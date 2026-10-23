@@ -8,7 +8,7 @@ The [SLT comparison review](slt-bounds-comparison-2026-10-19.md) records the pri
 
 On 20 October 2026 the collection's attribution was revised. Every paper and note with more than one author lists them in alphabetical order, with a footnote saying so, and names the AI models: ChatGPT-6 Astra wherever OpenAI Codex or ChatGPT was listed; Claude Fable 5 and Opus 5 on the strong-prior, above-mean-field and robust-depth papers and the two depth reports; Claude Opus 5.5 on the standard-scaling NNGP paper and the beyond-parity notes. The footnotes describing the AI authors' contributions were removed. Kaarel Hänni and Dmitry Vaintrob were added as authors of the standard-scaling NNGP paper. Citations within the collection that name these authors were updated to match; citations of external works keep their published author order. All 41 catalogued paper PDFs were rebuilt; only author lines, PDF metadata and author-naming citations changed. The author lists and PDF hashes in the 19 October [authorship record](claude-authorship-2026-10-19.json) are superseded. Copies kept for provenance keep their original attribution: the technical-check supplements of the first depth report and the source copies in `works-in-progress/depth-experiments/`.
 
-The current inventory contains **41 papers and notes**. The [latest Boolean-depth revision record](boolean-depth-structure-2026-10-18.json) covers the unrestricted-depth and critical-depth works in progress: independently reviewed structural theorems, a stronger actual parity learning lower bound, exact source hashes, and clean isolated rebuilds with matching PDF text. These additions are not Lean verified. The general polynomial-depth Boolean learning problem remains open. The [earlier revision record](boolean-depth-progress-2026-10-18.json) preserves the preceding circuit-rate and finite-bottleneck snapshot; counts in older records refer to their publication snapshots.
+The current inventory contains **52 papers and notes**. The [latest Boolean-depth revision record](boolean-depth-structure-2026-10-18.json) covers the unrestricted-depth and critical-depth works in progress: independently reviewed structural theorems, a stronger actual parity learning lower bound, exact source hashes, and clean isolated rebuilds with matching PDF text. These additions are not Lean verified. The general polynomial-depth Boolean learning problem remains open. The [earlier revision record](boolean-depth-progress-2026-10-18.json) preserves the preceding circuit-rate and finite-bottleneck snapshot; counts in older records refer to their publication snapshots.
 
 To check the catalog, PDF checksums, and local Markdown links:
 
@@ -81,3 +81,54 @@ The [standard-scaling NNGP parity paper](../side-results/standard-nngp-parity/RE
 - **Correction.** The obstruction section is corrected: a conditional "matching upper bound" paragraph had a false premise. It is replaced by a sharper lower bound on the conditioning cost per sample.
 
 The [revision record](../side-results/standard-nngp-parity/verification/review.md#revision-of-20-october-2026) describes the exploration, the independent AI-agent reviews and the supporting files. The revised paper builds from source in two LaTeX passes, without warnings or unresolved references. The inventory is unchanged at 41 papers.
+
+## Improved polynomial bounds, 21 October 2026
+
+Four [supporting papers](../works-in-progress/improved-polynomials/) were added, bringing the catalog to 45 manuscripts. They give a sixth-power width bound under the original robustness restriction for all mean-field-or-stronger scales; a quartic bound under that restriction at stronger scales; a quadratic bound with an additional neuron-averaging restriction; and a shallow-network norm bound with quadratic dependence in a specified coefficient class.
+
+The all-scales theorem retains the original prior support, every-width quantifier, and finite mean-field endpoint. Its proof and final LaTeX sources received an [independent full mathematical audit](../works-in-progress/improved-polynomials/verification/all-scales-review.md), alongside a second derivation of its key reconstruction lemma. The other three papers have their own review records in the same folder. These are AI-agent mathematical reviews, not human peer review or Lean verification.
+
+All four papers were rebuilt from their packaged sources and independently rebuilt in isolated temporary directories. Extracted text matches the published PDFs, without unresolved references or LaTeX warnings. The [publication record](../works-in-progress/improved-polynomials/verification/publication-build.json) records source and PDF hashes, exact build checks, and review scope. Earlier audit hashes identify their research snapshots; final attribution and PDF metadata changes are recorded separately in this publication record.
+
+The FAQ's polynomial section, collection index, catalog, and file checksums were updated. Existing paper PDFs and Lean source files are unchanged. The degree-46 conventional envelope and sixth-power circuit-width rate do not replace the degree-10974 budget checked by the existing Lean proof. No Lean rebuild is claimed for this addition.
+
+## Author-label correction, 22 October 2026
+
+The four improved-polynomial manuscripts now use one **ChatGPT-6 Astra** author credit, following the collection's attribution convention. The duplicate **OpenAI Codex** entry was removed from the three affected author lists; the shallow paper's OpenAI credit was renamed and placed in alphabetical order. PDF metadata, the catalog, and overview descriptions were updated consistently. This corrects an attribution mistake, not a change in mathematical contributions.
+
+All four PDFs were rebuilt and their sources checked to confirm that only author lines and PDF metadata changed. The [attribution correction record](../works-in-progress/improved-polynomials/verification/attribution-correction-2026-10-22.json) gives current hashes and isolated rebuild checks. The earlier publication record remains a historical snapshot and links to this correction. Mathematical content and Lean sources are unchanged.
+
+
+## Neuron-merging naturality, 21 October 2026
+
+The [signed-merging paper and empirical study](../works-in-progress/improved-polynomials/neuron-merging-naturality/) extend the quadratic theorem to signed, unequal populations, an output-normalized count budget, and a local sufficient certificate. The source received an independent mathematical audit, including the positive-mass Boolean implementation and every-width quantifiers. This is the 46th catalogued manuscript and is not Lean verified.
+
+The empirical package retains every outcome from 40 fresh gradient-trained networks, the full search records, and three exhaustive interval certificates. Automatic identity-partition cases and failed searches are reported separately. An independent replay checks the included saved weights and witnesses. The [publication record](../works-in-progress/improved-polynomials/neuron-merging-naturality/verification/publication-build.json) records source/PDF hashes, isolated rebuilding, and replay scope.
+
+
+## Cumulative mistakes, converses, and ReLU, 21 October 2026
+
+Three supporting manuscripts bring the catalog to 49: [total online mistakes](../works-in-progress/online-mistakes/upper/), [circuit-induction converses](../works-in-progress/online-mistakes/circuit-converse/), and [ReLU learning](../works-in-progress/relu-learning/). A separate [neural converse note](../works-in-progress/online-mistakes/nn-converse.md) distinguishes a weak original-support converse from an output-capped polynomial variant, both in the strong-prior-then-width limit.
+
+The new statistical proofs, exact circuit priors and repair costs, ReLU norm bound and Gaussian neighborhood argument, and neural singleton construction underwent independent AI-agent mathematical reviews. Each paper includes its audit and an isolated rebuild record. Sources reproduce the published PDF text; no unresolved references remain. These are conventional mathematical checks, not Lean verification. The five main formalized statements are unchanged.
+
+
+## Unbounded activations and polynomial depth, 22 October 2026
+
+Three supporting manuscripts bring the catalog to 52:
+
+- [The unified activation theorem](../works-in-progress/unbounded-activations/) proves one fixed-depth polynomial sample bound simultaneously over every learner width above bounded-weight teacher complexity and every Gaussian scale at least as strong as mean field. It covers every fixed globally Lipschitz activation vanishing at zero, including deep ReLU and GELU at the mean-field endpoint. The original global-margin and exact-label conventions are retained. The generic proof counts auxiliary networks with neuron-specific activations; it does not claim a same-activation circuit converse.
+- [Polynomial-depth ReLU/GELU learning](../works-in-progress/relu-gelu-polynomial-depth/) gives a quadratic-width bound up to logarithms, and an explicit literal quadratic envelope, under unsigned neuron-merging stability. All widths above compiled teacher width and all scales at least as strong as mean field are covered. Typical trained-network applicability is not established.
+- [The polynomial-depth neural converse](../works-in-progress/online-mistakes/depth-polynomial-converse/) converts complete-domain total mistakes into bounded-weight tanh complexity, with fourth-power mistake dependence and polynomial depth. It assumes an output cap and an internal-amplification certificate, and takes the strong-prior limit before the width limit. It is not a fixed-width converse.
+
+Several independent AI agents reviewed the mathematical arguments. The unified endpoint review found and corrected a covariance-diagonal bookkeeping issue by using layer-specific bounds; the final auxiliary atom statement also makes nonnegative coefficients explicit. The [integrated review](../works-in-progress/unbounded-activations/verification/meanfield-review.md) distinguishes the final theorem from earlier proof snapshots. A [fresh independent audit](../works-in-progress/unbounded-activations/verification/fresh-final-review.md), conducted without the other review reports, read all six final source files and found no defect requiring a mathematical correction or weaker theorem. It records the exact source hashes and checks the all-width, all-scale quantifiers. Each other paper has its own review record. These are AI mathematical reviews, not human peer review or Lean verification.
+
+All three PDFs were independently rebuilt from their packaged sources in isolated temporary directories. Their extracted text matches the published files, with no unresolved references or LaTeX warnings. Per-paper `verification/publication-build.json` records exact source and PDF hashes. The collection catalog, local links, checksums, FAQ, and indexes were checked. Existing PDFs and all Lean sources are unchanged.
+
+## Alternative prior restrictions and online FAQ, 22 October 2026
+
+The FAQ now has separate prominent questions on total online mistakes and their converses, and an expanded activation explanation. The old combined-section anchor is preserved. The new [alternative-restriction notes](../works-in-progress/robustness-alternatives/) give three separately scoped results: internal-noise stability plus bounded noisy activity for ReLU/GELU at strong prior and `gamma >= 2`; a declared path-norm cap, with a quadratic ReLU formula guarantee; and severe-dropout stability for tanh at strong prior and `gamma >= 2`. These are Markdown research notes, so the PDF inventory remains 52.
+
+Each learning argument received an independent AI-agent mathematical audit, and the parent researcher checked the derivations. The robust Boolean witnesses and operator-norm obstructions were checked separately. The [publication record](../works-in-progress/robustness-alternatives/verification/publication-check.json) maps reviewed research files to the GitHub-formatted copies and records reproduction of a twelve-checkpoint dropout diagnostic. The numerical replay uses the already published model weights; it is a small Monte Carlo study, not an exact robustness certificate or evidence that the theorem's conditions hold generally after training.
+
+These additions are not Lean verified and do not change any existing PDF or formal theorem. The FAQ, relative links, file inventory, and collection checksums were checked before publication.

@@ -1,0 +1,85 @@
+\subsection{Stable finite realization of tail atoms}
+The next certificate avoids any lower bound on the nonzero eigenvalues
+of the covariance. It is used for both tail atoms and the final readout.
+
+\begin{lemma}[An $\ell^1$ certificate for an RKHS vector]
+\label{lem:rkhs-atom-certificate}
+If $u\in\mathcal H_Q$, $\|u\|_Q\le1$, and $\eta>0$, there is a vector
+$\beta\in\mathbb R^{\mathcal X}$ such that
+\[
+ \|Q\beta-u\|_\infty\le\eta,\qquad
+ \|Q\beta\|_Q\le1,\qquad \|\beta\|_1\le\frac1{4\eta}.
+\]
+\end{lemma}
+\begin{proof}
+In the finite-dimensional Hilbert space $\mathcal H_Q$, minimize
+$\tfrac12\|v\|_Q^2$ subject to $\|v-u\|_\infty\le\eta$.
+A minimum exists, and $u$ is a strictly feasible point. The multiplier
+conditions for the $2|\mathcal X|$ linear inequalities therefore apply.
+With the signs chosen so that $v=Q\beta$, complementary slackness says
+\[
+ \beta\cdot(u-v)=\eta\|\beta\|_1.
+\]
+The left side is $\langle v,u\rangle_Q-\|v\|_Q^2$, and hence is at
+most $\|v\|_Q-\|v\|_Q^2\le1/4$. The other two claims follow from
+feasibility and the comparison with the feasible point $u$.
+The argument also covers singular $Q$, since the optimization takes place
+in $\mathcal H_Q$ itself.
+\end{proof}
+
+\begin{proposition}[Stable realization with auxiliary activations]
+\label{prop:generic-atom-realization}
+Let $Q$ have diagonal entries at most $M\ge1$, let $A\ge1$ and
+$0<\varepsilon\le1$, and suppose
+\[
+ R=\sum_{j=1}^r c_j\psi_j(v_j)\psi_j(v_j)^\top,\quad
+ c_j\ge0,\quad\sum_jc_j\le A,\quad\|v_j\|_Q\le1,
+ \quad\psi_j(0)=0,\quad\operatorname{Lip}(\psi_j)\le\lambda.
+\]
+Take
+\[
+ \eta=\frac{\varepsilon}{64A\lambda^2(\sqrt M+1)},\qquad
+ n=\left\lceil128A^2\lambda^4M^2\varepsilon^{-2}\log(4m^2)\right\rceil.
+\]
+Then $R$ admits an approximation $R'(Q')$ within $\varepsilon$ in maximum
+norm, uniformly over all positive semidefinite $Q'$ satisfying
+$\|Q'-Q\|_{\max}\le\eta^2$, by $n$ auxiliary neurons of the stated
+activation class. The covariance coefficients are $A/n$, and the
+incoming weights have the explicit bounds established below.
+\end{proposition}
+\begin{proof}
+Sample pairs $(v_j,\psi_j)$ with probabilities $c_j/A$, adding a zero
+pair for the remaining probability. The absolute entries of every
+sampled outer product are at most $\lambda^2M$, so Hoeffding's inequality
+gives samples whose average times $A$ approximates $R$ within
+$\varepsilon/4$ entrywise. Apply the RKHS certificate to the sampled
+$v_j$, obtaining $\|\beta_j\|_1\le1/(4\eta)$ and
+$\|Q\beta_j-v_j\|_\infty\le\eta$.
+For every $Q'$ with $\|Q'-Q\|_{\max}\le\eta^2$,
+\[
+ \|Q'\beta_j-v_j\|_\infty\le5\eta/4,
+ \qquad
+ \|\psi_j(Q'\beta_j)-\psi_j(v_j)\|_\infty\le5\lambda\eta/4.
+\]
+It follows that
+\[
+ R'(Q')=\frac A n\sum_j
+             \psi_j(Q'\beta_j)\psi_j(Q'\beta_j)^\top
+ \quad\hbox{satisfies}\quad
+ \|R'(Q')-R\|_{\max}\le\varepsilon.
+\]
+The displayed constants leave ample room for the outer-product error.
+
+If $Q'=\sum_\ell a_\ell h_\ell h_\ell^\top$ is a finite weighted
+feature realization, each new neuron has activation $\psi_j$ and weights
+\[
+ W_{j\ell}=a_\ell\sum_y\beta_j(y)h_\ell(y),
+ \qquad |W_{j\ell}|\le a_\ell\|h_\ell\|_\infty/(4\eta).
+\]
+Its covariance coefficient is $A/n$.
+\end{proof}
+These are ordinary finite
+feedforward computations with neuron-specific activations; the common
+capacity theorem controls them uniformly without coding the activations.
+All intermediate values and coefficients obey polynomial bounds whenever
+the preceding realization does.

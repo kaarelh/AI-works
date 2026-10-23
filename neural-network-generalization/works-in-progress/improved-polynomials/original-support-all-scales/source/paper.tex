@@ -1,0 +1,96 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,booktabs}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\usepackage{microtype}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\newcommand{\Prb}{\mathbb P}
+\newcommand{\R}{\mathbb R}
+\newcommand{\X}{\{-1,1\}^d}
+\newcommand{\op}{\mathrm{op}}
+\newcommand{\poly}{\operatorname{poly}}
+\title{A sharper polynomial learning bound for NNBayes on robust networks}
+\author{ChatGPT-6 Astra \and Claude Fable 5 and Opus 5 \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\hypersetup{pdftitle={A sharper polynomial learning bound for NNBayes on robust networks},pdfauthor={ChatGPT-6 Astra; Claude Fable 5 and Opus 5; Kaarel Hanni; Dmitry Vaintrob}}
+\date{21 October 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We give an explicit sample bound for Bayesian tanh networks whose clipped
+predictions are stable under a calibrated ball of simultaneous internal
+perturbations. For a Boolean target represented by a layered circuit of
+width $C$, the bound is $O(C^6\log^{13}(2+C))$ when the remaining parameters
+are fixed. One universal polynomial also controls its dependence on input
+dimension, depth, robustness calibration, accuracy and confidence; a
+conservative envelope has degree $46$. The result holds at every learner
+width $N\ge C$ and every Gaussian scale from the finite mean-field prior
+to stronger priors. It imposes the same robustness restriction as the
+earlier polynomial-depth theorem. The improvement comes from importance
+sampling with a uniform component, exact empirical whitening, and a
+mean-square comparison of Gaussian residual variances. We include the
+model, target-mass construction, entropy bookkeeping and statistical proof
+so that the result can be read independently.
+\end{abstract}
+
+\section{Introduction}
+For Bayesian neural-network learning, a useful statistical guarantee should
+depend on the complexity of the target rather than on the learner's
+possibly much larger width. A previous polynomial-depth result obtains
+such a guarantee after restricting the prior to networks stable under
+specified internal disturbances~\cite{earlier}. Its direct constructive
+budget has a very large polynomial degree. This paper improves that budget
+while leaving the learner and its support restriction unchanged.
+
+The target is a Boolean function computed by a layered bounded-fan-in
+Boolean circuit. For every learner width above that circuit's width,
+conditioning the restricted Gaussian prior on exact training margins gives
+small posterior test error after a number of examples polynomial jointly
+in circuit width, depth and the other parameters. We establish an explicit
+sixth-power dependence on circuit width, up to logarithms, including at
+finite mean-field scale. Quadratic dependence under this same restriction
+remains unresolved.
+
+The main analytic issue is that a wide mean-field network contains a large
+Gaussian bulk whose Frobenius energy grows with width. Simply retaining
+low-energy networks does not yield a width-independent bound. We retain
+the previous entropy-based separation into informative directions and a
+Gaussian residual, but reconstruct that residual more accurately. Sampling
+from a mixture of uniform and leverage probabilities controls both active
+and residual errors. Exact whitening makes the sampled covariance a
+least-squares residual; comparing square roots of its variances then costs
+$O(q/m)$ for $q$ active directions and $m$ sampled neurons. This replaces a
+much less efficient uniform covariance approximation.
+
+\paragraph{Status and scope.}
+This is an unformalized research paper with independent AI mathematical
+review. The earlier theorem's Lean proof does not certify the new rate.
+The robustness assumption is a restriction on supported implementations,
+not a claim about all gradient-trained networks. Targets are layered
+Boolean circuits, rather than arbitrary real-weight neural circuits of
+the same width. The guarantee concerns exact Bayesian inference and does
+not provide an efficient posterior-sampling algorithm.
+
+\input{learning-theorem.tex}
+\input{explicit-budget.tex}
+\appendix
+\input{compression-proof.tex}
+
+\begin{thebibliography}{9}
+\bibitem{earlier} ChatGPT-6 Astra, Claude Fable 5 and Opus 5, K. H\"anni,
+and D. Vaintrob. \emph{A polynomial-depth learning bound for NNBayes on
+robust networks}. 2026.
+\href{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/main-results/robust-polynomial-depth}{Paper and source}.
+\bibitem{talagrand} M. Talagrand. \emph{Transportation cost for Gaussian
+and other product measures}. Geometric and Functional Analysis 6 (1996),
+587--600.
+\bibitem{tropp} J. A. Tropp. \emph{User-friendly tail bounds for sums of
+random matrices}. Foundations of Computational Mathematics 12 (2012),
+389--434. Matrix Chernoff inequality.
+\end{thebibliography}
+\end{document}

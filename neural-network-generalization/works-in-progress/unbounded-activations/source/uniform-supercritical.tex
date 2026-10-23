@@ -1,0 +1,154 @@
+% Uniform all-gamma corollary, 22 October 2026.
+\section{One polynomial for every scaling at least as strong as mean field}
+\label{sec:uniform-supercritical}
+The endpoint and spectral arguments together give a stronger uniform
+statement than treating each exponent separately. Parameterize the raw
+Gaussian prior by $0<t\le1$, with coordinate variances
+\[
+ \frac{t^2}{d}\quad\hbox{in the first layer},\qquad
+ \frac{t^2}{N}\quad\hbox{in internal layers},\qquad
+ \frac{t^2}{N^2}\quad\hbox{at the readout}.
+\]
+The scaling exponent $\gamma\ge1$ corresponds to
+$t=N^{(1-\gamma)/2}$. Allowing every $t\in(0,1]$ also permits the scale
+to be chosen independently at each width. Write
+$\nu_{N,t}=\mu_{N,\sigma=t/\sqrt N}$ for this raw law.
+
+\begin{lemma}[Uniformity of the compression ingredients]
+\label{lem:uniform-scale-ingredients}
+Let $A_f=A$ be the constant in
+Proposition~\ref{prop:unbounded-target-mass}. At every $N\ge C$ and
+$0<t\le1$,
+\[
+ \nu_{N,t}(U_{N,f})\ge e^{-A_fN/(2t^2)}.
+\]
+The mean-field functional compression proposition remains true with the
+same polynomials $P_{L,\lambda},J_{L,\lambda}$ and raw exceptional bound
+$(2H+1)e^{-NK}$ whenever $N\ge P_{L,\lambda}(d,K)$, uniformly for
+every $t\in(0,1]$.
+Also, whenever
+\[
+ t\le a_K/8,\qquad t^{-2}\ge8(d+1),
+\]
+the spectral functional compression at energy $(L+3)K$ holds at every
+width, with raw exceptional mass at most $Le^{-NK/(8t^2)}$.
+\end{lemma}
+\begin{proof}
+The target-cylinder proof uses scalar Gaussian variance $t^2$ in its
+constrained coordinates and $t\le1$ in its deterministic error bound;
+replacing $N^\gamma$ by $N/t^2$ gives the first assertion directly.
+
+In the endpoint argument the conditional preactivation covariance is
+now $t^2Q_{s-1}$ and the first one is $t^2Q_0$. Apply the same one-step
+construction to these covariances. Their diagonal budgets do not increase.
+If $Q_{s-1}'$ approximates $Q_{s-1}$, then
+\[
+ \|t^2Q_{s-1}'-t^2Q_{s-1}\|_{\max}
+ \le\|Q_{s-1}'-Q_{s-1}\|_{\max}.
+\]
+The weighted feature coefficients for the next preactivation are
+multiplied by $t^2$. Thus Gaussian incoming weights are multiplied by
+$t$, atom incoming weights by $t^2$, and all existing upper bounds on
+weights and feature magnitudes remain valid. Initially the input-feature
+coefficients are $t^2/d$. The readout energy is
+$E_v=t^2\chi_N^2/N$, whose upper tail is no larger than at $t=1$.
+Hence the same polynomial thresholds, compressed-energy bound, and
+raw exceptional probability apply. Although the reconstructed networks
+may depend on $t$, the single auxiliary energy class containing them does
+not depend on it.
+
+For spectral compression, the weighted first-layer energy and readout
+energy are $(t^2/N)\chi^2_{N(d+1)}$ and $(t^2/N)\chi^2_N$;
+the internal entries have variance $t^2/N$. The two stated inequalities
+are exactly the hypotheses used in the spectral proof. Its singular-value,
+RMS-activation, and readout estimates therefore give the displayed tail,
+without a lower bound on $N$.
+\end{proof}
+
+Choose the following budgets, all independent of learner width and scale:
+\begin{align*}
+ K_s&=4A_f+8\log(2L/\varepsilon),&
+ t_*&=\min\{a_{K_s}/8,[8(d+1)]^{-1/2}\},\\
+ K_m&=2+A_f/t_*^2+\log\{2(2H+1)/\varepsilon\},&
+ N_*&=\left\lceil\max\{1,P_{L,\lambda}(d,K_m)\}\right\rceil,\\
+ D_*&=d+2+(L-2)N_*,&
+ J_0&=2A_f+2D_*\log2+4\log(2/\varepsilon),\\
+ J_*&=(L+3)K_s+J_{L,\lambda}(d,K_m)+J_0.
+\end{align*}
+Each budget, including $t_*^{-1}$, is polynomially bounded in
+$d,C,\log(1/\varepsilon)$ for fixed $L,\lambda$.
+
+\begin{theorem}[All widths and all scales at least as strong as mean field]
+\label{thm:uniform-all-scales}
+Fix a depth $L\ge2$ and an activation $\phi$ with $\phi(0)=0$ and
+Lipschitz constant at most $\lambda$. Suppose a Boolean target has a
+width-$C$, depth-$L$ implementation with weights bounded by $C$ and
+strict global margin $1/2$. Let the original fixed-$\phi$ Gaussian prior
+have the variances displayed above, condition it on an absolute margin
+$1/2$ at every Boolean input, and then condition on exact training labels.
+For every input distribution on the Boolean cube and every
+$0<\varepsilon,\delta<1$, one event of training-sample probability at
+least $1-\delta$ gives posterior average sign error at most $\varepsilon$
+\emph{simultaneously for every integer $N\ge C$ and every $0<t\le1$},
+provided
+\[
+ n\ge\frac2\varepsilon
+ \left[\mathcal B(J_*)+\log\frac1\delta\right].
+\]
+In particular, one fixed-depth polynomial sample bound works for every
+$\gamma\ge1$, including $\gamma=1$, without a polynomial degree or
+constant that deteriorates as $\gamma\downarrow1$.
+ReLU, exact GELU, SiLU, tanh, and every other fixed Lipschitz activation
+vanishing at zero are covered whenever the stipulated teacher exists.
+For the correct label to have posterior probability strictly greater
+than $2/3$ outside a test set of mass at most $\varepsilon$, apply the
+bound with average-error accuracy $\varepsilon/3$.
+\end{theorem}
+\begin{proof}
+Let $\mathcal F_*$ be the single auxiliary strict-margin function class
+of energy at most $J_*$. We show that at every $N\ge C$ and $0<t\le1$,
+the raw probability of margin-separated functions outside this class,
+divided by the raw target probability, is at most $\varepsilon/2$.
+
+If $t\le t_*$, spectral compression gives the ratio bound
+\[
+ L\exp\left[-\frac N{t^2}(K_s/8-A_f/2)\right]
+ \le\varepsilon/2.
+\]
+This applies at every width.
+If $t\ge t_*$ and $N\ge N_*$, the uniform endpoint compression gives
+\[
+ (2H+1)\exp\left[-N\left(K_m-\frac{A_f}{2t^2}\right)\right]
+ \le\varepsilon/2.
+\]
+
+For the remaining bounded widths $C\le N<N_*$, use total energy instead
+of a union over the continuum of possible scales. The parameter count is
+$p=N(d+2)+(L-2)N^2$, so $p/N\le D_*$. The normalized energy has law
+$\kappa_N=(t^2/N)\chi_p^2$. Its exponential moment at $N/(4t^2)$ is
+$2^{p/2}$, and therefore
+\begin{align*}
+ \frac{\nu_{N,t}\{\kappa_N>J_0\}}{\nu_{N,t}(U_{N,f})}
+ &\le \exp\left\{-\frac N{t^2}(J_0/4-A_f/2)
+                                      +\frac p2\log2\right\}\\
+ &\le \exp\left\{-\frac N{t^2}
+                  (J_0/4-A_f/2-D_*\log2/2)\right\}
+ \le\varepsilon/2.
+\end{align*}
+Here $t\le1$ and $N\ge1$ justify the last two inequalities. A globally
+margin-separated draw with $\kappa_N\le J_0$ itself belongs to the
+enlarged auxiliary class. Thus all three regimes are contained in the
+same $\mathcal F_*$ apart from the asserted relative mass.
+
+The target must belong to $\mathcal F_*$, since otherwise the relative
+mass would be at least one. Normalization by the global margin event
+cancels, and conditioning on any noiseless training labels preserves the
+upper bound $\varepsilon/2$ on posterior mass outside $\mathcal F_*$.
+The capacity theorem bounds $\log|\mathcal F_*|$ by
+$\mathcal B(J_*)$. A finite-class union bound ensures, on one sample
+event of probability at least $1-\delta$, that every consistent member
+has true error at most $\varepsilon/2$. That event refers only to the
+single function class, so it works for the entire continuum of scales
+and every learner width simultaneously. Adding the posterior mass of
+the complement gives the claimed average-error bound.
+\end{proof}

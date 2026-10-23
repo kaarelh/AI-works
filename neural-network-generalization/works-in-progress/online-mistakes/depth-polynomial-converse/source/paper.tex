@@ -1,0 +1,564 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,geometry,amsmath,amssymb,amsthm,mathtools}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue]{hyperref}
+\geometry{margin=1in}
+\setlength{\emergencystretch}{2em}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}\newcommand{\E}{\mathbb E}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\cX}{\mathcal X}\newcommand{\cS}{\mathcal S}
+\newcommand{\clip}{\operatorname{clip}}
+\hypersetup{pdftitle={Polynomial-depth mistake converses for neural priors with controlled internal amplification},pdfauthor={ChatGPT-6 Astra; Claude Fable 5 and Opus 5; Kaarel Hanni; Dmitry Vaintrob}}
+\title{Polynomial-depth mistake converses for neural priors\\with controlled internal amplification}
+\author{ChatGPT-6 Astra \and Claude Fable 5 and Opus 5 \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{Research draft, 22 October 2026}
+\begin{document}\maketitle
+\begin{abstract}
+Does making few online prediction mistakes force a Bayesian neural-network
+learner's target to have a small implementation, with polynomial rather
+than exponential dependence on depth? We prove such a converse for a
+Gaussian tanh prior restricted by bounded output magnitude and a
+label-independent certificate controlling propagation of internal noise.
+The certificate allows compensated layer expansion and includes networks
+whose internal matrices have operator norm at most one. It is preserved by
+cloning and direct sums. An exact singleton correction then increases the
+square root of minimum energy by only a polynomial-depth additive cost.
+A deterministic robustness compressor turns the resulting quadratic
+energy bound into an explicit circuit-width bound with fourth-power
+mistake dependence and no exponent depending on depth. The theorem
+concerns the limit taking prior variance to zero at each fixed width and
+then letting width tend to infinity. It handles tied minimizers,
+posterior sampling, majority prediction, and posterior-confidence
+failures, in any complete input-reveal order. The original fixed-width
+converse, and cheap implementations of every small deep Boolean circuit
+under this stronger restriction, remain open. These results are not
+Lean verified.
+\end{abstract}
+
+\section{Question and scope}
+An online learner receives an input, predicts its Boolean label, and then
+receives the true label. Every label is revealed, including after correct
+predictions. A converse asks whether a small total mistake count implies
+that the entire target has a small circuit. It requires sufficient input
+coverage: observations on a small easy subset cannot constrain the target
+elsewhere.
+
+For minimum-size Boolean-circuit induction, an incorrect prediction can
+be repaired by adding a short exception circuit. This immediately bounds
+circuit size by the mistake count. The analogous neural argument has two
+difficulties. A large wrong real-valued output may require an expensive
+correction, and a low-energy neural network need not have a known
+polynomial-depth compressor. We address these separately: a fixed output
+cap makes corrections inexpensive, while a stable internal-noise
+certificate supplies a polynomial-depth compressor.
+
+Our conclusion concerns bounded-weight tanh-network width at the stated
+depth, rather than unrestricted-depth NAND gate count. The new argument
+combines an exact singleton construction with the deterministic compressor
+underlying the earlier polynomial-depth learning result
+\cite{quartic}. We reproduce the required compression argument below.
+The prior restriction is specified in weights and outputs, without
+reference to training labels, target complexity, or mistake count.
+
+The order of limits is substantive. We take the strong-prior limit at
+each fixed width first, and only then let width tend to infinity. This
+supplies the extra neurons used by an exception branch. We do not assert
+that the converse holds at every fixed realizable width, or that this
+limit is one of the finite-exponent width-first posteriors.
+
+\section{A prior with controlled internal amplification}
+Fix $d\ge1$, $L\ge2$, $H=L-1$, $U>1$, and $\Lambda>1$.
+Let $\cX=\{-1,1\}^d$ and $\bar x=(x,1)$. A network with $H$ hidden
+layers of common width $N$ has
+\[
+ h^1=\tanh(W^1\bar x),\qquad
+ h^s=\tanh(W^sh^{s-1})\quad(2\le s\le H),\qquad
+ z_w=v^\top h^H.
+\]
+Its normalized Gaussian energy and readout energy are
+\[
+ \kappa_N(w)=\frac dN\norm{W^1}_F^2+
+ \sum_{s=2}^H\norm{W^s}_F^2+N\norm v_2^2,
+ \qquad E_v(w)=N\norm v_2^2.
+\]
+The independent raw Gaussian coordinates have variances
+$N\sigma^2/d$ in the first layer, $\sigma^2$ internally, and
+$\sigma^2/N$ in the readout. The density is proportional to
+$\exp[-\kappa_N/(2\sigma^2)]$.
+
+For diagonal matrices $D_2,\ldots,D_H$ with entries in $[0,1]$, put
+\[
+ B_j(w,D)=v^\top D_HW^H\cdots D_{j+1}W^{j+1}
+ \quad(1\le j<H),\qquad B_H(w,D)=v^\top.
+\]
+Define the certified squared hidden-noise gain
+\begin{equation}\label{eq:gain}
+ G_N(w)^2=N\max_{D_2,\ldots,D_H}
+                     \sum_{j=1}^H\norm{B_j(w,D)}_2^2.
+\end{equation}
+The maximum is over a compact finite-dimensional cube, so it exists and
+is continuous in the weights. For $H=1$, it is simply $E_v$.
+
+Let $\cS_{N,\Lambda,U}$ be the following open parameter set:
+\begin{equation}\label{eq:support}
+ \frac12<|z_w(x)|<U\quad(x\in\cX),\qquad
+ G_N(w)^2<\Lambda^2H E_v(w).
+\end{equation}
+The prior is the raw Gaussian conditioned on this set. Training further
+conditions on exact agreement of output signs with the revealed labels.
+Thus we retain the original global lower-margin convention and add an
+upper output cap and an internal-amplification certificate.
+
+\begin{remark}[Interpretation]
+The diagonals in \eqref{eq:gain} range over all possible slopes of tanh,
+not only slopes at the clean forward pass. The condition therefore
+certifies finite internal disturbances rather than only an infinitesimal
+Jacobian at one state. Requiring $\norm{W^s}_{\rm op}\le1$ at every
+internal layer is sufficient, since then $G_N^2\le H E_v$.
+The certificate is more flexible: expansion in a layer is allowed when
+subsequent contractions or readout directions control its effect.
+It is stronger than checking only the perturbations encountered on a
+particular data set.
+\end{remark}
+
+\begin{lemma}[Certified finite-noise stability]\label{lem:noise}
+Add disturbances after every hidden activation and at the readout, and
+measure them by
+\[
+ \norm\eta_*^2=\sum_{s=1}^H\norm{\eta^s}_2^2/N+|\eta^{\rm out}|^2.
+\]
+Every $w$ satisfying the gain condition in \eqref{eq:support} obeys
+\[
+ |z_w(x;\eta)-z_w(x)|
+ \le\Lambda\sqrt{1+HE_v(w)}\,\norm\eta_*.
+\]
+In particular, with $c=1/(16\Lambda)$ and
+$r_c(w)=c/\sqrt{1+HE_v(w)}$, its clipped output
+$T(z)=\clip(z,-1/2,1/2)$ changes by at most $1/16$ whenever
+$\norm\eta_*\le r_c(w)$.
+\end{lemma}
+\begin{proof}
+The difference of two tanh values is their input difference times a
+number in $[0,1]$. Thus the hidden-state differences satisfy
+$\Delta h^1=\eta^1$ and
+$\Delta h^s=D_sW^s\Delta h^{s-1}+\eta^s$ for suitable diagonals
+$D_s$. Expanding this recursion gives
+$\Delta z=\sum_jB_j(w,D)\eta^j+\eta^{\rm out}$.
+Cauchy--Schwarz bounds its magnitude by
+$\sqrt{1+G_N^2}\norm\eta_*$, and
+$1+G_N^2\le\Lambda^2(1+HE_v)$ since $\Lambda>1$.
+Clipping is one-Lipschitz.
+\end{proof}
+
+\section{Statement of the converse}
+For a Boolean function $g$, let $a_N(g)$ be the infimum of
+$\kappa_N(w)$ over $w\in\cS_{N,\Lambda,U}$ with sign function $g$,
+with value $+\infty$ when there is no such implementation. Set
+$a_\infty(g)=\inf_N a_N(g)$.
+A minimum-action predictive rule is one supported, at each history, on
+functions minimizing $a_\infty$ among those agreeing with that history.
+It may sample such a function, choose one deterministically, or predict
+by the majority of such a distribution. Confidence failure means that
+the correct label has probability at most a fixed $\theta\in(0,1)$.
+
+Let $C_L(f)$ be the smallest integer $C$ such that a depth-$L$, width-$C$
+tanh network has $f(x)z(x)>1/2$ everywhere and every weight has absolute
+value at most $C$. The network witnessing this conclusion need not
+satisfy the additional prior restriction.
+
+Define explicit budgets
+\begin{align*}
+ A_d&=\tfrac12\log(4(d+1)),& F_d&=1+A_d^2d(d+1),\\
+ D_{d,H}&=dF_d+H,& Q_H&=4(H+65),\\
+ P_{d,H,U}&=D_{d,H}+Q_H(U+1)^2.
+\end{align*}
+
+\begin{theorem}[Polynomial-depth mistake converse]\label{thm:main}
+Let $f:\cX\to\{-1,1\}$ and reveal every point of $\cX$, in any order.
+For any minimum-action predictive rule as above, let $m$ be either its
+actual total mistake count on a complete-revelation path or its expected
+total mistake count, using any one of the stated prediction conventions.
+Put
+\[
+ K=1+P_{d,H,U}(m+1)^2.
+\]
+Then
+\begin{equation}\label{eq:main}
+ C_L(f)\le
+ \left\lceil65536\Lambda^2K(1+HK)
+                   [d+\log(400L)]\right\rceil.
+\end{equation}
+This is a polynomial bound jointly in $d,L,U,\Lambda,m$, with
+logarithmic factors displayed and with leading fourth-power dependence
+on $m$. No exponent or implicit constant depends on depth.
+
+Every subsequential predictive limit obtained by first taking
+$\sigma\downarrow0$ at fixed $N$ for the prior
+\eqref{eq:support}, and then taking $N\to\infty$, is a
+minimum-action rule and satisfies the theorem. The same conclusion holds
+on an infinite iid stream with full support, since every domain point is
+eventually revealed and repeated points cause no further mistakes.
+\end{theorem}
+
+The theorem also holds if the gain certificate is replaced throughout by
+$\norm{W^s}_{\rm op}<1$ for every internal layer. This simpler support
+has its own minimum energies and predictive limits; its closure and
+singleton constructions below are unchanged. Its networks satisfy
+Lemma~\ref{lem:noise} with any fixed $\Lambda>1$, for example $\Lambda=2$.
+
+The statement is a converse. It does not establish that every small
+Boolean circuit has a low-energy implementation in this support.
+A fixed output cap controls a true amplitude obstruction in the repair
+argument; it is not inferred from small sign error or bounded hidden
+activations. A hard-conditioning prior need not describe ordinary SGD.
+
+\section{Cloning, direct sums, and the Gaussian limit}
+
+\begin{lemma}[Closure under cloning and direct sums]\label{lem:closure}
+Uniformly clone each neuron of a width-$n$ network $k$ times, divide its
+outgoing weights by $k$, and pad with zero neurons to any width $N\ge kn$.
+Its function is unchanged. If $\lambda=N/(kn)$, then
+\[
+ E'_v=\lambda E_v,\qquad G_N(w')^2=\lambda G_n(w)^2.
+\]
+The first-layer energy is divided by $\lambda$, internal energy is
+unchanged, and readout energy is multiplied by $\lambda$.
+Thus gain support and output caps are preserved.
+
+For a block-diagonal direct sum of widths $n_1,n_2$, with outputs added
+and ambient width $N=n_1+n_2$,
+\[
+ E_v=\sum_{i=1}^2\frac N{n_i}E_{v_i},\qquad
+ G_N^2=\sum_{i=1}^2\frac N{n_i}G_{n_i}^2.
+\]
+Consequently the strict gain certificate is preserved. The output cap
+is preserved whenever the resulting real output satisfies it.
+\end{lemma}
+\begin{proof}
+On active clone coordinates the internal matrix is
+$W^s\otimes(J_k/k)$ and the readout is $v\otimes\mathbf1_k/k$.
+Every path row $B_j$ is the old path row, with diagonal entries replaced
+by their within-clone averages, tensored with $\mathbf1_k^\top/k$.
+Its squared norm is divided by $k$. All averaged diagonals in $[0,1]$
+are attainable by taking identical slopes in each clone group, so the
+supremum is exactly the old one divided by $k$. Padding has no effect
+on these path rows. This proves the gain identity; direct calculation
+gives the remaining cloning energies.
+
+For a direct sum, every path row splits into the two blocks. The slope
+choices in the blocks are independent, so the supremum of the sum of
+squared norms is the sum of the two suprema. This proves the identities.
+For the operator-norm support, cloning preserves internal operator norms
+and a block-diagonal matrix has norm equal to the maximum of its blocks.
+\end{proof}
+
+For an exactly realizable real function $u$, let $E(u)$ be the infimum
+energy over all widths satisfying the gain certificate, without a lower
+margin or upper output constraint. Zero functions may be assigned energy
+zero by a limit. Lemma~\ref{lem:closure} gives
+\begin{equation}\label{eq:triangle}
+ \sqrt{E(u+v)}\le\sqrt{E(u)}+\sqrt{E(v)}.
+\end{equation}
+Indeed, clone two fixed branches into asymptotic proportions $1-\alpha$
+and $\alpha$. Their first-layer energies are multiplied by these
+proportions, internal energies do not change, and readout energies are
+divided by them. The total is at most
+$E(u)/(1-\alpha)+E(v)/\alpha$, after taking infima and approximation
+limits. Optimizing $\alpha$ proves \eqref{eq:triangle}. The same
+argument works for the operator-norm support.
+
+\begin{proposition}[Connection with the stated Gaussian learner]
+\label{prop:limits}
+Every Boolean function has finite $a_\infty$, and
+$a_N(g)\to a_\infty(g)$ as $N\to\infty$. The open-support Gaussian
+prior's fixed-width strong-prior posterior is supported in the limit on
+functions of smallest $a_N$ consistent with the history. Every subsequent
+width-limit accumulation point is supported on smallest $a_\infty$.
+\end{proposition}
+\begin{proof}
+Finite realizability follows from the exact singleton construction in the
+next section: at one hidden layer sum the singleton expansions with
+coefficients $g(x)$ to obtain output $g$ exactly. At greater depth,
+combine the first-layer features with sufficiently small coefficients to
+make the second-layer operator norm less than one, obtaining a scalar
+hidden state of equal magnitude and sign $g(x)$. Contractive repeated
+copies preserve that sign and common magnitude; the readout restores
+output exactly to $g$. Cloning the feature rows with suitable proportions
+makes the second-layer norm arbitrarily close to its variation-norm bound.
+Thus all internal operator norms are strictly below one and the output
+is exactly $\pm1$, within the fixed cap. A sufficiently large finite
+width suffices.
+
+Cloning a fixed width-$n$ realization with $k=\lfloor N/n\rfloor$
+shows that $\limsup_N a_N(g)\le a_n(g)$, because
+$N/(kn)\to1$. Taking the infimum over $n$ and using the reverse
+inequality from the infimum definition proves convergence.
+
+At fixed width, the event for any given function is open in parameter
+space. In weighted coordinates the raw Gaussian is $N(0,\sigma^2I)$.
+The elementary Gaussian rate calculation yields
+$2\sigma^2\log\mu_{N,\sigma}(U_g)\to-a_N(g)$: integrate over a
+small ball for the lower bound, and use the Gaussian norm tail for the
+upper bound. The support-normalization factor cancels in ratios.
+There are only finitely many functions, so strictly higher-energy
+functions disappear after conditioning on a noiseless history.
+The same finite-set argument and convergence of $a_N$ prove the final
+claim. Simultaneous subsequences for all finite distinct-input histories
+exist because their number is finite.
+\end{proof}
+
+\section{Exact singleton corrections with controlled amplification}
+
+\begin{lemma}[An inexpensive exact point indicator]\label{lem:singleton}
+For every $a\in\cX$ and $t\in\R$, the function
+$tI_a(x)=t\mathbf1\{x=a\}$ has implementations at depth $L$ with
+internal operator norms strictly below one and with infimum energy at most
+\[
+ E(tI_a)\le D_{d,H}+Q_Ht^2.
+\]
+\end{lemma}
+\begin{proof}
+There are $d+1$ affine-tanh features $h_0,\ldots,h_d$ satisfying
+\begin{equation}\label{eq:singleton-expansion}
+ I_a=\sum_{j=0}^d b_jh_j,\qquad \sum_j|b_j|\le4,
+ \qquad \norm{\text{first-layer row }j}_2^2\le F_d.
+\end{equation}
+To see this, take $h_0=\tanh(1)$ and
+\[
+ h_j(x)=\tanh\left(A_d[a\cdot x-(d-2j+1)]\right),\quad 1\le j\le d.
+\]
+On the shells $s=(d-a\cdot x)/2\in\{0,\ldots,d\}$, the columns
+$1,(1+h_1)/2,\ldots,(1+h_d)/2$ are entrywise within
+$e^{-2A_d}$ of the staircase columns
+$1,\mathbf1\{s<1\},\ldots,\mathbf1\{s<d\}$.
+The staircase inverse takes differences and a final endpoint, so its
+induced $\ell^1$ norm is at most two. The perturbation in inverse
+coordinates has norm at most
+$2(d+1)e^{-2A_d}=1/2$. The target singleton has staircase coefficient
+norm one; a Neumann-series inverse gives coefficients of total magnitude
+at most two. Expanding the affine columns and using
+$1=h_0/\tanh(1)$ increases that norm by a factor less than two.
+The row bound follows from $d$ coefficients of magnitude $A_d$ and a
+bias of magnitude at most $A_dd$. This proves
+\eqref{eq:singleton-expansion}.
+
+Write $V=\sum_j|b_j|\le4$ and omit zero coefficients. At large width
+clone feature $j$ in proportion $p_j=|b_j|/V$. If $H=1$, split its
+readout coefficient $tb_j$ equally among its copies. The limiting
+readout energy is $t^2\sum_jb_j^2/p_j=t^2V^2\le16t^2$,
+and first-layer energy is at most $dF_d$.
+
+If $H\ge2$, let each second-layer neuron receive $b_j/8$ times feature
+$j$, distributed across its copies. The resulting state is
+$a_2I_a$ with $a_2=\tanh(1/8)$. The second-layer squared operator
+norm and Frobenius energy both tend to
+$V^2/64\le1/4$, so they are below one at all sufficiently accurate
+finite allocations. Later hidden matrices are constant matrices
+$\beta J/N$, where $\beta=1-1/(2H)<1$. Thus every internal matrix
+is strictly contractive, and the state is $a_sI_a$, where
+$a_s=\tanh(\beta a_{s-1})$. Readout entries are $t/(Na_H)$.
+
+For $y\ge0$, $\tanh y\ge y/\sqrt{1+y^2}$, because
+$\operatorname{arsinh}y\le y$ and
+$\tanh(\operatorname{arsinh}y)=y/\sqrt{1+y^2}$.
+Consequently
+\[
+ a_2^{-2}\le65,\qquad
+ a_s^{-2}\le1+\beta^{-2}a_{s-1}^{-2},\qquad
+ a_H^{-2}\le\beta^{-2H}(65+H)\le4(65+H)=Q_H.
+\]
+The last inequality uses
+$-\log(1-1/(2H))\le1/(2H-1)$ and $H\ge2$.
+The first-layer cost is at most $dF_d$; the total internal cost is
+at most $H$ in the limiting construction; readout energy is at most
+$Q_Ht^2$. Every finite allocation computes the singleton exactly,
+so no approximation consumes any pre-existing margin slack.
+\end{proof}
+
+A constant output $+1$ or $-1$ also has a strictly contractive
+implementation of energy at most $d+5H+8$. Use identical first-layer
+features $\tanh(1)$, the same contractive relays, and a readout restoring
+unit magnitude. The inverse-square calculation above bounds the required
+readout energy by $4(H+2)$. In particular, the initial minimum action is
+at most $P_{d,H,U}$.
+
+\section{Mistakes bound the minimum action}
+Let $K_t$ be the smallest $a_\infty$ among functions consistent with the
+first $t$ revealed labels. This minimum exists, since the domain has
+finitely many functions and all have finite action. It is nondecreasing.
+If $K_t>K_{t-1}$, every function minimizing the previous action has the
+wrong label at the new input. Such a round is a forced mistake for every
+prediction convention in Theorem~\ref{thm:main}. This remains true with
+arbitrary mixtures of tied minimizers.
+
+Choose a minimizing function before such an increase and a capped
+real-output realization $z$ with energy arbitrarily close to its action.
+If the next input is $a$ with label $y$, replace its output by
+\[
+ z_{\rm new}(x)=z(x)+(y-z(a))I_a(x).
+\]
+Every other output is unchanged, and the new value at $a$ is exactly
+$y\in\{-1,1\}$. All previous labels, the strict lower margin, and the
+upper cap remain valid. Since $|z(a)|<U$, the singleton amplitude is at
+most $U+1$. Lemmas~\ref{lem:closure} and \ref{lem:singleton}, followed
+by approximation of the energy infima, give
+\[
+ \sqrt{K_t}\le\sqrt{K_{t-1}}+\sqrt{P_{d,H,U}}
+\]
+at an increase step. At other steps $K_t=K_{t-1}$. If $B$ is the number
+of increase steps after full revelation, then
+\begin{equation}\label{eq:energy-mistakes}
+ a_\infty(f)\le P_{d,H,U}(B+1)^2
+                    \le P_{d,H,U}(M+1)^2,
+\end{equation}
+where $M$ is total mistakes under any stated convention.
+
+For random orders or random predictions, the same conclusion holds with
+$m=\E M$. Invert \eqref{eq:energy-mistakes} first:
+$M\ge\sqrt{a_\infty(f)/P_{d,H,U}}-1$ on every complete path.
+The right side is deterministic, so expectation and rearrangement give
+$a_\infty(f)\le P_{d,H,U}(m+1)^2$. This does not reverse Jensen's
+inequality. Predictable adaptive input orders are allowed, provided all
+points are eventually revealed.
+
+\section{Polynomial-depth reconstruction from energy}
+For completeness we give the deterministic compression statement needed
+to turn \eqref{eq:energy-mistakes} into circuit complexity. It is the
+pruning-and-Bernstein construction of \cite{quartic}, used without its
+Gaussian or statistical parts.
+
+\begin{lemma}[Robust energy compression]\label{lem:compression}
+Suppose a width-$N$, depth-$L$ tanh network has $\kappa_N(w)\le K$,
+where $K\ge1$, and its clipped outputs change by at most $1/16$ under
+all disturbances of norm at most $r$, where $0<r\le1/6$. Put
+\[
+ m_*=\left\lceil256Kr^{-2}[d+\log(400L)]\right\rceil.
+\]
+There is an actual width-$m_*$, depth-$L$ tanh network with energy at
+most $4K$, weights bounded in magnitude by $2\sqrt{m_*K}$, and
+clipped outputs differing from the original's by at most $1/16$ on the
+entire Boolean cube.
+\end{lemma}
+\begin{proof}
+Write $k_s=\norm{W^s}_F^2$ for internal layers and
+$k_L=N\norm v_2^2$, so their sum is at most $K$.
+In each internal row and the readout, delete entries of magnitude above
+$8\sqrt K\norm{\text{row}}_2/(r\sqrt N)$; zero rows need no change.
+The absolute removed row mass is at most its squared norm divided by
+this threshold. On a vector in $[-1,1]^N$, pruning therefore has
+normalized stage error at most $r\sqrt{k_s/K}/8$.
+
+At each hidden layer independently sample $m_*$ uniform source indices
+with replacement. Keep sampled first-layer rows, and multiply subsequent
+sampled source weights by $N/m_*$. Work first with a virtual pass retaining
+all destination rows. Its clean virtual hidden states remain in
+$[-1,1]^N$ and are independent of the fresh source indices at the next
+stage. For one uniform source index $I$, the internal vector summand is
+$Y=N\overline W^s_{:,I}\widetilde h_I$. It obeys
+\[
+ \E\norm{Y-\E Y}_2^2\le Nk_s,\qquad
+ \norm{Y-\E Y}_2\le16\sqrt{NKk_s}/r.
+\]
+We use the Hilbert-space Bernstein inequality
+\cite[Appendix A, Corollary A.2]{tarres-yao}: independent centered
+Hilbert-space variables $X_i$ with $\norm{X_i}\le b$ and
+$\sum_i\E\norm{X_i}^2\le V$ satisfy
+\[
+ \Pr\!\left\{\left\|\sum_iX_i\right\|\ge t\right\}
+ \le2\exp\!\left[-\frac{t^2}{2(V+bt/3)}\right].
+\]
+For the sample average at tolerance
+$r\sqrt{Nk_s/K}/8$, this bounds the sampling failure probability by
+$2\exp[-m_*r^2/(256K)]$. The readout calculation is the same without
+factors of $\sqrt N$. A union bound over at most $L$ stages and $2^d$
+inputs is less than $1/200$ by the chosen budget.
+
+On success the pruning and sampling errors combine to give normalized
+stage errors at most $r\sqrt{k_s/K}/4$. Define postactivation disturbances
+as the difference between each virtual state and tanh applied to the
+original weights on the preceding virtual state. One-Lipschitzness makes
+the total disturbance norm at most $r/4$, uniformly on the cube. A
+readout disturbance makes the virtual output exact. Thus its clipped
+output differs from the original by at most $1/16$.
+
+The stored sampled coordinates form an ordinary width-$m_*$ network.
+Independent index lists in adjacent layers show that its expected
+normalized energy is at most $K$: the first-layer contribution is
+unchanged in expectation, and every remaining contribution is at most
+its original value. Hence its energy is at most $4K$ with probability
+at least $3/4$. The energy and all-input-noise events intersect. Choose
+one such network. The energy bound gives every coordinate magnitude at
+most $2\sqrt{m_*K}$, including the first layer since $d\ge1$.
+\end{proof}
+
+To finish Theorem~\ref{thm:main}, choose an admissible realization of $f$
+with energy below $K=1+P_{d,H,U}(m+1)^2$. Lemma~\ref{lem:noise} applies
+at radius
+\[
+ r=\frac1{16\Lambda\sqrt{1+HK}},
+\]
+which is at most $1/6$ and no greater than the network's own certified
+radius. Lemma~\ref{lem:compression} gives precisely the width in
+\eqref{eq:main}. Since the original output has signed margin above
+$1/2$, its signed clipped output is exactly $1/2$. The compressed output
+has signed margin at least $7/16$. Multiply its readout by two to obtain
+margin at least $7/8$, strictly above $1/2$. All weights are then at most
+$4\sqrt{m_*K}\le m_*$, because the displayed budget has $m_*\ge16K$.
+This proves $C_L(f)\le m_*$.
+
+For fixed $U,\Lambda$, the order of the bound is, explicitly,
+\[
+ O\!\left(\Lambda^2 L
+ [d^3\log^2(2+d)+L(U+1)^2]^2
+ (m+1)^4[d+\log(2L)]\right).
+\]
+The exact ceiling in \eqref{eq:main} includes the harmless lower-order
+terms. In particular the degree does not grow with $L$.
+
+\section{Interpretation and remaining questions}
+The prior conditions are implementational assumptions. A function may
+have both supported and unsupported realizations. Every Boolean function
+has some supported realization, but the construction proving this can be
+exponentially expensive in input dimension. We have not proved that every
+width-$C$, depth-$L$ Boolean circuit has a supported implementation with
+energy polynomial in $C,d,L$. Thus this paper supplies a polynomial-depth
+\emph{converse}; it does not claim a two-sided polynomial-depth circuit
+prior for all small Boolean circuits.
+
+The global gain certificate is sufficient, not necessary for stable
+predictions. Saturated tanh circuits can be stable near their actual
+states while failing a certificate that allows every diagonal slope in
+$[0,1]$. The simpler layerwise nonexpansiveness restriction is stronger
+still. Understanding useful weaker restrictions with the same closure
+properties is a natural next question.
+
+A uniform output cap is likewise substantive. Without it the correction
+amplitude can scale like the square root of current energy, turning the
+additive recurrence for its square root into a multiplicative one.
+The present proof does not remove that obstruction. Finally, direct sums
+need spare neurons. A fixed-width converse needs a way to create that
+space without repeatedly paying a constant energy factor, while retaining
+the prior's support restriction. That step is not supplied here.
+
+\begin{thebibliography}{9}
+\bibitem{quartic} ChatGPT-6 Astra, Claude Fable 5 and Opus 5, Kaarel H\"anni,
+and Dmitry Vaintrob. \emph{A quartic-width learning bound for Bayesian
+networks stable under internal noise}. Research manuscript, 2026.
+\url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/improved-polynomials/original-support}.
+\bibitem{previous} ChatGPT-6 Astra, Kaarel H\"anni, and Dmitry Vaintrob.
+\emph{What a few online mistakes imply for a strong-prior neural network}.
+Research note, 2026.
+\url{https://github.com/kaarelh/AI-works/blob/main/neural-network-generalization/works-in-progress/online-mistakes/nn-converse.md}.
+\bibitem{tarres-yao} Pierre Tarr\`es and Yuan Yao.
+\emph{Online learning as stochastic approximation of regularization paths:
+optimality and almost-sure convergence}.
+Appendix A, Corollary A.2, equation (A-1).
+\url{https://arxiv.org/abs/1103.5538}.
+\end{thebibliography}
+\end{document}

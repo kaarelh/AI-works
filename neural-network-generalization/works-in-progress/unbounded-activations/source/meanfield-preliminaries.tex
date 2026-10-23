@@ -1,0 +1,221 @@
+% Self-contained mean-field analytic ingredients, 22 October 2026.
+\section{Gaussian bulk, tail atoms, and stable exponential tilts}
+\label{sec:meanfield-preliminaries}
+Let $Q$ be a positive semidefinite matrix on a finite input set of size
+$m$, with $\max_xQ_{xx}\le M$ and $M\ge1$. Its reproducing-kernel
+Hilbert space $\mathcal H_Q$ is its range, with norm
+$\|u\|_Q^2=u^\top Q^+u$. Thus
+$|u_x|\le\sqrt M\|u\|_Q$. All input-set dependence in the quantitative
+bounds below is through $\log(2m)$.
+
+\begin{lemma}[Gaussian projection onto a bounded bulk]
+\label{lem:bulk-recession}
+Let $Z_1,\ldots,Z_N$ be independent $N(0,Q)$ vectors. Put
+$B=\sqrt{2M\log(4m)}$ and $A=4(K+\log2)$, where $K>0$.
+There are measurable decompositions $Z_i=a_i+u_i$ with
+$\|a_i\|_\infty\le B$ and $u_i\in\mathcal H_Q$ such that
+\[
+ \Prb\left\{N^{-1}\sum_i\|u_i\|_Q^2>A\right\}\le e^{-NK}.
+\]
+\end{lemma}
+\begin{proof}
+The closed convex set $\{a\in\mathcal H_Q:\|a\|_\infty\le B\}$
+has Gaussian probability at least $1/2$ by a union bound over the $m$
+coordinates. Let $a(z)$ be its metric projection in $\mathcal H_Q$,
+and let $u(z)=z-a(z)$. Gaussian isoperimetry on the support of $Q$ gives
+$\Prb\{\|u(Z)\|_Q>s\}\le e^{-s^2/2}$.
+Thus $\E e^{\|u(Z)\|_Q^2/4}\le2$ by integration of the tail.
+Independence and exponential Markov give
+$\exp(N\log2-NA/4)=e^{-NK}$. The projection is continuous and hence
+measurable. For $Q=0$ take $a=u=0$.
+\end{proof}
+
+\begin{lemma}[General Lipschitz version for auxiliary activations]
+\label{lem:bulk-lipschitz-auxiliary}
+Suppose instead only that $\phi(0)=0$ and $\phi$ is globally
+$\lambda$-Lipschitz. Keep $B,A$ and the Gaussian projections $Z_i=a_i+u_i$
+from Lemma~\ref{lem:bulk-recession}, and take $T\geq2B$.
+Let $r:\R^m\to[0,1]$ equal one on $\|z\|_\infty\le T$, and define
+$Q_{\mathrm{bulk}}=N^{-1}\sum_i r(Z_i)^2\phi(Z_i)\phi(Z_i)^\top$.
+Then, on the projection-good event, the empirical activation covariance is within
+$6\lambda^2 BMA/T$ of its same bounded bulk plus
+\[
+ R=\frac1N\sum_i(1-r(Z_i)^2)\phi(u_i)\phi(u_i)^\top.
+\]
+Writing $\delta_i=\|u_i\|_{\mathcal H_Q}$ and omitting zero terms, this is
+\[
+ R=\frac1N\sum_i(1-r(Z_i)^2)\delta_i^2
+       \psi_i(v_i)\psi_i(v_i)^\top,\qquad
+ v_i=u_i/\delta_i,\quad \psi_i(t)=\phi(\delta_i t)/\delta_i.
+\]
+Every $v_i$ has unit RKHS norm, every $\psi_i$ is $\lambda$-Lipschitz
+and zero at zero, and the nonnegative mixture weights sum to at most $A$.
+The same good event bounds the next covariance diagonal by
+$2\lambda^2 B^2+2\lambda^2 MA$.
+\end{lemma}
+\begin{proof}
+Lipschitz continuity gives
+$\|\phi(Z_i)-\phi(u_i)\|_\infty\leq\lambda B$ and
+$\|\phi(u_i)\|_\infty\leq\lambda\sqrt M\delta_i$.
+If $w_i=1-r(Z_i)^2>0$, then
+$\sqrt M\delta_i\ge T-B\ge T/2$. Hence
+\[
+ N^{-1}\sum_iw_i\le4MA/T^2,\qquad
+ N^{-1}\sum_iw_i\delta_i\le2\sqrt M A/T.
+\]
+The outer-product difference is therefore at most
+$4\lambda^2 BMA/T+4\lambda^2 B^2MA/T^2\leq6\lambda^2 BMA/T$.
+The normalization is an exact algebraic identity and preserves the
+Lipschitz constant. The diagonal bound follows from
+$\|\phi(Z_i)\|_\infty\leq\lambda B+\lambda\sqrt M\delta_i$.
+\end{proof}
+
+\paragraph{A smooth global cutoff.}
+Fix once and for all a smooth nonincreasing function
+$\chi:\mathbb R\to[0,1]$ equal to one on $(-\infty,2]$ and zero on
+$[5,\infty)$. For $T\geq1$, set
+\[
+ a=\frac{\log(2m)}{T^2},\quad
+ s(z)=a^{-1}\log\sum_{j=1}^m e^{az_j^2},\quad
+ r_T(z)=\chi(s(z)/T^2).
+\]
+Since $\|z\|_\infty^2\leq s(z)\leq\|z\|_\infty^2+T^2$,
+we have $r_T=1$ on $\|z\|_\infty\leq T$ and $r_T=0$ on
+$\|z\|_\infty\geq\sqrt5T$. Direct differentiation gives absolute constants
+depending only on $\chi$ such that
+\[
+ \sup_z\sum_j|\partial_jr_T(z)|\leq C/T,
+ \qquad
+ \sup_z\sum_{j,k}|\partial_{jk}r_T(z)|
+       \leq C\log(2m)/T^2.
+\]
+Indeed, on the support of the derivatives of $\chi$, every $|z_j|$ is at
+most $\sqrt5T$. If $p_j=e^{az_j^2}/\sum_ke^{az_k^2}$, then
+$\partial_js=2p_jz_j$ and
+$\partial_{jk}s=2p_j\mathbf1_{j=k}
+ +4a(p_jz_j^2\mathbf1_{j=k}-p_jp_kz_jz_k)$.
+Their entrywise derivative sums are at most $2\sqrt5T$ and
+$2+40\log(2m)$, respectively. The chain rule gives the assertion.
+
+For any globally $\lambda$-Lipschitz activation $\phi$ with $\phi(0)=0$,
+choose a fixed smooth nonnegative probability density $\rho$ supported
+on $[-1,1]$ and mollify
+$\psi_\tau(t)=\int\phi(t-\tau y)\rho(y)\,dy$, where $0<\tau\leq1$.
+Then $\|\psi_\tau-\phi\|_\infty\leq\lambda\tau$,
+$|\psi'_\tau|\leq\lambda$, and
+$|\psi''_\tau|\leq\lambda\|\rho'\|_1/\tau$.
+For ReLU one may alternatively use
+$(t+\sqrt{t^2+\tau^2})/2$, with uniform error at most $\tau/2$.
+For GELU one may use $\psi=\phi$ directly, since its first two
+derivatives are bounded by absolute constants. Write
+$b_x(z)=r_T(z)\psi(z_x)$.
+These bounded features have uniform derivative bounds
+\begin{align*}
+ B_0&:=\max_x\|b_x\|_\infty\leq C\lambda T,\\
+ B_1&:=\max_x\sup_z\sum_j|\partial_jb_x(z)|\leq C\lambda,\\
+ B_2&:=\max_x\sup_z\sum_{j,k}|\partial_{jk}b_x(z)|
+       \leq C\lambda(\log(2m)/T+\tau^{-1}).
+\end{align*}
+where for GELU one can set $\tau=1$ in the last bound. In general,
+the empirical covariance of $b(Z_i)$ differs from $Q_{\mathrm{bulk}}$
+by at most $C\lambda^2 T\tau$ in maximum norm, deterministically.
+
+
+\begin{lemma}[A sparse exponential-tilt certificate]
+\label{lem:sparse-tilt}
+Let $F=(F_1,\ldots,F_D)$ be bounded observables of a probability law
+$\mu$, with $|F_j|\le F_0$, and let $\widehat F$ be their empirical
+means on $N$ independent draws. For $G,K>0$ and a positive integer $s$,
+except on an event of probability at most
+\[
+ \exp\{s\log(2D+1)-N(K-G^2F_0^2/(2s))\},
+\]
+there is a tilt $d\mu_\Gamma=e^{\Gamma\cdot F-\Lambda(\Gamma)}d\mu$
+with $\|\Gamma\|_1\le G$, relative entropy at most $K$, and
+$\|\widehat F-\E_{\mu_\Gamma}F\|_\infty\le K/G$.
+Here $\Lambda(\Gamma)=\log\E_\mu e^{\Gamma\cdot F}$.
+\end{lemma}
+\begin{proof}
+Write $g(\Gamma)=\Gamma\cdot\widehat F-\Lambda(\Gamma)$.
+For every fixed $\Gamma$, independence gives $\E e^{Ng(\Gamma)}=1$.
+Every vector in the radius-$G$ $\ell^1$ ball is the mean of a random
+vertex from $\{0,\pm Ge_1,\ldots,\pm Ge_D\}$. Average $s$ independent
+such vertices to obtain $\Gamma_s$ with $\E\Gamma_s=\Gamma$.
+For every fixed observation, Hoeffding's exponential lemma gives
+\[
+ \E_{\Gamma_s}e^{(\Gamma_s-\Gamma)\cdot F}
+ \le e^{G^2F_0^2/(2s)}.
+\]
+Jensen's inequality and Fubini therefore show
+$\E_{\Gamma_s}\Lambda(\Gamma_s)\le\Lambda(\Gamma)+G^2F_0^2/(2s)$.
+For at least one of the at most $(2D+1)^s$ sparse averages,
+$g(\Gamma_s)\ge g(\Gamma)-G^2F_0^2/(2s)$.
+Exponential Markov and a union bound prove that
+$\max_{\|\Gamma\|_1\le G}g(\Gamma)\le K$ outside the stated event.
+
+Choose a maximizer $\Gamma_*$ on the compact ball. The first-order
+optimality condition says
+$\Gamma_*\cdot\nabla g(\Gamma_*)=G\|\nabla g(\Gamma_*)\|_\infty$,
+including an interior maximum, where both sides are zero.
+Concavity and $g(0)=0$ give
+$g(\Gamma_*)\ge\Gamma_*\cdot\nabla g(\Gamma_*)$.
+Since $\nabla g=\widehat F-\E_{\mu_\Gamma}F$, this proves the required
+approximation. Finally the tilt entropy is
+\[
+ D(\mu_{\Gamma_*}\|\mu)
+ =g(\Gamma_*)-\Gamma_*\cdot\nabla g(\Gamma_*)\le K.
+\]
+\end{proof}
+
+\begin{lemma}[Polynomial stability of the tilted bounded bulk]
+\label{lem:bulk-tilt-stability}
+Let $b_x$ be any bounded $C^2$ features satisfying the preceding
+$B_0,B_1,B_2$ bounds. For a matrix $\Gamma$ with
+$\|\Gamma\|_{1,\mathrm{ent}}\leq G$, define
+\[
+ \mathcal F_\Gamma(Q)=
+ \frac{\mathbb E_{Z\sim\mathcal N(0,Q)}
+       [b(Z)b(Z)^\top e^{b(Z)^\top\Gamma b(Z)}]}
+      {\mathbb E_{Z\sim\mathcal N(0,Q)}
+                         e^{b(Z)^\top\Gamma b(Z)}}.
+\]
+Put $F_0=B_0^2$, $F_1=2B_0B_1$, and
+$F_2=2B_1^2+2B_0B_2$. For all positive semidefinite $Q,Q'$,
+\[
+ \|\mathcal F_\Gamma(Q)-\mathcal F_\Gamma(Q')\|_{\max}
+ \leq C_G\|Q-Q'\|_{\max},
+ \quad
+ C_G=\tfrac12\{F_2+2GF_1^2+2F_0(GF_2+G^2F_1^2)\}.
+\]
+Moreover, with $s$ any positive integer, except on an event of probability
+\[
+ \exp\{s\log(2m^2+1)-N(K-G^2F_0^2/(2s))\},
+\]
+the empirical covariance of $b(Z_1),\ldots,b(Z_N)$ is within $K/G$
+in maximum norm of some $\mathcal F_\Gamma(Q)$ with
+$\|\Gamma\|_{1,\mathrm{ent}}\leq G$ and tilt entropy at most $K$.
+\end{lemma}
+\begin{proof}
+Apply Lemma~\ref{lem:sparse-tilt} to the $D=m^2$ bounded observables
+$F_{xy}(z)=b_x(z)b_y(z)$. This gives the approximation and exceptional
+probability, including the entropy bound.
+
+For stability, interpolate $Q_t=(1-t)Q+tQ'$, set
+$V=b^\top\Gamma b$, and let $\mathbb E_t$ denote Gaussian expectation
+tilted by $e^V$. Gaussian differentiation and the quotient rule give
+\begin{align*}
+ \frac d{dt}\mathbb E_tF
+ =\frac12\sum_{j,k}(Q'-Q)_{jk}\bigl\{
+ &\mathbb E_t[\partial_{jk}F+
+             \partial_jF\partial_kV+\partial_kF\partial_jV]\\
+ &+\operatorname{Cov}_t(F,\partial_{jk}V+
+                                   \partial_jV\partial_kV)\bigr\}.
+\end{align*}
+For $F=b_xb_y$, its sup norm and first/second derivative entry sums are
+at most $F_0,F_1,F_2$. The corresponding derivative sums for $V$ are
+at most $GF_1,GF_2$. Taking absolute values and summing proves the
+claimed bound. All functions and derivatives are bounded; adding
+$\epsilon I$ and passing to the limit proves the statement for singular
+covariances as well. No reciprocal partition-function estimate is used,
+so the stability constant is polynomial, not exponential, in $G$.
+\end{proof}

@@ -1,0 +1,283 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools,microtype,booktabs,xcolor}
+\usepackage[colorlinks=true,linkcolor=blue!45!black,citecolor=blue!45!black,urlcolor=blue!45!black]{hyperref}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}\newcommand{\E}{\mathbb E}\newcommand{\Prb}{\mathbb P}
+\newcommand{\relu}{\operatorname{ReLU}}\newcommand{\gelu}{\operatorname{GELU}}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\cX}{\mathcal X}\newcommand{\cF}{\mathcal F}\newcommand{\cG}{\mathcal G}
+\newcommand{\err}{\operatorname{err}}\newcommand{\Rad}{\widehat{\mathfrak R}}
+\setlength{\emergencystretch}{2em}
+\hypersetup{pdftitle={Width-independent learning bounds for ReLU, GELU, and other Lipschitz activations},pdfauthor={ChatGPT-6 Astra; Claude Fable 5 and Opus 5; Kaarel Hanni; Dmitry Vaintrob}}
+\title{Width-independent learning bounds for ReLU, GELU,\protect\\ and other Lipschitz activations}
+\author{ChatGPT-6 Astra \and Claude Fable 5 and Opus 5 \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed alphabetically.}}
+\date{October 22, 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We prove fixed-depth polynomial sample-complexity bounds for Bayesian neural networks with any fixed globally Lipschitz activation that vanishes at zero. The class includes ReLU, exact GELU, SiLU, and tanh. A bounded-weight teacher of width $C$ can be learned at every learner width $N\ge C$, with one polynomial sample bound simultaneously valid for every Gaussian prior scale at least as strong as mean field. In particular, the same bound covers all exponents $\gamma\ge1$, including the deep mean-field endpoint, without deterioration as $\gamma$ approaches one. The prior is conditioned before training on a strict absolute output margin at every Boolean input; training conditions on exact agreement with noiseless labels. A width-independent capacity estimate handles unbounded, nonhomogeneous activations by allowing auxiliary neuron-specific Lipschitz functions. Spectral truncation controls stronger priors. At mean field, a Gaussian projection separates a bounded bulk from a tail of controlled reproducing-kernel energy, and stable covariance reconstruction yields a finite auxiliary implementation. The actual Bayesian learner continues to use its single fixed activation. We also give a simpler strong-prior proof and an exact same-depth GELU implementation of layered Boolean circuits with at most twice the width. The quantitative polynomials are loose and retain poor depth dependence.
+\end{abstract}
+
+\section{Introduction}
+Can a neural-network posterior learn a small implementing network without paying for the much larger width of the learner? Bounded-activation proofs often compress hidden states by sampling neurons. ReLU and GELU require different care: individual hidden states can be arbitrarily large, and GELU does not permit the exact rescaling identities available for ReLU.
+
+We prove that neither boundedness nor homogeneity is necessary for a fixed-depth result. A globally Lipschitz activation $\phi$ satisfying $\phi(0)=0$ is enough. The proof controls the product of layer Frobenius norms, embeds the resulting networks into an auxiliary class with neuron-specific Lipschitz activations, and bounds that larger class using a one-dimensional activation cover. This gives a finite class of globally margin-separated Boolean functions at each fixed energy, simultaneously across all widths.
+
+That capacity statement has two applications. First, in the strong-prior limit, Gaussian rates suppress functions whose minimum energy exceeds the target's. Second, at every mean-field-or-stronger scale, a Gaussian functional compression argument replaces typical margin-separated draws by auxiliary networks of controlled complexity. For small scales, spectral truncation discards the operator-small bulk. At larger scales, including mean field, bounded exponential tilts describe the regular part of the hidden covariance, while a separate reproducing-kernel argument retains rare large neurons. Combining the two constructions gives one polynomial bound across the entire range of scales.
+
+These are information-theoretic guarantees for exact Bayesian conditioning, not claims about efficient posterior computation. They concern iid noiseless learning on the Boolean cube and the specified global-margin conditioning. The polynomial degree depends on depth; a polynomial-depth theorem requires additional ideas or restrictions. Established tools used below include Rademacher contraction and peeling, Gaussian concentration, and finite-class Occam learning~\cite{golowich,blumer,borell}. We give the particular estimates and normalization needed here.
+
+\section{Model and the results}
+Fix input dimension $d\ge1$, depth $L\ge2$, and $H=L-1$ hidden layers. Let $\cX=\{-1,1\}^d$, $\bar x=(1,x_1,\ldots,x_d)$, and fix an activation $\phi:\R\to\R$ with $\phi(0)=0$ and Lipschitz constant at most $\lambda\ge1$. A width-$N$ network is
+\[
+ h^0(x)=\bar x,\qquad h^s(x)=\phi(W^s h^{s-1}(x))\quad(1\le s<L),
+ \qquad z_w(x)=v^\top h^{L-1}(x),
+\]
+where activation is coordinatewise and every hidden layer has width $N$. There are no separate internal biases; constant wires can carry offsets. Define the weighted Gaussian energy
+\begin{equation}\label{eq:energy}
+ \kappa_N(w)=\frac dN\norm{W^1}_F^2+
+ \sum_{s=2}^{L-1}\norm{W^s}_F^2+N\norm v_2^2.
+\end{equation}
+The raw prior $\mu_{N,\sigma}$ has independent Gaussian coordinates with variances
+\[
+ (N/d)\sigma^2\quad\text{in the first layer},\qquad
+ \sigma^2\quad\text{internally},\qquad
+ \sigma^2/N\quad\text{in the readout}.
+\]
+Its density is proportional to $\exp[-\kappa_N(w)/(2\sigma^2)]$. Prescribed exponent $\gamma$ means $\sigma^2=N^{-\gamma}$.
+
+For a Boolean function $g$, set
+\[
+ U_{N,g}=\{w:g(x)z_w(x)>1/2\text{ for every }x\in\cX\},
+ \qquad U_N=\bigcup_g U_{N,g}.
+\]
+Condition the raw prior on $U_N$ before seeing data. This induces the function prior
+\[
+ \pi_{N,\sigma}(g)=\frac{\mu_{N,\sigma}(U_{N,g})}{\mu_{N,\sigma}(U_N)}.
+\]
+Given iid examples $S_n=((X_i,f(X_i)))_{i=1}^n$ with $X_i\sim D$, condition again on agreement with all labels, obtaining $\Pi_{N,\sigma}(\cdot\mid S_n)$. Its average sign error is
+\[
+ R_D(\Pi)=\E_{g\sim\Pi}\Prb_{X\sim D}\{g(X)\ne f(X)\}.
+\]
+The distribution $D$ may be any distribution on the cube.
+
+Assume $f$ has a width-$C$, depth-$L$ teacher with all individual weights bounded in absolute value by $C$, satisfying $f(x)z_*(x)>1/2$ for every input. This is the only teacher assumption. For an arbitrary activation it need not hold for every Boolean circuit; we verify it with a small implementation for ReLU and exact GELU in Section~\ref{sec:gelu}.
+
+\begin{theorem}[Summary of learning guarantees]\label{thm:summary}
+For fixed $L$ and $\lambda$, there is a sample bound polynomial in
+$d,C,\varepsilon^{-1},\log(1/\delta)$, independent of learner width,
+that gives $R_D(\Pi_{N,\sigma}(\cdot\mid S_n))\le\varepsilon$ with
+probability at least $1-\delta$, simultaneously for every $N\ge C$ and
+$0<\sigma^2\le1/N$. Thus one polynomial works for every prescribed
+exponent $\gamma\ge1$ in $\sigma^2=N^{-\gamma}$, and also covers the
+strong-prior limit at every fixed width.
+
+Theorem~\ref{thm:uniform-all-scales} gives the quantitative bound through
+constructive polynomial budgets. Theorem~\ref{thm:strong} gives a simpler
+strong-prior argument with a smaller explicit bound.
+\end{theorem}
+
+The probability statements are over the training inputs. The posterior may mix tied implementations or tied minimum-energy functions. No uniqueness is assumed. If $p_S(x)$ is the posterior probability of the correct label, then
+\begin{equation}\label{eq:confidence}
+ D\{x:p_S(x)\le q\}\le \frac{R_D(\Pi)}{1-q}\qquad(0<q<1).
+\end{equation}
+Thus using $\varepsilon/3$ in an average-risk bound gives correct-label probability strictly greater than $2/3$ except on an input set of measure at most $\varepsilon$. Posterior-majority error is at most twice the average sign error.
+
+Examples include ReLU and tanh with $\lambda=1$; exact GELU $\phi(t)=t\Phi(t)$ and SiLU $\phi(t)=t/(1+e^{-t})$ with $\lambda=2$; and centered softplus $\phi(t)=\log(1+e^t)-\log2$ with $\lambda=1$. A nonzero activation offset is not covered by the theorem as stated.
+
+\section{A capacity estimate without boundedness or homogeneity}
+Let $\Psi$ be the family of all globally $1$-Lipschitz real functions $\psi$ with $\psi(0)=0$.
+
+\begin{lemma}[A scalar activation cover]\label{lem:activation-net}
+For $R>0$ and $0<\eta\le R$, the restrictions of $\Psi$ to $[-R,R]$ have a supremum-norm $\eta$-net with $M_\eta$ centers that themselves belong to $\Psi$, satisfying
+\[
+ \log(2M_\eta)\le14R/\eta.
+\]
+\end{lemma}
+\begin{proof}
+Put $J=\lceil3R/\eta\rceil$ and $\Delta=R/J$. Round the values of $\psi$ at the grid points $j\Delta$, $-J\le j\le J$, to the nearest multiple of $\Delta$. The value at zero has code zero, and successive rounded integers differ by at most two. There are at most $5^{2J}$ codes. From each nonempty code choose one actual member of $\Psi$ as its representative. Functions with the same code differ by at most $\Delta$ at grid points and at most $3\Delta\le\eta$ everywhere on the interval. Finally
+\[
+ \log(2M_\eta)\le\log2+2(3R/\eta+1)\log5\le14R/\eta.
+\]
+Choosing actual representatives preserves the Lipschitz constant exactly.
+\end{proof}
+
+\begin{lemma}[Convex contraction]\label{lem:contraction}
+For a bounded set $T\subset\R^m$, a fixed $\psi\in\Psi$, and $a>0$,
+\[
+ \E_\epsilon\exp\left(a\sup_{t\in T}\sum_i\epsilon_i\psi(t_i)\right)
+ \le \E_\epsilon\exp\left(a\sup_{t\in T}\sum_i\epsilon_i t_i\right).
+\]
+The same holds with any convex nondecreasing function in place of the exponential.
+\end{lemma}
+\begin{proof}
+Replace one Rademacher coordinate at a time. With the other coordinates fixed, write $a_t$ for their contribution and
+\[
+ X_\pm=\sup_t(a_t\pm\psi(t_k)),\qquad Y_\pm=\sup_t(a_t\pm t_k).
+\]
+Because $|\psi(t_k)|\le|t_k|$, one has $\max(X_+,X_-)\le\max(Y_+,Y_-)$. Also
+\[
+ X_++X_-\le\sup_{t,u}(a_t+a_u+|t_k-u_k|)=Y_++Y_-.
+\]
+For two numbers, these maximum and sum inequalities imply the corresponding inequality for the sum of any convex nondecreasing function. Average over the coordinate and iterate. Suprema follow by finite approximation.
+\end{proof}
+
+Let $\cG_s$ consist of all vector-valued feature maps of depth $s$ whose layer matrices have Frobenius norm at most one and whose neurons use arbitrary, independently chosen members of $\Psi$. Widths can be any finite integers. Put $\cG_0=\{x\mapsto x\}$. All feature vectors have norm at most $R$ on inputs of norm at most $R$.
+
+\begin{lemma}[Width-independent feature complexity]\label{lem:feature-rad}
+For $H\ge1$, inputs $x_1,\ldots,x_m$ of Euclidean norm at most $R$, and independent uniform signs $\epsilon_i$,
+\[
+ \frac1m\E_\epsilon\sup_{h\in\cG_H}
+ \left\|\sum_i\epsilon_i h(x_i)\right\|_2
+ \le8HRm^{-1/3}.
+\]
+\end{lemma}
+\begin{proof}
+Write $Z_s=\sup_{h\in\cG_s}\|\sum_i\epsilon_i h(x_i)\|_2$. Decompose each row of the final matrix as $r_j u_j$, where $r_j\ge0$, $\|u_j\|_2\le1$, and $\sum_jr_j^2\le1$. For $r_j>0$, the map $t\mapsto\psi_j(r_jt)/r_j$ is again in $\Psi$; zero rows contribute zero. Consequently
+\[
+ Z_s\le\sup_{h\in\cG_{s-1},\,\|u\|_2\le1,\,\psi\in\Psi}
+ \left|\sum_i\epsilon_i\psi(u\cdot h(x_i))\right|.
+\]
+Replace $\psi$ by a center from Lemma~\ref{lem:activation-net}, at an additive cost $m\eta$. For each center, handle the absolute value by its two signs and apply Lemma~\ref{lem:contraction}. Since $\sup_{h,u}\sum_i\epsilon_i u\cdot h(x_i)=Z_{s-1}$, taking a finite union gives
+\[
+ \E e^{aZ_s}\le2M_\eta e^{am\eta}\E e^{aZ_{s-1}}\qquad(a>0).
+\]
+At depth zero, $\E Z_0\le R\sqrt m$. Changing one sign changes $Z_0$ by at most $2R$, so the bounded-differences exponential estimate gives
+\[
+ \E e^{aZ_0}\le\exp(aR\sqrt m+a^2mR^2/2).
+\]
+Iterate $H$ times and optimize $a$ to obtain
+\[
+ \E Z_H\le Hm\eta+R\sqrt m+R\sqrt{2mH\log(2M_\eta)}.
+\]
+Taking $\eta=Rm^{-1/3}$ and using $1+H+\sqrt{28H}\le8H$ proves the claim. No bound here depends on the number of neurons. All suprema are well-defined on the finite Rademacher sample space; equivalently one can take finite subclasses and pass to monotone limits.
+\end{proof}
+
+\begin{proposition}[Product-norm bound for Lipschitz activations]\label{prop:product-rad}
+Consider networks with $H=L-1$ hidden layers, with a possibly different zero-at-zero $\lambda$-Lipschitz activation at each neuron, and with product of layer Frobenius norms at most $P$. Their empirical Rademacher complexity is at most
+\[
+ 8H\lambda^H PRm^{-1/3}
+\]
+on any $m$ inputs of norm at most $R$, independently of the finite widths.
+\end{proposition}
+\begin{proof}
+Write $m_s=\|W^s\|_F$, treating the readout as layer $L$, and let $\phi_{s,j}$ be the activation of neuron $j$ in hidden layer $s$. If some $m_s=0$, the network is zero. Otherwise put $q_0=1$, $q_s=\lambda^s\prod_{j\le s}m_j$, and $g_s=h_s/q_s$. With $A_s=W^s/m_s$ one has the exact coordinate identities
+\[
+ g_{s,j}=\psi_{s,j}((A_sg_{s-1})_j),\qquad
+ \psi_{s,j}(t)=\frac{\phi_{s,j}(m_sq_{s-1}t)}{\lambda m_sq_{s-1}}\in\Psi.
+\]
+The output is $\lambda^H\prod_sm_s$ times a norm-one linear readout of $g_H$. Apply Lemma~\ref{lem:feature-rad}.
+\end{proof}
+
+\begin{remark}
+This normalization embeds a fixed-activation network into a larger auxiliary class. It changes the scalar activations. It is not a parameter rescaling inside the original GELU learner and does not assume GELU is homogeneous. The actual prior and teacher continue to use the single fixed activation $\phi$.
+\end{remark}
+
+For $K>0$ let $\cF(K)$ contain every Boolean function admitting a depth-$L$, globally strict-margin-$1/2$ implementation of energy at most $K$, at some finite equal hidden width, allowing each hidden neuron its own activation vanishing at zero with Lipschitz constant at most $\lambda$. This is an auxiliary counting class, larger than the fixed-$\phi$ learner's function class. Proposition~\ref{prop:product-rad} and its proof apply unchanged to this neuron-specific class. Define
+\begin{equation}\label{eq:capacity-budget}
+ v(K)=\left\lceil\left[16H\lambda^H\sqrt{\frac{d+1}{d}}
+                   \left(\frac KL\right)^{L/2}\right]^3\right\rceil,
+ \qquad \mathcal B(K)=v(K)\log(2^d+1).
+\end{equation}
+
+\begin{corollary}[Counting globally margin-separated functions]\label{cor:count}
+The common class across all widths satisfies $\log|\cF(K)|\le\mathcal B(K)$.
+\end{corollary}
+\begin{proof}
+The squared norms of $\sqrt{d/N}W^1,W^2,\ldots,W^{L-1},\sqrt N v^\top$ sum to $\kappa_N$ and their product equals $d\prod_s\|W^s\|_F^2$. Arithmetic--geometric mean yields
+\[
+ \prod_s\|W^s\|_F\le d^{-1/2}(K/L)^{L/2}.
+\]
+The appended inputs have norm $\sqrt{d+1}$. Shattering $m$ cube inputs with global margin $>1/2$ forces the empirical Rademacher complexity of the underlying real-output class to be at least $1/2$. Proposition~\ref{prop:product-rad} bounds its VC dimension by $v(K)$. The Sauer bound on the $2^d$-point domain gives $|\cF(K)|\le(2^d+1)^{v(K)}$.
+\end{proof}
+
+\section{The strong-prior learning theorem}
+\begin{lemma}[Exact width enlargement]\label{lem:clone}
+The target teacher can be implemented at every width $N\ge C$ with the same real-valued output and energy at most
+\[
+ B_*=d(d+1)C^2+LC^4.
+\]
+\end{lemma}
+\begin{proof}
+Let $k=\lfloor N/C\rfloor$. Make $k$ copies of each hidden neuron, copy the first-layer incoming weights, divide all internal weights by $k$ between each pair of copied populations, and divide the readout weights by $k$. Fill remaining slots with zero neurons; $\phi(0)=0$ makes padding harmless. Each copy computes exactly the original neuron's activation. The first-layer energy is at most $d(d+1)C^2$, internal Frobenius energies are unchanged and at most $C^4$ each, and readout energy is at most $2C^4$ because $N/k<2C$. This gives the claimed sum.
+\end{proof}
+
+\begin{lemma}[Finite-dimensional Gaussian rate]\label{lem:rate}
+For fixed $N$ and nonempty $U_{N,g}$, put $k_N(g)=\inf_{w\in U_{N,g}}\kappa_N(w)$. Then
+\[
+ \lim_{\sigma\downarrow0}2\sigma^2\log\mu_{N,\sigma}(U_{N,g})=-k_N(g).
+\]
+\end{lemma}
+\begin{proof}
+In weighted coordinates the raw law is an isotropic Gaussian. A small ball around any point of the open event gives the lower bound with rate equal to that point's squared norm, and then to the infimum. The closed-set Gaussian upper bound applies to its closure. A point of this closure has signed outputs at least $1/2$ everywhere; multiplying its readout by any factor greater than one places it in $U_{N,g}$ with arbitrarily small increase in energy. Hence the closure and the open event have equal energy infima. The elementary Gaussian upper bound can equivalently be obtained from the chi-square tail outside the ball with squared radius $k_N(g)$.
+\end{proof}
+
+\begin{theorem}[Strong-prior learning]\label{thm:strong}
+Let $B_*$ be as in Lemma~\ref{lem:clone}. For every $N\ge C$ and $0<\varepsilon<1$, there is $\sigma_0(N)>0$ such that for $0<\sigma<\sigma_0(N)$,
+\[
+ n\ge\frac2\varepsilon\left[\mathcal B(B_*+1)+\log(1/\delta)\right]
+\]
+implies $R_D(\Pi_{N,\sigma}(\cdot\mid S_n))\le\varepsilon$ with sample probability at least $1-\delta$, for every $D$ and $0<\delta<1$. The threshold can depend on $d,L,\lambda,N$, the teacher, and $\varepsilon$, but not on $D,n,\delta$. A common sample event works at every $N\ge C$, using the width-specific variance thresholds.
+\end{theorem}
+\begin{proof}
+At fixed width, retain functions satisfying $k_N(g)\le k_N(f)$. They are all in $\cF(B_*+1)$ by Lemma~\ref{lem:clone} and the definition of infimum. There are finitely many Boolean functions, so Lemma~\ref{lem:rate} makes the total raw mass of the remaining realizable functions divided by the target mass tend to zero. Choose $\sigma_0(N)$ so the ratio is at most $\varepsilon/2$. Global-margin normalization cancels. On every noiseless training history, the posterior denominator includes the target; thus posterior mass outside the retained class remains at most $\varepsilon/2$.
+
+By a finite-class union bound, with probability at least $1-\delta$, every member of $\cF(B_*+1)$ that agrees with all $n$ labels has true error at most $\varepsilon/2$. The stated sample bound suffices since a function of error greater than $\varepsilon/2$ survives with probability at most $e^{-n\varepsilon/2}$. On this common event, posterior average error is at most $\varepsilon$. This event does not depend on width.
+\end{proof}
+
+At fixed $L,\lambda$, this bound is polynomial in the indicated variables; its crude power of $C$ is at most $6L$. Positive homogeneity allows a sharper estimate for ReLU, but is unnecessary for the existence of a polynomial. The strong-prior limit is taken at fixed width before invoking the conclusion, and does not assert that one variance threshold works at all widths.
+
+\input{spectral-extension}
+\input{meanfield-preliminaries}
+\input{meanfield-atoms}
+\input{meanfield-closure}
+\input{uniform-supercritical}
+
+\section{Exact GELU implementations of Boolean circuits}\label{sec:gelu}
+The preceding theorems apply to small implementing networks. To translate ordinary Boolean circuits into that premise, take a layered fan-in-two circuit with NOR, COPY, and NOT gates and one constant wire. Every layer has width at most $C$, counting that wire. Inputs are encoded as bits $b_i=(1+x_i)/2$.
+
+For ReLU, a NOR gate is $\relu(1-a-b)$, a copy is $\relu(a)$, and NOT is $\relu(1-a)$ on Boolean inputs. These operations preserve exact bits; a constant wire of value one supplies offsets.
+
+\begin{proposition}[Exact same-depth GELU compilation]\label{prop:gelu-circuit}
+A layered Boolean circuit with $H$ stages and width $C$, counting its constant wire, has an exact GELU implementation with $H$ hidden layers, hidden width at most $2C$, and individual weights bounded by $4$. Its real-valued output can be chosen to equal the target sign $\pm1$ exactly. Consequently the learning theorems apply with teacher complexity at most $\max\{4,2C\}$.
+\end{proposition}
+\begin{proof}
+Write $\tau=\Phi(1)$, $s=2\tau-1$, $A=\tau/s$, and $B=(1-\tau)/s$. The elementary bound $\tau>2/3$ gives $1<A<2$ and $0<B<1$. Direct substitution shows
+\begin{equation}\label{eq:gelu-relu-grid}
+ A\gelu(u)+B\gelu(-u)=\relu(u)\qquad(u\in\{-1,0,1\}).
+\end{equation}
+At $u=1$, the left side is $A\tau-B(1-\tau)=1$; at $u=-1$ it is $-A(1-\tau)+B\tau=0$; and at zero it vanishes.
+
+Represent each gate by two GELU neurons with preactivations $u$ and $-u$. Decode the gate's bit as the linear combination with coefficients $A,B$. For NOR take $u=1-a-b$, for COPY $u=a$, and for NOT $u=1-a$. These always lie in $\{-1,0,1\}$. Substitute the preceding layer's linear decoders into each new preactivation; this implements all stages without an extra hidden layer. A single constant neuron has value $\tau$ and is propagated by incoming weight $1/\tau$, so it supplies the required constant one in each preactivation. The first stage uses the affine bit encoding above.
+
+Two copies of the same gate input produce coefficients of size at most $2A<4$; all other internal coefficients have magnitude at most $2$ or $1/\tau<3/2$. The final linear readout $2b-1$ has coefficients $2A,2B,-1/\tau$, all bounded by $4$. The total width is at most twice the original width, and the output is exactly $\pm1$. Pad to width $\max\{4,2C\}$ when a teacher complexity convention also requires weights bounded by the width.
+\end{proof}
+
+The identity in \eqref{eq:gelu-relu-grid} is required only on the three gate preactivations, not on the whole real line. Thus this is an exact discrete compilation using fixed coefficients, with no large-gain approximation or homogeneity assumption. The derivative $\Phi(t)+t(2\pi)^{-1/2}e^{-t^2/2}$ has absolute value less than $2$, verifying the activation hypothesis directly.
+
+\section{Scope and remaining questions}
+The result separates two obstacles caused by unbounded activations. Large individual neuron values are handled by Euclidean norm control in the capacity argument. At intermediate exponents $1<\gamma<2$, large total Gaussian parameter energy is handled by retaining the part with large singular values; discarded matrices have small operator norm and their accumulated output error can be bounded at fixed depth.
+
+At the deep mean-field endpoint, the Gaussian bulk has operator norm of constant order. The proof therefore keeps its covariance contribution, using a bounded tilt and separate tail atoms. The covariance reconstruction is polynomial at each fixed depth but repeatedly composes polynomial moduli. It does not give a polynomial-depth guarantee or a competitive numerical bound.
+
+The surrogate networks used for counting may have different zero-at-zero Lipschitz activations at different neurons. This is a proof device, not a change to the Bayesian model. In particular, the argument does not establish a same-activation circuit-compression converse for the generic activation class.
+
+The global-margin conditioning is also substantive. It converts the real-output capacity bound into a finite class of Boolean functions and lets us compare raw target mass with raw exceptional mass. Removing it, changing the likelihood, or learning real outputs requires additional arguments.
+
+\paragraph{Provenance and verification.}
+This paper extends the collaborative strong-prior setup and Gaussian-prior learning program, including contributions from Claude, to unbounded activations. The capacity, spectral, mean-field reconstruction, and exact GELU compilation arguments have undergone independent AI-agent mathematical review. No Lean formalization is claimed.
+
+\begin{thebibliography}{9}
+\bibitem{blumer} A. Blumer, A. Ehrenfeucht, D. Haussler, and M. K. Warmuth. Occam's razor. \emph{Information Processing Letters} 24(6):377--380, 1987.
+\bibitem{golowich} N. Golowich, A. Rakhlin, and O. Shamir. Size-independent sample complexity of neural networks. \emph{Proceedings of COLT}, 2018.
+\bibitem{borell} C. Borell. The Brunn--Minkowski inequality in Gauss space. \emph{Inventiones Mathematicae} 30:207--216, 1975.
+\end{thebibliography}
+\end{document}

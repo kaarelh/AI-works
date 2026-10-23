@@ -20,6 +20,10 @@ The empirical findings are separate from the learning theorem: trained-network a
 
 [Empirical source and reproduction scope](../../works-in-progress/depth-experiments/README.md) · [Technical FAQ](../../TECHNICAL-FAQ.md)
 
+## Sharper polynomial bounds
+
+A [new standalone paper](../../works-in-progress/improved-polynomials/original-support-all-scales/paper.pdf) keeps this prior restriction unchanged and gives $O(C^6\log^{13}(2+C))$ at fixed remaining parameters for every $\gamma\ge1$ and every $N\ge C$. It has a conservative joint degree-46 envelope, replacing the manuscript's degree-510 estimate. Its new compression argument and exponents have independent AI-agent review but are **not Lean verified**; the formal theorem and its sufficient budget remain unchanged. The [companion package](../../works-in-progress/improved-polynomials/) also contains a quartic stronger-scale bound and quadratic bounds under additional assumptions.
+
 ## Build
 
 Run `bash build.sh` from this directory with a standard TeX Live installation. It runs three LaTeX passes in `build/` and refreshes `paper.pdf`. All LaTeX inputs and figures are included under `source/`; no network access is needed.

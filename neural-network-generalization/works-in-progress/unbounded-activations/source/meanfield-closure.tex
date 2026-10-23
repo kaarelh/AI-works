@@ -1,0 +1,211 @@
+% Deep mean-field closure, 22 October 2026.
+% Input after the bulk-tail, RKHS-certificate, and generic-atom fragments.
+\section{The deep mean-field endpoint}
+\label{sec:meanfield-generic-closure}
+Throughout this section $\phi(0)=0$ and $\phi$ is $\lambda$-Lipschitz,
+where $\lambda\ge1$ is fixed. The original Bayesian model uses this same
+activation at every neuron. The finite reconstructions used only for
+counting may have different zero-at-zero $\lambda$-Lipschitz activations
+at different neurons; the preceding capacity theorem covers precisely
+this enlarged class. No claim that those auxiliary activations are
+additional parameters of the Bayesian learner is made.
+
+At $\gamma=1$, let $H=L-1$, $m=2^d$, and write
+\[
+ Q_0(x,y)=d^{-1}\bar x\cdot\bar y,\qquad
+ Q_s(x,y)=N^{-1}\sum_{i=1}^Nh_i^s(x)h_i^s(y).
+\]
+Conditionally on the preceding layers, the $N$ preactivation fields at
+layer $s$ are independent Gaussians with covariance $Q_{s-1}$. This is
+exact at every finite width.
+
+\subsection{One-step reconstruction and its polynomial modulus}
+We record explicitly why the local constructions can be iterated without
+an exponential dependence on $m$. Fix $K\ge1$, put
+\[
+ q=4K,\qquad A=4(q+\log2),
+\]
+and suppose the input covariance has diagonal at most $M\ge1$.
+For a desired output accuracy $0<\alpha\le1$, set
+\[
+ B=\sqrt{2M\log(4m)},\qquad
+ T=\max\{1,2B,96\lambda^2BMA/\alpha\}.
+\]
+Use the smooth cutoff from the preceding section. Mollify $\phi$ at
+scale $\tau\le1$ small enough that the maximum-norm difference between
+its cutoff covariance and that using the actual activation is at most
+$\alpha/16$, uniformly in the Gaussian covariance. For example
+$\tau=\min\{1,\alpha/[64C\lambda^2(T+1)]\}$ works with the absolute
+constant $C$ in the smoothing estimate. Let $F_0,F_1,F_2$ be the bounded
+observable and derivative budgets in that section, and put
+\[
+ G=16q/\alpha,\qquad
+ s=\max\{1,\lceil G^2F_0^2\rceil\},
+\]
+\[
+ C_G=\tfrac12\{F_2+2GF_1^2+2F_0(GF_2+G^2F_1^2)\},\qquad
+ \eta=\frac{\alpha}{512A\lambda^2(\sqrt M+1)},
+\]
+\[
+ r(\alpha)=\min\{1,\eta^2,\alpha/[16(1+C_G)]\},\qquad
+ N_0(\alpha)=\left\lceil\frac{2s\log(2m^2+1)}q\right\rceil.
+\]
+Every displayed quantity is bounded by a polynomial in
+$K,M,\log(2m),\alpha^{-1}$, or, for $r$, its reciprocal is so bounded.
+The constants may depend on $\lambda$ and the fixed smooth cutoff.
+
+For $N\ge N_0(\alpha)$, except with probability at most $2e^{-NK}$,
+the empirical outgoing covariance is within $3\alpha/16$ of
+\[
+ \mathcal F_\Gamma(Q)+R,\qquad
+ \|\Gamma\|_{1,\mathrm{ent}}\le G,
+\]
+where $R$ is a mixture of unit-RKHS auxiliary-activation atoms with total
+coefficient mass at most $A$. Indeed, the tail decomposition error is at
+most $\alpha/16$, smoothing costs at most $\alpha/16$, and the entropy
+certificate costs at most $q/G=\alpha/16$. The projection failure is
+at most $e^{-Nq}$; the entropy failure is at most
+\[
+ \exp\{s\log(2m^2+1)-N(q-1/2)\}\le e^{-NK}.
+\]
+These bounds hold conditionally and uniformly in the input covariance.
+
+Now suppose $Q'$ is a positive semidefinite covariance with
+$\|Q'-Q\|_{\max}\le r(\alpha)$, represented by finitely many weighted
+features from the preceding layer. The selected $\Gamma$ and atom
+certificates remain fixed while $Q$ is replaced by $Q'$. The bulk change
+is at most $\alpha/16$. The generic atom construction, with target
+accuracy $\alpha/8$, uses
+\[
+ n_A=\left\lceil8192A^2\lambda^4M^2\alpha^{-2}\log(4m^2)\right\rceil
+\]
+auxiliary neurons and approximates $R$ within $\alpha/8$ at covariance
+$Q'$. Its certificate parameter is exactly the $\eta$ above.
+
+To realize the bulk, sample independent Gaussian rows of covariance
+$Q'$ tilted by the bounded smooth observable. Evaluate the actual
+activation $\phi$ at those rows and absorb the scalar cutoff into their
+covariance coefficients. Each retained cutoff feature is bounded by
+$B_b=\lambda\sqrt5T$. Take
+\[
+ n_B=\left\lceil1024B_b^4\alpha^{-2}\log(16m^2)\right\rceil.
+\]
+Hoeffding's inequality and a union bound over $m^2$ entries give a
+realization with empirical covariance within $\alpha/16$ of its own
+expectation. The expectation differs from
+$\mathcal F_\Gamma(Q')$ by at most $\alpha/16$ because of the smooth
+activation approximation. Thus all the accumulated errors are less than
+$\alpha$. This construction uses $n_A+n_B$ neurons, a polynomial number
+in $K,M,\log(2m),\alpha^{-1}$.
+
+\paragraph{Finite weights and genuine feedforward evaluation.}
+Write the preceding covariance as
+$Q'=\sum_{\ell=1}^r a_\ell h_\ell h_\ell^\top$, with
+$a_\ell\le V:=\max\{1,A\}$ and $\|h_\ell\|_\infty\le B_h$.
+A bulk preactivation is realized with weights
+$\sqrt{a_\ell}\xi_\ell$, where the Gaussian vector $\xi$ is tilted by
+a density ratio at most $e^{2GF_0}$. Intersecting the empirical covariance
+concentration event with a Gaussian-coordinate tail event ensures
+\[
+ |\xi_\ell|\le R_\xi
+ :=\sqrt{4GF_0+2\log(16n_B\max\{r,1\})}
+\]
+for every sampled coordinate. The latter event fails with probability
+at most $1/8$, whereas the preceding covariance event fails with
+probability less than $1/8$, so the intersection has positive probability.
+Bulk weights are therefore bounded by $\sqrt V R_\xi$.
+The atom weights are $a_\ell\sum_y\beta_j(y)h_\ell(y)$ and are bounded
+by $VB_h/(4\eta)$. All new covariance coefficients are at most $V$:
+they are $r_T(z)^2/n_B$ for bulk rows and $A/n_A$ for atom rows.
+
+For example, if $B_W$ denotes the maximum of the two incoming-weight
+bounds, the actual hidden coordinates satisfy the deterministic bound
+$B_h^{\rm new}\le\lambda rB_WB_h$. This bounds the untruncated physical
+activations as well as the weighted features. Hence at any fixed number
+of layers both the weights and all physical hidden coordinates remain
+polynomially bounded. The cutoff scalars, tilt matrices, and RKHS
+certificates select finitely many real weights; they are not evaluated
+on the input when the resulting network predicts.
+At the first layer use input features $h_\ell(x)=\bar x_\ell$ and
+coefficients $a_\ell=1/d$. In particular an atom row is the ordinary
+linear form with weights $d^{-1}\sum_y\beta_j(y)\bar y$.
+
+\subsection{A uniform functional exceptional-mass bound}
+\begin{proposition}[Deep mean-field functional compression]
+\label{prop:generic-meanfield-compression}
+For each fixed $L$ and $\lambda$, there are polynomials
+$P_{L,\lambda}$ and $J_{L,\lambda}$ such that the following holds for
+every $d\ge1$, $K\ge1$, and
+$N\ge P_{L,\lambda}(d,K)$. Except on an event of raw Gaussian probability
+at most $(2H+1)e^{-NK}$, every globally strict-margin draw has the same
+Boolean sign function as an auxiliary depth-$L$ network with normalized
+energy at most $J_{L,\lambda}(d,K)$. All its neuronwise activations vanish
+at zero and have Lipschitz constant at most $\lambda$.
+\end{proposition}
+\begin{proof}
+Define layerwise deterministic diagonal bounds
+\[
+ M_s=2[8\lambda^2\{\log(4m)+A+1\}]^s,\qquad 0\le s\le H.
+\]
+At layer $s$, apply the one-step construction with $M=M_{s-1}$ and
+its corresponding projection cutoff $B_s$. On its projection-good event,
+the next covariance has diagonal at most
+$2\lambda^2B_s^2+2\lambda^2M_{s-1}A\le M_s$. Starting from
+$\max_xQ_0(x,x)\le2$, induction therefore validates the diagonal budget
+used at each layer. Every $M_s$ is polynomial in $d,K$ for fixed
+$L,\lambda$ because $\log m=d\log2$. There are at most two
+exceptional events per hidden layer, as accounted for in the one-step
+construction.
+
+Set the desired final covariance error to $\zeta_H=1/(128K)$.
+Working backwards, for $s=H,H-1,\ldots,1$, use the one-step construction
+with $\alpha=\zeta_s$ and $M=M_{s-1}$, and define
+$\zeta_{s-1}=r_s(\zeta_s)$ using that layer's modulus.
+Each $\zeta_s^{-1}$ is polynomially bounded in $d,K$ at fixed $L$:
+this is a fixed finite composition of the polynomial reciprocal moduli
+above. Taking the maximum of the finitely many thresholds
+$N_{0,s}(\zeta_s)$ defines a polynomial width threshold
+$P_{L,\lambda}(d,K)$ (increased to at least one if necessary).
+Starting from the exact $Q_0$, reconstruct the covariances forwards.
+The transported certificates are fixed for the original covariances;
+their estimates hold uniformly for every admissible preceding
+reconstruction. Thus no independence assumption is imposed on those
+certificates. Induction yields a weighted-feature covariance
+$\widehat Q_H$ with
+\[
+ \|\widehat Q_H-Q_H\|_{\max}\le1/(128K).
+\]
+The construction above bounds every layer width, every physical weight,
+and every physical activation by polynomials in $d,K$ at fixed depth.
+
+For the actual Gaussian readout $v_i\sim N(0,N^{-2})$, put
+$E_v=N\|v\|_2^2=N^{-1}\chi_N^2$. Markov's inequality at exponential
+parameter $1/4$ gives
+\[
+ \Pr\{E_v>8K\}\le\exp[-N(2K-\tfrac12\log2)]\le e^{-NK}.
+\]
+On its complement the original output $z$ belongs to $\mathcal H_{Q_H}$
+and $\|z\|_{Q_H}^2\le8K$. The scaled form of
+Lemma~\ref{lem:rkhs-atom-certificate}, with approximation accuracy $1/8$,
+gives
+\[
+ \|Q_H\beta-z\|_\infty\le1/8,\qquad \|\beta\|_1\le16K.
+\]
+Replacing $Q_H$ by $\widehat Q_H$ adds at most $1/8$ to this error.
+For $\widehat Q_H=\sum_i a_i h_ih_i^\top$, the readout
+$v_i'=2a_i\sum_y\beta(y)h_i(y)$ therefore represents a function with
+the same signs as $z$ and strict margin greater than $1/2$.
+Its weights are bounded by $32KVB_h$.
+
+Pad the finitely many reconstructed layers to their maximum width $r_*$
+with zero neurons, which is harmless since every activation vanishes at
+zero. If $B_*$ bounds all weights, the normalized energy is at most
+\[
+ [d(d+1)+(L-1)r_*^2]B_*^2.
+\]
+Taking a polynomial upper bound on this expression defines
+$J_{L,\lambda}(d,K)$. A conditional union bound over the $H$ layers and
+the readout proves the stated raw exceptional probability. The auxiliary
+capacity theorem applies uniformly to the possibly different activations;
+no finite coding of activation formulas is needed.
+\end{proof}

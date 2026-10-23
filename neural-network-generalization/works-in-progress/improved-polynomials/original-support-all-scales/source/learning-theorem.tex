@@ -1,0 +1,374 @@
+\section{Model, prediction convention, and stability restriction}
+\label{sec:theory-model}
+
+Let $\mathcal X=\{-1,1\}^d$, let $D$ be any distribution on $\mathcal X$,
+and let $f:\mathcal X\to\{-1,1\}$ be the target. A network has $H=L-1$
+hidden layers, each of width $N$, tanh activations, and a linear readout:
+\[
+ h^1=\tanh(W^1\bar x),\qquad
+ h^s=\tanh(W^s h^{s-1})\ (2\le s\le H),\qquad
+ z_w(x)=v^\top h^H,
+ \qquad \bar x=(x,1).
+\]
+The first layer includes a bias coordinate; internal constants are carried
+by ordinary hidden wires. Let $\mu_{N,t}$ be the product Gaussian with entry
+variances $t^2/d$ in $W^1$, $t^2/N$ in the internal matrices, and $t^2/N^2$
+in $v$, where $0<t\le1$. The exponent convention
+$t=N^{(1-\gamma)/2}$ therefore gives every $\gamma\ge1$. Define
+\[
+ \kappa_N(w)=\frac dN\|W^1\|_F^2+
+           \sum_{s=2}^H\|W^s\|_F^2+N\|v\|^2,
+ \qquad E_v(w)=N\|v\|^2.
+\]
+In these energy coordinates the Gaussian density is proportional to
+$\exp[-N\kappa_N/(2t^2)]$.
+
+A disturbance is added after every hidden activation and at the readout:
+\[
+ h^1_\eta=\tanh(W^1\bar x)+\eta^1,\qquad
+ h^s_\eta=\tanh(W^s h^{s-1}_\eta)+\eta^s,\qquad
+ z_w(x;\eta)=v^\top h^H_\eta+\eta^{\rm out}.
+\]
+The simultaneous disturbance budget is
+\begin{equation}\label{eq:standalone-noise}
+ \|\eta\|_*^2=\sum_{s=1}^H\frac{\|\eta^s\|_2^2}{N}
+                       +|\eta^{\rm out}|^2.
+\end{equation}
+This is an adversarial finite perturbation, not a Gaussian-noise average or
+a derivative evaluated only at the clean computation. Noisy hidden states
+need not stay in $[-1,1]^N$.
+
+Our training likelihood is
+\begin{equation}\label{eq:standalone-likelihood}
+ \mathcal L_S(w)=\prod_{i=1}^n
+       \mathbf1\{f(X_i)z_w(X_i)>1/2\}.
+\end{equation}
+At test time we count $f(x)z_w(x)\le1/4$ as an error. This stronger loss
+also bounds sign error. There is no requirement that unobserved inputs have
+any clean output margin.
+
+Clip the output at the training margin:
+\[
+ T(u)=\max\{-1/2,\min\{1/2,u\}\}.
+\]
+For a calibration parameter $c>0$, set
+\begin{equation}\label{eq:standalone-radius}
+ r_c(w)=\frac{c}{\sqrt{1+H E_v(w)}}.
+\end{equation}
+Let $\mathcal R_{N,c}$ be the set of networks satisfying
+\begin{equation}\label{eq:standalone-support}
+ |T(z_w(x;\eta))-T(z_w(x))|\le1/16
+ \quad\text{for every }x\in\mathcal X
+ \text{ and every }\|\eta\|_*\le r_c(w).
+\end{equation}
+The prior is exactly $\mu_{N,t}$ conditioned on $\mathcal R_{N,c}$.
+The posterior $Q_{S,N,t,c}$ additionally conditions on
+\eqref{eq:standalone-likelihood}. Both conditioning events have positive
+probability by the target construction below. No tractable sampling
+algorithm is assumed or supplied by the theorem.
+
+The clipping scale is set by the existing likelihood convention. For
+example, changing a raw output from $10$ to $1$ causes no score change.
+Clipping at $\pm1/2$ gives a weaker condition than clipping at $\pm1$ with
+the same tolerance and noise radius, because
+$T=T\circ T_1$, where $T_1$ clips at $\pm1$, and $T$ is $1$-Lipschitz.
+
+\section{The learning theorem}
+\label{sec:theory-main}
+
+A width-$C$, depth-$H$ layered Boolean circuit has at most $C$ Boolean wires
+at each of its $H$ stages. We use NAND gates, copies, and negations;
+constant wires required by internal gate implementations are carried
+through the circuit and count toward $C$. This is a universal Boolean
+basis. Compiling another fixed basis into this one may change the width
+and depth, and those resources must be counted. Its output is one final wire.
+The circuit's logical depth must fit the $H$ hidden layers; idle stages
+can be filled with copies.
+
+\begin{theorem}[Polynomial depth at every width and every $\gamma\ge1$]
+\label{thm:standalone-clipped}
+There is a universal polynomial $P$ with the following property.
+The explicit sufficient sample budget is given in
+Section~\ref{sec:explicit-budget}. At fixed $d,L,c,\varepsilon,\delta$,
+it is $O(C^6\log^{13}(2+C))$. Let $f$
+be computed by such a width-$C$, depth-$H$ Boolean circuit, and let $D$ be
+any input distribution. For every $c>0$ and every $0<\varepsilon,\delta<1$, if
+\[
+ n\ge P\bigl(d,L,C,c+c^{-1},\varepsilon^{-1},\log(1/\delta)\bigr),
+\]
+then with probability at least $1-\delta$ over the iid labeled sample,
+\begin{equation}\label{eq:standalone-risk}
+ \mathbb E_{w\sim Q_{S,N,t,c},\,X\sim D}
+       \mathbf1\{f(X)z_w(X)\le1/4\}\le\varepsilon
+\end{equation}
+simultaneously for every $N\ge C$ and $0<t\le1$.
+The polynomial degree is independent of width, depth, and Gaussian scale.
+In particular, the result includes the actual finite-variance mean-field
+scale $\gamma=1$ and every stronger-prior scale $\gamma>1$.
+\end{theorem}
+
+The same theorem holds if the prior is additionally conditioned on
+$|z_w(x)|>1/2$ at every input, as in the original globally margin-conditioned
+model. The proof below applies unchanged to this variant. The target cylinder constructed below already satisfies this extra
+condition. Its probability bound and every subsequent statistical step are
+therefore unchanged. Under that additional condition, test-margin error
+coincides with sign error. Dropping the extra condition is permitted, but is
+not required for the result.
+
+The width threshold concerns a layered Boolean circuit, not an arbitrary
+real-valued neural-network representation of the same Boolean function.
+The theorem does not assert that every function with a small real neural
+circuit has a comparably small Boolean circuit at the same depth, or that
+all its low-energy neural representations satisfy the stability condition.
+The proof instead supplies one robust implementation of each Boolean
+circuit, together with enough Gaussian probability around that implementation.
+
+Define the posterior correct-margin probability
+$p_S(x)=Q_{S,N,t,c}\{f(x)z_w(x)>1/4\}$.
+Equation~\eqref{eq:standalone-risk} immediately implies
+\[
+ D\{x:p_S(x)\le2/3\}\le3\varepsilon,
+ \qquad D\{x:p_S(x)\le1/2\}\le2\varepsilon.
+\]
+The same bounds hold for posterior sign correctness, since the correct-sign
+event contains the correct-margin event. These conclusions allow arbitrary
+posterior mixtures; they do not require concentration on one predictor.
+
+\section{Compression and the statistical proof}
+\label{sec:theory-statistical}
+
+The constructive compression statement needed here concerns numerical
+outputs before any robustness condition is used.
+
+\begin{lemma}[Entropy compression before the prediction comparison]
+\label{lem:raw-entropy-compression}
+For $d\ge1$, $L\ge2$, $K\ge1$, $0<r\le1$, and
+$0<\alpha\le1/8$, there is a finite class $\mathcal H$ of real-valued
+bounded-weight depth-$L$ tanh networks, independent of $N,t$, such that
+\[
+ \log|\mathcal H|\le
+       \operatorname{poly}(d,L,K,r^{-1},\alpha^{-1}).
+\]
+If $Q\ll\mu_{N,t}$ satisfies
+$D_{\rm KL}(Q\Vert\mu_{N,t})\le NK/t^2$, there is one distribution
+$\Gamma_Q$ on $\mathcal H$ with the following property. For every fixed
+$x$, one can couple $w\sim Q$ and $h\sim\Gamma_Q$ so that, except with
+probability at most $\alpha$, there is a disturbance $\eta$ with
+\[
+ \|\eta\|_*<r/2,\qquad
+ |h(x)-z_w(x;\eta)|\le r/8.
+\]
+The couplings and disturbances may depend on $x$, but their two marginals
+are the same at every input. No robustness or clean-margin assumption is
+made on $Q$.
+\end{lemma}
+
+The proof is constructive: it retains a bounded number of input directions
+carrying conditional Gaussian relative entropy in each layer, replaces the
+remaining directions by Gaussian randomness, samples a bounded number of
+source neurons, and rounds a bounded-size network to a fixed grid.
+The resulting virtual computation is the original network under small
+postactivation disturbances. The appendix gives the complete construction;
+the prediction comparison below is the first step that uses stability.
+
+\begin{lemma}[Readout truncation]
+\label{lem:standalone-readout-tail}
+Suppose a posterior is the raw Gaussian conditioned on an event of mass at
+least $\exp(-ND_*/t^2)$, where $D_*\ge1$. For $0<\beta\le1/2$, put
+\[
+ B=\max\{8,8[D_*+\log(1/\beta)]\}.
+\]
+It assigns mass at most $\beta$ to $E_v>B$. Its conditional law $Q'$ on
+$E_v\le B$ satisfies
+$D_{\rm KL}(Q'\Vert\mu_{N,t})\le N(D_*+1)/t^2$.
+\end{lemma}
+\begin{proof}
+Under the Gaussian, $NE_v/t^2$ has the chi-square distribution with $N$
+degrees of freedom. Its exponential moment gives, for $B\ge8$,
+\[
+ \mu_{N,t}\{E_v>B\}
+ \le e^{-NB/(4t^2)}2^{N/2}
+ \le e^{-NB/(8t^2)}.
+\]
+Divide by the conditioning-event probability and use $N/t^2\ge1$.
+The further conditioning event has raw probability at least
+$(1-\beta)e^{-ND_*/t^2}$, so its negative logarithm is at most
+$ND_*/t^2+\log[1/(1-\beta)]\le N(D_*+1)/t^2$.
+\end{proof}
+
+\begin{proof}[Statistical proof of Theorem~\ref{thm:standalone-clipped}]
+The next section constructs a subset of the support with correct noisy
+margin on every input and raw mass at least $e^{-ND_*/t^2}$, where
+$D_*=\operatorname{poly}(d,L,C,c)$ is independent of $N,t$.
+It is contained in the posterior conditioning event for every correctly
+labeled sample. Apply Lemma~\ref{lem:standalone-readout-tail} with
+$\beta=\varepsilon/4$, and write $Q'$ for the retained law. Set
+\[
+ K=D_*+1,\qquad
+ r=\min\{1/6,c/\sqrt{1+HB}\},\qquad
+ \alpha=\varepsilon/12.
+\]
+Every retained network satisfies the score-stability condition at the common
+radius $r$. Lemma~\ref{lem:raw-entropy-compression} and the $1$-Lipschitz
+property of $T$ therefore give pointwise couplings with
+\[
+ \Pr\{|T(h(x))-T(z_w(x))|>1/12\}\le\alpha,
+\]
+because $1/16+r/8\le1/12$.
+
+Use the bounded ramp loss
+\[
+ \psi(u)=
+ \begin{cases}
+ 1,&u\le1/3,\\
+ 5-12u,&1/3<u<5/12,\\
+ 0,&u\ge5/12.
+ \end{cases}
+\]
+At a training input, $f(x)z_w(x)>1/2$ implies $f(x)T(z_w(x))=1/2$.
+A successful coupling therefore gives $f(x)T(h(x))\ge5/12$, so its ramp
+loss is zero. The candidate's averaged empirical ramp risk is at most
+$\alpha$. At a test input with $f(x)z_w(x)\le1/4$, a successful coupling
+gives $f(x)T(h(x))\le1/3$, so its ramp loss is one.
+
+For any finite class of $[0,1]$-valued losses, a relative Chernoff bound
+and a union bound give, with probability at least $1-\delta$,
+\[
+ \mathbb E_D\psi(f(X)T(h(X)))
+ \le\frac2n\sum_{i=1}^n\psi(f(X_i)T(h(X_i)))
+       +\frac{8[\log|\mathcal H|+\log(1/\delta)]}{n}
+ \quad(h\in\mathcal H).
+\]
+For completeness, $e^{-u}\le1-(1-e^{-1})u$ on $[0,1]$ gives the usual
+lower-tail exponent at least the mean divided by eight. This proves the
+displayed bound for one loss, and a union bound proves simultaneity.
+Average under the sample-dependent law $\Gamma_{Q'}$, apply the population
+comparison, and restore the discarded posterior mass. The result is
+\[
+ \Pr_{Q_{S,N,t,c},D}\{f(X)z_w(X)\le1/4\}
+ \le\beta+3\alpha+
+       \frac{8[\log|\mathcal H|+\log(1/\delta)]}{n}.
+\]
+Choose $n$ so the last term is at most $\varepsilon/2$.
+Every quantity entering $\log|\mathcal H|$ is bounded by a universal
+polynomial in the theorem's parameters. Its class and the displayed sample
+event are independent of $N,t$, establishing the simultaneous statement.
+\end{proof}
+
+\section{A robust target cylinder at every width}
+\label{sec:theory-target-cylinder}
+
+We give the probability bound used in the statistical proof. It uses a
+robust digital implementation, not a claim that every implementation is
+stable. Let $N\ge C$. Partition the neurons into $C$ balanced clone groups
+of sizes $k_a\in\{\lfloor N/C\rfloor,\lceil N/C\rceil\}$, so
+$C/2\le N/k_a\le2C$. Let $P$ project onto vectors constant on each clone
+group. Fill unused logical slots with available constants or copies of an
+existing Boolean wire. The ideal wire
+vector $b^s(x)$ then has entries in $\{-1,1\}$, belongs to the range of
+$P$, and has Euclidean norm $\sqrt N$.
+
+Use gain $A$ in the tanh simulation of every Boolean gate. For example,
+NAND on $u,v\in\{-1,1\}$ is the sign of $1-u-v$; copies and negations
+use $u$ and $-u$. Bias constants in internal layers are supplied by counted
+constant wires. The ideal signed preactivation of every gate is at least
+$A$. In the clone implementation, each coefficient from a logical wire is
+divided equally among that wire's clones. Set
+\begin{align*}
+ e_*&=\frac1{16\sqrt{2C}},&
+ \tau_0&=\frac{e_*}{4},&
+ b_L&=\sqrt{16\log9+8\log(4L)},\\
+ A&=\max\{32b_L,2\log(8/e_*)\},&
+ a&=\max\{2,256c\},&
+ \rho&=\min\{1/4,A/[4(d+1)],Ae_*/(64\sqrt C)\}.
+\end{align*}
+The teacher readout averages the clones of the output wire with total
+coefficient $a$.
+
+In Gaussian coordinates $\sqrt d\,W^1$, $\sqrt N\,W^s$, and $Nv$, all
+entries have variance $t^2$. Restrict each first-layer coordinate, each
+internal row's projection onto every normalized clone-group direction, and
+each readout coordinate to an interval of radius $\rho t$ about its teacher
+value. The internal matrices then decompose as
+\[
+ W^s=W_*^s+R^s+E^s,\qquad
+ R^s=R^sP,\quad \|R^s\|_{\rm op}\le\rho t\sqrt C,
+ \quad E^sP=0.
+\]
+The remaining Gaussian bulk $E^s$ is independent of the constrained
+coordinates. A $1/4$-net of the unit sphere has at most $9^N$ points,
+and the usual two-net Gaussian bound gives
+\[
+ \Pr\{\|E^s\|_{\rm op}>b_Lt\}
+ \le2\exp(2N\log9-Nb_L^2/8)\le\frac1{2L}.
+\]
+Thus all bulk norms are at most $b_Lt$ with conditional probability at
+least $1/2$.
+
+\paragraph{Finite disturbance robustness.}
+Allow a separate RMS disturbance of size $\tau_0$ at each hidden layer and
+scalar output disturbance at most $\tau_0$. This includes the entire
+total-budget ball $\|\eta\|_*\le\tau_0$.
+Write $e_s=\|h^s_\eta-b^s\|_2/\sqrt N$.
+If $e_{s-1}\le e_*$, every clone-group mean differs from its ideal bit by
+at most $e_*\sqrt{N/k_a}\le1/16$. At most three teacher coefficients,
+including a constant coefficient, enter a gate, so its intended signed
+preactivation remains at least $A/2$.
+For $\epsilon\in\{-1,1\}$ and real $u$, the elementary global secant bound
+\[
+ \epsilon q\ge A/2
+ \quad\Longrightarrow\quad
+ |\tanh(q+u)-\epsilon|\le2e^{-A/2}+8|u|/A
+\]
+holds: for $|u|<A/4$ use saturation, and otherwise the linear term is at
+least two. Since $E^sb^{s-1}=0$ and
+$\|h^{s-1}_\eta\|_2/\sqrt N\le1+\tau_0$, it follows that
+\[
+ e_s\le2e^{-A/2}+
+          (8/A)\rho\sqrt C(1+\tau_0)
+          +(8b_L/A)e_{s-1}+\tau_0\le e_*.
+\]
+Each of the four terms is at most $e_*/4$.
+The first layer initializes the same invariant: its coordinatewise
+preactivation perturbation is at most $\rho(d+1)\le A/4$, and its
+postactivation disturbance contributes at most $\tau_0$ in RMS norm.
+Consequently the noisy signed readout is at least
+\[
+ f(x)z_w(x;\eta)
+ \ge\frac{15a}{16}-\rho(1+\tau_0)-\tau_0>1
+ \qquad(x\in\mathcal X,\ \|\eta\|_*\le\tau_0).
+\]
+
+The readout center satisfies $\sqrt N\|v_*\|\ge a\sqrt{C/2}$, and its
+permitted perturbation has $\sqrt N\|v-v_*\|\le\rho$.
+Therefore $E_v\ge a^2C/8$, whence
+\[
+ r_c(w)\le\frac{2\sqrt2c}{a\sqrt C}
+       \le\frac1{64\sqrt{2C}}=\tau_0.
+\]
+All clean and noisy clipped scores on the calibrated ball equal $f(x)/2$.
+The entire cylinder, with the bulk-norm event imposed, therefore belongs
+to $\mathcal R_{N,c}$ and satisfies the training likelihood for every sample.
+This also proves why every fixed $c>0$ is allowed: a larger calibration
+requires only a polynomially larger readout coefficient.
+
+\paragraph{Gaussian mass.}
+There are $Nq$ constrained independent scalar coordinates, where
+$q=d+2+(L-2)C$. The sum of their squared centers is at most $NB_0$, with
+\[
+ B_0=9dA^2+18(L-2)CA^2+2a^2C.
+\]
+These loose constants cover the fan-in-two gate implementation above.
+For $Z\sim\mathcal N(0,t^2)$, $\rho\le1/4$, and any center $m$,
+\[
+ \Pr\{|Z-m|\le\rho t\}
+ \ge\frac{2\rho}{e\sqrt{2\pi}}\exp(-m^2/t^2).
+\]
+Multiplication over the coordinates and the independent bulk event gives
+\begin{equation}\label{eq:standalone-cylinder-mass}
+ \mu_{N,t}(\text{target cylinder})
+ \ge\exp(-ND_*/t^2),\qquad
+ D_*=B_0+q\log\frac{e\sqrt{2\pi}}{2\rho}+\log2.
+\end{equation}
+Here $D_*\ge1$ and is bounded by a universal polynomial in $d,L,C,c$.
+The construction and estimate hold at every integer width $N\ge C$.
