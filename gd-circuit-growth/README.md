@@ -503,7 +503,7 @@ Other observations:
      That is $c\,d$ for $k=1,2$, and $c\,d\,(d/a)^{k-2}$ for $k\ge3$ when $d\ge a$. This is the correlational-SQ / leap-complexity scaling, with the constant $a$ entering as a squared initial overlap $m(0)^2=a/d$.
    - **What $a$ means is unclear.** Reading it as "the best overlap among many hidden units" was a guess, and the width data in 3.2 do not support it.
    - **Reuse.** Reusing grown features costs a search over the small active pool, $N(0)=|\text{pool}|$, so it is nearly free.
-   - **The race model does not follow this form exactly.** Its 3-parity $d$-exponent is 0.94.
+   - **The race model does not follow this form exactly.** Its 3-parity $d$-exponent is 0.94 on the calibrated stream and about 1.3 averaged over streams.
 3. **Readout.** A least-squares readout, with a dense linear (Hebbian) part that carries its own sampling noise.
 4. **Selection is greedy.** The race's greedy variant picks the largest utility; the minimal model picks the largest utility relative to its noise level, $n\rho^2/N(k)$.
    - **Time ordering does not come from the race.** The ordering of time to generalize is reproduced about equally well with or without the race (held-out time Spearman: greedy 0.86, race 0.83, noise-free search 0.78). It is set by the targets' feature utilities, not by the race's clocks.
@@ -645,6 +645,20 @@ Adding the kernel score to the race model brings per-example agreement to 0.62. 
 3. **Reservoir depletion at tiny initialization** (D): the race model assumes a persistent reservoir of dormant units, and D shows it can be used up by the first escape. When does that happen at practical scales?
 4. **Beyond this setting:** other architectures, cross-entropy, SGD noise (merging and collapse moves), real data. In particular: is the "noise of a continuous search" law the right replacement for Occam's description length in larger models?
 5. **Bayes vs gradient descent:** characterize the targets on which the γ≥1 posterior and gradient descent have polynomially related sample complexity. The predictor suggests: exactly those with a cheap greedy path.
+
+### 3.6 Late result, not yet verified: a kernel-background hybrid
+
+[`study/HYBRID.md`](study/HYBRID.md) was written by the last investigation of the session and is still being finished and checked, so everything here is provisional. It builds a more principled hybrid than the equal-weight sum of 3.1 item 5, with two constants calibrated on the calibration set. The NNGP-kernel background is fitted jointly with the race's gates, and its ridge relaxes on the race's clock like kernel gradient flow, $\lambda_{\rm bg}(t)=c_{\rm bg}n/t$. Growth stops at a square-loss level.
+
+**Results.**
+- **Held out.** $n^*$ ratio 0.35 against the race's 0.33, and per-example agreement 0.65 against 0.50 (NNGP kernel 0.69, a re-initialized network 0.62).
+- **Calibration set.** $n^*$ error 0.37 against the race's 0.24.
+
+**Readings** (Heuristic):
+- **Memorise like a kernel, generalise like a feature learner.** On partially learned cells, the networks' output is a signal part shared with every reasonable learner, plus a sample-noise part holding about 45% of the variance. That noise part has the shape of minimum-norm kernel interpolation of the training sample, with correlation 0.81 with NNGP kernel regression.
+- **Two clocks.** The kernel fits the target's low-degree part early and the sample noise only after a time proportional to $n$. Feature growth runs on its own clock.
+- **The networks do not memorise with grown units.** The hybrid fires about 2 gates per partial cell, where the race fires about 20, and matches $n^*$ as well. This points to an a-priori bound of the form "Occam for a few grown gates plus a kernel-norm term for the background", which was not attempted.
+- **Remaining discrepancy.** On easy targets the networks are 1.1–2.2× less sample-efficient than their own NNGP kernel. The race reproduces this, through its noisy Hebbian first gate, but the hybrid does not.
 
 ## Files
 
