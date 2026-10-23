@@ -413,7 +413,7 @@ Status labels as before.
    - an exact "mass clock" race identity for two-layer ReLU networks, a proof that nothing grows before $\approx\log(1/\alpha)/U^*$, and a width-free generalization bound through the first escape;
    - for two-layer *quadratic* networks with fixed output signs (equivalently, symmetric matrix sensing), a proof of your sketch at every training time: the number of grown hidden units is at most $\kappa(\tau/\Theta)^2$, with $\kappa$ independent of labels, trajectory and width. This gives a test-error bound uniform in time.
 
-   D passed its first adversarial referee pass with minor issues only. The general ReLU case beyond the first escape remains a stated conjecture.
+   D passed two adversarial referee passes with minor issues only. In the second, every Proved result was re-derived, including whether the bounds use classes fixed before the sample and whether $\kappa$ is really label-, trajectory- and width-free. The general ReLU case beyond the first escape remains a stated conjecture.
 8. **Robustness and SGD.**
    - **Width.** Between widths 32 and 256, the 3-parity's $n^*$ does not change (827–911), while the 4-parity's falls 1.9× and is still falling at 256. Narrowing from 128 to 32 units changes $n^*$ by +2% for the staircase and +23% for the multiplexer. The parity pattern does not fit the noise law with one width-dependent overlap constant; see 3.2. Dense MAJ$_9$ needs 59% more data at width 32, plausibly because the linear part is noisier with fewer units. Width 512 was abandoned: too slow on this CPU.
    - **One-pass SGD.** With fresh minibatches, the prequential mistake rate certifies the average test error of a window of iterates with no capacity argument ([`study/ONLINE-BOUNDS.md`](study/ONLINE-BOUNDS.md)). The bound tracks the whole learning curve. On MAJ$_9$, over successive windows, it is 0.53, 0.37, 0.20, 0.074, 0.032 and 0.013. After learning it is about 0.002–0.01 (zero mistakes plus the confidence term).
@@ -496,7 +496,7 @@ Other observations:
 
 ### 3.4 Thread 3: bounds
 
-**Review status** ([`theory/README.md`](theory/README.md)): A, B and C each failed or passed their first referee pass, were revised, and passed a second pass with only minor issues left. D passed its first pass with minor issues only and was revised accordingly; the revision has not been re-refereed.
+**Review status** ([`theory/README.md`](theory/README.md)): A, B and C each failed or passed their first referee pass, were revised, and passed a second pass with only minor issues left. D passed its first pass with minor issues only, was revised, and passed a second pass with 7 minor issues, which were then applied (one small addition made in that last step, a minibatch form of D6(5) item 3, is unrefereed).
 
 **What is now proved about "short training ⇒ small circuit ⇒ generalization":**
 - **The discrete race model (A):** time bounds the depth, the incoherence-weighted size and the readout $\ell_1$ norm, and hence test error, uniformly in time. Training time does not bound the raw gate count.
