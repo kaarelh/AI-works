@@ -1,6 +1,6 @@
 # Independent check of the beyond-parity note
 
-19 October 2026. The [note](../README.md) and its [FAQ question](../../../TECHNICAL-FAQ.md#14-for-gamma1-is-the-bad-sample-complexity-specific-to-parity) were checked in three rounds by AI agents that had not written them. Each reviewer read the cited lemmas in the subcritical paper's source rather than the note's paraphrases. The reviews are AI checks, not human review.
+19 October 2026. The [note](../README.md) and its [FAQ question](../../../TECHNICAL-FAQ.md#14-for-gamma1-is-the-bad-sample-complexity-specific-to-parity) were checked in three rounds by AI agents that had not written them. Each reviewer read the cited lemmas in the subcritical paper's source rather than the note's paraphrases. The reviews are AI checks, not human review. Question numbers in this record are those of the FAQ at the time: the sparse-XOR question cited as Question 11 is now [Question 13](../../../TECHNICAL-FAQ.md#13-for-gamma1-how-close-are-we-to-a-domegak-lower-bound-on-the-sample-complexity-of-sparse-xor).
 
 ## Round 1
 

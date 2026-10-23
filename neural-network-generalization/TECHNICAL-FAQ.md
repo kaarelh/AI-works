@@ -264,6 +264,8 @@ The $1$ is the constant input coordinate.
 
 These are the learners for which [Question 8](#8-what-is-known-for-the-one-parameter-family-of-prior-scalings) records exponential full-parity lower bounds. [Questions 13](#13-for-gamma1-how-close-are-we-to-a-domegak-lower-bound-on-the-sample-complexity-of-sparse-xor) and [14](#14-for-gamma1-is-the-bad-sample-complexity-specific-to-parity) study which other targets they find hard or cheap.
 
+<a id="10-does-a-quantitative-central-limit-theorem-make-all-0gamma1-into-gaussian-conditioning"></a>
+
 ## 11. Does a quantitative central limit theorem make all $0<\gamma<1$ into Gaussian conditioning?
 
 **At leading exponential order, yes; for posterior probabilities, no.** Here $\gamma$ is the exponent of the one-parameter family of prior scalings of [Question 8](#8-what-is-known-for-the-one-parameter-family-of-prior-scalings), and width is taken to infinity first. Moderate deviations justify a Gaussian rate function in this interval. At that order, the learner has the Gaussian minimum-energy description of [Question 10](#10-what-do-the-three-gamma1-learners-look-like-in-the-infinite-width-limit). But conditioning on rare events can magnify smaller corrections that a leading-rate approximation discards.
@@ -273,10 +275,13 @@ The [Gaussian-conditioning paper](side-results/subcritical-gaussian-conditioning
 Thus the moderate-deviation intuition was useful and partly correct. The stronger claim “the whole posterior is just a Gaussian conditioned on the observations throughout $\gamma<1$” is false. The exponential parity lower bound of [Question 8](#8-what-is-known-for-the-one-parameter-family-of-prior-scalings) survives because it controls all the relevant minimizers, rather than choosing Gaussian mixture weights among ties; [Question 7](#7-why-are-mixtures-of-individually-bad-predictors-not-already-a-problem-at-23) explains why that suffices at the $2/3$ threshold.
 
 <a id="9-can-we-classify-all-tuples-of-layerwise-scaling-exponents"></a>
+<a id="13-what-is-known-at-the-usual-nngp-scaling"></a>
+<a id="14-what-is-the-layer-collapse-argument-for-general-scaling-tuples-and-why-is-it-not-a-proof"></a>
+<a id="15-can-a-scaling-make-the-prior-prefer-something-other-than-small-circuits"></a>
 
 ## 12. Can we classify **all** tuples of layerwise scaling exponents?
 
-**We do not have learning results for all exponent tuples.** Off the one-parameter line of [Question 8](#8-what-is-known-for-the-one-parameter-family-of-prior-scalings), the usual NNGP (neural-network Gaussian process) tuple has proved parity lower bounds, and one collapsed one-hidden-layer region has a proved prior ordering; both are described below. This answer also describes the heuristic layer-collapse argument of the original slides, explains why it is not a proof, and lists our predictions with their status.
+**We do not have learning results for all exponent tuples.** Off the one-parameter line of [Question 8](#8-what-is-known-for-the-one-parameter-family-of-prior-scalings), the usual NNGP (neural-network Gaussian process) tuple has proved parity lower bounds, and one collapsed one-hidden-layer region has a proved prior ordering. This answer describes the heuristic layer-collapse argument of the original slides and why it is not a proof, gives an amplitude heuristic for the typical size of hidden activations, lists our predictions with their status, and then describes these two results.
 
 **Notation.** Write a general variance tuple as
 
@@ -319,7 +324,7 @@ and output variance has scale $`N^{1-a_L-h_{L-1}}`$. A negative value before tak
 
 | Exponent tuples | Prediction and current status |
 |---|---|
-| $`a_1\le0`$, every internal $`a_s\le1`$, and $`a_L<2`$ | **Conjectured frozen-feature region.** Hidden activations remain order one, possibly saturated. With a nondegenerate limiting kernel and empirical-kernel deviations costing order $N$, forcing margins costs only $`N^{a_L-1}=o(N)`$ when $`1<a_L<2`$. Thus conditioning should leave the leading kernel fixed. Exponential parity sample bounds are plausible but still require a spectrum and posterior-confidence argument for these kernels. The usual NNGP tuple $(0,1,\ldots,1,1)$ lies in this region and now has proved superpolynomial and nearly exponential lower bounds; see the paragraph on it below the table. |
+| $`a_1\le0`$, every internal $`a_s\le1`$, and $`a_L<2`$ | **Conjectured frozen-feature region.** Hidden activations remain order one, possibly saturated. With a nondegenerate limiting kernel and empirical-kernel deviations costing order $N$, forcing margins costs only $`N^{a_L-1}=o(N)`$ when $`1<a_L<2`$. Thus conditioning should leave the leading kernel fixed. Exponential parity sample bounds are plausible but still require a spectrum and posterior-confidence argument for these kernels. The usual NNGP tuple $(0,1,\ldots,1,1)$ lies in this region and now has proved superpolynomial and nearly exponential lower bounds; see the results for it below the table. |
 | Exact fan-in hidden scaling $`(0,1,\ldots,1,a_L)`$ with $`a_L\ge2`$ | **Conjectured circuit-learning side.** The endpoint $`a_L=2`$, which is $\gamma=1$ on the one-parameter line, is proved in our critical results ([Question 8](#8-what-is-known-for-the-one-parameter-family-of-prior-scalings)). For $`a_L>2`$, changing features can be cheaper than forcing the output through fixed features; we expect positive learning results, but output-dominated saturation and subleading costs need analysis. This does not assert the same circuit-prior ordering at every exponent. |
 | One hidden layer: $`(a_1,a_L)=(a,b)`$ with $a>0$ and $a\le b\le a+2$ | **Tentative larger circuit-learning region.** Using $M=N^{(b-a)/2}$ active neurons balances feature cost $MN^a$ against readout cost $N^b/M$. At $b=a+2$ (so $M=N$) this is the one-hidden-layer case of the established $\gamma=a+1>1$ family (main result 2 in the [collection index](README.md)). In the interior, the active block is itself a $\gamma'=(a+b)/(b-a)>1$ network at its own width $M$, which suggests that a smaller active population can suffice. A construction alone does not control the remaining neurons or the posterior. |
 | One hidden layer: $a>b>1$ | **Proved degree-based prior ordering; learning rate open.** The collapsing layer produces the threshold-degree hierarchy below. It is not a circuit-size prior, but it could still have exponential parity sample complexity. |
@@ -341,7 +346,7 @@ The results concern two learners. The **margin learner** conditions the prior on
 
 So far this tuple sits on the hard-learning side, as the frozen-feature prediction above expects. The proved exponents are not yet the exponential one.
 
-**A collapse calculation can actually be made rigorous.** Consider one hidden tanh layer of width $N$, with tuple $`(a_1,a_L)=(a,b)`$ and $a>b>1$, where the table above places a collapsing layer. For a Boolean function $f$, let $\mathrm{thr}(f)$, its polynomial threshold degree, be the smallest degree of a real polynomial whose sign equals $f$, as in [Question 14](#14-for-gamma1-is-the-bad-sample-complexity-specific-to-parity). Let $k$ be the smallest positive odd integer at least $\mathrm{thr}(f)$, which that question writes $`t^*`$ with $`t=\mathrm{thr}(f)`$. Let $`A_{N,f}`$ be the event that the network implements $f$ with the global margin: $f(x)z(x)>1/2$ at every input $x$, where $z$ is the network output. Then its raw prior probability satisfies
+**A collapse calculation can actually be made rigorous.** Consider a network with one hidden tanh layer of width $N$ and tuple $`(a_1,a_L)=(a,b)`$ with $a>b>1$, where the table above places a collapsing layer in the sense of step 2 of the layer-collapse argument. For a Boolean function $f$, let $\mathrm{thr}(f)$, its polynomial threshold degree, be the smallest degree of a real polynomial whose sign equals $f$, as in [Question 14](#14-for-gamma1-is-the-bad-sample-complexity-specific-to-parity). Let $k$ be the smallest positive odd integer at least $\mathrm{thr}(f)$, which is $`\mathrm{thr}(f)^*`$ in that question's notation. Let $`A_{N,f}`$ be the event that the network implements $f$ with the global margin: $f(x)z(x)>1/2$ at every input $x$, where $z$ is the network output. Then its raw prior probability satisfies
 
 $$
 \Pr(A_{N,f})=\exp\!\left[-\Theta_f\!\left(N^{(ka+b)/(k+1)}\right)\right].
@@ -352,6 +357,7 @@ The [proof note](works-in-progress/scaling-tuples/README.md) supplies matching T
 **This can sharply disagree with circuit size.** For even dimension, full parity is less probable asymptotically than every other Boolean function except its negation, including functions of exponentially greater circuit complexity. However, excluding the exact target from the limiting posterior does not imply poor test predictions: the remaining functions might be almost correct. So this result establishes a distinct prior-ordering mechanism, **not a third sample-complexity phase or an exponential sample lower bound**. Establishing the learning behavior of this explicit collapsed region is a useful next test of the broad dichotomy between circuit learning and exponential sample complexity discussed above.
 
 <a id="11-for-gamma1-how-close-are-we-to-a-domegak-lower-bound-on-the-sample-complexity-of-sparse-xor"></a>
+<a id="17-for-gamma1-how-close-are-we-to-a-domegak-lower-bound-on-the-sample-complexity-of-sparse-xor"></a>
 
 ## 13. For $\gamma<1$, how close are we to a $d^{\Omega(k)}$ lower bound on the sample complexity of sparse XOR?
 
@@ -390,9 +396,15 @@ Neither settles the fixed-depth natural scale.
 
 For $\gamma<0$, a [later work-in-progress note](works-in-progress/beyond-parity/README.md), with independent AI-agent checks only, gives a lower bound for every training set, selected or not. For any fixed $c\le1/2$ and large $k$, fewer than $(d/\sqrt k)^{c\sqrt k}$ examples leave the confidence-failure fraction above a constant depending on $c$. This uses its Proposition 3 with $r\asymp\sqrt k$ and the Aspnes–Beigel–Furst–Rudich bound. The exponent has the same order as the selected-set upper bound above. Whether selected sets of that size suffice at $\gamma<0$ is open.
 
-For parities of fixed size $k\ge2$, [Question 14](#14-for-gamma1-is-the-bad-sample-complexity-specific-to-parity) gives explicit power-of-$`d`$ bounds. For targets other than parity, see [Question 14](#14-for-gamma1-is-the-bad-sample-complexity-specific-to-parity).
+[Question 14](#14-for-gamma1-is-the-bad-sample-complexity-specific-to-parity) gives explicit power-of-$`d`$ bounds for parities of fixed size $k\ge2$, and treats targets other than parity.
 
 <a id="for-gamma1-is-the-bad-sample-complexity-specific-to-parity"></a>
+<a id="16-for-gamma1-is-the-bad-sample-complexity-specific-to-parity"></a>
+<a id="18-for-gamma1-which-targets-need-a-high-power-of-d-samples-and-which-are-cheap"></a>
+<a id="19-for-gamma1-which-targets-need-exponentially-many-samples"></a>
+<a id="20-how-do-the-gamma1-learners-sample-costs-compare-with-what-sgd-needs"></a>
+<a id="21-is-there-a-small-circuit-that-gradient-descent-learns-but-the-gamma1-learners-provably-cannot"></a>
+<a id="22-do-the-gamma1-sign-posteriors-and-kernel-regression-find-the-same-targets-hard"></a>
 
 ## 14. For $\gamma<1$, is the bad sample complexity specific to parity?
 
@@ -405,7 +417,7 @@ For parities of fixed size $k\ge2$, [Question 14](#14-for-gamma1-is-the-bad-samp
 **From parity to other targets.** The exponential lower bounds for $\gamma<1$ summarized in [Question 8](#8-what-is-known-for-the-one-parameter-family-of-prior-scalings) come from the [subcritical paper](main-results/subcritical-exponential/paper.pdf). They are stated for parity. Applied to another target, the same proof gives a bound governed by how far the target is from polynomial threshold functions of low degree. Concretely:
 
 - **Many targets other than parity need a high power of $d$ samples.**
-  - For a **junta**, a target that depends on a constant number of coordinates, the exponent is roughly its **threshold degree**: the least degree of a real polynomial whose sign equals the target at every input.
+  - For a **junta**, a target that depends on a constant number of coordinates independent of $d$, the exponent is roughly its threshold degree, defined below.
   - For example, $`h=\mathrm{MAJ}(x_1x_2,x_3x_4,x_5x_6)`$ needs at least about $d^2$ samples in every $\gamma<1$ regime, and about $d^3$ at $\gamma<0$. This holds even under the confidence criterion of [Question 6](#6-what-changes-if-correctness-means-posterior-probability-above-12-rather-than-23).
   - A function $g$ that mixes a three-bit parity with a three-bit majority needs at least about $d^3$ samples at $\gamma<0$, although SGD is conjectured to learn it from about $d$.
 - **Some targets with full Fourier degree are cheap.** Majority of all $d$ bits is learned from polynomially many samples.
@@ -415,7 +427,7 @@ For parities of fixed size $k\ge2$, [Question 14](#14-for-gamma1-is-the-bad-samp
 
 **Sources and status.** The [supporting note](works-in-progress/beyond-parity/README.md) gives the statements, proofs, and checks behind this answer, and a [second note](works-in-progress/beyond-parity/subcube-parity.md), the subcube note, covers parity on a subcube and the target $`f^*`$, including the greedy learner and the numerical runs. Their new arguments combine lemmas of the subcritical paper, standard learning-theory bounds, and elementary Boolean-function facts. They have independent AI-agent checks, but they are not Lean verified and have not been reviewed by a human.
 
-**Setting and criteria.** [Question 10](#10-what-do-the-three-gamma1-learners-look-like-in-the-infinite-width-limit) describes the $\gamma<1$ learners through one arcsine kernel $K$ on the cube. At $\gamma<0$, after an output normalization, the posterior is a centered Gaussian process with covariance $K$ conditioned on the training signs; at $\gamma=0$, the same process is also conditioned on an absolute margin $a>0$ at every input. At $0<\gamma<1$, the posterior concentrates on the signs of the minimum-energy functions: those of least $`K`$-norm with absolute value at least $a$ at every input and the correct training signs. **Gibbs error** is the expected error of one posterior draw; **confidence failure** is the fraction of test inputs whose correct label gets posterior probability at most $2/3$ ([Question 6](#6-what-changes-if-correctness-means-posterior-probability-above-12-rather-than-23)).
+**Setting and criteria.** Write $K$ for the arcsine kernel of [Question 10](#10-what-do-the-three-gamma1-learners-look-like-in-the-infinite-width-limit). At $\gamma<0$, after an output normalization, the posterior is a centered Gaussian process with covariance $K$ conditioned on the training signs; at $\gamma=0$, the same process is also conditioned on an absolute margin $a>0$ at every input. At $0<\gamma<1$, the posterior concentrates on the signs of the minimum-energy functions: those of least $`K`$-norm with absolute value at least $a$ at every input and the correct training signs. **Gibbs error** is the expected error of one posterior draw; **confidence failure** is the fraction of test inputs whose correct label gets posterior probability at most $2/3$ ([Question 6](#6-what-changes-if-correctness-means-posterior-probability-above-12-rather-than-23)).
 
 **Notation.** For a target $f$ on $\lbrace -1,1\rbrace ^d$:
 
@@ -424,7 +436,6 @@ For parities of fixed size $k\ge2$, [Question 14](#14-for-gamma1-is-the-bad-samp
 
 Other notation:
 
-- A **junta** is a target that depends on a constant number of coordinates, independent of $d$.
 - For an integer $k$, $`k^*`$ denotes $k$ rounded up to an odd integer.
 - $n$ is the number of training examples.
 - $\beta=2^{-(L-1)}$, where $L-1$ is the number of hidden layers, governs the decay of the spectrum of $K$, and costs a factor $d^{\beta}$ or $d^{2\beta}$ in some bounds below.
@@ -481,7 +492,7 @@ Parity, by contrast, is close to threshold functions of degree about $\sqrt d$, 
 - in the width limit, at least $1/16$ of the subcube fails the confidence criterion, so at least $2^{-k}/16$ of all inputs fail;
 - at $\gamma<0$, at least $3/8$ of the subcube fails even with the threshold lowered to $13/20$.
 
-Labels off the subcube enter the subcritical paper's proof only through bounds that hold for every labeling, so they cannot help on the subcube. The proof's constant $c$ is at worst of order $8^{-k}$. The [subcube note](works-in-progress/beyond-parity/subcube-parity.md) covers this theorem. The target $`f^*`$ below applies it with codimension one.
+Labels off the subcube enter the subcritical paper's proof only through bounds that hold for every labeling, so they cannot help on the subcube. The proof's constant $c$ is at worst of order $8^{-k}$. The [subcube note](works-in-progress/beyond-parity/subcube-parity.md) covers this theorem, called the subcube theorem below; it is applied with codimension one to the target $`f^*`$ below.
 
 **Open:** targets that are a large parity only on subcubes of linear codimension. Inner product mod 2 is an example: fixing half of its coordinates leaves a parity of about a quarter of them. The [supporting note](works-in-progress/beyond-parity/README.md) suggests that the margin-sensitive lemmas transfer to such targets one restriction at a time (extension suggested by the proof), but this has not been written out.
 
@@ -496,13 +507,13 @@ Every function of $`\sum_ix_i`$ alone has the same ceiling for the distance argu
 
 These SGD statements concern exponents for fixed juntas (literature, abstract-level). No theorem here relates SGD to these posteriors.
 
-**High leap forces high threshold degree.** Every Boolean function satisfies $\mathrm{Leap}(f)\le\mathrm{thr}(f)\le\deg f$; the proof is elementary. So a junta of leap $\ell\ge2$ has threshold degree at least $\ell$. These learners then need at least about $d^{\ell}$ samples: in confidence on every training set at $\gamma<0$, and in Gibbs error for typical samples at $0\le\gamma<1$, up to a factor $d^{2\beta}$.
+**High leap forces high threshold degree (proved).** Every Boolean function satisfies $\mathrm{Leap}(f)\le\mathrm{thr}(f)\le\deg f$, where $\deg f$ is the Fourier degree; the proof is elementary. So a junta of leap $\ell\ge2$ has threshold degree at least $\ell$. These learners then need at least about $d^{\ell}$ samples: in confidence on every training set at $\gamma<0$, and in Gibbs error for typical samples at $0\le\gamma<1$, up to a factor $d^{2\beta}$. SGD is conjectured to learn such a junta from about $d^{\ell-1}$.
 
 **The converse fails.** The leap-one target $g$ needs at least about $d^3$ samples at $\gamma<0$, while SGD is conjectured to need about $d$. The [supporting note](works-in-progress/beyond-parity/README.md)'s exhaustive four-bit census suggests that targets like $g$ are common: 97.5% of the leap-one functions depending on all four of their bits have threshold degree at least two.
 
 **Sparse parity versus SGD.** For $`k`$-sparse parity with fixed $k\ge2$, leap, threshold degree, and degree all equal $k$. Under the conjectured rate, SGD needs about $d^{k-1}$ samples. At $\gamma<0$ these learners need between about $`d^{k^*}`$ and $`d^{k^*+1}`$. At $0\le\gamma<1$ they need at least about $`d^{k^*}`$ up to a factor $d^{2\beta}$, in Gibbs error. So the exponents differ only by a small constant. [Barak et al.](https://arxiv.org/abs/2207.08799) find SGD taking $d^{O(k)}$ iterations on sparse parity, near the statistical-query limit.
 
-**A target that gradient descent can climb.** For an exponential gap, let $d$ be odd and add one selector bit $z$ to $x\in\lbrace -1,1\rbrace ^d$:
+**A target that gradient descent appears to climb.** For an exponential gap, let $d$ be odd and add one selector bit $z$ to $x\in\lbrace -1,1\rbrace ^d$:
 
 $$
 f^*(x,z)=\begin{cases}
@@ -533,7 +544,7 @@ On $z=+1$ it is the sign of a staircase. A chain of XOR gates computes the prefi
 
 **Why both halves (heuristic).** Two proved facts suggest why simpler targets do not work for the available proof routes. If a target is within distance $\eta$ of a single parity, all its other Fourier coefficients are at most $2\eta$, so there is little low-degree signal to climb. If instead a target becomes $\pm$ a parity of at least $\alpha d$ bits once some coordinates are fixed at uniformly random values, except with probability $\delta$, then its Fourier weight below degree $\alpha d$ is at most $\delta$. $`f^*`$ avoids both. It is at distance about $1/4$ or more from every parity, and at least about $\alpha/\pi$ of its Fourier weight lies below degree $\alpha d$. Yet it equals a parity exactly on half of the cube.
 
-**Comparison with kernel regression.** For contrast, consider a different predictor built from the same kernel $K$. It is the posterior mean of the centered Gaussian process with covariance $K$, given the noiseless labels as real values. That process is the NNGP of the sign-activation network of [Question 10](#10-what-do-the-three-gamma1-learners-look-like-in-the-infinite-width-limit), not the NNGP at the usual scaling ([Questions 9](#9-how-do-the-nnbayes-results-here-relate-to-nngp-and-kernel-regression) and [12](#12-can-we-classify-all-tuples-of-layerwise-scaling-exponents)). This posterior mean is kernel interpolation, called kernel regression below.
+**Comparison with kernel regression.** For contrast, consider a different predictor built from the same kernel $K$. It is the posterior mean of the centered Gaussian process with covariance $K$, given the noiseless labels as real values. That process is the NNGP of the sign-activation network of [Question 10](#10-what-do-the-three-gamma1-learners-look-like-in-the-infinite-width-limit), not the NNGP at the usual scaling ([Questions 9](#9-how-do-the-nnbayes-results-here-relate-to-nngp-and-kernel-regression) and [12](#12-can-we-classify-all-tuples-of-layerwise-scaling-exponents)). This posterior mean is kernel interpolation, called kernel regression below; by contrast, we call the $\gamma<1$ learners the sign posteriors. Kernel regression's squared error is governed by a target's Fourier weight, whereas the sign posteriors' lower bounds are governed by its distance from low-degree threshold functions.
 
 Write $`\mathrm{wt}_k(f)`$ for the Fourier weight of $f$ at degree $k$, and $`\mathrm{wt}_{>r}(f)`$ for its total weight above degree $r$.
 
@@ -550,6 +561,7 @@ The odd rounding comes from the odd activation and the constant input coordinate
 **In one direction the criteria are linked.** Since $`\mathrm{err}_r(f)\le\mathrm{wt}_{>r}(f)`$, every target that the fixed-degree, distance-based lower bounds above certify as hard for the sign posteriors is also hard for squared-error regression. This argument does not cover the growing-degree or margin-sensitive bounds.
 
 <a id="12-what-robustness-condition-gives-polynomial-depth-dependence"></a>
+<a id="23-what-robustness-condition-gives-polynomial-depth-dependence"></a>
 
 ## 15. What robustness condition gives polynomial depth dependence?
 
@@ -584,6 +596,7 @@ It is nevertheless a particular sufficient condition, with a strong “every inp
 **A different restriction for ReLU and GELU.** A [separate polynomial-depth theorem](works-in-progress/relu-gelu-polynomial-depth/) instead restricts the prior by stability under merging neuron populations. It gives quadratic width dependence up to logarithms. That condition is not proved equivalent to the internal-noise condition above. [Question 25](#25-what-does-the-neuron-merging-restriction-assume-and-what-bounds-does-it-give) describes the merging condition and gives its ReLU/GELU polynomial, and [Question 26](#26-how-natural-is-the-neuron-merging-restriction) discusses how natural it is.
 
 <a id="13-how-can-we-check-whether-a-network-satisfies-the-robustness-condition"></a>
+<a id="24-how-can-we-check-whether-a-network-satisfies-the-robustness-condition"></a>
 
 ## 16. How can we check whether a network satisfies the robustness condition?
 
@@ -598,6 +611,7 @@ It is nevertheless a particular sufficient condition, with a strong “every inp
 [Question 17](#17-do-gradient-trained-networks-satisfy-the-robustness-condition) reports certificates computed for trained networks.
 
 <a id="14-is-the-condition-satisfied-by-actual-gradient-descent-trained-networks"></a>
+<a id="25-do-gradient-trained-networks-satisfy-the-robustness-condition"></a>
 
 ## 17. Do gradient-trained networks satisfy the robustness condition?
 
@@ -616,6 +630,7 @@ The experiments use ordinary SGD/Adam on fully connected tanh image classifiers 
 **Neuron merging is a different condition.** The stronger neuron-merging restriction used for quadratic width dependence requires that averaging weights within suitably few groups of neurons barely changes clipped predictions ([Question 25](#25-what-does-the-neuron-merging-restriction-assume-and-what-bounds-does-it-give)). It has its own naturality study, described in [Question 26](#26-how-natural-is-the-neuron-merging-restriction), with fresh trained examples and different certificates. Membership in one condition should not be inferred from membership in the other.
 
 <a id="15-can-robustness-be-required-only-near-the-data-or-on-average"></a>
+<a id="26-can-robustness-be-required-only-near-the-data-or-on-average"></a>
 
 ## 18. Can robustness be required only near the data, or on average?
 
@@ -635,6 +650,7 @@ The experiments use ordinary SGD/Adam on fully connected tanh image classifiers 
 **Random-noise and soft variants.** Other candidates include robustness to dropout, random quantization, or random internal noise. These are plausible training objectives, but average random-noise robustness does not automatically imply the adversarial finite-noise condition used by the current compressor, the step of the proof that compresses posterior draws through small internal disturbances. Soft penalties also require explicit control of how much unstable posterior mass remains. They should be presented as research directions unless the additional bridge is supplied. [Question 27](#27-are-there-more-natural-alternatives-to-neuron-merging-stability) discusses alternative restrictions that do have completed arguments, including a much stronger, severe form of dropout stability.
 
 <a id="16-is-exponential-depth-dependence-necessary-without-any-robustness-restriction"></a>
+<a id="27-is-exponential-depth-dependence-necessary-without-any-robustness-restriction"></a>
 
 ## 19. Is exponential depth dependence necessary without any robustness restriction?
 
@@ -653,6 +669,8 @@ These thresholds are far above teacher width, so the result refutes guarantees a
 **For Boolean inputs,** the depth example in the original slides ([Question 38](#38-which-original-open-problems-have-been-resolved-and-which-remain)) and later critical-rate constructions remain capacity or proof obstructions, rather than exponential sample lower bounds. Distinct cube inputs do not become exponentially close, so the continuous counterexample does not settle that question.
 
 Without a robustness restriction, polynomial dependence on learner depth is nevertheless proved for substantial Boolean target classes: above mean field in [Question 20](#20-without-a-robustness-restriction-which-targets-have-polynomial-learner-depth-bounds-above-mean-field), and at the critical scaling $\gamma=1$ in [Question 21](#21-without-a-robustness-restriction-what-depth-dependence-does-the-critical-gamma1-prior-have).
+
+<a id="28-without-a-robustness-restriction-which-targets-have-polynomial-learner-depth-bounds-above-mean-field"></a>
 
 ## 20. Without a robustness restriction, which targets have polynomial learner-depth bounds above mean field?
 
@@ -674,6 +692,7 @@ at learner depths $L\ge\max\lbrace 2,h\rbrace $. This improves the direct expone
 **A barrier, and a reason for caution.** The same paper identifies a function-level representation barrier in terms of the product norm, the product of the weight matrices' Frobenius norms ([Question 22](#22-can-the-exponential-dependence-on-the-teachers-depth-be-removed-without-a-robustness-restriction)): low sample complexity forces suitable approximate low-product-norm representatives in a specified large-width regime. No explicit small deep circuit violating the necessary approximation condition is known here. Indeed, an explicit superpolynomial-sample counterexample within $\mathsf{NC}^1$ (polynomial-size fan-in-two circuits of logarithmic depth), in the regime covered by these positive results, would separate $\mathsf{NC}^1$ from $\mathsf{TC}^0$ (polynomial-size constant-depth threshold circuits). This is a reason for caution about easy purported counterexamples, not a proof that the desired theorem is true.
 
 <a id="17-what-does-the-critical-depth-result-imply-about-learning"></a>
+<a id="29-without-a-robustness-restriction-what-depth-dependence-does-the-critical-gamma1-prior-have"></a>
 
 ## 21. Without a robustness restriction, what depth dependence does the critical ($\gamma=1$) prior have?
 
@@ -719,6 +738,7 @@ Here $`[u]_+=\max\lbrace u,0\rbrace `$ is the positive part.
 **What the result does not say.** It does not make the function prior uniform or approximate circuit description length exactly. The prior's limiting rate $`J_L(f)=\lim_N a_N(f)`$ still controls exponential preferences at large width, and small positive rate differences are multiplied by $N$. The explicit finite-width construction need not be optimal for a target. Nor does the theorem bound the compressed network's weight norms or give an efficient posterior-sampling algorithm.
 
 <a id="18-can-the-exponential-dependence-on-the-teachers-depth-be-removed-unconditionally"></a>
+<a id="30-can-the-exponential-dependence-on-the-teachers-depth-be-removed-without-a-robustness-restriction"></a>
 
 ## 22. Can the exponential dependence on the *teacher's* depth be removed without a robustness restriction?
 
@@ -733,6 +753,7 @@ Here $`[u]_+=\max\lbrace u,0\rbrace `$ is the positive part.
 Thus we should not advertise “depth dependence eliminated for all small neural networks.” The established statement is a collection of representation-sensitive improvements, plus a joint polynomial-depth theorem under the explicit robustness restriction for Boolean-circuit targets.
 
 <a id="19-what-are-the-actual-polynomials-are-practical-sample-bounds-close"></a>
+<a id="31-what-are-the-explicit-sample-complexity-polynomials-and-are-practical-sample-bounds-close"></a>
 
 ## 23. What are the explicit sample-complexity polynomials, and are practical sample bounds close?
 
@@ -756,6 +777,9 @@ The improvement comes from sampling source neurons partly uniformly and partly a
 [Question 25](#25-what-does-the-neuron-merging-restriction-assume-and-what-bounds-does-it-give) describes the neuron-averaging (neuron-merging) restriction behind the quadratic row and its sharper tanh bounds, and the quadratic bound that an analogous merging restriction gives for ReLU and GELU.
 
 **Is quadratic the right target?** Quadratic dependence on teacher width is a useful dense-parameter benchmark, but not a universal lower bound. Bounded-fan-in Boolean circuits can have descriptions of order $LC\log(C+d)$ rather than $LC^2$ real parameters. A generic circuit-code prior can turn that description length into an Occam bound. Obtaining comparably sharp behavior for these Gaussian neural priors remains open.
+
+<a id="other-polynomial-estimates-and-verification"></a>
+<a id="32-what-do-the-shallow-lean-checked-and-unrestricted-deep-bounds-look-like"></a>
 
 ## 24. What do the shallow, Lean-checked, and unrestricted deep bounds look like?
 
@@ -814,6 +838,8 @@ $$
 
 suffices in the strong-prior limit. The fixed-depth all-width mean-field proof likewise has rapidly growing intermediate budgets, including $`O_L(dK^{4\cdot3^{L-2}-1})`$. The unrestricted critical-depth results in [Question 21](#21-without-a-robustness-restriction-what-depth-dependence-does-the-critical-gamma1-prior-have) use a different finite-representation argument; their polynomials are also not optimized. Neither the robustness improvements of [Question 23](#23-what-are-the-explicit-sample-complexity-polynomials-and-are-practical-sample-bounds-close) nor the shallow theorem establishes a small joint polynomial for arbitrary unrestricted deep teachers.
 
+<a id="33-what-does-the-neuron-merging-restriction-assume-and-what-bounds-does-it-give"></a>
+
 ## 25. What does the neuron-merging restriction assume, and what bounds does it give?
 
 **It keeps only networks whose neurons can be averaged within suitably few groups per hidden layer, with the number of groups bounded in terms of readout energy, while barely changing clipped predictions. Proved: under it, sample bounds are quadratic in teacher width, with polynomial depth dependence, at every learner width $N\ge C$ ($N\ge2C$ for GELU) and every $\gamma\ge1$.** For tanh, the restriction, also called neuron averaging, is imposed in addition to the robustness restriction of [Question 15](#15-what-robustness-condition-gives-polynomial-depth-dependence); for ReLU and GELU, a separate theorem uses an analogous merging restriction instead. These are conventional proofs with independent AI-agent reviews, not Lean verified; [Question 23](#23-what-are-the-explicit-sample-complexity-polynomials-and-are-practical-sample-bounds-close) compares these bounds with the others. Throughout, $C$ is teacher width, $N$ learner width, $d$ input dimension, $L$ depth, $c$ the calibration constant of the internal-noise restriction, $\varepsilon$ accuracy, $\delta$ failure probability, and $\gamma$ the prior-scaling exponent of [Question 8](#8-what-is-known-for-the-one-parameter-family-of-prior-scalings), with $\gamma=1$ mean field.
@@ -844,6 +870,7 @@ $$
 as a sufficient sample budget for a single-output bounded-fan-in Boolean teacher. Here $C$ counts the Boolean circuit's width, including constant wires; the eligible learner widths are $N\ge C$ for ReLU and $N\ge2C$ for the exact GELU compilation. A more informative nested budget has $O(C^2\log^3(2+C))$ dependence at fixed other resources. ReLU removes population-size parameters by homogeneity; GELU retains them but they admit a uniformly controlled finite cover. This is a conventional, independently reviewed result, not an update to the Lean polynomial ([Question 24](#24-what-do-the-shallow-lean-checked-and-unrestricted-deep-bounds-look-like)).
 
 <a id="how-natural-is-the-neuron-merging-restriction"></a>
+<a id="34-how-natural-is-the-neuron-merging-restriction"></a>
 
 ## 26. How natural is the neuron-merging restriction?
 
@@ -866,6 +893,7 @@ Here $`z_w(x)`$ is the network's real output at input $x$ for weights $w$. This 
 Three examples have exhaustive interval certificates, including a width-32, four-hidden-layer Adam network whose clipped outputs are preserved exactly by one signed population on all 256 inputs. Other witnesses use exhaustive float64 checks. These certify merging stability, not automatically internal-noise robustness or Bayesian learning behavior. The local operator-norm certificate is too conservative to explain these examples at the small noise calibrations previously tested. A quadratic bound under the original internal-noise restriction alone remains open.
 
 <a id="are-there-more-natural-alternatives-to-neuron-merging-stability"></a>
+<a id="35-are-there-more-natural-alternatives-to-neuron-merging-stability"></a>
 
 ## 27. Are there more natural alternatives to neuron-merging stability?
 
@@ -898,6 +926,7 @@ Dropout training, numerical precision tolerance, and norm regularization motivat
 These notes have independent AI-agent mathematical reviews and are **not Lean verified**.
 
 <a id="20-do-independent-non-gaussian-weight-priors-give-the-same-results"></a>
+<a id="36-do-independent-non-gaussian-weight-priors-give-the-same-results"></a>
 
 ## 28. Do independent non-Gaussian weight priors give the same results?
 
@@ -919,6 +948,7 @@ The constants $m,M$ are fixed independently of width. The condition says that th
 **Scope and status.** These are conventional proofs with [independent AI-agent review records](side-results/non-gaussian-priors/verification/README.md); the extension is a side result and **has not been Lean verified**. The sample polynomials may depend on the coordinate law and depth. The theorem does not cover Laplace, uniform, Student, or pure quartic-exponential coordinates at the original scales. For a compactly supported law, taking the scale to zero at fixed width can even make the global-margin conditioning event empty. Broader families, alternative width normalizations, and non-Gaussian subcritical ($\gamma<1$) learning remain open.
 
 <a id="21-what-about-relu-sigmoid-gelu-or-other-activations"></a>
+<a id="37-what-about-relu-sigmoid-gelu-or-other-activations"></a>
 
 ## 29. What about ReLU, sigmoid, GELU, or other activations?
 
@@ -954,6 +984,7 @@ There are two parts to this control. A capacity bound uses products of layer nor
 
 <a id="can-we-bound-the-total-number-of-mistakes-during-learning"></a>
 <a id="can-we-bound-total-mistakes-and-recover-circuit-complexity-from-them"></a>
+<a id="38-can-we-bound-the-total-number-of-mistakes-during-online-learning"></a>
 
 ## 30. Can we bound the total number of mistakes during online learning?
 
@@ -987,6 +1018,7 @@ The neuron-merging restrictions on the prior ([Questions 25](#25-what-does-the-n
 The cumulative results and their activation extensions have independent AI-agent mathematical reviews, not Lean formalizations. For the converse question, whether few mistakes imply that the target has a small circuit, see [Question 31](#31-does-making-few-mistakes-imply-that-the-target-has-a-small-circuit).
 
 <a id="does-making-few-mistakes-imply-that-the-target-has-a-small-circuit"></a>
+<a id="39-does-making-few-mistakes-imply-that-the-target-has-a-small-circuit"></a>
 
 ## 31. Does making few mistakes imply that the target has a small circuit?
 
@@ -1035,6 +1067,7 @@ The leading dependence on mistakes is fourth power; the polynomial degree and im
 **Scope.** This is a converse for the **strong-prior-then-width limit**, not for every fixed realizable learner width or for the finite-exponent mean-field posterior. It does not remove the output cap or prove that every small deep Boolean circuit has a cheap implementation satisfying the amplification certificate. The reconstructed small network need not itself satisfy the prior restriction. These converses are independently AI-reviewed and are not Lean verified.
 
 <a id="why-expect-occam-learning-to-transfer-out-of-distribution"></a>
+<a id="40-why-expect-occam-learning-to-transfer-out-of-distribution"></a>
 
 ## 32. Why expect Occam learning to transfer out of distribution?
 
@@ -1068,6 +1101,7 @@ says that, conditional on a mistake by the simplest survivor, a uniformly sample
 **What remains heuristic.** The heuristic part is whether this genericity premise holds for relevant tasks, representations, and input sequences. A sequence can instead expose errors peculiar to the current simplest hypothesis, eliminating very few other candidates at each mistake. Establishing that such behavior is atypical, and transferring the argument from a simplest-consistent description to the actual NNBayes posterior, remain open. The present iid theorems do not establish those claims.
 
 <a id="24-do-the-good-generalization-results-survive-a-small-amount-of-label-noise"></a>
+<a id="41-do-the-good-generalization-results-survive-a-small-amount-of-label-noise"></a>
 
 ## 33. Do the good generalization results survive a small amount of label noise?
 
@@ -1113,6 +1147,7 @@ There is a precise limitation to improving this particular counting argument. Ou
 **Scope.** These conclusions are specific to the stated sampling and interpolation conventions. Repeated inputs with contradictory labels would make exact conditioning impossible. If we instead allow training errors, ordinary finite-class noisy-error minimization has standard clean-learning guarantees, but that is a different learner. Replacing exact fit by a positive noisy likelihood also needs care in the **strong-prior-first limit**: its likelihood ratios are at most $((1-\eta)/\eta)^n$, whereas a fixed gap $\Delta\kappa$ between the prior energies of two functions contributes $\exp[-\Delta\kappa/(2\sigma^2)]$. At fixed $n$, the prior gap wins as $\sigma\to0$. The noisy-interpolation theorem uses the exact-fit likelihood throughout. [Question 34](#34-do-the-polynomial-bounds-survive-the-likelihood-based-setup-used-in-singular-learning-theory) discusses smooth likelihoods.
 
 <a id="do-the-polynomial-bounds-survive-the-likelihood-based-setup-used-in-singular-learning-theory"></a>
+<a id="42-do-the-polynomial-bounds-survive-the-likelihood-based-setup-used-in-singular-learning-theory"></a>
 
 ## 34. Do the polynomial bounds survive the likelihood-based setup used in singular learning theory?
 
@@ -1163,6 +1198,7 @@ A Boolean sign teacher gives positive variants of both Gaussian results after ad
 **Prediction conventions must match.** Logistic posterior-predictive confidence is $`\mathbb E_Q[(1+e^{-yz_w(x)})^{-1}]`$, whereas our classification papers use $`Q(yz_w(x)>0)`$. A score margin of $1/2$ gives only about $0.622$ logistic label probability, even if the parameters are known exactly. A $2/3$ predictive guarantee therefore needs a suitable link scale or a larger score margin. The Gaussian result above controls proximity of the latent output to the clean teacher; a future noisy observation is a separate random quantity.
 
 <a id="does-slt-already-give-comparable-generalization-bounds"></a>
+<a id="43-does-singular-learning-theory-already-give-comparable-generalization-bounds"></a>
 
 ## 35. Does singular learning theory already give comparable generalization bounds?
 
@@ -1215,6 +1251,8 @@ That particular certificate therefore retains a quadratic width cost, regardless
 
 Having fewer samples than parameters does not invalidate every classical bound. Norm, margin, compression, and PAC-Bayes bounds can use other complexity measures; for example, [spectral norm and margin bounds](https://arxiv.org/abs/1706.08498). Nor is a fixed finite Boolean domain a useful way to separate bounds indefinitely as width grows: its finite support supplies another capacity ceiling. The variational argument of [Question 36](#36-what-does-a-finite-sample-variational-bound-give-for-the-standard-fan-in-gaussian-prior) also permits continuous inputs.
 
+<a id="44-what-does-a-finite-sample-variational-bound-give-for-the-standard-fan-in-gaussian-prior"></a>
+
 ## 36. What does a finite-sample variational bound give for the standard fan-in Gaussian prior?
 
 **Proved: a final-posterior guarantee from $O(N)$ samples at learner width $N$, for fixed teacher resources, accuracy and confidence, with polynomial depth dependence; in some regimes this is far fewer samples than parameters.** The bound still grows linearly with $N$, unlike the width-independent guarantees of the main papers. It comes from an explicit comparison distribution, not from the local asymptotic quantities of singular learning theory (SLT; [Question 35](#35-does-singular-learning-theory-already-give-comparable-generalization-bounds)); the note has independent AI-agent mathematical checks but is not Lean verified.
@@ -1244,6 +1282,7 @@ $$
 Consequently there are regimes where this certificate is useful with far fewer samples than parameters. It does **not** establish practical numerical sharpness, or a theorem uniform over arbitrarily large width at fixed sample size. These are explicit variational calculations, not consequences of SLT's learning coefficient $\lambda$ and singular fluctuation $\nu$ alone ([Question 35](#35-does-singular-learning-theory-already-give-comparable-generalization-bounds)). [Question 37](#37-can-prior-scaling-force-direct-prior-mass-bounds-to-depend-on-width-or-target-complexity) discusses obstructions to removing this width dependence from direct prior-mass certificates.
 
 <a id="can-prior-scaling-obstruct-a-width-independent-log-prior-bound"></a>
+<a id="45-can-prior-scaling-force-direct-prior-mass-bounds-to-depend-on-width-or-target-complexity"></a>
 
 ## 37. Can prior scaling force direct prior-mass bounds to depend on width or target complexity?
 
@@ -1276,6 +1315,7 @@ Output variance of order one **does not by itself imply a GP**. The Gaussian lim
 **The distinction from the main learning theorems is essential.** Sign-only predictions are unchanged by positive output rescaling, and conditioning the prior on global margins changes the probabilities being compared. A common amplitude penalty can cancel between numerator and denominator. Our positive results use additional structure, including relative prior costs, posterior concentration, and compression ([Question 2](#2-can-we-bound-the-prior-probability-of-a-function)). A diverging raw log-prior penalty therefore does not contradict those theorems or prove that the actual learner needs more samples. For the Gaussian families covered by these obstructions, a successful width-independent, teacher-polynomial proof must use information beyond a direct raw-mass certificate.
 
 <a id="23-which-original-open-problems-have-been-resolved-and-which-remain"></a>
+<a id="46-which-original-open-problems-have-been-resolved-and-which-remain"></a>
 
 ## 38. Which original open problems have been resolved, and which remain?
 
@@ -1295,6 +1335,7 @@ Output variance of order one **does not by itself imply a GP**. The Gaussian lim
 The [appendix audit](side-results/strong-prior-appendix-audit/paper.pdf) checks every appendix of the slides in turn. In particular, the original depth example is a capacity/proof obstruction rather than a sample lower bound; the scaling classification is not exhaustive; the kernel-to-classification inference needed repair; and some online-learning claims were false under their stated conventions. These qualifications are part of the current account, not claims silently inherited from the slides.
 
 <a id="25-what-other-questions-matter-before-interpreting-this-as-an-explanation-of-practical-deep-learning"></a>
+<a id="47-what-other-questions-matter-before-interpreting-this-as-an-explanation-of-practical-deep-learning"></a>
 
 ## 39. What other questions matter before interpreting this as an explanation of practical deep learning?
 
@@ -1309,6 +1350,7 @@ The [appendix audit](side-results/strong-prior-appendix-audit/paper.pdf) checks 
 - **Selection of examples.** Passive iid sample lower bounds need not hold for active learning, teaching sets, or adversarially selected informative inputs. They are also usually stated for each specified sample size, not on one common event for every prefix of an infinite stream.
 
 <a id="26-how-much-of-this-is-formally-verified"></a>
+<a id="48-how-much-of-this-is-formally-verified"></a>
 
 ## 40. How much of this is formally verified?
 
