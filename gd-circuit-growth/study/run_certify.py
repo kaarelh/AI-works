@@ -45,8 +45,7 @@ def e1(ns=(64, 256, 1024, 4096, 16384), seeds=(0, 1, 2)):
     return out
 
 
-def e2(cases=(("par3", 1024), ("par3", 4096), ("stair5", 4096), ("majpar", 4096), ("maj9", 1024), ("mux", 4096),
-              ("rand1", 4096), ("dnf3", 16384))):
+def e2(cases=(("par3", 1024), ("stair5", 4096), ("majpar", 4096), ("maj3", 256), ("mux", 4096), ("par2", 128))):
     out = []
     for fn, n in cases:
         z = np.load(os.path.join(C.RESULTS, f"fixed_adam_{fn}.npz"))

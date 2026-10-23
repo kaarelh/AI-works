@@ -23,7 +23,7 @@ Outputs (stdout): per event, T, depth, tau/Theta, kappa, the A2 size and depth
 bounds, train/test error, and the A1 Occam bounds; for SC also ||c||_1 versus
 ||R(t)||_n / Theta (Theorem A2.4) and the l1/Rademacher bound.
 
-Run: python3 race_bounds.py > race_bounds.txt     (about a minute, one core)
+Run: python3 race_bounds.py > race_bounds.txt     (a few minutes, one core)
 """
 import math, sys, itertools
 import numpy as np
@@ -111,7 +111,6 @@ class Race:
         self.R = np.zeros(self.n)       # int_0^t r(s) ds
         # candidate store
         self.cand_tr, self.cand_te, self.cand_name, self.cand_depth = [], [], [], []
-        self.S, self.avail = [], []
         self.seen = set()
         # active gates (indices into the candidate store)
         self.active, self.sign = [], {}
@@ -141,7 +140,6 @@ class Race:
         self.seen.add(key)
         self.cand_tr.append(vtr.astype(np.float32)); self.cand_te.append(vte.astype(np.int8))
         self.cand_name.append(name); self.cand_depth.append(depth)
-        self.S.append(0.0); self.avail.append(self.t)
 
     def _add_pairs(self, i, j):
         a, b = self.src_tr[i], self.src_tr[j]
@@ -152,8 +150,8 @@ class Race:
 
     def _finalize(self):
         self.G = np.stack(self.cand_tr, 1).astype(np.float64)       # n x M
-        self.S = np.array(self.S, dtype=np.float64)
-        self.avail = np.array(self.avail)
+        self.S = np.zeros(len(self.cand_tr))
+        self.avail = np.zeros(len(self.cand_tr))
 
     def _grow_store(self, start):
         new = np.stack(self.cand_tr[start:], 1).astype(np.float64) if len(self.cand_tr) > start else None
@@ -255,7 +253,7 @@ class Race:
 
 
 def run(name, n, variant="LS", tmax=12.0, Tmax=60, seed=0, verbose=True, out=sys.stdout):
-    rng = np.random.default_rng([seed, n, hash(name) % 1000])
+    rng = np.random.default_rng([seed, n, sum(map(ord, name))])
     X = rng.choice([-1.0, 1.0], size=(n, D)); y = target(name, X)
     Xte = rng.choice([-1.0, 1.0], size=(20000, D)); yte = target(name, Xte)
     race = Race(X, y, Xte, yte, variant=variant)
@@ -277,20 +275,27 @@ def run(name, n, variant="LS", tmax=12.0, Tmax=60, seed=0, verbose=True, out=sys
             l1 = float(np.sum(np.abs(race.c)))
             Rn = float(np.sqrt(np.mean(race.R ** 2)))
             ident = float(np.mean(race.R * ftr))           # should equal ||c||_1 (Theta = 1)
-            B = abs(race.c0) + l1
+            # Theorem A1' with F = depth-1 dictionary, B = ||c||_1, |c0| <= 1 + B
+            B = l1
             j = max(0, math.ceil(math.log2(max(B, 1.0))))
             Bj = 2.0 ** j
-            logF2 = math.log(2 * (1 + race.G.shape[1]))   # |F| = 1 + #depth-1 candidates (merged)
+            assert abs(race.c0) <= 1 + Bj + 1e-9
+            logF2 = math.log(2 * race.G.shape[1])          # |F| = #depth-1 candidates (merged)
             pij = 1.0 / ((j + 1) * (j + 2))
+            rad = (1 + Bj) / math.sqrt(n) + Bj * math.sqrt(2 * logF2 / n)
+            conf = math.sqrt(math.log(1 / (pij * DELTA)) / (2 * n))
             clip_tr = 0.5 * float(np.mean((np.clip(ftr, -1, 1) - y) ** 2))
             clip_te = 0.5 * float(np.mean((np.clip(fte, -1, 1) - yte) ** 2))
-            sq_bound = clip_tr + 4 * Bj * math.sqrt(2 * logF2 / n) + 2 * math.sqrt(math.log(1 / (pij * DELTA)) / (2 * n))
+            sq_bound = clip_tr + 4 * rad + 2 * conf
+            th = 0.5
+            ramp_tr = float(np.mean(np.clip(1 - y * ftr / th, 0, 1)))
+            ramp_bound = ramp_tr + (2 / th) * rad + conf
             row.update(l1=l1, R_over_Theta=Rn, ident=ident, tau_bound=race.tau, B=B, clip_tr=clip_tr,
-                       clip_te=clip_te, sq_bound=sq_bound)
+                       clip_te=clip_te, sq_bound=sq_bound, ramp_bound=ramp_bound)
         rows.append(row)
         if first_interp is None and tr_err == 0:
             first_interp = row
-        if race.train_loss_zero() if hasattr(race, "train_loss_zero") else row["train_loss"] < 1e-20:
+        if row["train_loss"] < 1e-20:
             break
     if verbose:
         print(f"\n### {name}  n={n}  variant={variant}  (#depth-1 candidates after merging: {race.G.shape[1] if variant=='SC' else 'n/a'})", file=out)
@@ -300,10 +305,10 @@ def run(name, n, variant="LS", tmax=12.0, Tmax=60, seed=0, verbose=True, out=sys
                 print(f"{r['t']:6.2f} {r['tau']:6.2f} {r['T']:3d} {r['depth']:3d} {r['kappa']:6.2f} {r['size_bound']:8.2f} "
                       f"{r['train_loss']:7.4f} {r['train_err']:6.3f} {r['test_err']:6.3f} {min(1,r['kl']):6.3f} {min(1,r['bern']):7.3f}", file=out)
         else:
-            print(f"{'t/Th':>6} {'tau/Th':>6} {'T':>3} {'||c||1':>7} {'<R,f>':>7} {'|R|/Th':>7} {'clipTr':>7} {'clipTe':>7} {'l1bnd':>6} {'trErr':>6} {'teErr':>6}", file=out)
+            print(f"{'t/Th':>6} {'tau/Th':>6} {'T':>3} {'||c||1':>7} {'<R,f>':>7} {'|R|/Th':>7} {'clipTr':>7} {'clipTe':>7} {'A1psq':>6} {'trErr':>6} {'teErr':>6} {'A1pramp':>7}", file=out)
             for r in rows:
                 print(f"{r['t']:6.2f} {r['tau']:6.2f} {r['T']:3d} {r['l1']:7.3f} {r['ident']:7.3f} {r['R_over_Theta']:7.3f} "
-                      f"{r['clip_tr']:7.4f} {r['clip_te']:7.4f} {min(9.99,r['sq_bound']):6.3f} {r['train_err']:6.3f} {r['test_err']:6.3f}", file=out)
+                      f"{r['clip_tr']:7.4f} {r['clip_te']:7.4f} {min(9.99,r['sq_bound']):6.3f} {r['train_err']:6.3f} {r['test_err']:6.3f} {min(9.99,r['ramp_bound']):7.3f}", file=out)
     return rows, first_interp
 
 
@@ -322,6 +327,15 @@ if __name__ == "__main__":
             ok_depth = all(r["depth"] <= r["depth_bound"] + 1e-9 for r in rows)
             ok_A1 = all(r["test_err"] <= r["kl"] + 0.01 for r in rows)
             summary.append((name, n, fi, rows[-1] if rows else None, ok_size, ok_depth, ok_A1))
+    print("\n## Proposition A2.6 check (par3): first firing time vs the proved lower bound Theta/(2 eps)", file=out)
+    for name, n, fi, last, a, b, c in summary:
+        if name != "par3":
+            continue
+        M1 = 2205
+        eps = math.sqrt(2 * math.log(2 * (M1 + 1) / DELTA) / n)
+        rows, _ = run(name, n, "LS", tmax=40.0, Tmax=1, verbose=False)
+        print(f"  n={n:5d}: first firing at t/Theta = {rows[0]['t']:.2f};  bound 1/(2 eps) = {1/(2*eps):.2f};"
+              f"  heuristic sqrt(n/(2 log 2M)) = {math.sqrt(n/(2*math.log(2*M1))):.2f}", file=out)
     print("\n## Summary (LS race): first zero-train-error event and last event", file=out)
     print(f"{'target':>6} {'n':>5} | {'T@0':>4} {'t/Th':>5} {'teErr':>6} {'A1-kl':>6} | {'T_end':>5} {'t/Th':>5} {'teErr':>6} {'A1-kl':>6} | size depth A1 ok", file=out)
     for name, n, fi, last, a, b, c in summary:
@@ -334,3 +348,4 @@ if __name__ == "__main__":
             rows, _ = run(name, n, "SC", tmax=10.0, Tmax=40)
             ok = all(abs(r["l1"] - r["ident"]) < 1e-6 and r["l1"] <= r["R_over_Theta"] + 1e-9 and r["R_over_Theta"] <= r["tau"] + 1e-9 for r in rows)
             print(f"  identity and inequalities hold at every event: {ok}", file=out)
+            print(f"  (A1psq: Theorem A1' bound on test clipped square loss; A1pramp: Theorem A1' bound on test 0-1 error, theta = 1/2)", file=out)

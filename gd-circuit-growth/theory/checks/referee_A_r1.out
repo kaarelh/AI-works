@@ -1,0 +1,42 @@
+## 1. Theorem A1 realizable bound 1 - exp(-L_T/n), d=30, k=2, |G|=6, delta=0.05
+T= 1  L_T=   14.8  n=64:0.206  n=256:0.056  n=1024:0.014  n=4096:0.004  n=16384:0.001   n(<=0.1)=141  ratio n/T=141
+T= 3  L_T=   36.8  n=64:0.437  n=256:0.134  n=1024:0.035  n=4096:0.009  n=16384:0.002   n(<=0.1)=350  ratio n/T=117
+T= 6  L_T=   78.4  n=64:0.706  n=256:0.264  n=1024:0.074  n=4096:0.019  n=16384:0.005   n(<=0.1)=744  ratio n/T=124
+T=10  L_T=  151.4  n=64:0.906  n=256:0.446  n=1024:0.137  n=4096:0.036  n=16384:0.009   n(<=0.1)=1438  ratio n/T=144
+T=20  L_T=  427.2  n=64:0.999  n=256:0.812  n=1024:0.341  n=4096:0.099  n=16384:0.026   n(<=0.1)=4055  ratio n/T=203
+T=30  L_T=  840.1  n=64:1.000  n=256:0.962  n=1024:0.560  n=4096:0.185  n=16384:0.050   n(<=0.1)=7974  ratio n/T=266
+
+## 2. Theorem A3.1 for par2: gamma=1/2, R=lambda*=1, T=1, M_0=2205, delta=0.05
+eps=0.10355; condition 1: b >= 2253.2; condition 2: b >= 206.8  -> n >= 2254 (note says 2252)
+
+## 3. Population maj3 race (LS, exact on {-1,1}^5, toy library, depth <= 3)
+ event 1: t/Theta = 2.0000; 9 syntactic gates fire (9 distinct functions up to sign), |U| = [0.5]; depths [1]; cumulative distinct = 9; train residual ||r|| = 0.5000; kappa(pop) = 3.000
+   after event 1: max |S|/Theta of unfired candidates = 0.5000 (claim: <= 1/2)
+   refit f = (x1+x2+x3)/2 ? max|f - (x1+x2+x3)/2| = 1.78e-15
+   residual utilities after event 1: max over depth-1 = 0.0000, max over depth-2 = 0.2500, #depth-2 candidates attaining it = 12
+ event 2: t/Theta = 6.0000; 12 syntactic gates fire (12 distinct functions up to sign), |U| = [0.25]; depths [2]; cumulative distinct = 21; train residual ||r|| = 0.0000; kappa(pop) = 5.303
+   race stopped: all utilities zero
+
+## 4. Population MAJ_5, first event (d = 6)
+ t/Theta = 2.6667 (1/u_5 = 2.6667); gates fired = 25 (m^2 = 25); max other clock = 0.5000; kappa(pop) of the 25 = 5.000; (tau/Theta)^2 = 7.111
+ refit equals u_5 * sum x_i: True; sign(refit) == MAJ_5: True
+
+## 5. Smallest consistent circuit for maj3 (toy library, sign readout)
+ 1-gate circuit exists: False;  2-gate circuit exists: False
+
+## 6. A1 realizable bound vs the BEHW symmetrization route (|G|=6, d=30, k=2, delta=0.05)
+ n= 1024: A1 smaller than BEHW for T < None  (note: 'whenever T <~ log2(2n)' = 11); at T=10: A1=0.137, BEHW=0.448
+ n= 4096: A1 smaller than BEHW for T < None  (note: 'whenever T <~ log2(2n)' = 13); at T=10: A1=0.036, BEHW=0.122
+ n=16384: A1 smaller than BEHW for T < None  (note: 'whenever T <~ log2(2n)' = 15); at T=10: A1=0.009, BEHW=0.033
+
+## 7. Random correlated dictionaries: (SC) race with exits, (LS) depth-one race
+ SC (40 trials): total exits from the saturated set = 130;
+   max | ||c||_1 - <R,f>_n | = 2.66e-14 (Theorem A2.4, Theta=1); max |S_m - <R,g_m>_n| = 2.46e-14;
+   max (|S|-Theta) = 0.00e+00 (Lemma 2.2(3)); max |U_m| on support = 5.44e-16; chain <= ||R|| <= tau asserted
+ LS (40 trials): max over events of T / (kappa tau^2) = 0.715 (Theorem A2.3 needs <= 1)
+
+## 8. race_bounds.py: S[~dormant] = [sign[m] for m in active] assigns in index order, not in 'active' order
+ active=[4, 1], sign={4: 1.0, 1: -1.0} -> S[1]=1.0, S[4]=-1.0 (should be -1, +1). Harmless in LS (fired clocks unused); in SC it would corrupt the clock of a gate that later exits.
+
+## 9. Proposition A3.4(3): first-occurrence validation, adaptive memorizer, Monte Carlo
+ mean of (1/K) sum [L(h_s_k) - loss on first occurrence] = 0.0007 +- 0.0007 (should be ~0); P(gap > sqrt(log(1/0.05)/(2K))) = 0.0015 (should be <= 0.05)

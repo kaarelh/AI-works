@@ -9,6 +9,8 @@ Notes by Claude, prompted by Kaarel Hänni. Research note, 23 October 2026; not 
 
 **Question.** Is there a low-level, "more discrete" model of gradient-descent learning, comparable to the correspondence *NNBayes ≈ Occam circuit learning* in [`neural-network-generalization/`](../neural-network-generalization/)?
 
+[Part 2](#part-2-an-empirical-study-a-matched-discrete-model-and-generalization-bounds) adds an empirical study of rich-regime networks on 21 Boolean functions, a discrete "race" model that matches their sample complexity within a factor of about 1.3 on held-out functions, and generalization bounds, including certificates that bound trained networks' test error without labelled hold-out data.
+
 ## Short answer
 
 Mostly yes, and most of it is in the literature under the names *saddle-to-saddle dynamics* and *incremental learning*. In the rich regime (small initialization), gradient flow is well approximated by a discrete greedy algorithm:
@@ -209,9 +211,158 @@ These are small toy runs at one width and one target. They check the rate law's 
   - Weight decay adds slow delete-and-merge moves; grokking-like replacement of a memorizing circuit by a generalizing one is outside the race model.
 - **Proof status.** For deep nonlinear networks I found no proof beyond the first escape. The deep part of the model is conjectural.
 
+## Part 2: an empirical study, a matched discrete model, and generalization bounds
+
+Added later on 23 October 2026, in a second session of about three hours, in response to three requests:
+1. study rich-regime networks empirically on Boolean functions;
+2. find a discrete learning model that matches them behaviourally;
+3. find generalization bounds of the form "training has not taken long, so the circuit is still small, so a Chernoff bound over small circuits applies".
+
+Code and generated tables are in [`study/`](study/) (file guide: [`study/README.md`](study/README.md)); proofs are in [`theory/`](theory/). Everything below is **Numerical** at one input dimension (30), one width (128) and one learning rate per optimizer, unless labelled otherwise.
+
+### 2.1 What the networks do
+
+**Setup.**
+- **Targets:** 21 targets on $\{-1,1\}^{30}$ ([`study/boolfuncs.py`](study/boolfuncs.py)): dictator, AND, majorities, a random halfspace, parities of 2–4 bits, a staircase, compositions of parities and majorities, a multiplexer, a DNF, a decision list, and four random 6-gate formulas.
+- **Network:** a muP two-hidden-layer ReLU MLP of width 128 (small readout, per-layer learning-rate multipliers), square loss.
+- **Optimizer:** Adam with learning rate $10^{-3}$, minibatches of 64 sampled with replacement from a fixed training set of size $n\in\{16,\dots,16384\}$, for 20000 steps, 3 seeds.
+- **Online protocol:** six of the targets were also trained with a fresh minibatch at every step.
+
+The weights move far from initialization: $\lVert\Delta W_1\rVert/\lVert W_1(0)\rVert\approx0.7$–$1.05$. The layer kernels collapse from participation-ratio rank about 36 and 32 at initialization to 3–10.
+
+The sample complexity $n^*$ below is the training-set size at which test error reaches 0.1. The full tables are in [`study/NN-STUDY-TABLES.md`](study/NN-STUDY-TABLES.md); this is a selection.
+
+| target | relevant vars | leap | $n^*$ network | $n^*$ NNGP kernel | $n^*$ Occam over juntas |
+|---|---|---|---|---|---|
+| $x_1$ | 1 | 1 | 47 | 29 | 16 |
+| MAJ$_3$ | 3 | 1 | 112 | 73 | 18 |
+| MAJ$_9$ | 9 | 1 | 263 | 1470 | never |
+| random halfspace on 10 bits | 10 | 1 | 563 | 1701 | never |
+| $x_1x_2$, $x_1x_2x_3$, $x_1x_2x_3x_4$ | 2, 3, 4 | 2, 3, 4 | 200, 843, 2728 | 406, never, never | 16, 23, 37 |
+| staircase sign$(x_1+x_1x_2+\dots)$, 5 terms | 5 | 1 | 1514 | never | never |
+| MAJ$(x_1x_2,x_3x_4,x_5x_6)$ | 6 | 2 | 1380 | 1129 | never |
+| multiplexer $x_4\,?\,x_1x_2x_3:\mathrm{MAJ}_3$ | 4 | 1 | 1156 | never | 37 |
+| 3-term DNF | 9 | 1 | 505 | 564 | never |
+| sign$(2x_1+x_2x_3+x_4x_5x_6)$ | 6 | 3 | 2205 | never | never |
+
+"Never" means not within the range tested ($n\le4096$ for the kernel, $n\le16384$ otherwise). The Occam learner searches juntas of up to 4 variables, so it cannot represent targets with more relevant variables.
+
+**Observations.**
+- **Between a kernel and an Occam learner.**
+  - Parities cost the network 3–4× more data per extra bit: 200, 843 and 2728 samples. The Occam learner needs only 16, 23 and 37, and the NNGP kernel fails from 3 bits on.
+  - Conversely, dense leap-1 targets such as MAJ$_9$ and the 10-bit halfspace are cheap for the network, 3–6× cheaper than for the kernel, and out of reach of the junta learner.
+- **Reuse of a finite training set saves a lot of data.** With fresh samples, the network needs 12,800 samples for $x_1x_2$ and 32,000 for $x_1x_2x_3$, the staircase, the multiplexer and MAJ$(x_1x_2,\dots)$. That is 12–64× its fixed-set $n^*$ (MAJ$_9$: 3,200 against 263).
+- **Delayed generalization near $n^*$.**
+  - At $n=256$, $x_1x_2$ fits its training set by step 200 but only generalizes at steps 7000–10000.
+  - The multiplexer, the DNF, recursive majority and AND$(x_1x_2,x_3x_4)$ show 4–40× delays at their critical $n$.
+- **Features are learned in staircase order.** On the staircase target, the network's Fourier coefficient reaches half its target value at step 100 for $x_1$, step 500 for $x_1x_2$ and $x_1x_2x_3$, and step 1000 for $x_1x_2x_3x_4$. On sign$(2x_1+x_2x_3+x_4x_5x_6)$ it is step 100 for $x_1$, then 500, 1000 and 2000 for the higher terms.
+
+### 2.2 A discrete model that matches them
+
+Three designs were planned:
+- **race:** an event-driven utility race, i.e. Part 1's model made into an algorithm;
+- **sswm:** strong-selection/weak-mutation evolution of one shared fan-in-2 circuit, i.e. the original "mutate and keep improvements" idea;
+- **stagewise:** a leap-limited stagewise learner.
+
+Each would be implemented against a common API and scored against the networks. Each model's at most 4 global hyperparameters were calibrated on 12 *calibration* functions only and validated on 9 *held-out* functions. The stagewise design and the planned judge/refinement rounds were not run, for time.
+
+**The race model** ([`study/models/race.py`](study/models/race.py)) is the clear winner.
+- **State.** A shared two-level circuit of discrete ReLU gates $g=\mathrm{relu}(\sum_jw_ju_j-b)$. The weights are integers in $\{-3..3\}$, and the wires $u_j$ are the input literals and the earlier first-level gates. The gates feed a ridge least-squares readout, refitted after every gate.
+- **Proto-units.** A persistent pool of dormant "proto-units" of orders 1–4 stands in for the not-yet-used hidden units.
+- **Alignment.** Each proto-unit's direction aligns to the residual by (tensor) power iteration, at the speed given by the homogeneous law $\dot m=kU_km^{k-1}$. A unit of order $k$ starting from overlap $m\sim D^{-1/2}$ therefore needs time about $D^{(k-2)/2}/U_k$: the "fresh chain" cost of Part 1.
+- **Firing.** Its clock then grows at the rate of the rounded gate's utility, and the unit fires when the clock reaches $\theta=\log(1/\alpha)=1.5$.
+- **Race and stopping.** The earliest firing wins, after which the readout is refitted. The run stops at zero training error.
+- **Clock.** The model's own time is the race clock.
+
+On the **held-out** functions ([`study/MODEL-SCOREBOARD.md`](study/MODEL-SCOREBOARD.md); figures [`model_learning_curves.png`](study/figures/model_learning_curves.png), [`model_nstar_scatter.png`](study/figures/model_nstar_scatter.png)):
+
+| model | mean $\lvert\log_2 n^*_{\rm model}/n^*_{\rm NN}\rvert$ | Spearman of $n^*$ | success agreement | learning-curve MAE | per-example agreement | Spearman of time to generalize |
+|---|---|---|---|---|---|---|
+| **race** | **0.33** | **1.00** | **0.95** | **0.01** | 0.50 | **0.83** |
+| sswm | 1.36 | 0.60 | 0.86 | 0.06 | 0.26 | 0.72 |
+| NNGP kernel | 2.58 | 0.73 | 0.85 | 0.04 | **0.69** | 0.22 |
+| Occam over juntas | 4.61 | 0.50 | 0.62 | 0.13 | 0.20 | −0.07 |
+
+How to read the columns:
+- **Sample complexity:** the race model's $n^*$ is within a factor of about 1.26 of the network's on average over the held-out functions, and ranks them identically. The scores on the calibration functions are similar (0.24, 0.96, 0.98).
+- **Success agreement:** whether test error is at most 0.1 at each $(f,n)$.
+- **Per-example agreement:** on cells where the network is partially right, the excess agreement of the predictions over independent errors, on the same training set, as a fraction of the maximum.
+- **Time:** the race clock orders the cells by time to generalize much as network training steps do.
+
+**Caveats.**
+- The NNGP kernel agrees more with the network's *individual* mistakes at small $n$ (0.69 vs 0.50), although its learning curves are much worse. Where both are partially right, their errors resemble each other's.
+- There is no network-vs-network ceiling for these metrics: the planned SGD runs on the same training sets were dropped for time.
+- The race model is only one model, calibrated against one architecture and one optimizer. Whether the same three constants transfer to other widths, depths, optimizers or input dimensions is untested.
+- It is more mechanistic than "greedy Occam":
+  - its continuous direction search and rounding make it less discrete than the circuit picture of Part 1;
+  - its library (integer-weight discrete ReLUs over all wires) is large, $\approx D\log 7$ nats per gate.
+
+### 2.3 Generalization bounds
+
+Three derivations ([`theory/A-discrete-model.md`](theory/A-discrete-model.md), [`theory/B-nn-time-bounds.md`](theory/B-nn-time-bounds.md), [`theory/C-bridge-and-certificates.md`](theory/C-bridge-and-certificates.md)). An adversarial referee read A, with the result described below. The referee pass on B had not finished, and C has not been refereed. Treat their "Proved" labels accordingly.
+
+**Your sketch works, with one correction.**
+- **The Chernoff/Occam step needs no assumption on the dynamics.** For any learner whose output after $T$ gates is a circuit from a fixed library followed by a threshold readout, the realizable test error is at most about $\bigl(T(\log|G|+k\log(d+T))+T^2\log2+\log\frac{(T+1)(T+2)}\delta\bigr)/n$ simultaneously for all $T$ (Theorem A1, Proved).
+- **The correction:** training time does *not* bound the raw gate count. Many correlated gates can fire at once; on MAJ$_m$, $m^2$ gates fire at the same instant (Proposition A2.2(1–2)).
+- **What time does bound,** in the race model, with time measured as $\tau(t)/\log(1/\alpha)$ where $\tau=\int\sqrt{2\hat L}\,dt$:
+  - the circuit's **depth** (Proposition A2.1);
+  - its **incoherence-weighted size**, $T\le\kappa\,(\tau/\Theta)^2$ with $\kappa$ the top eigenvalue of the fired gates' Gram matrix (Theorem A2.3);
+  - the readout's **$\ell_1$ norm** at depth one (Theorem A2.4).
+
+  Each gives a bound on test error as a function of training time (Corollary A2.5). The race reaches the noise floor only at $t\gtrsim\Theta\sqrt{n/\log M}$ (Proposition A2.6), which is the correlational-SQ sample size. That is a precise version of "it hasn't had time to memorize yet".
+- **Rigorous for a real gradient-flow model:** for a diagonal linear network over a Boolean feature dictionary, small-initialization gradient flow provably keeps the number of large coordinates at most $\kappa\,\tau^2/\Theta_\varepsilon^2$. This gives a generalization bound uniform in $t$ with only $\ln(\text{dictionary size})$ dependence (C2).
+- **For ReLU networks** this is only conditional (C3). The networks inherit the race model's time-indexed bound under an explicit "saddle-to-saddle approximation" hypothesis, which can be checked with unlabelled inputs.
+- **SGD / online.**
+  - With fresh minibatches, generalization is not the issue: the greedy race makes the same decisions as the population race once the batch exceeds about $\log(M T/\delta)/\gamma^2$ (A3).
+  - The progressive (online) error bounds the test error of a random iterate (B3.4, C4). One correct move costs $O(\ln|\mathcal M|/\gamma^2)$ fresh samples (C4.3).
+
+**What works numerically on the real networks.**
+- **Parameter-space bounds are vacuous** at every $n\le16384$, even at initialization (B):
+  - Frobenius and path norms;
+  - the spectral bound;
+  - stability (Hardt–Recht–Singer) and mutual information, which also fail their assumptions here.
+
+  A PAC-Bayes bound with prior centred at initialization reaches 0.26–0.56 at $n=16384$ for the simplest targets, and is non-vacuous only in the first ~$10^2$ steps when its time-based form is used.
+- **Distillation certificates are non-vacuous and often tight** (C1, Proved; numbers in C §1.4).
+  - **Method:** find a small circuit $g$ (a junta truth table, or a sign of a few Fourier characters with small integer weights) that agrees with the trained network on *unlabelled* inputs. Then bound the network's test error by an Occam/Chernoff bound for $g$ on the training set, plus the measured disagreement. No labelled hold-out data is used.
+  - **At $n=2048$:** every network is certified below 0.5; 9 of 13 targets below 0.04 (MAJ$_9$ at 0.034 via a sign of 9 characters).
+  - **At $n=16384$:** every network is certified at most 0.021.
+  - **Failures and validity:** certificates fail exactly where the networks fail, and none of the 117 falls below the true error.
+- **Over training time** ([`study/CERTIFICATES.md`](study/CERTIFICATES.md), [`cert_over_time.png`](study/figures/cert_over_time.png)), certificates from [`study/certify.py`](study/certify.py) track delayed generalization.
+  - On $x_1x_2x_3$ at $n=1024$, the network fits its training set by step 1000 with test error 0.165; the certificate is 0.23. By step 20000 the test error is 0 and the certificate 0.073.
+  - While a network memorizes, the best certifying class temporarily grows, for example to signs of 8–10 characters, and then collapses to the 3-bit parity.
+  - My search is weaker than C's: it misses MAJ$(x_1x_2,\dots)$ after step 500 and certifies only 0.60 there.
+
+**Bottom line for "short training ⇒ generalization".**
+- **For the discrete model it is a theorem,** with "size" read as depth, incoherent size or readout norm.
+- **For real networks** the a-priori version is open beyond diagonal linear networks.
+- **The a-posteriori version** (the trained network is close to a small circuit, so Occam applies) is rigorous and gives the only non-vacuous bounds here, often within a few percent of the truth.
+- **Missing link:** a theorem that gradient descent keeps the network close to a circuit whose size is controlled by $\tau/\log(1/\alpha)$. That is exactly the "saddle-to-saddle approximation" hypothesis of C3.
+
+### 2.4 Open items from this session
+
+- **Not done, for time:**
+  - SGD runs on the same training sets (the network-vs-network ceiling for the agreement metrics);
+  - online runs for 15 of the 21 targets;
+  - the third model design;
+  - the judge/refinement stage;
+  - the referee pass on C, and repairs to B.
+- **Corrections from A's referee, not yet incorporated:**
+  - Proposition A3.4(2) (multi-epoch reuse) is labelled Proved but is not proved; it should be Heuristic.
+  - Proposition A2.2(3) (duplicate gates always fire together) is false as stated.
+  - The $\alpha$-invariance of Lemma 2.2(4) holds only for the pure $k=2$ race.
+  - The summary's "SGD reproduces the population run" holds only under the stated utility-gap assumptions.
+  - The referee found no false core theorem: A1, A2.1, A2.3 and A2.4 stand.
+- **Natural next steps:**
+  - test whether the race model's three constants transfer to other widths, depths and optimizers;
+  - a circuit search (not only juntas and Fourier signs) for the certificates;
+  - an attempt at the saddle-to-saddle approximation hypothesis for two-layer ReLU networks from small initialization, using Alternating Gradient Flows.
+
 ## Files
 
-All scripts use only numpy and run in seconds to minutes on a CPU.
+Part 2: [`study/`](study/) (NN study, discrete models, certificates; guide in [`study/README.md`](study/README.md)) and [`theory/`](theory/) (derivations A, B, C, with check scripts in `theory/checks/`).
+
+Part 1: all scripts use only numpy and run in seconds to minutes on a CPU.
 
 | file | contents |
 |---|---|
