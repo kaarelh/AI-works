@@ -14,22 +14,28 @@ READOUT  at race time t the readout is the joint ridge fit
     Equivalently kernel ridge regression with kernel K + (lam_bg / lam_g) F F^T and ridge lam_bg.  The race sees the
     residual of this joint fit, so the background competes with gate growth.
 
-BACKGROUND SCHEDULE  (one new constant)
+BACKGROUND SCHEDULE  (new constant 1: c_bg)
     mode 'flow' (the model):   lam_bg(t) = c_bg * n / t.
-        This is kernel gradient flow on the mean square loss run on the race clock: after time t, kernel GD has fitted
-        the residual's components along kernel eigenvalues kappa >~ n / (eta t) (the spectral cut-off of early-stopped
-        kernel regression), and fixed-time kernel GD is, to first order, ridge regression with lam ~ n / (eta t).
-        c_bg = 1 / eta is the background's slowness relative to the race clock.  Consequences: components with large
-        population eigenvalue (the target's degree-0/1 part) are fitted by the background early; the training-sample
-        noise lives on the many small eigenvalues (kappa ~ 0.3-0.5 per training point, independent of n) and is
-        memorised only once t >~ c_bg * n / 0.4, i.e. late, and later the larger n.  So on small training sets the
-        background memorises the sample before dense memorising gates can fire, and on large ones gates fire first.
-        t = 0: no background (the race's readout).
+        Kernel gradient flow on the mean square loss, run on the race clock: after time t, kernel GD has fitted the
+        residual's components along kernel eigenvalues kappa >~ n / (eta t) (the spectral cut-off of early-stopped kernel
+        regression); to first order fixed-time kernel GD is ridge regression with lam ~ n / (eta t), and c_bg = 1 / eta is
+        the background's slowness relative to the race clock.  Consequences: components with a large population
+        eigenvalue (the target's degree-0/1 part) are fitted by the background early; the training-sample noise lives on
+        the many small eigenvalues (kappa ~ 0.3-0.5 per training point, whatever n) and is memorised once
+        t >~ c_bg * n / 0.4 -- before dense memorising gates can fire on small training sets, after the real features
+        have fired on large ones.  t = 0: no background (the race's readout).
     mode 'static' (ablation):  lam_bg = rho * n ** beta, constant in time.
-    mode 'none': the race model exactly (used to check that the shared code reproduces models/race.py).
-STOP  at training sign error 0 (as in the race), now checked continuously in time in mode 'flow': if the background
-    (with the gates present) reaches sign error 0 before the next gate would fire, the run stops at that time
-    (bisection in log t); otherwise the gate fires.  Also stop after gmax gates or when no candidate is left.
+    mode 'none': the race model exactly (checks that the shared code reproduces models/race.py).
+STOP  (new constant 2: stop_mse)  gates are grown while the joint fit's training mean squared residual is >= stop_mse
+    (stop_mse = None: while the training sign error is > 0, the race's rule).  In mode 'flow' the condition is checked
+    continuously in time: if the background reaches it before the next gate would fire, growth stops at that time
+    (bisection in log t).  Also stop after gmax gates or when no candidate is left.  The race's sign-error rule stops
+    growth too early once a background is present: the background's degree-1 fit alone often classifies the training
+    set (e.g. MAJ_3), while the networks go on to grow the feature that removes the remaining square loss.
+END OF TRAINING  growth has stopped but training goes on: the gate weights are kept and the background interpolates
+    what is left, kernel ridge on y - c - F a with the NNGP baseline's ridge (1e-4, unit-diagonal kernel; models/baselines.py).
+CALIBRATED SETTING  HYBRID_DEFAULTS: c_bg = 0.003, stop_mse = 0.03 (chosen on common.CALIB only, by CALIB per-example
+    agreement minus CALIB mean |log2 n* ratio|; study/HYBRID.md section 2).
 
 LARGE n  for n > n_exact the background kernel is replaced by M random ReLU features of a fresh two-hidden-layer
     network at initialisation (widths M, M; a Monte-Carlo approximation of the same kernel, of rank M); their random
@@ -46,7 +52,7 @@ from models.race import _order_k, _align_time, _overlap_after, _best_threshold, 
 from models.baselines import nngp_table
 
 F32 = np.float32
-HYBRID_DEFAULTS = dict(mode="flow", c_bg=None)      # c_bg is set by the calibration (study/HYBRID.md)
+HYBRID_DEFAULTS = dict(mode="flow", c_bg=0.003, stop_mse=0.03)      # calibrated on CALIB (study/HYBRID.md)
 
 
 class _Background:
@@ -126,8 +132,8 @@ class _JointReadout:
 class Hybrid:
     name = "hybrid"
 
-    def __init__(self, mode="flow", c_bg=1.0, rho=None, beta=1.0, theta=1.5, lam=1e-3, Q=3, K=4, P=8, iters=8, gmax=48,
-                 depth=2, gate='relu', n_exact=2048, M=512, bisect=10, final_ridge=1e-4, stop_mse=None, verbose=False):
+    def __init__(self, mode="flow", c_bg=0.003, rho=None, beta=1.0, theta=1.5, lam=1e-3, Q=3, K=4, P=8, iters=8, gmax=48,
+                 depth=2, gate='relu', n_exact=2048, M=512, bisect=10, final_ridge=1e-4, stop_mse=0.03, verbose=False):
         self.mode = mode
         self.stop_mse = None if stop_mse is None else float(stop_mse)
         self.final_ridge = None if final_ridge is None else float(final_ridge)

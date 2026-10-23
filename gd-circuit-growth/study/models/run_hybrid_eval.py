@@ -1,7 +1,11 @@
 """Full-grid evaluation of the hybrid model (race + kernel background) at its calibrated setting, and the scoreboard rows.
 
     OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python models/run_hybrid_eval.py [name] [key=value ...]
-Saves <scratchpad>/model_evals/<name>.npz (default name 'hybrid', constants models.hybrid.HYBRID_DEFAULTS).
+Saves <scratchpad>/model_evals/<name>.npz (default name 'hybrid', constants models.hybrid.HYBRID_DEFAULTS; key=value
+pairs override them).  The ablations in HYBRID.md:
+    run_hybrid_eval.py hybrid-sign  stop_mse=None c_bg=0.01      (race's sign-error stop; its own best c_bg on CALIB)
+    run_hybrid_eval.py hybrid-static mode=static rho=0.003 stop_mse=None   (background ridge constant in time)
+    run_hybrid_eval.py hybrid-nofinal final_ridge=None           (no interpolation after growth stops)
 """
 import os, sys, json, time
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -15,7 +19,11 @@ if __name__ == "__main__":
     name = sys.argv[1] if len(sys.argv) > 1 else "hybrid"
     kw = dict(HYBRID_DEFAULTS)
     for a in sys.argv[2:]:
-        k, v = a.split("="); kw[k] = None if v == "None" else (float(v) if k in ("rho", "tau", "theta", "lam") else int(v))
+        k, v = a.split("=")
+        try:
+            kw[k] = None if v == "None" else float(v)
+        except ValueError:
+            kw[k] = v
     M = Hybrid(**kw); M.name = name
     t0 = time.time()
     res = C.evaluate(M)

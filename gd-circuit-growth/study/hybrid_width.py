@@ -1,8 +1,10 @@
-"""Width check of the background picture (study/HYBRID.md): per-example agreement of the kernel, the race and the hybrid
-with networks of width 32, 128 and 512 (fixed protocol, Adam; width sweep on par3, maj9, mux, stair5, seeds 0-1).
+"""Width check of the background picture (study/HYBRID.md, section 1.6): per-example agreement of the NNGP kernel, the
+race and the hybrid with networks of different widths (fixed protocol, Adam, same training sets; the width sweeps in
+<scratchpad>/results_w<width>, main sweep = width 128).
 
-If the networks' individual mistakes come from a random-feature background, the infinite-width NNGP kernel should
-agree more with wider networks.  Partial cells are those of each width's own networks.
+If the networks' individual mistakes come from a random-feature background, the infinite-width NNGP kernel should agree
+more with wider networks.  Partial cells are those of each width's own networks; only targets present at every compared
+width are pooled.
 
     OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python hybrid_width.py
 """
@@ -14,48 +16,56 @@ from models.hybrid import Hybrid, HYBRID_DEFAULTS
 from models.baselines import NNGPKernel
 
 S = os.path.dirname(C.RESULTS)
-FNS = ["par3", "maj9", "mux", "stair5"]
+WIDTHS = (32, 64, 128, 256, 512)
 
 
 def load(width, fn):
     path = os.path.join(S, "results" if width == 128 else f"results_w{width}", f"fixed_adam_{fn}.npz")
     if not os.path.exists(path):
         return None
-    z = np.load(path); ns = [int(v) for v in z["ns"]]
+    z = np.load(path)
     I = {(int(n), int(s)): j for j, (n, s) in enumerate(zip(z["net_n"], z["net_s"]))}
-    return {n: [(z["test_err"][-1, I[(n, s)]], z["pred"][-1, I[(n, s)]]) for s in (0, 1)] for n in ns}
+    seeds = sorted({int(s) for s in z["net_s"]})
+    return {int(n): [(float(z["test_err"][-1, I[(int(n), s)]]), z["pred"][-1, I[(int(n), s)]], s) for s in seeds] for n in z["ns"]}
 
 
 def main():
     models = {"race": Race(theta=1.5, Q=3, gate="relu"), "nngp-kernel": NNGPKernel(), "hybrid": Hybrid(**HYBRID_DEFAULTS)}
+    avail = {w: [fn for fn in C.FNS if load(w, fn) is not None] for w in WIDTHS}
+    avail = {w: f for w, f in avail.items() if f}
     cache = {}
-    print("| width | partial cells | " + " | ".join(models) + " |\n|---|---|" + "---|" * len(models))
-    for width in (32, 128, 512):
+
+    def score(width, fns):
         num = {m: 0.0 for m in models}; den = {m: 0.0 for m in models}; cells = 0
-        for fn in FNS:
-            nnw = load(width, fn)
-            if nnw is None:
-                continue
+        for fn in fns:
             Xte, yte = C.test_data(fn)
-            for n, lst in nnw.items():
-                en = np.mean([e for e, _ in lst])
+            for n, lst in load(width, fn).items():
+                en = np.mean([e for e, _, _ in lst])
                 if not 0.05 <= en <= 0.45:
                     continue
                 cells += 1
                 for m, M in models.items():
                     preds = []
-                    for s in (0, 1):
+                    for _, _, s in lst:
                         key = (m, fn, n, s)
                         if key not in cache:
                             X, y = C.train_data(fn, s, n)
                             cache[key] = np.where(M.fit(X, y, np.random.default_rng([s, n, C._fn_seed(fn)]))["predict"](Xte) > 0, 1, -1)
                         preds.append(cache[key])
                     em = np.mean([np.mean(p != yte) for p in preds])
-                    agree = np.mean([np.mean(p == q) for p, (_, q) in zip(preds, lst)])
+                    agree = np.mean([np.mean(p == q) for p, (_, q, _) in zip(preds, lst)])
                     indep = (1 - en) * (1 - em) + en * em
                     num[m] += agree - indep; den[m] += 1 - indep
-        if cells:
-            print(f"| {width} | {cells} | " + " | ".join(f"{num[m] / den[m]:.2f}" for m in models) + " |", flush=True)
+        return cells, {m: num[m] / den[m] if den[m] else np.nan for m in models}
+
+    common = sorted(set.intersection(*[set(f) for f in avail.values()]))
+    print(f"targets at every width {sorted(avail)}: {common}")
+    print("| width | targets | partial cells | " + " | ".join(models) + " |\n|---|---|---|" + "---|" * len(models))
+    for use_common in (True, False):
+        for w in sorted(avail):
+            use = common if use_common else avail[w]
+            cells, sc = score(w, use)
+            print(f"| {w} | {','.join(use)} | {cells} | " + " | ".join(f"{sc[m]:.2f}" for m in models) + " |", flush=True)
 
 
 if __name__ == "__main__":

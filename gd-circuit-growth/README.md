@@ -424,7 +424,9 @@ Status labels as before.
 6. **Once they generalize, both the networks and the model are functionally small circuits, even when their representation is large** (Numerical).
    - Half of the race model's generalizing fits carry more than 6 gates. Their own Occam bound is then usually vacuous: median 0.67, with 34% below 0.5.
    - Yet most are certified as close to small juntas or Fourier-sign circuits. On a sample of 30, the distillation certificate has median 0.125 and is below 0.2 in 24 cases. In the same sample the own-circuit Occam median is 0.82.
-   - The networks show the same: every network at $n=2048$ is certified below 0.5, and at $n=16384$ at most 0.021 ([`theory/C-bridge-and-certificates.md`](theory/C-bridge-and-certificates.md) §1.4, `theory/checks/c1_fourier_cert.txt`).
+   - **The networks show the same** ([`study/CERTIFICATES.md`](study/CERTIFICATES.md), regenerated in this session because the earlier copy was empty).
+     - Over all 21 targets, 5 sizes and 3 seeds, 221 of 315 networks get a non-vacuous certificate and 163 one below 0.2. No certificate falls below the network's actual test error.
+     - At $n=16384$ every network is certified at 0.08 or less, except on three targets: MAJ of pair parities (0.54), sparsepoly (0.29) and rand1 (0.42). There the networks generalize, but the certificate's circuit classes do not capture them cheaply.
 7. **Bounds** (Proved unless stated). The three derivations A, B and C each passed a second adversarial referee pass, with 7, 8 and 10 minor issues and none major ([`theory/checks/referee_A_r2.json`](theory/checks/referee_A_r2.json), [`_B_r2`](theory/checks/referee_B_r2.json), [`_C_r2`](theory/checks/referee_C_r2.json)). The new derivation D adds:
    - for two-layer ReLU networks trained by gradient flow from balanced small initialization (not the study's μP Adam networks):
      - an exact "mass clock" race identity;
