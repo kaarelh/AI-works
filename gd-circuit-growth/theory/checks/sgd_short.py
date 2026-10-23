@@ -91,15 +91,33 @@ def record(k, p):
                dist_groups=[float(v) for v in np.sqrt(sq)], energy_groups=[float(v) for v in Eg],
                path=nb.path_norm(pn), PF=nb.frob_complexity(pn), desc_min=float(desc_min),
                S_K=S_K, max_step_ratio=max_ratio, max_ratio_over_C=max_ratio_over_C)
-    # Theorem B3.1 (a priori, Frobenius): sup of P_F over the M^-1 ball of radius sqrt(t L0) (descent / flow)
-    rec["PF_apriori"] = PF_sup(p0n, np.sqrt(t * L0) / np.sqrt(desc_c)) if mode != "adam" else float("nan")
-    rec["frob_apriori_bound"] = nb.margin_bound(marg, rec["PF_apriori"], nb.KAPPA_FROB(31))[0] if mode != "adam" else float("nan")
+    # descent constant for B1.2(b) / B3.3(a): (D) must hold at every step k < K, so c = running minimum of the
+    # measured descent ratio (GD only).  If (D) fails (c <= 0) or the run is SGD, the 'flow' numbers use c = 1
+    # and are NOT rigorous (flow_rigorous = False).  [revision r2: previously c = 1 was hard-coded]
+    if mode == "gd" and 0 < desc_min < np.inf:
+        desc_c, flow_rig = float(desc_min), True
+    else:
+        desc_c, flow_rig = 1.0, bool(mode == "gd" and desc_min == np.inf)   # k = 0: nothing to check
+    rec.update(desc_c_used=desc_c, flow_rigorous=flow_rig)
+    # Theorem B3.1 (a priori, Frobenius): P^max over the M^-1 ball of radius sqrt(t L0 / c).  [revision r2]
+    # PF_apriori is the certified closed-form UPPER bound of Theorem B3.1; PF_apriori_search is the old
+    # random-search value, a LOWER estimate of P^max, kept only for comparison.
+    if mode != "adam":
+        r_ = np.sqrt(t * L0 / desc_c)
+        rec["PF_apriori"] = PF_sup_closed(p0n, r_)
+        rec["PF_apriori_search"] = PF_sup(p0n, r_)
+        jF = nb.grid_index(rec["PF_apriori"], 1.0, 1.1)
+        rec["frob_apriori_unit_margin"] = float(2 * nb.KAPPA_FROB(31) * 1.1 ** jF / np.sqrt(n))   # complexity term at gamma = 1
+        rec["frob_apriori_bound"] = nb.margin_bound(marg, rec["PF_apriori"], nb.KAPPA_FROB(31))[0]
+    else:
+        rec["PF_apriori"] = rec["PF_apriori_search"] = rec["frob_apriori_unit_margin"] = rec["frob_apriori_bound"] = float("nan")
     rec["frob_measured_bound"] = nb.margin_bound(marg, rec["PF"], nb.KAPPA_FROB(31))[0]
     rec["path_measured_bound"] = nb.margin_bound(marg, rec["path"], nb.KAPPA_PATH(31))[0]
     if k > 0 and (k in PB_CKPTS or k == steps):
         # Theorem B3.2, data-dependent: per-group sigma, KL from the measured displacement
         pb = nb.pac_bayes(pn, p0n, Xn, yn, rng)
-        rec.update(pb_KL=pb["KL"], pb_sig=[float(v) for v in pb["sig"]], pb_gibbs=pb["gibbs_train"], pb_RQ=pb["RQ"], pb_det=pb["det"])
+        rec.update(pb_KL=pb["KL"], pb_sig=[float(v) for v in pb["sig"]], pb_gibbs=pb["gibbs_train"], pb_RQ=pb["RQ"], pb_det=pb["det"],
+                   pb_gibbs_up=pb["gibbs_train_up"], pb_dis=pb["dis"], pb_dis_up=pb["dis_up"])
         # Theorem B3.3, time-based: same sigma, but KL replaced by its a-priori upper bound
         #   sum_g ||D_g||^2/(2 s_g^2) <= t * sum_g m_g E_g/(2 s_g^2)   [measured energies; Cor. B1.2]
         sig = pb["sig"]
@@ -116,9 +134,18 @@ def record(k, p):
     out.append(rec)
     print(json.dumps({kk: (round(v, 4) if isinstance(v, float) else v) for kk, v in rec.items()}), flush=True)
 
+def PF_sup_closed(p0n, r):
+    """Certified upper bound on P^max(r) (Theorem B3.1, closed form): every block displacement is at most
+       sqrt(m_g) r, so P_F <= (A0 + sqrt(m3) r)((F1 + sqrt(m1) r)(F2 + sqrt(m2) r) + B2 + sqrt(m2) r)."""
+    A1 = np.sqrt((p0n["W1"] ** 2).sum() + (p0n["b1"] ** 2).sum()); A2 = np.linalg.norm(p0n["W2"])
+    B2 = np.linalg.norm(p0n["b2"]); Aa = np.linalg.norm(p0n["a"])
+    s1, s2, s3 = np.sqrt(MULT["W1"]) * r, np.sqrt(MULT["W2"]) * r, np.sqrt(MULT["a"]) * r
+    return float((Aa + s3) * ((A1 + s1) * (A2 + s2) + B2 + s2))
+
 def PF_sup(p0n, r, tries=4000):
-    """max of ||a||(||[W1 b1]||_F ||W2||_F + ||b2||) over sum_g ||D_g||^2/m_g <= r^2 (triangle inequality per
-       block: block norms <= init norms + displacement); random search on the positive sphere + refinement."""
+    """LOWER estimate of P^max (not a certified bound; see PF_sup_closed): max of
+       ||a||(||[W1 b1]||_F ||W2||_F + ||b2||) over sum_g ||D_g||^2/m_g <= r^2 by random search on the positive
+       sphere + refinement."""
     A1 = np.sqrt((p0n["W1"] ** 2).sum() + (p0n["b1"] ** 2).sum()); A2 = np.linalg.norm(p0n["W2"])
     B2 = np.linalg.norm(p0n["b2"]); Aa = np.linalg.norm(p0n["a"])
     m = np.array([MULT["W1"], MULT["W2"], MULT["b2"], MULT["a"]])
@@ -135,7 +162,6 @@ def PF_sup(p0n, r, tries=4000):
                 best = v
     return float(val(best))
 
-desc_c = 1.0   # the a-priori 'flow' numbers use c = 1 (exact for gradient flow); GD's measured c is reported
 for k in range(steps + 1):
     if k in ckpts:
         record(k, p)

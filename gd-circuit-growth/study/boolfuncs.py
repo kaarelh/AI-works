@@ -126,3 +126,24 @@ if __name__ == "__main__":
     for k, v in S.items():
         y = v["fn"](X)
         print(f"{k:11s} bias={y.mean():+.3f} rel={v['relevant']}  {v['desc']}")
+
+
+def make_random_suite(d=30, count=20, seed=777):
+    """Fresh random fan-in-2 formulas (AND/OR/XOR with random literal negations) on 4-8 inputs with 3-8 gates, kept if
+    reasonably balanced and dependent on at least k-1 of their k inputs.  Used as an out-of-sample test of the models:
+    none of these targets was seen while designing or calibrating them."""
+    rng = np.random.default_rng(seed)
+    probe = np.random.default_rng(1).choice([-1.0, 1.0], size=(20000, d))
+    S = {}
+    while len(S) < count:
+        k = int(rng.integers(4, 9)); g = int(rng.integers(3, 9))
+        fn, desc = _random_formula(rng, k, g)
+        y = fn(probe)
+        if abs(y.mean()) > 0.5:
+            continue
+        infl = [np.mean(y != fn(probe * np.where(np.arange(d) == i, -1.0, 1.0))) for i in range(k)]
+        rel = [i for i in range(k) if infl[i] > 0.01]
+        if len(rel) < k - 1:
+            continue
+        S[f"rf{len(S):02d}"] = dict(fn=fn, relevant=rel, desc=f"random {g}-gate formula on {k} inputs: " + desc, circuit_size=g)
+    return S

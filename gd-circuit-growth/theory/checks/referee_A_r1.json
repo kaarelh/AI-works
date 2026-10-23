@@ -1,0 +1,114 @@
+{
+ "verdict": "fail",
+ "issues": [
+  {
+   "result": "Proposition A3.4(2) (multi-epoch SGD with reuse), labelled Proved",
+   "severity": "fatal",
+   "description": "Item 2 asserts, under a Proved label: 'Reuse reproduces the full-batch race on S', 'multi-epoch SGD approximates the full-batch race on S', and 'Generalization then comes from ... the full-batch case of Theorem A3.1'. None of this is proved. (a) Lemma A3.2 with P_n only says that the clocks concentrate around *drift clocks*, and those are built from SGD's own residual. Section 3.2 says explicitly that reproducing the race needs two unproved ingredients: readout tracking and a crossing-time margin. So the race claim is unproved by the note's own account, and I cannot close it. (b) Theorem A3.1 applied with P_n covers the greedy argmax model only. It needs a gap, R and lambda_* for the full-batch greedy run on S, and these are not derived from the population assumptions. On A3.1's event E the empirical gap is only > 0, not >= c*gamma. So the chain 'SGD with reuse ~ full batch on S ~ population run' is not established, even for greedy.",
+   "suggested_fix": "Relabel item 2 as Heuristic, or restate it exactly: 'conditional on S, Lemma A3.2 and Theorem A3.1 apply with P_n in place of P, with gamma, R and lambda_* of the full-batch run on S'. If the greedy chain is wanted, prove it: run A3.1 at eps/2. Then on E the full-batch run on S has empirical gap >= gamma/2, lambda_min(K_hat) >= lambda_*/2 and sup|r_hat_t| <= R + 2(T+1)eps/lambda_* (since |Pi_hat r_t| <= ||K_hat^{-1} v||_1). Then apply A3.1 conditionally on S with these constants and combine the failure probabilities."
+  },
+  {
+   "result": "Summary item 3 and Section 3 intro (SGD reproduces the population run)",
+   "severity": "major",
+   "description": "Overclaim in prose. The summary says 'With fresh minibatches there is no train/test gap to bound: the run *reproduces the population run* (Theorem A3.1, Lemma A3.2)'. Section 3 says 'the stochastic run makes the same moves as the population run, so its test error is the population model's test error'. What is proved is narrower. It holds only for the greedy argmax model, under a population gap gamma > 0, with a per-step batch b >= (2R^2/eps^2) log(...). That is about 2254 for par2, against b = 64 in the experiments. For the SGD race, Section 3.2 explicitly leaves reproduction unproved. Lemma A3.2 is clock concentration, not reproduction.",
+   "suggested_fix": "Qualify both sentences. Reproduction is proved for the greedy argmax model with large per-step batches and a utility gap. For the SGD race only clock concentration is proved. Note that A3.1 does not cover b = 64."
+  },
+  {
+   "result": "Corollary A2.5(a) and Summary item 2 ('generalization bounds that degrade with t/log(1/alpha)')",
+   "severity": "major",
+   "description": "The count version is not a bound in terms of training time alone. It depends on kappa(t), the top eigenvalue of the learned circuit's empirical Gram matrix. That is data-dependent and only bounded by tr K <= T. Population examples (checks/referee_A_r1.out, sections 3-4): kappa = 3 = m for maj3 after the first event, kappa = 5 = m for MAJ_5, kappa = 5.3 for maj3 after the second event. Since T(t) <= floor(kappa tau^2/Theta^2) and L_T is increasing, (a) is never tighter than Theorem A1 at the realized T(t). No a priori incoherence assumption is stated that would make it a time bound. A library-wide mu does not help either: in the toy library mu = 1/2 (x1 against AND(x1,x2)), so mu (tau/Theta)^2 < 1 fails once anything has fired. The depth bound in (a) enters no capacity bound. So the only genuine time-only bound is (b). It is restricted to depth-one (SC) and is near-vacuous (Section 5).",
+   "suggested_fix": "Present (a) as a decomposition 'size <= incoherence x time^2', not as a time-only generalization bound. Either add an explicit a priori assumption on kappa (and say when it holds), or drop the claim that A2.5(a) answers the 'training not too long' question. Drop 'depth <= tau/Theta' from the corollary, or add a depth-based count that uses it."
+  },
+  {
+   "result": "Proposition A4.2(2) ('fires at 6 Theta'), labelled Proved (population)",
+   "severity": "major",
+   "description": "Proof gap, which I closed. The proof computes the utility (1/4) of one depth-two candidate, XOR(AND(x1,x2),x3). It never shows that (i) no depth-one candidate fires in (2Theta, 6Theta), or that (ii) no depth-two candidate has |U| > 1/4. Both are needed for 'fires at 6 Theta'. I checked the exact population race on {-1,1}^5 (referee_A_r1.out section 3). Depth-one utilities against the residual -x1x2x3/2 are 0. The maximum depth-two |U| is 1/4, and 12 distinct depth-two candidates attain it. All 12 fire at exactly 6 Theta, and the residual is then 0. So the population race ends with 21 gates, not 10. The 10 in Section 5 comes from noise breaking a 12-way tie. A one-line argument closes (ii): for phi(a,b) with a, b among the 9 fired gates and inputs, the x1x2x3 Fourier coefficient is at most |(ab)^(123)| <= 1/2.",
+   "suggested_fix": "Add the Fourier step for (i) and (ii). Report the 12-way tie and population T_end = 21. Make clear that the Section 5 statement 'the population prediction is 6' refers to the time 6 Theta, not to a gate count."
+  },
+  {
+   "result": "Proposition A2.2(3), labelled Proved",
+   "severity": "major",
+   "description": "Literally false and has no proof. 'Gates that compute the same function ... always fire together' fails for duplicates with different availability times. A depth-two candidate computing the same function as a depth-one candidate starts its clock later, so it lags. In (LS), once the earlier one fires, the duplicate's utility is 0 forever and it never fires. Also, 'without merging duplicates, T(t) is unbounded already at t = Theta' is false for any fixed finite library: T(Theta) <= number of depth-one candidates <= |G| d^k. It is unbounded only over libraries. Nothing else depends on item 3, and the intended content (depth-one duplicates fire together) is trivially true. That is why I rate it major rather than fatal.",
+   "suggested_fix": "Restrict to candidates with equal availability time (e.g. depth-one duplicates). Replace 'unbounded' with 'not bounded by any function of t/Theta uniformly over libraries'. Add the one-line proof."
+  },
+  {
+   "result": "Lemma 2.2(4), the note after it, and Summary item 2 (alpha only sets the unit of time)",
+   "severity": "major",
+   "description": "Overgeneralized. The claims 'every statement below depends on t and alpha only through t/log(1/alpha)' and 'the race is invariant under changes of alpha once time is measured in units of log(1/alpha)' hold only for the pure k = 2 race. Section 2.1 itself adds fresh-chain candidates with threshold Theta_k ~ alpha^{-(k-2)}, so Theta_k/Theta depends on alpha and the invariance fails. The README model makes the first move out of the origin a fresh chain with k = L. In the user's network (3 weight layers), a first-layer feature reading inputs needs W1, W2 and a to grow, so k = 3 and the cost is about alpha^{-1}, not log(1/alpha). Any time at which something has been learned is then much larger than log(1/alpha). This weakens the note's reading of 'training hasn't taken too long' as 't/log(1/alpha) small' for the actual architecture.",
+   "suggested_fix": "State the invariance for the k = 2 (attach-only, depth-one-start) race only. Say how fresh-chain thresholds change the time unit. Note that the depth-one race started at time 0 models the first move of a diagonal or 2-homogeneous net, not of the 3-layer muP network."
+  },
+  {
+   "result": "Theorem A1' (simultaneous validity of the two bounds)",
+   "severity": "minor",
+   "description": "The two displayed bounds (clipped square loss, and ramp/0-1) are asserted jointly 'with probability at least 1-delta'. Each comes from L1 at confidence pi_j delta, so each holds with probability 1-delta. Jointly they hold with probability 1-2delta.",
+   "suggested_fix": "Use log(2/(pi_j delta)) in both confidence terms, or state them as two separate probability-(1-delta) statements."
+  },
+  {
+   "result": "Theorem A3.1(3) and the par2 constant",
+   "severity": "minor",
+   "description": "(a) Applying Theorem A1 to the class over the fixed circuit C_T needs its own failure probability, in a union with the event E. As stated, item 3 implicitly claims both under a single delta. (b) The par2 example: eps = 0.10355 and condition 1 gives b >= 2253.2, so n >= 2254, not 2252 (referee_A_r1.out section 2).",
+   "suggested_fix": "Write 'with probability >= 1-2delta' for item 3, or split delta. Change 2252 to 2254."
+  },
+  {
+   "result": "Corollary A2.5(a) item reference",
+   "severity": "minor",
+   "description": "The corollary says 'Theorem A1(2) holds for h_t'. The displayed zero-training-error bound err <= L/n is item 4 (realizable); item 2 gives 2L/n at p_hat = 0. All items hold on the same event, so this is only a mislabel.",
+   "suggested_fix": "Say 'Theorem A1 (all items) holds'."
+  },
+  {
+   "result": "Remark after Theorem A1 (symmetrization alternative) and the BEHW citation",
+   "severity": "minor",
+   "description": "The claim that the self-contained T^2 version is smaller only 'whenever T <~ log2(2n)' (about 15 gates at n <= 16384) is wrong with the quoted constants. The BEHW route 2 Pi(2n) 2^{-eps n/2} multiplies the whole complexity, wiring included, by 2/ln2 ~ 2.9. For n in {1024, 4096, 16384}, A1 is smaller at every T where either bound is below 1. For example, at T = 10, n = 4096: 0.036 against 0.122 (referee_A_r1.out section 6). Also, BEHW Theorem A2.1 (from memory) has the hypothesis m >= 8/eps, which the note omits.",
+   "suggested_fix": "Replace the crossover statement: A1 dominates throughout the non-vacuous range. Add the m >= 8/eps hypothesis to the cited statement."
+  },
+  {
+   "result": "Theorem A1' cited lemmas L1, L2",
+   "severity": "minor",
+   "description": "L1's constants (2R_n + M sqrt(log(1/delta)/(2n)), with R_n defined without absolute value or factor 2) are those of Mohri-Rostamizadeh-Talwalkar Thm 3.3. Bartlett-Mendelson (JMLR 2002) Theorem 8 is, from memory, stated with a differently normalized R_n (factor 2, absolute value) and a sqrt(8 ln(2/delta)/n) term. L2 as stated (no absolute values, no phi(0)=0 condition, constant l) is MRT Lemma 5.7. Ledoux-Talagrand Thm 4.12 is the absolute-value contraction principle: it requires phi_i(0)=0 and has an extra factor 2.",
+   "suggested_fix": "Cite MRT Thm 3.3 and Lemma 5.7 as the sources of the stated forms. Cite BM Thm 8 and LT Thm 4.12 as 'related forms with different constants', or drop them."
+  },
+  {
+   "result": "Section 5 / Theorem A2.3 numerical prose",
+   "severity": "minor",
+   "description": "The text says 'kappa in [0.7, 3.1] and kappa tau^2/Theta^2 exceeds T by a factor of 1.5-5'. Parsing checks/race_bounds.txt gives kappa in [0.44, 4.59] over all (LS) events, or [0.65, 3.09] for n >= 256. Looseness ranges from 1.00 (par2: the bound is exactly tight) to 6.97 (dnf3), and up to 400 on par3. The Theorem A1' range '0.50-0.84 at n=4096' is actually 0.46-0.97 across events.",
+   "suggested_fix": "Update the ranges and say which runs they cover. Note that par2 attains the A2.3 bound."
+  },
+  {
+   "result": "Proposition A2.2(2) count convention; Theorem A2.3 tightness example",
+   "severity": "minor",
+   "description": "(a) 'Exactly m^2 candidates fire' holds only under the convention of unordered, distinct source pairs with functions merged. Lemma 1.1's template counts ordered tuples with repeats. Under it, AND(x_i,x_i) = x_i, AND(not x_i, not x_i) = -x_i and AND(x_j,x_i) also fire, as extra syntactic duplicates. I verified m^2 = 9 and 25 distinct functions, all other clocks <= Theta/2, and the refit u_m sum x_i, for m = 3 and 5 (referee_A_r1.out sections 3-4). (b) The 'tight up to pi/2' example uses the population Gram matrix, while A2.3 is stated with the empirical one.",
+   "suggested_fix": "Say 'm^2 distinct functions (up to sign)'. Say the tightness example concerns the population analogue of A2.3."
+  },
+  {
+   "result": "Definition 2.1 (SC), Theorem A2.4, and the faithfulness claim",
+   "severity": "minor",
+   "description": "(a) Definition 2.1 (SC) does not establish existence or finitely many events (A2.1 does this for LS only), yet Theorem A2.4 is stated 'for every t'. (b) Pesme-Flammarion's diagonal network has no free intercept, while (SC) refits an unconstrained intercept at all times. 'My recollection is that the recursion is exactly the (SC) race' should flag this. (c) A2.3 and A2.5(a) are proved for (LS), which is not the depth-one GD limit: in (LS) fired coefficients change sign freely. A2.3's proof also works in (SC) for the current support (|supp| Theta = sum sigma_m <R, g~_m> <= tau sqrt(kappa |supp|)), so adding this would give A2.3 literature backing at depth one.",
+   "suggested_fix": "Add a well-posedness remark (finitely many events, or the statement holds up to any accumulation time). Note the intercept difference. Add the (SC)-support version of A2.3."
+  },
+  {
+   "result": "checks/race_bounds.py (Race.step)",
+   "severity": "minor",
+   "description": "Bug in a check script. `self.S[~dormant] = np.array([self.sign[m] for m in self.active])` assigns through a boolean mask in index order, while self.active is in firing order. Clocks of active gates can get the wrong sign (demonstrated in referee_A_r1.out section 8). This is harmless in (LS), where fired clocks are unused. In (SC) it would corrupt the clock of any gate that later exits. I instrumented the reported (SC) runs: there were 0 exits in all six, so the published numbers are unaffected. But the claim 'identity holds to machine precision at every event' never exercised the exit branch. My independent (SC) simulation on 40 random correlated dictionaries, with 130 exits, confirms Theorem A2.4's identity to 3e-14, S_m = <R, g_m>_n, |S| <= Theta and KKT. It also confirms A2.3 in (LS) (max T/(kappa tau^2) = 0.715).",
+   "suggested_fix": "Replace the line with `self.S[self.active] = [self.sign[m] for m in self.active]`. Add a test case with exits."
+  },
+  {
+   "result": "Proposition A4.3 / Summary item 4 (Occam on parity); Summary item 4 (library targets)",
+   "severity": "minor",
+   "description": "(a) 'error at most L_{s-1}/n = O(s log d/n)' and 'succeeds with O(|S| log d) samples' hold for the output-gate readout. With the sign-readout class, rho_{s-1} ~ (s-1)^2 ln2 adds an s^2 term. The sample count to reach error eps also needs a 1/eps. (b) 'On targets that are library gates, the greedy circuit is minimal' drops Prop A4.1's hypothesis E[y] = 0. (c) Prop A4.1's sample-version sentence has no proof. It is true: for |g| <= 1, Cov_n(y,g) < Var_n(y) unless g = y on the sample.",
+   "suggested_fix": "Specify the readout class and add 1/eps. Restore the balance hypothesis. Add the one-line proof."
+  },
+  {
+   "result": "Proposition A3.3/A3.4 consequences and wording",
+   "severity": "minor",
+   "description": "(a) The Summary's 'unbiased progressive-validation estimate of the test loss' really estimates the *average test loss of the iterates at first-draw times*, which are concentrated in the first epoch. It does not estimate the trained predictor's test loss. (b) 'online mistakes ... at most Tb': with batches B_0..B_T, and the exact predictor available only after refitting on B_T, the count is (T+1)b. (c) Prop A3.4(1) 'Whatever SGD does, its predictor ... lies in H_{T(s)}' holds only for learners whose predictor is a template circuit, not for the NN. (d) Lemma A3.2 should state that the availability indicator is F_{i-1}-measurable. Prop A3.4(3) itself checks out: in a Monte Carlo with an adaptive memorizer, the mean gap is 0.0007 +- 0.0007 and the tail exceedance is 0.0015 <= 0.05.",
+   "suggested_fix": "Reword (a) and (c), change Tb to (T+1)b, and add the measurability assumption."
+  },
+  {
+   "result": "Section 2.3 'Recipe for the real runs' (Heuristic) and vacuity statements",
+   "severity": "minor",
+   "description": "(a) The calibration tau(t) = integral of sqrt(2 L_hat) dt, with t = lr x steps, is not the race clock for Adam. Adam is the experiments' main optimizer, and its update magnitude does not scale with the utility, so clock increments are not proportional to U. (b) The 'non-vacuous' thresholds are inconsistent: Section 5 says 'non-vacuous whenever n >= 256 and T <= 10' (bounds up to 0.45), while Section 6 says 'for T <= 2 at n = 256' (threshold 0.1). The Summary's 'below 0.1 once n >~ 140T for T <= 10' needs 144T at T = 10 (n = 1438).",
+   "suggested_fix": "Restrict the recipe to SGD runs, or define an Adam clock. Fix one numerical threshold for 'non-vacuous' and use it consistently."
+  }
+ ],
+ "summary": "I read all of /home/user/AI-works/gd-circuit-growth/theory/A-discrete-model.md, re-derived every Proved result, and ran independent checks in /home/user/AI-works/gd-circuit-growth/theory/checks/referee_A_r1.py (output in referee_A_r1.out, under a minute).\n\n**Holds up:**\n- Lemmas 1.1\u20131.3 and Theorem A1 are correct, including the union bound over T, the Bernstein inversion and the table values, which I recomputed.\n- Theorem A1\u2032 is correct apart from a \u03b4 split.\n- Proposition A2.1, Theorem A2.3 (Cauchy\u2013Schwarz plus principal-submatrix step) and Theorem A2.4 (KKT plus cone-projection duality) are correct. I confirmed both numerically, including (SC) runs with 130 exits from the saturated set, which the authors' runs never exercised.\n- Proposition A2.6 and Propositions A4.1 and A4.3 are correct.\n- Theorem A3.1 is correct, and its key point is valid: the union bounds are over population-run quantities that don't depend on the data, so full-batch reuse is legitimate. Its constants are slightly off (n \u2265 2254, not 2252), and item 3 needs a second \u03b4.\n- Lemma A3.2 (Hoeffding lemma, supermartingale, Ville's inequality), Proposition A3.3, and Proposition A3.4(1) and (3) are correct; (3) also passes a Monte Carlo test with an adaptive memorizing learner.\n- Proposition A2.2(1)\u2013(2) is confirmed exactly for m = 3 and m = 5. The minimum consistent circuit for maj3 has exactly 3 gates.\n\n**Fatal:**\n- Proposition A3.4(2) states, under a Proved label, that SGD with reuse reproduces or approximates the full-batch race on S, and that generalization then follows from the full-batch case of A3.1. This is unproved: Section 3.2 itself says race reproduction needs unproved ingredients, and the greedy chain needs gap, \u03bb and R bounds on the sample's empirical distribution that are never derived. The fix is cheap (relabel it, or prove the chain along the lines in the issue), but as written it fails the rubric.\n\n**Major:**\n- The summary and Section 3 intro say SGD reproduces the population run. That is proved only for the greedy argmax model, with per-step batches of about 2254 for par2 (the experiments use 64).\n- Corollary A2.5(a) is not a time-only bound: it depends on the learned circuit's \u03ba(t), which can grow with T, so it is never tighter than A1 at the actual T.\n- Proposition A4.2(2) has a gap that I closed: 12 depth-two candidates tie at 6\u0398, so the population race ends with 21 gates, not 10.\n- Proposition A2.2(3) is literally false (\"always fire together\"; \"T unbounded at t = \u0398\").\n- The scale-invariance claim (\"\u03b1 only sets the unit of time\") fails once fresh-chain moves are included. In the user's 3-layer network those moves cost about \u03b1^{-1}.\n\n**Minor:** constant and \u03b4 bookkeeping, a wrong comparison with the symmetrization (BEHW) route (A1 actually wins everywhere both bounds are non-vacuous), imprecise citations (Bartlett\u2013Mendelson Thm 8 vs MRT Thm 3.3; Ledoux\u2013Talagrand 4.12), inaccurate numerical ranges for \u03ba and the A2.3 looseness, and a mask-ordering bug in checks/race_bounds.py. The bug doesn't affect the published numbers (zero exits in those runs).\n\n**Literature:** I could not fetch the Pesme\u2013Flammarion text to confirm the (SC) correspondence; the note already marks that as from memory.\n\n**Verdict: fail.** The fatal item only needs relabelling, and none of the core theorems is wrong."
+}

@@ -10,9 +10,14 @@ for r in rows:
     if r["fn"] not in fns:
         fns.append(r["fn"])
 print("### Table 5.2 (means over 3 seeds; ranges in brackets where useful)\n")
-print("| target | n | test err (actual) | path norm | B2.2 bound | $P_F$ | B2.3 bound | spectral $24\\varrho/n$ (init ref / zero ref) "
+# revision r2: c_path, c_F = complexity term of Theorem B2.1 at unit margin, 2 kappa phi_grid / sqrt(n).  B2.1 is >= 1 at
+# every margin whenever c >= max(1, mean positive train margin) (B_r2_checks.py, part 1); the printed "bound" columns are
+# minimized over gamma <= gamma_max = 4 and always sit at that grid edge, so they are artifacts of gamma_max.
+KP, KF = 3.3207, 14.8387
+cgrid = lambda v: 1.1 ** (0 if v <= 1 else int(np.ceil(np.log(v) / np.log(1.1) - 1e-12)))
+print("| target | n | test err (actual) | path norm | $c_{\\rm path}$ | B2.2 bound ($\\gamma\\le4$) | $P_F$ | $c_F$ | B2.3 bound ($\\gamma\\le4$) | spectral $24\\varrho/n$ (init ref / zero ref) "
       "| KL (nats) | Gibbs train err | B3.2: $R(Q)\\le$ | disagreement | B3.2: deterministic $R(\\theta)\\le$ |")
-print("|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+print("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
 for fn in fns:
     for n in [256, 2048, 16384]:
         rs = [r for r in rows if r["fn"] == fn and r["n"] == n]
@@ -20,7 +25,8 @@ for fn in fns:
             continue
         m = lambda k: np.mean([r[k] for r in rs])
         rng = lambda k: f"{min(r[k] for r in rs):.2f}–{max(r[k] for r in rs):.2f}"
-        print(f"| {fn} | {n} | {m('test_err'):.3f} | {m('path'):.0f} | {m('path_bound'):.2f} | {m('PF'):.1f} | {m('frob_bound'):.1f} "
+        cp = np.mean([2 * KP * cgrid(r["path"]) / np.sqrt(n) for r in rs]); cf = np.mean([2 * KF * cgrid(r["PF"]) / np.sqrt(n) for r in rs])
+        print(f"| {fn} | {n} | {m('test_err'):.3f} | {m('path'):.0f} | {cp:.2f} | {m('path_bound'):.2f} | {m('PF'):.1f} | {cf:.1f} | {m('frob_bound'):.1f} "
               f"| {m('spec_uncapped_init'):.0f} / {m('spec_uncapped_zero'):.0f} | {m('pb_KL'):.0f} | {m('pb_gibbs'):.3f} | {m('pb_RQ'):.2f} "
               f"| {m('pb_dis'):.3f} | {m('pb_det'):.2f} ({rng('pb_det')}) |")
 print()
@@ -64,12 +70,15 @@ for path in sorted(glob.glob(os.path.join(HERE, "sgd_short_*.json"))):
             print(f"| {r['step']} | {r['train_err']:.3f} | {r['test_err']:.3f} | {r['dist_M']:.2f} | {r['S_K']:.0f} | {r['max_step_ratio']:.2f} "
                   f"| {r['pb_KL']:.0f} | {r['pb_RQ']:.2f} | {r['pb_det']:.2f} | {r['pb_KL_adam']:.0f} | {r['pb_RQ_adam']:.2f} ({min(1, r['pb_RQ_adam'] + r['pb_det'] - r['pb_RQ']):.2f}) |")
     else:
-        print("| step | $t$ | train err | test err | $\\|\\Delta\\|_{M^{-1}}$ | $\\Lambda$ | $\\sqrt{tE}$ | $\\sqrt{tL_0}$ | $P_F$ | B3.1 | "
-              "KL measured | B3.2 $R(Q)$ | B3.2 det. | KL (B3.3b, energy) | $R(Q)$ | KL (B3.3a, flow) | $R(Q)$ (det.) |")
-        print("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+        # revision r2: B3.1 uses the certified closed-form P^max ('B3.1 c' = its complexity term at unit margin); the flow
+        # column divides by the measured running-minimum descent constant c_K and is marked * when it is rigorous ((D) holds)
+        print("| step | $t$ | train err | test err | $\\|\\Delta\\|_{M^{-1}}$ | $\\Lambda$ | $\\sqrt{tE}$ | $\\sqrt{tL_0}$ | $P_F$ | B3.1 c (unit margin) | B3.1 bound | "
+              "KL measured | B3.2 $R(Q)$ | B3.2 det. | KL (B3.3b, energy) | $R(Q)$ | $c_K$ | KL (B3.3a, flow) | $R(Q)$ (det.) |")
+        print("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
         for r in S["records"]:
             pb = r.get("pb_KL")
+            star = "*" if r.get("flow_rigorous") else ""   # * = (D) held at every step so far: B3.1 and B3.3(a) are theorems here
             tail = (f"| {r['pb_KL']:.0f} | {r['pb_RQ']:.2f} | {r['pb_det']:.2f} | {r['pb_KL_energy']:.0f} | {r['pb_RQ_energy']:.2f} "
-                    f"| {r['pb_KL_flow']:.0f} | {r['pb_RQ_flow']:.2f} ({min(1, r['pb_RQ_flow'] + r['pb_det'] - r['pb_RQ']):.2f}) |") if pb is not None else "| | | | | | | |"
+                    f"| {r.get('desc_c_used', 1.0):.4f} | {r['pb_KL_flow']:.0f} | {r['pb_RQ_flow']:.3f}{star} ({min(1, r['pb_RQ_flow'] + r['pb_det'] - r['pb_RQ']):.3f}) |") if pb is not None else "| | | | | | | | |"
             print(f"| {r['step']} | {r['t']:.0f} | {r['train_err']:.3f} | {r['test_err']:.3f} | {r['dist_M']:.2f} | {r['path_len']:.1f} "
-                  f"| {r['sqrt_tE']:.1f} | {r['sqrt_tL0']:.1f} | {r['PF']:.0f} | {r['frob_apriori_bound']:.0f} " + tail)
+                  f"| {r['sqrt_tE']:.1f} | {r['sqrt_tL0']:.1f} | {r['PF']:.0f} | {r.get('frob_apriori_unit_margin', float('nan')):.1f}{star} | {r['frob_apriori_bound']:.0f} " + tail)

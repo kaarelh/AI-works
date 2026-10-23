@@ -11,18 +11,19 @@ X is an (n, d) float32 array of +-1, y an (n,) array of +-1.  The training sets 
 the networks saw (nested across n for each seed), and the test set is the networks' test set.
 """
 import os, json, time, numpy as np
-from boolfuncs import make_suite
+from boolfuncs import make_suite, make_random_suite
 
-D = 30
-SUITE = make_suite(D)
+D = int(os.environ.get("DIM", 30))          # input dimension (the d-scaling study uses 15 and 60)
+SUITE = make_random_suite(D) if os.environ.get("SUITE") == "random" else make_suite(D)
 FNS = list(SUITE)
-NS = [16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384]
+NS = [2 ** k for k in range(4, int(np.log2(int(os.environ.get("NS_MAX", 16384)))) + 1)]
 SEEDS = [0, 1, 2]
 # Functions used to calibrate a model's global parameters, and functions held out for validation.
 CALIB = ["dict", "maj3", "thr10", "par2", "par4", "stair5", "parmaj", "dnf3", "rmaj9", "andxor", "rand0", "rand2"]
 HELDOUT = ["and3", "maj9", "par3", "majpar", "mux", "dlist5", "sparsepoly", "rand1", "rand3"]
 RESULTS = os.environ.get("NN_RESULTS",
-    "/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/results")
+    "/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/results"
+    + ("" if D == 30 else f"_d{D}") + ("_random" if os.environ.get("SUITE") == "random" else ""))
 
 def _fn_seed(name):
     return int.from_bytes(name.encode(), "little") % (2 ** 31)

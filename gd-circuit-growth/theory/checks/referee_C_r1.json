@@ -1,0 +1,114 @@
+{
+ "verdict": "pass",
+ "summary": "Referee round 1 on /home/user/AI-works/gd-circuit-growth/theory/C-bridge-and-certificates.md. I did not edit the file.\n\nWhat I checked: every result labelled Proved, line by line. That covers Lemmas C0.1\u2013C0.3, Theorem C1 and its variants (b) and (c), Propositions C1.2\u2013C1.5, Lemma C2.1, Theorems C2.2\u2013C2.4, Corollary C2.5, Proposition C2.6, Lemmas C3.1\u2013C3.3, Theorem C3.4, Corollary C3.5, Propositions C4.1\u2013C4.3 and Remark C4.5. I also re-derived the numbers in the tables against the scripts and their outputs.\n\nVerdict: pass, with required revisions. I found no fatal error. Every gap in a Proved result can be closed with the fix given in the issue list. The issues that must be fixed are:\n- **Theorem C3.4:** the stated library constants are wrong for real-valued gates. They hold only for \u00b11-valued gates, which is the case for A's toy library used in \u00a73.4.\n- **Corollary C2.5:** the \"Gershgorin choice\" is circular as written.\n- **\u00a71.2 and \u00a73.3:** the claim that infl_irr bounds an L\u00b2 distance is false for the saved data, which measure only 5 irrelevant coordinates.\n\nWhat holds up:\n- The union bounds are correct: in C1 (uniform over classes, selections and checkpoints, with candidates chosen from S, \u03be and U_A only) and in C2.4 and C3.4 (uniform over N or T, \u03b5, \u03b3 and t).\n- The certificate numbers match the outputs: K=169, the prior weights sum to 1, no certificate falls below the true error in the 117 runs, and the \u00a71.4, \u00a71.6 and \u00a73.4 table entries reproduce.\n- The constants in C4.3 are correct.\n- The literature entries match my memory of the papers. I did not re-verify them online.\n\nMy numerical checks, all of which passed:\n- the two additive readings of the kl inverse;\n- Lemma C3.1(2), for arbitrary step sizes, arbitrary subgradient choices at 0, and per-layer multipliers;\n- the Euler identity in Lemma C3.2;\n- Proposition C2.6 items 4\u20135 with step sizes up to 0.45;\n- a simulation of Proposition C4.3 at the smallest admissible b/\u03b7 (0 failures in 200 runs per setting);\n- that MAJ_3 needs 4 gates.\n\nThe networks being certified are rebuilt from parameters saved in float16. They differ from the trained float32 networks on at most 2 of the 4096 test inputs, which is negligible.\n\nProse overclaims are listed as minor issues.\n\nFiles:\n- /home/user/AI-works/gd-circuit-growth/theory/checks/referee_C_r1.py, with output in referee_C_r1.out\n- /home/user/AI-works/gd-circuit-growth/theory/checks/referee_C_r1_fp16.py, with output in referee_C_r1_fp16.out\n- /home/user/AI-works/gd-circuit-growth/theory/checks/referee_C_r1_small.py, with output in referee_C_r1_small.out",
+ "issues": [
+  {
+   "result": "Theorem C3.4 and the library constants of \u00a73.2\u20133.3 (L^sgn_T, L^mar_T)",
+   "severity": "major",
+   "description": "The proof counts threshold readouts with Lemma C0.2 on the image of x -> (g_1(x),...,g_T(x)), and claims it has at most 2^{min(T,d)} points. For the margin sets it claims (y, y g_1, ..., y g_T) takes at most 2^{min(T+1,d+1)} values. Both claims hold only for two-valued (\u00b11) gates. The theorem is stated for a general library G 'of fan-in at most k' (A, Definition 2.1). \u00a73.4 recommends 'a library closer to the network's units (ReLU neurons on few coordinates)', and README \u00a72.2's matched race model uses ReLU gates. For real-valued gates the image can have up to 2^d points, so L^sgn_T and L^mar_T undercount and the Occam event is not guaranteed at level \u03b4. A's Lemma 1.2 already makes this distinction (\u03c1_T = log \u03a6(2^d, T) for real-valued gates). The theorem is correct for A's toy library {id, AND(\u00b1a,\u00b1b), XOR}, the only one actually used.",
+   "suggested_fix": "Add the hypothesis 'every g in G is \u00b11-valued on the cube' to \u00a73.2 and to Theorem C3.4. Otherwise state L^sgn_T = W_T + ln \u03a6(2^d, T) and L^mar_T = W_T + ln \u03a6(2^{d+1}, T+1) for real-valued gates. Mention this in \u00a73.4's suggestion to switch to ReLU-neuron libraries."
+  },
+  {
+   "result": "Corollary C2.5 ('the Gershgorin choice makes this fully a priori')",
+   "severity": "major",
+   "description": "As written, \u03ba\u0304 = 1+(N\u0304\u22121)\u03bc_n, but N\u0304 is itself defined as \u230a\u03ba\u0304 \u03c4\u00b2/\u0398_\u03b3\u00b2\u230b. The definition is circular, and the proof of C2.5 does not address it. The valid statement is the fixed point of Theorem C2.3(2): N_\u03b5 \u2264 \u03ba_B x \u2264 (1+(N_\u03b5\u22121)\u03bc_n)x, hence N_\u03b5 \u2264 (1\u2212\u03bc_n)x/(1\u2212\u03bc_n x) when \u03bc_n x < 1, with x = (\u03c4/\u0398_\u03b3)\u00b2. c2_diag_check.py already uses this formula, so the numbers are right and the text is not. 'Fully a priori' also overstates it: \u03bc_n is computed from the training inputs. A bound in terms of n alone needs the Hoeffding coherence event of C2.3(2) with its own \u03b4'. Separately, the 'measured \u03ba' column is not a priori either: \u03ba_B is the top eigenvalue on the trajectory's own grown set. This is the same point A's referee made about A2.5(a).",
+   "suggested_fix": "Define N\u0304_G(t) = min{D, \u230a(1\u2212\u03bc_n)x/(1\u2212\u03bc_n x)\u230b} for \u03bc_n x < 1, and prove it in one line from C2.3(2). For a bound depending only on (n, D, t), replace \u03bc_n by sqrt(2 ln(2D_{2k}/\u03b4')/n) and state probability 1\u2212\u03b4\u2212\u03b4'. Call the measured-\u03ba form 'time-indexed, with a data-dependent \u03ba', not 'a priori'."
+  },
+  {
+   "result": "\u00a71.2 text after Proposition C1.5, and \u00a73.3 'What the saved data allow: infl_irr bounds the L\u00b2 distance to the best real junta'",
+   "severity": "major",
+   "description": "C claims that (d\u2212|R|)\u00b7infl_irr \u2265 ||f \u2212 E[f|x_R]||\u00b2_{L\u00b2} holds 'up to the sampling error of infl_irr'. That would hold if infl_irr averaged E(f\u2212f\u2218\u2295_i)\u00b2/4 over all d\u2212|R| irrelevant coordinates. It does not: study/nn_train.py uses irr = [i for i in range(D) if i not in rel][:5], so only the first 5 irrelevant coordinates are measured. (d\u2212|R|)\u00b7infl_irr is therefore an extrapolation that assumes the irrelevant coordinates are exchangeable, not an upper bound. The measured coordinates give only a lower bound on \u03a3_{i\u2209R} Inf_i. The saved data cannot certify the L\u00b2 closeness this paragraph claims. So the stated route to testing the L\u00b2 form of SSA from saved data is not available.",
+   "suggested_fix": "State that infl_irr is the mean over 5 of the d\u2212|R| irrelevant coordinates, so that (d\u2212|R|)\u00b7infl_irr is an estimate under exchangeability, not a bound. For a rigorous upper bound, recompute \u03a3_{i\u2209R} E(f\u2212f\u2218\u2295_i)\u00b2/4 from the saved final parameters, with a concentration term."
+  },
+  {
+   "result": "Corollary C3.5(1)",
+   "severity": "minor",
+   "description": "The two displayed inequalities are claimed to hold simultaneously with probability 1\u2212\u03b4_2, each with the term ln(|T||\u03a3|/\u03b4_2). The proof takes one union bound over the disagreement events and another over the squared-difference events: 2|T||\u03a3| events in all, each of probability \u03b4_2/(|T||\u03a3|). That gives probability 1\u22122\u03b4_2.",
+   "suggested_fix": "Replace ln(|T||\u03a3|/\u03b4_2) by ln(2|T||\u03a3|/\u03b4_2) in both displays, or state probability 1\u22122\u03b4_2."
+  },
+  {
+   "result": "Remark after Proposition C1.5: 'the certificates of \u00a71.4 exist exactly when the network's sign function is close to Fourier-sparse, or has small total influence outside a small set'",
+   "severity": "minor",
+   "description": "Proposition C1.5 gives sufficient conditions, not necessary ones, so 'exactly when' is false. Counterexample: MAJ_9 has level-1 Fourier weight 9\u00b7(70/256)\u00b2 = 0.673. So C1.5(1) with its 9 linear characters guarantees only dis \u2264 0.327. Yet sgn(\u03a3x_i) = MAJ_9 exactly, and \u00a71.4 certifies maj9 at 0.034 through F_{1,9}. Signs of sparse polynomials need not be Fourier-sparse (checks/referee_C_r1_small.out).",
+   "suggested_fix": "Change 'exactly when' to 'in particular when'. Note that Fourier-sign certificates also cover threshold-like functions that are far from Fourier-sparse."
+  },
+  {
+   "result": "Summary item 3, \u00a73.4 'Where SSA holds', \u00a75: 'the network sits exactly at the race's constant saddle state during its first plateau'",
+   "severity": "minor",
+   "description": "Here \u03b7\u0302 = 0 means only that the network predicts the majority label everywhere (and3 and dnf3 have unbalanced labels). Every learner that fits the mean first does this, so it says nothing about circuit growth. It is not evidence for SSA beyond the trivial s = 0 state. By the file's own yardstick SSA 'has content' here, but only in this trivial way.",
+   "suggested_fix": "Say explicitly that the first-plateau agreement is with the constant predictor and is expected of any learner that first fits the mean. Present the transition results (\u03b7\u0302 \u2248 0.1\u20130.3) as the real test."
+  },
+  {
+   "result": "\u00a71.6 reading: 'all entries hold simultaneously' and 'At every checkpoint, the network is certifiably close to a circuit whose description length grows in discrete steps'",
+   "severity": "minor",
+   "description": "The union bound covers the 15 checkpoints of one run, not the 8 targets \u00d7 2 sizes in the table: across runs the failure probabilities add. 'Certifiably close' is also overstated. For stair5 at steps 50\u2013200, the best certificate uses x_1 alone, with test error 0.30\u20130.34 and certificate 0.35\u20130.43. The selected class is the minimizer of a bound that trades error for size, not the size of a circuit the network is close to.",
+   "suggested_fix": "Say 'simultaneously over the checkpoints of each run'. Describe the staged class as 'the class that minimizes the certificate', not as 'the circuit the network is close to'."
+  },
+  {
+   "result": "Proposition C4.3, prose: 'N_1 does not depend on \u0398, hence not on \u03b1, nor on \u03b7 and b separately'; Summary: 'independently of \u03b1, \u03b7 and b'",
+   "severity": "minor",
+   "description": "In general N_1 = (b/\u03b7)\u00b7t_1 \u2248 (b/\u03b7)\u00b7\u0398/U*. The bound is free of \u0398 only when b/\u03b7 is at its smallest admissible value, which scales like 1/\u0398. The bound at that value, 100 ln(2|M|/\u03b4)/\u03b3\u00b2 + b, also contains b.",
+   "suggested_fix": "State it as: 'at the smallest admissible sampling rate b/\u03b7, the sample count is at most about 100 ln(2|M|/\u03b4)/\u03b3\u00b2 + b, independently of \u0398'."
+  },
+  {
+   "result": "Theorem C2.3, tightness remark: 'for y = \u03c7_{S*} in the dictionary, r stays parallel to \u03c7_{S*}, so |G_{S*}| = \u03c4 exactly'",
+   "severity": "minor",
+   "description": "This is false at finite n when the empirical coherence is nonzero: \u03bc_n = 0.30 at n = 100 in the check. Every S \u2260 S* receives gradient \u2212\u27e8\u03c7_{S*}, \u03c7_S\u27e9_n, so all coordinates move and r is not exactly parallel. Tightness holds only asymptotically as \u03b1 \u2192 0, or for an empirically orthogonal dictionary such as the full cube. The measured ratio 1.0000000016 (c2_diag_check.json, par2 at \u03b1 = 1e\u22128) is integration error. The inequality |G_{S*}| \u2264 \u03c4 itself is exact.",
+   "suggested_fix": "Say the bound is tight in the \u03b1 \u2192 0 limit, or exactly when \u27e8\u03c7_{S*}, \u03c7_S\u27e9_n = 0 for all S \u2260 S*."
+  },
+  {
+   "result": "Summary 2(d) and Proposition C2.6: 'with time measured by the logged minibatch losses'",
+   "severity": "minor",
+   "description": "Only item 3 (no early growth) is in terms of minibatch losses, through \u03c4^b. The SGD size bound (item 4) is in terms of \u03a3_j ||g_j||_2, the minibatch gradient norms in all D coordinates. These are not logged losses and can exceed sqrt(2 \u00d7 minibatch loss) by up to a factor sqrt(D). So under SGD the size bound is not the '\u03ba\u03c4\u00b2' form, and it is loose: measured ratios are 0.07\u20130.12.",
+   "suggested_fix": "Restrict the 'minibatch losses' wording to the no-early-growth statement. State that the SGD count uses integrated minibatch gradient norms."
+  },
+  {
+   "result": "\u00a71.3\u20131.4: which network is certified",
+   "severity": "minor",
+   "description": "study/nn_train.py saves the final parameters as float16. c1_fourier_cert.py rebuilds the network from them, so the certificates (and the 'true error' column) refer to the float16-rounded network, not the float32 network that was trained. The difference is negligible: at most 2 of 4096 test inputs disagree with the saved float32 predictions, over all 429 networks (checks/referee_C_r1_fp16.out).",
+   "suggested_fix": "State that the float16 network is the one certified. Optionally, add the measured float16/float32 disagreement through another unlabelled-disagreement term."
+  },
+  {
+   "result": "\u00a70 convention versus Theorem C1",
+   "severity": "minor",
+   "description": "\u00a70 reads err(sgn f) conservatively as P(yf \u2264 0). Theorem C1, and the scripts (z >= 0 maps to +1), bound P(h \u2260 y) with h = sgn f and sgn(0) = +1. The two differ when f = 0 has positive probability.",
+   "suggested_fix": "State that C1 bounds P(sgn f \u2260 y) with the sgn(0) = +1 convention, and keep the conservative reading for the margin results C2.4 and C3.4."
+  },
+  {
+   "result": "\u00a71.2 'Which class wins': 'Circuits ... win for structured targets with many variables. PAR_8, for example, costs 65 nats as a 7-gate circuit and 193 nats as a junta'",
+   "severity": "minor",
+   "description": "PAR_8 = \u03c7_{1..8} is in F_{8,1}, which costs ln D_8* + ln 4 \u2248 17.4 nats. So the example shows the Fourier-sign class winning, not circuits.",
+   "suggested_fix": "Use an example with no sparse Fourier-sign representation, such as an AND or OR of several parities, or a deeper formula. Otherwise note PAR_8's 17-nat Fourier-sign cost."
+  },
+  {
+   "result": "\u00a71.4 table format",
+   "severity": "minor",
+   "description": "The table pairs the mean error over seeds with the range of per-seed certificates. majpar (0.065 / 0.060\u20130.101) and par4 (0.171 / 0.034\u20130.379) then look like certificates below the true error. Per seed, none is (c1_fourier_cert.json).",
+   "suggested_fix": "Report per-seed pairs, or the maximum error next to the maximum certificate."
+  },
+  {
+   "result": "\u00a73.1 closing sentence and Lemmas C3.1\u2013C3.2: 'What can be proved for the actual network is one-sided'",
+   "severity": "minor",
+   "description": "Lemma C3.1 covers one-hidden-layer networks under gradient flow or GD. Lemma C3.2 covers bias-free homogeneous networks. The study's network has two hidden layers, a bias b2, \u03bcP multipliers and Adam, so neither lemma applies to it. The \u03bcP caveat says this only partly.",
+   "suggested_fix": "Replace 'the actual network' with 'small-initialization GD on these architectures'. State explicitly that the study's \u03bcP Adam runs are outside both lemmas."
+  },
+  {
+   "result": "Theorem C3.4 'In words' and C4.4",
+   "severity": "minor",
+   "description": "Two points. 'The gate count is at most \u03ba(ct/\u0398)\u00b2, so the bound is a function of training time' hides that \u03ba is the data-dependent Gram eigenvalue of the race's own gates, so the bound is not a function of time alone. Also, \u0398 \u2248 log(1/\u03b1) here, while \u0398 \u2248 \u00bd ln(1/\u03b1) in C2. Finally, C4.4 relies on A's Lemma 2.2(4) (\u03b1 only sets the unit of time), which A's referee found holds only for the pure k = 2 race.",
+   "suggested_fix": "Mention that \u03ba is data-dependent. Unify the unit of \u0398. Add the k = 2 caveat to C4.4's 'the race time is \u03b1-invariant'."
+  },
+  {
+   "result": "\u00a75 'Non-vacuous: Propositions C4.1 and C4.2 for the online protocol: these are essentially exact'",
+   "severity": "minor",
+   "description": "The file never evaluates C4.1 or C4.2 on the study's online runs. The claim is plausible, with deviation about 1e\u22123 at 1.28M samples. But it bounds the average over iterates, which includes the early bad ones, and the fast-rate form loses a factor of 1.58.",
+   "suggested_fix": "Compute C4.1 and C4.2 on the saved online runs, or move this entry to 'not yet evaluated'."
+  },
+  {
+   "result": "Theorem C2.2(2) and \u00a73.4 table details",
+   "severity": "minor",
+   "description": "\u03b5_D = min{D\u03b5, sqrt(\u03bb_max(K)\u00b7D)\u00b7\u03b5} always equals the second term, since \u03bb_max(K) \u2264 tr K = D. In the \u00a73.4 table, dnf3 at n = 256 sits at the constant state at steps 10\u201320 (c3_ssa_check.txt), not only at step 10.",
+   "suggested_fix": "Drop the redundant minimum. Correct the dnf3 n = 256 entry to 'steps 10\u201320'."
+  }
+ ]
+}

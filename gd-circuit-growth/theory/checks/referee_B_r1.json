@@ -1,0 +1,102 @@
+{
+ "verdict": "fail",
+ "issues": [
+  {
+   "severity": "major",
+   "result": "Theorem B3.3 (statement), Section 0 item 2, Section 4.5 comparison",
+   "description": "The theorem opens with 'the KL term in (PB) is bounded by quantities that grow linearly in training time'. That is true only for (a), gradient flow or GD under (D), where KL <= t L0 max_g m_g/(2 sigma_g^2). It is false for (b) and (c). (c) is sum_g p_g (eta m_g S_K)^2/(2 sigma_g^2) with S_K >= K (S_K is about 1.6K at K=100 and about 7K asymptotically), so it is at least quadratic in K. At fixed sigma, (S_300/S_100)^2 = 23 for a 3x increase in time (checks/referee_B_r1.out, part 1). (b) is t_K times E_K. For SGD with non-vanishing minibatch noise, E_K itself grows with K, so (b) grows roughly like t^2. The measured energy KLs in Section 5.3 are superlinear: 3669 to 1.78e6 while the step count grows 250x. The smooth a priori SGD bound B1.3 also has a noise term 2 eta beta t^2 sigma^2/B. The displayed inequalities are correct. The 'linear in time' description is a false sentence inside a Proved statement.",
+   "suggested_fix": "Restrict 'linear in training time' to (a). State that (b) is t_K E_K and is linear only if E_K stays bounded, which (D) guarantees and SGD noise does not. State that (c) is quadratic in K. Adjust Section 0 item 2 and the SGLD remark in 4.5 ('also linear in training time, structurally the same as B3.3') to match."
+  },
+  {
+   "severity": "major",
+   "result": "Theorem B3.3, 'Reading' paragraph",
+   "description": "The paragraph says 'This is the user's training has not taken long condition, made rigorous', then applies (a) to 'about 25 eps SGD steps per 1000 samples' and says 'Section 5.3 checks this along real runs'. The arithmetic is right (max_g m_g/2 sigma_g^2 = 400, K <= eps n/40; confirmed in referee_B_r1.out part 8). But (a) is a theorem only for gradient flow or for GD satisfying (D). Section 5.3 itself labels the flow column 'not rigorous for SGD'. The only rigorous SGD version is (b). At the same sigma its KL is 7-35x larger: 5832 vs 801 for x1 at step 20, and 1.78e6 vs 50852 for MAJ3 at n=2048, step 5000. Since this paragraph is the direct answer to the user's question, presenting the gradient-flow condition as a rigorous SGD statement is an overclaim.",
+   "suggested_fix": "Phrase the condition as gradient-flow time t <= eps n/200, i.e. 25 eps full-batch GD steps per 1000 samples at eta=0.2 provided (D) holds. For SGD, either point to (b), or derive a genuinely a priori high-probability version from B1.3 by Markov's inequality under the smoothness assumption. That version carries the t^2 noise term, and the note should say so."
+  },
+  {
+   "severity": "minor",
+   "result": "Theorem B3.2, Monte Carlo step and the sentence 'Any rule is allowed'",
+   "description": "(PB) is uniform over the sigma grid, so any data-dependent choice of sigma is fine for (PB). The Monte Carlo and disagreement steps (delta_1, delta_2) are valid only if the m final draws are made after, and independently of, the sigma search. nnbounds.pac_bayes does this correctly: selection uses sel_draws and the final estimates use fresh fin_draws, so the reported numbers stand. But the theorem text does not state the requirement. Reusing the selection draws would invalidate delta_1 and delta_2.",
+   "suggested_fix": "Add 'the m draws are made after sigma is chosen, independently of the search' to the statement of the derandomized bound."
+  },
+  {
+   "severity": "minor",
+   "result": "Section 5.3, GD with eta=0.02, 'flow (rigorous here)' column",
+   "description": "sgd_short.py hard-codes desc_c = 1.0, so the printed 'rigorous' values use c=1 instead of the measured c=0.9932. Recomputed with the measured c, R(Q) rises by 0.0009-0.0018. At step 1000 it goes from 0.7634 to 0.7653, so the printed 0.76 should be 0.77.",
+   "suggested_fix": "Divide the KL by the measured minimum descent ratio before reporting a value as rigorous."
+  },
+  {
+   "severity": "minor",
+   "result": "Theorem B3.1, numerics and verdict table",
+   "description": "PF_sup estimates P^max by random search on the sphere. That gives a lower estimate of the maximum, so the printed B3.1 values are not certified upper bounds. The closed-form upper bound in the theorem is 1.3-3.4x larger at rho = 1.4-22.6 (referee_B_r1.out part 5). The conclusion (vacuous) is unaffected. Separately, the verdict table says '>=3 at t=0', but summary_tables gives B3.1 = 2 at t=0 for n=16384: the bound is minimized over gamma up to 4, not taken at gamma=1.",
+   "suggested_fix": "Use the closed form, or a certified maximization (it is a 4-variable polynomial on a sphere segment), and quote the t=0 value as about 2-3 depending on n."
+  },
+  {
+   "severity": "minor",
+   "result": "Sections 5.2 and 5.5, margin-bound values and 'vacuous by k x'",
+   "description": "All 49 path-norm bounds in eval_saved.json are minimized at the grid edge gamma = gamma_max = 4. With train margins near 1, the bound is about 1 + (c-1)/gamma_max + conf, where c = 2 kappa phi_grid/sqrt(n). Vacuity is therefore equivalent to c > 1, and numbers such as 1.13, 7.8 or 'vacuous by 2-26x' are artifacts of gamma_max=4. A larger gamma_max moves them all toward 1. Also, the B2.3 bound in the table reaches 34.9, not 26. Trained path norms reach 610, not 543, in 'path norm 26-543'.",
+   "suggested_fix": "Report c = 2 kappa phi/sqrt(n), the complexity at unit margin, as Section 5.1 already does, instead of 'vacuous by k x'. Correct the two ranges."
+  },
+  {
+   "severity": "minor",
+   "result": "Proposition B2.2, sharpness paragraph",
+   "description": "The paragraph concludes 'the vacuity in Section 5 comes from the size of the measured norms, not from the constants'. For the closest case, x1 at n=16384, c = 2(3.32)(28.1)/128 = 1.46. If kappa were at its proven lower estimate 1.17 (a factor 2.8 lower), c would be about 0.51 < 1, and the margin bound could be non-vacuous. So in the closest cases the constant and the proof technique can decide vacuity.",
+   "suggested_fix": "Qualify the claim: vacuity is robust to constants for most networks, but not for the borderline ones."
+  },
+  {
+   "severity": "minor",
+   "result": "Theorem B2.4 (Dudley assembly; Literature, from memory)",
+   "description": "As I recall it, BFT's Lemma A.5 assumes 0 is in F for a [0,1]-valued class. The ramp-loss class need not contain 0; adding 0 to the class repairs this harmlessly. Also, '24 rho/n is a lower bound on the complexity term 2 R_S' should say it lower-bounds the BFT+Dudley upper bound on 2 R_S, not the Rademacher complexity itself, which is at most 1.",
+   "suggested_fix": "Add 0 to the class (one extra covering element) and reword."
+  },
+  {
+   "severity": "minor",
+   "result": "Section 4.5 and Section 0 item 7 (Xu-Raginsky, CMI)",
+   "description": "The text says these 'do not apply as stated. Their assumptions fail'. For the 0-1 loss, Xu-Raginsky Theorem 1 (1/2-sub-Gaussian) and Steinke-Zakynthinou CMI apply to any algorithm, with no smoothness or Lipschitz assumption. What fails is that the only available bounds on I(S;W) (<= nd ln2) and on CMI (<= n ln2) give vacuous results. Only HRS genuinely fails its assumptions.",
+   "suggested_fix": "Say the information-theoretic bounds apply but are vacuous with the computable bounds on I(S;W) and CMI. Keep 'do not apply' for HRS."
+  },
+  {
+   "severity": "minor",
+   "result": "Section 0 item 4, Section 5.3 reading 4, Section 6 (early-stopping numbers)",
+   "description": "'0.10-0.23 after 100-300 steps of SGD or Adam' is selective: Adam on MAJ3 at step 100 gives 0.34. Reporting the best checkpoint or optimizer after the fact also needs a union bound over the evaluated checkpoints for the Monte Carlo terms. (PB) is uniform in theta, but delta_1 and delta_2 are per evaluation. The cost is tiny (ln(5*100)/400 instead of ln(100)/400).",
+   "suggested_fix": "Give the full range, or state that each checkpoint's bound holds separately, and add the union bound when quoting a best-of value."
+  },
+  {
+   "severity": "minor",
+   "result": "Proposition B3.4 and its table row",
+   "description": "Three points. (i) 'For any window' must mean a window fixed in advance; choosing one after the fact needs a union bound. (ii) The bound covers the average test error of the iterates in the window, i.e. the random-iterate predictor, not the final network the study reports. (iii) nn_train.run_online does not record the progressive minibatch errors e_k, so B3.4 has not been evaluated on any study run; only its slack, 0.0048, is computed. 'No (essentially exact)' should say this.",
+   "suggested_fix": "State the window as fixed in advance, mention the random-iterate caveat, and either log e_k in the online protocol or mark the bound as not yet evaluated."
+  },
+  {
+   "severity": "minor",
+   "result": "Proposition 6.1, Section 5.4 prose, Section 0 item 8, Conjecture 6.2",
+   "description": "Several prose and number slips. 'Informative at n=256 for the targets with at most 3 relevant variables' is false for x1x2x3, which gives 0.985 (the bullets below admit this). 'At n=2048 it gives 0.01-0.10 for 4-6-variable targets' leaves out x1x2x3x4 (0.22 mean, 0.46 worst seed). The text says 'For k=3, ln(1/pi)=15.7'; the value is 15.80, as the table shows. 'The networks are 0-4%-close' should be 0-5%: AND3 seed 1 has disagreement 0.0498. The proof and the instantiation code (fresh inputs, union over k=0..6) are correct.",
+   "suggested_fix": "Name the targets explicitly and correct the numbers."
+  },
+  {
+   "severity": "minor",
+   "result": "Section 0 items 1 and 5",
+   "description": "Item 1: 'for SGD it holds in expectation under smoothness (B1.3)' overstates B1.3. It is not the same bound: there is a factor 4 and an additive noise term proportional to t^2 at fixed eta. Item 5: 'the first ~10^2 steps, i.e. gradient-flow time t <~ 50' does not match eta=0.2, where 10^2 steps is t=20; the rigorous SGD energy bound is already vacuous by step 50 at n=2048. '0.39 while the first feature is being learned' refers to a checkpoint where test error is already 0.001.",
+   "suggested_fix": "Make items 1 and 5 match Section 5.3."
+  },
+  {
+   "severity": "minor",
+   "result": "Theorem B3.3(b), how it is presented",
+   "description": "Since ||Delta_g||^2 <= m_g t E_g pointwise, (b) is always weaker than B3.2 with the measured displacement, and it uses only measured quantities. Calling it a rigorous time-based version for SGD overstates what it adds: it is not a priori in any sense.",
+   "suggested_fix": "Present (b) as a diagnostic of how loose the energy route is, not as an answer to the user's question for SGD."
+  },
+  {
+   "severity": "minor",
+   "result": "Section 0 item 3 and Section 3, 'vacuous already at initialization'",
+   "description": "(i) Only the Adam networks at n in {256, 2048, 16384} were evaluated (eval_saved.py defaults), not 'every trained network in the sweep at every n <= 16384'. (ii) The bound at theta_0 is trivially vacuous because its train margins are about 0.05. What is meant is that the complexity term at the initialization's norms exceeds 1. (iii) Trained networks can have a smaller path norm than at initialization (x1 at n=16384: 26 vs 31.5), so 'dominated by the random features present at muP initialization' is a heuristic reading and should be labelled as such.",
+   "suggested_fix": "Narrow the claim to what was evaluated, and label the interpretation Heuristic."
+  },
+  {
+   "severity": "minor",
+   "result": "Section 5.3 reading 5 (Lemma B1.4 'attained'), Remark B1.5, Section 5.2",
+   "description": "(i) The text says the largest value of ratio/C_t is 'exactly 1, attained at t=1'. The measured maximum is 0.999994 (an epsilon effect), and attainment at t=1 is trivial since C_1=1. The informative fact is ratio/C_50 of about 0.97 at step 50 (1.56 vs 1.61). (ii) The Remark B1.5 table entry says 'after 10^-4 steps', while the text and trivial_gronwall.out say 5x10^-5. (iii) 5.2 says all quantities are for the float16 weights, but 'test err (actual)' is the sweep's recorded float32 error.",
+   "suggested_fix": "Make the wording precise in all three places."
+  }
+ ],
+ "summary": "Referee round 1 of /home/user/AI-works/gd-circuit-growth/theory/B-nn-time-bounds.md. Verdict: fail, because of two major issues in Theorem B3.3, both easy to fix.\n\nWhat I checked and found correct:\n- **The proofs.** I checked every Proved proof step by step: B1.1, B1.2(a)/(b) (including the descent-lemma derivation), B1.3 (constants 4 and 2 eta t sigma^2(1+beta t)/B), Lemma B1.4 (the Cauchy\u2013Schwarz bound, its tightness, and the extremal sequence that is the same for every t), Remark B1.5, Lemma B2.0 (all three proof steps), B2.1 (grid union bound), B2.2 (rebalancing, exponential-moment peeling, the factor 8D), B2.3 (the AM-GM identity for P_F, the peeling identity, the McDiarmid variance factor), B3.1, B3.2 (KL formula, sigma-grid union bound, the Monte Carlo kl-Chernoff step, the pointwise derandomization inequality), B3.4 (Hoeffding/Azuma constant) and Proposition 6.1 (Occam step, disagreement step, triangle inequality). All are complete and correct.\n- **The constants.** I recomputed them independently: kappa_path=3.321, kappa_F=14.84, the GRS constant 16.92, C_inf=7.27, S_T, C_t increasing in t, the escape-ratio example 3.45, the n thresholds 5.3e4 and 1.36e5, the t=0 constant 369, E path norm at init 31.48, the B3.4 slack 0.0048, and ln(1/pi) for k=0..6.\n- **The code.** The pac_bayes code draws fresh Monte Carlo samples after selecting sigma. readoff.py uses fresh inputs for the disagreement estimate and a union bound over k=0..6. The regenerated init and data match the sweep's recorded norms (19/19 rows). The kl^-1 chains reproduce the JSON values. The sweep confirms the displacement growth (Delta W1 from 1.4 to 8.6).\n- **Literature.** DDKL Theorem 5.8 (chain rule for Whitney-stratifiable functions) is confirmed by web search. MRT Theorem 5.8, Ledoux\u2013Talagrand 4.12, Maurer Theorem 5, HRS Theorem 3.12, Xu\u2013Raginsky Theorem 1, GRS Theorem 1, BFT Theorem 3.3 and Kingma\u2013Ba Section 2.1 match my memory; WebFetch was unavailable, so I could not check full texts.\n\nThe two major issues:\n1. **B3.3 statement.** It claims the KL bounds 'grow linearly in training time'. This holds only for (a). The Adam bound (c) is quadratic in the step count K. The SGD energy bound (b) is t times E_K, and E_K grows with K under minibatch noise. The inequalities themselves are right; the description is false.\n2. **B3.3 'Reading'.** It applies the gradient-flow condition to SGD steps and calls it 'made rigorous'. For SGD only (b) is rigorous, and at the same sigma its KL is 7-35x larger.\n\nThe minor issues are:\n- the Monte Carlo independence requirement is not stated in B3.2;\n- the 'rigorous' flow numbers use c=1 instead of the measured 0.993;\n- the B3.1 numbers come from a random-search lower estimate of P^max;\n- every margin bound is minimized at the grid edge gamma=4, so the 'vacuous by k x' factors are artifacts;\n- the 'not from the constants' claim is overstated in the borderline cases;\n- the 0 in F condition in the Dudley lemma;\n- Xu\u2013Raginsky actually applies to the 0-1 loss and is vacuous rather than inapplicable;\n- best-of-checkpoint reporting lacks a union bound;\n- B3.4 caveats (window fixed in advance, random iterate, progressive errors not logged);\n- several prose and number slips.\n\nCheck script: /home/user/AI-works/gd-circuit-growth/theory/checks/referee_B_r1.py. Output: /home/user/AI-works/gd-circuit-growth/theory/checks/referee_B_r1.out. It confirms the Lemma B2.0 brute force, B1.3 on logistic regression, the B1.1/B1.2(b) inequalities on a small ReLU net, the quadratic growth in B3.3(c), and the P^max gap, all in about a minute."
+}
