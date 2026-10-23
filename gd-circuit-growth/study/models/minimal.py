@@ -209,12 +209,13 @@ def n_candidates(k, j, d, nact, f):
 
 # ---------------------------------------------------------------- one stage of search
 
-def search(Ulit, Mlit, r, active, gate_wires, c, a, law, fmax=4, need_score=None, d_count=None):
+def search(Ulit, Mlit, r, active, gate_wires, c, a, law, fmax=4, n_eff=None, d_count=None):
     """Score every depth-1 (literal subsets, f = 2..fmax) and depth-2 (pool subsets with >= 1 gate wire, f = 2..3)
     candidate on residual r.  Returns the best candidate by z^2 = n rho^2 / N(k) as a dict, or None.
     Ulit (n, d) literals, Mlit(order) -> plain literal moments up to that order, active (d,) bool,
     gate_wires (n, G) +-1 wires of depth-1 gates.  d_count: the d used in the noise law (defaults to Ulit.shape[1])."""
-    n, d = Ulit.shape
+    n_rows, d = Ulit.shape
+    n = n_eff or n_rows                     # sample size in the significance (n_eff: population mode, data = the cube)
     dn = d_count or d
     sr2 = float(np.mean((r - r.mean()) ** 2))
     if sr2 < 1e-12:
@@ -256,7 +257,7 @@ def search(Ulit, Mlit, r, active, gate_wires, c, a, law, fmax=4, need_score=None
         pool = np.concatenate([Ulit[:, act], gate_wires], 1)
         A = pool.shape[1]
         N0 = noise_count(0, dn, a, A, law, None)
-        Mp = moments(pool, np.ones(n, F32), 3); Rp = moments(pool, r.astype(F32), 3)
+        Mp = moments(pool, np.ones(n_rows, F32), 3); Rp = moments(pool, r.astype(F32), 3)
         for f in (2, 3):
             if A < f:
                 continue
