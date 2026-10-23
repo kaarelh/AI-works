@@ -12,8 +12,8 @@ predict_curve(fn, c, a, d)   the minimal model's noiseless run at each n on a fi
       with population correlations rho and the model's noise law N(k); least-squares readout in population.
     Returns the predicted test-error curve and n* (the n at which it crosses 0.1, log-interpolated as in common.py).
 
-bottleneck(fn, c, a, d)      the closed form: on the greedy path at n just above the predicted n*, with i* the first
-    stage whose population error is <= 0.1,
+bottleneck(fn, c, a, d)      the closed form: on the greedy path at n just above the predicted n*, with i* the length
+    of the shortest prefix whose readout has predicted error <= 0.1,
         n*_closed = max( n_Hebb , c * max_{i <= i*} N(k_i) / rho_i^2 ),
     where n_Hebb solves the Hebbian noise equation E_x Phi(-y F_{i*}(x) / sigma_n) = 0.1 for the readout F_{i*} of that
     stage.  It reproduces the curve's n* (up to the grid) and names the binding term: the Hebbian noise or one move.
@@ -59,7 +59,7 @@ def _ls(F, y):
     return w, F1 @ w
 
 
-def population_run(Xr, y, n, c, a, d, law="search", fmax=4, gmax=48, dense2=True):
+def population_run(Xr, y, n, c, a, d, law="search", fmax=4, gmax=48, dense2=True, act_scale=1.0):
     """The minimal model's noiseless run at sample size n.  Returns dict(stages, F (cube values), a_h, hnorm2, vy)."""
     m, r_ = Xr.shape
     vy = float(np.var(y))
@@ -87,7 +87,7 @@ def population_run(Xr, y, n, c, a, d, law="search", fmax=4, gmax=48, dense2=True
     active = np.zeros(r_, bool)
     N1 = noise_count(1, d, a, 0, law, n_candidates(1, 0, d, 0, 1))
     if vy > 1e-12:
-        active |= n * h ** 2 / vy / N1 > c
+        active |= n * h ** 2 / vy / N1 > c * act_scale
     GW = np.zeros((m, 0), F32)
     err = float(np.mean(np.where(F > 0, 1.0, -1.0) != y))
     while len(cols) < gmax and err > 0:
@@ -96,7 +96,7 @@ def population_run(Xr, y, n, c, a, d, law="search", fmax=4, gmax=48, dense2=True
         if sr2 < 1e-12:
             break
         rho_l2 = ((Xs.T @ (r - r.mean())) / m) ** 2 / sr2
-        active |= n * rho_l2 / N1 > c
+        active |= n * rho_l2 / N1 > c * act_scale
         best = search(Xr, Mlit, r, active, GW, c, a, law, fmax, n_eff=n, d_count=d, dense2=dense2)
         if best is None or best["z2"] <= c:
             break
@@ -137,11 +137,12 @@ def _crossing(ns, err, thr=0.1):
     return np.inf
 
 
-def predict_curve(fn, c, a, d=30, law="search", ns=None, fmax=4, suite=None, first_cross=False, dense2=True):
+def predict_curve(fn, c, a, d=30, law="search", ns=None, fmax=4, suite=None, first_cross=False, dense2=True,
+                  act_scale=1.0):
     """Predicted test-error curve on a grid of n (log2 step 1/8 from 2^3 to 2^17 by default) and its 0.1 crossing.
     first_cross: scan upward in steps of 1/4 and stop after the first crossing (refined to 1/16) -- for calibration."""
     Xr, y, rel = relevant_cube(fn, d, suite)
-    run = lambda n: noisy_error(population_run(Xr, y, n, c, a, d, law, fmax, dense2=dense2), y, n, d)
+    run = lambda n: noisy_error(population_run(Xr, y, n, c, a, d, law, fmax, dense2=dense2, act_scale=act_scale), y, n, d)
     if first_cross:
         prev_n, prev_e = None, None
         for l in np.arange(3, 17.01, 0.25):
@@ -161,9 +162,9 @@ def predict_curve(fn, c, a, d=30, law="search", ns=None, fmax=4, suite=None, fir
 
 def bottleneck(fn, c, a, d=30, law="search", fmax=4, suite=None, dense2=True):
     """Closed-form decomposition of the predicted n*: on the greedy path at n just above the predicted n*, with
-    i* the first stage whose population error is <= 0.1,
+    i* the length of the shortest prefix whose readout has predicted error <= 0.1,
         n*_closed = max( n_Hebb , max_{i <= i*} c N(k_i) / rho_i^2 ),
-    n_Hebb solving E_x Phi(-y F_{i*}(x) / sigma_n) = 0.1 for the readout F_{i*} of that stage.  Returns the binding
+    n_Hebb solving E_x Phi(-y F_{i*}(x) / sigma_n) = 0.1 for the readout F_{i*} of that prefix.  Returns the binding
     term ('hebb' or the bottleneck move) so that every n* can be read as one explicit formula."""
     p = predict_curve(fn, c, a, d, law, fmax=fmax, suite=suite, first_cross=True, dense2=dense2)
     if not np.isfinite(p["nstar"]):
@@ -172,12 +173,13 @@ def bottleneck(fn, c, a, d=30, law="search", fmax=4, suite=None, dense2=True):
     n0 = 1.02 * p["nstar"]
     run = population_run(Xr, y, n0, c, a, d, law, fmax, dense2=dense2)
     st = run["stages"]
-    base = population_run(Xr, y, n0, c, a, d, law, fmax, gmax=0, dense2=dense2)
-    base_err = float(np.mean(np.where(base["F"] > 0, 1.0, -1.0) != y))
-    i_star = -1 if base_err <= 0.1 else next((i for i, s in enumerate(st) if s["err"] <= 0.1), None)
-    if i_star is None:
-        i_star = len(st) - 1
-    run_t = population_run(Xr, y, n0, c, a, d, law, fmax, gmax=i_star + 1, dense2=dense2)
+    # i*: the shortest prefix of the path whose readout already has predicted (noisy) error <= 0.1 at n0
+    i_star, run_t = len(st), run
+    for i in range(len(st) + 1):
+        rt = population_run(Xr, y, n0, c, a, d, law, fmax, gmax=i, dense2=dense2)
+        if noisy_error(rt, y, n0, d) <= 0.1:
+            i_star, run_t = i, rt
+            break
     lo, hi = 1.0, 2.0 ** 30
     if noisy_error(run_t, y, hi, d) > 0.1:
         n_hebb = np.inf
@@ -186,7 +188,7 @@ def bottleneck(fn, c, a, d=30, law="search", fmax=4, suite=None, dense2=True):
             mid = math.sqrt(lo * hi)
             lo, hi = (mid, hi) if noisy_error(run_t, y, mid, d) > 0.1 else (lo, mid)
         n_hebb = hi if run_t["a_h"] != 0.0 else 0.0
-    used = st[:i_star + 1]
+    used = st[:i_star]
     n_gate = max([s["n_thr"] for s in used], default=0.0)
     if n_hebb >= n_gate:
         binding = "hebb"

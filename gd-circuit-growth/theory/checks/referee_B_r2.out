@@ -1,0 +1,60 @@
+== 1. Lemma B2.1a brute force ==
+   1600 (margins, c, gamma_max) instances with c >= max(1, mean(yf)_+): bound < 1 in 0
+   minimum at the grid edge gamma = gamma_max whenever gamma_max >= max margin: 1119 of 1119
+   gamma_max = 1e6: bound - 1 ranges 0.0181-0.2783; the k=0 confidence term ranges 0.0181-0.2783  (so the limit is 1 + conf, not 1)
+   necessity: margins all 5, c ~ 2 (>= 1 but < mean margin): bound = 0.451 < 1
+
+== 2. Lemma B1.4: C_t >= 1, monotone, <= C_inf ==
+   beta=(0.9,0.999): min C_t 1.000000; nondecreasing: True; max C_t 7.2703 <= C_inf 7.2703: True
+   beta=(0.9,0.99): min C_t 1.000000; nondecreasing: True; max C_t 2.3452 <= C_inf 2.3452: True
+   beta=(0.5,0.9): min C_t 1.000000; nondecreasing: True; max C_t 1.8605 <= C_inf 1.8605: True
+   beta=(0.0,0.999): min C_t 1.000000; nondecreasing: True; max C_t 31.6228 <= C_inf 31.6228: True
+   beta=(0.95,0.9999): min C_t 1.000000; nondecreasing: True; max C_t 16.0199 <= C_inf 16.0202: True
+   random growing sequences: max ratio / C_t = 1.0000 (<= 1)
+
+== 3. Theorem B3.3(d) on logistic regression (smooth, bounded per-example gradients) ==
+   K=   10 t=   19.85: E||D||^2_M^-1 =    11.102 <= V(t) =    1552.89: True;  P[||D||^2 > V/0.1] = 0.0000 (<= 0.1)  drift-only part 4tL0 = 55.05
+   K=   50 t=   99.27: E||D||^2_M^-1 =    33.047 <= V(t) =   34998.01: True;  P[||D||^2 > V/0.1] = 0.0000 (<= 0.1)  drift-only part 4tL0 = 275.23
+   K=  200 t=  397.07: E||D||^2_M^-1 =    82.880 <= V(t) =  548495.32: True;  P[||D||^2 > V/0.1] = 0.0000 (<= 0.1)  drift-only part 4tL0 = 1100.90
+   K= 1000 t= 1985.33: E||D||^2_M^-1 =   225.424 <= V(t) = 13635897.93: True;  P[||D||^2 > V/0.1] = 0.0000 (<= 0.1)  drift-only part 4tL0 = 5504.51
+   mixture KL 0.6663 <= mean KL 1.1125: True
+   mixture KL 11.7371 <= mean KL 12.4651: True
+   mixture KL 0.2842 <= mean KL 0.5138: True
+   mixture KL 0.7002 <= mean KL 1.3165: True
+   mixture KL 0.4564 <= mean KL 0.9513: True
+
+== 4. Theorem B2.4: cost of adding the zero function ==
+   sqrt(a^2+b) <= a + min(sqrt b, b/2a) on 1e5 random pairs: True
+   max over 300 random (n, rho, alpha) of extra / min(12 sqrt(ln2/n), 3 ln2/rho) = 0.9999 (<= 1)
+
+== 5. Section 5.3 recomputed from the trajectory records ==
+   kl^-1 chains and KL formulas reproduce the JSON (max deviation 0.00e+00)
+   SGD checkpoints: KL(b)/KL(a) at the same sigma ranges 1.9-44.3 over 18 checkpoints  (text: '7-35 times')
+   ||Delta||_M^-1 > sqrt(t L0) at: no record
+   largest overshoot over SGD/GD records: sqrt_tL0/||Delta|| = 7.1, path_len/||Delta|| = 23.3, sqrt_tE/||Delta|| = 43.4
+   rigorous time-based values below 0.5 (run, part, step, t, R(Q)):
+       ('maj3_2048_gd', 'energy', 20, 4.0, 0.455)
+       ('maj3_2048_gd_eta0.02', 'energy', 200, 4.0, 0.449)
+       ('dict_16384_sgd', 'energy', 20, 4.0, 0.394)
+       ('dict_16384_adam', 'adam', 20, 0.02, 0.46)
+       ('dict_16384_adam', 'adam', 50, 0.05, 0.437)
+   x1 step 300 block displacements (W1,b1 / W2,b2 / a): SGD [1.89 1.   0.51]  Adam [2.27 2.59 0.24]
+   GD eta=0.02 run ends at step 1000 (t = 20.0): flow R(Q) 0.765, energy R(Q) 0.715  -> non-vacuous at the last evaluated time; nothing measured beyond t = 20.0
+   GD eta=0.2 step 20: c_K = 0.2587, rigorous = True, flow KL 3145, R(Q) 0.900
+
+== 6. Constants ==
+   lambda_sigma = 400.0 (set by group 3)
+   t <= eps n c / (L0 lambda) = eps n / 200; steps per 1000 samples: eta=0.2 -> 25.0 eps, eta=0.02 -> 250.0 eps
+   KL <= 0.1 n at n=16384: (a) t <= 8.19; (d2) t <= 2.048; (d1, delta'=0.01) t <= 0.0205
+   Section 3, path: c >= 1 guaranteed for n <= (2 kappa phi)^2 = 4.38e+04; text uses (2 q kappa phi)^2 = 5.3e+04
+   Section 3, Frobenius: c >= 1 guaranteed for n <= (2 kappa phi)^2 = 1.12e+05; text uses (2 q kappa phi)^2 = 1.36e+05
+
+== 7. Proposition B3.4 ==
+   slack sqrt(ln(1/delta)/(2 K' B)), K'=1000, B=64, one window: 0.00484
+   slack sqrt(ln(1/delta)/(2 K' B)), K'=1000, B=64, three windows: 0.00566
+   adaptive-rate simulation (4000 runs, K'=200, B=16): Pr[mean R - mean e > slack] = 0.0008 (<= 0.05)
+
+== 8. Small numeric details ==
+   sgd_short_maj3_2048_sgd.json: largest sqrt(t L0)/||Delta|| = 6.16 at step 5000  (Section 6 says 'up to 6')
+   sgd_short_maj3_2048_gd_eta0.02.json: largest sqrt(t L0)/||Delta|| = 7.08 at step 5  (Section 6 says 'up to 6')
+   first Adam step in float32, eps = 0: |mhat|/sqrt(vhat) = 0.9999933  (the 0.999994 of Section 5.3 is float32 rounding of the bias corrections, not eps)

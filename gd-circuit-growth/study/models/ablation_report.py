@@ -7,6 +7,8 @@ import os, sys, json, glob
 import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import common as C
+import functools
+C.nn_fixed = functools.lru_cache(maxsize=None)(C.nn_fixed)     # the NN files are re-read by every compare() call
 
 SCR = "/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad"
 EVALS = os.path.join(SCR, "model_evals"); DIAG = os.path.join(SCR, "ablation_diag")

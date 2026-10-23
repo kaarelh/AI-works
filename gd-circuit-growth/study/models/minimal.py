@@ -7,24 +7,27 @@ Run with OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1.
 
 LEARNED OBJECT
     wires     the d input literals x_1..x_d (+-1), and every accepted depth-1 gate as a +-1 wire 2*1[s > b] - 1.
-    gate      g = relu(sum_{j in S} s_j u_j - b): fan-in f = |S| in {2,3,4}, signs s_j in {-1,+1}, threshold
-              b in {f-1, f-3, ..., 1-f} (AND-like ... OR-like) or b = -f-1 (the signed sum itself).
-              depth 1: S is a set of literals (f <= 4); depth 2: S is a set of f <= 3 wires from the *active pool*
+    gate      g = relu(sum_{j in S} s_j u_j - b): signs s_j in {-1,+1}, threshold b in {f-1, f-3, ..., 1-f}
+              (AND-like ... OR-like) or b = -f-1 (the signed sum itself), f = |S|.
+              depth 1: S is a set of f <= 4 literals; depth 2: S is a set of f <= 3 wires from the *active pool*
               (active literals and depth-1 gates) containing at least one gate.  Depth-2 gates are not wires.
+              Plus one dense depth-1 candidate per stage, the order-2 (spectral) unit: the two extreme eigenvectors of
+              M_ij = E_S[r x_i x_j] (i != j) rounded to {-1, 0, 1} (keep |v_i| >= max|v| / 2), any fan-in.
     readout   f(x) = c + a_0 h(x) + sum_g a_g (g - mean g)/std g: least squares over the Hebbian feature
               h(x) = sum_i h_i x_i, h = E_S[(y - ybar) x] (the race's order-1 unit: one dense linear unit whose weights are
               the empirical input-label correlations, with their sampling noise) and the accepted gates (tiny ridge),
               refitted after every acceptance; prediction sign(f).  Fan-in-1 gates are not moves.
 
-STATE    the accepted gates and the set A of *active* literals: a literal is active once an accepted gate reads it or
-         once its own residual correlation is significant (n rho_i^2 > c N(1)).
+STATE    the accepted gates and the set of *active* literals: a literal is active once an accepted gate reads it or
+         once its correlation with the label or the residual is significant at the order-1 level (n rho_i^2 > c N(1)).
 
-MOVES    a candidate gate g needs k = (number of inactive literals it reads) new inputs at once.  Its significance is
+MOVES    a candidate gate g needs k = (number of inactive literals it reads) new inputs at once (the spectral unit counts
+         as k = 2: it is an order-2 search over all d literals).  Its significance is
               z^2 = n * rho_g^2 / N(k),      rho_g = |Cov_S(r, g)| / (std_S(r) std_S(g))
          (rho_g = the empirical correlation of the gate with the current residual r).  Noise law (search cost):
               N(0) = |pool|                 (a search over the few active wires; for depth-1 gates on active literals
                                              the pool is the active literals)
-              N(k) = d * (d / a)^(k - 2)_+  (k >= 1)
+              N(k) = d * max(1, d / a)^(k - 2)_+  (k >= 1)
          i.e. the continuous-direction noise level sqrt(d/n) of an order-1 or order-2 (spectral) search over d inputs,
          multiplied by (d/a) for every extra input that has to be found at once beyond two.  This is the race model's
          alignment law m' = k U m^(k-1) from an initial overlap m(0)^2 ~ a/d: the order-k signal along the target
@@ -34,6 +37,10 @@ MOVES    a candidate gate g needs k = (number of inactive literals it reads) new
          noise level sqrt(2 log M_k / n)); kept for comparison.
     rule     accept the candidate with the largest z^2 if z^2 > c; otherwise stop.  Also stop at training error 0 or
          after gmax gates.
+
+OUTPUTS  'size' = number of gates; 'time' = the model's clock when the training error first reaches 0.1, where every
+         accepted move takes time sqrt(N(k)) / rho (the square root of its sample cost c N / rho^2, as in the race's
+         time-sample relation t ~ Theta sqrt(n / log M)); 'gates' = (depth, fan-in, k) of each gate; 'trace'.
 
 GLOBAL CONSTANTS (calibrated on common.CALIB only): c (acceptance level), a (initial-overlap scale of the search).
 Fixed: fan-in <= 4 at depth 1 and <= 3 at depth 2, +-1 weights, gmax = 48, ridge 1e-6.
@@ -199,7 +206,8 @@ def noise_count(k, d, a, pool, law="search", M=None):
         return max(math.log(max(M, 2)), 1.0)
     if k == 0:
         return float(max(pool, 1))
-    return float(d) * (float(d) / a) ** max(k - 2, 0)
+    # initial overlap m(0)^2 = min(1, a/d): every input beyond two that must be found at once costs a factor d/a (>= 1)
+    return float(d) * max(1.0, float(d) / a) ** max(k - 2, 0)
 
 
 def n_candidates(k, j, d, nact, f):
@@ -377,7 +385,8 @@ class Minimal:
 
         w, fhat = refit()
         err = float(np.mean(np.where(fhat > 0, 1.0, -1.0) != y))
-        t_fit = 0 if err <= 0.1 else None
+        t_fit = 0.0 if err <= 0.1 else None
+        clock = 0.0          # each accepted move takes time sqrt(N(k)) / rho: the square root of its sample cost
         # literals found by the order-1 unit: significant label correlation at the order-1 noise level
         vy = float(np.var(y))
         if vy > 1e-12:
@@ -410,8 +419,9 @@ class Minimal:
             w, fhat = refit()
             err = float(np.mean(np.where(fhat > 0, 1.0, -1.0) != y))
             trace.append((len(gates), err))
+            clock += math.sqrt(g["N"] / max(g["rho2"], 1e-12))
             if t_fit is None and err <= 0.1:
-                t_fit = len(gates)
+                t_fit = clock
             if self.verbose:
                 print(f"    gate {len(gates):2d} depth={g['depth']} f={g['f']} k={g['k']} S={list(g['S'])} b={g['b']} "
                       f"rho2={g['rho2']:.3f} N={g['N']:.1f} z2={g['z2']:.1f} train_err={err:.3f}")
@@ -436,5 +446,5 @@ class Minimal:
                     GWz = np.concatenate([GWz, (2.0 * ind - 1.0).astype(F32)[:, None]], 1)
             return np.where(out > 0, 1.0, -1.0)
 
-        return dict(predict=predict, time=float(t_fit if t_fit is not None else len(gates)), size=len(gates),
+        return dict(predict=predict, time=float(t_fit if t_fit is not None else clock), size=len(gates),
                     trace=trace, gates=[(g["depth"], g["f"], g["k"]) for g in gates])
