@@ -13,6 +13,11 @@ mode adam: Adam (lr 1e-3, betas 0.9/0.999, eps 1e-8, bias correction, multiplier
 records S_K = sum_t C_t (Lemma B1.4) and the largest per-coordinate step ratio |mhat|/(sqrt(vhat)+eps) seen,
 and evaluates the time-based PAC-Bayes KL bound  sum_g p_g (eta m_g S_K)^2 / (2 sig_g^2).
 
+Revision r2 (after referee_B_r1): Theorem B3.1 uses the certified closed-form upper bound on P^max (the old random
+search, a lower estimate, is kept as PF_apriori_search); the 'flow' KL of B3.3(a) is divided by the running minimum
+c_K of the measured descent ratio and flagged flow_rigorous only while (D) has held at every step (GD).  Runs used:
+  maj3 2048 sgd 5000 | maj3 2048 gd 2000 | maj3 2048 gd 1000 0.02 | dict/maj3 16384 sgd 300 | dict/maj3 16384 adam 300
+
 usage: python3 sgd_short.py <fn> <n> <mode: sgd|gd|adam> <steps> [eta]     (a few minutes at most)
 """
 import os, sys, json, time

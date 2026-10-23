@@ -82,13 +82,17 @@ class Recorder:
         return r
 
 
+SUFFIX = "" if C.D == 30 else f"-d{C.D}"     # DIM != 30: the d-scaling functions only, files tagged -d<DIM>
+FNS = C.FNS if C.D == 30 else [f for f in C.FNS if os.path.exists(os.path.join(C.RESULTS, f"fixed_adam_{f}.npz"))]
+
+
 def run(name):
     cfg = dict(BASE); cfg.update(ABLATIONS[name])
     oracle = cfg.pop("oracle", None)          # None, True (fresh sample of N_ORACLE) or an int N (0: N = n)
     model = RaceAblation(name=f"race-abl-{name}", **cfg)
     rec = Recorder(model)
     t0 = time.time(); res = None
-    for fn in C.FNS:
+    for fn in FNS:
         rec.fn = fn
         if oracle is not None:
             f = C.SUITE[fn]["fn"]
@@ -105,11 +109,11 @@ def run(name):
             for k in ("test_err", "train_err", "time", "size", "fit_seconds", "pred"):
                 res[k][fn] = r[k][fn]
     res["model"] = model.name
-    C.save_eval(res, os.path.join(EVALS, f"race-abl-{name}.npz"))
+    C.save_eval(res, os.path.join(EVALS, f"race-abl-{name}{SUFFIX}.npz"))
     json.dump(dict(name=name, cfg={k: v for k, v in cfg.items()}, oracle=oracle is not None,
                    n_oracle=None if oracle is None else ("n" if oracle is not True and oracle == 0 else N_ORACLE),
-                   seconds=time.time() - t0, rows=rec.rows), open(os.path.join(DIAG, f"race-abl-{name}.json"), "w"))
-    for split, fns in (("HELDOUT", C.HELDOUT), ("ALL", C.FNS)):
+                   seconds=time.time() - t0, rows=rec.rows), open(os.path.join(DIAG, f"race-abl-{name}{SUFFIX}.json"), "w"))
+    for split, fns in (("HELDOUT", C.HELDOUT), ("ALL", FNS)):
         s = C.compare(res, "adam", fns=fns, verbose=False)
         print(f"== {name} {split}: log2 {s['sc_mean_abs_log2_ratio']:.2f} rho {s['sc_spearman']:.2f} succ "
               f"{s['success_agreement']:.2f} mae {s['curve_mae']:.3f} ex {s['example_agreement_score']:.2f} "
@@ -121,7 +125,7 @@ def run(name):
 if __name__ == "__main__":
     for name in sys.argv[1:]:
         res = run(name)
-        if name == "base":       # must reproduce the saved race evaluation exactly
+        if name == "base" and C.D == 30:       # must reproduce the saved race evaluation exactly
             ref = C.load_eval(os.path.join(EVALS, "race.npz"))
             same = all(np.array_equal(ref["pred"][fn], res["pred"][fn]) for fn in C.FNS)
             print("== base reproduces race.npz predictions exactly:", same, flush=True)

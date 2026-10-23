@@ -125,6 +125,20 @@ for rec in S["records"]:
 for f in ["sgd_short_maj3_2048_gd.json", "sgd_short_maj3_2048_sgd.json"]:
     S = J(f)
     print(f"   {f}: flow_rigorous at the PB checkpoints:", sorted(set(r["flow_rigorous"] for r in S["records"] if "pb_KL_flow" in r)))
+# first step at which (D) fails for full-batch GD at eta = 0.2 (same data, init and multipliers as sgd_short.py)
+import nn_train as nt
+import jax, jax.numpy as jnp
+Xg, yg = nt.make_data("maj3", 0, 16384); Xg, yg = jnp.array(Xg[:2048]), jnp.array(yg[:2048])
+pg = nt.init_params(jax.random.PRNGKey(7)); MG = nt.MULT["sgd"]
+lg = jax.jit(lambda p: nt.loss_fn(p, Xg, yg)); gg = jax.jit(jax.grad(lambda p: nt.loss_fn(p, Xg, yg)))
+ratios = []
+for k in range(60):
+    g = gg(pg); g2 = float(sum(MG[q] * jnp.sum(g[q] ** 2) for q in g))
+    pn = {q: pg[q] - 0.2 * MG[q] * g[q] for q in pg}
+    ratios.append((float(lg(pg)) - float(lg(pn))) / (0.2 * g2)); pg = pn
+neg = [k for k, r in enumerate(ratios) if r <= 0]
+print(f"   GD eta=0.2, maj3, n=2048: min descent ratio over steps 0-19 = {min(ratios[:20]):.4f}; first step k with ratio <= 0: "
+      f"{neg[0] if neg else None}; ratios at steps 18-26: {[round(r, 3) for r in ratios[18:27]]}")
 
 # ------------------------------------------------------------------------------------------------ 3
 print("\n== 3. Theorem B3.1: certified closed form vs random search ==")

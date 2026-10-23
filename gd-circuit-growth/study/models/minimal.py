@@ -102,68 +102,67 @@ def score_subsets(Mo, Ro, f, sr2):
 
 # ---------------------------------------------------------------- moments of products of +-1 wires (colex-indexed)
 
+_BINOM = np.array([[math.comb(m, t) for t in range(6)] for m in range(256)], dtype=np.int64)   # _BINOM[m, t] = C(m, t)
+_COLEX = {}
+
+
+def _colex_subsets(W, f):
+    """All f-subsets of range(W), each sorted ascending, in colex order.  Colex order is prefix-closed: the subsets of
+    range(W) are the first C(W, f) rows of the table for any larger W, so one table serves every W."""
+    have = _COLEX.get(f)
+    if have is None or have[0] < W:
+        Wb = max(W, 2 * (have[0] if have else 0), 32)
+        if f == 1:
+            T = np.arange(Wb, dtype=np.int64)[:, None]
+        else:
+            prev = _colex_subsets(Wb - 1, f - 1)
+            T = np.concatenate([np.concatenate([prev[:_BINOM[m, f - 1]], np.full((_BINOM[m, f - 1], 1), m)], 1)
+                                for m in range(f - 1, Wb)], 0)
+        _COLEX[f] = (Wb, T)
+        have = _COLEX[f]
+    return have[1][:_BINOM[W, f]]
+
+
+def _rank(cols):
+    """colex ranks of the rows of an (m, t) array of ascending tuples."""
+    return sum(_BINOM[cols[:, i], i + 1] for i in range(cols.shape[1]))
+
+
 _IDX = {}
 
 
-def _colex(t):
-    """colex rank of a sorted tuple."""
-    return sum(math.comb(c, i + 1) for i, c in enumerate(t))
-
-
 def _subset_index(W, f):
-    """All f-subsets of range(W) (lex order) and, for each, the positions of its 2^f sub-masks in the concatenated
-    moment vector [empty | order 1 | order 2 | ... ] (each order block in colex order)."""
+    """All f-subsets of range(W) (colex order) and, for each, the positions of its 2^f sub-masks in the concatenated
+    moment vector [empty | order 1 | order 2 | ...] (each order block in colex order)."""
     key = (W, f)
     if key in _IDX:
         return _IDX[key]
     off = np.cumsum([0] + [math.comb(W, t) for t in range(0, 5)])            # block offsets for orders 0..4
-    subs = np.array(list(itertools.combinations(range(W), f)), dtype=np.int64)
+    subs = _colex_subsets(W, f)
     idx = np.zeros((len(subs), 2 ** f), dtype=np.int64)
-    for T in range(2 ** f):
+    for T in range(1, 2 ** f):
         cols = [j for j in range(f) if T >> j & 1]
-        t = len(cols)
-        if t == 0:
-            continue
-        rank = np.zeros(len(subs), dtype=np.int64)
-        for i, j in enumerate(cols):
-            rank += np.array([math.comb(int(v), i + 1) for v in range(W)], dtype=np.int64)[subs[:, j]]
-        idx[:, T] = off[t] + rank
+        idx[:, T] = off[len(cols)] + _rank(subs[:, cols])
+    if len(_IDX) > 64:
+        _IDX.clear()
     _IDX[key] = (subs, idx)
     return _IDX[key]
 
 
-_PAIRS = {}
-
-
 def _pairs(W):
     """Pairs (a<b) of range(W) in colex order, as two index arrays."""
-    if W not in _PAIRS:
-        a, b = [], []
-        for j in range(W):
-            for i in range(j):
-                a.append(i); b.append(j)
-        _PAIRS[W] = (np.array(a, dtype=np.int64), np.array(b, dtype=np.int64))
-    return _PAIRS[W]
-
-
-_TRIPLE_MAP = {}
+    s = _colex_subsets(W, 2)
+    return s[:, 0], s[:, 1]
 
 
 def _higher_maps(W, order):
-    """For order 3: for each triple in colex order, (pair colex index of first two, third).  For order 4: (pair(a,b), pair(c,d))."""
-    key = (W, order)
-    if key in _TRIPLE_MAP:
-        return _TRIPLE_MAP[key]
-    subs = np.array(list(itertools.combinations(range(W), order)), dtype=np.int64)
-    cr = np.array([_colex(tuple(s)) for s in subs], dtype=np.int64)
+    """For each order-3 subset (colex): (pair index of its first two elements, third element); for order 4:
+    (pair index of (a,b), pair index of (c,d))."""
+    s = _colex_subsets(W, order)
     pc = lambda i, j: i + j * (j - 1) // 2
     if order == 3:
-        A = pc(subs[:, 0], subs[:, 1]); B = subs[:, 2]
-    else:
-        A = pc(subs[:, 0], subs[:, 1]); B = pc(subs[:, 2], subs[:, 3])
-    o = np.argsort(cr)
-    _TRIPLE_MAP[key] = (A[o], B[o])
-    return _TRIPLE_MAP[key]
+        return pc(s[:, 0], s[:, 1]), s[:, 2]
+    return pc(s[:, 0], s[:, 1]), pc(s[:, 2], s[:, 3])
 
 
 def moments(U, w, maxord, chunk=8192):
@@ -326,6 +325,11 @@ class Minimal:
         w, fhat = refit()
         err = float(np.mean(np.where(fhat > 0, 1.0, -1.0) != y))
         t_fit = 0 if err <= 0.1 else None
+        # literals found by the order-1 unit: significant label correlation at the order-1 noise level
+        vy = float(np.var(y))
+        if vy > 1e-12:
+            N1 = noise_count(1, d, a, 0, law, n_candidates(1, 0, d, 0, 1))
+            active |= n * hvec ** 2 / vy / N1 > c
         trace.append((0, err))
         while len(gates) < self.gmax and err > 0:
             r = y - fhat
