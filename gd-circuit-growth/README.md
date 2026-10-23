@@ -476,7 +476,7 @@ Other observations:
 
 ### 3.4 Thread 3: bounds
 
-**Review status** ([`theory/README.md`](theory/README.md)): A, B and C each failed or passed their first referee pass, were revised, and passed a second pass with only minor issues left. D passed its first pass with minor issues only, and its minor fixes are not yet applied.
+**Review status** ([`theory/README.md`](theory/README.md)): A, B and C each failed or passed their first referee pass, were revised, and passed a second pass with only minor issues left. D passed its first pass with minor issues only and was revised accordingly; the revision has not been re-refereed.
 
 **What is now proved about "short training ⇒ small circuit ⇒ generalization":**
 - **The discrete race model (A):** time bounds the depth, the incoherence-weighted size and the readout $\ell_1$ norm, and hence test error, uniformly in time. Training time does not bound the raw gate count.
@@ -514,6 +514,7 @@ Other observations:
   - Gradient descent pays the noise cost of the most expensive move along its greedy path, about $d^{k-1}$.
   - They agree up to polynomial factors exactly for targets with a cheap greedy path, i.e. low-leap compositions with large residual correlations at every step. They diverge by $d^{k-1}/(k\log d)$ when a large leap is unavoidable.
 - **A testable consequence.** The networks' $n^*$ should be predictable from the target's greedy path alone. On 20 random formulas the closed form does this to within about 1.34×, with Spearman 0.92.
+- **The cost grows with the leap.** On the 26 targets with at most 4 relevant inputs (designed and random), the ratio of the networks' $n^*$ to the Occam-over-juntas learner's grows with the target's leap: median 8.1× at leap 1 (14 targets), 16.6× at leap 2 (8), 36× at leap 3 (2) and 85× at leap 4 (2), at $d=30$. Within leap 1 the spread is wide (1.7×–31×; the multiplexer is 31×), because the correlations along the path matter too, as the predictor says.
 
 **3. Kernel background and grown features.** *Moderately confident.* A trained network is a random-feature kernel background plus grown features:
 - the features decide whether and when it generalizes;
