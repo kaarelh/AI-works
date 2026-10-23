@@ -859,4 +859,4 @@ Revision 2, after the round-1 referee report (verdict: fail; one fatal, five maj
    - (b) The round-1 notes now count twelve minor issues, not eleven.
    - (c) Summary item 4's parity sample-complexity sentence now states the hypothesis $\mathrm{XOR}\in G$ of Proposition A4.3(2).
 
-Also changed: the header, and the pointer to the referees' checks under the status labels, now mention round 2. The Files table in Section 5 lists `referee_A_r2.py` and its output.
+Also changed: the header, and the pointer to the referees' checks under the status labels, now mention round 2. The Files table in Section 5 lists `referee_A_r2.py` and its output. The Gram-condition example in §3.1 names the library and $\delta$ it assumes. The par3 remark after Proposition A4.3 now gives the first noise firing as $t/\Theta=2.65$–$20.0$, matching Section 5; it said $5$–$20$.
