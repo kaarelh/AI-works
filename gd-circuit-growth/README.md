@@ -458,7 +458,7 @@ TODO width.
 | analytic predictor (no simulation) | 0.38 | 0.42 | 0.30 / 0.52 | – |
 | sswm (mutate and select) | 1.36 | 1.12 | – | 0.26 |
 | NNGP kernel | 2.58 | 1.78 | – | 0.69 |
-| Occam over juntas | 4.61 | TODO | – | 0.20 |
+| Occam over juntas | 4.61 | 3.76 | – | 0.20 |
 | *reference: SGD-trained networks vs Adam-trained networks* | *0.43* | – | – | *0.71* |
 
 **Known gaps.**

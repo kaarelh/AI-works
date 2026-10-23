@@ -31,3 +31,10 @@ Networks: muP MLP, Adam, 2 seeds per (target, n). Models use their original cali
 | rf17 | random 3-gate formula on 5 inputs: g5=~4xor3; g6 | 3049 | 1959 | never | never | 32 |
 | rf18 | random 3-gate formula on 4 inputs: g4=~0xor3; g5 | 174 | 201 | 89 | 225 | 18 |
 | rf19 | random 6-gate formula on 4 inputs: g4=~2xor1; g5 | 902 | 909 | 422 | never | 30 |
+
+Also evaluated on this suite (separately):
+
+| model | mean abs log2 n* ratio | n* Spearman | success agreement | curve MAE | per-example agreement | time Spearman |
+|---|---|---|---|---|---|---|
+| minimal (models/minimal.py, evaluation by its designer) | 0.47 | 0.96 | 0.95 | 0.019 | 0.56 | 0.80 |
+| analytic predictor (minimal_predict.py, c = 2.25, a = 18; random_predictor.json) | 0.42 | 0.92 | – | – | – | – |
