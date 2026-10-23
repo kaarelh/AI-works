@@ -1,6 +1,6 @@
 # SLT and sample-complexity comparison: review record
 
-19 October 2026. This records a focused source and mathematical review for the [FAQ comparison](../TECHNICAL-FAQ.md#does-slt-already-give-comparable-generalization-bounds). It is not a new main result, a Lean formalization, an exhaustive literature survey, or a full audit of the reports discussed below.
+19 October 2026. This records a focused source and mathematical review for the [FAQ comparison](../TECHNICAL-FAQ.md#40-does-slt-already-give-comparable-generalization-bounds). It is not a new main result, a Lean formalization, an exhaustive literature survey, or a full audit of the reports discussed below.
 
 In the initial publication, three separate Codex agents reviewed the primary SLT sources and the two Claude reports. The parent checked the cited comment in context, the network-capacity comparison, and the final exposition. Two agents then reviewed the completed FAQ section. No substantive correction was required in those final reviews; a sentence about the local-posterior theorem was made more precise.
 
