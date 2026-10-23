@@ -127,8 +127,9 @@ class Hybrid:
     name = "hybrid"
 
     def __init__(self, mode="flow", c_bg=1.0, rho=None, beta=1.0, theta=1.5, lam=1e-3, Q=3, K=4, P=8, iters=8, gmax=48,
-                 depth=2, gate='relu', n_exact=2048, M=512, bisect=10, verbose=False):
+                 depth=2, gate='relu', n_exact=2048, M=512, bisect=10, final_ridge=1e-4, verbose=False):
         self.mode = mode
+        self.final_ridge = None if final_ridge is None else float(final_ridge)
         self.c_bg = None if c_bg is None else float(c_bg)
         self.rho = None if rho is None else float(rho)
         self.beta = float(beta)
@@ -285,6 +286,13 @@ class Hybrid:
         a_, c_ = a.copy(), c0
         relu = self.gate != 'thr'
         alpha_ = r_res / lam_now if (use_bg and np.isfinite(lam_now)) else None
+        if use_bg and self.mode == "flow" and self.final_ridge is not None:
+            # growth has stopped; training goes on: gate weights stay, the background interpolates what is left
+            # (kernel ridge with the NNGP baseline's ridge on the residual y~ - F a)
+            z = yt - RO.F @ a_ if len(a_) else yt.copy()
+            ze = bg.E.T @ z; lf = self.final_ridge
+            alpha_ = bg.E @ (ze / (bg.ev + lf)) + (z - bg.E @ ze) / lf
+            lam_now = lf
 
         def score(Z):
             Z = np.asarray(Z, dtype=F32)

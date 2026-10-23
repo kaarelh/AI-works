@@ -434,6 +434,11 @@ Status labels as before.
 
 The fixed budget of 20000 steps can only make $n^*$ look larger at large $d$ (a learner that is slower there gets cut off), so the $k=4$ exponent is if anything an overestimate.
 
+**SGD instead of Adam** ([`study/run_checks2.sh`](study/run_checks2.sh); μP-SGD, learning rate 0.2, 2 seeds). On the 3-parity, SGD needs 382, 1220 and 3562 samples at $d=15,30,60$, against Adam's 241, 843 and 3410.
+- **Exponent.** SGD's is 1.61 against Adam's 1.91, so SGD sits between the reuse rate $d^{1.5}$ and the correlational-SQ rate $d^{2}$.
+- **Uncertainty.** At $d=60$ both $n^*$ are interpolated inside the same factor-2 step of the $n$ grid, between 2048 and 4096. With 2 seeds, each exponent is uncertain by roughly ±0.2.
+- **Conclusion.** The data do not pin down whether SGD and Adam follow the same exponent. What they do show is that SGD's larger constant at small $d$ (1.6× Adam's at $d=15$) shrinks to about 1× at $d=60$.
+
 Other observations:
 - **Out-of-sample targets.** The 20 fresh random formulas, with 3–5 relevant inputs and 3–8 gates, have network $n^*$ from 61 to 3049 ([`study/RANDOM-SUITE.md`](study/RANDOM-SUITE.md)).
 - **Complexity peaks just below $n^*$.** For the high-leap targets (parities of 3–4 bits, staircase, multiplexer, MAJ of parities), the networks' layer-2 kernel rank peaks just below $n^*$ and collapses above it, and the race model's circuit size does the same. Below $n^*$ both memorize with many features; above it both use the target's few features. The correlation over all cells is weak (Spearman 0.14), because at tiny $n$ the networks barely move from initialization and their kernel rank reflects random features.
@@ -504,7 +509,7 @@ Other observations:
   The ablations say it is the noise law, not the race's timing machinery, that does the work.
 - **Caveats.** All of this is in one setting:
   - one architecture family: a μP two-hidden-layer ReLU MLP;
-  - Adam (SGD gives similar $n^*$ on the held-out targets);
+  - Adam (SGD gives similar $n^*$ on the held-out targets; its 3-parity $d$-exponent, 1.6 against 1.9, is not resolved from Adam's at this precision);
   - widths 32 and 128;
   - $d\le60$, interactions of at most 4 bits, $n\le65536$;
   - uniform Boolean inputs and square loss.
