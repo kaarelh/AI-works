@@ -456,7 +456,9 @@ Other observations:
 - **3-parity: no width dependence the grid can see.** At every width the test error is 0.28–0.47 at $n=512$ and exactly 0 at $n=1024$. The interpolated $n^*$ values, 827–911, show no trend.
 - **4-parity: width helps, monotonically.** The test error at $n=2048$ falls from 0.49 to 0.05 between widths 32 and 256, and $n^*$ falls 1.9×. It has not levelled off at 256, although μP should have a width limit.
 - **This contradicts the simplest reading of the noise law** (Numerical). Suppose the constant $a\approx18$ were a single width-dependent "best initial overlap among the hidden units". Then, since $n^*\propto(d/a)^{k-2}$, the 4-parity's width effect would be the square of the 3-parity's. It is not: under 10% for the 3-parity against 1.9× for the 4-parity.
-- **A possible reason** (Heuristic). The relevant initial quantity for an order-$k$ feature is a product of $k$ weights, and the best of $P$ such products has a heavier tail the larger $k$ is. On this account the order-4 escape draws more on the population than order 3 does.
+- **A best-of-units account does not fit either** (Heuristic, with a Monte Carlo check). Suppose instead the binding quantity is the luckiest unit's initial order-$k$ coefficient, the largest product of $k$ Gaussian weights over $P$ units.
+  - **What it predicts.** That maximum grows from width 32 to 256 by 1.9× for $k=3$ and 2.2× for $k=4$ (Monte Carlo, 4000 draws). So it predicts a width effect for the 3-parity as well, which is absent.
+  - **A guess.** The 3-parity may already be at its width limit by width 32: its escape is carried by the bulk of the units, as in mean-field theory. The 4-parity, whose bulk signal is weaker, may still lean on lucky units.
 - **What it means for the models.** The race model and the predictor are models of width-128 networks. How order-$\ge4$ costs depend on width is open.
 
 ### 3.3 Thread 2: the discrete model
