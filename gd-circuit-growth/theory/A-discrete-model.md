@@ -1,6 +1,6 @@
 # A. Generalization bounds for the discrete circuit-growth model
 
-Notes by Claude (Opus 5.5), prompted by Kaarel Hänni. Research note, 23 October 2026, revised the same day after an adversarial referee report ([revision notes](#revision-notes)). Not reviewed by a human.
+Notes by Claude (Opus 5.5), prompted by Kaarel Hänni. Research note, 23 October 2026, revised twice the same day after two adversarial referee reports ([revision notes](#revision-notes)). This version applies the round-2 referee's minor fixes. Not reviewed by a human.
 
 **Question (from the user).** *"Try to see if you can get some generalization bounds for this. I guess I can see how one would have a result saying that you get good generalization if training hasn't taken too long because the circuit cannot have grown that big yet, and then one has a Chernoff guarantee for all small circuits that their train and test loss are similar? Here we could imagine doing full batch but with a train/test split, or SGD; either should make sense."*
 
@@ -10,7 +10,7 @@ Notes by Claude (Opus 5.5), prompted by Kaarel Hänni. Research note, 23 October
 - **Heuristic:** an informed expectation, or a modelling claim.
 - **Conjecture**, **Numerical:** as usual.
 
-Scripts and their outputs are in [`checks/`](checks/). Numbers added in this revision come from [`checks/A_r2_checks.py`](checks/A_r2_checks.py) (output [`checks/A_r2_checks.out`](checks/A_r2_checks.out)); the referee's independent checks are in [`checks/referee_A_r1.out`](checks/referee_A_r1.out).
+Scripts and their outputs are in [`checks/`](checks/). Numbers added in this revision come from [`checks/A_r2_checks.py`](checks/A_r2_checks.py) (output [`checks/A_r2_checks.out`](checks/A_r2_checks.out)); the referees' independent checks are in [`checks/referee_A_r1.out`](checks/referee_A_r1.out) (round 1) and [`checks/referee_A_r2.out`](checks/referee_A_r2.out) (round 2).
 
 ## Summary
 
@@ -20,25 +20,25 @@ The user's picture is right in outline. The Chernoff step works as hoped (item 1
    $$\frac{T\,(\log|G| + k\log(d+T)) + T^2\log 2 + \log\frac{(T+1)(T+2)}{\delta}}{n}.$$
    For the toy library below ($d=30$, fan-in 2, $|G|=6$) and $\delta=0.05$, this is at most $0.1$ once $n\ge 144\,T$, for $1\le T\le 10$. At the experiment's largest sizes it stays at most $0.1$ for circuits of up to 20 gates ($n=4096$) and 62 gates ($n=16384$).
 
-2. **"Not too much training time" does *not* bound the number of gates.** In the race model, clocks persist, as they do in small-initialization gradient descent. Many candidates can then fire at once. For example, on $\mathrm{MAJ}_m$ with identity and AND/OR gates, $m^2$ distinct gate functions fire together at time $\Theta/u_m\approx\Theta\sqrt{\pi m/2}$, where $\Theta=\log(1/\alpha)$ (Proposition A2.2). Time is measured by *effective time* $\tau(t)=\int_0^t\sqrt{2\hat L(s)}\,ds\le t$, in units of $\Theta$. Training time does control three other quantities:
+2. **"Not too much training time" bounds the number of gates only through an incoherence factor:** the learned circuit's $\kappa(t)$, or the library's $\bar\kappa\approx d$ (Corollary A2.5(a′)). No bound with a library-independent constant holds (Proposition A2.2). In the race model, clocks persist, as they do in small-initialization gradient descent. Many candidates can then fire at once. For example, on $\mathrm{MAJ}_m$ with identity and AND/OR gates, $m^2$ distinct gate functions fire together at time $\Theta/u_m\approx\Theta\sqrt{\pi m/2}$, where $\Theta=\log(1/\alpha)$ (Proposition A2.2). Time is measured by *effective time* $\tau(t)=\int_0^t\sqrt{2\hat L(s)}\,ds\le t$, in units of $\Theta$. Training time controls three quantities:
    - the **depth** of the circuit, $D(t)\le\tau(t)/\Theta$ (Proposition A2.1);
    - the **number of gates times their incoherence**, $T(t)\le\kappa(t)\,(\tau(t)/\Theta)^2$, where $\kappa(t)$ is the top eigenvalue of the fired gates' centred Gram matrix (Theorem A2.3). The population version is tight up to a factor $\pi/2$, and the toy run on par2 attains the bound;
-   - the **$\ell_1$ norm of the readout**, $\|c(t)\|_1\le\|R(t)\|_n/\Theta\le\tau(t)/\Theta$, for depth-one circuits with sign-consistent refits. This is the setting of diagonal linear networks (Theorem A2.4).
+   - the **$\ell_1$ norm of the readout**, $\|c(t)\|_1\le\|R(t)\|_n/\Theta\le\tau(t)/\Theta$, for depth-one circuits with sign-consistent refits (Theorem A2.4). This is the setting of diagonal linear networks (Literature, from memory; up to the intercept).
 
    Combined with Theorem A1 these give three statements of different strength (Corollary A2.5):
    - The **norm version (b)** is a genuine bound in terms of training time alone, but only at depth one, and it is near-vacuous at the experiment's sizes.
    - The **count version (a)** is a decomposition, *size $\le$ incoherence $\times$ time$^2$*. Since $\kappa(t)$ is a property of the learned circuit, (a) is never tighter than Theorem A1 applied to the realized size.
-   - The **time-only count version (a′)** replaces $\kappa(t)$ by the incoherence $\bar\kappa$ of the whole library on the unlabelled inputs. For the toy library $\bar\kappa_1\approx d=30$, so (a′) is weak. At $n=16384$ it gives $0.053$ at $\tau=\Theta$ and $0.195$ just below $\tau=2\Theta$, against $0.001$ for Theorem A1 at the size actually reached on par2.
+   - The **time-only count version (a′)** replaces $\kappa(t)$ by the incoherence $\bar\kappa$ of the whole library on the unlabelled inputs, for a race that merges candidates coinciding on the sample (as in Section 5). For the toy library $\bar\kappa_1\approx d=30$, so (a′) is weak. At $n=16384$ it gives $0.053$ at $\tau=\Theta$ and $0.195$ just below $\tau=2\Theta$, against $0.001$ for Theorem A1 at the size actually reached on par2.
 
-   **What "short training" means.** In the pure attach race, where every move needs $k=2$ fresh weight layers, $\alpha$ only sets the unit of time (Lemma 2.2(4)), so "training hasn't taken long" means $\tau/\log(1/\alpha)$ is small. This invariance fails once fresh-chain moves ($k\ge3$) are included, because their thresholds grow like $\alpha^{-(k-2)}$. In a network with three weight layers started entirely at scale $\alpha$, the very first feature is a fresh chain costing time about $\alpha^{-1}$. By the time anything has been learned, $t/\log(1/\alpha)$ is therefore already large. The depth-one race started at time $0$ models diagonal or 2-homogeneous networks, not the first move of the user's three-layer network. In the μP experiments there is no single $\alpha$ at all (§2.1).
+   **What "short training" means.** In the pure attach race, where every move needs $k=2$ fresh weight layers, $\alpha$ only sets the unit of time (Lemma 2.2(4)), so "training hasn't taken long" means $\tau/\log(1/\alpha)$ is small. This invariance fails once fresh-chain moves ($k\ge3$) are included, because their thresholds grow like $\alpha^{-(k-2)}$. In a network with three weight layers started entirely at scale $\alpha$, the very first feature is a fresh chain costing time about $\alpha^{-1}$ (Heuristic). By the time anything has been learned, $t/\log(1/\alpha)$ is therefore already large. The depth-one race started at time $0$ models diagonal or 2-homogeneous networks, not the first move of the user's three-layer network. In the μP experiments there is no single $\alpha$ at all (§2.1).
 
 3. **SGD.** What is proved is narrower than "SGD reproduces the population run".
-   - **Greedy argmax model** (one gate per step, the one of largest empirical utility). Suppose the population run has a utility gap $\gamma>0$ at every step and each per-step batch is large, $b\gtrsim (TR^2/\lambda_*\gamma^2)\log(MT/\delta)$. Then the stochastic run makes the population run's choices, and its test error *is* the population model's (Theorem A3.1).
+   - **Greedy argmax model** (one gate per step, the one of largest empirical utility). Suppose the population run has a utility gap $\gamma>0$ at every step and each per-step batch is large, $b\gtrsim\max\{TR^2/(\lambda_*\gamma^2),\,T^2/\lambda_*^2\}\log(MT/\delta)$. Then the stochastic run makes the population run's choices (Theorem A3.1). Under an exact representation (A3.1(2)) its test error *is* the population model's; otherwise A3.1(3) gives an Occam bound with no wiring term.
      - The same theorem covers full-batch training on one sample of that size.
      - Theorem A3.5, new in this revision, covers minibatches drawn with reuse from one training set, when both $n$ and $b$ exceed a similar threshold.
      - The thresholds are large: $b\ge2254$ for par2 with fresh batches, and $b\ge6225$ at $n=16384$ with reuse. The experiments' $b=64$ is not covered.
    - **SGD race.** Only concentration of the clocks around drift clocks is proved (Lemma A3.2). That the race reproduces the population race is Heuristic.
-   - **A different mechanism from Occam.** Where stability applies, it gives exact recovery from $n\approx TR^2\log(MT/\delta)/(\lambda_*\gamma^2)$ samples, with no $1/\varepsilon$.
+   - **A different mechanism from Occam.** Where stability applies, it gives exact recovery from $n\approx\max\{TR^2/(\lambda_*\gamma^2),\,T^2/\lambda_*^2\}\log(MT/\delta)$ samples, with no $1/\varepsilon$.
    - **Minibatches drawn *with reuse*:**
      - Theorem A1 applies to any learner whose predictor is a template circuit. It does not apply to the network itself.
      - The losses on each point's *first* draw estimate the average test loss of the iterates at the first-draw times, which lie mostly in the first epoch. They do not estimate the final predictor's test loss (Proposition A3.4).
@@ -47,7 +47,7 @@ The user's picture is right in outline. The Chernoff step works as hoped (item 1
    - On targets that are library gates, the greedy circuit is minimal. No balance assumption is needed (Proposition A4.1).
    - Ties and refits make it overshoot, by a factor $m$ on $\mathrm{MAJ}_m$ (Proposition A4.2). The population race on maj3 ends with 21 gates. The toy runs reach zero training error with 6 gates (10 by the end) on maj3, against a minimum of 3, and with 18 on dnf3, against at most 6.
    - Square-loss refits keep growing the circuit after the 0-1 training error reaches zero.
-   - On $\chi_S$ with $|S|>k$ the population race never fires at all (Proposition A4.3). The Occam learner with an output-gate readout reaches error $\varepsilon$ from $O((|S|\log(d+|S|)+\log(1/\delta))/\varepsilon)$ samples.
+   - On $\chi_S$ with $|S|>k$ the population race never fires at all (Proposition A4.3). If $\mathrm{XOR}\in G$, the Occam learner with an output-gate readout reaches error $\varepsilon$ from $O((|S|\log(d+|S|)+\log(1/\delta))/\varepsilon)$ samples.
 
 The [last section](#6-what-is-vacuous-and-what-is-open) lists what is vacuous at realistic sizes, and what is open.
 
@@ -61,7 +61,7 @@ The [last section](#6-what-is-vacuous-and-what-is-open) lists what is vacuous at
 | Proposition A2.2 | no bound on the gate count in terms of time alone holds uniformly over libraries; tight examples | Proved |
 | Theorem A2.3 | $T\le\kappa\,(\tau/\Theta)^2$ in (LS); $\lvert\mathrm{Sat}\rvert\le\kappa\,(\lVert R\rVert_n/\Theta)^2$ in (SC) | Proved |
 | Theorem A2.4 | $\Theta\lVert c\rVert_1=\langle R,f\rangle_n\le\lVert R\rVert_n$ (depth 1, sign-consistent) | Proved |
-| Corollary A2.5 | test error along training: (a) size $\le$ incoherence $\times$ time$^2$; (a′) time-only count bound via library incoherence; (b) time-only norm bound at depth one | Proved (a, a′); Proved given L1–L3 (b) |
+| Corollary A2.5 | test error along training: (a) size $\le$ incoherence $\times$ time$^2$; (a′) time-only count bound via library incoherence, for races that merge sample-duplicates; (b) time-only norm bound at depth one | Proved (a, a′); Proved given L1–L3 (b) |
 | Proposition A2.6 | no gate fires before $t\approx\Theta\sqrt{n/(8\log M)}$ on parity-like targets | Proved |
 | Clock model ≈ small-init GD | faithfulness of the model | Literature (depth 1, from memory) / Heuristic (deeper, fresh chains) |
 | Theorem A3.1 | decision stability of the greedy argmax model: fresh-batch and full-batch reproduction of the population run | Proved |
@@ -158,7 +158,7 @@ The learner's output after $T(S)$ gates lies in $\mathcal H_{T(S)}$ however the 
 - **Where the $T^2$ comes from, and the symmetrization alternative.** The term $\rho_T\approx T^2\log2$ (for $T\le d$) is the price of an arbitrary real threshold readout.
   - An alternative replaces it by $\log\Phi(2n,T)\approx T\log(2n)$, the number of readouts on a double sample, via symmetrization. The form I recall is: for $n\ge 8/\epsilon$, $P(\exists h\in\mathcal H:\hat p=0,\ p>\epsilon)\le2\,\Pi_{\mathcal H}(2n)\,2^{-\epsilon n/2}$ (Blumer–Ehrenfeucht–Haussler–Warmuth, JACM 1989, Theorem A2.1; **Literature, from memory**, including the hypothesis $n\ge8/\epsilon$). Here the growth function satisfies $\Pi_{\mathcal H_T}(2n)\le|\mathcal W_T|\,\Phi(2n,T)$ by Lemma 1.2.
   - Solving for $\epsilon$ multiplies the *whole* complexity, wiring term included, by $2/\ln2\approx2.9$.
-  - With the toy constants below, Theorem A1 is smaller than this route at every $T\le1499$ for $n\in\{1024,4096,16384\}$ ([`checks/A_r2_checks.out`](checks/A_r2_checks.out) §7). That covers the whole range in which either bound is below 1. At $T=10$ and $n=4096$, for example, the two give $0.036$ and $0.122$. For $T>d$, $\rho_T$ grows only like $dT\log2$, so the $T^2$ term never takes over.
+  - With the toy constants below, Theorem A1 is smaller than this route at every $T\le1499$ for $n\in\{1024,4096,16384\}$ ([`checks/A_r2_checks.out`](checks/A_r2_checks.out) §7). That covers the whole range in which BEHW is below 1 or A1 is non-vacuous. At $T=10$ and $n=4096$, for example, the two give $0.036$ and $0.122$. For $T>d$, $\rho_T$ grows only like $dT\log2$, so the $T^2$ term never takes over.
 - **Nothing about the dynamics was used.** The bound covers a greedy race, a minimum-circuit learner, or anything else. In the language of [`neural-network-generalization`](../../neural-network-generalization/TECHNICAL-FAQ.md#can-we-bound-the-total-number-of-mistakes-during-learning), $L_T$ is the log-cardinality "$h$" of the relevant family. Sections 2–4 concern which $T$ a given learner reaches.
 
 **Specialization (Numerical table, [`checks/lemma_checks.txt`](checks/lemma_checks.txt)).** Take $d=30$, $k=2$, $|G|=6$ (identity, four AND-types, XOR, up to negation) and $\delta=0.05$. The table gives the realizable bound (item 4, kl form) on the test error:
@@ -257,7 +257,7 @@ $\tau$ is *effective time*: time weighted by the root training loss.
 **What item 4 does and does not say about $\alpha$.**
 - **The pure attach race.** Item 4 applies when all candidates are $k=2$ attach moves with one threshold $\Theta=c\log(1/\alpha)$. There, **$\alpha$ only sets the unit of time**, and the race's state depends on $t$ and $\alpha$ only through $t/\log(1/\alpha)$.
 - **With fresh chains it fails.** Fresh-chain candidates ($k\ge3$ new layers in series; last bullet below) have thresholds $\Theta_k\approx c_k\alpha^{-(k-2)}$. These do not scale with $\log(1/\alpha)$, so $\Theta_k/\Theta$ depends on $\alpha$ and the order of events can change with $\alpha$.
-- **Consequence for the user's architecture.** In an $L$-layer network started entirely at scale $\alpha$ (the README model), the first move must be a fresh chain with $k=L$, which costs time about $\alpha^{-(L-2)}/U$. For three weight layers that is about $\alpha^{-1}/U\gg\log(1/\alpha)$. So for that architecture, "training hasn't taken long" cannot mean "$t/\log(1/\alpha)$ is small": by the time anything has been learned, it is large.
+- **Consequence for the user's architecture.** In an $L$-layer network started entirely at scale $\alpha$ (the README model), the first move must be a fresh chain with $k=L$, which costs time about $\alpha^{-(L-2)}/U$ (Heuristic). For three weight layers that is about $\alpha^{-1}/U\gg\log(1/\alpha)$. So for that architecture, "training hasn't taken long" cannot mean "$t/\log(1/\alpha)$ is small": by the time anything has been learned, it is large.
 - **What the bounds still give.** The bounds below stay valid in the extended race when $\Theta$ is the smallest threshold (see the fresh-chain bullet), but they are then loose. During the first plateau $\|r\|_n\approx\|y-\bar y\|_n$, so $\tau$ grows almost like $t$.
 - **Which networks the depth-one race models.** The depth-one race started at time $0$ models the first moves of a diagonal or 2-homogeneous network, not the first move of a three-layer network.
 - **The μP experiments.** The hidden layers start at $O(1)$ scale and only the readout is small. There is no single $\alpha$, neither rate law applies literally, and the recipe of §2.3 treats $\Theta$ as a fitted constant (Heuristic).
@@ -365,6 +365,7 @@ This is a LASSO-type duality. At the LASSO solution with penalty $\lambda$, $\|\
   - Its content is explanatory: it says which combination of size and incoherence training time controls.
 - **(a′) Time-only count version for a fixed library** ((LS) any depth, or (SC)).
   - *Definitions.* For $D\ge1$, let $\mathcal F_{\le D}$ be the set of distinct (up to sign, on the sample) non-constant functions computed by gates of depth $\le D$ over the library. Let $\bar\kappa_D$ be the top eigenvalue of their centred empirical Gram matrix. Both depend only on the library and the unlabelled inputs $x_1,\dots,x_n$, not on the labels or the dynamics.
+  - *Convention.* (a′) is stated for a race in which candidates that coincide up to sign on the sample are identified, and the refit uses one representative per class (as in Section 5). $T(t)$ then counts these classes, so $h_t\in\mathcal H_{T(t)}$. Without this merging the bound can fail: gates that are distinct on $\mathcal X$ but equal on the sample all fire together. In the referee's example ($d=6$, $n=4$, par2, first event of the depth-one (LS) race) 24 gates distinct on $\mathcal X$ fire, against $\bar T=2$ ([`checks/referee_A_r2.out`](checks/referee_A_r2.out) §2).
   - *Statement.* Theorem A1 (all items) holds for $h_t$ with $T=T(t)$, and
     $$T(t)\le\bar T(t):=\min\Bigl\{|\mathcal F_{\le D(t)}|,\ \Bigl\lfloor\bar\kappa_{D(t)}\frac{\tau(t)^2}{\Theta^2}\Bigr\rfloor\Bigr\},\qquad\text{so } L_{T(t)}\le L_{\bar T(t)} .$$
   - *Depth one.* For a depth-one race ((SC), or (LS) on a depth-one dictionary), $D=1$, and $\tau(t)$ may be replaced by $\|R(t)\|_n$. The same holds for (LS) at any depth while $\tau(t)<2\Theta$, since every fired gate then has depth one.
@@ -374,7 +375,7 @@ This is a LASSO-type duality. At the LASSO solution with penalty $\lambda$, $\|\
 
 *Proof.*
 - (a): Theorem A1 holds on one event uniformly in $T$, and the predictor at every time lies in $\mathcal H_{T(t)}$. Then apply Theorem A2.3.
-- (a′): By Proposition A2.1, every fired gate has depth $\le D(t)$. So a set $B$ of representatives of the distinct fired functions is a subset of $\mathcal F_{\le D(t)}$, and $|B|\le|\mathcal F_{\le D(t)}|$.
+- (a′): By Proposition A2.1, every fired gate has depth $\le D(t)$. By the merging convention, the set $B$ of representatives of the $T(t)$ fired classes consists of functions distinct up to sign on the sample. So $B$ is a subset of $\mathcal F_{\le D(t)}$, and $|B|\le|\mathcal F_{\le D(t)}|$.
   - Flipping the sign of some functions conjugates the Gram matrix by a diagonal $\pm1$ matrix and does not change its eigenvalues. So $K_B$ is a principal submatrix of the Gram matrix of $\mathcal F_{\le D(t)}$, and $\kappa_B\le\bar\kappa_{D(t)}$.
   - Theorem A2.3(1) gives the bound, or Theorem A2.3(2) for (SC), whose gates in use are $\mathrm{supp}\,c\subseteq\mathrm{Sat}\subseteq\mathcal F_1$.
   - The depth-one refinements are those of Theorem A2.3.
@@ -397,7 +398,7 @@ This is a LASSO-type duality. At the LASSO solution with penalty $\lambda$, $\|\
 
 So (a′) answers the user's question literally: training hasn't taken long, so the circuit is small, so a Chernoff bound applies. But it does so only at depth one, only for $\tau\lesssim2\Theta$, and with a library-incoherence factor $\bar\kappa_1\approx d$, which costs about a factor of 30 in size.
 
-So the user's statement holds in the race model, with "size" read as *depth*, *incoherent size* or *readout $\ell_1$ norm*, and "time" read as $\tau(t)/\Theta$. Training time does not control the raw gate count.
+So the user's statement holds in the race model, with "size" read as *depth*, *incoherent size* or *readout $\ell_1$ norm*, and "time" read as $\tau(t)/\Theta$. Training time bounds the raw gate count only through an incoherence factor: the learned circuit's $\kappa(t)$, or the library's $\bar\kappa\approx d$ (Corollary A2.5(a′)). No bound with a library-independent constant holds (Proposition A2.2).
 
 **Proposition A2.6 (no fitting of noise before $t\approx\Theta\sqrt n$ on parity-like targets) — Proved.** Suppose $\mathbb E[y]=0$ and $\mathbb E[yg]=0$ for every depth-one candidate $g$; for example, $y=\chi_S$ with $|S|>k$ under uniform inputs. Let $M_1$ be the number of depth-one candidates and
 $$\epsilon=\sqrt{2\log(2(M_1+1)/\delta)/n}.$$
@@ -423,7 +424,7 @@ No such calibration is proposed for **Adam**, the experiments' main optimizer. A
 ## 3. A3: SGD, online learning, and reuse
 
 With fresh minibatches, the natural statement is not a train/test comparison but *reproduction*: the stochastic run makes the same moves as the population run, so its test error is the population model's. What is proved here is narrower than that slogan.
-- **Greedy argmax model.** This model adds one gate per step, the one of largest empirical utility. Theorem A3.1 proves reproduction when the population run has a utility gap $\gamma>0$ at every step and each per-step batch has $b\gtrsim(TR^2/\lambda_*\gamma^2)\log(MT/\delta)$ samples.
+- **Greedy argmax model.** This model adds one gate per step, the one of largest empirical utility. Theorem A3.1 proves that the circuit is reproduced when the population run has a utility gap $\gamma>0$ at every step and each per-step batch has $b\gtrsim\max\{TR^2/(\lambda_*\gamma^2),\,T^2/\lambda_*^2\}\log(MT/\delta)$ samples. The second term comes from the theorem's Gram condition and dominates when $T/\lambda_*$ is large.
   - For par2 this is $b\ge2254$, against $b=64$ in the experiments, so **the theorem does not cover the experiments' SGD**.
   - The same theorem covers full-batch training on one sample of that size.
   - Theorem A3.5 covers minibatches drawn with reuse from a fixed sample, when both $n$ and $b$ exceed a similar threshold.
@@ -480,10 +481,10 @@ with no $T/\lambda_*$ factor. This is the batch size $\approx\log(MT/\delta)/\ga
 
 **How this compares with Occam.**
 - For exact recovery, stability needs
-  $$n\approx\frac{TR^2\log(MT/\delta)}{\lambda_*\gamma^2},$$
-  whereas the Occam bound needs $T\log M/\varepsilon$ samples to reach error $\varepsilon$.
+  $$n\approx\max\Bigl\{\frac{TR^2}{\lambda_*\gamma^2},\ \frac{T^2}{\lambda_*^2}\Bigr\}\log\frac{MT}{\delta},$$
+  whereas the Occam bound needs $T\log M/\varepsilon$ samples to reach error $\varepsilon$. The second term is the Gram condition of Theorem A3.1. For example, with $\gamma=1/2$, $R=1$, $T=30$ and $\lambda_*=1/2$, the utility condition needs $7.9\cdot10^4$ samples and the Gram condition $4.5\cdot10^5$ ([`checks/referee_A_r2.out`](checks/referee_A_r2.out) §5).
 - Stability has no $1/\varepsilon$, but it pays $1/\gamma^2$. It says nothing when the population run has ties ($\gamma=0$) or zero utilities.
-- **The constants are poor.** For par2 with XOR in $G$: $\gamma=1/2$, $R=\lambda_*=1$ and $M_0=2205$, so $\epsilon=0.10355$ and the theorem requires $n\ge2254$ ([`checks/A_r2_checks.out`](checks/A_r2_checks.out) §2). The toy run recovers par2 exactly at $n=64$. In a Monte Carlo the greedy first step picks $\mathrm{XOR}(x_1,x_2)$ in all 200 runs already at $b=16$, with fresh or reused batches (§8 of the same file).
+- **The constants are poor.** For par2 with XOR in $G$: $\gamma=1/2$, $R=\lambda_*=1$ and $M_0=2205$, so $\epsilon=0.10355$ and the theorem requires $n\ge2254$ ([`checks/A_r2_checks.out`](checks/A_r2_checks.out) §2). The toy run recovers par2 exactly at $n=64$. In a Monte Carlo of the greedy first step (Numerical), $\mathrm{XOR}(x_1,x_2)$ is an argmax in every run at $b=16$, with fresh or reused batches (§8 of the same file). That is guaranteed by Proposition A4.1, since $g=y$ on the batch attains the largest possible $|U|=\mathrm{Var}_b(y)$, so it carries no evidence. The informative frequency is that of a *unique* argmax, since tied gates equal to $\pm y$ on the batch can be picked instead. At $b=16$ it is 163/200 (reuse, $n=64$), 180/200 (reuse, $n=256$) and 375/400 (fresh), about 81–94%. At $b=64$ it is 200/200 (reuse, $n=1024$) and 400/400 (fresh) ([`checks/referee_A_r2.out`](checks/referee_A_r2.out) §7).
 - **Ties** of the maj3 type, where a symmetric set of candidates is jointly added, need a version in which the gap separates "this cluster" from the rest. That extension is not written out here.
 
 ### 3.2 SGD in the race model
@@ -613,7 +614,7 @@ in the realizable case, and the same theorem gives $\mathrm{err}\le L_{T_{\rm gr
      Every other depth-two candidate has $|U|\le1/8$.
    - The 12 become available at $2\Theta$ and fire together at exactly $6\Theta$, when all other clocks are at most $\Theta/2$. The refit then represents $y$ exactly, and the race stops.
    - So the **population race ends at $t=6\Theta$ with $9+12=21$ gates**.
-   - In general, the race stops only when $y$ lies in the span of the fired gates. On a sample that can require up to $n$ gates. The relevant $T$ for Theorem A1 is the one at the **stopping time**, not at the end of training.
+   - In general, the race keeps firing while some available candidate has nonzero utility. It stops when $y$ is in the span of the fired gates, or stalls with $y$ outside the span when all utilities vanish, as for par3 in the population (Proposition A4.3(1)). On a sample, reaching the span can require up to $n$ gates. The relevant $T$ for Theorem A1 is the one at the **stopping time**, not at the end of training.
 3. **Overshoot by a factor $m$.** Take $y=\mathrm{MAJ}_m$ ($m$ odd) with the toy library. The first event fires $m^2$ distinct gates at $t=\Theta/u_m$ (Proposition A2.2(2)). The refit is then $f=u_m\sum_{i\le m}x_i$, the degree-$\le2$ part of $y$, so $\mathrm{sgn}f=y$ and the 0-1 error is zero. But $m$ identity gates already suffice. So $T_{\rm greedy}=m^2$ while $s^*\le m$, and Theorem A1 uses $L_{m^2}\approx m^2\log(6d^2)+m^4\log2$ in place of $L_m$.
 
 *Proof of item 1.* Item 1 is Proposition A2.2(2), together with the Fourier expansion $\mathrm{maj}_3=\frac12(x_1+x_2+x_3-x_1x_2x_3)$. With $A_{ij}=\mathrm{AND}(x_i,x_j)$ and $A'_{ij}=\mathrm{AND}(\neg x_i,\neg x_j)$, we have $A_{ij}+A'_{ij}=x_ix_j-1$. So the span of the 9 gates and $1$ is exactly the space of functions of degree $\le2$ in $x_1,x_2,x_3$. The refit is therefore the degree-$\le2$ part of $\mathrm{maj}_3$, and $r=-x_1x_2x_3/2$.
@@ -635,7 +636,7 @@ in the realizable case, and the same theorem gives $\mathrm{err}\le L_{T_{\rm gr
 *Proof of item 3.* $\mathrm{MAJ}_m$ is odd, so its degree-2 Fourier coefficients vanish, and its degree-1 part is $u_m\sum_ix_i$. The span of the fired gates and $1$ is the span of $1$, the $x_i$ and the $x_ix_j$ ($i,j\le m$). So the least-squares refit is $u_m\sum_ix_i$, whose sign is $\mathrm{MAJ}_m$. ∎
 
 The exact population computation confirms item 2 on $\{-1,1\}^4$ and on $\{-1,1\}^5$ ([`checks/A_r2_checks.out`](checks/A_r2_checks.out) §4; [`checks/referee_A_r1.out`](checks/referee_A_r1.out) §3):
-- the 12 maximizers, 20 functions at $1/8$ and 55 at $0$;
+- the 12 maximizers, 20 functions at $1/8$ and 55 at $0$ (54 nonconstant, plus the constant);
 - each maximizer alone completes the representation;
 - 21 distinct gates at the end.
 
@@ -649,7 +650,7 @@ The exact population computation confirms item 2 on $\{-1,1\}^4$ and on $\{-1,1\
 2. Suppose $\mathrm{XOR}\in G$. The target is computed by a chain of $s-1$ XOR gates with the **output-gate readout** ($\rho_{s-1}=\log2$). So the MCC learner over that readout class, or any learner that outputs a consistent circuit of at most $s-1$ gates with that readout, has error at most
    $$\frac{L_{s-1}}{n},\qquad L_{s-1}=W_{s-1}+\log2+\log\frac{s(s+1)}{\delta}=O\bigl(s\log(d+s)+\log(1/\delta)\bigr).$$
    Error $\varepsilon$ therefore needs $n=O((s\log(d+s)+\log(1/\delta))/\varepsilon)$ samples. With the sign readout instead, $\rho_{s-1}\approx(s-1)^2\log2$ adds an $s^2$ term.
-3. On a sample, Proposition A2.6 applies: nothing fires before $t\approx\Theta\sqrt n/(2\sqrt{2\log(2M/\delta)})$, after which gates fitted to noise fire.
+3. On a sample, Proposition A2.6 applies: nothing fires before $t\approx\Theta\sqrt n/(2\sqrt{2\log(2M/\delta)})$. That gates fitted to noise fire after that is Numerical, not proved: in the par3 runs of Section 5 the first noise gate fires at $t/\Theta=2.65$–$20.0$ for $n=64$–$4096$.
 
 *Proof.* Before any gate fires, every candidate has depth one and so depends on some set $V$ of at most $k<s$ variables. Write $\chi_S=\chi_{S\cap V}\chi_{S\setminus V}$. Since $S\setminus V\ne\emptyset$, $\chi_{S\setminus V}$ has mean zero and is independent of $x_V$, so $\mathbb E[\chi_Sg]=0$. Also $\mathbb E[y]=0$. All utilities vanish, the residual stays $y$, and the clocks stay at $0$. Item 2 is Theorem A1, item 4, with $T=s-1$ and $\rho_{s-1}=\log2$. ∎
 
@@ -730,6 +731,7 @@ The norm route needs $n\gtrsim10^5$ here. Its advantage, independence from $T$, 
 | [`checks/sgd_clock_check.py`](checks/sgd_clock_check.py) | [`checks/sgd_clock_check.txt`](checks/sgd_clock_check.txt) | Lemma A3.2 and the utility table of Proposition A2.2 |
 | [`checks/A_r2_checks.py`](checks/A_r2_checks.py) | [`checks/A_r2_checks.out`](checks/A_r2_checks.out) | revision 2: A1 thresholds; A3.1 and A3.5 constants; library incoherence $\bar\kappa_1$ and Corollary A2.5(a′); Propositions A4.1 and A4.2(2) exactly; (SC) with exits; A1 versus BEHW; greedy-with-reuse Monte Carlo; Section 5 ranges |
 | [`checks/referee_A_r1.py`](checks/referee_A_r1.py) | [`checks/referee_A_r1.out`](checks/referee_A_r1.out) | the referee's independent checks (round 1) |
+| [`checks/referee_A_r2.py`](checks/referee_A_r2.py) | [`checks/referee_A_r2.out`](checks/referee_A_r2.out) | the referee's independent checks (round 2): library incoherence and the no-merging counterexample for Corollary A2.5(a′); Proposition A4.2(2) recount; (SC) and (LS) races; A3.1 and A3.5 constants; Theorem A3.5 Monte Carlo; unique-argmax frequencies on par2 |
 
 All use numpy (and scipy for linear programming and nonnegative least squares) and run in about a minute each on one core.
 
@@ -748,7 +750,7 @@ All use numpy (and scipy for linear programming and nonnegative least squares) a
   - With $\bar\kappa_1\approx32$–$35$, it gives 0.21 and 0.053 at $\tau=\Theta$ (for $n=4096$ and $16384$), and 0.61 and 0.195 just below $\tau=2\Theta$.
   - Measuring $\tau/\Theta$ on the real networks requires the calibration recipe of §2.3, which is Heuristic and proposed for SGD only.
 - **Not applicable to the experiments' SGD:**
-  - Theorem A3.1 asks for $n\ge2254$ for par2, which is learned at $n=64$; the greedy argmax already picks the right gate at $b=16$ in every Monte Carlo run.
+  - Theorem A3.1 asks for $n\ge2254$ for par2, which is learned at $n=64$. In a Monte Carlo the right gate is the unique greedy argmax in about 81–94% of runs at $b=16$ and in all runs at $b=64$ (§3.1).
   - Theorem A3.5 needs $b\ge6225$ at $n=16384$.
   - Neither covers $b=64$, and for the SGD race only clock concentration is proved.
 - **Indirect for real networks:** none of these bounds applies to a trained network unless the network is first described as a circuit of the template (Heuristic). That could be done by fitting the discrete race to the run, or by reading gates off the saved Fourier coefficients on the relevant variables. The bound then certifies that circuit, not the network.
@@ -788,9 +790,9 @@ All use numpy (and scipy for linear programming and nonnegative least squares) a
 
 ## Revision notes
 
-Round 2: a second referee passed revision 2 with 7 minor issues and no major ones ([`checks/referee_A_r2.json`](checks/referee_A_r2.json)); those minor issues are not yet applied. One of them is that Corollary A2.5(a′) is a weak time-only gate-count bound for a fixed library, so "training time does not bound the raw gate count" holds only uniformly over libraries (Proposition A2.2).
+Round 2: a second referee passed revision 2 with 7 minor issues and no major ones ([`checks/referee_A_r2.json`](checks/referee_A_r2.json)); those minor issues have been applied, as listed in the **Round-2 referee** entry at the end of these notes. One of them was that Corollary A2.5(a′) is a weak time-only gate-count bound for a fixed library, so "training time does not bound the raw gate count" holds only uniformly over libraries (Proposition A2.2).
 
-Revision 2, after the round-1 referee report (verdict: fail; one fatal, five major, eleven minor issues). The referee found no false core theorem. Changes, in the order of the report:
+Revision 2, after the round-1 referee report (verdict: fail; one fatal, five major, twelve minor issues). The referee found no false core theorem. Changes, in the order of the report:
 
 **Fatal**
 - **Proposition A3.4(2).** Item 2 claimed under a Proved label that reuse reproduces or approximates the full-batch race on $S$. It is replaced by three parts:
@@ -839,3 +841,22 @@ Revision 2, after the round-1 referee report (verdict: fail; one fatal, five maj
   - the calibration recipe is restricted to SGD, with a note on why Adam's clock differs;
   - "useful" ($\le0.1$) and "non-vacuous" ($<1/2$) are fixed once, in Section 1, and used consistently;
   - the Summary's "$n\gtrsim140T$" is corrected to "$n\ge144T$".
+
+**Round-2 referee** ([`checks/referee_A_r2.json`](checks/referee_A_r2.json), checks in [`checks/referee_A_r2.py`](checks/referee_A_r2.py) → [`checks/referee_A_r2.out`](checks/referee_A_r2.out)). The verdict on revision 2 was "pass": every round-1 issue is fixed, and no new or changed Proved result has a gap that the referee could not close. The report lists 7 issues, all minor. They are now applied, in the order of the report. No check script was rerun; every new number is taken from `referee_A_r2.out` or from the existing Section 5 output. No label was strengthened.
+1. **Corollary A2.5(a′), counting convention.** A *Convention* bullet now states that (a′) is for a race in which candidates that coincide up to sign on the sample are identified, with one representative per class in the refit (as in Section 5), so that $T(t)$ counts these classes and $h_t\in\mathcal H_{T(t)}$. It cites the referee's no-merging counterexample (24 gates distinct on $\mathcal X$ against $\bar T=2$). The proof of (a′) now invokes the convention. The status table and Summary item 2 mention the merging. Theorem A2.3 and Corollary A2.5(a) are unchanged, since A2.3 holds for any set of fired gates.
+2. **"Time does not bound the gate count."** Summary item 2's headline and the closing sentence of §2.3 now say that training time bounds the gate count only through an incoherence factor, the learned circuit's $\kappa(t)$ or the library's $\bar\kappa\approx d$ (Corollary A2.5(a′)), and that no bound with a library-independent constant holds (Proposition A2.2). "Three other quantities" in item 2 is now "three quantities".
+3. **Sample-size scaling of Theorem A3.1.**
+   - (a) Summary item 3, the §3 introduction and the comparison in §3.1 now write $b$ (or $n$) $\gtrsim\max\{TR^2/(\lambda_*\gamma^2),\,T^2/\lambda_*^2\}\log(MT/\delta)$, including the Gram condition. §3.1 gives the referee's example where it dominates ($T=30$, $\lambda_*=1/2$: $4.5\cdot10^5$ against $7.9\cdot10^4$).
+   - (b) Summary item 3 now says that the test error equals the population model's only under an exact representation (A3.1(2)), and that otherwise A3.1(3) gives an Occam bound with no wiring term. The §3 introduction now says that A3.1 proves the *circuit* is reproduced.
+4. **Monte Carlo of the greedy first step (§3.1, §6).** The text now says that XOR being *an* argmax is guaranteed by Proposition A4.1 and carries no evidence. It reports the referee's unique-argmax frequencies instead: 163/200, 180/200 and 375/400 at $b=16$ (about 81–94%), and 200/200 and 400/400 at $b=64$. The claim is labelled Numerical.
+5. **Unlabelled claims in the Summary.** The fresh-chain cost of about $\alpha^{-1}$ is labelled Heuristic, in Summary item 2 and in the note after Lemma 2.2(4). The sentence linking the $\ell_1$ bound to diagonal linear networks is labelled "Literature, from memory; up to the intercept".
+6. **Slips inside Proved items.**
+   - (a) Proposition A4.2(2): "the race stops only when $y$ lies in the span" is replaced by: the race keeps firing while some available candidate has nonzero utility; it stops when $y$ is in the span, or stalls when all utilities vanish (par3 in the population, Proposition A4.3(1)).
+   - (b) Proposition A4.3(3): the clause that noise gates fire after the A2.6 time is now labelled Numerical, citing the par3 runs of Section 5. It is not proved.
+   - The exact-count bullet after Proposition A4.2 now says that the 55 functions at utility $0$ are 54 nonconstant ones plus the constant.
+7. **Cosmetic.**
+   - (a) The BEHW remark now says the range $T\le1499$ covers the whole range in which BEHW is below 1 or A1 is non-vacuous.
+   - (b) The round-1 notes now count twelve minor issues, not eleven.
+   - (c) Summary item 4's parity sample-complexity sentence now states the hypothesis $\mathrm{XOR}\in G$ of Proposition A4.3(2).
+
+Also changed: the header, and the pointer to the referees' checks under the status labels, now mention round 2. The Files table in Section 5 lists `referee_A_r2.py` and its output.

@@ -396,7 +396,7 @@ Status labels as before.
      - There are two constants, $c=2.25$ and $a=18$, calibrated on 12 functions.
      - For 19 of the 21 designed targets the closed form reproduces the $n^*$ of the predicted learning curve (it misses the decision list and rand1).
    - **Results.**
-     - On 20 fresh random formulas never seen during calibration: mean $|\log_2|$ ratio 0.42 (within about 1.34×) and Spearman 0.92, over $n^*$ from 61 to 3049. A second saved run of the predictor, with slightly different per-formula predictions, gives Spearman 0.96 ([`study/MINIMAL-MODEL.md`](study/MINIMAL-MODEL.md)).
+     - On 20 fresh random formulas never seen during calibration: mean $|\log_2|$ ratio 0.42 (within about 1.34×) and Spearman 0.92, over $n^*$ from 61 to 3049. A second saved run of the predictor, which scans $n$ more finely, gives Spearman 0.96 ([`study/MINIMAL-MODEL.md`](study/MINIMAL-MODEL.md)).
      - On the 9 held-out functions: 0.38. The constants are clean there, but the model's structure is not: variants that scored better on the calibration set were rejected on principle. The random formulas are the cleaner test.
      - It gets the 2- and 3-parity $d$-exponents right. The $d=15$ agreement, however, depends on the cap $\max(1,d/a)$, which was probably added after the $d=15$ network results had been seen. That part is not a clean out-of-sample test.
 3. **The race model transfers out of sample** (Numerical).
@@ -414,7 +414,9 @@ Status labels as before.
      - removing order-3/4 units (1.4).
    - **Noise level versus noise realization.** Running the search on an independent sample of the *same* size keeps the $n^*$ match (0.31) but halves per-example agreement (0.50 → 0.26, held-out). The *level* of search noise sets sample complexity; the *particular* noise of the training sample sets which examples are wrong. Heuristically, about half of the race model's excess agreement with the networks' mistakes comes from both being misled by the same spurious correlations of the shared training sample.
    - The correct discrete picture is therefore *greedy growth whose acceptance is limited by the sampling noise of a continuous search over directions*.
-   - **How that noise depends on $d$ is a separate question** (Heuristic). The ablations do not settle it. It is the fitted law of item 2, supported by the networks' parity exponents for $k\le3$. The race model's own search noise grows too slowly with $d$ for parities.
+   - **How that noise depends on $d$.**
+     - *What the ablations measure* (Numerical): the search-noise floor directly, as the largest spurious order-$k$ utility found on random labels. Its crossing point grows polynomially in $d$, with an exponent that rises with each input that must be found at once (1.2, 1.6 and 2.0 for $k=2,3,4$ from $d=15$ to 30). That is slower than the networks' $n^*$ (1.1, 2.0, 2.4), and the race model's parity $n^*$ grows too slowly with $d$ for the same reason.
+     - *The functional form* (Heuristic): the fitted law of item 2, supported by the networks' parity exponents for $k\le3$.
 5. **A trained network looks like a kernel background plus grown features** (Heuristic reading of a Numerical result).
    - **The result.** Adding the NNGP kernel's score to the race model's score with equal weight raises held-out per-example agreement on partially learned tasks from 0.50 to 0.62. The $n^*$ match is unchanged within noise: 0.29 held-out and 0.32 calibration, against the race's 0.33 and 0.24.
    - **References.** Two Adam networks trained on the same data from *different* initializations agree at 0.62. SGD and Adam networks that share the initialization agree at 0.71. The NNGP kernel alone reaches 0.69.
