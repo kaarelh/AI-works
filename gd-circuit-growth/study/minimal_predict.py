@@ -17,6 +17,10 @@ bottleneck(fn, c, a, d)      the closed form: on the greedy path at n just above
         n*_closed = max( n_Hebb , c * max_{i <= i*} N(k_i) / rho_i^2 ),
     where n_Hebb solves the Hebbian noise equation E_x Phi(-y F_{i*}(x) / sigma_n) = 0.1 for the readout F_{i*} of that
     stage.  It reproduces the curve's n* (up to the grid) and names the binding term: the Hebbian noise or one move.
+
+Ablation switches (MINIMAL-MODEL.md, Section 4.3): law="occam" (N(k) = log M_k), a=1e9 (no leap cost), dense2=False (no
+spectral unit), absolute=True (significance against Var(y) instead of the residual), act_scale (literal activation level
+relative to c; 1 = the model's rule).
 """
 import os, sys, math, itertools
 import numpy as np
@@ -65,7 +69,7 @@ def _ls(F, y):
     return w, F1 @ w
 
 
-def population_run(Xr, y, n, c, a, d, law="search", fmax=4, gmax=48, dense2=True, act_scale=1.0):
+def population_run(Xr, y, n, c, a, d, law="search", fmax=4, gmax=48, dense2=True, act_scale=1.0, absolute=False):
     """The minimal model's noiseless run at sample size n.  Returns dict(stages, F (cube values), a_h, hnorm2, vy)."""
     m, r_ = Xr.shape
     vy = float(np.var(y))
@@ -104,6 +108,9 @@ def population_run(Xr, y, n, c, a, d, law="search", fmax=4, gmax=48, dense2=True
         rho_l2 = ((Xs.T @ (r - r.mean())) / m) ** 2 / sr2
         active |= n * rho_l2 / N1 > c * act_scale
         best = search(Xr, Mlit, r, active, GW, c, a, law, fmax, n_eff=n, d_count=d, dense2=dense2)
+        if best is not None and absolute:       # variant: significance against the label scale, not the residual's
+            best["z2"] *= sr2 / vy
+            best["rho2"] *= sr2 / vy
         if best is None or best["z2"] <= c:
             break
         g = dict(best, nwires=GW.shape[1])
@@ -144,11 +151,12 @@ def _crossing(ns, err, thr=0.1):
 
 
 def predict_curve(fn, c, a, d=30, law="search", ns=None, fmax=4, suite=None, first_cross=False, dense2=True,
-                  act_scale=1.0):
+                  act_scale=1.0, absolute=False):
     """Predicted test-error curve on a grid of n (log2 step 1/8 from 2^3 to 2^17 by default) and its 0.1 crossing.
     first_cross: scan upward in steps of 1/4 and stop after the first crossing (refined to 1/16) -- for calibration."""
     Xr, y, rel = relevant_cube(fn, d, suite)
-    run = lambda n: noisy_error(population_run(Xr, y, n, c, a, d, law, fmax, dense2=dense2, act_scale=act_scale), y, n, d)
+    run = lambda n: noisy_error(population_run(Xr, y, n, c, a, d, law, fmax, dense2=dense2, act_scale=act_scale,
+                                               absolute=absolute), y, n, d)
     if first_cross:
         prev_n, prev_e = None, None
         for l in np.arange(3, 17.01, 0.25):

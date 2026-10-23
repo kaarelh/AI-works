@@ -361,6 +361,125 @@ Three derivations ([`theory/A-discrete-model.md`](theory/A-discrete-model.md), [
   - a circuit search (not only juntas and Fourier signs) for the certificates;
   - an attempt at the saddle-to-saddle approximation hypothesis for two-layer ReLU networks from small initialization, using Alternating Gradient Flows.
 
+Several of these items were taken up in Part 3.
+
+## Part 3: state of understanding after an extended session
+
+This part was added on the night of 23–24 October 2026, after about five more hours. It covers:
+- new experiments: input dimensions 15 and 60; 20 fresh random targets; widths 32 and 512; online runs with prequential logging;
+- an investigation of *why* the race model works: ablations, a minimal model, an analytic predictor, and a kernel hybrid;
+- a second round of theory: repairs, second referee passes, and a new a-priori theorem.
+
+Status labels as before.
+
+### 3.1 Summary
+
+1. **Gradient descent's sample complexity follows a "noisy feature search" law, not an Occam law** (Numerical).
+   - **Parities.** For parities of 2, 3 and 4 bits, the networks' $n^*$ grows like $d^{1.04}$, $d^{1.91}$ and $d^{2.40}$ over $d=15,30,60$. That is close to the correlational-SQ rate $d^{k-1}$ for $k\le3$, and somewhat below it for $k=4$. This holds even though training reuses a fixed training set for many epochs.
+   - **Other targets.** Leap-1 compositions (staircase, multiplexer) scale like $d^{1.5}$, and dense majority like $d^{1.2}$.
+   - **Comparison with Occam.** An Occam learner needs only $\approx k\log d$ samples for a $k$-parity (16, 23 and 37 samples at $d=30$, against the networks' 200, 843 and 2728).
+2. **A closed-form predictor gets $n^*$ from the target alone** (Heuristic derivation, Numerical test).
+   - **Formula.** Along the target's population greedy path,
+   $$n^*\approx\max\Bigl(n_{\rm Hebb},\ c\max_i\frac{d\,(d/a)^{k_i-2}}{\rho_i^2}\Bigr).$$
+     Here $\rho_i$ is move $i$'s correlation with the residual, $k_i$ is the number of inputs it must find at once, and $n_{\rm Hebb}$ is the sampling-noise floor of the linear part. There are two constants, $c=2.25$ and $a=18$, calibrated on 12 functions.
+   - **Results.**
+     - On 20 fresh random formulas never seen during calibration: mean $|\log_2|$ ratio 0.42 (within about 1.34×), Spearman 0.92, over $n^*$ from 61 to 3049.
+     - On the 9 held-out functions: 0.38. It gets the 2- and 3-parity $d$-exponents right.
+3. **The race model transfers out of sample** (Numerical).
+   - **Fresh targets.** On the 20 fresh random formulas it matches the networks' $n^*$ within a factor of about 1.15 on average (mean $|\log_2|$ ratio 0.20, Spearman 0.99, success agreement 0.98), better than on the original held-out set.
+   - **New input dimensions.** Calibrated at $d=30$ only, it predicts $n^*$ at $d=15$ and $d=60$ with mean $|\log_2|$ ratio 0.45 and 0.43. Its one systematic miss is 3-bit parity, where its $d$-exponent is half the networks'.
+4. **What makes the race model work is noise in the feature search, not its clocks** (Numerical, ablations).
+   - **No effect on the match (0.25–0.35 held-out, against 0.33 for the full model):**
+     - the race's timing machinery: clocks, persistence of partial growth, the alignment-time cost;
+     - depth-2 gates;
+     - replacing the race by plain greedy selection (0.27).
+   - **Breaks the match:**
+     - computing the direction search on fresh samples instead of the training set (4.6, a diagnostic that removes sampling noise from the search);
+     - removing order-3/4 units (1.4).
+   - The correct discrete picture is therefore *greedy growth whose acceptance is limited by the sampling noise of a continuous search over directions*. That noise grows polynomially with $d$ for each input that must be found at once.
+5. **A trained network is a kernel background plus grown features** (Numerical). Adding the NNGP kernel's score to the race model's score with equal weight raises per-example agreement on partially learned tasks from 0.50 to 0.62, against a ceiling of 0.71 (SGD-trained vs Adam-trained networks), without losing the $n^*$ match (held-out 0.29). The networks' individual mistakes are kernel-like; *whether* they generalize is set by feature growth.
+6. **Once they generalize, both the networks and the model are functionally small circuits, even when their representation is large** (Numerical).
+   - Half of the race model's generalizing fits carry more than 6 gates. Their own Occam bound is then vacuous (median 0.67).
+   - Yet they are functionally small juntas or Fourier-sign circuits: the distillation certificate has median 0.125 on a sample of 30.
+   - The networks show the same.
+7. **Bounds** (Proved unless stated). The three derivations A, B and C each passed a second adversarial referee pass. The new derivation D adds:
+   - an exact "mass clock" race identity for two-layer ReLU networks, a proof that nothing grows before $\approx\log(1/\alpha)/U^*$, and a width-free generalization bound through the first escape;
+   - for two-layer *quadratic* networks, a proof of your sketch at every training time: the number of grown hidden units is at most $\kappa(\tau/\Theta)^2$, with $\kappa$ independent of labels, trajectory and width. This gives a test-error bound uniform in time.
+
+   TODO D referee status. The general ReLU case beyond the first escape remains a stated conjecture.
+8. **Robustness** TODO width. TODO online/prequential.
+
+### 3.2 Thread 1: what the networks do
+
+**Sample complexity versus input dimension** ([`study/DSCALE.md`](study/DSCALE.md), [`figures/dscale.png`](study/figures/dscale.png); 2 seeds at $d=15,60$):
+
+| target | $n^*$ at $d$ = 15 / 30 / 60 | exponent | CSQ rate $d^{k-1}$ | SQ / reuse rate $d^{k/2}$ |
+|---|---|---|---|---|
+| $x_1x_2$ | 100 / 200 / 427 | 1.04 | 1 | 1 |
+| $x_1x_2x_3$ | 241 / 843 / 3410 | 1.91 | 2 | 1.5 |
+| $x_1x_2x_3x_4$ | 508 / 2728 / 14255 | 2.40 | 3 | 2 |
+| staircase (5 terms) | 433 / 1514 / 3487 | 1.50 | – | – |
+| multiplexer | 364 / 1156 / 2848 | 1.48 | – | – |
+| MAJ$(x_1x_2,x_3x_4,x_5x_6)$ | 306 / 1380 / 3466 | 1.75 | – | – |
+| MAJ$_9$ | 123 / 263 / 625 | 1.17 | – | – |
+
+The fixed budget of 20000 steps can only make $n^*$ look larger at large $d$ (a learner that is slower there gets cut off), so the $k=4$ exponent is if anything an overestimate.
+
+Other observations:
+- **Out-of-sample targets.** The 20 fresh random formulas, with 3–5 relevant inputs and 3–8 gates, have network $n^*$ from 61 to 3049 ([`study/RANDOM-SUITE.md`](study/RANDOM-SUITE.md)).
+- **Complexity peaks just below $n^*$.** For the high-leap targets (parities of 3–4 bits, staircase, multiplexer, MAJ of parities), the networks' layer-2 kernel rank peaks just below $n^*$ and collapses above it, and the race model's circuit size does the same. Below $n^*$ both memorize with many features; above it both use the target's few features. The correlation over all cells is weak (Spearman 0.14), because at tiny $n$ the networks barely move from initialization and their kernel rank reflects random features.
+- **Time to fit grows with $n$ up to $n^*$ and then plateaus,** in both the networks and the model.
+
+TODO width.
+
+### 3.3 Thread 2: the discrete model
+
+**The model, as now understood.** The race model of Part 2 matches the networks. Its ablations and the minimal model show which of its parts matter:
+1. **Candidate features** are gates on the inputs and on already-grown features. A move is classified by the number $k$ of inputs it needs that the circuit does not yet use.
+2. **Search noise.** A candidate is found from the training set by a *continuous* search over directions, so its acceptance threshold is the noise level of that search, not the best-of-$M$ level of an Occam union bound. A move needing $k$ new inputs at once is accepted when $n\rho^2\gtrsim c\,d\,(d/a)^{k-2}$. This is the correlational-SQ law, with an effective initial overlap $a/d$: the best of many hidden units rather than one. Reusing grown features costs only the log of the pool size.
+3. **Readout.** A least-squares readout, with a dense linear (Hebbian) part that carries its own sampling noise.
+4. **Selection is greedy,** by largest utility. The race's clocks only reproduce *time* to generalize (time Spearman 0.83 against 0.69 for the minimal model), not sample complexity.
+
+**What this says about the original "mutation size" question.** The cost of a mutation is set by how many new inputs it must coordinate at once. Each one beyond the first two multiplies the required sample size by about $d/a$. Reusing an existing variable is nearly free. This is the empirical form of the rate law of Part 1, with data in place of time: sample size plays the role that $\log(1/\alpha)$ played for time.
+
+**Scoreboard** ([`study/MODEL-SCOREBOARD.md`](study/MODEL-SCOREBOARD.md), [`study/MINIMAL-MODEL.md`](study/MINIMAL-MODEL.md), [`study/HYBRID-QUICK.md`](study/HYBRID-QUICK.md); mean $|\log_2|$ ratio of $n^*$ against the networks):
+
+| model | 9 held-out functions | 20 fresh random formulas | $d=15$ / $d=60$ (7 targets) | per-example agreement (held-out) |
+|---|---|---|---|---|
+| race model | 0.33 | **0.20** | 0.45 / 0.43 | 0.50 |
+| race + kernel background ($\gamma=1$) | **0.29** | – | – | **0.62** |
+| minimal model (2 constants) | 0.59 | 0.47 | 0.30 / 0.52 | 0.50 |
+| analytic predictor (no simulation) | 0.38 | 0.42 | 0.30 / 0.52 | – |
+| sswm (mutate and select) | 1.36 | 1.12 | – | 0.26 |
+| NNGP kernel | 2.58 | 1.78 | – | 0.69 |
+| Occam over juntas | 4.61 | TODO | – | 0.20 |
+| *reference: SGD-trained networks vs Adam-trained networks* | *0.43* | – | – | *0.71* |
+
+**Known gaps.**
+- **3-bit parity's $d$-exponent:** the race model gets 0.94 against 1.91; the predictor gets it right.
+- **Compositions of low-leap moves at $d=60$:** the predictor underpredicts them by up to 2.1×.
+- **Very small initialization (from D):** all hidden units can be recruited by the first escape, and the network then never learns a second feature. The race model's persistent reservoir of dormant units assumes this does not happen. At μP scale it does not seem to.
+
+### 3.4 Thread 3: bounds
+
+**Review status** ([`theory/README.md`](theory/README.md)): A, B and C each failed or passed their first referee pass, were revised, and passed a second pass with only minor issues left. TODO D.
+
+**What is now proved about "short training ⇒ small circuit ⇒ generalization":**
+- **The discrete race model (A):** time bounds the depth, the incoherence-weighted size and the readout $\ell_1$ norm, and hence test error, uniformly in time. Training time does not bound the raw gate count.
+- **Diagonal linear networks (C2):** the number of grown coordinates is at most $\kappa(\tau/\Theta)^2$.
+- **Two-layer quadratic networks (D, new):** the same statement for the number of grown hidden units, a real network with a shared hidden layer. It gives a test-error bound uniform in time.
+- **Two-layer ReLU networks (D, new):**
+  - *Proved, and new as far as I know:* the exact mass-clock identity, no growth before $\approx\log(1/\alpha)/U^*$, and a width-free bound through the first escape. A newly found conserved quantity makes neurons of the same sign merge.
+  - *Conditional:* persistence beyond the first escape, under a condition checkable from the training residuals.
+  - *Conjecture:* the a-priori form beyond the first escape.
+- **One-pass SGD:** prequential error certifies test error directly, with no capacity argument. TODO numbers.
+
+**What works numerically on real networks:** only distillation certificates, i.e. "the trained network is close to a small circuit". For the networks this was shown in Part 2; for the race model's own large circuits, see [`study/RACE-CERTIFY.md`](study/RACE-CERTIFY.md). The race model's own-circuit Occam bound is tight (median 0.021) exactly when its circuit has collapsed to the target's few gates ([`study/RACE-BOUNDS.md`](study/RACE-BOUNDS.md)).
+
+### 3.5 What I now believe, and what is open
+
+TODO
+
 ## Files
 
 Part 2: [`study/`](study/) (NN study, discrete models, certificates; guide in [`study/README.md`](study/README.md)) and [`theory/`](theory/) (derivations A, B, C, with check scripts in `theory/checks/`).

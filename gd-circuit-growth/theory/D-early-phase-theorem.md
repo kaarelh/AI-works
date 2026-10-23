@@ -363,9 +363,9 @@ Let $S$ be fixed and $\alpha\to0$, at fixed width and initial directions in gene
 
 Then for every $c<c^\star(S)$, where $c^\star\ln(1/\alpha)/U_0^*$ is the time to the next escape, $\sup_{t\le(1+c)\ln(1/\alpha)/U_0^*}\inf_g\sup_x|f_t-g|\to0$ over $K$-neuron functions $g$. So Proposition D3.3 applies uniformly in $t$ over that window with $K$ computable from $S$ alone.
 
-**Evidence (Numerical).** In every run of §5 at $\alpha\le10^{-3}$ the clusters form at the escape, and within-cluster angles shrink to $1-\cos=2\cdot10^{-8}$–$2\cdot10^{-4}$. Consider the intervals of $0.2$ time units on which (A) holds for a sampled pair and $1-\cos\ge10^{-4}$ at the start, above the discretization floor; there are 1300–12700 per run.
-- On these intervals, $Q_{jk}$ increased by at most $0.2\%$, and decreased in every interval in 5 of the 7 runs.
-- On the intervals on which (A) fails, the median relative change is between $-8\cdot10^{-3}$ and $+2\cdot10^{-3}$. The largest is $+12\%$ at $\alpha\le10^{-3}$ and $+63\%$ at $\alpha=10^{-2}$, where the clusters are loose.
+**Evidence (Numerical).** In every run of §5 at $\alpha\le10^{-3}$ the clusters form at the escape, and within-cluster angles shrink to $1-\cos=2\cdot10^{-8}$–$2\cdot10^{-4}$. Consider the intervals of $0.2$ time units on which (A) holds for a sampled pair and $1-\cos\ge10^{-4}$ at the start, above the discretization floor; there are 800–12700 per run (1.0-unit intervals in the $t=400$ run).
+- On these intervals, $Q_{jk}$ increased by at most $0.2\%$, and decreased in every interval in 6 of the 8 runs.
+- On the intervals on which (A) fails, the median relative change is between $-3\cdot10^{-2}$ and $+2\cdot10^{-3}$. The largest is $+12\%$ per $0.2$ time units at $\alpha\le10^{-3}$ ($+66\%$ per $1.0$ in the $t=400$ run), and $+63\%$ at $\alpha=10^{-2}$, where the clusters are loose.
 - The median $Q_{jk}$ falls by 1–4 orders of magnitude at $\alpha=10^{-3}$. At $\alpha=10^{-6}$ it rises from $10^{-12}$ to $2\cdot10^{-9}$: the norms grow by $10^{10}$ during the alignment phase, when (A) often fails.
 
 **What would prove it.** Two pieces are missing:
@@ -381,7 +381,7 @@ AGF (Kunin et al. 2025) and neuron pursuit (Kumar–Haupt 2025) are the α→0 m
 
 ## 5. Numerical check, ReLU
 
-[`checks/D_relu_check.py`](checks/D_relu_check.py) produces [`checks/D_relu_check.out`](checks/D_relu_check.out), in about 3 minutes on one core.
+[`checks/D_relu_check.py`](checks/D_relu_check.py) produces [`checks/D_relu_check.out`](checks/D_relu_check.out), in about 10 minutes on one core (the last, $t=400$ configuration takes half of that).
 - **Setup.** $d=16$, width $m=64$, $|a_j(0)|=\|w_j(0)\|=\alpha$ with random signs and uniform random directions. $n$ training points are drawn without replacement from the cube.
 - **Training.** Full-batch GD with $\eta=0.02$ (one run at $\eta=0.004$) approximates the flow.
 - **Evaluation.** Test quantities are exact over all $2^{16}$ inputs. "Bound" columns use the certified $\hat U(y)$ of Lemma D2.1.
@@ -397,15 +397,16 @@ AGF (Kunin et al. 2025) and neuron pursuit (Kumar–Haupt 2025) are the α→0 m
 
 **Other checks** (all in the `.out` file):
 - **Lemma D1(a), balance** drifts by at most $2.2\cdot10^{-3}$ of $\max\rho$ under GD, against $0$ for the flow; the drift is $O(\eta)$ in total, $3.6\cdot10^{-4}$ at $\eta=0.004$.
-- **Lemma D1(e), monotone loss** holds under GD for $x_1$ and the $\alpha=10^{-2}$ run. For MAJ$_3$, and for $x_1+\frac12x_2x_3$ at $\alpha=10^{-6}$, GD increases the loss (by tiny amounts) on 640–1710 of its steps. That is the zig-zag across kinks, which the flow does not have.
+- **Lemma D1(e), monotone loss** holds under GD for $x_1$ and the $\alpha=10^{-2}$ run. For MAJ$_3$, and for $x_1+\frac12x_2x_3$ at $\alpha=10^{-6}$, GD increases the loss (by tiny amounts) on 640–1710 of its steps (8545 of 20000 in the $t=400$ run). That is the zig-zag across kinks, which the flow does not have.
 - **Lemma D1(f)** holds up to $-6\cdot10^{-4}$ per step, again from kink crossings.
 - **Lemma D1(g).**
   - The sign claim $m_{jk}\ge0$ holds exactly, and the flow-velocity form of $\dot Q$ is $\le0$ at every step at which all separating points attract.
-  - On GD trajectories, over intervals on which (A) holds and $1-\cos\ge10^{-4}$, $Q_{jk}$ increases by at most $0.2\%$, and strictly decreases in 5 of the 7 runs. The median relative change per interval is between $-3\cdot10^{-5}$ ($\alpha=10^{-2}$) and $-40\%$.
+  - On GD trajectories, over intervals on which (A) holds and $1-\cos\ge10^{-4}$, $Q_{jk}$ increases by at most $0.2\%$, and strictly decreases in 6 of the 8 runs. The median relative change per interval is between $-3\cdot10^{-5}$ ($\alpha=10^{-2}$) and $-40\%$.
   - Over intervals on which the pair keeps one activation pattern, $|\Delta Q|/Q\le10^{-5}$: conservation up to GD's $O(\eta^2)$ terms.
   - Below $1-\cos\approx10^{-4}$, the $O(\eta^2)$ terms of GD dominate $Q$, and the flow statement is not tested there.
 - **Proposition D2.2.** Over the whole run, the measured time with $\|\Pi\xi^y\|\ge0.3$ is at most $5.5$ time units for $x_1$ and MAJ$_3$, against the bound $150$–$880$. On $x_1+\frac12x_2x_3$ it is $107$ of $120$, because after the escape the neurons are stationary for $U_r$, not for $U_y$. The proposition is only meant for the pre-escape window.
 - **Theorem D3.2 (Maurey/Occam)** is vacuous ($1.0$) at every checkpoint, both with the measured $P$ and with the a priori bound.
+- **The stall persists.** The $x_1+\frac12x_2x_3$ run at $\alpha=10^{-6}$, continued to $t=400$ (last configuration in the script), keeps $L=0.1095$, test MSE $0.2323$ and $P=3.22$. At $t=400$ the a priori path-norm bound is $498$ and the loss-curve bound $5.5$.
 
 **Reading.**
 - **The clock bounds.** Theorem D2 is sharp in the exponent to within 5–16%. At $\alpha\le10^{-3}$ its escape-time lower bound is 60–81% of the observed time, against 42–51% for C3.1's. The remaining gap is the $\ln m$ term and the alignment time, during which the escaping neurons have less than the maximal utility.
@@ -594,7 +595,7 @@ $$\mathrm{err}(\mathrm{sgn}f_t)\le\mathrm{kl}^{-1}_+\Big(\widehat P_S[yf_t\le\ga
 
 | file | contents |
 |---|---|
-| [`checks/D_relu_check.py`](checks/D_relu_check.py) → [`checks/D_relu_check.out`](checks/D_relu_check.out) | Part I checks: Lemma D1 (a), (e), (f), (g); Lemma D2.1; Theorem D2; Proposition D2.2; Theorem D3; Theorem D3.2; Proposition D3.3; plateau diagnostics for §4 (≈3 min) |
+| [`checks/D_relu_check.py`](checks/D_relu_check.py) → [`checks/D_relu_check.out`](checks/D_relu_check.out) | Part I checks: Lemma D1 (a), (e), (f), (g); Lemma D2.1; Theorem D2; Proposition D2.2; Theorem D3; Theorem D3.2; Proposition D3.3; plateau diagnostics for §4 (≈10 min; `python3 D_relu_check.py 0,1` runs a subset) |
 | [`checks/D_quad_check.py`](checks/D_quad_check.py) → [`checks/D_quad_check.out`](checks/D_quad_check.out) | Part II checks: Theorem D5 (Horn and linearized clocks), Theorem D6 (1)–(3), Theorem D7 against the unrestricted class (≈15 s) |
 
 Both import `klinv_upper` and `log_Phi` from [`checks/c_common.py`](checks/c_common.py). Set `OPENBLAS_NUM_THREADS=1`.

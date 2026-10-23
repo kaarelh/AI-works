@@ -49,7 +49,9 @@ how the networks' sample complexity changes with the input dimension $d$?
 - **The Occam law** $N(k)=\log M_k$ (the best-of-$M_k$ noise level) fits $d=30$ about as well (held-out 0.39). But it
   predicts $n^*$ almost independent of $d$ (exponents 0.16–0.31) and fails the $d$-scaling (mean error 1.50 at $d=60$).
   The networks' sample complexity is a **search cost**, not a description length.
-{{SUMMARY_RANDOM}}
+- **Out of sample** (20 fresh random formulas, constants unchanged): predictor 0.42 / Spearman
+  0.96, minimal model 0.47 / 0.96, race 0.20 / 0.99. Here the race model is clearly better;
+  the predictor ranks the formulas well but underpredicts eight mid-sized ones by 1.4–1.7×.
 
 ## 1. The minimal model ([`models/minimal.py`](models/minimal.py))
 
@@ -244,17 +246,66 @@ Reading the table:
 
 ### 4.3 Which ingredient does what (predictor ablations, CALIB-refitted)
 
-| variant | CALIB mean abs log2 | HELDOUT mean abs log2 | what changes |
-|---|---|---|---|
-| full predictor ($c=2.25$, $a=18$) | 0.37 | 0.38 | |
-| no spectral unit ($c=2.25$, $a=24$) | 0.46 | 0.45 | MAJ$\oplus$MAJ must be built from sparse pair gates, whose $\rho^2$ is 7× smaller: 465 becomes 1635 (network 743); the DNF (518 → 571) and rand3 (575 → 709) slow down, the multiplexer barely changes (851 → 815) |
-| no leap cost ($a=\infty$, $c=2.5$) | 0.38 | 0.55 | indistinguishable at $d=30$ on CALIB; wrong $d$-scaling (Section 5) |
-| Occam law $N(k)=\log M_k$ ($c=9$) | 0.41 | 0.39 | indistinguishable at $d=30$; wrong $d$-scaling (Section 5) |
-| additive costs, $n^*=\max(n_{\rm Hebb},\,c\sum_{i\le i^*}N(k_i)/\rho_i^2)$ ($c=1.5$, $a=24$) | 0.33 | 0.39 | helps the multi-move compositions (staircase, recursive majority, rand3), hurts AND$(x_1x_2,x_3x_4)$ and the DNF; the data do not distinguish max from sum |
-| the literal sector as least squares on all $d$ literals instead of the Hebbian unit (minimal model, early version) | – | – | dense targets become too easy (MAJ$_9$: 107 against 263) and a double-descent bump appears at $n\approx d$ (MAJ$_3$: error 0.41 at $n=32$) |
+Mean $|\log_2|$ ratio of predicted to network $n^*$; the last column is the out-of-sample test of Section 4.4.
+
+| variant | CALIB | HELDOUT | 20 random formulas | what changes |
+|---|---|---|---|---|
+| full predictor ($c=2.25$, $a=18$) | 0.37 | 0.38 | **0.42** | |
+| no spectral unit ($c=2.25$, $a=24$) | 0.46 | 0.45 | 0.47 | MAJ$\oplus$MAJ must be built from sparse pair gates, whose $\rho^2$ is 7× smaller: 465 becomes 1635 (network 743); the DNF (518 → 571) and rand3 (575 → 709) slow down, the multiplexer barely changes (851 → 815) |
+| no leap cost ($a=\infty$, $c=2.5$) | 0.38 | 0.55 | 0.50 | indistinguishable on CALIB at $d=30$; wrong $d$-scaling (Section 5) |
+| Occam law $N(k)=\log M_k$ ($c=9$) | 0.41 | 0.39 | 0.43 | indistinguishable at $d=30$; wrong $d$-scaling (Section 5) |
+| additive costs, $n^*=\max(n_{\rm Hebb},\,c\sum_{i\le i^*}N(k_i)/\rho_i^2)$ ($c=1.5$, $a=24$) | 0.33 | 0.39 | 0.59 | helps the multi-move compositions of the main suite (staircase, recursive majority, rand3), hurts AND$(x_1x_2,x_3x_4)$, the DNF and the random formulas. Better on CALIB; max is kept because it is what the model's noiseless limit implies (a stage needs only its own threshold), not because of the random formulas |
+| significance against the label scale, $n\,U^2/\mathrm{Var}(y)$ instead of $n\rho^2$ ($c=2$, $a=18$) | 0.36 | 0.57 | 0.65 | later moves get more expensive as the residual shrinks. Marginally better on CALIB, so the choice is made on principle (the sampling noise of a correlation scales with the residual), and it is confirmed by the held-out and random targets |
+| the literal sector as least squares on all $d$ literals instead of the Hebbian unit (minimal model, early version) | – | – | – | dense targets become too easy (MAJ$_9$: 107 against 263) and a double-descent bump appears at $n\approx d$ (MAJ$_3$: error 0.41 at $n=32$) |
 
 At $d=30$ alone, the $n^*$ data cannot tell the search law from the Occam law or from no leap cost: the 21 targets span
 too narrow a range of $k$ and $d$. The $d$-scaling can.
+
+### 4.4 Out-of-sample: 20 fresh random formulas
+
+The 20 random fan-in-2 formulas of `boolfuncs.make_random_suite` (4–8 inputs, 3–8 gates; networks: Adam, 2 seeds) were
+generated after the models were designed and calibrated; all constants unchanged ([`minimal_random.py`](minimal_random.py)
+→ [`minimal_random.json`](minimal_random.json); the race model re-evaluated here with its $d=30$ constants).
+
+| model | mean abs log2 n* ratio | n* Spearman | success agreement | curve MAE | per-example agreement | time Spearman |
+|---|---|---|---|---|---|---|
+| analytic predictor | 0.42 | 0.96 | – | – | – | – |
+| Occam-law predictor | 0.43 | 0.93 | – | – | – | – |
+| minimal model | 0.47 | 0.96 | 0.95 | 0.02 | 0.56 | 0.80 |
+| race model | 0.20 | 0.99 | 0.98 | 0.01 | 0.54 | 0.82 |
+
+<details><summary>per-formula n*</summary>
+
+| target | formula | network | analytic predictor | minimal model | race |
+|---|---|---|---|---|---|
+| rf00 | 6 gates, 5 inputs: g5=~4and~3; g6=~5or1; g7=~2xor~5; g8=7or~2; g9=~8an | 98 | 91 | 138 | 98 |
+| rf01 | 4 gates, 5 inputs: g5=4xor~2; g6=0or5; g7=~6or~1; g8=~7xor~0 | 467 | 300 | 408 | 553 |
+| rf02 | 7 gates, 4 inputs: g4=0xor1; g5=2and~4; g6=~5xor0; g7=~6and~4; g8=7or~ | 266 | 156 | 200 | 216 |
+| rf03 | 5 gates, 4 inputs: g4=~3and0; g5=4xor3; g6=~5xor1; g7=6or~2; g8=7xor~0 | 425 | 247 | 308 | 482 |
+| rf04 | 7 gates, 4 inputs: g4=1xor~3; g5=0and4; g6=5or~1; g7=~6and2; g8=~7or~6 | 342 | 197 | 209 | 360 |
+| rf05 | 5 gates, 5 inputs: g5=3or~4; g6=~4or5; g7=~2or~5; g8=7xor4; g9=~8xor1 | 873 | 788 | 437 | 828 |
+| rf06 | 7 gates, 5 inputs: g5=3xor~1; g6=5or2; g7=6or~0; g8=~1xor5; g9=8or6; g | 61 | 71 | 65 | 61 |
+| rf07 | 8 gates, 4 inputs: g4=0xor1; g5=~1or2; g6=4and~0; g7=3or6; g8=7and~0;  | 407 | 247 | 332 | 482 |
+| rf08 | 8 gates, 4 inputs: g4=~2and~1; g5=4and3; g6=~4or~5; g7=~6or2; g8=~3xor | 85 | 120 | 136 | 114 |
+| rf09 | 8 gates, 4 inputs: g4=2xor~1; g5=~1or~2; g6=~1xor~2; g7=0and2; g8=~6or | 320 | 241 | 193 | 395 |
+| rf10 | 8 gates, 4 inputs: g4=~0xor~2; g5=~4and~2; g6=5or2; g7=~6xor~2; g8=7xo | 103 | 120 | 142 | 120 |
+| rf11 | 4 gates, 4 inputs: g4=0and~2; g5=4and0; g6=3xor1; g7=6xor~2 | 864 | 783 | 893 | 679 |
+| rf12 | 5 gates, 5 inputs: g5=~0or2; g6=5xor~4; g7=2and1; g8=7xor~6; g9=~8or~3 | 963 | 989 | 764 | 1115 |
+| rf13 | 7 gates, 4 inputs: g4=~0xor~3; g5=4xor1; g6=0xor~3; g7=~6and~0; g8=~7x | 401 | 612 | 326 | 438 |
+| rf14 | 5 gates, 5 inputs: g5=~1xor~4; g6=~0xor2; g7=6and1; g8=7xor~5; g9=8xor | 714 | 503 | 447 | 650 |
+| rf15 | 4 gates, 4 inputs: g4=~3xor1; g5=~4or3; g6=~5xor4; g7=6and0 | 108 | 120 | 141 | 124 |
+| rf16 | 7 gates, 4 inputs: g4=~0and~2; g5=4xor~1; g6=5and~1; g7=2or1; g8=7and2 | 354 | 241 | 197 | 347 |
+| rf17 | 3 gates, 5 inputs: g5=~4xor3; g6=~5xor0; g7=6xor~1 | 3049 | 2871 | 3567 | 1959 |
+| rf18 | 3 gates, 4 inputs: g4=~0xor3; g5=4or~2; g6=~5xor~0 | 174 | 243 | 292 | 201 |
+| rf19 | 6 gates, 4 inputs: g4=~2xor1; g5=4xor3; g6=~5xor~1; g7=~6or~0; g8=7and | 902 | 658 | 705 | 909 |
+
+</details>
+
+On these formulas the race model is clearly better (0.20 against 0.42 and 0.47). The predictor ranks them almost
+perfectly (Spearman 0.96) but underpredicts the mid-sized ones systematically: rf01–rf04, rf07, rf14, rf16 and rf19 come
+out at 0.58–0.73× of the networks' $n^*$ (and rf08, rf13, rf18 at 1.4–1.5×). The same bias appears on the main
+suite's compositions (Sections 4.2 and 5). It is not that the networks pay for every move instead of only the most
+expensive one: the additive variant of Section 4.3 does worse here (0.59, Spearman 0.90).
 
 ## 5. The $d$-dependence
 
@@ -270,6 +321,8 @@ their $d=30$ CALIB constants unchanged; race from [`DSCALE.md`](DSCALE.md) (also
 | mux | 364 / 1156 / 2848 | 264 / 851 / 1703 | 212 / 1179 / 1690 | 419 / 1423 / 2703 | 301 / 602 / 1204 | 602 / 686 / 781 |
 | majpar | 306 / 1380 / 3466 | 409 / 817 / 1635 | 445 / 892 / 1778 | 515 / 1632 / 2446 | 465 / 931 / 1862 | 783 / 931 / 1107 |
 | maj9 | 123 / 263 / 625 | 143 / 286 / 571 | 122 / 346 / 878 | 109 / 248 / 837 | 143 / 286 / 571 | 143 / 286 / 571 |
+
+Error $|\log_2(n^*_{\rm model}/n^*_{\rm network})|$ per target:
 
 | d | par2 | par3 | par4 | stair5 | mux | majpar | maj9 | mean |
 |---|---|---|---|---|---|---|---|---|
@@ -288,6 +341,8 @@ their $d=30$ CALIB constants unchanged; race from [`DSCALE.md`](DSCALE.md) (also
 | Occam law, d = 15 | 0.96 | 1.33 | 1.62 | 0.96 | 0.73 | 1.35 | 0.22 | 1.02 |
 | Occam law, d = 30 | 0.22 | 0.17 | 0.43 | 0.65 | 0.75 | 0.57 | 0.12 | 0.42 |
 | Occam law, d = 60 | 0.62 | 1.94 | 2.56 | 1.72 | 1.87 | 1.65 | 0.13 | 1.50 |
+
+Least-squares exponent of $n^*$ against $d$ over $d=15,30,60$:
 
 | target | network exponent | predictor | minimal model | race | no leap cost | Occam law |
 |---|---|---|---|---|---|---|
@@ -328,13 +383,16 @@ their $d=30$ CALIB constants unchanged; race from [`DSCALE.md`](DSCALE.md) (also
 
 ## 6. Assessment
 
-**Did the simplification keep the race's match?** Partly. On CALIB the minimal model is close to the race: $n^*$ ratio 0.36 against 0.24, Spearman 0.98 against 0.96, success agreement 0.98 against 0.98, time Spearman 0.86 against 0.89. On the held-out targets it matches the race on success agreement (0.94 against 0.95), learning-curve MAE (0.02 against 0.01) and per-example agreement (0.50 against 0.50). Its held-out $n^*$ accuracy is clearly worse (0.59 against 0.33, Spearman 0.85 against 1.00), mostly because of two compositions it learns too early: sign$(2x_1+x_2x_3+x_4x_5x_6)$ (804 against 2205) and rand3 (428 against 1016). Its exhaustive search finds the 3-leap $x_4x_5x_6$ with the help of a selection bias: the best of many variants of the true gate is inflated by sampling noise, so it passes the threshold at half the $n$ that the model's own noiseless limit predicts. It is still far better than the other simple learners (sswm 1.36, NNGP kernel 2.58, Occam over juntas 4.61). Its noiseless limit, the analytic predictor, matches the networks better than the model itself does (held-out 0.38), and matches the model to a mean $|\log_2|$ of 0.30 (median $-0.03$) over the 21 targets.
+**Did the simplification keep the race's match?** Partly. On CALIB the minimal model is close to the race: $n^*$ ratio 0.36 against 0.24, Spearman 0.98 against 0.96, success agreement 0.98 against 0.98, time Spearman 0.86 against 0.89. On the held-out targets it matches the race on success agreement (0.94 against 0.95), learning-curve MAE (0.02 against 0.01) and per-example agreement (0.50 against 0.50). Its held-out $n^*$ accuracy is clearly worse (0.59 against 0.33, Spearman 0.85 against 1.00), mostly because of two compositions it learns too early: sign$(2x_1+x_2x_3+x_4x_5x_6)$ (804 against 2205) and rand3 (428 against 1016). Its exhaustive search finds the 3-leap $x_4x_5x_6$ with the help of a selection bias: the best of many variants of the true gate is inflated by sampling noise, so it passes the threshold at half the $n$ that the model's own noiseless limit predicts. It is still far better than the other simple learners (sswm 1.36, NNGP kernel 2.58, Occam over juntas 4.61). On the 20
+random formulas it scores 0.47 / 0.96 / 0.95 / 0.02 / 0.56 / 0.80 against the race's 0.20 / 0.99 / 0.98 / 0.01 / 0.54 / 0.82. Its noiseless limit, the analytic predictor, matches the networks better than the model itself does (held-out 0.38), and matches the model to a mean $|\log_2|$ of 0.30 (median $-0.03$) over the 21 targets.
 
 **Is the sample complexity predictable from the target alone?** Yes, at about the race's accuracy on held-out targets,
 with two constants and one formula: $n^*=\max\bigl(n_{\rm Hebb},\,c\max_iN(k_i)/\rho_i^2\bigr)$ (held-out mean
 $|\log_2|$ ratio 0.38 and Spearman 0.97, against 0.33 and 1.00 for the race model, which needs a full simulation). Half
 of the targets come down to one line: the Hebbian noise for dense leap-1 targets (no constant), $c(2^k-1)\,d\max(1,d/a)^{k-2}$
-for parities, one bottleneck move for the rest.
+for parities, one bottleneck move for the rest. Out of sample, on 20 fresh random formulas, it keeps its ranking
+(Spearman 0.96) but its accuracy drops to 0.42, against the race's 0.20: the race's full simulation captures something
+about mid-sized compositions that the single-bottleneck formula misses.
 
 **Does it predict the $d$-dependence?** For sparse parities with $k\le3$ and for dense targets, yes, within 20% at every
 $d$, where the race model misses the 3-sparse parity's exponent (0.94 against 1.91). For the 4-sparse parity the
