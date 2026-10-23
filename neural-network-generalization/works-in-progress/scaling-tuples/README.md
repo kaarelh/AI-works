@@ -1,6 +1,6 @@
 # Layerwise scaling: a collapsed-layer prior and conjectured learning regions
 
-Research note, 19 October 2026. The theorem below has conventional proofs and independent AI-agent mathematical checks; it is not Lean verified. The learning-region predictions remain conjectures. Questions [12](../../TECHNICAL-FAQ.md#12-can-we-classify-all-tuples-of-layerwise-scaling-exponents) and [15](../../TECHNICAL-FAQ.md#15-can-a-scaling-make-the-prior-prefer-something-other-than-small-circuits) of the technical FAQ give the interpretation, and [Question 14](../../TECHNICAL-FAQ.md#14-what-is-the-layer-collapse-argument-for-general-scaling-tuples-and-why-is-it-not-a-proof) the original layer-collapse heuristic.
+Research note, 19 October 2026. The theorem below has conventional proofs and independent AI-agent mathematical checks; it is not Lean verified. The learning-region predictions remain conjectures. [Question 12](../../TECHNICAL-FAQ.md#12-can-we-classify-all-tuples-of-layerwise-scaling-exponents) of the technical FAQ gives the interpretation and the original layer-collapse heuristic.
 
 ## A precise collapsed-layer example
 
