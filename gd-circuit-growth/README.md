@@ -401,9 +401,9 @@ Status labels as before.
      - It gets the 2- and 3-parity $d$-exponents right. The $d=15$ agreement, however, depends on the cap $\max(1,d/a)$, which was probably added after the $d=15$ network results had been seen. That part is not a clean out-of-sample test.
 3. **The race model transfers out of sample** (Numerical).
    - **Fresh targets.** On the 20 fresh random formulas it matches the networks' $n^*$ within a factor of about 1.15 on average (mean $|\log_2|$ ratio 0.20, Spearman 0.99, success agreement 0.98), better than on the original held-out set.
-   - **New input dimensions.** Calibrated at $d=30$ only, it predicts $n^*$ at $d=15$ and $d=60$ with mean $|\log_2|$ ratio 0.45 and 0.43. Its largest miss is 3-bit parity, where its $d$-exponent is half the networks' (0.94 against 1.91). It also under-predicts the $d$-growth of MAJ of pair parities (1.12 against 1.75) and of the staircase (1.14 against 1.50).
+   - **New input dimensions.** Calibrated at $d=30$ only, it predicts $n^*$ at $d=15$ and $d=60$ with mean $|\log_2|$ ratio 0.45 and 0.43. Its largest miss is 3-bit parity, where its $d$-exponent is half the networks' with the calibrated random stream (0.94 against 1.91). Averaged over several random streams, the race's parity exponents from $d=15$ to 30 are about 1.3 (3-parity) and 1.8 (4-parity), against the networks' 1.8 and 2.4. That gap is about the size of one stream's spread, so "grows too slowly" is a direction, not a precise number. It also under-predicts the $d$-growth of MAJ of pair parities (1.12 against 1.75) and of the staircase (1.14 against 1.50).
 4. **What makes the race model work is noise in the feature search, not its clocks** (Numerical, ablations).
-   - **Little effect on the match.** The following change it by at most about 0.1 beyond the full model's own spread across internal seeds (0.27–0.33 held-out); held-out values are 0.25–0.42:
+   - **Little effect on the match.** The following change it by at most about 0.1 beyond the full model's own spread across internal random streams (held-out 0.23–0.33 over six streams); held-out values are 0.25–0.42. On the calibration targets, pool size 1, one power-iteration step and plain greedy sit 0.1–0.2 above that band, mostly because of the 4-parity:
      - the race's timing machinery: clocks, persistence of partial growth, the alignment-time cost;
      - depth-2 gates, which help only staircase-like targets, by about 0.4 in $\log_2$;
      - replacing the race by plain greedy selection (0.27).
@@ -508,6 +508,7 @@ Other observations:
 4. **Selection is greedy.** The race's greedy variant picks the largest utility; the minimal model picks the largest utility relative to its noise level, $n\rho^2/N(k)$.
    - **Time ordering does not come from the race.** The ordering of time to generalize is reproduced about equally well with or without the race (held-out time Spearman: greedy 0.86, race 0.83, noise-free search 0.78). It is set by the targets' feature utilities, not by the race's clocks.
    - The race beats the minimal model's derived clock clearly only on the held-out set (0.83 against 0.69; calibration set 0.89 against 0.86).
+   - **What the time Spearman measures.** It ranks *targets* only. Within a target it is about 0 (−0.07 held-out), and a per-target constant, the race's gate count at fit, already scores 0.75. Network step counts also sit on a 1-2-5 checkpoint grid.
 
 **Ablation details** ([`study/ABLATIONS.md`](study/ABLATIONS.md)).
 - **Search noise.**
@@ -540,7 +541,7 @@ Notes on the table:
 
 **Known gaps.**
 - **$d$-exponents.**
-  - *Race model:* it gets 0.94 for the 3-bit parity, against the networks' 1.91. It also underestimates MAJ of pair parities (1.12 against 1.75) and the staircase (1.14 against 1.50).
+  - *Race model:* it gets 0.94 for the 3-bit parity, against the networks' 1.91, on its calibrated random stream. Averaged over streams it gets about 1.3 from $d=15$ to 30, against 1.8. It also underestimates MAJ of pair parities (1.12 against 1.75) and the staircase (1.14 against 1.50).
   - *Predictor:* it gets the 3-parity right. It overpredicts the 4-parity at $d=60$ by 1.6× (the minimal model by 2.0×), with exponents 2.75 and 3.00 against the networks' 2.40.
 - **Compositions of low-leap moves:** the predictor underpredicts them by 1.4–1.7× already at $d=30$, and by 1.7–2.1× at $d=60$.
 - **Very small initialization (from D).** In D's two-layer ReLU runs at $\alpha\le10^{-3}$, every neuron was recruited by the first escape. On $x_1+\tfrac12x_2x_3$ at $\alpha=10^{-6}$, the second feature was not learned by $t=400$. The race model's persistent reservoir of dormant units assumes this does not happen. Whether it happens in the μP networks was not measured; their success on multi-stage targets suggests it does not.

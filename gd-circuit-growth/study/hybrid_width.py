@@ -58,14 +58,15 @@ def main():
                     num[m] += agree - indep; den[m] += 1 - indep
         return cells, {m: num[m] / den[m] if den[m] else np.nan for m in models}
 
-    common = sorted(set.intersection(*[set(f) for f in avail.values()]))
-    print(f"targets at every width {sorted(avail)}: {common}")
-    print("| width | targets | partial cells | " + " | ".join(models) + " |\n|---|---|---|" + "---|" * len(models))
-    for use_common in (True, False):
+    # target sets: those present at every width, then each narrower sweep's set compared with the main sweep (128)
+    sets = [sorted(set.intersection(*[set(f) for f in avail.values()]))]
+    sets += [sorted(set(f)) for w, f in avail.items() if w != 128 and sorted(set(f)) not in sets]
+    print("| targets | width | partial cells | " + " | ".join(models) + " |\n|---|---|---|" + "---|" * len(models))
+    for use in sets:
         for w in sorted(avail):
-            use = common if use_common else avail[w]
-            cells, sc = score(w, use)
-            print(f"| {w} | {','.join(use)} | {cells} | " + " | ".join(f"{sc[m]:.2f}" for m in models) + " |", flush=True)
+            if set(use) <= set(avail[w]):
+                cells, sc = score(w, use)
+                print(f"| {','.join(use)} | {w} | {cells} | " + " | ".join(f"{sc[m]:.2f}" for m in models) + " |", flush=True)
 
 
 if __name__ == "__main__":
