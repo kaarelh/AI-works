@@ -415,7 +415,7 @@ Status labels as before.
 
    D passed its first adversarial referee pass with minor issues only. The general ReLU case beyond the first escape remains a stated conjecture.
 8. **Robustness and SGD.**
-   - **Width.** Narrowing the network from 128 to 32 units barely changes $n^*$ on the sparse targets: +8% for 3-parity, +2% for the staircase, +23% for the multiplexer. Dense MAJ$_9$ needs 59% more data at width 32, plausibly because the linear part is noisier with fewer units. Width 512 was abandoned: too slow on this CPU.
+   - **Width.** Narrowing the network from 128 to 32 units changes $n^*$ only modestly on the sparse targets: +8% for 3-parity, +30% for 4-parity, +2% for the staircase, +23% for the multiplexer. The parity changes are what the noise law predicts if its overlap constant $a$ drops by about 10% at width 32. Dense MAJ$_9$ needs 59% more data at width 32, plausibly because the linear part is noisier with fewer units. Width 512 was abandoned: too slow on this CPU.
    - **One-pass SGD.** With fresh minibatches, the prequential mistake rate certifies the average test error of a window of iterates with no capacity argument ([`study/ONLINE-BOUNDS.md`](study/ONLINE-BOUNDS.md)). The bound tracks the whole learning curve. On MAJ$_9$, over successive windows, it is 0.53, 0.37, 0.20, 0.074, 0.032 and 0.013. After learning it is about 0.002–0.01 (zero mistakes plus the confidence term).
 
 ### 3.2 Thread 1: what the networks do
@@ -439,7 +439,9 @@ Other observations:
 - **Complexity peaks just below $n^*$.** For the high-leap targets (parities of 3–4 bits, staircase, multiplexer, MAJ of parities), the networks' layer-2 kernel rank peaks just below $n^*$ and collapses above it, and the race model's circuit size does the same. Below $n^*$ both memorize with many features; above it both use the target's few features. The correlation over all cells is weak (Spearman 0.14), because at tiny $n$ the networks barely move from initialization and their kernel rank reflects random features.
 - **Time to fit grows with $n$ up to $n^*$ and then plateaus,** in both the networks and the model.
 
-**Width** ([`study/run_width.sh`](study/run_width.sh); 2 seeds): $n^*$ at width 32 against 128 is 911 against 843 (3-parity), 419 against 263 (MAJ$_9$), 1417 against 1156 (multiplexer) and 1540 against 1514 (staircase). The fitted constant $a\approx18$ of the noise law is plausibly the best initial overlap among many hidden units. If so it should grow slowly with width. The small change from 32 to 128 units is consistent with that, but it was not tested further.
+**Width** ([`study/run_width.sh`](study/run_width.sh), [`study/run_checks2.sh`](study/run_checks2.sh); 2 seeds): $n^*$ at width 32 against 128 is 911 against 843 (3-parity), 3554 against 2728 (4-parity), 419 against 263 (MAJ$_9$), 1417 against 1156 (multiplexer) and 1540 against 1514 (staircase).
+- **Reading.** The fitted constant $a\approx18$ of the noise law is plausibly the best initial overlap among many hidden units, in which case it should grow slowly with width. In the law, $n^*\propto(d/a)^{k-2}$, so a change of $a$ shows up once in the 3-parity and squared in the 4-parity. The two ratios, 1.08 and 1.30, give the same answer: $a$ is about 10% larger at width 128 than at width 32 (1.08 and $\sqrt{1.30}=1.14$).
+- **Size of the effect.** It is weaker than a pure best-of-$P$ Gaussian overlap ($a\approx2\ln P$) would give, which is 1.4×. So $a$ depends on width only weakly over this range. Two widths and two seeds are too few to fix the functional form.
 
 ### 3.3 Thread 2: the discrete model
 
