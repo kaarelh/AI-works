@@ -20,7 +20,7 @@ variants). Readings of mechanism are labelled **Heuristic**.
    - changing θ 12-fold, the power-iteration steps per firing 32-fold, the pool size 32-fold, or the gate budget
      2-fold.
 
-   On held-out targets, mean |log₂ n\*ratio| is 0.25–0.42 for these variants, against 0.27–0.33 for the calibrated
+   On held-out targets, mean |log₂ n\* ratio| is 0.25–0.42 for these variants, against 0.27–0.33 for the calibrated
    model under three random streams. The n\* Spearman is ≥ 0.93, the curve MAE ≤ 0.02 and the time Spearman 0.80–0.88
    for all of them. The same holds at d = 15.
 2. **n\* is set by sampling noise in the direction search.**
@@ -57,7 +57,7 @@ variants). Readings of mechanism are labelled **Heuristic**.
    - **ReLU vs threshold gates:** ReLU gates beat threshold gates (`thr`: held-out 0.60, n\* of MAJ₉ and the DNF about
      doubled).
    - **Coarser weights:** ternary weights (`Q1`) lower n\* on most targets, by 1.5× on average, and break the match
-     (0.81). Coarse rounding denoises the estimated directions. Q = 2, 3 and 5 are equivalent.
+     (0.81). Coarse rounding denoises the estimated directions. Q = 2, 3 and 5 are nearly equivalent.
    - **Depth-2 composition** matters little (held-out 0.35). It helps the staircase-like targets by about 0.4 log₂.
 5. **Per-example agreement (0.50) comes from sharing the training sample.**
    - With an independent search sample of the same size, it halves: 0.26 for `indep-search`, 0.23 for `indep-align`.
@@ -296,7 +296,7 @@ race finds the true features, and the readout interpolates with them.
 
 One artifact needs flagging. With a *fixed* search sample, a spurious direction of that sample keeps its utility after
 it fires, because firing it does not fit that sample. The run can then fire it again and again. This happens for one
-seed of x₁…x₄ at n = 16384, where the oracle sample is no larger than the training set.
+seed of x₁…x₄ at n = 128, and for one at n = 16384, where the oracle sample is no larger than the training set.
 
 **Independent sample of the same size n (`indep-align`, `indep-search`).** The noise level of the search is restored,
 but the noise is independent of the training labels. The networks' n\* comes back:
@@ -481,8 +481,8 @@ conversion is free (`ablation_diagnostics.py tprofile`).
 
 **The alignment law.** The homogeneous law dm/dt = kU_k m^(k−1), with its D^((k−2)/2) leap factor, makes x₁x₂x₃ and
 x₁…x₄ 4× and 8–64× slower than x₁x₂. The networks take 2.5× and 5×.
-- The x₁…x₄ value varies between random streams because the order-4 unit's power iteration only advances at
-  firings.
+- The x₁…x₄ value varies a lot between random streams. A likely cause (Heuristic) is that the order-4 unit's power
+  iteration advances only at firings, and far above n\* firings are rare.
 - `free` brings the parities into line (2.5× and 4.3×) but makes the staircase and the sparse polynomial too fast.
 - `greedy` undershoots the parities and overshoots MAJ(x₁x₂,…) and recursive majority.
 - No variant fits the profile clearly better than the calibrated model's own stream-to-stream spread (rms log₂
@@ -564,7 +564,7 @@ this budget, and has no knob that would follow a longer one.
 ## 6. Per-example agreement
 
 The scoreboard's per-example agreement is 0.48–0.53 for every variant that searches on the training set (0.41–0.43
-for `thr` and `Q1`). It is 0.23–0.26 for the variants that search on an independent sample of the same size, and that
+for `thr` and `Q1`). It is 0.23–0.29 for the variants that search on an independent sample of the same size, and that
 drop is uniform across families:
 
 | model | parity | staircase/sparse poly | dense | compositions | other |
@@ -597,7 +597,8 @@ the two being misled by the *same spurious correlations of the same training sam
 - **Staircase, sparse polynomial, multiplexer.**
   - These are learned through low-order steps. Depth-2 composition helps a little (`depth1`: family +0.43 against
     +0.07 log₂; the staircase 2416 vs 1766, the sparse polynomial 2419 vs 1761).
-  - With orders ≤ 2 only (`K2`), the staircase is still learned, through composition, but at 14340. The sparse
+  - With orders ≤ 2 only (`K2`), the staircase is still learned, but only at 14340, presumably through
+    depth-2 composition of order-2 gates. The sparse
     polynomial, whose x₄x₅x₆ term has no lower-order foothold, is never learned; its plateau at 1/8 stays (figure).
 - **Dense majorities and the halfspace.**
   - n\* is the noise in one Hebbian direction, plus the damage done by the memorising gates fitted after it (§4.3).
@@ -627,11 +628,11 @@ the two being misled by the *same spurious correlations of the same training sam
 | file | contents |
 |---|---|
 | [`models/race_ablations.py`](models/race_ablations.py) | `RaceAblation`: `Race.fit` with switches for every ablation; its defaults reproduce `Race` exactly |
-| [`models/run_ablations.py`](models/run_ablations.py) | full-grid driver: `python models/run_ablations.py NAME…` (with `DIM=15` for the d = 15 variants). Saves `race-abl-NAME[-d15].npz` (common.save_eval format) and per-cell circuit and trajectory diagnostics (`ablation_diag/race-abl-NAME.json`) |
+| [`models/run_ablations.py`](models/run_ablations.py) | full-grid driver: `python models/run_ablations.py NAME…` (with `DIM=15` for the d = 15 variants). Saves `race-abl-NAME[-d15].npz` (common.save_eval format) and per-cell circuit and trajectory diagnostics (`ablation_diag/race-abl-NAME[-d15].json`) |
 | [`models/ablation_report.py`](models/ablation_report.py) | the tables of §2–§5 (scoreboard, n\*, families, circuits, time) |
 | [`models/ablation_diagnostics.py`](models/ablation_diagnostics.py) | parity noise floor, Hebbian n\*, delayed generalisation, networks' n\* against training steps, time profile, generalisation-time rescoring |
 | [`models/ablation_dscale.py`](models/ablation_dscale.py) | d = 15 against d = 30 |
 | [`models/ablation_figure.py`](models/ablation_figure.py) → [`figures/ablation_curves.png`](figures/ablation_curves.png) | learning curves of the networks and the main ablations |
 
 Evaluations are in the session scratchpad (`model_evals/race-abl-*.npz`, `ablation_diag/`). A full grid takes
-1.5–12 minutes single-threaded.
+1.5–12.5 minutes single-threaded.

@@ -449,6 +449,11 @@ Other observations:
 3. **Readout.** A least-squares readout, with a dense linear (Hebbian) part that carries its own sampling noise.
 4. **Selection is greedy,** by largest utility. The race's clocks only reproduce *time* to generalize (time Spearman 0.83 against 0.69 for the minimal model), not sample complexity.
 
+**Ablation details** ([`study/ABLATIONS.md`](study/ABLATIONS.md)).
+- **Search noise.** With a noise-free direction search, $n^*$ collapses to 16–87 on every target, as far from the networks as the Occam learner. Drawing a fresh search sample of the same size before every firing lowers $n^*$ by only about 1.5×, so what matters is the noise *level* at sample size $n$, not reuse of the training labels.
+- **Dense leap-1 targets.** For $x_1$, MAJ$_3$ and MAJ$_9$, a one-shot Hebbian classifier sign$(\mathbb E_S[yx]\cdot x)$ already gives the networks' $n^*$ (53, 116 and 346, against 47, 112 and 263).
+- **Time to generalize.** Its *ordering* across cells survives every ablation, including the noise-free search, so it is set by the true features' utilities. Its *magnitudes* are matched only loosely. For example, high-order parities are too slow in the race model at large $n$.
+
 **What this says about the original "mutation size" question.** The cost of a mutation is set by how many new inputs it must coordinate at once. Each one beyond the first two multiplies the required sample size by about $d/a$. Reusing an existing variable is nearly free. This is the empirical form of the rate law of Part 1, with data in place of time: sample size plays the role that $\log(1/\alpha)$ played for time.
 
 **Scoreboard** ([`study/MODEL-SCOREBOARD.md`](study/MODEL-SCOREBOARD.md), [`study/MINIMAL-MODEL.md`](study/MINIMAL-MODEL.md), [`study/HYBRID-QUICK.md`](study/HYBRID-QUICK.md); mean $|\log_2|$ ratio of $n^*$ against the networks):

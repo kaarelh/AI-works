@@ -229,18 +229,37 @@ For any selection flow from a balanced initialization, any data and any width:
 2. **Function bounds.** $\|f_t\|_n\le\frac{\sqrt{\lambda_X}}2P(t)$ and $\sup_{x\in\{-1,1\}^d}|f_t(x)|\le\frac{\sqrt{d+1}}2P(t)$. For uniform $P_X$, also $\|f_t\|_{L^2(P_X)}\le\frac12P(t)$.
 3. **Escape time.** For $\beta>P(0)$, let $t_\beta=\inf\{t:P(t)\ge\beta\}$. Then
 $$t_\beta\ \ge\ T_\beta:=\frac{\ln(\beta/P(0))}{2\,(U_0^*+\lambda_X\beta/2)} .$$
-   Hence for $t\le T_\beta$: $\sup_x|f_t(x)|\le\frac{\sqrt{d+1}}2\beta$ and $L(t)\ge\frac12(\|y\|_n-\frac{\sqrt{\lambda_X}}2\beta)^2$. Any upper bound on $U_0^*$, such as $\hat U(y)$, may be used in place of $U_0^*$.
+   Hence for $t\le T_\beta$: $\sup_x|f_t(x)|\le\frac{\sqrt{d+1}}2\beta$ and $L(t)\ge\frac12\big(\|y\|_n-\frac{\sqrt{\lambda_X}}2\beta\big)_+^2$. Any upper bound on $U_0^*$, such as $\hat U(y)$, may be used in place of $U_0^*$.
 4. **Per-neuron clock.** Neuron $j$ has mass $\ge\beta_j$ at time $t$ only if $\int_0^t\epsilon_jU_r(\hat w_j)\ge\frac12\ln(\beta_j/\rho_j(0))$.
 5. **Discrete GD** with step $\eta$ (no balance needed): $\rho^{k+1}_j\le\rho_j^k\big(1+2\eta U^*(r_k)+\eta^2\lambda_X\|r_k\|_n^2\big)$.
+6. **The leading constant is attained.** Consider the following instance.
+   - *Data.* The training inputs are the $2^d$ points of the cube, each once, and $y=x_1$.
+   - *Network.* One neuron ($m=1$) with $a(0)=\alpha<2^{-1/4}$ and $w(0)=\alpha v^*$, where $v^*=(e_1+e_0)/\sqrt2$ and $e_0$ is the bias coordinate.
+   - *Selection.* $s=0$ at the kink points $\{x_1=-1\}$, i.e. the convention $\sigma'(0)=0$.
+
+   Then $\lambda_X=1$ and $U_0^*=1/\sqrt2$. This is a selection flow, it keeps $\hat w(t)=v^*$, and for $P(0)<\beta<\sqrt2$
+$$P(t)=\frac{\sqrt2}{1+(\sqrt2/P(0)-1)e^{-\sqrt2t}},\qquad t_\beta=\frac{\ln(\beta/P(0))}{2U_0^*}+\frac1{\sqrt2}\ln\frac{\sqrt2-P(0)}{\sqrt2-\beta}.$$
+   So $t_\beta\big/\big(\ln(1/\alpha)/U_0^*\big)\to1$ as $\alpha\to0$, while item 3 gives the limit inferior $\ge(1+\lambda_X\beta/2U_0^*)^{-1}$ for every flow. Since item 3 holds for every selection flow, no bound of the form $t_\beta\ge c\,\frac{\ln(1/\alpha)}{U_0^*}(1+o(1))$ with $c>1$ can hold for all data.
 
 *Proof.*
 1. Lemma D1(b), with $|U_r(\hat w_j)|\le U^*(r)$; sum over $j$ for $P$.
 2. Lemma D1(c), with $|\sigma(v\cdot\tilde x)|\le|v\cdot\tilde x|$, $\|v\cdot\tilde x\|_n\le\sqrt{\lambda_X}$, $\sup_x|v\cdot\tilde x|\le\sqrt{d+1}$, and $\mathbb E(v\cdot\tilde x)^2=1$ under uniform inputs. Sum $\sum_j\rho_j/2=P/2$.
-3. For $t<t_\beta$, $\|f_t\|_n<\frac{\sqrt{\lambda_X}}2\beta$, so $U^*(r_t)\le U_0^*+\sqrt{\lambda_X}\|f_t\|_n<U_0^*+\frac{\lambda_X}2\beta=:U_\beta$. Item 1 and continuity give $\beta=P(t_\beta)\le P(0)e^{2U_\beta t_\beta}$ when $t_\beta<\infty$. The loss bound is $\sqrt{2L}=\|y-f\|_n\ge\|y\|_n-\|f\|_n$.
+3. For $t<t_\beta$, $\|f_t\|_n<\frac{\sqrt{\lambda_X}}2\beta$, so $U^*(r_t)\le U_0^*+\sqrt{\lambda_X}\|f_t\|_n<U_0^*+\frac{\lambda_X}2\beta=:U_\beta$. Item 1 and continuity give $\beta=P(t_\beta)\le P(0)e^{2U_\beta t_\beta}$ when $t_\beta<\infty$. The loss bound is $\sqrt{2L}=\|y-f\|_n\ge(\|y\|_n-\|f\|_n)_+$; square the nonnegative quantities.
 4. Lemma D1(b).
 5. One step is $a'=a+\eta A$, $w'=w+\eta aV$, with $A=\langle r,\sigma(w\cdot\tilde x)\rangle_n$ and $V=\frac1n\sum_ir_is_i\tilde x_i$. Since $w\cdot V=A$, $\rho'=\rho+4\eta aA+\eta^2(A^2+a^2\|V\|^2)$.
    - $|A|=\|w\|\,|U_r(\hat w)|\le\|w\|U^*(r)$ and $|a|\|w\|\le\rho/2$, so $4\eta aA\le2\eta\rho U^*$.
-   - $\|V\|\le\sqrt{\lambda_X}\|r\|_n$ and $U^*\le\sqrt{\lambda_X}\|r\|_n$, so $A^2+a^2\|V\|^2\le\rho\lambda_X\|r\|_n^2$. ∎
+   - $\|V\|\le\sqrt{\lambda_X}\|r\|_n$ and $U^*\le\sqrt{\lambda_X}\|r\|_n$, so $A^2+a^2\|V\|^2\le\rho\lambda_X\|r\|_n^2$.
+6. *Constants.* Over the full cube the coordinates of $\tilde x$ are orthonormal in $\langle\cdot,\cdot\rangle_n$, so $\hat\Sigma=I$ and $\lambda_X=1$.
+   - $\frac1n\sum_{x_1=\pm1}\tilde x\tilde x^\top=\frac12\big(I\pm(e_1e_0^\top+e_0e_1^\top)\big)$ has top eigenvalue $1$. With $\|y^\pm\|_n^2=\overline{y^\pm}=\frac12$, both entries of the minimum in Lemma D2.1 equal $1/\sqrt2$, so $U_0^*\le\hat U(y)=1/\sqrt2$.
+   - Also $U_y(v^*)=\frac12\cdot\frac2{\sqrt2}=\frac1{\sqrt2}$. Hence $U_0^*=1/\sqrt2$ (numerically confirmed at $d=16$ in [`checks/referee_D_r1.out`](checks/referee_D_r1.out), R4).
+
+   *Dynamics.* Try $a(t)=b(t)$ and $w(t)=b(t)v^*$ with $b>0$.
+   - On $\{x_1=1\}$, $w\cdot\tilde x=\sqrt2b>0$, so $s=1$. On $\{x_1=-1\}$, $w\cdot\tilde x=0$, and we take $s=0$.
+   - So $f=\sqrt2b^2$ and $r=1-\sqrt2b^2$ on $\{x_1=1\}$, while $f=0$ and $r=-1$ on $\{x_1=-1\}$.
+   - Then $\dot a=\langle r,\sigma(w\cdot\tilde x)\rangle_n=\frac b{\sqrt2}(1-\sqrt2b^2)$, and $\xi=\frac1n\sum_{x_1=1}r\,\tilde x=\frac12(1-\sqrt2b^2)(e_1+e_0)$, so $\dot w=a\xi=\frac b{\sqrt2}(1-\sqrt2b^2)\,v^*$.
+   - Both equations are therefore satisfied when $\dot b=\frac b{\sqrt2}(1-\sqrt2b^2)$ and $b(0)=\alpha$. This scalar ODE has a unique global solution, and it gives a $C^1$ curve with constant, hence measurable, selections. So it is a selection flow from a balanced initialization, with $\hat w=v^*$.
+   - $P=2b^2$ satisfies the logistic equation $\dot P=\sqrt2P(1-P/\sqrt2)$, with $P(0)=2\alpha^2<\sqrt2$. Its solution is the displayed $P(t)$, and solving $P(t_\beta)=\beta$ gives $t_\beta$, using $2U_0^*=\sqrt2$.
+   - Finally $\ln(\beta/P(0))=2\ln(1/\alpha)+\ln(\beta/2)$, and the second term of $t_\beta$ stays bounded as $\alpha\to0$. ∎
 
 **Reading.**
 - **Size of $T_\beta$.** With $P(0)=2m\alpha^2$,
