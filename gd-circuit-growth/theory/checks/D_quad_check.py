@@ -54,20 +54,20 @@ def capacity_rank(K, B, gamma):
         return 0.0
     eta_l = gamma / (8 * (d - 1) * K)
     eta_z = gamma / (16 * (d - 1) * (B + 1))
-    return K * math.log(2 * B / eta_l + 1) + d * K * math.log(1 + 2 / eta_z)
+    return K * math.log(2 * math.ceil(B / eta_l) + 1) + d * K * math.log(1 + 2 / eta_z)
 
 
 def bound_rank(K, P, gamma, emp, n, delta=0.05):
     B = 2.0 ** math.ceil(math.log2(max(P, 1e-12)))
     bexp = int(round(math.log2(B)))
-    lnpi = math.log((K + 1) * (K + 2)) + math.log(2 * (abs(bexp) + 1) * (abs(bexp) + 2)) + math.log(4)  # 4 gammas
+    lnpi = math.log((K + 1) * (K + 2)) + math.log(2 * (abs(bexp) + 1) * (abs(bexp) + 2)) + math.log(2)  # |Gamma| = 2
     return klinv_upper(emp, (capacity_rank(K, B, gamma) + lnpi + math.log(1 / delta)) / n)
 
 
-def bound_unrestricted(gamma, emp, n, delta=0.05):
-    # all margin sets {y <X, xx^T - I> <= theta}: affine threshold of (y x_k x_l)_{k<l} on 2^(d+1) points
+def bound_unrestricted(emp0, n, delta=0.05):
+    # all sets {y <X, xx^T - I> <= 0}: affine threshold of (y x_k x_l)_{k<l} on at most 2^(d+1) points (Cover)
     D = d * (d - 1) // 2
-    return klinv_upper(emp, (log_Phi(2 ** (d + 1), D + 1) + math.log(4) + math.log(1 / delta)) / n)
+    return klinv_upper(emp0, (log_Phi(2 ** (d + 1), D + 1) + math.log(1 / delta)) / n)
 
 
 def run(name, n, h, alpha, eta, T, seed=0, batch=None, out=sys.stdout):
@@ -173,7 +173,7 @@ def run(name, n, h, alpha, eta, T, seed=0, batch=None, out=sys.stdout):
                 Pap = P0 + t * float((y ** 2).mean())  # P(t) <= P(0) + t |y|_n^2 (full batch)
                 best_meas = min(best_meas, bound_rank(N, P, g, emp, n))
                 best_ap = min(best_ap, bound_rank(max(N, Nap), Pap, g, emp, n))
-                best_unr = min(best_unr, bound_unrestricted(g, emp, n))
+            best_unr = bound_unrestricted(float(np.mean(y * fS <= 0)), n)
             line += f" | test err={terr:.4f} N(eps)={N} apriori N<={Nap} | DQ3 measured={best_meas:.3f} a-priori={best_ap:.3f} unrestricted={best_unr:.3f}"
         else:
             line += f" | test MSE={np.mean((fC-yC)**2):.4f}"
