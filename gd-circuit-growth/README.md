@@ -225,7 +225,7 @@ Code and generated tables are in [`study/`](study/) (file guide: [`study/README.
 **Setup.**
 - **Targets:** 21 targets on $\{-1,1\}^{30}$ ([`study/boolfuncs.py`](study/boolfuncs.py)): dictator, AND, majorities, a random halfspace, parities of 2–4 bits, a staircase, compositions of parities and majorities, a multiplexer, a DNF, a decision list, and four random 6-gate formulas.
 - **Network:** a muP two-hidden-layer ReLU MLP of width 128 (small readout, per-layer learning-rate multipliers), square loss.
-- **Optimizer:** Adam with learning rate $10^{-3}$, minibatches of 64 sampled with replacement from a fixed training set of size $n\in\{16,\dots,16384\}$, for 20000 steps, 3 seeds.
+- **Optimizer:** Adam with learning rate $10^{-3}$, minibatches of 64 sampled with replacement from a fixed training set of size $n\in\{16,\dots,16384\}$, for 20000 steps, 3 seeds. On the 9 held-out targets, μP-SGD (learning rate 0.2, 2 seeds) was also run on the same training sets.
 - **Online protocol:** six of the targets were also trained with a fresh minibatch at every step.
 
 The weights move far from initialization: $\lVert\Delta W_1\rVert/\lVert W_1(0)\rVert\approx0.7$–$1.05$. The layer kernels collapse from participation-ratio rank about 36 and 32 at initialization to 3–10.
@@ -282,6 +282,9 @@ On the **held-out** functions ([`study/MODEL-SCOREBOARD.md`](study/MODEL-SCOREBO
 | sswm | 1.36 | 0.60 | 0.86 | 0.06 | 0.26 | 0.72 |
 | NNGP kernel | 2.58 | 0.73 | 0.85 | 0.04 | **0.69** | 0.22 |
 | Occam over juntas | 4.61 | 0.50 | 0.62 | 0.13 | 0.20 | −0.07 |
+| *reference: networks trained with μP-SGD instead of Adam* | *0.43* | *0.95* | *0.94* | *0.01* | *0.71* | *0.83* |
+
+The learning curves match in shape, not just at the 0.1 crossing. The race model reproduces the network's intermediate plateaus: test error stays near 0.13 on sign$(2x_1+x_2x_3+x_4x_5x_6)$ from $n\approx256$ to $n\approx2000$. That plateau matches the predictor sign$(2x_1+x_2x_3)$, whose error is exactly $1/8$: the stage at which $x_1$ and $x_2x_3$ have been found but the leap-3 term $x_4x_5x_6$ has not. On recursive majority the error stays near 0.2 from $n\approx100$ to $n\approx1000$. The model also reproduces the sharp parity transitions at the right $n$. Neither model receives the target's identity or any network result: both import only numpy.
 
 How to read the columns:
 - **Sample complexity:** the race model's $n^*$ is within a factor of about 1.26 of the network's on average over the held-out functions, and ranks them identically. The scores on the calibration functions are similar (0.24, 0.96, 0.98).
@@ -291,7 +294,7 @@ How to read the columns:
 
 **Caveats.**
 - The NNGP kernel agrees more with the network's *individual* mistakes at small $n$ (0.69 vs 0.50), although its learning curves are much worse. Where both are partially right, their errors resemble each other's.
-- There is no network-vs-network ceiling for these metrics: the planned SGD runs on the same training sets were dropped for time.
+- **Reference.** Networks trained with μP-SGD (2 seeds) on the same training sets serve as a ceiling for how alike two gradient-descent learners are. Against the Adam networks they score 0.43 on the $n^*$ ratio, so the race model is closer to the Adam networks' sample complexities than the SGD networks are. Their per-example agreement is 0.71: on individual mistakes, the race model reaches about 70% of the ceiling, and the NNGP kernel nearly all of it.
 - The race model is only one model, calibrated against one architecture and one optimizer. Whether the same three constants transfer to other widths, depths, optimizers or input dimensions is untested.
 - It is more mechanistic than "greedy Occam":
   - its continuous direction search and rounding make it less discrete than the circuit picture of Part 1;
@@ -299,7 +302,7 @@ How to read the columns:
 
 ### 2.3 Generalization bounds
 
-Three derivations ([`theory/A-discrete-model.md`](theory/A-discrete-model.md), [`theory/B-nn-time-bounds.md`](theory/B-nn-time-bounds.md), [`theory/C-bridge-and-certificates.md`](theory/C-bridge-and-certificates.md)). An adversarial referee read A, with the result described below. The referee pass on B had not finished, and C has not been refereed. Treat their "Proved" labels accordingly.
+Three derivations ([`theory/A-discrete-model.md`](theory/A-discrete-model.md), [`theory/B-nn-time-bounds.md`](theory/B-nn-time-bounds.md), [`theory/C-bridge-and-certificates.md`](theory/C-bridge-and-certificates.md)). Adversarial referees read A and B. They checked every proof step of B, and A's core results, and found them correct. They flagged mislabelled or overstated claims, listed in [`theory/README.md`](theory/README.md) and in 2.4 below. C's referee pass was still running at the end of the session.
 
 **Your sketch works, with one correction.**
 - **The Chernoff/Occam step needs no assumption on the dynamics.** For any learner whose output after $T$ gates is a circuit from a fixed library followed by a threshold readout, the realizable test error is at most about $\bigl(T(\log|G|+k\log(d+T))+T^2\log2+\log\frac{(T+1)(T+2)}\delta\bigr)/n$ simultaneously for all $T$ (Theorem A1, Proved).
@@ -342,11 +345,11 @@ Three derivations ([`theory/A-discrete-model.md`](theory/A-discrete-model.md), [
 ### 2.4 Open items from this session
 
 - **Not done, for time:**
-  - SGD runs on the same training sets (the network-vs-network ceiling for the agreement metrics);
+  - SGD runs on the calibration functions (they were run on the 9 held-out functions only);
   - online runs for 15 of the 21 targets;
   - the third model design;
   - the judge/refinement stage;
-  - the referee pass on C, and repairs to B.
+  - the referee pass on C, and repairs to B: Theorem B3.3's "linear in training time" holds only for gradient flow and GD under a descent condition.
 - **Corrections from A's referee, not yet incorporated:**
   - Proposition A3.4(2) (multi-epoch reuse) is labelled Proved but is not proved; it should be Heuristic.
   - Proposition A2.2(3) (duplicate gates always fire together) is false as stated.

@@ -24,6 +24,11 @@ bounds, train/test error, and the A1 Occam bounds; for SC also ||c||_1 versus
 ||R(t)||_n / Theta (Theorem A2.4) and the l1/Rademacher bound.
 
 Run: python3 race_bounds.py > race_bounds.txt     (a few minutes, one core)
+
+Revision 2 (after referee round 1): fixed the clock-sign assignment of active gates in
+Race.step, made the (SC) exit step iterate to a fixed point, split delta between the two
+Theorem A1' bounds, and added the (SC) size check |Sat| <= kappa_Sat (||R||_n/Theta)^2.
+The exit branch itself is tested in A_r2_checks.py.
 """
 import math, sys, itertools
 import numpy as np
@@ -114,6 +119,7 @@ class Race:
         self.seen = set()
         # active gates (indices into the candidate store)
         self.active, self.sign = [], {}
+        self.exits = 0                  # SC: number of gates that left the saturated set
         self.c0, self.c = float(np.mean(y)), np.zeros(0)
         self.r = y - self.c0
         # sources: inputs
@@ -208,7 +214,12 @@ class Race:
         # advance clocks of all candidates (active ones have U = 0 in LS; in SC
         # active-with-positive-weight have U = 0 and zero-weight saturated ones are dormant)
         self.S = self.S + U * dtm
-        self.S[~dormant] = np.array([self.sign[m] for m in self.active])  # keep exactly saturated
+        if self.active:
+            # keep active clocks exactly saturated.  (Revision 2: the earlier line
+            # `self.S[~dormant] = [sign[m] for m in active]` assigned in index order while
+            # `active` is in firing order, so active clocks could get the wrong sign.  Harmless
+            # in LS; in SC it would corrupt the clock of a gate that later exits.)
+            self.S[self.active] = np.array([self.sign[m] for m in self.active])
         self.R = self.R + self.r * dtm
         self.tau += np.sqrt(np.mean(self.r ** 2)) * dtm
         self.t += dtm
@@ -229,13 +240,17 @@ class Race:
             self._grow_store(start)
         self.refit()
         if self.variant == "SC":
-            # detach saturated gates whose weight is zero and whose utility points inward
-            keep = []
-            for idx, m in enumerate(self.active):
-                if abs(self.c[idx]) < 1e-12 and self.sign[m] * (self.G[:, m] @ self.r) / self.n < -1e-12:
-                    continue
-                keep.append(m)
-            if len(keep) < len(self.active):
+            # detach saturated gates whose weight is zero and whose utility points inward;
+            # repeat the refit until no gate leaves (revision 2: previously a single pass)
+            while True:
+                keep = []
+                for idx, m in enumerate(self.active):
+                    if abs(self.c[idx]) < 1e-12 and self.sign[m] * (self.G[:, m] @ self.r) / self.n < -1e-12:
+                        continue
+                    keep.append(m)
+                if len(keep) == len(self.active):
+                    break
+                self.exits += len(self.active) - len(keep)
                 self.active = keep
                 self.refit()
         return True
@@ -283,7 +298,9 @@ def run(name, n, variant="LS", tmax=12.0, Tmax=60, seed=0, verbose=True, out=sys
             logF2 = math.log(2 * race.G.shape[1])          # |F| = #depth-1 candidates (merged)
             pij = 1.0 / ((j + 1) * (j + 2))
             rad = (1 + Bj) / math.sqrt(n) + Bj * math.sqrt(2 * logF2 / n)
-            conf = math.sqrt(math.log(1 / (pij * DELTA)) / (2 * n))
+            # revision 2: confidence pi_j * delta / 2 for each of the two bounds, so that both
+            # hold jointly with probability >= 1 - delta
+            conf = math.sqrt(math.log(2 / (pij * DELTA)) / (2 * n))
             clip_tr = 0.5 * float(np.mean((np.clip(ftr, -1, 1) - y) ** 2))
             clip_te = 0.5 * float(np.mean((np.clip(fte, -1, 1) - yte) ** 2))
             sq_bound = clip_tr + 4 * rad + 2 * conf
@@ -291,7 +308,10 @@ def run(name, n, variant="LS", tmax=12.0, Tmax=60, seed=0, verbose=True, out=sys
             ramp_tr = float(np.mean(np.clip(1 - y * ftr / th, 0, 1)))
             ramp_bound = ramp_tr + (2 / th) * rad + conf
             row.update(l1=l1, R_over_Theta=Rn, ident=ident, tau_bound=race.tau, B=B, clip_tr=clip_tr,
-                       clip_te=clip_te, sq_bound=sq_bound, ramp_bound=ramp_bound)
+                       clip_te=clip_te, sq_bound=sq_bound, ramp_bound=ramp_bound,
+                       # revision 2: (SC) form of Theorem A2.3, |Sat| <= kappa_Sat (||R||_n/Theta)^2
+                       sc_size=kap * Rn ** 2, exits=race.exits,
+                       clock_err=float(np.max(np.abs(race.S - race.G.T @ race.R / race.n))))
         rows.append(row)
         if first_interp is None and tr_err == 0:
             first_interp = row
@@ -348,4 +368,8 @@ if __name__ == "__main__":
             rows, _ = run(name, n, "SC", tmax=10.0, Tmax=40)
             ok = all(abs(r["l1"] - r["ident"]) < 1e-6 and r["l1"] <= r["R_over_Theta"] + 1e-9 and r["R_over_Theta"] <= r["tau"] + 1e-9 for r in rows)
             print(f"  identity and inequalities hold at every event: {ok}", file=out)
+            ok_sc = all(r["T"] <= r["sc_size"] + 1e-9 for r in rows)
+            print(f"  (SC) size bound |Sat| <= kappa_Sat (||R||_n/Theta)^2 at every event: {ok_sc}; "
+                  f"max |S_m - <R,g_m>_n| = {max(r['clock_err'] for r in rows):.1e}; "
+                  f"exits from the saturated set: {rows[-1]['exits'] if rows else 0}", file=out)
             print(f"  (A1psq: Theorem A1' bound on test clipped square loss; A1pramp: Theorem A1' bound on test 0-1 error, theta = 1/2)", file=out)

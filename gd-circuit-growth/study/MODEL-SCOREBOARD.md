@@ -54,3 +54,11 @@ Reference: muP MLP trained with Adam, fixed training set (3 seeds). n* = trainin
 | rand1 | held-out | 463 | 558 | 253 | 730 | never |
 | rand2 | calib | 91 | 85 | 160 | 41 | 106 |
 | rand3 | held-out | 1016 | 1393 | 422 | never | never |
+
+## Network-vs-network reference (HELDOUT)
+
+muP-SGD (lr 0.2, 2 seeds, same training sets) scored against Adam with the same metrics, as a ceiling for how alike two gradient-descent learners are:
+
+| model | mean abs log2 n* ratio | n* Spearman | success agreement | curve MAE | per-example agreement | time Spearman |
+|---|---|---|---|---|---|---|
+| NN-SGD vs NN-Adam | 0.43 | 0.95 | 0.94 | 0.01 | 0.71 | 0.83 |

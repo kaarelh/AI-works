@@ -6,26 +6,26 @@ Adam unless stated; 'online' = median number of fresh samples seen when test err
 | fn | target | rel. vars | degree | leap | n* Adam | n*_0.02 | n* SGD | online samples | n* NNGP | n* Occam-junta |
 |---|---|---|---|---|---|---|---|---|---|---|
 | dict | x1 | 1 | 1 | 1 | 47 | 89 | – | – | 29 | 16 |
-| and3 | AND(x1,x2,x3) | 3 | 3 | 1 | 94 | 318 | – | – | 64 | 18 |
+| and3 | AND(x1,x2,x3) | 3 | 3 | 1 | 94 | 318 | 135 | – | 64 | 18 |
 | maj3 | MAJ(x1,x2,x3) | 3 | 3 | 1 | 112 | 398 | – | – | 73 | 18 |
-| maj9 | MAJ(x1..x9) | 9 | 9 | 1 | 263 | 833 | – | 3200 | 1470 | never |
+| maj9 | MAJ(x1..x9) | 9 | 9 | 1 | 263 | 833 | 529 | 3200 | 1470 | never |
 | thr10 | sign(w.x[1..10]), Gaussian w | 10 | 9 | 1 | 563 | 3001 | – | – | 1701 | never |
 | par2 | x1 x2 | 2 | 2 | 2 | 200 | 245 | – | 12800 | 406 | 16 |
-| par3 | x1 x2 x3 | 3 | 3 | 3 | 843 | 985 | – | 32000 | never | 23 |
+| par3 | x1 x2 x3 | 3 | 3 | 3 | 843 | 985 | 1220 | 32000 | never | 23 |
 | par4 | x1 x2 x3 x4 | 4 | 4 | 4 | 2728 | 3776 | – | – | never | 37 |
 | stair5 | sign(x1 + x1x2 + ... + x1..x5) | 5 | 5 | 1 | 1514 | 1942 | – | 32000 | never | never |
-| majpar | MAJ(x1x2, x3x4, x5x6) | 6 | 6 | 2 | 1380 | 3340 | – | 32000 | 1129 | never |
+| majpar | MAJ(x1x2, x3x4, x5x6) | 6 | 6 | 2 | 1380 | 3340 | 1516 | 32000 | 1129 | never |
 | parmaj | MAJ(x1,x2,x3) XOR MAJ(x4,x5,x6) | 6 | 6 | 2 | 743 | 1100 | – | – | never | never |
-| mux | x4 ? x1x2x3 : MAJ(x1,x2,x3) | 4 | 4 | 1 | 1156 | 1827 | – | 32000 | never | 37 |
+| mux | x4 ? x1x2x3 : MAJ(x1,x2,x3) | 4 | 4 | 1 | 1156 | 1827 | 1197 | 32000 | never | 37 |
 | dnf3 | (x1&x2&x3) | (x4&~x5&x6) | (x7&x8&~x9) | 9 | 9 | 1 | 505 | 1050 | – | – | 564 | never |
-| dlist5 | decision list x1:+ ~x2:- x3:+ x4:- x5:+ else - | 5 | 5 | 1 | 110 | 531 | – | – | 96 | 21 |
+| dlist5 | decision list x1:+ ~x2:- x3:+ x4:- x5:+ else - | 5 | 5 | 1 | 110 | 531 | 160 | – | 96 | 21 |
 | rmaj9 | MAJ of three MAJ3s | 9 | 9 | 1 | 2027 | 3565 | – | – | 3346 | never |
 | andxor | AND(x1x2, x3x4) | 4 | 4 | 2 | 376 | 604 | – | – | 967 | 25 |
-| sparsepoly | sign(2x1 + x2x3 + x4x5x6) | 6 | 6 | 3 | 2205 | 3628 | – | – | never | never |
+| sparsepoly | sign(2x1 + x2x3 + x4x5x6) | 6 | 6 | 3 | 2205 | 3628 | 2359 | – | never | never |
 | rand0 | random 6-gate formula: g6=2xor3; g7=~6and2; g8=7and~1; g9=8and~0; g10=~9and5; g11=~10xor~2 | 5 | 5 | 1 | 222 | 470 | – | – | 465 | 16 |
-| rand1 | random 6-gate formula: g6=~3xor5; g7=~6and~0; g8=~7and4; g9=8xor~7; g10=~9and2; g11=~10xor~7 | 5 | 5 | 2 | 463 | 879 | – | – | 730 | never |
+| rand1 | random 6-gate formula: g6=~3xor5; g7=~6and~0; g8=~7and4; g9=8xor~7; g10=~9and2; g11=~10xor~7 | 5 | 5 | 2 | 463 | 879 | 696 | – | 730 | never |
 | rand2 | random 6-gate formula: g6=4or3; g7=~2and4; g8=2and5; g9=~8and~7; g10=9or6; g11=10xor~1 | 5 | 5 | 1 | 91 | 1353 | – | – | 41 | 106 |
-| rand3 | random 6-gate formula: g6=1and2; g7=6and~0; g8=~5or3; g9=~3and8; g10=~9xor~4; g11=10xor7 | 6 | 6 | 1 | 1016 | 1809 | – | – | never | never |
+| rand3 | random 6-gate formula: g6=1and2; g7=6and~0; g8=~5or3; g9=~3and8; g10=~9xor~4; g11=10xor7 | 6 | 6 | 1 | 1016 | 1809 | 1343 | – | never | never |
 
 ## Test error by n (Adam, mean of 3 seeds)
 

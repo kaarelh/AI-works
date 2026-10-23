@@ -6,10 +6,10 @@ Files in this folder; the findings are summarised in the [project README](../REA
 |---|---|
 | [`boolfuncs.py`](boolfuncs.py) | the 21 target functions on $\{-1,1\}^{30}$ |
 | [`nn_train.py`](nn_train.py) | muP 2-hidden-layer ReLU MLP (width 128) in JAX: fixed-train-set and online protocols, diagnostics |
-| [`run_all.sh`](run_all.sh), [`run_rest.sh`](run_rest.sh) | the sweep as launched, and the trimmed remainder actually run |
+| [`run_all.sh`](run_all.sh), [`run_rest.sh`](run_rest.sh) | the sweep as launched (only its fixed-Adam pass ran) and the trimmed remainder (online Adam on six targets); SGD on the held-out targets was run directly with `nn_train.py --opt sgd --lr 0.2 --seeds 0,1` |
 | [`common.py`](common.py) | shared data access (exactly the networks' training and test sets), model evaluation, behavioural comparison metrics, CALIB/HELDOUT split |
 | [`models/baselines.py`](models/baselines.py) | NNGP kernel regression (lazy/kernel analogue) and an Occam learner over juntas |
-| [`models/race.py`](models/race.py) | **the race model**: event-driven utility race of dormant threshold units on a shared circuit (best match) |
+| [`models/race.py`](models/race.py) | **the race model**: event-driven utility race of dormant units on a shared circuit; evaluated with `gate="relu"` (discrete ReLU gates; the docstring describes the threshold-gate default) (best match) |
 | [`models/sswm.py`](models/sswm.py) | strong-selection/weak-mutation evolution of one shared fan-in-2 circuit |
 | [`models/run_race_eval.py`](models/run_race_eval.py) | full-grid evaluation of the race model at its calibrated setting |
 | [`judge_models.py`](judge_models.py) → [`MODEL-SCOREBOARD.md`](MODEL-SCOREBOARD.md) | scoreboard of models and baselines against the networks, held-out and calibration functions separately |
