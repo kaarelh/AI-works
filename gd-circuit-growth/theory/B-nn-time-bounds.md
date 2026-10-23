@@ -328,41 +328,74 @@ Here $R(Q)=\mathbb E_{\theta\sim Q}R(\theta)$, $\hat R_S(Q)=\mathbb E_{\theta\si
 Let $\Sigma$ be a finite grid of per-group standard deviations $\sigma=(\sigma_1,\sigma_2,\sigma_3)$, with $|\Sigma|=G$. For parameters $\theta$, let $Q_{\theta,\sigma}=\mathcal N(\theta,\mathrm{diag}(\sigma_g^2I_{p_g}))$ and $P_\sigma=\mathcal N(\theta_0,\mathrm{diag}(\sigma_g^2I_{p_g}))$. With probability at least $1-\delta_0$, for **all** $\theta$ (in particular the trained one, however it was obtained) and all $\sigma\in\Sigma$:
 $$R(Q_{\theta,\sigma})\le\mathrm{kl}^{-1}\Big(\hat R_S(Q_{\theta,\sigma}),\ \frac1n\Big[\sum_g\frac{\|\theta_g-\theta_{0,g}\|^2}{2\sigma_g^2}+\ln\frac{2G\sqrt n}{\delta_0}\Big]\Big). \tag{PB}$$
 
-**Monte Carlo and derandomization.** Draw $m$ iid pairs $(\theta'_j,B_j)$ with $\theta'_j\sim Q$ and $B_j$ a batch of indices drawn uniformly from $S$ (256 per batch in Section 5). Let $\hat e$ be the mean of the $m$ batch errors and $\hat\Delta$ the mean disagreement $\mathbb 1[\mathrm{sgn}f_{\theta'_j}(x)\ne\mathrm{sgn}f_\theta(x)]$ on $m$ fresh batches of **unlabeled** uniform inputs. (The input distribution is known; no labels beyond $S$ are used.) Then with probability at least $1-\delta_0-\delta_1-\delta_2$,
+**Monte Carlo and derandomization.** Fix $\theta$ and $\sigma\in\Sigma$ first, by any rule; $\sigma$ may be chosen by a search that looks at $S$, $\theta$ and its own random draws. **Then**, independently of everything used in that choice, draw $m$ iid pairs $(\theta'_j,B_j)$ with $\theta'_j\sim Q=Q_{\theta,\sigma}$ and $B_j$ a batch of indices drawn uniformly from $S$ (256 per batch in Section 5). Let $\hat e$ be the mean of the $m$ batch errors and $\hat\Delta$ the mean disagreement $\mathbb 1[\mathrm{sgn}f_{\theta'_j}(x)\ne\mathrm{sgn}f_\theta(x)]$ on $m$ fresh batches of **unlabeled** uniform inputs, drawn in the same way after $\sigma$ is fixed. (The input distribution is known; no labels beyond $S$ are used.) Then with probability at least $1-\delta_0-\delta_1-\delta_2$,
 $$R(\theta)\le\mathrm{kl}^{-1}\Big(\mathrm{kl}^{-1}\big(\hat e,\tfrac{\ln(1/\delta_1)}m\big),\ \tfrac1n\big[\mathrm{KL}+\ln\tfrac{2G\sqrt n}{\delta_0}\big]\Big)+\mathrm{kl}^{-1}\big(\hat\Delta,\tfrac{\ln(1/\delta_2)}{m}\big).$$
 
 *Proof.*
 1. **KL.** For Gaussians with equal covariance, $\mathrm{KL}(Q_{\theta,\sigma}\|P_\sigma)=\frac12(\theta-\theta_0)^\top\Sigma^{-1}(\theta-\theta_0)$. The prior depends on $\theta_0$, which is independent of $S$, so L5 applies conditionally on $\theta_0$. A union bound over $\Sigma$ at $\delta_0/G$ each gives (PB).
-2. **Monte Carlo.** Each batch error lies in $[0,1]$ and has mean $\hat R_S(Q)$. For $[0,1]$-valued iid variables, convexity gives $\mathbb Ee^{\lambda e}\le\mathbb Ee^{\lambda\,\mathrm{Bern}(p)}$, so the Chernoff bound $\Pr[\hat e\le q]\le e^{-m\,\mathrm{kl}(q\|p)}$ ($q<p$) holds, and with probability at least $1-\delta_1$, $\hat R_S(Q)\le\mathrm{kl}^{-1}(\hat e,\ln(1/\delta_1)/m)$. Monotonicity of $\mathrm{kl}^{-1}$ in its first argument transfers this into (PB).
+2. **Monte Carlo.** Conditionally on $(S,\theta,\sigma)$, the $m$ final draws are iid, because they are made after $\sigma$ is fixed and independently of the search. Each batch error lies in $[0,1]$ and has mean $\hat R_S(Q)$. For $[0,1]$-valued iid variables, convexity gives $\mathbb Ee^{\lambda e}\le\mathbb Ee^{\lambda\,\mathrm{Bern}(p)}$, so the Chernoff bound $\Pr[\hat e\le q]\le e^{-m\,\mathrm{kl}(q\|p)}$ ($q<p$) holds, and with probability at least $1-\delta_1$, $\hat R_S(Q)\le\mathrm{kl}^{-1}(\hat e,\ln(1/\delta_1)/m)$. Monotonicity of $\mathrm{kl}^{-1}$ in its first argument transfers this into (PB).
 3. **Derandomization.** Pointwise, $\mathbb 1[yf_\theta(x)\le0]\le\mathbb 1[yf_{\theta'}(x)\le0]+\mathbb 1[\mathrm{sgn}f_{\theta'}(x)\ne\mathrm{sgn}f_\theta(x)]$. Ties have probability zero under $Q$; a tie of $f_\theta$ makes the second term $1$. Average over $x$ and $\theta'\sim Q$, and bound the disagreement as in step 2. $\square$
 
-In Section 5, $\Sigma$ is $\{0.4\cdot2^{-i/2}:0\le i\le15\}^3$ ($G=4096$), $\delta_0=0.03$, $\delta_1=\delta_2=0.01$, $m=400$, and $\sigma$ is chosen by a data-dependent search. Any rule is allowed, since (PB) holds for the whole grid at once.
+In Section 5, $\Sigma$ is $\{0.4\cdot2^{-i/2}:0\le i\le15\}^3$ ($G=4096$), $\delta_0=0.03$, $\delta_1=\delta_2=0.01$, $m=400$, and $\sigma$ is chosen by a data-dependent search.
+- **Choice of $\sigma$.** Any rule is allowed for (PB), since (PB) holds for the whole grid at once. The Monte Carlo steps need the $m$ final draws to be fresh. Reusing the search's draws would invalidate $\delta_1$ and $\delta_2$. [`nnbounds.pac_bayes`](checks/nnbounds.py) searches with separate selection draws and reports estimates from fresh final draws.
+- **Several networks or checkpoints.** Each reported bound holds with probability $1-\delta_0-\delta_1-\delta_2$ on its own. To quote the best of $J$ evaluated bounds after the fact, replace $\delta_1,\delta_2$ by $\delta_1/J,\delta_2/J$. (PB) needs no such split, because it is uniform in $\theta$.
 
 ### Theorem B3.3 (time-based PAC-Bayes: "short training implies generalization"; Proved)
 
-Under the hypotheses of B3.2, the KL term in (PB) is bounded by quantities that grow **linearly in training time**:
+Under the hypotheses of B3.2, the KL term in (PB) at the trained parameters is bounded as follows. Write $\lambda_\sigma=\max_gm_g/2\sigma_g^2$.
 
-- **(a) gradient flow** (or GD under (D) with constant $c$): $\displaystyle\mathrm{KL}\le\frac{t\,(L_0-L_S(\theta(t)))}{c}\max_g\frac{m_g}{2\sigma_g^2}\le\frac{t\,L_0}{c}\max_g\frac{m_g}{2\sigma_g^2}$;
-- **(b) any update $\theta_{k+1}=\theta_k-\eta Mu_k$** (SGD included), with the measured per-group energies $E_{K,g}$ of B1.2(a): $\displaystyle\mathrm{KL}\le t_K\sum_g\frac{m_gE_{K,g}}{2\sigma_g^2}$;
-- **(c) Adam** (Lemma B1.4): $\displaystyle\mathrm{KL}\le\sum_g\frac{p_g(\eta m_gS_K)^2}{2\sigma_g^2}$.
+- **(a) Gradient flow** (or GD under (D) with constant $c$): $\displaystyle\mathrm{KL}\le\frac{t\,(L_0-L_S(\theta(t)))}{c}\lambda_\sigma\le\frac{t\,L_0}{c}\lambda_\sigma$. This bound is **linear in training time**.
+- **(b) Any update $\theta_{k+1}=\theta_k-\eta Mu_k$** (SGD included), with the measured per-group energies $E_{K,g}$ of B1.2(a): $\displaystyle\mathrm{KL}\le t_K\sum_g\frac{m_gE_{K,g}}{2\sigma_g^2}$.
+  - The energies are non-decreasing in $K$, so (b) is linear in $t_K$ only while they stay bounded.
+  - Under (D) they do: $\sum_gE_{K,g}\le L_0/c$, and (b) then implies (a).
+  - Under minibatch noise they need not. In the SGD runs of Section 5.3, $\sum_gE_{K,g}$ reaches $50\,L_0$ by step 5000.
+- **(c) Adam** (Lemma B1.4): $\displaystyle\mathrm{KL}\le\sum_g\frac{p_g(\eta m_gS_K)^2}{2\sigma_g^2}$. Here $C_t\ge1$ for every $t$, because constant gradients give the ratio exactly $1$ and $C_t$ is the supremum. Hence $S_K\ge K$, and $S_K/K\to C_\infty=7.27$. So (c) is **quadratic in the number of steps**: it is at least $K^2\sum_gp_g\eta^2m_g^2/2\sigma_g^2$.
+- **(d) SGD, a priori, under the hypotheses of Proposition B1.3** (new in revision 2). Let $V(t)=4tL_0+2\eta t\nu^2(1+\beta t)/B$ with $t=\eta K$, and let $\omega$ denote the minibatch indices.
+  - **(d1)** For every $\delta'\in(0,1)$: with probability at least $1-\delta_0-\delta'$ over $(S,\omega)$, (PB) holds at $\theta=\theta_K(\omega)$ for all $\sigma\in\Sigma$ with $\mathrm{KL}\le\lambda_\sigma V(t)/\delta'$.
+  - **(d2)** Let $\bar Q_\sigma$ be the law of $\theta_K(\omega)+\xi$, where $\omega$ is drawn afresh and $\xi\sim\mathcal N(0,\mathrm{diag}(\sigma_g^2I_{p_g}))$. This is the randomized predictor "rerun SGD on $S$, then perturb". With probability at least $1-\delta_0$ over $S$, for all $\sigma\in\Sigma$,
+  $$\mathrm{kl}\big(\hat R_S(\bar Q_\sigma)\,\big\|\,R(\bar Q_\sigma)\big)\le\frac1n\Big[\lambda_\sigma V(t)+\ln\frac{2G\sqrt n}{\delta_0}\Big].$$
+  - Both carry the noise term $2\eta\beta\nu^2t^2/B$, which is quadratic in $t$ at fixed $\eta$ and vanishes as $\eta\to0$ at fixed $t$.
 
-*Proof.* Insert B1.1(3), B1.2 or B1.4 into $\sum_g\|\Delta_g\|^2/2\sigma_g^2$. For (a), use $\sum_g m_gE_g/2\sigma_g^2\le\max_g(m_g/2\sigma_g^2)\sum_gE_g$. $\square$
+*Proof.* For every $\theta$, $\mathrm{KL}(Q_{\theta,\sigma}\|P_\sigma)=\sum_g\|\Delta_g\|^2/2\sigma_g^2=\sum_g(\|\Delta_g\|^2/m_g)(m_g/2\sigma_g^2)\le\lambda_\sigma\|\Delta\|_{M^{-1}}^2$.
+- (a) Insert B1.1(2), or B1.2(b): $\|\Delta\|^2_{M^{-1}}\le t(L_0-L_S(\theta(t)))/c$.
+- (b) Insert the per-group statement of B1.2(a). The bound $\sum_gE_{K,g}\le(L_0-L_S(\theta_K))/c$ under (D) is the first line of the proof of B1.2(b).
+- (c) Insert the consequence $\|\Delta\theta_g\|_2\le\sqrt{p_g}\,\eta m_gS_K$ of Lemma B1.4.
+- (d1) Since $L_S\ge0$, B1.3 gives $\mathbb E_\omega[\|\Delta\|^2_{M^{-1}}\mid S,\theta_0]\le V(t)$. Markov's inequality, conditionally on $(S,\theta_0)$, gives $\|\Delta\|^2_{M^{-1}}\le V(t)/\delta'$ outside an event of probability $\delta'$. (PB) holds for all $\theta$ at once outside an event of probability $\delta_0$, so it holds at $\theta_K(\omega)$ for every $\omega$. Take the union of the two exceptional events.
+- (d2) L5 holds for every posterior, including $\bar Q_\sigma$, which may depend on $S$. $\bar Q_\sigma$ is the $\theta'$-marginal of the joint law of $(\omega,\theta')$ with $\theta'\sim Q_{\theta_K(\omega),\sigma}$, and $P_\sigma$ is the $\theta'$-marginal of $\mathrm{law}(\omega)\otimes P_\sigma$. By the data-processing inequality and the chain rule, $\mathrm{KL}(\bar Q_\sigma\|P_\sigma)\le\mathbb E_\omega\mathrm{KL}(Q_{\theta_K(\omega),\sigma}\|P_\sigma)\le\lambda_\sigma\mathbb E_\omega\|\Delta\|^2_{M^{-1}}\le\lambda_\sigma V(t)$. The union bound over $\Sigma$ is as in B3.2. $\square$
 
-**Reading.** The test error of the noisy network is at most $\mathrm{kl}^{-1}(\text{noisy train error},\ \varepsilon+\ln(2G\sqrt n/\delta)/n)$ as long as
-$$t\le\varepsilon\,n\cdot\frac{2c}{L_0}\min_g\frac{\sigma_g^2}{m_g}.$$
-This is the user's "training has not taken long" condition, made rigorous. The price is the noise level $\sigma$: the bound is a priori in $t$ but a posteriori in **robustness**, because the noisy train error $\hat R_S(Q)$ must still be measured.
-
-For the study's SGD multipliers and the noise levels the trained networks tolerate ($\sigma\approx(0.14,0.2,0.025)$), $\max_gm_g/2\sigma_g^2\approx400$, set by the readout $a$. So the condition becomes $t\lesssim\varepsilon n/200$, i.e. about $25\,\varepsilon$ SGD steps per $1000$ samples. Section 5.3 checks this along real runs.
+**Reading.**
+- **(a) is the user's "training has not taken long" condition, made rigorous for gradient flow and for full-batch GD while (D) holds.** The test error of the noisy network is at most $\mathrm{kl}^{-1}(\text{noisy train error},\ \varepsilon+\ln(2G\sqrt n/\delta_0)/n)$ as long as
+  $$t\le\varepsilon\,n\cdot\frac{2c}{L_0}\min_g\frac{\sigma_g^2}{m_g}.$$
+  - For the study's SGD multipliers (also used for GD) and the noise levels the trained networks tolerate, $\sigma\approx(0.14,0.2,0.025)$, the constant is $\lambda_\sigma\approx400$, set by the readout $a$.
+  - With $L_0=0.5$ and $c=1$ the condition is $t\le\varepsilon n/200$ in gradient-flow time. For full-batch GD that is about $25\,\varepsilon$ steps per $1000$ samples at $\eta=0.2$, or $250\,\varepsilon$ at $\eta=0.02$, **provided (D) holds**.
+  - In our runs (D) holds at $\eta=0.02$ with $c\ge0.993$. At $\eta=0.2$ it holds only for the first 20 steps, with $c_{20}=0.26$ (Section 5.3).
+  - The price is the noise level $\sigma$: the bound is a priori in $t$ but a posteriori in **robustness**, because the noisy train error $\hat R_S(Q)$ must still be measured.
+- **For SGD, (a) is not a theorem.** The rigorous SGD versions are (b) and (d).
+  - **(b) is a diagnostic, not an a priori statement.** It uses only measured quantities, and since $\|\Delta_g\|^2\le m_gt_KE_{K,g}$ pointwise, it is always weaker than B3.2 with the measured displacement. It shows how loose the energy route is: at the same $\sigma$ its KL is $7$–$35$ times the flow value (5832 against 801 for $x_1$ at step 20; $1.8\times10^6$ against 50852 for MAJ$_3$ at $n=2048$, step 5000).
+  - **(d) is genuinely a priori but needs smoothness**, which fails for ReLU (Section 2), and its constants are worse than those of (a). It pays a factor $4$ (mixture form d2) or $4/\delta'$ (high-probability form d1), plus the $t^2$ noise term. With $\lambda_\sigma=400$ and the noise term ignored, KL $\le0.1\,n$ at $n=16384$ needs $t\le2.0$ for (d2), and $t\le0.02$ for (d1) with $\delta'=0.01$, against $t\le8.2$ for (a) ([`checks/B_r2_checks.out`](checks/B_r2_checks.out), part 6). (d) is not evaluated on the study's networks.
+- **For Adam, (c) is a priori but quadratic in $K$.** At fixed $\sigma$, tripling the number of steps from 100 to 300 multiplies it by $(S_{300}/S_{100})^2=23$.
 
 ### Proposition B3.4 (online protocol: progressive validation; Proved)
 
-In one-pass SGD, step $k$ draws a fresh minibatch $B_k$ of $B$ iid examples, independent of the past, and updates $\theta_{k-1}\mapsto\theta_k$. Let $e_k=\frac1B\sum_{(x,y)\in B_k}\mathbb 1[yf_{\theta_{k-1}}(x)\le0]$ be the error of the **pre-update** parameters on the new batch. Then for any window of $K'$ steps, with probability at least $1-\delta$,
+In one-pass training (SGD, Adam, or any update rule), step $k$ draws a fresh minibatch $B_k$ of $B$ iid examples, independent of the past, and updates $\theta_{k-1}\mapsto\theta_k$. Let $e_k=\frac1B\sum_{(x,y)\in B_k}\mathbb 1[yf_{\theta_{k-1}}(x)\le0]$ be the error of the **pre-update** parameters on the new batch. Then for any window of $K'$ steps **fixed in advance**, with probability at least $1-\delta$,
 $$\frac1{K'}\sum_{k\in\text{window}}R(\theta_{k-1})\le\frac1{K'}\sum_{k\in\text{window}}e_k+\sqrt{\frac{\ln(1/\delta)}{2K'B}} .$$
 So the predictor that outputs $\theta_{k-1}$ for a uniformly random $k$ in the window has test error at most the right-hand side.
+- **Choice of window.** Choosing the window after seeing the $e_k$ needs a union bound over the candidate windows, e.g. $\delta/J$ each for $J$ candidates.
+- **Which predictor.** The bound is on the random-iterate predictor, i.e. on the average test error of the window's iterates. It says nothing directly about the final network, which is the one the study reports.
 
 *Proof.* $X_k=R(\theta_{k-1})-e_k$ has $\mathbb E[X_k\mid\mathcal F_{k-1}]=0$. Conditionally on $\mathcal F_{k-1}$, it is a sum of $B$ independent terms of range $1/B$, so $\mathbb E[e^{\lambda X_k}\mid\mathcal F_{k-1}]\le e^{\lambda^2/(8B)}$ (Hoeffding's lemma). Chaining the conditional expectations gives $\Pr[\sum X_k\ge s]\le e^{-2Bs^2/K'}$. $\square$
 
-This is the online-to-batch conversion (Cesa-Bianchi–Conconi–Gentile, IEEE Trans. IT 2004; from memory). For the study's online runs ($B=64$, $K'=1000$, $\delta=0.05$) the slack is $0.005$. **In the online protocol there is no generalization gap left to bound:** the cumulative progressive error is the total number of mistakes made during learning, the quantity bounded for NNBayes in the sibling project's [online-mistake results](../../neural-network-generalization/TECHNICAL-FAQ.md#can-we-bound-the-total-number-of-mistakes-during-learning). A circuit-based theory of GD (tasks A and C) can aim at the same quantity. For multi-pass SGD on a fixed $S$ the argument fails, because batches are reused.
+This is the online-to-batch conversion (Cesa-Bianchi–Conconi–Gentile, IEEE Trans. IT 2004; from memory). For the study's online runs ($B=64$, $K'=1000$, $\delta=0.05$) the slack is $0.005$.
+
+**Evaluation (Numerical; [`checks/B_r2_checks.out`](checks/B_r2_checks.out), part 8).** The study's online runs (`nn_train.run_online`) do not log the progressive errors $e_k$, so B3.4 cannot be evaluated on them. I therefore reran the online protocol with logging: one-pass Adam with the study's settings (lr $10^{-3}$, batch 64, μP multipliers, seed-0 initialization) for 3000 steps, recording $e_k$ and the test error of every iterate on the 4096 held-out inputs. Three windows of 1000 steps were fixed in advance, with $\delta=0.05/3$ each, so the slack is $0.0057$:
+
+| target | steps 1–1000: bound (measured mean test error of the iterates) | steps 1001–2000 | steps 2001–3000 |
+|---|---|---|---|
+| $x_1$ | 0.016 (0.011) | 0.006 (0.000) | 0.006 (0.000) |
+| MAJ$_3$ | 0.021 (0.015) | 0.006 (0.000) | 0.006 (0.000) |
+| $x_1x_2x_3$ | 0.153 (0.149) | 0.006 (0.000) | 0.006 (0.000) |
+
+In every window the bound is within $0.006$ of the measured value. The final networks after 3000 steps have test error $0$. **In the online protocol there is no generalization gap left to bound:** the cumulative progressive error is the total number of mistakes made during learning, the quantity bounded for NNBayes in the sibling project's [online-mistake results](../../neural-network-generalization/TECHNICAL-FAQ.md#can-we-bound-the-total-number-of-mistakes-during-learning). A circuit-based theory of GD (tasks A and C) can aim at the same quantity. For multi-pass SGD on a fixed $S$ the argument fails, because batches are reused.
 
 ### 4.5 Alternatives: stability and information-theoretic bounds (Literature)
 
@@ -375,24 +408,25 @@ This is the online-to-batch conversion (Cesa-Bianchi–Conconi–Gentile, IEEE T
 - **Verdict: does not apply.**
 
 **Mutual information.** Xu–Raginsky (NeurIPS 2017), Theorem 1 (from memory): if $\ell(w,Z)$ is $s$-sub-Gaussian for every $w$, then $|\mathbb E[R(W)-\hat R_S(W)]|\le\sqrt{2s^2I(S;W)/n}$; for the 0-1 loss $s=1/2$.
-- *Noiseless training.* For our deterministic algorithms, $W$ is a function of $(S,\theta_0,\text{batch indices})$. The inputs are discrete, so $I(S;W)\le H(S)\le nd\ln2$, and the bound is $\le\sqrt{d\ln2/2}=3.2$: vacuous. Conditional mutual information (Steinke–Zakynthinou, COLT 2020) is at most $n\ln2$, giving at most $\sqrt{2\ln2}$, again vacuous unless the CMI is estimated by many retrainings.
-- *SGLD.* Bounds for SGLD (Pensia–Jog–Loh, ISIT 2018; Mou–Wang–Zhai–Zheng, COLT 2018; Negrea et al., NeurIPS 2019; from memory) need Gaussian noise injected at every step and give $I\lesssim\sum_t\eta_t^2L^2/\sigma_t^2$. That is *also* linear in training time, structurally the same as Theorem B3.3, but it applies only to Langevin variants of our runs.
+- *It applies to our runs.* The 0-1 loss is bounded, and no smoothness or Lipschitz condition is needed, so the bound applies to any algorithm. The problem is to bound $I(S;W)$.
+- *Noiseless training.* For our deterministic algorithms, $W$ is a function of $(S,\theta_0,\text{batch indices})$. The inputs are discrete, so $I(S;W)\le H(S)\le nd\ln2$, and the bound is $\le\sqrt{d\ln2/2}=3.2$: vacuous. The conditional mutual information bound of Steinke–Zakynthinou (COLT 2020) also applies to any algorithm with a bounded loss. The CMI is at most $n\ln2$, giving at most $\sqrt{2\ln2}=1.18$, again vacuous unless the CMI is estimated, e.g. by many retrainings.
+- *SGLD.* Bounds for SGLD (Pensia–Jog–Loh, ISIT 2018; Mou–Wang–Zhai–Zheng, COLT 2018; Negrea et al., NeurIPS 2019; from memory) need Gaussian noise injected at every step and give $I\lesssim\sum_t\eta_t^2L^2/\sigma_t^2$. At constant step size and noise that is linear in the number of steps, structurally the same as Theorem B3.3(a). But it applies only to Langevin variants of our runs.
 - *Plain SGD.* Neu–Dziugaite–Haghifam–Roy (COLT 2021) give information-theoretic bounds for plain SGD through a perturbed auxiliary iterate, in terms of gradient variance and sensitivity to perturbations (from memory). This is the closest analogue of B3.2–B3.3.
-- **Verdict: does not apply to the actual runs; the noisy variants reduce to the same "KL grows with time" mechanism.**
+- **Verdict: applies, but vacuous with the computable bounds on $I(S;W)$ and the CMI. The noisy variants reduce to the same "KL grows with time" mechanism as B3.3(a).**
 
 **Which bound applies to which protocol.**
 
-| protocol | B3.1 (a priori, norms) | B3.2 (PAC-Bayes, measured) | B3.3 (PAC-Bayes, time) | B3.4 (online) | HRS / Xu–Raginsky |
-|---|---|---|---|---|---|
-| gradient flow | applies, vacuous | applies | (a) applies | — | no |
-| full-batch GD | needs (D), checkable | applies | (a) with $c$ from (D), or (b) | — | no |
-| SGD with replacement on fixed $S$ | in expectation only (B1.3) | applies | (b) applies, measured energy | — | no |
-| Adam on fixed $S$ | no useful version | applies | (c) applies, vacuous beyond $\sim10^2$ steps | — | no |
-| online (one pass) | not needed | not needed | not needed | applies, essentially exact | not needed |
+| protocol | B3.1 (a priori, norms) | B3.2 (PAC-Bayes, measured) | B3.3 (PAC-Bayes, time) | B3.4 (online) | HRS | Xu–Raginsky, CMI |
+|---|---|---|---|---|---|---|
+| gradient flow | applies, vacuous | applies | (a) applies | — | no | apply, vacuous |
+| full-batch GD | needs (D), checkable | applies | (a) while (D) holds, with the measured $c$; (b) always | — | no | apply, vacuous |
+| SGD with replacement on fixed $S$ | in expectation only (B1.3) | applies | (b) applies (measured energy; a diagnostic); (d) only under smoothness | — | no | apply, vacuous |
+| Adam on fixed $S$ | no useful version | applies | (c) applies, quadratic in $K$, vacuous beyond $\sim10^2$ steps | — | no | apply, vacuous |
+| online (one pass) | not needed | not needed | not needed | applies; within $0.006$ of the measured value | not needed | not needed |
 
 ## 5. B4: numbers
 
-All bounds below hold with probability at least $0.95$. They use $q=1.1$ for the margin and norm grids, and for PAC-Bayes the grid and Monte-Carlo sizes stated after Theorem B3.2. A bound is *vacuous* if it is at least $1$ (printed as $1.00$). It is *uninformative* if it exceeds $0.5$, the error of random guessing on a balanced target. "Test err (actual)" is the network's error on the study's 4096 held-out inputs. It is shown for comparison and is never used by any bound.
+All bounds below hold with probability at least $0.95$. They use $q=1.1$ for the margin and norm grids, and for PAC-Bayes the grid and Monte-Carlo sizes stated after Theorem B3.2. A bound is *vacuous* if it is at least $1$ (printed as $1.00$). It is *uninformative* if it exceeds $0.5$, the error of random guessing on a balanced target. "Test err (actual)" is the network's error on the study's 4096 held-out inputs. It is shown for comparison and is never used by any bound. Margin bounds are reported through their complexity term at unit margin, $c=2\kappa\phi_0q^{j}/\sqrt n$ (Lemma B2.1a), because the minimized bound sits at the grid edge $\gamma_{\max}$ whenever it is vacuous.
 
 ### 5.1 Representative values (Numerical; [`checks/representative.out`](checks/representative.out))
 
@@ -408,32 +442,32 @@ The path-norm bound falls below $0.5$ only for $\phi\le2.9$ at $n=2048$, $\phi\l
 
 ### 5.2 Final networks of the Adam sweep (Numerical; [`checks/eval_saved.py`](checks/eval_saved.py))
 
-These are the study's networks after 20000 Adam steps. The initialization and training sets were regenerated from the study's seeds and matched against the sweep's recorded norms to two decimals. All quantities are for the float16-saved weights. Means over seeds $0,1,2$ ($x_1x_2x_3$, thr$_{10}$ and the last three targets: seed 0 only); the range over seeds of the final column is in brackets. stair$_5=\mathrm{sgn}(x_1+x_1x_2+\dots+x_1\cdots x_5)$.
+These are the study's networks after 20000 Adam steps. The initialization and training sets were regenerated from the study's seeds and matched against the sweep's recorded norms to two decimals. All bounds are computed for the float16-saved weights. "Test err (actual)" is the sweep's recorded float32 test error; rounding to float16 changes the predictions on at most 0.05% of the test inputs ([`checks/referee_C_r1_fp16.out`](checks/referee_C_r1_fp16.out)). The norm columns give the complexity term at unit margin, $c=2\kappa\phi_0q^j/\sqrt n$ with $\kappa_{\rm path}=3.32$ and $\kappa_F=14.84$ (Lemma B2.1a). The minimized bounds of round 1 are kept in [`checks/summary_tables.txt`](checks/summary_tables.txt); all are at least 1. Means over seeds $0,1,2$ ($x_1x_2x_3$, thr$_{10}$ and the last three targets: seed 0 only); the range over seeds of the final column is in brackets. stair$_5=\mathrm{sgn}(x_1+x_1x_2+\dots+x_1\cdots x_5)$.
 
-| target | $n$ | test err (actual) | path norm | B2.2 bound | $P_F$ | B2.3 bound | spectral $24\varrho/n$, init / zero reference | KL (nats) | Gibbs train err | B3.2: $R(Q)\le$ | B3.2: deterministic $R(\theta)\le$ |
+| target | $n$ | test err (actual) | path norm | B2.2: $c_{\rm path}$ | $P_F$ | B2.3: $c_F$ | spectral $24\varrho/n$, init / zero reference | KL (nats) | Gibbs train err | B3.2: $R(Q)\le$ | B3.2: deterministic $R(\theta)\le$ |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| $x_1$ | 256 | 0.000 | 62 | 7.8 | 24.3 | 12.7 | 2956 / 8426 | 127 | 0.35 | 0.87 | 1.00 |
-| $x_1$ | 2048 | 0.000 | 67 | 3.5 | 24.0 | 5.0 | 1293 / 3049 | 776 | 0.04 | 0.47 | **0.55** (0.52–0.60) |
-| $x_1$ | 16384 | 0.000 | 26 | 1.13 | 15.6 | 1.8 | 679 / 1005 | 1804 | 0.02 | 0.21 | **0.26** (0.24–0.27) |
-| AND$_3$ | 256 | 0.029 | 91 | 11.0 | 40.1 | 20.6 | 4269 / 11030 | 264 | 0.18 | 0.88 | 1.00 |
-| AND$_3$ | 2048 | 0.000 | 82 | 3.8 | 39.2 | 7.3 | 2094 / 4419 | 399 | 0.14 | 0.51 | **0.71** (0.69–0.73) |
-| AND$_3$ | 16384 | 0.000 | 41 | 1.34 | 28.0 | 2.4 | 932 / 1378 | 3021 | 0.03 | 0.32 | **0.39** (0.35–0.46) |
-| MAJ$_3$ | 256 | 0.041 | 128 | 14.8 | 44.8 | 22.6 | 5352 / 12741 | 238 | 0.39 | 0.95 | 1.00 |
-| MAJ$_3$ | 2048 | 0.000 | 103 | 4.7 | 48.6 | 9.3 | 3717 / 7007 | 915 | 0.20 | 0.71 | **0.94** (0.84–1.00) |
-| MAJ$_3$ | 16384 | 0.000 | 55 | 1.50 | 34.9 | 2.9 | 1644 / 2220 | 4315 | 0.02 | 0.35 | **0.40** (0.38–0.41) |
-| $x_1x_2$ | 256 | 0.002 | 135 | 15.7 | 53.0 | 26.4 | 7210 / 17322 | 278 | 0.47 | 0.98 | 1.00 |
-| $x_1x_2$ | 2048 | 0.000 | 83 | 4.0 | 39.4 | 7.5 | 2678 / 5208 | 1320 | 0.13 | 0.74 | **0.93** (0.90–0.97) |
-| $x_1x_2$ | 16384 | 0.000 | 41 | 1.32 | 29.2 | 2.6 | 1290 / 1719 | 4302 | 0.006 | 0.30 | **0.33** (0.31–0.35) |
-| $x_1x_2x_3$ | 2048 | 0.000 | 173 | 7.7 | 80.0 | 13.9 | 5195 / 9977 | 1207 | 0.39 | 0.90 | 1.00 |
-| $x_1x_2x_3$ | 16384 | 0.000 | 72 | 1.71 | 55.9 | 4.3 | 2208 / 3015 | 5291 | 0.05 | 0.46 | **0.56** |
-| thr$_{10}$ | 2048 | 0.027 | 339 | 14.3 | 124.9 | 22.0 | 11294 / 20234 | 1614 | 0.26 | 0.87 | 1.00 |
-| thr$_{10}$ | 16384 | 0.003 | 543 | 8.5 | 225.8 | 14.0 | 14482 / 18093 | 12632 | 0.16 | 0.80 | 1.00 |
-| $x_1x_2x_3x_4$ | 2048 | 0.020 | 610 | 24.8 | 204.0 | 34.9 | 12173 / 22894 | 4292 | 0.32 | 0.99 | 1.00 |
-| $x_1x_2x_3x_4$ | 16384 | 0.000 | 102 | 2.15 | 70.6 | 5.0 | 3245 / 4516 | 6014 | 0.18 | 0.66 | 0.91 |
-| stair$_5$ | 2048 | 0.000 | 302 | 12.0 | 127.1 | 22.0 | 7980 / 15168 | 1952 | 0.37 | 0.94 | 1.00 |
-| stair$_5$ | 16384 | 0.000 | 99 | 2.15 | 77.3 | 5.4 | 3032 / 4229 | 6048 | 0.13 | 0.60 | 0.79 |
-| MAJ$(x_1x_2,x_3x_4,x_5x_6)$ | 2048 | 0.048 | 602 | 24.8 | 202.2 | 34.9 | 10435 / 19686 | 2846 | 0.32 | 0.97 | 1.00 |
-| MAJ$(x_1x_2,x_3x_4,x_5x_6)$ | 16384 | 0.000 | 112 | 2.29 | 90.8 | 6.4 | 3179 / 4046 | 3456 | 0.27 | 0.66 | 1.00 |
+| $x_1$ | 256 | 0.000 | 62 | 26.7 | 24.3 | 47.4 | 2956 / 8426 | 127 | 0.35 | 0.87 | 1.00 |
+| $x_1$ | 2048 | 0.000 | 67 | 10.7 | 24.0 | 16.8 | 1293 / 3049 | 776 | 0.04 | 0.47 | **0.55** (0.52–0.60) |
+| $x_1$ | 16384 | 0.000 | 26 | 1.46 | 15.6 | 3.9 | 679 / 1005 | 1804 | 0.02 | 0.21 | **0.26** (0.24–0.27) |
+| AND$_3$ | 256 | 0.029 | 91 | 40.4 | 40.1 | 78.9 | 4269 / 11030 | 264 | 0.18 | 0.88 | 1.00 |
+| AND$_3$ | 2048 | 0.000 | 82 | 12.6 | 39.2 | 26.2 | 2094 / 4419 | 399 | 0.14 | 0.51 | **0.71** (0.69–0.73) |
+| AND$_3$ | 16384 | 0.000 | 41 | 2.28 | 28.0 | 6.5 | 932 / 1378 | 3021 | 0.03 | 0.32 | **0.39** (0.35–0.46) |
+| MAJ$_3$ | 256 | 0.041 | 128 | 55.4 | 44.8 | 86.7 | 5352 / 12741 | 238 | 0.39 | 0.95 | 1.00 |
+| MAJ$_3$ | 2048 | 0.000 | 103 | 15.7 | 48.6 | 33.7 | 3717 / 7007 | 915 | 0.20 | 0.71 | **0.94** (0.84–1.00) |
+| MAJ$_3$ | 16384 | 0.000 | 55 | 2.94 | 34.9 | 8.5 | 1644 / 2220 | 4315 | 0.02 | 0.35 | **0.40** (0.38–0.41) |
+| $x_1x_2$ | 256 | 0.002 | 135 | 59.1 | 53.0 | 101.9 | 7210 / 17322 | 278 | 0.47 | 0.98 | 1.00 |
+| $x_1x_2$ | 2048 | 0.000 | 83 | 12.9 | 39.4 | 27.0 | 2678 / 5208 | 1320 | 0.13 | 0.74 | **0.93** (0.90–0.97) |
+| $x_1x_2$ | 16384 | 0.000 | 41 | 2.21 | 29.2 | 7.2 | 1290 / 1719 | 4302 | 0.006 | 0.30 | **0.33** (0.31–0.35) |
+| $x_1x_2x_3$ | 2048 | 0.000 | 173 | 27.8 | 80.0 | 52.6 | 5195 / 9977 | 1207 | 0.39 | 0.90 | 1.00 |
+| $x_1x_2x_3$ | 16384 | 0.000 | 72 | 3.78 | 55.9 | 14.0 | 2208 / 3015 | 5291 | 0.05 | 0.46 | **0.56** |
+| thr$_{10}$ | 2048 | 0.027 | 339 | 54.1 | 124.9 | 84.7 | 11294 / 20234 | 1614 | 0.26 | 0.87 | 1.00 |
+| thr$_{10}$ | 16384 | 0.003 | 543 | 30.8 | 225.8 | 53.0 | 14482 / 18093 | 12632 | 0.16 | 0.80 | 1.00 |
+| $x_1x_2x_3x_4$ | 2048 | 0.020 | 610 | 95.8 | 204.0 | 136.4 | 12173 / 22894 | 4292 | 0.32 | 0.99 | 1.00 |
+| $x_1x_2x_3x_4$ | 16384 | 0.000 | 102 | 5.54 | 70.6 | 16.9 | 3245 / 4516 | 6014 | 0.18 | 0.66 | 0.91 |
+| stair$_5$ | 2048 | 0.000 | 302 | 44.7 | 127.1 | 84.7 | 7980 / 15168 | 1952 | 0.37 | 0.94 | 1.00 |
+| stair$_5$ | 16384 | 0.000 | 99 | 5.54 | 77.3 | 18.6 | 3032 / 4229 | 6048 | 0.13 | 0.60 | 0.79 |
+| MAJ$(x_1x_2,x_3x_4,x_5x_6)$ | 2048 | 0.048 | 602 | 95.8 | 202.2 | 136.4 | 10435 / 19686 | 2846 | 0.32 | 0.97 | 1.00 |
+| MAJ$(x_1x_2,x_3x_4,x_5x_6)$ | 16384 | 0.000 | 112 | 6.09 | 90.8 | 22.5 | 3179 / 4046 | 3456 | 0.27 | 0.66 | 1.00 |
 
 **KL split at $n=16384$** (nats for $(W_1,b_1)$ / $(W_2,b_2)$ / $a$; chosen $\sigma$; displacements $\|\Delta_g\|$):
 
@@ -450,10 +484,12 @@ These are the study's networks after 20000 Adam steps. The initialization and tr
 | MAJ$(x_1x_2,x_3x_4,x_5x_6)$ | 1736 / 1570 / 150 | 0.20 / 0.14 / 0.035 | 11.8 / 7.9 / 0.61 |
 
 **Reading.**
-- **Norm bounds.** All three are vacuous for every network.
-  - The *path norm* comes closest: $1.13$ for $x_1$ at $n=16384$. For $x_1$ the trained path norm ($26$–$67$) is $13$–$34$ times the minimal value $2$.
-  - The *Frobenius* bound is vacuous by $2$–$26\times$.
-  - The *spectral* bound is vacuous by $3$–$4$ orders of magnitude. Reference matrices at the initialization help by a factor of only $1.3$–$3$.
+- **Norm bounds.** All three are vacuous for every network. For each of the 49 networks, $c\ge\max(1,\bar m_+)$, so Lemma B2.1a applies. The mean positive train margins $\bar m_+$ are $0.99$–$1.01$ ([`checks/B_r2_checks.out`](checks/B_r2_checks.out), part 1).
+  - The *path norm* comes closest: $c_{\rm path}=1.46$ for $x_1$ at $n=16384$, and $2.2$–$2.9$ for AND$_3$, MAJ$_3$ and $x_1x_2$ there.
+  - Round 1 quoted the minimized bound instead ($1.13$ for $x_1$), but for every network that minimum sits at the grid edge $\gamma=\gamma_{\max}=4$. With $\gamma_{\max}=1000$ the same bounds are $1.02$–$1.27$. These values measure $\gamma_{\max}$, not how far the bound is from being useful.
+  - For $x_1$ the trained path norm ($26$–$67$) is $13$–$34$ times the minimal value $2$.
+  - *Frobenius:* $c_F=3.9$–$136$.
+  - *Spectral:* $24\varrho/n=679$–$22894$ at unit margin, i.e. vacuous by 3–4 orders of magnitude. Reference matrices at the initialization help by a factor of only $1.25$–$3$.
   - For the simple targets the path norm *decreases* with $n$, from about 60–135 at $n=256$ to 26–55 at $n=16384$. Plausibly this is because at large $n$ the network no longer fits idiosyncratic training points (Heuristic). For thr$_{10}$ it increases.
 - **PAC-Bayes.** The bound is non-vacuous at $n=16384$ for the five targets with at most 3 relevant variables: $0.26$–$0.56$ for the deterministic network and $0.21$–$0.46$ for the Gibbs network. At $n=2048$ it is borderline ($0.55$–$1.0$); at $n=256$ it is vacuous.
   - The KL is dominated by the first two layers. The readout tolerates only $\sigma_3\approx0.01$–$0.03$, but it moves little.
@@ -468,6 +504,7 @@ The runs are MAJ$_3$ at $n=2048$ (SGD and GD) and $x_1$ and MAJ$_3$ at $n=16384$
 - $\sqrt{tL_0}$: the gradient-flow bound of B1.1.
 - "meas.": B3.2 with the measured KL.
 - "energy" and "flow": B3.3(b) and (a), each with the same $\sigma$, reported as $R(Q)$ (Gibbs). In brackets: the deterministic network, which adds the measured disagreement.
+- "flow" divides the KL by $c_K$, the running minimum of the measured descent ratio $(L_k-L_{k+1})/(\eta\|g_k\|_M^2)$ over $k<K$, when (D) has held at every step so far. Only then is it rigorous. Otherwise (SGD, or GD after (D) has failed) it uses $c=1$ and is **not** rigorous. In round 1 the code used $c=1$ throughout.
 
 **SGD, $\eta=0.2$, batch 64** (no descent condition is available; only "energy" is rigorous):
 
@@ -490,21 +527,24 @@ The runs are MAJ$_3$ at $n=2048$ (SGD and GD) and $x_1$ and MAJ$_3$ at $n=16384$
 | MAJ$_3$ | 100 | 0.000 | 1.82 | 13.6 | 16.2 | 3.2 | 0.17 (0.22) | 97898, 1.00 | 4074, 0.34 |
 | MAJ$_3$ | 300 | 0.000 | 2.90 | 29.6 | 35.6 | 5.5 | 0.18 (0.23) | $2.4\times10^5$, 1.00 | 6112, 0.43 |
 
-**Full-batch GD, $\eta=0.2$** (the study's learning rate). The descent ratio $(L_k-L_{k+1})/(\eta\|g_k\|_M^2)$ has minimum $-0.56$ and median $0.004$. So (D) fails, and the dynamics oscillate, consistent with the edge-of-stability regime (sharpness not measured). Only "energy" is rigorous:
+**Full-batch GD, $\eta=0.2$** (the study's learning rate).
+- The descent ratio $(L_k-L_{k+1})/(\eta\|g_k\|_M^2)$ is positive for the first 20 steps, with minimum $c_{20}=0.26$. So (D) holds there, and "flow" at step 20 is rigorous, with the KL divided by $0.26$.
+- Over the whole run the ratio has minimum $-0.56$ and median $0.004$. So (D) fails after step 20, and the dynamics oscillate, consistent with the edge-of-stability regime (sharpness not measured).
+- From step 50 on, only "energy" is rigorous:
 
-| step | test err | $\Vert \Delta\Vert $ | $\Lambda$ | $\sqrt{tE}$ | $\sqrt{tL_0}$ | meas. | energy | flow (not rigorous) |
+| step | test err | $\Vert \Delta\Vert $ | $\Lambda$ | $\sqrt{tE}$ | $\sqrt{tL_0}$ | meas. | energy | flow |
 |---|---|---|---|---|---|---|---|---|
-| 20 | 0.051 | 1.11 | 1.2 | 1.2 | 1.4 | 0.43 (0.58) | 409, **0.46** | 814, 0.59 |
-| 50 | 0.010 | 1.63 | 5.7 | 12.9 | 2.3 | 0.42 (0.58) | 23053, 1.00 | 1017, 0.63 |
-| 2000 | 0.000 | 3.42 | 33.5 | 88.5 | 14.3 | 0.59 (0.79) | $6\times10^5$, 1.00 | 20341, 1.00 |
+| 20 | 0.051 | 1.11 | 1.2 | 1.2 | 1.4 | 0.43 (0.58) | 409, **0.46** | 3145, 0.90 (rigorous, $c_{20}=0.26$) |
+| 50 | 0.010 | 1.63 | 5.7 | 12.9 | 2.3 | 0.42 (0.58) | 23053, 1.00 | 1017, 0.63 (not rigorous) |
+| 2000 | 0.000 | 3.42 | 33.5 | 88.5 | 14.3 | 0.59 (0.79) | $6\times10^5$, 1.00 | 20341, 1.00 (not rigorous) |
 
-**Full-batch GD, $\eta=0.02$** (ten times smaller). (D) holds at every step with $c\ge0.993$, so "flow" is **rigorous** (Theorem B3.3(a)). Dividing the KL by $c$ changes $R(Q)$ in the third decimal.
+**Full-batch GD, $\eta=0.02$** (ten times smaller). (D) holds at every step with $c\ge0.993$, so "flow" is **rigorous** (Theorem B3.3(a)). The KL is divided by the running minimum $c_K$ ($0.9966$ up to step 100 and $0.9932$ from step 200 on). Relative to $c=1$, this raises $R(Q)$ by at most $0.002$.
 
 | step ($t$) | test err | $\Vert \Delta\Vert $ | $\Lambda$ | $\sqrt{tE}$ | $\sqrt{tL_0}$ | meas. | energy | flow (rigorous here) |
 |---|---|---|---|---|---|---|---|---|
-| 200 (4) | 0.047 | 1.11 | 1.2 | 1.2 | 1.4 | 0.42 (0.58) | 399, 0.45 | 814, **0.59** (0.75) |
-| 500 (10) | 0.010 | 1.32 | 1.6 | 2.0 | 2.3 | 0.43 (0.61) | 707, 0.57 | 1017, **0.65** (0.84) |
-| 1000 (20) | 0.003 | 1.60 | 2.2 | 2.9 | 3.2 | 0.42 (0.55) | 1701, 0.71 | 2034, **0.76** (0.89) |
+| 200 (4) | 0.047 | 1.11 | 1.2 | 1.2 | 1.4 | 0.42 (0.58) | 399, 0.45 | 819, **0.59** (0.75) |
+| 500 (10) | 0.010 | 1.32 | 1.6 | 2.0 | 2.3 | 0.43 (0.61) | 707, 0.57 | 1024, **0.65** (0.84) |
+| 1000 (20) | 0.003 | 1.60 | 2.2 | 2.9 | 3.2 | 0.42 (0.55) | 1701, 0.71 | 2048, **0.77** (0.89) |
 
 **Adam, lr $10^{-3}$, $n=16384$.** Here "a priori" is B3.3(c) with $S_K=\sum_{t\le K}C_t$. "Max ratio" is the largest $|\hat m_t|/(\sqrt{\hat v_t}+\epsilon)$ seen over all coordinates and steps; Lemma B1.4 bounds it by $C_t$.
 
@@ -519,16 +559,24 @@ The runs are MAJ$_3$ at $n=2048$ (SGD and GD) and $x_1$ and MAJ$_3$ at $n=16384$
 
 **Reading.**
 1. **The B1 chain is very loose in the discrete-time, noisy setting.** For SGD at step 5000, $\|\Delta\|=3.7$, $\Lambda=85$ and $\sqrt{tE}=159$. The path wanders and mostly cancels; the energy counts the minibatch noise.
-2. **The gradient-flow inequality holds for the actual displacement anyway.** $\|\Delta\|_{M^{-1}}\le\sqrt{tL_0}$ in every SGD and GD run (Numerical observation), but its discrete-time proof needs (D), which fails at $\eta=0.2$. At $\eta=0.02$, (D) holds and the inequality is a theorem.
-3. **Time-based bounds are non-vacuous only during the first escape.** The rigorous ones are B3.3(a) with (D), B3.3(b), and B3.3(c) for Adam.
-   - At $n=2048$, gradient flow (GD with $\eta=0.02$) gives $R(Q)\le0.59$–$0.76$ while the test error falls from 5% to 0.3%.
-   - Full-batch GD at the study's rate gives $0.46$ at step 20 (test error 5%) and is vacuous from step 50 on. SGD at $n=16384$ gives $0.39$ for $x_1$ at step 20 (test error 0.1%), from the measured energy alone.
-   - For Adam at $n=16384$, the a priori bound is $0.44$–$0.56$ at step 50, uninformative ($>0.5$) by step 100, and vacuous by step 200.
+2. **The gradient-flow inequality holds for the actual displacement anyway.** $\|\Delta\|_{M^{-1}}\le\sqrt{tL_0}$ in every SGD and GD run (Numerical observation), but its discrete-time proof needs (D), which fails at $\eta=0.2$ after step 20. At $\eta=0.02$, (D) holds and the inequality is a theorem.
+3. **Time-based bounds are non-vacuous only during and just after the first escape.** The rigorous ones are B3.3(a) while (D) holds, B3.3(b), and B3.3(c) for Adam.
+   - At $n=2048$, (a) for GD with $\eta=0.02$ gives $R(Q)\le0.59$–$0.77$ while the test error falls from 4.7% to 0.3%. For GD at $\eta=0.2$, (a) holds only up to step 20, where it gives $0.90$, because $c_{20}=0.26$.
+   - By (b), full-batch GD at the study's rate gives $0.46$ at step 20 (test error 5%) and is vacuous from step 50 on. SGD at $n=16384$ gives $0.39$ for $x_1$ at step 20 (test error 0.1%), and $0.85$ for MAJ$_3$ at step 50.
+   - In the SGD runs the energy $\sum_gE_{K,g}$ grows from $10L_0$ at step 20 to $50L_0$ at step 5000 ($n=2048$). At fixed $\sigma$, the KL of (b) grows like $K^{1.2}$ over steps 20–5000, faster than linearly ([`checks/B_r2_checks.out`](checks/B_r2_checks.out), part 5).
+   - For Adam at $n=16384$, the a priori bound (c) is $0.44$–$0.56$ at step 50, uninformative ($>0.5$) by step 100, and vacuous by step 200.
    - Since the rate law puts all the time on plateaus, these bounds are useful only when the first escape happens immediately, as it does here at μP scale.
-4. **Early stopping helps the measured bound, even though the function does not change.** With Adam, the deterministic B3.2 bound is $0.14$ ($x_1$) and $0.21$ (MAJ$_3$) at step 300, against $0.26$ and $0.40$ for the same targets after 20000 steps. With SGD at step 100–300 it is $0.10$ and $0.22$. At step 300 for $x_1$, SGD has moved the first two layers less than Adam (block displacements $\Vert\Delta(W_1,b_1)\Vert,\Vert\Delta(W_2,b_2)\Vert=1.9,1.0$ against $2.3,2.6$) and the readout more ($0.51$ against $0.24$). Continued training keeps moving the weights, and the KL grows with them. In the sweep ($n=16384$), $\|\Delta W_1\|_F$ for $x_1$ grows from $1.4$ at step 100, when the function is already fitted, to $8.6$ at step 20000.
+4. **Early stopping helps the measured bound, even though the function does not change.**
+   - With Adam, the deterministic B3.2 bound is $0.17$ ($x_1$) and $0.34$ (MAJ$_3$) at step 100, and $0.14$ and $0.21$ at step 300. After 20000 steps it is $0.26$ and $0.40$ for the same targets.
+   - With SGD at steps 100–300 it is $0.10$ ($x_1$) and $0.21$–$0.23$ (MAJ$_3$).
+   - Each of these values holds on its own. Quoting the best checkpoint after the fact needs a union bound over the evaluated checkpoints for the Monte Carlo terms (end of Theorem B3.2). With the 10 checkpoints per target (5 for SGD and 5 for Adam), the best values become $0.11$ ($x_1$, SGD step 300) and $0.23$ (MAJ$_3$, SGD step 200) ([`checks/B_r2_checks.out`](checks/B_r2_checks.out), part 4).
+   - At step 300 for $x_1$, SGD has moved the first two layers less than Adam (block displacements $\Vert\Delta(W_1,b_1)\Vert,\Vert\Delta(W_2,b_2)\Vert=1.9,1.0$ against $2.3,2.6$) and the readout more ($0.51$ against $0.24$). Continued training keeps moving the weights, and the KL grows with them. In the sweep ($n=16384$), $\|\Delta W_1\|_F$ for $x_1$ grows from $1.4$ at step 100, when the function is already fitted, to $8.6$ at step 20000.
    - *Mechanism (Heuristic).* Once the training loss is small but its minibatch gradients are still much larger than Adam's $\epsilon=10^{-8}$, the normalized update is mostly noise of about unit size per coordinate. The weights then random-walk, with $\|\Delta\theta_g\|\approx\eta\,m_g\sqrt{K\,p_g'}$, where $p_g'$ counts the coordinates with nonzero gradient. For $W_1$ ($p_1'=p_1$) this predicts $10^{-3}\sqrt{20000\cdot3968}=8.9$ after 20000 steps; the sweep measured $8.6$ ($x_1$) and $9.1$ (MAJ$_3$).
    - So for Adam, displacement-based bounds really do get worse with training time after the fit; early stopping is not only an artifact of the proof.
-5. **Adam's per-step movement exceeds the learning rate in practice.** The ratio reaches $1.5$–$1.7$ within the first 100 steps, during the first escape, as Lemma B1.4 allows ($C_{100}=2.24$). Over all coordinates and steps the largest value of ratio$/C_t$ is exactly $1$, attained at $t=1$, where every Adam step is a sign step. So the lemma is never violated, and it is attained. The folklore bound "$\le\mathrm{lr}$ per step" is violated by real runs, not only by adversarial sequences.
+5. **Adam's per-step movement exceeds the learning rate in practice.** The ratio reaches $1.5$–$1.7$ within the first 100 steps, during the first escape, as Lemma B1.4 allows ($C_{100}=2.24$).
+   - The informative comparison is at step 50. The largest ratio seen by then is $1.56$ ($x_1$) and $1.53$ (MAJ$_3$), against $C_{50}=1.61$, i.e. $97\%$ and $94\%$ of the worst case.
+   - Over all coordinates and steps, the largest value of ratio$/C_t$ is $0.999994$, at $t=1$. That is trivial: $C_1=1$, and every first Adam step is a sign step (up to $\epsilon$).
+   - The lemma is never violated. The folklore bound "$\le\mathrm{lr}$ per step" is violated by real runs, not only by adversarial sequences.
 
 ### 5.4 Read-off certificate (Numerical; Proposition 6.1; [`checks/readoff.py`](checks/readoff.py))
 
@@ -550,22 +598,27 @@ The same final networks as in 5.2. The bound is on the deterministic network's t
 | mux$_4$ ($x_4\,?\,x_1x_2x_3:\mathrm{MAJ}_3$) | 256 / 2048 / 16384 | 0.345 / 0 / 0 | mixed / $\{x_1..x_4\}$ / $\{x_1..x_4\}$ | 0.23 / 0 / 0 | 32 / 23 / 23 | 0.26 / 0 / 0 | 0.76 / **0.013** / 0.002 |
 | decision list on 5 vars | 256 / 2048 / 16384 | 0.046 / 0 / 0 | 3–4 of 5 / $\{x_1..x_5\}$ / $\{x_1..x_5\}$ | 0.010 / 0 / 0 | 18 / 36 / 36 | 0.042 / 0 / 0 | **0.16** / 0.019 / 0.002 |
 
-The read-off certificate is **one to two orders of magnitude** better than every parameter-space bound. It is informative at $n=256$ for the targets with at most 3 relevant variables and for the decision list. At $n=2048$ it gives $0.01$–$0.10$ for the 4–6-variable targets. On the three of these evaluated with B3.2, PAC-Bayes is vacuous at $n=2048$ and uninformative at $n=16384$. It fails in two kinds of cases.
-- **The network itself failed:** $x_1x_2x_3$ and $x_1x_2x_3x_4$ at $n=256$ (test error about $0.5$), and the other 4–6-variable targets at $n=256$. The certificate correctly reports failure. For $x_1x_2x_3x_4$ at $n=2048$ the three seeds' networks have test errors $0.02$, $0.36$ and $0.14$, and their certificates are $0.04$, $0.46$ and $0.15$. Whenever the read-off junta is the target, the certificate tracks the actual test error to within $0.01$–$0.1$.
+The read-off certificate is **one to two orders of magnitude** better than every parameter-space bound.
+- At $n=256$ it is informative for $x_1$, $x_1x_2$, AND$_3$, MAJ$_3$ and the decision list ($0.04$–$0.16$). It is not informative for $x_1x_2x_3$, whose $n=256$ networks failed ($0.985$).
+- At $n=2048$ it gives $0.01$–$0.10$ for the staircase, multiplexer, decision list and MAJ of parities, and $0.22$ (worst seed $0.46$) for $x_1x_2x_3x_4$.
+- Three 4–6-variable targets were also evaluated with B3.2: $x_1x_2x_3x_4$, the staircase and MAJ of parities. On them PAC-Bayes is vacuous at $n=2048$ and uninformative at $n=16384$.
+
+The certificate fails in two kinds of cases.
+- **The network itself failed:** $x_1x_2x_3$ and $x_1x_2x_3x_4$ at $n=256$ (test error about $0.5$), and the staircase, multiplexer and MAJ of parities at $n=256$ (test error $0.33$–$0.36$). The certificate correctly reports failure. For $x_1x_2x_3x_4$ at $n=2048$ the three seeds' networks have test errors $0.02$, $0.36$ and $0.14$, and their certificates are $0.04$, $0.46$ and $0.15$. Whenever the read-off junta is the target, the certificate tracks the actual test error to within $0.01$–$0.1$.
 - **The circuit language is wrong:** MAJ$_9$ and the 10-variable threshold function. These networks do compute (nearly) the target, but no 6-junta is close to it, and a truth table on 9–10 variables costs hundreds of nats. A language with threshold gates would describe them cheaply.
 
 ### 5.5 Verdict
 
 | bound | best case on the study's grid | verdict |
 |---|---|---|
-| B2.2 path norm (measured) | 1.13 ($x_1$, $n=16384$) | vacuous everywhere; it would need $\phi\lesssim8$ |
-| B2.3 Frobenius (measured) | 1.8 | vacuous everywhere, even at initialization |
-| B2.4 spectral, init reference | $\sim7\times10^2$ | vacuous by orders of magnitude |
-| B3.1 a priori norms | $\ge3$ at $t=0$ | vacuous |
-| B3.2 PAC-Bayes, measured KL | 0.10 (SGD, $x_1$, 100–300 steps) to 0.56 at $n=16384$; 0.55–1.0 at $n=2048$ | **the best parameter-space bound**; non-vacuous only at large $n$ |
-| B3.3 PAC-Bayes, time-based | 0.39–0.76 (Gibbs) during the first escape | non-vacuous only for the first $\sim10^2$ steps |
-| B3.4 online | slack 0.005 | exact, but only for one-pass SGD |
-| 6.1 read-off junta | 0.04–0.16 at $n=256$ (targets with at most 3 relevant variables, decision list); 0.01–0.10 at $n=2048$ (4–6 variables) | **best overall**, a posteriori, needs the known input distribution and a circuit language that fits |
+| B2.2 path norm (measured) | complexity at unit margin $c_{\rm path}=1.46$ ($x_1$, $n=16384$) | vacuous for all 49 networks evaluated; $c<1$ would need $\phi\lesssim19$ at $n=16384$, an informative bound ($<0.5$) $\phi\lesssim8$ |
+| B2.3 Frobenius (measured) | $c_F=3.9$ ($x_1$, $n=16384$) | vacuous everywhere; $c_F>1$ even at the initialization's norms |
+| B2.4 spectral, init reference | $24\varrho/n=679$ | vacuous by orders of magnitude |
+| B3.1 a priori norms | $c_F=2.8$ ($n=16384$) to $22$ ($n=256$) at $t=0$, then growing with $t$ | vacuous |
+| B3.2 PAC-Bayes, measured KL | 0.26–0.56 at $n=16384$ after 20000 Adam steps; 0.10–0.34 after 100–300 steps (best-of with union bound: 0.11 for $x_1$, 0.23 for MAJ$_3$); 0.55–1.0 at $n=2048$ | **the best parameter-space bound**; non-vacuous only at large $n$ |
+| B3.3 PAC-Bayes, time-based | informative ($<0.5$) only at the first checkpoint: 0.39 (SGD, $x_1$, step 20, via (b)), 0.45–0.46 (GD, $t=4$, via (b)), 0.44 (Adam, $x_1$, step 50, via (c)); 0.59–0.77 via (a) for GD at $\eta=0.02$ | non-vacuous only for the first 20–200 steps ($t\lesssim20$); (d) not evaluated |
+| B3.4 online | within 0.006 of the measured mean test error of the window's iterates (slack 0.0057) | essentially exact, but only for one-pass training, and for the random-iterate predictor |
+| 6.1 read-off junta | 0.04–0.16 at $n=256$ ($x_1$, $x_1x_2$, AND$_3$, MAJ$_3$, decision list); 0.01–0.10 at $n=2048$ (staircase, multiplexer, decision list, MAJ of parities), 0.22 for $x_1x_2x_3x_4$ | **best overall**, a posteriori, needs the known input distribution and a circuit language that fits |
 
 ## 6. What the circuit bounds have to beat
 

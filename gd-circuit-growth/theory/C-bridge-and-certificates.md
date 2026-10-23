@@ -432,9 +432,9 @@ Three admissible choices of $\bar N$, from most to least data-dependent:
 - *Main inequality.* Take $\varepsilon=\gamma/(2D)$ in Theorem C2.4. Then $2\mu_\varepsilon\le2D\varepsilon=\gamma$, so the empirical margin term is at most $\widehat P_S[yf_{w(t)}\le\gamma]$. The event of Theorem C2.4 is uniform over $N$, and $\mathrm{kl}^{-1}_+$, $\ell^*_N$ and $(N+1)(N+2)$ are nondecreasing, so the bound with $N_\varepsilon(t)$ implies the bound with any $\bar N\ge N_\varepsilon(t)$, however $\bar N$ depends on the data.
 - *Choice 1* is Theorem C2.3(2).
 - *Choice 2.* Write $N=N_\varepsilon(t)$; if $N=0$ there is nothing to prove. $K_B$ has unit diagonal and off-diagonal entries of absolute value at most $\mu_n$, so Gershgorin's theorem gives $\kappa_B\le1+(N-1)\mu_n$. With Theorem C2.3(2), $N\le(1+(N-1)\mu_n)x$, that is, $N(1-\mu_nx)\le(1-\mu_n)x$. Divide by $1-\mu_nx>0$; $N$ is an integer. The definition is not circular: $\mu_n$ and $x(t)$ do not depend on $N$.
-- *Choice 3.* On the Hoeffding event of Theorem C2.3(2), $\mu_n\le\bar\mu$, and $x(t)\le\bar x$ because $\tau(t)\le t$. So $\mu_nx(t)\le\bar\mu\bar x<1$. Let $\varphi(\mu,x)=\frac{(1-\mu)x}{1-\mu x}$ on $\{\mu x<1\}$. Then $\partial_x\varphi=\frac{1-\mu}{(1-\mu x)^2}\ge0$ and $\partial_\mu\varphi=\frac{x(x-1)}{(1-\mu x)^2}$.
-  - If $x(t)<1$, then $\varphi(\mu_n,x(t))<1$, so $N=0$ by choice 2.
-  - If $x(t)\ge1$, then $\varphi$ is nondecreasing in $\mu$ along $\{x(t)\}\times[\mu_n,\bar\mu]$, and in $x$ along $\{\bar\mu\}\times[x(t),\bar x]$, both inside $\{\mu x<1\}$. So $N\le\varphi(\mu_n,x(t))\le\varphi(\bar\mu,x(t))\le\varphi(\bar\mu,\bar x)$.
+- *Choice 3.* On the Hoeffding event of Theorem C2.3(2), $\mu_n\le\bar\mu$, and $x(t)\le\bar x$ because $\tau(t)\le t$. So $\mu_nx(t)\le\bar\mu\bar x<1$. Let $\Gamma(\mu,x)=\frac{(1-\mu)x}{1-\mu x}$ on $\{\mu x<1\}$. Then $\partial_x\Gamma=\frac{1-\mu}{(1-\mu x)^2}\ge0$ and $\partial_\mu\Gamma=\frac{x(x-1)}{(1-\mu x)^2}$.
+  - If $x(t)<1$, then $\Gamma(\mu_n,x(t))<1$, so $N=0$ by choice 2.
+  - If $x(t)\ge1$, then $\Gamma$ is nondecreasing in $\mu$ along $\{x(t)\}\times[\mu_n,\bar\mu]$, and in $x$ along $\{\bar\mu\}\times[x(t),\bar x]$, both inside $\{\mu x<1\}$. So $N\le\Gamma(\mu_n,x(t))\le\Gamma(\bar\mu,x(t))\le\Gamma(\bar\mu,\bar x)$.
   
   A union bound over the two events gives probability $1-\delta-\delta'$. ∎
 
@@ -665,24 +665,24 @@ $$P(yf_\theta\le0)\le P(yf^M\le\gamma)+P(|\mathrm{clip}f^M-\mathrm{clip}f_\theta
 
 Let $U$ be $m$ unlabelled inputs, independent of $(S,\xi)$. Let the calibration $s(t)$ be chosen from a finite grid $\Sigma$, possibly using $U$.
 1. With probability at least $1-\delta_2$, for all $t\in\mathcal T$ and $s\in\Sigma$,
-$$\mathrm{dis}(\mathrm{sgn}f_{\theta(t)},h^M_s)\le\mathrm{kl}^{-1}_+\Big(\widehat{\mathrm{dis}}_U,\ \tfrac{\ln(|\mathcal T||\Sigma|/\delta_2)}m\Big),$$
-$$\|\mathrm{clip}f_{\theta(t)}-\mathrm{clip}f^M_s\|^2\le\widehat{\|\cdot\|^2_U}+4\sqrt{\tfrac{\ln(|\mathcal T||\Sigma|/\delta_2)}{2m}}.$$
+$$\mathrm{dis}(\mathrm{sgn}f_{\theta(t)},h^M_s)\le\mathrm{kl}^{-1}_+\Big(\widehat{\mathrm{dis}}_U,\ \tfrac{\ln(2|\mathcal T||\Sigma|/\delta_2)}m\Big),$$
+$$\|\mathrm{clip}f_{\theta(t)}-\mathrm{clip}f^M_s\|^2\le\widehat{\|\cdot\|^2_U}+4\sqrt{\tfrac{\ln(2|\mathcal T||\Sigma|/\delta_2)}{2m}}.$$
    So the sign form of SSA can be *verified* at every checkpoint, with $\eta(t)$ given by these upper confidence bounds, and the theorem then holds on the intersection of the two events.
 2. More directly: since $h^M_s$ is a circuit predictor with $T^M(s)$ gates, Theorem C1 with the classes $\mathcal H_T$ gives, with probability $1-\delta_1-\delta_2$,
 $$\mathrm{err}(\mathrm{sgn}f_{\theta(t)})\le\mathrm{kl}^{-1}_+\big(\widehat{\mathrm{err}}_S(h^M_{s}),\cdot\big)+\mathrm{kl}^{-1}_+\big(\widehat{\mathrm{dis}}_U(\mathrm{sgn}f_{\theta(t)},h^M_s),\cdot\big),$$
    with no hypothesis at all.
 
 *Proof.*
-1. The race's predictors depend only on $S$. Conditionally on $(S,\xi)$, there are $|\mathcal T||\Sigma|$ fixed pairs. Apply Lemma C0.1 to the disagreement indicators, and Hoeffding to the squared differences, which lie in $[0,4]$; then take a union bound.
+1. The race's predictors depend only on $S$. Conditionally on $(S,\xi)$, there are $|\mathcal T||\Sigma|$ fixed pairs. Apply Lemma C0.1 to the disagreement indicators, and Hoeffding to the squared differences, which lie in $[0,4]$, each at level $\delta_2/(2|\mathcal T||\Sigma|)$; a union bound over the $2|\mathcal T||\Sigma|$ events gives $\delta_2$.
 2. This is Theorem C1, variant (b), with the candidate list $\{h^M_s:s\in\Sigma\}$. ∎
 
-So **the hypothesis is not needed for the a posteriori bound**, which C1 delivers whenever the check passes. The hypothesis is needed only for the *a priori* statement, which predicts before or during training that the network at time $t$ is within $\eta$ of a circuit of size at most $\kappa(ct/\Theta)^2$. Testing SSA on a sweep, and finding that it holds with small $\eta$ across targets, sizes and times, is the empirical content of "gradient descent is circuit growth".
+So **the hypothesis is not needed for the a posteriori bound**, which C1 delivers whenever the check passes. The hypothesis is needed only for the *predictive*, time-indexed statement: from $S$ and $t$ alone, before or during training, that the network at time $t$ is within $\eta$ of a circuit of size at most $\kappa^M(ct/\Theta)^2$, with $\kappa^M$ computable from the race on $S$. Testing SSA on a sweep, and finding that it holds with small $\eta$ across targets, sizes and times, is the empirical content of "gradient descent is circuit growth".
 
 **What the saved data allow.** The first item is carried out in §3.4.
-- *Test-set predictions.* The study saves predictions on 4096 test inputs at 15 checkpoints. The test inputs are independent of $S$, and their labels are not needed. This gives the sign-form check at every checkpoint, with $\varepsilon^U=\ln(15|\Sigma|/\delta)/4096\approx2\cdot10^{-3}$.
+- *Test-set predictions.* The study saves sign predictions on 4096 test inputs at 15 checkpoints. The test inputs are independent of $S$, and their labels are not needed. This gives the sign-form check at every checkpoint, with $\varepsilon^U=\ln(2\cdot15|\Sigma|/\delta)/4096\approx2.3\cdot10^{-3}$ for $|\Sigma|\le23$ race states ([`checks/C_r2_checks.out`](checks/C_r2_checks.out) §5).
 - *Fourier coefficients.* The saved coefficients on the relevant characters give *lower* bounds $\sum_{S\in\mathcal C}(\hat f_\theta(S)-\hat f^M(S))^2\le\|f_\theta-f^M\|^2$. They can refute the $L^2$ form, but not confirm it.
-- *Irrelevant influence.* $\mathrm{infl\_irr}$ bounds the $L^2$ distance to the best real junta on the relevant coordinates (§1.2), which can be compared with the race's distance to the same junta.
-- *Final parameters.* These allow any $m$, as in §1.4.
+- *Irrelevant influence.* $\mathrm{infl\_irr}$ averages only 5 of the $d-|R|$ irrelevant coordinates, so $(d-|R|)\cdot\mathrm{infl\_irr}$ is an extrapolation, not an upper bound, on the network's $L^2$ distance to the best real-valued junta on the relevant set (§1.2). At intermediate checkpoints, where only these summaries and the signs are saved, the saved data therefore cannot certify the $L^2$ form of SSA; the measured coordinates and the saved Fourier coefficients can only refute it.
+- *Final parameters.* These allow any $m$, as in §1.4, including a rigorous junta distance (§1.2) and the $L^2$ form of SSA, but only at the final checkpoint, where the race's final state is the target in most runs and the test has little content.
 
 **Caveat (μP initialization; Heuristic).**
 - The study's network is not at small initialization. At μP, $W_1$ and $W_2$ are $O(1)$, and the initial output is $O(N^{-1/2})$ in $L^2$, a few hundredths at $N=128$.
@@ -698,10 +698,10 @@ So **the hypothesis is not needed for the a posteriori bound**, which C1 deliver
 
 | target | $n$ | checkpoints with $\hat\eta=0$ while error $>0.01$ | other intermediate checkpoints: $\hat\eta$ / test error | final certificate: race state (gates) / best C1 |
 |---|---|---|---|---|
-| and3 | 2048 | steps 10–100: the network *is* the constant state $\mathrm{sgn}\,\bar y$ | step 200: 0.029 / 0.029 | 0.015 (2) / 0.010 |
+| and3 | 2048 | steps 10–100: the network predicts the majority label everywhere, the constant state $\mathrm{sgn}\,\bar y$ | step 200: 0.029 / 0.029 | 0.015 (2) / 0.010 |
 | and3 | 256 | steps 10–100, the same | steps 200–20000: $\hat\eta=e$ (0.02–0.06) | 0.132 (2) / 0.104 |
 | dnf3 | 2048 | steps 10–20: the constant state | steps 50–200: 0.11–0.14 / 0.13–0.25 | 0.152 (17) / 0.143 |
-| dnf3 | 256 | step 10 | steps 50–20000: 0.14–0.20 / 0.16–0.25 | 0.631 (11) / 0.687 |
+| dnf3 | 256 | steps 10–20: the constant state | steps 50–20000: 0.14–0.20 / 0.16–0.25 | 0.631 (11) / 0.687 |
 | mux | 2048 | — | steps 10–20: 0.10–0.12 / 0.47–0.49 (near the constant); steps 50–200: 0.13–0.28 / 0.31–0.38 | 0.191 (20) / 0.014 |
 | stair5 | 2048 | — | steps 10–500: 0.14–0.27 / 0.18–0.45; $s^*$ is not monotone in the step | 0.151 (17) / 0.020 |
 | maj3 | 2048 | — | steps 10–50: 0.11–0.32 / 0.11–0.36 | 0.040 (6) / 0.010 |
@@ -711,12 +711,12 @@ So **the hypothesis is not needed for the a posteriori bound**, which C1 deliver
 | par3 | 2048 | — | the race fires no useful gate: its only firing, at $t/\Theta=13$, is a noise gate (A, Propositions A4.3 and A2.6). The network learns par3 by step 500 | vacuous / 0.008 |
 
 **Reading.**
-- **Where SSA holds.** It holds exactly on the first plateau. For and3 and dnf3, the μP Adam network sits *exactly* at the race's $s=0$ state, the constant predictor, for its first 20–100 steps, before any feature is learned.
+- **The first plateau is a trivial match.** For and3 and dnf3, whose labels are unbalanced, the μP Adam network predicts the majority label on every test input during its first plateau (and3: steps 10–100; dnf3: steps 10–20), before any feature is learned. That is the race's $s=0$ state, the constant predictor. But any learner that fits the mean first does the same, so this agreement says nothing about circuit growth and is no evidence for SSA beyond the trivial state. The transitions are the real test.
 - **Partial support.** For dnf3, mux and stair5, the network's intermediate functions are closer to some intermediate race state than to the target: $\hat\eta$ is 40–80% of the test error. But $\hat\eta\approx0.1$–$0.3$ is far from small, and for stair5 the best-matching race time jumps back and forth.
 - **Where it fails.** For maj3, majpar and parmaj the intermediate networks are no closer to any race state than to the target. For par3 the toy race cannot even start, while the network succeeds: its route goes through a three-way interaction, which a fan-in-2 race with these thresholds never fires. This is A's circuit-leap obstruction, which real gradient descent overcomes at a polynomial cost in time.
 - **Overshoot costs certificate quality.** The race's own final circuit is a *worse* certificate than C1's read-off classes: 6 gates for maj3, 17–20 for mux, stair5 and dnf3. This is A's Proposition A4.2 (overshoot from ties and square-loss refits), now on real runs.
 
-So, with this toy library and the sign form, SSA is a good description of the first plateau and a poor one of the transitions, and the a priori Theorem C3.4 cannot yet be applied to the study's runs. The certificates that *are* valid and non-vacuous come from C1 directly, as Corollary C3.5 says they would. A better test would use the $L^2$ form, a library closer to the network's units (ReLU neurons on few coordinates), and a fitted clock map $s(t)$. Saving more checkpoints during transitions would also help.
+So, with this toy library and the sign form, SSA holds only in the trivial constant state and is a poor description of the transitions, and the time-indexed Theorem C3.4 cannot yet be applied to the study's runs. The certificates that *are* valid and non-vacuous come from C1 directly, as Corollary C3.5 says they would. A better test would use the $L^2$ form, which needs real outputs saved at intermediate checkpoints; a library closer to the network's units, such as ReLU neurons on few coordinates with a finite set of weights, counted with the real-valued constants of §3.2; and a fitted clock map $s(t)$. Saving more checkpoints during transitions would also help.
 
 ---
 
@@ -775,7 +775,7 @@ Then, with probability at least $1-\delta$:
 $$N_1\ \le\ \frac b\eta\Big(\frac{5\Theta}{4U^*}+\eta\Big),$$
   which at the smallest admissible $b/\eta$ is about $100\ln(2|\mathcal M|/\delta)/\gamma^2+b$.
 
-$N_1$ does not depend on $\Theta$, hence not on $\alpha$, nor on $\eta$ and $b$ separately.
+In general $N_1\approx(b/\eta)\,\Theta/U^*$: the sampling rate (samples per unit of race time) times the population firing time. So $N_1$ depends on $\Theta$ unless the sampling rate is scaled with it. At the smallest admissible sampling rate, $b/\eta$ just above $80U^*\ln(2|\mathcal M|/\delta)/(\Theta\gamma^2)$, which scales like $1/\Theta$, the sample count is at most about $100\ln(2|\mathcal M|/\delta)/\gamma^2+b$, independently of $\Theta$ and hence of $\alpha$.
 
 *Proof.*
 1. **Clock concentration** (as in A, Lemma A3.2). Let $t_0=2\Theta/U^*$, $I_0=\lceil t_0/\eta\rceil$, and $D^m_i=\eta(\langle y,g_m\rangle_{B_i}-U_m)$.
@@ -800,8 +800,8 @@ This is the correlational-SQ rate: one correct move costs $O(\ln|\mathcal M|/\ga
 To extend Proposition C4.3 to a run of $T$ moves, two things are needed that I have not proved: the readout must track the population refit (stochastic approximation), and the population race's crossing times must be separated by a clock margin $\Delta$. They are A's open problem 3. Granting them, the same concentration argument applies over the whole run.
 - **Clocks never reset.** So the noise accumulates over the run's total time $t^*$, the time at which the population race reaches error $\varepsilon$. The needed rate is $b/\eta\gtrsim2t^*\ln(2|\mathcal M|/\delta)/\Delta^2$, and the sample cost is
 $$N^*\approx\frac b\eta t^*\approx2\Big(\frac{t^*}{\Delta}\Big)^2\ln\frac{2|\mathcal M|}\delta .$$
-- **The race time is $\alpha$-invariant.** $t^*$ and $\Delta$ both scale with $\Theta$ (A, Lemma 2.2(4)), so $N^*$ does not depend on $\alpha$ at all: small initialization slows learning in *time*, not in *samples*.
-- **Where circuit size enters.** By Lemma C3.3, a race that has built $T$ gates has run for $\tau\ge\Theta\sqrt{T/\kappa}$. So $t^*/\Theta\ge\sqrt{T^*/\kappa}$, where $T^*$ is the size of the circuit the race needs. With $\Delta/\Theta$ the *relative* clock margin,
+- **The race time is $\alpha$-invariant, for the pure attach race.** In a race of $k=2$ attach moves with one threshold $\Theta$, $t^*$ and $\Delta$ both scale with $\Theta$ (A, Lemma 2.2(4)). Then $N^*$ does not depend on $\alpha$ at all: small initialization slows learning in *time*, not in *samples*. A's referee found that Lemma 2.2(4) holds only for this pure race. Once fresh-chain candidates with thresholds of order $\alpha^{-(k-2)}$ are added, the order of events, and with it $t^*/\Delta$ and $N^*$, can depend on $\alpha$ (A, the note after Lemma 2.2).
+- **Where circuit size enters.** By Lemma C3.3, a race that has built $T$ gates has run for $\tau\ge\Theta\sqrt{T/\kappa}$, with $\kappa$ the data-dependent top eigenvalue of the centred Gram matrix of its fired gates. So $t^*/\Theta\ge\sqrt{T^*/\kappa}$, where $T^*$ is the size of the circuit the race needs. With $\Delta/\Theta$ the *relative* clock margin,
 $$N^*\ \gtrsim\ \frac{T^*}{\kappa\,(\Delta/\Theta)^2}\ln\frac{2|\mathcal M|}{\delta}.$$
   For $T$ sequential moves with utilities about $U$ and gaps about $\gamma$, $t^*\approx T\Theta/U$ and $\Delta\approx\Theta\gamma/U$, which gives $N^*\approx2(T/\gamma)^2\ln|\mathcal M|$.
 - **Comparison with Occam.** In both cases $\ln|\mathcal M|\approx\ln|G|+k\ln(d+T)$ is the per-gate description length of A's Lemma 1.1. So the online race needs about *(circuit description length) / (relative margin)²* samples, between linear and quadratic in $T$. The Occam batch learner needs *(description length) / ε* (A, Theorem A1), and a consistent online learner over $\mathcal H_T$ makes $O(L_T\ln N)$ total mistakes (Remark C4.5 below; the sibling project proves the posterior-sampling version). The race replaces $1/\varepsilon$ by $1/\gamma^2$, pays $T$ again for persistent clock noise, and needs every intermediate move to have positive margin.
@@ -813,25 +813,28 @@ $$\mathbb E[M_N]\le1+\big(\ln|\mathcal H|+\ln N\big)\big(1+\ln N\big)+\big(1+\ln
 
 This is the precise sense in which small circuits imply few total mistakes for an Occam learner. The race is not consistent with past data, so the remark does not apply to it. For the race the mechanism is Proposition C4.3.
 
-**What can be checked.** The study's online protocol (one pass, batch 64) records test error against samples seen. Proposition C4.1 turns their prequential error into a rigorous bound on the trajectory's test error, and Proposition C4.2 into one on the best or final iterate. The heuristic predicts that the samples-to-learn number is independent of the learning rate at fixed $b/\eta$, and that it scales like $\ln d/\gamma^2$ for library targets. Both are testable.
+**What can be checked.** The study's online protocol (one pass, batch 64) records the error on a fixed test set against samples seen, every 500 steps. It does not log the prequential mistakes, that is, the errors of each iterate on its own fresh batch before the update, nor the later-sample errors $\widehat{\mathrm{err}}_{\ge i}(h_i)$ that Proposition C4.2 uses. So Propositions C4.1 and C4.2 have not been evaluated on the study's runs. Logging the per-step minibatch mistakes before each update would make C4.1 computable, and C4.2(1) would need each checkpoint's predictions on the later batches. The heuristic predicts that the samples-to-learn number is independent of the learning rate at fixed $b/\eta$, and that it scales like $\ln d/\gamma^2$ for library targets. Both are testable.
 
 ---
 
 ## 5. What is vacuous at realistic sizes, and what is open
 
 **Non-vacuous**
-- Theorem C1 on the saved networks: below $0.5$ for all 13 targets at $n=2048$, below $0.04$ for 9 of them, and $\le0.021$ for every network at $n=16384$. The Fourier-sign class extends B's junta read-off to MAJ$_9$, THR$_{10}$ and dnf3 (§1.4).
-- §1.6: certificates at every checkpoint, from saved predictions only, once the network is within about $0.1$ of a small circuit.
-- Theorem C2.4 and Corollary C2.5 (with measured $\kappa$) for sparse targets in the diagonal toy, from $n=100$–$400$ with $D=176$. The same holds for GD and SGD (Proposition C2.6).
-- Proposition C4.1 and C4.2 for the online protocol: these are essentially exact.
+- Theorem C1 on the saved networks: below $0.5$ for all 13 targets at $n=2048$, below $0.04$ for 9 of them, and $\le0.021$ for every network at $n=16384$. The Fourier-sign class extends B's junta read-off to MAJ$_9$, THR$_{10}$ and dnf3 (§1.4). The certified networks are the float16-rebuilt ones; the trained float32 networks cost at most $0.0024$ more (§1.3).
+- §1.6: certificates at every checkpoint of a run, uniformly over its 15 checkpoints, from saved predictions only, once the network is within about $0.1$ of a predictor in a small class.
+- Theorem C2.4, and Corollary C2.5 with the measured $\kappa_B$, for sparse targets in the diagonal toy, from $n=100$–$400$ with $D=176$. The same holds for GD and SGD (Proposition C2.6).
 
 **Vacuous or weak**
-- Corollary C2.5 with the a priori Gershgorin bound on $\kappa$ needs $\mu_n(\tau/\Theta)^2<1$, which fails at $n\le400$ unless $\alpha$ is tiny.
+- Corollary C2.5(2)–(3), the forms without the data-dependent $\kappa_B$, need $\mu(\tau/\Theta_\gamma)^2<1$. At $n\le400$ this holds only for par2 at $\alpha=10^{-8}$: $0.107$ with the empirical $\mu_n$, $0.163$ with the Hoeffding $\bar\mu$ (size term a function of $(n,D,\tau)$ alone), and $0.275$ with raw time $t$, at $t=10$ only. A time-only size term needs $n\gtrsim2(\tau/\Theta_\gamma)^4\ln(2D_{2k}/\delta')$.
+- Proposition C2.6(4), the SGD size count: it uses integrated minibatch gradient norms, and $N/\text{bound}$ is only $0.07$–$0.12$.
 - Lemma C3.2 at depth 4 for $\alpha\ge0.1$: $\prod\|W_l\|_F$ is too crude. At depth 3 the bound has the right scaling but is loose by 14–21×.
 - Proposition C4.3's constants: $100\ln(2|\mathcal M|/\delta)/\gamma^2$ is thousands of samples for par2, where the toy race needs far fewer.
 
+**Not yet evaluated**
+- Propositions C4.1 and C4.2 on the study's online runs. The study does not log prequential mistakes (§4, "What can be checked"). Their deviation terms would be small, about $\sqrt{\ln(20)/(2\cdot1.28\cdot10^6)}\approx10^{-3}$ at $1.28\cdot10^6$ samples. But they bound the average over iterates, which includes the early, bad ones, and the fast-rate form loses a factor of $1.58$ at $\lambda=1$.
+
 **Conditional**
-- Theorem C3.4 is only as good as hypothesis SSA. In the sign form, with A's toy library, SSA holds exactly on the first plateau (and3, dnf3), only partly during transitions ($\hat\eta\approx0.1$–$0.3$), and not at all for par3 (§3.4). So the a priori bound cannot yet be applied to the study's runs; C1 certifies them a posteriori.
+- Theorem C3.4 is only as good as hypothesis SSA. In the sign form, with A's toy library, SSA holds only in the trivial constant state of the first plateau (and3, dnf3), which any learner that fits the mean first reaches; only partly during transitions ($\hat\eta\approx0.1$–$0.3$); and not at all for par3 (§3.4). So the time-indexed bound cannot yet be applied to the study's runs; C1 certifies them a posteriori.
 
 **Open problems**
 1. **Prove SSA for some ReLU class.** A non-asymptotic SSA, even for two-layer ReLU networks on Boolean inputs with a finite library of neuron directions, would make Theorem C3.4 unconditional. The early-alignment results cover the first move; the difficulty is the second move onward.
@@ -844,7 +847,7 @@ This is the precise sense in which small circuits imply few total mistakes for a
 
 ## 6. Files
 
-All scripts are in [`checks/`](checks/), use numpy and scipy, and run in seconds to a few minutes on one core. The C1, §1.6 and §3.4 scripts read the sweep outputs read-only from `$RESULTS`, which are kept outside the repository, as in B.
+All scripts are in [`checks/`](checks/), use numpy and scipy, and run in seconds to a few minutes on one core. The C1, §1.6 and §3.4 scripts, the referee's float16 check and part 4 of `C_r2_checks.py` read the sweep outputs read-only from `$RESULTS`, which are kept outside the repository, as in B.
 
 | script | output | checks |
 |---|---|---|
@@ -856,6 +859,8 @@ All scripts are in [`checks/`](checks/), use numpy and scipy, and run in seconds
 | [`c2_discrete_check.py`](checks/c2_discrete_check.py) | [`c2_discrete_check.txt`](checks/c2_discrete_check.txt) | Proposition C2.6 (GD and SGD) |
 | [`c3_gronwall_check.py`](checks/c3_gronwall_check.py) | [`c3_gronwall_check.txt`](checks/c3_gronwall_check.txt), `c3_gronwall_check.json` | Lemmas C3.1 and C3.2 |
 | [`c3_ssa_check.py`](checks/c3_ssa_check.py) | [`c3_ssa_check.txt`](checks/c3_ssa_check.txt), `c3_ssa_check.json` | §3.4: hypothesis SSA (sign form) against A's race on the saved runs; uses [`race_bounds.py`](checks/race_bounds.py) from A |
+| [`referee_C_r1.py`](checks/referee_C_r1.py), [`referee_C_r1_fp16.py`](checks/referee_C_r1_fp16.py), [`referee_C_r1_small.py`](checks/referee_C_r1_small.py) | [`referee_C_r1.out`](checks/referee_C_r1.out), [`referee_C_r1_fp16.out`](checks/referee_C_r1_fp16.out), [`referee_C_r1_small.out`](checks/referee_C_r1_small.out) | the round-1 referee's checks: kl readings, Lemmas C3.1–C3.2, Proposition C2.6 at large steps, Proposition C4.3 by simulation; float16 versus float32 networks; MAJ$_3$ circuit size, $\mathcal F_{8,1}$, MAJ$_9$ level-1 weight |
+| [`C_r2_checks.py`](checks/C_r2_checks.py) | [`C_r2_checks.out`](checks/C_r2_checks.out) | revision 2: class sizes for §1.2; the three choices of Corollary C2.5; the float16 transfer term; junta distance of the final networks (§1.2); Corollary C3.5(1) constant; per-seed §1.4 table |
 
 ## References
 

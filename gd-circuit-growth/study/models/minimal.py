@@ -11,10 +11,10 @@ LEARNED OBJECT
               b in {f-1, f-3, ..., 1-f} (AND-like ... OR-like) or b = -f-1 (the signed sum itself).
               depth 1: S is a set of literals (f <= 4); depth 2: S is a set of f <= 3 wires from the *active pool*
               (active literals and depth-1 gates) containing at least one gate.  Depth-2 gates are not wires.
-    readout   f(x) = c + sum_i a_i x_i + sum_g a_g (g - mean g)/std g: least squares over ALL literals and the accepted
-              gates (tiny ridge), refitted after every acceptance; prediction sign(f).  The literals are always in the
-              readout (the "order-1 unit" of the race, i.e. the network's linear/Hebbian part), so a fan-in-1 gate is
-              never a move.
+    readout   f(x) = c + a_0 h(x) + sum_g a_g (g - mean g)/std g: least squares over the Hebbian feature
+              h(x) = sum_i h_i x_i, h = E_S[(y - ybar) x] (the race's order-1 unit: one dense linear unit whose weights are
+              the empirical input-label correlations, with their sampling noise) and the accepted gates (tiny ridge),
+              refitted after every acceptance; prediction sign(f).  Fan-in-1 gates are not moves.
 
 STATE    the accepted gates and the set A of *active* literals: a literal is active once an accepted gate reads it or
          once its own residual correlation is significant (n rho_i^2 > c N(1)).
@@ -213,7 +213,7 @@ def n_candidates(k, j, d, nact, f):
 def search(Ulit, Mlit, r, active, gate_wires, c, a, law, fmax=4, need_score=None, d_count=None):
     """Score every depth-1 (literal subsets, f = 2..fmax) and depth-2 (pool subsets with >= 1 gate wire, f = 2..3)
     candidate on residual r.  Returns the best candidate by z^2 = n rho^2 / N(k) as a dict, or None.
-    Ulit (n, d) literals, Mlit plain literal moments (precomputed, order <= fmax), active (d,) bool,
+    Ulit (n, d) literals, Mlit(order) -> plain literal moments up to that order, active (d,) bool,
     gate_wires (n, G) +-1 wires of depth-1 gates.  d_count: the d used in the noise law (defaults to Ulit.shape[1])."""
     n, d = Ulit.shape
     dn = d_count or d
@@ -228,22 +228,21 @@ def search(Ulit, Mlit, r, active, gate_wires, c, a, law, fmax=4, need_score=None
         if best is None or z2 > best["z2"]:
             best = dict(info, z2=z2)
 
-    # ----- depth 1: literal subsets.  Moments of order 4 are only computed when a k-new-input candidate could still win.
-    Rlit2 = None
+    # ----- depth 1: literal subsets.  Order-4 moments are computed only when a fan-in-4 candidate could still win.
+    Rcache = {}
     for f in range(2, fmax + 1):
-        # upper bound on z^2 for this fan-in: rho <= 1, smallest N among the k's possible for subsets of size f
+        # upper bound on z^2 for this fan-in: rho <= 1 and the smallest N among the k's possible for subsets of size f
         kmin = max(0, f - nact)
         Nmin = min(noise_count(k, dn, a, nact, law, n_candidates(k, f - k, dn, nact, f)) for k in range(kmin, f + 1))
         if best is not None and n / Nmin <= best["z2"]:
             continue
-        if f >= 4 and Rlit2 is not None and Rlit2[1] < 4:
-            Rlit2 = None
-        if Rlit2 is None:
-            Rlit2 = (moments(Ulit, r.astype(F32), f), f)
-        Rm = Rlit2[0]
+        mo = 3 if f <= 3 else 4
+        if mo not in Rcache:
+            Rcache[mo] = moments(Ulit, r.astype(F32), mo)
+        Rm = Rcache[mo]
+        Mlit_f = Mlit(mo)
         subs, idx = _subset_index(d, f)
-        Mo = Mlit[idx]; Ro = Rm[idx]
-        rho2, si, bb = score_subsets(Mo, Ro, f, sr2)
+        rho2, si, bb = score_subsets(Mlit_f[idx], Rm[idx], f, sr2)
         kk = (~active[subs]).sum(1)
         for k in np.unique(kk):
             sel = np.where(kk == k)[0]
@@ -299,15 +298,26 @@ class Minimal:
         X = np.asarray(X, dtype=F32); y = np.asarray(y, dtype=np.float64)
         n, d = X.shape
         c, a, law = self.c, self.a, self.law
-        Mlit = moments(X, np.ones(n, F32), self.fmax)
+        _mc = {}
+
+        def Mlit(order):           # plain literal moments, computed lazily (order-4 only if a fan-in-4 search happens)
+            if order not in _mc:
+                _mc[order] = moments(X, np.ones(n, F32), order)
+            return _mc[order]
         active = np.zeros(d, bool)
         gates, cols = [], []
         GW = np.zeros((n, 0), F32)
         Xs = X.astype(np.float64)
         trace = []
 
+        # the order-1 (Hebbian) unit: one dense linear feature h(x) = sum_i h_i x_i with h = E_S[(y - ybar) x]
+        hvec = (Xs.T @ (y - y.mean())) / n
+        hcol = Xs @ hvec
+        hsd = hcol.std() if hcol.std() > 1e-12 else 1.0
+        hcol = hcol / hsd
+
         def refit():
-            F = np.concatenate([Xs] + ([np.stack(cols, 1)] if cols else []), 1)
+            F = np.stack([hcol] + cols, 1)
             F1 = np.concatenate([np.ones((n, 1)), F], 1)
             A_ = F1.T @ F1 + self.ridge * n * np.diag(np.r_[0.0, np.ones(F.shape[1])])
             w = np.linalg.solve(A_, F1.T @ y)
@@ -361,10 +371,10 @@ class Minimal:
             Z = np.asarray(Z, dtype=F32)
             m = len(Z)
             GWz = np.zeros((m, 0), F32)
-            out = w_[0] + Z.astype(np.float64) @ w_[1:d + 1]
+            out = w_[0] + w_[1] * (Z.astype(np.float64) @ hvec) / hsd
             for i, gg in enumerate(G_):
                 o, ind = _gate_out(Z, GWz, gg)
-                out += w_[d + 1 + i] * (o - gg["mu"]) / gg["sd"]
+                out += w_[2 + i] * (o - gg["mu"]) / gg["sd"]
                 if "wire" in gg:
                     GWz = np.concatenate([GWz, (2.0 * ind - 1.0).astype(F32)[:, None]], 1)
             return np.where(out > 0, 1.0, -1.0)
