@@ -141,7 +141,7 @@ def R3():
     y = rng.standard_normal(n)
     # two same-sign neurons with nearby directions in the same cell, plus three others
     m = 5
-    W = rng.standard_normal((m, d + 1))
+    W = rng.standard_normal((m, d + 1)); W *= 0.3 / np.linalg.norm(W, axis=1, keepdims=True)
     cand = rng.standard_normal((100000, d + 1)); cand /= np.linalg.norm(cand, axis=1, keepdims=True)
     best = cand[np.argmax(np.abs(cand @ Xt.T).min(1))]           # direction with the largest training margin
     W[0] = 0.3 * best
@@ -159,11 +159,11 @@ def R3():
     Q0 = a[0] * a[1] - W[0] @ W[1]
     h, worst, steps = 1e-3, 0.0, 0
     pattern0 = (Xt @ W.T > 0)
-    for _ in range(2000):
+    for _ in range(5000):
         k1 = vel(st); k2 = vel(st + h / 2 * k1); k3 = vel(st + h / 2 * k2); k4 = vel(st + h * k3)
         new = st + h / 6 * (k1 + 2 * k2 + 2 * k3 + k4)
         Wn_ = new[m:].reshape(m, d + 1)
-        if np.any((Xt @ Wn_.T > 0) != pattern0):
+        if np.any((Xt @ Wn_[:2].T > 0) != pattern0[:, :2]):     # only the pair must keep its pattern
             break
         st = new; steps += 1
         a_, W_ = st[:m], st[m:].reshape(m, d + 1)

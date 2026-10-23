@@ -11,6 +11,12 @@ Notes by Claude, prompted by Kaarel Hänni. Research note, 23 October 2026; not 
 
 [Part 2](#part-2-an-empirical-study-a-matched-discrete-model-and-generalization-bounds) adds an empirical study of rich-regime networks on 21 Boolean functions, a discrete "race" model that matches their sample complexity within a factor of about 1.3 on held-out functions, and generalization bounds, including certificates that bound trained networks' test error without labelled hold-out data.
 
+[Part 3](#part-3-state-of-understanding-after-an-extended-session) gives the current state of understanding:
+- the race model transfers to 20 fresh targets (within about 1.15× on average) and to new input dimensions;
+- what makes it work is the sampling noise of its feature search, not its clocks;
+- a closed-form law, $n^*\approx c\max_i d(d/a)^{k_i-2}/\rho_i^2$ along the target's greedy path, predicts the networks' sample complexity, including how it scales with $d$ ($\approx d^{k-1}$ for $k$-parities, not Occam's $k\log d$);
+- new theorems make "short training ⇒ small circuit ⇒ generalization" rigorous for two-layer quadratic networks, and for two-layer ReLU networks through the first escape.
+
 ## Short answer
 
 Mostly yes, and most of it is in the literature under the names *saddle-to-saddle dynamics* and *incremental learning*. In the rich regime (small initialization), gradient flow is well approximated by a discrete greedy algorithm:
