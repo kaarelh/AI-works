@@ -65,5 +65,30 @@ def dscale_table():
         print(f"| {fn} | {ex('nn')} | {ex('pred')} | {ex('model')} | {ex('race')} | {ex('noleap')} | {ex('occam')} |")
 
 
+def scoreboard(split):
+    fns = C.HELDOUT if split == "HELDOUT" else C.CALIB
+    keys = ["sc_mean_abs_log2_ratio", "sc_spearman", "success_agreement", "curve_mae", "example_agreement_score", "time_spearman"]
+    print("| model | mean abs log2 n* ratio | n* Spearman | success agreement | curve MAE | per-example agreement | time Spearman |")
+    print("|---|---|---|---|---|---|---|")
+    nn = np.array([R["d30"][f]["nn"] for f in fns]); pr = np.array([R["d30"][f]["pred"] for f in fns])
+    pc = R[f"pred_curve_{split}"]
+    print(f"| **analytic predictor** (2 constants) | {np.mean([lr(a, b) for a, b in zip(pr, nn)]):.2f} | {spear(nn, pr):.2f} | "
+          f"{pc['success_agreement']:.2f} | {pc['curve_mae']:.2f} | – | – |")
+    rows = [("minimal", "**minimal model** (2 constants)"), ("race", "race (3 constants)"), ("sswm", "sswm"),
+            ("nngp-kernel", "NNGP kernel"), ("occam-junta", "Occam over juntas")]
+    for name, lab in rows:
+        path = os.path.join(EV, name + ".npz")
+        if not os.path.exists(path):
+            continue
+        b = C.compare(C.load_eval(path), "adam", fns=fns, verbose=False)
+        print(f"| {lab} | " + " | ".join(f"{b[k]:.2f}" if b[k] == b[k] else "–" for k in keys) + " |")
+    if split == "HELDOUT":
+        b = C.compare(C.nn_as_model_res("sgd", fns=C.HELDOUT), "adam", fns=C.HELDOUT, verbose=False)
+        print("| *reference: networks trained with μP-SGD* | " + " | ".join(f"*{b[k]:.2f}*" for k in keys) + " |")
+
+
 if __name__ == "__main__":
-    {"nstar": nstar_table, "summary": summary_rows, "dscale": dscale_table}[sys.argv[1]]()
+    if sys.argv[1] == "scoreboard":
+        scoreboard(sys.argv[2])
+    else:
+        {"nstar": nstar_table, "summary": summary_rows, "dscale": dscale_table}[sys.argv[1]]()

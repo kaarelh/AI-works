@@ -1,0 +1,69 @@
+(1) Lemma C0.1, [0,1]-valued: max over eps grid of P(p > klinv(phat, eps)) / e^{-n eps} (must be <= 1 up to MC error)
+    n= 10 Bernoulli(0.1)         max ratio 0.929 (at eps=0.098)
+    n= 10 unif{0,1/2,1}          max ratio 0.446 (at eps=0.005)
+    n= 10 Beta(0.3,2)            max ratio 0.336 (at eps=0.005)
+    n= 10 0 w.p. .7, else .25    max ratio 0.404 (at eps=0.005)
+    n= 10 0 w.p. .95, else 1     max ratio 0.860 (at eps=0.036)
+    n= 50 Bernoulli(0.1)         max ratio 0.646 (at eps=0.098)
+    n= 50 unif{0,1/2,1}          max ratio 0.279 (at eps=0.005)
+    n= 50 Beta(0.3,2)            max ratio 0.132 (at eps=0.005)
+    n= 50 0 w.p. .7, else .25    max ratio 0.100 (at eps=0.005)
+    n= 50 0 w.p. .95, else 1     max ratio 0.470 (at eps=0.036)
+    [2s]
+(2) Corollary C2.5 choices 2-3: algebra on a grid
+    18327 admissible (mu_n<=mubar, x<=xbar, mubar*xbar<1) points: violations of N<=Gamma(mu_n,x): 0; of N<=Gamma(mubar,xbar): 0; x<1 but Gamma>=1: 0
+    Gershgorin: max lambda_max(K_B)/(1+(N-1)mu) over 3000 random +-1 Gram matrices = 1.0000 (<=1)
+    [1s]
+(3) diagonal network, gradient flow (independent LSODA integration of the mirror form), d=10, k=3
+    par2  n=100 alpha=1e-03: mu_n=0.300 mubar=0.457 lam_max=4.92 U0=1.000; final train loss 3.5e-09
+    maj3  n=100 alpha=1e-03: mu_n=0.380 mubar=0.457 lam_max=5.00 U0=0.560; final train loss 8.0e-07
+    maj3  n=400 alpha=1e-03: mu_n=0.155 mubar=0.228 lam_max=2.75 U0=0.570; final train loss 3.8e-09
+    and3  n=400 alpha=1e-03: mu_n=0.165 mubar=0.228 lam_max=2.88 U0=0.800; final train loss 7.5e-07
+    x1    n= 64 alpha=1e-03: mu_n=0.438 mubar=0.571 lam_max=7.36 U0=1.000; final train loss 1.5e-08
+    maj5  n=100 alpha=1e-03: mu_n=0.340 mubar=0.457 lam_max=5.84 U0=0.520; final train loss 3.7e-02
+    par2  n=100 alpha=1e-08: mu_n=0.340 mubar=0.457 lam_max=5.23 U0=1.000; final train loss 3.7e-23
+    and3  n=400 alpha=1e-08: mu_n=0.160 mubar=0.228 lam_max=3.40 U0=0.770; final train loss 1.5e-08
+    x1    n=400 alpha=1e-08: mu_n=0.140 mubar=0.228 lam_max=2.87 U0=1.000; final train loss 2.1e-28
+    36045 (time, eps) checks, 36 first-escape brackets. Violations: {'C2.2(1)': 0, 'C2.2(2)': 0, 'C2.3(1)': np.int64(0), 'C2.3(2)': np.int64(0), 'C2.3(3)': 0, 'gersh': 0, 'hoeff_tau': 0, 'hoeff_t': 0}
+    worst N/bound ratios: C2.3(1) 0.701, C2.3(2) 0.999, gersh 1.000, hoeff_tau 1.000, hoeff_t 1.000; l1 identity max rel. error 1.7e-15
+    full cube d=6, y=chi_12: |G_S*|/tau = 1.0000000000; max_{S!=S*} |w_S(t=20)| = 7.7e-23 (the file says 'every coordinate is nonzero for t>0')
+    [4s]
+(4) Hoeffding coherence event: P(mu_n > mubar) over 1000 training sets (must be <= delta' = 0.05)
+    n=100: mubar=0.457, median mu_n=0.340, max 0.520, failure rate 0.005
+    n=400: mubar=0.228, median mu_n=0.165, max 0.255, failure rate 0.007
+    [2s]
+(5) Proposition C2.6: GD version of C2.5 (item 6) and SGD no-early-growth (item 3)
+    90000 (step, eps) checks; violations {'item5': np.int64(0), 'gersh_GD': 0, 'hoeff_GD': 0, 'item3_SGD': 0, 'item4_SGD': np.int64(0)}; worst ratios item5 0.727, gersh_GD 0.500, hoeff_GD 0.333, item4_SGD 0.066
+    [3s]
+(6) Section 1.2: E 1/2 (f(x)-f(x'))^2 = ||f-E[f|x_R]||^2 = sum_{S not<= R} fhat(S)^2 <= sum_{i notin R} Inf_i (exact, d=7)
+    max |pair - Fourier tail| = 1.2e-15; max (tail - influence sum) = 1.39e-17 (<= 0)
+    [0s]
+(7) Theorem C3.4 library constants; L^2-form inequality
+    T=1 real gate min(relu(x1+x2/2),1): 3 image points, 6 readout dichotomies; Boolean constant Phi(2^min(T,d),T)=4 (too small), real-valued constant Phi(2^d,T)=16
+    T=2 real gates: 6 image points, 32 dichotomies; Boolean constant Phi(4,2)=14, real-valued Phi(8,2)=58
+    P(yf<=0) <= P(yf^M<=gamma) + ||clip f - clip f^M||^2/gamma^2, and yf<=gamma <=> y clip f<=gamma: 0 violations in 20000
+    [1s]
+(8) Corollary C3.5(1): P(E Z > mean + 4 sqrt(ln(1/d)/(2m))) <= d for Z in [0,4] (one fixed pair)
+    m=50 delta=0.05 4*Bernoulli(.5): failure rate 0.00769
+    m=50 delta=0.05 4*Beta(.2,.2): failure rate 0.00173
+    m=400 delta=0.01 4*Bernoulli(.5): failure rate 0.00104
+    m=400 delta=0.01 4*Beta(.2,.2): failure rate 0.00015
+    [6s]
+(9) class sizes (nats), independent recomputation, d=30
+    F_(1,9) 60.4  F_(1,10) 72.1  F_(2,3) 21.5  F_(3,1) 9.8  F_(8,1) 17.4  F_(3,18) 304.0  F_(3,19) 332.1  F_(3,21) 392.3  F_(2,18) 262.7
+    C_<=7 65.0  C_<=8 73.4  J_<=8 193.0  J_<=9 371.4  J_<=3 13.70  J_<=5 34.05
+    dnf3 sign representation: 21 supports, GF(2) rank 9; with the rank refinement of C1.2(2) the support's own class has ln Phi(2^9,21) = 85.9 vs ln Phi(2^21,21) = 261.0
+    maj9 slack (60.4+6.6+3.7)/2048 = 0.0345; ln(8*9*10) = 6.58; ln(1/0.025) = 3.69
+    [0s]
+(10) Remark C4.5 by simulation (adversarially chosen consistent hypothesis); C4.3 arithmetic
+    target 37, N=50: E[M_N] = 5.17  <=  bound 51.2
+    target 37, N=500: E[M_N] = 7.41  <=  bound 91.3
+    target 150, N=50: E[M_N] = 5.33  <=  bound 51.2
+    target 150, N=500: E[M_N] = 7.76  <=  bound 91.3
+    C4.3: (b/eta)(5 Theta/(4U*)) at b/eta = 80 U* L/(Theta gamma^2) equals 100 L/gamma^2; par2 example: 100*ln(2*2205/0.05)/0.25 = 4555
+    [1s]
+(11) section 1.3 float16 transfer: klinv(j/4096, ln(100)/4096) for j = 0, 1, 2
+    j=0: 0.00112  j=1: 0.00186  j=2: 0.00239
+    C3.5 eps^U with |T|=15, |Sigma|=23, delta=0.05, m=4096: 2.33e-03
+    [0s]
+total 21s

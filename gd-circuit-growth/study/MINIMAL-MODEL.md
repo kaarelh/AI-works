@@ -9,7 +9,36 @@ how the networks' sample complexity changes with the input dimension $d$?
 
 ## Summary
 
-__SUMMARY__
+- **The minimal model** ([`models/minimal.py`](models/minimal.py)) is greedy stagewise regression over a finite library
+  of $\pm1$-weight ReLU gates of fan-in at most 4, with a dense Hebbian linear unit, one spectral (order-2) unit,
+  and one acceptance rule: accept the best gate if $n\rho^2>c\,N(k)$, where $\rho$ is its correlation with the residual
+  and $k$ the number of inputs it needs that are not yet in the circuit. Two constants, $c$ and $a$, fitted on CALIB.
+  {{SUMMARY_MODEL}}
+- **The noise law** (Heuristic, Section 2): $N(0)=$ the size of the active pool, and
+  $N(k)=d\max(1,d/a)^{k-2}$ for $k\ge1$. It comes from the race model's alignment law $\dot m=kUm^{k-1}$: a dormant unit
+  with initial overlap $m(0)^2=a/d$ escapes towards the target only if its order-$k$ signal beats the frozen sampling
+  noise of the gradient, $kU\,m(0)^{k-1}\gtrsim1/\sqrt n$. Its central claim is that sample cost grows polynomially in $d$
+  for every input that must be found at once, not logarithmically as an Occam (union-bound) threshold would give.
+- **The analytic predictor** ([`minimal_predict.py`](minimal_predict.py)), computed from the target alone on its
+  relevant variables, is the closed form
+  $$n^*=\max\Bigl(n_{\rm Hebb},\ c\max_i\frac{N(k_i)}{\rho_i^2}\Bigr)$$
+  along the population greedy path, where $n_{\rm Hebb}$ is set by the Hebbian unit's sampling noise and involves no
+  fitted constant. Examples: $n^*(x_1)=1.64\,d$, $n^*(\mathrm{MAJ}_9)=9.52\,d$, and $n^*(\chi_k)=c\,(2^k-1)\,d\,(d/a)^{k-2}$ for $d\ge a$.
+  With $c=2.25$ and $a=18$ fitted on CALIB, it predicts the networks' $n^*$ on the 9 held-out targets with mean
+  $|\log_2|$ ratio **0.38** and Spearman **0.97**. The race model scores 0.33 and 1.00 but needs a full simulation.
+- **$d$-dependence** (networks at $d=15,30,60$; constants unchanged):
+  - the predictor gets the sparse-parity exponents $1.00$ and $1.84$ for $k=2,3$ (networks $1.04$, $1.91$; race $0.93$, $0.94$),
+    and the values within 15% at every $d$; MAJ$_9$ is $\propto d$ (143/286/571 against 123/263/625);
+  - it overpredicts the 4-sparse parity at $d=60$ by 1.6× (exponent 2.75 against 2.40);
+  - it underpredicts compositions of low-leap moves (staircase, MAJ of pair parities, multiplexer), which scale as
+    $d^{1.5}$–$d^{1.75}$ in the networks, by up to 2.1× at $d=60$;
+  - mean $|\log_2|$ error over the 7 targets: 0.30 / 0.30 / 0.52 at $d=15/30/60$ (race 0.45 / 0.29 / 0.43).
+  {{SUMMARY_DSCALE_MODEL}}
+- **The Occam law** $N(k)=\log M_k$ (the best-of-$M_k$ noise level) fits $d=30$ about as well (held-out 0.39), but it
+  predicts $n^*$ almost independent of $d$ (exponents 0.16–0.31) and fails the $d$-scaling (mean error 1.50 at
+  $d=60$). The networks' sample complexity is a **search cost**, not a description length.
+  {{SUMMARY_RANDOM}}
+
 
 ## 1. The minimal model ([`models/minimal.py`](models/minimal.py))
 
@@ -35,22 +64,32 @@ It is greedy stagewise regression over an explicit finite library of gates, with
   training error 0, or after 48 gates.
 - **Constants.** Two global constants, $c$ (the acceptance level) and $a$ (the initial-overlap scale of the search),
   calibrated on the 12 CALIB functions only. Fixed by design: fan-in $\le4$, $\pm1$ weights, 48 gates, ridge $10^{-6}$.
-  There is no clock and no time constant.
+  There is no time constant. The model's clock (used only for the time-Spearman column) is derived, not fitted: an
+  accepted move takes time $\sqrt{N(k)}/\rho$, the square root of its sample cost, as in the race's relation
+  $t\sim\Theta\sqrt{n/\log M}$ between firing time and sample size ([`theory/A`](../theory/A-discrete-model.md), Proposition A2.6).
+
+The gate library is explicit and finite, so Theorem A1's counting applies to the gates: a sparse gate costs at most
+$\log\bigl(\binom{d+48}{4}2^4\cdot5\bigr)\approx 19$ nats at $d=30$, a spectral gate at most $d\log3+\log(d+2)\approx36$
+nats. The Hebbian unit is not a library element: it has $d$ real weights, so a generalization bound for the whole
+predictor must add a halfspace-in-$d$-dimensions (VC) term for it.
 
 Compared with the race: no continuous direction search, no rounding of a learned direction (except the spectral unit),
-no firing clock and no time constant $\theta$, a library with $\pm1$ instead of $\{-3..3\}$ weights, and a significance
+no race clock and no time constant $\theta$, a library with $\pm1$ instead of $\{-3..3\}$ weights, and a significance
 test in place of the race. What it keeps is the race's three ingredients that turned out to matter: a dense linear unit
 with sampling noise, sparse gates whose cost depends on how many new inputs they need at once, and reuse of active wires.
 
 ## 2. The noise law (Heuristic)
 
 A candidate is accepted when its correlation with the residual beats the noise level of the search that would find it:
-$\rho^2>c\,N(k)/n$.
+$\rho^2>c\,N(k)/n$, with $\rho$ the correlation (not the covariance) with the current residual, because the sampling
+noise of every gradient scales with the residual's size.
 
 **$k=1$: the Hebbian unit.** Its weights $\hat h_i=h_i+\varepsilon_i$ carry independent sampling noise
 $\varepsilon_i\sim\mathcal N(0,\mathrm{Var}(y)/n)$ on all $d$ coordinates, so the noise in the direction has squared norm
 $d\,\mathrm{Var}(y)/n$. A direction is usable when its signal exceeds that: $N(1)=d$. In the readout this noise is
-kept explicitly; it is what makes the networks' learning curves on dense targets gradual (Section 3).
+kept explicitly; it is what makes the networks' learning curves on dense targets gradual (Section 3). A sparse gate
+that needs one new input (a staircase step such as $x_1x_2$ once $x_1$ is active) is found by the same kind of search
+over $d$ candidates for that input, so it also has $N(1)=d$.
 
 **$k=2$: the spectral unit.** The best order-2 direction is the top eigenvector of $\hat M=M+\Xi$, whose noise $\Xi$ has
 entries of size $1/\sqrt n$ and spectral norm $\approx2\sqrt{d/n}$. A spike is detectable at the BBP-type threshold
@@ -66,9 +105,9 @@ $$kU\,m(0)^{k-1}\gtrsim\frac{\sigma_r}{\sqrt n}\quad\Longleftrightarrow\quad n\g
 With $m(0)^2=\min(1,a/d)$, and absorbing $k^2$ and the order-$k$ normalisation into $a$, this is
 $n\rho^2\gtrsim a\,(d/a)^{k-1}=d\,(d/a)^{k-2}$: every input beyond the second that must be found at once multiplies the
 cost by $d/a$. The initial overlap $m(0)^2=a/d$ is that of the best of many random dormant units rather than of one
-($m(0)^2=1/d$). The fitted $a\approx18$ (Section 4) is of the order of $2\ln P\approx9.7$ for $P=128$ hidden units times
-the $k^2/4$ that was absorbed; that reading is suggestive only, since the width was never varied. The cap at
-$m(0)=1$ matters only for $d<a$.
+($m(0)^2=1/d$). The fitted $a\approx18$ (Section 4) means $m(0)^2\approx0.6$ at $d=30$. For comparison, the best of
+$P=128$ random hidden units has $m(0)^2\approx2\ln P/d\approx0.32$, the same order once the absorbed $k^2$ is put back.
+That reading is suggestive only, since the width was never varied. The cap at $m(0)=1$ matters only for $d<a$.
 
 **$k=0$: reuse.** A gate on already-active wires is a search over the small pool only: $N(0)=|\text{pool}|$ (the active
 literals for depth-1 gates, active literals plus depth-1 gates for depth-2 gates).
@@ -95,7 +134,7 @@ variables (at most $2^{10}$ points); $d$ enters only through $N(k)$ and the Hebb
 **Closed form.** Along the path at $n^*$, with $i^*$ the shortest prefix whose readout reaches predicted error 0.1,
 $$\boxed{\;n^*=\max\Bigl(n_{\rm Hebb},\ c\max_{i\le i^*}\frac{N(k_i)}{\rho_i^2}\Bigr)\;}$$
 where $n_{\rm Hebb}$ solves $\mathbb E_x\Phi(-yF_{i^*}/\sigma_n)=0.1$. Each target's $n^*$ is therefore set by one binding
-term, either the Hebbian noise or a single bottleneck move (Table 2). For simple targets this gives explicit formulas:
+term, either the Hebbian noise or a single bottleneck move (Section 4.2). For simple targets this gives explicit formulas:
 
 | target | binding term | $n^*$ |
 |---|---|---|
@@ -110,8 +149,17 @@ The first two rows contain no fitted constant at all.
 ### 4.1 Scoreboard
 
 Same metrics as [`MODEL-SCOREBOARD.md`](MODEL-SCOREBOARD.md) (networks: Adam, 3 seeds; "never" counted as $2\times16384$).
-Constants were fitted on CALIB only: predictor $c=2.25$, $a=18$ (grid argmin of the CALIB mean $|\log_2|$ ratio);
-minimal model {{MODEL_CONSTANTS}}.
+Constants were fitted on CALIB only, by grid search on the CALIB mean $|\log_2|$ ratio. The predictor's grid
+($c\in[1.5,4]$, $a\in[8,\infty]$, 1 s per point) has its minimum at $c=2.25$, $a=18$ (0.367). The minimal model's grid
+(about 3 min per point) also has its minimum at $c=2.25$, $a=18$ (0.364), so **one pair of constants serves both**:
+
+| minimal model, CALIB mean abs log2 | $a=12$ | $a=16$ | $a=18$ | $a=20$ | $a=24$ |
+|---|---|---|---|---|---|
+| $c=1.5$ | 0.51 | 0.53 | | | |
+| $c=2$ | 0.48 | 0.39 | | 0.41 | 0.43 |
+| $c=2.25$ | | | **0.36** | | |
+| $c=2.5$ | | 0.47 | | | |
+| $c=3$ | | | | | 0.51 |
 
 **Held-out functions (primary):**
 
@@ -135,22 +183,26 @@ unit). Figures: [`figures/minimal_nstar.png`](figures/minimal_nstar.png) (scatte
 [`figures/minimal_curves.png`](figures/minimal_curves.png) (learning curves).
 
 Reading the table:
-- **Leap-1 dense targets** ($x_1$, AND$_3$, MAJ$_3$, MAJ$_9$, the decision list, rand2) are set by the Hebbian noise
-  alone, with no fitted constant: $n^*=1.64d$, $4.94d$, $9.52d$ for $x_1$, MAJ$_3$, MAJ$_9$ against the networks' 47, 112,
-  263 at $d=30$.
+- **Leap-1 dense targets** ($x_1$, AND$_3$, MAJ$_3$, MAJ$_9$, the random halfspace, the decision list, rand2) are set
+  by the Hebbian noise alone, with no fitted constant: $n^*=1.64d$, $4.94d$, $9.52d$ for $x_1$, MAJ$_3$, MAJ$_9$ against
+  the networks' 47, 112, 263 at $d=30$. The two misses in this group go in opposite directions: the networks beat the
+  Hebbian estimate on the decision list (110 against 175) and are worse than it on the random halfspace (563 against 390).
 - **Parities** are set by their first gate, the $k$-input AND, which has $\rho^2=1/(2^k-1)$ with $\chi_k$; the rest of
   the parity is assembled from cheap $k=0$ gates on the same inputs.
-- **Compositions** are set by one interior move: a fan-in-2 pair gate for MAJ$(x_1x_2,\dots)$ and AND$(x_1x_2,x_3x_4)$, a
-  3-leap for sign$(2x_1+x_2x_3+x_4x_5x_6)$, the spectral unit for MAJ$\oplus$MAJ, the multiplexer and the DNF.
+- **Compositions** are set by one interior move: a pair gate for MAJ$(x_1x_2,\dots)$, AND$(x_1x_2,x_3x_4)$ and rand0, a
+  fan-in-4 gate needing two new inputs for the staircase, a 3-leap ($x_4x_5x_6$) for sign$(2x_1+x_2x_3+x_4x_5x_6)$, and the
+  spectral unit for MAJ$\oplus$MAJ, the multiplexer, the DNF and rand3. Recursive majority is the exception: its
+  Hebbian term binds, because its readout keeps leaning on the noisy linear part.
 
 ### 4.3 Which ingredient does what (predictor ablations, CALIB-refitted)
 
 | variant | CALIB mean abs log2 | HELDOUT mean abs log2 | what changes |
 |---|---|---|---|
 | full predictor ($c=2.25$, $a=18$) | 0.37 | 0.38 | |
-| no spectral unit ($c=2.5$, $a=16$) | 0.63 | 0.26 | MAJ$\oplus$MAJ goes from 465 to 3724 (network 743); the DNF from 518 to 919; but the multiplexer and rand3 improve |
+| no spectral unit ($c=2.25$, $a=24$) | 0.46 | 0.45 | MAJ$\oplus$MAJ must be built from sparse pair gates, whose $\rho^2$ is 7× smaller: 465 becomes 1635 (network 743); the DNF (518 → 571) and rand3 (575 → 709) slow down, the multiplexer barely changes (851 → 815) |
 | no leap cost ($a=\infty$, $c=2.5$) | 0.38 | 0.55 | indistinguishable at $d=30$ on CALIB; wrong $d$-scaling (Section 5) |
 | Occam law $N(k)=\log M_k$ ($c=9$) | 0.41 | 0.39 | indistinguishable at $d=30$; wrong $d$-scaling (Section 5) |
+| additive costs, $n^*=\max(n_{\rm Hebb},\,c\sum_{i\le i^*}N(k_i)/\rho_i^2)$ ($c=1.5$, $a=24$) | 0.33 | 0.39 | helps the multi-move compositions (staircase, recursive majority, rand3), hurts AND$(x_1x_2,x_3x_4)$ and the DNF; the data do not distinguish max from sum |
 | the literal sector as least squares on all $d$ literals instead of the Hebbian unit (minimal model, early version) | – | – | dense targets become too easy (MAJ$_9$: 107 against 263) and a double-descent bump appears at $n\approx d$ (MAJ$_3$: error 0.41 at $n=32$) |
 
 At $d=30$ alone, the $n^*$ data cannot tell the search law from the Occam law or from no leap cost: the 21 targets span
@@ -180,14 +232,51 @@ their $d=30$ CALIB constants unchanged; race from [`DSCALE.md`](DSCALE.md) (also
   single-unit law does not allow. Untested.
 - **Compositions of leap-1/2 moves** (staircase, MAJ of pair parities, multiplexer): the networks scale as
   $d^{1.5}$–$d^{1.75}$, the predictor as $d^{0.6}$–$d^{1.3}$, so the predictor is too optimistic at $d=60$ by
-  1.7–2.1×. The 20000-step training budget explains only a small part: extrapolating each network's last
-  doubling of training lowers these $n^*$ by at most 25% and leaves the exponents at 1.4–1.6. A plausible cause is that
+  1.7–2.1×. The 20000-step training budget explains only a small part: extrapolating one more doubling of
+  training at the rate of the last one (steps 10000 to 20000) lowers these $n^*$ by at most about 25% and leaves the
+  exponents at 1.4–1.6. A plausible cause is that
   in MAJ$(x_1x_2,x_3x_4,x_5x_6)$ the three pair spikes of $M$ are degenerate, so the network's spectral search returns
   mixtures that only higher-order terms disentangle; the model's exhaustive pair search sidesteps this. Untested.
 
 ## 6. Assessment
 
-{{ASSESSMENT}}
+**Did the simplification keep the race's match?** {{MATCH_SENTENCE}}
+
+**Is the sample complexity predictable from the target alone?** Yes, at about the race's accuracy on held-out targets,
+with two constants and one formula: $n^*=\max\bigl(n_{\rm Hebb},\,c\max_iN(k_i)/\rho_i^2\bigr)$ (held-out mean
+$|\log_2|$ ratio 0.38 and Spearman 0.97, against 0.33 and 1.00 for the race model, which needs a full simulation). Half
+of the targets come down to one line: the Hebbian noise for dense leap-1 targets (no constant), $c(2^k-1)\,d\max(1,d/a)^{k-2}$
+for parities, one bottleneck move for the rest.
+
+**Does it predict the $d$-dependence?** For sparse parities with $k\le3$ and for dense targets, yes, within 15% at every
+$d$, where the race model misses the 3-sparse parity's exponent (0.94 against 1.91). For the 4-sparse parity the
+predicted exponent is too large (2.75 against 2.40), and for compositions of low-leap moves too small (0.6–1.3 against
+1.5–1.75). The mean $|\log_2|$ error over the 7 targets is 0.30, 0.30 and 0.52 at $d=15,30,60$, against 0.45, 0.29 and
+0.43 for the race model.
+
+**What this says about the networks (Heuristic).**
+1. The cost of a move is set by how many inputs it must find *at once*, and it is polynomial in $d$:
+   $n\propto d^{\max(1,k-1)}/\rho^2$. A union bound over a finite library ($\log M_k$, the Occam reading) fits the
+   $d=30$ data equally well but fails the $d$-scaling completely (exponents 0.2–0.3 against 1–2.4). The networks'
+   sample complexity is a *search* cost, not a description-length cost, even though what they learn is a small circuit.
+2. The search noise is that of a continuous search in $\mathbb R^d$ ($\sqrt{d/n}$ for a direction or a spectral
+   spike), times $(d/a)$ for every further input that has to be found together, with $m(0)^2=a/d$ the initial overlap
+   of the best dormant unit, $a\approx18$.
+3. Reusing what is already learned is nearly free ($N(0)=$ the size of the active pool): leaps, not fan-in, set the cost.
+4. The linear part of the network behaves like a Hebbian estimate with its full sampling noise, $d\,\mathrm{Var}(y)/n$:
+   this alone fixes $n^*$ for $x_1$, MAJ$_3$, MAJ$_9$, AND$_3$ and the decision list, and the small-$n$ learning curves
+   of dense targets, without any fitted constant.
+
+**Negative results and caveats.**
+- The predictor's misses at $d=30$ are structural, not constant-tuning: the decision list (+0.67 in $\log_2$), AND$(x_1x_2,x_3x_4)$
+  (+0.67), the random halfspace (−0.53), recursive majority (−0.90), the staircase (−0.59), MAJ$(x_1x_2,\dots)$ (−0.76).
+- The CALIB objective is flat: points within 0.02 of its minimum give held-out scores between 0.36 and 0.55. The
+  held-out 0.38 should be read with that spread.
+- The empirical model's learning curves are sharper than the networks': it accepts all gates of equal utility at the same $n$, so on MAJ$(x_1x_2,x_3x_4,x_5x_6)$ its error jumps from 0.50 to 0.00 between $n=512$ and 1024, where the networks (and the race) decline gradually from 0.41 at $n=128$ to 0.07 at 2048. With factor-2 steps in $n$, such jumps make its $n^*$ coarse: the 4-sparse parity moves from 3565 to 1783 when $a$ goes from 16 to 24. On multi-move targets it is also faster than its own noiseless limit, because the best of many noisy candidates passes the threshold early.
+- Status: the predictor's closed forms (the parity and majority formulas) are exact consequences of its definition;
+  their agreement with the networks is Numerical; the noise law is Heuristic. Everything is at one width (128), one
+  depth, one learning rate, and 20000 training steps; the fitted $a$ may depend on the width, which was not varied.
+
 
 ## 7. Files
 
@@ -199,6 +288,7 @@ their $d=30$ CALIB constants unchanged; race from [`DSCALE.md`](DSCALE.md) (also
 | [`minimal_report.py`](minimal_report.py) → [`minimal_report.json`](minimal_report.json) | all predictor numbers, at $d=30$ and in the $d$-scaling study, with the networks', the model's and the race's $n^*$ |
 | [`minimal_tables.py`](minimal_tables.py), [`minimal_figures.py`](minimal_figures.py) | the tables and figures of this note |
 | [`minimal_random.py`](minimal_random.py) → [`minimal_random.json`](minimal_random.json) | out-of-sample test on the 20 random formulas |
+| [`minimal_constants.txt`](minimal_constants.txt) | the calibrated constants $c$, $a$ |
 
 Saved evaluations (scratchpad, not in the repository): `model_evals/minimal.npz`, `minimal_d15.npz`, `minimal_d60.npz`,
 `minimal_random.npz`. Calibration scripts and logs: scratchpad `minimal/`. Reproduce:

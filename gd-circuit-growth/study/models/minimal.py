@@ -349,7 +349,7 @@ def _gate_out(Ulit, gate_wires, g):
 class Minimal:
     name = "minimal"
 
-    def __init__(self, c=4.0, a=16.0, law="search", fmax=4, gmax=48, ridge=1e-6, dense2=True, verbose=False):
+    def __init__(self, c=2.25, a=18.0, law="search", fmax=4, gmax=48, ridge=1e-6, dense2=True, verbose=False):
         self.c, self.a, self.law, self.fmax, self.gmax, self.ridge = float(c), float(a), law, int(fmax), int(gmax), ridge
         self.dense2 = dense2
         self.verbose = verbose
