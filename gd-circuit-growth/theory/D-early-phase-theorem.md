@@ -1,6 +1,6 @@
-# D. An a priori early-phase theorem: what gradient descent provably keeps small
+# D. Early-phase theorems: what gradient descent provably keeps small
 
-Notes by Claude (Opus 5.5), prompted by Kaarel Hänni. Research note, 23 October 2026. Written by a separate agent, after A, B and C. Refereed once: round 1 passed it with minor revisions ([`checks/referee_D_r1.json`](checks/referee_D_r1.json)), and this version is revised accordingly; the changes are listed in the [revision notes](#revision-notes). The revision has not been re-refereed. Not reviewed by a human.
+Notes by Claude (Opus 5.5), prompted by Kaarel Hänni. Research note, 23 October 2026. Written by a separate agent, after A, B and C. Refereed twice: round 1 passed it with minor revisions ([`checks/referee_D_r1.json`](checks/referee_D_r1.json)), and round 2 passed the revised version with minor issues only ([`checks/referee_D_r2.json`](checks/referee_D_r2.json)). This version applies the round-2 fixes; the changes of both rounds are listed in the [revision notes](#revision-notes). Not reviewed by a human.
 
 **Question (from the user, via the project README).** Generalization bounds of the form "training has not taken long, so the circuit cannot have grown big, so a Chernoff bound over small circuits applies". The README calls the missing link *an a priori theorem that gradient descent keeps a real network close to a circuit whose size is controlled by $\tau/\log(1/\alpha)$*. That is the "saddle-to-saddle approximation" hypothesis SSA of [C3](C-bridge-and-certificates.md#33-the-conditional-theorem). This file attempts it.
 - **Part I** treats the two-layer ReLU network from balanced small initialization.
@@ -24,7 +24,7 @@ Notes by Claude (Opus 5.5), prompted by Kaarel Hänni. Research note, 23 October
 2. **No growth before $\log(1/\alpha)/U^*$ (Theorem D2, Proved).**
    - **Statement.** $P(t)$ cannot reach $\beta$ before $T_\beta=\ln(\beta/P(0))\big/\big(2(U_0^*+\lambda_X\beta/2)\big)$. Here $U_0^*=\sup_v|U_y(v)|$ is the largest initial utility, and $\lambda_X$ is the top eigenvalue of the empirical second-moment matrix of $\tilde x$.
    - **Until then, the network is the empty circuit:** $\sup_x|f_t(x)|\le\frac{\sqrt{d+1}}2\beta$.
-   - **The leading constant is attained.** In an explicit instance ($y=x_1$ on the full cube, one neuron started at the maximizer of $U_y$), the escape time is $\ln(1/\alpha)/U_0^*+O(1)$ (Theorem D2(6)). So no lower bound valid for all data can have a larger leading constant. Only the leading constant is claimed to be sharp.
+   - **The leading constant is sharp.** Since $t_\beta$ is nondecreasing in $\beta$, the statement gives $\liminf_{\alpha\to0}t_\beta U_0^*/\ln(1/\alpha)\ge1$ for every selection flow, at every fixed $\beta>0$ and width. In an explicit instance ($y=x_1$ on the full cube, one neuron started at the maximizer of $U_y$), the escape time is $\ln(1/\alpha)/U_0^*+O(1)$, so the $1$ is attained (Theorem D2(6)). So no lower bound valid for all data can have a larger leading constant. The lower-order terms are not claimed to be sharp.
    - **Comparison with C3.1.** This improves Lemma C3.1, which used $\sqrt{\lambda_X}\|y\|_n$ in place of $U_0^*$, to the leading constant of the README's rate law.
    - **A certified upper bound** on the nonconvex supremum $U^*$ is given by two eigenvalue computations (Lemma D2.1). It is within 1.5–12% of a multistart estimate in the checks.
    - **Quantization (Proposition D2.2).** Before $T_\beta$, each neuron's direction is an approximate critical point of $\pm U_y$ except during $O(1)$ total time, uniformly in $\alpha$.
@@ -34,7 +34,7 @@ Notes by Claude (Opus 5.5), prompted by Kaarel Hänni. Research note, 23 October
    - **The $K$-neuron Occam bound (Proposition D3.3)** uses the network's own clusters of directions. Its use is a posteriori.
 4. **Beyond the first plateau: what is and is not proved (§4).**
    - **The a priori bound degrades.** The a priori path-norm bound grows linearly after $T_\beta$, so at $t=(1+c)\log(1/\alpha)/U^*$ it is $O(c\log(1/\alpha))$, not $O(1)$.
-   - **Conditional persistence (Proposition D4.1, Proved, conditional).** If every cluster's separating training points stay "attracting" along the trajectory, a condition checkable from the training residuals, then the network stays within an explicit sup-norm distance of a $K$-neuron function. That distance is computed at one checkpoint, plus the dormant mass, which is controlled a priori by the clock.
+   - **Conditional persistence (Proposition D4.1, Proved, conditional).** If every cluster's separating training points stay "attracting" along the trajectory, a condition checkable from the training residuals, then the network stays within an explicit sup-norm distance of a $K$-neuron function. That distance is computed from $Q$ at one checkpoint and the current norms $\|w_j(t)\|$, plus the dormant mass, which the clock bounds through $\int_{t_1}^t\hat U(r_s)\,ds$ along the run.
    - **What remains a conjecture (Conjecture D4)** is the a priori form: that this condition holds for a time of order $\log(1/\alpha)$ after each escape.
 5. **Numerical (two-layer ReLU, $d=16$, $n=1000$–$4000$, width 64, $\alpha=10^{-6}$–$10^{-2}$, small-step GD; exact test error on all $2^{16}$ inputs).** Every inequality proved for the flow holds along small-step GD, up to discretization effects at the kinks (listed in §5).
    - **Tightness of the clock bounds.** The growth bound reaches $0.84$–$0.95$ of its exponent, against $0.53$–$0.63$ for C3.1's. At $\alpha\le10^{-3}$ the escape-time lower bound is $60$–$81\%$ of the observed escape time, against $42$–$51\%$ for C3.1's.
@@ -51,7 +51,7 @@ Notes by Claude (Opus 5.5), prompted by Kaarel Hänni. Research note, 23 October
 7. **Time limits rank (Theorem D6, Proved).**
    - **Statement.** Let $N_\epsilon(t)$ be the number of eigenvalues of $UU^\top$ and $VV^\top$ that have grown above $\epsilon$. For all $t$,
      $$N_\epsilon(t)\le\kappa\,\big(\tau(t)/\Theta_\epsilon\big)^2,\qquad \Theta_\epsilon=\tfrac14\ln\frac{\epsilon}{\alpha^2s_0^2}\approx\tfrac12\ln\frac1\alpha,\quad\tau(t)=\int_0^t\|r\|_n .$$
-     Here $\kappa=2\lambda_{\max}$ of the Gram matrix of the $\binom d2$ pair features on the *training inputs only*. Its population value is $2$; it does not depend on the labels, the trajectory or the width.
+     Here $\kappa=2\lambda_{\max}$ of the Gram matrix of the $\binom d2$ pair features on the *training inputs only*. Its population value is $2$; it does not depend on the labels, the trajectory or the width. The bound itself depends on the width only through $s_0=\max(\|U_0\|_{op},\|V_0\|_{op})$ in $\Theta_\epsilon$, so the approximation $\Theta_\epsilon\approx\frac12\ln\frac1\alpha$ assumes $s_0=O(1)$ (§6).
    - **Weight-free, not a priori.** The bound uses $\tau$, which is read off the training-loss curve. It does not look at the weights, but it is not a function of time alone. The time-only form uses $\tau(t)\le R_0t$ with $R_0=\|r(0)\|_n\approx\|y\|_n$ (flow). It is much weaker: for $x_1x_2$ in §7.4 it gives $N\le42$ at $t=20$, against $4$ from $\tau$.
    - **No early growth.** No eigenvalue grows before $\Theta_\epsilon/(\|M_y\|_{op}+2\kappa\sqrt d\epsilon)$.
    - **Scope.** This is the user's "the circuit cannot have grown big yet", for a non-diagonal two-layer network, at every time, without any plateau analysis. Circuit size is rank, i.e. the number of effective hidden units. The network has fixed output signs and centred units, i.e. it is symmetric matrix sensing (see above).
@@ -60,7 +60,7 @@ Notes by Claude (Opus 5.5), prompted by Kaarel Hänni. Research note, 23 October
    - **Comparison.** The unrestricted class of all degree-2 sign functions costs $\ln\Phi(2^{d+1},\binom d2+1)\approx964$ nats at $d=16$, by Cover's count. So at $d=16$, $B=1$, $\gamma=\frac12$ the rank bound is better for $N\le7$.
 9. **Numerical ($d=16$, width 16+16, $\alpha=10^{-6}$, GD and SGD).**
    - **The inequalities hold.** The clock holds to round-off, $10^{-8}$. The rank bound's worst ratio is $0.38$–$0.59$.
-   - **$x_1x_2$ at $n=3000$.** The bound is $0.084$ with the measured rank (2), against $0.276$ for the unrestricted class; the true test error is $0$. With the weight-free rank bound (4) it is $0.20$–$0.21$. That number uses the flow's norm bound $B$, which is admissible for these GD runs because it exceeds the measured $P$ (§7.4).
+   - **$x_1x_2$ at $n=3000$.** The bound is $0.084$ with the measured rank (2), against $0.276$ for the unrestricted class; the true test error is $0$. With the weight-free rank bound (4) and the proved GD norm bound of D6(5) it is $0.20$–$0.21$, a weight-free certificate for GD. The step-size condition of D6(5) holds along the run, with $\max_j2\eta\|M_j\|_{op}=0.020$ (§7.4).
    - **Where the loss-curve form fails.** On MAJ of three pairs the residual does not vanish, so $\tau$ keeps growing on the plateau. The weight-free rank bound grows from 23 to 47 while the true rank stays 6, and the corresponding D7 bound becomes vacuous. This is the same weakness as C2.5.
 
 | result | content | status |
@@ -69,7 +69,7 @@ Notes by Claude (Opus 5.5), prompted by Kaarel Hänni. Research note, 23 October
 | Lemma D0.2, D0.3 | kl-Chernoff and Occam with a prior; size of a sphere net | Proved |
 | Lemma D1 | balance, exact mass clock, measure form, scale-free direction flow, energy identity, near-monotone utility, merging law | Proved |
 | Lemma D2.1 | certified upper bound on $\sup_v\pm U_r(v)$ by eigenvalues | Proved |
-| Theorem D2 | no growth before $T_\beta$; escape-time lower bound, whose leading constant is attained in an explicit instance (item 6); discrete GD form | Proved |
+| Theorem D2 | no growth before $T_\beta$; escape-time lower bound with sharp leading constant: $\liminf_{\alpha\to0}t_\beta U_0^*/\ln(1/\alpha)\ge1$ for every flow, with equality in an explicit instance (item 6); discrete GD form | Proved |
 | Proposition D2.2 | quantization: time at non-critical directions is $O(1)$ | Proved |
 | Theorem D3 | path norm through the escape: a priori and loss-curve forms | Proved |
 | Corollary D3.1 | Maurey: $\epsilon$-close to a $\lceil P^2b^2/4\epsilon^2\rceil$-neuron circuit, width-free | Proved |
@@ -78,7 +78,7 @@ Notes by Claude (Opus 5.5), prompted by Kaarel Hänni. Research note, 23 October
 | Proposition D4.1 | persistence of the cluster structure under the attracting-sign condition | Proved (conditional on a trajectory condition) |
 | Conjecture D4 | a priori persistence for $t\le(1+c)T_1$ | Conjecture |
 | Theorem D5 | log-det clock, continuous and discrete | Proved |
-| Theorem D6 | quadratic networks (fixed output signs): $N_\epsilon\le\kappa(\tau/\Theta_\epsilon)^2$; no early growth; path norm; GD/SGD forms of the clock, the rank bound and the path norm | Proved |
+| Theorem D6 | quadratic networks (fixed output signs): $N_\epsilon\le\kappa(\tau/\Theta_\epsilon)^2$; no early growth; path norm; GD/SGD forms of the clock, the rank bound, the no-early-growth bound and the path norm | Proved |
 | Theorem D7 | quadratic networks (fixed output signs): generalization uniform in $t$ with rank-$N_\epsilon(t)$ capacity | Proved |
 | §5, §7.4 | checks of every inequality | Numerical |
 
@@ -125,9 +125,11 @@ The priors used below are: $\frac1{(K+1)(K+2)}$ on $K\in\{0,1,\dots\}$ (or $\fra
 
 ### Lemma D0.3 (nets of the sphere) — Proved
 
-For $\eta\in(0,1]$, the unit sphere of $\mathbb R^D$ has an $\eta$-net $\mathcal N_\eta$ (every unit vector is within Euclidean distance $\eta$ of $\mathcal N_\eta$) with $|\mathcal N_\eta|\le(1+2/\eta)^D$.
+For every $\eta>0$, the unit sphere of $\mathbb R^D$ has an $\eta$-net $\mathcal N_\eta$ (every unit vector is within Euclidean distance $\eta$ of $\mathcal N_\eta$) with $|\mathcal N_\eta|\le(1+2/\eta)^D$.
 
 *Proof.* Take a maximal $\eta$-separated subset; by maximality it is an $\eta$-net. The balls of radius $\eta/2$ around its points are disjoint and lie in the ball of radius $1+\eta/2$. Compare volumes. ∎
+
+The proof does not use $\eta\le1$, and for $\eta\ge2$ a single point is a net. Values $\eta>1$ do occur: Proposition D3.3 takes $\eta=\gamma/(8B\sqrt{d+1})$ at small dyadic $B$.
 
 The nets are fixed once, for each $D$ and $\eta$ used, before the data are seen.
 
@@ -232,14 +234,18 @@ $$t_\beta\ \ge\ T_\beta:=\frac{\ln(\beta/P(0))}{2\,(U_0^*+\lambda_X\beta/2)} .$$
    Hence for $t\le T_\beta$: $\sup_x|f_t(x)|\le\frac{\sqrt{d+1}}2\beta$ and $L(t)\ge\frac12\big(\|y\|_n-\frac{\sqrt{\lambda_X}}2\beta\big)_+^2$. Any upper bound on $U_0^*$, such as $\hat U(y)$, may be used in place of $U_0^*$.
 4. **Per-neuron clock.** Neuron $j$ has mass $\ge\beta_j$ at time $t$ only if $\int_0^t\epsilon_jU_r(\hat w_j)\ge\frac12\ln(\beta_j/\rho_j(0))$.
 5. **Discrete GD** with step $\eta$ (no balance needed): $\rho^{k+1}_j\le\rho_j^k\big(1+2\eta U^*(r_k)+\eta^2\lambda_X\|r_k\|_n^2\big)$.
-6. **The leading constant is attained.** Consider the following instance.
+6. **The leading constant is sharp.** Consider the following instance.
    - *Data.* The training inputs are the $2^d$ points of the cube, each once, and $y=x_1$.
    - *Network.* One neuron ($m=1$) with $a(0)=\alpha<2^{-1/4}$ and $w(0)=\alpha v^*$, where $v^*=(e_1+e_0)/\sqrt2$ and $e_0$ is the bias coordinate.
    - *Selection.* $s=0$ at the kink points $\{x_1=-1\}$, i.e. the convention $\sigma'(0)=0$.
 
    Then $\lambda_X=1$ and $U_0^*=1/\sqrt2$. This is a selection flow, it keeps $\hat w(t)=v^*$, and for $P(0)<\beta<\sqrt2$
 $$P(t)=\frac{\sqrt2}{1+(\sqrt2/P(0)-1)e^{-\sqrt2t}},\qquad t_\beta=\frac{\ln(\beta/P(0))}{2U_0^*}+\frac1{\sqrt2}\ln\frac{\sqrt2-P(0)}{\sqrt2-\beta}.$$
-   So $t_\beta\big/\big(\ln(1/\alpha)/U_0^*\big)\to1$ as $\alpha\to0$, while item 3 gives the limit inferior $\ge\big(1+\lambda_X\beta/(2U_0^*)\big)^{-1}$ for every flow, at fixed $m$ and $\beta$. Since item 3 holds for every selection flow, no bound of the form $t_\beta\ge c\,\frac{\ln(1/\alpha)}{U_0^*}(1+o(1))$ with $c>1$ can hold for all data.
+   So $t_\beta\big/\big(\ln(1/\alpha)/U_0^*\big)\to1$ as $\alpha\to0$.
+
+   Conversely, item 3 gives $\liminf_{\alpha\to0}t_\beta U_0^*/\ln(1/\alpha)\ge1$ for every selection flow, at every fixed $\beta>0$ and $m$ (with $\alpha_j=\alpha$). The reason is monotonicity in $\beta$: for $\beta'\in(P(0),\beta]$, $t_\beta\ge t_{\beta'}\ge T_{\beta'}$. Let $\alpha\to0$, which gives $\liminf\ge\big(1+\lambda_X\beta'/(2U_0^*)\big)^{-1}$, and then let $\beta'\to0$. (Item 3 at $\beta'=\beta$ alone gives only $\big(1+\lambda_X\beta/(2U_0^*)\big)^{-1}$, which is $0.739$ for $\beta=\frac12$ in this instance; [`checks/referee_D_r2.out`](checks/referee_D_r2.out), S1.)
+
+   So the leading constant $1/U_0^*$ is sharp at every fixed $\beta$: the instance attains $1$ for every $\beta<\sqrt2$, and no bound of the form $t_\beta\ge c\,\frac{\ln(1/\alpha)}{U_0^*}(1+o(1))$ with $c>1$ can hold for all data.
 
 *Proof.*
 1. Lemma D1(b), with $|U_r(\hat w_j)|\le U^*(r)$; sum over $j$ for $P$.
@@ -265,8 +271,8 @@ $$P(t)=\frac{\sqrt2}{1+(\sqrt2/P(0)-1)e^{-\sqrt2t}},\qquad t_\beta=\frac{\ln(\be
 - **Size of $T_\beta$.** With $P(0)=2m\alpha^2$,
 $$T_\beta=\frac{\ln(1/\alpha)}{U_0^*}\Big(1-\frac{\ln(2m/\beta)}{2\ln(1/\alpha)}\Big)\Big(1+\frac{\lambda_X\beta}{2U_0^*}\Big)^{-1}.$$
   The leading constant $\ln(1/\alpha)/U_0^*$ is the README's rate law. It is the growth time, by Lemma D1(b), of a neuron that sits at a maximizer of $\pm U_y$ from the start while $r\approx y$.
-  - Item 6 makes this exact in one instance, so the leading constant cannot be improved in general.
-  - The $\beta$-dependent factor and the $\ln m$ term are not claimed to be sharp.
+  - Item 6 makes this exact in one instance, so the leading constant cannot be improved in general. By the monotonicity argument in item 6, every flow has $\liminf_{\alpha\to0}t_\beta U_0^*/\ln(1/\alpha)\ge1$ at every fixed $\beta$, so the $\beta$-dependent factor of $T_\beta$ does not enter the leading constant.
+  - The $\ln m$ term and the other lower-order terms are not claimed to be sharp.
   - Item 6 uses the selection $s=0$ on the kink $\{x_1=-1\}$, where the maximizer $v^*$ sits. With $s>0$ there the direction leaves $v^*$. Sharpness needs only one selection flow, because item 3 holds for all of them.
 - **Comparison with C3.1.** Lemma C3.1 has $\sqrt{\lambda_X}\|y\|_n$ in place of $U_0^*$. For $y=x_1$ on the full cube that is $1$ against $1/\sqrt2$.
 - **Width.** Width enters only through $\ln m$, and not at all if the initialization is scaled as $\alpha/\sqrt m$.
@@ -367,7 +373,7 @@ Under balance (Lemma D1(c)) $|a_j|\|w_j\|=\rho_j/2$, and Lemma D1(g) expresses $
 - **Margins.** On test points, $yf\le0\Rightarrow yg'\le\gamma/2$. On training points, $yg'\le\gamma/2\Rightarrow yf\le\gamma$.
 - **Occam.** Apply Lemma D0.2 to the events $\{yg'\le\gamma/2\}$. ∎
 
-This bound is a posteriori in the clusters, i.e. a parameter-space version of C1's distillation. It shows what an a priori version of Conjecture D4 would deliver: the capacity is about 100 nats per cluster at $d=16$, $B\approx1.4$, $\gamma=\frac12$, so about 200 nats for the 2 clusters of §5, against about 6500 nats for the same count applied to all 64 neurons.
+This bound is a posteriori in the clusters, i.e. a parameter-space version of C1's distillation. It shows what an a priori version of Conjecture D4 would deliver: the capacity is about 100 nats per cluster at $d=16$, $B\approx1.4$, $\gamma=\frac12$, so 202 nats for the 2 clusters of §5, against 6693 nats for the same count applied to all 64 neurons ([`checks/referee_D_r2.out`](checks/referee_D_r2.out), S4).
 
 ## 4. Beyond the first escape
 
@@ -399,7 +405,7 @@ and $\sum_k|c_k|\le P(t)/2$, with $P(t)$ bounded by Theorem D3(2). If (A) fails,
 - **Clusters.** $Q_{jj_k}$ is locally absolutely continuous, as a combination of products of absolutely continuous functions. Under (A), $\dot Q_{jj_k}\le0$ almost everywhere by Lemma D1(g2), so $Q_{jj_k}(t)\le Q_{jj_k}(t_1)$. And $\frac{\rho_j}2\|\hat w_j-\hat w_{j_k}\|=\|w_j\|^2\sqrt{2Q_{jj_k}/(\|w_j\|\|w_{j_k}\|)}$.
 - **If (A) fails.** Write $Q=Q_{jj_k}$ and $c(s)=\sqrt{(d+1)\|w_j\|\|w_{j_k}\|/2}\ \bar r^{\rm rep}_{jj_k}(s)\ge0$. $c$ is measurable, because the selections are, and it is bounded on $[t_1,t]$. Lemma D1(g3) gives $\frac d{ds}\sqrt Q\le c$ only where $Q>0$, and $\sqrt Q$ need not be absolutely continuous through zeros of $Q$. Suppose $Q(t)>0$, since otherwise there is nothing to prove.
   - If $Q$ has no zero on $[t_1,t]$, it is bounded away from $0$ there, so $\sqrt Q$ is absolutely continuous and $\sqrt{Q(t)}\le\sqrt{Q(t_1)}+\int_{t_1}^tc$.
-  - Otherwise let $s_0<t$ be the last zero of $Q$ in $[t_1,t]$; it exists because $Q$ is continuous. On every $[s_0+\delta,t]$, $Q$ is bounded away from $0$, so $\sqrt{Q(t)}\le\sqrt{Q(s_0+\delta)}+\int_{s_0+\delta}^tc$. Let $\delta\to0$: $\sqrt{Q(t)}\le\int_{s_0}^tc\le\sqrt{Q(t_1)}+\int_{t_1}^tc$.
+  - Otherwise let $t_*<t$ be the last zero of $Q$ in $[t_1,t]$; it exists because $Q$ is continuous. On every $[t_*+\delta,t]$, $Q$ is bounded away from $0$, so $\sqrt{Q(t)}\le\sqrt{Q(t_*+\delta)}+\int_{t_*+\delta}^tc$. Let $\delta\to0$: $\sqrt{Q(t)}\le\int_{t_*}^tc\le\sqrt{Q(t_1)}+\int_{t_1}^tc$.
 - **Remainder.** Apply Theorem D2(1) to the neurons of $D$ from time $t_1$, with $U^*\le\hat U$ (Lemma D2.1).
 - **Sum.** Use the sup bound of Proposition D3.3. ∎
 
@@ -431,7 +437,7 @@ AGF (Kunin et al. 2025) and neuron pursuit (Kumar–Haupt 2025) are the α→0 m
 
 ## 5. Numerical check, ReLU
 
-[`checks/D_relu_check.py`](checks/D_relu_check.py) produces [`checks/D_relu_check.out`](checks/D_relu_check.out), in about 10 minutes on one core (the last, $t=400$ configuration takes half of that).
+[`checks/D_relu_check.py`](checks/D_relu_check.py) produces [`checks/D_relu_check.out`](checks/D_relu_check.out), in about 10 minutes on one core (the last, $t=400$ configuration takes half of that). Its labels use an older theorem numbering; the map to the current numbers is under [Files](#files).
 - **Setup.** $d=16$, width $m=64$, $|a_j(0)|=\|w_j(0)\|=\alpha$ with random signs and uniform random directions. $n$ training points are drawn without replacement from the cube. Lemma D0.2 covers this sampling (remark after it).
 - **Training.** Full-batch GD with $\eta=0.02$ (one run at $\eta=0.004$) approximates the flow.
 - **Evaluation.** Test quantities are exact over all $2^{16}$ inputs. "Bound" columns use the certified $\hat U(y)$ of Lemma D2.1.
@@ -485,6 +491,7 @@ $$f_{U,V}(x)=\sum_{j\le h}\big[(u_j\cdot x)^2-\|u_j\|^2\big]-\sum_{j\le h'}\big[
 - **Measurements and loss.** $A_i=x_ix_i^\top-I$, $\mathcal A(Z)_i=\langle Z,A_i\rangle$, $M_r=\frac1n\sum_ir_iA_i$ (symmetric), and $L=\frac12\|y-f\|_n^2$, so that $\nabla_XL=-M_r$.
 - **Gradient flow:** $\dot U=2M_rU$, $\dot V=-2M_rV$. GD: $U\leftarrow(I+2\eta M_r)U$ and $V\leftarrow(I-2\eta M_r)V$; SGD uses the minibatch $M_r$.
 - **Initialization.** $U(0)=\alpha U_0$, $V(0)=\alpha V_0$, $s_0=\max(\|U_0\|_{op},\|V_0\|_{op})$.
+  - *Width.* The width enters Part II only through $s_0$ (in $\Theta_\epsilon$ below) and $P(0)$ (in D6(4)–(5)), and not at all if $U_0,V_0$ are scaled to unit operator norm. This is the analogue of Part I's $P(0)$. For iid $N(0,1/d)$ entries $s_0\approx1+\sqrt{h/d}$, so at large width $\Theta_\epsilon$ loses about $\frac14\ln(h/d)$.
 - **Existence.** The vector field is polynomial, $L$ is nonincreasing, and $\frac d{dt}(\|U\|_F^2+\|V\|_F^2)=4\langle r,f\rangle_n\le\|y\|_n^2$ (as in Lemma D1(e)). So the flow exists for all $t$.
 - **Grown count.** $N_\epsilon(t)=\#\{k:\sigma_k(U)^2\ge\epsilon\}+\#\{k:\sigma_k(V)^2\ge\epsilon\}$, the number of eigenvalues of $UU^\top$ and $VV^\top$ that have grown to at least $\epsilon$.
 - **Clock unit and effective time.** $\Theta_\epsilon=\frac14\ln\frac{\epsilon}{\alpha^2s_0^2}$ and $\tau(t)=\int_0^t\|r\|_n$.
@@ -529,14 +536,14 @@ For the quadratic network under gradient flow, for every $t$ and every $\epsilon
 $$N^U\Theta_\epsilon\le\int_0^t\sum_{k\le N^U}\lambda_k(M_{r(s)})\,ds,\qquad N^V\Theta_\epsilon\le\int_0^t\sum_{k\le N^V}\lambda_k(-M_{r(s)})\,ds .$$
 2. **Rank bound:**
 $$N_\epsilon(t)\le\kappa\,\Big(\frac{\tau(t)}{\Theta_\epsilon}\Big)^2 .$$
-3. **No early growth.** No eigenvalue of $UU^\top$ or $VV^\top$ reaches $\epsilon$ before
+3. **No early growth.** The first time $t_\epsilon$ at which some eigenvalue of $UU^\top$ or $VV^\top$ reaches $\epsilon$ satisfies
 $$t_\epsilon\ \ge\ \frac{\Theta_\epsilon}{U_0^*+2\kappa\sqrt d\,\epsilon},\qquad U_0^*:=\|M_y\|_{op}=\sup_{\|e\|=1}\big|\langle y,(e\cdot x)^2-1\rangle_n\big| ,$$
    which is the largest initial utility of one unit.
 4. **Path norm.** $P(t):=\|U\|_F^2+\|V\|_F^2\ge\|X(t)\|_*$, and $\dot P=4\langle r,f\rangle_n\le\|y\|_n^2$.
 5. **GD and SGD.** Let $M_j$ be the matrix of step $j$: $M_{r_j}$ for GD, and the minibatch matrix of batch $B_j$ for SGD. Write $\|\cdot\|_{B_j}$ for the minibatch norm and $\kappa_{B_j}$ for the coherence of $B_j$, i.e. $\kappa$ computed on $B_j$. For GD, $B_j$ is the whole sample and $\kappa_{B_j}=\kappa$.
-   - *Clock and rank, under the step-size condition.* Assume $2\eta\|M_j\|_{op}<1$ at every step, for GD and SGD alike.
-     - For GD, items 1–2 hold with $\int_0^t\to\eta\sum_{j<J}$ and $\tau_J=\eta\sum_{j<J}\|r_j\|_n$.
-     - For SGD, item 1 holds with the minibatch matrices $M_j$ in place of $M_{r(s)}$. Item 2 becomes $N\le\big(\eta\sum_j\sqrt{\kappa_{B_j}}\|r_j\|_{B_j}\big)^2/\Theta_\epsilon^2$. This is large for small batches: a single sample has $\kappa=d(d-1)$.
+   - *Clock, rank and no early growth, under the step-size condition.* Assume $2\eta\|M_j\|_{op}<1$ at every step, for GD and SGD alike.
+     - For GD, items 1–3 hold with $\int_0^t\to\eta\sum_{j<J}$, $\tau_J=\eta\sum_{j<J}\|r_j\|_n$, and $t_\epsilon=\eta J_\epsilon$, where $J_\epsilon$ is the first step at which some eigenvalue reaches $\epsilon$.
+     - For SGD, item 1 holds with the minibatch matrices $M_j$ in place of $M_{r(s)}$. Item 2 becomes $N\le\big(\eta\sum_j\sqrt{\kappa_{B_j}}\|r_j\|_{B_j}\big)^2/\Theta_\epsilon^2$. This is large for small batches: a single sample has $\kappa=d(d-1)$. Item 3 holds with $\max_{j<J_\epsilon}\|M^{B_j}_y\|_{op}$ in place of $U_0^*$ and $\max_{j<J_\epsilon}\kappa_{B_j}$ in place of $\kappa$, where $M^{B_j}_y=\frac1{|B_j|}\sum_{i\in B_j}y_iA_i$.
    - *Path norm, with no step-size condition.*
 $$P_J\ \le\ \exp\Big(4\eta^2\sum_{j<J}\|M_j\|_{op}^2\Big)\Big(P(0)+\eta\sum_{j<J}\|y\|_{B_j}^2\Big)\ \le\ \exp\Big(4\eta^2\sum_{j<J}\kappa_{B_j}\|r_j\|_{B_j}^2\Big)\Big(P(0)+\eta\sum_{j<J}\|y\|_{B_j}^2\Big).$$
      - The flow bound $P\le P(0)+t\|y\|_n^2$ of item 4 can fail for GD. The referee found a one-step counterexample from $f=y/2$ with $2\eta\|M\|_{op}=0.4$ ([`checks/referee_D_r1.out`](checks/referee_D_r1.out), R8).
@@ -555,6 +562,7 @@ $$\sum_{k\le N^U}\lambda_k(M)+\sum_{k\le N^V}\lambda_k(-M)\le\langle M,Z\rangle=
    - Item 1 with $N=1$ gives $\Theta_\epsilon\le t_\epsilon(U_0^*+2\kappa\sqrt d\,\epsilon)$.
 4. $\|X\|_*\le\|UU^\top\|_*+\|VV^\top\|_*=\mathrm{tr}\,UU^\top+\mathrm{tr}\,VV^\top$. Also $\frac d{dt}\|U\|_F^2=4\,\mathrm{tr}(M_rUU^\top)$ and $\frac d{dt}\|V\|_F^2=-4\,\mathrm{tr}(M_rVV^\top)$, which sum to $4\langle M_r,X\rangle=4\langle r,f\rangle_n\le\|y\|_n^2$.
 5. *Clock and rank.* Theorem D5(2) with $A_j=\pm2M_j$. The condition $2\eta\|M_j\|_{op}<1$ makes $I\pm2\eta M_j\succ0$. Item 2's argument applies to each step's matrix.
+   *No early growth.* Item 3's argument applies to the steps $j<J_\epsilon$. There $\|X_j\|_F<2\sqrt d\,\epsilon$, so $\|M_j\|_{op}\le\|M^{B_j}_y\|_{op}+\sqrt{\kappa_{B_j}}\|f_j\|_{B_j}<\|M^{B_j}_y\|_{op}+2\kappa_{B_j}\sqrt d\,\epsilon$, and the discrete item 1 with $N=1$ at step $J_\epsilon$ gives $\Theta_\epsilon\le\eta\sum_{j<J_\epsilon}\|M_j\|_{op}$.
    *Path norm.* One step $U'=(I+2\eta M_j)U$, $V'=(I-2\eta M_j)V$ gives $P_{j+1}=P_j+4\eta\langle M_j,X_j\rangle+4\eta^2(\|M_jU_j\|_F^2+\|M_jV_j\|_F^2)$.
    - $\langle M_j,X_j\rangle=\langle r_j,f_j\rangle_{B_j}=\langle r_j,y-r_j\rangle_{B_j}\le\frac14\|y\|_{B_j}^2$, as in Lemma D1(e).
    - $\|M_jU\|_F\le\|M_j\|_{op}\|U\|_F$, and the same for $V$.
@@ -564,7 +572,8 @@ $$\sum_{k\le N^U}\lambda_k(M)+\sum_{k\le N^V}\lambda_k(-M)\le\langle M,Z\rangle=
 **Reading.**
 - **The user's argument, for a non-diagonal network.** This is the user's argument for a non-diagonal two-layer network at every time, with no plateau analysis and no hypothesis on the data or the trajectory.
   - The number of effective hidden units (rank) that have grown above $\epsilon$ is at most $\kappa(\tau/\Theta_\epsilon)^2$.
-  - $\Theta_\epsilon\approx\frac12\ln\frac1\alpha$, and $\kappa$ is a property of the training inputs, about $2$.
+  - $\Theta_\epsilon\approx\frac12\ln\frac1\alpha$, and $\kappa$ is a property of the training inputs, about $2$. The width enters only through $s_0$ in $\Theta_\epsilon$ (§6).
+  - Trivially also $N_\epsilon\le\min(d,h)+\min(d,h')$, so D7 may use the smaller of the two bounds. Late in the MAJ-of-pairs run of §7.4 the trivial bound ($32$) is the smaller one: the weight-free bound is $37$ at $t=25$ and $47$ at $t=30$.
   - *Caveat 1: the model.* The output weights are fixed at $\pm1$ and the units are centred, so this is symmetric matrix sensing (§6). It is not a fully trained two-layer network.
   - *Caveat 2: weight-free, not a priori.* The bound uses $\tau=\int\|r\|_n$, read off the training-loss curve. It does not look at the weights, but it is not a function of time alone. For the flow, $\tau(t)\le R_0t$ with $R_0=\|r(0)\|_n$, because $L$ is nonincreasing. That gives the time-only form $N_\epsilon(t)\le\kappa(R_0t/\Theta_\epsilon)^2$, which is much weaker: for $x_1x_2$ at $n=3000$ (§7.4, $\gamma=\frac12$, $R_0\approx1$) it gives $N\le42$ at $t=20$, against $4$ from $\tau$.
   - *Relation to C2.* The proofs of D5–D6 use only that the $A_i$ are symmetric, with $\kappa=\sup_Z\|\mathcal A(Z)\|_n^2/\|Z\|_F^2$. Take diagonal $A_i=\mathrm{diag}(\chi_S(x_i))_S$ and diagonal initialization $U(0)=V(0)=\alpha I$. Then $U,V$ stay diagonal and this is C2's network. Commuting $A_i$ alone is not enough: the initialization must also be diagonal in their common eigenbasis.
@@ -594,7 +603,7 @@ The proof uses only the current $(U,V)$. So the same event gives the bound simul
   - $N=N_{\epsilon_\gamma}(t)$ (measured);
   - $N=\lfloor\kappa(\tau(t)/\Theta_{\epsilon_\gamma})^2\rfloor$ (Theorem D6(2), weight-free: from the loss curve and the training inputs; for GD with $\tau_J$, D6(5));
   - for the flow, $N=\lfloor\kappa(R_0t/\Theta_{\epsilon_\gamma})^2\rfloor$ (time-only, since $\tau\le R_0t$; much weaker).
-  - Any data-dependent $N\ge N_{\epsilon_\gamma}(t)$ is admissible, for example the maximum of the measured and the weight-free values.
+  - Any data-dependent $N\ge N_{\epsilon_\gamma}(t)$ is admissible, for example the maximum of the measured and the weight-free values, or the minimum of the weight-free value and the trivial bound $\min(d,h)+\min(d,h')$.
 - $B$:
   - for the flow, the dyadic round-up of $P(0)+t\|y\|_n^2$ (Theorem D6(4), a priori);
   - for GD or SGD, the dyadic round-up of the D6(5) path-norm bound;
@@ -621,21 +630,23 @@ The proof uses only the current $(U,V)$. So the same event gives the bound simul
 
 ### 7.4 Numerical check, quadratic networks
 
-[`checks/D_quad_check.py`](checks/D_quad_check.py) produces [`checks/D_quad_check.out`](checks/D_quad_check.out), in about 15 seconds.
+[`checks/D_quad_check.py`](checks/D_quad_check.py) produces [`checks/D_quad_check.out`](checks/D_quad_check.out), in about 15 seconds. Its labels use an older numbering (map under [Files](#files)). The round-2 referee replayed the four classification runs with the same seeds, reproduced every printed number, and added the proved GD norm bound, the step-size check and the SGD first-growth bound used below ([`checks/referee_D_r2.out`](checks/referee_D_r2.out), S3).
 - **Setup.** $d=16$, $h=h'=16$, $U_0,V_0$ with iid $N(0,1/d)$ entries, $\alpha=10^{-6}$.
 - **Training.** GD with $\eta=0.01$; one run uses SGD with batch 64.
 - **Evaluation.** Exact test error over all $2^{16}$ inputs; $\Gamma=\{0.25,0.5\}$ and $\delta=0.05$. Training points are drawn without replacement from the cube, which Lemma D0.2 covers (remark after it).
 - **The "weight-free" columns.**
-  - *Rank.* The rank is $\lfloor\kappa(\tau/\Theta)^2\rfloor$ from D6(2), with $\tau_J$ of D6(5) for GD. The D7 bound uses $\max(N_{\rm measured},\lfloor\kappa(\tau/\Theta)^2\rfloor)$. For the GD rows that is the weight-free value: at every printed checkpoint the measured rank is below it, as D6(5) guarantees under its step-size condition.
-  - *Norm.* $B$ is the dyadic round-up of $P(0)+t\|y\|_n^2$, i.e. D6(4)'s bound for the *flow*. For these GD runs it is admissible in D7 only because it exceeds the measured $P(t)$ ($\le1.51$ here, against $B=8$–$32$), which is all D7 requires. The proved GD form, D6(5), multiplies it by $\exp(4\eta^2\sum_j\|M_j\|_{op}^2)$, which the script does not evaluate. So the column is a valid certificate, but its $B$ is not a proved a priori bound for GD.
-  - *SGD row.* The weight-free $N$ uses the full-batch $\kappa$ form, which is not claimed for SGD. That row's D7 number is still a valid certificate, because $N\ge N_{\rm measured}$ and $B\ge P$ by construction, but it is neither a priori nor weight-free.
+  - *Rank.* The rank is $\lfloor\kappa(\tau/\Theta)^2\rfloor$ from D6(2), with $\tau_J$ of D6(5) for GD. The D7 bound uses $\max(N_{\rm measured},\lfloor\kappa(\tau/\Theta)^2\rfloor)$. For the GD rows that is the weight-free value: at every printed checkpoint the measured rank is below it, as D6(5) guarantees under its step-size condition, which holds (*Step size* below).
+  - *Norm.* $B$ is the dyadic round-up of the proved GD bound of D6(5), $\exp(4\eta^2\sum_j\|M_j\|_{op}^2)\big(P(0)+\eta\sum_j\|y\|_n^2\big)$. `D_quad_check.py` itself uses the flow bound $P(0)+t\|y\|_n^2$ of D6(4); the referee's replay recomputed the column with the proved GD bound. At the end of the runs this changes only MAJ of pairs, from $0.962$ to $0.969$ at $t=30$. For $x_1x_2$ at $n=3000$ the certificate stays $0.213$ at $t=17$–$20$ (at $t=14$ it moves from $0.201$ to $0.213$). So the $x_1x_2$ number is a proved weight-free certificate for GD.
+  - *Step size.* The step-size condition $2\eta\|M_j\|_{op}<1$ of D6(5) holds along every replayed run: $\max_j2\eta\|M_j\|_{op}=0.011$–$0.021$ for GD and $0.030$ for SGD. Its weight-free sufficient form $2\eta\sqrt{\kappa_{B_j}}\|r_j\|_{B_j}<1$ also holds, with maximum $0.034$–$0.077$. The real-valued two-stage run was not replayed.
+  - *SGD row.* The weight-free $N$ uses the full-batch $\kappa$ form, which is not claimed for SGD. That row's D7 number uses this $N$ and the flow $B$. It is still a valid certificate, because $N\ge N_{\rm measured}$ and $B\ge P$ by construction, but it is neither a priori nor weight-free. With the proved SGD forms of D6(5) instead, the rank bound is $N\le181$ at $t=30$, above the trivial $32$, and the D7 bound with $N$ capped at $32$ and the proved norm bound is $0.89$–$0.90$ from $t=17$ on.
+  - *SGD first growth.* The bound is the SGD form of item 3 in D6(5), with maxima over the steps before the first growth: $\Theta_\epsilon/(\max_j\|M^{B_j}_y\|_{op}+2\max_j\kappa_{B_j}\sqrt d\,\epsilon)=5.42/(1.475+2\cdot14.92\cdot4\cdot0.01)=2.03$. The full-batch value $6.96$ is not proved for SGD.
 
-| target, $n$ | $\kappa$ | D5 clock: worst excess | D6(2): worst $N/\kappa(\tau/\Theta)^2$ | first growth at $\epsilon=0.01$: observed / D6(3) bound | rank $N$ at end, measured / weight-free | D7 bound: measured $N$ / weight-free $N$ with flow $B$ / unrestricted | test error |
+| target, $n$ | $\kappa$ | D5 clock: worst excess | D6(2): worst $N/\kappa(\tau/\Theta)^2$ | first growth at $\epsilon=0.01$: observed / D6(3) bound | rank $N$ at end, measured / weight-free | D7 bound: measured $N$ / weight-free $N$ with proved GD $B$ / unrestricted | test error |
 |---|---|---|---|---|---|---|---|
 | $x_1x_2$, 300 | 5.01 | $3\cdot10^{-8}$ | 0.38 | 5.62 / 3.73 | 2 / 8 | 0.605 / 0.992 / 0.960 | 0 |
 | $x_1x_2$, 3000 | 2.85 | $3\cdot10^{-8}$ | 0.59 | 5.76 / 4.39 | 2 / 4 | **0.084** / **0.213** / 0.276 | 0 |
-| MAJ$(x_1x_2,x_3x_4,x_5x_6)$, 3000 | 2.85 | $1\cdot10^{-8}$ | 0.39 | 10.59 / 6.96 | 6 / 47 | 0.270 / 0.962 / 0.276 | 0 |
-| same, SGD batch 64 | 2.85 | $6\cdot10^{-8}$ | (not claimed) | 10.51 / 6.96 | 6 / 47 (full-batch form, not claimed) | 0.277 / 0.963 (not weight-free) / 0.276 | 0 |
+| MAJ$(x_1x_2,x_3x_4,x_5x_6)$, 3000 | 2.85 | $1\cdot10^{-8}$ | 0.39 | 10.59 / 6.96 | 6 / 47 | 0.270 / 0.969 / 0.276 | 0 |
+| same, SGD batch 64 | 2.85 | $6\cdot10^{-8}$ | (not claimed) | 10.51 / 2.03 (minibatch form) | 6 / 47 (full-batch form, not claimed) | 0.277 / 0.963 (full-batch $N$, flow $B$; not weight-free) / 0.276 | 0 |
 | $x_1x_2+\frac12x_3x_4$, 1000 | 3.55 | $9\cdot10^{-8}$ | 0.41 | 5.70 / 4.20 | 4 (two stages) / — | (real-valued; test MSE $\to0$) | — |
 
 **Reading.**
@@ -643,10 +654,10 @@ The proof uses only the current $(U,V)$. So the same event gives the bound simul
   - The referee traced the $+2.8\cdot10^{-8}$ excess of the $x_1x_2$, $n=300$ run to $K=d=h=16$ ([`checks/referee_D_r1.out`](checks/referee_D_r1.out), R9). There D5(2) holds with equality, $\ln|\det U_J|=\ln|\det U_0|+\sum_j\ln\det(I+2\eta M_j)$. For every $K\le15$ the excess is $\le0$ at all times.
   - The other runs were not traced.
 - **The two-stage target.** The rank grows in two stages, $2\to4$, at the times of the two utility eigenvalues.
-- **$x_1x_2$.** At $n=3000$ the generalization bound is $0.21$ with the weight-free rank and the flow norm bound (admissible here because it exceeds the measured $P$). That is better than the unrestricted degree-2 class ($0.28$), and the measured rank gives $0.084$. The time-only rank bound $\kappa(R_0t/\Theta)^2$ would give $N\le42$ at $t=20$, and a vacuous D7 bound.
+- **$x_1x_2$.** At $n=3000$ the generalization bound is $0.21$ with the weight-free rank and the proved GD norm bound of D6(5). That is better than the unrestricted degree-2 class ($0.28$), and the measured rank gives $0.084$. The time-only rank bound $\kappa(R_0t/\Theta)^2$ would give $N\le42$ at $t=20$, and a vacuous D7 bound.
 - **MAJ of three pairs.**
   - The residual stays at $\sqrt{2\cdot0.121}$ after the fit, because MAJ has a degree-6 part.
-  - So $\tau$ keeps growing, the weight-free rank bound loosens from 23 to 47 between $t=17$ and $t=30$, and the corresponding D7 bound becomes vacuous. The measured-rank bound is slightly better than the unrestricted one ($0.270$ against $0.276$).
+  - So $\tau$ keeps growing, the weight-free rank bound loosens from 23 to 47 between $t=17$ and $t=30$, and the corresponding D7 bound becomes vacuous. From $t=25$ on (37, then 47) it is worse than the trivial bound $\min(d,h)+\min(d,h')=32$. The measured-rank bound is slightly better than the unrestricted one ($0.270$ against $0.276$).
   - This is the weakness of any "effective time" bound on a plateau with nonzero residual. A bound that counts *escapes* instead of time would avoid it.
 - **SGD.** The SGD run satisfies the clock form (item 1) with large slack (worst $N\Theta-\int\text{KyFan}=-6.4$), as expected from the positive bias of minibatch Ky Fan sums.
 
@@ -658,11 +669,11 @@ The proof uses only the current $(U,V)$. So the same event gives the bound simul
 
 | piece | two-layer ReLU (Part I) | two-layer quadratic with fixed output signs, i.e. symmetric matrix sensing (Part II) |
 |---|---|---|
-| no growth before $\approx\log(1/\alpha)/U^*$ | Proved (D2(3)); its leading constant is attained in an explicit instance (D2(6)) | Proved (D6(3)) |
+| no growth before $\approx\log(1/\alpha)/U^*$ | Proved (D2(3)); its leading constant is sharp: $\liminf_{\alpha\to0}t_\beta U_0^*/\ln(1/\alpha)\ge1$ for every flow, with equality in an explicit instance (D2(6)) | Proved (D6(3)) |
 | race clock is exact | Proved (D1(b), (d)) | Proved, spectral clock (D5, D6(1)) |
 | directions near critical points of the utility | Proved in a time-averaged sense (D2.2) | automatic: growth is along eigenvectors of $M_r$ |
 | circuit size controlled by time, for all $t$ | only through the variation norm, linear in $t-T_\beta$ (D3); $K$ itself is not controlled a priori | **Proved** in weight-free form, with $\tau$ from the loss curve: $N_\epsilon\le\kappa(\tau/\Theta_\epsilon)^2$ (D6). The time-only form, via $\tau\le R_0t$, is much weaker |
-| generalization uniform in $t$ with that size | Proved, width-free, but vacuous at $n\le4000$ (D3.2); non-vacuous a posteriori with the network's clusters (D3.3) | **Proved** (D7). Non-vacuous at $n=3000$ for $x_1x_2$ with the weight-free rank bound and a $B$ checked against the measured $P$ (§7.4) |
+| generalization uniform in $t$ with that size | Proved, width-free, but vacuous at $n\le4000$ (D3.2); non-vacuous a posteriori with the network's clusters (D3.3) | **Proved** (D7). Non-vacuous at $n=3000$ for $x_1x_2$ with the weight-free rank bound and the proved GD norm bound of D6(5) (§7.4) |
 | persistence through the plateau, $t\le(1+c)T_1$ | conditional on the attracting-sign condition along the run (D4.1); a priori form is Conjecture D4 | not needed: D6 holds at all times |
 
 **Relation to the race model ([A](A-discrete-model.md)).**
@@ -695,8 +706,11 @@ The proof uses only the current $(U,V)$. So the same event gives the bound simul
 | [`checks/D_relu_check.py`](checks/D_relu_check.py) → [`checks/D_relu_check.out`](checks/D_relu_check.out) | Part I checks: Lemma D1 (a), (e), (f), (g); Lemma D2.1; Theorem D2; Proposition D2.2; Theorem D3; Theorem D3.2; Proposition D3.3; plateau diagnostics for §4 (≈10 min; `python3 D_relu_check.py 0,1` runs a subset) |
 | [`checks/D_quad_check.py`](checks/D_quad_check.py) → [`checks/D_quad_check.out`](checks/D_quad_check.out) | Part II checks: Theorem D5 (Horn and linearized clocks), Theorem D6 (1)–(3), Theorem D7 against the unrestricted class (≈15 s) |
 | [`checks/referee_D_r1.json`](checks/referee_D_r1.json), [`checks/referee_D_r1.py`](checks/referee_D_r1.py) → [`checks/referee_D_r1.out`](checks/referee_D_r1.out) | round-1 referee report and the referee's independent checks (≈20 s); cited above as R4, R8, R9, R11 |
+| [`checks/referee_D_r2.json`](checks/referee_D_r2.json), [`checks/referee_D_r2.py`](checks/referee_D_r2.py) → [`checks/referee_D_r2.out`](checks/referee_D_r2.out) | round-2 referee report and checks (≈25 s): S1 the D2(6) instance and the monotone form of the escape-time bound, S2 the D6(5) path norm, S3 the §7.4 replay with the proved GD/SGD forms of D6(5), S4 the D7 comparison and D3.3 capacities |
 
 Both import `klinv_upper` and `log_Phi` from [`checks/c_common.py`](checks/c_common.py). Set `OPENBLAS_NUM_THREADS=1`.
+
+**Labels in the check outputs.** `D_relu_check.py` and its `.out` use an older theorem numbering. D0 = Lemma D1 (a), (b), (e), (f), and D0(f), D0(g) = Lemma D1(f), (g); Lemma D1.1 = Lemma D2.1; D1(1), D1(3) = Theorem D2(1), (3); D1.3 = Proposition D2.2; D2 = Theorem D3; D2.2 (Maurey/Occam) = Theorem D3.2; D2.3 ($K$-neuron Occam) = Proposition D3.3; D3 diagnostics and Conjecture D3 = §4 and Conjecture D4. In `D_quad_check.py` and its `.out`, DQ1 = Theorem D5, DQ2 = Theorem D6(1)–(3), DQ3 = Theorem D7, and the "a-priori" columns ("apriori N") are what this file calls weight-free. The numbers are unaffected; the `.out` files are left as they were run.
 
 ## References
 
@@ -761,7 +775,7 @@ This revision answers the round-1 referee report ([`checks/referee_D_r1.json`](c
 8. **Measurability.** The selection-flow definition now requires Lebesgue-measurable selections. A new bullet explains why this loses nothing: Filippov's measurable-selection lemma (reference added) applies, because the admissible selections form a compact, measurably varying set. It also notes that on sliding sets the flow determines $\xi_j$ but not $\xi^y_j$. Proposition D2.2's proof notes that the integrand is measurable for this reason, and the proposition is stated for every measurable selection realizing the flow.
 9. **Proposition D4.1, "(A) fails" variant.** The proof now contains the last-zero argument.
    - If $Q$ has no zero on $[t_1,t]$, $\sqrt Q$ is absolutely continuous.
-   - Otherwise, with $s_0$ the last zero, $\sqrt Q$ is absolutely continuous on each $[s_0+\delta,t]$, and letting $\delta\to0$ gives $\sqrt{Q(t)}\le\int_{s_0}^tc\le\sqrt{Q(t_1)}+\int_{t_1}^tc$.
+   - Otherwise, with $t_*$ the last zero (called $s_0$ until round 2), $\sqrt Q$ is absolutely continuous on each $[t_*+\delta,t]$, and letting $\delta\to0$ gives $\sqrt{Q(t)}\le\int_{t_*}^tc\le\sqrt{Q(t_1)}+\int_{t_1}^tc$.
    - The (A)-holds case now says explicitly that $Q$ is absolutely continuous with $\dot Q\le0$ almost everywhere.
 10. **Statement slips.**
     - (a) Theorem D2(3) now reads $L(t)\ge\frac12(\|y\|_n-\frac{\sqrt{\lambda_X}}2\beta)_+^2$, and the proof squares only nonnegative quantities.
@@ -791,4 +805,18 @@ This revision answers the round-1 referee report ([`checks/referee_D_r1.json`](c
 - §8, "What fails" item 5, adds that Part II needs fixed output weights.
 - The Files table lists the referee's report, script and output, which the text now cites.
 
-Not changed: the referee found every other result labelled Proved correct, with its constants, and found that the tables in §5 and §7.4 reproduce. The theory README's review-status line for D still describes the state before this revision. This revision has not itself been re-refereed.
+Not changed: the referee found every other result labelled Proved correct, with its constants, and found that the tables in §5 and §7.4 reproduce.
+
+**Round-2 referee** ([`checks/referee_D_r2.json`](checks/referee_D_r2.json), checks in [`checks/referee_D_r2.py`](checks/referee_D_r2.py) → [`checks/referee_D_r2.out`](checks/referee_D_r2.out)). The verdict on the revised version was "pass": every result labelled Proved is correct as stated, and every round-1 issue is fixed. The report lists 7 new issues, all minor and none affecting a Proved statement. These minor fixes are now applied, in the order of the report. No check script was rerun; every new number is taken from `referee_D_r2.out`.
+1. **Leading constant.** Theorem D2(6) now gives the one-line monotonicity argument: for $\beta'\in(P(0),\beta]$, $t_\beta\ge t_{\beta'}\ge T_{\beta'}$, so $\liminf_{\alpha\to0}t_\beta U_0^*/\ln(1/\alpha)\ge1$ for every flow at every fixed $\beta$ and $m$, with equality in the instance. The Summary, the status table, the Reading after D2 and the §8 table now state this, and the sentence saying the $\beta$-factor is not claimed sharp is gone.
+2. **Lemma D0.3** is stated for every $\eta>0$, as Proposition D3.3 needs at small dyadic $B$. The proof is unchanged.
+3. **Width in Part II.** §6, Summary item 7 and the Reading after D6 say that the rank bound depends on the width through $s_0$ in $\Theta_\epsilon$ (and $P(0)$ through D6(4)–(5)). The Reading after D6, D7's admissible choices and §7.4 note the trivial bound $N_\epsilon\le\min(d,h)+\min(d,h')=32$, which beats the weight-free bound late in the MAJ-of-pairs run (37 and 47 at $t=25$, $30$).
+4. **§7.4 and D6(5).**
+   - The weight-free D7 column now uses the proved GD norm bound of D6(5), with the referee's recomputed numbers: $0.213$ for $x_1x_2$ at $n=3000$ (unchanged at the end), and $0.969$ instead of $0.962$ for MAJ of pairs. The caveat that this $B$ is not proved for GD is removed.
+   - The step-size check is reported: $\max_j2\eta\|M_j\|_{op}=0.011$–$0.030$ over the replayed runs.
+   - The SGD row's first-growth bound is now the minibatch form, $2.03$ instead of the full-batch $6.96$.
+   - D6(5) now lists item 3 for GD and its minibatch form for SGD, with a two-line proof. This minibatch form was added after the round-2 referee pass and has not itself been refereed.
+   - Summary item 9 and the §8 table are changed to match.
+5. **Title and README.** The title no longer says "a priori", and the theory README's description of D no longer says "a-priori theorem for real networks". The stale sentences at the end of the round-1 notes, saying that the README was not updated and that the revision was not re-refereed, are deleted, and the header is updated.
+6. **Check-output labels.** The Files section maps the older labels of `D_relu_check.out` and `D_quad_check.out` to the current numbers, e.g. D2.2 in `D_relu_check.out` = Theorem D3.2. §5 and §7.4 point to it. The `.out` files are not edited.
+7. **Wording.** D6(3) now defines $t_\epsilon$ as the first time an eigenvalue reaches $\epsilon$. The last zero of $Q$ in the proof of D4.1 is renamed $t_*$, since $s_0$ is Part II's initial operator norm. Summary item 4 says that D4.1's distance uses $Q$ at one checkpoint and the current norms, and that the dormant term uses $\int\hat U(r_s)\,ds$ along the run. The D3.3 remark gives the computed $202$ and $6693$ nats in place of "about 200" and "about 6500".
