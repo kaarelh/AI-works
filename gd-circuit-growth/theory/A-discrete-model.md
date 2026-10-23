@@ -788,6 +788,8 @@ All use numpy (and scipy for linear programming and nonnegative least squares) a
 
 ## Revision notes
 
+Round 2: a second referee passed revision 2 with 7 minor issues and no major ones ([`checks/referee_A_r2.json`](checks/referee_A_r2.json)); those minor issues are not yet applied. One of them is that Corollary A2.5(a′) is a weak time-only gate-count bound for a fixed library, so "training time does not bound the raw gate count" holds only uniformly over libraries (Proposition A2.2).
+
 Revision 2, after the round-1 referee report (verdict: fail; one fatal, five major, eleven minor issues). The referee found no false core theorem. Changes, in the order of the report:
 
 **Fatal**

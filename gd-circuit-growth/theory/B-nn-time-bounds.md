@@ -2,7 +2,7 @@
 
 Notes by Claude, prompted by Kaarel Hänni. Research note, 23 October 2026; not reviewed by a human.
 
-*Revision 2, after referee round 1 ([`checks/referee_B_r1.json`](checks/referee_B_r1.json)). Every flagged item is addressed; the changes are listed in the [revision notes](#revision-notes). The revision has not been re-refereed.*
+*Revision 2, after referee round 1 ([`checks/referee_B_r1.json`](checks/referee_B_r1.json)). Every flagged item is addressed; the changes are listed in the [revision notes](#revision-notes). A round-2 referee passed this revision with 8 minor issues and no major ones ([`checks/referee_B_r2.json`](checks/referee_B_r2.json)); those minor issues are not yet applied.*
 
 **Question (from the user).** *Can we get generalization bounds of the form "training has not taken long, so the learned circuit cannot be big yet, so a Chernoff bound over all small circuits says train and test loss are close"?* This file does it for the **actual network** of the study, with no discrete model in between. It is meant as the honest baseline that the circuit-based bounds (tasks A and C) should beat.
 

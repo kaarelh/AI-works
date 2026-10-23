@@ -308,7 +308,7 @@ How to read the columns:
 
 ### 2.3 Generalization bounds
 
-Three derivations ([`theory/A-discrete-model.md`](theory/A-discrete-model.md), [`theory/B-nn-time-bounds.md`](theory/B-nn-time-bounds.md), [`theory/C-bridge-and-certificates.md`](theory/C-bridge-and-certificates.md)). Adversarial referees read A and B. They checked every proof step of B, and A's core results, and found them correct. They flagged mislabelled or overstated claims, listed in [`theory/README.md`](theory/README.md); A has been revised accordingly, and B has not. C's referee pass was stopped part-way; the numerical checks it had completed found no problems.
+Three derivations ([`theory/A-discrete-model.md`](theory/A-discrete-model.md), [`theory/B-nn-time-bounds.md`](theory/B-nn-time-bounds.md), [`theory/C-bridge-and-certificates.md`](theory/C-bridge-and-certificates.md)). Adversarial referees read A and B. They checked every proof step of B, and A's core results, and found them correct. They flagged mislabelled or overstated claims, listed in [`theory/README.md`](theory/README.md); A has been revised accordingly, and B has not. C's referee pass was stopped part-way; the numerical checks it had completed found no problems. *(Superseded: in Part 3, A, B and C were all revised and passed a second referee pass; see 3.4.)*
 
 **Your sketch works, with one correction.**
 - **The Chernoff/Occam step needs no assumption on the dynamics.** For any learner whose output after $T$ gates is a circuit from a fixed library followed by a threshold readout, the realizable test error is at most about $\bigl(T(\log|G|+k\log(d+T))+T^2\log2+\log\frac{(T+1)(T+2)}\delta\bigr)/n$ simultaneously for all $T$ (Theorem A1, Proved).
@@ -356,7 +356,7 @@ Three derivations ([`theory/A-discrete-model.md`](theory/A-discrete-model.md), [
   - the third model design;
   - the judge/refinement stage;
   - the referee pass on C, and repairs to B: Theorem B3.3's "linear in training time" holds only for gradient flow and GD under a descent condition.
-- **A's referee corrections were incorporated** in revision 2 of [`theory/A-discrete-model.md`](theory/A-discrete-model.md), which has not been re-refereed. The main changes:
+- **A's referee corrections were incorporated** in revision 2 of [`theory/A-discrete-model.md`](theory/A-discrete-model.md), which later passed a second referee pass (Part 3). The main changes:
   - Proposition A3.4(2), the multi-epoch reuse claim, was split into a proved conditional statement and a new proved Theorem A3.5 (large batches with reuse reproduce the population run); the small-batch reading is Heuristic.
   - Proposition A2.2(3) was restricted to duplicates with equal availability.
   - The $\alpha$-invariance claim was restricted to the pure $k=2$ race.
@@ -457,7 +457,7 @@ The last two columns are reference rates from the literature, not fits:
 
 **SGD instead of Adam** (μP-SGD, learning rate 0.2, 2 seeds; $d=15$ and 60 from [`study/run_checks2.sh`](study/run_checks2.sh), $d=30$ from the main sweep). On the 3-parity, SGD needs 382, 1220 and 3562 samples at $d=15,30,60$, against Adam's 241, 843 and 3410.
 - **Exponent.** SGD's is 1.61 against Adam's 1.91, so SGD sits between the reuse rate $d^{1.5}$ and the correlational-SQ rate $d^{2}$.
-- **Uncertainty.** At $d=60$ both $n^*$ are interpolated inside the same factor-2 step of the $n$ grid, between 2048 and 4096. The two seeds give nearly the same exponents, within about ±0.01. The main uncertainty is that interpolation, at worst about ±0.25 per exponent.
+- **Uncertainty.** At $d=60$ both $n^*$ are interpolated inside the same factor-2 step of the $n$ grid, between 2048 and 4096. The two seeds agree to within ±0.01, but the grid forces that agreement: both seeds' errors switch from 0.33–0.48 to about 0 between the same two grid points. So it says nothing about seed noise. The interpolation uncertainty is at worst about ±0.25 per exponent.
 - **Conclusion.** The data suggest that SGD's exponent is about 0.3 lower: its $n^*$ falls from 1.6× Adam's at $d=15$ to about 1× at $d=60$. That difference is within the interpolation uncertainty, so it is not resolved.
 
 Other observations:
@@ -546,61 +546,97 @@ Notes on the table:
 **Review status** ([`theory/README.md`](theory/README.md)): A, B and C each failed or passed their first referee pass, were revised, and passed a second pass with only minor issues left. D passed its first pass with minor issues only, was revised, and passed a second pass with 7 minor issues, which were then applied (one small addition made in that last step, a minibatch form of D6(5) item 3, is unrefereed).
 
 **What is now proved about "short training ⇒ small circuit ⇒ generalization":**
-- **The discrete race model (A):** time bounds the depth, the incoherence-weighted size and the readout $\ell_1$ norm, and hence test error, uniformly in time. Training time does not bound the raw gate count.
+- **The discrete race model (A).** Time bounds the depth and the incoherence-weighted size at any depth, and the readout $\ell_1$ norm at depth one. With A1, these give test-error bounds uniform in time.
+  - *Raw gate count.* Training time does not bound it uniformly over gate libraries (A2.2). For a fixed library only a weak time-only bound holds: A2.5(a′), with a factor $\bar\kappa\approx d$.
+  - *Incoherence-weighted bound.* It uses the learned circuit's data-dependent $\kappa(t)$, and is never tighter than A1 applied to the realized size.
 - **Diagonal linear networks (C2):** the number of grown coordinates is at most $\kappa(\tau/\Theta)^2$.
-- **Two-layer quadratic networks with fixed output signs (D, new):** the same statement for the number of grown hidden units. The network has a shared hidden layer but fixed $\pm1$ output weights, so it is symmetric matrix sensing. It gives a test-error bound uniform in time.
-- **Two-layer ReLU networks (D, new):**
-  - *Proved:* the exact mass-clock identity, no growth before $\approx\log(1/\alpha)/U^*$, and a width-free bound through the first escape. A conserved quantity, the off-diagonal part of the classical balancedness law (Arora–Cohen–Hazan 2018; Du–Hu–Lee 2018), makes neurons of the same sign merge.
+- **Two-layer quadratic networks with fixed output signs (D, new):** the same weight-free statement for the number of grown hidden units, with $\tau$ read off the training-loss curve.
+  - *What the network is.* It has a shared hidden layer but fixed $\pm1$ output weights, so it is symmetric matrix sensing.
+  - *The bound.* It gives a test-error bound uniform in time.
+  - *Weak spots.* It weakens on plateaus with nonzero residual, and becomes vacuous on MAJ of pairs.
+- **Two-layer ReLU networks trained by gradient flow from balanced small initialization (D, new):**
+  - *Proved:*
+    - the exact mass-clock identity;
+    - no growth before $\approx\log(1/\alpha)/U^*$, with constant 1 sharp;
+    - a width-free bound through the first escape (vacuous below $n\approx10^5$ at $d=16$);
+    - a merging law. Same-sign neurons that share an activation pattern on the training set merge as their mass grows, through a conserved quantity: the off-diagonal part of the classical balancedness law (Arora–Cohen–Hazan 2018; Du–Hu–Lee 2018).
   - *Conditional:* persistence beyond the first escape, under a condition checkable from the training residuals.
   - *Conjecture:* the a-priori form beyond the first escape.
-- **One-pass SGD:** prequential error certifies test error directly, with no capacity argument (Proved; B3.4, C4.1). On the online runs, which now log prequential mistakes, the certified bound is within 0.01–0.15 of the window's measured test error throughout learning, and about 0.002 after it ([`study/ONLINE-BOUNDS.md`](study/ONLINE-BOUNDS.md)). The B repair independently found agreement within 0.006 on its own runs. For one-pass SGD, then, the question becomes *how many samples until the feature is found*. Point 1 of 3.5 answers it, so far heuristically.
+  - *Scope:* none of this covers the study's μP Adam networks directly.
+- **One-pass training** (here Adam on fresh minibatches; Proved, B3.4 and C4.1). The prequential error certifies the *average test error of a window's iterates*, with no capacity argument. It says nothing directly about the final network.
+  - *During learning.* On the online runs, which now log prequential mistakes, the certified bound is within about 0.01–0.18 of the test error at each window's end (seed 0, 4 targets). The window-average error, which is what the bound certifies, was not measured.
+  - *After learning,* the bound is about 0.002 ([`study/ONLINE-BOUNDS.md`](study/ONLINE-BOUNDS.md)).
+  - *Elsewhere.* The B repair independently found agreement within 0.006 on its own runs.
+  - *What remains.* For one-pass training, then, the question becomes *how many samples until the feature is found*. Point 1 of 3.5 answers it, so far heuristically.
 
-**What works numerically on real networks:** only distillation certificates, i.e. "the trained network is close to a small circuit". For the networks this was shown in Part 2; for the race model's own large circuits, see [`study/RACE-CERTIFY.md`](study/RACE-CERTIFY.md). The race model's own-circuit Occam bound is tight (median 0.021) exactly when its circuit has collapsed to the target's few gates ([`study/RACE-BOUNDS.md`](study/RACE-BOUNDS.md)).
+**What works numerically on the fixed-training-set networks:**
+- **Distillation certificates.** These are the only *tight* bounds: the trained network is close to a small circuit. For the networks this was shown in Part 2; for the race model's own large circuits, see [`study/RACE-CERTIFY.md`](study/RACE-CERTIFY.md).
+- **PAC-Bayes centred at initialization (B3.2)** is non-vacuous but weak: 0.26–0.56 at $n=16384$, on the simplest targets only.
+- **The race model's own-circuit Occam bound** ([`study/RACE-BOUNDS.md`](study/RACE-BOUNDS.md)) has median 0.021 among generalizing fits with at most 6 gates, against 0.67 for those with more. Tightness also needs large $n$.
 
 ### 3.5 What I now believe, and what is open
 
-**1. Gradient descent here is greedy circuit growth limited by search noise.** *Fairly confident, for this setting.*
-- **The claim.** Rich-regime gradient descent on Boolean targets behaves like greedy growth of a shared circuit. A new feature is added when its correlation with the residual beats the sampling noise of a continuous search over directions. For a feature that needs $k$ new inputs at once, that noise is about $d\,(d/a)^{k-2}/n$; reusing grown features is nearly free.
-- **Evidence.** This one law, in simulation (race model) or in closed form (predictor), predicts $n^*$ within about 1.15–1.5× on average across:
-  - 21 designed targets and 20 random ones;
+**1. Gradient descent here is greedy circuit growth limited by search noise.**
+- **Confidence.**
+  - *The qualitative picture: fairly confident, for this setting.* $n^*$ is set by when a move's correlation with the residual beats the sampling noise of a continuous search, and that cost grows polynomially in $d$ with the number of new inputs the move needs at once.
+  - *The specific functional form: Heuristic.* That form is $d\,\max(1,d/a)^{\max(k-2,0)}/n$, with reuse of grown features nearly free.
+- **Evidence.** Two models match $n^*$ within about 1.15–1.45× on average: the race simulation, and the closed-form noise-law predictor. They do so across:
+  - 21 designed targets, 12 of which were calibration data, and 20 random targets;
   - three input dimensions;
-  - a 50× range of $n^*$.
+  - $n^*$ from 47 to about 14000.
 
-  The ablations say it is the noise law, not the race's timing machinery, that does the work.
+  The ablations say that search noise, not the race's timing machinery, does the work.
+- **Known misses.**
+  - *Which model embodies the law.* Only the predictor embodies the functional form above. The race model's 3-parity $d$-exponent is half the networks'.
+  - *The 4-parity.* The networks scale like $d^{2.40}$, below the law's $d^{3}$.
+  - *Width.* The 4-parity's $n^*$ depends on width while the 3-parity's does not, which a single overlap constant $a$ cannot produce.
 - **Caveats.** All of this is in one setting:
   - one architecture family: a μP two-hidden-layer ReLU MLP;
   - Adam (SGD gives similar $n^*$ on the held-out targets; its 3-parity $d$-exponent, 1.6 against 1.9, is not resolved from Adam's at this precision);
-  - widths 32–256, with the models calibrated at 128;
+  - models and noise law tested at width 128 only, with width checks at 32–256 (parities only at 64 and 256);
   - $d\le60$, interactions of at most 4 bits, $n\le65536$;
   - uniform Boolean inputs and square loss.
 
 **2. Relation to NNBayes ≈ Occam circuit learning.**
 - **Same answer to *what* is learned.** Once gradient descent generalizes, the network is functionally close to a small circuit, as the certificates show. So the two pictures agree on what is learned when learning succeeds.
 - **Different answer to *how many samples*.**
-  - Occam (and the $\gamma\ge1$ posterior) pays the circuit's description length, about $k\log d$ for a $k$-parity.
-  - Gradient descent pays the noise cost of the most expensive move along its greedy path, about $d^{k-1}$.
-  - They agree up to polynomial factors exactly for targets with a cheap greedy path, i.e. low-leap compositions with large residual correlations at every step. They diverge by $d^{k-1}/(k\log d)$ when a large leap is unavoidable.
-- **A testable consequence.** The networks' $n^*$ should be predictable from the target's greedy path alone. On 20 random formulas the closed form does this to within about 1.34×, with Spearman 0.92.
-- **The cost grows with the leap.** On the 26 targets with at most 4 relevant inputs (designed and random), the ratio of the networks' $n^*$ to the Occam-over-juntas learner's grows with the target's leap: median 8.1× at leap 1 (14 targets), 16.6× at leap 2 (8), 36× at leap 3 (2) and 85× at leap 4 (2), at $d=30$. Within leap 1 the spread is wide (1.7×–31×; the multiplexer is 31×), because the correlations along the path matter too, as the predictor says.
+  - Occam (and, per the sibling project, the $\gamma\ge1$ posterior) pays the circuit's description length, about $k\log d$ for a $k$-parity.
+  - Gradient descent pays the noise cost of the most expensive move along its greedy path, about $d^{k-1}$ for a leap-$k$ move (somewhat less at $k=4$).
+- **Conjecture** (suggested by the predictor, not shown). The two sample complexities are close for targets with a cheap greedy path, i.e. low-leap compositions with large residual correlations at every step. They differ by about $d^{k-1}/(k\log d)$ when a leap of size $k$ is unavoidable. For fixed $k$ that gap is itself polynomial; it becomes super-polynomial only if $k$ grows with $d$.
+- **A testable consequence.** The networks' $n^*$ should be predictable from the target's greedy path alone. On 20 random formulas the closed form does this to within about 1.34×, with Spearman 0.92–0.96 depending on the saved predictor run.
+- **The cost grows with the leap.** On the 26 targets with at most 4 relevant inputs (designed and random), the ratio of the networks' $n^*$ to the Occam-over-juntas learner's grows with the target's leap, at $d=30$:
 
-**3. Kernel background and grown features.** *Moderately confident.* A trained network is a random-feature kernel background plus grown features:
+  | leap | targets | median ratio |
+  |---|---|---|
+  | 1 | 14 | 8.1× |
+  | 2 | 8 | 16.6× |
+  | 3 | 2 | 36× |
+  | 4 | 2 | 85× |
+
+  Within leap 1 the spread is wide (1.7×–31×; the multiplexer is 31×), because the correlations along the path matter too, as the predictor says.
+
+**3. Kernel background and grown features.** *Moderately confident* (Heuristic reading). A trained network is a random-feature kernel background plus grown features:
 - the features decide whether and when it generalizes;
 - the background decides which examples it gets wrong on the way.
 
+Adding the kernel score to the race model brings per-example agreement to 0.62. That is the agreement between two Adam networks trained on the same data from different initializations.
+
 **4. Bounds: where "short training ⇒ small circuit ⇒ Occam" now stands.**
 - **It is a theorem for:**
-  - the discrete model, reading size as depth, incoherence-weighted size or readout norm;
+  - the discrete model, reading size as depth, incoherence-weighted size, or readout norm at depth one;
   - diagonal linear networks;
-  - two-layer quadratic networks with fixed output signs (new);
-  - two-layer ReLU networks through the first escape (new).
+  - two-layer quadratic networks with fixed output signs (new), in weight-free form;
+  - two-layer ReLU networks under gradient flow from balanced small initialization, through the first escape (new).
 - **It is a conjecture for** ReLU networks beyond the first escape (Conjecture D4).
-- **Numerically,** on real networks, the only non-vacuous generalization bounds are after the fact: the trained network is close to a small circuit, certified with unlabelled inputs.
-- **For one-pass SGD,** prequential error certifies test error with no capacity argument.
-- **Note.** The bounds bound the train–test gap. The question of *how many samples* is answered, so far heuristically, by the noise law of point 1. Its lower half is the known correlational-SQ lower bound; its upper half for real networks is open.
+- **Numerically,** on the fixed-training-set networks, the only tight bounds are after the fact. The trained network is certified close to a small circuit using unlabelled inputs. PAC-Bayes at initialization is non-vacuous but weak.
+- **For one-pass training,** prequential error certifies the average test error of a window of iterates, with no capacity argument.
+- **Note on what the bounds answer.** The bounds bound the train–test gap. The question of *how many samples* is answered, so far heuristically, by the noise law of point 1.
+  - *Lower half.* For one-pass (CSQ-type) training, the lower half of that law is the known CSQ rate. For training that reuses a fixed sample, no matching lower bound is known, and the 4-parity data scale below $d^{k-1}$.
+  - *Upper half.* For real networks it is open.
 
 **Open problems, roughly in order of promise:**
 1. **Prove the noise law** for a two-layer network trained on a fixed sample from small initialization: an order-$k$ feature escapes the plateau iff $n\gtrsim d^{k-1}/\rho^2$ up to logarithms. Ingredients exist: information-exponent results for online SGD (Ben Arous–Gheissari–Jagannath), early alignment (Boursier–Flammarion), and D's mass clock and merging law.
-2. **Composition costs.** The predictor underpredicts staircase, multiplexer and MAJ of parities at $d=60$ by up to 2×, and the race model misses the 3-parity exponent. Sequential moves may partly add rather than take a maximum. Width dependence is order-dependent: none for the 3-parity, 1.9× from width 32 to 256 for the 4-parity, which one overlap constant $a$ cannot produce.
+2. **Composition costs.** The predictor underpredicts staircase, multiplexer and MAJ of parities by 1.4–1.7× at $d=30$ and 1.7–2.1× at $d=60$, and the race model misses the 3-parity exponent. Sequential moves may partly add rather than take a maximum. Width dependence is order-dependent: none for the 3-parity, 1.9× from width 32 to 256 for the 4-parity, which one overlap constant $a$ cannot produce.
 3. **Reservoir depletion at tiny initialization** (D): the race model assumes a persistent reservoir of dormant units, and D shows it can be used up by the first escape. When does that happen at practical scales?
 4. **Beyond this setting:** other architectures, cross-entropy, SGD noise (merging and collapse moves), real data. In particular: is the "noise of a continuous search" law the right replacement for Occam's description length in larger models?
 5. **Bayes vs gradient descent:** characterize the targets on which the γ≥1 posterior and gradient descent have polynomially related sample complexity. The predictor suggests: exactly those with a cheap greedy path.
