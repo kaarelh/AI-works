@@ -52,6 +52,9 @@ variants). Readings of mechanism are labelled **Heuristic**.
      |---|---|---|---|
      | 15 → 30 | 1.2 / 1.6 / 2.0 | 1.0 / 1.8 / 2.4 | 1.0 / 0.9 / 1.4 |
      | 30 → 60 | 1.0 / 1.2 / 1.5 | 1.1 / 2.0 / 2.4 | 0.9 / 1.2 / 2.8 |
+
+     The race column is the single `base` stream. Averaged over random streams (4 at d = 15, 6 at d = 30), the race's
+     15 → 30 exponents are 1.3 / 1.3 / 1.8 (Verification).
    - **Dense leap-1 targets:** the one-shot Hebbian classifier sign(E_S[y x]·x) gives n\* = 53, 116 and 346 for x₁,
      MAJ₃ and MAJ₉, against the networks' 47, 112 and 263. (Verification: the race's first gate alone, the *rounded*
      Hebbian direction, gives 74, 153 and 485; the gates added after it bring the race down to 54, 102 and 248.)
@@ -65,7 +68,7 @@ variants). Readings of mechanism are labelled **Heuristic**.
    - **Coarser weights:** ternary weights (`Q1`) lower n\* on most targets, by 1.5× on average, and break the match
      (0.81). Coarse rounding denoises the estimated directions. Q = 2, 3 and 5 are nearly equivalent.
    - **Depth-2 composition** matters little (held-out 0.35). It helps the staircase-like targets by about 0.4 log₂.
-5. **Per-example agreement (0.50) comes from sharing the training sample.**
+5. **Per-example agreement (0.50) comes mostly from sharing the training sample.**
    - With an independent search sample of the same size, it halves: 0.26 for `indep-search`, 0.23 for `indep-align`.
      The halving is roughly uniform across target families (least for the staircase family, 0.51 → 0.33).
    - No ablation raises it above 0.53. The NNGP kernel has 0.69 and SGD-vs-Adam networks 0.71.
@@ -697,6 +700,144 @@ the two being misled by the *same spurious correlations of the same training sam
 | [`models/ablation_diagnostics.py`](models/ablation_diagnostics.py) | parity noise floor, Hebbian n\*, delayed generalisation, networks' n\* against training steps, time profile, generalisation-time rescoring |
 | [`models/ablation_dscale.py`](models/ablation_dscale.py) | d = 15 against d = 30 |
 | [`models/ablation_figure.py`](models/ablation_figure.py) → [`figures/ablation_curves.png`](figures/ablation_curves.png) | learning curves of the networks and the main ablations |
+| [`models/ablation_verify.py`](models/ablation_verify.py) | the independent checks of the Verification section (scoreboard recomputation, extra random streams and noise bands, model-vs-model n\*, different-sample agreement floor, dense-target gate trajectories, `nostop`, time-Spearman baselines, implied noise-floor constant) |
 
 Evaluations are in the session scratchpad (`model_evals/race-abl-*.npz`, `ablation_diag/`). A full grid takes
 1.5–12.5 minutes single-threaded.
+
+## Verification
+
+This is an independent adversarial re-check, done on 2026-10-23.
+
+**How it was checked.**
+- Every number above was recomputed from the saved evaluations (`C.load_eval` + `C.compare`) and the per-cell
+  diagnostics.
+- The scripts were re-run as published: `ablation_report.py` on all 30 ablations; `ablation_diagnostics.py` with
+  `floor` at d = 15, 30 and 60, and with `hebb`, `delay`, `nnsteps`, `tprofile`, `gentime`, `reach` and `budget`;
+  and `ablation_dscale.py`.
+- New checks are in [`models/ablation_verify.py`](models/ablation_verify.py). Its `reseeds` command ran three more
+  random streams of the calibrated model at d = 30 and three at d = 15 (`model_evals/verify-abl-reseed*.npz`).
+
+### Confirmed
+
+- **Reproduction.** `race-abl-base` is bit-identical to `race.npz` on every target: predictions, test and training
+  errors, times and sizes.
+- **Tables.** All of these reproduce to the printed precision:
+  - the §2 scoreboards, every row, including the SGD and kernel references;
+  - the §3 n\* and family tables;
+  - the §4.4 circuit table and the §5 time tables;
+  - the d = 15 tables, the delay table and the steps table (mean drop 0.17 log₂);
+  - the Hebbian table and the parity noise-floor table at all three d;
+  - the reachability numbers at d = 30 and 60;
+  - the per-family per-example agreement table.
+- **Rule compliance.**
+  - `RaceAblation.fit` reads nothing about the target. The relevant sets and the test set are used only by the
+    driver's recorder, after `fit` returns.
+  - Only `oracle-*` and `indep-*` use the target inside `fit`, and they are labelled as diagnostics.
+  - No constant was refitted. All variants run at θ = 1.5, Q = 3, ReLU gates, λ = 10⁻³, K = 4, P = 8, 8 steps and
+    48 gates.
+- **Ablations that change two things.**
+  - `P1` does *not* also change the ± sign pattern of the even-order pool. That pattern is a no-op in `race.py`
+    itself: for even k the order-k gradient is odd-homogeneous of degree k − 1, so a sign flip only flips v, and 8
+    steps is an even number.
+  - `free` and `greedy` also move every dormant unit fully to its search endpoint at each firing, where `base` moves
+    unaligned units only part way. So they also accumulate more power-iteration steps. `iters32` changes nothing
+    either, so this side effect is not what keeps them in the band.
+  - `reset-all`, `P*` and `K*` also change how many random numbers are drawn. That is covered by the stream band.
+- **The noise-floor constant does not need held-out data.** At the networks' n\*, the ratio of the true utility to
+  the noise maximum is:
+
+  | d | x₁x₂ | x₁x₂x₃ | x₁…x₄ |
+  |---|---|---|---|
+  | 15 | 1.38 | 1.48 | 1.48 |
+  | 30 | 1.34 | 1.56 | 1.77 |
+  | 60 | 1.33 | 2.15 | 3.04 |
+
+  The calibration parities alone (x₁x₂ and x₁…x₄ at d = 30) give a geometric mean of 1.54, so the constant 1.5 does
+  not depend on the held-out x₁x₂x₃. The failure at d = 60 shows up as this ratio rising with k.
+- **"The race dynamics do not matter" passes a sharper test.** Compare n\* model against model, with no network
+  involved: the mean |log₂ n\*_variant / n\*_stream| over the six control streams.
+  - Held-out targets: between control streams 0.17 (pairs range 0.11–0.23). `flat` 0.13, `reset-all` 0.16, `free`
+    0.19, `reset-clock` 0.19, `greedy` 0.20, all θ values 0.16–0.21. These variants are statistically another
+    random stream.
+  - All 21 targets: controls 0.15 (0.10–0.21). `greedy` 0.26, `P1` 0.32 and `iters1` 0.37 move more than a reseed
+    does.
+- **The extended band does not change any conclusion.** With six streams at d = 30, held-out |log₂ ratio| spans
+  0.23–0.33. The published 0.33 is the *worst* stream, not a lucky one; its n\* Spearman of 1.00 is the best of
+  0.97–1.00. At d = 15, four streams give 0.36–0.49 over the 7 targets, so `free` 0.37, `flat` 0.37 and `greedy` 0.40
+  are inside: "the same holds at d = 15" is confirmed.
+
+### Corrected in place (each marked "corrected in verification" above)
+
+1. **Dense majorities (§4.3, §7, Summary 3).**
+   - The race's n\* is not the rounded Hebbian classifier's. Its first gate alone gives 74 / 153 / 485 for x₁ /
+     MAJ₃ / MAJ₉, which is the rounded classifier's n\*.
+   - The gates fitted after it *lower* n\* to 54 / 102 / 248. For MAJ₃ and MAJ₉ they are helpful refinements, not
+     harmful memorisation.
+   - Only for the 10-bit halfspace do the later gates hurt: n\* is 327 at fit and 578 at the end.
+   - MAJ₉: both the networks (263) and the race (248) beat the continuous Hebbian classifier (346) by about 0.4 log₂.
+2. **Order mix (§4.4).** The shift toward order-3/4 gates comes from the persistent growth clocks, not from the
+   alignment costs. `reset-clock` gives 6% order-4 gates, like `greedy`; `free` gives 16% and `free3` 29%.
+3. **Running past interpolation (§5, Summary 7).** "Never improves" is false.
+   - `nostop` ends lower than `base` (by more than 0.005) in 88 of 546 cells and higher in 126. Nearly all the
+     improvements are at n ≤ 128.
+   - Three cells cross from above 0.1 to at most 0.1.
+   - n\* of x₁ drops from 54 to 41; MAJ₃ rises from 102 to 137 and MAJ₉ from 248 to 406.
+   - The conclusion stands: there is no strong delay, and no cell goes from above 0.2 to at most 0.1.
+4. **Oracle artifact cells (§4.1).** In `oracle-align` they are n = 128 and 256. The pair n = 128 and 16384 belongs
+   to `oracle-search`.
+5. **`indep-resample` sample count.** It was "10–48 × n". It is the number of gates fired: near the networks' n\*,
+   median 48 and at least 3.
+6. **Reachability at d = 15 (§4.2).** At the networks' n\*, the fractions are 6% (x₁x₂x₃) and 4.1% (x₁…x₄). The 7%
+   and 3.5% quoted before are the values at the floor crossing.
+7. **Search budget (§4.2).** The noise maximum rises by up to 5.5% (not 5%) at the d = 60 crossings, and by 23%
+   (not 20%) at n = 14255.
+8. **Noise-maximum scaling (§4.2).** It goes as about n^(−0.7), not n^(−0.6), for k = 4 at d = 30.
+9. **Smaller wording fixes.**
+   - The per-example halving is only "roughly" uniform: the staircase family drops 0.51 → 0.33.
+   - `Q1` has 90% spurious gates below n\*, not 99%.
+   - The d = 15 → 30 parity exponents are weaker evidence than stated: see the caveats.
+
+### Caveats that remain
+
+- **Calibration targets.** The "within about 0.1 of the band" statement holds on held-out targets. On the
+  calibration targets, against the six-stream band of 0.23–0.30:
+  - `P1` and `iters1` score 0.49 and `greedy` 0.40, as stated in Summary 1.
+  - `free3` scores 0.39 and `K3` 0.56; `K3` is a library change and loses x₁…x₄.
+
+  On all 21 targets, `P1` and `iters1` score 0.41 and `free3` 0.44, against 0.24–0.29. Both pool-size and
+  iteration effects run through x₁…x₄: n\* is 6805 for `P1` and 3738 for `iters1`, against 1955–3037. So how well
+  the search reaches high-order directions does matter, on the calibration side.
+- **Per-example agreement has a floor of about 0.2 for any learner.** About 0.3 of the race's 0.50 comes from
+  sharing the training sample. `indep-search` (0.26) is only 0.09 above its own different-sample floor of 0.17.
+- **Time Spearman ranks targets, not dynamics** (§5 note).
+  - The networks' times sit on the checkpoint grid 0, 10, 20, 50, 100, 200, 500, 1000, 2000, 3000, 5000, 7000,
+    10⁴, 1.5·10⁴, 2·10⁴ steps. The ratios in the §5 profile (0.25, 2.5, 5, 10) and the d = 30 / d = 15 ratios
+    (1, 2, 2.5) are grid values.
+  - That the networks slow down with d on 6 of 7 targets is robust. The factor "about 2" is not.
+- **d-scaling.** The networks' n\* at d = 15 and 60 rest on 2 seeds. The race's parity exponents vary by ±0.4
+  between streams (§5 note). "Grows too slowly" is directionally supported, by about 0.5 in the exponent averaged
+  over streams, but it is not established target by target.
+- **Delayed generalisation.** The networks' "moment of fit" is read on the checkpoint grid. That can only hide
+  network delays, so the contrast with the race is if anything understated.
+- **The reachability argument for x₁…x₄ at d = 60 rests on about 1 start in 512** (0.2% at the floor crossing).
+  With 100 instead of 8 steps the fraction there is 5%. It is a few-step reachability effect, and still Heuristic.
+
+### Verdict
+
+The headline conclusions hold:
+- the race's timing machinery (clocks, alignment law, race against greedy) does not set n\* on held-out targets;
+- noise-free search collapses n\*, and same-size independent search restores it;
+- the gate library (orders, ReLU, Q) matters;
+- the noise-floor rule works at d = 15 and 30 and fails at d = 60 for 3 and 4 bits;
+- per-example agreement stays below the kernel's;
+- the race shows no strongly delayed generalisation.
+
+Corrected:
+- the dense-majority mechanism: the later gates help MAJ₃ and MAJ₉;
+- the attribution of the high-order gate share: it comes from the clocks, not the alignment costs;
+- "running past interpolation never helps";
+- several small numbers.
+
+Added caveats: calibration-side sensitivity to pool size, iteration count and greedy; the ~0.2 floor of per-example
+agreement; the between-target nature of the time Spearman; checkpoint-grid quantisation of the networks' times.

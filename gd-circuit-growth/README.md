@@ -545,7 +545,7 @@ Notes on the table:
 
 ### 3.4 Thread 3: bounds
 
-**Review status** ([`theory/README.md`](theory/README.md)): A, B and C each failed or passed their first referee pass, were revised, and passed a second pass with only minor issues left. D passed its first pass with minor issues only, was revised, and passed a second pass with 7 minor issues, which were then applied (one small addition made in that last step, a minibatch form of D6(5) item 3, is unrefereed).
+**Review status** ([`theory/README.md`](theory/README.md)): A, B and C each failed or passed their first referee pass, were revised, and passed a second pass with only minor issues (7, 8 and 10). Those minor fixes were then applied and each checked by a separate agent. D passed its first pass with minor issues only, was revised, and passed a second pass with 7 minor issues, which were then applied (one small addition made in that last step, a minibatch form of D6(5) item 3, is unrefereed).
 
 **What is now proved about "short training ⇒ small circuit ⇒ generalization":**
 - **The discrete race model (A).** Time bounds the depth and the incoherence-weighted size at any depth, and the readout $\ell_1$ norm at depth one. With A1, these give test-error bounds uniform in time.
