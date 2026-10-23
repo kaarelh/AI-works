@@ -402,6 +402,7 @@ Status labels as before.
    - **Breaks the match:**
      - computing the direction search on fresh samples instead of the training set (4.6, a diagnostic that removes sampling noise from the search);
      - removing order-3/4 units (1.4).
+   - **Noise level versus noise realization.** Running the search on an independent sample of the *same* size keeps the $n^*$ match (0.31) but halves per-example agreement (0.51 → 0.26). The *level* of search noise sets sample complexity. The *particular* noise of the training sample sets which examples are wrong. The race model agrees with the networks' individual mistakes because both pick up the same spurious correlations in that training set.
    - The correct discrete picture is therefore *greedy growth whose acceptance is limited by the sampling noise of a continuous search over directions*. That noise grows polynomially with $d$ for each input that must be found at once.
 5. **A trained network is a kernel background plus grown features** (Numerical). Adding the NNGP kernel's score to the race model's score with equal weight raises per-example agreement on partially learned tasks from 0.50 to 0.62, against a ceiling of 0.71 (SGD-trained vs Adam-trained networks), without losing the $n^*$ match (held-out 0.29). The networks' individual mistakes are kernel-like; *whether* they generalize is set by feature growth.
 6. **Once they generalize, both the networks and the model are functionally small circuits, even when their representation is large** (Numerical).
