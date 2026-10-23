@@ -127,8 +127,9 @@ class Hybrid:
     name = "hybrid"
 
     def __init__(self, mode="flow", c_bg=1.0, rho=None, beta=1.0, theta=1.5, lam=1e-3, Q=3, K=4, P=8, iters=8, gmax=48,
-                 depth=2, gate='relu', n_exact=2048, M=512, bisect=10, final_ridge=1e-4, verbose=False):
+                 depth=2, gate='relu', n_exact=2048, M=512, bisect=10, final_ridge=1e-4, stop_mse=None, verbose=False):
         self.mode = mode
+        self.stop_mse = None if stop_mse is None else float(stop_mse)
         self.final_ridge = None if final_ridge is None else float(final_ridge)
         self.c_bg = None if c_bg is None else float(c_bg)
         self.rho = None if rho is None else float(rho)
@@ -172,11 +173,15 @@ class Hybrid:
             a, r = RO.fit(lam_bg)
             return a, r, lam_bg, float(np.mean(np.where(y - r > 0, 1.0, -1.0) != y))
 
+        def done(st):
+            """Growth stops at training sign error 0 (stop_mse None, as in the race) or training MSE < stop_mse."""
+            return st[3] == 0 if self.stop_mse is None else float(np.mean(st[1] ** 2)) < self.stop_mse
+
         def first_time(lo, hi, ok):
             """Earliest time in (lo, hi] at which ok(state) holds, by bisection in log t (ok(hi) assumed)."""
             for _ in range(self.bisect):
                 mid = np.sqrt(lo * hi) if lo > 0 else hi / 4
-                if ok(state(mid)[3]):
+                if ok(state(mid)):
                     hi = mid
                 else:
                     lo = mid
@@ -186,7 +191,7 @@ class Hybrid:
         a, r_res, lam_now, err = state(t)
         t_fit = 0.0 if err <= 0.1 else None
         trace = [(0.0, err)]
-        while len(gates) < self.gmax and err > 0:
+        while len(gates) < self.gmax and not done((a, r_res, lam_now, err)):
             r64 = r_res
             if np.max(np.abs(r64)) < 1e-9:
                 break
@@ -239,11 +244,11 @@ class Hybrid:
             T, kw, pw, w, b, Ug, *_ = best
             if use_bg and self.mode == "flow":
                 # the background keeps fitting while the next gate grows: stop if it reaches sign error 0 first
-                e2 = state(t + T)[3]
-                if t_fit is None and e2 <= 0.1:
-                    t_fit = first_time(t, t + T, lambda e: e <= 0.1)
-                if e2 == 0:
-                    t = first_time(t, t + T, lambda e: e == 0)
+                st2 = state(t + T)
+                if t_fit is None and st2[3] <= 0.1:
+                    t_fit = first_time(t, t + T, lambda st: st[3] <= 0.1)
+                if done(st2):
+                    t = first_time(t, t + T, done)
                     a, r_res, lam_now, err = state(t)
                     trace.append((t, err))
                     break

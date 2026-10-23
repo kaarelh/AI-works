@@ -28,8 +28,8 @@ variants). Readings of mechanism are labelled **Heuristic**.
      (`oracle-align`). Then n\* collapses to 16–87 on every target. On held-out targets |log₂ ratio| is 4.6, as far from
      the networks as the junta Occam learner (4.61).
    - **Independent sample of the same size n** (`indep-search`): the networks' n\* comes back (held-out 0.31).
-     With a new size-n search sample at every firing (`indep-resample`; 10–48 times n samples in total), n\* falls by
-     only about 1.5×.
+     With a new size-n search sample at every firing (`indep-resample`; up to 48 times n samples in total, median 48
+     near the networks' n\* — corrected in the Verification section), n\* falls by only about 1.5×.
    - **So it is the noise *level* at sample size n that matters.** Reuse of the training labels by the search does
      not. Race timing, persistence and alignment costs only act on top of it.
 3. **A one-constant noise-floor rule predicts the networks' parity sample complexities at d = 15 and 30, but not at
@@ -42,7 +42,7 @@ variants). Readings of mechanism are labelled **Heuristic**.
      - d = 60: 539 / 1779 / 5545 against 427 / 3410 / 14255. That is right for x₁x₂, but 1.9× and 2.6× too low for
        the 3- and 4-bit parities.
    - **Growth with d.** The networks' 3- and 4-bit parities get harder with d faster than this floor. A larger
-     search budget does not change the floor. For x₁…x₄ at d = 60, reachability of the direction from random starts
+     search budget barely changes the floor. For x₁…x₄ at d = 60, reachability of the direction from random starts
      appears to bind instead (§4.2).
 
      | d range | rule | networks | race |
@@ -50,7 +50,8 @@ variants). Readings of mechanism are labelled **Heuristic**.
      | 15 → 30 | 1.2 / 1.6 / 2.0 | 1.0 / 1.8 / 2.4 | 1.0 / 0.9 / 1.4 |
      | 30 → 60 | 1.0 / 1.2 / 1.5 | 1.1 / 2.0 / 2.4 | 0.9 / 1.2 / 2.8 |
    - **Dense leap-1 targets:** the one-shot Hebbian classifier sign(E_S[y x]·x) gives n\* = 53, 116 and 346 for x₁,
-     MAJ₃ and MAJ₉, against the networks' 47, 112 and 263.
+     MAJ₃ and MAJ₉, against the networks' 47, 112 and 263. (Verification: the race's first gate alone, the *rounded*
+     Hebbian direction, gives 74, 153 and 485; the gates added after it bring the race down to 54, 102 and 248.)
 4. **The gate library matters.**
    - **Orders up to the target's leap are needed.**
      - Without orders 3–4 (`K2`), parities of 3 and 4 bits, the sparse polynomial and recursive majority are never
@@ -63,8 +64,11 @@ variants). Readings of mechanism are labelled **Heuristic**.
    - **Depth-2 composition** matters little (held-out 0.35). It helps the staircase-like targets by about 0.4 log₂.
 5. **Per-example agreement (0.50) comes from sharing the training sample.**
    - With an independent search sample of the same size, it halves: 0.26 for `indep-search`, 0.23 for `indep-align`.
-     The halving is uniform across target families.
+     The halving is roughly uniform across target families (least for the staircase family, 0.51 → 0.33).
    - No ablation raises it above 0.53. The NNGP kernel has 0.69 and SGD-vs-Adam networks 0.71.
+   - (Added in verification.) About 0.2 of every learner's score survives when the two learners see *different*
+     training samples (race 0.21, kernel 0.20, network vs network 0.20). Sharing the sample therefore accounts for
+     about 0.3 of the race's 0.50, against about 0.5 for the kernel and for SGD.
 6. **Time to generalise.** Its *ordering* survives every ablation, including noise-free search (time Spearman
    0.75–0.88 held-out, 0.82–0.94 at n ≥ 4096). So the ordering is set by the true features' utilities, not by noise or
    by the race.
@@ -79,7 +83,9 @@ variants). Readings of mechanism are labelled **Heuristic**.
    - **Networks:** in 43 cells the test error is above 0.15 when the training error reaches 0.1, and at or below 0.1
      at the end, after up to 200× as many steps.
    - **Race:** there is 1 such cell (0 above 0.2, against 15 for the networks). Running it past interpolation
-     (`nostop`) never improves the test error later.
+     (`nostop`) produces no strong delay either (3 cells above 0.15 at fit, none above 0.2). It lowers the test error
+     in some small-n cells but raises it in more (corrected in the Verification section; the earlier text said it
+     never helps).
    - **The networks' n\* is still falling at the end of training,** by 0.17 log₂ per doubling of steps between 10⁴ and
      2·10⁴. The race has no counterpart of that.
    - **So the match at 20000 steps is partly a match at that training budget.**
@@ -297,8 +303,10 @@ model (§4.4). So nothing in the race's *timing* produces a sample complexity by
 race finds the true features, and the readout interpolates with them.
 
 One artifact needs flagging. With a *fixed* search sample, a spurious direction of that sample keeps its utility after
-it fires, because firing it does not fit that sample. The run can then fire it again and again. This happens for one
-seed of x₁…x₄ at n = 128, and for one at n = 16384, where the oracle sample is no larger than the training set.
+it fires, because firing it does not fit that sample. The run can then fire it again and again. In `oracle-search`
+this happens for one seed of x₁…x₄ at n = 128, and for one at n = 16384, where the oracle sample is no larger than
+the training set. In `oracle-align` the failing cells are one seed of x₁…x₄ at n = 128 and at n = 256 (corrected in
+verification).
 
 **Independent sample of the same size n (`indep-align`, `indep-search`).** The noise level of the search is restored,
 but the noise is independent of the training labels. The networks' n\* comes back:
@@ -314,12 +322,13 @@ The families respond differently:
   memorize the training set after the first good feature, and that memorization costs generalisation.
 
 **A new search sample at every firing (`indep-resample`).** The search gets a fresh size-n sample before each
-firing, so over a run it sees 10–48 times n samples in total.
+firing, so over a run it sees as many size-n samples as it fires gates: near the networks' n\* (0.5–2 n\*), a
+median of 48, at least 3 (corrected in verification; the earlier text said 10–48).
 - n\* falls on every family, by about 1.5× on average (mean signed log₂ −0.57; x₁…x₄ 1510, MAJ₉ 129).
 - Held-out |log₂ ratio| rises to 0.54.
 
-So a 10–48-fold increase in the total data the search sees buys only a factor 1.5 in n\*. What sets n\* is the
-noise in the sample each search step uses.
+So a many-fold (typically 48-fold) increase in the total data the search sees buys only a factor 1.5 in n\*. What
+sets n\* is the noise in the sample each search step uses.
 
 ### 4.2 The parity noise floor (Numerical; the rule is Heuristic)
 
@@ -348,11 +357,13 @@ Network n\* at d = 15 and 60 are from [`DSCALE.md`](DSCALE.md) (2 seeds). Race n
   At d = 60 it is right for x₁x₂ (539 vs 427), but too low by 1.9× for x₁x₂x₃ (1779 vs 3410) and by 2.6× for x₁…x₄
   (5545 vs 14255). Two checks (`ablation_diagnostics.py budget`, `reach`):
   - **The floor is not an artifact of the search budget.** 128 or 512 starts × 100 steps instead of 32 × 40 raise the
-    noise maximum by at most 5% at the crossings (20% for x₁…x₄ at n = 14255).
+    noise maximum by at most 5.5% at the crossings (23% for x₁…x₄ at n = 14255; both corrected in verification from
+    "5%" and "20%").
   - **Reachability from random starts (Heuristic; 2 seeds × 256 starts).** The question here is from what fraction
     of random starts 8 power-iteration steps on the training residual reach the true direction (overlap > 0.9).
-    - At the networks' n\*, that fraction is similar at all three d: x₁x₂x₃ 7%, 10%, 9%; x₁…x₄ 3.5%, 2.9%, 1.4%
-      (d = 15, 30, 60).
+    - At the networks' n\*, that fraction is similar at all three d (within a factor of 3): x₁x₂x₃ 6%, 10%, 9%;
+      x₁…x₄ 4.1%, 2.9%, 1.4% (d = 15, 30, 60; the d = 15 values were corrected in verification: 7% and 3.5% are the
+      values at the d = 15 floor crossing, not at the networks' n\*).
     - At the d = 60 floor crossing it is 0.2% for x₁…x₄. So for the 4-bit parity at large d, a computational
       condition, reachability from random initialisation in a few steps, appears to bind beyond the statistical one.
     - For x₁x₂x₃ it is 5.7% at the floor crossing, so the 3-bit gap at d = 60 stays unexplained.
@@ -373,9 +384,9 @@ be "fitted" by spurious directions, much as a regression with more features than
 
 ### 4.3 Dense leap-1 targets: the noise in one Hebbian direction (Numerical)
 
-For x₁, MAJ₃ and MAJ₉ the first gate is the rounded Hebbian direction E_S[y u], and the first gate already reaches
-training error ≤ 0.1. Their n\* is that of the one-shot correlation classifier sign(c + a·h·x), up to rounding
-(`ablation_diagnostics.py hebb`):
+For x₁, MAJ₃ and MAJ₉ the first gate is the rounded Hebbian direction E_S[y u] (order 1 in every cell with n ≥ 32),
+and it usually already reaches training error ≤ 0.1. The networks' n\* is close to that of the one-shot correlation
+classifier sign(c + a·h·x) (`ablation_diagnostics.py hebb`):
 
 | target | network n\* | race n\* | sign(h·x), h = E_S[y x] | h rounded to {−3..3} | h rounded to {−1,0,1} |
 |---|---|---|---|---|---|
@@ -385,10 +396,18 @@ training error ≤ 0.1. Their n\* is that of the one-shot correlation classifier
 | 10-bit halfspace | 563 | 578 | 322 | 468 | never |
 | 3-term DNF, recursive MAJ₉ | 505, 2027 | 564, 1895 | never | never | never |
 
+**Correction (verification).** The race's n\* is *not* the rounded classifier's. The race circuit after its first
+gate alone has n\* = 74, 153 and 485 for x₁, MAJ₃ and MAJ₉, close to the rounded column (74, 142, 503). The gates
+fitted after it, on the way to interpolation, *lower* n\* to the race's final 54, 102 and 248. For x₁ and MAJ₃ this is
+close to the continuous classifier. For MAJ₉ both the race (248) and the networks (263) beat the continuous classifier
+(346) by about 0.4 log₂. So for the dense majorities the later "spurious" gates are refinements that help, not
+memorisation that hurts. Only for the halfspace below do they hurt.
+
 **The 10-bit halfspace.** Network and race agree with each other (563 and 578), but *both* need 1.8× more data than
 the plain Hebbian classifier (322).
 - In the race the cause is visible: after the first gate, which already fits, up to 47 further gates are fitted
-  to interpolate the training set. They are mostly spurious, and they cost generalisation.
+  to interpolate the training set. They are mostly spurious, and they cost generalisation: the circuit at the moment
+  the training error first reaches 0.1 has n\* = 327, the final one 578 (checked in verification).
 - The race reproduces the network's suboptimality, not only its successes.
 
 **Coarser weights denoise.** Rounding h to {−1,0,1} zeroes the noisy small coordinates. That is why `Q1` lowers n\*
@@ -415,12 +434,14 @@ target's relevant set after `fit()` has returned.
 | nostop | 47.9 | 1.00 | 0.74 | 0.75 | 0.07/0.50/0.25/0.18 |
 
 - **Below the networks' n\*:** essentially every gate is spurious (99–100% for every variant that searches on the
-  training set). The model interpolates the training set with memorising gates before the true feature wins the
+  training set, except `Q1` at 90%). The model interpolates the training set with memorising gates before the true feature wins the
   search.
 - **At n ≥ 2n\*:** the true features are present in about 75% of cells. The remaining spurious gates are mostly
   refinements of the dense targets.
-- **Order mix:** the race and the greedy learner differ mainly in it. The race's alignment costs shift selection
-  toward orders 3–4: 15% order-4 gates, against 6% for `greedy`.
+- **Order mix:** the race and the greedy learner differ mainly in it. The race's *persistent growth clocks* shift
+  selection toward orders 3–4: 15% order-4 gates, against 6% for `greedy` and 6% for `reset-clock` (clocks reset,
+  alignment law kept). The alignment costs are not the cause: removing them leaves the share at 16% (`free`) or
+  raises it to 29% (`free3`). (Corrected in verification; the earlier text credited the alignment costs.)
 
 ## 5. What sets the time to generalise
 
@@ -551,8 +572,15 @@ first reaches 0.1 with the final test error (`ablation_diagnostics.py delay`).
 - **The race's own delays are shallow.** In its "delayed" cells the test error at fit is about 0.10–0.14, and a few
   more gates finish the job before interpolation. Where a network first memorizes (test error 0.2–0.4) and
   generalises much later, the race either finds the feature first or not at all.
-- **Continuing to run does not help.** Running the race on past interpolation, to 48 gates (`nostop`) or, in spot
-  checks, to 160, never improves its test error afterwards. It drifts slowly upward instead.
+- **Continuing to run rarely helps (corrected in verification).** The earlier text said that running the race past
+  interpolation, to 48 gates (`nostop`) or, in spot checks, to 160, never improves its test error. On the full grid
+  that is not so. Compared with `base` on the same trajectory, `nostop` ends lower by more than 0.005 in 88 of the 546
+  cells that run past interpolation, and higher in 126.
+  - The improvements are at n ≤ 512, nearly all at n ≤ 128. In three cells the test error crosses from above 0.1 to
+    at most 0.1: x₁ at n = 64, and rand2 at n = 64 for two seeds.
+  - n\* changes: x₁ 54 → 41, but MAJ₃ 102 → 137 and MAJ₉ 248 → 406.
+  - Nothing changes at n ≥ 1024, and no cell goes from above 0.2 to at most 0.1. So the conclusion stands: the race
+    shows no network-like strongly delayed generalisation.
 
 **The networks' n\* is still decreasing at 20000 steps** (`ablation_diagnostics.py nnsteps`):
 
@@ -609,7 +637,9 @@ the two being misled by the *same spurious correlations of the same training sam
     depth-2 composition of order-2 gates. The sparse
     polynomial, whose x₄x₅x₆ term has no lower-order foothold, is never learned; its plateau at 1/8 stays (figure).
 - **Dense majorities and the halfspace.**
-  - n\* is the noise in one Hebbian direction, plus the damage done by the memorising gates fitted after it (§4.3).
+  - n\* is set by the noise in one Hebbian direction and by the gates fitted after it (§4.3). For MAJ₃ and MAJ₉ those
+    later gates help: n\* 153 → 102 and 485 → 248 from the first gate to the final circuit. For the halfspace they
+    hurt: 327 at fit, 578 at the end. (Corrected in verification; the earlier text said they only did damage.)
   - ReLU gates matter here: their linear regime represents a majority in one gate, and threshold gates double the n\*
     of MAJ₉ (527).
   - Recursive majority needs order-3 units: `K2` never learns it.
