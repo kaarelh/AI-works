@@ -21,12 +21,12 @@ for fn in fns:
     nn = C.nn_fixed(fn); s = C.sample_complexity(nn["ns"], nn["test_err"].mean(1))
     row = dict(nn=s, pred=predict_curve(fn, C_PRED, A_PRED, 30, suite=suite, first_cross=True)["nstar"],
                occam=predict_curve(fn, C_OCC, 1.0, 30, law="occam", suite=suite, first_cross=True)["nstar"])
-    for m in ("minimal", "race"):
-        p = f"{EV}/{m}_random.npz"
+    for m, p in (("minimal", f"{EV}/minimal_random.npz"), ("race", f"{EV}/race_random.npz"),
+                 ("race_check", "/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/minimal/race_random_check.npz")):
         if os.path.exists(p):
             r = C.load_eval(p)
             if fn in r["test_err"]:
-                row[m] = C.sample_complexity(np.array(r["ns"]), r["test_err"][fn].mean(1))
+                row["race" if m == "race_check" else m] = C.sample_complexity(np.array(r["ns"]), r["test_err"][fn].mean(1))
     rows[fn] = row
     print(fn, {k: round(v) if np.isfinite(v) else v for k, v in row.items()}, flush=True)
 lr = lambda a, b: abs(np.log2(min(a, cap) / min(b, cap)))
@@ -39,4 +39,11 @@ for k in ("pred", "occam", "minimal", "race"):
     if v:
         summ[k] = dict(n=len(v), mean_abs_log2=float(np.mean([lr(m, n) for n, m in v])), spearman=sp(*map(np.array, zip(*v))))
         print(k, summ[k])
+keys = ["sc_mean_abs_log2_ratio", "sc_spearman", "success_agreement", "curve_mae", "example_agreement_score", "time_spearman"]
+for m, p in (("minimal", f"{EV}/minimal_random.npz"),
+             ("race", "/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/minimal/race_random_check.npz")):
+    if os.path.exists(p):
+        b = C.compare(C.load_eval(p), "adam", fns=fns, verbose=False)
+        summ[m + "_scoreboard"] = {k: b[k] for k in keys}
+        print(m, " ".join(f"{k}={b[k]:.2f}" for k in keys))
 json.dump(dict(rows=rows, summary=summ), open(os.path.join(HERE, "minimal_random.json"), "w"), indent=1, default=float)

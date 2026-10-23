@@ -89,7 +89,7 @@ def maurey_occam(P, gamma, n, emp_marg, b2, delta=0.05):
     for K in range(1, 4000):
         eta = 1.0 / math.sqrt(K * (d + 1))
         lnG = K * math.log(2 * (1 + 2 / eta) ** (d + 1) + 1)
-        lnpi = math.log(K * (K + 1)) + math.log(2 * (abs(bexp) + 1) * (abs(bexp) + 2))
+        lnpi = math.log(K * (K + 1)) + math.log(2 * (abs(bexp) + 1) * (abs(bexp) + 2)) + math.log(2)  # |Gamma|=2
         eps2 = (B * (math.sqrt(b2) + 1) / math.sqrt(K)) ** 2
         apx = 2 * eps2 / gamma ** 2
         if apx >= 1:
@@ -239,7 +239,7 @@ def run(name, n, m, alpha, eta, T, seed=0, log_every=10):
     return dict(name=name, n=n, m=m, alpha=alpha, eta=eta, T=T, lam=lam, ynorm=ynorm, P0=P0, U0hat=U0hat,
                 U0est=U0est, rec=rec, worst_mono=worst_mono, worst_balance=worst_balance, loss_up=loss_up,
                 grad_time=grad_time, int_f2=int_f2, Xt=Xt, y=y, Ct=Ct, yC=yC, a=a, W=W, eps=eps, rho0=rho0,
-                Qhist=Qhist, mono_viol=mono_viol, pairs=pairs, rhs_attr_max=rhs_attr_max)
+                Qhist=Qhist, mono_viol=mono_viol, pairs=pairs, rhs_attr_max=rhs_attr_max, log_every=log_every)
 
 
 def analyse(R, out, rng):
@@ -342,7 +342,7 @@ def analyse(R, out, rng):
     for c, v in cat.items():
         v = np.array(v)
         if len(v):
-            pr(f"       relative change of Q_jk over {R['eta']*10:.2f}-intervals, {c}: count={len(v)}  "
+            pr(f"       relative change of Q_jk over {R['eta']*R['log_every']:.2f}-intervals, {c}: count={len(v)}  "
                f"median={np.median(v):+.2e}  max={v.max():+.2e}  min={v.min():+.2e}")
     Qfirst, Qlast = Qh[0][1], Qh[-1][2]
     pr(f"       Q_jk median at t=0: {np.median(Qfirst):.2e}, at the end: {np.median(Qlast):.2e}")
@@ -394,7 +394,7 @@ def main():
     configs = [("x1", 1000, 64, 1e-3, 0.02, 40.0), ("maj3", 1000, 64, 1e-3, 0.02, 60.0),
                ("maj3", 1000, 64, 1e-6, 0.02, 90.0), ("x1+x2x3", 1000, 64, 1e-6, 0.02, 120.0),
                ("maj3", 4000, 64, 1e-6, 0.02, 60.0), ("x1+x2x3", 1000, 64, 1e-2, 0.02, 60.0),
-               ("maj3", 1000, 64, 1e-3, 0.004, 20.0)]
+               ("maj3", 1000, 64, 1e-3, 0.004, 20.0), ("x1+x2x3", 1000, 64, 1e-6, 0.02, 400.0, 0, 50)]
     if len(sys.argv) > 1:
         configs = [configs[int(i)] for i in sys.argv[1].split(",")]
     for c in configs:
