@@ -415,7 +415,7 @@ Status labels as before.
 
    D passed its first adversarial referee pass with minor issues only. The general ReLU case beyond the first escape remains a stated conjecture.
 8. **Robustness and SGD.**
-   - **Width.** Narrowing the network from 128 to 32 units changes $n^*$ only modestly on the sparse targets: +8% for 3-parity, +30% for 4-parity, +2% for the staircase, +23% for the multiplexer. The parity changes are what the noise law predicts if its overlap constant $a$ drops by about 10% at width 32. Dense MAJ$_9$ needs 59% more data at width 32, plausibly because the linear part is noisier with fewer units. Width 512 was abandoned: too slow on this CPU.
+   - **Width.** Between widths 32 and 256, the 3-parity's $n^*$ does not change (827–911), while the 4-parity's falls 1.9× and is still falling at 256. Narrowing from 128 to 32 units changes $n^*$ by +2% for the staircase and +23% for the multiplexer. The parity pattern does not fit the noise law with one width-dependent overlap constant; see 3.2. Dense MAJ$_9$ needs 59% more data at width 32, plausibly because the linear part is noisier with fewer units. Width 512 was abandoned: too slow on this CPU.
    - **One-pass SGD.** With fresh minibatches, the prequential mistake rate certifies the average test error of a window of iterates with no capacity argument ([`study/ONLINE-BOUNDS.md`](study/ONLINE-BOUNDS.md)). The bound tracks the whole learning curve. On MAJ$_9$, over successive windows, it is 0.53, 0.37, 0.20, 0.074, 0.032 and 0.013. After learning it is about 0.002–0.01 (zero mistakes plus the confidence term).
 
 ### 3.2 Thread 1: what the networks do
@@ -444,9 +444,20 @@ Other observations:
 - **Complexity peaks just below $n^*$.** For the high-leap targets (parities of 3–4 bits, staircase, multiplexer, MAJ of parities), the networks' layer-2 kernel rank peaks just below $n^*$ and collapses above it, and the race model's circuit size does the same. Below $n^*$ both memorize with many features; above it both use the target's few features. The correlation over all cells is weak (Spearman 0.14), because at tiny $n$ the networks barely move from initialization and their kernel rank reflects random features.
 - **Time to fit grows with $n$ up to $n^*$ and then plateaus,** in both the networks and the model.
 
-**Width** ([`study/run_width.sh`](study/run_width.sh), [`study/run_checks2.sh`](study/run_checks2.sh); 2 seeds): $n^*$ at width 32 against 128 is 911 against 843 (3-parity), 3554 against 2728 (4-parity), 419 against 263 (MAJ$_9$), 1417 against 1156 (multiplexer) and 1540 against 1514 (staircase).
-- **Reading.** The fitted constant $a\approx18$ of the noise law is plausibly the best initial overlap among many hidden units, in which case it should grow slowly with width. In the law, $n^*\propto(d/a)^{k-2}$, so a change of $a$ shows up once in the 3-parity and squared in the 4-parity. The two ratios, 1.08 and 1.30, give the same answer: $a$ is about 10% larger at width 128 than at width 32 (1.08 and $\sqrt{1.30}=1.14$).
-- **Size of the effect.** It is weaker than a pure best-of-$P$ Gaussian overlap ($a\approx2\ln P$) would give, which is 1.4×. So $a$ depends on width only weakly over this range. Two widths and two seeds are too few to fix the functional form.
+**Width** ([`study/run_width.sh`](study/run_width.sh), [`study/run_checks2.sh`](study/run_checks2.sh), [`study/run_width2.sh`](study/run_width2.sh); 2 seeds except width 128, which has 3). At width 32 against 128, $n^*$ is 419 against 263 for MAJ$_9$, 1417 against 1156 for the multiplexer and 1540 against 1514 for the staircase. For the parities, across four widths:
+
+| width | 3-parity $n^*$ | its test error at $n=512$ | 4-parity $n^*$ | its test error at $n=2048$ |
+|---|---|---|---|---|
+| 32 | 911 | 0.46, 0.47 | 3554 | 0.49, 0.48 |
+| 64 | 827 | 0.37, 0.28 | 3304 | 0.31, 0.33 |
+| 128 | 843 | 0.40, 0.38, 0.29 | 2728 | 0.02, 0.36, 0.14 |
+| 256 | 873 | 0.43, 0.44 | 1899 | 0.04, 0.07 |
+
+- **3-parity: no width dependence the grid can see.** At every width the test error is 0.28–0.47 at $n=512$ and exactly 0 at $n=1024$. The interpolated $n^*$ values, 827–911, show no trend.
+- **4-parity: width helps, monotonically.** The test error at $n=2048$ falls from 0.49 to 0.05 between widths 32 and 256, and $n^*$ falls 1.9×. It has not levelled off at 256, although μP should have a width limit.
+- **This contradicts the simplest reading of the noise law** (Numerical). Suppose the constant $a\approx18$ were a single width-dependent "best initial overlap among the hidden units". Then, since $n^*\propto(d/a)^{k-2}$, the 4-parity's width effect would be the square of the 3-parity's. It is not: under 10% for the 3-parity against 1.9× for the 4-parity.
+- **A possible reason** (Heuristic). The relevant initial quantity for an order-$k$ feature is a product of $k$ weights, and the best of $P$ such products has a heavier tail the larger $k$ is. On this account the order-4 escape draws more on the population than order 3 does.
+- **What it means for the models.** The race model and the predictor are models of width-128 networks. How order-$\ge4$ costs depend on width is open.
 
 ### 3.3 Thread 2: the discrete model
 
@@ -510,7 +521,7 @@ Other observations:
 - **Caveats.** All of this is in one setting:
   - one architecture family: a μP two-hidden-layer ReLU MLP;
   - Adam (SGD gives similar $n^*$ on the held-out targets; its 3-parity $d$-exponent, 1.6 against 1.9, is not resolved from Adam's at this precision);
-  - widths 32 and 128;
+  - widths 32–256, with the models calibrated at 128;
   - $d\le60$, interactions of at most 4 bits, $n\le65536$;
   - uniform Boolean inputs and square loss.
 
@@ -540,7 +551,7 @@ Other observations:
 
 **Open problems, roughly in order of promise:**
 1. **Prove the noise law** for a two-layer network trained on a fixed sample from small initialization: an order-$k$ feature escapes the plateau iff $n\gtrsim d^{k-1}/\rho^2$ up to logarithms. Ingredients exist: information-exponent results for online SGD (Ben Arous–Gheissari–Jagannath), early alignment (Boursier–Flammarion), and D's mass clock and merging law.
-2. **Composition costs.** The predictor underpredicts staircase, multiplexer and MAJ of parities at $d=60$ by up to 2×, and the race model misses the 3-parity exponent. Sequential moves may partly add rather than take a maximum. The best-of-$P$-units overlap $a$ should depend on width; that was only partly tested.
+2. **Composition costs.** The predictor underpredicts staircase, multiplexer and MAJ of parities at $d=60$ by up to 2×, and the race model misses the 3-parity exponent. Sequential moves may partly add rather than take a maximum. Width dependence is order-dependent: none for the 3-parity, 1.9× from width 32 to 256 for the 4-parity, which one overlap constant $a$ cannot produce.
 3. **Reservoir depletion at tiny initialization** (D): the race model assumes a persistent reservoir of dormant units, and D shows it can be used up by the first escape. When does that happen at practical scales?
 4. **Beyond this setting:** other architectures, cross-entropy, SGD noise (merging and collapse moves), real data. In particular: is the "noise of a continuous search" law the right replacement for Occam's description length in larger models?
 5. **Bayes vs gradient descent:** characterize the targets on which the γ≥1 posterior and gradient descent have polynomially related sample complexity. The predictor suggests: exactly those with a cheap greedy path.
