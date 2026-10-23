@@ -478,7 +478,50 @@ TODO width.
 
 ### 3.5 What I now believe, and what is open
 
-TODO
+**1. Gradient descent here is greedy circuit growth limited by search noise.** *Fairly confident, for this setting.*
+- **The claim.** Rich-regime gradient descent on Boolean targets behaves like greedy growth of a shared circuit. A new feature is added when its correlation with the residual beats the sampling noise of a continuous search over directions. For a feature that needs $k$ new inputs at once, that noise is about $d\,(d/a)^{k-2}/n$; reusing grown features is nearly free.
+- **Evidence.** This one law, in simulation (race model) or in closed form (predictor), predicts $n^*$ within about 1.15–1.5× on average across:
+  - 21 designed targets and 20 random ones;
+  - three input dimensions;
+  - a 50× range of $n^*$.
+
+  The ablations say it is the noise law, not the race's timing machinery, that does the work.
+- **Caveats.** All of this is in one setting:
+  - one architecture family: a μP two-hidden-layer ReLU MLP;
+  - Adam (SGD gives similar $n^*$ on the held-out targets);
+  - widths 32 and 128 (512 pending);
+  - $d\le60$, interactions of at most 4 bits, $n\le65536$;
+  - uniform Boolean inputs and square loss.
+
+**2. Relation to NNBayes ≈ Occam circuit learning.**
+- **Same answer to *what* is learned.** Once gradient descent generalizes, the network is functionally close to a small circuit, as the certificates show. So the two pictures agree on what is learned when learning succeeds.
+- **Different answer to *how many samples*.**
+  - Occam (and the $\gamma\ge1$ posterior) pays the circuit's description length, about $k\log d$ for a $k$-parity.
+  - Gradient descent pays the noise cost of the most expensive move along its greedy path, about $d^{k-1}$.
+  - They agree up to polynomial factors exactly for targets with a cheap greedy path, i.e. low-leap compositions with large residual correlations at every step. They diverge by $d^{k-1}/(k\log d)$ when a large leap is unavoidable.
+- **A testable consequence.** The networks' $n^*$ should be predictable from the target's greedy path alone. On 20 random formulas the closed form does this to within about 1.34×, with Spearman 0.92.
+
+**3. Kernel background and grown features.** *Moderately confident.* A trained network is a random-feature kernel background plus grown features:
+- the features decide whether and when it generalizes;
+- the background decides which examples it gets wrong on the way.
+
+**4. Bounds: where "short training ⇒ small circuit ⇒ Occam" now stands.**
+- **It is a theorem for:**
+  - the discrete model, reading size as depth, incoherence-weighted size or readout norm;
+  - diagonal linear networks;
+  - two-layer quadratic networks (new);
+  - two-layer ReLU networks through the first escape (new).
+- **It is a conjecture for** ReLU networks beyond the first escape (Conjecture D4).
+- **Numerically,** on real networks, the only non-vacuous generalization bounds are after the fact: the trained network is close to a small circuit, certified with unlabelled inputs.
+- **For one-pass SGD,** prequential error certifies test error with no capacity argument.
+- **Note.** The bounds bound the train–test gap. The question of *how many samples* is answered, so far heuristically, by the noise law of point 1. Its lower half is the known correlational-SQ lower bound; its upper half for real networks is open.
+
+**Open problems, roughly in order of promise:**
+1. **Prove the noise law** for a two-layer network trained on a fixed sample from small initialization: an order-$k$ feature escapes the plateau iff $n\gtrsim d^{k-1}/\rho^2$ up to logarithms. Ingredients exist: information-exponent results for online SGD (Ben Arous–Gheissari–Jagannath), early alignment (Boursier–Flammarion), and D's mass clock and merging law.
+2. **Composition costs.** The predictor underpredicts staircase, multiplexer and MAJ of parities at $d=60$ by up to 2×, and the race model misses the 3-parity exponent. Sequential moves may partly add rather than take a maximum. The best-of-$P$-units overlap $a$ should depend on width; that was only partly tested.
+3. **Reservoir depletion at tiny initialization** (D): the race model assumes a persistent reservoir of dormant units, and D shows it can be used up by the first escape. When does that happen at practical scales?
+4. **Beyond this setting:** other architectures, cross-entropy, SGD noise (merging and collapse moves), real data. In particular: is the "noise of a continuous search" law the right replacement for Occam's description length in larger models?
+5. **Bayes vs gradient descent:** characterize the targets on which the γ≥1 posterior and gradient descent have polynomially related sample complexity. The predictor suggests: exactly those with a cheap greedy path.
 
 ## Files
 

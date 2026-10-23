@@ -37,12 +37,22 @@ def load(names):
     return out
 
 
-def scoreboard(res, splits=("HELDOUT", "ALL")):
+def references():
+    """Reference rows: NN-SGD vs NN-Adam (held-out targets only) and the NNGP kernel."""
+    ref = {"*NN-SGD vs NN-Adam*": C.nn_as_model_res("sgd", fns=C.HELDOUT)}
+    p = os.path.join(EVALS, "nngp-kernel.npz")
+    if os.path.exists(p):
+        ref["*NNGP kernel*"] = C.load_eval(p)
+    return ref
+
+
+def scoreboard(res, splits=("HELDOUT", "ALL"), refs=None):
     L = []
     for split in splits:
         fns = dict(HELDOUT=C.HELDOUT, CALIB=C.CALIB, ALL=C.FNS)[split]
         L += [f"#### {split}", "", "| ablation | " + " | ".join(k[1] for k in KEYS) + " |", "|---|" + "---|" * len(KEYS)]
-        for nm, r in res.items():
+        rows = list(res.items()) + [(k, v) for k, v in (refs or {}).items() if set(fns) <= set(v["fns"])]
+        for nm, r in rows:
             s = C.compare(r, "adam", fns=fns, verbose=False)
             L.append(f"| {nm} | " + " | ".join(f"{s[k]:.2f}" if s[k] == s[k] else "–" for k, _ in KEYS) + " |")
         L.append("")
