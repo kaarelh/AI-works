@@ -414,7 +414,9 @@ Status labels as before.
    - for two-layer *quadratic* networks with fixed output signs (equivalently, symmetric matrix sensing), a proof of your sketch at every training time: the number of grown hidden units is at most $\kappa(\tau/\Theta)^2$, with $\kappa$ independent of labels, trajectory and width. This gives a test-error bound uniform in time.
 
    D passed its first adversarial referee pass with minor issues only. The general ReLU case beyond the first escape remains a stated conjecture.
-8. **Robustness** TODO width. TODO online/prequential.
+8. **Robustness and SGD.**
+   - **Width.** Narrowing the network from 128 to 32 units barely changes $n^*$ on the sparse targets: +8% for 3-parity, +2% for the staircase, +23% for the multiplexer. Dense MAJ$_9$ needs 59% more data at width 32, plausibly because the linear part is noisier with fewer units. Width 512 was abandoned: too slow on this CPU.
+   - **SGD.** TODO online/prequential.
 
 ### 3.2 Thread 1: what the networks do
 
@@ -437,7 +439,7 @@ Other observations:
 - **Complexity peaks just below $n^*$.** For the high-leap targets (parities of 3–4 bits, staircase, multiplexer, MAJ of parities), the networks' layer-2 kernel rank peaks just below $n^*$ and collapses above it, and the race model's circuit size does the same. Below $n^*$ both memorize with many features; above it both use the target's few features. The correlation over all cells is weak (Spearman 0.14), because at tiny $n$ the networks barely move from initialization and their kernel rank reflects random features.
 - **Time to fit grows with $n$ up to $n^*$ and then plateaus,** in both the networks and the model.
 
-TODO width.
+**Width** ([`study/run_width.sh`](study/run_width.sh); 2 seeds): $n^*$ at width 32 against 128 is 911 against 843 (3-parity), 419 against 263 (MAJ$_9$), 1417 against 1156 (multiplexer) and 1540 against 1514 (staircase). The fitted constant $a\approx18$ of the noise law is plausibly the best initial overlap among many hidden units. If so it should grow slowly with width. The small change from 32 to 128 units is consistent with that, but it was not tested further.
 
 ### 3.3 Thread 2: the discrete model
 
@@ -496,7 +498,7 @@ TODO width.
 - **Caveats.** All of this is in one setting:
   - one architecture family: a μP two-hidden-layer ReLU MLP;
   - Adam (SGD gives similar $n^*$ on the held-out targets);
-  - widths 32 and 128 (512 pending);
+  - widths 32 and 128;
   - $d\le60$, interactions of at most 4 bits, $n\le65536$;
   - uniform Boolean inputs and square loss.
 

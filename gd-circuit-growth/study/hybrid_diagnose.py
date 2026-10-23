@@ -77,14 +77,19 @@ def net_index(path):
     return {(int(n), int(s)): j for j, (n, s) in enumerate(zip(z["net_n"], z["net_s"]))}
 
 
+def rkey(Z, rel):
+    return ((Z[:, rel] > 0).astype(np.int64) * (2 ** np.arange(len(rel)))).sum(1)
+
+
 def parts(v, rel):
-    v = (v - v.mean()) / max(v.std(), 1e-12)
-    key = ((PROBE[:, rel] > 0).astype(np.int64) * (2 ** np.arange(len(rel)))).sum(1)
+    mu, sd = v.mean(), max(v.std(), 1e-12)
+    v = (v - mu) / sd
+    key = rkey(PROBE, rel)
     cnt = np.bincount(key, minlength=2 ** len(rel)); s = np.bincount(key, weights=v, minlength=2 ** len(rel))
-    fR = (s / np.maximum(cnt, 1))[key]
+    tab = s / np.maximum(cnt, 1); fR = tab[key]
     f1 = PROBE @ (PROBE.T @ v / len(PROBE))
     f2 = CH @ (CH.T @ v / len(PROBE))
-    return dict(v=v, R=fR, perp=v - fR, d1=f1, d2=f2, d3=v - f1 - f2)
+    return dict(v=v, R=fR, perp=v - fR, d1=f1, d2=f2, d3=v - f1 - f2, tab=tab, mu=mu, sd=sd)
 
 
 def corr(a, b):
@@ -122,12 +127,25 @@ def main():
                 for k, (P_, I_) in refs.items():
                     if (int(n), s) in I_:
                         L[k] = nn_score(P_, I_[(int(n), s)])
-                te = {k: np.where(f(Xte) > 0, 1, -1) for k, f in L.items()}
+                fte = {k: f(Xte) for k, f in L.items()}
+                te = {k: np.where(v > 0, 1, -1) for k, v in fte.items()}
                 pr = {k: parts(f(PROBE), rel) for k, f in L.items()}
+                # swaps: the relevant-coordinate part of one learner plus the sample-noise part of another, on the test
+                # set (each part standardised as on the probe set); a diagnostic only -- it uses the relevant variables
+                kte = rkey(Xte, rel)
+                for A, B in (("race", "kernel"), ("kernel", "race"), ("race", "nn-reinit")):
+                    if A in L and B in L:
+                        RA = pr[A]["tab"][kte]; RB = pr[B]["tab"][kte]
+                        vA = (fte[A] - pr[A]["mu"]) / pr[A]["sd"]; vB = (fte[B] - pr[B]["mu"]) / pr[B]["sd"]
+                        # A's signal and threshold, B's noise pattern rescaled to A's noise variance
+                        pB = (vB - RB) * pr[A]["perp"].std() / max(pr[B]["perp"].std(), 1e-12)
+                        te[f"swap:{A}R+{B}perp"] = np.where(RA + pB > -pr[A]["mu"] / pr[A]["sd"], 1, -1)
                 # nearest training point label (Hamming distance = (d - x.x')/2)
                 nnlab = y[np.argmax(Xte @ X.T, 1)]
                 r = dict(fn=fn, n=int(n), seed=s, split="heldout" if fn in C.HELDOUT else "calib", learners=list(L))
                 en = te["nn"] != yte
+                for k in [k for k in te if k.startswith("swap:")]:
+                    r[f"{k}/err"] = float(np.mean(te[k] != yte)); r[f"{k}/agree"] = float(np.mean(te[k] == te["nn"]))
                 for k in L:
                     e = te[k] != yte
                     r[f"{k}/err"] = float(e.mean()); r[f"{k}/agree"] = float(np.mean(te[k] == te["nn"]))
@@ -155,7 +173,27 @@ def main():
     summarize(rows)
 
 
+def agreement(rows, k, split, need=()):
+    """common.compare's per-example agreement statistic for learner k, from the rows (cells where k and `need` exist)."""
+    cells = {}
+    for r in rows:
+        if (split == "all" or r["split"] == split) and f"{k}/err" in r and all(f"{q}/err" in r for q in need):
+            cells.setdefault((r["fn"], r["n"]), []).append(r)
+    num = den = 0.0
+    for lst in cells.values():
+        en = np.mean([r["nn/err"] for r in lst]); em = np.mean([r[f"{k}/err"] for r in lst])
+        ag = np.mean([r[f"{k}/agree"] for r in lst]); ind = (1 - en) * (1 - em) + en * em
+        num += ag - ind; den += 1 - ind
+    return num / den if den else np.nan
+
+
 def summarize(rows):
+    keys = sorted({k.split("/")[0] for r in rows for k in r if k.endswith("/agree")})
+    for split in ("heldout", "calib"):
+        print(f"\n=== per-example agreement with the network on {split} partial cells (cells where nn-reinit exists in brackets) ===")
+        for k in keys:
+            print(f"   {k:28s} {agreement(rows, k, split):.3f}   [{agreement(rows, k, split, need=('nn-reinit',)):.3f}]")
+
     def avg(key, split, learners=None):
         v = [r[key] for r in rows if key in r and (split == "all" or r["split"] == split) and np.isfinite(r[key])
              and (learners is None or all(l in r["learners"] for l in learners))]
@@ -182,38 +220,54 @@ def summarize(rows):
                 + f"   share_perp(nn) {np.mean([r['nn/share_perp'] for r in sel]):.2f}")
 
 
-def reinit_res(fns=None):
-    """The re-initialised networks (hybrid_reinit.py) in the evaluate() format (n <= 2048)."""
-    fns = [f for f in (fns or C.HELDOUT) if os.path.exists(os.path.join(REINIT, f"fixed_adam_{f}.npz"))]
-    res = dict(model="nn-reinit", fns=fns, ns=None, seeds=C.SEEDS, test_err={}, train_err={}, time={}, size={}, fit_seconds={}, pred={})
+def reinit_res(dirs=None, fns=None):
+    """Re-initialised networks (hybrid_reinit.py) in the evaluate() format (n <= 2048).  With several directories, the
+    prediction is the sign of the mean real-valued output of those networks (an ensemble over initialisations)."""
+    dirs = dirs or [REINIT]
+    fns = [f for f in (fns or C.HELDOUT) if all(os.path.exists(os.path.join(D_, f"fixed_adam_{f}.npz")) for D_ in dirs)]
+    res = dict(model="nn-reinit" + (f"-ens{len(dirs)}" if len(dirs) > 1 else ""), fns=fns, ns=None, seeds=C.SEEDS,
+               test_err={}, train_err={}, time={}, size={}, fit_seconds={}, pred={})
+    yte = {fn: C.test_data(fn)[1] for fn in fns}
     for fn in fns:
-        z = np.load(os.path.join(REINIT, f"fixed_adam_{fn}.npz")); ns = [int(v) for v in z["ns"]]; res["ns"] = ns
+        Z = [np.load(os.path.join(D_, f"fixed_adam_{fn}.npz")) for D_ in dirs]
+        z = Z[0]; ns = [int(v) for v in z["ns"]]; res["ns"] = ns
         I = {(int(n), int(s)): j for j, (n, s) in enumerate(zip(z["net_n"], z["net_s"]))}
-        te = np.array([[z["test_err"][-1, I[(n, s)]] for s in range(3)] for n in ns])
-        res["test_err"][fn] = te; res["train_err"][fn] = np.array([[z["train_err"][-1, I[(n, s)]] for s in range(3)] for n in ns])
-        res["pred"][fn] = np.array([[z["pred"][-1, I[(n, s)]] for s in range(3)] for n in ns])
-        stg = np.full(te.shape, np.nan)
-        for a, n in enumerate(ns):
-            for s in range(3):
-                hit = np.where(z["test_err"][:, I[(n, s)]] <= 0.1)[0]
-                if len(hit):
-                    stg[a, s] = z["step"][hit[0]]
-        res["time"][fn] = stg; res["size"][fn] = np.full(te.shape, np.nan); res["fit_seconds"][fn] = np.zeros(te.shape)
+        out = np.mean([zz["out_final"].astype(np.float64) for zz in Z], 0)          # [net, 4096]
+        pred = np.array([[np.where(out[I[(n, s)]] > 0, 1, -1) for s in range(3)] for n in ns], dtype=np.int8)
+        res["pred"][fn] = pred
+        res["test_err"][fn] = np.mean(pred != yte[fn][None, None, :], -1)
+        res["train_err"][fn] = np.array([[z["train_err"][-1, I[(n, s)]] for s in range(3)] for n in ns])
+        stg = np.full(res["test_err"][fn].shape, np.nan)
+        if len(dirs) == 1:
+            for a, n in enumerate(ns):
+                for s in range(3):
+                    hit = np.where(z["test_err"][:, I[(n, s)]] <= 0.1)[0]
+                    if len(hit):
+                        stg[a, s] = z["step"][hit[0]]
+        res["time"][fn] = stg; res["size"][fn] = np.full(stg.shape, np.nan); res["fit_seconds"][fn] = np.zeros(stg.shape)
     return res
 
 
 def ceiling():
     """Network-vs-network references on HELDOUT, restricted to n <= 2048 (all HELDOUT partial cells are there)."""
+    extra = [os.path.join(os.path.dirname(REINIT), f"nn_reinit_{f}") for f in (314159, 161803)]
+    extra = [D_ for D_ in extra if all(os.path.exists(os.path.join(D_, f"fixed_adam_{fn}.npz")) for fn in C.HELDOUT)]
     rr = reinit_res(); ns = rr["ns"]
     sg = C.nn_as_model_res("sgd", fns=C.HELDOUT); sg["ns"] = ns
     for fn in sg["fns"]:
         for k in ("test_err", "train_err", "time", "size", "fit_seconds", "pred"):
             sg[k][fn] = sg[k][fn][:len(ns)]
+    cands = [("nn-reinit (Adam, same data, new init)", rr), ("nn-sgd (SGD, same data, same init)", sg)]
+    for D_ in extra:
+        cands.append((f"nn-reinit {os.path.basename(D_)} (another new init)", reinit_res([D_])))
+    if extra:
+        cands.append((f"ensemble of {1 + len(extra)} new-init networks (sign of mean output)", reinit_res([REINIT] + extra)))
     out = {}
-    for name, r in (("nn-reinit (Adam, same data, new init)", rr), ("nn-sgd (SGD, same data, same init)", sg)):
+    for name, r in cands:
         b = C.compare(r, "adam", fns=C.HELDOUT, verbose=False); out[name] = b["example_agreement_score"]
         print(f"{name}: per-example agreement {b['example_agreement_score']:.3f} over {b['n_partial_cells']} cells; "
               f"n* |log2| {b['sc_mean_abs_log2_ratio']:.2f} (n<=2048 only); curve MAE {b['curve_mae']:.3f}")
+    json.dump(out, open(os.path.join(HERE, "hybrid_ceiling.json"), "w"), indent=1)
     return out
 
 

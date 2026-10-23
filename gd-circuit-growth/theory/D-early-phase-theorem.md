@@ -1,10 +1,10 @@
 # D. An a priori early-phase theorem: what gradient descent provably keeps small
 
-Notes by Claude (Opus 5.5), prompted by Kaarel Hänni. Research note, 23 October 2026. Written by a separate agent, after A, B and C. Not refereed, and not reviewed by a human.
+Notes by Claude (Opus 5.5), prompted by Kaarel Hänni. Research note, 23 October 2026. Written by a separate agent, after A, B and C. Refereed once: round 1 passed it with minor revisions ([`checks/referee_D_r1.json`](checks/referee_D_r1.json)), and this version is revised accordingly; the changes are listed in the [revision notes](#revision-notes). The revision has not been re-refereed. Not reviewed by a human.
 
 **Question (from the user, via the project README).** Generalization bounds of the form "training has not taken long, so the circuit cannot have grown big, so a Chernoff bound over small circuits applies". The README calls the missing link *an a priori theorem that gradient descent keeps a real network close to a circuit whose size is controlled by $\tau/\log(1/\alpha)$*. That is the "saddle-to-saddle approximation" hypothesis SSA of [C3](C-bridge-and-certificates.md#33-the-conditional-theorem). This file attempts it.
 - **Part I** treats the two-layer ReLU network from balanced small initialization.
-- **Part II** treats the two-layer *quadratic* network, a non-diagonal network with a shared hidden layer. There the full time-indexed statement is proved.
+- **Part II** treats a two-layer *quadratic* network, a non-diagonal network with a shared hidden layer. Its output weights are fixed at $\pm1$ and its units are centred, so it is symmetric matrix sensing rather than a fully trained two-layer network. There a time-indexed statement is proved, in weight-free form: it uses the training-loss curve, but not the weights.
 
 **Status labels**, as in A, B and C:
 - **Proved:** a complete proof with explicit constants is in this file. The two standard probabilistic lemmas are re-proved in §0.
@@ -19,17 +19,18 @@ Notes by Claude (Opus 5.5), prompted by Kaarel Hänni. Research note, 23 October
 1. **The exact race (Lemma D1, Proved).** The network's dynamics contains a race with a clock, with no approximation:
    - **Mass clock.** Each neuron's mass $\rho_j=a_j^2+\|w_j\|^2$ obeys $\rho_j(t)=\rho_j(0)\exp\big(2\int_0^t\epsilon_jU_{r(s)}(\hat w_j(s))\,ds\big)$, where $U_r(v)=\langle r,\mathrm{relu}(v\cdot\tilde x)\rangle_n$ is the utility of direction $v$ for the current residual $r$, and $\epsilon_j$ is the fixed sign of $a_j$.
    - **Scale-free search.** The direction $\hat w_j$ follows the projected (sub)gradient of $\epsilon_jU_r$ on the sphere, whatever the neuron's size.
-   - **Function.** The function is the signed measure $f_t=\sum_j\epsilon_j\frac{\rho_j}{2}\,\mathrm{relu}(\hat w_j\cdot\tilde x)$, so $P=\sum_j\rho_j=\|\theta\|^2$ is twice its variation norm.
-   - **Merging law (new here, as far as I know).** For two neurons of the same sign, $Q_{jk}=\|w_j\|\|w_k\|(1-\cos\angle(w_j,w_k))$ is *exactly conserved* while they share an activation pattern on the training set. It is nonincreasing whenever the residual has the "attracting" sign at every training point separating them. While either holds, the angle within a cluster shrinks like $1/\text{mass}$.
+   - **Function.** The function is the signed measure $f_t=\sum_j\epsilon_j\frac{\rho_j}{2}\,\mathrm{relu}(\hat w_j\cdot\tilde x)$, so its variation norm is at most $P/2$, where $P=\sum_j\rho_j=\|\theta\|^2$.
+   - **Merging law.** For two neurons of the same sign, $Q_{jk}=\|w_j\|\|w_k\|(1-\cos\angle(w_j,w_k))$ is *exactly conserved* while they share an activation pattern on the training set. This is not new: it is the off-diagonal entry of the classical balancedness conservation law $W_1W_1^\top-W_2^\top W_2=\text{const}$ of two-layer linear networks (Arora–Cohen–Hazan 2018; Du–Hu–Lee 2018), applied to a pair of neurons that share their selections, which is locally a linear network. For ReLU networks only the diagonal entries are conserved globally (Marcotte–Gribonval–Peyré 2023). What may be new are the monotonicity statements: $Q_{jk}$ is nonincreasing whenever the residual has the "attracting" sign at every training point separating them, with a growth bound otherwise. While either the conservation or the monotonicity holds, $1-\cos$ within a cluster (about half the squared angle) shrinks like $1/\text{mass}$, so the angle itself shrinks like $\text{mass}^{-1/2}$.
 2. **No growth before $\log(1/\alpha)/U^*$ (Theorem D2, Proved).**
    - **Statement.** $P(t)$ cannot reach $\beta$ before $T_\beta=\ln(\beta/P(0))\big/\big(2(U_0^*+\lambda_X\beta/2)\big)$. Here $U_0^*=\sup_v|U_y(v)|$ is the largest initial utility, and $\lambda_X$ is the top eigenvalue of the empirical second-moment matrix of $\tilde x$.
    - **Until then, the network is the empty circuit:** $\sup_x|f_t(x)|\le\frac{\sqrt{d+1}}2\beta$.
+   - **The leading constant is attained.** In an explicit instance ($y=x_1$ on the full cube, one neuron started at the maximizer of $U_y$), the escape time is $\ln(1/\alpha)/U_0^*+O(1)$ (Theorem D2(6)). So no lower bound valid for all data can have a larger leading constant. Only the leading constant is claimed to be sharp.
    - **Comparison with C3.1.** This improves Lemma C3.1, which used $\sqrt{\lambda_X}\|y\|_n$ in place of $U_0^*$, to the leading constant of the README's rate law.
    - **A certified upper bound** on the nonconvex supremum $U^*$ is given by two eigenvalue computations (Lemma D2.1). It is within 1.5–12% of a multistart estimate in the checks.
    - **Quantization (Proposition D2.2).** Before $T_\beta$, each neuron's direction is an approximate critical point of $\pm U_y$ except during $O(1)$ total time, uniformly in $\alpha$.
 3. **Through the escape: width-free size and generalization (Theorem D3 and its corollaries, Proved).**
    - **Path norm, two bounds.** For all $t$, $P(t)\le\beta+\|y\|_n^2(t-T_\beta)_+$ (a priori), and $\sqrt{P(t)}\le\sqrt\beta+\int_{T_\beta}^t\sqrt{-\dot L}$ (from the training-loss curve).
-   - **Circuit size.** By Maurey's lemma, the network is then $\epsilon$-close in $L^2$ to a $K$-neuron circuit with $K=\lceil P^2/4\epsilon^2\rceil$. A kl-Occam bound uniform in $t$ follows (Theorem D3.2), with no dependence on the width.
+   - **Circuit size.** By Maurey's lemma, the network is then $\epsilon$-close in $L^2$ to a $K$-neuron circuit with $K=\lceil P^2/4\epsilon^2\rceil$. A kl-Occam bound uniform in $t$ follows (Theorem D3.2), with no dependence on the width. As a statement about the current weights, it holds for any network, balanced or not (e.g. GD iterates), with $\sum_j|a_j|\|w_j\|\le P/2$ in place of $P/2$.
    - **The $K$-neuron Occam bound (Proposition D3.3)** uses the network's own clusters of directions. Its use is a posteriori.
 4. **Beyond the first plateau: what is and is not proved (§4).**
    - **The a priori bound degrades.** The a priori path-norm bound grows linearly after $T_\beta$, so at $t=(1+c)\log(1/\alpha)/U^*$ it is $O(c\log(1/\alpha))$, not $O(1)$.
@@ -37,27 +38,30 @@ Notes by Claude (Opus 5.5), prompted by Kaarel Hänni. Research note, 23 October
    - **What remains a conjecture (Conjecture D4)** is the a priori form: that this condition holds for a time of order $\log(1/\alpha)$ after each escape.
 5. **Numerical (two-layer ReLU, $d=16$, $n=1000$–$4000$, width 64, $\alpha=10^{-6}$–$10^{-2}$, small-step GD; exact test error on all $2^{16}$ inputs).** Every inequality proved for the flow holds along small-step GD, up to discretization effects at the kinks (listed in §5).
    - **Tightness of the clock bounds.** The growth bound reaches $0.84$–$0.95$ of its exponent, against $0.53$–$0.63$ for C3.1's. At $\alpha\le10^{-3}$ the escape-time lower bound is $60$–$81\%$ of the observed escape time, against $42$–$51\%$ for C3.1's.
-   - **Condensation.** At $\alpha\le10^{-3}$ all 64 neurons condense into $K=2$ clusters of width $1-\cos=2\cdot10^{-8}$–$2\cdot10^{-4}$, a direct observation of the merging law.
-   - **Kinks.** Except for $x_1$, whose residual vanishes, the clusters sit on data hyperplanes (training-set margins $10^{-7}$–$10^{-12}$). This is why arguments that freeze activation patterns cannot work here.
-   - **Bounds.** The Maurey bound is vacuous at these $n$. The $K$-neuron bound with the network's own clusters certifies $0.19$ ($n=1000$) and $0.051$ ($n=4000$) for MAJ$_3$, whose true test error is $0$.
+   - **Condensation.** At $\alpha\le10^{-3}$ all 64 neurons condense into $K=2$ clusters of width $1-\cos=2\cdot10^{-8}$–$2\cdot10^{-4}$, a direct observation of the merging law. The exception is the $n=4000$ run, where 63 neurons condense and one stops at mass $9.2\cdot10^{-4}$, below 1% of the largest neuron's mass.
+   - **Kinks.** Except for $x_1$, whose residual vanishes, the clusters sit on data hyperplanes (training-set margins $10^{-12}$–$3\cdot10^{-7}$). This is why arguments that freeze activation patterns cannot work here.
+   - **Bounds.** The Maurey bound is vacuous at these $n$. The $K$-neuron bound with the network's own clusters certifies $0.19$ ($n=1000$) and $0.051$ ($n=4000$) for MAJ$_3$, whose true test error is $0$. The script computes these certificates for the balanced surrogate of the GD network, not the network itself. For $n=1000$, $\alpha=10^{-3}$ the referee recomputed the certificate on the GD network itself and got the same value (§5).
    - **The race model's dormant reservoir can be absent.** On $x_1+\frac12x_2x_3$ at $\alpha=10^{-6}$, every neuron is recruited by the first escape, and the network then stays at a 2-neuron point that never learns $x_2x_3$ (checked to $t=400$, about 25 escape times). At $\alpha=10^{-2}$ it learns the target. This matches the "two-edged sword" of early alignment (Boursier–Flammarion).
 
-**Part II, two-layer quadratic networks** $f(x)=\sum_j[(u_j\cdot x)^2-\|u_j\|^2]-\sum_j[(v_j\cdot x)^2-\|v_j\|^2]=\langle UU^\top-VV^\top,\ xx^\top-I\rangle$. On the cube each hidden unit is a rank-one pairwise-interaction feature $2\sum_{k<l}u_ku_lx_kx_l$. Option (2) of the task, strictly more than C2: C2 is the special case in which all the measurement matrices commute.
+**Part II, two-layer quadratic networks** $f(x)=\sum_j[(u_j\cdot x)^2-\|u_j\|^2]-\sum_j[(v_j\cdot x)^2-\|v_j\|^2]=\langle UU^\top-VV^\top,\ xx^\top-I\rangle$. On the cube each hidden unit is a rank-one pairwise-interaction feature $2\sum_{k<l}u_ku_lx_kx_l$.
+- **The model.** The output weights are fixed at $\pm1$ and the units are centred (the $-\|u_j\|^2$ terms), so this is symmetric matrix sensing with measurements $x_ix_i^\top-I$. With trainable output weights the dynamics would be 3-homogeneous and different; that case is not covered.
+- **Relation to C2.** This is option (2) of the task. Theorems D5–D6 hold for any symmetric measurement matrices. C2's diagonal network is the case of commuting (diagonal) measurement matrices with diagonal initialization. For that case D6(2) gives a slightly weaker form of C2.3(2) (§7, Reading after D6).
 
-6. **The log-det clock (Theorem D5, Proved).** For $\dot W=A(t)W$ with $A$ symmetric, $\sum_{k\le K}\ln\sigma_k(W(t))\le\sum_{k\le K}\ln\sigma_k(W(0))+\int_0^t\sum_{k\le K}\lambda_k(A)$. The same holds for discrete GD and SGD, with $\ln(1+\eta\lambda_k)$ per step and no other correction.
+6. **The log-det clock (Theorem D5, Proved).** For $\dot W=A(t)W$ with $A$ symmetric, $\sum_{k\le K}\ln\sigma_k(W(t))\le\sum_{k\le K}\ln\sigma_k(W(0))+\int_0^t\sum_{k\le K}\lambda_k(A)$. The same holds for discrete GD and SGD, with $\ln(1+\eta\lambda_k)$ per step and no other correction, provided every step's factor $I+\eta A_j$ is positive definite. For the quadratic network ($A_j=\pm2M_j$) that is the step-size condition $2\eta\|M_j\|_{op}<1$, with $M_j$ the full-batch or minibatch matrix.
 7. **Time limits rank (Theorem D6, Proved).**
    - **Statement.** Let $N_\epsilon(t)$ be the number of eigenvalues of $UU^\top$ and $VV^\top$ that have grown above $\epsilon$. For all $t$,
      $$N_\epsilon(t)\le\kappa\,\big(\tau(t)/\Theta_\epsilon\big)^2,\qquad \Theta_\epsilon=\tfrac14\ln\frac{\epsilon}{\alpha^2s_0^2}\approx\tfrac12\ln\frac1\alpha,\quad\tau(t)=\int_0^t\|r\|_n .$$
      Here $\kappa=2\lambda_{\max}$ of the Gram matrix of the $\binom d2$ pair features on the *training inputs only*. Its population value is $2$; it does not depend on the labels, the trajectory or the width.
+   - **Weight-free, not a priori.** The bound uses $\tau$, which is read off the training-loss curve. It does not look at the weights, but it is not a function of time alone. The time-only form uses $\tau(t)\le R_0t$ with $R_0=\|r(0)\|_n\approx\|y\|_n$ (flow). It is much weaker: for $x_1x_2$ in §7.4 it gives $N\le42$ at $t=20$, against $4$ from $\tau$.
    - **No early growth.** No eigenvalue grows before $\Theta_\epsilon/(\|M_y\|_{op}+2\kappa\sqrt d\epsilon)$.
-   - **Scope.** This is the user's "the circuit cannot have grown big yet", for a real non-diagonal two-layer network, at every time, without any plateau analysis. Circuit size is rank, i.e. the number of effective hidden units.
+   - **Scope.** This is the user's "the circuit cannot have grown big yet", for a non-diagonal two-layer network, at every time, without any plateau analysis. Circuit size is rank, i.e. the number of effective hidden units. The network has fixed output signs and centred units, i.e. it is symmetric matrix sensing (see above).
 8. **Generalization uniform in time (Theorem D7, Proved).**
-   - **Statement.** Simultaneously for all $t$, the test error of $\mathrm{sgn}f_t$ is at most a kl-Occam term with capacity about $(d+1)N_\epsilon(t)\ln\frac{32d(P(t)+1)}{\gamma}$, at training margin $\gamma$. Here $\epsilon=\gamma/8(d-1)$, and $N_\epsilon(t)$ can be replaced by its a priori bound $\kappa(\tau/\Theta_\epsilon)^2$.
-   - **Comparison.** The unrestricted class of all degree-2 sign functions costs $(\binom d2+1)(d+1)\ln2$ nats.
+   - **Statement.** Simultaneously for all $t$, and for all GD and SGD iterates, the test error of $\mathrm{sgn}f_t$ is at most a kl-Occam term at training margin $\gamma$. Its capacity is about $(d+1)N_\epsilon(t)\ln\frac{32d(P(t)+1)}{\gamma}$, with $\epsilon=\gamma/8(d-1)$. $N_\epsilon(t)$ can be replaced by its weight-free bound $\kappa(\tau/\Theta_\epsilon)^2$.
+   - **Comparison.** The unrestricted class of all degree-2 sign functions costs $\ln\Phi(2^{d+1},\binom d2+1)\approx964$ nats at $d=16$, by Cover's count. So at $d=16$, $B=1$, $\gamma=\frac12$ the rank bound is better for $N\le7$.
 9. **Numerical ($d=16$, width 16+16, $\alpha=10^{-6}$, GD and SGD).**
    - **The inequalities hold.** The clock holds to round-off, $10^{-8}$. The rank bound's worst ratio is $0.38$–$0.59$.
-   - **$x_1x_2$ at $n=3000$.** The bound is $0.084$ with the measured rank (2) and $0.20$–$0.21$ with the a priori rank bound (4), against $0.276$ for the unrestricted class; the true test error is $0$.
-   - **Where the time-only form fails.** On MAJ of three pairs the residual does not vanish, so $\tau$ keeps growing on the plateau. The a priori rank bound grows from 23 to 47 while the true rank stays 6, and the a priori bound becomes vacuous. This is the same weakness as C2.5.
+   - **$x_1x_2$ at $n=3000$.** The bound is $0.084$ with the measured rank (2), against $0.276$ for the unrestricted class; the true test error is $0$. With the weight-free rank bound (4) it is $0.20$–$0.21$. That number uses the flow's norm bound $B$, which is admissible for these GD runs because it exceeds the measured $P$ (§7.4).
+   - **Where the loss-curve form fails.** On MAJ of three pairs the residual does not vanish, so $\tau$ keeps growing on the plateau. The weight-free rank bound grows from 23 to 47 while the true rank stays 6, and the corresponding D7 bound becomes vacuous. This is the same weakness as C2.5.
 
 | result | content | status |
 |---|---|---|
@@ -65,24 +69,24 @@ Notes by Claude (Opus 5.5), prompted by Kaarel Hänni. Research note, 23 October
 | Lemma D0.2, D0.3 | kl-Chernoff and Occam with a prior; size of a sphere net | Proved |
 | Lemma D1 | balance, exact mass clock, measure form, scale-free direction flow, energy identity, near-monotone utility, merging law | Proved |
 | Lemma D2.1 | certified upper bound on $\sup_v\pm U_r(v)$ by eigenvalues | Proved |
-| Theorem D2 | no growth before $T_\beta$; sharp-constant escape lower bound; discrete GD form | Proved |
+| Theorem D2 | no growth before $T_\beta$; escape-time lower bound, whose leading constant is attained in an explicit instance (item 6); discrete GD form | Proved |
 | Proposition D2.2 | quantization: time at non-critical directions is $O(1)$ | Proved |
 | Theorem D3 | path norm through the escape: a priori and loss-curve forms | Proved |
 | Corollary D3.1 | Maurey: $\epsilon$-close to a $\lceil P^2b^2/4\epsilon^2\rceil$-neuron circuit, width-free | Proved |
-| Theorem D3.2 | generalization uniform in $t$ through the escape, width-free | Proved |
+| Theorem D3.2 | generalization uniform in $t$ through the escape, width-free, for any network (balanced or not) | Proved |
 | Proposition D3.3 | $K$-neuron Occam bound with the network's own clusters | Proved (a posteriori in $K$) |
 | Proposition D4.1 | persistence of the cluster structure under the attracting-sign condition | Proved (conditional on a trajectory condition) |
 | Conjecture D4 | a priori persistence for $t\le(1+c)T_1$ | Conjecture |
 | Theorem D5 | log-det clock, continuous and discrete | Proved |
-| Theorem D6 | quadratic networks: $N_\epsilon\le\kappa(\tau/\Theta_\epsilon)^2$; no early growth; GD/SGD forms | Proved |
-| Theorem D7 | quadratic networks: generalization uniform in $t$ with rank-$N_\epsilon(t)$ capacity | Proved |
+| Theorem D6 | quadratic networks (fixed output signs): $N_\epsilon\le\kappa(\tau/\Theta_\epsilon)^2$; no early growth; path norm; GD/SGD forms, including the path norm | Proved |
+| Theorem D7 | quadratic networks (fixed output signs): generalization uniform in $t$ with rank-$N_\epsilon(t)$ capacity | Proved |
 | §5, §7.4 | checks of every inequality | Numerical |
 
 ---
 
 ## 0. Setting, notation, and three lemmas
 
-**Data.** $\mathcal X=\{-1,1\}^d$. $S=((x_i,y_i))_{i\le n}$ is iid from a distribution $P$ on $\mathcal X\times\mathbb R$; for the sign-error statements $y\in\{-1,1\}$, and where the input marginal matters it is uniform. Write $\langle u,v\rangle_n=\frac1n\sum_iu(x_i)v(x_i)$ and $\|u\|_n$. Logarithms are natural. For a predictor $f$, $\mathrm{err}(\mathrm{sgn}f)=P(\mathrm{sgn}f(x)\ne y)\le P(yf(x)\le0)$, with $\mathrm{sgn}(0)=+1$. The margin statements bound the right side, so either convention for $\mathrm{sgn}(0)$ works.
+**Data.** $\mathcal X=\{-1,1\}^d$. $S=((x_i,y_i))_{i\le n}$ is iid from a distribution $P$ on $\mathcal X\times\mathbb R$, or drawn without replacement from a finite population (remark after Lemma D0.2); for the sign-error statements $y\in\{-1,1\}$, and where the input marginal matters it is uniform. Write $\langle u,v\rangle_n=\frac1n\sum_iu(x_i)v(x_i)$ and $\|u\|_n$. Logarithms are natural. For a predictor $f$, $\mathrm{err}(\mathrm{sgn}f)=P(\mathrm{sgn}f(x)\ne y)\le P(yf(x)\le0)$, with $\mathrm{sgn}(0)=+1$. The margin statements bound the right side, so either convention for $\mathrm{sgn}(0)$ works.
 
 **The kl inverse** is $\mathrm{kl}^{-1}_+(q,c)=\sup\{p\in[q,1]:\mathrm{kl}(q\|p)\le c\}$, nondecreasing in both arguments, with $\mathrm{kl}^{-1}_+(q,c)\le q+\sqrt{2qc}+2c$ and $\mathrm{kl}^{-1}_+(0,c)\le c$ (proofs in [A, Lemma 1.3](A-discrete-model.md)).
 
@@ -112,6 +116,11 @@ $$P(A)\le\mathrm{kl}^{-1}_+\Big(\widehat P_S(A),\ \frac{\ln|\mathcal A_\iota|+\l
    - Otherwise $q\mapsto\mathrm{kl}(q\|p)$ decreases continuously from $\mathrm{kl}(0\|p)>c$ to $0$ on $[0,p]$. So the event is $\{\hat p<q^*\}$ with $\mathrm{kl}(q^*\|p)=c$, of probability at most $e^{-nc}$.
 2. Apply item 1 to each indicator $\mathbb 1_A$, $A\in\mathcal A_\iota$, with $c=(\ln|\mathcal A_\iota|+\ln\frac1{\pi(\iota)}+\ln\frac1\delta)/n$, so that each failure probability is at most $\pi(\iota)\delta/|\mathcal A_\iota|$. Sum over $A$ and $\iota$. ∎
 
+**Sampling without replacement.** Both check scripts draw the $n$ training points without replacement from the cube. The population is then the uniform distribution on the cube with the target's labels. Lemma D0.2 still holds, with $p$ the population frequency.
+- The proof of item 1 uses only the moment-generating-function bound $\mathbb Ee^{-\lambda n\hat p}\le(1-p+pe^{-\lambda})^n$.
+- By Hoeffding (1963, Theorem 4), $\mathbb Ef(\sum_iX_i)$ for a sample without replacement from a finite population is at most its value for a sample with replacement, for every continuous convex $f$. Take $f(s)=e^{-\lambda s}$.
+- Item 2 follows by the same union bound.
+
 The priors used below are: $\frac1{(K+1)(K+2)}$ on $K\in\{0,1,\dots\}$ (or $\frac1{K(K+1)}$ on $K\ge1$); $\frac1{2(|\ell|+1)(|\ell|+2)}$ on dyadic scales $B=2^\ell$, $\ell\in\mathbb Z$, whose total mass is $\frac34$; and uniform on a finite margin grid $\Gamma$. Products of these are sub-probabilities, which is all Lemma D0.2 needs.
 
 ### Lemma D0.3 (nets of the sphere) — Proved
@@ -135,9 +144,12 @@ The nets are fixed once, for each $D$ and $\eta$ used, before the data are seen.
 
 **Initialization.** Balanced: $|a_j(0)|=\|w_j(0)\|=\alpha_j>0$, with signs $\epsilon_j=\mathrm{sgn}\,a_j(0)$. The task's setting is $\alpha_j=\alpha$. Write $\rho_j=a_j^2+\|w_j\|^2$ and $P=\sum_j\rho_j=\|\theta\|^2$, so $P(0)=2\sum_j\alpha_j^2$. That is $2m\alpha^2$ for $\alpha_j=\alpha$, and $2\alpha^2$ for $\alpha_j=\alpha/\sqrt m$. **Width enters every statement below only through $P(0)$.**
 
-**Definition (selection flow).** A locally absolutely continuous $\theta(t)$ such that there are $s_j(t,i)\in\partial\sigma(w_j(t)\cdot\tilde x_i)$ with, for almost every $t$,
+**Definition (selection flow).** A locally absolutely continuous $\theta(t)$ such that there are Lebesgue-measurable selections $t\mapsto s_j(t,i)\in\partial\sigma(w_j(t)\cdot\tilde x_i)$ with, for almost every $t$,
 $$\dot a_j=\langle r,\sigma(w_j\cdot\tilde x)\rangle_n,\qquad \dot w_j=a_j\,\xi_j,\qquad \xi_j:=\frac1n\sum_ir_i\,s_j(t,i)\,\tilde x_i .$$
 - **Why this definition.** Every Clarke subgradient flow of $L$ is a selection flow, because the Clarke subdifferential of a sum or composition is contained in the set of such selections (Clarke 1983, Theorems 2.3.3 and 2.3.9; **Literature, from memory**). Clarke flows exist for locally Lipschitz functions (**Literature, from memory**).
+- **Measurability is no restriction.** Suppose that for almost every $t$ some selection satisfies the equations. Then a measurable one does, by Filippov's measurable-selection lemma (Aubin–Frankowska 1990, §8.2; **Literature, from memory**). The reason: the admissible selections at time $t$ form a compact set $\prod_{j,i}\partial\sigma(w_j(t)\cdot\tilde x_i)$ that depends measurably on $t$, and the right side is continuous in the selection.
+  - On sliding sets $\{w_j\cdot\tilde x_i=0\}$ of positive measure, which the checks show are typical, the flow determines $\xi_j$ but not, for example, $\xi^y_j$ of Lemma D1(f).
+  - Statements below that integrate such selection-dependent quantities (Proposition D2.2, Proposition D4.1) hold for every measurable selection that realizes the flow.
 - **What the proofs use.** The proofs below use only the definition, so they hold for any selection rule, in particular the convention $\sigma'(0)=0$ of most code. The checks use small-step GD as an approximation.
 
 ### Lemma D1 (exact structure of the flow) — Proved
@@ -146,7 +158,7 @@ Let $\theta$ be a selection flow from a balanced initialization. Then:
 - **(a) Balance.** $a_j^2-\|w_j\|^2$ is constant, so $|a_j(t)|=\|w_j(t)\|$ for all $t$.
 - **(b) The mass clock.** $\rho_j(t)>0$ and $\mathrm{sgn}\,a_j(t)=\epsilon_j$ for all $t$, $\hat w_j=w_j/\|w_j\|$ is absolutely continuous, and
 $$\rho_j(t)=\rho_j(0)\exp\Big(2\int_0^t\epsilon_j\,U_{r(s)}(\hat w_j(s))\,ds\Big).$$
-- **(c) Measure form.** For every $x$, not only training points, $f_t(x)=\sum_j\epsilon_j\frac{\rho_j(t)}2\,\sigma(\hat w_j(t)\cdot\tilde x)$. So $f_t=\int\sigma(v\cdot\tilde x)\,d\mu_t(v)$ with $\|\mu_t\|_{TV}=P(t)/2$.
+- **(c) Measure form.** For every $x$, not only training points, $f_t(x)=\sum_j\epsilon_j\frac{\rho_j(t)}2\,\sigma(\hat w_j(t)\cdot\tilde x)$. So $f_t=\int\sigma(v\cdot\tilde x)\,d\mu_t(v)$ with $\|\mu_t\|_{TV}\le P(t)/2$. Equality holds unless atoms of opposite sign coincide.
 - **(d) Scale-free search.** Almost everywhere, $\dot{\hat w}_j=\epsilon_j(I-\hat w_j\hat w_j^\top)\,\xi_j$.
 - **(e) Energy.** Almost everywhere, $\frac d{dt}L(\theta(t))=-\|\dot\theta\|^2$ and $\frac d{dt}P=4\langle r,f\rangle_n$. Hence $L$ is nonincreasing, $\|r(t)\|_n\le R_0:=\|r(0)\|_n$, and $\dot P\le\|y\|_n^2$.
 - **(f) Near-monotone utility.** With $\xi^y_j=\frac1n\sum_iy_is_j(t,i)\tilde x_i$ and $\Pi_j=I-\hat w_j\hat w_j^\top$, almost everywhere
@@ -159,6 +171,8 @@ $$\dot Q_{jk}=\epsilon_j\,\|w_j\|\|w_k\|\ \frac1n\sum_ir_i\,m_{jk}(t,i),\qquad m
   3. in general $\frac d{dt}\sqrt{Q_{jk}}\le\sqrt{\tfrac{(d+1)\|w_j\|\|w_k\|}2}\ \bar r^{\rm rep}_{jk}(t)$, where $\bar r^{\rm rep}_{jk}=\frac1n\sum_{i\ \text{separating},\ \epsilon_jr_i>0}|r_i|$ is the repelling residual mass, wherever $Q_{jk}>0$.
 
   The angle is read off from $Q$: $\|\hat w_j-\hat w_k\|^2=2Q_{jk}/(\|w_j\|\|w_k\|)$.
+
+  *Credit.* (g1) is the off-diagonal entry of the classical conservation law of two-layer linear networks. For $f=W_2W_1x$, with rows $w_j$ of $W_1$ and entries $a_j$ of $W_2$, gradient flow keeps $W_1W_1^\top-W_2^\top W_2$ constant (Arora–Cohen–Hazan 2018; Du–Hu–Lee 2018; from memory). Its $(j,k)$ entry is $-Q_{jk}$ and its diagonal is (a). It applies here because a pair of neurons that share their selections is locally a linear network (Remark below). For ReLU networks only the diagonal (a) is conserved globally (Marcotte–Gribonval–Peyré 2023; venue and abstract checked). The monotonicity statements (g2) and (g3) may be new; I have not seen them elsewhere.
 
 *Proof.*
 - (a) $\frac d{dt}a_j^2=2a_j\langle r,\sigma(w_j\cdot\tilde x)\rangle_n$. Also $\frac d{dt}\|w_j\|^2=2a_j\,w_j\cdot\xi_j=2a_j\langle r,s_j\,(w_j\cdot\tilde x)\rangle_n=2a_j\langle r,\sigma(w_j\cdot\tilde x)\rangle_n$, because $s\,z=\sigma(z)$ for every $s\in\partial\sigma(z)$.
@@ -182,7 +196,7 @@ $$\tfrac d{dt}(a_ja_k)=(w_j\cdot\xi_j)a_k+a_j(w_k\cdot\xi_k),\qquad \tfrac d{dt}
   - *Item 3.* $0\le m_{jk}\le|(\hat w_j-\hat w_k)\cdot\tilde x_i|\le\|\hat w_j-\hat w_k\|\sqrt{d+1}$, and only repelling points contribute positively. So $\dot Q\le\|w_j\|\|w_k\|\sqrt{d+1}\,\|\hat w_j-\hat w_k\|\,\bar r^{\rm rep}=\sqrt{2(d+1)\|w_j\|\|w_k\|Q}\ \bar r^{\rm rep}$. Divide by $2\sqrt Q$. ∎
 
 **Remarks.**
-- **Lorentz structure.** On an interval where a group of neurons shares its selections, $\xi_j=\xi$ is common to the group. Every pair $(a_j,w_j)$ then evolves by the same linear ODE $\dot z=J(t)z$, with $J=\begin{pmatrix}0&\xi^\top\\\xi&0\end{pmatrix}$. This ODE preserves the Lorentzian form $aa'-w\cdot w'$; (g1) is that conservation law.
+- **Lorentz structure.** On an interval where a group of neurons shares its selections, $\xi_j=\xi$ is common to the group. Every pair $(a_j,w_j)$ then evolves by the same linear ODE $\dot z=J(t)z$, with $J=\begin{pmatrix}0&\xi^\top\\\xi&0\end{pmatrix}$. This ODE preserves the Lorentzian form $aa'-w\cdot w'$; (g1) is that conservation law, which is the linear-network law cited after (g).
   - So inside a cell the network is a two-layer *linear* network, which is the bridge to Part II.
   - With (g1) from time $t_c$ on, $1-\cos\angle(w_j,w_k)=Q_{jk}(t_c)/(\|w_j\|\|w_k\|)$. Since $Q_{jk}(0)\le2\alpha_j\alpha_k$, a pair that keeps its selections from the start has $1-\cos\le4\alpha_j\alpha_k/\sqrt{\rho_j\rho_k}$ forever. Clusters are $\alpha^2$-tight relative to their mass.
 - **The race, exactly.** (b) and (d) are the README's race with no approximation:
