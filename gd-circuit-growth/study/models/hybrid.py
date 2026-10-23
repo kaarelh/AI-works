@@ -2,57 +2,72 @@
 
 Run with OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 (see race.py).
 
-PICTURE  a trained network = a fixed random-feature (kernel) background + a few grown features, all read out jointly.
-    The background is the infinite-width NNGP kernel of the networks' architecture at initialisation (two ReLU hidden
+PICTURE  a trained network = a random-feature (kernel) background + a few grown features, read out jointly.
+    The background is the infinite-width NNGP kernel K of the networks' architecture at initialisation (two ReLU hidden
     layers, models/baselines.py), normalised to unit diagonal.  The grown features are the race model's gates
-    (models/race.py, unchanged search / alignment / growth / firing rules and constants theta, lam, Q).
+    (models/race.py: unchanged search / alignment / growth / firing rules and constants theta = 1.5, lam = 1e-3, Q = 3,
+    gate = 'relu').
 
-READOUT  after every firing, the readout is the joint ridge fit
-        min_{a, f_bg}  |y - c - F a - f_bg|^2  +  lam_g |a|^2  +  lam_bg |f_bg|^2_K ,
-    F the standardised gate columns (as in the race), lam_g = lam * n (the race's own readout ridge), lam_bg = rho * n,
-    c = mean(y).  Equivalently kernel ridge regression with kernel K + (lam_bg / lam_g) F F^T and ridge lam_bg.  It is
-    computed by one Cholesky factorisation of K + lam_bg I and a rank-(#gates) Woodbury update per firing.
-    The race sees the residual of this joint fit, so the background competes with gate growth: on small training sets
-    it absorbs (memorises) most of the residual and fewer gates fire; on large ones it cannot, and the race proceeds.
-    Stop at training sign error 0 or after gmax gates, as in the race.
+READOUT  at race time t the readout is the joint ridge fit
+        min_{a, f_bg}  |y - c - F a - f_bg|^2  +  lam_g |a|^2  +  lam_bg(t) |f_bg|^2_K ,
+    F the standardised gate columns (as in the race), lam_g = lam * n (the race's own readout ridge), c = mean(y).
+    Equivalently kernel ridge regression with kernel K + (lam_bg / lam_g) F F^T and ridge lam_bg.  The race sees the
+    residual of this joint fit, so the background competes with gate growth.
 
-LARGE n  for n > n_exact the background kernel is replaced by M random ReLU features of a fresh 2-hidden-layer
-    network at initialisation (widths M, M), an unbiased Monte-Carlo approximation of the same kernel; the
-    algebra is unchanged (Woodbury in the M-dimensional primal space).
+BACKGROUND SCHEDULE  (one new constant)
+    mode 'flow' (the model):   lam_bg(t) = c_bg * n / t.
+        This is kernel gradient flow on the mean square loss run on the race clock: after time t, kernel GD has fitted
+        the residual's components along kernel eigenvalues kappa >~ n / (eta t) (the spectral cut-off of early-stopped
+        kernel regression), and fixed-time kernel GD is, to first order, ridge regression with lam ~ n / (eta t).
+        c_bg = 1 / eta is the background's slowness relative to the race clock.  Consequences: components with large
+        population eigenvalue (the target's degree-0/1 part) are fitted by the background early; the training-sample
+        noise lives on the many small eigenvalues (kappa ~ 0.3-0.5 per training point, independent of n) and is
+        memorised only once t >~ c_bg * n / 0.4, i.e. late, and later the larger n.  So on small training sets the
+        background memorises the sample before dense memorising gates can fire, and on large ones gates fire first.
+        t = 0: no background (the race's readout).
+    mode 'static' (ablation):  lam_bg = rho * n ** beta, constant in time.
+    mode 'none': the race model exactly (used to check that the shared code reproduces models/race.py).
+STOP  at training sign error 0 (as in the race), now checked continuously in time in mode 'flow': if the background
+    (with the gates present) reaches sign error 0 before the next gate would fire, the run stops at that time
+    (bisection in log t); otherwise the gate fires.  Also stop after gmax gates or when no candidate is left.
 
-NEW GLOBAL CONSTANTS (calibrated on common.CALIB only; see study/HYBRID.md)
-    rho   the background's ridge per training point (relative to the unit-diagonal kernel), i.e. how cheaply the
-          background can fit the residual compared with a grown gate (whose ridge is the race's lam).
-    tau   (optional, default None = static background) time constant of the background's fit on the race clock:
-          lam_bg(t) = rho * n * (1 + tau) / (1 + tau + t)... see `_lam_bg`; kept for the ablation in HYBRID.md.
-All race constants are the race's calibrated values (theta = 1.5, lam = 1e-3, Q = 3, gate = 'relu').
+LARGE n  for n > n_exact the background kernel is replaced by M random ReLU features of a fresh two-hidden-layer
+    network at initialisation (widths M, M; a Monte-Carlo approximation of the same kernel, of rank M); their random
+    draws are seeded from the data, so the race's own random stream is unchanged.
+
+ALGEBRA  K = E diag(ev) E^T (eigendecomposition once per fit; random features: from their M x M Gram matrix).  With
+    w = ev / (ev + lam) and Pi = I - E diag(w) E^T  (= lam (K + lam I)^{-1}):
+        a = (F^T Pi F + lam_g I)^{-1} F^T Pi y~,     training residual r = Pi (y~ - F a),
+    each O(n * rank + n * m^2) given E^T F and E^T y~ (y~ = y - c);  test predictions add K(x, X) r / lam.
 """
 import zlib
 import numpy as np
-from scipy.linalg import cho_factor, cho_solve
 from models.race import _order_k, _align_time, _overlap_after, _best_threshold, _best_relu
 from models.baselines import nngp_table
 
 F32 = np.float32
+HYBRID_DEFAULTS = dict(mode="flow", c_bg=None)      # c_bg is set by the calibration (study/HYBRID.md)
 
 
 class _Background:
-    """Kernel K (unit diagonal) on the training set with fast solves against K + lam I, exact or random-feature."""
+    """Unit-diagonal NNGP kernel on the training set, as an eigendecomposition (exact) or rank-M random features."""
 
-    def __init__(self, X, lam, n_exact, M, rng):
-        self.X = X; n, d = X.shape; self.d = d; self.lam = lam
+    def __init__(self, X, n_exact, M, seed):
+        self.X = X; n, d = X.shape; self.d = d
         self.table = (nngp_table(d) / nngp_table(d)[-1]).astype(np.float64)
         self.exact = n <= n_exact
         if self.exact:
-            K = self.gram(X)
-            self.cf = cho_factor(K + lam * np.eye(n))
+            ev, E = np.linalg.eigh(self.gram(X))
+            self.ev, self.E = np.maximum(ev, 0.0), E
         else:
+            rng = np.random.default_rng(seed)
             self.W1 = rng.standard_normal((M, d)).astype(F32) / np.sqrt(d)
             self.W2 = rng.standard_normal((M, M)).astype(F32) / np.sqrt(M)
             self.scale = None
-            P = self.feats(X)
-            self.P = P
-            self.cfm = cho_factor(P.T @ P + lam * np.eye(P.shape[1]))
+            Pf = self.feats(X); self.P = Pf
+            s2, V = np.linalg.eigh(Pf.T @ Pf)
+            keep = s2 > 1e-9 * s2.max()
+            self.ev = s2[keep]; self.E = Pf @ (V[:, keep] / np.sqrt(self.ev))
 
     def gram(self, Z):
         return self.table[((np.asarray(Z, F32) @ self.X.T).astype(np.int64) + self.d) // 2]
@@ -64,31 +79,71 @@ class _Background:
             self.scale = 1.0 / np.sqrt(np.mean(np.sum(h2 * h2, 1)))
         return h2 * self.scale
 
-    def solve(self, v):
-        """(K + lam I)^{-1} v."""
+    def apply(self, Z, v):
+        """K(Z, X) v."""
+        Z = np.asarray(Z, F32)
         if self.exact:
-            return cho_solve(self.cf, v)
-        return (v - self.P @ cho_solve(self.cfm, self.P.T @ v)) / self.lam
+            return np.concatenate([self.gram(Z[i:i + 2048]) @ v for i in range(0, len(Z), 2048)])
+        return self.feats(Z) @ (self.P.T @ v)
 
-    def apply(self, Z, alpha):
-        """K(Z, X) alpha."""
-        if self.exact:
-            out = np.zeros(len(Z))
-            for i in range(0, len(Z), 2048):
-                out[i:i + 2048] = self.gram(Z[i:i + 2048]) @ alpha
-            return out
-        return self.feats(Z) @ (self.P.T @ alpha)
+
+class _NoBackground:
+    def __init__(self, n):
+        self.ev = np.zeros(0); self.E = np.zeros((n, 0))
+
+
+class _JointReadout:
+    """Joint ridge readout over the background and the gates, for any background ridge lam (lam = inf: gates only)."""
+
+    def __init__(self, bg, yt, lam_g):
+        self.bg, self.yt, self.lam_g = bg, yt, lam_g
+        self.ye = bg.E.T @ yt
+        self.F = np.zeros((len(yt), 0)); self.Fe = np.zeros((len(bg.ev), 0))
+        self.FtF = np.zeros((0, 0)); self.Fty = np.zeros(0)
+
+    def add(self, col):
+        self.FtF = np.block([[self.FtF, (self.F.T @ col)[:, None]], [(col @ self.F)[None, :], np.array([[col @ col]])]])
+        self.Fty = np.append(self.Fty, col @ self.yt)
+        self.F = np.column_stack([self.F, col]); self.Fe = np.column_stack([self.Fe, self.bg.E.T @ col])
+
+    def fit(self, lam):
+        """Gate weights a and training residual r = y~ - F a - f_bg at background ridge lam."""
+        m = self.F.shape[1]
+        if not np.isfinite(lam):
+            a = np.linalg.solve(self.FtF + self.lam_g * np.eye(m), self.Fty) if m else np.zeros(0)
+            return a, self.yt - self.F @ a
+        w = self.bg.ev / (self.bg.ev + lam)
+        if m:
+            G = self.FtF - self.Fe.T @ (w[:, None] * self.Fe)
+            h = self.Fty - self.Fe.T @ (w * self.ye)
+            a = np.linalg.solve(G + self.lam_g * np.eye(m), h)
+            ze = self.ye - self.Fe @ a
+        else:
+            a = np.zeros(0); ze = self.ye
+        return a, (self.yt - self.F @ a) - self.bg.E @ (w * ze)
 
 
 class Hybrid:
     name = "hybrid"
 
-    def __init__(self, rho=0.03, theta=1.5, lam=1e-3, Q=3, K=4, P=8, iters=8, gmax=48, depth=2, gate='relu',
-                 n_exact=4096, M=512, tau=None, verbose=False):
+    def __init__(self, mode="flow", c_bg=1.0, rho=None, beta=1.0, theta=1.5, lam=1e-3, Q=3, K=4, P=8, iters=8, gmax=48,
+                 depth=2, gate='relu', n_exact=2048, M=512, bisect=10, verbose=False):
+        self.mode = mode
+        self.c_bg = None if c_bg is None else float(c_bg)
         self.rho = None if rho is None else float(rho)
+        self.beta = float(beta)
         self.theta, self.lam, self.Q, self.K, self.P = float(theta), float(lam), int(Q), int(K), int(P)
         self.iters, self.gmax, self.depth, self.gate, self.verbose = int(iters), int(gmax), int(depth), gate, verbose
-        self.n_exact, self.M, self.tau = int(n_exact), int(M), tau
+        self.n_exact, self.M, self.bisect = int(n_exact), int(M), int(bisect)
+
+    def _lam_bg(self, t, n):
+        if self.mode == "static":
+            return np.inf if self.rho is None else self.rho * n ** self.beta
+        if self.mode == "flow":
+            return np.inf if (self.c_bg is None or t <= 0) else self.c_bg * n / t
+        if self.mode == "none":
+            return np.inf
+        raise ValueError(self.mode)
 
     def _rand_dir(self, rng, D, P):
         V = rng.standard_normal((D, P)).astype(F32)
@@ -105,27 +160,34 @@ class Hybrid:
         for k in range(2, K + 1):
             pool[k] = dict(V=self._rand_dir(rng, d, P), c=np.zeros(P),
                            sgn=np.ones(P) if k % 2 else np.where(np.arange(P) % 2 == 0, 1.0, -1.0))
-        gates, cols = [], []
+        gates = []
         c0 = y.mean(); yt = y - c0
-        # ---- background (its random features, if any, are seeded from the data so the race's own random draws are unchanged)
-        lam_g = self.lam * n
-        if self.rho is not None:
-            lam_bg = self.rho * n
-            bg = _Background(X, lam_bg, self.n_exact, self.M, np.random.default_rng(zlib.crc32(X.tobytes())))
-            u = bg.solve(yt); Bs, Vs_ = [], []
-            cg = np.sqrt(lam_bg / lam_g)
-            alpha = u.copy(); a = np.zeros(0)
-            f = y - lam_bg * alpha
-        else:
-            Gm = np.zeros((0, 0)); Fy = np.zeros(0); a = np.zeros(0)
-            f = np.full(n, c0)
+        use_bg = self.mode != "none" and (self.c_bg is not None if self.mode == "flow" else self.rho is not None)
+        bg = _Background(X, self.n_exact, self.M, zlib.crc32(X.tobytes())) if use_bg else _NoBackground(n)
+        RO = _JointReadout(bg, yt, self.lam * n)
+
+        def state(t):
+            lam_bg = self._lam_bg(t, n) if use_bg else np.inf
+            a, r = RO.fit(lam_bg)
+            return a, r, lam_bg, float(np.mean(np.where(y - r > 0, 1.0, -1.0) != y))
+
+        def first_time(lo, hi, ok):
+            """Earliest time in (lo, hi] at which ok(state) holds, by bisection in log t (ok(hi) assumed)."""
+            for _ in range(self.bisect):
+                mid = np.sqrt(lo * hi) if lo > 0 else hi / 4
+                if ok(state(mid)[3]):
+                    hi = mid
+                else:
+                    lo = mid
+            return hi
+
         t = 0.0
-        err = float(np.mean(np.where(f > 0, 1.0, -1.0) != y))
+        a, r_res, lam_now, err = state(t)
         t_fit = 0.0 if err <= 0.1 else None
         trace = [(0.0, err)]
-        while len(gates) < self.gmax:
-            r64 = y - f
-            if np.max(np.abs(r64)) < 1e-9 or err == 0:
+        while len(gates) < self.gmax and err > 0:
+            r64 = r_res
+            if np.max(np.abs(r64)) < 1e-9:
                 break
             r = r64.astype(F32); rbar = float(r.mean())
             U = Uw[:, :D]
@@ -174,6 +236,16 @@ class Hybrid:
                 break
             best = min(cand, key=lambda z: z[0])
             T, kw, pw, w, b, Ug, *_ = best
+            if use_bg and self.mode == "flow":
+                # the background keeps fitting while the next gate grows: stop if it reaches sign error 0 first
+                e2 = state(t + T)[3]
+                if t_fit is None and e2 <= 0.1:
+                    t_fit = first_time(t, t + T, lambda e: e <= 0.1)
+                if e2 == 0:
+                    t = first_time(t, t + T, lambda e: e == 0)
+                    a, r_res, lam_now, err = state(t)
+                    trace.append((t, err))
+                    break
             t += T
             for (Tc, k, p, wc, bc, Ugc, Tal, lam_, m, vstar) in cand:
                 pk = pool[k]
@@ -200,39 +272,19 @@ class Hybrid:
             if dep < self.depth and D < Uw.shape[1] and 0 < ind.mean() < 1:
                 Uw[:, D] = 2 * ind - 1; wire = D; D += 1
             mu, sd = g.mean(), g.std()
-            col = (g - mu) / sd
             gates.append((w, b, wire, kw, sd, mu))
-            if self.rho is not None:
-                # joint ridge readout: alpha = (K + lam_bg I + cg^2 F F^T)^{-1} yt by Woodbury; a = cg^2 F^T alpha
-                Bs.append(cg * col); Vs_.append(bg.solve(cg * col))
-                Bm = np.stack(Bs, 1); Vm = np.stack(Vs_, 1)
-                S = np.eye(len(Bs)) + Bm.T @ Vm
-                alpha = u - Vm @ np.linalg.solve(S, Bm.T @ u)
-                a = cg * (Bm.T @ alpha)
-                f = y - lam_bg * alpha
-            else:
-                if cols:
-                    F = np.stack(cols, 1)
-                    gv = F.T @ col
-                    Gm = np.block([[Gm, gv[:, None]], [gv[None, :], np.array([[col @ col]])]])
-                else:
-                    Gm = np.array([[col @ col]])
-                Fy = np.append(Fy, col @ (y - c0))
-                cols.append(col)
-                a = np.linalg.solve(Gm + self.lam * n * np.eye(len(cols)), Fy)
-                f = c0 + np.stack(cols, 1) @ a
-            err = float(np.mean(np.where(f > 0, 1.0, -1.0) != y))
+            RO.add((g - mu) / sd)
+            a, r_res, lam_now, err = state(t)
             trace.append((t, err))
             if t_fit is None and err <= 0.1:
                 t_fit = t
             if self.verbose:
                 print(f"    gate {len(gates):2d} k={kw} fanin={len(nz):2d} depth={dep} U={Ug:.3f} T={T:.2f} "
-                      f"t={t:.2f} train_err={err:.3f}")
+                      f"t={t:.2f} lam_bg={lam_now:.3g} train_err={err:.3f}")
         G_ = [(gw, gb, gwire, gsd, gmu) for gw, gb, gwire, _, gsd, gmu in gates]
         a_, c_ = a.copy(), c0
         relu = self.gate != 'thr'
-        alpha_ = alpha.copy() if self.rho is not None else None
-        bg_ = bg if self.rho is not None else None
+        alpha_ = r_res / lam_now if (use_bg and np.isfinite(lam_now)) else None
 
         def score(Z):
             Z = np.asarray(Z, dtype=F32)
@@ -246,11 +298,11 @@ class Hybrid:
                 if gwire is not None:
                     W[:, Dz] = 2 * ind - 1; Dz += 1
                 out += a_[j] * (gv - gmu) / gsd
-            if bg_ is not None:
-                out += bg_.apply(Z, alpha_)
+            if alpha_ is not None:
+                out += bg.apply(Z, alpha_)
             return out
 
         return dict(predict=lambda Z: np.where(score(Z) > 0, 1.0, -1.0), score=score,
-                    time=float(t_fit if t_fit is not None else t), stop_time=float(t),
+                    time=float(t_fit if t_fit is not None else t), stop_time=float(t), lam_bg=float(lam_now),
                     size=len(gates), trace=trace, orders=[g[3] for g in gates],
                     fanin=[int(np.count_nonzero(g[0])) for g in gates])

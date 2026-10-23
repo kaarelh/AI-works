@@ -25,12 +25,17 @@ from scipy.linalg import cho_factor, cho_solve
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 import common as C
 from models.race import Race
-from models.hybrid import Hybrid, HYBRID_DEFAULTS
+from models.hybrid import Hybrid
+try:
+    from models.hybrid import HYBRID_DEFAULTS
+except ImportError:
+    HYBRID_DEFAULTS = {}
 from models.baselines import nngp_table
 
 REINIT = os.environ.get("NN_REINIT", os.path.join(os.path.dirname(C.RESULTS), "hybrid", "nn_reinit"))
 PROBE = np.random.default_rng(99).choice(np.array([-1.0, 1.0], dtype=np.float32), size=(16384, C.D))
 PAIRS = list(itertools.combinations(range(C.D), 2))
+CH = np.stack([PROBE[:, i] * PROBE[:, j] for i, j in PAIRS], 1).astype(np.float64)   # degree-2 characters on the probe set
 
 
 def race_score(fit):
@@ -78,10 +83,7 @@ def parts(v, rel):
     cnt = np.bincount(key, minlength=2 ** len(rel)); s = np.bincount(key, weights=v, minlength=2 ** len(rel))
     fR = (s / np.maximum(cnt, 1))[key]
     f1 = PROBE @ (PROBE.T @ v / len(PROBE))
-    Ch = np.empty((len(PROBE), len(PAIRS)), dtype=np.float32)
-    for q, (i, j) in enumerate(PAIRS):
-        Ch[:, q] = PROBE[:, i] * PROBE[:, j]
-    f2 = Ch @ (Ch.T @ v / len(PROBE))
+    f2 = CH @ (CH.T @ v / len(PROBE))
     return dict(v=v, R=fR, perp=v - fR, d1=f1, d2=f2, d3=v - f1 - f2)
 
 
@@ -180,8 +182,45 @@ def summarize(rows):
                 + f"   share_perp(nn) {np.mean([r['nn/share_perp'] for r in sel]):.2f}")
 
 
+def reinit_res(fns=None):
+    """The re-initialised networks (hybrid_reinit.py) in the evaluate() format (n <= 2048)."""
+    fns = [f for f in (fns or C.HELDOUT) if os.path.exists(os.path.join(REINIT, f"fixed_adam_{f}.npz"))]
+    res = dict(model="nn-reinit", fns=fns, ns=None, seeds=C.SEEDS, test_err={}, train_err={}, time={}, size={}, fit_seconds={}, pred={})
+    for fn in fns:
+        z = np.load(os.path.join(REINIT, f"fixed_adam_{fn}.npz")); ns = [int(v) for v in z["ns"]]; res["ns"] = ns
+        I = {(int(n), int(s)): j for j, (n, s) in enumerate(zip(z["net_n"], z["net_s"]))}
+        te = np.array([[z["test_err"][-1, I[(n, s)]] for s in range(3)] for n in ns])
+        res["test_err"][fn] = te; res["train_err"][fn] = np.array([[z["train_err"][-1, I[(n, s)]] for s in range(3)] for n in ns])
+        res["pred"][fn] = np.array([[z["pred"][-1, I[(n, s)]] for s in range(3)] for n in ns])
+        stg = np.full(te.shape, np.nan)
+        for a, n in enumerate(ns):
+            for s in range(3):
+                hit = np.where(z["test_err"][:, I[(n, s)]] <= 0.1)[0]
+                if len(hit):
+                    stg[a, s] = z["step"][hit[0]]
+        res["time"][fn] = stg; res["size"][fn] = np.full(te.shape, np.nan); res["fit_seconds"][fn] = np.zeros(te.shape)
+    return res
+
+
+def ceiling():
+    """Network-vs-network references on HELDOUT, restricted to n <= 2048 (all HELDOUT partial cells are there)."""
+    rr = reinit_res(); ns = rr["ns"]
+    sg = C.nn_as_model_res("sgd", fns=C.HELDOUT); sg["ns"] = ns
+    for fn in sg["fns"]:
+        for k in ("test_err", "train_err", "time", "size", "fit_seconds", "pred"):
+            sg[k][fn] = sg[k][fn][:len(ns)]
+    out = {}
+    for name, r in (("nn-reinit (Adam, same data, new init)", rr), ("nn-sgd (SGD, same data, same init)", sg)):
+        b = C.compare(r, "adam", fns=C.HELDOUT, verbose=False); out[name] = b["example_agreement_score"]
+        print(f"{name}: per-example agreement {b['example_agreement_score']:.3f} over {b['n_partial_cells']} cells; "
+              f"n* |log2| {b['sc_mean_abs_log2_ratio']:.2f} (n<=2048 only); curve MAE {b['curve_mae']:.3f}")
+    return out
+
+
 if __name__ == "__main__":
-    if len(sys.argv) > 1 and sys.argv[1] == "summary":
+    if len(sys.argv) > 1 and sys.argv[1] == "ceiling":
+        ceiling()
+    elif len(sys.argv) > 1 and sys.argv[1] == "summary":
         summarize(json.load(open(os.path.join(HERE, "hybrid_diagnose.json"))))
     else:
         main()

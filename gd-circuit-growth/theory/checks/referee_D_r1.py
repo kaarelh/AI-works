@@ -10,7 +10,8 @@ Sections (each prints PASS/FAIL-style numbers; nothing here edits D):
   R7  kappa identity and the <M,Z> step of Theorem D6(2); nuclear-norm facts of Theorem D7; non-nestedness of the D7 grids.
   R8  Independent quadratic-network GD/SGD run (d = 10, other seed): D6(1),(2),(3),(5) incl. the SGD kappa_B form.
       Also: D6(4) (P <= P(0) + t|y|^2) is a flow statement; a one-step GD counterexample.
-  R9  Exact-arithmetic (mpmath) recheck of the Horn clock on the D_quad_check config 0 trajectory (reported excess +2.8e-8).
+  R9  Horn clock on the D_quad_check config 0 trajectory (reported excess +2.8e-8): split by SVD resolution, and
+      excluding K = d = h, where D5 is an equality (determinant identity). (mpmath is not installed.)
   R10 Independent recomputation of the D7 numbers 0.084 / 0.213 (x1x2, n = 3000).
   R11 D_relu_check's D3.3 certificate is computed for the balanced surrogate sum_j eps_j rho_j/2 relu(hat w_j . xt),
       not for the GD network sum_j a_j relu(w_j . xt); recompute it for the real GD network (maj3, n=1000, alpha=1e-3),
@@ -344,7 +345,7 @@ def R8():
     Phi = X[:, iu[0]] * X[:, iu[1]]
     kappa = 2 * np.linalg.eigvalsh(Phi.T @ Phi / n)[-1]
     def Mres(r, Xb):
-        return (Xb * r[:, None]).T @ Xb / len(r) - r.mean() * np.eye(d)
+        return (Xb * r[:, None]).T @ Xb / len(r) - r.mean() * np.eye(Xb.shape[1])
     def fv(Xm, Xb):
         return np.einsum("ik,kl,il->i", Xb, Xm, Xb) - np.trace(Xm)
     for mode in ("gd", "sgd"):
@@ -407,71 +408,48 @@ def R8():
 
 # ---------------------------------------------------------------- R9
 def R9():
-    hdr("R9 mpmath recheck of the Horn clock on D_quad_check config 0 (x1x2, n=300, alpha=1e-6, eta=0.01, T=20)")
-    import mpmath as mp
-    mp.mp.dps = 40
+    hdr("R9 Horn clock on the D_quad_check config 0 trajectory (x1x2, n=300, alpha=1e-6, eta=0.01, T=20): is the +2.8e-8 excess round-off?")
+    # mpmath is not installed; instead, split the excess by how well the K-th singular value is resolved.
     d, n, h, alpha, eta, T = 16, 300, 16, 1e-6, 0.01, 20.0
-    rng = np.random.default_rng(0)
     idx = np.arange(2 ** d)[:, None]
     C = 1.0 - 2.0 * ((idx >> np.arange(d)[None, :]) & 1)
     yC = C[:, 0] * C[:, 1]
+    rng = np.random.default_rng(0)
     sel = rng.choice(len(C), size=n, replace=False)
     X, y = C[sel], yC[sel]
-    U0 = rng.standard_normal((d, h)) / math.sqrt(d)
-    rng.standard_normal((d, h))
-    U = alpha * U0
-    Ms = []
-    steps = int(round(T / eta))
-    Xm_ = None
-    V0 = None
-    # replicate the script: V0 drawn second
-    rng = np.random.default_rng(0); rng.choice(len(C), size=n, replace=False)
     U0 = rng.standard_normal((d, h)) / math.sqrt(d); V0 = rng.standard_normal((d, h)) / math.sqrt(d)
     U, V = alpha * U0, alpha * V0
-    for k in range(steps):
-        f = np.einsum("ik,kl,il->i", X, U @ U.T - V @ V.T, X) - np.trace(U @ U.T - V @ V.T)
+    l0U = np.cumsum(np.log(np.linalg.svd(U, compute_uv=False))); l0V = np.cumsum(np.log(np.linalg.svd(V, compute_uv=False)))
+    cU = np.zeros(d); cV = np.zeros(d)
+    thr = [1e-9, 1e-7, 1e-6, 1e-5, 1e-4]
+    worst = {t: -1e9 for t in thr}; argK = {t: None for t in thr}; worst_below = -1e9
+    steps = int(round(T / eta))
+    for k in range(steps + 1):
+        for W_, l0, c in ((U, l0U, cU), (V, l0V, cV)):
+            sv = np.linalg.svd(W_, compute_uv=False)
+            ex = np.cumsum(np.log(sv)) - l0 - c
+            Kn = min(d - 1, max(1, int((sv >= 1e-9 * sv[0]).sum())))
+            worst_below = max(worst_below, float(ex[:Kn].max()))
+            for t in thr:
+                K = max(1, int((sv >= t * sv[0]).sum()))
+                i = int(np.argmax(ex[:K]))
+                if ex[i] > worst[t]:
+                    worst[t] = float(ex[i]); argK[t] = (i + 1, k * eta, float(sv[i] / sv[0]))
+        if k == steps:
+            break
+        Xm = U @ U.T - V @ V.T
+        f = np.einsum("ik,kl,il->i", X, Xm, X) - np.trace(Xm)
         r = y - f
         M = (X * r[:, None]).T @ X / n - r.mean() * np.eye(d)
-        M = 0.5 * (M + M.T)
-        Ms.append(M)
+        ev = np.sort(np.linalg.eigvalsh(M))[::-1]
+        cU += np.cumsum(np.log1p(2 * eta * ev)); cV += np.cumsum(np.log1p(-2 * eta * ev[::-1]))
         U = U + 2 * eta * M @ U; V = V - 2 * eta * M @ V
-    # float64 check as in the script (resolved rank) at the end
-    def f64_excess(Wf, W0f, clock):
-        s = np.linalg.svd(Wf, compute_uv=False); s0 = np.linalg.svd(W0f, compute_uv=False)
-        K = int((s >= 1e-9 * s[0]).sum())
-        return float((np.cumsum(np.log(s)) - np.cumsum(np.log(s0)) - clock)[:K].max()), K
-    clockU = np.zeros(d); clockV = np.zeros(d)
-    for M in Ms:
-        ev = np.sort(np.linalg.eigvalsh(M))[::-1]
-        clockU += np.cumsum(np.log1p(2 * eta * ev)); clockV += np.cumsum(np.log1p(-2 * eta * ev[::-1]))
-    eU, KU = f64_excess(U, alpha * U0, clockU); eV, KV = f64_excess(V, alpha * V0, clockV)
-    print(f"   float64 (as in D_quad_check): end-of-run max excess U {eU:.2e} (K<= {KU}), V {eV:.2e} (K<= {KV})")
-    # exact product in mpmath at checkpoints
-    Wu = mp.matrix((alpha * U0).tolist()); Wv = mp.matrix((alpha * V0).tolist())
-    I = mp.eye(d)
-    s0u = sorted([mp.mpf(x) for x in mp.svd_r(Wu, compute_uv=False)], reverse=True)
-    s0v = sorted([mp.mpf(x) for x in mp.svd_r(Wv, compute_uv=False)], reverse=True)
-    cu = [mp.mpf(0)] * d; cv = [mp.mpf(0)] * d
-    worst = mp.mpf(-1e9)
-    checkpoints = set([200, 500, 600, 700, 800, 1000, 1500, 2000])
-    for k, M in enumerate(Ms, 1):
-        Mm = mp.matrix(M.tolist())
-        Wu = (I + 2 * eta * Mm) * Wu; Wv = (I - 2 * eta * Mm) * Wv
-        ev = np.sort(np.linalg.eigvalsh(M))[::-1]
-        for i in range(d):
-            cu[i] += mp.log1p(2 * eta * mp.mpf(ev[i])); cv[i] += mp.log1p(-2 * eta * mp.mpf(ev[::-1][i]))
-        if k in checkpoints:
-            su = sorted([mp.mpf(x) for x in mp.svd_r(Wu, compute_uv=False)], reverse=True)
-            sv = sorted([mp.mpf(x) for x in mp.svd_r(Wv, compute_uv=False)], reverse=True)
-            ex = []
-            for s, s0, c in ((su, s0u, cu), (sv, s0v, cv)):
-                lhs, rhs = mp.mpf(0), mp.mpf(0)
-                for K in range(d):
-                    lhs += mp.log(s[K]) - mp.log(s0[K]); rhs += c[K]
-                    ex.append(lhs - rhs)
-            worst = max(worst, max(ex))
-            print(f"   step {k}: exact max over K (U and V) of [sum ln s_k - sum ln s_k(0) - Horn clock] = {mp.nstr(max(ex), 5)}")
-    print(f"   exact worst = {mp.nstr(worst, 5)} (<= 0 required)")
+    for t in thr:
+        K, tt, ratio = argK[t]
+        print(f"   K restricted to s_K >= {t:.0e} s_1: max excess = {worst[t]:+.2e}  (at K={K}, t={tt:.2f}, s_K/s_1={ratio:.1e})")
+    print(f"   excluding K = d = h = 16 (where the inequality is an EQUALITY, ln|det U_J| = ln|det U_0| + sum ln det(I+2 eta M_j)):"
+          f" max excess over K <= 15 resolved to 1e-9 = {worst_below:+.2e}")
+    print("   float64 SVD has absolute error ~1e-16 s_1, i.e. relative error ~1e-16/(s_K/s_1) in s_K; the excess should shrink accordingly.")
 
 
 # ---------------------------------------------------------------- R10
@@ -512,7 +490,7 @@ def R11():
             nw = np.linalg.norm(W, axis=1)
             clusters = [np.where(eps == s)[0] for s in (1.0, -1.0)]
             ref = [c[np.argmax(nw[c])] for c in clusters]
-            Qt1 = {j: (abs(a[j]) * abs(a[rk]) - W[j] @ W[rk]) for c, rk in zip(clusters, ref) for j in c}
+            Qt1 = {j: (nw[j] * nw[rk] - W[j] @ W[rk]) for c, rk in zip(clusters, ref) for j in c}   # balanced form |w_j||w_k|(1-cos)
             attract_ok = {j: True for j in Qt1}
         if k > k1:
             for c, rk in zip(clusters, ref):

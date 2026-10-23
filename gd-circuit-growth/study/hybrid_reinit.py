@@ -6,15 +6,16 @@ constant, so the training sets (and minibatch order) are unchanged but the initi
 hybrid_diagnose.py to separate how much of two networks' agreement on individual test points comes from the shared
 training set and how much from the shared initialisation.
 
-    XLA_FLAGS="--xla_cpu_multi_thread_eigen=false intra_op_parallelism_threads=1" \
+    XLA_FLAGS="--xla_cpu_multi_thread_eigen=false intra_op_parallelism_threads=1" [REINIT_FOLD=<int>] \
         python hybrid_reinit.py <out_dir> [fns] [ns]
 """
 import sys, os
 import jax
 import nn_train
 
+FOLD = int(os.environ.get("REINIT_FOLD", 271828))   # 271828 = the 'nn-reinit' networks; other values = further inits
 _orig_init = nn_train.init_params
-nn_train.init_params = lambda key: _orig_init(jax.random.fold_in(key, 271828))
+nn_train.init_params = lambda key: _orig_init(jax.random.fold_in(key, FOLD))
 
 if __name__ == "__main__":
     out = sys.argv[1]

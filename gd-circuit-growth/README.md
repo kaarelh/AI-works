@@ -410,9 +410,9 @@ Status labels as before.
    - The networks show the same.
 7. **Bounds** (Proved unless stated). The three derivations A, B and C each passed a second adversarial referee pass. The new derivation D adds:
    - an exact "mass clock" race identity for two-layer ReLU networks, a proof that nothing grows before $\approx\log(1/\alpha)/U^*$, and a width-free generalization bound through the first escape;
-   - for two-layer *quadratic* networks, a proof of your sketch at every training time: the number of grown hidden units is at most $\kappa(\tau/\Theta)^2$, with $\kappa$ independent of labels, trajectory and width. This gives a test-error bound uniform in time.
+   - for two-layer *quadratic* networks with fixed output signs (equivalently, symmetric matrix sensing), a proof of your sketch at every training time: the number of grown hidden units is at most $\kappa(\tau/\Theta)^2$, with $\kappa$ independent of labels, trajectory and width. This gives a test-error bound uniform in time.
 
-   TODO D referee status. The general ReLU case beyond the first escape remains a stated conjecture.
+   D passed its first adversarial referee pass with minor issues only. The general ReLU case beyond the first escape remains a stated conjecture.
 8. **Robustness** TODO width. TODO online/prequential.
 
 ### 3.2 Thread 1: what the networks do
@@ -468,14 +468,14 @@ TODO width.
 
 ### 3.4 Thread 3: bounds
 
-**Review status** ([`theory/README.md`](theory/README.md)): A, B and C each failed or passed their first referee pass, were revised, and passed a second pass with only minor issues left. TODO D.
+**Review status** ([`theory/README.md`](theory/README.md)): A, B and C each failed or passed their first referee pass, were revised, and passed a second pass with only minor issues left. D passed its first pass with minor issues only, and its minor fixes are not yet applied.
 
 **What is now proved about "short training ⇒ small circuit ⇒ generalization":**
 - **The discrete race model (A):** time bounds the depth, the incoherence-weighted size and the readout $\ell_1$ norm, and hence test error, uniformly in time. Training time does not bound the raw gate count.
 - **Diagonal linear networks (C2):** the number of grown coordinates is at most $\kappa(\tau/\Theta)^2$.
-- **Two-layer quadratic networks (D, new):** the same statement for the number of grown hidden units, a real network with a shared hidden layer. It gives a test-error bound uniform in time.
+- **Two-layer quadratic networks with fixed output signs (D, new):** the same statement for the number of grown hidden units. The network has a shared hidden layer but fixed $\pm1$ output weights, so it is symmetric matrix sensing. It gives a test-error bound uniform in time.
 - **Two-layer ReLU networks (D, new):**
-  - *Proved, and new as far as I know:* the exact mass-clock identity, no growth before $\approx\log(1/\alpha)/U^*$, and a width-free bound through the first escape. A newly found conserved quantity makes neurons of the same sign merge.
+  - *Proved:* the exact mass-clock identity, no growth before $\approx\log(1/\alpha)/U^*$, and a width-free bound through the first escape. A conserved quantity, the off-diagonal part of the classical balancedness law (Arora–Cohen–Hazan 2018; Du–Hu–Lee 2018), makes neurons of the same sign merge.
   - *Conditional:* persistence beyond the first escape, under a condition checkable from the training residuals.
   - *Conjecture:* the a-priori form beyond the first escape.
 - **One-pass SGD:** prequential error certifies test error directly, with no capacity argument. TODO numbers.
@@ -515,7 +515,7 @@ TODO width.
 - **It is a theorem for:**
   - the discrete model, reading size as depth, incoherence-weighted size or readout norm;
   - diagonal linear networks;
-  - two-layer quadratic networks (new);
+  - two-layer quadratic networks with fixed output signs (new);
   - two-layer ReLU networks through the first escape (new).
 - **It is a conjecture for** ReLU networks beyond the first escape (Conjecture D4).
 - **Numerically,** on real networks, the only non-vacuous generalization bounds are after the fact: the trained network is close to a small circuit, certified with unlabelled inputs.
