@@ -6,7 +6,7 @@
 
 ## Question
 
-Main result 4 proves an $\exp(\Omega(d))$ parity lower bound for the collection's $\gamma<1$ learners, whose width limit is the iterated arcsine kernel. Does the same hold for the usual NNGP scaling? There the weight variances are $\sigma_1^2/(d+1)$ in the first layer and $\sigma_\ell^2/N$ in later layers, including the readout. This is the exponent tuple $(0,1,\ldots,1,1)$ of [FAQ Question 9](../../TECHNICAL-FAQ.md#9-can-we-classify-all-tuples-of-layerwise-scaling-exponents), which is not on the $\gamma$ line. At this scaling the preactivations stay of order one, so the limit is the dual-activation kernel of the activation itself.
+Main result 4 proves an $\exp(\Omega(d))$ parity lower bound for the collection's $\gamma<1$ learners, whose width limit is the iterated arcsine kernel. Does the same hold for the usual NNGP scaling? There the weight variances are $\sigma_1^2/(d+1)$ in the first layer and $\sigma_\ell^2/N$ in later layers, including the readout. This is the exponent tuple $(0,1,\ldots,1,1)$ of [FAQ Question 12](../../TECHNICAL-FAQ.md#12-can-we-classify-all-tuples-of-layerwise-scaling-exponents), which is not on the $\gamma$ line. At this scaling the preactivations stay of order one, so the limit is the dual-activation kernel of the activation itself.
 
 ## Results
 

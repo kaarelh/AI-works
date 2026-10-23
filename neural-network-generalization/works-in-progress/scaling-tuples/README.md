@@ -1,6 +1,6 @@
 # Layerwise scaling: a collapsed-layer prior and conjectured learning regions
 
-Research note, 19 October 2026. The theorem below has conventional proofs and independent AI-agent mathematical checks; it is not Lean verified. The learning-region predictions remain conjectures. [Technical FAQ, Question 9](../../TECHNICAL-FAQ.md#9-can-we-classify-all-tuples-of-layerwise-scaling-exponents) gives the interpretation and the original layer-collapse heuristic.
+Research note, 19 October 2026. The theorem below has conventional proofs and independent AI-agent mathematical checks; it is not Lean verified. The learning-region predictions remain conjectures. Questions [12](../../TECHNICAL-FAQ.md#12-can-we-classify-all-tuples-of-layerwise-scaling-exponents) and [15](../../TECHNICAL-FAQ.md#15-can-a-scaling-make-the-prior-prefer-something-other-than-small-circuits) of the technical FAQ give the interpretation, and [Question 14](../../TECHNICAL-FAQ.md#14-what-is-the-layer-collapse-argument-for-general-scaling-tuples-and-why-is-it-not-a-proof) the original layer-collapse heuristic.
 
 ## A precise collapsed-layer example
 
@@ -120,7 +120,7 @@ It is **not an exponential sample-complexity lower bound**. A posterior can excl
 
 The FAQ gives a tentative frozen-kernel region and a sparse-feature circuit-learning region. The latter uses one hidden layer, $a>0$ and $a\le b\le a+2$. A population $M$ of repeated order-one features has action of order $MN^a+N^b/M$, balanced at $M=N^{(b-a)/2}$ and action $N^{(a+b)/2}$. This is only a construction. Controlling the rest of the width and all competing posterior functions is the missing theorem.
 
-For general deep tuples, balancing an active subnetwork is insufficient: typical intervening layers can regenerate a full nonlinear kernel at a cheaper scale. For example, the two-hidden-layer tuple $(a_1,a_2,a_3)=(0.2,0.5,1.1)$, in the variance-exponent notation of FAQ Question 9, has shrinking first-hidden preactivations (variance $N^{-0.2}$) but saturated second-hidden preactivations (variance $N^{0.3}$). Its output forcing has the candidate Gaussian scale $N^{0.1}$, below the $N^{0.6}$ scale obtained by balancing a structured active subnetwork. These are scaling estimates, not a posterior theorem for that tuple.
+For general deep tuples, balancing an active subnetwork is insufficient: typical intervening layers can regenerate a full nonlinear kernel at a cheaper scale. For example, the two-hidden-layer tuple $(a_1,a_2,a_3)=(0.2,0.5,1.1)$, in the variance-exponent notation of [FAQ Question 12](../../TECHNICAL-FAQ.md#12-can-we-classify-all-tuples-of-layerwise-scaling-exponents), has shrinking first-hidden preactivations (variance $N^{-0.2}$) but saturated second-hidden preactivations (variance $N^{0.3}$). Its output forcing has the candidate Gaussian scale $N^{0.1}$, below the $N^{0.6}$ scale obtained by balancing a structured active subnetwork. These are scaling estimates, not a posterior theorem for that tuple.
 
 ## Review record
 

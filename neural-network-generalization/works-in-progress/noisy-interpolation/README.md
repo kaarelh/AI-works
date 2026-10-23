@@ -2,7 +2,7 @@
 
 *Research note, 18 October 2026. This is a new paper proof, not a Lean-verified result. It belongs with the works in progress rather than the verified main results.*
 
-[FAQ discussion](../../TECHNICAL-FAQ.md#24-do-the-good-generalization-results-survive-a-small-amount-of-label-noise) · [Proof review record](REVIEW.md) · [Collection index](../../README.md)
+[FAQ discussion](../../TECHNICAL-FAQ.md#41-do-the-good-generalization-results-survive-a-small-amount-of-label-noise) · [Proof review record](REVIEW.md) · [Collection index](../../README.md)
 
 Exact fitting of noisy labels does not prevent a useful generalization theorem for the strong-prior NNBayes learner. At every fixed depth, we obtain a clean-error bound of the form
 

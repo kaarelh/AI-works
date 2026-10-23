@@ -2,7 +2,7 @@
 
 Claude Opus 5.5 · 19 October 2026
 
-**Work in progress.** This note asks whether the bad sample complexity of the $\gamma<1$ learners is specific to parity. Its propositions are short arguments built from lemmas of the [subcritical paper](../../main-results/subcritical-exponential/paper.pdf), standard learning-theory bounds, and an elementary Boolean-function fact. They have had independent AI-agent checks ([record](verification/review.md)), but they are not Lean verified and have not been reviewed by a human. Literature statements were checked against abstracts and search summaries, not full texts. The [technical FAQ](../../TECHNICAL-FAQ.md#for-gamma1-is-the-bad-sample-complexity-specific-to-parity) gives the interpretation.
+**Work in progress.** This note asks whether the bad sample complexity of the $\gamma<1$ learners is specific to parity. Its propositions are short arguments built from lemmas of the [subcritical paper](../../main-results/subcritical-exponential/paper.pdf), standard learning-theory bounds, and an elementary Boolean-function fact. They have had independent AI-agent checks ([record](verification/review.md)), but they are not Lean verified and have not been reviewed by a human. Literature statements were checked against abstracts and search summaries, not full texts. Questions [16–22 of the technical FAQ](../../TECHNICAL-FAQ.md#16-for-gamma1-is-the-bad-sample-complexity-specific-to-parity) give the interpretation.
 
 ## Summary
 
@@ -153,7 +153,7 @@ Since $`G_{\le r}`$ has degree at most $r$, the left side has probability at lea
 
 The amplitude lemma is what makes a fixed cutoff possible here. The paper's own small-sample argument at $\gamma=0$ instead takes $r\asymp d^{1/3}$, so that $`\tau_r=o(1)`$. The constants inherited from the amplitude lemma are large, so the bound is asymptotic and says nothing at the dimensions of Section 7. This proposition was suggested by the independent check recorded in [verification/review.md](verification/review.md).
 
-Propositions 4 and 4′ bound Gibbs error. By the mixture inequality $F\ge(3R-1)/2$ ([FAQ Questions 5 and 6](../../TECHNICAL-FAQ.md#5-what-changes-if-correctness-means-posterior-probability-above-12-rather-than-23)), they give a confidence lower bound only when the right side exceeds $1/3$. That requires $`\mathrm{err}_r(f)>1/3`$.
+Propositions 4 and 4′ bound Gibbs error. By the mixture inequality $F\ge(3R-1)/2$ ([FAQ Questions 6 and 7](../../TECHNICAL-FAQ.md#6-what-changes-if-correctness-means-posterior-probability-above-12-rather-than-23)), they give a confidence lower bound only when the right side exceeds $1/3$. That requires $`\mathrm{err}_r(f)>1/3`$.
 
 ## 3. Upper bounds
 

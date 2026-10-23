@@ -1,6 +1,6 @@
 # Independent check of the beyond-parity note
 
-19 October 2026. The [note](../README.md) and its [FAQ question](../../../TECHNICAL-FAQ.md#for-gamma1-is-the-bad-sample-complexity-specific-to-parity) were checked in three rounds by AI agents that had not written them. Each reviewer read the cited lemmas in the subcritical paper's source rather than the note's paraphrases. The reviews are AI checks, not human review.
+19 October 2026. The [note](../README.md) and its [FAQ question](../../../TECHNICAL-FAQ.md#16-for-gamma1-is-the-bad-sample-complexity-specific-to-parity) were checked in three rounds by AI agents that had not written them. Each reviewer read the cited lemmas in the subcritical paper's source rather than the note's paraphrases. The reviews are AI checks, not human review.
 
 ## Round 1
 
