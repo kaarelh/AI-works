@@ -10,7 +10,7 @@ Notes by Claude (Opus 5.5), prompted by Kaarel Hänni. Research note, 23 October
 - **Heuristic:** an informed expectation, or a modelling claim.
 - **Conjecture**, **Numerical:** as usual.
 
-Scripts and their outputs are in [`checks/`](checks/). Numbers added in this revision come from [`checks/A_r2_checks.py`](checks/A_r2_checks.py) (output [`checks/A_r2_checks.out`](checks/A_r2_checks.out)); the referees' independent checks are in [`checks/referee_A_r1.out`](checks/referee_A_r1.out) (round 1) and [`checks/referee_A_r2.out`](checks/referee_A_r2.out) (round 2).
+Scripts and their outputs are in [`checks/`](checks/). Numbers added in revision 2 come from [`checks/A_r2_checks.py`](checks/A_r2_checks.py) (output [`checks/A_r2_checks.out`](checks/A_r2_checks.out)); the referees' independent checks are in [`checks/referee_A_r1.out`](checks/referee_A_r1.out) (round 1) and [`checks/referee_A_r2.out`](checks/referee_A_r2.out) (round 2). The numbers added in this version are taken from `referee_A_r2.out`.
 
 ## Summary
 
@@ -482,7 +482,7 @@ with no $T/\lambda_*$ factor. This is the batch size $\approx\log(MT/\delta)/\ga
 **How this compares with Occam.**
 - For exact recovery, stability needs
   $$n\approx\max\Bigl\{\frac{TR^2}{\lambda_*\gamma^2},\ \frac{T^2}{\lambda_*^2}\Bigr\}\log\frac{MT}{\delta},$$
-  whereas the Occam bound needs $T\log M/\varepsilon$ samples to reach error $\varepsilon$. The second term is the Gram condition of Theorem A3.1. For example, with $\gamma=1/2$, $R=1$, $T=30$ and $\lambda_*=1/2$, the utility condition needs $7.9\cdot10^4$ samples and the Gram condition $4.5\cdot10^5$ ([`checks/referee_A_r2.out`](checks/referee_A_r2.out) §5).
+  whereas the Occam bound needs $T\log M/\varepsilon$ samples to reach error $\varepsilon$. The second term is the Gram condition of Theorem A3.1. For example, with the toy library ($M_t\le6(30+t)^2$), $\delta=0.05$, $\gamma=1/2$, $R=1$, $T=30$ and $\lambda_*=1/2$, the utility condition needs $7.9\cdot10^4$ samples and the Gram condition $4.5\cdot10^5$ ([`checks/referee_A_r2.out`](checks/referee_A_r2.out) §5).
 - Stability has no $1/\varepsilon$, but it pays $1/\gamma^2$. It says nothing when the population run has ties ($\gamma=0$) or zero utilities.
 - **The constants are poor.** For par2 with XOR in $G$: $\gamma=1/2$, $R=\lambda_*=1$ and $M_0=2205$, so $\epsilon=0.10355$ and the theorem requires $n\ge2254$ ([`checks/A_r2_checks.out`](checks/A_r2_checks.out) §2). The toy run recovers par2 exactly at $n=64$. In a Monte Carlo of the greedy first step (Numerical), $\mathrm{XOR}(x_1,x_2)$ is an argmax in every run at $b=16$, with fresh or reused batches (§8 of the same file). That is guaranteed by Proposition A4.1, since $g=y$ on the batch attains the largest possible $|U|=\mathrm{Var}_b(y)$, so it carries no evidence. The informative frequency is that of a *unique* argmax, since tied gates equal to $\pm y$ on the batch can be picked instead. At $b=16$ it is 163/200 (reuse, $n=64$), 180/200 (reuse, $n=256$) and 375/400 (fresh), about 81–94%. At $b=64$ it is 200/200 (reuse, $n=1024$) and 400/400 (fresh) ([`checks/referee_A_r2.out`](checks/referee_A_r2.out) §7).
 - **Ties** of the maj3 type, where a symmetric set of candidates is jointly added, need a version in which the gap separates "this cluster" from the rest. That extension is not written out here.
@@ -656,7 +656,7 @@ The exact population computation confirms item 2 on $\{-1,1\}^4$ and on $\{-1,1\
 
 This is the circuit-leap obstruction of the [README](../README.md) (§3) in its simplest form.
 - In real GD the fan-in-$s$ search costs about $d^{s-1}$ time, as the SQ lower bounds require. The discrete model represents that cost only if the library contains fan-in-$s$ gates with correspondingly larger thresholds.
-- The par3 runs in Section 5 show the predicted behaviour: nothing until $t/\Theta=5$–$20$, depending on $n$; then one or more noise gates, with test error $0.50$.
+- The par3 runs in Section 5 show the predicted behaviour: nothing until $t/\Theta=2.65$–$20.0$ ($n=64$–$4096$); then one or more noise gates, with test error $0.50$.
 - Theorem A1 remains valid there: it gives $0.52$–$0.95$, which certifies nothing.
 
 **What this does to the bounds.**

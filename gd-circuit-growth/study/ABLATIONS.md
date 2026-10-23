@@ -21,8 +21,11 @@ variants). Readings of mechanism are labelled **Heuristic**.
      2-fold.
 
    On held-out targets, mean |log₂ n\* ratio| is 0.25–0.42 for these variants, against 0.27–0.33 for the calibrated
-   model under three random streams. The n\* Spearman is ≥ 0.93, the curve MAE ≤ 0.02 and the time Spearman 0.80–0.88
-   for all of them. The same holds at d = 15.
+   model under three random streams (0.23–0.33 under six; Verification). The n\* Spearman is ≥ 0.93, the curve MAE
+   ≤ 0.02 and the time Spearman 0.80–0.88 for all of them. The same holds at d = 15.
+
+   This is a held-out statement. On the calibration targets, `P1` and `iters1` (0.49 each) and `greedy` (0.40) sit
+   0.1–0.2 above the six-stream band of 0.23–0.30, mostly through x₁…x₄ (Verification).
 2. **n\* is set by sampling noise in the direction search.**
    - **Noise-free search:** the target directions v\* and their order-k utilities come from a large fresh sample
      (`oracle-align`). Then n\* collapses to 16–87 on every target. On held-out targets |log₂ ratio| is 4.6, as far from
@@ -72,6 +75,10 @@ variants). Readings of mechanism are labelled **Heuristic**.
 6. **Time to generalise.** Its *ordering* survives every ablation, including noise-free search (time Spearman
    0.75–0.88 held-out, 0.82–0.94 at n ≥ 4096). So the ordering is set by the true features' utilities, not by noise or
    by the race.
+
+   (Verification.) This ordering is a ranking of *targets*. Within a target, the race clock and the networks' steps
+   are uncorrelated: the mean within-target Spearman is −0.07 on held-out targets. A per-target constant, the race's
+   gate count at fit, already scores 0.75.
 
    Its *magnitudes* are matched only loosely by every variant:
    - **High-order parities.** The alignment law's leap factor makes them too slow. At n = 16384, x₁…x₄ takes 8–64× as
@@ -209,7 +216,9 @@ The reference rows are:
 
 **How to read it.**
 - **Noise band.** `base`, `reseed1` and `reseed2` differ only in the model's own random stream. Their spread (held-out
-  |log₂ ratio| 0.27–0.33, time Spearman 0.83–0.85) is the noise band for every "no change" statement.
+  |log₂ ratio| 0.27–0.33, time Spearman 0.83–0.85) is the noise band for every "no change" statement. Three more
+  streams, run in verification, widen it to 0.23–0.33 and 0.82–0.85 (calibration targets 0.23–0.30; all 21 targets
+  0.24–0.29).
 - **Within about 0.1 of the band:** every race-dynamics ablation, every constant, `nostop` and `depth1`.
 - **Outside the band:** only these leave it:
   - the noise-free search (`oracle-*`);
@@ -220,7 +229,8 @@ The reference rows are:
 ## 3. Sample complexity per target and per family
 
 n\* per target. The *base range* column is the minimum to maximum over the calibrated model's three random streams;
-for the parities it spans up to 0.6 log₂. A star marks the held-out targets.
+for the parities it spans up to 0.6 log₂ (0.7 over six streams: x₁x₂x₃ 494–792, x₁…x₄ 1955–3037; Verification). A star
+marks the held-out targets.
 
 | fn | NN | base range | base | greedy | free | reset-all | oracle-align | indep-search | indep-resample | K2 | K3 | depth1 | thr | Q1 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -378,8 +388,8 @@ Network n\* at d = 15 and 60 are from [`DSCALE.md`](DSCALE.md) (2 seeds). Race n
   3-bit parity, and only the race tracks the 4-bit one.
 - **One-constant fit:** the constant 1.5 was read off the same networks.
 
-**Mechanism (Heuristic).** At these sizes the order-k noise maximum falls faster than n^(−1/2), about n^(−0.6) for
-k = 4 at d = 30. The number of order-k directions, C(d,k), is larger than n here. So the empirical order-k tensor can
+**Mechanism (Heuristic).** At these sizes the order-k noise maximum falls faster than n^(−1/2), about n^(−0.7) for
+k = 4 at d = 30 (local slopes −0.65 to −0.88 between n = 512 and 8192; corrected in verification from n^(−0.6)). The number of order-k directions, C(d,k), is larger than n here. So the empirical order-k tensor can
 be "fitted" by spurious directions, much as a regression with more features than samples can.
 
 ### 4.3 Dense leap-1 targets: the noise in one Hebbian direction (Numerical)
@@ -484,6 +494,13 @@ same for every variant. That includes the noise-free search and the greedy clock
 So the ordering is a property of the targets' feature structure under the gate library. It reflects how many stages
 are needed and how small their utilities are. It is not specific to the race mechanics or to the noise.
 
+(Verification.) The time Spearman is a between-target statistic:
+- Within a target, the networks' steps to generalise sit on the checkpoint grid and are nearly constant above n\*.
+  The mean within-target Spearman with the race clock is −0.07 (held-out targets) and 0.02 (all 21).
+- Per-target constants do about as well as the clock. On held-out targets, the race's gate count at fit scores
+  0.75 and the race's own n\* 0.66, against 0.83 for the race clock. An oracle, the networks' median steps per
+  target, scores 0.97.
+
 The time measure was also tried both ways, as the clock at training error ≤ 0.1 (used throughout) and as the clock
 at test error ≤ 0.1 along the trajectory. This changes the calibrated model's held-out time Spearman only from 0.83 to
 0.78 (`ablation_diagnostics.py gentime`).
@@ -551,6 +568,11 @@ Time to generalise far above n\* (median over n ≥ 4096), ratio d = 30 / d = 15
 - **Too-weak d-dependence for parities.** Every variant's parity n\* grows too slowly with d. From 15 to 30 the
   parity exponents are 0.9–1.3 for x₁x₂x₃ and 1.4–1.8 for x₁…x₄, against 1.8 and 2.4 for the networks; the
   noise-floor rule of §4.2 gives 1.6 and 2.0.
+  - (Verification.) `base` is at the low end of its own noise here. Over 4 random streams at d = 15 and 6 at d = 30,
+    the calibrated model's exponents are 1.3 and 1.8 (geometric means of n\*). Single streams range 0.9–1.7 and
+    1.4–2.3.
+  - So the gap to the networks is about 0.5–0.6 in the exponent, no larger than a single stream's spread. The
+    networks' own exponent rests on 2 seeds at d = 15.
 - **Times.** The networks need about twice as many steps at d = 30 as at d = 15, on six of the seven targets. The
   models' clocks are nearly d-independent: Σ θ/U_g does not involve d at all. The one exception is the alignment law,
   whose leap factor doubles the time of x₁…x₄.
@@ -619,6 +641,10 @@ the two being misled by the *same spurious correlations of the same training sam
   networks' individual mistakes near n\* therefore look more kernel-like than circuit-like, even though their learning
   curves are circuit-like.
 - **No ablation closes that gap.**
+- **Different-sample floor (verification).** Each learner was also scored against networks trained on another
+  seed's sample. The scores fall to about 0.2 for all of them: race 0.21, kernel 0.20, a second Adam network 0.20,
+  SGD 0.18, `indep-search` 0.17. So about 0.2 of every score is shared by any two learners of the target. The
+  same-sample excess on top of that is about 0.3 for the race, 0.5 for the kernel and 0.5 for SGD.
 
 ## 7. Family by family
 

@@ -72,8 +72,9 @@ def agree():
             if not set(fns) <= set(r["fns"]):
                 continue
             same = C.compare(r, "adam", fns=fns, verbose=False)["example_agreement_score"] if not nm.startswith("nn-adam") else 1.0
-            d = [C.compare(_shift(r, k), "adam", fns=fns, verbose=False)["example_agreement_score"] for k in (1, 2)]
-            print(f"  {nm:22s} {split:8s} same sample {same:.2f}   different sample {d[0]:.2f} / {d[1]:.2f}")
+            S = r["pred"][fns[0]].shape[1]          # number of seeds; a roll by a multiple of S is no shift
+            d = [C.compare(_shift(r, k), "adam", fns=fns, verbose=False)["example_agreement_score"] for k in (1, 2) if k % S]
+            print(f"  {nm:22s} {split:8s} same sample {same:.2f}   different sample " + " / ".join(f"{x:.2f}" for x in d))
 
 
 def dense():
