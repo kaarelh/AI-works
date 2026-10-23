@@ -209,18 +209,25 @@ def n_candidates(k, j, d, nact, f):
 
 # ---------------------------------------------------------------- one stage of search
 
-def search(Ulit, Mlit, r, active, gate_wires, c, a, law, fmax=4, n_eff=None, d_count=None):
-    """Score every depth-1 (literal subsets, f = 2..fmax) and depth-2 (pool subsets with >= 1 gate wire, f = 2..3)
-    candidate on residual r.  Returns the best candidate by z^2 = n rho^2 / N(k) as a dict, or None.
+def search(Ulit, Mlit, r, active, gate_wires, c, a, law, fmax=4, n_eff=None, d_count=None, dense2=True):
+    """Score every candidate gate on residual r and return the best by z^2 = n rho^2 / N(k) (a dict), or None.
+      * pool candidates (k = 0): subsets of the active pool (active literals + depth-1 gate wires) of fan-in 2-3, and
+        fan-in-4 subsets of active literals; literal-only subsets are depth 1, subsets with a gate wire are depth 2;
+      * the order-2 spectral candidate (dense, k = 2, see below);
+      * depth-1 literal subsets of fan-in 2..fmax reading k >= 1 inactive literals (searched only while a k >= 1
+        candidate can still beat the best z^2 found so far: rho <= 1, so z^2 <= n / N(k)).
     Ulit (n, d) literals, Mlit(order) -> plain literal moments up to that order, active (d,) bool,
-    gate_wires (n, G) +-1 wires of depth-1 gates.  d_count: the d used in the noise law (defaults to Ulit.shape[1])."""
+    gate_wires (n, G) +-1 wires of depth-1 gates.  d_count: the d of the noise law (default Ulit.shape[1]); n_eff: the n
+    in z^2 (default the number of rows; the analytic predictor passes the cube of relevant variables and a hypothetical n)."""
     n_rows, d = Ulit.shape
-    n = n_eff or n_rows                     # sample size in the significance (n_eff: population mode, data = the cube)
+    n = n_eff or n_rows
     dn = d_count or d
-    sr2 = float(np.mean((r - r.mean()) ** 2))
+    rc = r - r.mean()
+    sr2 = float(np.mean(rc ** 2))
     if sr2 < 1e-12:
         return None
-    nact = int(active.sum())
+    act = np.where(active)[0]
+    nact = len(act)
     best = None
 
     def consider(z2, info):
@@ -228,49 +235,93 @@ def search(Ulit, Mlit, r, active, gate_wires, c, a, law, fmax=4, n_eff=None, d_c
         if best is None or z2 > best["z2"]:
             best = dict(info, z2=z2)
 
-    # ----- depth 1: literal subsets.  Order-4 moments are computed only when a fan-in-4 candidate could still win.
+    rf = r.astype(F32)
+    # ----- pool candidates (k = 0)
+    G = gate_wires.shape[1]
+    if nact + G >= 2:
+        pool = np.concatenate([Ulit[:, act], gate_wires], 1)
+        A = pool.shape[1]
+        mo = 4 if nact >= 4 and fmax >= 4 else 3
+        Mp = moments(pool[:, :nact], np.ones(n_rows, F32), mo) if mo == 4 else None
+        Rp4 = moments(pool[:, :nact], rf, mo) if mo == 4 else None
+        Mp3 = moments(pool, np.ones(n_rows, F32), 3); Rp3 = moments(pool, rf, 3)
+        for f in (2, 3, 4):
+            if f == 4:
+                if Mp is None:
+                    continue
+                subs, idx = _subset_index(nact, 4)
+                M_, R_ = Mp, Rp4
+            else:
+                if A < f:
+                    continue
+                subs, idx = _subset_index(A, f)
+                M_, R_ = Mp3, Rp3
+            rho2, si, bb = score_subsets(M_[idx], R_[idx], f, sr2)
+            has_gate = (subs >= nact).any(1)
+            for dep in (1, 2):
+                sel = np.where(has_gate == (dep == 2))[0]
+                if len(sel) == 0:
+                    continue
+                if law == "occam":
+                    Nf = noise_count(0, dn, a, A, law, len(sel) * 2 ** f * (f + 1))
+                else:
+                    Nf = noise_count(0, dn, a, nact if dep == 1 else A, law)
+                i = sel[np.argmax(rho2[sel])]
+                info = dict(f=f, k=0, sign=_coef_mats(f)[1][si[i]], b=float(bb[i]), rho2=float(rho2[i]), N=Nf)
+                if dep == 1:
+                    info.update(depth=1, S=act[subs[i]])
+                else:
+                    info.update(depth=2, S=subs[i], pool_lits=act)
+                consider(n * rho2[i] / Nf, info)
+    # ----- the order-2 (spectral) unit: the extreme eigenvectors of the residual-weighted literal covariance
+    #       M_ij = E[r x_i x_j] (i != j), rounded to {-1, 0, 1} (keep |v_i| >= max|v| / 2); one dense candidate per sign of
+    #       the eigenvalue, any fan-in.  It is an order-2 search over all d literals, so its noise count is N(2) = d.
+    N2 = noise_count(2, dn, a, nact, law, n_candidates(2, 0, dn, nact, 2))
     Rcache = {}
+    if dense2 and d >= 3 and (best is None or n / N2 > best["z2"]):
+        Rcache[3] = moments(Ulit, rf, 3)
+        o2 = 1 + d
+        pa, pb = _pairs(d)
+        Mm = np.zeros((d, d)); Mm[pa, pb] = Rcache[3][o2:o2 + len(pa)]; Mm += Mm.T
+        lam, vec = np.linalg.eigh(Mm)
+        for j in (0, d - 1):
+            v = vec[:, j]
+            S = np.where(np.abs(v) >= 0.5 * np.abs(v).max())[0]
+            if len(S) < 3:
+                continue
+            f = len(S)
+            for sg in (1.0, -1.0):
+                w = sg * np.sign(v[S])
+                s = Ulit[:, S].astype(np.float64) @ w
+                for b in _thresholds(f):
+                    g = np.maximum(s - b, 0.0)
+                    vg = g.var()
+                    if vg < 1e-9:
+                        continue
+                    rho2 = float(np.mean(rc * (g - g.mean())) ** 2 / vg / sr2)
+                    consider(n * rho2 / N2, dict(depth=1, f=f, k=2, S=S, sign=w, b=float(b), rho2=rho2, N=N2, dense=True))
+    # ----- depth-1 literal subsets with k >= 1 new inputs
     for f in range(2, fmax + 1):
-        # upper bound on z^2 for this fan-in: rho <= 1 and the smallest N among the k's possible for subsets of size f
-        kmin = max(0, f - nact)
-        Nmin = min(noise_count(k, dn, a, nact, law, n_candidates(k, f - k, dn, nact, f)) for k in range(kmin, f + 1))
-        if best is not None and n / Nmin <= best["z2"]:
+        ks = [k for k in range(1, f + 1) if f - k <= nact and k <= d - nact]
+        Nk = {k: noise_count(k, dn, a, nact, law, n_candidates(k, f - k, dn, nact, f)) for k in ks}
+        ks = [k for k in ks if best is None or n / Nk[k] > best["z2"]]
+        if not ks:
             continue
         mo = 3 if f <= 3 else 4
         if mo not in Rcache:
-            Rcache[mo] = moments(Ulit, r.astype(F32), mo)
-        Rm = Rcache[mo]
-        Mlit_f = Mlit(mo)
+            Rcache[mo] = moments(Ulit, rf, mo)
         subs, idx = _subset_index(d, f)
-        rho2, si, bb = score_subsets(Mlit_f[idx], Rm[idx], f, sr2)
         kk = (~active[subs]).sum(1)
-        for k in np.unique(kk):
+        keep = np.isin(kk, ks)
+        subs, idx, kk = subs[keep], idx[keep], kk[keep]
+        rho2, si, bb = score_subsets(Mlit(mo)[idx], Rcache[mo][idx], f, sr2)
+        for k in ks:
             sel = np.where(kk == k)[0]
-            N = noise_count(int(k), dn, a, nact, law, n_candidates(int(k), f - int(k), dn, nact, f))
+            if len(sel) == 0:
+                continue
             i = sel[np.argmax(rho2[sel])]
-            consider(n * rho2[i] / N, dict(depth=1, f=f, k=int(k), S=subs[i], sign=_coef_mats(f)[1][si[i]],
-                                           b=float(bb[i]), rho2=float(rho2[i]), N=N))
-    # ----- depth 2: pool = active literals + depth-1 gate wires, subsets with >= 1 gate wire, f <= 3, k = 0
-    G = gate_wires.shape[1]
-    if G > 0:
-        act = np.where(active)[0]
-        pool = np.concatenate([Ulit[:, act], gate_wires], 1)
-        A = pool.shape[1]
-        N0 = noise_count(0, dn, a, A, law, None)
-        Mp = moments(pool, np.ones(n_rows, F32), 3); Rp = moments(pool, r.astype(F32), 3)
-        for f in (2, 3):
-            if A < f:
-                continue
-            subs, idx = _subset_index(A, f)
-            keep = (subs >= len(act)).any(1)
-            subs, idx = subs[keep], idx[keep]
-            if len(subs) == 0:
-                continue
-            rho2, si, bb = score_subsets(Mp[idx], Rp[idx], f, sr2)
-            Nf = N0 if law != "occam" else noise_count(0, dn, a, A, law, len(subs) * 2 ** f * (f + 1))
-            i = int(np.argmax(rho2))
-            consider(n * rho2[i] / Nf, dict(depth=2, f=f, k=0, S=subs[i], pool_lits=act, sign=_coef_mats(f)[1][si[i]],
-                                           b=float(bb[i]), rho2=float(rho2[i]), N=Nf))
+            consider(n * rho2[i] / Nk[k], dict(depth=1, f=f, k=int(k), S=subs[i], sign=_coef_mats(f)[1][si[i]],
+                                               b=float(bb[i]), rho2=float(rho2[i]), N=Nk[k]))
     return best
 
 
@@ -290,8 +341,9 @@ def _gate_out(Ulit, gate_wires, g):
 class Minimal:
     name = "minimal"
 
-    def __init__(self, c=4.0, a=16.0, law="search", fmax=4, gmax=48, ridge=1e-6, verbose=False):
+    def __init__(self, c=4.0, a=16.0, law="search", fmax=4, gmax=48, ridge=1e-6, dense2=True, verbose=False):
         self.c, self.a, self.law, self.fmax, self.gmax, self.ridge = float(c), float(a), law, int(fmax), int(gmax), ridge
+        self.dense2 = dense2
         self.verbose = verbose
 
     def fit(self, X, y, rng=None):
@@ -341,7 +393,7 @@ class Minimal:
             rho_lit2 = ((X.T @ (r - r.mean()).astype(F32)) / n) ** 2 / sr2
             N1 = noise_count(1, d, a, int(active.sum()), law, n_candidates(1, 0, d, int(active.sum()), 1))
             active |= n * rho_lit2 / N1 > c
-            best = search(X, Mlit, r, active, GW, c, a, law, self.fmax)
+            best = search(X, Mlit, r, active, GW, c, a, law, self.fmax, dense2=self.dense2)
             if best is None or best["z2"] <= c:
                 break
             g = dict(best, nwires=GW.shape[1])

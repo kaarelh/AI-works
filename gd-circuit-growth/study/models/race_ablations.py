@@ -24,6 +24,9 @@ Ablation options (defaults = the calibrated race model):
                    threshold b and utility U_g still from the training set.
           'search' with an oracle: v*, U_k, b and U_g all from the fresh sample (only the readout and the stopping
                    rule see the training set).
+  resample False   with an oracle: True draws a new search sample before every firing (its noise is then not
+                   persistent: a spurious direction of one search sample cannot be selected over and over).
+  reseed  0       (default).  k > 0: an independent internal random stream (initial unit directions), same model.
 Constructor arguments of Race (theta, lam, Q, K, P, iters, gmax, depth, gate, stop_mse) are passed through.
 
 fit() additionally returns 'supports': for each gate the set of input coordinates it depends on (through depth-1
@@ -37,8 +40,9 @@ from models.race import Race, _order_k, _align_time, _overlap_after, _best_thres
 
 class RaceAblation(Race):
     def __init__(self, align="law", reset=None, greedy=False, stop="interp", oracle=None, noise="align",
-                 name=None, **kw):
+                 reseed=0, resample=False, name=None, **kw):
         super().__init__(**kw)
+        self.reseed, self.resample = int(reseed), bool(resample)
         assert align in ("law", "free", "free3", "flat") and reset in (None, "clock", "all")
         assert stop in ("interp", "none") and noise in ("align", "search")
         self.align, self.reset, self.greedy, self.stop, self.oracle, self.noise = align, reset, greedy, stop, oracle, noise
@@ -58,6 +62,8 @@ class RaceAblation(Race):
         return _overlap_after(k, lam, m, dt)
 
     def fit(self, X, y, rng):
+        if self.reseed:     # same model, independent internal random stream (measures the metrics' own noise)
+            rng = np.random.default_rng([self.reseed] + [int(v) for v in rng.integers(0, 2 ** 31, 2)])
         X = np.asarray(X, dtype=F32); y = np.asarray(y, dtype=np.float64)
         n, d = X.shape
         K, P, Q = self.K, self.P, self.Q
@@ -94,6 +100,17 @@ class RaceAblation(Race):
             if self.stop == "interp":
                 if (err == 0) if self.stop_mse is None else (np.mean(r64 ** 2) < self.stop_mse):
                     break
+            if orc and self.resample and gates:     # a new independent search sample for every firing
+                Xf, yf = self.oracle(np.random.default_rng([4243, n, self._nfit, len(gates)]), n)
+                Xf = np.asarray(Xf, dtype=F32); yf = np.asarray(yf, dtype=np.float64); nf = len(Xf)
+                Uwf = np.zeros((nf, d + self.gmax), dtype=F32); Uwf[:, :d] = Xf; colsf = []
+                for (gw_, gb_, gwire_, _, gsd_, gmu_) in gates:
+                    sgf = np.rint(Uwf[:, :len(gw_)] @ gw_.astype(F32)).astype(np.float64)
+                    indf = (sgf > gb_).astype(np.float64)
+                    gf = indf if self.gate == 'thr' else np.maximum(sgf - gb_, 0.0)
+                    if gwire_ is not None:
+                        Uwf[:, gwire_] = 2 * indf - 1
+                    colsf.append((gf - gmu_) / gsd_)
             r = r64.astype(F32); rbar = float(r.mean())
             U = Uw[:, :D]
             h = (U.T @ r) * F32(1.0 / n)
@@ -145,6 +162,11 @@ class RaceAblation(Race):
                     Ug, b = best_gate(np.rint(s).astype(np.int64), Ug_r)
                     if b is None or Ug <= 1e-9:
                         continue
+                    if orc and self.noise == "search":   # threshold chosen on the fresh sample: the gate must
+                        st = np.rint(U[:, :Dk] @ w.astype(F32))   # still vary on the training set (readout column)
+                        gt = (st > b) if self.gate == 'thr' else np.maximum(st - b, 0.0)
+                        if np.std(gt) <= 1e-9:
+                            continue
                     Tal = self._tal(k, lamv[p], mv[p])
                     if self.greedy:
                         T = self.theta / Ug

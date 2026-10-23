@@ -200,13 +200,19 @@ def run_online(name, opt, lr, seeds, steps_max, out_dir, chunk_steps=500):
 
     @jax.jit
     def run_chunk(state, Xc, yc):  # Xc: (S, steps, B, D)
+        # also returns the prequential mistakes: errors on each fresh batch made BEFORE the update on it
         def one(st, Xs, ys):
-            return jax.lax.fori_loop(0, Xs.shape[0], lambda i, st: step(st, Xs[i], ys[i]), st)
+            def body(i, carry):
+                st, mis = carry
+                f = forward(st[0], Xs[i])[0]
+                return step(st, Xs[i], ys[i]), mis + jnp.sum(jnp.sign(f) != ys[i])
+            return jax.lax.fori_loop(0, Xs.shape[0], body, (st, jnp.float32(0)))
         return jax.vmap(one)(state, Xc, yc)
 
     eval_all = jax.jit(jax.vmap(make_eval(Xte, yte, chi, Xflip)))
     rng = np.random.default_rng([_fn_seed(name), 777])
     rec = {k: [] for k in ["step", "test_loss", "test_err", "coef", "infl_irr", "pr1", "pr2", "dW1", "path1"]}
+    preq, preq_steps = [], []   # prequential mistakes per chunk (per seed) and the step at the end of each chunk
     grid = sorted(set([0] + [c for c in CKPTS if c <= steps_max] + list(range(chunk_steps, steps_max + 1, chunk_steps))))
     done = 0
     for c in grid:
@@ -214,7 +220,8 @@ def run_online(name, opt, lr, seeds, steps_max, out_dir, chunk_steps=500):
             k = min(chunk_steps, c - done)
             Xc = rng.choice(np.array([-1.0, 1.0], dtype=np.float32), size=(S, k, B, D))
             yc = SUITE[name]["fn"](Xc.reshape(-1, D)).reshape(S, k, B).astype(np.float32)
-            state = run_chunk(state, jnp.array(Xc), jnp.array(yc)); done += k
+            state, mis = run_chunk(state, jnp.array(Xc), jnp.array(yc)); done += k
+            preq.append(np.array(mis)); preq_steps.append(done)
         m = eval_all(state[0], p0)
         rec["step"].append(c)
         for kk in rec:
@@ -224,7 +231,8 @@ def run_online(name, opt, lr, seeds, steps_max, out_dir, chunk_steps=500):
             print(f"  [online {name}/{opt}] step {c:6d} test_err {np.round(np.array(m['test_err']), 3)} ({time.time()-t0:.0f}s)", flush=True)
     os.makedirs(out_dir, exist_ok=True)
     arrays = {k: np.array(v) for k, v in rec.items()}
-    arrays.update(seeds=np.array(seeds), sets=np.array(json.dumps(sets)), lr=lr, batch=B)
+    arrays.update(seeds=np.array(seeds), sets=np.array(json.dumps(sets)), lr=lr, batch=B,
+                  preq_mistakes=np.array(preq), preq_steps=np.array(preq_steps))
     np.savez_compressed(os.path.join(out_dir, f"online_{opt}_{name}.npz"), **arrays)
     return arrays
 

@@ -21,6 +21,8 @@ N_ORACLE = int(os.environ.get("N_ORACLE", 16384))
 
 ABLATIONS = {
     "base":       dict(),
+    "reseed1":    dict(reseed=1),          # the calibrated model with another internal random stream
+    "reseed2":    dict(reseed=2),
     "free":       dict(align="free"),
     "free3":      dict(align="free3"),
     "flat":       dict(align="flat"),
@@ -51,6 +53,9 @@ ABLATIONS = {
     # but the noise is no longer correlated with the training labels the readout has to fit
     "indep-search": dict(oracle=0, noise="search"),
     "indep-align":  dict(oracle=0, noise="align"),
+    # as indep-search / oracle-search, but a new search sample is drawn before every firing
+    "indep-resample":  dict(oracle=0, noise="search", resample=True),
+    "oracle-resample": dict(oracle=True, noise="search", resample=True),
 }
 
 

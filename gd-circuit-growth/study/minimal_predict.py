@@ -12,13 +12,11 @@ predict_curve(fn, c, a, d)   the minimal model's noiseless run at each n on a fi
       with population correlations rho and the model's noise law N(k); least-squares readout in population.
     Returns the predicted test-error curve and n* (the n at which it crosses 0.1, log-interpolated as in common.py).
 
-bottleneck(fn, c, a, d)      the closed form: along the n -> infinity greedy path (all literals with nonzero label
-    correlation active), every gate i has a threshold  n_i = c N_i / rho_i^2  (N_i = N(k_i) with k_i counted on the
-    *large-n* path, i.e. leaps through literals that the order-1 unit already found are k = 0 moves, but literals the
-    order-1 unit only finds at n > n_i do not count as found), and
-        n*_closed = max( n_Hebb , c * max_{i <= i*} N_i / rho_i^2 )
-    where i* is the first stage at which the population error is <= 0.1 and n_Hebb solves the Hebbian noise equation
-    E_x Phi(-y F_{i*}(x) / sigma_n) = 0.1 for the readout F_{i*} of that stage.
+bottleneck(fn, c, a, d)      the closed form: on the greedy path at n just above the predicted n*, with i* the first
+    stage whose population error is <= 0.1,
+        n*_closed = max( n_Hebb , c * max_{i <= i*} N(k_i) / rho_i^2 ),
+    where n_Hebb solves the Hebbian noise equation E_x Phi(-y F_{i*}(x) / sigma_n) = 0.1 for the readout F_{i*} of that
+    stage.  It reproduces the curve's n* (up to the grid) and names the binding term: the Hebbian noise or one move.
 """
 import os, sys, math, itertools
 import numpy as np
@@ -61,7 +59,7 @@ def _ls(F, y):
     return w, F1 @ w
 
 
-def population_run(Xr, y, n, c, a, d, law="search", fmax=4, gmax=48):
+def population_run(Xr, y, n, c, a, d, law="search", fmax=4, gmax=48, dense2=True):
     """The minimal model's noiseless run at sample size n.  Returns dict(stages, F (cube values), a_h, hnorm2, vy)."""
     m, r_ = Xr.shape
     vy = float(np.var(y))
@@ -99,7 +97,7 @@ def population_run(Xr, y, n, c, a, d, law="search", fmax=4, gmax=48):
             break
         rho_l2 = ((Xs.T @ (r - r.mean())) / m) ** 2 / sr2
         active |= n * rho_l2 / N1 > c
-        best = search(Xr, Mlit, r, active, GW, c, a, law, fmax, n_eff=n, d_count=d)
+        best = search(Xr, Mlit, r, active, GW, c, a, law, fmax, n_eff=n, d_count=d, dense2=dense2)
         if best is None or best["z2"] <= c:
             break
         g = dict(best, nwires=GW.shape[1])
@@ -114,7 +112,7 @@ def population_run(Xr, y, n, c, a, d, law="search", fmax=4, gmax=48):
         w, F = refit()
         err = float(np.mean(np.where(F > 0, 1.0, -1.0) != y))
         stages.append(dict(depth=g["depth"], f=g["f"], k=g["k"], rho2=g["rho2"], N=g["N"], z2=g["z2"],
-                           n_thr=c * g["N"] / g["rho2"], err=err))
+                           n_thr=c * g["N"] / g["rho2"], err=err, dense=bool(g.get("dense", False))))
     a_h = float(w[1]) if hcol is not None else 0.0
     return dict(stages=stages, F=F, a_h=a_h, hnorm2=hn2, vy=vy)
 
@@ -139,23 +137,47 @@ def _crossing(ns, err, thr=0.1):
     return np.inf
 
 
-def predict_curve(fn, c, a, d=30, law="search", ns=None, fmax=4, suite=None):
+def predict_curve(fn, c, a, d=30, law="search", ns=None, fmax=4, suite=None, first_cross=False, dense2=True):
+    """Predicted test-error curve on a grid of n (log2 step 1/8 from 2^3 to 2^17 by default) and its 0.1 crossing.
+    first_cross: scan upward in steps of 1/4 and stop after the first crossing (refined to 1/16) -- for calibration."""
     Xr, y, rel = relevant_cube(fn, d, suite)
+    run = lambda n: noisy_error(population_run(Xr, y, n, c, a, d, law, fmax, dense2=dense2), y, n, d)
+    if first_cross:
+        prev_n, prev_e = None, None
+        for l in np.arange(3, 17.01, 0.25):
+            e = run(2.0 ** l)
+            if e <= 0.1:
+                if prev_n is None:
+                    return dict(nstar=2.0 ** l, rel=rel)
+                grid = 2.0 ** np.arange(l - 0.25, l + 0.001, 0.0625)
+                errs = [prev_e] + [run(n) for n in grid[1:]]
+                return dict(nstar=_crossing(grid, np.array(errs)), rel=rel)
+            prev_n, prev_e = 2.0 ** l, e
+        return dict(nstar=np.inf, rel=rel)
     ns = np.array(ns if ns is not None else 2.0 ** np.arange(3, 17.01, 0.125))
-    err = np.array([noisy_error(population_run(Xr, y, n, c, a, d, law, fmax), y, n, d) for n in ns])
+    err = np.array([run(n) for n in ns])
     return dict(ns=ns, err=err, nstar=_crossing(ns, err), rel=rel)
 
 
-def bottleneck(fn, c, a, d=30, law="search", fmax=4, n_big=2.0 ** 24, suite=None):
-    """Closed-form n*: see module docstring.  Uses the greedy path at a very large n, where the moves' order and types are
-    fixed, then re-types each move's leap with the literals the order-1 unit has found by that move's own threshold."""
+def bottleneck(fn, c, a, d=30, law="search", fmax=4, suite=None, dense2=True):
+    """Closed-form decomposition of the predicted n*: on the greedy path at n just above the predicted n*, with
+    i* the first stage whose population error is <= 0.1,
+        n*_closed = max( n_Hebb , max_{i <= i*} c N(k_i) / rho_i^2 ),
+    n_Hebb solving E_x Phi(-y F_{i*}(x) / sigma_n) = 0.1 for the readout F_{i*} of that stage.  Returns the binding
+    term ('hebb' or the bottleneck move) so that every n* can be read as one explicit formula."""
+    p = predict_curve(fn, c, a, d, law, fmax=fmax, suite=suite, first_cross=True, dense2=dense2)
+    if not np.isfinite(p["nstar"]):
+        return dict(nstar=np.inf, n_hebb=np.inf, n_gate=np.inf, binding=None, stages=[], rel=p["rel"])
     Xr, y, rel = relevant_cube(fn, d, suite)
-    run = population_run(Xr, y, n_big, c, a, d, law, fmax)
+    n0 = 1.02 * p["nstar"]
+    run = population_run(Xr, y, n0, c, a, d, law, fmax, dense2=dense2)
     st = run["stages"]
-    i_star = next((i for i, s in enumerate(st) if s["err"] <= 0.1), None)
-    base_err = float(np.mean(np.where(run["F"] > 0, 1.0, -1.0) != y)) if not st else None
-    # Hebbian requirement for the readout at stage i*: rerun the population path at n_big truncated at i*
-    run_t = population_run(Xr, y, n_big, c, a, d, law, fmax, gmax=(i_star + 1) if i_star is not None else 0)
+    base = population_run(Xr, y, n0, c, a, d, law, fmax, gmax=0, dense2=dense2)
+    base_err = float(np.mean(np.where(base["F"] > 0, 1.0, -1.0) != y))
+    i_star = -1 if base_err <= 0.1 else next((i for i, s in enumerate(st) if s["err"] <= 0.1), None)
+    if i_star is None:
+        i_star = len(st) - 1
+    run_t = population_run(Xr, y, n0, c, a, d, law, fmax, gmax=i_star + 1, dense2=dense2)
     lo, hi = 1.0, 2.0 ** 30
     if noisy_error(run_t, y, hi, d) > 0.1:
         n_hebb = np.inf
@@ -163,11 +185,16 @@ def bottleneck(fn, c, a, d=30, law="search", fmax=4, n_big=2.0 ** 24, suite=None
         for _ in range(60):
             mid = math.sqrt(lo * hi)
             lo, hi = (mid, hi) if noisy_error(run_t, y, mid, d) > 0.1 else (lo, mid)
-        n_hebb = hi
-    n_gate = max([s["n_thr"] for s in st[:i_star + 1]], default=0.0) if i_star is not None else np.inf
-    if not st and base_err is not None and base_err <= 0.1:
-        n_gate = 0.0
-    return dict(nstar=max(n_hebb, n_gate), n_hebb=n_hebb, n_gate=n_gate, i_star=i_star, stages=st, rel=rel)
+        n_hebb = hi if run_t["a_h"] != 0.0 else 0.0
+    used = st[:i_star + 1]
+    n_gate = max([s["n_thr"] for s in used], default=0.0)
+    if n_hebb >= n_gate:
+        binding = "hebb"
+    else:
+        s = max(used, key=lambda s: s["n_thr"])
+        binding = f"{'spectral' if s.get('dense') else 'gate'} f={s['f']} k={s['k']} rho2={s['rho2']:.3f} N={s['N']:.1f}"
+    return dict(nstar=max(n_hebb, n_gate), n_curve=p["nstar"], n_hebb=n_hebb, n_gate=n_gate, binding=binding,
+                i_star=i_star, stages=used, rel=rel)
 
 
 if __name__ == "__main__":
@@ -176,6 +203,6 @@ if __name__ == "__main__":
     for fn in (sys.argv[3].split(",") if len(sys.argv) > 3 else C.FNS):
         p = predict_curve(fn, c, a, C.D)
         b = bottleneck(fn, c, a, C.D)
-        print(f"{fn:11s} n*_curve={p['nstar']:8.0f}  n*_closed={b['nstar']:8.0f} (hebb {b['n_hebb']:.0f}, gates {b['n_gate']:.0f}, "
-              f"i*={b['i_star']})  path: " + " ".join(f"[d{s['depth']}f{s['f']}k{s['k']} rho2={s['rho2']:.3f} N={s['N']:.0f} err={s['err']:.2f}]"
+        print(f"{fn:11s} n*_curve={p['nstar']:8.0f}  n*_closed={b['nstar']:8.0f} (hebb {b['n_hebb']:.0f}, gates {b['n_gate']:.0f}) "
+              f"binding: {b['binding']}  path: " + " ".join(f"[d{s['depth']}f{s['f']}k{s['k']} rho2={s['rho2']:.3f} N={s['N']:.0f} err={s['err']:.2f}]"
                                                     for s in b["stages"][:6]))

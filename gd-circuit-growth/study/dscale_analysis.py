@@ -74,6 +74,15 @@ def report():
         exps[fn] = ex
         g = lambda v: "–" if v is None else f"{v:.2f}"
         L.append(f"| {fn} | {cells[0]} | {g(ex['nn'])} | {cells[1]} | {g(ex['race'])} | {cells[2]} |")
+    L += ["", "Prediction error of the race model, |log2(n*_race / n*_NN)| per target (mean over the 7 targets in the last column):", "",
+          "| d | " + " | ".join(FNS) + " | mean |", "|---|" + "---|" * (len(FNS) + 1)]
+    for d in DS:
+        errs = []
+        for fn in FNS:
+            a, b = rows[d].get(fn, {}).get("race"), rows[d].get(fn, {}).get("nn")
+            errs.append(abs(np.log2(a / b)) if a and b and a < 1e98 and b < 1e98 else np.nan)
+        L.append(f"| {d}{' (calibration)' if d == 30 else ''} | " + " | ".join("–" if np.isnan(e) else f"{e:.2f}" for e in errs)
+                 + f" | {np.nanmean(errs):.2f} |")
     open(os.path.join(HERE, "DSCALE.md"), "w").write("\n".join(L) + "\n")
     json.dump(dict(rows=rows, exponents=exps), open(os.path.join(HERE, "dscale.json"), "w"), indent=1, default=float)
     fig, axs = plt.subplots(1, len(FNS), figsize=(2.6 * len(FNS), 2.6), sharey=True)
