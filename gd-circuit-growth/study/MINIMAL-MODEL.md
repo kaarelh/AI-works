@@ -9,36 +9,47 @@ how the networks' sample complexity changes with the input dimension $d$?
 
 ## Summary
 
-- **The minimal model** ([`models/minimal.py`](models/minimal.py)) is greedy stagewise regression over a finite library
-  of $\pm1$-weight ReLU gates of fan-in at most 4, with a dense Hebbian linear unit, one spectral (order-2) unit,
-  and one acceptance rule: accept the best gate if $n\rho^2>c\,N(k)$, where $\rho$ is its correlation with the residual
-  and $k$ the number of inputs it needs that are not yet in the circuit. Two constants, $c$ and $a$, fitted on CALIB.
-  {{SUMMARY_MODEL}}
-- **The noise law** (Heuristic, Section 2): $N(0)=$ the size of the active pool, and
-  $N(k)=d\max(1,d/a)^{k-2}$ for $k\ge1$. It comes from the race model's alignment law $\dot m=kUm^{k-1}$: a dormant unit
-  with initial overlap $m(0)^2=a/d$ escapes towards the target only if its order-$k$ signal beats the frozen sampling
-  noise of the gradient, $kU\,m(0)^{k-1}\gtrsim1/\sqrt n$. Its central claim is that sample cost grows polynomially in $d$
-  for every input that must be found at once, not logarithmically as an Occam (union-bound) threshold would give.
-- **The analytic predictor** ([`minimal_predict.py`](minimal_predict.py)), computed from the target alone on its
-  relevant variables, is the closed form
+- **The minimal model** ([`models/minimal.py`](models/minimal.py)) is greedy stagewise regression over a finite
+  library of $\pm1$-weight ReLU gates of fan-in at most 4, plus a dense Hebbian linear unit and one spectral (order-2)
+  unit. It has one acceptance rule: accept the best gate if $n\rho^2>c\,N(k)$, where $\rho$ is the gate's correlation
+  with the residual and $k$ is the number of inputs it needs that are not yet in the circuit. It has two constants,
+  $c=2.25$ and $a=18$, fitted on CALIB.
+- **The noise law** (Heuristic, Section 2) is $N(0)=$ the size of the active pool and $N(k)=d\max(1,d/a)^{k-2}$ for
+  $k\ge1$.
+  - It comes from the race model's alignment law $\dot m=kUm^{k-1}$: a dormant unit with initial overlap $m(0)^2=a/d$
+    escapes towards the target only if its order-$k$ signal beats the frozen sampling noise of the gradient,
+    $kU\,m(0)^{k-1}\gtrsim1/\sqrt n$.
+  - Its central claim: the sample cost grows polynomially in $d$ for every input that must be found at once, not
+    logarithmically as an Occam (union-bound) threshold would give.
+- **The analytic predictor** ([`minimal_predict.py`](minimal_predict.py)) is computed from the target alone, on its
+  relevant variables. It is the closed form
   $$n^*=\max\Bigl(n_{\rm Hebb},\ c\max_i\frac{N(k_i)}{\rho_i^2}\Bigr)$$
-  along the population greedy path, where $n_{\rm Hebb}$ is set by the Hebbian unit's sampling noise and involves no
-  fitted constant. Examples: $n^*(x_1)=1.64\,d$, $n^*(\mathrm{MAJ}_9)=9.52\,d$, and $n^*(\chi_k)=c\,(2^k-1)\,d\,(d/a)^{k-2}$ for $d\ge a$.
-  With $c=2.25$ and $a=18$ fitted on CALIB, it predicts the networks' $n^*$ on the 9 held-out targets with mean
-  $|\log_2|$ ratio **0.38** and Spearman **0.97**. The race model scores 0.33 and 1.00 but needs a full simulation.
+  along the population greedy path. Here $n_{\rm Hebb}$, set by the Hebbian unit's sampling noise, contains no fitted
+  constant. Examples: $n^*(x_1)=1.64\,d$, $n^*(\mathrm{MAJ}_9)=9.52\,d$, and $n^*(\chi_k)=c\,(2^k-1)\,d\,(d/a)^{k-2}$ for $d\ge a$.
+- **At $d=30$, on the 9 held-out targets** (mean $|\log_2|$ ratio of $n^*$ to the networks'; Spearman of $n^*$):
+
+  | | $n^*$ ratio | Spearman | success agreement | curve MAE | per-example agreement | time Spearman |
+  |---|---|---|---|---|---|---|
+  | analytic predictor | **0.38** | **0.97** | 0.96 | 0.03 | – | – |
+  | minimal model | 0.59 | 0.85 | 0.94 | 0.02 | 0.50 | 0.69 |
+  | race model | 0.33 | 1.00 | 0.95 | 0.01 | 0.50 | 0.83 |
+  | sswm | 1.36 | 0.60 | 0.86 | 0.06 | 0.26 | 0.72 |
+
+  The predictor is at the race's level without a simulation. The minimal model keeps the race's success agreement,
+  curves and per-example agreement, but on $n^*$ it is worse: it learns two held-out compositions 2.4–2.7× too early.
+  On CALIB the minimal model scores 0.36 and the race 0.24.
 - **$d$-dependence** (networks at $d=15,30,60$; constants unchanged):
-  - the predictor gets the sparse-parity exponents $1.00$ and $1.84$ for $k=2,3$ (networks $1.04$, $1.91$; race $0.93$, $0.94$),
-    and the values within 15% at every $d$; MAJ$_9$ is $\propto d$ (143/286/571 against 123/263/625);
+  - the predictor gets the sparse-parity exponents for $k=2,3$: $1.00$ and $1.84$, against the networks' $1.04$ and
+    $1.91$ (race $0.93$ and $0.94$), with values within 10% at every $d$; MAJ$_9$ is $\propto d$ (143/286/571 against 123/263/625);
   - it overpredicts the 4-sparse parity at $d=60$ by 1.6× (exponent 2.75 against 2.40);
   - it underpredicts compositions of low-leap moves (staircase, MAJ of pair parities, multiplexer), which scale as
     $d^{1.5}$–$d^{1.75}$ in the networks, by up to 2.1× at $d=60$;
-  - mean $|\log_2|$ error over the 7 targets: 0.30 / 0.30 / 0.52 at $d=15/30/60$ (race 0.45 / 0.29 / 0.43).
-  {{SUMMARY_DSCALE_MODEL}}
-- **The Occam law** $N(k)=\log M_k$ (the best-of-$M_k$ noise level) fits $d=30$ about as well (held-out 0.39), but it
-  predicts $n^*$ almost independent of $d$ (exponents 0.16–0.31) and fails the $d$-scaling (mean error 1.50 at
-  $d=60$). The networks' sample complexity is a **search cost**, not a description length.
-  {{SUMMARY_RANDOM}}
-
+  - mean $|\log_2|$ error over the 7 targets: predictor 0.30 / 0.30 / 0.52 at $d=15/30/60$, minimal model
+    0.30 / 0.36 / 0.52, race 0.45 / 0.29 / 0.43.
+- **The Occam law** $N(k)=\log M_k$ (the best-of-$M_k$ noise level) fits $d=30$ about as well (held-out 0.39). But it
+  predicts $n^*$ almost independent of $d$ (exponents 0.16–0.31) and fails the $d$-scaling (mean error 1.50 at $d=60$).
+  The networks' sample complexity is a **search cost**, not a description length.
+{{SUMMARY_RANDOM}}
 
 ## 1. The minimal model ([`models/minimal.py`](models/minimal.py))
 
@@ -163,11 +174,26 @@ Constants were fitted on CALIB only, by grid search on the CALIB mean $|\log_2|$
 
 **Held-out functions (primary):**
 
-{{SCOREBOARD_HELDOUT}}
+| model | mean abs log2 n* ratio | n* Spearman | success agreement | curve MAE | per-example agreement | time Spearman |
+|---|---|---|---|---|---|---|
+| **analytic predictor** (2 constants) | 0.38 | 0.97 | 0.96 | 0.03 | – | – |
+| **minimal model** (2 constants) | 0.59 | 0.85 | 0.94 | 0.02 | 0.50 | 0.69 |
+| race (3 constants) | 0.33 | 1.00 | 0.95 | 0.01 | 0.50 | 0.83 |
+| sswm | 1.36 | 0.60 | 0.86 | 0.06 | 0.26 | 0.72 |
+| NNGP kernel | 2.58 | 0.73 | 0.85 | 0.04 | 0.69 | 0.22 |
+| Occam over juntas | 4.61 | 0.50 | 0.62 | 0.13 | 0.20 | -0.07 |
+| *reference: networks trained with μP-SGD* | *0.43* | *0.95* | *0.94* | *0.01* | *0.71* | *0.83* |
 
 **Calibration functions:**
 
-{{SCOREBOARD_CALIB}}
+| model | mean abs log2 n* ratio | n* Spearman | success agreement | curve MAE | per-example agreement | time Spearman |
+|---|---|---|---|---|---|---|
+| **analytic predictor** (2 constants) | 0.37 | 0.94 | 0.95 | 0.03 | – | – |
+| **minimal model** (2 constants) | 0.36 | 0.98 | 0.98 | 0.02 | 0.52 | 0.86 |
+| race (3 constants) | 0.24 | 0.96 | 0.98 | 0.01 | 0.51 | 0.89 |
+| sswm | 1.11 | 0.91 | 0.92 | 0.05 | 0.25 | 0.49 |
+| NNGP kernel | 1.83 | 0.96 | 0.87 | 0.04 | 0.67 | 0.35 |
+| Occam over juntas | 3.98 | 0.73 | 0.65 | 0.12 | 0.17 | 0.27 |
 
 The predictor has no per-example predictions and no clock, so only its $n^*$ and curve columns are filled. Its
 learning curve is the noiseless-path error with the Hebbian noise term (dashed in
@@ -175,7 +201,29 @@ learning curve is the noiseless-path error with the Hebbian noise term (dashed i
 
 ### 4.2 Per-function $n^*$ and the binding term
 
-{{NSTAR_TABLE}}
+| target | split | network | analytic predictor | binding term at $n^*$ | minimal model | race | Occam-law predictor |
+|---|---|---|---|---|---|---|---|
+| dict | calib | 47 | 49 | Hebbian noise | 53 | 54 | 49 |
+| and3 | held-out | 94 | 90 | Hebbian noise | 130 | 108 | 90 |
+| maj3 | calib | 112 | 148 | Hebbian noise | 116 | 102 | 148 |
+| maj9 | held-out | 263 | 286 | Hebbian noise | 346 | 248 | 286 |
+| thr10 | calib | 563 | 390 | Hebbian noise | 322 | 578 | 390 |
+| par2 | calib | 200 | 204 | gate f=2 k=2 ρ²=0.333 N=30.0 | 223 | 180 | 233 |
+| par3 | held-out | 843 | 783 | gate f=3 k=3 ρ²=0.143 N=50.0 | 890 | 572 | 750 |
+| par4 | calib | 2728 | 2871 | gate f=4 k=4 ρ²=0.067 N=83.3 | 3565 | 1980 | 2030 |
+| stair5 | calib | 1514 | 1007 | gate f=4 k=2 ρ²=0.067 N=30.0 | 830 | 1766 | 963 |
+| majpar | held-out | 1380 | 817 | gate f=2 k=2 ρ²=0.083 N=30.0 | 892 | 1632 | 931 |
+| parmaj | calib | 743 | 465 | spectral f=6 k=2 ρ²=0.148 N=30.0 | 447 | 700 | 530 |
+| mux | held-out | 1156 | 851 | spectral f=4 k=2 ρ²=0.082 N=30.0 | 1179 | 1423 | 686 |
+| dnf3 | calib | 505 | 518 | spectral f=6 k=2 ρ²=0.128 N=30.0 | 446 | 564 | 502 |
+| dlist5 | held-out | 110 | 175 | Hebbian noise | 188 | 163 | 198 |
+| rmaj9 | calib | 2027 | 1084 | Hebbian noise | 1217 | 1895 | 3454 |
+| andxor | calib | 376 | 598 | gate f=2 k=2 ρ²=0.111 N=30.0 | 391 | 802 | 653 |
+| sparsepoly | held-out | 2205 | 1663 | gate f=4 k=3 ρ²=0.067 N=50.0 | 804 | 1761 | 1814 |
+| rand0 | calib | 222 | 233 | gate f=2 k=2 ρ²=0.300 N=30.0 | 228 | 194 | 265 |
+| rand1 | held-out | 463 | 482 | gate f=3 k=2 ρ²=0.214 N=30.0 | 384 | 558 | 441 |
+| rand2 | calib | 91 | 116 | Hebbian noise | 102 | 85 | 116 |
+| rand3 | held-out | 1016 | 575 | spectral f=4 k=2 ρ²=0.117 N=30.0 | 428 | 1393 | 651 |
 
 "Binding term" is the term that sets the predicted $n^*$ in the closed form of Section 3: the Hebbian noise, or the
 single move with the largest $c\,N(k)/\rho^2$ ($f$ = fan-in, $k$ = new inputs needed at once; "spectral" = the order-2
@@ -213,26 +261,66 @@ too narrow a range of $k$ and $d$. The $d$-scaling can.
 Networks at $d=15,30,60$ (2 seeds at 15 and 60, 3 at 30; [`DSCALE.md`](DSCALE.md)); predictor and minimal model with
 their $d=30$ CALIB constants unchanged; race from [`DSCALE.md`](DSCALE.md) (also unchanged). $n^*$ at $d=15/30/60$:
 
-{{DSCALE_TABLE}}
+| target | network | analytic predictor | minimal model | race | no leap cost ($a=\infty$) | Occam law |
+|---|---|---|---|---|---|---|
+| par2 | 100 / 200 / 427 | 102 / 204 / 409 | 111 / 223 / 446 | 93 / 180 / 335 | 116 / 233 / 465 | 196 / 233 / 277 |
+| par3 | 241 / 843 / 3410 | 243 / 783 / 3131 | 223 / 890 / 3562 | 346 / 572 / 1281 | 265 / 530 / 1060 | 604 / 750 / 891 |
+| par4 | 508 / 2728 / 14255 | 508 / 2871 / 22971 | 445 / 3565 / 28596 | 704 / 1980 / 13865 | 578 / 1156 / 2312 | 1566 / 2030 / 2414 |
+| stair5 | 433 / 1514 / 3487 | 854 / 1007 / 2015 | 339 / 830 / 2797 | 832 / 1766 / 4037 | 854 / 1709 / 3418 | 843 / 963 / 1059 |
+| mux | 364 / 1156 / 2848 | 264 / 851 / 1703 | 212 / 1179 / 1690 | 419 / 1423 / 2703 | 301 / 602 / 1204 | 602 / 686 / 781 |
+| majpar | 306 / 1380 / 3466 | 409 / 817 / 1635 | 445 / 892 / 1778 | 515 / 1632 / 2446 | 465 / 931 / 1862 | 783 / 931 / 1107 |
+| maj9 | 123 / 263 / 625 | 143 / 286 / 571 | 122 / 346 / 878 | 109 / 248 / 837 | 143 / 286 / 571 | 143 / 286 / 571 |
+
+| d | par2 | par3 | par4 | stair5 | mux | majpar | maj9 | mean |
+|---|---|---|---|---|---|---|---|---|
+| predictor, d = 15 | 0.03 | 0.01 | 0.00 | 0.98 | 0.46 | 0.42 | 0.22 | 0.30 |
+| predictor, d = 30 | 0.03 | 0.11 | 0.07 | 0.59 | 0.44 | 0.76 | 0.12 | 0.30 |
+| predictor, d = 60 | 0.06 | 0.12 | 0.69 | 0.79 | 0.74 | 1.08 | 0.13 | 0.52 |
+| minimal model, d = 15 | 0.15 | 0.11 | 0.19 | 0.35 | 0.78 | 0.54 | 0.01 | 0.30 |
+| minimal model, d = 30 | 0.16 | 0.08 | 0.39 | 0.87 | 0.03 | 0.63 | 0.40 | 0.36 |
+| minimal model, d = 60 | 0.06 | 0.06 | 1.00 | 0.32 | 0.75 | 0.96 | 0.49 | 0.52 |
+| race, d = 15 | 0.11 | 0.52 | 0.47 | 0.94 | 0.20 | 0.75 | 0.17 | 0.45 |
+| race, d = 30 | 0.15 | 0.56 | 0.46 | 0.22 | 0.30 | 0.24 | 0.08 | 0.29 |
+| race, d = 60 | 0.35 | 1.41 | 0.04 | 0.21 | 0.08 | 0.50 | 0.42 | 0.43 |
+| no leap cost, d = 15 | 0.21 | 0.14 | 0.19 | 0.98 | 0.27 | 0.60 | 0.22 | 0.37 |
+| no leap cost, d = 30 | 0.22 | 0.67 | 1.24 | 0.17 | 0.94 | 0.57 | 0.12 | 0.56 |
+| no leap cost, d = 60 | 0.13 | 1.69 | 2.62 | 0.03 | 1.24 | 0.90 | 0.13 | 0.96 |
+| Occam law, d = 15 | 0.96 | 1.33 | 1.62 | 0.96 | 0.73 | 1.35 | 0.22 | 1.02 |
+| Occam law, d = 30 | 0.22 | 0.17 | 0.43 | 0.65 | 0.75 | 0.57 | 0.12 | 0.42 |
+| Occam law, d = 60 | 0.62 | 1.94 | 2.56 | 1.72 | 1.87 | 1.65 | 0.13 | 1.50 |
+
+| target | network exponent | predictor | minimal model | race | no leap cost | Occam law |
+|---|---|---|---|---|---|---|
+| par2 | 1.04 | 1.00 | 1.00 | 0.93 | 1.00 | 0.25 |
+| par3 | 1.91 | 1.84 | 2.00 | 0.94 | 1.00 | 0.28 |
+| par4 | 2.40 | 2.75 | 3.00 | 2.15 | 1.00 | 0.31 |
+| stair5 | 1.50 | 0.62 | 1.52 | 1.14 | 1.00 | 0.16 |
+| mux | 1.48 | 1.34 | 1.50 | 1.35 | 1.00 | 0.19 |
+| majpar | 1.75 | 1.00 | 1.00 | 1.12 | 1.00 | 0.25 |
+| maj9 | 1.17 | 1.00 | 1.42 | 1.47 | 1.00 | 1.00 |
 
 **What the law gets right.**
 - **Parities with $k=2,3$:** the predicted exponents $1.00$ and $1.84$ match the networks' $1.04$ and $1.91$, and the
-  values match within 15% at every $d$. The race model, whose time law has the same $m(0)\sim d^{-1/2}$ but whose
+  values match within 10% at every $d$. The race model, whose time law has the same $m(0)\sim d^{-1/2}$ but whose
   sample complexity comes from a race against memorisation, gets $0.93$ and $0.94$: it misses the extra factor $d$ for the
   third input.
 - **Dense leap-1 targets:** $n^*\propto d$ (MAJ$_9$: 143/286/571 against 123/263/625), with no fitted constant.
+- **The minimal model itself** (run at $d=15$ and 60 with the same constants) shows the law's parity exponents
+  (1.00, 2.00, 3.00) and, unlike the predictor, the networks' exponents for the staircase and the multiplexer (1.52 and
+  1.50 against 1.50 and 1.48), although its individual values are coarse (factor-2 grid in $n$).
 - **The Occam law fails decisively:** it predicts exponents 0.16–0.31 for every target except MAJ$_9$ (mean
   $|\log_2|$ error 1.50 at $d=60$). The network's search noise is that of a continuous search in $\mathbb R^d$, not
   of a union bound over a finite library. Removing the leap cost ($a=\infty$) predicts exponent 1 for every parity.
 
 **What it gets wrong.**
 - **4-sparse parity:** predicted exponent 2.75 (asymptotically 3), measured 2.40 in both doublings; $n^*$ at $d=60$ is
-  overpredicted 1.6-fold (22971 against 14255). For $k=4$ the network beats the one-unit alignment bound; one
+  overpredicted 1.6-fold (22971 against 14255), and the minimal model, which follows the law, 2.0-fold (28596). For $k=4$ the network beats the one-unit alignment bound; one
   possibility is that a two-hidden-layer network assembles $x_1x_2x_3x_4$ from two pair-level features, which the
   single-unit law does not allow. Untested.
 - **Compositions of leap-1/2 moves** (staircase, MAJ of pair parities, multiplexer): the networks scale as
   $d^{1.5}$–$d^{1.75}$, the predictor as $d^{0.6}$–$d^{1.3}$, so the predictor is too optimistic at $d=60$ by
-  1.7–2.1×. The 20000-step training budget explains only a small part: extrapolating one more doubling of
+  1.7–2.1×. The minimal model reaches exponent 1.5 on the staircase and the multiplexer but stays at 1.0 on
+  MAJ$(x_1x_2,x_3x_4,x_5x_6)$ (network 1.75). The 20000-step training budget explains only a small part: extrapolating one more doubling of
   training at the rate of the last one (steps 10000 to 20000) lowers these $n^*$ by at most about 25% and leaves the
   exponents at 1.4–1.6. A plausible cause is that
   in MAJ$(x_1x_2,x_3x_4,x_5x_6)$ the three pair spikes of $M$ are degenerate, so the network's spectral search returns
@@ -240,7 +328,7 @@ their $d=30$ CALIB constants unchanged; race from [`DSCALE.md`](DSCALE.md) (also
 
 ## 6. Assessment
 
-**Did the simplification keep the race's match?** {{MATCH_SENTENCE}}
+**Did the simplification keep the race's match?** Partly. On CALIB the minimal model is close to the race: $n^*$ ratio 0.36 against 0.24, Spearman 0.98 against 0.96, success agreement 0.98 against 0.98, time Spearman 0.86 against 0.89. On the held-out targets it matches the race on success agreement (0.94 against 0.95), learning-curve MAE (0.02 against 0.01) and per-example agreement (0.50 against 0.50). Its held-out $n^*$ accuracy is clearly worse (0.59 against 0.33, Spearman 0.85 against 1.00), mostly because of two compositions it learns too early: sign$(2x_1+x_2x_3+x_4x_5x_6)$ (804 against 2205) and rand3 (428 against 1016). Its exhaustive search finds the 3-leap $x_4x_5x_6$ with the help of a selection bias: the best of many variants of the true gate is inflated by sampling noise, so it passes the threshold at half the $n$ that the model's own noiseless limit predicts. It is still far better than the other simple learners (sswm 1.36, NNGP kernel 2.58, Occam over juntas 4.61). Its noiseless limit, the analytic predictor, matches the networks better than the model itself does (held-out 0.38), and matches the model to a mean $|\log_2|$ of 0.30 (median $-0.03$) over the 21 targets.
 
 **Is the sample complexity predictable from the target alone?** Yes, at about the race's accuracy on held-out targets,
 with two constants and one formula: $n^*=\max\bigl(n_{\rm Hebb},\,c\max_iN(k_i)/\rho_i^2\bigr)$ (held-out mean
@@ -248,7 +336,7 @@ $|\log_2|$ ratio 0.38 and Spearman 0.97, against 0.33 and 1.00 for the race mode
 of the targets come down to one line: the Hebbian noise for dense leap-1 targets (no constant), $c(2^k-1)\,d\max(1,d/a)^{k-2}$
 for parities, one bottleneck move for the rest.
 
-**Does it predict the $d$-dependence?** For sparse parities with $k\le3$ and for dense targets, yes, within 15% at every
+**Does it predict the $d$-dependence?** For sparse parities with $k\le3$ and for dense targets, yes, within 20% at every
 $d$, where the race model misses the 3-sparse parity's exponent (0.94 against 1.91). For the 4-sparse parity the
 predicted exponent is too large (2.75 against 2.40), and for compositions of low-leap moves too small (0.6–1.3 against
 1.5–1.75). The mean $|\log_2|$ error over the 7 targets is 0.30, 0.30 and 0.52 at $d=15,30,60$, against 0.45, 0.29 and
@@ -272,7 +360,7 @@ predicted exponent is too large (2.75 against 2.40), and for compositions of low
   (+0.67), the random halfspace (−0.53), recursive majority (−0.90), the staircase (−0.59), MAJ$(x_1x_2,\dots)$ (−0.76).
 - The CALIB objective is flat: points within 0.02 of its minimum give held-out scores between 0.36 and 0.55. The
   held-out 0.38 should be read with that spread.
-- The empirical model's learning curves are sharper than the networks': it accepts all gates of equal utility at the same $n$, so on MAJ$(x_1x_2,x_3x_4,x_5x_6)$ its error jumps from 0.50 to 0.00 between $n=512$ and 1024, where the networks (and the race) decline gradually from 0.41 at $n=128$ to 0.07 at 2048. With factor-2 steps in $n$, such jumps make its $n^*$ coarse: the 4-sparse parity moves from 3565 to 1783 when $a$ goes from 16 to 24. On multi-move targets it is also faster than its own noiseless limit, because the best of many noisy candidates passes the threshold early.
+- The empirical model's learning curves are sharper than the networks': it accepts all gates of equal utility at the same $n$, so on MAJ$(x_1x_2,x_3x_4,x_5x_6)$ its error jumps from 0.50 to 0.00 between $n=512$ and 1024, where the networks (and the race) decline gradually from 0.41 at $n=128$ to 0.07 at 2048. With factor-2 steps in $n$, such jumps make its $n^*$ coarse: at $c=2$ the 4-sparse parity moves from 3565 to 1783 when $a$ goes from 16 to 24. On multi-move targets it is also faster than its own noiseless limit, because the best of many noisy candidates passes the threshold early.
 - Status: the predictor's closed forms (the parity and majority formulas) are exact consequences of its definition;
   their agreement with the networks is Numerical; the noise law is Heuristic. Everything is at one width (128), one
   depth, one learning rate, and 20000 training steps; the fitted $a$ may depend on the width, which was not varied.
@@ -292,6 +380,6 @@ predicted exponent is too large (2.75 against 2.40), and for compositions of low
 
 Saved evaluations (scratchpad, not in the repository): `model_evals/minimal.npz`, `minimal_d15.npz`, `minimal_d60.npz`,
 `minimal_random.npz`. Calibration scripts and logs: scratchpad `minimal/`. Reproduce:
-`OPENBLAS_NUM_THREADS=1 python3 models/run_minimal_eval.py {{C}} {{A}}` (about {{T}} min single-threaded for the
-full grid), `DIM=60 NS_MAX=65536 python3 models/run_minimal_eval.py {{C}} {{A}}`, `python3 minimal_report.py`.
+`OPENBLAS_NUM_THREADS=1 python3 models/run_minimal_eval.py 2.25 18` (about 4.5 min single-threaded for the
+full grid), `DIM=60 NS_MAX=65536 python3 models/run_minimal_eval.py 2.25 18`, `python3 minimal_report.py`.
 

@@ -53,6 +53,12 @@ def relevant_cube(fn, d=30, suite=None):
     return out
 
 
+def _err(F, y):
+    """Population sign error of the readout F; an exact tie (F = 0, e.g. the Hebbian fit of AND_3 at x = (1,1,1)) counts
+    as half an error (a coin flip), and keeps the run going (a tie is not a fit)."""
+    return float(np.mean(y * F < -1e-9) + 0.5 * np.mean(np.abs(F) <= 1e-9))
+
+
 def _ls(F, y):
     F1 = np.concatenate([np.ones((len(y), 1)), F], 1)
     w = np.linalg.lstsq(F1, y, rcond=None)[0]
@@ -89,7 +95,7 @@ def population_run(Xr, y, n, c, a, d, law="search", fmax=4, gmax=48, dense2=True
     if vy > 1e-12:
         active |= n * h ** 2 / vy / N1 > c * act_scale
     GW = np.zeros((m, 0), F32)
-    err = float(np.mean(np.where(F > 0, 1.0, -1.0) != y))
+    err = _err(F, y)
     while len(cols) < gmax and err > 0:
         r = y - F
         sr2 = float(np.var(r))
@@ -110,7 +116,7 @@ def population_run(Xr, y, n, c, a, d, law="search", fmax=4, gmax=48, dense2=True
             if 0 < ind.mean() < 1:
                 GW = np.concatenate([GW, (2.0 * ind - 1.0).astype(F32)[:, None]], 1)
         w, F = refit()
-        err = float(np.mean(np.where(F > 0, 1.0, -1.0) != y))
+        err = _err(F, y)
         stages.append(dict(depth=g["depth"], f=g["f"], k=g["k"], rho2=g["rho2"], N=g["N"], z2=g["z2"],
                            n_thr=c * g["N"] / g["rho2"], err=err, dense=bool(g.get("dense", False))))
     a_h = float(w[1]) if hcol is not None else 0.0
@@ -121,7 +127,7 @@ def noisy_error(run, y, n, d):
     """Predicted test error of the readout F with the Hebbian sampling noise."""
     F = run["F"]
     if run["a_h"] == 0.0 or run["hnorm2"] <= 1e-12:
-        return float(np.mean(np.where(F > 0, 1.0, -1.0) != y))
+        return _err(F, y)
     sig = abs(run["a_h"]) * math.sqrt(d * run["vy"] / (n * run["hnorm2"]))
     return float(np.mean(norm.cdf(-y * F / sig)))
 

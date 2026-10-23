@@ -49,11 +49,16 @@ def scoreboard(res, splits=("HELDOUT", "ALL")):
     return L
 
 
-def per_fn(res):
-    L = ["| fn | NN | " + " | ".join(res) + " |", "|---|---|" + "---|" * len(res)]
+def per_fn(res, controls=("base", "reseed1", "reseed2")):
+    """n* per function; 'base range' = min-max over the calibrated model run with 3 internal random streams."""
+    ctl = [r for nm, r in res.items() if nm in controls]
+    show = {nm: r for nm, r in res.items() if nm not in controls[1:]}
+    L = ["| fn | NN | base range | " + " | ".join(show) + " |", "|---|---|---|" + "---|" * len(show)]
     for fn in C.FNS:
         nn = C.nn_fixed(fn, "adam"); a = C.sample_complexity(nn["ns"], nn["test_err"].mean(1))
-        L.append(f"| {fn}{'*' if fn in C.HELDOUT else ''} | {fmt_n(a)} | " + " | ".join(fmt_n(nstar(r, fn)) for r in res.values()) + " |")
+        v = [nstar(r, fn) for r in ctl]
+        L.append(f"| {fn}{'*' if fn in C.HELDOUT else ''} | {fmt_n(a)} | {fmt_n(min(v))}–{fmt_n(max(v))} | "
+                 + " | ".join(fmt_n(nstar(r, fn)) for r in show.values()) + " |")
     return L
 
 

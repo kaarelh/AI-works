@@ -354,7 +354,7 @@ class Minimal:
         self.dense2 = dense2
         self.verbose = verbose
 
-    def fit(self, X, y, rng=None):
+    def fit(self, X, y, rng=None):          # deterministic: rng is unused
         X = np.asarray(X, dtype=F32); y = np.asarray(y, dtype=np.float64)
         n, d = X.shape
         c, a, law = self.c, self.a, self.law
@@ -427,10 +427,8 @@ class Minimal:
                       f"rho2={g['rho2']:.3f} N={g['N']:.1f} z2={g['z2']:.1f} train_err={err:.3f}")
         G_ = [dict(gg) for gg in gates]
         w_ = w.copy()
-        mus = [None] * len(G_)
-        # store normalisation of each gate column on the training set
-        for i, gg in enumerate(G_):
-            nw = gg["nwires"]
+        # store the normalisation of each gate column on the training set
+        for gg in G_:
             out, _ = _gate_out(X, GW, gg)
             gg["mu"], gg["sd"] = out.mean(), out.std()
 

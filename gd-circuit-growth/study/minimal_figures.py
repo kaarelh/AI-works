@@ -35,6 +35,7 @@ for ax, f in zip(axs, DS):
     ax.loglog(ds, g("nn"), "o-", color="#1f77b4", lw=2, ms=4, label="network")
     ax.loglog(ds, g("pred"), "s--", color="#d62728", ms=3, label="predictor")
     ax.loglog(ds, g("model"), "x:", color="#ff7f0e", ms=4, label="minimal model")
+    ax.loglog(ds, g("race"), "^:", color="#2ca02c", ms=3, lw=0.8, label="race")
     ax.loglog(ds, g("occam"), ":", color="0.5", label="Occam-law predictor")
     ax.set_title(f, fontsize=9); ax.set_xticks(ds); ax.set_xticklabels([str(d) for d in ds]); ax.minorticks_off()
 axs[0].set_ylabel("n*"); axs[0].legend(fontsize=5); fig.supxlabel("input dimension d", fontsize=9)
