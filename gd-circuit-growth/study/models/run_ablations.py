@@ -36,14 +36,12 @@ ABLATIONS = {
     "theta0.5":   dict(theta=0.5),
     "theta3":     dict(theta=3.0),
     "theta6":     dict(theta=6.0),
-    "theta20":    dict(theta=20.0),
     "Q1":         dict(Q=1),
     "Q2":         dict(Q=2),
     "Q5":         dict(Q=5),
     "P1":         dict(P=1),
     "P32":        dict(P=32),
     "nostop":     dict(stop="none"),
-    "nostop-g160": dict(stop="none", gmax=160),
     "iters1":     dict(iters=1),
     "iters32":    dict(iters=32),
     "gmax96":     dict(gmax=96),
@@ -53,9 +51,8 @@ ABLATIONS = {
     # but the noise is no longer correlated with the training labels the readout has to fit
     "indep-search": dict(oracle=0, noise="search"),
     "indep-align":  dict(oracle=0, noise="align"),
-    # as indep-search / oracle-search, but a new search sample is drawn before every firing
+    # as indep-search, but a new size-n search sample is drawn before every firing
     "indep-resample":  dict(oracle=0, noise="search", resample=True),
-    "oracle-resample": dict(oracle=True, noise="search", resample=True),
 }
 
 

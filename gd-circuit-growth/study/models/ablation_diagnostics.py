@@ -9,6 +9,10 @@ usage: python models/ablation_diagnostics.py floor | hebb | delay NAME... | nnst
   nnsteps   the networks' n* computed at intermediate training steps
   tprofile  median time to generalise at n = 16384, relative to par2, NN vs ablations
   gentime   rescore an ablation with its clock read at test error <= 0.1 along the trajectory
+  budget    floor check: noise maximum on random labels with 32x40, 128x100, 512x100 power-iteration starts x steps
+            (CASES env, e.g. "[('par3',3,[1779,3410]),('par4',4,[5545,14255])]")
+  reach     fraction of 256 random starts from which power iteration on the training residual reaches the true
+            parity direction (overlap > 0.9) within 8 and 100 steps (CASES env as above; 2 seeds)
 """
 import os, sys, json, functools
 import numpy as np
@@ -156,7 +160,38 @@ def gentime(names):
             print(f"{nm}, {lab}: HELDOUT time Spearman {s['time_spearman']:.2f}, Pearson r of log times {tl[0]:.2f}")
 
 
+def budget():
+    for fn, k, ns in eval(os.environ["CASES"]):
+        for n in ns:
+            X, y = C.train_data(fn, 0, n); U = X.astype(F32); r = (y - y.mean()).astype(F32)
+            vt = np.zeros((C.D, 1), F32); vt[:k, 0] = 1 / np.sqrt(k)
+            Ut = abs(float(_order_k(U, r, vt, k, (U.T @ r) / n, float(r.mean()), need_grad=False)[0][0]))
+            yr = np.random.default_rng(100).choice([-1.0, 1.0], n); rr = (yr - yr.mean()).astype(F32)
+            out = [(st, it, _power_max(U, rr, k, np.random.default_rng(0), starts=st, iters=it)) for st, it in [(32, 40), (128, 100), (512, 100)]]
+            print(f"d={C.D} {fn} n={n} U_true={Ut:.4f} | " + " | ".join(f"{a}x{b}: noise max {m:.4f}, ratio {Ut / m:.2f}" for a, b, m in out), flush=True)
+
+
+def reach(starts=256):
+    for fn, k, ns in eval(os.environ["CASES"]):
+        for n in ns:
+            fr = []
+            for s in range(2):
+                X, y = C.train_data(fn, s, n); U = X.astype(F32); r = (y - y.mean()).astype(F32); h = (U.T @ r) / n
+                vt = np.zeros(C.D, F32); vt[:k] = 1 / np.sqrt(k)
+                V = np.random.default_rng(s).standard_normal((C.D, starts)).astype(F32); V /= np.linalg.norm(V, axis=0)
+                sgn = (np.ones(starts) if k % 2 else np.where(np.arange(starts) % 2 == 0, 1.0, -1.0)).astype(F32)
+                res = {}
+                for it in range(1, 101):
+                    _, G = _order_k(U, r, V, k, h, float(r.mean())); G = G * sgn
+                    nr = np.linalg.norm(G, axis=0); nr[nr == 0] = 1; V = G / nr
+                    if it in (8, 100):
+                        res[it] = float(np.mean(np.abs(vt @ V) > 0.9))
+                fr.append(res)
+            print(f"d={C.D} {fn} n={n}: fraction of starts reaching the true direction: 8 steps "
+                  f"{np.mean([f[8] for f in fr]):.3f}, 100 steps {np.mean([f[100] for f in fr]):.3f}", flush=True)
+
+
 if __name__ == "__main__":
     cmd, args = sys.argv[1], sys.argv[2:]
     dict(floor=lambda: floor(), hebb=lambda: hebb(), delay=lambda: delay(args), nnsteps=lambda: nnsteps(),
-         tprofile=lambda: tprofile(args), gentime=lambda: gentime(args))[cmd]()
+         tprofile=lambda: tprofile(args), gentime=lambda: gentime(args), budget=lambda: budget(), reach=lambda: reach())[cmd]()

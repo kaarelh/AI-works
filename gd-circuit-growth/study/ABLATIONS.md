@@ -41,7 +41,9 @@ variants). Readings of mechanism are labelled **Heuristic**.
      - d = 30: 277 / 765 / 2026 against 200 / 843 / 2728;
      - d = 60: 539 / 1779 / 5545 against 427 / 3410 / 14255. That is right for x₁x₂, but 1.9× and 2.6× too low for
        the 3- and 4-bit parities.
-   - **Growth with d.** The networks' 3- and 4-bit parities get harder with d faster than this floor.
+   - **Growth with d.** The networks' 3- and 4-bit parities get harder with d faster than this floor. A larger
+     search budget does not change the floor. For x₁…x₄ at d = 60, reachability of the direction from random starts
+     appears to bind instead (§4.2).
 
      | d range | rule | networks | race |
      |---|---|---|---|
@@ -344,10 +346,16 @@ Network n\* at d = 15 and 60 are from [`DSCALE.md`](DSCALE.md) (2 seeds). Race n
 **The rule.** Read n\* as the ratio-1.5 crossing:
 - **Accuracy:** it predicts the networks' parity n\* within a factor of 1.4 at d = 15 and 30.
   At d = 60 it is right for x₁x₂ (539 vs 427), but too low by 1.9× for x₁x₂x₃ (1779 vs 3410) and by 2.6× for x₁…x₄
-  (5545 vs 14255). The networks' higher-order parities get harder with d faster than this floor. Possible causes:
-  - a computational barrier in the networks, beyond the statistical one;
-  - the floor's noise maximum, which comes from a fixed budget of 32 power-iteration starts, being increasingly
-    underestimated at large d.
+  (5545 vs 14255). Two checks (`ablation_diagnostics.py budget`, `reach`):
+  - **The floor is not an artifact of the search budget.** 128 or 512 starts × 100 steps instead of 32 × 40 raise the
+    noise maximum by at most 5% at the crossings (20% for x₁…x₄ at n = 14255).
+  - **Reachability from random starts (Heuristic; 2 seeds × 256 starts).** The question here is from what fraction
+    of random starts 8 power-iteration steps on the training residual reach the true direction (overlap > 0.9).
+    - At the networks' n\*, that fraction is similar at all three d: x₁x₂x₃ 7%, 10%, 9%; x₁…x₄ 3.5%, 2.9%, 1.4%
+      (d = 15, 30, 60).
+    - At the d = 60 floor crossing it is 0.2% for x₁…x₄. So for the 4-bit parity at large d, a computational
+      condition, reachability from random initialisation in a few steps, appears to bind beyond the statistical one.
+    - For x₁x₂x₃ it is 5.7% at the floor crossing, so the 3-bit gap at d = 60 stays unexplained.
 - **Growth with d,** as exponents of n\* in d for x₁x₂ / x₁x₂x₃ / x₁…x₄:
 
   | d range | rule | networks | race |
@@ -620,7 +628,7 @@ the two being misled by the *same spurious correlations of the same training sam
   noise (§4.1).
 - **The noise-floor rule is empirical.** Its constant 1.5 was read off the same networks it is compared with. Its
   "noise maximum" is what 32 power-iteration starts find, a lower bound on the true maximum. It is stated only for
-  sparse parities, and it fails at d = 60 for 3 and 4 bits.
+  sparse parities, and it fails at d = 60 for 3 and 4 bits. The reachability numbers in §4.2 rest on 2 seeds.
 - **Spurious-gate counting is strict.** A gate with one small stray weight counts as spurious.
 
 ## Files

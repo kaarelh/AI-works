@@ -50,3 +50,27 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+def during_learning(fns=("par3", "mux", "stair5", "maj9"), seed=0, upto=1000, delta=0.025):
+    """Per-window view over the first `upto` steps (windows = the logged 500-step chunks, union bound over them):
+    prequential mistake rate, certified bound on the windows' average test error, and the measured test error at the
+    window's end checkpoint."""
+    L = ["", f"## During learning (seed {seed}; windows = the logged chunks up to step {upto}, of 10-500 steps; delta = {delta} split over each target's windows)", "",
+         "| target | window (steps) | prequential rate | bound | measured test error at window end |", "|---|---|---|---|---|"]
+    for fn in fns:
+        z = np.load(os.path.join(R, f"online_adam_{fn}.npz"))
+        ps, pm = z["preq_steps"], z["preq_mistakes"]; starts = np.concatenate([[0], ps[:-1]]); B = int(z["batch"])
+        st, te = list(z["step"]), z["test_err"]
+        wins = [(a, b) for a, b in zip(starts, ps) if b <= upto]
+        for a, b in wins:
+            j = list(ps).index(b); N = B * int(b - a); M = float(pm[j, seed])
+            bound = M / N + math.sqrt(math.log(len(wins) / delta) / (2 * N))
+            meas = float(te[st.index(b), seed]) if b in st else float("nan")
+            L.append(f"| {fn} | {a}–{b} | {M / N:.4f} | {bound:.4f} | {meas:.4f} |")
+    open(os.path.join(HERE, "ONLINE-BOUNDS.md"), "a").write("\n".join(L) + "\n")
+    print("\n".join(L))
+
+
+if __name__ == "__main__":
+    during_learning()

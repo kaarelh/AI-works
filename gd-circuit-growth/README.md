@@ -416,7 +416,7 @@ Status labels as before.
    D passed its first adversarial referee pass with minor issues only. The general ReLU case beyond the first escape remains a stated conjecture.
 8. **Robustness and SGD.**
    - **Width.** Narrowing the network from 128 to 32 units barely changes $n^*$ on the sparse targets: +8% for 3-parity, +2% for the staircase, +23% for the multiplexer. Dense MAJ$_9$ needs 59% more data at width 32, plausibly because the linear part is noisier with fewer units. Width 512 was abandoned: too slow on this CPU.
-   - **SGD.** TODO online/prequential.
+   - **One-pass SGD.** With fresh minibatches, the prequential mistake rate certifies the average test error of a window of iterates with no capacity argument ([`study/ONLINE-BOUNDS.md`](study/ONLINE-BOUNDS.md)). The bound tracks the whole learning curve. On MAJ$_9$, over successive windows, it is 0.53, 0.37, 0.20, 0.074, 0.032 and 0.013. After learning it is about 0.002–0.01 (zero mistakes plus the confidence term).
 
 ### 3.2 Thread 1: what the networks do
 
@@ -486,7 +486,7 @@ Other observations:
   - *Proved:* the exact mass-clock identity, no growth before $\approx\log(1/\alpha)/U^*$, and a width-free bound through the first escape. A conserved quantity, the off-diagonal part of the classical balancedness law (Arora–Cohen–Hazan 2018; Du–Hu–Lee 2018), makes neurons of the same sign merge.
   - *Conditional:* persistence beyond the first escape, under a condition checkable from the training residuals.
   - *Conjecture:* the a-priori form beyond the first escape.
-- **One-pass SGD:** prequential error certifies test error directly, with no capacity argument. TODO numbers.
+- **One-pass SGD:** prequential error certifies test error directly, with no capacity argument (Proved; B3.4, C4.1). On the online runs, which now log prequential mistakes, the certified bound is within 0.01–0.15 of the window's measured test error throughout learning, and about 0.002 after it ([`study/ONLINE-BOUNDS.md`](study/ONLINE-BOUNDS.md)). The B repair independently found agreement within 0.006 on its own runs. For one-pass SGD, then, the question becomes *how many samples until the feature is found*. Point 1 of 3.5 answers it, so far heuristically.
 
 **What works numerically on real networks:** only distillation certificates, i.e. "the trained network is close to a small circuit". For the networks this was shown in Part 2; for the race model's own large circuits, see [`study/RACE-CERTIFY.md`](study/RACE-CERTIFY.md). The race model's own-circuit Occam bound is tight (median 0.021) exactly when its circuit has collapsed to the target's few gates ([`study/RACE-BOUNDS.md`](study/RACE-BOUNDS.md)).
 
