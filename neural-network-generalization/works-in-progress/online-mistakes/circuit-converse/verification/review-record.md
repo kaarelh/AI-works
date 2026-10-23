@@ -1,3 +1,5 @@
+**Current status:** The main statements now have Lean proofs; see [second-batch scope](../../../../lean/review/BatchTwo-coverage.md). The review record below describes the earlier conventional-proof snapshot.
+
 # Mathematical review record
 
 This manuscript has complete ordinary mathematical proofs and has not been formalized in Lean.

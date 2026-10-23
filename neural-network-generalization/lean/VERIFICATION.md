@@ -1,5 +1,32 @@
 # Verification record
 
+## Second formalization batch, 23 October 2026
+
+**PASS.** A fresh build of all 1,304 library modules completed successfully (4,640 build jobs). All seven final gates passed. The aggregate axiom audit checked 14,578 proved project declarations; the source comparison found zero differences across 1,313 source/configuration files.
+
+The main statements of ten additional papers have closed proofs, alongside the original five. [Theorem correspondence and exclusions](review/BatchTwo-coverage.md) · [Entry point](NeuralGeneralization/BatchTwoMain.lean) · [Axiom audit](NeuralGeneralization/BatchTwoAudit.lean).
+
+The second batch covers unified Lipschitz activations; polynomial-depth ReLU/GELU learning under population merging; improved polynomials under the original robust support; the shallow theorem; total online mistakes; circuit and gain-restricted neural converses; non-Gaussian priors; continuous-domain regression; and exponential continuous-regression depth dependence. The latter includes actual finite `γ>1` posteriors with a polynomial sufficient width and width-first `γ=1` posteriors, alongside the strong-prior limit.
+
+The main axiom audit accepts only `propext`, `Classical.choice` and `Quot.sound`. `Audit.lean` additionally checks every imported proved project declaration and preserves the original five exact-type gates. No main endpoint leaves target mass, concentration, compression, covariance approximation or posterior normalization as an assumed analytic conclusion.
+
+**Scope matters.** The improved original-support paper's headline theorem, sixth-power width rate and degree-46 envelope are checked; its separate printed numerical `16/ε` allocation is not. The online paper's three boxed neural budgets are checked, while some optional unboxed extensions are outside coverage. Ancillary classification, iterated-limit, LDP and smooth-density claims in the continuous papers are not all certified. The coverage table and per-paper correspondence records state these exclusions.
+
+Fresh verification uses Lean 4.32.0 and pinned mathlib revision `81a5d257c8e410db227a6665ed08f64fea08e997`. It starts with an empty project build directory and copies no project OLeans. The dependencies use the existing mathlib build cache: this is a fresh **project-source** rebuild, unlike the historical run below which rebuilt mathlib too. Reproduction commands are:
+
+```sh
+lake build NeuralGeneralization NeuralGeneralization.BatchTwoAudit
+lake env lean Audit.lean
+lake env lean CheckMain.lean
+lake env lean CheckRobust.lean
+lake env lean CheckParity.lean
+lake env lean CheckConfidence.lean
+```
+
+The release additionally builds every included library source module, including auxiliary modules outside the main import closure. Source checksums, build output, axiom output and check results are recorded in [the second-batch verification directory](review/verification/batch-two-2026-10-23/). The original five proofs, theorem types and historical audits are retained below.
+
+## Original batch verification record
+
 **PASS — 18 October 2026.** All **five exact main learning theorems**, the parity supplement, and the aggregate axiom audit pass in an independent project-source rebuild. The new result is the polynomial-depth generalization theorem under a robustness restriction.
 
 ## Independent full-source rebuild, 19 October 2026

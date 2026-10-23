@@ -18,8 +18,12 @@ The new statistical argument handles arbitrary posterior mixtures. It does not c
 
 Uniform input order is substantive. The paper gives simple finite-class examples with exponentially many mistakes in a prescribed order, and under sufficiently nonuniform iid distributions. These examples show that a finite relevant-class count alone cannot prove an arbitrary-order theorem; they are not counterexamples established for the particular Gaussian NN priors. A positive nonuniform extension depends on the logarithm of the smallest positive input probability.
 
-The online statistical proof is self-contained. The neural-network applications explicitly import and list the structural compression and target-mass results from the three main papers. No new Gaussian-compression theorem is claimed. The cumulative results are not Lean verified.
+The online statistical proof is self-contained. The neural-network applications explicitly import and list the structural compression and target-mass results from the three main papers. No new Gaussian-compression theorem is claimed. The core cumulative theorem and its three boxed neural applications are Lean verified; optional extensions have the narrower scope recorded below.
 
 Build with `./build.sh`. See the [independent mathematical review](verification/mathematical-review.md) and [publication record](verification/publication-build.json).
 
 Cumulative high-probability statements hold for each fixed learner, with width-independent constants; they do not assert one common event for the sampled predictions of every width.
+
+## Lean verification
+
+The main statements are included in the second formalization batch. [Exact coverage and exclusions](../../../lean/review/BatchTwo-coverage.md) · [Lean entry point](../../../lean/NeuralGeneralization/BatchTwoMain.lean). This label does not extend automatically to every appendix, remark or numerical allocation. The original mathematical review records describe their earlier source snapshots.

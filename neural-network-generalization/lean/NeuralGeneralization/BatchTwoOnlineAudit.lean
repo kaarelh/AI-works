@@ -1,0 +1,19 @@
+import NeuralGeneralization.BatchTwoOnlineConfidenceInfinite
+import NeuralGeneralization.BatchTwoOnlineActivation
+import NeuralGeneralization.BatchTwoRelativeGrowthPatternUnion
+
+/-! Kernel axiom audit for the completed online statistical theorem and the
+three bounded-activation NN regime endpoints. This file does not assert that
+the manuscript's additional ReLU and depth-polynomial extensions are closed. -/
+
+#print axioms NeuralGeneralization.BatchTwoOnline.random_order_cumulative_errors
+#print axioms NeuralGeneralization.BatchTwoOnline.cumulative_errors_both_protocols
+#print axioms NeuralGeneralization.BatchTwoOnline.strongPrior_online_bounds
+#print axioms NeuralGeneralization.BatchTwoOnline.aboveMeanField_online_bounds
+#print axioms NeuralGeneralization.BatchTwoOnline.meanField_online_bounds
+#print axioms NeuralGeneralization.BatchTwoOnline.online_budget_polynomial_majorant
+#print axioms NeuralGeneralization.BatchTwoOnline.iid_confidence_bounds
+#print axioms NeuralGeneralization.BatchTwoOnline.lipschitz_strongPrior_online_bounds
+#print axioms NeuralGeneralization.BatchTwoOnline.totalError_le_neg_log
+#print axioms NeuralGeneralization.BatchTwoOnline.infinite_sampled_prior_tail
+#print axioms NeuralGeneralization.BatchTwoRelativeGrowth.relative_growth_tail

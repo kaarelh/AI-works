@@ -1,0 +1,19 @@
+import NeuralGeneralization.BatchTwoShallowPriorConventions
+import NeuralGeneralization.BatchTwoShallowWidthPolynomials
+
+/-! Axiom audit for the three boxed sample bounds, the quadratic and quartic
+width consequences, and the prior conventions. Publication additionally
+requires the statement review and clean build recorded in the review files. -/
+
+#print axioms NeuralGeneralization.BatchTwoShallow.shallow_all_width_all_scale
+#print axioms NeuralGeneralization.BatchTwoShallow.shallow_sharp_all_width_all_scale
+#print axioms NeuralGeneralization.BatchTwoShallow.shallow_explicit_sharp_all_width_all_scale
+#print axioms NeuralGeneralization.BatchTwoShallow.quadratic_width_sample_bound
+#print axioms NeuralGeneralization.BatchTwoShallow.quartic_width_sample_bound
+#print axioms NeuralGeneralization.BatchTwoShallow.posterior_eq_twoStage
+#print axioms NeuralGeneralization.BatchTwoShallow.good_event_all_power_priors
+#print axioms NeuralGeneralization.BatchTwoShallow.good_event_all_t_scales
+#print axioms NeuralGeneralization.BatchTwoShallow.shallow_target_mass
+#print axioms NeuralGeneralization.BatchTwoShallow.vote_approximation_tail
+#print axioms NeuralGeneralization.BatchTwoShallow.halfspace_card_le
+#print axioms NeuralGeneralization.BatchTwoRelativeStatistics.relative_loss_tail

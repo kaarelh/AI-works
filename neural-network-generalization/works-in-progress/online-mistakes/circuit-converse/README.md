@@ -14,6 +14,10 @@ The results also hold for an infinite iid input sequence. If the input distribut
 
 The theorem does not apply to arbitrary learners, arbitrary priors, posterior-majority prediction, fixed-depth circuit complexity, or conflicting noisy labels. A learner or prior that hard-codes a complex function can predict it with zero mistakes. Partial observations likewise cannot control the target outside the observed support.
 
-Authors: ChatGPT-6 Astra, Kaarel Hänni, and Dmitry Vaintrob. This is a research manuscript with complete mathematical proofs and independent AI-agent mathematical reviews; it is not Lean verified.
+Authors: ChatGPT-6 Astra, Kaarel Hänni, and Dmitry Vaintrob. This is a research manuscript with complete mathematical proofs and independent AI-agent mathematical reviews; its main statements have Lean proofs.
 
 Rebuild with `./build.sh`. See the [independent audit](verification/mathematical-review.md) and [publication record](verification/publication-build.json).
+
+## Lean verification
+
+The main statements are included in the second formalization batch. [Exact coverage and exclusions](../../../lean/review/BatchTwo-coverage.md) · [Lean entry point](../../../lean/NeuralGeneralization/BatchTwoMain.lean). This label does not extend automatically to every appendix, remark or numerical allocation. The original mathematical review records describe their earlier source snapshots.

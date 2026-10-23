@@ -1,0 +1,9 @@
+import NeuralGeneralization.BatchTwoOnlineMergingIID
+
+#print axioms NeuralGeneralization.BatchTwoOnlineRaw.expected_total_general
+#print axioms NeuralGeneralization.BatchTwoOnlineRaw.total_high_probability_general
+#print axioms NeuralGeneralization.BatchTwoOnlineRaw.mergingCoverProcess
+#print axioms NeuralGeneralization.BatchTwoOnlineRaw.merging_online_expected_polynomial
+#print axioms NeuralGeneralization.BatchTwoOnlineRaw.merging_online_high_probability
+#print axioms NeuralGeneralization.BatchTwoOnlineRaw.merging_iid_expected
+#print axioms NeuralGeneralization.BatchTwoOnlineRaw.merging_iid_high_probability

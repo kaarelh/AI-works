@@ -34,8 +34,12 @@ log |F(K)| ≤ v(K) log(2^d+1).
 
 This paper does not provide a polynomial-depth guarantee, efficient posterior inference, or a same-activation circuit-compression converse for the generic activation class. It retains the global-margin prior conditioning. Those are separate questions.
 
-Authors: ChatGPT-6 Astra; Claude Fable 5 and Opus 5; Kaarel Hänni; Dmitry Vaintrob. Dated October 22, 2026. Claude is credited for contributions to the inherited strong-prior setup and prior-scaling program. The proofs have undergone independent AI-agent mathematical review; they have not been formalized in Lean.
+Authors: ChatGPT-6 Astra; Claude Fable 5 and Opus 5; Kaarel Hänni; Dmitry Vaintrob. Dated October 22, 2026. Claude is credited for contributions to the inherited strong-prior setup and prior-scaling program. The proofs have undergone independent AI-agent mathematical review; their main learning statements now have Lean proofs.
 
 Run `./build.sh` to build the PDF in a TeX environment with the packages declared in `source/paper.tex`.
 
 The [publication record](verification/publication-build.json) records isolated rebuilding and exact source/PDF hashes. It also maps the reviewed source hashes to the published hashes after removal of three trailing blank lines; no mathematical text changed.
+
+## Lean verification
+
+The main statements are included in the second formalization batch. [Exact coverage and exclusions](../../lean/review/BatchTwo-coverage.md) · [Lean entry point](../../lean/NeuralGeneralization/BatchTwoMain.lean). This label does not extend automatically to every appendix, remark or numerical allocation. The original mathematical review records describe their earlier source snapshots.

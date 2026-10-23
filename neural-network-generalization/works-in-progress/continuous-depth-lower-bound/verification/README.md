@@ -1,3 +1,5 @@
+**Current formalization status:** The main learning statements now have Lean proofs. [Exact scope and exclusions](../../../lean/review/BatchTwo-coverage.md). The earlier conventional-proof and review record below describes the pre-formalization snapshot.
+
 # Review and publication checks
 
 The manuscript has a conventional mathematical proof, not a Lean formalization. Independent AI-agent reviews checked the expanding-map construction, sample separation, exact interpolation at low energy, strong-prior concentration, finite-scale Gaussian-distance argument, and the posterior-mixture obstruction. These reviews are not external peer review.

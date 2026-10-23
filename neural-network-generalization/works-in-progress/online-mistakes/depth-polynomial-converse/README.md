@@ -2,7 +2,7 @@
 
 [Read the paper](paper.pdf) · [LaTeX source](source/paper.tex) · [Verification record](verification/mathematical-review.md)
 
-This note proves that **few total online mistakes imply a small bounded-weight tanh network, with polynomial dependence on depth**, for a particular restricted Gaussian neural prior. It is a research result, not Lean verified.
+This note proves that **few total online mistakes imply a small bounded-weight tanh network, with polynomial dependence on depth**, for a particular restricted Gaussian neural prior. Its main gain-restricted converse and stated prediction-rule corollaries have Lean proofs.
 
 The learner's prior retains the global lower output margin and adds two conditions:
 
@@ -38,3 +38,7 @@ The order of limits supplies spare neurons for a correction branch. The result d
 Run `./build.sh` with `pdflatex` installed. The build needs the standard LaTeX packages listed at the top of the source.
 
 The [publication record](verification/publication-build.json) records isolated rebuilding and exact source/PDF hashes.
+
+## Lean verification
+
+The main statements are included in the second formalization batch. [Exact coverage and exclusions](../../../lean/review/BatchTwo-coverage.md) · [Lean entry point](../../../lean/NeuralGeneralization/BatchTwoMain.lean). This label does not extend automatically to every appendix, remark or numerical allocation. The original mathematical review records describe their earlier source snapshots.

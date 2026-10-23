@@ -1,0 +1,12 @@
+import NeuralGeneralization.BatchTwoContinuousDepthStrongMain
+
+/-! Kernel dependency audit for the actual strong-prior endpoint. The finite
+exponent and mean-field claims in the paper are not asserted here. -/
+#print axioms NeuralGeneralization.BatchTwoContinuousDepthLower.strong_prior_depth_lower_bound
+#print axioms NeuralGeneralization.BatchTwoContinuousDepthLower.target_implementation_all_depths
+#print axioms NeuralGeneralization.BatchTwoContinuousDepthLower.inputLaw_sphere
+#print axioms NeuralGeneralization.BatchTwoContinuousDepthLower.inputLaw_probability
+#print axioms NeuralGeneralization.BatchTwoContinuousDepthLower.inputLaw_nullSingleton
+#print axioms NeuralGeneralization.BatchTwoContinuousDepthLower.exists_channel_memorizer
+#print axioms NeuralGeneralization.BatchTwoContinuousDepthLower.posterior_energy_concentration
+#print axioms NeuralGeneralization.BatchTwoContinuousDepthLower.measure_event_le_liminf
