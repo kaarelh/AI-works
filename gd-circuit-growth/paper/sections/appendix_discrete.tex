@@ -2,110 +2,100 @@
 \label{app:discrete}
 
 \begin{sloppypar}
-This appendix states the results of two derivations: Sections A1--A4 of \repo{theory/A-discrete-model.md}, on the discrete circuit-growth model, and Sections C2--C3 of \repo{theory/C-bridge-and-certificates.md}, on diagonal linear networks and a conditional transfer to ReLU networks. Each derivation was refereed twice, and the results are stated as revised after both rounds. Numbering in parentheses is the derivation's. The proofs here are sketches; the derivations give full proofs with explicit constants, and the check scripts are in \repo{theory/checks}. ``Literature, from memory'' marks a published result whose statement the derivation could not check against the paper.
+This appendix states the results of two derivations: Sections A1--A4 of \repo{theory/A-discrete-model.md}, on the discrete circuit-growth model, and Sections C2--C3 of \repo{theory/C-bridge-and-certificates.md}, on diagonal linear networks and a conditional transfer to ReLU networks. Each was refereed twice, and the results are stated as revised after the second round. Numbering in parentheses is the derivation's. Proofs are sketched here; full proofs with explicit constants are in the derivations, and check scripts are in \repo{theory/checks}. ``Literature, from memory'' marks a published result whose statement the derivation could not check against the paper.
 \end{sloppypar}
 
 \subsection{Setting, counting and the Occam bound}\label{app:discrete:occam}
 
-\paragraph{Notation.} Inputs lie in $\mathcal X=\cube$. $P$ is any distribution on $\mathcal X\times\{\pm1\}$, with input marginal $P_X$, and the sample $S=((x_i,y_i))_{i\le n}$ is iid from $P$. We write $\langle u,v\rangle_n=\frac1n\sum_iu(x_i,y_i)v(x_i,y_i)$, with norm $\|\cdot\|_n$, and $\bar u=\langle u,1\rangle_n$; in population statements, $\bar u=\E u$. The test error is $\mathrm{err}(h)=P(h(x)\ne y)$, and $\widehat{\mathrm{err}}$ is its empirical version. Logarithms are natural. The binary relative entropy is $\mathrm{kl}(q\|p)=q\log\frac qp+(1-q)\log\frac{1-q}{1-p}$, with inverse $\mathrm{kl}^{-1}_+(q,\epsilon)=\sup\{p\ge q:\mathrm{kl}(q\|p)\le\epsilon\}\le q+\sqrt{2q\epsilon}+2\epsilon$. A test-error bound is \emph{useful} if it is at most $0.1$, and \emph{non-vacuous} if it is below $1/2$.
+\paragraph{Notation.} $\mathcal X=\cube$, and $P$ is any distribution on $\mathcal X\times\{\pm1\}$, with input marginal $P_X$. The sample $S=((x_i,y_i))_{i\le n}$ is iid from $P$. We write $\langle u,v\rangle_n=\frac1n\sum_iu(x_i,y_i)v(x_i,y_i)$, $\|\cdot\|_n$ for its norm, and $\bar u=\langle u,1\rangle_n$ (in population statements, $\bar u=\E u$). The test error is $\mathrm{err}(h)=P(h(x)\ne y)$, and $\widehat{\mathrm{err}}$ is its value on $S$. Logarithms are natural. $\mathrm{kl}(q\|p)$ is the binary relative entropy, and $\mathrm{kl}^{-1}_+(q,\epsilon)=\sup\{p\ge q:\mathrm{kl}(q\|p)\le\epsilon\}\le q+\sqrt{2q\epsilon}+2\epsilon$. A test-error bound is \emph{useful} if it is at most $0.1$, and \emph{non-vacuous} if it is below $1/2$.
 
-\paragraph{Circuits.} A \emph{library} $G$ is a finite set of gates $\phi:[-1,1]^j\to[-1,1]$ of arity $j\le k$. It is \emph{Boolean} if every gate maps $\{\pm1\}^j$ into $\{\pm1\}$. In a circuit with $T$ gates, gate $t$ applies some $\phi_t\in G$ to sources among the $d$ inputs and gates $1,\dots,t-1$, and computes $g_t$. A predictor is $h=\psi(g_1,\dots,g_T)$, where $\psi$ is a \emph{sign readout} $\mathrm{sgn}(c_0+c\cdot z)$, an \emph{output-gate readout} $\pm z_T$, or a real readout $c_0+c\cdot z$. $\mathcal H_T$ denotes the predictors with $T$ gates. A \emph{learner} is any rule, possibly randomized and data-dependent, that maps $S$ to circuits and readouts. The \emph{toy library} $\{\mathrm{id},\mathrm{AND}(\pm a,\pm b),\mathrm{XOR}\}$, taken up to negation, has $|G|=6$ and $k=2$; at $d=30$ it has 2205 depth-one candidates.
+\paragraph{Circuits.} A \emph{library} $G$ is a finite set of gates $\phi:[-1,1]^j\to[-1,1]$ of arity $j\le k$. It is \emph{Boolean} if every gate maps $\{\pm1\}^j$ into $\{\pm1\}$. In a circuit with $T$ gates, gate $t$ applies some $\phi_t\in G$ to sources among the $d$ inputs and gates $1,\dots,t-1$, and computes $g_t$. A predictor $h=\psi(g_1,\dots,g_T)$ has a sign readout $\mathrm{sgn}(c_0+c\cdot z)$, an output-gate readout $\pm z_T$, or a real readout. $\mathcal H_T$ is the set of predictors with $T$ gates. A \emph{learner} is any rule, possibly randomized and data-dependent, that maps $S$ to circuits and readouts. The \emph{toy library} is $\{\mathrm{id},\mathrm{AND}(\pm a,\pm b),\mathrm{XOR}\}$ up to negation. It has $|G|=6$ and $k=2$, and at $d=30$ it has 2205 depth-one candidates.
 
 \begin{lemma}[Counting (Lemmas 1.1, 1.2 in the derivation)]\label{lem:app-disc-count}
-\status{Proved}\quad There are at most $e^{W_T}$ circuits with $T$ gates, where $W_T:=\sum_{t\le T}(\log|G|+k\log(d+t-1))$. On $N$ points of $\R^T$, at most $\Phi(N,T):=2\sum_{i\le T}\binom{N-1}{i}\le2N^T$ functions have the form $\mathrm{sgn}(c_0+c\cdot z)$. Hence $\log|\mathcal H_T|\le W_T+\rho_T$, where:
-\begin{itemize}[nosep]
-\item $\rho_T=\log\Phi(2^{\min(T,d)},T)$, about $T^2\log2$, for a Boolean library with a sign readout;
-\item $\rho_T=\log\Phi(2^d,T)$ for real-valued gates;
-\item $\rho_T=\log2$ for an output-gate readout.
-\end{itemize}
+\status{Proved}\quad There are at most $e^{W_T}$ circuits with $T$ gates, where $W_T:=\sum_{t\le T}(\log|G|+k\log(d+t-1))$. On $N$ points of $\R^T$, at most $\Phi(N,T):=2\sum_{i\le T}\binom{N-1}{i}\le2N^T$ functions have the form $\mathrm{sgn}(c_0+c\cdot z)$. Hence $\log|\mathcal H_T|\le W_T+\rho_T$. Here $\rho_T=\log\Phi(2^{\min(T,d)},T)\approx T^2\log2$ (for $T\le d$) for a Boolean library with sign readout, $\rho_T=\log\Phi(2^d,T)$ for real-valued gates, and $\rho_T=\log2$ for an output-gate readout.
 \end{lemma}
 
 \begin{theorem}[Occam bound, uniform over circuit size (Theorem A1 in the derivation)]\label{thm:app-A1}
-\status{Proved}\quad Fix $\delta\in(0,1)$ and let $L_T:=\log|\mathcal H_T|+\log\frac{(T+1)(T+2)}{\delta}$. With probability at least $1-\delta$ over $S$, the following hold simultaneously for every $T\ge0$ and every $h\in\mathcal H_T$, where $p=\mathrm{err}(h)$ and $\hat p=\widehat{\mathrm{err}}(h)$:
+\status{Proved}\quad Fix $\delta\in(0,1)$ and let $L_T:=\log|\mathcal H_T|+\log\frac{(T+1)(T+2)}{\delta}$. With probability at least $1-\delta$ over $S$, every $T\ge0$ and every $h\in\mathcal H_T$ satisfy four bounds, where $p=\mathrm{err}(h)$ and $\hat p=\widehat{\mathrm{err}}(h)$:
 \begin{enumerate}[label=(\arabic*),nosep]
 \item if $\hat p\le p$, then $\mathrm{kl}(\hat p\|p)\le L_T/n$;
 \item $p\le\hat p+\sqrt{2\hat pL_T/n}+2L_T/n$;
 \item $p\le\hat p+\sqrt{L_T/2n}$;
 \item if $\hat p=0$, then $p\le1-e^{-L_T/n}\le L_T/n$.
 \end{enumerate}
-A learner's output with $T(S)$ gates lies in $\mathcal H_{T(S)}$, however the gates were chosen. So the bounds hold for any learner at every stage and every training time, with $T$ the number of distinct gate functions in use.
+A learner's output with $T(S)$ gates lies in $\mathcal H_{T(S)}$, however the gates were chosen. So the bounds hold for any learner, at every stage and every training time, with $T$ the number of distinct gate functions in use.
 \end{theorem}
 \begin{proof}[Proof sketch]
-For a fixed $h$, the Chernoff bound in kl form gives $P(\hat p\le p,\ \mathrm{kl}(\hat p\|p)>\epsilon)\le e^{-n\epsilon}$. Take $\epsilon=L_T/n$, and take a union bound over $\mathcal H_T$ and then over $T$; the weights $\delta/((T+1)(T+2))$ sum to $\delta$. Items (2)--(4) are readings of (1): they use $\mathrm{kl}(q\|p)\ge(p-q)^2/2p$, Pinsker's inequality, and $\mathrm{kl}(0\|p)=-\log(1-p)$. No property of the dynamics is used. This is the Occam argument~\cite{blumer1987occam}, made uniform over $T$.
+For a fixed $h$, the kl-Chernoff bound gives $P(\hat p\le p,\ \mathrm{kl}(\hat p\|p)>\epsilon)\le e^{-n\epsilon}$. Take a union bound over $\mathcal H_T$ with $\epsilon=L_T/n$, and then over $T$ with weights $\delta/((T+1)(T+2))$. Items (2)--(4) follow from $\mathrm{kl}(q\|p)\ge(p-q)^2/2p$, Pinsker's inequality, and $\mathrm{kl}(0\|p)=-\log(1-p)$. Nothing about the dynamics is used. This is the Occam argument~\cite{blumer1987occam}, made uniform over $T$.
 \end{proof}
 
-\paragraph{Values} \status{Numerical}. For the toy library at $d=30$ and $\delta=0.05$, $L_T=14.8,151,427$ nats at $T=1,10,20$.
+\paragraph{Values} \status{Numerical}. Take the toy library at $d=30$ and $\delta=0.05$.
 \begin{itemize}[nosep]
-\item The realizable bound (4) is useful for $T\le2,7,20,62$ at $n=256,1024,4096,16384$. It is non-vacuous for $T\le11,27,102,403$ at the same $n$. For $T\le10$, $n\ge144T$ suffices for it to be useful.
+\item $L_T=14.8$, $151$ and $427$ nats at $T=1$, $10$ and $20$.
+\item The realizable bound (4) is useful for $T\le2,7,20,62$ and non-vacuous for $T\le11,27,102,403$, at $n=256,1024,4096,16384$.
 \item The agnostic form (3) is weak: at $T=5$ and $n=4096$ its gap is $0.088$.
-\item A symmetrization route in the style of Blumer, Ehrenfeucht, Haussler and Warmuth replaces $\rho_T$ by about $T\log2n$. It also multiplies the whole complexity by $2/\ln2$, and is larger at every $T\le1499$ for $n\ge1024$.
+\item A symmetrization route in the style of Blumer, Ehrenfeucht, Haussler and Warmuth is larger at every $T\le1499$ for $n\in\{1024,4096,16384\}$.
 \end{itemize}
 
-\paragraph{Norm version (Theorem A1$'$ in the derivation)} \status{Proved given three textbook Rademacher lemmas}. Let $\mathcal F$ be a finite set of functions $\mathcal X\to[-1,1]$, and consider $f=c_0+\sum_jc_jg_j$ with $g_j\in\mathcal F$, $\sum|c_j|\le B$ and $|c_0|\le1+B$. Let $\mathfrak R_n(B)=(1+B)/\sqrt n+B\sqrt{2\log(2|\mathcal F|)/n}$ and $\pi_j=1/((j+1)(j+2))$. With probability $1-\delta$, uniformly over $B=2^j$, two bounds hold:
-\begin{itemize}[nosep]
-\item the clipped square loss satisfies $\E\ell_{\rm sq}\le\hat\E\ell_{\rm sq}+4\mathfrak R_n(B)+2\sqrt{\log(2/\pi_j\delta)/2n}$;
-\item for the ramp loss $\varphi_\theta$, with $\theta$ fixed in advance, $\mathrm{err}(\mathrm{sgn}f)\le\hat\E\varphi_\theta(yf)+\frac2\theta\mathfrak R_n(B)+\sqrt{\log(2/\pi_j\delta)/2n}$.
-\end{itemize}
-Neither bound depends on the number of gates.
+\paragraph{A norm version} (Theorem A1$'$, \status{Proved given three textbook Rademacher lemmas}). This covers $f=c_0+\sum_jc_jg_j$ with $g_j$ in a finite class $\mathcal F$, $\sum_j|c_j|\le B$ and $|c_0|\le1+B$. Uniformly over $B=2^j$, with probability $1-\delta$, two gaps are bounded. The clipped square loss exceeds its empirical value by at most $4\mathfrak R_n(B)+2\sqrt{\log(2/\pi_j\delta)/2n}$. The 0-1 error exceeds the empirical ramp loss at a margin $\theta$ fixed in advance by at most $\frac2\theta\mathfrak R_n(B)+\sqrt{\log(2/\pi_j\delta)/2n}$. Here $\mathfrak R_n(B)=(1+B)/\sqrt n+B\sqrt{2\log(2|\mathcal F|)/n}$ and $\pi_j=1/((j+1)(j+2))$.
 
 \subsection{The clock race and what training time controls}\label{app:discrete:time}
 
 \begin{definition}[Clock race (Definition 2.1 in the derivation)]\label{def:app-race}
-Fix $\Theta>0$. At time $t$ there is a circuit of \emph{fired} gates, a readout $c(t)$, and the residual $r(t)=y-f_t$, where $f_t=c_0+\sum c_mg_m$.
+Fix $\Theta>0$. The state at time $t$ is a circuit of \emph{fired} gates, a readout $c(t)$, and the residual $r=y-f_t$, where $f_t=c_0+\sum c_mg_m$.
 \begin{itemize}[nosep]
-\item A \emph{candidate} $m$ is a gate on inputs or fired gates. Its \emph{availability time} $a_m$ is the latest firing time among its gate sources, or $0$ if it reads only inputs.
-\item Its \emph{clock} is $S_m(t)=\int_{a_m}^tU_m$, where $U_m=\langle r,g_m\rangle_n$ is its \emph{utility}.
-\item It fires when $|S_m|=\Theta$, with sign $\sigma_m=\mathrm{sgn}\,S_m$. Several candidates may fire at once, and clocks are never reset.
+\item A \emph{candidate} $m$ is a gate on inputs or fired gates. Its \emph{availability time} $a_m$ is the last firing time among its gate sources, or $0$ if it has none.
+\item Its \emph{clock} is $S_m(t)=\int_{a_m}^tU_m$, with utility $U_m=\langle r,g_m\rangle_n$. It fires when $|S_m|=\Theta$, with sign $\sigma_m=\mathrm{sgn}\,S_m$. Several candidates may fire at once, and clocks are never reset.
+\item After each event the readout is refit, in one of two variants. (LS): least squares with an intercept over all fired gates. (SC), for a depth-one dictionary only: least squares with an intercept over $\mathrm{Sat}=\{m:|S_m|=\Theta\}$, subject to $\sigma_mc_m\ge0$.
 \end{itemize}
-After each event the readout is refit in one of two variants. In (LS), it is fit by least squares with an intercept over all fired gates, at any depth. In (SC), which is for a depth-one dictionary only, it is fit by least squares with an intercept over $\mathrm{Sat}=\{m:|S_m|=\Theta\}$, subject to $\sigma_mc_m\ge0$. The \emph{effective time} is $\tau(t)=\int_0^t\|r\|_n=\int_0^t\sqrt{2\hat L}$, and $R(t)=\int_0^tr$. The \emph{population race} uses $L^2(P)$ in place of the sample.
+\emph{Effective time} is $\tau(t)=\int_0^t\|r\|_n=\int_0^t\sqrt{2\hat L}$, and $R(t)=\int_0^tr$. The \emph{population race} uses $L^2(P)$ in place of the sample.
 \end{definition}
 
-\paragraph{Basic facts (Lemma 2.2)} \status{Proved}.
+\paragraph{Basic facts} (Lemma 2.2, \status{Proved}).
 \begin{itemize}[nosep]
 \item $|U_m|\le\|r\|_n\le1$, so $\tau\le t$.
 \item In (LS), a fired gate keeps $U_m=0$.
 \item In (SC), $|S_m|\le\Theta$.
-\item With a single threshold, rescaling $\Theta$ rescales all event times.
-\item (SC) statements are proved up to any accumulation point of events. Whether such points exist is open.
+\item With one threshold, rescaling $\Theta$ rescales time.
 \end{itemize}
+(SC) results hold up to any accumulation point of event times. Whether such points exist is open.
 
-\paragraph{What the race models.}
+\paragraph{Scope.}
 \begin{itemize}[nosep]
-\item For moves that need $k=2$ fresh weight layers, $\Theta\approx\log(1/\alpha)$, so $\alpha$ only sets the unit of time.
-\item Fresh chains of $k\ge3$ layers have thresholds of order $\alpha^{-(k-2)}$. So the first move of a three-layer network started at scale $\alpha$ costs time about $\alpha^{-1}$ \status{Heuristic}, and the depth-one race models diagonal or 2-homogeneous networks.
-\item The diagonal network's small-$\alpha$ limit~\cite{pesme2023saddle} is recalled to match (SC), up to the intercept (Literature, from memory). (LS) is not that limit.
-\item AGF~\cite{kunin2025agf} likewise accumulates utility without resets (Literature, from memory).
+\item For moves needing $k=2$ fresh weight layers, $\Theta=c\log(1/\alpha)$, with a constant $c$ that depends on the parametrization ($c=\frac12$ for the diagonal network of \cref{app:discrete:diag}).
+\item Fresh chains with $k\ge3$ cost about $\alpha^{-(k-2)}$, so the first move of a three-layer network started at scale $\alpha$ costs about $\alpha^{-1}$ \status{Heuristic}. The depth-one race therefore models diagonal or 2-homogeneous networks.
+\item The diagonal network's small-$\alpha$ limit~\cite{pesme2023saddle} is recalled to match (SC) up to the intercept. AGF~\cite{kunin2025agf} also accumulates utility without resets. Both are Literature, from memory.
+\item (LS) is not the depth-one limit.
 \item Deeper moves are \status{Heuristic}.
 \end{itemize}
 
 \begin{proposition}[Depth (Proposition A2.1 in the derivation)]\label{prop:app-A21}
-\status{Proved}\quad In either variant, a gate of depth $D$ fires only at times with $\tau(t)\ge D\Theta$. So the depth at time $t$ is at most $\lfloor\tau(t)/\Theta\rfloor\le\lfloor t/\Theta\rfloor$.
+\status{Proved}\quad In either variant, a gate of depth $D$ fires only when $\tau(t)\ge D\Theta$. So the depth at time $t$ is at most $\lfloor\tau(t)/\Theta\rfloor\le\lfloor t/\Theta\rfloor$. The proof is by induction on $D$, since $\Theta=|S_m(t_m)|\le\tau(t_m)-\tau(a_m)$.
 \end{proposition}
-The proof is by induction on $D$, using $\Theta=|S_m(t_m)|\le\tau(t_m)-\tau(a_m)$.
 
 \begin{proposition}[No uniform gate-count bound (Proposition A2.2 in the derivation)]\label{prop:app-A22}
-\status{Proved}\quad Take the population race, uniform inputs, and $y=\mathrm{MAJ}(x_1,\dots,x_m)$ with $m\le d$ odd. Let $u_m=\binom{m-1}{(m-1)/2}2^{1-m}\approx\sqrt{2/\pi m}$.
+\status{Proved}\quad Consider the population race with uniform inputs and $y=\mathrm{MAJ}(x_1,\dots,x_m)$, for odd $m\le d$. Let $u_m=\binom{m-1}{(m-1)/2}2^{1-m}\approx\sqrt{2/\pi m}$.
 \begin{enumerate}[label=(\arabic*),nosep]
-\item For $G=\{\mathrm{id}\}$, $m$ gates fire together at $\Theta/u_m$, with nothing earlier, so $T\approx\frac2\pi(t/\Theta)^2$.
-\item For the toy library, exactly $m^2$ distinct functions fire together at $\Theta/u_m$: the identities, $\mathrm{AND}(x_i,x_j)$ and $\mathrm{AND}(\neg x_i,\neg x_j)$. So $T\approx(\frac2\pi)^2(t/\Theta)^4$.
-\item Duplicates with equal availability times fire together. So no function of $t/\Theta$ bounds the syntactic gate count uniformly over libraries.
+\item For $G=\{\mathrm{id}\}$, $m$ gates fire together at $\Theta/u_m$ and nothing fires earlier, so $T\approx\frac2\pi(t/\Theta)^2$.
+\item For the toy library, exactly $m^2$ functions, distinct up to sign, fire together at $\Theta/u_m$: the identities, $\mathrm{AND}(x_i,x_j)$ and $\mathrm{AND}(\neg x_i,\neg x_j)$. So $T\approx(\frac2\pi)^2(t/\Theta)^4$.
+\item Duplicates with equal availability times fire together, so no function of $t/\Theta$ bounds the syntactic gate count uniformly over libraries.
 \end{enumerate}
 \end{proposition}
 \begin{proof}[Proof sketch]
-The utilities follow from $\E[yx_i]=u_m$, which is the probability that the other votes tie, from $\E[yx_ix_j]=0$, and from $\mathrm{AND}(\epsilon_1a,\epsilon_2b)=(\epsilon_1a+\epsilon_2b+\epsilon_1\epsilon_2ab-1)/2$. The listed gates have utility $\pm u_m$, and every other gate has utility at most $u_m/2$.
+$\E[yx_i]=u_m$, the chance that the other votes tie, and $\E[yx_ix_j]=0$. Expanding the AND gates as $\mathrm{AND}(\epsilon_1a,\epsilon_2b)=(\epsilon_1a+\epsilon_2b+\epsilon_1\epsilon_2ab-1)/2$ shows that the listed gates have utility $\pm u_m$, and all others at most $u_m/2$ in absolute value.
 \end{proof}
-So for the toy library, no bound $T\le C(t/\Theta)^2$ holds with $C$ independent of $d$. At $n=4096$, maj3 fires 9 gates at $t/\Theta\in[1.98,2.12]$ \status{Numerical}.
+So no bound $T\le C(t/\Theta)^2$ with $C$ independent of $d$ holds for the toy library uniformly over the targets $\mathrm{MAJ}_m$, $m\le d$. At $n=4096$, maj3 fires 9 gates at $t/\Theta\in[1.98,2.12]$ \status{Numerical}.
 
 \begin{theorem}[Gate count times incoherence (Theorem A2.3 in the derivation)]\label{thm:app-A23}
-\status{Proved}\quad For a set $B$ of gates, let $K_B$ be the centred empirical Gram matrix, with entries $\langle g_m-\bar g_m,g_{m'}-\bar g_{m'}\rangle_n$, and let $\kappa_B=\lambda_{\max}(K_B)$.
+\status{Proved}\quad Let $K_B$ be the centred empirical Gram matrix of a set $B$ of gates, with entries $\langle g_m-\bar g_m,g_{m'}-\bar g_{m'}\rangle_n$, and $\kappa_B=\lambda_{\max}(K_B)$.
 \begin{enumerate}[label=(\arabic*),nosep]
-\item In (LS), at any depth, every set $B$ of gates fired by time $t$ satisfies $|B|\le\kappa_B(\tau(t)/\Theta)^2$. If all $a_m=0$, $\tau$ may be replaced by $\|R(t)\|_n$.
+\item In (LS), at any depth, every set $B$ fired by time $t$ satisfies $|B|\le\kappa_B(\tau(t)/\Theta)^2$. If all $a_m=0$, $\tau$ may be replaced by $\|R(t)\|_n$.
 \item In (SC), $|\mathrm{Sat}(t)|\le\kappa_{\mathrm{Sat}(t)}(\|R(t)\|_n/\Theta)^2$, and $\mathrm{supp}\,c\subseteq\mathrm{Sat}$.
 \end{enumerate}
-So the number $T(t)$ of distinct fired functions satisfies $T(t)\le\kappa(t)(\tau/\Theta)^2$. Let $\mu_B$ be the largest absolute centred covariance between two gates of $B$. If $\mu_Bx<1$, where $x=(\tau/\Theta)^2$, Gershgorin's theorem gives $|B|\le(1-\mu_B)x/(1-\mu_Bx)$.
+So the number $T(t)$ of distinct fired functions is at most $\kappa(t)(\tau/\Theta)^2$. Let $\mu_B$ be the largest absolute centred covariance within $B$, and $x=(\tau/\Theta)^2$. If $\mu_Bx<1$, then $|B|\le(1-\mu_B)x/(1-\mu_Bx)$, by Gershgorin's theorem.
 \end{theorem}
 \begin{proof}[Proof sketch]
-Each $m\in B$ has $\sigma_mS_m(t)=\Theta$. The refit intercept gives $\bar r=0$, so $U_m=\langle r,\tilde g_m\rangle_n$, where $\tilde g_m=g_m-\bar g_m$. Let $B(s)=\{m\in B:a_m\le s\}$. Then $|B|\Theta=\int_0^t\langle r,\sum_{B(s)}\sigma_m\tilde g_m\rangle_n\le\tau(t)\sqrt{\kappa_B|B|}$, because a principal submatrix has no larger top eigenvalue. If all $a_m=0$, Cauchy--Schwarz is applied to $\langle R,\cdot\rangle_n$ instead.
+Each $m\in B$ has $\sigma_mS_m(t)=\Theta$. The refit intercept gives $\bar r=0$, so $U_m=\langle r,\tilde g_m\rangle_n$ with $\tilde g_m=g_m-\bar g_m$. With $B(s)=\{m\in B:a_m\le s\}$, $|B|\Theta=\int_0^t\langle r,\sum_{B(s)}\sigma_m\tilde g_m\rangle_n\le\tau(t)\sqrt{\kappa_B|B|}$. The last step uses the fact that a principal submatrix has no larger top eigenvalue. When all $a_m=0$, apply Cauchy--Schwarz to $\langle R,\cdot\rangle_n$ instead.
 \end{proof}
 The population analogue is tight up to a factor $\pi/2$ (\cref{prop:app-A22}(1)). A library-wide coherence does not help, since the toy library has $\mu=\frac12$.
 
@@ -113,206 +103,178 @@ The population analogue is tight up to a factor $\pi/2$ (\cref{prop:app-A22}(1))
 \status{Proved}\quad In (SC) on a depth-one dictionary, $\Theta\|c(t)\|_1=\langle R(t),f_t\rangle_n\le\|R(t)\|_n\sqrt{1-\bar y^2}\le\tau(t)$, and $|c_0|\le1+\|c\|_1$.
 \end{theorem}
 \begin{proof}[Proof sketch]
-KKT gives $c_mS_m=|c_m|\Theta$, with $S_m=\langle R,g_m\rangle_n$. Since $\langle R,1\rangle_n=0$, $\Theta\|c\|_1=\langle R,f_t-\bar y\rangle_n$. The vector $f_t-\bar y$ is a projection of $y-\bar y$ onto a cone, so $\|f_t-\bar y\|_n\le\sqrt{1-\bar y^2}$. This is LASSO duality, with $R$ as the residual and $\Theta$ as the penalty.
+KKT gives $c_mS_m=|c_m|\Theta$, with $S_m=\langle R,g_m\rangle_n$. Since $\langle R,1\rangle_n=0$, $\Theta\|c\|_1=\langle R,f_t-\bar y\rangle_n$. Here $f_t-\bar y$ is the projection of $y-\bar y$ onto a cone, so its norm is at most $\sqrt{1-\bar y^2}$. This is LASSO duality, with $R$ as the residual and $\Theta$ as the penalty.
 \end{proof}
 
-\paragraph{Checks} \status{Numerical}. The toy races ran at $d=30$, with $n=64$--$4096$, on par2, maj3, and3, dnf3 and par3.
+\paragraph{Checks} \status{Numerical}. These are toy races at $d=30$ with $n=64$--$4096$.
 \begin{itemize}[nosep]
-\item \Cref{thm:app-A1}, \cref{prop:app-A21} and \cref{thm:app-A23} held at every event.
-\item The ratio $\kappa\tau^2/(\Theta^2T)$ was $1.00$ on par2, so the bound is attained there. It was at most 7 on the other learnable targets, and up to 400 on par3, where a lone noise gate fires late.
-\item The identity of \cref{thm:app-A24} held to $3\cdot10^{-14}$.
+\item \Cref{thm:app-A1,prop:app-A21,thm:app-A23} held at every event.
+\item The ratio $\kappa\tau^2/(\Theta^2T)$ is $1.00$ on par2, where the bound is attained. It is at most 7 on maj3, and3 and dnf3, and up to 400 on par3, where one noise gate fires late.
+\item \Cref{thm:app-A24} holds to machine precision in the toy (SC) runs, and to $3\cdot10^{-14}$ on 40 random correlated dictionaries with 130 exits from the saturated set.
 \end{itemize}
 
 \begin{corollary}[Test error along training (Corollary A2.5 in the derivation)]\label{cor:app-A25}
-\status{Proved for (a), (a$'$); proved given the lemmas of A1$'$ for (b)}\quad Let $h_t=\mathrm{sgn}f_t$ and $D(t)=\lfloor\tau(t)/\Theta\rfloor$. Each of the following holds with probability $1-\delta$, simultaneously for all $t$.
+\status{Proved for (a), (a$'$); proved given the lemmas of A1$'$ for (b)}\quad Let $h_t=\mathrm{sgn}f_t$ and $D(t)=\lfloor\tau(t)/\Theta\rfloor$. Each of (a), (a$'$) and (b) holds with probability $1-\delta$, simultaneously for all $t$.
 \begin{enumerate}[label=(\alph*),nosep]
-\item For (LS), \cref{thm:app-A1} holds for $h_t$ with $T(t)\le\lfloor\kappa(t)\tau^2/\Theta^2\rfloor$. In particular, at zero training error, $\mathrm{err}(h_t)\le L_{\lfloor\kappa\tau^2/\Theta^2\rfloor}/n$.
-\item[(a$'$)] Consider (LS) or (SC), for a race that merges candidates equal up to sign on the sample. Let $\mathcal F_{\le D}$ be the set of non-constant functions of depth at most $D$, distinct up to sign on the sample, and let $\bar\kappa_D$ be their top centred Gram eigenvalue. These depend only on the library and the unlabelled inputs. Then \cref{thm:app-A1} holds with $T(t)\le\min\{|\mathcal F_{\le D(t)}|,\lfloor\bar\kappa_{D(t)}\tau^2/\Theta^2\rfloor\}$. At depth one, $\tau$ may be replaced by $\|R\|_n$.
-\item[(b)] For (SC) at depth one, A1$'$ holds with $B\le2\max(1,\tau/\Theta)$, so the gap is $O((1+\tau/\Theta)\sqrt{\log(|G|d^k)/n})$, whatever the gate count.
+\item For (LS), \cref{thm:app-A1} holds for $h_t$ with $T(t)\le\lfloor\kappa(t)\tau^2/\Theta^2\rfloor$. For example, at zero training error, $\mathrm{err}(h_t)\le L_{\lfloor\kappa\tau^2/\Theta^2\rfloor}/n$.
+\item[(a$'$)] For (LS) or (SC), in a race that merges candidates equal up to sign on the sample: let $\mathcal F_{\le D}$ be the non-constant depth-$\le D$ functions that are distinct up to sign on the sample, and $\bar\kappa_D$ their top centred Gram eigenvalue. These depend only on the library and the unlabelled inputs. Then \cref{thm:app-A1} holds with $T(t)\le\min\{|\mathcal F_{\le D(t)}|,\lfloor\bar\kappa_{D(t)}\tau^2/\Theta^2\rfloor\}$, and at depth one $\tau$ may be replaced by $\|R\|_n$.
+\item[(b)] For (SC) at depth one, Theorem A1$'$ holds with $B\le2\max(1,\tau/\Theta)$. Its gap is therefore of order $(1+\tau/\Theta)\sqrt{\log(|G|d^k)/n}$, whatever the gate count.
 \end{enumerate}
 \end{corollary}
-For (a$'$), the fired representatives lie in $\mathcal F_{\le D(t)}$ by \cref{prop:app-A21}, and up to signs their Gram matrix is a principal submatrix of the library's.
+For (a$'$), the fired representatives lie in $\mathcal F_{\le D(t)}$ (\cref{prop:app-A21}), and up to sign flips their Gram matrix is a principal submatrix of the library's.
 
-\paragraph{Strength of the three statements.}
+\paragraph{How strong these are.}
 \begin{itemize}[nosep]
-\item \emph{(a) is a decomposition, not a time-only bound.} The factor $\kappa(t)$ belongs to the learned circuit and can grow; for maj3, $\kappa=3$ after the first event. Moreover, (a) is never tighter than \cref{thm:app-A1} at the realized size.
-\item \emph{(a$'$) is time-only but weak.} For the toy library, $\bar\kappa_1=d$ in the population, and empirically $\bar\kappa_1=35$ and $32$ at $n=4096$ and $16384$ ($d=30$). At zero training error, (a$'$) gives $0.21$ and $0.053$ at $\|R\|_n=\Theta$, and $0.61$ and $0.195$ just below $2\Theta$. For par2 at its realized size, \cref{thm:app-A1} gives $0.004$ and $0.001$.
-\item \emph{(a$'$) needs the merging.} Without it, the bound fails on the referee's counterexample.
-\item \emph{(b) is near-vacuous.} At $n=4096$ its 0-1 bound is $0.40$--$0.97$; a useful value would need $n\gtrsim10^5$.
+\item \emph{(a) is a decomposition, not a time-only bound.} $\kappa(t)$ belongs to the learned circuit and can grow (3 for maj3 after its first event). It is never tighter than \cref{thm:app-A1} at the realized size.
+\item \emph{(a$'$) is time-only but weak.} For the toy library, $\bar\kappa_1=d$ in the population, and $35$ and $32$ empirically at $n=4096$ and $16384$. At zero training error, (a$'$) gives $0.21$ and $0.053$ at $\|R\|_n=\Theta$, and $0.61$ and $0.195$ just below $2\Theta$. \Cref{thm:app-A1} at par2's realized size gives $0.004$ and $0.001$.
+\item \emph{(a$'$) needs the merging.} A referee counterexample shows that it fails without it.
+\item \emph{(b) is near-vacuous.} Its 0-1 bound at $n=4096$ is $0.40$--$0.97$.
 \end{itemize}
-So training time bounds the depth, the incoherence-weighted size, and the depth-one readout norm. It bounds the raw gate count only through $\kappa(t)$ or $\bar\kappa\approx d$.
-
-\paragraph{No early noise fitting (Proposition A2.6 in the derivation)} \status{Proved}. Suppose $\E y=\E[yg]=0$ for all $M_1$ depth-one candidates $g$, as for parities of more than $k$ inputs. Then, with probability $1-\delta$, nothing fires before $\Theta/2\epsilon$, where $\epsilon=\sqrt{2\log(2(M_1+1)/\delta)/n}$. On par3 the first noise gate fires at $t/\Theta=2.65$--$20.0$ ($n=64$--$4096$), against bounds of $0.84$--$6.71$.
+So training time bounds the depth, the incoherence-weighted size and the depth-one readout norm. It bounds the raw gate count only through $\kappa(t)$ or $\bar\kappa\approx d$.
 
 \subsection{Minibatches: reproducing the population run}\label{app:discrete:sgd}
 
-\paragraph{The two runs.} The \emph{population greedy run} (PG) adds one gate per step. Given the circuit $C_t$, let $f_t$ be the $L^2(P)$ projection of $y$ onto $V_t=\mathrm{span}\{1,C_t\}$, and $r_t=y-f_t$. PG adds $m_t=\arg\max_m|U_t(m)|$, where $U_t(m)=\E[r_tg_m]$. The maximum runs over $M_t\le|G|(d+t)^k$ candidates, identified up to sign. Three assumptions are made:
+\paragraph{The population greedy run (PG).} PG adds one gate per step. Given $C_t$, let $f_t$ be the $L^2(P)$ projection of $y$ onto $V_t=\mathrm{span}\{1,C_t\}$, and $r_t=y-f_t$. PG adds $m_t=\arg\max_m|U_t(m)|$, where $U_t(m)=\E[r_tg_m]$. The maximum is over $M_t\le|G|(d+t)^k$ candidates, identified up to sign. Three assumptions are made:
 \begin{itemize}[nosep]
 \item a gap $\gamma>0$: $|U_t(m_t)|\ge|U_t(m)|+\gamma$ for $m\ne\pm m_t$ and $t<T$;
-\item a bound $|r_t|\le R$;
-\item $\lambda_*=\min_{t\le T}\lambda_{\min}(K_t)>0$, where $K_t$ is the $L^2(P)$ Gram matrix of $(1,C_t)$.
+\item $|r_t|\le R$;
+\item $\lambda_*=\min_{t\le T}\lambda_{\min}(K_t)>0$, for the $L^2(P)$ Gram matrices $K_t$ of $(1,C_t)$.
 \end{itemize}
-The \emph{empirical run} (EG) uses a batch $B_t$ of size $b$ at step $t$, either $S$ itself (full batch) or fresh. It refits on $B_t$, adds a maximizer of $|\langle\hat r_t,g_m\rangle_{B_t}|$, and outputs the sign of the final refit.
+
+\paragraph{The empirical run (EG).} At step $t$, EG uses a batch $B_t$ of size $b$: either $S$ itself (full batch) or a fresh batch. It refits on $B_t$, adds a maximizer of $|\langle\hat r_t,g_m\rangle_{B_t}|$, and outputs the sign of its final refit.
 
 \begin{theorem}[Decision stability (Theorem A3.1 in the derivation)]\label{thm:app-A31}
-\status{Proved}\quad Let $\epsilon=\gamma/(2+2\sqrt{2T/\lambda_*})$. Suppose
-\[
-b\ge\frac{2R^2}{\epsilon^2}\log\frac{4\sum_{t<T}(M_t+t+1)}{\delta}\quad\text{and}\quad b\ge\frac{8(T+1)^2}{\lambda_*^2}\log\frac{4(T+1)^3}{\delta}.
-\]
-Then, for both protocols, with probability $1-\delta$:
+\status{Proved}\quad Let $\epsilon=\gamma/(2+2\sqrt{2T/\lambda_*})$, and suppose that $b\ge\frac{2R^2}{\epsilon^2}\log\frac{4\sum_{t<T}(M_t+t+1)}{\delta}$ and $b\ge\frac{8(T+1)^2}{\lambda_*^2}\log\frac{4(T+1)^3}{\delta}$. Then, for both protocols, with probability $1-\delta$:
 \begin{enumerate}[label=(\arabic*),nosep]
 \item EG's circuit computes $C_T$;
 \item if $y\in V_T$ almost surely, EG's predictor equals $y$ almost surely.
 \end{enumerate}
-In addition, with probability $1-2\delta$, \cref{thm:app-A1} holds for EG's predictor, on the sample of its final refit, with $L=\rho_T+\log(1/\delta)$ and no wiring term.
+With probability $1-2\delta$, \cref{thm:app-A1} holds for EG's predictor, on the sample of its final refit, with $L=\rho_T+\log(1/\delta)$ and no wiring term.
 \end{theorem}
 \begin{proof}[Proof sketch]
-The functions $r_t$, $g_m$ and $K_t$ come from the population run and do not depend on the data, so Hoeffding's inequality with a union bound applies. It gives empirical utilities accurate to $\epsilon$, and $\lambda_{\min}(\hat K_t)\ge\lambda_*/2$. Inductively, if EG holds $C_t$, then $\hat r_t=(I-\hat\Pi_t)r_t$ with $\|\hat\Pi_tr_t\|^2<2(t+1)\epsilon^2/\lambda_*$. So every empirical utility is within $\gamma/2$ of $U_t$, and the gap fixes the argmax.
+The functions $r_t$, $g_m$ and $K_t$ belong to the population run, so Hoeffding's inequality and a union bound give $\epsilon$-accurate empirical utilities, and $\lambda_{\min}(\hat K_t)\ge\lambda_*/2$. Inductively, if EG holds $C_t$, then $\hat r_t=(I-\hat\Pi_t)r_t$ with $\|\hat\Pi_tr_t\|^2<2(t+1)\epsilon^2/\lambda_*$. So every empirical utility is within $\gamma/2$ of $U_t$, and the gap fixes the argmax.
 \end{proof}
 
-\paragraph{Reuse (Theorem A3.5)} \status{Proved}. Now let each $B_t$ be drawn with replacement from a fixed $S$ of size $n$. The same conclusions hold, with the Occam bound on $S$, if the conditions hold with $b$ replaced by $n_{\rm eff}=(n^{-1/2}+b^{-1/2})^{-2}\ge\min(n,b)/4$ and with $\delta/2$ in place of $\delta$.
-
-\paragraph{Thresholds} \status{Numerical}.
+\paragraph{Related results.}
 \begin{itemize}[nosep]
-\item For par2, with $\mathrm{XOR}\in G$, $\gamma=\frac12$, $R=\lambda_*=1$ and $M_0=2205$, the fresh-batch theorem needs $b\ge2254$. With reuse it needs $b\ge6225$ at $n=16384$. So the experiments' $b=64$ is not covered.
-\item With the toy library, at $T=30$ and $\lambda_*=\frac12$, the Gram condition alone needs $4.5\cdot10^5$ samples.
-\item Stability has no $1/\varepsilon$ factor, but it says nothing under ties.
+\item \emph{Reuse} (Theorem A3.5, \status{Proved}). If batches are drawn with replacement from a fixed $S$ of size $n$, the same conclusions hold, with the Occam bound on $S$. The conditions use $(n^{-1/2}+b^{-1/2})^{-2}$ in place of $b$, and $\delta/2$ in place of $\delta$.
+\item \emph{Thresholds} (\status{Numerical}). For par2, with $\mathrm{XOR}\in G$, $\gamma=\frac12$, $R=\lambda_*=1$ and $M_0=2205$, the theorem needs $b\ge2254$. With reuse at $n=16384$ it needs $b\ge6225$. So the experiments' $b=64$ is not covered. At $T=30$ and $\lambda_*=\frac12$, the Gram condition needs $4.5\cdot10^5$ samples.
+\item \emph{Limits.} Stability gives exact recovery with no factor $1/\varepsilon$ for a target error $\varepsilon$, but it pays $1/\gamma^2$ and says nothing under ties or zero utilities.
+\item \emph{The SGD race.} For the race, only clock concentration is proved (Lemma A3.2, \status{Proved}). Under fresh batches, with residuals bounded by $R$ and a fixed finite candidate set $\mathcal M$, with probability $1-\delta$ every clock stays within $R\sqrt{2\eta t_0\log(2|\mathcal M|/\delta)/b}$ of its drift clock up to time $t_0$; the observed errors are 75--88\% of this \status{Numerical}. That the race reproduces the population race is \status{Heuristic}.
+\item \emph{Online-to-batch} (Proposition A3.3, \status{Proved}; cf.~\cite{cesabianchi2004online}). In one-pass training on fresh samples, pre-update minibatch losses estimate the trajectory's average test loss.
 \end{itemize}
-
-\paragraph{The SGD race.} For the race itself, only clock concentration is proved (Lemma A3.2, \status{Proved}). With fresh batches and step size $\eta$, every clock stays within $R\sqrt{2\eta t_0\log(2|\mathcal M|/\delta)/b}$ of its drift clock up to time $t_0$; observed errors are 75--88\% of this bound. That the SGD race reproduces the population race is \status{Heuristic}. Separately, an online-to-batch bound in the style of~\cite{cesabianchi2004online} (Proposition A3.3, \status{Proved}) shows that pre-update minibatch losses estimate the trajectory's average test loss.
 
 \subsection{Greedy growth versus minimum circuits}\label{app:discrete:greedy}
 
 \begin{proposition}[Equal, overshoot, never (Propositions A4.1--A4.3 in the derivation)]\label{prop:app-A4}
-\status{Proved (population; item 1 also on samples)}\quad Let $s^*$ be the size of the smallest consistent circuit.
+\status{Proved; item 2 for the population race only}\quad Let $s^*$ be the size of the smallest consistent circuit.
 \begin{enumerate}[label=(\arabic*),nosep]
-\item Suppose $y=\pm g^*$ for a depth-one candidate $g^*$, with $0<P(y=1)<1$. Then $g^*$ and its duplicates fire first, at $\Theta/\mathrm{Var}(y)$, and the race stops with $T=1=s^*$. The same holds on a sample, with $\mathrm{Var}_n$.
-\item For $y=\mathrm{maj}_3$, with uniform inputs and the toy library, 9 gates fire at $2\Theta$, and after them the 0-1 error is $0$. Then exactly 12 depth-two gates of utility $\frac14$ fire at $6\Theta$. The race ends with 21 gates, where $s^*=3$ (\status{Numerical}, by exhaustive search). For $\mathrm{MAJ}_m$, $m^2$ gates fire where $m$ suffice.
-\item For $y=\chi_A$ with $|A|=s>k$ and uniform inputs, nothing ever fires in the population race. If $\mathrm{XOR}\in G$, the minimum-consistent-circuit learner with an output-gate readout has error at most $L_{s-1}/n=O((s\log(d+s)+\log\frac1\delta)/n)$ with probability $1-\delta$.
+\item If $y=\pm g^*$ for a depth-one candidate $g^*$, and $0<P(y=1)<1$, then $g^*$ and its duplicates fire first, at $\Theta/\mathrm{Var}(y)$. The race then stops with $T=1=s^*$. The same holds on a sample containing both labels, with $\mathrm{Var}_n$, and with duplicates meaning candidates equal to $\pm y$ on the sample.
+\item Take uniform inputs, the toy library, and $y=\mathrm{maj}_3$. Then 9 gates fire at $2\Theta$, and the 0-1 error is already zero. Exactly 12 depth-two gates of utility $\frac14$ fire next, at $6\Theta$. So the race ends with 21 gates, while $s^*=3$ (\status{Numerical}, by exhaustive search). For $\mathrm{MAJ}_m$, $m^2$ gates fire where $m$ suffice.
+\item Take uniform inputs and $y=\chi_A$ with $|A|=s>k$. Then nothing ever fires in the population race. On a sample, with probability $1-\delta$, nothing fires before $\Theta\sqrt{n/(8\log(2(M_1+1)/\delta))}$, where $M_1$ is the number of depth-one candidates (Proposition A2.6). If $\mathrm{XOR}\in G$, then with probability $1-\delta$ the minimum-consistent-circuit learner with an output-gate readout has error at most $L_{s-1}/n=O((s\log(d+s)+\log\frac1\delta)/n)$.
 \end{enumerate}
 \end{proposition}
 \begin{proof}[Proof sketch]
-(1) $|\E[(y-\bar y)g]|\le\E|y-\bar y|=\mathrm{Var}(y)$ when $|g|\le1$, with equality only for $g=\pm y$. (2) The 9 gates span the functions of degree at most 2, leaving the residual $-\frac12x_1x_2x_3$, and a Fourier lemma bounds the depth-two utilities by $\frac14$. (3) Depth-one gates see fewer than $s$ variables, so they are uncorrelated with $y$. The error bound is \cref{thm:app-A1}(4).
+(1) For $|g|\le1$, $|\E[(y-\bar y)g]|\le\E|y-\bar y|=\mathrm{Var}(y)$, with equality only for $g=\pm y$. (2) The 9 gates span the degree-$\le2$ functions, which leaves the residual $-\frac12x_1x_2x_3$, and a Fourier lemma bounds the depth-two utilities by $\frac14$. (3) Depth-one gates see fewer than $s$ variables, and the error bound is \cref{thm:app-A1}(4).
 \end{proof}
-
-Both learners get the same Occam bound as a function of $T$; they differ only in the $T$ they reach. On samples \status{Numerical}:
+So both learners get the same Occam bound as a function of $T$, and they differ in which $T$ they reach \status{Numerical}.
 \begin{itemize}[nosep]
-\item maj3 reaches zero training error with 6 gates.
-\item dnf3 needs 18 gates where 6 suffice; at $n=4096$ its bound is $0.084$, against $0.019$ for 6 gates.
-\item On par3 only noise gates fire, and the bound ($0.52$--$0.95$) certifies nothing.
+\item maj3 reaches zero training error with 6 gates at $n\ge256$.
+\item dnf3 needs 18 gates where 6 suffice. Its bound at $n=4096$ is $0.084$, where 6 gates would give $0.019$.
+\item par3 fires only noise gates, at $t/\Theta=2.65$--$20.0$ (the proved lower bound is $0.84$--$6.71$). Its bound of $0.52$--$0.95$ certifies nothing.
 \end{itemize}
 
 \subsection{Diagonal linear networks (Section C2 of the derivation)}\label{app:discrete:diag}
 
-\paragraph{Setting.} The dictionary has $D$ characters $\chi_J(x)=\prod_{i\in J}x_i$, for example all $|J|\le k$, which gives $D=D_k=\sum_{i\le k}\binom di$. Let $X_{iJ}=\chi_J(x_i)$ and $K=X^\top X/n$. The model is $f_w=\sum_Jw_J\chi_J$, with $w=u\odot u-v\odot v$ and loss $L(w)=\frac1{2n}\|Xw-y\|^2$, trained by gradient flow from $u=v=\alpha\mathbf1$. Let $r=y-Xw$, $g=\nabla L=-X^\top r/n$, $G=\int_0^tg$, $\tau=\int_0^t\|r\|_n$ and $R=\int_0^tr$. Write $\Theta_\epsilon=\frac14\operatorname{arsinh}\frac\epsilon{2\alpha^2}\ge\frac14\log\frac\epsilon{\alpha^2}$.
+\paragraph{Setting.} The dictionary consists of $D$ characters $\chi_J(x)=\prod_{i\in J}x_i$; for example, taking all $|J|\le k$ gives $D=D_k=\sum_{i\le k}\binom di$. Let $X_{iJ}=\chi_J(x_i)$ and $K=X^\top X/n$. The model is $f_w=\sum_Jw_J\chi_J$, with $w=u\odot u-v\odot v$ and loss $L(w)=\frac1{2n}\|Xw-y\|^2$. It is trained by gradient flow from $u=v=\alpha\mathbf1$. Write $r=y-Xw$, $g=\nabla L=-X^\top r/n$, $G=\int_0^tg$, $\tau=\int_0^t\|r\|_n$ and $R=\int_0^tr$, and set $\Theta_\epsilon=\frac14\operatorname{arsinh}\frac\epsilon{2\alpha^2}\ge\frac14\log\frac\epsilon{\alpha^2}$.
 
-\paragraph{Closed form and no early growth (Lemma C2.1, Theorem C2.2 in the derivation)} \status{Proved}. The flow exists for all $t$, with $u=\alpha e^{-2G}$, $v=\alpha e^{2G}$ and $w=-2\alpha^2\sinh(4G)$.
+\paragraph{Closed form and no early growth} (Lemma C2.1, Theorem C2.2, \status{Proved}).
 \begin{itemize}[nosep]
-\item $-G_J$ is exactly the race clock, and $|w_J|\ge\epsilon$ exactly when it reaches $\Theta_\epsilon\approx\frac12\log\frac1\alpha$.
-\item $|G_J|\le\tau$, so nothing reaches $\epsilon$ while $\tau(t)<\Theta_\epsilon$.
-\item Let $U_0=\max_J|\langle y,\chi_J\rangle_n|$ and $\epsilon_D=\sqrt{\lambda_{\max}(K)D}\,\epsilon$. If $U_0>\epsilon_D$, the first escape happens in $[\Theta_\epsilon/(U_0+\epsilon_D),\Theta_\epsilon/(U_0-\epsilon_D)]$.
+\item $w(t)=-2\alpha^2\sinh(4G(t))$. So $-G_J$ is exactly the race clock, and $|w_J|\ge\epsilon$ exactly when it reaches $\Theta_\epsilon\approx\frac12\log\frac1\alpha$.
+\item Since $|G_J|\le\tau$, nothing reaches $\epsilon$ while $\tau(t)<\Theta_\epsilon$.
+\item Let $U_0=\max_J|\langle y,\chi_J\rangle_n|$ and $\epsilon_D=\sqrt{\lambda_{\max}(K)D}\,\epsilon$. If $U_0>\epsilon_D$, the first escape time lies in $[\Theta_\epsilon/(U_0+\epsilon_D),\Theta_\epsilon/(U_0-\epsilon_D)]$.
 \end{itemize}
 
 \begin{theorem}[How many coordinates can have grown (Theorem C2.3 in the derivation)]\label{thm:app-C23}
 \status{Proved}\quad Let $B=\{J:|w_J(t)|\ge\epsilon\}$, $N_\epsilon=|B|$ and $\kappa_B=\lambda_{\max}(X_B^\top X_B/n)$.
 \begin{enumerate}[label=(\arabic*),nosep]
 \item $N_\epsilon\le(\int_0^t\|\nabla L\|_2)^2/\Theta_\epsilon^2$.
-\item $N_\epsilon\le\kappa_B\tau^2/\Theta_\epsilon^2$. Let $\mu_n=\max_{J\ne J'}|\langle\chi_J,\chi_{J'}\rangle_n|$ and $x=(\tau/\Theta_\epsilon)^2$. Then $N_\epsilon\le(1-\mu_n)x/(1-\mu_nx)$ if $\mu_nx<1$. For uniform inputs and characters of degree at most $k$, $\mu_n\le\bar\mu=\sqrt{2\log(2D_{\min(2k,d)}/\delta')/n}$ with probability $1-\delta'$.
+\item $N_\epsilon\le\kappa_B\tau^2/\Theta_\epsilon^2$. Let $\mu_n=\max_{J\ne J'}|\langle\chi_J,\chi_{J'}\rangle_n|$ and $x=(\tau/\Theta_\epsilon)^2$. Then $N_\epsilon\le(1-\mu_n)x/(1-\mu_nx)$ when $\mu_nx<1$. For uniform inputs and characters of degree at most $k$, with probability $1-\delta'$, $\mu_n\le\bar\mu:=\sqrt{2\log(2D_{\min(2k,d)}/\delta')/n}$.
 \item $\sum_J|w_J||G_J|=\langle R,f_w\rangle_n$, so $\sum_{J\in B}|w_J|\le2\tau/\Theta_\epsilon$.
 \end{enumerate}
 \end{theorem}
 \begin{proof}[Proof sketch]
-Each $J\in B$ has $|G_J|\ge\Theta_\epsilon$; item (1) then follows from Minkowski's inequality. For item (2), with $\sigma_J=-\mathrm{sgn}\,G_J$, $N\Theta_\epsilon\le\int_0^t\langle r,\sum_B\sigma_J\chi_J\rangle_n\le\tau\sqrt{\kappa_BN}$, as in \cref{thm:app-A23}. The bound on $\mu_n$ is Hoeffding's inequality for the characters $\chi_{J\triangle J'}$.
+Each $J\in B$ has $|G_J|\ge\Theta_\epsilon$, and (1) follows from Minkowski's inequality. For (2), with $\sigma_J=-\mathrm{sgn}\,G_J$, $N\Theta_\epsilon\le\int_0^t\langle r,\sum_B\sigma_J\chi_J\rangle_n\le\tau\sqrt{\kappa_BN}$, as in \cref{thm:app-A23}. The bound on $\mu_n$ is Hoeffding's inequality for the characters $\chi_{J\triangle J'}$.
 \end{proof}
-Item (2) is exact for a single-character target that is empirically orthogonal to the rest of the dictionary. At nonzero coherence it is tight only as $\alpha\to0$.
+Item (2) is exact at the first crossing for a single-character target that is empirically orthogonal to the rest of the dictionary. At nonzero coherence it is strict; the derivation sketches, without a full proof, that it becomes tight as $\alpha\to0$.
 
 \begin{theorem}[Generalization uniform in $t$ and $\epsilon$ (Theorem C2.4 in the derivation)]\label{thm:app-C24}
-\status{Proved}\quad Let $\ell_N=\log\binom DN+\log\Phi(2^{\min(N,d+1)},N)$ and $\mu_\epsilon(t)=\sum_{J\notin B}|w_J(t)|$. With probability $1-\delta$, for all $t\ge0$ and $\epsilon>0$, with $N=N_\epsilon(t)$,
-\[
-P(yf_{w(t)}\le0)\le\mathrm{kl}^{-1}_+\big(\widehat P_S[yf_{w(t)}\le2\mu_\epsilon(t)],\ (\ell_N+\log\tfrac{(N+1)(N+2)}\delta)/n\big).
-\]
+\status{Proved}\quad Let $\ell_N=\log\binom DN+\log\Phi(2^{\min(N,d+1)},N)$ and $\mu_\epsilon(t)=\sum_{J\notin B}|w_J(t)|$. With probability $1-\delta$, for all $t\ge0$ and $\epsilon>0$, with $N=N_\epsilon(t)$:
+\[P(yf_{w(t)}\le0)\le\mathrm{kl}^{-1}_+\big(\widehat P_S[yf_{w(t)}\le2\mu_\epsilon(t)],\ (\ell_N+\log\tfrac{(N+1)(N+2)}\delta)/n\big).\]
 \end{theorem}
 \begin{proof}[Proof sketch]
-Write $f_w=f_L+f_s$, with $f_L$ supported on $B$ and $\|f_s\|_\infty\le\mu$. The set $\{yf_L\le\mu\}$ is a threshold of $(y\chi_J(x))_{J\in B}$, which takes at most $2^{\min(N,d+1)}$ values. So by Cover's count there are at most $e^{\ell_N}$ such sets. Apply kl-Chernoff with a union bound over the sets and over $N$, and compare margins on test and training points.
+Split $f_w=f_L+f_s$, with $f_L$ supported on $B$ and $\|f_s\|_\infty\le\mu$. The set $\{yf_L\le\mu\}$ is a threshold of $(y\chi_J(x))_{J\in B}$, which takes at most $2^{\min(N,d+1)}$ values. By Cover's count there are therefore at most $e^{\ell_N}$ such sets. Apply kl-Chernoff with a union bound over the sets and over $N$, and compare margins on test and training points.
 \end{proof}
 
 \begin{corollary}[Time-indexed form (Corollary C2.5 in the derivation)]\label{cor:app-C25}
 \status{Proved}\quad Fix $\gamma\in(0,1]$. Let $\epsilon=\gamma/2D$, $\Theta_\gamma=\frac14\operatorname{arsinh}\frac{\gamma}{4D\alpha^2}$, $x=(\tau/\Theta_\gamma)^2$ and $\ell^*_N=\max_{N'\le N}\ell_{N'}$. On the event of \cref{thm:app-C24}, every $\bar N\in[N_\epsilon(t),D]$, possibly data-dependent, satisfies
-\[
-\mathrm{err}(\mathrm{sgn}f_{w(t)})\le\mathrm{kl}^{-1}_+\big(\widehat P_S[yf_{w(t)}\le\gamma],\ (\ell^*_{\bar N}+\log\tfrac{(\bar N+1)(\bar N+2)}\delta)/n\big).
-\]
-Three choices of $\bar N$ are admissible:
+\[\mathrm{err}(\mathrm{sgn}f_{w(t)})\le\mathrm{kl}^{-1}_+\big(\widehat P_S[yf_{w(t)}\le\gamma],\ (\ell^*_{\bar N}+\log\tfrac{(\bar N+1)(\bar N+2)}\delta)/n\big).\]
+There are three admissible choices of $\bar N$, each capped at $D$:
 \begin{enumerate}[label=(\arabic*),nosep]
 \item $\lfloor\kappa_Bx\rfloor$, with $\kappa_B$ measured;
 \item $\lfloor(1-\mu_n)x/(1-\mu_nx)\rfloor$, if $\mu_nx<1$;
-\item the same with $\bar\mu$ in place of $\mu_n$, and optionally with $t$ in place of $\tau$, at total probability $1-\delta-\delta'$.
+\item for uniform inputs and all characters of degree $\le k$, the same with $\bar\mu$ in place of $\mu_n$, and optionally $t$ in place of $\tau$, if $\bar\mu x<1$, at total probability $1-\delta-\delta'$.
 \end{enumerate}
-In each case, cap $\bar N$ at $D$.
 \end{corollary}
-Only choice (3) is a function of $(n,D,\tau)$ alone, and it needs $n>2\log(2D_{\min(2k,d)}/\delta')(\tau/\Theta_\gamma)^4$. $D$ enters only through $\log D$.
+Only choice (3) depends on $(n,D,\tau)$ alone, and it needs $n>2\log(2D_{\min(2k,d)}/\delta')(\tau/\Theta_\gamma)^4$. $D$ enters only through $\log D$.
 
-\paragraph{Discrete GD and SGD (Proposition C2.6)} \status{Proved}. Consider steps $u\leftarrow u\odot(1-2\eta g_j)$ and $v\leftarrow v\odot(1+2\eta g_j)$, with any gradient estimates $g_j$, where $\bar G=\max_j\|g_j\|_\infty$ and $2\eta\bar G<1$.
+\paragraph{Discrete GD and SGD} (Proposition C2.6, \status{Proved}). Suppose $2\eta\bar G<1$, where $\bar G=\max_j\|g_j\|_\infty$.
 \begin{itemize}[nosep]
-\item No coordinate grows while the minibatch effective time $\eta\sum_j\|r_j\|_{B_j}$ is below $\Theta_\epsilon(1-4\eta^2\bar G^2)$.
-\item Under any batches, $N_\epsilon\le(\eta\sum_j\|g_j\|_2)^2/((1-4\eta^2\bar G^2)\Theta_\epsilon)^2$. This bound uses gradient norms rather than losses, and it is loose.
-\item Under full batch, the $\kappa_B\tau^2$ form holds with $\Theta_\epsilon$ reduced by an explicit $O(\eta^2\bar G^2\tau)$ term.
-\item \Cref{thm:app-C24} holds for any algorithm.
+\item No coordinate grows before the minibatch effective time $\eta\sum_j\|r_j\|_{B_j}$ reaches $\Theta_\epsilon(1-4\eta^2\bar G^2)$.
+\item Under SGD, the count is bounded only through the integrated gradient norms $\eta\sum_j\|g_j\|_2$, which is loose.
+\item Under full-batch GD, the $\kappa_B\tau^2$ form holds, with $\Theta_\epsilon$ reduced by an explicit $O(\eta^2\bar G^2\tau)$.
 \end{itemize}
 
-\paragraph{Checks} \status{Numerical}. The checks use $d=10$, $k=3$ and $D=176$, with exact test errors.
+\paragraph{Checks} \status{Numerical}. These are at $d=10$, $k=3$, $D=176$, with exact test errors. The generalization bounds are at $t=60$ and $\gamma=\frac12$.
 \begin{itemize}[nosep]
-\item The worst ratio of $N$ to $\kappa_B\tau^2/\Theta^2$ was $0.33$--$0.94$, and $1.00$ for par2 at $\alpha=10^{-8}$.
-\item For the count bounds of Proposition C2.6, the ratio was $0.62$--$0.80$ under GD, but only $0.07$--$0.12$ under SGD.
-\item \Cref{tab:app-C2} gives the generalization bounds. Choices (2) and (3) are vacuous except for par2 at $\alpha=10^{-8}$, where they give $0.107$ and $0.163$. So in this toy, ``short training, few grown coordinates, Chernoff'' works in time-only form only for a single character at tiny $\alpha$.
-\item For par4, which is uncorrelated with the dictionary, only noise grows, and the bound ($0.988$) certifies nothing.
+\item \emph{Size bounds.} The worst ratio of $N$ to $\kappa_B\tau^2/\Theta^2$ is $0.33$--$0.94$, and $1.00$ for par2 at $\alpha=10^{-8}$. The discrete counts reach $0.62$--$0.80$ of their bound under GD, and only $0.07$--$0.12$ under SGD.
+\item \emph{A posteriori.} At $\alpha=10^{-3}$, \cref{thm:app-C24} gives $0.107$ for par2 ($n=100$), $0.275$ and $0.077$ for maj3 ($n=100$ and $400$), and $0.166$ for and3 ($n=400$).
+\item \emph{Time-indexed.} Choice (1) gives $0.218$, $0.810$, $0.316$ and $0.477$ on the same runs. Choices (2) and (3) are vacuous except for par2 at $\alpha=10^{-8}$, where they give $0.107$ and $0.163$. So the time-only form works here only for a single character at tiny $\alpha$.
+\item \emph{Off-dictionary targets.} maj5 lies outside the dictionary and gets $0.951$, against a true error of $0.073$. par4 is uncorrelated with the dictionary and gets $0.988$.
 \end{itemize}
-\begin{table}[ht]
-\centering\small
-\caption{Diagonal network ($d=10$, $D=176$): bounds at $t=60$ and $\gamma=\frac12$; vac.\ means vacuous.}
-\label{tab:app-C2}
-\begin{tabular}{lrrrrrrr}
-\toprule
-target & $n$ & $\alpha$ & test err. & $N_{0.01}$ & \cref{thm:app-C24} & C2.5(1) & C2.5(3)\\
-\midrule
-par2 & 100 & $10^{-3}$ & 0 & 1 & 0.107 & 0.218 & vac.\\
-maj3 & 100 & $10^{-3}$ & 0 & 4 & 0.275 & 0.810 & vac.\\
-maj3 & 400 & $10^{-3}$ & 0 & 4 & 0.077 & 0.316 & vac.\\
-and3 & 400 & $10^{-3}$ & 0 & 8 & 0.166 & 0.477 & vac.\\
-maj5 & 100 & $10^{-3}$ & 0.073 & 48 & 0.951 & 0.998 & vac.\\
-par2 & 100 & $10^{-8}$ & 0 & 1 & 0.107 & 0.107 & 0.163\\
-\bottomrule
-\end{tabular}
-\end{table}
 
 \subsection{Conditional transfer to ReLU networks (Section C3 of the derivation)}\label{app:discrete:relu}
 
-\paragraph{Known results and growth lemmas.} The rigorous literature covers early alignment and the first escape in two-layer and homogeneous networks, for example~\cite{boursier2022early}. Exact saddle-to-saddle limits are known only for diagonal networks~\cite{pesme2023saddle,kunin2025agf} (Literature). The derivation proves one-sided growth bounds (Lemmas C3.1, C3.2, \status{Proved}). Let $\lambda_X$ be the top eigenvalue of the second-moment matrix of $(x,1)$.
+\paragraph{Known results and growth lemmas.} Rigorous results cover early alignment and the first escape in two-layer and homogeneous networks, for example~\cite{boursier2022early}. Exact saddle-to-saddle limits are known only for diagonal networks~\cite{pesme2023saddle,kunin2025agf} (Literature). The derivation proves one-sided growth bounds (Lemmas C3.1, C3.2, \status{Proved}). Let $\lambda_X$ be the top eigenvalue of the second moment of $(x,1)$.
 \begin{itemize}[nosep]
-\item In a two-layer ReLU network, under gradient flow or descent, each unit has $(a_j^2+\|w_j\|^2)(t)\le(a_j^2+\|w_j\|^2)(0)\,e^{2\sqrt{\lambda_X}\tau(t)}$. At $\alpha=10^{-4}$, maj3 escapes at $t=8.3$--$8.7$, against a lower bound of $3.7$.
-\item In a bias-free deep ReLU network with $L\ge3$, all layers grow equally~\cite{du2018algorithmic}, and $Q=\max_l\|W_l(0)\|_F^2+\Delta$ satisfies $Q(t)^{1-L/2}\ge Q(0)^{1-L/2}-(L-2)\sqrt{\lambda_X}\tau$. So escape needs effective time of order $\alpha^{-(L-2)}$. This bound is loose by $14$--$21\times$ at $L=3$, and vacuous at $L=4$.
-\item The study's $\mu$P Adam networks are outside both lemmas.
+\item \emph{Two layers.} In a two-layer ReLU network under gradient flow or descent, each unit's $\rho_j=a_j^2+\|w_j\|^2$ satisfies $\rho_j(t)\le\rho_j(0)e^{2\sqrt{\lambda_X}\tau(t)}$, with $\tau$ the discrete effective time $\eta\sum_k\|r_k\|_n$ for descent.
+\item \emph{Deep networks.} In a bias-free deep ReLU network with $L\ge3$ under gradient flow, all layers grow equally~\cite{du2018algorithmic}. The quantity $Q=\max_l\|W_l(0)\|_F^2+\Delta$ satisfies $Q(t)^{1-L/2}\ge Q(0)^{1-L/2}-(L-2)\sqrt{\lambda_X}\tau$. So, with layers of Frobenius norm $\asymp\alpha$, escape takes effective time at least of order $\alpha^{-(L-2)}$.
+\item \emph{Tightness} (\status{Numerical}). At $L=3$ this is loose by $14$--$21\times$, and at $L=4$ it is vacuous.
+\item \emph{Scope.} The study's $\mu$P Adam networks are outside both lemmas.
 \end{itemize}
 
-\paragraph{The hypothesis.} Let $f_{\theta(t)}$ be the network at checkpoints $t\in\mathcal T$. Run the (LS) race on the same $S$ with a finite library, and let $h^M_s=\mathrm{sgn}f^M_s$ be its state at race time $s$, which has $T^M(s)$ gates. Let $s(t)$ be a clock calibration. The \emph{saddle-to-saddle approximation hypothesis} (SSA) comes in two forms. The sign form is $P_X(\mathrm{sgn}f_{\theta(t)}\ne h^M_{s(t)})\le\eta(t)$. The $L^2$ form is $\|\mathrm{clip}f_{\theta(t)}-\mathrm{clip}f^M_{s(t)}\|_{L^2(P_X)}\le\eta(t)$. For a Boolean library, put $L^{\rm sgn}_T=W_T+\log\Phi(2^{\min(T,d)},T)$ and $L^{\rm mar}_T=W_T+\log\Phi(2^{\min(T+1,d+1)},T+1)$. For real-valued gates, the exponents become $d$ and $d+1$.
+\paragraph{The hypothesis.} Let $f_{\theta(t)}$ be the network at checkpoints $t\in\mathcal T$. Run the (LS) race on the same $S$ with a finite library. Let $h^M_s=\mathrm{sgn}f^M_s$ be its state at race time $s$, with $T^M(s)$ gates, and let $s(t)$ be a clock calibration. The \emph{saddle-to-saddle approximation hypothesis} (SSA) has two forms:
+\begin{itemize}[nosep]
+\item sign form: $P_X(\mathrm{sgn}f_{\theta(t)}\ne h^M_{s(t)})\le\eta(t)$;
+\item $L^2$ form: $\|\mathrm{clip}f_{\theta(t)}-\mathrm{clip}f^M_{s(t)}\|_{L^2(P_X)}\le\eta(t)$.
+\end{itemize}
+For a Boolean library, let $L^{\rm sgn}_T=W_T+\log\Phi(2^{\min(T,d)},T)$ and $L^{\rm mar}_T=W_T+\log\Phi(2^{\min(T+1,d+1)},T+1)$. For real-valued gates the exponents are $d$ and $d+1$.
 
 \begin{theorem}[The network inherits the race bound (Theorem C3.4 in the derivation)]\label{thm:app-C34}
 \status{Conditional: proved under SSA}\quad There is an event of probability $1-\delta$ over $S$, not depending on the network, on which the following hold for every $t\in\mathcal T$. Here $s=s(t)$ and $T=T^M(s)\le\kappa^M(s)(\tau^M(s)/\Theta)^2$.
 \begin{enumerate}[label=(\arabic*),nosep]
-\item Under SSA in sign form, $\mathrm{err}(\mathrm{sgn}f_{\theta(t)})\le\eta(t)+\mathrm{kl}^{-1}_+\big(\widehat{\mathrm{err}}_S(h^M_s),(L^{\rm sgn}_T+\log\frac{2(T+1)(T+2)}\delta)/n\big)$.
-\item Under SSA in $L^2$ form, for every $\gamma\in(0,1)$, $\mathrm{err}(\mathrm{sgn}f_{\theta(t)})\le\frac{\eta(t)^2}{\gamma^2}+\mathrm{kl}^{-1}_+\big(\widehat P_S[yf^M_s\le\gamma],(L^{\rm mar}_T+\log\frac{2(T+1)(T+2)}\delta)/n\big)$.
+\item Under the sign form, $\mathrm{err}(\mathrm{sgn}f_{\theta(t)})\le\eta(t)+\mathrm{kl}^{-1}_+\big(\widehat{\mathrm{err}}_S(h^M_s),(L^{\rm sgn}_T+\log\frac{2(T+1)(T+2)}\delta)/n\big)$.
+\item Under the $L^2$ form, for every $\gamma\in(0,1)$, $\mathrm{err}(\mathrm{sgn}f_{\theta(t)})\le\frac{\eta(t)^2}{\gamma^2}+\mathrm{kl}^{-1}_+\big(\widehat P_S[yf^M_s\le\gamma],(L^{\rm mar}_T+\log\frac{2(T+1)(T+2)}\delta)/n\big)$.
 \end{enumerate}
 \end{theorem}
 \begin{proof}[Proof sketch]
-Before training, fix two Occam events at level $\delta/2$ each: one for all threshold-readout circuits, and one for all margin sets of circuits. The sign form adds the disagreement. In the $L^2$ form, $yf_\theta\le0$ forces either $yf^M\le\gamma$ or a clipped gap larger than $\gamma$, and Chebyshev's inequality bounds the second.
+Before training, fix two Occam events, each at level $\delta/2$: one for threshold-readout circuits, and one for margin sets of circuits. The sign form then adds the disagreement. In the $L^2$ form, $yf_\theta\le0$ forces either $yf^M\le\gamma$ or a clipped gap larger than $\gamma$, and Chebyshev's inequality bounds the latter.
 \end{proof}
-The theorem only converts the hypothesis. Its size term depends on the data through $\kappa^M$.
 
-\paragraph{Testing SSA (Corollary C3.5)} \status{Proved}. With unlabelled inputs not used in training, the sign form can be checked at every checkpoint. The distillation certificate (Theorem C1) then bounds the network's error without the hypothesis. So SSA is needed only for the predictive statement.
-
-\paragraph{A first test} \status{Numerical}. The saved $\mu$P Adam networks were compared with the toy-library race on 4096 held-out inputs.
+\paragraph{What this gives.}
 \begin{itemize}[nosep]
-\item On the first plateau of and3 and dnf3, the networks match the race's constant state. Any mean-fitting learner does the same, so this is trivial.
-\item During transitions, the best disagreement with a race state is $0.1$--$0.3$ for dnf3, mux and stair5. For maj3, majpar and parmaj, the network is no closer to a race state than to the target.
-\item On par3 the race never starts, while the network learns the target.
+\item \emph{A conversion only.} The theorem converts the hypothesis into a bound, and its size term is data-dependent through $\kappa^M$.
+\item \emph{Testing SSA} (Corollary C3.5, \status{Proved}). Held-out unlabelled inputs make the sign form checkable. The distillation certificate (\cref{thm:C1}) then bounds the network with no hypothesis at all. So SSA is needed only for the predictive statement.
+\item \emph{A first test} (\status{Numerical}). On the saved $\mu$P Adam networks, and3 and dnf3 match the race's constant state on their first plateau, which is trivial. In transitions, the best disagreement with any race state is $0.1$--$0.3$ (dnf3, mux, stair5), or no better than the disagreement with the target (maj3, majpar, parmaj). On par3 the race never starts, while the network learns.
 \end{itemize}
-So \cref{thm:app-C34} cannot yet be applied to the study's runs. Proving SSA beyond the first escape remains open.
+So \cref{thm:app-C34} cannot yet be applied to the study's runs, and proving SSA beyond the first escape is open.
