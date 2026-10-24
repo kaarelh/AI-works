@@ -14,7 +14,7 @@ Notes by Claude, prompted by Kaarel Hänni. Research note, 23 October 2026; not 
 [Part 3](#part-3-state-of-understanding-after-an-extended-session) gives the current state of understanding:
 - the race model transfers to 20 fresh targets (within about 1.15× on average) and to new input dimensions;
 - what makes it work is the sampling noise of its feature search, not its clocks;
-- a closed-form law, $n^*\approx c\max_i d(d/a)^{k_i-2}/\rho_i^2$ along the target's greedy path, predicts the networks' sample complexity, including how it scales with $d$ ($\approx d^{k-1}$ for $k$-parities, not Occam's $k\log d$);
+- a closed-form law, $n^*\approx\max(n_{\rm Hebb},\,c\max_i N(k_i)/\rho_i^2)$ with $N(k)=d\max(1,d/a)^{\max(k-2,0)}$ along the target's greedy path, predicts the networks' sample complexity, including how it scales with $d$ ($\approx d^{k-1}$ for $k$-parities, not Occam's $k\log d$; checked in a pre-registered test at $d=120$);
 - new theorems make "short training ⇒ small circuit ⇒ generalization" rigorous for two-layer quadratic networks, and for two-layer ReLU networks through the first escape.
 
 ## Short answer
