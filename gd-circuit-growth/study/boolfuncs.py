@@ -147,3 +147,26 @@ def make_random_suite(d=30, count=20, seed=777):
             continue
         S[f"rf{len(S):02d}"] = dict(fn=fn, relevant=rel, desc=f"random {g}-gate formula on {k} inputs: " + desc, circuit_size=g)
     return S
+
+
+def make_poly_suite(d=30):
+    """Real-valued polynomial targets for the composition test (regression, square loss; every term has coefficient 1/2).
+    Asked by the user: is s + x1x2 + x3x4 + x1x2x3x4 easier than s + x1x2x3x4 (s = x1+x2+x3+x4)?  Both are leap 1, so
+    leap complexity cannot tell them apart; the question is whether intermediate features (x1x2, x3x4) that are useful
+    on their own make the degree-4 term cheaper to learn.  Controls: pairs that do not compose into x1x2x3x4, pairs
+    alone, no linear part (leap 2), the parity alone (leap 4), the linear part alone."""
+    S = {}
+    s = lambda x: x[:, 0] + x[:, 1] + x[:, 2] + x[:, 3]
+    p4 = lambda x: x[:, 0] * x[:, 1] * x[:, 2] * x[:, 3]
+
+    def add(name, fn, desc):
+        S[name] = dict(fn=lambda x, f=fn: 0.5 * f(x), relevant=[0, 1, 2, 3], desc=desc, circuit_size=None)
+
+    add("compA", lambda x: s(x) + x[:, 0] * x[:, 1] + x[:, 2] * x[:, 3] + p4(x), "s + x1x2 + x3x4 + x1x2x3x4 (composing pairs)")
+    add("compB", lambda x: s(x) + p4(x), "s + x1x2x3x4 (no intermediate pairs)")
+    add("compC", lambda x: s(x) + x[:, 0] * x[:, 1] + x[:, 1] * x[:, 2] + p4(x), "s + x1x2 + x2x3 + x1x2x3x4 (pairs that do not compose)")
+    add("compD", lambda x: s(x) + x[:, 0] * x[:, 1] + x[:, 2] * x[:, 3], "s + x1x2 + x3x4 (no degree-4 term)")
+    add("compE", lambda x: x[:, 0] * x[:, 1] + x[:, 2] * x[:, 3] + p4(x), "x1x2 + x3x4 + x1x2x3x4 (no linear part; leap 2)")
+    add("compF", lambda x: p4(x), "x1x2x3x4 (leap 4)")
+    add("compL", lambda x: s(x), "s (linear only)")
+    return S
