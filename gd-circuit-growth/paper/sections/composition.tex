@@ -1,2 +1,95 @@
-\section{Does compositional structure beyond leap matter?}\label{sec:composition}
-(Results pending.)
+\section{Compositional structure beyond leap}\label{sec:composition}
+
+Leap complexity depends only on Fourier supports (\cref{sec:leapcritique}). Kaarel H\"anni proposed a direct test. With $s=x_1+x_2+x_3+x_4$, consider
+\[
+A=s+x_1x_2+x_3x_4+x_1x_2x_3x_4\qquad\text{and}\qquad B=s+x_1x_2x_3x_4 .
+\]
+Both have leap 1: once $x_1,\dots,x_4$ are found, the degree-4 monomial adds no new input. The prediction was that $A$ should nevertheless be easier, because $x_1x_2$ and $x_3x_4$ are learned for their own sake and then combine into $x_1x_2x_3x_4$.
+
+\paragraph{Design.}
+\begin{itemize}
+\item \textbf{Task.} Real-valued regression with square loss, with every term at coefficient $1/2$. A sign-threshold label would wash out the degree-4 term: $\mathrm{sign}(B)=\mathrm{sign}(s+1)$.
+\item \textbf{Networks.} The same networks as before, at $d=30$ and $d=60$.
+\item \textbf{Measure.} $\nstar_4$ is the smallest training-set size at which the trained network's test-set Fourier coefficient on $x_1x_2x_3x_4$ reaches 0.4, i.e.\ 80\% of its target.
+\item \textbf{Controls.} We add controls that separate competing explanations:
+  \begin{itemize}
+  \item $C=s+x_1x_2+x_2x_3+x_1x_2x_3x_4$: in-support pairs that do not multiply to the degree-4 term;
+  \item $E=x_1x_2+x_3x_4+x_1x_2x_3x_4$: no linear part (leap 2);
+  \item $F=x_1x_2x_3x_4$: leap 4;
+  \item $G=s+x_5x_6+x_7x_8+x_1x_2x_3x_4$: pairs outside the support;
+  \item $H=s+x_1x_2+x_1x_2x_3x_4$: one pair.
+  \end{itemize}
+\item \textbf{Order.} The predictions of leap complexity, of our move classification, and of the race model (run on the networks' exact training sets) were committed to the repository before the networks were run. $G$, $H$ and the $d=60$ runs were added after the first $d=30$ results, with the race model's predictions for them again recorded first.
+\end{itemize}
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{llcccc}
+\toprule
+& target & leap & $\nstar_4$, $d=30$ & $\nstar_4$, $d=60$ & race model, $d=30$ / $60$\\
+\midrule
+$E$ & $x_1x_2+x_3x_4+x_1x_2x_3x_4$ & 2 & \textbf{1332} & -- & 1974 / --\\
+$C$ & $s+x_1x_2+x_2x_3+x_1x_2x_3x_4$ & 1 & 1586 & 3120 & 1946 / 7438\\
+$A$ & $s+x_1x_2+x_3x_4+x_1x_2x_3x_4$ & 1 & 1652 & 3165 & 2119 / 2943\\
+$H$ & $s+x_1x_2+x_1x_2x_3x_4$ & 1 & 1842 & -- & 2008 / --\\
+$B$ & $s+x_1x_2x_3x_4$ & 1 & 2030 & 5021 & 2013 / 26096\\
+$G$ & $s+x_5x_6+x_7x_8+x_1x_2x_3x_4$ & 2 & 3488 & -- & 1975 / --\\
+$F$ & $x_1x_2x_3x_4$ & 4 & 3635 & 14330 & 2306 / 15755\\
+\bottomrule
+\end{tabular}
+\caption{Composition test: training-set size at which the degree-4 coefficient reaches 80\% of its target (seed mean; 3 seeds at $d=30$, 2 at $d=60$). The race model's predictions were recorded before the corresponding network runs. ``--'': not run.}
+\label{tab:composition}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/composition.png}
+\caption{The degree-4 coefficient learned by the networks. Left and middle: fixed training set, at the end of training, against $n$, at $d=30$ and $d=60$. Right: one-pass training with fresh samples, against samples seen.}
+\label{fig:composition}
+\end{figure}
+
+\paragraph{Results} \status{Numerical}. \Cref{tab:composition} and \cref{fig:composition} show the outcome.
+\begin{enumerate}
+\item \textbf{The prediction holds, and the effect grows with $d$.}
+  \begin{itemize}
+  \item \emph{Samples.} $A$ needs fewer samples than $B$: $1.23\times$ fewer at $d=30$ and $1.59\times$ at $d=60$.
+  \item \emph{Time.} At $n=2048$, $d=30$, the degree-4 term reaches 80\% after 2000 steps for $A$ and 20000 for $B$.
+  \item \emph{One pass.} After 32000 fresh samples the degree-4 coefficient is 0.17–0.25 for $A$ and 0.05–0.07 for $B$ (target 0.5).
+  \end{itemize}
+  Leap complexity gives the two targets the same rate.
+\item \textbf{Any in-support intermediate feature helps; out-of-support ones do not.}
+  \begin{itemize}
+  \item \emph{Non-composing pairs.} $C$, whose pairs do not multiply to the degree-4 term, is as easy as $A$, at both $d=30$ and $d=60$. Note that $x_1x_2x_3x_4=(x_1x_2)\,x_3\,x_4$ is still a product of one learned pair and two learned inputs.
+  \item \emph{One pair.} $H$ lies between $A$ and $B$.
+  \item \emph{Pairs on other variables.} $G$ gets no help: its $\nstar_4$ is that of the bare parity $F$, and worse than $B$'s.
+  \item \emph{Pairs without the linear part.} $E$ is the easiest of all, in both protocols.
+  \end{itemize}
+  What matters is how many already-learned features the degree-4 term needs to combine, not how many new inputs it needs.
+\item \textbf{Leap gets the asymptotic class partly right.}
+  \begin{itemize}
+  \item \emph{Leap-1 targets with pairs.} From $d=30$ to $60$, $\nstar_4$ grows like $d^{0.94}$ for $A$ and $d^{0.98}$ for $C$, as leap 1 predicts.
+  \item \emph{The bare parity.} $F$ grows like $d^{1.98}$, below leap's $d^3$.
+  \item \emph{$B$ in between.} $B$ grows like $d^{1.31}$. Its degree-4 term is helped by having found $x_1,\dots,x_4$, but still behaves partly like a higher-order search.
+  \end{itemize}
+\item \textbf{Neither of our predictors anticipated this.}
+  \begin{itemize}
+  \item \emph{Our move classification.} Because $k$ counts new inputs, it assigned the degree-4 term in $B$ a cheap $k=0$ reuse move. By our estimate that is at most a few hundred samples, against the observed 2030.
+  \item \emph{The race model.} It searches for order-4 features over all $d$ inputs whether or not they are already active, so it gave all targets nearly the same $\nstar_4$ at $d=30$. At $d=60$ it is right for $A$ and $F$ but $5\times$ too pessimistic for $B$ and $2.4\times$ for $C$.
+  \end{itemize}
+\end{enumerate}
+
+\paragraph{Reading} \status{Heuristic}. The cost of a high-order term is set by the number of \emph{existing features} that must be combined at once to build it, not by the number of new inputs. This is the ``circuit leap'' of \cref{sec:leapcritique}.
+\begin{itemize}
+\item In $A$ and $E$ the degree-4 term is a product of two learned pairs.
+\item In $C$ and $H$ it is a product of a learned pair and two learned inputs.
+\item In $B$ it is a product of four learned inputs.
+\item In $G$ the pairs are useless for it, and they compete for the network's capacity and time.
+\end{itemize}
+The observed order is $E<C\approx A<H<B<G\approx F$. Apart from the near-tie of $A$ and $C$, this fits the reading.
+
+\paragraph{Consequences for the noise law.} The noise law of \cref{sec:noiselaw} should classify moves by the arity of the combination over existing features, with a cost that depends on $d$ only through the inputs that are genuinely new.
+\begin{itemize}
+\item The $d$-dependence of $B$ ($d^{1.3}$) shows that the noise of such a combination is not $d$-free.
+\item The size of the active pool alone does not account for it.
+\end{itemize}
+We have not yet built or calibrated this refined law.

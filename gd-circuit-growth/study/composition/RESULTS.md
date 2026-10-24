@@ -12,6 +12,9 @@ Predictions were recorded first, in [PREDICTIONS.md](PREDICTIONS.md). Networks: 
 | compD: s + x1x2 + x3x4 | never | never | -0.01 / -0.01 / -0.00 / 0.00 / 0.00 |
 | compE: x1x2 + x3x4 + x1x2x3x4 | 1332 | 1974 | 0.02 / 0.09 / 0.35 / 0.47 / 0.49 |
 | compF: x1x2x3x4 | 3635 | 2306 | -0.00 / 0.00 / 0.00 / 0.07 / 0.47 |
+| compL: s | never | never | 0.01 / 0.01 / 0.01 / 0.01 / 0.01 |
+| compG: s + x5x6 + x7x8 + x1x2x3x4 | 3488 | 1975 | 0.01 / 0.01 / 0.01 / 0.17 / 0.47 |
+| compH: s + x1x2 + x1x2x3x4 | 1842 | 2008 | 0.01 / 0.01 / 0.13 / 0.45 / 0.49 |
 
 ## Time to learn each term at large n (fixed training set, steps until the coefficient first reaches 0.4; seed mean of the curves)
 
@@ -29,8 +32,28 @@ Predictions were recorded first, in [PREDICTIONS.md](PREDICTIONS.md). Networks: 
 | compE | 16384 | – | 500 | 200 | – | 500 |
 | compF | 2048 | – | – | – | – | – |
 | compF | 16384 | – | – | – | – | 1000 |
+| compL | 2048 | 100 | – | – | – | – |
+| compL | 16384 | 100 | – | – | – | – |
+| compG | 2048 | 100 | – | – | – | – |
+| compG | 16384 | 100 | – | – | – | 2000 |
+| compH | 2048 | 100 | 500 | – | – | 10000 |
+| compH | 16384 | 100 | 500 | – | – | 1000 |
+
+## d = 60 (2 seeds; race predictions recorded before these runs)
+
+| target | n*_4 networks d=30 | n*_4 networks d=60 | ratio 60/30 | race d=60 (predicted) | coefficient at n = 1024 / 2048 / 4096 / 8192 / 16384 / 32768 |
+|---|---|---|---|---|---|
+| compA: s + x1x2 + x3x4 + x1x2x3x4 | 1652 | 3165 | 1.92 | 2943 | 0.03 / 0.24 / 0.49 / 0.52 / 0.52 / 0.52 |
+| compB: s + x1x2x3x4 | 2030 | 5021 | 2.47 | 26096 | 0.02 / 0.03 / 0.36 / 0.50 / 0.51 / 0.51 |
+| compC: s + x1x2 + x2x3 + x1x2x3x4 | 1586 | 3120 | 1.97 | 7438 | 0.02 / 0.29 / 0.47 / 0.50 / 0.50 / 0.50 |
+| compF: x1x2x3x4 | 3635 | 14330 | 3.94 | 15755 | -0.00 / -0.00 / 0.00 / 0.00 / 0.50 / 0.50 |
 
 ## Online protocol (fresh minibatch of 64 every step): samples until the x1x2x3x4 coefficient reaches 0.4
 
 | target | samples (per seed) | median |
 |---|---|---|
+| compA: s + x1x2 + x3x4 + x1x2x3x4 | 64000, 64000, 64000 | 64000 |
+| compB: s + x1x2x3x4 | 64000, 96000, 64000 | 64000 |
+| compC: s + x1x2 + x2x3 + x1x2x3x4 | 64000, 64000, 64000 | 64000 |
+| compE: x1x2 + x3x4 + x1x2x3x4 | 32000, 32000, 32000 | 32000 |
+| compF: x1x2x3x4 | 96000, 64000, 64000 | 64000 |
