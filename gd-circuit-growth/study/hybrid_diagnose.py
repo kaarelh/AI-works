@@ -25,6 +25,7 @@ Writes study/hybrid_diagnose.json and prints the summary tables used in HYBRID.m
     OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python hybrid_diagnose.py            # full run (about 15 min)
     python hybrid_diagnose.py summary                                             # tables from the saved json
     python hybrid_diagnose.py ceiling                                             # network-vs-network references
+    python hybrid_diagnose.py timecourse                                          # agreement over training steps
 """
 import os, sys, json, itertools, numpy as np
 from scipy.linalg import cho_factor, cho_solve
@@ -185,7 +186,8 @@ def main():
                 rows.append(r)
                 print(f"{fn:10s} n={int(n):5d} s={s} " + " ".join(f"{k}:err {r[k+'/err']:.2f} perp {r[k+'/corr_perp']:.2f} R {r[k+'/corr_R']:.2f}"
                                                          for k in L if k != "nn"), flush=True)
-    json.dump(rows, open(os.path.join(HERE, "hybrid_diagnose.json"), "w"), indent=0)
+    rows = [{k: (round(v, 4) if isinstance(v, float) else v) for k, v in r.items()} for r in rows]
+    json.dump(rows, open(os.path.join(HERE, "hybrid_diagnose.json"), "w"), separators=(",", ":"))
     summarize(rows)
 
 
@@ -290,8 +292,50 @@ def ceiling():
     return out
 
 
+def timecourse():
+    """Per-example agreement of the networks at each training checkpoint with the final race, kernel and hybrid
+    predictions (all 95 partial cells, small and large n separately); uses the saved checkpoint predictions."""
+    EV = "/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/model_evals"
+    M = {m: C.load_eval(os.path.join(EV, f"{m}.npz")) for m in ("race", "nngp-kernel", "hybrid")}
+    def score(cells):
+        num = den = 0.0
+        for en, em, ag in cells:
+            ind = (1 - en) * (1 - em) + en * em; num += ag - ind; den += 1 - ind
+        return num / den
+    out = {}
+    for regime, sel in (("n<=128", lambda n: n <= 128), ("256<=n<=2048", lambda n: n >= 256)):
+        acc = {}
+        for fn in C.FNS:
+            z = np.load(os.path.join(C.RESULTS, f"fixed_adam_{fn}.npz")); nn = C.nn_fixed(fn)
+            I = {(int(n), int(s)): j for j, (n, s) in enumerate(zip(z["net_n"], z["net_s"]))}
+            yte = C.test_data(fn)[1]
+            for a, n in enumerate(nn["ns"]):
+                if not (0.05 <= nn["test_err"][a].mean() <= 0.45 and sel(n)):
+                    continue
+                Pf = np.array([z["pred"][-1, I[(int(n), s)]] for s in range(3)])
+                for c, step in enumerate(z["step"]):
+                    P = np.array([z["pred"][c, I[(int(n), s)]] for s in range(3)]); en = np.mean(P != yte[None])
+                    for m, r in list(M.items()) + [("final network", None)]:
+                        Q = Pf if r is None else r["pred"][fn][a]
+                        acc.setdefault((int(step), m), []).append((en, np.mean(Q != yte[None]), np.mean(P == Q)))
+                    acc.setdefault((int(step), "train_err"), []).append(np.mean([z["train_err"][c, I[(int(n), s)]] for s in range(3)]))
+                    acc.setdefault((int(step), "test_err"), []).append(en)
+        names = ("race", "nngp-kernel", "hybrid", "final network")
+        print(f"\n{regime}: per-example agreement of the network at step t with ...")
+        print("| step | train error | test error | " + " | ".join(names) + " |\n|---|---|---|" + "---|" * len(names))
+        for step in sorted({k[0] for k in acc}):
+            if step == 0:
+                continue
+            row = [float(np.mean(acc[(step, "train_err")])), float(np.mean(acc[(step, "test_err")]))] + [score(acc[(step, m)]) for m in names]
+            out[f"{regime}|{step}"] = row
+            print(f"| {step} | " + " | ".join(f"{v:.3f}" for v in row) + " |")
+    json.dump(out, open(os.path.join(HERE, "hybrid_timecourse.json"), "w"), indent=0)
+
+
 if __name__ == "__main__":
-    if len(sys.argv) > 1 and sys.argv[1] == "ceiling":
+    if len(sys.argv) > 1 and sys.argv[1] == "timecourse":
+        timecourse()
+    elif len(sys.argv) > 1 and sys.argv[1] == "ceiling":
         ceiling()
     elif len(sys.argv) > 1 and sys.argv[1] == "summary":
         summarize(json.load(open(os.path.join(HERE, "hybrid_diagnose.json"))))

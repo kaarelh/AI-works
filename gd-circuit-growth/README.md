@@ -398,7 +398,7 @@ Status labels as before.
    - **Results.**
      - On 20 fresh random formulas never seen during calibration: mean $|\log_2|$ ratio 0.42 (within about 1.34×) and Spearman 0.92, over $n^*$ from 61 to 3049. A second saved run of the predictor, which scans $n$ more finely, gives Spearman 0.96 ([`study/MINIMAL-MODEL.md`](study/MINIMAL-MODEL.md)).
      - On the 9 held-out functions: 0.38. The constants are clean there, but the model's structure is not: variants that scored better on the calibration set were rejected on principle. The random formulas are the cleaner test.
-     - It gets the 2- and 3-parity $d$-exponents right. The $d=15$ agreement, however, depends on the cap $\max(1,d/a)$, which was probably added after the $d=15$ network results had been seen. That part is not a clean out-of-sample test.
+     - It gets the 2- and 3-parity $d$-exponents right. In a pre-registered test at $d=120$ (3.6) it predicted 817 and 12525 against the networks' 869 and 10691, where the race model was 3× too early on the 3-parity. The $d=15$ agreement, however, depends on the cap $\max(1,d/a)$, which was probably added after the $d=15$ network results had been seen. That part is not a clean out-of-sample test.
 3. **The race model transfers out of sample** (Numerical).
    - **Fresh targets.** On the 20 fresh random formulas it matches the networks' $n^*$ within a factor of about 1.15 on average (mean $|\log_2|$ ratio 0.20, Spearman 0.99, success agreement 0.98), better than on the original held-out set.
    - **New input dimensions.** Calibrated at $d=30$ only, it predicts $n^*$ at $d=15$ and $d=60$ with mean $|\log_2|$ ratio 0.45 and 0.43. Its largest miss is 3-bit parity, where its $d$-exponent is half the networks' with the calibrated random stream (0.94 against 1.91). Averaged over several random streams, the race's parity exponents from $d=15$ to 30 are about 1.3 (3-parity) and 1.8 (4-parity), against the networks' 1.8 and 2.4. That gap is about the size of one stream's spread, so "grows too slowly" is a direction, not a precise number. It also under-predicts the $d$-growth of MAJ of pair parities (1.12 against 1.75) and of the staircase (1.14 against 1.50).
@@ -419,7 +419,7 @@ Status labels as before.
      - *The functional form* (Heuristic): the fitted law of item 2, supported by the networks' parity exponents for $k\le3$.
 5. **A trained network looks like a kernel background plus grown features** (Heuristic reading of a Numerical result).
    - **The result.** Adding the NNGP kernel's score to the race model's score with equal weight raises held-out per-example agreement on partially learned tasks from 0.50 to 0.62. The $n^*$ match is unchanged within noise: 0.29 held-out and 0.32 calibration, against the race's 0.33 and 0.24.
-   - **References.** Two Adam networks trained on the same data from *different* initializations agree at 0.62. SGD and Adam networks that share the initialization agree at 0.71. The NNGP kernel alone reaches 0.69.
+   - **References.** Two single Adam networks trained on the same data from *different* initializations agree at 0.62. The average of three such networks reaches 0.68, extrapolating to about 0.71–0.73 (3.6). SGD and Adam networks that share the initialization agree at 0.71. The NNGP kernel alone reaches 0.69.
    - **Reading.** The networks' individual mistakes are kernel-like, while *whether* they generalize is set by feature growth.
 6. **Once they generalize, both the networks and the model are functionally small circuits, even when their representation is large** (Numerical).
    - Half of the race model's generalizing fits carry more than 6 gates. Their own Occam bound is then usually vacuous: median 0.67, with 34% below 0.5.
@@ -624,7 +624,7 @@ Notes on the table:
 - the features decide whether and when it generalizes;
 - the background decides which examples it gets wrong on the way.
 
-Adding the kernel score to the race model brings per-example agreement to 0.62. That is the agreement between two Adam networks trained on the same data from different initializations.
+Adding the kernel score to the race model brings per-example agreement to 0.62, and the flow hybrid of 3.6 to 0.65. Two single Adam networks trained on the same data from different initializations agree at 0.62, while an initialization-averaged network would reach about 0.71–0.73 (3.6).
 
 **4. Bounds: where "short training ⇒ small circuit ⇒ Occam" now stands.**
 - **It is a theorem for:**
@@ -646,19 +646,52 @@ Adding the kernel score to the race model brings per-example agreement to 0.62. 
 4. **Beyond this setting:** other architectures, cross-entropy, SGD noise (merging and collapse moves), real data. In particular: is the "noise of a continuous search" law the right replacement for Occam's description length in larger models?
 5. **Bayes vs gradient descent:** characterize the targets on which the γ≥1 posterior and gradient descent have polynomially related sample complexity. The predictor suggests: exactly those with a cheap greedy path.
 
-### 3.6 Late result, not yet verified: a kernel-background hybrid
+### 3.6 Late results: a kernel-background hybrid (verified) and a pre-registered test at $d=120$
 
-[`study/HYBRID.md`](study/HYBRID.md) was written by the last investigation of the session and is still being finished and checked, so everything here is provisional. It builds a more principled hybrid than the equal-weight sum of 3.1 item 5, with two constants calibrated on the calibration set. The NNGP-kernel background is fitted jointly with the race's gates, and its ridge relaxes on the race's clock like kernel gradient flow, $\lambda_{\rm bg}(t)=c_{\rm bg}n/t$. Growth stops at a square-loss level.
+These came from the last workflow of the session. They finished after the report to the user.
+- **The hybrid** has had a verification pass, and its corrections are included below.
+- **The $d=120$ test** has not had an independent verification pass. I recomputed the networks' $n^*$ from the saved runs and checked the timestamps.
+- **Synthesis.** [`study/MODEL-UNDERSTANDING.md`](study/MODEL-UNDERSTANDING.md) collects everything; its sections 3, 6.3 and 7 are unverified.
 
-**Results.**
-- **Held out.** $n^*$ ratio 0.35 against the race's 0.33, and per-example agreement 0.65 against 0.50 (NNGP kernel 0.69, a re-initialized network 0.62).
-- **Calibration set.** $n^*$ error 0.37 against the race's 0.24.
+**Kernel-background hybrid** ([`study/HYBRID.md`](study/HYBRID.md), with its Verification section).
+- **The model.**
+  - The race model unchanged, with an NNGP-kernel background fitted jointly with its gates in one ridge readout.
+  - The background's ridge relaxes on the race's clock like kernel gradient flow, $\lambda_{\rm bg}(t)=c_{\rm bg}n/t$.
+  - Growth stops at a square-loss level.
+  - There are two new constants, chosen on the calibration set. The schedule form, the stop rule and the end-of-training step were also chosen there.
+- **Per-example agreement.** On the held-out targets it rises from 0.50 to 0.65. Bootstrapped over targets, the gain is +0.15, with interval [0.13, 0.17]. It holds on every held-out target, every seed and two further random streams.
+- **Price in $n^*$.** Averaged over streams, $n^*$ error is 0.35 against the race's 0.28 (held-out) and 0.37 against 0.26 (calibration). On the summary numbers it is no better than simply adding the two scores (3.1, item 5). Its case is mechanistic.
+- **Ceiling, corrected.**
+  - Two single networks trained on the same data from different initializations agree at 0.62.
+  - The average of three such networks agrees with the original at 0.684, and extrapolates to about 0.71–0.73. So a learner that never sees the initialization can in principle reach the SGD reference's level.
+  - The NNGP kernel agrees 0.78 with a three-network average, against 0.68 for a fourth single network. The kernel behaves like the network averaged over initializations.
+- **Mechanism** (Numerical measurements, Heuristic reading).
+  - *Sample noise.* On partially learned cells, about 45% of a network's output variance is fitted sample noise: 0.59 at $n\le64$ and 0.23 at $n=2048$.
+  - *Signal and noise correlations.* Every learner matches the signal part (correlation 0.92–0.98). The noise part correlates 0.81 with the kernel's, 0.70 with a re-initialized network's and 0.48 with the race's.
+  - *Swapping noise patterns.* Swapping only the noise patterns moves the race from 0.50 to 0.63 and the kernel from 0.69 to 0.53.
+  - *Reading.* The networks memorise like a kernel and generalise like a feature learner.
+  - *Order of events.* Over training, the networks interpolate first, within 100–1000 steps, with kernel-like mistakes. Near $n^*$ the generalizing features grow afterwards.
+- **Few grown gates.** The hybrid needs about 2 gates per partially learned cell, where the race uses about 22. With the exact kernel at $n=4096$, it needs 3–18 rather than 48. The "circuit" a network grows is small, and the rest is kernel-like. This points to an a-priori bound of the form "Occam for a few grown gates plus a kernel-norm term for the background", which was not attempted.
+- **Remaining discrepancy.** On easy targets the networks are 1.1–2.2× less sample-efficient than their own NNGP kernel. The race reproduces this, through its noisy Hebbian first gate; the hybrid does not.
 
-**Readings** (Heuristic):
-- **Memorise like a kernel, generalise like a feature learner.** On partially learned cells, the networks' output is a signal part shared with every reasonable learner, plus a sample-noise part holding about 45% of the variance. That noise part has the shape of minimum-norm kernel interpolation of the training sample, with correlation 0.81 with NNGP kernel regression.
-- **Two clocks.** The kernel fits the target's low-degree part early and the sample noise only after a time proportional to $n$. Feature growth runs on its own clock.
-- **The networks do not memorise with grown units.** The hybrid fires about 2 gates per partial cell, where the race fires about 20, and matches $n^*$ as well. This points to an a-priori bound of the form "Occam for a few grown gates plus a kernel-norm term for the background", which was not attempted.
-- **Remaining discrepancy.** On easy targets the networks are 1.1–2.2× less sample-efficient than their own NNGP kernel. The race reproduces this, through its noisy Hebbian first gate, but the hybrid does not.
+**Pre-registered test at $d=120$** ([`study/MODEL-UNDERSTANDING.md`](study/MODEL-UNDERSTANDING.md) §6.3; predictions in [`study/understanding/predictions_d120.json`](study/understanding/predictions_d120.json)).
+- **Protocol.** The predictions were saved at 02:42:06, before the $d=120$ networks were launched; their first results are timestamped 02:44:31. All models kept their $d=30$ calibration constants. The networks used the same protocol, with 2 seeds, and $n^*$ was read at 20000 steps.
+
+| target | networks (factor-2 grid; refined) | analytic predictor | race (4 streams; geometric mean) | Occam law |
+|---|---|---|---|---|
+| $x_1x_2$ | 869 | **817** | 566 | 315 |
+| $x_1x_2x_3$ | 14188; 10691 | **12525** | 3557 | 1015 |
+| MAJ$_9$ | 845 | 1143 | 1307 | 1143 |
+| multiplexer | 6524; 5195 | 3405 | 4013 | 891 |
+
+- **The 3-parity is decisive.**
+  - *Predictor:* the correlational-SQ / leap law predicted that $n^*$ would roughly quadruple from $d=60$ to 120, and it did (refined grid: 2740 → 10691).
+  - *Race model:* its acceptance rule grows like about $d^{1.2}$ and is now 3× too early.
+  - *Errors:* mean $|\log_2|$ error is 0.41 for the predictor, 0.99 for the race and 2.14 for the Occam law.
+- **Updated exponents.** On the refined grid the networks' local exponents from $d=30$ to 120 are 1.09 and 1.03 for the 2-parity, and 1.93 and 1.96 for the 3-parity: $d^{\max(1,k-1)}$.
+- **MAJ$_9$.** The whole learning curve is a function of $n/d$ at $d=15$, 30, 60 and 120, within 0.01–0.04 of the constant-free Hebbian-noise law. Its apparent $n^*$ exponent of 0.44 from 60 to 120 is an artifact of where the flat curve crosses 0.1.
+- **Multiplexer.** The predictor's composition miss persists: 1.5× too early.
+- **What this changes** (Heuristic reading). Point 1 of 3.5 is strengthened for $k\le3$: the networks follow the escape law $d^{k-1}$ out to $d=120$. The race model matches at $d=30$ partly because there its "detect" threshold and the "escape" threshold nearly coincide, and its $d$-scaling is wrong. The closed-form noise law, not the race simulation, is the better discrete description of sample complexity.
 
 ## Files
 

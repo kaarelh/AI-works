@@ -20,12 +20,14 @@ BACKGROUND SCHEDULE  (new constant 1: c_bg)
         residual's components along kernel eigenvalues kappa >~ n / (eta t) (the spectral cut-off of early-stopped kernel
         regression); to first order fixed-time kernel GD is ridge regression with lam ~ n / (eta t), and c_bg = 1 / eta is
         the background's slowness relative to the race clock.  Consequences: components with a large population
-        eigenvalue (the target's degree-0/1 part) are fitted by the background early; the training-sample noise lives on
-        the many small eigenvalues (kappa ~ 0.3-0.5 per training point, whatever n) and is memorised once
-        t >~ c_bg * n / 0.4 -- before dense memorising gates can fire on small training sets, after the real features
-        have fired on large ones.  t = 0: no background (the race's readout).
+        eigenvalue (the target's degree-0/1 part, Gram eigenvalues ~ n/2 and ~ n/80) are fitted by the background early;
+        the training-sample noise lives in the bulk of the spectrum, whose eigenvalues do not grow with n (median 0.26 at
+        n = 64, 0.07 at n = 2048), and is memorised once t >~ c_bg * n / kappa_bulk -- before dense memorising gates can
+        fire on small training sets, after the real features have fired on large ones.  t = 0: no background (the race's
+        readout).
     mode 'static' (ablation):  lam_bg = rho * n ** beta, constant in time.
-    mode 'none': the race model exactly (checks that the shared code reproduces models/race.py).
+    mode 'none': the race model, with its sign-error stop (same gates and clock as models/race.py; test predictions equal
+        up to floating-point rounding in the readout, models/scratch_hybrid/check_none.py).
 STOP  (new constant 2: stop_mse)  gates are grown while the joint fit's training mean squared residual is >= stop_mse
     (stop_mse = None: while the training sign error is > 0, the race's rule).  In mode 'flow' the condition is checked
     continuously in time: if the background reaches it before the next gate would fire, growth stops at that time
@@ -36,6 +38,10 @@ END OF TRAINING  growth has stopped but training goes on: the gate weights are k
     what is left, kernel ridge on y - c - F a with the NNGP baseline's ridge (1e-4, unit-diagonal kernel; models/baselines.py).
 CALIBRATED SETTING  HYBRID_DEFAULTS: c_bg = 0.003, stop_mse = 0.03 (chosen on common.CALIB only, by CALIB per-example
     agreement minus CALIB mean |log2 n* ratio|; study/HYBRID.md section 2).
+
+EXPLORATORY OPTIONS (off by default; HYBRID.md section 2.2)  norm_util: the race sees the residual's direction only
+    (scale-free, Adam-like utilities); t_end: grow gates until the race clock reaches t_end instead of a loss criterion.
+    With mode 'static', beta = 0 they give the 'memorise first' variant suggested by the networks' time course.
 
 LARGE n  for n > n_exact the background kernel is replaced by M random ReLU features of a fresh two-hidden-layer
     network at initialisation (widths M, M; a Monte-Carlo approximation of the same kernel, of rank M); their random
@@ -133,8 +139,10 @@ class Hybrid:
     name = "hybrid"
 
     def __init__(self, mode="flow", c_bg=0.003, rho=None, beta=1.0, theta=1.5, lam=1e-3, Q=3, K=4, P=8, iters=8, gmax=48,
-                 depth=2, gate='relu', n_exact=2048, M=512, bisect=10, final_ridge=1e-4, stop_mse=0.03, verbose=False):
+                 depth=2, gate='relu', n_exact=2048, M=512, bisect=10, final_ridge=1e-4, stop_mse=0.03,
+                 norm_util=False, t_end=None, verbose=False):
         self.mode = mode
+        self.norm_util, self.t_end = bool(norm_util), (None if t_end is None else float(t_end))
         self.stop_mse = None if stop_mse is None else float(stop_mse)
         self.final_ridge = None if final_ridge is None else float(final_ridge)
         self.c_bg = None if c_bg is None else float(c_bg)
@@ -179,9 +187,14 @@ class Hybrid:
             a, r = RO.fit(lam_bg)
             return a, r, lam_bg, float(np.mean(np.where(y - r > 0, 1.0, -1.0) != y))
 
+        sign_rule = self.stop_mse is None or self.mode == "none"
+
         def done(st):
-            """Growth stops at training sign error 0 (stop_mse None, as in the race) or training MSE < stop_mse."""
-            return st[3] == 0 if self.stop_mse is None else float(np.mean(st[1] ** 2)) < self.stop_mse
+            """Growth stops at training sign error 0 (stop_mse None or mode 'none', as in the race) or training MSE < stop_mse;
+            with a time budget t_end (ablation 'memorise first') only the budget stops it."""
+            if self.t_end is not None:
+                return False
+            return st[3] == 0 if sign_rule else float(np.mean(st[1] ** 2)) < self.stop_mse
 
         def first_time(lo, hi, ok):
             """Earliest time in (lo, hi] at which ok(state) holds, by bisection in log t (ok(hi) assumed)."""
@@ -201,6 +214,8 @@ class Hybrid:
             r64 = r_res
             if np.max(np.abs(r64)) < 1e-9:
                 break
+            if self.norm_util:          # scale-free utilities (Adam-like): the race sees the residual's direction only
+                r64 = r64 / max(float(np.std(r64)), 1e-12)
             r = r64.astype(F32); rbar = float(r.mean())
             U = Uw[:, :D]
             h = (U.T @ r) * F32(1.0 / n)
@@ -248,6 +263,8 @@ class Hybrid:
                 break
             best = min(cand, key=lambda z: z[0])
             T, kw, pw, w, b, Ug, *_ = best
+            if self.t_end is not None and t + T > self.t_end:
+                break
             if use_bg and self.mode == "flow":
                 # the background keeps fitting while the next gate grows: stop if it reaches sign error 0 first
                 st2 = state(t + T)

@@ -13,8 +13,14 @@ Scripts as run in the session (paths point into the session scratchpad; kept for
 | `grid_flow.py` → `grid_flow2.log` (sign stop), `grid_flow3.log`, `grid_flow4.log` (MSE stop and more sign-stop points) | CALIB grid (n <= 4096), flow background |
 | `kernels.py` → `kernels.log` | which kernel agrees best with the networks' mistakes (NNGP, NTK and its layer terms, one-layer NNGP) |
 | `deg1.py` | first look at the degree-1 sample-noise direction |
-| `test_flow.py`, `test_mse.py` | spot checks (exact reproduction of the race in mode 'none'; MSE stop on MAJ3 etc.) |
+| `test_flow.py`, `test_mse.py`, `check_none.py` | spot checks (mode 'none' reproduces the race: same gates and clock, predictions equal up to rounding; MSE stop on MAJ3 etc.) |
 | `specparse.py` | parses the `key=value;...` setting strings |
 
 The constants were chosen from the CALIB grid (`grid_*.log`). The partial-cell scripts also printed the HELDOUT agreement,
 which was visible during the exploration of designs; it moved in parallel with the CALIB column throughout.
+
+Final runs (study/HYBRID.md sections 1-3): `eval_hybrid*.log` (full-grid evaluations, models/run_hybrid_eval.py),
+`diagnose_summary.log` (hybrid_diagnose.py), `ceiling.log` (hybrid_diagnose.py ceiling), `width.log` (hybrid_width.py),
+`report.log` (hybrid_report.py), `dscale15.log`, `dscale60.log` (hybrid_dscale.py).
+`timecourse.py` (first version of `hybrid_diagnose.py timecourse`); `test_memo.py` → `test_memo.log`: spot check of the
+'memorise first' variant (static background with beta = 0, scale-free utilities, fixed growth time) on 8 cells.
