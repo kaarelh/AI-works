@@ -693,6 +693,49 @@ These came from the last workflow of the session. They finished after the report
 - **Multiplexer.** The predictor's composition miss persists: 1.5× too early.
 - **What this changes** (Heuristic reading). Point 1 of 3.5 is strengthened for $k\le3$: the networks follow the escape law $d^{k-1}$ out to $d=120$. The race model matches at $d=30$ partly because there its "detect" threshold and the "escape" threshold nearly coincide, and its $d$-scaling is wrong. The closed-form noise law, not the race simulation, is the better discrete description of sample complexity.
 
+## Part 4: does compositional structure beyond leap matter? (24 October 2026)
+
+**The objection.** Leap complexity, and my move classification (k = new inputs), look only at which inputs a term touches. They cannot see intermediate functions that are learned for their own sake and then combined. The proposed test: with $s=x_1+x_2+x_3+x_4$, is $A=s+x_1x_2+x_3x_4+x_1x_2x_3x_4$ easier than $B=s+x_1x_2x_3x_4$? Both have leap 1.
+
+**Design.**
+- **Order of work.** The predictions were committed before any network was run ([`study/composition/PREDICTIONS.md`](study/composition/PREDICTIONS.md)): leap's, my move classification's, and the race model's on the networks' exact training sets.
+- **Task.** Real-valued regression, with every term at coefficient 1/2; signed labels would wash out the degree-4 term.
+- **Measure.** $n^*_4$ is the training-set size at which the network's degree-4 coefficient reaches 80% of its target.
+- **Controls.** Pairs that do not multiply to the term ($C$), pairs without the linear part ($E$), the bare parity ($F$), pairs on other inputs ($G$), and one pair ($H$).
+- **Results** are in [`study/composition/RESULTS.md`](study/composition/RESULTS.md), with the figure [`study/figures/composition.png`](study/figures/composition.png).
+
+| | target | leap | $n^*_4$, $d=30$ | $n^*_4$, $d=60$ |
+|---|---|---|---|---|
+| E | $x_1x_2+x_3x_4+x_1x_2x_3x_4$ | 2 | **1332** | – |
+| C | $s+x_1x_2+x_2x_3+x_1x_2x_3x_4$ | 1 | 1586 | 3120 |
+| A | $s+x_1x_2+x_3x_4+x_1x_2x_3x_4$ | 1 | 1652 | 3165 |
+| H | $s+x_1x_2+x_1x_2x_3x_4$ | 1 | 1842 | – |
+| B | $s+x_1x_2x_3x_4$ | 1 | 2030 | 5021 |
+| G | $s+x_5x_6+x_7x_8+x_1x_2x_3x_4$ | 2 | 3488 | – |
+| F | $x_1x_2x_3x_4$ | 4 | 3635 | 14330 |
+
+**Findings** (Numerical):
+- **The prediction holds, and the gap grows with $d$.**
+  - *Samples:* $A$ needs 1.23× fewer than $B$ at $d=30$, and 1.59× fewer at $d=60$.
+  - *Time:* at $n=2048$ the degree-4 term takes 2000 steps for $A$ and 20000 for $B$.
+  - *One pass:* after 32000 fresh samples the coefficient is 0.17–0.25 for $A$ and 0.05–0.07 for $B$.
+- **Any intermediate feature on the term's own inputs helps; features on other inputs do not.**
+  - $C$, whose pairs do not multiply to the term, helps as much as $A$. But $x_1x_2x_3x_4=(x_1x_2)x_3x_4$ is still a product of a learned pair and two learned inputs.
+  - $H$ (one pair) lies between $A$ and $B$.
+  - $G$ (pairs on other inputs) is as hard as the bare parity.
+  - $E$ (pairs, no linear part) is the easiest.
+- **Leap gets the class partly right.**
+  - From $d=30$ to 60, $A$ and $C$ grow like $d^{0.94}$ and $d^{0.98}$, as leap 1 says.
+  - $F$ grows like $d^{1.98}$, not $d^3$.
+  - $B$ grows like $d^{1.31}$, in between.
+- **Neither of my predictors saw it coming.**
+  - *The k-rule* calls the degree-4 term in $B$ a cheap reuse move.
+  - *The race model* searches order-4 features over all $d$ inputs. It gave everything nearly the same $n^*_4$ at $d=30$, and at $d=60$ it is 5× too pessimistic for $B$.
+
+**Reading** (Heuristic). The cost of a high-order term is set by how many *existing features* it must combine at once, not by how many new inputs it needs. This is the "circuit leap" suggested in Part 1 §3. The noise law should be refined accordingly; that is not yet done.
+
+**Paper.** A write-up of Parts 1–4 as a paper is in [`paper/`](paper/), as LaTeX sources plus a PDF.
+
 ## Files
 
 Part 2: [`study/`](study/) (NN study, discrete models, certificates; guide in [`study/README.md`](study/README.md)) and [`theory/`](theory/) (derivations A, B, C, with check scripts in `theory/checks/`).
