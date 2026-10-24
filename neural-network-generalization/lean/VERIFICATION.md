@@ -2,7 +2,7 @@
 
 ## Independent statement review and rebuild, 24 October 2026
 
-A second, independent review of all fifteen main statements found that each captures its paper's main theorem; three red-team agents could not break any of them. The project was rebuilt from the current sources against the existing pinned mathlib build: 4,617 jobs, no errors, and all five gates pass. The 69 batch-two axiom reports list only the standard axioms. Several documentation overstatements were corrected; no Lean source changed. [Review record](review/statement-review-2026-10-24/README.md).
+A second, independent review of all fifteen main statements found that each captures its paper's main theorem; three red-team agents could not break any of them. The import closure of `NeuralGeneralization` and `NeuralGeneralization.BatchTwoAudit` was rebuilt, or replayed from verified traces, from the current sources against the existing pinned mathlib build: 4,617 jobs, no errors, and all five gates pass. Project modules outside that closure, such as the online merging extension, were not built. The 69 batch-two axiom reports list only the standard axioms. Several documentation overstatements were corrected; no Lean source changed. [Review record](review/statement-review-2026-10-24/README.md).
 
 ## Statement correspondence recheck, 23 October 2026
 
