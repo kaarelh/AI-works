@@ -2,7 +2,7 @@
 
 [Paper (PDF)](paper.pdf) · [LaTeX source](source/paper.tex) · [Review and build records](verification/README.md) · [Collection index](../../README.md)
 
-**Status:** Proved side result with independent AI-agent mathematical reviews. Not Lean verified or externally peer reviewed.
+**Status:** Proved side result with independent AI-agent mathematical reviews. Main learning statements Lean verified; not externally peer reviewed.
 
 The main result concerns learning a teacher's **real-valued output** on a compact continuous domain, including the entire unit sphere or ball. The input distribution can be arbitrary. There is no global output-margin condition on the prior, and the teacher can cross zero.
 
@@ -48,3 +48,7 @@ The upper bounds do not establish computationally efficient inference, learning 
 ## Build
 
 Run `bash build.sh` in this directory with a standard TeX Live installation. The script runs two LaTeX passes, writes temporary files to `build/`, and refreshes `paper.pdf`. No network access is needed.
+
+## Lean verification
+
+The main statements are included in the second formalization batch. [Exact coverage and exclusions](../../lean/review/BatchTwo-coverage.md) · [Lean entry point](../../lean/NeuralGeneralization/BatchTwoMain.lean). This label does not extend automatically to every appendix, remark or numerical allocation. The original mathematical review records describe their earlier source snapshots.

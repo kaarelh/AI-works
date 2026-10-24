@@ -17,7 +17,7 @@
 \date{22 October 2026}
 \begin{document}\maketitle
 \begin{abstract}
-We prove a sample bound polynomial jointly in Boolean teacher width and depth for Bayesian ReLU and GELU networks, at every learner width above the compiled teacher width and every mean-field-or-stronger Gaussian scale. The prior retains networks whose clipped predictions survive averaging neurons into a limited number of populations. Populations may have arbitrary sizes; their permitted number is calibrated by scale-normalized readout energy. Every layered bounded-fan-in Boolean circuit has a positive-mass implementation satisfying the condition. ReLU perturbations need not contract through depth: an exponentially small parameter radius has only a polynomial negative-log-prior cost. Positive homogeneity removes population-mass parameters from the ReLU computation; a uniformly Lipschitz perspective transformation controls them for GELU. The bound is quadratic in teacher width up to logarithms, with a coarser literal quadratic-width envelope of degree nine in the remaining resources. This is a structural prior restriction, not a proved property of ordinary internally stable or gradient-trained networks. No Lean verification is claimed.
+We prove a sample bound polynomial jointly in Boolean teacher width and depth for Bayesian ReLU and GELU networks, at every learner width above the compiled teacher width and every mean-field-or-stronger Gaussian scale. The prior retains networks whose clipped predictions survive averaging neurons into a limited number of populations. Populations may have arbitrary sizes; their permitted number is calibrated by scale-normalized readout energy. Every layered bounded-fan-in Boolean circuit has a positive-mass implementation satisfying the condition. ReLU perturbations need not contract through depth: an exponentially small parameter radius has only a polynomial negative-log-prior cost. Positive homogeneity removes population-mass parameters from the ReLU computation; a uniformly Lipschitz perspective transformation controls them for GELU. The bound is quadratic in teacher width up to logarithms, with a coarser literal quadratic-width envelope of degree nine in the remaining resources. This is a structural prior restriction, not a proved property of ordinary internally stable or gradient-trained networks. The main learning statements and polynomial corollaries have Lean proofs.
 \end{abstract}
 
 \section{The learning question and the restriction}
@@ -51,7 +51,15 @@ The condition does not use the target or its complexity. The count budget is inv
 The prior is $\mu_{N,t}$ conditioned on $\mathcal A_N$. One may additionally impose the original all-input margin event $|z_w(x)|>1/2$ everywhere. Training further conditions on $f(X_i)z_w(X_i)>1/2$. The theorem holds for either prior convention and tests the event $f(X)z_w(X)\le1/4$.
 
 \section{Explicit learning theorem}
-The target is a single-output layered Boolean circuit of width $C\ge1$ and $H$ stages, using NOR, COPY, and NOT. Constant wires count toward $C$; compilation from another bounded-fan-in basis must count its width and depth overhead. Bits are $0,1$; target labels are $-1,1$.
+The target is a single-output layered Boolean circuit of width $C\ge1$ and $H$ stages, using NOR, COPY, and NOT. One constant-one wire is carried through every stage, including the final stage, and counts toward $C$. Compilation from another bounded-fan-in basis must count its width and depth overhead. Bits are $0,1$; target labels are $-1,1$.
+
+This reserved-wire convention is also used in the Lean statements. If an
+ordinary width-$C_0$ circuit has no reserved constant wire, adding one at
+each stage gives the theorem with $C=C_0+1$, hence learner width
+$N\ge C_0+1$ for ReLU and $N\ge2(C_0+1)$ for the GELU compilation below.
+The overhead matters at small widths: a width-one ReLU network with a
+bias-free linear readout has output of one weak sign everywhere, so it
+cannot learn a nonconstant Boolean literal with strict signed margins.
 
 Define
 \begin{align}
@@ -365,5 +373,5 @@ The restriction expresses stability under a specific structured change of the we
 These theorems therefore give polynomial-depth results for specified restricted priors, at all mean-field-or-stronger scales. They do not settle the unrestricted polynomial-depth learning question. Exponentially small parameter radii are harmless in this construction because only their logarithm is paid; exponentially large compressed width would not be harmless, and the population condition prevents that loss.
 
 \paragraph{Provenance and verification.}
-The proof adapts the earlier collaborative tanh population construction and Gaussian partition bound, including contributions from Claude. The ReLU normalized representation, GELU perspective extension and exact compiler, noncontracting target-cylinder estimate, and resulting depth-polynomial theorems are supplied here. This research manuscript is not Lean verified.
+The proof adapts the earlier collaborative tanh population construction and Gaussian partition bound, including contributions from Claude. The ReLU normalized representation, GELU perspective extension and exact compiler, noncontracting target-cylinder estimate, and resulting depth-polynomial theorems are supplied here. The main learning statements have Lean proofs, with scope recorded in the repository.
 \end{document}

@@ -4,7 +4,7 @@
 
 This note proves a sample bound polynomial jointly in Boolean teacher width and depth for a prior restricted to networks whose clipped predictions survive merging neurons into a limited number of populations. It covers ReLU and exact GELU, every learner width above the compiled teacher width, and every Gaussian scale at least as strong as mean field (`gamma >= 1`).
 
-For a layered bounded-fan-in Boolean circuit of width `C` and `L−1` gate stages (network depth `L`), the bound is quadratic in `C` up to logarithms. A deliberately loose literal bound is
+For a layered bounded-fan-in Boolean circuit of width `C` and `L−1` gate stages (network depth `L`), **with a reserved constant-one wire at every stage, including the final stage, counted in `C`**, the bound is quadratic in `C` up to logarithms. A circuit without that wire can be compiled with one extra wire per stage. A deliberately loose literal bound is
 
 ```text
 n = O((C^2 [2+d+L+log(4/epsilon)]^9 + log(1/delta))/epsilon).
@@ -21,8 +21,14 @@ The main ingredients are:
 
 The prior restriction is a condition on the learner's weights and outputs, independent of the target. It is **not** claimed equivalent to the original internal-noise restriction or established for ordinarily trained networks. The theorem concerns layered Boolean teachers, with compilation overhead included. It does not prove polynomial depth dependence for the unrestricted prior, arbitrary analog teachers, or efficient posterior sampling.
 
-The source and PDF have undergone independent AI-agent mathematical review. They are not Lean verified and remain research manuscripts.
+The source and PDF have undergone independent AI-agent mathematical review. Their main learning statements and polynomial corollaries have Lean proofs; they remain research manuscripts.
 
 To rebuild, run `./build.sh` from this directory.
 
 The [publication record](verification/publication-build.json) records isolated rebuilding and exact source/PDF hashes.
+
+## Lean verification
+
+The main statements are included in the second formalization batch. [Exact coverage and exclusions](../../lean/review/BatchTwo-coverage.md) · [Lean entry point](../../lean/NeuralGeneralization/BatchTwoMain.lean). This label does not extend automatically to every appendix, remark or numerical allocation. The original mathematical review records describe their earlier source snapshots.
+
+The [statement audit of 23 October](../../lean/review/statement-audit-2026-10-23/activations.md) identified an ambiguity in the manuscript's earlier phrase “constant wires count.” The paper now explicitly adopts the formal reserved-wire convention above. Without that convention, the claimed ReLU guarantee would include an impossible nonconstant width-one case. The Lean theorem already used the correct convention.

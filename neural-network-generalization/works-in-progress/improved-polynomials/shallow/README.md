@@ -10,6 +10,10 @@ The theorem allows the **raw Gaussian prior**, the globally margin-conditioned p
 
 When teacher hidden coefficients are at most `C` and readout coefficients are bounded independently of `C`, the width dependence is quadratic. Under the original complexity convention allowing those coefficients to reach `C`, the sufficient bound is quartic. The paper includes both a simple finite-cube count and a sharper dimension bound proved through relative growth functions.
 
-Independent AI-agent review checked the proof, including the sharper dimension bound and raw-prior extension. This paper is not Lean verified and has not received full human mathematical review. The publication source adds a complete robustness-event definition and a standalone presentation to the reviewed derivation.
+Independent AI-agent review checked the proof, including the sharper dimension bound and raw-prior extension. Its main learning statements are Lean verified; it has not received full human mathematical review. The publication source adds a complete robustness-event definition and a standalone presentation to the reviewed derivation.
 
 Run `./build.sh` to rebuild `paper.pdf` with `pdflatex`. Pandoc is not needed. See the [collection overview](../README.md) for the other improved bounds.
+
+## Lean verification
+
+The main statements are included in the second formalization batch. [Exact coverage and exclusions](../../../lean/review/BatchTwo-coverage.md) · [Lean entry point](../../../lean/NeuralGeneralization/BatchTwoMain.lean). This label does not extend automatically to every appendix, remark or numerical allocation. The original mathematical review records describe their earlier source snapshots.

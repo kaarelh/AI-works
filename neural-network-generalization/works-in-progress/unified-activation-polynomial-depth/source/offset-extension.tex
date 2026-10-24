@@ -1,0 +1,465 @@
+\section{Nonzero activation offsets for the original prior at fixed depth}
+\label{app:offset-original}
+
+The restriction \eqref{eq:support} is unnecessary if depth is held fixed
+and its polynomial exponent is allowed to depend on depth. This appendix
+extends the unified fixed-depth theorem of~\cite{lipschitz}, whose stated
+activation assumption was $\phi(0)=0$, to arbitrary bounded activation
+offsets. It analyzes the original Gaussian learner directly. Centering
+an activation and declaring the resulting network to have the same prior
+would be incorrect, since it induces weight-dependent hidden biases.
+The result below is a conventional proof extension; the earlier Lean
+certification does not certify this new offset extension.
+
+Keep the network and Gaussian law \eqref{eq:prior}, but impose
+\emph{no internal-noise or neuron-averaging support restriction}. Instead,
+let
+\[
+ U_{N,g}=\{w:g(x)z_w(x)>1/2\text{ for every }x\in\mathcal X\},
+ \qquad U_N=\bigcup_g U_{N,g}.
+\]
+The prior is $\mu_{N,t}$ conditioned only on $U_N$. Given noiseless
+examples of $f$, retain functions consistent with all training labels;
+write the resulting function posterior as $\Pi_{S,N,t}$. Its risk is
+\[
+ R_D^{\rm sign}(\Pi)=\E_{g\sim\Pi}\Pr_{X\sim D}\{g(X)\ne f(X)\}.
+\]
+Unlike the main theorem's margin loss, this is sign error under a prior
+already conditioned on the global absolute margin.
+
+\begin{theorem}[Original-prior learning with bounded activation offsets]
+\label{thm:offset-original}
+For each fixed $L\ge2$, $\lambda\ge1$ and $b\ge0$, there is a polynomial
+$\mathcal P_{L,\lambda,b}$ with the following property. Fix an activation
+satisfying \eqref{eq:activation}, an input dimension $d\ge1$, and a
+Boolean target admitting a depth-$L$, width-$C\ge1$ implementation with
+individual weights bounded by $B\ge1$ and strict signed output margin
+$1/2$ at every input. For every input law $D$ on the cube and every
+$0<\varepsilon,\delta<1$,
+\[
+ n\ge\frac2\varepsilon\left[
+ \mathcal P_{L,\lambda,b}(d,C,B,\log(1/\varepsilon))
+ +\log(1/\delta)\right]
+\]
+implies, with training-sample probability at least $1-\delta$,
+\[
+ R_D^{\rm sign}(\Pi_{S,N,t})\le\varepsilon
+ \qquad\text{simultaneously for every }N\ge C\text{ and }0<t\le1.
+\]
+All prior and posterior conditioning events have positive probability.
+The polynomial is uniform over the activations satisfying the displayed
+bounds. It includes every $\gamma\ge1$ and the strong-prior limit at each
+fixed width, through $t=N^{(1-\gamma)/2}$ and $t\downarrow0$, respectively.
+\end{theorem}
+
+As before, applying the theorem at accuracy $\varepsilon/3$ gives
+correct-label posterior probability strictly above $2/3$ outside test
+mass at most $\varepsilon$. The teacher must use the learner's activation;
+this does not assert a universal same-width circuit compiler for every
+Lipschitz function. The polynomial degree in this appendix may grow with
+$L$, in contrast with Theorem~\ref{thm:poly} under its additional support
+restriction.
+
+\subsection{A common capacity bound with offsets}
+Put $H=L-1$ and retain the weighted energy
+\[
+ \kappa_N(w)=\frac dN\norm{W^1}_F^2+
+ \sum_{s=2}^{H}\norm{W^s}_F^2+N\norm v_2^2.
+\]
+For counting only, allow each hidden neuron to use its own activation
+with Lipschitz constant at most $\lambda$ and offset at most $b$.
+Let $\mathcal F_b(K)$ contain all Boolean functions having a strict
+margin-$1/2$ realization of energy at most $K$ in this auxiliary class,
+at any finite equal hidden width. The actual learner still uses its
+single fixed activation.
+
+\begin{lemma}[Offset capacity]\label{lem:offset-capacity}
+For $K\ge0$, define
+\[
+ \mathcal B_b(K)=
+ \left\lceil\left[
+ 16H\lambda^H\sqrt{d+1}
+ \left(\frac{(1+b^2)K+H}{L}\right)^{L/2}
+ \right]^3\right\rceil\log(2^d+1).
+\]
+Then $\log|\mathcal F_b(K)|\le\mathcal B_b(K)$.
+\end{lemma}
+\begin{proof}
+Write $a^s_j=\phi_{s,j}(0)$ and
+$\psi_{s,j}=\phi_{s,j}-a^s_j$. For a width-$N$ realization put
+$u^s=(h^s-a^s)/\sqrt N$. The state $(u^s,1)$ is computed by a
+zero-at-zero network of the same depth, using upper-neuron activations
+$q\mapsto\psi_{s,j}(\sqrt Nq)/\sqrt N$ and the identity activation for
+its additional constant wire. Its first matrix consists of $W^1/\sqrt N$
+and the row selecting the constant input. Its internal matrices and
+readout are
+\[
+ \begin{pmatrix}W^s&W^sa^{s-1}/\sqrt N\\0&1\end{pmatrix},
+ \qquad (\sqrt Nv^\top,\ v^\top a^H).
+\]
+These are exact identities, not approximations. Since
+$\norm{a^s}_2\le b\sqrt N$, the sum of squared Frobenius norms of the
+transformed layer matrices is at most $(1+b^2)\kappa_N+H$, using $d\ge1$.
+Their product is therefore at most
+$[((1+b^2)K+H)/L]^{L/2}$.
+
+The zero-at-zero product-norm bound proved in~\cite{lipschitz} applies to
+arbitrary neuronwise activations of Lipschitz constant $\lambda$:
+on $q$ inputs of norm at most $R$, its empirical Rademacher complexity is
+at most $8H\lambda^HPRq^{-1/3}$ when the product of layer norms is at
+most $P$. Here $R=\sqrt{d+1}$. Shattering with strict margin $1/2$
+forces that complexity to be at least $1/2$, giving the displayed VC bound.
+The Sauer bound on the $2^d$-point cube proves the result.
+
+The normalization by $\sqrt N$ is important: unnormalized centered
+states would introduce columns $W^sa^{s-1}$ with an avoidable width
+factor. The construction is used only to count functions; it is not an
+identification of Gaussian priors.
+\end{proof}
+
+\subsection{Target probability and small-scale compression}
+The target-cylinder argument of~\cite{lipschitz} requires only Lipschitz
+bounds on differences once the teacher's states are bounded. Here the
+teacher states satisfy
+\[
+ M_1\le b+\lambda B(d+1),\qquad
+ M_s\le b+\lambda CBM_{s-1}.
+\]
+Thus a common bound $M$ is polynomial in $d,C,B$ at fixed $L,\lambda,b$.
+Use balanced cloning into $C$ nonempty groups at every $N\ge C$;
+this preserves the exact teacher function for any activation and uses
+all neurons, so it does not assume zero padding is harmless.
+Multiply the teacher readout by three.
+
+For completeness, one may use
+\[
+ M=[1+b+\lambda B(d+C+1)]^H,\quad
+ g_H=2+\sqrt{2\log(2H)},\quad
+ F=1+\lambda(\sqrt2CB+\sqrt C+g_H),
+\]
+\[
+ V=3\sqrt2CB,\qquad
+ E=\lambda[(d+1)+H\sqrt C\,M]F^{H-1},\qquad
+ \rho=[8((V+1)E+M)]^{-1}.
+\]
+Constrain first-layer, teacher-population, and readout coordinates
+exactly as in the target-cylinder proof of~\cite{lipschitz}, to radius
+$\rho t$ in coordinates with variance $t^2$. The free internal Gaussian
+bulk annihilates teacher-group-constant states. With conditional
+probability at least $1/2$, all its operator norms are at most $g_Ht$.
+On that event the normalized state error obeys
+\[
+ e_1\le\lambda\rho(d+1),\qquad
+ e_s\le Fe_{s-1}+\lambda\rho\sqrt C\,M,
+ \qquad e_H\le\rho E.
+\]
+Hence output error is at most $(V+1)e_H+\rho M\le1/8$.
+The draw has the teacher's signs with margin greater than $1/2$.
+
+There are $ND_0$ constrained coordinates, where
+$D_0=d+2+(H-1)C$, and their squared centers sum to at most $NB_0$, with
+\[
+ B_0=B^2[d(d+1)+(2H+36)C^2].
+\]
+The scalar interval estimate
+\[
+ \Pr\{|Z-a|\le\rho t\}\ge
+ \frac{2\rho}{\sqrt{2\pi}}\exp(-a^2/t^2-\rho^2),
+ \qquad Z\sim N(0,t^2),
+\]
+therefore gives
+\begin{equation}\label{eq:offset-target}
+ \mu_{N,t}(U_{N,f})\ge e^{-A_fN/(2t^2)},\qquad
+ A_f=2\left[B_0+D_0\log\frac{e\sqrt{2\pi}}{2\rho}+\log2\right].
+\end{equation}
+The offset changes the state and radius budgets, but does not change the
+Gaussian coordinates, independence, or cancellation of the free bulk.
+All budgets have polynomial upper bounds at fixed depth.
+
+The Gaussian spectral tail likewise makes no activation assumption.
+On its usual good event the weighted first-layer and readout energies
+are at most $K\ge1$, and each internal matrix is the sum of a retained
+matrix of Frobenius norm at most $\sqrt K$ and a discarded matrix of
+operator norm at most $a\le1$. Set
+\[
+ R=\lambda(\sqrt K+1)\ge2,\qquad U=2b+\lambda\sqrt{2K}.
+\]
+The original hidden RMS norms satisfy $M_s\le UR^{s-1}$ because
+$M_1\le b+\lambda\sqrt{2K}$ and $M_s\le b+RM_{s-1}$.
+Indeed, summing the additive offsets gives
+$M_s\le R^{s-1}(b+\lambda\sqrt{2K})+b(R^{s-1}-1)/(R-1)
+\le UR^{s-1}$.
+For original versus truncated states,
+\[
+ e_1=0,\qquad
+ e_s\le\lambda\sqrt K e_{s-1}+\lambda aM_{s-1}
+ \le\lambda a(s-1)UR^{s-2}.
+\]
+Taking
+\[
+ a_K=\min\{1,[16\lambda(H+1)\sqrt K(1+U)R^H]^{-1}\}
+\]
+makes the readout discrepancy smaller than $1/8$. Doubling the readout
+of the truncated network preserves signs and strict margin $1/2$, at
+energy at most $(L+3)K$. The same Gaussian tails as in~\cite{lipschitz}
+then imply
+\begin{equation}\label{eq:offset-spectral}
+ \mu_{N,t}\left(\bigcup_{g\notin\mathcal F_b((L+3)K)}U_{N,g}\right)
+ \le Le^{-NK/(8t^2)}
+\end{equation}
+whenever $t\le a_K/8$ and $t^{-2}\ge8(d+1)$.
+Here $a_K^{-1}$ is polynomially bounded at fixed depth. When $H=1$
+there are no internal matrices to truncate and the discrepancy is zero.
+
+\subsection{The mean-field endpoint with offsets}
+This is the only part of the extension where an unmodified normalization
+would fail. We give the replacement and then check every use of the
+activation in the existing endpoint proof.
+
+Let $Q$ be a positive semidefinite matrix on $m=2^d$ inputs, with diagonal
+at most $M\ge1$, and write $\mathcal H_Q$ for its finite-dimensional
+reproducing-kernel space. The Gaussian projection lemma of~\cite{lipschitz}
+provides, for independent $Z_i\sim N(0,Q)$,
+\[
+ Z_i=a_i+u_i,\quad \norm{a_i}_\infty\le B_c:=\sqrt{2M\log(4m)},
+ \quad \delta_i=\norm{u_i}_Q,
+\]
+with
+\[
+ \Pr\left\{N^{-1}\sum_i\delta_i^2>A\right\}\le e^{-Nq},
+ \qquad A=4(q+\log2).
+\]
+For $Q=0$ take $a_i=u_i=0$. Keep its smooth cutoff $r_T$, which is one
+on $\norm z_\infty\le T$ and zero outside $\norm z_\infty<\sqrt5T$.
+Put $w_i=1-r_T(Z_i)^2$.
+
+\begin{lemma}[Tail atoms with bounded offsets]\label{lem:offset-atoms}
+Suppose $N^{-1}\sum_i\delta_i^2\le A$ and
+$T\ge\max\{1,2B_c,b/\lambda\}$. The empirical activation covariance
+differs in maximum norm from
+\[
+ \frac1N\sum_i r_T(Z_i)^2\phi(Z_i)\phi(Z_i)^\top
+ +\frac1N\sum_i w_i\phi(u_i)\phi(u_i)^\top
+\]
+by at most $14\lambda^2B_cMA/T$. The second term has an exact representation
+\[
+ \sum_i c_i\psi_i(v_i)\psi_i(v_i)^\top,\qquad
+ \sum_i c_i\le A+1,\quad \norm{v_i}_Q\le1,
+ \quad \operatorname{Lip}(\psi_i)\le\lambda,\quad |\psi_i(0)|\le b.
+\]
+The next covariance diagonal is at most
+$2(b+\lambda B_c)^2+2\lambda^2MA$.
+\end{lemma}
+\begin{proof}
+When $w_i>0$, $\sqrt M\delta_i\ge T-B_c\ge T/2$. Consequently
+\[
+ N^{-1}\sum_iw_i\le4MA/T^2,\qquad
+ N^{-1}\sum_iw_i\delta_i\le2\sqrt M A/T.
+\]
+Use $|\phi(Z_i)_x-\phi(u_i)_x|\le\lambda B_c$ and
+$|\phi(u_i)_x|\le b+\lambda\sqrt M\delta_i$. The outer-product error is
+bounded by
+\[
+ \frac{4\lambda^2B_cMA}{T}
+ +\frac{8\lambda B_cbMA+4\lambda^2B_c^2MA}{T^2}
+ \le\frac{14\lambda^2B_cMA}{T}.
+\]
+For the exact representation put
+\[
+ s_i=\sqrt{1+\delta_i^2},\qquad v_i=u_i/s_i,\qquad
+ \psi_i(q)=\phi(s_iq)/s_i,\qquad c_i=w_is_i^2/N.
+\]
+Then $s_i\ge1$ proves all assertions, including
+$\sum_i c_i\le1+A$. This normalization has no division by zero.
+If $\delta_i=0$, then $w_i=0$; when $Q=0$, the whole tail is empty and
+the bulk retains the actual constant feature $\phi(0)$.
+Finally $|\phi(Z_i)_x|\le b+\lambda B_c+\lambda\sqrt M\delta_i$ gives
+the diagonal bound.
+\end{proof}
+
+The stable RKHS certificate used in~\cite{lipschitz} is unchanged: for
+$\norm v_Q\le1$ and $\eta>0$, it gives a vector $\beta$ such that
+\[
+ \norm{Q\beta-v}_\infty\le\eta,\qquad
+ \norm\beta_1\le(4\eta)^{-1}.
+\]
+For a mixture of the atoms above, put $A'=A+1$ and
+$R_A=b+\lambda\sqrt M$. Every atom has absolute values at most $R_A$.
+For target error $0<\xi\le1$, choose
+\[
+ \eta=\frac{\xi}{64A'\lambda(R_A+\lambda+1)},\qquad
+ n_A=\left\lceil128(A')^2R_A^4\xi^{-2}\log(4m^2)\right\rceil.
+\]
+Sample atoms with probabilities $c_i/A'$; fill the remaining probability
+with vector zero \emph{and the identically zero activation}.
+Hoeffding's inequality gives an empirical covariance approximation within
+$\xi/4$. If $\norm{Q'-Q}_{\max}\le\eta^2$, the certificates satisfy
+$\norm{Q'\beta-v}_\infty\le5\eta/4$. The activation error is at most
+$5\lambda\eta/4$, and each outer-product error at most
+$2R_A(5\lambda\eta/4)+(5\lambda\eta/4)^2$.
+The choice of $\eta$ makes its total mixture contribution less than
+$\xi/8$. Thus the stable finite-atom realization continues to work with
+polynomial budgets. For a weighted feature realization
+$Q'=\sum_\ell a_\ell h_\ell h_\ell^\top$, its incoming weights remain
+\[
+ W_{j\ell}=a_\ell\sum_y\beta_j(y)h_\ell(y),\qquad
+ |W_{j\ell}|\le a_\ell\norm{h_\ell}_\infty/(4\eta).
+\]
+The dummy activation must be zero: using $\phi(0)$ for the dummy atom
+would insert a spurious constant covariance.
+
+\paragraph{The bounded bulk and its stability.}
+Mollifying $\phi$ at scale $\tau\le1$ changes it by at most $\lambda\tau$,
+retains first derivative bound $\lambda$, and gives second derivative
+bound $O(\lambda/\tau)$. None of these facts uses $\phi(0)=0$.
+For the cutoff features $b_x(z)=r_T(z)\phi_\tau(z_x)$ and the chosen
+$T\ge b/\lambda$, the same entrywise derivative-sum bounds hold, with
+larger universal constants:
+\[
+ B_0=O(\lambda T),\qquad B_1=O(\lambda),\qquad
+ B_2=O\bigl(\lambda[\log(2m)/T+\tau^{-1}]\bigr).
+\]
+Indeed the additional offset terms in the first and second derivative
+bounds are $O(b/T)$ and $O(b\log(2m)/T^2)$. The smoothing covariance
+error is $O(\lambda^2T\tau)$.
+
+The sparse exponential-tilt certificate and its Gaussian covariance
+stability estimate in~\cite{lipschitz} apply to arbitrary bounded $C^2$
+features. They do not assume a zero activation offset. For clarity,
+with observables $F_{xy}=b_xb_y$, derivative budgets
+$F_0=B_0^2$, $F_1=2B_0B_1$, $F_2=2B_1^2+2B_0B_2$, and tilt
+$\norm\Gamma_{1,\rm ent}\le G$, their covariance map has modulus
+\[
+ C_G=\tfrac12\{F_2+2GF_1^2+2F_0(GF_2+G^2F_1^2)\}.
+\]
+It is polynomial in the indicated budgets, including for singular
+covariances. The proof differentiates the normalized tilted expectation;
+it does not pay an exponential reciprocal partition-function bound.
+
+Given a desired one-step error $\alpha\le1$, take $q=4K$,
+$A=4(q+\log2)$, and
+\[
+ T=\max\{1,2B_c,b/\lambda,256\lambda^2B_cMA/\alpha\}.
+\]
+Choose smoothing scale with reciprocal polynomial in $T,\alpha^{-1}$,
+then $G=16q/\alpha$ and the sparse certificate size
+$\max\{1,\lceil G^2F_0^2\rceil\}$. The original certificate proof has
+exceptional mass at most $e^{-NK}$ above a polynomial width threshold.
+Combine its error $\alpha/16$, smoothing error $\alpha/16$, and the tail
+error from Lemma~\ref{lem:offset-atoms}; use the atom construction with
+$\xi=\alpha/8$. Take the incoming covariance tolerance at most
+$\min\{1,\eta^2,\alpha/[16(1+C_G)]\}$.
+
+The bounded bulk is realized by finitely many tilted Gaussian rows,
+evaluating the \emph{actual} activation $\phi$ and putting the cutoff
+scalars into their covariance weights. Its feature bound is
+$b+\lambda\sqrt5T=O(\lambda T)$. The Gaussian-coordinate intersection
+argument of~\cite{lipschitz} bounds all sampled incoming coefficients
+polynomially, since the square root of the tilt log-density bound enters
+the coordinate cutoff. The expectation and sampling errors can each be
+made at most $\alpha/16$ with polynomially many rows. All errors total
+less than $\alpha$.
+
+Thus the one-step construction has the same two exceptional events,
+polynomial width and coefficient bounds, and a tolerance whose reciprocal
+is polynomial in $K,M,\log(2m),\alpha^{-1}$ at fixed $\lambda,b$.
+The physical hidden-value recursion becomes
+$B_h^{\rm new}\le b+\lambda r B_W B_h$, where $r$ is the previous
+finite feature count and $B_W$ the incoming weight bound. Its fixed-depth
+iteration remains polynomial. Padding uses the identically zero
+\emph{auxiliary} activation, which belongs to the bounded-offset class;
+it does not introduce unused original-$\phi$ neurons with nonzero values.
+
+\paragraph{Iteration and the final readout.}
+Conditional on all previous layers, the next preactivation rows are
+independent centered Gaussians with covariance $t^2Q_{s-1}$, where
+\[
+ Q_s(x,y)=N^{-1}\sum_i h_i^s(x)h_i^s(y),\qquad
+ Q_0(x,y)=d^{-1}\bar x\cdot\bar y.
+\]
+These are raw Gram matrices, not centered hidden covariances; hidden
+means therefore cause no change to this exact identity.
+Iterate the diagonal bound in Lemma~\ref{lem:offset-atoms}, starting
+from $\max Q_0(x,x)\le2$. Work backward from final covariance error
+$1/(128K)$ using the reciprocal-polynomial one-step tolerances, then
+reconstruct forward. Since $H$ is fixed and $\log m=d\log2$, all resulting
+widths, coefficient bounds and physical feature values are polynomial in
+$d,K$. The readout energy has law $t^2\chi_N^2/N$; except on mass
+$e^{-NK}$ it is at most $8K$. The original output then has RKHS norm at
+most $\sqrt{8K}$. Its unchanged certificate and the final covariance
+approximation give output error at most $1/4$; doubling the reconstructed
+readout recovers its signs with strict margin $1/2$.
+
+All reconstructed activations have offset at most $b$ and Lipschitz
+constant at most $\lambda$: bulk neurons use $\phi$, tail neurons use
+the normalized $\psi_i$, and dummy/padding neurons use zero. Bounding
+physical widths and weights bounds their weighted energy. Consequently
+there are polynomials $P_{L,\lambda,b}$ and $J_{L,\lambda,b}$ such that
+\begin{equation}\label{eq:offset-endpoint}
+ N\ge P_{L,\lambda,b}(d,K)\quad\Longrightarrow\quad
+ \mu_{N,t}\left(\bigcup_{g\notin\mathcal F_b(J_{L,\lambda,b}(d,K))}
+ U_{N,g}\right)\le(2H+1)e^{-NK}.
+\end{equation}
+The conditional union bound accounts for two events per hidden layer
+and one readout event. This holds uniformly for $0<t\le1$: covariance
+multiplication by $t^2$ does not enlarge diagonal or approximation budgets,
+bulk incoming weights acquire a factor $t$, atom incoming weights a factor
+$t^2$, and readout tails only decrease. The offset itself is still bounded
+by $b$.
+
+\subsection{One finite class for every width and scale}
+\begin{proof}[Proof of Theorem~\ref{thm:offset-original}]
+Use $A_f$ from \eqref{eq:offset-target} and set
+\begin{align*}
+ K_s&=4A_f+8\log(2L/\varepsilon),&
+ t_*&=\min\{a_{K_s}/8,[8(d+1)]^{-1/2}\},\\
+ K_m&=2+A_f/t_*^2+\log(2(2H+1)/\varepsilon),&
+ N_*&=\left\lceil\max\{1,P_{L,\lambda,b}(d,K_m)\}\right\rceil,\\
+ D_*&=d+2+(L-2)N_*,&
+ J_0&=2A_f+2D_*\log2+4\log(2/\varepsilon),\\
+ J_*&=(L+3)K_s+J_{L,\lambda,b}(d,K_m)+J_0.
+\end{align*}
+Increase the polynomial envelopes to be nonnegative if needed. Every
+quantity has a polynomial upper bound in $d,C,B,\log(1/\varepsilon)$
+at fixed $L,\lambda,b$, including $t_*^{-1}$.
+
+Let $\mathcal F_* =\mathcal F_b(J_*)$. For $t\le t_*$, divide the
+spectral bound \eqref{eq:offset-spectral} by the target probability to get
+\[
+ \frac{\mu_{N,t}(\bigcup_{g\notin\mathcal F_*}U_{N,g})}
+      {\mu_{N,t}(U_{N,f})}
+ \le L\exp[-N(K_s/8-A_f/2)/t^2]\le\varepsilon/2.
+\]
+For $t\ge t_*$ and $N\ge N_*$, the endpoint bound
+\eqref{eq:offset-endpoint} gives the same conclusion, since its ratio
+is at most $(2H+1)\exp[-N(K_m-A_f/(2t^2))]$.
+For $C\le N<N_*$, the parameter count is
+$p=N(d+2)+(L-2)N^2\le ND_*$. Independently of the activation,
+$\kappa_N=(t^2/N)\chi_p^2$ under the raw prior. Its exponential moment
+at $N/(4t^2)$ is $2^{p/2}$, so
+\[
+ \frac{\mu_{N,t}\{\kappa_N>J_0\}}{\mu_{N,t}(U_{N,f})}
+ \le \exp\left[-\frac N{t^2}(J_0/4-A_f/2)
+                         +\frac p2\log2\right]\le\varepsilon/2.
+\]
+Every margin-separated draw of energy at most $J_0$ is itself in the
+auxiliary bounded-offset class. Thus the same relative-mass bound holds
+in every case.
+
+Conditioning on the global margin cancels from probability ratios.
+Noiseless training always leaves the target in the posterior denominator,
+so posterior mass outside $\mathcal F_*$ is at most $\varepsilon/2$ on
+\emph{every} training history. By Lemma~\ref{lem:offset-capacity},
+$\log|\mathcal F_*|\le\mathcal B_b(J_*)$.
+A finite-class union bound gives a sample event of probability at least
+$1-\delta$ on which every consistent member has true error at most
+$\varepsilon/2$, provided
+\[
+ n\ge\frac2\varepsilon[\mathcal B_b(J_*)+\log(1/\delta)].
+\]
+This event depends only on one finite function class and therefore works
+for the entire family of widths and scales. Adding the discarded posterior
+mass proves the risk guarantee. A polynomial upper envelope of
+$\mathcal B_b(J_*)$ supplies $\mathcal P_{L,\lambda,b}$.
+The target-cylinder lower bound proves all normalizers positive.
+\end{proof}

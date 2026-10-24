@@ -1,0 +1,28 @@
+import NeuralGeneralization.BatchTwoNonGaussianTranslation
+import NeuralGeneralization.BatchTwoNonGaussianLindeberg
+import NeuralGeneralization.BatchTwoNonGaussianStatements
+import NeuralGeneralization.BatchTwoNonGaussianStrongMain
+import NeuralGeneralization.BatchTwoNonGaussianTower
+import NeuralGeneralization.BatchTwoNonGaussianSmallBall
+import NeuralGeneralization.BatchTwoNonGaussianApproximationTail
+import NeuralGeneralization.BatchTwoNonGaussianMain
+
+/-! Kernel audit of the actual analytic components and both complete main
+theorems of the non-Gaussian paper. -/
+
+#print axioms NeuralGeneralization.BatchTwoNonGaussian.CoordinateLaw.symmetric_event_translation
+#print axioms NeuralGeneralization.BatchTwoNonGaussian.CoordinateLaw.cubic_exp_integrable
+#print axioms NeuralGeneralization.BatchTwoNonGaussian.relative_lindeberg
+#print axioms NeuralGeneralization.BatchTwoNonGaussian.standardGaussian
+#print axioms NeuralGeneralization.BatchTwoNonGaussian.strongPrior
+#print axioms NeuralGeneralization.BatchTwoNonGaussian.gaussian_proxy_lift
+#print axioms NeuralGeneralization.BatchTwoNonGaussian.exists_mixed_compressed_network
+#print axioms NeuralGeneralization.BatchTwoNonGaussian.CoordinateLaw.hasSubgaussianMGF
+#print axioms NeuralGeneralization.BatchTwoNonGaussian.normalized_sum_small_ball
+#print axioms NeuralGeneralization.BatchTwoNonGaussian.actual_matrix_approximation_tail
+
+#print axioms NeuralGeneralization.BatchTwoNonGaussian.powerPrior_target_mass_all_width
+#print axioms NeuralGeneralization.BatchTwoNonGaussian.NonGaussianMeanField.meanField
+#print axioms NeuralGeneralization.BatchTwoNonGaussian.NonGaussianAbove.aboveMeanField
+#print axioms NeuralGeneralization.BatchTwoNonGaussian.finiteScale
+#print axioms NeuralGeneralization.BatchTwoNonGaussian.mainResults

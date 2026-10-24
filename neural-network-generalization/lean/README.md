@@ -1,7 +1,8 @@
-# Lean proofs of the five main learning results
+# Lean proofs of the NNBayes learning results
 
-This project proves the five main learning statements for the actual finite
-Gaussian neural-network model. The proofs use only Lean's standard axioms
+This project proves the original five main learning statements and the main statements of ten additional papers. The second batch extends the activations, priors, domains, polynomial bounds, online learning and converses. [Second-batch coverage](review/BatchTwo-coverage.md) · [Main entry point](NeuralGeneralization/BatchTwoMain.lean) · [Axiom audit](NeuralGeneralization/BatchTwoAudit.lean).
+
+The original five statements concern the actual finite Gaussian neural-network model. The proofs use only Lean's standard axioms
 `propext`, `Classical.choice`, and `Quot.sound`: there are no admitted proofs or
 project axioms asserting analytic or probabilistic ingredients.
 

@@ -1,0 +1,6 @@
+import NeuralGeneralization.BatchTwoOnlineMeanFieldExactTail
+
+#print axioms NeuralGeneralization.BatchTwoOnlineMeanFieldExact.good_network_mem_functions
+#print axioms NeuralGeneralization.BatchTwoOnlineMeanFieldExact.functions_card_le_exp
+#print axioms NeuralGeneralization.BatchTwoOnlineMeanFieldExact.aggregate_tail
+#print axioms NeuralGeneralization.BatchTwoOnlineMeanFieldExact.readout_bad_tail

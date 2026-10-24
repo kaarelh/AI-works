@@ -1,5 +1,42 @@
 # Verification record
 
+## Statement correspondence recheck, 23 October 2026
+
+The [fifteen-paper statement audit](review/statement-audit-2026-10-23/README.md) compares the original five and second-batch ten main claims with their actual Lean definitions and theorem types. The model, probability, prediction and quantifier checks found no further substantive mismatch after the following qualifications:
+
+- The original robust and improved original-support formalizations count a reserved constant wire at every stage. Width-one targets other than constant `+1` under the manuscripts' prose convention need formal width two; those learner-width-one cases are outside certification.
+- The ReLU/GELU polynomial-depth manuscript now explicitly requires the constant-one wire at every stage that its formal circuit definition already requires. Without it, the width-one ReLU claim would be false.
+- The previously recorded numerical and ancillary exclusions remain, notably the improved original-support paper's separate `16/ε` allocation.
+
+All 1,313 recorded Lean source/configuration files match the earlier fresh-build snapshot. Rerun theorem-type, confidence, parity and axiom checks passed; the aggregate audit again checks 14,578 proved declarations using only the three standard axioms. This is a semantic source review and a gate rerun using the existing checked build, **not another fresh rebuild**. [Machine recheck record](review/statement-audit-2026-10-23/kernel-recheck.json). No Lean theorem or proof was changed.
+
+## Second formalization batch, 23 October 2026
+
+**PASS.** A fresh build of all 1,304 library modules completed successfully (4,640 build jobs). All seven final gates passed. The aggregate axiom audit checked 14,578 proved project declarations; the source comparison found zero differences across 1,313 source/configuration files.
+
+The main statements of ten additional papers have closed proofs, alongside the original five. [Theorem correspondence and exclusions](review/BatchTwo-coverage.md) · [Entry point](NeuralGeneralization/BatchTwoMain.lean) · [Axiom audit](NeuralGeneralization/BatchTwoAudit.lean).
+
+The second batch covers unified Lipschitz activations; polynomial-depth ReLU/GELU learning under population merging; improved polynomials under the original robust support; the shallow theorem; total online mistakes; circuit and gain-restricted neural converses; non-Gaussian priors; continuous-domain regression; and exponential continuous-regression depth dependence. The latter includes actual finite `γ>1` posteriors with a polynomial sufficient width and width-first `γ=1` posteriors, alongside the strong-prior limit.
+
+The main axiom audit accepts only `propext`, `Classical.choice` and `Quot.sound`. `Audit.lean` additionally checks every imported proved project declaration and preserves the original five exact-type gates. No main endpoint leaves target mass, concentration, compression, covariance approximation or posterior normalization as an assumed analytic conclusion.
+
+**Scope matters.** The improved original-support paper's headline theorem, sixth-power width rate and degree-46 envelope are checked; its separate printed numerical `16/ε` allocation is not. The online paper's three boxed neural budgets are checked, while some optional unboxed extensions are outside coverage. Ancillary classification, iterated-limit, LDP and smooth-density claims in the continuous papers are not all certified. The coverage table and per-paper correspondence records state these exclusions.
+
+Fresh verification uses Lean 4.32.0 and pinned mathlib revision `81a5d257c8e410db227a6665ed08f64fea08e997`. It starts with an empty project build directory and copies no project OLeans. The dependencies use the existing mathlib build cache: this is a fresh **project-source** rebuild, unlike the historical run below which rebuilt mathlib too. Reproduction commands are:
+
+```sh
+lake build NeuralGeneralization NeuralGeneralization.BatchTwoAudit
+lake env lean Audit.lean
+lake env lean CheckMain.lean
+lake env lean CheckRobust.lean
+lake env lean CheckParity.lean
+lake env lean CheckConfidence.lean
+```
+
+The release additionally builds every included library source module, including auxiliary modules outside the main import closure. Source checksums, build output, axiom output and check results are recorded in [the second-batch verification directory](review/verification/batch-two-2026-10-23/). The original five proofs, theorem types and historical audits are retained below.
+
+## Original batch verification record
+
 **PASS — 18 October 2026.** All **five exact main learning theorems**, the parity supplement, and the aggregate axiom audit pass in an independent project-source rebuild. The new result is the polynomial-depth generalization theorem under a robustness restriction.
 
 ## Independent full-source rebuild, 19 October 2026
@@ -29,6 +66,8 @@ The [new exact-type audit](review/verification/robust-2026-10-18/ExactMainAudit.
 The new theorem concerns the actual finite Gaussian network conditioned on the stated internal-noise robustness event, followed by signed training output strictly above `1/2`. It does not impose a clean-output margin at every input before training. Test risk uses margin `1/4`; the final conclusion includes the strict `>2/3` posterior-confidence rule.
 
 One universal polynomial is chosen before dimension, circuit width, depth, calibration, and statistical parameters. For arbitrary input distributions, one high-probability sample event works simultaneously for every width above the **concrete layered Boolean-circuit width**, and every positive Gaussian scale satisfying `N*sigma^2 <= 1`. Thus it covers the specified family at every `gamma >= 1`. Constant wires and circuit compilation resources are counted. It is not an unconditional theorem for all small analog deep networks.
+
+Specifically, `LayeredBooleanCircuit` reserves one constant-`+1` wire at every stage, including the final stage. The paper's nonconstant width-one examples need formal width two, as its introduction acknowledges. Its learner-width-one cases are not certified by this theorem. See the [fresh correspondence review](review/statement-audit-2026-10-23/original-lower-robust.md).
 
 All ingredients of that main statement are discharged: actual target prior mass, posterior positivity and relative entropy, small- and large-width compression, original-network histories and noise costs, finite coding, and statistical bounds. The proof uses a more conservative Pinsker-and-energy construction than the manuscript's sharper transport estimate. A separate imported [degree calculation](NeuralGeneralization/RobustCompressionExplicitDegree.lean) verifies a sufficient exponent **10974** for its sample-budget formulas; neither this exponent nor the large constants are claimed to be optimal or practical.
 

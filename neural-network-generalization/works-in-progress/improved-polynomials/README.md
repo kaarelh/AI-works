@@ -1,6 +1,6 @@
 # Better polynomial bounds for NNBayes
 
-Five research papers with independent AI-agent mathematical review. Each paper lists its authors alphabetically, using ChatGPT-6 Astra for the OpenAI model credit. Papers using the inherited robust construction also credit Claude. These results are **not Lean verified** and have not received a full human mathematical review.
+Five research papers with independent AI-agent mathematical review. Each paper lists its authors alphabetically, using ChatGPT-6 Astra for the OpenAI model credit. Papers using the inherited robust construction also credit Claude. The original-support/all-scales and shallow main results are Lean verified in the [second formalization batch](../../lean/review/BatchTwo-coverage.md). The other papers retain their conventional-proof status. None has received a full human mathematical review.
 
 The earlier [robust-prior paper](../../main-results/robust-polynomial-depth/) gives a polynomial-depth theorem at every mean-field-or-stronger scale. Its conservative manuscript budget has degree 510 in the sum of the parameters; the more conservative [formal construction](../../lean/VERIFICATION.md#generalization-under-a-robustness-restriction-scope-and-correspondence) has a checked degree-10974 budget. The papers here obtain much smaller powers, including under the original restriction throughout the entire `gamma >= 1` regime.
 

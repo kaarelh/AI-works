@@ -16,12 +16,18 @@ $$
 S=2+d+L+C+c+c^{-1}+\varepsilon^{-1}+\log(1/\delta).
 $$
 
-This improves the earlier manuscript's degree-510 envelope. The earlier Lean proof uses a still looser degree-10974 budget and does **not** certify these new exponents.
+This improves the earlier manuscript's degree-510 envelope. The original Lean proof retains its degree-10974 budget. The second formalization batch separately certifies the new width exponent and degree-46 envelope.
 
 Training requires signed outputs above `1/2`; the bound controls posterior average test-margin failure at `1/4`, hence sign error and posterior-confidence failure. The theorem needs no all-input clean-output margin and also permits the original extra margin conditioning.
 
 The improvement replaces the expensive reconstruction step in the entropy compressor with importance sampling, exact empirical whitening, and a mean-square Gaussian standard-deviation comparison. The target-cylinder construction, conditional-entropy bookkeeping, preservation of the original posterior marginal, and statistical proof are included so that the paper can be read independently.
 
-**Status:** full proof and final sources passed independent AI-agent mathematical review. Not Lean verified or externally peer reviewed. Quadratic dependence under this unchanged support restriction remains open. The stronger-scale [quartic bound](../original-support/) and the stronger-support [quadratic bound](../neuron-averaging/) have different scopes.
+**Status:** full proof and final sources passed independent AI-agent mathematical review. Main learning statements Lean verified; not externally peer reviewed. Quadratic dependence under this unchanged support restriction remains open. The stronger-scale [quartic bound](../original-support/) and the stronger-support [quadratic bound](../neuron-averaging/) have different scopes.
 
 Run `./build.sh` to rebuild the PDF using `pdflatex`. [Collection overview and verification records](../README.md).
+
+## Lean verification
+
+The main statements are included in the second formalization batch. [Exact coverage and exclusions](../../../lean/review/BatchTwo-coverage.md) · [Lean entry point](../../../lean/NeuralGeneralization/BatchTwoMain.lean). This label does not extend automatically to every appendix, remark or numerical allocation. The original mathematical review records describe their earlier source snapshots.
+
+The verified circuit width includes a reserved constant-`+1` wire at every stage, including the final stage. A width-one circuit computing anything other than constant `+1` under the manuscript's prose convention needs formal width two; its learner-width-one case is not certified. The [statement audit](../../../lean/review/statement-audit-2026-10-23/polynomials-online.md) records this qualification. The separate printed numerical `16/ε` allocation is also outside certification; the sixth-power width rate and degree-46 envelope are proved with larger internal constants.
