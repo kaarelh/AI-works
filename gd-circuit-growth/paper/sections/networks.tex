@@ -9,12 +9,12 @@
 \end{itemize}
 The networks sit between the two, in a specific way \status{Numerical}:
 \begin{itemize}
-\item \textbf{Sparse high-order targets.} Parities cost the networks 3–4$\times$ more data per extra bit: 200, 843 and 2728 samples. The Occam learner needs at most 16, 23 and 37, and the kernel fails from 3 bits on.
+\item \textbf{Sparse high-order targets.} Parities cost the networks 3.2–4.2$\times$ more data per extra bit: 200, 843 and 2728 samples. The Occam learner needs at most 16, 23 and 37, and the kernel fails from 3 bits on.
 \item \textbf{Dense leap-1 targets.} MAJ$_9$ and the 10-bit halfspace are 3–6$\times$ cheaper for the networks than for the kernel, and out of reach of the junta learner.
 \end{itemize}
 
 \begin{table}[t]
-\centering\small
+\centering\footnotesize\setlength{\tabcolsep}{4pt}
 \begin{tabular}{lcccccc}
 \toprule
 target & relevant & leap & $\nstar$ networks & $\nstar$ NNGP kernel & $\nstar$ Occam (juntas)\\
@@ -44,7 +44,7 @@ sign$(2x_1+x_2x_3+x_4x_5x_6)$ & 6 & 3 & 2205 & -- & --\\
 
 Several further observations \status{Numerical}:
 \begin{itemize}
-\item \textbf{Reusing the training set saves data.} With fresh samples at every step, the networks need 12--64$\times$ their fixed-set $\nstar$: about 12800 samples for $\chi_2$, and about 32000 for $\chi_3$, the staircase, the multiplexer and MAJ of parities.
+\item \textbf{Reusing the training set saves data.} With fresh samples at every step, the networks need 12--64$\times$ their fixed-set $\nstar$: about 3200 samples for MAJ$_9$, 12800 for $\chi_2$, and 32000 for $\chi_3$, the staircase, the multiplexer and MAJ of parities. These counts are read at the first checkpoint with test error at most 0.1. Checkpoints are 2–2.5$\times$ apart, so they are upper bounds that may be up to about $2.5\times$ high.
 \item \textbf{Generalization is delayed near $\nstar$.} At $n=256$, $\chi_2$ fits its training set by step 200 but generalizes only at steps 7000--10000. The multiplexer, the DNF, recursive majority and AND$(x_1x_2,x_3x_4)$ show 4--40$\times$ delays at their critical $n$.
 \item \textbf{Features are learned in staircase order.} On the staircase target, the network's Fourier coefficient reaches half its target value at step 100 for $x_1$, step 500 for $x_1x_2$ and $x_1x_2x_3$, and step 1000 for $x_1x_2x_3x_4$.
 \item \textbf{Representation size peaks just below $\nstar$.} For the 3- and 4-bit parities, the staircase and the multiplexer, the participation-ratio rank of the second layer's kernel peaks just below $\nstar$ and collapses above it. Below $\nstar$ the networks fit the training set with many features; above it they use the target's few features.
@@ -54,37 +54,37 @@ Several further observations \status{Numerical}:
 
 \Cref{tab:dscale} and \cref{fig:dscale} show $\nstar$ at $d=15,30,60$, and at $d=120$ for four targets \status{Numerical}. The growth with $d$ is polynomial, with an exponent that increases with the number of inputs that must be found at once:
 \begin{itemize}
-\item \textbf{Parities.} For 2- and 3-bit parities the exponents are $1.04$ and $1.91$ over $d=15$–$60$. On a refined grid of $n$ (quarter-octave steps), the local exponents from $d=30$ to $120$ are $1.09/1.03$ and $1.93/1.96$. Both match the CSQ rate $d^{\max(1,k-1)}$ \cite{abbe2023leap,benarous2021online}. The 4-bit parity grows like $d^{2.40}$, below $d^{3}$.
-\item \textbf{Leap-1 compositions} (staircase, multiplexer) grow like $d^{1.5}$.
-\item \textbf{MAJ$_9$.} Its whole learning curve is a function of $n/d$ at all four $d$, within 0.01–0.04 of a constant-free prediction from the sampling noise of the linear (Hebbian) direction (\cref{fig:dscale}b). Its apparent $\nstar$ exponent comes from where this flat curve crosses 0.1.
+\item \textbf{Parities.} For 2- and 3-bit parities the exponents are $1.04$ and $1.91$ over $d=15$–$60$. From $d=30$ to $120$ the local exponents are $1.09/1.03$ for $\chi_2$, on the factor-2 grid, and $1.93/1.96$ for $\chi_3$, on a refined grid of $n$ (quarter-octave steps) that gives $\nstar=719$, 2740 and 10691 at $d=30$, 60 and 120. Both match the leap rate $d^{\max(1,k-1)}$, which on the hypercube matches CSQ lower bounds \cite{abbe2023leap}. The 4-bit parity grows like $d^{2.40}$, below $d^{3}$.
+\item \textbf{Leap-1 compositions} (staircase, multiplexer) grow like $d^{1.5}$ over $d=15$–60, with local exponents falling from 1.7–1.8 to 1.2–1.3. The multiplexer's is 1.20 from $d=60$ to 120 (factor-2 grid).
+\item \textbf{MAJ$_9$.} Down to test error about 0.1, its learning curve is a function of $n/d$ at all four $d$, within 0.01–0.04 of a constant-free prediction from the sampling noise of the linear (Hebbian) direction (\cref{fig:dscale}b). Below 0.1 the curves spread (0.02–0.08 at $n/d=17$). Its apparent $\nstar$ exponent comes from where this flat curve crosses 0.1.
 \end{itemize}
-Occam-type laws grow like $\log d$, an effective exponent of about 0.2 over this range, and fail completely.
+Occam-type laws grow like $\log d$, with local exponents of 0.19–0.37 over this range, and fail completely.
 
-Training reuses a fixed sample for many epochs, so the networks are not CSQ learners in the strict sense. SQ algorithms, or gradient descent that reuses batches, can reach $d^{k/2}$ in Gaussian single-index models \cite{damian2024gaps,dandi2024reuse}. For $k\le3$ the networks here nevertheless follow the CSQ exponent; at $k=4$ they fall between the two rates.
+Training reuses a fixed sample for many epochs, so the networks are not CSQ learners in the strict sense. In Gaussian single-index models with information exponent $k$, smoothing the loss lets online SGD reach the CSQ lower bound $d^{k/2}$ \cite{damian2023smoothing}. SQ algorithms, or gradient descent that reuses batches, go further, to about $d$ for polynomial links, by exploiting nonlinear functions of the label \cite{damian2024gaps,dandi2024reuse}. For $\pm1$ labels every statistical query is a correlational query plus a label-free one \cite{bshouty2002sq}, so that last speed-up has no direct analogue here, and the $d^{k/2}$ column is a Gaussian reference only. For $k\le3$ the networks follow the leap exponent $k-1$; at $k=4$ they fall between $d^{k-1}$ and $d^{k/2}$.
 
 \begin{table}[t]
-\centering\small
+\centering\footnotesize\setlength{\tabcolsep}{4pt}
 \begin{tabular}{lccccc}
 \toprule
-target & $\nstar$ at $d=15$ / 30 / 60 / 120 & exponent ($15$–$60$) & CSQ $d^{k-1}$ & SQ/reuse $d^{k/2}$\\
+target & $\nstar$ at $d=15$ / 30 / 60 / 120 & exponent ($15$–$60$) & leap $d^{k-1}$ & Gaussian $d^{k/2}$\\
 \midrule
 $\chi_2$ & 100 / 200 / 427 / 869 & 1.04 & 1 & 1\\
-$\chi_3$ & 241 / 843 / 3410 / 10691$^\dagger$ & 1.91 & 2 & 1.5\\
+$\chi_3$ & 241 / 843 / 3410 / 14188$^\dagger$ & 1.91 & 2 & 1.5\\
 $\chi_4$ & 508 / 2728 / 14255 / -- & 2.40 & 3 & 2\\
 staircase (5 terms) & 433 / 1514 / 3487 / -- & 1.50 & -- & --\\
-multiplexer & 364 / 1156 / 2848 / 5195$^\dagger$ & 1.48 & -- & --\\
+multiplexer & 364 / 1156 / 2848 / 6524$^\dagger$ & 1.48 & -- & --\\
 MAJ$(x_1x_2,x_3x_4,x_5x_6)$ & 306 / 1380 / 3466 / -- & 1.75 & -- & --\\
 MAJ$_9$ & 123 / 263 / 625 / 845 & 1.17 & -- & --\\
 \bottomrule
 \end{tabular}
-\caption{Network sample complexity against input dimension (Adam, width 128; 3 seeds at $d=30$, 2 elsewhere). $^\dagger$On a refined (quarter-octave) $n$ grid; the factor-2 grid gives 14188 and 6524. For $\chi_4$ the 20000-step budget limits $\nstar$ at both ends of the range, so the sign of its effect on the exponent is unknown.}
+\caption{Network sample complexity against input dimension (Adam, width 128; 3 seeds at $d=30$, 2 elsewhere). All entries are on the factor-2 $n$ grid. $^\dagger$A refined (quarter-octave) grid gives 10691 for $\chi_3$ and 5195 for the multiplexer at $d=120$, and 248 / 719 / 2740 for $\chi_3$ at $d=15$ / 30 / 60. ``--'' at $d=120$: not run; in the rate columns: not applicable. The $d^{k/2}$ column is the CSQ rate for Gaussian single-index models, a reference by analogy. For $\chi_4$ the 20000-step budget limits $\nstar$ at both ends of the range, so the sign of its effect on the exponent is unknown.}
 \label{tab:dscale}
 \end{table}
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{figures/understanding_dscale.png}
-\caption{(a) $\nstar$ against $d$ for the 2- and 3-bit parities: networks, the analytic noise-law predictor (\cref{sec:noiselaw}), the race model, a noise-floor rule, and the Occam law. The predictions at $d=120$ (shaded) were saved before the $d=120$ networks were trained. (b) MAJ$_9$: network test error against $n/d$ at four input dimensions, and the constant-free prediction from the noise of the Hebbian direction.}
+\caption{(a) $\nstar$ against $d$ for the 2- and 3-bit parities: networks, the analytic noise-law predictor (\cref{sec:noiselaw}), the race model, a noise-floor rule, and the Occam law. The predictor's, race model's and Occam law's predictions at $d=120$ (shaded) were saved before the $d=120$ networks were trained; the noise-floor rule was evaluated there afterwards. (b) MAJ$_9$: network test error against $n/d$ at four input dimensions, and the constant-free prediction from the noise of the Hebbian direction.}
 \label{fig:dscale}
 \end{figure}
 
@@ -109,7 +109,7 @@ Within leap 1 the spread is wide, from $1.7\times$ to $31\times$ (the multiplexe
 
 \paragraph{Width.} At widths 32, 64, 128 and 256 (2 seeds; 3 at width 128) \status{Numerical}:
 \begin{itemize}
-\item \textbf{3-parity:} $\nstar$ does not change visibly (911, 827, 843, 873). At every width the test error is 0.28–0.47 at $n=512$ and exactly 0 at $n=1024$.
+\item \textbf{3-parity:} $\nstar$ does not change visibly (911, 827, 843, 873). At every width the test error is 0.28–0.47 at $n=512$ and at most 0.04 at $n=1024$ (exactly 0 at widths 64–256).
 \item \textbf{4-parity:} $\nstar$ falls monotonically with width (3554, 3304, 2728, 1899), a factor of 1.9 from width 32 to 256, and has not levelled off.
 \end{itemize}
 This pattern does not fit a single width-dependent constant in the noise law of \cref{sec:noiselaw}, which would make the 4-parity's width effect the square of the 3-parity's. Nor does it fit a ``luckiest unit'' account. In that account the largest product of $k$ initial weights over the units would set the escape, and it predicts a width effect for the 3-parity too, since that maximum grows $1.9\times$ from width 32 to 256 at $k=3$. A guess \status{Heuristic}: the 3-parity is at its width limit by width 32, its escape carried by the bulk of the units as in mean-field theory, while the 4-parity still relies on lucky units.

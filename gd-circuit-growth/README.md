@@ -443,7 +443,7 @@ Status labels as before.
 
 **Sample complexity versus input dimension** ([`study/DSCALE.md`](study/DSCALE.md), [`figures/dscale.png`](study/figures/dscale.png); 2 seeds at $d=15,60$):
 
-| target | $n^*$ at $d$ = 15 / 30 / 60 | exponent | CSQ rate $d^{k-1}$ | SQ / reuse rate $d^{k/2}$ |
+| target | $n^*$ at $d$ = 15 / 30 / 60 | exponent | leap rate $d^{k-1}$ (matches CSQ lower bounds on the cube) | Gaussian CSQ rate $d^{k/2}$ (reference by analogy) |
 |---|---|---|---|---|
 | $x_1x_2$ | 100 / 200 / 427 | 1.04 | 1 | 1 |
 | $x_1x_2x_3$ | 241 / 843 / 3410 | 1.91 | 2 | 1.5 |
@@ -456,11 +456,12 @@ Status labels as before.
 For the 4-parity, the fixed budget of 20000 steps limits $n^*$ at both $d=15$ and $d=60$: the critical cells are still improving at the last step. So the sign of its effect on the $k=4$ exponent is unknown.
 
 The last two columns are reference rates from the literature, not fits:
-- **CSQ rate.** $d^{k-1}$ is the correlational-SQ / online-SGD rate for a leap-$k$ target (Abbe–Boix-Adserà–Misiakiewicz; Ben Arous–Gheissari–Jagannath).
-- **SQ / reuse rate.** $d^{k/2}$ is the rate that full SQ algorithms, or gradient descent reusing batches, can reach. It is established for Gaussian single-index models (Damian et al. 2024; Dandi et al. 2024) and is used here by analogy.
+- **Leap rate.** $d^{k-1}$ is the online-SGD rate for a leap-$k$ target on the hypercube, which matches CSQ lower bounds there (Abbe–Boix-Adserà–Misiakiewicz). In Gaussian single-index models, plain online SGD has the analogous rate (Ben Arous–Gheissari–Jagannath).
+- **Gaussian CSQ rate.** $d^{k/2}$ is the CSQ lower bound for Gaussian single-index models with information exponent $k$, attained by smoothed online SGD (Damian et al. 2023). SQ algorithms and batch reuse go further there by using nonlinear functions of the label (Damian et al. 2024; Dandi et al. 2024).
+- **Why the second column is only a reference.** For $\pm1$ labels every SQ is a CSQ plus a label-free query (Bshouty–Feldman 2002), so that further speed-up has no direct analogue on these Boolean targets.
 
 **SGD instead of Adam** (μP-SGD, learning rate 0.2, 2 seeds; $d=15$ and 60 from [`study/run_checks2.sh`](study/run_checks2.sh), $d=30$ from the main sweep). On the 3-parity, SGD needs 382, 1220 and 3562 samples at $d=15,30,60$, against Adam's 241, 843 and 3410.
-- **Exponent.** SGD's is 1.61 against Adam's 1.91, so SGD sits between the reuse rate $d^{1.5}$ and the correlational-SQ rate $d^{2}$.
+- **Exponent.** SGD's is 1.61 against Adam's 1.91, between the Gaussian-CSQ reference $d^{1.5}$ and the leap rate $d^{2}$.
 - **Uncertainty.** At $d=60$ both $n^*$ are interpolated inside the same factor-2 step of the $n$ grid, between 2048 and 4096. The two seeds agree to within ±0.01, but the grid forces that agreement: both seeds' errors switch from 0.33–0.48 to about 0 between the same two grid points. So it says nothing about seed noise. The interpolation uncertainty is at worst about ±0.25 per exponent.
 - **Conclusion.** The data suggest that SGD's exponent is about 0.3 lower: its $n^*$ falls from 1.6× Adam's at $d=15$ to about 1× at $d=60$. That difference is within the interpolation uncertainty, so it is not resolved.
 

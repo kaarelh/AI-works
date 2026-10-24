@@ -5,7 +5,7 @@
 \item \emph{Initialization:} $W_1\sim\mathcal N(0,1/d)$, $W_2\sim\mathcal N(0,1/N)$, a small readout $a\sim\mathcal N(0,1/N^2)$, and zero biases.
 \item \emph{Learning rates:} per-layer multipliers relative to a base width of 64.
 \end{itemize}
-Training minimizes the square loss on $\pm1$ labels with Adam \cite{kingma2015adam}, learning rate $10^{-3}$. Minibatches of 64 are drawn with replacement from a fixed training set of size $n\in\{16,32,\dots,16384\}$ (up to 65536 at $d=60$) for 20000 steps, with 3 seeds (2 at $d\neq30$). The weights move far from initialization, $\|\Delta W_1\|/\|W_1(0)\|\approx0.7$–$1.05$, and the layer kernels' participation-ratio rank collapses from about 36 to 3–10. This is the feature-learning regime.
+Training minimizes the square loss on $\pm1$ labels with Adam \cite{kingma2015adam}, learning rate $10^{-3}$. Minibatches of 64 are drawn with replacement from a fixed training set of size $n\in\{16,32,\dots,16384\}$ (up to 65536 at $d=60$) for 20000 steps. At $d=120$ the $n$ grids are target-specific, up to 65536, and the runs last 40000 steps, with $\nstar$ read at step 20000. There are 3 seeds for the designed targets at $d=30$ (Adam, width 128), and 2 for the other dimensions, the random formulas, SGD and the other widths. At $n=16384$ the weights move far from initialization, $\|\Delta W_1\|/\|W_1(0)\|\approx0.7$–$1.05$, and the participation-ratio ranks of the layer-1 and layer-2 kernels collapse from about 36 and 32 to 3–12 and 1–10. This is the feature-learning regime.
 
 Two other protocols are used:
 \begin{itemize}
@@ -22,7 +22,7 @@ Two other protocols are used:
 \item a multiplexer, a 3-term DNF, a decision list, sign$(2x_1+x_2x_3+x_4x_5x_6)$;
 \item four random 6-gate formulas.
 \end{itemize}
-They are split into 12 \emph{calibration} targets and 9 \emph{held-out} targets.\footnote{Calibration: $x_1$, MAJ$_3$, the halfspace, $\chi_2$, $\chi_4$, the staircase, parity of majorities, the DNF, recursive majority, AND$(x_1x_2,x_3x_4)$, and two random formulas. Held-out: AND$_3$, MAJ$_9$, $\chi_3$, MAJ of parities, the multiplexer, the decision list, sign$(2x_1+x_2x_3+x_4x_5x_6)$, and two random formulas.} A further 20 random fan-in-2 AND/OR/XOR formulas on 4–8 inputs (3–8 gates) were generated after all model design and calibration, as an out-of-sample test. \Cref{sec:composition} uses real-valued polynomial targets.
+They are split into 12 \emph{calibration} targets and 9 \emph{held-out} targets.\footnote{Calibration: $x_1$, MAJ$_3$, the halfspace, $\chi_2$, $\chi_4$, the staircase, parity of majorities, the DNF, recursive majority, AND$(x_1x_2,x_3x_4)$, and two random formulas. Held-out: AND$_3$, MAJ$_9$, $\chi_3$, MAJ of parities, the multiplexer, the decision list, sign$(2x_1+x_2x_3+x_4x_5x_6)$, and two random formulas.} A further 20 random fan-in-2 AND/OR/XOR formulas on 4–5 inputs (3–5 of them relevant), with 3–8 gates, were generated after all model design and calibration, as an out-of-sample test. \Cref{sec:composition} uses real-valued polynomial targets.
 
 \paragraph{Metrics.} We use the following:
 \begin{itemize}
@@ -31,7 +31,7 @@ They are split into 12 \emph{calibration} targets and 9 \emph{held-out} targets.
   \begin{itemize}
   \item the mean $|\log_2(\nstar_{\rm model}/\nstar_{\rm NN})|$ over targets; 0.33 means within a factor of $2^{0.33}\approx1.26$ on average;
   \item the Spearman correlation of $\nstar$;
-  \item \emph{success agreement}, whether both have test error at most 0.1 at each $(f,n)$;
+  \item \emph{success agreement}, the fraction of $(f,n)$ cells on which model and networks agree about whether test error is at most 0.1;
   \item the mean absolute difference of the test-error curves.
   \end{itemize}
 \item \textbf{Per-example agreement:} computed on \emph{partially learned cells}, where the networks' test error is in $[0.05,0.45]$, with model and network trained on the same training set. It is the excess of their agreement on test points over the agreement that independent errors would give, as a fraction of the largest possible excess: 0 means independent errors, 1 means identical errors.

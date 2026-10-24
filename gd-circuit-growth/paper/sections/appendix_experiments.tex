@@ -1,4 +1,5 @@
 \section{Experimental details}\label{app:experiments}
+\sloppy
 
 \paragraph{Network training} (\texttt{study/nn\_train.py}).
 \begin{itemize}
@@ -15,7 +16,7 @@
 \begin{itemize}
 \item \textbf{NNGP kernel:} the infinite-width kernel of the same architecture at initialization, evaluated in closed form on the cube, used in kernel ridge regression with ridge $10^{-4}\,\mathrm{tr}K/n$, for $n\le4096$.
 \item \textbf{Occam over juntas:} the smallest $k\le4$ such that some $k$-subset of coordinates is consistent with the training data, predicting by its truth table, with unseen cells given the majority label. If no subset is consistent, the 4-subset with the fewest training mistakes is used.
-\item \textbf{sswm:} strong-selection/weak-mutation evolution of a single shared circuit of fan-in-2 gates (BUF, signed AND, XOR) with a ridge readout. One random local mutation is proposed per tick: adding one gate (weight 1), a chain of two or three fresh gates (weights $\epsilon$, $\epsilon^2$), or rewiring. Improvements are kept.
+\item \textbf{sswm:} strong-selection/weak-mutation evolution of a single shared circuit of fan-in-2 gates (BUF, signed AND, XOR) with a ridge readout. One random local mutation is proposed per tick: adding one gate (weight 1), a chain of two or three fresh gates (weights $\epsilon$, $\epsilon^2$), or rewiring (1/4), retyping (1/8) or deleting (1/4) a leaf gate. A mutation that adds gates is kept if it lowers the training objective by more than a significance threshold per fresh gate; rewires and retypes are kept if they lower it at all, and deletes never are.
 \end{itemize}
 
 \paragraph{The race model} (\texttt{study/models/race.py}). The settings are $\theta=1.5$, ridge $\lambda=10^{-3}$, integer weights in $\{-3,\dots,3\}$, ReLU gates, proto-unit orders up to $K=4$ with $P=8$ units per order, 8 power-iteration steps per firing, and at most 48 gates. Full details and the 30 ablations are in \texttt{study/ABLATIONS.md}.
@@ -29,4 +30,4 @@
 
 \paragraph{The hybrid model} (\texttt{study/models/hybrid.py}). The race model plus an NNGP background in a joint ridge readout, with background ridge $c_{\rm bg}n/t$, $c_{\rm bg}=0.003$, and growth stopped when the training MSE falls below $0.03$. Above $n=2048$ the background is a rank-512 random-feature approximation; this is used in the scoreboard but not in the diagnosis.
 
-\paragraph{Compute.} Everything ran on a 4-core CPU container. A model evaluation over the full $(21\text{ targets})\times(11\ n)\times(3\text{ seeds})$ grid takes a few to ten minutes single-threaded.
+\paragraph{Compute.} Everything ran on a 4-core CPU container. A model evaluation over the full $(21\text{ targets})\times(11\ n)\times(3\text{ seeds})$ grid takes about 1.5–12.5 minutes single-threaded.

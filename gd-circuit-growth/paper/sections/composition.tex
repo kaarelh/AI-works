@@ -19,11 +19,11 @@ Both have leap 1: once $x_1,\dots,x_4$ are found, the degree-4 monomial adds no 
   \item $G=s+x_5x_6+x_7x_8+x_1x_2x_3x_4$: pairs outside the support;
   \item $H=s+x_1x_2+x_1x_2x_3x_4$: one pair.
   \end{itemize}
-\item \textbf{Order.} The predictions of leap complexity, of our move classification, and of the race model (run on the networks' exact training sets) were committed to the repository before the networks were run. $G$, $H$ and the $d=60$ runs were added after the first $d=30$ results, with the race model's predictions for them again recorded first.
+\item \textbf{Order.} The predictions of leap complexity, of our move classification, and of the race model were recorded before any network result was inspected, and committed seconds later; the $d=30$ runs had already started. The race model used its calibrated constants on the networks' exact training sets. For regression, its growth stops once the training MSE is below 2\% of the target variance, a new rule that was not calibrated. $G$, $H$ and the $d=60$ runs were added after the first $d=30$ results, with the race model's predictions for them recorded and committed before those runs began.
 \end{itemize}
 
 \begin{table}[t]
-\centering\small
+\centering\footnotesize\setlength{\tabcolsep}{4pt}
 \begin{tabular}{llcccc}
 \toprule
 & target & leap & $\nstar_4$, $d=30$ & $\nstar_4$, $d=60$ & race model, $d=30$ / $60$\\
@@ -37,7 +37,7 @@ $G$ & $s+x_5x_6+x_7x_8+x_1x_2x_3x_4$ & 2 & 3488 & -- & 1975 / --\\
 $F$ & $x_1x_2x_3x_4$ & 4 & 3635 & 14330 & 2306 / 15755\\
 \bottomrule
 \end{tabular}
-\caption{Composition test: training-set size at which the degree-4 coefficient reaches 80\% of its target (seed mean; 3 seeds at $d=30$, 2 at $d=60$). The race model's predictions were recorded before the corresponding network runs. ``--'': not run.}
+\caption{Composition test: training-set size at which the degree-4 coefficient reaches 80\% of its target (seed mean; 3 seeds at $d=30$, 2 at $d=60$). The race model's predictions were recorded before the corresponding network results (for $G$, $H$ and $d=60$, before the runs). ``--'': not run.}
 \label{tab:composition}
 \end{table}
 
@@ -64,7 +64,7 @@ $F$ & $x_1x_2x_3x_4$ & 4 & 3635 & 14330 & 2306 / 15755\\
   \item \emph{Pairs on other variables.} $G$ gets no help: its $\nstar_4$ is that of the bare parity $F$, and worse than $B$'s.
   \item \emph{Pairs without the linear part.} $E$ is the easiest of all, in both protocols.
   \end{itemize}
-  What matters is how many already-learned features the degree-4 term needs to combine, not how many new inputs it needs.
+  This suggests that what matters is how many already-learned features the degree-4 term needs to combine, not how many new inputs it needs.
 \item \textbf{Leap gets the asymptotic class partly right.}
   \begin{itemize}
   \item \emph{Leap-1 targets with pairs.} From $d=30$ to $60$, $\nstar_4$ grows like $d^{0.94}$ for $A$ and $d^{0.98}$ for $C$, as leap 1 predicts.
@@ -73,19 +73,19 @@ $F$ & $x_1x_2x_3x_4$ & 4 & 3635 & 14330 & 2306 / 15755\\
   \end{itemize}
 \item \textbf{Neither of our predictors anticipated this.}
   \begin{itemize}
-  \item \emph{Our move classification.} Because $k$ counts new inputs, it assigned the degree-4 term in $B$ a cheap $k=0$ reuse move. By our estimate that is at most a few hundred samples, against the observed 2030.
-  \item \emph{The race model.} It searches for order-4 features over all $d$ inputs whether or not they are already active, so it gave all targets nearly the same $\nstar_4$ at $d=30$. At $d=60$ it is right for $A$ and $F$ but $5\times$ too pessimistic for $B$ and $2.4\times$ for $C$.
+  \item \emph{Our move classification.} Because $k$ counts new inputs, it assigned the degree-4 term in $B$ a cheap $k=0$ reuse move. Evaluated after the runs, the noise law puts this at a few hundred samples. The four inputs, each with $\rho^2=1/5$, become active at $n\approx c\,d/\rho^2=2.25\cdot30\cdot5\approx340$, and their AND, with $\rho^2=1/15$, then costs $c\,|\text{pool}|/\rho^2=2.25\cdot4\cdot15\approx135$. The networks need 2030.
+  \item \emph{The race model.} Its order-3 and order-4 units search over all $d$ input literals, whether or not they are already active; only its order-1 and order-2 units read grown gates. So it can build $A$'s degree-4 term as a depth-2 product of the two pair gates, while $B$ and $C$ (where $x_1x_2\cdot x_2x_3=x_1x_3$) need the higher-order search over literals. At $d=30$ this made little difference: it gave all targets nearly the same $\nstar_4$. At $d=60$ it is right for $A$ and $F$ but $5\times$ too pessimistic for $B$ and $2.4\times$ for $C$.
   \end{itemize}
 \end{enumerate}
 
-\paragraph{Reading} \status{Heuristic}. The cost of a high-order term is set by the number of \emph{existing features} that must be combined at once to build it, not by the number of new inputs. This is the ``circuit leap'' of \cref{sec:leapcritique}.
+\paragraph{Reading} \status{Heuristic}. The cost of a high-order term is set by the number of \emph{existing features} that must be combined at once to build it, not by the number of new inputs. For a library of fan-in-2 gates this is the ``circuit leap'' of \cref{sec:leapcritique}: here, combining $m$ features takes $m-1$ gates inserted at once. With gates of fan-in 4 or more, every target here has circuit leap 1.
 \begin{itemize}
 \item In $A$ and $E$ the degree-4 term is a product of two learned pairs.
 \item In $C$ and $H$ it is a product of a learned pair and two learned inputs.
 \item In $B$ it is a product of four learned inputs.
 \item In $G$ the pairs are useless for it, and they compete for the network's capacity and time.
 \end{itemize}
-The observed order is $E<C\approx A<H<B<G\approx F$. Apart from the near-tie of $A$ and $C$, this fits the reading.
+The observed order is $E<C\approx A<H<B<G\approx F$. It is broadly consistent with the reading, but not in detail. $A$ and $C$ tie, although $A$ combines fewer features. $E$ is easier than $A$, and $H$ harder than $C$, although each pair combines the same kind of features; their per-seed values do not overlap. $G\gg B$ rests on the competition clause. Explaining these needs extra assumptions, such as a cost of the linear part, that we have not tested.
 
 \paragraph{Consequences for the noise law.} The noise law of \cref{sec:noiselaw} should classify moves by the arity of the combination over existing features, with a cost that depends on $d$ only through the inputs that are genuinely new.
 \begin{itemize}
