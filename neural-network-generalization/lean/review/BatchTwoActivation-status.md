@@ -28,8 +28,9 @@ looser bounds as verification of those formulas.
   Gaussian strong-prior learning at each width above teacher complexity.
   Its variance threshold precedes the input distribution, confidence level
   and sample count. Its displayed polynomial is looser than `thm:strong`.
-- `BatchTwoActivationGelu.exact_same_depth_gelu_compilation` proves exactly
-  `prop:gelu-circuit`: same depth, width `2*C`, every weight bounded by `4`,
+- `BatchTwoActivationGelu.exact_same_depth_gelu_compilation` proves the
+  compiler of `prop:gelu-circuit` (its one-line consequence, teacher complexity
+  at most `max{4,2C}`, is not stated as a Lean theorem): same depth, width `2*C`, every weight bounded by `4`,
   exact real output `+1` or `-1`. `gelu_zeroLipschitz` proves exact CDF GELU
   is zero at zero and globally 2-Lipschitz; `relu_zeroLipschitz` handles ReLU.
 

@@ -112,8 +112,8 @@ does not depend on those stronger intermediate lemmas.
 `BatchTwoContinuousDepthStrongAudit` audits the complete strong-prior endpoint
 and core supporting constructions. Only Lean’s standard `propext`,
 `Classical.choice`, and `Quot.sound` axioms occur. The entire manuscript must
-not yet be described as formally verified: the mean-field endpoint and the
-extra variants remain outstanding. No analytic
+not be described as formally verified: the mean-field endpoint is now proved
+(see below), but the extra variants remain outstanding. No analytic
 conclusion is installed as an axiom or endpoint hypothesis and then described
 as proving the paper.
 

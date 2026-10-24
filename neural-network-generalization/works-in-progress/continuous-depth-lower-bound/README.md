@@ -15,7 +15,7 @@ For every sufficiently large depth and every specified sample size up to $\exp(c
 - **Strong-prior limit:** at every fixed learner width above an explicit polynomial in sample size, as the prior variance tends to zero. The sample-probability statement uses a lower limit in the variance.
 - **Every fixed exponent above one:** at the actual scale $\sigma^2=N^{-\gamma}$, at every width above a polynomial in sample size and depth, whose degree can depend on $\gamma-1$.
 - **Mean-field scaling:** at $\gamma=1$, the lower limit of the confidence-failure fraction is at least one half as width tends to infinity, on a sample event of probability at least $49/50$. This uses the same fixed nonatomic distribution. It does not give a quantitative width threshold.
-- **Exact interpolation:** the same obstruction holds for every minimum-energy exact interpolant and every mixture of them. It also holds for posterior limits obtained by taking the strong-prior limit before sending the training tolerance to zero.
+- **Exact interpolation (not formalized in Lean):** the same obstruction holds for every minimum-energy exact interpolant and every mixture of them. It also holds for posterior limits obtained by taking the strong-prior limit before sending the training tolerance to zero.
 
 These are lower bounds at sufficiently large widths. They disprove a polynomial-depth guarantee claimed uniformly over all learner widths above teacher complexity; they do not say that every width is hard.
 
