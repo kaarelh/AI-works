@@ -1,0 +1,37 @@
+\section{Introduction}\label{sec:intro}
+
+For Bayesian neural networks there is a useful low-level picture of generalization: the posterior behaves like Occam learning over small circuits \cite{nngen}. A network generalizes on a target when the target has a short description, and the sample cost is roughly that description length. This paper asks whether gradient descent admits a comparably concrete, discrete description, and how close it is to the Occam picture.
+
+The literature already contains the qualitative ingredients. In the rich regime, from small initialization, gradient flow passes near a sequence of saddles. Each escape adds roughly one unit or one rank, so training resembles a greedy algorithm that grows a network one feature at a time. This has been made precise in several settings:
+\begin{itemize}
+\item diagonal linear networks \cite{pesme2023saddle};
+\item matrix factorization \cite{li2021greedy}, deep linear networks \cite{jacot2021saddle} and deep ReLU networks \cite{bantzis2025saddle};
+\item two-layer networks in general, through ``alternating gradient flows'' \cite{kunin2025agf}.
+\end{itemize}
+For sparse Boolean targets, the \emph{leap complexity} of Abbe, Boix-Adser\`a and Misiakiewicz \cite{abbe2023leap,abbe2022msp} predicts that online SGD on a two-layer network needs on the order of $d^{\max(L-1,1)}$ steps. Here $L$ is the largest number of new coordinates any Fourier monomial adds when the monomials are taken in the best order. This is the correlational-SQ (CSQ) rate \cite{abbe2021power,benarous2021online}. Evolution by mutation and selection is equivalent to CSQ learning \cite{valiant2009evolvability,feldman2008evolvability}, and noisy neuroevolution is equivalent on average to gradient descent \cite{whitelam2021neuroevolution}. So the original idea behind this work, ``a single circuit, mutated, keeping improvements'', is already placed: it is CSQ learning.
+
+What we add is quantitative and empirical. We train rich-regime networks on 41 Boolean targets (21 designed, 20 random formulas) at up to four input dimensions. We then build discrete models that reproduce the networks' sample complexity target by target, out of sample, and use ablations to find which ingredient of the model matters. We also prove a set of ``training has not taken long, so the circuit is still small, so a union bound over small circuits applies'' theorems, and test what can actually be certified for the trained networks.
+
+\paragraph{Main findings.}
+\begin{enumerate}
+\item \textbf{Gradient descent pays a search-noise cost, not a description-length cost} (\cref{sec:networks}). The networks' $\nstar$ grows like $d^{1.04}$, $d^{1.91}$ and $d^{2.40}$ for 2-, 3- and 4-bit parities (\cref{tab:dscale}). An Occam learner needs about $k\log d$ samples.
+\item \textbf{A greedy, noise-limited growth model matches the networks} (\cref{sec:model}).
+  \begin{itemize}
+  \item \emph{The rule.} A candidate feature is accepted once $n\rho^2$ exceeds the noise level of the continuous search that would find it. Here $\rho$ is its correlation with the residual, and the noise level grows by about a factor $d/a$ for each new input beyond the second.
+  \item \emph{Simulation.} The rule, simulated, matches $\nstar$ on 20 fresh random formulas within $1.15\times$ on average.
+  \item \emph{Closed form.} Evaluated in closed form along the target's greedy path, it predicted the 3-parity at $d=120$ before the networks were run.
+  \item \emph{Ablations.} The race dynamics we originally built into the model do not matter. The finite-sample noise of the direction search does.
+  \end{itemize}
+\item \textbf{Memorize like a kernel, generalize like a feature learner} (\cref{sec:hybrid}). On partially learned cells, the networks' mistakes are best predicted by the network's own NNGP kernel. A model that adds a kernel background to the grown features needs about 2 grown gates per such cell, where the pure growth model needs about 22.
+\item \textbf{Bounds} (\cref{sec:bounds}, \cref{app:discrete,app:networks}). The ``short training $\Rightarrow$ small'' implication is a theorem for:
+  \begin{itemize}
+  \item the discrete model;
+  \item diagonal linear networks;
+  \item quadratic networks with fixed output signs;
+  \item two-layer ReLU networks through the first escape.
+  \end{itemize}
+  It is a conjecture beyond the first escape. On the real networks, the only tight bounds are a-posteriori distillation certificates.
+\item \textbf{Composition} (\cref{sec:composition}). Leap complexity depends only on Fourier supports. We test whether intermediate features that are useful in their own right, and that compose into a higher-order term, make that term cheaper.
+\end{enumerate}
+
+\paragraph{Scope.} Everything empirical here is one architecture family, a $\mu$P two-hidden-layer ReLU MLP, mostly at width 128 and with Adam. Inputs are uniform on the hypercube, interactions have at most 4 bits, and the loss is square loss. We label every claim \status{Proved}, \status{Conditional}, \status{Conjecture}, \status{Heuristic} or \status{Numerical}.

@@ -1,0 +1,62 @@
+\section{Discussion}\label{sec:discussion}
+
+\subsection{The picture}
+
+Our current picture of rich-regime gradient descent on these targets \status{Heuristic}, summarizing the evidence of \cref{sec:networks,sec:model}:
+\[
+\text{trained network}\;\approx\;\underbrace{\text{random-feature kernel background}}_{\text{fits the sample noise; decides which examples are wrong}}\;+\;\underbrace{\text{a few grown features}}_{\text{decide whether and when it generalizes}}.
+\]
+Features are added greedily. A candidate is accepted once its correlation with the current residual beats the sampling noise of the \emph{continuous} search that would find it. That noise depends on how many inputs the feature needs at once that the circuit does not yet use, and it grows polynomially in $d$. It is not the best-of-$M$ noise of a union bound over a finite library, so the cost is not a description length.
+
+\subsection{Relation to NNBayes $\approx$ Occam}
+
+\begin{itemize}
+\item \textbf{The same answer to \emph{what} is learned.} Once gradient descent generalizes, the network is functionally close to a small circuit, as the distillation certificates show. So does the Occam picture predict \cite{nngen}.
+\item \textbf{Different answers to \emph{how many samples}.}
+  \begin{itemize}
+  \item Occam, and the $\gamma\ge1$ posterior of \cite{nngen}, pays the description length, about $k\log d$ for a $k$-parity.
+  \item Gradient descent pays the noise cost of the most expensive move along its greedy path, about $d^{k-1}$ for a move that needs $k$ new inputs at once.
+  \end{itemize}
+\item \textbf{The gap grows with leap:} the median ratio is $8\times$, $17\times$, $36\times$ and $85\times$ at leaps 1–4, at $d=30$.
+\end{itemize}
+A conjecture suggested by the predictor, not shown here \status{Conjecture}: the two sample complexities are polynomially related exactly for targets with a cheap greedy path, i.e.\ low-leap compositions with large residual correlations at every step. They differ by about $d^{k-1}/(k\log d)$ when a leap of size $k$ is unavoidable.
+
+\subsection{What is in the literature, and what is new}
+
+\paragraph{Known.} The qualitative picture is largely in the literature:
+\begin{itemize}
+\item the saddle-to-saddle / incremental-learning view of rich-regime gradient descent \cite{pesme2023saddle,jacot2021saddle,li2021greedy,kunin2025agf,bantzis2025saddle};
+\item the leap / CSQ account of which sparse targets online SGD learns, and how fast \cite{abbe2022msp,abbe2023leap,benarous2021online};
+\item the equivalence of mutation-and-selection with CSQ learning \cite{feldman2008evolvability}.
+\end{itemize}
+
+\paragraph{New here, as far as we know.} The contributions are quantitative and empirical:
+\begin{enumerate}
+\item a calibrated discrete model and a two-constant closed form that predict per-target sample complexity of multi-epoch, fixed-sample training out of sample, including a pre-registered prediction at $d=120$;
+\item ablations showing that the finite-sample noise level of the direction search, not the race dynamics, is the operative ingredient;
+\item the kernel-background decomposition of the networks' mistakes;
+\item the specific theorems of \cref{app:discrete,app:networks}: the weight-free rank bound for quadratic networks, and the early-phase results for ReLU networks;
+\item the empirical finding that distillation certificates are the only tight bounds in this setting.
+\end{enumerate}
+
+\subsection{Leap counts supports, not structure}\label{sec:leapcritique}
+
+Leap complexity is a function of the target's Fourier \emph{supports} only. Once the inputs of a monomial have been found, any further function of them is free in $d$. Leap therefore cannot see whether a high-order term can be built from intermediate features that are useful in their own right. Our move classification in \eqref{eq:noiselaw} inherits part of this blindness, since $k$ counts new inputs. But the correlation $\rho$ of the best available gate depends on which features already exist, so the noise law can in principle see such structure. An early version of this work proposed a ``circuit leap'' complexity. It orders a circuit's gates so that each insertion is a positive-utility move, and counts the largest number of gates that must be inserted at once. \Cref{sec:composition} tests the question directly.
+
+\subsection{Limitations}
+\begin{itemize}
+\item \textbf{One setting.} All experiments use one architecture family (a $\mu$P two-hidden-layer ReLU MLP), mostly width 128 and Adam, square loss, uniform Boolean inputs, $d\le120$, and interactions of at most 4 bits.
+\item \textbf{Width.} The 4-parity's width dependence is not explained by any model here (\cref{sec:width}).
+\item \textbf{The noise law.} Its form for 3 or more simultaneous inputs is a fit, not a derivation. It misses compositions by up to $2.1\times$, and it overpredicts the 4-parity at $d=60$.
+\item \textbf{Training budget.} The networks' $\nstar$ is still falling at 20000 steps, by about 0.17 in $\log_2$ per doubling of training. Part of every match is a match at this training budget.
+\item \textbf{Verification.} The theorems were checked by AI referees, not by humans (\cref{app:provenance}).
+\end{itemize}
+
+\subsection{Open problems}
+\begin{enumerate}
+\item \textbf{Prove the noise law} for a two-layer network trained on a fixed sample from small initialization: an order-$k$ feature escapes the plateau iff $n\gtrsim d^{k-1}/\rho^2$, up to logarithms. Ingredients exist: information-exponent results for online SGD \cite{benarous2021online}, early alignment \cite{boursier2022early}, and the mass clock and merging law of \cref{app:networks}.
+\item \textbf{Composition costs, and width dependence at order 4.}
+\item \textbf{Reservoir depletion.} When does the first escape use up the dormant units at practical scales?
+\item \textbf{A bound of the form ``Occam for a few grown features plus a kernel norm for the background''}, as suggested by the hybrid model.
+\item \textbf{Bayes versus gradient descent.} Characterize the targets on which their sample complexities are polynomially related.
+\end{enumerate}

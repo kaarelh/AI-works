@@ -1,0 +1,71 @@
+\section{Generalization bounds}\label{sec:bounds}
+
+The question here is whether ``training has not taken long, so the circuit cannot have grown big, so a Chernoff bound over all small circuits applies'' can be made rigorous, and whether it gives useful numbers. \Cref{app:discrete,app:networks} state the results precisely. This section summarizes them.
+
+\subsection{What is proved}
+
+\paragraph{The Occam step needs no dynamics} \status{Proved}. Consider any learner whose output after $T$ gates is a circuit from a fixed library, followed by a threshold readout. In the realizable case its test error is at most about
+\[
+\bigl(T(\log|G|+k\log(d+T))+T^2\log2+\log\tfrac{(T+1)(T+2)}{\delta}\bigr)/n,
+\]
+simultaneously for all $T$ (\cref{app:discrete}). The dynamics are needed only to bound $T$.
+
+\paragraph{Training time does not bound the raw gate count.} Many correlated gates can fire at once. On MAJ$_m$, $m^2$ gates fire at the same instant of the race. So training time cannot bound the raw gate count uniformly over gate libraries. For a fixed library only a weak time-only bound holds, with a factor of about $d$. What time does bound, in the race model, are three quantities \status{Proved}. Time is measured as $\tau(t)=\int_0^t\sqrt{2\hat L}$ in units of $\Theta=\log(1/\alpha)$, and the three quantities are:
+\begin{itemize}
+\item the circuit's depth;
+\item its incoherence-weighted size, $T\le\kappa(\tau/\Theta)^2$, where $\kappa$ is the top eigenvalue of the fired gates' Gram matrix;
+\item the readout's $\ell_1$ norm, at depth one.
+\end{itemize}
+Each gives a test-error bound as a function of training time. The race reaches the noise floor only at $t\gtrsim\Theta\sqrt{n/\log M}$. This is a precise version of ``it has not had time to memorize yet''.
+
+\paragraph{Diagonal linear networks} \status{Proved}. For a diagonal linear network over a Boolean feature dictionary, small-initialization gradient flow keeps the number of large coordinates at most $\kappa\,\tau^2/\Theta_\varepsilon^2$. This gives a generalization bound uniform in time, with only $\ln(\text{dictionary size})$ dependence.
+
+\paragraph{Two-layer quadratic networks with fixed output signs} \status{Proved}. These are networks $f(x)=\sum_j[(u_j\cdot x)^2-\|u_j\|^2]-\sum_j[(v_j\cdot x)^2-\|v_j\|^2]=\langle UU^\top-VV^\top,xx^\top-I\rangle$, with output weights fixed at $\pm1$ and centred units, equivalently symmetric matrix sensing. Under gradient flow from small initialization, the number of grown hidden units is at most $\kappa(\tau/\Theta)^2$ at every training time.
+\begin{itemize}
+\item $\kappa$ depends only on the training inputs: not on the labels, the trajectory or the width.
+\item The bound is weight-free rather than a-priori: $\tau$ is read off the training-loss curve. The same statement in raw training time alone is much weaker.
+\end{itemize}
+Together with a union bound over low-rank classes, this gives a test-error bound uniform in time. This makes the motivating sketch rigorous, for this class of networks.
+
+\paragraph{Two-layer ReLU networks} (gradient flow from balanced small initialization). We prove three things \status{Proved}:
+\begin{itemize}
+\item an exact ``mass clock'' identity;
+\item that no unit grows before about $\log(1/\alpha)/U^*$, with constant 1, which is sharp;
+\item a width-free generalization bound valid through the first escape from the initial saddle. It is vacuous below about $n\approx10^5$ at $d=16$.
+\end{itemize}
+In addition:
+\begin{itemize}
+\item \textbf{Merging.} A conserved quantity, the off-diagonal part of the classical balancedness law \cite{arora2018optimization,du2018algorithmic}, makes same-sign neurons that share an activation pattern on the training set merge as their mass grows.
+\item \textbf{Beyond the first escape.} Persistence of a small circuit holds under a condition that can be checked from the training residuals \status{Conditional}. The a-priori statement is open \status{Conjecture}.
+\item \textbf{Reservoir depletion.} In small-$\alpha$ simulations every neuron was recruited by the first escape. In one run at $\alpha=10^{-6}$ the second feature was then not learned by $t=400$. The discrete models assume the reservoir of dormant units persists; whether it does in the $\mu$P networks was not measured.
+\end{itemize}
+
+\paragraph{One-pass training} \status{Proved}. With fresh minibatches, the prequential error certifies the average test error of a window of iterates, with no capacity argument \cite{cesabianchi2004online}. Taking the window in advance with $N$ fresh samples and $M$ prequential mistakes, the bound is $M/N+\sqrt{\ln(1/\delta)/(2N)}$.
+
+\subsection{What can be certified for the trained networks}
+
+\paragraph{A-priori bounds are vacuous} \status{Numerical}. Norm-based, spectral, stability and mutual-information bounds are vacuous at every $n\le16384$, even at initialization. PAC-Bayes with a prior centred at initialization \cite{mcallester1999pacbayes,dziugaite2017computing} reaches 0.26–0.56 at $n=16384$ on the simplest targets only.
+
+\paragraph{Distillation certificates are non-vacuous and never violated} \status{Proved method; Numerical results}. The method:
+\begin{itemize}
+\item Find a small circuit $g$ that agrees with the trained network on \emph{unlabelled} inputs. The candidates are a junta truth table, or the sign of a few Fourier characters with small integer weights.
+\item Bound the network's test error by an Occam/Chernoff bound for $g$ on the training set, plus the measured disagreement.
+\end{itemize}
+No labelled hold-out data is used. Over all 21 targets, 5 training-set sizes and 3 seeds:
+\begin{itemize}
+\item 221 of 315 networks get a certificate below 0.5, and 163 one below 0.2.
+\item No certificate falls below the network's actual test error.
+\item At $n=16384$, every network is certified at 0.08 or less, except on three targets, where the certificate's circuit classes do not capture the network cheaply: MAJ of pair parities (0.54), sparse polynomial (0.29) and one random formula (0.42).
+\item Over training time, the certificates track delayed generalization. On $\chi_3$ at $n=1024$, the network fits its training set by step 1000 with test error 0.165, and the certificate is 0.23. By step 20000 the test error is 0 and the certificate 0.073. While the network memorizes, the best certifying class temporarily grows, for example to signs of 8–10 characters, and then collapses to the 3-bit parity.
+\end{itemize}
+
+\paragraph{The race model's own circuits.} When the race model's circuit is small, its own-circuit Occam bound is tight: median 0.021 among generalizing fits with at most 6 gates. Half of its generalizing fits carry more than 6 gates, and those bounds are vacuous (median 0.67). Yet most of these large circuits are \emph{functionally} small. A distillation certificate has median 0.125 on a sample of 30 and is below 0.2 in 24 of them. Size of representation and size of function come apart, for the model and for the networks alike.
+
+\paragraph{Online.} On the one-pass runs, the prequential bound is within 0.01–0.18 of the test error at the end of each window throughout learning, and about 0.002 after learning. On MAJ$_9$ it is 0.53, 0.37, 0.20, 0.074, 0.032 and 0.013 over successive windows.
+
+\subsection{What the bounds do not answer}
+The bounds control the gap between training and test error. In every case here, once gradient descent generalizes, the Occam bound for the circuit it found is already small: the target's circuit is tiny and $n\ge\nstar\gg k\log d$. The binding question is therefore not the gap but \emph{how many samples until the feature is found}, i.e.\ the noise law of \cref{sec:noiselaw}:
+\begin{itemize}
+\item \textbf{Lower half.} For one-pass (CSQ-type) training, its lower half is the known CSQ rate \cite{abbe2023leap,abbe2021power}. For training that reuses a fixed sample, no matching lower bound is known, and the 4-parity data scale below $d^{k-1}$.
+\item \textbf{Upper half.} For real networks, its upper half is open.
+\end{itemize}

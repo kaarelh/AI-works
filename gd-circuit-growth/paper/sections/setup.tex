@@ -1,0 +1,40 @@
+\section{Setup}\label{sec:setup}
+
+\paragraph{Networks.} The network is $f(x)=a^\top\mathrm{relu}(W_2\,\mathrm{relu}(W_1x+b_1)+b_2)$ with two hidden layers of width $N=128$ (32–256 in \cref{sec:width}). It uses the $\mu$P (maximal-update) parameterization \cite{yang2021feature}:
+\begin{itemize}
+\item \emph{Initialization:} $W_1\sim\mathcal N(0,1/d)$, $W_2\sim\mathcal N(0,1/N)$, a small readout $a\sim\mathcal N(0,1/N^2)$, and zero biases.
+\item \emph{Learning rates:} per-layer multipliers relative to a base width of 64.
+\end{itemize}
+Training minimizes the square loss on $\pm1$ labels with Adam \cite{kingma2015adam}, learning rate $10^{-3}$. Minibatches of 64 are drawn with replacement from a fixed training set of size $n\in\{16,32,\dots,16384\}$ (up to 65536 at $d=60$) for 20000 steps, with 3 seeds (2 at $d\neq30$). The weights move far from initialization, $\|\Delta W_1\|/\|W_1(0)\|\approx0.7$–$1.05$, and the layer kernels' participation-ratio rank collapses from about 36 to 3–10. This is the feature-learning regime.
+
+Two other protocols are used:
+\begin{itemize}
+\item \emph{SGD:} $\mu$P-SGD with learning rate 0.2, on a subset of targets.
+\item \emph{Online:} a fresh minibatch at every step, i.e.\ one pass over the data.
+\end{itemize}
+
+\paragraph{Targets.} Inputs are uniform on $\cube$. There are 21 designed targets:
+\begin{itemize}
+\item a dictator $x_1$; AND$_3$; MAJ$_3$ and MAJ$_9$; a random halfspace on 10 bits;
+\item the parities $\chi_k=x_1\cdots x_k$ for $k=2,3,4$;
+\item a 5-term staircase sign$(x_1+x_1x_2+\dots)$;
+\item compositions: MAJ of parities, parity of majorities, recursive majority, AND$(x_1x_2,x_3x_4)$;
+\item a multiplexer, a 3-term DNF, a decision list, sign$(2x_1+x_2x_3+x_4x_5x_6)$;
+\item four random 6-gate formulas.
+\end{itemize}
+They are split into 12 \emph{calibration} targets and 9 \emph{held-out} targets.\footnote{Calibration: $x_1$, MAJ$_3$, the halfspace, $\chi_2$, $\chi_4$, the staircase, parity of majorities, the DNF, recursive majority, AND$(x_1x_2,x_3x_4)$, and two random formulas. Held-out: AND$_3$, MAJ$_9$, $\chi_3$, MAJ of parities, the multiplexer, the decision list, sign$(2x_1+x_2x_3+x_4x_5x_6)$, and two random formulas.} A further 20 random fan-in-2 AND/OR/XOR formulas on 4–8 inputs (3–8 gates) were generated after all model design and calibration, as an out-of-sample test. \Cref{sec:composition} uses real-valued polynomial targets.
+
+\paragraph{Metrics.} We use the following:
+\begin{itemize}
+\item \textbf{Sample complexity $\nstar$:} the smallest $n$ at which the seed-mean test error at the end of training is at most $0.1$, interpolated linearly in $\log n$ on the factor-2 grid.
+\item \textbf{Comparing a model with the networks:}
+  \begin{itemize}
+  \item the mean $|\log_2(\nstar_{\rm model}/\nstar_{\rm NN})|$ over targets; 0.33 means within a factor of $2^{0.33}\approx1.26$ on average;
+  \item the Spearman correlation of $\nstar$;
+  \item \emph{success agreement}, whether both have test error at most 0.1 at each $(f,n)$;
+  \item the mean absolute difference of the test-error curves.
+  \end{itemize}
+\item \textbf{Per-example agreement:} computed on \emph{partially learned cells}, where the networks' test error is in $[0.05,0.45]$, with model and network trained on the same training set. It is the excess of their agreement on test points over the agreement that independent errors would give, as a fraction of the largest possible excess: 0 means independent errors, 1 means identical errors.
+\item \textbf{Time:} the Spearman correlation between a model's internal time to generalize and the networks' training steps to generalize.
+\end{itemize}
+\textbf{Leap} is the leap complexity of \cite{abbe2023leap}.

@@ -1,0 +1,52 @@
+\input{preamble}
+
+\title{Gradient descent on Boolean targets as noise-limited greedy feature growth:\\
+experiments, discrete models, and generalization bounds}
+\author{Claude (Anthropic)\thanks{Written by an AI system in a series of sessions prompted and steered by Kaarel H\"anni. Not reviewed by a human. The proofs were checked by independent adversarial AI referees, and the numbers by independent AI fact-checkers, as described in \cref{app:provenance}. Code, data, derivations and referee reports are on the \texttt{claude/nifty-mccarthy-j0lw2a} branch of \url{https://github.com/kaarelh/AI-works}, folder \texttt{gd-circuit-growth/}.}\\[2pt]
+\small prompted by Kaarel H\"anni}
+\date{24 October 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+We look for a low-level, discrete description of what gradient descent does when it trains a small network in the feature-learning regime, analogous to the correspondence between Bayesian neural networks and Occam circuit learning. The testbed is a $\mu$P two-hidden-layer ReLU network trained by Adam on Boolean targets, with input dimension $d\in\{15,30,60,120\}$. We report three things.
+
+\emph{Phenomenology.} The training-set size $\nstar$ at which test error reaches $0.1$ grows polynomially in $d$, with an exponent set by how many inputs must be found at once. For $k$-bit parities it grows like $d^{1.0}$, $d^{1.9}$ and $d^{2.4}$ for $k=2,3,4$. This is close to the correlational-SQ rate $d^{k-1}$ for $k\le3$, and far from the $k\log d$ an Occam learner needs. The ratio of the networks' $\nstar$ to an Occam learner's grows with the target's leap, from about $8\times$ at leap~1 to $85\times$ at leap~4.
+
+\emph{A discrete model.} A greedy feature-growth model, in which a candidate feature is accepted once its correlation with the residual beats the sampling noise of a continuous search for it, reproduces the networks' $\nstar$ to within about $1.15\times$ on 20 random formulas it was not calibrated on. Ablations show that this noise, not the model's race dynamics, sets $\nstar$. A two-constant closed form for $\nstar$ predicted the networks' 3-parity sample complexity at $d=120$ to within $1.2\times$ before those networks were trained; the simulation model was $3\times$ too optimistic there. On partially learned tasks, the networks' individual mistakes look like those of their initial kernel. About 45\% of the output variance is kernel-shaped fitted sample noise, which suggests the picture ``random-feature kernel background plus a few grown features''.
+
+\emph{Bounds.} We prove versions of ``short training $\Rightarrow$ small circuit $\Rightarrow$ generalization'' for:
+\begin{itemize}
+\item the discrete model, with size read as depth, incoherence-weighted size, or readout norm;
+\item diagonal linear networks;
+\item two-layer quadratic networks with fixed output signs, where the number of grown units is at most $\kappa(\tau/\Theta)^2$ uniformly in time;
+\item two-layer ReLU networks under gradient flow, through the first escape from the initial saddle.
+\end{itemize}
+On the real networks, a-priori bounds are vacuous or weak. Distillation certificates (``the network agrees on unlabelled inputs with a small circuit'') give non-vacuous bounds on 221 of 315 trained networks, and are never violated.
+
+Finally, we test a question about compositional structure that leap complexity cannot see: does $s+x_1x_2+x_3x_4+x_1x_2x_3x_4$ (with $s=x_1+\dots+x_4$) learn its degree-4 term faster than $s+x_1x_2x_3x_4$? We recorded predictions before running this test.
+\end{abstract}
+
+\tableofcontents
+\clearpage
+
+\input{sections/intro}
+\input{sections/setup}
+\input{sections/networks}
+\input{sections/model}
+\input{sections/composition}
+\input{sections/bounds}
+\input{sections/discussion}
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\appendix
+\input{sections/appendix_discrete}
+\input{sections/appendix_networks}
+\input{sections/appendix_experiments}
+\input{sections/appendix_provenance}
+
+\end{document}

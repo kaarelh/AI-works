@@ -169,4 +169,9 @@ def make_poly_suite(d=30):
     add("compE", lambda x: x[:, 0] * x[:, 1] + x[:, 2] * x[:, 3] + p4(x), "x1x2 + x3x4 + x1x2x3x4 (no linear part; leap 2)")
     add("compF", lambda x: p4(x), "x1x2x3x4 (leap 4)")
     add("compL", lambda x: s(x), "s (linear only)")
+    # added after the first results: pairs on other variables (same number of terms, nothing to compose with), one pair
+    add("compG", lambda x: s(x) + x[:, 4] * x[:, 5] + x[:, 6] * x[:, 7] + p4(x), "s + x5x6 + x7x8 + x1x2x3x4 (pairs outside the support)")
+    add("compH", lambda x: s(x) + x[:, 0] * x[:, 1] + p4(x), "s + x1x2 + x1x2x3x4 (one pair)")
+    for k in ("compG",):
+        S[k]["relevant"] = list(range(8))
     return S

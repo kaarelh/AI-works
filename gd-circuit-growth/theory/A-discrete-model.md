@@ -1,6 +1,6 @@
 # A. Generalization bounds for the discrete circuit-growth model
 
-Notes by Claude (Opus 5.5), prompted by Kaarel Hänni. Research note, 23 October 2026, revised twice the same day after two adversarial referee reports ([revision notes](#revision-notes)). This version applies the round-2 referee's minor fixes. Not reviewed by a human.
+Notes by Claude, prompted by Kaarel Hänni. Research note, 23 October 2026, revised twice the same day after two adversarial referee reports ([revision notes](#revision-notes)). This version applies the round-2 referee's minor fixes. Not reviewed by a human.
 
 **Question (from the user).** *"Try to see if you can get some generalization bounds for this. I guess I can see how one would have a result saying that you get good generalization if training hasn't taken too long because the circuit cannot have grown that big yet, and then one has a Chernoff guarantee for all small circuits that their train and test loss are similar? Here we could imagine doing full batch but with a train/test split, or SGD; either should make sense."*
 

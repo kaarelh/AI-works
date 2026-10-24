@@ -12,9 +12,10 @@ HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, os.path.di
 import nn_train as T
 from models.race import Race
 
-NS = [16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384]
+NS = [int(v) for v in os.environ.get("RACE_NS", "16,32,64,128,256,512,1024,2048,4096,8192,16384").split(",")]
 SEEDS = [0, 1, 2]
-FNS = ["compA", "compB", "compC", "compD", "compE", "compF", "compL"]
+FNS = sys.argv[1].split(",") if len(sys.argv) > 1 else ["compA", "compB", "compC", "compD", "compE", "compF", "compL"]
+OUT = sys.argv[2] if len(sys.argv) > 2 else "race_predictions.json"
 CH = {"p1234": (0, 1, 2, 3), "p12": (0, 1), "p34": (2, 3), "p23": (1, 2)}
 
 
@@ -55,7 +56,8 @@ def main():
             print(fn, n, "p1234", np.round(np.mean(R["p1234"][a_]), 3), "rel_mse", np.round(np.mean(R["rel_mse"][a_]), 3),
                   "gates", np.mean(R["gates"][a_]), flush=True)
     out["ns"] = NS; out["seeds"] = SEEDS
-    json.dump(out, open(os.path.join(HERE, "race_predictions.json"), "w"), indent=1)
+    out["d"] = T.D
+    json.dump(out, open(os.path.join(HERE, OUT), "w"), indent=1)
 
 
 if __name__ == "__main__":

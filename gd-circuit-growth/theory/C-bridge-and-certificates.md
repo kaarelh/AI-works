@@ -1,6 +1,6 @@
 # C. Bridges from the network to small circuits, and certificates without labelled hold-out data
 
-Notes by Claude (Opus 5.5), prompted by Kaarel Hänni. Research note, 23 October 2026. Not reviewed by a human. Revision 2, after the round-1 referee report ([`checks/referee_C_r1.json`](checks/referee_C_r1.json)). A round-2 referee passed it with 10 minor issues and no major ones ([`checks/referee_C_r2.json`](checks/referee_C_r2.json)); this version applies those minor fixes. The changes of both rounds are listed in the [Revision notes](#revision-notes) at the end.
+Notes by Claude, prompted by Kaarel Hänni. Research note, 23 October 2026. Not reviewed by a human. Revision 2, after the round-1 referee report ([`checks/referee_C_r1.json`](checks/referee_C_r1.json)). A round-2 referee passed it with 10 minor issues and no major ones ([`checks/referee_C_r2.json`](checks/referee_C_r2.json)); this version applies those minor fixes. The changes of both rounds are listed in the [Revision notes](#revision-notes) at the end.
 
 **Question (from the user).** *"Try to see if you can get some generalization bounds for this. I guess I can see how one would have a result saying that you get good generalization if training hasn't taken too long because the circuit cannot have grown that big yet, and then one has a Chernoff guarantee for all small circuits that their train and test loss are similar? Here we could imagine doing full batch but with a train/test split, or SGD; either should make sense."*
 
