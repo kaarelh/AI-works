@@ -1,0 +1,453 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,amsmath,amssymb,amsthm,geometry,booktabs}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue]{hyperref}
+\geometry{margin=1in}
+\setlength{\emergencystretch}{2em}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\title{Polynomial-depth Bayesian learning with general Lipschitz activations\\under balanced neuron-averaging stability}
+\author{OpenAI Codex \and Kaarel H\"anni \and Dmitry Vaintrob}
+\date{23 October 2026}
+\hypersetup{pdftitle={Polynomial-depth Bayesian learning with general Lipschitz activations under balanced neuron-averaging stability},pdfauthor={OpenAI Codex; Kaarel Hanni; Dmitry Vaintrob}}
+\begin{document}
+\maketitle
+\begin{abstract}
+We give one polynomial sample-complexity argument for tanh, ReLU, exact GELU,
+SiLU, sigmoid, softplus, and every fixed globally Lipschitz activation. No
+zero-at-zero assumption is needed. The Gaussian prior is restricted to networks
+whose clipped predictions survive averaging neurons within sufficiently few
+balanced populations, with population count calibrated by readout energy.
+A target implemented by a depth-$L$, width-$C$ network with weights bounded by
+$B$ is learned with sample complexity polynomial jointly in $d,C,L,B$, the
+activation's Lipschitz and offset bounds, and the statistical parameters.
+One sample event works at every learner width $N\ge C$ and every prior scale
+at least as strong as mean field, including all $\gamma\ge1$. The teacher
+need not itself satisfy the restriction: a rescaled, cloned implementation
+has a neighborhood of sufficient restricted prior mass. Its hidden states
+may grow exponentially with depth; the resulting small parameter radius
+costs only its logarithm. This is a theorem for a structurally restricted
+prior, not for the unrestricted Gaussian learner or for internal-noise
+stability alone. A separate appendix removes the zero-at-zero assumption
+from the fixed-depth learning theorem for the original globally
+margin-conditioned prior. The proofs are conventional and are not Lean formalized.
+\end{abstract}
+
+\section{The result and its setting}
+The question is whether a single argument can give polynomial dependence on
+depth for Bayesian networks with both bounded and unbounded activations.
+We use a restriction expressing redundancy among hidden neurons. The same
+balanced-population restriction was previously studied for tanh networks;
+we show that its proof applies much more broadly. In particular, neither
+positive homogeneity nor $\phi(0)=0$ is needed. The comparator here is an
+actual bounded-weight neural teacher, so no Boolean-circuit compiler or
+extra constant wire is hidden in the width threshold.
+
+Fix $d,C,H\ge1$, $B,\lambda\ge1$, and $b\ge0$. Network depth is $L=H+1$.
+Fix any activation $\phi:\R\to\R$ such that
+\begin{equation}\label{eq:activation}
+ |\phi(u)-\phi(v)|\le\lambda|u-v|,\qquad |\phi(0)|\le b.
+\end{equation}
+Inputs are $x\in\mathcal X=\{-1,1\}^d$, with $\bar x=(x,1)$.
+A width-$N$ network has $H$ hidden layers and a linear readout:
+\[
+ h^1=\phi(W^1\bar x),\qquad h^s=\phi(W^sh^{s-1})\quad(2\le s\le H),
+ \qquad z_w=v^\top h^H.
+\]
+Activation is coordinatewise; there are no separate internal biases.
+The raw prior $\mu_{N,t}$ has independent centered Gaussian entries with
+variances
+\begin{equation}\label{eq:prior}
+ t^2/d\text{ in }W^1,\qquad t^2/N\text{ in }W^s\ (s\ge2),
+ \qquad t^2/N^2\text{ in }v,\qquad 0<t\le1.
+\end{equation}
+The original exponent convention is $t=N^{(1-\gamma)/2}$, so this interval
+covers every $\gamma\ge1$. Define
+\[
+ E_v=N\norm v_2^2,\qquad T(u)=\max\{-1/2,\min\{1/2,u\}\}.
+\]
+
+A balanced partition into $q$ populations has sizes in
+$\{\lfloor N/q\rfloor,\lceil N/q\rceil\}$. Let $P_s$ average the
+coordinates within the populations at hidden layer $s$. For a tuple of
+such partitions, all with the same $q$, define
+\begin{equation}\label{eq:merged}
+ \bar W^1=P_1W^1,\qquad \bar W^s=P_sW^sP_{s-1},\qquad \bar v=P_Hv.
+\end{equation}
+Let $\mathcal A_N^\phi$ be the event that some $q$ and balanced partitions
+satisfy
+\begin{equation}\label{eq:support}
+ 1\le q\le N,\qquad q\le1+E_v(w),\qquad
+ \max_{x\in\mathcal X}|T(z_w(x))-T(z_{\bar w}(x))|\le1/16.
+\end{equation}
+This event depends on the activation and network, but not on the target
+or training labels. It is Borel: there are finitely many witnesses at
+fixed $N$, and the output maps are continuous. The condition uses absolute
+readout energy; it is not invariant under arbitrary rescaling of the readout.
+
+The prior is $\mu_{N,t}$ conditioned on $\mathcal A_N^\phi$. We also allow
+the optional further restriction $|z_w(x)|>1/2$ at every input. Training
+conditions on $f(X_i)z_w(X_i)>1/2$ for every example, where $X_i$ are iid
+from any distribution $D$ on the cube. Write $Q_{S,N,t}$ for the resulting
+posterior, with either convention. Test loss is
+\[
+ R_D(Q)=\E_{w\sim Q}\Pr_{X\sim D}\{f(X)z_w(X)\le1/4\}.
+\]
+This is a full posterior-average margin loss, which bounds sign error.
+
+\begin{theorem}[One polynomial for all activations and all stronger scales]
+\label{thm:poly}
+There is a universal constant $K_0$ with the following property. Suppose
+$f:\mathcal X\to\{-1,1\}$ has a width-$C$, $H$-hidden-layer implementation
+using $\phi$, all of whose individual weights are bounded by $B$, and whose
+output satisfies $f(x)z_*(x)>1/2$ at every input. Put
+\[
+ S_0=2+d+C+H+B+\lambda+b+\log(4/\varepsilon).
+\]
+For every $0<\varepsilon,\delta<1$, the sufficient condition
+\begin{equation}\label{eq:poly-budget}
+ n\ge\frac{K_0}{\varepsilon}
+       \left[S_0^{13}+\log(1/\delta)\right]
+\end{equation}
+gives, with sample probability at least $1-\delta$,
+$R_D(Q_{S,N,t})\le\varepsilon$ simultaneously for every $N\ge C$, every
+$0<t\le1$, and both choices of the optional global-margin restriction.
+All prior and training normalizers are positive. The sample polynomial
+does not depend on $N$, $t$, or $\gamma$, and its coefficient and degree
+are uniform over activations satisfying \eqref{eq:activation}.
+\end{theorem}
+
+The sample event may depend on the fixed activation and target. The
+statement does not select an activation using the same data. The teacher
+uses the learner's activation; no arbitrary Boolean circuit is identified
+with a same-width implementation. Under the earlier complexity convention
+$B=C$, the displayed envelope is still jointly polynomial in width and
+depth. Its degree is deliberately conservative, not claimed optimal.
+
+\begin{corollary}[Posterior confidence]
+Apply Theorem~\ref{thm:poly} with accuracy $\varepsilon/3$. Then the posterior
+probability of $f(x)z_w(x)>1/4$ is strictly greater than $2/3$ outside a set
+of test mass at most $\varepsilon$. This also implies the same guarantee
+for the correct sign. The conclusion allows arbitrary posterior mixtures.
+\end{corollary}
+\begin{proof}
+If the correct-margin probability is at most $2/3$, the posterior error at
+that input is at least $1/3$. Integrate this inequality under $D$.
+\end{proof}
+
+\section{Explicit budgets}
+The following formulas make the polynomial statement concrete. Define
+\begin{align*}
+ R_*&=2+b+\lambda B(d+C+1),& M&=R_*^H,\\
+ g_H&=2+\sqrt{2\log(2H)},&
+ A_*&=1+\lambda(\sqrt2 CB+\sqrt C+g_H),\\
+ V&=4\sqrt2 CB,&
+ E&=\lambda(d+1+H\sqrt C)M A_*^{H-1},\\
+ \rho&=\frac1{8[(V+1)E+M]},&
+ B_0&=B^2[d(d+1)+(2H+30)C^2],\\
+ q_0&=d+2+(H-1)C,&
+ D_*&=B_0+q_0\log\frac{e\sqrt{2\pi}}{2\rho}+\log2.
+\end{align*}
+The potentially exponential quantities $M,E,1/\rho$ enter the prior
+cost only through $\log(1/\rho)$. Set
+\begin{align*}
+ B_{r}&=\max\{8,8[D_*+\log(4/\varepsilon)]\},&
+ Q&=\lceil1+B_{r}\rceil.
+\end{align*}
+\[
+ J=8\left[D_*+\log(4/\varepsilon)+(H+1)\log Q
+       +\tfrac{\log2}{2}\{d+2+(H-1)Q\}\right].
+\]
+\begin{align*}
+ R&=1+\sqrt{QJ},&
+ A_g&=2(1+b+\lambda)(d+1+Q)(R+1),\\
+ \zeta&=[32(H+1)A_g^{H+1}]^{-1},&
+ P_Q&=Q(d+2)+(H-1)Q^2.
+\end{align*}
+
+\begin{theorem}[Explicit sufficient sample size]\label{thm:explicit}
+Every conclusion of Theorem~\ref{thm:poly} holds if
+\begin{equation}\label{eq:explicit}
+ n\ge\frac2\varepsilon
+       \left[P_Q\log(3+4R/\zeta)+\log(1/\delta)\right].
+\end{equation}
+\end{theorem}
+
+\section{A target neighborhood of polynomial logarithmic cost}
+\begin{lemma}[Target mass]\label{lem:mass}
+At every $N\ge C$ and $0<t\le1$, the raw Gaussian mass of networks in
+$\mathcal A_N^\phi$ satisfying $f(x)z_w(x)>1$ everywhere is at least
+$\exp(-ND_*/t^2)$.
+\end{lemma}
+\begin{proof}
+Let $v$ be the teacher readout. Its norm is positive by the signed-margin
+assumption. Replace it by
+\[
+ v'=4\max\{1,\norm v_2^{-1}\}v.
+\]
+Then $4\le\norm{v'}_2\le4B\sqrt C$, and the signed output is greater
+than $2$. The multiplier itself can be large; the final coefficient norm,
+which determines the Gaussian cost, is polynomially bounded.
+
+Partition all $N$ neurons at each layer into $C$ balanced groups with
+sizes $k_a$. Copy first-layer rows, put an internal teacher weight from
+logical neuron $a$ to $b$ on each corresponding edge divided by $k_a$,
+and divide each readout coefficient by its group's size. This preserves
+every hidden value and the output exactly for every activation.
+The cloned hidden state is constant within groups, and its coordinates
+are bounded by $M$: the recurrence
+$m_1\le b+\lambda B(d+1)$,
+$m_s\le b+\lambda CBm_{s-1}$ gives $m_s\le R_*^s$.
+
+For these cloned weights $w_*$,
+\[
+ \norm{W_*^s}_{\rm op}\le\sqrt2 CB\quad(s\ge2),\qquad
+ 8C\le N\norm{v_*}_2^2\le32C^2B^2,\qquad
+ \sqrt N\norm{v_*}_2\le V.
+\]
+These follow from $C/2\le N/k_a\le2C$ and $k_b/k_a\le2$.
+In independent Gaussian coordinates $\sqrt dW^1$, the coordinates of
+each $\sqrt N W^s$ row along the $C$ normalized group indicators, and
+$Nv$, constrain every coordinate within $\rho t$ of its center.
+There are $Nq_0$ such coordinates, each with variance $t^2$, and the sum
+of squared centers is at most $NB_0$.
+
+Writing $P$ for the clone projection, an internal perturbed matrix is
+$W^s=W_*^s+F^s+G^s$ with
+\[
+ F^s=F^sP,\quad \norm{F^s}_{\rm op}\le\rho t\sqrt C,
+ \qquad G^sP=0.
+\]
+The free bulk $G^s=(t/\sqrt N)Z^s(I-P)$ is independent of the constrained
+coordinates. The Gaussian operator-norm bound gives
+$\Pr\{\norm{G^s}_{\rm op}>g_Ht\}\le1/(2H)$.
+Thus all $H-1$ bulk bounds hold with conditional probability at least
+$1/2$; for $H=1$ the assertion is immediate.
+
+Put $e_s=\sup_x\norm{h_w^s(x)-h_*^s(x)}_2/\sqrt N$.
+Lipschitz continuity, $G^sh_*^{s-1}=0$, and $t,\rho\le1$ give
+\[
+ e_1\le\lambda\rho(d+1),\qquad
+ e_s\le A_*e_{s-1}+\lambda\rho\sqrt C M.
+\]
+Consequently $e_H\le\rho E$. The scaled readout error is at most $\rho$,
+so the output error is at most
+\[
+ (V+1)e_H+\rho M\le1/8.
+\]
+The same estimate holds for the merged weights: the projections preserve
+the constrained coordinate intervals, the centers, and kill the free bulk.
+Both outputs therefore have signed value greater than $15/8$ everywhere.
+Their clipped outputs agree exactly. Also
+\[
+ \sqrt{E_v(w)}\ge\sqrt{8C}-\rho\ge\sqrt{2C},
+\]
+since $\rho\le1/8$ and $C\ge1$. The clone partition thus witnesses
+$C\le1+E_v(w)$ and \eqref{eq:support}. The optional global margin holds too.
+
+For a scalar $Z\sim\mathcal N(0,t^2)$ and $\rho\le1$,
+\[
+ \Pr\{|Z-a|\le\rho t\}
+ \ge\frac{2\rho}{e\sqrt{2\pi}}e^{-a^2/t^2}.
+\]
+Multiply these interval bounds and the independent bulk probability.
+Using $t\le1$ and $N/t^2\ge1$ yields the claimed lower bound.
+\end{proof}
+
+\section{Gaussian control of every balanced partition}
+For fixed partitions, the merged network is exactly a width-$q$ network
+with the original activation and coefficients
+\[
+ U^1_{aj}=\frac1{k_{1,a}}\sum_{i\in a}W^1_{ij},\qquad
+ U^s_{ab}=\frac1{k_{s,a}}\sum_{i\in a,j\in b}W^s_{ij},\qquad
+ u_a=\sum_{j\in a}v_j.
+\]
+This identity holds for every activation, including nonzero offsets.
+Its weighted energy is
+\[
+ \kappa_q=\frac dq\norm{U^1}_F^2+
+             \sum_{s=2}^H\norm{U^s}_F^2+q\norm u_2^2.
+\]
+\begin{lemma}[Partition tail]\label{lem:partitions}
+The raw probability that some balanced partitions with
+$q\le\min\{N,Q\}$ have $\kappa_q>J$ is at most
+\[
+ Q\exp\left[HN\log Q+
+ \tfrac N2\{d+2+(H-1)Q\}\log2-\frac{NJ}{8t^2}\right].
+\]
+\end{lemma}
+\begin{proof}
+For a fixed partition, compressed coordinates are independent centered
+Gaussians of variances $t^2/(dk_{1,a})$,
+$t^2k_{s-1,b}/(Nk_{s,a})$, and $t^2k_{H,a}/N^2$.
+After the energy factors, each variance is at most $2t^2/N$ by balance.
+There are $P_q=q(d+2)+(H-1)q^2$ coordinates, hence
+\[
+ \E e^{N\kappa_q/(8t^2)}\le2^{P_q/2}.
+\]
+There are at most $q^{HN}$ ordered partition tuples, and
+$P_q/N\le d+2+(H-1)q$ for $q\le N$. Markov's inequality and the union
+bound prove the assertion. The union is taken before choosing any
+partition depending on the weights.
+\end{proof}
+
+\begin{lemma}[Uniform posterior truncation]\label{lem:truncation}
+For every noiseless training sample, outside posterior mass at most
+$\varepsilon/2$, a witnessing merged network has $q\le Q$ and
+$\kappa_q\le J$, for every eligible width, scale and optional-margin choice.
+\end{lemma}
+\begin{proof}
+The raw mass of each conditioning event is at least $e^{-ND_*/t^2}$ by
+Lemma~\ref{lem:mass}. Since $NE_v/t^2$ is chi-square with $N$ degrees of
+freedom, for $B_{r}\ge8$,
+\[
+ \mu_{N,t}\{E_v>B_{r}\}
+ \le e^{-NB_{r}/(4t^2)}2^{N/2}
+ \le e^{-NB_{r}/(8t^2)}.
+\]
+After normalization this is at most $\varepsilon/4$. Otherwise support
+membership supplies $q\le1+B_{r}\le Q$.
+Apply Lemma~\ref{lem:partitions}. Each positive exponent term, including
+$\log Q$, is bounded by $N/t^2$ times its corresponding term in $J/8$.
+The remaining raw probability is at most
+$e^{-ND_*/t^2}(\varepsilon/4)^{N/t^2}$; after normalization it is at most
+$\varepsilon/4$. Both estimates use only $N\ge1$ and $t\le1$.
+\end{proof}
+
+\section{Finite coding for activations with an offset}
+A merged network with $q\le Q$ and energy at most $J$ has coefficients
+bounded by $\sqrt{QJ}$. Pad to width $Q$, assigning zero to all edges
+entering or leaving a dummy neuron and to its readout coefficient.
+Dummy hidden outputs equal $\phi(0)$, but their outgoing weights are zero,
+so padding preserves the output exactly.
+Round coefficients on a fixed grid with mesh error at most $\zeta$,
+preserving zero, and magnitude bounded by $R$. The class $\mathcal G$
+of all grid networks has
+\begin{equation}\label{eq:count}
+ \log|\mathcal G|\le P_Q\log(3+4R/\zeta).
+\end{equation}
+Every network in this coding step still uses the one fixed activation.
+
+The inequality $|\phi(u)|\le b+\lambda|u|$ gives hidden-coordinate
+magnitudes at most $A_g^s$. If $e_s$ is the largest coordinate difference
+between the padded and rounded networks, then
+\[
+ e_1\le\lambda(d+1)\zeta\le A_g\zeta,\qquad
+ e_s\le\lambda QR e_{s-1}+\lambda Q\zeta A_g^{s-1}
+      \le A_g e_{s-1}+\zeta A_g^s.
+\]
+Thus $e_s\le s\zeta A_g^s$, and the readout error is at most
+$(H+1)\zeta A_g^{H+1}=1/32$. Merging and clipping give
+\begin{equation}\label{eq:approx}
+ |T(z_w(x))-T(g(x))|\le3/32
+\end{equation}
+for some $g\in\mathcal G$, uniformly over inputs. Only the logarithm of
+the exponential precision enters \eqref{eq:count}.
+
+\begin{proof}[Proof of Theorem~\ref{thm:explicit}]
+For each grid predictor define
+$F_g=\{x:f(x)T(g(x))\le11/32\}$.
+If the original network fits the training margins and satisfies
+\eqref{eq:approx}, then $f(X_i)T(g(X_i))\ge13/32$ for every training input,
+so the sample avoids this event. Every test failure $f(x)z_w(x)\le1/4$
+belongs to $F_g$. A fixed event of probability greater than
+$\varepsilon/2$ is avoided by $n$ iid inputs with probability at most
+$e^{-n\varepsilon/2}$. Union bounding over \eqref{eq:count} gives one
+sample event of probability at least $1-\delta$ on which every retained
+network has test loss at most $\varepsilon/2$.
+The discarded posterior mass from Lemma~\ref{lem:truncation} adds at most
+$\varepsilon/2$. The grid is independent of $N,t$ and the optional-margin
+choice, proving simultaneity. Lemma~\ref{lem:mass} proves all normalizers
+positive, even without a lower bound on sample size.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:poly}]
+All constants in the following estimates are universal. For $S_0$ as in
+the theorem, the target budgets satisfy
+\[
+ R_*\le2S_0^3,\quad A_*\le8S_0^3,\quad V\le6S_0^2,
+ \quad \log(1/\rho)=O(H\log S_0),\quad D_*=O(S_0^5).
+\]
+The last bound follows from $B_0=O(S_0^5)$,
+$q_0=O(S_0^2)$, and $H\log S_0=O(S_0^2)$.
+Consequently
+\[
+ Q=O(S_0^5),\quad J=O(S_0^6),\quad R=O(S_0^6),\quad
+ A_g=O(S_0^{12}),\quad P_Q=O(S_0^{11}).
+\]
+Finally $\log(3+4R/\zeta)=O(H\log S_0)=O(S_0^2)$, so the log-code
+budget is $O(S_0^{13})$. Increase one universal constant to dominate the
+explicit sample condition. No exponent depends on depth or activation.
+\end{proof}
+
+\section{Scope and interpretation}
+The activation class includes all the examples below, with the indicated
+conservative resource bounds.
+\begin{center}
+\begin{tabular}{lll}\toprule
+Activation & Lipschitz bound $\lambda$ & Offset bound $b$\\\midrule
+$\tanh(u)$, ReLU & $1$ & $0$\\
+Exact GELU $u\Phi(u)$, SiLU $u/(1+e^{-u})$ & $2$ & $0$\\
+Sigmoid $(1+e^{-u})^{-1}$ & $1$ & $1/2$\\
+Softplus $\log(1+e^u)$ & $1$ & $\log2$\\\bottomrule
+\end{tabular}
+\end{center}
+For a fixed activation its offset is a fixed constant. Removing
+$\phi(0)=0$ therefore admits ordinary sigmoid and softplus without a
+width penalty. Simply centering an activation is not an equality of the
+original Bayesian learners: it creates hidden biases correlated with the
+weights. Our argument analyzes the uncentered learner directly.
+
+The prior restriction remains substantial. It requires balanced hidden
+populations and prediction stability under their averaging, with the
+count-energy relation \eqref{eq:support}. It is not implied here by
+small internal-noise sensitivity, a bounded Jacobian, ordinary training,
+or the mere existence of a small teacher. Its positive-mass teacher
+construction establishes representability under the restriction, not
+its prevalence among trained networks. The theorem does not retain an
+additional arbitrary internal-noise restriction for general analog
+teachers. Such an intersection needs its own target-mass argument.
+
+This condition differs from the unsigned, arbitrary-population-size,
+output-scale-invariant restriction in the ReLU/GELU polynomial-depth
+paper. Balance bounds ratios of population sizes and lets us code the
+original fixed activation directly; that is why no special perspective
+identity for GELU, or homogeneity for ReLU, is needed. The sharper
+quadratic Boolean-width results under those other conditions remain
+separate. Nor does the present result settle unrestricted polynomial-depth
+learning, efficient posterior inference, corrupted labels, or arbitrary
+real-valued regression.
+
+\paragraph{Relation to earlier work and verification.}
+The balanced-population Gaussian tail and finite-code argument are inherited
+from the collaborative tanh population paper, with contributions credited
+there to ChatGPT-6 Astra and Claude. The new points here are the general
+bounded-weight analog-teacher cylinder, its readout normalization, and
+uniform coding for offset Lipschitz activations. These remove both the
+digital-teacher restriction and the activation-specific parts of the proof.
+The present extension has conventional proofs and AI-agent checks; the
+earlier Lean certifications do not automatically certify it.
+
+\appendix
+\input{offset-extension}
+
+\begin{thebibliography}{9}
+\bibitem{populations} ChatGPT-6 Astra, Claude Fable 5 and Opus 5, K. H\"anni,
+and D. Vaintrob. \emph{Quadratic-width learning bounds for Bayesian
+networks with stable neuron populations}. 2026.
+\href{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/improved-polynomials/neuron-averaging}{Paper and source}.
+\bibitem{relugelu} ChatGPT-6 Astra, Claude Fable 5 and Opus 5, K. H\"anni,
+and D. Vaintrob. \emph{Polynomial-depth learning for ReLU and GELU
+NNBayes stable under neuron merging}. 2026.
+\href{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/relu-gelu-polynomial-depth}{Paper and source}.
+\bibitem{lipschitz} ChatGPT-6 Astra, Claude Fable 5 and Opus 5, K. H\"anni,
+and D. Vaintrob. \emph{Width-independent learning bounds for ReLU, GELU,
+and other Lipschitz activations}. 2026.
+\href{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/unbounded-activations}{Paper and source}.
+\end{thebibliography}
+\end{document}

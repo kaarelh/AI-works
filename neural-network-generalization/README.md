@@ -1,6 +1,6 @@
 # Bayesian neural network generalization
 
-Papers and notes by ChatGPT-6 Astra, Claude (Fable 5, Opus 5, and Opus 5.5), Kaarel Hänni, and Dmitry Vaintrob. Authors are listed in alphabetical order, here and on every paper; each paper names its own authors. Public research snapshot, updated 23 October 2026.
+Papers and notes by ChatGPT-6 Astra, Claude (Fable 5, Opus 5, and Opus 5.5), OpenAI Codex, Kaarel Hänni, and Dmitry Vaintrob. Authors are listed in alphabetical order, here and on every paper; each paper names its own authors. Public research snapshot, updated 23 October 2026.
 
 **Start here:** [original main results](#main-results) · [second batch of formalized main results](#second-batch-of-formalized-main-results) · [technical FAQ: assumptions, interpretation, and open problems](TECHNICAL-FAQ.md) · [Lean verification](lean/VERIFICATION.md) · [improved polynomial bounds](#improved-polynomial-bounds) · [recent depth research](#recent-depth-research)
 
@@ -8,7 +8,7 @@ The original five main results retain their own section. A second section presen
 
 **Review status.** Most of this material has not yet been carefully reviewed by a human. The checks so far are the Lean proofs of the original five learning theorems and the ten-paper second batch, with the scope described [below](#lean-verification), and AI reviews. These include the audit records in the paper folders and a collection-wide review by Claude on 19 October 2026, recorded in [verification/review-2026-10-19.md](verification/review-2026-10-19.md). That review found and repaired several local errors but found no false theorem. It does not replace expert human review, and anything added or changed after the review was not part of it.
 
-Every paper has a PDF, editable LaTeX source, and a build script. The collection contains 52 PDF manuscripts, additional research notes, experimental code, and selected exact certificates. The [catalog](catalog.json) identifies the canonical manuscripts; older treatments retain their historical scope and open-status remarks.
+Every paper has a PDF, editable LaTeX source, and a build script. The collection contains 53 PDF manuscripts, additional research notes, experimental code, and selected exact certificates. The [catalog](catalog.json) identifies the canonical manuscripts; older treatments retain their historical scope and open-status remarks.
 
 ## Lean verification
 
@@ -161,7 +161,7 @@ Quadratic dependence under the original robust restriction throughout all $\gamm
 
 ## Total mistakes, unbounded activations, and depth
 
-The [online-learning papers and neural converses](works-in-progress/online-mistakes/) study the full learning process. The [unified activation theorem](works-in-progress/unbounded-activations/) covers ReLU, GELU, and every fixed Lipschitz activation vanishing at zero at all mean-field-or-stronger scales. Separate restricted-prior results give polynomial depth dependence. The unified activation, ReLU/GELU polynomial-depth, online upper-bound, circuit-converse and polynomial-depth neural-converse papers are included in the second formalization batch, with the exclusions recorded there.
+The [online-learning papers and neural converses](works-in-progress/online-mistakes/) study the full learning process. The [unified activation theorem](works-in-progress/unbounded-activations/) covers ReLU, GELU, and every fixed Lipschitz activation vanishing at zero at all mean-field-or-stronger scales. The [general-activation extension](works-in-progress/unified-activation-polynomial-depth/) removes the zero-at-zero assumption at fixed depth and gives a single polynomial-depth theorem under balanced neuron averaging, by conventional proofs. The unified activation, ReLU/GELU polynomial-depth, online upper-bound, circuit-converse and polynomial-depth neural-converse papers are included in the second formalization batch, with the exclusions recorded there.
 
 | Result | Scope |
 |---|---|
@@ -170,6 +170,7 @@ The [online-learning papers and neural converses](works-in-progress/online-mista
 | [Neural converse note](works-in-progress/online-mistakes/nn-converse.md) | An exponential converse under original support, and a polynomial converse with a fixed output cap, in the strong-prior-then-width limit. The original fixed-width polynomial converse remains open. |
 | [ReLU learning: the simpler norm argument](works-in-progress/relu-learning/paper.pdf) | Earlier strong-prior and finite-scale results, with sharper explicit ReLU estimates. Its open deep-scaling range is covered by the unified paper below. |
 | [ReLU, GELU, and general Lipschitz activations](works-in-progress/unbounded-activations/paper.pdf) | One fixed-depth polynomial sample bound, simultaneously for every `N >= C` and every mean-field-or-stronger Gaussian scale, including deep `gamma = 1`. Original global margins; no added robustness. Auxiliary activation classes handle large Gaussian contributions. |
+| [General Lipschitz activations: a common polynomial-depth theorem](works-in-progress/unified-activation-polynomial-depth/paper.pdf) · [source and reviews](works-in-progress/unified-activation-polynomial-depth/) | One balanced neuron-averaging restriction covers tanh, ReLU, GELU, sigmoid, softplus, and every globally Lipschitz activation, at all `N≥C` and all `γ≥1`. Arbitrary same-activation bounded-weight neural teachers; conservative joint degree-13 sample envelope. Appendix A separately removes the zero-at-zero assumption for the original fixed-depth prior. Conventional proofs, not Lean formalized. |
 | [Polynomial-depth ReLU/GELU learning](works-in-progress/relu-gelu-polynomial-depth/paper.pdf) | Quadratic Boolean teacher-width dependence up to logarithms, and polynomial depth, for every `gamma >= 1` under unsigned neuron-merging stability. All learner widths above compiled teacher width; positive-mass Boolean implementations. |
 | [Polynomial-depth neural converse](works-in-progress/online-mistakes/depth-polynomial-converse/paper.pdf) | Few total mistakes imply a small tanh network, with fourth-power mistake dependence and polynomial depth. Requires an output cap and controlled internal amplification, complete input coverage, and the strong-prior-then-width limit. |
 
