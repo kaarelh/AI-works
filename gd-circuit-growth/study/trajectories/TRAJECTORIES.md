@@ -143,8 +143,10 @@ Scoring ([`score.py`](score.py)):
 
 What the scores say:
 - **All three models predict the held-out targets about as well as the calibration targets.**
-- **`flow` predicts a network run better than an independent rerun of the network does,** in every condition. It models the expected trajectory, and the remaining differences are run-to-run noise.
+- **The ideal score.** A model that predicted the networks' expected trajectory exactly would score about *half* the seed-vs-seed value, since two independent runs each carry the run-to-run noise.
+- **`flow` predicts a network run better than an independent rerun of the network does,** in every condition: 0.6–0.9× the seed-vs-seed value. So it is close to the ideal, and what remains is mostly run-to-run noise.
 - **`fourier` and `gates`, the two discrete rules, come within 1.3–2× of rerun-to-rerun variability at large $n$,** and do better than it at $n=512$, where seeds also differ in their training sets.
+- **Their clearest held-out misses.** In parmaj, the degree-6 character arrives at about 280 steps, before the degree-4 characters (555). `fourier` predicted it last, at about 790. In andxor, the degree-4 character arrives at 300, against 550 predicted by `fourier`.
 - **Onsets.** Online, `flow` puts held-out onsets within about 10% (0.04 decades), and `fourier`'s by-hand rule within about 25% (0.10 decades). At finite $n$, onset errors are dominated by characters that end near $\tfrac12$, where model and network fall on opposite sides of the threshold. The trajectory errors there stay small.
 - **An earlier comparison was not like for like.** An earlier version of this table compared the models (scored against the 3-seed mean) with one seed scored against the mean of the other two. That comparison is not like for like: the irreducible error of the 3-seed-mean reference is only about a sixth of the seed-vs-seed number.
 

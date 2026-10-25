@@ -23,12 +23,17 @@ mean $F_t(x_R)=E[f_t(x)\mid x_R]$ does not need: the irrelevant inputs, the mini
     second moment $v$.
   - At finite $n$, every training pattern has a memorised offset $\mu_p$. It absorbs the training residual through
     the sample's own irrelevant coordinates, at the rate of the diagonal of the Adam-preconditioned tangent kernel.
-- **Constants.** None is fitted to the networks.
+- **Constants.** None is fitted to the networks. The model was not built blind to them, though (Section 3).
   - Memorisation has two constants, both at their derived values: rate factor $c_{\rm mem}=1$, and memory slots
-    $n_c=128\,(d-r)$. Brackets of ×0.5–2 around them on the calibration targets find nothing significantly better
-    (Section 3).
+    $n_c=128\,(d-r)$. They were bracketed against the calibration networks, $c_{\rm mem}$ at ×0.75–1.5 and
+    $c_{\rm cap}$ at ×0.5–2. $c_{\rm mem}=1.25$ and $c_{\rm cap}=2$ score slightly better, by about the noise of 2
+    seeds, and the derived values were kept (Section 3).
   - The width correction $(128/N)^{0.1}$ was measured on the model itself, against its own width-128 version.
-  - There is no time map. The model runs on the network's clock.
+  - About six structural and numerical choices were made while scoring the model against the calibration networks
+    (Section 3).
+  - No time map is fitted to the networks. At reduced width the model's clock is divided by the model-measured width
+    correction, a uniform rescaling by 7% at $N=64$, 10% at 48 and 15% at 32. The width-128 model needs none and
+    scores the same.
 - **Calibration** (score.py, five targets): mean traj **0.0050**, mean onset **0.086**.
 
   | condition | traj | onset | final |
@@ -39,16 +44,31 @@ mean $F_t(x_R)=E[f_t(x)\mid x_R]$ does not need: the irrelevant inputs, the mini
   | 512 | 0.0106 | 0.174 | 0.0178 |
 
   For scale:
-  - one network seed against the mean of the other two scores 0.005 / 0.041 online, 0.012 / 0.157 at
-    $n=2048$ and 0.023 / 0.345 at $n=512$ (from the `fourier` write-up), so every condition is at or below the
-    seed-to-seed noise;
-  - the trivial step function scores traj 0.12–0.30 and onset 0.4–1.0;
+  - these scores compare the model with the 3-seed network mean. Like for like
+    ([`fair_scores.py`](../../fair_scores.py), `fair_scores.json`), traj of the model against single network seeds,
+    next to one seed against another:
+
+    | condition | calibration: model vs single seeds | seed vs seed | ratio | held-out: model vs single seeds | seed vs seed | ratio |
+    |---|---|---|---|---|---|---|
+    | online | 0.0042 | 0.0070 | 0.59 | 0.0037 | 0.0054 | 0.68 |
+    | 16384 | 0.0041 | 0.0068 | 0.60 | 0.0038 | 0.0055 | 0.69 |
+    | 2048 | 0.0113 | 0.0163 | 0.69 | 0.0097 | 0.0111 | 0.87 |
+    | 512 | 0.0208 | 0.0307 | 0.68 | 0.0219 | 0.0360 | 0.61 |
+
+    So the model predicts a network run better than an independent rerun of the network does, in every condition.
+    That is expected of a model of the mean trajectory, and it does not put the model at the noise level. A perfect
+    predictor of the expected trajectory would score about half the seed-vs-seed number. The model is 1.2–1.4× that
+    floor on the calibration targets and 1.2–1.7× on the held-out ones. On the 3-seed-mean scale of the table above
+    the floor is (seed vs seed)/6, i.e. 0.0012 / 0.0011 / 0.0027 / 0.0051 by condition, and the model is 1.6–2.2×
+    above it (held out 1.7–3.2×). An earlier version of this file compared the model with one seed against the
+    mean of the other two, which is not like for like;
+  - the trivial step function scores traj 0.12–0.32 and onset 0.20–1.04, by target and condition;
   - the other two approaches score 0.0096 / 0.121 (`fourier`) and 0.0101 / 0.162 (`gates`).
 - **Reproduced:**
   - staging, and the order and timing of the stages: online the onsets are typically within 7% (mean
     $|\log_{10}|$ error 0.028);
-  - bundles, including rmaj9's 67 characters of degrees 3–9, small cross-block ones among them, which arrive as one
-    bundle;
+  - bundles, including rmaj9's 67 characters of degrees 3–9, small cross-block ones among them, which arrive
+    together, at 875–1322 steps against the networks' 796–1217 (Section 4);
   - overshoot: stair5's $x_1$ peaks at 1.15 (networks 1.22), mux's $x_i$ at 1.17 (1.21) and $x_ix_4$ at 1.34 (1.36);
   - the slow lead-in before each stage;
   - the training loss curve at finite $n$;
@@ -110,20 +130,22 @@ The minibatch gradient is $g_B=g+\xi$, with mean $g$ and per-parameter variance 
 **Consequence.** On a plateau the gradient towards the next feature is far below the noise. Adam is then
 preconditioned gradient descent, with step ${\rm lr}\sqrt B\,g_\theta/\sigma_\theta$ per coordinate. Once the signal
 dominates, it becomes sign descent at lr per step. So stage durations are set by the per-sample gradient noise, and
-that noise scales with the residual. Without the noise term every stage comes too early: the first by 1.3–3×, the
-later ones by 2.5–6× (Section 5).
+that noise scales with the residual. Without the noise term every stage comes too early: the first by 1.4–3.4×, the
+later ones by 2.4–6.7× (Section 5).
 
 ### 1.4 Width
 
 - The network is muP: its initialisation and multipliers have a width-independent limit. The model uses the same
   parametrisation at width $N$.
 - A finite-width effect remains: the model's onsets at $N=32$–64 are 8–13% later than at $N=128$.
-- The model's clock is therefore divided by $(128/N)^{0.1}$. The exponent was measured on the model itself, by
-  comparing its widths (Section 3).
+- The model's clock is therefore divided by $(128/N)^{0.1}$: 1.072 at $N=64$, 1.103 at 48 and 1.149 at 32. This
+  is a uniform rescaling of time. The exponent was measured on the model itself, by comparing its widths
+  (Section 3). The correction was introduced after the model's widths had been compared with network onsets.
 - With this correction, width 64 matches the networks as well as width 128 does. Widths 64 and 128 score
   0.0049 / 0.086 and 0.0050 / 0.087 on the four $r\le6$ targets.
 - So the model runs at width 64, with 6 seeds (`resolution` in [`flow.py`](flow.py)). To stay within the time
-  budget it uses 3 seeds for $r=8$, and width 48 or 32 with 2 seeds for $r=9$ or 10.
+  budget it uses 3 seeds for $r=8$, and width 48 or 32 with 2 seeds for $r=9$ or 10. This resolution was picked
+  from width-by-seed scores against the calibration networks (Section 3).
 
 ### 1.5 Finite $n$: memorisation through the irrelevant inputs
 
@@ -153,10 +175,14 @@ finite time. The training loss follows the networks':
 
 | | step 174 | 350 | 703 | 1413 | 2838 |
 |---|---|---|---|---|---|
-| sparsepoly, $n=2048$ (model / networks) | .153 / .156 | .100 / .115 | .042 / .056 | .005 / .009 | .000 / .000 |
-| sparsepoly, $n=512$ | .056 / .083 | .007 / .016 | .000 / .000 | | |
-| mux, $n=2048$ | .292 / .296 | .138 / .177 | .003 / .028 | .000 / .002 | |
-| rmaj9, $n=2048$ | .187 / .183 | .147 / .146 | .082 / .070 | .006 / .010 | .000 / .000 |
+| sparsepoly, $n=2048$ (model / networks) | .157 / .156 | .110 / .115 | .049 / .056 | .008 / .009 | .000 / .000 |
+| sparsepoly, $n=512$ | .062 / .083 | .011 / .016 | .000 / .000 | | |
+| mux, $n=2048$ | .301 / .296 | .177 / .177 | .006 / .028 | .000 / .002 | |
+| rmaj9, $n=2048$ | .192 / .183 | .153 / .146 | .091 / .070 | .012 / .010 | .000 / .000 |
+
+The model values were corrected on 25 October 2026. The earlier table read the model's statistics one record late:
+row $k$ of `run.stats` belongs to recorded step $k+1$. The values above are aligned and interpolated in log-step.
+Most entries agree better with the networks than before; rmaj9 at step 703 agrees less well (.091 against .070).
 
 ## 2. What the reduced dynamics say about learning
 
@@ -180,8 +206,8 @@ finite time. The training loss follows the networks':
     must wait until the biases move, or until the second layer composes them.
   - Degree becomes cheaper as the network shrinks its irrelevant weights, which the variance term
     $E\,{\rm Var}(f\mid x_R)$ pushes it to do, and as $w_R$ grows.
-  - Without the irrelevant inputs every stage comes too early: the linear stage by 1.3–1.8×, the later ones by
-    3–6× (Section 5). The $d$-dependence of the timing enters through $s^2\approx(d-r)/d$, the initial alignment
+  - Without the irrelevant inputs every stage comes too early: the linear stage by 1.4–2.0×, the later ones by
+    2.4–6.7× (Section 5). The $d$-dependence of the timing enters through $s^2\approx(d-r)/d$, the initial alignment
     $\lVert w_R\rVert^2\approx r/d$, and the noise in $v$.
 - **Composition is cheaper than a new leap.** A high-degree character on inputs that already carry features is a
   product of existing features, so a second-layer unit can build it. This is why mux's $x_1x_2x_3x_4$ and rmaj9's
@@ -215,8 +241,11 @@ finite time. The training loss follows the networks':
   | 1, 0.5 | 0.0088 | 0.170 | 0.0089 / 0.086 | 0.0150 / 0.385 |
   | 1, 2 | 0.0067 | 0.111 | 0.0063 / 0.072 | 0.0114 / 0.223 |
 
-  The same bracket at width 128 (`fit_n128.json`) gives 0.0067 / 0.119 at the derived values. The best neighbour
-  improves traj by 0.0007 with the same onset, which is within the noise of 2 seeds.
+  The same bracket at width 128 (`fit_n128.json`) gives 0.0067 / 0.119 at the derived values. Two neighbours score
+  slightly better than the derived values: $c_{\rm mem}=1.25$ improves traj by 0.0007 with the same onset, and
+  $c_{\rm cap}=2$ improves both (0.0067 / 0.111). Both gains are within the noise of 2 seeds, and the derived values
+  were kept. The builder's scratch grids, not kept in the repository, also tried $c_{\rm mem}=1.5$ and combinations
+  such as $(c_{\rm mem},c_{\rm cap})=(1.5,0.5)$ and $(0.75,2)$, so $c_{\rm mem}$ was bracketed at ×0.75–1.5.
 - **Width correction.** Onset ratios of the model at width $N$ to width 128, online, three seeds
   ([`width_dilation.txt`](width_dilation.txt)): ×1.13 at $N=32$, ×1.09 at 48, ×1.08 at 64. That gives $\beta_W$
   between 0.09 and 0.12; 0.1 is used.
@@ -231,15 +260,34 @@ finite time. The training loss follows the networks':
     | 128 × 3 | 0.0050 | 0.087 |
 
     Width 32 keeps the online fit, but loses accuracy at $n=2048$.
-- **Choices made after seeing calibration data.** These are not blind.
+- **Choices made after seeing calibration data.** These are not blind. Each was made while scoring the model
+  against the calibration networks.
   - The capacity factor $1/(1+n/n_c)$ was added after the model memorised too much at $n=16384$ and 2048. Its
-    constant is the derived one.
-  - Two alternatives were tested and dropped:
+    constant is the derived one. Its smooth form was chosen over the saturating variant below. Counting only the
+    off-R first-layer weights in $n_c$, while the rate $\lambda$ also sums the second-layer and readout terms, is
+    itself a choice, so "derived" should be read with that in mind.
+  - Changes from the first version of the model:
+    - the off-R weights became full vectors $w_{{\rm off},k}$, giving the exact cancellation closure of
+      Section 1.2. They replaced a radial off-weight norm $s_k$ with a random-walk update;
+    - a "memorising displacement" of the off-R weights was removed;
+    - the absorption factor $\rho_p=\exp(-\int\lambda_p\,dt)$ of Section 1.5 was added;
+    - the lumping schedule changed from lumping about $t/1000$ Adam steps into one at step $t$ to the 2-step
+      lumping below, with variants scored against the networks.
+  - The run resolution of Section 1.4 was picked from the width-by-seed scores in the table above. The width
+    correction was introduced after the model's widths had been compared with network onsets, although its exponent
+    comes from the model alone.
+  - Three alternatives were tested and dropped:
     - a memorisation that saturates at the share $n_c/(n+n_c)$ instead of slowing down. It never finishes
       memorising at 2048, whereas the networks do: traj 0.05–0.07 on sparsepoly at $n=2048$, the only case run.
     - an erosion of the memorised offsets, meant to produce the creep at $n=2048$. It wrecks $n=512$: traj
       0.0136 at rate $10^{-4}$ per step, and 0.0079 at $3\cdot10^{-5}$. These rows are in `fit_n128.json`. They were
       run with an earlier version of [`flow.py`](flow.py) that still had the option.
+    - pattern subsampling, for larger $r$ (Section 6, item 9).
+  - **The count.** No constant is fitted to the networks. Two constants ($c_{\rm mem}$, $c_{\rm cap}$) were
+    bracketed against them and left at their derived values. One clock constant ($\beta_W$) was measured model
+    against model. About six structural or numerical choices were made with the calibration networks in view: the
+    capacity factor and its form, the exact $W_{\rm off}$ closure, the removal of the off-R displacement, the
+    absorption factor $\rho$, the lumping schedule, and the width and seed resolution with its width correction.
 - **Numerics.**
   - Lumping 2 Adam steps into one after step 600 halves the cost and changes nothing measurable. On mux, exact
     stepping gives the same scores to four decimals, except 0.0047 against 0.0048 at $n=2048$.
@@ -275,7 +323,9 @@ rmaj9        512      0.008  0.030  0.011 |  0.369  0.575
 MEAN traj 0.005  onset 0.086
 ```
 
-Predicted stages online, from `predict.py`; network onsets are in parentheses.
+Predicted stages online, from `predict.py`, on the model's own time grid; network onsets (3-seed mean) are in
+parentheses. The ranges for majpar, rmaj9 and stair5 were corrected on 25 October 2026 to match the frozen output
+over all characters.
 
 - **sparsepoly:**
   - $x_1$ at 58 (56);
@@ -286,15 +336,18 @@ Predicted stages online, from `predict.py`; network onsets are in parentheses.
   - $x_1,x_2,x_3$ at 58–61 (60–66);
   - $x_ix_4$ at 182–186 (169–176);
   - $x_1x_2x_3$ and $x_1x_2x_3x_4$ at 471–474 (430–452).
-- **majpar:** pairs at 195–205 (189–210); the degree-6 term at 1148 (1164).
+- **majpar:** pairs at 195–205 (189–210); the degree-6 term at 1151 (1164).
 - **rmaj9:**
   - linear terms at 41–50 (47–55);
-  - the degree-3 to degree-9 bundle, block and cross-block characters together, at 875–1160 (796–990).
+  - the 67 characters of degrees 3 to 9, block and cross-block together, at 875–1322 (796–1217): degree 3 at
+    875–1160 (855–1085), degrees 5 and 7 at 1119–1322 (1095–1217), and the degree-9 character at 888 (796).
 - **stair5:** degree by degree.
-  - $x_1$ at 63 (65);
-  - degree 2 at 216–286 (188–234);
-  - degree 3 at 464–548 (341–540);
-  - degrees 4–5 at 522–755 (485–694).
+  - $x_1$ at 64 (65);
+  - degree 2 at 216–288 (188–234);
+  - degree 3 at 430–547 (341–703);
+  - degrees 4–5 at 523–797 (485–768).
+  - The worst character is $x_1x_2x_4$: the model puts it first of degree 3, at 430, and the networks last, at
+    703, a miss of 0.21 decades. $x_1x_2x_4x_5$ is last in both, at 797 (768).
 
 The comparison figure is [`fig_traj.png`](fig_traj.png): networks solid, model dashed, the largest characters of
 every degree.
@@ -312,8 +365,9 @@ every degree.
 | without the higher-Hermite part of the units' variance | 0.0039 | 0.064 |
 | with the minibatch random walk of the off-R weights | 0.0022 | 0.039 |
 
-The two noise sources set the clock. Without either one, every stage arrives too early, the later ones by 2.5–6×.
-The exact closure of the output variance matters at the 30–50% level. The random walk does not matter.
+The two noise sources set the clock. Without either one, every stage arrives too early, the later ones by 2.4–6.7×
+(onset ratios by character). The exact closure of the output variance matters: without the cancellation traj rises
+by 62% and onset by 39%, and without the higher-Hermite part by 86% and 78%. The random walk does not matter.
 
 **Finite $n$** ([`fit.py`](fit.py), `fit_n64.json`): width 64, 2 seeds, the four $r\le6$ targets.
 
@@ -338,9 +392,9 @@ while the networks complete them.
    The model's late levels there are 10–20% low. A constant erosion of the memory would produce creep, but it
    destroys $n=512$ (Section 3), so the mechanism is something else, probably the late-phase drift of Adam once $v$
    has decayed.
-2. **Third stages at $n=512$ are slightly over-learned.** mux $x_1x_2x_3$ reaches 0.43 and $x_1x_2x_3x_4$ 0.21,
-   where the networks reach about 0.05; stair5 $x_1x_2x_3$ reaches 0.27. Memorisation at $n=512$ is slightly slow
-   for these, which is the other side of item 1.
+2. **Third stages at $n=512$ are over-learned.** mux $x_1x_2x_3$ reaches 0.42 and $x_1x_2x_3x_4$ 0.22,
+   where the networks reach about 0.05; stair5 $x_1x_2x_3$ reaches 0.29, where they reach 0.08. Memorisation at
+   $n=512$ is slightly slow for these, which is the other side of item 1.
 3. **Threshold onsets.** When a partly learned stage ends near 1/2 and the model and the networks fall on different
    sides of it, onset charges a full decade. This is most of the onset error: majpar 512 (0.67), rmaj9 2048 (0.27)
    and stair5 2048 (0.22). The trajectories themselves are close (traj 0.006–0.008).
@@ -371,3 +425,65 @@ while the networks complete them.
 9. **Cost.** The model is limited to $r\le10$ within the time budget. Pattern subsampling, needed for larger $r$, was
    tried at $r=9$. It biased the clock even with a variance correction in $v$: the degree-3 bundle came 6% later
    with a 128-pattern subset, and 14% later with a 64-pattern subset. That path was removed.
+
+## Independent verification (25 October 2026)
+
+An independent verifier rechecked this model after the held-out networks were run.
+
+- **The scores reproduce exactly from the frozen commit 19da14d6.**
+  - The verifier re-ran the frozen `predict.py`, single-threaded, on stair5 and rmaj9 (calibration) and on parmaj
+    and dnf3 (held out). The output files are bit-identical to the saved ones.
+  - Re-scoring every saved calibration and held-out file reproduces `preds/scores.json` and
+    `heldout_scores/flow.json` with zero difference: calibration 0.0050 / 0.086, held-out 0.0050 / 0.154.
+  - `models/flow`, `analyze_traj.py`, `score.py`, `boolfuncs.py` and `nn_train.py` are unchanged since the freeze.
+- **No code path reads network results.**
+  - `predict.py` imports only `flow.py` and three helpers from `analyze_traj.py` (`subsets`, `chi_matrix`,
+    `first_cross`). `flow.py` imports only `boolfuncs.make_suite`. Neither opens a network trajectory, a results
+    file, `nn_summary.json` or a model evaluation.
+  - The one data input is the training-set draw, `flow.train_weights`, a reimplementation of
+    `nn_train.make_data`. It gives exactly the networks' pattern weights (checked for seeds 0–2 and
+    $n=512$, 2048, 16384 on dnf3, parmaj and stair5).
+  - Nothing depends on the target except through $r$: `resolution` picks width and seed count from $2^r$ alone, and
+    there are no per-target branches or constants.
+  - The timeline is consistent. The held-out target list (`run_heldout.sh`, commit 38e79931, 24 October 19:38) was
+    fixed before any `flow` code existed (first version 21:33). The freeze commit is at 00:13:54 on 25 October, the
+    first held-out network file appeared at 00:14:37, and the held-out predictions were written at 00:15–00:23.
+- **This file records no held-out predictions.** Its only forward predictions are for par2, par3 and par4
+  (Section 6, item 6), on which no network was run; the frozen code reproduces them exactly (140, 346, 990). The
+  pre-registration of the held-out test is the frozen, deterministic code. For parmaj and dnf3 it reproduces the
+  saved held-out predictions bit for bit.
+- **What was fitted or chosen with the calibration networks in view.** No constant is fitted. Two constants,
+  $c_{\rm mem}$ and $c_{\rm cap}$, were bracketed against the networks and left at their derived values. One clock
+  constant, $\beta_W$, was measured model against model (0.087–0.115 in `width_dilation.txt`). About six structural
+  or numerical choices were made while scoring against the calibration networks (Section 3). Before this check only
+  the capacity term, the erosion and the subsampling were disclosed, so "nothing fitted" overstated how blind the
+  model is.
+- **The held-out targets had been trained before, in the project's earlier fixed-$n$ study.**
+  `study/nn_summary.json` and `study/NN-STUDY-TABLES.md` (commit 9fcf27f2, 23 October) hold coarse results for all
+  six targets from the same network family: the step at which each character first reaches half its coefficient,
+  and the test error by $n$. The model never read that data, and it has no per-target knob such results could have
+  tuned. But the held-out targets were not unseen by the project.
+- **No run of this model on a held-out target before the freeze was found.** The builder's pre-freeze scratch runs
+  are on the calibration targets and on par2–4, thr10 and a dictionary target.
+- **Claims corrected in this file.** The verifier found these overclaims and slips, and each is fixed above:
+  - the seed-noise comparison was not like for like. The model is below the seed-to-seed spread, but about 1.2–1.7×
+    the floor of a perfect predictor of the expected trajectory, not at the noise level (Summary);
+  - "no time map" left out the model-measured clock rescaling of 7–15% at reduced width;
+  - the constants were bracketed at ×0.75–1.5 ($c_{\rm mem}$) and ×0.5–2 ($c_{\rm cap}$), not ×0.5–2 for both, and
+    two neighbours score slightly better than the derived values;
+  - the list of choices made with calibration data in view was incomplete (Section 3);
+  - the training-loss table read the model one record late (Section 1.5);
+  - rmaj9's bundle range covered only 15 of its 67 characters, and the network range did not reproduce;
+  - stair5's ranges left out its worst characters, $x_1x_2x_4$ and $x_1x_2x_4x_5$;
+  - stale numbers: the third-stage levels at $n=512$ (0.42, 0.22, 0.29) and majpar's degree-6 onset (1151);
+  - understatements: the step-function baseline (traj 0.12–0.32, onset 0.20–1.04), the effect of the exact
+    variance closure (+39% to +86%), and the early arrival without noise in $v$ or without irrelevant inputs
+    (1.4–3.4× for the first stage, 2.4–6.7× for later ones).
+
+  The phenomena the model claims to reproduce check out: the overshoot peaks (1.15 against 1.22, 1.17 against
+  1.21, 1.34 against 1.36), online onsets within about 7%, the share of onset error from threshold cases, the
+  partial levels at finite $n$, and the creep it fails to reproduce.
+- **Held-out outcome, for context.** Held-out traj equals calibration traj (0.0050 against 0.0050). Held-out onset
+  is 1.8× worse (0.154 against 0.086). Online it is 0.043 (calibration 0.028). At finite $n$ it degrades: 0.22
+  against 0.12 at $n=2048$ and 0.31 against 0.17 at $n=512$. dnf3 at finite $n$ scores 0.68 and 0.83. Like for like,
+  the model is 0.61–0.87× the seed-to-seed spread on the held-out targets (Summary).

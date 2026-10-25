@@ -28,20 +28,30 @@ At finite $n$:
   This fraction comes from eigenlearning theory with the NNGP kernel, and has no fitted constant.
 
 There are **5 fitted constants**: $\eta, T_1, m_0, c_w, c_{\rm mem}$. All five are global, fitted jointly on the 5
-calibration targets × 4 conditions.
+calibration targets × 4 conditions. Beyond them, at least 12 structural or "derived" choices were made with the
+calibration networks or their scores in view, so the effective number of degrees of freedom is well above 5 (see
+Independent verification).
 
-**Scores** (`score.py`, calibration targets), against the seed-to-seed noise floor:
+**Scores** (calibration targets). `score.py` scores the model against the 3-seed mean of the networks (traj and onset).
+For a like-for-like comparison with network-to-network variability, [`fair_scores.py`](../../fair_scores.py) scores the
+model against single seeds, next to one seed scored against another (traj only):
 
-| | model traj | model onset | noise floor traj | noise floor onset |
+| | model traj | model onset | model vs single seeds, traj | seed vs seed, traj |
 |---|---|---|---|---|
-| online | 0.007 | 0.091 | 0.005 | 0.041 |
-| n = 16384 | 0.007 | 0.086 | 0.005 | 0.041 |
-| n = 2048 | 0.017 | 0.168 | 0.012 | 0.157 |
-| n = 512 | 0.009 | 0.304 | 0.023 | 0.345 |
+| online | 0.007 | 0.091 | 0.0096 | 0.0070 |
+| n = 16384 | 0.007 | 0.086 | 0.0096 | 0.0068 |
+| n = 2048 | 0.016 | 0.168 | 0.0219 | 0.0163 |
+| n = 512 | 0.009 | 0.304 | 0.0196 | 0.0307 |
 | **mean** | **0.010** | **0.162** | | |
 
-The noise floor is one seed scored against the mean of the other two. The trivial step function scores traj 0.12–0.30
-and onset 0.4–1.0.
+- An independent rerun of the network scores the seed-vs-seed value. A prediction equal to the networks' expected
+  function would score about half of it.
+- Online, at $n=16384$ and at $n=2048$ the model is 1.3–1.4× seed vs seed: further from a network than another seed is.
+- At $n=512$ it is 0.64×, between a rerun and the exact expected function. There the seeds differ much from each other.
+- So the model is not at the noise level. Its `score.py` traj is about 6× the irreducible error of the 3-seed-mean
+  reference (≈ seed vs seed / 6: 0.0012 online, 0.0027 at 2048) online and at $n=2048$, and 1.8× at $n=512$ (0.0051).
+
+The trivial step function scores traj 0.12–0.30 and onset 0.4–1.0. No script in the repository computes this baseline.
 
 Files:
 - [`gates.py`](gates.py): the model.
@@ -60,13 +70,15 @@ mean), dashed lines the model. One curve per distinct (coefficient, bundle).*
 
 Read from `traj_*.npz` and `results/*.json`.
 
-1. **The output mean is learned at a constant speed.** For sparsepoly (mean $-0.25$) the learned fraction of the
-   constant is linear in $t$ up to step 14, at about 0.018 per step. That is the speed derived in §2.6.
+1. **The output mean is learned at a constant speed.** For sparsepoly (mean $-0.25$) the output mean moves linearly in
+   $t$ up to step 14, at about 0.017–0.018 per step (the learned fraction of the constant rises about 0.07 per step, to
+   0.95 at step 14). That is the speed derived in §2.6.
 2. **The linear stage needs no first-layer feature.**
    - All linear characters switch on together at about 50–65 steps, whatever their size: x1 (0.75) at 56, stair5's
      x1 (0.375) at 65, mux's three 0.25s at 62, rmaj9's nine 0.25s at 50.
-   - Meanwhile the first-layer weights on the relevant inputs barely move. sparsepoly's top unit goes from x1 weight
-     0.30 to 0.34 by step 75.
+   - Meanwhile the first-layer weights on the relevant inputs barely move (about 15%). In sparsepoly online, the unit
+     with the largest $|w_{x_1}|$ goes from 0.53 to 0.62 by step 75 (seed 0; 0.55 to 0.63 and 0.53 to 0.62 in the
+     other seeds).
    - First-layer "feature types" appear only after the linear stage (STAGES.md).
    - So the linear function is built by the upper layers on the random first layer.
 3. **Every nonlinear stage needs first-layer alignment, and its cost is set by how many pieces are combined.**
@@ -83,10 +95,12 @@ Read from `traj_*.npz` and `results/*.json`.
 5. **Finite $n$ is a race against memorisation.**
    - Define $D_n(t)$ = training loss / population loss. It is almost target-independent: across the five targets it
      is 0.29–0.44 at step 174 for $n=512$ and 0.41–0.49 at step 532 for $n=2048$. It decays super-exponentially.
-   - Each stage tracks the online curve until memorisation removes the training residual, then freezes.
-   - At $n=512$, every degree-2 character ends at 0.44–0.82. That is the level at which a kernel learns degree 2 at
-     $n=512$ ($L_2 = 0.56$, §2.7).
-   - At $n=512$ the degree ≥ 3 characters end at 0.0–0.16.
+   - Each stage tracks the online curve until memorisation removes the training residual, then nearly freezes (it
+     still creeps up slowly after interpolation, §5).
+   - At $n=512$, every degree-2 character ends at 0.37–0.82 (seed means). That is about the level at which a kernel
+     learns degree 2 at $n=512$ ($L_2 = 0.56$, §2.7).
+   - At $n=512$ the degree ≥ 3 characters end at −0.05–0.24 (the highest: rmaj9 $x_2x_4x_8$ 0.24, stair5 $x_1x_2x_5$
+     0.21).
 
 ## 2. The model and the reasoning behind it (Heuristic)
 
@@ -159,8 +173,11 @@ depends on its size.
 
 After its escape at step $T_B$, a bundle grows as $\varphi_B(t)=\bigl(1+e^{-(\tau(t)-T_B)/(c_wT_B)}\bigr)^{-1}$: a logistic
 in time of width proportional to its escape step. With $c_w\approx0.2$, a stage rises from 10% to 90% over about
-$0.9\,T_B$. This matches the networks' widths: 55–70 steps for the linear stage, 160–540 for the second and third stages,
+$0.87\,T_B$. The networks' 10–90% widths are 55–70 steps for the linear stage, 160–540 for the second and third stages,
 450–920 for the late ones.
+- The rule gets the early stages and majpar's degree-6 stage about right.
+- It is too wide for later stages: sparsepoly $x_4x_5x_6$ 1280 against 455 in the networks, its products 1398 against
+  713, mux's pairs 249 against 182. The networks' late transitions are 2–3× sharper.
 
 ### 2.6 Output mean (derived, no constant)
 
@@ -169,8 +186,10 @@ $\mathrm{sign}(\bar r\,\mathbb E h_{2,k})$. So the mean output moves by $V_0=N\,
 At initialisation, $\mathbb E[h_2]=\mathbb E\,\mathrm{relu}(\mathcal N(0,\tfrac12))=0.282$, so $V_0=0.018$ per step,
 and $\varphi_0(t)=\min(1,V_0t/|\bar y|)$.
 
-This matches sparsepoly's measured 0.018 per step (fact 1). It is the only calibration target with a nonzero mean, so
-the constant matters mainly for held-out targets.
+This matches sparsepoly's measured 0.017–0.018 per step (fact 1). It is the only calibration target with a nonzero
+mean, so the constant matters mainly for held-out targets. It was checked only against sparsepoly, and the
+initialisation-time $\mathbb E[h_2]$ was chosen knowing that slope. On the held-out networks (measured after the
+freeze) the output mean moves faster: andxor 0.027, dnf3 0.022, dlist5 0.020 per step.
 
 ### 2.7 Finite training sets
 
@@ -204,7 +223,8 @@ $$L_j(n)=\lambda_j/(\lambda_j+\kappa_n),\qquad n=\sum_j\binom dj\frac{\lambda_j}
 | $c_w$ | 0.198 | transition width / escape step |
 | $c_{\rm mem}$ | 24.6 epochs | memorisation time scale: initial rate $B/(c_{\rm mem}n)$ |
 
-Fixed or derived, not fitted:
+Fixed or derived, not fitted by the optimiser (but several were chosen with the calibration networks or scores in view;
+see Independent verification):
 - $V_0=0.018$ per step;
 - Adam's $\beta_2=0.999$ in the memorisation and feature clocks;
 - the NNGP learnabilities;
@@ -213,8 +233,8 @@ Fixed or derived, not fitted:
 **Fit.** Nelder–Mead in log-parameters on the joint objective mean traj + 0.1 × mean onset (onset in decades). It
 covers the 5 calibration targets × 4 conditions, against the same metrics as `score.py`. A fit takes about 2 minutes.
 
-Restarts from three different points converged to the same optimum within 0.1% of the objective. This was checked on
-an earlier variant of the law.
+Restarts from three different points converged to the same optimum within 0.1% of the objective. This was checked only
+on an earlier variant of the law, not on the reported model.
 
 **Leave-one-target-out (Numerical).** Refitting the five constants without one target and scoring that target:
 
@@ -227,7 +247,11 @@ an earlier variant of the law.
 | rmaj9 | 0.0100 / 0.119 | 0.0114 / 0.233 |
 
 The constants stay within $\eta$ 0.017–0.023, $T_1$ 55–61, $m_0$ 0.059–0.080, $c_w$ 0.16–0.21 and $c_{\rm mem}$
-19–26. Removing a target costs little, so the fit is not carried by one target.
+19–26.
+- For sparsepoly, mux and majpar, leaving the target out costs little.
+- For rmaj9 the onset score doubles (0.119 → 0.233), and stair5's traj rises 23% (0.0166 → 0.0205).
+- The LOO fits start Nelder–Mead at the full-data optimum (`fit.py`: `x0 = log(G.PARAMS)`), and every structural choice
+  was made with all five targets in view. So this tests only the stability of the five constants, not of the structure.
 
 ## 4. Results (Numerical)
 
@@ -257,15 +281,23 @@ The constants stay within $\eta$ 0.017–0.023, $T_1$ 55–61, $m_0$ 0.059–0.0
 | rmaj9 | 512 | 0.007 | 0.032 | 0.012 | 0.369 |
 | **mean** | | **0.010** | **0.162** | | |
 
-Per condition (traj / onset): online 0.007 / 0.091; 16384 0.007 / 0.086; 2048 0.017 / 0.168; 512 0.009 / 0.304.
+Per condition (traj / onset): online 0.007 / 0.091; 16384 0.007 / 0.086; 2048 0.016 / 0.168; 512 0.009 / 0.304.
 
-The large finite-$n$ onset errors are mostly threshold artefacts. Characters that end near one half cross it in the
-network and not in the model, or the reverse, and each such character counts a full decade:
-- majpar's pairs end at 0.50–0.60 in the network at $n=512$ and at 0.65 in the model;
-- rmaj9's cubic terms end at 0.39–0.57 per character at $n=2048$ (seed means), and at 0.51 for every cubic
-  character in the model.
+The large finite-$n$ onset errors are partly near-threshold effects and partly real timing and level misses:
+- **Near threshold: majpar at $n=512$ (0.662).** Its pairs end at 0.50–0.60 in the networks and at 0.65 in the model.
+  No character crosses one half in only one of the two. But $x_5x_6$ creeps across one half only at step 15632 in the
+  networks, a 1.8-decade two-sided error.
+- **Partly threshold, partly level: rmaj9 at $n=2048$ (0.343).** Characters crossing in only one of model and network
+  contribute 0.10 of the 0.34. Per character (seed means), the three within-block cubics (−0.25) end at 0.35–0.39 and
+  never cross one half; the 27 cross-block cubics end at 0.49–0.68. The model's uniform 0.51 is too high for the
+  large characters and too low for the small ones. The bundle-level agreement (0.51 against 0.45, §4.2) hides these
+  opposite errors.
+- **A real miss: stair5 at $n=2048$ (0.305).** No one-sided crossings. Its degree-4/5 characters cross one half at
+  steps 1141–13884 in the networks against 514 in the model, because the model saturates at 0.99 where the networks
+  creep to 0.60–0.79 (§5).
 
-The seed-to-seed onset noise at $n=512$ is itself 0.35.
+One seed scored against the mean of the other two has onset error 0.35 at $n=512$. This is not directly comparable
+with the model's onset, which is scored against the 3-seed mean.
 
 ### 4.2 Stage by stage
 
@@ -294,7 +326,7 @@ The steps are the half-learned step of the bundle, weighted by coefficient².
 
 | variant | fitted constants | traj | onset | online traj / onset | 2048 | 512 |
 |---|---|---|---|---|---|---|
-| **model** | 5 | **0.010** | **0.162** | 0.007 / 0.091 | 0.017 / 0.168 | 0.009 / 0.304 |
+| **model** | 5 | **0.010** | **0.162** | 0.007 / 0.091 | 0.016 / 0.168 | 0.009 / 0.304 |
 | order = degree of the character (no composition) | 5 | 0.016 | 0.229 | 0.015 / 0.159 | 0.025 / 0.276 | 0.009 / 0.319 |
 | no bundles (every character its own gate) | 5 | 0.020 | 0.274 | 0.017 / 0.220 | 0.030 / 0.317 | 0.017 / 0.334 |
 | no kernel background | 5 | 0.013 | 0.153 | 0.007 / 0.081 | 0.024 / 0.193 | 0.013 / 0.253 |
@@ -303,16 +335,20 @@ The steps are the half-learned step of the bundle, weighted by coefficient².
 | one gradient-flow law for all orders (no separate $T_1$) | 4 | 0.010 | 0.197 | 0.008 / 0.094 | 0.014 / 0.257 | 0.011 / 0.348 |
 | one Adam-saturated law $\eta S(\beta\rho m^{\kappa-1})$ for all orders | 5 | 0.013 | 0.172 | 0.008 / 0.088 | 0.021 / 0.187 | 0.012 / 0.324 |
 
-- **Essential:** composition, bundles and the memorisation clock. Each one removed doubles the trajectory error or more.
+- **Essential:** composition, bundles and the memorisation clock. Removing composition raises traj 1.6× (onset 1.4×),
+  removing bundles 2.0× (onset 1.7×), removing memorisation 6.4× (onset 2.1×).
 - **The kernel background:**
-  - It lowers traj at finite $n$, mainly by raising degree-2 characters at $n=512$ to the observed 0.44–0.82.
+  - It lowers traj at finite $n$, mainly by raising degree-2 characters at $n=512$ to the observed 0.37–0.82.
   - It makes onsets slightly worse.
   - It lets the memorisation constant take the value measured on the training-loss curves (24.6, against 25).
     Without it, the fit needs 32.
 - **The Adam-normalised feature clock and the plain one are a wash:**
-  - The Adam clock is better on onsets; it lets rmaj9's cubic terms reach the network's 0.4–0.5 at $n=2048$.
-  - The plain clock is better on traj; it keeps majpar's degree-6 term near 0 at $n=2048$, as in the networks.
-  - The Adam clock is kept because it applies the same normalisation as the memorisation law.
+  - The Adam clock is better on onsets; it lets rmaj9's cubic bundle reach the network's bundle-level 0.45 at
+    $n=2048$.
+  - The plain clock is better on traj (0.0087 against 0.0101), with a near-equal objective (0.0266 against 0.0263); it
+    keeps majpar's degree-6 term near 0 at $n=2048$, as in the networks.
+  - The Adam clock is kept because it applies the same normalisation as the memorisation law. The choice was made with
+    these calibration scores in view.
 
 ## 5. Qualitative phenomena
 
@@ -329,7 +365,9 @@ The steps are the half-learned step of the bundle, weighted by coefficient².
 - **Finite-$n$ saturation:**
   - Late stages stop partway or never start, with the right ordering across $n$.
   - Degree-2 characters end at about 0.6 at $n=512$.
-  - The $n=2048$ levels of sparsepoly and rmaj9 are close.
+  - The $n=2048$ levels of sparsepoly's later stages and of rmaj9's bundles are close. Exceptions: sparsepoly $x_2x_3$
+    (1.00 against 0.78) and $x_1x_2x_3$ (0.78 against 0.66) are too high, and rmaj9 agrees only at bundle level, not
+    per character (§4.1).
   - The online and $n=16384$ trajectories coincide, as in the networks.
 - **The memorisation curve** $D_n(t)$ itself (fact 5), at both $n$, from one constant.
 
@@ -354,11 +392,14 @@ The steps are the half-learned step of the bundle, weighted by coefficient².
 
 ## 6. Failure modes and caveats
 
-1. **Pairs found from scratch come late, by 1.3–1.7×:** mux $x_ix_4$ 286 against 172, stair5 293 against 198,
-   majpar 270 against 200. Moves through an existing gate are on time or early. One $(\eta,m_0)$ cannot place both.
-   - A smaller initial overlap for moves through a gate, $m_0\sqrt{d/N}$, was tried: objective 0.0252 against
-     0.0263.
-   - It made majpar's three-gate composition far too late (1615 against 1164), so it was not adopted.
+1. **Pairs found from scratch come late, by 1.2–1.7×:** mux $x_ix_4$ 286 against 172, stair5 293 against 198,
+   majpar 270 against 200, sparsepoly $x_2x_3$ 351 against 299. Moves through an existing gate are on time or early for
+   stair5, mux, majpar and rmaj9, but late in sparsepoly: $x_1x_2x_3$ 653 against 532 (1.23×), the products of
+   $x_4x_5x_6$ 1607 against 1449 (1.11×). One $(\eta,m_0)$ cannot place both.
+   - A smaller initial overlap for moves through a gate, $m_0\sqrt{d/N}$, was tried. Its calibration objective was
+     better: 0.0252 against 0.0263.
+   - It made majpar's three-gate composition far too late (1615 against 1164), so it was not adopted, although it
+     scored better.
 2. **Collapse.** Once a gate's support covers all relevant inputs, every remaining character has order 2 and is learned
    in one bundle.
    - This is right for mux and rmaj9 and too coarse for stair5 (§5).
@@ -394,6 +435,10 @@ Escape steps online, with order and the largest characters of each bundle:
 At finite $n$, every bundle escaping after step ≈ 200 is predicted to stay well below 1 at $n=512$; degree-2 ones end
 near 0.6.
 
+*Note added at verification (25 October 2026); the text of this section above is unchanged since the freeze. "Near 0.6"
+is loose: the model's own $n=512$ finals for the degree-2 bundles escaping after step 200 are 0.64–0.72 (andxor 0.70,
+rand3 0.72, rand1 0.66 and 0.64).*
+
 ## Reproduction
 
 ```
@@ -404,3 +449,75 @@ for f in sparsepoly stair5 mux majpar rmaj9; do python predict.py $f preds; done
 python ../../score.py preds                       # the table in 4.1
 python figure.py                                  # figure.png
 ```
+
+## Independent verification (25 October 2026)
+
+An independent verifier re-ran the model and checked this file against the code and the network data. The corrections
+above (the like-for-like scores, the ablation ratios, the onset-error breakdown, the widths, the LOO caveat, and the
+numbers in facts 1, 2 and 5, §4.1, §5 and §6.1) come from that check.
+
+**Reproduction.** The scores reproduce exactly from the frozen commit `19da14d6`.
+- `git diff 19da14d6` is empty for this folder, and `boolfuncs.py`, `score.py` and `analyze_traj.py` are unchanged
+  since the freeze.
+- Regenerating with the frozen `predict.py` gives bit-identical prediction files for the calibration targets checked
+  (sparsepoly, majpar) and for all six held-out targets (24 files).
+- `score.py` then matches `preds/scores.json` and `heldout_scores/gates.json` with zero difference: calibration
+  0.0101 / 0.162, held-out 0.0119 / 0.210.
+
+**Leakage.** No code path reads network results.
+- `predict.py` imports only `gates.py`. `gates.py` imports numpy, scipy and `boolfuncs.make_suite`, and reads no files.
+- The only target-dependent inputs are the truth table, the relevant set and $n$. There are no per-target branches or
+  parameters.
+- `fit.py` and `figure.py` read network trajectories, but only for the calibration targets, and `predict.py` does not
+  import them.
+- The held-out predictions existed byte-identically about 3 h before the first held-out trajectory file was written.
+
+**What was fitted or chosen with the calibration networks in view.** 5 continuous constants were fitted by
+Nelder–Mead ($\eta, T_1, m_0, c_w, c_{\rm mem}$; $T_1$ is in effect the measured 50–65-step linear-stage time, and
+$c_{\rm mem}\approx25$ was first estimated from hand-entered network $D_n(t)$ values). At least 12 further choices were
+made with the calibration networks or their scores in view, several of them labelled "derived" or "not fitted" above:
+1. the timing law `hebb`, with a separate fixed step $T_1$ for the linear stage, selected over the `gf` and
+   Adam-saturated single-law variants by calibration score;
+2. $V_0$ (§2.6), checked only against sparsepoly, with the initialisation-time $\mathbb E[h_2]$ chosen knowing the
+   0.018 slope;
+3. the form of the memorisation law (Adam-normalised, lagging $\hat v$ with $\beta_2=0.999$), chosen to reproduce the
+   measured super-exponential $D_n(t)$;
+4. the Adam rather than the plain feature clock (§4.3);
+5. rejecting the DEPTH2 variant (§6.1), although its calibration objective was better;
+6. the kernel background (NNGP rather than NTK, 2 hidden layers, applied to $(1-\varphi)(1-D_n)$, excluding the
+   constant), which has no fitted constant but whose form was chosen on the data;
+7. the composition rules ($\kappa=\max(2,\text{min cover})$, a subset of a gate's support is one piece, the Hebbian unit
+   is not a gate);
+8. the restart rule when a character's order drops;
+9. bundling by equal order and shared inputs, with the bundle's overlap the maximum over its members;
+10. a logistic transition of width proportional to the escape step, from widths measured on the networks;
+11. $\rho$ as a correlation rather than a covariance;
+12. the 0.1 onset weight in the objective.
+
+At least three timing laws and several switches were iterated against the calibration scores, so the effective number
+of degrees of freedom is well above 5.
+
+**The held-out targets were not new to the project.** All six (andxor, dlist5, parmaj, dnf3, rand1, rand3) had been
+trained before, in the project's earlier fixed-$n$ study (same width-128 muP MLP, Adam at learning rate 1e-3, batch 64,
+$n$ up to 16384). Its coarse onsets are in `study/nn_summary.json` and `NN-STUDY-TABLES.md`, for example parmaj's cross
+pairs at step 200 and andxor's $x_3x_4$ at 200 and $x_1x_2$ at 500. That data was available while the model was
+designed, but no code or design script of this model reads it.
+
+**The model's own held-out outputs were viewed during design.** Before the freeze, the escape skeleton of every suite
+target, held-out ones included, was printed with an earlier parameter set, and full predictions for all suite targets
+were written. §6.2–6.3 discuss the held-out predictions for dnf3 and rand3. No held-out network trajectory was involved.
+
+**Like-for-like scores on the held-out targets** (`fair_scores.json`, traj; model against single seeds, then seed
+against seed): online 0.0105 against 0.0054 (1.9×); $n=16384$ 0.0108 against 0.0055 (1.9×); $n=2048$ 0.0205 against
+0.0111 (1.8×); $n=512$ 0.0252 against 0.0360 (0.70×). Relative to seed vs seed, the model does worse on the held-out
+targets than on the calibration targets: 1.8–1.9× against 1.3–1.4× online and at $n\ge2048$, 0.70× against 0.64× at
+$n=512$.
+
+**Held-out outcome** (no claim about it in this file before the runs). Online traj is 0.009. The final collapse bundles
+(§6.2) come 1.3–1.8× early: dnf3 316 against 560, parmaj 314 against 501, dlist5 323 against 516. dnf3 is the weakest
+target (onset 0.81 at $n=2048$).
+
+**Claims not backed by a script.** No script in the repository computes the step-function baseline quoted at the top,
+and the restart check in §3 was made on an earlier law, not on the reported model.
+
+The verifier's scripts are in the session scratchpad (`verify_gates/`), not in the repository.
