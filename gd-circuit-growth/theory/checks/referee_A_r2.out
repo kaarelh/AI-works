@@ -1,0 +1,65 @@
+## 1. Corollary A2.5(a'): library incoherence kappa_bar_1
+ Fourier route, d = 6: 81 gates; max |off-diagonal of A^T A| = 0.0e+00; diagonal values [np.float64(2.0), np.float64(6.0)]; top eigenvalue = 6.000000
+ Fourier route, d = 8: 148 gates; max |off-diagonal of A^T A| = 0.0e+00; diagonal values [np.float64(2.0), np.float64(8.0)]; top eigenvalue = 8.000000
+ Fourier route, d = 10: 235 gates; max |off-diagonal of A^T A| = 0.0e+00; diagonal values [np.float64(2.0), np.float64(10.0)]; top eigenvalue = 10.000000
+ full cube d = 7: 112 distinct gates; kappa_bar_1(pop) = 7.000000 (claim: d = 7)
+ empirical d = 30, n =  4096, seeds 11-13: kappa_bar_1 = 35.34, 34.47, 35.27 (note: 34.97 / 32.42 for its seed)
+ empirical d = 30, n = 16384, seeds 11-13: kappa_bar_1 = 32.57, 32.35, 32.21 (note: 34.97 / 32.42 for its seed)
+   (a') n =  4096, x = 1.0: T_bar = [35, 34, 35], realizable A1 bound = 0.212, 0.207, 0.212
+   (a') n =  4096, x = 1.5: T_bar = [79, 77, 79], realizable A1 bound = 0.414, 0.406, 0.414
+   (a') n =  4096, x = 1.99: T_bar = [139, 136, 139], realizable A1 bound = 0.610, 0.602, 0.610
+   (a') n = 16384, x = 1.0: T_bar = [32, 32, 32], realizable A1 bound = 0.053, 0.053, 0.053
+   (a') n = 16384, x = 1.5: T_bar = [73, 72, 72], realizable A1 bound = 0.116, 0.115, 0.115
+   (a') n = 16384, x = 1.99: T_bar = [128, 128, 127], realizable A1 bound = 0.195, 0.195, 0.193
+ A1 at T = 1: n = 4096 0.0036, n = 16384 0.0009
+  [14s]
+
+## 2. Corollary A2.5(a'): gates distinct on X but equal on the sample (no merging)
+ d = 6, n = 4, par2 target, first event, 200 samples: worst case X-distinct fired = 24, sample-distinct fired = 1, |F_<=1| = 6, kappa_bar_1 = 2.0, x = 1.155, T_bar = 2
+   X-distinct fired gates exceed T_bar by 22; the min-norm predictor over all fired gates differs from the one-representative predictor on 0.328 of the cube
+   => (a') bounds the sample-distinct count; it bounds A1's T only if the race merges candidates that coincide (up to sign) on the sample and the readout uses one representative per class.
+
+## 3. Proposition A4.2: maj3 with the toy library on d = 4 (x4 irrelevant)
+ exhaustive (ordered sources with repeats, sign readout): 1-gate consistent: False; 2-gate consistent: False
+ residual = -x1x2x3/2: True
+ depth-two candidates (distinct up to sign, incl. duplicates of depth-one or fired functions): |U| = 0.25: 12; |U| = 0.125: 20; |U| = 0.0: 54
+ excluding functions already computed at depth one or fired: |U| = 0.25: 12; |U| = 0.125: 20; |U| = 0.0: 36
+ each of the 12 maximizers completes maj3: True
+  [36s]
+
+## 4. Independent (SC) race with exits; (LS) depth-one race
+ (SC) 60 dictionaries: 1127 events, 268 exits
+   max |Theta ||c||_1 - <R,f>_n| = 1.1e-14; max(<R,f> - ||R|| sqrt(1-ybar^2), ||R|| - tau) = 8.9e-16
+   max |S_m - <R,g_m>_n| = 5.9e-15; max(|S| - Theta) = 9.1e-15; max |U| on supp = 5.6e-16
+   Theorem A2.3(2): max |Sat|/(kappa_Sat x^2) = 0.710; max |supp|/(kappa_supp x^2) = 0.710 (need <= 1)
+ (LS) depth one, 40 dictionaries with duplicates, 961 fired gates: max |B|/(kappa_B (||R||_n/Theta)^2) over B = all fired and random subsets = 0.815 (Theorem A2.3(1) refinement needs <= 1)
+  [36s]
+
+## 5. Theorems A3.1 / A3.5: constants
+ par2: eps = 0.10355, b1 = 2253.2, b2 = 206.8 -> 2254
+ A3.5 par2: beta_max = 0.02049; n = b: 9530; n -> inf: b >= 2383; n = 16384: b >= 6225
+ n_eff(16384, 6225) = 2382.6; A3.1 requirement at delta/2: 2382.5 (restatement consistent: True)
+   gamma=0.5, R=1, lambda=1, T=1: first (utility) condition b >= 2.42e+03; second (Gram) condition b >= 207; first dominates
+   gamma=0.5, R=1, lambda=1, T=10: first (utility) condition b >= 1.49e+04; second (Gram) condition b >= 1.12e+04; first dominates
+   gamma=0.5, R=1, lambda=0.3, T=10: first (utility) condition b >= 4.18e+04; second (Gram) condition b >= 1.25e+05; second dominates
+   gamma=0.25, R=1, lambda=0.5, T=5: first (utility) condition b >= 5.64e+04; second (Gram) condition b >= 1.12e+04; first dominates
+   gamma=0.5, R=1, lambda=0.5, T=30: first (utility) condition b >= 7.87e+04; second (Gram) condition b >= 4.52e+05; second dominates
+  [36s]
+
+## 6. Theorem A3.5 Monte Carlo: population greedy run on the d = 4 cube
+ target sgn(3 x1x2 + 2 x3 + 1 x4 + 0.5): gap = 0.1250, R = 1.500, lambda_* = 0.500, sum (M_t+t+1) = 80, exact representation after T = 2: False
+   Theorem A3.5 needs n^-1/2 + b^-1/2 <= 0.00250, e.g. n = b = 638728
+   reuse protocol n = 638728, b = 638728: circuit differs from C_T in 0/200 runs; final predictor != y in 0/200
+   reuse protocol n = 256, b = 64: circuit differs from C_T in 1/400 runs; final predictor != y in 61/400
+   reuse protocol n = 64, b = 16: circuit differs from C_T in 260/400 runs; final predictor != y in 297/400
+  [37s]
+
+## 7. par2 first greedy step at small b: unique argmax?
+ reuse n = 64, b = 16: XOR(x1,x2) is an argmax in 200/200 runs (forced by |U| <= Var_b(y)); unique argmax in 163/200
+ reuse n = 256, b = 16: XOR(x1,x2) is an argmax in 200/200 runs (forced by |U| <= Var_b(y)); unique argmax in 180/200
+ reuse n = 1024, b = 64: XOR(x1,x2) is an argmax in 200/200 runs (forced by |U| <= Var_b(y)); unique argmax in 200/200
+ fresh b = 16: XOR(x1,x2) is the unique argmax in 375/400 runs
+ fresh b = 32: XOR(x1,x2) is the unique argmax in 398/400 runs
+ fresh b = 64: XOR(x1,x2) is the unique argmax in 400/400 runs
+
+[total 57s]

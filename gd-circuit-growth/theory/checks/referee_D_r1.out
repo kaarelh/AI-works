@@ -1,0 +1,71 @@
+
+=== R1 kl-inverse facts  [0s]
+max [klinv(q,c) - (q+sqrt(2qc)+2c)] = 0.00e+00 (<=0 up to bisection 1e-15);  max [klinv(0,c) - c] = -5.01e-09
+
+=== R2 Lemma D1 identities at random balanced points (d=6, n=40, m=8)  [0s]
+   bal    : worst violation / identity error = 4.55e-13
+   clock  : worst violation / identity error = 4.26e-14
+   dir    : worst violation / identity error = 6.66e-15
+   energy : worst violation / identity error = 2.99e-09
+   Pdot   : worst violation / identity error = 1.82e-12
+   f_id   : worst violation / identity error = 1.69e-08
+   f_ineq : worst violation / identity error = 0.00e+00
+   g_id   : worst violation / identity error = 5.12e-13
+   m_neg  : worst violation / identity error = 0.00e+00
+   g3     : worst violation / identity error = 0.00e+00
+   max (Pdot - |y|_n^2) = -17.565 (<= 0 required)
+
+=== R3 Lemma D1(g1): Q conserved in a shared activation cell (RK4)  [1s]
+   5000 RK4 steps (t=5.00) inside the cell; rho_0 grew x0.906;  max |Q-Q0|/Q0 = 1.88e-11 (0 for the flow)
+
+=== R4 Lemma D2.1 certified bound vs a dense multistart lower estimate (d=4, full cube)  [2s]
+   max (lower estimate - certified bound) = -1.53e-02 (<= 0 required);  certified/estimate: median 1.475, max 3.622
+   y=x1, full cube d=16: U_hat^+ = 0.707107, U_hat^- = 0.707107, U_y((e1+e0)/sqrt2) = 0.707107, 1/sqrt2 = 0.707107
+
+=== R5 Theorem D2(5) discrete one-step growth inequality (unbalanced)  [6s]
+   max (rho' - [rho + 4 eta |a||w| |U_r(hat w)| + eta^2 rho lam |r|^2]) / rho = -1.06e-06 (<= 0 required; this implies D2(5) since |U_r(hat w)| <= U*(r))
+
+=== R6 Theorem D5 log-det clock, continuous and discrete  [7s]
+   continuous: max over trials,K of [LHS - RHS] = -5.38e-01 (<= 0 up to ODE error);  discrete (Horn): -8.01e+00 (<= 0)
+
+=== R7 kappa identity, the <M,Z> step of D6(2), nuclear-norm facts of D7, grid nesting  [7s]
+   kappa = 4.8523; max random ratio = 2.5079 (<= kappa); ratio at the zero-diagonal top eigvec = 4.8523
+   D6(2) pointwise step: max [KyFan split - |r| sqrt(kappa N)] = -1.504 (<= 0)
+   max |zz^T-z'z'^T|_* / (2|z-z'|) = 1.0000 (<= 1);  |xx^T-I|_* = 18.0 (2(d-1)=18), |xx^T-I|_op = 9.0
+   D7 grids: eta_lambda(N)/eta_lambda(N+1) = (N+1)/N, an integer only for N = 1; so G_{N} is NOT a subset of G_{N+1} for N >= 2 (claim 'nested in N' is false; the conclusion 'any N >= N_eps admissible' still holds by padding).
+
+=== R8 independent quadratic run (d=10, n=400, seed 11): D6(1),(2),(3),(5); SGD kappa_B form; GD vs D6(4)  [8s]
+   [gd] kappa=3.038  max 2 eta |M_j| = 0.011 (<1 needed)  D6(1) max [K Theta - KyFan] = -0.427 (<= 0)  D6(2) max N/(kappa(tau/Theta)^2) = 0.397 (<= 1)  D6(5) kappa_B form max ratio = 0.3971 (<= 1)  first growth eps=0.01: t=4.45 >= bound 3.43, eps=0.1: t=5.02 >= bound 1.64
+   [sgd] kappa=3.038  max 2 eta |M_j| = 0.027 (<1 needed)  D6(1) max [K Theta - KyFan] = -2.544 (<= 0)  D6(5) kappa_B form max ratio = 0.1475 (<= 1)  first growth eps=0.01: t=4.42 >= bound 3.43, eps=0.1: t=5.00 >= bound 1.64
+   one GD step from f = y/2 (2 eta |M| = 0.4): P1 - P0 = 7.3227  vs  eta |y|_n^2 = 6.2413  -> the flow bound P(t) <= P(0) + t|y|^2 of D6(4) FAILS for GD at this step
+
+=== R9 Horn clock on the D_quad_check config 0 trajectory (x1x2, n=300, alpha=1e-6, eta=0.01, T=20): is the +2.8e-8 excess round-off?  [15s]
+   K restricted to s_K >= 1e-09 s_1: max excess = +2.82e-08  (at K=16, t=4.93, s_K/s_1=1.1e-09)
+   K restricted to s_K >= 1e-07 s_1: max excess = +4.40e-10  (at K=16, t=3.49, s_K/s_1=1.0e-07)
+   K restricted to s_K >= 1e-06 s_1: max excess = +2.80e-11  (at K=16, t=3.28, s_K/s_1=1.1e-06)
+   K restricted to s_K >= 1e-05 s_1: max excess = +5.36e-12  (at K=16, t=2.35, s_K/s_1=1.2e-05)
+   K restricted to s_K >= 1e-04 s_1: max excess = +3.36e-13  (at K=16, t=2.06, s_K/s_1=1.8e-04)
+   excluding K = d = h = 16 (where the inequality is an EQUALITY, ln|det U_J| = ln|det U_0| + sum ln det(I+2 eta M_j)): max excess over K <= 15 resolved to 1e-9 = +0.00e+00
+   float64 SVD has absolute error ~1e-16 s_1, i.e. relative error ~1e-16/(s_K/s_1) in s_K; the excess should shrink accordingly.
+
+=== R10 recompute D7 numbers for x1x2, n=3000 (gamma=0.5, delta=0.05, |Gamma|=2, emp=0)  [16s]
+   measured N=2, B=1 (l=0): 0.0840;  B=2 (l=1): 0.0887   [file: 0.084]
+   a priori N=4, B=32 (l=5): 0.2131   [file: 0.213];  N=4, measured B=1: 0.1599
+   capacity per unit at B=1, gamma=1/2: 127.1 nats [file: ~125]
+
+=== R11 D3.3 certificate for the real GD network vs the balanced surrogate; Proposition D4.1 along GD (maj3, n=1000, alpha=1e-3)  [16s]
+   t= 30.0: sup_cube|f_GD - f_surrogate| = 3.59e-07;  surrogate: sup|f-g|=3.30e-04, bound=0.190;  real GD net: sup|f-g|=3.30e-04, bound=0.190, test err=0.0000
+   t= 60.0: sup_cube|f_GD - f_surrogate| = 1.13e-06;  surrogate: sup|f-g|=3.23e-04, bound=0.190;  real GD net: sup|f-g|=3.23e-04, bound=0.190, test err=0.0000
+   Proposition D4.1 along GD (checkpoint t1=15, clusters = sign classes, ref = largest neuron; no dormant neurons):
+     t= 15.0  sup|f_t - g_t| = 9.050e-04  D4.1 right side = 3.266e-03  (holds);  neurons with (A) held on [t1,t] at every GD step: 64/64
+     t= 20.0  sup|f_t - g_t| = 1.629e-03  D4.1 right side = 3.275e-03  (holds);  neurons with (A) held on [t1,t] at every GD step: 64/64
+     t= 25.0  sup|f_t - g_t| = 1.657e-03  D4.1 right side = 3.275e-03  (holds);  neurons with (A) held on [t1,t] at every GD step: 64/64
+     t= 30.0  sup|f_t - g_t| = 1.185e-03  D4.1 right side = 3.276e-03  (holds);  neurons with (A) held on [t1,t] at every GD step: 64/64
+     t= 35.0  sup|f_t - g_t| = 1.545e-03  D4.1 right side = 3.276e-03  (holds);  neurons with (A) held on [t1,t] at every GD step: 64/64
+     t= 40.0  sup|f_t - g_t| = 1.673e-03  D4.1 right side = 3.276e-03  (holds);  neurons with (A) held on [t1,t] at every GD step: 64/64
+     t= 45.0  sup|f_t - g_t| = 1.500e-03  D4.1 right side = 3.276e-03  (holds);  neurons with (A) held on [t1,t] at every GD step: 64/64
+     t= 50.0  sup|f_t - g_t| = 1.243e-03  D4.1 right side = 3.276e-03  (holds);  neurons with (A) held on [t1,t] at every GD step: 64/64
+     t= 55.0  sup|f_t - g_t| = 1.172e-03  D4.1 right side = 3.276e-03  (holds);  neurons with (A) held on [t1,t] at every GD step: 64/64
+     t= 60.0  sup|f_t - g_t| = 1.239e-03  D4.1 right side = 3.277e-03  (holds);  neurons with (A) held on [t1,t] at every GD step: 64/64
+
+done in 20s

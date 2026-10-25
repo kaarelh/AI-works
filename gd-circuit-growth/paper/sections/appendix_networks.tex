@@ -1,0 +1,180 @@
+\section{Bounds for the trained networks}\label{app:networks}
+
+{\sloppy
+This appendix collects the generalization bounds proved for actual networks rather than for the discrete race model. The sources are three derivations:
+\repo{theory/B-nn-time-bounds.md} (parameter-space bounds for the study's networks),
+\repo{theory/C-bridge-and-certificates.md} (distillation certificates and the online protocol) and
+\repo{theory/D-early-phase-theorem.md} (early-phase theorems for two-layer networks).
+Each was refereed twice, the second pass finding only minor issues (reports in \repo{theory/checks/}). Results keep the derivation's numbering in parentheses. \status{Proved} means a complete proof with explicit constants is in the derivation, possibly invoking a named published result; \status{Conditional} means proved under a stated, unproved hypothesis; \status{Numerical} means a proved bound evaluated by a script. Sketches give only the key idea.
+\Cref{app:networks:displacement,app:networks:norms,app:networks:pacbayes,app:networks:certificates,app:networks:online} concern the study's networks. \Cref{app:networks:relu,app:networks:quad} concern two-layer networks trained from small initialization, and none of their theorems covers the study's $\mu$P Adam networks.\par}
+
+\paragraph{Notation.} Inputs are uniform on $\cube$, labels are $y=f^\star(x)\in\{\pm1\}$, and $S=((x_i,y_i))_{i\le n}$ is iid. $\mathrm{err}(h)=\Pr(h(x)\ne y)$ and $\mathrm{dis}(h,g)=\Pr_x(h(x)\ne g(x))$; hats denote empirical versions on $S$ or on an unlabelled sample $U$, and $\widehat P_S$ is an empirical frequency. $\langle u,v\rangle_n=\frac1n\sum_iu(x_i)v(x_i)$ and $\|u\|_n^2=\langle u,u\rangle_n$. For real $f$, $\mathrm{err}(\mathrm{sgn}f)\le\Pr(yf\le0)$, which the margin results bound. With $\mathrm{kl}$ the binary relative entropy, $\mathrm{kl}^{-1}_+(q,c)=\sup\{p\in[q,1]:\mathrm{kl}(q\|p)\le c\}\le q+\sqrt{2qc}+2c$.
+The study's network is $f_\theta(x)=a\cdot\sigma(W_2\sigma(W_1x+b_1)+b_2)$, with $\sigma=\mathrm{relu}$, $d=30$ and widths $N=128$. Its parameter groups $g=1,2,3$ are $(W_1,b_1)$, $(W_2,b_2)$ and $a$, with $p_g$ entries. $\theta_0$ is the $\mu$P initialization, independent of $S$. $L_S(\theta)=\frac1{2n}\sum_i(f_\theta(x_i)-y_i)^2$, $L_0=L_S(\theta_0)\approx0.5$, and $R(\theta)=\Pr[yf_\theta(x)\le0]$. Every update is $\theta_{k+1}=\theta_k-\eta Mu_k$ with per-group multipliers $M=\mathrm{diag}(m_g)$: SGD ($\eta=0.2$, batch 64) and GD use gradients, and Adam ($\eta=10^{-3}$) uses $u_k=\hat m_k/(\sqrt{\hat v_k}+\epsilon)$. Time is $t_K=\eta K$, $\|v\|_M^2=v^\top Mv$ and $\|v\|^2_{M^{-1}}=v^\top M^{-1}v$.
+
+\subsection{Displacement from initialization as a function of time}\label{app:networks:displacement}
+
+\begin{theorem}[Theorem B1.1, Corollary B1.2, Proposition B1.3, Lemma B1.4]\label{thm:B1}\status{Proved}
+\leavevmode
+\begin{enumerate}[label=(\alph*),leftmargin=*]
+\item \emph{Gradient flow.} Let $\theta$ be absolutely continuous, with $\theta'=-Mv$ where $v(s)$ is a Clarke subgradient of $L_S$, and assume the chain rule $\frac d{ds}L_S(\theta)=\langle v,\theta'\rangle$ a.e. Then
+\[
+\|\theta(t)-\theta(0)\|_{M^{-1}}\le\int_0^t\|\theta'\|_{M^{-1}}\le\sqrt{t\,(L_S(\theta(0))-L_S(\theta(t)))}\le\sqrt{tL_0}.
+\]
+Per group, $\|\theta_g(t)-\theta_g(0)\|^2\le m_g\,t\,E_g$, where $E_g=\int_0^tm_g\|v_g\|^2$ and $\sum_gE_g=L_S(\theta(0))-L_S(\theta(t))$.
+\item \emph{Any update.} $\|\theta_K-\theta_0\|_{M^{-1}}\le\eta\sum_{k<K}\|u_k\|_M\le\sqrt{t_KE_K}$, where $E_K=\eta\sum_{k<K}\|u_k\|_M^2$.
+\item \emph{GD under a descent condition.} If $L_S(\theta_{k+1})\le L_S(\theta_k)-c\eta\|\nabla L_S(\theta_k)\|_M^2$ for all $k<K$, with $c>0$ (condition (D)), then $E_K\le(L_0-L_S(\theta_K))/c$.
+\item \emph{SGD.} If $L_S$ is $\beta$-smooth in the $M$-geometry on a convex set containing the iterates, $\eta\le1/\beta$, and the minibatch gradients (with $B$ indices drawn uniformly with replacement, independently of the past) have conditional $M$-variance at most $\nu^2/B$, then $\E\|\theta_K-\theta_0\|^2_{M^{-1}}\le4t\,(L_0-\E L_S(\theta_K))+2\eta t\nu^2(1+\beta t)/B$.
+\item \emph{Adam.} If $\beta_1\in[0,1)$, $\beta_2\in(0,1)$ and $r=\beta_1^2/\beta_2<1$, every gradient sequence gives $|\hat m_t|/\sqrt{\hat v_t}\le C_t:=\frac{1-\beta_1}{1-\beta_1^t}\bigl(\frac{1-\beta_2^t}{1-\beta_2}\cdot\frac{1-r^t}{1-r}\bigr)^{1/2}$, with equality for $g_s\propto(\beta_2/\beta_1)^s$. Hence $\|\Delta\theta_g\|_\infty\le\eta m_gS_T$ with $S_T=\sum_{t\le T}C_t$.
+\end{enumerate}
+\end{theorem}
+\noindent\emph{Sketch.} (a) $\|\theta'\|^2_{M^{-1}}=v^\top Mv=-\frac d{ds}L_S$; then the triangle inequality and Cauchy--Schwarz in $s$. (b)--(c) are the discrete analogues (sum (D)). (d) Split into drift and martingale noise; bound the drift by the descent lemma. (e) Cauchy--Schwarz on $m_t=(1-\beta_1)\sum_s\beta_1^{t-s}g_s$ with weights $(\beta_1/\sqrt{\beta_2})^{t-s}$.
+
+\paragraph{Weak or vacuous.}\status{Numerical} For ReLU no global $\beta$ exists, so (D) must be checked along the run: in a GD run at the study's rate (MAJ$_3$, $n=2048$, $\eta=0.2$) it holds only for 20 steps ($c=0.26$), at $\eta=0.02$ throughout ($c\ge0.993$); the smoothness of (d) fails. In (e), $C_\infty=7.27$ for $(\beta_1,\beta_2)=(0.9,0.999)$, not the folklore $1$ (real runs reach $1.5$--$1.7$ in the first escape), and the a priori $\|\Delta W_1\|_F\le8.9\times10^3$ after 20000 steps compares with a measured $4$--$11$. For SGD at step 5000, $\|\Delta\|_{M^{-1}}=3.7$ against $\Lambda=85$ and $\sqrt{tE}=159$. \emph{Heuristic:} time-only bounds degrade as the initialization scale $\alpha\to0$ although the learned function does not change.
+
+\subsection{Norm-based uniform convergence is vacuous here}\label{app:networks:norms}
+
+For a complexity functional $C$ with $\mathfrak R_n(\{f_\theta:C(\theta)\le\phi\})\le\kappa\phi/\sqrt n$, the margin bound with union bounds over a norm grid $\phi_0q^j$ and a margin grid $\gamma_k$ (Theorem B2.1) has complexity term $c(\theta)/\gamma_k$, where $c(\theta)=2\kappa\phi_0q^{j(\theta)}/\sqrt n$ and $\phi_0q^{j(\theta)}\ge C(\theta)$ is the grid round-up. With biases included, the derivation proves $\kappa_{\rm path}=\sqrt{2\ln(8(d+1))}=3.32$ for the $\ell_1$ path norm $\phi_1$ (Proposition B2.2) and $\kappa_F=\sqrt{d+1}(1+\sqrt{4\ln2})=14.84$ for $P_F=\|a\|(\|[W_1\,b_1]\|_F\|W_2\|_F+\|b_2\|)$ (Proposition B2.3).
+
+\begin{lemma}[Lemma B2.1a]\label{lem:B21a}\status{Proved}
+Let $\bar m_+(\theta)=\frac1n\sum_i(y_if_\theta(x_i))_+$. If $c(\theta)\ge\max(1,\bar m_+(\theta))$, the margin bound of Theorem B2.1 is at least $1$ at every margin, whatever the largest grid margin $\gamma_{\max}$.
+\end{lemma}
+\noindent\emph{Sketch.} The ramp loss satisfies $\varphi_\gamma(u)\ge1-u_+/\gamma$, so $\hat R_\gamma\ge1-\bar m_+/\gamma$; treat $\gamma\le1$ and $\gamma>1$ separately.
+
+\paragraph{Numerical: vacuous everywhere.}\status{Numerical} All 49 final Adam networks of the sweep ($n\in\{256,2048,16384\}$) have $\bar m_+=0.99$--$1.01$ and satisfy the lemma for the path-norm and Frobenius bounds; the spectral bound is vacuous too. The closest cases are $c_{\rm path}=1.46$ ($x_1$, $n=16384$) and $c_F=3.7$; the spectral complexity at unit margin is at least $679$. The initialization's norms alone, $\phi_1(\theta_0)\approx31.5$ and $P_F(\theta_0)\approx11.3$, force $c\ge1$ for $n\lesssim4.4\times10^4$ and $1.1\times10^5$. \emph{Heuristic reading:} the random features of the initialization dominate the norms (though training can lower them: $26$ against $32$ for $x_1$).
+
+\subsection{PAC-Bayes centred at the initialization}\label{app:networks:pacbayes}
+
+\begin{theorem}[Theorem B3.2]\label{thm:B32}\status{Proved}
+Let $\Sigma$ be a grid of $G$ per-group noise levels $\sigma=(\sigma_g)$, and let $Q_{\theta,\sigma}=\mathcal N(\theta,\mathrm{diag}(\sigma_g^2I_{p_g}))$ and $P_\sigma=\mathcal N(\theta_0,\mathrm{diag}(\sigma_g^2I_{p_g}))$. Let $n\ge8$. With probability $\ge1-\delta_0$, for all $\theta$ (however obtained) and all $\sigma\in\Sigma$,
+\[
+R(Q_{\theta,\sigma})\le\mathrm{kl}^{-1}_+\Bigl(\hat R_S(Q_{\theta,\sigma}),\ \tfrac1n\bigl[\mathrm{KL}+\ln\tfrac{2G\sqrt n}{\delta_0}\bigr]\Bigr),\qquad \mathrm{KL}=\sum_g\frac{\|\theta_g-\theta_{0,g}\|^2}{2\sigma_g^2}. \tag{PB}
+\]
+\emph{Derandomized:} once $\theta,\sigma$ are fixed, let $\hat e$ be the mean error of $m$ fresh draws $\theta'\sim Q_{\theta,\sigma}$ on batches from $S$, and $\hat\Delta$ their mean sign disagreement with $f_\theta$ on fresh unlabelled inputs. With probability $\ge1-\delta_0-\delta_1-\delta_2$, $R(\theta)$ is at most (PB) with $\hat R_S(Q)$ replaced by $\mathrm{kl}^{-1}_+(\hat e,\ln(1/\delta_1)/m)$, plus $\mathrm{kl}^{-1}_+(\hat\Delta,\ln(1/\delta_2)/m)$.
+\end{theorem}
+
+\begin{theorem}[Time-based KL; Theorem B3.3]\label{thm:B33}\status{Proved}
+With $\lambda_\sigma=\max_gm_g/2\sigma_g^2$, the KL in (PB) at the trained parameters satisfies:
+(a) for gradient flow ($c=1$) or GD under (D), $\mathrm{KL}\le t(L_0-L_S(\theta(t)))\lambda_\sigma/c\le tL_0\lambda_\sigma/c$, linear in $t$;
+(b) for any update, $\mathrm{KL}\le t_K\sum_gm_gE_{K,g}/2\sigma_g^2$ with the measured per-group energies;
+(c) for Adam, $\mathrm{KL}\le\sum_gp_g(\eta m_gS_K)^2/2\sigma_g^2$, quadratic in $K$ since $S_K\ge K$;
+(d) for SGD under the hypotheses of \cref{thm:B1}(d), with $V(t)=4tL_0+2\eta t\nu^2(1+\beta t)/B$: with probability $\ge1-\delta_0-\delta'$, (PB) holds at $\theta_K$ with $\mathrm{KL}\le\lambda_\sigma V(t)/\delta'$; and for the mixture ``rerun SGD, then perturb'' the PAC-Bayes-kl inequality holds with $\mathrm{KL}\le\lambda_\sigma V(t)$.
+\end{theorem}
+\noindent\emph{Sketch.} The prior depends only on $\theta_0$, which is independent of $S$, so the PAC-Bayes-kl bound (Maurer 2004; in the line of \cite{mcallester1999pacbayes}) applies, with a union bound over $\Sigma$. Fresh Monte Carlo draws (as in \cite{dziugaite2017computing}) and the pointwise inequality $\mathbb 1[yf_\theta\le0]\le\mathbb 1[yf_{\theta'}\le0]+\mathbb 1[\mathrm{sgn}f_{\theta'}\ne\mathrm{sgn}f_\theta]$ derandomize it. For \cref{thm:B33}, $\mathrm{KL}\le\lambda_\sigma\|\theta-\theta_0\|^2_{M^{-1}}$; insert \cref{thm:B1}, and for (d) Markov's inequality or convexity of KL.
+
+\paragraph{Numerical.}\status{Numerical} On the final Adam networks the deterministic bound is $0.26$--$0.56$ at $n=16384$ for the five targets with $\le3$ relevant variables, $0.55$--$1.0$ at $n=2048$, vacuous at $n=256$, and uninformative ($0.79$--$1.0$) with 4--6 relevant variables even at $n=16384$. The KL for $x_1$ at $n=16384$ is 1804 nats, against about 4 nats to describe $x_1$ as a circuit. After 100--300 SGD or Adam steps the bound is $0.10$--$0.34$ (best $0.11$ for $x_1$, $0.23$ for MAJ$_3$, with a union bound over 10 checkpoints). The time-based forms are informative ($<0.5$) only up to $t\approx4$ or 50 Adam steps: (a) gives $0.59$--$0.77$ for GD at $\eta=0.02$; (b) gives $0.39$ for SGD on $x_1$ at step 20 and $\ge0.9$ from step 100, and is always weaker than (PB) with the measured displacement; (c) gives $0.44$--$0.56$ at step 50 and is vacuous by step 200; (d) is not evaluated, since smoothness fails for ReLU.
+
+\subsection{Distillation certificates without labelled hold-out data}\label{app:networks:certificates}
+
+\paragraph{Setting.} $\{\mathcal H_c\}_{c\in I}$ is a countable family of finite classes $\cube\to\{\pm1\}$, with weights $\sum_c\pi(c)\le1$, all fixed in advance. The predictors to certify, $h_1,\dots,h_J$, are arbitrary functions of $S$ and of training randomness $\xi\perp S$. The unlabelled sample $U$ of $m$ uniform inputs is independent of $(S,\xi)$.
+
+\begin{theorem}[Theorem C1]\label{thm:C1}\status{Proved}
+With probability $\ge1-\delta_1-\delta_2$, simultaneously for all $j\le J$, all $c\in I$ and all $g\in\mathcal H_c$ (so also for $g$ selected from $S$, $\xi$, $h_j$ and $U$),
+\[
+\mathrm{err}(h_j)\le\mathrm{kl}^{-1}_+\Bigl(\widehat{\mathrm{err}}_S(g),\tfrac{\ln|\mathcal H_c|+\ln\frac1{\pi(c)}+\ln\frac1{\delta_1}}n\Bigr)+\mathrm{kl}^{-1}_+\Bigl(\widehat{\mathrm{dis}}_U(h_j,g),\tfrac{\ln|\mathcal H_c|+\ln\frac1{\pi(c)}+\ln\frac J{\delta_2}}m\Bigr).
+\]
+\emph{Variants:} with $K$ candidates chosen using part $U_A$ of the pool and disagreement measured on an independent part $U_B$ ($m_B$ points), the second complexity term may be $\ln(JK/\delta_2)/m_B$; an exactly computed disagreement may be used as is.
+\end{theorem}
+\noindent\emph{Sketch.} The Occam event, a kl-Chernoff and union bound over $\bigcup_c\mathcal H_c$ \cite{blumer1987occam}, does not mention $h$ or the selection. Conditionally on $(S,\xi)$, $U$ is still iid. Then $\mathrm{err}(h)\le\mathrm{err}(g)+\mathrm{dis}(h,g)$. The bound breaks if the disagreement is measured on training inputs, or if the network is trained on $U$.
+
+\paragraph{The classes, counted.}\status{Proved} Let $\chi_S=\prod_{i\in S}x_i$, let $D_k^*$ count the nonempty characters of degree $\le k$, and let $\Phi(N,T)=2\sum_{i\le T}\binom{N-1}i$ (Cover's count). The signs $\mathcal F_{k,T}$ of $w_0+\sum_{j\le T}w_j\chi_{S_j}$, with distinct $S_j$ of size $1$--$k$, satisfy $\ln|\mathcal F_{k,T}|\le\ln\binom{D_k^*}T+\ln\Phi(2^{\min(T,d)},T)$ (Proposition C1.2). Fan-in-2 circuits with at most $T$ gates compute at most $\sum_{s\le T}(16(d+s)^2)^s(d+s)/s!$ functions (Proposition C1.3). Juntas are counted exactly: $|\mathcal J_{\le k}|=\sum_{j\le k}\binom djN_j$ with $N_j=\sum_{i\le j}(-1)^{j-i}\binom ji2^{2^i}$ (Proposition C1.4). At $d=30$, $\ln|\mathcal J_{\le3}|=13.7$ and $\ln|\mathcal C_{\le8}|=73.4$ nats.
+
+\paragraph{Numerical.}\status{Numerical} With juntas and Fourier signs (circuits were not searched) and selection from unlabelled inputs only, every target's saved final Adam network is certified below $0.5$ at $n=2048$ for every seed, 9 of 13 targets below $0.04$, and every network at $n=16384$ at $\le0.021$. Fourier signs certify MAJ$_9$ at $0.034$ and a 10-variable threshold at $0.09$--$0.10$ ($n=2048$), where the best junta certificates are $0.41$--$0.43$ and $0.20$. No certificate falls below the true error. Along training, the class that minimizes the certificate grows in stages. \emph{Weakness:} the certificate is a posteriori and does not say why training yields a near-circuit.
+
+\subsection{One-pass training: online-to-batch conversions}\label{app:networks:online}
+
+In the online protocol each step draws a fresh batch, the current predictor predicts on it, and then the network updates. Write $\ell_j$ for the mistake on sample $j$ of the $N$ samples, $p_j$ for the test error of the predictor that saw it, and $M_N=\sum_j\ell_j$.
+
+\begin{proposition}[Propositions B3.4, C4.1, C4.2]\label{prop:C41}\status{Proved}
+(1) With probability $\ge1-\delta$, $\frac1N\sum_jp_j\le\frac{M_N}N+\sqrt{\ln(1/\delta)/2N}$, and likewise for any window of steps fixed in advance (B3.4). For a finite grid $\Lambda$, with probability $\ge1-\delta$, for all $\lambda\in\Lambda$,
+\[
+\tfrac1N\textstyle\sum_jp_j\le(\lambda M_N+\ln(|\Lambda|/\delta))/((1-e^{-\lambda})N).
+\]
+(2) For a finite set $I$ of steps, let $\widehat{\mathrm{err}}_{\ge i}(h_i)$ be the error of $h_i$ on the $N_{\ge i}$ samples of steps $\ge i$. With probability $\ge1-\delta$, for all $i\in I$,
+\[
+\mathrm{err}(h_i)\le\mathrm{kl}^{-1}_+\bigl(\widehat{\mathrm{err}}_{\ge i}(h_i),\ln(|I|/\delta)/N_{\ge i}\bigr).
+\]
+Adding the term $\mathrm{kl}^{-1}_+(\widehat{\mathrm{dis}}_U(h_{\rm final},h_i),\ln(|I|/\delta')/m)$, for $m$ unlabelled inputs independent of the run, and minimizing over $i$ bounds $\mathrm{err}(h_{\rm final})$ with probability $\ge1-\delta-\delta'$. Without such a term a small average error says nothing about the final iterate.
+\end{proposition}
+\noindent\emph{Sketch.} $p_j-\ell_j$ are martingale differences, so Hoeffding's lemma applies; the fast rate uses the supermartingale $\exp\sum_j[(1-e^{-\lambda})p_j-\lambda\ell_j]$ \cite{cesabianchi2004online}. For (2), later samples are fresh for $h_i$.
+
+\paragraph{Numerical.}\status{Numerical} On one-pass Adam runs with logged progressive errors, B3.4 is within $0.006$ of the measured window-average test error, and C4.1 certifies the second half of training at $\le0.0017$ in all 18 reruns (\repo{study/ONLINE-BOUNDS.md}). Part (2) and the fast-rate form are not evaluated.
+
+\subsection{Two-layer ReLU networks from balanced small initialization}\label{app:networks:relu}
+
+\paragraph{Setting} (Part I of D). $f(x)=\sum_{j\le m}a_j\sigma(w_j\cdot\tilde x)$ with $\tilde x=(x,1)$, $L=\frac12\|y-f\|_n^2$, $r=y-f$, and $\lambda_X$ the top eigenvalue of $\frac1n\sum_i\tilde x_i\tilde x_i^\top$. The utility of a unit direction is $U_r(v)=\langle r,\sigma(v\cdot\tilde x)\rangle_n$, $U^*(r)=\sup_v|U_r(v)|$ and $U_0^*=U^*(y)$. The initialization is balanced, $|a_j(0)|=\|w_j(0)\|=\alpha$ with signs $\epsilon_j$; the masses are $\rho_j=a_j^2+\|w_j\|^2$ and $P=\sum_j\rho_j$, so the width enters only through $P(0)=2m\alpha^2$. A \emph{selection flow} is gradient flow with any measurable choice of subgradients at the kinks (every Clarke flow is one). Unless stated otherwise, the statements below concern selection flows from this initialization, and hold for any data and width.
+
+\begin{lemma}[Lemma D1(b), (c), (g)]\label{lem:D1}\status{Proved}
+(i) \emph{Mass clock:} with $\hat w_j=w_j/\|w_j\|$, $\rho_j(t)=\rho_j(0)\exp\bigl(2\int_0^t\epsilon_jU_{r(s)}(\hat w_j(s))\,ds\bigr)$.
+(ii) \emph{Measure form:} $f_t=\sum_j\epsilon_j\frac{\rho_j}2\sigma(\hat w_j\cdot\tilde x)$ everywhere, so the variation norm is at most $P/2$.
+(iii) \emph{Merging law:} for $\epsilon_j=\epsilon_k$ let $Q_{jk}=a_ja_k-w_j\cdot w_k=\|w_j\|\|w_k\|(1-\cos\angle(w_j,w_k))$. (g1) $Q_{jk}$ is constant while $j$ and $k$ use the same subgradient selections at every training point. (g2) It is nonincreasing while $\epsilon_jr_i\le0$ at every training point separating them. (g3) In general $\frac d{dt}\sqrt{Q_{jk}}\le\sqrt{(d+1)\|w_j\|\|w_k\|/2}\;\bar r^{\rm rep}_{jk}$, where $\bar r^{\rm rep}_{jk}$ is the residual mass $\frac1n\sum|r_i|$ over separating points with $\epsilon_jr_i>0$, wherever $Q_{jk}>0$.
+\end{lemma}
+\noindent\emph{Sketch and credit.} $a_j^2-\|w_j\|^2$ is conserved since $s\,z=\sigma(z)$ for every subgradient $s$, and positive homogeneity gives $\dot\rho_j=2\epsilon_j\rho_jU_r(\hat w_j)$. By monotonicity of $\partial\sigma$, $\dot Q_{jk}$ is a sum over separating points of $\epsilon_jr_i$ times a nonnegative factor. (g1) is the off-diagonal entry of the classical balancedness law $W_1W_1^\top-W_2^\top W_2=\text{const}$ of two-layer linear networks \cite{arora2018optimization,du2018algorithmic}, applied to a pair that shares its selections and is therefore locally a linear network. Only (g2) and (g3) may be new.
+
+\begin{theorem}[No growth before $\ln(1/\alpha)/U_0^*$; Theorem D2]\label{thm:D2}\status{Proved}
+(1) The path norm satisfies $P(t)\le P(0)\exp(2\int_0^tU^*(r(s))ds)$, and $\sup_{x\in\cube}|f_t(x)|\le\frac{\sqrt{d+1}}2P(t)$.
+(3) For $\beta>P(0)$ the escape time $t_\beta=\inf\{t:P(t)\ge\beta\}$ satisfies
+\[
+t_\beta\ge T_\beta:=\frac{\ln(\beta/P(0))}{2(U_0^*+\lambda_X\beta/2)},
+\]
+so for $t\le T_\beta$ the network is within $\frac{\sqrt{d+1}}2\beta$ of the zero function on the whole cube.
+(6) Every selection flow has $\liminf_{\alpha\to0}t_\beta U_0^*/\ln(1/\alpha)\ge1$, at every fixed $\beta>0$ and width, and the limit is $1$ (for every $\beta<\sqrt2$) for $y=x_1$ on the full cube with one neuron started at the maximizer of $U_y$ and $\sigma'(0)=0$. So the leading constant $1/U_0^*$ is sharp.
+\end{theorem}
+\noindent\emph{Sketch.} Use (i) with $|U_r|\le U^*(r)$ and $U^*(r_t)\le U_0^*+\sqrt{\lambda_X}\|f_t\|_n<U_0^*+\lambda_X\beta/2$ for $t<t_\beta$. In the instance $P(t)$ is logistic; the $\liminf$ follows from $t_\beta\ge t_{\beta'}\ge T_{\beta'}$ with $\beta'\to0$. Lower-order terms are not claimed sharp; that the escape actually happens near $T_\beta$ is not proved. The derivation also gives a discrete-GD form and a certified bound $\hat U(r)\ge U^*(r)$ from two eigenvalue computations (Lemma D2.1).
+
+\begin{theorem}[Theorems D3 and D3.2]\label{thm:D3}\status{Proved}
+\emph{Path norm.} For every $\beta>P(0)$, $P(t)\le\beta+\|y\|_n^2(t-T_\beta)_+$ (a priori) and $\sqrt{P(t)}\le\sqrt\beta+\int_{T_\beta}^t\sqrt{-\dot L}$ (from the training-loss curve).
+\emph{Generalization.} Let the inputs be uniform, $b^2=\frac12(1+\lambda_X)$ and $e_K=2B^2(b+1)^2/(K\gamma^2)$. Fix, before seeing data, a margin grid $\Gamma$ and, for each $K$, a net $\mathcal N_K$ of the unit sphere of $\R^{d+1}$ of resolution $1/\sqrt{K(d+1)}$, with $|\mathcal N_K|\le(1+2\sqrt{K(d+1)})^{d+1}$. With probability $\ge1-\delta$, simultaneously for every two-layer ReLU network $f$ of any width (balanced or not), every $K\ge1$, $\gamma\in\Gamma$ and dyadic $B=2^\ell\ge\sum_j|a_j|\|w_j\|$,
+\[
+\mathrm{err}(\mathrm{sgn}f)\le\mathrm{kl}^{-1}_+\Bigl(\widehat P_S[yf\le2\gamma]+e_K,\ \tfrac{K\ln(2|\mathcal N_K|+1)+\ln\frac{2|\Gamma|K(K+1)(|\ell|+1)(|\ell|+2)}\delta}n\Bigr)+e_K .
+\]
+\end{theorem}
+\noindent\emph{Sketch.} For the path norm, $\dot P=4\langle r,f\rangle_n\le\|y\|_n^2$ and $\frac d{dt}\|\theta\|\le\sqrt{-\dot L}$. For generalization, Maurey sampling of $K$ neurons with weights $|a_j|\|w_j\|$ (the measure of \cref{lem:D1}(ii) under balance), rounding to a net and Chebyshev's inequality under the test and training distributions give $K$-term approximants at margin cost $e_K$; then apply kl-Occam.
+\emph{Vacuous:} at $d=16$ and $B\approx1.4$ the bound needs $n\gtrsim10^5$, and it is $1.0$ in all runs below.
+
+The non-vacuous version is a posteriori: Proposition D3.3 (\status{Proved}) is a kl-Occam bound at margin $\gamma$, uniform over $K$, $B$, $\gamma$, for every predictor within $\gamma/4$ in sup norm of some $\sum_{k\le K}c_k\sigma(v_k\cdot\tilde x)$ with $\sum_k|c_k|\le B$, at capacity $K[(d+1)\ln(1+16B\sqrt{d+1}/\gamma)+\ln(2\lceil8KB\sqrt{d+1}/\gamma\rceil+1)]$ (about 100 nats per neuron at $d=16$, $B\approx1.4$, $\gamma=\frac12$).
+
+\begin{proposition}[Persistence of clusters; Proposition D4.1]\label{prop:D41}\status{Conditional}
+Fix $t_1$, same-sign clusters $G_k$ with reference neurons $j_k$, and a remainder $D$ with mass $P_D$. Suppose that on $[t_1,t]$:
+\begin{itemize}
+\item[(A)] every training point separating some $j\in G_k$ from $j_k$ has $\epsilon_jr_i\le0$, for almost every $s$.
+\end{itemize}
+Then $g_t=\sum_kc_k\sigma(\hat w_{j_k}\cdot\tilde x)$, with $c_k=\sum_{G_k}\epsilon_j\rho_j/2$ and $\sum|c_k|\le P(t)/2$, satisfies
+\[
+\sup_x|f_t-g_t|\le\sqrt{d+1}\Bigl[\sqrt2\sum_k\sum_{j\in G_k}\frac{\|w_j(t)\|^{3/2}}{\|w_{j_k}(t)\|^{1/2}}\sqrt{Q_{jj_k}(t_1)}+\tfrac12P_D(t_1)e^{2\int_{t_1}^t\hat U(r_s)ds}\Bigr].
+\]
+Without (A), add $\int_{t_1}^t\sqrt{(d+1)\|w_j\|\|w_{j_k}\|/2}\,\bar r^{\rm rep}_{jj_k}$ to each $\sqrt{Q_{jj_k}(t_1)}$. When the right-hand side is at most $\gamma/4$, Proposition D3.3 applies at time $t$ with this $K$.
+\end{proposition}
+\noindent\emph{Sketch.} Under (A), (g2) keeps $Q_{jj_k}\le Q_{jj_k}(t_1)$. The dormant neurons obey the clock bound from $t_1$ on. (A) can be checked from the training residuals, but it is not proved.
+
+\begin{conjecture}[Conjecture D4]\label{conj:D4}\status{Conjecture}
+Fix $S$ and the width, take initial directions in general position, and let $\alpha\to0$. Let $K$ be the number of selection-critical directions of $\pm U_y$ that attract a positive fraction of initial directions. Suppose the $K$-neuron least-squares fit on them has residual $r^\star$ with $\epsilon r^\star_i<0$ at the training points on the clusters' boundary hyperplanes. Then $\sup_{t\le(1+c)\ln(1/\alpha)/U_0^*}\inf_g\sup_x|f_t-g|\to0$ over $K$-neuron functions $g$, for every $c<c^\star(S)$, where $c^\star\ln(1/\alpha)/U_0^*$ is the time to the next escape.
+\end{conjecture}
+
+\paragraph{Numerical.}\status{Numerical} ($d=16$, $n=1000$--$4000$, width 64, $\alpha=10^{-6}$--$10^{-2}$, small-step GD, exact test error on all $2^{16}$ inputs.) The growth bound reaches $0.84$--$0.95$ of its exponent, and at $\alpha\le10^{-3}$, $T_\beta$ is $60$--$81\%$ of the observed escape time. At $\alpha\le10^{-3}$ the neurons condense into $K=2$ clusters ($1-\cos\le2\cdot10^{-4}$; one neuron stays out at $n=4000$) that, except for $x_1$, whose residual vanishes, sit on data hyperplanes (training margins $10^{-12}$--$3\cdot10^{-7}$); where (A) holds, $Q$ grew by at most $0.2\%$. D3.3 with the network's two clusters certifies MAJ$_3$ at $0.19$ ($n=1000$) and $0.051$ ($n=4000$), true error $0$ (computed for the balanced surrogate of the GD network). On $x_1+\frac12x_2x_3$ at $\alpha=10^{-6}$ every neuron is recruited by the first escape and the network stalls, the ``two-edged sword'' of \cite{boursier2022early}.
+
+\subsection{Quadratic networks with fixed output signs}\label{app:networks:quad}
+
+\paragraph{Setting} (Part II of D). $f(x)=\langle X,xx^\top-I\rangle$ with $X=UU^\top-VV^\top$: centred quadratic units with output weights fixed at $\pm1$, i.e.\ symmetric matrix sensing (trainable output weights are not covered). The flow is $\dot U=2M_rU$, $\dot V=-2M_rV$ with $M_r=\frac1n\sum_ir_i(x_ix_i^\top-I)$, from $U(0)=\alpha U_0$, $V(0)=\alpha V_0$, $s_0=\max(\|U_0\|_{op},\|V_0\|_{op})$. $N_\epsilon(t)$ counts the eigenvalues $\ge\epsilon$ of $UU^\top$ and of $VV^\top$; $\Theta_\epsilon=\frac14\ln(\epsilon/\alpha^2s_0^2)$, $\tau(t)=\int_0^t\|r\|_n$ and $P=\|U\|_F^2+\|V\|_F^2$. The coherence $\kappa=2\lambda_{\max}(\frac1n\Phi^\top\Phi)$, with $\Phi_{i,(k,l)}=x_{ik}x_{il}$ for $k<l$, depends only on the training inputs (not on labels, trajectory or width); its population value is $2$.
+
+\begin{theorem}[Theorem D6, with Theorem D5]\label{thm:D6}\status{Proved}
+For gradient flow, all $t$ and every $\epsilon$ with $\Theta_\epsilon>0$:
+(2) $N_\epsilon(t)\le\kappa\,(\tau(t)/\Theta_\epsilon)^2$;
+(3) the first time $t_\epsilon$ at which an eigenvalue reaches $\epsilon$ satisfies $t_\epsilon\ge\Theta_\epsilon/(\|M_y\|_{op}+2\kappa\sqrt d\,\epsilon)$;
+(4) $P\ge\|X\|_*$ and $\dot P=4\langle r,f\rangle_n\le\|y\|_n^2$.
+(5) For GD and SGD with step matrices $M_j$ (full-batch or minibatch $B_j$): if $2\eta\|M_j\|_{op}<1$ at every step, (2)--(3) hold for GD with $\tau_J=\eta\sum_{j<J}\|r_j\|_n$; for SGD, (2) holds as $N\le(\eta\sum_j\sqrt{\kappa_{B_j}}\|r_j\|_{B_j})^2/\Theta_\epsilon^2$ with $\kappa_{B_j}$ the batch coherence, and (3) with the maxima of $\|M^{B_j}_y\|_{op}$ and $\kappa_{B_j}$ over the batches before first growth. With no step-size condition, $P_J\le e^{4\eta^2\sum_j\|M_j\|_{op}^2}(P(0)+\eta\sum_j\|y\|_{B_j}^2)$.
+\end{theorem}
+\noindent The minibatch (SGD) form of (3) was added after the second referee pass and has not been refereed.
+
+\noindent\emph{Sketch.} The log-det clock (Theorem D5; Ky Fan's maximum principle for the flow, Horn's inequality for GD and SGD) gives $\sum_{k\le K}\ln\sigma_k(U(t))\le\sum_{k\le K}\ln\sigma_k(U(0))+2\int_0^t\sum_{k\le K}\lambda_k(M_{r(s)})ds$, hence $N\Theta_\epsilon\le\int(\text{two Ky Fan sums of }\pm M_r)$. Let $Z=\Pi_+-\Pi_-$ project onto the relevant eigenvectors of $M_r$, so that $\|Z\|_F^2\le N$. Then each instant contributes at most $\langle M_r,Z\rangle=\langle r,\mathcal A(Z)\rangle_n\le\|r\|_n\sqrt{\kappa N}$. So $N\Theta_\epsilon\le\tau\sqrt{\kappa N}$.
+\emph{Weight-free, not a priori:} $\tau$ is read off the loss curve. The time-only form $\tau\le\|r(0)\|_nt$ (flow) is much weaker; for $x_1x_2$ below it gives $N\le42$ at $t=20$, against $4$.
+
+\begin{theorem}[Theorem D7]\label{thm:D7}\status{Proved}
+Let $d\ge2$, $y\in\{\pm1\}$, and fix a margin grid $\Gamma\subset(0,8(d-1)]$. For $K\ge0$, dyadic $B=2^\ell$ and $\gamma\in\Gamma$, put $\eta_\lambda=\gamma/(8(d-1)\max(K,1))$ and $\eta_z=\gamma/(16(d-1)(B+1))$, and let $\mathcal G_{K,B,\gamma}$ be the matrices $\sum_{k\le K}\lambda'_kz_kz_k^\top$ with $\lambda'_k\in\eta_\lambda\mathbb Z$, $|\lambda'_k|\le\eta_\lambda\lceil B/\eta_\lambda\rceil$ and $z_k$ in a fixed $\eta_z$-net of $S^{d-1}$, so that $C_{K,B,\gamma}:=\ln|\mathcal G_{K,B,\gamma}|\le K\ln(2\lceil B/\eta_\lambda\rceil+1)+dK\ln(1+2/\eta_z)$. Put $\epsilon_\gamma=\gamma/(8(d-1))$. With probability $\ge1-\delta$, simultaneously for all $t$, all $\gamma\in\Gamma$, every integer $N\ge N_{\epsilon_\gamma}(t)$ and every dyadic $B\ge P(t)$,
+\[
+\mathrm{err}(\mathrm{sgn}f_t)\le\mathrm{kl}^{-1}_+\Bigl(\widehat P_S[yf_t\le\gamma],\ \tfrac{C_{N,B,\gamma}+\ln\frac{2|\Gamma|(N+1)(N+2)(|\ell|+1)(|\ell|+2)}\delta}n\Bigr).
+\]
+The event is the same for every $(U,V)$, so it covers all GD and SGD iterates. Admissible choices include the measured $N_{\epsilon_\gamma}(t)$ and $P(t)$, $N=\lfloor\kappa(\tau/\Theta_{\epsilon_\gamma})^2\rfloor$ for the flow (for $\Theta_{\epsilon_\gamma}>0$; for GD and SGD, the forms of \cref{thm:D6}(5)), and $B$ from \cref{thm:D6}(4) (flow) or (5) (GD and SGD).
+\end{theorem}
+\noindent\emph{Sketch.} Split $X$ into the eigencomponents $\ge\epsilon_\gamma$ of $UU^\top$ and $VV^\top$ (rank $\le N$, nuclear norm $\le B$) and the rest. Since $\|xx^\top-I\|_*=2(d-1)$, the rest moves $f$ by at most $\gamma/4$. Rounding into $\mathcal G$ costs less than $\gamma/4$; then apply kl-Occam at margin $\gamma/2$. The capacity is $127$--$129$ nats per unit at $d=16$, $B=1$, $\gamma=\frac12$, so the bound beats the unrestricted degree-2 class (about 964 nats) only for $N\le7$.
+
+\paragraph{Numerical.}\status{Numerical} ($d=16$, width $16+16$, $\alpha=10^{-6}$, GD with $\eta=0.01$ and one SGD run with batch 64, exact test error.) The clock holds to $10^{-8}$ and the rank bound is within a factor $1.7$--$2.7$ of the truth. For $x_1x_2$ at $n=3000$, D7 gives $0.084$ with the measured rank and $0.213$ with the weight-free rank and the proved GD norm bound, against $0.276$ for the unrestricted class (true error $0$); the step-size condition holds ($2\eta\|M_j\|_{op}\le0.021$). On MAJ of three pairs the residual plateaus above zero, so $\tau$ keeps growing: the weight-free rank bound rises from 23 to 47 while the true rank stays 6, and D7 becomes vacuous ($0.969$). For the SGD run on the same target, the proved SGD forms give D7 bounds of $0.89$--$0.90$, with $N$ capped at the trivial $32$.

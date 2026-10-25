@@ -1,0 +1,151 @@
+\section{A discrete model of the feature channel}\label{sec:model}
+
+\subsection{The race model}\label{sec:race}
+
+The first model, the \emph{race model}, makes the saddle-to-saddle picture into an algorithm. Its parts:
+\begin{itemize}
+\item \textbf{State.} A shared two-level circuit of discrete ReLU gates $g=\mathrm{relu}(\sum_j w_ju_j-b)$. The weights are integers in $\{-3,\dots,3\}$, and the wires $u_j$ are input literals and earlier first-level gates. The gates feed a ridge least-squares readout, refitted after every new gate.
+\item \textbf{Proto-units.} A persistent pool of dormant proto-units of orders 1–4 stands in for the not-yet-recruited hidden units.
+\item \textbf{Alignment.} Each proto-unit's direction aligns to the residual by (tensor) power iteration on the training sample. It does so at the speed of the homogeneous law $\dot m=kU_km^{k-1}$, with $U_k$ the order-$k$ utility.
+\item \textbf{Firing.} The rounded gate's utility then drives a clock, and the gate fires when the clock reaches $\theta=\log(1/\alpha)=1.5$. The earliest gate to fire is added to the circuit, the readout is refitted, and the race resumes.
+\item \textbf{Stopping.} Growth stops at zero training error, or after 48 gates.
+\end{itemize}
+Three constants were calibrated on the 12 calibration targets only. The model sees nothing but the training sample.
+
+\paragraph{Fit to the networks} \status{Numerical}. \Cref{tab:scoreboard} lists the scores.
+\begin{itemize}
+\item \textbf{Held-out targets.} The race model's $\nstar$ is within $1.26\times$ of the networks' on average, it ranks the targets identically, and its learning curves match in shape. It reproduces intermediate plateaus. For example, on sign$(2x_1+x_2x_3+x_4x_5x_6)$ test error stays near $1/8$ from $n\approx256$ to $n\approx2000$, which is the error of the partial predictor sign$(2x_1+x_2x_3)$.
+\item \textbf{20 random formulas generated after calibration.} It is within $1.15\times$ on average (Spearman 0.99), better than on the held-out set.
+\item \textbf{Other input dimensions.} At $d=15$ and $d=60$, without recalibration, it is within about $1.35\times$.
+\item \textbf{The original ``mutate and keep improvements'' model.} A strong-selection/weak-mutation evolution of a single fan-in-2 circuit does much worse: mean $|\log_2|$ ratio 1.36.
+\end{itemize}
+
+\begin{table}[t]
+\centering\footnotesize\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcccccc}
+\toprule
+& \multicolumn{4}{c}{mean $|\log_2(\nstar_{\rm model}/\nstar_{\rm NN})|$} & & \\
+\cmidrule(lr){2-5}
+model & held-out (9) & random (20) & $d=15$ & $d=60$ & per-example & time Sp.\\
+\midrule
+race model & 0.33 & \textbf{0.20} & 0.45 & 0.43 & 0.50 & 0.83\\
+race + kernel background (\cref{sec:hybrid}) & 0.35 & -- & 0.39 & 0.66 & 0.65 & 0.81\\
+minimal model (2 constants) & 0.59 & 0.47 & 0.30 & 0.52 & 0.50 & 0.69\\
+analytic predictor (no simulation) & 0.38 & 0.42 & 0.30 & 0.52 & -- & --\\
+sswm (mutate and select) & 1.36 & 1.12 & -- & -- & 0.26 & 0.72\\
+NNGP kernel & 2.58 & 1.78 & 1.43 & 2.68 & 0.69 & 0.22\\
+Occam over juntas & 4.61 & 3.76 & -- & -- & 0.20 & $-0.07$\\
+\midrule
+\emph{SGD-trained vs Adam-trained networks} & \emph{0.43} & -- & -- & -- & \emph{0.71} & \emph{0.83}\\
+\emph{Adam networks from a new initialization} & -- & -- & -- & -- & \emph{0.62} & --\\
+\bottomrule
+\end{tabular}
+\caption{Models scored against the Adam-trained networks. Per-example agreement and the time Spearman are on the held-out targets. The race model's held-out score varies between 0.23 and 0.33 across its internal random streams; its value averaged over streams is 0.28. The hybrid's held-out $\nstar$ error is the average over its three streams; its other entries are for one stream (its agreement averaged over streams is 0.66). Its $d=60$ score uses a random-feature background above $n=2048$; with the exact kernel there it is 0.47. ``--'': not evaluated, or not defined for that model. The $d=15$ agreement of the minimal model and the predictor depends on a cap that was probably added after the $d=15$ network results had been seen, so it is not a clean out-of-sample test. The last two rows compare networks with networks.}
+\label{tab:scoreboard}
+\end{table}
+
+\subsection{What makes it work: ablations}\label{sec:ablations}
+
+\Cref{tab:ablations} summarizes 30 ablations, each run on the full grid with the calibrated constants and no recalibration \status{Numerical}. Every ``no change'' is judged against the model's own variation across its internal random streams, which spans 0.23–0.33 held-out over six streams.
+\begin{itemize}
+\item \textbf{The race dynamics do not set $\nstar$ on the held-out targets.} Removing the alignment cost, resetting the clocks after every firing, or replacing the race by plain greedy selection changes held-out $\nstar$ error by at most about 0.1 beyond that spread. So does varying $\theta$ from 0.5 to 6, the power-iteration steps from 1 to 32, or the pool size from 1 to 32. One exception: removing the alignment cost only for orders $\ge3$ gives 0.50. On the calibration targets, greedy selection (0.40), pool size 1 and one power-iteration step (0.49 each) sit 0.1–0.2 above the band of 0.23–0.30 there, mostly through the 4-parity. So how well the search reaches high-order directions does matter on that side. Compared model against model on the held-out targets, the alignment, clock, greedy and $\theta$ variants differ from the six control streams by 0.13–0.21 in $|\log_2\nstar|$, no more than the control streams differ from each other (0.11–0.23). Over all 21 targets, greedy (0.26), pool size 1 (0.32) and one power-iteration step (0.37) move more than a reseed does (0.10–0.21).
+\item \textbf{The noise of the direction search does.} Computing the search directions on a large fresh sample removes their finite-sample noise. $\nstar$ then collapses to 16–87 on every target, as far from the networks as the Occam learner (4.63, against its 4.61). Running the whole search (directions, thresholds and utilities) on an independent sample of the \emph{same} size $n$ restores the match (0.31; directions alone: 0.41). So what matters is the noise \emph{level} at sample size $n$, not overfitting to the particular training labels.
+\item \textbf{The particular sample's noise sets which examples are wrong.} With the independent search sample, per-example agreement falls from 0.50 to 0.26, although $\nstar$ is matched. Roughly half of the race model's excess agreement with the networks comes from both being misled by the same spurious correlations of the shared sample \status{Heuristic}.
+\item \textbf{The gate library matters.} Without order-3 and order-4 candidates, the 3- and 4-bit parities, the sparse polynomial and recursive majority are never learned (1.43). Threshold gates in place of ReLU gates score 0.60, and weights in $\{-1,0,1\}$ score 0.81. Depth-2 gates help only staircase-like targets, by about 0.4 in $\log_2$.
+\item \textbf{Time.} The ordering of targets by time to generalize survives every ablation, including the noise-free search, so the true features' utilities set it, not the race clocks. Within a target, the time Spearman is about 0.
+\end{itemize}
+
+\begin{table}[t]
+\centering\footnotesize\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcc}
+\toprule
+variant & held-out $|\log_2|$ ratio & per-example\\
+\midrule
+race model (calibrated) & 0.33 & 0.50\\
+greedy: add the highest-utility gate, no race & 0.27 & 0.53\\
+one alignment law for all orders & 0.28 & 0.50\\
+depth-1 gates only & 0.35 & 0.51\\
+two other internal random streams & 0.32, 0.27 & 0.51, 0.51\\
+\midrule
+noise-free search (directions from a large fresh sample) & 4.63 & 0.04\\
+independent search sample of the same size $n$ & 0.31 & 0.26\\
+no order-3/4 candidates & 1.43 & 0.52\\
+\bottomrule
+\end{tabular}
+\caption{Selected ablations of the race model, held-out targets.}
+\label{tab:ablations}
+\end{table}
+
+\subsection{The noise law and a closed-form predictor}\label{sec:noiselaw}
+
+The ablations suggest a smaller model \status{Heuristic}: greedy stagewise least squares over ReLU gates with $\pm1$ weights, in which a candidate is accepted when
+\begin{equation}\label{eq:noiselaw}
+n\rho^2 \;>\; c\,N(k),\qquad N(k)=d\,\max\!\bigl(1,\tfrac da\bigr)^{\max(k-2,0)}\ (k\ge1),\qquad N(0)=|\text{active pool}|.
+\end{equation}
+\begin{itemize}
+\item $\rho$ is the gate's correlation with the current residual.
+\item $k$ is the number of inputs the gate needs that the circuit does not yet use. Reusing grown features ($k=0$) costs only a search over the small active pool.
+\item For $k\ge3$ the heuristic derivation comes from the alignment law. An order-$k$ unit escapes only if its signal $kU m(0)^{k-1}$ beats the frozen sampling noise $\sim n^{-1/2}$, with an effective initial overlap $m(0)^2=a/d$. $N(1)=d$ is the sampling noise of the Hebbian unit, and $N(2)=d$ a spectral (BBP-type) threshold. The overlap reading of $a$ is not quantitative.
+\end{itemize}
+This is the correlational-SQ / leap scaling $d^{\max(1,k-1)}$. Two constants, $c=2.25$ and $a=18$, were calibrated on the calibration targets for the predictor and reused for the minimal model, whose own grid does not resolve its optimum. The predictor's structural choices were made with held-out scores in view.
+
+Evaluated along the target's \emph{population} greedy path, \eqref{eq:noiselaw} gives a closed form:
+\[
+\nstar\approx\max\Bigl(n_{\rm Hebb},\ c\max_{i\le i^*}\frac{N(k_i)}{\rho_i^2}\Bigr).
+\]
+Here $i^*$ is the shortest prefix of the path that reaches error 0.1, and $n_{\rm Hebb}$ is the sampling-noise floor of the linear part. Some closed forms:
+\begin{itemize}
+\item $\nstar(x_1)=\Phi^{-1}(0.9)^2d=1.64\,d$, with no fitted constant.
+\item $\nstar(\mathrm{MAJ}_9)=9.52\,d$, with no fitted constant.
+\item $\nstar(\chi_k)=c\,(2^k-1)\,d\max(1,d/a)^{k-2}$. The first gate, AND$_k$, has $\rho^2=1/(2^k-1)$ with $\chi_k$, and the remaining gates are cheap $k=0$ moves.
+\end{itemize}
+On the 20 random formulas the analytic predictor, which reads $\nstar$ off its predicted learning curve, is within $1.34\times$ on average (Spearman 0.92–0.96, depending on the saved run). The closed form reproduces that curve's $\nstar$ for 19 of the 21 designed targets; it was not checked on the random formulas. The simulated minimal model keeps the race model's success agreement and per-example agreement, but not its held-out $\nstar$ accuracy (0.59, against an average of 0.28 for the race across its streams).
+
+\paragraph{A pre-registered test at $d=120$} \status{Numerical}. The predictor, its variants, and the race model (4 internal streams) were evaluated at $d=120$ with their $d=30$ constants. Their predictions were saved before the $d=120$ networks were launched, and the file timestamps confirm the order.
+
+\begin{center}\small
+\begin{tabular}{lcccc}
+\toprule
+target & networks & analytic predictor & race model & Occam law\\
+\midrule
+$\chi_2$ & 869 & \textbf{817} & 566 & 315\\
+$\chi_3$ & 10691 (refined grid) & \textbf{12525} & 3557 & 1015\\
+MAJ$_9$ & 845 & 1143 & 1307 & 1143\\
+multiplexer & 5195 (refined grid) & 3405 & 4013 & 891\\
+\bottomrule
+\end{tabular}
+\end{center}
+The 3-parity is the decisive case.
+\begin{itemize}
+\item \textbf{Predictor.} The leap law predicted that $\nstar$ would roughly quadruple from $d=60$ to 120. It did: from 2740 to 10691 on the refined grid.
+\item \textbf{Race model.} From $d=30$ to 120 it grows only like $d^{1.2}$ ($2.8\times$ from 60 to 120), and it is now $3\times$ too optimistic. A possible reading \status{Heuristic}: its order-$k$ search accepts a direction once it is \emph{detectable} in the empirical moments, while the networks behave as if the direction must be \emph{reached} from a random start. A direct test of reachability from random starts does not explain the 3-parity gap at $d=60$, however.
+\item \textbf{Why the race model matched at $d=30$.} At $d=30$ the two thresholds nearly coincide \status{Heuristic}.
+\item \textbf{Misses of the predictor.} It underpredicts compositions of low-leap moves: the multiplexer by $1.5\times$ at $d=120$, and by $1.4$–$2.1\times$ at $d=30$ and 60. It overpredicts the 4-parity at $d=60$ by $1.6\times$.
+\end{itemize}
+
+\subsection{Kernel background plus grown features}\label{sec:hybrid}
+
+The race model matches \emph{whether} and \emph{when} the networks generalize, but agrees less with \emph{which} test points they get wrong (0.50) than the NNGP kernel does (0.69). A diagnosis on the partially learned cells (95; most numbers below are on the 44 held-out ones) \status{Numerical}:
+\begin{itemize}
+\item \textbf{The output has two parts.} Split each learner's output into the part that depends only on the target's relevant variables, the signal, and the rest, which comes from the particular training sample. About 45\% of a network's output variance is this sample noise: 59\% at $n\le64$, 23\% at $n=2048$.
+\item \textbf{Every learner gets the signal; the kernel gets the noise.} All learners match the network's signal part (correlation 0.92–0.98). The noise part correlates 0.81 with the kernel's, 0.70 with that of a network retrained from a new initialization, and 0.48 with the race model's.
+\item \textbf{Swapping only the noise patterns} moves the race model's agreement from 0.50 to 0.63, and the kernel's from 0.69 to 0.53.
+\item \textbf{Over training time,} the networks first interpolate within 100–1000 steps, with kernel-like mistakes. Near $\nstar$ the generalizing features grow afterwards.
+\item \textbf{The kernel behaves like the network averaged over initializations.} Two single networks trained on the same data from different initializations agree only at 0.62. The average of three such networks agrees with a fourth at 0.684, and this extrapolates to about 0.71–0.73. The kernel agrees 0.78 with a three-network average.
+\end{itemize}
+
+A hybrid model adds an NNGP-kernel background to the race's gates in one joint ridge readout \status{Numerical}:
+\begin{itemize}
+\item \textbf{The background} relaxes on the race clock like kernel gradient flow, with ridge $c_{\rm bg}n/t$.
+\item \textbf{Growth} stops at a square-loss level, $\texttt{stop\_mse}$, after which the background interpolates the remaining residual.
+\item \textbf{Calibration.} Two constants, $c_{\rm bg}$ and $\texttt{stop\_mse}$, were chosen on the calibration set, together with the schedule form, the stop rule and the end-of-training step. Held-out agreement was visible while these design choices were explored, so only the constants are strictly calibrated on the calibration set.
+\end{itemize}
+Its results, and what they suggest:
+\begin{itemize}
+\item \textbf{Agreement.} On the held-out targets it raises per-example agreement from 0.50 to 0.65 (bootstrap over targets: $+0.15$, interval $[0.13,0.17]$). The gain holds on every held-out target and every seed.
+\item \textbf{Cost.} Its $\nstar$ error is 0.35 against the race model's 0.28, both averaged over random streams.
+\item \textbf{Few grown gates.} It needs about 2 grown gates per partially learned cell, where the race model needs about 22. The race model's extra gates memorize the sample. The networks do that with their random-feature background instead \status{Heuristic}.
+\item \textbf{A simpler competitor does as well on these numbers.} Adding the race's and the kernel's standardized scores, each fitted separately, gives held-out $\nstar$ error 0.29 and agreement 0.62. The hybrid's advantage is mechanistic, not numerical: it is one learner, and its background does the memorizing in place of the race's extra gates.
+\item \textbf{A candidate bound.} This suggests an a-priori bound of the form ``Occam for a few grown gates, plus a kernel-norm term for the background''. We have not attempted it.
+\item \textbf{Remaining discrepancy.} On easy targets the networks are 1.1–2.2$\times$ \emph{less} sample-efficient than their own NNGP kernel, for example 47 against 29 samples for $x_1$. The race model reproduces this through its noisy Hebbian first gate; the hybrid does not.
+\end{itemize}

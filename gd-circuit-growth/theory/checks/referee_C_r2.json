@@ -1,0 +1,66 @@
+{
+ "verdict": "pass",
+ "summary": "Round-2 referee report on /home/user/AI-works/gd-circuit-growth/theory/C-bridge-and-certificates.md (revision 2). I did not edit the file. Verdict: pass. Every round-1 issue is fixed, and every new or changed result labelled Proved holds line by line with no gap left open. What remains is 11 minor prose slips or stale statements, listed below. None affects a Proved result.\n\n**Round-1 issues: all 18 fixed.**\n- **Major 1 (Theorem C3.4 constants).** Fixed. The theorem now has Boolean and real-valued constants, and the proof counts image points in both cases. My exact LP count confirms the fix was needed: one real gate with 3 values has 6 readout dichotomies, more than the Boolean constant \u03a6(2,1)=4. Two real gates on 6 points give 32 dichotomies, more than \u03a6(4,2)=14.\n- **Major 2 (Corollary C2.5, circular definition).** Fixed. The three choices of N\u0304 are proved, with no circularity. The monotonicity argument in choice 3 is correct: \u2202_\u03bc\u0393 = x(x\u22121)/(1\u2212\u03bcx)\u00b2 \u2265 0 for x \u2265 1, \u2202_x\u0393 = (1\u2212\u03bc)/(1\u2212\u03bcx)\u00b2 \u2265 0, and x < 1 gives N = 0. \"A priori\" is gone from all non-historical text.\n- **Major 3 (infl_irr not an upper bound).** Fixed. I checked the new pair estimator exactly on a 7-dimensional cube: E\u00bd(f(x)\u2212f(x\u2032))\u00b2 equals the Fourier tail to 1e\u221215, and the tail is at most the influence sum. The permutation-equivariance argument for unbiasedness is sound for the study's iid init, Adam and uniform data.\n- **The 15 minor issues.** All addressed: C3.5(1) union bound, \"in particular when\", the trivial first plateau, the \u00a71.6 uniformity wording, C4.3 prose, the tightness remark, C2.6 wording, float16, the sgn(0) convention, the PAR_8/dnf3 example, per-seed table, \u00a73.1 scope, units of \u0398, the \"Not yet evaluated\" list, \u03b5_D, and dnf3 n=256.\n\n**New or changed Proved results, checked line by line.** All are correct:\n- Lemma C0.1 for [0,1]-valued variables;\n- Theorem C2.2(2) with the simplified \u03b5_D;\n- Corollary C2.5 choices 1\u20133, including the 1\u2212\u03b4\u2212\u03b4\u2032 union;\n- Proposition C2.6 item 6 (GD version of C2.5 through x_K);\n- Theorem C3.4 with real-valued constants, and its L\u00b2 form;\n- Corollary C3.5(1) with 2|T||\u03a3| events and the [0,4] Hoeffding constant 4\u00b7sqrt(ln/(2m));\n- the float16 transfer term;\n- the C4.3 arithmetic at the smallest admissible b/\u03b7.\n\nI also re-checked Lemmas C0.2 and C0.3, Propositions C1.2\u2013C1.5, Theorems C1, C2.3 and C2.4, Lemmas C3.1\u2013C3.3, Propositions C4.1 and C4.2, and Remark C4.5. All hold.\n\n**Numerical checks** (/home/user/AI-works/gd-circuit-growth/theory/checks/referee_C_r2.py, output /home/user/AI-works/gd-circuit-growth/theory/checks/referee_C_r2.out, 21 s). The script re-implements everything independently and does not import c_common.py. No violations anywhere:\n- **Lemma C0.1, [0,1] form:** Monte Carlo failure rates are at most 0.93 \u00d7 e^{\u2212n\u03b5}, over 5 distributions and n = 10, 50.\n- **Diagonal network, independent LSODA integration:** 9 runs, 36045 (time, \u03b5) checks and 36 first-escape brackets. No violations of C2.2(1)\u2013(2), C2.3(1)\u2013(3), or C2.5 choices 2\u20133, with either \u03c4 or raw t. The \u21131 identity holds to 1.7e\u221215.\n- **Hoeffding coherence event:** fails in 0.5\u20130.7% of 1000 training sets, below \u03b4\u2032 = 5%.\n- **Proposition C2.6, GD and SGD:** 90000 (step, \u03b5) checks for items 3, 4, 5 and 6, no violations.\n- **Corollary C3.5(1):** the Hoeffding constant fails at most 0.8% of the time at \u03b4 = 5%.\n- **Class sizes:** recomputed independently; 60.4, 72.1, 304.0, 332.1, 392.3, 73.4 and 371.4 nats all match.\n- **Remark C4.5:** holds under an adversarial consistent learner.\n- **Float16 term:** kl\u207b\u00b9(2/4096, ln100/4096) = 0.00239.\n- **Author's script:** rerunning C_r2_checks.py reproduces C_r2_checks.out exactly. I also spot-checked the \u00a71.4, \u00a71.6, \u00a72.2, \u00a73.4 and C2.6 numbers against their output files.\n- **Literature spot checks:** two WebSearch checks agree with the file. The Bantzis\u2013Simon\u2013Jacot \u2113^{1/4} factor is in the abstract (arxiv.org/abs/2505.21722), and K\u00e4\u00e4ri\u00e4inen is COLT 2005, LNCS 3559, 127\u2013142 (mlanthology.org/colt/2005).\n\n**Remaining issues, all minor:**\n- \"every coordinate is nonzero for t>0\" contradicts the orthogonal case described in the sentence before it.\n- \u00a74 and \u00a75 are now stale: nn_train.py, modified after this revision, logs prequential mistakes, and run_online2.sh queues a rerun.\n- The claim that saved Fourier coefficients can refute the L\u00b2 form of SSA is wrong: they bound the unclipped distance, and SSA is about clipped functions.\n- Range slips: \"0.17\u20130.35\" errors (per seed they are 0.15\u20130.38, and one dnf3 seed is certified at 0.496); the Summary's C2.5 range of 0.11\u20130.48 omits maj3 at n=100 (0.81); the overshoot statement holds only at n=2048; \"\u03b7\u0302=e\" for majpar.\n- \"exactly where B's read-off failed\" overstates.\n- \"O(L_T ln N)\" is imprecise; Remark C4.5 gives O((L_T + ln N) ln N).\n- The letter c is used for three different constants.\n- Suggestion: a rank-aware Fourier-sign class would roughly halve dnf3's cost, from 304 to 143 nats.\n\nThe theory README's status line for C is still out of date. That file is outside this task, and C's own revision notes already say so.",
+ "issues": [
+  {
+   "result": "Remark after Theorem C2.3 (tightness): 'Note also that *every* coordinate is nonzero for t>0'",
+   "severity": "minor",
+   "description": "This contradicts the sentence just before it. For an empirically orthogonal dictionary with y=chi_{S*} (e.g. the full cube), every S\u2260S* has zero gradient for all t. So G_S\u22610 and w_S\u22610 exactly. In my independent integration (full cube, d=6, k=2, alpha=1e-3), max_{S\u2260S*}|w_S(20)| = 7.7e-23, which is round-off, and |G_{S*}|/tau = 1.0000000000. More generally, w_S(t)=0 whenever G_S(t)=0. The point the remark wants to make (the bound counts grown coordinates, not nonzero ones) is right.",
+   "suggested_fix": "Say 'generically every coordinate is nonzero for t>0 (all except those with G_S(t)=0, e.g. all S\u2260S* in the orthogonal case above)'."
+  },
+  {
+   "result": "\u00a74 'What can be checked', \u00a75 'Not yet evaluated', Revision note 17: 'the study does not log prequential mistakes (checked in study/nn_train.py)'",
+   "severity": "minor",
+   "description": "This was true when C was revised, but it is now stale. study/nn_train.py was modified at 20:20, after C at about 20:02. run_online now accumulates the mistakes of each fresh batch before its update, per 500-step chunk, and saves them as preq_mistakes and preq_steps. study/run_online2.sh queues an online rerun of par2, par3, maj9, stair5, majpar and mux with this logging. Once that run finishes, Proposition C4.1 (both the Hoeffding and the fast-rate forms) becomes computable from saved data. C4.2(1) still needs each checkpoint's predictions on later batches, which are not logged.",
+   "suggested_fix": "When results_online2 exists, evaluate C4.1 on it and move it out of 'Not yet evaluated'. Until then, change the text to say the logging has been added and the rerun is pending. Keep C4.2(1) as not computable."
+  },
+  {
+   "result": "\u00a73.3 'What the saved data allow', Fourier-coefficients bullet: 'They can refute the L^2 form, but not confirm it'",
+   "severity": "minor",
+   "description": "The L\u00b2 form of SSA bounds ||clip f_theta \u2212 clip f^M||. The saved coefficients (coef = fte @ chi / N in nn_train.py) are of the unclipped output. Parseval then lower-bounds ||f_theta \u2212 f^M||, and that distance is at least the clipped one, because clip is 1-Lipschitz. So a large unclipped Fourier gap does not refute the clipped L\u00b2 form unless both functions stay in [\u22121,1]. The least-squares readout f^M and the network output need not. The coefficients are also estimated on 4096 test inputs, so they carry sampling error.",
+   "suggested_fix": "Say that the saved coefficients refute the L\u00b2 form only for an unclipped variant, or when both outputs lie in [\u22121,1]. Mention the sampling error, or state the L\u00b2 form without clipping where that is the version being tested."
+  },
+  {
+   "result": "\u00a71.5 'Where it fails': 'the error-0.17\u20130.35 networks of dnf3, majpar, mux, parmaj and stair5 at n=256'",
+   "severity": "minor",
+   "description": "The table now reports per-seed pairs. Per seed, these networks have test error 0.151\u20130.378 (dnf3 0.151/0.196/0.171, parmaj 0.287\u20130.378, stair5 0.330\u20130.369). The quoted 0.17\u20130.35 is the range of seed means. Also, dnf3 seed 2 at n=256 is certified at 0.496, which is below 0.5, so 'it fails' is not uniformly true for these five targets.",
+   "suggested_fix": "Use the per-seed range 0.15\u20130.38, and note the one non-vacuous dnf3 seed at 0.496."
+  },
+  {
+   "result": "Summary item 2, Numerical: 'The time-indexed Corollary C2.5 gives 0.11\u20130.48 with the measured kappa_B'",
+   "severity": "minor",
+   "description": "The \u00a72.2 table also contains maj3 at n=100, alpha=1e-3, where C2.5(1) gives 0.810. The \u00a72.2 reading states this ('non-vacuous for the sparse targets at n=400, and for par2 at n=100 ... It is 0.81 for maj3 at n=100'), but the Summary drops the qualification. The sentence before it, on Theorem C2.4 ('0.08\u20130.28 for par2, maj3 and and3 from n=100\u2013400'), does include maj3 at n=100.",
+   "suggested_fix": "Write 'gives 0.11\u20130.48 with the measured kappa_B for the sparse targets at n=400 and par2 at n=100 (0.81 for maj3 at n=100)'."
+  },
+  {
+   "result": "\u00a73.4 reading 'Overshoot costs certificate quality' and \u00a73.4 table row majpar",
+   "severity": "minor",
+   "description": "(a) The claim that the race's final circuit is a worse certificate than C1's holds at n=2048. At n=256, for dnf3, the race certificate (0.631, 11 gates) is better than the best C1 certificate (0.687) (c3_ssa_check.txt). (b) The majpar row says 'eta_hat = e at every step except step 20'. At step 10 it is 0.434 against 0.486, and at step 50 it is 0.446 against 0.453.",
+   "suggested_fix": "(a) Add 'at n=2048'. (b) Write 'eta_hat \u2248 e'."
+  },
+  {
+   "result": "\u00a71.5 'The Fourier-sign class matters exactly where B's junta read-off failed'",
+   "severity": "minor",
+   "description": "This is the same kind of 'exactly' overstatement as the round-1 'exactly when'. The Fourier-sign class is also the best class for dict, par2, par3, par4 and majpar at n=2048 (table, last column), where juntas would also certify. Its decisive contribution is on maj9, thr10 and dnf3, as \u00a75 says correctly ('extends B's junta read-off to MAJ_9, THR_10 and dnf3').",
+   "suggested_fix": "Write 'The Fourier-sign class is decisive where B's junta read-off fails: maj9, thr10, dnf3'."
+  },
+  {
+   "result": "C4.4 'Comparison with Occam': 'a consistent online learner over H_T makes O(L_T ln N) total mistakes (Remark C4.5 below)'",
+   "severity": "minor",
+   "description": "Remark C4.5, which I checked and which holds in simulation, gives E[M_N] \u2264 1 + (ln|H| + ln N)(1 + ln N) + (1 + ln N), that is O((L_T + ln N) ln N). This equals O(L_T ln N) only when L_T \u2273 ln N.",
+   "suggested_fix": "Write O((L_T + ln N) ln N)."
+  },
+  {
+   "result": "Notation: the constant c in \u00a73.2 'Units of Theta', in Theorem C3.4 'In words', and in Proposition C2.6",
+   "severity": "minor",
+   "description": "The letter c means three different things: the parametrization constant in Theta = c ln(1/alpha) + O(1) (\u00a73.2, with c=1/2 or 1); the clock-calibration slope in 's(t) \u2264 ct' and the gate count kappa^M(ct/Theta)^2 (Theorem C3.4 'In words'); and c = 1/(1\u22124eta^2G^2) in Proposition C2.6. A reader of 'In words' can mistake the calibration slope for the unit constant that \u00a73.2 just introduced.",
+   "suggested_fix": "Rename the calibration slope, for example s(t) \u2264 c_s t, and the C2.6 constant, for example c_eta."
+  },
+  {
+   "result": "\u00a71.2 'Which class wins' (dnf3: 392 nats as a 21-character sign) and \u00a71.5 (F_{3,18} at about 300 nats)",
+   "severity": "minor",
+   "description": "This is a suggestion, not an error. Proposition C1.2(2) proves the GF(2)-rank refinement |F_S| \u2264 \u03a6(2^r, T), but the counted classes use 2^{min(T,d)}. The dnf3 sign representation has 21 supports of GF(2) rank 9. A class of degree-\u22643 characters supported inside some 9-subset costs ln C(30,9) + ln C(129,T) + ln \u03a6(2^9,T): 142.6, 147.6 and 157.3 nats for T = 18, 19 and 21, against the file's 304.0, 332.1 and 392.3. That would roughly halve the dnf3 Fourier-sign certificate cost (n=2048: about 0.13 down to about 0.07). Circuits at 73.4 nats still win, so the paragraph's conclusion stands, but '392 nats' describes the loose class, not the representation.",
+   "suggested_fix": "Optionally add a rank- or junta-restricted Fourier-sign class to the hierarchy. Otherwise, note that the 392 figure uses the 2^{min(T,d)} point count."
+  }
+ ]
+}

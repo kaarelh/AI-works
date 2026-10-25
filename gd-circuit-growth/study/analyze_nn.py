@@ -1,0 +1,164 @@
+"""Summaries of the NN study: sample complexity, timing, feature-learning signatures, comparison to target structure.
+
+Writes study/NN-STUDY-TABLES.md and figures under study/figures/nn_*.png.
+"""
+import os, json, itertools, numpy as np
+import matplotlib; matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+import common as C
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+FIG = os.path.join(HERE, "figures"); os.makedirs(FIG, exist_ok=True)
+EVALS = "/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/model_evals"
+
+
+def exact_fourier(fn):
+    """Exact Fourier coefficients of the target on its relevant variables (others are irrelevant)."""
+    rel = C.SUITE[fn]["relevant"]; r = len(rel)
+    pts = np.array(list(itertools.product([-1.0, 1.0], repeat=r)))
+    X = np.ones((len(pts), C.D)); X[:, rel] = pts
+    y = C.SUITE[fn]["fn"](X)
+    coef = {}
+    for k in range(r + 1):
+        for S in itertools.combinations(range(r), k):
+            c = float(np.mean(y * np.prod(pts[:, list(S)], axis=1))) if k else float(y.mean())
+            if abs(c) > 1e-9:
+                coef[tuple(rel[i] for i in S)] = c
+    return coef
+
+
+def leap(support):
+    sets = [frozenset(S) for S in support if len(S) > 0]
+    for l in range(0, 12):
+        U, rem = set(), list(sets)
+        while True:
+            nxt = [S for S in rem if len(S - U) <= l]
+            if not nxt:
+                break
+            for S in nxt:
+                U |= S
+            rem = [S for S in rem if S not in nxt]
+        if not rem:
+            return l
+    return None
+
+
+def main():
+    fns = [f for f in C.FNS if os.path.exists(os.path.join(C.RESULTS, f"fixed_adam_{f}.npz"))]
+    base = {}
+    for b in ("nngp-kernel", "occam-junta"):
+        p = os.path.join(EVALS, f"{b}.npz")
+        if os.path.exists(p):
+            base[b] = C.load_eval(p)
+    rows = []
+    for fn in fns:
+        nn = C.nn_fixed(fn, "adam"); ns = nn["ns"]
+        err = nn["test_err"].mean(1)
+        coef = exact_fourier(fn)
+        row = dict(fn=fn, desc=C.SUITE[fn]["desc"], r=len(C.SUITE[fn]["relevant"]),
+                   deg=max(len(S) for S in coef), leap=leap(coef.keys()),
+                   n01=C.sample_complexity(ns, err, 0.1), n02=C.sample_complexity(ns, err, 0.02),
+                   err_by_n=[round(float(e), 3) for e in err])
+        # steps to generalise at the largest n, and "delay" after fitting the training set
+        z = np.load(os.path.join(C.RESULTS, f"fixed_adam_{fn}.npz"))
+        steps = z["step"]
+        row["steps_to_gen_maxn"] = float(np.median(nn["steps_to_gen"][-1]))
+        delays = []
+        for a in range(len(ns)):
+            for b in range(nn["test_err"].shape[1]):
+                tr = nn["train_err_curve"][:, a, b]; te = nn["test_err_curve"][:, a, b]
+                fit = np.where(tr <= 0.0)[0]; gen = np.where(te <= 0.1)[0]
+                if len(fit) and len(gen) and steps[gen[0]] > steps[fit[0]]:
+                    delays.append((int(ns[a]), int(steps[fit[0]]), int(steps[gen[0]])))
+        row["delayed_generalisation"] = delays[:6]
+        # Fourier learning order at the largest n: first checkpoint where the NN coefficient reaches half the target's
+        sets = [tuple(S) for S in json.loads(str(z["sets"]))]
+        J = [j for j, (n_, s_) in enumerate(zip(z["net_n"], z["net_s"])) if n_ == ns[-1]]
+        order = []
+        for S, c in sorted(coef.items(), key=lambda t: -abs(t[1])):
+            if abs(c) < 0.05 or S not in sets:
+                continue
+            j = sets.index(S)
+            nnc = z["coef"][:, J, j].mean(1)
+            hit = np.where(np.sign(c) * nnc >= abs(c) / 2)[0]
+            order.append((S, round(c, 3), int(steps[hit[0]]) if len(hit) else None))
+        row["fourier_order"] = order
+        row["pr_final"] = (round(float(z["pr1"][-1, J].mean()), 2), round(float(z["pr2"][-1, J].mean()), 2))
+        row["pr_init"] = (round(float(z["pr1"][0, J].mean()), 2), round(float(z["pr2"][0, J].mean()), 2))
+        row["dW1_rel"] = round(float((z["dW1"][-1, J] / z["W1"][0, J]).mean()), 2)
+        for b, res in base.items():
+            if fn in res["test_err"]:
+                e = np.nanmean(res["test_err"][fn], 1); ok = ~np.isnan(e)
+                row[f"n01_{b}"] = C.sample_complexity(np.array(res["ns"])[ok], e[ok], 0.1)
+        p = os.path.join(C.RESULTS, f"online_adam_{fn}.npz")
+        if os.path.exists(p):
+            on = C.nn_online(fn, "adam"); row["online_samples_to_gen"] = float(np.median(on["samples_to_gen"]))
+        p = os.path.join(C.RESULTS, f"fixed_sgd_{fn}.npz")
+        if os.path.exists(p):
+            sg = C.nn_fixed(fn, "sgd"); row["n01_sgd"] = C.sample_complexity(sg["ns"], sg["test_err"].mean(1), 0.1)
+        rows.append(row)
+
+    # ---- markdown tables
+    f = lambda v: "–" if v is None else ("never" if not np.isfinite(v) else f"{v:.0f}")
+    L = ["# NN study: summary tables (generated by analyze_nn.py)", "",
+         "n*: smallest training-set size (log-interpolated) at which the seed-mean test error is <= 0.1 (n*_0.02: <= 0.02).",
+         "Adam unless stated; 'online' = median number of fresh samples seen when test error first reaches 0.1.", "",
+         "| fn | target | rel. vars | degree | leap | n* Adam | n*_0.02 | n* SGD | online samples | n* NNGP | n* Occam-junta |",
+         "|---|---|---|---|---|---|---|---|---|---|---|"]
+    for r in rows:
+        L.append(f"| {r['fn']} | {r['desc']} | {r['r']} | {r['deg']} | {r['leap']} | {f(r['n01'])} | {f(r['n02'])} | "
+                 f"{f(r.get('n01_sgd'))} | {f(r.get('online_samples_to_gen'))} | {f(r.get('n01_nngp-kernel'))} | "
+                 f"{f(r.get('n01_occam-junta'))} |")
+    L += ["", "## Test error by n (Adam, mean of 3 seeds)", "",
+          "| fn | " + " | ".join(str(n) for n in C.NS) + " |", "|---|" + "---|" * len(C.NS)]
+    for r in rows:
+        L.append(f"| {r['fn']} | " + " | ".join(f"{e:.2f}" for e in r["err_by_n"]) + " |")
+    L += ["", "## Feature-learning signatures at n = 16384 (Adam)", "",
+          "Fourier order: target characters with |coefficient| >= 0.05, by decreasing |coefficient|, with the first checkpoint "
+          "step at which the network's coefficient reaches half the target's. PR = participation-ratio rank of the centred "
+          "layer-1 / layer-2 kernels (init -> final). dW1 = ||W1 - W1(0)||_F / ||W1(0)||_F.", "",
+          "| fn | Fourier order (set: target coef @ step) | PR init | PR final | dW1 | steps to gen |", "|---|---|---|---|---|---|"]
+    for r in rows:
+        fo = "; ".join(f"{''.join('x'+str(i+1) for i in S) or '1'}: {c:+.2f} @ {s}" for S, c, s in r["fourier_order"][:6])
+        L.append(f"| {r['fn']} | {fo} | {r['pr_init']} | {r['pr_final']} | {r['dW1_rel']} | {f(r['steps_to_gen_maxn'])} |")
+    L += ["", "## Delayed generalisation (n, step train error first 0, step test error first <= 0.1)", ""]
+    for r in rows:
+        if r["delayed_generalisation"]:
+            L.append(f"- {r['fn']}: " + ", ".join(str(t) for t in r["delayed_generalisation"]))
+    open(os.path.join(HERE, "NN-STUDY-TABLES.md"), "w").write("\n".join(L) + "\n")
+    json.dump(rows, open(os.path.join(HERE, "nn_summary.json"), "w"), indent=1, default=str)
+
+    # ---- figures: learning curves grid
+    k = len(rows); cols = 6; rws = int(np.ceil(k / cols))
+    fig, axs = plt.subplots(rws, cols, figsize=(3 * cols, 2.4 * rws), sharex=True, sharey=True)
+    for ax, r in zip(axs.ravel(), rows):
+        ax.semilogx(C.NS, r["err_by_n"], "o-", label="NN Adam", color="#1f77b4", ms=3)
+        for b, col in (("nngp-kernel", "#999999"), ("occam-junta", "#d62728")):
+            if b in base and r["fn"] in base[b]["test_err"]:
+                ax.semilogx(base[b]["ns"], np.nanmean(base[b]["test_err"][r["fn"]], 1), "--", color=col, label=b, lw=1)
+        p = os.path.join(C.RESULTS, f"fixed_sgd_{r['fn']}.npz")
+        if os.path.exists(p):
+            ax.semilogx(C.NS, C.nn_fixed(r["fn"], "sgd")["test_err"].mean(1), "s-", color="#ff7f0e", ms=2, lw=1, label="NN SGD")
+        ax.set_title(r["fn"], fontsize=9); ax.axhline(0.1, color="k", lw=0.5, ls=":")
+    for ax in axs.ravel()[k:]:
+        ax.axis("off")
+    axs.ravel()[0].legend(fontsize=6)
+    fig.supxlabel("training-set size n"); fig.supylabel("test error"); fig.tight_layout()
+    fig.savefig(os.path.join(FIG, "nn_learning_curves.png"), dpi=110); plt.close(fig)
+
+    # ---- figure: test error vs training step for each n, a few functions
+    show = [f for f in ("par3", "stair5", "majpar", "mux", "dnf3", "rand1") if f in fns]
+    fig, axs = plt.subplots(1, len(show), figsize=(3.2 * len(show), 2.8), sharey=True)
+    for ax, fn in zip(np.atleast_1d(axs), show):
+        nn = C.nn_fixed(fn, "adam")
+        for a, n in enumerate(nn["ns"]):
+            if n in (64, 256, 1024, 4096, 16384):
+                ax.semilogx(np.maximum(nn["step"], 1), nn["test_err_curve"][:, a].mean(1), label=f"n={n}")
+        ax.set_title(fn, fontsize=9); ax.set_xlabel("step")
+    np.atleast_1d(axs)[0].set_ylabel("test error"); np.atleast_1d(axs)[0].legend(fontsize=6)
+    fig.tight_layout(); fig.savefig(os.path.join(FIG, "nn_time_curves.png"), dpi=110); plt.close(fig)
+    print("\n".join(L[:30]))
+
+
+if __name__ == "__main__":
+    main()

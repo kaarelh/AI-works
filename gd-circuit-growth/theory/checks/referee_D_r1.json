@@ -1,0 +1,90 @@
+{
+ "verdict": "pass",
+ "issues": [
+  {
+   "result": "Theorem D2, results table (\"sharp-constant escape lower bound | Proved\"), \u00a78 table (\"Proved, sharp constant (D2)\"), Reading after D2 (\"the constant cannot be improved in general\")",
+   "severity": "minor",
+   "description": "Theorem D2 proves only the lower bound t_beta >= T_beta. Nothing in the file proves that the leading constant ln(1/alpha)/U_0^* is sharp. The Reading paragraph argues it heuristically (a neuron at a maximizer with r \u2248 y) and does not show that the direction stays near the maximizer, nor bound how far the residual drifts. So 'sharp constant' sits under a Proved label without a proof.",
+   "suggested_fix": "Drop 'sharp-constant' from the Proved rows, or label the sharpness Heuristic. Alternatively, prove it for one explicit instance, for example y=x_1 on the full cube with one neuron initialized at (e_1+e_0)/sqrt2, where the direction is a fixed point."
+  },
+  {
+   "result": "Summary item 1 (merging law: 'the angle within a cluster shrinks like 1/mass')",
+   "severity": "minor",
+   "description": "Lemma D1(g) gives 1-cos = Q/(|w_j||w_k|), so 1-cos (\u2248 angle^2/2) scales like 1/mass. The angle itself scales like mass^{-1/2}, i.e. like 1/|w|.",
+   "suggested_fix": "Say '1-cos (the squared angle) shrinks like 1/mass'."
+  },
+  {
+   "result": "Summary item 1 / Lemma D1(g): 'Merging law (new here, as far as I know)'",
+   "severity": "minor",
+   "description": "Item (g1) is the off-diagonal entry of the classical conservation law W_1W_1^T - W_2^T W_2 of two-layer linear networks (Arora-Cohen-Hazan 2018; Du-Hu-Lee 2018). It applies to any pair of neurons that share their selections, because the pair is locally a linear network, as the file's own Lorentz remark says. Marcotte-Gribonval-Peyr\u00e9 (NeurIPS 2023, arXiv:2307.00144; abstract and search summary checked) show that for ReLU only the diagonal is conserved globally. The monotonicity statements (g2) and (g3) may well be new; (g1) is not.",
+   "suggested_fix": "Credit (g1) to the linear-network conservation law applied within a shared cell, cite Du-Hu-Lee / Marcotte et al., and claim novelty only for (g2)-(g3)."
+  },
+  {
+   "result": "Theorem D7, proof step 4 ('The classes are nested in N through zero eigenvalues') and step 2 ('Because N eta_lambda <= 1')",
+   "severity": "minor",
+   "description": "(i) eta_lambda = gamma/(8(d-1)max(N,1)) depends on N, and eta_lambda(N)/eta_lambda(N+1) = (N+1)/N is not an integer for N >= 2. So G_{N,B,gamma} is not a subset of G_{N+1,B,gamma}, and the nesting claim is false. The conclusion survives: for any N >= N_eps(t), pad X_b to N terms and round in the grid of G_N, and the error bound N eta_lambda(N)/2 = gamma/(16(d-1)) holds verbatim (referee_D_r1.out R7). (ii) N eta_lambda <= 1 needs gamma <= 8(d-1), which is not stated. It is harmless for gamma <= 1.",
+   "suggested_fix": "Replace 'nested' with the padding argument, and state Gamma \u2282 (0,1] (or gamma <= 8(d-1))."
+  },
+  {
+   "result": "Theorem D7, 'Comparison' paragraph (\u22481420 nats; 'pays off when N is below about 11')",
+   "severity": "minor",
+   "description": "The script's unrestricted bound uses Cover's count ln Phi(2^17, 121) = 964 nats, not (C(d,2)+1)(d+1)ln2 = 1426 nats, and the table's 0.276 comes from 964 (referee recomputation). At about 127 nats per unit (B=1, gamma=1/2; R10), break-even is N \u2248 7.6, not 11. That matches the table, where MAJ-of-pairs with measured N=6 gives 0.270 against 0.276. The prose overstates by about 50% the range in which the rank bound beats the unrestricted class.",
+   "suggested_fix": "Quote \u2248964 nats (Cover) and break-even N \u2248 7\u20138 at d=16, B=1, gamma=1/2."
+  },
+  {
+   "result": "Theorem D6(4) / D7 'admissible choice' B = round-up of P(0)+t|y|^2, applied in \u00a77.4 to GD and SGD runs; Summary item 9 and \u00a78 table ('with a priori size')",
+   "severity": "minor",
+   "description": "D6(4) is a flow statement, and D6(5) transfers only items 1\u20132 to GD and SGD. For GD, P_{k+1} = P_k + 4eta<r,f> + 4eta^2(|MU|_F^2+|MV|_F^2), so P <= P(0)+t|y|^2 can fail. R8 gives a one-step counterexample from f=y/2: P1-P0 = 7.32 > eta|y|^2 = 6.24. In \u00a77.4 the 'a priori' D7 numbers (0.213; the SGD row's 0.963) are therefore not covered by a proved GD/SGD statement. They are still valid certificates, because D7 only needs a dyadic B >= measured P(t) (P=1\u20131.5 against B=8\u201332) and the script uses max(N_measured, N_apriori). Similarly, the SGD row's a priori N uses the full-batch kappa form, which is not claimed for SGD.",
+   "suggested_fix": "Add a GD/SGD version of D6(4), e.g. P_{k+1} <= (1+4eta^2|M_k|_op^2)P_k + eta|y|^2 (or a minibatch analogue), and use it for B. Otherwise say that B is checked against the measured P. Mark the SGD-row 'a priori' D7 bound as not a priori."
+  },
+  {
+   "result": "Prose: Summary items 7\u20139, \u00a77 Reading ('the user's argument for a real, non-diagonal two-layer network ... no hypothesis'), \u00a78 ('For quadratic networks the link is no longer missing')",
+   "severity": "minor",
+   "description": "Two overclaims. (i) The Part II network has fixed \u00b11 output weights and centred units (\u2212|u|^2), so it is symmetric matrix sensing. Calling it 'a real network' needs that caveat; with trainable output weights the dynamics are 3-homogeneous and differ. (ii) The 'a priori' rank bound kappa(tau/Theta)^2 uses tau = \u222b|r|_n from the observed training-loss curve. It is a priori only in not looking at the weights. The fully time-only form, tau <= |y|t, is much weaker (e.g. N <= 42 at t=20 for x1x2), and on plateaus with nonzero residual the bound degrades, as the file admits.",
+   "suggested_fix": "State the fixed output layer and the centring wherever 'real network' is claimed. Call the tau-based bound 'loss-curve' or 'weight-free' rather than 'a priori', and give the tau <= |y|t version for comparison."
+  },
+  {
+   "result": "Definition (selection flow) and Proposition D2.2",
+   "severity": "minor",
+   "description": "The definition does not require t -> s_j(t,i) to be measurable. On sliding sets {w_j\u00b7x\u0303_i = 0} of positive measure (which the checks show are typical), the flow pins down xi_j but not xi^y_j. So t -> |Pi_j xi^y_j(t)|^2 in D2.2 need not be measurable. The pointwise inequality from D1(f) still gives the bound for the upper integral and the outer measure of {|Pi xi^y| >= q}. The gap is technical and closable.",
+   "suggested_fix": "Require measurable selections (they exist by Filippov's lemma) or state D2.2 with the upper integral and outer measure."
+  },
+  {
+   "result": "Proposition D4.1, '(A) fails' variant",
+   "severity": "minor",
+   "description": "The variant integrates Lemma D1(g3), d sqrt(Q)/dt <= c(t), which holds only where Q>0, and sqrt(Q) need not be absolutely continuous through zeros of Q. The claim is still true: let s0 be the last zero of Q on [t1,t]. On (s0,t], sqrt Q is locally AC, so sqrt Q(t) <= \u222b_{s0}^t c <= sqrt Q(t1) + \u222b_{t1}^t c. If Q has no zero, sqrt Q is AC because Q is bounded away from 0. The argument is missing from the proof.",
+   "suggested_fix": "Add the one-line 'last zero' argument."
+  },
+  {
+   "result": "Theorem D2(3), Lemma D1(c), Theorems D3.2/D3.3 scope",
+   "severity": "minor",
+   "description": "Three small statement slips. (a) L(t) >= \u00bd(|y|_n \u2212 (sqrt(lambda_X)/2)beta)^2 needs the positive part, because squaring a negative lower bound is invalid. (b) |mu_t|_TV = P/2 should be <= P/2, since atoms of opposite sign can coincide. (c) D3.2 says 'every trajectory', and both D3.2 and D3.3 ('for the network') use the balanced measure form D1(c). For an unbalanced network (GD), use the weights |a_j||w_j| <= rho_j/2 and B >= sum_j |a_j||w_j|; the proofs go through unchanged.",
+   "suggested_fix": "Insert (\u00b7)_+, write <=, and state D3.2/D3.3 for any network with B >= sum_j|a_j||w_j| (equal to P/2 under balance)."
+  },
+  {
+   "result": "\u00a75 / \u00a77.4 numerical certificates vs Lemma D0.2's iid assumption; D_relu_check's certified function",
+   "severity": "minor",
+   "description": "(i) Both check scripts draw training points without replacement from the cube (rng.choice(..., replace=False)), while Lemma D0.2 is proved for iid samples. The kl-Chernoff bound still holds by Hoeffding (1963, Thm 4), since the MGF without replacement is at most the MGF with replacement, but the file does not say so. (ii) D_relu_check computes the D3.2/D3.3 certificates, the training margins and the 'exact test error' for the balanced surrogate sum_j eps_j rho_j/2 relu(\u0175_j\u00b7x\u0303), not for the GD network sum_j a_j relu(w_j\u00b7x\u0303). R11 (maj3, n=1000, alpha=1e-3) reruns the case: sup_cube|f_GD \u2212 f_surrogate| = 3.6e-7 (t=30) and 1.1e-6 (t=60), and the certificate for the real network is unchanged at 0.190 with test error 0. So the numbers stand, but they are certificates of the surrogate.",
+   "suggested_fix": "Add a sentence citing Hoeffding's without-replacement reduction. Evaluate the certificate on the actual network f = H@a, or note the 1e-6 difference."
+  },
+  {
+   "result": "\u00a71\u2013\u00a75 numerical prose",
+   "severity": "minor",
+   "description": "Small mismatches with D_relu_check.out. (a) '95\u2013500 of the training points within 1e-2 sqrt(d+1) of a grown neuron's hyperplane': the output shows 91\u20131517 (1517 in the n=4000 run, 91 at t=400). (b) 'all 64 neurons condense' / 'every neuron is recruited by the first escape' at alpha <= 1e-3: the n=4000 run has 63 grown and one neuron left with mass 9.2e-4. (c) 'The median Q_jk falls by 1\u20134 orders of magnitude at alpha=1e-3': for x1 it falls 9.9e-7 \u2192 1.3e-7, under one order. (d) 'rises ... to 2\u00b710^-9': the output gives 1.8\u20133.8e-9. (e) 'training-set margins 10^-7\u201310^-12': the largest is 3.2e-7 (x1+\u00bdx2x3, t=100).",
+   "suggested_fix": "Update the ranges to match the .out file."
+  },
+  {
+   "result": "Part II framing: 'C2 is the special case in which all the measurement matrices commute'; 'Item 2 then reduces to C2.3(2)'; bias-refitted variant 'Theorems D5\u2013D6 apply verbatim'",
+   "severity": "minor",
+   "description": "(i) With diagonal A_i and U, V, D6(2) gives a slightly weaker form of C2.3(2), not C2.3(2) itself. D's N_eps counts eigenvalues of UU^T and VV^T separately (an upper bound on C2's count of |w_S| >= eps). D's Theta uses \u00bcln(eps/alpha^2) where C2 uses \u00bcarsinh(eps/2alpha^2) >= \u00bcln(eps/alpha^2). And kappa is global rather than kappa_B (which the file does note). Commuting A_i also requires U(0), V(0) diagonal in the common basis. (ii) For the bias-refitted plain network, D6(3) needs U_0^* = |M_{y\u2212\u0233}|_op, not |M_y|_op, so 'verbatim' is not exactly right.",
+   "suggested_fix": "Say 'implies a slightly weaker form of C2.3(2)', and state the U_0^* change for the bias variant."
+  },
+  {
+   "result": "Summary item 6 (D5 discrete: 'no other correction'); Theorem D6(5) SGD",
+   "severity": "minor",
+   "description": "The discrete log-det clock needs I + eta A_j \u227b 0, i.e. 2eta|M_j|_op < 1, for both GD and SGD. The summary omits the condition. D6(5) states it for GD but leaves it implicit for SGD. It held in all runs (max 2eta|M| = 0.011\u20130.027 in R8).",
+   "suggested_fix": "State the step-size condition in the summary and in the SGD clause."
+  }
+ ],
+ "summary": "Round-1 adversarial referee report on /home/user/AI-works/gd-circuit-growth/theory/D-early-phase-theorem.md. The verdict is pass with minor revisions. Every result labelled Proved checks out line by line with its constants. Each gap I found has a short closing argument, given in the issues.\n\n**Previous issues.** The task says D has a \"Revision notes\" section and that earlier reports exist. Neither is true: D has no Revision notes section, its header says \"Not refereed\", and checks/referee_*_r1.json cover only A, B and C. So there were no earlier D issues to check. D does adopt one convention fix from the C round-1 report: it bounds P(yf <= 0), with sgn(0) = +1.\n\n**What I checked by hand.**\n- **Lemmas D0.1\u2013D0.3:** the a.e. derivative of relu\u2218h; kl-Chernoff and Occam, including the prior masses (3/4 on dyadic scales; the ln(2|\u0393|K(K+1)\u2026) terms); the sphere net.\n- **Lemma D1 (a)\u2013(g):** balance, mass clock, measure form, direction flow, energy identity, near-monotone utility, the Q\u0307 formula and its sign, and the (g3) constant. The Clarke-flow \u2282 selection-flow remark also holds: via the chain rule with g(a,z) = a\u03c3(z), the selection set is already convex.\n- **Part I theorems:** Lemma D2.1, including exactness for y = x1; Theorem D2 (1)\u2013(5); the T_\u03b2 expansion; Proposition D2.2, including its \u03b1-free constant; Theorem D3; Corollary D3.1 (Maurey); Theorem D3.2 (null-outcome Maurey, net rounding, the \u03bd-Chebyshev step, e_K); Proposition D3.3 (rounding constants \u03b3/8 + \u03b3/16, capacity formula); Proposition D4.1.\n- **Part II theorems:** Theorem D5 (flow via Ky Fan and interlacing; discrete via Horn); Theorem D6 (1)\u2013(5), including the \u03ba identity, the \u03a0+ \u2212 \u03a0\u2212 argument, the no-early-growth constant and the SGD \u03ba_B form; Theorem D7 (X_b/X_s split, |xx^T \u2212 I|_* = 2(d\u22121), |zz^T \u2212 z'z'^T|_* <= 2|z \u2212 z'|, rounding <= 3\u03b3/16).\n\n**Numerical checks.** Script: /home/user/AI-works/gd-circuit-growth/theory/checks/referee_D_r1.py. Output: /home/user/AI-works/gd-circuit-growth/theory/checks/referee_D_r1.out, about 20 s on one core. All results agree with the theorems.\n- **Lemma D1 identities** at 300 random balanced points: errors 1e-13 to 1e-8 (the larger ones are finite-difference error), with no violation of (f), (g) or (g3).\n- **Q conservation** inside a shared activation cell: conserved to 2e-11 over 5 time units (RK4).\n- **Lemma D2.1:** the certified bound is never below a dense multistart estimate.\n- **Theorem D2(5):** holds on random unbalanced steps.\n- **Theorem D5:** holds for the flow (solve_ivp) and for discrete steps, for every K.\n- **Independent quadratic run** (d = 10, other seed, GD and SGD): D6(1), (2), (3) and (5) hold, with a worst rank ratio of 0.40.\n- **Proposition D4.1 along a GD run:** holds with about 2\u20133x slack, and condition (A) held for all 64 neurons throughout.\n- **D7 numbers:** 0.084 and 0.213 reproduced independently.\n- **D3.3 certificate:** 0.190 is unchanged when computed for the actual GD network instead of the balanced surrogate that the check script uses.\n- **D_quad_check's +2.8e-8 clock excess:** it is round-off. It arises only at K = d = h, where D5 is an exact determinant identity; for every K <= 15 the excess is <= 0 at all times. The file could say this.\n- **Tables in \u00a75 and \u00a77.4:** the numbers match the .out files, with the exceptions listed in the issues.\n\n**Main issues, all minor.**\n- **Unproved sharpness:** the \"sharp constant\" in Theorem D2 is labelled Proved but not proved.\n- **Merging-law novelty:** item (g1) is the linear-network conservation law applied within a shared cell, so the \"new here\" claim should be limited to (g2)\u2013(g3).\n- **Theorem D7 proof wording:** the claim that the classes are nested in N is false, though the conclusion holds by padding; the proof also needs \u03b3 <= 8(d\u22121).\n- **Comparison capacity:** the prose says about 1420 nats, but the computed Cover count is 964 nats, so the break-even rank is about 7\u20138, not 11.\n- **\"A priori\" bounds on GD/SGD runs:** D6(4) is a flow statement, and a one-step GD counterexample shows it can fail for GD. The reported numbers stay valid only because the measured P is below B.\n- **Overclaims in prose:** \"a real network\" (Part II has fixed \u00b11 output weights and centred units); \"a priori\" for a rank bound that uses the observed loss curve; \"1/mass\" should be \"1\u2212cos \u221d 1/mass\".\n- **Technical gaps that close easily:** selection measurability in D2.2; zeros of Q in the D4.1 variant; a missing (\u00b7)_+ in D2(3).\n- **Check scripts:** training points are sampled without replacement, which is fine by Hoeffding (1963) but should be said.\n- **Numerical prose slips:** several ranges in \u00a71\u2013\u00a75 do not match the .out files (listed in the issues).\n\n**Citations checked by web search.** Boursier\u2013Flammarion (JMLR 26(183), 2025); Jin\u2013Li\u2013Lyu\u2013Du\u2013Lee (PMLR 202:15200\u201315238); Kumar\u2013Haupt (TMLR 2024, arXiv:2402.09226; arXiv:2509.12154); Chistikov\u2013Englert\u2013Lazi\u0107 (NeurIPS 2023, arXiv:2306.06479). All are correct as cited.\n\n**Files written:** only /home/user/AI-works/gd-circuit-growth/theory/checks/referee_D_r1.py and its output /home/user/AI-works/gd-circuit-growth/theory/checks/referee_D_r1.out. D was not edited."
+}

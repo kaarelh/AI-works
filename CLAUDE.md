@@ -10,6 +10,7 @@ This repository holds several independent projects, one top-level folder each.
 | `foom-coom-transition/` | `codex/foom-coom-transition-2026-10-08` |
 | `computational-cosmology/` | `codex/computational-cosmology-2026-10-08` |
 | `purpose-sensitivity/` | `claude/friendly-sagan-hngxoz` |
+| `gd-circuit-growth/` | `claude/nifty-mccarthy-j0lw2a` |
 
 ## Working branches
 

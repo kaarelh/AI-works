@@ -1,0 +1,70 @@
+## 1. Theorem A1 realizable bound 1-exp(-L_T/n) (d=30, k=2, |G|=6, delta=0.05)
+ n=   64: largest T with bound <= 0.1: 0;  largest T with bound < 0.5: 3
+ n=  256: largest T with bound <= 0.1: 2;  largest T with bound < 0.5: 11
+ n= 1024: largest T with bound <= 0.1: 7;  largest T with bound < 0.5: 27
+ n= 4096: largest T with bound <= 0.1: 20;  largest T with bound < 0.5: 102
+ n=16384: largest T with bound <= 0.1: 62;  largest T with bound < 0.5: 403
+ n needed for bound <= 0.1, divided by T, T = 1..10: 141, 120, 117, 118, 120, 124, 128, 133, 138, 144;  max = 143.8
+
+## 2. Theorem A3.1 and Theorem A3.5 for par2 (gamma = 1/2, R = lambda_* = 1, T = 1, M_0 = 2205)
+ A3.1: eps = 0.10355; b >= 2253.2 and b >= 206.8  ->  b (or n, full batch) >= 2254
+ A3.5: need n^-1/2 + b^-1/2 <= 0.02049
+   n = b: n >= 9530;  n -> infinity: b >= 2383
+   n = 4096: b >= 42299
+   n = 16384: b >= 6225
+   n = 1000000: b >= 2634
+   n = 16384, b = 64: n^-1/2 + b^-1/2 = 0.1328 (> 0.0205: not covered)
+
+## 3. Library incoherence kappa_bar_1 (centred Gram of all distinct depth-one toy gates)
+ population, d = 8 (exact, full cube): 148 gates, kappa_bar_1 = 8.000000  (closed form: d = 8)
+ empirical, d = 30, n =    64: 2205 distinct gates, kappa_bar_1 = 88.10  (population: 30)
+ empirical, d = 30, n =   256: 2205 distinct gates, kappa_bar_1 = 57.66  (population: 30)
+ empirical, d = 30, n =  1024: 2205 distinct gates, kappa_bar_1 = 41.17  (population: 30)
+ empirical, d = 30, n =  4096: 2205 distinct gates, kappa_bar_1 = 34.97  (population: 30)
+ empirical, d = 30, n = 16384: 2205 distinct gates, kappa_bar_1 = 32.42  (population: 30)
+ Corollary A2.5(a'): T(t) <= min(M_1, floor(kappa_bar_1 x^2)), x = ||R||_n/Theta <= tau/Theta, depth one; realizable A1 bound at that T:
+   n =  1024: x=1.0: T<=41, bound 0.672;  x=1.5: T<=92, bound 0.917;  x=1.99: T<=163, bound 0.988
+   n =  4096: x=1.0: T<=34, bound 0.207;  x=1.5: T<=78, bound 0.410;  x=1.99: T<=138, bound 0.607
+   n = 16384: x=1.0: T<=32, bound 0.053;  x=1.5: T<=72, bound 0.115;  x=1.99: T<=128, bound 0.195
+   for comparison, A1 at the realized T: par2 (T = 1) 0.004 at n = 4096; maj3 first event (T = 9) 0.032 at n = 4096
+
+## 4. Proposition A4.2(2): population maj3 after the first event (d = 4 cube)
+ residual after the 9-gate refit equals -x1x2x3/2: True
+ max |U| over depth-one candidates: 1.11e-16
+ max over source pairs of |hat(ab)(123)| = 0.5000 (lemma: <= 1/2)
+   |U| = 0.2500: 12 distinct functions (up to sign): XOR(x1,AND(x2,x3)), XOR(x1,AND(~x2,~x3)), XOR(x2,AND(x1,x3)), XOR(x2,AND(~x1,~x3)), XOR(x3,AND(x1,x2)), XOR(x3,AND(~x1,~x2)), XOR(AND(x1,x2),AND(x1,x3)), XOR(AND(x1,x2),AND(x2,x3)), XOR(AND(~x1,~x2),AND(~x1,~x3)), XOR(AND(~x1,~x2),AND(~x2,~x3)), XOR(AND(x1,x3),AND(x2,x3)), XOR(AND(~x1,~x3),AND(~x2,~x3))
+   |U| = 0.1250: 20 distinct functions (up to sign)
+   |U| = 0.0000: 55 distinct functions (up to sign)
+ each maximizer alone completes the representation of maj3: True
+ distinct gate functions after the second event: 9 + 12 = 21; residual after refit on all: 4.4e-16
+ second event time: 2 Theta + Theta/0.25 = 6.00 Theta; other clocks at that time <= 0.50 Theta
+
+## 5. Proposition A4.1 without balance: library-gate targets
+ population, d = 4: 34 targets (24 unbalanced); target is the unique argmax with |U| = Var(y) in all but 0; smallest gap Var(y) - second |U| = 0.2500
+ samples (d = 10, n in {16, 32, 64}): 199 library-gate targets; violations of '|U| = Var_n(y) exactly for g = +-y on the sample, < Var_n(y) otherwise': 0
+
+## 6. race_bounds.Race (fixed) in the (SC) variant on random correlated dictionaries
+ 40 trials, 721 events, 130 exits from the saturated set
+   max | ||c||_1 - <R,f>_n | = 2.8e-14 (Theorem A2.4, Theta = 1); max |S_m - <R,g_m>_n| = 2.4e-14; max(|S| - Theta) = 0.0e+00; max |U_m| on the support = 5.2e-16
+   max over events of |Sat| / (kappa_Sat ||R||_n^2) = 0.715 ((SC) form of Theorem A2.3 needs <= 1)
+
+## 7. A1 realizable bound versus the BEHW route 2 Pi(2n) 2^(-eps n/2) (needs n >= 8/eps)
+ n =  1024: T in 1..1499 where A1 is larger: none; A1 < 1/2 for T <= 27, BEHW < 1 for T <= 23; at T = 10: A1 0.137, BEHW 0.448 (n >= 8/eps holds: True)
+ n =  4096: T in 1..1499 where A1 is larger: none; A1 < 1/2 for T <= 102, BEHW < 1 for T <= 89; at T = 10: A1 0.036, BEHW 0.122 (n >= 8/eps holds: True)
+ n = 16384: T in 1..1499 where A1 is larger: none; A1 < 1/2 for T <= 403, BEHW < 1 for T <= 322; at T = 10: A1 0.009, BEHW 0.033 (n >= 8/eps holds: True)
+
+## 8. Greedy argmax, first step on par2, small batches (does it pick XOR(x1,x2)?)
+ n =    64, b =  16: XOR(x1,x2) is an argmax in 1.000 of reuse runs, 1.000 of fresh-batch runs
+ n =    64, b =  64: XOR(x1,x2) is an argmax in 1.000 of reuse runs, 1.000 of fresh-batch runs
+ n =   256, b =  16: XOR(x1,x2) is an argmax in 1.000 of reuse runs, 1.000 of fresh-batch runs
+ n =   256, b =  64: XOR(x1,x2) is an argmax in 1.000 of reuse runs, 1.000 of fresh-batch runs
+ n =  1024, b =  64: XOR(x1,x2) is an argmax in 1.000 of reuse runs, 1.000 of fresh-batch runs
+
+## 9. Ranges for Section 5, parsed from race_bounds.txt
+ (LS) kappa over all events: [0.44, 4.59]; n >= 256: [0.65, 3.09]
+   A2.3 looseness kappa tau^2 / (Theta^2 T), par2: [1.00, 1.00]
+   A2.3 looseness kappa tau^2 / (Theta^2 T), maj3: [1.40, 4.96]
+   A2.3 looseness kappa tau^2 / (Theta^2 T), and3: [1.32, 2.71]
+   A2.3 looseness kappa tau^2 / (Theta^2 T), dnf3: [1.70, 6.97]
+   A2.3 looseness kappa tau^2 / (Theta^2 T), par3: [1.89, 400.35]
+ (SC) Theorem A1' at n = 4096 (delta split): clipped-square bound [0.43, 0.92]; ramp 0-1 bound [0.40, 0.97]
