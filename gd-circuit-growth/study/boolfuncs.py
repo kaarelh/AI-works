@@ -218,3 +218,37 @@ def make_dl_heldout_suite(d=30, seed=4242):
         add(f"hrf{made}", fn, rel, f"random {gts}-gate formula on {k} inputs: " + desc)
         made += 1
     return S
+
+
+def make_dl_heldout2_suite(d=30, seed=5151):
+    """Second held-out suite for the discrete-learner comparison, written after DFG v1.1 was committed (0220cf04), so it
+    is blind for v1.1: a dense halfspace on 20 inputs, a wide majority, a parity times a majority, a 4-term 2-DNF, a
+    symmetric even function, and two fresh random formulas on 7-8 inputs."""
+    S = {}
+
+    def add(name, fn, rel, desc):
+        S[name] = dict(fn=fn, relevant=list(rel), desc=desc)
+
+    w = np.random.default_rng(seed).standard_normal(20)
+    add("thr20", lambda x, w=w: _sgn(x[:, :20] @ w), range(20), "sign(w.x[1..20]), Gaussian w")
+    add("maj21", lambda x: _maj(*[x[:, i] for i in range(21)]), range(21), "MAJ(x1..x21)")
+    add("xmaj", lambda x: x[:, 0] * x[:, 1] * _maj(x[:, 2], x[:, 3], x[:, 4]), range(5), "x1 x2 MAJ(x3,x4,x5)")
+    add("dnf4x2", lambda x: _or(_and(x[:, 0], x[:, 1]), _and(x[:, 2], x[:, 3]), _and(x[:, 4], x[:, 5]), _and(x[:, 6], x[:, 7])),
+        range(8), "(x1&x2) | (x3&x4) | (x5&x6) | (x7&x8)")
+    add("sym8", lambda x: np.where(np.abs(x[:, :8].sum(1)) >= 4, 1.0, -1.0), range(8), "|x1 + ... + x8| >= 4")
+    rng = np.random.default_rng(seed + 2)
+    probe = np.random.default_rng(3).choice([-1.0, 1.0], size=(20000, d))
+    made = 0
+    while made < 2:
+        k = int(rng.integers(7, 9)); gts = int(rng.integers(6, 10))
+        fn, desc = _random_formula(rng, k, gts)
+        y = fn(probe)
+        if abs(y.mean()) > 0.5:
+            continue
+        infl = [np.mean(y != fn(probe * np.where(np.arange(d) == i, -1.0, 1.0))) for i in range(k)]
+        rel = [i for i in range(k) if infl[i] > 0.01]
+        if len(rel) < k - 1:
+            continue
+        add(f"h2rf{made}", fn, rel, f"random {gts}-gate formula on {k} inputs: " + desc)
+        made += 1
+    return S

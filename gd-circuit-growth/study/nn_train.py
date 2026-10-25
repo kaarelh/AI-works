@@ -18,10 +18,10 @@ Many networks (all n x seeds) are trained in parallel with vmap.  Results go to
 import os, sys, json, time, itertools, argparse
 import numpy as np
 import jax, jax.numpy as jnp
-from boolfuncs import make_suite, make_random_suite, make_poly_suite, make_dl_heldout_suite
+from boolfuncs import make_suite, make_random_suite, make_poly_suite, make_dl_heldout_suite, make_dl_heldout2_suite
 
 D, N, B, N_TEST, BASE = int(os.environ.get("DIM", 30)), int(os.environ.get("WIDTH", 128)), 64, 4096, 64
-SUITE = {"random": make_random_suite, "poly": make_poly_suite, "dlheld": make_dl_heldout_suite}.get(os.environ.get("SUITE"), make_suite)(D)
+SUITE = {"random": make_random_suite, "poly": make_poly_suite, "dlheld": make_dl_heldout_suite, "dlheld2": make_dl_heldout2_suite}.get(os.environ.get("SUITE"), make_suite)(D)
 
 # ---------------------------------------------------------------- data
 
