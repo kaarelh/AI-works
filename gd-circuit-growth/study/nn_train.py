@@ -18,10 +18,10 @@ Many networks (all n x seeds) are trained in parallel with vmap.  Results go to
 import os, sys, json, time, itertools, argparse
 import numpy as np
 import jax, jax.numpy as jnp
-from boolfuncs import make_suite, make_random_suite, make_poly_suite
+from boolfuncs import make_suite, make_random_suite, make_poly_suite, make_dl_heldout_suite
 
 D, N, B, N_TEST, BASE = int(os.environ.get("DIM", 30)), int(os.environ.get("WIDTH", 128)), 64, 4096, 64
-SUITE = {"random": make_random_suite, "poly": make_poly_suite}.get(os.environ.get("SUITE"), make_suite)(D)
+SUITE = {"random": make_random_suite, "poly": make_poly_suite, "dlheld": make_dl_heldout_suite}.get(os.environ.get("SUITE"), make_suite)(D)
 
 # ---------------------------------------------------------------- data
 
@@ -125,7 +125,7 @@ def run_fixed(name, opt, lr, ns, seeds, steps_max, out_dir, save_params=True):
     Xte, yte = make_test(name)
     rel = SUITE[name]["relevant"]; sets = char_sets(rel)
     chi = jnp.array(char_matrix(Xte, sets))
-    irr = [i for i in range(D) if i not in rel][:5]
+    irr = [i for i in range(D) if i not in rel][:5] or [D - 1]   # no irrelevant input: the metric is then not meaningful
     Xflip = jnp.array(np.stack([Xte[:1024] * np.where(np.arange(D) == i, -1.0, 1.0).astype(np.float32) for i in irr]))
     # one network per (n, seed)
     net_n = jnp.array(np.repeat(ns, S)); net_s = jnp.array(np.tile(np.arange(S), len(ns)))
@@ -192,7 +192,7 @@ def run_online(name, opt, lr, seeds, steps_max, out_dir, chunk_steps=500):
     t0 = time.time()
     S = len(seeds); Xte, yte = make_test(name)
     rel = SUITE[name]["relevant"]; sets = char_sets(rel); chi = jnp.array(char_matrix(Xte, sets))
-    irr = [i for i in range(D) if i not in rel][:5]
+    irr = [i for i in range(D) if i not in rel][:5] or [D - 1]   # no irrelevant input: the metric is then not meaningful
     Xflip = jnp.array(np.stack([Xte[:1024] * np.where(np.arange(D) == i, -1.0, 1.0).astype(np.float32) for i in irr]))
     keys = jax.vmap(lambda i: jax.random.PRNGKey(i))(jnp.array([1000 * s + 7 for s in seeds]))
     p0 = jax.vmap(init_params)(keys); zeros = jax.tree_util.tree_map(jnp.zeros_like, p0)

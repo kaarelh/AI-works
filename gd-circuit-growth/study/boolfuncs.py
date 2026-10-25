@@ -175,3 +175,46 @@ def make_poly_suite(d=30):
     for k in ("compG",):
         S[k]["relevant"] = list(range(8))
     return S
+
+
+def make_dl_heldout_suite(d=30, seed=4242):
+    """Held-out targets for the discrete-learner comparison (study/discrete_learner), fixed before the learner was tuned
+    on them: dense halfspaces, compositions of majorities, a larger parity, the classic 6-multiplexer, a longer
+    staircase, an intersection of halfspaces, and fresh random formulas on 6-8 inputs."""
+    S = {}
+
+    def add(name, fn, rel, desc):
+        S[name] = dict(fn=fn, relevant=list(rel), desc=desc)
+
+    add("maj15", lambda x: _maj(*[x[:, i] for i in range(15)]), range(15), "MAJ(x1..x15)")
+    w = np.random.default_rng(seed).standard_normal(d)
+    add("thr30", lambda x, w=w: _sgn(x @ w), range(d), "sign(w.x), Gaussian w on all inputs")
+    add("majxor", lambda x: _maj(*[x[:, i] for i in range(5)]) * _maj(*[x[:, i] for i in range(5, 10)]), range(10),
+        "MAJ(x1..x5) XOR MAJ(x6..x10)")
+    add("majmaj5", lambda x: _maj(*[_maj(*[x[:, 5 * j + i] for i in range(5)]) for j in range(3)]), range(15),
+        "MAJ of three MAJ5s")
+    add("par5", lambda x: _xor(*[x[:, i] for i in range(5)]), range(5), "x1 x2 x3 x4 x5")
+    add("mux6", lambda x: np.choose(((x[:, 0] > 0) * 2 + (x[:, 1] > 0)).astype(int), [x[:, 2], x[:, 3], x[:, 4], x[:, 5]]),
+        range(6), "6-multiplexer: address x1 x2, data x3..x6")
+    add("stair6", lambda x: _sgn(sum(np.prod(x[:, :t + 1], axis=1) for t in range(6)) + 0.5), range(6),
+        "sign(x1 + x1x2 + ... + x1..x6 + 1/2)")
+    g = np.random.default_rng(seed + 1).standard_normal((2, 10))
+    add("inter2", lambda x, g=g: _and(_sgn(x[:, :10] @ g[0]), _sgn(x[:, :10] @ g[1])), range(10),
+        "AND of two Gaussian halfspaces on x1..x10")
+    add("majpar5", lambda x: _maj(*[x[:, 2 * i] * x[:, 2 * i + 1] for i in range(5)]), range(10), "MAJ of five pairs x1x2..x9x10")
+    rng = np.random.default_rng(seed + 2)
+    probe = np.random.default_rng(2).choice([-1.0, 1.0], size=(20000, d))
+    made = 0
+    while made < 3:
+        k = int(rng.integers(6, 9)); gts = int(rng.integers(5, 9))
+        fn, desc = _random_formula(rng, k, gts)
+        y = fn(probe)
+        if abs(y.mean()) > 0.5:
+            continue
+        infl = [np.mean(y != fn(probe * np.where(np.arange(d) == i, -1.0, 1.0))) for i in range(k)]
+        rel = [i for i in range(k) if infl[i] > 0.01]
+        if len(rel) < k - 1:
+            continue
+        add(f"hrf{made}", fn, rel, f"random {gts}-gate formula on {k} inputs: " + desc)
+        made += 1
+    return S
