@@ -1,0 +1,59 @@
+Lean analytic proof interfaces (25 October 2026)
+
+Build: run ./build-analytic.sh from any directory, optionally passing a mathlib-containing Lake project directory and the Lake executable as arguments. It uses Lean4.32 and the pinned mathlib revision; the portable build instructions are in README.md. All actual theorem proofs are checked; no sorry/custom axioms. Main axiom reports are [propext, Classical.choice, Quot.sound].
+
+1. TwoBallGeometry.lean
+frobeniusNorm A := sqrt(trace(A.adjoint ∘ A)).
+frobeniusSq_eq_matrix_sum and frobeniusNorm_eq_matrix_sum_sqrt prove equality to the conventional sum of squared matrix entries for ANY orthonormal domain/codomain bases. frobeniusSq_eq_sum_singularValues_sq proves the singular-value version.
+two_ball_matrix_frobenius_cover: arbitrary finite-dimensional real inner-product E,F; arbitrary rectangular linear map A:E→ₗF; arbitrary ball center z and r≥0. Returns Finset C of size≤2 covering A(closedBall z r), radius r||A||F/sqrt2. Zero rank/dimension and 1D have no exclusions.
+
+2. NetworkBallCover.lean
+FiniteBallCover S N r means a concrete finite set of≤N centers covers S at radius r.
+network_finite_ball_cover: genuinely varying layer spaces H n, affine linear layers and arbitrary whole-vector 1-Lipschitz maps; after n layers≤2^n balls, radius R product_i||A_i||F/(sqrt2)^n.
+network_monochromatic_cover: any input subset of the ball, unit output margin only on that subset, actual suffix Lipschitz constant T and radius*T<1 imply same-sign clusters. Whole-vector activations here are for geometry ONLY.
+
+3. FiniteConcentration.lean
+FiniteProbability.avg: finite weighted expectation, p_i≥0, sum_i p_i=1.
+sampleAvg: recursively defined product expectation on m independent finite draws.
+sampleAvg_exp_sub_avg_le: if changing one sample changes F by≤c, E exp(t(F−EF))≤exp(t²mc²/2). Proved from finite sums, exp convexity and cosh(u)≤exp(u²/2).
+exists_sample_all_lt: finite-family exponential-potential extraction. It assumes only the numerical exponential gap, NOT a concentration conclusion.
+
+4. FiniteMaurey.lean
+finite_input_maurey: finite nonempty input index K, finite sampling index I, p_i≥0 with sum1, arbitrary real inner-product space E, vectors v(k,i) with ||v||≤J, J>0, ε>0, m>0. If 64J²(1+log|K|)≤mε², some COMMON s:Fin m→I satisfies ||m⁻¹∑j v(k,sj)−∑i p_i v(k,i)||<ε for every k. The Hilbert second moment and bounded-differences estimates are both proved. Constant64 is deliberately loose.
+
+5. MaureyLayerCompression.lean
+rowMap/columnMap reconstruct actual rectangular linear maps; rowMap_adjoint_basis and columnMap_image_basis identify arbitrary maps with these dictionaries.
+maurey_linear_pair: arbitrary rectangular W:E→EuclideanSpace I and V:EuclideanSpace I→F; zero-preserving scalar 1-Lipschitz phi_i; finite inputs norm≤R, R>0. Under budget64(||W||F||V||F R)²(1+log|K|)≤mε², returns actual W',V' of width m and actual scalar psi_i, preserving activation hypotheses, with adjacent product≤original and simultaneous preactivation error<ε. Zero rows/columns/maps are included.
+sampled_frobenius_product proves exact per-draw norm product for active directions; sampled_frobenius_product_le covers zero directions.
+
+6. SequentialMaurey.lean
+ScalarNetwork n is an actual finite network on EuclideanSpace(Fin n), with explicit linear maps, explicit neuronwise scalar activations and proofs of zero preservation/1-Lipschitzness, and a final scalar linear readout. No hidden affine biases; arbitrary augmented inputs can encode the manuscript convention.
+ScalarNetwork.compress_prefix: finite input set norm≤R, R>0, ε>0, m>0. If64(product*R)²(1+log|K|)≤mε², returns N' with product≤N.product, depth≤N.depth, first h widths≤m, and final-output error≤hε. h may exceed original depth. Zero-product cases can shorten the network.
+
+7. AnalyticPrefixReduction.lean
+prefixEval/prefixProduct/suffixEval/suffixProduct describe actual network pieces; product_factor, eval_factor, prefix/suffix Lipschitz and norm bounds are proved.
+normalized_prototypes: h≤hiddenDepth and positive product, unit output margin on finite inputs, and2R*product/(sqrt2)^h<1 give≤2^h ACTUAL normalized prefix states, norm≤R, cover radius2R/(sqrt2)^h and same-sign decoding.
+compress_prefix_total packages the h-step error as one epsilon.
+compress_prefix_margin uses total error1/4 and doubles only the readout: margin≥3/2, product≤2P, depth nonincrease, retained widths≤m.
+analytic_prefix_reduction joins these: either the compressed network is shorter than h or it has a dimension≤m normalized prefix and the actual prototypes above. It assumes explicit numerical sampling and radius inequalities, not an empirical/covering conclusion.
+
+8. PolynomialPrefix.lean
+compilerDepth B = 2(2 floor(log2 B)+7) =4 floor(log2 B)+14.
+compilerWidth B =2^20 B^8.
+polynomial_analytic_prefix: B is an integer≥1; actual network product≤B; finite inputs norm≤B; log|K|≤B²; labels f(k)∈{−1,1} and signed original margin≥1. Returns actual M with positive product≤2B, margin≥3/2, no greater depth, and first compilerDepth(B) widths≤compilerWidth(B).
+Either M is shorter than compilerDepth(B), or its retained dimension≤2^20 B^8 and there are≤2^14 B^4 ACTUAL normalized prototypes, each norm≤B, every true normalized state within1/(16B) of a prototype. Exact finite global decoder: f(k)≥0 iff SOME stored prototype c has positive normalized suffix value and distance from the normalized state≤1/(8B). No gate-computation claim is embedded in this statement.
+
+9. FreezeSigns.lean
+uniform_sign_second_moment and uniformSignAverage_norm_sq prove the exact finite independent fair-sign second moment: average ||b+sum s_i v_i||² = ||b||²+sum ||v_i||². Both empty and arbitrary finite index sets are covered.
+exists_signs_norm_sq_le and exists_bool_freezing_norm_sq_le extract one actual common sign tuple whose squared norm is at most that average.
+
+10. BooleanRelevant.lean
+Relevant f i means there exist two Boolean inputs differing only at coordinate i and with different labels; relevantSet is the actual finite set of these coordinates.
+eq_of_agree_relevant proves that agreeing at every relevant coordinate implies equal labels.
+relevant_column_bound: for an actual affine first-layer feature vector b+sum sign(x_i) v_i, any T-Lipschitz suffix G with globally signed margin at least1 has T||v_i||>=1 at each relevant coordinate.
+relevant_card_le bounds their number by T²(||b||²+sum ||v_i||²).
+relevant_card_le_frobenius_product_sq specializes this to an actual rectangular augmented first-layer map W:Euclid(n+1)->E, with column0 the constant coordinate and the remaining columns the Boolean inputs. The bound is (T ||W||F)², using the proved trace/matrix Frobenius identity. No unproved geometric/counting conclusion is a hypothesis.
+exists_freezing_preserving_margin produces an actual replacement bias b' and sets each irrelevant column to zero. Its squared bias-plus-column norm is at most the original, and every original Boolean label retains margin1 under the same suffix G. The statement zeroes columns on the original input space; the routine conversion to a smaller reindexed space is not encoded.
+
+Current formalization boundary:
+The Boolean relevant-coordinate count, dependence statement, and norm-nonincreasing margin-preserving freezing are now proved. The lookup quantization, finite-bit encoding, arithmetic implementation, and conversion of the finite decoder into TC1/NC2 gates remain mathematically audited but NOT formalized. The broader research question and later imported statistical results are not certified by these files. CoreAudit.lean is untouched.

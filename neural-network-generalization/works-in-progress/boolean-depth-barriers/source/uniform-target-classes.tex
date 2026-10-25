@@ -1,0 +1,373 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,microtype,xurl}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue]{hyperref}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}
+\newcommand{\KL}{\operatorname{D}}\newcommand{\poly}{\operatorname{poly}}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\title{Uniform prior-scale bounds for structured Boolean targets}
+\author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob}
+\date{25 October 2026}
+\begin{document}\maketitle
+\begin{abstract}
+We assemble target-mass constructions for the original Gaussian tanh
+posterior uniformly over all prior prefactors $0<t\le1$, including the
+critical endpoint and arbitrarily small prefactors. For each fixed
+threshold depth, the sample bound is polynomial jointly in input
+dimension, circuit resources, and learner depth at every realizable
+width. Fourier variation gives a second polynomial target class at
+every learner depth. The proof combines a critical scalar program,
+an exact change of Gaussian reference, and a separate short-padding
+construction. The finite-width intrinsic learning and critical scalar
+inputs are stated explicitly; this note is an integration of audited
+research arguments, not a self-contained replacement for those inputs.
+\end{abstract}
+
+\section{Model and conclusions}
+Let $X_d=\{-1,1\}^d$, let $f:X_d\to\{-1,1\}$, and put $H=L-1\ge1$.
+The learner has $H$ hidden tanh layers of common width $N$, augmented
+input $(1,x)$, and scalar linear readout. The independent Gaussian
+entry variances are
+\[
+ W^1_{ij}:t^2/d,\qquad W^j_{ik}:t^2/N\ (2\le j\le H),
+ \qquad v_i:t^2/N^2,\qquad 0<t\le1.
+\]
+The posterior conditions only on $|z(x)|>1/2$ for every $x\in X_d$
+and on agreement with the noiseless training labels. Write
+\[
+ A_f=\{w:f(x)z_w(x)>1/2\text{ for all }x\in X_d\},\qquad
+ a_{N,t}(f)=-N^{-1}\log\mu_{N,t}(A_f).
+\]
+A realizable width means $\mu_{N,t}(A_f)>0$. The learning criterion is:
+for $0<\varepsilon,\delta<1$, with training probability at least $1-\delta$, the posterior assigns
+probability strictly greater than $2/3$ to the correct label outside a
+set of test-distribution mass at most $\varepsilon$. The input
+distribution is arbitrary.
+
+\begin{theorem}[Threshold circuits, all scales and learner depths]
+\label{thm:threshold}
+There is a universal constant $C$ with the following property. Suppose
+$f$ is computed by a layered threshold circuit with $h\ge1$ gate
+stages ending in the output bit $f$, width at most $C_0$, normalized gate margins at least one, and
+coefficient magnitudes at most $B$. Constants may be carried as
+ordinary circuit gates. Put
+\[
+ R=d+C_0+B+h+L+4.
+\]
+For every $L\ge h+1$, every realizable width, and every $0<t\le1$,
+the stated learning criterion holds whenever
+\[
+ n\ge \frac C\varepsilon\left[
+ R^{C(h+1)^2}(1+\log(1/\varepsilon))^C+
+ \log(1/\delta)\right].                         \tag{1}
+\]
+If $H-h\ge C[\log(d+2)+h\log R]$, the exponent
+$C(h+1)^2$ can be replaced by $C(h+1)$.
+\end{theorem}
+
+\begin{theorem}[Fourier variation at every learner depth]
+\label{thm:fourier}
+Let
+\[
+ A(f)=\sum_{S\subseteq[d]}|\widehat f(S)|,
+ \qquad f=\sum_S\widehat f(S)\prod_{i\in S}x_i.
+\]
+There are universal $C,c$ such that for every $L\ge2$, every
+realizable width, and every $0<t\le1$, it suffices that
+\[
+ n\ge\frac C\varepsilon\left[
+ (d+L+A(f)+2)^c(1+\log(1/\varepsilon))^c+
+ \log(1/\delta)\right].                         \tag{2}
+\]
+In particular, the bound is polynomial for every parity, uniformly in
+its degree and in the original Gaussian scale.
+\end{theorem}
+
+Neither theorem includes arbitrary polynomial-size circuits of
+unrestricted threshold depth with a polynomial bound independent of
+$h$. Nor does a tanh teacher become a threshold circuit merely by
+replacing its hidden activations by their signs.
+
+\section{Explicit analytic inputs}
+Set
+\[
+ b=t^{-2}-1,\qquad \theta=b/2,\qquad
+ c_t=\frac{t^{-2}-1+2\log t}{2}.
+\]
+Let $V_*$ be the critical scalar Bellman baseline from the critical
+depth analysis. Define $\mathcal R(D)\ge1$ by
+\[
+ \mathcal R(D)-1-\log\mathcal R(D)=2D.
+\]
+The following two intrinsic learning inputs are proved in the
+companion research notes listed at the end.
+
+\begin{proposition}[Uniform intrinsic inputs]
+\label{prop:intrinsic}
+There are universal polynomial degrees such that the original
+posterior sample bound, with $a=a_{N,t}(f)$ or any deterministic
+upper bound for it, is polynomial in $d,L,1+t^2a$ and
+\[
+ P_t(a+t^{-2},H)
+ =\max\{1,t^H\mathcal R((a+t^{-2})/H)^{H/2}\},      \tag{3}
+\]
+apart from the usual factor
+$\varepsilon^{-1}(1+\log(1/\varepsilon))^C$ and additive
+$C\varepsilon^{-1}\log(1/\delta)$.
+There is also a sharper bound, polynomial in $d,L,1+t^2a$ times
+$\exp(CJ)$, where
+\[
+ E=\bigl(a+4/(Ht^2)-Hc_t-V_*+b\bigr)_+,
+ \qquad
+ J=\min\{\sqrt{HE},E/b\}.                         \tag{4}
+\]
+At $b=0$, the second argument is omitted. Both statements hold at
+every realizable width, uniformly over $0<t\le1$.
+\end{proposition}
+
+These inputs use a bounded dual certificate with arbitrarily chosen
+action slack, scale-normalized importance quadrature, and a final
+split between large widths and the full finite-width VC class. In
+particular, they contain no separate inverse power of $t$.
+
+The critical target inputs are as follows. A threshold prefix of
+depth $h$ admits deterministic rare groups with seed fraction $p_h$
+such that, writing $S=\log(d+2)+h\log R$,
+\[
+ \log(1/p_h)\le CS,\qquad
+ \text{critical prefix cost}\le1/(8L).
+                                                               \tag{5}
+\]
+At every $N\ge\exp(CS)$ its target score is uniformly accurate to
+$\exp(-CS)$, after increasing constants, and its actual target
+component $p_N$ lies in $[p_h,2p_h]$. Its diagonal is at most one.
+For $H-h\ge CS$, the critical continuation can be chosen with charged
+scalar costs $D_j$ satisfying
+\[
+ \text{total action}\le V_*+CS^2/H,\quad
+ \sum_j\sqrt{D_j}\le CS,\quad
+ \sum_jD_j\le CS,                                \tag{6}
+\]
+and all tracked components at least $\exp(-CS)$. The final increasing
+scalar path, including readout, has cost at most three. The critical
+finite-width channel theorem has metric amplification $\exp(CS)$
+for this program. These statements are the quantitative finite-prefix,
+occupation, and scalar-steering inputs from the critical analysis.
+
+The square-root estimate in (6) concerns the \emph{charged scalar
+entropy upper costs}. It cannot be replaced by a smaller vector KL
+after data processing when bounding scalar second moments.
+
+\section{Changing scale without changing the physical scalar program}
+
+\begin{lemma}[Exact change of reference]
+If $\rho$ is a scalar control law with $m=\E_\rho Z^2$, then
+\[
+ \KL(\rho\Vert\mathcal N(0,t^2))
+ =\KL(\rho\Vert\mathcal N(0,1))+c_t+\theta(m-1).    \tag{7}
+\]
+Moreover, if $D=\KL(\rho\Vert\mathcal N(0,1))$, then
+$(m-1)_+\le C(\sqrt D+D)$.
+\end{lemma}
+\begin{proof}
+Equation (7) is the Gaussian log-density ratio integrated under
+$\rho$. The entropy variational principle, applied to the square of
+a standard Gaussian, gives $D\ge(m-1-\log m)/2$; inversion for
+$m\ge1$ gives the bound.
+\end{proof}
+
+\begin{lemma}[Smaller residual noise preserves the target component]
+Put $\psi_r(z)=\E\tanh(z+\sqrt rG)$. For $z>0$, $\psi_r(z)$ is
+nonnegative and nonincreasing in $r$. A critical Gaussian scalar
+stage with the same target component and no larger residual can
+therefore be reused at any $t\le1$, while tracking exactly the
+critical target component and no larger residual.
+\end{lemma}
+\begin{proof}
+The heat identity gives
+$\partial_r\psi_r(z)=\tfrac12\E\tanh''(z+\sqrt rG)\le0$.
+Indeed $\tanh''$ is odd and negative on the positive half-line,
+and a Gaussian shifted by $z>0$ puts greater density at $u$ than at
+$-u$ for $u>0$. Continuity treats $r=0$.
+
+For a Gaussian signal with variance $av$ and residual variance $r$,
+the total next diagonal is $F(av+t^2r)$, where
+$F(q)=\E\tanh^2(\sqrt qG)$ is increasing. The available conditional
+mean component increases when the residual decreases, whereas the
+total diagonal decreases. If a normalized score $b_0$ has component
+$v_0\ge v$, replace it by
+\[
+ b=\sqrt{v/v_0}\,b_0+\sqrt{1-v/v_0}\,\xi,
+\]
+where $\xi$ is an independent uniform sign included under both
+reference and controlled laws. This keeps unit score norm and
+component exactly $v$, costs zero KL, and increases its pointwise
+bound by at most one. The new residual is the diagonal minus $v$.
+\end{proof}
+
+\begin{proposition}[Uniform long-padding target mass]
+\label{prop:long}
+For the threshold target and $S$ above, if $H-h\ge CS$, then for
+every $N\ge\exp(CS)$ and every $0<t\le1$,
+\[
+ a_{N,t}(f)\le Hc_t+V_*+C(\theta S+S^2/H).          \tag{8}
+\]
+The constants and width threshold are independent of $t$.
+\end{proposition}
+\begin{proof}
+Keep the critical prefix group fractions and mean shifts. Their
+Gaussian entropy costs are divided by $t^2$, so the prefix cost is
+at most $1/(8Lt^2)$. The Gaussian noise only decreases, preserving
+the prefix estimates and allowing the same seed component.
+
+Reuse the physical critical Gaussian scalar laws, with the score
+downgrade from the preceding lemma. The final non-Gaussian scalar
+path uses the same normalized law as at criticality; its stable-lift
+estimate improves when residual noise decreases. Equation (7) and
+(6) charge at most one $c_t$ per hidden stage and an additional
+$C\theta S$. The readout costs at most three at criticality, so its
+factor $t^{-2}=1+2\theta$ adds only $C\theta$. This proves (8) for
+the ideal controlled path, with the coefficient of $V_*$ exactly one.
+
+For the finite-width lift, the physical metric multiplier of a
+scalar law is at most $\sqrt{\max\{t^2,m\}}\le
+\sqrt{\max\{1,m\}}\le\exp(C\sqrt D)$. Thus total amplification
+is $\exp(CS)$ independently of $t$. Tracked score bounds and
+inverse components are also $\exp(CS)$.
+Use action slack $\tau=1/(Ht^2)$ and controlled success loss
+\[
+ \kappa=\frac{c}{H(1+t^2\overline a)},
+\]
+where $\overline a$ is the displayed deterministic upper budget.
+Since $t^2c_t\le1/2$ and $t^2\theta\le1/2$,
+$t^2\overline a\le C(H+S+S^2/H)$. Hence $\kappa^{-1}$ is
+polynomial independently of $t$. The channel concentration and
+binary-KL comparison therefore require only $N\ge\exp(CS)$.
+Their added $1/(Ht^2)=(1+2\theta)/H$ is absorbed in (8).
+\end{proof}
+
+Applying (4) to (8) gives $J=O(S)$: if $b\ge S/H$, use $E/b$;
+otherwise use $\sqrt{HE}$. All normalized action factors and the
+width threshold are at most $\exp(CS)$. This proves the long-padding
+part of Theorem~\ref{thm:threshold}.
+
+\section{Short padding}
+Let $M=H-h$ and retain the same seed. Fix a universal small
+$p_*>0$ and put $S_0=\log(p_*/p_h)$; increase the resource constants
+so that $S_0\ge1$ and $S_0\le CS$. If $M=0$, a direct readout has
+normalized action at most $C/p_h$.
+
+For $1\le M<CS$, prescribe components growing geometrically from
+$p_N$ to $p_*$. A Gaussian scalar variance multiplier in
+\[
+ 1\le a_j\le128\exp(S_0/M)                       \tag{9}
+\]
+achieves each required increase exactly, uniformly in $t\le1$.
+For completeness, if the target component is $v$ and the next one
+is $w\le p_*=1/128$, taking $a=128w/v$ gives total preactivation
+variance at most two. Gaussian integration by parts and
+$\E\operatorname{sech}^2(\sqrt uG)\ge1/6$ for $u\le2$ give
+an available component at least $av/36>w$; at $a=1$ it is at most
+$v$. Continuity and the zero-cost score downgrade suffice.
+
+The resulting finite-width budget obeys
+\[
+ t^2\overline a\le C\{1+M\exp(S_0/M)\},\qquad
+ \Gamma\le128^{M/2}\exp(S_0/2).                  \tag{10}
+\]
+For $M=0$, replace the first right side by $C/p_h$.
+The same normalized finite-width slack argument gives a threshold
+$N\ge\exp(CS)$. Since $\mathcal R(D)\le4D+2$, (3) yields
+\[
+ \log P_t(\overline a+t^{-2},H)
+ \le C(h+1)(S+1).                               \tag{11}
+\]
+Indeed for $M\ge1$ the upper bound is at most
+$C H+C(H/M)S_0$, and $H=h+M$, $M<CS$; the case $M=0$ follows
+directly with $H=h$.
+Equations (10)--(11) and Proposition~\ref{prop:intrinsic} prove
+(1) at widths beyond $\exp(CS)$. All smaller widths are bounded
+by that same threshold, so the VC bound for the entire finite-width
+tanh class gives (1) there as well. This completes
+Theorem~\ref{thm:threshold}.
+
+\section{Fourier seeds and consequences}
+The critical Fourier construction supplies, for each parity $\chi_S$,
+a mixture of Gaussian mean shifts and cube sign symmetrizations
+with mean $c_S\chi_S$, $c_S\ge1/[8(d+1)]$, and entropy at most
+\[
+ D_*=C(d+1)^3\log^2(d+2).
+\]
+At variance $t^2/d$, keep the same physical shifts. Their entropy is
+at most $D_*/t^2$, the saturation estimate improves, and symmetry
+still gives an exact parity mean with the same lower bound. Mixing
+the signed parity laws with weights proportional to
+$|\widehat f(S)|/c_S(t)$ gives exact mean $f/Z_f(t)$, where
+$Z_f(t)\le8(d+1)A(f)$, at the same entropy upper bound.
+
+Mix this controlled law into the raw first law with probability
+$\vartheta=(D_*L)^{-1}$. A latent tag score gives the exact component
+\[
+ v=\frac1{D_*LZ_f(t)^2}\ge
+ \frac1{D_*L[8(d+1)A(f)]^2},                     \tag{12}
+\]
+with prefix cost at most $1/(Lt^2)$ and constant diagonal at most
+one. The tag is included under both laws and adds no independent
+entropy penalty. Use score downgrade to track the right side of
+(12), and initialize the virtual critical scalar comparator with
+diagonal one. Bounded scores and features give a polynomial
+finite-width seed threshold by concentration over the cube.
+
+Now $h=1$ and $S=O(\log(d+L+A(f)+2))$. The long-padding proof
+and the short-padding proof apply unchanged, including $H=1$ with
+direct readout. In (11), $h+1$ is an absolute constant. This proves
+Theorem~\ref{thm:fourier}.
+
+\begin{corollary}[Two useful regimes]
+Polynomial-size Boolean formulas and deterministic or nondeterministic branching programs
+of polynomial length and polynomial state width have
+$\exp(O(\log^2 L))$ sample bounds when their input dimension and
+resources are polynomial in learner depth $L$, uniformly over
+$0<t\le1$ and all realizable widths.
+\end{corollary}
+\begin{proof}
+Balanced formulas have logarithmic threshold depth and polynomial
+size. For branching programs, compose their Boolean transition
+matrices in a balanced tree using
+$(AB)_{pq}=\bigvee_r(A_{pr}\wedge B_{rq})$.
+This gives threshold depth $O(\log T)$ and size $O(TW^3)$ for
+length $T$ and width $W$. Thus $S=O(\log^2 L)$ and the learner
+has enough padding for Proposition~\ref{prop:long}.
+\end{proof}
+
+\section*{Proof dependencies and audit status}
+The local scale-change, residual monotonicity, score downgrade,
+short-padding estimates, and their combination with the intrinsic
+bounds have been independently checked by the upper-bound,
+critical-depth, and complexity-barrier agents. The following scratch
+notes identify the imported analytic arguments precisely:
+\begin{itemize}
+\item \texttt{uniform-scale-intrinsic.md} and
+\texttt{uniform-sharp-intrinsic.md}: normalized all-width learning.
+\item \path{finite-width-dual-certificate.md} and
+\path{uniform-baseline-gain.md}: extraction and baseline gain.
+\item \texttt{nearcritical-target-reuse.md}: uniform critical-program reuse.
+\item Section 4 of this manuscript: the short-padding schedule and
+its explicit gain bound. The critical finite-width channel input below
+supplies its concentration and relative-entropy comparison.
+\item The critical-depth manuscript's finite circuit prefix,
+scalar steering, occupation, finite channel, and controlled Fourier
+seed sections: the quantitative critical inputs (5)--(6).
+\end{itemize}
+The named proof notes accompany this manuscript in the
+\path{proof-notes/} directory. Exact links to the critical-depth
+source inputs appear in the package README and dependency manifest.
+These analytic learning statements are not claimed to be machine verified.
+\end{document}

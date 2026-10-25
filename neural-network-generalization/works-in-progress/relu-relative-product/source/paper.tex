@@ -1,0 +1,513 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,microtype,xurl,hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue,
+pdftitle={A sharp ReLU energy baseline and compression above that baseline},
+pdfauthor={ChatGPT-6 Astra; Kaarel Haenni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}
+\newcommand{\relu}{\operatorname{ReLU}}
+\newcommand{\F}{\mathrm F}
+\newcommand{\op}{\mathrm{op}}
+\newcommand{\tr}{\operatorname{tr}}
+\newcommand{\diag}{\operatorname{diag}}
+\title{A sharp ReLU energy baseline and compression above that baseline}
+\author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob}
+\date{Research draft --- 25 October 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+For bias-free ReLU layers following an augmented Boolean input, every
+nonconstant classifier with global unit margin has Gaussian weighted energy
+at least $2L+\log d-2\log2$.  A stronger finite-depth bound is attained
+exactly by a dictator at $d=1$.  We also prove a function-level
+compression theorem.  If a representation with $H$ hidden layers has
+Frobenius product $P$ and
+$\beta=\log(dP^2/2^H)$, the same classifier admits a ReLU representation
+of depth $O(1+\beta)$ and product $\exp(O(1+\beta))$, independently of
+its original depth and widths. The proof combines a simultaneous
+separation bound for all opposite-labelled hidden pairs with a
+constant-branching cover and an explicit nearest-prototype classifier.
+An Occam argument gives a cold-prior sample bound polynomial in the
+target's relative product, independently of learner width and depth.
+The relative product can be exponential in target depth, so this does
+not prove a joint polynomial-depth learning theorem or an exponential
+learning lower bound. No corresponding result for tanh is asserted.
+\end{abstract}
+
+\section{Model and statements}
+Let $d\ge1$ and $\bar x=(1,x)\in\R^{d+1}$ for
+$x\in\{-1,1\}^d$.  A network with $H\ge1$ hidden layers is
+\[
+ h_0(x)=\bar x,\qquad h_s(x)=\relu(W_s h_{s-1}(x))\ (1\le s\le H),
+ \qquad z(x)=v^T h_H(x).
+\]
+All hidden widths are finite and unrestricted.  There are no separately
+supplied biases after the augmented input.  Set $L=H+1$ and
+\[
+ P=\|v\|_2\prod_{s=1}^H\|W_s\|_\F.
+\]
+A Boolean function $f$ has global unit margin when $f(x)z(x)\ge1$ for every
+cube input.  At common width $N$, the Gaussian weighted energy is
+\[
+ \kappa=\frac dN\|W_1\|_\F^2+
+       \sum_{s=2}^H\|W_s\|_\F^2+N\|v\|_2^2.
+\]
+The product of these $L$ weighted layer energies is exactly $dP^2$.
+All logarithms are natural unless a base is displayed.
+
+\begin{theorem}[Baseline and sharp one-variable example]\label{thm:baseline}
+If $f$ is nonconstant and globally unit-margined, then
+\[
+ P^2\ge (1+d^{-1/H})^H,\qquad
+ dP^2\ge(1+d^{1/H})^H\ge2^H\sqrt d.
+\]
+Consequently
+\[
+ \kappa\ge L(1+d^{1/H})^{H/L}
+ \ge L(2^H\sqrt d)^{1/L}
+ \ge2L+\log d-2\log2.
+\]
+For $d=1$ and $f(x)=x$, the first energy bound is attained at every
+common width $N\ge2$.  In particular its exact value is $L2^{H/L}$.
+\end{theorem}
+
+\begin{theorem}[Compression above the baseline]\label{thm:compression}
+Suppose a nonconstant $f$ has a globally unit-margined representation with
+$H$ hidden layers and product $P$.  Put
+\[
+ \beta=\log\frac{dP^2}{2^H},\qquad
+ G=1+\beta.
+\]
+There is a universal constant $C$ such that $f$ has another globally
+unit-margined ReLU representation with at most $CG$ hidden layers and
+Frobenius product at most $\exp(CG)$.  There is no dependence on the
+original widths, individual coefficients, precision, or robustness.
+\end{theorem}
+
+\begin{corollary}[Energy form]\label{cor:energy}
+If $\kappa\le2L+B$ with $B\ge0$, then the conclusion of
+Theorem~\ref{thm:compression} holds with
+\[
+ G\le C(1+B).
+\]
+In particular the new depth is $O(B+1)$ and its product is
+$\exp(O(B+1))$, independently of the original depth.  This is a statement about an existing
+low-energy representation; it is not a learning theorem.
+\end{corollary}
+
+\section{Two-anchor linear replacement}
+The Boolean cube graph is connected, so a nonconstant $f$ has a
+bichromatic edge.  Orient it as $x_+,x_-$ with labels $+1,-1$.  Write
+\[
+ X=[\bar x_+,\bar x_-],\qquad
+ a_s=h_s(x_+),\quad b_s=h_s(x_-),\quad
+ G_s=\begin{pmatrix}\|a_s\|^2&a_s^Tb_s\\a_s^Tb_s&\|b_s\|^2\end{pmatrix}.
+\]
+The hidden anchors are nonnegative.  Neither vanishes, and they cannot be
+positively proportional: every subsequent layer and the readout preserve
+positive proportionality, which would contradict their opposite output
+signs.  Thus every $G_s$ is positive definite with nonnegative off-diagonal.
+The augmented input Gram has eigenvalues $2d,2$, so
+\[
+ G_0=X^TX=\begin{pmatrix}d+1&d-1\\d-1&d+1\end{pmatrix},
+ \qquad \det G_0=4d.
+\]
+Its off-diagonal is also nonnegative.
+
+\begin{lemma}[Linear replacement with a squared-error bound]\label{lem:replacement}
+Let two linearly independent anchors have Gram
+$G=\left(\begin{smallmatrix}A&C\\C&B\end{smallmatrix}\right)$ with $C\ge0$.
+For any row $w$, there is a minimum-norm linear row $b$ that maps these
+anchors to their two ReLU outputs, and
+\[
+ \|w-b\|^2\le\|w\|^2-\|b\|^2.
+\]
+Consequently, if $W$ maps the anchors through ReLU to output Gram $G'$, its
+least-Frobenius linear replacement $B_*$ satisfies
+\[
+ \|W-B_*\|_\F^2\le\|W\|_\F^2-\|B_*\|_\F^2,
+ \qquad \|B_*\|_\F^2=\tr(G'G^{-1}).
+\]
+The two nonzero squared singular values of $B_*$ are the eigenvalues of
+$G^{-1/2}G'G^{-1/2}$.
+\end{lemma}
+\begin{proof}
+If both outputs are positive, project $w$ onto the anchor span.  If both
+are zero, use $b=0$.  In the remaining case, interchange anchors if needed
+so that the outputs are $p>0,0$ and the original preactivations are $p,t$
+with $t\le0$.  The least-norm replacement has evaluations $(p,0)$.
+The difference has evaluations $(0,t)$ plus an orthogonal component, hence
+\[
+ \langle b,w-b\rangle=-Cpt/\det G\ge0.
+\]
+Expansion of $\|w\|^2$ proves the claimed inequality.  Apply this rowwise.
+The matrix and singular-value formulas follow from the minimum-norm map
+$Y X^+$ between two full-rank anchor-column matrices $X,Y$.
+\end{proof}
+
+It follows that for every hidden layer, including the first,
+\begin{equation}\label{eq:gramcost}
+ \|W_s\|_\F^2\ge\tr(G_sG_{s-1}^{-1})
+                \ge2\sqrt{\det G_s/\det G_{s-1}}.
+\end{equation}
+The least-norm readout with evaluations $y_+\ge1,y_-\le-1$ costs
+$y^TG_H^{-1}y$.  Nonnegativity of the off-diagonal gives
+\begin{equation}\label{eq:readout}
+ \|v\|^2\ge\frac{\|a_H\|^2+\|b_H\|^2+2a_H^Tb_H}{\det G_H}
+             \ge\frac2{\sqrt{\det G_H}}.
+\end{equation}
+Multiplying \eqref{eq:gramcost} and \eqref{eq:readout} already proves
+$P^2\ge2^H/\sqrt d$.
+
+\section{The stronger baseline and its sharpness}
+For completeness we prove the stronger product inequality in
+Theorem~\ref{thm:baseline}.  Replace all hidden matrices by the maps
+$B_1,\ldots,B_H$ from Lemma~\ref{lem:replacement}, and let
+$B=B_H\cdots B_1$ and $V=\|v\|$.  The product has rank two, transports
+$X$ exactly to $[a_H,b_H]$, and vanishes off the input anchor span.
+Let $\sigma_1\ge\sigma_2>0$ be the two singular values of $VB$.
+The input-edge difference has norm two, while the output difference is at
+least two.  Therefore $\sigma_1\ge1$.  Also \eqref{eq:readout} gives
+\[
+ \sigma_1\sigma_2
+   =V^2\sqrt{\frac{\det G_H}{\det G_0}}\ge d^{-1/2}.
+\]
+The rank-two form of Schatten H\"older gives
+\[
+ P\ge V\prod_s\|B_s\|_\F\ge\|VB\|_{S_{2/H}},
+\]
+including when $2/H<1$. Here is a direct proof of the inequality needed.
+Let $a_s\ge b_s>0$ be the singular values of the restriction of $B_s$
+between its two anchor planes, and let $u_1\ge u_2>0$ be those of $B$.
+Area multiplication gives $u_1u_2=\prod_s a_sb_s$, while operator-norm
+submultiplicativity gives
+\[
+ \tau:=\log(u_1/u_2)\le\sum_s\log(a_s/b_s).
+\]
+Put $t_s=\log(a_s/b_s)\ge0$. Convexity of $\log\cosh$ and monotonicity
+of $\cosh$ on the positive half-line imply
+\[
+ \prod_s\|B_s\|_\F^2
+ =2^H\Bigl(\prod_s a_sb_s\Bigr)\prod_s\cosh t_s
+ \ge2^Hu_1u_2\cosh(\tau/H)^H
+ =\bigl(u_1^{2/H}+u_2^{2/H}\bigr)^H.
+\]
+Multiplication by $V$ proves the claimed inequality for $VB$ without
+requiring a separate quasi-norm theorem. Thus
+\[
+ P^{2/H}\ge\sigma_1^{2/H}+\sigma_2^{2/H}
+  \ge\min_{t\ge1}\{t^{2/H}+d^{-1/H}t^{-2/H}\}
+  =1+d^{-1/H}.
+\]
+The last function is nondecreasing on $[1,\infty)$.  This proves the
+product bound.  Weighted-layer AM--GM proves the first energy bound.
+Finally
+\[
+ L(2^H\sqrt d)^{1/L}
+ =2L\exp\left(\frac{\tfrac12\log d-\log2}{L}\right)
+ \ge2L+\log d-2\log2.
+\]
+
+For $d=1$, use the first-layer indicator rails
+\[
+ \relu((1+x)/2),\qquad\relu((1-x)/2),
+\]
+then the two-dimensional identity in every internal layer and readout
+$(1,-1)$.  The first squared Frobenius norm is one, every internal squared
+norm is two, and the readout squared norm is two, giving $P^2=2^H$.
+Pad by zero neurons to any width $N\ge2$.  If $e_1,\ldots,e_L$ are the
+weighted energies and $g=2^{H/L}$, multiply each corresponding weight block
+by $\sqrt{g/e_s}$.  Their product is one.  Positive homogeneity preserves
+the output and makes every weighted energy equal to $g$, attaining $Lg$.
+This proves Theorem~\ref{thm:baseline}.
+
+\begin{remark}
+For margin $a>0$, multiply the product-squared lower bounds by $a^2$ and
+the energy bounds by $a^{2/L}$.  Constants have a different baseline:
+a single positive rail attains $\kappa=Ld^{1/L}$.  Its optimality follows
+from $P\ge1$ for any globally unit-margined function: the input second
+moment is the identity, and successive zero-preserving contractions imply
+$\mathbb E z(x)^2\le P^2$.
+\end{remark}
+
+\section{All opposite-labelled hidden pairs remain separated}
+The margin inequalities yield more than a bound for one selected edge.
+Fix \emph{any} pair of opposite-labelled cube inputs and let $G_s$ be its
+hidden Gram.  Both states are nonzero, nonnegative, and nonproportional
+at every stage.  Lemma~\ref{lem:replacement} therefore applies throughout
+its suffix.  With
+\[
+ S_j=\prod_{s\le j}\|W_s\|_\F,\qquad
+ T_j=\|v\|\prod_{s=j+1}^H\|W_s\|_\F,
+\]
+for $1\le j\le H$ we have $S_jT_j=P$ and
+\[
+ T_j^2\ge
+ \frac{2}{\sqrt{\det G_H}}
+ \prod_{s=j+1}^H2\sqrt{\frac{\det G_s}{\det G_{s-1}}}
+ =\frac{2^{H-j+1}}{\sqrt{\det G_j}}.
+\]
+Consequently
+\begin{equation}\label{eq:area}
+ \sqrt{\det G_j}\ge2^{1-j}dS_j^2e^{-\beta}.
+\end{equation}
+Each hidden state has norm at most $RS_j$, where $R=\sqrt{d+1}$.
+The parallelogram area of two vectors is at most the first vector's norm
+times their distance.  Dividing \eqref{eq:area} by $RS_j$ proves the
+simultaneous normalized separation bound
+\begin{equation}\label{eq:separation}
+ \left\|\frac{h_j(x)}{S_j}-\frac{h_j(y)}{S_j}\right\|
+ \ge\Delta_j:=\frac{2d}{R}\,2^{-j}e^{-\beta}
+ \qquad\text{whenever }f(x)\ne f(y).
+\end{equation}
+There is no original-depth factor in this estimate.  It bounds precisely
+those pairs that require opposite final signs, rather than an unrestricted
+suffix Lipschitz constant.  The baseline also gives
+$\beta\ge\tfrac12\log d\ge0$.
+
+\section{A cover and an explicit ReLU classifier}
+\begin{lemma}[A universal radius-quartering cover]\label{lem:cover}
+For $K=17^{64}$, every finite matrix $W$ maps any radius-$r$ ball into at
+most $K$ balls of radius $r\|W\|_\F/4$.  The same holds after ReLU.
+\end{lemma}
+\begin{proof}
+Normalize $\|W\|_\F=1$.  Retain its largest sixty-four singular directions;
+the tail has operator norm at most $1/8$. Cover the unit ball in the
+retained space by a $1/8$-net of size at most $17^{64}$. Orthogonality of
+the top and tail errors bounds the total radius by $\sqrt2/8<1/4$.
+Translation and scaling handle arbitrary balls, and ReLU is one-Lipschitz.
+\end{proof}
+
+Set
+\[
+ j_0=\left\lceil\log_2(64e^\beta)\right\rceil.
+\]
+If $H<j_0$, the original network already has the depth and product required
+by Theorem~\ref{thm:compression}, since
+$\log P=(H\log2+\beta-\log d)/2$.  Assume $H\ge j=j_0$.
+Repeated application of Lemma~\ref{lem:cover} covers the normalized states
+$h_j/S_j$ by at most $K^j$ balls of radius $R4^{-j}$.
+The simultaneous separation \eqref{eq:separation} makes every such ball
+monochromatic. Replace each nonempty ball center by an actual prefix
+image and retain its label. There are $q\le K^j$ prototypes, each of norm
+at most $R$, and the covering radius doubles. Since
+\[
+ \frac{2R4^{-j}}{\Delta_j}
+ =\frac{R^2}{d}e^\beta2^{-j}\le\frac1{32},
+\]
+every query has a correct-label prototype within $\Delta_j/4$, while every
+opposite-label prototype is at distance at least $\Delta_j$. Write
+$\Delta=\Delta_j$ below.
+Let $\mathcal P_+,\mathcal P_-$ denote the two nonempty prototype classes.
+Define
+\[
+ s_a(u)=2\langle a,u\rangle-\|a\|^2,\quad g=\Delta^2/2,
+ \quad t_{ab}(u)=\frac{s_a(u)-s_b(u)}g,
+\]
+for $a\in\mathcal P_+$ and $b\in\mathcal P_-$.  Compute
+\begin{align*}
+ C_{ab}(u)&=\frac{\relu(t_{ab}(u)+1)-\relu(t_{ab}(u)-1)}2,\\
+ A_a(u)&=\relu\left(\sum_{b\in\mathcal P_-}C_{ab}(u)
+                                      -|\mathcal P_-|+1\right),\\
+ z_*(u)&=2\sum_{a\in\mathcal P_+}A_a(u)-1.
+\end{align*}
+These formulas use two ReLU hidden layers and one linear readout.
+Always $C_{ab},A_a\in[0,1]$.  On a positive query a close positive
+prototype beats every negative score by at least
+$\Delta^2-\Delta^2/16>g$, so its $A_a$ equals one and $z_*\ge1$.
+On a negative query, one close negative prototype beats every positive
+score by the same amount; every $A_a$ vanishes and $z_*=-1$.
+The comparison cancels the squared query norm, which is why the suffix
+cost does not depend on the original feature dimension.
+
+Positive homogeneity computes the normalized prefix using
+$W_s/\|W_s\|_\F$.  Carry a constant rail of value one through it, starting
+from the augmented input.  Every augmented prefix matrix has Frobenius
+norm $\sqrt2$, so its product is $2^{j/2}$.  The comparison, $A$, and
+readout norms are respectively at most
+\[
+ Cq(1+R^2/g),\qquad Cq^{3/2},\qquad C\sqrt q,
+\]
+including constant-rail rows.  Since
+$R^2/g=R^4 4^je^{2\beta}/(2d^2)\le2\cdot4^je^{2\beta}$ and
+$q\le K^j$, the new product is bounded by
+\[
+ 2^{j/2}Cq^3(1+R^2/g)\le\exp(C(j+\beta+1))=\exp(CG).
+\]
+Its hidden depth is $j+2=O(G)$.  This proves
+Theorem~\ref{thm:compression}.
+
+Finally, if $\kappa\le2L+B$, weighted-layer AM--GM gives
+\[
+ \frac{dP^2}{2^H}\le2\left(1+\frac B{2L}\right)^L\le2e^{B/2}.
+\]
+Thus $\beta\le\log2+B/2$, proving Corollary~\ref{cor:energy}.
+
+\section{A strong-prior Occam consequence}
+We make the statistical consequence explicit. The result in this section
+concerns the cold prior limit at each fixed finite learner width. It is
+not a uniform polynomial-width theorem at a fixed exponent gap.
+
+\begin{lemma}[Finite classification capacity]\label{lem:capacity}
+For ReLU networks of hidden depth at most $h$, Frobenius product at most
+$Q\ge1$, and global unit margin on the $d$-cube, the number of distinct
+Boolean functions is at most
+\[
+ \exp\bigl(\operatorname{poly}(d,h,Q)\bigr),
+\]
+for one universal polynomial, independently of the original widths.
+Consequently the functions with any-depth relative product
+$dP^2/2^H\le T$, together with constants, form a class $\mathcal F_T$ with
+$\log|\mathcal F_T|\le\operatorname{poly}(d,\max(1,T))$.
+\end{lemma}
+\begin{proof}
+We give the finite-width step to clarify the absence of a width parameter.
+For consecutive matrices $W,V$, let $a_i$ be the norm of row $i$ of $W$,
+$b_i$ the norm of column $i$ of $V$, and
+$A=\sum_i a_i b_i\le\|W\|_\F\|V\|_\F$.
+Ignore zero terms. Sample $m$ indices with probabilities $a_i b_i/A$.
+Use incoming row $w_i/a_i$ and outgoing column $Av_i/(mb_i)$ for each
+sampled neuron. Positive homogeneity makes the new preactivation at the
+next layer an unbiased approximation to the original. Its two-layer
+Frobenius product is exactly $A$, for every draw.
+
+If the earlier prefix product is $S$, each sampled vector has norm at
+most $AS\sqrt{d+1}$. The suffix is bounded by its Frobenius product.
+Hilbert-space bounded-difference concentration and a union bound over the
+$2^d$ inputs therefore give final-output error at most $\varepsilon/h$
+with
+$m=\operatorname{poly}(d,h,Q,\varepsilon^{-1})$ samples.
+Process consecutive pairs from the first hidden layer through the last,
+using the readout as the final outgoing matrix. The product never
+increases, all retained widths are polynomial, and the total error is at
+most $\varepsilon$. Take $\varepsilon=1/4$ and double the final readout.
+
+Positive homogeneous rescaling now makes every hidden matrix have
+Frobenius norm one, while the readout norm is at most $2Q$.
+All hidden states have norm at most $\sqrt{d+1}$. Round the polynomially
+many matrix entries on an inverse-polynomial mesh. The usual layerwise
+one-Lipschitz recurrence gives uniform output error less than $1/4$.
+There are only $\exp(\operatorname{poly}(d,h,Q))$ resulting finite
+parameter descriptions, and each original function is represented by one
+of them. Theorem~\ref{thm:compression} gives the second assertion.
+\end{proof}
+
+Fix a target $f$ with a unit-margined depth-$D\ge2$, width-$C$ ReLU
+representation of product $P_*$, and put
+\[
+ T_* =\max\{1,dP_*^2/2^{D-1}\}.
+\]
+The learner uses depth $L\ge D$ and common width $N\ge\max(C,2)$.
+In weighted energy coordinates its raw prior has density proportional to
+$\exp(-\kappa/(2\sigma^2))$. Its posterior conditions on strict absolute
+margin $|z(x)|>1/2$ at every cube input and agreement with the noiseless
+sample labels. The input distribution below is arbitrary.
+
+\begin{theorem}[Width- and learner-depth-independent cold sample bound]
+\label{thm:occam}
+There is a universal polynomial $p$ such that, for all
+$\alpha,\delta\in(0,1)$, the sample bound
+\[
+ n\ge\frac6\alpha\left[p(d,T_*)+\log\frac1\delta\right]
+\]
+has the following property. For each fixed admissible $L,N$, and all
+sufficiently small positive $\sigma$ (with a threshold allowed to depend
+on $L,N,\alpha$ and the target), with sample probability at least $1-\delta$
+the posterior assigns the correct label probability strictly greater than
+$2/3$ on an input-distribution fraction at least $1-\alpha$.
+The displayed sample bound is independent of the learner width and depth.
+Its dependence on the target product may be exponential in target depth.
+\end{theorem}
+\begin{proof}
+First produce an exact target witness at the learner architecture.
+When $L>D$, replace the scalar readout by the two rails
+$\relu(z),\relu(-z)$ and final readout $(1,-1)$, and insert two-rail
+identity layers as needed. The initial split multiplies the product by
+two and adds one weighted layer. Every subsequent identity layer
+multiplies its square by two. Thus the padded target product $P_0$
+satisfies
+\[
+ T_0:=dP_0^2/2^{L-1}\le2T_*.
+\]
+For $L=D$ use the target directly. Pad hidden layers to a common base
+width $C_0\le\max(C,2)$. At any $N\ge C_0$, clone every base neuron
+$k=\lfloor N/C_0\rfloor$ times and pad the remaining coordinates by zero.
+The first Frobenius norm gains $\sqrt k$, internal norms are unchanged,
+and the readout norm gains $1/\sqrt k$. Hence the function and its product
+are preserved exactly, including at widths that are not multiples of
+$C_0$.
+
+Balance the $L$ weighted layer energies by positive homogeneous scaling.
+The exact target witness then has energy
+\[
+ K=L(dP_0^2)^{1/L}=L g,\qquad g\ge1.
+\]
+Here $g\ge1$ follows from $P_0\ge1$, using the input second moment and
+global margin. The witness has strict conditioning margin. A fixed
+neighborhood therefore lies in every sample-conditioning event and has
+energy at most $K+1/4$. Finite-dimensional Gaussian Laplace comparison
+shows, uniformly over all samples,
+\[
+ Q_{S,\sigma}\{\kappa>K+1\}\longrightarrow0
+                  \quad(\sigma\downarrow0).
+\]
+The denominator can use the same target neighborhood for every sample.
+No limit uniform in $L,N$ is asserted.
+
+For a posterior network of energy at most $K+1$, AM--GM gives
+\[
+ dP^2\le((K+1)/L)^L\le e^{1/g}dP_0^2\le e\,dP_0^2.
+\]
+Its margin is greater than $1/2$. Doubling its readout gives a unit-margin
+representation with relative product at most $4eT_0\le8eT_*$.
+Constant classifiers are harmless separately. Lemma~\ref{lem:capacity}
+therefore puts all these posterior functions in one class $\mathcal F$
+with $\log|\mathcal F|\le p(d,T_*)$, independently of $L,N$.
+
+A union bound over $\mathcal F$ shows that with sample probability at
+least $1-\delta$, every sample-consistent member has population error at
+most $\alpha/6$. Choose the cold threshold so the posterior mass outside
+this class is at most $\alpha/12$. Its Gibbs error is then at most
+$\alpha/4$. If the posterior correct-label probability is at most $2/3$
+at an input, its error probability there is at least $1/3$.
+Markov's inequality bounds the fraction of such inputs by
+$3\alpha/4<\alpha$, proving the stated strict-confidence conclusion.
+\end{proof}
+
+\section{Scope and further consequences}
+The structural theorem concerns the represented Boolean function, rather
+than the stability of a particular parameterization. It permits arbitrary
+original widths and arbitrarily small hidden amplitudes.
+The product-to-parallel-circuit theorem in the companion
+paper~\cite{parallel} also gives threshold circuits of size $\exp(O(\beta+1))$ and depth
+$O(\beta+1)$, and Boolean circuits of the same size with depth
+$O((\beta+1)^2)$. Its proof is separate from the arguments above.
+
+The cold sample theorem does not imply a polynomial sample bound in
+arbitrary target depth: $T_*$ itself can be exponential in that depth.
+An extension at prescribed finite Gaussian scales requires a separate
+posterior comparison; it is not proved here. The cold threshold in
+Theorem~\ref{thm:occam} is allowed to depend on the fixed architecture.
+
+No natural-activation exponential sample lower bound is proved here.
+No assertion about the original unrestricted tanh learning problem
+follows from these ReLU results.
+\paragraph{Verification scope.}
+The arguments have received independent conventional mathematical audits.
+The complete results in this paper have not been formalized in Lean.
+
+\begin{thebibliography}{9}
+\bibitem{parallel}
+ChatGPT-6 Astra, Kaarel H\"anni, and Dmitry Vaintrob.
+\emph{Frobenius product, parallel circuits, and sample-complexity barriers
+for deep Gaussian Bayesian networks}. Research draft, 25 October 2026.
+\url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/boolean-depth-barriers}.
+\end{thebibliography}
+\end{document}

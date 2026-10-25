@@ -1,0 +1,821 @@
+\section{Critical target mass and posterior circuits}
+\label{ac-appendix}
+
+This appendix proves the finite-width critical input used in the main
+theorem. Throughout, constants may depend on one fixed activation $\phi$.
+We assume that $\phi$ is odd, strictly increasing, bounded by one,
+and $1$-Lipschitz; that it is $C^5$ with bounded derivatives through
+order five, concave on $(0,\infty)$, and satisfies
+\[
+ \phi'(0)=1,\qquad \phi'''(0)<0,\qquad
+ \phi'(u)\ge c_0\operatorname{sech}^2u.
+\]
+Writing $\beta=\lim_{u\to\infty}\phi(u)>0$, assume
+$\beta-\phi(u)\le C(1+u)^{-a}$ for $u\ge0$ and some $a>0$.
+The final assumption is the strict potential
+\begin{equation}\label{ac-potential}
+ \log\E e^{\phi(\sqrt q Z)^2}\le q-cq^2,
+                  \qquad 0\le q\le2,
+\end{equation}
+where $Z$ is standard Gaussian. The main text verifies all these
+conditions for the activation constructed there.
+
+Set $H=L-1\ge1$. For a finite input set $X$, a controlled critical
+path starts at $Q_0(x,y)=(1+x\cdot y)/d$ and consists of
+\[
+ \rho_j\ll\mathcal N(0,Q_{j-1}),\quad
+ D_j=\operatorname{KL}(\rho_j\Vert\mathcal N(0,Q_{j-1})),\quad
+ Q_j(x,y)=\E_{\rho_j}\phi(G_x)\phi(G_y).
+\]
+Singular references are permitted. Its output $z\in\operatorname{range}Q_H$
+has readout cost $r=z^{\mathsf T}Q_H^\dagger z/2$, and total action
+$A=\sum_jD_j+r$. Let $J_L(f)$ be the infimum of this action over
+full-cube paths with $f(x)z(x)\ge1/2$ everywhere. These definitions
+will be related to actual finite-width probabilities below.
+
+\subsection{Scalar control, cooling, and a target program}
+
+For $q>0$ let $V(q)$ be the infimum, over finite scalar paths starting
+at $q_0=q$, of
+\[
+ \sum_{j=1}^m\operatorname{KL}(\eta_j\Vert\mathcal N(0,q_{j-1}))
+       +\frac1{8q_m},\qquad q_j=\E_{\eta_j}\phi(G)^2.
+\]
+The length-zero path is included.
+
+\begin{lemma}[Scalar baseline and short paths]\label{ac-scalar}
+The function $V$ is nonincreasing and has a finite positive limit
+$V_*:=\lim_{q\downarrow0}V(q)$. For a fixed $C$,
+\[
+ 0\le V_*-V(q)\le Cq\quad(0<q\le2).
+\]
+A scalar transition of entropy $D$ from variance $q$ to $q'$ satisfies
+\[
+ D\ge V(q)-V(q'),\qquad D\ge q'-q+cq^2\quad(q\le2).
+\]
+For every sufficiently small $p>0$ there is a strictly increasing
+scalar path starting at $p$, of total cost at most $V(p)+p$, whose
+length is at most $C/p$ and for which
+\begin{equation}\label{ac-short-path}
+ \sum_j q_j\le C\log(2/p),\qquad
+ \sum_j\sqrt{D_j}\le C\log(2/p).
+\end{equation}
+\end{lemma}
+\begin{proof}
+Rescaling a controlled preactivation when its reference variance
+increases preserves its Gaussian relative entropy and increases its
+$\phi$-square moment. Applying this successively proves monotonicity.
+Oddness, $\phi'(0)=1$, and bounded third derivatives give
+$F(u):=\E\phi(\sqrt uZ)^2\ge u-Cu^2$ for small $u$; outside a
+fixed neighborhood of zero use Gaussian tails and $|\phi(z)|\le|z|$.
+Inflating the reference variance by $1+Kq$, with fixed large $K$,
+therefore increases a small $q$ by between $c_1q^2$ and $C_1q^2$
+at Gaussian cost at most $C_2q^2$. Continuous adjustment of the
+inflation hits any prescribed small endpoint $p$ exactly. Telescoping
+the cost-to-increment ratio gives a bridge from arbitrarily small
+positive variance to $p$ costing at most $Cp$. A direct readout at
+one fixed $p$ proves finiteness of $V_*$, and appending a nearly
+optimal suffix proves $V_*-V(p)\le Cp$. Boundedness extends this
+inequality to $q\le2$. For starting $q\le1$, every final variance,
+including that of a length-zero path, is at most one; hence $V_*\ge1/8$.
+The Bellman inequality follows by appending a nearly optimal suffix,
+and entropy duality applied to~\eqref{ac-potential} gives dissipation.
+
+Delete each nonincreasing transition of a near-optimal path and rescale
+the subsequent controls as above. Cost does not increase, so the path
+may be taken strictly increasing. Its cost is bounded by a fixed
+constant $B$. Gaussian entropy duality and $\phi(z)^2\le z^2$ bound
+each ratio $q'/q$ by a constant depending on $B$. The entropy spent
+before a state $q$ is at most $p+Cq$, by the scalar suffix bound.
+In a dyadic band $u\le q<2u$, its expenditure, including its exit
+transition, is therefore $O(u)$: the exit state is at most a fixed
+multiple of $u$. Summed dissipation bounds its length by $O(1/u)$,
+apart from at most one exit transition. The band contributes $O(1)$
+to both sums in~\eqref{ac-short-path}, using Cauchy--Schwarz for the
+second. Summing the geometric length bounds and logarithmically
+many bands proves the assertion. States above a fixed small constant
+occupy only a bounded number of transitions by the same dissipation.
+\end{proof}
+
+\begin{lemma}[An exact low-cost Fourier seed]\label{ac-seed}
+Let $A_F(f)=\sum_T|\widehat f(T)|$. There is a first-row controlled
+law, with auxiliaries and a score $b_1$, such that
+\[
+ \E b_1^2=1,\quad \E[b_1\phi(w\cdot(1,x))]=\sqrt{v_1}f(x),
+ \quad \E\phi(w\cdot(1,x))^2=q_1
+\]
+with $q_1$ independent of $x$, relative entropy at most $1/H$, and
+$v_1^{-1},\norm{b_1}_\infty$ bounded by a fixed polynomial in
+$(d+H+2)A_F(f)$. The reference weight marginal is exactly
+$\mathcal N(0,I/d)$.
+\end{lemma}
+\begin{proof}
+For centered Gaussian $G$ of variance at most two, split at $G=-M/2$
+to obtain
+\[
+ \beta-\E\phi(M+G)\le CM^{-a}+Ce^{-M^2/16}.
+\]
+A parity on $k$ coordinates is a signed sum of $k$ threshold steps
+in their Hamming sum and a constant, with coefficient magnitudes
+at most one. Each step has an affine argument separated from zero
+by one. Shift first-row Gaussian means by a polynomially large
+multiple of these affine coefficients, and mix the signed detectors;
+reflection of the row implements a negative sign. Their normalized
+mixture has mean $g$ with $\chi_T(x)g(x)\ge c/(k+1)$ everywhere.
+Every component costs at most $D_* =\poly(d)$ in Gaussian KL.
+
+Average this law over cube translations $x\mapsto s x$, reflecting
+the output row by $\chi_T(s)$. Its mean becomes exactly
+$c_T\chi_T(x)$, where $c_T=\E_x\chi_T(x)g(x)\ge c/(d+1)$.
+Its second-moment diagonal is constant. The transformations preserve
+the Gaussian reference, and entropy convexity preserves the cost
+$D_*$. Mix these laws, with reflections according to
+$\operatorname{sign}\widehat f(T)$, in proportions
+$|\widehat f(T)|/c_T$. The resulting law has mean $f/Z_f$,
+constant diagonal, cost at most $D_*$, and
+$Z_f\le C(d+1)A_F(f)$.
+
+Dilute this law into the free first-row law with probability
+$\theta=(HD_*)^{-1}$, increasing $D_*\ge1$ if needed. Retain its
+Bernoulli tag $B_0$ and use $b_1=B_0/\sqrt\theta$. The coefficient
+is $\sqrt\theta f/Z_f$, so $v_1=\theta/Z_f^2$. In the reference
+use the same tags and free Gaussian weights in every branch. Its
+weight marginal is the original Gaussian, and the joint entropy is
+at most $\theta D_*\le1/H$. All claimed bounds follow. In particular,
+no entropy proportional to the number of translation or Fourier tags
+has been charged.
+\end{proof}
+
+\begin{lemma}[A scalar-channel target program]\label{ac-program}
+Put $R=(d+L+2)A_F(f)$ and $S=1+\log R$. If $H\ge CS$, there is
+an exact $H$-layer controlled program with scores $b_j$ and deterministic
+positive components $v_j$, residual diagonals $r_j\ge0$, such that
+\[
+ \E b_j^2=1,\quad \E[b_jh_j(x)]=\sqrt{v_j}f(x),\quad
+ \E h_j(x)^2=v_j+r_j\le1.
+\]
+Its charged scalar costs $D_j$ obey
+\begin{equation}\label{ac-program-bounds}
+ A:=\sum_jD_j+\frac1{8v_H}\le V_*+C S^2/H,
+ \quad K:=\sum_{j=2}^H\sqrt{D_j}\le CS,
+ \quad |b_j|\le B\le e^{CS}.
+\end{equation}
+For $j\ge2$, the controlled row uses a scalar $Z$, of entropy cost
+at most $D_j$ relative to a reference with standard Gaussian $Z$
+marginal, and independent Gaussian residual noise. At one input its
+feature is
+$\phi(\sqrt{v_{j-1}}f(x)Z+\sqrt{r_{j-1}}G)$.
+The score depends on $Z$ and auxiliaries, not on $G$.
+\end{lemma}
+\begin{proof}
+We supply the scalar estimates and the depth accounting. Write
+$b(u)=\E\phi'(\sqrt uZ)$. Taylor expansion, with bounded fifth
+derivatives and Gaussian tails, gives
+\begin{equation}\label{ac-cooling-expansions}
+ F(u)=u+\phi'''(0)u^2+O(u^3),\quad
+ b(u)=1+\tfrac12\phi'''(0)u+O(u^2),\quad
+ \frac{u b(u)^2}{F(u)}=1+O(u^2).
+\end{equation}
+Also $F(u)\le u-cu^2$ by~\eqref{ac-potential}. In a free layer,
+Gaussian integration by parts gives at least $v b(q)^2$ as the
+component generated from $vff^{\mathsf T}$ at diagonal $q$.
+The component-to-diagonal ratio therefore loses factors
+$q b(q)^2/F(q)$. Their logarithms are $O(q^2)$ near zero, and
+they have a positive lower bound on each remaining compact interval.
+Since free dissipation bounds $\sum q_j^2$, cooling to the first
+diagonal at most $\delta$ takes $O(1/\delta)$ layers and retains
+component at least $c\delta v_1$. If already below $\delta$, skip
+cooling; the same lower bound holds. Cooling costs zero entropy.
+
+The estimate
+\begin{equation}\label{ac-derivative-comparison}
+ 1-\phi'(z)\le C\phi(z)^2
+\end{equation}
+follows near zero by odd $C^3$ regularity and away from zero by
+positivity of $\phi$. Inflate only the target Gaussian coordinate
+by variance factor $1+e$. Its cost is
+$[e-\log(1+e)]/2\le e^2/4$. If the current component and residual
+diagonal are $v,r$ and $q=v+r$, the full conditional-mean component
+and new residual satisfy
+\begin{equation}\label{ac-growth}
+ v'\ge(1+e)v b(q+ev)^2
+       \ge(1+e)v[1-C(q+ev)],\qquad r'\le r
+\end{equation}
+in the small-variance range. The first inequality is the first Hermite
+projection; the last follows from conditional Gaussian Poincare.
+The component is continuous and increasing in $e$, and at $e=0$
+it is at most $v$. Thus at $q\le\delta$ one can hold $v$ exactly
+with $e=O(\delta)$, at cost $O(\delta^2)$, preserving $q\le\delta$.
+If $r\le\delta$ and $v\le p$, one can prescribe
+\[
+ v' =\min\{p,v[1+c_1(\delta+v)]\}
+\]
+with $e=O(\delta+v)$ and cost $O((\delta+v)^2)$. From
+$v_0=\delta e^{-C_1S}$ this takes $O(S/\delta)$ steps and costs
+$O(p+S\delta)$. Indeed, on full steps,
+$(\delta+v)^2=O(\Delta v+\delta\Delta v/v)$;
+their square-root costs sum to $O(\log(p/v_0)+1)=O(S)$ when
+$p/\delta$ is fixed. The prescribed sequence fixes the length
+independently of the residual and any preceding holding time.
+
+At $v=p$, $r\le\delta\le p$, hold the full component exactly.
+The total Gaussian preactivation variance lies in $[p,Cp]$, and
+\[
+ \E\phi'(\sqrt uZ)^2=1+\phi'''(0)u+O(u^2)\le1-cp.
+\]
+The derivative form of conditional Poincare now gives
+$r'\le(1-cp)r$. Thus $O(\log(H+2)/p)$ purification stages leave
+$r\le\delta H^{-4}$, at cost $O(p\log(H+2))$ and square-root
+cost $O(\log(H+2))$.
+
+For the scalar suffix, $|\phi''(z)|\le C\phi(z)$ for $z>0$:
+use oddness and $C^3$ regularity near zero, positivity on compact
+intervals, and bounded $\phi''$ elsewhere. If $P_r$ denotes Gaussian
+heat convolution, then
+\begin{equation}\label{ac-heat}
+ e^{-Cr/2}\phi(z)\le P_r\phi(z)\le\phi(z),\qquad z\ge0.
+\end{equation}
+Indeed $g=\phi''+C\phi$ is odd and nonnegative on the positive
+half-line. Pairing the Gaussian density at $y,-y$ shows
+$P_sg(z)\ge0$ for $z\ge0$, so
+$\partial_s[e^{Cs/2}P_s\phi(z)]\ge0$. The upper bound follows
+in the same way from concavity and the odd function $\phi''$.
+Concavity also gives $\phi(\alpha z)\ge\alpha\phi(z)$ for
+$0\le\alpha\le1$ and $z\ge0$.
+
+Lift the short scalar path of Lemma~\ref{ac-scalar} starting at $p$.
+For a nominal law $\eta$ from variance $q$ and an actual component
+$v\le q$, use physical scalar $\sqrt{v/q}X$, $X\sim\eta$.
+Its Gaussian relative entropy is unchanged. Equation~\eqref{ac-heat}
+and concavity imply
+\[
+ e^{-Cr}(v/q)\le v'/q'\le1,
+\]
+and the residual remains at most $r$. Starting at $v=q=p$, the
+lift of $m\le C/p$ stages therefore retains at least
+$e^{-Cm\delta H^{-4}}$ of every nominal component. Since
+$\delta\le p$, all components stay at least $p/2$, and the extra
+readout cost is $O(H^{-4})$. Its charged square-root cost is
+$O(\log(2/p))$ by~\eqref{ac-short-path}.
+
+Choose $\delta=B_1S/H$ and $p=B_2S/H$, with fixed sufficiently
+large $B_2\ge B_1$, and then increase the constant in $H\ge CS$
+so both scales are small. After cooling reduce the component to
+$v_0=\delta e^{-C_1S}$, which is permitted by Lemma~\ref{ac-seed}.
+Cooling, prescribed growth, purification, and the chosen scalar
+suffix occupy at most $H-1$ stages after choosing $B_1,B_2$.
+Insert exactly the unused number of holding stages before growth.
+The total cost is
+\[
+ A\le H^{-1}+V(p)+p+
+ C[H\delta^2+p+S\delta+p\log(H+2)+H^{-4}]
+ \le V_*+CS^2/H.
+\]
+Holding contributes $O(H\delta)=O(S)$ to the square-root sum;
+the other contributions were bounded above, proving $K\le CS$.
+This is a bound on the charged costs themselves, not an inference
+from smaller marginal entropies.
+
+The full conditional-mean score is
+$P_r\phi(\sqrt vZ)/\sqrt{v'}$, of unit second moment. To retain
+a smaller prescribed component $0<v''\le v'$, replace it by
+\[
+ \sqrt{v''/v'}\,b+\sqrt{1-v''/v'}\,U,
+\]
+where $U$ is an independent random sign with the same reference law.
+This has unit second moment, the desired coefficient, and absolute
+bound $1+(v'')^{-1/2}$, with no extra entropy. Every retained component
+in the construction is at least $e^{-CS}$, proving the score bound.
+At each stage an independent Gaussian residual vector with the current
+residual covariance realizes the stated full-cube law. Only its
+constant diagonal enters the one-input identities.
+\end{proof}
+
+\subsection{Finite-width realization without a rate-limit argument}
+
+\begin{lemma}[Finite scalar-channel probability]\label{ac-channel}
+Suppose a program as in Lemma~\ref{ac-program} has action $A$,
+distortion $K=\sum_{j\ge2}\sqrt{D_j}$, and score bound $B\ge1$.
+For every $\tau>0$ and every integer
+\begin{equation}\label{ac-channel-width}
+ N\ge CB^4H^4e^{4K}(A+1)^6(1+\tau^{-1})^4
+       [\log(2|X|)+\log(H+A+\tau^{-1}+3)],
+\end{equation}
+the original critical Gaussian prior satisfies
+\[
+ \mu_N\{f(x)z_W(x)>1/2\ (x\in X)\}\ge e^{-N(A+\tau)}.
+\]
+The lemma uses only boundedness and the unit Lipschitz constant of the
+activation, in addition to the specified program.
+\end{lemma}
+\begin{proof}
+For $N$ independent score/feature rows set
+\[
+ M=N^{-1}\sum_i b_i^2,\quad
+ \widehat c(x)=\frac{N^{-1}\sum_i b_ih_i(x)}{\sqrt M},\quad
+ \widehat q(x)=N^{-1}\sum_i h_i(x)^2,\quad
+ \widehat s(x)=\sqrt{\widehat q(x)-\widehat c(x)^2}.
+\]
+If the three raw moments have errors at most $\alpha\le1/4$,
+then, writing $c=\E bh$ and $s=\sqrt{\E h^2-c^2}$,
+\begin{equation}\label{ac-score-metric}
+ \max_x\sqrt{(\widehat c-c)^2+(\widehat s-s)^2}
+                         \le8\sqrt\alpha.
+\end{equation}
+For example $|\widehat c-c|\le4\alpha$ and the squared residual
+error before taking square roots is at most $13\alpha$.
+The coefficients $a_i=b_i/(N\sqrt M)$ have norm squared $1/N$;
+the empirical kernel decomposes exactly as
+$K_{\rm emp}=\widehat c\widehat c^{\mathsf T}+R_{\rm emp}$ with
+$R_{\rm emp}\succeq0$.
+
+Condition on the entire preceding construction and set $u=\sqrt N a$.
+For a fresh row draw its prescribed scalar $(Z,U)$ and independent
+standard Gaussian $\xi\in\R^N$, and use
+\begin{equation}\label{ac-row-realization}
+ w=[Zu+(I-uu^{\mathsf T})\xi]/\sqrt N.
+\end{equation}
+Under the reference, $Z$ is standard Gaussian, so the incoming
+weight marginal is exactly $\mathcal N(0,I/N)$. Its controlled
+relative entropy is at most $D_j$ by data processing. At one input
+the preactivation has law $\widehat c(x)Z+\widehat s(x)G$,
+with independent standard $G$. Couple this to the ideal preactivation
+using the same $Z,U,G$. Gaussian entropy duality gives
+$\E Z^2\le e^{2\sqrt{D_j}}$, so the preactivation and feature RMS
+errors are at most $e^{\sqrt{D_j}}$ times the preceding metric error.
+Orthogonal projection onto the common unit score, followed by the
+reverse triangle inequality for residual norms, gives the same bound
+for the population coefficient/residual metric. Fresh sampling and
+\eqref{ac-score-metric} consequently give
+\begin{equation}\label{ac-metric-recursion}
+ e_H\le8He^K\sqrt\alpha.
+\end{equation}
+Only one-input comparison couplings are used; the sampled network
+keeps its usual joint residual Gaussian law on all inputs.
+
+The observables $b^2,bh(x),h(x)^2$ are bounded by $B^2,B,1$.
+Conditional Hoeffding, a union bound over $2|X|+1$ observables, and
+successive conditioning over layers give all moment estimates with
+probability at least $1-\kappa/2$ if
+\[
+ N\ge CB^4\alpha^{-2}\log[8H(2|X|+1)/\kappa].
+\]
+Stop controlling if $M\notin[1/2,3/2]$ and thereafter use the prior.
+This defines the law on all histories, while the good event never stops.
+Choose
+\[
+ \kappa=\min\{1/4,\tau/[32(A+1)]\},\qquad
+ \alpha=\left[\frac{\kappa\sqrt{v_H}}{64He^K}\right]^2.
+\]
+Then the final coefficient has signed margin at least
+$\sqrt{v_H}(1-\kappa/8)$. On this event shift the readout mean to
+$ta$, where $t=(1+\kappa)/(2\sqrt{v_H})$; otherwise use zero mean.
+Its mean output is at least $1/2+\kappa/4$ in the correct direction.
+Its noise variance is at most $1/N$ at each input. If
+$N\ge C\kappa^{-2}\log(4|X|/\kappa)$, the maximum noise is less
+than $\kappa/8$ with probability at least $1-\kappa/2$. Thus the
+controlled law $Q_N$ gives the strict target event probability at
+least $1-\kappa$.
+
+Use the same reference auxiliaries as in the program. The reference
+weight marginal in~\eqref{ac-row-realization} remains Gaussian even
+under the history-dependent orthogonal decomposition. Conditional
+chain rule and data processing give hidden-block cost at most $ND_j$;
+stopping only reduces this bound. The readout shift costs $Nt^2/2$.
+After discarding auxiliaries,
+\[
+ \operatorname{KL}(Q_N\Vert\mu_N)
+ \le N\left[\sum_jD_j+\frac{(1+\kappa)^2}{8v_H}\right]
+ \le N(A+3A\kappa).
+\]
+Binary relative entropy for the target event implies
+\[
+ -N^{-1}\log\mu_N(E_f)
+ \le\frac{A+3A\kappa+N^{-1}\log2}{1-\kappa}\le A+\tau
+\]
+when $N\ge8/\tau$. Since $v_H^{-1}\le8A$, the width bound
+\eqref{ac-channel-width} implies all the numerical conditions above.
+\end{proof}
+
+\begin{theorem}[Critical raw target mass]\label{ac-target-mass}
+For fixed $\phi$ satisfying the hypotheses of this appendix, there
+are constants $C_0,C_1,C_2$ such that, if
+$R=(d+L+2)A_F(f)$ and $L\ge C_0\log R$, then at every integer
+$N\ge R^{C_1}$,
+\[
+ \mu_N\{f(x)z_W(x)>1/2\ (x\in X_d)\}
+ \ge\exp\left[-N\left(V_*+C_2\frac{\log^2R}{L}\right)\right].
+\]
+\end{theorem}
+\begin{proof}
+Apply Lemma~\ref{ac-channel} to Lemma~\ref{ac-program} with
+$\tau=1/H$. Each factor in~\eqref{ac-channel-width} is at most
+$e^{CS}$: $B\le e^{CS}$, $K\le CS$, $H,d\le e^S$, and
+$A+1\le C(1+S)$. Also $\log|X_d|=d\log2$. The additional
+$1/H$ action is absorbed into $CS^2/H$. Enlarging constants handles
+$H=L-1$ and $S=1+\log R$.
+\end{proof}
+
+\subsection{Near-baseline paths have parallel circuits}
+
+For $D\ge0$ define $G(D)\ge1$ by
+$G(D)-1-\log G(D)=2D$. Gaussian entropy duality implies
+\begin{equation}\label{ac-gaussian-gain}
+ \E_\rho\langle g,u\rangle^2\le G(D)\norm u^2,
+ \qquad \sqrt{G(D)}\le e^{\sqrt D},\qquad G(D)\le4D+2
+\end{equation}
+for any tilt of a standard Gaussian with entropy at most $D$.
+Indeed projection onto $\langle g,u\rangle/\norm u$ gives
+$D\ge(m-1-\log m)/2$ when its second moment $m>1$; writing
+$m=e^{2v}$ gives $(m-1-\log m)/2\ge v^2$.
+
+\begin{lemma}[Variance and entropy budgets]\label{ac-occupation}
+For a full-cube globally $1/2$-margined path of action
+$A\le V_*+\epsilon$, $\epsilon\ge0$, put
+$q_j=\max_xQ_j(x,x)$. Then
+\[
+ \sum_{j=0}^{H-1}q_j+\sum_{j=1}^H\sqrt{D_j}
+          \le C[1+\log(H+2)+\sqrt{H\epsilon}].
+\]
+\end{lemma}
+\begin{proof}
+All one-input variances are positive, since a zero variance would
+propagate at finite entropy and force zero final output. Decrease $c$
+so $q-cq^2$ is increasing on $[0,2]$. Projecting onto an input attaining
+the new maximum and using Lemma~\ref{ac-scalar} yields
+\[
+ D_j\ge q_j-q_{j-1}+cq_{j-1}^2.
+\]
+The scalar suffix at an input attaining $q_i$, including its readout,
+costs at least $V(q_i)$. Thus
+\begin{equation}\label{ac-prefix-budget}
+ \sum_{j\le i}D_j\le\epsilon+Cq_i.
+\end{equation}
+These inequalities concern full layer entropies. No two-input
+contraction property of the activation is needed.
+
+For an interval of $t$ transitions whose pre-states and endpoint
+are at least $u$, dividing dissipation by the squared pre-state and
+using $(q'-q)/q^2\ge1/q-1/q'$ gives
+$t\le C(E/u^2+1/u)$, where $E$ is its entropy expenditure.
+An initial prefix of length $t$ and expenditure $E$ also obeys
+\begin{equation}\label{ac-forced-cooling}
+ \sum_{j<t}q_j\le C\log(t+2)+C\sqrt{tE}
+\end{equation}
+when total entropy is bounded by a fixed constant. To prove this,
+write $F_0(v)=v-cv^2$, compare $q_j$ to $r_j+s_j$ with
+$r_{j+1}=F_0(r_j)$, $s_{j+1}=F_0(s_j)+D_{j+1}$, $r_0=q_0\le2$,
+$s_0=0$, and decrease $c$ so $F_0$ is increasing on the resulting
+bounded range. Since $F_0(r+s)\le F_0(r)+F_0(s)$, induction proves
+the comparison. The free sum is $O(\log(t+2))$, and
+$c\sum s_j^2\le E$, proving~\eqref{ac-forced-cooling}.
+
+If $\epsilon$ exceeds a fixed positive constant, summed dissipation
+and Cauchy--Schwarz prove the claim. Otherwise total entropy is bounded.
+Set $a=\max\{\epsilon,(H+1)^{-1}\}$, $b=\min_jq_j$, and
+$u_0=\max\{a,b\}$. If $u_0$ exceeds a fixed small constant, the
+occupation bound gives bounded $H$. Otherwise use dyadic levels
+$u_j=2^ju_0$ until a fixed constant, and their last-exit indices
+$\tau_j=\max\{i:q_i\le u_j\}$. There are $O(\log(H+2))$ bands.
+The initial prefix has entropy $O(\epsilon+1/H)$ if $b\le a$;
+then~\eqref{ac-forced-cooling} and Cauchy--Schwarz bound its two
+contributions as claimed. If $b>a$, its entropy is $O(b)$ and its
+length $O(1/b)$, giving state sum $O(\log(H+2))$ and square-root
+entropy $O(1)$. A later nonempty last-exit block has entropy $O(u_j)$
+by~\eqref{ac-prefix-budget}; after removing its first transition
+its pre-states and endpoint exceed $u_j$, so its length is $O(1/u_j)$.
+Every state in it is $O(u_j)$ because its starting state is at most
+$u_j$ and any increase is at most spent entropy. Both contributions
+are $O(1)$. The final tail has bounded length and contributions.
+Summing proves the assertion.
+\end{proof}
+
+\begin{theorem}[Critical canonical circuit theorem]\label{ac-circuits}
+A globally $1/2$-margined path of action $A\le V_*+\epsilon$ gives
+a nonuniform threshold circuit of size $R_1^{O(1)}$ and depth
+$O(\log R_1)$, and a bounded-fan-in Boolean circuit of size
+$R_1^{O(1)}$ and depth $O(\log^2R_1)$, where
+\[
+ T=1+\log(H+2)+\sqrt{H\epsilon},\qquad
+ R_1=(d+H+A+2)e^{CT}.
+\]
+All constants depend only on the fixed activation.
+\end{theorem}
+\begin{proof}
+We give the anchor reduction, finite-dimensional state, evaluator,
+and parallel iteration explicitly.
+
+\paragraph{Anchor reduction.}
+Let $I_j(U)$ be the entropy of the layer-$j$ preactivation marginal
+on an anchor set $U$. It increases with $U$ and is at most $D_j$.
+Choose $\rho=[C H(A+1)]^{-1}\le1/64$ and a cutoff $\delta>0$.
+Greedily add a query whenever $I_j(U\cup\{x\})-I_j(U)>\delta$
+for some layer, or projection of the final readout onto the anchor
+feature span changes its output there by more than $\rho$.
+There are at most $A/\delta$ entropy additions and $2r/\rho^2$
+readout additions: each latter increases the projection's squared
+norm by at least $\rho^2$, since final feature norms are at most one.
+
+Replace each row density by its conditional expectation $w_j(G_U)$
+given the anchors. It has entropy $I_j(U)\le D_j$ and preserves
+the original anchor marginal exactly. The conditional query KL
+increment is at most $\delta$. Conditional maximal coupling and
+Pinsker give expected squared feature error at most
+$4\sqrt{\delta/2}$, since features are bounded by one.
+For kernels sharing their anchor block, compare a query by its
+projection onto the common anchor span and its orthogonal residual
+norm. This defines a metric $d_U$ equal to the RMS error in a Gaussian
+coupling sharing the anchors and one residual standard Gaussian.
+The preceding replacement has $d_U$ error $O(\delta^{1/4})$.
+For a later Gaussian reference with the same anchor block, tilt this
+one-query coupling by the common $w_j$. Its entropy is $I_j(U)$;
+\eqref{ac-gaussian-gain} and the Lipschitz property multiply the
+input error by at most $e^{\sqrt{D_j}}$. Thus the complete error is
+at most $CH\delta^{1/4}\exp(\sum_j\sqrt{D_j})$.
+Choose $\delta$ so this is at most
+$\rho/\sqrt{\max\{2r,1\}}$. Lemma~\ref{ac-occupation} makes
+the anchor count polynomial in $R_1$.
+
+These replacements define a \emph{genuine} full-cube controlled path,
+with the exact original anchor blocks, density depending only on
+anchors, and no greater row entropies. The projected readout loses
+at most $2\rho$ of margin. Scaling it by $(1-4\rho)^{-1}$ restores
+margin $1/2$ at action increment $O(1/H)$. Its coefficient vector
+has norm $O(\sqrt{A+1})$. The genuine path therefore satisfies
+the budgets of Lemma~\ref{ac-occupation} with bound $CT$.
+
+\paragraph{Canonical finite states.}
+Initially $u_0(x)=(1,x)/\sqrt d\in\R^{d+1}$. Given states in
+$\R^K$, let $g\sim\mathcal N(0,I_K)$ tilted by
+$w_j((\langle g,u(a)\rangle)_{a\in U})$, and write this law as
+$\rho_j$. In $L^2(\rho_j)$ put
+$\Phi(u)=\phi(\langle g,u\rangle)$ and let $V$ span all $K$
+coordinate functions $g_i$ and all anchor features $\Phi(u(a))$.
+For an orthonormal basis $e_1,\ldots,e_M$, $M\le K+|U|$, define
+\begin{equation}\label{ac-canonical}
+ F(u)=\bigl(\langle e_b,\Phi(u)\rangle_{b=1}^M,
+                         \norm{(I-P_V)\Phi(u)}\bigr).
+\end{equation}
+Pythagoras preserves every diagonal. At anchors the last coordinate
+is zero, so every query-anchor cross moment and the entire anchor
+block are preserved exactly. Future anchor-plus-one-query Gaussian
+laws are determined by precisely these moments. Induction gives
+$d_U=0$ relative to the genuine anchor-only path at every stage,
+and identical anchored readout. The canonical full covariance is
+not asserted to be a valid original transition. Its state dimension
+is at most $d+1+H(|U|+1)$, polynomial in $R_1$.
+
+Since the linear map $u\mapsto\langle g,u\rangle$ lies in $V$,
+write $F(u)=A_ju+B_j(u)$, with
+$\norm{A_j}_{\rm op}\le\alpha_j:=\sqrt{G(D_j)}$.
+The map taking a Hilbert residual to its $V$ projection and its
+orthogonal norm is $1$-Lipschitz. Moreover
+$|\phi'(s)-1|\le C\min(s^2,1)$ by odd $C^3$ regularity and
+$0\le\phi'\le1$. For $\norm u,\norm v\le\sqrt q$, put
+$X=g\cdot u$, $Y=g\cdot v$, $Z=g\cdot(u-v)/\norm{u-v}$.
+The squared normalized residual difference is at most a fixed
+multiple of
+$W=Z^2\min\{1,\max(|X|,|Y|)^4\}$.
+For small fixed $c>0$,
+\[
+ e^{cW}-1\le cZ^2(X^4+Y^4)e^{cZ^2},\qquad
+ \log\E_{\rm Gauss}e^{cW}\le Cq^2.
+\]
+For the second inequality condition $X$ or $Y$ on $Z$; its fourth
+moment is at most $Cq^2(1+Z^4)$, regardless of correlations.
+Entropy duality consequently gives
+\begin{equation}\label{ac-residual-budget}
+ \Lip(B_j)\le C(q+\sqrt{D_j}),\quad
+ \sum_j\Lip(B_j)\le CT,\quad \prod_j\alpha_j\le e^{CT}
+\end{equation}
+on the actual state balls. Here use the genuine path's diagonal
+budget and the original path's entropy budget; alternatively take
+$D_j$ to be the actual anchor entropy. Extend each $B_j$ by radial
+projection. Round the radius upwards on mesh $R_1^{-c_1}$ and impose
+that same lower floor, with fixed large $c_1$. This adds only a
+constant to the summed squared radii and preserves the actual path.
+
+\paragraph{Polynomial finite evaluation.}
+For any current law $\rho$, basis vector $e=(e_b)$, and polynomial
+input radius, write
+\[
+ a(u)=\E_\rho e(g)\phi(g\cdot u),\quad
+ b(u)=\E_\rho\phi(g\cdot u)^2,\quad
+ F(u)=(a(u),\sqrt{b(u)-\norm{a(u)}^2}).
+\]
+Equation~\eqref{ac-gaussian-gain} gives
+$\E_\rho\norm g^2\le K G(D)$. Truncate to $\norm g\le M_0$.
+If the discarded probability is $p$, Bessel's inequality bounds the
+discarded vector expectation uniformly by $\sqrt p$, and the scalar
+expectation by $p$. A polynomial $M_0$ gives any inverse-polynomial
+accuracy. On the retained set sample with importance density
+$(1+\norm e^2)/Z_0$ relative to $\rho$, normalized there, where
+$Z_0\le M+1$. The vector and scalar integrands have norms at most
+$Z_0/2,Z_0$, and Lipschitz bounds at most $Z_0M_0/2,2Z_0M_0$.
+An input net has logarithmic cardinality
+$O(K\log(2+\poly(R_1)/\theta))$. For bounded Hilbert-valued
+samples, expected mean error is at most the bound divided by the
+square root of the sample count; bounded differences adds an
+exponential tail. A union bound on this net therefore gives
+polynomially many nodes approximating $a,b$ uniformly to error
+$\theta$. Lipschitzness extends the estimate to the whole ball.
+The retained nodes and all importance-weighted coefficients have
+polynomial magnitude, irrespective of an anchor condition number.
+Since $\norm a\le1$, choosing $\theta=O(\eta^2)$ and clipping
+the approximate radicand at zero gives error $O(\eta)$ in $F$.
+
+Round these constants, the matrix $A_j$, and all arithmetic to
+inverse-polynomial accuracy. Scalar $\phi$ values need only a
+polynomial mesh, since $\phi$ is $1$-Lipschitz; no algorithm for
+evaluating $\phi$ is assumed. Every word has $O(\log R_1)$ bits.
+Unary and binary word operations have polynomial-size truth tables.
+A sum of polynomially many such words has polynomial integer range
+after a common fixed-point scaling; threshold tests against each
+possible integer and a bit decoder compute it in constant threshold
+depth. Signed integer weights of polynomial magnitude can be
+replaced by repeated inputs and complements. Squares, square roots,
+comparisons, clipping, and radial projection have the same bounds;
+division occurs only above the inverse-polynomial radius floor.
+Thus one canonical residual evaluator has polynomial size and
+constant threshold depth, uniformly on the required polynomial ball.
+
+\paragraph{Parallel iteration.}
+Set $S_j=\prod_{i\le j}\alpha_i$, $v_j=u_j/S_j$. The normalized
+recursion is $v_j=C_jv_{j-1}+H_j(v_{j-1})$, where
+$C_j=A_j/\alpha_j$ is a contraction and
+$\Lip(H_j)\le\ell_j:=C(q_{j-1}+\sqrt{D_j})$ with
+$\Lambda:=\sum_j\ell_j\le CT$. All $S_j$ are polynomial in $R_1$.
+Precompute the interval products $C_{j:i}=C_j\cdots C_i$ as
+nonuniform constant matrices; their operator norms and entries are
+at most one. Starting with $v_j^{(0)}=C_{j:1}v_0$, compute all times
+simultaneously by
+\[
+ v_j^{(k+1)}=C_{j:1}v_0+
+               \sum_{i=1}^j C_{j:i+1}H_i(v_{i-1}^{(k)}).
+\]
+Strict time ordering gives
+$\max_j\norm{v_j^{(k)}-v_j}\le2\sqrt2\Lambda^k/k!$:
+expansion uses distinct ordered indices, whose products sum to at
+most $\Lambda^k/k!$. Thus $O(\log R_1)$ iterations give any fixed
+inverse-polynomial accuracy. Uniform additive error $\delta_0$ per
+update is amplified by at most
+$\sum_{k\ge0}\Lambda^k/k!=e^\Lambda=R_1^{O(1)}$.
+The clipped residuals have bounded ranges, so all exact and inexact
+iterates stay in a fixed polynomial ball. Rounded interval products,
+quadrature, and arithmetic contribute such additive errors; divide
+primitive tolerances by a polynomial to absorb the number of terms.
+
+There are polynomially many coordinates and times, each update has
+constant threshold depth, and there are $O(\log R_1)$ updates.
+The final rescaling and readout amplify errors only polynomially;
+choose precision so the output error is below $1/16$. This preserves
+all signs. Replacing each polynomial-fan-in majority gate by a
+logarithmic-depth Boolean summation circuit proves the Boolean bound.
+\end{proof}
+
+\subsection{A finite-event certificate and the full-cube ceiling}
+
+\begin{lemma}[Bounded-dual extraction]\label{ac-dual}
+On $m$ inputs put $k=m(m+1)/2$. For any raw event $E$ of critical
+prior probability at least $e^{-NA}$, any $\tau>0$, and
+$0<\Delta\le1$, there is a realization in $E$ and laws relative
+to its empirical preceding Gaussian covariances such that
+\[
+ \max_{x,y}|\E_{\rho_j}\phi(G_x)\phi(G_y)-Q_j(x,y)|\le\Delta,
+ \qquad \sum_jD_j+r\le A+\tau,
+\]
+provided
+\begin{equation}\label{ac-dual-width}
+ N\ge\frac C\tau\left[
+ Hk\log\left(1+\frac{C(A/\tau+1)Hk}{\Delta}\right)
+ +m\log(C(A/\tau+1))+1\right].
+\end{equation}
+Here $z$ is the realization's actual output and
+$r=z^{\mathsf T}Q_H^\dagger z/2$. No symmetry of the event is needed.
+\end{lemma}
+\begin{proof}
+For a reference feature law $\mu$ on $[-1,1]^m$, let $\Phi(h)$ list
+its $k$ upper-triangular products and define
+\[
+ I_B(q)=\max_{\lambda\in[-B,B]^k}
+       [\lambda\cdot q-\log\E_\mu e^{\lambda\cdot\Phi}].
+\]
+A maximizer exists. Its exponential tilt $\nu$ has moment vector
+$a$; coordinatewise optimality on the box gives
+$\lambda_i(q_i-a_i)=B|q_i-a_i|$. Hence
+\begin{equation}\label{ac-dual-identity}
+ I_B(q)=\operatorname{KL}(\nu\Vert\mu)+B\norm{q-a}_1\ge0.
+\end{equation}
+The same tilt of Gaussian preactivations has identical entropy and
+moments. The objective is $2k$-Lipschitz in the sup norm of $\lambda$.
+A mesh-$\eta$ grid has at most $(1+CB/\eta)^k$ points, and each
+fixed exponential likelihood ratio for $N$ iid rows has mean one.
+Thus for empirical moments $\widehat q$,
+\[
+ \E e^{N I_B(\widehat q)}\le e^{2Nk\eta}(1+CB/\eta)^k.
+\]
+This is uniform in the conditional reference. Iterate through layers.
+Given the hidden layers, the actual readout covariance is $Q_H/N$,
+so $\E[e^{(1-s)Nr}\mid\text{hidden}]\le s^{-m/2}$ for $0<s<1$.
+Writing $I_j$ for the realized dual costs gives
+\[
+ \E e^{N[\sum I_j+(1-s)r]}
+ \le e^{2NHk\eta}(1+CB/\eta)^{Hk}s^{-m/2}.
+\]
+Conditioning on $E$ has relative entropy at most $NA$. Entropy
+duality bounds the conditional mean of $\sum I_j+(1-s)r$ by
+\[
+ A+2Hk\eta+N^{-1}[Hk\log(1+CB/\eta)+(m/2)\log(1/s)].
+\]
+Take $s=\tau/[16(A+\tau)]$, $\eta=\tau/(64Hk)$, and
+$B=(A+\tau)/\Delta$. Under~\eqref{ac-dual-width}, some realization
+in $E$ has weighted cost at most $A+\tau/8$, hence unweighted cost
+at most $A+\tau$, since all $I_j\ge0$ and
+$(A+\tau)(1-s)=A+15\tau/16$. Apply~\eqref{ac-dual-identity}
+at each layer; its moment error is at most $I_j/B\le\Delta$.
+\end{proof}
+
+\begin{lemma}[Consistent-path repair]\label{ac-repair}
+A certificate of total cost at most $B$ in Lemma~\ref{ac-dual}
+has a genuine controlled path of cost at most $B$ and output
+$\widehat z$ satisfying
+\[
+ \max_x|\widehat z(x)-z(x)|
+            \le\sqrt{2B}\,H\sqrt{m\Delta}\,e^{\sqrt{HB}}.
+\]
+\end{lemma}
+\begin{proof}
+Two positive semidefinite $m$-point kernels differing entrywise by
+at most $\Delta$ have square-root feature embeddings with row
+distances at most $\sqrt{m\Delta}$. Their operator difference is
+at most $m\Delta$, and
+$\norm{K^{1/2}-{K'}^{1/2}}_{\rm op}
+\le\sqrt{\norm{K-K'}_{\rm op}}$.
+For the last inequality use $K\le K'+aI$, monotonicity of square
+root, and $\sqrt{K'+aI}\le\sqrt{K'}+\sqrt a I$, then reverse
+$K,K'$. Existing embeddings can be identified isometrically with
+these square-root embeddings, adjoining orthogonal complements.
+
+At each step couple Gaussian rows for the genuine preceding kernel
+and the empirical reference in such a common feature space. Tilt
+the joint Gaussian by the certificate density on its original
+coordinate. The new marginal has no larger entropy. Equation
+\eqref{ac-gaussian-gain} and the Lipschitz property multiply each
+row RMS error by at most $e^{\sqrt{D_j}}$. Identify the controlled
+feature moments with the next empirical kernel using the certificate
+error, at additional row distance $\sqrt{m\Delta}$. Gluing the
+shared feature spans gives
+$e_j\le e^{\sqrt{D_j}}e_{j-1}+\sqrt{m\Delta}$, $e_0=0$.
+Consequently $e_H\le H\sqrt{m\Delta}e^{\sqrt{HB}}$.
+Transfer the empirical readout vector of norm $\sqrt{2r}$ in the
+common space and project it onto the genuine final feature span.
+Its norm does not increase, and its output changes by at most
+$\sqrt{2r}e_H\le\sqrt{2B}e_H$.
+\end{proof}
+
+\begin{theorem}[Actual critical posterior circuit ceiling]\label{ac-ceiling}
+Put $R_0=d+n+L+2$, and suppose $L\ge C\log R_0$. At the actual
+critical scale $\sigma^2=1/N$, for every integer
+$N\ge2^{Cd}R_0^C$ and every consistently labeled sample of at most
+$n$ inputs, the original posterior gives probability at least
+$31/32$ to a fixed full-cube class of functions having Boolean
+circuits of size $\poly(R_0)$. More precisely this class can be taken
+as $\{g:J_L(g)\le V_*+C\log^2R_0/L\}$; its threshold depth is
+$O(\log R_0)$ and its Boolean depth is $O(\log^2R_0)$.
+\end{theorem}
+\begin{proof}
+The memorizer $g_S=1-2\sum_{p\text{ distinct negative sample input}}
+\boldsymbol1_{\{p\}}$ is Boolean, has the sample labels, and has
+Fourier variation at most $1+2n$, since each point indicator has
+Fourier variation one. Theorem~\ref{ac-target-mass} gives a raw
+conditioning denominator at least $e^{-Na_0}$, where
+$a_0=V_*+C_0\log^2R_0/L$, at all $N\ge R_0^{C_0}$ after
+enlarging constants.
+
+Let $E$ be the raw event of globally margined draws whose Boolean
+function satisfies $J_L(g)>a_0+K_0/L$. This is measurable because
+there are finitely many Boolean functions on the cube. If
+$\mu_N(E)\ge e^{-N(a_0+1/L)}$, apply Lemma~\ref{ac-dual} on
+the entire cube with $m=2^d$, action parameter $a_0+1/L$, and
+$\tau=1/L$. Choose $\Delta$ so Lemma~\ref{ac-repair} has output
+error at most $\rho=[C L(a_0+1)]^{-1}$. It suffices that
+\[
+ \log(1/\Delta)\le
+ C[d+\log(L(a_0+2))+\sqrt{L(a_0+2)}]
+\]
+for an appropriate sufficiently small tolerance. The required width
+in~\eqref{ac-dual-width} is therefore at most $2^{Cd}R_0^C$.
+The repaired output keeps the selected signs; multiplying its readout
+by $(1-2\rho)^{-1}$ restores margin $1/2$ and adds $O(1/L)$
+action. This realizes a function in $E$ at action at most
+$a_0+K_1/L$, contradicting $K_0>K_1$.
+
+Hence $\mu_N(E)<e^{-N(a_0+1/L)}$. Division by the sample-consistent
+denominator bounds posterior bad mass by $e^{-N/L}\le1/32$ under
+the stated width threshold. Absorb $K_0/L$ into the logarithmic
+excess. Theorem~\ref{ac-circuits} gives the claimed circuit bounds.
+If the rate infimum is not attained, choose a path within $1/H$;
+this changes the exponent $\sqrt{H\epsilon}$ only by a constant.
+Every bound is simultaneous over all samples of the specified size,
+and the class itself is sample independent.
+\end{proof}

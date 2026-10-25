@@ -1,0 +1,867 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,microtype,enumitem,xurl}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Exponential sample complexity for an analytic activation arbitrarily close to tanh},pdfauthor={ChatGPT-6 Astra; Kaarel Hanni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\poly}{\operatorname{poly}}
+\newcommand{\Lip}{\operatorname{Lip}}
+\newcommand{\dist}{\operatorname{dist}}
+\title{Exponential sample complexity for an analytic activation\\
+arbitrarily close to tanh}
+\author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{Research draft --- 25 October 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+For every fixed integer $r\ge1$ and every $\eta>0$, we construct one
+computable odd, strictly increasing, real-analytic activation $\phi$
+with range $(-1,1)$, global Lipschitz constant one, $\phi'(0)=1$,
+strict concavity on the positive half-line, and
+$\|\phi-\tanh\|_{C^r(\R)}<\eta$.
+For this fixed activation, the original Gaussian Bayesian classifier
+requires exponentially many examples in teacher depth on a uniform
+Boolean cube. Teachers have depth $L_d=Dd+O(1)$, width and coefficient
+bound $O(d)$, and constant global output margin. At every fixed
+Gaussian exponent $\gamma\ge1$, every sample of size at most $\exp(cd)$
+fails the posterior confidence criterion at every sufficiently large
+width $N\ge\exp(C_\gamma d)$. The critical endpoint uses finite-width
+entropy certificates and a parallel-circuit normal form for paths
+near their scalar baseline. A fixed-width cold-limit statement also holds.
+
+The construction is computationally contrived. It encodes computable
+hard truth tables in tiny analytic bumps, and decodes them by finite
+differences that cancel the tanh background. No efficient evaluator
+for the activation is asserted. This is a theorem about specially
+constructed activations arbitrarily close to tanh, not about tanh
+itself; it does not settle tanh, ReLU, or GELU.
+\end{abstract}
+\paragraph{Status.}
+This conventional mathematical research proof has received independent
+AI-agent reviews of the activation, decoder, capacity, energy, and posterior
+arguments, including the critical finite-width target-mass and
+canonical-state arguments. It is not Lean verified or human peer reviewed.
+
+\section{Model and theorem}
+Let $X_d=\{-1,1\}^d$ and $h^0(x)=(1,x)$. A common-width-$N$
+network of weighted depth $L$ is
+\[
+ h^s(x)=\phi(W^s h^{s-1}(x))\quad(1\le s<L),\qquad
+ z_W(x)=v^{\mathsf T}h^{L-1}(x).
+\]
+There are no separate hidden biases. Write $W^L=v^{\mathsf T}$
+and $P_F(W)=\prod_{s=1}^L\|W^s\|_F$.
+The independent Gaussian entry variances are $t^2/d$ in the first
+matrix, $t^2/N$ internally, and $t^2/N^2$ in the readout. Set
+$\sigma^2=t^2/N$. The energy is
+\begin{equation}\label{eq:energy}
+ \kappa_N(W)=\frac dN\|W^1\|_F^2+
+       \sum_{s=2}^{L-1}\|W^s\|_F^2+N\|v\|_2^2.
+\end{equation}
+In energy coordinates the prior is isotropic $N(0,\sigma^2 I)$.
+For a consistently labeled sample $S=((x_i,y_i))_{i=1}^s$, condition
+only on
+\begin{equation}\label{eq:event}
+ E_S=\{|z_W(x)|>1/2\ (x\in X_d),\
+                         y_i z_W(x_i)>0\ (1\le i\le s)\}.
+\end{equation}
+Call the posterior $Q_{S,\sigma}$ and define
+\[
+ e_{S,\sigma}(f)=2^{-d}\bigl|\{x:
+       Q_{S,\sigma}(f(x)z_W(x)>0)\le2/3\}\bigr|.
+\]
+Here $\|g\|_{C^r(\R)}=\max_{0\le j\le r}\sup_{u\in\R}|g^{(j)}(u)|$.
+
+\begin{theorem}\label{thm:main}
+Fix $r\ge1$ and $\eta>0$. There exist one fixed computable activation
+$\phi$, a computable family $f_d:X_d\to\{-1,1\}$, and constants
+$c>0,d_0,D,K$ with the following properties.
+\begin{enumerate}[label=(\roman*),leftmargin=*]
+\item $\phi$ is odd, real analytic, strictly increasing, and globally
+$1$-Lipschitz, with range $(-1,1)$ and $\phi'(0)=1$.
+It is strictly concave on $(0,\infty)$ and
+$\|\phi-\tanh\|_{C^r(\R)}<\eta$.
+\item The targets have teachers of weighted depth
+$L_d=Dd+K$, width and coefficient bound $C(d+1)$, and global signed
+output margin greater than one. The coefficients can be chosen
+with bit lengths polynomial in $d$.
+One may take $D=\max(16,r+2)+1$.
+\item For every $\zeta>0$ there is $C_\zeta$ such that for
+$d\ge d_0$, all $N\ge\exp(C_\zeta d)$, all
+$0<\sigma^2\le N^{-(1+\zeta)}$, and every sample of at most
+$\exp(cd)$ inputs labeled by $f_d$,
+\[
+ e_{S,\sigma}(f_d)\ge139/1024>1/8.
+\]
+\item For each $1\le n\le\exp(cd)$, every fixed finite
+$N\ge M(d,n)$ for a polynomial $M$ has the same conclusion
+for all sufficiently small $\sigma>0$, uniformly over all samples
+of at most $n$ inputs.
+\item There is $C_{\rm crit}$ such that the same every-sample
+conclusion holds at the actual critical scale $\sigma^2=1/N$
+for every $N\ge\exp(C_{\rm crit}d)$ and $d\ge d_0$.
+\end{enumerate}
+Constants may depend on the fixed $r,\eta$. The targets are
+evaluated under the uniform input law.
+\end{theorem}
+Thus the number of samples is exponential in $L_d$. The finite-scale
+width threshold is polynomial in the maximum permitted sample budget,
+but is not asserted polynomial in every smaller actual sample size.
+The coefficient and architectural teacher resources are polynomial
+in depth. The hard information is in the one fixed activation.
+The constants may depend on a fixed Gaussian exponent; no uniform
+claim for exponents approaching one with the problem resources is
+implicit in the theorem.
+
+\section{Universal capacity and computable hard tables}
+The tables must be chosen independently of the activation that later
+encodes them. We use a capacity bound allowing different activations
+at different neurons.
+\begin{proposition}[Universal finite-circuit capacity]\label{prop:capacity}
+There are universal constants $A,b$ such that any Boolean function
+with a globally unit-margin network of Frobenius product $P$ has a
+bounded-fan-in Boolean circuit of size at most
+$A(4+\lceil P\rceil)^b$. The network may have arbitrary finite depth
+and widths, and each neuron may use its own zero-preserving
+$1$-Lipschitz activation. The Boolean depth can be
+$O(\log^2(4+P))$; a threshold circuit has depth $O(\log(4+P))$.
+\end{proposition}
+A proof is given in Appendix~\ref{app:capacity}. Computability of
+the activations is unnecessary: the circuits are nonuniform and
+store finite tables as constants.
+
+\begin{lemma}\label{lem:hard}
+There are universal $a>0,d_0$ and a computable family $f_d$ such
+that for $d\ge d_0$, every globally unit-margin network in the class
+of Proposition~\ref{prop:capacity} with product at most $e^{ad}$
+disagrees with $f_d$ on at least $7/16$ of the uniform cube.
+\end{lemma}
+\begin{proof}
+Enumerate all bounded-fan-in Boolean circuits on $d$ inputs with
+at most $\lfloor2^{d/4}\rfloor$ gates. There are
+$\exp(O(d2^{d/4}))$ such circuits. A Hamming ball of relative radius
+$q=7/16$ among $2^d$-bit truth tables has at most
+$2^{H_2(q)2^d}$ elements, with binary entropy $H_2(q)<1$.
+The union covers fewer than $2^{2^d}$ tables eventually. Choose
+the lexicographically first table at distance at least $q2^d$
+from every listed circuit. At smaller dimensions with no such
+table choose a constant. Finite exhaustive search computes this
+choice. Choose $a>0$ so small that
+$A(4+\lceil e^{ad}\rceil)^b\le2^{d/4}$ eventually, and apply
+Proposition~\ref{prop:capacity}. The choice refers only to Boolean
+circuits, not to the later activation.
+\end{proof}
+
+
+\section{An analytic perturbation with weighted derivative control}
+Fix $M=\max(16,r+2)$, $D=M+1$, and $m=M+3$. Let $J$ be a
+sufficiently large fixed dyadic integer, increased from $2^{m+10}$
+if needed below. Set
+\[
+ \Delta_d=2^{-d-4},\quad r_d=\Delta_d/J,\quad
+ c_{d,k}=-4d-\tfrac14-\Delta_d k,\qquad 0\le k<2^d.
+\]
+For a sufficiently small fixed positive rational $\tau$, put
+$\delta_d=\tau r_d2^{-Md}=\tau(16J)^{-1}2^{-Dd}$ and define
+\begin{align}
+ S(u)&=\sum_{d\ge1}\sum_{k<2^d}\delta_df_d(k)(u/c_{d,k})^3
+                   \exp[-((u-c_{d,k})/r_d)^2],\label{eq:S}\\
+ R(u)&=S(u)-S(-u),\qquad \phi(u)=\tanh u+R(u).\label{eq:phi}
+\end{align}
+\begin{lemma}\label{lem:phi}
+The function $S$ is entire and computable. For every fixed
+$j\le\max(r,5)$,
+\begin{equation}\label{eq:globalder}
+ \sup_{\R}|S^{(j)}|\le
+ C_j\tau(16J)^{j-1}\sum_{d\ge1}2^{-(M+1-j)d}.
+\end{equation}
+There are constants $C,C_J$ such that
+\begin{align}
+ |R'(u)|&\le C\tau\min(u^2,1)\operatorname{sech}^2u,
+                                      \label{eq:weightedfirst}\\
+ |R''(u)|&\le C_J\tau|\tanh''u|.        \label{eq:weightedsecond}
+\end{align}
+A sufficiently small $\tau$ makes $\phi$ satisfy all activation
+properties in Theorem~\ref{thm:main}.
+\end{lemma}
+\begin{proof}
+On a complex compact set $|\Re z|,|\Im z|\le A$, for all large
+$d$ the real part of $(z-c_{d,k})^2$ is at least $c d^2$.
+The entire $d$-band is bounded by a polynomial factor times
+$2^d\delta_d\exp(-c d^2/r_d^2)$, a summable sequence. This
+proves local uniform convergence and entire analyticity.
+The explicit tails and computable finite tables also prove
+computability, without an efficiency assertion.
+
+For one bump write $v=(u-c)/r$ and $\rho=r/c$.
+Its shape is $(1+\rho v)^3e^{-v^2}$ with $|\rho|\le1$.
+Its $j$-th derivative is bounded by $C_jr^{-j}e^{-v^2/2}$.
+The elementary lattice estimate
+\[
+ \sup_s\sum_{k\in\mathbb Z}e^{-(s-Jk)^2/2}\le3\qquad(J\ge4)
+\]
+follows by choosing the nearest lattice point and summing the
+remaining tails. This gives \eqref{eq:globalder}.
+
+For a weighted derivative bound use
+$\operatorname{sech}^2u\ge e^{-2|u|}$,
+$|c_{d,k}|\le4d+5/16$, and
+$|u|\le|c_{d,k}|+r_d|v|$.
+The derivative's polynomial factor times
+$e^{-v^2+2r_d|v|}$ is at most $Ce^{-v^2/2}$, uniformly
+since $r_d\le1/128$. Therefore
+\[
+ \frac{|S'(u)|}{\operatorname{sech}^2u}
+ \le C\tau\sum_{d\ge1}e^{-(M\log2-8)d}\le C'\tau.
+\]
+A second derivative has an extra $r_d^{-1}$, giving
+\[
+ \frac{|S''(u)|}{\operatorname{sech}^2u}
+ \le CJ\tau\sum_{d\ge1}e^{-((M-1)\log2-8)d}\le C_J'\tau.
+\]
+Both series converge because $M\ge16$.
+
+Near zero the cubic factor gives additional powers.
+For $|u|\le1$, a single first derivative divided by $u^2$
+is bounded by
+\[
+ \frac{\delta_d}{|c|^3}
+ \left(3+\frac{2|u||u-c|}{r_d^2}\right)e^{-(u-c)^2/r_d^2}.
+\]
+Here $|u-c|\in[3d,6d]$. Its band sum is at most
+$C\tau2^{-(M-1)d}(r_d+r_d^{-1})e^{-9d^2/r_d^2}$.
+For a second derivative divided by $u$, the exact bracket is
+$\delta_dc^{-3}[6g(v)+6ug'(v)/r_d+u^2g''(v)/r_d^2]$,
+where $g(v)=e^{-v^2}$; its band sum is at most
+\[
+ C\tau2^{-(M-1)d}
+   (r_d+r_d^{-1}+r_d^{-3})e^{-9d^2/r_d^2}.
+\]
+Both series are $O(\tau)$. Since $\operatorname{sech}^2u$
+is bounded below on $[-1,1]$, this supplies the additional
+$u^2$ in \eqref{eq:weightedfirst}.
+Also $|\tanh''u|$ is bounded below by a positive constant
+times $|u|$ on this interval, and by a positive constant
+times $\operatorname{sech}^2u$ outside it.
+Apply these bounds at $u$ and $-u$ to get
+\eqref{eq:weightedfirst}--\eqref{eq:weightedsecond}.
+
+The perturbation is odd and vanishes to order three at zero,
+so $\phi(0)=0$ and $\phi'(0)=1$.
+Choose $\tau$ so both weighted constants are at most
+$\varepsilon<1/10$. Then $\phi'(u)>0$, while
+\[
+ \phi'(u)\le\operatorname{sech}^2u+
+       \varepsilon u^2\operatorname{sech}^2u
+ \le\operatorname{sech}^2u+\varepsilon\tanh^2u\le1,
+\]
+using $|u|\le|\sinh u|$.
+The second weighted estimate gives $\phi''(u)<0$ for $u>0$.
+Uniform summability in \eqref{eq:globalder} implies
+$S(u)\to0$ as $|u|\to\infty$, so $\phi$ has limits $\pm1$
+and range $(-1,1)$. Shrink $\tau$ once more to obtain the
+required $C^r$ distance.
+\end{proof}
+
+Two consequences used below, after decreasing $\tau$ if needed, are
+\begin{align}
+ |\phi(u)-u|&\le2u^2,\label{eq:taylor}\\
+ 1-\phi(u)&\le Ce^{-2u}\quad(u\ge0).\label{eq:saturation}
+\end{align}
+The first follows from $\phi'(0)=1$ and a global second-derivative
+bound. The second follows by integrating
+$\phi'\le(1+\varepsilon)\operatorname{sech}^2$ to infinity.
+More precisely $1-\phi(u)$ lies between
+$(1-\varepsilon)(1-\tanh u)$ and
+$(1+\varepsilon)(1-\tanh u)$.
+
+\section{Finite differences decode the hidden truth table}
+Put $h_d=\Delta_d/(2m)$ and define
+\begin{equation}\label{eq:decoder}
+ F_d(u)=\sum_{j=0}^m(-1)^j\binom mj\phi(u+jh_d).
+\end{equation}
+\begin{lemma}\label{lem:decode}
+For all sufficiently large $d$, uniformly over $0\le k<2^d$,
+\[
+ F_d(c_{d,k})=\delta_d(f_d(k)+e_{d,k}),\qquad |e_{d,k}|\le1/100.
+\]
+\end{lemma}
+\begin{proof}
+The central bump has value exactly $\delta_df_d(k)$.
+Every off-center query $u+jh_d$, $1\le j\le m$, lies between
+$h_d$ and $\Delta_d/2$ from this center, hence is at least
+$h_d$ from all centers in its band.
+Gaussian-polynomial absorption and the lattice bound make its
+same-band contribution at most
+$C\delta_d\exp[-J^2/(16m^2)]$.
+Other same-band bumps at the central query contribute at most
+$C\delta_de^{-J^2/4}$.
+The coefficient absolute sum is $2^m$, so fixed sufficiently
+large $J$ makes their aggregate error less than $\delta_d/1000$.
+
+Other-band contributions divided by $\delta_d$ are bounded by
+a polynomial factor times
+\[
+ \sum_{e\ne d}2^{e-D(e-d)}
+           \exp[-9(e-d)^2J^2 2^{2e+8}].
+\]
+This tends to zero. For $e\le d/2$ its exponent dominates
+$-c d^2 4^e$; for $d/2<e<d$ it dominates $-c4^{d/2}$;
+for $e>d$ it decreases faster still. All prefactors are
+dominated in these three splits.
+Reflected bumps have distance at least $3(d+e)$ from their
+negative-band centers, so satisfy a stronger estimate.
+
+The tanh part is an $m$-th forward difference.
+Its iterated-integral formula bounds it by
+\[
+ h_d^m\sup_{v\in[u,u+mh_d]}|\tanh^{(m)}v|
+       \le C_m\Delta_d^m e^{-8d}.
+\]
+For $v\le-1$, the estimate
+$|\tanh^{(m)}v|\le C_me^{2v}$ follows from its convergent
+series in $e^{2v}$.
+Dividing by $\delta_d=\tau(16J)^{-1}2^{-Dd}$ gives
+$O(2^{-2d}e^{-8d})$, since $m=M+3$.
+The fixed number of query terms does not affect convergence.
+These bounds prove the claim.
+\end{proof}
+
+Let $\operatorname{code}(x)=\sum_{i=0}^{d-1}2^i(x_{i+1}+1)/2$.
+The first teacher layer has $m+1$ neurons with preactivations
+$c_{d,\operatorname{code}(x)}+jh_d$, $0\le j\le m$.
+Their biases are $O(d)$ and other coefficients are at most $1/64$.
+A second hidden neuron uses the binomial weights in
+\eqref{eq:decoder}. Its output has the desired sign and
+amplitude $\delta_d(1+O(1/100))$.
+
+Follow it by $Dd+K_0$ scalar hidden layers of weight two.
+Choose fixed $K_0$ so $2^{K_0}\tau/(16J)$ is a sufficiently
+small positive amplitude $\rho$, up to a factor two.
+By \eqref{eq:taylor}, cumulative relative error during the
+amplification is $O(\rho)$: the sum of ideal intermediate
+amplitudes is a geometric series bounded by $4\rho$.
+Choose $\rho$ to make that error less than $1/10$ and use
+readout $2/\rho$. The signed output margin exceeds one.
+Depth is $L_d=Dd+K_0+3$, active width is $m+1$, and all
+coefficients are bounded by $C(d+1)$.
+First-layer coefficients are rational with $O(d)$ bits.
+Fixed remaining coefficients can be approximated with polynomial
+bit lengths while preserving the margin by layerwise Lipschitz
+propagation.
+
+\section{A low-energy memorizer in the exponential sample range}
+Choose an even integer $A\ge C_1\log(n+2)$ large enough for
+\eqref{eq:saturation}, and put
+\[
+ h_p(x)=\tfrac12\{\phi(A(1-d+p\cdot x))+\phi(A)\}.
+\]
+The first argument is $A(1-2\operatorname{Ham}(x,p))$, with
+absolute value at least $A$. Oddness and saturation imply
+$|h_p(x)-\mathbf1_{\{x=p\}}|\le Ce^{-2A}$.
+If $p_1,\ldots,p_s$, $s\le n$, are the distinct negative sample
+points, then
+\[
+ z_0(x)=2-4\sum_{j=1}^s h_{p_j}(x)
+\]
+is within $1/10$ of the ideal memorizer taking values $\pm2$.
+The constant feature is $\phi(A)$, with readout
+$2/\phi(A)-2s$; each point-feature readout is $-2$.
+Thus its first Frobenius norm squared is at most
+$F^2=A^2[1+n(d+1)^2]$, and its readout squared norm is
+$O((n+1)^2)$.
+
+Zero-pad to
+\begin{equation}\label{eq:MB}
+ M_0=\lceil\max\{4,n+1,dF^2\}\rceil.
+\end{equation}
+For $N\ge M_0$, clone every feature $\lfloor N/M_0\rfloor$
+times and divide its readout coefficients by that number.
+The output is unchanged, the first weighted energy is at
+most one, and the old readout $v_0$ has
+\begin{equation}\label{eq:B0}
+ B=N\|v_0\|_2^2\le B_0
+       \le C(d+1)^3(n+1)^3\log^2(n+2).
+\end{equation}
+
+Reduce the hard exponent $a$ from Lemma~\ref{lem:hard} so
+$a\le1/100$, and fix
+\[
+ q=\exp(a/(100D))>1.
+\]
+Choose a fixed small $\alpha>0$
+with $\alpha\le c_0(q-1)$ for a sufficiently small universal
+$c_0$. Put $\ell=L_d-2$ and
+$\rho_1=\alpha q^{1-\ell}$.
+The first scalar hidden matrix has every row
+$\rho_1v_0^{\mathsf T}$; the remaining $\ell-1$ scalar
+hidden matrices have every entry $q/N$.
+Their ideal states are
+\[
+ v_j(x)=\alpha q^{j-\ell}z_0(x).
+\]
+
+\begin{lemma}\label{lem:memorizer}
+For all sufficiently large $d$ and $n\le\exp(cd)$, where
+$c<a/1000$ is fixed, this construction followed by readout
+entries $1/(\alpha N)$ has global margin at least $1.5$,
+fits every sample, and has energy at most
+\begin{equation}\label{eq:K}
+ K_d=2+(\ell-1)q^2+\alpha^{-2}\le q^2L_d+C_*.
+\end{equation}
+The constants are independent of $d,n,N$.
+\end{lemma}
+\begin{proof}
+Equation \eqref{eq:taylor} gives a relative-error bootstrap.
+The first actual-to-ideal ratio differs from one by at most
+$C|v_1|$. Subsequently write
+$y_j=q y_{j-1}(1+\theta_j)$ with
+$|\theta_j|\le C|y_{j-1}|$.
+Under $|y_i/v_i|\le2$, the sum of these relative errors is at
+most $C'\alpha/(q-1)$.
+Our choice of $\alpha$ makes this less than $1/100$; the
+product of $1+\theta_j$ closes the bootstrap and puts every
+ratio in $[9/10,11/10]$.
+All preactivations stay in $[-1,1]$.
+The final output therefore has margin at least
+$(9/10)(1.9)>1.5$, with the signs of $z_0$.
+
+From \eqref{eq:B0}, $\log B_0\le3cd+O(\log d)$, whereas
+$q^{-2\ell}=\exp[-ad/50+O(1)]$.
+Thus $B\rho_1^2\le1$ eventually, uniformly over the sample
+range. This is the first scalar energy.
+The other scalar energies are $q^2$ each and the readout
+energy is $\alpha^{-2}$; adding the original first energy
+proves \eqref{eq:K}.
+\end{proof}
+
+The product of the block energies in \eqref{eq:energy} is
+$dP_F(W)^2$. Hence
+\begin{equation}\label{eq:amgm}
+ dP_F(W)^2\le(\kappa_N(W)/L_d)^{L_d}.
+\end{equation}
+For all large $d$ a globally strict-margin-$1/2$ function with
+an energy-$K_d+1$ representative therefore has a unit-margin
+representative of product at most
+\begin{equation}\label{eq:coldP}
+ P_{\rm cold}=\frac2{\sqrt d}
+            ((K_d+1)/L_d)^{L_d/2}\le Cq^{L_d}/\sqrt d.
+\end{equation}
+
+In the remaining proof write $L=L_d$, $K=K_d$, and $M=M(d,n)=M_0$.
+\section{Cold posterior concentration}
+\begin{lemma}\label{lem:cold}
+For fixed $d,n,L,N$ with $N\ge M(d,n)$,
+\[
+ \sup_{|S|\le n}Q_{S,\sigma}\{\kappa_N>K+1\}\longrightarrow0
+ \qquad(\sigma\downarrow0),
+\]
+where the supremum is over consistently labeled samples.
+\end{lemma}
+\begin{proof}
+The memorizing witness has margin at least $1.5$ and energy at most $K$.
+Continuity of $\phi$ and finiteness of $X_d$ imply that a nonempty
+ball in energy coordinates lies inside $E_S$ and has energy at
+most $K+1/4$. If $p$ is the parameter dimension, this ball has
+Gaussian probability at least
+$c_S\sigma^{-p}\exp[-(K+1/4)/(2\sigma^2)]$.
+For $\eta=1/[4(K+1)]$, the Gaussian exponential moment gives
+\[
+ \mu_\sigma\{\kappa_N>K+1\}
+ \le\eta^{-p/2}\exp[-(K+3/4)/(2\sigma^2)].
+\]
+The ratio tends to zero. Only finitely many distinct conditioning
+events arise from samples of at most $n$ inputs on the finite
+cube, so convergence is uniform over those events.
+\end{proof}
+
+\section{Actual finite Gaussian scales}
+The following argument uses only $\phi(0)=0$ and
+$\Lip(\phi)\le1$. Normalize the input by $\sqrt d$, hidden states
+by $\sqrt N$, and use energy-coordinate blocks
+\[
+ A_1=\sqrt{d/N}\,W^1,\quad A_s=W^s\ (2\le s<L),\quad
+ A_L=\sqrt N\,v^{\mathsf T}.
+\]
+The normalized hidden activation is
+$u\mapsto\phi(\sqrt N u)/\sqrt N$, still zero-preserving and
+$1$-Lipschitz. The normalized input norm is at most $\sqrt2$.
+
+\begin{lemma}[Uniform perturbation]\label{lem:perturb}
+If $\kappa_N(U)\le K+1$ and each normalized block of $B$ has
+operator norm at most $\eta$, then
+\[
+ \sup_{x\in X_d}|z_{U+B}(x)-z_U(x)|
+ \le\sqrt2L\eta
+ \left(\frac{K+1+2\eta\sqrt{L(K+1)}+L\eta^2}{L-1}
+                                                   \right)^{(L-1)/2}.
+\]
+Define
+\begin{equation}\label{eq:eta}
+ A_*=\left(\frac{K+2}{L-1}\right)^{(L-1)/2},\quad
+ \eta=\min\left\{1,\frac1{4\sqrt{L(K+1)}},
+                         \frac1{8\sqrt2LA_*}\right\}.
+\end{equation}
+Then the output perturbation is at most $1/8$.
+\end{lemma}
+\begin{proof}
+Replace blocks one at a time. Zero preservation bounds intermediate
+state norms by the input norm times preceding operator norms.
+Lipschitzness bounds each replacement's effect by $\eta$ times
+the other $L-1$ factors. Write $a_s=\norm{U_s}_F$; those factors
+are at most $a_s+\eta$. The sum of their squares, even including
+the omitted factor, is at most
+$K+1+2\eta\sqrt{L(K+1)}+L\eta^2$. Arithmetic--geometric mean and
+the sum over replacements prove the bound. The second choice in
+\eqref{eq:eta} makes this numerator at most $K+2$, and the last
+choice gives the error $1/8$.
+\end{proof}
+
+Set
+\begin{equation}\label{eq:bulk}
+ b^2=\max\{2(d+1)\log2+4\log8,\,
+                          16\log9+8\log(8L)\}.
+\end{equation}
+In energy coordinates let $T$ be the set where the first and last
+blocks have Frobenius norm at most $tb$, and every internal block
+has operator norm at most $tb$. This set is closed, convex, and
+centrally symmetric. It has raw Gaussian mass at least $1/2$.
+Indeed the first and last bounds each fail with probability at
+most $1/8$ by the chi-square exponential moment. Two $1/4$-nets
+of the $N$-dimensional unit sphere have at most $9^{2N}$ pairs;
+the scalar Gaussian tail and a union bound give, for each internal
+block, failure probability at most
+\[
+ 2\exp(2N\log9-Nb^2/8)\le1/(4L).
+\]
+The sum of all these failure bounds is at most $1/2$.
+
+\begin{proposition}\label{prop:finite}
+Suppose $tb\le\eta$ for \eqref{eq:eta}--\eqref{eq:bulk}.
+For every sample of at most $n$ inputs, the posterior gives mass
+at least $1-2e^{-1/(2\sigma^2)}$ to Boolean functions admitting a
+global unit-margin representative of product at most
+\begin{equation}\label{eq:Pfin}
+ P_{\rm fin}=\frac8{3\sqrt d}((K+1)/L)^{L/2}\le Cq^L/\sqrt d.
+\end{equation}
+\end{proposition}
+\begin{proof}
+Let $w_S$ be the memorizing witness.
+Lemma~\ref{lem:perturb} gives $w_S+T\subset E_S$.
+The Gaussian shift formula and central symmetry of $T$ imply
+\[
+ \mu_\sigma(E_S)\ge\mu_\sigma(w_S+T)
+       \ge\tfrac12\exp[-K/(2\sigma^2)].
+\]
+Gaussian isoperimetry for a set of Gaussian mass at least $1/2$
+gives
+\[
+ \mu_\sigma\{\dist(W,T)^2>K+1\}
+        \le\exp[-(K+1)/(2\sigma^2)].
+\]
+Distance here is Euclidean distance in energy coordinates.
+Division bounds the posterior exceptional mass by
+$2e^{-1/(2\sigma^2)}$.
+
+Outside this set let $B$ be the metric projection of $W$ onto
+$T$ and set $U=W-B$. Then $\kappa_N(U)\le K+1$, and all
+normalized blocks of $B$ have operator norm at most $tb\le\eta$.
+Lemma~\ref{lem:perturb} makes $z_U$ differ from $z_W$ by at most
+$1/8$ everywhere. Their signs agree and $|z_U|>3/8$.
+Multiply its readout by $8/3$, and apply \eqref{eq:amgm} and
+\eqref{eq:K}, to obtain \eqref{eq:Pfin}.
+\end{proof}
+
+
+Fix $\zeta>0$. It suffices to require
+\begin{equation}\label{eq:width}
+ N\ge\left\lceil\max\{M,2,(b/\eta)^{2/\zeta},2\log64\}\right\rceil.
+\end{equation}
+Then $\sigma^2\le N^{-(1+\zeta)}$ implies
+$t=\sqrt{N\sigma^2}\le N^{-\zeta/2}$, so $tb\le\eta$;
+the posterior exceptional mass is at most $1/32$.
+For $K\le q^2L+C_*$,
+\[
+ ((K+2)/L)^L\le Cq^{2L},\qquad
+ A_*^2\le e((K+2)/L)^L\le Cq^{2L}.
+\]
+Thus $\eta^{-1}\le C\poly(L)q^L$.
+The bulk constant is polynomial in $d,L$, and
+$M\le\exp(Cd)$ uniformly for $n\le\exp(cd)$.
+Since $L=Dd+O(1)$, a bound $N\ge\exp(C_\zeta d)$
+satisfies \eqref{eq:width} throughout this sample range.
+
+\section{Completion at the cold and fixed-gap scales}
+Since $L_d\log q=ad/100+O(1)$, both
+\eqref{eq:coldP} and \eqref{eq:Pfin} are at most $e^{ad}$
+for all sufficiently large $d$.
+Lemma~\ref{lem:hard} gives error at least $7/16$ for every
+Boolean function in those posterior events.
+By the cold comparison or finite-scale projection argument,
+the event has posterior mass at least $31/32$.
+The posterior Gibbs error is at least
+$(31/32)(7/16)=217/512$.
+If $e=e_{S,\sigma}(f_d)$, the Gibbs error is at most
+$(1-e)/3+e$. Hence
+\[
+ e\ge[3(217/512)-1]/2=139/1024>1/8.
+\]
+All estimates are uniform over sample realizations. Together
+with the teacher construction this proves the cold and fixed-gap
+parts of Theorem~\ref{thm:main}.
+
+\section{The critical endpoint}
+The same activation satisfies the hypotheses of the critical
+target-mass and canonical-state results proved in
+Appendix~\ref{ac-appendix}. Here we check the activation-specific
+strict potential explicitly.
+For $\tau$ sufficiently small, \eqref{eq:weightedfirst} gives
+\[
+ |R(u)|\le\varepsilon\min(|u|^3/3,1).
+\]
+Both $\phi$ and tanh are bounded by one and by $|u|$, so
+$|\phi(u)^2-\tanh(u)^2|\le2\varepsilon\min(u^4,1)$.
+For standard Gaussian $Z$ and $0\le q\le2$,
+\[
+ \left|\E e^{\phi(\sqrt qZ)^2}
+             -\E e^{\tanh(\sqrt qZ)^2}\right|
+       \le6e\varepsilon q^2.
+\]
+There is $c_0>0$ with
+$\log\E e^{\tanh(\sqrt qZ)^2}\le q-c_0q^2$ on $[0,2]$:
+for $G(u)=e^{\tanh^2u}$, direct differentiation gives
+$G''<2G$ away from zero, and the heat equation gives strict
+inequality at positive $q$; Taylor expansion at zero gives
+$q-q^2+O(q^3)$. Compactness supplies $c_0$.
+Taking $\varepsilon\le c_0/(12e)$ proves
+\begin{equation}\label{eq:strictpotential}
+ \log\E e^{\phi(\sqrt qZ)^2}\le q-(c_0/2)q^2
+                         \qquad(0\le q\le2).
+\end{equation}
+We may impose this further smallness on $\tau$ without changing
+any preceding argument.
+The global derivatives through order five are bounded by
+\eqref{eq:globalder}, and the weighted second-derivative estimate
+at zero gives $\phi'''(0)=-2+O(\varepsilon)<0$.
+That estimate
+also gives $|\phi''(u)|\le3\phi(u)$ for $u>0$, after decreasing
+$\tau$: integrate $|R'|\le\varepsilon\operatorname{sech}^2$
+to get $\phi(u)\ge(1-\varepsilon)\tanh u$ and use
+$|\phi''|\le(1+\varepsilon)|\tanh''|$.
+All hypotheses in Appendix~\ref{ac-appendix} are therefore met.
+
+For the sample memorizer
+$g_S=1-2\sum_{p\ {\rm negative\ in}\ S}\mathbf1_{\{p\}}$,
+Fourier variation is at most $1+2n$.
+The appendix proves that whenever $L\ge C\log(d+n+L)$,
+at the actual scale $\sigma^2=1/N$ and every
+$N\ge2^{Cd}(d+n+L)^C$, the posterior gives mass at least
+$31/32$ to functions with Boolean circuits of size
+$\poly(d+n+L)$, uniformly over every sample of at most $n$
+inputs.
+Reduce $c>0$ in Theorem~\ref{thm:main} so that
+$n\le e^{cd}$ and $L_d=Dd+K$ imply both the depth condition
+and this circuit-size bound being at most $2^{d/4}$.
+The definition of $f_d$ then gives error at least $7/16$
+for each such function. The same Gibbs calculation yields
+$e_{S,\sigma}(f_d)\ge139/1024$.
+Finally $2^{Cd}(d+n+L_d)^C\le e^{C'd}$ in this range.
+This proves the critical part and completes the theorem.
+
+\section{Why the activation cannot be efficiently evaluated}
+\begin{proposition}\label{prop:evaluation}
+There are fixed constants $C,c'>0$ such that approximating this
+$\phi$ to error $2^{-Cd}$ on all dyadic inputs of magnitude
+at most $Cd$ and bit length at most $Cd$ cannot be done by
+Boolean circuits of size less than $\exp(c'd)$ for all
+sufficiently large $d$. In particular no algorithm performs
+these evaluations in time polynomial in the input length
+and requested precision.
+\end{proposition}
+\begin{proof}
+Round the teacher's rational parameters to dyadics with $O(d)$
+bits. Its one binomial-combination layer has a fixed norm,
+and its remaining amplifying layers have scalar weight two.
+Layerwise Lipschitz propagation therefore bounds the output
+error from parameter, arithmetic, and activation-evaluation
+errors by $C_1d\,2^{Dd}\delta$ when every primitive error is
+at most $\delta$. Taking $\delta=2^{-C_2d}$ with fixed
+sufficiently large $C_2$ preserves the global output signs.
+All preactivation arguments have magnitude $O(d)$ and
+dyadic bit length $O(d)$. There are polynomially many
+arithmetic operations and activation calls.
+
+If one accurate activation evaluator had circuit size
+$\exp(c'd)$, replacing all activation calls by copies of it
+would give a circuit for $f_d$ of size at most
+$\poly(d)\exp(c'd)$. Choosing fixed $c'<(\log2)/4$
+makes this smaller than $2^{d/4}$ eventually, contrary to
+the defining circuit hardness of $f_d$.
+Enlarge $C$ to cover the required argument and precision
+constants. Polynomial running time would in particular
+give polynomial-size circuits, so is excluded as well.
+\end{proof}
+
+\section{Scope}
+
+The activation is fixed for the entire dimension sequence and
+is computable by finite search and convergent analytic series.
+It is intentionally computationally contrived. The proof
+asserts no efficient evaluator for it: inverse-exponential
+accuracy at its lookup bands reveals circuit-hard truth tables.
+The teacher architecture, coefficient sizes, and coefficient
+precision remain polynomial in its depth.
+
+There is no limiting inference to the exact tanh activation.
+Decreasing the perturbation size decreases the encoded signal
+and increases the fixed number of amplification layers.
+The decoder deliberately amplifies that small activation difference
+to a constant output margin; its constants are not uniform as the
+perturbation tends to zero.
+
+Thus oddness, analyticity, monotonicity, concavity, exact slope
+one at zero, and arbitrary closeness to tanh in any fixed
+finite number of derivatives do not by themselves give a
+universal polynomial-depth learning theorem.
+The exact tanh activation is unchanged by this statement.
+No lower bound for the exact tanh, ReLU, or GELU activation
+follows from this construction.
+
+\appendix
+\section{Universal finite-circuit capacity}\label{app:capacity}
+We prove Proposition~\ref{prop:capacity}, including its parallel-depth
+assertion. All activations in this appendix may differ by neuron.
+
+\paragraph{Relevant coordinates.}
+Let $T$ be the Frobenius product after the first matrix. If coordinate
+$i$ is relevant, a bichromatic cube edge has output difference at
+least two, so $T\norm{W^1e_i}\ge1$. Summing the squares shows that
+the number $k$ of relevant coordinates is at most $P^2$.
+Freeze the others to signs without increasing the first Frobenius
+norm: the expected squared norm of the new bias column under
+independent random signs is the sum of the old bias and frozen-column
+squared norms. Some assignment attains at most this expectation.
+Put $R=\sqrt{k+1}$ and $B=4+\lceil P\rceil$. Also $P\ge1$, since
+zero preservation and the margin imply
+\[
+ 1\le\E z(x)^2\le T^2\E\norm{W^1(1,x)}^2
+          =T^2\norm{W^1}_F^2\le P^2.
+\]
+In particular $R\le B$.
+
+\paragraph{A short prefix can be compressed.}
+For adjacent matrices $W,V$, let $w_i$ be row $i$ of $W$ and
+$v_i$ column $i$ of $V$, with $a_i=\norm{w_i}$, $b_i=\norm{v_i}$,
+and $A_0=\sum_i a_ib_i\le\norm W_F\norm V_F$.
+Delete zero contributions. Normalize the incoming rows to
+$u_i=w_i/a_i$ and activations to
+$\psi_i(s)=\phi_i(a_i s)/a_i$.
+Sample $m$ indices with probabilities $p_i=a_ib_i/A_0$.
+Each sampled neuron has row $u_i$, activation $\psi_i$, and
+outgoing column $A_0v_i/(mb_i)$. These activations remain
+zero-preserving and $1$-Lipschitz. For every draw the new adjacent
+Frobenius product is exactly $A_0$, and its expected contribution
+to the next preactivation is the old one.
+
+Let $S$ be the preceding product. The incoming state norm is at
+most $SR$, and an unaveraged sampled vector has norm at most
+$A_0SR$. Hilbert-space bounded-difference concentration and a
+union bound over $X_k$ give some draw with uniform preactivation
+error $O(A_0SR\sqrt{\log(8|X_k|)/m})$.
+The suffix after $V$ has Lipschitz constant at most
+$P/(S\norm W_F\norm V_F)$. Thus final output error is at most
+$O(PR\sqrt{\log(8|X_k|)/m})$.
+For $h=O(\log B)$ choose
+$m=C(PRh)^2\log(8|X_k|)$, and perform this replacement through
+the first $\min\{h,L-1\}$ hidden layers. The product never
+increases, and sufficiently large universal $C$ gives total
+output error at most $1/4$. Double the readout: the resulting
+network has margin at least $3/2$, product $P_0\le2P$, and
+retained widths polynomial in $B$. A following unretained matrix
+may still have arbitrarily many rows, which does not affect these
+claims.
+
+\paragraph{Two-ball refinement.}
+The image of a radius-$r$ ball under a matrix $W$ is covered by at
+most two balls of radius $r\norm W_F/\sqrt2$.
+Normalize $\norm W_F=1$ and let $a$ be its leading singular value.
+If $a^2\le1/2$, one ball at zero works. Otherwise put
+$b^2=1-a^2$, $c=(a^2-b^2)/(2a)$, and use centers $\pm cu$ along
+the leading left-singular direction. For a unit input with
+leading right-singular coordinate $t$, the squared distance to
+the matching center is at most
+\[
+ (a|t|-c)^2+b^2(1-t^2).
+\]
+It is convex in $|t|\in[0,1]$, and both endpoint values are
+$1/(4a^2)\le1/2$. Scaling and translation prove the claim.
+Coordinatewise Lipschitz activations preserve the covering radii.
+
+Let $S_j$ be the product of the first $j$ modified matrix norms.
+Iteration gives at most $2^j$ balls of radius $RS_j2^{-j/2}$.
+Replace each nonempty ball center by an actual hidden image,
+doubling its radius. Choose
+$h=\lceil2\log_2(64B^2)\rceil$.
+If at least $h$ hidden layers exist, normalize their final state
+by $S_h$. Every input is within $1/(8\overline P)$ of an actual
+representative, where $\overline P=4B$. Opposite-label
+representatives are at distance at least $2/\overline P$:
+the normalized suffix is $P_0$-Lipschitz and both outputs have
+margin at least one. There are at most $2^h=\poly(B)$ centers.
+If fewer hidden layers exist, retain the entire compressed
+network and its readout instead.
+
+\paragraph{Normalize before rounding.}
+Put $M_s=\norm{W^s}_F$, $S_s=\prod_{i\le s}M_i$,
+$A_s=W^s/M_s$, and
+$\Psi_{s,i}(u)=\phi_{s,i}(S_su)/S_s$. No $M_s$ vanishes,
+since that would force all outputs to vanish. The normalized
+states satisfy
+\[
+ u_s=\Psi_s(A_su_{s-1}),\qquad \norm{A_s}_F=1,\qquad
+ \norm{u_s}\le R.
+\]
+Every $\Psi_{s,i}$ is zero-preserving and $1$-Lipschitz.
+Choose inverse-polynomial meshes in $B$ for the matrix entries
+and for scalar tables of $\Psi_{s,i}$ on $[-R-2,R+2]$.
+If matrix Frobenius error is at most $\eta$ and scalar lookup
+error at most $2\delta$, the state error obeys
+\[
+ e_s\le(1+\eta)e_{s-1}+\eta R+2\sqrt C\,\delta,
+\]
+where $C=\poly(B)$ bounds the retained widths.
+Taking $\eta,\delta$ below suitable inverse polynomials in
+$B,C,h$ gives $e_s<1/(256\overline P)$ throughout.
+Approximate affine inputs remain in the stored interval.
+Store the normalized representatives to the same Euclidean
+accuracy. Squared-distance comparisons at threshold
+$1/\overline P^2$ distinguish a close correct-label center from
+every opposite-label center. The output is positive precisely
+when a positive-labeled center lies below that threshold.
+In the short-network case, round the normalized readout as
+well; its margin at least $1/\overline P$ dominates these errors.
+
+All tables have polynomial length in $B$, with $O(\log B)$ bits
+per entry. Fixed-precision sums, products, comparisons, and
+lookups therefore give a Boolean circuit of size $\poly(B)$
+with universal degree. Carry-save addition trees followed by
+carry propagation take $O(\log B)$ depth per retained layer,
+giving total $O(\log^2 B)$ Boolean depth.
+Alternatively each fixed affine comparison of preceding state
+bits is a threshold gate. Interval tests and table-bit selection
+take constant threshold depth per layer. Squaring the final
+$O(\log B)$-bit differences uses polynomial-size lookup tables,
+and threshold gates sum the squares. The threshold depth is
+$O(\log B)$. This proves Proposition~\ref{prop:capacity}.
+
+\input{critical-appendix}
+
+\end{document}

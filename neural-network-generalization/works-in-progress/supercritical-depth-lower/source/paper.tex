@@ -1,0 +1,447 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage[T1]{fontenc}\usepackage{lmodern,microtype,enumitem,xurl}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\newtheorem{theorem}{Theorem}[section]\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newcommand{\R}{\mathbb R}\newcommand{\E}{\mathbb E}\newcommand{\Pp}{\mathbb P}
+\newcommand{\KL}{\operatorname{KL}}\newcommand{\tr}{\operatorname{tr}}
+\newcommand{\diag}{\operatorname{diag}}\newcommand{\sech}{\operatorname{sech}}
+\newcommand{\sgn}{\operatorname{sign}}\newcommand{\op}{\mathrm{op}}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\cN}{\mathcal N}\newcommand{\one}{\mathbf 1}
+\title{Exponential-depth sample complexity for a Gaussian Bayesian\\tanh network with a supercritical variance prefactor}
+\author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{Research draft --- 25 October 2026}
+\hypersetup{pdftitle={Exponential-depth sample complexity for a Gaussian Bayesian tanh network with a supercritical variance prefactor},pdfauthor={ChatGPT-6 Astra; Kaarel Haenni; Dmitry Vaintrob}}
+\begin{document}\maketitle
+\begin{abstract}
+We study an exact finite-width Gaussian Bayesian tanh network on the Boolean cube. Hidden weights have variance $t^2/N$ and readout weights have variance $t^2/N^2$, with a fixed prefactor $t>1$. The prior is conditioned on an absolute output margin at every input, and training labels are fitted exactly. For hidden depth $H=\Theta_t(d)$ and width $N=2^{\Theta_t(d)}$, we prove that the prior probabilities of all globally margined Boolean truth tables have ratio $1+\exp(-\Omega_t(d))$. Consequently, after any training sample, the posterior correct-label probability at every unseen input is $1/2+O(\exp(-\Omega_t(d)))$. Under the uniform cube law, even the constant target needs $\exp(\Omega_t(H))$ examples for the posterior to assign the correct label probability greater than $2/3$ on most inputs.
+
+The proof is at the actual finite width, not merely at the level of a Gaussian-process limit or a large-deviation rate. It combines uniform empirical covariance contraction, an exceptional-event estimate small relative to every truth-table probability, and an exact Gaussian readout comparison. The conclusion concerns a specified exponential width window, confidence and Gibbs prediction; it does not prove a lower bound for deterministic majority prediction. The prefactor $t>1$ is outside the canonical $0<t\le1$ family, whose unrestricted-depth question remains open.
+\end{abstract}
+
+\section{Model and result}
+Let $\mathcal X_d=\{-1,1\}^d$, with $m=2^d$. Append a constant input coordinate and consider $H$ tanh hidden layers of width $N$, followed by a linear scalar readout $z$. There are no internal biases. All weights are independent centered Gaussians, with variances
+\begin{equation}\label{eq:prior}
+ t^2/d\quad\text{in the first layer},\qquad t^2/N\quad\text{in other hidden layers},\qquad t^2/N^2\quad\text{in the readout}.
+\end{equation}
+Fix $t>1$. For a truth table $f:\mathcal X_d\to\{-1,1\}$ write
+\begin{equation}\label{eq:wf}
+ w_f=\Pp\{f(x)z(x)>1/2\text{ for every }x\in\mathcal X_d\}.
+\end{equation}
+Conditioning first on $|z(x)|>1/2$ at every input and then on consistent training labels produces a posterior whose function weights are proportional to $w_f$ among sample-consistent tables.
+
+\begin{theorem}\label{thm:main}
+For each fixed $t>1$ there are constants $p>4$, $K,c>0$, and $d_0$, depending only on $t$, such that for every $d\ge d_0$, at
+\begin{equation}\label{eq:window}
+ N=\lceil2^{pd}\rceil,\qquad H=\lceil K(d+1)\rceil,
+\end{equation}
+the finite-network probabilities obey
+\begin{equation}\label{eq:ratio}
+ \frac{\max_f w_f}{\min_f w_f}\le1+e^{-cd}.
+\end{equation}
+For any consistent training sample $S$ and every unobserved input $x$, the posterior probability $p_S(x)$ of either prescribed label satisfies
+\begin{equation}\label{eq:posterior}
+ \frac1{2+e^{-cd}}\le p_S(x)\le\frac{1+e^{-cd}}{2+e^{-cd}}.
+\end{equation}
+For sufficiently large $d$, under the uniform cube law,
+\begin{equation}\label{eq:mistakes}
+ \Pp_X\{p_S(\text{correct label at }X)\le2/3\}
+ \ge1-\frac{|\{x:x\text{ occurs in }S\}|}{2^d}\ge1-\frac{|S|}{2^d}.
+\end{equation}
+The conclusions hold for every target and every realized consistent sample, including samples with repetitions.
+\end{theorem}
+
+The constant target $+1$ has a width-two implementation at every depth with all coefficients at most one and output greater than one. Both first neurons read the constant input with coefficient one. Every subsequent $2\times2$ hidden matrix has all entries one. The shared value satisfies $u_1=\tanh(1)$ and $u_j=\tanh(2u_{j-1})\ge\tanh(1)$; the readout sums the final two values. Nevertheless, \eqref{eq:mistakes} requires more than $2^{d-1}=\exp(\Omega_t(H))$ examples to bring confidence failure below $1/2$ for the Bayesian learner.
+
+Confidence and majority prediction differ: $1/2+e^{-cd}$ can have the correct majority sign. Our theorem also bounds Gibbs error below by $(1-|S|/2^d)/(2+e^{-cd})$, but makes no such claim about deterministic majority. Nor do we assert the conclusion at all larger widths: increasing width can magnify tiny differences between rare-event probabilities.
+
+The prior in \eqref{eq:prior} has exactly the same width powers as the coefficient-one mean-field prior. It is therefore naturally called mean-field scaling with a different fixed variance prefactor. If one instead insists on the exact coefficient-one formula $t=N^{(1-\gamma)/2}$, it corresponds to $\gamma_N=1-2\log(t)/\log(N)<1$, approaching one from below; it is not a fixed subcritical exponent. The lower bound does not cover the canonical $0<t\le1$ family, whose unrestricted Boolean depth question remains open.
+
+There is no contradiction with fixed-depth, width-independent polynomial learning. That guarantee extends to each fixed $t>1$: in the bounded-activation proof, the cloning bulk gains a factor $t$ and covariance stability gains a factor $t^2$, both harmless at fixed depth. Equivalently, writing $W=tU$ replaces the activation by $u\mapsto\tanh(tu)$ and the fixed output margin by $1/(2t)$, which remain within fixed-depth Lipschitz-activation methods. The new theorem shows that the resulting polynomial cannot be uniform jointly in depth. A bound $A_H(1+d)^{D_H}$ at fixed teacher width and accuracy must have $\log A_H+D_H\log H\ge c_tH-O_t(1)$ along the lower-bound sequence.
+
+The prefactor is not removable while keeping the original tanh learner: $u\mapsto\tanh(tu)$ has derivative $t$ at zero, whereas tanh has derivative one. Output-margin changes alone leave the hidden covariance dynamics unchanged. The positive white equilibrium used here exists precisely for $t>1$.
+
+\paragraph{Relation to prior work.}
+The free variance and correlation recursions, their ordered and chaotic phases, and the associated signal-propagation depth scales are established subjects in random-network theory; see Poole et al.~\cite{poole} and Schoenholz et al.~\cite{schoenholz}. Deep Gaussian-process limits likewise use recursive hidden covariances to describe Bayesian networks at infinite width~\cite{lee}. We use these covariance dynamics as an input. The question here concerns an actual finite-width posterior after a rare full-domain margin event. Its resolution requires multiplicative comparison of the probabilities of different truth tables, including configurations atypical under the unconditioned prior. The empirical transport, uniform full-margin mass bound, and exact readout comparison below provide that additional step; unconditioned kernel convergence alone would not justify it.
+
+\section{Covariance chains and free dynamics}
+Write $F(s)=\E\tanh^2(\sqrt{s}Z)$ for standard normal $Z$ and $T(q)=F(t^2q)$. The ratio $F(s)/s$ strictly decreases: pointwise, $\tanh(u)/u$ strictly decreases for $u>0$. Since $T'(0)=t^2>1$ and $T(q)<1$, there is a unique positive fixed point $q_*\in(0,1)$, with $0<T'(q_*)<1$.
+
+For a positive semidefinite $m\times m$ matrix $Q$, choose $R\in\R^{m\times m}$ with $RR^T=Q$. For independent standard Gaussian columns $G_1,\ldots,G_N\in\R^m$, set
+\begin{equation}\label{eq:empmap}
+ F_G(R)=[\tanh(tRG_1),\ldots,\tanh(tRG_N)],\qquad
+ \Phi_G(R)=F_G(R)F_G(R)^T/N.
+\end{equation}
+The population map is $\mathcal T(Q)=\E\tanh(tRG)\tanh(tRG)^T$. Equation \eqref{eq:empmap} is the exact empirical-Gram transition: conditional on current features, next-layer preactivation columns are independent Gaussians of covariance $t^2Q$. Initially
+\begin{equation}\label{eq:initial}
+ Q_0(x,y)=(1+x\cdot y)/d.
+\end{equation}
+The representation holds at singular $Q$, including the first layer: it gives the same Gaussian pushforward as the physical weights.
+For a table $f$, let $D_f$ be its diagonal sign matrix. Oddness implies that the chain started at $D_fQ_0D_f$ has final feature law $D_fF_H$. Its all-positive margin probability is $w_f$. We call this a sign gauge.
+
+Use unnormalized Bures distance
+\begin{equation}\label{eq:bures}
+ d_B(Q,Q')^2=\tr Q+\tr Q'-2\tr\sqrt{Q^{1/2}Q'Q^{1/2}}.
+\end{equation}
+It equals the minimum squared Frobenius distance of equally sized factors. Optimal factors can be chosen Borel measurably by orthogonal Procrustes minimization, including at singular matrices. At every step choose them using only the past and use the same fresh Gaussian array for both chains. This gives correct marginal transition laws. All uniform estimates below allow every factor orientation.
+
+\begin{lemma}[Free scalar and pair drift]\label{lem:free}
+For some $a_t>0$ and every $0<q\le2$,
+\[
+ |\log(T(q)/q_*)|\le |\log(q/q_*)|-a_t\min\{|\log(q/q_*)|,1\}.
+\]
+The absolute output correlation of two Gaussian tanh features is at most their input absolute correlation $|c|$. If both variances lie in a fixed compact positive interval, some uniform $\lambda<1$ gives
+\[
+ |c_{\rm free}|\le\lambda|c|+(1-\lambda)|c|^3.
+\]
+\end{lemma}
+\begin{proof}
+The increasing scalar map lies between $q$ and $q_*$, because $T(q)/q$ strictly decreases. Its logarithmic displacement towards $q_*$ approaches $2\log t>0$ at zero; its displacement-to-distance ratio approaches $1-T'(q_*)>0$ near $q_*$. Compactness proves the claim; reduce $a_t\le1$.
+Expand each standardized odd feature in orthonormal Hermite polynomials. Only odd degrees occur and squared coefficients sum to one. Cross moments are sums of coefficient products times $c^k$. Cauchy--Schwarz gives the first correlation bound. Nonlinearity makes degree-one weight strictly below one; compactness bounds it uniformly away from one on a positive variance interval. Splitting off degree one gives the stronger bound.
+\end{proof}
+
+\begin{lemma}[Free matrix estimates]\label{lem:free-matrix}
+In a sufficiently small operator neighborhood of $q_*I$, the free covariance map has Frobenius derivative norm less than one, uniformly in $m$. For input correlation matrix $C$, write $X=\lambda_{\max}(C)-1$ and $Y=1-\lambda_{\min}(C)$. If all variances are close enough to $q_*$ and all off-diagonal absolute correlations are at most $3/4$, then
+\begin{equation}\label{eq:freeXY}
+ X_{\rm free}\le aX,\qquad Y_{\rm free}\le bY+c_1X,
+ \qquad a,b<1.
+\end{equation}
+All constants depend only on $t$ and fixed tolerances.
+\end{lemma}
+\begin{proof}
+At $q_*I$, the diagonal derivative multiplier is $T'(q_*)<1$. The off-diagonal multiplier is
+\[r_{\rm off}=t^2(\E\sech^2(t\sqrt{q_*}Z))^2<1,\]
+the first standardized Hermite weight. Gaussian differentiation by parts gives, for $i\ne j$,
+\[
+ (D\mathcal T(Q)[E])_{ij}=a_{ij}E_{ij}+b_{ij}E_{ii}+b_{ji}E_{jj},
+ \qquad |b_{ij}|\le C_t|Q_{ij}|.
+\]
+Here $a_{ij}$ is uniformly close to $r_{\rm off}$. The $b$ bound follows by differentiating in cross covariance from its zero value at independence. The diagonal-to-off-diagonal Frobenius operator norm is at most
+$C_t\max_i(\sum_{j\ne i}Q_{ij}^2)^{1/2}\le C_t\norm{Q-q_*I}_{\op}$.
+Together with the diagonal derivative, this proves local contraction.
+
+The normalized Hermite expansion is
+$C_{\rm free}=\sum_{k\text{ odd}}A_k C^{\circ k}A_k$, with diagonal $A_k$ and $\sum_kA_k^2=I$. Since $C^2\le\lambda_{\max}(C)C$, one has $\sum_{j\ne i}C_{ij}^2\le X$. Thus the off-diagonal row sums of $C^{\circ k}-I$, for odd $k\ge3$, are at most $(3/4)^{k-2}X$. Degree-one squared coefficients lie within $\epsilon$ of $r_{\rm off}$; Cauchy--Schwarz bounds the aggregate higher-degree remainder by $(3/4)(1-r_{\rm off}+\epsilon)X$. The first-degree term contributes at most $(r_{\rm off}+\epsilon)X$ above and $(r_{\rm off}+\epsilon)Y$ below. Taking $\epsilon$ small gives \eqref{eq:freeXY}.
+\end{proof}
+
+\section{Uniform empirical quality}\label{sec:quality}
+Rare-event comparison needs exceptional probabilities exponentially small in $Nd$, not merely a typical pointwise approximation. Put $\zeta(v)=v^{1/4}+v$.
+\begin{theorem}[One-array quality]\label{thm:quality}
+For $N\ge C_tm^4\log(eN)$ there is a measurable, orthogonally invariant statistic $V\ge\tau$, where $\tau=C_tm^4\log(eN)/N$, satisfying
+\begin{equation}\label{eq:qualitytail}
+ \Pp\{V>\tau+s\}\le C_te^{-c_tNs}\quad(s\ge0).
+\end{equation}
+Simultaneously over all factors with positive input diagonal variances at most two, at $v=V$,
+\begin{align}
+ |\log(q_{\rm next}/T(q))|&\le C_t\zeta(v),\label{eq:scalarq}\\
+ 1-|c_{\rm next}|&\ge e^{-C_t\zeta(v)}(1-|c_{\rm free}|)
+                                      &&(v\le v_0),\label{eq:pairsmall}\\
+ 1-|c_{\rm next}|&\ge e^{-C_t\zeta(v)}(1-|c_{\rm in}|)
+                                      &&(v>v_0),\label{eq:pairlarge}\\
+ \norm{C_{\rm next}-C_{\rm free}}_{\op}
+      &\le C_t\norm{C_{\rm in}}_{\op}\zeta(v)
+                                      &&(v\le v_0),\label{eq:matrixsmall}\\
+ \norm{C_{\rm next}}_{\op}&\le C_te^{C_tv}\norm{C_{\rm in}}_{\op}.\label{eq:matrixlarge}
+\end{align}
+For arbitrary optimal factors of $Q,Q'$,
+\begin{equation}\label{eq:globalgain}
+ d_B(\Phi_G(R),\Phi_G(R'))\le t\sqrt{1+C_t(\sqrt v+v)}d_B(Q,Q').
+\end{equation}
+There are an operator ball $\mathcal U$ about $q_*I$, $r<1$, and $v_1>0$ such that for $Q,Q'\in\mathcal U$ and $v\le v_1$,
+\begin{equation}\label{eq:localgain}
+ d_B(\Phi_G(R),\Phi_G(R'))\le r\,d_B(Q,Q').
+\end{equation}
+\end{theorem}
+We give the empirical-process details, including degenerating variances and pairs.
+
+\subsection{Two-feature moments}
+\begin{lemma}\label{lem:L4}
+For $0<r,s\le\sqrt2t$, $c\in[-1,1]$, and arbitrary real $a,b$, if $Z,U$ are independent standard Gaussians, then
+\[
+ g=a\tanh(rZ)+b\tanh(s(cZ+\sqrt{1-c^2}U))
+ \quad\text{satisfies}\quad \E g^4\le C_t(\E g^2)^2.
+\]
+\end{lemma}
+\begin{proof}
+Absorb the sign of $c$ into $b$. Put $v=r^2,w=s^2,A=ar,B=bs$, and $f_v(z)=\tanh(\sqrt v z)/\sqrt v$, with $f_0(z)=z$. The divided difference $h_{v,w}=(f_w-f_v)/(w-v)$, extended on the diagonal, is continuous in $L^4$ on the compact square and bounded by $C|z|^3$. Its Taylor coefficients at $z,z^3$ are $(0,-1/3)$, whereas those of $f_v$ are $(1,-v/3)$. The two functions are linearly independent at every parameter pair. Compactness gives uniformly positive $L^2$ Gram matrices and bounded $L^4$ norms. Therefore for $g_0=Af_v(Z)+Bf_w(Z)$,
+\[
+ \E g_0^2\ge c_t[(A+B)^2+B^2(w-v)^2],\qquad
+ \norm{g_0}_4\le C_t(|A+B|+|B||w-v|).
+\]
+For $e=1-c^2$, unit Lipschitz continuity gives $\norm{g-g_0}_p\le C_p|B|\sqrt e$, $p=2,4$. Projection onto the first conditional Hermite coordinate of $U$, followed by Jensen, gives
+$\E\operatorname{Var}(g\mid Z)\ge B^2e[\E\sech^2(sZ)]^2\ge c_tB^2e$.
+Hence $\norm{g_0}_2\le C_t\norm g_2$, and $\E g^2$ controls $(A+B)^2$, $B^2(w-v)^2$, and $B^2e$. The $L^4$ triangle inequality completes the proof.
+\end{proof}
+
+\subsection{VC uniformity and rare strips}
+Let $\mathcal A$ be all strips
+$\{|a\tanh(u\cdot G)+b\tanh(v\cdot G)|\le s\}$, with arbitrary coefficients, $s\ge0$, and bounded $u,v$. Its VC dimension is at most $D=Cm^4$. A strip is a fixed Boolean combination of two thresholds of a two-unit tanh network. The sigmoidal VC bound of Karpinski--Macintyre \cite{KM} is $O((\text{parameters}\times\text{nodes})^2)$ here. Both counts are $O(m)$ even if input vertices are counted. We use the conservative $O(m^4)$ bound; fixed Boolean combinations cost only a constant factor.
+The bounded-indicator VC inequality follows from ghost-sample symmetrization, Sauer's pattern bound, and Hoeffding's inequality. At $v\ge CD\log(eN)/N$ it gives, except on $Ce^{-cNv}$,
+\begin{equation}\label{eq:VCabs}
+ \sup_{A\in\mathcal A}|P_N(A)-P(A)|\le C\sqrt v.
+\end{equation}
+Here $P_N$ is empirical averaging and $P$ Gaussian expectation.
+
+\begin{lemma}[Rare sets of large empirical mass]\label{lem:rare}
+For a VC class of dimension $D$, $N\ge4D$, and $0<p\le1/8$,
+\[
+ \Pp\{\exists A:P(A)\le p,\ P_N(A)\ge1/2\}
+ \le2\exp\!\left[D\log\frac{3eN}{D}+CN-(N/2-D)\log(1/p)\right].
+\]
+\end{lemma}
+\begin{proof}
+Draw $M=\lceil N/p\rceil$ ghost observations. Conditional on a witness selected from the original sample, its ghost count is at most $2Mp$ with probability at least $1/2$, by Markov. It then contains at most $4N$ pooled observations. Condition on the pool and uniformly choose its $N$ original positions. For each pattern with at most $4N$ points, a union bound over at least $N/2$ hits bounds the probability by $2^N(4p)^{N/2}$, with harmless rounding constants. Sauer's lemma bounds pooled patterns by $(3eN/(Dp))^D$. Multiply and account for the factor two for ghost success.
+\end{proof}
+It follows, for $N\ge C_tD\log(eN)$, outside probability $C_te^{-c_tN(1+v)}$, that every strip with empirical mass at least $1/2$ has Gaussian mass at least
+\begin{equation}\label{eq:rarefloor}
+ p_v=e^{-C_t(1+v)}.
+\end{equation}
+This avoids the false unrestricted uniform relative-entropy assertion for arbitrarily tiny sets containing a single observation.
+
+For any two-feature combination $Y$ normalized by $PY^2=1$, Lemma~\ref{lem:L4} gives $PY^4\le C_t$. Truncate at $B=v^{-1/4}$. Layer cake and \eqref{eq:VCabs} give
+$|(P_N-P)\min(Y^2,B)|\le CB\sqrt v=Cv^{1/4}$, while the truncation bias is at most $PY^4/B\le Cv^{1/4}$. Thus the population and empirical pair matrices satisfy, uniformly,
+\begin{equation}\label{eq:pairPSD}
+ \Gamma_N\succeq(1-C_tv^{1/4})\Gamma.
+\end{equation}
+This remains multiplicative at arbitrarily small nonzero eigenvalues. No exponential moment of a cubic Gaussian limit is used.
+
+\subsection{Matrix and derivative concentration}
+Put $\eta(v)=\sqrt v+v$. On one nested event with failure at most $Ce^{-cNv}$ for $v\ge C_tm^2\log(eN)/N$, we claim
+\begin{align}
+ \norm{P_NGG^T-I}_{\op}&\le C_t\eta(v),\label{eq:GG}\\
+ \norm{(P_N-P)h_Rh_R^T}_{\op}&\le C_t\eta(v),\label{eq:localcov}\\
+ |(P_N-P)\{2t(Mh_R)^T\diag(\sech^2(tRG))EG\}|&\le C_t\eta(v),\label{eq:derivative}
+\end{align}
+where $h_R=\tanh(tRG)$, $RR^T$ lies in a fixed small operator ball about $q_*I$, and $M,E$ are Frobenius-unit matrices with $M$ symmetric. Also define
+\[
+ \psi_s(z)=\tanh(\sqrt s z)/\sqrt{F(s)}\ (s>0),\qquad \psi_0(z)=z.
+\]
+For every matrix $B$ with unit row norms and $s_i\in[0,2t^2]$, put $\psi_{B,s}(G)_i=\psi_{s_i}((BG)_i)$ and $\Lambda=\norm B_{\op}^2\ge1$. Uniformly,
+\begin{equation}\label{eq:globalnorm}
+ \norm{(P_N-P)\psi_{B,s}\psi_{B,s}^T}_{\op}\le C_t\Lambda\eta(v).
+\end{equation}
+
+For completeness, these assertions follow by the following explicit nets. At fixed parameters, all normalized scalar tests have dimension-independent subexponential norms. For \eqref{eq:GG} use $(u^TG)^2$. For \eqref{eq:localcov}, $u^Th_R$ is centered and Gaussian-Lipschitz with constant $t\norm R_{\op}=O_t(1)$. The absolute derivative integrand is at most $2t\norm{Mh_R}_2\norm{EG}_2$. Poincare gives $\E\norm{Mh_R}_2^2\le t^2\norm R_{\op}^2\norm M_F^2$; its Gaussian Lipschitz constant is at most $t\norm R_{\op}\norm M_{\op}$. Both norm factors therefore have bounded subGaussian scales. Their product is subexponential. For \eqref{eq:globalnorm} test $(u^T\psi_{B,s})^2/\Lambda$; the unsquared normalized projection is centered and Gaussian-Lipschitz with a constant depending only on $t$. Bernstein bounds a fixed-test deviation $A\eta(v)$ by $2e^{-cANv}$ for large fixed $A$.
+
+Restrict first to $\max_i\norm{G_i}^2\le T_v^2=A_t[m+\log(2N)+Nv]$, whose failure is at most $e^{-cNv}$ by Gaussian exponential moments and a union bound. Parameter spaces have dimension at most $3m^2+O(m)$ and radius $O_t(\sqrt m)$, hence mesh nets of size $(C_t\sqrt m/\epsilon)^{3m^2+O(m)}$. A conservative common parameter Lipschitz envelope for all integrands is $C_tm^2(1+\norm G^4)$.
+For the possible zero-scale singularity, write $\tanh(\sqrt s z)/\sqrt s=z\theta(sz^2)$, with $\theta(a)=\tanh(\sqrt a)/\sqrt a$ and $\theta(0)=1$. Its derivative is bounded, and $F(s)/s$ has a positive lower bound and bounded derivative on the compact scale interval. Hence
+\[
+ |\psi_s(z)|\le C_t|z|,\quad |\partial_z\psi_s(z)|\le C_t,
+ \quad |\partial_s\psi_s(z)|\le C_t(|z|+|z|^3).
+\]
+The denominator $\norm B_{\op}$ is Lipschitz and at least one, justifying the same polynomial envelope. Take $\epsilon=c_t\eta(v)/[m^2(1+T_v^4)]$; Gaussian fourth moments control reference expectations with this mesh too. Net log-cardinality is at most $C_tm^2[\log(eN)+\log(1+v)]$. For $v\le1$ the threshold absorbs it into $Nv$; for $v\ge1$ use $\log(1+v)\le v$ and $N\ge C_tm^2$. The union bound proves \eqref{eq:GG}--\eqref{eq:globalnorm}. Define the event by the full supremum inequalities, not a particular net, making rotation invariance exact.
+
+\subsection{Scalar and pair bounds at all qualities}
+Taking all rows equal in \eqref{eq:globalnorm} and canceling their multiplicity gives
+\begin{equation}\label{eq:scalarraw}
+ \left|\frac{P_N\tanh^2(u\cdot G)}{P\tanh^2(u\cdot G)}-1\right|\le C_t\eta(v).
+\end{equation}
+At small quality, combine its upper bound with \eqref{eq:pairPSD}. Testing the latter against a signed difference divided by the actual empirical standard deviations gives
+\[
+ 1-|c_N|\ge\frac{1-C_tv^{1/4}}{1+C_t\sqrt v}(1-|c_{\rm free}|).
+\]
+This proves \eqref{eq:scalarq} and \eqref{eq:pairsmall} for small $v$.
+
+For large $v$, \eqref{eq:GG} gives $\lambda_{\max}(P_NGG^T)\le C_t(1+v)$. A standardized scalar $W=\tanh^2(rZ)/F(r^2)$ obeys $W\le C_tZ^2$ and $P\{W\le a\}\le C_t\sqrt a$, uniformly for $0<r\le\sqrt2t$. If $\mu=P_NW$, at least half the sample satisfies $W\le2\mu$. The rare-strip estimate gives $\mu\ge c_te^{-C_t(1+v)}$, and sample covariance gives $\mu\le C_t(1+v)$. For $v$ above a fixed positive threshold these logarithms are bounded by $C_tv$, completing \eqref{eq:scalarq}.
+
+For a pair let $\delta_{\rm in}=1-|c_{\rm in}|>0$, with actual empirical moments $q_u^N,q_v^N$, and put
+\[
+ g=\frac{\tanh(u\cdot G)}{\sqrt{q_u^N}}
+   -\sgn(c_N)\frac{\tanh(v\cdot G)}{\sqrt{q_v^N}},\qquad
+ \delta_{\rm out}=1-|c_N|.
+\]
+Then $P_Ng^2=2\delta_{\rm out}$ and $q_u^N\le\norm u^2\Lambda$, where $\Lambda=C_t(1+v)$. Conditional on $v\cdot G$, the other Gaussian has standard deviation $\norm u\sqrt{1-c_{\rm in}^2}$. On $|u\cdot G|\le\norm u R$, its normalized tanh derivative is at least $c_te^{-C_tR}/\sqrt{q_u^N}$. A conditional density bound therefore yields
+\[
+ P\{|g|\le a\}\le C_ta\sqrt{\Lambda/\delta_{\rm in}}e^{C_tR}+2e^{-R^2/2}.
+\]
+For $z=a\sqrt{\Lambda/\delta_{\rm in}}<1$ choose $R=\sqrt{\log(1/z)}$, giving $C_t\sqrt z$; larger $z$ is automatic. At $a=2\sqrt{\delta_{\rm out}}$ empirical mass is at least $1/2$. Equation \eqref{eq:rarefloor} implies
+$\delta_{\rm out}\ge c_t\delta_{\rm in}\Lambda^{-1}e^{-C_t(1+v)}$, proving \eqref{eq:pairlarge} for $v\ge v_0$. The same bounds exclude zero scalar moments and exactly degenerate output pairs on the quality event.
+
+\subsection{Matrix normalization and Bures gains}
+The population-normalized output covariance in \eqref{eq:globalnorm} has operator norm at most $\Lambda$: its Hermite expansion is a sum of diagonal conjugates of Schur powers of $C$, each bounded above by $\Lambda I$, and coefficient squares sum to $I$. This uses that Schur multiplication by a positive correlation matrix is a unital positive map. Normalize instead by empirical diagonal moments. Their ratios are within $C_t\zeta(v)$ of one at small quality, and at least $c_te^{-C_tv}$ at all quality. Equation \eqref{eq:globalnorm} gives \eqref{eq:matrixsmall}--\eqref{eq:matrixlarge}.
+
+The shared empirical feature coupling and unit Lipschitz continuity give
+\[
+ d_B(\Phi_G(R),\Phi_G(R'))^2\le t^2P_N\norm{(R-R')G}^2
+ \le t^2(1+C_t\eta(v))\norm{R-R'}_F^2,
+\]
+proving \eqref{eq:globalgain}. For local contraction, take optimal factors $R=Q^{1/2}$, $R'=AR$ where
+$A=Q^{-1/2}(Q^{1/2}Q'Q^{1/2})^{1/2}Q^{-1/2}$. The chord $R_s=(I+s(A-I))R$ is a horizontal Bures geodesic of speed $\norm{R'-R}_F=d_B(Q,Q')$. If the endpoints are within $\epsilon$ of $q_*I$ in operator norm, $A-I=O_t(\epsilon)$ and the whole covariance chord stays in an $O_t(\epsilon)$ white ball. Its covariance tangent norm is at most $2\sqrt{q_*+O_t(\epsilon)}\norm{R'-R}_F$.
+Lemma~\ref{lem:free-matrix} and \eqref{eq:derivative} bound the empirical output tangent by
+\[
+ [2\sqrt{q_*+O_t(\epsilon)}(r_0+O_t(\epsilon))+C_t\eta(v)]\norm{R'-R}_F,
+ \quad r_0=\max(T'(q_*),r_{\rm off})<1.
+\]
+The output minimum eigenvalue is at least $q_*-O_t(\epsilon)-C_t\eta(v)$. For the population part use the Hermite expansion and $\norm{C^{\circ k}-I}_{\op}\le\norm{C-I}_{\op}$, by the same Schur-map argument; the empirical part follows from \eqref{eq:localcov}.
+For a positive covariance path $K_s$, Bures speed is at most $\norm{\dot K_s}_F/(2\sqrt{\lambda_{\min}(K_s)})$. Indeed, solve $X_sK_s+K_sX_s=\dot K_s$ and lift a factor by $\dot A_s=X_sA_s$. Its squared speed in an eigenbasis is $\frac12\sum_{ij}(\dot K_s)_{ij}^2/(\lambda_i+\lambda_j)$. Integrating yields gain $r_0+C_t\epsilon+C_t\eta(v)<1$ for sufficiently small fixed $\epsilon,v_1$. This proves \eqref{eq:localgain} with the necessary near-one metric comparison.
+
+Finally use the full-class inequalities to define nested quality events, dropping small-quality requirements after a fixed threshold. Combined VC and matrix failure probabilities are $Ce^{-cNv}$ for $v\ge\tau$. Measurability follows from countable parameter approximation. A nontrivial analytic strip has Gaussian-null boundary; slightly expanded rational strips preserve each finite sample pattern while their probabilities converge. Moment classes use continuity at every nonzero denominator. Take the infimum successful quality, replacing it by twice the infimum plus $\tau$ if necessary to avoid endpoints. Enlarging the constant in $\tau$ gives \eqref{eq:qualitytail} and completes Theorem~\ref{thm:quality}.
+
+\section{Occupation and empirical transport}
+\begin{proposition}\label{prop:occupation}
+Any path started at a sign gauge of \eqref{eq:initial}, driven by qualities $v_1,\ldots,v_H$, has at most
+\begin{equation}\label{eq:badcount}
+ C_t\left(d+1+\sum_{j=1}^H\zeta(v_j)\right)
+\end{equation}
+entering states outside the white ball $\mathcal U$.
+\end{proposition}
+\begin{proof}
+All variances are at most one after the first layer and at most two initially. Set $A_j=\max_x|\log(Q_j(x,x)/q_*)|$. The free scalar drift and \eqref{eq:scalarq} give
+$A_j\le A_{j-1}-a_t\min(A_{j-1},1)+C_t\zeta(v_j)$.
+The drift's right side is increasing in $A_{j-1}$, so the maximum is legitimate. Since $A_0=O_t(1)$, summation bounds the number of states with any variance outside a fixed neighborhood of $q_*$ by $C_t(1+\sum_j\zeta(v_j))$.
+
+Put $U_j=\max_{x\ne y}-\log(1-|\operatorname{corr}(Q_j)_{xy}|)$. Initially $U_0\le\log(d+1)$. Free transitions never increase $U$. When variances are good and $U\ge\log4$, the free pair inequality decreases it by a fixed amount: pairs with $|c|\ge1/2$ increase their gap by a fixed factor, while others have potential at most $\log2$. Small-quality steps lose at most $C_t\zeta(v)$ by \eqref{eq:pairsmall}; large-quality steps lose that much relative to the entering value by \eqref{eq:pairlarge}. Their missing free decrement is charged to their count $\sum v_j/v_0$. Summing bounds scalar/pair-bad states by $C_t[\log(d+1)+\sum\zeta(v_j)]$.
+
+Normalize to correlation $C_j$ and put $X_j=\lambda_{\max}(C_j)-1$, $Y_j=1-\lambda_{\min}(C_j)\in[0,1]$. At scalar/pair-good steps with $v\le v_0$,
+\[
+ X'\le aX+C_t(1+X)\zeta(v),\qquad
+ Y'\le bY+c_1X+C_t(1+X)\zeta(v).
+\]
+For fixed small $\epsilon_X>0$, the potential $W(X)=\log(1+X/\epsilon_X)$ obeys
+$W(X')-W(X)\le-c_t\mathbf1_{X\ge\epsilon_X}+C_t\zeta(v)$ at these steps. At every other step \eqref{eq:matrixlarge} bounds its increase by $C_t(1+v)$. Their count is already charged; $W(X_0)=O(\log m)=O(d)$. Summation gives \eqref{eq:badcount} for all exceptions and states with $X\ge\epsilon_X$.
+
+The lower eigenvalue needs its own argument. For a small desired $\epsilon_Y$, choose $\epsilon_X$ with $y_0=c_1\epsilon_X/(1-b)\le\epsilon_Y/4$. At remaining good steps with $X\le\epsilon_X$, $Z=(Y-y_0)_+$ satisfies $Z'\le bZ+C_t\zeta(v)$. At other steps it increases by at most one since $0\le Z\le1$. Summing this linear drift gives the same count for $Y\ge\epsilon_Y$. These diagonal and both spectral tolerances imply $Q\in\mathcal U$. No union bound over inputs or pairs is used.
+\end{proof}
+
+\begin{proposition}[Empirical transport]\label{prop:transport}
+Couple any two sign-gauged chains by past-optimal factors and common fresh arrays. Then
+\begin{equation}\label{eq:transport}
+ d_B(Q_H,Q'_H)\le C_t\sqrt m\exp\!\left[-c_tH+C_t\left(d+1+\sum_j\zeta(V_j)\right)\right].
+\end{equation}
+For every $B>0$,
+\begin{equation}\label{eq:budget}
+ \Pp\left\{\sum_{j=1}^HV_j>H\tau+B\right\}\le e^{C_tH-c_tNB}.
+\end{equation}
+\end{proposition}
+\begin{proof}
+Apply the occupation bound to both paths and mark $V_j>v_1$ steps exceptional; their count is absorbed in $\sum V_j/v_1$. At other steps both states contract by $r<1$. Exceptional log gains are at most $\log t+C_t\zeta(V_j)$ by \eqref{eq:globalgain}. Summing gives \eqref{eq:transport}, with initial Bures distance at most $C\sqrt m$ by the traces. Independent arrays have independent qualities. Integrating \eqref{eq:qualitytail} gives $\E e^{c_tN(V_j-\tau)/2}\le C_t$; Chernoff proves \eqref{eq:budget}. Past-adapted factor rotations preserve both marginal laws and the uniform rotation-invariant quality event.
+\end{proof}
+
+\section{Every truth table has sufficient finite-width mass}
+\begin{proposition}\label{prop:mass}
+There are $C_t,K_t$ such that for every truth table $f$ and
+\begin{equation}\label{eq:masswidth}
+ H\ge C_t(d+1),\qquad N\ge e^{C_t(d+1)}\log(H+2),
+\end{equation}
+one has $w_f\ge e^{-K_tN(d+1)}$. The constant $K_t$ is independent of $H/d$.
+\end{proposition}
+\begin{proof}
+We construct a changed law of relative entropy $O_t(N(d+1))$ with full-margin event probability at least $3/4$, modifying only $O_t(d+1)$ final hidden layers and the readout.
+
+\paragraph{A free prefix.}
+For small fixed $\delta_t>0$, some $h_0\le C_t(d+1)$ satisfies
+$\norm{\mathcal T^{h_0}(Q_0)-q_*I}_F\le\delta_t/8$. The common diagonal converges geometrically: on $[q_*,2]$, $T'(q)<T(q)/q\le1$, with uniform strict gap. Distinct initial absolute correlations are at most $1-2/(d+1)$; Lemma~\ref{lem:free} brings them below $1/2$ in $O_t(\log(d+1))$ steps and then contracts them geometrically. Diagonal accuracy $O(\delta_t/\sqrt m)$ and off-diagonal accuracy $O(\delta_t/m)$ need $O_t(d+1)$ layers. Local Frobenius contraction gives
+$\norm{\mathcal T(Q)-q_*I}_F\le r_t\norm{Q-q_*I}_F$, $r_t<1$, within radius $\delta_t$.
+
+Conditional Hoeffding gives
+\[
+ \Pp\{\norm{\widehat Q_j-\mathcal T(\widehat Q_{j-1})}_{\max}>\epsilon\mid\text{past}\}
+ \le2m^2e^{-N\epsilon^2/2}.
+\]
+Gaussian differentiation and bounded first two tanh derivatives give global entrywise Lipschitz constant $A_t=3t^2$. For the first $h_0$ layers choose $\epsilon_0=\delta_t/(16mh_0A_t^{h_0})$, leaving at most $\delta_t/8$ Frobenius error. Thereafter choose $\epsilon_1=(1-r_t)\delta_t/(4m)$, preserving distance at most $\delta_t/2$ from $q_*I$. A union bound over any $H$ layers costs only $\log(H+2)$ in width. Enlarging the constant in \eqref{eq:masswidth} gives success probability $15/16$. Reduce $\delta_t\le q_*/8$.
+
+\paragraph{A target covariance schedule.}
+Targets have form $Q=rI+wff^T$, with $r>0,w\ge0,q=r+w\le1$. Starting from $q_*I$, seed with preactivation covariance $t^2[q_*I+(q_*/m)ff^T]$. Its Gaussian entropy cost is $(1-\log2)/2$. Conditional independence given the common Gaussian coordinate and oddness give the target form. Its first common Hermite projection yields
+\[
+ w_1\ge\frac{t^2q_*}{m}[\E\sech^2(\sqrt{t^2q_*(1+1/m)}Z)]^2\ge c_t/m.
+\]
+Also $q_1\ge q_*$ and $r_1\ge c_tq_*$.
+Set $\beta_t=\E\sech^2(\sqrt{t^2+1}Z)>0$, $A_t^*=\max(2,4/(t^2\beta_t^2))$, and $p_t=1/(A_t^*t^2)$. While $w\le p_t$, use covariance $t^2[rI+awff^T]$ with $1\le a\le A_t^*$. Relative to $\cN(0,t^2Q)$ its entropy is at most $(A_t^*-1-\log A_t^*)/2$, since only one eigenvalue ratio changes and it is at most $A_t^*$. At $a=A_t^*$, the common output is at least $t^2A_t^*w\beta_t^2\ge4w$; total preactivation variance is at most $t^2+1$. At $a=1$ it is at most $w$, since free correlation does not increase and free diagonal is at most $q$ for $q\ge q_*$. By continuity choose $a$ making it $\min(2w,p_t)$. The output diagonal stays at least $q_*$. After $O_t(d+1)$ steps reach $w\ge p_t$.
+Projection onto the first independent residual Hermite coordinate gives
+\[
+ r'=\E\operatorname{Var}[\tanh(t\sqrt{aw}Z+t\sqrt r Z')\mid Z]
+ \ge t^2r[\E\sech^2(\sqrt{t^2(r+aw)}Z)]^2\ge c_tr.
+\]
+All target minimum eigenvalues are therefore at least $\ell_d=e^{-C_t(d+1)}$.
+
+\paragraph{Controls on empirical features.}
+For actual $X\in\R^{m\times N}$ with positive $\widehat Q=XX^T/N$, any positive desired preactivation covariance $C$ is realized by a Gaussian row law equal to the prior on $\ker X$, with entropy exactly
+\begin{equation}\label{eq:rowKL}
+ \KL(\cN(0,C)\Vert\cN(0,t^2\widehat Q)).
+\end{equation}
+Restrict $X$ to its row span, invert onto $\R^m$, and pull back the desired Gaussian while keeping the independent prior on the complement.
+If $\norm{\widehat Q-Q}_F\le\lambda_{\min}(Q)/4$, write $B=Q^{-1/2}\widehat QQ^{-1/2}=I+E$, so $\norm E_F\le1/4$. Desired covariances have $S=Q^{-1/2}(C/t^2)Q^{-1/2}=I+U$, with positive rank-at-most-one $U$ of bounded norm. Twice \eqref{eq:rowKL} is
+\[
+ [\tr S-m-\log\det S]+[\tr(B^{-1}-I)+\log\det B]+\tr[(B^{-1}-I)U].
+\]
+These are bounded by $C_t,C\norm E_F^2,C_t\norm E_{\op}$ respectively. Thus cost per row is $O_t(1)$, independent of $m$. An initial reset from near-white empirical covariance to preactivation covariance $t^2q_*I$ uses the same bound with $U=0$ and yields target $q_*I$.
+
+\paragraph{Stopped change of measure.}
+Reserve the reset, seed and growth layers; leave earlier layers under the prior. Enlarge the depth constant so the prefix has at least $h_0$ layers. If its white check fails, make no changes. Otherwise apply the Gaussian controls; after each require $\norm{\widehat Q_j-Q_j}_F\le\ell_d/4$, and on failure revert all later weights to the prior. On surviving histories the next row outputs have independent exact target second moment $Q_j$. Conditional Hoeffding bounds check failure by $2m^2\exp[-N\ell_d^2/(32m^2)]$ per stage. The width bound makes their total at most $1/16$, in addition to $1/16$ prefix failure. All decisions are past measurable. The entropy chain rule bounds hidden-law entropy by $C_tN(d+1)$.
+
+\paragraph{Readout.}
+On survival, $\widehat Q\succeq Q/2\succeq(p_t/2)ff^T$. Shift readout mean to $\mu=N^{-1}X^T\widehat Q^{-1}f$, keeping covariance $t^2N^{-2}I$. The mean output is $f$, with entropy $Nf^T\widehat Q^{-1}f/(2t^2)\le N/(t^2p_t)$. Each output-noise variance is at most $t^2/N$; a union bound makes all absolute values below $1/2$ with probability at least $15/16$ once $N\ge C_t(d+1)$. The changed law gives the strict event probability at least $3/4$. Binary relative entropy implies $\tfrac34\log(1/w_f)-\log2\le C_tN(d+1)$, completing the proof.
+\end{proof}
+
+\section{Readout comparison and completion}
+\begin{lemma}[Exact Gaussian readout comparison]\label{lem:readout}
+Suppose coupled final features $(F,G)$ satisfy
+$\Pp\{d_B(FF^T/N,GG^T/N)>\delta\}\le\beta$. Let $w_F,w_G$ be their all-positive margin-$a$ probabilities under independent readout $v\sim\cN(0,t^2N^{-2}I)$. For $B>0$ set
+\[
+ \tau_N(B)=\Pp\{\chi_N^2>2NB\},\quad\epsilon=t\sqrt{2B}\delta<a,
+ \quad s=a/(a-\epsilon),\quad\Lambda=NB(s^2-1).
+\]
+Then $w_G\ge e^{-\Lambda}(w_F-\beta-\tau_N(B))$ and conversely with $F,G$ reversed. If both weights exceed $w_{\min}>\beta+\tau_N(B)$, their ratio is at most
+$e^\Lambda/[1-(\beta+\tau_N(B))/w_{\min}]$.
+\end{lemma}
+\begin{proof}
+For each pair take a measurable orthogonal Procrustes matrix $O$ satisfying
+\[\norm{F-GO}_F=\sqrt N\,d_B(FF^T/N,GG^T/N).\] On the good pair event and cutoff $N\norm v^2/(2t^2)\le B$, output discrepancy is at most $\sqrt N\delta\norm v\le\epsilon$. Thus $Fv>a\one$ implies $G(sOv)>a\one$. For the first orthant intersected with its cutoff, called $S$, Gaussian change of variables gives
+\[
+ \gamma(sOS)=\int_S s^N\exp\!\left[-\frac{N^2(s^2-1)}{2t^2}\norm v^2\right]d\gamma(v)
+ \ge e^{-NB(s^2-1)}\gamma(S).
+\]
+Discard the favorable factor $s^N$, integrate over the coupling, and discard the bad-pair and readout-tail probabilities. Reverse the pair for the other inequality. No hidden-coupling Jacobian or invertibility is needed.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:main}]
+Denote the constants in Proposition~\ref{prop:mass} by $C_{\rm mass},K_{\rm mass}$. First choose $p>4$ with $p\log2>C_{\rm mass}$ and fixed slack. Choose $M>K_{\rm mass}+2$, then $b$ so the coefficient of $NB$ in \eqref{eq:budget} times $b$ exceeds $M+2$. These choices do not depend on the later large depth ratio $K$.
+For $N=\lceil2^{pd}\rceil$, $H=\lceil K(d+1)\rceil$, and large $d$, $H\tau\le d+1$. Equation \eqref{eq:budget} with $B=b(d+1)$ has failure
+\begin{equation}\label{eq:betafinal}
+ \beta\le e^{-MN(d+1)},
+\end{equation}
+since $C_tH\le N(d+1)$ for sufficiently large $d$. On the good event,
+\[
+ \sum_j\zeta(V_j)\le H^{3/4}[(b+1)(d+1)]^{1/4}+(b+1)(d+1).
+\]
+The coupled Bures distance is therefore at most
+\begin{equation}\label{eq:deltafinal}
+ \delta\le C_t\sqrt m\exp\!\left[-c_tH+C_t\{d+1+
+ H^{3/4}[(b+1)(d+1)]^{1/4}+(b+1)(d+1)\}\right].
+\end{equation}
+Now choose $K\ge C_{\rm mass}$ sufficiently large that
+$\delta\le e^{-(p\log2+2)(d+1)}$ for large $d$. This is possible: the adverse $K$ term is only $O_t(K^{3/4}(b+1)^{1/4})$, while the favorable term is $-c_tK$. The $\sqrt m$ factor contributes $(\log2)d/2$.
+
+The mass width threshold holds for large $d$ because $p\log2>C_{\rm mass}$; its exponent is independent of $K$ and its depth dependence is only $\log(H+2)$. Hence $w_f\ge e^{-K_{\rm mass}N(d+1)}$ for every $f$. Take readout cutoff $B=k(d+1)$ with sufficiently large fixed $k$. The chi-square Chernoff bound
+\[
+ \tau_N(B)\le\exp[-N(2B-1-\log(2B))/2]
+\]
+makes its tail at most $e^{-(K_{\rm mass}+2)N(d+1)}$. At margin $a=1/2$, for large $d$, the dilation exponent obeys
+$\Lambda\le C_tN(d+1)^{3/2}\delta\le e^{-c'd}$,
+and $(\beta+\tau_N(B))/w_{\min}\le2e^{-2N(d+1)}$.
+Lemma~\ref{lem:readout} yields uniformly for each pair
+\[
+ \frac{\max(w_f,w_g)}{\min(w_f,w_g)}
+ \le\frac{e^\Lambda}{1-2e^{-2N(d+1)}}\le1+e^{-cd}.
+\]
+These are deterministic inequalities between probabilities; no union bound over the truth tables is necessary.
+Finally, for an unseen input pair each consistent truth table with the table obtained by flipping only that input. Summing the paired weight ratios proves \eqref{eq:posterior}; counting unseen inputs proves \eqref{eq:mistakes}.
+\end{proof}
+
+\section{Interpretation and limitations}
+At $t>1$, the scalar variance has a positive equilibrium and the free covariance dynamics near its white matrix are contractive. Depth erases the distinction between sign gauges. Unfavorable empirical layers can delay this mixing, but their total quality cost is controlled even at probabilities much smaller than the globally margined function events. The exact readout comparison turns small feature-covariance distance into small ratios of actual probabilities.
+
+A free Gaussian-process limit alone would not prove this. Global-margin conditioning changes typical feature configurations, and near-equality of leading large-deviation actions does not control finite-width ratios. The separate all-label mass bound, the $\exp(-\Theta(Nd))$ exceptional estimate, and exact readout dilation close that gap.
+
+The theorem concerns the displayed joint depth--width family and a fixed prefactor above one. The positive white equilibrium mechanism is absent at $t\le1$; no unrestricted-depth lower bound for that original family is claimed. This research draft has undergone independent AI-agent mathematical checks, but has not been formalized in Lean.
+
+\begin{thebibliography}{9}
+\bibitem{KM} M. Karpinski and A. Macintyre. Polynomial bounds for VC dimension of sigmoidal and general Pfaffian neural networks. \emph{Journal of Computer and System Sciences} 54(1):169--176, 1997. \url{https://doi.org/10.1006/jcss.1997.1477}.
+\bibitem{poole} B. Poole, S. Lahiri, M. Raghu, J. Sohl-Dickstein, and S. Ganguli. Exponential expressivity in deep neural networks through transient chaos. \emph{Advances in Neural Information Processing Systems} 29, 2016. \url{https://arxiv.org/abs/1606.05340}.
+\bibitem{schoenholz} S. S. Schoenholz, J. Gilmer, S. Ganguli, and J. Sohl-Dickstein. Deep information propagation. \emph{International Conference on Learning Representations}, 2017. \url{https://arxiv.org/abs/1611.01232}.
+\bibitem{lee} J. Lee, Y. Bahri, R. Novak, S. S. Schoenholz, J. Pennington, and J. Sohl-Dickstein. Deep neural networks as Gaussian processes. \emph{International Conference on Learning Representations}, 2018. \url{https://arxiv.org/abs/1711.00165}.
+\end{thebibliography}
+\end{document}

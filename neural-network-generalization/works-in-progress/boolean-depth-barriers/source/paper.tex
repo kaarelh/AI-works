@@ -1,0 +1,3548 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{enumitem}
+\usepackage{xurl}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Frobenius product, parallel circuits, and sample-complexity barriers for deep Gaussian Bayesian networks},pdfauthor={ChatGPT-6 Astra; Kaarel Haenni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Prb}{\mathbb P}
+\newcommand{\Lip}{\operatorname{Lip}}
+\newcommand{\sign}{\operatorname{sign}}
+\newcommand{\poly}{\operatorname{poly}}
+\newcommand{\TC}{\mathsf{TC}}
+\newcommand{\NC}{\mathsf{NC}}
+\newcommand{\Ppoly}{\mathsf{P}/\mathrm{poly}}
+\newcommand{\MAJ}{\operatorname{MAJ}}
+\newcommand{\KL}{\operatorname{KL}}
+\newcommand{\Gain}{\mathcal G}
+\newcommand{\norm}[1]{\left\lVert #1\right\rVert}
+\title{Frobenius product, parallel circuits, and sample-complexity\
+barriers for deep Gaussian Bayesian networks}
+\author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{Research draft --- 25 October 2026}
+
+\begin{document}
+\maketitle
+\begin{abstract}
+We prove that a Boolean function with a globally unit-margin neural
+representation of layer Frobenius product $P$ has a nonuniform threshold
+circuit of size polynomial in $d+P$ and depth $O(\log(2+P))$. The original
+network may have arbitrary finite depth and widths, and each neuron may
+use its own arbitrary zero-preserving $1$-Lipschitz activation. Thus
+polynomial product implies nonuniform $\TC^1$, and hence $\NC^2$.
+The proof combines a two-ball covering lemma, finite-set sampling of a
+short prefix, and bounded-precision lookup tables; it does not require
+computable activations or well-conditioned intermediate layers.
+
+For the original tanh Gaussian posterior conditioned only on a global
+absolute margin and exact training labels, we prove a sample-to-circuit
+converse uniformly at every finite scale $0<\sigma^2\le1/N$.
+The circuit resources are polynomial in input dimension, sample count,
+and learner depth. The theorem requires logarithmic depth padding
+and uses a width threshold exponential in input dimension.
+Its proof combines finite canonical features, Gaussian block covers,
+and factorially convergent parallel Picard iteration. The block covers
+keep the number of representatives polynomial even when the common
+prior prefactor approaches one. All confidence-failure tolerances
+$\varepsilon<1/2$ are allowed. A separate above-critical product
+ceiling gives circuit resources independent of learner depth.
+Consequently, for any prescribed prior-scale schedule in the stated
+range, a universal sample bound polynomial jointly in teacher
+resources and learner depth would imply
+$\Ppoly=\TC^1$. Conversely, the stronger assumption
+$\Ppoly=\TC^0$ suffices for that joint polynomial learning bound,
+by compiling one universal circuit-evaluation family.
+An explicit finite-horizon compiler shows that the necessary collapse
+already follows for teachers of width $24$ and weights bounded by one,
+while the learner width remains unrestricted.
+In the opposite direction, previously established
+learning bounds imply that any fixed stretched-exponential sample lower bound
+$\exp(\Omega(L^\alpha))$, $\alpha>0$,
+with teacher resources polynomial in depth $L$ would imply
+$\NC\ne\Ppoly$. These are barriers to the two proposed resolutions,
+not a resolution of unrestricted-depth learning itself.
+\end{abstract}
+
+\section{Introduction}
+
+A deep network can have small individual weights while its product of
+layer norms grows exponentially with depth. These two resource measures
+lead to different questions. A bound on width, depth, and individual
+weights gives a finite description of a globally margined Boolean
+classifier. A bound on the product of Frobenius norms imposes a stronger
+restriction: we show that it gives a small parallel circuit, regardless
+of the network's original depth.
+
+The geometric reason is simple. A linear map of Frobenius norm $M$
+sends every Euclidean ball of radius $r$ into the union of two balls of
+radius $Mr/\sqrt2$. Coordinatewise $1$-Lipschitz maps preserve this
+property. After $O(\log P)$ layers, a network of total product $P$ has
+only polynomially many prefix states relevant to its output signs.
+The remaining layers can be replaced by a finite classification of
+these states. A separate sampling argument bounds the width of the
+retained prefix. Normalizing each layer before numerical simulation
+removes any dependence on the sizes of intermediate signals.
+
+The result has consequences for Bayesian learning. In the original
+Gaussian tanh model, the prior is conditioned on
+$|z(x)|>1/2$ at every Boolean input and on the observed labels.
+Above Gaussian exponent one, an existing finite-scale posterior ceiling
+places most posterior mass on Boolean functions with product polynomial
+in the input dimension and sample count, uniformly in learner depth.
+Combining that ceiling with our circuit theorem gives a converse: a
+distribution-free sample guarantee forces the target to have a small
+parallel circuit. Two finite majority constructions handle posterior
+mixtures and confidence-failure tolerances arbitrarily close to $1/2$.
+
+The critical exponent one requires a different representation theorem.
+We construct finite canonical features preserving every query's
+correlations with a common anchor set, without preserving the entire
+kernel. Their dimension grows additively with depth. The resulting
+recursion is a linear contraction sequence plus residual maps of small
+total Lipschitz constant, and parallel Picard iteration evaluates it in
+logarithmic threshold depth. Uniform importance quadrature makes each
+map a finite circuit despite arbitrary controlled densities and
+ill-conditioned anchor spans. A finite-event entropy certificate then
+gives an actual posterior ceiling on the full cube. The resulting
+converse includes $L$ in its polynomial resources, assumes
+$L\ge C\log(d+n+L+2)$, and chooses width above
+$2^{Cd}\poly(d+n,L)$. These qualifications still permit the universal
+polynomial-bound implication below.
+
+Fixed prefactors $0<t<1$ need one more argument, since their exponent
+gaps shrink with width. For the two largest eigenvalues of a
+controlled row's second moment, Gaussian entropy bounds its
+two-ball covering radius more strongly than its ordinary Lipschitz
+gain. The strict gap accumulates over a short prefix while charging
+the entire suffix. A normalized importance rule evaluates that
+prefix without representing large or small physical scales.
+This first gives a converse uniform on each range $0<t\le t_0<1$.
+To cover the moving boundary $t\to1$, we group
+$O((t^{-2}-1)^{-1})$ layers at a time. On most blocks the linear
+map is a contracting isometry plus a Hilbert--Schmidt perturbation
+of bounded size, and the nonlinear residual is small. Each such
+block admits a constant-size cover. Only logarithmically many
+blocks are needed, while parallel Picard iteration evaluates their
+potentially long prefix. The final theorem is uniform over every
+$0<t\le1$, equivalently every $0<\sigma^2\le1/N$.
+
+There are two separate consequences. A universal joint polynomial
+sample upper bound would collapse $\Ppoly$ to nonuniform $\TC^1$.
+The stronger collapse $\Ppoly=\TC^0$ is sufficient for that
+learning bound: one universal evaluator fixes the resource
+exponent for all bounded-weight teachers.
+Any fixed stretched-exponential depth lower bound, when both input dimension and
+bounded-weight teacher resources are polynomial in depth, would
+separate $\Ppoly$ from every nonuniform polylogarithmic-depth Boolean
+circuit class. Neither consequence is currently an unconditional
+complexity theorem. The arguments also leave room for intermediate
+sample growth between polynomial and exponential.
+Appendix~\ref{app:constant-width} shows that the necessary collapse
+already applies to fixed-width teachers: a width-$24$ tanh network with coefficients bounded by one can simulate any small Boolean circuit at polynomially
+larger depth. Its memory is exponentially delicate, so this observation
+does not supply a robust or polynomial-product representation.
+
+The geometric, canonical-feature, finite-event extraction, and
+circuit reductions are proved below. We state the previously established
+inputs explicitly: the finite-scale posterior ceiling in
+Section~\ref{sec:ceiling}, the scalar Bellman facts and finite-width
+Fourier target mass in Section~\ref{sec:critical-parallel}, the companion
+scale-change target mass in Section~\ref{sec:fixed-prefactor}, and the
+circuit-target learning bound in Section~\ref{sec:negative}. The
+critical endpoint is proved separately, rather than inferred by taking
+a limit in the above-one result.
+The conditional sufficiency direction also uses the companion
+normalized intrinsic learning theorem, stated explicitly where needed.
+
+\paragraph{Relation to previous work.}
+Norm-controlled generalization and compression are well established.
+Golowich, Rakhlin, and Shamir~\cite{grs} bound Rademacher complexity
+under layer norm constraints, improving depth dependence and obtaining
+size-independent bounds under additional assumptions.
+Their full-version Theorem~3 already obtains a rank-one layer
+replacement and a Lipschitz suffix; its displayed uniform error
+decreases polynomially with the retained prefix length.
+Here the global Boolean margin is preserved using a logarithmic
+prefix and polynomially many covering states.
+Sellke~\cite{sellke} refines the Frobenius-product analysis for ReLU
+networks, often removing explicit depth dependence.
+Our sampling and normalization arguments belong to this broader
+norm-compression framework. The conclusion studied here is an exact
+nonuniform circuit for a globally margined Boolean classifier, followed
+by a comparison with the original conditioned Bayesian posterior.
+A norm-based generalization estimate alone does not make that
+posterior-to-teacher-complexity comparison.
+
+Circuit-complexity barriers to neural depth separation also precede
+this work. Vardi and Shamir~\cite{vardi-shamir} relate deeper ReLU
+approximation lower bounds to circuit lower bounds and natural-proof
+barriers, using a reduction to polynomially bounded weights.
+Vardi, Reichman, Pitassi, and Shamir~\cite{vardi-benign} establish
+related barriers for approximating efficiently computable functions
+with polynomial Lipschitz bounds. The implications here concern a
+different quantitative object: distribution-universal posterior
+sample complexity for bounded-resource tanh Boolean teachers.
+We make no claim that connecting neural representation bounds to
+circuit complexity, or compressing norm-bounded networks, is new.
+
+Jacot~\cite{jacot-rank,jacot-bottleneck} studies a related depth
+baseline for homogeneous networks: the leading representation
+cost is governed by a nonlinear rank, with finite-depth corrections
+and quantitative bounds on deviation from low-rank layer matrices.
+Those results help distinguish low-dimensional representation from
+the complexity of its encoder and decoder. They do not by themselves
+bound that residual complexity by a polynomial in the teacher
+resources considered here.
+
+\section{Networks and circuit conventions}
+\label{sec:conventions}
+
+Let $X_d=\{-1,1\}^d$ and $f:X_d\to\{-1,1\}$. A network of weighted
+depth $D\ge1$ has augmented input $h^0(x)=(1,x)$, hidden layers
+\[
+ h^s_i(x)=\phi_{s,i}\bigl((W^s h^{s-1}(x))_i\bigr),
+ \qquad 1\le s<D,
+\]
+and scalar linear output $z(x)=W^D h^{D-1}(x)$. Every hidden width is
+finite. Unless specified otherwise, each $\phi_{s,i}:\R\to\R$ satisfies
+\[
+ \phi_{s,i}(0)=0,\qquad
+ |\phi_{s,i}(u)-\phi_{s,i}(v)|\le |u-v|.
+\]
+There are no additional affine biases: constants enter through the
+augmented input and may be propagated by ordinary hidden units.
+Write
+\[
+ P_F(W)=\prod_{s=1}^D\norm{W^s}_F.
+\]
+A global unit-margin representation means $f(x)z(x)\ge1$ for every
+$x\in X_d$. We allow arbitrary real weights and arbitrary activations
+in this definition; no computability assumption is made.
+
+All circuit classes in this paper are \emph{nonuniform}. Boolean
+circuits use a fixed bounded-fan-in basis, for example
+$\{\mathsf{AND},\mathsf{OR},\mathsf{NOT}\}$, together with constants.
+Threshold circuits may equivalently use unbounded-fan-in majority
+gates and bounded-fan-in Boolean gates. Our constructed weighted
+threshold gates have polynomially bounded integer weights and can be
+converted to majority gates with polynomial overhead. Thus $\TC^1$
+denotes polynomial size and logarithmic depth in the ordinary
+nonuniform sense. We use
+\[
+ \NC=\bigcup_{k\ge1}\NC^k,
+\]
+where $\NC^k$ has polynomial size and depth $O(\log^k d)$.
+Size may count wires and input nodes; retaining all $d$ named input
+nodes changes our bounds only by an additive $d$.
+
+\begin{theorem}[Product-to-parallel-circuit theorem]
+\label{thm:main}
+There are universal constants $a,c>0$ such that the following holds.
+If $f:X_d\to\{-1,1\}$ has a global unit-margin representation as above
+with $P_F(W)\le P$, then $P\ge1$ and $f$ has a threshold circuit with
+at most $(d+P+2)^a$ wires and depth at most $c\log(P+2)$.
+It also has a bounded-fan-in Boolean circuit of polynomial size in
+$d+P$ and depth at most $c\log^2(P+2)$, after changing $a,c$.
+
+The constants are independent of the original depth, widths, physical
+weights, and choices of activations. In particular, any family with
+$P=\poly(d)$ belongs to nonuniform $\TC^1\subseteq\NC^2$.
+\end{theorem}
+
+The theorem is about represented functions. It does not give an
+efficient procedure for finding a circuit from a network, and does not
+put the evaluation problem for supplied arbitrary real networks in
+$\NC$. Its proof deliberately permits auxiliary activations outside
+the fixed-tanh class.
+
+\section{A short prefix suffices}
+
+\subsection{Relevant inputs}
+
+\begin{lemma}[Relevant-coordinate reduction]
+\label{lem:junta}
+Every globally unit-margin representation has Frobenius product at least one.
+Its Boolean function depends on at most $P_F(W)^2$ input coordinates.
+After fixing the other coordinates, it has a representation on just
+the relevant coordinates whose product is no larger.
+\end{lemma}
+\begin{proof}
+Zero preservation and the Lipschitz bounds imply
+\[
+ \E_{x\sim\mathrm{Unif}(X_d)}z(x)^2
+ \le \left(\prod_{s=2}^D\norm{W^s}_F^2\right)
+       \E\norm{W^1(1,x)}_2^2
+ =P_F(W)^2.
+\]
+Here $\E[(1,x)(1,x)^T]=I$, and the formula also covers $D=1$.
+The margin makes the left side at least one.
+
+Put $T=\prod_{s=2}^D\norm{W^s}_F$, with an empty product equal to one.
+For each relevant coordinate $i$, some pair of inputs differing only
+at $i$ has opposite labels. Their outputs differ by at least two, so
+\[
+ 2\le 2T\norm{W^1 e_i}_2.
+\]
+Summing the resulting squared inequalities over relevant coordinates
+gives their number $k\le P_F(W)^2$.
+
+For irrelevant coordinates choose independent uniform signs $a_i$.
+Absorb them into the first bias column by replacing $w_0$ with
+$w_0+\sum_i a_i w_i$, and delete their columns. The expected squared
+Frobenius norm of the new first matrix equals the old squared norm.
+Some choice therefore does not increase it. Irrelevance ensures that
+all these restrictions preserve the Boolean function and its margin.
+\end{proof}
+
+\subsection{The two-ball lemma}
+
+\begin{lemma}[Dimension-free two-ball covering]
+\label{lem:two-ball}
+For every finite real matrix $W$, center $a$, and $r\ge0$, and every
+coordinatewise $1$-Lipschitz map $\Phi$, the set
+$\Phi(W B(a,r))$ is covered by at most two Euclidean balls of radius
+$r\norm W_F/\sqrt2$.
+\end{lemma}
+\begin{proof}
+Zero radius and the zero matrix are immediate. Translation and scaling
+reduce the linear part to $W B(0,1)$ with $\norm W_F=1$.
+Let $\alpha$ be its largest singular value. If $\alpha^2\le1/2$,
+the operator-norm bound gives one ball. Otherwise put
+\[
+ b^2=1-\alpha^2,\qquad
+ c=\frac{\alpha^2-b^2}{2\alpha}
+   =\frac{2\alpha^2-1}{2\alpha},
+\]
+and let $u$ be a leading left singular vector. The remaining singular
+part has operator norm at most $b$. For a unit-ball input whose leading
+right-singular coordinate is $t$, distance squared from its image to
+the center $cu$ or $-cu$ matching the sign of $t$ is at most
+\[
+  (\alpha |t|-c)^2+b^2(1-t^2).
+\]
+This is convex as a function of $|t|\in[0,1]$. Both endpoint values are
+\[
+ c^2+b^2=(\alpha-c)^2=\frac1{4\alpha^2}\le\frac12.
+\]
+The two centers therefore give the claimed linear cover. Apply
+$\Phi$ to the translated and rescaled centers; its Euclidean
+Lipschitz constant is at most one. The centers need not belong to the
+image, which does not affect the covering assertion.
+\end{proof}
+
+\begin{lemma}[Margin-relevant prefix states]
+\label{lem:prefix}
+Let a network of product $P$ have global unit margin on a set of inputs
+of Euclidean norm at most $R$. Put
+$S_j=\prod_{s\le j}\norm{W^s}_F$. For $j\le D-1$, its $j$th hidden
+image has a cover by at most $2^j$ balls of radius
+\[
+ r_j=R S_j 2^{-j/2}.
+\]
+If
+\[
+ j=\left\lceil2\log_2(16PR)\right\rceil\le D-1,
+\]
+one can select at most $512P^2R^2$ actual normalized prefix states
+$c_a=h^j(x_a)/S_j$, each with its label $f(x_a)$, so that every
+$u=h^j(x)/S_j$ has a same-label selected state within $1/(8P)$,
+while every selected state of the opposite label is at distance at
+least $2/P$. All these states have norm at most $R$.
+\end{lemma}
+\begin{proof}
+Iterate Lemma~\ref{lem:two-ball}, starting from the radius-$R$ input
+ball. The remaining suffix is Lipschitz with constant at most $P/S_j$.
+Two hidden images in one covering ball therefore have output
+difference at most
+\[
+ 2r_jP/S_j=2PR2^{-j/2}\le1/8,
+\]
+whereas opposite labels require difference at least two. Each nonempty
+ball is thus monochromatic. Select an actual image in each nonempty
+ball; this doubles the cover radius. Divide by $S_j$ to get the
+same-label bound. The suffix Lipschitz bound gives the opposite-label
+bound directly. Finally $2^j\le2(16PR)^2$, and zero preservation gives
+$\norm{h^j(x)}\le S_jR$.
+\end{proof}
+
+\subsection{Sampling only the retained prefix}
+
+We next bound the width of the short prefix. The following argument
+uses the freedom to change the neuronwise activations; it is not a
+fixed-activation tanh compression claim.
+
+\begin{lemma}[Finite-set prefix compression]
+\label{lem:maurey}
+Let $X$ be a nonempty finite set of inputs of norm at most $R$, and let a network
+as in Section~\ref{sec:conventions} have product at most $P$.
+For $1\le h\le D-1$ and $\epsilon>0$, its first $h$ hidden layers can
+be replaced by layers of width at most
+\[
+ m=\left\lceil
+ \max\{1,64(PRh/\epsilon)^2(1+\log|X|)\}
+ \right\rceil
+\]
+so that all final outputs on $X$ change by at most $\epsilon$ and the
+full product never increases. The replacement activations remain
+zero-preserving and $1$-Lipschitz. No bound depends on the number or
+widths of the later layers.
+\end{lemma}
+\begin{proof}
+Consider consecutive matrices $W,V$. Let $w_i$ be row $i$ of $W$ and
+$v_i$ column $i$ of $V$, and put $a_i=\norm{w_i}_2$ and
+$b_i=\norm{v_i}_2$. Terms with $a_i b_i=0$ contribute zero and may be
+deleted. If all contributions are zero, the intervening computation
+can be replaced by a zero layer. Otherwise set
+\[
+ A=\sum_i a_i b_i\le\norm W_F\norm V_F=:B,
+ \qquad p_i=\frac{a_i b_i}{A},\qquad u_i=\frac{w_i}{a_i},
+ \qquad \psi_i(t)=\frac{\phi_i(a_i t)}{a_i}.
+\]
+The activation $\psi_i$ has the required properties. The preactivation
+of $V$ is $\sum_i a_i v_i\psi_i(u_i^T h)$.
+Sample $m$ indices independently with probabilities $p_i$. For each
+sampled index use incoming row $u_i$, activation $\psi_i$, and outgoing
+column $A v_i/(m b_i)$. The new preactivation is an unbiased empirical
+average of the random vectors
+\[
+ Y(h)=\frac{A v_i}{b_i}\psi_i(u_i^T h).
+\]
+For every draw, the two new Frobenius norms are $\sqrt m$ and
+$A/\sqrt m$, so their product is $A\le B$.
+
+Let $S$ be the product of all preceding layer norms. On $X$ one has
+$\norm h\le SR$, hence $\norm{Y(h)}\le ASR=:J$.
+The finite-input Hilbert sampling estimate gives a common sample
+with every preactivation error smaller than $\delta$ whenever
+\[
+ 64J^2(1+\log|X|)\le m\delta^2,\qquad m\ge1.
+\]
+Here is a finite-sum proof with deliberately loose constants. If
+$F_x$ is the norm of the centered sum of $m$ sampled vectors, the
+Hilbert variance identity gives $\E F_x\le J\sqrt m$.
+Changing one index changes $F_x$ by at most $2J$. A finite
+bounded-differences argument, obtained by iterating the scalar
+bound $\E e^{t(Z-\E Z)}\le e^{t^2c^2/2}$ for a variable of
+oscillation at most $c$, gives
+\[
+ \E e^{t(F_x-\E F_x)}\le e^{2t^2mJ^2}.
+\]
+The scalar bound follows from convexity of the exponential and
+$\cosh u\le e^{u^2/2}$. Summing these exponential potentials
+over $X$ and taking $t=\delta/(8J^2)$ proves the displayed
+sampling estimate: its budget bounds the mean by $m\delta/2$
+and makes the total exponential potential strictly smaller
+than $e^{tm\delta/2}$. Thus some common sample has
+$F_x<m\delta$ for every $x$. This argument includes $|X|=1$.
+If $J=0$, all sampled features vanish. A zero full product
+makes the final network output identically zero. Both cases
+are handled directly.
+
+When the current product and $SB$ are positive, the suffix after
+$V$, including its activation if present, is Lipschitz with
+constant at most $P/(SB)$. Take
+$\delta=(\epsilon/h)SB/P$. Since $A\le B$, the displayed
+choice of $m$ guarantees that the final output error in this
+replacement is at most $\epsilon/h$. Zero-product networks
+are replaced by zero networks before making any division.
+Process the first $h$ hidden layers successively, allotting error
+$\epsilon/h$ to each. The product does not increase at any step, and
+altering the next matrix never changes an already bounded hidden
+width. Summing the output errors proves the assertion.
+\end{proof}
+
+\section{Compiling the prefix at bounded precision}
+\label{sec:compiler}
+
+\begin{proof}[Proof of Theorem~\ref{thm:main}]
+Apply Lemma~\ref{lem:junta}. If $f$ is constant, a constant gate
+suffices. Otherwise retain $k\le P^2$ relevant inputs and put
+$R=\sqrt{k+1}$. Let $\overline P=2P$ and
+\[
+ j_0=\left\lceil2\log_2(16\overline P R)\right\rceil,
+ \qquad h=\min\{j_0,D-1\}.
+\]
+Apply Lemma~\ref{lem:maurey} with error $1/4$ to these $h$ layers
+(nothing is required if $h=0$), then double the final readout. The new
+network has signed margin at least $3/2$ and product at most
+$\overline P$. Its retained widths are at most a universal polynomial
+$C=C(P)$, since $R\le\sqrt{P^2+1}$,
+$1+\log|X_k|=1+k\log2$, and $h=O(\log(P+2))$.
+
+If $D-1\ge j_0$, apply Lemma~\ref{lem:prefix} to the new network
+using the upper bound $\overline P$. It supplies polynomially many
+normalized centers with the stated separation. If $D-1<j_0$, we will
+evaluate the entire short network and its linear readout instead.
+In both cases only $h\le j_0$ hidden layers need be simulated.
+
+Write $M_s=\norm{W^s}_F$, $S_s=\prod_{i\le s}M_i$, and
+$A_s=W^s/M_s$ for the new network. All $M_s$ are nonzero because its
+margin is nonzero. Define $u_s=h^s/S_s$ and, neuron by neuron,
+\[
+ \Psi_{s,i}(v)=\frac{\phi_{s,i}(S_s v)}{S_s}.
+\]
+Then the exact normalized computation is
+\[
+ u_s=\Psi_s(A_su_{s-1}),\qquad
+ \norm{A_s}_F=1,\qquad \norm{u_s}_2\le R.
+\]
+Every $\Psi_{s,i}$ is zero-preserving and $1$-Lipschitz, even when
+$S_s$ is arbitrarily large or small.
+
+Put $m_0=\max\{C,k+1,2\}$. Choose positive dyadic $\eta,\delta$,
+each within a factor two of and no larger than the corresponding value
+\[
+ \frac1{4096\overline P(R+1)(j_0+1)},\qquad
+ \frac1{4096\overline P m_0(j_0+1)}.
+\]
+Round each $A_s$ entry on a dyadic mesh between
+$\eta/(2m_0)$ and $\eta/m_0$, so its Frobenius error is at most
+$\eta$. Set $B_0=\lceil R+2\rceil$. Replace each $\Psi_{s,i}$ on
+$[-B_0,B_0]$ by a lookup table with grid spacing $\delta$ and table
+values rounded to multiples of $\delta$. Lipschitzness gives scalar
+error at most $2\delta$. Its table length, all inverse meshes, and all
+integer ranges are polynomial in $P+2$; every stored number has
+$O(\log(P+2))$ bits. This observation uses only existence of the finite
+table, not computability of the activation.
+
+If $e_s$ is the Euclidean error of the simulated state, then
+\[
+ e_s\le(1+\eta)e_{s-1}+\eta R+2\sqrt C\,\delta,
+ \qquad e_0=0.
+\]
+The displayed choices give $e_s<1/(64\overline P)$ for every
+$s\le h$: for example, $(1+\eta)^{j_0}<2$ and the accumulated
+right-hand error is at most
+$6/[4096\overline P]$. Rounded preactivations stay inside
+$[-B_0,B_0]$, as required.
+
+In the long-network case, round each normalized center to Euclidean
+error at most $1/(64\overline P)$, using a comparable dyadic mesh
+in each coordinate. A correct-label center then has computed distance
+at most $5/(32\overline P)$, whereas every opposite-label center has
+computed distance at least $63/(32\overline P)$. Choose a dyadic number
+\[
+ \tau\in[1/(2\overline P^2),1/\overline P^2].
+\]
+Compute the squared distances of the rounded vectors exactly, and
+output $+1$ precisely when some positive-labeled center has squared
+distance at most $\tau$. A positive input has such a center, and a
+negative input has none. The gap proves exact classification.
+In the short-network case, the normalized final readout has norm one
+and signed margin at least $1/\overline P$. Round its coefficients
+to the same Frobenius precision and take its sign. Its additional
+error is at most $\eta R+(1+\eta)e_h<1/(2\overline P)$, so its
+sign is also exact.
+
+It remains to justify the circuit bounds without an unproved
+transcendental-arithmetic assumption. All table values and rounded
+states have a common dyadic grid of inverse-polynomial spacing.
+All rounded matrix entries also have polynomially bounded dyadic
+denominators. After clearing denominators within one layer, an affine
+preactivation is a linear function of the preceding state bits with
+polynomially bounded integer weights and polynomial integer range.
+Compare this linear function to every table grid boundary by one
+threshold layer. Boolean gates identify its grid interval, and, for
+each output bit, an OR over those intervals whose stored table value
+has that bit equal to one implements the lookup. This has constant
+threshold depth and polynomial size. The lookup resets the output to
+its fixed grid, so denominators do not accumulate through the layers.
+Signed values can be encoded by an offset integer; this only changes
+the affine constants.
+
+For distance tests, a difference of two rounded coordinates still
+has $O(\log(P+2))$ bits. Its square is a polynomial-size table.
+A threshold comparison of the sum of these squares implements each
+test, and an OR combines the positive tests. The short-case readout
+is itself a threshold gate. Every threshold used here has integer
+weights and a threshold of polynomial magnitude. Negative weights
+can be moved to complemented inputs and the constant threshold
+adjusted. Repeating inputs according to the positive integer weights,
+and adding constant inputs, converts such a gate to a majority gate
+with polynomial overhead. There are $O(\log(P+2))$ simulated layers,
+proving the threshold-circuit assertion.
+
+For completeness, majority on $q$ bits has a bounded-fan-in Boolean
+circuit of polynomial size and depth $O(\log(q+2))$. Use constant-depth
+full adders to compress three summands to two, in parallel at each bit
+position. After $O(\log(q+2))$ compression stages, two binary integers
+remain; add and compare them in $O(\log(q+2))$ further depth, even by
+a ripple circuit on their $O(\log(q+2))$ bits. Replacing each majority
+gate of our threshold circuit this way gives total depth
+$O(\log^2(P+2))$ and polynomial size. Finally, reconnect the retained
+input coordinates to their original names. This proves the theorem.
+\end{proof}
+
+\begin{remark}[What the representation theorem does not assert]
+The proof bounds circuit resources, not the original network's
+parameters. It does not assert that a small bounded-weight deep
+network has polynomial product, or that a majority of low-product
+functions has low product. No closure of product norm under majority
+will be needed below. The arbitrary-activation compression is used
+only as an auxiliary step in compiling the represented Boolean
+function; the statistical model remains exactly tanh.
+\end{remark}
+
+\begin{corollary}[Other Lipschitz constants]
+If the activations in hidden layer $s$ are zero-preserving and have
+Lipschitz constants at most $\lambda_s>0$, the conclusion of
+Theorem~\ref{thm:main} holds with the effective product
+\[
+ P_{\mathrm{eff}}=P_F(W)\prod_{s=1}^{D-1}\lambda_s
+\]
+in place of $P$. In particular, the result includes ReLU.
+\end{corollary}
+\begin{proof}
+Write $\phi_{s,i}=\lambda_s\psi_{s,i}$ with $\psi_{s,i}$
+$1$-Lipschitz. Replace the hidden state by $h^s/\lambda_s$, multiply
+the following matrix by $\lambda_s$, and use $\psi_{s,i}$ as the
+activation. The resulting representation has the same output and
+product $P_{\mathrm{eff}}$. Apply Theorem~\ref{thm:main}.
+\end{proof}
+
+\section{The original Gaussian posterior and its ceiling}
+\label{sec:ceiling}
+
+Fix input dimension $d\ge1$, weighted depth $L\ge3$, and common hidden
+width $N$. In this section all hidden activations are tanh. The raw
+Gaussian prior has independent entries with variances
+\[
+ W^1_{ij}:\frac{t^2}{d},\qquad
+ W^s_{ij}:\frac{t^2}{N}\ (2\le s<L),\qquad
+ v_i:\frac{t^2}{N^2},
+\]
+where $v=W^L$ is the linear readout. Equivalently, put
+$\sigma^2=t^2/N$ and use energy coordinates with squared norm
+\[
+ \kappa_N(W)=\frac dN\norm{W^1}_F^2+
+       \sum_{s=2}^{L-1}\norm{W^s}_F^2+N\norm v_2^2.
+\]
+Their coordinates have common variance $\sigma^2$.
+The exponent convention $\sigma^2=N^{-\gamma}$ corresponds to
+$t^2=N^{1-\gamma}$.
+
+For a consistently labeled sample $S=((x_i,y_i))_{i=1}^m$, let $Q_S$
+be the raw prior conditioned on
+\[
+ |z(x)|>1/2\quad(x\in X_d),\qquad
+ y_i z(x_i)>0\quad(1\le i\le m).
+\]
+There are no further constraints on hidden activations, internal
+margins, operator norms, or parameter size. Let
+\[
+ p_S(f(x)\mid x)=Q_S\{f(x)z(x)>0\}.
+\]
+The confidence-failure mass under an input law $\mathcal D$ is
+$\mathcal D\{x:p_S(f(x)\mid x)\le2/3\}$.
+
+We quote the following established result with its explicit constants.
+It is the finite-scale posterior energy ceiling in
+\cite[section ``A posterior energy ceiling and a necessary
+representation condition'']{unrestricted}; the exact source file is
+identified in the bibliography.
+
+\begin{theorem}[Imported finite-scale posterior ceiling]
+\label{thm:ceiling}
+Fix $d,n\ge1$, $L\ge3$, $\zeta>0$, and $0<\beta<1$. Define
+\begin{align*}
+ C_0&=n+1,\\
+ R_0&=\max\{4(n+1),(d+1)\log(16(n+1))\},\\
+ M&=\left\lceil\max\{4,C_0,2R_0,dC_0(d+1)R_0^2\}\right\rceil,
+ &T&=MC_0R_0^2,\\
+ K&=2+(L+14)(2T)^{1/(L-1)},\\
+ b^2&=\max\{2(d+1)\log2+4\log8,\ 16\log9+8\log(8L)\},\\
+ A&=\left(\frac{K+2}{L-1}\right)^{(L-1)/2},\\
+ \xi&=\min\left\{1,\frac1{4\sqrt{L(K+1)}},
+                         \frac1{8\sqrt2 LA}\right\},\\
+ N_0&=\left\lceil\max\left\{M,2,(b/\xi)^{2/\zeta},
+                                      2\log(2/\beta)\right\}\right\rceil.
+\end{align*}
+For every integer $N\ge N_0$, every actual finite scale
+$0<\sigma^2\le N^{-(1+\zeta)}$, and every consistently labeled sample
+of at most $n$ inputs, $Q_S$ assigns probability at least $1-\beta$ to
+Boolean functions that admit a global unit-margin tanh representation
+of product at most $P_0$, where
+\[
+ \boxed{\quad P_0^2=d^{-1}e^{19}(2T)^{3/2}.\quad}
+\]
+Such a representation can be taken at the same width and depth.
+The width threshold $N_0$ is polynomial in
+$d,n,L,\log(2/\beta)$, with degree depending only on $\zeta$.
+\end{theorem}
+
+The theorem concerns the Boolean function of a posterior draw. Its
+low-product representative need not be the draw itself. In particular,
+it would be incorrect to replace this result by an assertion that all
+posterior parameters have small energy.
+
+\begin{lemma}[Polynomial size of the ceiling]
+\label{lem:ceiling-poly}
+For $S=d+n+2$, the preceding product satisfies
+\[
+ P_0\le e^{19/2}544^{3/4}S^9.
+\]
+In particular its polynomial degree is independent of $L,\zeta,\beta$.
+\end{lemma}
+\begin{proof}
+The displayed definitions give $C_0\le S$, $R_0\le4S^2$,
+$M\le17S^7$, and $T\le272S^{12}$. Substitute these into $P_0$ and
+use $d\ge1$. For example,
+$\log(16(n+1))\le4S$ for $S\ge4$, which suffices for the bound on
+$R_0$; the remaining inequalities follow directly.
+\end{proof}
+
+\section{From samples to an exact parallel circuit}
+\label{sec:converse}
+
+Let $\mathcal H_P$ be the finite set of Boolean functions on $X_d$
+that admit globally unit-margin tanh representations of product at
+most $P$, allowing arbitrary finite depths and widths. It is finite
+because the domain is finite. Theorem~\ref{thm:main} gives uniform
+circuit bounds for every member of this set.
+
+\begin{theorem}[Sample-to-parallel-circuit converse]
+\label{thm:converse}
+Fix $d,n\ge1$, $L\ge3$, $\zeta>0$, and $0\le\varepsilon<1/2$.
+Use Theorem~\ref{thm:ceiling} with $\beta=1/6$, and fix any one
+$N\ge N_0$ and any one $0<\sigma^2\le N^{-(1+\zeta)}$.
+These choices are independent of the input law.
+
+Suppose that for every input distribution $\mathcal D$ on $X_d$,
+an iid $n$-sample labeled by $f$ has positive probability of satisfying
+\[
+ \mathcal D\{x:p_S(f(x)\mid x)\le2/3\}\le\varepsilon.
+\]
+Put $\kappa=1-2\varepsilon>0$. Then $f$ has a threshold circuit of
+size polynomial in $d+n+\kappa^{-1}$ and depth $O(\log(d+n+2))$.
+It has a bounded-fan-in Boolean circuit of polynomial size in the same
+quantities and depth
+\[
+ O\bigl(\log^2(d+n+2)+\log(\kappa^{-1}+2)\bigr).
+\]
+All polynomial degrees and depth constants are universal. They do
+not depend on the original teacher, $L$, $N$, or $\zeta$.
+\end{theorem}
+\begin{proof}
+Fix $\mathcal D$ and select a successful sample. The ceiling supplies
+a posterior event of mass at least $5/6$ on which the represented
+Boolean function belongs to $\mathcal H_{P_0}$. Condition on that
+event, obtaining a distribution $\nu$ on this finite class. On the
+good set
+\[
+ G=\{x:p_S(f(x)\mid x)>2/3\},
+\]
+whose $\mathcal D$-mass is at least $1-\varepsilon$, a draw from
+$\nu$ has wrong-label probability strictly less than
+$(1/3)/(5/6)=2/5$. Its signed vote therefore has expectation greater
+than $1/5$ at every $x\in G$.
+
+Choose an odd integer $m_0\ge100(d+1)$ no larger than $100(d+1)+2$.
+Independent draws of $m_0$ functions from $\nu$ have majority error
+at a fixed good input at most $e^{-m_0/50}$ by Hoeffding's inequality.
+A union bound over $X_d$ is strictly less than one. Thus some majority
+$g$ of $m_0$ members of $\mathcal H_{P_0}$ agrees with $f$ on all of
+$G$, and has $\mathcal D$-error at most $\varepsilon$.
+
+Let $\mathcal K$ be the finite class of all such $m_0$-voter
+majorities. This class is independent of $\mathcal D$. The conclusion
+just proved says
+\[
+ \text{for every }\mathcal D,\quad
+ \max_{g\in\mathcal K}\E_{x\sim\mathcal D}[f(x)g(x)]\ge\kappa.
+\]
+The finite minimax theorem, applied to the matrix with entries
+$f(x)g(x)$, gives a distribution $\lambda$ on $\mathcal K$ with
+\[
+ f(x)\E_{g\sim\lambda}g(x)\ge\kappa
+ \qquad\text{for every }x\in X_d.
+\]
+Choose an odd integer $m_1\ge4(d+1)/\kappa^2$ within two of this
+bound. Hoeffding and a union bound again give
+\[
+ 2^d e^{-m_1\kappa^2/2}<1.
+\]
+Some majority of $m_1$ members of $\mathcal K$ therefore equals $f$
+on every input. This is a majority of majorities of low-product
+functions; it is not being asserted to have low product itself.
+
+Compile all its constituent functions by Theorem~\ref{thm:main}.
+Lemma~\ref{lem:ceiling-poly} bounds $P_0$ by a universal polynomial
+in $d+n$. Put these circuits in parallel and add the two majority
+layers. Their number is polynomial in $d+n+\kappa^{-1}$, and the
+threshold depth increases only by two. For the Boolean circuit,
+convert the constituent circuits first, then implement the two
+majorities in depths $O(\log m_0)$ and $O(\log m_1)$ using the
+construction in Section~\ref{sec:compiler}. This gives the sharper
+additive $O(\log\kappa^{-1})$ term in the stated bound.
+\end{proof}
+
+\begin{remark}[Quantifiers and mixtures]
+The hypothesis is distribution-free, and only existence of a
+successful sample is used for each distribution. The samples, low-product
+representatives, and both lists of voters may depend nonuniformly on
+$f$. The one width and one actual Gaussian scale in the theorem are
+fixed before the distribution is chosen. No posterior algorithm,
+posterior concentration on a single function, or pointwise statement
+about an individual posterior draw is assumed.
+\end{remark}
+
+\section{The critical endpoint: canonical features and parallel iteration}
+\label{sec:critical-parallel}
+
+The critical prior has $t=1$, equivalently $\sigma^2=1/N$. Its
+finite-width rate ceiling is different from the product ceiling above.
+We prove a separate circuit theorem for its near-baseline rate class.
+The proof preserves a finite set of anchor correlations, rather than
+the full feature covariance, and retains the learner depth in the
+resulting resource bound.
+
+\subsection{Variational paths and the imported scalar facts}
+
+For a finite input set $X\subseteq X_d$, put
+$Q_0(x,y)=(1+x\cdot y)/d$. A critical controlled path with
+$H=L-1$ hidden transitions consists of laws
+\[
+ \rho_j\ll\mathcal N(0,Q_{j-1}),\qquad
+ Q_j(x,y)=\E_{\rho_j}[\tanh(G_x)\tanh(G_y)],
+ \qquad D_j=\KL(\rho_j\Vert\mathcal N(0,Q_{j-1})).
+\]
+Singular Gaussian references are allowed. A readout vector
+$z\in\operatorname{range}(Q_H)$ has cost
+\[
+ r=\tfrac12z^TQ_H^\dagger z,
+ \qquad A=\sum_{j=1}^H D_j+r.
+\]
+Equivalently, if $Q_H$ is the Gram matrix of feature vectors $u_H(x)$,
+then $z(x)=\langle c,u_H(x)\rangle$ for a vector $c$ of squared norm
+$2r$. Let $J_L(f)$ be the infimum of $A$ over full-cube paths with
+$f(x)z(x)\ge1/2$ everywhere.
+
+The scalar value $V(q)$ is the infimum of
+\[
+ \sum_{j=1}^m\KL(\eta_j\Vert\mathcal N(0,q_{j-1}))
+       +\frac1{8q_m},\qquad
+ q_0=q,\quad q_j=\E_{\eta_j}\tanh^2 G,
+\]
+over all finite lengths, including length zero. We use the following
+previously proved facts from \cite[``Scalar control and target-component
+constructions'']{critical}. They are stated explicitly to identify the
+only scalar-control input to our new parallelization argument.
+
+\begin{proposition}[Imported scalar Bellman facts]
+\label{prop:scalar-facts}
+There is a limit $V_*:=\lim_{q\downarrow0}V(q)\in(1,2)$ and universal
+$C_0,c>0$ such that
+\[
+ 0\le V_*-V(q)\le C_0q\quad(0<q\le2),\qquad
+ V(q)\le\frac1{8q}.
+\]
+For a scalar transition from reference variance $p$ to feature variance
+$q$, with entropy $D$, one has
+\[
+ D\ge V(p)-V(q),\qquad
+ D\ge q-p+cp^2\quad(0<p\le2).
+\]
+The constant $c$ may be decreased so that $p-cp^2$ is increasing on
+$[0,5]$.
+\end{proposition}
+
+The source states the small-state bound first and extends it by
+boundedness; increasing $C_0$ gives the interval above. Its strict
+potential proof gives dissipation on $[0,1]$. The same proof extends
+to $[0,2]$: for $q>0$,
+$\log\E\exp\{\tanh^2(\sqrt q Z)\}<q$, its difference from $q$ is
+$q^2+O(q^3)$ at zero, and compactness supplies a positive uniform
+constant. The Bellman inequality is also immediate by appending a
+nearly optimal scalar suffix.
+
+For $D\ge0$, define $\Gain(D)\ge1$ by
+\[
+ \Gain(D)-1-\log\Gain(D)=2D.
+\]
+Gaussian entropy duality gives, for any tilt $\rho$ of a standard
+Gaussian with entropy at most $D$,
+\begin{equation}
+ \E_\rho\langle g,u\rangle^2\le\Gain(D)\norm u_2^2,
+ \qquad \sqrt{\Gain(D)}\le e^{\sqrt D},
+ \qquad \Gain(D)\le4D+2.
+ \label{eq:critical-gain}
+\end{equation}
+Indeed, for a scalar second moment $m>1$, maximizing the entropy
+dual over quadratic functions gives
+$D\ge(m-1-\log m)/2$. For the second inequality write
+$v=\tfrac12\log\Gain(D)$ and use
+$D=(e^{2v}-1-2v)/2\ge v^2$. For the last, use
+$\log u\le u/2$ for $u\ge2$. These facts also show that every
+linear coordinate lies in $L^2(\rho)$.
+
+\begin{lemma}[Variance and entropy occupation]
+\label{lem:critical-occupation}
+Let a full-cube path have global margin $1/2$ and action
+$A\le V_*+\epsilon$, where $\epsilon\ge0$. Put
+$q_j=\max_x Q_j(x,x)$. Then
+\[
+ \sum_{j=0}^{H-1}q_j+\sum_{j=1}^H\sqrt{D_j}
+ \le C\bigl[\log(H+2)+\sqrt{H\epsilon}\bigr]
+\]
+for a universal $C$.
+\end{lemma}
+\begin{proof}
+All one-input variances are positive: zero variance would propagate
+at finite entropy and make the final output zero. The initial
+diagonal is $(d+1)/d\le2$, and subsequent diagonals are at most one.
+Project a transition onto an input attaining its new maximum, and
+use the monotonicity of $p-cp^2$ in Proposition~\ref{prop:scalar-facts}.
+This gives
+\begin{equation}
+ D_j\ge q_j-q_{j-1}+cq_{j-1}^2.
+ \label{eq:critical-max-dissipation}
+\end{equation}
+At an input attaining $q_i$, scalar projection of the suffix and
+Cauchy--Schwarz for the readout show that its remaining cost is at
+least $V(q_i)$. Therefore, with $S_i=\sum_{j\le i}D_j$,
+\begin{equation}
+ S_i\le\epsilon+C_0q_i,
+ \qquad S_H\le V_*+\epsilon.
+ \label{eq:critical-prefix-budget}
+\end{equation}
+
+We give the occupation argument because both its conclusions will
+be used. On a consecutive interval of $\ell$ transitions with
+pre-states at least $u>0$, entropy expenditure $E$, and endpoint
+also at least $u$, dividing~\eqref{eq:critical-max-dissipation} by
+the squared pre-state and telescoping yields
+\begin{equation}
+ \ell\le C(E/u^2+1/u).
+ \label{eq:critical-reciprocal-occupation}
+\end{equation}
+The algebra is
+$(q'-q)/q^2\ge1/q-1/q'$, with difference
+$(q'-q)^2/(q^2q')\ge0$.
+
+We also need a bound for an initial prefix of length $t$ and entropy
+expenditure $E<3$:
+\begin{equation}
+ \sum_{j<t}q_j\le C\log(t+2)+C\sqrt{tE}.
+ \label{eq:critical-forced-cooling}
+\end{equation}
+Let $F(v)=v-cv^2$. Compare $q_j$ with $r_j+s_j$, where
+$r_0=q_0$, $s_0=0$, $r_{j+1}=F(r_j)$ and
+$s_{j+1}=F(s_j)+D_{j+1}$. These sequences are nonnegative,
+$r_j\le2$, $s_j\le E<3$, and $F$ is increasing on their range.
+Since $F(r+s)\le F(r)+F(s)$, induction gives $q_j\le r_j+s_j$.
+Also $r_j\le1/(cj+1/r_0)$ and
+$c\sum_{j<t}s_j^2\le E$. Summing and applying Cauchy--Schwarz
+proves~\eqref{eq:critical-forced-cooling}.
+
+If $\epsilon\ge1/4$, summed dissipation and Cauchy--Schwarz give
+both claims directly from $S_H\le2+\epsilon$. Otherwise $S_H<3$.
+Put $a=\max\{\epsilon,(H+1)^{-1}\}$ and $b=\min_j q_j$.
+If $a\ge1/4$, then $H$ is bounded; if $b\ge1/4$,
+\eqref{eq:critical-reciprocal-occupation} bounds $H$. Thus assume
+$u_0=\max\{a,b\}<1/4$. Let $u_j=2^ju_0$, stop at the first
+$u_J\ge1/4$, and define last-exit indices
+$\tau_j=\max\{i:q_i\le u_j\}$. There are
+$J=O(\log(H+2))$ bands.
+
+For the initial prefix through $\tau_0$, if $b\le a$ its entropy
+is $O(\epsilon+1/H)$ and its length at most $H$.
+Equation~\eqref{eq:critical-forced-cooling} gives its state sum,
+and Cauchy--Schwarz gives its square-root entropy sum, bounded by
+$C[\log(H+2)+\sqrt{H\epsilon}]$. If $b>a$, its endpoint is $b$,
+its entropy is $O(b)$, and all its states are at least $b$.
+Equation~\eqref{eq:critical-reciprocal-occupation} gives length
+$O(1/b)$; forced cooling bounds its state sum by $O(\log(H+2))$,
+and Cauchy--Schwarz bounds its square-root entropy by a constant.
+
+For a nonempty later block $(\tau_j,\tau_{j+1}]$, its entropy is
+at most $\epsilon+2C_0u_j=O(u_j)$. After deleting its first
+transition, all pre-states and its endpoint exceed $u_j$, so its
+length is $O(1/u_j)$. Restoring the first transition preserves this
+bound. Its initial state is at most $u_j$, and each subsequent
+increase is bounded by the entropy spent; all states in the block
+are therefore $O(u_j)$. The block's state sum and square-root
+entropy sum are both $O(1)$. The tail after $\tau_J$ has bounded
+length and bounded contributions by the same occupation bound.
+Summing the blocks proves the lemma.
+\end{proof}
+
+\subsection{Anchors and a finite canonical state}
+
+For two positive semidefinite kernels with identical anchor block
+$K_{TT}=K'_{TT}$, define
+\[
+ d_T(K,K')=\max_{x\in X_d}
+ \sqrt{\norm{a_x-a'_x}_2^2+(\sqrt{v_x}-\sqrt{v'_x})^2},
+\]
+where $a_x=K_{TT}^{\dagger/2}K_{Tx}$ and
+$v_x=K_{xx}-\norm{a_x}_2^2$, and similarly for $K'$.
+This has a geometric meaning: identify the anchor spans isometrically,
+project each query onto that common span, and align its remaining
+orthogonal direction. It is also the root mean square difference in
+a Gaussian coupling that shares the anchor vector and the one-query
+residual Gaussian. Any coupling of query feature vectors with identical
+anchor vectors bounds this distance by its query root mean square
+error. No inverse Gram matrix will be evaluated by the final circuit.
+
+\begin{lemma}[Finite anchor replacement]
+\label{lem:critical-anchors}
+Let a full-cube controlled path have action $A\le V_*+\epsilon$,
+and put $T_0=1+\log(H+2)+\sqrt{H\epsilon}$.
+There is a genuine controlled path whose row densities depend only
+on a common set of
+\[
+ q\le\poly(d,H,A+1)\exp(CT_0)
+\]
+anchors, with the same anchor covariance blocks as the original
+path. It has an anchor-supported readout of global margin $1/2$
+and action at most $A+C/H$. Its layer entropies are at most the
+original $D_j$. Its readout vector has norm at most $C\sqrt{A+1}$.
+\end{lemma}
+\begin{proof}
+Write $I_j(T)$ for the entropy of the layer-$j$ anchor marginal
+relative to its Gaussian reference. It is monotone in $T$ and at
+most $D_j$. Choose $0<\rho\le1/64$ of order
+$[H(A+1)]^{-1}$, and a cutoff $\delta>0$ specified below.
+Greedily add an input whenever either
+$I_j(T\cup\{x\})-I_j(T)>\delta$ for some $j$, or projection of
+the final readout onto the anchor feature span changes its output
+at $x$ by more than $\rho$. There are at most
+$A/\delta$ entropy additions. A readout addition increases the
+squared norm of its projection by at least $\rho^2$, since the
+final feature vectors have norm at most one. There are at most
+$2r/\rho^2$ such additions. This proves termination and a bound
+on the common anchor count.
+
+At layer $j$ replace the original density by its conditional
+expectation given $G_T$, denoted $w_j(G_T)$. This preserves the
+anchor marginal exactly and has entropy $I_j(T)\le D_j$.
+For a query $x$, the conditional entropy of $G_x$ beyond $G_T$
+is at most $\delta$. Conditional maximal coupling and Pinsker's
+inequality give a coupling of the original and replaced bounded
+tanh features, with identical anchor features, whose squared query
+error is at most $4\sqrt{\delta/2}$. Indeed the mismatch probability
+is conditional total variation, whose average is at most
+$\sqrt{\delta/2}$, and the squared feature difference is at most
+four. Thus the one-step $d_T$ error is at most $C\delta^{1/4}$.
+Pinsker's inequality here follows from binary entropy after data
+processing onto a set attaining total variation.
+
+Transfer the anchor density $w_j$ to any preceding kernel with the
+same anchor block. Couple its Gaussian anchor-plus-query vectors
+as in the definition of $d_T$. The common density has entropy at
+most $D_j$ relative to this joint Gaussian law. Equation
+\eqref{eq:critical-gain} and tanh's Lipschitz property imply that
+the resulting $d_T$ error is at most
+$\sqrt{\Gain(D_j)}$ times the input error. Applying these
+replacements successively defines a genuine full-cube controlled
+path, with exact original anchor blocks. Its total query error is
+at most
+\[
+ C H\delta^{1/4}\exp\left(\sum_j\sqrt{D_j}\right).
+\]
+Choose $\delta$ so this is at most
+$\rho/\sqrt{\max\{2r,1\}}$.
+Lemma~\ref{lem:critical-occupation} makes $\delta^{-1}$ at most a
+polynomial in $H,A+1$ times $\exp(CT_0)$, as needed for the anchor
+count.
+
+The projected readout has norm at most $\sqrt{2r}$. Its query
+values change by at most $\rho$ during the path transfer, in
+addition to the projection error $\rho$. Thus it has margin at
+least $1/2-2\rho$. Scale it by $(1-4\rho)^{-1}$ to restore
+margin $1/2$. This changes its action by $O(\rho A)=O(1/H)$ and
+preserves the asserted norm bound. The row entropy costs do not
+increase.
+\end{proof}
+
+\begin{lemma}[Canonicalization with additive dimension]
+\label{lem:critical-canonical}
+Let the query states $u_x\in\R^K$ include anchor states $u_a$.
+Let $\rho$ be a tilt of $g\sim\mathcal N(0,I_K)$ of entropy at
+most $D$, and set $\Phi(u)=\tanh(\langle g,u\rangle)$ as a vector
+in $\mathcal H=L^2(\rho)$. There is a map
+$F:\R^K\to\R^{K+q+1}$, allowing unused zero coordinates, such that
+its Gram kernel has the same anchor block, all query-anchor inner
+products, and all query norms as $\Phi$. Moreover
+\[
+ F(u)=Au+B(u),\qquad
+ \norm A_{\mathrm{op}}\le\sqrt{\Gain(D)},\qquad B(0)=0,
+\]
+and on the ball $\norm u\le\sqrt Q$,
+\[
+ \Lip(B)\le C(Q+\sqrt D).
+\]
+No assertion of full query-query kernel preservation is made.
+\end{lemma}
+\begin{proof}
+Let $V\subseteq\mathcal H$ be the span of the $K$ functions $g_i$
+and the $q$ anchor functions $\Phi(u_a)$. For an orthonormal basis
+$e_1,\ldots,e_M$ of $V$, with $M\le K+q$, define
+\[
+ F(u)=\bigl(\langle e_1,\Phi(u)\rangle,\ldots,
+       \langle e_M,\Phi(u)\rangle,
+       \norm{(I-P_V)\Phi(u)}\bigr).
+\]
+Pythagoras preserves every norm. At an anchor the last coordinate
+is zero, which preserves every query-anchor inner product and the
+anchor block. Since $L(u)=\langle g,u\rangle\in V$, set
+\[
+ Au=(\langle e_b,L(u)\rangle)_{b=1}^M\oplus0.
+\]
+Equation~\eqref{eq:critical-gain} bounds its operator norm. Writing
+$R(u)=\Phi(u)-L(u)$, the residual is
+$B(u)=(P_VR(u),\norm{(I-P_V)R(u)})$ in these coordinates.
+Orthogonality and the reverse triangle inequality give
+\[
+ \norm{B(u)-B(v)}^2\le\norm{R(u)-R(v)}_{L^2(\rho)}^2.
+\]
+
+For the last bound put $X=\langle g,u\rangle$,
+$Y=\langle g,v\rangle$ and
+$Z=\langle g,u-v\rangle/\norm{u-v}$ when $u\ne v$.
+The derivative of $\tanh s-s$ has absolute value $\tanh^2s$, so
+\[
+ \frac{|R(u)-R(v)|^2}{\norm{u-v}^2}
+ \le W:=Z^2\min\{1,\max(|X|,|Y|)^4\}.
+\]
+Under the reference Gaussian, $Z$ is standard normal and
+$\operatorname{Var}(X),\operatorname{Var}(Y)\le Q$. For a fixed
+sufficiently small $c>0$,
+\[
+ e^{cW}-1\le cZ^2(X^4+Y^4)e^{cZ^2}.
+\]
+Conditioning $X$ or $Y$ on $Z$ bounds its fourth moment by
+$CQ^2(1+Z^4)$, regardless of their correlations. Hence
+$\log\E e^{cW}\le CQ^2$. Entropy duality gives
+$\E_\rho W\le C(D+Q^2)$, proving the Lipschitz assertion.
+\end{proof}
+
+Apply this canonicalization successively to the path from
+Lemma~\ref{lem:critical-anchors}. At each stage the reference
+Gaussian can be written in the current finite coordinates, tilted
+by the prescribed anchor density. The next anchor-plus-one-query
+Gaussian law depends only on the three types of moments preserved
+by Lemma~\ref{lem:critical-canonical}. Induction therefore gives
+$d_T=0$ between the canonical recursion and the genuine anchor-only
+path. In particular their diagonals and anchored outputs are equal.
+After $H$ transitions the canonical dimension is at most
+$d+1+H(q+1)$. This does not claim that the canonical full covariance
+itself is the original controlled transition covariance.
+
+\subsection{Uniform finite evaluation of a canonical map}
+
+\begin{lemma}[Polynomial canonical evaluators]
+\label{lem:critical-evaluation}
+In Lemma~\ref{lem:critical-canonical}, suppose
+$K,q,\Gain(D),U,\eta^{-1}$ are bounded by a fixed polynomial in
+$R\ge2$. On the ball $\norm u\le U$, the map $F$, and the residual
+$F(u)-Au$, admit uniform approximations of error $\eta$ by
+polynomial-size constant-depth threshold circuits on a sufficiently
+fine inverse-polynomial input grid. The circuits use bounded dyadic
+constants of $O(\log R)$ bits. The polynomial bounds depend only
+on the stipulated resource polynomial, not on an anchor condition
+number or a description of $\rho$.
+\end{lemma}
+\begin{proof}
+Write
+\[
+ a(u)=\E_\rho[e(g)\tanh(g\cdot u)],\quad
+ b(u)=\E_\rho\tanh^2(g\cdot u),\quad
+ F(u)=(a(u),\sqrt{b(u)-\norm{a(u)}^2}).
+\]
+The radicand is nonnegative and $\norm{a(u)}\le1$.
+By~\eqref{eq:critical-gain},
+$\E_\rho\norm g^2\le K\Gain(D)$. Truncate to $\norm g\le B$.
+The discarded probability is at most $K\Gain(D)/B^2$. Bessel's
+inequality bounds the discarded vector expectation uniformly in $u$
+by the square root of that probability; the discarded scalar
+expectation is bounded by the probability itself. A polynomial $B$
+makes both errors any prescribed inverse-polynomial amount.
+
+On the retained set use the importance density
+\[
+ p(g)=\frac{(1+\norm{e(g)}^2)\boldsymbol1_{\{\norm g\le B\}}}{Z},
+ \qquad Z\le M+1,
+\]
+relative to $\rho$. The retained set has positive probability.
+Its vector and scalar integrands have respective bounds
+$\norm{e(g)\tanh(g\cdot u)/p(g)}\le Z/2$ and
+$\tanh^2(g\cdot u)/p(g)\le Z$.
+They have Lipschitz bounds at most $ZB/2$ and $2ZB$.
+A net of the radius-$U$ input ball at spacing proportional to
+$\theta/(ZB)$ has logarithmic cardinality
+$O(K\log(2+UZB/\theta))$. The Hilbert-valued bounded-differences
+argument used in Lemma~\ref{lem:maurey}, and a union bound on this
+net, give a polynomial number of importance samples uniformly
+approximating $a,b$ to error $\theta$. Lipschitzness extends the
+bound to the whole ball.
+
+The formulas have the form
+\[
+ \widehat a(u)=\sum_{\ell=1}^m c_\ell\tanh(g_\ell\cdot u),
+ \qquad
+ \widehat b(u)=\sum_{\ell=1}^m b_\ell\tanh^2(g_\ell\cdot u),
+\]
+where $\norm{g_\ell}\le B$, $\norm{c_\ell}\le Z/(2m)$ and
+$0\le b_\ell\le Z/m$. In particular, large coefficients in a
+possibly ill-conditioned formula for the basis $e$ never appear in
+the evaluator. If both errors are at most $\theta\le1$, then
+\[
+ \left|\widehat b-\norm{\widehat a}^2
+                  -(b-\norm a^2)\right|\le3\theta+\theta^2.
+\]
+Clip the approximate radicand at zero. The inequality
+$|\sqrt s-\sqrt t|\le\sqrt{|s-t|}$ shows that
+$\theta$ of order $\eta^2$ suffices for error $\eta$ in $F$.
+
+All incoming nodes and output coefficients are polynomially bounded
+and can be rounded on inverse-polynomial meshes. The matrix $A$ is
+an independent nonuniform constant of bounded operator norm and
+can be rounded directly; it need not be estimated from truncated
+samples. Affine forms, tanh lookups, squares, finite sums, clipping,
+and square roots now have polynomial range and inverse-polynomial
+precision requirements. Use the constant-threshold-depth lookup
+and comparison construction from Section~\ref{sec:compiler} for
+each. Square root needs the squared accuracy mesh. This proves the
+claim. It uses existence of finite quadrature constants, not an
+algorithm for the density or its orthonormal basis.
+\end{proof}
+
+\begin{theorem}[Near-baseline critical rate implies parallel circuits]
+\label{thm:critical-normal-form}
+Suppose $f$ has a globally $1/2$-margined critical path with $H$ hidden
+transitions and action $A\le V_*+\epsilon$, $\epsilon\ge0$.
+Put
+\[
+ T_0=1+\log(H+2)+\sqrt{H\epsilon},\qquad
+ R=(d+H+A+2)e^{CT_0},
+\]
+with a sufficiently large universal $C$.
+Then $f$ has a threshold circuit of size $R^{O(1)}$ and depth
+$O(\log R)$, and a bounded-fan-in Boolean circuit of size $R^{O(1)}$
+and depth $O(\log^2R)$, with universal constants.
+Consequently, if $d+L\le Q^k$ and
+$J_L(f)\le V_*+k\log^2Q/L$ for fixed $k$, then $f$ has size
+polynomial in $Q$ and threshold depth $O_k(\log Q)$.
+\end{theorem}
+\begin{proof}
+Use Lemma~\ref{lem:critical-anchors} and the canonical recursion.
+Its dimension is polynomial in $R$. The genuine anchor-only path
+has action at most $A+C/H$, the same diagonals and readout as the
+canonical recursion, and row entropies at most $D_j$.
+Apply Lemma~\ref{lem:critical-occupation} to that genuine path for
+its diagonal sum, with the additional $C/H$ absorbed in the constant,
+and to the original path for its original entropy sum. Together they give
+\[
+ \sum_j Q_{j-1}^{\max}+\sum_j\sqrt{D_j}\le CT_0.
+\]
+Write its canonical maps as $F_j(u)=A_ju+B_j(u)$, with
+\[
+ \alpha_j=\sqrt{\Gain(D_j)},\quad
+ \norm{A_j}_{\mathrm{op}}\le\alpha_j,\quad
+ \Lip(B_j)\le\ell_j:=C(Q_{j-1}^{\max}+\sqrt{D_j})
+\]
+on the relevant state balls. Thus
+$\sum_j\ell_j\le CT_0$ and $\prod_j\alpha_j\le e^{CT_0}$.
+
+Extend each $B_j$ by radial projection onto its state ball. For
+finite evaluation, first floor each radius at $R^{-c}$ and then round
+it upward on a dyadic mesh of spacing at most $R^{-c}$, for a
+sufficiently large universal $c$. The increase in the sum of squared
+radii is $O(HR^{-c})\le O(1)$, so the total Lipschitz budget increases
+by at most a constant. The actual path is unchanged.
+These extensions fix zero, remain Lipschitz, and have polynomially
+bounded ranges. Radial projection is uniformly evaluable with
+polynomial resources by norm, square-root, and reciprocal lookups;
+division only occurs above the inverse-polynomial radius floor.
+
+Let $S_j=\prod_{i\le j}\alpha_i$ and $v_j=u_j/S_j$, with $S_0=1$.
+The normalized recursion is
+\[
+ v_j=C_jv_{j-1}+H_j(v_{j-1}),\qquad
+ C_j=A_j/\alpha_j,\quad \norm{C_j}_{\mathrm{op}}\le1,
+\]
+where $H_j(v)=B_j(S_{j-1}v)/S_j$ uses the extended residual.
+Its Lipschitz constant is at most $\ell_j$. All $S_j$ lie between
+one and a polynomial in $R$.
+
+Precompute the contraction products
+$C_{j:i}=C_j\cdots C_i$ as nonuniform matrices. Their entries have
+absolute value at most one and their dimensions are polynomial.
+The recursion is equivalent to the Volterra system
+\[
+ v_j=C_{j:1}v_0+\sum_{i=1}^j C_{j:i+1}H_i(v_{i-1}),
+\]
+where an empty product is the identity. Initialize
+$v_j^{(0)}=C_{j:1}v_0$ and compute all times in parallel by
+\begin{equation}
+ v_j^{(k+1)}=C_{j:1}v_0+
+             \sum_{i=1}^j C_{j:i+1}H_i(v_{i-1}^{(k)}).
+ \label{eq:critical-picard}
+\end{equation}
+Put $\Lambda=\sum_i\ell_i=O(T_0)$. Expanding the error recurrence
+over strictly increasing time indices gives
+\[
+ \max_j\norm{v_j^{(k)}-v_j}
+ \le2\sqrt2\,\frac{\Lambda^k}{k!}.
+\]
+Indeed each product uses distinct ordered indices, and their sum
+is at most $\Lambda^k/k!$. Thus
+$k=O(\Lambda+\log(1/\eta))=O(\log R)$ iterations suffice for
+any fixed inverse-polynomial error $\eta$.
+
+Uniform additive error $\delta$ per update contributes at most
+\[
+ \delta\sum_{m\ge0}\frac{\Lambda^m}{m!}
+ =\delta e^\Lambda=\delta\,R^{O(1)}.
+\]
+This treats finite quadrature and rounded arithmetic as errors
+relative to the exact Lipschitz maps; the approximating maps need
+not themselves have small Lipschitz constants. Clipped residuals
+are bounded, so the right side of~\eqref{eq:critical-picard} has
+polynomial norm at every iteration. This supplies a fixed polynomial
+evaluation range and a bootstrap for its inexact versions. Divide
+the primitive error tolerance by a sufficiently large polynomial
+to absorb all matrix, coefficient, and summation errors in $\delta$.
+
+Lemma~\ref{lem:critical-evaluation} makes every simultaneous
+update a polynomial-size constant-depth threshold circuit. There
+are polynomially many time indices and matrix entries, and
+$O(\log R)$ iterations. The final rescaling by $S_H$ and bounded
+readout amplify error only polynomially. Choose $\eta,\delta$ so
+that the final output changes by less than $1/16$; its $1/2$ margin
+then gives the exact signs. This proves the threshold bound.
+The majority-gate simulation in Section~\ref{sec:compiler} gives
+the Boolean bound. For an infimum $J_L(f)$, choose a path within
+$1/H$ of that infimum. This adds only a constant to $T_0$, proving
+the final assertion without an attainment assumption.
+\end{proof}
+
+\subsection{A finite-width full-cube rate ceiling}
+
+We next prove the extraction step needed to apply the structural
+theorem to the actual posterior, rather than a limiting rate model.
+
+\begin{lemma}[Finite-event covariance certificate]
+\label{lem:critical-dual-certificate}
+Consider the critical width-$N$ prior on a set of $m$ inputs, with
+$H$ hidden layers, and put $k=m(m+1)/2$. For any measurable raw
+event $E$ of probability at least $e^{-NA}$, $A\ge0$, any
+$\tau>0$, and $0<\Delta\le1$, there is a realization in $E$ and
+laws $\rho_j\ll\mathcal N(0,Q_{j-1})$, relative to its empirical
+preceding covariances, such that
+\[
+ \max_{x,y}\left|\E_{\rho_j}\tanh G_x\tanh G_y-Q_j(x,y)\right|
+ \le\Delta,\qquad
+ \sum_j\KL(\rho_j\Vert\mathcal N(0,Q_{j-1}))+r\le A+\tau,
+\]
+provided
+\[
+ N\ge\frac C\tau\left[
+ Hk\log\left(1+\frac{C(A/\tau+1)Hk}{\Delta}\right)
+ +m\log\bigl(C(A/\tau+1)\bigr)+1\right].
+\]
+Here $z$ is the selected realization's actual output and
+$r=\tfrac12z^TQ_H^\dagger z$. No exchangeability of $E$ is required.
+\end{lemma}
+\begin{proof}
+For a row law $\mu$ on $h\in[-1,1]^m$, let $\phi(h)$ list its $k$
+upper-triangular products. Define the bounded dual
+\[
+ I_B(q;\mu)=\max_{\lambda\in[-B,B]^k}
+ \{\lambda\cdot q-\log\E_\mu e^{\lambda\cdot\phi}\}.
+\]
+A maximizer exists. Its exponential tilt $\nu$ has moments $a$,
+and coordinatewise optimality gives
+$\lambda_i(q_i-a_i)=B|q_i-a_i|$. Consequently
+\begin{equation}
+ I_B(q;\mu)=\KL(\nu\Vert\mu)+B\norm{q-a}_1\ge0.
+ \label{eq:critical-bounded-dual}
+\end{equation}
+The same feature tilt of the Gaussian preactivation has identical
+entropy and moments.
+
+For $N$ iid rows let $\widehat q$ be their empirical moments. A
+grid $\Gamma\subset[-B,B]^k$ of covering radius $\eta$ has size
+at most $(1+CB/\eta)^k$. The dual objective is $2k$-Lipschitz in
+$\lambda$, and each fixed exponential likelihood ratio has mean
+one. Hence
+\[
+ \E e^{N I_B(\widehat q;\mu)}
+ \le e^{2Nk\eta}|\Gamma|.
+\]
+This bound is uniform in the conditional reference row law.
+Iterate it forward through the network. Given the hidden layers,
+the readout has covariance $Q_H/N$, so, for $0<s<1$,
+$\E[e^{(1-s)Nr}\mid\text{hidden}]
+=s^{-\operatorname{rank}(Q_H)/2}\le s^{-m/2}$.
+Writing $I_j$ for the realized layer dual costs gives
+\[
+ \E_{\mathrm{prior}}e^{N[\sum_j I_j+(1-s)r]}
+ \le e^{2NHk\eta}|\Gamma|^H s^{-m/2}.
+\]
+Conditioning on $E$ has relative entropy at most $NA$. Entropy
+duality therefore bounds the conditional expectation of
+$\sum I_j+(1-s)r$ by
+\[
+ A+2Hk\eta+
+ \frac{H\log|\Gamma|+(m/2)\log(1/s)}N.
+\]
+Take $s=\tau/[16(A+\tau)]$,
+$\eta=\tau/(64Hk)$, and $B=(A+\tau)/\Delta$.
+Under the stated width bound some realization in $E$ has the last
+cost at most $A+\tau/8$. Since all $I_j$ are nonnegative and
+$(A+\tau)(1-s)=A+15\tau/16$, its unweighted total
+$\sum I_j+r$ is at most $A+\tau$. Apply
+\eqref{eq:critical-bounded-dual} layer by layer. Each moment
+$\ell_1$ error is at most $I_j/B\le\Delta$, proving the lemma.
+\end{proof}
+
+\begin{lemma}[Consistent-path transfer]
+\label{lem:critical-consistent-transfer}
+For a certificate as above with total cost at most $B$, there is
+a genuine controlled path of cost at most $B$, with output
+$\widehat z$, satisfying
+\[
+ \max_x|\widehat z(x)-z(x)|
+ \le \sqrt{2B}\,H\sqrt{m\Delta}\,e^{\sqrt{HB}}.
+\]
+\end{lemma}
+\begin{proof}
+Two positive semidefinite $m$-point kernels differing entrywise
+by at most $\Delta$ have feature embeddings with each corresponding
+row distance at most $\sqrt{m\Delta}$. To see this, their operator
+norm difference is at most $m\Delta$, and
+$\norm{K^{1/2}-{K'}^{1/2}}_{\mathrm{op}}
+\le\sqrt{\norm{K-K'}_{\mathrm{op}}}$.
+The latter follows by monotonicity of the matrix square root from
+$K\le K'+aI$ and $K'\le K+aI$. Any existing embedding can be
+identified isometrically with its square-root embedding, enlarging
+the ambient Hilbert space when necessary.
+
+Inductively couple Gaussian rows for the genuine preceding kernel
+and the empirical reference using such common feature embeddings.
+Tilt the joint Gaussian by the certificate's original density.
+The new marginal has no larger entropy by data processing, while
+\eqref{eq:critical-gain} bounds each root mean square preactivation
+difference by $\sqrt{\Gain(D_j)}$ times its previous feature
+difference. Apply tanh, then use the certificate moment error to
+identify the controlled moment embedding with the next empirical
+embedding at additional error $\sqrt{m\Delta}$. Couplings can be
+joined by identifying the common feature span and adjoining their
+orthogonal complements. Thus the maximal row error satisfies
+\[
+ e_j\le\sqrt{\Gain(D_j)}e_{j-1}+\sqrt{m\Delta},
+ \qquad e_0=0.
+\]
+It follows that
+$e_H\le H\sqrt{m\Delta}\exp(\sum_j\sqrt{D_j})
+\le H\sqrt{m\Delta}e^{\sqrt{HB}}$.
+Transfer the empirical readout vector of norm $\sqrt{2r}$ through
+this common embedding and project it onto the new final feature
+span. Its norm and readout cost do not increase, while its output
+error is at most $\sqrt{2r}\,e_H\le\sqrt{2B}\,e_H$.
+\end{proof}
+
+For the raw mass of a sample memorizer we use the established
+finite-width Fourier-seed result
+\cite[``Finite-width target mass for Fourier seeds'']{critical}:
+there are universal constants such that a Boolean target $g$ of
+Fourier variation $A_F(g)$ has raw critical probability at least
+\[
+ \exp\left[-N\left(V_*+C\frac{\log^2 R_g}{L}\right)\right],
+ \qquad R_g=(d+L+2)A_F(g),
+\]
+at every $N\ge R_g^C$ whenever $L\ge C\log R_g$.
+The event here has the original strict global margin and the signs
+of $g$. This is an imported finite-width target-mass theorem, not
+a rate-limit assertion.
+
+\begin{theorem}[Critical full-cube posterior ceiling]
+\label{thm:critical-ceiling}
+There are universal $C,c>0$ such that the following holds. Put
+$R_0=d+n+L+2$, with $d,n\ge1$, and suppose
+$L\ge C\log R_0$. At the actual critical scale $\sigma^2=1/N$,
+for every
+\[
+ N\ge 2^{Cd}R_0^C+CL\log(1/\beta),\qquad0<\beta<1,
+\]
+and every consistently labeled sample of at most $n$ inputs, the
+original posterior assigns probability at least $1-\beta$ to the
+fixed full-cube class
+\[
+ \mathcal G=\left\{g:J_L(g)\le
+             V_*+c\frac{\log^2R_0}{L}\right\}.
+\]
+All its members have threshold circuits of polynomial size in
+$R_0$ and depth $O(\log R_0)$, uniformly over the class.
+\end{theorem}
+\begin{proof}
+If $x_1,\ldots,x_m$ are the distinct negative sample inputs, the
+function $g_S=1-2\sum_{i=1}^m\boldsymbol1_{\{x_i\}}$ has the
+observed signs and Fourier variation at most $1+2n$. Indeed each
+point indicator has Fourier variation one. The imported target
+mass theorem gives a lower bound $e^{-Na_0}$ for the conditioning
+denominator, where
+$a_0=V_*+C_0\log^2R_0/L$, at every $N\ge R_0^{C_0}$ after
+enlarging constants.
+
+Let $E$ be the raw event of globally margined draws whose Boolean
+function $g$ has $J_L(g)>a_0+K/L$, where $K$ is a sufficiently
+large universal constant. It is measurable because there are
+finitely many sign functions. Suppose its probability were at
+least $e^{-N(a_0+1/L)}$. Apply
+Lemma~\ref{lem:critical-dual-certificate} on the entire cube, with
+$m=2^d$, $\tau=1/L$, and action parameter $a_0+1/L$.
+Choose $\Delta$ sufficiently small that
+Lemma~\ref{lem:critical-consistent-transfer} gives output error
+at most $\rho=[C L(a_0+1)]^{-1}<1/4$.
+It suffices to choose a tolerance with
+\[
+ \log(1/\Delta)
+ \le C\bigl[d+\log(L(a_0+2))+\sqrt{L(a_0+2)}\bigr].
+\]
+The certificate's required width is thus at most
+$2^{Cd}R_0^C$. The transferred path preserves the selected
+realization's signs; multiplying its readout by $(1-2\rho)^{-1}$
+restores margin $1/2$ and adds at most $C/L$ action. It gives a
+path of action at most $a_0+K'/L$ for one of the functions in $E$,
+contradicting $K>K'$.
+
+Hence the bad raw mass is less than $e^{-N(a_0+1/L)}$.
+Divide by the sample-consistent denominator $e^{-Na_0}$ to bound
+its posterior mass by $e^{-N/L}\le\beta$. Absorb $K/L$ into the
+displayed logarithmic excess. Theorem~\ref{thm:critical-normal-form}
+then gives the uniform circuit bounds. Its use of an arbitrarily
+near-minimizing path removes any issue of rate attainment.
+\end{proof}
+
+\begin{corollary}[Critical sample-to-parallel-circuit converse]
+\label{cor:critical-converse}
+Let $0\le\varepsilon<1/2$, $\kappa=1-2\varepsilon$, and
+$R_0=d+n+L+2$. Suppose $L\ge C\log R_0$ and choose one width
+above the threshold of Theorem~\ref{thm:critical-ceiling} with
+$\beta=1/6$. If, at $\sigma^2=1/N$, every input law gives
+positive probability to an $n$-sample with confidence-failure
+mass at most $\varepsilon$, then $f$ has threshold size polynomial
+in $R_0+\kappa^{-1}$ and depth $O(\log R_0)$. Its Boolean depth
+is $O(\log^2R_0+\log(\kappa^{-1}+2))$, with polynomial size.
+\end{corollary}
+\begin{proof}
+Apply the two-majority argument of Theorem~\ref{thm:converse}
+with the fixed class $\mathcal G$ from
+Theorem~\ref{thm:critical-ceiling} in place of
+$\mathcal H_{P_0}$. The one width is chosen before the input law,
+and the ceiling is simultaneous over every realized sample.
+Each voter now has the uniform circuit bound from
+Theorem~\ref{thm:critical-normal-form}. No other step changes.
+\end{proof}
+
+The exponential width threshold in this converse is deliberate:
+we extract on all $2^d$ inputs to obtain a distribution-independent
+full-cube circuit class. It does not assert a polynomial width
+threshold for this endpoint converse. It suffices for a necessary
+condition on a sample guarantee required at every admissible width.
+
+\section{Every fixed subcritical prefactor}
+\label{sec:fixed-prefactor}
+
+Fix $0<t<1$ while allowing the width to grow. The corresponding
+exponent is $\gamma_N=1+2\log(1/t)/\log N$, so a fixed-gap theorem
+does not apply uniformly in $N$. We prove a separate converse.
+All constants and polynomial exponents in this section may depend
+on the fixed value of $t$. Put
+\[
+ a=t^{-2}-1,\quad c_t=\frac{a-\log(1+a)}2,\quad
+ \delta_t=\frac{(a+1)\log(1+a)-(a+2)\log(1+a/2)}2.
+\]
+A controlled path uses reference $\mathcal N(0,t^2Q_{j-1})$,
+row entropies $D_j$, and readout action
+\[
+ r_t=\frac1{2t^2}z^TQ_H^\dagger z,\qquad
+ A=\sum_{j=1}^H D_j+r_t,\qquad H=L-1.
+\]
+Its full-cube rate $J_{t,L}(f)$ is the infimum over such paths
+with signed output margin at least $1/2$.
+
+\subsection{A strict spectral covering gain}
+
+\begin{lemma}[Entropy and two principal directions]
+\label{lem:prefactor-spectral}
+Let $\rho\ll\mathcal N(0,t^2I_K)$ have entropy at most $D$,
+where $K\ge2$, and let $\lambda_1\ge\lambda_2$ be the largest
+eigenvalues of $\Sigma=\E_\rho gg^T$. Set
+$\alpha=\sqrt{\lambda_1}$ and
+$b=(\lambda_1+\lambda_2)/(2\sqrt{\lambda_1})$. Then
+\[
+ \log\alpha\le(D-c_t)/a,\qquad
+ \log b\le(D-c_t-\delta_t)/a,\qquad \delta_t>0.
+\]
+Every map satisfying
+$\norm{F(u)-F(v)}\le\norm{\Sigma^{1/2}(u-v)}$
+sends any ball of radius $r$ into two balls of radius $rb$.
+\end{lemma}
+\begin{proof}
+Finite Gaussian entropy implies finite second moments, and absolute
+continuity makes $\Sigma$ positive definite. Define
+$F_t(\lambda)=(\lambda/t^2-1-\log(\lambda/t^2))/2$.
+The exact identity
+\[
+ \KL(\rho\Vert\mathcal N(0,t^2I))
+ =\KL(\rho\Vert\mathcal N(0,\Sigma))+\sum_iF_t(\lambda_i)
+\]
+uses the full second moment and allows a nonzero mean.
+Thus $F_t(\lambda_1)+F_t(\lambda_2)\le D$.
+The first gain bound follows from
+\[
+ F_t(\lambda)-c_t-\frac a2\log\lambda
+ =\frac{a+1}2(\lambda-1-\log\lambda)\ge0.
+\]
+For the second put $s=\lambda_2/\lambda_1\le1$,
+$u=(a+1)(\lambda_1+\lambda_2)/(a+2)$ and $v=(a+2)/2$.
+Direct expansion gives
+\begin{align*}
+ F_t(\lambda_1)+F_t(\lambda_2)-c_t-a\log b-\delta_t
+ ={}&v(u-1-\log u)\\
+ &+\log\frac{1+s}{2\sqrt s}+\frac a2\log\frac2{1+s}\ge0.
+\end{align*}
+The signs follow from $\log u\le u-1$, arithmetic--geometric
+mean, and $s\le1$. Also $\delta_t=0$ at $a=0$, and its derivative
+is $\tfrac12\log((1+a)/(1+a/2))>0$ for $a>0$.
+
+For the covering statement, take two centers on the top principal
+axis of $\Sigma^{1/2}B_1$, at displacements
+$\pm(\lambda_1-\lambda_2)/(2\sqrt{\lambda_1})$.
+At top input coordinate of magnitude $s\in[0,1]$, the squared
+distance to the nearer center is at most
+\[
+ \lambda_2+(\lambda_1-\lambda_2)(s^2-s)
+                   +\frac{(\lambda_1-\lambda_2)^2}{4\lambda_1}
+ \le b^2.
+\]
+The centers have preimages inside the input ball. Map these
+preimages through $F$, then translate and scale the ball.
+\end{proof}
+
+The canonical map from Lemma~\ref{lem:critical-canonical}
+has this metric property at every prefactor: the feature map
+$\Phi(u)=\tanh(\langle g,u\rangle)$ does in $L^2(\rho)$,
+and projection together with the residual norm is a contraction.
+All its anchor and diagonal identities remain valid.
+The gap $\delta_t\sim a^2/8$ as $t\to1$ is positive only away
+from the endpoint.
+
+\subsection{Normalized anchors and finite evaluation}
+
+\begin{lemma}[Normalized anchor replacement]
+\label{lem:prefactor-anchors}
+Suppose a full-cube path has signed margin $1/2$ and
+$A\le Hc_t+E$, $E\ge0$. Put $R=(d+H+A+2)e^E$.
+There is a genuine path whose densities depend on a common set
+of $R^{O_t(1)}$ anchors, with exact original anchor blocks and
+an anchor-supported readout of margin $1/2$ and action at most
+$A+C/H$. Its row entropies are at most the original $D_j$.
+Its canonical state has dimension $R^{O_t(1)}$.
+\end{lemma}
+\begin{proof}
+Use the entropy upper gains
+\[
+ \alpha_j=t\sqrt{\Gain(D_j)},\qquad
+ S_j=\prod_{i\le j}\alpha_i,\quad S_0=1,\qquad \Gamma=S_H,
+\]
+where $\Gain(D)-1-\log\Gain(D)=2D$. They always use the
+\emph{original} entropies, including after replacement.
+Every original or replacement row has second-moment operator
+norm at most $\alpha_j^2$, so its feature norm is at most
+$\sqrt2S_j$. The tangent bound gives
+\[
+ \log\alpha_j\le(D_j-c_t)/a,\qquad \Gamma\le e^{E/a}.
+\]
+Write $W=\sqrt{2t^2r_t}$. The margin at any input implies
+$W\Gamma\ge1/(2\sqrt2)$, while $W\le\sqrt{2t^2A}$.
+The normalized readout multiplier and needed inverse margin
+tolerances are therefore polynomial in $R$.
+
+Take $\rho_0=[CH(A+1)]^{-1}\le1/64$. Select common anchors
+as in Lemma~\ref{lem:critical-anchors}, with entropy cutoff
+$\eta$ and readout projection tolerance $\rho_0$. There are
+at most $A/\eta+W^2/\rho_0^2$ anchors. Replace each density
+by its conditional expectation $w_j(G_T)$ given the anchors.
+
+A one-dimensional Gaussian $G$ of variance $\sigma^2$ satisfies
+\begin{equation}
+ W_2^2(\nu,G)\le2\sigma^2\KL(\nu\Vert G).
+ \label{eq:prefactor-transport}
+\end{equation}
+For a smooth increasing transport $T$ from a centered Gaussian,
+change of variables and Gaussian integration by parts give
+\[
+ \KL(\nu\Vert G)=
+ \frac{\E(T(X)-X)^2}{2\sigma^2}
+ +\E[T'(X)-1-\log T'(X)].
+\]
+This proves \eqref{eq:prefactor-transport}; translation and
+approximation give the general form. Conditional on the anchors,
+the reference query variance is at most $t^2Q_{j-1}(x,x)$,
+and conditional entropy averaged under the tilted anchor law is
+at most $\eta$. Coupling original and replaced queries sharing
+that anchor vector gives feature root mean square error at most
+$\sqrt{2t^2Q_{j-1}(x,x)\eta}$. After division by $S_j$ this is
+at most $2(t/\alpha_j)\sqrt\eta\le2\sqrt\eta$.
+Zero conditional variance forces equality and needs no transport.
+
+For transfer to a changed preceding kernel with the same anchor
+block, tilt the Gaussian query coupling by the common anchor
+density. Its entropy is at most $D_j$ and its root mean square
+gain is at most $\alpha_j$. Normalized propagation thus has
+gain at most one. Successive replacements define a genuine
+full-cube path of normalized query error at most $CH\sqrt\eta$.
+Choose $\eta$ so $W\Gamma CH\sqrt\eta\le\rho_0$.
+Its inverse and the anchor count are polynomial in $R$.
+
+The anchored readout loses at most $2\rho_0$ margin. Scaling by
+$(1-4\rho_0)^{-1}$ restores margin $1/2$, adds
+$O(A\rho_0)=O(1/H)$ action, and gives new readout norm
+$W'\le2W$. Apply the canonical construction, retaining the span
+of the Gaussian coordinate functions and anchor features and
+appending the residual norm. It adds at most $|T|+1$ coordinates
+per layer. Anchor blocks, query-anchor moments, and diagonals
+agree inductively with the genuine replaced path. These are
+precisely the invariants used by subsequent anchored densities
+and the final readout; full query-query covariance preservation
+is not asserted.
+\end{proof}
+
+\begin{lemma}[Evaluation after arbitrary scalar normalization]
+\label{lem:prefactor-evaluation}
+Let $F$ be a canonical map on $\R^K$ for a controlled row law
+with second moment $\Sigma$ and $M\le K+q$ basis functions.
+For $\alpha\ge\sqrt{\norm\Sigma_{\mathrm{op}}}$ and $S>0$,
+the map $F(Sv)/(S\alpha)$ has a constant-threshold-depth,
+polynomial-size evaluator on $\norm v\le U$, to any inverse
+polynomial accuracy, whenever $K,M,U$ and inverse accuracy are
+polynomially bounded. No bound on $S,S^{-1}$ or the density is
+needed.
+\end{lemma}
+\begin{proof}
+Let $e(g)\in\R^M$ list an orthonormal basis of the canonical
+subspace, and put
+\[
+ k(g)=\norm g/\alpha,\qquad
+ \psi_g(s)=\frac{\tanh(S\norm g\,s)}{S\norm g}.
+\]
+Assign zero at $g=0$, a null event. Each $\psi_g$ is
+zero-preserving and $1$-Lipschitz, hence bounded by $U$ on
+$[-U,U]$. The normalized feature is
+$k(g)\psi_g(\langle\widehat g,v\rangle)$, with
+$\widehat g=g/\norm g$. Use the importance density
+\[
+ p(g)=\frac{1+\norm{e(g)}^2+k(g)^2}{Z},\qquad
+ Z=1+M+\E k^2\le1+M+K.
+\]
+The projection vector $b(v)$ and squared feature norm $q(v)$
+are expectations, under this sampling law, of
+\[
+ \frac{e(g)k(g)}{p(g)}\psi_g(\langle\widehat g,v\rangle),
+ \qquad
+ \frac{k(g)^2}{p(g)}\psi_g(\langle\widehat g,v\rangle)^2.
+\]
+Pointwise $\norm{ek/p}\le Z/2$ and $k^2/p\le Z$.
+The vector summand is bounded by $ZU/2$ and has Lipschitz
+constant at most $Z/2$; the scalar summand is bounded by
+$ZU^2$ and has Lipschitz constant at most $2ZU$.
+Bounded concentration and a net of logarithmic cardinality
+$O(K\log(\poly(K,M,U)/\eta))$ give polynomially many nodes
+approximating both expectations uniformly to tolerance $\eta$.
+One may apply scalar concentration to each of the polynomially
+many vector coordinates. Complete the state by
+\[
+ \bigl(b(v),\sqrt{\max\{0,q(v)-\norm{b(v)}^2\}}\bigr).
+\]
+The square-root inequality only squares the required accuracy.
+
+All sampled directions and coefficients have polynomial range.
+Replace each $\psi_g$ by values on a polynomial mesh in
+$[-U,U]$. Its Lipschitz bound controls the error independently
+of $S\norm g$. The bounded arithmetic and scalar lookup
+constructions proved earlier implement these sums, products,
+and the clipped square root at constant threshold depth.
+The physical scales never become circuit inputs. The
+construction is nonuniform.
+\end{proof}
+
+\subsection{Structural and actual-posterior converses}
+
+\begin{theorem}[Fixed-prefactor near-baseline parallelization]
+\label{thm:prefactor-normal-form}
+Fix $0<t<1$. If a full-cube path for $f$ has signed margin
+$1/2$ and action $A\le Hc_t+E$, $E\ge0$, then, with
+$R=(d+H+A+2)e^E$, the target has threshold size $R^{O_t(1)}$
+and depth $O_t(\log R)$. Its Boolean depth is $O_t(\log^2R)$
+with polynomial size in $R$.
+\end{theorem}
+\begin{proof}
+Use the anchored canonical path from
+Lemma~\ref{lem:prefactor-anchors}, charge each row to its
+original $D_j$, and normalize by $S_j$ from that proof.
+Each normalized map is globally $1$-Lipschitz and
+zero-preserving. Normalized cube states therefore have norm
+at most $\sqrt2$ and polynomial dimension.
+
+Let $b_i$ be the two-ball factor of the actual canonical row
+covariance. Cover the first $j$ layers, then propagate each
+ball through the remaining layers using the entropy upper
+gains $\alpha_i$. The possible output error is at most
+\begin{equation}
+ \sqrt2\,W'\prod_{i\le j}b_i\prod_{i>j}\alpha_i
+ \le\sqrt2\,W'
+ \exp\left(\frac{A+C/H-Hc_t-j\delta_t}{a}\right).
+ \label{eq:prefactor-prefix-error}
+\end{equation}
+Every layer is charged exactly once. Choose
+$J=O_t(E+\log(A+2)+1)$ making this at most $1/64$.
+If $J\ge H$, retain all $H$ layers. Otherwise there are at
+most $2^J$ prefix balls. Discard empty balls and replace each
+remaining center by an actual cube state in it, recording its
+label. This doubles the radius and gives stored normalized
+centers of norm at most $\sqrt2$. Intermediate existential
+cover centers need not be inside the cube-state ball; their
+images use the globally defined canonical maps.
+
+The normalized suffix has output Lipschitz constant at most
+$W'\Gamma$, polynomial in $R$. Opposite labels at the retained
+layer are therefore separated by at least $1/(W'\Gamma)$,
+while every query is within $1/(32W'\Gamma)$ of a stored
+center. Declare it positive when some positive center is within
+$1/(4W'\Gamma)$. Inverse-polynomial state, center and
+squared-distance errors preserve this exact classifier.
+
+Evaluate each retained normalized map by
+Lemma~\ref{lem:prefactor-evaluation}, projecting radially onto
+the radius-$\sqrt2$ ball after each approximate map.
+Projection is nonexpansive and fixes the true state, so errors
+add across the $O_t(\log R)$ maps. Its arithmetic uses a
+reciprocal only above the fixed positive radius threshold and
+has constant threshold depth at the required precision.
+Distance tests run in parallel. Size is polynomial and
+threshold depth logarithmic; the previous Boolean majority
+simulation gives squared-logarithmic depth.
+\end{proof}
+
+We state the finite-width target-mass input explicitly.
+The companion scale-change construction
+\cite[Proposition \texttt{prop:long} and the Fourier-seed
+section]{uniformtargets} shows that for
+$R_g=d+L+A_F(g)+2$, $L\ge C\log R_g$, $N\ge R_g^C$,
+and $0<t\le1$, the raw probability of the original strict
+global-margin event for $g$ is at least
+\begin{equation}
+ \exp\left[-N\left\{
+ Hc_t+V_*+C\left(a\log R_g+\frac{\log^2R_g}{H}\right)
+ \right\}\right].
+ \label{eq:prefactor-target-mass}
+\end{equation}
+Its constants are independent of $t$. This is an explicit
+finite-width target construction, not a rate-limit assertion.
+As at criticality, target mass is an analytic input; the
+extraction and parallelization arguments here are separate.
+
+\begin{theorem}[Fixed-prefactor full-cube posterior ceiling]
+\label{thm:prefactor-ceiling}
+Fix $0<t<1$, and let $R_0=d+n+L+2$, $d,n\ge1$ and
+$L\ge C\log R_0$. Define
+\[
+ A_0=Hc_t+V_*+
+ C\left(a\log R_0+\frac{\log^2R_0}{H}\right),\quad H=L-1.
+\]
+There are constants $C_t,K_t$ such that at every
+\[
+ N\ge2^{C_t d}R_0^{C_t}+C_tH\log(1/\beta),\quad0<\beta<1,
+\]
+the original posterior at $\sigma^2=t^2/N$ gives mass at least
+$1-\beta$, simultaneously for every consistent sample of at
+most $n$ points, to the sample-independent class
+\[
+ \mathcal G_t=\{g:J_{t,L}(g)\le A_0+K_t/H\}.
+\]
+Every member has threshold size $R_0^{O_t(1)}$ and depth
+$O_t(\log R_0)$.
+\end{theorem}
+\begin{proof}
+The sample memorizer from
+Theorem~\ref{thm:critical-ceiling} has Fourier variation at
+most $1+2n$. Equation~\eqref{eq:prefactor-target-mass} bounds
+the conditioning denominator below by $e^{-NA_0}$.
+
+Lemma~\ref{lem:critical-dual-certificate} applies unchanged
+with references $\mathcal N(0,t^2Q)$ and readout cost $r_t$.
+Hidden observables remain bounded; given them the readout has
+covariance $t^2Q_H/N$ and
+$\E e^{(1-s)Nr_t}\le s^{-m/2}$. Its width formula is unchanged.
+Consistent-path transfer now has recurrence
+$e_j\le\alpha_j e_{j-1}+\sqrt{m\Delta}$ and final multiplier
+$\sqrt{2t^2r_t}$. For total cost $B=O_t(H+\log R_0)$,
+each $\alpha_j=t\sqrt{\Gain(D_j)}$ is polynomial in $B+1$.
+Suffix products may be larger, but their logarithms are at
+most $O_t(H\log(B+2))$. Hence a tolerance with
+\[
+ \log(1/\Delta)\le
+ C_t\{d+H\log(B+2)+\log(H(B+2))\}
+\]
+makes the output error at most
+$\rho=[C_tH(B+1)]^{-1}$. The embedding and data-processing
+proof of Lemma~\ref{lem:critical-consistent-transfer}
+preserves the action. Readout scaling by $(1-2\rho)^{-1}$
+restores margin $1/2$ and adds $O_t(1/H)$ action.
+
+Consider the bad raw event of globally margined draws with
+rate above $A_0+K_t/H$. If its probability were at least
+$e^{-N(A_0+1/H)}$, use the full-cube certificate with
+$m=2^d$, $\tau=1/H$ and the preceding tolerance.
+Its width requirement is at most $2^{C_t d}R_0^{C_t}$.
+The repaired path would give a bad function action at most
+$A_0+K'_t/H$, contradicting $K_t>K'_t$.
+The bad raw mass is therefore less than $e^{-N(A_0+1/H)}$.
+Division by the denominator gives posterior bad mass at most
+$e^{-N/H}\le\beta$.
+
+Since $A_0-Hc_t=O_t(\log R_0)$ under the depth condition,
+Theorem~\ref{thm:prefactor-normal-form}, applied within $1/H$
+of each rate infimum, supplies uniform circuit bounds.
+No attainment assumption is needed.
+\end{proof}
+
+\begin{corollary}[Fixed-prefactor sample-to-circuit converse]
+\label{cor:prefactor-converse}
+Fix $0<t<1$, $0\le\varepsilon<1/2$, and
+$\kappa=1-2\varepsilon$. Let $L\ge C\log R_0$,
+$R_0=d+n+L+2$, and fix one width above the preceding
+ceiling with $\beta=1/6$. If every input law gives positive
+probability to an $n$-sample with confidence-failure mass at
+most $\varepsilon$, at $\sigma^2=t^2/N$, then $f$ has
+threshold size polynomial in $R_0+\kappa^{-1}$ and depth
+$O_t(\log R_0)$. Its Boolean depth is
+$O_t(\log^2R_0+\log(\kappa^{-1}+2))$, with polynomial size.
+\end{corollary}
+\begin{proof}
+Use the two-majority and minimax proof of
+Theorem~\ref{thm:converse} with the fixed class $\mathcal G_t$.
+The width is chosen before the input law, the ceiling is
+simultaneous over all samples, and
+Theorem~\ref{thm:prefactor-normal-form} supplies the uniform
+voter circuit bounds.
+\end{proof}
+
+\begin{corollary}[Uniformity away from the critical prefactor]
+\label{cor:prefactor-uniform}
+Fix $0<t_0<1$. The structural theorem holds uniformly for
+$0<t\le t_0$ with resource
+\[
+ R=(d+H+t^2A+2)\exp(E/a).
+\]
+The posterior ceiling and sample converse hold uniformly on this
+same range: their polynomial exponents and width constants depend
+only on $t_0$, if the ceiling class is replaced by
+\[
+ \mathcal G_t^{\,\mathrm{unif}}
+ =\{g:J_{t,L}(g)\le A_0+K/(t^2H)\}.
+\]
+In particular the finite-width threshold can be chosen as
+$2^{C_{t_0}d}R_0^{C_{t_0}}+C_{t_0}H\log(1/\beta)$,
+independently of $t$.
+\end{corollary}
+\begin{proof}
+Put $Q=t^2A$ and retain the entropy upper gains from
+Lemma~\ref{lem:prefactor-anchors}. Use layer-dependent entropy
+cutoffs $\eta_j=\eta\Gain(D_j)$. Their total anchor count is
+at most
+\[
+ \sum_j\frac{D_j}{\eta\Gain(D_j)}
+ \le\frac{H}{2\eta},
+\]
+because $D/\Gain(D)\le1/2$. The normalized conditional
+transport error is now
+$2(t/\alpha_j)\sqrt{\eta_j}=2\sqrt\eta$.
+Take $\rho_0=c/[H(1+Q)]$. Since $W^2\le2Q$ and
+$\Gamma\le e^{E/a}$, the required $\eta^{-1}$ and readout
+projection count are polynomial in the displayed $R$,
+uniformly in $t$. Readout repair adds at most
+$CA\rho_0\le C/(t^2H)$ action and at most doubles its norm.
+The cover still charges the original hidden costs, so this
+norm factor is the only change needed in
+\eqref{eq:prefactor-prefix-error}.
+
+As a function of $a$, $\delta$ has $\delta(0)=0$ and
+$\delta''(a)=1/[2(a+1)(a+2)]>0$. Thus $\delta(a)/a$ is
+increasing and bounded below by its positive value at
+$a_0=t_0^{-2}-1$. The mixed cover error is bounded by
+$\sqrt2W'\exp(E/a-j\delta_t/a)$, and $O_{t_0}(\log R)$
+layers suffice. The arbitrary-scale evaluator requires no
+additional bound involving $t^{-1}$.
+
+For the statistical assertion, the target budget satisfies
+\[
+ t^2A_0\le C(H+\log R_0+1),\qquad
+ \frac{A_0-Hc_t}{a}\le C_{t_0}\log R_0.
+\]
+These bounds persist after addition of $K/(t^2H)$, since
+$(t^2a)^{-1}=(1+a)/a\le1+a_0^{-1}$.
+In the finite-event certificate take
+$\tau=1/(t^2H)$ and event budget $B=A_0+\tau$.
+Then $B/\tau=Ht^2B$ is polynomial in $R_0$ and
+$1/\tau=t^2H\le H$. Transfer gains satisfy
+$\alpha_j^2\le4t^2B+2$, and the readout norm is at most
+$\sqrt{2t^2B}$. With repair tolerance
+$\rho=c/[H(1+t^2B)]$, the required
+$\log(1/\Delta)$ has a polynomial bound independent of $t$.
+The certificate's width bound is therefore uniform, and
+readout repair adds $O(1/(t^2H))$ action.
+
+The bad-event contradiction now uses raw threshold
+$\exp[-N(A_0+1/(t^2H))]$ and bad rate
+$A_0+K/(t^2H)$. Its posterior mass is at most
+$e^{-N/(t^2H)}\le e^{-N/H}$. The structural resource of
+every retained function is polynomial in $R_0$, with constants
+depending only on $t_0$. The same two-majority argument proves
+the uniform sample converse.
+\end{proof}
+
+Thus arbitrarily small prefactors do not cause a loss of uniformity
+on a range bounded away from one. A prescribed prefactor may vary
+with dimension or width within that range. The direct spectral
+proof deteriorates at $t\to1$; the next section resolves that
+boundary by combining block covering with critical parallelization.
+
+\section{Uniform parallelization across the critical boundary}
+\label{sec:uniform-prefactor}
+
+We now remove the remaining dependence on a prefactor approaching
+one. The spectral argument alone would retain $O(S/a)$ layers
+and could create $2^{O(S/a)}$ representatives. Instead we cover
+blocks of $O(1/a)$ physical layers with a constant number of
+balls. A low-entropy prefix then has only $O(S)$ such blocks,
+and the critical parallel iteration evaluates the whole prefix.
+
+\begin{theorem}[Uniform near-baseline parallelization]
+\label{thm:uniform-normal-form}
+Fix a numerical constant $K_0$. There are constants $C_0,C$,
+depending only on $K_0$, such that the following holds for
+every $0<t\le1$. Suppose a full-cube path for $f$ has signed
+margin $1/2$ and
+\[
+ A\le Hc_t+V_*+K_0\left(aS+\frac{S^2}{H}\right),
+ \quad S\ge1+\log(d+H+2),\quad H\ge C_0S,
+\]
+where $a=t^{-2}-1$ and $c_t=(a-\log(1+a))/2$.
+Then $f$ has threshold size $\exp(CS)$ and depth $CS$.
+Its Boolean size is $\exp(CS)$ and depth at most $CS^2$.
+All constants are independent of $t$.
+\end{theorem}
+
+\subsection{Adjusted costs and a controlled prefix}
+
+We first supply the scalar estimates used in its proof. The
+critical value $V$ is nonincreasing: starting from a larger
+variance, use the same standardized law at each scalar step.
+This preserves its entropy cost and increases every subsequent
+variance by monotonicity of $\tanh^2$ under dilation. The
+terminal readout cost decreases. Taking infima proves the claim.
+
+Put $q_j=\max_xQ_j(x,x)$, $q_0=(d+1)/d$, and
+\[
+ e_j=D_j-c_t-\frac a2\log(q_j/q_{j-1}),\qquad
+ r_1=t^2r_t.
+\]
+All query variances are positive, since zero variance would
+propagate at finite entropy and preclude a nonzero final output.
+At a query attaining $q_j$, let its preceding variance be
+$p\le q_{j-1}$ and put $M=\E G_x^2/p$. The scalar reference
+identity is
+\[
+ D_t(\eta)=D_1(\eta)+c_t+\frac a2(M-1).
+\]
+Since $q_j\le Mp$, the difference between $e_j$ and this
+query's critical scalar entropy is nonnegative. Monotonicity of
+$V$ and of $p-cp^2$ therefore gives
+\begin{equation}
+ e_j\ge0,\quad
+ e_j\ge V(q_{j-1})-V(q_j),\quad
+ e_j\ge q_j-q_{j-1}+cq_{j-1}^2.
+ \label{eq:uniform-adjusted}
+\end{equation}
+Moreover
+\[
+ \widetilde A:=\sum_j e_j+r_1
+ =A-Hc_t-\frac a2\log(q_H/q_0)-ar_1
+ \le A-Hc_t+a.
+\]
+The last inequality follows from
+$r_1\ge1/(8q_H)$ and
+$\tfrac12\log(q_H/2)+1/(8q_H)\ge-1$.
+Consequently, for $\epsilon=C_{K_0}(aS+S^2/H)$,
+\begin{equation}
+ \widetilde A\le V_*+\epsilon,\qquad
+ \sum_{j\le i}e_j\le\epsilon+Cq_i.
+ \label{eq:uniform-prefix-budget}
+\end{equation}
+The latter follows by telescoping the Bellman inequalities over
+the suffix and using $r_1\ge V(q_H)$.
+
+Use the original entropy upper gains
+\[
+ \alpha_j=t\sqrt{\Gain(D_j)},\quad
+ P_j=\prod_{i\le j}\alpha_i,\quad P_0=1,\quad
+ \Gamma=P_H,\quad g_j=\log\alpha_j.
+\]
+Their exact inverse relation gives
+\begin{equation}
+ D_j-c_t=ag_j+
+       \frac{1+a}{2}(e^{2g_j}-1-2g_j),\qquad
+ 0\le h_j:=D_j-c_t-ag_j\le e_j.
+ \label{eq:uniform-gain-remainder}
+\end{equation}
+Here $q_j/q_{j-1}\le\alpha_j^2$ proves the last inequality.
+
+\begin{lemma}[Uniform gain and last-exit bounds]
+\label{lem:uniform-gain-prefix}
+Under the hypotheses of Theorem~\ref{thm:uniform-normal-form},
+$\Gamma\le e^{CS}$ and $t^2A\le CH$. For $0<a\le1/4$,
+the last index $\tau$ with $q_\tau\le a$ satisfies
+\[
+ H-\tau\le C(\epsilon/a^2+1/a).
+\]
+If no such index exists, the same bound holds for $H$.
+\end{lemma}
+\begin{proof}
+Write $u_j=\log(q_j/q_{j-1})$. When $u_j>0$,
+the critical entropy dominated by $e_j$ and Gaussian
+second-moment duality imply $e_j\ge u_j^2/4$.
+Thus $u_j\le2\sqrt{e_j}$. If $g_j>\sqrt{e_j}\ge0$,
+the nonnegative remainder in
+\eqref{eq:uniform-gain-remainder} is at least
+$(1+a)g_j^2$, contradicting
+$D_j-c_t=au_j/2+e_j$.
+Hence $g_j\le\sqrt{e_j}$. The critical occupation proof,
+using \eqref{eq:uniform-adjusted}--\eqref{eq:uniform-prefix-budget},
+gives
+\[
+ \sum_jg_j\le C\log(H+2)+C\sqrt{H\epsilon}.
+ \tag{*}
+\]
+There is also the telescoping tangent inequality
+$g_j\le u_j/2+e_j/a$.
+
+For clarity, its complementary last-exit estimate is
+\[
+ \sum_jg_j\le C\{1+\log(1/a)+\epsilon/a\},
+ \qquad 0<a<1/4,\quad\epsilon<1/4.
+ \tag{**}
+\]
+To verify it, put $m=\min_iq_i$ and start dyadic thresholds
+at $b=\max(a,m)$. If $m\le a$, the gain through the last
+state below $a$ is at most $C+\epsilon/a$ by the tangent
+inequality and the prefix budget. If $m>a$, the reciprocal
+occupation bound proved in the critical section gives initial
+length at most $C(\epsilon/m^2+1/m)$ and cost at most
+$\epsilon+Cm$; Cauchy--Schwarz bounds its gain by
+$C(1+\epsilon/m)$. Between the last exits below $u$ and
+$2u$, remove one initial transition. Pre-states exceed $u$,
+the final state is at most $2u$, and the cost is at most
+$\epsilon+2Cu$. Reciprocal occupation and Cauchy--Schwarz
+give length $C(\epsilon/u^2+1/u)$ and gain
+$C(1+\epsilon/u)$. Sum geometrically up to a fixed positive
+threshold; the remaining tail has bounded length and gain.
+The same occupation calculation starting at threshold $a$
+proves the asserted last-exit length, without requiring small
+$\epsilon$. If $m>a$, include the initial minimum-state
+prefix. This also covers the case with no state below $a$.
+
+For the required gain, if $a\le S/H$, use (*) to obtain
+$CS$. Otherwise $\epsilon/a\le CS$ and $a\ge1/H$.
+If $\epsilon\ge1/4$ or $a\ge1/4$, the whole-path tangent
+bound $(V_*+\epsilon)/a$ is $O(1+\epsilon/a)$ in the
+respective case. In the remaining case use (**), with
+$\log(1/a)\le\log H\le S$. This proves the uniform gain.
+Finally $t^2c_t\le1/2$, $t^2a\le1$, and $S\le H/C_0$
+give $t^2A\le CH$.
+\end{proof}
+
+We prove Theorem~\ref{thm:uniform-normal-form}. At $t=1$ use
+Theorem~\ref{thm:critical-normal-form}; at $a\ge1/4$ use
+Corollary~\ref{cor:prefactor-uniform}, whose resource has
+logarithm $O(S)$. Hence suppose $0<a<1/4$.
+
+Choose a large fixed $K$ below and set $J=\lceil KS/a\rceil$.
+If $H\ge K_HS/a$, where $K_H$ is sufficiently large compared
+with $K$ and the last-exit constants, then $J\le\tau$ and
+\begin{align}
+ E_{\rm pre}:=\sum_{j\le J}e_j&\le C_eaS,\nonumber\\
+ D_{\rm pre}:=\sum_{j\le J}D_j
+ &\le Jc_t+C_eaS=O_K(aS),&
+ \sum_{j\le J}\sqrt{D_j}&=O_K(S).
+ \label{eq:uniform-prefix-cost}
+\end{align}
+The constant $C_e$ is independent of $K$, since
+$S^2/H\le aS/K_H$ and $q_J$ is controlled by the last-exit
+prefix budget. More precisely, nonnegativity gives
+$E_{\rm pre}\le\sum_{j\le\tau}e_j\le\epsilon+Ca$.
+Also $q_J\le1\le q_0$, so the telescoping logarithm in
+$D_{\rm pre}$ is nonpositive.
+
+We need the sharper variance estimate
+\begin{equation}
+ \sum_{j<J}q_j\le C\log(J+2)+C\sqrt{JE_{\rm pre}}
+                  \le C(1+\sqrt K)S.
+ \label{eq:uniform-prefix-occupation}
+\end{equation}
+The forced-cooling comparison from the critical proof works for
+arbitrary total forcing by taking
+$r_{j+1}=r_j-cr_j^2$ and
+$s_{j+1}=\min\{1,s_j-cs_j^2+e_{j+1}\}$.
+On a capped step $q_{j+1}\le1\le r_{j+1}+s_{j+1}$.
+On an uncapped step, monotonicity and subadditivity of
+$u-cu^2$ on $[0,3]$ preserve $q_j\le r_j+s_j$.
+Capping preserves $c\sum s_j^2\le\sum e_j$.
+Now $\sum r_j=O(\log(J+2))$ and Cauchy--Schwarz give
+\eqref{eq:uniform-prefix-occupation}.
+
+If instead $H<K_HS/a$, then
+$A\le V_*+C_{K_H}S^2/H$.
+The full critical canonical/Picard proof applies to the raw
+subcritical costs with uniform constants. Indeed its scalar
+Bellman comparison is trivial when the next variance is no
+larger; when it is larger, $M>1$ in the reference identity
+and $D_t\ge D_1$. Its raw dissipation is
+\[
+ D_t\ge q-t^2p+ct^4p^2\ge q-p+c'p^2
+\]
+since $t^2\ge4/5$. Gaussian gains are at most the critical
+gains, and the residual estimate after substituting $g=t\xi$
+is at most $C(p+\sqrt{D_t})$. The readout cost also dominates
+the critical cost. Thus the occupation, anchor and Picard
+proof gives size $\exp(CS)$ and depth $CS$ in this short
+regime. It remains to treat the long prefix above.
+
+\subsection{Gaussian and non-Gaussian row costs}
+
+Write $W=\sqrt{2t^2r_t}$. Besides $W\Gamma\le e^{CS}$,
+the absolute margin bounds every partial normalization:
+\begin{equation}
+ P_j\le2W\Gamma\le e^{CS}\qquad(j\ge1).
+ \label{eq:uniform-partial-gain}
+\end{equation}
+Indeed $q_H(x)\le q_j(x)(\Gamma/P_j)^2$,
+$q_j(x)\le1$, and $1/2\le W\sqrt{q_H(x)}$.
+Perform the adaptive normalized anchor replacement from
+Corollary~\ref{cor:prefactor-uniform}, using the original
+$\alpha_j$. Take readout tolerance
+$\rho=c/[H(1+t^2A)]$ and choose the entropy cutoff parameter
+$\eta$ small enough that
+\[
+ W\Gamma CH\sqrt\eta\le\rho,\qquad
+ CH\sqrt\eta\max_jP_j\le H^{-2}.
+\]
+The inverse cutoff, anchor count, and canonical dimensions are
+all $\exp(O(S))$. The genuine replaced path has maximum
+diagonals $\widehat q_j$ satisfying
+\begin{equation}
+ \sum_{j<J}\widehat q_j\le\sum_{j<J}q_j+C.
+ \label{eq:uniform-variance-transfer}
+\end{equation}
+This follows from
+$|\sqrt{\widehat q_j}-\sqrt{q_j}|\le H^{-2}$ and bounded
+hidden variances. Its repaired readout has norm $W'\le2W$.
+The added action $O(1/(t^2H))$ is absorbed by the theorem's
+budget after increasing $K_0$.
+
+For any original controlled Gaussian row, decompose its entropy
+using its full second moment $\Sigma$:
+\[
+ D=J_{\rm ng}+C_{\rm g},\qquad
+ J_{\rm ng}=\KL(\rho\Vert\mathcal N(0,\Sigma)),\qquad
+ C_{\rm g}=\sum_iF_t(\lambda_i(\Sigma)).
+\]
+At the query attaining $q_j$, the Gaussian cost is at least
+$F_t(M)$, with $q_j/q_{j-1}\le M$.
+The tangent inequality for $F_t$ implies
+$J_{{\rm ng},j}^{\rm original}\le e_j$.
+Anchor replacement does not increase this non-Gaussian entropy.
+To see this, split Gaussian coordinates orthogonally into the
+anchor span and its complement. The replaced law is its
+controlled anchor marginal times an independent free Gaussian.
+Its matching Gaussian has the same product form, so its
+$J_{\rm ng}$ equals that of the anchor marginal.
+Data processing of the original law and its matching Gaussian
+proves the inequality. Changed kernels with exact anchor block
+alter only the isometric realization and the free complement.
+The conclusion therefore persists in canonical coordinates.
+For the canonical row costs we have
+\begin{equation}
+ J_{{\rm ng},j}+C_{{\rm g},j}\le D_j,\qquad
+ \sum_{j\le J}J_{{\rm ng},j}\le C_eaS.
+ \label{eq:uniform-ng-budget}
+\end{equation}
+
+\subsection{Blocks with a constant number of representatives}
+
+For a physical canonical map $F_j$, let $A_j$ be its linear
+part, obtained from the retained Gaussian coordinate functions.
+Then $A_j^TA_j=\Sigma_j$. Its polar decomposition gives
+\[
+ A_j=tU_j(I+B_j),\qquad
+ \norm{B_j}_{\rm HS}^2\le2C_{{\rm g},j},
+\]
+where $U_j$ is an isometry. The last inequality is
+$(\sqrt\mu-1)^2\le\mu-1-\log\mu$ summed over eigenvalues.
+For a block of $b$ layers, telescoping yields
+\begin{equation}
+ A_{\rm block}=t^bU_{\rm block}+E_{\rm block},\qquad
+ \norm{E_{\rm block}}_{\rm HS}
+ \le e^{\sqrt{2bC_{\rm g,block}}}
+                   \sqrt{2bC_{\rm g,block}}.
+ \label{eq:uniform-block-linear}
+\end{equation}
+This holds also for increasing rectangular dimensions, since
+products of the $U_j$ remain isometries.
+
+The nonlinear residual $N_j=F_j-A_j$, on its physical state
+ball of squared radius $\widehat q_{j-1}$, satisfies
+\begin{equation}
+ \Lip(N_j)\le C\sqrt{\lambda_j}
+       \bigl(\lambda_j\widehat q_{j-1}+
+                         \sqrt{J_{{\rm ng},j}}\bigr),
+ \qquad\lambda_j=\norm{\Sigma_j}_{\rm op}.
+ \label{eq:uniform-matched-residual}
+\end{equation}
+Whiten by the matching Gaussian, $g=\Sigma_j^{1/2}\xi$.
+The law of $\xi$ has entropy $J_{{\rm ng},j}$ relative to
+a standard Gaussian. The residual moment estimate in
+Lemma~\ref{lem:critical-canonical}, followed by composition
+with $\Sigma_j^{1/2}$, proves
+\eqref{eq:uniform-matched-residual}. The canonical residual
+projection is a Hilbert-space contraction.
+
+Set $b=\lceil c/a\rceil$, with a large fixed $c$, and call a
+full block Gaussian-good if
+$C_{\rm g,block}\le r_0a$. Then
+$bC_{\rm g,block}\le(c+1/4)r_0$, so
+\eqref{eq:uniform-block-linear} has a fixed bound $M_0$.
+Every subproduct of the actual linear gains has a fixed
+bound too, since
+$\sum_{\rm block}\sqrt{C_{{\rm g},j}}
+\le\sqrt{bC_{\rm g,block}}$.
+Telescoping $F_{\rm block}-A_{\rm block}$ on pairs of
+\emph{actual query states} gives
+\[
+ \Lip(N_{\rm block})\le C_{\rm block}
+       \sum_{\rm block}
+       (\widehat q_{j-1}+\sqrt{J_{{\rm ng},j}}).
+ \tag{\(\dagger\)}
+\]
+All intermediate states for these pairs lie in the balls
+used in \eqref{eq:uniform-matched-residual}; both the full
+and linear maps have gain at most $\sqrt{\lambda_j}$.
+No ambient-ball assertion about this residual is needed.
+
+Choose $c$ so large that
+\[
+ \sigma_0=e^{-c/(2(1+1/4))}
+   < B_0/32,\qquad B_0=e^{-(c+1/4)/4-1}.
+\]
+Since $c_t\le a^2/4$, for every block cost
+$D_{\rm block}=\sum_{\rm block}D_j$,
+\[
+ t^b\le\sigma_0,\qquad
+ \exp((D_{\rm block}-bc_t)/a-1)\ge B_0.
+\]
+In \eqref{eq:uniform-block-linear}, truncate singular values
+of $E_{\rm block}$ below a sufficiently small fixed multiple
+of $B_0$. The retained rank is bounded by a constant depending
+only on $c,r_0$. A volumetric net for that fixed-rank ellipsoid
+therefore covers the image of any radius-$r$ ball under
+$A_{\rm block}$ by at most $M_{\rm cover}$ balls of radius
+$B_0r/8$, where $M_{\rm cover}$ is an absolute constant.
+The free isometry contributes at most $\sigma_0r$,
+and the discarded operator and net errors each contribute
+a sufficiently small fixed multiple of $B_0r$.
+
+Also call a block nonlinear-good if
+\[
+ \sum_{\rm block}
+ (\widehat q_{j-1}+\sqrt{J_{{\rm ng},j}})\le\eta_{\rm nl},
+\]
+where $\eta_{\rm nl}>0$ is fixed so that
+(\(\dagger\)) is at most $B_0/16$. In each nonempty linear
+cover cell select an actual query state. Two such states
+within the original cluster have distance at most $2r$,
+their linear images differ by at most $B_0r/4$, and their
+nonlinear remainders differ by at most $B_0r/8$.
+Thus the true outputs have an actual-representative cover of
+radius at most
+\begin{equation}
+ \frac{B_0r}{2}
+ \le r\exp((D_{\rm block}-bc_t)/a-1),
+ \label{eq:uniform-good-block}
+\end{equation}
+with at most $M_{\rm cover}$ cells. The selection of actual
+representatives is what permits the restricted estimate
+(\(\dagger\)). On any bad block, simply propagate the
+existing center and use the global one-ball gain
+$\exp((D_{\rm block}-bc_t)/a)$.
+Treat the final incomplete block the same way.
+
+There are $M=\lfloor J/b\rfloor$ full blocks, with
+$M\ge KS/[2(c+1/4)]$ after increasing $K$.
+By \eqref{eq:uniform-prefix-cost}, at most
+$(K/4+C_e+1)S/r_0$ are Gaussian-bad.
+Choose $r_0$ sufficiently large compared with $c$.
+Equations \eqref{eq:uniform-prefix-occupation},
+\eqref{eq:uniform-variance-transfer} and
+\eqref{eq:uniform-ng-budget} give
+\[
+ \sum_{j\le J}
+ (\widehat q_{j-1}+\sqrt{J_{{\rm ng},j}})
+ \le C(1+\sqrt K)S.
+\]
+After $c,r_0,\eta_{\rm nl}$ are fixed, choose $K$ large
+enough that each type of bad block accounts for at most
+$M/4$. At least $KS/[4(c+1/4)]$ blocks are good.
+Finally choose $K_H$ to validate the long-prefix selection.
+This order of choices involves no problem parameter.
+
+Start with an actual cube state and radius $2\sqrt2$.
+Multiplying good and bad block gains and dividing the prefix
+state by $P_J$ gives normalized cover radius at most
+\[
+ 2\sqrt2\exp\left(\frac{\sum_{j\le J}h_j}{a}
+                      -G_{\rm good}\right)
+ \le2\sqrt2\exp(C_eS-G_{\rm good}).
+\]
+Enlarge fixed $K$ so the subsequent readout multiplier
+$W'\Gamma\le e^{CS}$ leaves output uncertainty at most
+$1/64$. The number of stored representatives is
+$M_{\rm cover}^M=\exp(O(S))$, since $M=O(S)$.
+Every stored normalized center is an actual cube state,
+of norm at most $\sqrt2$. The normalized suffix has output
+Lipschitz constant at most $W'\Gamma$. Opposite labels
+are separated by $1/(W'\Gamma)$, so the same distance
+classifier as before is exact at inverse-exponential-in-$S$
+coordinate accuracy.
+
+\subsection{Parallel evaluation and the finite-width consequence}
+
+The prefix may contain $J\gg S$ layers, but
+\eqref{eq:uniform-prefix-cost} and
+\eqref{eq:uniform-prefix-occupation} give
+\[
+ \sum_{j\le J}\sqrt{D_j}+
+ \sum_{j<J}\widehat q_j=O_K(S).
+\]
+The raw-reference residual estimate is
+$\Lip(F_j-A_j)\le C(\widehat q_{j-1}+\sqrt{D_j})$.
+After normalization by $P_j$, divide by
+$\alpha_j\ge t\ge\sqrt{4/5}$; its total Lipschitz budget
+is still $O(S)$ and the linear maps are contractions.
+Extend each residual by radial projection onto its actual
+normalized state ball. Floor that radius at $e^{-C_1S}$.
+By \eqref{eq:uniform-partial-gain}, the total increase in
+physical squared radii is at most
+$H e^{CS}e^{-2C_1S}$, made at most one by fixed large $C_1$.
+This adds only a constant to the residual budget and leaves
+all actual states unchanged.
+
+Precompute all interval products of the linear contractions
+and apply the strict-causal Picard iteration from
+Theorem~\ref{thm:critical-normal-form}. Its remainder is
+bounded by $C\Lambda^k/k!$, with $\Lambda=O(S)$, and
+uniform evaluation errors are amplified by at most
+$e^\Lambda$. Thus $O(S)$ iterations suffice at
+$e^{-CS}$ primitive accuracy.
+All time indices and state dimensions are polynomial in
+$e^S$. Lemma~\ref{lem:prefactor-evaluation} evaluates each
+normalized canonical map at constant threshold depth,
+independently of small $P_j$; subtracting its bounded linear
+part and projecting supplies the residual evaluator.
+Appending the parallel distance tests proves
+Theorem~\ref{thm:uniform-normal-form}.\hfill$\square$
+
+\begin{theorem}[Uniform actual-posterior circuit ceiling]
+\label{thm:uniform-ceiling}
+There are universal positive constants
+\[
+ C_{\mathrm{mass}},\quad C_{\mathrm{pad}},\quad C_{\mathrm{width}},
+ \quad C_{\mathrm{circ}},\quad K
+\]
+with the following property.
+Put $R_0=d+n+L+2$ and suppose
+$L\ge C_{\mathrm{pad}}\log R_0$.
+For every $0<t\le1$, define
+\[
+ A_0=Hc_t+V_*+
+ C_{\mathrm{mass}}\left(a\log R_0+\frac{\log^2R_0}{H}\right).
+\]
+At every actual width
+\[
+ N\ge2^{C_{\mathrm{width}}d}R_0^{C_{\mathrm{width}}}
+       +C_{\mathrm{width}}H\log(1/\beta),\qquad0<\beta<1,
+\]
+and every consistent sample of at most $n$ points, the
+original posterior at $\sigma^2=t^2/N$ gives mass at least
+$1-\beta$ to
+\[
+ \{g:J_{t,L}(g)\le A_0+K/(t^2H)\}.
+\]
+Every such function has threshold size at most $R_0^{C_{\mathrm{circ}}}$
+and depth at most $C_{\mathrm{circ}}\log R_0$.
+The mass-budget constant is fixed before choosing the padding, width,
+and circuit-resource constants; increasing a resource constant does
+not enlarge the defining rate class.
+Thus one common class of circuits with those resources is
+a posterior ceiling class for all $t,N$ in the assertion.
+\end{theorem}
+\begin{proof}
+Use the uniform target mass
+\eqref{eq:prefactor-target-mass} for the sample memorizer.
+The finite-event argument of
+Corollary~\ref{cor:prefactor-uniform} was uniform in
+extraction, without requiring separation from $t=1$:
+take normalized action $Q=t^2A$, slack
+$\tau=1/(t^2H)$, and repair tolerance
+$c/[H(1+Q)]$. The certificate ratios
+$A/\tau=HQ$ and $1/\tau=t^2H\le H$, transfer gains
+$\alpha_j^2\le4Q+2$, readout norm, and
+$\log(1/\Delta)$ all have uniform polynomial bounds.
+The raw-event contradiction gives exceptional posterior
+mass at most $e^{-N/(t^2H)}\le e^{-N/H}$.
+The repaired rate threshold differs from $A_0$ by
+$O(1/(t^2H))$, which is absorbed by
+$C(aS+S^2/H)$ for $S=C'\log R_0$.
+Theorem~\ref{thm:uniform-normal-form} now gives uniform
+circuit resources, including for paths approaching a rate
+infimum. The class of all circuits with these resource
+bounds is independent of $t$ and of the sample.
+\end{proof}
+
+\begin{corollary}[Uniform sample-to-parallel-circuit converse]
+\label{cor:uniform-converse}
+Let $0\le\varepsilon<1/2$, $\kappa=1-2\varepsilon$,
+$R_0=d+n+L+2$, and assume the padding hypothesis of
+Theorem~\ref{thm:uniform-ceiling}.
+Fix one width above that theorem's
+threshold with $\beta=1/6$, and any $0<t\le1$.
+If every input law has positive probability of an
+$n$-sample with confidence-failure mass at most
+$\varepsilon$, then $f$ has threshold size polynomial
+in $R_0+\kappa^{-1}$ and depth $O(\log R_0)$.
+Its Boolean depth is
+$O(\log^2R_0+\log(\kappa^{-1}+2))$, with polynomial size.
+The constants do not depend on $t$.
+\end{corollary}
+\begin{proof}
+Apply the two-majority and minimax proof of
+Theorem~\ref{thm:converse} to the common circuit class
+from Theorem~\ref{thm:uniform-ceiling}.
+Choose the one width and its actual prefactor before
+the input law. The ceiling is simultaneous over samples
+and its threshold is independent of the prefactor.
+\end{proof}
+
+\section{A universal polynomial bound would imply a collapse}
+
+\begin{lemma}[Bounded-weight tanh teachers for Boolean circuits]
+\label{lem:boolean-teacher}
+Every bounded-fan-in Boolean circuit of size $s$ on $d$ inputs has a
+tanh representation with global signed output margin greater than
+one, depth and width polynomial in $d+s$, and every physical weight
+an integer of absolute value at most $20$. It has no biases after its augmented
+input.
+\end{lemma}
+\begin{proof}
+Use $\{-1,1\}$ wire values. AND, OR, NOT, and COPY have respective
+affine forms
+\[
+ u+v-1,\qquad u+v+1,\qquad -u,\qquad u,
+\]
+of absolute margin at least one on Boolean inputs. Process gates in
+topological order, retaining all earlier values by copy gates; this
+gives width $O(d+s)$ and depth $O(d+s)$, with one initial layer if
+needed to encode input wires. Replace each gate by tanh of ten times
+its affine form. If every incoming value is within $1/100$ of its
+intended sign, the affine perturbation is at most $3/100$, and the
+new sign error is at most $2e^{-19.4}<1/100$. Thus errors do not
+accumulate through the depth.
+
+Implement each affine constant with a separate wire of intended
+value $+1$, initialized as $\tanh(10)$ from the augmented constant
+input and propagated by the same COPY map. Include its error in
+the preceding $3/100$ perturbation bound. Its gate coefficient is
+$\pm10$. Duplicate logical wire copies when needed so repeated
+gate inputs use separate coordinates; this changes width by only
+a constant factor. All hidden weights are then integers of
+absolute value at most ten. This also handles constant Boolean
+circuits. Finish with twice the encoded output as a linear
+readout. Its signed margin exceeds $1.98$. Pad with copy layers if
+necessary to obtain weighted depth at least three.
+
+For every larger common width $N$, pad all hidden layers by zero
+neurons and use zero readout weights on them. Since $\tanh(0)=0$,
+this preserves the classifier, depth, and margin. On the finite
+cube, continuity gives an open parameter neighborhood with the
+same strict margin. Every nondegenerate Gaussian prior assigns
+that neighborhood positive probability, so these widths are
+realizable at every finite positive scale.
+\end{proof}
+
+\begin{corollary}[Joint polynomial learning implies $\Ppoly=\TC^1$]
+\label{cor:collapse}
+Fix any prescribed prefactor schedule $0<t=t(d,L,N)\le1$,
+chosen independently of the input law and the observed sample.
+Suppose there is one polynomial sample bound jointly
+in $d,C,L,\varepsilon^{-1},\log(2/\delta)$ with the following property.
+Every Boolean target admitting a depth-$L$, width-at-most-$C$ tanh
+teacher with weights bounded by $C$ and global signed margin greater
+than $1/2$ is learned by the original posterior at scale
+$\sigma^2=t(d,L,N)^2/N$, for every input law and every integer
+$N\ge C$. The guarantee is that confidence-failure mass is at most
+$\varepsilon$ with sample probability at least $1-\delta$.
+Then
+\[
+ \boxed{\qquad\Ppoly=\TC^1.\qquad}
+\]
+In particular $\Ppoly=\NC^2$. The same conclusion holds if the
+hypothesis instead covers every realizable width.
+In particular, the conclusion applies to every fixed exponent
+$\gamma\ge1$, every fixed prefactor, and arbitrary prescribed
+prefactors approaching one.
+\end{corollary}
+\begin{proof}
+Take any family in $\Ppoly$ and a polynomial-size bounded-fan-in
+Boolean circuit family for it. Lemma~\ref{lem:boolean-teacher}
+supplies teacher width, weight bound, and depth all polynomial in $d$.
+Enlarge $C$ to bound both the width and twenty, and pad the teacher
+depth to at least $d$ using the same robust copy gates. Fix, for example,
+$\varepsilon=1/3$ and $\delta=1/2$. The hypothesized sample count is
+$n=\poly(d)$, determined without choosing the learner width.
+
+The padding $L\ge d$ and the polynomial bounds on
+$n,L$ ensure $L\ge C_0\log(d+n+L+2)$ for all sufficiently large
+$d$. Choose one width above both $C$ and the uniform ceiling
+threshold in Theorem~\ref{thm:uniform-ceiling} with $\beta=1/6$.
+This threshold is independent of $t$, so the actual value
+$t(d,L,N)$ can now be used without circularly changing $N$.
+The width and scale have been fixed before the input law.
+Corollary~\ref{cor:uniform-converse} gives threshold size
+polynomial in $d$ and depth $O(\log d)$, with uniform constants.
+No computability assumption on the prescribed schedule is
+needed for this nonuniform circuit conclusion.
+Finitely many remaining dimensions can be
+hardcoded. Hence $\Ppoly\subseteq\TC^1$. The reverse
+inclusion holds by definition. The Boolean simulation from
+Theorem~\ref{thm:main} also gives
+$\TC^1\subseteq\NC^2\subseteq\Ppoly$.
+\end{proof}
+
+The width quantifier is essential here. A sample bound polynomial in
+the learner width $N$ is not the joint bound in this corollary: it
+would make $n$ depend on the width subsequently chosen above the
+ceiling threshold. Likewise, the result does not say that a fixed
+input distribution admitting polynomial sample complexity forces an
+exact parallel circuit.
+
+\begin{lemma}[Fixed learner depth, uniformly over the prefactor]
+\label{lem:fixed-depth-uniform}
+For every fixed $L\ge2$ there is a polynomial $p_L$ such that
+every width-$C$, depth-$L$ tanh teacher with weights bounded
+by $C$ and global signed margin greater than $1/2$ is learned
+from
+\[
+ n\ge \varepsilon^{-1}
+ p_L\bigl(d,C,1+\log(1/\varepsilon),\log(2/\delta)\bigr)
+\]
+examples at every $N\ge C$ and every $0<t\le1$.
+The polynomial is independent of $N,t$.
+\end{lemma}
+\begin{proof}
+We give the target-cost bound, and state the additional intrinsic
+learning input precisely. Write
+$a_{N,t}= -N^{-1}\log\mu_{N,t}(A_f)$.
+The cloning cylinder of \cite[Proposition \texttt{prop:cloning}]{meanfield}
+extends to all $0<t\le1$ as follows.
+Triple the teacher readout and partition the $N$ neurons into
+$C$ groups of sizes $k_b$ differing by at most one.
+The exact clone has first rows equal to the teacher rows,
+internal entries $B^j_{ba}/k_a$, and readout entries $v_b/k_b$.
+Constrain all scaled first-layer coordinates, the internal
+row projections onto the group-constant subspace, and all
+scaled readout coordinates to intervals of radius $\rho t$
+about this clone; the respective scalings are
+$\sqrt d\,W^1$, $\sqrt N\,W^j$, and $Nv$.
+There are
+$NM$, where $M=d+2+(L-2)C$, independent constrained Gaussian
+coordinates of variance $t^2$, and their squared centers sum
+to at most $NB_0$, where
+\[
+ B_0=d(d+1)C^2+2(L-2)C^4+36C^4.
+\]
+The free internal matrices vanish on the group-constant
+subspace. An elementary sphere-net Gaussian estimate bounds
+all their operator norms by $b_Lt$ with conditional
+probability at least $1/2$, where
+$b_L=\sqrt{16\log9+8\log(4L)}$.
+
+Put $A=2+3C^2+b_L$ and
+$\rho=[2+9C^2(d+L+1)A^{L-2}]^{-1}$.
+The normalized hidden error obeys
+$e_1\le\rho(d+1)$ and
+$e_j\le(\sqrt2C^2+\sqrt C+b_L)e_{j-1}+\rho\sqrt C$.
+These inequalities hold for every $t\le1$ because both
+the cylinder errors and the free operator norms decrease
+with $t$. The output error is at most
+$3\sqrt2C^2e_{L-1}+\rho\le1/2$, so the strict target
+margin is preserved. The scalar Gaussian interval estimate
+\[
+ \Pr\{|Z-u|\le\rho t\}
+ \ge \frac{2\rho}{\sqrt{2\pi}}
+             \exp(-u^2/t^2-\rho^2)
+ \quad (Z\sim\mathcal N(0,t^2))
+\]
+therefore gives
+\[
+ t^2a_{N,t}
+ \le B_0+M\log\frac{e\sqrt{2\pi}}{2\rho}+\log2
+ =:Q_L(d,C).
+\]
+This is polynomial at each fixed $L$, uniformly in $N,t$.
+
+The imported normalized intrinsic theorem
+\cite[Proposition \texttt{prop:intrinsic}]{uniformtargets}
+gives a sample bound polynomial in
+$d,L,1+t^2a_{N,t}$ and
+\[
+ \max\{1,t^H\Gain((a_{N,t}+t^{-2})/H)^{H/2}\},
+ \qquad H=L-1,
+\]
+apart from a factor
+$\varepsilon^{-1}(1+\log(1/\varepsilon))^c$
+and an additive $C\varepsilon^{-1}\log(2/\delta)$.
+It holds at every realizable width. Since
+$\Gain(D)\le4D+2$, the squared one-layer factor is at most
+$4(Q_L+1)/H+2$. Its $H/2$ power is polynomial for fixed
+$L$. This proves the claim, including the smaller widths
+handled by the intrinsic theorem's finite-width VC bound.
+\end{proof}
+
+\begin{proposition}[A sufficient collapse]
+\label{prop:tc0-sufficient}
+If $\Ppoly=\TC^0$, then there is one polynomial sample bound
+jointly in $d,C,L,\varepsilon^{-1},\log(2/\delta)$ for the
+teachers in Corollary~\ref{cor:collapse}, simultaneously
+at every $N\ge C$ and every $0<t\le1$.
+\end{proposition}
+\begin{proof}
+Let $R=d+C+L+2$. Lemma~\ref{lem:finite-description} below
+gives a Boolean circuit for each such teacher with at most
+$R^q$ gates, where $q$ is universal. Its finite description
+length is polynomial in $R$, even if the teacher's real
+weights have arbitrary precision.
+
+Consider one universal Boolean circuit-evaluation family:
+given a circuit description and its input assignment,
+evaluate the circuit, and output zero on malformed
+descriptions. This family lies in $\Ppoly$, indeed in
+uniform polynomial time. Under the assumed equality it
+has one fixed majority depth $h$ and one fixed polynomial
+size bound in the description length. Hardcode the
+teacher circuit description and leave its $d$ Boolean
+inputs free. Layering and carrying constants changes $h$
+by only a fixed factor. This produces a threshold circuit
+of depth at most $h$ with width and coefficient magnitudes
+polynomial in $R$, and normalized gate margins at least
+one. The usual integer form of majority gates has all
+these properties. Crucially, the same depth and polynomial
+degree work for every teacher because the assumption was
+applied to one universal family.
+
+For $L\ge h+1$, apply
+\cite[Theorem \texttt{thm:threshold}]{uniformtargets},
+including its short-padding case. Its resource exponent
+$C(h+1)^2$ is fixed, so its bound is jointly polynomial
+in the stated resources and statistics.
+It holds at every realizable width; each $N\ge C$ is
+realizable by padding the original teacher. In particular,
+the learner width need not exceed the compiled circuit
+width. For the finitely many depths $2\le L<h+1$, apply
+Lemma~\ref{lem:fixed-depth-uniform} and take the largest
+of their polynomial degrees and constants.
+\end{proof}
+
+Thus the two complexity assumptions bracket the desired
+learning statement:
+\[
+ \Ppoly=\TC^0
+ \ \Longrightarrow\
+ \text{universal joint-polynomial learning}
+ \ \Longrightarrow\
+ \Ppoly=\TC^1.
+\]
+This does not identify either implication as an equivalence.
+The sufficiency proof needs no efficient construction of the
+compiled circuits or computation of the posterior.
+
+\section{An exponential depth lower bound would separate circuit classes}
+\label{sec:negative}
+
+We first record two elementary facts needed to control the resource
+and subsequence quantifiers. The first uses only exact sample
+consistency, and holds for any posterior of this kind.
+
+\begin{lemma}[Finite-domain occupancy bound]
+\label{lem:occupancy}
+Let $X$ be a finite domain of size $M$. A posterior supported on
+classifiers agreeing with all observed labels has, for every input
+law, confidence-failure mass at most $\varepsilon$ with probability
+at least $1-\delta$ whenever
+\[
+ n\ge\frac{M\log2+\log(1/\delta)}{\varepsilon}.
+\]
+\end{lemma}
+\begin{proof}
+At every observed input the posterior correct-label probability is
+one. The confidence-failure set is therefore contained in the unseen
+set $U$. Any fixed subset of mass greater than $\varepsilon$ is
+missed by all samples with probability at most $e^{-n\varepsilon}$.
+A union bound over the $2^M$ subsets gives
+$\Prb\{\mathcal D(U)>\varepsilon\}\le2^M e^{-n\varepsilon}$.
+\end{proof}
+
+\begin{lemma}[Bounded-weight margined tanh teachers have finite descriptions]
+\label{lem:finite-description}
+Suppose a tanh teacher has depth $D$, hidden widths at most $C$,
+weights bounded by $B$, and signed output margin greater than $1/2$
+on $X_d$. Its Boolean function has a Boolean circuit of size
+polynomial in $d,C,D,B+1$. In particular, any such family with these
+resources polynomial in $d$ lies in $\Ppoly$, even when the original
+weights have no computability or precision restriction.
+\end{lemma}
+\begin{proof}
+Put $m=\max\{d+1,C,2\}$ and $A=4m(B+1)$, and choose
+\[
+ p=\left\lceil(D+3)\log_2 A\right\rceil+5,
+ \qquad \rho=2^{-p}.
+\]
+Round every weight to error at most $\rho$. Evaluate each affine
+form exactly on dyadic approximations to the preceding states, and
+approximate each hidden tanh to error at most $\rho$, clamped to
+$[-1,1]$. If $e_j$ is the maximum coordinate error after layer $j$,
+the Lipschitz property gives
+\[
+ e_j\le mB e_{j-1}+(m+1)\rho
+       \le A e_{j-1}+A\rho.
+\]
+The same upper bound covers the final linear layer. Thus
+$e_D\le2\rho A^D<1/16$, which preserves every output sign.
+The rounded weights and all intermediate dyadic states have
+polynomially many bits in the asserted resources.
+
+For clarity, approximating tanh at this precision has an elementary
+polynomial-size Boolean implementation. Use oddness to assume $u\ge0$.
+For $u\ge p+10$, the value $1$ has error at most
+$2e^{-2(p+10)}<2^{-p}$. On $0\le u\le p+10$, evaluate $e^{2u}$
+by its Taylor polynomial of degree $\lceil16(p+10)^2\rceil$ using
+rational arithmetic. The factorial bound $q!\ge(q/e)^q$ and the
+geometric bound on the tail after this degree give error below
+$2^{-p-4}$. Compute $(E-1)/(E+1)$ and round to the output dyadic
+grid; slightly increasing the working precision gives total error
+at most $\rho$. The numerators and denominators in this computation
+have polynomial bit length. Ordinary grade-school integer addition,
+multiplication, and division use polynomially many Boolean gates,
+so this finite algorithm can be unrolled to the claimed circuit.
+No parallel-depth bound is asserted in this lemma.
+\end{proof}
+
+The second imported input is a weaker common form of the previously
+proved circuit-target learning bounds. We restrict its statistical
+parameters to fixed constants because that is all the separation
+argument needs.
+
+\begin{proposition}[Imported circuit-target upper bound]
+\label{prop:target-upper}
+Fix $0<\varepsilon,\delta<1$. In either of the following regimes,
+there is a constant $a\ge1$ such that the assertion below holds:
+\begin{enumerate}[label=(\roman*),leftmargin=*]
+ \item a fixed $\zeta>0$, all scales
+       $0<\sigma^2\le N^{-(1+\zeta)}$, with $a$ allowed to depend
+       on $\zeta,\varepsilon,\delta$;
+ \item the critical scale $\sigma^2=N^{-1}$, with $a$ allowed to
+       depend on $\varepsilon,\delta$.
+\end{enumerate}
+If a target has a bounded-fan-in Boolean circuit of wire size $s$
+and depth $h\ge1$, then at any learner depth satisfying
+\[
+ L\ge a(h+1)\log(d+s+L+2),
+\]
+a sufficient sample count for the original posterior is
+\[
+ n\le(d+s+L+2)^{a(h+1)}.
+\]
+This guarantee holds for every input law and every
+$N\ge C_L(f)$, where $C_L(f)$ is the least width admitting a
+depth-$L$ tanh representation with weights bounded by that width
+and signed output greater than $1/2$ everywhere. In regime (i) it
+is simultaneous over the displayed finite scales. In regime (ii)
+it holds, more generally, at every realizable width.
+\end{proposition}
+
+This is a direct weakening of
+\cite[``Precision-independent threshold-circuit learning'']{unrestricted}
+in regime (i), and
+\cite[``Real threshold teachers without a weight bound'']{critical}
+in regime (ii). To match their conventions, layer a bounded-fan-in
+circuit by inserting copy wires; its size and width grow by at most
+a polynomial factor, and its depth stays $O(h)$.
+The fixed statistical factors and this polynomial change are
+absorbed by $a$. The source in regime (i) in fact needs only
+$L\ge2h$ before this harmless weakening. A realizable width is one
+at which a depth-$L$ tanh network realizes the target signs; scaling
+the readout then gives strict margin $1/2$ and positive Gaussian
+target mass. In particular, every width at least that of a specified
+depth-$L$ teacher is realizable. The bounded-weight admissibility
+condition $N\ge C_L(f)$ can be stronger than realizability; we keep
+the two notions distinct. No new Gaussian target-mass claim is needed
+for this proposition.
+
+\begin{theorem}[Exponential depth hardness implies $\NC\ne\Ppoly$]
+\label{thm:exp-barrier}
+Fix either regime of Proposition~\ref{prop:target-upper}, and fixed
+$0<\varepsilon,\delta<1$. Suppose there is a sequence of targets
+$f_j:X_{d_j}\to\{-1,1\}$ with tanh teachers at the same learner
+depths $L_j\to\infty$, widths at most $C_j$, weights bounded by
+$C_j$, and global signed margins greater than $1/2$. Assume
+\[
+ d_j+C_j\le L_j^b
+\]
+for some fixed $b$, and that obtaining the distribution-free,
+all-admissible-width confidence guarantee, over $N\ge C_{L_j}(f_j)$,
+requires at least
+$\exp(cL_j)$ examples along this sequence, for some fixed $c>0$.
+The same conclusion applies to the weaker width range $N\ge C_j$.
+Then
+\[
+ \boxed{\qquad\NC\ne\Ppoly.\qquad}
+\]
+Indeed a subsequence of the targets extends to a Boolean family in
+$\Ppoly\setminus\NC$.
+\end{theorem}
+\begin{proof}
+Lemma~\ref{lem:occupancy}, with $M=2^{d_j}$, gives a universal
+$O(2^{d_j})$ sample upper bound for fixed $\varepsilon,\delta$.
+The assumed lower bound therefore forces
+\[
+ d_j\ge\frac c{\log2}L_j-O(1).
+\]
+Consequently $L_j=O(d_j)$ and $C_j\le\poly(d_j)$, while also
+$d_j\le\poly(L_j)$. Select an infinite subsequence with distinct
+strictly increasing $d_j$. Define a Boolean family $F_d$ to equal
+$f_j$ at those dimensions and a constant at every other dimension.
+Lemma~\ref{lem:finite-description} puts this family in $\Ppoly$.
+Nonuniformity permits both the arbitrary subsequence and the rounded
+teacher coefficients; no effective selection is being asserted.
+
+Suppose $F\in\NC$. Then, for some fixed $k$ and fixed size exponent,
+the selected targets have circuits of size $s_j=\poly(d_j)$ and
+depth $h_j=O(\log^k(d_j+2))$. All of $d_j,s_j$ are polynomial in
+$L_j$. Hence the depth condition in
+Proposition~\ref{prop:target-upper} holds for all sufficiently large
+$j$, and that proposition supplies a sample upper bound
+\[
+ n_j\le
+ \exp\bigl(O(\log^{k+1}(L_j+2))\bigr)
+ =\exp(o(L_j)).
+\]
+It holds at every admissible width $N\ge C_{L_j}(f_j)$, in particular
+throughout $N\ge C_j$, and in regime (i) at every displayed scale. This
+contradicts the exponential lower bound. Thus $F\notin\NC$.
+\end{proof}
+
+The separation implication applies to nonexplicit targets as well as
+explicit ones. A counting or diagonalization construction of targets
+with the stated polynomial teacher resources would still produce the
+separated family. The global margin is important: it is what allows
+arbitrary original real coefficients to be replaced by finite
+descriptions.
+
+\begin{corollary}[Every fixed stretched-exponential rate has the same barrier]
+\label{cor:stretched-exponential-barrier}
+Under the teacher, statistical, and width hypotheses of
+Theorem~\ref{thm:exp-barrier}, replace the sample lower bound
+$\exp(cL_j)$ by $\exp(cL_j^\alpha)$, for any fixed $c,\alpha>0$.
+Then the same conclusion $\NC\ne\Ppoly$ holds. In particular this
+applies at every fixed Gaussian exponent $\gamma\ge1$.
+\end{corollary}
+\begin{proof}
+The occupancy bound now forces
+$d_j\ge(c/\log2)L_j^\alpha-O(1)$. Hence
+$L_j=O(d_j^{1/\alpha})$, and both depth and teacher width are
+polynomial in $d_j$. The finite-description and subsequence argument
+still give a family in $\Ppoly$. If it belonged to some $\NC^k$,
+the imported learning theorem would give
+$\exp(O(\log^{k+1}(L_j+2)))=\exp(o(L_j^\alpha))$ examples,
+contradicting the assumed lower bound.
+\end{proof}
+
+Thus a fixed stretched-exponential rate is already stronger than
+merely disproving a polynomial sample bound. The conditional
+contrapositive of Corollary~\ref{cor:collapse}, under
+$\Ppoly\ne\TC^1$, supplies failure of a universal polynomial
+guarantee; it supplies no stretched-exponential rate. Such a rate
+would also entail the stronger separation in
+Corollary~\ref{cor:stretched-exponential-barrier}.
+
+\begin{corollary}[The lower-bound barrier is uniform over all prefactors]
+\label{cor:all-prefactor-negative}
+The conclusion of Corollary~\ref{cor:stretched-exponential-barrier}
+also holds for an arbitrary sequence of actual prefactors
+$0<t_j\le1$ and realizable learner widths, with
+$\sigma_j^2=t_j^2/N_j$. No separation from $t=1$ is required.
+\end{corollary}
+\begin{proof}
+Here we use the companion uniform positive theorem
+\cite[Theorem \texttt{thm:threshold}, long-padding case]{uniformtargets}
+in place of Proposition~\ref{prop:target-upper}. Its precise
+specialization needed here is: for fixed statistical parameters,
+a bounded-fan-in Boolean circuit of size $s$ and depth $h$ has
+sample bound
+\[
+ (d+s+L+2)^{C(h+1)}
+\]
+at every realizable width and every $0<t\le1$, whenever
+$L\ge C(h+1)\log(d+s+L+2)$. Boolean gate coefficients and
+margins are absolute constants; layering changes only the
+universal polynomial factors.
+The occupancy and finite-description parts of the preceding
+proof do not depend on the scale. If the resulting family were
+in $\NC^k$, this uniform theorem would give
+$\exp(O(\log^{k+1}L_j))$ examples at the very same actual
+$N_j,t_j$, contradicting $\exp(cL_j^\alpha)$.
+\end{proof}
+
+\section{Scope and remaining questions}
+
+The product structural theorem is unconditional and applies to arbitrary
+finite depths, widths, and neuronwise zero-preserving $1$-Lipschitz
+activations. Its statistical consequence uses the exact original tanh
+posterior at finite Gaussian scale. The product route covers every
+fixed gap $\gamma\ge1+\zeta$ without a resource dependence on
+the learner depth in the circuit conclusion.
+Canonical features, near-baseline action, and the block cover
+give a complementary converse uniform over all $0<t\le1$,
+equivalently all $0<\sigma^2\le1/N$, with the depth padding,
+depth-dependent circuit resources, and finite-width threshold
+in Corollary~\ref{cor:uniform-converse}.
+This includes arbitrary prescribed schedules approaching the
+critical endpoint and all fixed exponents $\gamma\ge1$.
+The actual width is chosen before the input law, and no limiting
+posterior is substituted for the original one.
+Corollary~\ref{cor:all-prefactor-negative}, using the companion
+uniform positive theorem, also makes the stretched-exponential
+lower-bound barrier uniform throughout this scale range.
+
+The two complexity consequences address different strengths of
+learning claim. A universal joint polynomial bound would imply
+$\Ppoly=\TC^1$, while the stronger assumption
+$\Ppoly=\TC^0$ suffices for it. Even a fixed stretched-exponential lower bound
+$\exp(\Omega(L^\alpha))$, $\alpha>0$, with polynomial teacher
+resources would imply $\Ppoly\ne\NC$. Neither implication
+is an equivalence. Failure of a universal polynomial bound need not
+give an exponential lower bound, and a universal subexponential
+bound need not give the polynomial circuit sizes required for
+$\TC^1$ or $\NC^2$. Familiar targets already in $\NC$, including
+bounded-depth formulas and polylogarithmic-depth circuit families,
+cannot establish the stated exponential lower bound because
+Proposition~\ref{prop:target-upper} gives subexponential sample bounds
+for them.
+
+Several representation questions remain meaningful between these
+barriers. Which subclasses of $\TC^1$ have polynomial-product tanh
+representations? Can a useful quantitative relation be proved between
+parallel-circuit resources and the smallest product representation?
+Can one obtain a general learning bound between polynomial and
+exponential depth dependence without forcing polynomial-size
+parallel circuits? The present results delimit these questions but
+do not settle them.
+
+\appendix
+\section{Constant-width bounded-weight teachers can encode every small circuit}
+\label{app:constant-width}
+
+The teacher width in Corollary~\ref{cor:collapse} need not grow.
+The following finite-horizon construction makes this precise. The idea of
+encoding discrete memory in real registers is classical: saturated-linear
+neural simulations use base encodings~\cite{siegelmann-sontag}, and
+Kilian and Siegelmann~\cite{kilian-siegelmann} establish sigmoidal
+universality. We give an independent finite feedforward construction with
+explicit depth and error bounds. In particular, we do not infer a
+polynomial-time tanh simulation from an earlier universality theorem.
+
+\begin{theorem}[A constant-width tanh compiler]
+\label{thm:constant-width-compiler}
+Let $d\ge1$, and suppose an acyclic Boolean circuit with $S$ gates,
+each of fan-in at most two, computes $f:X_d\to\{-1,1\}$.
+There is a tanh network with augmented input $(1,x)$, no separate
+hidden biases, hidden width $24$, at most
+\[
+ H\le5000(d+S+1)^3
+\]
+hidden layers, every physical coefficient of absolute value at most one,
+and scalar linear readout satisfying $f(x)z(x)>1$ for every $x\in X_d$.
+All coefficients may be chosen dyadic with
+$O(H+\log(d+1))$ bits each.
+The construction only guarantees a Frobenius product bounded by
+$\exp(O((d+S+1)^3))$; it is not a polynomial-product representation.
+\end{theorem}
+
+\subsection{Registers and stable amplification}
+
+Put $n=d+S$, $M=n+1$, and set
+\[
+ c=\tanh1,\quad \kappa=c^{-1},\quad
+ \delta=\eta=4^{-20M},\quad
+ \alpha=\frac{\operatorname{arctanh}\delta}{\delta},\quad K=500M.
+\]
+We first use six logical registers $R,T,U,B,C,D$.
+The last two are constant rails, initialized from the augmented input
+by preactivations $1$ and $\operatorname{arctanh}\delta$.
+The updates
+\[
+ C\leftarrow\tanh(\kappa C),\qquad
+ D\leftarrow\tanh(\alpha D)
+\]
+keep them exactly equal to $c$ and $\delta$.
+Here $0.761<c<0.762$ and $\kappa,\alpha<2$.
+The $D$ rail is included to make tiny constants explicit; the particular
+memory updates below can also use tiny coefficients multiplying $C$.
+
+Let $\varphi(u)=\tanh(\kappa u)$.
+Its fixed points include $0,\pm c$. Concavity gives
+\[
+ \frac{\varphi(u)}u\ge
+ \frac{\tanh(3/4)}{3c/4}>1.1
+ \quad(0<u\le3c/4),
+\]
+and on the invariant interval $[3c/4,1]$,
+\[
+ |\varphi'(u)|\le\frac{\operatorname{sech}^2(3/4)}c<0.8.
+\]
+By oddness the same bounds hold with signs reversed. Thus, whenever
+$\delta/10\le|u|\le1$, $K$ iterations give
+\[
+ |\varphi^{K}(u)-c\sign u|\le\eta.
+\]
+Indeed it suffices to take
+\[
+ \left\lceil\frac{\log(8/\delta)}{\log1.1}\right\rceil+
+ \left\lceil\frac{\log(1/\eta)}{\log1.25}\right\rceil<500M
+\]
+iterations. Once a register is within $\eta$ of $\pm c$, applying
+$\varphi$ keeps it there. We call this a robust bit register.
+Small memory registers instead use the hold update $u\leftarrow\tanh u$.
+Every layer updates all registers; the schedule below specifies which
+registers use a small hold, a robust hold, a reset, or an arithmetic update.
+
+\subsection{Base-four memory and a fixed read schedule}
+
+Store bits $b_1,\ldots,b_m\in\{-1,1\}$, with $m\le n$, as
+\[
+ r^*=\delta\sum_{i=1}^m b_i4^{-i}.
+\]
+Then $|r^*|\le\delta/3$ and, for a nonempty word,
+$|r^*|\ge\delta/6$, with sign equal to $b_1$.
+The ideal operations are
+\[
+ \text{pop}:\quad r^*\mapsto4r^*-\delta b_1,
+ \qquad
+ \text{insert}:\quad r^*\mapsto(r^*+\delta b)/4.
+\]
+Initialize
+\[
+ R=\tanh\left(\delta\sum_{i=1}^d x_i4^{-i}\right),
+ \qquad T=U=B=0.
+\]
+The initial memory error is at most $\delta^3$.
+
+To read position $p$ of $R$, first set $T\leftarrow\tanh R$.
+For $i=1,\ldots,p$, set $U\leftarrow\tanh T$ and apply $K$
+amplifier steps to $U$. If $i<p$, pop using
+\[
+ T\leftarrow\tanh\bigl(4T-(\delta/c)U\bigr).
+\]
+Throughout the read, hold $R$ in its small mode. The error bound below
+shows that each amplification reads the intended bit, so at completion
+$U$ is within $\eta$ of $c$ times the requested bit. Circuit addresses
+and gate order are known in advance: there is no input-dependent control
+flow. A read uses at most $1+n(K+2)$ layers.
+
+For two operand bits, read the first and save it by
+$B\leftarrow\varphi(U)$. Hold $B$ robustly while reading the second
+into $U$. A NAND operation has update
+\[
+ U\leftarrow\tanh(C-B-U),
+\]
+followed by $K$ amplifier layers. Its ideal preactivation values are
+$-c,c,3c$; the input error is at most $2\eta$. Hence its sign is the
+NAND bit with a fixed margin, and amplification restores $\eta$ accuracy.
+Insert its output by
+\[
+ R\leftarrow\tanh\bigl((R+(\delta/c)U)/4\bigr).
+\]
+Only outputs of the original circuit gates are inserted, so the word
+never exceeds $d+S=n$ digits.
+
+For completeness, an arbitrary two-input gate needs at most five NAND
+operations on $B,U,T$. During this finite program $T$ is a robust bit
+register; the next read overwrites it. In the following table,
+$\mathsf N(X,Y)$ denotes NAND followed by $K$ amplification steps;
+unwritten occupied robust registers are held by $\varphi$.
+The initial operands are $B=a,U=b$, and the output is in $U$.
+Truth strings are ordered $00,01,10,11$, where $0$ represents $-1$.
+\begin{center}\small
+\begin{tabular}{c l}
+\hline
+Truth string & Sequential assignments\\\hline
+0000 & $T=\mathsf N(B,B);\ U=\mathsf N(B,T);\ U=\mathsf N(U,U)$\\
+0001 & $U=\mathsf N(B,U);\ U=\mathsf N(U,U)$\\
+0010 & $U=\mathsf N(U,U);\ U=\mathsf N(B,U);\ U=\mathsf N(U,U)$\\
+0011 & $U=\mathsf N(B,B);\ U=\mathsf N(U,U)$\\
+0100 & $B=\mathsf N(B,B);\ U=\mathsf N(B,U);\ U=\mathsf N(U,U)$\\
+0101 & no assignment\\
+0110 & $T=\mathsf N(B,U);\ B=\mathsf N(B,T);\ U=\mathsf N(U,T);\ U=\mathsf N(B,U)$\\
+0111 & $B=\mathsf N(B,B);\ U=\mathsf N(U,U);\ U=\mathsf N(B,U)$\\
+1000 & $B=\mathsf N(B,B);\ U=\mathsf N(U,U);\ U=\mathsf N(B,U);\ U=\mathsf N(U,U)$\\
+1001 & $T=\mathsf N(B,U);\ B=\mathsf N(B,T);\ U=\mathsf N(U,T);\ U=\mathsf N(B,U);\ U=\mathsf N(U,U)$\\
+1010 & $U=\mathsf N(U,U)$\\
+1011 & $B=\mathsf N(B,B);\ U=\mathsf N(B,U)$\\
+1100 & $U=\mathsf N(B,B)$\\
+1101 & $U=\mathsf N(U,U);\ U=\mathsf N(B,U)$\\
+1110 & $U=\mathsf N(B,U)$\\
+1111 & $T=\mathsf N(B,B);\ U=\mathsf N(B,T)$\\\hline
+\end{tabular}
+\end{center}
+A repeated source uses coefficient $-2$, within the bound four on
+logical matrix entries. Literal constants can replace a read by
+$U\leftarrow\varphi(\pm C)$; no extra memory digit is needed.
+Two reads, a save, five NAND operations, and insertion cost at most
+$(2n+5)K+4n+9$ layers per original gate. Including initialization and
+an optional final read of an original input, the total is at most
+\[
+ (2n^2+6n)K+4n^2+11n+2<5000(n+1)^3=:T_{\max}.
+\]
+Gates outside the designated output's ancestry may first be deleted,
+and the remaining gates topologically ordered with the output last.
+Constant circuits and an output equal to an original input are covered
+by the direct constant assignment and optional read respectively.
+
+\subsection{Uniform error bounds}
+
+For every real $z$,
+\[
+ |\tanh z-z|\le |z|^3/3,
+\]
+because $z-\tanh z$ is the integral of $\tanh^2$ and
+$|\tanh z|\le|z|$. Whenever a small register is within $\delta/100$
+of its ideal value, its magnitude is below $\delta/2$.
+A hold or copy then introduces at most $\delta^3$ error.
+A valid insertion satisfies
+\[
+ e_R^{\mathrm{new}}\le e_R/4+\delta\eta/2+\delta^3.
+\]
+Dropping the beneficial factor $1/4$, the main-memory error is at most
+\[
+ E_R=(T_{\max}+1)\delta^3+n\delta\eta.
+\]
+For a temporary read, a pop satisfies
+\[
+ e_T^{\mathrm{new}}\le4e_T+2\delta\eta+\delta^3.
+\]
+There are at most $n$ pops, and $T_{\max}$ bounds all intervening holds.
+Consequently
+\[
+ E_T=4^n\bigl[(2T_{\max}+2)\delta^3+3n\delta\eta\bigr]
+\]
+bounds every temporary-memory error. With $M=n+1$,
+\[
+ \frac{E_T}{\delta}
+ \le(10000M^3+2)4^{-39M}+3M4^{-19M}<\frac1{100}.
+\]
+For example, $M\le2^M$, $M^3\le8^M$, and $M\ge2$ give the last
+inequality with ample slack. Also $E_R\le E_T$.
+
+These estimates close a simultaneous induction over the fixed schedule.
+At extraction, the ideal memory has magnitude at least $\delta/6$,
+its error is below $\delta/100$, and the initialization
+$U\leftarrow\tanh T$ introduces at most $\delta^3$ error.
+Thus its sign is correct and its magnitude exceeds $\delta/10$.
+The amplifier estimate applies, which in turn justifies the pop and
+insertion recurrences. The robust NAND computation has the separate
+constant-scale sign margin established above. Resetting $T$ at each
+read prevents its intervening robust mode from carrying small-memory
+error into that read. Every estimate is uniform on the entire Boolean
+cube, without a probability or genericity assumption.
+
+\subsection{Physical width, coefficient size, and finite precision}
+
+Every logical layer is a linear map on six registers followed by tanh,
+with matrix entries bounded by four. Replace each logical register by
+four identical neurons. Replace an entry $A_{ij}$ by $A_{ij}/4$ on
+every source-clone/destination-clone edge. Each destination clone then
+has exactly the logical preactivation, and every physical coefficient
+is bounded by one. The four initial clones use the initial row directly;
+all its coefficients are already at most one. This gives width $24$
+without any separate hidden bias.
+
+The final $U$ is within $\eta$ of $cf(x)$. Read out $2U/c$, using
+coefficient $1/(2c)<1$ on each of its four clones. The signed output is
+at least $2(1-\eta/c)>1.9$.
+Uniform cloning preserves each internal Frobenius norm: the cloned
+matrix is $A\otimes(J_4/4)$ and $\norm{J_4/4}_F=1$.
+The first norm is at most three, the readout norm below two, and each
+internal norm at most $24$. Thus the product is at most
+$6\,24^{T_{\max}}$, with no uncharged norm reduction.
+
+Exact transcendental rails are unnecessary for the conclusion.
+Round every physical coefficient toward zero to dyadic error at most
+$\xi$, preserving its bound one. With $H$ hidden layers, maximum
+coordinate errors obey
+\[
+ e_1\le(d+1)\xi,\qquad e_j\le24e_{j-1}+24\xi.
+\]
+The resulting readout error is at most
+$(d+3)24^{H+1}\xi$. Taking
+\[
+ \xi\le\bigl[20(d+3)24^{H+1}\bigr]^{-1}
+\]
+changes every output by at most $1/20$. The signed margin remains
+greater than one, and $O(H+\log(d+1))$ bits per coefficient suffice.
+This proves Theorem~\ref{thm:constant-width-compiler}.
+
+\begin{corollary}[Fixed-width teachers and the learning barrier]
+\label{cor:constant-width-collapse}
+Boolean families represented with global unit margin by width-$24$ tanh
+networks of polynomial depth and coefficient magnitudes at most one
+are exactly $\Ppoly$.
+Consequently, the joint-polynomial-learning hypothesis of
+Corollary~\ref{cor:collapse} already implies $\Ppoly=\TC^1$
+when restricted to these teachers, provided the learner guarantee still
+holds at every width $N\ge24$.
+\end{corollary}
+\begin{proof}
+The compiler gives the inclusion of $\Ppoly$. The reverse inclusion
+is Lemma~\ref{lem:finite-description}, with constant width and weight
+bound. The compiler has polynomial depth and can be padded to at least
+d hidden layers by robust holds before readout. Its fixed width and
+coefficient bounds remain unchanged. The hypothesized sample count is
+then polynomial in d, so the proof of Corollary~\ref{cor:collapse}
+applies at a sufficiently large learner width chosen before the input law.
+\end{proof}
+
+\begin{remark}[The roles of precision and learner width]
+The memory uses exponentially small state differences and exponentially
+fine absolute weight precision, but only polynomially many description
+bits. It is sensitive to polynomial-scale perturbations and gives no
+polynomial-product or robust implementation of arbitrary small circuits.
+At fixed learner width $24$, ordinary finite-architecture capacity bounds
+already give polynomial sample bounds. The collapse conclusion depends
+on a guarantee uniform over arbitrarily large learner widths, even
+though the teacher width is fixed.
+\end{remark}
+
+\section{Exact proof dependencies and verification scope}
+\label{app:dependencies}
+
+The structural product theorem, canonical-feature construction, block-cover
+argument, finite-event extraction, two-majority reductions, and the preceding
+constant-width compiler are proved in this manuscript. The statistical
+applications additionally use target-mass and intrinsic-learning results.
+The following map specifies those inputs; it is not a claim that a short
+companion statement replaces its supporting proof.
+
+\begin{enumerate}[leftmargin=*]
+\item The above-one product ceiling is Theorem
+\texttt{thm:posterior-energy-ceiling} of
+\path{unrestricted-primary-posterior-ceiling.tex} in the repository's
+\path{works-in-progress/unrestricted-depth/source/} directory.
+The statement, including its actual finite-scale width threshold, is
+reproduced as Theorem~\ref{thm:ceiling} here.
+\item The scalar Bellman baseline, small-state bridge, monotonicity, and
+one-step dissipation are Definition \texttt{def:critical-scalar-value},
+Lemma \texttt{lem:scalar-value-properties}, and equation
+\texttt{eq:scalar-step-dissipation} in
+\path{works-in-progress/critical-depth/source/critical-rate-foundations.tex}.
+Proposition~\ref{prop:scalar-facts} gives the precise imported statements.
+\item The finite-width Fourier target mass is Corollary
+\texttt{cor:critical-finite-fourier-mass} in
+\path{critical-finite-width-channel.tex}, in that same critical-depth
+source directory. Its seed is constructed in
+\path{critical-controlled-fourier-seeds.tex}; the finite channel proof
+uses bounded-score concentration, conditional Gaussian weight shifts,
+and binary relative entropy. These are finite-width inputs, not a
+large-deviation limit substituted for the posterior.
+\item The uniform target-mass bound is Proposition \texttt{prop:long}
+and the Fourier-seed section of the companion
+\path{uniform-target-classes.tex}. Its scale-change proof is detailed in
+\path{nearcritical-target-reuse.md}, Sections 1--6: Gaussian reference
+change; residual monotonicity; zero-cost score downgrade; the circuit
+prefix; stable lifting of the scalar path; and finite-width normalized
+slack. Its critical program inputs are the preceding critical-depth
+sources. The short-padding proof appears directly in the companion's
+Section 4.
+\item The normalized intrinsic input used for sufficiency is Proposition
+\texttt{prop:intrinsic} of that companion. Its two proofs are
+\path{uniform-scale-intrinsic.md} and
+\path{uniform-sharp-intrinsic.md}. They combine
+\path{finite-width-dual-certificate.md}, the scaled importance compression
+in \path{fixed-t-compression.md}, and the scalar gain estimate in
+\path{uniform-baseline-gain.md}. The sharper argument uses vanishing
+readout repair so that it retains the coefficient one on $V_*$.
+The finite-witness class is defined by representability on every witness
+of a prescribed size; it is not assumed that every function outside an
+arbitrary VC class has a small separating witness.
+\item The older bounded-fan-in target upper bounds used in
+Proposition~\ref{prop:target-upper} are identified by these source-label pairs:
+\begin{itemize}
+\item \path{unrestricted-primary-threshold-circuits.tex}:\\
+\path{cor:threshold-circuit-learning};
+\item \path{critical-all-width-target-learning.tex}:\\
+\path{cor:critical-all-width-real-threshold-learning}.
+\end{itemize}
+They occur in the respective source directories already specified. The all-prefactor extension instead uses
+Theorem \texttt{thm:threshold} of the uniform companion.
+\end{enumerate}
+
+The named companion proof notes should accompany the manuscript whenever
+its all-prefactor statistical claims are distributed. The repository
+bibliography below identifies the older public sources; the proof notes
+provide the additional scale-uniform arguments.
+The geometric and compression Lean modules associated with this research
+verify components of the structural argument. They do not constitute a
+Lean proof of the full posterior converse, its target-mass inputs, the
+constant-width compiler, or the complexity-class implications.
+All conditional implications and the open status of unrestricted-depth
+learning are unchanged by this distinction.
+
+\begin{thebibliography}{99}
+\bibitem{unrestricted}
+ChatGPT-6 Astra, Kaarel H\"anni, and Dmitry Vaintrob.
+\emph{Representation constraints and polynomial-depth learning in
+Gaussian Bayesian networks}.
+Research draft, 19 October 2026.
+Repository: \url{https://github.com/kaarelh/AI-works}, directory
+\path{neural-network-generalization/works-in-progress/unrestricted-depth/source/}.
+The imported posterior ceiling is
+\path{unrestricted-primary-posterior-ceiling.tex}, theorem
+\texttt{thm:posterior-energy-ceiling}, including its explicit width
+threshold. The imported target-learning bound is
+\path{unrestricted-primary-threshold-circuits.tex}, corollary
+\texttt{cor:threshold-circuit-learning}.
+
+\bibitem{critical}
+ChatGPT-6 Astra, Kaarel H\"anni, and Dmitry Vaintrob.
+\emph{Depth and learning bounds for critical Bayesian neural networks}.
+Research draft, 19 October 2026.
+Repository: \url{https://github.com/kaarelh/AI-works}, directory
+\path{neural-network-generalization/works-in-progress/critical-depth/source/}.
+The imported scalar facts are in
+\path{critical-rate-foundations.tex}, definition
+\texttt{def:critical-scalar-value}, lemma
+\texttt{lem:scalar-value-properties}, and equation
+\texttt{eq:scalar-step-dissipation}. The imported finite-width
+Fourier target mass is in
+\path{critical-finite-width-channel.tex}, corollary
+\texttt{cor:critical-finite-fourier-mass}. The imported learning bound is
+\path{critical-all-width-target-learning.tex}, corollary
+\texttt{cor:critical-all-width-real-threshold-learning}.
+
+\bibitem{uniformtargets}
+\emph{Uniform prior-scale bounds for structured Boolean targets}.
+Companion research manuscript, 24 October 2026,
+\path{uniform-target-classes.tex}.
+The imported finite-width target mass is Proposition
+\texttt{prop:long}, together with its section on Fourier seeds.
+The physical scalar-program change of reference and normalized
+finite-width comparison are detailed in the accompanying research
+note \path{nearcritical-target-reuse.md}.
+
+\bibitem{meanfield}
+ChatGPT-6 Astra, Kaarel H\"anni, and Dmitry Vaintrob.
+\emph{Mean-field Bayesian circuit learning at every width
+above target complexity}.
+Research draft, 15 October 2026.
+Repository: \url{https://github.com/kaarelh/AI-works}, directory
+\path{neural-network-generalization/main-results/meanfield-all-width/source/}.
+The cloning cylinder is Proposition \texttt{prop:cloning}
+in \path{cloning.tex}.
+
+\bibitem{siegelmann-sontag}
+Hava T. Siegelmann and Eduardo D. Sontag.
+\emph{On the Computational Power of Neural Nets}.
+Journal of Computer and System Sciences 50(1):132--150, 1995.
+\url{https://doi.org/10.1006/jcss.1995.1013}.
+
+\bibitem{kilian-siegelmann}
+Joe Kilian and Hava T. Siegelmann.
+\emph{The Dynamic Universality of Sigmoidal Neural Networks}.
+Information and Computation 128(1):48--56, 1996.
+\url{https://doi.org/10.1006/inco.1996.0062}.
+
+\bibitem{grs}
+Noah Golowich, Alexander Rakhlin, and Ohad Shamir.
+\emph{Size-Independent Sample Complexity of Neural Networks}.
+Conference on Learning Theory, PMLR 75, 2018.
+\url{https://proceedings.mlr.press/v75/golowich18a.html}.
+Full version: \url{https://arxiv.org/abs/1712.06541}.
+
+\bibitem{sellke}
+Mark Sellke.
+\emph{On Size-Independent Sample Complexity of ReLU Networks}.
+2024 revision.
+\url{https://arxiv.org/abs/2306.01992}.
+
+\bibitem{vardi-shamir}
+Gal Vardi and Ohad Shamir.
+\emph{Neural Networks with Small Weights and Depth-Separation Barriers}.
+Advances in Neural Information Processing Systems, 2020.
+\url{https://arxiv.org/abs/2006.00625}.
+
+\bibitem{vardi-benign}
+Gal Vardi, Daniel Reichman, Toniann Pitassi, and Ohad Shamir.
+\emph{Size and Depth Separation in Approximating Benign Functions
+with Neural Networks}.
+Conference on Learning Theory, PMLR 134:4195--4223, 2021.
+\url{https://proceedings.mlr.press/v134/vardi21a.html}.
+
+\bibitem{jacot-rank}
+Arthur Jacot.
+\emph{Implicit Bias of Large Depth Networks: a Notion of Rank
+for Nonlinear Functions}.
+International Conference on Learning Representations, 2023.
+\url{https://arxiv.org/abs/2209.15055}.
+
+\bibitem{jacot-bottleneck}
+Arthur Jacot.
+\emph{Bottleneck Structure in Learned Features:
+Low-Dimension vs Regularity Tradeoff}.
+Advances in Neural Information Processing Systems, 2023;
+2024 revision. \url{https://arxiv.org/abs/2305.19008}.
+\end{thebibliography}
+\end{document}

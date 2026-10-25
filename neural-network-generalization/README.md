@@ -1,6 +1,6 @@
 # Bayesian neural network generalization
 
-Papers and notes by ChatGPT-6 Astra, Claude (Fable 5, Opus 5, and Opus 5.5), OpenAI Codex, Kaarel Hänni, and Dmitry Vaintrob. Authors are listed in alphabetical order, here and on every paper; each paper names its own authors. Public research snapshot, updated 23 October 2026.
+Papers and notes by ChatGPT-6 Astra, Claude (Fable 5, Opus 5, and Opus 5.5), OpenAI Codex, Kaarel Hänni, and Dmitry Vaintrob. Authors are listed in alphabetical order, here and on every paper; each paper names its own authors. Public research snapshot, updated 25 October 2026.
 
 **Start here:** [original main results](#main-results) · [second batch of formalized main results](#second-batch-of-formalized-main-results) · [technical FAQ: assumptions, interpretation, and open problems](TECHNICAL-FAQ.md) · [Lean verification](lean/VERIFICATION.md) · [improved polynomial bounds](#improved-polynomial-bounds) · [recent depth research](#recent-depth-research)
 
@@ -8,7 +8,7 @@ The original five main results retain their own section. A second section presen
 
 **Review status.** Most of this material has not yet been carefully reviewed by a human. The checks so far are the Lean proofs of the original five learning theorems and the ten-paper second batch, with the scope described [below](#lean-verification), and AI reviews. These include the audit records in the paper folders and a collection-wide review by Claude on 19 October 2026, recorded in [verification/review-2026-10-19.md](verification/review-2026-10-19.md). That review found and repaired several local errors but found no false theorem. It does not replace expert human review, and anything added or changed after the review was not part of it.
 
-Every paper has a PDF, editable LaTeX source, and a build script. The collection contains 53 PDF manuscripts, additional research notes, experimental code, and selected exact certificates. The [catalog](catalog.json) identifies the canonical manuscripts; older treatments retain their historical scope and open-status remarks.
+Every paper has a PDF, editable LaTeX source, and a build script. The collection contains 58 canonical PDF manuscripts, a structured-target companion, additional research notes, experimental code, and selected exact certificates. The [catalog](catalog.json) identifies the canonical manuscripts; older treatments retain their historical scope and open-status remarks.
 
 ## Lean verification
 
@@ -183,6 +183,18 @@ The FAQ has separate sections on [total mistakes](TECHNICAL-FAQ.md#30-can-we-bou
 This note is not Lean verified and remains separate from the main results. The [label-noise FAQ](TECHNICAL-FAQ.md#33-do-the-good-generalization-results-survive-a-small-amount-of-label-noise) gives the conventions, width requirement, and remaining question.
 
 ## Recent depth research
+
+**Boolean depth: a lower bound for a natural mean-field prefactor, and barriers for the original prior.** For tanh with variances `t²/d`, `t²/N`, and `t²/N²`, any fixed `t>1` admits an actual finite-width `exp(Ω(depth))` confidence lower bound, even for a constant target. These are the same mean-field width powers with a different fixed variance prefactor. Exact coefficient-one tanh (`t=1`) and the stronger canonical priors remain open. The [new lower-bound paper](works-in-progress/supercritical-depth-lower/) and [parallel-complexity paper](works-in-progress/boolean-depth-barriers/) give the precise distinction. These are conventionally checked supporting results, not additions to the two formalized main-result sections.
+
+| New paper | Scope |
+|---|---|
+| [Exponential depth at a supercritical mean-field prefactor](works-in-progress/supercritical-depth-lower/paper.pdf) · [source and reviews](works-in-progress/supercritical-depth-lower/) | Ordinary tanh, fixed `t>1`, depth `Θ(d)`, and a specified finite width `exp(Θ(d))`. All globally margined truth-table weights become nearly equal, so even a constant target needs exponentially many examples for `>2/3` confidence. Exact majority prediction and the coefficient-one prior are not covered. Includes audited nearcritical and sign-only notes. |
+| [Frobenius product, parallel circuits, and learning barriers](works-in-progress/boolean-depth-barriers/paper.pdf) · [source and reviews](works-in-progress/boolean-depth-barriers/) | Polynomial product implies small logarithmic-depth threshold circuits. A universal joint-polynomial bound for the original tanh priors would imply `P/poly = TC¹`; a stretched-exponential lower bound would separate `P/poly` from `NC`. Includes a width-24 bounded-weight circuit simulator. Analytic compression components have Lean proofs; the complete compiler and posterior implications do not. |
+| [An analytic activation arbitrarily close to tanh](works-in-progress/analytic-activation-depth-lower/paper.pdf) · [source and reviews](works-in-progress/analytic-activation-depth-lower/) | An engineered fixed odd, monotone, concave-on-positive-inputs, analytic 1-Lipschitz activation gives exponential-depth hardness at every fixed `γ≥1`. It encodes hard truth tables and is not efficiently evaluable; this does not settle exact tanh. |
+| [The cost of narrow input layers](works-in-progress/narrow-layer-information/paper.pdf) · [source and reviews](works-in-progress/narrow-layer-information/) | Low-rank input layers give a constant-depth threshold normal form. Inner-product parity forces exponential product and fine coefficient precision at fixed first-layer width, while a wider shallow implementation has polynomial product. A representation separation, not a Bayesian sample lower bound. |
+| [ReLU compression above its depth baseline](works-in-progress/relu-relative-product/paper.pdf) · [source and reviews](works-in-progress/relu-relative-product/) | A sharp nonconstant-function energy baseline and compression in terms of relative product `dP²/2^(D−1)`. Gives a strong-prior sample bound independent of learner depth in that parameter; relative product may still be exponential in teacher depth. |
+
+The [structured-target companion](works-in-progress/boolean-depth-barriers/uniform-target-classes.pdf) records scale-uniform positive bounds used in the circuit-complexity comparison. [FAQ 19](TECHNICAL-FAQ.md#19-is-exponential-depth-dependence-necessary-without-any-robustness-restriction) and [FAQ 22](TECHNICAL-FAQ.md#22-can-the-exponential-dependence-on-the-teachers-depth-be-removed-without-a-robustness-restriction) explain the implications and remaining gaps.
 
 These are supporting results and works in progress, retained separately from the main generalization theorem under a robustness restriction. The unrestricted Boolean-cube problem remains open. For continuous-output regression, a counterexample proves that exponential depth dependence is necessary in a general width-independent guarantee.
 

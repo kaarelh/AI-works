@@ -1,0 +1,339 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,microtype,enumitem,xurl}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{lemma}[theorem]{Lemma}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\F}{\mathrm F}
+\newcommand{\IP}{\operatorname{IP}}
+\newcommand{\TC}{\mathsf{TC}}
+\newcommand{\norm}[1]{\lVert #1\rVert}
+\title{The cost of narrow input layers in Boolean neural networks}
+\author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob}
+\date{Research draft --- 25 October 2026}
+\hypersetup{pdftitle={The cost of narrow input layers in Boolean neural networks},pdfauthor={ChatGPT-6 Astra; Kaarel Haenni; Dmitry Vaintrob}}
+\begin{document}
+\maketitle
+\begin{abstract}
+A narrow neural network can represent a simple Boolean function by storing
+its inputs at extremely fine resolution. We quantify the cost of this
+bottleneck. If the first affine layer has rank $r$ and the product of layer
+Frobenius norms is $P$, a globally unit-margined Boolean function has a
+constant-depth threshold circuit of size $(d+\max(1,P)+r+2)^{O(r+1)}$.
+For inner-product parity on two $n$-bit blocks, every representation whose
+first layer has width $r$ requires $P\ge(2^{(n-1)/r}-1)/\sqrt2$, regardless
+of its subsequent depth and widths. A first layer on a common rational
+grid must also have exponentially fine resolution when $r$ is fixed.
+Yet the same function has a depth-three tanh representation of width
+$O(n)$ and product $O(n^{5/2}\log^2(n+2))$. These results isolate a
+representation obstruction: expanding the first layer can eliminate an
+exponential norm cost. They do not establish a learning lower bound for
+an unrestricted Bayesian neural-network prior.
+\end{abstract}
+
+\section{Model and purpose}
+Let $x\in\{-1,1\}^d$ and $\bar x=(1,x)$. Consider a classifier
+\begin{equation}\label{eq:model}
+ z(x)=G(W\bar x),\qquad f(x)z(x)\ge1\quad\text{for every }x,
+\end{equation}
+where $f$ takes values in $\{-1,1\}$, $W$ is a real rectangular matrix,
+and $G$ is $T$-Lipschitz in Euclidean norm. The first coordinate of $W$
+is the actual charged bias column. Write
+\[
+ F=\norm W_\F,\qquad A=TF,\qquad r=\operatorname{rank}W.
+\]
+For an ordinary neural network with neuronwise $1$-Lipschitz activations,
+$T$ may be taken to be the product of the remaining layer Frobenius norms,
+including the linear readout. The first activation is included in $G$.
+Thus $A$ can be taken equal to the full layer product $P$.
+No assumption about efficient evaluation, zero preservation, or
+stability of the activations is needed for the first two theorems below.
+
+The motivating question is whether small, deep teachers admit inexpensive
+alternative implementations, and hence strong Bayesian learning guarantees
+without restricting the prior to robust networks. The theorems in this
+note show why preserving a narrow first layer can be an unnecessary and
+expensive constraint. They concern a function's representations rather
+than posterior probability or sample complexity.
+
+A threshold gate tests an affine inequality in Boolean inputs. The class
+$\TC^0$ consists of nonuniform families of polynomial-size, constant-depth
+circuits with majority and negation gates. Polynomially bounded integer
+weights can be replaced by repeated inputs and constant wires, with
+polynomial size overhead. All complexity statements below are nonuniform:
+the circuit may hardcode a finite table of labels.
+
+\section{A low-rank first layer gives a constant-depth circuit}
+\begin{theorem}\label{thm:rank}
+Every classifier satisfying \eqref{eq:model} has a constant-depth
+threshold circuit of size
+\begin{equation}\label{eq:size}
+ \bigl(d+\max(1,A)+r+2\bigr)^{O(r+1)}.
+\end{equation}
+The implicit constant is universal. Its threshold gates can be expanded
+into unweighted majority gates within the same size bound. In particular,
+fixed first-layer rank and polynomial Frobenius product imply $\TC^0$,
+independently of all later widths and of network depth.
+\end{theorem}
+\begin{proof}
+If $r=0$, or if $T=0$, the function is constant. Otherwise take a singular
+value factorization $W=UB$, where $U:\R^r\to\operatorname{im}W$ is an
+isometry and $\norm B_\F=F>0$. Set
+\[
+ u(x)=B\bar x/F,\qquad g(u)=G(FUu).
+\]
+Then $\norm{u(x)}\le R:=\sqrt{d+1}$, each affine coefficient of $u$ has
+absolute value at most one, and $g$ is $A$-Lipschitz. Oppositely labelled
+inputs therefore have code separation at least $2/A$.
+
+Put $M=\max(1,A)$. Choose dyadic $h$ such that
+\[
+ \frac1{32M\sqrt r}\le h\le\frac1{16M\sqrt r}.
+\]
+Choose another dyadic spacing $\rho\le h/[8(d+1)]$, with $h/\rho$ a power
+of two and $1/\rho$ polynomially bounded in $d+M+r$. Round every affine
+coefficient of $u$ to this grid. The resulting code $\widetilde u(x)$
+differs in each coordinate from $u(x)$ by at most $h/8$.
+
+Round each coordinate of $\widetilde u(x)$ to a nearest multiple of $h$,
+with a fixed tie rule. If two inputs receive the same integer grid code,
+their exact codes differ in each coordinate by at most $h+2(h/8)$.
+Their Euclidean distance is consequently at most
+\[
+ \frac54\sqrt r\,h<\frac2A.
+\]
+They have the same label. Each integer code coordinate has magnitude at
+most $C(1+M\sqrt{r(d+1)})$, so the number of possible codes is bounded by
+$(d+M+r+2)^{O(r)}$.
+
+Hardcode the label of every attained code, assigning arbitrary labels to
+unattained ones. Membership in a grid cell is a conjunction of $2r$
+affine threshold tests on the original input. An OR over the cells labelled
+positive computes $f$ using three threshold layers. Half-open endpoints
+or exact ties are implemented by the chosen integer comparison convention.
+Multiplication by the common denominator makes every test an integer
+threshold with weights and thresholds polynomially bounded in $d+M+r$.
+Expanding those weights into repeated literals, and implementing AND and
+OR by majority gates with constants, gives \eqref{eq:size}.
+\end{proof}
+
+\begin{remark}
+The theorem does not require that the original first-layer coefficients
+have bounded precision. Its safe rounding scale follows from the product
+bound and the global margin. If $P$ is exponential in depth, its conclusion
+can still be exponential in depth. Thus it does not by itself establish a
+polynomial-depth learning bound for arbitrary narrow teachers.
+\end{remark}
+
+\section{Inner-product parity requires information through the first layer}
+For $n\ge1$ and $a,b\in\{-1,1\}^n$, define
+\[
+ \IP_n(a,b)=(-1)^{\sum_{i=1}^n((1-a_i)/2)((1-b_i)/2)}.
+\]
+This function has a Boolean circuit with $O(n)$ bounded-fan-in gates:
+compute the $n$ pairwise conjunctions, then their parity.
+
+\begin{theorem}[Product lower bound]\label{thm:packing}
+Suppose
+\[
+ z(a,b)=G(Aa+Bb+c),\qquad \IP_n(a,b)z(a,b)\ge1
+\]
+on the full Boolean cube, and $G$ is $T$-Lipschitz. Let
+$r_A=\operatorname{rank}A$. Then $r_A\ge1$ and
+\begin{equation}\label{eq:packing}
+ T\norm A_\F\ge\frac{2^{(n-1)/r_A}-1}{\sqrt2}.
+\end{equation}
+In a $1$-Lipschitz-activation network with first hidden width at most $r$,
+the full Frobenius product therefore obeys
+\begin{equation}\label{eq:product}
+ P\ge\frac{2^{(n-1)/r}-1}{\sqrt2}.
+\end{equation}
+Subsequent widths and depth are unrestricted.
+\end{theorem}
+\begin{proof}
+For distinct $a,a'$, select a coordinate $i$ where they differ and choose
+$b$ with $b_i=-1$ and every other coordinate $+1$. Then
+$\IP_n(a,b)=a_i$ and $\IP_n(a',b)=a'_i$. The outputs differ by at least
+$2$, while Lipschitz continuity bounds their difference by
+$T\norm{Aa-Aa'}$. Hence
+\begin{equation}\label{eq:separation}
+ \norm{Aa-Aa'}\ge2/T
+\end{equation}
+for all distinct $a,a'$. In particular, $T>0$ and $r_A\ge1$.
+
+For uniform $a$ on the cube, independent symmetric signs give
+\[
+ \E\norm{Aa}^2=\norm A_\F^2.
+\]
+At least $2^{n-1}$ code points therefore lie in the $r_A$-dimensional
+image ball of radius $\sqrt2\norm A_\F$. Place a radius-$1/T$ ball around
+each. Their interiors are disjoint by \eqref{eq:separation}, and they
+are contained in the ball of radius $\sqrt2\norm A_\F+1/T$. Comparing
+$r_A$-dimensional volumes gives
+\[
+ 2^{n-1}\le(1+\sqrt2 T\norm A_\F)^{r_A},
+\]
+which is \eqref{eq:packing}. In the neural-network specialization,
+$T\norm A_\F\le P$ and $r_A\le r$, proving \eqref{eq:product}.
+\end{proof}
+
+\begin{corollary}
+For fixed first hidden width, every unit-margin representation of
+$\IP_n$ has product $\exp(\Omega(n))$. If $P$ is polynomial in $n$,
+the first layer must instead have rank $\Omega(n/\log(n+2))$ on the
+$a$ input block.
+\end{corollary}
+
+The next obstruction concerns input resolution rather than norm. It
+requires no continuity or Lipschitz hypothesis at all.
+\begin{theorem}[Common-grid precision lower bound]\label{thm:grid}
+Suppose a deterministic network computes $\IP_n$ exactly and has first
+hidden width $r\ge1$. Let $Q\ge1$ be an integer and $B_0>0$. If every
+first-layer coefficient is an integer multiple of $1/Q$ and has magnitude
+at most $B_0$, then
+\begin{equation}\label{eq:grid}
+ 2^n\le(2\lfloor QB_0n\rfloor+1)^r,
+ \qquad
+ Q\ge\frac{2^{n/r}-1}{2B_0n}.
+\end{equation}
+The later computation may have arbitrary depth, width, activation,
+and precision.
+\end{theorem}
+\begin{proof}
+Write the first affine map as $Aa+Bb+c$. The same distinguishing-row
+argument shows that $Aa\ne Aa'$ for distinct $a,a'$: otherwise all
+subsequent computations would agree for every $b$. Thus $Aa$ has $2^n$
+distinct values. Each coordinate of $QAa$ is an integer in
+$[-QB_0n,QB_0n]$. Counting those tuples proves \eqref{eq:grid}.
+\end{proof}
+
+\begin{remark}
+The argument is the elementary deterministic one-way communication
+lower bound for inner-product parity. Alice's affine code must distinguish
+every possible row of the truth table. Plain parity would not give this
+obstruction, because one integer-weight sum retains its parity.
+
+A common denominator is essential to the formulation. Bounding individual
+rational denominators separately need not bound their least common multiple
+polynomially. For ordinary dyadic coefficients, a polynomial common grid
+means $O(\log n)$ fractional bits, whereas \eqref{eq:grid} requires
+$\Omega(n/r)$ fractional bits up to logarithmic terms.
+\end{remark}
+
+\section{A wider first layer removes the exponential cost}
+\begin{theorem}\label{thm:wide}
+Inner-product parity has a tanh representation with two hidden layers,
+common hidden width $O(n)$, global signed margin greater than one, and
+Frobenius product
+\[
+ P=O\bigl(n^{5/2}\log^2(n+2)\bigr).
+\]
+The network uses a single augmented constant input and no separately
+supplied internal biases. All constant rails and readout coefficients
+are charged in the stated product.
+\end{theorem}
+\begin{proof}
+Write $q_i=(1-a_i)(1-b_i)/4\in\{0,1\}$ and
+$m=\sum_iq_i$. Let $K=C\log(n+2)$ for a sufficiently large universal
+constant $C$. The first hidden layer contains
+\[
+ h_i=\tanh\bigl(K(-a_i-b_i-1)\bigr),\quad 1\le i\le n,
+ \qquad c=\tanh(1).
+\]
+The ideal value of $h_i$ is $2q_i-1$. Since its signed preactivation
+has magnitude at least $K$, the elementary estimate
+$1-\tanh u\le2e^{-2u}$ for $u\ge0$ makes its error at most
+$1/(100n^2)$. The squared Frobenius norm of this layer is $O(nK^2)$.
+
+Set $s=\sum_i h_i$. For $1\le j\le n$, use second-layer neurons
+\[
+ t_j=\tanh\bigl(K(s-(-n+2j-1))\bigr).
+\]
+The constant term is supplied by coefficient
+$-K(-n+2j-1)/c$ on the charged rail. Carry the rail itself through
+this layer by coefficient $1/c$, so that its new value remains exactly
+$c$. Because $s$ is within $1/(100n)$ of $-n+2m$, each threshold has
+signed preactivation magnitude at least $K(1-1/(100n))$. Increasing $C$
+if necessary makes $t_j$ lie within $1/(100n^2)$ of $+1$ for $j\le m$
+and of $-1$ for $j>m$.
+
+Use the linear readout
+\[
+ z=2\left[1+\sum_{j=1}^n(-1)^j(1+t_j)\right],
+\]
+with its constant term supplied by the carried $c$ rail. At the ideal
+sign values this equals $2(-1)^m=2\IP_n(a,b)$. Its error is at most
+$2n/(100n^2)<1/10$, so its signed margin is greater than one.
+
+The second matrix has squared Frobenius norm $O(n^3K^2)$, including
+the constant-shift coefficients. The readout has norm $O(\sqrt n)$:
+its coefficient on the constant rail is bounded uniformly, since
+$1+\sum_{j=1}^n(-1)^j$ is either zero or one. Multiplying the three
+norm bounds gives $O(n^{5/2}K^2)$. Zero padding makes the two hidden
+widths equal without changing the represented function or product.
+\end{proof}
+
+\section{Consequences for deep narrow teachers and Bayesian learning}
+The finite-horizon tanh compiler in \cite[constant-width compiler
+appendix]{parallel} gives another representation of the same target:
+width $24$, every physical coefficient at most one, and depth polynomial
+in $n$. It compiles any $S$-gate Boolean circuit on $d$ inputs to depth
+at most $5000(d+S+1)^3$ with unit output margin. Its memory uses
+exponentially fine real registers; polynomially many description bits
+suffice. This representation fact is the only imported result in this
+section; Theorems~\ref{thm:rank}--\ref{thm:wide} have self-contained
+proofs above.
+
+Combining that compiler with the present results gives three compatible
+facts about inner-product parity:
+\begin{enumerate}[leftmargin=*]
+\item It has fixed-width, bounded-coefficient, polynomial-depth tanh
+teachers.
+\item Every unit-margin representation retaining a fixed first hidden
+width has exponential Frobenius product, regardless of additional depth.
+At bounded coefficients its first layer also needs an exponential common
+denominator.
+\item Expanding the first hidden layer to width $O(n)$ permits a
+polynomial-product, depth-three representation.
+\end{enumerate}
+The fine resolution of a narrow teacher is therefore a genuine information
+requirement, while its large product need not be intrinsic to the function.
+A universal economical compiler cannot preserve fixed first-layer width.
+An unrestricted learner is free to expand it.
+
+These representation lower bounds do not prove bad Bayesian
+generalization. At fixed learner width, ordinary finite-architecture
+consistency bounds can give polynomial sample guarantees despite an
+exponential product. At large learner width, the inexpensive wide
+implementation above is available. A lower bound on one teacher's product,
+or even on every representation inside a narrow architecture, cannot be
+substituted for a target-relative lower bound on the full posterior.
+
+The unrestricted question---whether some small Boolean teachers require
+exponential-in-depth samples under the original Gaussian Bayesian
+learner---remains open. The present results explain why faithfully
+compressing the given teacher, controlling its perturbations, or merely
+counting its first-layer cells can miss a cheaper implementation of its
+Boolean function.
+
+\paragraph{Verification scope.}
+The statements in this note have been independently checked at the level
+of conventional mathematical proofs. They are not presented as Lean
+formalizations. The related analytic-compression formalization in the
+companion project proves other geometric and sampling lemmas, not the
+complete theorems in this note.
+
+\begin{thebibliography}{9}
+\bibitem{parallel}
+ChatGPT-6 Astra, Kaarel H\"anni, and Dmitry Vaintrob.
+\emph{Frobenius product, parallel circuits, and sample-complexity barriers
+for deep Gaussian Bayesian networks}. Research draft, 25 October 2026.
+\end{thebibliography}
+\end{document}
