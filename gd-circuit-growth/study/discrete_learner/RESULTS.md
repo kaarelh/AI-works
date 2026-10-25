@@ -18,7 +18,7 @@ of both learners.
 | held-out 1 (12), v1.1 - post-hoc | 12 | 0 | 3.0x | 5.3x | 6 (5) of 132 | 0.43 |
 | random formulas (20), v1 - used as a check during development | 20 | 0 | 6.0x | 6.8x | 9 (5) of 220 | 0.14 |
 | designed (21), v1 - in-sample | 20 | 0 | 5.4x | 7.0x | 7 (2) of 231 | 0.19 |
-| designed at d = 15 (7), v1 (the budget does not bind at d = 15) | 7 | 0 | 6.0x | 6.3x | 1 (0) of 77 | 0.08 |
+| designed at d = 15 (7), v1 (the budget binds only for the degree-6 search at n = 16384) | 7 | 0 | 6.0x | 6.3x | 1 (0) of 77 | 0.08 |
 | designed at d = 60 (7), v1.1 | 7 | 0 | 31.7x | 36.3x | 0 (0) of 77 | 0.46 |
 | designed at d = 120 (4), v1.1 | 4 | 0 | 45.5x | 30.7x | 0 (0) of 29 | 0.18 |
 
@@ -162,7 +162,7 @@ Cells (target, n) where the learner's seed-mean test error exceeds the networks'
 
 Mean log2 ratio over targets where both learn: -2.80 (negative = learner needs less data). Learner clearly better (ratio < -0.25 or networks never): 20; clearly worse: 0; of 21. Largest compute used: 1.9e-01 of a GD run.
 
-## dfg-c1.0 on the designed at d = 15 (7), v1 (the budget does not bind at d = 15) suite (d = 15)
+## dfg-c1.0 on the designed at d = 15 (7), v1 (the budget binds only for the degree-6 search at n = 16384) suite (d = 15)
 
 | target | n* learner | n* networks | log2 ratio (learner/networks) | test error at n = 64 / 256 / 1024 / 4096 (learner; networks) | max FLOPs / GD run |
 |---|---|---|---|---|---|

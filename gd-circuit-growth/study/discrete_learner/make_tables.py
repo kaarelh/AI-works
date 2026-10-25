@@ -31,7 +31,7 @@ ROWS = [  # (key, label); key "V1HELD" = the frozen v1 held-out run (written in 
     ("dfg-v1.1__random", "random formulas (20), v1.1"),
     ("dfg-c1.0__designed", "designed (21), v1 - in-sample"),
     ("dfg-v1.1__designed", "designed (21), v1.1 - in-sample"),
-    ("dfg-c1.0__designed_d15", "designed at d = 15 (7), v1 (the budget does not bind at d = 15)"),
+    ("dfg-c1.0__designed_d15", "designed at d = 15 (7), v1 (the budget binds only for the degree-6 search at n = 16384)"),
     ("dfg-v1.1__designed_d60", "designed at d = 60 (7), v1.1"),
     ("dfg-v1.1__designed_d120", "designed at d = 120 (4), v1.1"),
 ]

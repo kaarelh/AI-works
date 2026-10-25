@@ -18,7 +18,7 @@ Notes by Claude, prompted by Kaarel Hänni. Research note, 23 October 2026; not 
 
 Raw network outputs live in a session scratch directory and are in neither branch. The scripts regenerate them.
 
-[Part 6](#part-6-a-discrete-learner-as-good-as-gradient-descent-25-october-2026) builds a discrete learner from this picture that needs less data than the networks on nearly every target, at a fraction of their compute.
+[Part 6](#part-6-a-discrete-learner-that-needs-less-data-than-gradient-descent-25-october-2026) builds a discrete learner from this picture. On nearly every target it needs less data than the study's networks: 3.1× less at the median on a blind held-out suite. It uses at most about half of one network run's FLOPs per fit, and is comparable to or faster than them in CPU time.
 
 [Part 4](#part-4-does-compositional-structure-beyond-leap-matter-24-october-2026) tests whether compositional structure beyond leap complexity matters. [Part 5](#part-5-what-the-network-computes-while-it-learns-2425-october-2026) characterizes the sequence of functions a network computes while it learns, and gives models that reproduce it on held-out targets.
 
@@ -789,7 +789,7 @@ Full write-up: [`study/trajectories/TRAJECTORIES.md`](study/trajectories/TRAJECT
 
 This is the composition finding of Part 4, seen in time rather than in samples.
 
-## Part 6: a discrete learner as good as gradient descent (25 October 2026)
+## Part 6: a discrete learner that needs less data than gradient descent (25 October 2026)
 
 Full write-up: [`study/discrete_learner/DISCRETE-LEARNER.md`](study/discrete_learner/DISCRETE-LEARNER.md). All tables:
 [`study/discrete_learner/RESULTS.md`](study/discrete_learner/RESULTS.md).
@@ -797,8 +797,8 @@ Full write-up: [`study/discrete_learner/DISCRETE-LEARNER.md`](study/discrete_lea
 **Question.** Use the picture of Parts 1–5 to build a more discrete learner that, with similar compute and data, does at
 least as well as gradient descent on the toy problems where gradient descent does well.
 
-**Proposal: discrete feature growth (DFG)** (Heuristic design, Numerical results). Same strategy as the networks,
-different search.
+**Proposal: discrete feature growth (DFG)** (Heuristic design, Numerical results). It keeps the strategy Parts 1–5
+attribute to the networks, and replaces their search.
 
 The strategy, as in the networks:
 - Grow features greedily, in order of detectability against the noise of the *residual*.
@@ -816,35 +816,52 @@ moves: a χ² test on the whole linear part, and the spiked top eigen-directions
 - **Blind tests.**
   - *Final version* (v1.1, on 7 held-out targets written after it was committed): smaller n* on all 7. The median is
     3.1× less data, at most 0.26 of one network run's FLOPs per fit.
-  - *Frozen first version* (on 12 earlier held-out targets): smaller n* on 11 of 12, median 2.7×. It never learns par5,
-    which needs the degree-5 search it lacked.
+  - *Frozen first version, with its degree-5/6 search removed* (on 12 earlier held-out targets): smaller n* on 11 of
+    12, median 2.7×. It never learns par5. The frozen version did have that search, and with it wins on all 12, but the
+    search was added knowing par5 was in the suite.
 - **Development suites.** On 21 designed targets and 20 random formulas: clearly smaller n* on 40 of 41 (median 5–6×),
-  and a tie on and3. The factor grows with input dimension, to a median 30–45× at d = 60 and 120. For par3 the networks
+  and a tie on and3. The factor grows with input dimension on the sparse targets, to a median 32–46× at d = 60 and 120
+  (in-sample targets, mostly sparse). For maj9 it stays at 1.5–2.7×. For par3 the networks
   need 843 / 3410 / ~14000 samples at d = 30 / 60 / 120; DFG needs 28 / 28 / 56 (inputs permuted per fit).
-- **Where it is worse.** Per (target, n) cell, DFG is worse than the networks by more than 0.02 in 0–10% of cells,
-  mostly at n = 16–64, where both are near chance. The persistent exception is MAJ5 ⊕ MAJ5 at n = 64–256.
-- **Audits.** Three independent audits checked the comparison: data and leakage, compute accounting, and reproduction.
-  They found no leakage and an exact data match, and the FLOP counter agrees with an independent count. They also found
-  real problems, all fixed or disclosed in the write-up:
+- **Where it is worse.** Per (target, n) cell, DFG is worse than the networks by more than 0.02 in 0–10% of cells.
+  Most are at n = 16–64, where both are near the constant predictor's error and DFG is sometimes above it. The
+  persistent exception is MAJ5 ⊕ MAJ5 at n = 64–256.
+- **Audits.** Five independent audits checked the comparison: data and leakage, compute accounting, reproduction, and
+  two of the write-up. They found no test-data leakage and an exact data match, and the FLOP counter agrees with an
+  independent count. They also found real problems, all fixed or disclosed in the write-up:
+  - the degree-5/6 search was added knowing par5 was in held-out suite 1;
+  - the random suite was used during development, and the small-n rules were tuned on the designed suite's test error,
+    so neither is out-of-sample;
   - a compute-budget bug at d = 120;
   - a tie-break bias toward low-index inputs;
-  - an overclaim in an early draft.
-- **Ablations.** Every ingredient taken from the networks is worth 1.2–3× on one class of targets:
+  - a seed-lucky mux n*;
+  - several overclaims in drafts.
+- **Ablations** (3 seeds each). Each ingredient taken from the networks is worth 1.1–3× on one class of targets:
   - the readout fitted to the residual, on dense targets;
   - residual-scaled thresholds and the composition classes, on staged targets;
   - the linear block, on majorities.
 
-  The bulk of the gap with gradient descent comes from exhaustive search itself.
+  No single-ingredient ablation comes near the networks except dropping degree 4 (par4 is then never learned). So by
+  elimination the bulk of the gap is plausibly carried by exhaustive search over the Fourier dictionary, though that
+  was not ablated directly.
 
-**What this says about gradient descent** (Heuristic). Its extra data cost on these targets is the price of searching in
-weight space. Part 3's law has it paying about d^{k−1} samples for a k-parity. Exhaustive search pays the same search
-in FLOPs and only about 2k ln d in samples, and that fits inside gradient descent's own FLOP budget here.
+**What this says about gradient descent** (Heuristic; consistent with these results, not tested by them). Its extra data
+cost on these targets would be the price of searching in weight space:
+- *Gradient descent:* Part 3's heuristic law has it paying about d^{k−1} samples for a k-parity (measured: d^{1.9} for
+  k = 3, d^{2.4} for k = 4).
+- *Exhaustive search:* it pays for search in FLOPs and only about 2k ln d in samples, and that fits inside gradient
+  descent's own FLOP budget at d = 30.
+- *The confound:* search and hypothesis class are not separated here. DFG's dictionary is the class the targets were
+  built from, in effect a greedy, budgeted low-degree algorithm. The networks are generic and run one untuned
+  configuration.
 
 **Limits.**
-- DFG's dictionary assumes the Boolean cube with uniform inputs.
+- DFG was designed knowing the targets are Boolean functions of uniform ±1 inputs, mostly sparse in the Fourier basis.
+  So the result shows that such a specialised learner fits within gradient descent's FLOP budget and needs less data.
+  It says nothing about learners in general.
 - Its compute grows as d^K, so high-degree features are found only from subsamples.
-- In CPU time on this machine it is not faster than the networks: float64 numpy against float32 XLA.
-- It was compared with one network configuration.
+- It was compared with one untuned network configuration. Earlier parts found up to about 2× changes in the networks'
+  n* from width or optimizer, which is comparable to DFG's smallest blind wins (1.3–1.9×).
 
 ## Files
 
