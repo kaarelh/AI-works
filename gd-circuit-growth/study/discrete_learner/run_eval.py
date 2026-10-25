@@ -2,7 +2,7 @@
 results/<learner>__<suite>.md.   usage: python run_eval.py <module:Class[:kwargs-json]> <suite> [fns]"""
 import sys, os, json, importlib
 import harness as H
-mod, cls, *kw = sys.argv[1].split(":")
+mod, cls, *kw = sys.argv[1].split(":", 2)
 L = getattr(importlib.import_module(mod), cls)(**(json.loads(kw[0]) if kw else {}))
 suite = sys.argv[2]; fns = sys.argv[3].split(",") if len(sys.argv) > 3 else None
 os.makedirs("results", exist_ok=True)

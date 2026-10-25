@@ -21,6 +21,10 @@ least-squares fit on the features grown so far.  DFG does the same with exhausti
                  features (u.x)^2 - |u|^2                                                          (e.g. MAJ5 xor MAJ5)
     stop when nothing is accepted, or when the fit already has every training label's sign right
   predict sign(least-squares fit + kernel background, below)
+  v1.1 (readout="logit", added after the held-out evaluation of v1): the least-squares weights are refined by 15 Newton
+  steps of L2-regularised logistic regression (lambda = 1e-4) when n >= 8 p.  Square loss is the wrong readout for
+  halfspaces: sign(LS) of a dense threshold function stays a few % off, and the logistic fit tends to the max-margin
+  separator in the grown features.
 
 The noise level s falls as features are fit, so later (weaker) features become detectable: the 'noise-limited greedy
 growth' picture.  The readout is least squares, not the raw coefficients: on MAJ9 at n = 128 this alone takes the test
@@ -37,10 +41,13 @@ points than the default by over 2 sqrt(#points where they differ), a paired McNe
 it).  The cost of the cross-validation is included.
 
 COMPUTE BUDGET.  The exhaustive searches are run on the first m training points, with m set so that each stays within a
-fixed fraction of one network run (harness.gd_flops): degree 4 in 25%, degree 3 in 3% per round, the two-input
+fixed fraction of one network run (harness.gd_flops): degree 4 in 15% (25% in the frozen v1), degree 3 in 3% per round, the two-input
 extensions in 3% per round, degrees 5 and 6 (first round) in 3% each (thresholds use m).  At d = 30 this binds only
 for degrees 5 and 6 (m ~ 1400 and ~150); at d = 60 and 120 it binds for degree 4 too.  A parity needs only
 ~2 ln(N) / rho^2 points to be found, so subsampling the search costs little there.
+A search whose m would fall below 32 is skipped.  With the small-n cross-validation the final fit gets half of the
+budget and the 2F fold fits share the other half (v1.1; in v1 every fold fit had the whole budget, which at d = 120 cost
+up to 2.7 network runs per fit).  A round starts only while the fit has spent less than 0.75 of its budget.
 Compute is counted in FLOPs (multiply-add = 2) and compared with one network run.
 """
 import itertools, math, numpy as np
@@ -74,34 +81,37 @@ def _fwht(a):
 
 class DFG:
     def __init__(self, K=4, K_later=3, c=1.0, delta=0.1, rounds=8, max_new=64, max_feats=256, max_ext_bases=32,
-                 local_max=12, blocks=True, ridge=1e-3, budget=(0.25, 0.03, 0.03), noise="residual", readout="ls",
-                 small_n=True, cv_n=512, K_hi=6, budget_hi=0.03, background=True, name=None):
+                 local_max=12, blocks=True, ridge=1e-3, budget=(0.15, 0.03, 0.03), noise="residual", readout="ls",
+                 small_n=True, cv_n=512, K_hi=6, budget_hi=0.03, background=True, logit_lam=1e-4, name=None):
         self.K, self.K_later, self.c, self.delta, self.rounds = K, K_later, c, delta, rounds
         self.max_new, self.max_feats, self.max_ext_bases, self.local_max = max_new, max_feats, max_ext_bases, local_max
         self.blocks, self.ridge, self.budget, self.noise, self.readout = blocks, ridge, budget, noise, readout
         self.small_n, self.cv_n, self.K_hi, self.budget_hi, self.background = small_n, cv_n, K_hi, budget_hi, background
-        self.name = name or f"dfg-c{c}" + ("" if blocks else "-noblocks")
+        self.logit_lam = logit_lam
+        self.name = name or (f"dfg-c{c}" if readout != "logit" else "dfg-v1.1")
 
     def fit(self, X, y, rng=None):
         """At n <= cv_n the fallbacks for small samples are compared by 5-fold cross-validation (see SMALL n)."""
         X = np.asarray(X, dtype=np.float64); y = np.asarray(y, dtype=np.float64); n = len(y)
         R = self.ridge
         variants = [(self.c, False, False, R), (self.c, True, False, R)]
-        run = lambda v, A, b, hi=False: self._hebb(A, b) if v == "hebb" else self._fit(A, b, *v, hi=hi)
+        F = 10 if n <= 64 else 5
+        # the budget is shared: the final fit gets half, the 2F fold fits the other half
+        run = lambda v, A, b, hi=False, sc=1.0: self._hebb(A, b) if v == "hebb" else self._fit(A, b, *v, hi=hi, scale=sc)
         if n > self.cv_n or not self.small_n:
             out = self._fit(X, y, *variants[0]); out["info"].update(variant=0); return out
         rng = rng if rng is not None else np.random.default_rng(0)
-        F = 10 if n <= 64 else 5; fold = rng.permutation(n) % F; wrong, fl = [], 0.0
+        fold = rng.permutation(n) % F; wrong, fl = [], 0.0
         for v in variants:
             e = np.zeros(n, bool)
             for f in range(F):
                 tr, te = fold != f, fold == f
-                o = run(v, X[tr], y[tr]); fl += o["flops"]; e[te] = o["predict"](X[te]) != y[te]
+                o = run(v, X[tr], y[tr], False, 1 / (4 * F)); fl += o["flops"]; e[te] = o["predict"](X[te]) != y[te]
             wrong.append(e)
         b, c_ = int(np.sum(wrong[0] & ~wrong[1])), int(np.sum(~wrong[0] & wrong[1]))
         best = 1 if b - c_ > 2 * math.sqrt(b + c_) else 0              # forced only if it wins a paired (McNemar) test
         errs = [int(w.sum()) for w in wrong]
-        out = run(variants[best], X, y, True); out["flops"] += fl
+        out = run(variants[best], X, y, True, 0.5); out["flops"] += fl
         out["info"].update(variant=best, cv_errs=errs)
         return out
 
@@ -112,9 +122,9 @@ class DFG:
         return dict(predict=lambda Z: np.where(np.asarray(Z, dtype=np.float64) @ w + b > 0, 1.0, -1.0), flops=2.0 * n * d,
                     info=dict(size=d + 1, rounds=0, log=[]))
 
-    def _fit(self, X, y, c, force, lin0, ridge, hi=True):
+    def _fit(self, X, y, c, force, lin0, ridge, hi=True, scale=1.0):
         n, d = X.shape
-        fl = [0.0]; GD = gd_flops(d); forced = [0]
+        fl = [0.0]; GD = gd_flops(d) * scale; forced = [0]
         feats = [("chi", ())]; cols = [np.ones(n)]; have = {()}
         info = dict(rounds=0, log=[])
 
@@ -128,6 +138,8 @@ class DFG:
         for rnd in range(self.rounds):
             s = math.sqrt(max(np.mean(r * r), 1e-12))
             if s < 1e-6 or (rnd > 0 and np.all(np.sign(y - r) == y)):    # exact fit, or every training sign right
+                break
+            if fl[0] > 0.75 * GD:                                        # hard cap: stay within one network run
                 break
             if self.noise == "label":                                   # ablation: noise taken as that of the labels
                 s = 1.0
@@ -157,9 +169,9 @@ class DFG:
                 for i, j in list(zip(*np.where(Mu > t))) + [q]:
                     offer((int(i), int(j)), M[i, j], t)
             if K >= 3:
-                m = min(n, max(32, int(self.budget[1] * GD / (d * (2 * d * d + 2 * d)))))
-                Xm, rm, tm = X[:m], r[:m], thr_m(math.comb(d, 3), m)
-                for a in range(d - 2):
+                m = min(n, int(self.budget[1] * GD / (d * (2 * d * d + 2 * d))))
+                Xm, rm, tm = X[:m], r[:m], thr_m(math.comb(d, 3), max(m, 1))
+                for a in range(d - 2 if m >= 32 else 0):
                     Ma = (Xm * (rm * Xm[:, a])[:, None]).T @ Xm / m; fl[0] += 2 * m * d * d + 2 * m * d
                     Ma = np.triu(Ma, 1); Ma[: a + 1] = 0; t = tm
                     q = np.unravel_index(np.argmax(np.abs(Ma)), Ma.shape)
@@ -167,9 +179,9 @@ class DFG:
                         if i > a and j > i:
                             offer((a, int(i), int(j)), Ma[i, j], t)
             if K >= 4:
-                m = min(n, max(32, int(self.budget[0] * GD / (math.comb(d, 2) * (2 * d * d + 3 * d)))))
-                Xm, rm, t = X[:m], r[:m], thr_m(math.comb(d, 4), m)
-                for a, b in itertools.combinations(range(d), 2):
+                m = min(n, int(self.budget[0] * GD / (math.comb(d, 2) * (2 * d * d + 3 * d))))
+                Xm, rm, t = X[:m], r[:m], thr_m(math.comb(d, 4), max(m, 1))
+                for a, b in (itertools.combinations(range(d), 2) if m >= 32 else []):
                     if b >= d - 2:
                         continue
                     Mab = (Xm * (rm * Xm[:, a] * Xm[:, b])[:, None]).T @ Xm / m; fl[0] += 2 * m * d * d + 3 * m * d
@@ -197,14 +209,16 @@ class DFG:
             base = [(k, abs(wi)) for (kind, k), wi in zip(feats, w) if kind == "chi" and k]
             base = [k for k, _ in sorted(base, key=lambda kv: -kv[1])][: self.max_ext_bases]
             if base:
-                m = min(n, max(32, int(self.budget[2] * GD / (len(base) * (2 * d * d + 3 * d)))))
-                Xm = X[:m]; t1, t2 = thr(len(base) * d), thr_m(len(base) * math.comb(d, 2), m)
+                m = min(n, int(self.budget[2] * GD / (len(base) * (2 * d * d + 3 * d))))
+                Xm = X[:max(m, 1)]; t1, t2 = thr(len(base) * d), thr_m(len(base) * math.comb(d, 2), max(m, 1))
                 for S in base:
                     rs = r * _chi(X, S); fl[0] += n * (len(S) + 1)
                     e1 = X.T @ rs / n; fl[0] += 2 * n * d
                     for j in np.where(np.abs(e1) > t1)[0]:
                         if j not in S:
                             offer(tuple(sorted(S + (int(j),))), e1[j], t1)
+                    if m < 32:
+                        continue
                     E2 = np.triu((Xm * rs[:m, None]).T @ Xm / m, 1); fl[0] += 2 * m * d * d + m * d
                     for j, l in zip(*np.where(np.abs(E2) > t2)):
                         if j not in S and l not in S:
@@ -257,6 +271,13 @@ class DFG:
                                     blocks=[k for k, _ in blk]))
             w, r = lsfit(); info["rounds"] = rnd + 1
         F, W = list(feats), np.array(w)
+        if self.readout == "logit" and n >= 8 * len(cols):              # v1.1: refine the weights with logistic loss
+            A = np.stack(cols, 1); p = A.shape[1]; v = 4.0 * W; lam = self.logit_lam
+            for _ in range(15):
+                z = A @ v; pr = 1 / (1 + np.exp(-y * z)); g = -(A.T @ (y * (1 - pr))) / n + lam * v
+                Hs = (A * (pr * (1 - pr))[:, None]).T @ A / n + lam * np.eye(p); v = v - np.linalg.solve(Hs, g)
+                fl[0] += 2 * n * p * p + p ** 3 / 3 + 8 * n * p
+            W = v * (np.linalg.norm(A @ W) / max(np.linalg.norm(A @ v), 1e-12))
         bg = X.T @ r / n if self.background else np.zeros(d); fl[0] += 2 * n * d   # kernel background on the residual
         if self.readout == "coef":                                      # ablation: raw coefficients, no least squares
             W = np.array([float(np.mean(y * cl) / max(np.mean(cl * cl), 1e-12)) for cl in cols])

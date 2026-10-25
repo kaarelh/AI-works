@@ -7,8 +7,8 @@ set is 4096 points from default_rng([fn_seed(name), 10**6]).  Same as study/nn_t
 GRADIENT DESCENT'S COMPUTE. One network run (study/nn_train.py: muP MLP d-128-128-1, Adam, batch 64, 20000 steps) costs
     params P = d*128 + 128 + 128*128 + 128 + 128 (= 20608 at d = 30);
     forward + backward ~ 6 P FLOPs per example  ->  6 P * 64 * 20000  (= 1.58e11 at d = 30),
-plus the Adam update (~10 P per step, 4e9).  We use GD_FLOPS(d) = 6 P * 64 * 20000 + 10 P * 20000 as the budget per fit,
-for every n (the networks always train 20000 steps).  A learner reports its own FLOP count (multiply-adds count 2).
+plus the Adam update (~10 P per step, 4e9).  We use GD_FLOPS(d) = 6 P * 64 * T + 10 P * T as the budget per fit, for every
+n, with T the networks' step count: 20000, except 40000 at d = 120 (GD_STEPS).  A learner reports its own FLOP count (multiply-adds count 2).
 
 LEARNER API.  An object with .name and .fit(X, y, rng) -> dict(predict=callable(Z)->+-1 array, flops=float, [info=dict]).
 X: (n, d) float32 in {-1, +1}; y: (n,) float32 in {-1, +1}.  fit may use only (X, y, rng).
@@ -27,7 +27,11 @@ NS = [2 ** k for k in range(4, 15)]
 N_MAX, N_TEST = 16384, 4096
 
 
-def gd_flops(d, N=128, batch=64, steps=20000):
+GD_STEPS = {120: 40000}          # the d = 120 networks were trained for 40000 steps (study Part 3); all others 20000
+
+
+def gd_flops(d, N=128, batch=64, steps=None):
+    steps = GD_STEPS.get(d, 20000) if steps is None else steps
     P = d * N + N + N * N + N + N
     return 6 * P * batch * steps + 10 * P * steps
 
