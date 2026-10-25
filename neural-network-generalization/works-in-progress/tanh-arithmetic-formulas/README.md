@@ -12,6 +12,8 @@ It also proves a Bayesian converse using an explicitly stated existing posterior
 
 A universal polynomial sample bound for unrestricted bounded-weight deep teachers in either of these regimes would therefore imply **P/poly = nonuniform PNC¹ = L/poly**. This is a conditional complexity consequence, not an established contradiction or an exponential-depth sample lower bound. The general unrestricted-depth learning question remains open. The strengthened converse does not cover **γ = 1**: the low-action expectation maps arising there have not been shown to admit the deterministic low-product tanh representations required here.
 
+The [online converse note](research-notes/online-depth-independent-circuit-converse.md) gives a related conclusion: a bound of `M` on expected total confidence errors or Gibbs mistakes **for every iid input distribution** forces a circuit of size polynomial in `d + M`, independently of learner depth. It uses the same sufficiently-large-width or strong-prior hypotheses, and does not cover ordinary majority mistakes or a guarantee for just one input distribution. The note has a [separate independent audit](verification/online-depth-independent-circuit-converse-audit.md).
+
 ## Contents and dependencies
 
 - [Paper](paper.pdf): the representation proof is self-contained apart from standard probability, finite minimax, and the cited arithmetic-complexity theorems.

@@ -10,3 +10,5 @@ This is a conventionally checked research paper. The Fourier–Poisson estimator
 - The ordinary-tanh normal-form appendices are included in full. Replacing their activation class by arbitrary lookup functions would not justify applying the tanh estimator.
 
 The [dependency manifest](../DEPENDENCIES.json) records exact source hashes for imported repository results. The [publication check](publication-check.json) records the compiled manuscript and the scope of the checks; it is not a machine-checked proof certificate.
+
+The separate [online converse note](../research-notes/online-depth-independent-circuit-converse.md) has an [independent conventional audit](online-depth-independent-circuit-converse-audit.md). It uses a distribution-universal total-mistake hypothesis; it is not part of the PDF or a Lean formalization.
