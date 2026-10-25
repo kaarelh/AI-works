@@ -1,0 +1,241 @@
+\section{A logarithmic-depth ordinary-tanh normal form}
+\label{app:normal}
+
+We supply the geometric reduction and all remaining normalization
+steps. They are needed because the estimator acts on tanh itself,
+whereas a generic finite-precision simulation could replace tanh by
+lookup tables without preserving the hypothesis of the estimator.
+
+\subsection{Relevant coordinates and a two-ball cover}
+
+\begin{lemma}[Relevant-coordinate reduction]
+\label{lem:relevant}
+A globally unit-margin tanh representation has $P\ge1$, and its
+Boolean function has at most $P^2$ relevant input coordinates.
+Fixing all the other coordinates can be done without increasing its
+product or reducing its global margin on the remaining cube.
+\end{lemma}
+\begin{proof}
+Since tanh is zero-preserving and one-Lipschitz,
+\[
+ 1\le\E_x z(x)^2\le
+ \left(\prod_{s=2}^D\norm{W^s}_F^2\right)
+ \E_x\norm{W^1(1,x)}_2^2=P^2,
+\]
+where the expectation is uniform and
+$\E[(1,x)(1,x)^T]=I$. Put $T=\prod_{s=2}^D\norm{W^s}_F$.
+For every relevant coordinate $i$, a bichromatic cube edge in that
+direction gives $2\le2T\norm{W^1e_i}_2$. Summing squares yields
+at most $P^2$ relevant coordinates. For the irrelevant columns,
+choose independent uniform signs $a_i$, replace the first constant
+column $w_0$ by $w_0+\sum_i a_iw_i$, and delete those columns.
+The expected new squared Frobenius norm equals the old squared norm.
+Some choice does not increase it. Every restriction has the same
+Boolean labels and retains the original margin.
+\end{proof}
+
+\begin{lemma}[Two balls]
+\label{lem:twoball}
+For every real matrix $W$, every Euclidean ball $B(a,r)$, and every
+coordinatewise one-Lipschitz map $\Phi$, the set
+$\Phi(W B(a,r))$ is covered by two balls of radius
+$r\norm W_F/\sqrt2$.
+\end{lemma}
+\begin{proof}
+Translation and scaling reduce to $a=0,r=1,\norm W_F=1$;
+the zero case is immediate. Let $\alpha$ be the leading singular
+value. If $\alpha^2\le1/2$, one ball suffices. Otherwise put
+$b^2=1-\alpha^2$ and $c=(2\alpha^2-1)/(2\alpha)$.
+The remaining singular part has operator norm at most $b$.
+With $u$ a leading left singular vector, a point whose leading
+input coordinate is $t$ has squared distance to the matching
+center $cu$ or $-cu$ at most
+\[
+ (\alpha|t|-c)^2+b^2(1-t^2).
+\]
+This is convex in $|t|\in[0,1]$ and both endpoint values equal
+$1/(4\alpha^2)\le1/2$. Apply $\Phi$ to the two centers;
+its Euclidean Lipschitz constant is at most one.
+\end{proof}
+
+For prefix products $S_j=\prod_{s\le j}\norm{W^s}_F$ and
+inputs of norm at most $R$, iteration gives at most $2^j$ balls of
+radius $RS_j2^{-j/2}$. The remaining suffix is Lipschitz with
+constant at most $P/S_j$. Thus normalized prefix states of opposite
+labels are at least $2/P$ apart. If
+\[
+ j=\left\lceil2\log_2(64PR)\right\rceil,
+\]
+selecting one actual state from each nonempty ball gives polynomially
+many centers $c_a=h^j(x_a)/S_j$, each with its label $f_a$.
+Every normalized state has a same-label center within $1/(8P)$,
+and every opposite-label center is at least $2/P$ away. All states
+and centers have norm at most $R$. The center need not initially lie
+in the image: selecting an actual image doubles the cover radius,
+which the displayed constants allow. Every covering ball is
+monochromatic by the suffix Lipschitz estimate.
+
+\subsection{Physical weights and finite precision at short depth}
+
+\begin{lemma}[Bounding physical weights]
+\label{lem:physical}
+Suppose a globally unit-margin tanh representation already has
+depth $D$, hidden widths at most $C$, and product at most $P$.
+It has a representation of the same Boolean function with no more
+weighted layers, product at most $2P$, margin greater than $3/2$,
+and individual weights bounded by a universal polynomial in
+$d,D,C,P$. It can then be rounded to dyadic weights with
+$O(D\log B)$ bits and product at most $4P$, where $B$ is a
+polynomial bounding its dimensions, Frobenius norms, and row sums.
+The rounded representation retains unit margin.
+\end{lemma}
+\begin{proof}
+Write $M_j=\norm{W^j}_F$, $S_j=\prod_{s\le j}M_s$, and
+$R=\sqrt{d+1}$. Margin and bounded hidden activations give
+$S_j\le P\sqrt C$ at every hidden layer. Set
+\[
+ \tau^2=\frac1{16PD R^3}.
+\]
+Replace tanh by the identity at each hidden layer whose original
+prefix product is less than $\tau$. For any intermediate hybrid
+network, all prefix and suffix Lipschitz bounds remain valid.
+Using $|u-\tanh u|\le|u|^3/3$ and
+$\norm{v^{\odot3}}_2\le\norm v_2^3$, the telescoping output
+error is at most
+\[
+ \sum_{j:S_j<\tau}\frac{P}{S_j}\frac{(S_jR)^3}{3}
+ \le PD\tau^2R^3/3\le1/48.
+\]
+Collapse consecutive linear blocks into the following nonlinear
+layer or final readout, then double the readout. If retained hidden
+indices are $j_1<\cdots<j_H$, the collapsed matrices have assigned
+Frobenius bounds
+$S_{j_1}$, $S_{j_s}/S_{j_{s-1}}$, and $2P/S_{j_H}$.
+Since each retained $S_{j_s}$ lies between $\tau$ and $P\sqrt C$,
+all weights are bounded by $\max(1,2P\sqrt C/\tau)$, a polynomial.
+The product is at most $2P$ and the margin exceeds $3/2$.
+If no hidden activation remains, the affine matrix has norm at
+most $2P$ and the same conclusions hold.
+
+For precision, enlarge a polynomial $B\ge2$ to bound all dimensions,
+matrix Frobenius norms, and absolute row sums. At remaining depth
+$D'\le D$, every nonzero matrix norm satisfies
+\[
+ M_j\ge1/(\sqrt{d+1}B^{D'-1}),
+\]
+because $1\le|z(x)|\le\sqrt{d+1}\prod_jM_j$.
+Round entries to mesh $2^{-b}$ with
+$b=O(D'\log B+\log(d+D'+2))$, with a sufficiently large
+universal constant. Matrix perturbations are at most $M_j/(4D')$,
+so the product increases by less than two. The layerwise error
+recursion using the row-sum bound $B$ and Lipschitzness of tanh
+makes the output error less than $1/2$ at the same precision.
+The pre-rounding margin in fact exceeds $2(1-1/48)>3/2$, so the
+remaining margin is greater than one. If needed, absorb the additive
+logarithm into $O(D\log B)$ by enlarging $B$.
+\end{proof}
+
+\subsection{Replacing the long suffix by a tanh classifier}
+
+\begin{proof}[Proof of Theorem~\ref{thm:normal}]
+Apply Lemma~\ref{lem:relevant}, retain $k\le P^2$ inputs, and
+put $R=\sqrt{k+1}$ and
+$j=\lceil2\log_2(256PR)\rceil$.
+If $D=1$, the affine coefficients have norm at most $P$; double
+the readout and round them directly to sufficiently fine dyadic
+precision $O(\log(P+2))$, retaining unit margin, and finish.
+Hence assume $D\ge2$.
+Use the prefix version of the compression theorem in
+Appendix~\ref{sec:pf-width-compression} on the first
+$\min(j,D-1)$ hidden layers with error $1/4$, then double the
+readout. The global margin is at least $3/2$, the full product is
+at most $P_0=4P$, and all retained widths are bounded by a
+universal polynomial $C=C(P)$: the only inputs to that width
+bound are $P,R,j,\log(2|X_k|)$ and a fixed error tolerance.
+If all hidden layers have been retained, apply
+Lemma~\ref{lem:physical} and finish. Otherwise the first $j$
+hidden layers have the cover and normalized centers just proved,
+with $P_0$ in place of $P$.
+
+First supply a constant to a new suffix while preserving the product
+bound. For retained prefix products $S_s$, global margin gives
+$S_s\le P_0\sqrt C$. Choose
+\[
+ \epsilon_0=1/\max(1,2\max_{s\le j}S_s).
+\]
+It has inverse polynomial in $P$ and satisfies
+$0<\epsilon_0S_s\le1/2$. Add one constant rail whose activation
+in layer $s$ is exactly $\epsilon_0S_s$. Its first weight is
+$\operatorname{atanh}(\epsilon_0S_1)$ on the augmented constant;
+its later weight is
+$\operatorname{atanh}(\epsilon_0S_s)/(\epsilon_0S_{s-1})$.
+For $0<u\le1/2$,
+$(\operatorname{atanh}u/u)^2\le1+u^2\le5/4$.
+Thus the added squared norm is at most $(5/4)M_s^2$ in each
+layer, and the augmented prefix product is at most $(3/2)^jS_j$.
+
+At the interface the features are $(h^j,\epsilon_0S_j)$.
+A suffix written for $(u,1)=(h^j/S_j,1)$ is attached by multiplying
+its first matrix by
+$\operatorname{diag}(S_j^{-1}I,(\epsilon_0S_j)^{-1})$.
+This increases its first Frobenius norm by at most
+$(\epsilon_0S_j)^{-1}$. The complete product is therefore at
+most $(3/2)^j\epsilon_0^{-1}$ times the suffix's ordinary product.
+Both extra factors are polynomial in $P$.
+
+We now give the suffix. Its input $u$ and each of the $q=\poly(P)$
+centers $c_a$ have norm at most $R$. A correct-label center is
+within $1/(8P_0)$, while each opposite-label center is at distance
+at least $2/P_0$. In one hidden layer provide the features
+\[
+ \tanh(\beta u_i),\qquad
+ \tanh(1+\alpha u_i),\qquad\tanh(1-\alpha u_i),
+\]
+and an exact constant $1/2$. Linear combinations of these features
+approximate respectively $u_i$ and $u_i^2$ using
+\[
+ \frac{\tanh(\beta u_i)}\beta,\qquad
+ \frac{\tanh(1+\alpha u_i)+\tanh(1-\alpha u_i)-2\tanh1}
+      {\alpha^2\tanh''1}.
+\]
+Their errors are $O(\beta^2R^3)$ and $O(\alpha^2R^4)$.
+Choose $\alpha,\beta$ inverse-polynomially small in
+$C,R,P_0$ so that every affine combination
+\[
+ D_a(u)=\sum_i\operatorname{approx}(u_i^2)
+       -2\sum_i(c_a)_i\operatorname{approx}(u_i)+\norm{c_a}_2^2
+\]
+approximates $\norm{u-c_a}_2^2$ to error at most
+$1/(256P_0^2)$. This is possible with polynomial weights because
+$\norm{c_a}_1\le\sqrt C R$ and $\tanh''1\ne0$.
+Every affine constant is charged to the constant rail.
+
+In a second hidden layer use
+\[
+ t_a(u)=\tanh(B_0[\tau_0-D_a(u)]),\qquad
+ \tau_0=1/(16P_0^2),\quad B_0=32P_0^2\log(16q),
+\]
+and propagate the constant $1/2$. Put $\chi_a=(1+t_a)/2$.
+For a selected close center, $\tau_0-D_a\ge11/(256P_0^2)$;
+for every opposite-label center it is less than $-3/P_0^2$.
+The tanh tail estimate gives $\chi_a\ge1-1/(16q)$ for a close
+center and $\chi_a\le1/(16q)$ for each opposite-label center.
+All other $\chi_a$ lie in $[0,1]$, so
+\[
+ f(u)\sum_a f_a\chi_a(u)\ge1-1/(16q)-q/(16q)\ge7/8.
+\]
+The readout $2\sum_af_a\chi_a=\sum_af_at_a+\sum_af_a$
+has margin at least $7/4$; implement its constant by the carried
+$1/2$ rail. This is an ordinary-tanh network with two hidden
+layers, polynomial width, polynomial weights, and polynomial product.
+
+Attach it to the augmented prefix. The resulting network has
+depth $j+3=O(\log(P+2))$ and polynomial width and product.
+Some interface weights can be large if $S_j$ is tiny. Apply
+Lemma~\ref{lem:physical} to this now-short network. It preserves
+ordinary tanh and the Boolean function, makes all physical weights
+polynomial in $P$, and rounds them with
+$O(D'\log B)=O(\log^2(P+2))$ bits, since both the new depth
+$D'$ and $\log B$ are $O(\log(P+2))$.
+This proves all parts of the normal form.
+\end{proof}

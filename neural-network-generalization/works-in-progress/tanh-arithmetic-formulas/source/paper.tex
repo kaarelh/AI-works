@@ -1,0 +1,622 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,microtype,enumitem,xurl}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Arithmetic formulas for low-product tanh networks and a Bayesian learning converse},pdfauthor={ChatGPT-6 Astra; Kaarel Haenni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}
+\newcommand{\C}{\mathbb C}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Prb}{\mathbb P}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\poly}{\operatorname{poly}}
+\newcommand{\PNC}{\mathsf{PNC}}
+\newcommand{\NC}{\mathsf{NC}}
+\newcommand{\AC}{\mathsf{AC}}
+\newcommand{\Lpoly}{\mathsf L/\mathrm{poly}}
+\newcommand{\Ppoly}{\mathsf P/\mathrm{poly}}
+\newcommand{\PF}{P_F}
+\newcommand{\MAJ}{\operatorname{MAJ}}
+\newcommand{\sign}{\operatorname{sign}}
+\newcommand{\Rea}{\operatorname{Re}}
+\newcommand{\Ima}{\operatorname{Im}}
+\title{Arithmetic formulas for low-product tanh networks\
+and a Bayesian learning converse}
+\author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{Research draft --- 25 October 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We prove that every Boolean function with a globally unit-margin tanh
+representation of Frobenius product $P$ has a logarithmic-depth integer
+arithmetic circuit of size polynomial in $d+P$ whose output sign equals
+the function. The original network may have arbitrary finite depth,
+widths, and real coefficients. In particular, polynomial product implies
+nonuniform $\PNC^1$, hence logarithmic space with polynomial advice.
+The analytic ingredient is an exact Fourier--Poisson estimator for tanh
+that multiplies expected arithmetic work times second moment by only a
+universal constant. Cost-aware neuron sampling makes this potential
+propagate according to squared Frobenius norms. A logarithmic-depth tanh
+normal form, finite-set derandomization, coefficient rounding, and
+real-affine formula balancing complete the proof.
+
+For the original Gaussian Bayesian network conditioned on a global
+absolute output margin and exact training labels, an established
+posterior representation ceiling then gives a converse: a
+distribution-free guarantee after $n$ samples, with confidence-failure
+mass below any fixed constant less than one half, forces a small
+arithmetic-sign representation of the target. This applies to the
+strong-prior limit and every fixed Gaussian exponent $\gamma>1$ at the
+specified sufficiently large widths. It handles the full posterior
+mixture. The endpoint $\gamma=1$ is not covered by this strengthening.
+No unconditional exponential-depth sample lower bound or general
+polynomial-depth learning upper bound follows. The new arguments have
+undergone mathematical review but have not been formalized in Lean.
+\end{abstract}
+
+\section{Introduction and results}
+
+How much sequential computation can a neural network hide behind a
+small product of layer norms? This question matters for strong Gaussian
+Bayesian priors: after conditioning on data, most posterior functions
+can have low-product representatives even when the sampled parameters
+themselves are numerous and not small. A structural theorem about these
+functions can therefore turn a learning guarantee into a necessary
+computational condition on the target.
+
+For tanh networks, we show that polynomial Frobenius product restricts
+the represented Boolean function to a class between Boolean logarithmic
+depth and logarithmic space. This conclusion is stronger than merely
+exhibiting a small Boolean circuit. It also differs from simulating the
+given network layer by layer: the original network can have unbounded
+finite depth and arbitrary real weights.
+
+The proof has two parts. A geometric covering argument reduces the
+function to an ordinary-tanh network of logarithmic depth and polynomial
+resources. We include this normal form and its required width
+compression in the appendices. We then replace the remaining nonlinear
+computation by a small collection of randomized arithmetic expressions.
+An exact Fourier representation and Poisson random products prevent
+second-moment losses from escalating with the moment order. The useful
+quantity is the product of expected work and second moment. It grows by
+a constant times the squared layer Frobenius norm, so logarithmic
+retained depth leaves polynomial cost. The probabilistic method selects
+expressions correct on the whole Boolean cube. A careful finite-bit
+conversion makes their coefficients legitimate circuit constants.
+
+\subsection{Conventions}
+
+Write $X_d=\{-1,1\}^d$ and augment the input by one constant coordinate.
+A depth-$D$ network has $D$ weighted layers,
+\[
+ h^0(x)=(1,x),\qquad h^s(x)=\tanh(W^s h^{s-1}(x))\ (s<D),
+ \qquad z(x)=W^D h^{D-1}(x).
+\]
+The readout is scalar and linear. Hidden widths are arbitrary finite
+integers. There are no later free biases; a constant must be carried by
+ordinary hidden neurons. Put
+\[
+ \PF(W)=\prod_{s=1}^D\norm{W^s}_F.
+\]
+A representation of $f:X_d\to\{-1,1\}$ has \emph{global unit margin}
+if $f(x)z(x)\ge1$ for every $x\in X_d$. Purely affine representations
+($D=1$) are allowed.
+
+An integer arithmetic circuit uses binary $+$ and multiplication gates,
+input bits, and constants $-1,0,1$. The nonuniform class $\PNC^1$
+consists of signs of polynomial-size, logarithmic-depth such circuits:
+the accepting output is strictly positive. This is an arithmetic sign
+class, not Boolean $\NC^1$. Standard results give
+\[
+ \NC^1\subseteq\PNC^1\subseteq\Lpoly
+ \quad\hbox{in the nonuniform setting},
+ \qquad \AC^0(\PNC^1)=\PNC^1.
+\]
+Here and below the notation $\PNC^1$ is explicitly nonuniform unless a
+uniform evaluator is mentioned. The last display uses the corresponding
+nonuniform circuit form of the standard closure theorem
+\cite{datta}; the advice consists of the selected finite circuits.
+
+\begin{theorem}[Low product gives an arithmetic-sign circuit]
+\label{thm:main}
+There are universal constants $a,c>0$ such that any $f:X_d\to\{-1,1\}$
+with a global unit-margin tanh representation of product at most $P$
+has an integer arithmetic circuit of size at most $(d+P+2)^a$ and
+depth at most $c\log(d+P+2)$ whose output is positive exactly when
+$f(x)=1$. Its only constants are $-1,0,1$.
+Consequently, any family with $P=\poly(d)$ belongs to nonuniform
+$\PNC^1\subseteq\Lpoly$.
+\end{theorem}
+
+The theorem is existential. It does not say that the original real
+parameters are computable, that the circuit can be found efficiently,
+or that the original network can be evaluated in logarithmic space
+from an arbitrary real encoding. It gives another finite representation
+of the same Boolean function.
+
+\begin{theorem}[Bayesian consequence, informal]
+\label{thm:intro-converse}
+For the Gaussian posterior specified in Section~\ref{sec:posterior},
+fix either an exponent $\gamma>1$ and a sufficiently large finite
+learner width, or a sufficiently large fixed width followed by the
+strong-prior limit. Suppose that for every input distribution, $n$
+labeled samples have positive probability of giving posterior
+probability greater than $2/3$ to the correct label outside a set of
+mass at most $\varepsilon<1/2$. Then the target has an arithmetic-sign
+circuit of size polynomial in $d+n+(1-2\varepsilon)^{-1}$ and
+logarithmic depth in the same quantities. The polynomial is independent
+of learner depth and width. Precise width and limit quantifiers appear
+in Theorems~\ref{thm:ceiling} and~\ref{thm:converse}.
+\end{theorem}
+
+If a single distribution-free sample bound polynomial jointly in the
+resources of arbitrary bounded-weight deep tanh teachers and learner
+depth held in either of these regimes, it would follow that
+$\Ppoly$ is contained in nonuniform $\PNC^1$, and hence
+$\Ppoly=\Lpoly$; see Corollary~\ref{cor:collapse}. This is a
+conditional obstruction, not a proved separation. The question whether
+unrestricted tanh Bayesian learning has polynomial or necessarily
+exponential depth dependence remains open.
+
+\subsection{Relation to arithmetic neural computation}
+
+Merrill, Jiang, Li, Lin, and Sabharwal relate linear recurrent networks
+to logarithmic-depth arithmetic circuits and distinguish them from
+nonlinear recurrent architectures \cite{merrill}. Our setting is a
+different restriction: the network is genuinely nonlinear and
+feedforward, and neither its original depth nor its width is bounded.
+The hypothesis is low Frobenius product together with a global Boolean
+margin. The Fourier--Poisson argument constructs a new arithmetic
+representation from this norm constraint; it does not replace the
+nonlinear recurrence by an exact linear recurrence. The cited recurrent
+results therefore do not supply the theorem here. The arithmetic-class
+closure and logspace evaluation facts themselves are established
+results of counting complexity \cite{datta,caussinus}.
+
+\section{An exact random arithmetic expression for tanh}
+\label{sec:estimator}
+
+Expressions in this section may use complex arithmetic internally and
+real or imaginary part at a unary gate. Their final outputs are real.
+Cost counts leaves and arithmetic operations. Every child call uses
+independent fresh randomness, and the random expression's shape is
+independent of its input. Sampling exact real constants is a
+nonuniform representation device; no computational cost bound for an
+exact sampling algorithm is asserted.
+
+\begin{lemma}[Fourier identity]
+\label{lem:fourier}
+For real $u$,
+\[
+ \tanh u=\int_0^\infty k(\omega)\sin(\omega u)\,d\omega,
+ \qquad k(\omega)=\frac1{\sinh(\pi\omega/2)},
+ \qquad \int_0^\infty\omega k(\omega)\,d\omega=1.
+\]
+The first integral is absolutely convergent.
+\end{lemma}
+\begin{proof}
+The expansion $k(\omega)=2\sum_{j\ge0}e^{-(j+1/2)\pi\omega}$,
+combined with integration of sine against an exponential, gives
+\[
+ \int_0^\infty k(\omega)\sin(\omega u)\,d\omega
+ =2\sum_{j\ge0}\frac{u}{(j+1/2)^2\pi^2+u^2}=\tanh u.
+\]
+The last equality is the partial-fraction identity obtained by
+logarithmically differentiating the Euler product
+\[
+ \cosh u=\prod_{j\ge0}\left(1+\frac{u^2}{(j+1/2)^2\pi^2}\right).
+\]
+Termwise integration is justified by
+$\int k(\omega)|\sin(\omega u)|\,d\omega<\infty$:
+near zero $k(\omega)=O(1/\omega)$, and at infinity it decays
+exponentially. The second integral equals
+$2\sum_{j\ge0}((j+1/2)\pi)^{-2}=1$.
+\end{proof}
+
+\begin{theorem}[A universal work--second-moment transform]
+\label{thm:transform}
+Suppose random real arithmetic expressions $X(x)$ obey, uniformly on a
+finite input set,
+\[
+ \E X(x)=\mu(x),\quad \E X(x)^2\le V>0,
+ \quad \E\operatorname{cost}(X)\le T,\quad T\ge1.
+\]
+There is a random arithmetic expression $Y(x)$ with mean
+$\tanh\mu(x)$ and bounds $V',T'\ge0$, $T'\ge1$, satisfying
+\[
+ \E Y(x)^2\le V',\qquad
+ \E\operatorname{cost}(Y)\le T',\qquad V'T'\le C VT
+\]
+for a universal constant $C$. The case $V=0$ is handled by the zero
+expression. For every $s>0$, the same potential bound holds for the
+scaled activation $\tanh(s\mu)/s$.
+\end{theorem}
+\begin{proof}
+For fixed $\omega>0$, put $\lambda=1+\omega^2 V$, take
+$K\sim\operatorname{Poisson}(\lambda)$ independently, and define
+\[
+ Z=\prod_{j=1}^K(1+i\omega X_j/\lambda),\qquad S=\Ima Z.
+\]
+The empty product is one. The Poisson generating function and fresh
+independence give the exact identities
+\[
+ \E Z=e^{i\omega\mu},\qquad
+ \E|Z|^2=\exp\!\left(\frac{\omega^2\E X^2}{\lambda}\right)\le e.
+\]
+These require only second moments. Since $\mu^2\le V$,
+\begin{align*}
+ \E S^2&\le\E|Z-1|^2\\
+ &=\exp\!\left(\frac{\omega^2\E X^2}{\lambda}\right)
+       -2\cos(\omega\mu)+1
+ \le C\omega^2 V.
+\end{align*}
+Together with the preceding bound this proves
+$\E S^2\le C\min(1,\omega^2 V)$. The expected work conditional on
+$\omega$ is at most $CT\lambda$.
+
+Define
+\begin{align*}
+ b(\omega)&=\min(1,\omega\sqrt V),\\
+ Z_V&=\int_0^\infty k(\omega)b(\omega)/\sqrt\lambda\,d\omega,\\
+ A_V&=\int_0^\infty k(\omega)b(\omega)\sqrt\lambda\,d\omega.
+\end{align*}
+Both integrals are finite and positive. Sample $\omega$ with density
+$q_V(\omega)=k(\omega)b(\omega)/(\sqrt\lambda Z_V)$ and output
+$Y=k(\omega)S/q_V(\omega)$. The bound on $\E|S|$ gives
+absolute integrability, so Fubini and Lemma~\ref{lem:fourier} prove
+$\E Y=\tanh\mu$. Moreover
+\[
+ \E Y^2\le C Z_VA_V,
+ \qquad \E\operatorname{cost}(Y)\le CT A_V/Z_V.
+\]
+For $r\ge0$,
+$r\le\min(1,r)\sqrt{1+r^2}\le\sqrt2r$, hence
+$\sqrt V\le A_V\le\sqrt{2V}$. Multiplication proves the claim.
+Since $A_V/Z_V\ge1$, fixed overhead is absorbed. Apply this
+construction to $sX$ and divide its result by $s$ to obtain the last
+assertion; the $s^2$ factors cancel in the potential.
+\end{proof}
+
+\section{Cost-aware sampling through a network}
+
+\begin{lemma}[Linear combination]
+\label{lem:linear}
+Suppose child expressions have means $\mu_j$, second-moment bounds
+$V_j>0$, and expected-work bounds $T_j\ge1$. A linear combination
+$\sum_jw_j\mu_j$ has an unbiased expression with potential at most
+\[
+ C\left(\sum_j|w_j|\sqrt{V_jT_j}\right)^2.
+\]
+\end{lemma}
+\begin{proof}
+Omit zero terms. Set
+\[
+ L_0=\sum_j|w_j|\sqrt{V_j/T_j},\qquad
+ M_0=\sum_j|w_j|\sqrt{V_jT_j},\qquad
+ p_j=|w_j|\sqrt{V_j/T_j}/L_0.
+\]
+Sample $J$ with probabilities $p_j$ and output $w_JX_J/p_J$.
+Its mean is the required sum, its second moment is at most $L_0M_0$,
+and expected work is at most $CM_0/L_0$. Here $M_0/L_0\ge1$,
+which absorbs multiplication overhead. Their product is as claimed.
+If all terms vanish, use the zero expression.
+\end{proof}
+
+\begin{proposition}[Frobenius propagation]
+\label{prop:potential}
+A tanh network with $h$ hidden layers, input coordinates of absolute
+value at most one, and product $P$ has an unbiased scalar-output
+expression whose work--second-moment potential is at most
+\[
+ C^{h+1}(d+1)P^2.
+\]
+For a vector readout, the sum of its coordinate potentials has the
+same bound. The conclusion also allows neuron-specific normalized
+tanh activations or identity activations.
+\end{proposition}
+\begin{proof}
+Input coordinates have $V=T=1$. If $K_j=V_jT_j$ denotes a child
+potential, Lemma~\ref{lem:linear} and Theorem~\ref{thm:transform}
+give
+\[
+ K_i\le C\left(\sum_j|w_{ij}|\sqrt{K_j}\right)^2,
+ \qquad \sum_iK_i\le C\norm W_F^2\sum_jK_j.
+\]
+The second inequality is rowwise Cauchy--Schwarz. Iterate it through
+the hidden layers and final readout. All multiplication subexpressions
+are fresh independent calls; no higher moments are needed.
+\end{proof}
+
+The factor $C^{h+1}$ is not a depth-independent constant. The next
+normal form is what makes the final estimate polynomial.
+
+\begin{theorem}[Short ordinary-tanh normal form]
+\label{thm:normal}
+There are universal constants $a,c$ such that a globally unit-margin
+tanh Boolean representation of product $P$ has another globally
+unit-margin ordinary-tanh representation with at most
+$c\log(P+2)$ weighted layers, width, individual weights, and product
+at most $(P+2)^a$, using only its at most $P^2$ relevant coordinates.
+The weights can be dyadic with at most $c\log^2(P+2)$ bits per entry
+after changing the constants.
+\end{theorem}
+
+Appendices~\ref{sec:pf-width-compression}--\ref{app:normal} give a
+self-contained proof. In particular this statement does not replace
+tanh by arbitrary lookup activations. An affine final normal form is
+allowed and causes no difficulty in Proposition~\ref{prop:potential}.
+
+\section{Selecting finite formulas and bounding their coefficients}
+\label{sec:precision}
+
+Apply Theorem~\ref{thm:normal}. Write $B=d+P+2$ and increase a
+universal exponent $a$ as necessary. Its depth is at most $a\log B$;
+its dimensions, product, and physical coefficient magnitudes are at
+most $B^a$. Its coefficient bit lengths are at most $B^a$. In
+particular every nonzero coefficient is at least $\exp(-B^a)$ in
+absolute value. The deliberately loose exponential bound is sufficient.
+
+The output estimator $Y$ from Proposition~\ref{prop:potential} has
+deterministic bounds $V,T$ with
+\begin{equation}\label{eq:VT}
+ VT\le B^a.
+\end{equation}
+The margin implies $V\ge1$, so both final-output bounds are polynomial.
+Internal bounds need not individually be polynomial. We next bound
+their logarithms, rather than assuming that all internal scales are
+well conditioned.
+
+\begin{lemma}[Internal constants]
+\label{lem:constants}
+All nonzero internal deterministic bounds $V,T,L_0,M_0,Z_V$, and their
+reciprocals, lie between $\exp(-B^b)$ and $\exp(B^b)$ for a
+universal $b$.
+\end{lemma}
+\begin{proof}
+The explicit estimator bounds may be used as the recursive definitions
+of $V$ and $T$, with all work bounds at least one. If preceding
+second-moment and work bounds have logarithmic magnitudes at most
+$R$, the formulas for $L_0,M_0$ show that their logarithmic
+magnitudes are at most $C(R+B^a)$. A nonzero row has a nonzero
+coefficient at least $\exp(-B^a)$ and at least one retained child.
+Zero children or zero rows are omitted. The same estimate applies to
+$V_{\rm in}=L_0M_0$ and $T_{\rm in}=CM_0/L_0$.
+
+The transform uses
+\begin{equation}\label{eq:Zbounds}
+ \sqrt V\le A_V\le\sqrt{2V},\qquad
+ c\min(\sqrt V,1)\le Z_V\le C\min(\sqrt V,1).
+\end{equation}
+For $V\le1$, integration over $[1,2]$ gives the lower bound for
+$Z_V$, and $b(\omega)\le\omega\sqrt V$ gives the upper bound.
+For $V\ge1$, integrate over $[0,1/\sqrt V]$ for the lower bound,
+using $k(\omega)\asymp1/\omega$ there. For the upper bound split
+at $1/\sqrt V$; the remaining integral is at most
+$\int_{1/\sqrt V}^\infty k(\omega)/(\omega\sqrt V)\,d\omega$,
+which is uniformly bounded by a further split at one. Thus
+$V'=CZ_VA_V$ and $T'=CT A_V/Z_V$ satisfy a logarithmic recurrence
+$R_{s+1}\le CR_s+CB^a$. There are $O(\log B)$ layers, so its
+solution is $B^{O(1)}$.
+\end{proof}
+
+\begin{lemma}[A good realization of polynomial size]
+\label{lem:realization}
+There is a fixed collection of at most $C(d+1)$ arithmetic formulas
+of total size polynomial in $B$ such that, on every input, more than
+two thirds of their outputs have the correct sign and absolute margin
+at least $1/2$. Every coefficient in these formulas has modulus at most
+$\exp(B^c)$ for a universal $c$.
+\end{lemma}
+\begin{proof}
+Average $n_0=\lceil40V\rceil$ independent output estimators in
+one group. Chebyshev gives error at most $1/2$ with probability at
+least $0.9$ at each input. Form $r=O(d+1)$ independent groups, with
+a sufficiently large universal constant. Chernoff and a union bound
+over $2^d$ inputs give probability at least $0.9$ that more than two
+thirds of the groups are good at every input. Their expected total
+size is at most $S=B^{O(1)}$, by \eqref{eq:VT} and $V\ge1$.
+Markov gives realized size at most $20S$ except with probability
+at most $1/20$.
+
+Uniformly over all internal neuron types, Lemma~\ref{lem:constants}
+and the density formula imply
+\[
+ \Prb(\omega<\eta)\le e^{B^b}\eta,\qquad
+ \Prb(\omega>U)\le e^{B^b}e^{-c_0U}\quad(U\ge1).
+\]
+The first estimate uses $k(\omega)\le C/\omega$ and
+$b(\omega)\le\omega\sqrt V$; the second uses exponential decay
+and the lower bound on $Z_V$. A newly reached node draws its fresh
+frequency after its existence and type have been determined. Summing
+the conditional bad-frequency probabilities over all tree addresses
+therefore bounds the probability of any bad frequency by their common
+upper bound times the expected number of reached nodes, at most $S$.
+Choose $\eta=e^{-B^{c_1}}$ and $U=B^{c_1}$ with a sufficiently large
+universal $c_1$. This failure probability is at most $1/20$.
+
+All three good events have positive joint probability. Fix such a
+realization. Every Poisson count is at most its total size. The
+arithmetic constants are obtained from original constants and
+\[
+ \frac{w_j}{p_j}=\sign(w_j)L_0\sqrt{T_j/V_j},\quad
+ \frac\omega\lambda,\quad
+ \frac{k(\omega)}{q_V(\omega)}
+       =\frac{Z_V\sqrt\lambda}{\min(1,\omega\sqrt V)},\quad
+ n_0^{-1}.
+\]
+Their logarithmic magnitudes are polynomial in $B$ on the good event.
+Each good group approximates an output of absolute value at least one
+to error at most $1/2$, giving the margin. We have selected an event
+from the original unbiased construction; we have not conditioned the
+estimator on truncated frequencies and then asserted unbiasedness.
+\end{proof}
+
+\begin{lemma}[Dyadic rounding and integer numerators]
+\label{lem:round}
+The formulas in Lemma~\ref{lem:realization} can be replaced by
+polynomial-size formulas over Gaussian integer constants, addition,
+multiplication, and real/imaginary-part gates, with all integer constants
+of polynomial bit length, so that their majority of signs still equals
+$f$ on the whole cube.
+\end{lemma}
+\begin{proof}
+Regard each occurrence of a constant in a formula as a separate pair
+of real variables. A formula of size $s$ is separately linear in each
+occurrence, with degree at most $s$ and at most exponentially many
+terms. Real/imaginary-part gates are real-linear. On a coefficient box
+of magnitude $e^{B^{O(1)}}$, values and first coefficient derivatives
+are therefore at most $e^{B^{O(1)}}$ because $s=B^{O(1)}$.
+Equivalently this follows by direct induction through the gates.
+Round every coefficient component to dyadic error $2^{-B^c}$ with
+a sufficiently large constant exponent. Every group output changes by
+less than $1/8$, uniformly on the cube. Its previously good outputs
+retain the correct sign and margin at least $3/8$. Bad groups may
+change sign, but more than two thirds remain good at every input.
+
+Clear denominators with positive integer subtree denominators. At an
+addition replace $N_1/D_1+N_2/D_2$ by
+$(N_1D_2+N_2D_1)/(D_1D_2)$; at multiplication multiply numerators
+and denominators. Real and imaginary part commute with division by
+a positive real denominator. Each denominator is a precomputed
+constant whose bit length is at most the sum of leaf denominator bit
+lengths in the subtree. Each child numerator occurs only once, so the
+result is a polynomial-size formula, not an exponentially expanded
+circuit. The sign of its real output is that of its integer numerator.
+\end{proof}
+
+\section{Balancing and the arithmetic complexity class}
+
+\begin{lemma}[Real-affine balancing of complex formulas]
+\label{lem:balancing}
+A size-$s$ formula over Gaussian integer constants, complex addition
+and multiplication, and unary real/imaginary-part gates has an
+equivalent real integer formula of polynomial size and depth $O(\log(s+2))$.
+Its constants have no larger bit lengths, up to a constant, than the
+original constants.
+\end{lemma}
+\begin{proof}
+First balance the complex formula. Select a subtree $Q$ whose size
+lies between one third and two thirds of the full size, up to a fixed
+additive constant. Such a subtree exists for a tree of fan-in at most
+two, including unary gates. Since $Q$ occurs only once, its surrounding
+context is real-affine. Thus
+\[
+ F=(F[Q:=1]-F[Q:=0])\Rea Q
+   +(F[Q:=i]-F[Q:=0])\Ima Q+F[Q:=0].
+\]
+Both $Q$ and each substituted context have at most two thirds of
+the original size, up to fixed additive terms. Recursing introduces
+only a fixed number of copies at each recursive level. The resulting
+size is polynomial in $s$ and depth is $O(\log(s+2))$. The only new
+constants are $0,1,i,-1$.
+
+Now replace each complex gate by its fixed-size real/imaginary pair
+of integer arithmetic gates. Expansion into formulas duplicates
+subexpressions by only a fixed factor per level. Since the balanced
+depth is logarithmic, this gives only a polynomial total factor.
+Doing this expansion before balancing would not justify the bound.
+The final output is real, so keep its real component.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:main}]
+Lemmas~\ref{lem:realization}--\ref{lem:balancing} give polynomially
+many polynomial-size logarithmic-depth integer formulas. Their
+polynomial-bit constants can be built using $-1,0,1$: construct a
+power $2^j$ as a balanced product of $j$ copies of $1+1$, and express
+an integer as a balanced sum of its signed nonzero powers of two.
+This adds polynomial size and logarithmic depth. Replace sign inputs
+by $2b-1$ for bit inputs. Each formula's positivity predicate belongs
+to nonuniform $\PNC^1$.
+
+The final majority is itself a $\PNC^1$ predicate (indeed it is the
+sign of an affine integer sum of the input bits). It is applied to
+polynomially many $\PNC^1$ predicates. The composition theorem
+$[\PNC^1]\cdot[\PNC^1]=\PNC^1$ in \cite[Theorem 4.2]{datta}
+therefore gives the claimed circuit with universal polynomial size
+and logarithmic depth. Equivalently use the constant nesting depth
+of positivity gates and \cite[Proposition 3.4 and Theorem 4.1]{datta}.
+The inclusion in $\Lpoly$ follows from their Proposition 2.4, with
+the selected circuit supplied as advice. Formula balancing alone
+would not establish Boolean $\NC^1$.
+If the final integer output can be zero, replacing it by twice that
+output minus one gives strictly positive and strictly negative values
+on the two label classes without changing the resource bounds.
+\end{proof}
+
+\input{posterior.tex}
+
+\section{Scope and open questions}
+
+The result isolates a tanh-specific structural restriction on the
+functions favored by sufficiently strong priors. Its proof is
+nonuniform and allows enormous original weights and widths, yet the
+replacement arithmetic circuit has polynomially many bits. It is not
+an algorithm for posterior sampling or circuit recovery.
+
+The endpoint $\gamma=1$ remains outside the new posterior converse.
+Existing descriptions of its low-action functions can use nonlinear
+expectation maps. A small value of that action is not a proved
+low-product deterministic tanh representation, so applying
+Theorem~\ref{thm:main} to it would be an extra, unsupported step.
+Related circuit upper bounds in larger classes do not fill that gap.
+
+Nor does the theorem prove that some small Boolean circuit needs
+exponential product or samples. It gives a conditional obstruction:
+universal polynomial learning would impose a strong nonuniform
+complexity collapse. It leaves open intermediate growth rates and
+does not identify an explicit hard target. A converse inclusion such
+as $\PNC^1$ inside the low-product tanh class is also not established.
+Finally, the scalar transform extends to normalized tanh, but its
+Fourier formula does not automatically cover ReLU, GELU, or arbitrary
+Lipschitz activations.
+
+\appendix
+\input{width-compression.tex}
+\input{normal-form.tex}
+
+\begin{thebibliography}{9}
+\bibitem{datta}
+S.~Datta, M.~Mahajan, B.~V.~Raghavendra Rao, M.~Thomas, and H.~Vollmer.
+\emph{Counting Classes and the Fine Structure between NC1 and L}.
+2010. Primary full version:
+\url{https://www.cse.iitm.ac.in/~bvrr/conf/mfcs10.pdf}.
+In particular, Proposition~2.4 and Theorems~4.1--4.2.
+
+\bibitem{caussinus}
+H.~Caussinus, P.~McKenzie, D.~Th\'erien, and H.~Vollmer.
+Nondeterministic NC1 computation.
+\emph{Journal of Computer and System Sciences} 57(2):200--212, 1998.
+\url{https://doi.org/10.1006/jcss.1998.1588}.
+
+\bibitem{merrill}
+W.~Merrill, H.~Jiang, Y.~Li, A.~W.~Lin, and A.~Sabharwal.
+Why Are Linear RNNs More Parallelizable?
+\emph{Proceedings of the 43rd International Conference on Machine Learning},
+PMLR 306:88230--88260, 2026.
+\url{https://proceedings.mlr.press/v306/merrill26a.html}.
+
+\bibitem{unrestricted}
+ChatGPT-6 Astra, K.~H\"anni, and D.~Vaintrob.
+\emph{Representation constraints and polynomial-depth learning
+in Gaussian Bayesian networks}, research draft, 19 October 2026.
+The posterior ceiling used here is the theorem entitled
+``A finite-scale posterior energy ceiling'' in
+\path{works-in-progress/unrestricted-depth/source/unrestricted-primary-posterior-ceiling.tex}.
+\url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/unrestricted-depth}.
+
+\bibitem{parallel}
+ChatGPT-6 Astra, K.~H\"anni, and D.~Vaintrob.
+\emph{Frobenius product, parallel circuits, and sample-complexity barriers
+for deep Gaussian Bayesian networks}, 2026.
+\url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/boolean-depth-barriers}.
+The two-ball geometry and two-majority statistical reduction are developed
+there; the versions needed for the present theorem are proved here.
+\end{thebibliography}
+\end{document}

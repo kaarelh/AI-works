@@ -1,0 +1,235 @@
+\section{A converse for the original Gaussian posterior}
+\label{sec:posterior}
+
+Fix $d,n\ge1$, learner weighted depth $L\ge3$, and common hidden
+width $N$. Write $\sigma^2$ for the common variance in energy
+coordinates. The independent physical weight variances are
+\[
+ W^1_{ij}:\frac{N\sigma^2}{d},\qquad
+ W^s_{ij}:\sigma^2\ (2\le s<L),\qquad
+ v_i:\frac{\sigma^2}{N}.
+\]
+Equivalently the Gaussian energy is
+\[
+ \kappa_N(W)=\frac dN\norm{W^1}_F^2+
+       \sum_{s=2}^{L-1}\norm{W^s}_F^2+N\norm v_2^2.
+\]
+For a consistently labeled sample $S=((x_i,y_i))$, the posterior
+$Q_{S,\sigma}$ conditions the raw prior on
+\[
+ |z(x)|>1/2\quad\hbox{for every }x\in X_d,
+ \qquad y_i z(x_i)>0\quad\hbox{for every training example}.
+\]
+No hidden robustness, internal margin, or parameter bound is imposed.
+Its induced distribution on Boolean truth tables will also be denoted
+by $Q_{S,\sigma}$. Define
+$p_{S,\sigma}(f(x)\mid x)=Q_{S,\sigma}\{h:h(x)=f(x)\}$.
+The exponent convention is $\sigma^2=N^{-\gamma}$.
+
+\subsection{The precise imported posterior input}
+
+Let $\mathcal H_P$ be the finite set of Boolean functions on $X_d$
+admitting some globally unit-margin tanh representation of product at
+most $P$, with arbitrary finite depth and widths. The following
+posterior theorem is an input from the existing Gaussian analysis
+\cite{unrestricted}; it is not a consequence of the Fourier estimator.
+We state all its quantitative data so its use here is unambiguous.
+
+\begin{theorem}[Finite-scale representation ceiling, imported]
+\label{thm:ceiling}
+Fix $\zeta>0$ and $0<\beta<1$. Define
+\begin{align*}
+ C_0&=n+1,\qquad R_0=\max\{4(n+1),(d+1)\log(16(n+1))\},\\
+ M&=\left\lceil\max\{4,C_0,2R_0,dC_0(d+1)R_0^2\}\right\rceil,
+ \qquad T_0=MC_0R_0^2,\\
+ K_0&=2+(L+14)(2T_0)^{1/(L-1)},\\
+ b_0^2&=\max\{2(d+1)\log2+4\log8,\ 16\log9+8\log(8L)\},\\
+ A_0&=\left(\frac{K_0+2}{L-1}\right)^{(L-1)/2},\\
+ \xi&=\min\left\{1,\frac1{4\sqrt{L(K_0+1)}},
+                     \frac1{8\sqrt2 LA_0}\right\},\\
+ N_0&=\left\lceil\max\{M,2,(b_0/\xi)^{2/\zeta},
+                                     2\log(2/\beta)\}\right\rceil,\\
+ P_0^2&=d^{-1}e^{19}(2T_0)^{3/2}.
+\end{align*}
+For every $N\ge N_0$, every actual positive scale
+$\sigma^2\le N^{-(1+\zeta)}$, and every consistently labeled
+sample of at most $n$ inputs,
+\[
+ Q_{S,\sigma}(\mathcal H_{P_0})\ge1-\beta.
+\]
+The threshold $N_0$ is polynomial in
+$d,n,L,\log(2/\beta)$ with degree depending only on $\zeta$.
+The product bound satisfies
+\[
+ P_0\le e^{19/2}544^{3/4}(d+n+2)^9,
+\]
+independently of $L,N,\zeta,\beta$.
+\end{theorem}
+
+The low-product representative can differ from the sampled parameter
+vector. The theorem does not assert that posterior weights themselves
+have bounded energy. Its proof uses a uniform memorizing witness,
+a Gaussian perturbation set, and Gaussian distance concentration.
+The exact source is the theorem labeled
+\texttt{thm:posterior-energy-ceiling} in the file identified in
+\cite{unrestricted}; the package dependency manifest records its hash.
+For the final displayed polynomial, put $S_0=d+n+2$. Directly,
+$C_0\le S_0$, $R_0\le4S_0^2$, $M\le17S_0^7$, and
+$T_0\le272S_0^{12}$, which give the claim.
+
+\subsection{Two majority reductions}
+
+\begin{theorem}[From distribution-free samples to arithmetic circuits]
+\label{thm:converse}
+Fix $d,n\ge1$, $L\ge3$, $\zeta>0$, and $0\le\varepsilon<1/2$.
+Use Theorem~\ref{thm:ceiling} with $\beta=1/6$, and choose one
+$N\ge N_0$ and one $0<\sigma^2\le N^{-(1+\zeta)}$, before
+choosing an input distribution. Suppose that for every probability
+distribution $\mathcal D$ on $X_d$, an iid $n$-sample labeled by $f$
+has positive probability of satisfying
+\begin{equation}\label{eq:confidence}
+ \mathcal D\{x:p_{S,\sigma}(f(x)\mid x)\le2/3\}\le\varepsilon.
+\end{equation}
+Then $f$ has an integer arithmetic circuit with constants $-1,0,1$
+whose sign equals $f$, size polynomial in
+$d+n+(1-2\varepsilon)^{-1}$, and depth
+$O(\log(2+d+n+(1-2\varepsilon)^{-1}))$.
+All polynomial exponents are universal and independent of learner
+depth, width, scale, and $\zeta$.
+\end{theorem}
+\begin{proof}
+Fix $\mathcal D$ and choose a successful sample. Condition its
+posterior on $\mathcal H_{P_0}$, obtaining $\nu$. On
+$G=\{x:p_{S,\sigma}(f(x)\mid x)>2/3\}$, which has
+$\mathcal D$-mass at least $1-\varepsilon$, its wrong-label
+probability is strictly below $(1/3)/(5/6)=2/5$. Thus
+$\E_{h\sim\nu}f(x)h(x)>1/5$ at every $x\in G$.
+
+Choose an odd $m_0$ between $100(d+1)$ and $100(d+1)+2$.
+Hoeffding bounds the error of $m_0$ independent voters at a fixed
+good input by $e^{-m_0/50}$. The union bound over $2^d$ inputs is
+less than one. Some fixed majority $g$ of these low-product functions
+therefore agrees with $f$ everywhere on $G$ and has
+$\mathcal D$-error at most $\varepsilon$.
+
+Let $\mathcal K$ be the finite class of all $m_0$-voter majorities
+of $\mathcal H_{P_0}$. It does not depend on $\mathcal D$.
+Writing $\kappa=1-2\varepsilon>0$, we have proved
+\[
+ \text{for every }\mathcal D,\qquad
+ \max_{g\in\mathcal K}\E_{x\sim\mathcal D}f(x)g(x)\ge\kappa.
+\]
+Finite minimax gives a distribution $\lambda$ on $\mathcal K$
+with $f(x)\E_\lambda g(x)\ge\kappa$ for every input. Choose
+an odd $m_1\ge4(d+1)/\kappa^2$ within two of that value.
+Another Hoeffding bound and union bound give
+$2^d e^{-m_1\kappa^2/2}<1$. Some majority of $m_1$ members of
+$\mathcal K$ is consequently equal to $f$ on the entire cube.
+
+Compile its $m_0m_1$ low-product constituents by
+Theorem~\ref{thm:main}. Their resources are polynomial in $d+n$
+by Theorem~\ref{thm:ceiling}. Two further majority layers are a
+constant number of $\PNC^1$ predicate-composition levels, absorbed
+by the closure theorem \cite{datta}. The asserted polynomial and
+depth bounds follow. No assertion that a majority itself has low
+Frobenius product has been used.
+\end{proof}
+
+The proof handles posterior mixtures without choosing a unique
+minimum-energy function. The first majority uses confidence on a large
+set; the second uses distribution-universal approximation and minimax.
+Averaging the error of individual posterior draws directly would give
+a weaker range of $\varepsilon$ and would miss this distinction.
+Only existence of a successful sample is used, so any usual
+positive-probability or high-probability sample guarantee implies the
+hypothesis. Its distribution-free quantifier is essential.
+
+\subsection{Fixed exponents and the strong-prior limit}
+
+\begin{corollary}[The two strong-prior regimes]
+\label{cor:regimes}
+The conclusion of Theorem~\ref{thm:converse} holds in each case below.
+\begin{enumerate}[label=(\roman*)]
+\item Fix $\gamma>1$, put $\zeta=\gamma-1$, choose any
+$N\ge N_0$, and use $\sigma^2=N^{-\gamma}$.
+\item Fix $d,n,L$, choose $N\ge N_0$ using $\zeta=1$ and
+$\beta=1/6$, and let $Q_S^0$ be any selected strong-prior limit of
+the posterior truth-table distributions as $\sigma\downarrow0$.
+Assume \eqref{eq:confidence} for $Q_S^0$ directly.
+\end{enumerate}
+In (ii), a common subsequence for all samples may be used, and the
+claim includes an actual posterior limit whenever it exists.
+\end{corollary}
+\begin{proof}
+Case (i) is immediate. For (ii), every sufficiently small $\sigma$
+satisfies Theorem~\ref{thm:ceiling}. Truth-table space is finite and
+$\mathcal H_{P_0}$ is a fixed subset, so any limiting posterior has
+$Q_S^0(\mathcal H_{P_0})\ge5/6$. There are only finitely many
+samples of at most $n$ inputs, so sequential compactness also permits
+a common subsequence. Run the proof of Theorem~\ref{thm:converse}
+on these limiting probability vectors. No passage of the strict
+confidence event through a limit, or independent assertion of limit
+uniqueness, is needed.
+\end{proof}
+
+The strong-prior width threshold above is sufficient; it is not
+claimed optimal. In both cases the chosen architecture precedes
+the input distribution. A proposed sample bound valid at every
+realizable width permits choosing this sufficiently large width after
+its width-independent sample budget has been fixed.
+
+\begin{corollary}[A conditional barrier to universal polynomial learning]
+\label{cor:collapse}
+Fix either a Gaussian exponent $\gamma>1$ or the strong-prior limit
+of Corollary~\ref{cor:regimes}. Suppose the original learner has a
+distribution-free sample guarantee with some fixed
+$\varepsilon<1/2$ and positive sample-success probability, bounded
+by one polynomial jointly in input dimension, bounded-weight teacher
+width and depth, and learner depth, independently of learner width,
+valid at every realizable learner width. Then
+\[
+ \Ppoly=\text{nonuniform }\PNC^1=\Lpoly.
+\]
+\end{corollary}
+\begin{proof}
+Every polynomial-size Boolean circuit family has a tanh teacher
+family with polynomial width and depth and uniformly bounded physical
+weights. Here is an explicit elementary construction. Compile gates
+to NAND. Carry each already computed logical bit by a neuron with
+activation within $1/10$ of its sign, and carry a constant $1/2$
+using the weight $2\operatorname{atanh}(1/2)$ after its first layer.
+The map $\tanh(4u)$ copies a bit. A NAND of $u,v$ is
+$\tanh(4(1-u-v))$, with the affine constant implemented by the
+charged constant wire. Its preactivation has the required sign and
+absolute value at least $3.2$, so its output is again within $1/10$
+of the desired sign. Initialize inputs by $\tanh(4x_i)$, execute
+one gate per layer while carrying previous bits, and multiply the
+final bit by two. Width and depth are polynomial in the Boolean
+circuit size, all weights have magnitude at most eight, and the
+global output margin exceeds one. Zero padding to larger widths
+preserves the function. If a convention requires teacher weights
+bounded by teacher width, pad the width to at least eight.
+
+The hypothesized sample budget is therefore polynomial in $d$ for
+every family in $\Ppoly$. Choose an admissible learner width above
+the ceiling threshold and apply Theorem~\ref{thm:converse} or
+Corollary~\ref{cor:regimes}. This puts the family in nonuniform
+$\PNC^1\subseteq\Lpoly$. The reverse inclusions in $\Ppoly$
+are standard finite-circuit simulations, proving equality.
+\end{proof}
+
+This is not a known contradiction and not an exponential sample lower
+bound. Even a conditional failure of every polynomial bound is weaker
+than an $\exp(\Omega(L))$ lower bound in teacher depth. A sample
+guarantee polynomial in the chosen learner width, or a guarantee only
+for one input law, would not imply the displayed collapse.
+
+\begin{remark}[Other confidence thresholds]
+For a fixed threshold $\tau>1/2$, choose
+$\beta=\tau-1/2$ in the ceiling. Conditioning then leaves signed
+vote gap at least
+$(2\tau-1-\beta)/(1-\beta)>0$. The first majority has size
+$O((d+1)/\mathrm{gap}^2)$, and the same argument applies. At
+$\tau=1/2$ there is no uniform positive vote gap supplied by this
+calculation; the same polynomial conclusion is not proved here.
+\end{remark}

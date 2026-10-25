@@ -1,0 +1,19 @@
+# Independent audit of the ordinary-tanh normal form
+
+25 October 2026. Conventional mathematical proof audit by an independent AI agent; not a Lean verification.
+
+I checked `source/normal-form.tex` against the main paper's theorem `thm:normal`, including its preservation of ordinary tanh, the numerical gaps in the final classifier, and its dependence on product rather than original depth. No substantive proof gap was found. The assembled version incorporates the requested explicit D=1 branch, so zero-hidden-layer networks do not invoke a compression budget divided by zero.
+
+Checks:
+
+1. The relevant-coordinate argument gives both P>=1 and at most P² relevant coordinates by the actual first-column squared norm identity. Random freezing of irrelevant columns preserves the expectation of the charged augmented first-layer squared norm, and all Boolean labels remain the same. These claims agree with the separately checked Lean `FreezeSigns` and `BooleanRelevant` modules, although that fact does not formalize the rest of this appendix.
+2. The two-ball singular-axis construction is correct, including the equality of its two endpoint squared-distance bounds at 1/(4 alpha²). Replacing a covering center by an actual state doubles the radius; the chosen 256PR prefix constant has ample slack even after replacing P by P0=4P.
+3. The imported ordinary-tanh width compression is used only on a prefix. Its norm and error budgets use the number of compressed layers, and its per-step estimates do not depend on the widths of the later suffix. This preserves tanh rather than replacing its neurons by general Lipschitz lookup maps. The explicit D=1 case skips compression.
+4. The physical-weight lemma removes only activations with very small original prefix product. Every hybrid remains zero-preserving and one-Lipschitz, so the original prefix/suffix norm bounds control its error. The summed cubic linearization error is at most1/48. Collapsing linear blocks gives the claimed ratios of retained prefix products; these ratios and the readout are polynomial after the small-prefix deletion. The short-depth rounding precision controls both output error and multiplicative product inflation.
+5. The added constant rail is physically charged. On 0<=u<=1/2, (atanh(u)/u)²<=1+u², so every augmented matrix norm grows by at most3/2. There are only O(log P) retained layers. The inverse rail scale is polynomial because bounded retained hidden width and global margin give S_j<=P0 sqrt(C). The suffix interface's inverse S_j cancels the original prefix product exactly in the complete product estimate.
+6. The quadratic feature approximation uses tanh''(1) nonzero and inverse-polynomial alpha,beta. The number of features, coefficient sizes, and resulting distance errors are polynomial. A close center gives threshold gap11/(256P0²); opposite-label centers give a negative gap below -3/P0². The chosen tanh gain is sufficient for each leakage bound1/(16q). Summing signed indicators therefore gives margin at least7/8, and the final doubled readout has margin at least7/4. All constants use actual rails.
+7. The final physical-weight normalization is applied only after shortening the network. It keeps ordinary tanh and yields O(log²(P+2)) dyadic bits with polynomial width, coefficient magnitudes, and product. The relevant input restriction is made before this bound, so unused original dimensions do not create hidden dependence in the normal-form resources.
+
+Scope: this check concerns the normal-form assembly. It treats the separately reproduced width-compression theorem as an already checked input, while inspecting its prefix-use interface; it does not constitute a fresh full audit of every line of that theorem. The arithmetic-estimator, finite-bit arithmetic evaluation, and posterior theorems require their own checks.
+
+Reviewed source SHA256: `469fe2706d3a39782bd5d91e3562e02cd0813b58b9d0bf56c513efdabb6968f9`.
