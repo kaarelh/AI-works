@@ -22,3 +22,5 @@ The [strict Gaussian-baseline gap audit](gaussian-scalar-baseline-gap-independen
 The [proof-note guide](../research-notes/gaussian-controls-guide.md) maps the component proofs to their audits. The [companion build record](gaussian-controls-build.json) identifies its exact source, PDF, proof-note snapshots, and imported target-component construction. No Gaussian replacement theorem for the original posterior is claimed, and none of these companion results is Lean verified.
 
 A [fresh independent challenge audit](independent-pnc1-challenge.md) reconstructed the main paper without relying on earlier verdicts and found no substantive gap. It includes an independent direct rational construction for the constant-gap majority step. This is an additional conventional mathematical check, not Lean verification.
+
+The [non-Gaussian controls companion](../non-gaussian-controls.pdf) has its own [complete manuscript and component audit record](non-gaussian-controls/README.md). It covers specified controlled feature paths, including arbitrary Gaussian layers, and does not establish the full critical-posterior converse. It is not Lean verified.

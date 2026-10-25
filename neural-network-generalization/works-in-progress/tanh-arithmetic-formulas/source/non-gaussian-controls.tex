@@ -1,0 +1,640 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools,booktabs,microtype}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue]{hyperref}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}
+\newcommand{\R}{\mathbb R}
+\newcommand{\N}{\mathbb N}
+\newcommand{\norm}[1]{\left\lVert #1\right\rVert}
+\newcommand{\KL}{\mathrm{KL}}
+\newcommand{\HS}{\mathrm{HS}}
+\newcommand{\poly}{\mathrm{poly}}
+\newcommand{\PNC}{\mathrm{PNC}^{1}}
+\title{Arithmetic formulas for Gaussian feature paths with non-Gaussian controls}
+\author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob}
+\date{25 October 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We study iterated tanh feature maps whose Gaussian row law may be changed on a fixed-dimensional subspace at each layer. The changed coordinates may have any finite relative entropy, need not be Gaussian, and need not have moments above two. Their subspaces may change arbitrarily between layers. The same theorem permits arbitrary Gaussian controls and quadratic tanh tilts with bounded entrywise coefficient norm. A further extension allows quadratic tilts in normalized ridge differences, uniformly when their raw coefficients diverge as anchors approach one another. If $q_j$ is the largest incoming squared feature norm and $D_j$ the row entropy, a globally margined Boolean readout has arithmetic-formula complexity polynomial in its elementary resources and exponential only in $\sum_j(q_j+\sqrt{D_j}+D_j)$; normalized ridge tilts add their normalized coefficient mass. Logarithmic total budget therefore gives nonuniform $\PNC$, hence nonuniform logarithmic space. The proof uses exact scalar Poisson formulas, Gaussian Hermite features, and a separately maintained squared-norm oracle. It includes finite-bit control for correlated Taylor subtractions and continuous feature coordinates. Positive Poisson mixtures supply the quadratic-tilt extensions without a dimension bound. This is a restricted feature-path theorem: it does not classify the arbitrary conditional row laws of the full critical Bayesian posterior.
+\end{abstract}
+
+\section{The result and its scope}
+A Gaussian feature layer sends a vector $u$ to the random-variable feature $\tanh(G(u))$, where $G$ is an isonormal Gaussian on its feature Hilbert space. Its inner product with another query feature is the corresponding Gaussian tanh kernel. We permit a non-Gaussian change on a subspace of dimension at most a fixed integer $r_0$.
+
+Precisely, at layer $j$ choose an isometry $A_j:\R^{r_j}\to\mathcal H_{j-1}$, with $r_j\le r_0$, a law $\rho_j\ll\gamma_{r_j}$, and $Z_j\sim\rho_j$. Independently let $G_j$ be isonormal on $\operatorname{ran}(A_j)^\perp$. Set
+\begin{equation}
+ u_j(x)(Z_j,G_j)=\tanh\bigl(Z_j^*A_j^*u_{j-1}(x)+G_j((I-A_jA_j^*)u_{j-1}(x))\bigr),
+ \label{eq:path}
+\end{equation}
+as a vector in the appropriate $L^2$ space. The subspaces and laws are fixed across queries, but can change with the layer. Initialize
+\[
+ d\ge1,\qquad X=\{-1,1\}^d,\qquad u_0(x)=(1,x)/\sqrt d.
+\]
+Write
+\[
+ D_j=\KL(\rho_j\Vert\gamma_{r_j})<\infty,
+ \qquad q_j=\max_{x\in X}\norm{u_{j-1}(x)}^2,
+ \qquad B=\sum_{j=1}^H(q_j+\sqrt{D_j}+D_j).
+\]
+Thus $q_1\le2$ and subsequent physical squared norms are at most one.
+
+\begin{theorem}[Fixed-rank entropy controls]
+\label{thm:main}
+Fix $r_0$. Suppose $v\in\mathcal H_H$ and $\eta>0$ satisfy
+\[
+ f(x)\langle v,u_H(x)\rangle\ge\eta\qquad(x\in X)
+\]
+for a Boolean function $f$. Then $f$ is a majority of signs of rational arithmetic formulas of total size at most
+\begin{equation}
+ \poly_{r_0}(d+H+1+\norm v/\eta)\exp(C_{r_0}B).
+ \label{eq:size}
+\end{equation}
+The formulas have coefficients of polynomial bit length in this size. Consequently, when the resources in \eqref{eq:size} are polynomial in an ambient parameter, $f$ belongs to nonuniform $\PNC$, and hence to $L/\mathrm{poly}$.
+\end{theorem}
+
+
+The theorem also holds if arbitrary layers are replaced by either of the following, with their actual Gaussian relative entropies included in $B$:
+\begin{itemize}
+\item an arbitrary nonsingular Gaussian row law, with no rank restriction on its mean or covariance;
+\item a law proportional to
+\[
+ \exp\left(\frac12\sum_{i,j}T_{ij}\tanh(G(w_i))\tanh(G(w_j))\right)d\gamma,
+ \qquad \sum_{i,j}|T_{ij}|\le b_0,
+\]
+where $T$ is symmetric, $b_0$ is fixed, and $\norm{w_i}^2\le q_j$. There is no bound on the number or span of the $w_i$.
+\end{itemize}
+For the second extension the constant may depend on $b_0$. Its local cost is in fact $1+O_{b_0}(q_j)$, and its entropy is $O_{b_0}(q_j^2)$. Sections~\ref{sec:gaussian}--\ref{sec:mixture} prove these extensions using the same state interface.
+
+There is also a version insensitive to small distances between anchors. For nonzero denominators, allow normalized features
+\[
+ \psi_i(g)=\frac{\tanh(g^*w_i)}{\norm{w_i}}
+ \quad\hbox{or}\quad
+ \psi_i(g)=\frac{\tanh(g^*w_i)-\tanh(g^*z_i)}{\norm{w_i-z_i}},
+ \qquad \norm{w_i}^2,\norm{z_i}^2\le q_j.
+\]
+\begin{theorem}[Geometrically normalized quadratic controls]
+\label{thm:normalized}
+There is a universal $t_0>0$ such that layers with row law
+\[
+ d\rho=Z^{-1}\exp\left(\tfrac12\sum_{i,k}S_{ik}\psi_i\psi_k\right)d\gamma,
+ \qquad S=S^*,\qquad t=\sum_{i,k}|S_{ik}|\le t_0,
+\]
+can be interspersed with the preceding layers. In \eqref{eq:size}, charge such a layer $q_j+t_j$ instead of $q_j+\sqrt{D_j}+D_j$. Its local work and moment growth are $1+O(q_j+t_j)$ and its actual entropy is $O(t_j^2)$. Constants are independent of the number, span, and mutual distances of the anchors.
+\end{theorem}
+Section~\ref{sec:normalized} proves this claim. It is a representation condition on the quadratic potential, not an assertion that every covariance-normalized quadratic form has such a representation with small $t$.
+
+The conclusion is nonuniform and existential. It does not give an efficient algorithm for sampling or evaluating the densities $\rho_j$. It imposes no higher-moment, smoothness, lower coefficient-size, or density-description assumption. The constant may depend on $r_0$; the theorem is not dimension-free in the rank of the changed block.
+
+An arbitrary finite-entropy law on the whole row space need not be a fixed-rank independent block change. In particular, the entropy chain rule produces \emph{conditional} scalar laws, generally depending on all perpendicular coordinates. Such changes are outside \eqref{eq:path}. Thus Theorem~\ref{thm:main} does not resolve the original unrestricted Boolean-depth question for the critical neural-network posterior.
+
+We prove the one-dimensional case first. Section~\ref{sec:block} gives the fixed-rank extension. All claims here have conventional independent AI-agent audits; this note is not Lean verified.
+
+\section{Scalar formulas and entropy estimates}
+A random scalar formula has shape and constants chosen independently of the input. A fresh call is an independent realization. When a cancellation uses the same sample twice, its realized expression is copied syntactically and its entire size is charged twice. There is no shared vector computation.
+
+Intermediate formulas may use complex arithmetic and real or imaginary projection. We count their size in this fixed-dimensional algebra and convert the \emph{entire selected expression} to real arithmetic only once. Expanding every local complex product separately would give an incorrect cost for some of the estimates below.
+
+\begin{lemma}[Poisson transforms]
+\label{lem:poisson}
+Suppose $X$ has mean $a$, second moment at most $V$, and expected formula size $T\ge1$. For $K\sim\operatorname{Pois}(\lambda)$ and independent copies $X_i$, put
+\[
+ Z_s=\prod_{i=1}^K(1+isX_i/\lambda),\qquad \lambda=1+s^2V.
+\]
+Then $\E Z_s=e^{isa}$, $\E|Z_s|^2\le e$, and the expected complex-formula size is $O(\lambda T)$. At expected size $O(T)$, unbiased factories for $\sin(sa)$, $\cos(sa)$, and $\cos(sa)-1$ have second moments bounded respectively by
+\begin{equation}
+ Cs^2V,\qquad C(1+s^2V),\qquad C\min(s^4V^2,s^2V).
+ \label{eq:trig}
+\end{equation}
+If $c\ge0$ and $R$ has mean $r\in[0,1]$ and second moment at most a fixed constant, the real Poisson product
+\[
+ E_c=\prod_{i=1}^K(1-cR_i/\lambda),\qquad \lambda=1+c^2V,
+\]
+has mean $e^{-cr}$. At expected size $O(T)$ it has second moment at most $C(1+c^2V)e^{-2cr}$, and a factory for $e^{-cr}-1$ has second moment at most $Cc^2V$.
+\end{lemma}
+\begin{proof}
+The compound-Poisson identity gives
+\[
+ \E Z_s=e^{isa},\quad \E|Z_s|^2=e^{s^2\E X^2/\lambda},\quad
+ \E E_c^2=e^{-2cr+c^2\E R^2/\lambda}.
+\]
+An estimator costing $\lambda T$ can be returned with probability $1/\lambda$ and multiplied by $\lambda$, giving cost $O(T)$ and multiplying its second moment by $\lambda$. Write $u=sa$ and $w=s^2\E X^2/\lambda\le1$. Direct calculation gives
+\[
+ \E(\Re Z_s-1)^2=(\cos u-1)^2+\cos^2u(\cosh w-1)+\sin^2u\sinh w.
+\]
+Before the cost adjustment this is $O(\min(s^4V^2,1))$. Similarly $\E(\Im Z_s)^2=O(\min(s^2V,1))$. These prove \eqref{eq:trig}. Finally
+\[
+ \E(E_c-1)^2=e^{-2cr}(e^{c^2\E R^2/\lambda}-1)+(e^{-cr}-1)^2.
+\]
+For small $c$ this is $O(c^2V)$, and for large $c$ it is bounded; the same cost adjustment proves the last assertion. Averaging a cheaper estimator, when needed, also preserves these work--moment bounds.
+\end{proof}
+
+Put $k(\omega)=1/\sinh(\pi\omega/2)$. We use
+\begin{equation}
+ \tanh t=\int_0^\infty k(\omega)\sin(\omega t)\,d\omega,
+ \quad \int_0^\infty\omega k(\omega)\,d\omega=1,
+ \quad \int_0^\infty\omega^3 k(\omega)\,d\omega=2.
+ \label{eq:fourier}
+\end{equation}
+These identities follow by the Fourier transform of $\operatorname{sech}^2$ and differentiation or integration. The densities $\omega k(\omega)$ and $\omega^3k(\omega)/2$ are used below; both have all polynomial moments.
+
+\begin{lemma}[Capped scalar residual]
+\label{lem:cap}
+For $0<q\le2$, a scalar oracle $X$ of bounded second moment and mean $a\in[-1,1]$, and fixed $z\in\R$, the function
+\[
+ \tanh(\sqrt qza)/\sqrt q-za
+\]
+has an unbiased complex-formula factory of expected size $O(T)$ and second moment
+\begin{equation}
+ C\min(q^2z^6,z^2).
+ \label{eq:cap}
+\end{equation}
+If $\KL(\rho\Vert\gamma_1)=D$, then
+\begin{align}
+ \E_\rho\min(q^2Z^6,Z^2)&\le C(q^2+D),\label{eq:entropycap1}\\
+ \E_\rho\min(qZ^4,Z^2)&\le C(q+D).\label{eq:entropycap2}
+\end{align}
+\end{lemma}
+\begin{proof}
+For $qz^2$ small, use the density $\omega^3k(\omega)/2$ and subtract the linear term from the imaginary Poisson product using the \emph{same} children. The resulting polynomial starts at degree three. Explicitly, with $u=sa$, $w=s^2\E X^2/\lambda$, and $L=(s/\lambda)\sum_iX_i$,
+\[
+ \E(\Im Z_s-L)^2=(\sin u-u)^2+w(\cos u-1)^2
+ +\sin^2u(\cosh w-1)+\cos^2u(\sinh w-w).
+\]
+This is $O(s^6V^3)$ when $\lambda=1+s^2V$; for large $s$ the weaker quadratic bound is already at most that sixth-order bound. After the Fourier scaling its second moment is $O(q^2z^6)$, and its expected work is $O(T)$ after integrating the frequency. For $qz^2$ large, the ordinary Fourier--Poisson estimator for $\phi_s(a)=\tanh(sa)/s$ has work times second moment bounded by $CVT$, uniformly in $s$. Indeed optimal frequency sampling gives the product proportional to
+\[
+ s^{-2}\left[\int_0^\infty k(\omega)\min(1,\omega|s|\sqrt V)
+                   \sqrt{1+\omega^2s^2V}\,d\omega\right]^2\le CV.
+\]
+Balancing work by sampling or averaging, multiplying by $z$, and subtracting $za$ gives the second cap. The exact cubic-subtraction identity uses only second moments of distinct children.
+
+For either entropy claim let $W(Z)$ denote its capped integrand. It is bounded by $Z^2$, and also by $q^2Z^6$ or $qZ^4$. At a fixed sufficiently small $c>0$,
+\[
+ e^{cW}-1\le cW e^{cZ^2}.
+\]
+Gaussian moments therefore give $\log\E_\gamma e^{cW}\le Cq^2$ or $Cq$. Entropy duality proves \eqref{eq:entropycap1}--\eqref{eq:entropycap2}.
+\end{proof}
+
+\section{One changed direction and Gaussian tensor features}
+For now write the normalized input as $h=\alpha e_0+v$, with $\alpha^2+\norm v^2\le1$, and let $r=\norm v^2$. The local feature is
+\begin{equation}
+ F(h)(z,G)=\tanh\bigl(\sqrt q[z\alpha+G(v)]\bigr)/\sqrt q.
+ \label{eq:local}
+\end{equation}
+Assume scalar oracles of common expected size $T$ for $\alpha$, $r$, and every coordinate of $v$, with bounded scalar second moments and a bounded \emph{trace} of the coordinate moments. No sum of coordinatewise suprema over inputs is required.
+
+Expand only the perpendicular Gaussian variables in their Hermite/Fock representation. The full ordered tensor coordinates of degree $\ell$ are indexed by $I=(i_1,\ldots,i_\ell)$. Their coefficient is
+\begin{equation}
+ \frac1{\sqrt q}\int_0^\infty k(\omega)e^{-q\omega^2r/2}
+ \frac{(\omega\sqrt q)^\ell}{\sqrt{\ell!}}
+ \begin{cases}\pm\sin(\omega\sqrt qz\alpha),&\ell\text{ even},\\
+ \pm\cos(\omega\sqrt qz\alpha),&\ell\text{ odd},\end{cases}
+ v_{i_1}\cdots v_{i_\ell}\,d\omega.
+ \label{eq:fock}
+\end{equation}
+The ordered tensors contain redundant symmetric coordinates but preserve the norm and kernel. Continuous coordinate measures are allowed.
+
+\begin{lemma}[Nonlinear residual]
+\label{lem:residual}
+Let $L(h)=z\alpha+G(v)$ and $R=F-L$. There are coordinate oracles of expected size $O(T)$ in degrees zero and one, and expected size $O((\ell+1)T)$ in degree $\ell\ge2$, such that
+\begin{equation}
+ \E_\rho\left[\E|R_0|^2+\int\E|R_{1,i}|^2,di
+   +\sum_{\ell\ge2}\ell^2\int\E|R_{\ell,I}|^2,dI\right]
+ \le C(q^2+D).
+ \label{eq:trace}
+\end{equation}
+The constants are uniform for $0<q\le2$ and finite $D$.
+\end{lemma}
+\begin{proof}
+For $\ell\ge2$, sample $\omega$ with density $\omega^3k(\omega)/2$. Use the relative exponential factory of Lemma~\ref{lem:poisson} for the damping in \eqref{eq:fock}. Average $m=\lceil C(1+q\omega^2V)\rceil$ independent copies of each tensor child. Its trace moment is at most $r+V/m$. The exponential damping cancels the true-$r$ part of the tensor sum:
+\[
+ e^{-q\omega^2r}\sum_{\ell\ge0}\frac{[q\omega^2(r+V/m)]^\ell}{\ell!}
+ =e^{q\omega^2V/m}\le C.
+\]
+For odd degrees the tail begins at degree three. For even degrees it begins at degree two, but the sine factory contributes the additional factor $Cq\omega^2z^2$. With $\ell^2$ inserted, the summed moment is thus at most $Cq^2(1+z^2)$ after integration over the frequency. All remaining frequency factors are fixed polynomials, and the exponential tail of the proposal integrates them. The expected number of tensor children is $O(\ell)$.
+
+The degree-one correction is
+\[
+ \int_0^\infty\omega k(\omega)
+ \left[(\cos(\omega\sqrt qz\alpha)-1)e^{-q\omega^2r/2}
+                 +(e^{-q\omega^2r/2}-1)\right]d\omega.
+\]
+Lemma~\ref{lem:poisson} bounds its moment by
+$C[\min(q^2z^4,qz^2)+q^2]$. Multiply by a fresh $v_i$ oracle and sum its trace. Equation~\eqref{eq:entropycap2} bounds the $z$ integral by $C(q^2+qD)$.
+
+For degree zero split the residual into Lemma~\ref{lem:cap}'s scalar residual and
+\[
+ q^{-1/2}\int_0^\infty k(\omega)\sin(\omega\sqrt qz\alpha)
+                         (e^{-q\omega^2r/2}-1)\,d\omega.
+\]
+The latter uses the $\omega^3k/2$ proposal. The sine and exponential residual moments contribute $q\omega^2z^2$ and $q^2\omega^4$; the outer $q^{-1}$ and proposal square cancel the displayed powers. Its moment is $Cq^2z^2$. Finally $\E_\rho Z^2\le C(1+D)$ by Gaussian maximum entropy, and \eqref{eq:entropycap1} handles the scalar residual. Since $q\le2$, these bounds prove \eqref{eq:trace}.
+\end{proof}
+
+\section{Maintaining the norm without summing all coordinates}
+A bounded trace alone does not cheaply supply the squared-norm oracle $r$. We maintain the total squared norm as a separate scalar state.
+
+\begin{lemma}[Norm increment]
+\label{lem:norm}
+With the previous scalar oracles, the function
+\[
+ \Delta_z=\frac{\E_G\tanh^2(\sqrt q[z\alpha+\sqrt rG])}{q}
+                         -(z^2\alpha^2+r)
+\]
+has a factory of common expected size $O(T)$ and moment at most
+\[
+ C b(z)^2,\qquad b(z)=q+\min(qz^4,z^2).
+\]
+Consequently $\E_\rho\Delta_Z$ has an oracle of size $O(T)$ and second moment $C(q+D)^2$.
+\end{lemma}
+\begin{proof}
+For the last assertion sample $z$ with density $b(z)/\E_\rho b$ and divide by that density. Equation~\eqref{eq:entropycap2} gives $\E b\le C(q+D)$.
+
+For the local assertion first suppose $qz^2\le1$. Two correlated Taylor remainders are useful. In the notation of Lemma~\ref{lem:poisson},
+\[
+ \Re Z_s-1+(s/\lambda)^2\sum_{i<j}X_iX_j
+\]
+has mean $\cos(sa)-1+(sa)^2/2$ and second moment $Cs^8V^4$. For $|s|\sqrt V\le1$, expand
+\[
+ \E\left[\prod(1+tX_i/\lambda)\prod(1+uX_i/\lambda)\right]
+       =\exp\left(a(t+u)+(\E X^2/\lambda)tu\right).
+\]
+The remaining real terms have degree at least four in each factor. For larger $s$, the product moment is bounded and the subtracted quadratic has moment $O(1+s^4V^2)$, which is at most $O(s^8V^4)$. The pair sum has an $O(K)$-size expression through
+$2\sum_{i<j}X_iX_j=(\sum_iX_i)^2-\sum_iX_i^2$. Its algebraic cancellations use the same realized children; no fourth moment is needed.
+
+Similarly $E_c-1+(c/\lambda)\sum_iR_i$ has mean $e^{-cr}-1+cr$ and second moment $Cc^4$. Its small-$c$ series begins at degree two; its large-$c$ bound follows from $\E E_c^2\le e$ and the second moment of the linear sum.
+
+Use the Fourier identity for $\tanh^2$ and the decomposition
+\begin{align*}
+ 1-\cos u\,e^{-c}-(u^2/2+c)
+ ={}&(1-\cos u-u^2/2)e^{-c}\\
+ &+(1-e^{-c}-c)+(u^2/2)(e^{-c}-1).
+\end{align*}
+Here $u=\omega\sqrt qz\alpha$ and the mean $c=q\omega^2r/2$ is supplied by the $r$ oracle. With proposal $\omega^3k/2$, the importance coefficient is $2/(q\omega^2)$. The three terms have integrated moments $O(q^2z^8)$, $O(q^2)$, and $O(q^2z^4)$, respectively. Their work is $O(T)$ because $qz^2\le1$.
+
+When $qz^2>1$, use the direct identity with proposal $\omega k$. Its moment after division by $q$ is at most $C(1+qz^2)/q^2\le Cz^4$. Subtract independent unbiased products for $z^2\alpha^2$ and the $r$ oracle. This proves the stated cap.
+\end{proof}
+
+\section{Arbitrary directions and persistent coordinate copies}
+Let $a$ now be any unit direction in the current Hilbert space, $P=I-aa^*$, and $s=\norm h^2$. The local helpers are
+\[
+ \alpha=\langle a,h\rangle,\qquad v=Ph,\qquad r=s-\alpha^2.
+\]
+A scalar linear functional is sampled with density $|a_i|^2$ over coordinates. If the old coordinate trace is $V$, its second moment is at most $V$. The coordinates $v_i=h_i-a_i\alpha$ have trace at most $4V$ and size $O(T)$; $r$ has bounded moment using two independent $\alpha$ copies. These helpers are used only inside the charged residual branches.
+
+Set $\sigma^2=\E_\rho Z^2$. Gaussian maximum entropy gives
+\begin{equation}
+ \sigma^2-1-\log\sigma^2\le2D,\qquad
+ |\sigma-1|\le\sqrt{2D},\qquad
+ |\sigma^2-1|\le C(\sqrt D+D).
+ \label{eq:sigma}
+\end{equation}
+Define an isometry $J$ by sending $h$ to $(z/\sigma)\langle a,h\rangle$ in degree zero and to $Ph$ in degree one, constant in $z$. The true linear part is $J[I+(\sigma-1)aa^*]h$.
+
+For the small residual of Lemma~\ref{lem:residual}, put
+\[
+ b_0=\E_\rho(zR_0/\sigma),\qquad b_i=\E_\rho R_{1,i}.
+\]
+Then $J^*R=ab_0+Pb$. Sample $b_0$ with density $z^2/\sigma^2$ and $b_i$ with $\rho$. The resulting trace moments are bounded by the original residual trace. Compute $Pb=b-a\langle a,b\rangle$ with one more sampled scalar functional. Reapplying $J$ gives exactly $(z/\sigma)b_0$ in degree zero and $Pb$ in degree one; no noisy estimate of the identically zero quantity $a^*Pb$ is made.
+
+The isometric embedding
+\begin{equation}
+ F(h)\longmapsto\bigl(J^*F(h),(I-JJ^*)F(h)\bigr)
+ =\bigl([I+(\sigma-1)aa^*]h+J^*R,(I-JJ^*)R\bigr)
+ \label{eq:embedding}
+\end{equation}
+preserves the complete query kernel. Its large part is a literal copy of the old coordinates. Only the residual is projected, at a universal trace/work factor. No fixed anchor or fixed tilt direction is required.
+
+The stored total norm updates through
+\[
+ s_{\rm new}=s+\E_\rho\Delta_Z+(\sigma^2-1)\alpha^2.
+\]
+Lemma~\ref{lem:norm} and \eqref{eq:sigma} give a small-increment oracle with moment $C(q+\sqrt D+D)^2$. Thus a full coordinate sum is never computed.
+
+\section{Composition and normalization}
+Write $b=q+\sqrt D+D$. For small $b$, activate the residual with probability proportional to $b$, and degree $\ell\ge2$ with probability proportional to $b/\ell^2$. Divide an activated residual by its probability. Lemma~\ref{lem:residual} makes both the trace increment and common expected-size increment $O(b)$. The squared-norm scalar oracle has the same property. Cross terms depend on the true means and are bounded by the corresponding residual norms. The rank-one linear perturbation in \eqref{eq:embedding} is handled the same way.
+
+Whenever a deterministic moment bound exceeds a fixed threshold, average two independent copies. For a vector mean of norm at most one,
+\[
+ \int\E\left|(X_i+X_i')/2\right|^2di
+ \le\tfrac12\left(\int\E|X_i|^2di+1\right).
+\]
+The scalar norm mean is also bounded. Consequently only $O(1+\sum b_j)$ resets are needed. Large steps create the residual outright and use polynomially many averages; their logarithmic cost is $O(b)$.
+
+Physical normalization uses $h_{j-1}=u_{j-1}/\sqrt{q_j}$. A local factory returns $u_j/\sqrt{q_j}$, which must be multiplied by $\sqrt{q_j/q_{j+1}}$. The following standard entropy estimate charges this scalar gain.
+
+\begin{lemma}[Norm retention]
+\label{lem:retention}
+For a Gaussian entropy tilt of cost $D$ and $\norm u^2\le q\le2$,
+\[
+ \E_\rho\tanh^2(G(u))\ge
+ e^{-C(q+\sqrt D+D)}\norm u^2.
+\]
+\end{lemma}
+\begin{proof}
+Normalize the Gaussian linear form to $Z\sim N(0,1)$ and write $s=\norm u^2\le q$. For small $q+\sqrt D$, compare $\tanh(\sqrt sZ)/\sqrt s$ with $Z$. The residual square is bounded by $C\min(s^2Z^6,Z^2)$; Lemma~\ref{lem:cap}'s entropy argument bounds its tilted mean by $C(q^2+D)$. The Gaussian quadratic exponential moment also gives $\E_\rho Z^2\ge1-C\sqrt D$ in this range. The $L^2$ triangle inequality therefore gives a relative lower bound $1-C(q+\sqrt D)$. For the remaining range, $\tanh^2 t\ge c\min(t^2,1)$ and $s\le2$ give the uniform Gaussian small-ball estimate
+\[
+ \gamma\{\tanh^2(\sqrt sZ)/s\le a\}\le Ca^c
+\]
+for fixed universal constants and $a\in(0,1)$. If its tilted mean is $\mu$, Markov gives tilted mass at least one half to the event with threshold $2\mu$. Binary entropy data processing yields $D\ge c\log(1/\mu)-C$. Since $q+\sqrt D$ is bounded below in this range, the additive constant is absorbed by $C(q+\sqrt D+D)$.
+\end{proof}
+
+Apply the lemma to a query maximizing $q_j$. It gives
+\[
+ \log^+\sqrt{q_j/q_{j+1}}\le C(q_j+\sqrt{D_j}+D_j).
+\]
+Vector and squared-norm scalar rescaling therefore have the same total budget. Apply the averaging resets to the normalized state after this physical rescaling, when its vector mean norm and scalar squared-norm mean are at most one. The expected scalar size is initial resources times $e^{CB}$, with bounded vector trace and scalar norm moments. A sampled final linear functional has second moment at most a constant times the squared readout norm. Average sufficiently many copies and use $O(d+1)$ independent groups. Chebyshev, a binomial tail bound, a union bound on the cube, and a size Markov bound give a finite seed whose majority is correct on every input, with a fixed margin in a fixed majority of the groups.
+
+\section{Finite precision without lower bounds on coefficients}
+\label{sec:precision}
+The selected formulas may initially contain tiny sampling probabilities, frequencies, or matrix entries. Rounding their original expressions directly is not justified. The following normalization argument supplies finite bits.
+
+For a stored coordinate oracle $X_i$, let $a_i^2$ be its average second moment over the Boolean cube and its randomness. Add independent Rademacher noise of variance $\delta a_i^2$, with $\delta$ inverse polynomial in the number of stored layers. This preserves means and adds only a constant total moment budget. It gives a pointwise independent-noise floor compared with the coordinate's cube RMS. Normalize each internal oracle by its own RMS; zero-RMS coordinates are identically zero on the finite cube and are discarded.
+
+\begin{lemma}[Correlated multilinear primitives]
+\label{lem:precision}
+Suppose a primitive is a multilinear polynomial in $K$ distinct child samples, each having an independent Rademacher noise floor at least $\gamma$ times its cube-averaged second moment. After RMS normalization, its coefficients admit bounds $\exp[O(K\log(K/\gamma))]$ times the normalized parent RMS. The Poisson products and all same-child Taylor remainders above have $O(K)$-size fixed-dimensional vector-algebra representations with internally bounded normalized coefficients. A complete finite tree of these primitives converts once to polynomial-size ordinary real arithmetic formulas.
+\end{lemma}
+\begin{proof}
+Condition on the input and on base child values bounded in normalized magnitude by $\sqrt{2K}$; the joint cube/randomness probability of this event is at least one half. Walsh orthogonality in the independent noise signs bounds the translated polynomial's coefficients by its conditional squared norm. Inverting the triangular translation of a multilinear polynomial bounds an original normalized coefficient by $\exp[O(K\log(K/\gamma))]$ times that norm. Integration proves the RMS statement.
+
+A product can be evaluated by keeping fixed degree categories. For the imaginary product minus its linear term use categories $0$, $1$, even degrees at least two, and odd degrees at least three. For the fourth-order cosine remainder use the analogous six categories separating degrees $0,1,2,3$ from higher even and odd degrees. The exponential remainder uses three categories. Normalize each category by its maximum monomial coefficient. A parent monomial has a unique decomposition between its two disjoint child blocks, so all normalized bilinear transition coefficients have magnitude at most one. This avoids expanding exponentially many monomials.
+
+Any one-hole context in a fixed-dimensional vector formula is affine linear in that hole. A balanced cut therefore expresses the context through a fixed number of affine coefficients and recursively balances the tree with polynomial size and logarithmic depth. Expand the fixed-dimensional bilinear gates into real scalar arithmetic only afterward. This is one global conversion, not a separate expansion at each recursive layer.
+\end{proof}
+
+Condition on a primitive's external random choices and let $A_\theta$ be its conditional cube RMS, with $A^2=\E_\theta A_\theta^2$. The ratio satisfies $\E(A_\theta/A)^2=1$. An expected-call-count bound excludes large selected ratios with positive probability, simultaneously with the classification and size events. Singular external factors cancel in this RMS normalization. Thus no lower frequency or coefficient cutoff is needed. On a polynomial-size good seed, every normalized coefficient has polynomial logarithmic magnitude, and polynomial-bit rounding preserves the uniformly margined groups.
+
+All arguments extend from sums to standard-Borel direct integrals by Tonelli. Fresh noise is generated only for actually requested coordinates; an uncountable independent random field is unnecessary. A fixed seed requests only finitely many constants. The noise bookkeeping adds a polynomial $H$ factor. Finally the standard arithmetic-formula evaluation and constant-depth composition theorems place the polynomial-size majority in nonuniform $\PNC$; $\PNC\subseteq L/\mathrm{poly}$ \cite{datta}.
+
+\section{Fixed-rank blocks}
+\label{sec:block}
+Let $A:\R^r\to\mathcal H$ be an isometry with $r\le r_0$, $P=I-AA^*$, and $\alpha=A^*h$. Local helpers for the $r$ coordinates of $\alpha$, for $Ph$, and for $s-\norm\alpha^2$ have trace/work overhead depending only on $r_0$. For fixed $z\ne0$, the scalar
+\[
+ \alpha_z=\langle Az/\norm z,h\rangle
+\]
+has a uniform bounded-moment oracle. Substitute $\norm z\,\alpha_z$ for $z\alpha$ in the preceding factories. Their caps become
+\[
+ \min(q^2\norm z^6,\norm z^2),\quad
+ \min(q^2\norm z^4,q\norm z^2),\quad
+ q+\min(q\norm z^4,\norm z^2).
+\]
+The Gaussian entropy estimates hold with constants depending on $r_0$.
+
+Set $M=\E_\rho ZZ^*$ and $\xi=M^{-1/2}z$. Maximum entropy gives
+\[
+ \operatorname{tr}M-\log\det M-r\le2D,\qquad
+ \norm{\sqrt M-I}_{\HS}\le\sqrt{2D}.
+\]
+The isometry $J$ has degree-zero output $\xi^*\alpha$ and degree-one output $Ph$. Its true linear part is $J[I+A(\sqrt M-I)A^*]h$, a charged HS perturbation of the identity. Estimate the $\ell$th block coordinate of $J^*R$ with density $\xi_\ell^2$ and apply the rank-$r$ projector $P$ to the degree-one part. The trace/work overhead is a rank-dependent constant, and only the residual is projected. The scalar norm update adds the quadratic correction $\alpha^*(M-I)\alpha$, using independent copies. Small and large steps, physical rescaling, and Section~\ref{sec:precision} now prove Theorem~\ref{thm:main}.
+
+
+\section{Arbitrary Gaussian controls use the same interface}
+\label{sec:gaussian}
+\begin{proposition}[An uncentered covariance factorization]
+\label{prop:gaussian}
+A Gaussian row law $N(m,\Sigma)$ of relative entropy $D$ can be realized by a positive linear change of the input state and an independent one-dimensional Gaussian tilt. Their costs add exactly to $D$.
+\end{proposition}
+\begin{proof}
+Set $M=\Sigma+mm^*$, $A=\sqrt M$, and $b=M^{-1/2}m$. Then
+\[
+ A^{-1}g\sim N(b,I-bb^*),\qquad \norm b<1.
+\]
+This law is standard Gaussian perpendicular to $b$ and has mean $\norm b$ and variance $1-\norm b^2$ along its direction. Its entropy is
+\[
+ D_1=-\tfrac12\log(1-\norm b^2).
+\]
+The covariance-factor cost is $D_0=\tfrac12(\operatorname{tr}M-\log\det M-n)$. The determinant lemma gives
+\[
+ \det M=\det\Sigma(1+m^*\Sigma^{-1}m),\quad
+ 1-\norm b^2=(1+m^*\Sigma^{-1}m)^{-1},\quad D_0+D_1=D.
+\]
+Moreover $\norm{A-I}_{\HS}\le\sqrt{2D_0}$.
+
+Apply $A$ to the query state before using the one-dimensional factory. For $K=A-I$, the coordinate update has a small-HS oracle: sample a row entry with probability proportional to its square. Its total second moment is at most $\norm K_{\HS}^2$ times the old trace. The scalar squared-norm increment is
+\[
+ h^*(A^*A-I)h,
+ \qquad \norm{A^*A-I}_{\HS}\le2\norm K_{\HS}+\norm K_{\HS}^2.
+\]
+Sample a pair of indices with probability proportional to the squared matrix entry and use independent coordinate calls. Its second moment is bounded by the squared displayed HS norm times the squared old trace. These updates use the same rare-branch and averaging invariants as before.
+
+If $s=\max(1,\norm A_{\rm op})$, use normalized state $Ah/s$ and physical scale $q'=qs^2$. Since $\norm M_{\rm op}\le C(1+D)$, $q'\le Cq(1+D)$. When $D$ is small this charges only $O(q+\sqrt D+D)$. When $D$ is large, $q'$ is polynomial in $1+D$. The one-dimensional Gaussian has mean norm below one and variance at most one, so all its fixed moments are uniformly bounded. The local factories above remain polynomial in $q'$ and $D$ for $q'>2$: their frequency factors are fixed polynomials, the relative exponential cancellation is unchanged, and the capped bounds can be replaced by the second-moment bound on the tilted scalar. Averaging therefore costs only a polynomial before the physical normalization. Its logarithm is $O(1+D)$, and Lemma~\ref{lem:retention} applied to the original Gaussian law charges the final scale change to $O(q+\sqrt D+D)$. No switch of state representation is needed.
+\end{proof}
+
+\section{Bounded quadratic tanh tilts: a positive random-rank mixture}
+\label{sec:mixture}
+Let $X_i=G(w_i)$ with $\norm{w_i}^2\le q\le2$, and let
+\[
+ V(G)=\tfrac12\sum_{i,j}T_{ij}\tanh X_i\tanh X_j,
+ \qquad b=\sum_{i,j}|T_{ij}|\le b_0.
+\]
+If $b=0$ the law is Gaussian. Otherwise sample $K\sim\operatorname{Pois}(b/2)$ and $K$ ordered pairs with probabilities $|T_{ij}|/b$. Set
+\[
+ w_\omega(G)=\prod_{\ell=1}^K
+ [1+\operatorname{sign}(T_{i_\ell j_\ell})\tanh X_{i_\ell}\tanh X_{j_\ell}],
+ \quad Z_\omega=\E_\gamma w_\omega.
+\]
+Every factor is strictly positive. The Poisson product identity gives $\E_\omega w_\omega=e^V$. Thus
+\begin{equation}
+ \rho_T=\int\rho_\omega\,d\pi(\omega),\qquad
+ \rho_\omega=w_\omega\gamma/Z_\omega,\qquad
+ d\pi=Z_\omega\,dP(\omega)/Z_T.
+ \label{eq:mixture}
+\end{equation}
+Each component changes a subspace of rank at most $2K$ and retains an independent Gaussian complement.
+
+\begin{lemma}[Weighted component entropy]
+\label{lem:mixtureentropy}
+For every fixed $A>0$ and integer $m\ge0$, with $D_\omega=\KL(\rho_\omega\Vert\gamma)$,
+\begin{align*}
+ \E_\pi A^K(K+1)^m&\le C_{b_0,A,m},\\
+ \E_\pi A^K(K+1)^mD_\omega&\le C_{b_0,A,m}q^2,\\
+ \E_\pi A^K(K+1)^m\sqrt{D_\omega}&\le C_{b_0,A,m}q.
+\end{align*}
+Also $D_\omega\le K(\log2+q)$.
+\end{lemma}
+\begin{proof}
+The identity
+\[
+ 1+\sigma\tanh x\tanh y=\frac{\cosh(x+\sigma y)}{\cosh x\cosh y}
+\]
+and $\log\cosh x\le x^2/2$ give $Z_\omega\ge e^{-Kq}$ by Jensen. The product is at most $2^K$, and $Z_T\ge e^{-b/2}$. Hence all fixed exponential rank moments are finite uniformly in $q$.
+
+For one factor $h$, $\E_\gamma\norm{\nabla h}^2\le4q^2$. The product rule, the bound $h\le2$, and Gaussian Poincar\'e give
+\[
+ \operatorname{Var}_\gamma(w_\omega)\le K^2 4^Kq^2.
+\]
+The KL-to-chi-square inequality therefore yields
+\[
+ Z_\omega D_\omega\le
+ \frac{\operatorname{Var}(w_\omega)}{Z_\omega}
+ \le K^2(4e^q)^Kq^2.
+\]
+Integrate under the Poisson law and use Cauchy--Schwarz for the square-root estimate. Finally $\log(w_\omega/Z_\omega)\le K(\log2+q)$ pointwise.
+\end{proof}
+
+The local block factories have \emph{polynomial} rank dependence before any large-step reset. More precisely, for a universal fixed integer $p$, balancing coordinate work gives residual traces bounded by
+\[
+ C(1+r)^p(q^2+D),
+\]
+and scalar norm-increment moments bounded by $C(1+r)^p(q^2+D+D^2)$. To verify this quantitative point, block projection helpers have polynomial rank moments and work. Tensor averaging cancels the true-norm exponential before the degree sum, leaving only fixed powers of those moment bounds. All Fourier moment orders are fixed. Taking entropy dual parameter $1/(8r)$ gives
+\[
+ \E_\rho\min(q^2\norm Z^6,\norm Z^2)\le C(rD+q^2r^3),\quad
+ \E_\rho\min(q\norm Z^4,\norm Z^2)\le C(rD+qr^2).
+\]
+Whitened projection coordinates have normalized squared densities, so no inverse eigenvalue enters a moment estimate. There are only finitely many operations of fixed polynomial degree. Increasing $p$ absorbs common-work balancing and projection costs.
+
+It is essential to integrate these \emph{unreset} factories before paying component-dependent normalization costs. Lemma~\ref{lem:mixtureentropy}, including $D_\omega^2\le C(K+1)D_\omega$, gives integrated residual trace and norm-increment moment $O_{b_0}(q^2)$.
+
+Here is the common isometry explicitly. Let $J_\omega$ be the normalized block isometry for component $\omega$, and let $S_\omega-I$ be its HS linear correction. On the direct integral with measure $\pi$, put
+\[
+ Jh=(J_\omega h)_\omega,\qquad
+ \widetilde R_\omega=R_\omega+J_\omega(S_\omega-I)h.
+\]
+Then $J^*J=I$ and $F=Jh+\widetilde R$. The additional linear residual has integrated HS squared norm at most $2\E_\pi D_\omega=O_{b_0}(q^2)$. Apply the exact embedding
+\[
+ F\longmapsto(h+J^*\widetilde R,(I-JJ^*)\widetilde R).
+\]
+The component adjoints, mixture integration, and reapplication of $J_\omega$ are sampled and balanced to common coordinate work; each adds only a fixed rank polynomial, absorbed by Lemma~\ref{lem:mixtureentropy}. Thus the old state is again a literal copy with a residual of second moment $O_{b_0}(q^2)$. The total-norm oracle uses the averaged component increment and has the same bound.
+
+Rare creation with probability proportional to $q$ now gives $1+O_{b_0}(q)$ work and moment increments. Convexity of relative entropy gives $D(\rho_T\Vert\gamma)\le\E_\pi D_\omega=O_{b_0}(q^2)$, so physical scaling has the same cost. The global precision argument remains unchanged. This proves the quadratic-tilt extension stated after Theorem~\ref{thm:main}.
+
+At a minimum hard-margin final readout, its dual coefficients $\beta_x$ satisfy $\norm\beta_1\le\norm v^2/a$ for margin $a$, so the terminal quadratic costate $T=\beta\beta^*$ has bounded entrywise norm whenever the action is bounded. Earlier variational costates need not have a known uniform bound. The extension therefore handles that terminal family but does not certify the entire optimal posterior path.
+
+\section{Normalized ridge differences and a Gaussian envelope}
+\label{sec:normalized}
+We prove Theorem~\ref{thm:normalized}. For each normalized ridge or ridge difference, let $a_i$ be the corresponding unit direction $w_i/\norm{w_i}$ or $(w_i-z_i)/\norm{w_i-z_i}$, and write $A_i=g^*a_i$. The Lipschitz bounds for tanh and its derivative give
+\begin{equation}
+ |\psi_i(g)|\le|A_i|,\qquad
+ \norm{\nabla\psi_i(g)}\le1+C|A_i|.
+ \label{eq:normalizedgradient}
+\end{equation}
+For a difference, its gradient equals
+\[
+ a_i\operatorname{sech}^2(g^*w_i)+
+ z_i\frac{\operatorname{sech}^2(g^*w_i)-\operatorname{sech}^2(g^*z_i)}{\norm{w_i-z_i}}.
+\]
+Thus the constant is uniform through arbitrarily small denominators, since $q\le2$.
+
+Put $V=\tfrac12\sum S_{ik}\psi_i\psi_k$. The case $t=0$ is Gaussian. For $t>0$, define
+\[
+ P=\frac1{2t}\sum_{i,k}|S_{ik}|(a_ia_i^*+a_ka_k^*),\qquad
+ Q(g)=\tfrac t2g^*Pg.
+\]
+Then $P\succeq0$, $\operatorname{tr}P=1$, and $|V|\le Q$. Change the Gaussian reference to
+\[
+ d\gamma_Q\ \propto\ e^{-Q}\,d\gamma,
+ \qquad C_Q=(I+tP)^{-1}.
+\]
+Its covariance square root differs from the identity in HS norm by $O(t)$, and its Gaussian entropy is $O(t^2)$.
+
+Choose a pair $I=(i,k)$ with probability $|S_{ik}|/t$, and set
+\[
+ h_I=\tfrac14(A_i^2+A_k^2+2\operatorname{sign}(S_{ik})\psi_i\psi_k),
+ \qquad H=\E_Ih_I.
+\]
+Equation~\eqref{eq:normalizedgradient} gives
+\begin{equation}
+ 0\le h_I\le(A_i^2+A_k^2)/2,\qquad
+ V+Q=tH,\qquad H\le g^*Pg.
+ \label{eq:envelope}
+\end{equation}
+Draw $K\sim\operatorname{Pois}(1)$ and independent pairs $I_1,\ldots,I_K$. With
+\[
+ w_\omega=\prod_{\ell=1}^K(1+th_{I_\ell}),\quad
+ Z_\omega=\E_{\gamma_Q}w_\omega,\quad
+ \rho_\omega=w_\omega\gamma_Q/Z_\omega,
+\]
+all factors and $Z_\omega$ are at least one. The exact identity $\E_\omega w_\omega=e^{tH}$ gives
+\begin{equation}
+ \rho=\int\rho_\omega\,d\pi(\omega),\qquad
+ d\pi=Z_\omega\,dP(\omega)/\overline Z,\qquad
+ \overline Z=\E_{\gamma_Q}e^{tH}\ge1.
+ \label{eq:normalizedmixture}
+\end{equation}
+In whitened $\gamma_Q$ coordinates each component changes a subspace of dimension at most $4K$ and has an independent standard Gaussian complement.
+
+\begin{lemma}[Weighted entropies for unbounded positive factors]
+\label{lem:normalizedentropy}
+Fix $A>1$. For sufficiently small universal $t_0$, depending on this fixed $A$, the component entropy $D_\omega=\KL(\rho_\omega\Vert\gamma_Q)$ satisfies
+\[
+ \E_\pi A^K\le C_A,\qquad
+ \E_\pi A^KD_\omega\le C_At^2,\qquad
+ \E_\pi A^KD_\omega^2\le C_At^2.
+\]
+The same bounds hold with any fixed polynomial in $K$ after increasing the fixed exponential weight and decreasing $t_0$.
+\end{lemma}
+\begin{proof}
+The Poisson identity gives
+\[
+ \E_\pi A^K
+ =e^{A-1}\frac{\E_{\gamma_Q}e^{AtH}}{\overline Z}\le C_A,
+\]
+since $H\le g^*Pg$, $\operatorname{tr}P=1$, and $At_0$ is small. All fixed Gaussian moments remain bounded under this quadratic reweighting, uniformly in the ambient dimension.
+
+For entropy use Gaussian logarithmic Sobolev, not a chi-square bound: averaging the squared products would introduce a possibly nonintegrable quartic exponential. Since $C_Q\preceq I$,
+\[
+ Z_\omega D_\omega\le\tfrac12\E_{\gamma_Q}
+ \frac{\norm{\nabla w_\omega}^2}{w_\omega}.
+\]
+Writing $f_I=1+th_I\ge1$, Cauchy--Schwarz gives
+\[
+ \frac{\norm{\nabla w}^2}{w}
+ \le Kt^2\sum_{\ell=1}^K\norm{\nabla h_{I_\ell}}^2
+                  \prod_{m\ne\ell}f_{I_m}.
+\]
+Put $G=\E_I\norm{\nabla h_I}^2$. Selecting one marked Poisson factor, with $K=1+K_{\rm rest}$, gives the exact upper bound
+\[
+ \E_\omega A^K\frac{\norm{\nabla w}^2}{w}
+ \le t^2A G[1+A(1+tH)]e^{A-1+AtH}.
+\]
+By \eqref{eq:normalizedgradient},
+\[
+ \norm{\nabla h_{(i,k)}}^2
+ \le C(A_i^2+A_k^2+A_i^2A_k^2).
+\]
+These fixed-degree moments, also multiplied by $H$, are uniformly bounded under the preceding small quadratic reweighting. Integrating proves the first entropy estimate.
+
+For the second, $w,Z_\omega\ge1$ imply
+\[
+ D_\omega^2\le\E_{\rho_\omega}(\log w)^2
+ \le t^2\E_{\rho_\omega}\left(\sum_{\ell=1}^Kh_{I_\ell}\right)^2.
+\]
+Set $H_s=\E_Ih_I^s$. Marking either one or two Poisson factors gives
+\[
+ \E_\omega A^Kw\left(\sum_\ell h_{I_\ell}\right)^2
+ =e^{A-1+AtH}\{A(H_2+tH_3)+A^2(H+tH_2)^2\}.
+\]
+Every term has a uniformly bounded integral by \eqref{eq:envelope} and fixed Gaussian moment bounds. Dividing by $\overline Z\ge1$ proves the claim. A slightly larger fixed $A$ absorbs any fixed polynomial in $K$.
+\end{proof}
+
+Apply the covariance contraction $C_Q^{1/2}$ to the incoming state with the HS vector and squared-norm interface of Section~\ref{sec:gaussian}. It costs $1+O(t)$ and does not increase any query norm. The denominators in the normalized ridges are unchanged. After contraction the corresponding directions have norm at most one, which suffices for every preceding bound.
+
+Next integrate the unreset block factories, whose moments grow only polynomially in the rank. Lemma~\ref{lem:normalizedentropy} and $r\le4K$ give vector residual trace and scalar norm-increment moment both $O(q^2+t^2)$. The common-isometry construction of Section~\ref{sec:mixture} applies verbatim. Its linear HS correction has integrated squared norm at most $2\E_\pi D_\omega=O(t^2)$. Component adjoints and reapplication introduce only fixed rank polynomials, absorbed by the lemma. Thus rare creation with probability proportional to $q+t$ gives the claimed work and moment growth $1+O(q+t)$.
+
+For physical normalization it remains to bound the entropy against the original Gaussian. Gaussian logarithmic Sobolev applied to $e^V/Z$ gives
+\[
+ \KL(\rho\Vert\gamma)\le\tfrac12\E_\rho\norm{\nabla V}^2\le Ct^2.
+\]
+Indeed \eqref{eq:normalizedgradient} bounds the last integrand by $t^2$ times a fixed Gaussian-moment expression; $|V|\le Q$ controls its integral and $Z\ge e^{\E_\gamma V}\ge e^{-t/2}$. Lemma~\ref{lem:retention} charges the final normalization by $O(q+t)$. The same direct-integral finite-bit construction applies; it never requires a lower bound on the anchor denominators. This completes Theorem~\ref{thm:normalized}.
+
+For example, the potential
+\[
+ \frac t2\frac{[\tanh(g^*w)-\tanh(g^*z)]^2}{\norm{w-z}^2}
+\]
+is covered uniformly as $w$ approaches $z$, although its expanded raw coefficients diverge. A general covariance-normalized feature direction can involve a complicated combination of many ridges. We have not proved that every such direction admits a normalized-ridge representation with controlled coefficient mass.
+
+\section{What remains for unrestricted critical paths}
+The proof represents the non-Gaussian features directly; replacing them by a Gaussian is not sufficient in general. Even three equal-norm queries admit entropy-$D$ examples whose covariance-matched Gaussian kernels have optimal common feature error of order $\sqrt{qD}$. The discrepancy can affect useful polynomial-norm readouts. Entrywise kernel errors of order $q^2\sqrt D+qD$ do not repair that problem when weak modes matter.
+
+The remaining issue is a dimension-free treatment of a row law with general conditional dependence. Talagrand transport writes the changed Gaussian row as $Z+b(Z)$ with $\E\norm b^2\le2D$, giving a small HS \emph{linear} perturbation. It does not by itself give economical scalar formulas for the nonlinear feature change. The entropy chain rule, a covariance match, or a bounded trace cannot be substituted for that missing argument. The present theorem therefore supplies a genuinely non-Gaussian class with controlled formula complexity while leaving the full critical-posterior question open.
+
+\begin{thebibliography}{9}
+\bibitem{datta} S.~Datta, M.~Mahajan, B.~V.~Raghavendra Rao, M.~Thomas, and H.~Vollmer. \emph{Counting Classes and the Fine Structure between NC1 and L}. 2010. Primary manuscript: \url{https://www.cse.iitm.ac.in/~bvrr/conf/mfcs10.pdf}. We use Proposition 2.4 and the constant-depth composition results in Theorems 4.1--4.2.
+\end{thebibliography}
+\end{document}
