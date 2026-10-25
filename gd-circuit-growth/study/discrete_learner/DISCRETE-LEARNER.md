@@ -132,6 +132,13 @@ n = 64 / 256 / 1024 / 4096 for both learners. Definitions:
 | designed at d = 60 (7), v1.1 | 7 | 0 | 31.7x | 36.3x | 0 (0) of 77 | 0.46 |
 | designed at d = 120 (4), v1.1 | 4 | 0 | 45.5x | 30.7x | 0 (0) of 29 | 0.18 |
 
+![DFG's n* against the networks' n*](../figures/dfg_nstar.png)
+
+*Figure (`plot_nstar.py`).* DFG's n* against the networks' n*, for every target of every suite, on log axes. Points
+below the dashed line are targets where DFG needs less data. Blind: held-out 2 (v1.1) and held-out 1 (frozen v1 without
+the degree-5/6 search; par5, which it never learns, is drawn at the top). Development: designed and random at d = 30,
+frozen v1, inputs not permuted. Other d: v1 at d = 15, v1.1 at d = 60 and 120.
+
 **Reading the table.**
 - **Blind tests.** These are rows 1 and 2.
   - *Held-out 2* is the blind test of the final proposal, v1.1: DFG has the smaller n* on all 7 targets (median factor 3.1, geometric mean 3.4), at
