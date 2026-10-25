@@ -55,7 +55,7 @@ Onset steps online, seed mean. Characters within a factor 1.35 of each other are
 | stair5 | 65: $x_1$ → 207: $x_1x_j$ (all four, including the −0.125 ones) → 450–800: degree 3, then 4 and 5 |
 | mux | 63: $x_1,x_2,x_3$ → 172: $x_1x_4,x_2x_4,x_3x_4$ → 437: $x_1x_2x_3$ and the largest coefficient, $x_1x_2x_3x_4$ (0.75), last |
 | majpar | 202: the three pairs → 1165: $x_1\cdots x_6$ |
-| rmaj9 | 50: all nine linear terms → 1034: all 67 characters of degree 3–9 together, including the small cross-block ones |
+| rmaj9 | 50: all nine linear terms → 860–1200: a cascade within a factor 1.4. The top-degree $x_1\cdots x_9$ comes first (860), together with the earliest degree-3 characters (860–1080, small cross-block ones included). Degrees 5 and 7 follow at 1090–1200. |
 | andxor | 201: $x_1x_2,x_3x_4$ → 299: $x_1x_2x_3x_4$ |
 | dlist5 | 57: the five linear terms → 417: all 26 higher terms |
 | parmaj | 171: the nine cross pairs → 282: $x_1\cdots x_6$ → 555: the degree-4 terms |
@@ -67,7 +67,7 @@ Onset steps online, seed mean. Characters within a factor 1.35 of each other are
 1. *The linear stage comes first and at a nearly fixed time,* 50–70 steps, whatever the size of the linear coefficients.
 2. *Characters arrive in bundles, not one at a time.*
    - A bundle is everything one new direction of a hidden unit can carry. Examples: all $x_1x_j$ at once in stair5; the three $x_ix_4$ at once in mux.
-   - Once the inputs are in use, the remaining structure on them arrives together. Examples: rmaj9's 67 characters; dnf3's 500.
+   - Once the inputs are in use, the remaining structure on them arrives within a short window (a factor of about 1.5 in steps). Examples: rmaj9's 67 characters of degree 3–9; dnf3's 500.
    - Bundles cut across coefficient size: small characters switch on together with large ones carried by the same feature.
 3. *Order follows construction, not coefficient size.*
    - A character comes after the features it can be built from. Examples: mux's largest term comes last; majpar's degree-6 term comes after the pairs.
@@ -90,7 +90,9 @@ Onset steps online, seed mean. Characters within a factor 1.35 of each other are
 
 Three independent model designs were built and calibrated on the five targets only, with at most five global constants each. Each predicts $f_R(t)$ at every step for every condition, from the target function alone.
 
-The predictors were frozen and committed (commit `19da14d6`) before any network was run on the six held-out targets. Each model's write-up records its held-out predictions from before those runs.
+The predictors were frozen and committed (commit `19da14d6`) before any network was run on the six held-out targets.
+- *What serves as the pre-registration.* The frozen, deterministic code is. `fourier` and `gates` also wrote their held-out predictions into their write-ups beforehand.
+- *How new the held-out targets are.* They were new to the trajectory study, but not to the project: the earlier fixed-$n$ study had trained networks on them, and coarse onset steps are in `study/nn_summary.json`. The independent verifiers (§6) found that no model code reads that data, or any other network data, for the targets it predicts.
 
 Scoring ([`score.py`](score.py)):
 - **traj:** the mean over steps of $\lVert f_{\rm model}-f_{\rm net}\rVert^2/\mathrm{Var}\,y$;
@@ -106,34 +108,45 @@ Scoring ([`score.py`](score.py)):
     A fired bundle rises along a saddle-escape logistic with slope $e\ln d$ in progress.
   - *Junta completion.* Once a nonlinear gate on inputs already in use exists, the rest of the function on those inputs is one cheap move.
   - *Finite $n$.* Memorisation cuts the race off after about 35 epochs. A bundle saturates at the spiked-estimation overlap $1-N/(n\rho^2)$.
-  - *Constants:* five.
+  - *Constants:* five fitted by optimiser. On top of these, 2–3 continuous constants and 8–10 structural switches were chosen on calibration scores (§6).
 - **`gates`** ([`models/gates/MODEL.md`](models/gates/MODEL.md)): feature-level greedy growth.
   - *The prediction.* The output is the least-squares fit of the target on the ReLU gates grown so far.
   - *Order of a bundle.* A bundle of characters has order $\kappa$, the number of pieces it is built from at once. A piece is an input or an existing gate.
   - *Timing.* All bundles align in parallel by $\dot m=\eta\rho\,m^{\kappa-1}$ and escape at $m=1$.
   - *Finite $n$.* A memorisation clock, plus a kernel background.
-  - *Constants:* five.
+  - *Constants:* five fitted by optimiser, plus several structural choices made on calibration scores (§6).
 - **`flow`** ([`models/flow/MODEL.md`](models/flow/MODEL.md)): the network's own Adam dynamics, reduced.
   - *What is kept.* A width-64 copy of the network that sees only the relevant inputs. The irrelevant inputs become Gaussian noise on each first-layer unit. Adam runs on the expected gradient, with the minibatch noise kept in its second moment.
   - *Finite $n$.* Each training pattern gets a memorised offset.
   - *Clock.* It runs on the network's clock with no time map.
-  - *Constants:* no constant fitted to network data, beyond a capacity term added with the calibration data in view (see its write-up).
+  - *Constants:* none optimised against network data. Its two memorisation constants are at their derived values, though they were bracketed against the networks, and about six structural choices were made while scoring against them. A width correction rescales its clock uniformly by $(128/N)^{0.1}$, a factor measured on the model itself.
 
 ### 3.3 Scores
 
-| model | calibration (5 targets) traj / onset | held-out (6 targets) traj / onset | held-out, online only | held-out, $n=2048$ |
+**Against the 3-seed network mean** (score.py), traj / onset:
+
+| model | calibration (5 targets) | held-out (6 targets) | held-out, online | held-out, $n=2048$ |
 |---|---|---|---|---|
 | `fourier` | 0.010 / 0.12 | 0.011 / 0.18 | 0.009 / 0.10 | 0.014 / 0.26 |
 | `gates` | 0.010 / 0.16 | 0.012 / 0.21 | 0.009 / 0.15 | 0.017 / 0.30 |
 | `flow` | 0.005 / 0.09 | **0.005 / 0.15** | **0.002 / 0.04** | 0.006 / 0.22 |
-| *one network seed against the mean of the other two* | *0.011 / 0.15* | *0.011 / 0.17* | *0.004 / 0.06* | *0.008 / 0.21* |
 | *trivial step function (target mean until step 1000, then the target)* | *0.20 / 0.66* | – | – | – |
 
-- **All three models predict the held-out targets about as well as the targets they were calibrated on,** at about the level at which one network seed predicts another.
-- **Online:**
-  - `flow` puts the onsets of held-out characters within about 10% of the networks' (0.04 decades);
-  - `fourier`'s hand rule is within about 25% (0.10 decades).
-- **Finite $n$.** Onset errors there are dominated by characters that end near $\tfrac12$, where model and network fall on opposite sides of the threshold. The trajectory errors there remain small.
+**Like for like** ([`fair_scores.py`](fair_scores.py)): traj of each model against *single* network seeds, next to one network seed against another, i.e. how well an independent rerun of the network predicts a run.
+
+| | calibration, online | calibration, $n=2048$ | calibration, $n=512$ | held-out, online | held-out, $n=2048$ | held-out, $n=512$ |
+|---|---|---|---|---|---|---|
+| *network seed vs another seed* | *0.0070* | *0.0163* | *0.0307* | *0.0054* | *0.0111* | *0.0360* |
+| `fourier` | 0.0087 | 0.0222 | 0.0188 | 0.0105 | 0.0177 | 0.0232 |
+| `gates` | 0.0096 | 0.0219 | 0.0196 | 0.0105 | 0.0205 | 0.0252 |
+| `flow` | 0.0042 | 0.0113 | 0.0208 | 0.0037 | 0.0097 | 0.0219 |
+
+What the scores say:
+- **All three models predict the held-out targets about as well as the calibration targets.**
+- **`flow` predicts a network run better than an independent rerun of the network does,** in every condition. It models the expected trajectory, and the remaining differences are run-to-run noise.
+- **`fourier` and `gates`, the two discrete rules, come within 1.3–2× of rerun-to-rerun variability at large $n$,** and do better than it at $n=512$, where seeds also differ in their training sets.
+- **Onsets.** Online, `flow` puts held-out onsets within about 10% (0.04 decades), and `fourier`'s by-hand rule within about 25% (0.10 decades). At finite $n$, onset errors are dominated by characters that end near $\tfrac12$, where model and network fall on opposite sides of the threshold. The trajectory errors there stay small.
+- **An earlier comparison was not like for like.** An earlier version of this table compared the models (scored against the 3-seed mean) with one seed scored against the mean of the other two. That comparison is not like for like: the irreducible error of the 3-seed-mean reference is only about a sixth of the seed-vs-seed number.
 
 ## 4. The general model (Heuristic)
 
@@ -153,7 +166,7 @@ a truncated Fourier expansion of the target. The fractions switch on in bundles 
    - each bundle is learned only to the spiked-estimation overlap $1-N/(n\rho^2)$;
    - the race is cut off once the training set is memorised, after a fixed number of epochs. Memorisation goes into the irrelevant inputs.
 
-**Its mechanism** is clearest in `flow`, which reproduces it from the network's own dynamics with nothing fitted:
+**Its mechanism** is clearest in `flow`, which reproduces it from the network's own dynamics with no constant optimised against the networks:
 - each stage is the escape from a saddle;
 - its length is set by Adam's normalisation by the minibatch gradient noise;
 - high-order characters are slow because the irrelevant inputs blur each unit's response to them;
@@ -173,4 +186,16 @@ a truncated Fourier expansion of the target. The fractions switch on in bundles 
 
 ## 6. Verification
 
-(Pending: an independent agent per model reproduces its scores, checks for leakage of network data into the predictors, and audits its write-up.)
+An independent agent per model checked four things.
+- **Reproduction.** It regenerated the predictions from the frozen commit. They were bit-identical, and the scores reproduced exactly.
+- **Leakage.** It read every code path for leakage. None of the three predictors reads any network output for the target it predicts.
+- **Pre-registration.** It checked the recorded held-out predictions against the frozen code. They match, apart from two labelling slips in `fourier`'s write-up. `flow` recorded none; its frozen code is the pre-registration.
+- **Write-up claims.** It audited each write-up's claims.
+
+Its main findings, each now disclosed in the model's MODEL.md:
+- **Undercounted constants.** "Five constants" undercounts the degrees of freedom of `fourier` and `gates`. Each also has 2–3 hand-tuned continuous constants and roughly 8–10 structural switches chosen on calibration scores.
+- **Choices made with the networks in view.** `flow`'s constants were not optimised, but its two memorisation constants were bracketed against the networks, and about six structural choices were made while scoring against them.
+- **Held-out outputs seen during design.** `fourier`'s builder looked at the model's own outputs (not the networks') on three held-out targets, and kept two rules on that basis. Switching them off changes the held-out score by less than 0.001.
+- **The held-out targets were not new to the project** (§3.1).
+- **The noise-floor comparison** was not like for like (§3.3, now corrected).
+- **Overstated details.** Several quantitative details in the write-ups were overstated: rise slopes, some ranges, one ablation factor. They are corrected there.
