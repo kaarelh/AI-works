@@ -18,6 +18,8 @@ Notes by Claude, prompted by Kaarel Hänni. Research note, 23 October 2026; not 
 
 Raw network outputs live in a session scratch directory and are in neither branch. The scripts regenerate them.
 
+[Part 6](#part-6-a-discrete-learner-as-good-as-gradient-descent-25-october-2026) builds a discrete learner from this picture that needs less data than the networks on nearly every target, at a fraction of their compute.
+
 [Part 4](#part-4-does-compositional-structure-beyond-leap-matter-24-october-2026) tests whether compositional structure beyond leap complexity matters. [Part 5](#part-5-what-the-network-computes-while-it-learns-2425-october-2026) characterizes the sequence of functions a network computes while it learns, and gives models that reproduce it on held-out targets.
 
 [Part 3](#part-3-state-of-understanding-after-an-extended-session) gives the current state of understanding:
@@ -786,6 +788,63 @@ Full write-up: [`study/trajectories/TRAJECTORIES.md`](study/trajectories/TRAJECT
 - *Finite $n$:* the race against memorisation decides where it stops.
 
 This is the composition finding of Part 4, seen in time rather than in samples.
+
+## Part 6: a discrete learner as good as gradient descent (25 October 2026)
+
+Full write-up: [`study/discrete_learner/DISCRETE-LEARNER.md`](study/discrete_learner/DISCRETE-LEARNER.md). All tables:
+[`study/discrete_learner/RESULTS.md`](study/discrete_learner/RESULTS.md).
+
+**Question.** Use the picture of Parts 1–5 to build a more discrete learner that, with similar compute and data, does at
+least as well as gradient descent on the toy problems where gradient descent does well.
+
+**Proposal: discrete feature growth (DFG)** (Heuristic design, Numerical results). Same strategy as the networks,
+different search.
+
+The strategy, as in the networks:
+- Grow features greedily, in order of detectability against the noise of the *residual*.
+- Make terms on inputs already in use cheaper, through smaller candidate classes for extensions and local subsets
+  (Part 4's composition effect).
+- Fit a linear background.
+- Read out with the sign of a fit on the grown features (Part 5's truncated Fourier expansion).
+
+The search, unlike the networks: exhaustive enumeration of Fourier characters, admitted by union-bound tests. It is run
+on subsamples sized so that a fit stays within a fixed share of one network run's FLOPs. Dense targets have two block
+moves: a χ² test on the whole linear part, and the spiked top eigen-directions of the residual pair matrix.
+
+**Results** against the study's networks (same training sets and test set):
+
+- **Blind tests.**
+  - *Final version* (v1.1, on 7 held-out targets written after it was committed): smaller n* on all 7. The median is
+    3.1× less data, at most 0.26 of one network run's FLOPs per fit.
+  - *Frozen first version* (on 12 earlier held-out targets): smaller n* on 11 of 12, median 2.7×. It never learns par5,
+    which needs the degree-5 search it lacked.
+- **Development suites.** On 21 designed targets and 20 random formulas: clearly smaller n* on 40 of 41 (median 5–6×),
+  and a tie on and3. The factor grows with input dimension, to a median 30–45× at d = 60 and 120. For par3 the networks
+  need 843 / 3410 / ~14000 samples at d = 30 / 60 / 120; DFG needs 28 / 28 / 56 (inputs permuted per fit).
+- **Where it is worse.** Per (target, n) cell, DFG is worse than the networks by more than 0.02 in 0–10% of cells,
+  mostly at n = 16–64, where both are near chance. The persistent exception is MAJ5 ⊕ MAJ5 at n = 64–256.
+- **Audits.** Three independent audits checked the comparison: data and leakage, compute accounting, and reproduction.
+  They found no leakage and an exact data match, and the FLOP counter agrees with an independent count. They also found
+  real problems, all fixed or disclosed in the write-up:
+  - a compute-budget bug at d = 120;
+  - a tie-break bias toward low-index inputs;
+  - an overclaim in an early draft.
+- **Ablations.** Every ingredient taken from the networks is worth 1.2–3× on one class of targets:
+  - the readout fitted to the residual, on dense targets;
+  - residual-scaled thresholds and the composition classes, on staged targets;
+  - the linear block, on majorities.
+
+  The bulk of the gap with gradient descent comes from exhaustive search itself.
+
+**What this says about gradient descent** (Heuristic). Its extra data cost on these targets is the price of searching in
+weight space. Part 3's law has it paying about d^{k−1} samples for a k-parity. Exhaustive search pays the same search
+in FLOPs and only about 2k ln d in samples, and that fits inside gradient descent's own FLOP budget here.
+
+**Limits.**
+- DFG's dictionary assumes the Boolean cube with uniform inputs.
+- Its compute grows as d^K, so high-degree features are found only from subsamples.
+- In CPU time on this machine it is not faster than the networks: float64 numpy against float32 XLA.
+- It was compared with one network configuration.
 
 ## Files
 

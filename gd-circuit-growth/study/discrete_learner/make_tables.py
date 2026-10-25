@@ -31,7 +31,7 @@ ROWS = [  # (key, label); key "V1HELD" = the frozen v1 held-out run (written in 
     ("dfg-v1.1__random", "random formulas (20), v1.1"),
     ("dfg-c1.0__designed", "designed (21), v1 - in-sample"),
     ("dfg-v1.1__designed", "designed (21), v1.1 - in-sample"),
-    ("dfg-v1.1__designed_d15", "designed at d = 15 (7), v1.1"),
+    ("dfg-c1.0__designed_d15", "designed at d = 15 (7), v1 (the budget does not bind at d = 15)"),
     ("dfg-v1.1__designed_d60", "designed at d = 60 (7), v1.1"),
     ("dfg-v1.1__designed_d120", "designed at d = 120 (4), v1.1"),
 ]
@@ -84,27 +84,20 @@ def main():
     L += ["", "## Per-suite tables", ""] + blocks
     abl = sorted(glob.glob(os.path.join(RES, "abl-*__designed.json")))
     if abl:
-        L += ["## Ablations (12 designed targets, d = 30)", "",
-              "| variant | targets learned (n* finite) | mean log2 n* ratio vs full DFG | worst target (log2 vs full) | mean log2 vs networks |",
-              "|---|---|---|---|---|"]
-        full = json.load(open(os.path.join(RES, "abl-full__designed.json"))) if os.path.exists(os.path.join(RES, "abl-full__designed.json")) else None
-        for p in abl:
-            r = json.load(open(p)); nm = r["learner"]
-            lr, worst, learned, vsn = [], ("", -9), 0, []
-            for f, v in r["fns"].items():
-                ln = H.nstar(r["ns"], np.nanmean(np.array(v["err"]), 1))
-                nn = H.nstar(H.NS, np.nanmean(np.array(v["nn_err"]), 1))
-                learned += np.isfinite(ln)
-                if np.isfinite(ln) and np.isfinite(nn):
-                    vsn.append(np.log2(ln / nn))
-                if full is not None:
-                    lf = H.nstar(full["ns"], np.nanmean(np.array(full["fns"][f]["err"]), 1))
-                    q = np.log2(ln / lf) if np.isfinite(ln) else float("inf")
-                    lr.append(min(q, 8.0))
-                    if q > worst[1]:
-                        worst = (f, q)
-            L.append(f"| {nm} | {learned}/{len(r['fns'])} | {np.mean(lr):+.2f} | {worst[0]} ({worst[1]:+.2f}) | {np.mean(vsn):+.2f} |")
-        L += ["", "(A target never learned counts +8 in the mean against full DFG.)", ""]
+        rs = {json.load(open(p))["learner"]: json.load(open(p)) for p in abl}
+        full = rs.get("abl-full-perm")
+        fns = list(full["fns"]) if full else list(next(iter(rs.values()))["fns"])
+        nst = lambda r, f: H.nstar(r["ns"], np.nanmean(np.array(r["fns"][f]["err"]), 1))
+        L += ["## Ablations (DFG v1.1, inputs permuted per fit; 7 designed targets, d = 30)", "",
+              "n* of each variant (the networks' n* in the last row). Each variant removes one ingredient.", "",
+              "| variant | " + " | ".join(fns) + " | mean log2 n* vs full |", "|---|" + "---|" * (len(fns) + 1)]
+        order = ["abl-full-perm"] + [k for k in rs if k != "abl-full-perm"]
+        for k in order:
+            r = rs[k]; vals = [nst(r, f) for f in fns]
+            ml = np.mean([min(np.log2(v / nst(full, f)), 8.0) if np.isfinite(v) else 8.0 for v, f in zip(vals, fns)]) if full else float("nan")
+            L.append(f"| {k.replace('abl-', '').replace('-perm', '')} | " + " | ".join("never" if not np.isfinite(v) else f"{v:.0f}" for v in vals) + f" | {ml:+.2f} |")
+        L.append("| networks | " + " | ".join(f"{H.nstar(H.NS, np.nanmean(np.array(full['fns'][f]['nn_err']), 1)):.0f}" for f in fns) + " | |")
+        L += ["", "(A target never learned counts +8 in the mean.)", ""]
     open(os.path.join(HERE, "RESULTS.md"), "w").write("\n".join(L) + "\n")
     print("\n".join(L[:20]))
 

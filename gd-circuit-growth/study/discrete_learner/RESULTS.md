@@ -12,12 +12,33 @@ of both learners.
 
 | suite, learner | DFG clearly better (n* ratio < 2^-0.25, or networks never) | clearly worse | median data factor (networks' n* / DFG's) | geometric-mean data factor | (target, n) cells where DFG's error exceeds the networks' by > 0.02 (of these, by > 2 s.e.) | max FLOPs per fit / one GD run |
 |---|---|---|---|---|---|---|
+| held-out 2 (7 targets), v1.1, inputs permuted per fit - blind | 7 | 0 | 3.1x | 3.4x | 6 (3) of 77 | 0.26 |
 | held-out 1 (12), frozen v1 without the degree-5/6 search - blind | 11 | 1 | 2.7x | 3.7x | 13 (12) of 132 | 0.17 |
 | held-out 1 (12), frozen v1 (degree-5/6 search added knowing par5 was in the suite) | 12 | 0 | 2.8x | 5.2x | 11 (10) of 132 | 0.23 |
+| held-out 1 (12), v1.1 - post-hoc | 12 | 0 | 3.0x | 5.3x | 6 (5) of 132 | 0.43 |
 | random formulas (20), v1 - used as a check during development | 20 | 0 | 6.0x | 6.8x | 9 (5) of 220 | 0.14 |
 | designed (21), v1 - in-sample | 20 | 0 | 5.4x | 7.0x | 7 (2) of 231 | 0.19 |
+| designed at d = 15 (7), v1 (the budget does not bind at d = 15) | 7 | 0 | 6.0x | 6.3x | 1 (0) of 77 | 0.08 |
+| designed at d = 60 (7), v1.1 | 7 | 0 | 31.7x | 36.3x | 0 (0) of 77 | 0.46 |
+| designed at d = 120 (4), v1.1 | 4 | 0 | 45.5x | 30.7x | 0 (0) of 29 | 0.18 |
 
 ## Per-suite tables
+
+## dfg-v1.1-perm on the held-out 2 (7 targets), v1.1, inputs permuted per fit - blind suite (d = 30)
+
+| target | n* learner | n* networks | log2 ratio (learner/networks) | test error at n = 64 / 256 / 1024 / 4096 (learner; networks) | max FLOPs / GD run |
+|---|---|---|---|---|---|
+| thr20 | 136 | 593 | -2.13 | 0.17 / 0.05 / 0.01 / 0.01 ; 0.19 / 0.12 / 0.06 / 0.02 | 2.6e-01 |
+| maj21 | 134 | 413 | -1.62 | 0.20 / 0.00 / 0.00 / 0.00 ; 0.20 / 0.12 / 0.02 / 0.00 | 1.4e-01 |
+| xmaj | 61 | 1552 | -4.66 | 0.07 / 0.00 / 0.00 / 0.00 ; 0.50 / 0.49 / 0.25 / 0.00 | 1.4e-01 |
+| dnf4x2 | 235 | 440 | -0.91 | 0.28 / 0.08 / 0.00 / 0.00 ; 0.26 / 0.16 / 0.01 / 0.00 | 2.1e-01 |
+| sym8 | 395 | 504 | -0.35 | 0.39 / 0.14 / 0.01 / 0.00 ; 0.36 / 0.23 / 0.05 / 0.00 | 2.0e-01 |
+| h2rf0 | 117 | 527 | -2.17 | 0.30 / 0.06 / 0.00 / 0.00 ; 0.38 / 0.24 / 0.02 / 0.00 | 1.5e-01 |
+| h2rf1 | 85 | 127 | -0.58 | 0.14 / 0.03 / 0.00 / 0.00 ; 0.19 / 0.06 / 0.03 / 0.00 | 1.4e-01 |
+
+Cells (target, n) where the learner's seed-mean test error exceeds the networks' by more than 0.02: 6 of 77 (thr20@32: 0.29 vs 0.27; dnf4x2@16: 0.36 vs 0.33; dnf4x2@64: 0.28 vs 0.26; sym8@16: 0.38 vs 0.31; sym8@32: 0.40 vs 0.34; sym8@64: 0.39 vs 0.36). Of these, by more than 2 standard errors of the seed-to-seed spread: 3 (dnf4x2@64, sym8@32, sym8@64).
+
+Mean log2 ratio over targets where both learn: -1.78 (negative = learner needs less data). Learner clearly better (ratio < -0.25 or networks never): 7; clearly worse: 0; of 7. Largest compute used: 2.6e-01 of a GD run.
 
 ## dfg-c1.0-Khi4 on the held-out 1 (12), frozen v1 without the degree-5/6 search - blind suite (d = 30)
 
@@ -60,6 +81,27 @@ Mean log2 ratio over targets where both learn: -1.90 (negative = learner needs l
 Cells (target, n) where the learner's seed-mean test error exceeds the networks' by more than 0.02: 11 of 132 (thr30@2048: 0.07 vs 0.03; thr30@4096: 0.06 vs 0.02; thr30@8192: 0.06 vs 0.01; thr30@16384: 0.05 vs 0.01; majxor@64: 0.49 vs 0.47; majxor@128: 0.50 vs 0.44; majxor@256: 0.50 vs 0.36; stair6@16: 0.44 vs 0.38; inter2@16: 0.33 vs 0.30; majpar5@32: 0.51 vs 0.48; majpar5@64: 0.50 vs 0.47). Of these, by more than 2 standard errors of the seed-to-seed spread: 10 (thr30@2048, thr30@4096, thr30@8192, thr30@16384, majxor@64, majxor@128, majxor@256, stair6@16, majpar5@32, majpar5@64).
 
 Mean log2 ratio over targets where both learn: -2.37 (negative = learner needs less data). Learner clearly better (ratio < -0.25 or networks never): 12; clearly worse: 0; of 12. Largest compute used: 2.3e-01 of a GD run.
+
+## dfg-v1.1 on the held-out 1 (12), v1.1 - post-hoc suite (d = 30)
+
+| target | n* learner | n* networks | log2 ratio (learner/networks) | test error at n = 64 / 256 / 1024 / 4096 (learner; networks) | max FLOPs / GD run |
+|---|---|---|---|---|---|
+| maj15 | 130 | 355 | -1.45 | 0.16 / 0.00 / 0.00 / 0.00 ; 0.21 / 0.12 / 0.01 / 0.00 | 1.4e-01 |
+| thr30 | 158 | 528 | -1.74 | 0.18 / 0.04 / 0.02 / 0.01 ; 0.21 / 0.14 / 0.07 / 0.02 | 2.5e-01 |
+| majxor | 766 | 1313 | -0.78 | 0.49 / 0.50 / 0.02 / 0.00 ; 0.47 / 0.36 / 0.16 / 0.00 | 2.1e-01 |
+| majmaj5 | 816 | 2847 | -1.80 | 0.30 / 0.17 / 0.08 / 0.00 ; 0.29 / 0.22 / 0.20 / 0.03 | 2.3e-01 |
+| par5 | 56 | 7245 | -7.02 | 0.00 / 0.00 / 0.00 / 0.00 ; 0.49 / 0.50 / 0.50 / 0.50 | 1.4e-01 |
+| mux6 | 197 | 481 | -1.29 | 0.39 / 0.00 / 0.00 / 0.00 ; 0.37 / 0.23 / 0.00 / 0.00 | 1.4e-01 |
+| stair6 | 207 | 1967 | -3.25 | 0.39 / 0.00 / 0.00 / 0.00 ; 0.38 / 0.34 / 0.26 / 0.00 | 1.5e-01 |
+| inter2 | 583 | 859 | -0.56 | 0.22 / 0.13 / 0.06 / 0.00 ; 0.20 / 0.14 / 0.10 / 0.02 | 4.3e-01 |
+| majpar5 | 123 | 5229 | -5.41 | 0.50 / 0.03 / 0.00 / 0.00 ; 0.47 / 0.37 / 0.18 / 0.14 | 1.4e-01 |
+| hrf0 | 86 | 192 | -1.15 | 0.14 / 0.02 / 0.00 / 0.00 ; 0.15 / 0.09 / 0.06 / 0.00 | 1.4e-01 |
+| hrf1 | 118 | 1203 | -3.35 | 0.36 / 0.00 / 0.00 / 0.00 ; 0.48 / 0.41 / 0.13 / 0.00 | 1.4e-01 |
+| hrf2 | 46 | 107 | -1.22 | 0.06 / 0.02 / 0.00 / 0.00 ; 0.17 / 0.06 / 0.04 / 0.00 | 1.4e-01 |
+
+Cells (target, n) where the learner's seed-mean test error exceeds the networks' by more than 0.02: 6 of 132 (majxor@64: 0.49 vs 0.47; majxor@128: 0.50 vs 0.44; majxor@256: 0.50 vs 0.36; stair6@16: 0.44 vs 0.38; inter2@16: 0.33 vs 0.30; majpar5@64: 0.50 vs 0.47). Of these, by more than 2 standard errors of the seed-to-seed spread: 5 (majxor@64, majxor@128, majxor@256, stair6@16, majpar5@64).
+
+Mean log2 ratio over targets where both learn: -2.42 (negative = learner needs less data). Learner clearly better (ratio < -0.25 or networks never): 12; clearly worse: 0; of 12. Largest compute used: 4.3e-01 of a GD run.
 
 ## dfg-c1.0 on the random formulas (20), v1 - used as a check during development suite (d = 30)
 
@@ -119,4 +161,67 @@ Mean log2 ratio over targets where both learn: -2.76 (negative = learner needs l
 Cells (target, n) where the learner's seed-mean test error exceeds the networks' by more than 0.02: 7 of 231 (and3@16: 0.20 vs 0.13; and3@32: 0.17 vs 0.12; parmaj@64: 0.50 vs 0.48; parmaj@128: 0.47 vs 0.44; dnf3@16: 0.38 vs 0.33; andxor@16: 0.37 vs 0.29; rand1@64: 0.33 vs 0.31). Of these, by more than 2 standard errors of the seed-to-seed spread: 2 (and3@32, dnf3@16).
 
 Mean log2 ratio over targets where both learn: -2.80 (negative = learner needs less data). Learner clearly better (ratio < -0.25 or networks never): 20; clearly worse: 0; of 21. Largest compute used: 1.9e-01 of a GD run.
+
+## dfg-c1.0 on the designed at d = 15 (7), v1 (the budget does not bind at d = 15) suite (d = 15)
+
+| target | n* learner | n* networks | log2 ratio (learner/networks) | test error at n = 64 / 256 / 1024 / 4096 (learner; networks) | max FLOPs / GD run |
+|---|---|---|---|---|---|
+| maj9 | 84 | 123 | -0.54 | 0.14 / 0.00 / 0.00 / 0.00 ; 0.14 / 0.03 / 0.00 / 0.00 | 8.1e-02 |
+| majpar | 55 | 306 | -2.48 | 0.00 / 0.00 / 0.00 / 0.00 ; 0.36 / 0.12 / 0.00 / 0.00 | 4.6e-02 |
+| mux | 61 | 364 | -2.57 | 0.09 / 0.00 / 0.00 / 0.00 ; 0.36 / 0.20 / 0.00 / 0.00 | 4.6e-02 |
+| par2 | 16 | 100 | -2.65 | 0.00 / 0.00 / 0.00 / 0.00 ; 0.28 / 0.00 / 0.00 / 0.00 | 4.6e-02 |
+| par3 | 24 | 241 | -3.31 | 0.00 / 0.00 / 0.00 / 0.00 ; 0.49 / 0.07 / 0.00 / 0.00 | 4.6e-02 |
+| par4 | 16 | 508 | -4.99 | 0.00 / 0.00 / 0.00 / 0.00 ; 0.50 / 0.44 / 0.00 / 0.00 | 4.6e-02 |
+| stair5 | 109 | 433 | -1.99 | 0.43 / 0.00 / 0.00 / 0.00 ; 0.42 / 0.25 / 0.00 / 0.00 | 4.6e-02 |
+
+Cells (target, n) where the learner's seed-mean test error exceeds the networks' by more than 0.02: 1 of 77 (maj9@16: 0.36 vs 0.27). Of these, by more than 2 standard errors of the seed-to-seed spread: 0.
+
+Mean log2 ratio over targets where both learn: -2.65 (negative = learner needs less data). Learner clearly better (ratio < -0.25 or networks never): 7; clearly worse: 0; of 7. Largest compute used: 8.1e-02 of a GD run.
+
+## dfg-v1.1 on the designed at d = 60 (7), v1.1 suite (d = 60)
+
+| target | n* learner | n* networks | log2 ratio (learner/networks) | test error at n = 64 / 256 / 1024 / 4096 (learner; networks) | max FLOPs / GD run |
+|---|---|---|---|---|---|
+| maj9 | 227 | 625 | -1.46 | 0.26 / 0.09 / 0.01 / 0.00 ; 0.26 / 0.14 / 0.08 / 0.00 | 4.6e-01 |
+| majpar | 63 | 3466 | -5.78 | 0.09 / 0.02 / 0.00 / 0.00 ; 0.49 / 0.43 / 0.23 / 0.09 | 1.7e-01 |
+| mux | 137 | 2848 | -4.38 | 0.29 / 0.00 / 0.00 / 0.00 ; 0.42 / 0.38 / 0.31 / 0.00 | 1.7e-01 |
+| par2 | 16 | 427 | -4.74 | 0.00 / 0.00 / 0.00 / 0.00 ; 0.50 / 0.37 / 0.00 / 0.00 | 1.7e-01 |
+| par3 | 28 | 3410 | -6.94 | 0.00 / 0.00 / 0.00 / 0.00 ; 0.50 / 0.49 / 0.49 / 0.00 | 1.7e-01 |
+| par4 | 56 | 14255 | -8.00 | 0.00 / 0.00 / 0.00 / 0.00 ; 0.51 / 0.51 / 0.49 / 0.50 | 1.7e-01 |
+| stair5 | 110 | 3487 | -4.99 | 0.45 / 0.00 / 0.00 / 0.00 ; 0.46 / 0.41 / 0.35 / 0.04 | 1.7e-01 |
+
+Cells (target, n) where the learner's seed-mean test error exceeds the networks' by more than 0.02: 0 of 77. Of these, by more than 2 standard errors of the seed-to-seed spread: 0.
+
+Mean log2 ratio over targets where both learn: -5.18 (negative = learner needs less data). Learner clearly better (ratio < -0.25 or networks never): 7; clearly worse: 0; of 7. Largest compute used: 4.6e-01 of a GD run.
+
+## dfg-v1.1 on the designed at d = 120 (4), v1.1 suite (d = 120)
+
+| target | n* learner | n* networks | log2 ratio (learner/networks) | test error at n = 64 / 256 / 1024 / 4096 (learner; networks) | max FLOPs / GD run |
+|---|---|---|---|---|---|
+| maj9 | 439 | 752 | -0.78 | 0.34 / 0.18 / 0.04 / 0.00 ; 0.34 / 0.17 / 0.08 / 0.00 | 1.8e-01 |
+| mux | 102 | 6073 | -5.90 | 0.30 / 0.06 / 0.00 / 0.00 ; nan / 0.40 / 0.36 / 0.23 | 1.8e-01 |
+| par2 | 24 | 842 | -5.12 | 0.00 / 0.00 / 0.00 / 0.00 ; 0.50 / 0.46 / 0.00 / 0.00 | 1.8e-01 |
+| par3 | 56 | 14029 | -7.97 | 0.00 / 0.00 / 0.00 / 0.00 ; nan / nan / 0.50 / 0.50 | 1.8e-01 |
+
+Cells (target, n) where the learner's seed-mean test error exceeds the networks' by more than 0.02: 0 of 29. Of these, by more than 2 standard errors of the seed-to-seed spread: 0.
+
+Mean log2 ratio over targets where both learn: -4.94 (negative = learner needs less data). Learner clearly better (ratio < -0.25 or networks never): 4; clearly worse: 0; of 4. Largest compute used: 1.8e-01 of a GD run.
+
+## Ablations (DFG v1.1, inputs permuted per fit; 7 designed targets, d = 30)
+
+n* of each variant (the networks' n* in the last row). Each variant removes one ingredient.
+
+| variant | maj9 | thr10 | par4 | stair5 | mux | rmaj9 | sparsepoly | mean log2 n* vs full |
+|---|---|---|---|---|---|---|---|---|
+| full | 107 | 146 | 52 | 111 | 64 | 167 | 93 | +0.00 |
+| K3-no-hi | 107 | 152 | never | 113 | 158 | 167 | 93 | +1.34 |
+| coef-readout | 309 | 295 | 52 | 112 | 63 | 210 | 99 | +0.42 |
+| label-noise | 107 | 148 | 56 | 165 | 111 | 188 | 97 | +0.25 |
+| ls-readout | 107 | 170 | 52 | 112 | 65 | 167 | 101 | +0.05 |
+| no-background-no-small-n | 107 | 146 | 52 | 112 | 110 | 167 | 107 | +0.14 |
+| no-blocks | 168 | 144 | 52 | 111 | 61 | 178 | 80 | +0.07 |
+| no-composition | 107 | 142 | 52 | 196 | 107 | 167 | 108 | +0.25 |
+| networks | 263 | 563 | 2728 | 1514 | 1156 | 2027 | 2205 | |
+
+(A target never learned counts +8 in the mean.)
 
