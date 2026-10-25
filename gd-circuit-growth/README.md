@@ -13,9 +13,8 @@ Notes by Claude, prompted by Kaarel Hänni. Research note, 23 October 2026; not 
 
 **Paper:** [`paper/gd-circuit-growth-paper.pdf`](paper/gd-circuit-growth-paper.pdf) (LaTeX sources in [`paper/`](paper/)) writes up Parts 1–5.
 
-**Working branch:** `claude/nifty-mccarthy-j0lw2a` holds the full working state. These paths stay on it and are not published to `main`:
-- `paper/test_fragment.tex`, a build helper;
-- `study/models/scratch_hybrid/`, scratch scripts and logs from the hybrid-model search.
+**Working branch:** `claude/nifty-mccarthy-j0lw2a` holds the full working state. One path stays on it and is not published to `main`: `paper/test_fragment.tex`, a build helper.
+- The `study/models/scratch_*` folders are published, because they hold the calibration logs that the model write-ups cite.
 
 Raw network outputs live in a session scratch directory and are in neither branch. The scripts regenerate them.
 
