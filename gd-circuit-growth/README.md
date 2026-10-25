@@ -737,6 +737,47 @@ These came from the last workflow of the session. They finished after the report
 
 **Paper.** A write-up of Parts 1–4 as a paper is in [`paper/`](paper/), as LaTeX sources plus a PDF.
 
+## Part 5: what the network computes while it learns (24–25 October 2026)
+
+Full write-up: [`study/trajectories/TRAJECTORIES.md`](study/trajectories/TRAJECTORIES.md). Figures: [`study/figures/trajectories.png`](study/figures/trajectories.png) and [`study/figures/trajectories_heldout.png`](study/figures/trajectories_heldout.png).
+
+**Question.** For several Boolean targets, characterize the function the network computes at each step of training and the sequence of functions it passes through. Then find a general model that reproduces this.
+
+**Method.**
+- *Targets.* Five chosen targets (sparsepoly, stair5, mux, majpar, rmaj9), plus six held-out ones.
+- *Conditions.* One-pass training, and fixed $n=16384$, 2048 and 512.
+- *What is recorded.* At 72 log-spaced steps, the network's $E[f\mid x_R]$ is recorded exactly on every pattern of the relevant variables. From it come the full Fourier spectrum and each target character's learned fraction.
+
+**What the network computes** (Numerical):
+- **A truncated Fourier expansion of the target.** On each plateau, $f\approx\sum_{S\in\mathcal S(t)}\hat y_S\chi_S$, with the correct coefficients on the terms it has and nothing on the rest. The distance is 0.00–0.03 Var $y$. The alternative, "the best function of the inputs discovered so far", is 0.13–0.41 away.
+- **The sequence is reproducible.**
+  - Online and $n=16384$ agree, and seeds agree to about 15%.
+  - The linear stage comes first, at a nearly fixed 50–70 steps.
+  - Characters then arrive in *bundles*: everything one new feature direction carries, small coefficients together with large.
+  - The *order follows construction, not coefficient size.* For example, mux's largest term, $x_1x_2x_3x_4$, comes last, after the features it is built from.
+- **Transient effects.** Coefficients overshoot transiently, by up to 1.36, as the readout refits on the features present.
+- **Finite $n$.** At finite $n$ the same sequence stops partway: later stages saturate partially or never start, and memorisation goes into the irrelevant inputs.
+
+**Models** (Heuristic). Three independent designs were calibrated on the five targets and frozen. Only then were networks run on the six held-out targets.
+- **`fourier`, a by-hand rule.** It is a race of moves, each of which extends something already learned by $e$ new inputs at once.
+  - *Duration:* $\propto e^2\cdot2^{[\text{built on a feature}]}\cdot2^{[\text{odd degree}\ge3]}/\rho^{1/2}$.
+  - *Finite $n$:* memorisation cut-off, plus the spiked-estimation level $1-N/(n\rho^2)$.
+- **`gates`.** Least-squares fit on greedily grown ReLU-gate bundles, with an alignment-law clock.
+- **`flow`.** The network's own Adam dynamics, reduced to the relevant inputs, with the irrelevant inputs entering as noise.
+
+**Results.**
+- All three predict the held-out trajectories as well as the calibration ones.
+- Like for like, against single network runs (traj, held-out): `flow` 0.0037 online, against 0.0054 for an independent rerun of the network. So it predicts a run better than a rerun does. `fourier` and `gates` score 0.0105, within 2× of rerun variability.
+- Online onsets are within about 10% (`flow`) and 25% (`fourier`).
+- An independent verifier per model reproduced every score bit for bit, and found no network data read by any predictor. It flagged undercounted degrees of freedom, and the fact that the held-out targets had been trained in the project's earlier study. Both are disclosed.
+
+**The general picture** (Heuristic). The network computes a truncated Fourier expansion of the target, extended in bundles. Each bundle is added by a move that builds on a feature the network already has.
+- *Cost:* a move costs more the more new inputs it must coordinate at once, and is cheap when it only composes existing features.
+- *Within a stage:* the readout refits on the features present.
+- *Finite $n$:* the race against memorisation decides where it stops.
+
+This is the composition finding of Part 4, seen in time rather than in samples.
+
 ## Files
 
 Part 2: [`study/`](study/) (NN study, discrete models, certificates; guide in [`study/README.md`](study/README.md)) and [`theory/`](theory/) (derivations A, B, C, with check scripts in `theory/checks/`).
