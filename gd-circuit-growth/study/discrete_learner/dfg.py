@@ -88,7 +88,7 @@ class DFG:
         self.blocks, self.ridge, self.budget, self.noise, self.readout = blocks, ridge, budget, noise, readout
         self.small_n, self.cv_n, self.K_hi, self.budget_hi, self.background = small_n, cv_n, K_hi, budget_hi, background
         self.logit_lam = logit_lam
-        self.name = name or (f"dfg-c{c}" if readout != "logit" else "dfg-v1.1")
+        self.name = name or ("dfg-v1.1" if readout == "logit" else f"dfg-v1.1-{readout}")   # frozen v1 was 'dfg-c1.0'
 
     def fit(self, X, y, rng=None):
         """At n <= cv_n the fallbacks for small samples are compared by 5-fold cross-validation (see SMALL n)."""

@@ -36,6 +36,20 @@ def gd_flops(d, N=128, batch=64, steps=None):
     return 6 * P * batch * steps + 10 * P * steps
 
 
+class Permuted:
+    """Wrap a learner so that each fit sees its input columns in a random order (from the fit rng) and predicts through
+    the same order.  Every suite puts a target's relevant inputs at the lowest indices, and a learner that breaks ties by
+    enumeration order would otherwise be favoured at tiny n; the networks' initialisation is symmetric in the inputs."""
+
+    def __init__(self, learner):
+        self.inner, self.name = learner, learner.name + "-perm"
+
+    def fit(self, X, y, rng):
+        pi = rng.permutation(X.shape[1]); out = self.inner.fit(X[:, pi], y, rng); pr = out["predict"]
+        out["predict"] = lambda Z, pr=pr, pi=pi: pr(np.asarray(Z)[:, pi])
+        return out
+
+
 def fn_seed(name):
     return int.from_bytes(name.encode(), "little") % (2 ** 31)
 

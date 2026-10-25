@@ -3,12 +3,16 @@ results/<learner>__<suite>.md.   usage: python run_eval.py <module:Class[:kwargs
 import sys, os, json, importlib
 import harness as H
 mod, cls, *kw = sys.argv[1].split(":", 2)
-L = getattr(importlib.import_module(mod), cls)(**(json.loads(kw[0]) if kw else {}))
+kw = json.loads(kw[0]) if kw else {}
+perm = kw.pop("permute", False)
+L = getattr(importlib.import_module(mod), cls)(**kw)
+L = H.Permuted(L) if perm else L
 suite = sys.argv[2]; fns = sys.argv[3].split(",") if len(sys.argv) > 3 else None
 os.makedirs("results", exist_ok=True)
-if suite == "dlheld":
-    from boolfuncs import make_dl_heldout_suite
-    res = H.evaluate(L, suite=suite, fns=fns, targets=make_dl_heldout_suite(30), results_dir=os.path.join(H.SCR, "results_dlheld"))
+if suite in ("dlheld", "dlheld2"):
+    import boolfuncs
+    mk = boolfuncs.make_dl_heldout_suite if suite == "dlheld" else boolfuncs.make_dl_heldout2_suite
+    res = H.evaluate(L, suite=suite, fns=fns, targets=mk(30), results_dir=os.path.join(H.SCR, "results_" + suite))
 elif suite.startswith("designed_d"):
     d = int(suite[len("designed_d"):]); rdir = os.path.join(H.SCR, f"results_d{d}")
     fns = fns or sorted(f[len("fixed_adam_"):-4] for f in os.listdir(rdir) if f.startswith("fixed_adam_"))
