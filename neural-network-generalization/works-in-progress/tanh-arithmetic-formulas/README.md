@@ -14,6 +14,16 @@ A universal polynomial sample bound for unrestricted bounded-weight deep teacher
 
 The [online converse note](research-notes/online-depth-independent-circuit-converse.md) gives a related conclusion: a bound of `M` on expected total confidence errors or Gibbs mistakes **for every iid input distribution** forces a circuit of size polynomial in `d + M`, independently of learner depth. It uses the same sufficiently-large-width or strong-prior hypotheses, and does not cover ordinary majority mistakes or a guarantee for just one input distribution. The note has a [separate independent audit](verification/online-depth-independent-circuit-converse-audit.md).
 
+## Companion: Gaussian-controlled feature paths
+
+**[Read the Gaussian-controls companion](gaussian-controls.pdf)** · [Source](source/gaussian-controls.tex) · [Proof-note guide](research-notes/gaussian-controls-guide.md)
+
+For a globally margined Boolean classifier represented by Gaussian-controlled tanh feature layers, this companion gives rational arithmetic formulas and **nonuniform PNC¹, hence L/poly**, with resources polynomial in `(d + H + ||v|| + 2) exp(C Σ_j(√D_j + D_j))`, where `D_j` is the Gaussian relative entropy of layer `j`. Controls may have arbitrary means and covariances, input-dependent variances, and unrestricted real precision. The proof supplies scalar formulas and finite-bit constants without assuming bounded precision of the original controls.
+
+The **Gaussian scalar baseline `V_*^G` is strictly larger than the unrestricted baseline `V_*`**. A bounded-cost Gaussian scalar path must cross a fixed variance range, where replacing one Gaussian law by the entropy-optimal non-Gaussian tilt saves a uniform positive amount. Thus the Gaussian class at action `V_* + o(1)` is eventually empty as depth grows. The companion instead proves its useful near-baseline result relative to `V_*^G`, with resource exponent `O(log H + √(Hε) + ε)` at action at most `V_*^G + ε`. This class is nonempty on the prescribed augmented Boolean input: every fixed target approaches `V_*^G`, and constants and dictators do so with `O(log²(d+H)/H)` excess action.
+
+This is a theorem about a restricted variational control class. A Gaussian weight prior does not make conditioned row laws Gaussian. The strict baseline gap prevents a Gaussian replacement from preserving vanishing excess above `V_*`; **the companion does not prove a converse for the original γ = 1 posterior or settle the unrestricted-depth learning question**. Its [occupation and scope audit](verification/gaussian-control-manuscript-occupation-audit.md), [finite-bit and assembled-path audit](verification/noncentral-gaussian-and-manuscript-finite-n-audit.md), and [build/dependency record](verification/gaussian-controls-build.json) are conventional checks, not Lean formalizations.
+
 ## Contents and dependencies
 
 - [Paper](paper.pdf): the representation proof is self-contained apart from standard probability, finite minimax, and the cited arithmetic-complexity theorems.
@@ -25,3 +35,5 @@ The [online converse note](research-notes/online-depth-independent-circuit-conve
 ## Build
 
 From this directory run `./build.sh`. It requires `pdflatex` and the standard LaTeX packages listed in the source. Generated auxiliary files go in `.build/`; the finished document is copied to `paper.pdf`.
+
+Run `./build-gaussian-controls.sh` to build the separate companion. Its auxiliary files go in `.build/gaussian-controls/`, and the finished document is copied to `gaussian-controls.pdf`.

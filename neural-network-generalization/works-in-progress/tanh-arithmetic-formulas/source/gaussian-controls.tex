@@ -1,0 +1,750 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in,top=0.9in,bottom=0.9in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,microtype,xurl}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\HS}{\mathrm{HS}}
+\newcommand{\KL}{\operatorname{KL}}
+\newcommand{\poly}{\operatorname{poly}}
+\newcommand{\PNC}{\mathsf{PNC}}
+\newcommand{\Lpoly}{\mathsf L/\mathrm{poly}}
+\newcommand{\norm}[1]{\left\lVert #1\right\rVert}
+\title{Arithmetic formulas for Gaussian-controlled tanh feature paths}
+\author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob}
+\date{25 October 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We study globally margined Boolean classifiers represented by Gaussian
+variational feature paths with tanh activation. The Gaussian controls may
+have nonzero means, arbitrary covariances, varying query diagonals, and
+unrestricted real precision. If their relative entropies are $D_1,\ldots,D_H$,
+the classifier has rational arithmetic sign formulas, followed by a majority,
+with resources polynomial in
+\[
+ (d+H+\norm v+2)\exp\!\left[C\sum_{j=1}^H
+                   (\sqrt{D_j}+D_j)\right].
+\]
+Consequently logarithmic entropy occupation gives nonuniform $\PNC^1$
+circuits, hence logarithmic space with polynomial advice. The construction
+uses normalized Gaussian Hermite features, degree-dependent averaging,
+rare nonlinear branches, and an artificial variance floor that removes
+hidden assumptions about the precision of importance coefficients.
+The Gaussian scalar baseline is strictly larger than the unrestricted
+one. Near-baseline consequences are therefore stated relative to the
+Gaussian class's own baseline.
+This is a theorem about Gaussian variational controls. The unrestricted
+critical Bayesian posterior permits non-Gaussian row tilts; no replacement
+of those tilts by Gaussian controls is proved here.
+\end{abstract}
+
+\section{Model and statement}
+
+Let $d\ge1$, $H\ge1$, $X_d=\{-1,1\}^d$, and
+$h_0(x)=(1,x)/\sqrt d$.
+A feature state is a map from $X_d$ into a real separable Hilbert space.
+At stage $j$, choose a Gaussian row law with mean $m_j$ and covariance
+$\Sigma_j>0$, relative to the standard isonormal Gaussian on the preceding
+feature span. The next kernel is
+\begin{equation}\label{eq:kernel}
+ Q_j(x,y)=\E\bigl[\tanh(\langle G_j,h_{j-1}(x)\rangle)
+                       \tanh(\langle G_j,h_{j-1}(y)\rangle)\bigr],
+ \qquad G_j\sim N(m_j,\Sigma_j).
+\end{equation}
+Any Hilbert feature realization of this kernel may be used in the next
+stage. The control cost is
+\begin{equation}\label{eq:entropy}
+ D_j=\frac12\left[\norm{m_j}^2+
+            \operatorname{tr}(\Sigma_j-I-\log\Sigma_j)\right].
+\end{equation}
+Only the finite span of the $2^d$ query states matters. We extend a control
+by mean zero and covariance identity on its orthogonal complement.
+This preserves both the query law and its relative entropy. Coordinates
+in the resulting fixed countable feature bases may be arbitrary real
+numbers; they need not be sparsely supported or bounded away from zero.
+
+The final output is $z(x)=\langle v,h_H(x)\rangle$. Throughout the main
+statement, $f(x)z(x)\ge1$ on the cube. A different positive margin is
+handled by scaling $v$.
+
+\begin{theorem}\label{thm:main}
+There are universal constants $C,c$ with the following property. Every
+Gaussian-controlled path above has a classifier that is a majority of
+signs of rational arithmetic formulas whose total size and coefficient
+bit lengths are at most $R^c$, where
+\[
+ R=(d+H+\norm v+2)\exp\!\left[C\sum_j(\sqrt{D_j}+D_j)\right].
+\]
+Their majority agrees with $f$ on every Boolean input. In particular, whenever
+$R$ is polynomial in an ambient input resource, $f$ belongs to nonuniform
+$\PNC^1$, and therefore to $\Lpoly$.
+\end{theorem}
+
+The arithmetic-formula conclusion is stronger and more precise than a
+claim about a real arithmetic computation with shared intermediate states.
+All expressions below are scalar trees. A repeated occurrence of an
+already sampled child is charged its full size; distinct child calls are
+independent. Random choices select an expression independently of the
+queried input. No algorithm for finding the nonuniform constants or for
+sampling them efficiently is asserted.
+Identically zero controls or corrections are omitted. In particular,
+a zero branch probability means that no correction is constructed and
+no division by that probability is performed.
+
+\section{Scalar-oracle calculus}
+
+An oracle family $X_i(x)$ has mean vector $u(x)$, pointwise trace moment
+$\sum_i\E X_i(x)^2\le V$, and common expected scalar-tree size at most $T$.
+We charge $T\ge1$. The coordinate index set may be countable. Trace bounds
+are pointwise in $x$; we do not interchange a sum with a supremum over $x$.
+
+\begin{lemma}[Linear and quadratic sampling]\label{lem:sampling}
+For a Hilbert--Schmidt matrix $K$, each coordinate of $Ku$ has an unbiased
+scalar oracle of expected size $O(T)$, with the sum of its second moments
+at most $\norm K_\HS^2 V$. For a Hilbert--Schmidt matrix $B$, the scalar
+$u^TBu$ has an unbiased oracle of expected size $O(T)$ and second moment
+at most $\norm B_\HS^2V^2$.
+\end{lemma}
+\begin{proof}
+In row $i$, put $b_i=\sum_jK_{ij}^2$, sample $j$ with probability
+$K_{ij}^2/b_i$, and return $K_{ij}X_j$ divided by that probability.
+Its second moment is $b_i\sum_{j:K_{ij}\ne0}\E X_j^2\le b_iV$.
+For the quadratic form, sample $(i,j)$ with probability
+$B_{ij}^2/\norm B_\HS^2$ and use independent children $X_iX'_j$.
+Tonelli's theorem gives the claimed bound, including countable bases.
+\end{proof}
+
+For $A=J+K$, where $J$ is a signed coordinate injection, retain the copied
+child and add the sampled $K$ child only on a Bernoulli branch of probability
+$p=\norm K_\HS$ when this norm is small. Divide the correction by $p$.
+Independence gives
+\begin{equation}\label{eq:nearcopy}
+ V_{\rm new}\le V+3\norm K_\HS V,
+ \qquad T_{\rm new}\le T(1+C\norm K_\HS).
+\end{equation}
+Indeed the cross term is at most $2\norm K_\HS\norm u^2$ and the new
+second-moment term is $\norm K_\HS^2V/p$. On the absent branch we return
+the copied formula. Fixed scalar weights are merged along copy chains.
+For large $\norm K_\HS$, copy $J$ and sample only $K$, then average
+polynomially many copies when the true output mean norm is bounded.
+Sampling the whole matrix $J+K$ would not be justified in a countable basis.
+
+An average of two independent oracle families has trace moment
+\begin{equation}\label{eq:reset}
+ \frac12\left(V+\norm{u(x)}^2\right).
+\end{equation}
+Thus a bounded-mean family whose moment bound increases by $O(\eta_j)$
+per small step can be kept at a fixed bound by $O(1+\sum_j\eta_j)$
+two-copy resets. Their cost is $\exp[O(\sum_j\eta_j)]$.
+
+\begin{lemma}[Fixed-dimensional smooth scalar factory]\label{lem:factory}
+Let $r\in\R^p$, $p\le2$, have scalar coordinate oracles of uniformly
+bounded second moment and expected size $T$. For any compactly supported
+$F\in H^4(\R^p)$, there is an unbiased real scalar oracle for $F(r)$ with
+second moment at most $C\norm F_{H^4}^2$ and expected size at most $CT$.
+The same statement holds for a countable family, with weighted sums of
+the second moments bounded by the corresponding weighted sums of
+$H^4$ norms.
+\end{lemma}
+\begin{proof}
+Use a fixed frequency density proportional to $(1+\norm\omega^2)^{-4}$.
+Construct $W=\sum_{l=1}^p\omega_lX_l$ from independent coordinate
+children; its second moment is at most $C\norm\omega^2$. Choose
+$K\sim\operatorname{Pois}(\lambda)$ with
+$\lambda=1+C\norm\omega^2$, and form
+\[
+ Z=\prod_{a=1}^K(1+iW_a/\lambda).
+\]
+The Poisson product identities give $\E Z=e^{i\omega\cdot r}$ and
+$\E|Z|^2\le e$. Multiply by the Fourier coefficient divided by the
+frequency density and take its real part. Plancherel gives the moment
+bound. A balanced real/imaginary expansion uses $O((K+1)^2)$ child
+occurrences. The fourth frequency moment is finite in dimensions at most
+two for the displayed density, so expected real-tree cost is $O(T)$.
+Copies repeated in that expansion use the same already sampled child;
+they are not independent redraws. Fixed compact-interval extensions are
+used whenever $F$ is specified only on a bounded rectangle.
+\end{proof}
+
+\section{Normalized noncentral Gaussian features}
+
+For $b\in\R$, put
+\[
+ Y_b=\frac{Z+b}{\sqrt{1+b^2}},\quad Z\sim N(0,1),
+ \qquad F(t,b)=\E\tanh(\sqrt t\,Y_b)^2.
+\]
+Then $\E Y_b^2=1$. Expand the normalized scalar feature in orthonormal
+probabilists' Hermite polynomials:
+\begin{equation}\label{eq:hermite}
+ \frac{\tanh(\sqrt t\,Y_b)}{\sqrt{F(t,b)}}
+       =\sum_{k\ge0}c_k(t,b)H_k(Z).
+\end{equation}
+At $t=0$ the continuous extension has
+\[
+ c_0(0,b)=\frac b{\sqrt{1+b^2}},\qquad
+ c_1(0,b)=\frac1{\sqrt{1+b^2}},\qquad c_k(0,b)=0\ (k\ge2).
+\]
+For a unit vector $u$, the feature map
+\begin{equation}\label{eq:fock}
+ \mathcal F_{t,b}(u)=\bigoplus_{k\ge0}c_k(t,b)u^{\otimes k}
+\end{equation}
+has norm one. Using full ordered tensor powers makes its coordinate
+description explicit. Its inner products give exactly the normalized
+Gaussian tanh kernel, including different $(t,b)$ at different queries.
+
+\begin{lemma}[Coefficient and variance bounds]\label{lem:coefficients}
+For all $t>0$ and $b\in\R$,
+\begin{equation}\label{eq:weightedtail}
+ \sum_{k\ge2}k^2c_k(t,b)^2\le8t^2.
+\end{equation}
+Mixed derivatives in $t,b$ of every fixed order (in particular through
+order five), with two further derivatives in $Z$, of the normalized scalar feature in
+\eqref{eq:hermite} are bounded in Gaussian $L^2$ for $0\le t\le1$,
+uniformly in $b$. On larger bounded parameter rectangles the bounds are
+polynomial in their ranges. Moreover
+\begin{equation}\label{eq:envelope}
+ F(t,b)\le g(t):=\min\{1,t/(1+t/2)\}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+The Gaussian second-derivative identity and $k^2\le2k(k-1)$ for $k\ge2$
+give
+\[
+ \sum_{k\ge2}k^2c_k^2
+ \le\frac{2t^2}{(1+b^2)^2 F(t,b)}
+             \E\tanh''(\sqrt tY_b)^2\le8t^2,
+\]
+since $\tanh''(z)^2\le4\tanh(z)^2$.
+For the derivative assertion, write
+\[
+ \tanh(\sqrt tY_b)/\sqrt t=Y_b\psi(tY_b^2),
+ \qquad\psi(s)=\tanh(\sqrt s)/\sqrt s.
+\]
+Every fixed derivative of $\psi$ is bounded on $[0,\infty)$; the Taylor
+expansion handles zero and direct differentiation handles infinity.
+Every fixed $b$ derivative of $Y_b$ is polynomially bounded in $|Z|$,
+uniformly in $b$. Also $F(t,b)/t$ is smooth and bounded away from zero for
+$0\le t\le1$, uniformly in $b$: $\E Y_b^2=1$ and uniformly bounded fourth
+moments give a uniform small-ball lower bound. Differentiation under the
+Gaussian integral now proves the stated bounds. For $t\ge1$, the same
+small-ball argument bounds $F(t,b)$ below by a positive constant and
+direct differentiation gives polynomial bounds. Finally,
+$\tanh^2 z\le z^2/(1+z^2/2)$. For example,
+$w(z)=z/\sqrt{1+z^2/2}$ satisfies $w(0)=0$ and
+$w'(z)\ge1-w(z)^2$ for $z\ge0$, since
+$(1+s)^{-1/2}\ge1-s$ for $s\ge0$; scalar comparison with the tanh
+equation proves the inequality. Jensen's inequality for the concave function
+$s/(1+s/2)$ and $\E Y_b^2=1$ prove \eqref{eq:envelope}.
+\end{proof}
+
+In particular, on a fixed bounded rectangle in $(r,\zeta)$, for small
+$a$ and bounded $M$, the functions $c_k(ar,M\zeta)$ have weighted
+$H^4$ tail norm
+\begin{equation}\label{eq:sobolevtail}
+ \sum_{k\ge2}k^2\norm{c_k(a\,\cdot,M\,\cdot)}_{H^4}^2\le Ca^2.
+\end{equation}
+The two low-degree differences from $c_k(0,M\zeta)$ have $H^4$ norm
+$O(a)$, and
+\begin{equation}\label{eq:rresidual}
+ \norm{F(a r,M\zeta)/g(a)-r}_{H^4}\le Ca.
+\end{equation}
+These follow from Lemma~\ref{lem:coefficients}, scaling each $t$ derivative
+by $a$, and the fact that the differences vanish at $a=0$. For large
+parameter ranges, replace the right sides by fixed polynomials in those
+ranges. A bounded extension operator into compactly supported $H^4$
+functions preserves these weighted estimates.
+
+\section{The path compiler}
+
+We first describe a deterministic-operator version. Let each linear
+covariance map be $A_j=J_j+K_j$, with
+\[
+ \kappa_j=\norm{K_j}_\HS,\quad M_j=\norm{m_j},\quad
+ \rho_j=\min\{1,\sigma_{\min}(A_j)\},\quad
+ S=\sum_j(\kappa_j+M_j),\quad L=\sum_j\log(1/\rho_j).
+\]
+The compiler has expected scalar-tree cost
+\begin{equation}\label{eq:compilerbudget}
+ \poly(H+T_0)\exp[C(S+L)]
+\end{equation}
+for normalized feature directions. We maintain a unit direction $u(x)$
+and a scalar $r(x)\in(0,1]$ such that
+\[
+ h(x)=\sqrt{\bar q\,r(x)}\,u(x),
+\]
+where $\bar q$ is deterministic. The combined mean squared norm is at
+most two. Common trace moments are kept at a fixed bound using
+\eqref{eq:reset}. Initially $r=1$ and the normalized cube coordinates
+have bounded deterministic formulas.
+
+\subsection{Control and mean coordinates}
+
+At one stage put
+\[
+ n=\norm{Au},\qquad\beta=\langle m,u\rangle,\qquad
+ u_G=Au/n,\qquad b=\beta/n,\qquad
+ c=(1+\kappa)^2+M^2.
+\]
+The total preactivation second moment is $\bar q r(n^2+\beta^2)$.
+Set
+\begin{equation}\label{eq:controlstate}
+ a=c\bar q,\qquad r'=r(n^2+\beta^2)/c.
+\end{equation}
+The row at query $x$ has the distribution
+$\sqrt{a r'(x)}Y_{b(x)}$, with Gaussian direction $u_G(x)$.
+Its leading unit feature at variance zero is
+\begin{equation}\label{eq:leading}
+ \ell(x)=\frac{(\beta,Au)}{\sqrt{n^2+\beta^2}}
+        =\frac{(b,u_G)}{\sqrt{1+b^2}}.
+\end{equation}
+
+For a small joint control $\eta=\kappa+M$, the squared-norm corrections
+are quadratic forms with Hilbert--Schmidt norm $O(\eta)$:
+\[
+ A^*A-I=J^*K+K^*J+K^*K,\qquad
+ A^*A+mm^*-I=(A^*A-I)+mm^*.
+\]
+Lemma~\ref{lem:sampling} supplies $O(\eta^2)$-second-moment oracles for
+these corrections. Apply Lemma~\ref{lem:factory} after division by
+$\eta$ to the smooth function
+$(1+\eta s)^{-1/2}-1$, on a fixed interval where its denominator is
+bounded away from zero. Its $H^4$ norm is $O(\eta)$. Adding the resulting
+normalization products on probability-$\eta$ branches constructs $u_G$
+and $\ell$ with moment increase and multiplicative common cost $O(\eta)$.
+For the new degree-zero component of $\ell$, create the $\beta$ oracle
+only on a probability-$\eta$ branch and divide it by $\eta$ there.
+Its trace contribution is $O(M^2/\eta)=O(\eta)$ and its expected
+coordinate cost is $1+O(\eta T)$. This avoids a fixed per-layer cost
+factor for a newly appended scalar coordinate.
+The relative scalar in \eqref{eq:controlstate} is updated in the same way,
+using the quadratic form for $n^2+\beta^2-1$.
+
+When $M>0$, a transient scalar helper $\zeta=b/M$ has bounded second
+moment and cost $CT$: sample $\langle m,u\rangle/M$ and multiply by the
+normalization oracle for $1/n$. It is used only on subsequent rare
+nonlinear branches; it is not stored as a new common-cost state that would
+introduce a fixed multiplicative factor at each layer. For $M=0$, set
+$b=0$ without a helper.
+The direction $u_G$ and leading feature $\ell$ are alternative local oracle
+families. Their trace budgets are not added as if both were one persistent
+state; only $\ell$ is retained as the low-degree output base, while
+$u_G$ is called on the charged correction and tensor branches.
+
+For a joint control bounded away from zero, copy $J$ and sample $K$,
+then use the lower bound $n\ge\rho$. Smooth compact extensions of the
+inverse-square-root functions have Sobolev norms polynomial in
+$1+\kappa$, $1+M$, and $1/\rho$. Scalar factories, products, and polynomial
+averaging produce the same exact means at a cost polynomial in these
+quantities. Its logarithm is $O(\kappa+M+\log(1/\rho))$. The auxiliary
+$b$ range is bounded by $M/\rho$ and its rescaling is charged once to
+this joint stage.
+
+\subsection{Gaussian features without a tensor variance explosion}
+
+The exact new normalized direction has coordinates
+$c_k(a r',b)u_G^{\otimes k}$. For $k\ge2$, average
+$m_k=\lceil kV\rceil$ independent copies of each direction-coordinate
+oracle before multiplying. Since $\norm{u_G}=1$, their second moments
+$W_i(x)$ satisfy
+\begin{equation}\label{eq:tensoraverage}
+ \left(\sum_iW_i(x)\right)^k
+ \le\left(1+\frac{V-1}{m_k}\right)^k\le e.
+\end{equation}
+Estimate the scalar coefficient independently by
+Lemma~\ref{lem:factory}. For small $a$, create this coordinate only with
+probability $p_k=a/k^2$, dividing the product by $p_k$ on that branch.
+Equation~\eqref{eq:sobolevtail} and \eqref{eq:tensoraverage} give total
+tail moment $O(a)$; the common expected coordinate cost is
+\[
+ 1+Cp_k(km_kT+T)\le T(1+Ca).
+\]
+At degrees zero and one, retain the leading feature \eqref{eq:leading}
+and add independent probability-$a$ product corrections for
+$c_k(ar',b)-c_k(0,b)$. Their second moments are $O(a^2)$ and their
+moment and cost increases are $O(a)$.
+The summed leading cross term is nonpositive, since
+$c_0(0,b)[c_0(t,b)-c_0(0,b)]+c_1(0,b)[c_1(t,b)-c_1(0,b)]
+=\langle Y_b,\phi_{t,b}\rangle-1\le0$ for the two unit Gaussian
+functions in \eqref{eq:hermite}.
+The scalar $r$ is updated using
+\eqref{eq:rresidual} on another probability-$a$ branch. Its new mean is
+\begin{equation}\label{eq:qupdate}
+ \bar q_{\rm new}=g(a),\qquad
+ r_{\rm new}=F(ar',b)/g(a)\in(0,1].
+\end{equation}
+Thus every small free step costs $1+O(a)$ and has an $O(a)$ reset charge.
+
+For large $a$, use $p_k=\min(1,a/k^2)$, the polynomial Sobolev bounds,
+and polynomially many averages. Include the two low degrees and the
+scalar variance map directly. This costs polynomially in $1+a$ and
+in the parameters of a jointly large control, and restores the combined
+trace bound. The logarithmic free-step charge is therefore
+$O(a)$ near zero and $O(\log(1+a))$ away from zero.
+
+\subsection{Deterministic variance telescoping}
+
+Put $\ell(a)=\log(a/g(a))$. This is comparable to $a$ near zero and
+to $\log(1+a)$ away from zero. Equations \eqref{eq:controlstate} and
+\eqref{eq:qupdate} give
+\[
+ \sum_{j=1}^H\ell(a_j)
+ =\log(\bar q_0/\bar q_H)+\sum_j\log c_j.
+\]
+Since $c_j\ge1$ and $g$ is increasing, the deterministic upper variances
+cool no faster than iteration of $g$. After the first step they are at
+most one, and $g(q)=q/(1+q/2)$ on $(0,1]$. Hence
+\[
+ \bar q_H\ge c/(H+1),\qquad
+ \sum_j\ell(a_j)\le C\log(H+1)+2\sum_j\log(1+\kappa_j+M_j).
+\]
+The small-step moment resets and large-step averaging now prove
+\eqref{eq:compilerbudget}. All transient helpers are called only within
+the explicitly charged branches. No vector subcomputation is shared.
+
+\section{Finite precision without assuming control precision}
+
+We give the precision argument because counting real arithmetic operations
+alone would not prove Theorem~\ref{thm:main}. Let $\overline V_i$ denote
+the cube average of an oracle's second moment. Remove a zero-$\overline V_i$
+oracle; it is zero almost surely at every cube input. Otherwise inject an
+independent Rademacher sign:
+\begin{equation}\label{eq:floor}
+ X_i^+=X_i+\sqrt{\delta\overline V_i}\,\varepsilon_i,
+ \qquad
+ \operatorname{Var}X_i^+(x)\ge
+ \gamma\overline V_i^+,\quad\gamma=\delta/(1+\delta).
+\end{equation}
+Choose inverse-polynomial $\delta$, inject initially and at stored
+intermediates, and restore the floor after averaging resets. Means are
+unchanged, trace moments increase by only $O(H\delta)$, and scalar cost
+has only an additive polynomial overhead before the previous exponential
+budget. Conditional versions of the same floor are used inside scalar
+factories below.
+
+Normalize each oracle subtree by its own cube RMS
+$a_i=\sqrt{\overline V_i}$. These individual scales can be arbitrarily
+small. We place only the resulting coefficient ratios into the fixed
+arithmetic tree. The injected-noise node has normalized coefficients
+$1/\sqrt{1+\delta}$ and $\sqrt{\delta/(1+\delta)}$.
+
+\paragraph{Linear and sampled product nodes.}
+For a near-copy node
+$Y=aX_0+(B/p)C_JX_J$ with independent branches, the noise floors imply
+\[
+ \overline V_Y\ge\gamma\left(a^2\overline V_0+
+                 p^{-1}\sum_jp_jC_j^2\overline V_j\right).
+\]
+Its copied normalized coefficient is at most $\gamma^{-1/2}$, and its
+selected normalized coefficient has squared expectation at most
+$\gamma^{-1}$. For an independent product, the pointwise second-moment
+floors multiply. An $m$-term averaged child has a floor at least
+$\gamma/m$ relative to its own cube RMS. Hence a sampled degree-$k$
+product has normalized coefficient bounded, on an active branch, by
+$p^{-1/2}(m/\gamma)^{k/2}$. Equivalently, its selected squared
+coefficient multiplied by the product of the child floors has expectation
+at most one. This handles quadratic entry sampling and the independently
+estimated coefficient times a tensor product as well.
+
+\paragraph{Fourier factory nodes.}
+Condition on frequency and Poisson count $\theta=(\omega,K)$ in
+Lemma~\ref{lem:factory}. Let $Z$ be its complex product and put
+$s_\theta^2=\E_x\E(|Z|^2\mid\theta)$. If $c$ denotes its Fourier
+importance coefficient, replace its conditional real output by
+\[
+ Y_\theta=\Re(cZ)+\sqrt\delta\,|c|s_\theta\varepsilon.
+\]
+The added noise charges at most $\delta$ times the same Fourier moment
+integral, and the mixed output has a pointwise variance floor. Its
+conditional RMS $b_\theta$ satisfies
+$b_\theta^2\ge\delta|c|^2s_\theta^2$. Normalize each complex factor by
+$t_j=\sqrt{1+r_j^2a_j^2}$, where $r_j$ is its fixed multiplier of the
+raw child $X_j$. The normalized factor coefficients are at most one in magnitude,
+and the child floors give
+\[
+ s_\theta^2\ge\gamma^K\prod_jt_j^2.
+\]
+Thus the conditional output divided by $b_\theta$ has root coefficient
+at most $\delta^{-1/2}\gamma^{-K/2}$, plus a noise coefficient at most
+one. The mixture normalization contributes $b_\theta/b$, whose squared
+expectation is exactly one. This removes possible phase cancellation
+without a lower bound on a Fourier coefficient or a frequency cutoff.
+For vector frequencies, use the factor
+$1+i\sum_l\omega_lX_l/\lambda$ and normalize it by
+$t^2=1+\sum_l\omega_l^2a_l^2/\lambda^2$. Its at most three coefficients
+are bounded by one. Independent coordinate children give a noise variance
+at least $\gamma\sum_l\omega_l^2a_l^2/\lambda^2$, so the same factorwise
+lower bound and product proof apply even when their means cancel.
+
+\paragraph{Fixing and rounding a good seed.}
+Sample the final linear readout with probabilities proportional to its
+squared coordinates. It has second moment at most a constant times
+$\norm v^2$. Average polynomially many copies per group, and use $O(d+1)$
+independent groups. Chebyshev, a Chernoff bound, and a union bound over the
+cube give a realization in which, at every input, at least three quarters
+of the group averages are within $1/2$ of the target output. Those groups
+have the correct signs and absolute margin at least $1/2$; the other
+groups need not have any margin. The expected total formula
+size and the expected number of primitive calls are polynomial in $R$.
+
+A size Markov bound and the normalized coefficient second-moment bounds
+can be imposed jointly with this success event. On a polynomial-size
+realization, every active tensor degree, averaging count, and Poisson
+product length is polynomial. Active branches of inverse-superpolynomial
+probability may be excluded by an expected-call union bound; equivalently
+use the weighted product-coefficient estimate above. Thus, with positive
+probability, all normalized coefficients have magnitude at most
+$\exp(\poly(R))$. Initial normalized cube leaves are bounded signed
+coordinate/constant formulas, and the final root RMS lies between the
+margin and a polynomial readout bound. No original control coefficient
+or internal RMS scale has to be encoded separately.
+
+Fix this realization. A polynomial-size arithmetic tree with coefficient
+magnitudes $\exp(\poly(R))$ has values and coefficient derivatives bounded
+by the same form on Boolean inputs. Dyadic rounding to polynomially many
+bits therefore changes every group output by less than $1/4$, preserving
+the signs of the good three quarters at every input and hence the majority.
+Clear positive subtree denominators. Arithmetic-formula
+balancing yields polynomial-size logarithmic-depth integer formulas.
+If complex gates were retained, first balance using their real-affine
+one-hole contexts, then expand real and imaginary parts; this also gives
+only polynomial growth. Formula positivity is in $\PNC^1$.
+The composition theorem for $\PNC^1$ predicates absorbs the final majority
+\cite[Theorem~4.2]{datta}, and $\PNC^1\subseteq\Lpoly$ in the nonuniform
+setting follows from \cite[Proposition~2.4]{datta}.
+
+\section{Entropy budgets and the Gaussian scalar baseline}
+
+In the actual Gaussian path, take $A_j=\Sigma_j^{1/2}$ in the current
+fixed feature basis. The scalar inequality
+$(\sqrt\lambda-1)^2\le\lambda-1-\log\lambda$ gives
+\[
+ \kappa_j\le\sqrt{2D_j},\qquad M_j\le\sqrt{2D_j}.
+\]
+A one-dimensional entropy marginal gives
+\[
+ \log_+\norm{A_j^{-1}}_{\rm op}
+    \le C(\sqrt{D_j}+D_j).
+\]
+Consequently $S+L\le C\sum_j(\sqrt{D_j}+D_j)$. The kernel semantics
+are exact throughout: positive covariance square roots act on the existing
+feature space, and the noncentral Hermite expansion realizes
+\eqref{eq:kernel} including all query-query inner products. The final
+physical norm is at most one, so dividing the final feature by its positive
+query norm preserves the output sign and cannot reduce a unit margin.
+This proves Theorem~\ref{thm:main}.
+
+For $q>0$, let $V_G(q)$ be the infimum over finite scalar paths, including
+length zero, of
+\[
+ \sum_{j=1}^m\KL(\eta_j\Vert N(0,q_{j-1}))+\frac1{8q_m},
+ \qquad q_0=q,\quad q_j=\E_{\eta_j}\tanh^2 Z,
+\]
+where every $\eta_j$ is Gaussian, with arbitrary mean and positive
+variance. Write $V(q)$ for the unrestricted scalar value and
+$V_*:=\lim_{q\downarrow0}V(q)$.
+
+\begin{proposition}[Different scalar baselines]\label{prop:baselines}
+The limit $V_*^G:=\lim_{q\downarrow0}V_G(q)$ exists, and there are
+universal $C_0<\infty$ and $\delta_0>0$ such that
+\[
+ V_*+\delta_0\le V_*^G<2,\qquad
+ 0\le V_*^G-V_G(q)\le C_0q\quad(0<q\le2).
+\]
+\end{proposition}
+\begin{proof}
+Scaling all successive controls proves that $V_G$ is nonincreasing;
+Gaussianity and relative entropy are preserved. Let
+$F(u)=\E\tanh^2(\sqrt uZ)$. The bound $F(u)\ge u/(1+3u)$ shows
+that Gaussian variance inflation from $q$ to $(1+6q)q$, for $q<1/10$,
+costs at most $9q^2$ and increases the feature variance by at least
+$q^2(3-18q)/(1+3q+18q^2)$. Integrating the cost-to-increment ratio,
+and shortening the last step to hit $1/10$, gives total cost including
+readout at most
+\[
+ U=199/200+\log(5/2)<2.
+\]
+Thus the limit exists and is at most $U$. Likewise
+$F(u)\ge u(1-2u)$ shows that inflation to $(1+16q)q$ costs at most
+$64q^2$ and advances the state by at least $4q^2$ for $q\le1/128$.
+Growing from an arbitrarily small state to $p\le1/128$ costs at most
+$17p$. Appending a Gaussian suffix proves
+$V_*^G-V_G(p)\le17p$; boundedness extends this to $p\le2$.
+
+To prove strict separation, put $b=1/16$, $a=b/10$, and
+\[
+ I_p(r)=\sup_{\theta\in\R}\{\theta r-
+           \log\E_{N(0,p)}e^{\theta\tanh^2 Z}\}.
+\]
+For $0<r<1$, the unique entropy-minimizing law with
+$\E\tanh^2 Z=r$ has density proportional to
+$e^{\theta\tanh^2 Z}$ relative to $N(0,p)$. Its entropy $I_p(r)$
+is continuous in $(p,r)$. Consider Gaussian laws $N(m,s)$ with
+$p\in[a,b]$, entropy at most two relative to $N(0,p)$, and output
+$r=\E_{N(m,s)}\tanh^2 Z\ge b$. Their parameter set is compact:
+the entropy bounds $m^2/p$ and confines $s/p$ to a compact subinterval
+of $(0,\infty)$. Their outputs are bounded away from one.
+On this set the continuous entropy saving
+\[
+ \KL(N(m,s)\Vert N(0,p))-I_p(r)
+\]
+has a positive minimum $\delta_0$. Indeed equality would make the
+Gaussian log-density ratio a bounded function
+$\theta\tanh^2 z-\log\E e^{\theta\tanh^2 Z}$. A quadratic
+polynomial can be bounded on $\R$ only if it is constant, forcing
+the reference Gaussian and hence $r=F(p)<p\le b$, a contradiction.
+
+Any Gaussian scalar path of cost below two from $q<a$ must cross $b$,
+since otherwise its readout costs at least two. At its first crossing,
+the preceding state $p$ is at least $a$: a post/pre-state ratio of at
+least ten forces entropy at least $(10-1-\log10)/2>2$ by Gaussian
+second-moment entropy duality. Replacing that single Gaussian law by
+the optimizer defining $I_p(r)$ preserves the post-state and saves at
+least $\delta_0$. Hence $V_G(q)\ge V(q)+\delta_0$. Paths of cost
+below two approximate $V_G(q)$ by the upper bound $U<2$; taking
+$q\downarrow0$ proves the claim.
+\end{proof}
+
+\begin{lemma}[Occupation relative to the Gaussian baseline]
+\label{lem:gaussianoccupation}
+For a globally $1/2$-margined Gaussian path with action
+$A=\sum_jD_j+\norm v^2/2\le V_*^G+\epsilon$, $\epsilon\ge0$,
+\[
+ \sum_j\sqrt{D_j}\le C[1+\log(H+2)+\sqrt{H\epsilon}],
+ \qquad \sum_jD_j\le U+\epsilon.
+\]
+Moreover every such path, without the upper-action hypothesis, satisfies
+$A\ge V_*^G-C/H$.
+\end{lemma}
+\begin{proof}
+Let $q_i=\max_x\norm{h_i(x)}^2$. Projection of a Gaussian row law
+onto any input is Gaussian, and data processing bounds its entropy by
+$D_j$. The scalar terminal readout bound is $1/(8q_H(x))$.
+Therefore a scalar Gaussian suffix from an input attaining $q_i$ gives
+\[
+ S_i:=\sum_{j\le i}D_j\le A-V_G(q_i)\le\epsilon+C_0q_i.
+\]
+Strict scalar dissipation gives
+$D_j\ge q_j-q_{j-1}+cq_{j-1}^2$ for a universal $c>0$.
+One direct proof uses
+$\log\E e^{\tanh^2(\sqrt pZ)}\le p-cp^2$ on $[0,2]$:
+the heat equation makes the inequality strict away from zero, and the
+expansion is $p-p^2+O(p^3)$ at zero. For maximum variances, decrease
+$c$ until $p-cp^2$ is increasing. These facts also handle $q_0\le2$.
+
+On an interval with pre-states and endpoint at least $u$, entropy $E$
+and length $\ell$, divide dissipation by the squared pre-state to get
+$\ell\le C(E/u^2+1/u)$. Use last exits from dyadic levels starting
+at $\max\{\epsilon,(H+1)^{-1},\min_iq_i\}$. Each later band below
+a fixed positive level has entropy $O(u)$ and length $O(1/u)$, so
+Cauchy--Schwarz bounds its square-root entropy by a constant.
+There are $O(\log(H+2))$ bands. The initial prefix has either entropy
+$O(\epsilon+1/H)$ and length at most $H$, or entropy $O(b)$ and
+length $O(1/b)$ with $b=\min_iq_i$; its contribution is
+$O(1+\sqrt{H\epsilon})$. The remaining high-variance tail has bounded
+length. This proves the claim for $\epsilon<1/4$; otherwise apply
+Cauchy--Schwarz directly to $\sum D_j\le U+\epsilon$.
+
+For the lower-action assertion it suffices to consider $A\le V_*^G$.
+Then $S_i\le C_0q_i$ and $\sum D_j<2$. The same last-exit argument,
+starting at $b=\min_iq_i$, bounds the total length by $C/b$.
+Thus $b\le C/H$, and its Gaussian suffix costs at least
+$V_G(b)\ge V_*^G-C_0b$.
+\end{proof}
+
+\begin{corollary}[Near the Gaussian class's own baseline]
+\label{cor:critical}
+Suppose a globally $1/2$-margined Gaussian-controlled path has action
+at most $V_*^G+\epsilon$. Its classifier has $\PNC^1$ resources
+polynomial in
+\[
+ (d+H+\epsilon+2)
+ \exp\!\left[C\{1+\log(H+2)+\sqrt{H\epsilon}+\epsilon\}\right].
+\]
+In particular, at $\epsilon=O(\log^2 R/H)$ with
+$d,H\le\poly(R)$ and $H\ge c\log R$, these resources are polynomial
+in $R$.
+\end{corollary}
+\begin{proof}
+Scale the margin to one and apply Theorem~\ref{thm:main} and
+Lemma~\ref{lem:gaussianoccupation}. The action also bounds the
+readout norm by $O(\sqrt{1+\epsilon})$.
+\end{proof}
+
+\begin{proposition}[Attainability from the prescribed input]
+\label{prop:attainability}
+Let $J_H^G(f)$ be the Gaussian-restricted action infimum for global
+margin $1/2$, and let $Q_1$ be the first free tanh kernel. Set
+\[
+ a_f=(f^TQ_1^{-1}f)^{-1},\qquad S_f=1+\log(1/a_f).
+\]
+There is a universal $C$ such that
+\[
+ V_*^G-C/H\le J_H^G(f)
+ \le V_*^G+C\frac{S_f^2+\log^2(2H)}H\qquad(H\ge CS_f).
+\]
+One has $S_f\le15(d+1)$, while constants and dictators satisfy
+$S_f=O(\log(d+1))$. In particular every fixed target has deep Gaussian
+rate limit $V_*^G$, and the own-baseline corollary is nonempty in its
+polynomial-resource range.
+\end{proposition}
+\begin{proof}
+The lower bound is Lemma~\ref{lem:gaussianoccupation}. For the upper
+bound use the target-component construction of \cite{critical}.
+We check specifically that its laws remain Gaussian. The first free
+kernel is positive definite and dominates $a_fff^T$. Free cooling,
+holding, prescribed growth, and purification use only Gaussian
+covariance inflations in this target direction. A smaller tracked
+component merely chooses a new decomposition $Q=vff^T+R$, $R\succeq0$;
+it changes no law. Representing the reference as
+$\sqrt v fZ+G_R$, with independent Gaussian terms, shows by data
+processing that each scalar Gaussian modification induces a Gaussian
+vector control with no greater entropy, even for singular $R$.
+
+The increasing-path reduction and small-state bridge in
+Proposition~\ref{prop:baselines} preserve Gaussianity. The usual dyadic
+entropy bound therefore gives a Gaussian scalar suffix from $p$ with
+cost at most $V_G(p)+p$ and length $O(1/p)$. Its stable lift rescales
+this Gaussian scalar law and adds an independent residual Gaussian,
+so it too is admissible. Choosing cooling scale $\eta\asymp S_f/H$
+and target scale $p\asymp[S_f+\log(2H)]/H$, the construction has
+excess action at most
+\[
+ C[H\eta^2+S_f\eta+p+p\log(2H)+H^{-4}]
+ \le C[S_f^2+\log^2(2H)]/H.
+\]
+Exact Gaussian holding fills the unused layers before growth. The
+first-layer spectral bound gives $a_f\ge e^{-14(d+1)}$; its first
+Hermite term gives $a_f\ge c/(d+1)$ for constants and dictators.
+These are the asserted bounds on $S_f$.
+\end{proof}
+
+Proposition~\ref{prop:baselines} and Lemma~\ref{lem:gaussianoccupation}
+show why the choice of baseline matters: the Gaussian subclass with
+action at most $V_*+\epsilon$ is empty whenever
+$\epsilon<\delta_0-C/H$. A near-$V_*$ Gaussian consequence would
+therefore be asymptotically vacuous. The unrestricted posterior admits
+all finite-entropy row tilts. Neither a Gaussian replacement theorem nor
+a formula compiler for those tilts is proved here, so the original
+learning question remains open.
+
+\begin{thebibliography}{9}
+\bibitem{datta}
+S.~Datta, M.~Mahajan, B.~V.~Raghavendra Rao, M.~Thomas, and H.~Vollmer.
+\emph{Counting Classes and the Fine Structure between NC1 and L}.
+2010. \url{https://www.cse.iitm.ac.in/~bvrr/conf/mfcs10.pdf}.
+\bibitem{critical}
+\emph{Critical depth and learning}.
+Research manuscript, sections ``Scalar control and target-component
+constructions'', ``Short near-optimal scalar paths and residual spectral
+control'', and ``The initial target component and the sufficient depth''.
+\url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/critical-depth}.
+\end{thebibliography}
+\end{document}
