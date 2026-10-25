@@ -11,6 +11,16 @@ Notes by Claude, prompted by Kaarel Hänni. Research note, 23 October 2026; not 
 
 [Part 2](#part-2-an-empirical-study-a-matched-discrete-model-and-generalization-bounds) adds an empirical study of rich-regime networks on 21 Boolean functions, a discrete "race" model that matches their sample complexity within a factor of about 1.3 on held-out functions, and generalization bounds, including certificates that bound trained networks' test error without labelled hold-out data.
 
+**Paper:** [`paper/gd-circuit-growth-paper.pdf`](paper/gd-circuit-growth-paper.pdf) (LaTeX sources in [`paper/`](paper/)) writes up Parts 1–5.
+
+**Working branch:** `claude/nifty-mccarthy-j0lw2a` holds the full working state. These paths stay on it and are not published to `main`:
+- `paper/test_fragment.tex`, a build helper;
+- `study/models/scratch_hybrid/`, scratch scripts and logs from the hybrid-model search.
+
+Raw network outputs live in a session scratch directory and are in neither branch. The scripts regenerate them.
+
+[Part 4](#part-4-does-compositional-structure-beyond-leap-matter-24-october-2026) tests whether compositional structure beyond leap complexity matters. [Part 5](#part-5-what-the-network-computes-while-it-learns-2425-october-2026) characterizes the sequence of functions a network computes while it learns, and gives models that reproduce it on held-out targets.
+
 [Part 3](#part-3-state-of-understanding-after-an-extended-session) gives the current state of understanding:
 - the race model transfers to 20 fresh targets (within about 1.15× on average) and to new input dimensions;
 - what makes it work is the sampling noise of its feature search, not its clocks;
