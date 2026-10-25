@@ -111,10 +111,12 @@ def main():
          "- **Sign error:** that of the network's E[f | x_R], and that of the projection P_S y of the target onto those characters.",
          "- **Distances,** relative to Var y: to that projection (H_char), and to the best function of the variables the network depends on (H_junta).",
          "- **Feature types:** first-layer units whose weight on the relevant variables has grown, labelled by the inputs they weight and the signs.", ""]
-    for fn in FNS:
+    fns = sys.argv[1:] or FNS
+    for fn in fns:
         for tag, prefix in (("online", "online"), ("fixed", "2048")):
             describe(fn, tag, prefix, L)
-    open(os.path.join(HERE, "STAGES.md"), "w").write("\n".join(L) + "\n")
+    name = "STAGES.md" if fns == FNS else "STAGES-heldout.md"
+    open(os.path.join(HERE, name), "w").write("\n".join(L) + "\n")
     print("\n".join(L))
 
 
