@@ -1,0 +1,283 @@
+\section{A Fourier-increment class beyond tanh}
+\label{app:fourier-activations}
+
+The scalar argument extends beyond tanh. A mixed-activation normal form
+lets us retain a short prefix of the original activation and use tanh
+only in the replacement suffix. This separates the spectral condition
+needed for the estimator from the geometric conditions needed for the
+normal form.
+
+\begin{theorem}[A bounded Fourier-increment activation class]
+\label{thm:fourier-class}
+Fix a real activation $\phi$ satisfying the following conditions.
+\begin{enumerate}[label=(\roman*)]
+\item $\phi(0)=0$, $\phi$ is one-Lipschitz, and $|\phi|\le A$ for
+some fixed finite $A$.
+\item For fixed $c,r_0,\kappa>0$,
+$|\phi(u)-u|\le c|u|^{1+\kappa}$ when $|u|\le r_0$.
+On an interval about zero it has a continuous inverse with
+$|\phi^{-1}(v)|\le C|v|$.
+\item There is a complex Radon measure $\nu$ on $\R\setminus\{0\}$,
+with $\sigma$-finite total variation, such that
+\begin{equation}\label{eq:increment-class}
+ \phi(u)=\int (e^{i\omega u}-1)\,d\nu(\omega),\qquad
+ M=\int|\omega|\,d|\nu|(\omega)<\infty.
+\end{equation}
+The displayed integral is real-valued.
+\end{enumerate}
+Then Theorem~\ref{thm:main}'s arithmetic-sign conclusion holds for
+$\phi$ networks, with constants depending on this fixed activation.
+In particular polynomial Frobenius product implies nonuniform
+$\PNC^1\subseteq\Lpoly$.
+\end{theorem}
+
+The integral in \eqref{eq:increment-class} is absolutely convergent,
+since $|e^{i\omega u}-1|\le|\omega u|$. The total variation of $\nu$
+itself may be infinite near zero. No efficient sampling algorithm,
+computable Fourier coefficients, or quantitative Fourier-tail rate is
+assumed. Oddness and analyticity are also unnecessary.
+
+\subsection{The exact scalar transform}
+
+Let $X$ have mean $a$, second moment at most $V>0$, and expected
+arithmetic work at most $T\ge1$. At a frequency $\omega$, put
+\[
+ \lambda=1+\omega^2V,\qquad K\sim\operatorname{Pois}(\lambda),
+ \qquad Z=\prod_{j=1}^K(1+i\omega X_j/\lambda),
+\]
+with independent child calls. The compound-Poisson identity gives
+\[
+ \E Z=e^{i\omega a},\qquad
+ \E|Z-1|^2=e^{\omega^2\E X^2/\lambda}-2\cos(\omega a)+1
+       \le C\min(\omega^2V,1).
+\]
+Expected complex-formula work is $O((1+\omega^2V)T)$.
+Write $v(\omega)=\min(\omega^2V,1)$, $c(\omega)=1+\omega^2V$, and
+\[
+ I=\int\sqrt{vc}\,d|\nu|,\qquad
+ J=\int\sqrt{v/c}\,d|\nu|.
+\]
+Unless $\nu=0$, which is trivial,
+\[
+ 0<J\le I\le\sqrt{2V}M,
+\]
+because $\sqrt{\min(a^2,1)(1+a^2)}\le\sqrt2a$.
+Sample the frequency with density $\sqrt{v/c}/J$ relative to
+$|\nu|$, multiply $Z-1$ by the corresponding importance coefficient
+and the unit complex phase $d\nu/d|\nu|$, and take its real part.
+The resulting unbiased estimator $U$ of $\phi(a)$ has
+\begin{equation}\label{eq:increment-potential}
+ (\E\,\mathrm{work}(U))\sup_x\E|U(x)|^2
+ \le C M^2VT.
+\end{equation}
+Indeed the two factors are at most $CTI/J$ and $CJI$.
+All choices are input-independent. The subtraction of one is part of
+the same realized expression; it is not replaced by a separately
+sampled term. No higher moment of a child or second Fourier moment
+is used. Lemma~\ref{lem:linear} now gives Frobenius propagation with
+one fixed activation-dependent factor per retained layer.
+
+\subsection{The short mixed normal form}
+
+The relevant-coordinate and two-ball lemmas use only zero preservation
+and one-Lipschitzness, so they hold for $\phi$. There are at most $P^2$
+relevant input coordinates, and $j=O(\log(P+2))$ retained prefix
+layers give polynomially many separated normalized centers.
+
+Width compression also uses boundedness and local linearization.
+Here are the modifications to Appendix~\ref{sec:pf-width-compression}.
+At adjacent matrices $W,V$, let $S$ be the preceding norm product,
+$P_*$ the current full-product bound, and $e$ the allocated error.
+Delete rows with $S\norm{w_i}>B$, where $B=AP_*/e$.
+The activation bound $A$ makes their propagated error at most $e$.
+For rows with $S\norm{w_i}<\tau$, replace the activation by the
+identity, taking
+\[
+ \tau\le r_0/R,\qquad cP_*\tau^\kappa R^{1+\kappa}\le e.
+\]
+Their activation-error norm is at most
+$c\tau^\kappa R^{1+\kappa}S\norm W_F$, so propagation gives
+error at most $e$. Middle-row sampling is unchanged, with ratio
+parameter $(B/\tau)^2$, and keeps ordinary $\phi$ neurons.
+
+For the truncated linear branch of nuclear norm $\xi$, replicate
+its singular channels $K$ times with the same balanced incoming and
+outgoing weights as in that appendix. If $c_0$ is its balancing
+scalar, the propagated nonlinear error is at most
+\[
+ CP_* (c_0\xi S^2/K)^{\kappa/2}R^{1+\kappa}.
+\]
+To see this, the preactivation norm in one copy is at most
+$\sqrt{c_0/K}\sqrt\xi SR$. Apply the local remainder bound,
+then the outgoing norm $\sqrt\xi/\sqrt{c_0K}$, sum the $K$
+copies, and propagate through the suffix. The existing sampling
+estimates bound $c_0\xi S^2$ polynomially in the short-prefix
+resources. Choose $K$ polynomially large to obtain error at most
+$e$ and keep those preactivations inside $[-r_0,r_0]$.
+The exact pair-product calculation is unchanged. Since $\kappa$
+is fixed, all retained widths are polynomial in $P$.
+
+Boundedness and the margin give $S_s\le AP\sqrt C$ at retained
+prefix layers of width at most $C$. Choose $\epsilon>0$ with inverse
+polynomial in $P$ and $\epsilon S_s$ in the local inverse interval.
+A constant rail with outputs $\epsilon S_s$ uses first weight
+$\phi^{-1}(\epsilon S_1)$ and later weights
+\[
+ \frac{\phi^{-1}(\epsilon S_s)}{\epsilon S_{s-1}}.
+\]
+Each is at most a fixed constant times its original layer norm.
+The rail therefore increases the prefix product by at most a fixed
+constant to the power $j$, hence a polynomial. Normalize the
+interface and attach the ordinary-tanh squared-distance classifier
+from Appendix~\ref{app:normal}. It uses two hidden layers and
+polynomial width, weights and product. No tail estimate or curvature
+condition on $\phi$ is needed for this replacement suffix.
+
+For completeness, the physical-weight argument also extends to this
+mixed network. Set $\kappa_* =\min(\kappa,2)$. Both activations
+have a remainder $C|u|^{1+\kappa_*}$ on a fixed neighborhood of zero.
+Replace activations at layers whose original prefix product is less
+than $\tau$ by the identity, choosing
+\[
+ \tau\le r_*/R,\qquad
+ CPD\tau^{\kappa_*}R^{1+\kappa_*}\le1/100.
+\]
+Telescoping controls the output error. Collapse consecutive linear
+blocks. Each retained prefix product lies between $\tau$ and
+$\max(A,1)P\sqrt C$, so the resulting weight bounds are polynomial.
+Double the readout and round using the ordinary one-Lipschitz
+perturbation estimate. The resulting mixed network has unit margin,
+logarithmic depth, polynomial width and product, polynomial weights,
+and $O(\log^2(d+P+2))$ coefficient bits.
+
+\subsection{Finite coefficients without a spectral-tail hypothesis}
+
+An explicit deterministic approximation avoids any hidden regularity
+assumption on $\nu$. Let $B\ge2$ be polynomial in $d+P$ and bound
+all dimensions, row sums, and preactivation magnitudes in the mixed
+normal form, enlarging it by fixed activation-dependent factors.
+Its depth is $D=O(\log(d+P+2))$. Choose $\delta$ with
+\[
+ \log\delta^{-1}=O_\phi(\log^2(d+P+2))
+\]
+so small that replacing its $\phi$ evaluations by $\delta$-close
+functions on $[-2B,2B]$ changes the final output by at most $1/10$.
+For example the row-sum estimate
+$D\sqrt C[B\max(1,2M)]^D\delta$ suffices.
+Boundedness and $\delta\le1$ keep every hybrid preactivation in
+this interval inductively.
+
+Define
+\begin{align*}
+ \phi_{\eta,U}(u)&=a_\eta u+\Rea\int_{\eta\le|\omega|\le U}
+                            (e^{i\omega u}-1)\,d\nu(\omega),\\
+ a_\eta&=\Rea\int_{0<|\omega|<\eta}i\omega\,d\nu(\omega).
+\end{align*}
+Taylor's second-order remainder and the bounded exponential increment
+imply
+\begin{equation}\label{eq:frequency-truncation}
+ |\phi(u)-\phi_{\eta,U}(u)|
+ \le\tfrac12M\eta|u|^2+2M/U.
+\end{equation}
+Choose cutoffs making this at most $\delta$ on the interval above.
+Both $|\log\eta|$ and $\log U$ are
+$O_\phi(\log^2(d+P+2))$. The new activation is at most
+$2M$-Lipschitz. This is a deterministic replacement with bounded
+bias, not a claim that a conditionally truncated estimator remains
+unbiased for $\phi$.
+
+The truncated Fourier branch retains
+\eqref{eq:increment-potential}. The linear branch has work $T$ and
+moment at most $M^2V$, even if $a_\eta=0$. Combine the two by sampling
+branch $i$ with probability proportional to $\sqrt{v_i/t_i}$ for
+its positive moment and work bounds. The resulting potential is at
+most $C(\sum_i\sqrt{v_it_i})^2\le C_\phi VT$.
+Thus logarithmic depth and polynomial Frobenius product still give
+polynomial final work--moment potential.
+
+We spell out the scale control. Fix a compact frequency band
+$a\le|\omega|\le b$ with positive $|\nu|$ mass; it exists since
+$\phi$ is not zero. Choose all truncations to contain it. The
+truncated factory then satisfies
+\[
+ J\ge c_\phi\min(\sqrt V,1/\sqrt V),\qquad
+ J\le I\le\sqrt{2V}M.
+\]
+These estimates, the positive upper moment bound $M^2V$ for the
+linear branch, and Lemma~\ref{lem:linear} imply the same logarithmic
+recurrence as Lemma~\ref{lem:constants}: at each retained layer
+logarithmic magnitudes of deterministic positive quantities and their
+inverses increase by at most a fixed factor plus a polynomial.
+Nonzero original matrix entries have polynomially bounded logarithmic
+reciprocals. The $O(\log(d+P+2))$ layers therefore give polynomial
+logarithmic bounds for every internal work, moment and sampling
+normalization. No reciprocal of $a_\eta$ is used.
+
+All sampled frequencies are now between $\eta$ and $U$. Their
+importance coefficient has modulus
+\[
+ J\sqrt{\frac{1+\omega^2V}{\min(\omega^2V,1)}},
+\]
+with polynomial logarithmic size by the preceding bounds. The same
+holds for $\omega/\lambda$, the bounded coefficient $a_\eta$,
+and all cost-aware neuron coefficients. Average the output estimators
+and take $O(d+1)$ groups. The strict-margin, Chernoff, union-bound and
+Markov argument of Lemma~\ref{lem:realization} now selects polynomial
+total formula size with every constant of modulus at most
+$\exp(\poly(d+P+2))$. No frequency-tail event is needed.
+Lemma~\ref{lem:round}, denominator clearing, and the single global
+real-affine balancing proof apply to these realized expressions.
+They give the claimed polynomial-bit integer arithmetic-sign
+circuits. This proves Theorem~\ref{thm:fourier-class}.
+
+\subsection{Examples and scope}
+
+A convenient sufficient condition is that $\phi'$ be the Fourier
+transform of a finite complex measure $\mu$ with no atom at zero.
+Integrating the derivative gives \eqref{eq:increment-class} with
+$d\nu=d\mu/(i\omega)$ and $M=\norm\mu_{\mathrm{TV}}$.
+The following examples have positive probability derivative measures,
+so $M=1$.
+\begin{itemize}
+\item $\phi(u)=\int_0^u e^{-s^2}\,ds=(\sqrt\pi/2)\operatorname{erf}(u)$:
+its derivative is the characteristic function of $N(0,2)$.
+It has a cubic local remainder.
+\item $\phi(u)=\arctan u$: its derivative $1/(1+u^2)$ is the
+characteristic function of the density $e^{-|\omega|}/2$.
+It also has a cubic local remainder.
+\item $\phi(u)=u/(1+|u|)$: its derivative is continuous and
+\[
+ (1+|u|)^{-2}=\int_0^\infty t e^{-t}e^{-t|u|}\,dt.
+\]
+Each $e^{-t|u|}$ is a Cauchy characteristic function, and the mixing
+density $te^{-t}$ has mass one. The local remainder is at most
+$|u|^2$ and the local inverse is $v/(1-|v|)$. This example is not
+analytic at zero.
+\end{itemize}
+All are bounded, one-Lipschitz, zero-preserving and locally invertible.
+
+The coded activation in the analytic depth counterexample of
+\cite{analytic} also
+has a finite derivative Fourier measure. A single bump has form
+$\delta b_\rho((u-c)/r)$, where
+$b_\rho(v)=(1+\rho v)^3e^{-v^2}$ and $|\rho|\le1$.
+Its derivative Fourier $L^1$ norm is at most $C\delta/r$, by scaling
+and the uniform bound for this fixed-degree Gaussian polynomial.
+For its all-derivatives-bounded construction, with
+$m_d=M_0+\lceil\log_2(d+2)\rceil$, summing the $2^d$
+bumps in band $d$ gives the finite bound
+\[
+ C\tau\sum_d2^{-(m_d-4)d}<\infty.
+\]
+The original constant-order construction has the same summability.
+Add the Fourier measure of $\operatorname{sech}^2$ and the reflected
+perturbation. This is consistent with its learning lower bound:
+those teachers have large Frobenius product. Fourier compressibility
+of low-product networks is not efficient numerical evaluation of the
+activation primitive.
+
+A Bayesian consequence requires a separately established posterior
+low-product ceiling for the chosen activation. Theorem~\ref{thm:fourier-class}
+does not supply that ceiling or resolve arbitrary conditional controls
+at $\gamma=1$. ReLU and GELU are not covered by this bounded-activation
+theorem; it makes no claim for all smooth or all Lipschitz activations.

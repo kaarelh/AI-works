@@ -1,0 +1,250 @@
+\section{A variant with every derivative globally bounded}
+\label{app:all-derivatives}
+
+The activation in Theorem~\ref{thm:main} has global bounds on any
+prescribed finite number of derivatives. Its sufficiently high
+derivatives need not be bounded. This feature is not necessary for an
+exponential dependence on teacher depth: a smaller encoding amplitude gives
+one activation whose derivatives of \emph{every} order are globally
+bounded. Amplifier weights of order $d$ preserve the linear teacher depth.
+
+\begin{theorem}\label{thm:all-derivatives}
+Fix a finite integer $r\ge1$ and $\eta>0$. There is one computable
+activation $\phi$ with all the shape and $C^r$-closeness properties of
+Theorem~\ref{thm:main}, such that every derivative of $\phi$ is globally
+bounded. The same circuit-hard targets $f_d$ have globally unit-margin
+teachers with
+\[
+ L_d=d+4,\qquad
+ \text{active width }O(\log(d+2)),\qquad
+ \text{coefficient magnitude }O(d+1),
+\]
+and polynomial coefficient bit length. For some $c>0$, every sample
+of at most $\exp(cd)$ observations has posterior confidence-failure
+rate at least $139/1024$, at every fixed Gaussian exponent
+$\gamma\ge1$ and every sufficiently large width
+$N\ge\exp(C_\gamma d)$. The fixed-width cold-limit conclusion holds
+at every width above the memorizer threshold~\eqref{eq:MB}.
+
+Thus this variant retains the sample lower bound
+$\exp(\Omega(L_d))$. It does not assert a uniform
+analytic-strip bound, a finite-order Gevrey bound, or efficient
+activation evaluation.
+\end{theorem}
+
+\subsection{The modified bands and derivative estimates}
+
+Fix a sufficiently large integer $M_0\ge24$, and set
+\begin{align*}
+ m_d&=M_0+\lceil\log_2(d+2)\rceil,&
+ J_d&=2^{m_d+10},&
+ \Delta_d&=2^{-d-4},\\
+ r_d&=\Delta_d/J_d,&
+ c_{d,k}&=-4d-\tfrac14-\Delta_d k,&
+ \delta_d&=\tau r_d2^{-(m_d-3)d}.
+\end{align*}
+In particular,
+\begin{equation}\label{eq:all-derivative-amplitude}
+ \delta_d=\tau2^{-(m_d-2)d-m_d-14}.
+\end{equation}
+Use these parameters in~\eqref{eq:S}--\eqref{eq:phi}, with a fixed
+sufficiently small positive rational $\tau$. The truth tables and
+centers are otherwise unchanged.
+
+For each fixed derivative order $j$, the Gaussian lattice estimate
+in Lemma~\ref{lem:phi} gives
+\begin{equation}\label{eq:all-derivative-bound}
+ \sup_{\R}|S_d^{(j)}|
+ \le C_j\tau(16J_d)^{j-1}2^{-(m_d-j-2)d}.
+\end{equation}
+Here $S_d$ denotes the whole $d$th band. This is summable in $d$
+for every fixed $j$, because $m_d=\log_2d+O(1)$ and $J_d=O(d)$.
+Consequently every derivative is globally bounded. On each complex
+compact, the moving band centers and Gaussian suppression still
+give locally uniform convergence; hence $S$ is entire. The explicit
+tails and the computable finite truth tables give computability.
+
+The weighted first- and second-derivative estimates have band
+majorants
+\[
+ C\tau e^{8d}2^{-(m_d-3)d},\qquad
+ C\tau J_de^{8d}2^{-(m_d-4)d},
+\]
+respectively. Both are summable. The cubic factor at zero supplies
+the same extra powers of $u$ as in Lemma~\ref{lem:phi}. Therefore
+\eqref{eq:weightedfirst}--\eqref{eq:weightedsecond} hold, with fixed
+constants for this modified activation. A sufficiently small $\tau$
+preserves oddness, slope one at zero, strict increase, global
+Lipschitz constant one, positive-half-line strict concavity, and
+saturation to $\pm1$. Equation~\eqref{eq:all-derivative-bound} makes
+the prescribed $C^r$ distance smaller than $\eta$ after a further
+fixed reduction of $\tau$. The constants bounding derivative $j$
+can grow rapidly with $j$; no uniform analytic-type estimate is used.
+
+\subsection{A growing finite-difference decoder}
+
+Use $h_d=\Delta_d/(2m_d)$ and the $m_d$th finite difference in
+\eqref{eq:decoder}. At $c_{d,k}$ the central bump contributes
+$\delta_df_d(k)$. Every other query is at least $h_d$ from every
+center in this band. Since $J_d=2^{m_d+10}$, its leakage, multiplied
+by the coefficient sum $2^{m_d}=O(d)$, is $o(\delta_d)$.
+
+For another band $e\ne d$, the logarithm of its amplitude ratio
+is $O(d\log d+e\log e)$, whereas Gaussian suppression has exponent
+at most $-c(d-e)^24^eJ_e^2$. Split the sum into $e\le d/2$,
+$d/2<e<d$, and $e>d$. In the first range even the smallest fixed
+$e$ gives a negative quadratic in $d$, dominating $d\log d$.
+The second has suppression at least $\exp(-c4^{d/2})$; in the
+third the amplitudes decrease and the Gaussian suppression is
+stronger still. Polynomial factors and the coefficient sum do not
+change these conclusions. Reflected bands are farther away.
+
+For $m=m_d=O(\log d)$, the negative-half-line exponential series of
+tanh gives
+\[
+ \sup_{u\le-4d+1}|\tanh^{(m)}u|
+ \le C2^m e^{-8d+2}.
+\]
+Indeed the differentiated series is bounded by
+$2^{m+1}\sum_{n\ge1}n^me^{-(8d-2)n}$, whose first term dominates
+uniformly for large $d$ since $m=o(d)$. The tanh contribution to
+the finite difference is at most
+$C\Delta_d^m m^{-m}e^{-8d}$. Dividing by
+\eqref{eq:all-derivative-amplitude} bounds its relative size by
+\[
+ C\tau^{-1}2^{-2d-3m+14}m^{-m}e^{-8d}=o(1).
+\]
+We therefore retain the uniform decoding estimate
+$F_d(c_{d,k})=\delta_d(f_d(k)+o(1))$.
+
+The first layer has $m_d+1$ neurons and evaluates these query
+points. The next layer uses binomial coefficients of magnitude at
+most $2^{m_d}=O(d)$. Set the amplifier gain
+\[
+ a_d=2^{m_d-2}=\Theta(d).
+\]
+Exactly $d+1$ scalar amplification layers give ideal final amplitude
+\[
+ \delta_da_d^{d+1}=\tau2^{-16}=: \rho.
+\]
+Their ideal preactivation amplitudes form a geometric sequence with
+sum at most $2\rho$, since $a_d\ge2$. The estimate
+\eqref{eq:taylor} therefore gives a uniform $O(\rho)$ relative-error
+bootstrap, independent of the growing gain. Choosing $\tau$ small
+keeps every actual preactivation below $2\rho$; a fixed readout
+$2/\rho$ gives margin greater than one. Counting the query layer,
+combination layer, $d+1$ amplifiers, and readout gives $L_d=d+4$.
+The amplifier weights are still $O(d)$. This proves the teacher
+resource bounds. Rounding its coefficients to $O(d\log d)$ bits
+preserves the margin: the whole propagation gain is at most
+$\exp(O(d\log d))$.
+
+\subsection{Cold and fixed-gap posterior bounds}
+
+Let $a>0$ be the hard-product exponent in the proof of
+Lemma~\ref{lem:hard}. Since $L_d=d+4$, the original fixed-gain
+memorizer applies. Set
+\[
+ q=\exp(a/100),\qquad \alpha=c_0(q-1),
+\]
+with the same sufficiently small constant $c_0$ as in
+Lemma~\ref{lem:memorizer}. Both are fixed, and
+$q^{L_d}=\exp(ad/100+O(1))$.
+The relative-error sum is still $O(\alpha/(q-1))$, hence
+uniformly small. The first scalar energy is at most one: its
+decaying factor is
+\[
+ q^{-2(L_d-2)}=\exp(-ad/50+O(1)),
+\]
+whereas \eqref{eq:B0} gives $\log B_0\le3cd+O(\log d)$.
+Choose $c<a/1000$. The witness energy satisfies
+\begin{equation}\label{eq:all-derivative-memorizer}
+ K_d\le q^2L_d+O(1).
+\end{equation}
+The cold posterior argument remains valid at each fixed
+architecture. Arithmetic--geometric mean bounds its unit-margin
+representative product by
+\[
+ \exp\{ad/100+O(1)\}\le e^{ad}
+\]
+for all large $d$. This is the same hard-table threshold as before.
+
+For the actual fixed-gap scales, Lemma~\ref{lem:perturb} and
+Proposition~\ref{prop:finite} apply with the energy in
+\eqref{eq:all-derivative-memorizer}. Since $L_d=d+4$ and
+$q^{L_d}=\exp(ad/100+O(1))$, the inverse perturbation tolerance
+remains $\exp(O(d))$ without further changes. The Gaussian bulk
+constant is polynomial in $d,L_d$, and the memorizer width
+in~\eqref{eq:MB} is $\exp(O(d))$ uniformly over $n\le e^{cd}$.
+Thus every $N\ge\exp(C_\zeta d)$ meets the finite-scale
+condition~\eqref{eq:width}, for each fixed gap $\zeta=\gamma-1>0$.
+The posterior product bound remains below $e^{ad}$; the hard-table
+and Gibbs-to-confidence calculation gives the same failure rate
+$139/1024$.
+
+\subsection{The critical endpoint}
+
+The modified activation satisfies the fixed-activation hypotheses
+of Appendix~\ref{ac-appendix}: the same shape and weighted estimates,
+bounded derivatives through order five, and the strict scalar
+potential obtained by choosing $\tau$ sufficiently small. Therefore
+its finite-width target-mass and canonical-circuit results apply
+with constants depending only on this fixed activation.
+
+For $L_d=d+4$ and $n\le e^{cd}$, reducing $c$ makes the depth
+condition $L_d\ge C\log(d+n+L_d)$ hold for all large $d$.
+A further reduction makes the posterior circuit ceiling
+$\poly(d+n+L_d)$ at most
+$2^{d/4}$. The width threshold
+$2^{Cd}(d+n+L_d)^C$ is still at most $\exp(C'd)$.
+The hard-table and confidence calculation is unchanged. This
+completes the proof of Theorem~\ref{thm:all-derivatives}.
+
+\subsection{Quantitative derivative bounds and numerical evaluation}
+
+The distinction between bounded derivatives of each order and a
+quantitative bound on their growth is important here.
+
+\begin{proposition}\label{prop:gevrey-evaluation}
+Suppose a real activation satisfies, for fixed constants $C,A\ge1$
+and finite $s\ge1$,
+\[
+ \sup_{u\in\R}|\phi^{(j)}(u)|\le CA^j(j!)^s
+ \qquad(j\ge0).
+\]
+On dyadic inputs of bit length $b$ in $[-R,R]$, it has nonuniform
+Boolean circuits approximating its value to error $2^{-p}$, of
+size polynomial in $R+1$, $p+1$, and $b+1$. The polynomial may
+depend on $C,A,s$. No efficient uniform procedure for computing
+the circuit's coefficients is assumed.
+\end{proposition}
+\begin{proof}
+Replace $s$ by the integer $s_0=\lceil s\rceil$, and choose an
+integer upper bound for $A$. For an integer $n$, partition the
+interval into pieces of radius at most
+$h=(2An^{s_0-1})^{-1}$. Taylor expansion of degree $n-1$ at the
+center of a piece has remainder at most
+\[
+ \frac{CA^n(n!)^{s_0}}{n!}h^n
+ \le C(Ahn^{s_0-1})^n=C2^{-n}.
+\]
+Take $n=O(p+\log C+1)$, with enough fixed slack. There are
+$O((R+1)n^{s_0-1})$ pieces. Store their centers and Taylor
+coefficients as nonuniform circuit constants. The coefficients
+have logarithmic magnitude $O(n\log(n+1))$, and the local
+argument has magnitude at most one. Rounding each coefficient
+to absolute error $2^{-p}/(8n)$ controls the total coefficient
+error. Polynomially many additional bits suffice for the dyadic
+arithmetic, interval selection, and evaluation of each polynomial.
+All sizes are polynomial in the displayed resources.
+\end{proof}
+
+This includes a global finite-order Gevrey bound. A bounded
+holomorphic extension to a fixed-width strip is another sufficient
+condition, by Cauchy estimates. Such conditions cannot hold for
+the constructed activation: simulating its polynomial-resource
+teacher at precision $O(d\log d)$ would give polynomial-size
+Boolean circuits for the circuit-hard $f_d$. Thus the new variant
+still contains computationally expensive information in its
+activation primitive. It is not a counterexample for a standard
+efficiently evaluable activation or for exact tanh.

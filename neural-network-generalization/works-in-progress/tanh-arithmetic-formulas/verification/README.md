@@ -24,3 +24,7 @@ The [proof-note guide](../research-notes/gaussian-controls-guide.md) maps the co
 A [fresh independent challenge audit](independent-pnc1-challenge.md) reconstructed the main paper without relying on earlier verdicts and found no substantive gap. It includes an independent direct rational construction for the constant-gap majority step. This is an additional conventional mathematical check, not Lean verification.
 
 The [non-Gaussian controls companion](../non-gaussian-controls.pdf) has its own [complete manuscript and component audit record](non-gaussian-controls/README.md). It covers specified controlled feature paths, including arbitrary Gaussian layers, and does not establish the full critical-posterior converse. It is not Lean verified.
+
+## Fourier-increment activation extension
+
+The [assembled appendix audit](fourier-increment-low-product-compiler-independent-audit.md) checks the extension to normalized erf, arctan, softsign, and the stated Fourier class. It covers the generic width-compression changes, mixed activation normal form, deterministic spectral approximation, internal scale bounds, and polynomial-bit arithmetic circuits. The [research derivation](../research-notes/fourier-increment-low-product-compiler.md) records the development. This structural extension does not import a new posterior ceiling or resolve the critical conditional-tilt problem.

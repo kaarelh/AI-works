@@ -1,0 +1,499 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,microtype,xurl}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={A Wasserstein lower bound for local group-product networks},pdfauthor={ChatGPT-6 Astra, Kaarel Hänni, Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}
+\newcommand{\R}{\mathbb R}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\PF}{P_{\mathrm F}}
+\newcommand{\W}{W_2}
+\newcommand{\cP}{\mathcal P}
+\newcommand{\ent}{\mathcal H}
+\title{A Wasserstein lower bound for local group-product networks}
+\author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob}
+\date{25 October 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+Consider a network computing a Boolean predicate of an ordered product of
+$n$ letters in a fixed finite group. Suppose its physical layers merge
+contiguous subwords through successive local modules, with disjoint data
+channels between different modules in each layer band. Internal states may
+retain the entire subword, have arbitrary dimension and precision, and use
+arbitrary fixed-seed estimator features. No internal margin or product-state
+encoding is assumed. We prove that the product of the layer Frobenius norms
+is at least a constant times the exponential of one half the accumulated
+entropy of the subword partitions. If every merge has arity at most $b$, this
+is at least
+$\exp((\log n)^2/(4\log b)+(\log n)/4)$, up to the stated input and margin
+factor, for unbalanced as well as balanced hierarchies. The proof uses
+Wasserstein distances between state distributions conditioned on the group
+product. The lower bound concerns this physical architecture. It also applies
+to local parity networks, although parity has a shallow polynomial-product
+realization. It is therefore neither an intrinsic function-norm lower bound
+nor a Bayesian sample lower bound.
+\end{abstract}
+
+\section{Purpose and the physical restriction}
+
+A bounded-width branching program can multiply letters from a fixed finite
+group in linear time. A balanced arithmetic formula can do the same with
+polynomial size and logarithmic depth. These observations do not by themselves
+supply a tanh network with small product of layer Frobenius norms: a physical
+network must transmit its intermediate states through its actual matrices.
+The issue is especially visible in local multiplication trees, which repeatedly
+maintain many independent subword computations in parallel.
+
+One possible response is to change the state code. A module might use a
+high-dimensional code, keep auxiliary information about the original subword,
+or store random-estimator values whose mean represents its group product.
+The theorem below permits all such deterministic boundary states. Its
+restriction is on dataflow: before their designated merge, different subwords
+have disjoint data-dependent channels. Each merge band consists of at least
+one actual matrix layer, and every layer that carries the states is charged.
+
+This distinction matters. A free relabeling of two vectors as one concatenated
+vector is not an additional physical layer. Nor may one factor a global linear
+map virtually, assign the factors to an invented tree, and charge the resulting
+logical depth. Conversely, arbitrary depth \emph{inside} a genuine local band
+is permitted. The lower bound will not depend on that depth.
+
+\subsection{Inputs and target}
+
+Fix a finite group $G$ and $n\ge2$. The input letters $g_1,\ldots,g_n$
+range independently over $G$. Letter $i$ is supplied through a fixed encoding
+$E_i:G\to\R^{s_i}$. The principal case is an injective Boolean encoding,
+$E_i(G)\subseteq\{-1,1\}^{s_i}$. A single augmented constant coordinate
+may be provided in addition, as in the usual bias-free tanh architecture.
+
+Fix a nonconstant predicate $f:G\to\{-1,1\}$, and put
+\[
+ p=\frac{|\{g\in G:f(g)=-1\}|}{|G|}\in(0,1).
+\]
+The network output $z$ is required to satisfy
+\begin{equation}\label{eq:margin}
+ f(g_1\cdots g_n)z(g_1,\ldots,g_n)\ge1
+ \qquad\text{for every }(g_1,\ldots,g_n)\in G^n.
+\end{equation}
+The output magnitude may depend on the whole word. Only its required sign
+depends on the group product. If the network is defined on a larger Boolean
+cube, \eqref{eq:margin} is needed only on valid encoded words. In particular,
+any full-cube extension satisfying the margin is covered.
+
+Uniform letters are a device in the proof, used to define conditional state
+distributions. The theorem is a deterministic representation statement, not
+a learning guarantee for a specified sampling law.
+
+\subsection{Partitions, bands, and arbitrary boundary codes}
+
+Let
+\[
+ \cP_0,\cP_1,\ldots,\cP_T
+\]
+be successive partitions of $\{1,\ldots,n\}$ into contiguous intervals.
+The first partition consists of singletons, the last consists of the whole
+word, and each partition coarsens the preceding one. A block in $\cP_j$
+is a parent; the consecutive blocks of $\cP_{j-1}$ that it contains are
+its children. Unary carry modules are allowed.
+
+At the cut associated with a block $v$, let $e_v(w_v)\in\R^{r_v}$ denote
+its boundary code, where $w_v$ is the complete ordered subword in that block.
+It is an arbitrary deterministic function of that subword. It may retain every
+original letter and arbitrary auxiliary values. There is no assumption that
+it is a function only of the product of the subword. The initial singleton
+codes are the prescribed encodings $E_i$.
+
+The bands, in order, partition all actual matrix layers preceding the final
+readout. Each band is nonempty and consists of consecutive layers; no
+physical layer is reused or omitted. Within band $j$, different parent modules have disjoint
+data-dependent channels. The first matrix of each parent module receives
+only the boundary codes of its children; subsequent matrices receive only
+that module's data-dependent channels. Shared input-independent constants
+are allowed. They may be treated as biases when deriving a lower bound,
+although their actual weights are included in the network's norm.
+
+All activations are coordinatewise $1$-Lipschitz. They may differ between
+neurons and layers. Tanh is a special case; zero preservation is not needed
+for the proof. The final readout is linear,
+\[
+ z=v^\top e_{\mathrm{root}}+c.
+\]
+Its constant can be supplied through ordinary charged constant channels.
+Write
+\[
+ \PF=\prod_{\ell}\norm{W_\ell}_{\mathrm F}
+\]
+for the product over all actual weight matrices, including the readout.
+Any additional charged constant weights only increase the lower estimates
+used below. There are no uncharged input-dependent bypasses.
+
+\section{The entropy-area theorem}
+
+Give every block $u$ mass
+\[
+ \mu_u=|u|/n.
+\]
+At each cut these masses form a probability vector. Define its entropy in
+natural units by
+\[
+ \ent(\cP_j)=-\sum_{u\in\cP_j}\mu_u\log\mu_u.
+\]
+For the input encodings, set
+\[
+ a_i^2=\E_{g\sim\mathrm{Unif}(G)}
+       \norm{E_i(g)-\E E_i(g)}_2^2,
+ \qquad A_0=\prod_{i=1}^n a_i^{1/n}.
+\]
+Whenever \eqref{eq:margin} is realizable in the stated architecture, all
+$a_i$ are positive, as will follow from the proof. For Boolean $s_i$-bit
+encodings, $a_i\le\sqrt{s_i}$.
+
+\begin{theorem}[Entropy accumulated across physical bands]\label{thm:entropy}
+Every network satisfying the preceding architecture assumptions and
+\eqref{eq:margin} obeys
+\begin{equation}\label{eq:entropy-bound}
+ \PF\ge\frac{2\sqrt{p(1-p)}}{A_0}
+   \exp\!\left(\frac12\sum_{j=1}^T\ent(\cP_{j-1})\right).
+\end{equation}
+Internal dimensions, code precision, retained history, and module depths
+are unrestricted. Every term in the entropy sum corresponds to a nonempty
+band of actual charged matrix layers.
+\end{theorem}
+
+The theorem separates two effects. Changes in the numerical scale of a
+boundary code will telescope out. The entropy of the number and sizes of
+simultaneously separate subword computations remains. The next corollary
+makes this quantitative without requiring a balanced tree.
+
+\begin{corollary}[Bounded merge arity]\label{cor:arity}
+Suppose every parent has at most $b$ children, where $2\le b\le n$. Then
+\begin{equation}\label{eq:arity-bound}
+ \PF\ge\frac{2\sqrt{p(1-p)}}{A_0}
+   \exp\!\left(\frac{(\log n)^2}{4\log b}+\frac{\log n}{4}\right).
+\end{equation}
+For a complete $b$-ary tree with $n=b^h$, this is
+\[
+ \PF\ge\frac{2\sqrt{p(1-p)}}{A_0}\,b^{h(h+1)/4}.
+\]
+\end{corollary}
+
+For fixed arity the product is at least $\exp(\Omega((\log n)^2))$.
+For arity of order $\log n$, the corresponding lower bound is
+\[
+ \exp\!\bigl(\Omega((\log n)^2/\log\log n)\bigr).
+\]
+When $b=n$ and there is only one band, the bound is only a constant times
+$\sqrt n$. That case does allow an arbitrary global network inside the one
+root band; no repeated local hierarchy is being imposed.
+
+\section{Conditional Wasserstein signals}
+
+For two finitely supported probability laws $\nu,\nu'$ on a Euclidean
+space, their quadratic Wasserstein distance is
+\[
+ \W(\nu,\nu')^2
+   =\min_{\pi\in\Pi(\nu,\nu')}
+          \int\norm{x-y}_2^2\,d\pi(x,y),
+\]
+where $\Pi(\nu,\nu')$ is the set of couplings with the stated marginals.
+The minimum exists. We use two elementary facts: applying an $L$-Lipschitz
+map to both sides multiplies this squared distance by at most $L^2$;
+and coupling mixtures with the same mixing variable bounds their squared
+distance by the average squared distances of the coupled components.
+Both facts follow by constructing the indicated coupling.
+
+For a block $u$ and $g\in G$, let $\nu_{u,g}$ be the law of its boundary
+code under uniform subwords conditioned on their product being $g$. Every
+group product has positive probability, and the code laws have finite
+support. Define
+\begin{equation}\label{eq:signal}
+ a_u^2=\frac1{2|G|^2}\sum_{g,h\in G}
+                      \W(\nu_{u,g},\nu_{u,h})^2.
+\end{equation}
+The same notation agrees with the earlier input definition: at a leaf,
+$\nu_{i,g}$ is the point mass at $E_i(g)$, and the average squared distance
+of two independent points, divided by two, is their variance.
+
+The conditional laws couple away arbitrary variation within a fixed product
+class. No decoding map from code to product is needed. This is the reason the
+argument permits complete histories and auxiliary estimator values.
+
+\begin{lemma}[One-child contraction]\label{lem:contraction}
+Suppose a parent module has code map
+$F(e_1(w_1),\ldots,e_m(w_m))$. If its Lipschitz constant when only child
+$i$'s code varies is at most $L_i$, then
+\[
+ a_{\mathrm{parent}}\le L_i a_i.
+\]
+\end{lemma}
+\begin{proof}
+We first give the binary case, varying the left child. Conditional on the
+parent product being $a$, its complete right subword remains unconditionally
+uniform. Indeed the independent left product is uniform on $G$, so each
+fixed right subword contributes the same factor $1/|G|$ to the conditioning
+probability. If the right subword has product $h$, the left product must be
+$a h^{-1}$.
+
+To couple parent code laws for products $a$ and $b$, choose the same uniform
+right subword in both copies. Conditional on that word, couple the two left
+codes optimally under
+\[
+ \nu_{\mathrm{left},a h^{-1}},\qquad
+ \nu_{\mathrm{left},b h^{-1}}.
+\]
+Apply $F$ to these codes and the shared right code. This constructs a coupling
+with the desired parent marginals and gives
+\[
+ \W(\nu_{\mathrm{parent},a},\nu_{\mathrm{parent},b})^2
+ \le L_i^2\E_{w_{\mathrm{right}}}
+       \W(\nu_{\mathrm{left},a h^{-1}},
+           \nu_{\mathrm{left},b h^{-1}})^2.
+\]
+For every fixed $h$, right translation sends a uniform pair $(a,b)$ to a
+uniform pair $(a h^{-1},b h^{-1})$. Average the last inequality over $a,b$
+and use \eqref{eq:signal}.
+
+For an arbitrary child of an $m$-ary parent, condition on all the other full
+subwords and denote the products before and after that child by $L$ and $R$.
+The other subwords again remain jointly uniform under parent-product
+conditioning, because the missing child's product is independent uniform.
+Its required product is $L^{-1}aR^{-1}$. The same construction and the
+bijection $a\mapsto L^{-1}aR^{-1}$ prove the result.
+\end{proof}
+
+\begin{remark}
+The parent code need not be constant on product classes, and its two
+conditional laws need not have the same covariance or mean. The coupling
+uses the full conditional laws. Replacing them by the means alone would
+not justify the lemma for history-retaining states.
+\end{remark}
+
+\begin{lemma}[The output margin supplies a signal]\label{lem:root}
+The root signal is positive, and
+\[
+ \norm v_2\ge\frac{2\sqrt{p(1-p)}}{a_{\mathrm{root}}}.
+\]
+\end{lemma}
+\begin{proof}
+For opposite labels $f(g)\ne f(h)$, every code in the support of
+$\nu_{\mathrm{root},g}$ and every code in the support of
+$\nu_{\mathrm{root},h}$ have readout values separated by at least two.
+Their Euclidean separation is therefore at least $2/\norm v_2$. Every
+coupling has at least this squared displacement, so
+\[
+ \W(\nu_{\mathrm{root},g},\nu_{\mathrm{root},h})^2
+       \ge4/\norm v_2^2.
+\]
+The fraction of ordered opposite-label pairs is $2p(1-p)$. The factor
+$1/2$ in \eqref{eq:signal} gives
+$a_{\mathrm{root}}^2\ge4p(1-p)/\norm v_2^2$.
+\end{proof}
+
+Lemma~\ref{lem:contraction} propagates positivity from the root to every
+preceding cut and every leaf. All signal ratios below are therefore legitimate.
+The readout can alternatively be included in the last root band; then its
+scalar output has signal at least $2\sqrt{p(1-p)}$.
+
+\section{Physical norms and the entropy telescope}
+
+Fix one band. For parent module $u$, partition its first variable-input
+matrix into blocks $B_{u,i}$, one for each child. Let $T_u$ be the product of
+the Frobenius norms of its remaining variable-channel matrices, with the
+empty product equal to one. Coordinatewise activation contractions and the
+operator-norm bound by Frobenius norm give a one-child Lipschitz constant
+at most $T_u\norm{B_{u,i}}_{\mathrm F}$. Consequently
+\begin{equation}\label{eq:module}
+ P_u^2\ge T_u^2\sum_{i\text{ child of }u}
+                   \norm{B_{u,i}}_{\mathrm F}^2
+       \ge\sum_{i\text{ child of }u}(a_u/a_i)^2,
+\end{equation}
+where $P_u$ is the product of the module's variable-channel Frobenius norms.
+Any constants omitted from this estimate can only increase actual matrix
+norms. Shared input-independent channels may be frozen as biases when
+bounding changes in the variable inputs.
+
+At physical layer $t$ of the band, channel disjointness implies
+\[
+ \norm{W_t}_{\mathrm F}^2\ge\sum_u
+                    \norm{B_{u,t}}_{\mathrm F}^2.
+\]
+Expanding a product of sums of nonnegative numbers gives
+\begin{equation}\label{eq:band}
+ P_{\mathrm{band}}^2
+ \ge\prod_t\sum_u\norm{B_{u,t}}_{\mathrm F}^2
+ \ge\sum_u\prod_t\norm{B_{u,t}}_{\mathrm F}^2
+ =\sum_u P_u^2
+ \ge\sum_{i\to u}(a_u/a_i)^2.
+\end{equation}
+This is why arbitrary additional physical depth inside a local band does not
+weaken the conclusion. The estimate only requires the band to be nonempty
+and all its variable-channel matrices to be charged.
+
+\begin{proof}[Proof of Theorem~\ref{thm:entropy}]
+Apply weighted arithmetic--geometric mean to the last sum in
+\eqref{eq:band}, using weights $\mu_i$ on the child edges. These weights sum
+to one because the child blocks form the pre-band partition. Thus
+\begin{align*}
+ \log P_{\mathrm{band}}
+ &\ge\frac12\sum_{i\to u}\mu_i
+                   \log\frac{(a_u/a_i)^2}{\mu_i}\\
+ &=\sum_{i\to u}\mu_i(\log a_u-\log a_i)
+           +\frac12\ent(\cP_{\mathrm{pre}}).
+\end{align*}
+For each parent, the child masses sum to its own mass. Hence, writing
+$A_j=\prod_{u\in\cP_j}a_u^{\mu_u}$, the first term is exactly
+$\log A_j-\log A_{j-1}$. Sum over bands. The result is
+\[
+ \prod_j P_{\mathrm{band},j}
+ \ge\frac{a_{\mathrm{root}}}{A_0}
+           \exp\!\left(\frac12\sum_j\ent(\cP_{j-1})\right).
+\]
+Multiply by the readout bound in Lemma~\ref{lem:root}. All internal signal
+scales cancel, proving \eqref{eq:entropy-bound}.
+\end{proof}
+
+\begin{proof}[Proof of Corollary~\ref{cor:arity}]
+The entropy chain rule for one coarsening gives
+\[
+ \ent(\cP_{j-1})-\ent(\cP_j)
+ =\sum_{u\in\cP_j}\mu_u
+       \ent\bigl((\mu_i/\mu_u)_{i\text{ child of }u}\bigr)
+ \le\log b.
+\]
+Initial entropy is $A=\log n$ and final entropy is zero. With $B=\log b$
+and $r=\lceil A/B\rceil$, the sum of pre-band entropies is at least
+\[
+ \sum_{j=0}^{r-1}(A-jB)
+   =rA-\frac{Br(r-1)}2
+   \ge\frac{A^2}{2B}+\frac A2.
+\]
+For the last inequality, set $r=A/B+\theta$, $0\le\theta<1$; the difference
+is $B\theta(1-\theta)/2\ge0$. Substitute this estimate into
+\eqref{eq:entropy-bound}. When $n=b^h$ and the tree is balanced, the cut
+entropies are $h\log b,(h-1)\log b,\ldots,\log b$, giving the displayed
+exact exponent.
+\end{proof}
+
+\begin{corollary}[Large interaction blocks must appear early]\label{cor:early}
+Fix $G,f$ and bounded-size Boolean leaf encodings. Suppose networks in this
+physical hierarchy satisfy $\PF\le C_0n^K$ for fixed $C_0>0$ and $K\ge0$. For every fixed
+$0<\varepsilon<1$, a block containing at least $n^{1-\varepsilon}$ letters
+must appear within $O((K+1)/\varepsilon)$ charged bands.
+\end{corollary}
+\begin{proof}
+Theorem~\ref{thm:entropy} gives
+$\sum_j\ent(\cP_{j-1})\le2K\log n+O(1)$. Thus only
+$O((K+1)/\varepsilon)$ pre-band cuts can have entropy at least
+$\varepsilon\log n$. If the hierarchy terminates earlier, its root already
+has the required size. Otherwise some cut within that many bands has entropy
+at most $\varepsilon\log n$. For any probability vector,
+$\ent(\mu)\ge\log(1/\max\mu)$, so that cut has a block of mass at least
+$n^{-\varepsilon}$.
+\end{proof}
+
+The conclusion concerns this hierarchy of physical interactions. It does not
+assign an intrinsic interaction depth to an arbitrary fully connected network.
+
+\section{Boolean examples and limits of the result}
+
+\subsection{A fixed noncommutative group}
+
+Take $G=A_5$, the even permutations of five objects, and define $f(g)=-1$
+exactly when $g$ is a three-cycle. There are $20$ three-cycles among the
+$60$ group elements, so $p=1/3$. Any injection of $A_5$ into six Boolean
+bits gives $A_0\le\sqrt6$. Therefore every network for this predicate with
+the stipulated maximum-arity-$b$ physical hierarchy satisfies
+\[
+ \PF\ge\frac{2}{3\sqrt3}
+       \exp\!\left(\frac{(\log n)^2}{4\log b}+\frac{\log n}{4}\right).
+\]
+The claim holds for every Boolean extension on the unused four letter codes.
+It does not prove that an unrestricted network for this word predicate must
+have the displayed product.
+
+The theorem rules out improving a local multiplication implementation merely
+by distorting its group-state codes, keeping extra history, or placing more
+hidden layers inside its local modules. Fixed-seed random-estimator features
+are also deterministic subword codes and are covered when implemented through
+the same charged dataflow. Ordinary arithmetic work is not being identified
+with physical Frobenius product.
+
+\subsection{Parity proves that the lower bound is architectural}
+
+Take $G=\mathbb Z/2\mathbb Z$, encode each letter by one sign, and let $f$
+be parity. Then $p=1/2$ and $A_0=1$. A binary local physical hierarchy must
+have $\PF\ge2^{h(h+1)/4}$ for $n=2^h$. Yet parity has a shallow tanh
+realization with polynomial product. Here is a direct construction.
+
+For $x\in\{-1,1\}^n$, put $s(x)=\sum_i x_i$,
+$\tau_j=-n+2j-1$, and $K=\log(8n)$. Use hidden neurons
+\[
+ t_j(x)=\tanh(K(s(x)-\tau_j)),\qquad j=1,\ldots,n,
+\]
+with all shifts supplied by the augmented constant input. Add a constant
+neuron with value $c_0=\tanh1$. If $m$ coordinates are positive, then the
+ideal signs $\eta_j$ equal $+1$ for $j\le m$ and $-1$ otherwise, and
+\[
+ 1+\sum_{j=1}^n(-1)^j(1+\eta_j)=(-1)^m.
+\]
+Choose the linear readout
+\[
+ z(x)=2(-1)^n\left[1+\sum_{j=1}^n(-1)^j(1+t_j(x))\right],
+\]
+representing its constant term through $c_0$. Every preactivation before the
+factor $K$ is an odd integer. Hence
+$|t_j-\eta_j|\le2e^{-2K}$, and the output differs from
+$2\prod_i x_i$ by at most $4ne^{-2K}<1$. Its signed margin exceeds one.
+The first-layer Frobenius norm is $O(Kn^{3/2})$, including the shifts, and
+the readout norm is $O(\sqrt n)$. Thus
+\[
+ \PF=O(n^2\log(n+1)).
+\]
+Its first hidden features access all input letters at once. It is a single
+global merge, not the prescribed repeated local hierarchy, so there is no
+contradiction.
+
+\subsection{What remains outside the theorem}
+
+Nonlocal interactions before a designated merge, globally mixed feature maps,
+and other organizations of the network are not covered. Neither are
+uncharged external rereads of input letters at later steps. If such values
+are physically carried within child boundary states, they are covered as
+retained history and their carrying matrices must be charged.
+
+Finite ensembles are ordinary deterministic code vectors. The proof also
+extends to deterministic Hilbert-valued boundary codes and charged
+Hilbert--Schmidt maps whenever these objects define the physical realization;
+the conditional distributions still have finite support over the finite input
+set. It does not assert a result about arbitrary stochastic networks with
+unspecified shared randomness.
+
+The coupling lemma can similarly be formulated for finite operations that
+are bijective in each argument and preserve uniform measure. No additional
+application is needed here. The group case already shows the limitation of
+local probabilistic branching-program implementations without introducing
+internal robustness assumptions.
+
+Finally, no prior distribution occurs in the proof. The Gaussian Bayesian
+learner in the motivating problem is free to use fully connected global
+features. An architecture-specific representation lower bound, even one
+valid for arbitrary internal histories, does not establish a lower bound
+for its posterior confidence or sample complexity.
+
+\section*{Verification and provenance}
+
+The conditional-law coupling, physical-band charging, entropy telescope,
+and constants have conventional independent mathematical checks. This note
+is not a Lean formalization. Its purpose is to retain a precise obstruction
+to local compilation methods while leaving the unrestricted representation
+and Bayesian questions open.
+
+\end{document}
