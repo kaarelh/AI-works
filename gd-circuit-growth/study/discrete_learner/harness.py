@@ -149,18 +149,24 @@ def report(res, file=None):
         fmax = np.nanmax(np.array(r["flops"])) / res["gd_flops"]; flr.append(fmax)
         f = lambda v: "never" if not np.isfinite(v) else f"{v:.0f}"
         L.append(f"| {name} | {f(ln)} | {f(nn)} | {lr:+.2f} | {e_l} ; {e_n} | {fmax:.1e} |")
-    cells, worse = 0, []
+    cells, worse, sig = 0, [], []
     for name, r in res["fns"].items():
         if r["nn_err"] is None:
             continue
-        el, en = np.nanmean(np.array(r["err"]), 1), np.nanmean(np.array(r["nn_err"]), 1)
+        EL, EN = np.array(r["err"]), np.array(r["nn_err"])
+        el, en = np.nanmean(EL, 1), np.nanmean(EN, 1)
         for i, n in enumerate(ns):
-            if n in NS and not np.isnan(en[NS.index(n)]):
+            j = NS.index(n) if n in NS else None
+            if j is not None and not np.isnan(en[j]):
                 cells += 1
-                if el[i] > en[NS.index(n)] + 0.02:
-                    worse.append(f"{name}@{n}: {el[i]:.2f} vs {en[NS.index(n)]:.2f}")
+                se = np.sqrt(np.nanvar(EL[i], ddof=1) / EL.shape[1] + np.nanvar(EN[j], ddof=1) / np.sum(~np.isnan(EN[j])))
+                if el[i] > en[j] + 0.02:
+                    worse.append(f"{name}@{n}: {el[i]:.2f} vs {en[j]:.2f}")
+                    if el[i] - en[j] > 2 * se:
+                        sig.append(f"{name}@{n}")
     L += ["", f"Cells (target, n) where the learner's seed-mean test error exceeds the networks' by more than 0.02: "
-          f"{len(worse)} of {cells}" + (" (" + "; ".join(worse) + ")" if worse else "") + "."]
+          f"{len(worse)} of {cells}" + (" (" + "; ".join(worse) + ")" if worse else "") + ". "
+          f"Of these, by more than 2 standard errors of the seed-to-seed spread: {len(sig)}" + (" (" + ", ".join(sig) + ")" if sig else "") + "."]
     L += ["", f"Mean log2 ratio over targets where both learn: {np.mean(ratios):+.2f} (negative = learner needs less data). "
           f"Learner clearly better (ratio < -0.25 or networks never): {wins}; clearly worse: {losses}; of {len(res['fns'])}. "
           f"Largest compute used: {max(flr):.1e} of a GD run."]
@@ -169,4 +175,4 @@ def report(res, file=None):
         open(file, "a").write(txt + "\n\n")
     print(txt)
     return dict(mean_log2=float(np.mean(ratios)) if ratios else float("nan"), wins=wins, losses=losses, max_flops_ratio=float(max(flr)),
-                worse_cells=worse, cells=cells)
+                worse_cells=worse, worse_sig=sig, cells=cells)

@@ -10,29 +10,37 @@ least-squares fit on the features grown so far.  DFG does the same with exhausti
     r = y - (least-squares fit of y on the current features);  s = rms(r)
     candidate classes, each with its own count N (a union bound per class):
       global     every character chi_S, |S| <= K, over all d inputs (K = 4 in the first round, 3 after)  N = C(d, |S|)
+                 and in the first round degrees 5 and 6 on a subsample whose size the compute budget sets
       extension  S u {j} and S u {j, l} for current features S (any inputs j, l)                       N = #candidates
       local      every S inside V = inputs of the current features, |V| <= 12 (all degrees: junta completion)  N = C(|V|, |S|)
     accept S if |mean(r chi_S)| > c * s * sqrt(2 ln(4 K N / delta) / n)    (the noise of mean(r chi_S) is s / sqrt(n))
     BLOCK moves, for signal spread over many small coefficients that no single test sees:
       linear     all d inputs at once, if n |c_1|^2 / s^2 exceeds the chi^2_d tail at level delta          (halfspaces)
       quadratic  the top eigen-directions u of the residual pair matrix mean(r x x^T) (diagonal removed) whose
-                 eigenvalue clears the noise edge 2 s sqrt(d / n); features (u.x)^2 - |u|^2         (e.g. MAJ5 xor MAJ5)
+                 eigenvalue clears the noise edge 2 s sqrt(d / n) (a Wigner edge, so only for n >= 4 d);
+                 features (u.x)^2 - |u|^2                                                          (e.g. MAJ5 xor MAJ5)
     stop when nothing is accepted, or when the fit already has every training label's sign right
-  predict sign(least-squares fit)
+  predict sign(least-squares fit + kernel background, below)
 
 The noise level s falls as features are fit, so later (weaker) features become detectable: the 'noise-limited greedy
 growth' picture.  The readout is least squares, not the raw coefficients: on MAJ9 at n = 128 this alone takes the test
 error from 0.16 to 0.08, because the residual, not the label, sets the estimation noise.
 
-SMALL n.  With few points the union-bound test passes nothing (at n = 16 even a perfect single-input target fails it),
-and predicting a constant is worse than a guess.  For n <= 512, four variants are compared by 5-fold cross-validation:
-the default; 'forced' (if nothing passes, take the best-scoring global character anyway, at most twice); forced with
-c x 0.6; forced with all d linear inputs from the start (the kernel-like background).  The cost is included.
+SMALL n.  Two things keep DFG at least as good as the networks when n is tiny.  (i) A kernel background: the final
+predictor adds sum_i mean(r x_i) x_i, one Hebbian step on the residual over all d inputs (the networks' near-kernel
+part).  With no features this is the Hebbian classifier; once the features fit, it is ~0.  Least squares is kept to
+p <= n / 2 features (the linear block only if it fits), so it never sits at its interpolation peak.  (ii) With few
+points the union-bound test passes nothing (at n = 16 even a perfect single-input target fails it).  For n <= 512 a
+'forced' variant (if nothing passes, take the best-scoring global character anyway, at most twice) is compared with the
+default by cross-validation (10-fold for n <= 64, else 5-fold; forced is taken only if it is right on more held-out
+points than the default by over 2 sqrt(#points where they differ), a paired McNemar test; the folds skip the degree-5/6 search, the final fit does
+it).  The cost of the cross-validation is included.
 
 COMPUTE BUDGET.  The exhaustive searches are run on the first m training points, with m set so that each stays within a
 fixed fraction of one network run (harness.gd_flops): degree 4 in 25%, degree 3 in 3% per round, the two-input
-extensions in 3% per round (thresholds use m).  At d = 30 this never binds (m = n); at d = 60 and 120 it does.  A
-parity needs only ~2 ln(N) / rho^2 points to be found, so subsampling the search costs little there.
+extensions in 3% per round, degrees 5 and 6 (first round) in 3% each (thresholds use m).  At d = 30 this binds only
+for degrees 5 and 6 (m ~ 1400 and ~150); at d = 60 and 120 it binds for degree 4 too.  A parity needs only
+~2 ln(N) / rho^2 points to be found, so subsampling the search costs little there.
 Compute is counted in FLOPs (multiply-add = 2) and compared with one network run.
 """
 import itertools, math, numpy as np
@@ -41,6 +49,18 @@ from harness import gd_flops
 
 def _chi(X, S):
     return np.prod(X[:, list(S)], axis=1) if S else np.ones(len(X))
+
+
+def _table(X, d, k):
+    T = list(itertools.combinations(range(d), k)); I = np.array(T)
+    Z = np.ones((len(X), len(T)))
+    for q in range(k):
+        Z *= X[:, I[:, q]]
+    return T, Z
+
+
+def m_tab_cost(d, k1, k2):
+    return math.comb(d, k1) * k1 + math.comb(d, k2) * k2
 
 
 def _fwht(a):
@@ -55,33 +75,44 @@ def _fwht(a):
 class DFG:
     def __init__(self, K=4, K_later=3, c=1.0, delta=0.1, rounds=8, max_new=64, max_feats=256, max_ext_bases=32,
                  local_max=12, blocks=True, ridge=1e-3, budget=(0.25, 0.03, 0.03), noise="residual", readout="ls",
-                 small_n=True, cv_n=512, name=None):
+                 small_n=True, cv_n=512, K_hi=6, budget_hi=0.03, background=True, name=None):
         self.K, self.K_later, self.c, self.delta, self.rounds = K, K_later, c, delta, rounds
         self.max_new, self.max_feats, self.max_ext_bases, self.local_max = max_new, max_feats, max_ext_bases, local_max
         self.blocks, self.ridge, self.budget, self.noise, self.readout = blocks, ridge, budget, noise, readout
-        self.small_n, self.cv_n = small_n, cv_n
+        self.small_n, self.cv_n, self.K_hi, self.budget_hi, self.background = small_n, cv_n, K_hi, budget_hi, background
         self.name = name or f"dfg-c{c}" + ("" if blocks else "-noblocks")
 
     def fit(self, X, y, rng=None):
         """At n <= cv_n the fallbacks for small samples are compared by 5-fold cross-validation (see SMALL n)."""
         X = np.asarray(X, dtype=np.float64); y = np.asarray(y, dtype=np.float64); n = len(y)
-        variants = [(self.c, False, False), (self.c, True, False), (0.6 * self.c, True, False), (self.c, True, True)]
+        R = self.ridge
+        variants = [(self.c, False, False, R), (self.c, True, False, R)]
+        run = lambda v, A, b, hi=False: self._hebb(A, b) if v == "hebb" else self._fit(A, b, *v, hi=hi)
         if n > self.cv_n or not self.small_n:
-            return self._fit(X, y, *variants[0])
+            out = self._fit(X, y, *variants[0]); out["info"].update(variant=0); return out
         rng = rng if rng is not None else np.random.default_rng(0)
-        F = 5; fold = rng.permutation(n) % F; errs, fl = [], 0.0
+        F = 10 if n <= 64 else 5; fold = rng.permutation(n) % F; wrong, fl = [], 0.0
         for v in variants:
-            e = 0
+            e = np.zeros(n, bool)
             for f in range(F):
                 tr, te = fold != f, fold == f
-                o = self._fit(X[tr], y[tr], *v); fl += o["flops"]; e += int(np.sum(o["predict"](X[te]) != y[te]))
-            errs.append(e)
-        best = min(range(len(variants)), key=lambda i: (errs[i], i))
-        out = self._fit(X, y, *variants[best]); out["flops"] += fl
+                o = run(v, X[tr], y[tr]); fl += o["flops"]; e[te] = o["predict"](X[te]) != y[te]
+            wrong.append(e)
+        b, c_ = int(np.sum(wrong[0] & ~wrong[1])), int(np.sum(~wrong[0] & wrong[1]))
+        best = 1 if b - c_ > 2 * math.sqrt(b + c_) else 0              # forced only if it wins a paired (McNemar) test
+        errs = [int(w.sum()) for w in wrong]
+        out = run(variants[best], X, y, True); out["flops"] += fl
         out["info"].update(variant=best, cv_errs=errs)
         return out
 
-    def _fit(self, X, y, c, force, lin0):
+    @staticmethod
+    def _hebb(X, y):
+        """The kernel-like background alone: sign(mean(y) + sum_i mean(y x_i) x_i)."""
+        n, d = X.shape; w = X.T @ y / n; b = float(y.mean())
+        return dict(predict=lambda Z: np.where(np.asarray(Z, dtype=np.float64) @ w + b > 0, 1.0, -1.0), flops=2.0 * n * d,
+                    info=dict(size=d + 1, rounds=0, log=[]))
+
+    def _fit(self, X, y, c, force, lin0, ridge, hi=True):
         n, d = X.shape
         fl = [0.0]; GD = gd_flops(d); forced = [0]
         feats = [("chi", ())]; cols = [np.ones(n)]; have = {()}
@@ -89,7 +120,7 @@ class DFG:
 
         def lsfit():
             A = np.stack(cols, 1); p = A.shape[1]
-            G = A.T @ A + self.ridge * n * np.diag([0.0] + [1.0] * (p - 1)) + 1e-9 * np.eye(p)
+            G = A.T @ A + ridge * n * np.diag([0.0] + [1.0] * (p - 1)) + 1e-9 * np.eye(p)
             w = np.linalg.solve(G, A.T @ y); fl[0] += 2 * n * p * p + p ** 3 / 3 + 4 * n * p
             return w, y - A @ w
 
@@ -147,6 +178,21 @@ class DFG:
                     for i, j in list(zip(*np.where(np.abs(Mab) > t))) + [q]:
                         if i > b and j > i:
                             offer((a, b, int(i), int(j)), Mab[i, j], t)
+            # ---- higher degrees K < k <= K_hi (first round): coefficients of chi_{T1 u T2} for disjoint T1, T2 of degrees
+            #      ceil(k/2), floor(k/2), as one product of character tables on the first m points (m set by the budget)
+            if rnd == 0 and hi:
+                for k in range(self.K + 1, self.K_hi + 1):
+                    k1, k2 = (k + 1) // 2, k // 2; N1, N2 = math.comb(d, k1), math.comb(d, k2)
+                    m = min(n, int(self.budget_hi * GD / (2 * N1 * N2 + m_tab_cost(d, k1, k2))))
+                    if m < 64:
+                        continue
+                    T1, Z1 = _table(X[:m], d, k1); T2, Z2 = (T1, Z1) if k2 == k1 else _table(X[:m], d, k2)
+                    G = (Z1 * r[:m, None]).T @ Z2 / m; fl[0] += 2 * m * N1 * N2 + m * (N1 * k1 + N2 * k2)
+                    t = thr_m(math.comb(d, k), m)
+                    for p, q in zip(*np.where(np.abs(G) > t)):
+                        S = set(T1[p]) | set(T2[q])
+                        if len(S) == k:
+                            offer(tuple(sorted(S)), G[p, q], t)
             # ---- extensions of current character features by one or two inputs
             base = [(k, abs(wi)) for (kind, k), wi in zip(feats, w) if kind == "chi" and k]
             base = [k for k, _ in sorted(base, key=lambda kv: -kv[1])][: self.max_ext_bases]
@@ -180,21 +226,21 @@ class DFG:
                 lin = [i for i in range(d) if (i,) not in have and (i,) not in cand]
                 if lin:
                     T1 = n * float(np.sum(c1[lin] ** 2)) / s ** 2; k = len(lin); tt = math.log(1 / self.delta)
-                    if T1 > k + 2 * math.sqrt(k * tt) + 2 * tt or (lin0 and rnd == 0):
-                        blk.append(("linear", lin))
+                    if (T1 > k + 2 * math.sqrt(k * tt) + 2 * tt or (lin0 and rnd == 0)) and n >= 2 * (len(feats) + k):
+                        blk.append(("linear", lin))                       # (else the background carries it)
                 Ms = (M + M.T) / 2; np.fill_diagonal(Ms, 0.0)
                 for S in list(have) + list(cand):
                     if len(S) == 2:
                         Ms[S[0], S[1]] = Ms[S[1], S[0]] = 0.0
                 lam, U = np.linalg.eigh(Ms); fl[0] += 10 * d ** 3
                 edge = 2 * s * math.sqrt(d / n) * (1 + math.sqrt(2 * math.log(1 / self.delta) / d))
-                qs = [q for q in np.argsort(-np.abs(lam)) if abs(lam[q]) > edge][:4]
+                qs = [q for q in np.argsort(-np.abs(lam)) if abs(lam[q]) > edge][:4] if n >= 4 * d else []
                 if qs:
                     blk.append(("quad", [U[:, q].copy() for q in qs]))
             new = sorted(cand.items(), key=lambda kv: -kv[1][0])[: self.max_new]
             if force and not new and not blk and forced[0] < 2 and top[1] is not None:
                 new = [(top[1], (top[0], top[2]))]; forced[0] += 1       # nothing passed: take the best guess
-            room = self.max_feats - len(feats)
+            room = min(self.max_feats, n // 2) - len(feats)          # least squares with p <= n / 2
             if (not new and not blk) or room <= 0:
                 break
             for S, _ in new[:room]:
@@ -211,6 +257,7 @@ class DFG:
                                     blocks=[k for k, _ in blk]))
             w, r = lsfit(); info["rounds"] = rnd + 1
         F, W = list(feats), np.array(w)
+        bg = X.T @ r / n if self.background else np.zeros(d); fl[0] += 2 * n * d   # kernel background on the residual
         if self.readout == "coef":                                      # ablation: raw coefficients, no least squares
             W = np.array([float(np.mean(y * cl) / max(np.mean(cl * cl), 1e-12)) for cl in cols])
 
@@ -218,7 +265,7 @@ class DFG:
             Z = np.asarray(Z, dtype=np.float64); f = np.zeros(len(Z))
             for (kind, k), wi in zip(F, W):
                 f += wi * (_chi(Z, k) if kind == "chi" else (Z @ k) ** 2 - k @ k)
-            return f
+            return f + Z @ bg
 
         info["size"] = len(F); info["train_err"] = float(np.mean(np.where(value(X) > 0, 1, -1) != y))
         return dict(predict=lambda Z: np.where(value(Z) > 0, 1.0, -1.0), flops=fl[0], info=info)
