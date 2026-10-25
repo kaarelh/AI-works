@@ -55,8 +55,9 @@ def cells(L, ds):
         rel = (a - b) / max(b, 1e-3)
         verdict = "better" if (rel < -0.1 and b - a > 2 * se) else ("worse" if (rel > 0.1 and a - b > 2 * se) else "tie")
         nn, kind = n_for_err(nl, el, b)
+        fr = float(np.nanmax(np.array(rl["flops"], float)[i]) / np.nanmax(np.array(rm["flops"], float)[j]))
         out.append(dict(n=int(n), err_l=float(a), err_m=float(b), log2_ratio=float(np.log2(max(a, 0.002) / max(b, 0.002))),
-                        verdict=verdict, data_factor=nn / n if np.isfinite(nn) else float("inf"), df_kind=kind))
+                        verdict=verdict, data_factor=nn / n if np.isfinite(nn) else float("inf"), df_kind=kind, flops_frac=fr))
     return out
 
 
@@ -68,9 +69,11 @@ def summarize(L, names):
     v = [c["verdict"] for _, c in allc]
     df = [c["data_factor"] for _, c in allc if np.isfinite(c["data_factor"])]
     never = sum(1 for _, c in allc if not np.isfinite(c["data_factor"]))
+    ff = [c["flops_frac"] for _, c in allc if np.isfinite(c["flops_frac"])]
     return dict(cells=len(allc), better=v.count("better"), worse=v.count("worse"), tie=v.count("tie"),
                 mean_log2=float(np.mean(lr)), median_data_factor=float(np.median(df)) if df else float("nan"), never=never,
-                datasets=len(set(ds for ds, _ in allc)))
+                datasets=len(set(ds for ds, _ in allc)), max_flops=max(ff) if ff else float("nan"),
+                over_budget=sum(1 for f in ff if f > 1.0))
 
 
 def table(L, ds):
@@ -79,7 +82,7 @@ def table(L, ds):
     if rm is None:
         return f"*{ds}: MLP results missing*"
     nm, em, _ = curve(rm)
-    head = f"| n | MLP | {L} |" + "".join(f" {k} |" for k in REFS) + " verdict | data factor |"
+    head = f"| n | MLP | {L} |" + "".join(f" {k} |" for k in REFS) + " verdict | data factor | FLOPs / MLP run |"
     rows = [f"**{ds}**", "", head, "|" + "---|" * (head.count("|") - 1)]
     C = {c["n"]: c for c in (cells(L, ds) or [])}
     for j, n in enumerate(nm):
@@ -91,7 +94,7 @@ def table(L, ds):
         dfs = "–" if c is None else ("never" if not np.isfinite(c["data_factor"]) else
                                     (f"≤{c['data_factor']:.2f}" if c["df_kind"] == "le" else f"{c['data_factor']:.2f}"))
         rows.append(f"| {int(n)} | {em[j]:.4f} | {get(rl)} |" + "".join(f" {get(refs[k])} |" for k in REFS) +
-                    f" {c['verdict'] if c else '–'} | {dfs} |")
+                    f" {c['verdict'] if c else '–'} | {dfs} | {'–' if c is None else format(c['flops_frac'], '.2f')} |")
     return "\n".join(rows)
 
 
@@ -105,13 +108,14 @@ def main(learners):
          "boosting, default settings.", ""]
     for split, names in (("held-out", DATA.HELDOUT), ("dev", DATA.DEV)):
         L += [f"## Summary, {split} datasets", "",
-              "| learner | datasets | cells | better | tie | worse | mean log2(err / MLP err) | median data factor | MLP error never reached |",
-              "|---|---|---|---|---|---|---|---|---|"]
+              "| learner | datasets | cells | better | tie | worse | mean log2(err / MLP err) | median data factor | MLP error never reached | max FLOPs / MLP run (cells over 1) |",
+              "|---|---|---|---|---|---|---|---|---|---|"]
         for l in learners + REFS:
             s = summarize(l, names)
             if s:
+                fl = "–" if not np.isfinite(s["max_flops"]) else f"{s['max_flops']:.2f} ({s['over_budget']})"
                 L.append(f"| {l} | {s['datasets']} | {s['cells']} | {s['better']} | {s['tie']} | {s['worse']} | {s['mean_log2']:+.2f} | "
-                         f"{s['median_data_factor']:.2f} | {s['never']} |")
+                         f"{s['median_data_factor']:.2f} | {s['never']} | {fl} |")
         L.append("")
     for l in learners:
         L += [f"## {l}: per dataset", ""]
