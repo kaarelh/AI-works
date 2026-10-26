@@ -494,23 +494,39 @@ class DFG:
                                            key=lambda kv: -kv[1])][: self.sum_mod]
                 nmod = 1 + len(nb); KM = self.sum_kmax
                 tk = lambda k, nmod=nmod: math.log(4 * self.K * math.comb(d, k) * 2.0 ** (k - 1) * 2 * nmod * KM / self.delta)
-                mc = max(3, int(self.sum_mc * n)); s2 = s * s
+                mc = max(3, int(self.sum_mc * n))
                 kw = dict(gcap=self.sum_gcap, kmax=KM, fl=fl, neig=self.sum_seeds[0], npair=self.sum_seeds[1],
                           nsingle=self.sum_seeds[2])
-                rr, Mc, cands, mg0 = r, M, [], -np.inf
-                for it in range(self.sum_add):              # additive blocks; the residual is deflated by each candidate
+                # blocks are searched on the round's residual r, but accepted only if they also pass the test on rS = r
+                # projected off this round's accepted characters (what they add beyond them); same threshold
+                new0 = [S for S, _ in sorted(cand.items(), key=lambda kv: -kv[1][0])[: self.max_new]]
+                rS = r
+                if new0:
+                    A0 = np.stack([np.ones(n)] + [_chi(X, S) for S in new0], 1); q0 = A0.shape[1]
+                    rS = r - A0 @ np.linalg.lstsq(A0, r, rcond=None)[0]
+                    fl[0] += 2 * n * q0 * q0 + 4 * n * q0 + q0 ** 3
+                s2, s2S = s * s, float(np.mean(rS * rS))
+                live = s2S > 1e-4 * s2                      # else the round's characters already explain the residual
+
+                def tS(b, vec):                             # block statistic of b on vec, in units of s2S
+                    g = b.group(X); T_, lev_ = _multi_T(g[:, None], vec, b.ngroups()); fl[0] += 4.0 * n
+                    return float(T_[0]) / s2S
+                rr, rrS, Mc, cands, mg0 = r, rS, M, [], -np.inf
+                for it in range(self.sum_add if live else 0):   # additive blocks; residuals deflated by each candidate
                     b_, T_, th_, ok = _block_search(X, rr, s2, Mc, (), tk, mc, **kw)
                     if b_ is None:
                         break
+                    TS = tS(b_, rrS); ok = ok and TS > th_
                     cands.append(b_)
                     if it == 0 and th_ > 0:
-                        sum_top[:] = [T_ / th_, b_]; mg0 = T_ - th_
+                        sum_top[:] = [T_ / th_, b_]; mg0 = TS - th_
                     if ok and b_.key() not in have_blk:
                         blk.append(("sum", b_)); have_blk.add(b_.key())
                     if it + 1 < self.sum_add:
-                        g = b_.group(X); G = b_.ngroups()
-                        mu = np.bincount(g, weights=rr, minlength=G) / np.maximum(np.bincount(g, minlength=G), 1)
-                        rr = rr - mu[g]; Mc = (X * rr[:, None]).T @ X / n; fl[0] += 2 * n * d * d + 4 * n
+                        g = b_.group(X); G = b_.ngroups(); cnt = np.maximum(np.bincount(g, minlength=G), 1)
+                        rr = rr - (np.bincount(g, weights=rr, minlength=G) / cnt)[g]
+                        rrS = rrS - (np.bincount(g, weights=rrS, minlength=G) / cnt)[g]
+                        Mc = (X * rr[:, None]).T @ X / n; fl[0] += 2 * n * d * d + 8 * n
                 okb, prods = False, []                      # product candidates (margin, block)
                 if self.sum_prod and len(cands) >= 2:       # product A x B: B searched over the joint cells with A
                     a_ = cands[0]; gA, GA = a_.group(X), a_.ngroups()
@@ -518,7 +534,9 @@ class DFG:
                     b2, Tb, thb, ok2 = _block_search(X, r, s2, Mc, set(a_.S.tolist()), tkp, mc, base=(gA, GA),
                                                      init=[(c.S, c.sg, c.fold) for c in cands[1:]], **kw)
                     if ok2:
-                        prods.append((Tb - thb, SumBlock(b2.S, b2.sg, b2.fold, (), b2.edges, other=a_)))
+                        P = SumBlock(b2.S, b2.sg, b2.fold, (), b2.edges, other=a_); TS = tS(P, rS)
+                        if TS > thb:
+                            prods.append((TS - thb, P))
                 if self.sum_prod and cands:                 # split move: a block with mixed signs may be |t_A - t_B|
                     c0 = cands[0]; pos = c0.S[c0.sg > 0].tolist(); neg = c0.S[c0.sg < 0].tolist()
                     if len(pos) >= 2 and len(neg) >= 2:
@@ -528,31 +546,33 @@ class DFG:
                         b2, Tb, thb, ok2 = _block_search(X, r, s2, Mc, set(pos), tkp, mc, base=(gA, GA),
                                                          init=[(neg, [1.0] * len(neg), c0.fold)], **kw)
                         if ok2:
-                            prods.append((Tb - thb, SumBlock(b2.S, b2.sg, b2.fold, (), b2.edges, other=Ap)))
+                            P = SumBlock(b2.S, b2.sg, b2.fold, (), b2.edges, other=Ap); TS = tS(P, rS)
+                            if TS > thb:
+                                prods.append((TS - thb, P))
                 if prods and max(v[0] for v in prods) > mg0:     # only if it beats the first additive block alone
                     P = max(prods, key=lambda v: v[0])[1]; okb = True
                     if P.key() not in have_blk:
                         blk.append(("sum", P)); have_blk.add(P.key())
-                if self.sum_prod:
+                if self.sum_prod and live:
                     for a_, b2 in ([] if okb else itertools.combinations(cands, 2)):
                         if set(a_.S.tolist()) & set(b2.S.tolist()):
                             continue
                         P = SumBlock(a_.S, a_.sg, a_.fold, (), a_.edges, other=b2)
                         if P.key() in have_blk:
                             continue
-                        g = P.group(X); Tp, lev = _multi_T(g[:, None], r, P.ngroups()); fl[0] += 4.0 * n * (len(a_.S) + len(b2.S))
+                        g = P.group(X); Tp, lev = _multi_T(g[:, None], rS, P.ngroups()); fl[0] += 4.0 * n * (len(a_.S) + len(b2.S))
                         m_ = max(int(lev[0]) - 1, 1)
-                        if float(Tp[0]) / s2 > _chi2_thr(m_, tk(len(a_.S)) + tk(len(b2.S))):
+                        if float(Tp[0]) / s2S > _chi2_thr(m_, tk(len(a_.S)) + tk(len(b2.S))):
                             blk.append(("sum", P)); have_blk.add(P.key())
-                for T in nb:
+                for T in (nb if live else []):
                     ct = _chi(X, T); rt = r * ct
                     Mt = (X * rt[:, None]).T @ X / n; fl[0] += 2 * n * d * d + n * (d + len(T))
                     b_, T_, th_, ok = _block_search(X, rt, s2, Mt, set(T), tk, mc, **kw)
-                    if ok:
+                    if ok and tS(b_, rS * ct) > th_:
                         b_.mod = tuple(T)
                         if b_.key() not in have_blk:
                             blk.append(("sum", b_)); have_blk.add(b_.key())
-                if self.sum_prod:
+                if self.sum_prod and live:
                     add_ = [b for b in blocks if not b.mod and b.other is None]
                     for a_, b2 in itertools.combinations(add_, 2):
                         if set(a_.S.tolist()) & set(b2.S.tolist()):
@@ -561,10 +581,10 @@ class DFG:
                         if P.key() in have_blk:
                             continue
                         g = P.group(X); G = P.ngroups()
-                        Tp, lev = _multi_T(g[:, None], r, G); fl[0] += 4.0 * n * (len(a_.S) + len(b2.S))
+                        Tp, lev = _multi_T(g[:, None], rS, G); fl[0] += 4.0 * n * (len(a_.S) + len(b2.S))
                         m_ = max((len(a_.edges)) * (len(b2.edges)), 1)
                         tp = tk(len(a_.S)) + tk(len(b2.S))
-                        if float(Tp[0]) / s2 > _chi2_thr(m_, tp):
+                        if float(Tp[0]) / s2S > _chi2_thr(m_, tp):
                             blk.append(("sum", P)); have_blk.add(P.key())
             new = sorted(cand.items(), key=lambda kv: -kv[1][0])[: self.max_new]
             if force and not new and not blk and forced[0] < 2:          # nothing passed: take the best guess
