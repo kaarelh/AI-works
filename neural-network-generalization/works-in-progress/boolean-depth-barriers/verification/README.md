@@ -2,6 +2,7 @@
 
 The manuscript and supporting analytic notes received conventional mathematical reviews. They are not a Lean verification of the full statistical results.
 
+- [Why the lower bound would imply a circuit separation](canonical-lower-bound-is-a-circuit-separation.md): an actual implication of the upper theorem, including the same-depth and narrow-learner cases. The [fresh stress test](boolean-depth-barriers-fresh-stress-test-2026-10-26.md) checks scope, confidence thresholds, and possible loopholes.
 - [Polynomial-bit coefficient and quantitative-depth audit](polynomial-bit-weight-depth-barrier-independent-audit.md): saturation-aware finite precision, exponentially large coefficients, and the conditional threshold-depth lower bound. The original bounded-weight admissibility theorem is unchanged.
 - [Fresh resumed audit](resume-main-audit.md): canonical invariants and evaluators, nearcritical block covers, actual finite-width extraction, posterior mixtures, and complexity quantifiers. Its recorded hash identifies the main source before the constant-width appendix and editorial constant split.
 - [Earlier independent adversarial audit](fresh-barrier-independent-audit.md): structural and statistical proof mechanisms, imported inputs, and limits of the claimed conclusions.

@@ -1,0 +1,232 @@
+\documentclass[11pt]{article}
+\usepackage[margin=.9in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,microtype}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue]{hyperref}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newcommand{\E}{\mathbb E}
+\newcommand{\norm}[1]{\lVert #1\rVert}
+\newcommand{\poly}{\operatorname{poly}}
+\title{Quadratic variance occupation for Gaussian Fock formulas}
+\author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob}
+\date{26 October 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+For equal-diagonal Gaussian tanh feature maps in compatible coordinates,
+we construct exact unbiased scalar arithmetic formulas with trace second
+moment at most two and expected coordinate size
+$CT_0\exp[C\sum_j q_j^2]$. Higher Hermite degrees are created rarely,
+with probability independent of the physical variance $q_j$; their small
+coefficients supply the quadratic variance charge. Compatible
+Hilbert--Schmidt perturbations add their norm sum to the exponent.
+For a free near-critical Gaussian chain this gives the feature-representation
+scale $\exp[O(1+\delta^2H)]$. This is not a posterior learning theorem,
+and no variable-diagonal or non-Gaussian extension is asserted.
+\end{abstract}
+
+\section{Feature map and precise scope}
+
+Let $H$ be a real separable Hilbert space with a fixed countable coordinate
+basis. For $q>0$, put $F(q)=\E\tanh^2(\sqrt q Z)$, $Z\sim N(0,1)$,
+and expand in orthonormal probabilists' Hermite polynomials:
+\[
+ \tanh(\sqrt q Z)=\sum_{k\ {\rm odd}}a_k(q)H_k(Z),\qquad
+ b_k(q)=a_k(q)/\sqrt{F(q)}.
+\]
+For $\norm u=1$, define the normalized Fock feature
+\[
+ G_q(u)=\bigoplus_{k\ {\rm odd}}b_k(q)u^{\otimes k}.
+\]
+Full ordered tensor coordinates are used. Parseval gives
+$\norm{G_q(u)}=1$, and the Gaussian Hermite identity gives
+\[
+ \langle G_q(u),G_q(v)\rangle
+ =\sum_kb_k(q)^2\langle u,v\rangle^k
+ =\frac{\E\tanh(\sqrt q Z_u)\tanh(\sqrt q Z_v)}{F(q)},
+\]
+where the standard Gaussian pair has correlation $\langle u,v\rangle$.
+Thus the common $q$ is a physical preactivation variance, equal at every
+query. It is not a query-dependent scalar oracle.
+
+\begin{theorem}\label{thm:main}
+On a finite input set $X$, consider finitely many steps $G_{q_j}$, optionally
+interspersed with linear maps $J_j+K_j$. Each $J_j$ is a signed partial
+coordinate injection (no duplicated old coordinates), and $K_j$ is
+Hilbert--Schmidt in the same compatible bases. Assume all true intermediate
+states have norm at most one, and every state entering $G_{q_j}$ has
+norm exactly one. Suppose initial coordinates have unbiased random scalar
+formulas with pointwise trace second moment at most two and common
+expected size $T_0\ge2$. Then exact unbiased coordinate formulas satisfy
+\[
+ \sum_i\E Y_i(x)^2\le2\quad(x\in X),\qquad
+ \sup_i\E\operatorname{size}(Y_i)
+ \le CT_0\exp[C(S+Q_2)],
+\]
+where $S=\sum_j\norm{K_j}_{\rm HS}$ and $Q_2=\sum_jq_j^2$.
+The random shapes are independent of the query, and the constants are
+universal. In particular $S=0$ for an unmodified Fock chain.
+\end{theorem}
+
+Formulas here are finite real arithmetic trees with arbitrary real edge
+coefficients. A copied coordinate changes its final edge coefficient;
+successive coefficients are combined algebraically. A zero is one leaf.
+This prevents a new unary node at every skipped layer. Converting a final
+weighted tree into ordinary scalar multiplications costs only a constant
+per edge. No finite-bit or computational-complexity conclusion is needed
+for the theorem. An arbitrary dense basis rotation is not a free copy.
+
+\section{The exact Hermite estimate and scalar factory}
+
+\begin{lemma}\label{lem:tail}
+For every $q>0$, $\sum_{k\ge3,\ k\ {\rm odd}}k^2b_k(q)^2\le6q^2$.
+\end{lemma}
+\begin{proof}
+Gaussian Sobolev Parseval and bounded derivatives give
+\[
+ \sum_k k(k-1)a_k(q)^2
+   =q^2\E\bigl[\tanh''(\sqrt q Z)^2\bigr].
+\]
+For $k\ge3$, $k^2\le\tfrac32k(k-1)$. Also
+$\tanh''z=-2\tanh z\,\operatorname{sech}^2z$, so
+$\tanh''(z)^2\le4\tanh^2z$. Division by $F(q)>0$ proves the claim.
+It is an exact all-degree estimate, not a Taylor truncation.
+\end{proof}
+
+Suppose current coordinate oracles $X_i$ have means $u_i$, $\norm u=1$,
+pointwise trace second moment at most $V\ge1$, and common expected size
+at most $T\ge2$. At an odd degree $k\ge3$, set
+\[
+ m_k=\lceil kV\rceil,\qquad p_k=(C_*k^2V)^{-1}.
+\]
+For an ordered word $I=(i_1,\ldots,i_k)$, return zero with probability
+$1-p_k$, and otherwise return
+\[
+ \frac{b_k(q)}{p_k}\prod_{a=1}^k\overline X_{i_a},
+\]
+where each bar averages $m_k$ independent child copies. Distinct factors
+are independent even if their coordinate indices coincide. The oracle
+is unbiased. Unit norm of the true mean gives
+\[
+ \sum_i\E\overline X_i^2
+ \le1+\frac{V-1}{m_k},\qquad
+ \left(\sum_i\E\overline X_i^2\right)^k\le e.
+\]
+There is a universal arithmetic-accounting constant $C_0$ for which the
+nonzero branch has expected size at most $C_0km_kT$. Since $m_k\le2kV$,
+the whole coordinate costs at most
+\[
+ 1+C_0p_kkm_kT\le1+(2C_0/C_*)T\le T
+\]
+when $C_*\ge4C_0$. At degree one return the coefficient-weighted copy
+$b_1(q)X_i$, also of size at most $T$.
+
+Tonelli's theorem and independence give the degree-$k$ trace bound
+$e b_k(q)^2/p_k$. Summing and applying Lemma~\ref{lem:tail} yields
+\begin{equation}\label{eq:step}
+ V_{\rm new}\le b_1(q)^2V+
+ e\sum_{k\ge3}\frac{b_k(q)^2}{p_k}
+ \le V(1+C_1q^2),\qquad T_{\rm new}\le T.
+\end{equation}
+All sums are nonnegative, so countably many coordinates cause no exchange
+of conditionally convergent series. The higher-degree coordinates are
+new orthogonal coordinates: their zero branch does not evaluate an old
+coordinate. This is why $p_k$ can be independent of $q$. Averaging before
+forming the tensor product also avoids the potentially divergent naive
+series $\sum_k b_k(q)^2V^k$.
+
+\section{Variance resets and compatible controls}
+
+Start by averaging two copies if needed, so the trace bound is at most
+$3/2$, at constant size cost. For a small step with $C_1q^2\le1/8$,
+update the deterministic bound by \eqref{eq:step}. If it first exceeds
+$7/4$, it is still below two. Average two independent copies of each
+coordinate. Since the true mean has norm one, the trace becomes at most
+$(V_{\rm new}+1)/2\le3/2$, at size multiplier at most three.
+Between these resets the trace must increase by at least $1/4$, while
+each increase is at most $Cq^2$. Thus there are at most $C Q_2+C$ such
+resets. A large step starting from $V\le2$ has
+$V_{\rm new}\le2(1+C_1q^2)$. Averaging
+$\lceil2V_{\rm new}\rceil$ copies restores trace at most $3/2$.
+Its size multiplier is polynomial in $1+q^2$, with logarithm $O(q^2)$
+above the fixed small-step cutoff. This proves the theorem when $S=0$.
+
+For completeness, the compatible linear-control estimate has the same
+reset form. Let $\kappa=\norm K_{\rm HS}$. In row $i$ put
+$c_i=\sum_jK_{ij}^2$ and sample $j$ with probability $K_{ij}^2/c_i$.
+The oracle $Z_i=K_{ij}X_j/(K_{ij}^2/c_i)$ has mean $(Ku)_i$ and
+\[
+ \E Z_i^2\le c_iV,\qquad \sum_i\E Z_i^2\le\kappa^2V.
+\]
+Zero rows are omitted. For small nonzero $\kappa$, add this row oracle
+to the copied $J$ coordinate only on a Bernoulli branch of probability
+$p=\kappa$, dividing its coefficient by $p$. Fresh row and copy children
+are independent. The mean is $(J+K)u$; its trace is bounded by
+\[
+ V+2\norm{Ju}\norm{Ku}+\kappa^2V/p\le V+C\kappa
+\]
+while $V\le2$ and $\norm u\le1$. Common expected size grows by at most
+$1+C\kappa$, since the zero branch is a literal coordinate copy.
+For zero $\kappa$ no branch is called. Above the fixed small-control
+cutoff use $p=1$ and an averaging reset; trace and size costs are
+polynomial in $1+\kappa$, with logarithm $O(\kappa)$.
+When an intermediate true mean has norm below one, averaging $m$ copies
+still gives trace at most $1+(V-1)/m$. Resets can therefore be charged
+to the combined increments $C(\kappa+q^2)$. Multiplying the costs proves
+Theorem~\ref{thm:main} with exponent $C(S+Q_2)$.
+
+Every realized tree is finite almost surely: there are finitely many
+trajectory layers, every selected tensor degree is finite, and every
+averaging count is finite. No vector subcomputation is shared.
+
+\section{Readouts, near-critical scale, and limitations}
+
+For $v\in\ell_2$, sample coordinate $i$ with probability
+$v_i^2/\norm v^2$ and return $\norm v^2Y_i/v_i$. This is an unbiased
+oracle for $\langle v,h(x)\rangle$, with second moment at most
+$2\norm v^2$ and the same common expected size bound. The zero readout is
+trivial. If the readout has global signed margin one on $X$, average
+$O(1+\norm v^2)$ independent copies per group. Chebyshev's inequality
+makes a group accurate to $1/2$ with probability at least $3/4$.
+Use $O(\log(2|X|))$ independent groups; concentration and a union bound
+make a majority correct at every input with positive probability.
+Markov's inequality simultaneously bounds total formula size by a
+constant times its expectation. Thus a fixed-seed classifier exists as
+a majority of signs of real arithmetic formulas of total size
+\[
+ \poly(\log(2|X|),T_0,1+\norm v)\exp[C(S+Q_2)].
+\]
+This exact real-constant statement is separate from any finite-bit
+completion.
+
+For an uncontrolled equal-diagonal Gaussian tanh chain with
+$t=1+\delta$, $0\le\delta\le\delta_0$ for a fixed small $\delta_0$,
+and bounded initial variance, the free variance comparison gives
+$q_j\le C[\delta+(j+1)^{-1}]$. Indeed $F(q)\le q-cq^2$ on a fixed
+bounded variance interval: $(q-F(q))/q^2$ is positive and continuous,
+with limit two at zero. Thus
+$q_{j+1}=t^2F(q_j)\le(1+C\delta)q_j-cq_j^2$.
+For a sufficiently large fixed $K$, the interval $[0,K\delta]$ is
+invariant when $\delta_0$ is small. Above this interval the sequence
+obeys $q_{j+1}\le q_j-(c/2)q_j^2$, so its reciprocal increases by at
+least $c/2$ until it enters the interval. This proves the comparison.
+Consequently
+\[
+ Q_2=\sum_{j<H}q_j^2\le C(1+\delta^2H).
+\]
+The normalized Gaussian Fock feature/readout representation therefore
+has resource $\exp[O(1+\delta^2H)]$, multiplied by the stated initial
+and readout resources. This identifies a quadratic free-feature
+timescale; it is not a learning statement for a margin-conditioned prior.
+
+The common $q_j$ and compatible bases are substantive hypotheses.
+Query-dependent variances require input-dependent Hermite coefficients;
+the known variance-oracle and normalization helpers still have an
+$O(q_j)$ charge. An arbitrary dense change of basis is not a signed
+coordinate copy. Margin conditioning may change Gaussian row laws, and
+physical readout normalization may change its norm. Nothing here
+provides a variable-diagonal or non-Gaussian posterior bridge, or settles
+the original canonical Boolean tanh depth question.
+\end{document}

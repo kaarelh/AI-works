@@ -1,0 +1,375 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools,hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}
+\newtheorem{inputlemma}{Imported theorem}
+\newcommand{\E}{\mathbb E}
+\newcommand{\KL}{\operatorname{KL}}
+\newcommand{\AF}{A_{\mathrm F}}
+\newcommand{\R}{\mathbb R}
+\title{A positive learning window above the critical tanh prefactor}
+\author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob}
+\date{26 October 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We extend a critical Boolean tanh posterior upper bound to prefactors
+$t=1+\delta$ just above one, retaining the original Gaussian width
+powers, global output-margin conditioning, and exact labels. If
+$S=1+\log((d+H+2)\AF(f))$ and $H\ge CS$, then every realizable width has
+sufficient sample complexity $\exp(O(S+\delta H))$, times polynomial
+statistical factors. Thus polynomial Fourier variation, including every
+parity, retains polynomial sample complexity when
+$\delta H=O(\log(d+H))$. The proof combines a scalar reference-change
+bootstrap with an actual finite-width target-mass construction whose
+perpendicular Gaussian covariance is never replaced. The critical
+scalar and finite-width compression theorems are stated explicitly as
+imported inputs. This positive window lies above the canonical range;
+it does not resolve the unrestricted Boolean depth question at $t\le1$.
+\end{abstract}
+
+\section{Model and conclusion}
+For $x\in\{-1,1\}^d$ use the augmented input $(1,x)$, $H\ge1$
+hidden layers of width $N$ with activation $\tanh$, no internal biases,
+and a scalar linear readout $z_W(x)$. The independent Gaussian weight
+variances are $t^2/d$ in the first layer, $t^2/N$ in later hidden layers,
+and $t^2/N^2$ in the readout. Write $\mu_{N,t}$ for this unconditioned
+prior and
+\[
+ E_f=\{W:f(x)z_W(x)>1/2\text{ for every }x\},\qquad
+ E_{\rm mar}=\{W:|z_W(x)|>1/2\text{ for every }x\}.
+\]
+The posterior is $\mu_{N,t}$ conditioned first on $E_{\rm mar}$ and then
+on the exact labels of the training sample. Training inputs are drawn
+independently from the same distribution used to measure test error.
+At a test input it fails
+when the posterior probability of the correct label is at most $2/3$.
+A width is \emph{realizable} here if $\mu_{N,t}(E_f)>0$.
+
+Use the uniform Fourier expansion
+$f(x)=\sum_{T\subseteq[d]}\widehat f(T)\prod_{i\in T}x_i$ and define
+\[
+ \AF(f)=\sum_T|\widehat f(T)|,\quad
+ S=1+\log((d+H+2)\AF(f)),\quad U=S+\delta H.
+\]
+Since $f$ is Boolean, $\AF(f)\ge1$.
+
+\begin{theorem}\label{thm:main}
+There are universal $\delta_0,C,c>0$ such that the following holds.
+Let $t=1+\delta$, $0\le\delta\le\delta_0$, and $H\ge CS$.
+At every finite realizable width, for every test distribution on the
+cube and $0<\epsilon,\beta<1/2$, it suffices to take
+\begin{equation}\label{eq:samples}
+ n\ge\frac C\epsilon\left\{
+ e^{CU}(1+\log(1/\epsilon))^c+\log(1/\beta)\right\}
+\end{equation}
+to make the confidence-failure set have test mass at most $\epsilon$
+with training probability at least $1-\beta$.
+\end{theorem}
+For $\AF(f)\le(d+H)^a$ with fixed $a$, the bound is polynomial in
+$d,H,\epsilon^{-1},\log(1/\beta)$ whenever
+$\delta H=O(\log(d+H))$. In particular $\AF(f)=1$ for every parity,
+regardless of its degree. A fixed positive $\delta$ is not covered by a
+polynomial-depth conclusion. No bound on Fourier variation is inferred
+from an arbitrary bounded-weight deep tanh teacher.
+
+\section{Scalar comparison and an intrinsic bound}
+The critical scalar value $V(q)$ is the infimum, over finite scalar
+paths starting at variance $q$, of
+\[
+ \sum_j\KL(\eta_j\|\mathcal N(0,q_{j-1}))+\frac1{8q_m},
+ \qquad q_j=\E_{\eta_j}\tanh^2 G.
+\]
+Write $V_* =\lim_{q\downarrow0}V(q)$. This is the unrestricted critical
+scalar baseline; no Gaussian restriction on $\eta_j$ is imposed.
+
+We use the following critical scalar theorem from the existing
+critical analysis~\cite{critical}.
+\begin{inputlemma}[Critical occupation]\label{inp:occupation}
+For $q_0\in[1,2]$, suppose $e_j\ge0$ dominate the actual critical scalar
+transition entropies, and $r\ge1/(8q_H)$. If
+$\sum_{j=1}^H e_j+r\le V_*+a$, $a\ge0$, then
+\[
+ \sum_{j=1}^H\sqrt{e_j}\le C\log(H+2)+C\sqrt{Ha}.
+\]
+The statement permits upper costs rather than exact marginal
+entropies: scalar dissipation and Bellman suffix lower bounds remain
+valid with those larger costs. The same analysis gives
+$V(q)\le V_*$ and increasing paths from small $p$ with total cost at
+most $V(p)+p$, length at most $C/p$, and square-root entropy sum at most
+$C\log(2/p)$.
+\end{inputlemma}
+
+A controlled path on a finite set of inputs has full row entropies
+$D_j$ relative to $\mathcal N(0,t^2Q_{j-1})$ and readout action
+$r_t=z^TQ_H^\dagger z/(2t^2)$. Its action is $A=\sum D_j+r_t$.
+Assume one witness input has $|z(x_0)|\ge1/2$ and initial variance in
+$[1,2]$. Let $R(D)\ge1$ solve $R-1-\log R=2D$.
+
+\begin{lemma}[Above-critical occupation]\label{lem:gain}
+For $0\le\delta\le\delta_0$, if $A\le V_*+a$, $a\ge0$, then
+\begin{align}
+ Z:=\sum_j\sqrt{D_j}&\le C\{\log(H+2)+\sqrt{Ha}+\delta H\},\label{eq:Z}\\
+ \log\prod_jt\sqrt{R(D_j)}&\le C\{\log(H+2)+\sqrt{Ha}+\delta H\}.
+\end{align}
+\end{lemma}
+\begin{proof}
+At $x_0$ write $p=q_{j-1}$, $d_j=\KL(\eta_j\|\mathcal N(0,t^2p))
+\le D_j$, and $M_j=\E_{\eta_j}G^2/p$. All these variances are positive,
+since a zero variance cannot revive at finite entropy. Put
+$b=1-t^{-2}$ and $c_t=(t^{-2}-1+2\log t)/2$. Gaussian density comparison
+gives the exact identity
+\begin{equation}\label{eq:reference}
+ d_{1,j}:=\KL(\eta_j\|\mathcal N(0,p))
+   =d_j-c_t+\frac b2(M_j-1).
+\end{equation}
+Entropy duality gives $M_j\le t^2R(D_j)$ and
+$R(D)-1\le C(\sqrt D+D)$. Hence
+\[
+ d_{1,j}\le(1+C\delta)D_j+C\delta\sqrt{D_j}+C\delta^2.
+\]
+For a sufficiently large fixed $C_0$, take
+$e_j=(1+C_0\delta)D_j+C_0\delta\sqrt{D_j}+C_0\delta^2$.
+These nonnegative costs dominate both $D_j$ and $d_{1,j}$.
+The critical terminal cost $r_1=t^2r_t$ is at least $1/(8q_H)$, and
+\[
+ \sum e_j+r_1\le V_*+C\{a+\delta(1+a)+\delta Z+H\delta^2\}.
+\]
+Imported Theorem~\ref{inp:occupation} implies
+\[
+ Z\le C\log(H+2)+C\sqrt{Ha+H\delta(1+a)+H\delta Z+H^2\delta^2}.
+\]
+Put $Y=\log(H+2)+\sqrt{Ha}+H\delta$. The terms independent of $Z$
+under the root are at most $CY^2$. Thus
+$Z\le CY+C\sqrt{H\delta Z}$, and Young's inequality absorbs the last
+term into $Z/2+CH\delta$. Finally $\log R(D)\le2\sqrt D$ and
+$\log t\le\delta$ give the gain assertion.
+\end{proof}
+
+For completeness we state precisely the finite-width input used with
+this lemma. Set $a_{N,t}(f)=-N^{-1}\log\mu_{N,t}(E_f)$.
+\begin{inputlemma}[Intrinsic transfer]\label{inp:intrinsic}
+The finite-witness dual certificate and normalized importance
+compression of~\cite{intrinsic,certificate}, with
+Lemma~\ref{lem:gain} replacing their critical gain estimate, give
+sufficient sample size
+\begin{equation}\label{eq:intrinsic}
+ \frac C\epsilon\left\{
+ [(d+H+t^2a_{N,t}(f)+2)(1+\log(1/\epsilon))]^c
+ \exp\!\left(C\left[\sqrt{H(B-V_*)_+}+\delta H\right]\right)
+ +\log(1/\beta)\right\}.
+\end{equation}
+Here $B=a_{N,t}(f)+4/(Ht^2)$.
+This holds at every actual finite realizable width, uniformly for
+$1\le t\le1+\delta_0$.
+\end{inputlemma}
+Here the population compression depends on the exact gains
+$t\sqrt{R(D_j)}$; its dependence on $t$ is bounded on this compact
+interval. The finite-event certificate allows arbitrary Gaussian
+reference covariances. Its covariance-transfer tolerance has inverse
+logarithm $O(H\log(2+t^2A)+\log(H+m+2))$, using the coarse gain
+$\sqrt{C(1+t^2A)}$. The readout repair costs $4/(Ht^2)=O(1/H)$.
+Thus the only sign-sensitive input replaced above is the scalar gain
+bound; no covariance change in all weight coordinates is used.
+The certificate divides by the actual raw target mass. Small widths
+are completed by the ordinary tanh parameter-count VC bound, and the
+inclusive confidence threshold follows from posterior Gibbs error.
+
+\section{An actual finite-width target witness}
+\begin{proposition}\label{prop:mass}
+Under the hypotheses of Theorem~\ref{thm:main}, at every integer
+$N\ge\exp(CU)$,
+\begin{equation}\label{eq:mass}
+ \mu_{N,t}(E_f)\ge\exp\{-N[V_*+CU^2/H]\}.
+\end{equation}
+\end{proposition}
+We give the complete modifications of the critical scalar-channel
+construction~\cite{critical,target}. Its Fourier seed and bounded-score
+finite-channel concentration lemma are imported; their dependence on
+the prefactor is checked below.
+
+\paragraph{Seed and cooling.}
+The Fourier mixture seed, retaining its rare-component tag under both
+controlled and reference laws, has
+\[
+ \E b_1^2=1,\quad \E[b_1h_1(x)]=\sqrt{v_1}f(x),\quad
+ D_1\le H^{-1},\quad v_1\ge e^{-CS},\quad |b_1|\le e^{CS},
+\]
+and constant feature diagonal. Use the actual first-layer covariance
+$t^2I/d$. Each prescribed mean shift has no larger entropy than at
+$t=1$, and its noise variance stays in a fixed compact interval. The
+saturated threshold detectors, cube-translation parity projection,
+and Fourier mixture therefore retain the same bounds uniformly in $t$.
+
+Let $F(q)=\E\tanh^2(\sqrt qZ)$. The critical drift and the bound
+$0\le F'(q)\le1$ imply, for a large fixed $K$,
+\begin{equation}\label{eq:cool}
+ q-F(t^2q)\ge cq^2\quad(K\delta\le q\le1).
+\end{equation}
+Choose $\Delta\ge K\delta$, small. Free layers reach $q\le\Delta$
+in $O(1/\Delta)$ steps; the first such value lies in
+$[\Delta/2,\Delta]$. For a component $vff^T\preceq Q$ the next
+first-Hermite component is $t^2v[1-F(t^2q)]^2$. Its ratio to the new
+diagonal, divided by $v/q$, is $1+O(q^2)$ near zero and has a uniform
+positive lower bound elsewhere. Equation~\eqref{eq:cool} bounds the
+cooling sum of $q^2$, so a component at least $c\Delta v_1$ survives.
+Omit cooling if already below threshold. An independent-sign score
+mixture reduces the tracked component exactly to
+$v_0=\Delta e^{-C_3S}$, without entropy cost.
+
+\paragraph{Holding and prescribed growth.}
+Write $Q=vff^T+R$, with $R\succeq0$ and diagonal $r\le\Delta$.
+Leave the perpendicular covariance at its actual value $t^2R$ and
+choose covariance $avff^T$ on the scalar target channel. The latent
+entropy charge is
+\begin{equation}\label{eq:latent}
+ d_t(a)=\tfrac12[a/t^2-1-\log(a/t^2)].
+\end{equation}
+With $\psi_s(z)=\E\tanh(z+\sqrt sZ)$, the full conditional-mean
+component is $v'(a)=\E\psi_{t^2r}(\sqrt{av}Z)^2$. It is continuous
+and increasing, $v'(1)\le v$, and
+\[
+ v'(a)\ge av[1-F(av+t^2r)]^2\ge av[1-2(av+t^2r)].
+\]
+Thus $a\in[1,1+C(\Delta+v)]$ can hold $v$ or realize
+$v_{\rm next}=\min\{p,v[1+c_1(\Delta+v)]\}$ exactly as its full
+conditional-mean component. There is no deliberate component reduction
+in these steps. Since $\delta\le\Delta/K$, their cost is
+$O((\Delta+v)^2)$.
+Conditional Gaussian Poincare gives
+\[
+ r'\le t^2r\E\operatorname{sech}^4(\sqrt{av+t^2r}Z)
+     \le t^2r(1-ct^2r).
+\]
+The last map preserves $[0,\Delta]$ for sufficiently large $K$.
+Residuals may increase at small $r$; only this invariant barrier is used.
+Holding costs at most $CH\Delta^2$. Prescribed growth has length
+$CS/\Delta$, cost $C(p+S\Delta)$, and square-root cost
+$C(S+\log(p/\Delta)+1)$. These follow by summing the geometric regime
+$v\le\Delta$ and the increments comparable to $v^2$ above $\Delta$.
+Fix the growth sequence before inserting the holding interval.
+
+\paragraph{Purification and scalar continuation.}
+At $v=p\ge\Delta$, holding with $a=1+O(p)$ gives
+$r'\le t^2r(1-cp)\le(1-c'p)r$ if $p\ge K'\delta$.
+After $C\log(H+2)/p$ steps, the residual is at most
+$r_0=\Delta(H+2)^{-4}$, at cost $Cp\log(H+2)$ and square-root cost
+$C\log(H+2)$.
+Take the increasing critical scalar path from $p$ in
+Imported Theorem~\ref{inp:occupation}. For each transition from $q$ to
+$q'>q$, $\E_\eta G^2/q\ge1$ because $\tanh^2G\le G^2$. Consequently
+\begin{align*}
+ \KL(\eta\|\mathcal N(0,t^2q))
+ &=\KL(\eta\|\mathcal N(0,q))+\log t
+       -\tfrac12(1-t^{-2})\E_\eta G^2/q\\
+ &\le\KL(\eta\|\mathcal N(0,q))+C\delta^2.
+\end{align*}
+Lift each scalar law by $\sqrt{v/q}$ along the tracked target and add
+the actual perpendicular Gaussian. The residual obeys $r_{j+1}\le t^2r_j$;
+over $m\le C/p$ steps it is at most $Cr_0$, because $\delta/p=O(1)$.
+The critical heat-convolution estimate preserves the target component
+up to factor $\exp(-C\sum r_j)$, with extra readout cost $O(mr_0)$.
+The physical readout cost $1/(8t^2v_{\rm final})$ is no larger than
+its critical comparison. Added suffix entropy is $O(\delta^2/p)$,
+and added square-root cost is $O(\delta/p)$.
+
+\paragraph{Exact depth and resources.}
+Choose large fixed $B_2\ge B_1$ and set
+$\Delta=B_1U/H$, $p=B_2U/H$. Taking $\delta_0$ small and the constant
+in $H\ge CS$ large makes these scales small enough for all estimates.
+Cooling, growth, purification, and continuation use at most $H-1$
+layers; fill the remainder by holding $v_0$ before growth. Their total
+action and scalar square-root charge satisfy
+\begin{align}
+ A&\le V_*+C[H^{-1}+H\Delta^2+S\Delta+p+p\log(H+2)
+                 +\delta^2/p+H^{-4}]
+       \le V_*+CU^2/H,\label{eq:action}\\
+ K_1&:=\sum_{j\ge2}\sqrt{D_j}
+ \le C[H\Delta+S+\log(H+2)+\log(2/p)+\delta/p]\le CU.
+\end{align}
+Every positive tracked component is at least $e^{-CU}$, and all unit
+scores are bounded by $B_0\le e^{CU}$.
+
+\paragraph{Finite width.}
+For the empirical unit score direction $u$, generate an incoming row as
+\[
+ w=N^{-1/2}\{Zu+t(I-uu^T)\xi\},\qquad \|u\|=1,
+\]
+where $Z$ has the prescribed scalar law relative to
+$\mathcal N(0,t^2)$ and $\xi$ is independent standard Gaussian.
+Under that reference, the weight marginal is exactly
+$\mathcal N(0,t^2I/N)$ conditional on every preceding history. Its
+entropy is at most the scalar charge. A query comparison has the form
+$\widehat c(x)Z+t\widehat s(x)G$ versus its ideal counterpart.
+Since $\E Z^2\le t^2e^{2\sqrt{D_j}}$, the accumulated moment-comparison
+error is at most $8H\exp(K_1+H\log t)\sqrt\alpha$.
+The critical bounded-score concentration and stopping proof therefore
+gives raw probability at least $e^{-N(A+\tau)}$ whenever
+\begin{equation}\label{eq:width}
+ N\ge C B_0^4H^4e^{4K_1+4H\log t}(A+1)^6(1+\tau^{-1})^4
+ [\log(2^{d+1})+\log(H+A+\tau^{-1}+3)].
+\end{equation}
+The readout noise variance is at most $t^2/N$, and its shift entropy
+is divided by $t^2$, so constants are uniform on the prefactor interval.
+Explicitly the controlled process has success probability at least
+$1-\kappa$ and KL at most $N(A+3A\kappa)$, where
+$\kappa=\min\{1/4,\tau/[32(A+1)]\}$. Binary entropy yields
+\[
+ -N^{-1}\log\mu_{N,t}(E_f)
+ \le\frac{A+3A\kappa+N^{-1}\log2}{1-\kappa}\le A+\tau.
+\]
+The width condition enforces $N\ge8/\tau$. Take $\tau=1/H$.
+Every factor in~\eqref{eq:width} is at most $e^{CU}$, since
+$H\log t\le\delta H\le U$. This proves Proposition~\ref{prop:mass}.
+
+\begin{proof}[Proof of Theorem~\ref{thm:main}]
+For $N\ge e^{CU}$, Proposition~\ref{prop:mass} gives
+$(B-V_*)_+\le CU^2/H$; substitution into~\eqref{eq:intrinsic} yields
+\eqref{eq:samples}, increasing universal constants. For smaller $N$,
+the number of real network parameters is at most $e^{CU}$, and the
+standard tanh VC bound is polynomial in that count and $H$.
+Realizability and exact conditioning make every posterior-supported
+classifier sample-consistent. Uniform convergence bounds its Gibbs
+error; the set with correct posterior probability at most $2/3$ has
+mass at most three times that Gibbs error. Choosing the corresponding
+constant slack proves the claimed inclusive-threshold statement.
+\end{proof}
+
+\section{Scope and remaining gap}
+The improved sample dependence is $\exp(O(S+\delta H))$, not
+$\exp(O(S+\delta^2H))$. A separate exact Gaussian feature lemma can
+charge quadratic variance occupation in an equal-diagonal Fock basis,
+but conditioning on global margin does not preserve Gaussian row laws,
+and query-dependent variance oracles require additional work. It
+cannot replace the path-gain argument above without a further theorem.
+The present positive window is compatible with supercritical lower
+bounds at longer depth. It neither supplies a lower bound in the
+canonical range $t\le1$ nor proves a polynomial bound there for every
+bounded-weight Boolean tanh teacher of growing depth.
+
+{\small\raggedright
+\begin{thebibliography}{9}
+\bibitem{critical} Critical-depth project. Scalar Bellman foundations,
+\emph{Critical square-root entropy}, \emph{Short near-optimal scalar
+paths}, and \emph{Finite-width scalar-channel comparison}; source files
+\texttt{critical-square-root-entropy.tex},
+\texttt{critical-scalar-paths.tex}, and
+\texttt{critical-finite-width-channel.tex}, repository
+\texttt{works-in-progress/critical-depth/source}.
+\bibitem{intrinsic} \emph{Uniform intrinsic learning after subtracting
+the scalar baseline} and \emph{Uniform scale-sensitive intrinsic
+learning}, research notes \texttt{uniform-sharp-intrinsic.md} and
+\texttt{uniform-scale-intrinsic.md}, 24 October 2026.
+\bibitem{certificate} \emph{Finite-width bounded-dual certificate},
+research note \texttt{finite-width-dual-certificate.md}, 24 October 2026.
+\bibitem{target} \emph{Critical target mass and the analytic-activation
+posterior lower bound}, research note
+\texttt{critical-analytic-target-mass.md}, specialized here to exact
+$\tanh$, 24 October 2026.
+\end{thebibliography}
+}
+\end{document}

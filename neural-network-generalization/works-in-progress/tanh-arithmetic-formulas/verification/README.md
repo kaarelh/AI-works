@@ -28,3 +28,17 @@ The [non-Gaussian controls companion](../non-gaussian-controls.pdf) has its own 
 ## Fourier-increment activation extension
 
 The [assembled appendix audit](fourier-increment-low-product-compiler-independent-audit.md) checks the extension to normalized erf, arctan, softsign, and the stated Fourier class. It covers the generic width-compression changes, mixed activation normal form, deterministic spectral approximation, internal scale bounds, and polynomial-bit arithmetic circuits. The [research derivation](../research-notes/fourier-increment-low-product-compiler.md) records the development. This structural extension does not import a new posterior ceiling or resolve the critical conditional-tilt problem.
+
+## Quadratic Gaussian variance occupation
+
+The [four-page note](../gaussian-quadratic-occupation.pdf) has an [independent proof-note audit](gaussian-fock-quadratic-occupation-nongaussian-audit.md) and an [independent final assembled audit](gaussian-fock-quadratic-occupation-assembled-audit.md). The latter checks exact TeX SHA256 `2a860b2edca3c62a6b082534452845db5a590b568ade1e854dac020831c77137`, preserved byte-for-byte in `source/gaussian-quadratic-occupation.tex`. The [assembly record](gaussian-fock-quadratic-occupation-manuscript-assembly.md) describes the derivation and its scratch build; the [publication build manifest](gaussian-quadratic-occupation-build.json) records the packaged PDF and source hashes.
+
+The result concerns equal-diagonal Gaussian Fock maps in compatible coordinate bases and exact real-coefficient formulas. The free near-critical `δ²H` scale is a feature/readout representation statement. No variable-diagonal improvement, finite-bit theorem, or original posterior learning guarantee is asserted. These are conventional mathematical checks, not Lean verification.
+
+## Critical internal-control research notes
+
+The [scoped audit guide](critical-internal-controls/README.md) covers the new signed-alignment, first-crossing, and bounded-density finite-chaos notes. The first two allow arbitrary finite-entropy internal controls; the local scalar construction has a bounded-density hypothesis and explicit approximation limits. The [manifest](critical-internal-controls/manifest.json) identifies the final checked snapshots. These notes are not Lean verified and do not claim that their separate conclusions already compose into a general critical-posterior theorem.
+
+The separate [centered variable-diagonal follow-up](../research-notes/gaussian-diagonal-defect-quadratic-occupation.md) has an [independent final audit](gaussian-diagonal-defect-quadratic-occupation-independent-audit.md). It checks the strict diagonal-ratio telescope, normalized defect oracle, weighted coefficient estimates, convex-mixture control update, and condition-number charge. Its conclusion concerns exact real formulas for centered compatible Gaussian controls; it does not add a finite-bit or posterior theorem.
+
+The [universal scalar-occupation audit](universal-quadratic-variance-and-diagonal-occupation-audit.md) checks entropy-to-relative-variance comparison, quadratic maximum-variance occupation, and logarithmic diagonal-spread control for arbitrary row laws. Its conclusions are scalar inequalities, not an extension of the Gaussian feature compiler.

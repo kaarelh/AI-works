@@ -29,8 +29,10 @@ sample bounds at every realizable learner width, uniformly over canonical
 Gaussian scales $0<t\le1$. The statistical step imports the established
 uniform intrinsic-learning and scalar-continuation theorems; a
 heterogeneous-layer prefix lemma needed here is proved explicitly.
-These results do not cover arbitrary polynomial-size deep Boolean circuits,
-nor does it replace real tanh states by their signs.
+An explicit unary-map compiler also gives polynomial sample bounds
+for Boolean formulas of any fixed Horton--Strahler rank.
+These results do not cover arbitrary polynomial-size deep Boolean circuits
+or replace real tanh states by their signs.
 \end{abstract}
 
 \section{Model and statements}
@@ -115,6 +117,22 @@ If $L\ge C E_{\rm sep}$, then \eqref{eq:samples} with $E=E_{\rm sep}$
 has the same confidence-error, scale, and all-width conclusions.
 The same statement holds for any fixed excluded-minor graph class,
 with constants depending only on the excluded minor.
+\end{theorem}
+
+\begin{theorem}[Formula register rank]\label{thm:strahler}
+Suppose $f$ has a fan-in-at-most-two Boolean formula with $s\ge1$
+nodes and Horton--Strahler rank $r$. A leaf has rank zero, a unary
+gate retains its child's rank, and a binary gate of child ranks
+$a,b$ has rank $\max\{a,b\}$ if $a\ne b$ and rank $a+1$ otherwise.
+Set
+\[
+ E_r=\log(d+L+3)+(r+1)\log(d+s+L+3).
+\]
+If $L\ge C E_r$, then \eqref{eq:samples} with $E=E_r$ has the same
+confidence-error, scale, and all-width conclusions. In particular,
+the sample bound is polynomial in $d+s+L$ at every fixed rank,
+independently of the formula's original depth. Repeated occurrences
+of the same input variable are allowed.
 \end{theorem}
 
 For families with $d,s,v\le L^{O(1)}$, these theorems give an
@@ -509,6 +527,83 @@ $O(\sqrt n)$ separator theorem of Alon--Seymour--Thomas
 \cite{ast}; the same argument applies with its fixed constant.
 Its component balance can be grouped into two sides of weight at
 most $2/3$. This proves the extension.
+
+\section{Flattening formula paths by their unary transformation monoid}
+We prove a threshold implementation of a size-$s$, rank-$r$ formula
+with depth $O(r+1)$, width polynomial in $d+s+2$, and unit-margin
+integer gate coefficients of polynomial magnitude. Its polynomial
+degrees are independent of $r$.
+
+First consider $m$ unary Boolean maps, writing bits as $0,1$.
+The map $u_i$ is specified by $a_i=u_i(0)$ and $b_i=u_i(1)$.
+Put $R_i=\boldsymbol1\{a_i=b_i\}$ and
+$F_i=\boldsymbol1\{a_i=1,b_i=0\}$. When $R_i=1$, the map
+resets its argument to $a_i$; otherwise it is either identity
+or a flip, according to $F_i$. Thus the composite applied to
+$y_0$ equals $y_0$ XOR the parity of all flips if there is no
+reset. If $j$ is the last reset, it equals $a_j$ XOR the
+parity of flips with indices greater than $j$.
+
+All these suffix parities have constant-depth threshold circuits.
+For $0\le j\le m$ and $1\le k\le m-j$, form
+\[
+ U_{j,k}=\boldsymbol1\left\{\sum_{i>j}F_i\ge k\right\}.
+\]
+The alternating sum
+$\sum_{k=1}^{m-j}(-1)^{k+1}U_{j,k}$ is exactly the suffix
+parity; a second-stage threshold at $1/2$ gives its bit $P_j$.
+For the empty suffix put $P_m=0$.
+The count scores $2\sum_{i>j}F_i-(2k-1)$ and the parity score
+$2\sum_k(-1)^{k+1}U_{j,k}-1$ have integer gap at least one.
+There are $O(m^2)$ gates and all coefficient magnitudes and row
+norms are polynomial in $m+1$.
+
+The mutually exclusive last-reset indicators are
+\[
+ J_j=R_j\wedge\bigwedge_{i>j}\neg R_i\quad(1\le j\le m),
+ \qquad J_0=\bigwedge_{i\ge1}\neg R_i.
+\]
+Put $a_0=y_0$. The answer is
+\[
+ \bigvee_{j=0}^m\bigl[J_j\wedge(a_j\mathbin{\mathrm{XOR}}P_j)\bigr].
+\]
+Each XOR has a fixed-size constant-depth Boolean implementation.
+The indicators and final OR are threshold gates. This explicitly
+computes composition in the four-element monoid consisting of
+identity, flip, reset to zero, and reset to one, in constant
+threshold depth and $O((m+1)^2)$ gates. A constant rail supplies
+biases. Conversion from $0,1$ to signed Boolean wires preserves
+the stated polynomial resources and unit margins.
+
+Now form maximal formula paths using parent--child edges whose
+endpoints have equal rank. At a rank-$k$ binary node there is at
+most one child of rank $k$, so these components really are paths.
+Every off-path child has smaller rank. At the bottom of a path,
+either a leaf supplies the starting bit, or a gate whose children
+have smaller rank computes it in constant depth. Going upward,
+each gate acts as a unary map on the carried bit, with an already
+computed off-path bit as its other argument. For a fixed gate
+truth table, $a_i,b_i$ are unary functions of that off-path bit,
+so they, $R_i$, and $F_i$ take only constant depth to prepare.
+The preceding compiler evaluates the entire path in constant depth.
+
+Process ranks $0,1,\ldots,r$, all paths of one rank in parallel.
+Keep input bits, the constant rail, and computed path-root values
+on ordinary copy wires until needed. There are at most $s$ such
+values, and the sum of squared path lengths is at most $s^2$.
+Consequently each rank uses polynomial width, connections, and
+coefficient row norms in $d+s+2$, with universal polynomial degrees.
+The total threshold depth is $O(r+1)$. Substitution into
+\eqref{eq:S} gives $S=O(E_r)$; Lemma~\ref{lem:prefix} proves
+Theorem~\ref{thm:strahler}.
+
+The single-bit path is essential: this is not a constant-depth
+compiler for arbitrary constant-width branching programs, whose
+state transformation monoids can be non-solvable. A balanced
+binary formula can have $r=\Theta(\log s)$, so the general formula
+bound remains quasipolynomial. The argument reduces target depth
+semantically before the Gaussian prefix construction; it does not
+discard the costs of its physical neuron groups.
 
 \section{Scope of the conclusions}
 These are positive target classes for the original posterior,

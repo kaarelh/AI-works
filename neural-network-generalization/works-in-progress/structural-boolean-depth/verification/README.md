@@ -1,19 +1,21 @@
 # Verification record
 
-The final source includes three structural upper bounds: early narrow
-cuts, low treewidth, and planar/fixed-excluded-minor circuit graphs.
+The final source includes four structural upper bounds: early narrow
+cuts, low treewidth, planar/fixed-excluded-minor circuit graphs, and
+formulas of bounded Horton–Strahler rank.
 All retain the learner-depth padding condition and use the original
 globally margined, exact-fit Gaussian posterior.
 
 - [Independent audit of the original structural reductions](depth-sensitive-standard-reductions-independent-audit.md): narrow-cut and treewidth resource accounting.
 - [Full assembly audit](structural-boolean-upper-bounds-finite-n-audit.md): heterogeneous Gaussian prefix, analytic transfer, all-width quantifiers, cut and treewidth proofs, and final separator integration.
 - [Independent separator audit](geometric-separator-layer-budget-independent-audit.md): weighted boundary balancing, decreasing bag sizes, and on-demand local tables.
+- [Formula rank and final assembly audit](strahler-formula-threshold-compiler-independent-audit.md): explicit unary-map composition, suffix parities, layer resources, and the posterior corollary.
 
 The graph separator and balanced-decomposition theorems, Pfaffian/VC
 bounds, and uniform intrinsic/scalar-continuation theorems are explicitly
 imported. This is mathematical review, not formal verification.
 
-The manuscript builds to eight pages with no undefined references or
+The manuscript builds to ten pages with no undefined references or
 overfull boxes. Its first page was visually checked. The build manifest
 records the final source and PDF hashes; the checksum inventory covers
 the packaged source, PDF, notes, scripts, and audit records. PDF bytes may
