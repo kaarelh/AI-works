@@ -1,5 +1,5 @@
 """Score a learner on a toy suite against the study's networks.
-usage: python eval_toy.py <module:Class[:kwargs]> <designed|random|dlheld|dlheld2|dlheld3> [fns] [--quick]
+usage: python eval_toy.py <module:Class[:kwargs]> <designed|random|dlheld|dlheld2|dlheld3|dlsymdev|dlheld4> [fns] [--quick]
 --quick: n in {64, 256, 1024, 4096}, seeds 0-1 (development).  Writes results/toy__<learner>__<suite>.json (+ .md);
 --part=K (a shard of the targets, run in parallel): writes ...__<suite>__partK.json; merge with merge_toy.py.
 --perm: each fit sees its input columns in a random order (discrete_learner/harness.Permuted; learner name + '-perm').
@@ -17,10 +17,11 @@ L = common.ToyAdapter(common.load_learner(spec))
 if "--perm" in sys.argv:
     L = TH.Permuted(L)
 kw = dict(ns=[64, 256, 1024, 4096], seeds=[0, 1]) if quick else {}
-if suite in ("dlheld", "dlheld2", "dlheld3"):
+if suite in ("dlheld", "dlheld2", "dlheld3", "dlsymdev", "dlheld4"):
     import boolfuncs
     mk = {"dlheld": boolfuncs.make_dl_heldout_suite, "dlheld2": boolfuncs.make_dl_heldout2_suite,
-          "dlheld3": boolfuncs.make_dl_heldout3_suite}[suite]
+          "dlheld3": boolfuncs.make_dl_heldout3_suite, "dlsymdev": boolfuncs.make_dl_symdev_suite,
+          "dlheld4": boolfuncs.make_dl_heldout4_suite}[suite]
     res = TH.evaluate(L, suite=suite, fns=fns, targets=mk(30), results_dir=os.path.join(TH.SCR, "results_" + suite), **kw)
 else:
     res = TH.evaluate(L, suite=suite, fns=fns, **kw)

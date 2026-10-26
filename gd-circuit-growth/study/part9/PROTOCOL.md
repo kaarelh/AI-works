@@ -1,0 +1,49 @@
+# Part 9 protocol (written before any Part 9 design work)
+
+Part 8 left two clear failures of the discrete portfolio `hyb_portfolio` against gradient-descent-trained networks:
+1. **symmetric functions** (sym9 = [|x1 + ... + x9| <= 1]: 1229 samples against 350 for the best network) - its Fourier
+   weight is spread over many characters, so a character search pays for each one;
+2. **images at large n** (MNIST / Fashion-MNIST at n >= 30000: a regularized MLP ensemble wins clearly) - nearest
+   neighbours and axis-aligned trees are the only image members.
+Part 9 adds (a) *sum features* - discrete functions of signed sums of inputs, phi(x) = g(sum_{i in S} s_i x_i) with S a
+subset, s_i in {-1, +1} and g an indicator of a value set of the integer sum - to the character search, and (b) discrete,
+**pixel-permutation-invariant** image members (no use of pixel adjacency: the comparator is an MLP, which is invariant
+to a fixed permutation of the inputs; a method using spatial structure would have to be compared with a CNN).
+
+**Data access.**
+- *Development:* toy `designed` (21) and the new symmetric dev suite `dlsymdev` (8 targets, boolfuncs.make_dl_symdev_suite);
+  images MNIST, Fashion-MNIST (both already seen in Part 8) and the new `qd_dev` (QuickDraw, 10 categories); tabular DEV.
+  Part 8's held-out results (dlheld3 including sym9, HELDOUT2, ...) are known and may be looked at, but are not evidence.
+- *Held out (fixed now, before any design):* toy suite `dlheld4` (12 targets: 9 symmetric / signed-sum targets of new
+  sizes and accept-sets, mixtures with parities and gates, and 3 non-symmetric controls) and the QuickDraw sets `qd_a`,
+  `qd_b` (10 categories each, disjoint from `qd_dev`; 60000 / 10000; columns permuted by one fixed permutation, as are
+  `qd_dev`'s). Category lists: data.py and the cache.
+- Regression checks (not evidence; already seen): toy `dlheld3`, tabular DEV and HELDOUT2, MNIST / Fashion-MNIST.
+
+**Budgets** as in Part 8: one network training run per toy fit; 3 MLP training runs per real fit (common.budget_real);
+everything counted; prediction cost reported separately.
+
+**References.** Toy (`dlsymdev`, `dlheld4`): `nets`, `nets_wd` (decoupled weight decay 0.1), `nets_cewd` (logistic loss
++ weight decay 0.1), `nets_best` (per-target best, hindsight), plus `lin` and the Part 8 learner `hyb_portfolio` (v1).
+Images (`qd_dev`, `qd_a`, `qd_b`): `mlp`, `mlp_l2unit`, `mlp_strong` (and its single network `mlp_strong1`), `mlp_best`
+(per-cell hindsight best), `hgb`, and `hyb_portfolio` v1. Seed 0 only at n >= 30000 for every learner (memory, compute);
+3 seeds below.
+
+**Design.** Builders work on development data only, freeze, and run a full dev evaluation once:
+- S: DFG v1.2 = DFG v1.1 + sum-feature blocks; delivered as a replacement of the portfolio's DFG member.
+- I1, I2: two independent discrete, permutation-invariant image members (different angles), each delivered as a member
+  added to the portfolio.
+**Integration rule (fixed now).** `hyb_portfolio2` = `hyb_portfolio` with (i) DFG v1.2 in place of DFG v1.1 if, on the dev
+toy suites (`designed` + `dlsymdev`, permuted inputs, against `nets_best`), the S variant's mean log2 n* ratio is lower than
+v1's and no dev target gets worse by more than 0.5 in log2; and (ii) the image member (I1 or I2) whose portfolio
+variant has the lower mean log2(err / mlp_best err) over the dev image cells (MNIST, Fashion-MNIST, qd_dev; all n), if
+that mean is lower than v1's on the same cells. The image member runs only on inputs that are all continuous with d >= 256
+(images), so tabular results are unchanged by construction. `hyb_portfolio2` is frozen before any held-out Part 9 run.
+
+**Evaluation and verdicts** (as in Part 8; `compare_hybrid.py` rules): toy - n* per target, permuted inputs, against each
+network reference; images - per-cell verdicts and mean log2 ratios against each MLP reference, by n range.
+Pre-registered questions:
+- Q1 (sum features): on `dlheld4`, is `hyb_portfolio2`'s mean log2 n* ratio against `nets_best` below 0 with more
+  clearly-better than clearly-worse targets, and is it below v1's on the symmetric targets?
+- Q2 (images at large n): on `qd_a` and `qd_b`, at n >= 10000, is `hyb_portfolio2`'s mean log2(err / ref err) below 0
+  against `mlp_strong` and against `mlp_best`, and below v1's?

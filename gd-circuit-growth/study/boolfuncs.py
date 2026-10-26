@@ -299,3 +299,70 @@ def make_dl_heldout3_suite(d=30, seed=6161):
         add(f"h3rf{made}", fn, rel, f"random {gts}-gate formula on {k} inputs: " + desc)
         made += 1
     return S
+
+
+def _pm(b):
+    return np.where(b, 1.0, -1.0)
+
+
+def make_dl_symdev_suite(d=30, seed=7171):
+    """Part 9 DEVELOPMENT suite for sum features (symmetric functions and functions of signed sums of inputs).
+    Development data only; the held-out counterpart is make_dl_heldout4_suite."""
+    S = {}
+
+    def add(name, fn, rel, desc):
+        S[name] = dict(fn=fn, relevant=list(rel), desc=desc)
+    s = lambda x, k, a=0: x[:, a:a + k].sum(1)
+    add("sym7", lambda x: _pm(np.abs(s(x, 7)) <= 1), range(7), "|x1 + ... + x7| <= 1")
+    add("ex3of8", lambda x: _pm(s(x, 8) == -2), range(8), "exactly 3 of x1..x8 are +1")
+    add("band11", lambda x: _pm(np.isin(np.abs(s(x, 11)), [3, 5])), range(11), "|x1 + ... + x11| in {3, 5}")
+    add("far9", lambda x: _pm(np.abs(s(x, 9)) >= 5), range(9), "|x1 + ... + x9| >= 5")
+    sg = np.array([1, -1, 1, -1, 1, 1, -1, 1, 1], float)
+    add("ssym9", lambda x, sg=sg: _pm(np.abs(x[:, :9] @ sg) <= 1), range(9), "|x1 - x2 + x3 - x4 + x5 + x6 - x7 + x8 + x9| <= 1")
+    add("symxpar", lambda x: _pm(np.abs(s(x, 6)) <= 2) * x[:, 6] * x[:, 7], range(8), "[|x1+...+x6| <= 2] xor (x7 x8)")
+    add("twosym", lambda x: _pm((np.abs(s(x, 5)) <= 1) == (np.abs(s(x, 5, 5)) >= 3)), range(10),
+        "[|x1+...+x5| <= 1] == [|x6+...+x10| >= 3]")
+    add("thrsum", lambda x: _sgn(s(x, 6) + 3 * x[:, 6] * x[:, 7] + 0.5), range(8), "sign(x1+...+x6 + 3 x7 x8 + 1/2)")
+    return S
+
+
+def make_dl_heldout4_suite(d=30, seed=8181):
+    """Fourth held-out Boolean suite (Part 9: sum features), fixed before any Part 9 design: symmetric functions and
+    functions of signed sums of different sizes and accept-sets, mixtures with parities and gates, and three
+    non-symmetric controls (two fresh random formulas and a DNF)."""
+    S = {}
+
+    def add(name, fn, rel, desc):
+        S[name] = dict(fn=fn, relevant=list(rel), desc=desc)
+    s = lambda x, k, a=0: x[:, a:a + k].sum(1)
+    add("sym11", lambda x: _pm(np.abs(s(x, 11)) <= 1), range(11), "|x1 + ... + x11| <= 1")
+    add("ex4of9", lambda x: _pm(s(x, 9) == -1), range(9), "exactly 4 of x1..x9 are +1")
+    add("tail13", lambda x: _pm(np.abs(s(x, 13)) >= 5), range(13), "|x1 + ... + x13| >= 5")
+    add("band10", lambda x: _pm(np.abs(s(x, 10)) == 2), range(10), "|x1 + ... + x10| = 2")
+    sg = np.array([1, 1, -1, 1, -1, -1, 1, -1], float)
+    add("ssym8", lambda x, sg=sg: _pm(x[:, :8] @ sg == 0), range(8), "x1 + x2 - x3 + x4 - x5 - x6 + x7 - x8 = 0")
+    add("symxor", lambda x: _pm(np.abs(s(x, 7)) <= 1) * x[:, 7], range(8), "[|x1+...+x7| <= 1] xor x8")
+    add("symand", lambda x: _and(_pm(np.abs(s(x, 6)) <= 2), _or(x[:, 6], x[:, 7])), range(8),
+        "[|x1+...+x6| <= 2] & (x7 | x8)")
+    add("sumpar", lambda x: _sgn(s(x, 5) + 2 * x[:, 5] * x[:, 6] + 2 * x[:, 7] * x[:, 8] * x[:, 9]), range(10),
+        "sign(x1+...+x5 + 2 x6 x7 + 2 x8 x9 x10)")
+    add("majsym", lambda x: _maj(_pm(np.abs(s(x, 5)) <= 1), x[:, 5] * x[:, 6], x[:, 7]), range(8),
+        "MAJ([|x1+...+x5| <= 1], x6 x7, x8)")
+    add("dnf3x3", lambda x: _or(_and(x[:, 0], -x[:, 1], x[:, 2]), _and(x[:, 3], x[:, 4], -x[:, 5]), _and(-x[:, 6], x[:, 7], x[:, 8])),
+        range(9), "(x1 & ~x2 & x3) | (x4 & x5 & ~x6) | (~x7 & x8 & x9)")
+    rng = np.random.default_rng(seed + 2)
+    probe = np.random.default_rng(5).choice([-1.0, 1.0], size=(20000, d))
+    made = 0
+    while made < 2:
+        k = int(rng.integers(7, 10)); gts = int(rng.integers(6, 10))
+        fn, desc = _random_formula(rng, k, gts)
+        y = fn(probe)
+        if abs(y.mean()) > 0.5:
+            continue
+        infl = [np.mean(y != fn(probe * np.where(np.arange(d) == i, -1.0, 1.0))) for i in range(k)]
+        rel = [i for i in range(k) if infl[i] > 0.01]
+        if len(rel) < k - 1:
+            continue
+        add(f"h4rf{made}", fn, rel, f"random {gts}-gate formula on {k} inputs: " + desc)
+        made += 1
+    return S
