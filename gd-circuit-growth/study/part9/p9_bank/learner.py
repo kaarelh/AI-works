@@ -235,19 +235,20 @@ def _bank_pairs(Xs, ys, F, rng, nb=4000, chunk=512):
     return ia, ib, 2.0 * F * len(samp) * d + 3.0 * F * len(samp)
 
 
-def _bank_bits(A, W, thr, chunk=4000):
-    """float32 bits [A @ W > thr], chunked over rows."""
-    out = np.empty((len(A), W.shape[1]), np.float32)
+def _bank_bits(A, W, thr, dmap=None, chunk=4000):
+    """float32 bits [(A @ W)[:, dmap] > thr] (dmap: feature -> direction; None = one feature per direction)."""
+    out = np.empty((len(A), len(thr)), np.float32)
     for a in range(0, len(A), chunk):
-        out[a:a + chunk] = (np.asarray(A[a:a + chunk], np.float32) @ W) > thr
+        P = np.asarray(A[a:a + chunk], np.float32) @ W
+        out[a:a + chunk] = (P if dmap is None else P[:, dmap]) > thr
     return out
 
 
-def bank_cost(nT, nH, d, C, F, pool_mult=6, ns_max=15000, rounds=8, nb=4000, mq=2000, n_lams=8):
-    """Projected FLOPs of one bank fit (the same terms that fit_bank charges)."""
-    Fp = pool_mult * F; ns = min(nT, ns_max); N = nT + nH; per = F / rounds
-    c = 2.0 * Fp * min(ns, nb) * d + Fp * d                       # pairs, directions
-    c += 2.0 * ns * d * Fp + ns * Fp + min(ns, mq) * math.log2(max(min(ns, mq), 2)) * Fp   # pool bits, thresholds
+def bank_cost(nT, nH, d, C, F, pool_mult=6, ns_max=15000, rounds=8, nb=4000, mq=2000, n_lams=8, n_thr=1):
+    """Projected FLOPs of one bank fit (the same terms that fit_bank charges; the final projections at F directions)."""
+    Fp = pool_mult * F; Fd = Fp / n_thr; ns = min(nT, ns_max); N = nT + nH; per = F / rounds
+    c = 2.0 * Fd * min(ns, nb) * d + Fd * d                       # pairs, directions
+    c += 2.0 * ns * d * Fd + ns * Fp + min(ns, mq) * math.log2(max(min(ns, mq), 2)) * Fp   # pool bits, thresholds
     c += (rounds - 1) * 2.0 * ns * Fp * C                         # screening scores
     c += ns * F * F + 2.0 * ns * F * C * (rounds + 1)             # incremental Gram (total), cross with targets, residuals
     c += sum(((r + 1) * per) ** 3 / 3.0 + 4.0 * ((r + 1) * per) ** 2 * C for r in range(rounds))   # Cholesky per round
@@ -257,13 +258,13 @@ def bank_cost(nT, nH, d, C, F, pool_mult=6, ns_max=15000, rounds=8, nb=4000, mq=
 
 
 class _BankModel:
-    def __init__(s, W, thr, m, Wr, b0, tau, C):
-        s.W, s.thr, s.m, s.Wr, s.b0, s.tau, s.C = W, thr, m, Wr, b0, tau, C
+    def __init__(s, W, thr, dmap, m, Wr, b0, tau, C):
+        s.W, s.thr, s.dmap, s.m, s.Wr, s.b0, s.tau, s.C = W, thr, dmap, m, Wr, b0, tau, C
 
     def scores(s, A, chunk=4000):
         A = np.asarray(A, np.float32); S = np.empty((len(A), s.C), np.float32)
         for a in range(0, len(A), chunk):
-            S[a:a + chunk] = (((A[a:a + chunk] @ s.W) > s.thr).astype(np.float32) - s.m) @ s.Wr + s.b0
+            S[a:a + chunk] = (_bank_bits(A[a:a + chunk], s.W, s.thr, s.dmap) - s.m) @ s.Wr + s.b0
         return S
 
     def proba(s, A):
@@ -276,7 +277,7 @@ def _softmax_ce(Z, y):
 
 
 def fit_bank(X, y, C, T, H, F, rng, pool_mult=6, ns_max=15000, rounds=8, lam_screen=10.0, lams=(0.3, 1.0, 3.0, 10.0, 30.0, 100.0, 300.0, 1000.0),
-             v_frac=0.15, v_max=5000, nb=4000, mq=2000, want_all=True):
+             v_frac=0.15, v_max=5000, nb=4000, mq=2000, n_thr=1, want_all=True):
     """Bank member.  X: raw float32 inputs; T: training rows, H: rows to predict out of fold (may be empty).
     Features are chosen on a subsample S of T minus a validation split V; the ridge penalty and the temperature are
     chosen on V (model fitted on T - V); the reported model is refitted on T (and, if want_all, on T + H with the same
@@ -288,15 +289,19 @@ def fit_bank(X, y, C, T, H, F, rng, pool_mult=6, ns_max=15000, rounds=8, lam_scr
     perm = T[rng.permutation(len(T))]; nv = int(min(v_max, max(C, round(v_frac * len(T)))))
     V, Tm = perm[:nv], perm[nv:]
     S = Tm[:min(len(Tm), ns_max)]; Xs = np.asarray(X[S], np.float32); ys = y[S]; ns = len(S)
-    Fp = int(pool_mult * F)
+    Fd = max(1, int(pool_mult * F) // n_thr); Fp = Fd * n_thr          # pool: Fd directions x n_thr thresholds each
     # ---- candidate pool
-    ia, ib, f0 = _bank_pairs(Xs, ys, Fp, rng, nb=nb); fl += f0
-    W = (Xs[ia] - Xs[ib]).T.copy(); fl += Fp * d
+    ia, ib, f0 = _bank_pairs(Xs, ys, Fd, rng, nb=nb); fl += f0
+    W = (Xs[ia] - Xs[ib]).T.copy(); fl += Fd * d
+    dir_of = np.repeat(np.arange(Fd), n_thr)
     Bp = np.empty((ns, Fp), np.bool_); thr = np.empty(Fp, np.float32); q = rng.uniform(0.1, 0.9, Fp).astype(np.float32)
-    k = min(ns, mq)
-    for a in range(0, Fp, 4000):
-        P = Xs @ W[:, a:a + 4000]; thr[a:a + 4000] = _bank_quantiles(P[:k], q[a:a + 4000]); Bp[:, a:a + 4000] = P > thr[a:a + 4000]
-    fl += 2.0 * ns * d * Fp + ns * Fp + k * math.log2(max(k, 2)) * Fp
+    k = min(ns, mq); cd = max(1, 4000 // n_thr)
+    for a in range(0, Fd, cd):
+        P = Xs @ W[:, a:a + cd]; j0, j1 = a * n_thr, min(Fd, a + cd) * n_thr
+        if n_thr > 1:
+            P = P[:, np.repeat(np.arange(P.shape[1]), n_thr)]
+        thr[j0:j1] = _bank_quantiles(P[:k], q[j0:j1]); Bp[:, j0:j1] = P > thr[j0:j1]
+    fl += 2.0 * ns * d * Fd + ns * Fp + k * math.log2(max(k, 2)) * Fp
     mp = Bp.mean(0, dtype=np.float64).astype(np.float32); sdp = np.sqrt(mp * (1 - mp)) + 1e-3
     Y = np.zeros((ns, C), np.float32); Y[np.arange(ns), ys] = 1.0; Yc = Y - Y.mean(0)
     # ---- forward screening in rounds (ridge on the selected bits, residual correlation of the remaining candidates)
@@ -320,19 +325,23 @@ def fit_bank(X, y, C, T, H, F, rng, pool_mult=6, ns_max=15000, rounds=8, lam_scr
         G = np.block([[G, X12], [X12.T, G22]]); RY = np.vstack([RY, (Nc.T @ Yc).astype(np.float64)])
         Bc = np.concatenate([Bc, Nc], 1); sel += new
     del Bp, Bc
-    Ws, ts = W[:, sel].copy(), thr[sel].copy(); Fs = len(sel)
-    info["F"] = Fs; info["pool"] = Fp; info["ns"] = ns
+    if n_thr > 1:                                      # distinct directions of the selected bits, and the bit -> direction map
+        ud, dmap = np.unique(dir_of[sel], return_inverse=True); Ws = W[:, ud].copy()
+    else:
+        Ws, dmap = W[:, sel].copy(), None
+    ts = thr[sel].copy(); Fs = len(sel); U = Ws.shape[1]
+    info["F"] = Fs; info["dirs"] = U; info["pool"] = Fp; info["ns"] = ns
 
     # ---- readout: accumulate (uncentred) Gram, sums and cross-products over row groups
     def acc(rows, keep=False):
         Gq = np.zeros((Fs, Fs), np.float32); s = np.zeros(Fs); BY = np.zeros((Fs, C), np.float32); cnt = np.bincount(y[rows], minlength=C).astype(np.float64)
         kept = [] if keep else None
         for a in range(0, len(rows), 4000):
-            B = _bank_bits(X[rows[a:a + 4000]], Ws, ts); Gq += B.T @ B; s += B.sum(0, dtype=np.float64)
+            B = _bank_bits(X[rows[a:a + 4000]], Ws, ts, dmap); Gq += B.T @ B; s += B.sum(0, dtype=np.float64)
             Yb = np.zeros((len(B), C), np.float32); Yb[np.arange(len(B)), y[rows[a:a + 4000]]] = 1.0; BY += B.T @ Yb
             if keep:
                 kept.append(B)
-        f = 2.0 * len(rows) * d * Fs + len(rows) * Fs + len(rows) * Fs * (Fs + 1) + 2.0 * len(rows) * Fs * C
+        f = 2.0 * len(rows) * d * U + len(rows) * Fs + len(rows) * Fs * (Fs + 1) + 2.0 * len(rows) * Fs * C
         return (Gq, s, BY, cnt, float(len(rows))), (np.concatenate(kept) if keep and kept else None), f
 
     def add(a, b):
@@ -360,7 +369,7 @@ def fit_bank(X, y, C, T, H, F, rng, pool_mult=6, ns_max=15000, rounds=8, lam_scr
     _, lam, tau = best; info["lam"], info["tau"] = lam, round(tau, 3)
     aT = add(aM, aV); del aM, aV
     m, Wr, yb, f = solve(aT, lam); fl += f
-    model_T = _BankModel(Ws, ts, m, Wr, yb, tau, C)
+    model_T = _BankModel(Ws, ts, dmap, m, Wr, yb, tau, C)
     PH, model_all = None, None
     if len(H):
         aH, BH, f3 = acc(H, keep=True); fl += f3
@@ -369,7 +378,7 @@ def fit_bank(X, y, C, T, H, F, rng, pool_mult=6, ns_max=15000, rounds=8, lam_scr
         if want_all:
             aT = add(aT, aH); del aH
             m2, Wr2, yb2, f = solve(aT, lam); fl += f
-            model_all = _BankModel(Ws, ts, m2, Wr2, yb2, tau, C)
+            model_all = _BankModel(Ws, ts, dmap, m2, Wr2, yb2, tau, C)
     return model_T, PH, model_all, fl, info
 
 
@@ -401,13 +410,15 @@ def fit_stacker(Ls, y, C, lam_w=1e-3, lam_b=1e-3):
 class Learner:
     def __init__(self, K=5, K_small=10, K_small_n=500, lin_one_n=10000, kfold_max=3000, hold_max=6000, ks=(1, 3, 9, 27), lin_C=(0.05, 1.0), gbt_trees=100,
                  et_trees=100, dfg_share=(0.35, 0.5), dfg_dmax=256, lam_w=1e-2, members=None, name="p9_bank",
-                 bank_share=0.45, bank_Fmax=4000, bank_dmin=256, bank_fcap=2.0, bank_lams=(0.3, 1.0, 3.0, 10.0, 30.0, 100.0, 300.0, 1000.0)):
+                 bank_share=0.45, bank_Fmax=4500, bank_dmin=256, bank_fcap=2.0, bank_lams=(0.3, 1.0, 3.0, 10.0, 30.0, 100.0, 300.0, 1000.0),
+                 bank_nthr=3, bank_gbt_reserve=0.7):
         self.K_small, self.K_small_n, self.lin_one_n = K_small, K_small_n, lin_one_n
         self.K, self.kfold_max, self.hold_max, self.ks, self.lin_C = K, kfold_max, hold_max, tuple(ks), tuple(lin_C)
         self.gbt_trees, self.et_trees, self.dfg_share, self.dfg_dmax, self.lam_w = gbt_trees, et_trees, dfg_share, dfg_dmax, lam_w
         self.members = members                     # None = all applicable; else a set of member families (dev ablation)
         self.name = name
         self.bank_share, self.bank_Fmax, self.bank_dmin, self.bank_fcap, self.bank_lams = bank_share, bank_Fmax, bank_dmin, bank_fcap, tuple(bank_lams)
+        self.bank_nthr, self.bank_gbt_reserve = bank_nthr, bank_gbt_reserve
 
     def _use(self, fam):
         return self.members is None or fam in self.members
@@ -559,25 +570,27 @@ class Learner:
         if bank_ok:
             Xb = X.astype(np.float32); enc_bank = lambda A: np.asarray(A, dtype=np.float32)
             rng_b = np.random.default_rng([seed, 9209]); kf = len(splits) > 1
-            alw = min(self.bank_share * budget, 0.9 * budget - spent[0])
+            # allowance: at most bank_share of the budget, and what is left below 0.9 after reserving bank_gbt_reserve x the
+            # LightGBM charge (the compute audit found that charge up to 1.7x low on Fashion-MNIST at n_tr ~ 800-27000)
+            alw = min(self.bank_share * budget, 0.9 * budget - spent[0] - self.bank_gbt_reserve * info["flops"].get("gbt", 0.0))
 
             def bank_proj(F):
-                c = sum(bank_cost(len(tr), len(te), d, C, F, n_lams=len(self.bank_lams)) for tr, te in splits)
-                return c + (bank_cost(n, 0, d, C, F, n_lams=len(self.bank_lams)) if kf else 0.0)
+                c = sum(bank_cost(len(tr), len(te), d, C, F, n_lams=len(self.bank_lams), n_thr=self.bank_nthr) for tr, te in splits)
+                return c + (bank_cost(n, 0, d, C, F, n_lams=len(self.bank_lams), n_thr=self.bank_nthr) if kf else 0.0)
             Fb = None
-            for F in (4000, 3500, 3000, 2500, 2000, 1500, 1000, 750, 500, 250):
+            for F in (4500, 4000, 3500, 3000, 2500, 2000, 1500, 1000, 750, 500, 250):
                 ns_b = min(len(splits[0][0]) - int(min(5000, max(C, round(0.15 * len(splits[0][0]))))), 15000)
                 if F <= self.bank_Fmax and F <= max(250, self.bank_fcap * ns_b) and bank_proj(F) <= alw:
                     Fb = F; break
             if Fb is not None:
                 if not kf:
                     tr, te = splits[0]
-                    mT, PH, mA, fl, binfo = fit_bank(Xb, y, C, tr, te, Fb, rng_b, lams=self.bank_lams); charge("bank", fl)
+                    mT, PH, mA, fl, binfo = fit_bank(Xb, y, C, tr, te, Fb, rng_b, lams=self.bank_lams, n_thr=self.bank_nthr); charge("bank", fl)
                     oof["bank"] = _logp(PH); fitters["bank"] = ("done", mA, enc_bank)
                 else:
                     P = np.zeros((len(H), C))
                     for tr, te in splits:
-                        mT, PH, _, fl, binfo = fit_bank(Xb, y, C, tr, te, Fb, rng_b, lams=self.bank_lams, want_all=False); charge("bank", fl)
+                        mT, PH, _, fl, binfo = fit_bank(Xb, y, C, tr, te, Fb, rng_b, lams=self.bank_lams, n_thr=self.bank_nthr, want_all=False); charge("bank", fl)
                         P[pos[te]] = PH
                     oof["bank"] = _logp(P); fitters["bank"] = ("bank_refit", Fb, Xb, enc_bank, rng_b)
                 info["bank"] = dict(binfo, F_budget=Fb)
@@ -605,7 +618,7 @@ class Learner:
                 m, fl = f[2](f[3], y, share, f[1]); charge(nm, fl)
                 finals.append((w[i], lambda A, m=m: m.proba(enc_pm(A))))
             elif isinstance(f, tuple) and f[0] == "bank_refit":
-                mB, _, _, fl, _ = fit_bank(f[2], y, C, np.arange(n), np.zeros(0, np.int64), f[1], f[4], lams=self.bank_lams, want_all=False); charge(nm, fl)
+                mB, _, _, fl, _ = fit_bank(f[2], y, C, np.arange(n), np.zeros(0, np.int64), f[1], f[4], lams=self.bank_lams, n_thr=self.bank_nthr, want_all=False); charge(nm, fl)
                 finals.append((w[i], lambda A, m=mB, enc=f[3]: m.proba(enc(A))))
             elif isinstance(f, tuple) and f[0] == "done":
                 m, enc = f[1], f[2]; finals.append((w[i], lambda A, m=m, enc=enc: m.proba(enc(A))))
