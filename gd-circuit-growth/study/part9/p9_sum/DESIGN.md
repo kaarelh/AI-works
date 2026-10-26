@@ -7,7 +7,9 @@ Part 9, builder S. Files:
   and the docstring header.
 - `run_toy.sh`: runs `hybrid/eval_toy.py` (unchanged) on `p9_sum.learner:Learner` with `study/part9` on `PYTHONPATH`.
 
-Frozen file: see section 6 for the md5 of `learner.py` and `dfg12.py`.
+Frozen 26 October 2026, 21:50 UTC: `learner.py` md5 `42600014816ac148105bb1cec40e8b4e`, `dfg12.py` md5
+`4ff2e0c9c324f0f1be93f604734b4a69`. Neither file was changed afterwards; md5s were recorded before and after the full
+dev evaluation.
 
 Development used only the toy suites `designed` and `dlsymdev`, with inputs permuted per fit, as in Part 8.
 
@@ -174,3 +176,21 @@ choice was checked against those definitions, and every change in this list was 
 generic parameters bear on block size and composition: k_max = 24 (block sizes up to 24 inputs) and 2 additive blocks
 per round with products of two. Neither was tuned. The exposure is recorded here so that the held-out result can be
 read with it in mind.
+
+## 6. Freeze and how to run
+
+Frozen files: `learner.py` (md5 `42600014816ac148105bb1cec40e8b4e`) and `dfg12.py` (md5
+`4ff2e0c9c324f0f1be93f604734b4a69`). `__init__.py` is empty.
+
+```
+# development-style quick run (eval_toy's --quick grid)
+sh study/part9/p9_sum/run_toy.sh dlsymdev --perm --quick
+# the full dev evaluation (as run, in two target shards per suite; then merge)
+sh study/part9/p9_sum/run_toy.sh designed dict,and3,maj3,maj9,thr10,par2,par3,par4,stair5,majpar,parmaj --perm --part=1
+sh study/part9/p9_sum/run_toy.sh designed mux,dnf3,dlist5,rmaj9,andxor,sparsepoly,rand0,rand1,rand2,rand3 --perm --part=2
+sh study/part9/p9_sum/run_toy.sh dlsymdev sym7,ex3of8,band11,far9 --perm --part=1
+sh study/part9/p9_sum/run_toy.sh dlsymdev ssym9,symxpar,twosym,thrsum --perm --part=2
+cd study/hybrid && python3 merge_toy.py p9_sum-perm designed && python3 merge_toy.py p9_sum-perm dlsymdev
+# real data (standard harness): from study/hybrid, PYTHONPATH=../part9 python3 eval_real.py p9_sum.learner:Learner <ds>
+```
+Results: `study/hybrid/results/toy__p9_sum-perm__{designed,dlsymdev}.{json,md}`; copies in `p9_sum/results/`.

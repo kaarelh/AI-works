@@ -14,8 +14,9 @@ suites, tabular data) the code path, the random-number stream and therefore the 
 block is skipped and uses its own generator (`default_rng([seed, 9])`) when it runs.
 
 **Two discrete objects, built from the training data of the fit.**
-- *Pooling sets.* For every non-constant column i, S_i = the k = 9 columns most correlated with column i over the first
-  ≤ 20000 training rows (i itself first, correlation 1). The pooled feature is the subset sum p_i(x) = Σ_{j∈S_i} x_j:
+- *Pooling sets.* For every non-constant column i and k ∈ {4, 9, 16}, S_i(k) = the k columns most correlated with column
+  i over the first ≤ 20000 training rows (i itself first, correlation 1). The pooled feature is the subset sum
+  p_i(x) = Σ_{j∈S_i(k)} x_j:
   a signed sum of a small input subset with all signs +1, the subset chosen by a data statistic. On images the most
   correlated pixels are, in practice, the near neighbours, so p_i is a learned "blob" detector; but the construction never
   uses pixel adjacency or the 28 × 28 layout - it sees only the data matrix, and a column permutation permutes the sets
@@ -29,8 +30,8 @@ block is skipped and uses its own generator (`default_rng([seed, 9])`) when it r
 
 | member | what it is | out-of-fold predictions |
 |---|---|---|
-| `gknn_<k>`, k ∈ {1, 3, 9, 27} | k-nearest-neighbour votes in the pooled representation p(x) (Euclidean on the ~650–700 subset sums) | leave-one-out votes of the stacking points against all n (as `knn`) |
-| `ggbt` | LightGBM on the gate bank [x, p(x), (x_a − x_b)·x] (≈ 784 + 650–700 + 300 ≈ 1750 columns): every split is a gate [u · x > t], u a pixel, a pooling set or a prototype pair, t a data quantile (histogram bin, 63 bins). 31 leaves, lr 0.1, 20% of the columns per tree, bagging 0.5 when the member's training set exceeds 20000 rows, `min_data_in_leaf` = clip(n/25, 2, 20). Rounds: 100 when the training set has < 5000 points; otherwise early stopping on the error of a stratified inner validation split of min(10%, 5000) points (patience 50 rounds, at least 150, at most 400; ties go to the later round) | fitted on each fold's training part (k-fold regime, n ≤ 3000) or on the n − h non-holdout points (holdout regime), pairs drawn from that part only |
+| `gknn_<k>`, k ∈ {1, 3, 9, 27} | k-nearest-neighbour votes in the pooled representation at scale 9 (Euclidean on the a ≈ 640–700 subset sums p_i, S_i(9)) | leave-one-out votes of the stacking points against all n (as `knn`) |
+| `ggbt` | LightGBM on the gate bank [x, p(x) at scales 4, 9 and 16, (x_a − x_b)·x] (F ≈ 784 + 3a + 300 ≈ 3000–3200 columns): every split is a gate [u · x > t], u a pixel, a pooling set or a prototype pair, t a data quantile (histogram bin, 63 bins). 31 leaves, lr 0.1, 12% of the columns per tree, bagging 0.5 when the member's training set exceeds 20000 rows, `min_data_in_leaf` = clip(n/25, 2, 20). Rounds: 100 when the training set has < 5000 points; otherwise early stopping on the error of a stratified inner validation split of min(10%, 5000) points (patience 50 rounds, at least 150, at most 400; ties go to the later round) | fitted on each fold's training part (k-fold regime, n ≤ 3000) or on the n − h non-holdout points (holdout regime), pairs drawn from that part only |
 
 **Refit (as Part 8's `gbt`).** k-fold regime: `ggbt` is refitted on all n with 100 rounds. Holdout regime with
 n·d ≤ 1e7 (n = 10000 on images): refitted on all n with the early-stopped round count. n·d > 1e7: the holdout-trained
@@ -59,13 +60,13 @@ Part 8's `gbt` and `et`) is invariant in distribution, not bit-for-bit.
 
 Everything of the Part 8 portfolio is counted as in Part 8. The gates block adds:
 - pooling sets: 2·r·a² (correlation matrix, r ≤ 20000 rows, a ≈ 650–700 active columns) + 4·r·a + 2·a²·log2 a (ranking);
-- pooled features of all n rows: 2·n·d·a (dense matrix product; the 0/1 matrix would need 2·9·a per row);
+- pooled features (scale 9) of all n rows, for `gknn`: 2·n·d·a (dense matrix product; the 0/1 matrix would need 2·9·a);
 - `gknn`: v1's kNN count, 2·q·n·a + 3·q·n, q = stacking-set size;
-- `ggbt`, per fit: projections 2·n·d·(a + 300); binning 16·n·F (F ≈ 1750 columns); per trained tree (all trained trees,
+- `ggbt`, per fit: projections 2·n·d·(3a + 300); binning 16·n·F (F ≈ 3100 columns); per trained tree (all trained trees,
   including the early-stopping patience rounds) the compute audit's count (audit F1, `hybrid/audit/compute.md`):
   2·d_used·n_bag·2.6 (histograms, Σ min(n_left, n_right) ≤ 1.6 n) + 12·B_used·59 (split search over the bins actually
   built, read from `Dataset.feature_num_bin`, times the feature fraction) + 2·B_used·29 (histogram subtraction) + 22·n
-  (gradients, partition, score update); + 20 per inner-validation row per tree; out-of-fold predictions 2·d·(a + 300) +
+  (gradients, partition, score update); + 20 per inner-validation row per tree; out-of-fold predictions 2·d·(3a + 300) +
   10 per tree per row.
 - The budget is `common.budget_real` (3 MLP training runs), unchanged.
 
@@ -74,14 +75,76 @@ Everything of the Part 8 portfolio is counted as in Part 8. The gates block adds
 Per query, on top of v1's (v1: up to 2 kNN scans of all n training points, 1.9e8 FLOPs at n = 60000):
 - `gknn` (when the stacker keeps it): pooling 2·d·a ≈ 1.1e6, plus a scan of all n pooled training rows, 2·n·a ≈ 8.4e7 at
   n = 60000;
-- `ggbt`: projections 2·d·(a + 300) ≈ 1.5e6, plus ≈ 10 FLOPs per tree (≤ 4000 trees) ≈ 4e4.
+- `ggbt`: projections 2·d·(3a + 300) ≈ 3.7e6, plus ≈ 10 FLOPs per tree (≤ 4000 trees) ≈ 4e4.
 So at n = 60000 the portfolio's prediction is ≈ 2.8e8 FLOPs per query (≈ 500× an MLP's 2P = 5.4e5), ≈ 2.8e12 for the
 10000 test points (≈ 0.45 of the fit budget). Stored: the n pooled training rows (≈ 0.17 GB float32 at n = 60000) in
 addition to v1's.
 
 ## 5. Development history (dev validation split only)
 
-(filled in below)
+All numbers in this section are validation errors on pool[50000:60000] of the seed-0 training pool (10000 points), for
+models trained on pool[:n]; they are not test errors and are not comparable digit-for-digit with §6. Scripts and logs:
+scratchpad `p9_gates/` (`exp1.py`–`exp6.py`, `run_dev.py`, `dev_*.log`, `exp*.log`). About 1.5 hours, on 2 shared cores.
+
+**1. Which engine for oblique gates?** (MNIST, n = 10000 unless stated.)
+
+| what | validation error |
+|---|---|
+| LightGBM, raw pixels, 100 rounds (≈ Part 8's `gbt`) | 0.0452 |
+| LightGBM on 500 random prototype-pair projections only / "nearest-enemy" pairs only | 0.0480 / 0.0488 |
+| LightGBM on raw + 500 pair projections | 0.0420 |
+| LightGBM on raw + pooled sums (k = 9 and 25) | 0.0418 |
+| LightGBM on raw + pooled (k = 9) + 300 pairs (20% of columns per tree) | **0.0386** |
+| ridge (least squares on one-hot) over 4000 quantile gates [u·x > t]: 1000 pair directions × 4 thresholds / 4000 pairs × 1 | 0.0540 / 0.0642 |
+| same, u = random signed sums of 20 pixels / signs of the 30 largest pair differences / single prototypes | 0.0698 / 0.0546 / 0.1204 |
+| same, pairs selected per class pair by a Fisher-ratio test from 200–1000 candidates | 0.0580–0.0603 |
+| ridge over 4000 pair gates at n = 50000 | 0.0399 |
+
+A convex readout over a random gate bank is capacity-limited: its cost is 2·n·F² for F gates, so F ≈ 5000 is the most the
+budget allows at n = 60000, and 4000 gates give 4.0% at n = 50000. Abandoned. Boosted trees over an augmented gate bank
+were the engine kept. Fashion-MNIST n = 10000, 100 rounds: raw 0.1184, raw + 500 pairs 0.1153.
+
+**2. Pooling for nearest neighbours.** kNN in the pooled representation (sets of k most correlated pixels):
+
+| dataset (n = 10000) | raw 1 / 3 / 9-NN | pooled k = 4 | pooled k = 9 | pooled k = 16 |
+|---|---|---|---|---|
+| MNIST | 0.0507 / 0.0465 / 0.0556 | 0.0474 / 0.0435 / 0.0484 | **0.0441 / 0.0411 / 0.0447** | 0.0493 / 0.0452 / 0.0492 |
+| Fashion-MNIST | 0.1825 / 0.1771 / 0.1771 | 0.1784 / 0.1691 / 0.1708 | 0.1819 / 0.1722 / 0.1681 | 0.1855 / 0.1797 / 0.1712 |
+| qd_dev | 0.2433 / 0.2249 / 0.2353 | 0.2149 / 0.2027 / 0.1993 | 0.2046 / **0.1919** / 0.1929 | 0.2044 / 0.1930 / 0.1912 |
+
+k = 9 was kept for `gknn`.
+
+**3. Large n** (MNIST, n = 50000, LightGBM, bagging 0.5, 63 bins). Raw pixels (30% of columns per tree): 0.0263 / 0.0235
+/ 0.0219 after 100 / 200 / 300 rounds. Raw + pooled (k = 9) + centre-minus-surround signed sums + 300 pairs (15% of
+columns): 0.0252 / 0.0207 / **0.0191**, at 95 ms per tree on one contended core.
+
+**4. The full portfolio** (`run_dev.py`; v1 = `hyb_portfolio` on the same split):
+
+| dataset | n | v1 | p9_gates (dev versions) | log2 ratio | what the stacker weights most |
+|---|---|---|---|---|---|
+| MNIST | 1000 | 0.0819 | 0.0771 | −0.09 | ggbt 0.22, gknn_3/9 0.20/0.19 |
+| Fashion-MNIST | 1000 | 0.1773 | 0.1757 | −0.01 | lin, et, ggbt |
+| qd_dev | 1000 | 0.2666 | 0.2259 (final: 0.2262) | −0.24 | ggbt 0.28, gknn_9 0.23 |
+| MNIST | 10000 | 0.0343 | 0.0342 → **0.0330** after the early-stopping fix | −0.06 | gbt, gknn_1, ggbt |
+| qd_dev | 10000 | 0.1690 | 0.1469 | −0.20 | ggbt 0.31 |
+| Fashion-MNIST | 10000 | – | 0.1097 | – | ggbt, gbt, et, lin |
+| MNIST | 50000 | – | 0.0189 (fit 334 CPU s, peak RSS 2.6 GB, 0.33 of the budget) | – | ggbt 0.34 |
+
+Member out-of-fold errors: `ggbt` is the best single member on every dev cell (e.g. qd_dev n = 10000: 0.165 against
+`gbt` 0.189 and the best Part 8 kNN 0.228; MNIST n = 50000: 0.0208 against 0.0282 and 0.0259), and `gknn` beats the
+Part 8 kNN members on MNIST and qd_dev (qd_dev n = 10000: 0.190 against 0.228).
+
+**5. Changes along the way.**
+- *Early stopping.* Stopping on the inner-validation log-loss (patience 25) stopped `ggbt` at 57 rounds at MNIST
+  n = 10000: the probabilities become over-confident long before the error stops falling. Replaced by stopping on the
+  validation error, patience 50, at least 150 rounds (179 rounds there; validation 0.0342 → 0.0330).
+- *Exact permutation equivariance.* Ranking correlations with column-index tie-breaking changed 1 of 644 pooling sets
+  under a column permutation (exact ties between pixels that are non-zero in the same few images). Fixed by rounding the
+  correlations to 1e-9 and breaking ties by a column fingerprint; `test_perm.py` now passes on all permutations tried.
+- *Multi-scale pooled bank* (the last change before freezing). LightGBM only, n = 10000, 250 rounds: pooled sums at
+  scales 4, 9, 16 + pairs (12% of columns) against scale 9 + pairs (20%): qd_dev 0.1503 against 0.1560, Fashion-MNIST
+  0.1091 against 0.1088. Kept for `ggbt`; the full portfolio with it was run once before freezing (qd_dev n = 1000:
+  0.2262, stack out-of-fold 0.239 against 0.248), and not on MNIST.
 
 ## 6. Full dev evaluation (frozen code, run once)
 
@@ -89,8 +152,39 @@ addition to v1's.
 
 ## 7. Weaknesses (honest)
 
-(filled in below)
+- **It is still a tree ensemble.** The new member is LightGBM over a richer, discrete feature bank, plus kNN in a pooled
+  representation. Neither learns a continuous direction. On MNIST at large n the dev numbers suggest the gap to the
+  strong MLP narrows but does not close (validation 1.89% at n = 50000; the strong MLP's test error at 60000 is 1.43%).
+- **The pooling sets exploit pixel correlations.** They are built from the data matrix alone and are exactly
+  permutation-equivariant, so they do not use the layout. But on images the most correlated pixels are the spatial
+  neighbours, so the sets recover local neighbourhoods from data. An MLP is free to learn the same; the auditor should
+  still read p_i as "blob" features found by a correlation test, not as layout-free in spirit.
+- **Partial invariance of `ggbt`.** LightGBM's per-tree column sampling draws columns by index, so `ggbt` is invariant in
+  distribution, not bit-for-bit (as Part 8's `gbt` and `et`).
+- **The last change was tested lightly.** The multi-scale bank was compared only as a LightGBM-only model on qd_dev and
+  Fashion-MNIST at n = 10000 (not on MNIST), and the full portfolio with it was run once (qd_dev n = 1000) before
+  freezing. Its CPU cost at n = 60000 was not measured before freezing (the n = 50000 measurement used the scale-9 bank).
+- **CPU time.** `ggbt` adds 75–200 CPU s per fit at n = 1000–10000 (the k-fold regime fits it 6 times), and ~3 CPU-min
+  at n = 50000. The whole fit is ~2–6 CPU-min, against tens of seconds for the MLP runs the FLOP budget corresponds to.
+- **Data given up for early stopping.** At large n the final booster is the holdout-trained one, trained on 90% of
+  n − h points (48600 at n = 60000): 10% for its early stopping, h for the stacker.
+- **Prediction cost.** `gknn` adds a second scan of all n training rows per query (§4): ≈ 500× an MLP per query at
+  n = 60000, ≈ 0.45 of the fit budget for the 10000 test points.
+- **Small n untested.** The dev grid starts at n = 1000. With 5 more members the stacker has ~22 inputs; at n = 100–300
+  (on the held-out grids) the stacking noise Part 8 saw at n = 100 may grow.
+- **Dev in-sample.** Every choice was made on dev validation splits; the full dev evaluation (§6) is on dev test sets,
+  seed 0 only, and is not evidence about `qd_a` / `qd_b`.
+- **FLOPs of library trees are estimates.** `ggbt` uses the compute audit's per-tree formula with measured bin counts;
+  it is not a measured count.
 
 ## 8. Freeze
 
-(filled in below)
+Frozen 26 October 2026, 21:48 UTC, after about 1.5 hours of development. `learner.py` md5
+`2728ac2b80597d9e559dedca6a70cb7c` (also in `learner.md5`; `run_full_dev.py` asserts it before running). Checked
+before freezing: on optdigits (tabular) the predictions and FLOP counts are identical to v1's at n = 300 and 1000;
+`test_perm.py` passes. The learner was not changed after the freeze.
+
+Files: `learner.py`, `__init__.py`, `learner.md5`, `DESIGN.md`, `test_perm.py` (invariance checks), `compare_dev.py`
+(the §6 table from the result files). The full dev evaluation was run with scratchpad `p9_gates/run_full_dev.py`
+(`small`: n ∈ {1000, 10000}, `large`: n = 60000, then `merge`), each part one `standard_tasks` `harness.evaluate`
+call with seeds (0,), merged into `standard_tasks/results/p9_gates-dev__<ds>.json`.
