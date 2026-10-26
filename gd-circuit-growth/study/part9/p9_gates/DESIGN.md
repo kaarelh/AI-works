@@ -176,6 +176,11 @@ Part 8 kNN members on MNIST and qd_dev (qd_dev n = 10000: 0.190 against 0.228).
   `p9_gates/diag_lgb_same.py`; 72.8 → 33.3 ms per tree) - and cuts `ggbt`'s time about 2.2–2.7×. Per the freeze rule this was **not** applied; whoever integrates the member should
   apply it as a recorded deviation, re-check identical predictions on a dev cell, and re-time. The FLOP count is not
   affected: the copies are data movement, which the analytic count does not charge.
+- **Memory at n = 60000: ~6 GB peak RSS** (6.2 GB on Fashion-MNIST, 4.4 GB on MNIST, process total, measured every
+  5 s), about twice v1's ~3 GB: the gate bank (54000 × 3175 float32, plus the row subset LightGBM bins from) and
+  LightGBM's multi-value bins come on top of v1's members. In the shared 14.3 GB memory cgroup this got the frozen run's
+  n = 60000 fits OOM-killed three times while other jobs ran (§6). Freeing the bank after binning, or building the
+  booster's `Dataset` from row chunks, would cut the peak; not done (frozen).
 - **CPU time, smaller n.** `ggbt` adds 75–200 CPU s per fit at n = 1000–10000 (the k-fold regime fits it 6 times). The
   whole fit is 1.5–3.5 CPU-min there, against tens of seconds for the MLP runs the FLOP budget corresponds to.
 - **Data given up for early stopping.** At large n the final booster is the holdout-trained one, trained on 90% of

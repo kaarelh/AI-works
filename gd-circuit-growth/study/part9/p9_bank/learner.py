@@ -243,7 +243,7 @@ def _bank_bits(A, W, thr, chunk=4000):
     return out
 
 
-def bank_cost(nT, nH, d, C, F, pool_mult=6, ns_max=15000, rounds=8, nb=4000, mq=2000):
+def bank_cost(nT, nH, d, C, F, pool_mult=6, ns_max=15000, rounds=8, nb=4000, mq=2000, n_lams=8):
     """Projected FLOPs of one bank fit (the same terms that fit_bank charges)."""
     Fp = pool_mult * F; ns = min(nT, ns_max); N = nT + nH; per = F / rounds
     c = 2.0 * Fp * min(ns, nb) * d + Fp * d                       # pairs, directions
@@ -252,7 +252,7 @@ def bank_cost(nT, nH, d, C, F, pool_mult=6, ns_max=15000, rounds=8, nb=4000, mq=
     c += ns * F * F + 2.0 * ns * F * C * (rounds + 1)             # incremental Gram (total), cross with targets, residuals
     c += sum(((r + 1) * per) ** 3 / 3.0 + 4.0 * ((r + 1) * per) ** 2 * C for r in range(rounds))   # Cholesky per round
     c += 2.0 * N * d * F + N * F + N * F * (F + 1) + 2.0 * N * F * C       # final bits, Gram, cross
-    c += 7 * (F ** 3 / 3.0 + 4.0 * F * F * C) + 2.0 * N * F * C           # 5 lambdas + T + all solves, scores
+    c += (n_lams + 2) * (F ** 3 / 3.0 + 4.0 * F * F * C) + 2.0 * N * F * C * 2   # lambda grid + T + all solves, scores
     return c
 
 
@@ -275,7 +275,7 @@ def _softmax_ce(Z, y):
     Z = Z - Z.max(1, keepdims=True); return float(np.mean(np.log(np.exp(Z).sum(1)) - Z[np.arange(len(y)), y]))
 
 
-def fit_bank(X, y, C, T, H, F, rng, pool_mult=6, ns_max=15000, rounds=8, lam_screen=10.0, lams=(1.0, 3.0, 10.0, 30.0, 100.0),
+def fit_bank(X, y, C, T, H, F, rng, pool_mult=6, ns_max=15000, rounds=8, lam_screen=10.0, lams=(0.3, 1.0, 3.0, 10.0, 30.0, 100.0, 300.0, 1000.0),
              v_frac=0.15, v_max=5000, nb=4000, mq=2000, want_all=True):
     """Bank member.  X: raw float32 inputs; T: training rows, H: rows to predict out of fold (may be empty).
     Features are chosen on a subsample S of T minus a validation split V; the ridge penalty and the temperature are
@@ -401,13 +401,13 @@ def fit_stacker(Ls, y, C, lam_w=1e-3, lam_b=1e-3):
 class Learner:
     def __init__(self, K=5, K_small=10, K_small_n=500, lin_one_n=10000, kfold_max=3000, hold_max=6000, ks=(1, 3, 9, 27), lin_C=(0.05, 1.0), gbt_trees=100,
                  et_trees=100, dfg_share=(0.35, 0.5), dfg_dmax=256, lam_w=1e-2, members=None, name="p9_bank",
-                 bank_share=0.45, bank_Fmax=4000, bank_dmin=256):
+                 bank_share=0.45, bank_Fmax=4000, bank_dmin=256, bank_fcap=2.0, bank_lams=(0.3, 1.0, 3.0, 10.0, 30.0, 100.0, 300.0, 1000.0)):
         self.K_small, self.K_small_n, self.lin_one_n = K_small, K_small_n, lin_one_n
         self.K, self.kfold_max, self.hold_max, self.ks, self.lin_C = K, kfold_max, hold_max, tuple(ks), tuple(lin_C)
         self.gbt_trees, self.et_trees, self.dfg_share, self.dfg_dmax, self.lam_w = gbt_trees, et_trees, dfg_share, dfg_dmax, lam_w
         self.members = members                     # None = all applicable; else a set of member families (dev ablation)
         self.name = name
-        self.bank_share, self.bank_Fmax, self.bank_dmin = bank_share, bank_Fmax, bank_dmin
+        self.bank_share, self.bank_Fmax, self.bank_dmin, self.bank_fcap, self.bank_lams = bank_share, bank_Fmax, bank_dmin, bank_fcap, tuple(bank_lams)
 
     def _use(self, fam):
         return self.members is None or fam in self.members
@@ -562,22 +562,22 @@ class Learner:
             alw = min(self.bank_share * budget, 0.9 * budget - spent[0])
 
             def bank_proj(F):
-                c = sum(bank_cost(len(tr), len(te), d, C, F) for tr, te in splits)
-                return c + (bank_cost(n, 0, d, C, F) if kf else 0.0)
+                c = sum(bank_cost(len(tr), len(te), d, C, F, n_lams=len(self.bank_lams)) for tr, te in splits)
+                return c + (bank_cost(n, 0, d, C, F, n_lams=len(self.bank_lams)) if kf else 0.0)
             Fb = None
             for F in (4000, 3500, 3000, 2500, 2000, 1500, 1000, 750, 500, 250):
                 ns_b = min(len(splits[0][0]) - int(min(5000, max(C, round(0.15 * len(splits[0][0]))))), 15000)
-                if F <= self.bank_Fmax and F <= max(250, ns_b) and bank_proj(F) <= alw:
+                if F <= self.bank_Fmax and F <= max(250, self.bank_fcap * ns_b) and bank_proj(F) <= alw:
                     Fb = F; break
             if Fb is not None:
                 if not kf:
                     tr, te = splits[0]
-                    mT, PH, mA, fl, binfo = fit_bank(Xb, y, C, tr, te, Fb, rng_b); charge("bank", fl)
+                    mT, PH, mA, fl, binfo = fit_bank(Xb, y, C, tr, te, Fb, rng_b, lams=self.bank_lams); charge("bank", fl)
                     oof["bank"] = _logp(PH); fitters["bank"] = ("done", mA, enc_bank)
                 else:
                     P = np.zeros((len(H), C))
                     for tr, te in splits:
-                        mT, PH, _, fl, binfo = fit_bank(Xb, y, C, tr, te, Fb, rng_b, want_all=False); charge("bank", fl)
+                        mT, PH, _, fl, binfo = fit_bank(Xb, y, C, tr, te, Fb, rng_b, lams=self.bank_lams, want_all=False); charge("bank", fl)
                         P[pos[te]] = PH
                     oof["bank"] = _logp(P); fitters["bank"] = ("bank_refit", Fb, Xb, enc_bank, rng_b)
                 info["bank"] = dict(binfo, F_budget=Fb)
@@ -605,7 +605,7 @@ class Learner:
                 m, fl = f[2](f[3], y, share, f[1]); charge(nm, fl)
                 finals.append((w[i], lambda A, m=m: m.proba(enc_pm(A))))
             elif isinstance(f, tuple) and f[0] == "bank_refit":
-                mB, _, _, fl, _ = fit_bank(f[2], y, C, np.arange(n), np.zeros(0, np.int64), f[1], f[4], want_all=False); charge(nm, fl)
+                mB, _, _, fl, _ = fit_bank(f[2], y, C, np.arange(n), np.zeros(0, np.int64), f[1], f[4], lams=self.bank_lams, want_all=False); charge(nm, fl)
                 finals.append((w[i], lambda A, m=mB, enc=f[3]: m.proba(enc(A))))
             elif isinstance(f, tuple) and f[0] == "done":
                 m, enc = f[1], f[2]; finals.append((w[i], lambda A, m=m, enc=enc: m.proba(enc(A))))
