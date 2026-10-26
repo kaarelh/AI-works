@@ -1,4 +1,15 @@
-"""hyb_portfolio: a portfolio of discrete learners combined by cross-validated stacking (Part 8, design 3).
+"""p9_bank: the Part 8 portfolio hyb_portfolio (hybrid/hyb_portfolio/learner.py, md5 063bcd91e0b221c948760ec1ba28e042)
+plus one image member, 'bank' (Part 9, builder I2): a bank of discrete prototype-pair threshold bits with a convex
+(ridge) readout, active only when every column is continuous and d >= 256.  Changes against the Part 8 file: the
+file-location constants, the bank member (functions below the kNN section; its block in fit() after the logistic
+members; its refit in the final-members loop), three constructor arguments, the default name.  Every other member, the
+stacker and the stacking set are the Part 8 code unchanged; the bank uses its own random stream, so the other members'
+fits are identical to Part 8's.
+
+BANK (see DESIGN.md): phi_j(x) = [(x_a - x_b) . x > t_j], a and b training points of different classes (b the nearest
+other-class point to a in a reference sample), t_j a random quantile of the projection; F of them (F <= 4000, from the
+FLOP budget) chosen from a pool of 6F candidates by forward screening on the ridge residual; ridge readout on the
+centred bits, penalty and softmax temperature chosen on an internal validation split.
 
 MEMBERS (each a discrete learner; each gives class probabilities):
   dfg     DFG v1.1 (discrete_learner/dfg.py, readout='logit'): exhaustive search over Fourier characters with union-bound
@@ -25,7 +36,8 @@ COMPUTE: FLOPs counted for everything (multiply-add = 2): DFG's own counter; kNN
   what is left of the budget.  Prediction is not counted (as for the networks); kNN's test-time cost is 2 n d per query.
 """
 import os, sys, math, importlib.util, numpy as np
-HERE = os.path.dirname(os.path.abspath(__file__)); HYB = os.path.dirname(HERE); STUDY = os.path.dirname(HYB)
+HERE = os.path.dirname(os.path.abspath(__file__)); STUDY = os.path.dirname(os.path.dirname(HERE))
+HYB = os.path.join(STUDY, "hybrid")
 if HYB not in sys.path:
     sys.path.insert(0, HYB)
 import common
@@ -191,6 +203,176 @@ def knn_cost(q, n, d):
     return 2.0 * q * n * d + 3.0 * q * n
 
 
+# ------------------------------------------------------------------------------------------- bank member (Part 9, I2)
+# A bank of discrete binary features phi_j(x) = [ (x_a - x_b) . x > t_j ]: a, b two training points of different classes
+# (b = the nearest point of another class to a, among a random reference sample), t_j a random quantile of the
+# projection over training points.  The bank is chosen from a pool of candidates by forward screening (squared
+# standardized correlation with the multi-output ridge residual, in rounds); the readout is ridge regression on the
+# centred bits with one-hot targets (closed form, convex), ridge penalty and a softmax temperature chosen on an internal
+# validation split.  Only Euclidean distances, inner products and per-feature quantiles are used: invariant to any fixed
+# permutation of the pixels.
+def _bank_quantiles(P, q):
+    """Per-column quantile q[j] of P[:, j] (linear interpolation)."""
+    m = P.shape[0]; Ps = np.sort(P, axis=0); pos = q * (m - 1)
+    lo = np.floor(pos).astype(np.int64); hi = np.minimum(lo + 1, m - 1); fr = (pos - lo).astype(np.float32)
+    cols = np.arange(P.shape[1])
+    return (Ps[lo, cols] * (1 - fr) + Ps[hi, cols] * fr).astype(np.float32)
+
+
+def _bank_pairs(Xs, ys, F, rng, nb=4000, chunk=512):
+    """F prototype pairs (a, b): a uniform over the rows of Xs, b = nearest row of another class within a random
+    reference sample of <= nb rows.  Returns indices into Xs and the FLOPs."""
+    ns, d = Xs.shape; ia = rng.integers(ns, size=F)
+    samp = rng.choice(ns, min(ns, nb), replace=False); Xr = Xs[samp]; yr = ys[samp]
+    rr = np.einsum("ij,ij->i", Xr, Xr); ib = np.empty(F, np.int64)
+    for a in range(0, F, chunk):
+        A = Xs[ia[a:a + chunk]]; D = rr[None, :] - 2.0 * (A @ Xr.T)
+        D[ys[ia[a:a + chunk]][:, None] == yr[None, :]] = np.inf
+        j = np.argmin(D, 1); ok = np.isfinite(D[np.arange(len(A)), j])
+        ib[a:a + chunk] = np.where(ok, samp[j], -1)
+    for t in np.where(ib < 0)[0]:                      # no other-class point in the sample: any other-class row
+        other = np.where(ys != ys[ia[t]])[0]; ib[t] = rng.choice(other) if len(other) else ia[t]
+    return ia, ib, 2.0 * F * len(samp) * d + 3.0 * F * len(samp)
+
+
+def _bank_bits(A, W, thr, chunk=4000):
+    """float32 bits [A @ W > thr], chunked over rows."""
+    out = np.empty((len(A), W.shape[1]), np.float32)
+    for a in range(0, len(A), chunk):
+        out[a:a + chunk] = (np.asarray(A[a:a + chunk], np.float32) @ W) > thr
+    return out
+
+
+def bank_cost(nT, nH, d, C, F, pool_mult=6, ns_max=15000, rounds=8, nb=4000, mq=2000):
+    """Projected FLOPs of one bank fit (the same terms that fit_bank charges)."""
+    Fp = pool_mult * F; ns = min(nT, ns_max); N = nT + nH; per = F / rounds
+    c = 2.0 * Fp * min(ns, nb) * d + Fp * d                       # pairs, directions
+    c += 2.0 * ns * d * Fp + ns * Fp + min(ns, mq) * math.log2(max(min(ns, mq), 2)) * Fp   # pool bits, thresholds
+    c += (rounds - 1) * 2.0 * ns * Fp * C                         # screening scores
+    c += ns * F * F + 2.0 * ns * F * C * (rounds + 1)             # incremental Gram (total), cross with targets, residuals
+    c += sum(((r + 1) * per) ** 3 / 3.0 + 4.0 * ((r + 1) * per) ** 2 * C for r in range(rounds))   # Cholesky per round
+    c += 2.0 * N * d * F + N * F + N * F * (F + 1) + 2.0 * N * F * C       # final bits, Gram, cross
+    c += 7 * (F ** 3 / 3.0 + 4.0 * F * F * C) + 2.0 * N * F * C           # 5 lambdas + T + all solves, scores
+    return c
+
+
+class _BankModel:
+    def __init__(s, W, thr, m, Wr, b0, tau, C):
+        s.W, s.thr, s.m, s.Wr, s.b0, s.tau, s.C = W, thr, m, Wr, b0, tau, C
+
+    def scores(s, A, chunk=4000):
+        A = np.asarray(A, np.float32); S = np.empty((len(A), s.C), np.float32)
+        for a in range(0, len(A), chunk):
+            S[a:a + chunk] = (((A[a:a + chunk] @ s.W) > s.thr).astype(np.float32) - s.m) @ s.Wr + s.b0
+        return S
+
+    def proba(s, A):
+        Z = s.tau * s.scores(A).astype(np.float64); Z -= Z.max(1, keepdims=True); P = np.exp(Z)
+        return P / P.sum(1, keepdims=True)
+
+
+def _softmax_ce(Z, y):
+    Z = Z - Z.max(1, keepdims=True); return float(np.mean(np.log(np.exp(Z).sum(1)) - Z[np.arange(len(y)), y]))
+
+
+def fit_bank(X, y, C, T, H, F, rng, pool_mult=6, ns_max=15000, rounds=8, lam_screen=10.0, lams=(1.0, 3.0, 10.0, 30.0, 100.0),
+             v_frac=0.15, v_max=5000, nb=4000, mq=2000, want_all=True):
+    """Bank member.  X: raw float32 inputs; T: training rows, H: rows to predict out of fold (may be empty).
+    Features are chosen on a subsample S of T minus a validation split V; the ridge penalty and the temperature are
+    chosen on V (model fitted on T - V); the reported model is refitted on T (and, if want_all, on T + H with the same
+    features: the bank's Gram matrix is a sum over rows).  Returns (model_T, P_H, model_all, flops, info)."""
+    from scipy.linalg import cho_factor, cho_solve
+    from scipy.optimize import minimize_scalar
+    d = X.shape[1]; fl = 0.0; info = {}
+    T = np.asarray(T); H = np.asarray(H, dtype=np.int64)
+    perm = T[rng.permutation(len(T))]; nv = int(min(v_max, max(C, round(v_frac * len(T)))))
+    V, Tm = perm[:nv], perm[nv:]
+    S = Tm[:min(len(Tm), ns_max)]; Xs = np.asarray(X[S], np.float32); ys = y[S]; ns = len(S)
+    Fp = int(pool_mult * F)
+    # ---- candidate pool
+    ia, ib, f0 = _bank_pairs(Xs, ys, Fp, rng, nb=nb); fl += f0
+    W = (Xs[ia] - Xs[ib]).T.copy(); fl += Fp * d
+    Bp = np.empty((ns, Fp), np.bool_); thr = np.empty(Fp, np.float32); q = rng.uniform(0.1, 0.9, Fp).astype(np.float32)
+    k = min(ns, mq)
+    for a in range(0, Fp, 4000):
+        P = Xs @ W[:, a:a + 4000]; thr[a:a + 4000] = _bank_quantiles(P[:k], q[a:a + 4000]); Bp[:, a:a + 4000] = P > thr[a:a + 4000]
+    fl += 2.0 * ns * d * Fp + ns * Fp + k * math.log2(max(k, 2)) * Fp
+    mp = Bp.mean(0, dtype=np.float64).astype(np.float32); sdp = np.sqrt(mp * (1 - mp)) + 1e-3
+    Y = np.zeros((ns, C), np.float32); Y[np.arange(ns), ys] = 1.0; Yc = Y - Y.mean(0)
+    # ---- forward screening in rounds (ridge on the selected bits, residual correlation of the remaining candidates)
+    per = max(1, F // rounds); sel = list(rng.choice(Fp, per, replace=False))
+    Bc = Bp[:, sel].astype(np.float32) - mp[sel]; G = (Bc.T @ Bc).astype(np.float64); RY = (Bc.T @ Yc).astype(np.float64)
+    fl += ns * len(sel) * (len(sel) + 1) + 2.0 * ns * len(sel) * C
+    for r in range(rounds):
+        lamv = lam_screen * ns / 1000.0
+        Wr = cho_solve(cho_factor(G + lamv * np.eye(len(G))), RY).astype(np.float32); fl += len(G) ** 3 / 3.0 + 4.0 * len(G) ** 2 * C
+        if r == rounds - 1 or len(sel) >= F:
+            break
+        R = Yc - Bc @ Wr; fl += 2.0 * ns * len(sel) * C
+        sc = np.empty(Fp, np.float32)
+        for a in range(0, Fp, 4000):
+            sc[a:a + 4000] = (((Bp[:, a:a + 4000].astype(np.float32).T @ R) / ns / sdp[a:a + 4000, None]) ** 2).sum(1)
+        fl += 2.0 * ns * Fp * C
+        sc[sel] = -1.0; new = [int(j) for j in np.argsort(-sc)[:min(per, F - len(sel))]]
+        Nc = Bp[:, new].astype(np.float32) - mp[new]
+        X12 = (Bc.T @ Nc).astype(np.float64); G22 = (Nc.T @ Nc).astype(np.float64)
+        fl += 2.0 * ns * len(sel) * len(new) + ns * len(new) * (len(new) + 1) + 2.0 * ns * len(new) * C
+        G = np.block([[G, X12], [X12.T, G22]]); RY = np.vstack([RY, (Nc.T @ Yc).astype(np.float64)])
+        Bc = np.concatenate([Bc, Nc], 1); sel += new
+    del Bp, Bc
+    Ws, ts = W[:, sel].copy(), thr[sel].copy(); Fs = len(sel)
+    info["F"] = Fs; info["pool"] = Fp; info["ns"] = ns
+
+    # ---- readout: accumulate (uncentred) Gram, sums and cross-products over row groups
+    def acc(rows, keep=False):
+        Gq = np.zeros((Fs, Fs), np.float32); s = np.zeros(Fs); BY = np.zeros((Fs, C), np.float32); cnt = np.bincount(y[rows], minlength=C).astype(np.float64)
+        kept = [] if keep else None
+        for a in range(0, len(rows), 4000):
+            B = _bank_bits(X[rows[a:a + 4000]], Ws, ts); Gq += B.T @ B; s += B.sum(0, dtype=np.float64)
+            Yb = np.zeros((len(B), C), np.float32); Yb[np.arange(len(B)), y[rows[a:a + 4000]]] = 1.0; BY += B.T @ Yb
+            if keep:
+                kept.append(B)
+        f = 2.0 * len(rows) * d * Fs + len(rows) * Fs + len(rows) * Fs * (Fs + 1) + 2.0 * len(rows) * Fs * C
+        return (Gq, s, BY, cnt, float(len(rows))), (np.concatenate(kept) if keep and kept else None), f
+
+    def add(a, b):
+        return tuple(a[i] + b[i] for i in range(5))
+
+    def solve(a, lam):
+        Gq, s, BY, cnt, N = a; m = s / N; yb = cnt / N
+        Gc = Gq.astype(np.float64) - N * np.outer(m, m); Rc = BY.astype(np.float64) - np.outer(s, yb)
+        Gc[np.diag_indices(Fs)] += lam * N / 1000.0
+        Wr = cho_solve(cho_factor(Gc, overwrite_a=True), Rc); del Gc
+        return m.astype(np.float32), Wr.astype(np.float32), yb.astype(np.float32), Fs ** 3 / 3.0 + 4.0 * Fs * Fs * C
+
+    aM, _, f1 = acc(Tm); aV, BV, f2 = acc(V, keep=True); fl += f1 + f2
+    best = None
+    for lam in lams:
+        m, Wr, yb, f = solve(aM, lam); fl += f
+        Sv = ((BV - m) @ Wr + yb).astype(np.float64); fl += 2.0 * len(V) * Fs * C
+        rr = minimize_scalar(lambda lt: _softmax_ce(np.exp(lt) * Sv, y[V]), bounds=(np.log(0.1), np.log(1000.0)), method="bounded",
+                             options=dict(xatol=1e-3))
+        fl += 6.0 * len(V) * C * rr.nfev
+        ce = float(rr.fun); err = float(np.mean(np.argmax(Sv, 1) != y[V]))
+        info.setdefault("val", {})[lam] = (round(err, 4), round(ce, 4))
+        if best is None or ce < best[0]:
+            best = (ce, lam, float(np.exp(rr.x)))
+    _, lam, tau = best; info["lam"], info["tau"] = lam, round(tau, 3)
+    aT = add(aM, aV); del aM, aV
+    m, Wr, yb, f = solve(aT, lam); fl += f
+    model_T = _BankModel(Ws, ts, m, Wr, yb, tau, C)
+    PH, model_all = None, None
+    if len(H):
+        aH, BH, f3 = acc(H, keep=True); fl += f3
+        Z = tau * ((BH - m) @ Wr + yb).astype(np.float64); fl += 2.0 * len(H) * Fs * C
+        Z -= Z.max(1, keepdims=True); PH = np.exp(Z); PH /= PH.sum(1, keepdims=True)
+        if want_all:
+            aT = add(aT, aH); del aH
+            m2, Wr2, yb2, f = solve(aT, lam); fl += f
+            model_all = _BankModel(Ws, ts, m2, Wr2, yb2, tau, C)
+    return model_T, PH, model_all, fl, info
+
+
 # ---------------------------------------------------------------------------------------------------------- stacker
 def fit_stacker(Ls, y, C, lam_w=1e-3, lam_b=1e-3):
     """min over w >= 0, b of mean CE(softmax(b + sum_m w_m L_m)) + lam_w |w|^2 + lam_b |b|^2."""
@@ -218,12 +400,14 @@ def fit_stacker(Ls, y, C, lam_w=1e-3, lam_b=1e-3):
 # ---------------------------------------------------------------------------------------------------------- learner
 class Learner:
     def __init__(self, K=5, K_small=10, K_small_n=500, lin_one_n=10000, kfold_max=3000, hold_max=6000, ks=(1, 3, 9, 27), lin_C=(0.05, 1.0), gbt_trees=100,
-                 et_trees=100, dfg_share=(0.35, 0.5), dfg_dmax=256, lam_w=1e-2, members=None, name="hyb_portfolio"):
+                 et_trees=100, dfg_share=(0.35, 0.5), dfg_dmax=256, lam_w=1e-2, members=None, name="p9_bank",
+                 bank_share=0.45, bank_Fmax=4000, bank_dmin=256):
         self.K_small, self.K_small_n, self.lin_one_n = K_small, K_small_n, lin_one_n
         self.K, self.kfold_max, self.hold_max, self.ks, self.lin_C = K, kfold_max, hold_max, tuple(ks), tuple(lin_C)
         self.gbt_trees, self.et_trees, self.dfg_share, self.dfg_dmax, self.lam_w = gbt_trees, et_trees, dfg_share, dfg_dmax, lam_w
         self.members = members                     # None = all applicable; else a set of member families (dev ablation)
         self.name = name
+        self.bank_share, self.bank_Fmax, self.bank_dmin = bank_share, bank_Fmax, bank_dmin
 
     def _use(self, fam):
         return self.members is None or fam in self.members
@@ -370,6 +554,34 @@ class Learner:
                     continue
                 kfold_member(f"lin_{Cr}", lambda A, yy, Cr=Cr: fit_lin(A, yy, C, Cr, seed), Zs)
 
+        # bank of prototype-pair threshold bits (Part 9): images only (every column continuous, d >= bank_dmin)
+        bank_ok = self._use("bank") and all(t == "continuous" for t in types) and d >= self.bank_dmin and len(np.unique(y)) > 1
+        if bank_ok:
+            Xb = X.astype(np.float32); enc_bank = lambda A: np.asarray(A, dtype=np.float32)
+            rng_b = np.random.default_rng([seed, 9209]); kf = len(splits) > 1
+            alw = min(self.bank_share * budget, 0.9 * budget - spent[0])
+
+            def bank_proj(F):
+                c = sum(bank_cost(len(tr), len(te), d, C, F) for tr, te in splits)
+                return c + (bank_cost(n, 0, d, C, F) if kf else 0.0)
+            Fb = None
+            for F in (4000, 3500, 3000, 2500, 2000, 1500, 1000, 750, 500, 250):
+                ns_b = min(len(splits[0][0]) - int(min(5000, max(C, round(0.15 * len(splits[0][0]))))), 15000)
+                if F <= self.bank_Fmax and F <= max(250, ns_b) and bank_proj(F) <= alw:
+                    Fb = F; break
+            if Fb is not None:
+                if not kf:
+                    tr, te = splits[0]
+                    mT, PH, mA, fl, binfo = fit_bank(Xb, y, C, tr, te, Fb, rng_b); charge("bank", fl)
+                    oof["bank"] = _logp(PH); fitters["bank"] = ("done", mA, enc_bank)
+                else:
+                    P = np.zeros((len(H), C))
+                    for tr, te in splits:
+                        mT, PH, _, fl, binfo = fit_bank(Xb, y, C, tr, te, Fb, rng_b, want_all=False); charge("bank", fl)
+                        P[pos[te]] = PH
+                    oof["bank"] = _logp(P); fitters["bank"] = ("bank_refit", Fb, Xb, enc_bank, rng_b)
+                info["bank"] = dict(binfo, F_budget=Fb)
+
         # ---- stacker
         names = sorted(oof)
         w, b, fl = fit_stacker([oof[k] for k in names], yH, C, lam_w=self.lam_w); charge("stack", fl)
@@ -392,6 +604,9 @@ class Learner:
                 share = min(self.dfg_share[1], 0.9 * (budget - spent[0]) / budget) / nd
                 m, fl = f[2](f[3], y, share, f[1]); charge(nm, fl)
                 finals.append((w[i], lambda A, m=m: m.proba(enc_pm(A))))
+            elif isinstance(f, tuple) and f[0] == "bank_refit":
+                mB, _, _, fl, _ = fit_bank(f[2], y, C, np.arange(n), np.zeros(0, np.int64), f[1], f[4], want_all=False); charge(nm, fl)
+                finals.append((w[i], lambda A, m=mB, enc=f[3]: m.proba(enc(A))))
             elif isinstance(f, tuple) and f[0] == "done":
                 m, enc = f[1], f[2]; finals.append((w[i], lambda A, m=m, enc=enc: m.proba(enc(A))))
             else:
