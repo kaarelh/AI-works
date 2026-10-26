@@ -22,15 +22,15 @@
 \item \code{dlheld2} (7, ``held-out 2''), written after DFG v1.1 was committed: a 20-input halfspace, MAJ$_{21}$, $x_1x_2\,$MAJ$(x_3,x_4,x_5)$, a 4-term 2-DNF, the symmetric function $\mathrm{sym8}=[|x_1+\dots+x_8|\ge4]$, and two random formulas on 7 inputs.
 \item \code{dlheld3} (10), fixed for Part 8 before any Part 8 design (\cref{tab:dlheld3}):
   \begin{itemize}
-  \item a CNF, a decision list, an integer-weight threshold, the 11-multiplexer;
-  \item $x_1x_2x_3\vee(x_4\wedge x_5)$, a sparse polynomial with a degree-4 term, a majority of mixed gates;
+  \item cnf3 $=(x_1\vee x_2\vee x_3)\wedge(\bar x_4\vee x_5\vee x_6)\wedge(x_7\vee\bar x_8\vee x_9)$; dlist8, a decision list on 8 literals; thrint $=\mathrm{sign}(3x_1+2x_2+2x_3+x_4+\dots+x_9)$; mux11, the 11-multiplexer;
+  \item par3or $=x_1x_2x_3\vee(x_4\wedge x_5)$; poly4 $=\mathrm{sign}(x_1x_2+x_3x_4x_5+\tfrac12x_6+x_7x_8x_9x_{10})$; mixmaj $=\mathrm{MAJ}(x_1x_2,\,x_3\wedge x_4,\,x_5\vee x_6)$;
   \item the symmetric function $\mathrm{sym9}=[|x_1+\dots+x_9|\le1]$;
-  \item two random formulas.
+  \item h3rf0 and h3rf1, random formulas with 8--9 gates on 7 inputs.
   \end{itemize}
 \end{itemize}
 Here $[\cdot]$ is $+1$ if the condition holds and $-1$ otherwise. Every suite puts the relevant inputs first. This matters for tie-breaking (\cref{sec:tiebreak}).
 
-\paragraph{The networks} \cite{gdcircuit2026}.
+\paragraph{The networks.} They are the companion paper's \cite{gdcircuit2026}.
 \begin{itemize}
 \item \emph{Architecture:} $f(x)=a^\top\mathrm{relu}(W_2\,\mathrm{relu}(W_1x+b_1)+b_2)$, two hidden layers of width 128, in the $\mu$P parameterization \cite{yang2021feature}.
 \item \emph{Training:} Adam \cite{kingma2015adam} at learning rate $10^{-3}$ on the square loss, with minibatches of 64 drawn with replacement from a fixed training set of size $n\in\{16,32,\dots,16384\}$. Training runs 20000 steps (40000 at $d=120$) and is read at the final step.
@@ -59,9 +59,9 @@ This configuration was never tuned. In Part 8, after an audit found it to be a w
 
 \begin{table}[t]
 \centering\footnotesize\setlength{\tabcolsep}{4pt}
-\begin{tabular}{llll}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{3.3cm}c>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{4.4cm}}
 \toprule
-set & size & status for DFG (Parts 6, 8) & role\\
+set & size & status & role\\
 \midrule
 toy \code{designed} & 21 & development; in-sample & Part 6 development; Part 8 dev score\\
 toy \code{random} & 20 & read during DFG's development & Part 6 development check; Part 8 supporting\\
@@ -74,7 +74,7 @@ Part 7 HELDOUT, tabular & 11 & held out in Part 7; references read by Part 8 bui
 MNIST, Fashion-MNIST & 2 & held out in Part 7; references read by Part 8 builders & the only image evidence (Parts 7, 8)\\
 HELDOUT2 & 10 & fresh in Part 8, never read by a builder & \textbf{Part 8 tabular headline}\\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \caption{Data sets and their status. ``Fresh'' sets were fixed in a commit before any design work of the part that uses them as headline evidence. Part 9 adds further fresh sets (\cref{sec:part9}).}
 \label{tab:suites}
 \end{table}
@@ -132,7 +132,7 @@ Calibration references, which enter no verdict:
 
 \subsection{Pre-registration, held-out discipline and audits}\label{sec:discipline}
 
-Each part fixed its held-out data before the learner it tests was frozen, and froze the learner before running it on held-out data.
+In each part the held-out data were fixed, and the learner frozen, before the learner was run on those data.
 \begin{itemize}
 \item \textbf{Part 6.}
   \begin{itemize}
@@ -142,7 +142,7 @@ Each part fixed its held-out data before the learner it tests was frozen, and fr
   \end{itemize}
   \Cref{sec:dfgversions} lists the exceptions.
 \item \textbf{Part 7.} Three builders developed adaptations of DFG on the 5 DEV datasets only and froze them. A protocol audit confirmed that no builder touched a held-out dataset.
-\item \textbf{Part 8.} A protocol was written before any design result was seen \repo{study/hybrid/PROTOCOL.md}. It fixed:
+\item \textbf{Part 8.} A protocol (\repo{study/hybrid/PROTOCOL.md}) was written before any design result was seen. It fixed:
   \begin{itemize}
   \item the fresh sets \code{dlheld3} and HELDOUT2 (commit \texttt{04a215b2});
   \item the FLOP budgets;

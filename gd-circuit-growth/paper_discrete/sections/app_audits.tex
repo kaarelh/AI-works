@@ -1,0 +1,160 @@
+\section{Protocols and audits}\label{app:audits}
+
+Every part was reviewed by independent audit agents: separate AI sessions with their own instructions, which reported to the orchestrating session. This appendix lists what each audit found and what was done about it. The Part 8 audit reports are in \repo{study/hybrid/audit/}. The Part 6 and 7 audit scripts and logs are in the session scratch directory, not in the repository; their findings are recorded in the write-ups \repo{study/discrete_learner/DISCRETE-LEARNER.md} and \repo{study/standard_tasks/STANDARD-TASKS.md}.
+
+\begin{table}[p]
+\centering\scriptsize\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{6.4cm}>{\raggedright\arraybackslash}X}
+\toprule
+audit finding & what was done\\
+\midrule
+\multicolumn{2}{l}{\emph{protocol and leakage}}\\
+F1: toy runs had no input permutation; all designs break ties toward low column indices (dev effect up to 0.25 in $\log_2$ per target with $\nstar\lesssim64$) & every held-out toy suite re-run with inputs permuted per fit; that run is the headline; natural-order runs kept (suite means differ by 0.01--0.04)\\
+F2: the Part 7 HELDOUT set is not blind at the reference level (the primary's builder read Part 7's per-dataset held-out tables) & headline tabular evidence = HELDOUT2; Part 7 tabular set and images labelled ``references known to the designers''; no fresh image set\\
+F3: \code{random}, \code{dlheld}, \code{dlheld2} are development, post-hoc or once-used data for DFG & toy headline = \code{dlheld3}; other suites labelled\\
+F4: \code{hyb_union} stops on a 480\,s wall clock & disclosed; cells with $\ge300$ CPU\,s flagged (\cref{app:compute})\\
+F5: large-input settings never run on real data before the held-out runs & disclosed\\
+F6: \code{hyb_stage} chooses its kNN metric before the CV split & disclosed; slightly optimistic validation, no effect on test sets\\
+F7: \code{hyb_union} froze once, aborted its dev run after 12\,s, kept developing on dev data, and froze again & disclosed; only dev data involved\\
+F8: designation scores are in-sample to development & disclosed\\
+\addlinespace
+\multicolumn{2}{l}{\emph{fairness of the references}}\\
+F1: the toy networks are one untuned, unregularized square-loss configuration; in the audit's probe, AdamW with weight decay 0.1 cut $\nstar$ by 1.7--1.9$\times$ (thr10, mux, par3) and logistic loss plus weight decay by at least 1.9--2.0$\times$ (thr10, mux) & added \code{nets_wd} (all five suites), \code{nets_cewd} (\code{dlheld3} only; the audit preferred it on all suites) and \code{nets_best}; in the full runs the per-target cut is 1.0--3.7$\times$\\
+F2--F4: final-checkpoint reading, truncated training, width & disclosed, not re-run: a test-set oracle checkpoint would lower the networks' suite-mean $\log_2\nstar$ by 0.00--0.20 (\code{dlheld3}: 0.09), a realizable validation checkpoint recovered little, and longer training would plausibly lower it by another 0.1--0.3\\
+F5: literature framing: sparse-parity wins are structural, dense-target wins are constant factors & reflected in \cref{sec:toyresults,sec:attribution}\\
+F6, F7: the MLP references are lightly tuned single networks, and the baseline's per-pixel standardization handicaps it on images & added \code{mlp_strong} and \code{mlp_strong1} on HELDOUT2, the images and the Part 7 tabular set at $n\le10000$; \code{mlp_l2unit} used on images at every $n$\\
+F8: \code{mlp_reg} is not uniformly stronger than \code{mlp} (fixed learning rate, final checkpoint, $\lambda$ chosen on 10--30 points) & disclosed; \code{mlp_best} covers those cells with hindsight, and \code{mlp_strong} selects decoupled weight decay on validation\\
+F9: \code{mlp_best} covers different variants per split & variant lists given (\cref{tab:mlpbest})\\
+F10: baseline checkpoint selection is near random at $n\le300$; the step cap and constant learning rate bind at $n>25600$ & disclosed; \code{mlp_strong} uses cosine decay to 0\\
+F11: Fashion-MNIST \code{mlp_l2unit} was missing at $n\ge30000$, and missing reference rows were silently dropped & both rows run; \texttt{compare\_hybrid.py} lists every missing row\\
+\bottomrule
+\end{tabularx}
+\caption{Part 8 audit findings and actions (1 of 2): the protocol and fairness audits. Source: \repo{study/hybrid/HYBRID.md}, \S8, and the reports in \repo{study/hybrid/audit/}.}
+\label{tab:auditactions}
+\end{table}
+
+\begin{table}[p]
+\centering\scriptsize\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{6.4cm}>{\raggedright\arraybackslash}X}
+\toprule
+audit finding & what was done\\
+\midrule
+\multicolumn{2}{l}{\emph{compute accounting}}\\
+F1: \code{hyb_portfolio}'s LightGBM FLOP formula is off by 0.05--1.7$\times$ & corrected image maximum $\approx0.74$ of the budget reported\\
+F2: kNN prediction costs up to $350\times$ an MLP's per query & disclosed (\cref{app:compute})\\
+F3: equal FLOPs are not equal CPU time & CPU seconds reported for image cells\\
+F4: \code{hyb_stage}'s tree count is uncapped and partly undercounted & disclosed; 2 cells over budget\\
+F5: toy compute is bounded by measurement, not by construction (worst case $\approx1.1$) & disclosed; largest measured toy fit 0.75\\
+F6: \code{hyb_union}'s wall-clock stop makes large fits load-dependent & disclosed; cells flagged\\
+F7, F8: ExtraTrees count plausible within about $2\times$ and $\le0.3\%$ of the budget; small items approximated or uncounted, $<2\%$ of the budget & disclosed; no budget verdict changes\\
+\addlinespace
+\multicolumn{2}{l}{\emph{discreteness}}\\
+F1: on real data the primary is a classical stack; DFG runs on 1 of 23 held-out datasets & wording (\cref{sec:discreteness}); post-hoc ablations (\cref{sec:attribution}); the suggested no-DFG run on mushroom was not done\\
+F2: logistic regression alone carries the halfspace-like toy targets & \code{lin} column added to every toy table\\
+F3: the spectral $(u\cdot z)^2$ features have continuous directions & disclosed; not ablated\\
+F4: attribution was not recorded & post-hoc member ablations\\
+F5--F7: boosting is functional gradient descent; kNN is Euclidean memory; logistic regression on continuous inputs is a linear background & wording\\
+F8: \code{hyb_union}'s parity family is idle on real data; \code{hyb_stage}'s final stage choice is not recorded & disclosed\\
+F9: toy runs not input-permuted (as protocol F1) & as protocol F1\\
+\bottomrule
+\end{tabularx}
+\caption{Part 8 audit findings and actions (2 of 2): the compute and discreteness audits.}
+\label{tab:auditactions2}
+\end{table}
+
+\begin{table}[t]
+\centering\footnotesize
+\begin{tabular}{ll}
+\toprule
+split & variants in \code{mlp_best}\\
+\midrule
+HELDOUT2 & \code{mlp}, \code{mlp_l2}, \code{mlp_strong}, \code{mlp_strong1}\\
+images & \code{mlp}, \code{mlp_unit} ($n\le10000$), \code{mlp_l2unit}, \code{mlp_strong}, \code{mlp_strong1}\\
+Part 7 tabular & \code{mlp}, \code{mlp_plus} ($n\le3000$), \code{mlp_l2}, \code{mlp_strong} and \code{mlp_strong1} ($n\le10000$)\\
+dev & \code{mlp}, \code{mlp_l2}\\
+\bottomrule
+\end{tabular}
+\caption{The MLP variants over which \code{mlp_best} takes its per-cell hindsight minimum. \code{mlp_plus} is effectively a learning-rate-grid variant, since its weight decay is negligible.}
+\label{tab:mlpbest}
+\end{table}
+
+\subsection{Part 6}
+
+Five independent audits checked the comparison:
+\begin{itemize}
+\item data and leakage;
+\item compute accounting;
+\item reproduction;
+\item two reviews of the write-up, one of numbers and one of framing.
+\end{itemize}
+
+\paragraph{Found sound.}
+\begin{itemize}
+\item There was no test-data leakage. The training sets match the networks' row for row, for every $n$ and seed, across suites and $d$, and the networks' saved weights reproduce their recorded training error on these sets.
+\item DFG sees only $(X,y)$ and a random generator.
+\item An independent ufunc-level FLOP count agrees with DFG's counter to within 0.98--1.00.
+\end{itemize}
+
+\paragraph{Found wrong, and what was done.} Each item was fixed or disclosed in the write-up.
+\begin{itemize}
+\item \emph{The degree-5/6 search} was added knowing par5 was in \code{dlheld}. The blind row now uses v1 without it.
+\item \emph{The development suites.} \code{random} was used during development, and the small-$n$ rules were tuned on the designed suite's test error. Both are labelled as not out of sample.
+\item \emph{A compute-budget bug at $d=120$.} The cross-validation folds each had the whole budget, costing up to 2.7 runs of a 20000-step network per fit. v1.1 fixes it.
+\item \emph{A tie-break bias toward low-index inputs.} The input-permutation wrapper was added before any run on \code{dlheld2}, and the size of the bias was measured (\cref{sec:tiebreak}).
+\item \emph{A seed-lucky $\nstar$ for mux.} The fresh-seed value (about 87 against 65) is reported.
+\item \emph{Several overclaims in drafts.} They were corrected after the numbers and framing reviews (commit \texttt{c12c3b5b}).
+\end{itemize}
+
+\subsection{Part 7}
+
+\begin{itemize}
+\item \textbf{Protocol audit.} No builder touched a held-out dataset. The plan to designate a primary design did not hold: \code{dfg_dirs} froze its second version after the other designs' held-out runs had started. All three are therefore reported on an equal footing.
+\item \textbf{MLP-fairness audit.}
+  \begin{itemize}
+  \item \emph{Finding.} The baseline MLP was under-regularized at small $n$: its only regularizer was early stopping, chosen on as few as 10 validation points.
+  \item \emph{Action.} \code{mlp_l2} was added, and 18 of DFG's 23 cell wins over the baseline became ties or losses against it.
+  \item \emph{Calibration.} The audit also checked the baseline's large-$n$ errors against ranges it recalled for 2-layer MLPs. They are within those ranges except MNIST (2.5\% against about 1.6--2\%). The ranges were recalled, not checked against sources.
+  \end{itemize}
+\item \textbf{Compute audit.} The FLOP counters were checked against an instrumented count. True over reported is 0.98--1.00 for \code{dfg_bits}, 1.00--1.05 for \code{dfg_gates} and 1.01--1.05 for \code{dfg_dirs}. \code{dfg_gates}'s final readout refit is not reserved in its budget check.
+\item \textbf{Claims check} (commit \texttt{9fd619b8}). It corrected the following: which wins survive, the image error ranges, the pendigits range, the gradient-boosting comparison, the framing of the test stall, and protocol details.
+\item \textbf{Incidents.}
+  \begin{itemize}
+  \item \emph{A crash and a post-freeze fallback.} \code{dfg_gates} crashed on MNIST when a Cholesky factorization failed. A jitter fallback was added that runs only when the factorization fails, so fits that never crashed are bit-identical.
+  \item \emph{The one fit where the fallback is known to have fired} (MNIST $n=10000$, seed 1) is an outlier: 0.233 against 0.075--0.076 for the other seeds. It raises that learner's image mean $\log_2$ ratio from $+0.36$ to $+0.41$, and its retry FLOPs are not counted.
+  \item \emph{Memory kills.} Several image runs were killed by the memory limit and rerun with resume support, with no effect on the results.
+  \end{itemize}
+\end{itemize}
+
+\subsection{Part 8}
+
+Four code-and-process audits ran while the primary's held-out jobs were running: protocol and leakage, compute accounting, discreteness, and fairness of the references. Each audit reports that it read no held-out result of a Part 8 learner.
+\begin{itemize}
+\item None found test-data use inside a learner, or held-out access by a builder.
+\item The freezes hold: the md5 sums match, and a re-run of the frozen primary reproduced its dev errors exactly.
+\item HELDOUT2 and \code{dlheld3} were fixed (commit \texttt{04a215b2}, 06:05) before the first builder started (06:22).
+\end{itemize}
+\Cref{tab:auditactions,tab:auditactions2} list the findings that changed something or needed disclosure. No learner was changed.
+
+
+
+\paragraph{Deviations from the Part 8 protocol.}
+\begin{itemize}
+\item \emph{Headline sets.} The protocol listed all held-out sets as plain held-out data. After the audits, the headline was restricted to the fresh \code{dlheld3} and HELDOUT2.
+\item \emph{Toy headline.} It uses permuted inputs, which the protocol did not specify.
+\item \emph{References.} The protocol named \code{mlp_best} as ``best of five'' variants; in fact 2--3 existed per split at the time. This report adds \code{nets_wd}, \code{nets_cewd}, \code{nets_best}, \code{mlp_strong} and \code{mlp_strong1}, all of which make the references stronger. The calibration references \code{lin} and \code{hgb} enter no verdict.
+\item \emph{Secondary designs.} The protocol evaluates all three frozen designs on all held-out sets.
+  \begin{itemize}
+  \item \code{hyb_stage} and \code{hyb_union} were run on the held-out toy suites only on \code{dlheld3}, with inputs permuted.
+  \item \code{hyb_union} was not run on the Part 7 tabular set.
+  \end{itemize}
+\item \emph{Ablations.} They are post hoc.
+\end{itemize}
+
+\paragraph{Scope cuts for compute.}
+\begin{itemize}
+\item \code{mlp_strong} was not run at five large Part 7 cells (adult $n=30000$ and 38842, letter 15000, connect\_4 30000 and 57557), or on the dev sets.
+\item \code{nets_cewd} was run on \code{dlheld3} only.
+\item The real ablations cover $n\le3000$ with seeds 0--1, on HELDOUT2 and the images only.
+\item \code{hgb} was not run on the \code{designed} toy suite.
+\end{itemize}
+\clearpage

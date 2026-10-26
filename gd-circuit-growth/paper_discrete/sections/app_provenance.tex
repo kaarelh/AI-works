@@ -1,0 +1,81 @@
+\section{How this work was done}\label{app:provenance}
+
+This paper and the work it reports were produced by an AI system, Claude (Anthropic), on 25--26 October 2026. Kaarel H\"anni prompted and steered it by posing the questions of Parts 6--9. No human has reviewed the code, the results or this text.
+
+\paragraph{Organisation.} One orchestrating session took each part's question from the user, wrote protocols, fixed held-out sets, ran evaluations and wrote the study's write-ups. It delegated four kinds of work to separate agents, which reported back to it:
+\begin{itemize}
+\item design work (\emph{builders});
+\item reviews of code and process (\emph{audits});
+\item checks of the write-ups against the result files (\emph{claims checks} or \emph{numbers and framing reviews});
+\item this paper's drafting.
+\end{itemize}
+Builders and auditors had their own instructions and data restrictions; the restrictions on data access are recorded in the protocol files and were checked by the protocol audits.
+
+\paragraph{Part 6} (25 October; commits on the working branch).
+\begin{itemize}
+\item \texttt{805bff0e}, 19:59: DFG's harness, a first DFG, and the held-out suite \code{dlheld}.
+\item \texttt{359a6b61}, 20:29: DFG v1 frozen for the held-out evaluation.
+\item \texttt{0220cf04}, 20:48: v1.1, made post hoc after v1's held-out run, with frozen v1 kept.
+\item \texttt{5716239b}, 21:03: the input-permutation wrapper, added after the reproduction audit found the tie-break bias, and before any run on \code{dlheld2}. \code{dlheld2} itself was committed after v1.1 (\texttt{70c604eb}).
+\item \texttt{43c842b5}, 21:30: the write-up and all results.
+\item \texttt{c12c3b5b}, 21:47: corrections from the numbers and framing reviews.
+\end{itemize}
+The networks on \code{dlheld} were trained, and their learning curves inspected, before v1 was frozen; DFG was run on that suite only after the freeze. \code{dlheld2} was written by DFG's designer.
+
+\paragraph{Part 7} (25--26 October).
+\begin{itemize}
+\item \texttt{1ae3b424}, 22:43: datasets, harness, MLP baseline and references.
+\item \texttt{ba1f1322}, 23:51: the three frozen adaptations with their dev results, and the post-freeze Cholesky fallback of \code{dfg_gates}.
+\item The MLP variants followed, with \code{mlp_l2} added after the fairness audit (\texttt{196a36d1}, \texttt{8c11bf6b}).
+\item \texttt{11e7eec7}, 02:01: the write-up.
+\item \texttt{9fd619b8}, 02:14: corrections from the claims check.
+\end{itemize}
+The three builders worked from the dev datasets only, and had about 70 minutes each.
+
+\paragraph{Part 8} (26 October).
+\begin{itemize}
+\item \texttt{04a215b2}, 06:05: \code{dlheld3} and HELDOUT2 fixed.
+\item 06:21--06:27: the shared harness, the protocol and the comparison script were committed. The first builder started at 06:22; the protocol was written before any design result was seen.
+\item \texttt{b3489586}, 09:11:20: the three frozen designs with full dev results, and the primary designated. The held-out jobs started at 09:11:27.
+\item \texttt{82d7877d} and \texttt{49807a59}, 10:26: the audit-driven additions (permuted toy runs, \code{lin}, network variants with weight decay and logistic loss, \code{mlp_strong}, coverage checks) and the four audit reports.
+\item 09:47--16:21: held-out results (the first was \code{hyb_portfolio} on MNIST, \texttt{e5a8cc30}, before the audit commits), references, secondary designs and post-hoc ablations.
+\item \texttt{dc51998a}, 16:59: the write-up, after a claims check.
+\end{itemize}
+
+\paragraph{What the orchestrator had seen when it changed the evaluation (Part 8).} The four audits ran while the primary's held-out jobs were running. By the time the audit-driven changes were decided, the orchestrating session had seen parts of the primary's held-out results in the job logs:
+\begin{itemize}
+\item the per-dataset error curves of 7 tabular datasets (phoneme, ring, twonorm and waveform\_40 from the Part 7 set; texture, wine\_quality\_white and sleep from HELDOUT2);
+\item the full MNIST learning curve, next to the MLP references then available;
+\item a few single-seed cells (connect\_4 $n=30000$, sleep $n=10000$ and 30000);
+\item the summaries of the first two \code{random} toy shards, 4 of the 20 targets;
+\item the held-out toy results of the \code{hgb} reference.
+\end{itemize}
+Every change made on the audits' findings strengthens a reference, removes a bias in the learner's favour, or narrows the claim:
+\begin{itemize}
+\item the network variants;
+\item \code{mlp_strong}, with settings from the auditor's recommendation, smoke-tested on dev data only;
+\item the input permutation;
+\item the restriction of the headline to the fresh sets.
+\end{itemize}
+No learner was changed after its freeze.
+
+\paragraph{Job scheduling (Part 8).}
+\begin{itemize}
+\item To give the reference runs priority, the running jobs of \code{hyb_stage} on Fashion-MNIST, led24 and ann\_thyroid were paused with SIGSTOP for about 50 minutes. \code{hyb_stage} has no wall-clock rule, and a stopped process accrues no CPU time, so neither its results nor its recorded CPU time are affected. No \code{hyb_union} job was paused.
+\item Two duplicate reference runs, \code{nets_wd} on \code{dlheld} and \code{mlp_strong} on pendigits, were started by mistake and stopped; one copy of each was kept.
+\end{itemize}
+
+\paragraph{Part 9.} The protocol, the new development sets and the held-out sets were committed before any Part 9 design work (\texttt{82ca257d}, 20:14), and an amendment fixing the dev image cells followed before design (\texttt{f6ad9afe}, 20:15).
+
+\paragraph{This paper.} It was drafted by a separate agent from the study's write-ups (\texttt{DISCRETE-LEARNER.md}, \texttt{STANDARD-TASKS.md}, \texttt{HYBRID.md} and their result tables), the protocols and the audit reports.
+\begin{itemize}
+\item The figures (\texttt{make\_figures.py}) and the generated tables (\texttt{make\_tables.py}) are computed directly from the result files with the study's own comparison functions.
+\item Their values were compared with the study's markdown tables.
+\item The paper itself has not yet had an independent claims check.
+\end{itemize}
+
+\paragraph{Reproducibility.} All code is in \repo{study/}: \texttt{discrete\_learner/} (Part 6), \texttt{standard\_tasks/} (Part 7), \texttt{hybrid/} (Part 8) and \texttt{part9/}. Each write-up ends with the commands that regenerate its results.
+\begin{itemize}
+\item The networks' raw outputs and the cached datasets are in a session scratch directory, not in the repository. The scripts regenerate them, and \repo{study/hybrid/results/nets_final_err.json} holds the networks' final-step test errors used for the toy comparisons.
+\item The orchestration scripts of Part 8 (\texttt{study/hybrid/orchestration/}) are kept on the working branch only.
+\end{itemize}

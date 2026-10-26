@@ -1,0 +1,64 @@
+\section{Part 9 (in progress): sum features and discrete image members}\label{sec:part9}
+
+\todo{This section holds the question and the pre-registered protocol of Part 9 (\repo{study/part9/PROTOCOL.md}, commits \texttt{82ca257d} and \texttt{f6ad9afe}, written before any Part 9 design work). Results, audits and the answers to Q1 and Q2 are to be added when the held-out runs are complete.}
+
+\paragraph{Question.} Part 8 left two clear failures of \code{hyb_portfolio} against gradient-descent-trained networks.
+\begin{enumerate}
+\item \emph{Symmetric functions.} On sym9 the portfolio needs 1229 samples against 350 for the best network. Its Fourier weight is spread over many characters, and a character search pays for each one.
+\item \emph{Images at large $n$.} On MNIST and Fashion-MNIST at $n\ge30000$, a regularized MLP ensemble wins clearly. Nearest neighbours and axis-aligned trees are the only image members.
+\end{enumerate}
+Part 9 adds two things to the portfolio.
+\begin{itemize}
+\item \emph{Sum features.} These are discrete functions of signed sums of inputs, added to the character search:
+\[
+\phi(x)=g\Bigl(\textstyle\sum_{i\in S}s_ix_i\Bigr),\qquad S\subseteq[d],\ s_i\in\{-1,+1\},
+\]
+with $g$ the indicator of a set of values of the integer sum.
+\item \emph{Discrete, pixel-permutation-invariant image members.} They may make no use of pixel adjacency. The comparator is an MLP, which is invariant to a fixed permutation of its inputs; a method that used spatial structure would have to be compared with a convolutional network.
+\end{itemize}
+
+\paragraph{Data access.}
+\begin{itemize}
+\item \emph{Development:}
+  \begin{itemize}
+  \item the toy \code{designed} suite, and a new symmetric dev suite \code{dlsymdev} of 8 targets: sym7, exactly 3 of 8 inputs $+1$, a band of $|x_1+\dots+x_{11}|$, a tail of $|x_1+\dots+x_9|$, a signed-sum version of sym9, and three mixtures: $[|x_1+\dots+x_6|\le2]\oplus x_7x_8$, an equivalence of two symmetric functions of disjoint inputs, and sign$(x_1+\dots+x_6+3x_7x_8+\tfrac12)$ (definitions in \texttt{study/boolfuncs.py});
+  \item the images MNIST and Fashion-MNIST, already seen in Part 8;
+  \item a new QuickDraw \cite{ha2017sketch} set \code{qd_dev} of 10 categories;
+  \item the tabular DEV sets.
+  \end{itemize}
+  Part 8's held-out results are known and may be looked at, but they are not evidence.
+\item \emph{Held out, fixed before any design:}
+  \begin{itemize}
+  \item the toy suite \code{dlheld4} (12 targets), with 9 symmetric or signed-sum targets of new sizes and accept-sets, and mixtures with parities and gates: $[|x_1+\dots+x_{11}|\le1]$, exactly 4 of 9 inputs $+1$, $[|x_1+\dots+x_{13}|\ge5]$, $[|x_1+\dots+x_{10}|=2]$, a signed sum of 8 inputs equal to 0, $[|x_1+\dots+x_7|\le1]\oplus x_8$, $[|x_1+\dots+x_6|\le2]\wedge(x_7\vee x_8)$, sign$(x_1+\dots+x_5+2x_6x_7+2x_8x_9x_{10})$ and MAJ$([|x_1+\dots+x_5|\le1],x_6x_7,x_8)$;
+  \item 3 non-symmetric controls in the same suite: two fresh random formulas and a 3-term DNF;
+  \item the QuickDraw sets \code{qd_a} and \code{qd_b}: 10 categories each, disjoint from \code{qd_dev}, with 60000 training and 10000 test images, and columns permuted by one fixed permutation, as are \code{qd_dev}'s.
+  \end{itemize}
+\item \emph{Regression checks} (already seen, not evidence): \code{dlheld3}, tabular DEV and HELDOUT2, MNIST and Fashion-MNIST.
+\end{itemize}
+
+\paragraph{Budgets and references.} The budgets are as in Part 8: one network run per toy fit and three MLP runs per real fit, with everything counted and prediction cost reported separately.
+\begin{itemize}
+\item \emph{Toy references} (\code{dlsymdev}, \code{dlheld4}): \code{nets}, \code{nets_wd}, \code{nets_cewd} and \code{nets_best}, plus \code{lin} and the Part 8 learner \code{hyb_portfolio} (v1).
+\item \emph{Image references} (\code{qd_dev}, \code{qd_a}, \code{qd_b}): \code{mlp}, \code{mlp_l2unit}, \code{mlp_strong} and \code{mlp_strong1}, \code{mlp_best}, \code{hgb} and \code{hyb_portfolio} v1.
+\item \emph{Seeds:} seed 0 only at $n\ge30000$ for every learner, and 3 seeds below.
+\end{itemize}
+
+\paragraph{Designs and integration rule.} Builders work on development data only, freeze, and run a full dev evaluation once.
+\begin{itemize}
+\item \emph{S:} DFG v1.2, which is DFG v1.1 plus sum-feature blocks, delivered as a replacement of the portfolio's DFG member.
+\item \emph{I1, I2:} two independent discrete, permutation-invariant image members, each added to the portfolio.
+\end{itemize}
+\code{hyb_portfolio2} is \code{hyb_portfolio} with two possible changes, and it is frozen before any held-out Part 9 run.
+\begin{itemize}
+\item \emph{DFG v1.2 replaces v1.1} if, on the dev toy suites (\code{designed} and \code{dlsymdev}, permuted inputs, against \code{nets_best}), the S variant's mean $\log_2\nstar$ ratio is lower than v1's, and no dev target gets worse by more than 0.5 in $\log_2$.
+\item \emph{An image member is added:} the one of I1 and I2 whose portfolio variant has the lower mean $\log_2(\text{error}/\text{\code{mlp_best} error})$ over the dev image cells, if that mean is lower than v1's on the same cells.
+\end{itemize}
+The image member runs only on inputs that are all continuous with $d\ge256$, so tabular results are unchanged by construction. An amendment made before any design work, for compute, fixed the dev image cells as MNIST, Fashion-MNIST and \code{qd_dev} at $n\in\{1000,10000,60000\}$, seed 0 (9 cells). The S builder's dev evaluation is the full toy grid (3 seeds) on \code{designed} and \code{dlsymdev}, inputs permuted.
+
+\paragraph{Pre-registered questions.} Verdicts follow Part 8's rules.
+\begin{itemize}
+\item \textbf{Q1 (sum features).} On \code{dlheld4}, is \code{hyb_portfolio2}'s mean $\log_2\nstar$ ratio against \code{nets_best} below 0, with more clearly-better than clearly-worse targets? Is it below v1's on the symmetric targets?
+\item \textbf{Q2 (images at large $n$).} On \code{qd_a} and \code{qd_b} at $n\ge10000$, is \code{hyb_portfolio2}'s mean $\log_2(\text{error}/\text{reference error})$ below 0 against \code{mlp_strong} and against \code{mlp_best}, and below v1's?
+\end{itemize}
+
+\paragraph{Results.} \todo{integration decision (S, I1/I2) from the dev evaluation; \code{dlheld4} table against all network references and \code{hyb_portfolio} v1 (Q1); \code{qd_a}/\code{qd_b} learning curves and per-cell verdicts at $n\ge10000$ (Q2); regression checks on \code{dlheld3}, HELDOUT2 and MNIST/Fashion-MNIST; compute and prediction cost of the new members; audits and claims check.}

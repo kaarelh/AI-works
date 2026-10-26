@@ -292,14 +292,15 @@ class DFG:
     def __init__(self, K=4, K_later=3, c=1.0, delta=0.1, rounds=8, max_new=64, max_feats=256, max_ext_bases=32,
                  local_max=12, blocks=True, ridge=1e-3, budget=(0.15, 0.03, 0.03), noise="residual", readout="ls",
                  small_n=True, cv_n=512, K_hi=6, budget_hi=0.03, background=True, logit_lam=1e-4, name=None,
-                 sums=True, sum_kmax=24, sum_mod=4, sum_add=2, sum_gcap=2048, sum_mc=0.005, sum_prod=True, sum_nmin=32):
+                 sums=True, sum_kmax=24, sum_mod=4, sum_add=2, sum_gcap=2048, sum_mc=0.005, sum_prod=True, sum_nmin=32,
+                 sum_force=True):
         self.K, self.K_later, self.c, self.delta, self.rounds = K, K_later, c, delta, rounds
         self.max_new, self.max_feats, self.max_ext_bases, self.local_max = max_new, max_feats, max_ext_bases, local_max
         self.blocks, self.ridge, self.budget, self.noise, self.readout = blocks, ridge, budget, noise, readout
         self.small_n, self.cv_n, self.K_hi, self.budget_hi, self.background = small_n, cv_n, K_hi, budget_hi, background
         self.logit_lam = logit_lam
         self.sums, self.sum_kmax, self.sum_mod, self.sum_add, self.sum_gcap = sums, sum_kmax, sum_mod, sum_add, sum_gcap
-        self.sum_mc, self.sum_prod, self.sum_nmin = sum_mc, sum_prod, sum_nmin
+        self.sum_mc, self.sum_prod, self.sum_nmin, self.sum_force = sum_mc, sum_prod, sum_nmin, sum_force
         self.name = name or ("dfg-v1.2" if readout == "logit" else f"dfg-v1.2-{readout}")
 
     def fit(self, X, y, rng=None):
@@ -467,6 +468,7 @@ class DFG:
             # ---- v1.2: sum-feature blocks (S, s): additive (up to sum_add per round, the residual deflated in between),
             #      modulated by a current character chi_T (inputs of T excluded from S), and products of two accepted
             #      additive blocks.  One union bound over every (S, s) of size k, fold variant and modulator.
+            sum_top = [0.0, None]                                       # best additive candidate (T / threshold)
             if self.sums and n >= self.sum_nmin and d >= 3:
                 nb = [k for k, _ in sorted([(k, abs(wi)) for (kind, k), wi in zip(feats, w) if kind == "chi" and k],
                                            key=lambda kv: -kv[1])][: self.sum_mod]
@@ -480,6 +482,8 @@ class DFG:
                     if b_ is None:
                         break
                     cands.append(b_)
+                    if it == 0 and th_ > 0:
+                        sum_top[:] = [T_ / th_, b_]
                     if _DBG: print("   [sum] rnd", rnd, "add", it, b_.desc(), "T %.1f thr %.1f" % (T_, th_), ok)
                     if ok and b_.key() not in have_blk:
                         blk.append(("sum", b_)); have_blk.add(b_.key())
@@ -531,8 +535,11 @@ class DFG:
                         if float(Tp[0]) / s2 > _chi2_thr(m_, tp):
                             blk.append(("sum", P)); have_blk.add(P.key())
             new = sorted(cand.items(), key=lambda kv: -kv[1][0])[: self.max_new]
-            if force and not new and not blk and forced[0] < 2 and top[1] is not None:
-                new = [(top[1], (top[0], top[2]))]; forced[0] += 1       # nothing passed: take the best guess
+            if force and not new and not blk and forced[0] < 2:          # nothing passed: take the best guess
+                if self.sum_force and sum_top[1] is not None and sum_top[0] > top[0] ** 2:
+                    blk = [("sum", sum_top[1])]; have_blk.add(sum_top[1].key()); forced[0] += 1   # v1.2: a block
+                elif top[1] is not None:
+                    new = [(top[1], (top[0], top[2]))]; forced[0] += 1
             room = min(self.max_feats, n // 2) - len(feats)          # least squares with p <= n / 2
             if (not new and not blk) or room <= 0:
                 break

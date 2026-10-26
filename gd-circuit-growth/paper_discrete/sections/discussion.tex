@@ -1,0 +1,36 @@
+\section{Discussion}\label{sec:discussion}
+
+\emph{Draft for Parts 6--8; to be revised when Part 9's results are in.}
+
+\paragraph{What discrete search buys} \status{Heuristic}. On sparse Boolean targets, enumerating a dictionary that contains the target's features and admitting them by union-bound tests needs about $\ln N$ samples per feature. It pays for search in FLOPs. At $d=30$ that fits inside the FLOPs of one gradient-descent training run, up to degree 4 on all the data. The networks pay for their search in samples: about $d^{k-1}$ for a $k$-parity in Part 3's law, and $d^{1.9}$ and $d^{2.4}$ measured for $k=3,4$. This is why DFG's advantage is largest on parity-like targets and grows with $d$, while on dense targets it is a constant factor that a regularized linear readout already achieves (\cref{sec:lin}). That much agrees with what SQ and leap theory lead one to expect \cite{abbe2023leap,barak2022hidden,edelman2023pareto}. The experiments measure the factors at equal FLOPs against concrete networks, on held-out targets, and they show where the toy-side advantage comes from: DFG's ablations and the portfolio's attribution both locate it in exhaustive character search.
+
+\paragraph{What it does not buy.} The advantage does not transfer to standard tasks through DFG's recipe.
+\begin{itemize}
+\item On images the useful features are a continuous family, and an MLP's gradient updates many directions in parallel.
+\item On tabular data DFG's dictionaries are about as good as a plain MLP and worse than a regularized one.
+\item What does beat the MLPs on fresh tabular data, on average and not significantly, is a classical stack of tree ensembles, nearest neighbours and logistic regression. That is a known result about tabular data \cite{grinsztajn2022tree,shwartzziv2022tabular}, not a consequence of the circuit-growth picture.
+\item On images at large $n$ a regularized MLP ensemble is clearly better.
+\end{itemize}
+
+\paragraph{The honest claim.} One discrete learner beats the study's gradient-descent-trained networks on both kinds of task only in a limited sense. It needs clearly less data on 9 of 10 fresh toy targets, and it has lower error on fresh tabular data on average. It does not beat them on images at large $n$, and it is a portfolio whose two halves are carried by different components. The comparison is with networks trained by gradient descent, not with gradient descent as such: the portfolio itself contains functional gradient descent (boosting), and its references are finite (\cref{sec:discreteness}).
+
+\paragraph{Limitations.}
+\begin{itemize}
+\item \textbf{The references.}
+  \begin{itemize}
+  \item \emph{Toy networks:} one width-128 architecture at one learning rate and a fixed step count, in three loss and regularization settings. Wider networks, longer training and better checkpoint choice would plausibly lower their $\nstar$ further. An audit estimated 0.00--0.20 in $\log_2$ from an oracle checkpoint and 0.1--0.3 from 2--4$\times$ longer training (\cref{app:audits}).
+  \item \emph{MLPs:} no convolutional networks, augmentation or tuned architectures. The hindsight references \code{nets_best} and \code{mlp_best} favour the networks.
+  \end{itemize}
+\item \textbf{Power.} The fresh sets are 10 toy targets and 10 tabular datasets; the tabular sign test is $p=0.11$. There is no fresh image set before Part 9.
+\item \textbf{Specialisation.} DFG was designed for the toy class, and its settings were tuned on the designed suite. The held-out toy suites were written within the study, mostly from target families already in the development suites; \code{dlheld2} was written by DFG's designer. They are blind to tuning, not to the choice of target families.
+\item \textbf{Compute.} Equal FLOPs are not equal CPU time. The portfolio uses minutes of CPU per image fit where the MLP budget corresponds to tens of seconds, and its prediction costs up to $350\times$ an MLP's per query.
+\item \textbf{Not run.} Several cells, references and secondary-design evaluations were cut for compute (\cref{app:audits}).
+\end{itemize}
+
+\paragraph{Open problems.}
+\begin{enumerate}
+\item \emph{Symmetric and signed-sum functions.} Can a discrete dictionary of sum features close the sym9 gap without losing the parity advantage? This is Part 9's Q1.
+\item \emph{Images at large $n$.} Is there a discrete, permutation-invariant image member that is competitive with a regularized MLP ensemble at $n\ge10000$, or is a continuous family of directions essential there? This is Part 9's Q2.
+\item \emph{Search versus dictionary.} DFG's dictionary is the class the toy targets were built from. A test that separates the search from the hypothesis class is still missing: for example, gradient descent restricted to the same dictionary, or DFG on targets outside it.
+\item \emph{One mechanism.} Is there one discrete learner, rather than a portfolio, that wins on both kinds of task? Part 8's attribution shows that \code{hyb_portfolio} is not one.
+\end{enumerate}

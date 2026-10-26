@@ -72,12 +72,12 @@ def tab_dlheld3():
     NR = CH.toy_nstars("dlheld3")
     P, S, U, L, G = (toy_n(k, "dlheld3") for k in ("hyb_portfolio-perm", "hyb_stage-perm", "hyb_union-perm", "lin", "hgb"))
     D = toy_n("abl_dfg-perm", "dlheld3"); X = toy_n("abl_noDFG-perm", "dlheld3")
-    out = [r"\begin{tabular}{llrrrrrrrrrr}", r"\toprule",
-           r"target & definition & portfolio & DFG alone & w/o DFG & \texttt{lin} & \texttt{hgb} & \texttt{nets} & "
-           r"\texttt{nets\_wd} & \texttt{nets\_cewd} & \texttt{nets\_best} & $\log_2$ ratio\\", r"\midrule"]
+    out = [r"\begin{tabular}{lrrrrrrrrrr}", r"\toprule",
+           r"target & portfolio & \hd{DFG\\alone} & \hd{without\\DFG} & \texttt{lin} & \texttt{hgb} & \texttt{nets} & "
+           r"\texttt{nets\_wd} & \texttt{nets\_cewd} & \texttt{nets\_best} & \hd{$\log_2$ ratio to\\\texttt{nets\_best}}\\", r"\midrule"]
     for fn in NR["nets"]:
         lr = CH.l2r(P[fn], NR["nets_best"][fn])
-        out.append(f"{fn} & {DEF[fn]} & {f_n(P[fn])} & {f_n(D[fn])} & {f_n(X[fn])} & {f_n(L[fn])} & {f_n(G[fn])} & "
+        out.append(f"{fn} & {f_n(P[fn])} & {f_n(D[fn])} & {f_n(X[fn])} & {f_n(L[fn])} & {f_n(G[fn])} & "
                    f"{f_n(NR['nets'][fn])} & {f_n(NR['nets_wd'][fn])} & {f_n(NR['nets_cewd'][fn])} & "
                    f"{f_n(NR['nets_best'][fn])} & ${lr:+.2f}$\\\\")
     out += [r"\bottomrule", r"\end{tabular}"]
@@ -152,22 +152,25 @@ def ds_stats(L, ds, kind):
 
 
 def app_part8_real():
-    out = [r"\begin{tabular}{lrrrrrr}", r"\toprule",
-           r"dataset & cells & vs \texttt{mlp\_best} (b/w) & vs \texttt{mlp\_strong} (b/w) & \texttt{hgb} vs \texttt{mlp\_best} & "
-           r"full $n$ & error: \texttt{mlp\_best} / portfolio\\", r"\midrule"]
+    short = {"mlp": "mlp", "mlp_plus": "plus", "mlp_l2": "l2", "mlp_l2unit": "l2unit", "mlp_unit": "unit",
+             "mlp_strong": "strong", "mlp_strong1": "strong1"}
+    out = [r"\begin{tabular}{lrcccrrlr}", r"\toprule",
+           r"dataset & cells & \hd{vs \texttt{mlp\_best}\\(b/w)} & \hd{vs \texttt{mlp\_strong}\\(b/w)} & "
+           r"\hd{\texttt{hgb} vs\\\texttt{mlp\_best}} & full $n$ & \hd{\texttt{mlp\_best}\\error} & variant & \hd{portfolio\\error}\\",
+           r"\midrule"]
     for title, names in (("HELDOUT2 (fresh)", list(DATA.HELDOUT2)),
                          ("Part 7 tabular set (references known to the designers)", [d for d in DATA.HELDOUT if d not in CH.IMG]),
                          ("images (references known to the designers)", list(CH.IMG))):
-        out.append(rf"\multicolumn{{7}}{{l}}{{\emph{{{title}}}}}\\")
+        out.append(rf"\multicolumn{{9}}{{l}}{{\emph{{{title}}}}}\\")
         for ds in names:
             a = ds_stats("hyb_portfolio", ds, "mlp_best"); b = ds_stats("hyb_portfolio", ds, "mlp_strong")
             h = ds_stats("hgb", ds, "mlp_best")
             mb = CH.ref("mlp_best", ds); full = mb["ns"][-1]
             e_mb = float(np.nanmean(np.array(mb["err"][-1], float)))
             rp = CH.load("hyb_portfolio", ds); e_p = float(np.nanmean(np.array(rp["err"][rp["ns"].index(full)], float)))
-            bs = f"${b[0]:+.2f}$ ({b[1]}/{b[2]})" + ("" if b[3] == a[3] else r"$^\dagger$") if b else "--"
+            bs = (f"${b[0]:+.2f}$ ({b[1]}/{b[2]})" + ("" if b[3] == a[3] else r"$^\dagger$")) if b else "--"
             out.append(f"{ds.replace('_', chr(92) + '_')} & {a[3]} & ${a[0]:+.2f}$ ({a[1]}/{a[2]}) & {bs} & ${h[0]:+.2f}$ & "
-                       f"{full} & {e_mb:.4f} ({mb['variant'][-1].replace('_', chr(92) + '_')}) / {e_p:.4f}\\\\")
+                       f"{full} & {e_mb:.4f} & {short[mb['variant'][-1]]} & {e_p:.4f}\\\\")
         out.append(r"\addlinespace[2pt]")
     out += [r"\bottomrule", r"\end{tabular}"]
     write("app_part8_real.tex", out)

@@ -1,0 +1,80 @@
+\section{Compute accounting}\label{app:compute}
+
+\paragraph{Units.}
+\begin{itemize}
+\item \emph{FLOPs.} A multiply-add counts as 2. Every fit-time operation is counted, including model selection, cross-validation and out-of-fold fits; prediction is not counted.
+\item \emph{Toy unit:} one network run, $6P\cdot64\cdot T+10P\cdot T$ FLOPs ($1.62\times10^{11}$ at $d=30$).
+\item \emph{Real unit:} one MLP training run at size $n$, $6P\cdot128\cdot S$ FLOPs. The baseline MLP's model selection costs 3 runs, and \code{mlp_l2}'s costs 5.
+\item \emph{Budgets per fit:} DFG (Part 6), one toy unit; the DFG adaptations (Part 7), one real unit; the Part 8 designs, one toy unit or three real units. \code{mlp_strong} costs 6 real units.
+\end{itemize}
+Library learners such as the tree boosters must charge an explicit analytic FLOP estimate.
+
+\paragraph{Part 6.}
+\begin{itemize}
+\item \emph{Fit compute.} DFG's largest per-fit compute is 0.08--0.46 of a network run, depending on the suite (\cref{tab:dfgsummary}). It occurs at $n=16384$, in the degree-4 search, the extensions, least squares and the logistic refinement. At $n\le512$ DFG uses at most 7.5\% of a run at $d=30$ (under 0.3\% at $n\le32$), and up to 14--15\% at $d=60$ and 120.
+\item \emph{The counter.} An independent ufunc-level count agrees with DFG's counter to within 0.98--1.00.
+\item \emph{CPU time.} DFG runs at about 8--12\,GFLOP/s at $d=30$ and 15--18\,GFLOP/s at $d=60$ and 120 (float64 numpy driven from Python); the networks run at 32--50\,GFLOP/s (float32 under XLA). So at $n=16384$ a DFG fit takes 0.25--1.7$\times$ a network's CPU time at $d=30$, and 0.26--0.52$\times$ at $d=120$.
+\end{itemize}
+
+\paragraph{Part 7.}
+\begin{itemize}
+\item \emph{Counter accuracy.} Against an instrumented count, true over reported FLOPs is 0.98--1.00 (\code{dfg_bits}), 1.00--1.05 (\code{dfg_gates}) and 1.01--1.05 (\code{dfg_dirs}).
+\item \emph{Within budget:} \code{dfg_dirs} in every cell by its own count (maximum 0.99, MNIST $n=60000$); given the measured undercount, that cell may be marginally over.
+\item \emph{Over budget:}
+  \begin{itemize}
+  \item \code{dfg_gates} in 7 cells, at most 1.07$\times$: letter, pendigits and connect\_4 at large $n$, and two image cells.
+  \item \code{dfg_bits} on images: up to 3.45$\times$ on Fashion-MNIST at $n\ge10000$, and 1.2$\times$ on MNIST at $n=60000$. These cells count against it.
+  \end{itemize}
+\end{itemize}
+
+\paragraph{Part 8: fit FLOPs.}
+
+\begin{center}\footnotesize
+\begin{tabular}{lccccc}
+\toprule
+design & toy (per network run) & Part 7 tabular & HELDOUT2 & images & dev\\
+\midrule
+\code{hyb_portfolio} & 0.20--0.75 by suite & 0.24 & 0.09 & 0.54 & 0.14\\
+\code{hyb_stage} & 0.74 (\code{dlheld3}) & 1.17 (2 of 59 cells over) & 0.77 & 0.23 & 0.36\\
+\code{hyb_union} & 0.34 (\code{dlheld3}) & not run & 0.38 & 0.17 & 0.09\\
+\bottomrule
+\end{tabular}
+\end{center}
+These are the largest per-fit fractions of the budget, by the learners' own counts. The own counts are uncorrected for the problems below.
+\begin{itemize}
+\item \emph{LightGBM charge.} \code{hyb_portfolio} charges $10\,n\,d+8\cdot31\cdot d\cdot255$ FLOPs per tree. Against an algorithmic count that tracks CPU time, this is off by $0.05$--$1.7\times$. It overcounts on toy and low-cardinality inputs and undercounts on Fashion-MNIST at about 800--27000 training rows.
+\item \emph{Corrected image maxima:} about 0.74 at Fashion-MNIST $n=3000$ (0.58--0.90 depending on the per-bin cost, against the own count of 0.54), about 0.41 at MNIST $n=3000$, and about 0.31 for both datasets at $n=60000$.
+\item \emph{Tabular and toy.} Tabular cells other than mushroom stay at most 0.15 after correction; mushroom, where DFG is counted exactly, is at most 0.24. On the toy suites the LightGBM term is overcounted and DFG is counted exactly, so the largest fit is 0.75. Toy compute is bounded by measurement, not by construction: the audit's worst-case bound is about 1.1.
+\item \emph{\code{hyb_stage}} ran over on letter at $n=10000$ and 15000, at 1.17 of the budget. Its trees and readouts have no budget guard.
+\item \emph{\code{hyb_union}} stops on a 480\,s wall clock, so its large fits depend on machine load. The cells with at least 300 CPU\,s per fit are MNIST $n=30000$ and 60000, Fashion-MNIST 60000 and sleep 95908.
+\end{itemize}
+
+\paragraph{Part 8: prediction cost.} Prediction is not counted for any learner. \code{hyb_portfolio}'s kNN members scan all $n$ training points under up to two metrics:
+\begin{center}\footnotesize
+\begin{tabular}{lccc}
+\toprule
+cell & FLOPs per query & \hd{vs an MLP's\\$2P=5.4\times10^5$} & \hd{whole test set\\(10000 points)}\\
+\midrule
+images, $n=60000$ & $1.9\times10^8$ & $\approx350\times$ & \hd{$1.9\times10^{12}$: 0.30 of the fit budget,\\0.91 of one MLP training run}\\
+images, $n=10000$ & $3.1\times10^7$ & $58\times$ & --\\
+\bottomrule
+\end{tabular}
+\end{center}
+\begin{itemize}
+\item With prediction charged, the $n=60000$ fits still stay within budget (fit $\approx0.31$ plus test set $\approx0.30$).
+\item The portfolio stores all $n$ training rows twice, about 0.38\,GB in float32 at $n=60000$, against the MLP's 0.27\,M parameters.
+\item \code{hyb_stage} and \code{hyb_union} cost at most $12\times$ and $36\times$ an MLP per query.
+\end{itemize}
+
+\paragraph{Part 8: CPU time.} Equal FLOPs are not equal time.
+\begin{itemize}
+\item \emph{Rates, by the audit's count:} tree work 0.4--1.9\,GFLOP/s, ExtraTrees 0.11--0.15, BLAS 57--111, the networks 32--50.
+\item \emph{Image fits.} Process CPU seconds per \code{hyb_portfolio} fit (seed mean) at $n=100$, 300, 1000, 3000, 10000, 30000, 60000:
+  \begin{itemize}
+  \item MNIST: 14, 29, 58, 162, 158, 116, 237;
+  \item Fashion-MNIST: 37, 91, 214, 488, 335, 200, 314.
+  \end{itemize}
+  The drop above $n=3000$ is consistent with the switch to holdout stacking, and the drop above $n\cdot d=10^7$ with the subsampled booster.
+\item \emph{Against the MLPs.} At Fashion-MNIST $n=3000$ the portfolio uses about 0.74 of the FLOP budget and about 8 CPU-minutes; the audit estimates 25--40\,s for the three MLP runs that budget corresponds to.
+\item \emph{Tabular.} On dev, every design's per-fit CPU time is at most 30\,s, comparable to the MLPs.
+\end{itemize}
