@@ -1,5 +1,5 @@
 """Final (held-out) evaluation of a frozen Part 8 learner.
-usage: python run_heldout.py <module:Class[:kwargs]> <part,...>    parts: toy, tab, img
+usage: python run_heldout.py <module:Class[:kwargs]> <part,...>    parts: toy, tab, img, img:<dataset>
   toy: the toy suites random, dlheld, dlheld2, dlheld3 (eval_toy.py, full grid and seeds)
   tab: every tabular dataset of data.HELDOUT and data.HELDOUT2 (3 seeds, full grid)
   img: mnist, fashion_mnist - 3 seeds for n <= 10000, seed 0 only at n = 30000 and 60000 (as for the Part 7 learners)
@@ -16,8 +16,9 @@ if "toy" in parts:
         subprocess.run([sys.executable, os.path.join(HERE, "eval_toy.py"), spec, suite], check=True)
 if "tab" in parts:
     SH.evaluate(L, [d for d in DATA.HELDOUT + DATA.HELDOUT2 if d not in IMG])
-if "img" in parts:
-    for ds in IMG:
+imgs = IMG if "img" in parts else [p.split(":", 1)[1] for p in parts if p.startswith("img:")]
+if imgs:
+    for ds in imgs:
         a = SH.evaluate(L, [ds], ns=[100, 300, 1000, 3000, 10000], seeds=(0, 1, 2))[ds]
         b = SH.evaluate(L, [ds], ns=[30000, 60000], seeds=(0,), tag=L.name + "-large")[ds]
         nan = float("nan")

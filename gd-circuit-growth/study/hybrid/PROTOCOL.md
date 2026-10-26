@@ -28,3 +28,23 @@ primary's.
 Standard: `mlp` (baseline), `mlp_reg` (L2-regularized MLP selected on validation: `mlp_l2` on tabular, `mlp_l2unit` on
 images, now at every n) and `mlp_best` (per cell the best of five MLP variants chosen with hindsight on the test set).
 Verdicts as in Part 7 (`compare_hybrid.py`).
+
+## Designation (recorded after the full dev runs, before any held-out run)
+
+Frozen files: `hyb_stage/learner.py` md5 75bbfc0898b78b74000c812fd87cecc3, `hyb_union/learner.py` md5
+d780099c98f6551a374775a3ee7de6dd, `hyb_portfolio/learner.py` md5 063bcd91e0b221c948760ec1ba28e042.
+
+Dev scores recomputed independently from the result files (verdicts with Part 7's rule, including the binomial test-set
+noise floor, which makes the small dev test sets resolve few cells; the builders' self-reported counts omitted that floor):
+
+| design | toy mean log2 n* ratio | toy better / worse (of 21) | real mean log2 err ratio vs min(mlp, mlp_l2) | real better / worse (of 24) | sum |
+|---|---|---|---|---|---|
+| hyb_stage | -2.79 | 21 / 0 | -0.122 | 1 / 0 | -2.91 |
+| hyb_union | -2.52 | 21 / 0 | -0.127 | 0 / 0 | -2.65 |
+| hyb_portfolio | -2.98 | 21 / 0 | -0.248 | 1 / 0 | -3.23 |
+
+hyb_stage and hyb_portfolio beat GD on dev by the rule (hyb_union has no better cell); **the primary design is
+hyb_portfolio** (lowest sum; it is also best on each side separately).
+
+Reporting addition fixed now, before held-out runs: per split, the number of datasets on which the learner's mean log2
+error ratio (over n) is below 0, with a two-sided exact sign test over datasets.

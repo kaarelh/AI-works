@@ -78,15 +78,28 @@ def cells(rl, rm, ds):
     return out
 
 
+def sign_p(k, m):
+    """Two-sided exact sign-test p-value: k of m datasets favour one side."""
+    from math import comb
+    if m == 0:
+        return float("nan")
+    t = min(k, m - k)
+    return min(1.0, 2 * sum(comb(m, i) for i in range(t + 1)) / 2 ** m)
+
+
 def summary_row(L, names, kind):
-    C = [c for ds in names for c in cells(load(L, ds), ref(kind, ds), ds)]
+    per = {ds: cells(load(L, ds), ref(kind, ds), ds) for ds in names}
+    per = {ds: c for ds, c in per.items() if c}
+    C = [c for cs in per.values() for c in cs]
     if not C:
         return None
     v = [c["v"] for c in C]
     dfs = [c["df"] for c in C if np.isfinite(c["df"])]
-    return dict(ds=len({ds for ds in names if cells(load(L, ds), ref(kind, ds), ds)}), cells=len(C), better=v.count("better"),
-                tie=v.count("tie"), worse=v.count("worse"), mean=float(np.mean([c["lr"] for c in C])),
-                median_df=float(np.median(dfs)) if dfs else float("nan"), never=len(C) - len(dfs))
+    dm = [np.mean([c["lr"] for c in cs]) for cs in per.values()]            # per-dataset mean log2 ratio
+    k = sum(x < 0 for x in dm); m = sum(x != 0 for x in dm)
+    return dict(ds=len(per), cells=len(C), better=v.count("better"), tie=v.count("tie"), worse=v.count("worse"),
+                mean=float(np.mean([c["lr"] for c in C])), median_df=float(np.median(dfs)) if dfs else float("nan"),
+                never=len(C) - len(dfs), ds_lower=k, ds_p=sign_p(k, m))
 
 
 def flops_frac(L, names):
@@ -128,8 +141,8 @@ def real_section(learners):
     L = []
     for split, names in SPLITS:
         L += [f"### Summary, {split}", "",
-              "| learner | reference | datasets | cells | better | tie | worse | mean log2(err / ref err) | median data factor | ref error never reached |",
-              "|---|---|---|---|---|---|---|---|---|---|"]
+              "| learner | reference | datasets | cells | better | tie | worse | mean log2(err / ref err) | datasets with lower mean error (sign-test p) | median data factor | ref error never reached |",
+              "|---|---|---|---|---|---|---|---|---|---|---|"]
         for l in learners + ["hgb", "mlp"]:
             for kind in ("mlp", "mlp_reg", "mlp_best"):
                 if l == kind or (l == "mlp" and kind == "mlp"):
@@ -137,7 +150,7 @@ def real_section(learners):
                 s = summary_row(l, names, kind)
                 if s:
                     L.append(f"| {l} | {kind} | {s['ds']} | {s['cells']} | {s['better']} | {s['tie']} | {s['worse']} | "
-                             f"{s['mean']:+.2f} | {s['median_df']:.2f} | {s['never']} |")
+                             f"{s['mean']:+.2f} | {s['ds_lower']} of {s['ds']} ({s['ds_p']:.2g}) | {s['median_df']:.2f} | {s['never']} |")
         for l in learners:
             ff = flops_frac(l, names)
             if ff:

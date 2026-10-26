@@ -107,15 +107,15 @@ def _feat_cols(feats, B, Z):
 class Learner:
     def __init__(self, K=4, K_later=3, K_hi=6, c=1.0, delta=0.1, rounds=8, max_new=64, max_feats=256, max_ext_bases=32,
                  local_max=12, ridge=1e-3, shares=(0.03, 0.03, 0.12, 0.03, 0.03), search_cap=4e10, lam_f=1e-3,
-                 lam_grid=(0.3, 0.1, 0.03, 0.01, 1e-3, 1e-4), n_cv=1500, force_n=512, lr=0.1, tmax=1000,
+                 lam_grid=(0.1, 0.01, 1e-3, 1e-4), n_cv=1000, force_n=128, lr=0.1, tmax=600,
                  patience=40, min_delta=2e-4, ll_w=0.1, stage2=True, nn=True, nn_ks=(1, 3, 9, 27), nn_share=0.3,
-                 nn_keep=96, name="hyb_stage"):
+                 nn_keep=96, nn_pmax=4096, name="hyb_stage"):
         self.K, self.K_later, self.K_hi, self.c, self.delta, self.rounds = K, K_later, K_hi, c, delta, rounds
         self.max_new, self.max_feats, self.max_ext_bases, self.local_max = max_new, max_feats, max_ext_bases, local_max
         self.ridge, self.shares, self.search_cap, self.lam_f, self.lam_grid = ridge, shares, search_cap, lam_f, lam_grid
         self.n_cv, self.force_n, self.lr, self.tmax, self.patience, self.ll_w = n_cv, force_n, lr, tmax, patience, ll_w
         self.stage2, self.name, self.min_delta = stage2, name, min_delta
-        self.nn, self.nn_ks, self.nn_share, self.nn_keep = nn, tuple(nn_ks), nn_share, nn_keep
+        self.nn, self.nn_ks, self.nn_share, self.nn_keep, self.nn_pmax = nn, tuple(nn_ks), nn_share, nn_keep, nn_pmax
 
     # ================================================================== stage 1: DFG-style search
     def _grow(self, B, grp, Zl, zb, Y, GD, force=False, binary_inputs=False):
@@ -189,38 +189,43 @@ class Learner:
                         Mq = (Bm * Rm[:, q:q + 1]).T @ Bm / m; T2 += Mq * Mq
                     fl[0] += 2 * m * db * db * Cy + m * db * Cy
                     offer_mat(m * T2, thr(npair), lambda f: (f // db, f % db), base2)
-            # ---- degree 3 (anchor a < i < j, all from different inputs)
+            # ---- degrees 3 and 4: anchors (a) or (a < b) from different inputs, then every pair i < j above the anchor,
+            #      batched over chunks of anchors: M[anchor, i, j] = mean(r * chi_anchor * b_i * b_j)
+            def anchored(anc, m, t):
+                Bm, Rm = B[:m], sub(m); A_ = len(anc)
+                Pa = np.prod(np.stack([Bm[:, [x[k] for x in anc]] for k in range(len(anc[0]))]), axis=0)   # m x A
+                La = np.array([x[-1] for x in anc]); ar = np.arange(db)
+                ch = max(1, int(1.5e7 // (m * db)))
+                for s0 in range(0, A_, ch):
+                    sl = slice(s0, min(s0 + ch, A_)); Ac = sl.stop - sl.start
+                    T = np.zeros((Ac, db, db))
+                    for q in range(Cy):
+                        Wq = Rm[:, q:q + 1] * Pa[:, sl]
+                        for a_ in range(Ac):
+                            Mq = (Bm * Wq[:, a_:a_ + 1]).T @ Bm; T[a_] += Mq * Mq
+                    T /= m * m
+                    fl[0] += Cy * (2 * m * Ac * db * db + 2 * m * Ac * db)
+                    Rk = ar[None, :] > La[sl, None]
+                    for k in range(len(anc[0])):
+                        Rk &= grp[None, :] != grp[np.array([x[k] for x in anc[sl]])][:, None]
+                    v = base2[None] & Rk[:, :, None] & Rk[:, None, :]
+                    Tv = np.where(v, m * T, 0.0)
+                    q = int(np.argmax(Tv)); qa, qi, qj = np.unravel_index(q, Tv.shape)
+                    offer(tuple(int(x) for x in anc[sl.start + qa]) + (int(qi), int(qj)), float(Tv[qa, qi, qj]), t)
+                    hit = np.argwhere(Tv > t)
+                    if len(hit) > 4 * self.max_new:
+                        vals = Tv[hit[:, 0], hit[:, 1], hit[:, 2]]; hit = hit[np.argpartition(-vals, 4 * self.max_new)[:4 * self.max_new]]
+                    for qa, qi, qj in hit:
+                        offer(tuple(int(x) for x in anc[sl.start + qa]) + (int(qi), int(qj)), float(Tv[qa, qi, qj]), t)
+
             if K >= 3 and db >= 3:
                 m = min(n, int(self.shares[1] * GD / (2 * db ** 3 * Cy + 1)))
                 if m >= 32:
-                    Bm, Rm = B[:m], sub(m); t = thr(math.comb(db, 3))
-                    for a in range(db - 2):
-                        v = base2.copy(); v[:a + 1] = False; ga = grp != grp[a]; v &= ga[:, None] & ga[None, :]
-                        if not v.any():
-                            continue
-                        T3 = np.zeros((db, db))
-                        for q in range(Cy):
-                            Mq = (Bm * (Rm[:, q] * Bm[:, a])[:, None]).T @ Bm / m; T3 += Mq * Mq
-                        fl[0] += 2 * m * db * db * Cy + 2 * m * db * Cy
-                        offer_mat(m * T3, t, lambda f, a=a: (a, f // db, f % db), v)
-            # ---- degree 4 (pairs a < b, then i < j), first round
+                    anchored([(a_,) for a_ in range(db - 2)], m, thr(math.comb(db, 3)))
             if K >= 4 and db >= 4:
-                npr = npair
-                m = min(n, int(self.shares[2] * GD / (npr * (2 * db * db * Cy + 3 * db * Cy) + 1)))
+                m = min(n, int(self.shares[2] * GD / (npair * (2 * db * db * Cy + 3 * db * Cy) + 1)))
                 if m >= 32:
-                    Bm, Rm = B[:m], sub(m); t = thr(math.comb(db, 4))
-                    for a, b in zip(*np.where(base2)):
-                        if b >= db - 2:
-                            continue
-                        v = base2.copy(); v[:b + 1] = False
-                        gab = (grp != grp[a]) & (grp != grp[b]); v &= gab[:, None] & gab[None, :]
-                        if not v.any():
-                            continue
-                        T4 = np.zeros((db, db)); w = Bm[:, a] * Bm[:, b]
-                        for q in range(Cy):
-                            Mq = (Bm * (Rm[:, q] * w)[:, None]).T @ Bm / m; T4 += Mq * Mq
-                        fl[0] += 2 * m * db * db * Cy + 3 * m * db * Cy
-                        offer_mat(m * T4, t, lambda f, a=a, b=b: (int(a), int(b), f // db, f % db), v)
+                    anchored([(int(a_), int(b_)) for a_, b_ in zip(*np.where(base2)) if b_ < db - 2], m, thr(math.comb(db, 4)))
             # ---- higher degrees (first round, few bits only): chi_{T1 u T2} via character tables
             if rnd == 0 and db <= 40:
                 for k in range(self.K + 1, self.K_hi + 1):
@@ -333,7 +338,34 @@ class Learner:
 
     # ================================================================== stage-1 readout: softmax regression
     @staticmethod
-    def _softmax(A, y, C, pen, W0=None, maxiter=300):
+    def _logit_newton(A, y, pen, W0=None, maxiter=40):
+        """C = 2: penalised logistic regression by damped Newton; returned in the softmax layout (W = [0, w], b = [0, c])."""
+        n, p = A.shape; t = y.astype(np.float64); fl = 0.0
+        Ab = np.hstack([A, np.ones((n, 1))]); pv = np.r_[pen, 0.0] + np.r_[np.zeros(p), 1e-8]
+        w = np.zeros(p + 1) if W0 is None else np.r_[W0[:2 * p].reshape(p, 2)[:, 1] - W0[:2 * p].reshape(p, 2)[:, 0], W0[-1] - W0[-2]]
+        def loss(w):
+            z = Ab @ w
+            return float(np.mean(np.logaddexp(0.0, z) - t * z) + 0.5 * np.sum(pv * w * w)), z
+        L, z = loss(w)
+        for it in range(maxiter):
+            pr = 1.0 / (1.0 + np.exp(-z)); g = Ab.T @ (pr - t) / n + pv * w
+            H = (Ab * (pr * (1 - pr))[:, None]).T @ Ab / n + np.diag(pv)
+            step = np.linalg.solve(H, g); fl += 2 * n * (p + 1) ** 2 + (p + 1) ** 3 / 3 + 8 * n * (p + 1)
+            a = 1.0
+            while True:
+                Ln, zn = loss(w - a * step); fl += 2 * n * (p + 1)
+                if Ln <= L or a < 1e-4:
+                    break
+                a *= 0.5
+            w, dL, L, z = w - a * step, L - Ln, Ln, zn
+            if dL < 1e-10 or np.max(np.abs(a * step)) < 1e-7:
+                break
+        Wm = np.zeros((p, 2)); Wm[:, 1] = w[:p]
+        return np.concatenate([Wm.ravel(), [0.0, w[p]]]), fl
+
+    def _softmax(self, A, y, C, pen, W0=None, maxiter=300):
+        if C == 2:
+            return self._logit_newton(A, y, pen, W0)
         n, p = A.shape; Yo = np.eye(C)[y]; nf = [0]
 
         def f(th):
@@ -358,9 +390,10 @@ class Learner:
     # ================================================================== stage 2: boosted trees on the margins
     def _gb_params(self, n_tr, d, C, rng):
         leaves = int(np.clip(n_tr // 25, 4, 31))
-        p = dict(objective="binary" if C == 2 else "multiclass", learning_rate=self.lr, num_leaves=leaves,
-                 min_data_in_leaf=int(np.clip(n_tr // 50, 2, 20)), lambda_l2=1.0, feature_fraction=0.8 if d <= 100 else 0.3,
-                 bagging_fraction=0.8, bagging_freq=1, max_bin=63 if d > 200 else 255, num_threads=1, verbose=-1,
+        big = getattr(self, "_big", False)
+        p = dict(objective="binary" if C == 2 else "multiclass", learning_rate=0.2 if big else self.lr, num_leaves=leaves,
+                 min_data_in_leaf=int(np.clip(n_tr // 50, 2, 20)), lambda_l2=1.0,
+                 feature_fraction=0.2 if big else 0.8 if d <= 100 else 0.3, bagging_fraction=0.5 if big else 0.8, bagging_freq=1, max_bin=63 if d > 200 else 255, num_threads=1, verbose=-1,
                  seed=int(rng.integers(1 << 30)), min_sum_hessian_in_leaf=1e-3)
         if C > 2:
             p["num_class"] = C
@@ -477,12 +510,12 @@ class Learner:
             v = np.stack([(y[nb] == c).sum(1) for c in range(C)], 1)
             errs[nm] = float(np.mean(v.argmax(1) != y[:Q]))
         met = min(errs, key=errs.get); fm = mets[met]; M = fm(X); dm = M.shape[1]
-        P = int(min(n, self.nn_share * budget / (2.0 * n * dm + 1)))
+        P = int(min(n, self.nn_pmax, self.nn_share * budget / (2.0 * n * dm + 1)))
         if P < 20:
             return None, fl
-        K = P - 1 if n <= self.n_cv else min(P - 1, self.nn_keep)
+        K = min(P - 1, self.nn_keep)
         nb = self._knn(M, M[:P], K, self_rows=True); fl += 2.0 * n * P * dm
-        return dict(f=fm, Pm=M[:P], P=P, nb=nb, yP=y[:P], met=met, errs=errs), fl
+        return dict(f=fm, Pm=M[:P].copy(), P=P, nb=nb, yP=y[:P].copy(), met=met, errs=errs), fl
 
     # ================================================================== fit
     def fit(self, X, y, types, C, rng=None, budget=None):
@@ -496,7 +529,7 @@ class Learner:
         sc = lambda e, l: float(np.mean(e) + self.ll_w * np.mean(l))
         idx = rng.permutation(n); order = idx[np.argsort(y[idx], kind="stable")]
         if n <= self.n_cv:
-            F = 10 if n <= 64 else 5
+            F = 10 if n <= 64 else 5 if n <= 200 else 3
             fold = np.empty(n, int); fold[order] = np.arange(n) % F
             variants = [False, True] if n <= self.force_n else [False]
             GDf = 0.3 * budget / (F * len(variants)); folds = list(range(F))
@@ -510,7 +543,13 @@ class Learner:
         nnopts = [False, True] if NN is not None else [False]
         if NN is not None:
             info.update(nn_metric=NN["met"], nn_P=NN["P"])
-        nl = len(self.lam_grid)
+        # large problems (n d C > 5e7, e.g. MNIST-sized): 2 penalties, 100 L-BFGS iterations, faster trees, no trees-alone
+        self._big = big = n * enc_all.z(X[:1]).shape[1] * C > 5e7
+        lams = self.lam_grid[-2:] if big else self.lam_grid; mi = 100 if big else 300
+        tmax = 200 if big else self.tmax
+        if big and NN is not None:
+            nnopts = [True]
+        nl = len(lams)
         cfgs = [(v, o) for v in variants for o in nnopts]
         E = {c: [np.zeros(n) for _ in range(nl)] for c in cfgs}; Lg = {c: [np.zeros(n) for _ in range(nl)] for c in cfgs}
         keep = {}; vm = np.zeros(n, bool)
@@ -527,9 +566,9 @@ class Learner:
                 for o in nnopts:
                     A1, A2, isf1 = (np.hstack([Atr, Vtr]), np.hstack([Ava, Vva]), np.r_[isf, np.zeros(Vtr.shape[1], bool)]) if o else (Atr, Ava, isf)
                     th = None
-                    for li, lam in enumerate(self.lam_grid):
+                    for li, lam in enumerate(lams):
                         pen = np.where(isf1, min(self.lam_f, lam), lam)
-                        th, f2 = self._softmax(A1, y[tr], C, pen, th); fl += f2
+                        th, f2 = self._softmax(A1, y[tr], C, pen, th, mi); fl += f2
                         Sva = self._margins(th, A2, C); e, l = self._eval(Sva, y[va])
                         E[(v, o)][li][va], Lg[(v, o)][li][va] = e, l
                         keep[(f, v, o, li)] = (self._margins(th, A1, C), Sva, enc if F == 1 else None, feats if F == 1 else None, th)
@@ -544,23 +583,23 @@ class Learner:
             b_, c_ = int(np.sum((e0 > 0) & (e1 == 0))), int(np.sum((e0 == 0) & (e1 > 0)))
             vstar = bool(b_ - c_ > 2 * math.sqrt(b_ + c_))
         cstar = min([c for c in cfgs if c[0] == vstar], key=lambda c: best[c][0]); ostar = cstar[1]
-        li = best[cstar][1]; lam = self.lam_grid[li]
+        li = best[cstar][1]; lam = lams[li]
         s1_err, s1_ll = E[cstar][li][vm], Lg[cstar][li][vm]
         cands = {"s1": (sc(s1_err, s1_ll), 0)}
         info.update(F=F, variant=int(vstar), nn=int(ostar), lam=lam, s1_err=float(np.mean(s1_err)))
         # ---- stage 2: trees on the stage-1 margins, and trees alone; number of trees by validation logloss
         if self.stage2 and np.mean(s1_err) > 0:
-            for fam in ("s12", "s2"):
-                LL = np.zeros(self.tmax); ER = np.zeros(self.tmax); nv = 0
+            for fam in (("s12",) if big else ("s12", "s2")):
+                LL = np.zeros(tmax); ER = np.zeros(tmax); nv = 0
                 for f in folds:
                     va = fold == f; tr = ~va
                     if fam == "s12":
                         Str, Sva = keep[(f, vstar, ostar, li)][:2]
                     else:
                         Str, Sva = self._prior(y[tr], C, tr.sum()), self._prior(y[tr], C, va.sum())
-                    _, f3, ll, er = self._gb_run(X[tr], y[tr], Str, X[va], y[va], Sva, C, cat, rng, self.tmax)
+                    _, f3, ll, er = self._gb_run(X[tr], y[tr], Str, X[va], y[va], Sva, C, cat, rng, tmax)
                     fl += f3; k = va.sum(); nv += k
-                    pad = lambda a: np.r_[a, np.full(self.tmax - len(a), a[-1])]
+                    pad = lambda a: np.r_[a, np.full(tmax - len(a), a[-1])]
                     LL += k * pad(ll); ER += k * pad(er)
                 LL /= nv; ER /= nv; T = int(np.argmin(LL)) + 1
                 cands[fam] = (float(ER[T - 1] + self.ll_w * LL[T - 1]), T)
@@ -580,7 +619,7 @@ class Learner:
                 V = self._votes(NN["nb"], np.ones(NN["P"], bool), NN["yP"], C)
                 A = np.hstack([A, V]); isf = np.r_[isf, np.zeros(V.shape[1], bool)]
             pen = np.where(isf, min(self.lam_f, lam), lam)
-            th, f2 = self._softmax(A, y, C, pen, th0 if len(th0) == (A.shape[1] + 1) * C else None); fl += f2
+            th, f2 = self._softmax(A, y, C, pen, th0 if len(th0) == (A.shape[1] + 1) * C else None, mi); fl += f2
             S = self._margins(th, A, C)
             info.update(n_feats=len(feats), feats=[(f[0], f[1]) if f[0] != "quad" else ("quad",) for f in feats][:30])
         else:

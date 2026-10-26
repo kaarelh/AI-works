@@ -1,6 +1,7 @@
 """Score a learner on a toy suite against the study's networks.
 usage: python eval_toy.py <module:Class[:kwargs]> <designed|random|dlheld|dlheld2|dlheld3> [fns] [--quick]
---quick: n in {64, 256, 1024, 4096}, seeds 0-1 (development).  Writes results/toy__<learner>__<suite>.json (+ .md)."""
+--quick: n in {64, 256, 1024, 4096}, seeds 0-1 (development).  Writes results/toy__<learner>__<suite>.json (+ .md);
+--part=K (a shard of the targets, run in parallel): writes ...__<suite>__partK.json; merge with merge_toy.py."""
 import os, sys, json
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 import common
@@ -20,6 +21,7 @@ if suite in ("dlheld", "dlheld2", "dlheld3"):
 else:
     res = TH.evaluate(L, suite=suite, fns=fns, **kw)
 os.makedirs(os.path.join(HERE, "results"), exist_ok=True)
-tag = os.path.join(HERE, "results", f"toy__{L.name}__{suite}" + ("__quick" if quick else ""))
+part = [a.split("=", 1)[1] for a in sys.argv[3:] if a.startswith("--part=")]
+tag = os.path.join(HERE, "results", f"toy__{L.name}__{suite}" + ("__quick" if quick else "") + (f"__part{part[0]}" if part else ""))
 json.dump(res, open(tag + ".json", "w"))
 open(tag + ".md", "w").close(); TH.report(res, file=tag + ".md")

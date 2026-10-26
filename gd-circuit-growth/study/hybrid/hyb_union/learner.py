@@ -23,11 +23,20 @@ or when the FLOP budget is spent.
 import math, itertools, time, numpy as np
 from scipy.optimize import minimize
 
-FAMS = ("tree", "parity", "linear", "knn", "forest")
+FAMS = ("tree", "parity", "linear", "knn", "forest", "lr")
 
 
-def pen(q, L):                                   # chi^2_q upper-tail bound at level exp(-L) (Laurent-Massart)
-    return q + 2.0 * math.sqrt(q * L) + 2.0 * L
+_PEN = {}
+
+
+def pen(q, L):
+    """the chi^2_q upper-tail quantile at level exp(-L) (exact, scipy), cached"""
+    key = (int(q), round(L, 3))
+    if key not in _PEN:
+        from scipy.stats import chi2
+        v = float(chi2.isf(math.exp(-L), q)) if L < 700 else q + 2.0 * math.sqrt(q * L) + 2.0 * L
+        _PEN[key] = v if np.isfinite(v) else q + 2.0 * math.sqrt(q * L) + 2.0 * L
+    return _PEN[key]
 
 
 def _prob(F, K):
@@ -89,7 +98,7 @@ def enc_bits(X, cols, max_cat=16):
             out.append(np.where(x > p, 1.0, -1.0))
         else:
             out.append(np.where(x > p[2], 1.0, -1.0))
-    return np.stack(out, 1) if out else np.zeros((len(X), 0))
+    return np.stack(out, 1).astype(np.float32) if out else np.zeros((len(X), 0), np.float32)
 
 
 def enc_tree(X, cols):
@@ -153,7 +162,10 @@ def fit_intercept(Y, K):
 def lr_stage(A, Y, K, rng, lams, folds, maxiter):
     """Choose lambda (or intercept only) by cross-validated log-loss; refit on all rows.  Returns (W, b, lam, flops)."""
     n = len(A); fl = 0.0
-    if n >= 4000:                                              # one 80/20 holdout
+    if n * A.shape[1] * K > 2e7:                               # large: lambda on a subsample (80/20 of <= 8000 rows)
+        sub = rng.permutation(n)[: min(n, max(4000, int(2e7 / (A.shape[1] * K))), 8000)]
+        splits = [(sub[: int(0.8 * len(sub))], sub[int(0.8 * len(sub)):])]
+    elif n >= 4000:                                            # one 80/20 holdout
         perm = rng.permutation(n); splits = [(perm[: int(0.8 * n)], perm[int(0.8 * n):])]
     else:
         fid = rng.permutation(n) % folds; splits = [(np.where(fid != f)[0], np.where(fid == f)[0]) for f in range(folds)]
@@ -170,7 +182,7 @@ def lr_stage(A, Y, K, rng, lams, folds, maxiter):
     F_oof = oof[best] if len(splits) > 1 else None
     if best == "none":
         return None, fit_intercept(Y, K), best, fl, F_oof
-    W, b, _, f = fit_lr(A, Y, K, best, None, maxiter); fl += f
+    W, b, _, f = fit_lr(A, Y, K, best, None, maxiter if n * A.shape[1] * K <= 2e7 else 40); fl += f
     return W, b, best, fl, F_oof
 
 
@@ -184,6 +196,18 @@ def knn_lists(Q, R, kmax, self_excl, block=512):
         q = Q[s: s + block]; D = sr[None, :] - 2.0 * (q @ R.T)
         if self_excl:
             D[np.arange(len(q)), np.arange(s, s + len(q))] = np.inf
+        I = np.argpartition(D, kmax - 1, axis=1)[:, :kmax]
+        o = np.argsort(np.take_along_axis(D, I, 1), axis=1); out[s: s + block] = np.take_along_axis(I, o, 1)
+    return out
+
+
+def knn_lists_ref(Q, R, kmax, pos, block=512):
+    """like knn_lists(Q, R) but row i of Q is excluded from its own neighbours when it is reference row pos[i] >= 0"""
+    Q = Q.astype(np.float32); R = R.astype(np.float32); sr = (R * R).sum(1)
+    out = np.empty((len(Q), kmax), dtype=np.int64)
+    for s in range(0, len(Q), block):
+        q = Q[s: s + block]; D = sr[None, :] - 2.0 * (q @ R.T); p = pos[s: s + block]; ok = p >= 0
+        D[np.where(ok)[0], p[ok]] = np.inf
         I = np.argpartition(D, kmax - 1, axis=1)[:, :kmax]
         o = np.argsort(np.take_along_axis(D, I, 1), axis=1); out[s: s + block] = np.take_along_axis(I, o, 1)
     return out
@@ -203,15 +227,18 @@ def _combos(d, k):
     return np.array(list(itertools.combinations(range(d), k)), dtype=np.int64).reshape(-1, k)
 
 
-def char_search(Xb, G, Hs, ks, ms, topT, fl):
+def char_search(Xb, G, Hs, ks, ms, topT, fl, thr):
     """Newton statistics sum_c (sum_i g_ic chi_S(x_i))^2 / Hs_c of every character of degree k in ks on the first ms[k]
-    rows.  Returns {k: list of (S, stat_on_m)} with the topT per degree."""
+    rows (float32).  Returns {k: list of (S, stat_on_m)}: the topT per degree for k <= 2, and for k >= 3 those above
+    thr[k] (at most topT)."""
     db = Xb.shape[1]; K = G.shape[1]; out = {}
+    Xb = Xb.astype(np.float32); G = G.astype(np.float32)
     for k in ks:
         m = ms.get(k, 0)
         if m < 32 or db < k or math.comb(db, k) > 2e6:          # (very wide bit sets: no enumeration of that degree)
             continue
         Xm, Gm = Xb[:m], G[:m]; Hm = Hs[k]
+        Hm = np.asarray(Hm, dtype=np.float32)
         if k == 1:
             V = Xm.T @ Gm; fl[0] += 2.0 * m * db * K
             st = (V * V / Hm).sum(1); keys = [(j,) for j in range(db)]
@@ -231,9 +258,11 @@ def char_search(Xb, G, Hs, ks, ms, topT, fl):
                 for c in range(K):
                     M = (Xm[:, lo:] * (Gm[:, c] * w)[:, None]).T @ Xm[:, lo:]; acc += M * M / Hm[c]
                 fl[0] += K * (2.0 * m * (db - lo) ** 2 + 2 * m * (db - lo)) + m * (k - 2)
-                iu = np.triu_indices(db - lo, 1); sts.append(acc[iu])
-                keys += [tuple(P.tolist()) + (lo + i, lo + j) for i, j in zip(iu[0].tolist(), iu[1].tolist())]
+                iu = np.triu_indices(db - lo, 1); v = acc[iu]; hit = np.nonzero(v > thr[k])[0]
+                sts.append(v[hit]); keys += [tuple(P.tolist()) + (lo + int(iu[0][q]), lo + int(iu[1][q])) for q in hit]
             st = np.concatenate(sts) if sts else np.zeros(0)
+        elif m < 64:
+            continue
         else:                                                  # k = 5, 6: products of degree-ceil(k/2), floor(k/2) tables
             k1, k2 = (k + 1) // 2, k // 2; T1, T2 = _combos(db, k1), _combos(db, k2)
             Z1 = np.ones((m, len(T1)), np.float32); Z2 = np.ones((m, len(T2)), np.float32); Xm = Xm.astype(np.float32)
@@ -245,8 +274,8 @@ def char_search(Xb, G, Hs, ks, ms, topT, fl):
             for c in range(K):
                 M = (Z1 * Gm[:, c:c + 1].astype(np.float32)).T @ Z2; acc += M * M / np.float32(Hm[c])
             fl[0] += K * 2.0 * m * len(T1) * len(T2) + m * (len(T1) * k1 + len(T2) * k2)
-            a_ = acc.ravel(); kk = min(40 * topT, a_.size - 1)
-            flat = np.argpartition(-a_, kk)[:kk]; flat = flat[np.argsort(-a_[flat])]; seen = {}
+            a_ = acc.ravel(); flat = np.nonzero(a_ > thr[k])[0]
+            flat = flat[np.argsort(-a_[flat])][: 40 * topT]; seen = {}
             for f in flat:
                 a, b = divmod(int(f), len(T2)); S = tuple(sorted(set(T1[a].tolist()) | set(T2[b].tolist())))
                 if len(S) == k and S not in seen:
@@ -282,14 +311,14 @@ def _chi(Xb, S):
 
 # ------------------------------------------------------------------ the learner
 class Learner:
-    def __init__(self, eta_tree=0.1, eta=0.5, leaves=15, delta=0.1, split_gamma=1.0, split_gamma_val=0.2, max_rounds=600, patience=40,
+    def __init__(self, eta_tree=0.1, eta=1.0, leaves=31, delta=0.1, split_gamma=1.0, split_gamma_val=0.2, grow_gamma_val=0.0, max_rounds=600, patience=40,
                  n_val=1000, lams=(1e-3, 1e-2, 1e-1, 1.0), knn_ks=(1, 3, 7, 15, 31), kmax=4, k_hi=6,
                  search_share=0.04, hi_share=0.03, max_bin=63, lam_tree=1.0, lam_par=1.0, max_lin=300,
-                 families=FAMS, time_limit=480.0, oof=True, rf_trees=100, name="hyb_union"):
-        self.__dict__.update(dict(eta_tree=eta_tree, eta=eta, leaves=leaves, delta=delta, split_gamma=split_gamma, split_gamma_val=split_gamma_val,
+                 families=FAMS, time_limit=480.0, oof=True, rf_trees=100, knn_cap=2.5e11, rf_cv_n=2000, stack=True, name="hyb_union"):
+        self.__dict__.update(dict(eta_tree=eta_tree, eta=eta, leaves=leaves, delta=delta, split_gamma=split_gamma, split_gamma_val=split_gamma_val, grow_gamma_val=grow_gamma_val,
                                   max_rounds=max_rounds, patience=patience, n_val=n_val, lams=lams, knn_ks=knn_ks,
                                   kmax=kmax, k_hi=k_hi, search_share=search_share, hi_share=hi_share, max_bin=max_bin,
-                                  lam_tree=lam_tree, lam_par=lam_par, max_lin=max_lin, families=families, oof=oof, rf_trees=rf_trees,
+                                  lam_tree=lam_tree, lam_par=lam_par, max_lin=max_lin, families=families, oof=oof, rf_trees=rf_trees, knn_cap=knn_cap, rf_cv_n=rf_cv_n, stack=stack,
                                   time_limit=time_limit))
         self.name = name
 
@@ -321,6 +350,8 @@ class Learner:
         F, Fv = lin0(A[tr]), lin0(A[va])
         if F_oof is not None and self.oof:                     # honest stacking: boost on out-of-fold linear scores
             F = F_oof.copy()
+        lr_tr, lr_va = F - F.mean(0), Fv - F.mean(0)              # the 'lr' block rescales the (centred) linear scores
+        lr_mu = F.mean(0); use_lrs = "lr" in self.families and W0 is not None
         comps = []                                            # (family, params, coef(K,) or W, eta)
 
         # ---- kNN lists (honest LOO for training rows), budget share <= 25%
@@ -328,41 +359,63 @@ class Learner:
         if "knn" in self.families:
             kinfo = knn_prep(X, cols); Xk = knn_enc(X, cols, kinfo)
             # feature subset (highest variance) so that the n^2 distance cost stays within 20% of the budget
-            dk = Xk.shape[1]; cap = int(0.2 * budget / (2.0 * ntr * n + 1))
-            keep = np.arange(dk) if cap >= dk else np.sort(np.argsort(-Xk[tr].var(0))[:max(cap, 1)])
-            if cap >= 8:
-                kmax = min(max(self.knn_ks), ntr - 1)
-                Xk = Xk[:, keep]
-                nb_tr = knn_lists(Xk[tr], Xk[tr], kmax, True); fl[0] += 2.0 * ntr * ntr * len(keep) + 6.0 * ntr * ntr
-                nb_va = knn_lists(Xk[va], Xk[tr], kmax, False) if len(va) else np.zeros((0, kmax), np.int64)
-                fl[0] += 2.0 * len(va) * ntr * len(keep) + 6.0 * len(va) * ntr
+            # distance cost 2 n_q n_ref d_k <= kcap: first at most 128 (highest-variance) columns, then a random
+            # reference subset of the training rows (training rows outside it are still honest: never their own neighbour)
+            dk = Xk.shape[1]; kcap = min(0.2 * budget, self.knn_cap)
+            dsel = dk if 2.0 * ntr * ntr * dk <= kcap else min(dk, 128)
+            keep = np.arange(dk) if dsel >= dk else np.sort(np.argsort(-Xk[tr].var(0))[:dsel])
+            nref = int(min(ntr, kcap / (2.0 * n * len(keep))))
+            if nref >= 200:
+                kmax = min(max(self.knn_ks), nref - 1)
+                Xk = Xk[:, keep]; ref = np.sort(rng.permutation(ntr)[:nref]) if nref < ntr else np.arange(ntr)
+                pos = np.full(ntr, -1); pos[ref] = np.arange(nref)
+                nb_tr = knn_lists_ref(Xk[tr], Xk[tr][ref], kmax, pos)
+                fl[0] += 2.0 * ntr * nref * len(keep) + 6.0 * ntr * nref
+                nb_va = knn_lists(Xk[va], Xk[tr][ref], kmax, False) if len(va) else np.zeros((0, kmax), np.int64)
+                fl[0] += 2.0 * len(va) * nref * len(keep) + 6.0 * len(va) * nref
+                yref = y[tr][ref]
                 ks = [k for k in self.knn_ks if k <= kmax]
-                kf = {k: (knn_feats(nb_tr, y[tr], C, K, k), knn_feats(nb_va, y[tr], C, K, k)) for k in ks}
+                kf = {k: (knn_feats(nb_tr, yref, C, K, k), knn_feats(nb_va, yref, C, K, k)) for k in ks}
                 for k in ks:                                   # centre on the training mean
                     mu = kf[k][0].mean(0); kf[k] = (kf[k][0] - mu, kf[k][1] - mu, mu)
-                knn = dict(Xk=Xk, keep=keep, ks=ks, kf=kf, kmax=kmax, kinfo=kinfo)
+                # prediction-time reference: all training rows (validation included) up to nref rows
+                pref = np.sort(rng.permutation(n)[:nref]) if nref < n else np.arange(n)
+                knn = dict(Xk=Xk[pref], yk=y[pref], keep=keep, ks=ks, kf=kf, kmax=kmax, kinfo=kinfo)
+                info["knn_ref"] = int(nref)
                 info["knn_dims"] = int(len(keep)); info["knn_img_scale"] = bool(kinfo["img"])
 
         info["t_knn"] = round(time.time() - t_start, 2)
         # ---- random forest out-of-bag vote features (honest for training rows)
         forest = None
         if "forest" in self.families and ntr >= 30:
-            from sklearn.ensemble import RandomForestClassifier
+            from sklearn.ensemble import ExtraTreesClassifier
             ntrees = int(max(30, min(self.rf_trees, self.rf_trees * 2e6 / (ntr * d))))
             mtry = max(1, int(math.sqrt(A.shape[1])))
-            rf_cost = ntrees * 4.0 * ntr * mtry * math.log2(max(ntr, 2)) ** 2
+            cv_fit = ntr < self.rf_cv_n                        # small n: 5-fold cross-fitted votes (OOB votes are pessimistic)
+            ntcv = max(30, ntrees // 2)                        # trees per cross-fit fold
+            rf_cost = 4.0 * ntr * mtry * math.log2(max(ntr, 2)) ** 2 * (ntrees + (0.8 * 5 * ntcv if cv_fit else 0))
             if rf_cost < 0.15 * budget:
-                rf = RandomForestClassifier(n_estimators=ntrees, max_features=mtry, oob_score=True, bootstrap=True,
-                                            n_jobs=1, random_state=int(rng.integers(1 << 30))).fit(A[tr], y[tr])
-                fl[0] += rf_cost + 2.0 * ntrees * n * math.log2(max(ntr, 2))       # (+ out-of-bag / validation votes)
-                def rf_feat(Pr, rf=rf):
-                    Pf = np.zeros((len(Pr), C)); Pf[:, rf.classes_] = Pr
+                seed = int(rng.integers(1 << 30))
+                rf = ExtraTreesClassifier(n_estimators=ntrees, max_features=mtry, oob_score=not cv_fit, bootstrap=not cv_fit,
+                                          n_jobs=1, random_state=seed).fit(A[tr], y[tr])
+                fl[0] += rf_cost + 2.0 * ntrees * n * math.log2(max(ntr, 2)) * (2 if cv_fit else 1)   # (+ votes)
+                def rf_feat(Pr, cl):
+                    Pf = np.zeros((len(Pr), C)); Pf[:, cl] = Pr
                     return (np.log((Pf[:, 1:2] + 0.02) / (Pf[:, 0:1] + 0.02)) if K == 1 else np.log(Pf + 0.02))
-                Po = rf.oob_decision_function_; bad = ~np.isfinite(Po).all(1)
-                Po = np.where(bad[:, None], np.bincount(y[tr], minlength=C)[rf.classes_] / ntr, Po)
-                ftr = rf_feat(Po); mu = ftr.mean(0)
-                fva = rf_feat(rf.predict_proba(A[va])) if len(va) else np.zeros((0, K))
-                forest = dict(rf=rf, feat=rf_feat, tr=ftr - mu, va=fva - mu, mu=mu)
+                prior = np.bincount(y[tr], minlength=C) / ntr
+                if cv_fit:
+                    fid = rng.permutation(ntr) % 5; ftr = np.zeros((ntr, K))
+                    for f_ in range(5):
+                        a_, b_ = fid != f_, fid == f_
+                        m_ = ExtraTreesClassifier(n_estimators=ntcv, max_features=mtry, n_jobs=1,
+                                                  random_state=seed + 1 + f_).fit(A[tr][a_], y[tr][a_])
+                        ftr[b_] = rf_feat(m_.predict_proba(A[tr][b_]), m_.classes_)
+                else:
+                    Po = rf.oob_decision_function_; bad = ~np.isfinite(Po).all(1)
+                    Po = np.where(bad[:, None], prior[rf.classes_], Po); ftr = rf_feat(Po, rf.classes_)
+                mu = ftr.mean(0)
+                fva = rf_feat(rf.predict_proba(A[va]), rf.classes_) if len(va) else np.zeros((0, K))
+                forest = dict(rf=rf, feat=lambda Pr, rf=rf: rf_feat(Pr, rf.classes_), tr=ftr - mu, va=fva - mu, mu=mu)
                 info["rf_trees"] = ntrees
         info["t_rf"] = round(time.time() - t_start, 2)
         # ---- LightGBM booster (trees fitted to our gradient)
@@ -371,16 +424,20 @@ class Learner:
             nbins = [min(self.max_bin, len(np.unique(Tz[tr, j][~np.isnan(Tz[tr, j])]))) for j in range(d)]
             Nsplit = max(sum(max(b - 1, 0) for b in nbins), 1)
             tau = (self.split_gamma if not len(va) else self.split_gamma_val) * 2.0 * math.log(Nsplit / self.delta)
+            tau_grow = tau if not len(va) else self.grow_gamma_val * 2.0 * math.log(Nsplit / self.delta)
             cat_idx = [j for j, (kd, _) in enumerate(cols) if kd == "cat"]
             ff = 1.0 if d <= 200 else max(0.2, 200.0 / d)
             params = dict(objective="none", num_class=K, num_leaves=self.leaves, learning_rate=self.eta_tree,
                           min_data_in_leaf=int(max(3, min(20, ntr // 25))), min_sum_hessian_in_leaf=1e-3,
-                          lambda_l2=self.lam_tree, min_gain_to_split=tau, max_bin=self.max_bin, feature_fraction=ff,
+                          lambda_l2=self.lam_tree, min_gain_to_split=tau_grow, max_bin=self.max_bin, feature_fraction=ff,
                           feature_fraction_seed=int(rng.integers(1 << 30)), verbose=-1, num_threads=1,
                           boost_from_average=False, max_cat_to_onehot=8, cat_smooth=10, deterministic=True)
             ds = lgb.Dataset(Tz[tr], categorical_feature=cat_idx if cat_idx else "auto", free_raw_data=False,
-                             params=dict(max_bin=self.max_bin, verbose=-1))
-            booster = lgb.Booster(params=params, train_set=ds)
+                             params=dict(max_bin=self.max_bin, verbose=-1, min_data_in_bin=1, feature_pre_filter=False))
+            try:
+                booster = lgb.Booster(params=params, train_set=ds)
+            except Exception:                                  # (LightGBM refuses degenerate data: no tree family)
+                booster = None
             fl[0] += 10.0 * ntr * d                            # binning
             info["tau_split"] = round(tau, 2)
             tree_cost = lambda: 2.0 * ntr * d * ff * (1 + math.ceil(math.log2(self.leaves))) * K + 10.0 * d * self.max_bin * self.leaves * K
@@ -405,7 +462,34 @@ class Learner:
         use_lin = "linear" in self.families and K * (dl + 1) <= self.max_lin
         A1 = np.hstack([A, np.ones((n, 1))]) if use_lin else None
 
+        # ---- stacking init: joint ridge-Newton fit of the honest blocks' weights (linear-start rescale, forest votes,
+        #      best-k kNN votes), per class, 8 iterations; these are a handful of convex stacking weights, no search
+        blocks = []
+        if use_lrs:
+            blocks.append(("lr", None, lr_tr, lr_va))
+        if forest is not None:
+            blocks.append(("forest", None, forest["tr"], forest["va"]))
+        if knn is not None:
+            G0, H0 = _gh(F, Y, K); G0, H0 = G0.reshape(ntr, K), H0.reshape(ntr, K)
+            kb = max(knn["ks"], key=lambda k: float(np.sum(np.sum(G0 * knn["kf"][k][0], 0) ** 2 /
+                                                           (np.sum(H0 * knn["kf"][k][0] ** 2, 0) + self.lam_par))))
+            blocks.append(("knn", kb, knn["kf"][kb][0], knn["kf"][kb][1]))
+        if self.stack and len(blocks) >= 1:
+            Vt = np.stack([b[2] for b in blocks], 2); Vv = np.stack([b[3] for b in blocks], 2)   # (n, K, B)
+            Bn = Vt.shape[2]; Wst = np.zeros((K, Bn)); F_base, Fv_base = F.copy(), Fv.copy()
+            for _ in range(8):
+                Fc = F_base + np.einsum("nkb,kb->nk", Vt, Wst)
+                G0, H0 = _gh(Fc, Y, K); G0, H0 = G0.reshape(ntr, K), H0.reshape(ntr, K)
+                for c in range(K):
+                    Vc = Vt[:, c, :]; Hm = (Vc * H0[:, c:c + 1]).T @ Vc + self.lam_par * np.eye(Bn)
+                    gr = Vc.T @ G0[:, c] + self.lam_par * Wst[c]; Wst[c] -= np.linalg.solve(Hm, gr)
+                fl[0] += 8.0 * K * (2.0 * ntr * Bn * Bn + 4.0 * ntr * Bn) + 30.0 * ntr * K
+            F = F_base + np.einsum("nkb,kb->nk", Vt, Wst); Fv = Fv_base + np.einsum("nkb,kb->nk", Vv, Wst)
+            for j, (fam, k, _, _) in enumerate(blocks):
+                comps.append((fam, k, Wst[:, j].copy()))
+            info["stack_w"] = {b[0]: np.round(Wst[:, j], 2).tolist() for j, b in enumerate(blocks)}
         best_v, best_round, since = _loss(Fv, Yv, K) if len(va) else np.inf, 0, 0
+        n_stack = len(comps)
         hist = []                                             # per round: len(comps), booster trees
         for rnd in range(self.max_rounds):
             if fl[0] > 0.9 * budget or time.time() - t_start > self.time_limit:
@@ -419,7 +503,13 @@ class Learner:
             if booster is not None:
                 fl[0] += tree_cost()
                 g_, h_ = (G[:, 0], H[:, 0]) if K == 1 else (G, H)
-                booster.update(fobj=lambda preds, data, g_=g_, h_=h_: (g_, h_))
+                try:
+                    booster.update(fobj=lambda preds, data, g_=g_, h_=h_: (g_, h_)); ok = True
+                except Exception:
+                    ok = False
+            if booster is not None and not ok and booster.current_iteration() == 0:
+                booster = None                                 # degenerate data: drop the tree family
+            if booster is not None and ok:
                 it = booster.current_iteration() - 1
                 u = booster.predict(Tz[tr], start_iteration=it, num_iteration=1, raw_score=True).reshape(ntr, K)
                 fl[0] += 2.0 * ntr * K * math.log2(self.leaves)
@@ -432,14 +522,15 @@ class Learner:
                     booster.rollback_one_iter()
             # -- parity
             if use_par:
-                full = rnd == 0 or (rnd - last_full >= 10 and n_full < 8 and par_since)
+                full = rnd == 0 or (rnd - last_full >= 10 and n_full < 5 and par_since)
                 active = rnd < 10 or rnd - last_pick <= 20      # cheap per-round classes only while parities are in use
-                ks = list(range(1, self.kmax + 1)) if full else ([1, 2] if active else [])
-                ms = ms_for((self.search_share / max(self.kmax - 2, 1)) if full else 0.002, ks)
+                ks = (list(range(1, self.kmax + 1)) if rnd == 0 else [1, 2, 3]) if full else ([1, 2] if active else [])
+                ms = ms_for((self.search_share / max(self.kmax - 2, 1)) if full else 0.0005, ks)
                 if rnd == 0 and self.k_hi > self.kmax and db <= 32:
                     ks += list(range(self.kmax + 1, self.k_hi + 1)); ms.update(ms_for(self.hi_share, range(self.kmax + 1, self.k_hi + 1)))
                 Hsk = {k: H[: ms.get(k, 0)].sum(0) + self.lam_par for k in ks}
-                found = char_search(Bt[tr], G, Hsk, ks, ms, 16, fl)
+                thr_k = {k: pen(K, lnNk[k] + math.log(1 / self.delta)) for k in range(1, 7)}
+                found = char_search(Bt[tr], G, Hsk, ks, ms, 16, fl, thr_k)
                 if full:
                     last_full, n_full, par_since = rnd, n_full + 1, False
                 for k, lst in found.items():
@@ -453,7 +544,8 @@ class Learner:
                         lnl = math.log(max(math.comb(len(V), len(S_)), 1)) + math.log(len(V))
                         if S_ not in pool and st > pen(K, lnl + math.log(1 / self.delta)):
                             pool[S_] = ("loc", lnl)
-                for S_ in (chosen[-16:] if (active or full) else []):   # extensions S u {j}
+                n_ext = int(min(16, 0.0005 * budget / (2.0 * ntr * db * K + 1)))  # extension bases this round (FLOP cap)
+                for S_ in (chosen[-n_ext:] if (active or full) and n_ext > 0 else []):   # extensions S u {j}
                     cs = chis[S_][0] if S_ in chis else _chi(Bt[tr], S_)
                     V = Bt[tr].T @ (G * cs[:, None]); fl[0] += 2.0 * ntr * db * K
                     st = (V * V / (Hs + self.lam_par)).sum(1)
@@ -501,9 +593,14 @@ class Learner:
                 v = forest["tr"]; num = np.sum(G * v, 0); den = np.sum(H * v * v, 0) + self.lam_par; fl[0] += 4.0 * ntr * K
                 coef = -num / den
                 cands.append((float(np.sum(num * num / den)) - pen(K, math.log(1 / self.delta)), "forest", coef, v * coef[None, :]))
+            # -- lr block: per-class rescaling of the linear start
+            if use_lrs:
+                v = lr_tr; num = np.sum(G * v, 0); den = np.sum(H * v * v, 0) + self.lam_par; fl[0] += 4.0 * ntr * K
+                coef = -num / den
+                cands.append((float(np.sum(num * num / den)) - pen(K, math.log(1 / self.delta)), "lr", coef, v * coef[None, :]))
             # -- pick
             cands.sort(key=lambda c: -c[0])
-            if rnd < 3 or rnd % 10 == 0:
+            if rnd < 3 or rnd % 25 == 0:
                 info.setdefault("cand_log", []).append((rnd, [(c[1], round(c[0], 1)) for c in cands]))
             if not cands or (cands[0][0] <= 0 and not (len(va) and any(c[1] == "tree" for c in cands))):
                 if booster is not None and any(c[1] == "tree" for c in cands):
@@ -529,6 +626,10 @@ class Learner:
                         chosen.append(S_)
                     if len(va):
                         Fv = Fv + e * chis[S_][1][:, None] * coef[None, :]
+                elif fam == "lr":
+                    comps.append(("lr", None, par * e))
+                    if len(va):
+                        Fv = Fv + e * lr_va * par[None, :]
                 elif fam == "forest":
                     comps.append(("forest", None, par * e))
                     if len(va):
@@ -545,6 +646,9 @@ class Learner:
             info["rounds"] = rnd + 1
             if len(va):
                 lv = _loss(Fv, Yv, K); fl[0] += 14.0 * len(va) * K
+                pred_tr = (F[:, 0] > 0) if K == 1 else np.argmax(F, 1); pred_va = (Fv[:, 0] > 0) if K == 1 else np.argmax(Fv, 1)
+                if np.all(pred_tr == y[tr]) and np.all(pred_va == y[va]):    # every label right (DFG's stop)
+                    best_v, best_round = lv, rnd + 1; info["stop"] = "all labels right"; break
                 if lv < best_v - 1e-6:
                     best_v, best_round, since = lv, rnd + 1, 0
                 else:
@@ -553,7 +657,7 @@ class Learner:
                         info["stop"] = "validation"; break
         # ---- truncate to the best validation round
         if len(va) and info["rounds"] > 0:
-            nc, nt = hist[best_round - 1] if best_round > 0 else (0, 0)
+            nc, nt = hist[best_round - 1] if best_round > 0 else (n_stack, 0)
             comps = comps[:nc]
             while booster is not None and booster.current_iteration() > nt:
                 booster.rollback_one_iter()
@@ -571,9 +675,12 @@ class Learner:
                 knn_W[k] = knn_W.get(k, 0) + c
         nt_final = booster.current_iteration() if booster is not None else 0
         rf_W = sum((c for f_, _, c in comps if f_ == "forest"), np.zeros(K))
+        lr_W = sum((c for f_, _, c in comps if f_ == "lr"), np.zeros(K))
 
         def predict(Z):
             Z = np.asarray(Z, dtype=np.float64); Az = enc_lin(Z, cols); Fz = lin0(Az)
+            if np.any(lr_W):
+                Fz = Fz + (Fz - lr_mu) * lr_W[None, :]
             if par_comps:
                 Bz = enc_bits(Z, cols)
                 for S_, c in par_comps:
@@ -584,7 +691,7 @@ class Learner:
                 Zk = knn_enc(Z, cols, knn["kinfo"])[:, knn["keep"]]
                 nb = knn_lists(Zk, Xk_all, knn["kmax"], False)
                 for k, c in knn_W.items():
-                    v = knn_feats(nb, y, C, K, k) - knn["kf"][k][2]
+                    v = knn_feats(nb, knn["yk"], C, K, k) - knn["kf"][k][2]
                     Fz = Fz + v * c[None, :]
             if np.any(rf_W):
                 Fz = Fz + (forest["feat"](forest["rf"].predict_proba(Az)) - forest["mu"]) * rf_W[None, :]
