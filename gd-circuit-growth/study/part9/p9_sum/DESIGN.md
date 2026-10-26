@@ -126,10 +126,23 @@ Everything is added to DFG's own counter `fl`, so it also counts against the bud
 - building the block columns: n (k + 2 G);
 - the larger least-squares and logistic fits: through v1.1's own lsfit / Newton counters.
 
-The block search is cheap in FLOPs: on the toy suites it is a few percent of a fit. The largest fit uses 0.11 of one
-network run on dlsymdev and designed at n ≤ 4096 in dev runs; see the frozen tables for the full grid. In CPU time it
-is not small: Python overhead per search step, plus the extra DFG rounds that accepted blocks cause. DFG v1.2 fits take
-about 1.5–3× v1.1's CPU time on the toy suites.
+The block search is cheap in FLOPs: on the toy suites it is a few percent of a fit. In the frozen full run, the
+largest fit used 0.55 of one network run (thr10 on designed; v1: 0.60 on maj9) and 0.24 on dlsymdev (v1: 0.71). The
+median fit used 0.06 and 0.05.
+
+Audit corrections (Part 8 `audit/compute.md`) do not change this. On the toy suites the cost is DFG's exact count. The
+known undercounts are ExtraTrees (up to about 4× on binary inputs, ≈ 2e8 FLOPs per fit, so at most +0.005 of a network
+run) and the LU solves (p³/3 instead of 2p³/3, p ≤ 290). Together they add < 0.01 of a network run. On binary inputs
+the LightGBM formula overcounts.
+
+CPU time is not small. It comes from Python overhead per search step and from the extra DFG rounds that accepted
+blocks cause. DFG v1.2 alone takes about 1.5–3× v1.1's CPU time per fit in dev runs. In the frozen full portfolio run
+(cores shared with other jobs, so not exactly comparable with v1's run), the suite totals were:
+
+| suite | p9_sum total CPU | v1 total CPU | p9_sum CPU per fit (max) | v1 CPU per fit (max) |
+|---|---|---|---|---|
+| designed | 2089 s | 2483 s | 30.4 s | 16.1 s |
+| dlsymdev | 734 s | 540 s | 7.5 s | 9.9 s |
 
 **Prediction cost** (not counted, as for the networks and Part 8). Per query and block: k additions for t, a
 binary search over at most k + 1 group edges, one multiply for a modulator, and a product block's two lookups. This is
@@ -137,8 +150,6 @@ O(Σ_blocks k) ≤ a few hundred FLOPs per query, negligible next to the portfol
 data). On the toy suites, prediction cost is dominated by the same members as in Part 8.
 
 ## 4. Development history (dev data only)
-
-(see section 5 for the frozen dev results)
 
 1. Additive blocks only, eigenvector-prefix and pair-growth seeds. DFG alone at n = 128 solves sym7 and ssym9 (v1.1:
    0.48 and 0.50 test error). band11 at n = 2048 failed on one seed: the eigenvector ordering put a noise input into the
@@ -176,6 +187,127 @@ choice was checked against those definitions, and every change in this list was 
 generic parameters bear on block size and composition: k_max = 24 (block sizes up to 24 inputs) and 2 additive blocks
 per round with products of two. Neither was tuned. The exposure is recorded here so that the held-out result can be
 read with it in mind.
+
+## 5. Full dev evaluation (frozen files, run once)
+
+Run 26 October 2026, 21:51–22:47 UTC, after the freeze. The command was `run_toy.sh` (= `hybrid/eval_toy.py
+p9_sum.learner:Learner <suite> --perm`, full grid n = 16 … 16384, seeds 0–2), in two target shards per suite, merged
+with `hybrid/merge_toy.py`. md5s of `learner.py` and `dfg12.py` were identical before and after
+(`results/md5_before.txt`, `results/md5_after.txt`). Results: `hybrid/results/toy__p9_sum-perm__{designed,dlsymdev}.*`
+and copies in `results/`. References: the networks via `compare_hybrid.toy_nstars`, and v1 =
+`results/toy__hyb_portfolio-perm__<suite>.json` (same fits: the harness's per-fit data and seeds are deterministic).
+
+### dlsymdev (8 symmetric / signed-sum targets; n*, inputs permuted)
+
+| target | definition | p9_sum | v1 | nets | nets_wd | nets_cewd | nets_best | log2 p9_sum / nets_best | log2 v1 / nets_best | log2 p9_sum / v1 | max FLOPs / GD |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| sym7 | \|x1+…+x7\| ≤ 1 | **110** | 677 | 670 | 425 | 329 | 329 | −1.58 | +1.04 | −2.62 | 0.22 |
+| ex3of8 | exactly 3 of x1..x8 are +1 | **117** | 1520 | 1355 | 761 | 664 | 664 | −2.50 | +1.19 | −3.70 | 0.23 |
+| band11 | \|x1+…+x11\| ∈ {3, 5} | **828** | never | 3253 | 2538 | 1836 | 1836 | −1.15 | +inf | −inf | 0.21 |
+| far9 | \|x1+…+x9\| ≥ 5 | **87** | 270 | 392 | 296 | 309 | 296 | −1.76 | −0.13 | −1.63 | 0.20 |
+| ssym9 | \|x1−x2+x3−x4+x5+x6−x7+x8+x9\| ≤ 1 | **111** | 960 | 821 | 537 | 324 | 324 | −1.55 | +1.57 | −3.11 | 0.23 |
+| symxpar | [\|x1+…+x6\| ≤ 2] xor x7x8 | **111** | 331 | 2176 | 1596 | 1410 | 1410 | −3.66 | −2.09 | −1.57 | 0.20 |
+| twosym | [\|x1+…+x5\| ≤ 1] == [\|x6+…+x10\| ≥ 3] | **415** | 3498 | 3389 | 2534 | 1817 | 1817 | −2.13 | +0.94 | −3.07 | 0.24 |
+| thrsum | sign(x1+…+x6 + 3 x7x8 + ½) | **81** | 97 | 515 | 340 | 330 | 330 | −2.02 | −1.77 | −0.25 | 0.21 |
+
+| learner | reference | mean log2 n* ratio | clearly better | clearly worse | learner never |
+|---|---|---|---|---|---|
+| p9_sum | nets | −2.89 | 8 | 0 | 0 |
+| p9_sum | nets_wd | −2.35 | 8 | 0 | 0 |
+| p9_sum | nets_cewd | −2.05 | 8 | 0 | 0 |
+| **p9_sum** | **nets_best** | **−2.04** | **8** | **0** | 0 |
+| v1 (hyb_portfolio) | nets | −0.75 | 3 | 1 | 1 |
+| v1 | nets_wd | −0.18 | 2 | 5 | 1 |
+| v1 | nets_cewd | +0.10 | 2 | 5 | 1 |
+| v1 | nets_best | +0.11 (7 targets; it never learns band11) | 2 | 5 | 1 |
+
+Cells where p9_sum's seed-mean error exceeds the plain networks' by > 0.02: 2 of 88 (ex3of8 and thrsum at n = 16), none
+by > 2 s.e. (harness report).
+
+### designed (21 targets; no regressions)
+
+| target | p9_sum | v1 | lin | nets | nets_wd | nets_best | log2 p9_sum / nets_best | log2 v1 / nets_best | log2 p9_sum / v1 | max FLOPs / GD |
+|---|---|---|---|---|---|---|---|---|---|---|
+| dict | 16 | 16 | 27 | 47 | 40 | 40 | −1.33 | −1.33 | +0.00 | 0.19 |
+| and3 | 25 | 25 | 68 | 94 | 70 | 70 | −1.51 | −1.51 | +0.00 | 0.19 |
+| maj3 | 31 | 31 | 56 | 112 | 91 | 91 | −1.53 | −1.53 | +0.00 | 0.19 |
+| maj9 | 80 | 88 | 80 | 263 | 149 | 149 | −0.90 | −0.75 | −0.15 | 0.21 |
+| thr10 | 121 | 121 | 113 | 563 | 307 | 307 | −1.34 | −1.34 | +0.00 | 0.55 |
+| par2 | 16 | 16 | never | 200 | 109 | 109 | −2.77 | −2.77 | +0.00 | 0.19 |
+| par3 | 55 | 55 | never | 843 | 443 | 443 | −3.00 | −3.00 | +0.00 | 0.19 |
+| par4 | 56 | 56 | never | 2728 | 1726 | 1726 | −4.95 | −4.95 | +0.00 | 0.19 |
+| stair5 | 109 | 109 | never | 1514 | 871 | 871 | −2.99 | −2.99 | +0.00 | 0.19 |
+| majpar | 60 | 60 | never | 1380 | 1026 | 1026 | −4.08 | −4.08 | +0.00 | 0.19 |
+| parmaj | **142** | 214 | never | 743 | 434 | 434 | −1.61 | −1.02 | −0.60 | 0.20 |
+| mux | 79 | 77 | never | 1156 | 729 | 729 | −3.20 | −3.25 | +0.05 | 0.19 |
+| dnf3 | 134 | 147 | never | 505 | 353 | 353 | −1.39 | −1.27 | −0.13 | 0.22 |
+| dlist5 | 32 | 32 | 85 | 110 | 85 | 85 | −1.41 | −1.41 | +0.00 | 0.20 |
+| rmaj9 | 163 | 163 | never | 2027 | 1273 | 1273 | −2.96 | −2.97 | +0.00 | 0.21 |
+| andxor | 40 | 40 | never | 376 | 204 | 204 | −2.34 | −2.34 | +0.00 | 0.19 |
+| sparsepoly | 95 | 95 | never | 2205 | 1238 | 1238 | −3.71 | −3.71 | +0.00 | 0.19 |
+| rand0 | 16 | 16 | never | 222 | 125 | 125 | −2.97 | −2.97 | +0.00 | 0.21 |
+| rand1 | 95 | 94 | never | 463 | 316 | 316 | −1.74 | −1.75 | +0.00 | 0.20 |
+| rand2 | 16 | 16 | 50 | 91 | 59 | 59 | −1.89 | −1.89 | +0.00 | 0.21 |
+| rand3 | **114** | 181 | never | 1016 | 692 | 692 | −2.60 | −1.93 | −0.66 | 0.21 |
+
+| learner | reference | mean log2 n* ratio | clearly better | clearly worse |
+|---|---|---|---|---|
+| p9_sum | nets | −3.04 | 21 | 0 |
+| **p9_sum** | **nets_best (= nets_wd)** | **−2.39** | **21** | **0** |
+| v1 | nets | −2.97 | 21 | 0 |
+| v1 | nets_best | −2.32 | 21 | 0 |
+
+At n ≤ 64 the test errors are identical to v1's on 16 of 21 targets, test point for test point: no block passes
+there. Cells where the seed-mean error exceeds the plain networks' by > 0.02: 4 of 231 (maj3, maj9, thr10, rand1, all
+at n = 16), none by > 2 s.e.; v1 had 6.
+
+### Integration rule (PROTOCOL.md, Part 9 (i)), on these runs
+
+Over designed + dlsymdev (29 targets, inputs permuted, against nets_best):
+- **Mean log2 n* ratio:** p9_sum −2.30 (29 of 29 clearly better, none clearly worse); v1 −1.71 (23 better, 5 worse).
+  v1's mean is over 28 targets, because it never learns band11, so the comparison is conservative for p9_sum.
+- **Worse than v1 by more than 0.5 in log2:** no target. The largest increase is +0.05 (mux, 79 against 77); rand1
+  differs by +0.004.
+- **Largest decreases:** ex3of8 −3.70, ssym9 −3.11, twosym −3.07, sym7 −2.62, far9 −1.63, symxpar −1.57, rand3 −0.66,
+  parmaj −0.60; band11 is learned (828) where v1 never was.
+
+So part (i) of the rule is met on the dev suites: the S variant's mean is lower than v1's, and no target is worse by
+more than 0.5.
+
+## 5b. Weaknesses (honest)
+
+- **Union-bound cost at small n.** The test pays ln(C(d, k) 2^{k−1}) for a block of size k, about 20–34 nats at
+  d = 30, k = 5–11. No block can pass below n ≈ 100, even for a perfect sym7, since T ≤ n (the whole residual) and the
+  threshold is about 70–95. On the dev symmetric targets n* is therefore at least about 80–110. The networks are worse
+  there anyway, but a weaker test (for example sample splitting with a small candidate set) could gain about a factor
+  of 1.5 at the very low end. A "forced block" variant for n ≤ 64 was tried and dropped (section 4).
+- **The search, not the test, limits weak blocks.** For band11 (pair coefficients 0.036), the block passes easily once
+  found, but the eigenvector and pair seeds find it reliably only from n ≈ 1000 (n* 828; 1 of 2 seeds solved at
+  n = 512). More seeds help a little and cost time. twosym needs the conditional / split product routes, and they work
+  from n ≈ 256–512.
+- **Products of more than two blocks, and sums with more than one modulating character, are not searched.** For
+  example g(t_S + 2 x6 x7 + 2 x8 x9 x10) needs a modulator χ_{67} χ_{89,10}, available only if that character is
+  already in the model. So are symmetric functions nested inside other gates, beyond what the product and modulated
+  blocks plus the linear readout provide. Such targets fall back to v1.1's characters, which still find their Fourier
+  pieces, but at a cost.
+- **The block's ±1 weights.** A sum over S with unequal integer weights (thr10's Gaussian weights; "3 x7x8" with
+  weight 3) is not a block, except through a modulator for one character. Thresholds of weighted sums are left to the
+  linear block and the logistic readout, as in v1.1, so there is no gain on thr10 (121 = v1).
+- **CPU time.** In FLOPs the addition is small, but per fit DFG v1.2 takes about 1.5–3× v1.1's CPU time in dev runs (more
+  rounds and Python-level search). The largest portfolio fit took 30 s on designed (thr10, n = 16384) against v1's 16 s.
+  On real data where DFG runs (kr_vs_kp, n = 1000), the fit took 12.9 s against 3.7 s.
+- **Eigenvectors in the search.** The eigenvectors of the residual pair matrix (computed by v1.1 anyway) rank inputs
+  for candidate prefixes. The hypothesis contains only the discrete (S, s) and group indicators, but the search is not
+  purely combinatorial. Greedy growth and local moves are combinatorial, and the eigenvector seeds can be removed
+  (`_block_search(neig=0)`) at some loss on weak blocks (not measured).
+- **Dev in-sample.** Every change in section 4 was made while looking at dev results (designed and dlsymdev). The
+  dlsymdev margins are in-sample for the design, and the held-out `dlheld4` is the test. The data-access note in
+  section 4 records that its target definitions were seen as source code before the design started.
+- **Real data not evaluated beyond one fit.** Only one fit on kr_vs_kp (the one DEV dataset where DFG runs) was
+  checked: same error up to one test point, 0.080 of the budget. The tabular / image results of the portfolio are
+  unchanged wherever DFG does not run (any continuous column, or C > 2), by construction.
+- **Prediction cost** (not counted): negligible over v1. The block features cost O(Σ k) additions and a binary search
+  per query (section 3).
 
 ## 6. Freeze and how to run
 
