@@ -52,6 +52,7 @@ Compute is counted in FLOPs (multiply-add = 2) and compared with one network run
 """
 import itertools, math, numpy as np
 from harness import gd_flops
+import os as _os; _DBG = bool(_os.environ.get("DFG12_DBG"))
 
 
 # ------------------------------------------------------------------------------------------- v1.2: sum-feature blocks
@@ -122,20 +123,32 @@ class SumBlock:
         return a + ("" if self.other is None else " x " + self.other.desc())
 
 
-def _block_search(X, rt, s2, Mt, excl, tk, mc, gcap=2048, kmax=24, npair=3, neig=2, patience=5, fl=None):
+def _block_search(X, rt, s2, Mt, excl, tk, mc, gcap=2048, kmax=24, npair=3, neig=2, nsingle=2, patience=5, fl=None,
+                  base=None, init=()):
     """Discrete search for one (S, s) block on the residual-like vector rt (r, or r * chi_mod).
     Candidates: (a) inputs ordered by |u_i| for the top-neig eigenvectors u of the off-diagonal pair matrix Mt
-    (s = sign(u)), every prefix; (b) greedy growth from the npair strongest pairs of Mt (both relative signs), adding
-    at each step the input and sign that maximise the block statistic T; every prefix of every path, folded (|t|) and
-    unfolded.  Prefix scores use the first min(n, gcap) points.  The best candidate is then tested on all n:
+    (s = sign(u)), every prefix; (a') inputs ordered by the degree-1 coefficients |mean(rt x_i)| (s = their signs);
+    (b) greedy growth from the npair strongest pairs of Mt (both relative signs) and from the nsingle strongest single
+    inputs, adding at each step the input and sign that maximise the block statistic T; every prefix of every path,
+    folded (|t|) and unfolded.  The 3 best are refined by a local search (add / remove / flip-sign moves).  Prefix
+    scores use the first min(n, gcap) points.  The best candidate is then tested on all n:
     T = |projection of rt onto the block's level indicators|^2 / s^2 > chi^2 threshold at exp(-tk(k)) (tk includes the
     union bound over every (S, s) of size k, both fold variants and every modulator, so the adaptive search is covered).
-    Returns (block or None, T, threshold)."""
+    base = (g, G): a fixed partition of the points (the groups of another block); T is then computed over the joint
+    cells (base group, level), i.e. for the product block, and init: extra starting candidates [(S, sg, fold)].
+    Returns (best candidate block or None, T, threshold, accepted)."""
     n, d = X.shape
     mg = min(n, gcap); Xg, rg = X[:mg], rt[:mg]; scale = n / mg
+    if base is None:
+        _mT = _multi_T
+    else:
+        gb, Gb = base; gbg = gb[:mg]
+
+        def _mT(I, r_, L):
+            return _multi_T(gbg[:, None] * L + I, r_, Gb * L)
     allowed = np.ones(d, bool); allowed[list(excl)] = False
     if allowed.sum() < 2:
-        return None, 0.0, 0.0
+        return None, 0.0, 0.0, False
     kmax = int(min(kmax, allowed.sum()))
     best = {}                                                   # key -> (margin, S, sg, fold)
 
@@ -147,7 +160,7 @@ def _block_search(X, rt, s2, Mt, excl, tk, mc, gcap=2048, kmax=24, npair=3, neig
         order = np.asarray(order); sg = np.asarray(sg, dtype=np.float64); K = len(order)
         Cs = np.cumsum(Xg[:, order] * sg[None, :], axis=1); ks = np.arange(1, K + 1)
         Iu = np.rint((Cs + ks[None, :]) / 2).astype(np.int64); If = np.rint(np.abs(Cs)).astype(np.int64)
-        Tu, lu = _multi_T(Iu, rg, K + 1); Tf, lf = _multi_T(If, rg, K + 1)
+        Tu, lu = _mT(Iu, rg, K + 1); Tf, lf = _mT(If, rg, K + 1)
         if fl is not None:
             fl[0] += 8.0 * mg * K
         for k in range(2, K + 1):
@@ -165,39 +178,89 @@ def _block_search(X, rt, s2, Mt, excl, tk, mc, gcap=2048, kmax=24, npair=3, neig
     for q in np.argsort(-np.abs(lam))[:neig]:
         u = U[:, q]; order = [int(i) for i in np.argsort(-np.abs(u)) if allowed[i]][:kmax]
         prefixes(order, np.where(u[order] >= 0, 1.0, -1.0))
+    c1 = X.T @ rt / n; c1[~allowed] = 0.0
+    if fl is not None:
+        fl[0] += 2.0 * n * d
+    order = [int(i) for i in np.argsort(-np.abs(c1)) if allowed[i]][:kmax]
+    prefixes(order, np.where(c1[order] >= 0, 1.0, -1.0))
     Mu = np.abs(np.triu(Ms, 1)); top = np.argsort(-Mu.ravel())[:npair]
+    seeds = []
     for p in top:
         i, j = divmod(int(p), d)
-        if Mu[i, j] <= 0:
-            continue
-        for sj in (1.0, -1.0):
-            S, sg = [i, j], [1.0, sj]; cur = Xg[:, i] + sj * Xg[:, j]; bestm, bestk = -np.inf, 2
-            for k in range(3, kmax + 1):
-                inS = np.zeros(d, bool); inS[S] = True; L = np.where(allowed & ~inS)[0]
-                if len(L) == 0:
-                    break
-                NS = np.concatenate([cur[:, None] + Xg[:, L], cur[:, None] - Xg[:, L]], axis=1)
-                T, lev = _multi_T(np.rint((NS + k) / 2).astype(np.int64), rg, k + 1)
-                if fl is not None:
-                    fl[0] += 8.0 * mg * NS.shape[1]
-                c = int(np.argmax(T)); l = int(L[c % len(L)]); sl = 1.0 if c < len(L) else -1.0
-                S.append(l); sg.append(sl); cur = cur + sl * Xg[:, l]
-                mk = margin(T[c], lev[c], k)
-                if mk > bestm:
-                    bestm, bestk = mk, k
-                elif k - bestk >= patience:
-                    break
-            prefixes(S, sg)
+        if Mu[i, j] > 0:
+            seeds += [([i, j], [1.0, 1.0]), ([i, j], [1.0, -1.0])]
+    for i in [int(i) for i in np.argsort(-np.abs(c1)) if allowed[i]][:nsingle]:
+        seeds.append(([i], [1.0]))
+    for S0, sg0 in seeds:
+        S, sg = list(S0), list(sg0); cur = Xg[:, S] @ np.asarray(sg); bestm, bestk = -np.inf, len(S)
+        for k in range(len(S) + 1, kmax + 1):
+            inS = np.zeros(d, bool); inS[S] = True; L = np.where(allowed & ~inS)[0]
+            if len(L) == 0:
+                break
+            NS = np.concatenate([cur[:, None] + Xg[:, L], cur[:, None] - Xg[:, L]], axis=1)
+            T, lev = _mT(np.rint((NS + k) / 2).astype(np.int64), rg, k + 1)
+            if fl is not None:
+                fl[0] += 8.0 * mg * NS.shape[1]
+            c = int(np.argmax(T)); l = int(L[c % len(L)]); sl = 1.0 if c < len(L) else -1.0
+            S.append(l); sg.append(sl); cur = cur + sl * Xg[:, l]
+            mk = margin(T[c], lev[c], k)
+            if mk > bestm:
+                bestm, bestk = mk, k
+            elif k - bestk >= patience:
+                break
+        prefixes(S, sg)
+    for S0, sg0, fold0 in init:                                 # extra starting candidates (scored as they are)
+        S0 = [int(i) for i in S0 if allowed[i]]
+        if len(S0) >= 2:
+            sv = np.asarray(sg0, dtype=np.float64)[: len(S0)]; cur = Xg[:, S0] @ sv; k = len(S0)
+            I = np.rint(np.abs(cur) if fold0 else (cur + k) / 2).astype(np.int64)[:, None]
+            T, lev = _mT(I, rg, k + 1); key = (tuple(sorted(zip(S0, (sv * sv[0]).astype(int).tolist()))), bool(fold0))
+            best[key] = (margin(T[0], lev[0], k), tuple(S0), tuple(sv * sv[0]), bool(fold0))
     if not best:
-        return None, 0.0, 0.0
-    mgn, S, sg, fold = max(best.values(), key=lambda v: v[0])
+        return None, 0.0, 0.0, False
+
+    def refine(mgn, S, sg, fold):
+        """Discrete local search on the block margin: remove an input, add an input (either sign), or flip a sign;
+        take the best improving move until none improves (at most 3 kmax moves)."""
+        S, sg = list(S), [float(v) for v in sg]
+        for _ in range(3 * kmax):
+            k = len(S); cur = Xg[:, S] @ np.asarray(sg); inS = np.zeros(d, bool); inS[S] = True
+            L = np.where(allowed & ~inS)[0]
+            cols, ks, moves = [], [], []
+            if k > 2:
+                cols.append(cur[:, None] - Xg[:, S] * np.asarray(sg)[None, :]); ks += [k - 1] * k; moves += [("rm", q) for q in range(k)]
+            cols.append(cur[:, None] - 2 * Xg[:, S] * np.asarray(sg)[None, :]); ks += [k] * k; moves += [("fl", q) for q in range(k)]
+            if len(L) and k < kmax:
+                cols += [cur[:, None] + Xg[:, L], cur[:, None] - Xg[:, L]]; ks += [k + 1] * (2 * len(L))
+                moves += [("add", (int(l), 1.0)) for l in L] + [("add", (int(l), -1.0)) for l in L]
+            Cs = np.concatenate(cols, axis=1); ka = np.asarray(ks)
+            I = np.rint(np.abs(Cs) if fold else (Cs + ka[None, :]) / 2).astype(np.int64)
+            T, lev = _mT(I, rg, kmax + 2)
+            if fl is not None:
+                fl[0] += 8.0 * mg * Cs.shape[1]
+            M_ = np.array([margin(T[c], lev[c], ka[c]) for c in range(len(ka))]); c = int(np.argmax(M_))
+            if M_[c] <= mgn + 1e-9:
+                break
+            mgn = float(M_[c]); kind, a = moves[c]
+            if kind == "rm":
+                S.pop(a); sg.pop(a)
+            elif kind == "fl":
+                sg[a] = -sg[a]
+            else:
+                S.append(a[0]); sg.append(a[1])
+        return mgn, tuple(S), tuple(sg), fold
+
+    tops = sorted(best.values(), key=lambda v: -v[0])[:3]
+    mgn, S, sg, fold = max((refine(*c) for c in tops), key=lambda v: v[0])
     blk = SumBlock(S, sg, fold, (), [])
     t = blk.stat(X); blk.edges = _edges(t, mc); g = np.searchsorted(blk.edges, t); G = len(blk.edges) + 1
+    if base is not None:
+        g, G = base[0] * G + g, base[1] * G
     T, lev = _multi_T(g[:, None], rt, G); T = float(T[0]) / s2; m = max(int(lev[0]) - 1, 1)
     if fl is not None:
         fl[0] += 2.0 * n * len(S) + 4.0 * n
     thr = _chi2_thr(m, tk(len(S)))
-    return (blk if T > thr else None), T, thr
+    return blk, T, thr, T > thr
 
 
 def _chi(X, S):
@@ -411,20 +474,45 @@ class DFG:
                 tk = lambda k, nmod=nmod: math.log(4 * self.K * math.comb(d, k) * 2.0 ** (k - 1) * 2 * nmod * KM / self.delta)
                 mc = max(3, int(self.sum_mc * n)); s2 = s * s
                 kw = dict(gcap=self.sum_gcap, kmax=KM, fl=fl)
-                rr, Mc = r, M
-                for it in range(self.sum_add):
-                    b_, T_, th_ = _block_search(X, rr, s2, Mc, (), tk, mc, **kw)
-                    if b_ is None or b_.key() in have_blk:
+                rr, Mc, cands = r, M, []
+                for it in range(self.sum_add):              # additive blocks; the residual is deflated by each candidate
+                    b_, T_, th_, ok = _block_search(X, rr, s2, Mc, (), tk, mc, **kw)
+                    if b_ is None:
                         break
-                    blk.append(("sum", b_)); have_blk.add(b_.key())
-                    g = b_.group(X); G = b_.ngroups()
-                    mu = np.bincount(g, weights=rr, minlength=G) / np.maximum(np.bincount(g, minlength=G), 1)
-                    rr = rr - mu[g]; Mc = (X * rr[:, None]).T @ X / n; fl[0] += 2 * n * d * d + 4 * n
+                    cands.append(b_)
+                    if _DBG: print("   [sum] rnd", rnd, "add", it, b_.desc(), "T %.1f thr %.1f" % (T_, th_), ok)
+                    if ok and b_.key() not in have_blk:
+                        blk.append(("sum", b_)); have_blk.add(b_.key())
+                    if it + 1 < self.sum_add:
+                        g = b_.group(X); G = b_.ngroups()
+                        mu = np.bincount(g, weights=rr, minlength=G) / np.maximum(np.bincount(g, minlength=G), 1)
+                        rr = rr - mu[g]; Mc = (X * rr[:, None]).T @ X / n; fl[0] += 2 * n * d * d + 4 * n
+                if self.sum_prod and len(cands) >= 2:       # product A x B: B searched over the joint cells with A
+                    a_ = cands[0]; gA, GA = a_.group(X), a_.ngroups()
+                    tkp = lambda k, kA=len(a_.S): tk(kA) + tk(k)
+                    b2, Tb, thb, okb = _block_search(X, r, s2, Mc, set(a_.S.tolist()), tkp, mc, base=(gA, GA),
+                                                     init=[(c.S, c.sg, c.fold) for c in cands[1:]], **kw)
+                    if _DBG and b2 is not None: print("   [sum] cond", a_.desc(), "x", b2.desc(), "T %.1f thr %.1f" % (Tb, thb), okb)
+                    if okb:
+                        P = SumBlock(b2.S, b2.sg, b2.fold, (), b2.edges, other=a_)
+                        if P.key() not in have_blk:
+                            blk.append(("sum", P)); have_blk.add(P.key())
+                    for a_, b2 in ([] if okb else itertools.combinations(cands, 2)):
+                        if set(a_.S.tolist()) & set(b2.S.tolist()):
+                            continue
+                        P = SumBlock(a_.S, a_.sg, a_.fold, (), a_.edges, other=b2)
+                        if P.key() in have_blk:
+                            continue
+                        g = P.group(X); Tp, lev = _multi_T(g[:, None], r, P.ngroups()); fl[0] += 4.0 * n * (len(a_.S) + len(b2.S))
+                        m_ = max(int(lev[0]) - 1, 1)
+                        if _DBG: print("   [sum] prod", P.desc(), "T %.1f thr %.1f" % (float(Tp[0]) / s2, _chi2_thr(m_, tk(len(a_.S)) + tk(len(b2.S)))))
+                        if float(Tp[0]) / s2 > _chi2_thr(m_, tk(len(a_.S)) + tk(len(b2.S))):
+                            blk.append(("sum", P)); have_blk.add(P.key())
                 for T in nb:
                     ct = _chi(X, T); rt = r * ct
                     Mt = (X * rt[:, None]).T @ X / n; fl[0] += 2 * n * d * d + n * (d + len(T))
-                    b_, T_, th_ = _block_search(X, rt, s2, Mt, set(T), tk, mc, **kw)
-                    if b_ is not None:
+                    b_, T_, th_, ok = _block_search(X, rt, s2, Mt, set(T), tk, mc, **kw)
+                    if ok:
                         b_.mod = tuple(T)
                         if b_.key() not in have_blk:
                             blk.append(("sum", b_)); have_blk.add(b_.key())

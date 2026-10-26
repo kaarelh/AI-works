@@ -1,0 +1,52 @@
+\section{Introduction}\label{sec:intro}
+
+A companion paper \cite{gdcircuit2026} (Parts 1--5 of this study) trained rich-regime networks on Boolean targets and described what gradient descent does there. It grows features greedily, one bundle at a time. A feature's cost is set by how hard its correlation with the current \emph{residual} is to detect against the sampling noise of the directions it competes with. Features on inputs already in use are cheaper. A near-kernel linear background is present from the start. On every plateau the network computes the sign of a truncated Fourier expansion of the target. The cost of this search is paid in samples. For a $k$-bit parity on $d$ inputs, the networks' sample complexity $\nstar$ grows like $d^{1.0}$, $d^{1.9}$ and $d^{2.4}$ for $k=2,3,4$. This is close to the leap and correlational-SQ rate $d^{k-1}$ \cite{abbe2022msp,abbe2023leap}, and far from the $\approx k\log d$ that an Occam learner needs.
+
+This paper follows the picture in the other direction. If gradient descent is a particular, noisy way of searching a discrete space of features, can a learner that searches the same space by other means do at least as well, with the same data and compute? We asked this in three steps. Each step was posed by the user who prompted the work, and each was designed, frozen and tested on held-out data before its results were read.
+
+\begin{enumerate}
+\item \textbf{Part 6} (\cref{sec:dfg}). \emph{Use the picture of what gradient descent does to build a more discrete learner that, with similar compute and data, does at least as well on the toy problems where gradient descent does well.}
+\item \textbf{Part 7} (\cref{sec:standard}). \emph{How well does that learner do on standard tasks where MLPs are reasonable, compared with MLPs?}
+\item \textbf{Part 8} (\cref{sec:portfolio}). \emph{Is there one discrete method that beats gradient-descent-trained networks both on the toy suites and on the standard tasks?}
+\end{enumerate}
+Part 9 (\cref{sec:part9}) is in progress and targets the two failures that Part 8 left.
+
+\paragraph{What was found.} All results are \status{Numerical}. The readings are \status{Heuristic}.
+\begin{itemize}
+\item \textbf{On the toy targets the discrete learner wins clearly} (\cref{sec:dfg}). DFG enumerates Fourier characters exhaustively and admits them by union-bound tests against the residual. It needs less data than the study's networks on every target of a blind 7-target suite (median factor 3.1) and on 11 of 12 targets of an earlier held-out suite. On development targets the factor grows with $d$: for the 3-bit parity the networks need 843, 3410 and about 14000 samples at $d=30$, 60 and 120, and DFG needs 28, 28 and 56. Every fit uses less than half of one network run's FLOPs.
+\item \textbf{On standard tasks it does not} (\cref{sec:standard}). Three independent adaptations of DFG to real-valued, multi-class data are about level with a plain MLP on tabular data. Their error is 12--17\% higher than an L2-regularized MLP's at $n\le3000$, and default gradient boosting has 8--12\% lower error than they do. On MNIST and Fashion-MNIST at $n=60000$ their error is 2.2--2.9$\times$ and 1.3--1.4$\times$ the MLP's.
+\item \textbf{A portfolio wins on the toy suites and on fresh tabular data on average, but not on images at large $n$} (\cref{sec:portfolio}). The pre-registered primary design stacks DFG with LightGBM, ExtraTrees, nearest-neighbour votes and logistic regression.
+  \begin{itemize}
+  \item \emph{Fresh toy suite.} It needs clearly less data than the per-target best of three network configurations on 9 of 10 targets, and loses on one symmetric function.
+  \item \emph{Fresh tabular datasets.} Its mean error is lower than the hindsight-best MLP's on 8 of 10 (sign test $p=0.11$).
+  \item \emph{Images.} It is slightly ahead of every MLP up to $n=3000$ and clearly behind a regularized MLP ensemble at $n\ge30000$.
+  \end{itemize}
+  The toy margins come from DFG's character search. The real-data margins come from the classical stack, and DFG runs on only 1 of 23 held-out real datasets.
+\end{itemize}
+
+\paragraph{What it means} \status{Heuristic}. On sparse Boolean targets, exhaustive enumeration trades compute for samples. A union-bound test over $N$ candidates needs about $2\ln N/\rho^2$ samples to admit a feature of residual correlation $\rho$. That is about $2k\ln d/\rho^2$ for a $k$-sparse character, and at $d=30$ the enumeration fits inside one network run's FLOP budget. The networks, searching by noisy local steps in weight space, pay about $d^{k-1}$ samples instead. This is what SQ and leap theory lead one to expect \cite{kearns1998sq,abbe2022msp,abbe2023leap,barak2022hidden,edelman2023pareto}. The experiments add measured factors at equal FLOPs, on fresh targets.
+
+On real data the premise fails. The useful features of images are directions spread over many correlated pixels. Such directions form a continuous family that no small dictionary enumerates, and there local search is the efficient search. The portfolio's tabular wins restate the known strength of tree ensembles and stacking over plain MLPs on medium-sized tabular data \cite{grinsztajn2022tree,shwartzziv2022tabular,erickson2020autogluon}; well-tuned MLPs narrow or close that gap \cite{kadra2021welltuned,gorishniy2021revisiting}.
+
+\paragraph{Contributions.}
+\begin{enumerate}
+\item A discrete learner, DFG, built component by component from a mechanistic picture of gradient descent. It is tested blind against the networks that picture was drawn from, at equal FLOPs, with ablations of each borrowed ingredient (\cref{sec:dfg}).
+\item A negative result on standard benchmarks: three independent adaptations of the same recipe, frozen on development data, with an analysis of why it fails (\cref{sec:standard}).
+\item A pre-registered test of a discrete portfolio against network references on both kinds of task, with the following safeguards (\cref{sec:portfolio}):
+  \begin{itemize}
+  \item fresh held-out sets fixed before design, and a designation rule fixed before any held-out run;
+  \item independent audits of leakage, compute, discreteness and reference strength, whose findings strengthened the references;
+  \item post-hoc ablations that attribute each result to a component.
+  \end{itemize}
+\item A record of how the work was done, including what the orchestrating session had seen when it made each change (\cref{app:audits,app:provenance}).
+\end{enumerate}
+
+\paragraph{Scope.}
+\begin{itemize}
+\item \emph{The toy networks.} They are one architecture family: $\mu$P two-hidden-layer ReLU MLPs of width 128, trained by Adam for a fixed number of steps. Weight-decayed and logistic-loss variants were added in Part 8.
+\item \emph{The MLP references.} The strongest is a 256-256 ensemble with standard regularization. There are no convolutional networks, augmentation or tuned architectures.
+\item \emph{What DFG was designed for.} It was designed knowing that the toy targets are Boolean functions of uniform $\pm1$ inputs, mostly sparse in the Fourier basis. Its toy result shows that such a specialised learner fits within gradient descent's FLOP budget and needs less data. It says nothing about learners in general.
+\item \emph{Size of the held-out sets.} The fresh sets are small: 10 toy targets and 10 tabular datasets. There is no fresh image set before Part 9.
+\item \emph{What ``discrete'' means.} It means no continuous feature parameters. Gradient boosting is functional gradient descent over trees, and DFG's spectral block uses eigenvector directions (\cref{sec:discreteness}). The fair wording is ``beats gradient-descent-trained networks'', not ``beats gradient descent''.
+\end{itemize}
+Claims are labelled \status{Numerical} (measured here) or \status{Heuristic} (a reading or a back-of-envelope argument, not tested or proved here). There are no theorems in this paper.

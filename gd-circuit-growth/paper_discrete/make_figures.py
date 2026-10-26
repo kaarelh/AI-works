@@ -268,36 +268,44 @@ def curve_mean(L, ds):
     return np.array(ns, float), np.array([np.nanmean(np.array(e, float)) for e in r["err"]])
 
 
+def place_labels(ax, ends, gap=0.05, dx=1.18):
+    """Direct labels at the right end of each line: ends = [(text, x, y_data)]; spread in axes-fraction units."""
+    from matplotlib.transforms import blended_transform_factory
+    tr = blended_transform_factory(ax.transData, ax.transAxes)
+    to_frac = lambda yv: ax.transAxes.inverted().transform(ax.transData.transform((1.0, yv)))[1]
+    fr = repel([to_frac(yv) for _, _, yv in ends], gap)
+    for (t, x, yv), f in zip(ends, fr):
+        ax.text(x * dx, f, t, fontsize=6.5, color=INK, va="center", ha="left", transform=tr)
+
+
 def fig5():
     fig, axs = plt.subplots(2, 2, figsize=(TEXTW, 5.4), sharex=True)
     top = ["hyb_portfolio", "mlp_strong", "mlp_l2unit", "hgb"]
     bot = ["hyb_portfolio", "mlp_l2unit", "mlp", "hgb"]
     for c, (ds, name) in enumerate(IMGS):
         ax = axs[0, c]
-        ends = []
+        ends, allv = [], []
         for L in top:
             n, e = curve_mean(L, ds); col, mk, ls = STY[L]
             ax.plot(n, e, color=col, marker=mk, ls=ls, ms=4.5, mec="white", mew=0.4, label=LAB[L], zorder=3)
-            ends.append((L, n[-1], e[-1]))
+            ends.append((SHORT[L], n[-1], e[-1])); allv += list(e)
         ax.set_xscale("log"); ax.set_yscale("log")
+        ax.set_xlim(70, 4.3e5); ax.set_ylim(min(allv) * 0.85, max(allv) * 1.15)
         ax.axvspan(2.0e4, 9e4, color="#f3f3f3", zorder=0, lw=0)
-        ys = repel([np.log10(e) for _, _, e in ends], 0.075)
-        for (L, n, e), yy in zip(ends, ys):
-            ax.text(n * 1.18, 10 ** yy, SHORT[L], fontsize=6.5, color=INK, va="center", ha="left")
-        ax.set_xlim(70, 4.3e5)
+        place_labels(ax, ends)
         ax.set_title(f"({'ab'[c]}) {name}: test error", loc="left")
         if c == 0:
             ax.set_ylabel("test error (seed mean)")
         ax.yaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{100 * v:g}%"))
         ax.yaxis.set_minor_formatter(matplotlib.ticker.FuncFormatter(
-            lambda v, _: f"{100 * v:g}%" if round(v * 100, 6) in (2, 3, 5, 20, 30, 50) else ""))
+            lambda v, _: f"{100 * v:g}%" if round(v * 100, 6) in (2, 3, 5, 15, 20, 30) else ""))
         # bottom: log2 ratio to the strong MLP
         ax = axs[1, c]
         ns_ref, e_ref = curve_mean("mlp_strong", ds)
-        ax.axhline(0, color=COL[1], lw=1.5, ls="--", zorder=2)
-        ax.text(80, 0.02, "mlp_strong", fontsize=6.5, color=INK, va="bottom", ha="left")
+        ax.plot([60, 6.6e4], [0, 0], color=COL[1], lw=1.5, ls="--", zorder=2)
         ax.axvspan(2.0e4, 9e4, color="#f3f3f3", zorder=0, lw=0)
-        ends = []
+        ax.set_xscale("log"); ax.set_ylim(-0.45, 1.12); ax.set_xlim(70, 4.3e5)
+        ends = [("mlp_strong", ns_ref[-1], 0.0)]
         for L in bot:
             n, e = curve_mean(L, ds)
             m = [list(ns_ref).index(x) for x in n if x in ns_ref]
@@ -305,17 +313,13 @@ def fig5():
             lr = np.log2(np.maximum(ee, 0.002) / np.maximum(e_ref[m], 0.002))
             col, mk, ls = STY[L]
             ax.plot(nn, lr, color=col, marker=mk, ls=ls, ms=4.5, mec="white", mew=0.4, label=LAB[L], zorder=3)
-            ends.append((L, nn[-1], lr[-1]))
-        ys = repel([v for _, _, v in ends], 0.075)
-        for (L, n, v), yy in zip(ends, ys):
-            ax.text(n * 1.18, yy, SHORT[L], fontsize=6.5, color=INK, va="center", ha="left")
-        ax.set_xscale("log")
-        ax.set_ylim(-0.45, 1.0)
+            ends.append((SHORT[L], nn[-1], lr[-1]))
+        place_labels(ax, ends)
         ax.set_title(f"({'cd'[c]}) {name}: " + r"$\log_2$(error / mlp_strong error)", loc="left")
         ax.set_xlabel("training-set size n")
         if c == 0:
             ax.set_ylabel(r"$\log_2$ error ratio")
-        ax.text(2.2e4, 0.93, "seed 0 only", fontsize=6.3, color=INK2, va="top", ha="left")
+        ax.text(2.2e4, -0.42, "seed 0\nonly", fontsize=6.3, color=INK2, va="bottom", ha="left", linespacing=1.0)
     h = [Line2D([], [], color=STY[L][0], marker=STY[L][1], ls=STY[L][2], ms=4.5, mec="white", mew=0.4, label=LAB[L])
          for L in ["hyb_portfolio", "mlp_strong", "mlp_l2unit", "mlp", "hgb"]]
     fig.legend(handles=h, loc="lower center", ncol=5, bbox_to_anchor=(0.5, 0.0), handlelength=2.6, columnspacing=1.2)
@@ -345,7 +349,7 @@ def fig6():
     ax.set_xscale("log"); ax.set_xlim(12, 3.2e4)
     ax.set_yticks(y); ax.set_yticklabels(T); ax.grid(axis="y", visible=False)
     ax.set_xlabel(r"$n^*$ (inputs permuted)")
-    ax.set_title("(a) toy suite dlheld3: which members carry n*", loc="left")
+    ax.set_title(r"(a) toy suite dlheld3: $n^*$ by member set", loc="left")
     ax.set_ylim(-0.7, len(T) - 0.3)
     ax.legend(loc="lower right", handletextpad=0.2, borderaxespad=0.3, labelspacing=0.3, bbox_to_anchor=(1.0, 0.02))
     # (b) real: mean log2(err / best MLP err) per variant, n <= 3000, seeds 0-1
@@ -374,12 +378,13 @@ def fig6():
     ax.scatter(m, yy, marker="o", s=26, facecolor=[COL[0]] + [COL[6]] * (len(V) - 1), edgecolor="white", linewidth=0.4,
                zorder=3)
     for v, q, (k, _) in zip(m, yy, V):
-        ax.text(v + (0.04 if v >= 0 else -0.04), q + 0.28, f"{v:+.2f}", fontsize=6.5, color=INK, va="center",
+        ax.text(v + (0.05 if v >= 0 else -0.05), q, f"{v:+.2f}".replace("-", "\u2212"), fontsize=6.5, color=INK, va="center",
                 ha="left" if v >= 0 else "right")
     ax.set_yticks(yy); ax.set_yticklabels([lab for _, lab in V]); ax.grid(axis="y", visible=False)
     ax.set_xlim(-0.45, 0.75)
     ax.set_xlabel(r"mean $\log_2$(error / best MLP error)")
-    ax.set_title(f"(b) real: HELDOUT2 + images, n <= 3000 ({len(agg['hyb_portfolio'])} cells)", loc="left")
+    ax.set_title(f"(b) HELDOUT2 + images, n \u2264 3000 ({len(agg['hyb_portfolio'])} cells)", loc="left")
+    ax.set_ylim(-0.6, len(V) - 0.35)
     fig.tight_layout(w_pad=1.5)
     save(fig, "fig_ablations.pdf")
     return {k: (len(agg[k]), float(np.mean(agg[k]))) for k, _ in V}

@@ -1,0 +1,154 @@
+\section{Setup}\label{sec:setup}
+
+\subsection{Toy Boolean targets and the networks}\label{sec:toysetup}
+
+\paragraph{Targets.} Inputs are uniform on $\cube$, mostly with $d=30$, and labels are $\pm1$ values of a target $f$. Products of inputs are parities (Fourier characters) $\chi_S(x)=\prod_{i\in S}x_i$. Five suites are used. Their roles differ by part, and \cref{tab:suites} gives the status of each.
+\begin{itemize}
+\item \code{designed} (21 targets), from Parts 1--5:
+  \begin{itemize}
+  \item a dictator, AND$_3$, MAJ$_3$, MAJ$_9$, a 10-input halfspace;
+  \item the parities $\chi_2$, $\chi_3$, $\chi_4$ and a 5-term staircase;
+  \item compositions of majorities and parities, a multiplexer, a 3-term DNF, a decision list, sign$(2x_1+x_2x_3+x_4x_5x_6)$;
+  \item four random 6-gate formulas.
+  \end{itemize}
+  Seven of them were also run at $d=15$ and 60, and four at $d=120$.
+\item \code{random} (20): random fan-in-2 AND/OR/XOR formulas with 3--8 gates, each depending on 3--5 inputs.
+\item \code{dlheld} (12, ``held-out 1''), written for Part 6 before DFG was tuned on it:
+  \begin{itemize}
+  \item dense halfspaces and majorities: MAJ$_{15}$, a Gaussian halfspace on all 30 inputs, MAJ of three MAJ$_5$, MAJ$_5\oplus$MAJ$_5$, an intersection of two halfspaces;
+  \item $\chi_5$, the 6-multiplexer, a 6-term staircase, MAJ of five pairs;
+  \item three random formulas on 6 inputs.
+  \end{itemize}
+\item \code{dlheld2} (7, ``held-out 2''), written after DFG v1.1 was committed: a 20-input halfspace, MAJ$_{21}$, $x_1x_2\,$MAJ$(x_3,x_4,x_5)$, a 4-term 2-DNF, the symmetric function $\mathrm{sym8}=[|x_1+\dots+x_8|\ge4]$, and two random formulas on 7 inputs.
+\item \code{dlheld3} (10), fixed for Part 8 before any Part 8 design (\cref{tab:dlheld3}):
+  \begin{itemize}
+  \item a CNF, a decision list, an integer-weight threshold, the 11-multiplexer;
+  \item $x_1x_2x_3\vee(x_4\wedge x_5)$, a sparse polynomial with a degree-4 term, a majority of mixed gates;
+  \item the symmetric function $\mathrm{sym9}=[|x_1+\dots+x_9|\le1]$;
+  \item two random formulas.
+  \end{itemize}
+\end{itemize}
+Here $[\cdot]$ is $+1$ if the condition holds and $-1$ otherwise. Every suite puts the relevant inputs first. This matters for tie-breaking (\cref{sec:tiebreak}).
+
+\paragraph{The networks} \cite{gdcircuit2026}.
+\begin{itemize}
+\item \emph{Architecture:} $f(x)=a^\top\mathrm{relu}(W_2\,\mathrm{relu}(W_1x+b_1)+b_2)$, two hidden layers of width 128, in the $\mu$P parameterization \cite{yang2021feature}.
+\item \emph{Training:} Adam \cite{kingma2015adam} at learning rate $10^{-3}$ on the square loss, with minibatches of 64 drawn with replacement from a fixed training set of size $n\in\{16,32,\dots,16384\}$. Training runs 20000 steps (40000 at $d=120$) and is read at the final step.
+\item \emph{Seeds and test set:} 3 seeds at $d=30$ (2 on \code{random} and at other $d$), and one 4096-point test set per target.
+\end{itemize}
+This configuration was never tuned. In Part 8, after an audit found it to be a weak representative of gradient-descent-trained networks (\cref{app:audits}), two variants were added at the same width, steps and FLOPs:
+\begin{itemize}
+\item \code{nets_wd}: decoupled weight decay 0.1 \cite{loshchilov2019adamw}, on every target of every suite;
+\item \code{nets_cewd}: logistic loss plus weight decay 0.1, on \code{dlheld3} only.
+\end{itemize}
+\code{nets_best} is, per target, the variant with the smallest $\nstar$. It is chosen with hindsight on the test set and so favours the networks.
+
+\paragraph{Sample complexity.} $\nstar$ is the training-set size at which the seed-mean test error reaches 0.1, interpolated linearly in $\log n$ on the factor-2 grid. Every learner sees exactly the networks' training sets and test set; an audit checked this row by row (\cref{app:audits}).
+\begin{itemize}
+\item \emph{Comparison:} the $\log_2$ ratio $\log_2(\nstar_{\rm learner}/\nstar_{\rm ref})$, so $-1$ means half the data. Suite means are taken over targets both learners learn.
+\item \emph{Clearly better (worse):} the ratio is below $-0.25$ (above $+0.25$), or only one of the two reaches 10\% error on the grid.
+\item \emph{Data factor:} the reference's $\nstar$ divided by the learner's.
+\end{itemize}
+
+\paragraph{Compute budget.} Compute is counted in FLOPs, with a multiply-add as 2. Everything a learner does in a fit is counted, including model selection and cross-validation; prediction is not counted, for either side.
+\begin{itemize}
+\item \emph{Toy unit:} one network training run, $6P\cdot64\cdot T+10P\cdot T$ FLOPs, where $P$ is the parameter count and $T$ the step count (Adam adds the second term). That is $1.62\times10^{11}$ at $d=30$.
+\item \emph{No sharing:} the networks are trained in parallel under \texttt{vmap}, but no computation is shared between them, so each $(n,\text{seed})$ network costs one unit.
+\item \emph{Budgets:} DFG (Part 6) and the Part 8 learners are held to at most one unit per fit.
+\end{itemize}
+
+\begin{table}[t]
+\centering\footnotesize\setlength{\tabcolsep}{4pt}
+\begin{tabular}{llll}
+\toprule
+set & size & status for DFG (Parts 6, 8) & role\\
+\midrule
+toy \code{designed} & 21 & development; in-sample & Part 6 development; Part 8 dev score\\
+toy \code{random} & 20 & read during DFG's development & Part 6 development check; Part 8 supporting\\
+toy \code{dlheld} & 12 & blind for frozen DFG v1 (except its degree-5/6 search) & Part 6 blind test; Part 8 supporting\\
+toy \code{dlheld2} & 7 & blind for DFG v1.1; used once in Part 6 & Part 6 blind test; Part 8 supporting\\
+toy \code{dlheld3} & 10 & fresh in Part 8 & \textbf{Part 8 toy headline}\\
+\addlinespace
+5 PMLB DEV & 5 & development & Part 7 and Part 8 development\\
+Part 7 HELDOUT, tabular & 11 & held out in Part 7; references read by Part 8 builders & Part 7 test; Part 8 supporting\\
+MNIST, Fashion-MNIST & 2 & held out in Part 7; references read by Part 8 builders & the only image evidence (Parts 7, 8)\\
+HELDOUT2 & 10 & fresh in Part 8, never read by a builder & \textbf{Part 8 tabular headline}\\
+\bottomrule
+\end{tabular}
+\caption{Data sets and their status. ``Fresh'' sets were fixed in a commit before any design work of the part that uses them as headline evidence. Part 9 adds further fresh sets (\cref{sec:part9}).}
+\label{tab:suites}
+\end{table}
+
+\subsection{Standard tasks and the MLP references}\label{sec:stdsetup}
+
+\paragraph{Datasets.} Part 7 used 18 classification tasks:
+\begin{itemize}
+\item MNIST \cite{lecun1998mnist} and Fashion-MNIST \cite{xiao2017fashion}, with the standard 60000/10000 split;
+\item 16 datasets from the Penn Machine Learning Benchmarks (PMLB) \cite{olson2017pmlb}, with continuous, categorical, binary and mixed features and 2--26 classes.
+\end{itemize}
+Five PMLB datasets were for development (optdigits, magic, kr\_vs\_kp, satimage, spambase). The remaining 13 tasks were held out: the two image sets and adult, letter, pendigits, connect\_4, dna, nursery, ring, twonorm, phoneme, waveform\_40, mushroom. Part 8 added HELDOUT2, 10 further PMLB datasets fixed before any Part 8 design: texture, churn, wine\_quality\_white, page\_blocks, clean2, led24, ann\_thyroid, banana, krkopt, sleep.
+
+\paragraph{Learning curves.} Each dataset has a fixed test set: the standard 10000 images, or a random 25\% (at most 10000 points) for PMLB.
+\begin{itemize}
+\item \emph{Training sets:} nested prefixes of a seed-specific permutation of the remaining pool.
+\item \emph{Grid:} $n=100,300,1000,3000,10000,30000,60000$ up to the pool size, plus the full pool.
+\item \emph{Seeds:} three. On images at $n\ge30000$ the DFG adaptations (Part 7), and the Part 8 learners and the strong MLP, were run with seed 0 only.
+\end{itemize}
+
+\paragraph{MLP references.} All are 256-256 ReLU MLPs with softmax cross-entropy.
+\begin{itemize}
+\item \code{mlp}, the baseline:
+  \begin{itemize}
+  \item standardized continuous inputs, one-hot categoricals;
+  \item Adam at batch 128, for $\min(10000,\max(2000,\,50\text{ epochs}))$ steps;
+  \item learning rate in $\{10^{-3},3\times10^{-4}\}$ and the stopping checkpoint chosen on a 10\% validation split, then retrained on all $n$.
+  \end{itemize}
+\item Variants added during Part 7:
+  \begin{itemize}
+  \item \code{mlp_plus}: a learning-rate grid with AdamW; tabular data, $n\le3000$;
+  \item \code{mlp_unit}: raw $[0,1]$ pixels; images, $n\le10000$;
+  \item \code{mlp_l2}: an L2 penalty $\lambda\in\{10^{-4},10^{-3},10^{-2},10^{-1}\}$ chosen on validation, final checkpoint. It was added after an audit found the baseline under-regularized at small $n$.
+  \end{itemize}
+\item \code{mlp_reg} (Part 8): \code{mlp_l2} on tabular data and its $[0,1]$-pixel version \code{mlp_l2unit} on images, at every $n$.
+\item \code{mlp_strong} (Part 8; added after the fairness audit, settings from the audit's recommendation and standard practice, smoke-tested on two dev datasets only):
+  \begin{itemize}
+  \item quantile-transformed continuous inputs, or $[0,1]$ pixels;
+  \item AdamW \cite{loshchilov2019adamw} at learning rate $10^{-3}$ with cosine decay to 0;
+  \item decoupled weight decay in $\{0,0.1,1\}$ chosen on validation, and dropout 0.1 \cite{srivastava2014dropout};
+  \item an ensemble of 3 networks, so 6 training runs per fit, twice the Part 8 learners' budget. Its first network alone is \code{mlp_strong1}.
+  \end{itemize}
+\item \code{mlp_best}: per cell, the lowest seed-mean \emph{test} error over every MLP variant run on that cell. It is a hindsight choice that favours the MLPs. Which variants exist differs by split (\cref{app:audits}).
+\end{itemize}
+Calibration references, which enter no verdict:
+\begin{itemize}
+\item \code{linear}: multinomial logistic regression on the MLP's encoding;
+\item \code{hgb}: scikit-learn's histogram gradient boosting with default settings \cite{pedregosa2011sklearn};
+\item \code{lin}, on the toy suites: L2 logistic regression on the raw inputs, with cross-validated $\lambda$.
+\end{itemize}
+
+\paragraph{Budgets on standard tasks.} One MLP training run at size $n$ costs $6P\cdot128\cdot S$ FLOPs, with $S$ the step count. DFG's adaptations (Part 7) were held to one run per fit. The Part 8 learners were held to three, which is the baseline's own cost including its learning-rate selection.
+
+\paragraph{Verdicts.} A $(\text{dataset},n)$ cell is \emph{better} (\emph{worse}) if the seed-mean errors differ by more than 10\% relative and by more than 2 standard errors. The s.e.\ comes from the seed spread of both learners and is at least the binomial noise of the test set; otherwise the cell is a \emph{tie}. Errors are floored at 0.002 in $\log_2$ ratios. The \emph{data factor} of a cell is the training size at which the learner reaches the reference's error at $n$, divided by $n$. Part 8 also reports, per split, the number of datasets whose mean $\log_2$ error ratio over $n$ is below 0, with a two-sided exact sign test. This was fixed before any held-out run.
+
+\subsection{Pre-registration, held-out discipline and audits}\label{sec:discipline}
+
+Each part fixed its held-out data before the learner it tests was frozen, and froze the learner before running it on held-out data.
+\begin{itemize}
+\item \textbf{Part 6.}
+  \begin{itemize}
+  \item DFG v1 was frozen (commit \texttt{359a6b61}) after \code{dlheld} was committed (\texttt{805bff0e}) and before it was run on it.
+  \item The revised v1.1 (\texttt{0220cf04}) was made after that run.
+  \item \code{dlheld2} was committed after v1.1, and v1.1 was first run on it after the input-permutation wrapper was added (\texttt{5716239b}).
+  \end{itemize}
+  \Cref{sec:dfgversions} lists the exceptions.
+\item \textbf{Part 7.} Three builders developed adaptations of DFG on the 5 DEV datasets only and froze them. A protocol audit confirmed that no builder touched a held-out dataset.
+\item \textbf{Part 8.} A protocol was written before any design result was seen \repo{study/hybrid/PROTOCOL.md}. It fixed:
+  \begin{itemize}
+  \item the fresh sets \code{dlheld3} and HELDOUT2 (commit \texttt{04a215b2});
+  \item the FLOP budgets;
+  \item three independent designs, built on development data only;
+  \item a rule that designates the primary design from the dev scores before any held-out run.
+  \end{itemize}
+  The frozen files' md5 sums are recorded there.
+\end{itemize}
+Independent audit agents reviewed each part. In Part 8 they ran while the primary design's held-out jobs were running; they were instructed not to read held-out results of the Part 8 learners, and each reports that it read none. \Cref{app:audits} lists their findings and what was done about each, and \cref{app:provenance} records what the orchestrating session had seen when it decided each change.
