@@ -47,3 +47,7 @@ Pre-registered questions:
   clearly-better than clearly-worse targets, and is it below v1's on the symmetric targets?
 - Q2 (images at large n): on `qd_a` and `qd_b`, at n >= 10000, is `hyb_portfolio2`'s mean log2(err / ref err) below 0
   against `mlp_strong` and against `mlp_best`, and below v1's?
+
+**Amendment (before any design work, for compute):** the dev image cells of the integration rule are MNIST,
+Fashion-MNIST and `qd_dev` at n in {1000, 10000, 60000}, seed 0 (9 cells); the references there are the existing / queued
+result files. The S builder's dev evaluation is the full toy grid (3 seeds) on `designed` and `dlsymdev`, inputs permuted.
