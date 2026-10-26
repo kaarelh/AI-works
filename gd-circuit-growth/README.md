@@ -13,7 +13,7 @@ Notes by Claude, prompted by Kaarel Hänni. Research note, 23 October 2026; not 
 
 **Paper:** [`paper/gd-circuit-growth-paper.pdf`](paper/gd-circuit-growth-paper.pdf) (LaTeX sources in [`paper/`](paper/)) writes up Parts 1–5.
 
-**Working branch:** `claude/nifty-mccarthy-j0lw2a` holds the full working state. One path stays on it and is not published to `main`: `paper/test_fragment.tex`, a build helper.
+**Working branch:** `claude/nifty-mccarthy-j0lw2a` holds the full working state. Two paths stay on it and are not published to `main`: `paper/test_fragment.tex`, a build helper, and `study/hybrid/orchestration/`, the job queues of Part 8.
 - The `study/models/scratch_*` folders are published, because they hold the calibration logs that the model write-ups cite.
 
 Raw network outputs live in a session scratch directory and are in neither branch. The scripts regenerate them.
@@ -21,6 +21,8 @@ Raw network outputs live in a session scratch directory and are in neither branc
 [Part 6](#part-6-a-discrete-learner-that-needs-less-data-than-gradient-descent-25-october-2026) builds a discrete learner from this picture. On nearly every target it needs less data than the study's networks: 3.1× less at the median on a blind held-out suite. It uses at most about half of one network run's FLOPs per fit, and is comparable to or faster than them in CPU time.
 
 [Part 7](#part-7-dfg-on-standard-ml-tasks-against-mlps-2526-october-2026) tests DFG on 18 standard classification tasks against MLPs. It is clearly behind on images at large n, and behind a properly regularized MLP and gradient boosting on tabular data.
+
+[Part 8](#part-8-a-discrete-portfolio-against-gradient-descent-trained-networks-on-toy-and-real-tasks-26-october-2026) asks for one discrete method that beats gradient-descent-trained networks on both. A pre-registered portfolio (DFG plus boosted trees, ExtraTrees, kNN votes and logistic regression, stacked) does so on the toy suites (9 of 10 fresh targets) and on held-out tabular data on average (lower mean error on 8 of 10 fresh datasets; not significant). On images its error is lower than every MLP's up to n = 3000 (one cell resolved), but a regularized MLP ensemble beats it at n ≥ 30000. The toy wins come from DFG's character search, the real-task wins from the classical stack.
 
 [Part 4](#part-4-does-compositional-structure-beyond-leap-matter-24-october-2026) tests whether compositional structure beyond leap complexity matters. [Part 5](#part-5-what-the-network-computes-while-it-learns-2425-october-2026) characterizes the sequence of functions a network computes while it learns, and gives models that reproduce it on held-out targets.
 
@@ -904,6 +906,70 @@ features and paying only about ln N in samples. On real data that premise fails:
 - *Dense signal:* on dev data, union-bound tests designed to block false features on sparse targets stalled growth on
   dense real-world signal. Where DFG loses most on held-out data, though, it ran at or near its FLOP budget: the
   dictionary and the budget bind, not the tests.
+
+## Part 8: a discrete portfolio against gradient-descent-trained networks on toy and real tasks (26 October 2026)
+
+Full write-up: [`study/hybrid/HYBRID.md`](study/hybrid/HYBRID.md). Tables: [`study/hybrid/RESULTS.md`](study/hybrid/RESULTS.md)
+and [`study/hybrid/ABLATIONS.md`](study/hybrid/ABLATIONS.md) (post hoc). Protocol: [`study/hybrid/PROTOCOL.md`](study/hybrid/PROTOCOL.md).
+
+**Question.** Is there a discrete method that beats gradient-descent-trained networks both on the toy Boolean suites of
+Parts 1–6 (n*, the data needed for 10% test error) and on Part 7's standard tasks (test error against MLPs)?
+
+**Setup** (Numerical):
+- *Pre-registration.* A protocol was written first. Two held-out sets were fixed before any design: a fresh toy suite
+  (`dlheld3`, 10 targets) and 10 fresh PMLB datasets (HELDOUT2).
+- *Designs.* Three designs were built independently on dev data only, then frozen. A fixed dev rule picked the primary,
+  `hyb_portfolio`: Part 6's character search (DFG), LightGBM, ExtraTrees, kNN votes and logistic regression, stacked on
+  out-of-fold predictions.
+- *Budgets:* one network run per toy fit; three MLP runs per real fit.
+- *Audits and stronger references.* Four code audits ran while the primary's held-out jobs were running; the auditors
+  were told not to read held-out results of the Part 8 learners and report that they did not. By the time the changes
+  below were decided, the orchestrating session had seen part of the primary's held-out results (error curves of 7
+  tabular datasets in the job logs, the MNIST curve, a few tabular cells, 4 of the 20 `random` targets) and `hgb`'s
+  held-out toy results. Each change strengthens a reference, removes a bias in the learner's favour or narrows the
+  claim; no learner was changed:
+  - the toy runs were redone with permuted inputs;
+  - the toy references gained weight-decayed networks (all five suites) and logistic-loss, weight-decayed networks
+    (fresh suite only);
+  - a strong MLP was added (quantile inputs, AdamW, dropout, ensemble of 3; twice the budget), set from the audit's
+    recommendation and smoke-tested on dev data only. It was run on the fresh datasets, the images and the Part 7
+    tabular set up to n = 10000;
+  - the headline was restricted to the two fresh sets.
+
+**Answer: partly.**
+- **Toy.** On the fresh suite it needs less data than the per-target best network variant on 9 of 10 targets (mean
+  log2 n* ratio −1.41, about 2.7×; −1.55 against the single logistic-loss, weight-decayed configuration). The loss is
+  sym9 (|x1 + … + x9| ≤ 1): 1229 samples against 350. On the other four suites it is clearly better on 57 of 60 targets
+  and tied on 3. Against the regularized networks the suite-mean margins shrink by 0.5–0.7 in log2; the shrink is
+  spread over every kind of target, largest on poly4, thrint and sym9 (1.2–1.9). The parity-type margins remain the
+  largest (par3or −3.54, poly4 −3.95 against the per-target best network).
+- **Tabular.** On the 10 fresh datasets its mean error is lower than the hindsight-best MLP's on 8 of 10 (sign test
+  p = 0.11, not significant): mean log2 error ratio −0.17, 10 better and 2 worse of 53 cells. Against the strong MLP
+  ensemble alone the ratio is −0.28, and against one network of that recipe −0.32, again on 8 of 10 datasets. It loses
+  on texture (higher error at every n, no cell resolved) and on krkopt (resolved at n ≥ 10000). On the 11 Part 7
+  tabular datasets, whose references the designers had seen, it is −0.11 against the hindsight-best MLP and lower on 8
+  of 11 (p = 0.23); its mean error is higher there on nursery, pendigits and connect_4.
+- **Images** (MNIST and Fashion-MNIST; no fresh image set, and the designers had seen the references). Its seed-mean
+  error is below every MLP's up to n = 3000, but only MNIST n = 3000 resolves as better. It is about equal at
+  n = 10000. At n = 30000–60000 (one seed) the strong MLP, a 3-network ensemble at twice the budget, wins in all four
+  cells: 1.43% against 1.98% on MNIST and 9.7% against 10.7% on Fashion-MNIST at 60000. Against a single network of
+  that recipe only MNIST n = 30000 resolves.
+- **Compute.** Its largest fit uses about three quarters of the FLOP budget: 0.75 of a network run on the toy suites by
+  its own count (a measurement, not a bound), and ≈ 0.74 (range 0.58–0.90) on images after the compute audit's
+  correction. It costs far more CPU time on images, and up to 350× an MLP's prediction FLOPs per query (kNN).
+
+**Reading** (Heuristic). This is an AutoML-style portfolio that dispatches by input type, not one discrete mechanism.
+- *Toy:* the post-hoc ablations put the large margins on DFG's exhaustive character search. Without it the design
+  fails on the parity-like targets (par3or 7531 samples, poly4 never learned), and its mean on the fresh suite becomes
+  +0.17 against the best network. It still wins clearly on 6 of 10 fresh targets, with the trees carrying cnf3 and
+  mux11.
+- *Real data:* the wins come from the classical stack. No single member matches it, and DFG runs on 1 of 23 held-out
+  datasets. This restates the known strength of trees and stacking over plain MLPs on medium-sized tabular data.
+- *Images:* with enough data, a well-regularized MLP's learned directions beat prototype memory and trees.
+
+"Discrete" means no continuous feature parameters. Boosting is still functional gradient descent, and DFG's spectral
+features use continuous eigenvector directions. The fair wording is "beats gradient-descent-trained networks", not
+"beats gradient descent".
 
 ## Files
 
