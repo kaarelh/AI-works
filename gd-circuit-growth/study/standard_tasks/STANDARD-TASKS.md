@@ -6,11 +6,11 @@ Part 7 of the study (25–26 October 2026). All tables: [`RESULTS.md`](RESULTS.m
 **Question (from the user).** How well does the proposal, DFG (Part 6), do on more standard ML tasks, compared with MLPs
 on tasks MLPs are reasonable for?
 
-**Short answer.** **Not very well, beyond the toy problems.** Here DFG is judged against a *properly regularized* MLP, the fair
-comparison.
-- **Tabular data:** DFG's adaptations need about as much data as a plain MLP, but they lose to a regularized MLP and to
-  gradient-boosted trees.
-- **Images:** they are far behind.
+**Short answer.** **Not very well, beyond the toy problems.**
+- **Tabular data:** DFG's adaptations need roughly as much data as a plain MLP (median data factor 1.0–1.3, counting
+  cells where they never reach the MLP's error). They lose to a properly regularized MLP, which is the fair comparison
+  and is available for tabular data at n ≤ 3000. They also lose, somewhat, to gradient-boosted trees.
+- **Images:** they are clearly behind at large n.
 
 Three independent adaptations of DFG to real-valued, multi-class data were developed on 5 dev datasets, frozen, and
 run on 13 held-out datasets. They use at most one MLP training run's FLOPs per fit, with a few overruns reported below.
@@ -23,19 +23,29 @@ run on 13 held-out datasets. They use at most one MLP training run's FLOPs per f
     (+0.21).
   - So most of DFG's small-n "wins" over the baseline were the baseline's lack of regularization. That was found by an
     independent audit, not anticipated.
-  - At large n DFG is clearly behind on tasks with many interacting features: letter 2–3.5×, pendigits 1.7–2.2×,
-    connect_4 1.25–1.4×, phoneme 1.1–1.2× the MLP's error.
+  - Of the 23 (learner, cell) wins over the baseline, 5 survive against the regularized MLP. All are at n ≤ 300: dfg_bits
+    on dna, ring and waveform, and dfg_gates on waveform. Only dna also clearly beats every other reference.
+  - At full n DFG is clearly behind on letter (2.1–3.5× the MLP's error), pendigits (1.6–2.0×; dfg_dirs's cells count
+    as ties) and connect_4 (1.25–1.4×). It is 10–20% behind on phoneme, within the tie band.
 - **Images** (MNIST, Fashion-MNIST):
-  - DFG is behind at n ≥ 3000 on both datasets (roughly tied at n ≤ 1000 on Fashion-MNIST), with 20–33% higher error
-    on average over the grid (log2 +0.26 to +0.41).
-  - At n = 60000 it gets 5.5–7.2% error on MNIST against the MLP's 2.5%, and 14–16% on Fashion-MNIST against 11%.
-    That is close to logistic regression.
-  - This gap is a lower bound, because the MLP is somewhat under-tuned on images: MNIST at n = 60000 is 2.5% against
-    about 1.6–2% for published 2-layer MLPs.
+  - Where DFG is behind:
+    - on MNIST from n ≈ 3000 (dfg_bits from n = 1000);
+    - on Fashion-MNIST from n = 10000 (dfg_bits from 30000; at n = 3000 it is 7–9% worse, a tie).
+
+    At small n it is roughly tied. Averaged over the grid its error is 20–33% higher (log2 +0.26 to +0.41).
+  - At n = 60000 it gets 5.5–7.2% error on MNIST against the MLP's 2.5% (2.2–2.9×), and 14–16% on Fashion-MNIST against
+    11% (1.3–1.4×). All three are closer to logistic regression (7.8%, 16.5%) than to the MLP.
+  - This gap is probably a lower bound, because the MLP is somewhat under-tuned on images. MNIST at n = 60000 is 2.5%,
+    against about 1.6–2% recalled for published 2-layer MLPs.
 - **Gradient boosting:** default sklearn gradient boosting (`hgb`, also a discrete, greedily grown learner, but over
-  trees) beats all three DFG adaptations on most tabular datasets. It is on average slightly better than the baseline
-  MLP (mean log2 −0.07): better on adult, dna, ring, phoneme and waveform, and worse on letter, pendigits, connect_4 and
-  twonorm.
+  trees) has 8–12% lower error than the DFG adaptations on held-out tabular data on average. It is lower on most datasets,
+  but higher on twonorm and waveform.
+  - *Against the baseline MLP* it is slightly better on average (mean log2 −0.07):
+    - clearly better on adult, dna and ring;
+    - within the tie band on phoneme, nursery, mushroom and waveform;
+    - clearly worse on pendigits and twonorm;
+    - worse on letter and connect_4 only at full n.
+  - *Against the regularized MLP* it trails at n ≤ 3000 (+0.11).
 
 ## 1. Tasks and protocol
 
@@ -59,17 +69,22 @@ run on 13 held-out datasets. They use at most one MLP training run's FLOPs per f
   (`harness.mlp_flops`). The MLP's model selection costs 3 runs.
 - **MLP variants added during the study.** The aim was not to flatter DFG.
   - `mlp_plus`: lr ∈ {3e-3, 1e-3, 3e-4} × AdamW decay {0, 0.05}; tabular, n ≤ 3000.
-  - `mlp_unit`: inputs scaled to [−1, 1] instead of standardized per pixel; images, n ≤ 10000.
+  - `mlp_unit`: raw [0, 1] pixels instead of per-pixel standardization (continuous inputs divided by the training
+    max |x|); images, n ≤ 10000.
   - `mlp_l2`: lr 1e-3 with an L2 penalty λ ∈ {1e-4, 1e-3, 1e-2, 1e-1} chosen on validation, final checkpoint, retrained
     on all n; held-out tabular, n ≤ 3000.
 
   `mlp_l2` was added after an independent audit found the baseline under-regularized at small n. Its only regularizer
-  is early stopping, chosen on as few as 10 validation points. The baseline MLP's large-n errors are within typical
-  published ranges for 2-layer MLPs (adult 14.3%, letter 3.3%, pendigits 0.6%, Fashion-MNIST 11.0%), except MNIST
-  (2.5% against about 1.6–2%).
+  is early stopping, chosen on as few as 10 validation points. The baseline MLP's large-n errors are within the ranges
+  the audit recalled for 2-layer MLPs (adult 14.3%, letter 3.3%, pendigits 0.6%, Fashion-MNIST 11.0%), except MNIST
+  (2.5% against about 1.6–2%). Those ranges were recalled from memory, not checked against sources.
 - **Incidents.**
   - dfg_gates crashed on MNIST: its Cholesky factorization failed on a near-singular matrix. A jitter fallback was
-    added that only runs when the factorization fails, so non-crashing fits are bit-identical.
+    added that runs only when the factorization fails, so fits that never crashed are bit-identical.
+    - The one fit where the fallback is known to have fired (MNIST n = 10000, seed 1) is an outlier: 0.233 against
+      0.075–0.076 for the other seeds.
+    - It inflates that cell's mean to 0.128, and dfg_gates's image mean log2 to +0.41 (+0.36 without it).
+    - Its retry FLOPs are not counted.
   - Several image runs were killed by the memory limit and rerun with resume support. The results are unaffected.
 - **References** (not part of the comparison, for calibration): multinomial logistic regression on the MLP's encoding
   (`linear`, the "kernel background" alone), and sklearn's histogram gradient boosting with default settings (`hgb`), a
@@ -97,7 +112,7 @@ equal footing.
 |---|---|---|---|---|
 | `dfg_bits` (most faithful) | each input → ±1 bits (one-hot categories; 6–12 thermometer bits at training quantiles per continuous input); *characters* (products of bits from different inputs), degrees 1–2 every round, 3–4 when the budget allows; extensions S∪{j}, S∪{j,l}; local Walsh transform; linear and spectral (u·x)² blocks | 1 (DFG's) | ridge LS (leave-one-out ridge) → softmax refinement | +0.15 |
 | `dfg_gates` | *literals* [x_j > t] at 16 quantiles, [x_j = v], and negations; *gates* = ANDs of up to 3 literals; pairs exhaustively on a budgeted subsample, extensions g∧l of current gates; linear block | 0.5 | LS or softmax, chosen on a 10% split, refit on all n | +0.07 |
-| `dfg_dirs` | gates [u·z > t], hinges and squares (u·z)² on a finite set of *axes*: the coordinates, plus directions derived each round (per-class linear discriminants, spectral eigen-directions of the residual, the residual's class-mean difference inside an accepted gate's region, prototype points); products of accepted features with gates (composition); linear block | 0.8 | softmax, λ by cross-validation | +0.06 |
+| `dfg_dirs` | gates [u·z > t], hinges and squares (u·z)² on a finite set of *axes*: the coordinates, plus directions derived each round (per-class linear discriminants, spectral eigen-directions of the residual, the residual's class-mean difference inside an accepted gate's region, prototype points); products of accepted features with gates (composition); linear block | 0.8 | softmax, λ by cross-validation | +0.05 |
 
 All three:
 - run DFG's multi-class test: a χ² statistic of the whitened residual summed over classes, with a union bound over each
@@ -106,8 +121,11 @@ All three:
 - keep a linear block;
 - count every FLOP against the one-MLP-run budget.
 
-Two of them loosened DFG's constant c on dev data, because with c = 1 growth stopped after a few rounds on dense
-real-world signal. dfg_bits kept c = 1.
+Two of them loosened DFG's constant c on dev data:
+- dfg_gates used c = 0.5, because with c = 1 growth stopped after 2–4 rounds on magic and spambase.
+- dfg_dirs used c = 0.8, which was slightly better on 6 of 10 dev cells.
+
+dfg_bits kept c = 1. Its search also stopped after 1–3 rounds, but c = 0.6–0.8 was not consistently better.
 
 Each folder has a `DESIGN.md` with the details and the dev history.
 
@@ -146,8 +164,9 @@ final checkpoint; the baseline MLP's row is included for scale):
 | linear | 2 | 14 | 0 | 4 | 10 | +0.50 | 1.16 | 7 | – |
 | hgb | 1 | 7 | 3 | 4 | 0 | -0.12 | 0.72 | 0 | – |
 
-**Against the best MLP variant per cell, chosen with hindsight on test error** (an upper bound on what MLP tuning buys;
-held-out, all 13 datasets):
+**Against the best MLP variant per cell, chosen with hindsight on test error.** This is an optimistic estimate of what
+choosing among the tried variants buys. Above n = 3000 for tabular data and n = 10000 for images, it equals the
+baseline MLP. Held-out, all 13 datasets:
 
 | learner | datasets | cells | better | tie | worse | mean log2(err / best-MLP err) | median data factor | never reached |
 |---|---|---|---|---|---|---|---|---|
@@ -201,11 +220,14 @@ held-out, all 13 datasets):
 | mushroom | 6093 | 0.001 | – | 0.000 | 0.000 | 0.000 | 0.000 | 0.000 |
 
 **Compute.**
-- **dfg_dirs** stayed within one MLP run in every cell (max 0.99).
+- **dfg_dirs** stayed within one MLP run in every cell by its own count (max 0.99, MNIST n = 60000). Given the audit's
+  measured undercount of 1–5%, that cell may be marginally over.
 - **dfg_gates** exceeded the budget in 7 cells (max 1.07×): letter, pendigits and connect_4 at large n, and two image
   cells. Its final readout refit is not reserved in its budget check, as the compute audit found.
 - **dfg_bits** exceeded the budget on images: up to 3.45× on Fashion-MNIST at n ≥ 10000, and 1.2× on MNIST at n = 60000.
-  These cells should count against it; it loses there anyway.
+  These cells should count against it.
+  - It is behind the MLP in all of them: 9–29% higher error, "worse" at n ≥ 30000 and a tie at n = 10000.
+  - Its lead over the other adaptations on Fashion-MNIST at n ≥ 10000 comes with 2–3.5× their compute.
 
 An independent audit checked the FLOP counters against an instrumented count: true/reported is 0.98–1.00 for
 dfg_bits, 1.00–1.05 for dfg_gates and 1.01–1.05 for dfg_dirs. The MLP's FLOPs are one training run; its model
@@ -213,25 +235,32 @@ selection costs 3 runs (`mlp_l2`: 5).
 
 ## 4. What this says
 
-**Where DFG holds up** (Numerical): low-dimensional tabular problems whose signal is a handful of thresholds,
-categories or short interactions, such as adult, mushroom, nursery, twonorm and dna. On those, a discrete dictionary
-plus explicit tests is about as good as an MLP.
+**Where DFG holds up** (Numerical): mostly categorical or binary tabular problems whose signal is a handful of
+categories, thresholds or short interactions, and the linear twonorm. On those, a discrete dictionary plus explicit
+tests is about as good as an MLP:
+- adult, mushroom and dna;
+- nursery, for dfg_gates only. dfg_bits and dfg_dirs are 3.7–4.3× worse there at n = 3000.
 
-The apparent small-n wins over the baseline MLP mostly vanish against a regularized MLP:
-- *ring* (n = 300): dfg_bits 0.078, against the regularized MLP's 0.097 and the baseline MLP's 0.254. dfg_gates (0.128)
-  and dfg_dirs (0.150) are worse than the regularized MLP.
-- *waveform:* plain logistic regression already does as well.
-- *dna:* the one robust exception is dfg_bits at n = 300 (0.060), against at least 0.10 for every MLP tried, matching
-  gradient boosting (0.057). Here sparse categorical motifs are exactly the bit-products DFG enumerates.
+Of the 23 (learner, cell) wins over the baseline MLP, 18 become ties or losses against the regularized MLP. Five
+survive:
+- *dfg_bits on dna, n = 300:* 0.060, against 0.119 for the regularized MLP and at least 0.10 for every MLP tried. It
+  matches gradient boosting (0.057). Here sparse categorical motifs are exactly the bit-products DFG enumerates.
+- *dfg_bits on ring, n = 100 and 300:* 0.128 against 0.184, and 0.078 against 0.097.
+- *dfg_bits and dfg_gates on waveform, n = 100:* 0.197 and 0.198, against 0.231.
+
+The ring and waveform survivors are less secure. Gradient boosting matches dfg_bits on ring at n = 300 (0.082), and
+logistic regression ties DFG on waveform. An audit probe whose checkpoint was picked on test reached 0.071 on ring at
+n = 100. dfg_gates (0.128) and dfg_dirs (0.150) are worse than the regularized MLP on ring at n = 300.
 
 **Where it falls behind.**
-- *Tabular data needing many interacting features at large n:* letter (26 classes), pendigits, connect_4 (game
-  positions) and phoneme.
-- *Images:* everywhere above n ≈ 300.
-  - At large n the MLP reaches about half of DFG's error, and the gap grows with n. dfg_bits and dfg_gates end up close
-    to plain logistic regression.
+- *Tabular data at large n with many classes or interacting features:* letter (26 classes), pendigits, connect_4 (game
+  positions), and phoneme (within the tie band).
+- *Images:* on MNIST from n ≈ 3000 (dfg_bits from n = 1000), and on Fashion-MNIST from n ≈ 10000.
+  - At n = 60000 the MLP's error is a third to a half of DFG's on MNIST (DFG 2.2–2.9×), and 70–77% of it on
+    Fashion-MNIST (DFG 1.3–1.4×). dfg_bits and dfg_gates end up close to plain logistic regression on MNIST.
   - dfg_dirs, whose dictionary is thresholded linear directions (the same kind of unit as an MLP's), is the best of the
-    three on images. It is still 1.5× the MLP's error on MNIST at n = 30000.
+    three on MNIST: 1.5× the MLP's error at n = 30000 and 2.2× at n = 60000 (5.5% against 2.5%). On Fashion-MNIST it
+    is the worst of the three at n ≥ 10000. There dfg_bits is the best, but only with 2–3.5× the FLOP budget.
 
 **Why** (Heuristic). In Part 6, DFG beat gradient descent on sparse Boolean targets. Exhaustive search over a
 dictionary that contains the target's features pays only about ln N in samples, and the dictionary fit within the
@@ -245,19 +274,29 @@ networks' FLOP budget. On standard tasks the premise fails in two ways:
   An MLP's gradient step instead updates hundreds of directions at once, each pulled toward the residual. In effect it
   is a continuous, parallel version of DFG's spectral move, iterated thousands of times. In the continuous family,
   local search is the efficient search, and enumeration is not.
-- *The tests become the bottleneck.* Union-bound tests are built to stop false features on sparse targets. On dense
-  real-world signal — many weak, correlated effects — they stop growth after a few rounds, and two of the builders had
-  to weaken the test constant c to get growth at all. The MLP has no such gate. It fits everything and relies on early
-  stopping, which is the better trade when the signal is dense.
+- *The tests can stall growth on dense signal.* Union-bound tests are built to stop false features on sparse targets.
+  On dense real-world signal — many weak, correlated effects — they stopped growth early on dev data:
+  - dfg_gates lowered c to 0.5 because at c = 1 growth stopped after 2–4 rounds on magic and spambase.
+  - dfg_bits found that lowering c did not help consistently.
+
+  On held-out data, a test stall fits the cells that use little of the budget (e.g. phoneme, 0.03–0.11 of a run). The
+  largest losses ran at or near the FLOP budget: letter, pendigits, connect_4, and images at large n. There the
+  dictionary and the budget, not the tests, are what bind.
+
+  The MLP has no such gate. It moves all its units at once and controls overfitting with a continuous penalty, not by
+  rejecting features. Here, L2 weight decay with no early stopping lowered its error by 16% at n ≤ 3000.
 
 **What the experiment does not show.**
 - *It does not show that no discrete learner can match MLPs.* Gradient boosting is a discrete, greedily grown learner
-  too: a stagewise fit of trees to the residual. As the strongest tabular reference here, it beats the MLP on many
-  tabular datasets. What fails is DFG's specific recipe: exhaustive enumeration with union-bound tests over parity, gate
-  or direction dictionaries. Trees, whose splits are chosen locally and refined recursively, do much better on tabular
-  data. Neither approach was tried with a convolutional dictionary on images.
-- *It does not show that the three adaptations are the best possible ones.* Each builder had about an hour and only
-  the dev datasets.
+  too: a stagewise fit of trees to the residual.
+  - It beats the baseline MLP on several tabular datasets (adult, dna, ring), though at n ≤ 3000 it trails the
+    regularized MLP (+0.11).
+  - What does less well is DFG's specific recipe: exhaustive enumeration with union-bound tests over parity, gate or
+    direction dictionaries. Trees, whose splits are chosen locally and refined recursively, do somewhat better on
+    tabular data. DFG's error is 8–12% higher than gradient boosting's on average, but lower on twonorm and waveform.
+  - Neither was tried with a convolutional dictionary on images.
+- *It does not show that the three adaptations are the best possible ones.* Each builder had about 70 minutes and only
+  the dev datasets. dfg_bits and dfg_gates finished in about 20 minutes, and dfg_dirs in about 50.
 
 ## Reproduce
 
@@ -267,7 +306,7 @@ python data.py                              # downloads and caches the datasets
 python mlp.py <dataset> ...                 # MLP baseline -> results/mlp__<dataset>.json
 python baselines.py linear|hgb <dataset> ...
 python -c "import harness, importlib; harness.evaluate(importlib.import_module('dfg_bits.learner').Learner(), ['adult'])"
-python run_images.py dfg_bits                # images: 3 seeds up to n = 10000, seed 0 at 30000 and 60000
+python run_images.py dfg_bits                # images: 3 seeds up to n = 10000, seed 0 only at 30000 and 60000
 MLP_VARIANT=l2 MLP_MAX_N=3000 python mlp.py ring dna ...   # also MLP_VARIANT=plus / unit
 python compare.py dfg_bits-v1 dfg_gates-v1 dfg_dirs-v2      # RESULTS.md
 ```
