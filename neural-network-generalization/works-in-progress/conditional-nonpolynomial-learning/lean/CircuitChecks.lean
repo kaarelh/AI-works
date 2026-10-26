@@ -1,0 +1,9 @@
+import CircuitOperations
+import ThresholdToBoolean
+
+#print axioms ConditionalNonpolynomial.TC0_subset_TC1
+#print axioms ConditionalNonpolynomial.TC1_subset_PPoly
+#print axioms ConditionalNonpolynomial.ThresholdGates.eval_concat_shift
+#print axioms ConditionalNonpolynomial.majorityCircuit_ofFn_eval_eq
+#print axioms ConditionalNonpolynomial.majorityCircuit_ofFn_size_le
+#print axioms ConditionalNonpolynomial.majorityCircuit_ofFn_depth_le

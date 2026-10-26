@@ -1,14 +1,14 @@
 # Bayesian neural network generalization
 
-Papers and notes by ChatGPT-6 Astra, Claude (Fable 5, Opus 5, and Opus 5.5), OpenAI Codex, Kaarel Hänni, and Dmitry Vaintrob. Authors are listed in alphabetical order, here and on every paper; each paper names its own authors. Public research snapshot, updated 25 October 2026.
+Papers and notes by ChatGPT-6 Astra, Claude (Fable 5, Opus 5, and Opus 5.5), OpenAI Codex, Kaarel Hänni, and Dmitry Vaintrob. Authors are listed in alphabetical order, here and on every paper; each paper names its own authors. Public research snapshot, updated 26 October 2026.
 
-**Start here:** [original main results](#main-results) · [second batch of formalized main results](#second-batch-of-formalized-main-results) · [technical FAQ: assumptions, interpretation, and open problems](TECHNICAL-FAQ.md) · [Lean verification](lean/VERIFICATION.md) · [improved polynomial bounds](#improved-polynomial-bounds) · [recent depth research](#recent-depth-research)
+**Start here:** [original main results](#main-results) · [second batch of formalized main results](#second-batch-of-formalized-main-results) · [conditional obstruction to polynomial circuit learning](#conditional-obstruction-to-polynomial-circuit-learning) · [technical FAQ: assumptions, interpretation, and open problems](TECHNICAL-FAQ.md) · [Lean verification](lean/VERIFICATION.md) · [improved polynomial bounds](#improved-polynomial-bounds) · [recent depth research](#recent-depth-research)
 
 The original five main results retain their own section. A second section presents ten additional papers whose main statements now have Lean proofs. The remaining papers are listed as side results, earlier treatments, or works in progress. “Side result” does not mean unproved: several contain complete theorems, but they are not the main presentation of this project. These are research drafts, not externally peer-reviewed publications; the FAQ distinguishes proved statements from plausible extensions and open questions.
 
 **Review status.** Most of this material has not yet been carefully reviewed by a human. The checks so far are the Lean proofs of the original five learning theorems and the ten-paper second batch, with the scope described [below](#lean-verification), and AI reviews. These include the audit records in the paper folders and a collection-wide review by Claude on 19 October 2026, recorded in [verification/review-2026-10-19.md](verification/review-2026-10-19.md). That review found and repaired several local errors but found no false theorem. It does not replace expert human review, and anything added or changed after the review was not part of it.
 
-Every paper has a PDF, editable LaTeX source, and a build script. The collection contains 65 canonical PDF manuscripts, structured-target, Gaussian-control, non-Gaussian-control, quadratic-occupation, and softplus companions, additional research notes, experimental code, and selected exact certificates. The [catalog](catalog.json) identifies the canonical manuscripts; older treatments retain their historical scope and open-status remarks.
+Every paper has a PDF, editable LaTeX source, and a build script. The collection contains 66 canonical PDF manuscripts, structured-target, Gaussian-control, non-Gaussian-control, quadratic-occupation, and softplus companions, additional research notes, experimental code, and selected exact certificates. The [catalog](catalog.json) identifies the canonical manuscripts; older treatments retain their historical scope and open-status remarks.
 
 ## Lean verification
 
@@ -84,6 +84,16 @@ The [fresh statement audit](lean/review/statement-audit-2026-10-23/README.md) re
 | [10. Exponential depth dependence in regression](works-in-progress/continuous-depth-lower-bound/paper.pdf) | A fixed nonatomic unit-circle law and bounded width-three teachers require exponentially many samples in depth. Covers strong priors, finite `γ>1` with polynomial sufficient width, and width-first `γ=1`. |
 
 The original five results above retain their numbering and presentation. The directory names `side-results` and `works-in-progress` are preserved so existing links continue to work.
+
+## Conditional obstruction to polynomial circuit learning
+
+[Paper (PDF)](works-in-progress/conditional-nonpolynomial-learning/paper.pdf) · [Source and verification scope](works-in-progress/conditional-nonpolynomial-learning/) · [Lean statement and checked reduction](works-in-progress/conditional-nonpolynomial-learning/lean/)
+
+**Assuming nonuniform P/poly differs from TC¹, unrestricted Gaussian tanh NNbayes has no universal sample bound polynomial jointly in input dimension, teacher width, and teacher depth, independent of learner width.** The result applies separately to every prescribed canonical scale schedule, including each fixed `gamma >= 1`, with noiseless exact-fit training and the original global-margin convention. Accuracy and confidence are already fixed constants. It rules out a universal polynomial guarantee; it does not establish an exponential-depth lower bound.
+
+The paper presents this conditional negative result as its central theorem. A universal polynomial guarantee with the same target class, input-law and width quantifiers would require changing the prior; restricting its support is one possible change. Restrictions on targets or input laws also change the premises.
+
+**The complete theorem is not yet Lean verified.** Lean checks the exact concrete statement and the full reduction from a named analytic posterior-circuit ceiling, including actual Gaussian conditioning, finite boosting, circuit constructions, teacher compilation, and polynomial resource bounds. The analytic ceiling itself remains unproved in Lean. This result is therefore separate from the two fully formalized main-result sections above.
 
 ## Shared conventions
 
@@ -184,7 +194,7 @@ This note is not Lean verified and remains separate from the main results. The [
 
 ## Recent depth research
 
-**Boolean depth: a lower bound for a natural mean-field prefactor, and barriers for the original prior.** For tanh with variances `t²/d`, `t²/N`, and `t²/N²`, any fixed `t>1` admits an actual finite-width `exp(Ω(depth))` confidence lower bound, even for a constant target. These are the same mean-field width powers with a different fixed variance prefactor. Exact coefficient-one tanh (`t=1`) and the stronger canonical priors remain open. The [new lower-bound paper](works-in-progress/supercritical-depth-lower/) and [parallel-complexity paper](works-in-progress/boolean-depth-barriers/) give the precise distinction. These are conventionally checked supporting results, not additions to the two formalized main-result sections.
+**Boolean depth: a lower bound for a natural mean-field prefactor, and barriers for the original prior.** For tanh with variances `t²/d`, `t²/N`, and `t²/N²`, any fixed `t>1` admits an actual finite-width `exp(Ω(depth))` confidence lower bound, even for a constant target. These are the same mean-field width powers with a different fixed variance prefactor. For coefficient-one tanh (`t=1`) and stronger canonical priors, the unconditional general Boolean-depth question remains open. The [conditional impossibility paper](works-in-progress/conditional-nonpolynomial-learning/) rules out a universal polynomial guarantee assuming `P/poly != TC¹`. The [new lower-bound paper](works-in-progress/supercritical-depth-lower/) and [parallel-complexity paper](works-in-progress/boolean-depth-barriers/) give the precise distinction. These are conventionally checked supporting results, not additions to the two formalized main-result sections.
 
 | New paper | Scope |
 |---|---|

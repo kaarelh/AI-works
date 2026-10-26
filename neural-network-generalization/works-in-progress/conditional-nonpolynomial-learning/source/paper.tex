@@ -1,0 +1,659 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,microtype}
+\usepackage{xurl}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={A conditional obstruction to polynomial sample complexity in unrestricted NNbayes},pdfauthor={ChatGPT-6 Astra; Kaarel Haenni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathsf P/\mathrm{poly}}
+\newcommand{\TC}{\mathsf{TC}}
+\newcommand{\NC}{\mathsf{NC}}
+\newcommand{\Prb}{\mathbb P}
+\newcommand{\poly}{\operatorname{poly}}
+\newcommand{\sgn}{\operatorname{sign}}
+\title{A conditional obstruction to polynomial sample complexity\newline in unrestricted NNbayes}
+\author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{Research draft --- 26 October 2026}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Assume that polynomial-size Boolean circuits cannot all be replaced by
+polynomial-size, logarithmic-depth threshold circuits:
+$\Pp\ne\TC^1$, with both classes nonuniform.
+Then the original Gaussian tanh Bayesian learner has no distribution-free
+sample bound jointly polynomial in input dimension, teacher width, and
+teacher depth that is independent of learner width. This holds separately
+for every prescribed mean-field-or-stronger scale schedule, including each
+fixed exponent $\gamma\ge1$. The failure already occurs at fixed accuracy
+and confidence. Training is noiseless; the posterior fits every observed
+label exactly and is conditioned to have an absolute output margin at
+every Boolean input. No computational limitation is imposed on inference.
+
+The proof combines an established posterior circuit ceiling with a finite
+majority argument: distribution-free learning by mixtures of small
+threshold circuits forces an exact small threshold circuit for the target.
+We give this statistical reduction and the bounded-weight Boolean-to-tanh
+implementation explicitly. The analytic posterior ceiling is stated with
+its full quantifiers and cited as an input. The conclusion rules out a
+universal polynomial guarantee; it does not establish exponential depth
+dependence. Obtaining that guarantee while retaining the target class and
+the other learning conventions therefore requires changing the prior;
+restricting its support is one possible change. A Lean formalization checks
+the concrete-model reduction conditional on the analytic ceiling; the proof
+of that analytic input remains outside the formalization.
+\end{abstract}
+
+\section{Introduction}
+
+A natural goal for Bayesian neural-network learning is a sample bound
+polynomial in the size of a circuit implementing the target, independently
+of the much larger network used by the learner. At each fixed depth,
+Gaussian tanh priors at mean-field scaling and stronger scales admit such
+width-independent bounds. The degree or constants of those bounds can
+grow rapidly with depth. It is therefore important to distinguish a
+polynomial bound \emph{at every fixed depth} from one polynomial jointly
+in width and depth.
+
+This paper gives a conditional negative answer to the latter question for
+the original unrestricted Gaussian prior. Under the circuit-complexity
+conjecture $\Pp\ne\TC^1$, a universal joint-polynomial sample bound is
+impossible. This is a statistical obstruction, even for exact Bayesian
+inference with unlimited computation. It does not arise from the difficulty
+of running a posterior-sampling algorithm.
+
+The mechanism is a mismatch between target expressivity and posterior
+expressivity at limited sample counts. Every small Boolean circuit can be
+implemented by a polynomial-resource tanh teacher with bounded weights.
+An analytic theorem for the original posterior nevertheless places most
+posterior mass on functions having threshold circuits of size polynomial
+in dimension, sample count, and learner depth, and of logarithmic
+threshold depth. If the learner succeeded for every input distribution
+using only polynomially many examples, an elementary boosting argument would
+turn these posterior mixtures into an exact $\TC^1$ circuit for every
+function in $\Pp$.
+
+The width quantifier is essential: the guarantee must cover arbitrarily
+large finite learner widths. So is the distribution quantifier: training
+and testing use the same distribution, but the guarantee must hold for
+every such distribution. No distribution shift is involved.
+
+We present the conditional impossibility as the main result. The
+underlying analytic circuit ceiling was established in
+\cite{barriers}. Its proof is substantially longer than the reduction
+here; Section~\ref{sec:analytic} states exactly what is imported and
+explains its role. All subsequent probabilistic and complexity-theoretic
+steps are supplied below.
+
+\section{Learner, target complexity, and circuit classes}
+\label{sec:model}
+
+\subsection{The original Gaussian tanh posterior}
+
+Let $d\ge1$, $X_d=\{-1,1\}^d$, and $f:X_d\to\{-1,1\}$.
+A network has weighted depth $L\ge3$, hidden width $N$, augmented input
+$h^0(x)=(1,x)$, hidden states
+\[
+ h^j(x)=\tanh(W^j h^{j-1}(x)),\qquad 1\le j<L,
+\]
+and scalar linear output $z_W(x)=W^L h^{L-1}(x)$.
+The activation acts coordinatewise. There are no separate hidden biases;
+constant wires use ordinary neurons and are counted in the width.
+
+For $0<t\le1$, let $\Pi_{d,L,N,t}$ be the product Gaussian law on all
+weights, with mean zero and entrywise variances
+\begin{equation}\label{eq:prior}
+ \frac{t^2}{d}\quad\text{in the first layer},\qquad
+ \frac{t^2}{N}\quad\text{in intermediate layers},\qquad
+ \frac{t^2}{N^2}\quad\text{in the readout}.
+\end{equation}
+The critical, or mean-field, scale is $t=1$.
+The usual exponent family $\gamma\ge1$ is obtained by setting
+$t=N^{(1-\gamma)/2}$.
+
+Fix a prescribed schedule
+\begin{equation}\label{eq:schedule}
+ t=t(d,L,N)\in(0,1].
+\end{equation}
+It may depend on these architectural dimensions but not on the training
+sample or the input distribution. It need not be computable.
+
+For a labeled sample $S=((x_i,f(x_i)))_{i=1}^n$, condition the prior on
+\begin{equation}\label{eq:conditioning}
+ |z_W(x)|>1/2\quad(x\in X_d),\qquad
+ f(x_i)z_W(x_i)>1/2\quad(1\le i\le n).
+\end{equation}
+Let $\Pi_S$ denote this posterior and put
+\[
+ p_S(y\mid x)=\Pi_S\{W:\sgn z_W(x)=y\}.
+\]
+For an input law $\mu$ on $X_d$, the confidence-failure mass is
+\begin{equation}\label{eq:error}
+ \mathcal E_\mu(f,S)
+   =\mu\{x:p_S(f(x)\mid x)\le2/3\}.
+\end{equation}
+Thus a prediction counts as successful only when the posterior assigns
+probability strictly greater than $2/3$ to the correct label.
+The training inputs are iid from $\mu$, which is also the test law.
+
+Here ``unrestricted'' means that no internal-stability or other robustness
+condition is added to the prior support. The global absolute-margin
+condition in \eqref{eq:conditioning} remains part of the learner.
+
+\subsection{Teacher resources and universal polynomial learning}
+
+For an integer $C\ge1$, a target has teacher resources $(d,C,L)$ if it admits a depth-$L$ tanh
+network of hidden widths at most $C$, all weights bounded in absolute
+value by $C$, and signed output greater than $1/2$ on every input.
+Equivalently, its hidden widths may all be taken equal to $C$ by zero padding. Larger hidden widths can also be obtained by zero padding. Continuity on the
+finite cube then gives a positive-prior neighborhood of that
+implementation, so the conditional law \eqref{eq:conditioning} is defined
+for every sample and every $N\ge C$.
+
+For fixed statistical tolerances, any polynomial bound in $d,C,L$ is
+bounded above by $A(1+d+C+L)^k$ for some real $A>0$ and integer $k\ge0$.
+We use that envelope to state the question precisely.
+
+\begin{definition}[Universal polynomial sample guarantee]\label{def:poly}
+For a schedule \eqref{eq:schedule}, let $\mathsf{PolyLearn}(t)$ mean that
+there are $A>0$ and $k\in\mathbb N$ such that, for every
+$d\ge1$, $C\ge1$, $L\ge3$, every target with those teacher resources,
+every $N\ge C$, every law $\mu$, and every integer sample count
+\begin{equation}\label{eq:sample}
+ n\ge A(1+d+C+L)^k,
+\end{equation}
+an iid labeled sample satisfies
+\begin{equation}\label{eq:guarantee}
+ \Prb_{S\sim\mu^n}\{\mathcal E_\mu(f,S)\le1/16\}\ge1/2.
+\end{equation}
+The constants $A,k$ are independent of learner width and input law.
+\end{definition}
+
+A polynomial guarantee at all accuracy and confidence parameters would
+in particular imply \eqref{eq:guarantee}. The proof below uses the
+particular integer count $n=A_0(1+d+C+L)^k$, with a fixed positive integer
+$A_0\ge A$; it does not assume that posterior accuracy is monotone in $n$.
+
+The quantity $d+C+L$ is polynomially equivalent to an ordinary upper bound
+on the number of parameters in this dense teacher architecture, after
+including input dimension and depth. More importantly, the reduction
+below starts with ordinary Boolean circuits and uses constant-magnitude
+integer weights. The obstruction does not require hiding an arbitrary
+truth table in the precision of a teacher coefficient.
+
+\subsection{Nonuniform threshold circuits}
+
+A circuit family has one Boolean circuit for each input dimension.
+``Nonuniform'' imposes no efficient procedure for generating that family.
+The class $\Pp$ consists of functions with polynomial-size Boolean circuit
+families. The class $\TC^1$ consists of functions with polynomial-size
+threshold circuit families of depth $O(\log(d+2))$. One may use
+unbounded-fan-in majority gates and ordinary Boolean gates as the
+threshold basis. The class $\TC^0$ uses constant depth instead.
+All circuit classes in this paper are nonuniform.
+
+The assumption $\Pp\ne\TC^1$ says that some polynomial-size computations
+cannot be parallelized into logarithmic threshold depth with polynomial
+size. Appending a constant number of polynomial-fan-in majority layers
+preserves $\TC^1$. The reverse simulation has no depth requirement:
+
+\begin{lemma}[Threshold circuits are polynomial-size Boolean computations]
+\label{lem:threshold-boolean}
+A threshold circuit with total gate and input-wire count $s$ has an
+ordinary Boolean circuit of size polynomial in $s$. Consequently
+$\TC^1\subseteq\Pp$.
+\end{lemma}
+\begin{proof}
+For a gate with $m$ incoming bits, define $T_{j,k}$ to mean that at least
+$k$ of the first $j$ bits are one. The recurrence
+\[
+ T_{j,k}=T_{j-1,k}\ \mathsf{OR}\
+             (x_j\ \mathsf{AND}\ T_{j-1,k-1})
+\]
+with $T_{j,0}=1$ and $T_{0,k}=0$ for $k>0$ computes every relevant count
+threshold using $O(m^2)$ gates. Thresholds above $m$ are constant false.
+Replacing every threshold gate this way costs at most a constant times
+$\sum_j(m_j+1)^2$, which is $O((s+1)^2)$. AND, OR, and NOT have constant-size
+NAND implementations. No bound on the Boolean simulation's depth is
+needed for membership in $\Pp$.
+\end{proof}
+
+\section{The conditional impossibility theorem}
+
+\begin{theorem}[No universal polynomial circuit-learning bound]
+\label{thm:main}
+Assume $\Pp\ne\TC^1$. For every prescribed scale schedule
+$t(d,L,N)\in(0,1]$, the property $\mathsf{PolyLearn}(t)$ is false.
+
+Equivalently, for every real $A>0$ and integer $k\ge0$, there exist dimensions
+$d,C,L$, a target with those teacher resources, a learner width $N\ge C$,
+a common training/test law $\mu$, and an integer sample count satisfying
+\eqref{eq:sample}, such that
+\begin{equation}\label{eq:failure}
+ \Prb_{S\sim\mu^n}\{\mathcal E_\mu(f,S)>1/16\}>1/2.
+\end{equation}
+In particular the conclusion holds separately for every fixed
+$\gamma\ge1$ in the exponent family.
+\end{theorem}
+
+Theorem~\ref{thm:main} concerns unlimited-computation Bayesian prediction.
+Its target family may be chosen from $\Pp$, with polynomial-resource
+bounded-weight teachers. The difficult distribution and the learner width
+may depend on the proposed sample polynomial.
+
+\begin{corollary}[What must change]\label{cor:change}
+Under the same complexity assumption, no theorem can give the original
+learner a sample guarantee polynomial jointly in $d,C,L$ at every
+eligible learner width, for every target in Section~\ref{sec:model} and
+every common training/test law.
+Consequently, obtaining such a guarantee while retaining the architecture, that target
+class, those statistical conventions, and those width and distribution
+quantifiers requires changing the prior. Restricting its support to
+networks satisfying an additional stability condition is one possible
+change, not a conclusion that every such restriction suffices.
+\end{corollary}
+
+If other parts of the goal may change, there are other routes: restrict
+the target class, assume a particular input law, limit learner width, or
+alter the likelihood or prediction criterion. The theorem does not say
+that a robustness restriction is the uniquely necessary remedy.
+
+\section{The analytic input: a posterior circuit ceiling}
+\label{sec:analytic}
+
+For integers $R\ge2$, let $\mathcal H_R$ be the finite set of Boolean
+functions representable by threshold circuits of size at most $R^b$ and
+depth at most $b\log R$, for a sufficiently large universal constant $b$.
+The particular circuit for a function need not be unique.
+
+\begin{proposition}[Established analytic ceiling]\label{prop:ceiling}
+There are universal positive constants $b,c_0,c_1$ such that the following
+holds for every integer sample budget $n\ge1$ for the original posterior \eqref{eq:prior}--\eqref{eq:conditioning}.
+Put $R=d+n+L+2$ and suppose
+\begin{equation}\label{eq:padding}
+ L\ge c_0\log R.
+\end{equation}
+For every $0<\beta<1$, every actual integer width
+\begin{equation}\label{eq:width}
+ N\ge 2^{c_1d}R^{c_1}+c_1(L-1)\log(1/\beta),
+\end{equation}
+every $0<t\le1$, and every consistent sample of at most $n$ observations
+whose conditioning event has positive probability,
+\begin{equation}\label{eq:ceiling}
+ \Pi_S\{W:\sgn z_W\in\mathcal H_R\}\ge1-\beta.
+\end{equation}
+The class $\mathcal H_R$ is common to all these samples, widths, and
+scales. In particular, the width threshold is independent of $t$ and
+of the input law.
+\end{proposition}
+
+This is the circuit conclusion of the uniform actual-posterior ceiling
+in \cite{barriers}, where it is labeled
+\texttt{thm:uniform-ceiling}; no new analytic ceiling is claimed here. Its proof has three ingredients. First,
+finite-event relative-entropy certificates associate most posterior mass
+with controlled covariance paths of bounded action. A target-mass
+construction for a sample memorizer supplies the posterior denominator
+needed for this step. Second, the bounded-action paths admit finite
+canonical feature representations, with bounded-size covers even when
+$t$ approaches one. Third, parallel iteration of the resulting feature
+recursion gives polynomial circuit size and logarithmic threshold depth.
+The actual finite-width estimate, rather than only a limiting variational
+statement, is essential to \eqref{eq:ceiling}.
+
+The present proof uses Proposition~\ref{prop:ceiling} only with
+$\beta=1/6$. It does not use the explicit covariance-path rate, an
+optimal representation, or an efficient way of constructing a circuit
+from network weights. Nor does it assert that one circuit carries most
+posterior mass. The posterior can be an arbitrary mixture over its
+ceiling class.
+
+\section{From distribution-free mixtures to an exact circuit}
+\label{sec:majorities}
+
+The next lemma is independent of neural networks. It is an elementary
+finite boosting argument. Its deterministic weight update avoids any
+need for a minimax theorem or a concentration inequality.
+
+\begin{lemma}[A small exact majority from weak prediction]
+\label{lem:majority}
+Let $X$ be a finite nonempty set with $|X|\le2^d$, let
+$f:X\to\{-1,1\}$, and let $\mathcal H$ be a nonempty finite class of
+Boolean functions. Suppose that for every probability law $\mu$ on $X$
+there is an $h\in\mathcal H$ with
+\[
+ \mu\{x:h(x)\ne f(x)\}\le9/20.
+\]
+Then $f$ is exactly a majority of $O(d+1)$ members of $\mathcal H$,
+allowing repetitions. In fact $400(d+1)$ voters suffice.
+\end{lemma}
+\begin{proof}
+Initially give every input weight $w_0(x)=1$. At step $j$, normalize the
+positive weights to a probability law and choose a voter $h_j$ whose
+weighted error is at most $9/20$. Multiply a correctly classified input's
+weight by $9/10$, and an incorrectly classified input's weight by $10/9$.
+If $W_j=\sum_x w_j(x)$ is the total weight, then
+\[
+ \frac{W_{j+1}}{W_j}
+ \le\frac{11}{20}\frac9{10}+\frac9{20}\frac{10}{9}
+ =\frac{199}{200}.
+\]
+After $m$ rounds,
+\begin{equation}\label{eq:boost-potential}
+ W_m\le |X|(199/200)^m\le2^d e^{-m/200}.
+\end{equation}
+Set $m=400(d+1)$. For an elementary rational check, Bernoulli's inequality
+gives $(200/199)^{400}\ge1+400/199>2$, so
+$(199/200)^{400}<1/2$. Consequently $W_m\le1/2<1$.
+But an input misclassified by at least half the voters would have final
+weight
+\[
+ (9/10)^{\#\mathrm{correct}}(10/9)^{\#\mathrm{wrong}}\ge1,
+\]
+contradicting $W_m<1$. Every input is therefore correctly classified
+by a strict majority of the chosen voters.
+\end{proof}
+
+\begin{lemma}[A successful posterior supplies a weak voter]
+\label{lem:posterior-voter}
+Let $\pi$ be a distribution on Boolean functions on $X$, and suppose
+$\pi(\mathcal H)\ge5/6$. If
+\[
+ \mu\{x:\pi\{h:h(x)=f(x)\}\le2/3\}\le1/16,
+\]
+then some $h\in\mathcal H$ has $\mu$-error at most $9/20$.
+\end{lemma}
+\begin{proof}
+At every point outside the confidence-failure set, a draw from $\pi$
+has wrong-label probability less than $1/3$. On that set its error
+probability is at most one. Averaging over inputs gives
+\[
+ \E_{h\sim\pi}\mu\{x:h(x)\ne f(x)\}
+ \le\frac13+\frac23\frac1{16}=\frac38.
+\]
+Conditioning on $\mathcal H$ increases this average by at most $6/5$,
+so its conditional average is at most $(3/8)(6/5)=9/20$. A finite
+average cannot be smaller than all its contributing terms. One
+$h\in\mathcal H$ therefore has error at most $9/20$.
+\end{proof}
+
+\begin{proposition}[Posterior success forces a small parallel circuit]
+\label{prop:success-circuit}
+Fix $d,n,L$ satisfying \eqref{eq:padding}, one width satisfying
+\eqref{eq:width} with $\beta=1/6$, and one scale $0<t\le1$.
+These choices are made before the input distribution.
+Suppose that for every input law $\mu$, there is positive probability of
+an iid labeled $n$-sample with $\mathcal E_\mu(f,S)\le1/16$.
+Then $f$ has a threshold circuit of size polynomial in $d+n+L$ and depth
+$O(\log(d+n+L+2))$. The constants are universal and independent of
+learner width and scale.
+\end{proposition}
+\begin{proof}
+For each law $\mu$, choose a successful sample and push its posterior
+forward to Boolean functions. Proposition~\ref{prop:ceiling} gives mass
+at least $5/6$ to the common finite class $\mathcal H_R$.
+Lemma~\ref{lem:posterior-voter} supplies one member of that class with
+$\mu$-error at most $9/20$.
+
+This is precisely the distribution-free hypothesis of
+Lemma~\ref{lem:majority}. Its exact majority has $O(d+1)$ voters from
+$\mathcal H_R$. Compile the voters in parallel and append one majority
+gate. Size grows by only a polynomial factor, and depth increases by one.
+\end{proof}
+
+The posterior mixture is handled by averaging; it is not identified with
+one selected predictor. The successful samples and chosen voters may
+vary with the input law, while $\mathcal H_R$ remains fixed. Positive
+sample-success probability is used only to supply one successful sample
+for each distribution. An earlier two-majority/minimax proof in
+\cite{barriers} permits every confidence-failure tolerance below $1/2$;
+the smaller fixed tolerance here makes the proof substantially shorter.
+
+\section{Small Boolean circuits have bounded-weight teachers}
+
+\begin{lemma}[Digital tanh implementation]\label{lem:teacher}
+Every NAND circuit with $s$ gates on $d$ inputs has a tanh implementation
+of hidden width $C=d+s+256$ and weighted depth $L=d+s+3$, with all
+weights integers of absolute value at most $192$ and signed output
+greater than $1/2$ throughout $X_d$. It has no hidden biases. The depth
+can be further increased by inserting copy layers with the same bounds.
+Other fixed bounded-fan-in Boolean bases incur only a constant-factor
+change in circuit size before this construction.
+\end{lemma}
+\begin{proof}
+Use signed Boolean wire values. NAND, NOT, and COPY have the scores
+\[
+ 1-u-v,\qquad -u,\qquad u.
+\]
+Their signed margins are at least one on exact Boolean inputs.
+Reserve coordinates for the $d$ inputs, the two Boolean constants,
+and every computed gate. Initialize their tanh encodings in one hidden
+layer from the augmented input. Then process one NAND gate per layer,
+retaining all earlier values by copying. The true constant wire supplies
+all subsequent affine constants. Append $d+1$ copy layers. The number of
+hidden-to-hidden stages is $s+d+1$, hence the weighted depth is $s+d+3$.
+The width $C=d+s+256$ leaves all required coordinates available.
+
+Use gain $64$ at each gate. Suppose that each incoming wire is within
+$1/16$ of its intended sign. The score perturbation, including the
+constant wire, is at most $3/16$. Thus the signed preactivation is at
+least $64/2$. The elementary saturation bound
+\[
+ by\ge A/2,\quad b\in\{-1,1\},\quad A>0
+ \quad\Longrightarrow\quad |\tanh y-b|\le4/A
+\]
+then gives a new error at most $1/16$. For example, the bound follows
+from $1-\tanh v=2/(e^{2v}+1)$ and $e^a\ge1+a$.
+The initial input and constant signs satisfy the same estimate.
+This proves an error invariant uniform in the number of layers.
+
+A coefficient receives at most three contributions of magnitude $64$,
+including coincident input and constant wires, so its absolute value is
+at most $192$. The final linear readout is twice the selected output
+wire. Its signed margin is at least $2(1-1/16)=15/8>1$.
+Further copy layers preserve the invariant. Unused neurons have zero
+weights, so zero padding to a larger width also preserves the function.
+\end{proof}
+
+The teacher construction is digitally stable at its Boolean gate
+margins. The conditional negative result nevertheless concerns the
+\emph{unrestricted learner prior}; having a stable implementation of the
+target does not force the posterior's competing explanations to share
+that stability.
+
+\section{Proof of the main theorem}
+
+We prove the contrapositive in its slightly stronger positive form.
+
+\begin{theorem}[A universal polynomial guarantee would collapse classes]
+\label{thm:collapse}
+For every schedule \eqref{eq:schedule},
+\[
+ \mathsf{PolyLearn}(t)\quad\Longrightarrow\quad\Pp=\TC^1.
+\]
+\end{theorem}
+\begin{proof}
+Assume Definition~\ref{def:poly}, with fixed $A,k$, and choose a positive
+integer $A_0\ge A$. Take any family
+$(f_d)$ in $\Pp$, represented by Boolean circuits of size polynomial in
+$d$. Lemma~\ref{lem:teacher} gives teachers with width, weight bound,
+and depth polynomial in $d$. Their width $C_d$ is at least $256$, so it
+also bounds every coefficient, and their depth $L_d$ is already at least
+$d$.
+
+The prescribed sample count
+\[
+ n_d=A_0(1+d+C_d+L_d)^k
+\]
+is polynomial in $d$ and is fixed \emph{before} choosing learner width.
+Thus $R_d=d+n_d+L_d+2$ is polynomial in $d$. Since $L_d\ge d$, the
+padding condition $L_d\ge c_0\log R_d$ holds for all sufficiently large
+$d$.
+
+For each such dimension choose one integer width at least $C_d$ and at
+least the threshold \eqref{eq:width} with $\beta=1/6$. The threshold is
+independent of $t$, so now set $t_d=t(d,L_d,N_d)$. There is no circular
+choice of width and scale. Both are fixed before the input law.
+
+The assumed learning guarantee gives success probability at least $1/2$
+for every input law. Proposition~\ref{prop:success-circuit}, applied
+with confidence-failure tolerance $1/16$, produces a threshold circuit for $f_d$ of
+polynomial size in $R_d$, hence polynomial size in $d$, and depth
+$O(\log R_d)=O(\log(d+2))$. The constants are uniform in $d$.
+Finitely many remaining input dimensions can be hardcoded.
+
+Every family in $\Pp$ therefore belongs to nonuniform $\TC^1$.
+The reverse inclusion is standard, so $\Pp=\TC^1$.
+\end{proof}
+
+Taking the contrapositive proves Theorem~\ref{thm:main}.
+For fixed $A,k$, a violation of \eqref{eq:guarantee} has probability
+strictly less than $1/2$ for the event $\mathcal E_\mu(f,S)\le1/16$.
+Its complementary event is exactly \eqref{eq:failure}. All distributions
+and samples here are on a finite input set, so no measurability issue is
+hidden in this logical step.
+
+The reduction has the following order of choices:
+\[
+ \begin{aligned}
+ &\text{sample polynomial}\ \longrightarrow\
+ \text{target family and teachers}\ \longrightarrow\ n_d,\\
+ &n_d\ \longrightarrow\ N_d\ \longrightarrow\ t_d
+ \ \longrightarrow\ \text{input law and sample}.
+ \end{aligned}
+\]
+The last two objects may vary while the architecture and scale remain
+fixed. A sample bound polynomial in $N$ would not permit this argument:
+it would make $n_d$ depend on the large width chosen only afterwards.
+
+\subsection{A fixed hard family and one law for all sufficiently large widths}
+
+The argument gives more than the failure of a particular confidence
+threshold. The following consequence separates what can be made uniform
+from the absence of an explicit asymptotic lower-bound rate.
+
+\begin{corollary}[Failure for every sample on a hard distribution]
+\label{cor:hard-family}
+Assume $\Pp\ne\TC^1$. There is a fixed family $(f_d)$ in $\Pp$ with
+bounded-weight tanh teachers of width $C_d=\poly(d)$ and depth
+$d\le L_d=\poly(d)$ such that the following holds.
+For every polynomially bounded integer sample budget $n_d\ge1$, there
+are infinitely many dimensions $d$ with an input law $\mu_d$ for which
+\[
+ \mathcal E_{\mu_d}(f_d,S)>1/16
+\]
+for every labeled sample $S$ of length at most $n_d$, at every width above
+both $C_d$ and the analytic ceiling threshold, and every scale $0<t\le1$.
+The law $\mu_d$ is common to all those samples, widths, and scales.
+In particular, the probability of failure is one for iid sampling from
+$\mu_d$ at any of those sample counts.
+\end{corollary}
+\begin{proof}
+Fix any family in $\Pp\setminus\TC^1$ and compile its teachers as in the
+proof of Theorem~\ref{thm:collapse}. Put $R_d=d+n_d+L_d+2$.
+For all sufficiently large $d$, the padding condition holds. Let
+$\mathcal K_d$ be the class of all majorities of $400(d+1)$ members
+of $\mathcal H_{R_d}$, allowing repetitions.
+Every member has size polynomial in $R_d$ and depth $O(\log R_d)$.
+Since $R_d=\poly(d)$, if $f_d\in\mathcal K_d$ for all but finitely many
+$d$, the entire family would be in $\TC^1$. Hence $f_d\notin\mathcal K_d$
+for infinitely many $d$.
+
+At each such dimension, the contrapositive of
+Lemma~\ref{lem:majority} gives one law $\mu_d$ for which every member of
+$\mathcal H_{R_d}$ has error strictly greater than $9/20$.
+Proposition~\ref{prop:ceiling} applies to every eligible width, scale,
+and consistent sample of at most $n_d$ points, using the same class
+$\mathcal H_{R_d}$. By Lemma~\ref{lem:posterior-voter}, none of those
+posteriors can have confidence-failure mass at most $1/16$ under $\mu_d$.
+This proves the claim. All target-labeled samples have positive
+conditioning probability because the teacher exists.
+\end{proof}
+
+The teacher family is fixed before the sample budget. The hard input
+law may depend on the budget and dimension. No particular growth rate
+or explicit description of the hard family follows from the separation
+assumption alone.
+
+\section{Interpretation and limits}
+
+\paragraph{What ``no polynomial bound'' means.}
+The conclusion defeats every universal polynomial resource bound. It
+does not assert an exponential lower bound in $L$, or even a fixed
+stretched-exponential rate. Quasipolynomial or other intermediate sample
+growth remains compatible with the theorem. The input dimension and
+teacher resources vary together; fixing the finite input domain would
+give an elementary finite-domain upper bound regardless of depth.
+
+\paragraph{Why the input distribution is allowed to vary.}
+For each proposed polynomial, the hard instance may use its own common
+training/test law. The boosting argument would not follow from success
+only under the uniform distribution. The theorem therefore supplies no
+uniform-input lower bound without additional work.
+
+\paragraph{No contradiction with positive fixed-depth theorems.}
+For each fixed $L$, a bound with degree depending on $L$ can hold.
+The theorem prohibits one degree working jointly over all depths and
+target resources. It also leaves intact width-dependent finite-width
+bounds and positive bounds for particular target representations.
+
+\paragraph{Robust prior restrictions.}
+Positive joint-polynomial results obtained by discarding unstable
+networks change the learner. Theorem~\ref{thm:main} gives a conditional
+reason that some change is needed for a theorem with the full original
+target and distribution quantifiers. It does not identify the best
+restriction, establish that trained networks satisfy one, or prove that
+support restriction is preferable to every other modification.
+
+\paragraph{Computational and statistical claims.}
+The use of a circuit-complexity conjecture does not make this a lower
+bound on the runtime of inference. The posterior is the exact conditional
+Gaussian law. Circuit complexity enters because of the functions to
+which that posterior assigns mass, and because distribution-free
+prediction can be converted into an exact finite circuit.
+
+\paragraph{Formal verification scope.}
+The accompanying Lean project defines the actual Gaussian prior,
+tanh network, global-margin posterior, iid sample law, and concrete
+Boolean and threshold circuits used in the statement. It proves the
+bounded-weight teacher compiler, the posterior-to-weak-voter transfer,
+the deterministic boosting argument, the actual circuit composition,
+threshold-to-Boolean simulation, polynomial family resource bounds,
+and the final circuit-class implication.
+
+There is one remaining analytic premise. The Lean theorem
+\begin{center}
+\texttt{conditionalImpossibility\_of\_posteriorCeiling}
+\end{center}
+proves the implication from the concrete proposition
+\texttt{AnalyticPosteriorCeiling} to the concrete main claim
+\texttt{ConditionalImpossibility}. The former is the finite-width
+Gaussian posterior statement corresponding to
+Proposition~\ref{prop:ceiling}, with integer resource envelopes; it is
+not an abstract oracle standing in for a different learner.
+\emph{Its proof has not been formalized.} The latter proposition states
+$\Pp\ne\TC^1\Rightarrow\forall t\,\neg\mathsf{PolyLearn}(t)$ with
+the exact conventions above, but has no closed Lean proof from the
+complexity assumption alone. Neither proposition is postulated as an
+axiom. Thus the package formally verifies the reduction and its
+concrete definitions, not the complete main theorem. The verification
+record gives file-level coverage and exact build information.
+
+\begin{thebibliography}{9}
+\bibitem{barriers}
+ChatGPT-6 Astra, Kaarel H\"anni, and Dmitry Vaintrob.
+\emph{Frobenius product, parallel circuits, and sample-complexity barriers
+for deep Gaussian Bayesian networks}. Research manuscript, 2026.
+\url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/boolean-depth-barriers}.
+The present paper uses the uniform actual-posterior circuit ceiling,
+Theorem \texttt{thm:uniform-ceiling}, in the accompanying LaTeX source.
+\end{thebibliography}
+\end{document}
