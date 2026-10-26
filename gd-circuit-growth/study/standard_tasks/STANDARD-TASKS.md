@@ -45,7 +45,23 @@ adaptation that keeps its core:
 Each builder developed only on the dev datasets and then froze its design. The design with the best dev score
 (mean log2 error ratio against the MLP) was designated the primary proposal *before* any held-out run.
 
-[DESIGNS]
+| design | discrete features (the dictionary) | test constant c | readout | dev score: mean log2(err / MLP err) |
+|---|---|---|---|---|
+| `dfg_bits` (most faithful) | each input → ±1 bits (one-hot categories; 6–12 thermometer bits at training quantiles per continuous input); *characters* (products of bits from different inputs), degrees 1–2 every round, 3–4 when the budget allows; extensions S∪{j}, S∪{j,l}; local Walsh transform; linear and spectral (u·x)² blocks | 1 (DFG's) | ridge LS (leave-one-out ridge) → softmax refinement | +0.15 |
+| `dfg_gates` | *literals* [x_j > t] at 16 quantiles, [x_j = v], and negations; *gates* = ANDs of up to 3 literals; pairs exhaustively on a budgeted subsample, extensions g∧l of current gates; linear block | 0.5 | LS or softmax, chosen on a 10% split, refit on all n | +0.07 |
+| `dfg_dirs` (primary) | gates [u·z > t], hinges and squares (u·z)² on a finite set of *axes*: the coordinates, plus directions derived each round (per-class linear discriminants, spectral eigen-directions of the residual, the residual's class-mean difference inside an accepted gate's region, prototype points); products of accepted features with gates (composition); linear block | 0.8 | softmax, λ by cross-validation | +0.06 |
+
+All three:
+- run DFG's multi-class test: a χ² statistic of the whitened residual summed over classes, with a union bound over each
+  candidate class;
+- accept candidates in rounds;
+- keep a linear block;
+- count every FLOP against the one-MLP-run budget.
+
+Two of them loosened DFG's constant c on dev data, because with c = 1 growth stopped after a few rounds on dense
+real-world signal. dfg_bits kept c = 1.
+
+Each folder has a `DESIGN.md` with the details and the dev history.
 
 ## 3. Results
 

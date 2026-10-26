@@ -24,7 +24,7 @@ def load(learner, ds):
 
 def curve(r):
     E = np.array(r["err"], float)
-    return np.array(r["ns"], float), np.nanmean(E, 1), E
+    return np.array(r["ns"][:len(E)], float), np.nanmean(E, 1), E          # (a run in progress has fewer rows)
 
 
 def n_for_err(ns, e, target):
@@ -40,8 +40,8 @@ def n_for_err(ns, e, target):
     return float("inf"), "ge"
 
 
-def cells(L, ds):
-    rl, rm = load(L, ds), load("mlp", ds)
+def cells(L, ds, ref="mlp"):
+    rl, rm = load(L, ds), load(ref, ds)
     if rl is None or rm is None:
         return None
     nl, el, El = curve(rl); nm, em, Em = curve(rm)
@@ -61,8 +61,32 @@ def cells(L, ds):
     return out
 
 
-def summarize(L, names):
-    allc = [(ds, c) for ds in names for c in (cells(L, ds) or [])]
+def make_mlp_best(names):
+    """results/mlp_best__<ds>.json: per (dataset, n), the MLP variant (mlp, mlp_plus, mlp_unit) with the lowest seed-mean
+    TEST error - chosen with hindsight, so it favours the MLP; used only as a stricter reference."""
+    for ds in names:
+        base = load("mlp", ds)
+        if base is None:
+            continue
+        out = dict(base); out["learner"] = "mlp_best"; out["variant"] = []
+        E, F = [], []
+        for j, n in enumerate(base["ns"]):
+            if j >= len(base["err"]):
+                break
+            best = ("mlp", base["err"][j], base["flops"][j])
+            for v in ("mlp_plus", "mlp_unit"):
+                r = load(v, ds)
+                if r is not None and n in r["ns"][:len(r["err"])]:
+                    k = r["ns"].index(n)
+                    if np.nanmean(r["err"][k]) < np.nanmean(best[1]):
+                        best = (v, r["err"][k], r["flops"][k])
+            E.append(best[1]); F.append(best[2]); out["variant"].append(best[0])
+        out["err"], out["flops"], out["ns"] = E, F, base["ns"][:len(E)]
+        json.dump(out, open(os.path.join(RES, f"mlp_best__{ds}.json"), "w"))
+
+
+def summarize(L, names, ref="mlp"):
+    allc = [(ds, c) for ds in names for c in (cells(L, ds, ref) or [])]
     if not allc:
         return None
     lr = [c["log2_ratio"] for _, c in allc]
@@ -117,6 +141,19 @@ def main(learners):
                 L.append(f"| {l} | {s['datasets']} | {s['cells']} | {s['better']} | {s['tie']} | {s['worse']} | {s['mean_log2']:+.2f} | "
                          f"{s['median_data_factor']:.2f} | {s['never']} | {fl} |")
         L.append("")
+    make_mlp_best(DATA.HELDOUT + DATA.DEV)
+    L += ["## Summary against the best MLP variant per cell (held-out datasets)", "",
+          "`mlp_best` = per (dataset, n) the lowest-test-error of `mlp`, `mlp_plus` (lr in {3e-3, 1e-3, 3e-4} x AdamW decay",
+          "{0, 0.05}; tabular, n <= 3000) and `mlp_unit` (inputs scaled to [-1, 1] instead of standardized; images, n <= 10000),",
+          "chosen with hindsight on the test set, so it favours the MLP.", "",
+          "| learner | datasets | cells | better | tie | worse | mean log2(err / best-MLP err) | median data factor | never reached |",
+          "|---|---|---|---|---|---|---|---|---|"]
+    for l in learners + REFS:
+        s = summarize(l, DATA.HELDOUT, ref="mlp_best")
+        if s:
+            L.append(f"| {l} | {s['datasets']} | {s['cells']} | {s['better']} | {s['tie']} | {s['worse']} | {s['mean_log2']:+.2f} | "
+                     f"{s['median_data_factor']:.2f} | {s['never']} |")
+    L.append("")
     for l in learners:
         L += [f"## {l}: per dataset", ""]
         for ds in DATA.HELDOUT + DATA.DEV:
