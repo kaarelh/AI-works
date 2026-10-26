@@ -3,8 +3,13 @@ merged into results/<learner>__<dataset>.json with NaN for the seeds not run.  u
 import sys, os, json, importlib, numpy as np
 import harness as H, data as DATA
 mod = sys.argv[1]; L = importlib.import_module(mod + ".learner").Learner()
+large_only = os.environ.get("LARGE_ONLY")          # reuse an existing small-n result file (after an interrupted run)
 for ds in (sys.argv[2:] or ["mnist", "fashion_mnist"]):
-    a = H.evaluate(L, [ds], ns=[100, 300, 1000, 3000, 10000], seeds=(0, 1, 2))[ds]
+    if large_only:
+        a = json.load(open(os.path.join(H.RES, f"{L.name}__{ds}.json")))
+        assert a["ns"] == [100, 300, 1000, 3000, 10000]
+    else:
+        a = H.evaluate(L, [ds], ns=[100, 300, 1000, 3000, 10000], seeds=(0, 1, 2))[ds]
     b = H.evaluate(L, [ds], ns=[30000, 60000], seeds=(0,), tag=L.name + "-large")[ds]
     err = a["err"] + [[e[0], float("nan"), float("nan")] for e in b["err"]]
     fl = a["flops"] + [[f[0], float("nan"), float("nan")] for f in b["flops"]]

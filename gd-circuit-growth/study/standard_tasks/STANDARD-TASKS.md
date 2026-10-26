@@ -69,7 +69,47 @@ Each folder has a `DESIGN.md` with the details and the dev history.
 
 ## 4. What this says
 
-[DISCUSSION]
+**Where DFG holds up** (Numerical): low-dimensional tabular problems whose signal is a handful of thresholds,
+categories or short interactions. On those, a discrete dictionary plus explicit tests is as good as an MLP, and often
+better at small n. Its explicit, union-bound-gated growth then works as built-in regularization.
+- *ring:* two Gaussians that differ in variance, which needs |x|-type features. Thermometer bits express those
+  directly, and dfg_bits gets 0.13 error at n = 100 against the MLP's 0.29.
+- *dna:* sparse categorical motifs.
+- *waveform:* nearly linear. Here the regularized linear readout is the whole story, and plain logistic regression
+  does as well.
+
+**Where it falls behind.**
+- *Tabular data needing many interacting features at large n:* letter (26 classes), pendigits, connect_4 (game
+  positions) and phoneme.
+- *Images:* everywhere above n ≈ 300.
+  - At large n the MLP reaches about half of DFG's error, and the gap grows with n. dfg_bits and dfg_gates end up close
+    to plain logistic regression.
+  - dfg_dirs, whose dictionary is thresholded linear directions (the same kind of unit as an MLP's), is the best of the
+    three on images. It is still 1.5× the MLP's error on MNIST at n = 30000.
+
+**Why** (Heuristic). In Part 6, DFG beat gradient descent on sparse Boolean targets. Exhaustive search over a
+dictionary that contains the target's features pays only about ln N in samples, and the dictionary fit within the
+networks' FLOP budget. On standard tasks the premise fails in two ways:
+- *The features that matter are not in any small enumerable dictionary.* On images, the useful hidden units are
+  directions spread over hundreds of correlated pixels, each with a small weight. That is a continuous family:
+  - A product of a few bits or a short AND of thresholds is a poor approximation of one such unit.
+  - DFG's directional moves (spectral eigen-directions, class discriminants, local mean differences) generate only a
+    few candidate directions per round, from statistics of the current residual.
+
+  An MLP's gradient step instead updates hundreds of directions at once, each pulled toward the residual. In effect it
+  is a continuous, parallel version of DFG's spectral move, iterated thousands of times. In the continuous family,
+  local search is the efficient search, and enumeration is not.
+- *The tests become the bottleneck.* Union-bound tests are built to stop false features on sparse targets. On dense
+  real-world signal — many weak, correlated effects — they stop growth after a few rounds, and two of the builders had
+  to weaken the test constant c to get growth at all. The MLP has no such gate. It fits everything and relies on early
+  stopping, which is the better trade when the signal is dense.
+
+**What the experiment does not show.**
+- It does not show that no discrete learner can match MLPs on images.
+- It does not show that DFG's tabular wins are robust to a stronger MLP. The `mlp_best` row bounds this from the MLP's
+  side: some DFG wins shrink against it, and dna, ring and waveform remain.
+- It does not show the comparison with gradient-boosted trees. `hgb`, also a discrete feature-growing learner, is the
+  strongest tabular reference here, and it is better than both the MLP and DFG on adult, phoneme and at large n.
 
 ## Reproduce
 

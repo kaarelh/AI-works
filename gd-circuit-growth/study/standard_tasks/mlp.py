@@ -27,6 +27,11 @@ W, B, LRS, NCK = 256, 128, (1e-3, 3e-4), 40
 # training max |x| instead of standardized (for images: raw [0, 1] pixels).
 VARIANT = os.environ.get("MLP_VARIANT", "")
 CONFIGS = [(lr, wd) for lr in (3e-3, 1e-3, 3e-4) for wd in (0.0, 0.05)] if VARIANT == "plus" else [(lr, 0.0) for lr in LRS]
+# "l2" (added after the MLP-fairness audit): lr 1e-3 and a coupled L2 penalty lam/2 * sum ||W||^2 on the weight matrices,
+# lam in {1e-4, 1e-3, 1e-2, 1e-1}; lam chosen by validation accuracy averaged over the last 4 checkpoints; the network
+# retrained on all n is read at its FINAL checkpoint (no early stopping).
+if VARIANT == "l2":
+    CONFIGS = [(1e-3, lam) for lam in (1e-4, 1e-3, 1e-2, 1e-1)]
 TAG = "mlp" + (("_" + VARIANT) if VARIANT else "")
 
 
@@ -50,9 +55,10 @@ def forward(ps, x):
     return x
 
 
-def loss_fn(ps, x, y):
+def loss_fn(ps, x, y, lam=0.0):
     lg = forward(ps, x)
-    return -jnp.mean(jnp.take_along_axis(jax.nn.log_softmax(lg), y[:, None], 1))
+    ce = -jnp.mean(jnp.take_along_axis(jax.nn.log_softmax(lg), y[:, None], 1))
+    return ce + 0.5 * lam * sum(jnp.sum(w * w) for w, _ in ps)
 
 
 def make_runner(d, C, S):
@@ -62,13 +68,14 @@ def make_runner(d, C, S):
     def adam_step(state, batch, lr, wd):
         ps, m, v, t = state
         x, y = batch
-        g = jax.grad(loss_fn)(ps, x, y)
+        g = jax.grad(loss_fn)(ps, x, y, wd if VARIANT == "l2" else 0.0)
         t = t + 1
         m = jax.tree_util.tree_map(lambda a, b: 0.9 * a + 0.1 * b, m, g)
         v = jax.tree_util.tree_map(lambda a, b: 0.999 * a + 0.001 * b * b, v, g)
         mh = jax.tree_util.tree_map(lambda a: a / (1 - 0.9 ** t), m)
         vh = jax.tree_util.tree_map(lambda a: a / (1 - 0.999 ** t), v)
-        ps = jax.tree_util.tree_map(lambda p, a, b: p - lr * a / (jnp.sqrt(b) + 1e-8) - lr * wd * p, ps, mh, vh)
+        dec = 0.0 if VARIANT == "l2" else wd                         # 'plus': decoupled decay; 'l2': penalty in the loss
+        ps = jax.tree_util.tree_map(lambda p, a, b: p - lr * a / (jnp.sqrt(b) + 1e-8) - lr * dec * p, ps, mh, vh)
         return (ps, m, v, t)
 
     def one_net(key, Xtr, ytr, ntr, lr, wd, Xev, yev):
@@ -112,7 +119,14 @@ def run(name, seeds=(0, 1, 2), max_n=None):
     D = DATA.load(name); grid = [n for n in DATA.grid(D) if max_n is None or n <= max_n]; C = D["C"]
     res = dict(learner=TAG, dataset=name, ns=grid, seeds=list(seeds), err=[], flops=[], flops_total=[], cpu_seconds=[],
                chosen_lr=[], chosen_wd=[], chosen_step=[], configs=CONFIGS)
-    for n in grid:
+    path = os.path.join(RES, f"{TAG}__{name}.json")
+    if os.environ.get("MLP_RESUME") and os.path.exists(path):              # continue an interrupted run
+        old = json.load(open(path))
+        if old["ns"] == grid:
+            res = old
+            res.setdefault("chosen_wd", [[0.0] * len(seeds) for _ in res["err"]]); res.setdefault("configs", CONFIGS)
+            res["learner"] = TAG
+    for n in grid[len(res["err"]):]:
         S = n_steps(n); t0 = time.time()
         enc = []
         dom = {j: np.unique(D["X"][:, j]) for j, t in enumerate(D["types"]) if t == "categorical"}   # feature domain only
@@ -155,9 +169,12 @@ def run(name, seeds=(0, 1, 2), max_n=None):
             best = None
             for j in range(len(CONFIGS)):
                 k = i * len(CONFIGS) + j
-                c = int(np.argmax(val[k]))                               # first maximum: earliest checkpoint
-                if best is None or val[k, c] > best[0]:
-                    best = (val[k, c], j, c)
+                if VARIANT == "l2":                                      # final checkpoint; smoothed validation score
+                    c, sc = NCK - 1, float(np.mean(val[k, -4:]))
+                else:
+                    c = int(np.argmax(val[k])); sc = val[k, c]           # first maximum: earliest checkpoint
+                if best is None or sc > best[0]:
+                    best = (sc, j, c)
             chosen.append(best)
         # stage 2: retrain on all n with the chosen lr; read the test error at the chosen checkpoint
         Xa = [e["Xa"] for e in enc]; na = max(len(a) for a in Xa)
