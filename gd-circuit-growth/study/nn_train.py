@@ -64,7 +64,11 @@ def forward(p, x):
     h2 = jax.nn.relu(h1 @ p["W2"].T + p["b2"])
     return h2 @ p["a"], h1, h2
 
+LOSS, WD = "sq", 0.0     # Part 8 reference variants (--loss logistic, --wd lam: decoupled weight decay, p -= lr mult lam p)
+
 def loss_fn(p, x, y):
+    if LOSS == "logistic":
+        return jnp.mean(jax.nn.softplus(-y * forward(p, x)[0]))
     return 0.5 * jnp.mean((forward(p, x)[0] - y) ** 2)
 
 MULT = {"adam": dict(W1=1.0, b1=1.0, W2=BASE / N, b2=BASE / N, a=BASE / N),
@@ -82,7 +86,7 @@ def make_step(opt, lr):
         m = {k: 0.9 * m[k] + 0.1 * g[k] for k in p}
         v = {k: 0.999 * v[k] + 0.001 * g[k] ** 2 for k in p}
         c1, c2 = 1 - 0.9 ** t, 1 - 0.999 ** t
-        p = {k: p[k] - lr * mult[k] * (m[k] / c1) / (jnp.sqrt(v[k] / c2) + 1e-8) for k in p}
+        p = {k: p[k] - lr * mult[k] * ((m[k] / c1) / (jnp.sqrt(v[k] / c2) + 1e-8) + WD * p[k]) for k in p}
         return (p, m, v, t)
     return step
 
@@ -243,7 +247,8 @@ if __name__ == "__main__":
     ap.add_argument("--ns", default="16,32,64,128,256,512,1024,2048,4096,8192,16384")
     ap.add_argument("--seeds", default="0,1,2"); ap.add_argument("--steps", type=int, default=20000)
     ap.add_argument("--out", default="results")
-    a = ap.parse_args()
+    ap.add_argument("--loss", default="sq"); ap.add_argument("--wd", type=float, default=0.0)
+    a = ap.parse_args(); LOSS, WD = a.loss, a.wd
     fns = list(SUITE) if a.fns == "all" else a.fns.split(",")
     seeds = [int(s) for s in a.seeds.split(",")]
     for fn in fns:

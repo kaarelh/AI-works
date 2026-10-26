@@ -1,7 +1,9 @@
 """Score a learner on a toy suite against the study's networks.
 usage: python eval_toy.py <module:Class[:kwargs]> <designed|random|dlheld|dlheld2|dlheld3> [fns] [--quick]
 --quick: n in {64, 256, 1024, 4096}, seeds 0-1 (development).  Writes results/toy__<learner>__<suite>.json (+ .md);
---part=K (a shard of the targets, run in parallel): writes ...__<suite>__partK.json; merge with merge_toy.py."""
+--part=K (a shard of the targets, run in parallel): writes ...__<suite>__partK.json; merge with merge_toy.py.
+--perm: each fit sees its input columns in a random order (discrete_learner/harness.Permuted; learner name + '-perm').
+Every suite puts the relevant inputs first, and tie-breaking by column index would otherwise favour the learner."""
 import os, sys, json
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 import common
@@ -12,6 +14,8 @@ spec, suite = sys.argv[1], sys.argv[2]
 args = [a for a in sys.argv[3:] if not a.startswith("--")]; quick = "--quick" in sys.argv
 fns = args[0].split(",") if args else None
 L = common.ToyAdapter(common.load_learner(spec))
+if "--perm" in sys.argv:
+    L = TH.Permuted(L)
 kw = dict(ns=[64, 256, 1024, 4096], seeds=[0, 1]) if quick else {}
 if suite in ("dlheld", "dlheld2", "dlheld3"):
     import boolfuncs
