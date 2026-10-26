@@ -252,3 +252,50 @@ def make_dl_heldout2_suite(d=30, seed=5151):
         add(f"h2rf{made}", fn, rel, f"random {gts}-gate formula on {k} inputs: " + desc)
         made += 1
     return S
+
+
+def make_dl_heldout3_suite(d=30, seed=6161):
+    """Third held-out Boolean suite (Part 8: a hybrid discrete learner), fixed before any hybrid was designed: a CNF,
+    a symmetric even function, a decision list, an integer-weight threshold, a parity OR a conjunction, a sparse
+    polynomial with a degree-4 term, a majority of mixed gates, the 11-multiplexer, and two fresh random formulas."""
+    S = {}
+
+    def add(name, fn, rel, desc):
+        S[name] = dict(fn=fn, relevant=list(rel), desc=desc)
+
+    add("cnf3", lambda x: _and(_or(x[:, 0], x[:, 1], x[:, 2]), _or(-x[:, 3], x[:, 4], x[:, 5]), _or(x[:, 6], -x[:, 7], x[:, 8])),
+        range(9), "(x1|x2|x3) & (~x4|x5|x6) & (x7|~x8|x9)")
+    add("sym9", lambda x: np.where(np.abs(x[:, :9].sum(1)) <= 1, 1.0, -1.0), range(9), "|x1 + ... + x9| <= 1")
+
+    def dlist8(x):
+        out = np.ones(len(x))
+        for i, val in reversed(list(enumerate([-1, 1, 1, -1, 1, -1, -1, 1]))):
+            lit = x[:, i] if i % 3 != 1 else -x[:, i]
+            out = np.where(lit > 0, float(val), out)
+        return out
+    add("dlist8", dlist8, range(8), "decision list on 8 literals")
+    wint = np.array([3, 2, 2, 1, 1, 1, 1, 1, 1], float)
+    add("thrint", lambda x, w=wint: _sgn(x[:, :9] @ w), range(9), "sign(3x1 + 2x2 + 2x3 + x4 + ... + x9)")
+    add("par3or", lambda x: _or(_xor(x[:, 0], x[:, 1], x[:, 2]), _and(x[:, 3], x[:, 4])), range(5), "(x1 x2 x3) | (x4 & x5)")
+    add("poly4", lambda x: _sgn(x[:, 0] * x[:, 1] + x[:, 2] * x[:, 3] * x[:, 4] + 0.5 * x[:, 5] + x[:, 6] * x[:, 7] * x[:, 8] * x[:, 9]),
+        range(10), "sign(x1x2 + x3x4x5 + x6/2 + x7x8x9x10)")
+    add("mixmaj", lambda x: _maj(x[:, 0] * x[:, 1], _and(x[:, 2], x[:, 3]), _or(x[:, 4], x[:, 5])), range(6),
+        "MAJ(x1 x2, x3 & x4, x5 | x6)")
+    add("mux11", lambda x: np.choose(((x[:, 0] > 0) * 4 + (x[:, 1] > 0) * 2 + (x[:, 2] > 0)).astype(int),
+                                     [x[:, 3 + k] for k in range(8)]), range(11), "11-multiplexer: address x1..x3, data x4..x11")
+    rng = np.random.default_rng(seed + 2)
+    probe = np.random.default_rng(4).choice([-1.0, 1.0], size=(20000, d))
+    made = 0
+    while made < 2:
+        k = int(rng.integers(7, 10)); gts = int(rng.integers(6, 10))
+        fn, desc = _random_formula(rng, k, gts)
+        y = fn(probe)
+        if abs(y.mean()) > 0.5:
+            continue
+        infl = [np.mean(y != fn(probe * np.where(np.arange(d) == i, -1.0, 1.0))) for i in range(k)]
+        rel = [i for i in range(k) if infl[i] > 0.01]
+        if len(rel) < k - 1:
+            continue
+        add(f"h3rf{made}", fn, rel, f"random {gts}-gate formula on {k} inputs: " + desc)
+        made += 1
+    return S

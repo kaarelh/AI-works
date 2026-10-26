@@ -18,6 +18,9 @@ PMLB_META = "https://raw.githubusercontent.com/EpistasisLab/pmlb/master/datasets
 DEV = ["optdigits", "magic", "kr_vs_kp", "satimage", "spambase"]
 HELDOUT = ["mnist", "fashion_mnist", "adult", "letter", "pendigits", "connect_4", "dna", "nursery", "ring", "twonorm",
            "phoneme", "waveform_40", "mushroom"]
+# Fresh held-out datasets for Part 8 (the hybrid learner), fixed before any hybrid was designed; never used before.
+HELDOUT2 = ["texture", "churn", "wine_quality_white", "page_blocks", "clean2", "led24", "ann_thyroid", "banana", "krkopt",
+            "sleep"]
 NS = [100, 300, 1000, 3000, 10000, 30000, 60000]
 TEST_MAX = 10000
 
@@ -66,7 +69,7 @@ def load(name):
         out = dict(X=X, y=y, types=["continuous"] * X.shape[1], C=10, split="standard", n_test=len(yte))
     else:
         raw = gzip.open(_get(PMLB.format(name), os.path.join(DATA_DIR, name, name + ".tsv.gz"))).read().decode()
-        lines = raw.strip().split("\n"); cols = lines[0].split("\t")
+        lines = [l.rstrip("\r") for l in raw.strip().split("\n")]; cols = lines[0].split("\t")
         A = np.array([[float(v) for v in l.split("\t")] for l in lines[1:]])
         ti = cols.index("target"); feats = [c for c in cols if c != "target"]
         X = np.delete(A, ti, axis=1); t = A[:, ti]
