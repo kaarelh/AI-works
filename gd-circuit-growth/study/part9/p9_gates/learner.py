@@ -4,16 +4,18 @@ Everything below the Part 8 docstring is identical to hyb_portfolio/learner.py (
 constructor's new arguments and name, and the block marked 'p9_gates' in fit().
 
 THE GATES FAMILY (see DESIGN.md).  Two discrete objects are built from the training data only:
-  pooling sets  S_i = the k = 9 columns most correlated with column i (i over the non-constant columns), computed from
-                the training matrix (a data statistic; no pixel adjacency or 28 x 28 layout is used: permuting the columns
-                permutes the sets).  Pooled feature p_i(x) = sum_{j in S_i} x_j (a signed subset sum with all signs +1).
-  prototype pairs  (a, b): training points of different classes, drawn at random; feature (x_a - x_b) . x.
+  pooling sets  S_i(k) = the k columns most correlated with column i (i over the non-constant columns; k in 4, 9, 16),
+                computed from the training matrix (a data statistic; no pixel adjacency or 28 x 28 layout is used:
+                permuting the columns permutes the sets exactly).  Pooled feature p_i(x) = sum_{j in S_i(k)} x_j (a
+                signed subset sum with all signs +1).
+  prototype pairs  (a, b): 300 training points pairs of different classes, drawn at random; feature (x_a - x_b) . x.
 Members:
-  gknn_<k>  k-nearest-neighbour votes (k in 1, 3, 9, 27) in the pooled representation p(x) (Euclidean); leave-one-out
-            votes are the out-of-fold predictions (as for knn).
-  ggbt      LightGBM on [x, p(x), (x_a - x_b) . x]: every split is a gate [u . x > t] with u a pixel, a pooling set or a
-            prototype pair, and t a data quantile (histogram bin); 31 leaves, lr 0.1, 63 bins, 20% of the features per
-            tree; early stopping on an inner validation split when the member's training set has >= 5000 points.
+  gknn_<k>  k-nearest-neighbour votes (k in 1, 3, 9, 27) in the pooled representation p(x) at scale 9 (Euclidean);
+            leave-one-out votes are the out-of-fold predictions (as for knn).
+  ggbt      LightGBM on [x, p(x) at scales 4, 9, 16, (x_a - x_b) . x]: every split is a gate [u . x > t] with u a pixel,
+            a pooling set or a prototype pair, and t a data quantile (histogram bin); 31 leaves, lr 0.1, 63 bins, 12% of
+            the columns per tree; 100 rounds, or (training set >= 5000 points) early stopping on the error of an inner
+            validation split (patience 50, 150 to 400 rounds).
 Both give class probabilities to the same stacker as every other member.
 
 Part 8 docstring follows.
