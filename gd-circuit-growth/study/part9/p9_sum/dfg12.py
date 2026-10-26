@@ -64,6 +64,9 @@ modulated blocks on one (S, s) represent any g(t + w chi_T) with integer w.
            pair matrix M (an even symmetric function has pair coefficients a2 s_i s_j on S) and by the degree-1
            coefficients; greedy growth by T from the strongest pairs and single inputs; local refinement (add / remove /
            flip a sign) of the 3 best; the best is tested on all n.
+  accept   a candidate is searched on the round's residual r and accepted only if it also passes the same test on
+           r projected off this round's accepted characters and the constant (what it adds beyond them); no block
+           search when those characters already explain r (mean square < 1e-4 s^2).
   per round  up to 2 additive blocks (the residual deflated by each candidate); a product A x B with B searched over
            the joint cells with A (and a 'split' of a mixed-sign candidate into its + and - parts), accepted only if it
            beats the additive block's margin; one modulated block per top-4 current character; products of accepted

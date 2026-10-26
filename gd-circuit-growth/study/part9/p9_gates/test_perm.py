@@ -16,7 +16,7 @@ D = DATA.load(ds); pool, _ = DATA.splits(D, 0); X = D["X"][pool[:n]]; y = D["y"]
 ok = True
 for s in (1, 2, 3):
     perm = np.random.default_rng(s).permutation(X.shape[1]); inv = np.argsort(perm); Xp = X[:, perm]
-    A, _ = LM.pool_sets(X, 9); Ap, _ = LM.pool_sets(Xp, 9)
+    A, _ = LM.pool_sets(X, (9,)); Ap, _ = LM.pool_sets(Xp, (9,)); A, Ap = A[9], Ap[9]
     act = np.where(A.sum(0) > 0)[0]
     # column r of A belongs to the r-th non-constant pixel; map original pixel j -> its column in Ap
     orig_pix = np.where(X[:20000].std(0) > 1e-6)[0]; perm_pix = np.where(Xp[:20000].std(0) > 1e-6)[0]

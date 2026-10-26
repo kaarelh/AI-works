@@ -217,10 +217,11 @@ def is_image(types, d, dmin=256):
     return d >= dmin and all(t == "continuous" for t in types)
 
 
-def pool_sets(X, k, rows=20000, tol=1e-6):
-    """Pooling sets from the training matrix only: for every non-constant column i, S_i = the k columns with the largest
-    correlation with column i over the first `rows` training rows (i itself first: corr = 1).  Returns the 0/1 pooling
-    matrix A (d x n_active, A[S_i, i] = 1; pooled features = X @ A) and the FLOPs.  No pixel adjacency or layout is
+def pool_sets(X, ks, rows=20000, tol=1e-6):
+    """Pooling sets from the training matrix only: for every non-constant column i, S_i(k) = the k columns with the
+    largest correlation with column i over the first `rows` training rows (i itself first: corr = 1), for each k in ks.
+    Returns {k: the 0/1 pooling matrix A_k (d x n_active, A_k[S_i(k), i] = 1; pooled features = X @ A_k)} and the
+    FLOPs.  No pixel adjacency or layout is
     used; a permutation of the columns permutes the sets exactly: correlations are rounded to 1e-9 (BLAS rounding can
     depend on the column order) and ties are broken by a column fingerprint (the column's inner product with fixed
     pseudo-random row weights), never by column index."""
@@ -228,12 +229,15 @@ def pool_sets(X, k, rows=20000, tol=1e-6):
     Z = (Xs[:, act] - Xs[:, act].mean(0)) / sd[act]
     R = np.round(Z.T @ Z / len(Z), 9)
     fp = Xs[:, act].T @ np.random.default_rng(77).standard_normal(len(Xs))
-    S = act[np.lexsort((np.broadcast_to(-fp, R.shape), -R), axis=1)[:, :k]]
-    A = np.zeros((X.shape[1], len(act)), np.float32)
-    A[S.ravel(), np.repeat(np.arange(len(act)), k)] = 1.0
+    S = act[np.lexsort((np.broadcast_to(-fp, R.shape), -R), axis=1)[:, :max(ks)]]
+    As = {}
+    for k in ks:
+        A = np.zeros((X.shape[1], len(act)), np.float32)
+        A[S[:, :k].ravel(), np.repeat(np.arange(len(act)), k)] = 1.0
+        As[k] = A
     na = len(act)
     fl = 2.0 * len(Z) * na * na + 4.0 * len(Z) * na + 2.0 * na * na * max(1.0, math.log2(max(na, 2)))   # corr + sort
-    return A, fl
+    return As, fl
 
 
 def pair_dirs(X, y, m, rng):
@@ -283,7 +287,7 @@ def _es_error(patience, min_rounds):
     return cb, st
 
 
-def fit_ggbt(Xr, y, C, A, rng, seed, n_pairs=300, max_rounds=400, ff=0.2, bins=63, lr=0.1, leaves=31, es_min=5000,
+def fit_ggbt(Xr, y, C, A, rng, seed, n_pairs=300, max_rounds=400, ff=0.12, bins=63, lr=0.1, leaves=31, es_min=5000,
              es_patience=50, es_min_rounds=150, fixed_rounds=None):
     """LightGBM on the gate bank.  Rounds: fixed_rounds if given; else early stopping on the error of a stratified inner
     validation split (min(10%, 5000) points; patience 50, at least 150 rounds) when len(y) >= es_min, up to max_rounds;
@@ -327,7 +331,7 @@ def fit_ggbt(Xr, y, C, A, rng, seed, n_pairs=300, max_rounds=400, ff=0.2, bins=6
     return M(), fl, best
 
 
-def ggbt_cost(n, d, C, m, rounds, ff=0.2, bins=63):
+def ggbt_cost(n, d, C, m, rounds, ff=0.12, bins=63):
     nb = 0.5 if n > 20000 else 1.0
     return 2.0 * n * d * m + 16.0 * n * (d + m) + rounds * C * lgb_tree_flops(n, nb * n, ff * (d + m), ff * (d + m) * bins)
 
@@ -360,7 +364,7 @@ def fit_stacker(Ls, y, C, lam_w=1e-3, lam_b=1e-3):
 class Learner:
     def __init__(self, K=5, K_small=10, K_small_n=500, lin_one_n=10000, kfold_max=3000, hold_max=6000, ks=(1, 3, 9, 27), lin_C=(0.05, 1.0), gbt_trees=100,
                  et_trees=100, dfg_share=(0.35, 0.5), dfg_dmax=256, lam_w=1e-2, members=None, name="p9_gates",
-                 gates_k=9, gates_pairs=300, gates_rounds=400, gates_ff=0.2, gates_dmin=256):
+                 gates_k=9, gates_ks=(4, 9, 16), gates_pairs=300, gates_rounds=400, gates_ff=0.12, gates_dmin=256):
         self.K_small, self.K_small_n, self.lin_one_n = K_small, K_small_n, lin_one_n
         self.K, self.kfold_max, self.hold_max, self.ks, self.lin_C = K, kfold_max, hold_max, tuple(ks), tuple(lin_C)
         self.gbt_trees, self.et_trees, self.dfg_share, self.dfg_dmax, self.lam_w = gbt_trees, et_trees, dfg_share, dfg_dmax, lam_w
@@ -368,6 +372,7 @@ class Learner:
         self.name = name
         # p9_gates: the image member family 'gates' (sub-families 'gknn', 'ggbt')
         self.gates_k, self.gates_pairs, self.gates_rounds, self.gates_ff, self.gates_dmin = gates_k, gates_pairs, gates_rounds, gates_ff, gates_dmin
+        self.gates_ks = tuple(gates_ks)              # pooling scales of ggbt's bank; gknn uses the scale gates_k
 
     def _use(self, fam):
         return self.members is None or fam in self.members
@@ -517,7 +522,9 @@ class Learner:
         # ---- p9_gates: the image member family (only when every column is continuous and d >= 256)
         if self._use("gates") and is_image(types, d, self.gates_dmin):
             rg = np.random.default_rng([seed, 9])
-            A, fl = pool_sets(X, self.gates_k); charge("g_pool", fl)
+            As, fl = pool_sets(X, sorted(set(self.gates_ks) | {self.gates_k})); charge("g_pool", fl)
+            A = As[self.gates_k]                                            # gknn's pooled representation
+            Ag = np.concatenate([As[k] for k in self.gates_ks], 1)          # ggbt's pooled sums, every scale
             enc_pool = lambda Q, A=A: np.asarray(Q, np.float32) @ A
             if self._use("gknn"):
                 cost = knn_cost(len(H), n, A.shape[1]) + 2.0 * n * d * A.shape[1]
@@ -530,13 +537,13 @@ class Learner:
                             fitters[f"gknn_{k}"] = ("knn", "pool", k)
                     fitters["_knn_pool"] = (Zp, enc_pool)
             if self._use("ggbt"):
-                ntr = len(splits[0][0]); m_g = A.shape[1] + self.gates_pairs
+                ntr = len(splits[0][0]); m_g = Ag.shape[1] + self.gates_pairs
                 refit = len(splits) > 1 or not big
                 cost = ggbt_cost(ntr, d, C, m_g, self.gates_rounds if ntr >= 5000 else 100, self.gates_ff) * (len(splits) + (1 if refit else 0))
                 if spent[0] + cost <= 0.9 * budget:
                     P = np.zeros((len(H), C)); used = []
                     for tr, te in splits:
-                        mg, fl, r = fit_ggbt(X[tr], y[tr], C, A, rg, seed, self.gates_pairs, self.gates_rounds, self.gates_ff)
+                        mg, fl, r = fit_ggbt(X[tr], y[tr], C, Ag, rg, seed, self.gates_pairs, self.gates_rounds, self.gates_ff)
                         # + its out-of-fold predictions: projections, and ~10 FLOPs per tree per row for the traversal
                         charge("ggbt", fl + 2.0 * len(te) * d * m_g + 10.0 * r * C * len(te)); P[pos[te]] = mg.proba(X[te]); used.append(r)
                     oof["ggbt"] = _logp(P); info["ggbt_rounds"] = used
@@ -567,7 +574,7 @@ class Learner:
                 m, fl = f[2](f[3], y, share, f[1]); charge(nm, fl)
                 finals.append((w[i], lambda A, m=m: m.proba(enc_pm(A))))
             elif isinstance(f, tuple) and f[0] == "ggbt":                  # p9_gates: refit of ggbt on all n
-                m, fl, _ = fit_ggbt(X, y, C, A, rg, seed, self.gates_pairs, self.gates_rounds, self.gates_ff, fixed_rounds=f[1])
+                m, fl, _ = fit_ggbt(X, y, C, Ag, rg, seed, self.gates_pairs, self.gates_rounds, self.gates_ff, fixed_rounds=f[1])
                 charge(nm, fl); finals.append((w[i], lambda Q, m=m: m.proba(Q)))
             elif isinstance(f, tuple) and f[0] == "done":
                 m, enc = f[1], f[2]; finals.append((w[i], lambda A, m=m, enc=enc: m.proba(enc(A))))

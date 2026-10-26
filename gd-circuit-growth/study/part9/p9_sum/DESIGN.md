@@ -68,6 +68,12 @@ points. Scores use the first min(n, 2048) points; the final test uses all n.
    best improving move, until none improves.
 5. Test the best refined candidate on all n.
 
+**Acceptance beyond the round's characters.** Candidates are searched on the round's residual r, the same residual
+v1.1's character tests use. A candidate is accepted only if it also passes the same test on r_S: r projected off the
+constant and the characters accepted in the same round. So a block must add something beyond those characters. If the
+characters already explain r (mean(r_S²) < 10⁻⁴ s²), no block is searched in that round. Without this, a block
+{x1, noise input} was accepted together with the character x1 on dict and sparsepoly (section 4, item 7).
+
 **Per round** (after v1.1's character searches and blocks, same residual):
 - Up to 2 additive blocks. After each candidate, the residual is deflated by its group means (and M recomputed), and
   the search is repeated.
@@ -148,8 +154,16 @@ data). On the toy suites, prediction cost is dominated by the same members as in
    portfolio it raised andxor's error at n = 32 from 0.078 to 0.139 (n* 30 → 43, seeds 0–1). → off (default False).
 6. More search seeds (4 eigenvectors, 6 pairs): band11 at n = 512 mean error 0.33 → 0.17 (3 seeds), about 30% more
    time. Not adopted (defaults: 2 eigenvectors, 3 pairs, 2 single inputs).
-7. Real-data check (DEV kr_vs_kp, n = 1000, seed 0, the only DEV dataset where DFG runs): same test error as v1
-   (0.0100), 0.080 of the budget against v1's 0.063, CPU 12.4 s against 3.5 s.
+7. Portfolio on designed (seeds 0–1, n ≤ 512), against v1 on the same fits: sparsepoly 155 against 109 (+0.51 in
+   log2). In round 0 the character x1 (sparsepoly = sign(2 x1 + x2 x3 + x4 x5 x6)) passed, and the same round's block
+   search accepted {x1, noise input}, carried by x1's signal. Dict accepted such blocks too, though without error cost.
+   → the acceptance rule above. A first version searched on the projected residual too: that broke maj9 at n = 256
+   (a partial 5-input block once 4 of the 9 linear characters had passed; error 0.034 against 0.000) and, without the
+   constant column, still accepted a block on dict. The final rule (search on r, test also on r_S with the constant)
+   gives sparsepoly 0.093 / 0.012 at n = 128 / 256 (= v1.1), maj9 0.000 / 0.000, and no block on dict or par2.
+8. Real-data check (DEV kr_vs_kp, n = 1000, seed 0, the only DEV dataset where DFG runs), final code: test error
+   0.0113 against v1's 0.0100 (a difference of about one test point), 0.080 of the budget against v1's 0.063, CPU
+   12.9 s against 3.7 s.
 
 **Data-access note.** While reading `boolfuncs.py` for the dev suite's definitions, an over-long `grep -A 60` printed
 the source of the next function, `make_dl_heldout4_suite` (the held-out target definitions; no data or results).
