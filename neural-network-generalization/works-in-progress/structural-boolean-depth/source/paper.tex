@@ -30,7 +30,8 @@ Gaussian scales $0<t\le1$. The statistical step imports the established
 uniform intrinsic-learning and scalar-continuation theorems; a
 heterogeneous-layer prefix lemma needed here is proved explicitly.
 An explicit unary-map compiler also gives polynomial sample bounds
-for Boolean formulas of any fixed Horton--Strahler rank.
+for Boolean formulas of any fixed Horton--Strahler rank, including
+short learner depths; rank at most one works at every depth $L\ge2$.
 These results do not cover arbitrary polynomial-size deep Boolean circuits
 or replace real tanh states by their signs.
 \end{abstract}
@@ -134,6 +135,19 @@ the sample bound is polynomial in $d+s+L$ at every fixed rank,
 independently of the formula's original depth. Repeated occurrences
 of the same input variable are allowed.
 \end{theorem}
+
+\begin{corollary}[Fixed-rank formulas at short learner depths]\label{cor:rankshort}
+For the formula in Theorem~\ref{thm:strahler}, put $R=d+s+L+3$.
+There are universal constants such that, for every $L\ge C(r+1)$,
+a sufficient sample bound is
+\[
+ n\ge\frac C\varepsilon\left[
+ R^{C(r+1)^2}(1+\log(1/\varepsilon))^C+\log(1/\delta)\right].
+\]
+This has the same confidence-error conclusion, at every realizable
+width and every $0<t\le1$. If $r\le1$, a polynomial bound in
+$d+s+L$ holds at every $L\ge2$.
+\end{corollary}
 
 For families with $d,s,v\le L^{O(1)}$, these theorems give an
 $\exp(o(L))$ sample bound at fixed $\varepsilon,\delta$ whenever,
@@ -604,6 +618,52 @@ binary formula can have $r=\Theta(\log s)$, so the general formula
 bound remains quasipolynomial. The argument reduces target depth
 semantically before the Gaussian prefix construction; it does not
 discard the costs of its physical neuron groups.
+
+\subsection{Short padding and the rank-one Fourier seed}
+The imported uniform threshold theorem
+\cite[Theorem 1.1]{uniform} includes a short-padding assertion:
+a threshold target of $q$ stages, width $C_0$, and normalized
+coefficient bound $B$ has sufficient sample resource
+\[
+ (d+C_0+B+q+L+4)^{C(q+1)^2}
+\]
+at every $L\ge q+1$, all realizable widths, and all $0<t\le1$.
+Apply this to the formula compiler, where $q\le C(r+1)$ and
+$C_0,B$ are bounded by a universal polynomial in $d+s+2$.
+This proves the first assertion of Corollary~\ref{cor:rankshort}.
+Unlike the sharper linear-in-$r$ exponent, this statement does
+not need logarithmic learner-depth padding.
+
+For the remaining assertion, define the Fourier variation
+$A(g)=\sum_{T\subseteq[d]}|\widehat g(T)|$.
+It obeys $A(gh)\le A(g)A(h)$ on the Boolean cube, even when
+$g,h$ depend on overlapping variables. A rank-zero formula is
+a literal or constant, with variation one. In a rank-one formula,
+all rank-one nodes lie on one path; each off-path value is a
+literal or constant. The signed starting bit $f_0=2y_0-1$
+depends on at most two literals, so $A(f_0)\le2$ by Parseval
+and Cauchy--Schwarz.
+
+In the notation above, $R_i$ and $1-R_i$ are literal indicators
+or constant bits and have variation at most one. The signed
+reset value $g_i=2a_i-1$ and flip sign $\eta_i=(-1)^{F_i}$
+are signed literals or constants and have variation one.
+The exact signed output is
+\[
+ f=J_0 f_0\prod_{i=1}^m\eta_i
+          +\sum_{j=1}^m J_jg_j\prod_{i>j}\eta_i,
+\]
+where $J_0=\prod_i(1-R_i)$ and
+$J_j=R_j\prod_{i>j}(1-R_i)$.
+Submultiplicativity and the triangle inequality give
+$A(f)\le2+m\le s+2$.
+The uniform Fourier-target theorem
+\cite[Theorem 1.2]{uniform} supplies a sample bound polynomial
+in $d+L+A(f)+2$ at every $L\ge2$, every realizable width, and
+every $0<t\le1$, with the usual statistical factors.
+This proves the rank-one assertion. It uses the Fourier seed and
+the imported theorem's finite-width completion; the threshold
+compiler need not fit in that learner's width or hidden depth.
 
 \section{Scope of the conclusions}
 These are positive target classes for the original posterior,

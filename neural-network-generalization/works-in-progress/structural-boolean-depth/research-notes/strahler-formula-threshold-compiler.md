@@ -113,3 +113,55 @@ Unlike a change of Gaussian mass allocation, the construction genuinely
 reduces the target threshold depth before invoking the posterior theorem.
 For general formulas r can be logarithmic in s, leaving the familiar
 quasipolynomial upper and the open polynomial-formula question.
+
+## All-depth completion at fixed rank
+
+Let `R=d+s+L+3`. The published uniform target theorem, including its
+short-padding part (Theorem1.1 of the uniform-target-classes companion),
+applies to a threshold circuit with q stages, width C0, row/coordinate
+bound B, and every learner L>=q+1. Its sufficient sample resource is
+
+`(d+C0+B+q+L+4)^{C(q+1)^2}`.
+
+Our compiler has q<=C(r+1) and C0,B<=R^C with universal constants.
+Therefore every L>=C(r+1) has sufficient samples
+
+`(C/epsilon)[R^{C(r+1)^2}(1+log(1/epsilon))^C+log(1/delta)]`.
+
+This retains every actual realizable width and every0<t<=1, exactly
+as in the imported theorem. Thus each fixed-rank family has polynomial
+samples at every learner depth large enough to hold its constant-depth
+threshold implementation; no logarithmic learner-depth padding is
+needed for this fixed-rank polynomial assertion.
+
+## Rank at most one: every learner depth L>=2
+
+A rank-zero formula is a literal or constant after composing its unary
+gates, so its Fourier variation is1. For rank one, all rank-one nodes
+lie on one path. Its bottom value y0 is a Boolean function of at most
+two literals, hence the signed bit `f0=2y0-1` has Fourier variation at
+most2 by Parseval and Cauchy--Schwarz on at most four coefficients.
+Every off-path input is rank zero, hence a literal or constant.
+
+Use the reset/flip notation above, with m maps above the bottom gate.
+Each R_i and1-R_i is a literal indicator or a constant0/1, with Fourier
+variation at most1. Each signed reset value `g_i=2a_i-1` and flip sign
+`eta_i=(-1)^{F_i}` is a signed literal or constant, with variation1.
+Put `J_0=product_i(1-R_i)` and
+`J_j=R_j product_(i>j)(1-R_i)`. The exact signed output is
+
+`f=J_0 f0 product_i eta_i + sum_(j=1)^m J_j g_j product_(i>j) eta_i`.
+
+The Fourier l1 norm is submultiplicative on the Boolean cube, including
+when literals or subexpressions share variables. Thus
+
+`A(f)<=2+m<=s+2`.
+
+The published uniform Fourier-target theorem (Theorem1.2 of the same
+companion) consequently gives polynomial samples in d+s+L at **every
+L>=2**, all actual realizable widths, and all0<t<=1. This does not
+require the formula's threshold compilation to fit into that learner
+width or hidden depth. It imports the Fourier seed and the theorem's
+finite-width completion. Rank two does not inherit a polynomial
+Fourier bound from this argument: parity of disjoint two-input ANDs
+already has exponentially growing Fourier variation.

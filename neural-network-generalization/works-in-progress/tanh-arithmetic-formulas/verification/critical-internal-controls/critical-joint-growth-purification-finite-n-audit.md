@@ -1,0 +1,15 @@
+# Independent joint growth/purification audit
+
+26 October 2026. Source SHA256 `7881b73f45ac274c947dda6202d8330c49a55d286c8f07cff8533da5b652ce59`.
+
+PASS, interpreting the opening residual diagonal r as a common scalar diagonal at every query. The construction requires that constant-diagonal hypothesis; it does not prove the same statement for arbitrary unequal query diagonals.
+
+The first-chaos expansion of the conditional-mean component has leading term u[1-2(u+r)+O((u+r)^2)]. The third-and-higher covariance is at most O(u³), hence O(u(u+r)²), uniformly even when u/r is small. Conditional Gaussian Poincare supplies the residual bound with a multiplicative factor r, avoiding an invalid additive O(q³) residual error. Solving the prescribed full increment v_next=v+2v² gives eta=4v+2r+O(q²), and Gaussian KL therefore has coefficients 4v²+4vr+r²+O(q³) as stated.
+
+On each full step, the target-residual product grows by at most exp(Cq²). The prescribed sequence gives sum q²=O(a), so vr<=Cp² and r<=Cp²/v. In the entropy sum, the main term is exactly 2 dv, while the r/v, r²/v² and cubic-error sums are O(p), O(p), and O(a²), respectively. Left-endpoint discrete sums are bounded by constant multiples of the displayed integrals because consecutive v ratios are uniformly bounded. The shortened final step costs O(a²). With a=sqrt(p), total growth cost is 2a+O(p), and residual is O(p²/a).
+
+I checked the exact imported statements in critical-depth/source. The scalar expansion is V(a)=V*-2a+O(a²). Lemma critical-dyadic-short-path applies to ANY increasing path with cost at most V(a)+a; therefore choosing a path within p<=a of the infimum still has length O(1/a), rather than paying for the smaller approximation tolerance. The stable scalar-lift lemma charges at most 12m times the residual, with m=O(1/a); its small-residual hypothesis holds for sufficiently small p. The lift overhead is O(p²/a²)=O(p). Thus the leading 2a terms cancel and the suffix bound is V*+O(p).
+
+The Gaussian growth step count depends only on the prescribed component sequence, and the subsequent nominal scalar path can also be fixed before the holding interval. This makes exact-depth filling legitimate. The unmodified first-layer seed then uses Delta=B S_f/H, and every nonholding stage occupies at most C(S_f+1)/Delta layers. Choose B large and then the depth-padding constant large so Delta is small. Holding, initial growth and the new suffix sum to V*+C S_f²/H. The proof retains the residual and imports no finite-width probability statement. The variational rate improvement does not itself improve actual posterior sample complexity without the separately stated mass/concentration analysis.
+
+Final clarification and corollary: source SHA256 `7614db1c0911839404976c031d8142f09c239762e7ae8939ae21b030de9f8f76` explicitly states the constant-diagonal hypothesis. Combining its upper with the established inverse-depth lower J_(H+1)>=V*−C/H indeed gives J_(H+1)=V*+O_f(1/H) for each fixed f. The previously proved S_f<=C(d+1) gives the stated uniform upper V*+C(d+1)²/H at H>=C(d+1). These are approved consequences, retaining the variational-only scope.

@@ -35,9 +35,34 @@ not follow automatically.
 The formula bound is polynomial for every fixed register rank,
 independently of the formula's original depth. Its proof evaluates
 single-bit formula paths through the last reset and suffix parities of
-their unary Boolean maps. Arbitrary balanced formulas can have
+their unary Boolean maps. The short-padding refinement gives
+`(d+s+L)^{O((r+1)²)}` samples whenever `L≥C(r+1)`; for rank at most
+one, Fourier variation is at most `s+2`, giving polynomial samples
+at **every `L≥2`**. Both refinements hold at every actual realizable
+width and every canonical scale. Arbitrary balanced formulas can have
 `r=Theta(log s)`, so the polynomial-sample question for all small
 Boolean formulas remains open.
+
+An independently audited
+[supporting refinement](research-notes/strahler-exact-stage-posterior-refinement.md)
+strengthens that learner-depth condition to **`L≥r+1`**, with `L≥2`
+for rank zero, and retains the universal
+`(d+s+L)^{O((r+1)²)}` sample bound. It compiles each formula rank into
+one threshold-feature stage and extracts a quantitative bound from the
+published cloning proof at the boundary depth. This refinement is in
+the supporting note and its
+[audit](verification/strahler-exact-stage-posterior-refinement-independent-audit.md);
+the 10-page paper itself retains the weaker `L≥C(r+1)` condition.
+
+A [supporting note](research-notes/rank-two-one-hidden-product-obstruction.md)
+shows a sharp scope distinction: inner-product parity, a linear-size
+rank-two XOR/AND formula, requires exponential Frobenius product in
+every one-hidden-layer tanh representation with exact global unit
+margin, but has polynomial product with two hidden layers. This is an
+exact shallow representation result, **not a Bayesian sample lower
+bound** and not a lower bound allowing arbitrary neural depth. Its
+[independent audit](verification/rank-two-one-hidden-product-obstruction-finite-n-audit.md)
+also records the gate-basis qualification for formula rank.
 
 The graph conditions describe a Boolean representation of the target.
 They do not restrict the prior or posterior architecture. A narrow
@@ -50,7 +75,7 @@ The combinatorial constructions and the extension of the Gaussian
 prefix construction to heterogeneous layer widths and row norms are
 proved in the paper. The statistical transfer explicitly imports:
 
-- [Uniform intrinsic learning and scalar continuation](../boolean-depth-barriers/uniform-target-classes.pdf), Proposition2.1 and Proposition3.3; [source](../boolean-depth-barriers/source/uniform-target-classes.tex).
+- [Uniform intrinsic learning, scalar continuation, and short-padding/Fourier target bounds](../boolean-depth-barriers/uniform-target-classes.pdf), Proposition2.1, Proposition3.3, and Theorems1.1–1.2; [source](../boolean-depth-barriers/source/uniform-target-classes.tex).
 - [Baseline-subtracted intrinsic proof](../boolean-depth-barriers/proof-notes/uniform-sharp-intrinsic.md) and [scale-reuse proof](../boolean-depth-barriers/proof-notes/nearcritical-target-reuse.md).
 - [Finite-width circuit prefix](../critical-depth/source/critical-finite-width-circuit-prefix.tex) and the scalar/finite-channel inputs in the [critical-depth paper](../critical-depth/paper.pdf).
 - The cited balanced tree-decomposition and weighted planar/excluded-minor separator theorems.

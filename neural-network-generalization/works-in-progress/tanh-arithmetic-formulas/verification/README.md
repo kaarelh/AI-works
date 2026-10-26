@@ -42,3 +42,9 @@ The [scoped audit guide](critical-internal-controls/README.md) covers the new si
 The separate [centered variable-diagonal follow-up](../research-notes/gaussian-diagonal-defect-quadratic-occupation.md) has an [independent final audit](gaussian-diagonal-defect-quadratic-occupation-independent-audit.md). It checks the strict diagonal-ratio telescope, normalized defect oracle, weighted coefficient estimates, convex-mixture control update, and condition-number charge. Its conclusion concerns exact real formulas for centered compatible Gaussian controls; it does not add a finite-bit or posterior theorem.
 
 The [universal scalar-occupation audit](universal-quadratic-variance-and-diagonal-occupation-audit.md) checks entropy-to-relative-variance comparison, quadratic maximum-variance occupation, and logarithmic diagonal-spread control for arbitrary row laws. Its conclusions are scalar inequalities, not an extension of the Gaussian feature compiler.
+
+The [centered diagonal-defect finite-bit audit](gaussian-diagonal-defect-finite-bit-audit.md) separately checks the [rational corollary](../research-notes/gaussian-diagonal-defect-rational-corollary.md). It verifies noise floors under the new convex mixtures, normalized tensor sampling, cancellation of small physical denominators, fixed-seed selection, and polynomial-bit rounding. The initial finite-description resource and readout margin remain explicit; no posterior theorem is inferred.
+
+The scoped internal-control guide also records audited obstructions to separately sampling the exact tanh Hermite/Wick expansion and to deleting tiny components from canonical nearoptimal paths. They are conventional proofs, with no general learning lower-bound claim.
+
+The exact scalar-profile interface has a separate independent audit in the scoped guide. Its scalar and unit-direction scope is explicit; it is not a claim that all bounded-density internal controls have been compiled.
