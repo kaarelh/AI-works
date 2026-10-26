@@ -366,3 +366,67 @@ def make_dl_heldout4_suite(d=30, seed=8181):
         add(f"h4rf{made}", fn, rel, f"random {gts}-gate formula on {k} inputs: " + desc)
         made += 1
     return S
+
+
+def make_dl_heldout5_suite(d=30, seed=9393):
+    """Fifth held-out Boolean suite (Part 9), generated at random AFTER the sum-feature builder froze its design (that
+    builder had seen dlheld4's source code; see study/part9/PROTOCOL.md).  Targets are drawn by rejection sampling from a
+    fixed generative family, not hand-picked: 8 functions of a signed sum t = sum_{i<k} s_i x_i (k uniform in 5..13, random
+    signs, a random accept set of t-values with acceptance probability in [0.25, 0.75]), each optionally combined (prob 1/2)
+    with a random gate on 1-2 further inputs (XOR with a character, AND / OR with a literal); 2 thresholds of a signed sum
+    plus an integer multiple of a random character; 2 random formulas (controls).  Balance: |mean| <= 0.5."""
+    S = {}
+    rng = np.random.default_rng(seed)
+    probe = np.random.default_rng(6).choice([-1.0, 1.0], size=(20000, d))
+    from math import comb
+
+    def add(name, fn, rel, desc):
+        S[name] = dict(fn=fn, relevant=list(rel), desc=desc)
+    made = 0
+    while made < 8:
+        k = int(rng.integers(5, 14)); sg = rng.choice([-1.0, 1.0], size=k)
+        vals = np.arange(-k, k + 1, 2); pv = np.array([comb(k, (v + k) // 2) for v in vals], float) / 2 ** k
+        A = vals[rng.random(len(vals)) < 0.5]
+        if not (0.25 <= pv[np.isin(vals, A)].sum() <= 0.75):
+            continue
+        base = lambda x, k=k, sg=sg, A=A: _pm(np.isin(x[:, :k] @ sg, A))
+        mode = rng.choice(["none", "xor", "and", "or"], p=[0.5, 1 / 6, 1 / 6, 1 / 6])
+        if mode == "none":
+            fn, rel, extra = base, list(range(k)), ""
+        elif mode == "xor":
+            m = int(rng.integers(1, 3)); T = list(range(k, k + m))
+            fn = lambda x, base=base, T=T: base(x) * np.prod(x[:, T], 1); rel = list(range(k + m)); extra = f" xor chi{tuple(i + 1 for i in T)}"
+        else:
+            sgn = float(rng.choice([-1.0, 1.0]))
+            fn = (lambda x, base=base, k=k, sgn=sgn: _and(base(x), sgn * x[:, k])) if mode == "and" else \
+                 (lambda x, base=base, k=k, sgn=sgn: _or(base(x), sgn * x[:, k]))
+            rel = list(range(k + 1)); extra = f" {mode} {'' if sgn > 0 else '~'}x{k + 1}"
+        y = fn(probe)
+        if abs(y.mean()) > 0.5:
+            continue
+        add(f"h5s{made}", fn, rel, f"[sum_(i<={k}) s_i x_i in {A.tolist()}], s = {sg.astype(int).tolist()}" + extra)
+        made += 1
+    made = 0
+    while made < 2:
+        k = int(rng.integers(5, 10)); sg = rng.choice([-1.0, 1.0], size=k); m = int(rng.integers(2, 4)); w = int(rng.integers(2, 4))
+        T = list(range(k, k + m))
+        fn = lambda x, k=k, sg=sg, T=T, w=w: _sgn(x[:, :k] @ sg + w * np.prod(x[:, T], 1) + 0.5)
+        y = fn(probe)
+        if abs(y.mean()) > 0.5:
+            continue
+        add(f"h5t{made}", fn, list(range(k + m)), f"sign(sum_(i<={k}) s_i x_i + {w} chi{tuple(i + 1 for i in T)} + 1/2), s = {sg.astype(int).tolist()}")
+        made += 1
+    made = 0
+    while made < 2:
+        k = int(rng.integers(7, 10)); gts = int(rng.integers(6, 10))
+        fn, desc = _random_formula(rng, k, gts)
+        y = fn(probe)
+        if abs(y.mean()) > 0.5:
+            continue
+        infl = [np.mean(y != fn(probe * np.where(np.arange(d) == i, -1.0, 1.0))) for i in range(k)]
+        rel = [i for i in range(k) if infl[i] > 0.01]
+        if len(rel) < k - 1:
+            continue
+        add(f"h5rf{made}", fn, rel, f"random {gts}-gate formula on {k} inputs: " + desc)
+        made += 1
+    return S

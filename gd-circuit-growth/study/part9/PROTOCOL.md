@@ -51,3 +51,11 @@ Pre-registered questions:
 **Amendment (before any design work, for compute):** the dev image cells of the integration rule are MNIST,
 Fashion-MNIST and `qd_dev` at n in {1000, 10000, 60000}, seed 0 (9 cells); the references there are the existing / queued
 result files. The S builder's dev evaluation is the full toy grid (3 seeds) on `designed` and `dlsymdev`, inputs permuted.
+
+**Amendment 2 (26 October, 23:1x UTC; after the sum-feature builder froze, before any held-out Part 9 run).** The S
+builder reports that an over-long text search printed the *source code* of `make_dl_heldout4_suite` (the target
+definitions) at the start of its work; no dlheld4 data or results were touched. So `dlheld4` is not blind for the sum-feature
+component. A fifth suite, `dlheld5` (boolfuncs.make_dl_heldout5_suite, seed 9393), was generated now by rejection sampling
+from a fixed random family of signed-sum targets (plus two random-formula controls), not hand-picked, after the S design
+was frozen; nobody has seen its targets' behaviour. Q1 is answered on both suites; `dlheld5` is the clean test, `dlheld4`
+is reported with the exposure noted. Networks (nets, nets_wd, nets_cewd), lin, hgb and v1 are run on dlheld5 as on dlheld4.
