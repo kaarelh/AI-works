@@ -147,6 +147,11 @@ def toy_nstars(suite):
             if f.startswith("fixed_adam_") and f.endswith(".npz"):
                 fn = f[len("fixed_adam_"):-4]; e = TH.nn_reference(fn, d)
                 out[ref_name][fn] = TH.nstar(TH.NS, np.nanmean(e, 1))
+    exp = os.path.join(HERE, "results", "nets_final_err.json")       # the committed export (nets_export.py), used when
+    if not out and os.path.exists(exp):                               # the network result directories are absent
+        X = json.load(open(exp))
+        for ref_name, T in X["err"].get(suite, {}).items():
+            out[ref_name] = {fn: TH.nstar(X["ns"], np.nanmean(np.array(e, float), 1)) for fn, e in T.items()}
     if out:
         fns = out["nets"].keys() if "nets" in out else []
         out["nets_best"] = {fn: min(out[r][fn] for r in out if fn in out[r]) for fn in fns}
