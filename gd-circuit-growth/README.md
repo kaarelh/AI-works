@@ -20,6 +20,8 @@ Raw network outputs live in a session scratch directory and are in neither branc
 
 [Part 6](#part-6-a-discrete-learner-that-needs-less-data-than-gradient-descent-25-october-2026) builds a discrete learner from this picture. On nearly every target it needs less data than the study's networks: 3.1× less at the median on a blind held-out suite. It uses at most about half of one network run's FLOPs per fit, and is comparable to or faster than them in CPU time.
 
+[Part 7](#part-7-dfg-on-standard-ml-tasks-against-mlps-2526-october-2026) tests DFG on 18 standard classification tasks against MLPs. It is far behind on images, and behind a properly regularized MLP and gradient boosting on tabular data.
+
 [Part 4](#part-4-does-compositional-structure-beyond-leap-matter-24-october-2026) tests whether compositional structure beyond leap complexity matters. [Part 5](#part-5-what-the-network-computes-while-it-learns-2425-october-2026) characterizes the sequence of functions a network computes while it learns, and gives models that reproduce it on held-out targets.
 
 [Part 3](#part-3-state-of-understanding-after-an-extended-session) gives the current state of understanding:
@@ -862,6 +864,42 @@ cost on these targets would be the price of searching in weight space:
 - Its compute grows as d^K, so high-degree features are found only from subsamples.
 - It was compared with one untuned network configuration. Earlier parts found up to about 2× changes in the networks'
   n* from width or optimizer, which is comparable to DFG's smallest blind wins (1.3–1.9×).
+
+## Part 7: DFG on standard ML tasks, against MLPs (25–26 October 2026)
+
+Full write-up: [`study/standard_tasks/STANDARD-TASKS.md`](study/standard_tasks/STANDARD-TASKS.md). Tables:
+[`study/standard_tasks/RESULTS.md`](study/standard_tasks/RESULTS.md).
+
+**Question.** How well does DFG do on standard tasks where MLPs are reasonable, compared with MLPs?
+
+**Setup** (Numerical):
+- *Tasks:* 18 classification tasks — MNIST, Fashion-MNIST and 16 PMLB tabular datasets, 5 for development and 13 held
+  out.
+- *Protocol:* learning curves from n = 100 to the full training set, 3 seeds.
+- *Baseline:* a reasonably tuned 256-256 MLP.
+- *DFG:* three independent adaptations to real-valued, multi-class data, built on the dev sets only and then frozen:
+  - Boolean-bit characters;
+  - threshold/AND gates;
+  - thresholded data-derived directions.
+- *Compute rule:* each DFG fit uses at most one MLP training run's FLOPs, with a few reported overruns.
+
+**Answer: not very well, beyond the toy problems.**
+- **Tabular, against the baseline MLP:** about on par, with 3–7% higher error on average.
+- **Tabular, against an L2-regularized MLP** (added after an independent audit found the baseline under-regularized at
+  small n): 12–17% higher error. Most apparent small-n wins disappear; the exception is sparse categorical motifs (dna).
+- **Tabular at large n:** clearly behind on tasks with many interacting features — letter 2–3.5×, pendigits 1.7–2.2×,
+  connect_4 1.25–1.4×.
+- **Gradient boosting** beats all three adaptations on most tabular datasets.
+- **Images:** far behind. At n = 60000, MNIST is 5.5–7.2% error against the MLP's 2.5%, and Fashion-MNIST is 14–16%
+  against 11%, close to logistic regression.
+
+**Reading** (Heuristic). DFG's advantage in Part 6 came from enumerating a small dictionary that contains the target's
+features and paying only about ln N in samples. On real data that premise fails:
+- *Images:* the useful features are directions spread over many correlated inputs, a continuous family that no
+  enumerable dictionary covers. An MLP's gradient step updates hundreds of such directions in parallel, so in that
+  family local search, not enumeration, is the efficient search.
+- *Dense signal:* union-bound tests designed to block false features on sparse targets stall growth on dense
+  real-world signal.
 
 ## Files
 

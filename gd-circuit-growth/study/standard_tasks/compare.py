@@ -180,6 +180,25 @@ def main(learners):
             L.append(f"| {l} | {s['datasets']} | {s['cells']} | {s['better']} | {s['tie']} | {s['worse']} | {s['mean_log2']:+.2f} | "
                      f"{s['median_data_factor']:.2f} | {s['never']} |")
     L.append("")
+    L += ["## Compact view: test error at n = 300, n = 3000 and the full training pool (held-out datasets)", "",
+          "| dataset | n | MLP | MLP-L2 | " + " | ".join(learners) + " | linear | hgb |",
+          "|---|---|---|---|" + "---|" * (len(learners) + 2)]
+    for ds in DATA.HELDOUT:
+        rm = load("mlp", ds)
+        if rm is None:
+            continue
+        nm, em, _ = curve(rm)
+        for n in sorted(set([300, 3000, int(nm[-1])])):
+            if n not in nm:
+                continue
+            def g(l):
+                r = load(l, ds)
+                if r is None:
+                    return "–"
+                nn, e, _ = curve(r)
+                return f"{e[list(nn).index(n)]:.3f}" if n in nn else "–"
+            L.append(f"| {ds} | {n} | {g('mlp')} | {g('mlp_l2')} | " + " | ".join(g(l) for l in learners) + f" | {g('linear')} | {g('hgb')} |")
+    L.append("")
     for l in learners:
         L += [f"## {l}: per dataset", ""]
         for ds in DATA.HELDOUT + DATA.DEV:
