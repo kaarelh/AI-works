@@ -49,10 +49,28 @@ A search whose m would fall below 32 is skipped.  With the small-n cross-validat
 budget and the 2F fold fits share the other half (v1.1; in v1 every fold fit had the whole budget, which at d = 120 cost
 up to 2.7 network runs per fit).  A round starts only while the fit has spent less than 0.75 of its budget.
 Compute is counted in FLOPs (multiply-add = 2) and compared with one network run.
+
+v1.2 (Part 9, part9/p9_sum): SUM-FEATURE BLOCKS.  A block is (S, s, fold): a subset S of the inputs, signs s_i in
+{-1, +1}, and t(x) = sum_{i in S} s_i x_i (or |t| if fold).  Its features are the indicators of contiguous groups of
+values of t (each group >= max(3, 0.005 n) training points), so every function of t - every symmetric function of the
+signed inputs in S - is a linear combination of them.  Variants: modulated, chi_T(x) * [t in group] for a current
+character chi_T (inputs of T not in S); product, the joint cells of two blocks with disjoint supports.  Additive and
+modulated blocks on one (S, s) represent any g(t + w chi_T) with integer w.
+  test     T = |projection of r onto the group indicators|^2 / s^2 = sum_v n_v mean_v(r)^2 / s^2 > m + 2 sqrt(m t) + 2 t
+           (chi^2_m tail, m = occupied groups - 1), t = ln(4 K C(d, k) 2^(k-1) * 2 * (1 + #modulators) * k_max / delta):
+           a union bound over EVERY (S, s) of size k, both fold variants, every modulator and size, so the adaptive
+           search below is covered.  Products: the sum of the two blocks' t.
+  search   (_block_search; uses only the residual) prefixes of the inputs ordered by the top eigenvectors of the residual
+           pair matrix M (an even symmetric function has pair coefficients a2 s_i s_j on S) and by the degree-1
+           coefficients; greedy growth by T from the strongest pairs and single inputs; local refinement (add / remove /
+           flip a sign) of the 3 best; the best is tested on all n.
+  per round  up to 2 additive blocks (the residual deflated by each candidate); a product A x B with B searched over
+           the joint cells with A (and a 'split' of a mixed-sign candidate into its + and - parts), accepted only if it
+           beats the additive block's margin; one modulated block per top-4 current character; products of accepted
+           additive blocks.  In the forced variant the best block candidate may be forced instead of a character.
 """
 import itertools, math, numpy as np
 from harness import gd_flops
-import os as _os; _DBG = bool(_os.environ.get("DFG12_DBG"))
 
 
 # ------------------------------------------------------------------------------------------- v1.2: sum-feature blocks
@@ -293,7 +311,7 @@ class DFG:
                  local_max=12, blocks=True, ridge=1e-3, budget=(0.15, 0.03, 0.03), noise="residual", readout="ls",
                  small_n=True, cv_n=512, K_hi=6, budget_hi=0.03, background=True, logit_lam=1e-4, name=None,
                  sums=True, sum_kmax=24, sum_mod=4, sum_add=2, sum_gcap=2048, sum_mc=0.005, sum_prod=True, sum_nmin=32,
-                 sum_force=True):
+                 sum_force=True, sum_seeds=(2, 3, 2)):
         self.K, self.K_later, self.c, self.delta, self.rounds = K, K_later, c, delta, rounds
         self.max_new, self.max_feats, self.max_ext_bases, self.local_max = max_new, max_feats, max_ext_bases, local_max
         self.blocks, self.ridge, self.budget, self.noise, self.readout = blocks, ridge, budget, noise, readout
@@ -301,6 +319,7 @@ class DFG:
         self.logit_lam = logit_lam
         self.sums, self.sum_kmax, self.sum_mod, self.sum_add, self.sum_gcap = sums, sum_kmax, sum_mod, sum_add, sum_gcap
         self.sum_mc, self.sum_prod, self.sum_nmin, self.sum_force = sum_mc, sum_prod, sum_nmin, sum_force
+        self.sum_seeds = tuple(sum_seeds)                               # (eigenvectors, pairs, single inputs)
         self.name = name or ("dfg-v1.2" if readout == "logit" else f"dfg-v1.2-{readout}")
 
     def fit(self, X, y, rng=None):
@@ -475,32 +494,45 @@ class DFG:
                 nmod = 1 + len(nb); KM = self.sum_kmax
                 tk = lambda k, nmod=nmod: math.log(4 * self.K * math.comb(d, k) * 2.0 ** (k - 1) * 2 * nmod * KM / self.delta)
                 mc = max(3, int(self.sum_mc * n)); s2 = s * s
-                kw = dict(gcap=self.sum_gcap, kmax=KM, fl=fl)
-                rr, Mc, cands = r, M, []
+                kw = dict(gcap=self.sum_gcap, kmax=KM, fl=fl, neig=self.sum_seeds[0], npair=self.sum_seeds[1],
+                          nsingle=self.sum_seeds[2])
+                rr, Mc, cands, mg0 = r, M, [], -np.inf
                 for it in range(self.sum_add):              # additive blocks; the residual is deflated by each candidate
                     b_, T_, th_, ok = _block_search(X, rr, s2, Mc, (), tk, mc, **kw)
                     if b_ is None:
                         break
                     cands.append(b_)
                     if it == 0 and th_ > 0:
-                        sum_top[:] = [T_ / th_, b_]
-                    if _DBG: print("   [sum] rnd", rnd, "add", it, b_.desc(), "T %.1f thr %.1f" % (T_, th_), ok)
+                        sum_top[:] = [T_ / th_, b_]; mg0 = T_ - th_
                     if ok and b_.key() not in have_blk:
                         blk.append(("sum", b_)); have_blk.add(b_.key())
                     if it + 1 < self.sum_add:
                         g = b_.group(X); G = b_.ngroups()
                         mu = np.bincount(g, weights=rr, minlength=G) / np.maximum(np.bincount(g, minlength=G), 1)
                         rr = rr - mu[g]; Mc = (X * rr[:, None]).T @ X / n; fl[0] += 2 * n * d * d + 4 * n
+                okb, prods = False, []                      # product candidates (margin, block)
                 if self.sum_prod and len(cands) >= 2:       # product A x B: B searched over the joint cells with A
                     a_ = cands[0]; gA, GA = a_.group(X), a_.ngroups()
                     tkp = lambda k, kA=len(a_.S): tk(kA) + tk(k)
-                    b2, Tb, thb, okb = _block_search(X, r, s2, Mc, set(a_.S.tolist()), tkp, mc, base=(gA, GA),
+                    b2, Tb, thb, ok2 = _block_search(X, r, s2, Mc, set(a_.S.tolist()), tkp, mc, base=(gA, GA),
                                                      init=[(c.S, c.sg, c.fold) for c in cands[1:]], **kw)
-                    if _DBG and b2 is not None: print("   [sum] cond", a_.desc(), "x", b2.desc(), "T %.1f thr %.1f" % (Tb, thb), okb)
-                    if okb:
-                        P = SumBlock(b2.S, b2.sg, b2.fold, (), b2.edges, other=a_)
-                        if P.key() not in have_blk:
-                            blk.append(("sum", P)); have_blk.add(P.key())
+                    if ok2:
+                        prods.append((Tb - thb, SumBlock(b2.S, b2.sg, b2.fold, (), b2.edges, other=a_)))
+                if self.sum_prod and cands:                 # split move: a block with mixed signs may be |t_A - t_B|
+                    c0 = cands[0]; pos = c0.S[c0.sg > 0].tolist(); neg = c0.S[c0.sg < 0].tolist()
+                    if len(pos) >= 2 and len(neg) >= 2:
+                        Ap = SumBlock(pos, [1.0] * len(pos), c0.fold, (), [])
+                        Ap.edges = _edges(Ap.stat(X), mc); gA, GA = Ap.group(X), Ap.ngroups()
+                        tkp = lambda k, kA=len(pos): tk(kA) + tk(k)
+                        b2, Tb, thb, ok2 = _block_search(X, r, s2, Mc, set(pos), tkp, mc, base=(gA, GA),
+                                                         init=[(neg, [1.0] * len(neg), c0.fold)], **kw)
+                        if ok2:
+                            prods.append((Tb - thb, SumBlock(b2.S, b2.sg, b2.fold, (), b2.edges, other=Ap)))
+                if prods and max(v[0] for v in prods) > mg0:     # only if it beats the first additive block alone
+                    P = max(prods, key=lambda v: v[0])[1]; okb = True
+                    if P.key() not in have_blk:
+                        blk.append(("sum", P)); have_blk.add(P.key())
+                if self.sum_prod:
                     for a_, b2 in ([] if okb else itertools.combinations(cands, 2)):
                         if set(a_.S.tolist()) & set(b2.S.tolist()):
                             continue
@@ -509,7 +541,6 @@ class DFG:
                             continue
                         g = P.group(X); Tp, lev = _multi_T(g[:, None], r, P.ngroups()); fl[0] += 4.0 * n * (len(a_.S) + len(b2.S))
                         m_ = max(int(lev[0]) - 1, 1)
-                        if _DBG: print("   [sum] prod", P.desc(), "T %.1f thr %.1f" % (float(Tp[0]) / s2, _chi2_thr(m_, tk(len(a_.S)) + tk(len(b2.S)))))
                         if float(Tp[0]) / s2 > _chi2_thr(m_, tk(len(a_.S)) + tk(len(b2.S))):
                             blk.append(("sum", P)); have_blk.add(P.key())
                 for T in nb:
