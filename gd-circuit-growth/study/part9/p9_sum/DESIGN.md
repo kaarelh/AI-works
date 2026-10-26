@@ -257,9 +257,9 @@ by > 2 s.e. (harness report).
 | v1 | nets | −2.97 | 21 | 0 |
 | v1 | nets_best | −2.32 | 21 | 0 |
 
-At n ≤ 64 the test errors are identical to v1's on 16 of 21 targets, test point for test point: no block passes
-there. Cells where the seed-mean error exceeds the plain networks' by > 0.02: 4 of 231 (maj3, maj9, thr10, rand1, all
-at n = 16), none by > 2 s.e.; v1 had 6.
+At n ≤ 64 the test errors are identical to v1's on 18 of 21 targets, test point for test point (all but and3, maj3 and
+rand1); at n ≤ 128 on 10 of 21. Cells where the seed-mean error exceeds the plain networks' by > 0.02: 4 of 231
+(maj3, maj9, thr10, rand1, all at n = 16), none by > 2 s.e. These are the same 4 cells as v1's permuted run.
 
 ### Integration rule (PROTOCOL.md, Part 9 (i)), on these runs
 
@@ -276,9 +276,10 @@ more than 0.5.
 
 ## 5b. Weaknesses (honest)
 
-- **Union-bound cost at small n.** The test pays ln(C(d, k) 2^{k−1}) for a block of size k, about 20–34 nats at
-  d = 30, k = 5–11. No block can pass below n ≈ 100, even for a perfect sym7, since T ≤ n (the whole residual) and the
-  threshold is about 70–95. On the dev symmetric targets n* is therefore at least about 80–110. The networks are worse
+- **Union-bound cost at small n.** The test pays t = ln(4K · C(d, k) 2^{k−1} · 2 · (1 + #modulators) · k_max / δ),
+  about 24–34 nats at d = 30, k = 5–11. The χ² threshold is then about 63 (k = 5), 74 (k = 7) and 95 (k = 11). Since
+  T ≤ n (all of the residual), no block of 7 inputs can pass below n ≈ 75, even for a perfect sym7. On the dev
+  symmetric targets n* is therefore about 80–120. The networks are worse
   there anyway, but a weaker test (for example sample splitting with a small candidate set) could gain about a factor
   of 1.5 at the very low end. A "forced block" variant for n ≤ 64 was tried and dropped (section 4).
 - **The search, not the test, limits weak blocks.** For band11 (pair coefficients 0.036), the block passes easily once
@@ -299,7 +300,7 @@ more than 0.5.
 - **Eigenvectors in the search.** The eigenvectors of the residual pair matrix (computed by v1.1 anyway) rank inputs
   for candidate prefixes. The hypothesis contains only the discrete (S, s) and group indicators, but the search is not
   purely combinatorial. Greedy growth and local moves are combinatorial, and the eigenvector seeds can be removed
-  (`_block_search(neig=0)`) at some loss on weak blocks (not measured).
+  (`DFG(sum_seeds=(0, 3, 2))`) at some loss on weak blocks (not measured).
 - **Dev in-sample.** Every change in section 4 was made while looking at dev results (designed and dlsymdev). The
   dlsymdev margins are in-sample for the design, and the held-out `dlheld4` is the test. The data-access note in
   section 4 records that its target definitions were seen as source code before the design started.
