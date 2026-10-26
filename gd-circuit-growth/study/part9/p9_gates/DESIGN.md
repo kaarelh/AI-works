@@ -164,8 +164,20 @@ Part 8 kNN members on MNIST and qd_dev (qd_dev n = 10000: 0.190 against 0.228).
 - **The last change was tested lightly.** The multi-scale bank was compared only as a LightGBM-only model on qd_dev and
   Fashion-MNIST at n = 10000 (not on MNIST), and the full portfolio with it was run once (qd_dev n = 1000) before
   freezing. Its CPU cost at n = 60000 was not measured before freezing (the n = 50000 measurement used the scale-9 bank).
-- **CPU time.** `ggbt` adds 75–200 CPU s per fit at n = 1000–10000 (the k-fold regime fits it 6 times), and ~3 CPU-min
-  at n = 50000. The whole fit is ~2–6 CPU-min, against tens of seconds for the MLP runs the FLOP budget corresponds to.
+- **CPU time at n = 60000 exceeds the ~15-minute target (found during the frozen run).** The MNIST n = 60000 fit took
+  1352 CPU s (22.5 min). Cause, from stack samples of the running fit and a post-freeze diagnostic
+  (scratchpad `p9_gates/diag_lgb_layout.py`, which does not change the learner): on the multi-scale bank (3175 mostly
+  sparse columns) LightGBM picks its row-wise multi-value-bin layout automatically, and with a feature fraction it then
+  copies the sampled column subset for every tree (`MultiValBinWrapper::CopyMultiValBinSubset`). At n = 30000 this
+  costs 198.5 ms per tree against 73.2 ms with `force_col_wise=True`, with the same validation error after 10 rounds.
+  The n = 50000 timing run before the freeze used the smaller scale-9 bank (334 CPU s for the whole fit), so the
+  regression came with the last change. Adding `force_col_wise=True` to `ggbt`'s LightGBM parameters leaves the
+  predictions unchanged - bit-identical class probabilities on qd_dev n = 8000 after 40 rounds (max |ΔP| = 0, scratchpad
+  `p9_gates/diag_lgb_same.py`; 72.8 → 33.3 ms per tree) - and cuts `ggbt`'s time about 2.2–2.7×. Per the freeze rule this was **not** applied; whoever integrates the member should
+  apply it as a recorded deviation, re-check identical predictions on a dev cell, and re-time. The FLOP count is not
+  affected: the copies are data movement, which the analytic count does not charge.
+- **CPU time, smaller n.** `ggbt` adds 75–200 CPU s per fit at n = 1000–10000 (the k-fold regime fits it 6 times). The
+  whole fit is 1.5–3.5 CPU-min there, against tens of seconds for the MLP runs the FLOP budget corresponds to.
 - **Data given up for early stopping.** At large n the final booster is the holdout-trained one, trained on 90% of
   n − h points (48600 at n = 60000): 10% for its early stopping, h for the stacker.
 - **Prediction cost.** `gknn` adds a second scan of all n training rows per query (§4): ≈ 500× an MLP per query at
