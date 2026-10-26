@@ -266,11 +266,28 @@ def lgb_tree_flops(n_fit, n_bag, d_used, bins_used, leaves=31):
     return 2.0 * d_used * n_bag * 2.6 + 12.0 * bins_used * (2 * leaves - 3) + 2.0 * bins_used * (leaves - 2) + 22.0 * n_fit
 
 
+def _es_error(patience, min_rounds):
+    """Early stopping on the validation error (multi_error; ties go to the later round), never before min_rounds.
+    (Stopping on the validation log-loss stopped far too early on dev: the boosted probabilities become over-confident
+    long before the error stops falling, and the stacker can temper them.)"""
+    import lightgbm as lgb
+    st = dict(best=np.inf, it=0)
+
+    def cb(env):
+        e = env.evaluation_result_list[0][2]; i = env.iteration + 1
+        if e <= st["best"]:
+            st["best"], st["it"] = e, i
+        if i >= min_rounds and i - st["it"] >= patience:
+            raise lgb.callback.EarlyStopException(st["it"] - 1, env.evaluation_result_list)
+    cb.order = 30
+    return cb, st
+
+
 def fit_ggbt(Xr, y, C, A, rng, seed, n_pairs=300, max_rounds=400, ff=0.2, bins=63, lr=0.1, leaves=31, es_min=5000,
-             es_patience=25, fixed_rounds=None):
-    """LightGBM on the gate bank.  Rounds: fixed_rounds if given; else early stopping on a stratified inner validation
-    split (min(10%, 5000) points) when len(y) >= es_min, up to max_rounds; else 100 rounds.  Returns (model, flops,
-    rounds used)."""
+             es_patience=50, es_min_rounds=150, fixed_rounds=None):
+    """LightGBM on the gate bank.  Rounds: fixed_rounds if given; else early stopping on the error of a stratified inner
+    validation split (min(10%, 5000) points; patience 50, at least 150 rounds) when len(y) >= es_min, up to max_rounds;
+    else 100 rounds.  Returns (model, flops, rounds used)."""
     import lightgbm as lgb
     n, d = Xr.shape
     if len(np.unique(y)) < 2:
@@ -293,13 +310,14 @@ def fit_ggbt(Xr, y, C, A, rng, seed, n_pairs=300, max_rounds=400, ff=0.2, bins=6
     cb = []
     vs = []
     if va is not None:
-        dva = lgb.Dataset(F[va], y[va], reference=dtr); vs = [dva]; cb = [lgb.early_stopping(es_patience, verbose=False)]
+        dva = lgb.Dataset(F[va], y[va], reference=dtr); vs = [dva]; es, est = _es_error(es_patience, min(es_min_rounds, rounds)); cb = [es]
+        params["metric"] = "multi_error"
     bst = lgb.train(params, dtr, num_boost_round=rounds, valid_sets=vs, callbacks=cb)
     trees = bst.num_trees()
     fl += trees * lgb_tree_flops(n_fit, bag * n_fit, ff * F.shape[1], ff * nb, leaves)
     if va is not None:
         fl += trees * 20.0 * len(va)                                    # validation scores, one tree at a time
-    best = int(bst.best_iteration) if (va is not None and bst.best_iteration > 0) else rounds
+    best = int(est["it"]) if (va is not None and est["it"] > 0) else rounds
     del F
 
     class M:

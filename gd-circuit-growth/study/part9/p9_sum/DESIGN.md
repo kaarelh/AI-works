@@ -71,19 +71,25 @@ points. Scores use the first min(n, 2048) points; the final test uses all n.
 **Per round** (after v1.1's character searches and blocks, same residual):
 - Up to 2 additive blocks. After each candidate, the residual is deflated by its group means (and M recomputed), and
   the search is repeated.
-- *Conditional product.* The second block B is searched again with A's groups fixed, scored on the joint cells (A
-  group × B level). It is seeded by the deflated-residual candidate, and the product is accepted if it passes the joint
-  test. This is for f = h_A(t_A) · h_B(t_B), where each additive part explains little, such as twosym, or parmaj =
-  MAJ3 xor MAJ3.
+- *Products.* Two routes, scored on the joint cells (A group × B level):
+  - *conditional:* B is searched again with A = the first candidate's groups fixed, seeded by the deflated-residual
+    candidate;
+  - *split:* if the first candidate has at least 2 inputs of each sign, A = its + part and B is searched with the −
+    part as seed. A product h_A(t_A) · h_B(t_B) of two symmetric functions correlates with |t_A − t_B|, which the
+    additive search returns as one mixed-sign block.
+
+  The better product, by T − threshold, is accepted if it passes the joint test *and* its margin beats the first
+  additive candidate's own margin. Otherwise a product would be added redundantly on top of a single signed block,
+  such as ssym9. This is for f = h_A(t_A) · h_B(t_B), where each additive part explains little, such as twosym, or
+  parmaj = MAJ3 xor MAJ3.
 - A modulated block for each of the 4 current characters with the largest least-squares weights, searched on r · χ_T.
 - Products of pairs of additive blocks accepted in earlier rounds.
 
 Accepted blocks become least-squares columns like any other feature, within DFG's p ≤ n/2 limit. The logistic
 refinement, kernel background, stopping rule and budget caps are unchanged.
 
-**Forced variant** (small n). In DFG's "forced" variant, which runs only when nothing passes, the best additive block
-candidate is taken instead of the best character when its T / threshold exceeds the character's (|v| / t)². As in
-v1.1, the stacker, or DFG's own McNemar cross-validation, decides whether the forced variant is used at all.
+**Forced variant** (small n). Unchanged from v1.1. A "forced block" option (`sum_force`) was tried in development
+and is off in the frozen file (section 4).
 
 ## 2. What is discrete
 
@@ -134,5 +140,23 @@ data). On the toy suites, prediction cost is dominated by the same members as in
 3. twosym at n = 512: block A was found but B only partly (3 of 5 inputs), since B's additive part explains about 6% of
    the variance. → conditional product search (B scored on the joint cells with A). One of 2 seeds is then solved at
    n = 512, both at 1024.
-4. Forced block in the small-n forced variant: no effect at n = 64 on 5 dev targets in a DFG-alone check (the search
-   itself is the limit at n = 64), kept since it is used only if cross-validation or the stacker prefers it.
+4. twosym, seed 0 at n = 512: the additive search returned one mixed-sign 10-input block (both 5-blocks, one with
+   flipped signs), and the conditional product built on it was inexact (error 0.24). → the split move, and products
+   must beat the additive margin. Both seeds are then solved at n = 512, and one of 3 at 256.
+5. Forced block (`sum_force`): in DFG's forced variant, force the best block candidate instead of a character. No
+   effect at n = 64 on 5 symmetric dev targets in a DFG-alone check (the search itself is the limit there). In the
+   portfolio it raised andxor's error at n = 32 from 0.078 to 0.139 (n* 30 → 43, seeds 0–1). → off (default False).
+6. More search seeds (4 eigenvectors, 6 pairs): band11 at n = 512 mean error 0.33 → 0.17 (3 seeds), about 30% more
+   time. Not adopted (defaults: 2 eigenvectors, 3 pairs, 2 single inputs).
+7. Real-data check (DEV kr_vs_kp, n = 1000, seed 0, the only DEV dataset where DFG runs): same test error as v1
+   (0.0100), 0.080 of the budget against v1's 0.063, CPU 12.4 s against 3.5 s.
+
+**Data-access note.** While reading `boolfuncs.py` for the dev suite's definitions, an over-long `grep -A 60` printed
+the source of the next function, `make_dl_heldout4_suite` (the held-out target definitions; no data or results).
+Nothing of it was loaded, run or evaluated. The design follows the dev suites and the directions given in the task
+(sum blocks found from pair coefficients or greedy residual growth, union-bound tests, integer combinations with found
+characters). The exposure happened at the start, before any design work, so every choice above was made after it. No
+choice was checked against those definitions, and every change in this list was driven by a dev-target failure. Two
+generic parameters bear on block size and composition: k_max = 24 (block sizes up to 24 inputs) and 2 additive blocks
+per round with products of two. Neither was tuned. The exposure is recorded here so that the held-out result can be
+read with it in mind.

@@ -67,7 +67,8 @@ modulated blocks on one (S, s) represent any g(t + w chi_T) with integer w.
   per round  up to 2 additive blocks (the residual deflated by each candidate); a product A x B with B searched over
            the joint cells with A (and a 'split' of a mixed-sign candidate into its + and - parts), accepted only if it
            beats the additive block's margin; one modulated block per top-4 current character; products of accepted
-           additive blocks.  In the forced variant the best block candidate may be forced instead of a character.
+           additive blocks.  (sum_force=True, off by default: in the forced variant force the best block candidate
+           instead of a character; it cost accuracy on andxor at n = 32 in development and gained nothing.)
 """
 import itertools, math, numpy as np
 from harness import gd_flops
@@ -311,7 +312,7 @@ class DFG:
                  local_max=12, blocks=True, ridge=1e-3, budget=(0.15, 0.03, 0.03), noise="residual", readout="ls",
                  small_n=True, cv_n=512, K_hi=6, budget_hi=0.03, background=True, logit_lam=1e-4, name=None,
                  sums=True, sum_kmax=24, sum_mod=4, sum_add=2, sum_gcap=2048, sum_mc=0.005, sum_prod=True, sum_nmin=32,
-                 sum_force=True, sum_seeds=(2, 3, 2)):
+                 sum_force=False, sum_seeds=(2, 3, 2)):
         self.K, self.K_later, self.c, self.delta, self.rounds = K, K_later, c, delta, rounds
         self.max_new, self.max_feats, self.max_ext_bases, self.local_max = max_new, max_feats, max_ext_bases, local_max
         self.blocks, self.ridge, self.budget, self.noise, self.readout = blocks, ridge, budget, noise, readout
