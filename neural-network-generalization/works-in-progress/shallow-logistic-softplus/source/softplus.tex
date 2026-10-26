@@ -1,0 +1,476 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,microtype,xurl}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue]{hyperref}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Prb}{\mathbb P}
+\newcommand{\norm}[1]{\left\lVert #1\right\rVert}
+\newcommand{\poly}{\operatorname{poly}}
+\title{A positive-channel wire for deep softplus posteriors}
+\author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob}
+\date{26 October 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+For the standard softplus activation, a bounded-weight shallow Boolean
+classifier can be transmitted through many hidden layers at isotropic
+Gaussian energy $L+O(\log^2(LT))$, where $T$ is polynomial in the shallow
+teacher resources. This matches the leading coefficient of the
+nonconstant energy lower bound. The construction uses actual constant
+neurons and charges their injection and final subtraction. Its operator
+stability is polynomial even though the constant-channel weights depend
+on a logarithmic anchor. Combined with a Lipschitz representation cover
+and a Gaussian-distance posterior bound, it gives quasipolynomial
+sample complexity at every finite learner width in cold limits and at
+every fixed variance exponent $\gamma>1$, once depth exceeds a squared
+logarithm of the teacher resources. The critical exponent $\gamma=1$,
+arbitrary deep teachers, and the original tanh question remain outside
+this result.
+\end{abstract}
+
+\section{Model, theorem, and proof dependencies}
+
+Let $F(a)=\log(1+e^a)$, $X_d=\{-1,1\}^d$, and $d\ge1$. A learner has
+$L\ge2$ matrices, $L-1$ softplus hidden layers of common width $N$,
+augmented input $(1,x)$, no internal biases, and a linear output $z_W(x)$.
+The independent Gaussian entry variances in the first matrix, internal
+matrices, and readout are respectively
+\[
+ t^2/d,\qquad t^2/N,\qquad t^2/N^2,\qquad 0<t\le1.
+\]
+For a target-labeled sample $S=((x_i,f(x_i)))_{i=1}^n$, set
+\[
+ E_S=\{|z_W(x)|>1/2\ \forall x\in X_d\}
+ \cap\{\operatorname{sign}z_W(x_i)=f(x_i)\ \forall i\},
+ \qquad Q_S=\mu(\,\cdot\mid E_S).
+\]
+The confidence-failure mass under uniform cube inputs is
+\[
+ e(S)=2^{-d}\#\{x:Q_S(\operatorname{sign}z_W(x)=f(x))\le2/3\}.
+\]
+Assume the target has a one-hidden-layer teacher of width $C$, physical
+weights bounded by $B\ge1$, and signed output at least one everywhere.
+Choose an integer
+\[
+ M_0=\left\lceil\max\{C,2,d+1,dC(d+1)B^2\}\right\rceil,
+ \qquad T=M_0CB^2\ge1.
+\]
+These quantities are polynomial in the teacher resources.
+
+\begin{theorem}\label{thm:main}
+There are universal constants $c_0,c_1$ such that, if
+\[
+ L-1\ge c_0\log^2(T+2),
+\]
+then every width $N\ge C$ has the following learning guarantee. Put
+$R=2+d+C+B+L+\varepsilon^{-1}+\log(2/\delta)$, with
+$0<\varepsilon,\delta<1$.
+Every limiting sign posterior as $t\downarrow0$, at a fixed finite
+architecture, satisfies
+\[
+ n\ge\exp[c_1\log^2R]
+ \quad\Longrightarrow\quad
+ \Prb_S\{e(S)>\varepsilon\}\le\delta.
+\]
+For every fixed $\zeta>0$, the same holds for the actual finite-scale
+posterior, with $c_1$ replaced by a constant $c_\zeta$, simultaneously for
+all $N\ge C$ and $0<t\le N^{-\zeta/2}$. Thus the common isotropic
+variance is at most $N^{-(1+\zeta)}$.
+\end{theorem}
+
+A limiting sign posterior means any subsequential limit on the finite
+set of Boolean truth tables; the architecture is fixed before taking
+that limit. The theorem is an upper bound for a shallow target class,
+and does not bound arbitrary deep teachers by their width and depth.
+
+We use one representation lemma from the logistic companion
+\cite{logistic}: on a finite input set of radius at most two and
+log-cardinality $O(d)$, globally margined networks with arbitrary
+zero-fixing $1$-Lipschitz scalar activations, depth $L$, product of
+Frobenius norms at most $P\ge1$, and final offset at most $2P$ have a
+common finite sign class with log-cardinality $\poly(d,L,P)$.
+Its proof compresses each layer by row-column importance sampling,
+then stores finite scalar activation tables. It is independent of the
+original width and requires no precision assumption on the original
+weights or activations. Below we provide the softplus wire, its
+stability, and the posterior transfer, including the small-width case.
+
+\section{A matching-energy wire}
+
+Use energy coordinates
+\[
+ A_1=\sqrt{d/N}\,W_1,\quad A_j=W_j\ (2\le j<L),\quad
+ A_L=\sqrt N\,v,\qquad \kappa(A)=\sum_{j=1}^L\norm{A_j}_F^2.
+\]
+All coordinates have variance $\sigma^2=t^2/N$. The normalized input
+is $(1,x)/\sqrt d$, hidden states are $h_j/\sqrt N$, and the normalized
+activation is $F(\sqrt N a)/\sqrt N$. Since $F$ is $1$-Lipschitz, a
+nonconstant globally absolute-margined classifier has, on some
+opposite-label cube edge,
+\begin{equation}\label{eq:lower}
+ \prod_j\norm{A_j}_F>\sqrt d/2,\qquad
+ \kappa(A)\ge L\exp[(\log d-\log4)/L]\ge L-\log4.
+\end{equation}
+This is a deterministic energy statement, not a finite-scale rate formula.
+
+Suppose $N\ge4M_0$. Replicate every teacher row
+$k=\lfloor N/(2M_0)\rfloor$ times, divide its outgoing coefficient by
+$k$, and set all remaining first-layer rows and outgoing coefficients
+to zero. The teacher computation $g=u\cdot h_1$ is unchanged. Its
+first energy is at most two, and
+\[
+ D=N\norm u^2\le4M_0CB^2=4T.
+\]
+At least $N/2$ first-layer neurons remain with exact value
+$q_0=F(0)=\log2$, on which $u$ vanishes. These supply a constant without
+an internal bias.
+
+Write $m=L-1\ge2$ and set
+\[
+ q=T^{1/(2m)},\qquad k_j=\min(j,m-j),\qquad
+ r_j=\frac{q^j}{2\sqrt T\,k_j}\quad(1\le j\le m-1).
+\]
+Then $q^m=\sqrt T$, $r_j\le1/(2qk_j)\le1/2$, and
+$r_{m-1}=1/(2q)$. Choose the positive anchor
+\[
+ A=4+3\log(m+2)+\log(T+2),\qquad
+ a_j=\frac{r_j}{r_{j-1}}=q\frac{k_{j-1}}{k_j}\quad(2\le j\le m-1).
+\]
+The new hidden signal values are
+\begin{equation}\label{eq:wire}
+ h_1^{\rm new}=F(A+r_1g),\qquad
+ h_j^{\rm new}=F\bigl(A+a_j(h_{j-1}^{\rm new}-A)\bigr).
+\end{equation}
+Implement each new layer using $n=\lfloor N/2\rfloor$ identical signal
+neurons and $n$ zero-row constant neurons. Ignore an odd surplus neuron.
+The coefficients into a signal neuron are $a_j$ on the preceding signal
+average and $A(1-a_j)/q_0$ on the preceding constant average.
+Thus every affine expression in \eqref{eq:wire} is implemented by actual
+weights and the existing constant channel.
+
+\begin{lemma}\label{lem:margin}
+The final readout $z=4q(h_{m-1}^{\rm new}-A)$, implemented using the
+signal and constant group averages, has signed margin at least one
+whenever $|g|\ge1$.
+\end{lemma}
+\begin{proof}
+At $g=\pm1$, compare the signal with $A+r_jg$. All additive errors are
+nonnegative because $F(s)\ge s$, and all corresponding preactivations
+are at least $A-1/2$. Each new additive error is therefore at most
+$e^{-A+1/2}$. Consecutive ideal gains telescope:
+\[
+ \prod_{\ell=i+1}^j a_\ell=q^{j-i}\frac{k_i}{k_j}\le m\sqrt T.
+\]
+The final error is at most
+\[
+ m^2\sqrt T\,e^{-A+1/2}\le\frac1{8q}=\frac{r_{m-1}}4.
+\]
+The last inequality follows from $q\sqrt T\le T$ and the displayed
+choice of $A$. Thus the final output is at least two at $g=1$ and
+at most $-3/2$ at $g=-1$. Every map in the scalar chain and the final
+readout is increasing in $g$. This extends the margin to all $|g|\ge1$;
+an upper bound on the teacher output is not required here.
+\end{proof}
+
+\begin{proposition}\label{prop:energy}
+If $m\ge c_0\log^2(T+2)$, the constructed witness has
+\begin{equation}\label{eq:energy}
+ \kappa(A_*)\le K:=L+C\log^2(LT+2)
+\end{equation}
+for a universal constant $C$.
+\end{proposition}
+\begin{proof}
+The first new signal rows have disjoint teacher and constant supports.
+Using at least $N/4$ reserved constants, their total energy is at most
+\[
+ (D/2)r_1^2+2A^2/q_0^2\le q^2/2+2A^2/q_0^2.
+\]
+Each later signal/constant layer has energy exactly
+$a_j^2+(A^2/q_0^2)(1-a_j)^2$. The last readout has weighted energy
+at most $64q^2(1+A^2/q_0^2)$, including the cost of subtracting $A$.
+The factor $N/n\le3$ handles odd widths.
+
+For $R_j=k_{j-1}/k_j$, the reciprocal pairs $k/(k+1)$ and $(k+1)/k$
+give
+\[
+ \sum_jR_j^2\le m+C,\qquad \sum_j(1-R_j)^2\le C.
+\]
+Indeed the paired excess of squares above two is
+$2/[k(k+1)]+k^{-2}+(k+1)^{-2}$, a summable sequence. Since $a_j=qR_j$,
+\[
+ \sum_j a_j^2\le(m+C)q^2,\qquad
+ \sum_j(1-a_j)^2\le C\{m(q-1)^2+q^2\}.
+\]
+Including the first teacher layer yields
+\[
+ \kappa(A_*)\le mq^2+Cq^2+CA^2\{1+q^2+m(q-1)^2\}.
+\]
+The depth assumption bounds $q$ and $m(q-1)^2$ by universal constants,
+while $mq^2\le m+C\log(T+2)$. Finally $A\le C\log(LT+2)$.
+This proves \eqref{eq:energy}, with leading coefficient one as in
+\eqref{eq:lower}. Every constant-channel contribution is charged.
+\end{proof}
+
+\section{Polynomial operator stability}
+
+\begin{lemma}\label{lem:stability}
+There is a polynomial $J=\poly(d,C,B,L)$, independent of $N\ge4M_0$,
+such that perturbing every energy-coordinate matrix of the witness by
+operator norm at most $J^{-1}$ preserves global signed margin $3/4$.
+\end{lemma}
+
+\begin{proof}
+Let $s,c$ be the signal and constant group indicator vectors, each of
+squared norm $n$. A new internal witness matrix is
+\[
+ W_j=s w_j^T,\qquad
+ w_j=(a_j/n)s+[A(1-a_j)/(q_0n)]c.
+\]
+For every diagonal matrix $D_j$ with entries in $[0,1]$,
+\[
+ w_{j+1}^TD_js=\frac{a_{j+1}}n\sum_{i\in\mathrm{signal}}(D_j)_{ii}
+ \in[0,a_{j+1}].
+\]
+Consequently a consecutive product of $D_jW_j$ has operator norm at most
+\[
+ \sqrt{a_i^2+[A(1-a_i)/q_0]^2}\prod_{\ell=i+1}^ja_\ell.
+\]
+The telescoping gains bound this by a polynomial in $L,T,A$.
+The first injection, original teacher matrix, and final readout have
+polynomial operator norms, so all relevant propagators are bounded by a
+polynomial $P_0$. The bound permits arbitrary intervening diagonal
+contractions, not merely derivatives at unperturbed states.
+
+The shallow teacher range is polynomial in $d,C,B$. Also
+\[
+ |F(A+y)-A|\le |y|+\log2\qquad(A\ge0).
+\]
+This inequality and the telescoping gains give a polynomial bound $Q$
+on every normalized witness state, uniformly on the cube and in $N$.
+Write a perturbation block as $B_j$, with $\norm{B_j}_{\rm op}\le\eta$.
+The componentwise mean-value formula, using $0<F'<1$, gives the exact
+state-error identity
+\[
+ e_j=D_jA_j^*e_{j-1}+D_jB_j(u_{j-1}^*+e_{j-1}),
+\]
+where the $D_j$ are diagonal contractions. Variation of constants bounds
+the maximum hidden-state error $E$ by
+\[
+ E\le\eta P_0L(Q+E).
+\]
+For $\eta P_0L\le1/2$, this gives $E\le2\eta P_0LQ$.
+The final linear readout has polynomial norm, and its own perturbation
+adds at most $\eta(Q+E)$. Taking a polynomially small $\eta$ makes total
+output error at most $1/4$. Lemma~\ref{lem:margin} completes the proof.
+\end{proof}
+
+This uses the particular rank-one structure of the planted wire. No
+polynomial partial-product bound is asserted for arbitrary networks of
+energy $L+O(\log^2(LT))$.
+
+\section{The actual posterior above the width threshold}
+
+Fix an input anchor $x_0$. Center every normalized hidden state of a
+realized network at that anchor. The resulting scalar activations are
+\[
+ a_{b,N}(r)=\frac{F(\sqrt N(b+r))-F(\sqrt N b)}{\sqrt N}.
+\]
+They fix zero and are $1$-Lipschitz. The linear matrices remain $A_j$,
+and their product satisfies
+\[
+ P(A)\le(\kappa(A)/L)^{L/2}.
+\]
+The centered input has radius at most two. A nonconstant globally
+margined output has an opposite-sign point, which bounds its anchor
+offset by $2P(A)$. Constants can be listed separately. Therefore the
+representation lemma from \cite{logistic} gives, at energy $K+1$,
+a common finite sign class with
+\begin{equation}\label{eq:class}
+ P\le\exp[C\log^2(LT+2)],\qquad
+ \log|\mathcal F|\le\exp[C\log^2(d+L+T+2)].
+\end{equation}
+
+For a finite-scale argument we must justify the posterior normalization,
+not just compare witness energies. Set
+$b^2=16\log9+8\log(8L)$, and let $\mathcal T$ be the intersection of
+the parameter-block operator balls of radius $tb$. Since $N\ge4M_0$
+and $M_0\ge d+1$, a unit-sphere net and Gaussian tails show
+$\mu(\mathcal T)\ge1/2$. The set is closed, convex, and centrally
+symmetric. Lemma~\ref{lem:stability} implies that, if $tb\le J^{-1}$,
+then $A_*+\mathcal T\subset E_S$ for every target-labeled sample.
+Gaussian translation and symmetry yield
+\[
+ \mu(E_S)\ge\tfrac12e^{-K/(2\sigma^2)}.
+\]
+Gaussian isoperimetry for a set of mass at least $1/2$ then gives
+\begin{equation}\label{eq:distance}
+ Q_S\{\operatorname{dist}(A,\mathcal T)^2>K+1\}
+ \le2e^{-1/(2\sigma^2)}.
+\end{equation}
+These statements use the common isotropic variance $\sigma^2=t^2/N$.
+
+On the complementary event write $A=U+B$ by projection onto $\mathcal T$,
+so that $\kappa(U)\le K+1$ and each $B$ block has operator norm at most
+$\eta=tb$. Center the \emph{realized} network $A$, freeze its scalar
+maps $a_{b,N}$ and its actual anchor output, and replace only the linear
+matrices by $U$. The surrogate is allowed to belong to the larger
+Lipschitz representation class; its anchor maps are not recomputed, and
+it need not be a native softplus network.
+
+Zero-fixing Lipschitz telescoping and AM--GM bound the output change by
+\begin{equation}\label{eq:perturb}
+ 2L\eta
+ \left(\frac{(\sqrt{K+1}+\sqrt L\eta)^2}{L-1}\right)^{(L-1)/2}.
+\end{equation}
+Each of the $L$ terms is bounded by $2\eta$ times the other $L-1$
+block norms, enlarged by at most $\eta$, and their squared sum is at
+most $(\sqrt{K+1}+\sqrt L\eta)^2$. If
+$\eta\le1/\sqrt{L(K+1)}$, this sum is at most $K+4$. Using
+\eqref{eq:energy}, the power in \eqref{eq:perturb} is at most
+$\exp[C\log^2(LT+2)]$. Thus a condition of the form
+\begin{equation}\label{eq:small}
+ tb\le\exp[-C\log^2(d+L+T+2)]
+\end{equation}
+both preserves the planted witness's margin and makes
+\eqref{eq:perturb} at most $1/8$.
+
+The surrogate has the same signs as the posterior network on the entire
+cube, with margin greater than $3/8$. Its product obeys \eqref{eq:class}.
+If it is nonconstant, its retained anchor offset is automatically bounded
+by twice its own product, since its centered computation vanishes at
+$x_0$. Hence the same sample-independent class $\mathcal F$ contains
+posterior mass at least $1-2e^{-1/(2\sigma^2)}$.
+
+For any fixed $\zeta>0$, the inequalities $t\le N^{-\zeta/2}$ and
+$\sigma^2\le N^{-(1+\zeta)}$ ensure \eqref{eq:small} and
+$2e^{-1/(2\sigma^2)}\le\beta$ above a threshold
+\[
+ N_*\le\exp\!\left[C_\zeta
+   \log^2(2+d+C+B+L+\log(2/\beta))\right],\qquad N_*\ge4M_0.
+\]
+This is the large-width finite-scale part of the proof. It makes no
+claim at the critical prefactor $t=1$.
+
+\section{Small widths, cold limits, and learning}
+
+For completeness, there is a lower-cost fallback for the purpose of
+finite-width counting, although it does not match the coefficient in
+\eqref{eq:lower}. The exact identity
+\[
+ F(g)-F(-g)=g
+\]
+provides a complementary relay. At any $N\ge\max(C,2)$, balance-clone
+the first teacher rows to width $N$, dividing outgoing coefficients by
+their replication counts. The first energy is at most
+$2d(d+1)B^2$, and the weighted shallow readout energy is at most
+$2C^2B^2$, independently of $N$. Split every added relay into two groups
+of size $\lfloor N/2\rfloor$ and ignore an odd surplus neuron. Its
+internal energy is four. The first relay costs at most the weighted
+shallow readout energy, and the final readout costs at most six.
+Thus a unit-margin depth-$L$ witness exists with energy polynomial in
+$d,C,B,L$, independently of $N$. For $L=2$ use the cloned shallow witness
+directly. If $N=1$, every represented truth table is constant because
+the final hidden value is positive; one example determines its sign.
+
+We spell out why the ordinary finite-width energy-net proof also applies
+to this unbounded activation. Since $F(a)\le\log2+|a|$, on an energy
+ball $\kappa\le R$ the normalized hidden states satisfy
+\[
+ \norm{u_j}\le\log2+\sqrt R\norm{u_{j-1}}.
+\]
+Consequently the logarithms of the state bounds and of a uniform
+parameter-to-output Lipschitz constant $\Lambda_R$ are
+$O(L\log(2+R+L))$, independent of $N$.
+Let $K_0$ be the polynomial fallback witness energy, set $K'=2K_0+2$,
+and take $r=\min(1,1/(4\Lambda_{K'}))$. A radius-$r$ witness neighborhood
+retains signed margin $3/4$. In parameter dimension
+$p=N(d+2)+(L-2)N^2$, use its inscribed cube with half-side
+$\min(r/\sqrt p,\sigma)$. The cube mass gives
+\[
+ \mu(E_S)\ge e^{-K'/(2\sigma^2)-pT_0},\qquad
+ T_0=\log\!\left(C\max\{1,\sqrt{p/N}/r\}\right).
+\]
+Clipping at $\sigma$ removes any divergence in $\log(1/t)$.
+Dividing the elementary Gaussian energy tail by this denominator puts
+posterior mass $1-\beta$ in the ball of radius squared
+\[
+ R_\beta=2K'+\frac4N
+       \{p(T_0+\tfrac12\log2)+\log(1/\beta)\}.
+\]
+A net of mesh $1/(8\Lambda_{R_\beta+1})$ there preserves every globally
+margined sign function. Its log-cardinality is polynomial in
+$d,N,L,K_0,\log(1/\beta)$. Thus for $N<N_*$ it is quasipolynomial in
+the resources of Theorem~\ref{thm:main}. No width interval is omitted.
+
+For a cold limit at fixed finite architecture, a strict-margin witness
+of energy $K$ implies
+\[
+ Q_S\{\kappa>K+\rho\}\longrightarrow0\quad(\sigma\downarrow0)
+ \qquad\text{for every }\rho>0.
+\]
+A fixed neighborhood retaining the witness's signs and energy at most
+$K+\rho/2$ has Gaussian mass of order at least
+$\sigma^{-p}e^{-(K+\rho/2)/(2\sigma^2)}$, while the tail above $K+\rho$
+has the smaller exponential factor $e^{-(K+\rho)/(2\sigma^2)}$ times
+a polynomial in $\sigma^{-1}$. For $N\ge4M_0$, the matching witness
+and the class in \eqref{eq:class} therefore put every limiting sign
+posterior on a common class of quasipolynomial log-cardinality.
+The finite-width argument just given covers the remaining widths
+uniformly in $t$ and hence in cold limits.
+
+Finally, suppose a sample-independent finite class of size $M$ contains
+posterior mass at least $1-\beta$. For
+$n\ge(\log M+\log(1/\delta))/\alpha$, with probability at least
+$1-\delta$ every sample-consistent member has true error at most $\alpha$.
+The posterior Gibbs error is then at most $\alpha+\beta$. At a point
+where correct-label confidence is at most $2/3$, wrong-label probability
+is at least $1/3$, so $e(S)\le3(\alpha+\beta)$. Taking
+$\alpha=\beta=\varepsilon/12$ proves the stated finite-scale bound.
+For a limiting posterior supported on the class take $\beta=0$; passing
+Gibbs error to the limit uses only continuity on the finite truth-table
+simplex, not continuity of the inclusive confidence threshold.
+This proves Theorem~\ref{thm:main}.
+
+\section{A shallow parity witness and the scope limit}
+
+Parity is an example within the shallow teacher class. Put
+$k(x)=(d+\sum_i x_i)/2\in\{0,\ldots,d\}$. Its alternating values are
+interpolated by
+\[
+ (-1)^k=1-2k+4\sum_{j=1}^{d-1}(-1)^{j+1}(k-j)_+
+ \qquad(k\in\{0,\ldots,d\}).
+\]
+Replace each hinge by $F(\beta(k-j))/\beta$, whose uniform error is at
+most $(\log2)/\beta$, and take $\beta=32d$. The accumulated error is
+less than $1/8$. Realize the linear term exactly using
+$F(k)-F(-k)=k$, and realize the constant using a zero-weight neuron of
+value $\log2$. Multiplying the output by two gives signed margin at
+least one with $d+2$ neurons and polynomially bounded weights.
+
+When shallow teacher resources are polynomial in learner depth, the
+depth condition in Theorem~\ref{thm:main} holds eventually, and its
+quasipolynomial bound is subexponential in depth. Such shallow softplus
+targets therefore do not supply exponential-depth lower bounds in the
+cold or fixed-$\gamma>1$ regimes considered here. The proof does not
+cover arbitrary deep teachers, $\gamma=1$, or arbitrary fixed positive
+canonical prefactors. In particular, a both-label posterior cannot be
+normalized by the mass of constant truth tables. These scope limits
+also prevent any conclusion about the original exact-tanh problem.
+
+\begin{thebibliography}{9}
+\bibitem{logistic}
+ChatGPT-6 Astra, K. H\"anni, and D. Vaintrob,
+\emph{Shallow targets under deep logistic posteriors},
+companion research proof, 2026. The finite Lipschitz representation
+lemma and its layer-compression proof are used in Section 1.
+\bibitem{borell}
+C. Borell, \emph{The Brunn--Minkowski inequality in Gauss space},
+Inventiones Mathematicae \textbf{30} (1975), 207--216.
+\end{thebibliography}
+\end{document}

@@ -2827,49 +2827,65 @@ A union bound over the $2^M$ subsets gives
 $\Prb\{\mathcal D(U)>\varepsilon\}\le2^M e^{-n\varepsilon}$.
 \end{proof}
 
-\begin{lemma}[Bounded-weight margined tanh teachers have finite descriptions]
+\begin{lemma}[Margined tanh teachers have polynomial-bit descriptions]
 \label{lem:finite-description}
 Suppose a tanh teacher has depth $D$, hidden widths at most $C$,
-weights bounded by $B$, and signed output margin greater than $1/2$
-on $X_d$. Its Boolean function has a Boolean circuit of size
-polynomial in $d,C,D,B+1$. In particular, any such family with these
-resources polynomial in $d$ lies in $\Ppoly$, even when the original
-weights have no computability or precision restriction.
+weights bounded in magnitude by $B\ge1$, and signed output margin
+greater than $1/2$ on $X_d$. Its Boolean function has a Boolean
+circuit of size polynomial in
+\[
+ d+C+D+\log(2+B).
+\]
+No computability or precision restriction on the original real
+weights is required.
 \end{lemma}
 \begin{proof}
-Put $m=\max\{d+1,C,2\}$ and $A=4m(B+1)$, and choose
+Put $m=\max\{d+1,C,2\}$,
+$b=\lceil\log_2(B+2)\rceil$, $q=\lceil\log_2m\rceil$, and
 \[
- p=\left\lceil(D+3)\log_2 A\right\rceil+5,
- \qquad \rho=2^{-p}.
+ p=(D+3)(b+q+4)+10,\qquad \rho=2^{-p},\qquad A=4m(B+1).
 \]
-Round every weight to error at most $\rho$. Evaluate each affine
-form exactly on dyadic approximations to the preceding states, and
-approximate each hidden tanh to error at most $\rho$, clamped to
-$[-1,1]$. If $e_j$ is the maximum coordinate error after layer $j$,
-the Lipschitz property gives
+Round each weight to a multiple of $\rho$ within error $\rho$.
+Evaluate each affine form exactly on dyadic hidden states, and
+approximate each hidden tanh to error at most $\rho$, with its
+output clipped to $[-1,1]$. If $e_j$ is the largest coordinate
+error at layer $j$, the Lipschitz property gives
 \[
- e_j\le mB e_{j-1}+(m+1)\rho
-       \le A e_{j-1}+A\rho.
+ e_j\le mB e_{j-1}+(m+1)\rho\le A e_{j-1}+A\rho.
 \]
-The same upper bound covers the final linear layer. Thus
-$e_D\le2\rho A^D<1/16$, which preserves every output sign.
-The rounded weights and all intermediate dyadic states have
-polynomially many bits in the asserted resources.
+The same bound covers the final linear layer. Since
+$\log_2 A\le b+q+2$, we have $e_D\le2\rho A^D<1/16$,
+preserving every output sign. The rounded parameters have
+$O(b+p)$ bits, and the exact affine forms have $O(b+q+p)$
+integer and fractional bits. Their denominator is $2^{2p}$.
 
-For clarity, approximating tanh at this precision has an elementary
-polynomial-size Boolean implementation. Use oddness to assume $u\ge0$.
-For $u\ge p+10$, the value $1$ has error at most
-$2e^{-2(p+10)}<2^{-p}$. On $0\le u\le p+10$, evaluate $e^{2u}$
-by its Taylor polynomial of degree $\lceil16(p+10)^2\rceil$ using
-rational arithmetic. The factorial bound $q!\ge(q/e)^q$ and the
-geometric bound on the tail after this degree give error below
-$2^{-p-4}$. Compute $(E-1)/(E+1)$ and round to the output dyadic
-grid; slightly increasing the working precision gives total error
-at most $\rho$. The numerators and denominators in this computation
-have polynomial bit length. Ordinary grade-school integer addition,
-multiplication, and division use polynomially many Boolean gates,
-so this finite algorithm can be unrolled to the claimed circuit.
-No parallel-depth bound is asserted in this lemma.
+The activation evaluator must handle large preactivations without
+enumerating a range of size $B$. First inspect the sign and compare
+$|u|$ to $p+10$. If $|u|\ge p+10$, saturation to the appropriate
+sign has error at most $2e^{-2(p+10)}<\rho$. Otherwise use oddness
+and assume $0\le u\le p+10$. Set $J=\lceil16(p+10)^2\rceil$
+and evaluate
+\[
+ E_J=\sum_{k=0}^J\frac{(2u)^k}{k!}.
+\]
+The exponential-series remainder is at most
+\[
+ e^{2u}\left(\frac{2eu}{J+1}\right)^{J+1}<2^{-p-4}.
+\]
+Compute $(E_J-1)/(E_J+1)$, and round to the nearest $\rho$-grid
+point, clipped to $[-1,1]$. Since $E_J\ge1$, the derivative of
+this quotient in $E_J$ is at most $1/2$; the total activation error
+is therefore less than $\rho$.
+
+The Taylor terms have common denominator $2^{2pJ}J!$. Its bit
+length and those of the numerators are $O(p^3+p^2\log p)$.
+Ordinary integer arithmetic thus evaluates the series, division,
+and rounding with polynomially many Boolean gates. There are only
+polynomially many affine operations and activation calls in the
+teacher resources. Since $p=O(D(\log(m+1)+\log(B+2)))$, the
+claimed circuit-size bound follows. The approximation algorithm
+is uniform on its rounded parameter strings, even though those
+strings may be chosen nonuniformly from the original real weights.
 \end{proof}
 
 The second imported input is a weaker common form of the previously
@@ -3036,6 +3052,78 @@ proof do not depend on the scale. If the resulting family were
 in $\NC^k$, this uniform theorem would give
 $\exp(O(\log^{k+1}L_j))$ examples at the very same actual
 $N_j,t_j$, contradicting $\exp(cL_j^\alpha)$.
+\end{proof}
+
+\begin{corollary}[Polynomial coefficient bit length suffices for the barrier]
+\label{cor:bitlength-negative}
+Fix $c,\alpha,b>0$ and fixed accuracy and confidence parameters
+in $(0,1)$. Suppose targets at learner depths $L_j\to\infty$
+have tanh teachers at those same depths, with widths $C_j$ and weight magnitudes at most
+$B_j\ge1$, and signed output margins greater than $1/2$, with
+\[
+ d_j+C_j+\log(2+B_j)\le L_j^b.
+\]
+If the original posterior requires $\exp(cL_j^\alpha)$ examples
+for the fixed distribution-free confidence guarantee at some
+actual realizable widths $N_j$ and prefactors $0<t_j\le1$, then
+$\NC\ne\Ppoly$. In particular the same conclusion applies to a
+lower bound on a guarantee required at every realizable width.
+\end{corollary}
+\begin{proof}
+The occupancy bound gives $d_j=\Omega(L_j^\alpha)$, so the teacher
+width, depth, and coefficient bit length are polynomial in $d_j$.
+Lemma~\ref{lem:finite-description} therefore places a subsequence
+of these targets in a family in $\Ppoly$. If that family belonged
+to some fixed $\NC^k$, its targets would have Boolean circuits of
+size polynomial in $d_j$ and depth $O(\log^k d_j)$. Since also
+$d_j\le L_j^b$, the uniform target theorem used in
+Corollary~\ref{cor:all-prefactor-negative} applies at the same
+learner depth, width, and scale and gives
+$\exp(O(\log^{k+1}L_j))=\exp(o(L_j^\alpha))$ samples, a
+contradiction. The all-realizable-width version of that upper
+theorem needs no condition $N_j\ge B_j$.
+\end{proof}
+
+Thus polynomially many relevant coefficient bits, rather than
+polynomial coefficient magnitude, suffice for the lower-bound
+barrier. This does not cover an activation that itself encodes
+hard truth tables: the proof uses the polynomial-time numerical
+evaluator for exact tanh. Large but polynomial-bit coefficients
+do not substitute for such an activation-level lookup mechanism.
+
+\begin{corollary}[A quantitative threshold-depth obstruction]
+\label{cor:quantitative-threshold-depth}
+Under the hypotheses of Corollary~\ref{cor:bitlength-negative},
+suppose $0<\alpha\le1$. For every fixed $a>0$, there is a constant
+$c_a>0$ such that any real threshold circuit of width at most
+$L_j^a$ computing $f_j$ has depth at least
+\[
+ c_a\frac{L_j^\alpha}{\log(L_j+2)}
+\]
+for all sufficiently large $j$. Its original coefficients may be
+arbitrary real numbers. The constant may depend on the fixed
+resource exponents and statistical parameters.
+\end{corollary}
+\begin{proof}
+It suffices to consider threshold depth $h_j\le L_j$. The
+weight-independent threshold compiler and the uniform target
+upper bound give sufficient sample count
+\[
+ \exp(C(h_j+1)\log R_j),\qquad
+ R_j=d_j+L_j^a+h_j+L_j+2,
+\]
+provided $L_j\ge C(h_j+1)\log R_j$; universal polynomial
+compiler overhead changes only $C$. Write
+$\log R_j\le B_a\log(L_j+2)$. If
+\[
+ h_j+1\le\kappa L_j^\alpha/\log(L_j+2),\qquad
+ \kappa\le\frac{\min\{1,c\}}{2CB_a},
+\]
+then the padding condition holds because $L_j^\alpha\le L_j$,
+and the sample upper is at most $\exp(cL_j^\alpha/2)$.
+This contradicts the assumed lower bound at the same width and
+scale. Absorb the additive one in $h_j+1$ by decreasing the
+constant, since $L_j^\alpha/\log(L_j+2)\to\infty$.
 \end{proof}
 
 \section{Scope and remaining questions}

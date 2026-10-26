@@ -1,0 +1,581 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage[T1]{fontenc}\usepackage{lmodern,microtype,xurl}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue]{hyperref}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}\newcommand{\E}{\mathbb E}
+\newcommand{\KL}{\operatorname{D}}\newcommand{\poly}{\operatorname{poly}}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\title{Structural Boolean circuits and subexponential sample bounds\\for the original Gaussian tanh posterior}
+\author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob}
+\date{26 October 2026}
+\begin{document}\maketitle
+\begin{abstract}
+We give structural sufficient conditions for subexponential dependence
+on learner depth in the original, unrestricted Gaussian tanh posterior.
+A synchronous Boolean circuit with an early narrow layer can be evaluated
+by retaining its prefix and replacing its suffix by a truth table. A
+bounded-fanin circuit of small graph treewidth admits a shallow threshold
+implementation by tree-decomposition dynamic programming. For planar
+circuit graphs, a separator schedule improves the exponent to the square
+root of graph size, apart from logarithmic terms. We account for
+the size and coefficients of these constructions, and give the resulting
+sample bounds at every realizable learner width, uniformly over canonical
+Gaussian scales $0<t\le1$. The statistical step imports the established
+uniform intrinsic-learning and scalar-continuation theorems; a
+heterogeneous-layer prefix lemma needed here is proved explicitly.
+These results do not cover arbitrary polynomial-size deep Boolean circuits,
+nor does it replace real tanh states by their signs.
+\end{abstract}
+
+\section{Model and statements}
+Let $X_d=\{-1,1\}^d$, $f:X_d\to\{-1,1\}$, and $H=L-1\ge1$.
+The learner has $H$ hidden tanh layers of common width $N$, input
+$(1,x)$, and a scalar linear readout. All weights are independent
+centered Gaussians, with entry variances
+\[
+ \operatorname{Var}(W^1_{ij})=t^2/d,\qquad
+ \operatorname{Var}(W^j_{ik})=t^2/N\ (j\ge2),\qquad
+ \operatorname{Var}(v_i)=t^2/N^2,
+ \quad 0<t\le1.
+\]
+There are no additional hidden biases. A constant input coordinate may
+be propagated as an ordinary neuron. Write $z_w(x)$ for the output and
+\[
+ A_f=\{w:f(x)z_w(x)>1/2\text{ for every }x\in X_d\},\qquad
+ a_{N,t}(f)=-N^{-1}\log\mu_{N,t}(A_f).
+\]
+A width is \emph{realizable} if $\mu_{N,t}(A_f)>0$. The posterior
+conditions on $|z_w(x)|>1/2$ at every cube input and on agreement with
+all noiseless training labels. Training and test inputs have any common
+distribution $\mathcal D$. Its confidence error is
+\[
+ \mathcal D\{x:\Pr_{\rm post}(\operatorname{sign}z_w(x)=f(x))\le2/3\}.
+\]
+Every statistical assertion below is at each fixed realizable width;
+it does not assert one simultaneous event for infinitely many widths.
+
+For $E\ge1$, abbreviate the sufficient sample bound
+\begin{equation}\label{eq:samples}
+ n\ge \frac C\varepsilon\left[
+       e^{CE}(1+\log(1/\varepsilon))^C+\log(1/\delta)\right],
+ \qquad 0<\varepsilon,\delta<1.
+\end{equation}
+Here and below $C$ denotes a universal constant that may increase.
+
+\begin{theorem}[An early narrow cut]\label{thm:cut}
+Suppose $f$ is computed by a synchronous fan-in-two Boolean circuit
+with $s\ge1$ gates and depth $h\ge1$: inputs occur at level zero,
+and every wire joins adjacent levels. Let $w_j$ be the number of
+bits at level $j$, $1\le j\le h$. Put
+\[
+ K=\log(d+s+L+3),\qquad g=\frac K{\log(K+2)},\qquad
+ E_{\rm cut}=K+\min_{1\le j\le h}(jg+w_j).
+\]
+If $L\ge C E_{\rm cut}$, then \eqref{eq:samples} with
+$E=E_{\rm cut}$ bounds the confidence error by $\varepsilon$ with
+training probability at least $1-\delta$, at every realizable width
+and every $0<t\le1$. In particular one may replace $E_{\rm cut}$ by
+\begin{equation}\label{eq:sqrt}
+ E_{\rm size}=K+\sqrt{sK/\log(K+2)}.
+\end{equation}
+If inputs are also injected after a cut, the narrow-cut assertion holds
+with $w_j$ replaced by $w_j+r_j$, where $r_j$ counts the distinct
+input bits used strictly after that cut. The size-only bound
+\eqref{eq:sqrt} requires the original synchronous, level-zero-input
+hypothesis.
+\end{theorem}
+
+\begin{theorem}[Small treewidth]\label{thm:tree}
+Suppose a fan-in-two Boolean circuit computing $f$ has $v\ge1$
+vertices, including its input vertices, and its underlying undirected
+graph has treewidth $k$. Set
+\[
+ E_{\rm tw}=\log(d+L+3)
+       +(k+\log(v+d+L+3))\log(v+3).
+\]
+If $L\ge C E_{\rm tw}$, then \eqref{eq:samples} with $E=E_{\rm tw}$
+has the same confidence-error, scale, and all-width conclusions.
+\end{theorem}
+
+\begin{theorem}[Planar and excluded-minor circuit graphs]\label{thm:planar}
+Suppose the underlying undirected graph of a fan-in-two Boolean circuit
+for $f$ is planar, with $v\ge1$ vertices including its input vertices.
+Set
+\[
+ E_{\rm sep}=\sqrt v+\log(d+L+3)
+                 +\log(v+3)\log(v+d+L+3).
+\]
+If $L\ge C E_{\rm sep}$, then \eqref{eq:samples} with $E=E_{\rm sep}$
+has the same confidence-error, scale, and all-width conclusions.
+The same statement holds for any fixed excluded-minor graph class,
+with constants depending only on the excluded minor.
+\end{theorem}
+
+For families with $d,s,v\le L^{O(1)}$, these theorems give an
+$\exp(o(L))$ sample bound at fixed $\varepsilon,\delta$ whenever,
+respectively,
+\[
+ \min_j(j\log L/\log\log L+w_j)=o(L),\quad
+ s=o(L^2\log\log L/\log L),\quad\text{or}\quad
+ k=o(L/\log L).
+\]
+The planar or fixed-excluded-minor bound is subexponential when
+$v=o(L^2)$.
+The displayed padding conditions then hold eventually. In particular,
+they must not be omitted from finite-parameter versions of the results.
+The conclusions restrict the \emph{target's} Boolean representation;
+they impose no sparsity, treewidth, or architecture restriction on the
+prior or posterior.
+
+\section{The analytic learning inputs and a layerwise prefix}
+This section isolates exactly which prior analytic results are used.
+Let
+\[
+ b=t^{-2}-1,\qquad c_t=(t^{-2}-1+2\log t)/2,
+\]
+and let $V_*$ denote the critical scalar Bellman baseline of
+\cite{critical,uniform}. Its numerical value is not needed.
+
+\begin{proposition}[Imported intrinsic and scalar inputs]\label{prop:inputs}
+The following statements hold for the model above.
+\begin{enumerate}
+\item For the actual target cost $a=a_{N,t}(f)$, or a deterministic
+upper bound for it, define
+\[
+ E_a=(a+4/(Ht^2)-Hc_t-V_*+b)_+,
+ \qquad J_a=\min\{\sqrt{HE_a},E_a/b\},
+\]
+omitting the second term when $b=0$. A sufficient sample size is
+polynomial in $d,L,1+t^2a$, multiplied by $\exp(CJ_a)$ and the
+statistical factors in \eqref{eq:samples}. The polynomial degrees
+and constants are universal, and the conclusion holds at every
+realizable width uniformly in $0<t\le1$.
+\item Suppose a Boolean circuit prefix of $q$ hidden stages supplies
+a target component $p\ge e^{-CS}$, diagonal at most one, critical
+cost at most $1/(8L)$, and finite-width relative score and residual
+accuracy $e^{-C'S}$ at widths $N\ge e^{C''S}$, for any required
+fixed exponents after increasing constants. Suppose $S\ge
+1+\log(d+L+2)+q$. Its Gaussian mean shifts at scale $t$ have cost
+at most $1/(8Lt^2)$. If $H-q\ge CS$, the critical scalar program,
+reused at scale $t$, gives the actual target-mass bound
+\begin{equation}\label{eq:target}
+ a_{N,t}(f)\le Hc_t+V_*+C(bS+S^2/H)
+ \quad(N\ge e^{CS}),
+\end{equation}
+with constants and width threshold independent of $t$.
+\end{enumerate}
+\end{proposition}
+
+The first item is the baseline-subtracted intrinsic bound in
+\cite[Proposition 2.1, equation (4)]{uniform}, proved in the companion
+note \texttt{uniform-sharp-intrinsic.md}. The second is the scalar
+continuation and finite-width lift in
+\cite[Proposition 3.3]{uniform} (label
+\texttt{prop:long}), with the prefix supplied separately. Its proof
+uses the prefix only through the listed seed, cost, and accuracy
+bounds. The underlying finite-width circuit prefix is
+\cite[Lemma \texttt{lem:critical-finite-circuit-prefix}]{critical}.
+These are imported analytic theorems, not assertions reproved by the
+combinatorial arguments below.
+
+\begin{lemma}[A heterogeneous-layer prefix]\label{lem:prefix}
+Consider a layered threshold circuit with $q\ge1$ stages, widths
+$C_j\ge1$, a constant rail, unit normalized gate margins, and
+row Euclidean norms at most $B_j\ge1$ at stage $j$. Set
+\begin{equation}\label{eq:S}
+ S=1+\log(d+L+3)+q\log(q+L+3)
+       +\sum_{j=1}^q\log((C_j+1)(B_j+1)).
+\end{equation}
+For $L\ge q+1$ this circuit supplies the prefix hypotheses in
+Proposition~\ref{prop:inputs}, with this $S$. Consequently, when
+$L\ge CS$, \eqref{eq:samples} holds with $E=S$ uniformly over
+all canonical scales and all realizable widths.
+\end{lemma}
+\begin{proof}
+We give the resource dependence, including the finite-width
+construction, to avoid replacing the sum in \eqref{eq:S} by a
+maximum width times depth. Put $p_0=1/d$, and choose a common
+gain $a$ and tolerance $\eta=8e^{4-a}$. Define
+\[
+ p_j=\frac{p_{j-1}}{8C_jqLa^2B_j^2},\qquad
+ k_j=\lceil Np_j\rceil.
+\]
+For each wire prescribe a disjoint group of $k_j$ neurons. In the
+first layer use mean $aw_{1,i}$ on a controlled row. At stage $j>1$,
+put mean $aw_{j,i,g}/k_{j-1}$ on each coordinate in the preceding
+group for wire $g$, and zero elsewhere. All row covariances retain
+their original Gaussian values. The preactivation mean is exactly
+$a\sum_g w_{j,i,g}m_{j-1,g}(x)$, where $m_{j-1,g}$ is that group's
+empirical mean.
+
+If $Np_q\ge1$, then $k_j\le2Np_j$, the groups fit, and the entropy
+per controlled row is at most $a^2B_j^2/(2t^2p_{j-1})$. Thus
+\[
+ \frac1N\KL(P\Vert\mu^{\rm prefix}_{N,t})
+ \le\sum_{j=1}^q
+       \frac{2C_jp_j a^2B_j^2}{2t^2p_{j-1}}
+ \le\frac1{8Lt^2}.
+\]
+Choose $\eta\le(4\max_j B_j\sqrt{W_j})^{-1}$, where
+$W_1=d+1$ and $W_j=C_{j-1}$ thereafter. An incoming empirical
+error at most $\eta$ then leaves preactivation mean of the correct
+sign and magnitude at least $3a/4$. Gaussian variance is at most
+two at the first stage and one thereafter. Gaussian exponential
+moments and $1-\tanh u\le2e^{-2u}$ show that its tanh expectation
+is within $\eta/4$ of the correct bit, and its second moment is
+within $\eta/2$ of one.
+
+Conditional Hoeffding bounds, united over all cube inputs, groups,
+and stages, now give simultaneous gate-mean error at most $\eta$
+provided
+\[
+ Np_q\ge C\eta^{-2}
+       \left[d+\log\frac{q(1+\max_j C_j)}{\zeta}\right].
+\]
+The diagonal follows the scalar recurrence
+$\bar q_j=(1-\theta_j)F_t(\bar q_{j-1})+\theta_j$,
+where $\theta_j=C_j k_j/N$, $\bar q_0=(d+1)/d$, and
+$F_t(u)=\E\tanh^2(t\sqrt uG)$.
+Since $F_t$ is one-Lipschitz for $t\le1$, bounded-square
+concentration gives diagonal error at most $2j\eta$.
+The final target-group indicator, normalized to a unit vector,
+therefore has score within $\sqrt p\eta$ of $\sqrt p f$, where
+$p=k_q/N$, and residual-variance error at most $(2q+3)\eta$.
+After the first stage the ideal diagonal is at most one. This is
+the same score/residual seed used by the scalar continuation.
+
+Take $a=A S$ for a sufficiently large universal $A$. Because
+$S\ge q\log(q+L+3)$ and $S\ge q$, one has
+\[
+ q\log S=q\log q+q\log(S/q)\le2S.
+\]
+It follows that
+\[
+ \log(1/p_q)=\log d+
+   \sum_j\log(8C_jqLa^2B_j^2)\le C(1+\log A)S.
+\]
+The gate-margin tolerance and any fixed seed-relative accuracy
+requirement hold by increasing $A$: $\log(1/\eta)$ grows linearly
+in $A$, while the last bound grows only logarithmically in $A$.
+The concentration requirement is then $N\ge e^{CS}$ for
+$\zeta\ge e^{-C'S}$, with arbitrary fixed $C'$. The construction
+and all concentration estimates are uniform for $t\le1$.
+
+For $L\ge CS$, Proposition~\ref{prop:inputs} gives
+\eqref{eq:target}. In its intrinsic bound, $E_a\le
+C(bS+S^2/H)$, absorbing $b$ and $4/(Ht^2)$ because
+$S\ge1+\log(H+2)$. If $b\ge S/H$ use $E_a/b$; otherwise use
+$\sqrt{HE_a}$. In either case $J_a=O(S)$. Also
+$t^2a\le C(H+S+S^2/H)$, so all polynomial factors are absorbed
+by $e^{CS}$.
+
+This proves the conclusion for $N\ge e^{CS}$. For smaller widths,
+the entire depth-$L$, width-$N$ tanh sign class has VC dimension
+polynomial in its parameter and computation counts
+\cite{km}. These counts are $e^{O(S)}$, since $d,L,N\le e^{O(S)}$.
+The standard realizable VC consistency bound therefore makes every
+posterior-supported function's test error at most $\varepsilon/3$
+under \eqref{eq:samples}. Averaging over that posterior and applying
+Markov's inequality gives confidence error at most $\varepsilon$:
+at a point counted as an error, posterior mistake probability is at
+least $1/3$. This handles every smaller realizable width without
+requiring the compiled circuit to fit inside that width.
+\end{proof}
+
+\section{A prefix followed by one lookup}
+We first record the resource accounting behind cone blocking.
+Take $b$ consecutive fan-in-two Boolean levels. Each output depends
+on at most $2^b$ entrance bits. Its truth table has a DNF with at
+most $2^{2^b}$ terms, hence two threshold stages, whose widths and
+normalized row norms have logarithms $O(2^b+\log(s+2))$.
+Copy gates and a constant rail obey the same bounds.
+Thus a depth-$j$ prefix has a threshold implementation with
+\[
+ q_0=O(1+j/b),\qquad
+ \sum_{\rm prefix}\log((C_i+1)(B_i+1))
+       =O((1+j/b)(K+2^b)).
+\]
+The same bounds hold if finitely many specified input bits must be
+retained for later use. Choose $b$ within a constant factor of
+$\log(K+2)$, truncated to $1\le b\le j$. Then $2^b=O(K)$ and
+\begin{equation}\label{eq:prefixbudget}
+ S_{\rm prefix}=O(K+jK/\log(K+2)).
+\end{equation}
+This is also the resource-sensitive blocking construction in
+\cite[\texttt{thm:critical-boolean-blocking}]{critical}.
+
+At a cut with $w$ bits, the whole suffix is a Boolean function of
+those bits. Its DNF implementation has two threshold stages,
+width $2^{O(w)}$, and normalized row norms $2^{O(w)}$.
+It contributes $O(w+1)$ to the sum in \eqref{eq:S}, not
+$O(q_0w)$. Combining with \eqref{eq:prefixbudget} gives
+$S=O(K+jg+w)$ and proves the first part of
+Theorem~\ref{thm:cut} by Lemma~\ref{lem:prefix}.
+If some input bits enter after the cut, retain precisely those
+distinct bits alongside the cut state. This proves the asserted
+$w+r$ correction.
+
+For completeness, first prune all gates that are not ancestors of
+the designated output; this can only reduce the widths and gate count.
+Take the first remaining level with at most $y$ gates.
+It exists because the final output is one bit. All previous
+levels have more than $y$ gates, so its index is at most
+$s/y+1$. Therefore
+\[
+ E_{\rm cut}\le C\{K+y+(s/y)g\}.
+\]
+Choosing a positive integer $y$ within one of $\sqrt{sg}$ gives
+\eqref{eq:sqrt}. This keeps the prefix of the synchronous
+depth-reduction argument of G\'al--Jang \cite{gj}, instead of
+using only its minimum-depth conclusion and losing size control.
+
+\begin{remark}[Ordinary neural realizations]
+The same threshold implementations have unit-margin tanh
+realizations with logarithmic Frobenius product bounded by their
+parameter $S$. Indeed, use a common output-bit tolerance
+$\eta=e^{-CS}$ and tanh gain $a=O(S)$ at each threshold stage.
+Gate scores retain a fixed sign gap, and saturation achieves that
+tolerance. The layer norm is at most $aB_j\sqrt{C_j}$; hence
+\[
+ \log\prod_j\max\{1,\norm{W_j}_F\}
+ \le q\log a+\sum_j\log B_j+\tfrac12\sum_j\log C_j
+ =O(S).
+\]
+A final scalar multiplier gives unit output margin. This product
+statement is additional evidence for the resource accounting;
+the posterior conclusion above uses the Gaussian seed construction
+and does not assume a generic product-to-target-mass theorem.
+\end{remark}
+
+\section{Tree-decomposition dynamic programming}
+Start with a tree decomposition of the underlying circuit graph
+of width $k$. The balanced-decomposition theorem gives a binary
+decomposition of width at most $3k+2$, depth $O(\log(v+3))$, and
+polynomially many bags \cite[Lemma 1]{js}. This external graph
+theorem is the only structural input in this section.
+
+Enlarge each bag by adding the at most two predecessors of every
+circuit vertex already in it. Its size grows by a factor at most
+three. This remains a tree decomposition: for any vertex $u$,
+its new bags are its old connected bag subtree together with the
+old subtrees of its successors. Each such subtree intersects the
+old subtree of $u$, because a bag covers that circuit edge.
+Their union is connected. Moreover each gate's full constraint
+scope---the gate and its at most two inputs---is now contained
+in a bag.
+
+Introduce one Boolean variable $z_u$ for every circuit vertex.
+For a fixed external input $x$, require every gate equation,
+every input equation $z_u=x_i$, and $z_{\rm out}=1$.
+Anchor each constraint at one bag containing its variables.
+Because the circuit is acyclic, the whole system is satisfiable
+exactly when the circuit accepts $x$.
+
+For bag $B_t$ and assignment $a\in\{0,1\}^{B_t}$, let
+$A_t(a;x)$ assert that $a$ extends to a satisfying assignment
+of all constraints anchored below $t$. If $t$ has children
+$\ell,r$, then
+\begin{align}\label{eq:dp}
+ A_t(a;x)={}&\operatorname{Local}_t(a;x)\ \wedge\notag\\[-2mm]
+ &\bigvee_{b:\,b|_{B_t\cap B_\ell}=a|_{B_t\cap B_\ell}}
+                  A_\ell(b;x)\ \wedge\notag\\[-2mm]
+ &\bigvee_{c:\,c|_{B_t\cap B_r}=a|_{B_t\cap B_r}}
+                  A_r(c;x).
+\end{align}
+For a missing child omit its factor. Running intersection shows
+that the two child subtrees overlap only in variables already
+fixed at the parent; hence compatible extensions glue. This
+proves both directions of \eqref{eq:dp}.
+For fixed $a$, the anchored gate constraints and output
+condition are constants, while the input constraints are a
+conjunction of at most $O(k+1)$ literals of $x$.
+
+Compute all these local terms first. Retain them by copy gates
+until their merge level, and evaluate \eqref{eq:dp} upward.
+Each merge uses an OR stage and an AND stage. Finally OR over
+all root assignments. There are $2^{O(k)}\poly(v+d)$ table
+entries and connections, and $O(\log(v+3))$ threshold stages.
+All thresholds can be chosen integral and normalized to margin
+one; their row norms are at most $2^{O(k)}\poly(v+d)$.
+Constant rails, copying pending tables, and retaining local
+terms obey the same resource bounds. In particular the potentially
+exponential table size is charged explicitly.
+
+Substituting these resources into \eqref{eq:S} gives
+\[
+ S\le C\{\log(d+L+3)
+          +(k+\log(v+d+L+3))\log(v+3)\}
+       =O(E_{\rm tw}).
+\]
+Lemma~\ref{lem:prefix} proves Theorem~\ref{thm:tree}.
+The preceding remark also gives a constant-margin tanh realization
+of physical depth $O(\log(v+3))$ and logarithmic Frobenius product
+$O((k+\log(v+d+3))\log(v+3))$, choosing its gain without the
+statistical learner-depth parameter.
+
+\section{Geometrically shrinking separators}
+The weighted planar separator theorem \cite{lt} partitions any
+$n$-vertex planar graph with nonnegative vertex weights into two
+nonadjacent sides and a separator of at most $c\sqrt n$ vertices,
+each side carrying at most $\beta=2/3$ of the total weight. We use
+this theorem twice at each recursion step, for two different weights.
+
+A subproblem consists of disjoint interior and boundary sets $I,B$,
+with the induced graph on $I\cup B$; no interior vertex has an edge
+outside this subproblem. Initially $I$ is the whole graph and
+$B=\varnothing$. Write $m=|I|$, $b=|B|$. If $I=\varnothing$,
+use the leaf bag $B$ and stop. Otherwise, first separate with weight
+one on $I$ and zero on $B$, obtaining separator $Z_0$ and two
+sides $U_0,U_1$, each with at most $\beta m$ interior vertices.
+Within each nonempty $U_i$, apply the weighted theorem with weight
+one on $B\cap U_i$ and zero elsewhere. If this weight is zero,
+retain $U_i$ as one side without a separator. Let $Z_1,Z_2$ be
+the additional separators and $P_a$ the at most four resulting
+sides. Put
+\[
+ Z=Z_0\cup Z_1\cup Z_2,\qquad
+ \mathcal B_t=B\cup Z,\qquad
+ I_a=I\cap P_a,\quad B_a=(B\cap P_a)\cup Z.
+\]
+The children are the induced subproblems on $I_a\cup B_a$.
+Duplicating all of $Z$ into each child is allowed. Their sizes obey
+\begin{equation}\label{eq:boundary}
+ |I_a|\le\beta m,\qquad
+ |B_a|\le\beta b+3c\sqrt{m+b}.
+\end{equation}
+Different $P_a$ have no edges between them, so the boundary invariant
+persists. The bags $\mathcal B_t$ form a tree decomposition:
+edges are either covered in a parent bag or passed to one child,
+and a vertex appearing in several children belongs to the parent
+bag. Induction gives edge coverage and running intersection.
+
+Put $M_\ell=\beta^\ell v$. Choose a universal $A$ large enough that
+\[
+ \beta A+3c\sqrt{1+A}\le A\sqrt\beta;
+\]
+such an $A$ exists because $\beta<\sqrt\beta$.
+At depth $\ell$, interior size is at most $M_\ell$ and boundary
+size is at most $A\sqrt{M_\ell}$. Indeed, when $M_\ell\ge1$,
+\eqref{eq:boundary} and this induction hypothesis give
+\begin{align*}
+ |B_a|&\le\beta A\sqrt{M_\ell}
+                 +3c\sqrt{M_\ell+A\sqrt{M_\ell}}\\
+ &\le(\beta A+3c\sqrt{1+A})\sqrt{M_\ell}
+ \le A\sqrt{M_{\ell+1}}.
+\end{align*}
+When $M_\ell<1$, interiors are empty and recursion has stopped.
+Thus the decomposition has depth $O(\log(v+3))$, polynomially many
+bags, and every bag at depth $\ell$ has size
+$O(\sqrt{M_\ell})$. The last level has constant bag size.
+Enlarge bags by gate predecessors exactly as in the preceding
+section. Their sizes increase by at most three, while all gate
+scopes become covered; no planarity of the enlarged scope graph
+is needed.
+
+Now perform the same bag-assignment dynamic program, scheduling
+levels from deepest to root. Each table entry is a local term AND
+at most four compatible-child ORs, so each level uses only a
+constant number of threshold stages. Carry the original Boolean
+input bits and a constant rail throughout, and compute each bag's
+local literal constraints only when that bag's level is reached.
+Leaf tables are also created at their own level. Child tables are
+discarded after the next merge. In particular, large root tables
+are not created at the first physical layer and retained throughout;
+doing so would lose the following improvement.
+
+At level $\ell$, logarithmic widths and normalized row norms are
+\[
+ O(\sqrt{M_\ell}+\log(v+d+3)).
+\]
+This includes input rails, local terms, all tables at that level,
+and their connections. The geometric series satisfies
+\[
+ \sum_{\ell\ge0}\sqrt{M_\ell}
+       \le\frac{\sqrt v}{1-\sqrt\beta}.
+\]
+With $q=O(\log(v+3))$ physical threshold stages, the sum in
+\eqref{eq:S}, including its $q\log(q+L+3)$ term, is therefore
+$O(E_{\rm sep})$. Lemma~\ref{lem:prefix} proves the planar case of
+Theorem~\ref{thm:planar}.
+
+For a fixed excluded minor, use the weighted
+$O(\sqrt n)$ separator theorem of Alon--Seymour--Thomas
+\cite{ast}; the same argument applies with its fixed constant.
+Its component balance can be grouped into two sides of weight at
+most $2/3$. This proves the extension.
+
+\section{Scope of the conclusions}
+These are positive target classes for the original posterior,
+including its unrestricted background neurons and all canonical
+Gaussian scales. Small compiled width is unnecessary at an
+individual learner width: at the smaller widths, the proof uses
+the full finite-width class rather than forcing the compilation
+into the learner. Realizability remains necessary for conditioning
+on noiseless target labels.
+
+The bounds do not solve the generic Boolean-depth question.
+A polynomial-size circuit can have large treewidth and no early
+sublinear-bit cut, and need not lie in a fixed excluded-minor class.
+Generic planarization can have quadratic size cost, which removes
+the sublinear-in-size gain of Theorem~\ref{thm:planar}.
+Size-only depth reductions need not preserve
+the resource sum \eqref{eq:S}. Moreover a bounded-width tanh
+teacher stores real-valued states; its hidden signs need not be
+sufficient statistics for the next layer. Applying these results
+to such a teacher requires an independently justified Boolean
+simulation with the stated structural resources. No cutset or
+treewidth limitation of one representation is an intrinsic neural
+lower bound, and no exponential sample lower bound is proved here.
+
+\begin{thebibliography}{9}
+\bibitem{uniform} ChatGPT-6 Astra, Kaarel H\"anni, and Dmitry Vaintrob.
+\emph{Uniform prior-scale bounds for structured Boolean targets}.
+Companion to \emph{Depth dependence, parallel circuits, and Boolean
+learning}, 2026. Repository package
+\path{works-in-progress/boolean-depth-barriers/}; source
+\path{source/uniform-target-classes.tex}, with the six supporting
+\path{proof-notes/} files identified in its proof-dependency section.
+
+\bibitem{critical} ChatGPT-6 Astra, Kaarel H\"anni, and Dmitry Vaintrob.
+\emph{Critical-depth analysis for the Gaussian tanh posterior}, 2026.
+Repository package \path{works-in-progress/critical-depth/}; in
+particular \path{source/critical-finite-width-circuit-prefix.tex},
+\path{source/critical-optimized-circuit-blocking.tex}, and the
+scalar-steering, finite-channel, and intrinsic-learning modules.
+
+\bibitem{gj} Anna G\'al and Jing-Tang Jang.
+\emph{The Size and Depth of Layered Boolean Circuits}.
+LATIN 2010; journal version, Information Processing Letters, 2010.
+\url{https://www.cs.utexas.edu/~panni/sizedepth.pdf}.
+\url{https://doi.org/10.1016/j.ipl.2010.11.023}.
+
+\bibitem{js} Maurice Jansen and Jayalal Sarma.
+\emph{Balancing Bounded Treewidth Circuits}. Lemma 1, citing
+Bodlaender's balanced-tree-decomposition theorem.
+\url{https://www.cse.iitm.ac.in/~jayalal/research/papers/JS10.pdf}.
+
+\bibitem{lt} Richard J. Lipton and Robert Endre Tarjan.
+A separator theorem for planar graphs.
+\emph{SIAM Journal on Applied Mathematics} 36(2) (1979), 177--189.
+\url{https://doi.org/10.1137/0136016}.
+Original report:
+\url{https://i.stanford.edu/pub/cstr/reports/cs/tr/77/627/CS-TR-77-627.pdf}.
+
+\bibitem{ast} Noga Alon, Paul Seymour, and Robin Thomas.
+A separator theorem for graphs with an excluded minor and its applications.
+\emph{STOC}, 1990.
+\url{https://research.ibm.com/publications/separator-theorem-for-graphs-with-an-excluded-minor-and-its-applications}.
+
+\bibitem{km} Marek Karpinski and Angus Macintyre.
+Polynomial bounds for VC dimension of sigmoidal and general
+Pfaffian neural networks. \emph{Journal of Computer and System
+Sciences} 54 (1997), 169--176.
+\url{https://doi.org/10.1006/jcss.1997.1477}.
+\end{thebibliography}
+\end{document}

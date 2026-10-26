@@ -1,0 +1,13 @@
+# Independent audit of geometric separator layer budgets
+
+26 October 2026. **PASS**, with the explicitly cited weighted planar/minor-free separator theorem as an external input. Source `geometric-separator-layer-budget.md`, SHA256 `aa633076f83649bed89a95bafa3abec563e64aa66ece72263d6c8de133c8e02f`.
+
+The two successive weighted separators solve distinct problems. The first balances interior vertices; the second, applied within each first side, balances the inherited boundary. Their union has size at most `3c sqrt(m+b)`, and at most four child sides remain. Child interiors have size at most `beta m` and child boundaries at most `beta b+3c sqrt(m+b)`. Including the entire separator union in each child preserves these bounds and is harmless for edge coverage.
+
+I checked the recursive interface: a child interior has no neighbor in a discarded old boundary component because the two separator operations leave no edges between child sides. Previously external neighbors were already absent by induction. The parent bag contains the old boundary and all new separator vertices. A vertex repeated among children is a separator vertex appearing in the parent, while every other vertex enters at most one child. Thus the resulting bags satisfy edge coverage and running intersection.
+
+For `M_l=beta^l v`, the invariant `b_l<=A sqrt(M_l)` is valid while `M_l>=1`, since one can choose A with `beta A+3c sqrt(1+A)<=sqrt(beta)A`. The next level then has the required bound. Once `M_l<1`, every integer interior is empty; the last boundary size remains constant. Hence depth is O(log v), branching is at most four, and bag sizes at level l are O(sqrt(M_l)). Adding each gate's at most two predecessors preserves running intersection and multiplies these bag sizes by at most three.
+
+The dynamic-program schedule is essential and correct. Raw input rails are carried throughout, but each bag's local table is created only when its level is processed. Child tables pass only to their immediate parent level. Leaves at shallower depths are created at those depths, so unbalanced branches do not force retaining large early tables. Consequently logarithmic stage widths and row norms sum geometrically to `O(sqrt(v)+log(v+3)log(v+d+3))`; the heterogeneous prefix overhead adds only the stated logarithmic terms. No hidden `sqrt(v)log v` factor remains.
+
+The actual-posterior conclusion then follows from the previously audited heterogeneous-prefix theorem with its depth-padding hypothesis. The result applies to the target's planar or fixed-minor-free Boolean graph and does not require a planar learner prior. It is not a generic subexponential compiler: arbitrary circuit planarization may require quadratically many vertices.

@@ -1,0 +1,549 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,microtype,xurl}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue]{hyperref}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Prb}{\mathbb P}
+\newcommand{\R}{\mathbb R}
+\newcommand{\norm}[1]{\left\lVert #1\right\rVert}
+\newcommand{\sig}{\mathsf s}
+\newcommand{\poly}{\operatorname{poly}}
+\title{Shallow targets under deep logistic posteriors}
+\author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob}
+\date{25 October 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+Consider the standard logistic activation, augmented Boolean inputs, no
+internal biases, and a linear readout. We study the actual Gaussian
+posterior conditioned on absolute output margin greater than $1/2$ on the
+entire cube and exact training labels. Every bounded-weight one-hidden-layer
+target has polynomial sample complexity at every finite learner width and
+depth in the strong-prior limit. The same holds at every fixed variance
+exponent $\gamma>1$. A complementary-pair construction transmits the shallow
+computation at energy $16L+O(\log T+1)$ once $L-1\ge\log T$, matching the leading nonconstant
+energy lower bound. Centering realized activations and subtracting typical
+Gaussian matrices then reduces the finite-scale posterior to a common
+class of small-product Lipschitz networks. We prove the required finite
+class bound by elementary layer compression. The theorem does not cover
+the critical exponent $\gamma=1$ or arbitrary deep teachers, and does not
+settle the original tanh question.
+\end{abstract}
+
+\section{Model and statement}
+
+Let $X_d=\{-1,1\}^d$, $d\ge1$, and $\sig(a)=(1+e^{-a})^{-1}$. A learner
+has $L\ge2$ matrices, $L-1$ hidden layers of common width $N$, input
+$(1,x)$, and a linear scalar output $z_W(x)$. There are no internal
+biases. The independent Gaussian entry variances are
+\[
+ t^2/d,\qquad t^2/N,\qquad t^2/N^2
+\]
+for the first matrix, internal matrices, and readout. We assume $0<t\le1$.
+For a target $f:X_d\to\{-1,1\}$ and sample $S=((x_i,f(x_i)))_{i=1}^n$,
+write
+\[
+ E_S=\{|z_W(x)|>1/2\text{ for every }x\in X_d\}
+       \cap\{\operatorname{sign}z_W(x_i)=f(x_i)\text{ for every }i\},
+ \qquad Q_S=\mu(\,\cdot\mid E_S).
+\]
+Thus both conditioning operations are retained. For iid uniform cube
+examples define
+\[
+ e(S)=2^{-d}\#\{x:Q_S(\operatorname{sign}z_W(x)=f(x))\le2/3\}.
+\]
+A shallow teacher has one hidden layer of width $C$, all physical weights
+bounded by $B\ge1$, and $f(x)z_*(x)\ge1$ everywhere. A fixed positive
+teacher margin can instead be normalized by rescaling its readout.
+
+\begin{theorem}\label{thm:main}
+There is a universal polynomial $P_0$ with the following property. Every
+shallow teacher as above is learned, at every $N\ge C$ and $L\ge2$, by
+every limiting sign posterior as $t\downarrow0$, with
+\[
+ n\ge P_0(d,C,B,L,\varepsilon^{-1},\log(2/\delta))
+ \quad\Longrightarrow\quad
+ \Prb_S\{e(S)>\varepsilon\}\le\delta.
+\]
+Here a limiting sign posterior is any subsequential limit on the finite
+set of Boolean truth tables, for each fixed finite architecture.
+Furthermore, for every fixed $\zeta>0$ there is a polynomial $P_\zeta$
+giving the same conclusion for the actual finite-scale posterior,
+simultaneously for all
+\[
+ N\ge C,\quad L\ge2,\quad 0<t\le N^{-\zeta/2}.
+\]
+Equivalently, the common variance in the isotropic coordinates below is
+at most $N^{-(1+\zeta)}$. Polynomial degrees may depend on $\zeta$.
+\end{theorem}
+
+The theorem includes both-label samples. Its proof does not use the prior
+mass of constant-sign truth tables as a denominator. Constant targets are
+included, but are not the reason for the upper bound.
+
+Put
+\[
+ A_1=\sqrt{d/N}\,W_1,\qquad A_j=W_j\ (2\le j<L),\qquad
+ A_L=\sqrt N\,v,\qquad
+ \kappa(A)=\sum_{j=1}^L\norm{A_j}_F^2.
+\]
+All parameter coordinates now have variance $\sigma^2=t^2/N$. The input is
+$u_0=(1,x)/\sqrt d$, the normalized hidden states are $u_j=h_j/\sqrt N$,
+and the scalar hidden activation is
+$\sig(\sqrt N a)/\sqrt N$. It is $1/4$-Lipschitz, and
+$\norm{u_j}\le1$ for every hidden layer.
+
+\section{A width-independent finite class bound}
+
+We need only a bound polynomial in depth; no circuit-compression theorem
+is used. The activations in this section may differ between neurons.
+
+\begin{lemma}\label{lem:cover}
+Fix a finite set $X\subset\R^D$ of radius at most two, with
+$\log(2|X|)\le d+1$, and an integer depth $L$. Consider networks whose
+hidden scalar activations fix zero and are $1$-Lipschitz, whose product of
+matrix Frobenius norms is at most $P\ge1$, and whose final additive scalar
+offset has magnitude at most $2P$. The sign functions with absolute
+margin at least $3/8$ on $X$ belong to a finite class $\mathcal F$ such that
+\[
+ \log|\mathcal F|\le\poly(D,d,L,P).
+\]
+The class is common to all original widths, activation maps, and real
+parameter values.
+\end{lemma}
+
+\begin{proof}
+We first compress one hidden layer. Let $W,V$ be its incoming and outgoing
+matrices; let $w_i$ be row $i$ of $W$, $v_i$ column $i$ of $V$, and set
+$a_i=\norm{w_i}$, $b_i=\norm{v_i}$,
+$A=\sum_i a_i b_i\le\norm W_F\norm V_F$. Omit zero terms. Replacing
+$\phi_i$ by $\psi_i(s)=\phi_i(a_i s)/a_i$ and the incoming row by
+$w_i/a_i$ gives
+\[
+ V\phi(Wu)=\sum_i a_i v_i\psi_i((w_i/a_i)u).
+\]
+Sample $m$ independent indices with probabilities $a_i b_i/A$. For each
+sample use incoming row $w_i/a_i$, activation $\psi_i$, and outgoing column
+$A v_i/(m b_i)$. Their incoming and outgoing Frobenius norms are exactly
+$\sqrt m$ and $A/\sqrt m$, so the product does not increase. The output
+is an unbiased average of vectors of norm at most $A\norm u$.
+
+If $S$ is the product of preceding norms, the current states on $X$ have
+norm at most $2S$. The expected norm error of the average is at most
+$2AS/\sqrt m$. Bounded-difference concentration, followed by a union bound
+over $X$, gives a choice of the sampled indices with preactivation error
+at most $C AS\sqrt{(d+1)/m}$ simultaneously on $X$. The suffix is
+Lipschitz with constant at most the product of its matrix norms. Hence
+the final scalar error is at most $C P\sqrt{(d+1)/m}$, irrespective of
+the original layer widths. This also holds when $V$ is the final readout.
+Compress every hidden layer in succession, using
+\[
+ m=\left\lceil C P^2L^2(d+1)\right\rceil.
+\]
+The total output error is at most $1/16$, after increasing $C$, and every
+hidden width is at most $m$. Every compression preserves zero-fixing
+$1$-Lipschitz activations and does not increase the global product.
+
+Now normalize each hidden matrix to Frobenius norm one. If its original
+norms are $a_1,\ldots,a_{L-1}$, divide the hidden state at layer $j$ by
+$S_j=\prod_{i\le j}a_i$, replace its scalar activation by
+$\phi(S_j s)/S_j$, and multiply the final readout by $S_{L-1}$.
+All activations remain zero-fixing and $1$-Lipschitz; the readout norm is
+at most $P$, and all hidden states have norm at most two. If a hidden
+matrix has norm zero, the network is constant and can be listed separately.
+
+Round hidden matrices in Frobenius norm to accuracy
+$\eta=c/(PL)$, and round the readout and final offset to accuracy $c$.
+Store every scalar activation on a uniform grid of spacing
+$\eta'=c/(PL\sqrt m)$ in $[-7,7]$, rounding its values to this accuracy
+and using linear interpolation. The table differs from the original
+activation by at most $2\eta'$ on that interval. The elementary state
+error recurrence, using the original activation's Lipschitz constant one,
+shows that all rounded states have norm below three and the final output
+changes by at most $1/16$, for a sufficiently small universal $c$.
+For example the accumulated hidden error is bounded by
+$C L(3\eta+\sqrt m\eta')$, since the rounded matrix norms are at most
+$1+\eta$. Readout and offset errors can be made smaller fixed constants
+by reducing $c$. All preactivations stay in the stored interval.
+
+There are polynomially many matrix entries and table entries in
+$D,d,L,P$, each with polynomial logarithmic range and precision. Thus
+the total description length is polynomial in these parameters. The
+two approximations change every output by less than $1/8$, preserving
+the signs of the stated margin class. Listing all descriptions proves
+the lemma; no precision hypothesis on the original activations is needed.
+\end{proof}
+
+\section{A matching-energy complementary-pair wire}
+
+A nonconstant globally margined classifier has opposite labels on some
+cube edge. The normalized inputs at its endpoints have distance
+$2/\sqrt d$, while the outputs differ by more than one. Since logistic
+has derivative at most $1/4$, AM--GM gives the deterministic bound
+\begin{equation}\label{eq:lower}
+ \prod_{j=1}^L\norm{A_j}_F>4^{L-1}\sqrt d/2,\qquad
+ \kappa(A)\ge16L\exp\bigl((\log d-\log64)/L\bigr).
+\end{equation}
+In particular the leading energy coefficient is $16$. This is not a
+finite-temperature posterior rate calculation.
+
+\begin{lemma}\label{lem:scalar}
+For $D>0$ and $m\ge2$, put $D'=\max(D,4)$ and
+$q=(D'/4)^{1/(2m)}$. There are positive weights
+$\alpha,b_2,\ldots,b_{m-1},c$ such that
+\[
+ r_1=\tanh\alpha,\quad r_s=\tanh(b_s r_{s-1}),\quad
+ cr_{m-1}=1/2,
+\]
+and
+\[
+ D\alpha^2+\sum_{s=2}^{m-1}b_s^2+c^2\le(m+12)q^2,
+ \qquad c=q.
+\]
+Moreover every consecutive product of the $b_s$ is at most
+$Cm\sqrt{D'/4}$.
+\end{lemma}
+
+\begin{proof}
+Set $k_s=\min(s,m-s)$ and $r_s=q^s/(\sqrt{D'}k_s)$. Then
+$r_s\le1/(2q k_s)\le1/2$ and $r_{m-1}=1/(2q)$. Take
+$\alpha=\operatorname{atanh}r_1$, $b_s=\operatorname{atanh}(r_s)/r_{s-1}$,
+and $c=q$. For $0<u\le1/2$, the power series gives
+$(\operatorname{atanh}(u)/u)^2\le1+u^2$.
+The reciprocal pairs in $R_s=k_{s-1}/k_s$ obey
+\[
+ ((k+1)/k)^2+(k/(k+1))^2-2\le4/k^2.
+\]
+Consequently $\sum R_s^2\le m-2+7$, $R_s\le2$, and
+$\sum k_s^{-2}<4$. These imply
+\[
+ D\alpha^2\le q^2+1/4,\qquad
+ \sum b_s^2\le q^2(m-2+7)+4,\qquad c^2=q^2,
+\]
+whose sum is at most $(m+12)q^2$. Empty sums when $m=2$ cause no change.
+Finally
+\[
+ b_s=q\frac{k_{s-1}}{k_s}\frac{\operatorname{atanh}r_s}{r_s},
+ \qquad \sum_s r_s^2\le1.
+\]
+The $k$-ratios telescope, $q^m=\sqrt{D'/4}$, and the remaining factors
+have product at most $\exp(\frac12\sum r_s^2)$. This proves the partial
+product bound.
+\end{proof}
+
+Let $g(x)=u\cdot h_1(x)$ be a shallow witness with signed margin one,
+first energy $E_1$, and weighted readout energy $D=N\norm u^2$.
+For $N\ge2$, use $M=2\lfloor N/2\rfloor$ active neurons in each added
+hidden layer, split into equal groups. Let $a$ have entries $2/M$ and
+$-2/M$ on the groups and zero on any surplus coordinate. Then
+$\norm a^2=4/M$, and
+\[
+ \sig(2z)-\sig(-2z)=\tanh z.
+\]
+Apply Lemma~\ref{lem:scalar} with first coefficient $D/4$ and $m=L-1$.
+The first added layer has rows $\pm2\alpha u$ and energy at most
+$4D\alpha^2$. Each later added layer has rows $\pm2b_s a^T$ and energy
+$16b_s^2$. The final readout $2ca$ has weighted energy
+$16(N/M)c^2\le32c^2$. Monotonicity of the scalar chain gives global
+signed output at least one. Thus
+\begin{equation}\label{eq:wire}
+ \kappa(A_*)\le E_1+16(L+12)\max(1,D/16)^{1/(L-1)}.
+\end{equation}
+Odd widths have only an endpoint cost; they do not increase the per-layer
+coefficient $16$.
+
+Choose an integer
+\[
+ M_0\ge\max\{C,2,d+1,dC(d+1)B^2\}
+\]
+of polynomial size. Zero-padding the teacher to width $M_0$ makes its
+first energy at most one. Balanced cloning to any $N\ge M_0$ gives
+$E_1\le2$ and $D\le D_0:=2M_0CB^2$: each replication count lies between
+$N/(2M_0)$ and $2N/M_0$. Put $T=\max(1,D_0/16)$. The construction gives
+\begin{equation}\label{eq:K}
+ K_L=2+16(L+12)T^{1/(L-1)},\qquad \kappa(A_*)\le K_L.
+\end{equation}
+In particular, for every $L\ge3$,
+\begin{equation}\label{eq:P}
+ 4\left(\frac{K_L+1}{16L}\right)^{L/2}
+ \le4e^{13/2}T^{3/4}.
+\end{equation}
+Indeed $(K_L+1)/16\le(L+13)T^{1/(L-1)}$ and
+$L/(2(L-1))\le3/4$. For $L=2$ the cloned shallow witness directly has
+energy at most $2+D_0$, which gives a polynomial bound as well.
+
+\begin{lemma}\label{lem:stable}
+The above witness can be chosen so that perturbing every parameter block
+in operator norm by at most $\eta$ changes its output on the entire cube
+by at most $C L^2T\eta$. The same bound, with an enlarged constant,
+holds for the direct $L=2$ witness.
+\end{lemma}
+
+\begin{proof}
+Use the upper bound $D_0$ in the scalar lemma. The first added layer's
+normalized Lipschitz gain $\norm{A_2^*}_{\rm op}/4$ is at most $Cq$;
+the last readout norm is at most $Cq$. The first teacher matrix has norm
+at most $\sqrt2$. The intervening gains are exactly $b_s$ in operator
+norm, and Lemma~\ref{lem:scalar} bounds every partial product by
+$CL\sqrt T$. Including the endpoint factors gives a bound $CLT$ for
+every suffix affecting an injected error.
+
+Normalized logistic hidden states of both the witness and the perturbed
+network have norm at most one. Therefore their state differences satisfy
+\[
+ e_j\le(\norm{A_j^*}_{\rm op}/4)e_{j-1}+\eta/4,
+\]
+with first forcing at most $\sqrt2\eta/4$. Summing the $L$ forced errors,
+and treating the final linear readout similarly, proves the result.
+The proof uses the explicit partial products; total energy alone would
+not supply this polynomial stability bound.
+\end{proof}
+
+\section{Centering and finite-scale Gaussian subtraction}
+
+Fix an anchor $x_0\in X_d$. Center every normalized hidden state at that
+anchor. Writing $b_{j,i}=(A_j u_{j-1}(x_0))_i$, the centered scalar maps
+are
+\[
+ a_{b,N}(r)=\frac{\sig(\sqrt N(b+4r))-\sig(\sqrt N b)}{\sqrt N}.
+\]
+They fix zero and are $1$-Lipschitz. The centered linear blocks are
+$A_j/4$ for hidden layers and $A_L$ for the readout. Thus the centered
+product is at most
+\begin{equation}\label{eq:centerproduct}
+ P(A)=4^{-(L-1)}\prod_j\norm{A_j}_F
+ \le4\left(\frac{\kappa(A)}{16L}\right)^{L/2}.
+\end{equation}
+The centered input $(0,x-x_0)/\sqrt d$ has norm at most two.
+The output is $z_A(x_0)$ plus this centered computation. If the truth
+table is nonconstant, an opposite-sign point implies
+\begin{equation}\label{eq:offset}
+ |z_A(x_0)|\le2P(A).
+\end{equation}
+Constants can be listed separately.
+
+For $N\ge M_0$, let $\mathcal T$ be the intersection of the operator-norm
+balls of radius $tb$ in all parameter blocks, where
+\[
+ b^2=16\log9+8\log(8L).
+\]
+This is a closed convex centrally symmetric set with $\mu(\mathcal T)
+\ge1/2$. For completeness, a $1/4$-net in each unit sphere has cardinality
+at most $9^r$ in dimension $r$. The bilinear Gaussian tail and the net
+bound give
+$\Prb(\norm G_{\rm op}>tb)\le2\,9^{r+c}\exp(-Nb^2/8)$ for an
+$r\times c$ block of variance $t^2/N$. Here $r+c\le2N$, since
+$N\ge d+1$, so a union bound over the $L$ blocks proves the claim.
+
+Assume
+\begin{equation}\label{eq:smallbulk}
+ tb\le\xi:=c/(L^2T)
+\end{equation}
+for a sufficiently small universal $c$. Lemma~\ref{lem:stable} puts
+$A_*+\mathcal T$ inside global signed margin $3/4$, hence inside every
+$E_S$ labeled by the target. Gaussian translation and symmetry give
+\begin{equation}\label{eq:denom}
+ \mu(E_S)\ge\mu(A_*+\mathcal T)
+ \ge\tfrac12\exp[-K_L/(2\sigma^2)].
+\end{equation}
+Indeed the translated density is the original density multiplied by
+$\exp[-\norm{A_*}^2/(2\sigma^2)-\langle A_*,A\rangle/\sigma^2]$;
+symmetry replaces the last factor by a hyperbolic cosine of mean at least
+one. Gaussian isoperimetry for a set of mass at least $1/2$ gives
+$\mu\{\operatorname{dist}(A,\mathcal T)>r\}\le\exp[-r^2/(2\sigma^2)]$.
+Dividing by \eqref{eq:denom} proves the actual posterior estimate
+\begin{equation}\label{eq:distance}
+ Q_S\{\operatorname{dist}(A,\mathcal T)^2>K_L+1\}
+ \le2\exp[-1/(2\sigma^2)].
+\end{equation}
+Only this standard Gaussian isoperimetric inequality is used as a
+probabilistic input beyond elementary concentration.
+
+On the complementary event, project $A$ onto $\mathcal T$ and write
+$A=U+B$, where $\kappa(U)\le K_L+1$ and every block of $B$ has operator
+norm at most $tb$. Center the \emph{realized} network $A$ at $x_0$ and
+freeze its exact maps $a_{b,N}$. Replace its centered linear matrices by
+those of $U$, keeping both the frozen maps and the actual anchor output.
+This surrogate need not be a native logistic network. It belongs to the
+larger Lipschitz class of Lemma~\ref{lem:cover}, which is all that counting
+requires. The anchor maps are not recomputed after subtraction.
+
+To bound the change, divide all $U$ blocks, including the readout, by four
+and place a factor four outside the final output. Set
+$K'=(K_L+1)/16$ and $\eta=tb/4$. A telescoping replacement of linear
+blocks, using zero-preserving $1$-Lipschitz maps and input radius two,
+gives error at most
+\begin{equation}\label{eq:subtract}
+ 8L\eta
+ \left(\frac{(\sqrt{K'}+\sqrt L\eta)^2}{L-1}\right)^{(L-1)/2}.
+\end{equation}
+To verify it, each of the $L$ terms is bounded by $8\eta$ times the
+product of the other $L-1$ block norms, each enlarged by at most $\eta$.
+Their squared sum is at most $(\sqrt{K'}+\sqrt L\eta)^2$; apply AM--GM.
+For $L\ge3$, \eqref{eq:smallbulk} and
+$K'\le(L+13)T^{1/(L-1)}$ bound the displayed power by $C\sqrt T$.
+Indeed the added energy is bounded by a universal constant, after which
+the ratio is at most $(1+C/(L-1))T^{1/(L-1)}$.
+Thus \eqref{eq:subtract} is at most $1/8$, after decreasing $c$.
+For $L=2$, use its direct bound $K'\le C(1+T)$ and the same conservative
+condition \eqref{eq:smallbulk}.
+
+The surrogate preserves every sign of the globally margined posterior
+network and has margin greater than $3/8$. Its product is polynomial in
+$T$ by \eqref{eq:P}. Since every frozen map fixes zero, its centered
+computation vanishes at the anchor. If its truth table is nonconstant,
+the retained offset is automatically at most twice its own product,
+by the same opposite-sign argument as \eqref{eq:offset}. Lemma~\ref{lem:cover}
+therefore supplies one class $\mathcal F$ with
+\begin{equation}\label{eq:commonclass}
+ \log|\mathcal F|\le\poly(d,C,B,L),\qquad
+ Q_S\{\operatorname{sign}z_A\notin\mathcal F\}
+ \le2e^{-1/(2\sigma^2)}.
+\end{equation}
+The class is independent of the sample, width, and realized anchor values.
+
+\section{Small widths, cold limits, and statistical conversion}
+
+We record the elementary finite-width estimate needed below the
+large-width threshold. It also avoids any appeal to sigmoid VC theory.
+
+\begin{lemma}\label{lem:finitewidth}
+Suppose a width-$N$, depth-$L$ logistic target witness has signed margin
+one and isotropic energy at most $K_0\ge1$. For $0<t\le1$, its posterior
+has sufficient sample size polynomial in
+\[
+ d,N,L,K_0,\varepsilon^{-1},\log(2/\delta),
+\]
+uniformly in $t$.
+\end{lemma}
+
+\begin{proof}
+The parameter dimension is $p=N(d+2)+(L-2)N^2$. On an energy ball
+$\kappa\le R$, the map from parameters to any cube output has a
+Lipschitz constant $\Lambda_R$ with
+\[
+ \log(2+\Lambda_R)\le CL\log(2+R+L).
+\]
+For example differentiate layer by layer: all hidden states have norm
+at most one, the input norm is at most $\sqrt2$, each derivative is
+bounded by $1/4$, and every downstream block norm is at most $\sqrt R$.
+This proves a bound $C L\max(1,\sqrt R)^L$, which suffices.
+
+Let $K=2K_0+2$ and $r=\min(1,1/(4\Lambda_K))$. The ball of radius $r$
+around the witness has signed margin at least $3/4$ and energy at most
+$K$. Its inscribed cube with half-side $\min(r/\sqrt p,\sigma)$ gives
+\[
+ \mu(E_S)\ge\exp[-K/(2\sigma^2)-pT_0],\qquad
+ T_0=\log\!\left(C\max\{1,\sqrt{p/N}/r\}\right).
+\]
+Here the clipping at $\sigma$ is essential: since $\sigma\le1/\sqrt N$,
+the volume-to-Gaussian-scale ratio introduces no $\log(1/t)$ term.
+The isotropic Gaussian tail
+$\mu\{\kappa>R\}\le2^{p/2}e^{-R/(4\sigma^2)}$ shows that the posterior
+mass outside
+\[
+ R_\beta=2K+\frac4N\{p(T_0+\tfrac12\log2)+\log(1/\beta)\}
+\]
+is at most $\beta$. This radius is polynomial in the displayed resources
+and $\log(1/\beta)$.
+
+A parameter net of mesh $1/(8\Lambda_{R_\beta+1})$ in that ball has
+log-cardinality polynomial in the same resources. Every globally margined
+network in the ball has exactly the signs of a net representative, since
+the output approximation error is below $1/4$. Thus a common finite
+class contains posterior mass at least $1-\beta$. The finite-class
+argument given below completes the proof.
+\end{proof}
+
+For $C\le N<M_0$ and $N\ge2$, zero-padding the shallow teacher to width
+$N$ gives first energy at most $dC(d+1)B^2/N$ and readout energy at most
+$NCB^2$. For $L\ge3$, applying \eqref{eq:wire} gives a witness energy
+polynomial in $d,C,B,L,N$; for $L=2$, use the direct shallow witness.
+Hence Lemma~\ref{lem:finitewidth}
+handles these widths. For $N=1$ every logistic truth table is constant,
+since the last hidden value is positive and the readout is scalar;
+one example fixes its sign everywhere.
+
+For the finite-scale part of Theorem~\ref{thm:main}, fix $\zeta>0$.
+There is a threshold $N_*\ge M_0$, polynomial in
+$d,C,B,L,\log(2/\beta)$ with degree depending only on $\zeta$, such that
+every $N\ge N_*$ satisfies both \eqref{eq:smallbulk} and
+$2e^{-1/(2\sigma^2)}\le\beta$ whenever $t\le N^{-\zeta/2}$.
+This follows from $b=O(\sqrt{\log(2L)})$, $T=\poly(d,C,B)$, and
+$\sigma^2\le N^{-(1+\zeta)}$. Equation~\eqref{eq:commonclass} handles
+all widths above $N_*$. For widths below it, the just-described witness
+and Lemma~\ref{lem:finitewidth} give a polynomial bound because $N_*$
+itself is polynomial. This proves a uniform all-width statement, not
+only a large-width limit.
+
+For the cold statement, at every fixed finite architecture a strict-margin
+witness of energy at most $K$ implies
+\begin{equation}\label{eq:cold}
+ Q_S\{\kappa>K+\rho\}\longrightarrow0\qquad(\sigma\downarrow0)
+\end{equation}
+for each $\rho>0$, uniformly over target-labeled samples. A sufficiently
+small fixed neighborhood of the witness retains its signs and margin
+and has energy at most $K+\rho/2$. Its Gaussian mass is bounded below by
+a constant times $\sigma^{-p}e^{-(K+\rho/2)/(2\sigma^2)}$.
+The Gaussian energy tail above $K+\rho$ is at most a polynomial in
+$\sigma^{-1}$ times $e^{-(K+\rho)/(2\sigma^2)}$, so their ratio tends
+to zero. With \eqref{eq:K}, \eqref{eq:centerproduct}, and
+Lemma~\ref{lem:cover}, every limiting sign posterior at $N\ge M_0$ is
+supported on a common class of polynomial log-cardinality. The preceding
+finite-width argument covers the remaining widths uniformly in the
+cold limit. Passing Gibbs error through a sign-posterior limit is valid
+on the finite truth-table simplex; no continuity of the inclusive
+confidence threshold is assumed.
+
+Finally, let a sample-independent class of size $M$ contain posterior
+mass at least $1-\beta$. With probability at least $1-\delta$, every
+sample-consistent member of this class has true error at most $\alpha$,
+provided
+\[
+ n\ge\frac{\log M+\log(1/\delta)}{\alpha}.
+\]
+Every draw from $Q_S$ is sample consistent. Its expected true error is
+therefore at most $\alpha+\beta$. If correct-label confidence is at most
+$2/3$, its wrong-label probability is at least $1/3$, so
+$e(S)\le3(\alpha+\beta)$. Taking $\alpha=\beta=\varepsilon/12$
+leaves strict slack at the stated threshold. For a limiting posterior
+supported on the class take $\beta=0$. This completes
+Theorem~\ref{thm:main}.
+
+\section{Scope and a concrete shallow example}
+
+Parity is included in the shallow-target hypothesis. To see this
+directly, put $k(x)=(d+\sum_i x_i)/2\in\{0,\ldots,d\}$ and
+$y(k)=(-1)^k$. The step expansion
+\[
+ y(k)=y(0)+\sum_{j=1}^d[y(j)-y(j-1)]\,\mathbf1_{\{k>j-1/2\}}
+\]
+is approximated on these integer values by replacing each step with
+$\sig(A(k-j+1/2))$, where $A=2\log(16d)$.
+The total approximation error is at most $2d e^{-A/2}\le1/8$.
+The constant term is realized by a zero-weight hidden unit with output
+$1/2$. Multiplying the final output by two gives signed margin at least
+one. There are $d+1$ hidden units and weights bounded by $O(d\log(2d))$.
+
+Thus neither parity nor another bounded-weight shallow logistic target
+can yield an exponential-in-depth sample lower bound in the regimes
+of Theorem~\ref{thm:main}. The proof leaves the exact critical exponent
+$\gamma=1$, and a fixed positive canonical prefactor $t$, open: then
+the typical Gaussian block size $tb$ need not satisfy
+\eqref{eq:smallbulk}. It also leaves arbitrary deep teachers open.
+The offset of standard logistic is handled here by centering and
+complementary transmission; this result does not assert the analogous
+theorem for other activations or resolve the original tanh problem.
+
+\begin{thebibliography}{9}
+\bibitem{borell}
+C. Borell, \emph{The Brunn--Minkowski inequality in Gauss space},
+Inventiones Mathematicae \textbf{30} (1975), 207--216.
+\end{thebibliography}
+\end{document}

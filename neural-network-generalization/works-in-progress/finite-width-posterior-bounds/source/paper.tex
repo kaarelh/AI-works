@@ -15,17 +15,21 @@
 \newcommand{\norm}[1]{\left\lVert #1\right\rVert}
 \title{Finite-width bounds for the globally margined tanh posterior}
 \author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob}
-\date{25 October 2026}
+\date{26 October 2026}
 \begin{document}
 \maketitle
 \begin{abstract}
-We give two bounds for the actual Gaussian tanh posterior conditioned on
+We give finite-width bounds for the actual Gaussian tanh posterior conditioned on
 absolute margin greater than $1/2$ at every Boolean input and exact training
 labels. A bounded-weight, globally margined width-$C$ teacher at depth $L$
 is learned at every width $N\ge C$ with sample size essentially
 $[Nd+LN^2]L\log(d+C+L+B+N)$, uniformly over canonical variance prefactors
 $0<t\le1$. The proof combines a teacher neighborhood, a conditional energy
-tail, and a margin-stable parameter net. Conversely, augmented-coordinate
+tail, and a margin-stable parameter net. For bounded-fan-in Boolean circuit
+targets, a separate Gaussian mean-shift witness improves this to a
+linear-width bound $O(N(d+CH)/t^2)$ above an explicit width threshold,
+where $H=L-1$ and $C$ counts the circuit wires. This second bound retains
+its inverse-scale dependence. Conversely, augmented-coordinate
 symmetry forces $\Omega(\log d)$ samples for a constant target, at every
 finite width and depth. We also exhibit a two-dimensional example in which
 correct-label posterior probability strictly decreases when width increases
@@ -221,6 +225,160 @@ sample bound in Theorem~\ref{thm:upper} is $N^2$ times a polynomial
 in $L$. Rearranging gives the claim.
 \end{proof}
 
+\section{A linear-width bound for Boolean circuit targets}
+\label{sec:boolean-mean-shift}
+
+For targets specified by digital gates, a direct Gaussian mean shift
+improves the preceding width dependence. This theorem retains an
+explicit $t^{-2}$ factor; it is not a uniform cold-limit bound.
+Write $H=L-1$. Suppose $f$ has a layered AND/OR/NOT/COPY circuit
+with at most $H$ stages and width at most $C$, including a constant
+$+1$ wire. Pad shorter circuits by COPY gates.
+
+\begin{theorem}\label{thm:boolean-linear-width}
+If
+\[
+ N\ge1600C\{d\log2+\log(8CH)\},
+\]
+then the raw Gaussian prior satisfies
+\[
+ \mu\{f(x)z_W(x)>1/2\ \forall x\in X_d\}
+ \ge \exp[-2002N(d+CH)/t^2].
+\]
+For any common training and test input law, the actual posterior
+therefore has confidence-failure mass at most $\epsilon$ with
+sample probability at least $1-\delta$ whenever
+\[
+ n\ge\frac6\epsilon\left[
+       \frac{2002N(d+CH)}{t^2}
+       +\log\frac6{\epsilon\delta}\right].
+\]
+\end{theorem}
+
+\begin{proof}
+Partition each hidden layer into $C$ groups whose sizes $n_g$
+are $\lfloor N/C\rfloor$ or $\lceil N/C\rceil$, hence
+$n_g\ge N/(2C)$. A group represents one circuit wire by its
+average activation. Use gain $a=10$ and the affine gate formulas
+\[
+ u+v-1,\quad u+v+1,\quad -u,\quad u
+\]
+for AND, OR, NOT, and COPY. A constant term is supplied by the
+actual previous constant group, or by the augmented input at the
+first layer. Coincident inputs may be combined; the coefficient
+absolute sum remains at most three.
+
+Define a product Gaussian comparison law $Q$ with the original
+variances and deterministic shifted means. A first-layer gate row
+has mean $a$ times its affine formula's coefficients. At later
+layers, put mean $ac_j/n_j$ on every coordinate of predecessor
+group $j$, where $c_j$ is that formula's coefficient. All other
+weight means are zero. The constant group copies its predecessor
+constant, starting from the augmented constant input. Set the
+readout mean to $1/n_{\rm out}$ on the output group and zero
+elsewhere. All background random weights remain present.
+
+Suppose the predecessor group averages have the correct signs
+and signed magnitudes at least $0.9$. Since all tanh values lie
+in $[-1,1]$, AND and OR retain signed affine margin at least
+$2(0.9)-1=0.8$, including error in the constant group. COPY and
+NOT retain margin at least $0.9$. The first-layer margin is at
+least one. Thus each controlled row has signed preactivation
+mean at least eight. Conditional on previous layers its variance
+is at most two initially and at most one later, uniformly for
+$t\le1$. For centered Gaussian $Z$ of variance at most two,
+\[
+ \E\tanh(8+Z)\ge1-2e^{-4}-2e^{-8}>0.95.
+\]
+Indeed $\Prb(Z<-4)\le e^{-4}$ and $\tanh(8+Z)\ge1-2e^{-8}$
+on the complementary event. Symmetry treats a negative gate bit.
+
+Conditional Hoeffding concentration gives probability at most
+$e^{-n_g/800}$ that one signed group average is below $0.9$ at
+one input. Sequential union bounds over all layers, groups, and
+cube inputs give hidden propagation failure at most
+\[
+ CH2^d e^{-N/(1600C)}\le1/8.
+\]
+No independence between distinct cube inputs is used. Conditional
+on the hidden layers, centered readout noise has variance at most
+$t^2/N$ at each input, so
+\[
+ Q\{\max_x|z(x)-\E[z(x)\mid\text{hidden layers}]|>1/4\}
+ \le2^{d+1}e^{-N/(32t^2)}\le1/8.
+\]
+On the joint good event every signed output is at least
+$0.9-0.25=0.65$. Thus $Q(E_f)\ge3/4$ for the globally correct
+margin event $E_f$ in the theorem.
+
+We charge every mean shift. The first-layer relative entropy is
+at most $450dN/t^2$. An internal row has squared mean norm at most
+\[
+ a^2\sum_jc_j^2/n_j\le18a^2C/N,
+\]
+so its entropy is at most $900C/t^2$. The readout contributes
+at most $NC/t^2$. Hence
+\[
+ \mathrm{KL}(Q\Vert\mu)
+ \le\frac N{t^2}\{450d+900C(H-1)+C\}
+ \le\frac{1000N(d+CH)}{t^2}.
+\]
+For any event $E$, binary relative entropy gives
+\[
+ \mathrm{KL}(Q\Vert\mu)
+ \ge Q(E)\log(1/\mu(E))-\log2.
+\]
+Using $Q(E_f)\ge1/2$ proves the raw target-mass bound with
+constant $2002$.
+
+Let $\pi$ be the prior already conditioned on global absolute
+margin. Since $E_f$ is contained in that event, its truth-table
+mass under $\pi$ is at least
+$p_*:=\exp[-2002N(d+CH)/t^2]$. This is a lower bound for every
+target-labeled sample's version-space normalizer. The expected
+$\pi$-mass of classifiers fitting an iid sample and having
+population error greater than $\epsilon/6$ is at most
+$e^{-n\epsilon/6}$. Markov therefore gives
+\[
+ \Prb_S\{Q_S(\operatorname{err}>\epsilon/6)>\epsilon/6\}
+ \le\frac{6e^{-n\epsilon/6}}{\epsilon p_*}\le\delta.
+\]
+Outside this exceptional sample event the posterior Gibbs error
+is at most $\epsilon/3$. A point with correct-label probability
+at most $2/3$ contributes at least $1/3$ to that Gibbs error, so
+its total probability mass is at most $\epsilon$. This argument
+uses the actual posterior mixture and both conditioning events.
+\end{proof}
+
+\begin{remark}[Layerwise resources and exponent scaling]
+If the circuit widths are $C_1,\ldots,C_H$, put
+$C_{\max}=\max_jC_j$ and $G=\sum_jC_j$, including all constant
+and padding COPY wires. Separate balanced partitions at each
+layer give internal entropy at most $900NC_{j-1}/t^2$ at stage
+$j$, and readout entropy at most $NC_H/t^2$. Thus replace $CH$
+by $G$ in the theorem and its width threshold by
+\[
+ 1600C_{\max}\{d\log2+\log(8G)\}.
+\]
+Under the common exponent convention
+$t=N^{(1-\gamma)/2}$, the width factor $N/t^2$ equals $N^\gamma$.
+One may take the smaller of this bound and Theorem~\ref{thm:upper}.
+At $\gamma=1$ the new dependence is linear in $N$ above the
+displayed threshold. For $C_{\max}\le N$ below that threshold,
+Theorem~\ref{thm:upper} and the bounded-weight digital realization
+give a coarser $N$ times polynomial-circuit-resource bound, since
+the extra factor $N$ is then polynomially bounded. This comparison
+does not assert the sharper coefficient $d+G$ below the threshold.
+\end{remark}
+
+The polynomial-depth statement here concerns a digital Boolean
+implementation at the available learner depth. A tanh teacher
+with soft intermediate states need not have such an implementation
+at comparable resources. Nor does the explicit $t^{-2}$ factor
+permit taking a cold limit in this particular bound. Exponentially
+large learner widths can still make its sample bound exponential
+in depth.
+
 \section{An exact symmetry lower bound for a constant target}
 
 Here $f\equiv+1$ and $D$ is uniform on the cube. The argument works
@@ -385,11 +543,11 @@ support-preserving comparison of globally margined sign posteriors.
 
 \section{What the bounds leave open}
 
-The upper theorem supplies an actual-posterior obstruction to depth
-hardness at small widths; the lower theorem supplies a dimension-dependent
+The general upper theorem and the stronger Boolean-circuit upper bound
+supply actual-posterior obstructions to depth hardness at small widths; the lower theorem supplies a dimension-dependent
 confidence obstruction already for a constant target. They are not
-matching bounds. The upper bound retains its quadratic learner-width
-dependence, and the symmetry lower gives only $\Omega(\log L)$ when
+matching bounds. The general upper bound retains quadratic learner-width dependence;
+the digital-circuit bound is linear in width at the critical scale, and the symmetry lower gives only $\Omega(\log L)$ when
 $d$ is polynomial in $L$. The width counterexample blocks one simple
 interpolation principle without proving a confidence lower bound.
 The original question of a universal polynomial sample bound versus an
