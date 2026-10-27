@@ -448,8 +448,8 @@ def fig8():
             n, e = curve_mean(L, ds); ok = np.isfinite(e); n, e = n[ok], e[ok]
             if not len(e):
                 continue
-            ax.plot(n, e, color=col, marker=mk, ls=ls if ls else "none", ms=4.2 if mk != "x" else 5, mec="white" if mk not in ("x", "P") else col,
-                    mew=0.4 if mk not in ("x",) else 1.0, lw=1.3, zorder=4 if L == "hyb_portfolio2" else 3, label=lab)
+            ax.plot(n, e, color=col, marker=mk, ls=ls if ls else "none", ms={"x": 5, "P": 6.5}.get(mk, 4.2), mec="white" if mk not in ("x", "P") else col,
+                    mew=0.4 if mk not in ("x",) else 1.0, lw=1.3, zorder=5 if mk in ("P", "x", "^") else (4 if L == "hyb_portfolio2" else 3), label=lab)
             allv += list(e)
         ax.set_xscale("log"); ax.set_yscale("log")
         ax.axvspan(9e3, 7.5e4, color="#f3f3f3", zorder=0, lw=0)
