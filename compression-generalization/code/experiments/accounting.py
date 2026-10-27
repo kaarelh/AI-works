@@ -27,7 +27,7 @@ def boolean_bound(r, delta=0.05):
     if "dis_exact" in r:   # n <= 22: exact disagreement, all of delta to the Occam term
         return min(1.0, occam_bound(r["train_err_g"], m, bits, delta) + r["dis_exact"])
     n_cert = r.get("n_cert", 200_000)
-    k = r.get("dis_count", int(round(r["dis_hat"] * n_cert)))
+    k = r["dis_count"] if "dis_count" in r else int(round(r["dis_hat"] * n_cert))
     return min(1.0, occam_bound(r["train_err_g"], m, bits, delta / 2)
                + cp_upper(k, n_cert, delta / 2 / DESIGN_FACTOR))
 

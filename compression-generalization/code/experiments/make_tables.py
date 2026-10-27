@@ -207,7 +207,69 @@ def init():
         write("init_kernel.tex", "\n".join(lines) + "\n")
 
 
+def headline():
+    rows = []
+    b50 = load(os.path.join(RES, "boolean", "grid_n50.jsonl"))
+    b20 = load(os.path.join(RES, "boolean", "grid_n20.jsonl"))
+
+    def bool_row(data, task, noise, m, label, anyD=False):
+        rr = [r for r in data if r["task"] == task and r["noise"] == noise and r["m"] == m]
+        if not rr:
+            return
+        n = rr[0]["n"]
+        te = np.mean([r["test_err_f"] for r in rr])
+        bd = np.mean([boolean_any_D(r) if anyD else boolean_bound(r) for r in rr])
+        bits = np.mean([(r["bits_any_D"] if anyD else r["bits"]) + 4 for r in rr])
+        P = rr[0]["params"]
+        occ = np.mean([occam_bound(int(round(r["train_err_f"] * m)), m, 32.0 * P + 64, 0.05) for r in rr])
+        rows.append((label, f"MLP, {P:,} params", "known $D_X$" if not anyD else "none (any $D$)",
+                     f"{n}-bit, $m={m}$", te, bd, bits, occ))
+    bool_row(b50, "parity3", 0.0, 4000, r"\texttt{parity3}")
+    bool_row(b50, "parity3", 0.0, 2000, r"\texttt{parity3}, partly learned")
+    bool_row(b50, "junta6", 0.0, 4000, r"\texttt{junta6}")
+    bool_row(b50, "maj5", 0.1, 16000, r"\texttt{maj5}, 10\% label noise")
+    bool_row(b20, "parity3", 0.0, 4000, r"\texttt{parity3}", anyD=True)
+    t2rows = load(os.path.join(RES, "mnist", "t2.jsonl"))
+    for d, H in [("mnist", 100), ("fashion", 100)]:
+        rr = [r for r in t2rows if r["data"] == d and r["widths"][1] == H and r.get("init", "random") == "random"
+              and r.get("code_ref", "init") == "init" and r["basis"] == "dct"]
+        if rr:
+            K = len(rr)
+            b = min(rr, key=lambda r: t2_bound(r, K))
+            occ = occam_bound(int(round(b["train_err_f"] * 60000)), 60000, 32.0 * b["params"] + 64, 0.05)
+            rows.append(({"mnist": "MNIST", "fashion": "Fashion-MNIST"}[d], f"784-{H}-10", "unlabeled test inputs",
+                         "$m=60000$", b["test_err_f"], t2_bound(b, K), b["bits"] + 4, occ))
+    t3rows = load(os.path.join(RES, "mnist", "t3.jsonl"))
+    for d, H in [("mnist", 8), ("mnist", 16)]:
+        rr = [r for r in t3rows if r["data"] == d and r["widths"][1] == H and r.get("weight_noise", 0) == 0
+              and r["basis"] == "dct" and r.get("code_ref", "init") == "init" and r.get("init", "random") == "random"]
+        for r in rr:
+            occ = occam_bound(int(round(r["train_err_f"] * 60000)), 60000, 32.0 * r["params"] + 64, 0.05)
+            rows.append(({"mnist": "MNIST", "fashion": "Fashion-MNIST"}[d], f"784-{H}-10", "none", "$m=60000$",
+                         r["test_err_f"], t3_bound(r), r["bits"] + 4, occ))
+    sp = load(os.path.join(RES, "mnist", "t3_sparse.jsonl"))
+    for d, H, nz in [("mnist", 100, 0.01), ("mnist", 256, 0.003)]:
+        rr = [r for r in sp if r["data"] == d and r["widths"][1] == H and abs(r["nonzero_fraction"] - nz) < 1e-4]
+        for r in rr:
+            occ = occam_bound(int(round(r["train_err_f"] * 60000)), 60000, 32.0 * r["params"] + 64, 0.05)
+            rows.append(({"mnist": "MNIST", "fashion": "Fashion-MNIST"}[d], f"784-{H}-10, sparse update ({100 * nz:g}\\%)",
+                         "none", "$m=60000$", r["test_err_f"], t3_bound(r), r["bits"] + 4, occ))
+    lines = [r"\begin{table}[t]", r"\centering\small", r"\begin{tabular}{l l l l r r r r}", r"\toprule",
+             r"task & network $f$ & extra data & data & test err.\ $f$ & bound on $f$ & bits & 32-bit Occam \\", r"\midrule"]
+    for row in rows:
+        lines.append(f"{row[0]} & {row[1]} & {row[2]} & {row[3]} & {row[4]:.4f} & {fmt(row[5])} & {row[6]:,.0f} & {fmt(row[7], 2)}" + r" \\")
+    lines += [r"\bottomrule", r"\end{tabular}",
+              r"\caption{Headline results: certified upper bounds on the test error of the trained network itself, at "
+              r"confidence 95\%, against its measured test error and the parameter-counting bound (32 bits per "
+              r"parameter). `Extra data': what the bound uses besides the training set; no row uses labelled "
+              r"held-out data. Chance level is 0.5 for the Boolean tasks and 0.9 for MNIST. Boolean rows average three seeds. "
+              r"`Bits': description length of the compressed or dithered network.}"
+              r"\label{tab:headline}", r"\end{table}"]
+    write("headline.tex", "\n".join(lines) + "\n")
+
+
 if __name__ == "__main__":
+    headline()
     boolean("n50", [500, 1000, 2000, 4000, 16000])
     boolean("n20", [100, 250, 500, 1000, 4000])
     t2()

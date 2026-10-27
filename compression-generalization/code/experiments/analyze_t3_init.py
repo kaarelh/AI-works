@@ -140,10 +140,45 @@ def init():
     open(os.path.join(RES, "summary_init.md"), "w").write("\n".join(out) + "\n")
 
 
+def kernel_figure():
+    """Estimated bound (selection pool) of the init-kernel codec versus the rank r."""
+    rows = load(os.path.join(RES, "init", "init_kernel.jsonl"))
+    if not rows:
+        return
+    tasks = sorted({r["task"] for r in rows})
+    fig, axes = plt.subplots(1, len(tasks), figsize=(3.4 * len(tasks), 2.9), squeeze=False, sharey=True)
+    for ax, t in zip(axes[0], tasks):
+        for r in sorted([r for r in rows if r["task"] == t], key=lambda r: (r["regime"], r["m"])):
+            best = {}
+            for y in r["kernel_sweep"]:
+                best[y["r"]] = min(best.get(y["r"], 9.0), y["est"])
+            rs = sorted(best)
+            col = SERIES[0] if r["regime"] == "lazy" else SERIES[1]
+            ax.plot(rs, [min(1.0, best[k]) for k in rs], color=col, lw=2 if r["m"] == 4000 else 1.2,
+                    ls="-" if r["m"] == 4000 else "--", marker="o", ms=3,
+                    label=f"{r['regime']}, m={r['m']}")
+        for k, lab in [(31, "degree ≤ 1"), (466, "degree ≤ 2")]:
+            ax.axvline(k, color=INK2, lw=0.8, ls=":")
+            ax.text(k * 1.08, 0.95, lab, fontsize=7, color=INK2)
+        ax.set_xscale("log")
+        ax.set_ylim(0, 1.02)
+        ax.set_title(t, fontsize=9)
+        ax.set_xlabel("rank r of the init-kernel subspace", fontsize=8, color=INK2)
+        style(ax)
+    axes[0, 0].set_ylabel("estimated bound on f", fontsize=8, color=INK2)
+    h, l = axes[0, 0].get_legend_handles_labels()
+    fig.legend(h, l, loc="lower center", ncol=4, fontsize=7, frameon=False)
+    fig.tight_layout(rect=(0, 0.12, 1, 1))
+    fig.savefig(os.path.join(FIG, "init_kernel.png"), dpi=170)
+    fig.savefig(os.path.join(FIG, "init_kernel.pdf"))
+    plt.close(fig)
+
+
 if __name__ == "__main__":
     os.makedirs(FIG, exist_ok=True)
     t3()
     init()
+    kernel_figure()
     p = os.path.join(RES, "mnist", "t2.jsonl")
     if os.path.exists(p):
         txt = ("# Bounds on f with unlabeled inputs (Theorem 2; the setting of Bazinet et al. 2026) and on g (Occam)\n\n"
