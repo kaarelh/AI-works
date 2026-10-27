@@ -1,4 +1,4 @@
-# Referee report: cftp (proof lens)
+# Round 1 referee report: cftp (proof lens)
 
 **Verdict.** needs major fixes. The proofs in sec:cftp hold up: Prop. prop:truncation, the anti-monotonicity and Häggström–Nelander exactness claim, the bias accounting and the gamma coalescence bound are all correct. But Thm. thm:cftp is missing a hypothesis: every event must have b_i ≤ 1/2, and for general unate circuits b_i must also be certified. Without it the staging step "Harris-guaranteed r_k ≥ 1/2" can fail. telescoping_estimate in code/rareprob/cftp.py does not check this hypothesis, and on valid unate CNFs it returns intervals that miss p far more often than delta allows. It also has an input-handling soundness bug: a clause that repeats a variable gets the wrong D(B_c).
 
@@ -85,3 +85,4 @@ Scripts are in /tmp/claude-0/-home-user-AI-works/02f29707-9759-5ff3-9757-46e1f8b
 **Problem.** This is stated as a consequence but not proved. KLM needs (1) relative-error estimates of each D(A_j), with the bias they induce in the index-sampling step bounded as in thm:boxes, and (2) conditional samplers for D|A_j whose truncation TV error is budgeted. KLM's per-sample mean is ≥ 1/t, so each sampler needs eta = O(eps/t). None of this is shown.
 
 **Proposed fix.** Either add these two conditions and the parameter choice eta ≤ eps/(c t) and per-disjunct relative accuracy eps/c, with a two-line argument, or downgrade the sentence to a remark ('should extend, via KLM, to ...').
+

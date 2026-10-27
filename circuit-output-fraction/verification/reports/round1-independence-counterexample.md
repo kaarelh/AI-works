@@ -1,4 +1,4 @@
-# Referee report: independence (counterexample lens)
+# Round 1 referee report: independence (counterexample lens)
 
 **Verdict.** Sound with minor fixes, plus two major gaps in the estimation procedure of thm:janson-general. The mathematics I was assigned is correct: the first-order sandwich, (H1)-(H6), both bounds of thm:second-order, the E_3 derivation, the formulas and the 0.29 constant of prop:pairwise-barrier, the interface-DP identity and the Möbius identity. The two major gaps: (1) the definition of "unate" ignores the XOR and threshold gates that sec:setting allows, so "sound on every circuit" is false as written; (2) the sample size depends on mu, which is never defined or estimated. Some quoted numbers are off by a factor 2 in the exponent.
 
@@ -78,3 +78,4 @@ Also correct:
 **Problem.** (a) In the triangle example the symmetric LLL existence condition holds easily: e*b*(d+1) is about 4.9e-5. What fails are the algorithmic counting and sampling conditions (b*d^c <~ 1 for c around 5-7) and the KP condition of (ii) with r = N-2. As written, the claim is vague. (b) thm:janson-general gives e^{Delta/(1-max b)}, or prod_i(1 + d_i/(1-b_i)), not e^{Delta}. Under the procedure's own pre-test (max b <= 1/2) this can be e^{2 Delta}.
 
 **Proposed fix.** Name the specific counting conditions that fail. Replace 'within e^{Delta}' with 'within e^{Delta/(1-max_i b_i)}'.
+

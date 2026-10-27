@@ -1,4 +1,4 @@
-# Referee report: envelopes (proof lens)
+# Round 1 referee report: envelopes (proof lens)
 
 **Verdict.** The core results are sound once minor fixes are made: Definition def:envelope, Lemma lem:envmass, Theorem thm:envelope (i)-(iv) and Lemma lem:K are correct, but they need several hypotheses and constants stated and one bound term fixed. The variance/dispersion remark is not sound: it contains a false claim (major). Its claim that dispersion, not the mean, is what costs samples is false for the paper's own estimator and for its own example. It also says "(10/9)^m-1 under every reweighting" where it should say "at least".
 
@@ -120,3 +120,4 @@ Surprise paragraph: checked the identity log2(1/p) = log2(1/Z) + log2 K and the 
 **Problem.** phi(X) can be as large as 2^{Theta(|Phi|)} (it is a derivation count), and the masses Z_v are products and sums of marginals q_i. So exact sampling and computing W = 1/phi(X) take O(|Phi|) operations on numbers of poly(|Phi|, b) bits, not O(|Phi|) bit operations. The time claim holds only in a unit-cost RAM model.
 
 **Proposed fix.** Say "O(|C|+|Phi|) arithmetic operations on poly(|Phi|, b)-bit rationals (b = bit length of the q_i)". Alternatively, note that W only needs relative precision eps/poly, so O(log|Phi| + log(1/eps))-bit floating point suffices for the estimate. The exactness of the sampler needs exact rational arithmetic.
+

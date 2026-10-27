@@ -1,4 +1,4 @@
-# Referee report: pcis (proof lens)
+# Round 1 referee report: pcis (proof lens)
 
 **Verdict.** Needs major fixes, and contains one false claim. The core soundness argument (thm:pcis-sound) and prop:calculus are correct, given that each node satisfies its own guarantee. Two such guarantees are missing: the verifier cannot check d-DNNF determinism in polynomial time, and thm:sis gives no valid interval. thm:certenv's class R is broader than its proof covers. The threshold example's K=O(sqrt n) is false as stated.
 
@@ -127,3 +127,4 @@ All scratch scripts are in /tmp/claude-0/-home-user-AI-works/02f29707-9759-5ff3-
 **Problem.** Only the "if" direction is proved (thm:certenv). Nothing shows that every circuit on which PCIS is complete has a short envelope-style explanation, and arguments built from SUM, SPLIT and PROD trees need not take that form.
 
 **Proposed fix.** Replace "complete exactly when" with "complete whenever".
+

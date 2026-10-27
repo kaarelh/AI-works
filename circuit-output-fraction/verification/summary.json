@@ -1,0 +1,345 @@
+[
+ {
+  "round": "round 1",
+  "topic": "boxes-tilting",
+  "lens": "counterexample",
+  "counts": {
+   "major": 2,
+   "minor": 10
+  },
+  "verdict": "contains false statements. The three assigned results (thm:boxes, prop:tilting, thm:janson) are correct as stated, apart from small constant and convention slips. Two claims built on them are false: the relative-error claim for the geometric-mean estimate right after thm:janson, and the use of prop:tilting for integer-weight thresholds in sec-part2."
+ },
+ {
+  "round": "round 1",
+  "topic": "boxes-tilting",
+  "lens": "proof",
+  "counts": {
+   "major": 1,
+   "minor": 10
+  },
+  "verdict": "sound with minor fixes. I found no false theorem statement and no broken proof among the assigned results (thm:boxes, prop:tilting, thm:janson). The problems are constants, unstated cost terms or hypotheses, one wrong cross-reference, one false runtime claim in the text, and one overclaim in sec-part2 that cites prop:tilting."
+ },
+ {
+  "round": "round 1",
+  "topic": "cftp",
+  "lens": "proof",
+  "counts": {
+   "critical": 1,
+   "major": 2,
+   "minor": 7
+  },
+  "verdict": "needs major fixes. The proofs in sec:cftp hold up: Prop. prop:truncation, the anti-monotonicity and H\u00e4ggstr\u00f6m\u2013Nelander exactness claim, the bias accounting and the gamma coalescence bound are all correct. But Thm. thm:cftp is missing a hypothesis: every event must have b_i \u2264 1/2, and for general unate circuits b_i must also be certified. Without it the staging step \"Harris-guaranteed r_k \u2265 1/2\" can fail. telescoping_estimate in code/rareprob/cftp.py does not check this hypothesis, and on valid unate CNFs it returns intervals that miss p far more often than delta allows. It also has an input-handling soundness bug: a clause that repeats a variable gets the wrong D(B_c)."
+ },
+ {
+  "round": "round 1",
+  "topic": "code-soundness",
+  "lens": "code",
+  "counts": {
+   "critical": 2,
+   "major": 1,
+   "minor": 3
+  },
+  "verdict": "needs major fixes. The sampling code is sound: tens of thousands of runs checked against exact p found no failures. Two soundness bugs remain, each giving a wrong interval with probability 1. (1) The Part-2 verifier trusts a support field that the prover controls. (2) The Janson/Harris code computes D(B_i) wrongly when a clause repeats a literal. There are also three minor floating-point or validation issues. The theorems themselves are not affected; these are implementation bugs on soundness-critical paths. Code reviewed: HEAD 42ec83fb (includes 6f67d2a9 'outward-rounded envelope/DFSB/Janson'); the code was being edited while I worked, and every finding was re-run against this version."
+ },
+ {
+  "round": "round 1",
+  "topic": "ctx-modules",
+  "lens": "counterexample",
+  "counts": {
+   "critical": 1,
+   "major": 4,
+   "minor": 4
+  },
+  "verdict": "contains false statements. The core results are correct: the Theorem thm:cw construction, F1/F2, decomposability, the d-DNNF claim, cw=0 iff DNNF, Lemma lem:quotient and laminarity inside the output cone. Two statements are false as written, though: (1) because the definition says \"nested gates flattened\", the Example's cw=O(w) claim fails; (2) the NNF size bound fails under flattening. The module-walk paragraph also claims more than the lemma proves."
+ },
+ {
+  "round": "round 1",
+  "topic": "ctx-modules",
+  "lens": "proof",
+  "counts": {
+   "critical": 1,
+   "major": 2,
+   "minor": 7
+  },
+  "verdict": "contains false statements. The construction and proof of Theorem thm:cw and the proof of Lemma lem:quotient are correct. The problem is the definition of context width: it says nested gates are flattened, and under that definition the Example's claim cw=O(w) is false, the NNF is not of size at most 2|C|, and the parameter no longer generalises dtrees. The implementation and experiments use the unflattened NNF. There are also some smaller missing hypotheses, and one empirical claim nothing supports. All of these are fixable in place."
+ },
+ {
+  "round": "round 1",
+  "topic": "dfsb",
+  "lens": "counterexample",
+  "counts": {
+   "critical": 1,
+   "major": 4,
+   "minor": 10
+  },
+  "verdict": "contains false statements. Theorem thm:dfsb (soundness, the pilot thresholds, the pruning argument, the interval-ratio propagation) is correct. Several claims around it are false as written: the \"read-once compositions\" inclusion in cor:dfsb(a), the O(1) tree size and cost in cor:dfsb(b), \"no sampling at all\" with K=1 in cor:dfsb(c), \"read-once formulas (exactly)\" once (R8) is applied, and the speed-up bound drawn from ETH in sec:part1-limits. Each has a short fix, given below."
+ },
+ {
+  "round": "round 1",
+  "topic": "dfsb",
+  "lens": "proof",
+  "counts": {
+   "critical": 1,
+   "major": 4,
+   "minor": 7
+  },
+  "verdict": "contains false statements. The core of Theorem thm:dfsb holds: soundness, the pilot constants, ratio propagation and the cost formula under its hypothesis. Three side claims are false as written: the 2^{o(log(1/p))} remark in sec:part1-limits, the read-once-composition clause of Cor. cor:dfsb(a), and the degree-2 algebraic module. The algorithm is also underspecified in a way that breaks the polynomial-time claim of Thm thm:meta: Phase 2 has no sample caps and loose leaves have no rule."
+ },
+ {
+  "round": "round 1",
+  "topic": "envelopes",
+  "lens": "counterexample",
+  "counts": {
+   "major": 1,
+   "minor": 10
+  },
+  "verdict": "The mathematics is sound and needs only minor fixes. Lemma lem:envmass, Theorem thm:envelope (i)-(iv), Lemma lem:K and the variance formula are correct up to the edge cases, constants and wording listed below. Separately, the implementation has one major soundness gap: it computes the \"exact mass Z\" in float64, so it can return a confidently wrong interval such as [0,0] when p > 0."
+ },
+ {
+  "round": "round 1",
+  "topic": "envelopes",
+  "lens": "proof",
+  "counts": {
+   "major": 1,
+   "minor": 10
+  },
+  "verdict": "The core results are sound once minor fixes are made: Definition def:envelope, Lemma lem:envmass, Theorem thm:envelope (i)-(iv) and Lemma lem:K are correct, but they need several hypotheses and constants stated and one bound term fixed. The variance/dispersion remark is not sound: it contains a false claim (major). Its claim that dispersion, not the mean, is what costs samples is false for the paper's own estimator and for its own example. It also says \"(10/9)^m-1 under every reweighting\" where it should say \"at least\"."
+ },
+ {
+  "round": "round 1",
+  "topic": "independence",
+  "lens": "counterexample",
+  "counts": {
+   "major": 2,
+   "minor": 7
+  },
+  "verdict": "Sound with minor fixes, plus two major gaps in the estimation procedure of thm:janson-general. The mathematics I was assigned is correct: the first-order sandwich, (H1)-(H6), both bounds of thm:second-order, the E_3 derivation, the formulas and the 0.29 constant of prop:pairwise-barrier, the interface-DP identity and the M\u00f6bius identity. The two major gaps: (1) the definition of \"unate\" ignores the XOR and threshold gates that sec:setting allows, so \"sound on every circuit\" is false as written; (2) the sample size depends on mu, which is never defined or estimated. Some quoted numbers are off by a factor 2 in the exponent."
+ },
+ {
+  "round": "round 1",
+  "topic": "independence",
+  "lens": "proof",
+  "counts": {
+   "major": 3,
+   "minor": 7
+  },
+  "verdict": "needs major fixes. The mathematical core is correct: the first-order sandwich, the full second-order theorem with (H1)-(H6) and the E_3 bound, and the barrier constant 0.29. The problems are around it. The definition of unateness lets XOR and negative-weight threshold gates through, and with those gates the theorem is false as literally stated. The sample size depends on mu, which is never defined and is unknown to the procedure. The Kotecky-Preiss FPRAS claim has no proof (I checked that it is true). Two of the three triangle-freeness numbers in the text do not follow from the stated theorems."
+ },
+ {
+  "round": "round 1",
+  "topic": "limits",
+  "lens": "proof",
+  "counts": {
+   "major": 1,
+   "minor": 10
+  },
+  "verdict": "Sound, with minor fixes. Prop. worstcase (a, b), Thm. blackbox, Thm. ma and Prop. interactive are all correct in substance. The fixes needed are: one false side claim (the white-box sentence in the Remark after thm:blackbox; a major finding), a missing range hypothesis in the 'In particular' of thm:blackbox, a 1-delta that should be 1-2delta in both parts of prop:worstcase, a circuit-simulation constant, an imprecise SBP equivalence, and some imprecise assumptions in prop:interactive and the Fiat-Shamir remark."
+ },
+ {
+  "round": "round 1",
+  "topic": "lower-surprise",
+  "lens": "proof",
+  "counts": {
+   "major": 4,
+   "minor": 4
+  },
+  "verdict": "needs major fixes. The identity in Proposition prop:proposal and the main inequality of Theorem thm:surprise(a) are correct. Part (b) is underspecified. Under the natural reading that gives \"exactly 1.5\" it is false, and its proof sketch runs the coupling in the direction that only gives T*2^l, not T. The tightness and \"matching lower bound\" claims go beyond what is proved, and the soundness of the proposal rule silently assumes the prover's pmf and sampler agree, which the verifier cannot check."
+ },
+ {
+  "round": "round 1",
+  "topic": "pcis",
+  "lens": "counterexample",
+  "counts": {
+   "critical": 1,
+   "major": 4,
+   "minor": 7
+  },
+  "verdict": "Contains false statements. The integer-weight threshold example claims K=O(sqrt n), and that claim is false. The union-bound adaptivity argument of thm:pcis-sound is correct. The identity in thm:sis(a)/(b) is correct, and so are the [0.58,1.70] constants. Still, thm:pcis-sound holds only if three rules are fixed: the exact rule (d-DNNF determinism cannot be checked), the thm:sis node (estimate vs. sound interval) and the proposal rule (the seed sampler cannot be checked). thm:certenv's class R is larger than its proof covers. These need major fixes."
+ },
+ {
+  "round": "round 1",
+  "topic": "pcis",
+  "lens": "proof",
+  "counts": {
+   "major": 5,
+   "minor": 11
+  },
+  "verdict": "Needs major fixes, and contains one false claim. The core soundness argument (thm:pcis-sound) and prop:calculus are correct, given that each node satisfies its own guarantee. Two such guarantees are missing: the verifier cannot check d-DNNF determinism in polynomial time, and thm:sis gives no valid interval. thm:certenv's class R is broader than its proof covers. The threshold example's K=O(sqrt n) is false as stated."
+ },
+ {
+  "round": "round 1",
+  "topic": "separations",
+  "lens": "counterexample",
+  "counts": {
+   "major": 2,
+   "minor": 9
+  },
+  "verdict": "contains false statements. The core constructions are correct: V_T soundness, the Valiant-Vazirani and Goldreich-Levin lower-bound separations, the canonical-pair equivalence for the [0,0] task, pad_a, the Corollary, UP cap coNP, both orientations of the NP-hardness barrier, and prSBP vs prMA. Two claims are stated more strongly than what is proved: (1) uniquely satisfiable circuits are 'certified exactly by one witness', which read literally implies coNP in MA; (2) 'the prover helps exactly when P is not weakly automatable' (also in the abstract, intro and README), whose 'only if' direction is proved only for the specific [0,0] task. The rest are minor precision fixes."
+ },
+ {
+  "round": "round 1",
+  "topic": "separations",
+  "lens": "proof",
+  "counts": {
+   "major": 2,
+   "minor": 8
+  },
+  "verdict": "The mathematics in sec:separations is essentially sound: every construction checks out, and so do its probabilities and reductions. One headline claim goes beyond what is proved (major): \"the prover helps exactly when P is not weakly automatable\", repeated in the abstract and intro. The corollary is true, but the chain of citations behind it skips a needed step (major for exposition). Everything else needs only minor fixes. No critical errors."
+ },
+ {
+  "round": "integration",
+  "topic": "local-thresholds",
+  "lens": "referee",
+  "counts": {
+   "major": 1,
+   "minor": 11
+  },
+  "verdict": "The core mathematics holds up under a line-by-line check, but the code has one soundness bug. I re-derived every step of: soundness (i); Lemma local-mix (a)\u2013(c); Lemma local-ti and Lemma local-ti-window (the Maurer and Bernstein steps, and the clipping term); the Maurer proof; the Poisson-binomial local bound; the anticoncentration lemma and the constants c1 and m0; the pilot and normaliser completeness; rarity (iii); certgap (a)/(b); and the annealed-importance-sampling unbiasedness in p2-gibbs. Each step is correct, apart from minor constant slips. The code bug is in syntactic recognition: `ltc_from_circuit` rounds the threshold with a different tolerance than the circuit evaluator. On a valid circuit it then estimates the wrong function, and the interval misses p with probability about 1. The other findings are minor: one example in a corollary contradicts its own hypotheses, a few hypotheses are missing from theorem statements, and several numbers or parameter descriptions in the experiments text differ from what the code and logs show."
+ },
+ {
+  "round": "integration",
+  "topic": "local-thresholds",
+  "lens": "referee",
+  "counts": {
+   "major": 2,
+   "minor": 6
+  },
+  "verdict": "The core results hold up. I re-derived Thm local(i), Lemmas local-mix (a)-(c), local-ti and local-ti-window, Maurer's inequality, Lemmas pb-local and local-anti, Thm local(ii) and (iii), Prop local-cftp, Prop certgap (a) and (b), Prop gibbs and the AIS remark, and found no gaps. The numerical checks agree:\n- the Dobrushin TV bound against the exact law of the scan;\n- the variance bound (c) against brute force;\n- CFTP exactness at theta up to 8;\n- the certgap(b) constants.\n\nOn LTC objects the estimator never failed: 1446 adversarial brute-force runs at delta=0.5 gave 1 miss. There are two substantive problems:\n1. **Unsound circuit recognition (code).** `ltc_from_circuit` rounds the THR threshold with a different tolerance from the circuit evaluator. On a crafted circuit TG is then confidently wrong: 20 of 20 intervals missed p.\n2. **False completeness claim (paper).** Cor local-side claims completeness with cost x 1/pi_H, which is false in the theta=0 branch: an H that forces S down to t far below s(0) makes p exponentially small while Pr[H|S=t]=1.\n\nThe rest are minor: inconsistencies between the text and the experiment numbers, between the implemented and the analysed pilot, one citation of a proof technique, and missing factors in Prop gibbs."
+ },
+ {
+  "round": "integration",
+  "topic": "affine-linear",
+  "lens": "referee",
+  "counts": {
+   "critical": 1,
+   "major": 4,
+   "minor": 8
+  },
+  "verdict": "I re-derived the mathematics and it largely holds. That covers the presolve identity and the rho bound, Thm affenv(a)-(c), the XOR-DNNF mass and sampler, the coset lemma, Thm parity-barrier(a),(b) with the (n+2)(S+2) smoothing bound, Cor parity-ghw and Cor random-parity (the 2^{n+7m-7n/3} union bound), the constants in Cor barrier-methods, Prop bw-dp (2n(4^w+1)), Thm biased-hard (the k threshold, the 2^{-2g-3} gap, the BPP/MA reductions and the q>1/2 complement), the LTF dynamic program and rejection sampler, the nonclosure reductions and the Fourier facts. Every number in tab:affine and in the text matches affine_log.txt, and a fresh run reproduces them (67 s on this machine).\n\nThe implementation, however, does not meet the claim that every interval is valid on every circuit and every argument. Four failures reproduce:\n- **Critical:** a malicious XPT argument makes the verifier output [0,0] for p=1/8.\n- A threshold gate with real weights makes XPT propagation infer a false value.\n- A malformed linear order crashes the verifier, and under python -O gives a wrong interval.\n- Floating-point underflow makes the presolve return [0,0] for p=2^-1100, and makes subnormal masses miss p for a 650-literal AND under Bern(1/3).\n\nOn the paper side, the novelty claim for prop:affine-ltf is an immediate instance of Theorem 3.6 of the cited GKMSVV paper. There are also several smaller wording and hypothesis problems, listed below."
+ },
+ {
+  "round": "integration",
+  "topic": "affine-linear",
+  "lens": "referee",
+  "counts": {
+   "major": 3,
+   "minor": 9
+  },
+  "verdict": "The mathematics mostly holds up. I re-derived the coset lemma, the parity barrier (a)/(b) with the smoothing count, the GHW and random-parity corollaries, the constants in cor:barrier-methods, prop:bw-dp, thm:biased-hard, prop:nonclosure, prop:fourier, the LTF dynamic program with its rejection sampler, and the union-with-approximate-masses lemma, and found no false theorem. The code does not meet its stated guarantee that every returned interval contains p on every circuit. There are three concrete failures. (1) The XPT propagator reasons about threshold gates in floating point. The trivial one-leaf argument on THR([x0..x3],[1e17,3,3,-1],5) returns [0.497,0.500] although p=0.625. (2) Leaf orders supplied by the prover are checked only by an assert. A malformed order crashes the verifier, and under `python -O` it yields an interval that misses p. (3) presolve_estimate's factor M underflows to an interval of [0,0] once log2 M < -1074. Smaller floating-point margins (rel, eta) are not proven bounds and are exceeded on natural instances, by about 1e-11 relative. The text has several minor overclaims: gadget certification, the 'smallest DNNF' sandwich, the c-dependence of the barrier consequences, E3 presented as showing the barrier, and ground truths described as 'independent of the code'. Every number in tab:affine and in the text matches affine_log.txt and affine.json, and the E6 ground truths are correct, which I checked with an independent implementation."
+ },
+ {
+  "round": "final",
+  "topic": "setting-limits",
+  "lens": "audit + fresh review",
+  "counts": {
+   "critical": 1,
+   "minor": 8
+  },
+  "verdict": "Paper (sec-setting, sec-limits): sound with minor fixes. All eleven round-1 findings are resolved in the current text; the one partial is that the size of the compiled circuit C' in prop:interactive(a) is still left implicit. Code: one critical finding. The implementation's threshold gates do not compute the threshold function defined in the Setting, so on such circuits every procedure can return an interval that excludes p with probability 1. The fix is simple: evaluate exactly, or declare the floating-point semantics and reject inputs that lose precision. The other new findings are minor."
+ },
+ {
+  "round": "final",
+  "topic": "envelopes",
+  "lens": "audit + fresh review",
+  "counts": {
+   "critical": 1,
+   "minor": 8
+  },
+  "verdict": "Paper: sound with minor fixes. Every earlier finding for envelopes, boxes and tilting is resolved in the current text and code. Code: one new critical soundness bug, narrow in scope and about 1e-12 in relative size. tilted_estimate does not dominate C when the threshold t lies in (m, m+1e-12] for an integer m, so tilted_estimate and meta_estimate return intervals that exclude p deterministically. The fix is about one line. The other new findings are minor."
+ },
+ {
+  "round": "final",
+  "topic": "dfsb",
+  "lens": "audit + fresh review",
+  "counts": {
+   "major": 2,
+   "minor": 7
+  },
+  "verdict": "contains false statements. Two side claims are false: the read-once-composition clause of cor:dfsb(a), and the (R8) claim that a small-cone rewrite changes neither DFSB's tree nor class membership. Both have easy fixes. thm:dfsb is correct: soundness, the pilot constants, the pruning argument, the box-looseness bound and the 2\u03b4 accounting. So are cor:dfsb(b)-(d), prop:dnnf-env, thm:meta and the limits paragraph, up to minor fixes. No soundness violation was found in 290,000 randomized runs against exact rational p."
+ },
+ {
+  "round": "final",
+  "topic": "ctx-modules",
+  "lens": "audit + fresh review",
+  "counts": {
+   "minor": 6
+  },
+  "verdict": "sound with minor fixes"
+ },
+ {
+  "round": "final",
+  "topic": "independence",
+  "lens": "audit + fresh review",
+  "counts": {
+   "minor": 1
+  },
+  "verdict": "sound with minor fixes. All 19 earlier findings for this topic are resolved. In the fresh review I found no mathematical error, no way to break soundness, and no overclaim in p1-indep.tex or in appendix.tex before the \\input lines. My one new finding is a minor clarification about the top AND-tree of a DAG, which affects efficiency, not soundness."
+ },
+ {
+  "round": "final",
+  "topic": "cftp",
+  "lens": "audit + fresh review",
+  "counts": {
+   "minor": 5
+  },
+  "verdict": "sound with minor fixes"
+ },
+ {
+  "round": "final",
+  "topic": "local",
+  "lens": "audit + fresh review",
+  "counts": {
+   "minor": 7
+  },
+  "verdict": "sound with minor fixes"
+ },
+ {
+  "round": "final",
+  "topic": "affine",
+  "lens": "audit + fresh review",
+  "counts": {
+   "critical": 1,
+   "minor": 7
+  },
+  "verdict": "Sound with minor fixes. The mathematics holds, and all 25 earlier findings are resolved. One new code soundness hole needs a one-line fix. I labelled it critical because it violates soundness, but it only arises from malformed input: a CONST gate whose parameter is not 0 or 1, built with Circuit.add. The remaining findings are minor wording and precision issues."
+ },
+ {
+  "round": "final",
+  "topic": "pcis",
+  "lens": "audit + fresh review",
+  "counts": {
+   "minor": 8
+  },
+  "verdict": "sound with minor fixes"
+ },
+ {
+  "round": "final",
+  "topic": "lower-surprise",
+  "lens": "audit + fresh review",
+  "counts": {
+   "major": 1,
+   "minor": 5
+  },
+  "verdict": "needs major fixes. There is one major issue: thm:surprise(b) is stated in a pure black-box model. There thm:blackbox already gives a stronger bound whenever D(E) < 1/3, so (b) does not support the reading 'once an envelope is certified, the 2^{sigma_u} term cannot be avoided' that the paper, intro, discussion and README rest on it. A one-line change of hypothesis fixes it, and the proof stays the same. Everything else checks out: the prop:proposal identity and completeness, the proof of thm:surprise(a) and its tightness, the coupling and constants of thm:surprise(b), and the cost-formula arithmetic. The remaining points are minor."
+ },
+ {
+  "round": "final",
+  "topic": "separations",
+  "lens": "audit + fresh review",
+  "counts": {
+   "minor": 6
+  },
+  "verdict": "sound with minor fixes"
+ },
+ {
+  "round": "final",
+  "topic": "code",
+  "lens": "audit + fresh review",
+  "counts": {
+   "critical": 1,
+   "major": 1,
+   "minor": 4
+  },
+  "verdict": "needs major fixes. One new soundness bug: on a narrow but legal class of threshold circuits, the tilting path (and so meta_estimate) returns an interval that misses the evaluator's p with probability 1. All six earlier code findings are resolved, one of them only partly: asserts that guard soundness remain in janson.py, cftp.py and dist.py."
+ }
+]

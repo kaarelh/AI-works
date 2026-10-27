@@ -1,4 +1,4 @@
-# Referee report: independence (proof lens)
+# Round 1 referee report: independence (proof lens)
 
 **Verdict.** needs major fixes. The mathematical core is correct: the first-order sandwich, the full second-order theorem with (H1)-(H6) and the E_3 bound, and the barrier constant 0.29. The problems are around it. The definition of unateness lets XOR and negative-weight threshold gates through, and with those gates the theorem is false as literally stated. The sample size depends on mu, which is never defined and is unknown to the procedure. The Kotecky-Preiss FPRAS claim has no proof (I checked that it is true). Two of the three triangle-freeness numbers in the text do not follow from the stated theorems.
 
@@ -110,3 +110,4 @@ The pre-test b_hat_i <= 1/3 needs O(log(m/delta)) samples per event, with a unio
 **Problem.** This overstates thm:janson-general in two ways. The window there is e^{Delta/(1-max b_i)}, not e^{Delta}. And M_hat needs additive accuracy on log M, i.e. relative accuracy on a possibly exponentially small product, costing Theta(mu/eps^2) samples per event; the proof itself says 'Only M needs relative accuracy'.
 
 **Proposed fix.** Write 'within e^{Delta/(1-max_i b_i)}', and say that the cost is linear in mu (about log(1/p)) rather than relying on 'additive estimates' alone.
+

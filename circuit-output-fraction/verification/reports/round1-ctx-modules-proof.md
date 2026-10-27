@@ -1,4 +1,4 @@
-# Referee report: ctx-modules (proof lens)
+# Round 1 referee report: ctx-modules (proof lens)
 
 **Verdict.** contains false statements. The construction and proof of Theorem thm:cw and the proof of Lemma lem:quotient are correct. The problem is the definition of context width: it says nested gates are flattened, and under that definition the Example's claim cw=O(w) is false, the NNF is not of size at most 2|C|, and the parameter no longer generalises dtrees. The implementation and experiments use the unflattened NNF. There are also some smaller missing hypotheses, and one empirical claim nothing supports. All of these are fixable in place.
 
@@ -155,3 +155,4 @@ Two things should change.
 **Proposed fix.** Add the one-line proof: if v ∈ sv(g) ∩ sv(h), every path from x_v to the output passes through both g and h, so one is in the other's cone and the supports are nested.
 
 Then write either 'found in linear time [DR96]' or 'in O(|C|n) time: g is a module iff every input of sv(g) lies in g's subtree of the post-dominator tree of C (dominator tree of the reversed DAG rooted at the output)'.
+

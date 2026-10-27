@@ -1,4 +1,4 @@
-# Referee report: boxes-tilting (counterexample lens)
+# Round 1 referee report: boxes-tilting (counterexample lens)
 
 **Verdict.** contains false statements. The three assigned results (thm:boxes, prop:tilting, thm:janson) are correct as stated, apart from small constant and convention slips. Two claims built on them are false: the relative-error claim for the geometric-mean estimate right after thm:janson, and the use of prop:tilting for integer-weight thresholds in sec-part2.
 
@@ -145,3 +145,4 @@ The same slip appears in sec-part1 ('after flipping the negative variables, ever
 **Problem.** Under the uniform D, reweighting the ∨-edges with a proposal probability α gives a per-clause relative second moment of (2/9)(1/α + 1/(1−α) + 1). This is at least 10/9, with equality only at α = 1/2. So the variance is at least (10/9)^m − 1, not exactly that under every reweighting. The constant 10/9 is also specific to q = 1/2: for q_x = q_y = q the per-clause factor is (4−3q)/(2−q)², which is about 1.073 at q = 0.3.
 
 **Proposed fix.** Write 'has relative variance at least (10/9)^m − 1 under every reweighting of its ∨-edges (uniform D), with equality for the mass-proportional one'.
+

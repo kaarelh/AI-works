@@ -1,4 +1,4 @@
-# Referee report: separations (proof lens)
+# Round 1 referee report: separations (proof lens)
 
 **Verdict.** The mathematics in sec:separations is essentially sound: every construction checks out, and so do its probabilities and reductions. One headline claim goes beyond what is proved (major): "the prover helps exactly when P is not weakly automatable", repeated in the abstract and intro. The corollary is true, but the chain of citations behind it skips a needed step (major for exposition). Everything else needs only minor fixes. No critical errors.
 
@@ -76,3 +76,4 @@ Scratch scripts: /tmp/claude-0/-home-user-AI-works/02f29707-9759-5ff3-9757-46e1f
 **Problem.** The equivalence holds, and I re-derived both directions. Forward: amplify the gap with an AND of k independent copies. Backward: Merlin sends j = ceil(log2(1/p)) and a prMA proof for the gap problem at threshold 2^-j, giving L = 2^-j/gamma >= p/(2*gamma). Three problems remain. [bgm2006] introduces SBP but does not state this equivalence, which is folklore and needs a two-line proof. The oracle claim should cite its source precisely; I believe BGM06 give an oracle with SBP not in MA, and Aaronson-Kothari-Kretschmer-Thaler 2020 strengthen it to QMA. I could not check this online. The derandomisation clause has no citation; prAM = prNP follows from hardness against nondeterministic circuits (Miltersen-Vinodchandran, Shaltiel-Umans). Finally, sec-limits.tex states the same fact for the language classes ('SBP contained in MA', 'is exactly a proof'). That is not known to be equivalent; the promise version given here is the right one.
 
 **Proposed fix.** Add the two-line proof of the equivalence. Cite the oracle separation and the AM=NP derandomisation explicitly. Change sec-limits.tex to prSBP and prMA. Optionally note that a constant factor upgrades to 1+eps by tensoring (k = O(1/eps) copies).
+

@@ -1,4 +1,4 @@
-# Referee report: ctx-modules (counterexample lens)
+# Round 1 referee report: ctx-modules (counterexample lens)
 
 **Verdict.** contains false statements. The core results are correct: the Theorem thm:cw construction, F1/F2, decomposability, the d-DNNF claim, cw=0 iff DNNF, Lemma lem:quotient and laminarity inside the output cone. Two statements are false as written, though: (1) because the definition says "nested gates flattened", the Example's cw=O(w) claim fails; (2) the NNF size bound fails under flattening. The module-walk paragraph also claims more than the lemma proves.
 
@@ -67,3 +67,4 @@ The existing pytest ctxwidth tests pass (9/9). Not verified: the Meel-de Colnet 
 **Problem.** b_i is never defined in thm:cw. thm:sis(a)'s 'comparator on ceil(log2 b_i) fresh bits' gives #E' = (prod b_i) D(E) only if the negative literal becomes the range test [a_i <= u_i < b_i]; the test [u_i >= a_i] gives 2^{ceil(log b_i)} - a_i preimages. The identity also needs smoothing with respect to all n variables, otherwise the product runs only over vars(E). The d-DNNF hypothesis 'every OR-gate has semantically disjoint children' must refer to the OR-gates of the NNF in the root's cone, which include De Morgan duals of negated AND-gates. That is much more restrictive than the wording suggests. With these readings the corollary is correct.
 
 **Proposed fix.** Write q_i = a_i/b_i. Specify the literal replacements as x_i -> [u_i < a_i] and NOT x_i -> [a_i <= u_i < b_i], each an O(log b_i)-size OBDD. Smooth over all n variables. Say 'every OR-gate of the NNF (in the root's cone)'.
+

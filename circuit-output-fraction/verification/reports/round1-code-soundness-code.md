@@ -1,4 +1,4 @@
-# Referee report: code-soundness (code lens)
+# Round 1 referee report: code-soundness (code lens)
 
 **Verdict.** needs major fixes. The sampling code is sound: tens of thousands of runs checked against exact p found no failures. Two soundness bugs remain, each giving a wrong interval with probability 1. (1) The Part-2 verifier trusts a support field that the prover controls. (2) The Janson/Harris code computes D(B_i) wrongly when a clause repeats a literal. There are also three minor floating-point or validation issues. The theorems themselves are not affected; these are implementation bugs on soundness-critical paths. Code reviewed: HEAD 42ec83fb (includes 6f67d2a9 'outward-rounded envelope/DFSB/Janson'); the code was being edited while I worked, and every finding was re-run against this version.
 
@@ -69,3 +69,4 @@ Results (t_janson_dup.py):
 **Problem.** The requirement that samples lie in [0,1], which the KL interval needs, is enforced only by an assert, and python -O removes asserts. With a malformed envelope, a weight 1/phi = inf or NaN would then reach total/N. kl_interval clamps that mean to 1 and returns an interval near 1 for E[W], silently inflating the estimate.
 
 **Proposed fix.** Replace the assert with an explicit check (np.isfinite(z).all() and the [0,1] bounds) that raises ValueError, or clip z to [0,1], which is sound for the lower-bound path. Do the same for any other assert that guards soundness.
+

@@ -1,4 +1,4 @@
-# Referee report: dfsb (counterexample lens)
+# Round 1 referee report: dfsb (counterexample lens)
 
 **Verdict.** contains false statements. Theorem thm:dfsb (soundness, the pilot thresholds, the pruning argument, the interval-ratio propagation) is correct. Several claims around it are false as written: the "read-once compositions" inclusion in cor:dfsb(a), the O(1) tree size and cost in cor:dfsb(b), "no sampling at all" with K=1 in cor:dfsb(c), "read-once formulas (exactly)" once (R8) is applied, and the speed-up bound drawn from ETH in sec:part1-limits. Each has a short fix, given below.
 
@@ -113,3 +113,4 @@ The closure claim is also unproved, and it fails for local rewrites at large-sup
 **Problem.** (i) 'At most two copies of every gate' fails for large-weight threshold gates; the code makes them opaque nodes (nnf.py), and DFSB's description never says how (F), (D) and (B) treat opaque nodes. (ii) Flattening can create repeated children, e.g. AND(A, AND(A, B)). The code deduplicates them; the paper does not, and without deduplication sv(A) enters Conf and (D) fails. (iii) Read-once formulas containing XOR (allowed by the setting) are not handled exactly: x XOR y becomes the non-decomposable (x AND NOT y) OR (NOT x AND y).
 
 **Proposed fix.** Define opaque nodes and their treatment; add 'deduplicate children after flattening'; write 'read-once {AND, OR, NOT}-formulas'.
+

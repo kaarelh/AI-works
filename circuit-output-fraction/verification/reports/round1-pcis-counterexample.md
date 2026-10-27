@@ -1,4 +1,4 @@
-# Referee report: pcis (counterexample lens)
+# Round 1 referee report: pcis (counterexample lens)
 
 **Verdict.** Contains false statements. The integer-weight threshold example claims K=O(sqrt n), and that claim is false. The union-bound adaptivity argument of thm:pcis-sound is correct. The identity in thm:sis(a)/(b) is correct, and so are the [0.58,1.70] constants. Still, thm:pcis-sound holds only if three rules are fixed: the exact rule (d-DNNF determinism cannot be checked), the thm:sis node (estimate vs. sound interval) and the proposal rule (the seed sampler cannot be checked). thm:certenv's class R is larger than its proof covers. These need major fixes.
 
@@ -83,3 +83,4 @@ Checked by hand: the inductive soundness of the sandwich rules for AND, OR and N
 **Problem.** 'Exactly when' claims a characterization, but no converse is proved. PCIS is also complete through prod plus mc leaves on syntactically decomposed products, without any R-envelope of small K. The sequential sampler is the standard Jerrum-Valiant-Vazirani counting-to-sampling reduction combined with Knuth's weighting. It is not part of [meel2026dnnf], and the wording suggests it is.
 
 **Proposed fix.** Replace 'exactly when' with 'whenever' and point to thm:certenv. Reword the attribution: 'combined with the self-reducibility sampler (JVV) with Knuth-style weights [knuth1975], the FPRAS of [meel2026dnnf] removes the dispersion'.
+

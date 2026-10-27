@@ -1,4 +1,4 @@
-# Referee report: boxes-tilting (proof lens)
+# Round 1 referee report: boxes-tilting (proof lens)
 
 **Verdict.** sound with minor fixes. I found no false theorem statement and no broken proof among the assigned results (thm:boxes, prop:tilting, thm:janson). The problems are constants, unstated cost terms or hypotheses, one wrong cross-reference, one false runtime claim in the text, and one overclaim in sec-part2 that cites prop:tilting.
 
@@ -100,3 +100,4 @@ Not verified (no network access): whether gkm2010 / gopalan2011fptas cover produ
 **Problem.** If a derivation is a sub-DAG ('keeping one child of every Sum gate reached'), the counting identity fails for shared constant-only nodes. Example: Prod(S, S) with S = Sum(1, 1) is vacuously decomposable and computes 4, but has only 2 sub-DAG derivations. A sampler that memoises S would also choose its child only once. Nodes with nonempty support cannot be reached twice, so this is an edge case only.
 
 **Proposed fix.** Define derivations on the tree unfolding of Φ (each occurrence chooses independently), or require Prod children to have nonempty support, after folding constant subcircuits into a single constant leaf.
+

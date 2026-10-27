@@ -1,4 +1,4 @@
-# Referee report: separations (counterexample lens)
+# Round 1 referee report: separations (counterexample lens)
 
 **Verdict.** contains false statements. The core constructions are correct: V_T soundness, the Valiant-Vazirani and Goldreich-Levin lower-bound separations, the canonical-pair equivalence for the [0,0] task, pad_a, the Corollary, UP cap coNP, both orientations of the NP-hardness barrier, and prSBP vs prMA. Two claims are stated more strongly than what is proved: (1) uniquely satisfiable circuits are 'certified exactly by one witness', which read literally implies coNP in MA; (2) 'the prover helps exactly when P is not weakly automatable' (also in the abstract, intro and README), whose 'only if' direction is proved only for the specific [0,0] task. The rest are minor precision fixes.
 
@@ -92,3 +92,4 @@ I could not re-read the cited abstracts: the web-search budget was exhausted and
 **Problem.** (a) 'Cannot be satisfiable' holds only with probability 1-delta, and only if the procedure is run with a full-support D (e.g. uniform). Under a product D with some q_i in {0,1}, a satisfiable C can have p_D(C)=0, so [0,0] is then correct. (b) Z_P^m should read 'a P-refutation of size at most m(|C|)'. The canonical pair with a fixed polynomial m differs from Pudlak's pair {(phi,1^m)}; they are equivalent only for P that tolerates padding with small overhead. (c) The PCIS certificate for pad_a(C) refutes the beta=0 restriction of pad_a(C), whose Tseitin encoding is not literally that of C. P must be closed under restrictions and weakening for C's refutation to transfer. (d) 'Task-1 procedure' is never defined; it means a prover-free procedure in the sense of Def. def:sound.
 
 **Proposed fix.** Write 'the separator runs the procedure under the uniform distribution and answers SAT unless U=0; by soundness it errs on satisfiable C with probability at most delta'. Write 'of size at most m(|C|)'. Add 'P closed under restrictions (true for resolution, cutting planes, (TC0-)Frege, EF)'. Replace 'Task-1 procedure' with 'prover-free procedure (Def. def:sound)'.
+

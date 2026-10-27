@@ -1,4 +1,4 @@
-# Referee report: envelopes (counterexample lens)
+# Round 1 referee report: envelopes (counterexample lens)
 
 **Verdict.** The mathematics is sound and needs only minor fixes. Lemma lem:envmass, Theorem thm:envelope (i)-(iv), Lemma lem:K and the variance formula are correct up to the edge cases, constants and wording listed below. Separately, the implementation has one major soundness gap: it computes the "exact mass Z" in float64, so it can return a confidently wrong interval such as [0,0] when p > 0.
 
@@ -86,3 +86,4 @@ Numerical checks:
 **Problem.** This holds only for {∧,∨,¬} circuits. A ⊕ gate of fan-in k needs Θ(k) ∧/∨ gates per polarity. Threshold gates with large weights have no small NNF; the project's own nnf.py keeps them as opaque 'X' nodes. The envelope section's references to DNNFs and supports rely on this definition.
 
 **Proposed fix.** Restrict the 'at most two copies' claim to {∧,∨,¬}. Say that ⊕ expands to O(fan-in) gates, that thresholds with polynomially bounded integer weights expand via a counter DP, and that other gates stay opaque (and can be handled as boxes).
+

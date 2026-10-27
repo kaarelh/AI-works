@@ -1,4 +1,4 @@
-# Referee report: lower-surprise (proof lens)
+# Round 1 referee report: lower-surprise (proof lens)
 
 **Verdict.** needs major fixes. The identity in Proposition prop:proposal and the main inequality of Theorem thm:surprise(a) are correct. Part (b) is underspecified. Under the natural reading that gives "exactly 1.5" it is false, and its proof sketch runs the coupling in the direction that only gives T*2^l, not T. The tightness and "matching lower bound" claims go beyond what is proved, and the soundness of the proposal rule silently assumes the prover's pmf and sampler agree, which the verifier cannot check.
 
@@ -90,3 +90,4 @@ This is not a matching lower bound for min_pi(|pi| + 2^{sigma_u(pi)}). Also, Hil
 - The success probability (1 - delta) is not stated, and the proof proves only the identity, not the sample bound.
 
 **Proposed fix.** Restate: "if tau <= Kp and the inputs x in C^{-1}(1) with psi(phi(x)) = x and D(x) <= tau P_R(phi(x)) have total D-mass at least (1 - eps/2)p, then with probability >= 1-delta, tau times the KL lower end for W/tau is >= (1-eps)p after N = O(K log(1/delta)/eps^2) samples". Add the proof: E W >= (1-eps/2)p, and the two hypotheses force tau >= (1-eps/2)p, so tau/E W <= 2K. The multiplicative Chernoff bound applied to W/tau then puts the KL lower end within a factor (1-eps/2) of E W once N >= cK log(1/delta)/eps^2, and (1-eps/2)^2 >= 1-eps.
+

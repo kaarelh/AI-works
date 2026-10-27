@@ -1,4 +1,4 @@
-# Referee report: dfsb (proof lens)
+# Round 1 referee report: dfsb (proof lens)
 
 **Verdict.** contains false statements. The core of Theorem thm:dfsb holds: soundness, the pilot constants, ratio propagation and the cost formula under its hypothesis. Three side claims are false as written: the 2^{o(log(1/p))} remark in sec:part1-limits, the read-once-composition clause of Cor. cor:dfsb(a), and the degree-2 algebraic module. The algorithm is also underspecified in a way that breaks the polynomial-time claim of Thm thm:meta: Phase 2 has no sample caps and loose leaves have no rule.
 
@@ -106,3 +106,4 @@ Growth is about 2^{0.7k}, although C is 1/2-dense. The output is still tight ([0
 **Problem.** (1) The pruning argument ('continues identically') needs T*_K to be well defined. That requires deterministic tie-breaking in (B) and a rule for when unit propagation refutes h; in that case D(h)=0 and it should be a (T) leaf. Neither is stated. (2) The treewidth module uses a greedy elimination order, which carries no width guarantee. Completeness on tw=O(log|C|) needs the Bodlaender et al. 5-approximation actually to be run.
 
 **Proposed fix.** Add: '(B) breaks ties by smallest index; if propagation derives a conflict, h is the constant 0.' In the treewidth item: 'use the order of the 5-approximate tree decomposition [bodlaender2016] (width <= 5tw+4), or the greedy order if it is narrower'.
+

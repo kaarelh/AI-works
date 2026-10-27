@@ -1,4 +1,4 @@
-# Referee report: limits (proof lens)
+# Round 1 referee report: limits (proof lens)
 
 **Verdict.** Sound, with minor fixes. Prop. worstcase (a, b), Thm. blackbox, Thm. ma and Prop. interactive are all correct in substance. The fixes needed are: one false side claim (the white-box sentence in the Remark after thm:blackbox; a major finding), a missing range hypothesis in the 'In particular' of thm:blackbox, a 1-delta that should be 1-2delta in both parts of prop:worstcase, a circuit-simulation constant, an imprecise SBP equivalence, and some imprecise assumptions in prop:interactive and the Fiat-Shamir remark.
 
@@ -91,3 +91,4 @@ No repository file was edited. Scratch scripts are in /tmp/claude-0/-home-user-A
 **Problem.** Both sentences claim more than is proved. thm:ma is conditional (it assumes coNP is not in MA) and concerns upper bounds only. thm:blackbox rules out black-box certification only below about 1/T, not black-box upper-bound verification in general.
 
 **Proposed fix.** Write '... and, unless coNP is contained in MA, can be complete for upper bounds only on a restricted class'. In the intro, write 'black-box verification of upper bounds below ~1/T is impossible'.
+
