@@ -154,6 +154,6 @@ nets_cewd1.0).
 - `posthoc_ggbt.py` (discreteness audit D3): ggbt alone, refitted with the frozen `fit_ggbt` at n = 60000 on `qd_a` and
   `qd_b`, seed 0, with its full bank, raw pixels only, pooled sums without pairs, and the full bank at 100 rounds. It
   explains which part of ggbt carries its error; it is not evidence for Q2.
-- At ~06:05 UTC the memory cgroup killed two reference runs (the resumed `mlp` on `qd_a` at n = 60000 and `mlp_pool` on
+- At ~06:05 and ~06:35 UTC the memory cgroup killed reference and post-hoc runs (the resumed `mlp` on `qd_a` at n = 60000 and `mlp_pool` on
   `qd_a` at n = 60000) when the orchestrator started two ggbt ablations at once. Both were rerun from their saved state,
   one at a time; no learner or setting changed.
