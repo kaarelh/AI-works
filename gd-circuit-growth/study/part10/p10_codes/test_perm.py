@@ -17,12 +17,13 @@ def bar_family(X, L):
 
 for ds, n in (("qd_dev", 2000), ("fashion_mnist", 2000)):
     D = DATA.load(ds); pool, _ = DATA.splits(D, 0); X = D["X"][pool[:n]]
-    b0, p0 = bar_family(X, 2)
-    for s in range(2):
-        perm = np.random.default_rng(100 + s).permutation(X.shape[1])          # new column j = old column perm[j]
-        b1, p1 = bar_family(X[:, perm], 2)
-        b1 = [frozenset(int(perm[j]) for j in b) for b in b1]
-        p1 = {k: [frozenset(int(perm[j]) for j in b) for b in v] for k, v in p1.items()}
-        same_b = sorted(map(sorted, b0)) == sorted(map(sorted, b1))
-        same_p = all(sorted(map(sorted, p0[k])) == sorted(map(sorted, p1[k])) for k in p0)
-        print(ds, n, "perm", s, "bars identical:", same_b, " pooling sets identical:", same_p, " (bars: %d)" % len(b0), flush=True)
+    for L in (2, 4):
+        b0, p0 = bar_family(X, L)
+        for s in range(2):
+            perm = np.random.default_rng(100 + s).permutation(X.shape[1])          # new column j = old column perm[j]
+            b1, p1 = bar_family(X[:, perm], L)
+            b1 = [frozenset(int(perm[j]) for j in b) for b in b1]
+            p1 = {k: [frozenset(int(perm[j]) for j in b) for b in v] for k, v in p1.items()}
+            same_b = sorted(map(sorted, b0)) == sorted(map(sorted, b1))
+            same_p = all(sorted(map(sorted, p0[k])) == sorted(map(sorted, p1[k])) for k in p0)
+            print(ds, n, "L", L, "perm", s, "bars identical:", same_b, " pooling sets identical:", same_p, " (bars: %d)" % len(b0), flush=True)

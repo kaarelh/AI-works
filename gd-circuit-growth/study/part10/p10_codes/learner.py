@@ -1,17 +1,21 @@
 """p10_codes (Part 10, image builder I2): v2 = hyb_portfolio2 (part9/hyb_portfolio2/learner.py, md5 e38af404...) with one
 change, in its image member 'gates' (ggbt's feature bank and LightGBM layout); everything else is v2's code, unchanged.
 
-THE CHANGE (see DESIGN.md).  ggbt's bank [x, pooled sums at k = 4, 9, 16, 300 prototype-pair projections] becomes
-  [x, pooled sums at k = 4, 9, 16, BARS],  with no prototype pairs and a smaller per-tree column fraction,
-where the bars are discrete local codes on the data-recovered topology: every non-constant pixel i has 8 most-correlated
-pixels (ranks 2..9 of the same ranked correlation lists that give v2's pooling sets); they are paired into 4 'axes' by
-least mutual correlation (on a grid: opposite neighbours), and the bar of (i, axis) is the straight run of pixels through
-i along that axis, continued by the same pairing rule at the next pixel ('go straight on'), BAR_L steps each way.  A bar
-feature is the subset sum of the pixels on it (weights in {0, 1}); 4 bars per pixel per length.  Split thresholds are
-LightGBM histogram bins (data quantiles), as before.  Every object is built from training-row statistics only (rounded
-correlations, fingerprint tie-breaks): a column permutation permutes the bars exactly (test_perm.py).  LightGBM runs with
-force_col_wise=True (bit-identical to the automatic layout on v2's bank, Part 9; checked again here) and the bank is
-built separately for the booster's fitting and inner-validation rows (memory).  gknn and every other member: v2's.
+THE CHANGE (see DESIGN.md).  One more boosted member, 'cgbt' ('code' gbt), next to v2's 'ggbt' (which is unchanged):
+  cgbt = LightGBM, with ggbt's settings except the column fraction (codes_ff), on [x, pooled sums at k = 4, 9, 16, BARS]
+         (no prototype pairs);
+the stacker weights it against ggbt and every other member, as for any member.  The BARS are discrete local codes on the
+data-recovered topology: every non-constant pixel i has 8 most-correlated pixels (ranks 2..9 of the same ranked
+correlation lists that give v2's pooling sets); they are paired into 4 'axes' by least mutual correlation (on a grid:
+opposite neighbours), and the bar of (i, axis) is the straight run of pixels through i along that axis, continued by the
+same pairing rule at the next pixel ('go straight on'), L steps each way (L in codes_bars).  A bar feature is the subset
+sum of the pixels on it (weights in {0, 1}); 4 bars per pixel per length.  Split thresholds are LightGBM histogram bins
+(data quantiles), as before.  Every object is built from training-row statistics only (rounded correlations,
+fingerprint tie-breaks): a column permutation permutes the bars exactly (test_perm.py).  Both boosters run with
+force_col_wise=True (bit-identical predictions to the automatic layout on v2's bank, Part 9 and check_same here; 2-3x
+faster), and each bank is built separately for the booster's fitting and inner-validation rows (memory).  cgbt draws from
+its own generator, so ggbt's fits are v2's bit for bit; gknn and every other member: v2's.  codes_mode='replace' (dev
+only) swaps ggbt's bank for cgbt's instead of adding a member.
 
 v2's docstring follows.
 
@@ -461,7 +465,7 @@ class Learner:
     def __init__(self, K=5, K_small=10, K_small_n=500, lin_one_n=10000, kfold_max=3000, hold_max=6000, ks=(1, 3, 9, 27), lin_C=(0.05, 1.0), gbt_trees=100,
                  et_trees=100, dfg_share=(0.35, 0.5), dfg_dmax=256, lam_w=1e-2, members=None, name="p10_codes",
                  gates_k=9, gates_ks=(4, 9, 16), gates_pairs=300, gates_rounds=400, gates_ff=0.12, gates_dmin=256,
-                 codes_bars=(2,), codes_pairs=0, codes_ff=0.07, codes_mode="both", gates_col_wise=True):
+                 codes_bars=(2, 4), codes_pairs=0, codes_ff=0.05, codes_mode="both", gates_col_wise=True):
         self.K_small, self.K_small_n, self.lin_one_n = K_small, K_small_n, lin_one_n
         self.K, self.kfold_max, self.hold_max, self.ks, self.lin_C = K, kfold_max, hold_max, tuple(ks), tuple(lin_C)
         self.gbt_trees, self.et_trees, self.dfg_share, self.dfg_dmax, self.lam_w = gbt_trees, et_trees, dfg_share, dfg_dmax, lam_w
