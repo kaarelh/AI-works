@@ -6,8 +6,8 @@ For each n of the toy grid (seed s), the fit of eval_toy.py --perm is reproduced
   w_dfg        the stacker's weight share of the DFG members (dfg + dfg_forced) among all kept members
   terms        the DFG model's largest terms in original coordinates (hooks.dfg_terms; share = sd of the term's output)
   support      inputs used by terms with share >= 5% of the largest (precision / recall against the true relevant set)
-  classes      for each true signed-symmetry class of size >= 3 (hooks.symmetry_classes): the best-matching sum block or
-               factor of a product block (Jaccard of the sets; sign_ok = signs agree up to a global flip; exact = both)
+  classes      for each true signed-symmetry class of size >= 3 (hooks.symmetry_classes): the best-matching sum block,
+               factor of a product block, or modulator chi_M of a modulated block (a parity's inputs: signs irrelevant) (Jaccard of the sets; sign_ok = signs agree up to a global flip; exact = both)
   fourier_chi  the target's Fourier weight on the characters in the model (sum of fhat(S)^2 over its chi_S)
   g            per class: [t, count, mean target, mean DFG value] over the test inputs at each value of the class's
                signed sum t (the learned accept set against the true one)
@@ -51,9 +51,11 @@ def summarise(r, truth, F):
         if len(c["S"]) < 3:
             continue
         best = dict(jaccard=0.0, sign_ok=False, exact=False, desc=None, share=0.0)
-        for t, fac in [(t, f_) for t in terms if t["kind"] == "sum" for f_ in t["factors"]]:   # every factor of every block
+        facs = [(t, f_) for t in terms if t["kind"] == "sum" for f_ in t["factors"]]              # every factor of every block,
+        facs += [(t, dict(S=t["mod"], signs=[None] * len(t["mod"]))) for t in terms if t["kind"] == "sum" and t["mod"]]   # and its modulator
+        for t, fac in facs:
             S = set(fac["S"]); J = len(S & set(c["S"])) / len(S | set(c["S"]))
-            sg = dict(zip(fac["S"], fac["signs"])); ok = [(i, s) for i, s in zip(c["S"], c["signs"]) if s is not None and i in sg]
+            sg = dict(zip(fac["S"], fac["signs"])); ok = [(i, s) for i, s in zip(c["S"], c["signs"]) if s is not None and i in sg and sg[i] is not None]
             agree = bool(ok) and (all(sg[i] == s for i, s in ok) or all(sg[i] == -s for i, s in ok))
             if (J, agree, t["share"]) > (best["jaccard"], best["sign_ok"], best["share"]):
                 best = dict(jaccard=round(J, 3), sign_ok=agree, exact=J == 1.0 and (agree or not ok), desc=t["desc"], share=t["share"])

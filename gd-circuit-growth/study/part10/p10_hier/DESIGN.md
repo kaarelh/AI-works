@@ -7,8 +7,14 @@ development; the file was made read-only and not changed afterwards. Starting po
 
 Data access: development used only validation rows of the seed-0 training pools (train = pool[:n], validation =
 pool[50000:60000]) of `qd_dev`, `qd_a`, `qd_b`, Fashion-MNIST, plus optdigits (tabular, identity check). No test row was
-scored before the freeze. `qd_c`, `qd_d` and `dlheld7` were never loaded, generated, printed or inspected, and no result
-file or log about them was read.
+scored before the freeze. `qd_c`, `qd_d` and `dlheld7` were never loaded, generated, printed or inspected by this builder.
+
+**Disclosure (after the freeze).** At about 20:00 UTC, 15 minutes after the freeze, while finding out why the n = 60000
+dev cell was waiting for the shared lock, I printed the last 5 lines of the stdout log of the process holding it
+(`scratchpad/p10/logs/mlp_qd_c.log`, the orchestrator's `mlp.py qd_c` reference run). Those lines are the baseline MLP's
+`qd_c` test errors at n = 100 – 3000. Nothing about any discrete learner on `qd_c` was shown, nothing was loaded or run,
+and the learner had been frozen and made read-only before; it cannot have influenced the design. No other held-out
+file or log was opened.
 
 ## 1. What changed (and only this)
 
