@@ -130,14 +130,50 @@ Everything is counted as in v2, plus:
 `eval_cells.py p10_hier.learner:Learner <ds> --ns=... --seeds=0 --tag=p10_hier-dev`: test error, seed 0, the same splits
 and per-fit rng as v2's files (`p9_gates-dev__{qd_dev,fashion_mnist}`, `hyb_portfolio2__{qd_a,qd_b}`).
 
-RESULTS_PLACEHOLDER
+Run 27 October 19:45–21:09 UTC (four processes at once on the shared, heavily loaded machine; load average 20–26 on
+4 cores, so CPU seconds are inflated relative to an idle machine, as v2's own were). Every cell records the learner md5
+`1da21bf7…`. The `qd_dev` process was OOM-killed once by the shared memory cgroup (about 20:29, during its n = 10000 fit; total
+cgroup memory, not this fit alone) and restarted; the cell is resumable, so the n = 1000 cell was kept and n = 10000
+refitted from scratch with the same rng.
+
+| set | n | v2 err | p10_hier err | log2 ratio | v2 CPU s | p10_hier CPU s | v2 budget | p10_hier budget | ggbt out-of-fold err | ggbt weight | ggbt rounds |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| qd_dev | 1000 | 0.2217 | **0.2101** | −0.078 | 132 | 201 | 0.36 | 0.48 | 0.266 | 0.30 | 150 (5 folds) |
+| qd_dev | 10000 | 0.1467 | **0.1329** | −0.143 | 376 | 467 | 0.25 | 0.31 | 0.1445 | 0.35 | 214 |
+| fashion_mnist | 1000 | **0.1805** | 0.1816 | +0.009 | 186 | 282 | 0.44 | 0.58 | 0.187 | 0.11 | 150 (5 folds) |
+| fashion_mnist | 10000 | 0.1247 | **0.1234** | −0.015 | 457 | 466 | 0.38 | 0.38 | 0.1246 | 0.20 | 161 |
+| qd_a | 3000 | 0.1875 | **0.1759** | −0.092 | 542 | 462 | 0.58 | 0.72 | 0.1887 | 0.32 | 150 (5 folds) |
+| qd_a | 10000 | 0.1509 | **0.1456** | −0.052 | 606 | 307 | 0.28 | 0.22 | 0.1675 | 0.41 | 119 |
+| qd_b | 3000 | 0.2238 | **0.2109** | −0.086 | 625 | 485 | 0.62 | 0.70 | 0.2177 | 0.31 | 150 (5 folds) |
+| qd_b | 10000 | 0.1860 | **0.1748** | −0.090 | 563 | 447 | 0.25 | 0.29 | 0.182 | 0.32 | 170 |
+| qd_a | 60000 | 0.1197 | LARGE_ERR | LARGE_LR | 1757 | LARGE_CPU | 0.42 | LARGE_FRAC | | | |
+
+(v2: `p9_gates-dev__{qd_dev,fashion_mnist}.json`, `hyb_portfolio2__{qd_a,qd_b}.json`, seed 0; budget = the fit's own
+FLOP count / `common.budget_real` (3 MLP training runs); out-of-fold errors are on the fit's stacking rows. Table from
+`compare_dev.py`.)
+
+**Integration-rule numbers.**
+- Mean log2(err / v2 err) over the 8 small cells: **−0.068** (threshold: below −0.05). 7 of 8 cells lower, Fashion-MNIST
+  n = 1000 +0.009 (11 more errors among 10000 test points). QuickDraw cells alone: −0.090; Fashion-MNIST: −0.003.
+- `qd_a` n = 60000: LARGE_SENTENCE
+- Budget: every small cell within budget (largest 0.72, `qd_a` n = 3000).
+
+**Reading.**
+- The QuickDraw gains in the portfolio (−0.05 to −0.14) are about what the booster-alone dev runs predicted (−0.07 to
+  −0.14), diluted where the stacker leans on other members (`qd_a` n = 10000: −0.052).
+- At n = 10000 v2's early-stopping rule (inner validation split of 10% = 800 points, error-based, patience 50, at least
+  150 rounds) stopped the new booster at 119–214 rounds, while on 10000 validation rows the dev curves were still
+  falling at 300 (§3). The 600-round cap therefore did not bind at n = 10000, and the n = 10000 cells were cheaper in
+  CPU than v2's at `qd_a` / `qd_b` (column-wise histograms). The early-stopping rule is v2's and was not changed.
+- Small n costs more: the k-fold regime fits the booster 6 times with 150 rounds on the larger bank (`qd_dev` n = 1000:
+  201 CPU s against 132; Fashion-MNIST: 282 against 186).
 
 ## 6. Weaknesses
 
 - **The gain is QuickDraw's.** On the dev validation rows the level-2 bank helps the booster on `qd_dev`, `qd_a`, `qd_b`
   (−0.07 to −0.14 log2 for ggbt alone) and does nothing on Fashion-MNIST (centred, aligned garments: translation
   tolerance has nothing to buy). MNIST was not used. The effect on the portfolio is diluted by the stacker (ggbt has
-  0.25–0.5 of the weight) and by the members that did not change.
+  0.11–0.41 of the weight on the dev cells) and by the members that did not change.
 - **Closer to a CNN in spirit.** The pooling sets recover the pixel grid (Part 9 discreteness audit D1); a sum-pool
   followed by a max-pool over recovered neighbourhoods is a fixed (untrained) two-layer CNN-like feature hierarchy. It
   never uses the layout, learns no filter and has no continuous direction, but the comparison with permutation-invariant
