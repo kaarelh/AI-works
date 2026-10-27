@@ -1,0 +1,168 @@
+\section{Limits}\label{sec:limits}
+
+This section fixes what cannot be done, so that the positive results of
+\cref{sec:envelopes,sec:part1,sec:part2} can be read against it.
+
+\subsection{Without a prover: structure is necessary}
+
+\begin{proposition}[worst case]\label{prop:worstcase}
+\begin{enumerate}[label=(\alph*)]
+\item If a sound efficient procedure is complete (for some fixed $\eps>0$; any
+finite $\eps$ works) on all 3-CNF formulas under the uniform distribution, then
+$\NP\subseteq\BPP$.
+\item Let $G_k:\bits^k\to\bits^{2k}$ be computable by $\poly(k)$-size
+circuits and suppose every circuit of size $T(k)$ distinguishes $G_k(U_k)$
+from $U_{2k}$ with advantage less than $1/2$. For $y\in\bits^{2k}$ let
+$C_y(x)=[G_k(x)=y]$ on inputs $x\in\bits^k$, $k\ge3$. Then $p(C_{G(s)})\ge 2^{-k}$ for
+every seed $s$, while $\Pr_y[p(C_y)>0]\le2^{-k}$ for uniform $y$; and any
+sound procedure with $\delta\le1/8$ that is complete on $\{C_{G(s)}\}$ within
+time $t$ (on that family) satisfies $t\log t\ge T(k)/\poly(k)$.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(a) Answer ``satisfiable'' iff $L>0$. If $p=0$, then $L>0$ means $p\notin[L,U]$,
+which has probability at most $\delta$. If $p>0$ (so $p\ge2^{-n}$), then $L=0$
+means the output is not tight or does not contain $p$, which has probability at
+most $2\delta$. Run with $\delta=1/8$.
+(b) The bounds on $p$ are immediate ($\E_y|G^{-1}(y)|=2^{k-2k}$). Let $A$ be
+the procedure, $t$ its running time on the family, and consider the test
+``$A(C_y)$, stopped after $t$ steps, outputs $L>0$'' (stopping only lowers the
+firing probability on other inputs). On $y=G(s)$ it fires with probability at
+least $1-2\delta$ (a tight interval containing $p>0$ has $L>0$; tightness and
+containment each fail with probability at most $\delta$). On uniform $y$, with
+probability at least $1-2^{-k}$ we have $p=0$, and soundness forces $L\le p=0$
+except with probability $\delta$. The advantage is at least
+$1-3\delta-2^{-k}\ge1/2$ for $\delta\le1/8$, $k\ge3$. Fixing $A$'s coins to their
+best value and simulating $t$ steps by a circuit of size $O(t\log t)+\poly(k)$
+gives the claim.
+\end{proof}
+
+Monte Carlo on $C_{G(s)}$ costs $O(2^k\poly(k))$. So if $G$ is
+exponentially hard ($T(k)=2^{(1-o(1))k}$), no sound procedure beats sampling on
+this family by more than a $2^{o(k)}$ factor ($p^{-o(1)}$ when $p=2^{-\Theta(k)}$),
+even though every instance is a small, explicit circuit. Beating sampling is a
+matter of structure: the classes of \cref{sec:part1} are where the structure is visible to
+a polynomial-time algorithm, and those of \cref{sec:part2} are where it is
+visible to a polynomial-time verifier given a hint.
+
+\subsection{With a prover: upper bounds need deduction}
+
+Lower and upper bounds behave very differently. A lower bound $p\ge L$ can be
+witnessed by \emph{showing} probability mass: a proposal distribution $Q$
+concentrated on $C^{-1}(1)$ (\cref{sec:lower}). An upper bound must exclude
+mass that the verifier has not seen. The next theorem makes this precise:
+under the uniform distribution (or any $D$ of small collision probability), a
+verifier that only evaluates $C$ cannot certify an upper bound much below the
+reciprocal of its number of evaluations, whatever argument it is given.
+
+\begin{theorem}[sampling cannot certify upper bounds]\label{thm:blackbox}
+Let $V$ be a verifier that receives an argument $\pi$, has oracle access to
+$f:\bits^n\to\bits$, flips coins, makes at most $T$ oracle queries (at
+adaptively chosen points, from any distributions it likes), and outputs a
+number $U$. Suppose $V$ is sound for upper bounds under the uniform
+distribution: for all $f,\pi$, $\Pr[U<p(f)]\le\delta$. Then for every $f$,
+every $\pi$ and every $k\le n$,
+\[
+\Pr\big[V^f(\pi)\text{ outputs }U<2^{-k}\big]\;\le\;\delta+T\,2^{-k}.
+\]
+In particular, for $2^{-(n+1)}\le\eta\le1$, to output an upper bound below $\eta$
+with probability $1-\delta'$ a black-box verifier needs
+$T\ge(1-\delta-\delta')/(2\eta)$ queries.
+\end{theorem}
+
+\begin{proof}
+Fix $f$, $\pi$, $k$. For $t\in\bits^k$ let $H_t=\{x:x_{1..k}=t\}$ and
+$f_t=f\vee\one_{H_t}$, so $p(f_t)\ge2^{-k}$. Fix the coins $r$ of $V$. The run
+of $V^f(\pi;r)$ queries a fixed sequence of points $z_1,\dots,z_T$. The run of
+$V^{f_t}(\pi;r)$ is identical unless some $z_i\in H_t$; for each fixed $z_i$
+this happens for exactly one $t$. Hence for uniform $t$,
+$\Pr_{r,t}[\text{the runs differ}]\le T2^{-k}$, and
+\[
+\E_t\Pr_r\big[V^{f_t}(\pi;r)<2^{-k}\big]\;\ge\;\Pr_r\big[V^{f}(\pi;r)<2^{-k}\big]-T2^{-k}.
+\]
+Some $t$ attains at least the average; for it, $V$ outputs $U<2^{-k}\le
+p(f_t)$ with that probability, which soundness bounds by $\delta$.
+For the last claim take $k=\max(0,\lceil\log_2(1/\eta)\rceil-1)\le n$, so that
+$\eta\le2^{-k}\le2\eta$.
+\end{proof}
+
+\begin{remark}
+The same argument works for any distribution $D$ with enough collision entropy,
+planting $H=\{x:Ax=b\}$ for a random $k\times n$ matrix $A$ over $\F_2$ and random
+$b$: every fixed point lies in $H$ with probability $2^{-k}$, and by pairwise
+independence $D(H)\ge2^{-k-1}$ except with probability $4\cdot2^{k}\sum_xD(x)^2$
+(for a product distribution, $\sum_xD(x)^2=\prod_i(q_i^2+(1-q_i)^2)$). The bound
+becomes $\Pr[V^f(\pi)\text{ outputs }U<2^{-k-1}]\le\delta+T2^{-k}+4\cdot2^k\sum_xD(x)^2$.
+It also extends to verifiers that see a circuit for $f$ and its size but use the
+circuit only through evaluations, provided the planted gadget $G_{A,b}=[Ax=b]$ is
+padded to a topology independent of $(A,b)$ (each row as
+$\bigoplus_j(x_j\wedge a_{ij})\oplus b_i$ with constant leaves $a_{ij},b_i$): the
+planted circuits $C\vee(1\wedge G_{A,b})$ then all have the topology and size of
+$C\vee(0\wedge G_{A_0,b_0})$, so the bound holds for \emph{some} circuit for $f$ of
+size $|C|+O(nk)$, namely the latter. It cannot hold for every circuit computing $f$:
+under the uniform distribution, a verifier that sees $|C|=3$ knows
+$p\in\{0\}\cup[1/8,1]$.
+\end{remark}
+
+The verifiers of \cref{sec:part2} escape \cref{thm:blackbox} by reading the
+circuit: they check a proof that $C(x)=1$ forces $x$ into a region of small,
+exactly computable measure. Short such proofs cannot always exist unless
+$\coNP\subseteq\MA$:
+
+\begin{theorem}[no complete upper-bound arguments]\label{thm:ma}
+Suppose a sound argument system (soundness error $\delta\le1/3$) is complete
+for upper bounds on all 3-CNF formulas with $p=0$ under the uniform
+distribution, i.e.\ for each such $C$ some $\pi$ of polynomial size makes $V$
+output $U<2^{-n}$ with probability at least $2/3$. Then $\coNP\subseteq\MA$,
+and the polynomial hierarchy collapses to its second level.
+\end{theorem}
+
+\begin{proof}
+Merlin sends $\pi$; Arthur runs $V$ and accepts iff $U<2^{-n}$. If $C$ is
+unsatisfiable he accepts with probability $\ge2/3$. If $C$ is satisfiable then
+$p\ge2^{-n}$, and accepting means $V$ output $U<p$, which happens with
+probability at most $1/3$. So 3-UNSAT$\in\MA\subseteq\AM$, and
+$\coNP\subseteq\AM$ collapses $\PH$ to $\Sigma_2^p$ \cite{bhz1987} (in fact
+$\coNP\subseteq\MA$ gives $\PH=\MA$).
+\end{proof}
+
+The lower-bound side is weaker but not free: a system complete for lower
+bounds within a constant factor on all circuits under the uniform distribution
+exists iff
+$\mathrm{pr}\SBP\subseteq\mathrm{pr}\MA$ for the class $\SBP$ of \cite{bgm2006}
+(amplify the $\SBP$ gap by conjunctions of copies; conversely send the scale with
+an $\MA$ proof), and in particular it would give $\SBP\subseteq\MA$. Since
+$\MA\subseteq\Sigma_2^p$ relativizes and there is an oracle relative to which
+$\SBP\not\subseteq\Sigma_2^p$ \cite{bgm2006}, no relativizing argument shows that
+such a system exists. It does exist if $\mathrm{pr}\AM=\mathrm{pr}\NP$, which
+follows from standard derandomisation hypotheses (\cref{sec:separations}); its
+soundness then rests on the hypothesis.
+
+\subsection{Interaction trivialises the problem}
+
+The restriction to one message is essential:
+
+\begin{proposition}\label{prop:interactive}
+\begin{enumerate}[label=(\alph*)]
+\item (Sum-check \cite{lfkn1992}.) For every circuit $C$ and product $D$, let $B$ be
+the total bit length of the denominators of the marginals, and let $C'$ be $C$ with
+its threshold gates compiled into $\{\wedge,\vee,\neg,\oplus\}$-subcircuits (scale the
+weights to integers and add them in binary), so that $|C'|$ is at most quadratic in
+the input size. The exact value of $p$ has an interactive proof over a prime field
+with $|\F|>2^{B+1}$, with a polynomial-time verifier, $O(n+|C'|)$ rounds and
+soundness error $O((n+|C'|)\,d/|\F|)$, where $d\le|C'|+2$ bounds the individual
+degrees of the arithmetised Tseitin summand.
+\item (Set lower bounds \cite{gs1986}.) For uniform $D$ (or dyadic product $D$, via
+the sampler reduction), two-round public-coin protocols, repeated in parallel,
+certify $p\ge L/c$ for a constant $c$ for every circuit.
+\end{enumerate}
+\end{proposition}
+
+Applying the Fiat--Shamir transform to (a) gives, in the random-oracle model
+(or heuristically with a fixed hash), a one-message argument that is only
+computationally sound, which is not the model asked for. So the interesting
+question is the Merlin--Arthur one, where by \cref{thm:blackbox,thm:ma} an
+argument certifying upper bounds below the sampling scale must contain
+\emph{deductive} content about the circuit, and, unless $\coNP\subseteq\MA$, can be
+complete for upper bounds only on a restricted class.

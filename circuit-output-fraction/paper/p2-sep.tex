@@ -1,0 +1,274 @@
+\subsection{How much stronger is the prover?}\label{sec:separations}
+
+\paragraph{A universal verifier.} Fix a consistent theory $T$ with a
+polynomial-time decidable set of axioms that proves every true $\Delta_0(\exp)$
+sentence (an arithmetic sentence with exponentiation all of whose quantifiers are
+bounded): for instance any such extension of $I\Delta_0+\exp$, or ZFC through its
+standard interpretation of arithmetic. A $V_T$-argument is a randomized program $M$,
+a time bound $t$ written in unary, a budget $\delta_M\le\delta$, and a $T$-proof of the
+$\Delta_0(\exp)$ sentence ``at most $\delta_M2^t$ strings $r\in\bits^t$ make $M$,
+run for $t$ steps on $(C,D)$ with coins $r$, fail to output an interval containing
+$\sum_xD(x)C(x)$''. $V_T$ checks the proof and runs $M$ for $t$ steps (outputting
+$[0,1]$ if $M$ has not halted), in time polynomial in the length of the argument.
+It is sound: if the sentence were false, its negation would be a true
+$\Delta_0(\exp)$ sentence, which $T$ also proves, and $T$ would be inconsistent. It
+$p$-simulates every argument system $V'$ with a polynomial time bound $t'$ for which
+$T$ proves, as one universally quantified sentence, that $V'$ clocked at $t'$ is
+sound: in polynomial time an argument $\pi'$ for $V'$ becomes the $V_T$-argument made
+of $V'(\cdot,\cdot,\pi',\eps,\delta)$, $t=t'(|C|,|\pi'|,1/\eps,\log(1/\delta))$, $\delta$
+and the instance of that $T$-proof at $(C,D,\pi',\eps,\delta)$ (of polynomial size,
+with numerals in binary), on which
+$V_T$ has the output law of $V'$ clocked at $t'$. So $V_T$ can use any FPRAS,
+compiler, mixing-time bound or combinatorial theorem as a certified rule. This is
+the analogue, for estimation, of proof systems that are optimal relative to a
+theory \cite{kp1989}.
+
+\paragraph{Lower bounds: the prover helps unless $\NP\subseteq\BPP$.}
+Under the uniform distribution a uniquely satisfiable circuit has $p=2^{-n}$, and
+one witness certifies the tight lower bound $L=p$ (a witness list,
+\cref{sec:lower}). If a sound efficient procedure without a prover outputs some
+$L>0$ with probability at least $1-\delta$ on every uniquely satisfiable circuit,
+then $\NP\subseteq\BPP$: run it with $\delta$ of order $1/n$ on $O(n)$ independent
+Valiant--Vazirani restrictions of a formula \cite{vv1986}, which include a uniquely
+satisfiable one with probability at least $3/4$ if the formula is satisfiable and
+are all unsatisfiable otherwise, and answer ``satisfiable'' iff some run gives
+$L>0$. The matching upper bound needs a proof of uniqueness: a system certifying
+$p$ within a factor below $2$ on every uniquely satisfiable circuit would put
+$\coNP$ in $\MA$, since $\mathrm{pad}_0$ (below) maps unsatisfiable circuits to
+uniquely satisfiable ones with $p=2^{-n-1}$ and satisfiable ones to circuits with
+$p\ge2^{-n}$ (argue as for \cref{thm:ma}).
+
+One-way permutations give an average-case version. Let $f$ be a one-way
+permutation of $\bits^k$ and $C_y(x,r)=[(f(x),r,\langle x,r\rangle)=y]$ on $2k$
+inputs. For $y=(f(x_0),r_0,b)$ with $x_0,r_0,b$ uniform,
+$p(C_y)=2^{-2k}[b=\langle x_0,r_0\rangle]$, and on positive instances the preimage
+$(x_0,r_0)$ certifies $L=p$. A sound polynomial-time procedure without a prover
+outputs $L>0$ on a random positive instance $(f(x_0),r_0,\langle x_0,r_0\rangle)$
+with probability at most $\delta+\mathrm{negl}(k)$: otherwise, run on
+$C_{(f(x_0),r_0,b)}$ for a random bit $b$, answering $b$ if $L>0$ and $1-b$
+otherwise, it would predict the Goldreich--Levin bit $\langle x_0,r_0\rangle$ from
+$(f(x_0),r_0)$ \cite{gl1989}. Two-sided certificates on these instances also need a
+proof that $f^{-1}(f(x_0))=\{x_0\}$ (for $V_T$, e.g.\ the instance of a $T$-proof that
+$f$ is injective).
+
+\paragraph{Upper bounds on refutable circuits.} For a proof system $P$ and a
+polynomial $m$ let $Z_P^m$ be the set of circuits $C$ with a refutation
+$C\vdash_P\bot$ (\cref{sec:pcis}) of size at most $m(|C|)$, and $\mathrm{SAT}$ the
+set of satisfiable circuits; $(Z_P^m,\mathrm{SAT})$ is a slice of the canonical
+disjoint $\NP$ pair of $P$ \cite{razborov1994pairs}. For a set $\mathcal Z$ of
+unsatisfiable circuits, $(\mathcal Z,\mathrm{SAT})$ is \emph{separable in randomized
+polynomial time} if a randomized polynomial-time algorithm accepts every
+$C\in\mathcal Z$ and rejects every $C\in\mathrm{SAT}$, each with probability at
+least $2/3$. For $a\ge0$ let
+\[
+\mathrm{pad}_a(C)(\beta,x,w)=(\beta\wedge x=0^n\wedge w=0^a)\vee(\neg\beta\wedge C(x))
+\]
+on $1+n+a$ inputs and $\mathrm{pad}_a(\mathcal Z)=\{\mathrm{pad}_a(C):C\in\mathcal
+Z\}$; under the uniform distribution $p(\mathrm{pad}_a(C))=2^{-n-a-1}+s\,2^{-n-1}$ if
+$C$ has $s$ satisfying inputs.
+
+\begin{proposition}\label{prop:canonical}
+Let $\mathcal Z$ be a set of unsatisfiable circuits and $a\ge0$.
+\begin{enumerate}[label=(\alph*)]
+\item A sound efficient procedure without a prover that is complete on $\mathcal Z$
+exists iff $(\mathcal Z,\mathrm{SAT})$ is separable in randomized polynomial time.
+\item If $(\mathcal Z,\mathrm{SAT})$ is separable in randomized polynomial time, some
+sound efficient procedure without a prover is complete on $\mathrm{pad}_a(\mathcal
+Z)$. Conversely, if some sound efficient procedure without a prover is complete on
+$\mathrm{pad}_a(\mathcal Z)$ under the uniform distribution for some $\eps<2^a$,
+then $(\mathcal Z,\mathrm{SAT})$ is separable in randomized polynomial time.
+\item If $\mathcal Z\subseteq Z_P^m$ and $P$ is resolution, cutting planes or a
+Frege-type system ($\mathrm{TC}^0$-Frege, Frege, extended Frege), the PCIS verifier
+with $P$ outputs $[p,p]$ on every circuit of $\mathcal Z$ and of
+$\mathrm{pad}_a(\mathcal Z)$, with arguments of size $m(|C|)+\poly(|C|+a)$ ($p=0$
+on $\mathcal Z$, and $p=2^{-n-a-1}$ on $\mathrm{pad}_a(\mathcal Z)$ under the uniform
+distribution).
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(a) Given a separator, amplify it to error $\delta$ by a majority vote, and output
+$[0,0]$ if it accepts $C$ and $[0,1]$ otherwise. This is sound for every $C$ and
+$D$: if $p_D(C)>0$ then $C$ is satisfiable and $[0,0]$ is output with probability at
+most $\delta$, and if $p_D(C)=0$ both outputs contain $p$. On $\mathcal Z$ it
+outputs $[0,0]$ with probability at least $1-\delta$. Conversely, run the procedure
+under the uniform distribution with $\eps=1$ and $\delta=1/8$, and accept iff $U=0$.
+On $C\in\mathcal Z$, $p=0$, and a tight interval containing $p$ has $U\le2L\le2p=0$,
+so this happens with probability at least $1-2\delta$. On $C\in\mathrm{SAT}$,
+$p\ge2^{-n}$, so $U=0$ means $p\notin[L,U]$, which has probability at most $\delta$.
+
+(b) Given a separator, output $[0,1]$ unless the circuit has the syntactic form
+$\mathrm{pad}_a(C)$; then output $[q,q]$ with $q=D(\beta=1,x=0^n,w=0^a)$ if the
+amplified separator accepts $C$, and $[0,1]$ otherwise. Since $p=q+D(\beta=0)p_D(C)$,
+$p\ne q$ only if $C$ is satisfiable, so this is sound, and it is complete on
+$\mathrm{pad}_a(\mathcal Z)$. Conversely, run the procedure on $\mathrm{pad}_a(C)$
+under the uniform distribution with $\delta=1/8$, and accept iff
+$U<\tau=2^{-n-1}(1+2^{-a})$. On $C\in\mathcal Z$, $p=2^{-n-a-1}$, and with probability
+at least $1-2\delta$, $U\le(1+\eps)L\le(1+\eps)p<(1+2^a)2^{-n-a-1}=\tau$. On
+$C\in\mathrm{SAT}$, $p\ge\tau$, so $U<\tau$ has probability at most $\delta$.
+
+(c) A \textsc{refute} node with the given refutation outputs $[0,0]$ on $C$. For
+$\mathrm{pad}_a(C)$, \textsc{split} on $\beta$: the restriction to $\beta=1$ is
+equivalent to the subcube $x=0^n,w=0^a$, an \textsc{exact} node whose two
+implications have proofs with $O(n+a)$ steps; the restriction to $\beta=0$ gets a
+\textsc{refute} node whose refutation derives $[C=1]$ from the gadget in $O(1)$ steps
+and then uses $C$'s refutation. The root interval is $[q,q]$ with $q$ as in (b).
+\end{proof}
+
+A proof system $P$ is \emph{weakly automatable} if for some proof system $Q$ an
+algorithm finds $Q$-refutations of every unsatisfiable $F$ in time polynomial in
+$|F|$ and the size of the shortest $P$-refutation of $F$. Pudl\'ak
+\cite{pudlak2003pairs} shows that $P$ is weakly automatable iff its canonical pair,
+formulas with a $P$-refutation of size at most $k$ versus satisfiable formulas
+(each paired with $1^k$), is separable in \emph{deterministic} polynomial time.
+Every slice $(Z_P^m,\mathrm{SAT})$ reduces to it, by
+$C\mapsto(\mathrm{Tseitin}(C)\wedge[C=1],1^{m(|C|)})$. Conversely, for the systems of
+\cref{prop:canonical}(c) it reduces to a single slice: a $P$-refutation of $F$ gives
+one of $\mathrm{Tseitin}(C_F)\wedge[C_F=1]$, for a circuit $C_F$ computing $F$ gate by
+gate, with polynomial overhead (derive the clauses of $F$, or for Frege-type systems
+the equivalence of each gate variable with its subformula), so mapping $(F,1^k)$ to
+$C_F$ padded to size at least $k$ reduces the pair to $(Z_P^{m_0},\mathrm{SAT})$ for
+a fixed polynomial $m_0$. Hence, if $P$ is weakly automatable, the prover gives no
+advantage on the tasks of \cref{prop:canonical} with $\mathcal Z=Z_P^m$; and, for the
+systems of \cref{prop:canonical}(c), it strictly helps on them whenever some slice is
+not separable in randomized polynomial time. For these systems the two conditions
+differ only by derandomisation: $P$ is weakly automatable iff
+$(Z_P^{m_0},\mathrm{SAT})$ is separable in deterministic polynomial time, so if
+$\mathrm{pr}\BPP=\mathrm{pr}\Ptime$ the prover strictly helps on these tasks exactly
+when $P$ is not weakly automatable; without that, a randomized separator does not
+give Pudl\'ak's automating system, whose proofs must be checked deterministically.
+Whether weak automatability of $P$ removes the prover's advantage on larger classes,
+such as the classes
+$\mathcal K_P(m,K)$ of \cref{thm:certenv}, is open: there the argument also
+supplies the envelope pieces and the shape of the DAG, which a procedure that can
+only test given formulas for short refutations does not obviously find.
+
+\paragraph{Hard slices.} Let $(A,B)$ be a disjoint $\NP$ pair,
+$A=\{u:\exists y\,\varphi_{|u|}(u,y)\}$ and $B=\{u:\exists z\,\psi_{|u|}(u,z)\}$
+with polynomial-size formulas $\varphi_\ell,\psi_\ell$, such that
+$\varphi_\ell(u,y)\wedge\psi_\ell(u,z)$, with $u,y,z$ all variables, has
+$P$-refutations of polynomial size, the formulas being in the language of $P$.
+Suppose $P$ is closed under restrictions and passes from a refutation of a formula
+to one of its Tseitin encoding with polynomial overhead (as $\mathrm{TC}^0$-Frege,
+Frege and extended Frege do, by deriving the equivalence of each gate variable with
+its subformula). Here the Tseitin encoding defines every gate: for
+$\mathrm{TC}^0$-Frege, a threshold gate by its threshold connective (\cref{sec:pcis});
+for Frege and extended Frege, the threshold connectives of a $\mathrm{TC}^0$-Frege
+formula are first replaced by polynomial-size $\mathrm{NC}^1$ formulas. The relaxation
+that leaves threshold gates unconstrained is not meant here. For $u\in B$
+with witness $z_0$, restricting such a refutation by $(u,z_0)$ (the true closed
+formula $\psi_\ell(u,z_0)$ has a short proof) shows that the formula
+$F_u=\varphi_{|u|}(u,\cdot)$, as a circuit, lies in $Z_P^m$ for a polynomial $m$; for
+$u\in A$ it is satisfiable. So $u\mapsto F_u$ reduces $(A,B)$ to $(\mathcal
+Z,\mathrm{SAT})$ with $\mathcal Z=\{F_u:u\in B\}\subseteq Z_P^m$ (cf.\
+\cite{razborov1994pairs,pudlak2003pairs}), and a randomized polynomial-time separator
+of $(\mathcal Z,\mathrm{SAT})$ separates $(A,B)$ in randomized polynomial time,
+hence, by Adleman's argument \cite{adleman1978} (amplify the success probability,
+then fix coins that are good for all $u$ of each length), by polynomial-size
+circuits. Bonet, Pitassi and Raz \cite{bpr2000} construct such a pair, based on the
+Diffie--Hellman function, with polynomial-size $\mathrm{TC}^0$-Frege refutations,
+which no polynomial-size circuits separate unless Blum integers can be factored by
+polynomial-size circuits (their failure of feasible interpolation); Kraj\'{\i}\v{c}ek
+and Pudl\'ak \cite{kp1998} had constructed one for extended Frege from RSA. Frege and
+extended Frege $p$-simulate $\mathrm{TC}^0$-Frege, so \cref{prop:canonical} gives:
+
+\begin{corollary}\label{cor:automatability}
+Suppose Blum integers cannot be factored by polynomial-size circuits, and let $P$
+be $\mathrm{TC}^0$-Frege, Frege or extended Frege. Then there are a polynomial $m$
+and a family $\mathcal Z\subseteq Z_P^m$ such that for every $a\ge0$ the PCIS
+verifier with $P$ certifies $p$ exactly, with polynomial-size arguments, on
+$\mathcal Z$ and on $\mathrm{pad}_a(\mathcal Z)$, while no sound efficient procedure
+without a prover is complete on $\mathcal Z$, nor on $\mathrm{pad}_a(\mathcal Z)$
+under the uniform distribution for any $\eps<2^a$.
+\end{corollary}
+
+\begin{proof}
+Take $\mathcal Z=\{F_u:u\in B\}$ for the pair of \cite{bpr2000}. Certification is
+\cref{prop:canonical}(c). An excluded procedure would, by
+\cref{prop:canonical}(a,b), separate $(\mathcal Z,\mathrm{SAT})$ in randomized
+polynomial time, and hence $(A,B)$ by polynomial-size circuits.
+\end{proof}
+
+If LWE is hard for quantum polynomial-time algorithms, Arteche, Carenini and Gray
+\cite{acg2024} show that no polynomial-time quantum algorithm weakly automates
+$\mathrm{TC}^0$-Frege. We do not claim the quantum analogue of
+\cref{cor:automatability}: it would need that no bounded-error quantum algorithm
+separates a slice $(Z_P^m,\mathrm{SAT})$, which does not obviously follow, since a
+separator need not output proofs that can be checked deterministically.
+
+Finding the short proofs is a different matter. No algorithm finds resolution
+refutations of unsatisfiable CNFs $F$ in time polynomial in $|F|$ and the size of the
+shortest refutation of $F$ unless $\Ptime=\NP$ \cite{atserias2020automating}. This
+concerns automatability; \cref{prop:canonical} needs only separability of the slices,
+which would follow from weak automatability, and whether resolution is weakly
+automatable is, as far as we know, open, so no separation for resolution follows. For
+preimage circuits $C_y=[g(x)=y]$ of suitable generators $g$, it is conjectured that
+strong proof systems have no short refutations of $C_y$ for $y\notin\mathrm{range}(g)$
+(proof complexity generators \cite{abrw2004,krajicek2004dual}); if so, the PCIS
+verifier with such $P$ cannot certify $p=0$ on them by \textsc{refute}. Excluding
+certified small positive upper bounds there would need the stronger hypothesis that
+there are no short proofs $C_y\vdash_PG$ for the circuits $G$ of \textsc{envelope}
+nodes (\cref{sec:pcis}) whose envelopes have mass $n^{-\omega(1)}$.
+
+\paragraph{Two-sided, exact.} Let $\Lambda\in\mathsf{UP}\cap\coNP$, with a
+polynomial-time verifier $R(u,v)$, $v\in\bits^k$ ($k$ polynomial in $|u|$), that has
+exactly one witness if $u\in\Lambda$ and none otherwise, and a verifier $R'$ for the
+complement. Let $C_u=\mathrm{pad}_0(R(u,\cdot))$, with $R(u,\cdot)$ written as a
+circuit on $k$ inputs, so that $p(C_u)=2^{-k-1}(1+[u\in\Lambda])$ under the uniform
+distribution. If $T$ proves that $R$ has at most one witness and that no $u$ has
+witnesses for both $R$ and $R'$, then $V_T$ certifies both values exactly, from the
+witness of $R$ or of $R'$ and the instances of these two theorems. A sound efficient
+procedure without a prover that is complete on $\{C_u\}$ for some $\eps<1$ decides
+$\Lambda$ with error at most $2\delta$, by answering $u\in\Lambda$ iff $L>2^{-k-1}$
+(the two values differ by a factor $2$). For the bits of the prime factorisation,
+encoded canonically (prime factors in increasing order with multiplicity, padded to a
+fixed length, primality checked by AKS \cite{aks2004} rather than by certificates, so
+that the witness is unique), ZFC proves both theorems, and this gives a two-sided
+separation under the worst-case assumption ``factoring $\notin\BPP$'', with $V_T$
+complete on both sides.
+
+\paragraph{Why not NP-hardness?} Suppose SAT reduces, by a randomized many-one
+reduction, to the gap problem ``$p\ge t_1$ versus $p\le t_0$'' on circuits $C$, with
+$t_1\ge\gamma t_0$ and $\gamma\ge1+1/\poly(|C|)$, where $t_0=0$ is allowed (smaller
+gaps do not matter: a tight interval decides the gap problem when $1+\eps<\gamma$, and
+an efficient procedure reaches such $\eps$ in polynomial time only if $1/(\gamma-1)$ is
+polynomial). If unsatisfiable formulas go to the small side and some MA system
+certifies $U<t_1$ there (for instance, is complete there with $1+\eps<\gamma$), then
+$\coNP\subseteq\AM$: Arthur samples the reduction (repeated in parallel), Merlin sends
+arguments, and Arthur accepts if most of them certify $U<t_1$; this is an
+$\mathsf{AMA}$ protocol, and $\mathsf{AMA}=\AM$ \cite{babai1985}. If unsatisfiable
+formulas go to the large side, the set lower bound protocol \cite{gs1986}, applied to
+the conjunction of $O(1/(\gamma-1))$ independent copies of the circuit (which raises
+the gap to at least $2$), already puts the complement of SAT in $\AM$. A reduction
+that maps one side into a band of $p$ and the other outside it is handled by combining
+the two protocols, with Merlin naming the side of the band when the unsatisfiable
+formulas lie outside it. In each case $\PH$ collapses \cite{bhz1987}. So
+upper-bound and two-sided separations cannot be derived from $\NP$-hardness by
+randomized many-one reductions (adaptive reductions to the gap problem are not
+covered); here they come from structured assumptions, such as the hardness of
+factoring, while lower-bound separations may come from $\NP\not\subseteq\BPP$.
+
+\paragraph{Universality.} Upper bounds: no argument system is complete for all
+circuits unless $\coNP\subseteq\MA$ (\cref{thm:ma}). Lower bounds, under the uniform
+distribution: an argument system complete for lower bounds within a constant factor
+on all circuits exists iff $\mathrm{pr}\SBP\subseteq\mathrm{pr}\MA$, for the class
+$\SBP$ of \cite{bgm2006}. If $V$ is such a system, with factor $c$, and a promise
+problem has a randomized polynomial-time machine that accepts with probability
+above $2^{-j}$ on yes-instances and below $2^{-j-1}$ on no-instances, the
+conjunction $C$ of $k\ge\max(1,\lceil\log_2c\rceil)$ runs with independent coins
+has $p(C)>2^{-kj}$, respectively $p(C)<2^{-kj}/c$, so accepting iff $V$ outputs
+$L\ge2^{-kj}/c$ is an $\MA$ protocol.
+Conversely, ``$p(C)>2^{-j}$ versus $p(C)<2^{-j-1}$'' is in $\mathrm{pr}\SBP$; given
+an $\MA$ protocol for it, the argument consisting of $j=\lfloor\log_2(1/p)\rfloor+1$
+and Merlin's proof, with output $L=2^{-j-1}$ if Arthur accepts and $L=0$ otherwise,
+is sound and complete within the factor $4$. A constant factor improves to $1+\eps$
+by applying the system to the conjunction of $O(1/\eps)$ independent copies of $C$
+and taking the corresponding root of $L$, rounded down to a rational of polynomial bit
+length (still at most $p$, as $L\le p^k$ for $k$ copies). The inclusion fails relative to an oracle
+(one with $\SBP\not\subseteq\Sigma_2^p$ \cite{bgm2006}, while $\MA\subseteq\Sigma_2^p$
+relativizes). It holds if $\mathrm{pr}\AM=\mathrm{pr}\NP$, since
+$\mathrm{pr}\SBP\subseteq\mathrm{pr}\AM$ by the set lower bound protocol
+\cite{gs1986}; the hitting-set derandomisation of Miltersen and Vinodchandran
+\cite{mv2005}, which applies to promise problems, gives this if some language in
+$\mathsf{NE}\cap\mathsf{coNE}$ needs nondeterministic circuits of size
+$2^{\Omega(n)}$, and the verifier's soundness then rests on that hypothesis.

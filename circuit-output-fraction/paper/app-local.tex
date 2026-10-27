@@ -1,0 +1,254 @@
+\section{Local threshold circuits: proofs}\label{app:local}
+
+Notation is that of \cref{sec:local}: $D_\theta\propto De^{\theta S}$, $s(\theta)=\E_{D_\theta}S$,
+$r_i(x)=\sigma(a_i+\theta\Delta_i(x))=\Pr_{D_\theta}[x_i=1\mid x_{-i}]$, $R=S_{\max}-S_{\min}$.
+
+\subsection{The sampler}
+
+\begin{proof}[Proof of \cref{lem:local-mix}]
+(a) Let $x,x'$ differ only at $l$, $z=a_i+\theta'\Delta_i(x)$, $z'=a_i+\theta'\Delta_i(x')$. By the
+mean value theorem $|\sigma(z)-\sigma(z')|\le|z-z'|\max_{[z,z']}\sigma'$. For $\theta'\le\theta$ the
+points $a_i+\theta'\Delta$ lie on the segments from $a_i$ to $a_i+\theta\Delta$, so the hull for
+$\theta'$ is contained in the hull for $\theta$, and $|z-z'|=\theta'|\Delta_i(x)-\Delta_i(x')|$; this
+gives $c_{il}(\theta')\le\kappa_{il}(\theta)$, and the same argument shows that $\kappa_{il}$ is
+nondecreasing. A factor that does not contain $l$ contributes the same amount to
+$\Delta_i(x)$ and $\Delta_i(x')$; one that contains $i$ and $l$ contributes a difference of two
+values in $\{-1,0,1\}$, so $|\Delta_i(x)-\Delta_i(x')|\le2n_{il}$, and $\sigma'\le\frac14$. Finally
+$\sum_{l\ne i}n_{il}=\sum_{j\ni i}(|A_j|-1)\le d(k-1)$.
+
+(b) A class update resamples sites that share no scope, so given the other sites they are
+independent with their single-site conditional laws, and the update preserves
+$D_{\theta'}$. Run two copies $X,Y$ with the same uniforms ($x_i\gets\one[u_i<r_i(x)]$), $X$
+from the given state and $Y$ from $D_{\theta'}$, so that $Y$ stays distributed as
+$D_{\theta'}$. Let $e_i=\Pr[X_i\ne Y_i]$. When site $i$ is updated, given the current states the
+new values differ with probability $|r_i(X)-r_i(Y)|\le\sum_{l:X_l\ne Y_l}c_{il}(\theta')$ (change
+the differing neighbours one at a time); taking expectations, the new $e_i$ is at most
+$\sum_l\kappa_{il}(\theta)e_l$, where the $e_l$ are current values (no neighbour of $i$ is
+updated together with $i$). Let $M=\max_ie_i/w_i$ at the start of a sweep. During the sweep
+all ratios stay at most $M$, and each updated site gets $e_i\le\sum_l\kappa_{il}w_lM\le\alpha
+Mw_i$; after the sweep every site has been updated, so the maximum ratio is at most
+$\alpha M$. Initially $M\le1/\min_iw_i$, so after $\tau$ sweeps
+$d_{\rm TV}(X_\tau,D_{\theta'})\le\Pr[X_\tau\ne Y_\tau]\le\sum_ie_i\le\alpha^\tau\sum_iw_i/\min_iw_i$.
+
+(c) Consider the random-scan heat-bath chain $P=\frac1n\sum_iP_i$, $P_if=\E_{D_{\theta'}}[f\mid
+x_{-i}]$; each $P_i$ is an orthogonal projection in $L^2(D_{\theta'})$, so $P$ is reversible. For
+$x,y$ differing only at $l$, update the same site in both: if it is $l$, the two conditional
+laws coincide; otherwise couple maximally, creating a disagreement with probability
+$c_{il}(\theta')\le\kappa_{il}(\theta)$. The expected Hamming distance after one step is at most
+$1-\frac1n+\frac1n\sum_{i\ne l}\kappa_{il}(\theta)\le1-\gamma/n$. By path coupling
+\cite{bubleydyer1997} this contraction extends to all pairs, and a reversible chain whose
+transportation distance contracts by $1-\gamma/n$ has spectral gap at least $\gamma/n$
+\cite[Section~13.1]{lpw2017}. The Poincar\'e inequality then gives
+$\mathrm{Var}(f)\le\frac n\gamma\langle f,(I-P)f\rangle=\frac1\gamma\sum_i\E[\mathrm{Var}(f\mid x_{-i})]\le
+\frac1{4\gamma}\sum_i\mathrm{osc}_i(f)^2$. For $f=S$, $\mathrm{osc}_i(S)\le d$ for the $n_S$ variables
+in some scope and $\mathrm{osc}_i(S)=0$ for the others.
+\end{proof}
+
+\subsection{The normaliser}
+
+\begin{lemma}[Maurer \cite{maurer2003}]\label{lem:maurer}
+For independent nonnegative $X_1,\dots,X_N$ with finite second moments and $\tau>0$,
+$\Pr\big[\sum_r(\E X_r-X_r)\ge\tau\big]\le\exp\big(-\tau^2/(2\sum_r\E X_r^2)\big)$.
+\end{lemma}
+
+\begin{proof}
+For $y\ge0$, $e^{-y}\le1-y+y^2/2$, so for $\lambda>0$,
+$\E e^{-\lambda X_r}\le1-\lambda\E X_r+\lambda^2\E X_r^2/2\le\exp(-\lambda\E X_r+\lambda^2\E X_r^2/2)$.
+By Markov's inequality the probability is at most
+$\exp(-\lambda\tau+\lambda^2\sum_r\E X_r^2/2)$; take $\lambda=\tau/\sum_r\E X_r^2$.
+\end{proof}
+
+\begin{proof}[Proof of \cref{lem:local-ti}]
+The function $\ln Z$ is smooth, with $(\ln Z)'=s$ and
+$s'=\mathrm{Var}_{D_\theta}(S)\ge0$, so $\ln Z(\theta)=\int_0^\theta s$ lies between the lower and
+the upper Riemann sum; the upper one, $T=h\sum_{l=1}^Ls(\theta_l)$, exceeds the lower one
+by $h(s(\theta)-s(0))\le h(S_{\max}-s(0))$. It remains to show $|\hat T-T|\le u$ with probability
+$1-\delta_1-\delta_2$.
+
+Variance. For $D_r=\frac12(Y_{2r-1}-Y_{2r})^2$, independence gives
+\[
+\E D_r=\tfrac12(\mathrm{Var}\,Y_{2r-1}+\mathrm{Var}\,Y_{2r})+\tfrac12(\E Y_{2r-1}-\E Y_{2r})^2,
+\]
+so $\sum_l\mathrm{Var}\,Y_l\le2\E\Sigma$. Since
+$D_r\in[0,R^2/2]$, $\E D_r^2\le\frac{R^2}2\E D_r$, and \cref{lem:maurer} with
+$\tau=a\sqrt{\E\Sigma}$ shows that, with probability at least $1-\delta_2$,
+$\E\Sigma\le\Sigma+a\sqrt{\E\Sigma}$, that is $\sqrt{\E\Sigma}\le\frac a2+\sqrt{\frac{a^2}4+\Sigma}$; then
+$\sum_l\mathrm{Var}\,Y_l\le\bar V$. (Also $\mathrm{Var}\,Y_l\le R^2/4$ always.)
+
+Bernstein. The variables $h(Y_l-\E Y_l)$ are independent, centred, bounded by $hR$ in absolute
+value, with total variance $v=h^2\sum_l\mathrm{Var}\,Y_l$, so by Bernstein's inequality
+(e.g.\ \cite[Chapter~2]{blm2013}) $\Pr[|\hat T-T|\ge u(v)]\le\delta_1$, where $u(v)$ solves
+$u^2=2\ell(v+hRu/3)$, i.e.\ $u(v)=\frac13hR\ell+\sqrt{(\frac13hR\ell)^2+2v\ell}$. As $u(\cdot)$ is
+increasing, $\{|\hat T-T|>u(h^2\bar V)\}\subseteq\{\bar V<\sum_l\mathrm{Var}\,Y_l\}\cup\{|\hat T-T|>u(v)\}$, which
+has probability at most $\delta_2+\delta_1$.
+\end{proof}
+
+\begin{lemma}[windows]\label{lem:local-ti-window}
+In \cref{lem:local-ti}, let $c_l\in[S_{\min},S_{\max}]$ and $w>0$ be fixed before the $Y_l$ are
+drawn, $\hat Y_l=\min(\max(Y_l,c_l-w),c_l+w)$, $E_l=|Y_l-\hat Y_l|$,
+$M=\max_l\max(S_{\max}-c_l-w,\ c_l-w-S_{\min},\ 0)$, and $\bar z$ the upper end of the KL interval
+(level $\delta_3$) for the mean of the $E_l/M\in[0,1]$. Define $\hat T,\Sigma,\bar V,u$ as in
+\cref{lem:local-ti} with $Y_l$ replaced by $\hat Y_l-c_l$ in $\Sigma$, $\hat T=h\sum_l\hat Y_l$,
+$R^2/2$ replaced by $2w^2$ in $a=\sqrt{2(R^2/2)\ln(1/\delta_2)}$, and $hR$ by $2hw$ in $u$. Then with
+probability at least $1-\delta_1-\delta_2-\delta_3$,
+$\ln Z(\theta)\in[\hat T-u-\theta M\bar z-h(S_{\max}-s(0)),\ \hat T+u+\theta M\bar z]$.
+\end{lemma}
+
+\begin{proof}
+$|s(\theta_l)-\E\hat Y_l|\le\E E_l$, and $E_l\le M$ because $Y_l$ and $c_l$ lie in
+$[S_{\min},S_{\max}]$. Hoeffding's bound holds for independent, not necessarily identically
+distributed, $[0,1]$ variables \cite{hoeffding1963}, so with probability $1-\delta_3$,
+$h\sum_l\E E_l=\theta M\cdot\frac1L\sum_l\E[E_l/M]\le\theta M\bar z$. The rest is the proof of
+\cref{lem:local-ti} applied to $\hat Y_l-c_l\in[-w,w]$ (pairs: $\E D_r$ still dominates the
+average of the two variances; $D_r\in[0,2w^2]$).
+\end{proof}
+
+\subsection{Anticoncentration}
+
+\begin{lemma}[local bound for Poisson-binomials]\label{lem:pb-local}
+Let $X=\sum_{l\le N}\xi_l$ with independent $\xi_l\sim\mathrm{Bernoulli}(\pi_l)$,
+$\pi_l\in(0,1)$, $\mu=\E X$, $v=\mathrm{Var}\,X$. For every integer $u$ with $|u-\mu|\le v/e$,
+\[
+\Pr[X=u]\ \ge\ \frac3{8\sqrt N+4}\,\exp\Big(-\frac{e(u-\mu)^2}{2v}\Big).
+\]
+\end{lemma}
+
+\begin{proof}
+The law of $X$ is log-concave with support $\{0,\dots,N\}$, and $v\le\min(\mu,N-\mu)$, so
+$1\le u\le N-1$. By log-concavity there is a finite $\lambda$ such that $u$ is a mode of the
+tilted law $\Pr_\lambda[X=j]\propto\Pr[X=j]e^{\lambda j}$, which is again Poisson-binomial, with
+variance $\varsigma^2\le N/4$. By Chebyshev's inequality an open window of length $4\varsigma$ around
+its mean carries probability at least $\frac34$ and contains at most $4\varsigma+1$ integers, so
+$\Pr_\lambda[X=u]\ge\frac3{4(4\varsigma+1)}\ge\frac3{8\sqrt N+4}$. Moreover
+$\Pr[X=u]=\Pr_\lambda[X=u]e^{-(\lambda u-\Lambda(\lambda))}\ge\Pr_\lambda[X=u]e^{-\Lambda^*(u)}$, where
+$\Lambda(\lambda)=\ln\E e^{\lambda X}$ and $\Lambda^*$ is its Legendre transform. For $|\lambda|\le1$,
+$\pi(\lambda)(1-\pi(\lambda))=\pi(1-\pi)e^\lambda/(1-\pi+\pi e^\lambda)^2\ge e^{-|\lambda|}\pi(1-\pi)$, so
+$\Lambda''\ge v/e$ on $[-1,1]$. Then $\Lambda'(1)\ge\mu+v/e\ge u$ and $\Lambda'(-1)\le u$, the
+supremum defining $\Lambda^*(u)$ is attained in $[-1,1]$, and there
+$\Lambda(\lambda)\ge\lambda\mu+\frac v{2e}\lambda^2$; hence $\Lambda^*(u)\le e(u-\mu)^2/(2v)$.
+\end{proof}
+
+\begin{lemma}[anticoncentration]\label{lem:local-anti}
+Assume (H1), (H2), $m\ge m_0$, $0\le\theta\le\theta_0$, and let $s'$ be an integer with
+$|s'-s(\theta)|\le2\sqrt{n_S}$. Then $\Pr_{D_\theta}[S=s']\ge e^{-c_1}/(16\sqrt{n_S})$.
+\end{lemma}
+
+\begin{proof}
+Let $P$ be the set of factors in (H2), $I=\{i_j:j\in P\}$ and $y=x_{[n]\setminus I}$. Each $i_j$ lies
+only in $A_j$, so $S=R_0(y)+\sum_{j\in P}\Delta_j(y)x_{i_j}$ with
+$\Delta_j(y)=g_j(\cdot,x_{i_j}{=}1)-g_j(\cdot,x_{i_j}{=}0)\in\{-1,0,1\}$, and given $y$ the
+$x_{i_j}$ are independent with $\Pr[x_{i_j}=1\mid y]=\sigma(a_{i_j}+\theta\Delta_j(y))\in
+[\eta_0,1-\eta_0]$, $\eta_0=\beta e^{-2}$ (as $\theta\le\theta_0\le2$). Let $N(y)=|\{j\in P:\Delta_j(y)\ne0\}|$,
+let $X_{\rm big}$ be the sum of the $x_{i_j}$ over the larger of the classes $\{\Delta_j=1\}$,
+$\{\Delta_j=-1\}$ (at least $N(y)/2$ terms) and $X_{\rm small}$ the other; given $(y,X_{\rm
+small})$, $S=c\pm X_{\rm big}$ for a constant $c$. Let $M'=\E[S\mid y,X_{\rm small}]$.
+
+(E1) By \cref{lem:local-mix}(c) (the crude certificate has column sums $\le1-\gamma$ for
+$\theta\le\theta_0$), $\mathrm{Var}_{D_\theta}S\le n_Sd^2/(4\gamma)$, so $|S-s(\theta)|\le d\sqrt{n_S/\gamma}$ with
+probability at least $\frac34$.
+(E2) $\Delta_j(y)\ne0$ is an event on $x_B$, $B=A_j\setminus\{i_j\}$, of $D$-probability at least
+$\nu$. Given all other variables, the density of $x_B$ under $D_\theta$ relative to $D$ lies in
+$[e^{-\theta d(k-1)},e^{\theta d(k-1)}]\subseteq[e^{-2},e^2]$, since $S$ varies by at most $d|B|$ with
+$x_B$. So $\E N\ge e^{-2}\nu^2m$. As $\mathrm{osc}_i(N)\le d$ for the $n_S\le km$ variables in
+scopes and $0$ for the others, $\mathrm{Var}\,N\le kmd^2/(4\gamma)$, and Chebyshev gives
+$\Pr[N<N_0]\le\Pr[N<\E N/2]\le e^4kd^2/(\gamma\nu^4m)\le\frac14$, with $N_0=e^{-2}\nu^2m/2$.
+(E3) Given $(y,X_{\rm small})$, $X_{\rm big}$ has at most $|P|\le n_S$ terms (the private variables
+$i_j$ are distinct), so $\mathrm{Var}\,X_{\rm big}\le n_S/4$ and $|S-M'|\le\sqrt{n_S}$ with
+conditional probability at least $\frac34$.
+
+The event $G=\{N(y)\ge N_0,\ |s'-M'|\le b\sqrt{n_S}\}$ is a function of $(y,X_{\rm small})$ and
+contains (E1)$\cap$(E2)$\cap$(E3), since $|s'-M'|\le2\sqrt{n_S}+d\sqrt{n_S/\gamma}+\sqrt{n_S}=b\sqrt{n_S}$;
+so $\Pr[G]\ge\frac14$. On $G$, $X_{\rm big}$ has at least $N_0/2$ terms with variances at least
+$\eta_0/2$, so its conditional variance is $v\ge e^{-4}\nu^2\beta m/8$ and
+$v/e\ge e^{-5}\nu^2\beta m/8\ge b\sqrt{km}\ge b\sqrt{n_S}$ by the choice of $m_0$.
+\Cref{lem:pb-local} with $N\le n_S$ terms and $|u-\E X_{\rm big}|=|s'-M'|\le b\sqrt{n_S}$ gives
+$\Pr[S=s'\mid y,X_{\rm small}]\ge\frac1{4\sqrt{n_S}}\exp(-eb^2n_S/(2v))\ge\frac{e^{-c_1}}{4\sqrt{n_S}}$, using
+$n_S\le km$. Average over $G$.
+\end{proof}
+
+\subsection{Completeness and rarity}
+
+\paragraph{The pilot.} Let $V_{\max}=n_Sd^2/(4\gamma)$, $L_p=\lceil2\theta_0V_{\max}/\sqrt{n_S}\rceil$ and
+$\vartheta_l=l\theta_0/L_p$, $l=0,\dots,L_p$. If $s(0)\ge t$, set $\theta=0$. Otherwise, at each
+$\vartheta_l$ take the median $\hat s_l$ of $\lceil8\ln((L_p+1)/\delta)\rceil$ means of
+$\lceil4d^2/\gamma\rceil$ samples each, and let $\theta=\vartheta_{l^*}$ with
+$l^*=\arg\min_l|\hat s_l-t|$. The pilot samples are drawn by the sampler of (T2) and, for
+this analysis, counted in $N_{\rm tot}$ (so the level $\eta=\delta/(5N_{\rm tot})$ covers them);
+soundness does not need this. (The implementation uses a cheaper heuristic pilot, which
+affects only the width of the output.)
+
+\begin{proof}[Proof of \cref{thm:local}(ii)]
+Work on the event that every sample of the run equals an exact sample (probability
+$\ge1-\delta/5$). The crude certificate ($w=\one$, $\alpha=\theta d(k-1)/2\le1-\gamma$, $F=n$) gives
+$\tau=O(\gamma^{-1}\log(nN_{\rm tot}/\delta))$, and $N_{\rm tot}=\poly(n,1/\eps,\log(1/\delta))$.
+
+\emph{Tilt.} By \cref{lem:local-mix}(c), $s'=\mathrm{Var}\le V_{\max}$ on $[0,\theta_0]$. Each group mean
+has variance at most $n_S/16$, so it is within $\sqrt{n_S}/2$ of $s(\vartheta_l)$ with probability
+$\ge\frac34$, and all medians are, with probability $\ge1-\delta$. If $s(0)<t\le s(\theta_0)$, some
+$\vartheta'$ has $s(\vartheta')=t$, and the nearest grid point has $|s(\vartheta_{l_0})-t|\le
+V_{\max}\theta_0/(2L_p)\le\sqrt{n_S}/4$. Then $|s(\theta)-t|\le|\hat s_{l^*}-t|+\frac{\sqrt{n_S}}2\le|\hat
+s_{l_0}-t|+\frac{\sqrt{n_S}}2\le\frac54\sqrt{n_S}$. By \eqref{eq:local-anti} with $s'=t$ and
+\cref{lem:local-anti}, $v(\theta)\ge e^{-c_1}/(16\sqrt{n_S})=1/K_0$. If $s(0)\ge t$, then $\theta=0$ and
+$v(0)=p\ge\Pr_D[S=\lceil s(0)\rceil]\ge1/K_0$ by \cref{lem:local-anti}.
+
+\emph{Normaliser.} Let $\ell=\ln(10/\delta)$; the Bernstein step of \cref{lem:local-ti} runs at
+level $\delta_1=\delta/5$, so its $\ln(2/\delta_1)$ equals $\ell$, and the other logarithms below,
+$\ln(5/\delta)$, are at most $\ell$. With $D_r\in[0,R^2/2]$ and
+$\mathrm{Var}\,D_r\le\frac{R^2}2\E D_r$, Bernstein's inequality gives
+$\Sigma\le2\E\Sigma+\frac43R^2\ln(5/\delta)$ with probability $\ge1-\delta/5$. Also
+$\E\Sigma\le\frac12LV_{\max}+\frac12hV_{\max}R$, since neighbouring means differ by at most
+$hV_{\max}$ and these differences sum to at most $R$. As $\bar V\le2a^2+4\Sigma$ with
+$a^2=R^2\ln(5/\delta)$, we get $\bar V\le4LV_{\max}+4hV_{\max}R+10R^2\ell$, and, since
+$u\le\frac23hR\ell+h\sqrt{2\bar V\ell}$, for $L\ge\sqrt{\theta R}$,
+\[
+u\ \le\ 2\theta\sqrt{8V_{\max}\ell/L}\ +\ 6\theta R\ell/L .
+\]
+Since $\theta^2V_{\max}\le\theta_0^2n_Sd^2/(4\gamma)\le n_S/(\gamma(k-1)^2)$ and $\theta R\le\theta_0m=2(1-\gamma)m/(d(k-1))$, the
+stated $L$ makes $u\le\eps/10$ and $h(S_{\max}-s(0))\le\theta_0m/L\le\eps/10$.
+
+\emph{Importance sampling.} With $K=1/v(\theta)\le K_0$, \cref{thm:envelope}(iv) reaches
+ratio $1+\eps/3$ after $O(K(\log(1/\delta)+\log\log K)/\eps^2)$ samples with probability
+$\ge1-\delta/5$, within the cap $N_{\rm IS}$ by hypothesis.
+
+The output ratio is then at most $e^{2u+h(S_{\max}-s(0))}(1+\eps/3)\le e^{3\eps/10}(1+\eps/3)\le1+\eps$ for
+$\eps\le1$ (the middle expression is convex in $\eps$, equal to $1$ at $0$ and below $2$ at $1$).
+Adding the failure probabilities of the pilot, the coupling, the three tightness events and
+the soundness events gives at most $3\delta$. The pilot uses
+$(L_p+1)\lceil4d^2/\gamma\rceil\lceil8\ln((L_p+1)/\delta)\rceil=O(d^3\sqrt{n_S}\log(n_S/\delta)/(\gamma^2(k-1)))$
+samples.
+\end{proof}
+
+\begin{proof}[Proof of \cref{thm:local}(iii)]
+In the notation of the proof of \cref{lem:local-anti}, for $u\in[0,\theta_0]$,
+$\mathrm{Var}_{D_u}S\ge\E\,\mathrm{Var}(S\mid y)\ge\E[N(y)]\,\eta_0(1-\eta_0)\ge e^{-4}\nu^2\beta m/2=v_{\min}$ (this
+part used only $\theta_0d(k-1)\le2$). Hence $s(\theta_0)-s(0)=\int_0^{\theta_0}\mathrm{Var}_{D_u}S\,du\ge\theta_0v_{\min}$,
+and integrating by parts, for every $\vartheta\in[0,\theta_0]$,
+$\ln Z(\vartheta)-\vartheta s(\vartheta)=-\int_0^{\vartheta}u\,\mathrm{Var}_{D_u}S\,du\le-\vartheta^2v_{\min}/2$. With
+$\vartheta=\theta_0$ and $t\ge s(\theta_0)-1$, the Chernoff bound $p\le Z(\theta_0)e^{-\theta_0t}$ gives the
+second claim. For the third, let $t\in(s(0),s(\theta_0)]$ (for $t=s(0)$ there is nothing to prove)
+and, by continuity, $\vartheta\in(0,\theta_0]$ with $s(\vartheta)=t$. By \cref{lem:local-mix}(c) with the
+crude certificate, $t-s(0)=\int_0^\vartheta\mathrm{Var}_{D_u}S\,du\le\vartheta V_{\max}$, so
+$\ln p\le\ln Z(\vartheta)-\vartheta t\le-\vartheta^2v_{\min}/2\le-(t-s(0))^2v_{\min}/(2V_{\max}^2)$.
+\end{proof}
+
+\subsection{The certification gap}
+
+\begin{proof}[Proof of \cref{prop:certgap}]
+(a) Let $\lambda=2\eps p/(B-p)\le3\eps p/B\le1$ and $P_1=(1-\lambda)P_0+\lambda\delta_B$, whose mean is
+$p+\lambda(B-p)=(1+2\eps)p$. An interval of ratio at most $1+\eps$ that contains $p$ lies below
+$(1+\eps)p$, so it cannot contain the mean of $P_1$. Couple a draw from $P_1$ as a draw from
+$P_0$ replaced by $B$ with probability $\lambda$, independently. The runs on $P_0$ and $P_1$
+coincide unless some draw that is actually taken is replaced; whether draw $i$ is taken depends
+only on earlier draws, so this has probability at most $\sum_i\lambda\Pr[N\ge i]=\lambda\E_{P_0}N$.
+The run on $P_0$ outputs a tight interval containing $p$ with probability $\ge1-2\delta$, the run
+on $P_1$ an interval containing its mean with probability $\ge1-\delta$, and these events are
+disjoint when the outputs coincide. Hence $\lambda\E_{P_0}N\ge1-3\delta$.
+
+(b) $\sum_{i>n}x_i\le M<t\le2M$, so $C=g$. With $q=2^{-n}$,
+$Z(\theta)=(1-q+qe^{2M\theta})\big(\frac{1+e^\theta}2\big)^M$, and $\frac{1+e^\theta}2\ge e^{\theta/2}$ gives
+$Z(\theta)e^{-\theta t}\ge(1-q)e^{-M\theta}+qe^{M\theta}\ge2\sqrt{q(1-q)}$, so
+$K\ge2\sqrt{(1-q)/q}\ge2^{n/2}$. The weight $W=C\,Z(\theta)e^{-\theta S}$ under $D_\theta$ has
+$\E W^2=Z(\theta)\E_D[Ce^{-\theta S}]=Z(\theta)\,q\,e^{-2M\theta}\big(\frac{1+e^{-\theta}}2\big)^M$. At
+$e^{2M\theta}=1/q$ this is $q^2(2-q)\cosh(\theta/2)^{2M}\le2q^2\exp(M\theta^2/4)=2q^2\exp(n^2(\ln
+2)^2/(16M))\le2.07\,q^2$.
+\end{proof}

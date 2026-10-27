@@ -11,6 +11,7 @@ This repository holds several independent projects, one top-level folder each.
 | `computational-cosmology/` | `codex/computational-cosmology-2026-10-08` |
 | `purpose-sensitivity/` | `claude/friendly-sagan-hngxoz` |
 | `gd-circuit-growth/` | `claude/nifty-mccarthy-j0lw2a` |
+| `circuit-output-fraction/` | `claude/circuit-output-fraction-xixj34` |
 
 ## Working branches
 

@@ -1,0 +1,87 @@
+\subsection{Gibbs envelopes}\label{sec:gibbs}
+
+The soft envelopes of \cref{sec:pcis} (thresholds with side conditions) need a product
+proposal. When the statistic has overlapping scopes the proposal is a Gibbs measure, and
+its sampler and normaliser can only be certified statistically, as in \cref{sec:local}.
+This gives one more statistical rule for PCIS arguments.
+
+\begin{definition}[Gibbs-envelope node]\label{def:gibbs-node}
+A node with circuit $C_v$ may carry: a statistic $S=\sum_jg_j(x_{A_j})$ given by scopes and
+truth tables; an integer $t'$ and a tilt $\theta\ge0$; either a weight vector $w>0$ and
+$\alpha<1$, or the claim that $S$ is supermodular; a $P$-proof of $C_v\vdash_P[S\ge t']$, with
+$[S\ge t']$ encoded by a fixed counting circuit (e.g.\ a totalizer); budgets $L$,
+$N_{\rm IS}$ and a sweep cap $T_{\max}$, written in unary; and $\delta_v$. The verifier
+returns $[0,1]$ for the node unless $d(k-1)\le c\log(|\pi|+|C_v|)$, for a fixed constant
+$c$, so that every neighbourhood has at most $(|\pi|+|C_v|)^c$ configurations. It checks
+the proof, recomputes $\kappa(\theta)$ and checks
+$\sum_l\kappa_{il}(\theta)w_l\le\alpha w_i$ for all $i$ (or checks supermodularity and samples by
+monotone CFTP, aborting with $[0,1]$ when a run exceeds $T_{\max}$ sweeps,
+\cref{prop:local-cftp}), returns $[0,1]$ if the $\tau$ of (T2) exceeds $T_{\max}$, and
+otherwise runs steps (T2)--(T5) of TG at $\theta$, without windows, with
+$U=C_v(X)e^{-\theta(S(X)-t')}$.
+\end{definition}
+
+\begin{proposition}[Gibbs envelopes]\label{prop:gibbs}
+For every circuit and every argument, a Gibbs-envelope node returns an interval containing
+$q_v=D(C_v)$ with probability at least $1-\delta_v$; if its proof is missing or wrong, the
+same computation with $U'=\min(1,U)$ still returns a valid lower bound. The verifier runs
+in time polynomial in $|\pi|$ and $|C_v|$. If $C_v$ has such a
+node with a proof of size $\poly(|C_v|)$, $d(k-1)\le c\log|C_v|$, a certificate with
+$\alpha\le1-\gamma$ and
+$v_C(\theta)=\E_{D_\theta}[C_ve^{-\theta(S-t')}]\ge1/\poly(n)$, then for $0<\eps\le1$ the interval has
+ratio at most $1+\eps$ with probability $1-3\delta_v$ after
+$L+O\big((\log(1/\delta_v)+\log\log(1/v_C(\theta)))/(\eps^2v_C(\theta))\big)$ samples (with $N_{\rm IS}$
+at least the second term and $T_{\max}$ at least the $\tau$ of (T2), which is
+$O(\gamma^{-1}\log(FN_{\rm tot}/\delta_v))$), where $L=O((\theta^2m^2/\eps^2+1)\log(1/\delta_v))$ always suffices,
+and $L=O((\theta^2n_Sd^2/(\gamma\eps^2)+\theta m/\eps+1)\log(1/\delta_v))$ when the column sums of
+$\kappa(\theta)$ are also at most $1-\gamma$.
+\end{proposition}
+
+\begin{proof}
+For every $C_v$, $\E_{D_\theta}[C_ve^{-\theta(S-t')}]=e^{\theta t'}q_v/Z(\theta)$, because $D_\theta$ has full
+support; the proved implication gives $U\le1$. The proof of \cref{thm:local}(i) used nothing
+else, and the certificate is recomputed by the verifier, so no argument can make it
+false. Without the implication, $U'\le U$ has mean at most $e^{\theta t'}q_v/Z(\theta)$, so the lower
+ends of the intervals for $\E U'$ and $\ln Z$ still give a lower bound. Declining with $[0,1]$
+is always valid. The enumeration visits at most $n(|\pi|+|C_v|)^c$ configurations, and
+the budgets are in unary, so the verifier runs in polynomial time. Completeness is the
+argument of \cref{thm:local}(ii) with the anticoncentration step replaced by the assumption
+on $v_C(\theta)$ and the tilt supplied, so no pilot is run. Without a variance bound,
+$\bar V\le LR^2/4$ in \cref{lem:local-ti}, so with $\ell=\ln(10/\delta_v)$,
+$u\le\frac23\theta R\ell/L+\theta R\sqrt{\ell/(2L)}$, and
+with $R\le m$ and $\theta m/\eps\le(\theta m/\eps)^2+1$ this gives the first value of $L$ (which also
+makes $h(S_{\max}-s(0))\le\theta m/L\le\eps/10$). With column sums at most $1-\gamma$,
+\cref{lem:local-mix}(c) gives $\mathrm{Var}_{D_{\theta'}}S\le V_{\max}=n_Sd^2/(4\gamma)$ for all
+$\theta'\le\theta$, and the bound $u\le2\theta\sqrt{8V_{\max}\ell/L}+6\theta R\ell/L$ (for $L\ge\sqrt{\theta R}$)
+from the proof of \cref{thm:local}(ii), which does not use $\theta\le\theta_0$, gives the second; for
+$\theta\le\theta_0$ it is at most the $L$ of \cref{thm:local}(ii).
+\end{proof}
+
+Compared with \cref{thm:local}, the prover contributes three things. (1) The domination is
+proved, so $C_v$ need not be syntactically an LTC: an obfuscated or rewired implementation
+of a count, or any circuit that implies one, is handled through the proof system.
+(2) The tilt and the weights are supplied and only checked, which removes the pilot run and
+can certify regimes where the unweighted bound fails. (3) The threshold $t'$ and the
+statistic itself are part of the argument, and by \cref{prop:certgap} they, not the
+variance of the weights, set the cost: in its instance the one-line proof $C\vdash g$
+replaces $K\ge2^{n/2}$ by $K=1$.
+
+\begin{remark}[block certificates]
+Sites may be replaced by blocks of $b$ variables, each resampled exactly from its
+conditional law by enumerating $2^b$ assignments. The influence of block $B'$ on block $B$
+is the largest total variation distance between the conditional laws of $x_B$ when
+$x_{-B}$ changes inside $B'$, computable by enumerating $2^{O(dkb)}$ configurations, and the
+proof of \cref{lem:local-mix}(b) goes through with blocks in place of sites. This lets an
+argument certify strongly coupled clusters of size $O(\log n)$. (Not implemented.)
+\end{remark}
+
+\begin{remark}[lower bounds need no mixing certificate]
+For any schedule $0=\theta_0<\dots<\theta_L$ and any transitions $T_l$ that preserve
+$D_{\theta_l}$ (heat-bath sweeps, for instance), annealed importance sampling \cite{neal2001} is
+unbiased for $p$ whether or not the chains mix: draw $x_0\sim D$, $x_l\sim T_l(x_{l-1},\cdot)$, and
+weight $\prod_{l=1}^Le^{(\theta_l-\theta_{l-1})S(x_{l-1})}\cdot C(x_L)e^{-\theta_LS(x_L)}$. By Markov's
+inequality the median of $r$ independent estimates exceeds $cp$ with probability at most
+$(4/c)^{r/2}$ for $c>4$, so the median divided by $c$ is a lower bound valid on every circuit,
+without a certificate. As in \cref{sec:lower}, lower bounds need only a proposal; upper
+bounds need the certificate, or exact samples.
+\end{remark}

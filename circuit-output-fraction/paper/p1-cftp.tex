@@ -1,0 +1,182 @@
+\subsection{Certified telescoping with Las Vegas samplers}\label{sec:cftp}
+
+Annealing estimators write $p=\prod_kr_k$ with $r_k=\Pr_{\pi_{k-1}}[\neg B_k]$ and
+$\pi_{k-1}=D\mid F_{<k}$, and estimate each ratio by sampling from $\pi_{k-1}$. They
+are sound only if the samples really come from $\pi_{k-1}$; Markov chains give
+no certificate of that. \emph{Exact} Las Vegas samplers do, if their running time
+is certified empirically:
+
+\begin{proposition}[certified truncation]\label{prop:truncation}
+Let $\mathcal A$ halt with probability $1$ and output exactly $\pi$, with running
+time $\tau$. Truncated at $T$ and conditioned on halting, its output law
+$\pi_T$ satisfies $d_{\rm TV}(\pi_T,\pi)\le\Pr[\tau>T]$. If at most $\eta R/2$ of
+$R=\lceil8\ln(1/\delta)/\eta\rceil$ truncated runs fail, then $\Pr[\tau>T]\le\eta$ except
+with probability $\delta$.
+\end{proposition}
+
+\begin{proof}
+$\pi=(1-\theta)\pi_T+\theta\pi_{>T}$ with $\theta=\Pr[\tau>T]$, so
+$\pi_T-\pi=\theta(\pi_T-\pi_{>T})$. If $\theta>\eta$, then by Chernoff at most
+$\eta R/2$ failures occur with probability at most $e^{-\eta R/8}\le\delta$.
+\end{proof}
+
+Let $C$ be unate (\cref{sec:independence}), flipped so that the events $B_i$ are
+increasing and $q_v$ are the flipped marginals. Then every
+$F_X=\bigwedge_{i\in X}\neg B_i$ is a down-set, and $D(F_X)\ge\prod_{i\in X}(1-b_i)>0$
+by Harris when all $b_i<1$. Fix $F=F_X$ with $D(F)>0$ and let $\phi_v(x)=1$ iff no event
+$B_i$, $i\in X$, with $v\in S_i$ occurs at $x^{v\to1}$; $\phi_v$ is decreasing. The
+heat-bath Glauber dynamics for $D\mid F$ picks a uniform site $v$ and a uniform
+$u\in[0,1]$ and sets $x_v\leftarrow[u<q_v]\wedge\phi_v(x)$. It is anti-monotone in the
+sense of Häggström and Nelander: $\Pr[x_v=1\mid x_{-v}]$ is decreasing in $x_{-v}$.
+Their bounding-chain coupling from the past \cite{hn1998,pw1996} runs, with common
+randomness, a lower chain $L$ and an upper chain $U$ from $L=0$, $U=\one$ at time
+$-T$, updating $L_v\leftarrow[u<q_v]\wedge\phi_v(U)$ and $U_v\leftarrow[u<q_v]\wedge\phi_v(L)$.
+Then $L\le X\le U$ for every chain $X$ started in $F$, so if $L=U$ at time $0$ that
+state is an exact sample of $D\mid F$; otherwise $T$ is doubled, reusing the
+randomness of times $-1,\dots,-T$. It halts almost surely: in any window of $n$
+steps, with positive probability the sites with $q_v<1$ are updated first, each
+with $u\ge q_v$, and then the sites in $W=\{v:q_v=1\}$; after the first phase both
+chains are $\le\one_W$, and $\one_W\in F$ (as $D(F)>0$ and $F$ is a down-set), so
+every update of the second phase sets $1$ in both chains, and $L=U=\one_W$ at the
+end. Disjoint windows are independent.
+
+\begin{theorem}[certified telescoping]\label{thm:cftp}
+Let $C=\bigwedge_{i=1}^mA_i$ as in \cref{sec:independence}, $0<\eps\le1$,
+$\eps'=\ln(1+\eps)$, $0<\delta<1$, $\Lambda_{\max}\ge1$, and let $T=2^JT_0$ be a
+truncation time ($J\ge0$, $T_0\ge1$). For unate $C$, flipped as above, let $b_i^+\ge b_i$
+be upper bounds: $b_i^+=b_i$, a product of marginals over the distinct literals of
+$A_i$, if $C$ is a CNF; otherwise the upper end of the Hoeffding--KL interval
+(\cref{sec:envelopes}) at level $\delta/(3m)$ for $b_i$ from
+$N_b=\lceil192\,m\ln(6m/\delta)\rceil$ samples of $x_{S_i}$.
+\begin{enumerate}[label=(\arabic*),start=0]
+\item If $C$ is not unate, output $[0,1]$; if $m=0$, output $[1,1]$. Otherwise flip $C$
+as above.
+\item If some $b_i^+=1$, output $[0,0]$ if $C$ is a CNF and $[0,1]$ otherwise.
+\item \emph{Stages:} scan the events in a fixed order, adding each to the current
+stage unless that brings $\rho_k=\prod_{i\in I_k}(1-b_i^+)$ below $1/2$, in which
+case it opens a new stage. Let $I_1,\dots,I_K$ be the stages, $\rho=\min_k\rho_k$,
+$\Lambda=\sum_k1/\rho_k$ and $\eta=\eps'\rho/(16K)$. If $\Lambda>\Lambda_{\max}$,
+output $[0,1]$. Let $\mathcal A_k$ be the sampler above for $\pi_{k-1}=D\mid F_{<k}$,
+$F_{<k}=F_{I_1\cup\dots\cup I_{k-1}}$, with the horizons $T_0,2T_0,\dots,2^JT_0=T$, and
+$\theta_k=\Pr[\mathcal A_k$ does not halt$]$.
+\item \emph{Certificates:} for each $k$, run the test of \cref{prop:truncation} on
+$\mathcal A_k$ at level $\eta$, with $\delta/(3K)$ in place of $\delta$; if one
+fails, output $[0,1]$.
+\item \emph{Estimates:} in each of $R=\lceil8\ln(3/\delta)\rceil$ rounds and for each
+$k$, make $2N$ runs of $\mathcal A_k$, $N=\lceil256\Lambda/\eps'^2\rceil$; if fewer
+than $N$ halt, output $[0,1]$; otherwise let $\hat r_k$ be the fraction of the first
+$N$ halted outputs at which no event of $I_k$ occurs.
+Output $[\hat Me^{-\eps'/2},\min\{1,\hat Me^{\eps'/2}\}]$, with $\hat M$ the median
+over the rounds of $\prod_k\hat r_k$.
+\end{enumerate}
+This procedure is sound on every circuit, for every $T_0$, $J$ and $\Lambda_{\max}$;
+unless it outputs $[0,1]$, its output is exact or has $U\le(1+\eps)L$. If $C$ is unate,
+$\Lambda\le\Lambda_{\max}$ and $\theta_k\le\eta/16$ for all $k$, it outputs $[0,1]$ with
+probability at most $\delta/3+RKe^{-3N/4}$; the second condition holds when
+$\gamma=1-q_{\max}d_{\max}(k_{\max}-1)>0$ and $T\ge(n/\gamma)\ln(16n/\eta)$, where
+$q_{\max}=\max_vq_v$, every variable lies in at most $d_{\max}$ supports and
+$k_{\max}=\max_i|S_i|$. It uses $mN_b$ samples of the $x_{S_i}$ if $C$ is not a CNF,
+$K\lceil8\ln(3K/\delta)/\eta\rceil$ runs for the certificates and at most $2RKN$ runs
+for the estimates, each of fewer than $2T$ updates of two chains. As
+$K\le\Lambda\le\Lambda_{\max}$ and $1/\rho\le\Lambda$, these are
+$O\big(\Lambda_{\max}^3\log(\Lambda_{\max}/\delta)/\eps+\Lambda_{\max}^2\log(1/\delta)/\eps^2\big)$
+runs. If $\max_ib_i^+\le1/2$, then $\rho\ge1/2$, $\Lambda\le2K$ and $K\le4\mu^++1$ with
+$\mu^+=\sum_ib_i^+$, so this is
+$O\big(K^2\log(K/\delta)/\eps+K(\mu^++1)\log(1/\delta)/\eps^2\big)$ runs, and
+$T=O((n/\gamma)\log(nK/\eps))$ suffices when $\gamma>0$. This holds for a CNF with
+$\max_ib_i\le1/2$ and, except with probability $\delta/6$, for any unate $C$ with
+$\max_ib_i\le1/8$; in both cases $\Lambda\le24\mu+3\le24m+3$, so the cut-off
+$\Lambda_{\max}=24m+3$ costs no completeness there.
+\end{theorem}
+
+\begin{proof}
+\emph{Soundness.} In step~(0), $p=1$ if $m=0$; in step~(1) for a CNF, $b_i=1$ and
+$p=0$. Otherwise $C$ is unate and all $b_i^+<1$, so $\rho>0$. Let $G$ be the event that
+$b_i^+\ge b_i$ for all $i$ (certain for a CNF, of probability at least $1-\delta/3$
+otherwise) and that every $\mathcal A_k$ whose certificate passes has
+$\theta_k\le\eta$ (by \cref{prop:truncation} and a union bound, given the stages, this
+fails with probability at most $\delta/3$). Assume $G$ and that step~(4) reaches its
+output. By Harris, as the $\neg B_i$ are decreasing,
+$r_k=D(F_{\le k})/D(F_{<k})\ge D(F_{I_k})\ge\prod_{i\in I_k}(1-b_i)\ge\rho_k$. The
+outputs of halted runs of $\mathcal A_k$ are i.i.d.\ from a law $\pi'_{k-1}$ with
+$d_{\rm TV}(\pi'_{k-1},\pi_{k-1})\le\theta_k$ (\cref{prop:truncation}), independently
+of which runs halt, so the $N$ outputs kept in step~(4) are i.i.d.\ from
+$\pi'_{k-1}$, and $r'_k=\pi'_{k-1}(F_{I_k})$ has $|r'_k-r_k|\le\eta\le\rho_k/16$.
+\emph{Bias:} $Z'=\prod_kr'_k$ satisfies $Z'/p\in[(1-\eta/\rho)^K,(1+\eta/\rho)^K]
+\subseteq[1-\eps'/16,e^{\eps'/16}]$. \emph{Variance:} in a round the $\hat r_k$ are
+independent with $\E\hat r_k=r'_k$ and relative variance
+$(1-r'_k)/(Nr'_k)\le(1-\rho_k+\eta)/((\rho_k-\eta)N)\le2/(\rho_kN)$, so
+$\hat Z=\prod_k\hat r_k$ has $\E\hat Z=Z'$ and
+$\E\hat Z^2/Z'^2\le e^{2\Lambda/N}\le e^{\eps'^2/128}\le1+\eps'^2/64$; by Chebyshev,
+$\Pr[|\hat Z/Z'-1|>\eps'/4]\le1/4$. By Hoeffding, at least half of the $R$
+independent rounds deviate with probability at most $e^{-R/8}\le\delta/3$; otherwise
+$\hat M/Z'\in[1-\eps'/4,1+\eps'/4]$. As $\eps'\le\ln2$,
+$(1-\eps'/4)(1-\eps'/16)\ge e^{-\eps'/2}$ and $(1+\eps'/4)e^{\eps'/16}\le e^{\eps'/2}$,
+so $p\in[\hat Me^{-\eps'/2},\hat Me^{\eps'/2}]$, and $U/L\le e^{\eps'}=1+\eps$. The three
+failure events have total probability at most $\delta$.
+
+\emph{Certificates.} If $\theta_k\le\eta/16$, the number $X$ of failures among the
+$R_k=\lceil8\ln(3K/\delta)/\eta\rceil$ runs has $\E X\le\eta R_k/16$, so by Chernoff
+$\Pr[X>\eta R_k/2]\le(e/8)^{\eta R_k/2}\le(e/8)^{4\ln(3K/\delta)}\le\delta/(3K)$.
+In step~(4), as $\theta_k\le\eta/16<1/16$, more than $N$ of $2N$ runs fail with
+probability at most $e^{-N(1-2\theta_k)^2}\le e^{-3N/4}$ (Hoeffding), so step~(4)
+outputs $[0,1]$ with probability at most $RKe^{-3N/4}$.
+
+\emph{Coalescence.} Let $D_t$ be the set of sites where $L$ and $U$ differ. An update
+of $v$ leaves $L_v\ne U_v$ only if $u<q_v$ and $\phi_v(L)\ne\phi_v(U)$, which needs a
+site $w\in D_t\setminus\{v\}$ sharing a support with $v$; each $w$ has at most
+$d_{\max}(k_{\max}-1)$ such $v$. So
+$\E[|D_{t+1}|\mid D_t]\le(1-1/n)|D_t|+(q_{\max}/n)d_{\max}(k_{\max}-1)|D_t|=(1-\gamma/n)|D_t|$,
+and $\theta_k\le\E|D_0|\le ne^{-\gamma T/n}\le\eta/16$ for the chains started at
+$-T$. (Coalescence from $-T'$ implies coalescence from $-T\le-T'$: the updates
+preserve $L'\le L\le U\le U'$ for the pairs $(L,U)$ started at $-T$ and $(L',U')$
+started at $-T'$.)
+
+\emph{Cost.} The horizons $T_0,\dots,2^JT_0=T$ cost fewer than $2T$ updates per run.
+As all $\rho_k\le1$, $K\le\Lambda$ and $1/\rho\le\Lambda$, so
+$\eta\ge\eps'/(16\Lambda^2)$. A stage accepts a further event only if $\rho_k$ stays
+$\ge1/2$, so an event with $b_i^+>1/2$ is a stage of its own and every other stage has
+$\rho_k\ge1/2$. If $\max_ib_i^+\le1/2$, then $\rho\ge1/2$ and $\Lambda\le2K$; with
+$s_i=-\ln(1-b_i^+)\le2\ln2\,b_i^+$ (convexity on $[0,1/2]$), stage $k<K$ was closed
+because $\sum_{i\in I_k}s_i+s_{j}>\ln2$ for the first event $j$ of $I_{k+1}$, and
+summing over $k<K$ gives $(K-1)\ln2<2\sum_is_i\le4\ln2\,\mu^+$. In general the same
+count gives $\Lambda\le8\mu^++2+2\sum_{i:\,b_i^+>1/2}(1-b_i^+)^{-1}$.
+
+\emph{The bounds $b_i^+$.} If $C$ is not a CNF, let $\hat b_i$ be the empirical
+frequency and $\ell=\ln(6m/\delta)$, so $N_b\KL(\hat b_i\|b_i^+)\le\ell$. As
+$\KL(a\|c)\ge(a-c)^2/(2\max\{a,c\})$, $t=b_i^+-\hat b_i$ satisfies
+$t^2\le2(\hat b_i+t)\ell/N_b$; if $t>\hat b_i$ this gives $t<4\ell/N_b\le1/(48m)$, so
+$b_i^+\le2\hat b_i+1/(16m)$. Chernoff's bound with $a=b_i/2+1/(32m)$, for which
+$b_i+a\le3a$, gives $\Pr[\hat b_i\ge b_i+a]\le e^{-N_b\KL(b_i+a\|b_i)}\le e^{-N_ba/6}\le
+\delta/(6m)$. So, except with probability $\delta/6$, $b_i^+\le3b_i+1/(8m)$ for all
+$i$; then $\max_ib_i\le1/8$ gives $\max_ib_i^+\le1/2$ and $\mu^+\le3\mu+1/8$, and
+$\Lambda\le2K\le8\mu^++2\le24\mu+3$ (for a CNF with $\max_ib_i\le1/2$, directly
+$\Lambda\le8\mu+2$).
+\end{proof}
+
+This covers, for instance, hard-core-type instances where Janson's $\Delta$ is
+extensive and the local-lemma conditions fail; beyond the provable regime the method
+stays sound and decides empirically whether it can answer.
+The implementation (\texttt{cftp.py}, for unate CNFs) runs the chains of
+$\mathcal A_k$ only on the variables of the events in $F_{<k}$ (the others are
+independent of $F_{<k}$ and are drawn from their marginals), starts at
+$T_0=4|A|$ for the set $A$ of these variables, and otherwise changes only the
+bookkeeping: it takes $N$ rather than $\eps$ and makes $N$ runs per stage and round,
+keeping all that halt (so its cost is $RKN$ runs and it needs no $\Lambda_{\max}$);
+it takes the least odd $R$ for which a majority of $R$ independent rounds, each failing
+with probability $1/4$, fails with probability at most $\delta/2$; it pools the
+estimation runs of stage $k$ into a Hoeffding--KL upper bound $\theta_k^+$ on
+$\theta_k$ instead of the test of \cref{prop:truncation}, requires $\theta_k^+<\rho_k$,
+and widens the interval by the bias factors $e^{\pm a_k}$,
+$a_k=\theta_k^+/(\rho_k-\theta_k^+)$ (as
+$r_k/r'_k\in[1/(1+\theta_k/r_k),1/(1-\theta_k/r_k)]$), and by a Chebyshev bound
+computed from the per-stage relative variances
+$(1-\rho_k+\theta_k^+)/((\rho_k-\theta_k^+)n_k)$, with $n_k$ the least number of
+halted runs of stage $k$ in a round; and it raises the lower end to the Harris bound
+$\prod_i(1-b_i)$. The same argument applies, and \texttt{telescoping\_estimate} states
+the resulting guarantee, including the effect of floating-point rounding. Karp--Luby--Madras
+sampling should extend it to ORs of unate $\wedge$-circuits with different
+polarities, given estimates of each disjunct's probability from \cref{thm:cftp} and
+certified samplers for each disjunct's conditional law (at truncation level
+$O(\eps/t)$ for $t$ disjuncts, as the KLM summand is at least $1/t$); we have not
+worked out that error budget.

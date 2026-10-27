@@ -1,0 +1,105 @@
+\section{Discussion and open problems}\label{sec:discussion}
+
+\paragraph{What the answers are.}
+Without a prover, our procedures beat sampling where the rarity of $C(x)=1$ is
+\emph{visible}: built from independent parts, forced literals, small cutsets,
+unions, $\wedge$'s of small context width, thresholds of independent blocks or of
+local detectors in a certified regime, affine constraints, or sparse monotone
+overlaps, possibly disguised by rewriting cones of logarithmic support. DFSB plus the
+specialised modules is sound on every circuit and complete on the union of their
+classes (\cref{thm:dfsb,thm:meta}). Visibility depends on the method and the
+distribution: random parity checks are transparent to Gaussian elimination under the
+uniform distribution, but for events that fill a $1/\poly(n)$ fraction of the solution
+set of $m\le n/6$ random checks, with high probability, envelopes with small leaves,
+context-width compilation and DFSB's completeness guarantee cost Monte Carlo's price up
+to polynomial factors, and any use of a DNNF envelope at least its square root
+(\cref{cor:barrier-methods}); and under biased inputs small
+$\wedge$'s of parity checks admit no sound procedure that is complete on them unless
+$\NP\subseteq\BPP$ (\cref{thm:biased-hard}). With a prover, the visible structure
+may be replaced by \emph{provable} structure: any confinement of the rare inputs to a
+union of tractable pieces (subcubes, checked-deterministic circuits, affine atoms,
+DNNFs) of small total mass that a propositional proof system can certify
+(\cref{thm:certenv}). For upper bounds this
+helps strictly whenever slices of the proof system's canonical pair are not separable
+in randomized polynomial time (\cref{prop:canonical,cor:automatability}). In both
+settings the cost has the same shape, polynomial in the size of the explanation and
+exponential in the unexplained surprise, and under the uniform distribution, once an
+envelope is certified, the exponential part is unavoidable on some circuits for
+verifiers that access the rest of the circuit only through evaluations
+(\cref{thm:surprise}(b)).
+
+\paragraph{Relation to heuristic arguments.}
+ARC's programme \cite{christiano2022presumption,hilton2024surprise} asks for
+estimators that use a model's internals to beat sampling, and measures
+explanations by surprise accounting. The present results isolate the part of
+that programme that can be made \emph{sound against adversarial circuits}:
+\begin{itemize}
+\item the presumption of independence is certified where independence is
+syntactic (variable-disjoint parts, \textsc{prod}) or where correlation
+inequalities control the error (\cref{thm:janson,thm:janson-general});
+\item surprise accounting becomes a cost formula for a sound verifier,
+$\poly(|\pi|)+2^{\sigma_u(\pi)}$ up to polynomial factors, with $|\pi|$ the size of
+the argument's deductive part, and under the uniform distribution both halves have a
+black-box meaning: in the worst case (planted subcubes), a bit of argument saves at
+most a factor $2$ in evaluations for lower bounds, and once an envelope is certified, a verifier that accesses the rest of $C$ only through
+evaluations needs about $2^{\sigma_u}$ of them for two-sided intervals on some
+circuits, which the envelope estimator achieves (\cref{thm:surprise});
+\item what soundness forbids is equally sharp: upper bounds must come from
+deduction (\cref{thm:blackbox}), and unless $\coNP\subseteq\MA$ no system certifies
+them with polynomial-size arguments for all circuits (\cref{thm:ma}). A heuristic estimator that is accurate on random circuits but
+not sound on adversarial ones is therefore not a counterexample to anything
+here; it lives in the gap between ``no certificate exists'' and ``the estimate
+is wrong''.
+\end{itemize}
+The rarity that defeats certification is \emph{distributed surprise}: many
+weak, overlapping constraints (random CNFs below the threshold), or
+pseudorandomness. Strongly overlapping constraints (large $\Delta$, outside the
+local-lemma and cluster-expansion regimes) are certified here only where an exact
+sampler or a locally checkable mixing certificate exists (\cref{thm:cftp,thm:local});
+weakly overlapping ones by the Harris--Janson sandwich, the cluster expansion and the
+local-lemma FPRASs (\cref{thm:janson,thm:janson-general,prop:kp,sec:modules}).
+Annealing and splitting estimators handle many of the strongly overlapping ones in practice, and ARC-style
+heuristic estimators may handle both kinds on typical instances; neither comes with a
+certificate that a polynomial-time verifier can check.
+
+\paragraph{Open problems.}
+\begin{enumerate}
+\item \emph{Envelope lower bounds for distributed surprise.} Does every
+polynomial-size DNNF envelope of a random 3-CNF with $1/3<\alpha<\alpha_{\rm sat}$
+have $D(E)/p=2^{\Omega(n)}$? Proved here only for drop-conjunct relaxations; for
+random parity checks the analogous bound is \cref{thm:parity-barrier}.
+\item \emph{Certified annealing.} Is there a polynomial-size, MA-checkable
+certificate that a sampler for $D\mid A_1\wedge\dots\wedge A_j$ is accurate (a
+checkable mixing certificate) beyond exact samplers (\cref{thm:cftp}) and the
+Dobrushin regime of soft tilts (\cref{lem:local-mix})? By \cref{thm:blackbox} it
+cannot be purely statistical. This is what would make multilevel splitting sound.
+\item \emph{Nested unions over approximate leaves.} Can the DNNF FPRAS be run
+over DNNF skeletons whose leaves are sets given only by approximate counters,
+approximate samplers and membership tests? This would give unions of unions of
+products of dense blocks at any depth.
+\item \emph{A natural two-sided separation.} Find a $\mathsf{UP}\cap\coNP$
+problem not in $\BPP$ (under a standard assumption) whose unique-witness property and
+the disjointness of its two witness relations have polynomial-size extended Frege
+proofs (the disjointness follows from uniqueness when both relations come from one
+unique-witness relation, as for factorisation); then the two-sided separation of
+\cref{sec:separations} holds with a standard proof checker instead of a theory like
+ZFC.
+\item \emph{Weak automatability and envelopes.} If $P$ is weakly automatable, is
+there a procedure without a prover that is complete on the classes $\mathcal
+K_P(m,K)$ of \cref{thm:certenv}, i.e.\ that finds certified envelopes and not only
+tests them?
+\item \emph{Optimal arguments.} How well can $\min_\pi\big(|\pi|+2^{\sigma_u(\pi)}\big)$
+be approximated for natural certificate languages? Choosing which conjuncts to
+keep is weighted set packing on supports; choosing branch variables is related to
+pseudo-tree depth.
+\item \emph{Networks.} Binarised or ReLU networks with rare activation patterns
+are the case of most interest for alignment. Local threshold circuits
+(\cref{sec:local}) cover bounded receptive fields with a count readout. For general
+networks, interval-bound propagation gives gate-wise outer approximations; can it be
+turned into sandwich certificates (\cref{sec:part2}) with small looseness for trained
+networks?
+\item \emph{Heuristic to certified.} When a presumption-of-independence estimate
+is accurate, when can it be compiled into a certificate with polynomial overhead,
+for instance by proving the independence it presumes, or by bounding the
+correlations it ignores?
+\end{enumerate}

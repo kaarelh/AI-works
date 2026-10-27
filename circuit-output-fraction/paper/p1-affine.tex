@@ -1,0 +1,524 @@
+\subsection{Affine structure and linear thresholds}\label{sec:affine}
+
+Parity checks, linear hashes and CRCs make rare events with $p=2^{-\mathrm{rank}}$,
+which Gaussian elimination computes exactly under the uniform distribution. They are
+also where decomposition fails. Take $m\le n/6$ random parity checks and an event
+inside their solution set that holds on at least a $1/\poly(n)$ fraction of it. With
+high probability over the checks, the envelope estimator with decomposable
+envelopes whose leaves have at most $2n/3$ variables, context-width compilation and the
+node budget behind DFSB's completeness
+guarantee then cost Monte Carlo's price up to a polynomial factor, and every use of a
+DNNF envelope costs at least its square root
+(\cref{thm:parity-barrier,cor:barrier-methods}). This subsection
+makes affine structure usable soundly, proves that barrier, and maps where
+tractability ends: under biased product distributions and in combination with
+thresholds. We write $U=\{i:q_i=1/2\}$ for the uniform coordinates of $D$ and
+$D_i(b)=\Pr_D[x_i=b]$.
+
+\paragraph{Certified affine gates.}
+The algebraic normal form (ANF) of a Boolean function is its unique representation
+as a multilinear polynomial over $\F_2$. We propagate ANFs through the circuit
+($\wedge\mapsto ab$ with $x_i^2=x_i$, $\vee\mapsto a+b+ab$, $\neg\mapsto1+a$,
+$\oplus\mapsto a+b$), store the linear part as a bit vector, and abort a gate when
+its nonlinear part exceeds $T$ monomials; threshold gates are opaque. A gate whose
+ANF is computed is computed exactly, because the rules are identities and the ANF is
+unique; if its degree is at most one the gate is \emph{certified affine},
+$g(x)=a_g\cdot x+c_g$ for all $x$. A chain of two-input XOR gadgets
+$(a\vee b)\wedge\neg(a\wedge b)$ on $k$ inputs is certified with $T=k-1$ and $O(k^2)$
+work per gate (our implementation also caps the work of each product); a balanced
+tree of such gadgets needs $T\ge\lfloor k/2\rfloor\lceil k/2\rceil$, because its last
+$\vee$ multiplies two disjoint linear forms. A gate is in \emph{solved form} on a coordinate $i$,
+$g(x)=x_i\oplus G(x_{-i})$, if the ANF computed with $x_i$ as one symbol and every
+gate whose support avoids $i$ as an opaque symbol contains $x_i$ only in the
+monomial $x_i$. Substituting Boolean functions for symbols is a homomorphism of
+Boolean rings, so this is a certificate as well, with $G=g|_{x_i=0}$. Certification
+has to be deductive. A gate computing $\ell\oplus\one_{x^*}$ agrees with the affine
+form $\ell$ except at a hidden point, which $T$ evaluations miss with probability
+$1-T2^{-n}$; yet in $C=[g=1]\wedge[Ax=b]$ with $\ell\equiv0$ on $\{Ax=b\}\ni x^*$ it
+decides between $p=2^{-n}$ and $p=0$ (compare \cref{thm:blackbox}).
+
+\paragraph{Exact presolve.}
+The \emph{$\wedge$-spine} of $C$ is the set of pairs $(g,b)$ reached from
+$(\mathrm{out},1)$ through $\wedge$-gates with $b=1$, $\vee$-gates with $b=0$ and
+negations, without entering certified affine or solved-form gates; then
+$C(x)=\bigwedge_{(g,b)}[g(x)=b]$ identically.
+
+\begin{proposition}[exact affine and triangular presolve]\label{prop:presolve}
+Suppose $C(x)=\bigwedge_{j\le k}[x_{p_j}=\pi_j(x)]\wedge R(x)$ for all $x$, where the
+$p_j$ are distinct and $\pi_j$ does not read $x_{p_j},\dots,x_{p_k}$. Let
+$P=\{p_1,\dots,p_k\}$, and for $x\in\bits^n$ let $\tilde x$ agree with $x$ off $P$
+and satisfy $\tilde x_{p_j}=\pi_j(\tilde x)$, fixed for $j=1,\dots,k$ in turn; let
+$\tilde R(x)=R(\tilde x)$, which does not read $P$. Then, for every product
+distribution $D$,
+\[
+p=M\,\E_D[W],\qquad
+W(x)=\tilde R(x)\prod_{j\le k}\frac{D_{p_j}(\tilde x_{p_j})}{\max(q_{p_j},1-q_{p_j})}\in[0,1],\qquad
+M=\prod_{j\le k}\max(q_{p_j},1-q_{p_j}).
+\]
+In particular $p=2^{-k}D(\tilde R)$ if $P\subseteq U$; and if
+$|q_{p_j}-\frac12|\le\eta$ for all $j$, then $\E_D W\ge\rho^{-k}D(\tilde R)$ with
+$\rho=\frac{1+2\eta}{1-2\eta}$.
+\end{proposition}
+
+\begin{proof}
+For fixed $x_{-P}$ the constraints determine $x_{p_1},\dots,x_{p_k}$ in turn, since
+$\pi_j$ reads only coordinates off $P$ and earlier pivots. So exactly one completion,
+$\tilde x$, satisfies them, and
+$p=\sum_{x_{-P}}D_{-P}(x_{-P})D_P(\tilde x_P)R(\tilde x)=M\,\E_DW$, as $W$ does not
+depend on $x_P$. If $P\subseteq U$, then $D_P\equiv2^{-k}=M$ and $W=\tilde R$; with
+$|q_{p_j}-\frac12|\le\eta$ every ratio in $W$ is at least $\rho^{-1}$.
+\end{proof}
+
+Two kinds of spine conjuncts have this form. Certified affine conjuncts
+$[a_g\cdot x=b\oplus c_g]$ of rank $r$, in reduced row echelon form
+$x_P=b'+A'x_{[n]\setminus P}$, have every $\pi_j$ reading only non-pivots; we choose
+pivots in $U$ and, when possible, outside the support of the remaining conjuncts. A
+solved-form conjunct $[x_i\oplus G(x_{-i})=b]$ gives $\pi=b\oplus G$; the presolve
+adds such conjuncts greedily, keeping an order in which no earlier $G$ and no affine
+row reads a later pivot. It then builds $\tilde R$ as a circuit (the pivots are
+replaced by $\oplus$-gates of free inputs and by copies of the cones of the $G$'s) and
+returns $M$ times any sound interval for $\E_DW$: by default the KL procedure of
+\cref{thm:envelope}(iv) on $W$, and, when $P\subseteq U$, any sound method applied to
+$\tilde R$, such as DFSB or the meta-procedure. The certified bound $p\le M$ always
+holds. So the presolve is exact and sound on every circuit, explains $k$ bits of
+surprise at polynomial cost, and leaves $\log_2(1/D(\tilde R))$ bits to the methods
+that follow; under biased pivots each pivot costs a factor up to $\rho$ in samples.
+Rule (F) of DFSB also applies Gaussian elimination to affine conjuncts at the root,
+but it keeps only the literals the system forces, that is, rows of the reduced system
+with a single variable. A rank-$r$ system without such rows explains nothing there,
+and $r$ bits here. Examples, under the uniform distribution (or whenever the pivots can
+be chosen uniform): the event $[\mathrm{CRC}(x)=0]\wedge R(x)$ has
+$p=2^{-r}D(\tilde R)$ with $r$ the rank of the CRC map, and a Feistel round $[L\oplus f(R)=t]$,
+whose pivots are the coordinates of $L$, has probability $2^{-|L|}$ for every round
+function $f$ (E4 in \cref{tab:affine}). More
+generally, under the uniform distribution a map $F$ composed of coordinate
+permutations and triangular flips
+$\tau(x)=x\oplus g(x_{-i})e_i$ with $i\in U$ preserves $D$ (each flip is a
+measure-preserving involution of every fibre $\{x_{-i}=\text{const}\}$), so
+$D(R\circ F)=D(R)$ for every $R$, whatever the round functions; our implementation
+detects only the one-round case. Gaussian elimination is standard in SAT and
+model-counting tools, and eliminating variables defined by others is a known
+preprocessing step for model counting \cite{lagniez2016}. What the presolve adds is
+its use as an exact surprise-removal step that composes with every sound estimator,
+together with the biased-pivot version.
+
+\paragraph{Affine-union envelopes.}
+Decomposition fails on parity checks, but abstract interpretation over unions of
+affine subspaces succeeds, and the result is an envelope.
+
+\begin{theorem}[affine envelopes]\label{thm:affenv}
+For every gate $g$ compute lists $E^+(g),E^-(g)$ of affine subspaces of $\F_2^n$. A
+certified affine gate gets $E^+=\{a_g\cdot x=1+c_g\}$ and $E^-=\{a_g\cdot x=c_g\}$;
+$\neg$ swaps the lists; for $g=g_1\wedge g_2$ let $E^+(g)$ be the nonempty
+intersections $V_1\cap V_2$, $V_j\in E^+(g_j)$, if there are at most $L$ of them, and
+otherwise the operand list of smaller mass; let $E^-(g)=E^-(g_1)\cup E^-(g_2)$ if it
+has at most $L$ entries, and otherwise $\{\F_2^n\}$; $\vee$ is dual, $\oplus$ uses
+$E^+(a\oplus b)=E^+(a)\sqcap E^-(b)\,\cup\,E^-(a)\sqcap E^+(b)$ (and similarly for
+$E^-$), wider gates are folded, and other gates get $\{\F_2^n\}$ for both lists.
+Duplicate and contained subspaces may be removed.
+\begin{enumerate}[label=(\alph*)]
+\item For every circuit and every gate, $g^{-1}(1)\subseteq\bigcup E^+(g)$ and
+$g^{-1}(0)\subseteq\bigcup E^-(g)$. Hence the function
+$\varphi=\sum_{V\in E^+(\mathrm{out})}\one_V$ dominates $C$, and
+$E^+(\mathrm{out})=\emptyset$ certifies $p=0$. The lists cost
+$\poly(|C|,n,L,T)$ time.
+\item If every constraint of $V$ is on uniform coordinates, $D(V)=2^{-\mathrm{codim}V}$
+and $D\mid V$ is sampled exactly by drawing $x\sim D$ and re-solving the pivots; for
+other $V$, \cref{prop:bw-dp} below gives $D(V)$ and exact samples along a given linear
+order of the coordinates, in time exponential in its width (our implementation uses
+the input order here, and orders supplied by a prover in \cref{sec:xpt}); if the width
+exceeds a cap, $V$ is replaced by its implied constraints on $U$ (a superset). With
+these, the envelope estimator (\cref{thm:envelope}) is sound on
+every circuit, with $K=\sum_{V\in E^+(\mathrm{out})}D(V)/p$; it is the
+Karp--Luby--Madras estimator for the union.
+\item If $C=\bigvee_{j\le L}([A_jx=b_j]\wedge R_j)$ with certified affine conjuncts and
+opaque $R_j$ (for instance threshold gates), then $K\le L/\min_j\Pr_D[R_j\mid A_jx=b_j]$
+under the uniform distribution.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+(a) Induction over the gates. A certified gate equals its affine form. $\neg$ swaps
+the one-set and the zero-set. If $g=g_1\wedge g_2$ and $g(x)=1$, then $x$ lies in some
+$V_1\cap V_2$, and both coarsenings are supersets; if $g(x)=0$ then $x\in g_1^{-1}(0)\cup
+g_2^{-1}(0)$. The other gates are dual or are unions of such cases, and multiplicities
+only increase $\varphi$. (b) With constraints on $U$ only, the free uniform coordinates,
+the pivots solved from them, and the other coordinates drawn from $D$ give each $x\in
+V$ probability $D(x)2^{\mathrm{codim}V}$. The rest is \cref{thm:envelope} with the
+integer-valued $\varphi$. (c) Opaque $R_j$ have $E^+=\{\F_2^n\}$, so
+$E^+(\mathrm{out})\subseteq\{V_j\}$ with $V_j=\{A_jx=b_j\}$, and
+$\sum_jD(V_j)\le L\max_jD(V_j)$ while $p\ge D(V_{j^*})\Pr[R_{j^*}\mid V_{j^*}]$ for the
+maximiser $j^*$.
+\end{proof}
+
+On the $120$-input instance E1 of \cref{tab:affine} (45 gadget parity checks and a
+3-DNF) the envelope has six pieces and $K=1.39$.
+Decomposability can be generalised to linear independence, which keeps exact masses
+and samplers under the uniform distribution.
+
+\begin{proposition}[XOR-DNNF envelopes]\label{prop:xordnnf}
+Let $\Phi$ be an arithmetic circuit with nonnegative weights whose leaves are
+nonnegative constants and functions $f(\ell(x))$ of a single nonconstant affine form,
+and in which, at every $\Prod$ gate, the spaces $\mathcal L(c)$ spanned by the linear
+parts of the leaf forms below the children $c$ form a direct sum. Under the uniform
+distribution the bottom-up pass ($\Sum\mapsto$ weighted sum, $\Prod\mapsto$ product,
+leaf $\mapsto(f(0)+f(1))/2$) computes $\E\varphi$ exactly, and the following samples
+exactly from $D\varphi/\E\varphi$: choose a derivation top-down as in
+\cref{lem:envmass}, give each of its leaves the value $v$ with probability
+proportional to $f(v)$, and draw $x$ uniformly from the affine subspace on which every
+leaf form takes its value.
+\end{proposition}
+
+The proof is in \cref{app:affine}. DNNF envelopes (forms $x_i$) and unions of affine
+subspaces (products of leaves $[\ell=b]$ with independent forms) are special cases;
+$\one_{\{Hx=s\}}$ is an XOR-DNNF with $m$ leaves and $K=1$, while DNNFs whose leaves
+have at most $2n/3$ variables need at least $2^{\lambda_{\rm bal}}/(n+2)-2$ wires by the
+next theorem (part (b) with $C=E=\one_{\{Hx=s\}}$). Affine decision trees \cite{koriche2013}
+use affine decision nodes for exact model counting; XOR-DNNF envelopes also allow
+nondeterministic sums and arbitrary leaf functions, at the price of looseness.
+
+\paragraph{The parity barrier for decomposable envelopes.}
+For an affine subspace $V\subseteq\F_2^n$ and a cut $(Y,Z)$ of $[n]$ let
+$\lambda_V(Y)=\dim\pi_Y(V)+\dim\pi_Z(V)-\dim V$, with $\pi_Y$ the coordinate
+projection. For $V=\{Hx=s\}\ne\emptyset$ this is
+$\mathrm{rank}\,H_Y+\mathrm{rank}\,H_Z-\mathrm{rank}\,H$, the connectivity function of
+the binary matroid of $H$. Let
+$\lambda_{\rm bal}(V)=\min\{\lambda_V(Y):n/3<|Y|\le2n/3\}$. Call an envelope circuit or
+DNNF \emph{smooth} if every $\Sum$ (or $\vee$) child has the support of its parent
+and the root has support $[n]$; leaves may be arbitrary nonnegative (Boolean)
+functions of their declared supports. For a circuit $\Phi$ let $G(\Phi)$ be the set
+of its nodes $v$ with $n/3<|\sv(v)|\le2n/3$.
+
+\begin{theorem}[parity barrier]\label{thm:parity-barrier}
+Let $D$ be uniform, $V$ a nonempty affine subspace, and $C$ a circuit with
+$\emptyset\ne C^{-1}(1)\subseteq V$; let $c=|C^{-1}(1)|/|V|=\Pr[C\mid V]$.
+\begin{enumerate}[label=(\alph*)]
+\item Let $\Phi$ be a smooth envelope circuit with fan-in-two $\Prod$ gates whose
+leaves have supports of size at most $2n/3$. If $\varphi\ge1$ on $C^{-1}(1)$ and
+$K=\E\varphi/p$, then $|G(\Phi)|\cdot K\ge c\,2^{\lambda_{\rm bal}(V)}$.
+\item Let $E$ be a smooth DNNF with fan-in-two $\wedge$-gates whose leaves have
+supports of size at most $2n/3$, with $C\Rightarrow E$. Then
+$|G(E)|^2\,D(E)/p\ge c\,2^{\lambda_{\rm bal}(V)}$, and $|G(E)|\ge c\,2^{\lambda_{\rm
+bal}(V)}$ if moreover $E\Rightarrow[x\in V]$ (for instance if $E\equiv C$).
+\end{enumerate}
+Every envelope circuit or DNNF with $S$ wires computes the same function as a smooth
+one with fan-in-two products and at most $(n+2)(S+2)$ nodes.
+\end{theorem}
+
+The proof (\cref{app:affine}) walks down each derivation, following the larger
+child at products, to its first node with at most $2n/3$ variables. This writes
+$\varphi$ as a sum, over balanced nodes $g$, of products $f_g(x_Y)h_g(x_Z)$. A
+Cauchy--Schwarz argument over the $2^{\lambda_V(Y)}$ blocks $A_i\times B_i$ into which
+$V$ splits across the cut then shows that such a product covers at most a
+$2^{-\lambda_V(Y)/2}$ fraction of $V$ per unit of mass. Part (b) with $E\equiv C$
+is the rectangle-cover bound behind known DNNF lower bounds for linear codes
+\cite{duris2004,bova2016}. Here the bound is for envelopes, trades size against
+looseness, applies to every subset of $V$, and is parametrised by the connectivity
+function.
+
+\begin{corollary}\label{cor:parity-ghw}
+If $H\in\F_2^{m\times n}$ has rank $m$ and row space $R$, then for every nonempty
+$V=\{Hx=s\}$, $\lambda_V(Y)=m-\dim(R\cap\F_2^Y)-\dim(R\cap\F_2^Z)$, where $\F_2^T$
+denotes the vectors supported in $T$; hence $\lambda_{\rm bal}(V)\ge m-2j^*$ with
+$j^*=\max\{r:d_r(R)\le2n/3\}$ and $d_r$ the $r$-th generalised Hamming weight
+\cite{wei1991}.
+\end{corollary}
+
+\begin{corollary}[random parity checks]\label{cor:random-parity}
+Let $H$ be uniform in $\F_2^{m\times n}$ with $m\le n/6$. With probability at least
+$1-2^{1-n/6}$, $H$ has rank $m$ and $\dim(R\cap\F_2^T)\le6$ for every $|T|\le2n/3$;
+then $\lambda_{\rm bal}(V)\ge m-12$ for every nonempty $V=\{Hx=s\}$. On this event,
+for every circuit $C$ with $C^{-1}(1)\subseteq V$ and $c=\Pr[C\mid V]$ (so that
+$p=c2^{-m}$), every $\Phi$ as in (a) has $|G(\Phi)|K\ge c\,2^{m-12}=c^2/(4096p)$ and
+every $E$ as in (b) has $|G(E)|^2D(E)/p\ge c^2/(4096p)$.
+\end{corollary}
+
+\begin{corollary}[what the barrier rules out]\label{cor:barrier-methods}
+On the event of \cref{cor:random-parity}, for $C^{-1}(1)\subseteq V=\{Hx=s\}$:
+\begin{enumerate}[label=(\roman*)]
+\item \emph{Envelopes.} The envelope estimator with any envelope circuit $\Phi$
+whose leaves have supports of at most $2n/3$ variables (for instance literal and
+constant leaves, the (R8) atoms of \cref{sec:rules} when $a\le2n/3$, (R7) boxes on at
+most $2n/3$ variables, and the leaves of \cref{thm:cw}) evaluates $\varphi$ at every sample and needs $\Omega(K)$ samples, so its work is
+$\Omega(c^2/(np))$: Monte Carlo's number of samples up to a factor $O(n/c^2)$. Any
+implementation reads $\Phi$ to compute the mass and draws $\Omega(K)$ samples, so it
+does $\Omega(c/\sqrt{np})$ work: at most a quadratic speed-up.
+\item \emph{The \#DNNF route.} \Cref{thm:sis} and \cref{prop:dnnf-env} with a DNNF
+$E\supseteq C$ (small leaves) read $E$ at every sample and need $\Omega(D(E)/p)$
+samples, hence do $\Omega(c/(n\sqrt p))$ work.
+\item \emph{Context width.} Let $N$ be an NNF of $C$ as in \cref{thm:cw}, without
+frontier gates (threshold gates are expanded by counters, \cref{sec:ctxwidth};
+$|N|\le12|C|$ for the gate-by-gate NNF of a $\{\wedge,\vee,\neg,\oplus\}$-circuit). The DNNF that \cref{thm:cw} builds from $N$
+has literal and constant leaves, is equivalent to $C$, and has at most
+$(|N|+1)(\mathrm{cw}+3)2^{\mathrm{cw}}$ wires, so
+$\mathrm{cw}\ge m-14-\log_2\big((n+2)(|N|+1)(\mathrm{cw}+3)/c\big)$.
+\item \emph{DFSB.} Every tree built with the exact rules (T), (T$'$), (F), (D), (B) of
+\cref{sec:dfsb} in which every leaf $h$ with more than $2n/3$ variables, other than a
+refuted one, has $D(h)\ge1/K'$, where $K'<2^{m-6}$, has at least $c\,2^{m-12}/(n+6)^2$ nodes. This
+applies to the ideal tree $T^*_{K'}(C)$ when the atom size $a$ is at most $2n/3$, since
+its leaves are constants, atoms and (S)-leaves with $D(h)\ge1/K'$. So the completeness
+guarantee of \cref{thm:dfsb}, which needs $m_{K'}(C)$ to be at most the node budget,
+requires a budget of at least $c^2/(4096(n+6)^2p)$ unless $K'\ge2^{m-6}=c/(64p)$. (Runs
+that stop early at (E)-leaves are not covered.)
+\end{enumerate}
+\end{corollary}
+
+So for random parity checks with $m\le n/6$ and events with $c\ge1/\poly(n)$, the
+costs in (i)--(iv) are exponential in $m$: within a polynomial factor of Monte Carlo
+for (i), (iii) and (iv), and at least its square root for any use of a DNNF envelope.
+For smaller $c$ the bounds weaken; for $c=2^{-m/2}$, for instance, $c^2/p=p^{-1/3}$.
+Meanwhile
+the presolve computes the factor $2^{-m}$ exactly, and the affine envelope of
+$[Hx=s]\wedge R$ with opaque $R$ has $K=1/c$. Conversely, bounded connectivity along a
+whole tree suffices.
+
+\begin{proposition}[bounded width; any product distribution]\label{prop:bw-dp}
+Let $V=\{Ax=b\}$ and let $\mathcal T$ be a rooted binary tree with leaf set $[n]$ such
+that $\lambda_V(X_t)\le w$ for the leaf set $X_t$ of every node $t$. Then $\one_V$ has a
+smooth deterministic DNNF, structured by $\mathcal T$, with at most $2n(4^w+1)$ gates;
+for every product distribution, $D(V)$ and exact samples from $D\mid V$ are computed
+with $O(n4^w)$ arithmetic operations after $\poly(n,m)$ linear algebra; and
+$\lambda_{\rm bal}(V)\le w$.
+\end{proposition}
+
+The construction (\cref{app:affine}) is a dynamic program over \emph{live partial
+syndromes}: at node $t$ the states are the $s=A_{X_t}x_{X_t}$ with $s\in
+b+\mathrm{col}(A_{[n]\setminus X_t})$, a coset of $\mathrm{col}(A_{X_t})\cap
+\mathrm{col}(A_{[n]\setminus X_t})$, which has $2^{\lambda_V(X_t)}$ elements. Our
+implementation uses linear orders (caterpillar trees). A narrow tree can be found by
+the fixed-parameter algorithms of Hlin\v{e}n\'y and Oum \cite{hlinenyoum2008} or by
+heuristics, or it can be supplied by a prover; the dynamic program is exact for any
+tree, and the width only affects time. Let $\mathrm{bw}(V)$ be the least $w$ for
+which a tree as in \cref{prop:bw-dp} exists; for $n\ge2$ this is the branch-width of the
+binary matroid of $A$ minus one, since the usual connectivity function
+\cite{hlinenyoum2008} is $\lambda_V+1$. Together with \cref{thm:parity-barrier}(b) for
+$C=E=\one_V$ ($c=1$), the smallest smooth DNNF for $\one_V$ with fan-in-two
+$\wedge$-gates and leaves on at most $2n/3$ variables (for instance literal leaves) has
+between $2^{\lambda_{\rm bal}(V)}$ and $2n(4^{\mathrm{bw}(V)}+1)$ gates. The two ends are
+polynomially related when $\mathrm{bw}(V)=\lambda_{\rm bal}(V)+O(1)$, but not in general: for
+$V=V_1\times V_2$ with $V_1,V_2$ on the two halves of $[n]$, $\lambda_{\rm bal}(V)=0$, while
+$\mathrm{bw}(V)\ge\mathrm{bw}(V_1)$ can be linear in $n$.
+
+\paragraph{Biased product distributions.}
+Linear bijections preserve the uniform measure, but a triangular flip on coordinate $i$
+(with $g\not\equiv0$) preserves a product distribution with marginals in $(0,1)$ only if
+$q_i=\frac12$. Under a biased product distribution the same tiny circuits become hard.
+
+\begin{theorem}[biased parity events]\label{thm:biased-hard}
+Fix a rational $q\in(0,1)\setminus\{\frac12\}$. For $H\in\F_2^{m\times n}$,
+$s\in\F_2^m$ and $k\ge1$ let $C$ be the circuit on $N=nk$ inputs $x_{i,c}$ ($i\le n$,
+$0\le c<k$)
+\[
+C=\bigwedge_{i\le n,\;1\le c<k}[x_{i,0}\oplus x_{i,c}=0]\;\wedge\;[Hx_{\cdot,0}=s],
+\]
+an $\wedge$ of parity checks of total size $O(N+mn)$. Under $D=\mathrm{Bern}(q)^N$,
+\[
+p=(1-q)^N\sum_{y\in\F_2^n:\,Hy=s}\lambda^{|y|},\qquad\lambda=\Big(\frac q{1-q}\Big)^k.
+\]
+\begin{enumerate}[label=(\alph*)]
+\item If $q<\frac12$ and $k\ge(n+2g+3)/\log_2\frac{1-q}q$, any interval $[L,U]\ni p$
+with $U\le2^gL$ decides whether the coset $\{Hy=s\}$ contains a vector of weight at
+most $t$, which is $\NP$-complete \cite{bmvt1978}.
+\item Consequently, for every fixed $\gamma>0$, a sound procedure that is complete on
+these circuits within a factor $2^{N^{1-\gamma}}$ would give $\NP\subseteq\BPP$, and an
+argument system (\cref{def:argument}) complete on them within a factor $2$ would give
+$\coNP\subseteq\MA$, hence $\PH=\Sigma_2^p$ \cite{bhz1987}.
+\end{enumerate}
+For $q>\frac12$ complement all inputs, which replaces $s$ by $s+H\one$.
+\end{theorem}
+
+The proof is in \cref{app:affine}. The same circuit has $p=2^{-\mathrm{rank}}$ or $0$
+under the uniform distribution, and its probability is computed exactly at bounded
+width under every product distribution (\cref{prop:bw-dp}). So algebraic tractability
+is a property of the circuit and the distribution together. For $s=0$ and all
+$q_i\le\frac12$, $p$ is a weight enumerator of $\ker H$, that is, a ferromagnetic
+Ising partition function of a binary matroid, which has an FPRAS for graphic
+\cite{jerrumsinclair1993} and regular \cite{goldbergjerrum2013regular} matroids and,
+under a complexity-theoretic assumption, none for binary matroids in general
+\cite{goldbergjerrum2013binary}. In E6 of \cref{tab:affine}, banded LDPC checks
+under $\mathrm{Bern}(1/3)$ ($p\approx2.6\cdot10^{-31}$) are estimated to $4\%$ in
+$0.2$ seconds by the affine envelope with exact dynamic-programming masses, whereas the
+biased-pivot presolve only certifies $p\le1.3\cdot10^{-22}$ within its budget.
+
+\paragraph{Linear thresholds.}
+A single linear threshold function (LTF) is tractable under every product
+distribution, which makes unions of LTF pieces tractable, but conjunctions are
+generally not.
+
+\begin{proposition}[single LTFs \cite{gopalan2011fptas}]\label{prop:ltf}
+For $L=[w\cdot x\le\theta]$ with integer weights and a product distribution with
+marginals of $\beta$ bits, $D(L)$ has a deterministic FPTAS using $O(n^3\beta/\eps)$ exact
+operations on rationals of $\poly(n,\beta,1/\eps)$ bits, and $D\mid L$ has an exact sampler using
+$O(n\log(n\beta/\eps))$ expected operations per sample after the same preprocessing.
+\end{proposition}
+
+Gopalan, Klivans, Meka, \v{S}tefankovi\v{c}, Vempala and Vigoda note that their
+branching-program method counts knapsack solutions under all product and symmetric
+distributions \cite[Sec.~3.2]{gopalan2011fptas}. \Cref{app:affine} gives a
+self-contained dynamic program, with values rounded to powers of $1+\eps/(2n)$, and a
+rejection step that makes the sampler exact. With the rounded masses as certified
+lower bounds, the Karp--Luby--Madras estimator remains sound: if
+$C=\bigvee_{j\le T}P_j$ where each $P_j$ is an LTF $\wedge$ a subcube, or a
+variable-disjoint $\wedge$ of such pieces (and of affine subspaces on uniform
+coordinates), the estimator has mean in $[e^{-\eps/3}p,p]$ and looseness at most
+$e^{\eps/3}T$ (\cref{app:affine}).
+
+\begin{proposition}[an affine system and one LTF \cite{gopalan2011fptas}]\label{prop:affine-ltf}
+Let $C=[Ax=b]\wedge[w\cdot x\le\theta]$ with integer $w$, and let $x_1,\dots,x_n$ be
+ordered so that $\lambda_t=\mathrm{rank}A_{\le t}+\mathrm{rank}A_{>t}-\mathrm{rank}A\le
+w_0$ for every $t$. Then $D(C)$ has a deterministic FPTAS using
+$O(n^32^{w_0}\beta/\eps)$ operations under every product distribution with $\beta$-bit
+marginals, and $D\mid C$ has an exact sampler.
+\end{proposition}
+
+This is an instance of \cite[Thm.~3.6 with Claim~3.4]{gopalan2011fptas}: for
+$V=\{Ax=b\}$, $D\mid V$ is a small-space source of width $2^{w_0}$ in their sense, whose states are the live
+syndromes of \cref{prop:bw-dp} and whose transition probabilities are proportional to
+$D_t$ times the masses of the suffixes, $[w\cdot x\le\theta]$ is a monotone read-once
+branching program in every variable order, and $D(C)=D(V)\Pr_{D\mid V}[w\cdot
+x\le\theta]$. Their construction takes time quadratic in the source width. The direct
+dynamic program of \cref{app:affine}, which runs the threshold recursion inside each
+live syndrome, is linear in $2^{w_0}$ and also gives the exact sampler. Without such
+structure, conjunctions are hard.
+
+\begin{proposition}[non-closure]\label{prop:nonclosure}
+Under the uniform distribution, deciding $p>0$ is $\NP$-complete for each of the
+following classes of polynomial-size circuits: (a) $[w\cdot x\ge\theta]\wedge[w\cdot
+x\le\theta]$ (two LTFs; subset sum); (b) $[Hx=s]\wedge[|x|\le t]$ (an affine system and
+one LTF; coset weight \cite{bmvt1978}); (c) $[\sum_{uv\in E}(x_u\oplus x_v)\ge k]$ (a
+threshold of parities, i.e.\ a quadratic threshold; maximum cut). For (d)
+$[|Hx|\le t]$, approximating $p$ within any factor below $2$ is $\NP$-hard
+\cite{vardy1997}. Hence no sound procedure is complete on any of these classes unless
+$\NP\subseteq\BPP$, and no argument system is complete for upper bounds on any of them
+unless $\coNP\subseteq\MA$.
+\end{proposition}
+
+\begin{proof}
+(a)--(c) are the stated $\NP$-complete problems, and a sound procedure complete on the
+class decides them as in \cref{prop:worstcase}(a); an argument system complete for upper
+bounds gives $\MA$ proofs of the complements as in \cref{thm:ma}. For (d), $x\mapsto
+Hx$ maps the uniform distribution onto the uniform distribution on the code
+$\mathcal C=\mathrm{col}(H)$, so $p=|\{y\in\mathcal C:|y|\le t\}|/|\mathcal C|$, which
+is $1/|\mathcal C|$ if the minimum distance of $\mathcal C$ exceeds $t$ and at least
+$2/|\mathcal C|$ otherwise; deciding which is $\NP$-hard for codes given by generator
+matrices \cite{vardy1997} (take $H$ to be the transposed generator matrix).
+\end{proof}
+
+The tractable compositions are thus: $\vee$ (Karp--Luby--Madras), variable-disjoint
+$\wedge$, $\wedge$ with an affine system whose pivots can be chosen uniform and outside
+the other conjunct's support (\cref{prop:presolve}, $p=2^{-r}D(L)$), and affine
+$\wedge$ LTF at bounded width (\cref{prop:affine-ltf}).
+
+\paragraph{Fourier and degree structure.}
+Rare events with simple Fourier structure are affine.
+
+\begin{proposition}\label{prop:fourier}
+Let $D$ be uniform and $C\not\equiv0$.
+(a) If $C$ has $k$ nonzero Fourier coefficients then $p\ge1/k$.
+(b) If $C$ has degree $d$ as a multilinear polynomial over $\F_2$ or over $\R$ then
+$p\ge2^{-d}$.
+(c) For every affine $V$ and quadratic polynomial $Q$ over $\F_2$,
+$\Pr_{x\in V}[Q(x)=0]\in\{0\}\cup[\frac14,1]$.
+\end{proposition}
+
+\begin{proof}
+(a) For $x_0$ with $C(x_0)=1$, $1\le\sum_S|\hat C(S)|\le\sqrt{k\sum_S\hat C(S)^2}=
+\sqrt{kp}$ by Parseval. (b) We show $\Pr_x[f(x)\ne0]\ge2^{-\deg f}$ for every nonzero multilinear
+polynomial $f$ over $\F_2$ or $\R$, by induction on the number of variables, and apply
+it to $f=C$. Write $f=x_nG+H$ with $G,H$ free of $x_n$. If $G\equiv0$, then $f=H$ has
+fewer variables. Otherwise $\deg G\le\deg f-1$, and wherever $G(x_{<n})\ne0$ at least
+one of $f(x_{<n},0)=H$ and $f(x_{<n},1)=H+G$ is nonzero, so $\Pr[f\ne0]\ge\frac12\Pr[G\ne0]\ge
+2^{-\deg f}$ (the base case is a nonzero constant). (c) Parametrise $V$ affinely;
+$Q$ becomes a quadratic $q$ on $\F_2^{\dim V}$ with associated alternating form
+$B(z,z')=q(z+z')+q(z)+q(z')+q(0)$ of rank $2h$. If $h=0$, $q$ is affine and
+$\Pr[q=0]\in\{0,\frac12,1\}$. Otherwise
+$(\E(-1)^{q})^2=\E_{z'}(-1)^{q(z')+q(0)}\E_z(-1)^{B(z,z')}\le2^{-2h}$, since the inner
+expectation vanishes off the radical of $B$; so $\Pr[q=0]=\frac12(1+\E(-1)^q)\in[\frac14,\frac34]$.
+\end{proof}
+
+So an event with $p=2^{-50}$ needs Fourier sparsity at least $2^{50}$ and degree at
+least $50$, yet $50$ independent parity checks have spectral norm $1$, and Boolean
+functions of bounded spectral norm are $\pm$-combinations of boundedly many coset
+indicators \cite{greensanders2008}. By (c), one quadratic equation adds at most two
+bits of surprise to an affine envelope; affine systems with one quadric are counted
+exactly by Dickson's normal form \cite{ek1990}, while systems of quadrics contain SAT.
+Sampling on the Fourier side does not help either: for $C=[Ax=b]$ the unbiased
+estimator $Y=(-1)^{b\cdot y}\prod_{i:(A^\top y)_i=1}(1-2q_i)$, $y$ uniform in $\F_2^m$,
+has $\E Y^2\ge2^{-m}$ (from $y=0$), a relative variance of about $1/p$ when
+$p\approx2^{-m}$.
+
+\paragraph{Experiments.}
+\Cref{tab:affine} reports our implementation (module \texttt{affine.py}, script
+\texttt{exp\_affine.py}; $\eps=0.05$, $\delta=0.01$; wall-clock seconds on a shared
+4-core machine). The exact values are
+computed without the module: by closed forms for E1--E4 (for E1--E3 the checks
+restricted to the inputs outside the residual have full rank, so $p=2^{-m}\Pr[R]$), by
+Gaussian elimination on the raw check rows and inclusion--exclusion for E5, by an exact
+rational sweep over the bands for E6a, by enumerating the $2^{24}$-element coset for
+E6b, and by enumeration in rational arithmetic for E7; the module's dynamic program
+agrees with the E6 values to $2\cdot10^{-14}$. Monte Carlo is charged the number of samples its KL interval needs
+for the same ratio. E3 illustrates DFSB on a dense parity event at a size where it can
+run; with $m=12>n/6$ it lies outside \cref{cor:random-parity}, so it is not an instance
+of the barrier. On $36$ inputs with $12$ dense checks ($p=8.8\cdot10^{-5}$), DFSB with a
+$400$-node budget spent $79$ seconds and $1.5\cdot10^6$ samples and returned an interval
+of ratio $29$, while the presolve needed $1.6\cdot10^4$ samples and $0.02$ seconds; at
+this size plain Monte Carlo is cheap too ($3.7\cdot10^7$ bit-parallel evaluations, about
+$0.2$ seconds). In $600$ estimates on random $16$-input circuits under uniform and
+product distributions (E7), no interval missed the exact value. The whole experiment
+takes about $111$ seconds.
+
+The implementation is sound in floating point as well. Threshold gates are evaluated and
+propagated exactly, in integer arithmetic after scaling the weights (\cref{sec:setting};
+the weights of a repeated child are added), so the threshold rule (X1) of
+\cref{sec:xpt} is a valid inference about $C$. Masses are carried as a
+mantissa and a binary exponent with proven relative-error bounds (at most
+$\gamma_{5n+5}$ for the dynamic program, where $\gamma_k=ku/(1-ku)$ and $u=2^{-53}$),
+every interval is rounded outward, and an upper end below the range of doubles becomes
+the smallest positive double rather than $0$. The Hoeffding--KL intervals exclude a value
+only when its divergence certainly exceeds the bound, allowing for the rounding of the
+empirical mean.
+
+\begin{table}[t]
+\centering\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lrllrrr@{}}
+\toprule
+instance (Monte Carlo samples) & $n$ & $p$ & method & $U/L$ & samples & sec.\\
+\midrule
+E1 gadget checks ($1.2\cdot10^{18}$) & 120 & $1.54\cdot10^{-14}$ & presolve & $1.045$ & $3.3\cdot10^4$ & $0.27$\\
+ & & & affine envelope, $K=1.39$ & $1.042$ & $1.6\cdot10^4$ & $0.46$\\
+E2 random checks ($4.1\cdot10^{34}$) & 600 & $4.30\cdot10^{-31}$ & presolve & $1.045$ & $3.3\cdot10^4$ & $2.3$\\
+ & & & affine envelope, $K=1.38$ & $1.041$ & $1.6\cdot10^4$ & $3.7$\\
+E4 Feistel ($4.8\cdot10^{16}$) & 92 & $3.69\cdot10^{-13}$ & triangular presolve & $1.042$ & $6.6\cdot10^4$ & $0.16$\\
+ & & & affine envelope & $U{=}5.0\cdot10^{-5}$ & $10^5$ & $0.11$\\
+E5 two of three ($3.6\cdot10^{12}$) & 90 & $4.89\cdot10^{-9}$ & affine envelope & $U{=}5.0\cdot10^{-5}$ & $10^5$ & $0.19$\\
+ & & & XPT, 7-node argument & $1.040$ & $6.6\cdot10^4$ & $0.43$\\
+E6a banded ($6.9\cdot10^{34}$) & 300 & $2.59\cdot10^{-31}$ & affine envelope + DP & $1.041$ & $4.1\cdot10^3$ & $0.24$\\
+ & & & biased-pivot presolve & $U{=}1.3\cdot10^{-22}$ & $2\cdot10^5$ & $2.7$\\
+E6b copies & 216 & $1.47\cdot10^{-43}$ & affine env., width $\le2^6$ & $U{=}5.1\cdot10^{-5}$ & $2\cdot10^5$ & $0.67$\\
+ & & & affine env., width $\le2^{16}$ & $1.006$ & $1.0\cdot10^3$ & $1.9$\\
+E3 dense checks ($3.7\cdot10^7$) & 36 & $8.77\cdot10^{-5}$ & presolve & $1.083$ & $1.6\cdot10^4$ & $0.02$\\
+ & & & DFSB, 400 nodes & $28.7$ & $1.5\cdot10^6$ & $79$\\
+\bottomrule
+\end{tabular}
+\caption{Affine methods ($\eps=0.05$, $\delta=0.01$; E3: $\eps=0.1$, $\delta=0.05$). E1: 45
+checks built from $\wedge,\vee,\neg$ gadgets $\wedge$ a 3-DNF; E2: 100 dense random checks
+$\wedge$ a 3-DNF; E4: $[L\oplus f(R)=t]$ with $k=40$ and a nonlinear $f$, $\wedge$ a side
+condition; E5: two of three blocks of 14 checks through a threshold gate, $\wedge$ a 3-DNF;
+E6: $\mathrm{Bern}(1/3)$ inputs, 100 banded checks (a) and the copies gadget of
+\cref{thm:biased-hard} with $n=36$, $m=12$, $k=6$ (b). Every interval contained the exact
+$p$; ``$U{=}\dots$'' marks a run that stopped at its sample cap with the valid interval
+$[0,U]$.}
+\label{tab:affine}
+\end{table}
+
+\paragraph{Open questions.} (1) Lower bounds for XOR-DNNF envelopes: an explicit
+rare event with $p=2^{-m}$ for which every XOR-DNNF envelope has size times
+looseness $2^{\Omega(m)}$. A Fourier version of the coset lemma reduces this to
+quadratic systems whose nonzero combinations have large cross-rank across every
+balanced linear cut. (2) Is the quadratic gap in \cref{cor:barrier-methods}(i)--(ii)
+real? (3) For $s=0$ and $q_i\le\frac12$, $\coNP$-hardness does not apply: can an
+$\MA$ prover help, for instance with a certificate of rapid mixing? (4) Detection:
+certify affineness of sub-circuits whose intermediate ANFs are dense (parities
+computed through adders or lookup tables), for instance from $\F_2$-polynomial-calculus
+proofs supplied by a prover.

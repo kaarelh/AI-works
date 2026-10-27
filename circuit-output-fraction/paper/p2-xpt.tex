@@ -1,0 +1,94 @@
+\subsection{Affine arguments}\label{sec:xpt}
+
+\Cref{thm:certenv} admits affine subspaces on uniform coordinates as atoms of envelope
+pieces, with domination proved in any Cook--Reckhow system. For parity reasoning
+resolution appears to be the wrong system: the refutations of dense linear hashes that
+a CDCL solver finds grow rapidly, and we conjecture that resolution needs exponential
+size (\cref{sec:pcis}). The
+following arguments check domination with gate propagation and Gaussian elimination.
+This amounts to a tree-like case analysis over affine forms and gates, in the spirit
+of parity decision trees, and it extends affine pieces to product distributions.
+
+\begin{definition}[XOR-propagation trees]\label{def:xpt}
+Fix an ANF cap $T$, a parameter of the verifier given in unary (our implementation
+uses $T=64$). An \emph{XPT argument} is a binary tree. Each internal node splits on an
+affine form $\ell(x)=\sum_{i\in I}x_i+c$ with $I\subseteq[n]$ and $c\in\{0,1\}$ (the
+children add $\ell(x)=0$ and $\ell(x)=1$) or on a gate $g$ (they add $g=0$ and $g=1$). Each leaf is labelled \emph{closed} or
+\emph{open}, and an open leaf may carry a linear order of the coordinates. The
+\emph{state} of a node is an affine system $S$ and a partial assignment $\sigma$ of gate
+values: at the root $S=\emptyset$ and $\sigma(\mathrm{out})=1$, and at every node the
+branch assumptions are added and the state is closed under
+\begin{description}[style=sameline,leftmargin=1.5em]
+\item[(X1)] gate semantics, forwards and backwards (an $\wedge$ with value $1$ forces its
+children to $1$, an $\wedge$ with value $0$ and all children but one equal to $1$ forces
+that child to $0$, and so on; for threshold gates, the range of the weighted sum allowed
+by the known children, computed exactly as in \cref{sec:setting});
+\item[(X2)] if $g$ is certified affine with $\sigma(g)=v$, add $a_g\cdot x=v+c_g$ to $S$;
+\item[(X3)] if $g$ is certified affine and $a_g\cdot x$ is constant on the solution set
+$V(S)$, set $\sigma(g)$ to that constant plus $c_g$.
+\end{description}
+A node is \emph{refuted} if $S$ becomes inconsistent or a gate receives both values.
+\end{definition}
+
+The verifier computes the certified affine gates of \cref{sec:affine} and the state of
+every node. It drops refuted nodes with their subtrees, whatever their labels. Every
+remaining leaf, including a closed leaf whose refutation fails and any malformed node
+(for instance a split whose constant is not a bit or whose index is out of range),
+contributes the piece $V(S_{\rm leaf})$. The verifier then runs the estimator of
+\cref{thm:affenv}(b) on the union of the pieces. Masses are $2^{-\mathrm{codim}}$ for
+pieces constrained only on uniform coordinates. Otherwise they come from the dynamic
+program of \cref{prop:bw-dp} along the leaf's order (the identity order if the given one
+is not a permutation of $[n]$), below a width cap fixed in advance, and a piece above
+the cap is replaced by its constraints on uniform coordinates.
+
+\begin{theorem}[XPT arguments]\label{thm:xpt}
+\begin{enumerate}[label=(\alph*)]
+\item For every circuit $C$, product distribution $D$ and string $\pi$, the verifier's
+interval contains $p$ with probability at least $1-\delta$.
+\item If $C$ has an XPT argument with $t$ leaves whose pieces satisfy
+$\sum_{\rm leaves}D(V_{\rm leaf})\le Kp$, and whose orders have $\lambda_t\le w$
+wherever a piece has constraints off the uniform coordinates (and the width cap is at
+least $w$), then with this argument
+the verifier outputs a $(1+\eps)$-tight interval with probability $1-\delta$, in time
+$\poly(|\pi|,|C|,n,T)+O(tn4^w)+O\big(K\eps^{-2}(\log(1/\delta)+\log\log K)\big)\cdot(|C|+tn^2)$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+(a) Let $x$ satisfy $C(x)=1$ and agree with a state: $x\in V(S)$, and the true gate
+values of $x$ agree with $\sigma$ where it is defined. Then $x$ agrees with the closed
+state, since each rule is a valid inference about the true gate values of $x$ ((X2) and (X3)
+use $g(x)=a_g\cdot x+c_g$, which certification makes an identity). So no such $x$
+reaches a refuted node. Following, at each split, the branch that matches $\ell(x)$ or
+$g(x)$, $x$ agrees with every state on its path, avoids refuted nodes, and ends at a
+leaf or malformed node whose piece contains $x$. Hence the pieces dominate $C$ for
+every $\pi$, and these deterministic checks use no coins. Soundness follows from
+\cref{thm:affenv}(b) and \cref{thm:envelope}. (b) The honest argument produces the
+stated pieces, so $K$ bounds the looseness and \cref{thm:envelope}(iv) applies. Each
+sample costs one evaluation of $C$, one piece sample ($O(n^2)$, or $O(n)$ with the
+dynamic program), and the membership tests for $\varphi$.
+\end{proof}
+
+XPT is an instance of the certified-envelope rule with a particular proof system: a
+piece constrained only on uniform coordinates is an affine atom of \cref{thm:certenv},
+and along a linear order the dynamic program of \cref{prop:bw-dp} is an OBDD, which is
+checked-deterministic. So XPT composes with the other rules of \cref{def:pcis} and
+inherits \cref{thm:pcis-sound}. It adds two things. First, parity reasoning in
+polynomial size. A dense linear hash $[Mx_A=Ma]$ needs no split at all, because (X1),
+(X2) and Gaussian elimination derive $x_A=a$. Splits on gates expose affine structure
+behind gates that the abstract interpretation of \cref{thm:affenv} treats as opaque. For example, if $C$
+requires two of three parity-check blocks through a threshold gate, splitting on two
+of the block gates gives three affine pieces with looseness close to that of the residual
+condition, while the Part-1 envelope stays at the trivial bound (E5 in \cref{tab:affine}:
+$p=4.9\cdot10^{-9}$, an argument with $7$ nodes, of which one is a closed and three are
+open leaves, ratio $1.04$ from $6.6\cdot10^4$ samples; the checker visits $6$ of the
+nodes, as propagation refutes the closed leaf when its split is applied). Second, affine pieces
+under product distributions: the prover supplies narrow linear orders and the verifier
+recomputes their widths. An order that is not a permutation is ignored, and one wider
+than the cap only relaxes its piece, so a bad order costs tightness or time, never
+soundness. The limits
+are those of \cref{thm:biased-hard,prop:nonclosure}: no argument system, XPT or any
+other, is complete for parity events under $\mathrm{Bern}(1/3)$, or for
+$[Hx=s]\wedge[|x|\le t]$ under the uniform distribution, unless $\coNP\subseteq\MA$.
+So the barrier of \cref{thm:ma} already applies to explicit, sparse circuits with very
+simple algebraic structure.
