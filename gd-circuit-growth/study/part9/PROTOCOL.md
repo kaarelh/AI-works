@@ -86,3 +86,30 @@ switched off only when `min_data_in_leaf` < 20 (one line in fit_ggbt). Verified:
 p9_gates at qd_dev n = 1000 (and the fix cannot act at n_fit >= 500, i.e. on every dev cell and every image cell with
 n >= 1000); runs at n = 100 and 300. New md5 **e38af40493816ef1bc82e4f16428dcdf**. No held-out result existed when the fix was
 made. The toy runs are unaffected (the gates member never runs on toy inputs); some toy shards ran before, some after.
+
+**Amendment 3 (27 October, after the Part 9 protocol audit; before any run on the new suite, and before the orchestrator
+had read any hyb_portfolio2 toy result).** The protocol audit (audit/protocol.md, M1 and M2) found that neither held-out
+toy suite tests Q1 blind to the sum-feature design:
+- `dlheld4`: builder S saw its source, the orchestrator's task prompt to S quoted a truncation of its target sumpar, and
+  S's block-size and modulator parameters were set minutes after the exposure.
+- `dlheld5`: blind to target identities, but its family was specified by the orchestrator 35 s after reading S's design
+  summary, including S's list of unsupported forms. The family lies inside S's representable class and its accept sets
+  are more oscillatory than any dev target's, which favours S over the networks and v1. "The clean test" (Amendment 2)
+  is withdrawn.
+
+A sixth suite, **`dlheld6`** (`part9/heldout6/`, `boolfuncs.make_dl_heldout6_suite`, seed 52817; 12 targets
+h6_00 ... h6_11), was written by a fresh agent given only: the pre-registered description of the held-out suite ("9
+symmetric / signed-sum targets of new sizes and accept-sets, mixtures with parities and gates, and 3 non-symmetric
+controls"), the Part 9 question, sym9 as the motivating failure, the dev-suite format (three dlsymdev targets) and the
+constraints (d = 30, 5-14 relevant inputs, P(+1) in [0.25, 0.75] as the only rejection rule, one seed). It was told not
+to read anything under part9/ outside its own folder, boolfuncs.py, results, logs or git history; its tool calls
+(transcript) touched only its folder and the scratchpad. It wrote the family (heldout6/FAMILY.md, sections 1-6) before
+drawing once. Controls: h6_03, h6_04, h6_05 (Q1's sum-structured subset is the other 9).
+
+**Q1 is answered on `dlheld6`** with the pre-registered criteria (mean log2 n* ratio against `nets_best` below 0 with
+more clearly-better than clearly-worse targets; below v1's on the sum-structured targets). `dlheld5` and `dlheld4` are
+reported as secondary evidence with their exposures. References on `dlheld6`: nets, nets_wd, nets_cewd (hence
+nets_best), lin, hgb and v1; v2 (frozen, md5 e38af404...) is run per target with permuted inputs; on toy inputs it is
+identical to p9_sum, which is not run separately. At this point the orchestrator had seen no hyb_portfolio2 toy result
+(its dlheld5 shards are committed but unopened) and one p9_sum dlheld5 log line (h5t0; see the freeze section).
+

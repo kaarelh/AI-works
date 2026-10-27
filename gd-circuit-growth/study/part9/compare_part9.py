@@ -3,7 +3,8 @@ usage: python compare_part9.py [v2_name]          (default hyb_portfolio2)
 
 TOY (inputs permuted for the discrete learners): n* per target and summaries against nets / nets_wd / nets_cewd / nets_best
 on the dev suites (designed, dlsymdev) and the held-out suites (dlheld4: definitions seen by the sum-feature builder;
-dlheld5: generated after its freeze).  Q1 subset: the sum-structured targets (all but the random formulas and the DNF).
+dlheld5: generated after its freeze, inside its class; dlheld6: written blind to its design, Amendment 3).  Q1 subset:
+the sum-structured targets (all but the controls: random formulas, DNFs, decision lists).
 IMAGES: test error by n on qd_a, qd_b (held out) and the dev sets; summaries against mlp, mlp_reg (mlp_l2unit),
 mlp_strong, mlp_strong1, mlp_best, by n range (all, n <= 3000, n >= 10000 = Q2).
 INTEGRATION RULE (PROTOCOL.md): dev image cells n in {1000, 10000, 60000}, seed 0, mean log2(err / mlp_best err)."""
@@ -16,7 +17,7 @@ V2 = sys.argv[1] if len(sys.argv) > 1 else "hyb_portfolio2"
 TOY = [("dlsymdev", "dev"), ("designed", "dev"), ("dlheld4", "held out; definitions seen by the S builder"),
        ("dlheld5", "held out; family specified after S's design summary was read, inside its representable class"),
        ("dlheld6", "held out; family written by an agent blind to the S design (Amendment 3)")]
-NONSUM = {"dnf3x3", "h4rf0", "h4rf1", "h5rf0", "h5rf1"}
+NONSUM = {"dnf3x3", "h4rf0", "h4rf1", "h5rf0", "h5rf1", "h6_03", "h6_04", "h6_05"}   # controls (non-symmetric)
 IMG_HELD, IMG_DEV = ["qd_a", "qd_b"], ["qd_dev", "mnist", "fashion_mnist"]
 REFS = ("mlp", "mlp_reg", "mlp_strong", "mlp_strong1", "mlp_best")
 
