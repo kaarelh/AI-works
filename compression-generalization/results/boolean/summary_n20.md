@@ -4,10 +4,13 @@ Each row averages 3 seeds (training sets and initializations). `test err f`: exa
 
 | task | m | test err f | bound on f | Occam part | Pr[f≠g] part | bits | best g (seed 0) | float32 Occam | VC (d=#params) | any-D bound |
 |---|---|---|---|---|---|---|---|---|---|---|
-| fullmaj | 4000 | 0.0000 | 0.0078 | 0.0071 | 0.0000 | 37 | mlp k=20 widths=[20, 1] rel=0.5 | 1.00 | 1.00 | 0.0277 |
-| junta6 | 4000 | 0.0000 | 0.0168 | 0.0161 | 0.0000 | 89 | table k=6 | 1.00 | 1.00 | 0.0191 |
+| fullmaj | 4000 | 0.0000 | 0.0078 | 0.0071 | 0.0000 | 37 | mlp k=20 widths=[20, 1] rel=0.5 | 1.00 | 1.00 | 0.0236 |
+| junta6 | 2000 | 0.0041 | 0.0374 | 0.0320 | 0.0041 | 89 | table k=6 | 1.00 | 1.00 | 1.0000 |
+| junta6 | 4000 | 0.0000 | 0.0168 | 0.0161 | 0.0000 | 89 | table k=6 | 1.00 | 1.00 | 0.0184 |
+| maj5 | 2000 | 0.0000 | 0.0159 | 0.0145 | 0.0000 | 38 | mlp k=5 widths=[5, 1] rel=0.5 | 1.00 | 1.00 | 0.0166 |
 | maj5 | 4000 | 0.0000 | 0.0080 | 0.0073 | 0.0000 | 38 | mlp k=5 widths=[5, 1] rel=0.5 | 1.00 | 1.00 | 0.0083 |
+| parity3 | 2000 | 0.0000 | 0.0122 | 0.0108 | 0.0000 | 27 | table k=3 | 1.00 | 1.00 | 0.0129 |
 | parity3 | 4000 | 0.0000 | 0.0061 | 0.0054 | 0.0000 | 27 | table k=3 | 1.00 | 1.00 | 0.0065 |
 
-Runs: 9. Bound below 0.5 (non-vacuous for a binary task): 9. Runs where the bound is below the measured test error: 0.
+Runs: 19. Bound below 0.5 (non-vacuous for a binary task): 19. Runs where the bound is below the measured test error: 0.
 Network f: widths [20, 512, 512, 1], [273921] parameters; Adam, lr 0.001, batch 64, trained to zero training error and mean training loss <= 0.01.

@@ -83,8 +83,7 @@ def figure(tasks, groups, grid, path):
     for ax, t in zip(axes.ravel(), tasks):
         ms = sorted({key[1] for key in groups if key[0] == t})
         def stat(key):
-            v = np.array([[r[key] for r in groups[(t, m)]] for m in ms], dtype=float)
-            return v.mean(1)
+            return np.array([np.mean([r[key] for r in groups[(t, m)]]) for m in ms], dtype=float)
         te = np.maximum(stat("test_err_f"), 1e-4)
         bd = stat("bound_f")
         ax.plot(ms, bd, color=SERIES[1], lw=2, marker="o", ms=4, label="bound on f (Thm 2)")

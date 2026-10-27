@@ -30,9 +30,7 @@ def tname(r):
 
 
 def fmt(x, d=3):
-    if x >= 0.9995:
-        return "1.0"
-    return f"{x:.{d}f}"
+    return f"{min(x, 1.0):.{d}f}"
 
 
 def write(name, body):
@@ -124,7 +122,7 @@ def t3():
             if r.get("init", "random") == "dct":
                 v.append("DCT init")
             return ", ".join(v)
-        for r in sorted(rows, key=lambda r: (r["data"], r.get("weight_noise", 0), r["widths"][1], code(r))):
+        for r in sorted(rows, key=lambda r: (r["data"] != "mnist", r.get("weight_noise", 0), r["widths"][1], code(r))):
             P = r["params"]
             occ32 = occam_bound(int(round(r["train_err_f"] * 60000)), 60000, 32.0 * P + 64, 0.05)
             lines.append(f"{r['data']} & {r['widths'][1]} & {var(r)} & {code(r)} & {r['test_err_f']:.4f} & {r['bits'] + 4:.0f} & "
@@ -140,7 +138,7 @@ def t3():
         lines = [r"\begin{table}[t]", r"\centering\small", r"\begin{tabular}{l r r r r r r r}", r"\toprule",
                  r"data & $H$ & kept coefficients & test err.\ $f$ & bits & certified & bound on $f$ & 32-bit Occam \\",
                  r"\midrule"]
-        for r in sorted(rows, key=lambda r: (r["data"], r["widths"][1], -r["nonzero_fraction"])):
+        for r in sorted(rows, key=lambda r: (r["data"] != "mnist", r["widths"][1], -r["nonzero_fraction"])):
             P = r["params"]
             occ32 = occam_bound(int(round(r["train_err_f"] * 60000)), 60000, 32.0 * P + 64, 0.05)
             lines.append(f"{r['data']} & {r['widths'][1]} & {100 * r['nonzero_fraction']:.1f}\\% & {r['test_err_f']:.4f} & "
