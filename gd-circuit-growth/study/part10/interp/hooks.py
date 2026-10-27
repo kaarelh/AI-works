@@ -2,7 +2,8 @@
 interpretability analysis.  A fit here is bit-for-bit the fit of the evaluation harness (same training rows, same rng),
 with the learner's internals recorded:
   - every DFG fit (characters, sum blocks, readout weights; the last fit on all n is the final member),
-  - the pooling sets S_i(k) (the 0/1 matrices A_k), the prototype-pair directions U and every ggbt booster,
+  - the pooling sets S_i(k) (the 0/1 matrices A_k), the prototype-pair directions U (and the classes of each pair's two
+    points) and every ggbt booster,
   - the stacker's weights and the members' out-of-fold errors (the learner's own info).
 Nothing is changed in the learner: module-level functions are wrapped, the wrapped calls return what they returned.
 
@@ -41,7 +42,7 @@ class Recorder:
     """Wraps HP's DFG._fit, pool_sets, pair_dirs and fit_ggbt for the duration of a with-block."""
 
     def __init__(self, HP):
-        self.HP = HP; self.dfg, self.pool, self.pairs, self.ggbt = [], [], [], []
+        self.HP = HP; self.dfg, self.pool, self.pairs, self.pair_cls, self.ggbt = [], [], [], [], []
 
     def __enter__(self):
         HP = self.HP; self._saved = {}
@@ -62,13 +63,23 @@ class Recorder:
             As, fl = ps(X, ks, *a, **k); rec.pool.append({kk: v.copy() for kk, v in As.items()}); return As, fl
 
         def pair_dirs(X, y, m, rng):
-            U = pd(X, y, m, rng); rec.pairs.append(U.copy()); return U
+            import copy
+            rc = copy.deepcopy(rng); U = pd(X, y, m, rng); rec.pairs.append(U.copy())
+            a = rc.integers(len(X), size=m); b = rc.integers(len(X), size=m)       # the same draws as pair_dirs makes
+            for _ in range(100):
+                bad = y[a] == y[b]
+                if not bad.any():
+                    break
+                b[bad] = rc.integers(len(X), size=int(bad.sum()))
+            keep = y[a] != y[b]; rec.pair_cls.append(np.stack([y[a[keep]], y[b[keep]]], 1))
+            assert len(rec.pair_cls[-1]) == len(U)
+            return U
 
         def fit_ggbt(Xr, y, *a, **k):
             m, fl, r = fg(Xr, y, *a, **k)
             c = _closure(type(m).proba) if hasattr(type(m), "proba") else {}
-            rec.ggbt.append(dict(n=len(y), model=m, bst=c.get("bst"), best=c.get("best"), rounds=r,
-                                 U=rec.pairs[-1] if rec.pairs else None))
+            rec.ggbt.append(dict(n=len(y), model=m, bst=c.get("bst"), best=c.get("best"), feat=c.get("feat"), rounds=r,
+                                 U=rec.pairs[-1] if rec.pairs else None, pair_cls=rec.pair_cls[-1] if rec.pair_cls else None))
             return m, fl, r
         HP.pool_sets, HP.pair_dirs, HP.fit_ggbt = pool_sets, pair_dirs, fit_ggbt
         return self
@@ -117,10 +128,13 @@ def targets(suite, d=30):
     return mk(d)
 
 
-def final_dfg(rec):
-    """The final DFG member: the last DFG fit on all n rows (the earlier ones are the out-of-fold fits), or None."""
+def final_dfg(rec, fallback=False):
+    """The final DFG member: the last DFG fit on all n rows (the earlier ones are the out-of-fold fits), or None (the
+    stacker gave DFG no weight, so it was not refitted); fallback=True: then the last out-of-fold fit (fewer rows)."""
     full = [f for f in rec["rec"].dfg if f["n"] == rec["n"]]
-    return full[-1] if full else None
+    if full:
+        return full[-1]
+    return rec["rec"].dfg[-1] if fallback and rec["rec"].dfg else None
 
 
 def dfg_terms(rec, fit=None):
@@ -128,7 +142,7 @@ def dfg_terms(rec, fit=None):
     column j to the original input pi[j]).  Each term: kind ('const', 'chi' with set S, or 'sum' with the block's set,
     signs, fold, modulator and the weights of its level groups), and its share = the standard deviation of its
     contribution over the test inputs (sum terms: of the whole block's contribution)."""
-    f = final_dfg(rec) if fit is None else fit
+    f = final_dfg(rec, fallback=True) if fit is None else fit
     if f is None:
         return []
     pi = rec["pi"]; Z = rec["Xte"]; o = lambda S: sorted(int(pi[i]) for i in S)
@@ -139,19 +153,30 @@ def dfg_terms(rec, fit=None):
             terms.append(dict(kind="const" if not S else "chi", S=o(S), w=float(w), share=float(np.std(w * col))))
         elif kind == "sum":
             bid, v = k; blocks.setdefault(bid, []).append((v, float(w)))
-        else:
-            terms.append(dict(kind="quad", w=float(w), share=float("nan")))
+        else:                                                       # a spectral (quadratic) feature (u . x)^2 - |u|^2
+            u = np.asarray(k, float); col = (Z @ u) ** 2 - u @ u; sup = np.where(np.abs(u) > 0.1 * np.abs(u).max())[0]
+            terms.append(dict(kind="quad", S=o(sup), w=float(w), share=float(np.std(w * col))))
     for bid, lv in blocks.items():
         B = f["B"][bid]; g = B.group(Z); cm = np.prod(Z[:, list(B.mod)], 1) if B.mod else np.ones(len(Z))
         contrib = sum(w * (g == v) for v, w in lv) * cm
         sg = {int(pi[i]): int(s) for i, s in zip(B.S, B.sg)}
         terms.append(dict(kind="sum", S=sorted(sg), signs=[sg[i] for i in sorted(sg)], fold=B.fold, mod=o(B.mod),
-                          edges=[float(e) for e in B.edges], levels={int(v): w for v, w in lv}, desc=B.desc(),
+                          edges=[float(e) for e in B.edges], levels={int(v): w for v, w in lv}, desc=block_desc(B, pi),
                           product=B.other is not None, share=float(np.std(contrib))))
     bg = f["bg"]
     terms.append(dict(kind="background", w=[float(bg[np.where(pi == i)[0][0]]) for i in range(len(pi))],
                       share=float(np.std(Z @ bg))))
     return sorted(terms, key=lambda t: -t["share"])
+
+
+def block_desc(B, pi):
+    """A sum block in original coordinates, 1-indexed: e.g. 'chi[x3]*|x1-x2+x5|' (x 'other' for a product block)."""
+    o = sorted((int(pi[i]), int(s)) for i, s in zip(B.S, B.sg))
+    t = "".join(("+" if s > 0 else "-") + f"x{i + 1}" for i, s in o).lstrip("+")
+    a = f"|{t}|" if B.fold else f"({t})"
+    if B.mod:
+        a = "chi[" + ",".join(f"x{int(pi[i]) + 1}" for i in sorted(B.mod, key=lambda i: pi[i])) + "]*" + a
+    return a + ("" if B.other is None else " x " + block_desc(B.other, pi))
 
 
 def grid_of(ds, d=784):
