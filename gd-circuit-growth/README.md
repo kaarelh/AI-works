@@ -24,9 +24,9 @@ Raw network outputs live in a session scratch directory and are in neither branc
 
 [Part 8](#part-8-a-discrete-portfolio-against-gradient-descent-trained-networks-on-toy-and-real-tasks-26-october-2026) asks for one discrete method that beats gradient-descent-trained networks on both. A pre-registered portfolio (DFG plus boosted trees, ExtraTrees, kNN votes and logistic regression, stacked) does so on the toy suites (9 of 10 fresh targets) and on held-out tabular data on average (lower mean error on 8 of 10 fresh datasets; not significant). On images its error is lower than every MLP's up to n = 3000 (one cell resolved), but a regularized MLP ensemble beats it at n ≥ 30000. The toy wins come from DFG's character search, the real-task wins from the classical stack.
 
-[Part 9](#part-9-sum-features-and-permutation-invariant-image-members-2627-october-2026) continues in the two directions where Part 8 lost. Features that are functions of signed sums of inputs remove the loss on symmetric targets: on a held-out suite written blind to the design, 10 of 12 targets need clearly less data than the best pre-registered network variant, none more. A pixel-permutation-invariant image member beats a strong MLP ensemble on two fresh QuickDraw sets at n ≥ 10000. But the image gain is carried by locality recovered from pixel correlations: an MLP given the same pooled sums matches it at n = 60000, so does a CPU-matched ensemble of wider MLPs, and a small CNN is better.
+[Part 9](#part-9-sum-features-and-permutation-invariant-image-members-2627-october-2026) continues in the two directions where Part 8 lost. Features that are functions of signed sums of inputs remove the loss on symmetric targets: on a held-out suite written blind to the design, 10 of 12 targets need clearly less data than the best pre-registered network variant and none more; with two network variants added after the audits, 2 need more. With a pixel-permutation-invariant image member, the portfolio beats a strong MLP ensemble on two fresh QuickDraw sets at n ≥ 10000 (3 of 6 cells clearly better, none worse). But the image gain is carried by locality recovered from pixel correlations: an MLP given the same pooled sums matches it at n = 60000, so does a CPU-matched ensemble of wider MLPs, and a small CNN that sees the pixel layout, run on one set, is clearly better at n = 10000 (level at n = 1000).
 
-**Paper (Parts 6–9):** [`paper_discrete/discrete-learners-paper.pdf`](paper_discrete/discrete-learners-paper.pdf) (LaTeX sources, figure and table scripts in [`paper_discrete/`](paper_discrete/)).
+**Paper (Parts 6–9):** LaTeX sources, figure and table scripts in [`paper_discrete/`](paper_discrete/) (build `main.tex`). The compiled PDF is not committed yet.
 
 [Part 4](#part-4-does-compositional-structure-beyond-leap-matter-24-october-2026) tests whether compositional structure beyond leap complexity matters. [Part 5](#part-5-what-the-network-computes-while-it-learns-2425-october-2026) characterizes the sequence of functions a network computes while it learns, and gives models that reproduce it on held-out targets.
 
@@ -993,7 +993,12 @@ samples against the networks' 350) and images at large n.
     boosted trees on subset sums over the 4, 9 and 16 pixels most correlated with each pixel, plus prototype-pair
     projections.
 - v2 (`hyb_portfolio2`) = v1 with both, frozen before any held-out run (one recorded crash fix afterwards).
-- *Audits and amendments.* Four audits ran on code and process before any v2 held-out result was read.
+- *Audits and amendments.* Four audits ran on code and process (02:13–03:01 UTC on 27 October); the auditors opened no
+  held-out result file (the protocol audit quotes the one p9_sum `dlheld5` log line the orchestrator had seen). During and just after the audits (02:40 and 03:03 UTC) the orchestrator saw v2's `qd_a` / `qd_b`
+  test errors at n = 100, 300 and 1000 in progress logs, and nothing at n ≥ 3000. The amendments below were fixed
+  before any v2 toy result or Q2 image cell was read (PROTOCOL.md, Amendments 3 and 4). For compute, `mlp_xl` was
+  later cut to n = 60000 (at the weight decay `mlp_wide` chose there) and `cnn` to `qd_a` at n = 1000 and 10000, at
+  07:05 UTC, after the held-out results had been read.
   - The protocol audit found that `dlheld4` and a later suite `dlheld5` were both exposed to the sum-feature design. A
     sixth suite, `dlheld6`, was written by an agent blind to the design, from the pre-registered one-line description,
     and Q1 is answered on it.
@@ -1004,24 +1009,30 @@ samples against the networks' 350) and images at large n.
 - **Q1, toy (blind suite `dlheld6`).** v2 needs clearly less data than the per-target best network on 10 of 12 targets
   and more on none: mean log2 n* ratio −1.45 against the pre-registered variants, about 2.7×. On the 9 sum-structured
   targets v2 is at −1.53, v1 at +0.63. With two more network weight decays (added after the fairness audit) the mean is
-  −1.25, with 2 targets worse: the most regularized network learns a residue class mod 3 of a 13-input count
-  (n* = 12304), which v2 does not find although it is a function of one signed sum. The two exposed suites agree (−2.40
-  and −1.68).
+  −1.25, with 2 targets worse. On h6_00, a residue class mod 3 of a 13-input count, the most regularized network
+  reaches n* = 12304 and is the only learner that learns it; v2 does not find it although it is a function of one
+  signed sum. On h6_10 v2 needs 702 samples against 451. Q1's criteria still hold. The two exposed suites agree (−2.40
+  on `dlheld5`, −1.68 on `dlheld4`).
 - **Q2, images (`qd_a`, `qd_b`, n ≥ 10000).** v2's mean log2 error ratio is −0.18 against the strong MLP ensemble and
   the pre-registered `mlp_best` (3 cells better, 3 tied, none worse), and v1's is +0.01. Against the strengthened
-  references it is −0.11 (none worse), and v2 has the lowest error of every reference at 13 of 14 cells. At n = 60000 v2
-  has 12.0% and 14.9% error, against 12.9% and 15.2% for the 512-wide ensemble and 12.5% and 14.8% for the CPU-matched
-  1024-wide ensemble (two ties).
+  references it is −0.11 (2 better, 4 tied, none worse), and v2 has the lowest error of every reference at 13 of 14
+  cells (the post-hoc controls below aside). At n = 60000 v2 has 12.0% and 14.9% error, against 12.9% and 15.2% for the
+  512-wide ensemble and 12.5% and 14.8% for the CPU-matched 1024-wide ensemble: all four are ties, and the 14.8% on
+  `qd_b` is the one cell where a reference is lower than v2.
 - **What carries the image result** (controls and post-hoc ablation):
   - the pooling sets recover the pixel grid from correlations (on the permuted dev set, 98% of the members of each
     4-pixel set lie within one grid step);
-  - an MLP given the same pooled sums matches v2 at n = 60000 (12.3% and 14.7%);
+  - an MLP given the same pooled sums matches v2 at n = 60000 (12.3% and 14.7%), and is level with it at 5 of the 6
+    cells where it ran;
   - the winning member is gradient-boosted trees, whose gain over Part 8's tree member splits about evenly between the
     pooled sums and longer boosting;
-  - a small CNN that sees the pixel layout is better still (12.0% at n = 10000 on `qd_a`, where v2 has 15.0%).
+  - a small CNN that sees the pixel layout (one network, run on `qd_a` at two sizes) is better still at n = 10000
+    (12.0%, where v2 has 15.0%) and level at n = 1000 (21.0% against 22.6%, a tie by the cell rule).
 - **Compute.** v2's FLOPs stay within the budget (largest image fit 0.62 of three MLP runs by its own count, ≈ 0.72
-  after the compute audit's correction; toy ≤ 0.82 of one network run). A v2 image fit takes 20–30 CPU minutes at n = 60000, against about a minute for the strong MLP ensemble,
-  and its prediction costs about 500× an MLP's per query.
+  after the compute audit's correction; toy ≤ 0.82 of one network run). A v2 image fit at n = 60000 takes 20–30 minutes
+  of process CPU time (1757 s on `qd_a`, 1178 s on `qd_b`), against 2–3.5 minutes of wall time for the strong MLP
+  ensemble (205 s and 130 s) and 20–23 minutes for the CPU-matched one (1207 s and 1359 s). Its prediction costs about
+  500× an MLP's per query.
 
 **Reading** (Heuristic). Sum features close the symmetric-function gap because they put "a function of one signed sum"
 into the dictionary, which a union bound searches for a few dozen nats; gradient descent has to find the sum's

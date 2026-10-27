@@ -403,11 +403,11 @@ v1: largest FLOPs per fit / one network run: 0.70.
 | fashion_mnist | 30000 | – | 0.1171 | 0.1174 | 0.1258 | 0.1241 | 0.1053 | 0.1131 | – | – | – | 0.1053 | 0.1053 | – | – |
 | fashion_mnist | 60000 | – | 0.1072 | 0.1054 | 0.1100 | 0.1073 | 0.0966 | 0.0992 | – | – | – | 0.0966 | 0.0966 | – | – |
 
-## Images: compute per fit (own FLOP count / budget of 3 MLP runs; CPU seconds, process time)
+## Images: compute per fit (own FLOP count / budget of 3 MLP runs; seconds per fit: process CPU time for hyb_portfolio2 and hyb_portfolio, wall-clock time for the MLP references)
 
 Prediction is not charged; see PART9.md for the per-query cost.
 
-| dataset | n | budget (FLOPs) | hyb_portfolio2 FLOPs/budget | hyb_portfolio FLOPs/budget | hyb_portfolio2 CPU s | hyb_portfolio CPU s | mlp CPU s | mlp_strong CPU s | mlp_wide CPU s | mlp_xl CPU s |
+| dataset | n | budget (FLOPs) | hyb_portfolio2 FLOPs/budget | hyb_portfolio FLOPs/budget | hyb_portfolio2 CPU s | hyb_portfolio CPU s | mlp wall s | mlp_strong wall s | mlp_wide wall s | mlp_xl wall s |
 |---|---|---|---|---|---|---|---|---|---|---|
 | qd_a | 100 | 1.24e+12 | 0.49 | 0.45 | 57 | 12 | 23 | 25 | 157 | – |
 | qd_a | 300 | 1.24e+12 | 0.55 | 0.47 | 133 | 28 | 24 | 25 | 161 | – |

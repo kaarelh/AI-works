@@ -116,10 +116,11 @@ def img_compute():
     """Compute per image cell (audit F1, F7): own-count FLOPs / budget_real (max over seeds) and CPU seconds per fit
     (seed mean; process time) for the discrete learners, and the recorded CPU seconds of the MLP references."""
     import common
-    L = ["## Images: compute per fit (own FLOP count / budget of 3 MLP runs; CPU seconds, process time)", "",
+    L = ["## Images: compute per fit (own FLOP count / budget of 3 MLP runs; seconds per fit: process CPU time for hyb_portfolio2 "
+         "and hyb_portfolio, wall-clock time for the MLP references)", "",
          "Prediction is not charged; see PART9.md for the per-query cost.", "",
          "| dataset | n | budget (FLOPs) | " + " | ".join(f"{l} FLOPs/budget" for l in (V2, "hyb_portfolio")) + " | "
-         + " | ".join(f"{l} CPU s" for l in (V2, "hyb_portfolio", "mlp", "mlp_strong", "mlp_wide", "mlp_xl")) + " |", "|---|---|---|" + "---|" * 8]
+         + " | ".join(f"{l} {'CPU' if l in (V2, 'hyb_portfolio') else 'wall'} s" for l in (V2, "hyb_portfolio", "mlp", "mlp_strong", "mlp_wide", "mlp_xl")) + " |", "|---|---|---|" + "---|" * 8]
     for ds in IMG_HELD:
         D = DATA.load(ds)
         R = {l: CH.load(l, ds) for l in (V2, "hyb_portfolio", "mlp", "mlp_strong", "mlp_wide", "mlp_xl")}

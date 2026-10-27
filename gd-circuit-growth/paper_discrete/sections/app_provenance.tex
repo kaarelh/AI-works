@@ -1,15 +1,17 @@
 \section{How this work was done}\label{app:provenance}
 
-This paper and the work it reports were produced by an AI system, Claude (Anthropic), on 25--26 October 2026. Kaarel H\"anni prompted and steered it by posing the questions of Parts 6--9. No human has reviewed the code, the results or this text.
+This paper and the work it reports were produced by an AI system, Claude (Anthropic), on 25--27 October 2026. Kaarel H\"anni prompted and steered it by posing the questions of Parts 6--9. No human has reviewed the code, the results or this text.
 
-\paragraph{Organisation.} One orchestrating session took each part's question from the user, wrote protocols, fixed held-out sets, ran evaluations and wrote the study's write-ups. It delegated four kinds of work to separate agents, which reported back to it:
+\paragraph{Organisation.} One orchestrating session took each part's question from the user, wrote protocols, fixed held-out sets, ran evaluations and wrote the study's write-ups. It delegated six kinds of work to separate agents, which reported back to it:
 \begin{itemize}
 \item design work (\emph{builders});
+\item writing the blind held-out toy suite \code{dlheld6} (Part 9);
 \item reviews of code and process (\emph{audits});
 \item checks of the write-ups against the result files (\emph{claims checks} or \emph{numbers and framing reviews});
-\item this paper's drafting.
+\item the first draft of this paper (Parts 6--8);
+\item pre-drafting \texttt{PART9.md} and applying the Part 9 claims-check corrections (Part 9).
 \end{itemize}
-Builders and auditors had their own instructions and data restrictions; the restrictions on data access are recorded in the protocol files and were checked by the protocol audits.
+Builders, auditors and the author of \code{dlheld6} had their own instructions and data restrictions; the restrictions on data access are recorded in the protocol files; the builders' were checked by the protocol audits, and the \code{dlheld6} author's from its transcript (its tool calls touched only its own folder and the scratchpad).
 
 \paragraph{Part 6} (25 October; commits on the working branch).
 \begin{itemize}
@@ -65,25 +67,26 @@ No learner was changed after its freeze.
 \item Two duplicate reference runs, \code{nets_wd} on \code{dlheld} and \code{mlp_strong} on pendigits, were started by mistake and stopped; one copy of each was kept.
 \end{itemize}
 
-\paragraph{Part 9.} The protocol, the new development sets and the held-out sets were committed before any Part 9 design work (\texttt{82ca257d}, 20:14 UTC on 26 October), and an amendment fixing the dev image cells followed before design (\texttt{f6ad9afe}, 20:15).
+\paragraph{Part 9} (26--27 October). The protocol, the new development sets and the original held-out sets (\code{dlheld4}, \code{qd_a}, \code{qd_b}) were committed before any Part 9 design work (\texttt{82ca257d}, 20:14 UTC on 26 October), and an amendment fixing the dev image cells followed before design (\texttt{f6ad9afe}, 20:15). The later held-out toy suites came with amendments: \code{dlheld5} (Amendment 2, \texttt{7449313e}, 23:08, after builder S froze) and the Q1 suite \code{dlheld6} (Amendment 3, \texttt{0c4db784}, 02:54 UTC on 27 October, after v2 was frozen).
 \begin{itemize}
 \item \emph{Builders.} Three independent agents built the sum-feature component (S) and the two image members (I1, I2) on development data and froze before their full dev evaluations. A container restart killed the first I2 session; a new agent resumed from its files (\cref{sec:p9audits}).
 \item \emph{Integration and freeze.} The orchestrating session applied the pre-registered rule mechanically from dev result files and froze v2 at 02:11 UTC on 27 October; a one-line crash fix followed before any held-out result existed.
-\item \emph{Audits.} Four auditors (protocol, compute, discreteness, fairness) examined code and process before any v2 held-out result was read. Their findings led to Amendments 3 and 4 (\cref{tab:p9amend}).
+\item \emph{Audits.} Four auditors (protocol, compute, discreteness, fairness) examined code and process (02:13--03:01 UTC on 27 October) without opening any held-out result file (the protocol auditor read the one \code{p9_sum} \code{dlheld5} line the orchestrator had quoted in its chat); the orchestrator's looks at v2's $n\le1000$ progress lines, at 02:40 and 03:03, fell during and just after that window (see below). Their findings led to Amendments 3 and 4 (\cref{tab:p9amend}).
 \item \emph{The blind suite.} \code{dlheld6} was written by a fresh agent that was told not to read the design notes, the other suites or any result; its tool calls touched only its own folder and the scratchpad.
 \item \emph{What the orchestrator saw.} Before the freeze, three held-out log lines (v1 on \code{qd_a} and \code{qd_b}, and one \code{p9_sum} line on \code{dlheld5}); before Amendment 4, v2's \code{qd_a}/\code{qd_b} test errors at $n\le1000$ in progress logs. Both are recorded in the protocol.
-\item \emph{Compute incidents.} Two container restarts; out-of-memory kills of two reference runs and one post-hoc run when too many large jobs ran at once (all rerun from saved state, one at a time); and two compute cuts, recorded before the runs: the CNN context reference ran at two cells, and the CPU-matched MLP at $n=60000$ only.
+\item \emph{Compute incidents.} Two container restarts; out-of-memory kills of \code{p9_gates}' $n=60000$ dev fits (three times; rerun with the frozen file) and, in the held-out phase, of the resumed baseline \code{mlp} (twice), the \code{mlp_pool} control and one \code{ggbt} ablation, all on \code{qd_a} at $n=60000$, when too many large jobs ran at once (all rerun from saved state, one at a time); and three compute cuts: the CNN context reference was reduced to one network at a fixed weight decay (recorded before it ran on \code{qd_a}/\code{qd_b}) and to two cells on \code{qd_a} (recorded once its $n=1000$ cell had finished, before it ran past that cell), and the CPU-matched MLP ran at $n=60000$ only, at the weight decay \code{mlp_wide} chose (recorded before those runs).
 \end{itemize}
 
-\paragraph{This paper.} It was drafted by a separate agent from the study's write-ups (\texttt{DISCRETE-LEARNER.md}, \texttt{STANDARD-TASKS.md}, \texttt{HYBRID.md} and their result tables), the protocols and the audit reports.
+\paragraph{This paper.} Its sections on Parts 6--8 were first drafted by a separate agent from the study's write-ups (\texttt{DISCRETE-LEARNER.md}, \texttt{STANDARD-TASKS.md}, \texttt{HYBRID.md} and their result tables), the protocols and the audit reports. The Part 9 section, and the Part 9 revisions of the other sections, were written by the orchestrating session from \texttt{PART9.md}, \texttt{study/part9/RESULTS.md}, the Part 9 protocol and audit reports, and the result files. \texttt{PART9.md}'s methods and process sections were pre-drafted by a separate agent; the corrections from the Part 9 claims check were applied by separate agents, one per group of files, and an independent agent checked each group's edits.
 \begin{itemize}
 \item The figures (\texttt{make\_figures.py}) and the generated tables (\texttt{make\_tables.py}) are computed directly from the result files with the study's own comparison functions.
 \item Their values were compared with the study's markdown tables.
-\item \PCLAIMS
+\item An independent claims check of the paper, the README and \texttt{PART9.md} (one checker per group of sections, then an adversarial re-check of each reported discrepancy) compared every claim with the result files, the protocol and the audit reports. Its 69 confirmed findings were applied, the edits were checked by independent verifiers, and their remaining findings were applied by the orchestrating session.
 \end{itemize}
 
 \paragraph{Reproducibility.} All code is in \repo{study/}: \texttt{discrete\_learner/} (Part 6), \texttt{standard\_tasks/} (Part 7), \texttt{hybrid/} (Part 8) and \texttt{part9/} (Part 9, with \texttt{PROTOCOL.md}, \texttt{PART9.md}, \texttt{RESULTS.md} and the audit reports). Each write-up ends with the commands that regenerate its results.
 \begin{itemize}
 \item The networks' raw outputs and the cached datasets are in a session scratch directory, not in the repository. The scripts regenerate them, and \repo{study/hybrid/results/nets_final_err.json} holds the networks' final-step test errors used for the toy comparisons.
 \item The orchestration scripts of Part 8 (\texttt{study/hybrid/orchestration/}) are kept on the working branch only.
+\item {\sloppy Part 9's job drivers and queue scripts (among them \texttt{run\_v2.sh}, \texttt{jax\_refs.sh}, \texttt{cpu\_refs*.sh}, \texttt{refs5.sh}, \texttt{nets5.sh}, \texttt{after\_restart2.sh}, \texttt{refs\_a4.sh}, \texttt{run\_h6.sh}, \texttt{nets\_r3.sh}, \texttt{final\_q*.sh}), the builders' development scripts and the equivalence checks (\texttt{equiv.py}, \texttt{equiv2.py}) stayed in the session scratch directory and are in neither branch. The drivers only wrapped the committed scripts, and \texttt{PART9.md} gives the commands that reproduce the runs. The Part 6 and 7 audit scripts are likewise in the scratch directory (\cref{app:audits}).\par}
 \end{itemize}

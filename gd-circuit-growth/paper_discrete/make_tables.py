@@ -220,8 +220,11 @@ def tab_p9_toy_summary():
     for suite, status in P9_TOY:
         NR = CH.toy_nstars(suite); V2 = toy_n("hyb_portfolio2-perm", suite) or toy_n("p9_sum-perm", suite)
         V1 = toy_n("hyb_portfolio-perm", suite)
-        out.append(f"\\texttt{{{suite}}} & {status} & {cell(V2, NR['nets_best'])} & {cell(sub(V2), NR['nets_best'])} & "
-                   f"{cell(sub(V1), NR['nets_best'])} & {cell(sub(V2), V1)}" + r"\\")
+        if suite == "designed":                       # no designated controls, and mostly not sum-structured: no subset
+            ss = ["---"] * 3
+        else:
+            ss = [cell(sub(V2), NR['nets_best']), cell(sub(V1), NR['nets_best']), cell(sub(V2), V1)]
+        out.append(f"\\texttt{{{suite}}} & {status} & {cell(V2, NR['nets_best'])} & " + " & ".join(ss) + r"\\")
     out += [r"\bottomrule", r"\end{tabular}"]
     write("tab_p9_toy_summary.tex", out)
 
@@ -243,7 +246,7 @@ def tab_p9_images():
                 if r is None or n not in r["ns"][:len(r["err"])]:
                     return "---"
                 v = np.nanmean(np.array(r["err"][r["ns"].index(n)], float))
-                return "---" if not np.isfinite(v) else f"{100 * v:.1f}"
+                return "---" if not np.isfinite(v) else f"{100 * v + 1e-9:.1f}"          # half up (0.1225 -> 12.3)
             vals = [g(k) for k, _ in P9_IMG_COLS]
             ranked = [float(v) for (k, _), v in zip(P9_IMG_COLS, vals) if v != "---" and k not in ("cnn", "mlp_pool", "mlp_best", "mlp_best+")]
             best = min(ranked) if ranked else None

@@ -418,6 +418,8 @@ def fig7():
                            edgecolor=(COL[0] if fc == "white" else "white") if not ctl else (COL[3] if fc == "white" else "white"),
                            linewidth=0.8, zorder=3 if fc == "white" else 4)
         ax.axhline(NEV, color="#c8c8c8", lw=0.5, zorder=0); ax.text(lo * 1.15, NEV * 0.82, "never", fontsize=6, color=INK2, va="top")
+        ax.axvline(NEV, color="#c8c8c8", lw=0.5, zorder=0)      # "never" on the x axis too (nets_best did not reach 10%)
+        ax.text(NEV * 0.82, lo * 1.15, "never", rotation=90, fontsize=6, color=INK2, ha="right", va="bottom")
         ax.set_xscale("log"); ax.set_yscale("log"); ax.set_xlim(lo, hi); ax.set_ylim(lo, hi); ax.set_aspect("equal")
         ax.set_title(title, loc="left", fontsize=7.2)
         ax.set_xlabel(r"$n^*$ of nets_best")
@@ -460,7 +462,7 @@ def fig8():
         ax.yaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{100 * v:g}%"))
         ax.yaxis.set_minor_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{100 * v:g}%" if round(v * 100, 6) in (12, 15, 20, 30, 40, 50) else ""))
     axs[0].set_ylim(np.nanmin(allv) * 0.9, np.nanmax(allv) * 1.08)
-    axs[0].set_ylabel("test error (seed mean; seed 0 at n >= 30000)")
+    axs[0].set_ylabel("test error (seed mean;\nseed 0 at n >= 30000 and for mlp_pool, cnn)", fontsize=7)
     h, l = axs[0].get_legend_handles_labels()
     fig.legend(h, l, loc="lower center", ncol=4, bbox_to_anchor=(0.5, -0.01), columnspacing=1.0, handlelength=2.2, fontsize=6.5)
     fig.tight_layout(rect=(0, 0.14, 1, 1), w_pad=0.8)

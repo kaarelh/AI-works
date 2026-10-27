@@ -2,7 +2,7 @@
 
 \subsection{Toy Boolean targets and the networks}\label{sec:toysetup}
 
-\paragraph{Targets.} Inputs are uniform on $\cube$, mostly with $d=30$, and labels are $\pm1$ values of a target $f$. Products of inputs are parities (Fourier characters) $\chi_S(x)=\prod_{i\in S}x_i$. Five suites are used. Their roles differ by part, and \cref{tab:suites} gives the status of each.
+\paragraph{Targets.} Inputs are uniform on $\cube$, mostly with $d=30$, and labels are $\pm1$ values of a target $f$. Products of inputs are parities (Fourier characters) $\chi_S(x)=\prod_{i\in S}x_i$. Parts 6--8 use the five suites below; Part 9 adds four more (\code{dlsymdev}, \code{dlheld4}, \code{dlheld5}, \code{dlheld6}; \cref{sec:p9data}). Their roles differ by part, and \cref{tab:suites} gives the status of each.
 \begin{itemize}
 \item \code{designed} (21 targets), from Parts 1--5:
   \begin{itemize}
@@ -39,7 +39,7 @@ Here $[\cdot]$ is $+1$ if the condition holds and $-1$ otherwise. Every suite pu
 This configuration was never tuned. In Part 8, after an audit found it to be a weak representative of gradient-descent-trained networks (\cref{app:audits}), two variants were added at the same width, steps and FLOPs:
 \begin{itemize}
 \item \code{nets_wd}: decoupled weight decay 0.1 \cite{loshchilov2019adamw}, on every target of every suite;
-\item \code{nets_cewd}: logistic loss plus weight decay 0.1, on \code{dlheld3} only.
+\item \code{nets_cewd}: logistic loss plus weight decay 0.1, on \code{dlheld3} in Part 8 (not on the four earlier suites), and on every Part 9 toy suite (\code{dlsymdev}, \code{dlheld4}--\code{dlheld6}; \cref{sec:part9}). Part 9 also runs \code{nets_cewd0.3} and \code{nets_cewd1.0}, the same with weight decay 0.3 and 1.0, on \code{dlheld6}.
 \end{itemize}
 \code{nets_best} is, per target, the variant with the smallest $\nstar$. It is chosen with hindsight on the test set and so favours the networks.
 
@@ -54,7 +54,7 @@ This configuration was never tuned. In Part 8, after an audit found it to be a w
 \begin{itemize}
 \item \emph{Toy unit:} one network training run, $6P\cdot64\cdot T+10P\cdot T$ FLOPs, where $P$ is the parameter count and $T$ the step count (Adam adds the second term). That is $1.62\times10^{11}$ at $d=30$.
 \item \emph{No sharing:} the networks are trained in parallel under \texttt{vmap}, but no computation is shared between them, so each $(n,\text{seed})$ network costs one unit.
-\item \emph{Budgets:} DFG (Part 6) and the Part 8 learners are held to at most one unit per fit.
+\item \emph{Budgets:} DFG (Part 6) and the Part 8 and Part 9 learners are held to at most one unit per fit.
 \end{itemize}
 
 \begin{table}[t]
@@ -63,22 +63,22 @@ This configuration was never tuned. In Part 8, after an audit found it to be a w
 \toprule
 set & size & status & role\\
 \midrule
-toy \code{designed} & 21 & development; in-sample & Part 6 development; Part 8 dev score\\
+toy \code{designed} & 21 & development; in-sample & Part 6 development; Part 8 dev score; Part 9 integration rule (i)\\
 toy \code{random} & 20 & read during DFG's development & Part 6 development check; Part 8 supporting\\
 toy \code{dlheld} & 12 & blind for frozen DFG v1 (except its degree-5/6 search) & Part 6 blind test; Part 8 supporting\\
 toy \code{dlheld2} & 7 & blind for DFG v1.1; used once in Part 6 & Part 6 blind test; Part 8 supporting\\
 toy \code{dlheld3} & 10 & fresh in Part 8 & \textbf{Part 8 toy headline}\\
 \addlinespace
-5 PMLB DEV & 5 & development & Part 7 and Part 8 development\\
+5 PMLB DEV & 5 & development & Part 7, 8 and 9 development\\
 Part 7 HELDOUT, tabular & 11 & held out in Part 7; references read by Part 8 builders & Part 7 test; Part 8 supporting\\
-MNIST, Fashion-MNIST & 2 & held out in Part 7; references read by Part 8 builders & the only image evidence (Parts 7, 8)\\
+MNIST, Fashion-MNIST & 2 & held out in Part 7; references read by Part 8 builders; development in Part 9 & the only image evidence of Parts 7, 8; Part 9 integration rule (ii)\\
 HELDOUT2 & 10 & fresh in Part 8, never read by a builder & \textbf{Part 8 tabular headline}\\
 \addlinespace
-toy \code{dlsymdev} & 8 & development, new in Part 9 & Part 9 integration rule\\
+toy \code{dlsymdev} & 8 & development, new in Part 9 & Part 9 integration rule (i), with \code{designed}\\
 toy \code{dlheld4} & 12 & fixed before Part 9 design; definitions seen by the sum-feature builder & Part 9 secondary\\
 toy \code{dlheld5} & 12 & drawn after that builder froze; family inside its class & Part 9 secondary\\
 toy \code{dlheld6} & 12 & family written blind to the design, drawn once & \textbf{Part 9 toy headline (Q1)}\\
-QuickDraw \code{qd_dev} & 1 & development, new in Part 9 & Part 9 integration rule\\
+QuickDraw \code{qd_dev} & 1 & development, new in Part 9 & Part 9 integration rule (ii), with MNIST, Fashion-MNIST\\
 QuickDraw \code{qd_a}, \code{qd_b} & 2 & fixed before Part 9 design, never read by a builder & \textbf{Part 9 image headline (Q2)}\\
 \bottomrule
 \end{tabularx}
@@ -102,7 +102,7 @@ Five PMLB datasets were for development (optdigits, magic, kr\_vs\_kp, satimage,
 \item \emph{Seeds:} three. On images at $n\ge30000$ the DFG adaptations (Part 7), and the Part 8 learners and the strong MLP, were run with seed 0 only.
 \end{itemize}
 
-\paragraph{MLP references.} All are 256-256 ReLU MLPs with softmax cross-entropy.
+\paragraph{MLP references.} The Part 7 and 8 references are 256-256 ReLU MLPs with softmax cross-entropy; Part 9's wider \code{mlp_wide} (512) and \code{mlp_xl} (1024) and its controls are described in \cref{sec:p9images}.
 \begin{itemize}
 \item \code{mlp}, the baseline:
   \begin{itemize}
@@ -119,12 +119,12 @@ Five PMLB datasets were for development (optdigits, magic, kr\_vs\_kp, satimage,
 \item \code{mlp_reg} (Part 8): \code{mlp_l2} on tabular data and its $[0,1]$-pixel version \code{mlp_l2unit} on images, at every $n$.
 \item \code{mlp_strong} (Part 8; added after the fairness audit, settings from the audit's recommendation and standard practice, smoke-tested on two dev datasets only):
   \begin{itemize}
-  \item quantile-transformed continuous inputs, or $[0,1]$ pixels;
+  \item quantile-transformed continuous inputs; $[0,1]$ pixels on MNIST and Fashion-MNIST, quantile-transformed pixels on the Part 9 QuickDraw sets;
   \item AdamW \cite{loshchilov2019adamw} at learning rate $10^{-3}$ with cosine decay to 0;
   \item decoupled weight decay in $\{0,0.1,1\}$ chosen on validation, and dropout 0.1 \cite{srivastava2014dropout};
   \item an ensemble of 3 networks, so 6 training runs per fit, twice the Part 8 learners' budget. Its first network alone is \code{mlp_strong1}.
   \end{itemize}
-\item \code{mlp_best}: per cell, the lowest seed-mean \emph{test} error over every MLP variant run on that cell. It is a hindsight choice that favours the MLPs. Which variants exist differs by split (\cref{app:audits}).
+\item \code{mlp_best}: per cell, the lowest seed-mean \emph{test} error over the Part 7--8 MLP variants run on that cell. It is a hindsight choice that favours the MLPs. Which variants exist differs by split (\cref{app:audits}); on QuickDraw, Part 9's wider variants enter only \code{mlp_best+} (\cref{sec:p9images}).
 \end{itemize}
 Calibration references, which enter no verdict:
 \begin{itemize}
@@ -133,7 +133,7 @@ Calibration references, which enter no verdict:
 \item \code{lin}, on the toy suites: L2 logistic regression on the raw inputs, with cross-validated $\lambda$.
 \end{itemize}
 
-\paragraph{Budgets on standard tasks.} One MLP training run at size $n$ costs $6P\cdot128\cdot S$ FLOPs, with $S$ the step count. DFG's adaptations (Part 7) were held to one run per fit. The Part 8 learners were held to three, which is the baseline's own cost including its learning-rate selection.
+\paragraph{Budgets on standard tasks.} One MLP training run at size $n$ costs $6P\cdot128\cdot S$ FLOPs, with $S$ the step count. DFG's adaptations (Part 7) were held to one run per fit. The Part 8 and Part 9 learners were held to three, which is the baseline's own cost including its learning-rate selection.
 
 \paragraph{Verdicts.} A $(\text{dataset},n)$ cell is \emph{better} (\emph{worse}) if the seed-mean errors differ by more than 10\% relative and by more than 2 standard errors. The s.e.\ comes from the seed spread of both learners and is at least the binomial noise of the test set; otherwise the cell is a \emph{tie}. Errors are floored at 0.002 in $\log_2$ ratios. The \emph{data factor} of a cell is the training size at which the learner reaches the reference's error at $n$, divided by $n$. Part 8 also reports, per split, the number of datasets whose mean $\log_2$ error ratio over $n$ is below 0, with a two-sided exact sign test. This was fixed before any held-out run.
 
