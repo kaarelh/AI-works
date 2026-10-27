@@ -38,9 +38,11 @@ def exact_prob(C: Circuit, D: Product | None = None, max_n: int = 26) -> float:
     return float(D.pmf(X).sum())
 
 
-def exact_prob_rational(C: Circuit, D: Product | None = None, max_n: int = 20):
+def exact_prob_rational(C: Circuit, D: Product | None = None, max_n: int = 22):
     """Pr_D[C = 1] as an exact Fraction (each float marginal taken at its exact
-    binary value), for checking interval coverage without rounding artefacts."""
+    binary value), for checking interval coverage without rounding artefacts.
+    Every marginal in [2^-7, 1] is an integer multiple of 2^-60; smaller ones
+    are handled through their exact Fraction."""
     from fractions import Fraction
 
     n = C.n
@@ -50,11 +52,13 @@ def exact_prob_rational(C: Circuit, D: Product | None = None, max_n: int = 20):
     if D is None or np.all(D.q == 0.5):
         return Fraction(int(y.sum()), 1 << n)
     q1 = [Fraction(float(v)) for v in D.q]
-    q0 = [1 - v for v in q1]
-    total = Fraction(0)
-    for x in X[y]:
-        t = Fraction(1)
-        for i in range(n):
-            t *= q1[i] if x[i] else q0[i]
-        total += t
-    return total
+    den = 1
+    for v in q1:
+        den = max(den, v.denominator)
+    # integer weights w_b[i] = den * Pr[x_i = b]; the weight of x is prod_i w_{x_i}[i]
+    W = np.array([1], dtype=object)
+    for v in q1:
+        w1 = int(v * den)
+        w0 = den - w1
+        W = np.concatenate([W * w0, W * w1])  # index bit i <-> variable i
+    return Fraction(int(W[y].sum()), den ** n)
