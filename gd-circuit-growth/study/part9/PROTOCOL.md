@@ -113,3 +113,30 @@ nets_best), lin, hgb and v1; v2 (frozen, md5 e38af404...) is run per target with
 identical to p9_sum, which is not run separately. At this point the orchestrator had seen no hyb_portfolio2 toy result
 (its dlheld5 shards are committed but unopened) and one p9_sum dlheld5 log line (h5t0; see the freeze section).
 
+**Amendment 4 (27 October, ~03:10 UTC, after the four Part 9 audits; fixed before any hyb_portfolio2 held-out result was
+read).** The fairness and discreteness audits (audit/fairness.md, audit/discreteness.md) found the references plausible
+but not at the frontier, and the image gain unattributed. Added now, none of them tuned on held-out results:
+- **R1 `mlp_wide` / `mlp_wide1`** (strengthening; fairness F1): the mlp_strong recipe at width 512, weight decay in
+  {0.1, 1, 3} chosen on validation, an ensemble of 3 (`mlp_wide`, 6 runs of width 512) and its first network
+  (`mlp_wide1`, one retrained network, about 0.8 of the 3-run budget; 4 runs counting selection). qd_a and qd_b, the
+  full grid (3 seeds at n <= 10000, seed 0 at n >= 30000).
+- **R2 `mlp_xl`** (CPU-matched; fairness F2): the same recipe at width 1024, an ensemble of 3; qd_a and qd_b at
+  n = 10000 and 60000, seed 0. Its CPU time is of the order of hyb_portfolio2's at n = 60000; its FLOPs are far above
+  the budget.
+- **R3 `nets_cewd0.3`, `nets_cewd1.0`** (fairness F6): logistic loss with weight decay 0.3 and 1.0, on `dlheld6`.
+- **C1 `mlp_pool`** (post-hoc control; discreteness D1, fairness F3): the mlp_strong recipe on [x, pooled sums at
+  k = 4, 9, 16], the pooling sets computed by hyb_portfolio2's own `pool_sets` from each fit's training rows; qd_a and
+  qd_b, n in {1000, 10000, 60000}, seed 0. It separates the representation from the learner.
+- **C2 `cnn`** (context only; discreteness D1): a small CNN on the *unpermuted* pixels (it uses the layout, which the
+  MLPs and the discrete learners do not), the mlp_strong recipe otherwise; qd_a and qd_b, n in {1000, 10000, 60000},
+  seed 0. It is not a Q2 reference.
+- **C3 attribution** (discreteness D3): from 03:0x UTC the evaluator also stores each fit's stack weights and per-member
+  out-of-fold errors (training rows only); the remaining hyb_portfolio2 image cells record them. The learner is unchanged.
+- **Reporting:** `mlp_reg` maps to `mlp_l2unit` on QuickDraw too (fairness F5, a table bug); CPU seconds per fit are
+  reported next to FLOPs.
+
+**Q2 is answered twice:** as pre-registered (against `mlp_strong` and the pre-registered `mlp_best`), and against
+`mlp_best+` = the per-cell best of every MLP variant including R1 and R2 (hindsight; R2 is not FLOP-matched). **Q1** uses
+`nets_best` over all network variants run on the suite (on `dlheld6`: nets, nets_wd, nets_cewd, nets_cewd0.3,
+nets_cewd1.0).
+

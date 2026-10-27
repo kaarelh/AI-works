@@ -4,6 +4,8 @@ finished cell is saved under the scratch cell directory, so a rerun skips it.  W
 merged into standard_tasks/results/<name>__<dataset>.json in harness format.
 usage: python eval_cells.py <module:Class[:kwargs]> <dataset> [--img] [--ns=...] [--seeds=...] [--tag=name]
   --img: 3 seeds for n <= 10000, seed 0 only for n >= 30000 (the Part 8 / 9 image protocol; other seeds NaN).
+Each cell also records the learner file's md5 and, where the learner reports it, its attribution info (stack weights,
+member out-of-fold errors on the training rows, per-member FLOPs and CPU); merged into <name>__<dataset>.info.json.
 Fits with n >= 30000 hold a file lock, so that at most one runs at a time across processes (memory)."""
 import os, sys, json, time, hashlib, numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__)); STUDY = os.path.dirname(HERE)
@@ -20,6 +22,7 @@ D = DATA.load(ds)
 grid = [int(v) for v in opt["ns"].split(",")] if "ns" in opt else [n for n in DATA.grid(D) if n <= len(D["y"]) - D["n_test"]]
 seeds = [int(v) for v in opt.get("seeds", "0,1,2").split(",")]
 cdir = os.path.join(CELLS, f"{name}__{ds}"); os.makedirs(cdir, exist_ok=True)
+INFO_KEYS = ("weights", "member_oof_err", "stack_oof_err", "ggbt_rounds", "flops", "times", "budget_frac")
 for n in grid:
     for s in seeds:
         if img and n >= 30000 and s != 0:
@@ -38,7 +41,9 @@ for n in grid:
         fit = L.fit(D["X"][tr], D["y"][tr], list(D["types"]), D["C"], np.random.default_rng([s, n, 4242]))
         cpu = time.process_time() - t0
         err = float(np.mean(np.asarray(fit["predict"](D["X"][te])) != D["y"][te]))
-        json.dump(dict(n=n, seed=s, err=err, flops=float(fit.get("flops", np.nan)), cpu=cpu, md5=MD5), open(f + ".tmp", "w"))
+        inf = {k: v for k, v in (fit.get("info") or {}).items() if k in INFO_KEYS}   # attribution (stack weights, member out-of-fold errors)
+        json.dump(dict(n=n, seed=s, err=err, flops=float(fit.get("flops", np.nan)), cpu=cpu, md5=MD5, info=inf), open(f + ".tmp", "w"),
+                  default=lambda o: o.item() if hasattr(o, "item") else str(o))
         os.replace(f + ".tmp", f)
         if lk is not None:
             fcntl.flock(lk, fcntl.LOCK_UN); lk.close()
@@ -53,4 +58,8 @@ r = dict(learner=name, dataset=ds, ns=grid, seeds=seeds, err=err.tolist(), flops
          note="eval_cells.py" + ("; n >= 30000: seed 0 only" if img else ""), learner_md5=MD5,
          cell_md5=sorted({json.load(open(os.path.join(cdir, g))).get("md5", "not recorded") for g in os.listdir(cdir) if g.endswith(".json")}))
 json.dump(r, open(os.path.join(SH.RES, f"{name}__{ds}.json"), "w"))
+IN = {f"n{n}_s{s}": json.load(open(os.path.join(cdir, f"n{n}_s{s}.json"))).get("info") for n in grid for s in seeds
+      if os.path.exists(os.path.join(cdir, f"n{n}_s{s}.json"))}
+if any(IN.values()):
+    json.dump(IN, open(os.path.join(SH.RES, f"{name}__{ds}.info.json"), "w"))
 print(ds, "merged", [round(float(np.nanmean(e)), 4) for e in err], flush=True)
