@@ -113,8 +113,12 @@ nets_best), lin, hgb and v1; v2 (frozen, md5 e38af404...) is run per target with
 identical to p9_sum, which is not run separately. At this point the orchestrator had seen no hyb_portfolio2 toy result
 (its dlheld5 shards are committed but unopened) and one p9_sum dlheld5 log line (h5t0; see the freeze section).
 
-**Amendment 4 (27 October, ~03:10 UTC, after the four Part 9 audits; fixed before any hyb_portfolio2 held-out result was
-read).** The fairness and discreteness audits (audit/fairness.md, audit/discreteness.md) found the references plausible
+**Amendment 4 (27 October, 03:03 UTC, commit 1a767058, after the four Part 9 audits; fixed before any hyb_portfolio2 toy
+result or Q2 image cell was read).** Correction to the original wording ("before any held-out result was read"): while
+estimating run times at 02:40 and 03:03 UTC the orchestrator printed the progress logs of v2's image lanes and so saw
+v2's qd_a / qd_b test errors at n = 100, 300 and 1000 (and nothing at n >= 3000). No reference error on qd_a / qd_b was
+looked at alongside them; the additions below follow the audits' recommendations, which were written blind to all
+held-out results. The fairness and discreteness audits (audit/fairness.md, audit/discreteness.md) found the references plausible
 but not at the frontier, and the image gain unattributed. Added now, none of them tuned on held-out results:
 - **R1 `mlp_wide` / `mlp_wide1`** (strengthening; fairness F1): the mlp_strong recipe at width 512, weight decay in
   {0.1, 1, 3} chosen on validation, an ensemble of 3 (`mlp_wide`, 6 runs of width 512) and its first network
