@@ -902,7 +902,7 @@ runs); CPU is process seconds per fit, under load from other jobs:
    | compute F2 | projected Fashion-MNIST n = 3000 cost ≈ 0.94 (0.77–1.12) of the budget, invisible to the guard | not run (Fashion-MNIST regression grid not run); disclosed in §7 |
    | discreteness D1 | the pooling sets recover the pixel grid (on permuted `qd_dev`, 98% of S_i(4) members within 1 grid step) | wording (§9); controls `mlp_pool` and `cnn` (Amendment 4, C1–C2) |
    | discreteness D2 | prototype-pair features are continuous, unfitted oblique projections | wording (§4.1, §9) |
-   | discreteness D3 | what carries the image gain was not recorded; ggbt's gain is confounded with more boosting rounds | the evaluator records attribution from 03:0x UTC (Amendment 4, C3); confound disclosed |
+   | discreteness D3 | what carries the image gain was not recorded; ggbt's gain is confounded with more boosting rounds | the evaluator records attribution from 03:06 UTC (Amendment 4, C3); confound disclosed |
    | fairness F1 | the image references are not at the FLOP frontier (a width-512 MLP beats the 3-net ensemble at n = 60000 on dev) | Amendment 4, R1 `mlp_wide` / `mlp_wide1`; Q2 also against `mlp_best+` |
    | fairness F2 | FLOP-equal is not CPU-equal (4–12× the CPU of the budget's MLP runs) | Amendment 4, R2 `mlp_xl` (CPU-matched) |
    | fairness F3 | an MLP is the comparator only formally, since the member recovers locality | wording; `cnn` context; the information-matched GD methods (Le Roux et al. 2007; Coates & Ng 2011; Neyshabur 2020) cited, not run |

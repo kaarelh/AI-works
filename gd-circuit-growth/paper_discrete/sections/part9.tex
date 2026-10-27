@@ -163,7 +163,43 @@ Fashion-MNIST & 1000 & \textbf{0.1805} & 0.1844 & 0.1839 & 0.1860 & tie ($-0.04$
 
 \subsection{Audits, exposures and deviations}\label{sec:p9audits}
 
-\todo{audit summary table and exposures.}
+Four independent auditors examined code and process before any held-out result of v2 was read: protocol and leakage, compute accounting, discreteness and permutation invariance, and the fairness of the references (\repo{study/part9/audit/}). None reported a blocker. Their major findings changed the protocol (\cref{tab:p9amend}) and the wording of the claims; \cref{tab:p9audit} lists them with what was done.
+
+\paragraph{Exposures of the toy test suites.} Three things weakened the held-out toy evidence before \code{dlheld6} existed.
+\begin{itemize}
+\item At the start of its work, builder S ran an over-long text search that printed the source of \code{dlheld4}'s target definitions. S never loaded or ran the suite. But its design note later used held-out \code{sumpar}'s form as its example of an unsupported form; the orchestrator's own task prompt had quoted a truncation of the same target; and the block-size cap (24) and the number of modulators (4) were set minutes after the exposure. \code{dlheld4} is therefore not a test of the sum-feature design.
+\item \code{dlheld5} was drawn after S froze and is blind to target identities. But its family was written 35 seconds after the orchestrator read S's design summary, including its list of forms it cannot represent, and every family member lies inside S's representable class: one signed sum with an arbitrary accept set, optionally with one modulating character or one gate literal. Its accept sets are also more oscillatory than any dev target's (3--5 runs of accepted values, against 1--2), which costs a character search and a network far more than it costs one sum block.
+\item The orchestrator saw one \code{p9_sum} result line on \code{dlheld5} before v2 was frozen (h5t0: $\nstar=104$ against the networks' 770). Both parts of the integration rule were mechanical and reproduce exactly from dev files, so no integration decision depended on it.
+\end{itemize}
+
+\paragraph{Other deviations.}
+\begin{itemize}
+\item \emph{A dev test look by a killed builder.} The first I2 session scored its development runs on the MNIST and Fashion-MNIST test sets and once on the \code{qd_dev} test set at $n=10000$, an integration-rule cell. \code{p9_bank}'s dev numbers are therefore slightly optimistic; it lost the rule anyway.
+\item \emph{Two container restarts} killed running builders and jobs. v2's held-out image runs and the \code{hgb} image references therefore used a resumable per-cell evaluator with the harness's splits and random streams. From 03:06 UTC on 27 October it also stored the learner file's md5 and v2's member attribution with each cell.
+\item \emph{An unapplied speed fix.} Builder I1 found that LightGBM's row-wise layout copies the sampled columns for every tree on the 3000-column bank, and recommended \texttt{force\_col\_wise}, which leaves predictions bit-identical and cuts \code{ggbt}'s time by about $2.2$--$2.7\times$. v2 was assembled with only the two textual changes, so the CPU figures below are with the slow layout.
+\end{itemize}
+
+\begin{table}[t]
+\centering\footnotesize\renewcommand{\arraystretch}{1.12}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{2.2cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{4.3cm}}
+\toprule
+audit & major finding & action\\
+\midrule
+protocol & \code{dlheld5}'s family was written after S's limits were read and lies inside S's class & Amendment 3: \code{dlheld6}, written blind; Q1 answered on it\\
+protocol & \code{dlheld4}'s exposure went beyond the text search (prompt, parameters) & \code{dlheld4} secondary; design note corrected\\
+compute & v2's image fits take 22--29 CPU-min at $n=60000$, over I1's own 15-min target & CPU reported next to FLOPs\\
+compute & a Fashion-MNIST $n=3000$ fit would project to 0.94 (0.77--1.12) of the budget, invisible to the guard & that grid was not run; disclosed\\
+discreteness & the pooling sets recover the pixel grid & wording; controls \code{mlp_pool} and \code{cnn}\\
+discreteness & prototype pairs are continuous unfitted projections & wording\\
+discreteness & what carries the image gain was not recorded; \code{ggbt}'s gain is confounded with longer boosting & attribution recorded from 03:06 UTC; confound disclosed\\
+fairness & the image references are not at the FLOP frontier: a 512-wide MLP beats the 3-net ensemble at $n=60000$ on dev & \code{mlp_wide}, \code{mlp_wide1}; Q2 also against \code{mlp_best+}\\
+fairness & equal FLOPs is not equal CPU: v2 uses 4--12$\times$ the CPU of the budget's MLP runs & \code{mlp_xl}, CPU-matched\\
+fairness & an MLP is the comparator only formally, since the member recovers locality & wording; \code{cnn} as context; information-matched GD methods cited, not run\\
+\bottomrule
+\end{tabularx}
+\caption{Major findings of the four Part 9 audits and what was done. Minor findings (commit times, per-cell md5s, a dropped reference in the tables, a prediction-cost table, the strong MLP's quantile encoding on QuickDraw, toy weight decay) were all acted on; see \repo{study/part9/PART9.md}, \S8.}
+\label{tab:p9audit}
+\end{table}
 
 \subsection{Answers to Q1 and Q2}\label{sec:p9answers}
 

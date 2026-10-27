@@ -136,7 +136,7 @@ but not at the frontier, and the image gain unattributed. Added now, none of the
   seed 0. It is not a Q2 reference. (Implementation note, 03:35 UTC, before it ran on qd_a / qd_b: one network at a fixed
   weight decay of 0.1, without selection or ensembling, because a CNN step costs about 5x an MLP step on this CPU; a
   smoke test with selection took 15 CPU-min at n = 300.)
-- **C3 attribution** (discreteness D3): from 03:0x UTC the evaluator also stores each fit's stack weights and per-member
+- **C3 attribution** (discreteness D3): from 03:06 UTC the evaluator also stores each fit's stack weights and per-member
   out-of-fold errors (training rows only); the remaining hyb_portfolio2 image cells record them. The learner is unchanged.
 - **Reporting:** `mlp_reg` maps to `mlp_l2unit` on QuickDraw too (fairness F5, a table bug); CPU seconds per fit are
   reported next to FLOPs.
