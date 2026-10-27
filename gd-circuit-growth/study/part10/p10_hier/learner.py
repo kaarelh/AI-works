@@ -1,4 +1,14 @@
-"""hyb_portfolio2 (Part 9): the Part 8 portfolio with (i) its DFG member switched to DFG v1.2 = DFG v1.1 + sum-feature
+"""p10_hier (Part 10, builder I1): hyb_portfolio2 (v2, part9/hyb_portfolio2/learner.py, md5 e38af404...) with one change, in
+the image member's booster ggbt: a second, max-pooling level on the data-recovered topology (see DESIGN.md).
+  level 1 (v2)   p_i^(k)(x) = sum_{j in S_i(k)} x_j, k in 4, 9, 16 (S_i(k): the k columns most correlated with column i);
+  level 2 (new)  m_i^(k,K)(x) = max_{j in S_i(K)} p_j^(k)(x), (k, K) in (4, 9), (9, 16), (16, 49): a split
+                 [m_i^(k,K) > t] is the OR over the K recovered neighbours j of i of the level-1 gates [p_j^(k) > t]
+                 (t a data quantile chosen by the booster), i.e. a position-tolerant blob detector.
+ggbt's bank becomes [x, level 1, level 2] (about 784 + 6 a columns, a = number of non-constant pixels); the 300
+prototype-pair projections are dropped (no dev gain); LightGBM runs with force_col_wise=True (same model, faster).
+gknn, every other member, the stacker, budgets and all non-image inputs are v2's, bit for bit.
+
+hyb_portfolio2 (Part 9): the Part 8 portfolio with (i) its DFG member switched to DFG v1.2 = DFG v1.1 + sum-feature
 blocks (part9/p9_sum/dfg12.py, md5 4ff2e0c9c324f0f1be93f604734b4a69) and (ii) the image member of p9_gates
 (part9/p9_gates/learner.py, md5 2728ac2b80597d9e559dedca6a70cb7c), chosen by the integration rule of PROTOCOL.md.
 This file is p9_gates/learner.py with two changes: the DFG module path and the default name; plus one post-freeze
@@ -404,9 +414,9 @@ def fit_stacker(Ls, y, C, lam_w=1e-3, lam_b=1e-3):
 # ---------------------------------------------------------------------------------------------------------- learner
 class Learner:
     def __init__(self, K=5, K_small=10, K_small_n=500, lin_one_n=10000, kfold_max=3000, hold_max=6000, ks=(1, 3, 9, 27), lin_C=(0.05, 1.0), gbt_trees=100,
-                 et_trees=100, dfg_share=(0.35, 0.5), dfg_dmax=256, lam_w=1e-2, members=None, name="hyb_portfolio2",
-                 gates_k=9, gates_ks=(4, 9, 16), gates_pairs=300, gates_rounds=400, gates_ff=0.12, gates_dmin=256,
-                 gates_l2=(), gates_colwise=True, gates_small_rounds=100):
+                 et_trees=100, dfg_share=(0.35, 0.5), dfg_dmax=256, lam_w=1e-2, members=None, name="p10_hier",
+                 gates_k=9, gates_ks=(4, 9, 16), gates_pairs=0, gates_rounds=400, gates_ff=0.12, gates_dmin=256,
+                 gates_l2=(("max", 4, 9), ("max", 9, 16), ("max", 16, 49)), gates_colwise=True, gates_small_rounds=100):
         self.K_small, self.K_small_n, self.lin_one_n = K_small, K_small_n, lin_one_n
         self.K, self.kfold_max, self.hold_max, self.ks, self.lin_C = K, kfold_max, hold_max, tuple(ks), tuple(lin_C)
         self.gbt_trees, self.et_trees, self.dfg_share, self.dfg_dmax, self.lam_w = gbt_trees, et_trees, dfg_share, dfg_dmax, lam_w
