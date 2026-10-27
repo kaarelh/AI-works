@@ -530,8 +530,8 @@ class DFG:
                  local_max=12, blocks=True, ridge=1e-3, budget=(0.15, 0.03, 0.03), noise="residual", readout="ls",
                  small_n=True, cv_n=512, K_hi=6, budget_hi=0.03, background=True, logit_lam=1e-4, name=None,
                  sums=True, sum_kmax=24, sum_mod=4, sum_add=2, sum_gcap=2048, sum_mc=0.005, sum_prod=True, sum_nmin=32,
-                 sum_force=True, sum_seeds=(2, 3, 2), sum_inner=True, sum_beam=64, sum_beam_nmax=512, sum_force_nmin=48,
-                 sum_force_r2=0.0):
+                 sum_force=True, sum_seeds=(2, 3, 2), sum_inner=True, sum_beam=32, sum_beam_nmax=128, sum_force_nmin=48,
+                 sum_force_r2=0.0, sum_ntau=1):
         self.K, self.K_later, self.c, self.delta, self.rounds = K, K_later, c, delta, rounds
         self.max_new, self.max_feats, self.max_ext_bases, self.local_max = max_new, max_feats, max_ext_bases, local_max
         self.blocks, self.ridge, self.budget, self.noise, self.readout = blocks, ridge, budget, noise, readout
@@ -542,7 +542,7 @@ class DFG:
         self.sum_seeds = tuple(sum_seeds)                               # (eigenvectors, pairs, single inputs)
         self.sum_inner = sum_inner                                      # v1.3: weighted blocks u = t + a tau
         self.sum_beam, self.sum_beam_nmax = sum_beam, sum_beam_nmax     # v1.3: beam search width (at n <= nmax)
-        self.sum_force_nmin, self.sum_force_r2 = sum_force_nmin, sum_force_r2
+        self.sum_force_nmin, self.sum_force_r2, self.sum_ntau = sum_force_nmin, sum_force_r2, sum_ntau
         self.name = name or ("dfg-v1.3" if readout == "logit" else f"dfg-v1.3-{readout}")
 
     def fit(self, X, y, rng=None):
@@ -720,8 +720,8 @@ class DFG:
                 tkb = lambda b: tk(len(b.S)) + (_ln_inner(d) if b.inner is not None else 0.0)   # v1.3: weighted blocks
                 mc = max(3, int(self.sum_mc * n))
                 kw = dict(gcap=self.sum_gcap, kmax=KM, fl=fl, neig=self.sum_seeds[0], npair=self.sum_seeds[1],
-                          nsingle=self.sum_seeds[2], inner=self.sum_inner,
-                          beam=self.sum_beam if n <= self.sum_beam_nmax else 0)
+                          nsingle=self.sum_seeds[2], inner=False, beam=0)
+                kwa = dict(kw, inner=self.sum_inner, ntau=self.sum_ntau)    # v1.3: weighted blocks (additive search)
                 # blocks are searched on the round's residual r, but accepted only if they also pass the test on rS = r
                 # projected off this round's accepted characters (what they add beyond them); same threshold
                 new0 = [S for S, _ in sorted(cand.items(), key=lambda kv: -kv[1][0])[: self.max_new]]
@@ -738,7 +738,8 @@ class DFG:
                     return float(T_[0]) / s2S
                 rr, rrS, Mc, cands, mg0 = r, rS, M, [], -np.inf
                 for it in range(self.sum_add if live else 0):   # additive blocks; residuals deflated by each candidate
-                    b_, T_, th_, ok = _block_search(X, rr, s2, Mc, (), tk, mc, **kw)
+                    b_, T_, th_, ok = _block_search(X, rr, s2, Mc, (), tk, mc, **dict(
+                        kwa, beam=self.sum_beam if (it == 0 and n <= self.sum_beam_nmax) else 0))
                     if b_ is None:
                         break
                     TS = tS(b_, rrS); ok = ok and TS > th_

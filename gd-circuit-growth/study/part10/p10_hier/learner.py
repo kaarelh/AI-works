@@ -357,22 +357,23 @@ def fit_ggbt(Xr, y, C, A, rng, seed, n_pairs=300, max_rounds=400, ff=0.12, bins=
         params["force_col_wise"] = True
     # post-freeze crash fix (27 Oct; PROTOCOL.md): LightGBM refuses min_data_in_leaf below the Dataset's construction value
     # (20) when features were pre-filtered; below 20 (n_fit < 500) pre-filtering is switched off.  Unchanged for n_fit >= 500.
+    Fc = F.shape[1]
     dtr = lgb.Dataset(F[tr], y[tr], params=dict(max_bin=bins, verbose=-1, **({} if mcs >= 20 else dict(feature_pre_filter=False))),
                       free_raw_data=True); dtr.construct()
-    nb = float(sum(dtr.feature_num_bin(j) for j in range(F.shape[1])))
-    fl += 16.0 * n_fit * F.shape[1]                                     # binning
+    nb = float(sum(dtr.feature_num_bin(j) for j in range(Fc)))
+    fl += 16.0 * n_fit * Fc                                             # binning
     cb = []
     vs = []
     if va is not None:
-        dva = lgb.Dataset(F[va], y[va], reference=dtr); vs = [dva]; es, est = _es_error(es_patience, min(es_min_rounds, rounds)); cb = [es]
+        dva = lgb.Dataset(F[va], y[va], reference=dtr); dva.construct(); vs = [dva]; es, est = _es_error(es_patience, min(es_min_rounds, rounds)); cb = [es]
         params["metric"] = "multi_error"
+    del F                                                               # p10_hier: the bank is freed once binned (memory)
     bst = lgb.train(params, dtr, num_boost_round=rounds, valid_sets=vs, callbacks=cb)
     trees = bst.num_trees()
-    fl += trees * lgb_tree_flops(n_fit, bag * n_fit, ff * F.shape[1], ff * nb, leaves)
+    fl += trees * lgb_tree_flops(n_fit, bag * n_fit, ff * Fc, ff * nb, leaves)
     if va is not None:
         fl += trees * 20.0 * len(va)                                    # validation scores, one tree at a time
     best = int(est["it"]) if (va is not None and est["it"] > 0) else rounds
-    del F
 
     class M:
         def proba(self, Q):
@@ -415,7 +416,7 @@ def fit_stacker(Ls, y, C, lam_w=1e-3, lam_b=1e-3):
 class Learner:
     def __init__(self, K=5, K_small=10, K_small_n=500, lin_one_n=10000, kfold_max=3000, hold_max=6000, ks=(1, 3, 9, 27), lin_C=(0.05, 1.0), gbt_trees=100,
                  et_trees=100, dfg_share=(0.35, 0.5), dfg_dmax=256, lam_w=1e-2, members=None, name="p10_hier",
-                 gates_k=9, gates_ks=(4, 9, 16), gates_pairs=0, gates_rounds=400, gates_ff=0.12, gates_dmin=256,
+                 gates_k=9, gates_ks=(4, 9, 16), gates_pairs=0, gates_rounds=600, gates_ff=0.12, gates_dmin=256,
                  gates_l2=(("max", 4, 9), ("max", 9, 16), ("max", 16, 49)), gates_colwise=True, gates_small_rounds=100):
         self.K_small, self.K_small_n, self.lin_one_n = K_small, K_small_n, lin_one_n
         self.K, self.kfold_max, self.hold_max, self.ks, self.lin_C = K, kfold_max, hold_max, tuple(ks), tuple(lin_C)
