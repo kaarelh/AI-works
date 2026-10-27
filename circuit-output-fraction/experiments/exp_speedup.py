@@ -40,6 +40,8 @@ def record(rows, family, param, p, est, secs, extra=None):
     rows.append(r)
     print(f"{family:14s} {str(param):8s} p={p:.3e} [{est.lo:.3e},{est.hi:.3e}] ok={r['contains']} "
           f"cost={r['cost']:.3g} mc={r['mc_cost']:.3g} {secs:.1f}s", flush=True)
+    with open(os.path.join(OUT, "speedup.json"), "w") as f:  # incremental
+        json.dump(rows, f, indent=1)
 
 
 def cycle_threshold(C, vs, t):
@@ -117,11 +119,12 @@ def main():
     # 3b. AND of dense non-decomposable blocks on 16 variables each (thresholds
     # over a cycle of XORs, above the atom size): dense leaves are sampled, with
     # the eps/(3d) accuracy split of thm:dfsb
-    for kb in (2, 4, 8, 16):
+    # (block density 0.059; the cost grows like d^3 with the number d of leaves)
+    for kb in (2, 3, 4, 5, 6):
         n = 16 * kb
         C = Circuit(n)
-        C.set_output(C.AND(*[cycle_threshold(C, list(range(16 * j, 16 * j + 16)), 10) for j in range(kb)]))
-        p = cycle_threshold_prob(16, 10) ** kb
+        C.set_output(C.AND(*[cycle_threshold(C, list(range(16 * j, 16 * j + 16)), 12) for j in range(kb)]))
+        p = cycle_threshold_prob(16, 12) ** kb
         D = Product.uniform(n)
         t = time.time()
         est = dfsb_estimate(C, D, eps=EPS, delta=DELTA, rng=rng)
