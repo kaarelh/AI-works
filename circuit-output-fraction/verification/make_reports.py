@@ -14,6 +14,9 @@ raw/round3_final_referee.json
     earlier finding was resolved
 raw/round3_final_fixes.json
     the fixes made after the final round
+raw/round3_consistency_and_sync.json
+    the final experiment rerun, text synchronisation, consistency referee
+    and the last fixes
 """
 
 import json
@@ -114,6 +117,20 @@ def main():
             lines += [f"- not done: {clean(x['item'])}: {clean(x['reason'])}" for x in o["not_done"]]
             lines += [""]
         write("round3-final-fixes.md", lines)
+    sync = load("round3_consistency_and_sync.json")
+    if sync:
+        r = sync["ref"]
+        lines = ["# Consistency referee (abstract, introduction, experiments, discussion, README)", "",
+                 f"**Verdict.** {clean(r['verdict'])}", "", f"**What was checked.** {clean(r['checked'])}", "",
+                 "## Findings", ""] + findings_md(r["findings"])
+        lines += ["", "## Fixes", "", clean(sync["last"]["summary"]), ""]
+        lines += [f"- {clean(x['item'])}: {clean(x['action'])}" for x in sync["last"]["resolved"]]
+        lines += [f"- not done: {clean(x['item'])}: {clean(x['reason'])}" for x in sync["last"]["not_done"]]
+        lines += ["", "## Experiment rerun on the final code", "", clean(sync["code"]["summary"]), "",
+                  clean(sync["code"]["headline_numbers"])]
+        write("round3-consistency.md", lines)
+        summary.append(("final", "consistency", "claims and numbers", Counter(f["severity"] for f in r["findings"]),
+                        r["verdict"]))
     json.dump([dict(round=a, topic=b, lens=c, counts=dict(d), verdict=e) for a, b, c, d, e in summary],
               open(os.path.join(HERE, "summary.json"), "w"), indent=1)
     for a, b, c, d, e in summary:

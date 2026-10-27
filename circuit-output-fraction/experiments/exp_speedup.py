@@ -4,7 +4,8 @@ output probability p shrinks, on families with exactly known p.
 Cost is measured in circuit (or sub-circuit) evaluations; Monte Carlo cost is
 the number of samples its KL interval needs at the same (eps, delta) when the
 empirical mean equals p (computed, not run, below p = 1e-4; run as a check
-above). Writes results/speedup.json.
+above). Each p is computed as an exact Fraction and compared with the
+interval ends without slack. Writes results/speedup.json.
 """
 
 import json
@@ -12,6 +13,7 @@ import math
 import os
 import sys
 import time
+from fractions import Fraction
 
 import numpy as np
 
@@ -19,20 +21,23 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "code"))
 
 from rareprob import Circuit, Product, auto_estimate, compile_envelope, envelope_estimate  # noqa: E402
 from rareprob.circuit import Circuit  # noqa: E402
-from rareprob.families import (dnf_circuit, dnf_exact, independent_blocks, obfuscated_dnf_circuit,  # noqa: E402
+from rareprob.exact import dnf_prob_rational, poisson_binomial_tail_rational  # noqa: E402
+from rareprob.families import (dnf_circuit, independent_blocks, obfuscated_dnf_circuit,  # noqa: E402
                                random_block_circuit, random_dnf_terms, trigger_circuit)
 from rareprob.stats import mc_samples_needed  # noqa: E402
 from rareprob.dfsb import dfsb_estimate  # noqa: E402
-from rareprob.tilting import Block, poisson_binomial_tail, tilted_estimate  # noqa: E402
+from rareprob.tilting import Block, tilted_estimate  # noqa: E402
 
 EPS, DELTA = 0.1, 0.05
 OUT = os.path.join(os.path.dirname(__file__), "results")
 os.makedirs(OUT, exist_ok=True)
 
 
-def record(rows, family, param, p, est, secs, extra=None):
+def record(rows, family, param, pe, est, secs, extra=None):
+    """pe: the exact p (a Fraction); the containment check is exact."""
+    p = float(pe)
     r = dict(family=family, param=param, p=p, lo=est.lo, hi=est.hi, value=est.value,
-             contains=bool(est.lo <= p * (1 + 1e-12) and p <= est.hi * (1 + 1e-12)),
+             contains=bool(est.lo <= pe <= est.hi),
              ratio=est.ratio, cost=est.evaluations, mc_cost=mc_samples_needed(p, EPS, DELTA),
              seconds=secs, note=est.note)
     if extra:
@@ -53,11 +58,11 @@ def cycle_threshold(C, vs, t):
 
 
 def cycle_threshold_prob(m, t):
-    """Exact Pr[cycle_threshold] under uniform inputs: the XORs around a cycle
-    are uniform subject to even parity, so their number of ones is even and
-    Pr[sum = j] = 2 binom(m, j) / 2^m for even j."""
+    """Exact Pr[cycle_threshold] under uniform inputs (a Fraction): the XORs
+    around a cycle are uniform subject to even parity, so their number of ones
+    is even and Pr[sum = j] = 2 binom(m, j) / 2^m for even j."""
     from math import comb
-    return sum(2 * comb(m, j) for j in range(t, m + 1) if j % 2 == 0) / 2.0 ** m
+    return Fraction(sum(2 * comb(m, j) for j in range(t, m + 1) if j % 2 == 0), 2 ** m)
 
 
 def main():
@@ -69,7 +74,7 @@ def main():
     for w in (8, 16, 24, 32, 40, 48, 56):
         terms = random_dnf_terms(n, m, w, rng)
         D = Product.uniform(n)
-        p = dnf_exact(terms, D)
+        p = dnf_prob_rational(terms, D)
         C = obfuscated_dnf_circuit(n, terms, rng, noise=2)
         t = time.time()
         est = dfsb_estimate(C, D, eps=EPS, delta=DELTA, rng=rng)
@@ -85,7 +90,7 @@ def main():
         X[:, rest] = ((np.arange(1 << 16)[:, None] >> np.arange(16)) & 1).astype(bool)
         for i, b in trig:
             X[:, i] = bool(b)
-        p = float(C.eval_bits(X).mean()) * 2.0 ** (-k)
+        p = Fraction(int(C.eval_bits(X).sum()), 1 << (16 + k))
         t = time.time()
         est = dfsb_estimate(C, D, eps=EPS, delta=DELTA, rng=rng)
         record(rows, "trigger", k, p, est, time.time() - t, {"size": C.size})
@@ -103,14 +108,15 @@ def main():
         body = cycle_threshold(C, rest, 12)
         C.set_output(C.AND(trig, body))
         D = Product.uniform(n)
-        p = cycle_threshold_prob(20, 12) * 2.0 ** (-k)
+        p = cycle_threshold_prob(20, 12) / 2 ** k
         t = time.time()
         est = dfsb_estimate(C, D, eps=EPS, delta=DELTA, rng=rng)
         record(rows, "trigger-cycle20", k, p, est, time.time() - t, {"size": C.size})
 
     # 3. AND of independent random blocks (6 variables each)
     for kb in (4, 8, 16, 24, 32):
-        C, p, probs = independent_blocks(kb, 6, 12, rng)
+        C, _, probs = independent_blocks(kb, 6, 12, rng)
+        p = math.prod(Fraction(q) for q in probs)  # block probabilities are exact (counts / 2^6)
         D = Product.uniform(kb * 6)
         t = time.time()
         est = dfsb_estimate(C, D, eps=EPS, delta=DELTA, rng=rng)
@@ -145,7 +151,8 @@ def main():
             bl.tabulate(D)
         mean = sum(bl.p1 for bl in blocks)
         tt = math.ceil(mean + frac * (kb - mean) * 0.5)
-        p = poisson_binomial_tail([bl.p1 for bl in blocks], [1] * kb, tt)
+        # exact block probabilities under uniform D: counts / 2^b
+        p = poisson_binomial_tail_rational([Fraction(len(bl.pts1), 1 << b) for bl in blocks], [1] * kb, tt)
         t = time.time()
         est = tilted_estimate(blocks, tt, D, n, eps=EPS, delta=DELTA, rng=rng)
         record(rows, "threshold", kb, p, est, time.time() - t, {"t": tt})

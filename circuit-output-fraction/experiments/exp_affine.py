@@ -23,7 +23,8 @@ E7  Coverage: repeated runs against exact values.
 Ground truths are computed without rareprob.affine: closed forms with a local
 GF(2) rank (E1, E2, E3, E4), local GF(2) elimination on the raw check rows and
 inclusion-exclusion (E5), an exact rational sweep over the bands (E6a),
-enumeration of the 2^24-element coset (E6b), brute force (E7).
+enumeration of the 2^24-element coset (E6b), brute force in rational arithmetic
+(E7). Every containment check is exact.
 """
 
 import json
@@ -38,7 +39,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "code"))
 from fractions import Fraction  # noqa
 from itertools import product as iprod  # noqa
 
-from rareprob import Circuit, Product, exact_prob  # noqa
+from rareprob import Circuit, Product  # noqa
+from rareprob.exact import exact_prob_rational  # noqa
 from rareprob.affine import (Affine, LinearOrderDP, affine_envelope, affine_envelope_estimate,  # noqa
                              presolve, presolve_estimate, xpt_check, xpt_honest, xpt_verify)
 from rareprob.stats import mc_samples_needed  # noqa
@@ -127,6 +129,7 @@ def eval_rate(C, D, rng, N=1 << 16):
 
 
 def summarize(name, e, p, secs):
+    """p: the exact value (an exact float or a Fraction); the containment check is exact."""
     r = dict(method=name, lo=e.lo, hi=e.hi, ratio=(e.hi / e.lo if e.lo > 0 else None),
              contains=bool(e.lo <= p <= e.hi) if p is not None else None, samples=e.samples,
              seconds=secs, note=e.note)
@@ -387,21 +390,22 @@ def e5(rng):
     # (local GF(2) elimination, independent of the module under test)
     def mass(sel):
         ok, r, _, _ = gf2_solve([row for i in sel for row in blocks[i]])
-        return 2.0 ** -r if ok else 0.0
+        return Fraction(1, 2 ** r) if ok else Fraction(0)
     p2of3 = mass([0, 1]) + mass([0, 2]) + mass([1, 2]) - 2 * mass([0, 1, 2])
-    p = p2of3 * prR
+    p_exact = p2of3 * Fraction(prR)  # prR = count / 2^10, exact
+    p = float(p_exact)
     log(f"  exact p = Pr[2 of 3] * Pr[R] = {p2of3:.4e} * {prR:.4f} = {p:.4e}")
     out = dict(n=n, p=p, rows=[])
     eps, delta = 0.05, 0.01
     t0 = time.time()
     e = affine_envelope_estimate(C, None, eps, delta, rng, max_samples=10**5)
-    out["rows"].append(summarize("affine envelope (KLM)", e, p, time.time() - t0))
+    out["rows"].append(summarize("affine envelope (KLM)", e, p_exact, time.time() - t0))
     t0 = time.time()
     arg = xpt_honest(C, [("gate", hs[0]), ("gate", hs[1])])
     leaves, st = xpt_check(C, arg)
     log(f"  XPT argument: {st['nodes']} nodes, {st['open']} open leaves, {st['closed']} closed")
     e = xpt_verify(C, None, arg, eps, delta, rng)
-    out["rows"].append(summarize("XPT argument + KLM", e, p, time.time() - t0))
+    out["rows"].append(summarize("XPT argument + KLM", e, p_exact, time.time() - t0))
     out["xpt"] = st
     out["argument_bytes"] = len(json.dumps(arg))
     out["mc"] = mc_row(C, Product.uniform(n), p, eps, delta, rng)
@@ -456,10 +460,10 @@ def e6(rng):
     eps, delta = 0.05, 0.01
     t0 = time.time()
     e = affine_envelope_estimate(C, D, eps, delta, rng)
-    ra["rows"].append(summarize("affine envelope (DP pieces)", e, p, time.time() - t0))
+    ra["rows"].append(summarize("affine envelope (DP pieces)", e, p_exact, time.time() - t0))
     t0 = time.time()
     e = presolve_estimate(C, D, eps, delta, rng, max_samples=2 * 10**5)
-    ra["rows"].append(summarize("presolve, biased pivots", e, p, time.time() - t0))
+    ra["rows"].append(summarize("presolve, biased pivots", e, p_exact, time.time() - t0))
     ra["mc"] = mc_row(C, D, p, eps, delta, rng)
     out["banded"] = ra
     # (b) the copies gadget: AND of copy equalities and [H x_0 = s], dense H
@@ -484,7 +488,8 @@ def e6(rng):
     C.set_output(C.AND(*conj))
     D = Product(np.full(N, 1 / 3))
     t0 = time.time()
-    pb = float(coset_probability([(r, int(sum(xs[bits_of(r)]) & 1)) for r in Hrows], n0, Fraction(1 / 3), k))
+    pb_exact = coset_probability([(r, int(sum(xs[bits_of(r)]) & 1)) for r in Hrows], n0, Fraction(1 / 3), k)
+    pb = float(pb_exact)
     log(f"  (b) copies gadget n0={n0}, m0={m0}, k={k} (N={N}): exact p = {pb:.6e} by enumerating the coset "
         f"({time.time() - t0:.1f}s)")
     t0 = time.time()
@@ -495,7 +500,7 @@ def e6(rng):
     for cap in (6, 16):
         t0 = time.time()
         e = affine_envelope_estimate(C, D, eps, delta, rng, max_width=cap, max_samples=2 * 10**5)
-        rb["rows"].append(summarize(f"affine envelope, width cap {cap}", e, pb, time.time() - t0))
+        rb["rows"].append(summarize(f"affine envelope, width cap {cap}", e, pb_exact, time.time() - t0))
     out["copies"] = rb
     return out
 
@@ -514,7 +519,7 @@ def e7(rng):
         C = random_mixed_circuit(n, rng, int(rng.integers(2, 6)), int(rng.integers(2, 14)))
         for prod in (False, True):
             D = Product(rng.choice([0.5, 0.5, 0.3, 0.7], n)) if prod else Product.uniform(n)
-            p = exact_prob(C, D)
+            p = exact_prob_rational(C, D)  # a Fraction: the comparison is exact
             for nm, f in (("presolve", presolve_estimate), ("affine envelope", affine_envelope_estimate)):
                 e = f(C, D, 0.1, 0.05, rng, max_samples=2 * 10**5)
                 key = f"{nm} ({'product' if prod else 'uniform'})"

@@ -11,7 +11,7 @@ The proofs and the code of this project were checked by AI referees, not by huma
 | new results | integration of local threshold circuits and of affine/linear structure: proofs re-derived, code and experiments written, then two referees per topic and a fix | 4 | 1 / 10 / 34 |
 | 2 | consolidation: residual re-review findings and all cross-file edits | 7 owners | |
 | 3 (final) | a fresh referee per topic, reviewing the current text and code from scratch and auditing every earlier finding | 12 | 4 / 4 / 72 |
-| fix 3 | final fixes, then a consistency referee on abstract, introduction, experiments, discussion and README | 8 owners + 1 | |
+| fix 3 | final fixes; all experiments rerun on the final code; then a consistency referee on abstract, introduction, experiments, discussion and README, and its fixes | 8 owners, 1 referee | consistency: 0 / 3 / 23, all fixed |
 
 Audit in round 3 of the 239 findings of the earlier rounds: 231 resolved, 5 partially resolved (all minor, then fixed in fix 3), 3 superseded because the text was removed.
 
@@ -39,7 +39,7 @@ Soundness bugs in the code (all fixed, each with a regression test):
 ## Status
 
 - The final referees found no remaining error in the mathematics of any topic beyond minor items, which were fixed. Their verdicts per topic are in `reports/round3-final-*.md`.
-- The code passes its test suite, and the coverage experiment, run against exact rational ground truth without slack, shows no interval missing its exact value.
+- The code passes its test suite (327 tests), and the coverage experiment, run against exact rational ground truth without slack, shows no interval missing its exact value.
 - The referees are AI systems. They re-derived proofs and ran adversarial numerical checks, but their judgement is not a substitute for human review, and citations were checked against abstracts and secondary sources where full texts were not reachable.
 
 ## Files
@@ -49,4 +49,5 @@ Soundness bugs in the code (all fixed, each with a regression test):
 - `raw/new_results_integration.json`: integration, referee reports and fixes for the local-threshold and affine results.
 - `raw/round2_consolidation.json`: the consolidation round.
 - `raw/round3_final_referee.json`, `raw/round3_final_fixes.json`: the final referee round and the fixes after it.
+- `raw/round3_consistency_and_sync.json`: the final experiment rerun, the text synchronisation, the consistency referee and the last fixes.
 - `reports/`: all of the above as Markdown.

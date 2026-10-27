@@ -2,6 +2,9 @@
 random circuits and families with exactly known p, including adversarial
 arguments (wrong envelopes, envelopes without proofs, bogus proofs).
 
+Every reference value is an exact Fraction (enumeration in rational
+arithmetic, exact block probabilities and their product, or an exact
+Poisson-binomial tail), compared with the interval ends without slack.
 Every procedure must have miss rate <= delta (up to sampling error of the
 miss-rate estimate itself). Writes results/coverage.json.
 """
@@ -10,13 +13,14 @@ import json
 import math
 import os
 import sys
+from fractions import Fraction
 
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "code"))
 
 from rareprob import Product, auto_estimate, compile_envelope, dnf_envelope, envelope_estimate, exact_prob  # noqa
-from rareprob.exact import exact_prob_rational  # noqa
+from rareprob.exact import exact_prob_rational, poisson_binomial_tail_rational  # noqa
 from rareprob.argument import honest_proof, verify  # noqa
 from rareprob.circuit import Circuit  # noqa
 from rareprob.dfsb import dfsb_estimate  # noqa
@@ -24,7 +28,7 @@ from rareprob.envelope import Envelope  # noqa
 from rareprob.families import (dnf_circuit, independent_blocks, obfuscated_dnf_circuit,  # noqa
                                random_block_circuit, random_dnf_terms, trigger_circuit)
 from rareprob.janson import cnf_circuit, janson_interval, random_unate_cnf  # noqa
-from rareprob.tilting import Block, poisson_binomial_tail, tilted_estimate  # noqa
+from rareprob.tilting import Block, tilted_estimate  # noqa
 
 DELTA = 0.1
 OUT = os.path.join(os.path.dirname(__file__), "results")
@@ -92,7 +96,8 @@ def main():
     # 3. boxes: products of dense blocks
     res = []
     for t in range(100):
-        C, p, _ = independent_blocks(int(rng.integers(2, 5)), 4, 8, rng)
+        C, _, probs = independent_blocks(int(rng.integers(2, 5)), 4, 8, rng)
+        p = math.prod(Fraction(q) for q in probs)  # block probabilities are exact (counts / 2^4)
         D = Product.uniform(C.n)
         E, _, _ = compile_envelope(C, D, tau=0.05, rng=rng)
         e = envelope_estimate(C, D, E, eps=0.3, delta=DELTA, rng=rng)
@@ -115,7 +120,8 @@ def main():
             bl.tabulate(D)
         mean = sum(bl.p1 for bl in blocks)
         tt = int(math.ceil(mean + rng.uniform(0.1, 0.5) * (kb - mean)))
-        p = poisson_binomial_tail([bl.p1 for bl in blocks], [1] * kb, tt)
+        # exact block probabilities under uniform D: counts / 2^b
+        p = poisson_binomial_tail_rational([Fraction(len(bl.pts1), 1 << b) for bl in blocks], [1] * kb, tt)
         if p == 0:
             continue
         e = tilted_estimate(blocks, tt, D, n, eps=0.2, delta=DELTA, rng=rng)

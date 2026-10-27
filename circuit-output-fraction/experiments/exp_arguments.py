@@ -54,15 +54,23 @@ def make_instance(fam, k, r, seed):
     return C, S, a, body, rng
 
 
+def instance_facts(fam, k, r, seed):
+    """Size and exact p of an instance (p = Pr[R] 2^-k, a dyadic rational, exact in floating point)."""
+    C, S, a, body, _ = make_instance(fam, k, r, seed)
+    return dict(size=C.size, p=body_prob(C, S, a, body) * 2.0 ** (-k))
+
+
 def run_part1(fam, k, r, seed):
     """The prover-free procedures: forcing (UP, probing, Gaussian elimination) and DFSB."""
     C, S, a, body, rng = make_instance(fam, k, r, seed)
     D = Product.uniform(C.n)
+    p = body_prob(C, S, a, body) * 2.0 ** (-k)
     t = time.time()
     forced = forced_input_literals(C)
     e1 = dfsb_estimate(C, D, eps=EPS, delta=DELTA, rng=rng, node_budget=300)
     return dict(forced_by_part1=len(forced or {}), part1_lo=e1.lo, part1_hi=e1.hi,
-                part1_ratio=e1.ratio, part1_cost=e1.evaluations, part1_seconds=time.time() - t)
+                part1_ratio=e1.ratio, part1_cost=e1.evaluations, part1_seconds=time.time() - t,
+                part1_contains=bool(e1.lo <= p <= e1.hi))
 
 
 def run_part2(fam, k, r, seed):
@@ -110,7 +118,7 @@ def main():
         args = (fam, k, r, 99 + idx)
         row = run_limited(run_part2, args, TIME_LIMIT)
         if row is None:
-            row = dict(family=fam, k=k, rounds=r, timeout_seconds=TIME_LIMIT)
+            row = dict(family=fam, k=k, rounds=r, timeout_seconds=TIME_LIMIT, **instance_facts(*args))
             print(f"{fam:8s} k={k:2d}: no proof within {TIME_LIMIT} s", flush=True)
         p1 = run_limited(run_part1, args, PART1_LIMIT)
         if p1 is None:
@@ -118,7 +126,8 @@ def main():
             p1txt = f"part1 no verdict within {PART1_LIMIT} s"
         else:
             row.update(p1)
-            p1txt = f"part1 [{p1['part1_lo']:.2e},{p1['part1_hi']:.2e}] forced={p1['forced_by_part1']}"
+            p1txt = (f"part1 [{p1['part1_lo']:.2e},{p1['part1_hi']:.2e}] ok={p1['part1_contains']} "
+                     f"forced={p1['forced_by_part1']}")
         if "proof_steps" in row:
             print(f"{fam:8s} k={k:2d} size={row['size']:4d} p={row['p']:.2e} | {p1txt} | "
                   f"proof {row['proof_steps']} steps ({row['prover_seconds']:.1f}s), check {row['verify_seconds']:.1f}s, "

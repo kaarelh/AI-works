@@ -159,17 +159,22 @@ extensive and the local-lemma conditions fail; beyond the provable regime the me
 stays sound and decides empirically whether it can answer.
 The implementation (\texttt{cftp.py}, for unate CNFs) runs the chains of
 $\mathcal A_k$ only on the variables of the events in $F_{<k}$ (the others are
-independent of $F_{<k}$ and are drawn from their marginals), and otherwise changes
-only the bookkeeping: it takes $N$ rather than $\eps$ (so its cost is $RKN$ runs and it
-needs no $\Lambda_{\max}$), pools the estimation runs of stage $k$ into a
-Hoeffding--KL upper bound $\theta_k^+$ on $\theta_k$ instead of the test of
-\cref{prop:truncation}, requires $\theta_k^+<\rho_k$, and widens the interval by the
-bias factors $e^{\pm a_k}$, $a_k=\theta_k^+/(\rho_k-\theta_k^+)$ (as
+independent of $F_{<k}$ and are drawn from their marginals), starts at
+$T_0=4|A|$ for the set $A$ of these variables, and otherwise changes only the
+bookkeeping: it takes $N$ rather than $\eps$ and makes $N$ runs per stage and round,
+keeping all that halt (so its cost is $RKN$ runs and it needs no $\Lambda_{\max}$);
+it takes the least odd $R$ for which a majority of $R$ independent rounds, each failing
+with probability $1/4$, fails with probability at most $\delta/2$; it pools the
+estimation runs of stage $k$ into a Hoeffding--KL upper bound $\theta_k^+$ on
+$\theta_k$ instead of the test of \cref{prop:truncation}, requires $\theta_k^+<\rho_k$,
+and widens the interval by the bias factors $e^{\pm a_k}$,
+$a_k=\theta_k^+/(\rho_k-\theta_k^+)$ (as
 $r_k/r'_k\in[1/(1+\theta_k/r_k),1/(1-\theta_k/r_k)]$), and by a Chebyshev bound
 computed from the per-stage relative variances
-$(1-\rho_k+\theta_k^+)/((\rho_k-\theta_k^+)n_k)$, with $n_k$ the realised numbers of
-halted runs; the same argument applies, and \texttt{telescoping\_estimate} states the
-resulting guarantee, including the effect of floating-point rounding. Karp--Luby--Madras
+$(1-\rho_k+\theta_k^+)/((\rho_k-\theta_k^+)n_k)$, with $n_k$ the least number of
+halted runs of stage $k$ in a round; and it raises the lower end to the Harris bound
+$\prod_i(1-b_i)$. The same argument applies, and \texttt{telescoping\_estimate} states
+the resulting guarantee, including the effect of floating-point rounding. Karp--Luby--Madras
 sampling should extend it to ORs of unate $\wedge$-circuits with different
 polarities, given estimates of each disjunct's probability from \cref{thm:cftp} and
 certified samplers for each disjunct's conditional law (at truncation level

@@ -6,11 +6,12 @@ keeps the AND-tree of C; flattening merges nested ANDs and can raise the
 context width from w (a window CNF as a left-deep chain in window order) to
 n - 2 (the same CNF as one flat AND).
 
-to_nnf also hash-conses structurally equal nodes, so AND gates of different
-chains of C with equal children (two CNFs whose first clauses coincide)
-become one node of N, whose context then collects the overlaps of both
-chains; cw can exceed the bound for chains that share no gate of C. The
-bounds stated below hold for chains that share no AND node of N as built.
+to_nnf(C, flatten=False) is gate by gate: the AND/OR node of a gate of C is
+keyed by the gate and its polarity, so distinct gates stay distinct nodes
+even when structurally equal (equal first clauses of two CNF chains do not
+merge the chains), and cw is measured on the circuit's own bracketing. Only
+literals and the nodes that to_nnf creates inside small cones and XOR and
+threshold expansions are shared between gates.
 
 In N, the overlap of an AND gate g is S_g = the variables shared by two of
 its children; the context of a gate h is

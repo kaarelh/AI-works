@@ -154,7 +154,9 @@ $\ln Z(\theta)\in[z_-,z_+]$.
 samples at $\theta$, level $\delta/5$, cap $N_{\rm IS}$: $v(\theta)\in[v_-,v_+]$.
 \item[(T5)] Output $[e^{z_--\theta t}v_-,\ \min(1,e^{z_+-\theta t}v_+)]$.
 \end{description}
-With $\theta=0$ the samples are exact draws from $D$, $Z=1$, and TG is Monte Carlo.
+With $\theta=0$ the samples are draws from $D$, $Z=1$, and TG is Monte Carlo (our
+implementation draws each coordinate by comparing a 53-bit uniform with $q_i$ and charges
+$N_{\rm tot}n2^{-53}$ to the coupling share $\delta/5$).
 
 For completeness we use three hypotheses, with parameters $\beta,\nu\in(0,\frac12]$:
 \begin{description}[style=sameline,leftmargin=1.5em]
@@ -341,7 +343,7 @@ large variance, cannot cause wrong answers here, only slow ones. The proof is in
 
 \paragraph{Experiments (\cref{tab:local}; \texttt{experiments/exp\_local.py}).} We ran TG
 with $\eps=0.3$, $\delta=0.05$ and margin $\gamma=0.25$ (Python with numpy, two runs at a time
-on a shared machine, $15$--$38$\,ns per site update, pilot included) on four families. (1) A chain LTC $g_j(z_{j-1},z_j,y_j)$ with random truth
+on a shared 4-core machine, $18$--$31$\,ns per site update, pilot included) on four families. (1) A chain LTC $g_j(z_{j-1},z_j,y_j)$ with random truth
 tables, each $y_j$ private and pivotal with probability $\ge\frac12$, $m=1600$, with the
 threshold set so that $p\approx10^{-20}$; exact $p$ from a transfer matrix (treewidth $2$;
 used only for checking). (2) A random cubic graph on $N=1500$ vertices with one random table
@@ -375,13 +377,13 @@ missed $p$; the median ratio was $2.05$ and the median error of the point estima
 \toprule
 instance & $n$ & $\theta$ & $\log_{10}p$ (exact or MC) & certified $\log_{10}p$ & ratio & samples & sweeps & s & MC\\
 \midrule
-chain, $m=1600$ & 3201 & 0.492 & $-20.19$ & $[-20.30,\,-20.08]$ & 1.66 & 72{,}560 & 80 & 687 & $1.8\cdot10^{22}$\\
-cubic, $N=1500$ & 3750 & 0.447 & -- & $[-23.88,\,-23.61]$ & 1.84 & 72{,}560 & 95 & 824 & $3.3\cdot10^{25}$\\
-cubic, $N=100$ & 250 & 0.457 & $[-3.016,\,-2.993]$ & $[-3.050,\,-2.959]$ & 1.23 & 72{,}560 & 90 & 23 & $6.7\cdot10^{5}$\\
-CFTP, $m=400$ & 801 & 1.5 & $-71.80$ & $[-71.99,\,-71.66]$ & 2.13 & 81{,}280 & 22$^*$ & 38 & --\\
-CFTP, $m=400$ & 801 & 2.5 & $-169.76$ & $[-170.00,\,-169.54]$ & 2.88 & 81{,}280 & 26$^*$ & 40 & --\\
+chain, $m=1600$ & 3201 & 0.492 & $-20.19$ & $[-20.31,\,-20.08]$ & 1.66 & 72{,}560 & 80 & 441 & $1.8\cdot10^{22}$\\
+cubic, $N=1500$ & 3750 & 0.447 & -- & $[-23.88,\,-23.61]$ & 1.84 & 72{,}560 & 95 & 618 & $3.3\cdot10^{25}$\\
+cubic, $N=100$ & 250 & 0.457 & $[-3.017,\,-2.992]$ & $[-3.051,\,-2.958]$ & 1.23 & 72{,}560 & 90 & 29 & $6.7\cdot10^{5}$\\
+CFTP, $m=400$ & 801 & 1.5 & $-71.80$ & $[-71.99,\,-71.65]$ & 2.13 & 81{,}280 & 22$^*$ & 45 & --\\
+CFTP, $m=400$ & 801 & 2.5 & $-169.76$ & $[-170.00,\,-169.53]$ & 2.88 & 81{,}280 & 26$^*$ & 50 & --\\
 \bottomrule
 \end{tabular}
-\caption{TG on local threshold circuits ($\eps=0.3$, $\delta=0.05$, $\gamma=0.25$ in every row; \texttt{exp\_local.py}). ``Samples'' counts pilot, normaliser and importance samples; each normaliser and importance sample is a fresh chain run for ``sweeps'' sweeps, and pilot chains run fewer sweeps (to total variation $10^{-3}$) ($^*$: CFTP, sweeps per counted exact sample, counting both bounding chains and restarts). ``s'': wall-clock seconds on a shared machine, two runs at a time. ``MC'': samples a Monte Carlo KL interval needs for the same ratio at the same $\delta$, at the exact $p$, at the upper end of TG's interval when $p$ is unknown, and at the Monte Carlo estimate for $N=100$, whose $\log_{10}p$ column is the interval from $10^7$ Monte Carlo samples (77\,s).}
+\caption{TG on local threshold circuits ($\eps=0.3$, $\delta=0.05$, $\gamma=0.25$ in every row; \texttt{exp\_local.py}). ``Samples'' counts pilot, normaliser and importance samples; each normaliser and importance sample is a fresh chain run for ``sweeps'' sweeps, and pilot chains run fewer sweeps (to total variation $10^{-3}$) ($^*$: CFTP, sweeps per counted exact sample, counting both bounding chains and restarts). ``s'': wall-clock seconds on a shared 4-core machine, two runs at a time; intervals rounded outward. ``MC'': samples a Monte Carlo KL interval needs for the same ratio at the same $\delta$, at the exact $p$, at the upper end of TG's interval when $p$ is unknown, and at the Monte Carlo estimate for $N=100$, whose $\log_{10}p$ column is the interval from $10^7$ Monte Carlo samples (109\,s).}
 \label{tab:local}
 \end{table}

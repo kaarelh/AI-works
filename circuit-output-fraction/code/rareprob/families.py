@@ -22,9 +22,10 @@ def dnf_circuit(n: int, terms) -> Circuit:
 
 
 def obfuscated_dnf_circuit(n: int, terms, rng: np.random.Generator, noise: int = 2) -> Circuit:
-    """The same DNF written badly: literals routed through XOR identities
-    x = (x XOR r) XOR r with random helper inputs r, terms built as balanced
-    trees, and the OR written as NOT(AND(NOT ...)).
+    """The same DNF written badly: each literal routed through up to `noise`
+    XOR identities x = (x XOR r) XOR r, r a random other input variable (a
+    draw with r = i is skipped), terms built as balanced trees, and the OR
+    written as NOT(AND(NOT ...)).
     """
     C = Circuit(n)
     lit_cache = {}
@@ -95,8 +96,9 @@ def independent_blocks(k: int, b: int, gates: int, rng: np.random.Generator):
 
 def trigger_circuit(n: int, k: int, rng: np.random.Generator, body_gates: int = 60):
     """Backdoor-style circuit: R(x) AND [x_S = t] where the trigger test is
-    written as AND of XNORs with constants and R is a random dense circuit on
-    the remaining variables. Uniform p = 2^-k * Pr[R]."""
+    written as AND of XNORs with constants and R is a random circuit drawn on
+    the remaining variables, resampled until Pr[R] >= 0.05 on 4096 samples; its
+    output may depend on only some of them. Uniform p = 2^-k * Pr[R]."""
     S = rng.choice(n, size=k, replace=False)
     t = rng.integers(0, 2, size=k)
     rest = [i for i in range(n) if i not in set(S.tolist())]

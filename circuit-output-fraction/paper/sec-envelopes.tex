@@ -69,7 +69,8 @@ telescope, so the relative error of $\hat Z\cdot\E_{\hat Q}W$ is at most
 $e^{\pm\eta}$, where $\eta$ is the largest sum of local rounding errors on a
 derivation (a max-sum dynamic program over $\Phi$); the discreteness of the
 categorical draws at $\Sum$ gates adds an absolute $O((n+|\Phi|)2^{-53})$ to $\E W$
-(the remaining inputs are drawn from $D$ exactly, so the rejection fills of
+(the remaining inputs are drawn from $D$ exactly, by comparing lazily drawn binary
+digits of a uniform with those of $q_i$, so the rejection fills of
 \cref{sec:boxes} are exact and the box estimates rest on exact samples); and the
 output interval is widened by both and rounded outwards.
 
@@ -79,7 +80,10 @@ For $N$ i.i.d.\ samples in $[0,1]$ with empirical mean $\hat\mu$, the
 \emph{Hoeffding--KL interval} at level $\delta$ is
 $\{m\in[0,1]:N\,\KL(\hat\mu\|m)\le\ln(2/\delta)\}$ with $\KL$ the Bernoulli relative
 entropy; it contains the true mean with probability at least $1-\delta$
-\cite[Thm.~1]{hoeffding1963}.
+\cite[Thm.~1]{hoeffding1963}. (In floating point our implementation excludes a value
+only when its computed divergence exceeds the bound by more than its rounding error,
+and allows for the rounding of $\hat\mu$, so the computed interval contains the exact
+one.)
 
 \begin{theorem}[envelope estimator]\label{thm:envelope}
 Let $\varphi:\bits^n\to\R_{\ge0}$ dominate $C$, with exact mass $Z$ and an exact
@@ -272,6 +276,11 @@ k/4$, and this window contains at most $4\sigma+1$ integers, so, $S$ being unimo
 $p=Z_\theta\,\E_{Q_\theta}[e^{-\theta(S-t)}\one_{S\ge t}]\ge Z_\theta\,Q_\theta(S=t)$.
 \end{proof}
 
+Our implementation, which also allows nonnegative integer block weights $w_j$, finds
+$\theta$ by bisection on $\E_{Q_\theta}S$ to within $1/(2(k+2))$ of $t$, subject to
+$\theta\max_jw_j\le699$ (so that every $e^{\theta w_j}$ is a finite double), and compares
+$S$ with $\lceil t\rceil$ in integer arithmetic, so $\varphi_\theta\ge1$ wherever $C=1$.
+
 Unit weights matter. For integer weights under a product distribution the best
 tilt can be loose by a factor $p^{-\Theta(1)}$: with
 $S=(k+1)y+\sum_{i\le k}x_i$, $q_y=\eta$, $q_x=1/2$ and $t=k+1$, so $p=\eta$, the
@@ -329,7 +338,7 @@ $b_i$, is at most $M\exp(2\Delta/(1-\Delta))$ for $\Delta<1$: if clause $i$ shar
 variable with an earlier clause $j$, then $d_i\ge D(B_i\wedge B_j)\ge b_i+b_j-1\ge
 2b_i-1$, so $1-b_i\ge(1-\Delta)/2$; otherwise $d_i=0$. Example: $m=6\cdot10^4$
 random clauses of width $12$ over $2\cdot10^5$ variables give the certified interval
-$p\in[4.33,5.07]\cdot10^{-7}$ (ratio $1.17$) in under a minute of pure Python
-(\cref{tab:janson}). The
+$p\in[4.33,5.07]\cdot10^{-7}$ (ratio $1.17$) in $50$ seconds of pure Python
+(wall-clock, on a shared 4-core machine; \cref{tab:janson}). The
 version for unate $\wedge$'s of arbitrary monotone sub-circuits, with $b_i$ and
 $\Delta$ estimated by sampling, is \cref{thm:janson-general}.

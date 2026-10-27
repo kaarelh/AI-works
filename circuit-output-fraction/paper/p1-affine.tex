@@ -337,7 +337,7 @@ Ising partition function of a binary matroid, which has an FPRAS for graphic
 under a complexity-theoretic assumption, none for binary matroids in general
 \cite{goldbergjerrum2013binary}. In E6 of \cref{tab:affine}, banded LDPC checks
 under $\mathrm{Bern}(1/3)$ ($p\approx2.6\cdot10^{-31}$) are estimated to $4\%$ in
-$0.3$ seconds by the affine envelope with exact dynamic-programming masses, whereas the
+$0.2$ seconds by the affine envelope with exact dynamic-programming masses, whereas the
 biased-pivot presolve only certifies $p\le1.3\cdot10^{-22}$ within its budget.
 
 \paragraph{Linear thresholds.}
@@ -449,25 +449,27 @@ $p\approx2^{-m}$.
 
 \paragraph{Experiments.}
 \Cref{tab:affine} reports our implementation (module \texttt{affine.py}, script
-\texttt{exp\_affine.py}; $\eps=0.05$, $\delta=0.01$, one core). The exact values are
+\texttt{exp\_affine.py}; $\eps=0.05$, $\delta=0.01$; wall-clock seconds on a shared
+4-core machine). The exact values are
 computed without the module: by closed forms for E1--E4 (for E1--E3 the checks
 restricted to the inputs outside the residual have full rank, so $p=2^{-m}\Pr[R]$), by
 Gaussian elimination on the raw check rows and inclusion--exclusion for E5, by an exact
 rational sweep over the bands for E6a, by enumerating the $2^{24}$-element coset for
-E6b, and by brute force for E7; the module's dynamic program agrees with the E6 values
-to $2\cdot10^{-14}$. Monte Carlo is charged the number of samples its KL interval needs
+E6b, and by enumeration in rational arithmetic for E7; the module's dynamic program
+agrees with the E6 values to $2\cdot10^{-14}$. Monte Carlo is charged the number of samples its KL interval needs
 for the same ratio. E3 illustrates DFSB on a dense parity event at a size where it can
 run; with $m=12>n/6$ it lies outside \cref{cor:random-parity}, so it is not an instance
 of the barrier. On $36$ inputs with $12$ dense checks ($p=8.8\cdot10^{-5}$), DFSB with a
-$400$-node budget spent $55$ seconds and $1.5\cdot10^6$ samples and returned an interval
+$400$-node budget spent $79$ seconds and $1.5\cdot10^6$ samples and returned an interval
 of ratio $29$, while the presolve needed $1.6\cdot10^4$ samples and $0.02$ seconds; at
 this size plain Monte Carlo is cheap too ($3.7\cdot10^7$ bit-parallel evaluations, about
 $0.2$ seconds). In $600$ estimates on random $16$-input circuits under uniform and
 product distributions (E7), no interval missed the exact value. The whole experiment
-takes about $77$ seconds.
+takes about $111$ seconds.
 
 The implementation is sound in floating point as well. Threshold gates are evaluated and
-propagated exactly, in integer form (\cref{sec:setting}), so the threshold rule (X1) of
+propagated exactly, in integer arithmetic after scaling the weights (\cref{sec:setting};
+the weights of a repeated child are added), so the threshold rule (X1) of
 \cref{sec:xpt} is a valid inference about $C$. Masses are carried as a
 mantissa and a binary exponent with proven relative-error bounds (at most
 $\gamma_{5n+5}$ for the dynamic program, where $\gamma_k=ku/(1-ku)$ and $u=2^{-53}$),
@@ -483,20 +485,20 @@ empirical mean.
 \toprule
 instance (Monte Carlo samples) & $n$ & $p$ & method & $U/L$ & samples & sec.\\
 \midrule
-E1 gadget checks ($1.2\cdot10^{18}$) & 120 & $1.54\cdot10^{-14}$ & presolve & $1.045$ & $3.3\cdot10^4$ & $0.25$\\
- & & & affine envelope, $K=1.39$ & $1.042$ & $1.6\cdot10^4$ & $0.34$\\
-E2 random checks ($4.1\cdot10^{34}$) & 600 & $4.30\cdot10^{-31}$ & presolve & $1.045$ & $3.3\cdot10^4$ & $2.0$\\
- & & & affine envelope, $K=1.38$ & $1.041$ & $1.6\cdot10^4$ & $2.6$\\
-E4 Feistel ($4.8\cdot10^{16}$) & 92 & $3.69\cdot10^{-13}$ & triangular presolve & $1.042$ & $6.6\cdot10^4$ & $0.20$\\
- & & & affine envelope & $U{=}5.0\cdot10^{-5}$ & $10^5$ & $0.14$\\
-E5 two of three ($3.6\cdot10^{12}$) & 90 & $4.89\cdot10^{-9}$ & affine envelope & $U{=}5.0\cdot10^{-5}$ & $10^5$ & $0.16$\\
- & & & XPT, 7-node argument & $1.040$ & $6.6\cdot10^4$ & $0.40$\\
-E6a banded ($6.9\cdot10^{34}$) & 300 & $2.59\cdot10^{-31}$ & affine envelope + DP & $1.041$ & $4.1\cdot10^3$ & $0.29$\\
- & & & biased-pivot presolve & $U{=}1.3\cdot10^{-22}$ & $2\cdot10^5$ & $1.9$\\
-E6b copies & 216 & $1.47\cdot10^{-43}$ & affine env., width $\le2^6$ & $U{=}5.1\cdot10^{-5}$ & $2\cdot10^5$ & $0.54$\\
- & & & affine env., width $\le2^{16}$ & $1.006$ & $1.0\cdot10^3$ & $1.4$\\
+E1 gadget checks ($1.2\cdot10^{18}$) & 120 & $1.54\cdot10^{-14}$ & presolve & $1.045$ & $3.3\cdot10^4$ & $0.27$\\
+ & & & affine envelope, $K=1.39$ & $1.042$ & $1.6\cdot10^4$ & $0.46$\\
+E2 random checks ($4.1\cdot10^{34}$) & 600 & $4.30\cdot10^{-31}$ & presolve & $1.045$ & $3.3\cdot10^4$ & $2.3$\\
+ & & & affine envelope, $K=1.38$ & $1.041$ & $1.6\cdot10^4$ & $3.7$\\
+E4 Feistel ($4.8\cdot10^{16}$) & 92 & $3.69\cdot10^{-13}$ & triangular presolve & $1.042$ & $6.6\cdot10^4$ & $0.16$\\
+ & & & affine envelope & $U{=}5.0\cdot10^{-5}$ & $10^5$ & $0.11$\\
+E5 two of three ($3.6\cdot10^{12}$) & 90 & $4.89\cdot10^{-9}$ & affine envelope & $U{=}5.0\cdot10^{-5}$ & $10^5$ & $0.19$\\
+ & & & XPT, 7-node argument & $1.040$ & $6.6\cdot10^4$ & $0.43$\\
+E6a banded ($6.9\cdot10^{34}$) & 300 & $2.59\cdot10^{-31}$ & affine envelope + DP & $1.041$ & $4.1\cdot10^3$ & $0.24$\\
+ & & & biased-pivot presolve & $U{=}1.3\cdot10^{-22}$ & $2\cdot10^5$ & $2.7$\\
+E6b copies & 216 & $1.47\cdot10^{-43}$ & affine env., width $\le2^6$ & $U{=}5.1\cdot10^{-5}$ & $2\cdot10^5$ & $0.67$\\
+ & & & affine env., width $\le2^{16}$ & $1.006$ & $1.0\cdot10^3$ & $1.9$\\
 E3 dense checks ($3.7\cdot10^7$) & 36 & $8.77\cdot10^{-5}$ & presolve & $1.083$ & $1.6\cdot10^4$ & $0.02$\\
- & & & DFSB, 400 nodes & $28.7$ & $1.5\cdot10^6$ & $55$\\
+ & & & DFSB, 400 nodes & $28.7$ & $1.5\cdot10^6$ & $79$\\
 \bottomrule
 \end{tabular}
 \caption{Affine methods ($\eps=0.05$, $\delta=0.01$; E3: $\eps=0.1$, $\delta=0.05$). E1: 45

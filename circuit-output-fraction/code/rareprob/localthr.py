@@ -54,7 +54,7 @@ import numpy as np
 from scipy.special import expit
 
 from .circuit import Circuit, as_rational, pack_rows, thr_canonical, unpack_bits
-from .stats import Estimate, kl_interval, sequential_mean
+from .stats import Estimate, kl_interval, sequential_mean, sum_rel_err
 
 FLOAT_TV_PER_UPDATE = 2.0 ** -48  # floor of the per-update allowance (LocalModel.float_tv)
 _U = 2.0 ** -53
@@ -661,7 +661,8 @@ def ti_interval(Y: np.ndarray, theta: float, mu0: float, S_lo: int, S_hi: int, d
         exc = np.maximum(np.abs(Y - c) - w, 0.0)
         Mx = float(np.max(np.maximum(np.maximum(S_hi - c - w, c - w - S_lo), 0.0)))
         if Mx > 0:
-            zhi = kl_interval(float(np.mean(exc / Mx)), L, delta_o)[1]
+            # rel_err: the L quotients and the float mean (as in sequential_mean)
+            zhi = kl_interval(float(np.mean(exc / Mx)), L, delta_o, rel_err=sum_rel_err(L))[1]
             e_out = theta * Mx * zhi  # >= h sum_l E|Y_l - clip(Y_l)| w.p. 1 - delta_o
         Yc = np.clip(Y, c - w, c + w)
         dev = Yc - c

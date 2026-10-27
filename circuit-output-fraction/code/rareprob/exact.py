@@ -95,3 +95,72 @@ def exact_prob_rational(C: Circuit, D: Product | None = None, max_n: int = 22):
         w0 = den - w1
         W = np.concatenate([W * w0, W * w1])  # index bit i <-> variable i
     return Fraction(int(W[y].sum()), den ** n)
+
+
+def dnf_prob_rational(terms, D: Product | None = None):
+    """Pr_D[OR of the terms] as an exact Fraction, by inclusion-exclusion over
+    the consistent subsets of terms (each term a list of (var, val); each
+    marginal at its exact binary value). For reference values (m <= ~22)."""
+    from fractions import Fraction
+
+    if len(terms) > 22:
+        raise ValueError("dnf_prob_rational: inclusion-exclusion needs at most 22 terms")
+
+    def lit(i, b):
+        q = Fraction(1, 2) if D is None else Fraction(float(D.q[i]))
+        return q if b else 1 - q
+
+    tot = Fraction(0)
+
+    def rec(j, lits, pr, sign):
+        nonlocal tot
+        for k in range(j, len(terms)):
+            new, npr = dict(lits), pr
+            for i, b in terms[k]:
+                if i in new:
+                    if new[i] != b:
+                        break
+                    continue
+                new[i] = b
+                npr *= lit(i, b)
+            else:
+                tot += npr if sign > 0 else -npr
+                rec(k + 1, new, npr, -sign)
+
+    rec(0, {}, Fraction(1), 1)
+    return tot
+
+
+def poisson_binomial_tail_rational(ps, ws, t):
+    """Pr[sum_j w_j B_j >= t] as an exact Fraction, for independent
+    Bernoulli(p_j) (each p_j at its exact binary value, or a Fraction),
+    nonnegative integer weights and a rational (or infinite) threshold."""
+    import math
+    from fractions import Fraction
+
+    from .circuit import as_rational
+
+    ps = [as_rational(p) for p in ps]
+    wr = [as_rational(w) for w in ws]
+    if any(w.denominator != 1 or w < 0 for w in wr) or any(not 0 <= p <= 1 for p in ps):
+        raise ValueError("poisson_binomial_tail_rational: weights must be nonnegative integers, p in [0, 1]")
+    ws = [int(w) for w in wr]
+    if isinstance(t, float) and math.isinf(t):
+        return Fraction(0) if t > 0 else Fraction(1)
+    t = math.ceil(as_rational(t))
+    tot = sum(ws)
+    if t > tot:
+        return Fraction(0)
+    if t <= 0:
+        return Fraction(1)
+    # integer DP on numerators over the common denominator prod_j den_j
+    dist, den = [1] + [0] * tot, 1
+    for p, w in zip(ps, ws):
+        a, d = p.numerator, p.denominator
+        new = [x * (d - a) for x in dist]
+        if a:
+            for s in range(tot + 1 - w):
+                if dist[s]:
+                    new[s + w] += dist[s] * a
+        dist, den = new, den * d
+    return Fraction(sum(dist[t:]), den)

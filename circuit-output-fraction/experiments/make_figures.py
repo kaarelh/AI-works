@@ -1,7 +1,7 @@
 """Figures for the paper from experiments/results/*.json.
 
 fig_speedup.pdf   small multiples: evaluations used vs surprise log2(1/p), ours vs Monte Carlo
-fig_surprise.pdf  samples vs unexplained surprise bits (partially revealed triggers)
+fig_surprise.pdf  samples vs unrevealed trigger bits k - j (partially revealed triggers)
 fig_proofs.pdf    DRUP proof size vs hidden-trigger width (linear hash vs SPN)
 """
 
@@ -31,7 +31,7 @@ plt.rcParams.update({
 
 # families on the sampling path (the trigger and 6-variable block families of the
 # table are computed exactly, with no sampling, so they have no curve here)
-NAMES = {"dnf-obfuscated": "obfuscated DNF\n(envelope leaf)", "trigger-cycle20": "trigger + 20-var dense body\n(forcing + dense leaf)",
+NAMES = {"dnf-obfuscated": "obfuscated DNF\n(envelope leaf; $w=8$ dense)", "trigger-cycle20": "trigger + 20-var dense body\n(forcing + dense leaf)",
          "blocks-cycle16": "AND of 16-var dense blocks\n(dense leaves)", "threshold": "threshold of blocks\n(tilting)"}
 
 
@@ -75,9 +75,9 @@ def surprise():
         ax.plot([r["unexplained_bits"] for r in capped], [r["samples"] for r in capped], ls="none",
                 marker="x", color=ORANGE, label="sample cap hit (ratio $>1.2$)")
     c = rows[0]["samples"]
-    ax.plot(x, [c * 2 ** b for b in x], color=INK2, ls="--", lw=1.0, label="$\\propto 2^{\\sigma_u}$")
+    ax.plot(x, [c * 2 ** b for b in x], color=INK2, ls="--", lw=1.0, label="$\\propto 2^{k-j}$")
     ax.set_yscale("log")
-    ax.set_xlabel("unexplained surprise $\\sigma_u$ (bits)")
+    ax.set_xlabel("unrevealed trigger bits $k-j$")
     ax.set_ylabel("samples to ratio $\\leq 1.2$")
     ax.legend(fontsize=7)
     fig.tight_layout()

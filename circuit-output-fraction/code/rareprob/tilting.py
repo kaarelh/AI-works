@@ -34,7 +34,7 @@ from scipy.special import expit
 from .circuit import Circuit, as_rational
 from .dist import Product
 from .envelope import _exp_down, _exp_up
-from .stats import Estimate, kl_interval, sequential_mean
+from .stats import Estimate, kl_interval, sequential_mean, sum_rel_err
 
 _U = 2.0 ** -53
 _TINY_ABS = 2.0 ** -1074  # an ulp of 0
@@ -298,6 +298,6 @@ def proposal_lower_bound(C: Circuit, D: Product, Q, M: float, eps: float = 0.1,
     mags = np.where(c & np.isfinite(lD), np.abs(lD) + np.abs(lQ), 0.0)  # D(x) = 0: W = 0 exactly
     rel = math.expm1(2.0 ** -50 * (C.n + 4) * (float(mags.max(initial=0.0)) + 4))
     mean = float(W.mean())
-    lo, _ = kl_interval(mean, N, delta)
+    lo, _ = kl_interval(mean, N, delta, rel_err=sum_rel_err(N))  # rel_err: the float mean of N values
     lo_p = max(0.0, math.nextafter(lo * M / (1 + rel) * (1 - 2.0 ** -50), 0.0))
     return Estimate(min(max(mean * M, lo_p), 1.0), min(lo_p, 1.0), 1.0, N, N, delta, "lower bound only")

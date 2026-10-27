@@ -1,6 +1,7 @@
 \section{Introduction}\label{sec:intro}
 
-Let $C:\bits^n\to\bits$ be a Boolean circuit and $D$ a distribution on its inputs.
+Let $C:\bits^n\to\bits$ be a Boolean circuit and $D$ a product distribution on its
+inputs (\cref{sec:setting}).
 We want $p=\Pr_{x\sim D}[C(x)=1]$ when $p$ is tiny. Monte Carlo sampling finds
 it to relative error $\eps$ with $\Theta(\log(1/\delta)/(p\eps^2))$ evaluations
 of $C$: polynomial in $1/p$, so exponential in the \emph{surprise}
@@ -41,9 +42,9 @@ sample, yields an importance sampler with bounded weights, hence two-sided
 intervals, after $O(K(\log(1/\delta)+\log\log K)\eps^{-2})$ samples, where $K=Z/p$
 (\cref{thm:envelope}). The envelope explains $\log_2(1/Z)$ bits of the
 surprise; the remaining $\log_2K$ bits are paid for by sampling, and this cannot be
-avoided: once the envelope is certified, a verifier that accesses the rest of $C$
-only through evaluations needs about $K$ of them on some circuits inside the envelope,
-whatever further argument it reads (\cref{thm:surprise}(b)).
+avoided: under the uniform distribution, once the envelope is certified, a verifier
+that accesses the rest of $C$ only through evaluations needs about $K$ of them on some
+circuits inside the envelope, whatever further argument it reads (\cref{thm:surprise}(b)).
 \end{itemize}
 Karp--Luby--Madras estimation of DNF probabilities \cite{klm1989}, exact
 counting for decision-DNNFs and bounded treewidth, exponential tilting for
@@ -64,15 +65,17 @@ interesting one.
 
 \paragraph{Without a prover (\cref{sec:part1}).} The procedure DFSB
 (Decompose--Force--Sample--Branch) recursively splits the event by exact rules
-(independence of variable-disjoint parts, literals forced by propagation,
-Shannon expansion) and samples only at leaves that are dense or have tight
-envelopes. It is sound on every circuit, and complete, with
-$\tilde O(m\,K\,d^2\eps^{-2}\log(m/\delta))$ evaluations besides its pilots, on every
-circuit whose ideal $K$-explanation tree has $m$ nodes, with at most $d$ sampled leaves
-whose estimates are multiplied together (\cref{thm:dfsb}). This covers
-read-once formulas (exactly); read-once compositions of sub-circuits each of which, in
-the polarity in which it occurs, is \emph{component-dense}: unit propagation and
-independence split it into exact or $K$-dense pieces (\cref{cor:dfsb}); backdoor-style triggers;
+(independence of variable-disjoint parts, literals forced by propagation and Gaussian
+elimination, Shannon expansion) and samples only at leaves that are dense or have tight
+envelopes. It is sound on every circuit, and complete on every circuit whose ideal
+$K$-explanation tree has $m$ nodes, with at most $d$ sampled leaves whose estimates are
+multiplied together, using $\tilde O(m\,K\,d^2\eps^{-2}\log(m/\delta))$ evaluations
+besides its pilots (\cref{thm:dfsb}). This covers
+read-once formulas (exactly); read-once compositions of non-constant sub-circuits each of
+which, in the polarity in which it occurs and after restriction by any literals it implies,
+is \emph{component-dense}: unit propagation and independence split it into exact or
+$K$-dense pieces (\cref{cor:dfsb}); triggers that propagation or Gaussian elimination
+exposes;
 circuits with small cutsets (exactly, by cutset conditioning); and versions of all of
 these disguised by rewriting cones of logarithmic support, which are computed exactly.
 DNFs and DNNFs, whose ideal trees can be exponential, are covered instead by envelope
@@ -90,17 +93,22 @@ of bounded-pathwidth CNFs, each bracketed along a path decomposition
 (\cref{lem:pathcw}), whose exact counting is $\#\mathsf P$-hard.
 \item \emph{Modules} (\cref{lem:quotient}): functions of independent sub-circuits
 (thresholds, majorities) are estimated through their quotients, walking the module
-tree; the log-ratios of the quotient estimates add, up to lower-order terms, when each
-module is estimated to small relative error on the polarity its parent uses.
+tree. The log-ratio of the final interval is at most the sum $S$ of those of the
+quotient estimates, in the polarities the parents use, when each parent is monotone or
+antitone in each input or the interval for that input's used polarity lies in
+$[0,\frac12]$, and at most $e^{O(dS)}S$ in general, for $dS=O(1)$ and $d$ the depth of
+the module tree; so small relative errors in the used polarities suffice.
 \item \emph{The presumption of independence, certified}
-(\cref{thm:janson-general}): for unate $\wedge$'s of arbitrary sub-circuits,
-Harris and Janson inequalities pin $p$ to within a factor
-$e^{\Delta/(1-\max_ib_i)}$ of the independence estimate $\prod_iD(A_i)$
-($b_i=D(\neg A_i)$, $\Delta$ the probability carried by dependent pairs), at a
-sampling cost linear in $\sum_ib_i\le\log(1/p)+\Delta/(1-\max_ib_i)$ and independent
-of $1/p$; a covariance correction reduces the error to third order, and pairwise
-data provably cannot do better than $e^{0.29\Delta}$
-(\cref{prop:pairwise-barrier}).
+(\cref{thm:janson,thm:janson-general}): for unate $\wedge$'s of arbitrary
+sub-circuits $A_i$, Harris and Janson inequalities give $M\le p\le
+Me^{\Delta/(1-\max_ib_i)}$ for the independence estimate $M=\prod_iD(A_i)$
+($b_i=D(\neg A_i)$, $\Delta$ the probability carried by dependent pairs). For unate
+CNFs both ends are computed exactly. In general a sampling procedure certifies $p$ to
+ratio $1+\eps$ whenever $\Delta\le\ln(1+\eps)/64$ and $\max_ib_i\le\frac14$, with
+samples linear in $\sum_ib_i\le\log(1/p)+\Delta/(1-\max_ib_i)$ plus
+$O(\eps^{-1}\log(1/\delta))$ per dependent pair, independent of $1/p$. A covariance
+correction reduces the error to third order, and pairwise data provably cannot do
+better than $e^{0.29\Delta}$ (\cref{prop:pairwise-barrier}).
 \item \emph{Certified telescoping} (\cref{thm:cftp}): annealing estimators become
 sound when the intermediate samplers are exact Las Vegas samplers (coupling from
 the past) whose truncation is certified empirically; this handles unate circuits
@@ -118,8 +126,10 @@ $p=e^{-\Omega(m)}$. For supermodular statistics coupling from the past removes t
 certificate (\cref{prop:local-cftp}).
 \item \emph{Affine structure} (\cref{sec:affine}): certified affine gates and an exact
 affine and triangular presolve (\cref{prop:presolve}) factor out the parity-check part
-of the surprise exactly, in front of any sound estimator, and unions of affine
-subspaces give envelopes (\cref{thm:affenv}). Parity checks are also where
+of the surprise exactly, in front of any sound estimator, when the pivots can be chosen
+on uniform coordinates (a pivot of bias $|q_i-\frac12|\le\eta$ costs a factor up to
+$(1+2\eta)/(1-2\eta)$ in samples), and unions of affine subspaces give envelopes
+(\cref{thm:affenv}). Parity checks are also where
 decomposition fails: for $m\le n/6$ random checks and events that fill a $1/\poly(n)$
 fraction of their solution set, with high probability envelopes with small leaves,
 context-width compilation and DFSB's completeness guarantee cost Monte Carlo's price up
@@ -128,8 +138,9 @@ to polynomial factors, and any use of a DNNF envelope at least its square root
 small $\wedge$'s of parity checks on $N$ inputs admit no sound procedure complete within
 a factor $2^{N^{1-\gamma}}$ unless $\NP\subseteq\BPP$, and no argument system complete
 within a factor $2$ unless $\coNP\subseteq\MA$ (\cref{thm:biased-hard}).
-\item Bounded treewidth (exact), thresholds of independent blocks (exponential
-tilting with $K=O(\sqrt k)$, \cref{prop:tilting}), and the known FPRAS classes
+\item Bounded treewidth (exact), thresholds $[S\ge t]$ of $k$ unit-weight independent
+blocks (exponential tilting with $K\le\frac43(2\sqrt k+1)$ for $\E_DS\le t<k_+$, $k_+$
+the number of blocks that can be $1$, \cref{prop:tilting}), and the known FPRAS classes
 \cite{moitra2019,gkm2010}.
 \end{itemize}
 
@@ -147,10 +158,11 @@ recomputed by the verifier (\cref{prop:gibbs}). The verifier's cost is
 $\poly(|\pi|)+2^{\sigma_u}$ (the second term times
 $\eps^{-2}(\log(1/\delta)+\log(1+\sigma_u))$ and the cost of a sample), where $|\pi|$
 is the size of the argument's deductive part (envelopes, proofs, circuits, but not its
-unary sample caps) and $\sigma_u$ is the surprise it leaves unexplained. Both terms
-have a sharp meaning for verifiers that use (part of) $C$ only through evaluations: each
-bit of argument reduces the number of evaluations needed for a lower bound by at most a
-factor $2$, and once an envelope is certified, a verifier that accesses the rest of $C$ only through evaluations needs
+unary sample caps) and $\sigma_u$ is the surprise it leaves unexplained. Under the
+uniform distribution both terms have a sharp meaning for verifiers that use (part of)
+$C$ only through evaluations: in the worst case (planted subcubes), each bit of argument
+reduces the number of evaluations needed for a lower bound by at most a factor $2$, and
+once an envelope is certified, a verifier that accesses the rest of $C$ only through evaluations needs
 about $2^{\sigma_u}$ of them on some circuits for a two-sided interval, whatever
 further argument it reads, which the envelope estimator achieves
 (\cref{thm:surprise}). The prover helps strictly: for lower
@@ -173,8 +185,8 @@ exactly, with no samples, and $p\approx2.7\cdot10^{-25}$ for an 80-bit trigger o
 dense, non-decomposable 20-variable body to ratio $1.03$ with $1.8\cdot10^5$
 evaluations; it estimates $p\approx4\cdot10^{-46}$ for an OR of eight window-CNFs on
 $800$ variables to $0.4\%$ from $1{,}024$ samples (by context-width compilation), and
-certifies $p\in[6.19,7.35]\cdot10^{-22}$ for a unate CNF with $2\cdot10^5$ clauses
-deterministically and $p\in10^{[-20.30,-20.08]}$ (exact $10^{-20.19}$) for a chain of
+certifies $p\in[6.18,7.35]\cdot10^{-22}$ for a unate CNF with $2\cdot10^5$ clauses
+deterministically and $p\in10^{[-20.31,-20.08]}$ (exact $10^{-20.19}$) for a chain of
 $1600$ overlapping random local detectors with about $7\cdot10^4$ Glauber samples, where
 Monte Carlo would need about $2\cdot10^{22}$. When $d$ dense leaves must be sampled and
 multiplied, the cost grows like $d^3$, and Monte Carlo is cheaper on $\wedge$'s of up to
@@ -195,7 +207,7 @@ theorem (few near-minimum cuts) serving as the envelope. FPRASs exist for DNNF
 \cite{arenas2021nfa}), for CNFs in the local-lemma regime
 \cite{moitra2019,fgyz2021,fhy2021,jpv2021,hwy2022,wangyin2024}, and for knapsack
 \cite{gopalan2011fptas,gkm2010}; d-DNNF, OBDD, SDD and bounded treewidth admit exact
-counting \cite{darwiche2002map,samer2010}. Hashing-based counters
+counting \cite{darwiche2002map,darwiche2011sdd,samer2010}. Hashing-based counters
 \cite{chakraborty2013approxmc} use an NP oracle; partial compilation with
 sampling \cite{lai2023partialkc} and AND/OR importance sampling
 \cite{gogate2008andor} combine decomposition with sampling for variance reduction,
@@ -219,6 +231,8 @@ where soundness forces deduction. ARC's ``matching sampling principle''
 \cite{neyman2025competing} asks for estimators that do at least as well as sampling
 (on average over a distribution of circuits, without soundness), and its
 ``computational no-coincidence principle'' \cite{neyman2025nocoincidence}
-conjectures that structure in random reversible circuits always has short
-explanations checkable by a verifier; our Part~2 is a worst-case, statistically
-sound relative of the latter, for probabilities instead of properties.
+conjectures that a polynomial-time verifier can check short advice certifying a
+certain property of reversible circuits whenever the property holds, while accepting no
+advice for $99\%$ of random reversible circuits, which almost never have it; our
+Part~2 is a worst-case, statistically sound relative of the latter, for probabilities
+instead of properties.

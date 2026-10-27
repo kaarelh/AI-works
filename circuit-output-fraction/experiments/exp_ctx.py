@@ -37,7 +37,7 @@ def main():
         t0 = time.time()
         e = envelope_estimate(C, D, E, eps=0.1, delta=0.05, rng=rng)
         te = time.time() - t0
-        p = exact_prob(C, D) if n <= 24 else None
+        p = exact_prob(C, D) if n <= 24 else None  # count / 2^n under uniform D: exact
         row = dict(n=n, t=t, w=w, size=C.size, cw=cw, dnnf_size=E.size(), compile_seconds=tc, lo=e.lo, hi=e.hi,
                    ratio=e.ratio, samples=e.samples, estimate_seconds=te, exact_p=p,
                    contains=(None if p is None else bool(e.lo <= p <= e.hi)),

@@ -499,7 +499,9 @@ class DFSB:
                 k = min(k, cap - N)
                 total += float(self._draw(b.eval, k).sum())
                 N += k
-                l, h = kl_interval(total / N, N, db * 6.0 / (math.pi ** 2 * stage * stage))
+                # 0/1 samples: the sum is exact, the division rounds
+                l, h = kl_interval(total / N, N, db * 6.0 / (math.pi ** 2 * stage * stage),
+                                   rel_err=sum_rel_err(0))
                 lo, hi = max(lo, l), min(hi, h)
                 if hi < floor:
                     break
