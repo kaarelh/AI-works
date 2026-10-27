@@ -59,3 +59,18 @@ component. A fifth suite, `dlheld5` (boolfuncs.make_dl_heldout5_suite, seed 9393
 from a fixed random family of signed-sum targets (plus two random-formula controls), not hand-picked, after the S design
 was frozen; nobody has seen its targets' behaviour. Q1 is answered on both suites; `dlheld5` is the clean test, `dlheld4`
 is reported with the exposure noted. Networks (nets, nets_wd, nets_cewd), lin, hgb and v1 are run on dlheld5 as on dlheld4.
+
+## Integration and freeze (27 October 2026, ~02:20 UTC, before any held-out run of hyb_portfolio2)
+
+- (i) Sum features: on `designed` + `dlsymdev` (permuted, against `nets_best`), p9_sum's mean log2 n* ratio is -2.30
+  (29 better / 0 worse) against v1's -1.71 (23 / 5; v1 never learns band11); no dev target is worse than v1 by more than
+  0.5 in log2 (largest +0.05, mux). Met: DFG v1.2 is used.
+- (ii) Image member, mean log2(err / mlp_best err) over the 9 dev image cells (seed 0; mlp_best = per-cell best seed-mean
+  of all MLP variants): **p9_gates -0.105**, p9_bank -0.007, v1 +0.046 (study/part9/RESULTS.md, "Integration rule").
+  p9_gates is used. (p9_bank's builder session was killed by a container restart and resumed by a new agent from its
+  partial files; p9_gates's last dev cell was rerun after an out-of-memory kill and a restart, with the frozen file.)
+- `hyb_portfolio2/learner.py` = `p9_gates/learner.py` with the DFG module path switched to `p9_sum/dfg12.py` and the
+  name changed (make_v2.py); **md5 6837fa52627c588318cce10f0c47ac8f**. Equivalence checks: identical predictions to
+  p9_sum on 3 toy fits (sym7 n=256, par3 n=64, thrsum n=512), to p9_gates on qd_dev n=1000, to v1 on satimage n=300.
+- Already run before this freeze, with frozen components whose inclusion did not depend on them: p9_sum (identical to
+  hyb_portfolio2 on toy inputs) on dlheld4 and dlheld5. The headline toy rows are hyb_portfolio2's own runs.
