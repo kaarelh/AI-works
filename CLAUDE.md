@@ -26,6 +26,7 @@ This repository holds several independent projects, one top-level folder each.
 * **What to publish:** the README, the paper sources and PDF, code with its tests and results, and the records that support the claims (verification, referee reports, check scripts and their outputs).
 * **What stays on the working branch:** scratch files, orchestration scripts, and build output.
 * **When:** at milestones, or when the user asks.
+* **Top-level README:** when you publish, make sure every top-level folder on `main` has a row in the table of the repository's `README.md`, and add or update your project's row.
 
 Each project's README marks the paths that stay on its working branch. To publish, replace the project's folder on `main` with the version on the working branch, then remove those paths:
 
