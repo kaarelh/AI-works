@@ -1,0 +1,89 @@
+\subsection{The presumption of independence, certified}\label{sec:independence}
+
+Let $C=\bigwedge_{i=1}^mA_i$ be the top $\wedge$-tree of $C$ with arbitrary
+sub-circuits $A_i$ of supports $S_i$, $B_i=\neg A_i$, $b_i=D(B_i)$, and $G$ the
+dependency graph ($i\sim j$ iff $S_i\cap S_j\ne\emptyset$). The presumption of
+independence estimates $p$ by $M=\prod_i(1-b_i)$. Call $C$ \emph{unate} if there is
+a sign pattern such that every path from $x_v$ to the output has the same
+parity of negations; after flipping the negative variables, every $B_i$ is
+increasing. This is checked syntactically in $O(|C|n)$ time.
+
+\begin{theorem}[certified independence, first order]\label{thm:janson-general}
+Let $C$ be unate. For any ordering of the events and
+$d_i=\sum_{j<i,\,j\sim i}D(B_i\wedge B_j)$,
+\[
+M\;\le\;p\;\le\;\prod_i(1-b_i+d_i)\;\le\;M\exp\Big(\frac{\Delta}{1-\max_ib_i}\Big),\qquad
+\Delta=\sum_{\{i,j\}:\,i\sim j}D(B_i\wedge B_j).
+\]
+The following procedure is sound on every circuit: check unateness; estimate
+every $b_i$ with $O((\mu+1)\eps^{-2})$ independent samples (median of
+$O(\log(1/\delta))$ repetitions for $\hat M$), estimate $\Delta$ by sampling
+dependent pairs, and output $[\hat Me^{-\eps/4},\hat Me^{3\eps/4}]$ only if all
+$\hat b_i\le1/3$ and $\hat\Delta\le\eps/16$. It is complete when $\max_ib_i\le1/4$ and
+$\Delta\le\eps/64$, at a cost of $O\big(\sum_i|A_i|\cdot((\mu+1)\eps^{-2}+|E(G)|\eps^{-1})\log(m/\delta)\big)$
+evaluations, independent of $p$ (which can be $e^{-\Theta(\mu)}$).
+\end{theorem}
+
+\begin{proof}
+Write $p=\prod_i(1-c_i)$ with $c_i=\Pr[B_i\mid F_{<i}]$, $F_{<i}=\bigwedge_{j<i}\neg B_j$
+(nonzero by Harris unless some $b_j=1$). $B_i$ is increasing and $F_{<i}$
+decreasing, so $c_i\le b_i$ (Harris), giving $p\ge M$. Split the earlier events
+into neighbours $N$ and non-neighbours $R$ of $i$ (Boppana--Spencer \cite{boppanaspencer1989}): $B_i$ is
+independent of $F_R$ (disjoint supports), so $c_i\ge\Pr[B_iF_N\mid F_R]\ge
+b_i-\sum_{j\in N}\Pr[B_iB_j\mid F_R]\ge b_i-d_i$, the last step by Harris
+($B_iB_j$ increasing, $F_R$ decreasing). Then $1-b_i+d_i\le(1-b_i)e^{d_i/(1-b_i)}$.
+For the procedure: the log of $\hat M$ deviates from $\log M$ by a sum of independent
+terms of total variance $O(\mu/N)$ plus a quadratic remainder of the same order,
+so $N=O((\mu+1)/\eps^2)$ and a median give $|\log\hat M-\log M|\le\eps/4$; the
+pre-tests reject with high probability when $\max b_i>1/2$ or $\Delta>\eps/4$, and
+otherwise $p\in[M,Me^{\eps/2}]$. Only $M$ needs relative accuracy; $\Delta$ and
+$\max_ib_i$ need additive accuracy.
+\end{proof}
+
+For a unate CNF all quantities are products of marginals and the sandwich is
+deterministic (\cref{thm:janson}); for triangle-freeness of $G(N,q)$ at
+$N=10^4$, $\mu=10$, the window is $e^{\pm0.023}$. The bound needs only
+\emph{syntactic} structure (unateness, supports); semantic monotonicity or
+independence is coNP-hard to check and invisible to sampling.
+
+\paragraph{Second order.} Correcting by covariances,
+$M_2=\prod_i(1-b_i+C_i)$ with $C_i=\sum_{j<i,j\sim i}\mathrm{Cov}(B_i,B_j)$, the same
+Harris/Boppana--Spencer argument together with Bonferroni inequalities gives
+$|\log p-\log M_2|\le E_3$, where $E_3$ is a sum of third-order quantities
+(joint probabilities of connected triples, and singles times connected pairs).
+On triangle-freeness of $G(10^4,q)$ with $\mu=100$ ($p\approx e^{-99}$) the
+first-order window is $e^{2.1}$ while the second-order one is $e^{\pm0.055}$,
+in a regime where the local-lemma counting conditions fail. For principal up-sets Mousset, Noever, Panagiotou and Samotij \cite{mnps2020} give a full hierarchy of such bounds in terms of joint cumulants; the statement for arbitrary monotone sub-circuits and its proof are in \cref{app:second-order}.
+
+\begin{proposition}[pairwise data is not enough]\label{prop:pairwise-barrier}
+Let all variables be Bernoulli$(q)$, $q\le1/2$. The ``stars'' $B_i=y\wedge z_i$
+and the ``triangle'' $B_1=z_1z_2,B_2=z_2z_3,B_3=z_3z_1$ have the same dependency
+graph, the same $b_i=q^2$ and the same $D(B_i\wedge B_j)=q^3$; taking $M'$ disjoint
+copies, $\log(p_{\rm stars}/p_{\rm triangles})=M'\log\big(1+\frac{q^3(1-q)}{1-3q^2+2q^3}\big)\ge0.29\,\Delta$.
+So no certificate computed from single and pairwise probabilities can have a
+window narrower than $e^{0.29\Delta}$: Janson's $e^{\Delta/(1-b)}$ is optimal up to the
+constant in the exponent.
+\end{proposition}
+
+\begin{proof}
+$p_{\rm stars}=(1-q)+q(1-q)^3$ and $p_{\rm triangles}=(1-q)^3+3q(1-q)^2=1-3q^2+2q^3$;
+their difference is $q^3(1-q)$. The bound $0.29$ is the minimum over
+$q\in(0,1/2]$ of $\log(1+q^3(1-q)/(1-3q^2+2q^3))/(3q^3)$, attained near $q=0.28$.
+\end{proof}
+
+\paragraph{Beyond pairs.} Two further certified routes need no monotonicity.
+(i) \emph{Interface dynamic programming.} If $Z$ contains every variable shared by
+two of the $A_i$, then
+$p=\sum_{z\in\bits^Z}D_Z(z)\prod_ia_i(z_{I_i})$ with $a_i(y)=\Pr[A_i\mid x_{I_i}=y]$,
+$I_i=S_i\cap Z$, computed by variable elimination along a tree decomposition of
+the interface hypergraph with Monte Carlo (or recursively estimated) factor
+tables; with interval arithmetic this is sound for every circuit, and it handles
+strong, extensive correlations (on a chain of $300$ modules with $p\approx3\cdot10^{-115}$,
+where independence is off by $e^{64}$, the log error was below $0.06$). This is
+DFSB's cutset rule organised by a tree decomposition. (ii) \emph{The Möbius
+expansion} $\log p=\sum_{T\text{ connected}}\mu(T)$, whose first-order terms are
+the presumption of independence and whose higher terms are log-interaction
+corrections computed from non-rare joint probabilities; a Kotecký--Preiss argument \cite{kp1986}
+certifies the tail when $\max_ib_i\le(2e^3d)^{-r}$ ($d$ the degree of $G$, $r$ the
+number of events per variable), giving an FPRAS for bounded $d$.
+

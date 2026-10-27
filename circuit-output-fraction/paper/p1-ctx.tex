@@ -1,0 +1,93 @@
+\subsection{Context width: compiling any circuit into a DNNF}\label{sec:ctxwidth}
+
+DFSB branches on shared variables but treats overlapping $\vee$'s by envelopes.
+With the \#DNNF FPRAS available, non-deterministic $\vee$'s cost nothing, and
+the only obstacle is $\wedge$-gates whose children share variables. The following
+parameter measures exactly that, and generalises Darwiche's dtree conditioning \cite{darwiche2001dnnf} from CNFs to arbitrary circuits.
+
+\begin{definition}[context width]
+Work in the NNF of $C$ (size $\le2|C|$, nested gates flattened). For an
+$\wedge$-gate $g$ let $S_g=\bigcup_{a\ne b\text{ children of }g}\sv(a)\cap\sv(b)$ be
+its overlap. For a gate $h$ let $\mathrm{Up}(h)$ be the set of $\wedge$-gates from
+which $h$ is reachable (including $h$), and define the \emph{context}
+$\kappa(h)=\sv(h)\cap\bigcup_{g\in\mathrm{Up}(h)}S_g$. The context width is
+$\mathrm{cw}(C)=\max_h|\kappa(h)|$.
+\end{definition}
+
+\begin{theorem}[context-width compilation]\label{thm:cw}
+Every circuit $C$ is equivalent to a DNNF of size $O(|C|\,\mathrm{cw}\,2^{\mathrm{cw}})$,
+computable in the same time. $\mathrm{cw}(C)=0$ iff the NNF of $C$ is already a
+DNNF. If moreover every $\vee$-gate has semantically disjoint children, the
+result is a d-DNNF. Consequently (via \cref{thm:sis}(a) and \cite{meel2026dnnf})
+$p$ has an FPRAS under every product distribution with rational marginals,
+running in time $\poly(|C|2^{\mathrm{cw}},n,\max_i\log b_i,1/\eps,\log(1/\delta))$;
+polynomial when $\mathrm{cw}=O(\log|C|)$.
+\end{theorem}
+
+\begin{proof}
+Two facts. (F1) If $h$ is a child of $g$ then $\mathrm{Up}(h)\supseteq\mathrm{Up}(g)$,
+so $\kappa(g)\cap\sv(h)\subseteq\kappa(h)$. (F2) If $h_i,h_j$ are distinct children
+of an $\wedge$-gate $g$ then $\sv(h_i)\cap\sv(h_j)\subseteq S_g\cap\sv(g)\subseteq\kappa(g)$.
+Nodes of the DNNF: for each gate $h$ and $\sigma\in\bits^{\kappa(h)}$ a node
+$N[h,\sigma]$ for $h|_\sigma$; for each wire $g\to h$ and each assignment $\pi$ to
+$\kappa(g)\cap\sv(h)$ a node
+$M[h,\pi]=\bigvee_{\tau}\big(\mathrm{lits}(\tau)\wedge N[h,\pi\cup\tau]\big)$, $\tau$
+ranging over assignments to $\kappa(h)\setminus\mathrm{dom}\,\pi$ (a deterministic
+Shannon expansion; $\pi\cup\tau$ covers $\kappa(h)$ by F1). Set
+$N[g,\sigma]=\mathrm{op}_j M[h_j,\sigma|_{\kappa(g)\cap\sv(h_j)}]$ for a gate $g$ with
+children $h_j$, literal leaves become constants when their variable is in
+$\kappa(h)$, and the root is $M[\mathrm{root},\emptyset]$. Correctness is induction
+on $g|_\sigma=\mathrm{op}_jh_j|_{\sigma}$. Decomposability: inside $M$, the literals
+of $\tau$ live on $\kappa(h)\setminus\mathrm{dom}\,\pi$ and $N[h,\cdot]$ on
+$\sv(h)\setminus\kappa(h)$; at an $\wedge$-gate the children's variables lie in
+$\sv(h_j)\setminus\kappa(g)$, pairwise disjoint by F2. Each wire contributes
+$O(\mathrm{cw}\,2^{\mathrm{cw}})$ nodes. The d-DNNF claim holds because
+conditioning preserves disjointness and the $M$-nodes are deterministic.
+\end{proof}
+
+\begin{example}[$\vee$'s are easy, $\wedge$'s are hard]
+Let $C=\bigvee_{i\le t}F_i$ where each $F_i$ is a CNF with clauses on sliding
+windows of width $w$ along its own variable order. Then $\mathrm{cw}=O(w)$, so an
+FPRAS exists, while $p$ can be $2^{-\Theta(n)}$. Exact computation is
+$\#\mathsf P$-hard already for ORs of $t=O(1)$ \emph{read-once} CNFs: edge-colour a
+bounded-degree graph with $\Delta+1$ colours, write its vertex-cover CNF as
+$\bigwedge_c\varphi_c$ with each $\varphi_c$ a matching CNF, and recover
+$\#\bigwedge_c\varphi_c$ from $\#\bigvee_{c\in S}\varphi_c$, $S\subseteq[\Delta+1]$,
+by inclusion--exclusion; counting vertex covers in graphs of degree $\ge3$ is
+$\#\mathsf P$-complete.
+\end{example}
+
+The same construction works with a \emph{frontier} of gates that are compiled
+otherwise (small support by tabulation, bounded treewidth by
+\cite{darwiche2009}): context width is then computed with frontier gates as
+leaves.
+
+\subsection{Modules and quotients}\label{sec:modules-quotients}
+
+A gate $g$ is a \emph{module} if every path from an input in $\sv(g)$ to the output
+passes through $g$. Then $C(x)=Q_g(g(x_{\sv(g)}),x_{\rm rest})$ for the quotient
+$Q_g$ obtained by replacing $g$ with a fresh input, and under a product
+distribution $g(x)$ is independent of $x_{\rm rest}$. Modules form a laminar family
+and can be found in $O(|C|\,n)$ time with dominators, as in fault-tree analysis \cite{dutuitrauzy1996}.
+
+\begin{lemma}[sensitivity of quotients]\label{lem:quotient}
+Let $F(q)=\Pr_{y\sim\bigotimes_j\mathrm{Bern}(q_j)}[Q(y)=1]$. If
+$\hat q_j\in e^{\pm\xi_j}q_j$ and $1-\hat q_j\in e^{\pm\xi_j}(1-q_j)$ for all $j$, then
+$F(\hat q)\in e^{\pm\sum_j\xi_j}F(q)$. If $Q$ is monotone (resp.\ antitone) in $y_j$,
+the condition on $q_j$ (resp.\ $1-q_j$) alone suffices for that coordinate.
+\end{lemma}
+
+\begin{proof}
+$F$ is multilinear: $F=q_jA+(1-q_j)B$ with $A,B\ge0$, so scaling either term by a
+factor in $e^{\pm\xi_j}$ scales $F$ within $e^{\pm\xi_j}$. If $Q$ is monotone in
+$y_j$ then $A\ge B$, and for $c\ge1$, $F(cq_j)=F+(c-1)q_j(A-B)\le F+(c-1)q_jA\le cF$;
+symmetrically for $c\le1$. Iterate over coordinates.
+\end{proof}
+
+Walking the module tree bottom-up and estimating each module's probability with
+any sound method (exact for small quotients, the threshold dynamic program,
+DFSB, Monte Carlo for dense quotients) gives a sound estimator whose relative
+error is the sum of the modules' errors. Thresholds, majorities and other
+tractable functions of independent sub-circuits are the typical case: a threshold
+of $80$ random modules with $p\approx10^{-15}$ is estimated to $0.1\%$ in seconds.
+

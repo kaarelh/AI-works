@@ -1,0 +1,159 @@
+\section{Without a prover: sound procedures and their classes}\label{sec:part1}
+
+A procedure without a prover must find the structure itself. Ours look for
+exactly the structure that \cref{sec:envelopes} can exploit: independence
+(variable-disjoint sub-circuits), forcing (literals implied by $C(x)=1$),
+small cutsets, dense residuals, and a few algebraic and analytic patterns. All
+steps are either exact identities under product distributions or Monte Carlo
+estimates with valid intervals, so the procedures are sound on every circuit;
+which circuits they are \emph{complete} on is characterised by the size of a
+canonical ``explanation tree''.
+
+\subsection{Decompose--Force--Sample--Branch}\label{sec:dfsb}
+
+Work with the NNF of $C$, flattened and with constants propagated; restricting
+a node by a partial assignment $\rho$ simplifies it again. For a node $h$:
+
+\begin{description}[style=sameline,leftmargin=1.5em]
+\item[(T)] $h$ is a constant or a literal: exact value.
+\item[(F)] Unit propagation on $\mathrm{Tseitin}(h)\wedge[h=1]$ derives a
+nonempty set of input literals $F$ (at the root, also failed-literal probing
+and Gaussian elimination on conjuncts that are affine over $\F_2$):
+$D(h)=D(F)\cdot D(h|_F)$, since $h\Rightarrow F$ and $h|_F$ does not depend on
+the variables of $F$.
+\item[(D)] The children of $h$'s top gate fall into at least two
+variable-disjoint groups: $D(h)=\prod_jD(h_j)$ for $\wedge$ and
+$D(h)=1-\prod_j(1-D(h_j))$ for $\vee$.
+\item[(S)] Dense test: a pilot of $N_0=64K\lceil\ln(2m/\delta)\rceil$ samples
+finds at least $N_0/(4K)$ hits; then $h$ is a Monte Carlo leaf.
+\item[(E)] Envelope test: a syntactic envelope $\Phi_h$ (\cref{sec:rules})
+passes the analogous pilot for $\E_{Q_\Phi}[h/\varphi]$ (at least $N_0/(4K)$ total
+weight in $N_0$ samples); then $h$ is an envelope leaf.
+\item[(B)] Otherwise branch on the variable shared by the most children:
+$D(h)=(1-q_x)D(h|_{x=0})+q_xD(h|_{x=1})$.
+\end{description}
+Phase 1 builds the tree with a node budget $m$; nodes beyond the budget become
+``loose'' leaves. Phase 2 estimates every leaf with fresh samples, to relative
+accuracy $\eps/(3d)$ at confidence $\delta/\ell$, where $\ell$ is the number of
+leaves and $d$ the largest number of leaves on one derivation (all children at
+(D)-$\wedge$, one child elsewhere), and combines the leaf intervals through the
+exact node operations, all of which are monotone.
+
+\begin{definition}[ideal explanation tree]
+$T^*_K(C)$ is the tree built by the same rules with the pilot test (S)
+replaced by the exact predicate $D(h)\ge1/K$ and without (E).
+$m_K(C)=|T^*_K(C)|$.
+\end{definition}
+
+\begin{theorem}[DFSB]\label{thm:dfsb}
+For every circuit $C$ and product distribution $D$, the output interval
+contains $p$ with probability at least $1-\delta$. If $m_K(C)\le m$, then with
+probability at least $1-2\delta$ the output is tight ($U\le(1+\eps)L$), and the
+number of circuit evaluations is
+\[
+O\big(mK\log(m/\delta)\big)+\tilde O\Big(\ell\cdot K\,d^2\,\eps^{-2}\log(\ell/\delta)\Big),\qquad
+\ell\le m,\ d\le n,
+\]
+each costing $O(|C|)$; the non-sampling work is $O(m\cdot|C|)$.
+\end{theorem}
+
+\begin{proof}
+Soundness. (T), (F), (D), (B) are exact identities under a product distribution
+(independence of variable-disjoint sub-circuits, the law of total probability, and
+$h\Rightarrow F$). Phase 2 runs on a fixed tree with fresh samples, so a union
+bound over its $\ell$ leaves gives probability $1-\delta$ that every leaf interval
+is valid; interval arithmetic through monotone operations then gives a valid
+root interval. Phase 1 only shapes the tree.
+
+Completeness. Let $X$ be a pilot's hit count and $\mu=\E X$. If $D(h)\ge1/K$ then
+$\mu\ge N_0/K$ and $\Pr[X<N_0/(4K)]\le e^{-(3/4)^2\mu/2}\le(\delta/2m)^{18}$. If
+$D(h)<1/(16K)$ then $\mu<N_0/(16K)$ and, by the Chernoff bound
+$\Pr[X\ge t]\le e^{-\mu}(e\mu/t)^t$, $\Pr[X\ge N_0/(4K)]\le(e/4)^{N_0/(4K)}\le(\delta/2m)^{6}$.
+The same two bounds hold for the envelope pilot, whose summands lie in $[0,1]$. So
+with probability $1-\delta$ every pilot behaves: it accepts every node of density
+$\ge1/K$ and no node of density $<1/(16K)$. On that event the actual tree is a
+pruning of $T^*_K(C)$ (where the ideal tree stops, the actual one stops; where it
+continues, the actual one continues identically or stops early at a leaf of
+density $\ge1/(16K)$), so it has at most $m$ nodes and every leaf is
+$16K$-dense (for envelope leaves: has looseness at most $16K$). Each leaf then
+needs $\tilde O(Kd^2\eps^{-2}\log(\ell/\delta))$ samples for relative accuracy
+$\eps/(3d)$ (\cref{thm:envelope}(iv)), and $(1+\eps/(3d))^d\le e^{\eps/3}$, so the
+root ratio is at most $1+\eps$: products multiply leaf ratios; positive
+combinations with exact weights do not increase them; and for
+$f(x)=1-\prod_j(1-x_j)$, which is monotone and concave along rays with
+$f(0)=0$, $x'\le bx$ implies $f(x')\le bf(x)$ and $x'\ge ax$ implies $f(x')\ge
+af(x)$, so (D)-$\vee$ nodes do not increase ratios either.
+\end{proof}
+
+The class on which DFSB beats sampling is therefore
+$\{C: m_K(C)\le\poly(|C|)\text{ for some }K\le\poly(|C|)\}$. It contains:
+
+\begin{corollary}\label{cor:dfsb}
+Let $s=|C|$.
+\begin{enumerate}[label=(\alph*)]
+\item \emph{Component-dense circuits.} If every leaf of the syntactic
+component tree of $C$ (built by (F) and (D) alone) has probability at least
+$1/K$, then $m_K(C)=O(s)$. This includes read-once formulas (exactly) and
+read-once compositions $F(\lambda_1,\dots,\lambda_t)$ of arbitrary $K$-dense
+circuits on disjoint variable sets; e.g.\ an $\wedge$ of $t$ blocks of
+probability $1/2$ has $p=2^{-t}$ and costs $O(t^3\eps^{-2}\log(t/\delta))$
+evaluations.
+\item \emph{Backbones.} If (F) derives a set $F$ with $D(C\mid F)\ge1/K$ (for
+instance trigger circuits $R\wedge[x_A=a]$, however the test is written, as long
+as propagation sees it), then $m_K(C)=O(1)$ and the cost is
+$O(K\eps^{-2}\log(1/\delta))$ against $2^{|A|}K\eps^{-2}\log(1/\delta)$ for Monte
+Carlo.
+\item \emph{Cutsets.} Let $\mathrm{Conf}(C)$ be the set of input variables that lie
+in the supports of two different children of some gate of the NNF. If
+$|\mathrm{Conf}(C)|=r$ then $m_K(C)=O(s\,3^r)$ for every $K$, and with $K=1$ DFSB
+is exact cutset conditioning \cite{pearl1988}: no sampling at all.
+\item \emph{Global variables.} If fixing some set $Z$ of $r$ variables makes $C$
+satisfy (a), the variant that first enumerates $Z$ uses $O(2^rs)$ nodes.
+\end{enumerate}
+\end{corollary}
+
+\begin{proof}
+(a) Every node that reaches (S) is a force-free, non-decomposable leaf of the
+component tree, hence accepted; forcing never lowers a part's probability
+($D(\lambda\mid\ell)=D(\lambda)/D(\ell)\ge D(\lambda)$ for $\lambda\Rightarrow\ell$); tree nodes map
+injectively to gates, child groups, or force wrappers. (c) Branching happens only
+at a non-decomposable node, on a variable shared by two children, which lies in
+$\mathrm{Conf}(C)$ (restriction only shrinks supports); two distinct tree nodes
+cannot carry the same NNF node and the same partial assignment to
+$\mathrm{Conf}(C)$, and once all of $\mathrm{Conf}(C)\cap\sv(h)$ is assigned every
+gate is decomposable, so with $K=1$ the tree ends in literals. There are $O(s)$
+NNF nodes and $3^r$ partial assignments. (b), (d) are immediate.
+\end{proof}
+
+\subsection{Envelope leaves and sound rewriting rules}\label{sec:rules}
+
+Nodes that are rare but not decomposable get an envelope from the following
+rules, each of which produces $\varphi\ge\one_h$ pointwise, so any combination is
+sound (\cref{thm:envelope}):
+\begin{enumerate}[label=(R\arabic*)]
+\item literal $\mapsto$ literal; $\vee(c_1,\dots,c_k)\mapsto\sum_j\varphi_{c_j}$ (union bound);
+\item $\wedge$ with forced literals $F$ $\mapsto\prod_{\ell\in F}[\ell]\cdot\varphi_{h|_F}$;
+\item $\wedge$ with variable-disjoint children $\mapsto\prod_j\varphi_{c_j}$;
+\item $\wedge$ with a shared variable $u$ (at most $r$ times on a path)
+$\mapsto\sum_b[u=b]\cdot\varphi_{h|_{u=b}}$ (Shannon expansion);
+\item $\wedge$ otherwise $\mapsto$ product over a greedy variable-disjoint subset of
+conjuncts, most informative first (dropping conjuncts);
+\item anything $\mapsto1$, used whenever the rules give mass $>1$;
+\item a dense node $\mapsto$ a box (\cref{thm:boxes});
+\item \emph{small-cone canonicalisation}: a gate whose support has at most
+$c\log|C|$ variables is replaced, before anything else, by its exact reduced
+OBDD (computed by tabulation). This makes every class above closed under local
+rewriting: e.g.\ literals disguised as $(x\oplus r)\oplus r$, or terms built from
+redundant small gadgets, are recognised exactly.
+\end{enumerate}
+
+\begin{proposition}[DNNF envelopes]\label{prop:dnnf-env}
+If the NNF of $C$ is a DNNF (after (R8)), rules (R1)--(R3) produce its own
+arithmetic circuit, with $K=\E_D[\varphi\mid C=1]$, its expected ambiguity; for a
+DNF with $m$ terms, $K\le m$ (Karp--Luby--Madras). For DNNFs of large ambiguity
+dispersion, the FPRAS of \cite{meel2026dnnf} with the sampler of
+\cref{thm:sis} gives cost linear in $D(E)/p=1$; all DNNFs therefore admit
+polynomial-time relative-error estimation, and so do all circuits that (R1)--(R8)
+turn into a DNNF envelope $E$ with $D(E)\le Kp$.
+\end{proposition}
+

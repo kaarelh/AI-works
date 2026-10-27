@@ -1,0 +1,52 @@
+\subsection{Certified telescoping with Las Vegas samplers}\label{sec:cftp}
+
+Annealing estimators write $p=\prod_kr_k$ with $r_k=\Pr_{\pi_{k-1}}[\neg B_k]$ and
+$\pi_{k-1}=D\mid F_{<k}$, and estimate each ratio by sampling from $\pi_{k-1}$. They
+are sound only if the samples really come from $\pi_{k-1}$; Markov chains give
+no certificate of that. \emph{Exact} Las Vegas samplers do, if their running time
+is certified empirically:
+
+\begin{proposition}[certified truncation]\label{prop:truncation}
+Let $\mathcal A$ halt with probability $1$ and output exactly $\pi$, with running
+time $\tau$. Truncated at $T$ and conditioned on halting, its output law
+$\pi_T$ satisfies $d_{\rm TV}(\pi_T,\pi)\le\Pr[\tau>T]$. If at most $\eta R/2$ of
+$R=\lceil8\ln(1/\delta)/\eta\rceil$ truncated runs fail, then $\Pr[\tau>T]\le\eta$ except
+with probability $\delta$.
+\end{proposition}
+
+\begin{proof}
+$\pi=(1-\theta)\pi_T+\theta\pi_{>T}$ with $\theta=\Pr[\tau>T]$, so
+$\pi_T-\pi=\theta(\pi_T-\pi_{>T})$. If $\theta>\eta$, then by Chernoff at most
+$\eta R/2$ failures occur with probability at most $e^{-\eta R/8}\le\delta$.
+\end{proof}
+
+For unate $C$ (flipped so that the $B_i$ are increasing) the target $D\mid F$ is a
+distribution on a down-set, and heat-bath Glauber dynamics ($x_v\leftarrow1$ iff
+$u<q_v$ and no event containing $v$ fires on $x^{v\to1}$) is anti-monotone. The
+bounding-chain coupling from the past of Häggström and Nelander \cite{hn1998,pw1996}
+(lower chain updated with the upper chain's local check and vice versa) is then an
+exact Las Vegas sampler for $D\mid F_{<k}$, whatever the events are.
+
+\begin{theorem}[certified telescoping]\label{thm:cftp}
+For unate $C$, group the events into stages with Harris-guaranteed ratios
+$r_k\ge1/2$, certify each stage's truncation at level $\eta=\eps/(16m)$ by
+\cref{prop:truncation}, and estimate each $r_k$ with $O((\mu+1)/\eps^2)$ truncated
+exact samples (median trick). The output is within $(1\pm\eps)p$ with probability
+$1-\delta$ for every unate circuit and every truncation level; it is a verdict
+(not ``fail'') whenever coalescence is fast, which is provable when
+$\gamma=1-\max_vq_v\,r(k_{\max}-1)>0$ ($r$ events per variable, supports of size
+$\le k_{\max}$), with $T=O((n/\gamma)\log(nm/\eps))$.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+Bias: each $r_k\ge1/2$ is shifted by at most $\eta$ in total variation, a relative
+shift of $2\eta$; over $m$ stages at most $\eps/4$. Variance: as for products of
+independent estimates. Coalescence: the disagreement set shrinks in expectation by
+a factor $1-\gamma/n$ per step.
+\end{proof}
+
+This covers, for instance, hard-core-type instances where Janson's $\Delta$ is
+extensive and the local-lemma conditions fail; beyond the provable regime the method
+stays sound and decides empirically whether it can answer. By
+Karp--Luby--Madras, ORs of unate $\wedge$-circuits (with different polarities) follow.
+
