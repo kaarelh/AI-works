@@ -169,7 +169,9 @@ def dfg_terms(rec, fit=None):
         while b is not None:
             fs = {int(pi[i]): int(s) for i, s in zip(b.S, b.sg)}; factors.append(dict(S=sorted(fs), signs=[fs[i] for i in sorted(fs)]))
             b = b.other
-        terms.append(dict(kind="sum", S=sorted(sg), signs=[sg[i] for i in sorted(sg)], fold=B.fold, mod=o(B.mod), factors=factors,
+        inn = getattr(B, "inner", None)
+        inner = None if inn is None else dict(a=int(inn[0]), kind=inn[1], inputs=sorted(int(pi[q]) for q in (inn[2], inn[3]) if q is not None and q >= 0 and (inn[1] != "lit" or q == inn[2])))
+        terms.append(dict(kind="sum", S=sorted(sg), signs=[sg[i] for i in sorted(sg)], fold=B.fold, mod=o(B.mod), factors=factors, inner=inner,
                           edges=[float(e) for e in B.edges], levels={int(v): w for v, w in lv}, desc=block_desc(B, pi),
                           product=B.other is not None, share=float(np.std(contrib))))
     bg = f["bg"]
@@ -182,6 +184,11 @@ def block_desc(B, pi):
     """A sum block in original coordinates, 1-indexed: e.g. 'chi[x3]*|x1-x2+x5|' (x 'other' for a product block)."""
     o = sorted((int(pi[i]), int(s)) for i, s in zip(B.S, B.sg))
     t = "".join(("+" if s > 0 else "-") + f"x{i + 1}" for i, s in o).lstrip("+")
+    inner = getattr(B, "inner", None)                                 # DFG v1.3: weighted inner term a * tau
+    if inner is not None:
+        a, kind, j, l, sj, sl = inner; xj, xl = f"x{int(pi[j]) + 1}", f"x{int(pi[l]) + 1}" if l is not None and l >= 0 else ""
+        tau = xj if kind == "lit" else f"{xj}{xl}" if kind == "par" else f"AND({'' if sj > 0 else '-'}{xj},{'' if sl > 0 else '-'}{xl})"
+        t += f"{a:+d}*{tau}"
     a = f"|{t}|" if B.fold else f"({t})"
     if B.mod:
         a = "chi[" + ",".join(f"x{int(pi[i]) + 1}" for i in sorted(B.mod, key=lambda i: pi[i])) + "]*" + a
