@@ -184,7 +184,25 @@ Fashion-MNIST & 1000 & \textbf{0.1805} & 0.1844 & 0.1839 & 0.1860 & tie ($-0.04$
 
 \paragraph{The control: an MLP on v2's pooled sums.} \code{mlp_pool} is \code{mlp_strong} with v2's pooled subset sums (scales 4, 9, 16, pooling sets computed from each fit's training rows) appended to the pixels. It is the strongest MLP at every $n$ it was run at, and at $n=60000$ it matches v2: 12.3\% against 12.0\% on \code{qd_a} and 14.7\% against 14.9\% on \code{qd_b}. v2 keeps a margin at $n=1000$ and $n=10000$ (for example 15.0\% against 16.4\% on \code{qd_a} at $n=10000$), but by the cell rule 5 of the 6 cells are ties and one (\code{qd_a}, $n=1000$) favours v2; with a single-seed control the rule is a weak test. So most of v2's large-$n$ advantage over the MLPs is carried by the \emph{representation}, the locality recovered from pixel correlations, which a gradient-trained network can use as well as the discrete members can. A small CNN that sees the \emph{unpermuted} pixels (one network, fixed weight decay; context, run on \code{qd_a} at two cells for compute) is better than every permutation-invariant learner: 21.0\% at $n=1000$ and 12.0\% at $n=10000$, against v2's 22.6\% and 15.0\%; v2 reaches the CNN's $n=10000$ error only at $n=60000$ (12.0\%).
 
-\paragraph{What carries v2's image error.} From 03:06 UTC the evaluator recorded the stack weights and every member's out-of-fold error on the training rows (all cells with $n\ge3000$, except \code{qd_a} at $n=3000$, seed 0). \code{ggbt} is the best single member by out-of-fold error at every recorded cell (for example 12.7\% against \code{gknn}'s 15.6\% and \code{gbt}'s 15.9\% at \code{qd_a}, $n=60000$), and its stacking weight grows with $n$ to 0.50--0.55 at $n=60000$; \code{gknn} carries the larger weight at $n=3000$ in 4 of the 5 recorded fits. Part 8's members (\code{gbt}, \code{et}, raw \code{knn}, \code{lin}) together keep weights of 0.12--0.31. \TODOABL
+\paragraph{What carries v2's image error.} From 03:06 UTC the evaluator recorded the stack weights and every member's out-of-fold error on the training rows (all cells with $n\ge3000$, except \code{qd_a} at $n=3000$, seed 0). \code{ggbt} is the best single member by out-of-fold error at every recorded cell (for example 12.7\% against \code{gknn}'s 15.6\% and \code{gbt}'s 15.9\% at \code{qd_a}, $n=60000$), and its stacking weight grows with $n$ to 0.50--0.55 at $n=60000$; \code{gknn} carries the larger weight at $n=3000$ in 4 of the 5 recorded fits. Part 8's members (\code{gbt}, \code{et}, raw \code{knn}, \code{lin}) together keep weights of 0.12--0.31. A post-hoc ablation (\repo{study/part9/posthoc_ggbt.py}; run after the results were read, so explanatory) refitted \code{ggbt} alone at $n=60000$ on both sets (\cref{tab:p9abl}). Replacing the bank by raw pixels at the same early-stopped schedule raises its error by 0.22--0.25 in $\log_2$; cutting the schedule to v1's 100 rounds raises it by 0.17--0.19; dropping the prototype pairs costs only 0.02. So the gain over Part 8's tree member splits roughly evenly between the pooled subset sums and longer boosting, and the prototype pairs carry almost nothing. \code{ggbt} alone on all $n$ rows is as good as the whole of v2 (11.9\% against 12.0\% on \code{qd_a}, 14.4\% against 14.9\% on \code{qd_b}): at this size v2's final booster is the one trained on its stacking split, about 49000 points.
+
+\begin{table}[t]
+\centering\footnotesize
+\begin{tabular}{lcccc}
+\toprule
+\code{ggbt} alone, $n=60000$ & bank & rounds & \code{qd_a} & \code{qd_b}\\
+\midrule
+frozen & $x$, pooled sums, 300 pairs & early stopping (364--400) & 11.9\% & 14.4\%\\
+no pairs & $x$, pooled sums & early stopping & 12.1\% & 14.6\%\\
+raw pixels & $x$ & early stopping & 14.2\% & 16.8\%\\
+100 rounds & $x$, pooled sums, 300 pairs & 100 & 13.6\% & 16.2\%\\
+\midrule
+v2 (the whole portfolio) & & & 12.0\% & 14.9\%\\
+\bottomrule
+\end{tabular}
+\caption{Post-hoc ablation of v2's \code{ggbt} member: test error of the member refitted alone on all $n=60000$ training rows (seed 0), with the frozen \texttt{fit\_ggbt}.}
+\label{tab:p9abl}
+\end{table}
 
 
 \subsection{Compute}\label{sec:p9compute}
