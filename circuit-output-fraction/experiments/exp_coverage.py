@@ -16,6 +16,7 @@ import numpy as np
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "code"))
 
 from rareprob import Product, auto_estimate, compile_envelope, dnf_envelope, envelope_estimate, exact_prob  # noqa
+from rareprob.exact import exact_prob_rational  # noqa
 from rareprob.argument import honest_proof, verify  # noqa
 from rareprob.circuit import Circuit  # noqa
 from rareprob.dfsb import dfsb_estimate  # noqa
@@ -52,7 +53,9 @@ def tally(name, results, rows):
 
 
 def contains(e, p):
-    return e.lo <= p <= e.hi  # no slack: floating-point misses count as misses
+    # p is an exact Fraction and the comparison with the float ends is exact:
+    # no slack, so floating-point misses of the procedures count as misses
+    return e.lo <= p <= e.hi
 
 
 def main():
@@ -65,7 +68,7 @@ def main():
         n = int(rng.integers(8, 15))
         C = random_circuit(n, int(rng.integers(15, 50)), rng)
         D = Product(rng.uniform(0.15, 0.85, n))
-        p = exact_prob(C, D)
+        p = exact_prob_rational(C, D)
         e = auto_estimate(C, D, eps=0.2, delta=DELTA, rng=rng, max_samples=20000)
         res_auto.append(contains(e, p))
         if t < 150:
@@ -81,7 +84,7 @@ def main():
         terms = random_dnf_terms(n, int(rng.integers(3, 12)), int(rng.integers(6, 14)), rng)
         C = dnf_circuit(n, terms)
         D = Product(rng.uniform(0.2, 0.8, n))
-        p = exact_prob(C, D)
+        p = exact_prob_rational(C, D)
         e = envelope_estimate(C, D, dnf_envelope(terms, n), eps=0.2, delta=DELTA, rng=rng)
         res.append(contains(e, p))
     tally("KLM envelope on DNFs", res, rows)
@@ -125,7 +128,7 @@ def main():
         n = 18
         cl = random_unate_cnf(n, int(rng.integers(3, 50)), int(rng.integers(2, 7)), rng)
         D = Product(rng.uniform(0.2, 0.8, n))
-        p = exact_prob(cnf_circuit(n, cl), D)
+        p = exact_prob_rational(cnf_circuit(n, cl), D)
         res.append(contains(janson_interval(cl, D), p))
     tally("Harris-Janson sandwich (deterministic)", res, rows)
 
@@ -136,7 +139,7 @@ def main():
         terms = random_dnf_terms(n, int(rng.integers(3, 8)), int(rng.integers(6, 11)), rng)
         C = obfuscated_dnf_circuit(n, terms, rng)
         D = Product.uniform(n)
-        p = exact_prob(C, D)
+        p = exact_prob_rational(C, D)
         E = dnf_envelope(terms, n)
         pf = honest_proof(C, E)
         res_honest.append(contains(verify(C, D, E, pf, eps=0.2, delta=DELTA, rng=rng).estimate, p))
