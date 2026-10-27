@@ -1,8 +1,15 @@
 """Context-width compilation: any circuit into an equivalent DNNF.
 
-In the NNF of C, the overlap of an AND gate g is S_g = the variables shared by
-two of its children; the context of a gate h is
-    kappa(h) = var(h) & union of S_g over the AND gates g from which h is reachable;
+Context width is a parameter of an NNF N *as bracketed*: every AND gate keeps
+the children it was built with. Build N with to_nnf(C, flatten=False), which
+keeps the AND-tree of C; flattening merges nested ANDs and can raise the
+context width from w (a window CNF as a left-deep chain in window order) to
+n - 2 (the same CNF as one flat AND).
+
+In N, the overlap of an AND gate g is S_g = the variables shared by two of
+its children; the context of a gate h is
+    kappa(h) = var(h) & union of S_g over the AND gates g from which h is
+               reachable (h itself included);
 the context width cw is max_h |kappa(h)|. Conditioning every gate on its
 context makes every AND decomposable:
 
@@ -12,10 +19,16 @@ context makes every AND decomposable:
                = SUM over tau (assignments to the rest of kappa(h)) of
                  PROD(literals of tau, N[h, pi + tau])    (a Shannon expansion).
 
-The result has O(|C| cw 2^cw) nodes and is returned as an Envelope whose
-supp is exactly C^{-1}(1) (OR -> SUM, AND -> PROD), so the envelope estimator
-applies with K = expected ambiguity, and it is exact (K = 1) when every OR is
-deterministic.
+The result has at most (|N| + 1)(cw + 3) 2^cw wires (|N| = wires of N); nodes
+are never merged into their parents, since merging a shared SUM or PROD node
+copies its children and can make the output quadratic in |N|. It is returned
+as an Envelope whose supp is exactly C^{-1}(1) (OR -> SUM, AND -> PROD), so the
+envelope estimator applies with K = expected ambiguity, and it is exact
+(K = 1) when every OR of N is deterministic.
+
+path_order orders the clauses of a CNF along a path decomposition of its
+primal graph; the left-deep AND-chain of the clauses in that order has
+context width at most (width of the decomposition) + 1.
 """
 
 from __future__ import annotations
@@ -54,6 +67,35 @@ def context_width(N: NNF, root: int | None = None) -> int:
     return max((bin(k).count("1") for k in kappa.values()), default=0)
 
 
+def path_order(clauses, bags) -> list[int]:
+    """Indices of `clauses` (lists of (var, val) literals) ordered by the first
+    bag of the path decomposition `bags` (a sequence of variable sets) that
+    contains all of the clause's variables. Raises ValueError if no bag
+    contains some clause. If `bags` is a path decomposition of width k of the
+    CNF's primal graph, the left-deep AND-chain of the clauses in this order has
+    context width at most k + 1."""
+    bags = [frozenset(int(v) for v in B) for B in bags]
+    first: dict[int, int] = {}
+    for idx, B in enumerate(bags):
+        for v in B:
+            first.setdefault(v, idx)
+    key = []
+    for ci, c in enumerate(clauses):
+        vs = {int(v) for v, _ in c}
+        if not vs:
+            key.append((0, ci))
+            continue
+        if any(v not in first for v in vs):
+            raise ValueError(f"clause {ci} has a variable in no bag")
+        lo = max(first[v] for v in vs)
+        if not vs <= bags[lo]:  # not a path decomposition: fall back to a scan
+            lo = next((i for i, B in enumerate(bags) if vs <= B), None)
+            if lo is None:
+                raise ValueError(f"no bag contains clause {ci}")
+        key.append((lo, ci))
+    return [ci for _, ci in sorted(key)]
+
+
 def _bits(mask: int) -> list[int]:
     out = []
     while mask:
@@ -61,6 +103,42 @@ def _bits(mask: int) -> list[int]:
         out.append(low.bit_length() - 1)
         mask ^= low
     return out
+
+
+def _sum(E: Envelope, ch) -> int:
+    """SUM node without merging SUM children (constants are simplified)."""
+    out = [c for c in ch if E.kind[c] != "ZERO"]
+    if not out:
+        return E.zero()
+    if len(out) == 1:
+        return out[0]
+    out = tuple(sorted(out))  # keep multiplicity
+    s = 0
+    for c in out:
+        s |= E.sup[c]
+    return E._mk("SUM", out, s)
+
+
+def _prod(E: Envelope, ch) -> int:
+    """PROD node without merging PROD children; children must be disjoint."""
+    out = []
+    for c in ch:
+        k = E.kind[c]
+        if k == "ZERO":
+            return E.zero()
+        if k != "ONE":
+            out.append(c)
+    if not out:
+        return E.one()
+    if len(out) == 1:
+        return out[0]
+    out = tuple(sorted(out))
+    acc = 0
+    for c in out:
+        if acc & E.sup[c]:
+            raise ValueError("PROD children must have disjoint supports")
+        acc |= E.sup[c]
+    return E._mk("PROD", out, acc)
 
 
 def compile_ctx(N: NNF, root: int | None = None, max_cw: int = 12) -> Envelope | None:
@@ -128,7 +206,7 @@ def _compile_ctx(N: NNF, root: int | None, max_cw: int) -> Envelope | None:
             for c in N.data[h]:
                 pi = tuple((v, asg[v]) for v in kvars[h] if (N.sup[c] >> v) & 1)
                 ch.append(Mm(c, pi))
-            r = E.PROD(ch) if k == "A" else E.SUM(ch)
+            r = _prod(E, ch) if k == "A" else _sum(E, ch)
         memoN[key] = r
         return r
 
@@ -146,9 +224,9 @@ def _compile_ctx(N: NNF, root: int | None, max_cw: int) -> Envelope | None:
             for tau in product((0, 1), repeat=len(free)):
                 d2 = dict(d)
                 d2.update(zip(free, tau))
-                terms.append(E.PROD([E.lit(v, b) for v, b in zip(free, tau)]
-                                    + [Nn(c, tuple(d2[v] for v in kvars[c]))]))
-            r = E.SUM(terms)
+                terms.append(_prod(E, [E.lit(v, b) for v, b in zip(free, tau)]
+                                   + [Nn(c, tuple(d2[v] for v in kvars[c]))]))
+            r = _sum(E, terms)
         memoM[key] = r
         return r
 
