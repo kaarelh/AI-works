@@ -417,7 +417,7 @@ class Learner:
     def __init__(self, K=5, K_small=10, K_small_n=500, lin_one_n=10000, kfold_max=3000, hold_max=6000, ks=(1, 3, 9, 27), lin_C=(0.05, 1.0), gbt_trees=100,
                  et_trees=100, dfg_share=(0.35, 0.5), dfg_dmax=256, lam_w=1e-2, members=None, name="p10_hier",
                  gates_k=9, gates_ks=(4, 9, 16), gates_pairs=0, gates_rounds=600, gates_ff=0.12, gates_dmin=256,
-                 gates_l2=(("max", 4, 9), ("max", 9, 16), ("max", 16, 49)), gates_colwise=True, gates_small_rounds=100):
+                 gates_l2=(("max", 4, 9), ("max", 9, 16), ("max", 16, 49)), gates_colwise=True, gates_small_rounds=150):
         self.K_small, self.K_small_n, self.lin_one_n = K_small, K_small_n, lin_one_n
         self.K, self.kfold_max, self.hold_max, self.ks, self.lin_C = K, kfold_max, hold_max, tuple(ks), tuple(lin_C)
         self.gbt_trees, self.et_trees, self.dfg_share, self.dfg_dmax, self.lam_w = gbt_trees, et_trees, dfg_share, dfg_dmax, lam_w
