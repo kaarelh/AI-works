@@ -3,7 +3,8 @@ Same protocol as standard_tasks/harness.evaluate (same splits, same per-fit rng,
 finished cell is saved under the scratch cell directory, so a rerun skips it.  When every cell is done the cells are
 merged into standard_tasks/results/<name>__<dataset>.json in harness format.
 usage: python eval_cells.py <module:Class[:kwargs]> <dataset> [--img] [--ns=...] [--seeds=...] [--tag=name]
-  --img: 3 seeds for n <= 10000, seed 0 only for n >= 30000 (the Part 8 / 9 image protocol; other seeds NaN)."""
+  --img: 3 seeds for n <= 10000, seed 0 only for n >= 30000 (the Part 8 / 9 image protocol; other seeds NaN).
+Fits with n >= 30000 hold a file lock, so that at most one runs at a time across processes (memory)."""
 import os, sys, json, time, numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__)); STUDY = os.path.dirname(HERE)
 sys.path.insert(0, HERE); sys.path.insert(0, os.path.join(STUDY, "hybrid"))
@@ -26,12 +27,20 @@ for n in grid:
         if os.path.exists(f):
             continue
         pool, te = DATA.splits(D, s); tr = pool[:n]
+        lk = None
+        if n >= 30000:                                   # large fits one at a time across processes (memory)
+            import fcntl
+            lk = open(os.path.join(CELLS, "large.lock"), "w"); fcntl.flock(lk, fcntl.LOCK_EX)
+            if os.path.exists(f):
+                fcntl.flock(lk, fcntl.LOCK_UN); lk.close(); continue
         t0 = time.process_time()
         fit = L.fit(D["X"][tr], D["y"][tr], list(D["types"]), D["C"], np.random.default_rng([s, n, 4242]))
         cpu = time.process_time() - t0
         err = float(np.mean(np.asarray(fit["predict"](D["X"][te])) != D["y"][te]))
         json.dump(dict(n=n, seed=s, err=err, flops=float(fit.get("flops", np.nan)), cpu=cpu), open(f + ".tmp", "w"))
         os.replace(f + ".tmp", f)
+        if lk is not None:
+            fcntl.flock(lk, fcntl.LOCK_UN); lk.close()
         print(f"  {ds} n={n} seed={s} err={err:.4f} flops={fit.get('flops', float('nan')):.3g} cpu={cpu:.1f}s", flush=True)
 err = np.full((len(grid), len(seeds)), np.nan); fl = np.full_like(err, np.nan); cpu = np.full_like(err, np.nan)
 for a, n in enumerate(grid):
