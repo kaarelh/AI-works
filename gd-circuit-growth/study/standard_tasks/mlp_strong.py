@@ -173,7 +173,7 @@ def run(name, seeds=(0, 1, 2), max_n=None):
         err += [float("nan")] * (len(seeds) - len(err)); err1 += [float("nan")] * (len(seeds) - len(err1))
         res["err"].append(err); res["err_single"].append(err1); res["flops"].append([fl] * len(seeds))
         res["flops_total"].append([(len(WDS) + ENS) * fl] * len(seeds)); res["chosen_wd"].append(cw)
-        res["cpu_seconds"].append([(time.time() - t0) / len(seeds)] * len(seeds))
+        res["cpu_seconds"].append([(time.time() - t0) / (1 if big else len(seeds))] * len(seeds))   # wall s per fitted seed
         print(f"  {name} n={n} S={S} err={np.round(err, 4).tolist()} single={np.round(err1, 4).tolist()} wd={cw} "
               f"({time.time() - t0:.0f}s)", flush=True)
         os.makedirs(RES, exist_ok=True)
