@@ -19,7 +19,7 @@ All dev targets: mean -0.066, largest increase +0.26.  Rule (mean < -0.05 and no
 | candidate | cells | mean log2(err / v2 err) | per cell (ds@n: cand / v2) | qd_a 60000 err | CPU s | FLOPs / budget | qualifies |
 |---|---|---|---|---|---|---|---|
 | p10_hier-dev | 8 | -0.071 | qd_dev@1000: 0.2101/0.2222; qd_dev@10000: 0.1329/0.1463; fashion_mnist@1000: 0.1816/0.1819; fashion_mnist@10000: 0.1234/0.1259; qd_a@3000: 0.1759/0.1875; qd_a@10000: 0.1456/0.1509; qd_b@3000: 0.2109/0.2238; qd_b@10000: 0.1748/0.1860 | 0.1108 | 924 | 0.44 | yes |
-| p10_codes-dev | 0 | +nan | qd_dev@1000: missing; qd_dev@10000: missing; fashion_mnist@1000: missing; fashion_mnist@10000: missing; qd_a@3000: missing; qd_a@10000: missing; qd_b@3000: missing; qd_b@10000: missing | – | – | – | no |
+| p10_codes-dev | 8 | -0.078 | qd_dev@1000: 0.2118/0.2222; qd_dev@10000: 0.1330/0.1463; fashion_mnist@1000: 0.1797/0.1819; fashion_mnist@10000: 0.1238/0.1259; qd_a@3000: 0.1748/0.1875; qd_a@10000: 0.1422/0.1509; qd_b@3000: 0.2176/0.2238; qd_b@10000: 0.1678/0.1860 | 0.1082 | 1453 | 0.58 | yes |
 
-Adopted image variant: **p10_hier-dev** (the qualifying candidate with the lower mean; v2's qd_a n = 60000: 0.1197 at 1757 CPU s).
+Adopted image variant: **p10_codes-dev** (the qualifying candidate with the lower mean; v2's qd_a n = 60000: 0.1197 at 1757 CPU s).
 

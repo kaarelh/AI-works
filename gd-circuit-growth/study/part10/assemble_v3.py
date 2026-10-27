@@ -34,7 +34,7 @@ open(os.path.join(out, "__init__.py"), "w").close()
 assert md5(os.path.join(out, "dfg13.py")) == md5(os.path.join(HERE, "p10_sum", "dfg13.py"))
 
 # ---- identity checks
-sys.path.insert(0, os.path.join(STUDY, "hybrid")); sys.path.insert(0, os.path.join(STUDY, "part9")); sys.path.insert(0, STUDY)
+sys.path.append(STUDY); sys.path.insert(0, os.path.join(STUDY, "part9")); sys.path.insert(0, os.path.join(STUDY, "hybrid"))   # hybrid/common.py first
 import common
 DATA = common.SH.DATA
 _ts = importlib.util.spec_from_file_location("toy_h", os.path.join(STUDY, "discrete_learner", "harness.py"))
