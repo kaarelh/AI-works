@@ -318,8 +318,8 @@ def _block_search(X, rt, s2, Mt, excl, tk, mc, gcap=2048, kmax=24, npair=3, neig
         mb = min(n, bcap); Xb, rb = X[:mb], rt[:mb]; scb = n / mb; idx = np.where(allowed)[0]
 
         def bmargin(T, lev, k):
-            m = np.maximum(lev - 1, 1); Te = (T / s2 - m) * scb + m
-            return Te - np.array([_chi2_thr(int(mm), tk(int(k))) for mm in m])
+            m = np.maximum(lev - 1, 1).astype(np.float64); Te = (T / s2 - m) * scb + m; t_ = tk(int(k))
+            return Te - (m + 2.0 * np.sqrt(m * t_) + 2.0 * t_)
 
         def bscore(NS, k):                                      # best of unfolded / folded margin for each column
             Iu = np.rint((NS + k) / 2).astype(np.int64); If = np.rint(np.abs(NS)).astype(np.int64)
@@ -419,7 +419,7 @@ def _block_search(X, rt, s2, Mt, excl, tk, mc, gcap=2048, kmax=24, npair=3, neig
             T, lev = _mT(I, rg, 2 * K0 + 2)
             if fl is not None:
                 fl[0] += 8.0 * mg * Cs.shape[1]
-            M_ = np.array([wmargin(T[c], lev[c], ka[c]) for c in range(len(ka))]); c = int(np.argmax(M_))
+            M_ = wmargins(T, lev, ka); c = int(np.argmax(M_))
             if M_[c] <= mgn + 1e-9:
                 break
             mgn = float(M_[c]); kind, a = moves[c]
@@ -434,6 +434,11 @@ def _block_search(X, rt, s2, Mt, excl, tk, mc, gcap=2048, kmax=24, npair=3, neig
     def wmargin(T, lev, k):
         m = max(int(lev) - 1, 1); Te = (T / s2 - m) * scale + m
         return Te - _chi2_thr(m, tk(k) + tw)
+
+    def wmargins(T, lev, ks):                                   # vectorised wmargin
+        m = np.maximum(lev - 1, 1).astype(np.float64); Te = (T / s2 - m) * scale + m
+        t_ = np.array([tk(int(k)) + tw for k in range(int(np.max(ks)) + 1)])[np.asarray(ks)]
+        return Te - (m + 2.0 * np.sqrt(m * t_) + 2.0 * t_)
 
     def extend(S, sg, fold):
         """v1.3: inner-term extensions of a block (S, s): u = t + a tau for a literal outside S, an input of S
@@ -466,7 +471,7 @@ def _block_search(X, rt, s2, Mt, excl, tk, mc, gcap=2048, kmax=24, npair=3, neig
         I = np.rint(np.abs(Cs) if fold else Cs + K0).astype(np.int64); T, lev = _mT(I, rg, 2 * K0 + 2)
         if fl is not None:
             fl[0] += 8.0 * mg * Cs.shape[1]
-        M_ = np.array([wmargin(T[c], lev[c], len(meta[c][0])) for c in range(len(meta))]); c = int(np.argmax(M_))
+        M_ = wmargins(T, lev, np.array([len(mt[0]) for mt in meta])); c = int(np.argmax(M_))
         S2, g2, inn = meta[c]
         return float(M_[c]), tuple(S2), tuple(g2), fold, inn
 

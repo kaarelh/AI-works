@@ -160,7 +160,11 @@ def dfg_terms(rec, fit=None):
         B = f["B"][bid]; g = B.group(Z); cm = np.prod(Z[:, list(B.mod)], 1) if B.mod else np.ones(len(Z))
         contrib = sum(w * (g == v) for v, w in lv) * cm
         sg = {int(pi[i]): int(s) for i, s in zip(B.S, B.sg)}
-        terms.append(dict(kind="sum", S=sorted(sg), signs=[sg[i] for i in sorted(sg)], fold=B.fold, mod=o(B.mod),
+        factors, b = [], B                                          # a product block's factors (the block itself first)
+        while b is not None:
+            fs = {int(pi[i]): int(s) for i, s in zip(b.S, b.sg)}; factors.append(dict(S=sorted(fs), signs=[fs[i] for i in sorted(fs)]))
+            b = b.other
+        terms.append(dict(kind="sum", S=sorted(sg), signs=[sg[i] for i in sorted(sg)], fold=B.fold, mod=o(B.mod), factors=factors,
                           edges=[float(e) for e in B.edges], levels={int(v): w for v, w in lv}, desc=block_desc(B, pi),
                           product=B.other is not None, share=float(np.std(contrib))))
     bg = f["bg"]

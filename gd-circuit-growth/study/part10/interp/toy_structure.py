@@ -6,8 +6,8 @@ For each n of the toy grid (seed s), the fit of eval_toy.py --perm is reproduced
   w_dfg        the stacker's weight share of the DFG members (dfg + dfg_forced) among all kept members
   terms        the DFG model's largest terms in original coordinates (hooks.dfg_terms; share = sd of the term's output)
   support      inputs used by terms with share >= 5% of the largest (precision / recall against the true relevant set)
-  classes      for each true signed-symmetry class of size >= 3 (hooks.symmetry_classes): the best-matching sum block
-               (Jaccard of the sets; sign_ok = signs agree up to a global flip; exact = both)
+  classes      for each true signed-symmetry class of size >= 3 (hooks.symmetry_classes): the best-matching sum block or
+               factor of a product block (Jaccard of the sets; sign_ok = signs agree up to a global flip; exact = both)
   fourier_chi  the target's Fourier weight on the characters in the model (sum of fhat(S)^2 over its chi_S)
   g            per class: [t, count, mean target, mean DFG value] over the test inputs at each value of the class's
                signed sum t (the learned accept set against the true one)
@@ -25,7 +25,8 @@ opt = {a.split("=", 1)[0][2:]: a.split("=", 1)[1] for a in sys.argv[2:] if a.sta
 seed = int(opt.get("seed", 0)); tag = opt.get("tag", "v2"); path = opt.get("learner", H.V2)
 T = H.targets(suite); names = args[0].split(",") if args else list(T)
 HP = H.load_learner(path)
-out_dir = os.path.join(os.environ.get("INTERP_OUT", os.path.join(HERE, "results")), "toy", tag)   # INTERP_OUT: live runs write outside the repository; os.makedirs(out_dir, exist_ok=True)
+out_dir = os.path.join(os.environ.get("INTERP_OUT", os.path.join(HERE, "results")), "toy", tag)   # INTERP_OUT: live runs write outside the repository
+os.makedirs(out_dir, exist_ok=True)
 
 
 def summarise(r, truth, F):
@@ -50,11 +51,9 @@ def summarise(r, truth, F):
         if len(c["S"]) < 3:
             continue
         best = dict(jaccard=0.0, sign_ok=False, exact=False, desc=None, share=0.0)
-        for t in terms:
-            if t["kind"] != "sum":
-                continue
-            S = set(t["S"]); J = len(S & set(c["S"])) / len(S | set(c["S"]))
-            sg = dict(zip(t["S"], t["signs"])); ok = [(i, s) for i, s in zip(c["S"], c["signs"]) if s is not None and i in sg]
+        for t, fac in [(t, f_) for t in terms if t["kind"] == "sum" for f_ in t["factors"]]:   # every factor of every block
+            S = set(fac["S"]); J = len(S & set(c["S"])) / len(S | set(c["S"]))
+            sg = dict(zip(fac["S"], fac["signs"])); ok = [(i, s) for i, s in zip(c["S"], c["signs"]) if s is not None and i in sg]
             agree = bool(ok) and (all(sg[i] == s for i, s in ok) or all(sg[i] == -s for i, s in ok))
             if (J, agree, t["share"]) > (best["jaccard"], best["sign_ok"], best["share"]):
                 best = dict(jaccard=round(J, 3), sign_ok=agree, exact=J == 1.0 and (agree or not ok), desc=t["desc"], share=t["share"])
