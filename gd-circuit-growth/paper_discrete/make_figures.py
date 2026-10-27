@@ -393,13 +393,13 @@ def fig6():
 
 
 # ---- F7: Part 9 toy held-out suites, n* of hyb_portfolio2 and hyb_portfolio against nets_best --------------------------
-P9_SUITES = [("dlheld6", "(a) dlheld6: written blind to the design (Q1)"),
-             ("dlheld5", "(b) dlheld5: inside the sum features' class"), ("dlheld4", "(c) dlheld4: definitions seen")]
+P9_SUITES = [("dlheld6", "(a) dlheld6: blind (Q1)"), ("dlheld5", "(b) dlheld5: inside S's class"),
+             ("dlheld4", "(c) dlheld4: definitions seen")]
 P9_CONTROLS = {"dnf3x3", "h4rf0", "h4rf1", "h5rf0", "h5rf1", "h6_03", "h6_04", "h6_05"}
 
 
 def fig7():
-    fig, axs = plt.subplots(1, 3, figsize=(TEXTW, 2.55), sharey=True)
+    fig, axs = plt.subplots(1, 3, figsize=(TEXTW, 2.9), sharey=True)
     lo, hi, NEV = 20, 3.2e4, 2.2e4                               # "never" plotted at NEV
     g = np.array([lo, hi])
     for ax, (suite, title) in zip(axs, P9_SUITES):
@@ -426,8 +426,8 @@ def fig7():
          Line2D([], [], marker="o", ls="", mfc="white", mec=COL[0], ms=5, label="v1 = hyb_portfolio, same targets"),
          Line2D([], [], marker="s", ls="", mfc=COL[3], mec="white", ms=5, label="v2, control (v1: hollow square)"),
          Line2D([], [], color=INK2, ls="--", lw=0.8, label="equal data"), Line2D([], [], color="#a8a8a8", ls=":", lw=0.6, label="4x less data")]
-    fig.legend(handles=h, loc="lower center", ncol=3, bbox_to_anchor=(0.5, -0.02), columnspacing=1.0, handletextpad=0.3)
-    fig.tight_layout(rect=(0, 0.13, 1, 1), w_pad=0.6)
+    fig.legend(handles=h, loc="lower center", ncol=3, bbox_to_anchor=(0.5, -0.01), columnspacing=1.0, handletextpad=0.3)
+    fig.tight_layout(rect=(0, 0.17, 1, 1), w_pad=0.6)
     save(fig, "fig_p9_toy.pdf")
 
 
@@ -440,12 +440,14 @@ P9_STY = {"hyb_portfolio2": (COL[0], "o", "-", "v2 = hyb_portfolio2"), "hyb_port
 
 def fig8():
     fig, axs = plt.subplots(1, 2, figsize=(TEXTW, 3.05), sharey=True)
+    allv = []                                                   # shared y-axis: limits over both panels
     for ax, (ds, name) in zip(axs, (("qd_a", "(a) QuickDraw qd_a (held out)"), ("qd_b", "(b) QuickDraw qd_b (held out)"))):
-        allv = []
         for L, (col, mk, ls, lab) in P9_STY.items():
             if CH.load(L, ds) is None:
                 continue
             n, e = curve_mean(L, ds); ok = np.isfinite(e); n, e = n[ok], e[ok]
+            if not len(e):
+                continue
             ax.plot(n, e, color=col, marker=mk, ls=ls if ls else "none", ms=4.2 if mk != "x" else 5, mec="white" if mk not in ("x", "P") else col,
                     mew=0.4 if mk not in ("x",) else 1.0, lw=1.3, zorder=4 if L == "hyb_portfolio2" else 3, label=lab)
             allv += list(e)
@@ -454,11 +456,10 @@ def fig8():
         ax.text(1.0e4, 0.96, "Q2: n >= 10000", transform=matplotlib.transforms.blended_transform_factory(ax.transData, ax.transAxes),
                 fontsize=6.3, color=INK2, va="top")
         ax.set_xlim(70, 8e4)
-        if allv:
-            ax.set_ylim(min(allv) * 0.85, max(allv) * 1.12)
         ax.set_title(name, loc="left"); ax.set_xlabel("training-set size n")
         ax.yaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{100 * v:g}%"))
-        ax.yaxis.set_minor_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{100 * v:g}%" if round(v * 100, 6) in (3, 5, 15, 20, 30, 40) else ""))
+        ax.yaxis.set_minor_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{100 * v:g}%" if round(v * 100, 6) in (12, 15, 20, 30, 40, 50) else ""))
+    axs[0].set_ylim(np.nanmin(allv) * 0.9, np.nanmax(allv) * 1.08)
     axs[0].set_ylabel("test error (seed mean; seed 0 at n >= 30000)")
     h, l = axs[0].get_legend_handles_labels()
     fig.legend(h, l, loc="lower center", ncol=4, bbox_to_anchor=(0.5, -0.01), columnspacing=1.0, handlelength=2.2, fontsize=6.5)
