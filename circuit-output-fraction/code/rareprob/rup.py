@@ -13,6 +13,8 @@ trusted base of the domination certificates.
 
 from __future__ import annotations
 
+import numbers
+
 
 class RUPChecker:
     def __init__(self, clauses):
@@ -161,11 +163,21 @@ class RUPChecker:
     def check_refutation(self, proof) -> bool:
         if self.refuted:
             return True
-        for step in proof:
-            if isinstance(step, str):
+        for raw in proof:
+            # snapshot the step once, as plain ints: a prover-supplied object
+            # must not be able to show different clauses to is_rup and add
+            if isinstance(raw, (str, bytes)):
                 continue
+            if not isinstance(raw, (list, tuple)):
+                return False
+            step = list(raw)
             if step and isinstance(step[0], str):  # deletion: ignored (sound)
                 continue
+            if not all(isinstance(l, numbers.Integral) and not isinstance(l, bool) for l in step):
+                return False
+            step = [int(l) for l in step]
+            if any(l == 0 for l in step):
+                return False
             if not self.is_rup(step):
                 return False
             if len(step) == 0:

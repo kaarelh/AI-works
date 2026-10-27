@@ -25,6 +25,7 @@ from scipy.optimize import minimize_scalar
 
 from .circuit import Circuit
 from .dist import Product
+from .envelope import _exp_down, _exp_up
 from .stats import Estimate, kl_interval, sequential_mean
 
 
@@ -51,14 +52,23 @@ class Block:
 
     @property
     def p1(self) -> float:
-        return float(self.w1.sum())
+        return float(math.fsum(self.w1))
+
+    @property
+    def p0(self) -> float:
+        """Pr[g = 0], summed directly (1 - p1 loses relative precision near p1 = 1)."""
+        return float(math.fsum(self.w0))
+
+
+def log_chernoff(blocks, t: float, theta: float) -> float:
+    terms = [-theta * t]
+    for b in blocks:
+        terms.append(math.log(b.p0 + b.p1 * math.exp(theta * b.weight)))
+    return math.fsum(terms)
 
 
 def chernoff(blocks, t: float, theta: float) -> float:
-    lm = -theta * t
-    for b in blocks:
-        lm += math.log((1 - b.p1) + b.p1 * math.exp(theta * b.weight))
-    return math.exp(lm)
+    return math.exp(log_chernoff(blocks, t, theta))
 
 
 def best_theta(blocks, t: float) -> float:
@@ -79,9 +89,9 @@ def tilted_estimate(blocks, t: float, D: Product, n: int, eps: float = 0.1, delt
         if b.pts1 is None:
             b.tabulate(D)
     th = best_theta(blocks, t) if theta is None else theta
-    B = chernoff(blocks, t, th)  # E[phi]: the Chernoff bound
+    logB = log_chernoff(blocks, t, th)  # log E[phi]: the Chernoff bound
     # per-block tilted probability of g = 1
-    pt = [b.p1 * math.exp(th * b.weight) / ((1 - b.p1) + b.p1 * math.exp(th * b.weight)) for b in blocks]
+    pt = [b.p1 * math.exp(th * b.weight) / (b.p0 + b.p1 * math.exp(th * b.weight)) for b in blocks]
 
     def draw(k):
         S = np.zeros(k)
@@ -92,10 +102,20 @@ def tilted_estimate(blocks, t: float, D: Product, n: int, eps: float = 0.1, delt
         # need to materialize x: W = C / phi = [S >= t] * exp(-theta (S - t)).
         return np.where(S >= t - 1e-12, np.exp(-th * (S - t)), 0.0)
 
-    est = sequential_mean(draw, eps, delta, max_samples=max_samples)
-    r = est.scaled(B)
-    r.note = f"theta={th:.3g}, Chernoff bound {B:.4g}, K~{B / max(r.value, 1e-300):.3g}"
-    return r
+    est = sequential_mean(draw, 0.999 * eps, delta, max_samples=max_samples)
+    # Outward rounding. eta bounds the relative floating-point error of the
+    # block masses, of log B and of the sampler's law (a product over blocks of
+    # per-block probabilities, each off by a few ulps); tau is the absolute
+    # error in E[W] from the 53-bit uniform draws (one per block per sample).
+    k = len(blocks)
+    eta = 2.0 ** -48 * (sum(len(b.w0) + len(b.w1) for b in blocks) + 4 * k + 4) \
+        + 2.0 ** -50 * (abs(logB) + 1) * (k + 2)
+    tau = (k + 8) * 2.0 ** -52
+    lo = _exp_down(math.log(est.lo - tau) + logB - eta) if est.lo > tau else 0.0
+    hi = _exp_up(math.log(min(1.0, est.hi + tau)) + logB + eta)
+    val = min(max(est.value * math.exp(logB), lo), hi)
+    return Estimate(val, lo, hi, est.samples, est.evaluations, delta,
+                    f"theta={th:.3g}, Chernoff bound {math.exp(logB):.4g}, K~{math.exp(logB) / max(val, 1e-300):.3g}")
 
 
 def poisson_binomial_tail(ps, ws, t) -> float:

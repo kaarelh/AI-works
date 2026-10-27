@@ -120,7 +120,11 @@ def sequential_mean(
         if k <= 0:
             break
         z = np.asarray(draw(k), dtype=float)
-        assert z.min(initial=0.0) >= -1e-12 and z.max(initial=0.0) <= 1 + 1e-9
+        # the KL interval needs samples in [0, 1]: check explicitly (an assert
+        # would vanish under python -O); tolerate only float noise at the ends
+        if not np.isfinite(z).all() or z.min(initial=0.0) < -1e-12 or z.max(initial=0.0) > 1 + 1e-9:
+            raise ValueError("sequential_mean: samples must lie in [0, 1]")
+        z = np.clip(z, 0.0, 1.0)
         total += float(z.sum())
         N += k
         dj = delta * 6.0 / (math.pi**2 * j * j)
