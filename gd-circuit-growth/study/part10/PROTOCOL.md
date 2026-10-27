@@ -76,11 +76,34 @@ inputs permuted, 3 seeds): mean log2 n* ratio **−0.066** over the 40 targets b
 increase **+0.26** (fd_06; ≤ 0.5). v2's dev fits are p9_sum's on `designed` and `dlsymdev` (identical code path on toy
 inputs; checked: 110 of 110 seed-0 cells on `designed` equal) and hyb_portfolio2's on `dlfamdev`.
 
-**(I) image component — pending** `p10_codes` (builder I2), which started only when the toy builder finished (the
-workflow runs two agents at a time). `p10_hier` (I1; md5 `1da21bf797ca3f247103e31428d74fe5`) qualifies: mean
-log2(err / v2 err) over the 8 dev cells **−0.071** against v2's own errors (the builder's −0.068 used Part 9's
-p9_gates-dev errors for qd_dev and fashion_mnist; v2 itself was run on those 4 cells for Part 10), qd_a n = 60000 error
-0.1108 (≤ 0.1257), 924 CPU s (≤ 2636), FLOP fraction 0.44.
+**(I) image component — adopted: `p10_codes`** (27 Oct, 23:40 UTC; `compare_part10.py --dev`, from the result files,
+before any held-out run of a Part 10 image learner). Both candidates qualify; the rule takes the lower mean.
+- `p10_codes` (I2; a second booster `cgbt` on [x, pooled sums, oriented "bar" sums along correlation-recovered lines];
+  md5 `fd688acdfd6a70eca27ea712d666627d`, frozen 22:10 UTC): mean log2(err / v2 err) over the 8 dev cells **−0.078**;
+  qd_a n = 60000 error **0.1082** (≤ 0.1257), **1453** CPU s (≤ 2636), FLOP fraction **0.58** (≤ 1).
+- `p10_hier` (I1; level-2 max-pooling in ggbt's bank; md5 `1da21bf797ca3f247103e31428d74fe5`): **−0.071**; 0.1108,
+  924 CPU s, 0.44.
+The builders' numbers used Part 9's p9_gates-dev errors for v2 on qd_dev and fashion_mnist; the rule here uses v2's own
+errors on those cells, run for Part 10 (`hyb_portfolio2__{qd_dev,fashion_mnist}.json`).
+
+**Disclosures.**
+- *p10_hier* (its DESIGN.md): about 15 minutes after its freeze, the builder printed the last 5 lines of the
+  orchestrator's `mlp.py qd_c` log (the baseline MLP's qd_c test errors at n = 100–3000) while finding out why its
+  n = 60000 cell waited for the shared lock. Nothing about a discrete learner on qd_c was shown; its file was frozen
+  and read-only before.
+- *p10_codes*: the container restarted at 22:40 UTC during its fixed dev evaluation (2 of 9 cells done); the workflow
+  running the builders was lost. The orchestrator resumed the evaluation with the builder's own script
+  (scratchpad `p10_codes/run_dev_eval.sh`; cells are resumable and record the learner md5, unchanged since the freeze),
+  and took the builder's summary from its DESIGN.md (whose §5 placeholder it never filled).
+- *Orchestrator*: before v3's freeze it read reference results on held-out data (the `nets_wd` dlheld7 training logs
+  of f7_00–f7_04, the MLP references' qd_c progress lines), never a result of v2 or of a Part 10 learner on dlheld7,
+  qd_c or qd_d. v2's dlheld7 results and v3's toy side's (`toy__p10_sum-perm__dlheld7.json`) were committed unread.
+
+**v3 = `hyb_portfolio3`** (`part10/hyb_portfolio3/`, assembled by `assemble_v3.py`, frozen 27 Oct 23:45 UTC):
+`learner.py` md5 **`b045fafe1e24418620bf8c503aa601c6`** (= p10_codes/learner.py with the DFG module path pointing at
+`hyb_portfolio3/dfg13.py`, the default name and a header), `dfg13.py` md5 `69cabe5c50345cb24079198ed52b562f`
+(= p10_sum/dfg13.py). Identity checks on dev data (`hyb_portfolio3/ASSEMBLY.md`): v3 ≡ p10_sum on 12 toy fits, ≡ p10_codes
+on a qd_dev fit, ≡ v2 on optdigits, ≡ p10_sum on kr_vs_kp — all predictions identical. Files made read-only.
 
 **Scheduling.** v3's behaviour on toy inputs is fixed by (T) whatever (I) decides (the image members run only on images,
 and both image candidates leave every non-image path bit-identical to v2), so v3's held-out toy evaluation starts now as
