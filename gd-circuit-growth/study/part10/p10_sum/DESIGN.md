@@ -110,12 +110,93 @@ RESULTS: section 5.
 
 ## 4. Development history (dev data only)
 
-TBD
+All quick checks below are DFG alone (the final-fit call `_fit(..., scale=0.5)`, the share the portfolio's final DFG
+fit gets) or the portfolio on a few small n, inputs permuted, scored on a fresh validation draw of 4096 points
+(`default_rng([fn_seed, 777])`) for DFG alone and on the harness's points for the portfolio checks.
+
+1. *Where v2 stands on dlfamdev* (DFG v1.2 alone, seed 0, n = 256 / 1024 / 4096): every target but fd_10 is solved
+   by n = 1024 (most by 256); fd_10 (`[((s+10)/2) mod 3 == 0]`, 10 signed inputs) stays at 0.33 (= the majority rate)
+   up to 4096; h6_00 (dlheld6, mod 3 of 13) at 0.33 up to 16384. v2's portfolio n* on fd_00–fd_02 is 70–75.
+2. *Mod-3 landscape* (section 1d): not attempted further.
+3. *Search vs test at n = 256* (h6_01, band11, h6_11, h6_10): the true block passes easily (T = n against ≈ 100), the
+   search misses it (returns 2–3-input partial blocks). For h6_10 the plain 12-block explains only ≈ 30% (T = 74 at
+   n = 256) because of the weight-3 literal.
+4. *Beam (width 16), truncated power seeds*: no change on band11 / h6_01 at 256–512 (section 1d). Dropped.
+5. *Weighted blocks* (1a, routes 1 and 3): h6_10 DFG-alone search at n = 256 finds `|x1+…+x12 ± 3 x13|` exactly on all
+   3 seeds (T = 252–256 against 120–124; v1.2: partial 3-input blocks, nothing passes). Portfolio, quick grid (n = 64,
+   256, 1024, 4096; seeds 0–1): h6_10 n* 171 (v2's full-grid n* is 702; error at 256: 0.01 against v2's 0.31).
+   Regression check (DFG alone, inner terms only): dlsymdev 8 targets × n ∈ {64, 256, 1024} × 2 seeds identical to
+   v1.2 to the test point; designed 21 targets × {64, 256, 1024} identical; dlfamdev fd_00 at 256: 0.061 → 0.057, the
+   rest identical where compared.
+6. *Synthetic weighted targets* (my own, not from any suite; DFG alone, 3 seeds): `[|x1+…+x7 − 2 x8| ≥ 3]` at n = 128:
+   0.495 → 0.000; `[|x1+…+x8 + 3 AND(x9, −x10)| ≤ 2]` at 256: 0.054 → 0.016 (found as plain blocks; the AND term itself
+   was not recovered); `sign-ish [x1+…+x9 + 2 x10x11 ≥ 1]` at 256: 0.003 → 0.000. Route 2 (τ first) was added for the
+   parity / AND case; it did not change these numbers measurably.
+7. *Small n, search*: with a width-64 beam at n = 64 / 128 the search finds sym7 at 64 on 3 of 3 seeds (v1.2: 0), fd_09
+   at 128 on 3 of 3 (v1.2: 1), ssym9 seed 2 at 128 (v1.2: missed); ex3of8 at 64 still missed. Width 256: no further gain,
+   4× the time. Width 32 at n ≤ 128 was adopted for CPU (0.17 s per search at n = 128 against 0.03 s without).
+8. *Forced blocks* (1b) + beam, DFG alone, forced variant, n = 64, 3 seeds: sym7 0.478 → 0.000, ssym9 0.497 → 0.328,
+   far9 0.324 → 0.058, ex3of8 0.323 → 0.330, symxpar unchanged; designed and3, maj3 at n = 32, 64 identical.
+   Portfolio (n = 32, 64, 128, 256; 3 seeds; against v2's stored fits): sym7 at 64: 0.457 → 0.000; ssym9 at 64:
+   0.490 → 0.327; andxor, and3, maj3 identical at every n; fd_01 (a halfspace, `[x1+…+x6 ≥ 0]`) at 64: 0.122 → 0.145
+   (worse; the other n identical). The checks were stopped there (the machine was at load ≈ 20) and the files frozen.
+9. *CPU*: per additive search, the weighted routes cost ≈ 2× v1.2's search (0.06 / 0.25 / 0.9 s at n = 128 / 512 /
+   2048, against 0.03 / 0.1 / 0.36 s), so they were restricted to the additive search (not the modulated and product
+   searches). kr_vs_kp (n = 1000, seed 0, validation rows pool[1000:] of the seed-0 split, not the test set): p10_sum
+   0.0093, v2 0.0093; FLOPs 2.6e10 against 2.84e10; CPU 15.0 s against 12.9 s.
 
 ## 5. Fixed dev evaluation (frozen files, run once)
 
 TBD
 
-## 6. Freeze
+## 5b. Weaknesses (honest)
 
-TBD
+- **Residue classes mod 3 of 10–13 inputs remain unlearned** (fd_10, h6_00). Not a test problem: the weight of such a
+  function sits at degree ≈ 3k/4 and the block statistic is detectable only within ≈ 3–4 wrong inputs or signs of the
+  truth (section 1d). No change from v2.
+- **Weak-pair blocks at n = 256–512** (band11, twosym, h6_01-like arbitrary accept sets) are still found only from
+  n ≈ 512–1000; the beam and the truncated-power seeds did not help there, and the limit is computational.
+- **Small n is still bounded by the union bound.** At n = 64 no block passes the test (T ≤ n < threshold ≈ 75–90); the
+  gain at n = 64 comes only from the forced variant (the stacker's cross-validated choice), so it depends on the
+  forced member being trusted on ~58-point folds. A forced block can also be wrong: fd_01 (a plain halfspace) at
+  n = 64 got worse in the portfolio check (0.122 → 0.145), presumably because a forced 6-input block with 7 groups
+  replaced a forced character the logistic readout used better.
+- **Weighted blocks are restricted** to one heavy term, a ∈ {2, 3}, τ a literal / parity / AND of two literals. Two heavy
+  terms, unequal weights in general (thr10's Gaussian weights) or a heavy 3-input term are not in the class. The AND
+  inner term is searched (τ-first, extensions) but in the one synthetic check it was not recovered as such (the target
+  was solved by plain blocks). The weighted routes run only in the additive search (not modulated / product).
+- **The level of the block test** per round is now ≤ 2δ (the weighted class has its own δ) instead of δ.
+- **CPU.** Per fit the DFG member is slower: ≈ 2× at n ≤ 128 (beam), and the additive search ≈ 2–2.5× at every n (the
+  weighted routes). See section 5 for the measured suite totals.
+- **Dev in-sample.** Every choice was made on dev targets (designed, dlsymdev, dlfamdev, dlheld6 which was already seen,
+  and my own synthetic weighted targets). The forced-block / beam decision was made on a partial portfolio check (8
+  targets at n ≤ 256), stopped early because of machine load.
+
+## 6. Freeze and how to run
+
+Frozen 27 October 2026, 19:44 UTC (52 minutes after the start of the work), before the fixed dev evaluation:
+
+| file | md5 |
+|---|---|
+| `learner.py` | `5ee995add8601b90ee8b1d5612fede87` |
+| `dfg13.py` | `69cabe5c50345cb24079198ed52b562f` |
+
+(`results/md5_before.txt`; `results/md5_after.txt` after the evaluation.) `__init__.py` is empty. Neither file was edited
+after the freeze.
+
+```
+# fixed dev evaluation, as run (8 target shards, then merge)
+sh study/part10/p10_sum/run_toy.sh designed dict,and3,maj3,maj9,thr10,par2 --perm --part=1
+sh study/part10/p10_sum/run_toy.sh designed par3,par4,stair5,majpar,parmaj --perm --part=2
+sh study/part10/p10_sum/run_toy.sh designed mux,dnf3,dlist5,rmaj9,andxor --perm --part=3
+sh study/part10/p10_sum/run_toy.sh designed sparsepoly,rand0,rand1,rand2,rand3 --perm --part=4
+sh study/part10/p10_sum/run_toy.sh dlsymdev sym7,ex3of8,band11,far9 --perm --part=1
+sh study/part10/p10_sum/run_toy.sh dlsymdev ssym9,symxpar,twosym,thrsum --perm --part=2
+sh study/part10/p10_sum/run_toy.sh dlfamdev fd_00,fd_01,fd_02,fd_03,fd_04,fd_05 --perm --part=1
+sh study/part10/p10_sum/run_toy.sh dlfamdev fd_06,fd_07,fd_08,fd_09,fd_10,fd_11 --perm --part=2
+cd study/hybrid && for s in designed dlsymdev dlfamdev; do python3 merge_toy.py p10_sum-perm $s; done
+# tabular check
+cd study/part9 && PYTHONPATH=../part10:. python3 eval_cells.py p10_sum.learner:Learner kr_vs_kp --ns=1000 --seeds=0 --tag=p10_sum-dev
+```
+Results: `study/hybrid/results/toy__p10_sum-perm__{designed,dlsymdev,dlfamdev}.{json,md}` (copies in `results/`),
+`study/standard_tasks/results/p10_sum-dev__kr_vs_kp.{json,info.json}`.
