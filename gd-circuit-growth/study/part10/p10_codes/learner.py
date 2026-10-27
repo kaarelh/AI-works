@@ -248,6 +248,70 @@ def pool_sets(X, ks, rows=20000, tol=1e-6):
     return As, fl
 
 
+def pool_sets_topo(X, ks, rows=20000, tol=1e-6, kmax=16):
+    """p10_codes: pool_sets (the same pooling matrices A_k, bit for bit: the same statistics, ranking and tie-breaks) and
+    the recovered topology it rests on: the active columns act, the rounded correlation matrix R among them and every
+    active column's ranked list of its kmax most correlated active columns (local indices, rank 1 = itself).  FLOPs as
+    pool_sets (the ranking is the same full sort)."""
+    Xs = np.asarray(X[:rows], np.float64); sd = Xs.std(0); act = np.where(sd > tol)[0]
+    Z = (Xs[:, act] - Xs[:, act].mean(0)) / sd[act]
+    R = np.round(Z.T @ Z / len(Z), 9)
+    fp = Xs[:, act].T @ np.random.default_rng(77).standard_normal(len(Xs))
+    O = np.lexsort((np.broadcast_to(-fp, R.shape), -R), axis=1)[:, :max(max(ks), kmax)]
+    S = act[O[:, :max(ks)]]
+    As = {}
+    for k in ks:
+        A = np.zeros((X.shape[1], len(act)), np.float32)
+        A[S[:, :k].ravel(), np.repeat(np.arange(len(act)), k)] = 1.0
+        As[k] = A
+    na = len(act)
+    fl = 2.0 * len(Z) * na * na + 4.0 * len(Z) * na + 2.0 * na * na * max(1.0, math.log2(max(na, 2)))   # corr + sort
+    return As, fl, dict(act=act, R=R, fp=fp, S=O)
+
+
+def _match_axes(R, nb):
+    """Pair a pixel's 8 most correlated pixels nb (ranks 2..9, local indices) into 4 axes, greedily: the least
+    correlated remaining pair first (on a grid: opposite neighbours).  Returns opp: rank position -> its partner.
+    Ties (R is rounded) go to the earlier rank position; rank positions are themselves permutation-invariant."""
+    C = R[np.ix_(nb, nb)].copy(); np.fill_diagonal(C, np.inf); opp = -np.ones(len(nb), np.int64)
+    for _ in range(len(nb) // 2):
+        p = int(np.argmin(C)); a, b = divmod(p, len(nb))
+        opp[a], opp[b] = b, a; C[[a, b], :] = np.inf; C[:, [a, b]] = np.inf
+    return opp
+
+
+def bar_sets(topo, d, L=2):
+    """p10_codes: discrete 'bars' on the recovered topology.  Every active pixel i has 4 axes (its 8 most correlated
+    pixels paired by _match_axes, in the canonical order of the rank of each axis' first end); the bar of (i, axis) is
+    i, the two ends of the axis, and then up to L - 1 further steps in each direction, where the step from j (reached
+    from i') is the partner of i' in j's own pairing (go straight on; the bar stops if i' is not among j's 8).  Returns the
+    0/1 matrix B (d x 4 n_active; bar sums = X @ B) and FLOPs (negligible: a few list operations per pixel).  Built from
+    the ranked correlation lists only: permuting the columns permutes the bars exactly."""
+    act, R, S = topo["act"], topo["R"], topo["S"]; a = len(act); NB = S[:, 1:9]
+    AX = np.zeros((a, 4, 2), np.int64); opp_of = []
+    for k in range(a):
+        opp = _match_axes(R, NB[k]); seen = []; dct = {}
+        for p in range(8):
+            if p not in seen:
+                seen += [p, int(opp[p])]; AX[k, len(seen) // 2 - 1] = (NB[k, p], NB[k, opp[p]])
+            dct[int(NB[k, p])] = int(NB[k, opp[p]])
+        opp_of.append(dct)
+    B = np.zeros((d, 4 * a), np.float32)
+    for i in range(a):
+        for t in range(4):
+            mem = {i}
+            for end in AX[i, t]:
+                prev, cur = i, int(end)
+                for s in range(L):
+                    mem.add(cur)
+                    nxt = opp_of[cur].get(prev, -1)
+                    if nxt < 0 or s == L - 1:
+                        break
+                    prev, cur = cur, nxt
+            B[act[sorted(mem)], 4 * i + t] = 1.0
+    return B, 200.0 * a
+
+
 def pair_dirs(X, y, m, rng):
     """m prototype pairs (a, b), a and b training points of different classes, drawn uniformly; direction x_a - x_b."""
     a = rng.integers(len(X), size=m); b = rng.integers(len(X), size=m)
@@ -260,14 +324,15 @@ def pair_dirs(X, y, m, rng):
     return (np.asarray(X[a[keep]], np.float32) - np.asarray(X[b[keep]], np.float32))
 
 
-def ggbt_feats(A, U):
-    """Feature map of ggbt: [x, x @ A (pooled sums), x @ U^T (prototype-pair projections)], float32."""
+def ggbt_feats(A, U, extra=None):
+    """Feature map of ggbt: [x, x @ A (pooled sums; p10_codes: and bar sums), x @ U^T (prototype-pair projections)
+    (+ p10_codes: extra(x), the pooled code counts, when given)], float32."""
     M = np.concatenate([A, U.T], 1).astype(np.float32)
 
     def f(Xr):
         Xr = np.asarray(Xr, np.float32)
-        return np.concatenate([Xr, Xr @ M], 1)
-    return f, M.shape[1]
+        return np.concatenate([Xr, Xr @ M] + ([extra[0](Xr)] if extra is not None else []), 1)
+    return f, M.shape[1] + (extra[1] if extra is not None else 0)
 
 
 def lgb_tree_flops(n_fit, n_bag, d_used, bins_used, leaves=31):
