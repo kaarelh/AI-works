@@ -97,6 +97,40 @@ class NNF:
             s |= self.sup[c]
         return self._mk("O", out, s)
 
+    def restrict(self, v: int, rho: dict, _memo: dict | None = None) -> int:
+        """Node for v with the variables in rho fixed, simplified (constants
+        propagated, nested gates flattened). Opaque nodes keep their
+        restriction in their data."""
+        if not rho:
+            return v
+        memo = {} if _memo is None else _memo
+        # iterative post-order over the cone of v
+        order = self.cone(v)
+        for u in order:
+            if u in memo:
+                continue
+            s = self.sup[u]
+            k = self.kind[u]
+            if not any((s >> i) & 1 for i in rho):
+                memo[u] = u
+                continue
+            if k == "L":
+                i, b = self.data[u]
+                memo[u] = self.true() if rho[i] == b else self.false()
+            elif k == "A":
+                memo[u] = self.AND([memo[c] for c in self.data[u]])
+            elif k == "O":
+                memo[u] = self.OR([memo[c] for c in self.data[u]])
+            elif k == "X":
+                g, pol = self.data[u][:2]
+                old = dict(self.data[u][2]) if len(self.data[u]) > 2 else {}
+                old.update({i: b for i, b in rho.items() if (s >> i) & 1})
+                newsup = s & ~sum(1 << i for i in old)
+                memo[u] = self._mk("X", (g, pol, tuple(sorted(old.items()))), newsup)
+            else:
+                memo[u] = u
+        return memo[v]
+
     def children(self, v: int) -> tuple:
         return self.data[v] if self.kind[v] in ("A", "O") else ()
 
@@ -157,10 +191,15 @@ class NNF:
                     r |= val[c]
                 val[u] = r
             else:
-                g, pol = self.data[u]
+                g, pol = self.data[u][:2]
+                Xu = X
+                if len(self.data[u]) > 2 and self.data[u][2]:
+                    Xu = X.copy()
+                    for i, b in self.data[u][2]:
+                        Xu[:, i] = bool(b)
                 C = self.circuit
                 sub = Circuit(C.n, list(C.ops), list(C.args), list(C.params), g)
-                r = sub.eval_bits(X)
+                r = sub.eval_bits(Xu)
                 val[u] = r if pol else ~r
         return val[v]
 
@@ -188,11 +227,46 @@ class NNF:
         return memo[self.root if v is None else v]
 
 
-def to_nnf(C: Circuit, thr_max_states: int = 4096) -> NNF:
+def _small_cone_nnf(N: NNF, C: Circuit, g: int, sup_mask: int, q: int) -> int:
+    """Exact reduced-OBDD NNF (a d-DNNF) of [gate g == q], by tabulating g on
+    all assignments of its (small) support."""
+    import numpy as _np
+
+    vs = [i for i in range(C.n) if (sup_mask >> i) & 1]
+    k = len(vs)
+    X = _np.zeros((1 << k, C.n), dtype=bool)
+    X[:, vs] = ((_np.arange(1 << k)[:, None] >> _np.arange(k)) & 1).astype(bool)
+    sub = Circuit(C.n, list(C.ops), list(C.args), list(C.params), g)
+    tt = sub.eval_bits(X) == bool(q)
+    memo: dict = {}
+
+    def build_sub(seg, depth):
+        if seg.all():
+            return N.true()
+        if not seg.any():
+            return N.false()
+        key = seg.tobytes()
+        r = memo.get((depth, key))
+        if r is not None:
+            return r
+        f0 = build_sub(seg[0::2], depth + 1)
+        f1 = build_sub(seg[1::2], depth + 1)
+        v = vs[depth]
+        r = f0 if f0 == f1 else N.OR([N.AND([N.lit(v, 0), f0]), N.AND([N.lit(v, 1), f1])])
+        memo[(depth, key)] = r
+        return r
+
+    return build_sub(tt, 0)
+
+
+def to_nnf(C: Circuit, thr_max_states: int = 4096, small_cone: int = 10) -> NNF:
     """NNF of C's output, size O(|C|) for AND/OR/NOT/XOR gates.
 
-    THR gates with small nonnegative-integer weights are expanded by a
-    sequential-counter DP; other THR gates become opaque nodes.
+    Gates whose support has at most `small_cone` variables are tabulated and
+    replaced by their exact reduced OBDD (a sound, exact simplification:
+    e.g. (x XOR r) XOR r becomes x). THR gates with small nonnegative-integer
+    weights are expanded by a sequential-counter DP; other THR gates become
+    opaque nodes.
     """
     N = NNF()
     N.circuit = C
@@ -210,6 +284,9 @@ def to_nnf(C: Circuit, thr_max_states: int = 4096) -> NNF:
             a = C.args[h]
             if op == "IN":
                 memo[(h, q)] = N.lit(h, q)
+                continue
+            if small_cone and op != "CONST" and 0 < bin(sup[h]).count("1") <= small_cone:
+                memo[(h, q)] = _small_cone_nnf(N, C, h, sup[h], q)
                 continue
             if op == "CONST":
                 memo[(h, q)] = N.true() if C.params[h] == q else N.false()

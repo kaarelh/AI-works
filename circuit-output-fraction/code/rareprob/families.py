@@ -145,3 +145,83 @@ def chain_circuit(n: int, rng: np.random.Generator, width: int = 3):
         ys.append(g)
         prev = g
     return C.set_output(C.AND(*ys))
+
+
+def dnf_exact(terms, D) -> float:
+    """Exact Pr[DNF] by inclusion-exclusion over term subsets (m <= ~22)."""
+    import itertools
+
+    m = len(terms)
+    assert m <= 22
+    tot = 0.0
+    # iterate subsets via Gray-code-free recursion with pruning of contradictions
+    def rec(j, lits, sign_count):
+        nonlocal tot
+        for k in range(j, m):
+            new = dict(lits)
+            ok = True
+            for i, b in terms[k]:
+                if new.get(i, b) != b:
+                    ok = False
+                    break
+                new[i] = b
+            if not ok:
+                continue
+            pr = 1.0
+            for i, b in new.items():
+                pr *= D.lit_prob(i, b)
+            tot += pr if sign_count % 2 == 0 else -pr
+            rec(k + 1, new, sign_count + 1)
+
+    rec(0, {}, 0)
+    return tot
+
+
+def linear_hash_trigger(n_body: int, k: int, rng: np.random.Generator, rows: int | None = None,
+                        body_gates: int = 40):
+    """R(x_body) AND [A x_S == A a] over F2, A a dense random (rows x k)
+    matrix of full column rank, so the trigger is the subcube x_S = a written
+    through a linear hash. Unit propagation cannot see the subcube (the XOR
+    constraints are dense); a SAT solver (or Gaussian elimination) can.
+    Returns (C, S, a, body_vars)."""
+    rows = rows or k + 4
+    n = k + n_body
+    while True:
+        A = rng.integers(0, 2, size=(rows, k))
+        if np.linalg.matrix_rank(A.astype(float)) == k:
+            # rank over GF(2) check
+            M = A.copy() % 2
+            r = 0
+            for c in range(k):
+                piv = [i for i in range(r, rows) if M[i, c]]
+                if not piv:
+                    break
+                M[[r, piv[0]]] = M[[piv[0], r]]
+                for i in range(rows):
+                    if i != r and M[i, c]:
+                        M[i] ^= M[r]
+                r += 1
+            if r == k:
+                break
+    S = list(range(k))
+    a = rng.integers(0, 2, size=k)
+    target = A.dot(a) % 2
+    body = list(range(k, n))
+    C = Circuit(n)
+    checks = []
+    for i in range(rows):
+        cols = [S[j] for j in range(k) if A[i, j]]
+        par = C.XOR(*cols) if len(cols) > 1 else cols[0]
+        checks.append(par if target[i] else C.NOT(par))
+    trig = C.AND(*checks)
+    while True:
+        Cr = Circuit(n)
+        R = random_block_circuit(Cr, body, body_gates, rng)
+        Cr.set_output(R)
+        if Cr.eval_bits(rng.random((4096, n)) < 0.5).mean() >= 0.05:
+            break
+    m = list(range(n))
+    for v in range(n, len(Cr.ops)):
+        m.append(C.add(Cr.ops[v], [m[u] for u in Cr.args[v]], Cr.params[v]))
+    C.set_output(C.AND(trig, m[R]))
+    return C, S, [int(t) for t in a], body

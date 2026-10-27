@@ -150,3 +150,27 @@ def dklr_stopping_rule(draw1: Callable[[], float], eps: float, delta: float,
         s += draw1()
         N += 1
     return ups1 / N, N
+
+
+def mc_samples_needed(p: float, eps: float, delta: float) -> float:
+    """Samples a Monte-Carlo run needs before its (1 - delta) KL interval
+    has ratio <= 1 + eps, when the empirical mean equals p (fixed-N
+    interval, no sequential correction: this favours Monte Carlo).
+    For tiny p uses the asymptotic N ~ c / p with c computed at p0 = 1e-6."""
+    def ok(N):
+        lo, hi = kl_interval(p, int(N), delta)
+        return lo > 0 and hi <= (1 + eps) * lo
+
+    if p < 1e-6:
+        return mc_samples_needed(1e-6, eps, delta) * 1e-6 / p
+    a, b = 1.0, 1.0
+    while not ok(b):
+        b *= 2
+    a = b / 2
+    while b - a > max(1.0, 1e-3 * b):
+        m = (a + b) / 2
+        if ok(m):
+            b = m
+        else:
+            a = m
+    return b

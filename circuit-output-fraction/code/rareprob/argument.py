@@ -60,7 +60,10 @@ def support_circuit(env: Envelope, n: int) -> Circuit:
 
 def domination_cnf(C: Circuit, env: Envelope) -> list[list[int]]:
     """CNF that is unsatisfiable iff C(x) = 1 implies phi(x) > 0."""
-    B = support_circuit(env, C.n)
+    from .ve import binarize
+
+    C = binarize(C)
+    B = binarize(support_circuit(env, C.n))
     off = len(C.ops)  # B's gate variables live after C's
     cls = tseitin(C) + [[C.output + 1]]
     cls += tseitin(B, offset=off)

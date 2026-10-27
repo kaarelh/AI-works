@@ -146,6 +146,9 @@ def forced_input_literals(C: Circuit, probe: bool = True, rounds: int = 3) -> di
     Tseitin encoding plus failed-literal probing. Returns {input: bit}, or
     None if C(x) = 1 is refuted (then p = 0).
     """
+    from .ve import binarize
+
+    C = binarize(C)
     cls = tseitin(C) + [[gvar(C.output)]]
     up = UP(cls)
     ok, val = up.propagate([])

@@ -172,6 +172,9 @@ class EnvelopeCompiler:
         if k == "X":
             return self._box(v, rho) if self._dense(v, rho) else self.E.one()
         r = self._env_rules(v, rho, depth)
+        # the constant 1 is always a valid envelope: never use one of mass > 1
+        if self.mass(r) > 1.0:
+            r = self.E.one()
         # replace a loose rule-based envelope by an exact dense leaf
         if self.tau is not None and k in ("A", "O"):
             m = self.mass(r)

@@ -1,0 +1,341 @@
+"""Decompose-Force-Sample-Branch (DFSB): the Part-1 procedure.
+
+Recursively explain the rarity of C by exact structure, and sample only
+what is left:
+
+  T  constants and literals: exact.
+  F  literals forced by unit propagation on the Tseitin encoding of the
+     subproblem: P(h) = D(F) * P(h|F).
+  D  the children of h's top gate split into variable-disjoint groups:
+       AND:  P(h) = prod_j P(h_j)
+       OR:   P(h) = 1 - prod_j (1 - P(h_j))
+  S  dense leaf: a pilot run finds P(h) >= 1/(4K); estimated by Monte Carlo.
+  E  envelope leaf: a syntactic envelope phi of h (rules of compile.py) has
+     P(h)/E[phi] >= 1/(4K); estimated by envelope importance sampling.
+  B  otherwise branch on the variable shared by the most children:
+       P(h) = (1-q) P(h|x=0) + q P(h|x=1).
+
+Two phases: phase 1 builds the tree with pilot samples (its randomness
+affects only the shape of the tree, never validity); phase 2 estimates every
+leaf with fresh samples to relative accuracy eps/(3d) at confidence
+delta/#leaves, where d is the largest number of leaves on one derivation,
+and combines leaf intervals by interval arithmetic through the exact,
+monotone node operations. The output interval is valid with probability
+>= 1 - delta for every circuit; it is tight when every leaf is (K-dense
+leaves within the node budget), which is the class of circuits whose ideal
+K-explanation tree is small.
+"""
+
+from __future__ import annotations
+
+import math
+from dataclasses import dataclass, field
+
+import numpy as np
+
+from .circuit import Circuit
+from .cnf import UP
+from .compile import EnvelopeCompiler
+from .dist import Product
+from .envelope import envelope_estimate
+from .nnf import NNF, to_nnf
+from .stats import Estimate, kl_interval, sequential_mean
+
+
+# ------------------------------------------------------------- tree nodes
+@dataclass
+class TNode:
+    kind: str  # const lit force and or branch mc env loose
+    v: int = -1  # NNF node
+    val: float = 0.0
+    lits: list = field(default_factory=list)
+    var: int = -1
+    children: list = field(default_factory=list)
+    env: object = None
+    lo: float = 0.0
+    hi: float = 1.0
+    cost: int = 0
+
+
+def nnf_forced(N: NNF, v: int, n: int, probe: bool = False):
+    """Input literals implied by node v being true, via unit propagation on
+    the Tseitin encoding of v's cone (opaque nodes unconstrained). Returns a
+    dict {var: bit}, or None if v is refuted."""
+    def lit_of(u):
+        k = N.kind[u]
+        if k == "L":
+            i, b = N.data[u]
+            return (i + 1) if b else -(i + 1)
+        return n + 1 + u
+
+    cls = []
+    for u in N.cone(v):
+        k = N.kind[u]
+        if k == "T":
+            cls.append([lit_of(u)])
+        elif k == "F":
+            cls.append([-lit_of(u)])
+        elif k == "A":
+            a = lit_of(u)
+            ch = [lit_of(c) for c in N.data[u]]
+            cls += [[-a, c] for c in ch]
+            cls.append([a] + [-c for c in ch])
+        elif k == "O":
+            a = lit_of(u)
+            ch = [lit_of(c) for c in N.data[u]]
+            cls += [[a, -c] for c in ch]
+            cls.append([-a] + ch)
+    cls.append([lit_of(v)])
+    up = UP(cls)
+    ok, val = up.propagate([])
+    if not ok:
+        return None
+    if probe:
+        for i in range(n):
+            if not (N.sup[v] >> i) & 1 or (i + 1) in val:
+                continue
+            for b in (True, False):
+                ok2, _ = up.propagate([(i + 1) if b else -(i + 1)], base=val)
+                if not ok2:
+                    ok3, val = up.propagate([-(i + 1) if b else (i + 1)], base=val)
+                    if not ok3:
+                        return None
+                    break
+    return {x - 1: int(b) for x, b in val.items() if 1 <= x <= n}
+
+
+class DFSB:
+    def __init__(self, C: Circuit, D: Product, K: float = 64.0, node_budget: int = 2000,
+                 rng=None, use_envelopes: bool = True, shannon_env: int = 3, probe_root: bool = True):
+        self.C = C
+        self.D = D
+        self.K = K
+        self.budget = node_budget
+        self.rng = np.random.default_rng() if rng is None else rng
+        self.use_env = use_envelopes
+        self.shannon_env = shannon_env
+        self.N = to_nnf(C)
+        self.nodes = 0
+        self.pilot_evals = 0
+        self.probe_root = probe_root
+
+    # ---------------------------------------------------------- phase 1
+    def _pilot_dense(self, v: int) -> bool:
+        N = int(64 * self.K)
+        X = self.D.sample(N, self.rng)
+        self.pilot_evals += N
+        return int(self.N.eval_batch(X, v).sum()) >= 16
+
+    def _pilot_env(self, v: int):
+        comp = EnvelopeCompiler(self.N, self.D, shannon=self.shannon_env)
+        r = comp.env(v, {}, 0)
+        E = comp.E
+        E.root = r
+        if E.kind[r] == "ONE" or E.mass(self.D) >= 1.0:
+            return None
+        Np = int(64 * self.K)
+        m = E.masses(self.D)
+        X = E.sample(self.D, Np, self.rng, m)
+        self.pilot_evals += Np
+        c = self.N.eval_batch(X, v)
+        phi = E.evaluate(X)
+        w = np.where(c, 1.0 / np.maximum(phi, 1e-300), 0.0)
+        return E if w.sum() >= 16 else None
+
+    def build(self, v: int, root: bool = False) -> TNode:
+        N = self.N
+        self.nodes += 1
+        k = N.kind[v]
+        if k == "T":
+            return TNode("const", v, val=1.0)
+        if k == "F":
+            return TNode("const", v, val=0.0)
+        if k == "L":
+            return TNode("lit", v, val=self.D.lit_prob(*N.data[v]))
+        if self.nodes > self.budget:
+            return TNode("loose", v)
+        # F: forced literals
+        f = nnf_forced(N, v, self.C.n, probe=root and self.probe_root)
+        if f is None:
+            return TNode("const", v, val=0.0)
+        if f:
+            child = N.restrict(v, f)
+            return TNode("force", v, lits=sorted(f.items()), children=[self.build(child)])
+        # D: variable-disjoint groups
+        if k in ("A", "O"):
+            groups = _groups(N, N.data[v])
+            if len(groups) > 1:
+                mk = N.AND if k == "A" else N.OR
+                subs = [mk([N.data[v][j] for j in g]) for g in groups]
+                return TNode("and" if k == "A" else "or", v, children=[self.build(s) for s in subs])
+        # S: dense
+        if self._pilot_dense(v):
+            return TNode("mc", v)
+        # E: envelope leaf
+        if self.use_env:
+            E = self._pilot_env(v)
+            if E is not None:
+                return TNode("env", v, env=E)
+        # B: branch
+        x = _branch_var(N, v)
+        if x is None:
+            return TNode("loose", v)
+        return TNode("branch", v, var=x, children=[self.build(N.restrict(v, {x: 0})),
+                                                    self.build(N.restrict(v, {x: 1}))])
+
+    # ---------------------------------------------------------- phase 2
+    def estimate(self, eps: float = 0.1, delta: float = 0.05, max_leaf_samples: int = 10**6) -> Estimate:
+        root = self.build(self.N.root, root=True)
+        leaves = _leaves(root)
+        d = max(1, _depth_leaves(root))
+        el = eps / (3 * d)
+        dl = delta / max(1, len(leaves))
+        total = 0
+        for t in leaves:
+            if t.kind == "mc":
+                v = t.v
+
+                def draw(k, v=v):
+                    return self.N.eval_batch(self.D.sample(k, self.rng), v).astype(float)
+
+                e = sequential_mean(draw, el, dl, max_samples=max_leaf_samples)
+                t.lo, t.hi, t.cost = e.lo, e.hi, e.samples
+            elif t.kind == "env":
+                Cv = _NodeAsCircuit(self.N, t.v)
+                e = envelope_estimate(Cv, self.D, t.env, eps=el, delta=dl,
+                                      max_samples=max_leaf_samples, rng=self.rng)
+                t.lo, t.hi, t.cost = e.lo, e.hi, e.evaluations
+            elif t.kind == "loose":
+                # valid trivial bounds; Monte Carlo upper bound with the leaf budget
+                def draw(k, v=t.v):
+                    return self.N.eval_batch(self.D.sample(k, self.rng), v).astype(float)
+
+                e = sequential_mean(draw, el, dl, max_samples=min(max_leaf_samples, 10**5))
+                t.lo, t.hi, t.cost = e.lo, e.hi, e.samples
+            total += t.cost
+        lo, hi = _combine(root, self.D)
+        val = math.sqrt(lo * hi) if lo > 0 else hi / 2
+        return Estimate(val, lo, hi, total, total + self.pilot_evals, delta,
+                        f"tree nodes {self.nodes}, leaves {len(leaves)}, d={d}, "
+                        f"kinds {_kind_counts(root)}")
+
+
+class _NodeAsCircuit:
+    """Adapter so envelope_estimate can evaluate an NNF node like a circuit."""
+
+    def __init__(self, N, v):
+        self.N, self.v = N, v
+
+    def eval_bits(self, X):
+        return self.N.eval_batch(X, self.v)
+
+
+def _groups(N: NNF, ch) -> list[list[int]]:
+    parent = list(range(len(ch)))
+
+    def find(a):
+        while parent[a] != a:
+            parent[a] = parent[parent[a]]
+            a = parent[a]
+        return a
+
+    owner: dict[int, int] = {}
+    for j, c in enumerate(ch):
+        s = N.sup[c]
+        while s:
+            low = s & -s
+            i = low.bit_length() - 1
+            if i in owner:
+                ra, rb = find(owner[i]), find(j)
+                if ra != rb:
+                    parent[ra] = rb
+            else:
+                owner[i] = j
+            s ^= low
+    out: dict[int, list[int]] = {}
+    for j in range(len(ch)):
+        out.setdefault(find(j), []).append(j)
+    return list(out.values())
+
+
+def _branch_var(N: NNF, v: int):
+    ch = N.children(v)
+    if not ch:
+        s = N.sup[v]
+        return (s & -s).bit_length() - 1 if s else None
+    cnt: dict[int, int] = {}
+    for c in ch:
+        s = N.sup[c]
+        while s:
+            low = s & -s
+            i = low.bit_length() - 1
+            cnt[i] = cnt.get(i, 0) + 1
+            s ^= low
+    if not cnt:
+        return None
+    return max(cnt, key=lambda i: (cnt[i], -i))
+
+
+def _leaves(t: TNode) -> list[TNode]:
+    if t.kind in ("mc", "env", "loose"):
+        return [t]
+    out = []
+    for c in t.children:
+        out += _leaves(c)
+    return out
+
+
+def _depth_leaves(t: TNode) -> int:
+    if t.kind in ("mc", "env", "loose"):
+        return 1
+    if t.kind == "and":
+        return sum(_depth_leaves(c) for c in t.children)
+    if t.children:
+        return max(_depth_leaves(c) for c in t.children)
+    return 0
+
+
+def _kind_counts(t: TNode, acc=None) -> dict:
+    acc = {} if acc is None else acc
+    acc[t.kind] = acc.get(t.kind, 0) + 1
+    for c in t.children:
+        _kind_counts(c, acc)
+    return acc
+
+
+def _combine(t: TNode, D: Product) -> tuple[float, float]:
+    k = t.kind
+    if k in ("const", "lit"):
+        return t.val, t.val
+    if k in ("mc", "env", "loose"):
+        return t.lo, t.hi
+    if k == "force":
+        w = 1.0
+        for i, b in t.lits:
+            w *= D.lit_prob(i, b)
+        lo, hi = _combine(t.children[0], D)
+        return w * lo, w * hi
+    if k == "and":
+        lo, hi = 1.0, 1.0
+        for c in t.children:
+            l, h = _combine(c, D)
+            lo, hi = lo * l, hi * h
+        return lo, hi
+    if k == "or":
+        slo, shi = 0.0, 0.0  # sums of log(1 - x)
+        for c in t.children:
+            l, h = _combine(c, D)
+            slo += math.log1p(-min(l, 1.0)) if l < 1 else -math.inf
+            shi += math.log1p(-min(h, 1.0)) if h < 1 else -math.inf
+        return -math.expm1(slo), -math.expm1(shi)
+    if k == "branch":
+        q = D.q[t.var]
+        l0, h0 = _combine(t.children[0], D)
+        l1, h1 = _combine(t.children[1], D)
+        return (1 - q) * l0 + q * l1, (1 - q) * h0 + q * h1
+    raise ValueError(k)
+
+
+def dfsb_estimate(C: Circuit, D: Product, eps: float = 0.1, delta: float = 0.05, K: float = 64.0,
+                  node_budget: int = 2000, rng=None, **kw) -> Estimate:
+    return DFSB(C, D, K=K, node_budget=node_budget, rng=rng, **kw).estimate(eps, delta)

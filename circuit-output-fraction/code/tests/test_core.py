@@ -161,3 +161,37 @@ def test_argument_sound_and_complete():
     assert honest_proof(C, E2) is None
     v2 = verify(C, D, E2, pf, eps=0.1, delta=0.05, rng=rng)
     assert not v2.proof_ok and v2.estimate.hi == math.inf and v2.estimate.lo <= p
+
+
+@pytest.mark.parametrize("seed", range(6))
+def test_dfsb_sound_random(seed):
+    from rareprob.dfsb import dfsb_estimate
+    rng = np.random.default_rng(200 + seed)
+    n = 12
+    C = random_circuit(n, 30, rng)
+    D = Product(rng.uniform(0.2, 0.8, n))
+    p = exact_prob(C, D)
+    e = dfsb_estimate(C, D, eps=0.2, delta=0.05, K=16, rng=rng, node_budget=200)
+    assert e.lo <= p * (1 + 1e-9) and p <= e.hi * (1 + 1e-9) + 1e-15
+
+
+def test_dfsb_blocks_tight():
+    from rareprob.dfsb import dfsb_estimate
+    rng = np.random.default_rng(300)
+    C, p, _ = independent_blocks(8, 5, 10, rng)
+    D = Product.uniform(40)
+    e = dfsb_estimate(C, D, eps=0.2, delta=0.05, rng=rng)
+    assert e.contains(p) and e.ratio <= 1.25
+
+
+def test_nnf_restrict():
+    rng = np.random.default_rng(301)
+    C = random_circuit(8, 30, rng)
+    N = to_nnf(C)
+    X = all_points(8)
+    rho = {1: 0, 4: 1}
+    v = N.restrict(N.root, rho)
+    Xr = X.copy()
+    Xr[:, 1] = False
+    Xr[:, 4] = True
+    assert np.array_equal(N.eval_batch(X, v), C.eval_bits(Xr))

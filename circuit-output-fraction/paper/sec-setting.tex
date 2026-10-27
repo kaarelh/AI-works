@@ -1,0 +1,86 @@
+\section{Setting}\label{sec:setting}
+
+\paragraph{Circuits.}
+A circuit $C$ on inputs $x_1,\dots,x_n$ is a directed acyclic graph whose
+internal nodes (gates) compute $\wedge$, $\vee$ (any fan-in), $\neg$, $\oplus$
+or a threshold function $[\sum_j w_j y_j \ge t]$ of their inputs; one gate is
+the output. $|C|$ is the number of wires. For a gate $g$,
+$\sv(g)\subseteq[n]$ is the set of input variables in its cone (its
+\emph{support}). Pushing negations to the inputs gives the negation normal form
+(NNF) of $C$: an $\{\wedge,\vee\}$-circuit over literals, with at most two
+copies of every gate, one per polarity. An $\wedge$-gate of an NNF is
+\emph{decomposable} if its children have pairwise disjoint supports; an NNF
+all of whose $\wedge$-gates are decomposable is a DNNF \cite{darwiche2002map}.
+
+\paragraph{Distributions.}
+$D$ is a product distribution on $\bits^n$ with $\Pr[x_i=1]=q_i$. Product
+structure is what makes ``disjoint supports'' mean ``independent''. A
+distribution given by a sampler circuit $S:\bits^m\to\bits^n$ reduces to the
+uniform case: $\Pr_{x\sim S(U_m)}[C(x)=1]=\Pr_{u\sim U_m}[(C\circ S)(u)=1]$.
+(The reduction can destroy structure; we do not rely on it.) We write
+\[
+  p \;=\; p_D(C) \;=\; \Pr_{x\sim D}[C(x)=1]
+\]
+and think of $p$ as tiny: $2^{-50}$, $n^{-\omega(1)}$, or $2^{-\Omega(n)}$.
+For a set or function $E$ we write $D(E)=\E_D[E]$.
+
+\paragraph{What counts as an answer.}
+Because $p$ can be arbitrarily small, additive error is useless; we ask for
+relative error. To let a procedure decline, we let it output intervals.
+
+\begin{definition}[sound interval estimation]\label{def:sound}
+An \emph{estimation procedure} gets $(C,D,\eps,\delta)$ and outputs an
+interval $[L,U]\subseteq[0,1]$ (possibly the trivial $[0,1]$, meaning ``no
+verdict''). It is \emph{sound} if for every circuit $C$ and every $D$,
+\[
+\Pr\big[p_D(C)\notin[L,U]\big]\le\delta .
+\]
+It is \emph{complete} on a class $\mathcal C$ if for all $C\in\mathcal C$,
+with probability at least $1-\delta$ the interval is tight:
+$U\le(1+\eps)L$. It is \emph{efficient} if it runs in time
+$\poly(|C|,1/\eps,\log(1/\delta))$.
+\end{definition}
+
+A sound procedure that is complete on $\mathcal C$ gives, on $\mathcal C$, a
+$(1\pm\eps)$-approximation of $p$ with probability $1-2\delta$; outside
+$\mathcal C$ its output is still a valid (if loose) interval. Soundness
+everywhere is what makes the ``check a property, then sample'' procedures of
+the problem statement safe to use on circuits we know nothing about.
+
+\paragraph{The baseline.}
+Monte Carlo draws $x^{(1)},\dots,x^{(N)}\sim D$ and reports the fraction of
+ones. A relative-error interval needs
+$N=\Theta\big(\log(1/\delta)/(p\eps^2)\big)$ samples, so its cost is
+\[
+\cost_{\MC}=\Theta\Big(\frac{|C|\log(1/\delta)}{p\,\eps^2}\Big),
+\]
+exponential in the \emph{surprise} $\log_2(1/p)$. The
+Dagum--Karp--Luby--Ross stopping rule achieves this without knowing $p$ in
+advance, and it is optimal among procedures that only see i.i.d.\ samples of
+$C(x)$ \cite{dklr2000}: beating sampling requires looking at the circuit.
+
+\begin{definition}[beating sampling]
+A procedure beats sampling on a class $\mathcal C$ if it is sound, efficient,
+and complete on $\mathcal C$, and $\mathcal C$ contains circuits with
+$p=n^{-\omega(1)}$ (for most of our classes, $p=2^{-\Omega(n)}$). Its cost is then
+polynomial in the surprise $\log(1/p)$ rather than in $1/p$.
+\end{definition}
+
+\paragraph{Prover-assisted estimation.}
+In the second setting an unbounded prover sends one string $\pi$ (an
+\emph{argument}) to a randomized polynomial-time verifier $V$, which then
+flips coins (for instance to sample) and outputs an interval $[L,U]$.
+
+\begin{definition}[argument system]\label{def:argument}
+$V$ is \emph{sound} if for every circuit $C$, every $D$ and every string
+$\pi$, $\Pr_{\text{coins of }V}\big[p_D(C)\notin V(C,D,\pi,\eps,\delta)\big]\le\delta$.
+It is \emph{complete} on $\mathcal C$ if for every $C\in\mathcal C$ there is a
+$\pi$ of size $\poly(|C|)$ such that with probability $1-\delta$ the output is
+tight. One-sided variants (lower-bound or upper-bound arguments) are defined
+in the obvious way.
+\end{definition}
+
+This is the non-interactive, statistically sound (Merlin--Arthur) model. We
+will see in \cref{sec:limits} that interaction or computational soundness
+would trivialise the problem, while in this model upper bounds on $p$ cannot be
+certified for all circuits unless $\coNP\subseteq\MA$.

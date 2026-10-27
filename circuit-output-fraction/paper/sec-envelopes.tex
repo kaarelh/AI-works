@@ -1,0 +1,244 @@
+\section{Envelopes: the common mechanism}\label{sec:envelopes}
+
+All our upper-bound-capable methods, with and without a prover, are instances
+of one estimator. It turns a \emph{deductive} fact (``$C(x)=1$ implies
+$\varphi(x)\ge1$'') and an \emph{exact} computation ($\E_D\varphi$) into an
+importance sampler whose cost depends only on how loose the deduction is.
+
+\subsection{Envelope circuits}
+
+\begin{definition}[envelope]\label{def:envelope}
+An \emph{envelope circuit} $\Phi$ is an arithmetic circuit whose leaves are
+literal indicators $[x_i=b]$, constants $0,1$, and (\cref{sec:boxes})
+\emph{boxes} $[B(x)=1]$ for circuits $B$; whose gates are $\Sum$ and
+$\Prod$; and whose $\Prod$ gates are \emph{decomposable}: their children have
+pairwise disjoint supports. It computes $\varphi:\bits^n\to\R_{\ge0}$. It
+\emph{dominates} $C$ if $\varphi(x)\ge1$ whenever $C(x)=1$. Its \emph{mass} is
+$Z=\E_D\varphi$, and its \emph{looseness on $C$} is $K=Z/p$.
+\end{definition}
+
+A \emph{derivation} of $\Phi$ is a subcircuit obtained by keeping, top-down,
+one child of every $\Sum$ gate reached and all children of every $\Prod$ gate
+reached. For literal leaves, $\varphi(x)$ is the number of derivations all of
+whose leaves are satisfied by $x$. A DNF $\bigvee_j T_j$ gives the envelope
+$\sum_j\prod_{\ell\in T_j}[\ell]$, and a DNNF gives the envelope obtained by
+reading $\vee$ as $\Sum$ and $\wedge$ as $\Prod$.
+
+\begin{lemma}[exact mass, exact sampling]\label{lem:envmass}
+Let $\Phi$ have literal and constant leaves only, and $D$ be a product
+distribution. Then $Z=\E_D\varphi$ is computed by one bottom-up pass
+($\Sum\mapsto$ sum of children's masses, $\Prod\mapsto$ product), and
+the following top-down procedure samples exactly from
+$Q_\varphi(x)=D(x)\varphi(x)/Z$: at a $\Sum$ gate choose a child with
+probability proportional to its mass; at a $\Prod$ gate visit all children; at
+a literal leaf set the literal; finally draw every unset variable from $D$.
+\end{lemma}
+
+\begin{proof}
+By decomposability and independence, $\E_D\prod_c\varphi_c=\prod_c\E_D\varphi_c$;
+linearity handles $\Sum$. The procedure selects a derivation $\mathcal T$ with
+probability $w(\mathcal T)/Z$, where $w(\mathcal T)=\prod_{\ell\in\mathcal
+T}D(\ell)$ (the choice probabilities telescope), and then draws $x\sim D$
+conditioned on all literals of $\mathcal T$, whose density is
+$D(x)\one[x\models\mathcal T]/w(\mathcal T)$. Summing over derivations,
+$\Pr[x]=\sum_{\mathcal T}D(x)\one[x\models\mathcal T]/Z=D(x)\varphi(x)/Z$.
+(A literal is set at most once per derivation: two literals on the same
+variable in one derivation would lie below different children of a
+decomposable $\Prod$.)
+\end{proof}
+
+\subsection{The envelope estimator}
+
+\begin{theorem}[envelope estimator]\label{thm:envelope}
+Let $\Phi$ dominate $C$, with exact mass $Z$ and an exact sampler for
+$Q_\varphi$. For $X\sim Q_\varphi$ let $W=C(X)/\varphi(X)$. Then
+\begin{enumerate}[label=(\roman*)]
+\item $W\in[0,1]$ and $\E W=p/Z=1/K$;
+\item from $N$ independent copies, the Hoeffding--KL interval $[\ell,u]$ for
+$\E W$ at level $\delta$ gives an interval $[Z\ell,Zu]$ containing $p$ with
+probability at least $1-\delta$, \emph{for every circuit $C$} as long as $\Phi$
+dominates it;
+\item if $\Phi$ does not dominate $C$, the same procedure gives a valid
+interval for $\Pr_D[C(x)=1\wedge\varphi(x)>0]\le p$; in particular $Z\ell$ is
+still a valid lower bound on $p$;
+\item run sequentially (doubling $N$, level $\delta_j=6\delta/(\pi^2j^2)$ at
+stage $j$), the procedure stops with $u\le(1+\eps)\ell$ after
+$N=O\big(K(\log(1/\delta)+\log\log K)/\eps^2\big)$ samples with probability
+$1-\delta$, each costing $O(|C|+|\Phi|)$ time.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+(i) If $Q_\varphi(x)>0$ then $\varphi(x)>0$; if moreover $C(x)=1$ then
+$\varphi(x)\ge1$, so $W\le1$. $\E W=\sum_xD(x)\varphi(x)C(x)/(Z\varphi(x))=p/Z$.
+(ii) The KL interval is valid for i.i.d.\ $[0,1]$ variables \cite{hoeffding1963}.
+(iii) Without domination, $W$ may be unbounded only where $C(x)=1$ and
+$0<\varphi(x)<1$; envelopes with literal leaves are integer-valued, so $W\in[0,1]$
+still, and $\E W=\Pr[C=1,\varphi>0]/Z$. (For real-valued $\varphi$ clip $W$ at
+1, which only decreases its mean.)
+(iv) Let $\mu=1/K$. By the multiplicative Chernoff bound, once
+$N\ge c\log(1/\delta_j)/(\mu\eps^2)$ the empirical mean $\hat\mu$ is within
+a factor $1\pm\eps/8$ of $\mu$ with probability $1-\delta_j$. Since
+$\KL(a\|b)\ge(a-b)^2/(2\max(a,b))$, every $m$ in the KL interval satisfies
+$|m-\hat\mu|\le\sqrt{2\max(m,\hat\mu)\log(2/\delta_j)/N}\le(\eps/4)\hat\mu$ for
+a suitable constant $c$, so $u/\ell\le(1+\eps/4)/(1-\eps/4)\le1+\eps$. The
+doubling stage at which this first holds has $j=O(\log K)$, whence the
+$\log\log K$ term; the union bound over stages makes all intervals
+simultaneously valid.
+\end{proof}
+
+So the cost of an envelope is governed by one number. Monte Carlo is the
+trivial envelope $\varphi\equiv1$, with $K=1/p$; exact computation is
+$\varphi=C$ (when $C$ is itself a deterministic DNNF), with $K=1$. In between:
+
+\begin{lemma}[what $K$ measures]\label{lem:K}
+$K=\E_D[\varphi\mid C=1]+\E_D[\varphi\,\one_{C=0}]/p$. For an envelope with
+literal leaves whose support is exactly $C^{-1}(1)$ (e.g.\ a DNNF for $C$),
+$K$ is the expected number of derivations of a random accepted input, its
+\emph{expected ambiguity}. For a DNF with $m$ terms, $K\le m$.
+\end{lemma}
+
+The first term is overcounting (union bounds); the second is mass that the
+deduction failed to exclude. In surprise-accounting terms
+\cite{hilton2024surprise}: of the $\log_2(1/p)$ bits of surprise in the event
+$C(x)=1$, the envelope explains $\log_2(1/Z)$ bits by deduction and exact
+computation, at polynomial cost, and leaves $\log_2K$ bits to sampling, at
+cost $2^{\log_2K}=K$. Monte Carlo explains nothing; exact computation explains
+everything, possibly at exponential cost in $|\Phi|$.
+
+\subsection{Dense leaves}\label{sec:boxes}
+
+Products of independent events that are individually not rare are the most
+common source of rarity, and they need not have small envelopes: an
+$\wedge$ of $k$ independent random sub-circuits $B_j$, each true with
+probability $1/2$, has $p=2^{-k}$ but its literal envelope may lose a constant
+factor per block. Boxes repair this: a box is a sub-function used as its own
+envelope, its mass estimated by Monte Carlo and its conditional distribution
+sampled by rejection. Estimation errors in the masses bias the proposal, but
+the bias on each derivation is a product of per-box ratios that we can bound
+exactly.
+
+\begin{theorem}[envelopes with dense leaves]\label{thm:boxes}
+Let $\Phi$ dominate $C$, with literal leaves and box leaves $B_1,\dots,B_r$
+($\Prod$ gates decomposable with respect to supports), where
+$m_j=D(B_j)\ge1/R$ and every derivation contains at most $L$ box leaves.
+Estimate each $m_j$ by Monte Carlo to an interval $[\ell_j,u_j]$ at level
+$\delta/(2r)$ with point value $\hat m_j$; compute masses $\hat Z$ and sample
+$\hat Q$ as in \cref{lem:envmass} with $\hat m_j$ in place of $m_j$, filling
+each box by rejection sampling from $D$. For $\rho(\mathcal T)=\prod_{B_j\in\mathcal
+T}\hat m_j/m_j$ let $\rho_{\min},\rho_{\max}$ be its extreme values over
+derivations when each $m_j$ ranges over $[\ell_j,u_j]$ (computed by a
+min-/max-product pass over $\Phi$). Then, with $[\ell,u]$ a level-$\delta/2$ KL
+interval for $\E_{\hat Q}W$, $W=C/\varphi$,
+\[
+p\in\big[\hat Z\ell/\rho_{\max},\;\hat Zu/\rho_{\min}\big]
+\]
+with probability at least $1-\delta$. If each $[\ell_j,u_j]$ has relative
+width at most $\eps/(4L)$ the output interval is tight after
+$O(K\log(1/\delta)/\eps^2)$ samples of $\hat Q$, each costing
+$O(|C|+|\Phi|+LR\max_j|B_j|)$ in expectation; estimating the boxes costs
+$O(rL^2R\log(r/\delta)/\eps^2)$ evaluations.
+\end{theorem}
+
+\begin{proof}
+The sampler picks derivation $\mathcal T$ with probability
+$\hat w(\mathcal T)/\hat Z$ where $\hat w$ uses the $\hat m_j$, and then draws
+$x$ exactly from $D$ conditioned on $\mathcal T$'s leaves (rejection sampling
+is exact; decomposability makes the leaves' conditionings independent), whose
+density is $D(x)\one[x\models\mathcal T]/w(\mathcal T)$ with the true masses.
+Hence $\hat Q(x)=\frac{D(x)}{\hat Z}\sum_{\mathcal T\ni x}\rho(\mathcal T)$, and
+\[
+\hat Z\,\E_{\hat Q}W=\sum_xD(x)C(x)\cdot\frac{1}{\varphi(x)}\sum_{\mathcal
+T\ni x}\rho(\mathcal T)\;\in\;[\rho_{\min},\rho_{\max}]\cdot p,
+\]
+because $\varphi(x)$ is the number of derivations satisfied by $x$, so the
+middle factor is an average of $\rho(\mathcal T)$. On the event (probability
+$\ge1-\delta/2$) that all $m_j\in[\ell_j,u_j]$, $\rho_{\min}$ and $\rho_{\max}$
+bound this average; conditionally on the box estimates the KL interval fails
+with probability at most $\delta/2$. With relative widths $\eps/(4L)$,
+$\rho_{\max}/\rho_{\min}\le(1+\eps/(4L))^{2L}\le e^{\eps/2}$, and
+\cref{thm:envelope}(iv) applies to the importance-sampling stage with $\eps/3$.
+\end{proof}
+
+With boxes, the product of $k$ independent dense blocks has $K=1$ and costs
+$O(k^3R\log(k/\delta)/\eps^2)$ evaluations, against $2^{\Theta(k)}$ for Monte
+Carlo; a DNF whose terms are products of dense blocks has $K\le m$
+(\cref{thm:part1-classes}).
+
+\subsection{Soft envelopes: Chernoff bounds as certificates}\label{sec:tilting}
+
+Envelopes need not be $\{0,1,2,\dots\}$-valued. If
+$C(x)=[S(x)\ge t]$ with $S=\sum_{j=1}^k g_j(x_{B_j})$ a sum of
+$\{0,1\}$-valued sub-circuits on disjoint blocks, then for $\theta\ge0$
+\[
+\varphi_\theta(x)=e^{\theta(S(x)-t)}\ \ge\ \one[S(x)\ge t],\qquad
+Z_\theta=e^{-\theta t}\prod_{j=1}^k\big(1-p_j+p_je^{\theta}\big),
+\]
+where $p_j=D(g_j=1)$. $Z_\theta$ is the Chernoff bound, a deductively valid
+upper bound, and $Q_{\varphi_\theta}$ is the exponentially tilted product
+distribution, sampled block by block. This is the classical efficient
+importance sampler for large deviations of sums \cite{siegmund1976,bucklew2004};
+here is a clean uniform bound on its looseness.
+
+\begin{proposition}[tilting is polynomially tight]\label{prop:tilting}
+Let $\E_D S\le t<k_+$, where $k_+=|\{j:p_j>0\}|$ and $t$ is an integer, and
+choose $\theta\ge0$ with $\E_{Q_\theta}S=t$. Then
+$K=Z_\theta/p\le\tfrac43\big(2\sqrt{k}+1\big)$.
+\end{proposition}
+
+\begin{proof}
+Under $Q_\theta$ the $g_j$ are independent Bernoulli$(p_j^\theta)$, so $S$ is
+Poisson-binomial with integer mean $t$. A Poisson-binomial distribution is
+log-concave, hence unimodal, and its mode differs from its mean by less than
+one \cite{darroch1964}, so its mode is $t$. By Chebyshev,
+$Q_\theta(|S-t|\le2\sigma)\ge3/4$ with $\sigma^2=\mathrm{Var}_{Q_\theta}S\le
+k/4$, and this window contains at most $4\sigma+1$ integers, so
+$Q_\theta(S=t)\ge\frac{3}{4(4\sigma+1)}$. Finally
+$p=Z_\theta\,\E_{Q_\theta}[e^{-\theta(S-t)}\one_{S\ge t}]\ge Z_\theta\,Q_\theta(S=t)$.
+\end{proof}
+
+When the block probabilities $p_j$ are known exactly, the integer-weight case
+can also be computed exactly by dynamic programming over $S$, and real weights
+have a deterministic FPTAS \cite{gopalan2011fptas}; the point of
+\cref{prop:tilting} is that the Chernoff bound, a one-line deduction from the
+syntax ``$C$ is a threshold of independent blocks'', explains all but
+$O(\log k)$ bits of the surprise, and sampling pays for the rest. The same
+estimator applies verbatim when the $p_j$ are estimated (boxes).
+
+\subsection{Certified presumption of independence}\label{sec:janson}
+
+The \emph{presumption of independence} \cite{christiano2022presumption}
+estimates $\Pr[\bigwedge_iA_i]$ by $\prod_i\Pr[A_i]$. For monotone events it can
+be certified: correlation inequalities bound the error in terms of the
+probability carried by dependent pairs, which can be computed or estimated
+without ever conditioning on the rare event.
+
+\begin{theorem}[Harris--Janson sandwich]\label{thm:janson}
+Let $C=\bigwedge_{i=1}^m\mathrm{cl}_i$ be a CNF in which every variable occurs
+with only one sign, $B_i=[\mathrm{cl}_i=0]$ (a subcube), $D$ a product
+distribution, $M=\prod_i(1-D(B_i))$, $\eps_0=\max_iD(B_i)$ and
+$\Delta=\sum_{i\ne j,\ \sv(\mathrm{cl}_i)\cap\sv(\mathrm{cl}_j)\ne\emptyset}D(B_i\wedge B_j)$
+(ordered pairs). Then
+\[
+M\;\le\;p\;\le\;M\exp\Big(\frac{\Delta}{2(1-\eps_0)}\Big),
+\]
+and $M,\Delta,\eps_0$ are computable exactly in time $O(\sum_i|\mathrm{cl}_i|^2\cdot d)$, $d$ the maximum
+number of clauses sharing a variable.
+\end{theorem}
+
+\begin{proof}
+Flip the variables that occur negatively; then every $B_i$ is a principal
+up-set $\{x:x_{S_i}=\one\}$ under a product measure. The lower bound is the
+Harris--Kleitman inequality (the events $\neg B_i$ are decreasing, hence
+positively correlated). The upper bound is Janson's inequality
+\cite[Thm.~8.1.1]{alonspencer}. $D(B_i)$ and $D(B_i\wedge B_j)$ are products of
+marginals over $S_i$ and $S_i\cup S_j$.
+\end{proof}
+
+So for unate CNFs whose dependent pairs carry total probability $\Delta\le\eps$,
+the deterministic estimate $\sqrt{M\cdot Me^{\Delta/(2(1-\eps_0))}}$ has
+relative error $O(\eps)$, however small $p$ is. Example: $m=6\cdot10^4$ random
+clauses of width $12$ over $2\cdot10^5$ variables give $p\approx4.7\cdot10^{-7}$ and an interval of ratio $1.17$ in one second
+(\cref{sec:experiments}). The general version (any $\bigwedge_iA_i$ with each
+$A_i$ a monotone sub-circuit in a common orientation) is in
+\cref{sec:part1}.
