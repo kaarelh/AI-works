@@ -7,8 +7,9 @@ before the final grids).  Strictly, the code must be fixed before the sample
 is drawn.  We cover up to 16 designs by a uniform prior over them: every
 description pays DESIGN_BITS = 4 extra bits, and every disagreement term
 estimated on inputs that the development runs also used is taken at
-confidence delta2 / 16.  The effect on the numbers is negligible (4 bits
-against descriptions of tens to tens of thousands of bits).
+confidence delta2 / 16.  The cost is about 4 ln2 / m in the Occam term plus
+a slightly wider disagreement interval: at most 0.025 on the reported Boolean
+means (at m = 100), under 0.003 for the MNIST bounds.
 """
 import os
 import sys

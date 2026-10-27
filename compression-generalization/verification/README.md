@@ -28,3 +28,44 @@ Four independent AI referees (lenses: proof of the dithered transfer theorem and
 | break-it | code/experiments/analyze_t3_init.py, t3(), Boolean T3 table column 'Th | no | none (the claim describes the previous commit 472016ad; HEAD | No fix needed for the claimed defect; HEAD already does what the referee suggests. Optional hardening: - In boolean_t3.py, add "delta": args.delta and "delta_prime": args.delta_prime to res, so t3_bound uses the confiden |
 
 All items marked real were fixed in commits 472016ad and 324f76f7 (Theorem 5 stated for encoders tuned on S with an auxiliary selection dither; Lemma 6 wording; code flags and certificate-parameter bits in the descriptions; calibrated Monte Carlo test of the Lemma 7 constants with tight acceptance bands; stricter grouping keys in the analyses; per-configuration T2 field renamed; the sqrt(d) remark restricted to boxes and balls and backed by `code/experiments/worstcase_probe.py`; the sign-flip hypothesis in the heuristic after Proposition 9; certification samples drawn from OS entropy; a charge for development-time design choices, `code/experiments/accounting.py`).
+
+# Referee round 2: skeptical paper review, new code, claims against results
+
+Three independent AI referees read the paper and code at commit `bdb413ee`, each with one lens: a skeptical reader of the paper (are the claims supported, are the comparisons fair, is the prior work described correctly); the code added since round 1 (sparse-update networks, the masked dither, `DCTMLP`, `accounting.py`, `make_tables.py`, the init-kernel experiment); and the Boolean and initialization claims checked against the raw result files. Each candidate defect then went to an independent adjudicator, who checked it against the current files. Full record: `referee_round2.json` (including what each referee checked and found correct).
+
+**Outcome.** No referee found an error in a theorem, a proof, or a reported bound; every tabulated bound was recomputed independently from the stored counts. The referees re-derived Lemma 7, checked `certificate_v2` and the masked dither path (Monte Carlo violation rates below η), and checked the sparse-network bookkeeping (the bounded network is the evaluated one). The 32 candidate defects were all about prose: overclaims (the learning-curve wording, the init-kernel rank claims, the deterministic initialization), descriptions of prior work, missing baselines, and a few wrong numbers in the text. They were fixed while the adjudication ran, which is why many verdicts read "already fixed in the current files".
+
+| lens | location | outcome | change |
+|---|---|---|---|
+| paper-critic | paper/sections/discussion.tex:5-7 ("When is the reduction tight?"); same idea in intro.... | fixed | tightness display corrected to err(f)+2ε; realizable-rate caveat stated |
+| paper-critic | paper/sections/abstract.tex:1; intro.tex:16; experiments.tex:9 (Results); README.md:26 | fixed | learning-curve claims replaced by measured gaps (abstract, intro, experiments, README) |
+| paper-critic | paper/sections/exp_init.tex:5 | fixed | linearization agreement stated as 97–99.9% (majority) and 83–87% (parity2); momentum SGD |
+| paper-critic | paper/sections/exp_init.tex:5,9,10; README.md:43; code/experiments/init_kernel.py:115-117 | fixed | rank 4526 removed from the stated candidates; 'exactly'/'sharp' dropped for parity2; rich regime 'weaker', not 'fails' |
+| paper-critic | paper/sections/discussion.tex:11 item (iv); README.md:43 | fixed | deterministic-limit claim restricted to mean-field scaling; NTK initial function noted |
+| paper-critic | paper/sections/theory.tex:99 (Remark, relation to PAC-Bayes); theory/README.md:99 | fixed | Nagarajan–Kolter described as per-input noise resilience; Langford–Shawe-Taylor cited; novelty claim narrowed |
+| paper-critic | paper/sections/related.tex:9 (Biggs & Guedj); intro.tex prior-work bullet; README.md:18-22 | fixed | Biggs–Guedj quoted in both prior settings; contribution framed as mechanism, not tightness |
+| paper-critic | paper/tables/t3_sparse.tex and headline.tex (32-bit Occam = 1.00 for the sparse rows); ... | fixed | sparse-network exact-code baseline (fixed before adjudication) |
+| paper-critic | README.md:25; paper/sections/methods.tex:11 ('For every trained f we report ... the VC ... | fixed | baseline scope in README restricted to the two-hidden-layer Boolean MLPs; Boolean T3 table gained baseline columns |
+| paper-critic | paper/sections/exp_t3.tex:9 (Networks with sparse updates); abstract.tex:1; intro.tex t... | fixed | sparse procedure described as bound-specific (dense deployed weights, higher test error) |
+| paper-critic | paper/sections/exp_t3.tex:7; exp_init.tex:1 (last sentence); README.md:42 | fixed | DCT-initialization claim restated as a shorter code with a similar bound; ~3k bits at matched certified fraction |
+| paper-critic | paper/sections/exp_anyD.tex:1 (last sentence) | fixed | exact-equivalence vacuity attributed to the patch cost; pointer to Theorem 5 restricted to one hidden layer |
+| paper-critic | paper/sections/appendix.tex:3 (float64 caveat for Boolean only); theory.tex Lemma 7; ab... | not a defect | none |
+| paper-critic | paper/sections/theory.tex:74 vs 78-93; theory/README.md:79,83-84; paper/tables/boolean_... | fixed | η/δ' typo from the ν renaming fixed; clip variable written as ν̃ |
+| new-code | paper/tables/headline.tex (sparse rows) and paper/tables/t3_sparse.tex, '32-bit Occam' ... | fixed | (fixed before adjudication) |
+| new-code | README.md:25 ('Parameter-counting (32 bits per weight) and VC bounds are 1.0 for every ... | fixed | (fixed before adjudication) |
+| new-code | paper/sections/appendix.tex:7 (Design charge paragraph); also code/experiments/accounti... | fixed | design-charge cost restated from measurements: ≤0.025 Boolean (m=100), <0.003 MNIST |
+| new-code | paper/sections/appendix.tex:3 ('For n=50, the certified disagreement uses 2x10^5 fresh ... | fixed | (fixed before adjudication) |
+| new-code | README.md:42 ('A deterministic DCT initialization gave a more compressible network (65k... | not a defect | none |
+| new-code | paper/sections/methods.tex:9 ('The biases and the output layer get a common step, a mul... | not a defect | none |
+| new-code | paper/sections/exp_t3.tex:9 ('exactly-zero coefficients are sent exactly (no dither, no... | not a defect | none |
+| new-code | paper/sections/exp_t3.tex:9 ('the output layer takes 20--75% of the total') and exp_t3.... | fixed | (fixed before adjudication) |
+| init-and-boolean-claims | paper/sections/exp_init.tex, paragraph 'The init-kernel codec in the lazy and rich regi... | fixed | (fixed before adjudication) |
+| init-and-boolean-claims | paper/sections/exp_init.tex, first bullet ('For the degree-2 target parity2 it is exact... | fixed | parity2 bound decomposed (0.14 disagreement + 0.45 Occam) |
+| init-and-boolean-claims | paper/sections/exp_init.tex, first bullet: 'Describing 466 coefficients costs about 150... | fixed | (fixed before adjudication) |
+| init-and-boolean-claims | paper/sections/exp_init.tex, bullets 1-2 ('In the lazy regime the best rank is the dime... | fixed | (fixed before adjudication) |
+| init-and-boolean-claims | paper/sections/abstract.tex (last sentence); intro.tex Initialization bullet; discussio... | fixed | n^k claim hedged as heuristic from a single n |
+| init-and-boolean-claims | paper/sections/exp_init.tex: 'The candidate ranks include the dimensions of the low-deg... | fixed | (fixed before adjudication: 4526 removed from the stated candidate ranks) |
+| init-and-boolean-claims | paper/sections/theory.tex, heuristic after Proposition 9 ('its eigenfunctions are Walsh... | fixed | Prop. 9 heuristic: eigenvalue ordering assumed; one sampled θ0 |
+| init-and-boolean-claims | paper/sections/exp_t3.tex, last paragraph: 'With the uniform distribution known, thm:re... | fixed | Boolean T3 gap attributed to weight-space vs function-space; Cor. 3 gives 0.002–0.008 on the n=20 nets |
+| init-and-boolean-claims | paper/sections/exp_init.tex, first paragraph ('Two effects explain why the initializati... | fixed | zero-vs-init comparison flagged as not like-for-like; explanations labelled hypotheses |
+| init-and-boolean-claims | README.md line 43: 'while a distilled junta (20--50 bits) works in both regimes' | not a defect | none |

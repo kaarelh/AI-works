@@ -53,6 +53,9 @@ def vc_dense(r, delta=0.05, m=60000):
 
 
 def write(name, body):
+    # Shrink any table wider than the text block (adjustbox's max width leaves narrower tables alone).
+    body = body.replace(r"\begin{tabular}", r"\begin{adjustbox}{max width=\linewidth}\begin{tabular}")
+    body = body.replace(r"\end{tabular}", r"\end{tabular}\end{adjustbox}")
     os.makedirs(TAB, exist_ok=True)
     open(os.path.join(TAB, name), "w").write(body)
 
@@ -255,8 +258,8 @@ def headline():
         P = rr[0]["params"]
         occ = np.mean([occam_bound(int(round(r["train_err_f"] * m)), m, 32.0 * P + 64, 0.05) for r in rr])
         vc = np.mean([r["baseline_vc_W"] for r in rr])
-        rows.append((label, f"MLP, {P:,} params", "known $D_X$" if not anyD else "none (any $D$)",
-                     f"{n}-bit, $m={m}$", te, bd, bits, occ, vc))
+        rows.append((label + f" ($n={n}$, $m={m}$)", f"MLP, {P / 1000:.0f}k params",
+                     "known $D_X$" if not anyD else "none (any $D$)", te, bd, bits, occ, vc))
     bool_row(b50, "parity3", 0.0, 4000, r"\texttt{parity3}")
     bool_row(b50, "parity3", 0.0, 2000, r"\texttt{parity3}, partly learned")
     bool_row(b50, "junta6", 0.0, 4000, r"\texttt{junta6}")
@@ -270,35 +273,37 @@ def headline():
             K = len(rr)
             b = min(rr, key=lambda r: t2_bound(r, K))
             occ = occam_bound(int(round(b["train_err_f"] * 60000)), 60000, 32.0 * b["params"] + 64, 0.05)
-            rows.append(({"mnist": "MNIST", "fashion": "Fashion-MNIST"}[d], f"784-{H}-10", "unlabeled test inputs",
-                         "$m=60000$", b["test_err_f"], t2_bound(b, K), b["bits"] + 4, occ, b["baseline_vc_W"]))
+            rows.append(({"mnist": "MNIST", "fashion": "Fashion-MNIST"}[d], f"784-{H}-10", "unlabeled inputs",
+                         b["test_err_f"], t2_bound(b, K), b["bits"] + 4, occ, b["baseline_vc_W"]))
     t3rows = load(os.path.join(RES, "mnist", "t3.jsonl"))
     for d, H in [("mnist", 8), ("mnist", 16)]:
         rr = [r for r in t3rows if r["data"] == d and r["widths"][1] == H and r.get("weight_noise", 0) == 0
               and r["basis"] == "dct" and r.get("code_ref", "init") == "init" and r.get("init", "random") == "random"]
         for r in rr:
             occ = occam_bound(int(round(r["train_err_f"] * 60000)), 60000, 32.0 * r["params"] + 64, 0.05)
-            rows.append(({"mnist": "MNIST", "fashion": "Fashion-MNIST"}[d], f"784-{H}-10", "none", "$m=60000$",
+            rows.append(({"mnist": "MNIST", "fashion": "Fashion-MNIST"}[d], f"784-{H}-10", "none",
                          r["test_err_f"], t3_bound(r), r["bits"] + 4, occ, vc_dense(r)))
     sp = load(os.path.join(RES, "mnist", "t3_sparse.jsonl"))
     for d, H, nz in [("mnist", 100, 0.01), ("mnist", 256, 0.003)]:
         rr = [r for r in sp if r["data"] == d and r["widths"][1] == H and abs(r["nonzero_fraction"] - nz) < 1e-4]
         for r in rr:
             occ = sparse_exact_bound(r)[0]
-            rows.append(({"mnist": "MNIST", "fashion": "Fashion-MNIST"}[d], f"784-{H}-10, sparse update ({100 * nz:g}\\%)",
-                         "none", "$m=60000$", r["test_err_f"], t3_bound(r), r["bits"] + 4, occ, None))
-    lines = [r"\begin{table}[t]", r"\centering\small", r"\begin{tabular}{l l l l r r r r r}", r"\toprule",
-             r"task & network $f$ & extra data & data & test err.\ $f$ & bound on $f$ & bits & 32-bit code & VC \\", r"\midrule"]
+            rows.append(({"mnist": "MNIST", "fashion": "Fashion-MNIST"}[d], f"784-{H}-10, {100 * nz:g}\\% update",
+                         "none", r["test_err_f"], t3_bound(r), r["bits"] + 4, occ, None))
+    lines = [r"\begin{table}[t]", r"\centering\small", r"\setlength{\tabcolsep}{4pt}",
+             r"\begin{tabular}{l l l r r r r r}", r"\toprule",
+             r"task & network $f$ & extra data & test err.\ $f$ & bound on $f$ & bits & 32-bit code & VC \\", r"\midrule"]
     for row in rows:
-        vc = "--" if row[8] is None else fmt(row[8], 2)
-        lines.append(f"{row[0]} & {row[1]} & {row[2]} & {row[3]} & {row[4]:.4f} & {fmt(row[5])} & {row[6]:,.0f} & {fmt(row[7], 2)} & {vc}" + r" \\")
+        vc = "--" if row[7] is None else fmt(row[7], 2)
+        lines.append(f"{row[0]} & {row[1]} & {row[2]} & {row[3]:.4f} & {fmt(row[4])} & {row[5]:,.0f} & {fmt(row[6], 2)} & {vc}" + r" \\")
     lines += [r"\bottomrule", r"\end{tabular}",
               r"\caption{Headline results: certified upper bounds on the test error of the trained network itself, at "
               r"confidence 95\%, against its measured test error and two parameter-counting baselines for the same "
               r"network: the Occam bound for coding it exactly with 32 bits per parameter (for sparse-update networks: "
               r"per stored parameter, plus the support), and the VC bound with $d$ equal to the number of parameters "
               r"(optimistic). `Extra data': what the bound uses besides the training set; no row uses labelled "
-              r"held-out data. Chance level is 0.5 for the Boolean tasks and 0.9 for MNIST. Boolean rows average three seeds. "
+              r"held-out data. Chance level is 0.5 for the Boolean tasks and 0.9 for MNIST. Boolean rows average three seeds; "
+              r"image rows are one network each, with $m=60000$. "
               r"`Bits': description length of the compressed or dithered network.}"
               r"\label{tab:headline}", r"\end{table}"]
     write("headline.tex", "\n".join(lines) + "\n")

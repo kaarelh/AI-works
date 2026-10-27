@@ -113,7 +113,7 @@ ysel = fp(Xsel)
 results = []
 best = None
 for r in [8, 16, 31, 64, 128, 256, 466, 1024, 2048, 4526]:
-    if r > Vt.shape[0]:
+    if r > Vt.shape[0]:   # rank is at most n_mc; with n_mc = 4000, 4526 is never evaluated
         break
     coef = Vt[:r] @ D
     for rel in [0.5, 0.25, 0.125, 0.0625]:
