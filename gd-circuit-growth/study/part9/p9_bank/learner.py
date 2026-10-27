@@ -2,14 +2,19 @@
 plus one image member, 'bank' (Part 9, builder I2): a bank of discrete prototype-pair threshold bits with a convex
 (ridge) readout, active only when every column is continuous and d >= 256.  Changes against the Part 8 file: the
 file-location constants, the bank member (functions below the kNN section; its block in fit() after the logistic
-members; its refit in the final-members loop), three constructor arguments, the default name.  Every other member, the
+members; its refit in the final-members loop), seven bank_* constructor arguments, the default name.  Every other member, the
 stacker and the stacking set are the Part 8 code unchanged; the bank uses its own random stream, so the other members'
 fits are identical to Part 8's.
 
 BANK (see DESIGN.md): phi_j(x) = [(x_a - x_b) . x > t_j], a and b training points of different classes (b the nearest
-other-class point to a in a reference sample), t_j a random quantile of the projection; F of them (F <= 4000, from the
-FLOP budget) chosen from a pool of 6F candidates by forward screening on the ridge residual; ridge readout on the
-centred bits, penalty and softmax temperature chosen on an internal validation split.
+other-class point to a in a reference sample), t_j a midpoint between order statistics of the projection (3 stratified
+quantile levels per direction).  F bits (F from the FLOP budget: 2500 at n = 1000, 5000 at n = 10000, 4000 at
+n = 60000 on 784-pixel images) chosen in 8 rounds of forward screening, each round from a fresh pool of 6 F / 8
+candidates scored by squared standardized correlation with the current ridge residual; ridge readout on the centred bits
+(one-hot targets, closed form), penalty and softmax temperature chosen on an internal validation split.  fit_bank also
+has an optional second layer (gates > 0: AND gates of two selected bits as candidates); it is off (tested on dev, no
+consistent gain).  Projections are computed in float64 and thresholds sit between distinct sample values, so the fitted
+member is invariant to a permutation of the pixel columns exactly, not only up to rounding (test_perm.py).
 
 MEMBERS (each a discrete learner; each gives class probabilities):
   dfg     DFG v1.1 (discrete_learner/dfg.py, readout='logit'): exhaustive search over Fourier characters with union-bound
