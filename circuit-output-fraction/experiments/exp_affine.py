@@ -118,9 +118,6 @@ def e1(rng):
     # full rank m, then x_R is uniform given Hx = s, so p = 2^-m Pr[R]
     mask = ((1 << n) - 1) ^ ((1 << kres) - 1)
     assert gf2_rank(rows) == m and gf2_rank([r & mask for r in rows]) == m
-    Cr = Circuit(kres)
-    Rr = random_dnf(Cr, np.arange(kres), 6, 3, np.random.default_rng(0))  # placeholder, replaced below
-    del Cr, Rr
     # Pr[R] by enumeration of the residual block: evaluate C's gate R on 2^15 points
     X = np.zeros((1 << kres, n), dtype=bool)
     X[:, :kres] = ((np.arange(1 << kres)[:, None] >> np.arange(kres)) & 1).astype(bool)
@@ -284,25 +281,6 @@ def e5(rng):
     C.set_output(C.AND(maj, R))
     # exact p: R is independent of the checks (disjoint inputs); the 2-of-3
     # event's probability by inclusion-exclusion over the three subspaces
-    def r(rows):
-        return gf2_rank(rows)
-    V = [blocks[0], blocks[1], blocks[2]]
-    # Pr[V_i cap V_j] = 2^-rank if consistent; the checks were drawn with
-    # random right-hand sides, so test consistency by Gaussian elimination
-    def consistent_rank(sel):
-        A = Affine()
-        for i in sel:
-            for row, g in zip(V[i], range(len(V[i]))):
-                pass
-        return None
-    # simpler and exact: enumerate via the affine machinery
-    spaces = []
-    for i in range(3):
-        A = Affine()
-        ok = True
-        for row in V[i]:
-            pass
-        spaces.append(A)
     sub = Circuit(n, list(C.ops), list(C.args), list(C.params), R)
     X = np.zeros((1 << kres, n), dtype=bool)
     X[:, :kres] = ((np.arange(1 << kres)[:, None] >> np.arange(kres)) & 1).astype(bool)
