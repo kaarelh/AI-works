@@ -44,7 +44,12 @@ class DitheredNet:
     """A dithered one-hidden-layer network g together with its description."""
 
     def __init__(self, f_weights, init_weights, basis, band_ids, unit_exp, band_exp,
-                 b_exp, V_exp, c_exp, seed=None):
+                 b_exp, V_exp, c_exp, seed=None, A=None):
+        """A: optionally, f's first-layer coefficients given exactly (for a
+        network parameterized by them, e.g. models.DCTMLP).  Coefficients that
+        are exactly zero are then transmitted exactly (no dither, error 0): the
+        description codes their positions (the support, per band) and dithers
+        only the nonzero ones."""
         (W, b), (V, c) = f_weights
         (W0, b0), (V0, c0) = init_weights
         self.seed = secrets.randbits(63) if seed is None else int(seed)
@@ -58,17 +63,24 @@ class DitheredNet:
         self.sb = 2.0 ** (self.b_exp / 4.0)
         self.sV = 2.0 ** (self.V_exp / 4.0)
         self.sc = 2.0 ** (self.c_exp / 4.0)
-        A = (W - W0) @ basis
+        self.masked = A is not None
+        if A is None:
+            A = (W - W0) @ basis
+            self.mask = np.ones(A.shape, dtype=bool)
+        else:
+            self.mask = A != 0
+            self.S = np.where(self.mask, self.S, 0.0)   # exact zeros: no dither, no noise
         self.W0, self.b0, self.V0, self.c0 = W0, b0, V0, c0
         xiA = rng.uniform(-0.5, 0.5, A.shape)
         xib = rng.uniform(-0.5, 0.5, b.shape)
         xiV = rng.uniform(-0.5, 0.5, V.shape)
         xic = rng.uniform(-0.5, 0.5, c.shape)
-        self.KA = np.round(A / self.S + xiA).astype(np.int64)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            self.KA = np.where(self.mask, np.round(A / np.where(self.mask, self.S, 1.0) + xiA), 0).astype(np.int64)
         self.Kb = np.round((b - b0) / self.sb + xib).astype(np.int64)
         self.KV = np.round((V - V0) / self.sV + xiV).astype(np.int64)
         self.Kc = np.round((c - c0) / self.sc + xic).astype(np.int64)
-        self.Ag = self.S * (self.KA - xiA)
+        self.Ag = np.where(self.mask, self.S * (self.KA - xiA), 0.0)
         self.bg = b0 + self.sb * (self.Kb - xib)
         self.Vg = V0 + self.sV * (self.KV - xiV)
         self.cg = c0 + self.sc * (self.Kc - xic)
@@ -93,8 +105,15 @@ class DitheredNet:
         d.add("unit steps", sum(coding.signed_int(e) for e in self.unit_exp))
         d.add("band steps", sum(coding.signed_int(e) for e in self.band_exp))
         d.add("other steps", coding.signed_int(self.b_exp) + coding.signed_int(self.V_exp) + coding.signed_int(self.c_exp))
+        d.add("support flag", 1.0)
         for j in range(int(self.band_ids.max()) + 1):
-            d.add("layer0 W", coding.best_tensor_code(self.KA[:, self.band_ids == j]))
+            cols = self.band_ids == j
+            if self.masked:
+                Mj = self.mask[:, cols]
+                d.add("layer0 support", coding.subset(Mj.size, int(Mj.sum())))
+                d.add("layer0 W", coding.best_tensor_code(self.KA[:, cols][Mj]))
+            else:
+                d.add("layer0 W", coding.best_tensor_code(self.KA[:, cols]))
         d.add("layer0 b", coding.best_tensor_code(self.Kb))
         d.add("layer1 W", coding.best_tensor_code(self.KV))
         d.add("layer1 b", coding.best_tensor_code(self.Kc))

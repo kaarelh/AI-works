@@ -165,3 +165,96 @@ def train_error(model, Xt, yt, chunk=1 << 15, with_loss=False):
     if with_loss:
         return wrong / Xt.shape[0], tot / Xt.shape[0]
     return wrong / Xt.shape[0]
+
+
+class DCTMLP(nn.Module):
+    """One-hidden-layer image MLP whose first-layer weights are parameterized as
+    W = W0 + A B^T, with W0 the (seeded) initialization and B the orthonormal 2-D
+    DCT basis.  The network is defined by its parameters (A, b, V, c); trained
+    with an L1 proximal step on A, the update A is exactly sparse."""
+
+    def __init__(self, hidden, seed=0, side=28, classes=10):
+        super().__init__()
+        from .certify import dct_basis
+        base = MLP([side * side, hidden, classes], seed=seed)
+        (W0, b0), (V0, c0) = base.weights()
+        B, _ = dct_basis(side)
+        self.register_buffer("W0", torch.as_tensor(W0, dtype=torch.float32))
+        self.register_buffer("B", torch.as_tensor(B, dtype=torch.float32))
+        self.A = nn.Parameter(torch.zeros(hidden, side * side))
+        self.b = nn.Parameter(torch.as_tensor(b0, dtype=torch.float32))
+        self.V = nn.Parameter(torch.as_tensor(V0, dtype=torch.float32))
+        self.c = nn.Parameter(torch.as_tensor(c0, dtype=torch.float32))
+        self.widths = [side * side, hidden, classes]
+        self._init64 = [(W0, b0), (V0, c0)]
+        self._B64 = B
+
+    def forward(self, x):
+        W = self.W0 + self.A @ self.B.T
+        return F.relu(x @ W.T + self.b) @ self.V.T + self.c
+
+    def init_weights(self):
+        return self._init64
+
+    def coefficients(self):
+        return self.A.detach().double().numpy().copy()
+
+    def weights(self):
+        """float64 weights of the network defined by (A, b, V, c)."""
+        A = self.coefficients()
+        W = self._init64[0][0] + A @ self._B64.T
+        return [(W, self.b.detach().double().numpy().copy()),
+                (self.V.detach().double().numpy().copy(), self.c.detach().double().numpy().copy())]
+
+    def num_params(self):
+        return self.A.numel() + self.b.numel() + self.V.numel() + self.c.numel()
+
+
+def train_prox(model, X, y, *, epochs=20, lr=1e-3, batch=128, lam=0.0, seed=0):
+    """Adam on all parameters, followed after every step by soft-thresholding of
+    the DCT coefficients A at lam * lr (a proximal step for lam * ||A||_1)."""
+    Xt = torch.as_tensor(X, dtype=torch.float32)
+    yt = torch.as_tensor(y)
+    opt = torch.optim.Adam(model.parameters(), lr=lr)
+    g = torch.Generator().manual_seed(seed + 7)
+    n = Xt.shape[0]
+    for ep in range(epochs):
+        perm = torch.randperm(n, generator=g)
+        for s in range(0, n, batch):
+            idx = perm[s:s + batch]
+            loss = F.cross_entropy(model(Xt[idx]), yt[idx])
+            opt.zero_grad()
+            loss.backward()
+            opt.step()
+            if lam > 0:
+                with torch.no_grad():
+                    model.A.copy_(torch.sign(model.A) * torch.clamp(model.A.abs() - lam * lr, min=0.0))
+    return model
+
+
+def prune_finetune(model, X, y, *, density, epochs=10, lr=5e-4, batch=128, seed=0):
+    """Keep the largest-magnitude fraction `density` of the DCT coefficients A
+    (globally), zero the rest, and fine-tune all parameters with that support
+    fixed.  The resulting network has an exactly sparse first-layer update."""
+    with torch.no_grad():
+        a = model.A.abs().flatten()
+        k = max(1, int(round(density * a.numel())))
+        thr = torch.topk(a, k).values[-1]
+        mask = (model.A.abs() >= thr).float()
+        model.A.mul_(mask)
+    Xt = torch.as_tensor(X, dtype=torch.float32)
+    yt = torch.as_tensor(y)
+    opt = torch.optim.Adam(model.parameters(), lr=lr)
+    g = torch.Generator().manual_seed(seed + 11)
+    n = Xt.shape[0]
+    for ep in range(epochs):
+        perm = torch.randperm(n, generator=g)
+        for s in range(0, n, batch):
+            idx = perm[s:s + batch]
+            loss = F.cross_entropy(model(Xt[idx]), yt[idx])
+            opt.zero_grad()
+            loss.backward()
+            opt.step()
+            with torch.no_grad():
+                model.A.mul_(mask)
+    return model
