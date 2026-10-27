@@ -12,7 +12,7 @@ Part 10, builder T. Files:
   on binary / categorical inputs with C = 2 (the toy suites, kr_vs_kp-like tables), so on images and on every other
   tabular set p10_sum is v2 by construction.
 
-FREEZE: see section 6.
+FREEZE: 19:44 UTC, md5 `learner.py` 5ee995add8601b90ee8b1d5612fede87, `dfg13.py` 69cabe5c50345cb24079198ed52b562f (section 6).
 
 Development used only the toy suites `designed`, `dlsymdev`, `dlfamdev` and `dlheld6` (already seen), a few
 synthetic targets of my own (section 4), inputs permuted per fit. No held-out suite (`dlheld7`) or held-out image set
@@ -106,7 +106,9 @@ points and C candidate columns; beam: 16 m C per step for the folded and unfolde
 building the columns; τ evaluations included), so it also counts against DFG's budget caps (a round starts only below
 0.75 of the DFG share).
 
-RESULTS: section 5.
+Measured cost of the fixed dev evaluation: section 5 (largest fit 0.73 of one network run; CPU ≈ 1.6–1.7× v2's
+suite totals). Prediction (not counted, as before): a weighted block costs k additions + one τ evaluation + a binary
+search over its group edges per query.
 
 ## 4. Development history (dev data only)
 
@@ -147,7 +149,114 @@ fit gets) or the portfolio on a few small n, inputs permuted, scored on a fresh 
 
 ## 5. Fixed dev evaluation (frozen files, run once)
 
-TBD
+Run 27 October 2026, 20:00–21:35 UTC (restart: section 6), frozen files (md5 identical before and after,
+`results/md5_{before,after}.txt`). `hybrid/eval_toy.py p10_sum.learner:Learner <suite> --perm`, full grid n = 16 … 16384,
+seeds 0–2, 8 target shards merged with `hybrid/merge_toy.py`. v2's fits: `toy__p9_sum-perm__{designed,dlsymdev}.json`
+(p9_sum = v2 on toy inputs) and `toy__hyb_portfolio2-perm__dlfamdev.json`; the harness's data, permutations and seeds
+are deterministic, so these are the same fits. Script: `results/rule_dev.py` (output `results/rule_dev.txt`).
+
+### Integration rule (PROTOCOL.md, T): designed + dlsymdev + dlfamdev = 41 targets
+
+- **Mean log2 n* ratio p10_sum / v2: −0.066** over the 40 targets that both learn (−0.064 over 41 if fd_10, which
+  neither learns, counts as 0). The rule asks for < −0.05.
+- **Largest per-target increase: +0.257 (fd_06, n* 318 against 266)**; the rule allows ≤ +0.5. Other increases:
+  sparsepoly +0.12 (103 / 95), fd_01 +0.12 (79 / 73), ex3of8, fd_07, rand1 +0.01.
+- **Decreases:** sym7 −1.00 (55 / 110), fd_09 −0.76 (101 / 171), parmaj −0.36 (110 / 142), far9 −0.30 (71 / 87), dnf3
+  −0.19 (118 / 134), mux −0.18 (70 / 79), fd_05 −0.14 (147 / 161), fd_02 −0.10 (66 / 70), ssym9 −0.10 (104 / 111),
+  thrsum −0.02. The other 25 targets: identical n* (to < 0.01 in log2).
+- So both conditions of the rule are met on the dev suites (by a small margin on the mean: the gain is concentrated
+  in a few targets at n = 64–128).
+
+Where the changes act (seed-mean test error, p10_sum / v2):
+
+| target | n = 64 | n = 128 | n = 256 | source of the change |
+|---|---|---|---|---|
+| sym7 | 0.000 / 0.457 | 0.000 / 0.000 | 0.001 / 0.001 | forced block + beam at n = 64 |
+| ssym9 | 0.327 / 0.490 | 0.000 / 0.000 | 0.001 / 0.001 | forced block (1 of 3 seeds) |
+| far9 | 0.116 / 0.177 | 0.005 / 0.005 | 0.003 / 0.003 | forced block |
+| fd_09 | 0.274 / 0.274 | 0.010 / 0.169 | 0.002 / 0.002 | beam at n = 128 |
+| parmaj | 0.466 / 0.466 | 0.000 / 0.117 | 0.000 / 0.000 | beam at n = 128 |
+| dnf3 | 0.252 / 0.256 | 0.080 / 0.108 | 0.002 / 0.001 | (small n) |
+| mux | 0.112 / 0.131 | 0.016 / 0.032 | 0.000 / 0.000 | (small n) |
+| fd_05 | 0.301 / 0.301 | 0.124 / 0.148 | 0.002 / 0.002 | beam at n = 128 |
+| fd_06 | 0.386 / 0.386 | 0.328 / 0.328 | **0.141 / 0.105** | n = 256 (beam off there): the weighted routes or a forced block; not diagnosed |
+| fd_01 | **0.145 / 0.122** | 0.000 / 0.000 | 0.000 / 0.000 | forced block on a halfspace |
+| sparsepoly | **0.162 / 0.146** | 0.072 / 0.066 | 0.008 / 0.008 | (small n) |
+
+At n ≥ 512 the two learners' errors agree on every target to ≤ 0.002 (seed means). fd_10 is not learned by either
+(0.32–0.33 at every n). dlheld6's h6_10 (not part of the rule; quick grid only, section 4): n* 171 against v2's 702.
+
+Per-target table (`results/rule_dev.txt`; CPU = total process seconds of the 33 fits; v2's CPU was measured on a less
+loaded machine):
+
+```
+suite     target       n* p10    n* v2    log2 maxFL/GD  cpu p10   cpu v2 max cpu/fit
+designed  dict             16       16   +0.00    0.191       65       55         6.0
+designed  and3             25       25   +0.00    0.191       76       56         5.2
+designed  maj3             31       31   +0.00    0.191       92       66         8.8
+designed  maj9             80       80   +0.00    0.213      149       91         8.2
+designed  thr10           121      121   +0.00    0.593      534      315        45.8
+designed  par2             16       16   +0.00    0.191       61       53         7.1
+designed  par3             55       55   +0.00    0.195       68       56         7.3
+designed  par4             56       56   +0.00    0.191       61       55         7.2
+designed  stair5          109      109   +0.00    0.193      169       93        15.6
+designed  majpar           60       60   +0.00    0.196      158       86         9.7
+designed  parmaj          110      142   -0.36    0.198      165       89        10.8
+designed  mux              70       79   -0.18    0.192      149       88        11.2
+designed  dnf3            118      134   -0.19    0.381      278      127        21.6
+designed  dlist5           32       32   -0.00    0.212      212      149        21.0
+designed  rmaj9           163      163   +0.00    0.215      230      127        18.5
+designed  andxor           40       40   +0.00    0.191       82       60         7.7
+designed  sparsepoly      103       95   +0.12    0.199      199      102        14.3
+designed  rand0            16       16   +0.00    0.210      214       96        12.9
+designed  rand1            95       95   +0.01    0.201      174       95        15.2
+designed  rand2            16       16   +0.00    0.212      198       99        14.1
+designed  rand3           114      114   +0.00    0.213      187      130        23.1
+dlsymdev  sym7             55      110   -1.00    0.218      139       82         8.2
+dlsymdev  ex3of8          118      117   +0.01    0.228      148       91         9.3
+dlsymdev  band11          829      828   +0.00    0.214      177       94        14.9
+dlsymdev  far9             71       87   -0.30    0.205      142       87         8.0
+dlsymdev  ssym9           104      111   -0.10    0.229      149       90         8.2
+dlsymdev  symxpar         111      111   +0.00    0.203      155       88        13.3
+dlsymdev  twosym          415      415   +0.00    0.237      175       94        10.4
+dlsymdev  thrsum           80       81   -0.02    0.211      193      107        18.6
+dlfamdev  fd_00            75       75   -0.00    0.229      330      192        22.9
+dlfamdev  fd_01            79       73   +0.12    0.220      141       88         9.7
+dlfamdev  fd_02            66       70   -0.10    0.209      194      108        14.3
+dlfamdev  fd_03            81       81   -0.00    0.208      205      134        30.0
+dlfamdev  fd_04           171      171   +0.00    0.231      196      119        11.0
+dlfamdev  fd_05           147      161   -0.14    0.258      178      113        15.0
+dlfamdev  fd_06           318      266   +0.26    0.689      344      217        22.5
+dlfamdev  fd_07            98       97   +0.01    0.316      263      161        28.8
+dlfamdev  fd_08            29       29   +0.00    0.729      359      247        30.4
+dlfamdev  fd_09           101      171   -0.76    0.203      141      101         9.3
+dlfamdev  fd_10           inf      inf   +0.00    0.107      141       82         8.8
+dlfamdev  fd_11           123      123   -0.00    0.583      217      128        15.2
+targets 41; both finite 40; both never 1; mean log2 ratio over finite -0.0656; mean over all (never=never counted 0) -0.0640; max increase +0.257; min -1.003
+```
+
+### Tabular check: kr_vs_kp, n = 1000, seed 0 (`eval_cells.py --ns=1000 --seeds=0 --tag=p10_sum-dev`)
+
+| learner | test error | FLOPs | fraction of budget | CPU |
+|---|---|---|---|---|
+| p10_sum | **0.0038** | 2.60e10 | 0.074 | 15.3 s |
+| v2 (`hyb_portfolio2__kr_vs_kp.json`) | 0.0125 | 2.84e10 | 0.081 | 18.7 s |
+
+(3 against 10 wrong of 799 test points; the stack weights and member out-of-fold errors are close to v2's: DFG 0.017
+against 0.015 out of fold. One seed, so this is a crash / budget check rather than evidence.)
+
+### Cost
+
+| suite | p10_sum total CPU | v2 total CPU | max CPU / fit | median CPU / fit | max FLOPs / GD run (v2) | median FLOPs / GD (v2) |
+|---|---|---|---|---|---|---|
+| designed | 3521 s | 2089 s | 45.8 s (v2 30.4) | 3.9 s (v2 2.6) | 0.593 (0.555) | 0.061 (0.058) |
+| dlsymdev | 1280 s | 734 s | 18.6 s (v2 7.5) | 4.7 s (v2 2.6) | 0.237 (0.236) | 0.054 (0.052) |
+| dlfamdev | 2710 s | 1690 s | 30.4 s (v2 24.4) | 5.9 s (v2 3.7) | 0.729 (0.760) | 0.064 (0.062) |
+
+Every fit stays within one network run (largest 0.73, fd_08; the toy budget is 1.0); the new FLOPs are a few percent
+of a fit. CPU is ≈ 1.6–1.7× v2's suite totals, partly the new searches (beam at n ≤ 128, the weighted routes at every
+n) and partly the machine (load ≈ 20–30 on 4 cores during this run, against a less loaded machine for v2's runs; process
+CPU time rises under contention), so the per-fit CPU ratio attributable to the code is not separated here.
 
 ## 5b. Weaknesses (honest)
 
@@ -206,3 +315,15 @@ cd study/part9 && PYTHONPATH=../part10:. python3 eval_cells.py p10_sum.learner:L
 ```
 Results: `study/hybrid/results/toy__p10_sum-perm__{designed,dlsymdev,dlfamdev}.{json,md}` (copies in `results/`),
 `study/standard_tasks/results/p10_sum-dev__kr_vs_kp.{json,info.json}`.
+
+## 7. Data access
+
+I never loaded, generated, printed or inspected `qd_c`, `qd_d` or the toy suite `dlheld7`, and read no result file or
+log about them. Incidental exposures, recorded for completeness: a `ps` listing of running processes showed the
+command lines of other jobs (e.g. an `eval_cells.py ... qd_c` reference run and an `mlp.py qd_c` run), command lines only;
+a `sed -n 430,460p boolfuncs.py` printed the one-line signature `def make_dl_heldout7_suite(d=30):` at the end of the
+range (no body); the source of `eval_toy.py` and `merge_toy.py` names that function in their suite tables. Nothing about
+`dlheld7`'s targets was seen. Development used designed, dlsymdev, dlfamdev, dlheld6 (already seen), my own synthetic
+targets, and kr_vs_kp validation rows (pool[1000:] of the seed-0 split) before the freeze; the kr_vs_kp test cell was run
+only after the freeze, as part of the fixed evaluation.
+

@@ -130,11 +130,15 @@ Everything is counted as in v2, plus:
 `eval_cells.py p10_hier.learner:Learner <ds> --ns=... --seeds=0 --tag=p10_hier-dev`: test error, seed 0, the same splits
 and per-fit rng as v2's files (`p9_gates-dev__{qd_dev,fashion_mnist}`, `hyb_portfolio2__{qd_a,qd_b}`).
 
-Run 27 October 19:45–21:09 UTC (four processes at once on the shared, heavily loaded machine; load average 20–26 on
-4 cores, so CPU seconds are inflated relative to an idle machine, as v2's own were). Every cell records the learner md5
+Run 27 October 19:45–21:35 UTC (four processes at once on the shared, heavily loaded machine; load average 20–26 on
+4 cores, so CPU seconds are inflated relative to an idle machine, as v2's own were; the n = 60000 cell ran last, under the
+shared lock, on a less loaded machine). Every cell records the learner md5
 `1da21bf7…`. The `qd_dev` process was OOM-killed once by the shared memory cgroup (about 20:29, during its n = 10000 fit; total
 cgroup memory, not this fit alone) and restarted; the cell is resumable, so the n = 1000 cell was kept and n = 10000
-refitted from scratch with the same rng.
+refitted from scratch with the same rng. Earlier, at about 20:13, the same cgroup limit had OOM-killed the
+orchestrator's reference job `mlp.py qd_c` (pid 760, 1.9 GB) while my four dev processes (1–1.8 GB each) were running;
+my processes contributed to that memory pressure. Total wall time of this builder: 18:52–21:36 UTC (freeze at 53 min;
+the rest is the evaluation on the loaded machine and 1 h 28 min of waiting for the lock).
 
 | set | n | v2 err | p10_hier err | log2 ratio | v2 CPU s | p10_hier CPU s | v2 budget | p10_hier budget | ggbt out-of-fold err | ggbt weight | ggbt rounds |
 |---|---|---|---|---|---|---|---|---|---|---|---|
@@ -146,7 +150,7 @@ refitted from scratch with the same rng.
 | qd_a | 10000 | 0.1509 | **0.1456** | −0.052 | 606 | 307 | 0.28 | 0.22 | 0.1675 | 0.41 | 119 |
 | qd_b | 3000 | 0.2238 | **0.2109** | −0.086 | 625 | 485 | 0.62 | 0.70 | 0.2177 | 0.31 | 150 (5 folds) |
 | qd_b | 10000 | 0.1860 | **0.1748** | −0.090 | 563 | 447 | 0.25 | 0.29 | 0.182 | 0.32 | 170 |
-| qd_a | 60000 | 0.1197 | LARGE_ERR | LARGE_LR | 1757 | LARGE_CPU | 0.42 | LARGE_FRAC | | | |
+| qd_a | 60000 | 0.1197 | **0.1108** | −0.111 | 1757 | 924 | 0.42 | 0.44 | 0.1152 | 0.51 | 327 |
 
 (v2: `p9_gates-dev__{qd_dev,fashion_mnist}.json`, `hyb_portfolio2__{qd_a,qd_b}.json`, seed 0; budget = the fit's own
 FLOP count / `common.budget_real` (3 MLP training runs); out-of-fold errors are on the fit's stacking rows. Table from
@@ -155,7 +159,11 @@ FLOP count / `common.budget_real` (3 MLP training runs); out-of-fold errors are 
 **Integration-rule numbers.**
 - Mean log2(err / v2 err) over the 8 small cells: **−0.068** (threshold: below −0.05). 7 of 8 cells lower, Fashion-MNIST
   n = 1000 +0.009 (11 more errors among 10000 test points). QuickDraw cells alone: −0.090; Fashion-MNIST: −0.003.
-- `qd_a` n = 60000: LARGE_SENTENCE
+- `qd_a` n = 60000: test error **0.1108** against v2's 0.1197 (log2 −0.111; the rule's limit is 0.1257); **924 CPU s**
+  per fit against v2's 1757 (0.53x; the limit is 2636); own FLOP count **0.44 of the budget** (v2: 0.42). ggbt alone
+  took 699 CPU s (v2's: 1473), early-stopped at 327 rounds (the 600 cap did not bind), out-of-fold error 0.1152 (v2's
+  0.1267), stacking weight 0.51. Peak process RSS 6.5 GB (sampled every 5 s; `dev/rss_60000.log`), about v2's ~6 GB.
+  The fit waited 1 h 28 min for the shared large-fit lock (held by reference MLP runs) and ran 21:13–21:35 UTC.
 - Budget: every small cell within budget (largest 0.72, `qd_a` n = 3000).
 
 **Reading.**
@@ -185,15 +193,19 @@ FLOP count / `common.budget_real` (3 MLP training runs); out-of-fold errors are 
 - **Chosen on few cells, one seed.** The scale set {(4, 9), (9, 16), (16, 49)}, the 600-round cap and the 150 small-n
   rounds were each chosen from one or two dev cells (booster alone, one LightGBM seed). Differences of 0.002–0.004 in the
   tables of §3 are within run-to-run noise; the level-2 gain (0.008–0.014) is not.
-- **The 600-round cap and dropping the pairs were not tested at n = 60000 before the freeze.** The Part 9 post-hoc
-  ablation found the pairs worth −0.02 log2 there; the longer cap should more than pay for that, but this rests on the
-  one large-n dev cell.
+- **The 600-round cap and dropping the pairs were not tested at n = 60000 before the freeze.** In the one large-n dev
+  cell the cap did not bind (early stop at 327 rounds), so the large-n gain (−0.111) comes from the bank, net of the
+  pairs' −0.02 that the Part 9 post-hoc ablation measured; one cell, one seed.
+- **Early stopping is noisy at n = 10000.** v2's rule (error on an 800-point inner split, patience 50) stopped the
+  booster at 119–214 rounds, where the 10000-row dev curves were still falling at 300; a better stopping rule might be
+  worth more than the cap, and was not tried (frozen).
 - **CPU at small n goes up.** In the k-fold regime ggbt is fitted 6 times with 150 rounds on a bank 1.56x v2's, so
   fits at n <= 3000 cost more CPU than v2's (`qd_dev` n = 1000: 201 s against 132 s), even with the column-wise layout.
 - **Budget use goes up** (`qd_dev` n = 1000: 0.48 of the budget against 0.36); still well inside, and the guard (skip
   ggbt if its projection takes the total above 0.9) never fired on dev.
 - **Memory.** The bank is 1.56x v2's (4840 against 3112 columns on QuickDraw); it is now freed once binned, which v2 did
-  not do.
+  not do. Peak process RSS at `qd_a` n = 60000 was 6.5 GB (v2: ~6 GB). At n ≤ 10000 a fit holds 1–1.8 GB; four such
+  fits plus the other jobs filled the shared 14 GB cgroup once (§5).
 - **Invariance in distribution only** for the booster (LightGBM samples columns by index), as in v2.
 - **Prediction cost** per query is about v2's: the bank needs 2 · d · 3a ≈ 3.2e6 FLOPs (pooled sums) plus 71 a ≈ 5e4
   comparisons (v2: 3.7e6 with the pairs); ≤ 6000 trees at ~10 FLOPs; `gknn`'s scan of the n pooled training rows
