@@ -141,8 +141,7 @@ class DFSB:
         if E.kind[r] == "ONE" or E.mass(self.D) >= 1.0:
             return None
         Np = self._pilot_size()
-        m = E.masses(self.D)
-        X = E.sample(self.D, Np, self.rng, m)
+        X = E.sample(self.D, Np, self.rng, E.log_masses(self.D)[0])
         self.pilot_evals += Np
         c = self.N.eval_batch(X, v)
         phi = E.evaluate(X)
@@ -232,7 +231,7 @@ class DFSB:
                 t.lo, t.hi, t.cost = e.lo, e.hi, e.samples
             total += t.cost
         lo, hi = _combine(root, self.D)
-        val = math.sqrt(lo * hi) if lo > 0 else hi / 2
+        val = math.exp(0.5 * (math.log(lo) + math.log(hi))) if lo > 0 else hi / 2
         return Estimate(val, lo, hi, total, total + self.pilot_evals, delta,
                         f"tree nodes {self.nodes}, leaves {len(leaves)}, d={d}, "
                         f"kinds {_kind_counts(root)}")
@@ -321,36 +320,68 @@ def _kind_counts(t: TNode, acc=None) -> dict:
     return acc
 
 
+def _dn(x: float) -> float:
+    """Round a nonnegative float result down by one ulp (outward rounding)."""
+    return max(0.0, math.nextafter(x, 0.0)) if x > 0 else 0.0
+
+
+def _up(x: float, positive: bool) -> float:
+    """Round up by one ulp; stays positive if the exact value is positive."""
+    if x == math.inf:
+        return x
+    return max(math.nextafter(x, math.inf), math.ulp(0.0)) if positive else max(x, 0.0)
+
+
+def _lit_bounds(D: Product, i: int, b: int) -> tuple[float, float]:
+    v = D.lit_prob(i, b)
+    return _dn(v), min(1.0, _up(v, v > 0))
+
+
 def _combine(t: TNode, D: Product) -> tuple[float, float]:
+    """Interval for the target of t from its children's intervals, with every
+    floating-point operation rounded outwards (so underflow never turns a
+    positive upper end into 0)."""
     k = t.kind
-    if k in ("const", "lit"):
+    if k == "const":
         return t.val, t.val
+    if k == "lit":
+        return _dn(t.val), min(1.0, _up(t.val, t.val > 0))
     if k in ("mc", "env", "loose"):
         return t.lo, t.hi
     if k == "force":
-        w = 1.0
-        for i, b in t.lits:
-            w *= D.lit_prob(i, b)
         lo, hi = _combine(t.children[0], D)
-        return w * lo, w * hi
+        for i, b in t.lits:
+            wl, wh = _lit_bounds(D, i, b)
+            lo, hi = _dn(lo * wl), _up(hi * wh, hi > 0 and wh > 0)
+        return lo, min(hi, 1.0)
     if k == "and":
         lo, hi = 1.0, 1.0
         for c in t.children:
             l, h = _combine(c, D)
-            lo, hi = lo * l, hi * h
-        return lo, hi
+            lo, hi = _dn(lo * l), _up(hi * h, hi > 0 and h > 0)
+        return lo, min(hi, 1.0)
     if k == "or":
-        slo, shi = 0.0, 0.0  # sums of log(1 - x)
+        # 1 - prod(1 - x_i) for independent children, via sums of log(1 - x);
+        # log1p/expm1 are accurate to a few ulps: widen by a relative 2^-45 per child
+        slo, shi = 0.0, 0.0
         for c in t.children:
             l, h = _combine(c, D)
             slo += math.log1p(-min(l, 1.0)) if l < 1 else -math.inf
             shi += math.log1p(-min(h, 1.0)) if h < 1 else -math.inf
-        return -math.expm1(slo), -math.expm1(shi)
+        wid = (len(t.children) + 2) * 2.0 ** -45
+        lo = _dn(-math.expm1(slo) * (1 - wid))
+        hi_raw = -math.expm1(shi)
+        hi = min(1.0, _up(hi_raw * (1 + wid), shi < 0))
+        return lo, hi
     if k == "branch":
-        q = D.q[t.var]
+        q1l, q1h = _lit_bounds(D, t.var, 1)
+        q0l, q0h = _lit_bounds(D, t.var, 0)
         l0, h0 = _combine(t.children[0], D)
         l1, h1 = _combine(t.children[1], D)
-        return (1 - q) * l0 + q * l1, (1 - q) * h0 + q * h1
+        lo = _dn(_dn(q0l * l0) + _dn(q1l * l1))
+        hi = _up(_up(q0h * h0, q0h > 0 and h0 > 0) + _up(q1h * h1, q1h > 0 and h1 > 0),
+                 (q0h > 0 and h0 > 0) or (q1h > 0 and h1 > 0))
+        return lo, min(hi, 1.0)
     raise ValueError(k)
 
 

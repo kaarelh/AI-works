@@ -37,7 +37,8 @@ size written in the argument).]
 \textsc{envelope}: an envelope $\Phi$ (\cref{def:envelope}) with
 $C_v\vdash_P\supp\Phi$, estimated by \cref{thm:envelope,thm:boxes} or by the
 FPRAS-guided sampler of \cref{thm:sis}.
-\textsc{proposal}: a lower bound from a proposal (\cref{sec:lower}).
+\textsc{proposal}: a lower bound from a proposal in self-certifying form
+(\cref{prop:proposal}).
 \textsc{mc}: plain Monte Carlo on $C_v$.
 \end{description}
 The verifier checks every certificate and that $\sum_v\delta_v\le\delta$,
@@ -87,13 +88,13 @@ ratio of their summands; products multiply ratios.
 \subsection{The two-sided workhorse: certified envelopes}
 
 When the envelope is an arbitrary DNNF $E$ given by the prover, the
-derivation-weighted estimator of \cref{thm:envelope} can be needlessly slow:
-its relative variance is
-$\frac{D(E)}{p}\,\E[\varphi\mid E]\,\E[1/\varphi\mid C]-1$, which depends on the
-\emph{dispersion} of the number of derivations, and for
-$E=\bigwedge_{i\le m}(x_i\vee y_i)$ is $(10/9)^m-1$ under every reweighting of
-the $\vee$-edges, although $D(E)=(3/4)^m$ is known exactly. The
-Meel--de Colnet FPRAS for DNNF \cite{meel2026dnnf} removes the dispersion,
+derivation-weighted estimator of \cref{thm:envelope} can be needlessly slow,
+because it pays for the overcounting of derivations: its looseness is
+$\E_D[\varphi]/p$ rather than $D(E)/p$. For $E=\bigwedge_{i\le m}(x_i\vee y_i)$
+under the uniform distribution, $\E_D[\varphi]=1$ while $D(E)=(3/4)^m$, so the
+looseness is inflated by $(4/3)^m$ (and the relative variance is at least
+$(10/9)^m-1$ under every reweighting of the $\vee$-edges). The
+Meel--de Colnet FPRAS for DNNF \cite{meel2026dnnf} removes the overcounting,
 through a Knuth-style sequential sampler whose weights are exactly unbiased
 whatever errors the counter makes.
 
@@ -168,10 +169,17 @@ hashes, so here the proof system matters (\cref{sec:experiments}); extended
 resolution, or an affine envelope, handles them in polynomial size.
 \item \emph{Planted unions.} $C=\bigvee_j(T_j\wedge G_j)$, $T_j$ subcubes of
 large codimension, $G_j$ dense: $K\le$ (overlap)$/\min_j\Pr[G_j\mid T_j]$.
-\item \emph{Thresholds with side conditions.} $C=[w\cdot x\ge\theta]\wedge G$
-with integer $w$: a cutting-planes proof of $w\cdot x\ge\theta$ from $C$ and the
-soft envelope $\beta^{w\cdot x-\theta}$ ($\beta>1$ rational) give $K=O(\sqrt n)$
-(\cref{prop:tilting}); numerically $K=37$ at $n=800$, $p=4\cdot10^{-125}$.
+\item \emph{Thresholds with side conditions.} $C=[w\cdot x\ge\theta]\wedge G$:
+a cutting-planes proof of $w\cdot x\ge\theta$ from $C$ and the soft envelope
+$\beta^{w\cdot x-\theta}$ ($\beta>1$ rational), which dominates $C$ by that
+proof, give
+$K\le K_{\rm tilt}/\Pr_D[G\mid w\cdot x\ge\theta]$, where $K_{\rm tilt}$ is the
+looseness of the tilted envelope for the threshold alone. For unit weights
+$K_{\rm tilt}=O(\sqrt n)$ by \cref{prop:tilting}. For general integer weights
+no such bound holds ($K_{\rm tilt}$ can be $p^{-\Omega(1)}$ when one heavy
+coordinate carries the rarity), and the method is useful only when
+$K_{\rm tilt}$ happens to be small; numerically $K=37$ at $n=800$,
+$p=4\cdot10^{-125}$ for the instance of \cref{sec:experiments}.
 \item \emph{Hidden independence.} A proof that $C\Leftrightarrow\bigwedge_jC_j(x_{S_j})$
 with disjoint $S_j$ turns a product of $k$ moderately rare events into $k$
 separate estimations (\textsc{prod}).
@@ -190,77 +198,136 @@ samples. No SAT proof is needed.
 \subsection{Lower bounds need no deduction}\label{sec:lower}
 
 \begin{proposition}[trace-reconstructible proposals]\label{prop:proposal}
-The prover supplies a seed law $P_R$ on $\bits^r$ with computable pmf and an
-exact sampler, a generator $\psi:\bits^r\to\bits^n$, an inverter
-$\phi:\bits^n\to\bits^r$, and a clip level $\tau$. For $R\sim P_R$ and
-$X=\psi(R)$ let $W=\one[\phi(X)=R]\,C(X)\min(D(X)/P_R(R),\tau)\in[0,\tau]$.
-Then for every $C$ and every choice of the other objects,
+The prover supplies a seed law $P_R$ on $\bits^r$ in \emph{self-certifying}
+form: rational circuits $q_i(r_{<i})\in[0,1]$, $i\le r$ (an autoregressive
+law), or a smooth decomposable probabilistic circuit with rational weights, or
+the law $D\varphi/Z$ of an envelope (\cref{lem:envmass}). The verifier samples
+$R\sim P_R$ with its own coins and computes $P_R(R)$ from the same object, so
+sampler and pmf agree by construction and need no check. The prover also
+supplies circuits $\psi:\bits^r\to\bits^n$ (generator) and
+$\phi:\bits^n\to\bits^r$ (inverter), and a clip level $\tau>0$. For
+$R\sim P_R$ and $X=\psi(R)$ let
 \[
-\E W=\sum_{x\in C^{-1}(1):\,\psi(\phi(x))=x}\min\big(D(x),\tau P_R(\phi(x))\big)\le p,
+W=\one[\phi(X)=R]\,C(X)\min\big(D(X)/P_R(R),\,\tau\big)\in[0,\tau].
 \]
-so the lower end of a KL interval for $\E W$ is a sound lower bound. It is
-within $1-\eps$ of $p$ after $O(K\log(1/\delta)/\eps^2)$ samples if
-$\tau\le Kp$ and the pairs $x$ with $D(x)\le\tau P_R(\phi(x))$ and
-$\psi(\phi(x))=x$ carry $(1-\eps/2)p$.
+\begin{enumerate}[label=(\alph*)]
+\item (Soundness.) For every $C$ and every such $P_R,\psi,\phi,\tau$,
+\[
+\E W=\sum_{x\in C^{-1}(1):\,\psi(\phi(x))=x}\min\big(D(x),\,\tau P_R(\phi(x))\big)\le p,
+\]
+so $\tau$ times the lower end of a KL interval for $W/\tau$ at level $\delta$
+is a lower bound on $p$ with probability at least $1-\delta$.
+\item (Completeness.) If $\tau\le Kp$ and the inputs $x\in C^{-1}(1)$ with
+$\psi(\phi(x))=x$ and $D(x)\le\tau P_R(\phi(x))$ have total $D$-mass at least
+$(1-\eps/2)p$, then after $N=O(K\eps^{-2}\log(1/\delta))$ samples this lower
+bound is at least $(1-\eps)p$ with probability at least $1-\delta$.
+\end{enumerate}
 \end{proposition}
 
 \begin{proof}
-$\psi$ is injective on $R^*=\{r:\phi(\psi(r))=r\}$ (if $\psi(r)=\psi(r')=x$
-then $r=\phi(x)=r'$) and maps it onto $\{x:\psi(\phi(x))=x\}$; substitute
-$x=\psi(r)$. Without the trace check each $x$ would be counted once per
-preimage and $\E W$ could exceed $p$.
+(a) $\psi$ is injective on $R^*=\{r:\phi(\psi(r))=r\}$ (if
+$\psi(r)=\psi(r')=x$ then $r=\phi(x)=r'$) and maps it onto
+$\{x:\psi(\phi(x))=x\}$. Hence $\E
+W=\sum_{r\in R^*}P_R(r)\,C(\psi(r))\min(D(\psi(r))/P_R(r),\tau)$, and the
+substitution $x=\psi(r)$ gives the identity; each term is at most $D(x)$ and
+each $x$ occurs once. (Without the trace check each $x$ would be counted once
+per preimage and $\E W$ could exceed $p$.) (b) The inputs named in the
+hypothesis contribute $D(x)$ each, so $\E W\ge(1-\eps/2)p$. Their inverter
+images are distinct, so their mass is at most $\tau\sum_rP_R(r)=\tau$; hence
+$\tau\ge(1-\eps/2)p$ and $\mu=\E[W/\tau]\ge(1-\eps/2)/K\ge1/(2K)$. By the
+multiplicative Chernoff bound for $[0,1]$-valued variables, after
+$N=cK\eps^{-2}\log(1/\delta)$ samples the KL lower end for $W/\tau$ is at least
+$(1-\eps/2)\mu$ with probability $1-\delta$, and $(1-\eps/2)^2\ge1-\eps$.
 \end{proof}
 
-Special cases: autoregressive models or probabilistic circuits ($r=n$,
-$\psi=\phi=\mathrm{id}$, $P_R=Q$), witness lists (exact lower bound
-$\sum_iD(x^{(i)})$, no sampling), an unproved envelope, and generators with
-inverters such as normalising flows.
+Special cases: autoregressive models and probabilistic circuits ($r=n$,
+$\psi=\phi=\mathrm{id}$), an envelope used without a domination proof (whose
+importance weights then give the lower end of \cref{thm:envelope}(iii)),
+witness lists (the verifier checks $C(x^{(i)})=1$ for distinct $x^{(i)}$: an
+exact lower bound $\sum_iD(x^{(i)})$, no sampling), and generators with
+inverters driven by an autoregressive seed law. What must \emph{not} be
+accepted is a pmf and a sampler supplied separately: their agreement is a
+semantic property the verifier cannot check, and a sampler that over-produces
+a seed whose claimed pmf is tiny inflates $\E W$ arbitrarily.
 
-\subsection{Surprise accounting, made exact}
+\subsection{Surprise accounting}\label{sec:surprise}
 
 Write $\sigma=\log_2(1/p)$ for the surprise of the event. An envelope argument
-explains $\sigma_e=\log_2(1/D(E))$ bits deductively and leaves
-$\sigma_u=\log_2(D(E)/p)$ bits to sampling:
+explains $\sigma_e=\log_2(1/Z)$ bits deductively and leaves
+$\sigma_u=\log_2(Z/p)$ bits to sampling, where $Z$ is the mass of the envelope
+actually sampled: $Z=D(E)$ for a deterministic envelope or one sampled by
+\cref{thm:sis}, $Z=\E_D\varphi$ for \cref{thm:envelope}, and
+$Z=\Lambda=\sum_jD(E_j)$ for a union (\cref{thm:certenv}). Under completeness,
 \[
-\text{verifier time}\;=\;\poly(|\pi|,|C|)\;+\;O\big(2^{\sigma_u}\eps^{-2}\log(1/\delta)\big)\cdot(|C|+|E|).
+\text{verifier time}\;\le\;\poly(|\pi|,|C|)\;+\;O\big(2^{\sigma_u}\eps^{-2}\log(1/\delta)\big)\cdot c_s,
 \]
-For a skeleton of independent components (\textsc{prod} at the top) the
-second term is $\sum_\lambda2^{\sigma_u(\lambda)}$ rather than
-$2^{\sum_\lambda\sigma_u(\lambda)}$: unexplained surprise spread over $t$
-independent components costs about $t\,2^{\sigma_u/t}$. Both terms are
-necessary in the black-box sense:
+where $c_s$ is the cost of one sample: $O(|C|+|E|)$ for a deterministic
+envelope, $|C|$ plus $2n$ counter calls for \cref{thm:sis}. For a skeleton of
+$t$ independent components (\textsc{prod} at the top) estimated separately,
+each leaf needs ratio $1+\eps/(2t)$ and confidence $\delta/t$
+(\cref{prop:calculus}), so the second term becomes
+$O(t^2\eps^{-2}\log(t/\delta))\sum_\lambda2^{\sigma_u(\lambda)}\,c_s$:
+unexplained surprise spread evenly over $t$ independent components costs about
+$t^32^{\sigma_u/t}$ rather than $2^{\sigma_u}$. In the black-box model both
+kinds of bits have a sharp meaning.
 
 \begin{theorem}[proof bits and surprise bits]\label{thm:surprise}
-Let a verifier access $C$ only through $T$ evaluations (adaptive, from any
-distributions) and read an $\ell$-bit argument; let $D$ be uniform.
+Let $D$ be uniform, and let a verifier read an argument of exactly $\ell$ bits
+and access $C$ only through $T$ evaluations, at points it chooses adaptively by
+any randomized rule.
 \begin{enumerate}[label=(\alph*)]
-\item If it is $\delta$-sound for lower bounds on all circuits and, for each
-subcube $S$ of codimension $k$, some argument makes it output $L>0$ on
-$\one_S$ with probability $1-\delta$, then $T\cdot2^\ell\ge(1-2\delta)2^k$.
-Each bit of argument buys at most one bit of surprise, and this is tight:
-revealing $j$ coordinates of $S$ leaves $T=O(2^{k-j}\eps^{-2}\log(1/\delta))$.
-\item Inside a certified envelope $E$, distinguishing $C_0=E\wedge[x_I=b]$
-from $C_1=E\wedge([x_I=b]\vee[x_{I'}=b'])$ (factor $1.5$ apart) needs
-$T\ge(1-2\delta)D(E)/p$ evaluations: the $2^{\sigma_u}$ term cannot be avoided
-by any method that treats the unexplained part of $C$ as a black box.
+\item (Lower bounds.) Fix a set $I$ of $k$ coordinates and let
+$S_b=[x_I=b]$ for $b\in\bits^k$. If the verifier is $\delta$-sound for lower
+bounds on all circuits and, for each $b$, some argument makes it output $L>0$
+on $\one_{S_b}$ with probability at least $1-\delta$, then $T\cdot2^\ell\ge(1-2\delta)2^k$.
+This is tight up to the factor $\eps^{-2}\log(1/\delta)$: an argument consisting of $j$
+bits of $b$ lets the verifier sample $x$ uniformly with those bits fixed, which
+certifies $L\ge(1-\eps)p$ (\cref{prop:proposal}) after
+$T=O(2^{k-j}\eps^{-2}\log(1/\delta))$ evaluations.
+\item (Two-sided intervals inside an envelope.) Let $D$ be uniform on pairs
+$(y,x)$ with at least $2k$ $x$-coordinates, $E=E(y)$ any function of $y$ with
+$D(E)>0$, $S=[x_I=b]$ with $|I|=k$, and $C_0=E\wedge S$, so that
+$p_0=D(C_0)=D(E)2^{-k}$. Suppose the verifier is $\delta$-sound for upper
+bounds on all circuits and that on $C_0$, with some argument $\pi_0$, it
+outputs with probability at least $1-\delta$ an interval $[L,U]\ni p_0$ with
+$U\le(1+\eps)L$, $\eps<1/2$. Then $T\ge(1-2\delta)D(E)/p_0=(1-2\delta)2^{\sigma_u}$,
+where $\sigma_u$ is the surprise left by the envelope $E$.
 \end{enumerate}
 \end{theorem}
 
 \begin{proof}
-(a) Couple the runs on $\one_S$ and on the zero function with the same coins;
-they differ only if a query lands in $S$, which for a fixed query has
-probability $2^{-k}$ over a uniformly random $S$ of the family. Soundness on
-the zero function forces the event ``some query lands in $S$'' to have
-probability at least $1-2\delta$ under the argument $\pi_S$; averaging over
-$S$ and summing over the at most $2^\ell$ arguments gives $1-2\delta\le
-2^\ell T2^{-k}$. (b) The same coupling, with $C_0$ in place of the zero
-function and the random subcube $[x_{I'}=b']$ planted.
+(a) Couple the run on $\one_{S_b}$ with argument $\pi_b$ and the run on the
+zero function with the same argument and the same coins; they differ only if a
+query lands in $S_b$. Soundness on the zero function bounds $\Pr[L>0]$ there by
+$\delta$, so under $\pi_b$ the run on the zero function hits $S_b$ with
+probability at least $1-2\delta$. For a fixed argument $\pi$ that run does not
+depend on $b$, and since the $S_b$ partition the cube each query lies in
+exactly one of them: $\sum_b\Pr_\pi[\text{hit }S_b]\le T$. Summing over $b$
+and over the $2^\ell$ arguments gives $2^k(1-2\delta)\le2^\ell T$. (b) Fix
+$i_0\in I$ and for a uniformly random $k$-set $J$ of $x$-coordinates outside $I$
+and uniform $b''\in\bits^k$ plant $S'=[x_{i_0}=1-b_{i_0}]\wedge[x_J=b'']$,
+which is disjoint from $S$ and has $D(S')=2^{-k-1}$. Then
+$C_1=E\wedge(S\vee S')$ has $p_1=1.5\,p_0$ for every member of the family, and
+every fixed point lies in $S'$ with probability at most $2^{-k}$. Run the
+verifier with $\pi_0$ and the same coins on $C_0$ and on $C_1$. On $C_0$, with
+probability at least $1-\delta$, $U\le(1+\eps)L\le(1+\eps)p_0<p_1$; on $C_1$,
+soundness gives $U\ge p_1$ with probability at least $1-\delta$. So the runs
+differ, which needs a query in $S'$, with probability at least $1-2\delta$.
+The run on $C_0$ does not depend on $S'$; averaging over the family, the
+expected number of its queries in $S'$ is at most $T2^{-k}$. Hence
+$T2^{-k}\ge1-2\delta$.
 \end{proof}
 
-So the cost of certifying a rare event is governed by
-$\min_\pi\big(|\pi|+2^{\sigma_u(\pi)}\big)$, a two-part, MDL-like cost of the
-kind that ``surprise accounting'' \cite{hilton2024surprise} proposes for
-heuristic explanations, here with a sound verifier and a matching lower bound.
+So, up to polynomial factors, certifying a rare event costs $|\pi|+2^{\sigma_u(\pi)}$
+for the argument $\pi$ used: a two-part, MDL-like cost in the spirit of surprise
+accounting \cite{hilton2024surprise} (which adds bits, $|\pi|+\sigma_u$, where
+here the unexplained bits are paid exponentially). The black-box theorem gives
+the two halves a precise sense: each bit of argument reduces the number of
+evaluations needed for a lower bound by at most a factor $2$, and once an
+envelope is certified, the $2^{\sigma_u}$ sampling term cannot be avoided for
+two-sided intervals by any method that treats the rest of $C$ as a black box.
+It is not a lower bound on $|\pi|$ for white-box verifiers, which may need no
+argument at all (an explicit subcube is counted exactly).
 
 \subsection{How much stronger is the prover?}\label{sec:separations}
 

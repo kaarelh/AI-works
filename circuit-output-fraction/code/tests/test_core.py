@@ -257,3 +257,28 @@ def test_telescoping_contains():
     p = exact_prob(cnf_circuit(n, cl), D)
     e = telescoping_estimate(cl, D, N=800, rng=rng)
     assert e.lo <= p <= e.hi
+
+
+def test_envelope_no_underflow():
+    """Masses far below the float range must not turn the upper end into 0."""
+    rng = np.random.default_rng(11)
+    for n, q in ((1000, 0.5), (1200, 0.5), (400, 0.05)):
+        C = Circuit(n)
+        C.set_output(C.AND(*[C.lit(i, 1) for i in range(n)]))
+        D = Product(np.full(n, q))
+        E = dnf_envelope([[(i, 1) for i in range(n)]], n)
+        est = envelope_estimate(C, D, E, eps=0.1, delta=0.05, rng=rng)
+        logp = n * math.log(q)
+        assert est.hi > 0
+        if logp > math.log(1e-300):
+            assert est.lo <= math.exp(logp) <= est.hi and est.lo > 0
+
+
+def test_dfsb_interval_no_underflow():
+    from rareprob.dfsb import dfsb_estimate
+    rng = np.random.default_rng(12)
+    n = 1200
+    C = Circuit(n)
+    C.set_output(C.AND(*[C.lit(i, 1) for i in range(n)]))
+    est = dfsb_estimate(C, Product.uniform(n), eps=0.1, delta=0.05, rng=rng)
+    assert est.hi > 0 and est.lo >= 0

@@ -177,6 +177,47 @@ class Envelope:
         """E_D[phi_v] for every node v (boxes contribute their estimates)."""
         return self._dp(D, lambda b: b.value, sum, math.prod)
 
+    def log_masses(self, D: Product, box_value=None) -> tuple[dict[int, float], float]:
+        """(log E_D[phi_v] for every node v, eta), computed in the log domain so
+        that nothing underflows. eta bounds, over all derivations T, the sum of
+        the local rounding errors on T (a max-sum DP); the sampler's law on
+        derivations and the computed mass are both within e^{+-eta} of exact
+        arithmetic, up to the discreteness of the uniform draws (see
+        envelope_estimate). Boxes contribute log(box_value(b)) (default: the
+        estimate)."""
+        box_value = (lambda b: b.value) if box_value is None else box_value
+        u53 = 2.0 ** -50  # a generous unit of rounding error
+        lm: dict[int, float] = {}
+        err: dict[int, float] = {}
+        for u in self.cone():
+            k = self.kind[u]
+            if k == "ONE":
+                lm[u], loc = 0.0, 0.0
+            elif k == "ZERO":
+                lm[u], loc = -math.inf, 0.0
+            elif k in ("LIT", "BOX"):
+                v = D.lit_prob(*self.data[u]) if k == "LIT" else box_value(self.boxes[self.data[u]])
+                lm[u] = math.log(v) if v > 0 else -math.inf
+                loc = u53 * (2.0 + abs(lm[u])) if v > 0 else 0.0
+            else:
+                ch = self.data[u]
+                vals = [lm[c] for c in ch]
+                fin = [abs(v) for v in vals if v > -math.inf]
+                if k == "SUM":
+                    M = max(vals)
+                    lm[u] = M + math.log(math.fsum(math.exp(v - M) for v in vals)) if M > -math.inf else -math.inf
+                    loc = u53 * (4.0 * len(ch) + abs(lm[u]) + max(fin, default=0.0)) if lm[u] > -math.inf else 0.0
+                else:
+                    lm[u] = math.fsum(vals) if all(v > -math.inf for v in vals) else -math.inf
+                    loc = u53 * len(ch) * (1.0 + sum(fin))
+            if k == "SUM":
+                err[u] = loc + max(err[c] for c in self.data[u])
+            elif k == "PROD":
+                err[u] = loc + sum(err[c] for c in self.data[u])
+            else:
+                err[u] = loc
+        return lm, 2.0 * err[self.root] + 2.0 ** -40
+
     def mass(self, D: Product) -> float:
         return self.masses(D)[self.root]
 
@@ -237,9 +278,10 @@ class Envelope:
     def sample(self, D: Product, N: int, rng: np.random.Generator,
                masses: dict[int, float] | None = None, counter: list | None = None) -> np.ndarray:
         """N samples from D * phi / E[phi] (exact if there are no boxes;
-        with boxes, SUM choices use the boxes' estimated masses)."""
-        m = self.masses(D) if masses is None else masses
-        assert m[self.root] > 0, "envelope has zero mass"
+        with boxes, SUM choices use the boxes' estimated masses). `masses`
+        are log masses as returned by log_masses."""
+        m = self.log_masses(D)[0] if masses is None else masses  # log masses
+        assert m[self.root] > -math.inf, "envelope has zero mass"
         X = D.sample(N, rng)
         order = self.cone()[::-1]  # parents before children
         reach: dict[int, list] = {self.root: [np.arange(N)]}
@@ -258,7 +300,8 @@ class Envelope:
                 self._rejection_fill(self.boxes[self.data[u]], D, X, idx, rng, counter)
             elif k == "SUM":
                 ch = self.data[u]
-                w = np.array([m[c] for c in ch])
+                lw = np.array([m[c] for c in ch])
+                w = np.exp(lw - lw.max())
                 choice = rng.choice(len(ch), size=idx.size, p=w / w.sum())
                 for j, c in enumerate(ch):
                     sel = idx[choice == j]
@@ -318,27 +361,41 @@ def envelope_estimate(C: Circuit, D: Product, env: Envelope, eps: float = 0.1,
 
     If env does not dominate C, the interval is still valid for
     Pr_D[C=1 and phi>0] <= p, so its lower end is a valid lower bound on p.
+
+    Floating point: masses are kept in the log domain, and the interval is
+    widened by e^{+-eta} (the max-path rounding bound of log_masses), by an
+    absolute tau on the mean of W in [0,1] for the discreteness of the uniform
+    draws (each Bernoulli or categorical draw is off by at most 2^-53 per
+    category in total variation), and rounded outwards on conversion.
     """
     rng = np.random.default_rng() if rng is None else rng
     used = env.used_boxes()
     d_box = delta / 2 if used else 0.0
     d_is = delta - d_box
     box_evals = 0
+    L = max(1, _max_boxes_per_derivation(env)) if used else 0
     if used:
-        # box errors compound along derivations; give each box eps/(4L)
-        L = max(1, _max_boxes_per_derivation(env))
-        box_evals = estimate_boxes(env, D, box_eps or eps / (4 * L), d_box, rng, max_samples)
-    m = env.masses(D)
-    Z = m[env.root]
-    if Z == 0.0:
-        return Estimate(0.0, 0.0, 0.0, 0, box_evals, delta, "envelope mass 0")
+        # box errors compound along derivations: rho_max / rho_min <= (1 + eps/(8L))^{2L} <= e^{eps/4}
+        box_evals = estimate_boxes(env, D, box_eps or eps / (8 * L), d_box, rng, max_samples)
+    lm, eta = env.log_masses(D)
+    logZ = lm[env.root]
+    if used:
+        # deductive upper bound p <= E_D[phi] <= mass with every box at its upper end
+        lm_hi, eta_hi = env.log_masses(D, box_value=lambda b: b.hi)
+        z_upper = _exp_up(lm_hi[env.root] + eta_hi)
+    else:
+        z_upper = math.inf
+    if logZ == -math.inf:
+        if not used:  # exact zero mass: phi = 0 everywhere, and phi dominates C
+            return Estimate(0.0, 0.0, 0.0, 0, box_evals, delta, "envelope mass 0")
+        return Estimate(0.0, 0.0, z_upper, 0, box_evals, delta, "estimated envelope mass 0")
     counter = [0]
 
     def draw(k):
         out = []
         while k > 0:
             b = min(k, batch_cap)
-            X = env.sample(D, b, rng, m, counter)
+            X = env.sample(D, b, rng, lm, counter)
             c = C.eval_bits(X)
             phi = env.evaluate(X)
             w = np.zeros(b)
@@ -347,14 +404,39 @@ def envelope_estimate(C: Circuit, D: Product, env: Envelope, eps: float = 0.1,
             k -= b
         return np.concatenate(out)
 
-    eps_is = eps / 2 if used else eps
+    eps_is = eps / 4 if used else 0.999 * eps  # slack for the outward rounding
     est = sequential_mean(draw, eps_is, d_is, max_samples=max_samples)
     rmin, rmax = env.bias_range(D) if used else (1.0, 1.0)
-    lo = est.lo * Z / rmax if rmax < math.inf else 0.0
-    hi = est.hi * Z / rmin if rmin > 0 else math.inf
-    val = min(max(est.value * Z, lo), hi)
+    n_cat = sum(len(env.data[u]) for u in env.cone() if env.kind[u] == "SUM")
+    tau = (D.n + n_cat + 8) * 2.0 ** -52
+    eta = eta + 2.0 ** -45 * (L + 1)  # rounding in the bias range and in 1/phi
+    lo_is, hi_is = max(0.0, est.lo - tau), min(1.0, est.hi + tau)
+    if lo_is > 0 and rmax < math.inf:
+        lo = _exp_down(math.log(lo_is) + logZ - eta - math.log(rmax))
+    else:
+        lo = 0.0
+    if rmin > 0:
+        hi = _exp_up(math.log(hi_is) + logZ + eta - math.log(rmin)) if hi_is > 0 else 0.0
+    else:
+        hi = math.inf
+    hi = min(hi, z_upper)
+    val = min(max(est.value * math.exp(logZ), lo), hi)
     return Estimate(val, lo, hi, est.samples, est.samples + counter[0] + box_evals, delta,
-                    f"envelope mass {Z:.4g}, size {env.size()}, boxes {len(used)}")
+                    f"envelope mass {math.exp(logZ):.4g}, size {env.size()}, boxes {len(used)}")
+
+
+def _exp_up(x: float) -> float:
+    """An upper bound on e^x that is positive whenever x > -inf."""
+    if x == -math.inf:
+        return 0.0
+    return max(math.nextafter(math.exp(x) * (1 + 2.0 ** -50), math.inf), math.ulp(0.0))
+
+
+def _exp_down(x: float) -> float:
+    """A lower bound on e^x."""
+    if x == -math.inf:
+        return 0.0
+    return max(0.0, math.nextafter(math.exp(x) * (1 - 2.0 ** -50), 0.0))
 
 
 def _max_boxes_per_derivation(env: Envelope) -> int:
