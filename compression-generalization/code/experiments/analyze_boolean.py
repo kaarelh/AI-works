@@ -14,13 +14,21 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+from accounting import boolean_bound, boolean_any_D, DESIGN_BITS, DESIGN_FACTOR  # noqa: E402
 ROOT = os.path.join(HERE, "..", "..")
 SERIES = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100"]   # categorical slots 1-4, fixed order
 INK, INK2, GRID = "#0b0b0b", "#52514e", "#e4e3df"
 
 
 def load(path):
-    return [json.loads(l) for l in open(path)]
+    rows = [json.loads(l) for l in open(path)]
+    for r in rows:   # reported bounds include the design charge (accounting.py)
+        r["bound_f_raw"] = r["bound_f"]
+        r["bound_f"] = boolean_bound(r)
+        if "bits_any_D" in r:
+            r["bound_f_any_D"] = boolean_any_D(r)
+    return rows
 
 
 def label(r):
@@ -35,7 +43,8 @@ def summarize(rows, grid):
     lines = [f"# Boolean grid `{grid}`: bounds on the trained network f\n",
              "Each row averages 3 seeds (training sets and initializations). `test err f`: exact "
              "(n = 20, all 2^20 inputs) or on 3x10^5 fresh inputs. `bound on f`: Theorem 2 with delta = 0.05 "
-             "(Occam term for g plus an upper bound on Pr[f != g] under the uniform input distribution). "
+             "(Occam term for g plus an upper bound on Pr[f != g] under the uniform input distribution), "
+             f"including the design charge of accounting.py ({DESIGN_BITS:g} bits, disagreement at delta/{DESIGN_FACTOR}). "
              "`bits`: description length of g. `float32 Occam` and `VC (d = #params)`: parameter-counting "
              "baselines for f itself. Every bound is a valid upper bound for its own seed; the table shows means.\n"]
     has_any = any("bound_f_any_D" in r for r in rows)
@@ -84,6 +93,8 @@ def figure(tasks, groups, grid, path):
             ax.plot(ms, stat("bound_f_any_D"), color=SERIES[2], lw=2, marker="^", ms=4,
                     label="bound, any input distribution (Cor 3)")
         ax.axhline(0.5, color=INK2, lw=1, ls=":")
+        if t == tasks[0]:
+            ax.text(ms[0], 0.36, "chance", fontsize=7, color=INK2)
         ax.set_xscale("log")
         ax.set_yscale("log")
         ax.set_ylim(8e-5, 1.2)
@@ -96,8 +107,8 @@ def figure(tasks, groups, grid, path):
     axes[0, 0].set_ylabel("error (log scale)", fontsize=8, color=INK2)
     h, l = axes[0, 0].get_legend_handles_labels()
     fig.legend(h, l, loc="lower center", ncol=len(l), fontsize=8, frameon=False)
-    fig.suptitle(f"Boolean tasks ({grid}): float32 parameter-counting and VC bounds are 1.0 (vacuous) at every m",
-                 fontsize=9, color=INK2)
+    fig.suptitle(f"Boolean tasks ({grid}); test error 0 is drawn at 1e-4. Parameter-counting (float32 Occam) and VC "
+                 "bounds on the same networks are 1.0 at every m.", fontsize=9, color=INK2)
     fig.tight_layout(rect=(0, 0.06, 1, 0.95))
     fig.savefig(path + ".png", dpi=170)
     fig.savefig(path + ".pdf")

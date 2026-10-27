@@ -7,6 +7,7 @@ import argparse
 import json
 import math
 import os
+import secrets
 import sys
 import time
 
@@ -88,14 +89,15 @@ if args.quick:
 best, cands, inf = compress(f_predict32, n, Xtr, ytr, rng=rng_c, delta=args.delta, seed=args.seed,
                             log=lambda s: None, **kw)
 g = best["g"]
-rng_f = np.random.default_rng(4242 + 1000 * args.seed + m)
+cert_seed = secrets.randbits(63)  # drawn after g is fixed, independent of everything used to build g
+rng_f = np.random.default_rng(cert_seed)
 fb = final_bound(f_predict, g, n, Xtr, ytr, rng=rng_f, delta=args.delta, f_all=pf if n <= 22 else None)
 res = {
     "task": args.task, "n": n, "m": m, "seed": args.seed, "noise": args.noise,
     "widths": widths, "stop_loss": args.stop_loss, "init_scale": args.init_scale, "lr": args.lr, "wd": args.wd,
     "params": W, "train": tr, "train_err_f": k_tr / m,
     "test_err_f": test_err, "test_err_f_clean": test_err_clean,
-    "best_label": best["label"], **fb,
+    "best_label": best["label"], "cert_seed": str(cert_seed), **fb,
     "baseline_occam32": occam_bound(k_tr, m, 32.0 * W + 64, args.delta),
     "baseline_vc_W": vc_bound(k_tr, m, W, args.delta),
     "num_candidates": len(cands),

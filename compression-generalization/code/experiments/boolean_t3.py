@@ -91,13 +91,15 @@ t3 = min(1.0, occam_bound(int((~cert).sum()), m, desc.bits, args.delta) + eta / 
 f32 = [(W.astype(np.float32), b.astype(np.float32)) for W, b in F]
 fp32 = lambda X: np_predict(f32, X)
 bestd, _, _ = compress(fp32, n, Xtr, ytr, rng=np.random.default_rng(3), delta=0.05, log=lambda s: None)
-fb = final_bound(fp, bestd["g"], n, Xtr, ytr, rng=np.random.default_rng(4), delta=0.05)
+cert_seed = secrets.randbits(63)
+fb = final_bound(fp, bestd["g"], n, Xtr, ytr, rng=np.random.default_rng(cert_seed), delta=0.05)
 
 res = {"task": args.task, "n": n, "m": m, "width": H, "seed": args.seed, "weight_noise": args.weight_noise,
        "params": f.num_params(), "train": tr, "train_err_f": k_f / m, "test_err_f": test_err,
        "t1": args.t1, "t2": args.t2, "eta": eta, "chosen": {"gs": gs, "pu": pu}, "dither_seed": str(fin),
        "t3_bits": desc.bits, "t3_code": desc.summary(), "cert_frac": float(cert.mean()), "T3_bound_f_anyD": t3,
        "T2known_bound_f": fb["bound_f"], "T2known_bits": fb["bits"], "T2known_label": bestd["label"],
+       "T2known": fb, "m_train": m,
        "secs": round(time.time() - t0, 1)}
 os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
 with open(args.out, "a") as fh:

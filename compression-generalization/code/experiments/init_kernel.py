@@ -14,6 +14,7 @@ import argparse
 import json
 import math
 import os
+import secrets
 import sys
 import time
 
@@ -128,7 +129,8 @@ for r in [8, 16, 31, 64, 128, 256, 466, 1024, 2048, 4526]:
         if best is None or est < best["est"]:
             best = dict(results[-1], g=g)
 # final certification for the best init-kernel g on fresh inputs
-Xc = uniform_cube(n, 200_000, np.random.default_rng(17))
+cert_seed = secrets.randbits(63)  # fresh, after g is fixed
+Xc = uniform_cube(n, 200_000, np.random.default_rng(cert_seed))
 dk = int(np.sum(fp(Xc) != np_predict(best["g"], Xc)))
 k_err = int(round(best["train_err_g"] * m))
 kernel_bound = min(1.0, occam_bound(k_err, m, best["bits"], args.delta / 2) + cp_upper(dk, len(Xc), args.delta / 2))
@@ -136,13 +138,15 @@ kernel_bound = min(1.0, occam_bound(k_err, m, best["bits"], args.delta / 2) + cp
 # function-space distillation codec on the same f, for comparison
 fp32 = lambda X: np_predict(th, X)
 bestd, _, _ = compress(fp32, n, Xtr, ytr, rng=np.random.default_rng(19), delta=args.delta, log=lambda s: None)
-fb = final_bound(fp, bestd["g"], n, Xtr, ytr, rng=np.random.default_rng(23), delta=args.delta)
+fb = final_bound(fp, bestd["g"], n, Xtr, ytr, rng=np.random.default_rng(secrets.randbits(63)), delta=args.delta)
 
 res = {"task": args.task, "n": n, "m": m, "width": H, "regime": args.regime, "seed": args.seed,
        "init_scale": init_scale, "opt": opt, "lr": lr, "train": tr, "test_err_f": test_err,
        "rel_param_move": rel_move, "lin_disagreement": lin_dis,
        "kernel_spectrum_top": [float(x) for x in sv[:12] ** 2],
        "kernel_codec": {k: v for k, v in best.items() if k != "g"}, "kernel_bound_f": kernel_bound,
+       "kernel_cert": {"train_err_g": k_err, "bits": best["bits"], "dis_count": dk, "n_cert": len(Xc), "m": m},
+       "distill_cert": fb,
        "kernel_sweep": results,
        "distill_bound_f": fb["bound_f"], "distill_bits": fb["bits"], "distill_label": bestd["label"],
        "secs": round(time.time() - t0, 1)}

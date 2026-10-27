@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, ".."))
 from analyze_mnist import main as t2_table  # noqa: E402
+from accounting import t1_bound, t2_bound, t3_bound, boolean_bound  # noqa: E402
 
 ROOT = os.path.join(HERE, "..", "..")
 RES = os.path.join(ROOT, "results")
@@ -52,7 +53,7 @@ def t3():
         occ32 = occam_bound(int(round(r["train_err_f"] * 60000)), 60000, 32.0 * W + 64, 0.05)
         out.append(f"| {r['data']} | {r['widths'][1]} | {r.get('weight_noise', 0)} | {r.get('init', 'random')} | "
                    f"{r.get('code_ref', 'init')} | {r['basis']} | {W} | {r['train_err_f']:.4f} | {r['test_err_f']:.4f} | "
-                   f"{r['bits']:.0f} | {r['cert_frac']:.4f} | {r['T3_bound_f']:.4f} | {r['t1']}, {r['t2']} | "
+                   f"{r['bits']:.0f} | {r['cert_frac']:.4f} | {t3_bound(r):.4f} | {r['t1']}, {r['t2']} | "
                    f"{r['eta'] / r['delta_prime']:.1e} | {occ32:.2f} | {r['test_err_g']:.4f} |")
     bt = load(os.path.join(RES, "boolean", "t3.jsonl"))
     if bt:
@@ -61,8 +62,8 @@ def t3():
                 "|" + "---|" * 11]
         for r in sorted(bt, key=lambda r: (r["n"], r["task"], r["m"], r["width"], r["weight_noise"])):
             out.append(f"| {r['task']} | {r['n']} | {r['m']} | {r['width']} | {r['weight_noise']} | {r['test_err_f']:.4f} | "
-                       f"{r['t3_bits']:.0f} | {r['cert_frac']:.4f} | {r['T3_bound_f_anyD']:.4f} | "
-                       f"{r['T2known_bound_f']:.4f} | {r['T2known_bits']:.0f} |")
+                       f"{r['t3_bits']:.0f} | {r['cert_frac']:.4f} | {t3_bound(r):.4f} | "
+                       f"{boolean_bound(dict(r['T2known'], m=r['m'])):.4f} | {r['T2known_bits']:.0f} |")
     open(os.path.join(RES, "summary_t3.md"), "w").write("\n".join(out) + "\n")
     # figure: bound vs hidden width, standard and noise-trained, MNIST and Fashion
     sel = [r for r in rows if r.get("init", "random") == "random" and r.get("code_ref", "init") == "init" and r["basis"] == "dct"]
@@ -74,7 +75,7 @@ def t3():
                 rr = sorted([r for r in sel if r["data"] == d and r.get("weight_noise", 0) == wn], key=lambda r: r["widths"][1])
                 H = [r["widths"][1] for r in rr]
                 lab = "standard training" if wn == 0 else f"trained with weight noise {wn:g}"
-                ax.plot(H, [r["T3_bound_f"] for r in rr], color=SERIES[1 + 2 * j], lw=2, marker="o", ms=4,
+                ax.plot(H, [t3_bound(r) for r in rr], color=SERIES[1 + 2 * j], lw=2, marker="o", ms=4,
                         label=f"T3 bound on f, {lab}")
                 ax.plot(H, [r["test_err_f"] for r in rr], color=SERIES[0 + 3 * j], lw=1.5, ls="--", marker="s", ms=3,
                         label=f"test error of f, {lab}")
@@ -96,23 +97,22 @@ def t3():
 def init():
     rows = load(os.path.join(RES, "init", "mnist_init.jsonl"))
     out = ["# Initialization study\n", "## MNIST, 784-256-10, codes relative to the initialization vs relative to zero\n",
-           "Each row: one trained f, best over 8 compression configurations (union-bound corrected for the "
-           "disagreement term). T1 = Occam bound on g; T2 = bound on f with unlabeled test inputs.\n",
+           "Each row: one trained f and code family, best over its compression configurations (union-bound corrected "
+           "for the disagreement term; design charge of accounting.py). T1 = Occam bound on g; T2 = bound on f with unlabeled test inputs.\n",
            "| init | init scale | code ref | test err f | best T1 | bits (T1) | best T2 | bits (T2) |", "|---|---|---|---|---|---|---|---|"]
     from cgb.bounds import occam_bound, cp_upper
     groups = collections.defaultdict(list)
     for r in rows:
-        groups[(r.get("init", "random"), r["init_scale"], r.get("code_ref", "init"))].append(r)
+        groups[(r.get("init", "random"), r["init_scale"], r.get("code_ref", "init"), r["data"],
+                tuple(r["widths"]), r["seed"], r["epochs"], r["lr"], r["wd"])].append(r)
     for k in sorted(groups):
         g = groups[k]
+        assert len({(r["train_err_f"], r["test_err_f"]) for r in g}) == 1, "group mixes networks"
         K = len(g)
-        b1 = min(g, key=lambda r: r["T1_bound_g"])
-        def t2(r):
-            return min(1.0, occam_bound(int(round(r["train_err_g"] * 60000)), 60000, r["bits"], 0.025)
-                       + cp_upper(r["dis_count"], r["n_unlabeled"], 0.025 / K))
-        b2 = min(g, key=t2)
-        out.append(f"| {k[0]} | {k[1]} | {k[2]} | {g[0]['test_err_f']:.4f} | {b1['T1_bound_g']:.4f} | {b1['bits']:.0f} | "
-                   f"{t2(b2):.4f} | {b2['bits']:.0f} |")
+        b1 = min(g, key=t1_bound)
+        b2 = min(g, key=lambda r: t2_bound(r, K))
+        out.append(f"| {k[0]} | {k[1]} | {k[2]} | {g[0]['test_err_f']:.4f} | {t1_bound(b1):.4f} | {b1['bits']:.0f} | "
+                   f"{t2_bound(b2, K):.4f} | {b2['bits']:.0f} |")
     ik = load(os.path.join(RES, "init", "init_kernel.jsonl"))
     if ik:
         out += ["\n## Boolean, n = 30, one hidden layer of 512: init-kernel codec vs distillation codec\n",
@@ -124,8 +124,8 @@ def init():
         for r in sorted(ik, key=lambda r: (r["task"], r["regime"], r["m"])):
             kc = r["kernel_codec"]
             out.append(f"| {r['task']} | {r['regime']} | {r['m']} | {r['test_err_f']:.4f} | {r['rel_param_move']:.2f} | "
-                       f"{r['lin_disagreement']:.3f} | {kc['r']} | {kc['bits']:.0f} | {r['kernel_bound_f']:.4f} | "
-                       f"{r['distill_bits']:.0f} | {r['distill_bound_f']:.4f} | {r['distill_label']} |")
+                       f"{r['lin_disagreement']:.3f} | {kc['r']} | {kc['bits']:.0f} | {boolean_bound(r['kernel_cert']):.4f} | "
+                       f"{r['distill_bits']:.0f} | {boolean_bound(dict(r['distill_cert'], m=r['m'])):.4f} | {r['distill_label']} |")
     open(os.path.join(RES, "summary_init.md"), "w").write("\n".join(out) + "\n")
 
 

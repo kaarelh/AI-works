@@ -179,6 +179,8 @@ def final_bound(f_predict, g, n, Xtr, ytr, *, rng, delta=0.05, n_cert=200_000, e
         for s in range(0, n_cert, 200_000):
             Xc = uniform_cube(n, min(200_000, n_cert - s), rng)
             dis_k += int(np.sum(f_predict(Xc) != g.predict(Xc)))
+        out["dis_count"] = dis_k
+        out["n_cert"] = n_cert
         out["dis_hat"] = dis_k / n_cert
         out["dis_upper"] = cp_upper(dis_k, n_cert, delta / 2)
         out["occam_g"] = occam_bound(k_err, m, g.bits, delta / 2)

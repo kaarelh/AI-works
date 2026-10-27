@@ -134,9 +134,9 @@ for basis in args.bases:
                            train_err_g=k_g / m, test_err_g=float(np.mean(pg_te != yte)),
                            T1_bound_g=occ, dis_test_inputs=dis_k / len(yte), dis_count=dis_k, n_unlabeled=len(yte),
                            train_dis=float(np.mean(pg_tr != pf_tr)), dis_upper=cpu,
-                           T2_bound_f=min(1.0, occ2 + cpu), secs=round(time.time() - t1, 1))
+                           T2_bound_f_fixed_config=min(1.0, occ2 + cpu), secs=round(time.time() - t1, 1))
                 with open(args.out, "a") as fh:
                     fh.write(json.dumps(res) + "\n")
                 print(json.dumps({k: res[k] for k in ["basis", "mode", "rel", "lam", "bits", "nonzeros",
                                                       "train_err_g", "test_err_g", "T1_bound_g",
-                                                      "dis_test_inputs", "T2_bound_f", "secs"]}), flush=True)
+                                                      "dis_test_inputs", "T2_bound_f_fixed_config", "secs"]}), flush=True)

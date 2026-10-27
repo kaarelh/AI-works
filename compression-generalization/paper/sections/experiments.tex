@@ -1,0 +1,35 @@
+\section{Experiments}\label{sec:experiments}
+
+All numbers in this section are produced by the scripts in \repo{code/experiments} and are reported in the summary files of \repo{results}; the tables below are generated from those files by \repo{code/experiments/make_tables.py}. Every reported bound includes a charge for the codec designs we tried on the same data during development (4 bits per description, and the disagreement term at confidence $\delta_2/16$; \repo{code/experiments/accounting.py}).
+
+\subsection{Boolean tasks with a known input distribution}\label{sec:exp-bool}
+
+\paragraph{Setup.} Inputs are uniform on $\{\pm1\}^{50}$. Targets: the parity of 3 fixed coordinates (\texttt{parity3}), the majority of 5 (\texttt{maj5}), the AND of 3 (\texttt{and3}), a random truth table on 6 coordinates (\texttt{junta6}), and the majority of all 50 (\texttt{fullmaj}), plus \texttt{maj5} and \texttt{parity3} with 10\% of the training labels flipped. The network $f$ is an MLP of widths $(50,512,512,1)$ with 289{,}281 parameters, trained with Adam (learning rate $10^{-3}$, batch 64) until it reaches zero training error and a mean training loss below $0.01$. We use $m\in\{250,\dots,16000\}$ and three seeds per setting (training set and initialization). The bound is \cref{thm:reduction} with the codec of \cref{sec:methods}; the disagreement term uses $2\times10^5$ fresh uniform inputs.
+
+\paragraph{Results.} \Cref{fig:boolean,tab:boolean} show the main finding: wherever $f$ generalizes, the bound on $f$ is close to its test error. Across the learning curve the bound is roughly test error plus $L\ln2/m$, where $L$ is 28--100 bits (a truth table on the relevant coordinates or a linear threshold function). The parameter-counting baseline (32 bits per parameter, about $9.3\times10^6$ bits) and the VC baseline are 1.0 for every network. Where $f$ has not learned the target (\texttt{parity3} at $m\le1000$), the bound is vacuous, correctly. Where $f$ has partially learned it, the bound still tracks: at $m=2000$, \texttt{parity3} networks have test error $0.29$ and bound $0.30$. The best $g$ is then the true parity, with zero training errors, and $\Pr[f\ne g]$ is $f$'s error.
+
+\paragraph{Interpolating noisy labels.} With 10\% label noise, $f$ fits every flipped label (zero training error). Its test error on noisy labels is $0.1+0.8\,\Pr[f\ne\text{target}]$. The compressed $g$ is the clean rule, so $\err(g)\approx0.1$ and $\Pr[f\ne g]$ measures the damage done by memorization. At $m=16000$ the bounds are 0.17 against a test error of 0.14 for both tasks. A bound of this kind needs only that $f$ is close to a short program on most of the input space; it does not need $f$ to be simple.
+
+\input{tables/boolean_n50}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{../figures/boolean_n50.pdf}
+\caption{Boolean tasks, $n=50$: test error of the trained network $f$ (blue) and the certified upper bound on it from \cref{thm:reduction} (orange), averaged over 3 seeds, versus the number of training examples. The dotted line is chance.}\label{fig:boolean}
+\end{figure}
+
+\subsection{Distribution-free bounds by exact equivalence}\label{sec:exp-anyD}
+
+\input{sections/exp_anyD}
+
+\subsection{Images: bounds with unlabeled inputs}\label{sec:exp-t2}
+
+\input{sections/exp_t2}
+
+\subsection{Images and Boolean tasks: bounds from training data alone}\label{sec:exp-t3}
+
+\input{sections/exp_t3}
+
+\subsection{Initialization}\label{sec:exp-init}
+
+\input{sections/exp_init}
