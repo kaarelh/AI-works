@@ -1,0 +1,120 @@
+\section{From a short description to a bound on the trained network}\label{sec:theory}
+
+\paragraph{Setting.} $D$ is a distribution on $\mathcal X\times\mathcal Y$ with input marginal $D_X$, and the training sample is $S=((x_i,y_i))_{i\le m}\sim D^m$. For a predictor $h$, $\err(h)=\Pr_D[h(x)\ne y]$ and $k_S(h)=\#\{i:h(x_i)\ne y_i\}$. The trained network $f=f_S$ is an arbitrary function of $S$ and of any other randomness used in training. A \emph{code} is a countable set $\Sigma$ of descriptions with lengths $L:\Sigma\to[0,\infty)$ satisfying $\sum_\sigma 2^{-L(\sigma)}\le1$, fixed before $S$ is seen; $\sigma$ decodes to a predictor $g_\sigma$. All our lengths are $-\log_2$ of products of conditional probabilities (Elias-$\delta$ codes for integers, enumerative codes for subsets, adaptive Krichevsky--Trofimov codes for integer arrays), so they need not be integers. We write $\Bin(k,m,\alpha)=\sup\{p:\Pr[\mathrm{Bin}(m,p)\le k]\ge\alpha\}$ for the binomial tail inversion.
+
+\begin{lemma}[Occam bound, exact binomial form]\label{lem:occam}
+With probability at least $1-\delta$ over $S$, simultaneously for all $\sigma\in\Sigma$,
+\[
+\err(g_\sigma)\le\Bin\big(k_S(g_\sigma),m,\delta2^{-L(\sigma)}\big)\le\kl^{-1}\Big(\tfrac{k_S(g_\sigma)}{m},\ \tfrac{L(\sigma)\ln2+\ln(1/\delta)}{m}\Big).
+\]
+\end{lemma}
+\begin{proof}
+For fixed $\sigma$, $k_S(g_\sigma)\sim\mathrm{Bin}(m,\err(g_\sigma))$, so $\err(g_\sigma)>\Bin(k_S,m,\alpha)$ says that $k_S$ falls in a lower tail of mass less than $\alpha=\delta2^{-L(\sigma)}$. Sum over $\sigma$ using Kraft. The second inequality is the Chernoff bound $\Pr[\mathrm{Bin}(m,p)\le qm]\le e^{-m\,\kl(q\|p)}$ for $q\le p$.
+\end{proof}
+The description may be chosen after seeing $S$ in any way.
+
+\begin{theorem}[reduction to compression]\label{thm:reduction}
+For any predictor $f$ and any description $\sigma=\sigma(S)$, $\err(f)\le\err(g_\sigma)+\Pr_{D_X}[f(x)\ne g_\sigma(x)]$. If, after $\sigma$ is fixed, $N$ inputs are drawn i.i.d.\ from $D_X$ independently of everything else and $f\ne g_\sigma$ on $j$ of them, then with probability at least $1-\delta_1-\delta_2$,
+\[
+\err(f)\le\Bin\big(k_S(g_\sigma),m,\delta_12^{-L(\sigma)}\big)+\Bin(j,N,\delta_2).
+\]
+\end{theorem}
+\begin{proof}
+$\{f(x)\ne y\}\subseteq\{g(x)\ne y\}\cup\{f(x)\ne g(x)\}$. The first term is \cref{lem:occam}; conditional on $(S,\sigma)$ the disagreement indicators are i.i.d.\ Bernoulli with mean $\Pr_{D_X}[f\ne g_\sigma]$, so Clopper--Pearson gives the second.
+\end{proof}
+
+The disagreement term needs \emph{inputs} from $D_X$ but no labels. We use three sources: (i) a known, sampleable $D_X$ (Boolean tasks with uniform inputs: the inputs are free, and for $\{\pm1\}^n$ with $n\le22$ we enumerate them, making the term exact); (ii) unlabeled samples (MNIST test images without labels; this is the setting of \citet{bazinet2026bound}); (iii) none at all (\cref{sec:transfer}). If $K$ candidate surrogates are compared on the same $N$ inputs, $\delta_2$ is replaced by $\delta_2/K$; our experiments either select on a separate pool or apply this correction.
+
+\begin{corollary}[distribution-free, finite domain]\label{cor:anyD}
+Let $\mathcal X$ be finite. If a description $g'$ satisfies $g'(x)=f(x)$ for all $x\in\mathcal X$, then for every distribution $D$, with probability $\ge1-\delta$, $\err_D(f)\le\Bin(k_S(f),m,\delta2^{-L(g')})$. A short $g$ that disagrees with $f$ on a set $E$ becomes such a $g'$ by appending $E$, at a cost of $1+L_\delta(|E|+1)+\log_2\binom{|\mathcal X|}{|E|}$ bits.
+\end{corollary}
+
+\subsection{Bounds from training data alone}\label{sec:transfer}
+
+The disagreement term is a statement about $D_X$. To avoid it, make the closeness certificate a function of the short description only, evaluate it at the training inputs, and transfer it with the same Occam bound.
+
+\begin{theorem}[certified transfer]\label{thm:certified}
+Let each $\sigma$ define a set $K_\sigma$ of predictors and a measurable $\pi_\sigma:\mathcal X\times\mathcal Y\to\{0,1\}$ with $\pi_\sigma(x,y)=1\Rightarrow h(x)=y$ for all $h\in K_\sigma$. With probability $\ge1-\delta$, simultaneously for all $\sigma$ and all $h\in K_\sigma$,
+\[
+\err(h)\le\Bin\big(\#\{i:\pi_\sigma(x_i,y_i)=0\},m,\delta2^{-L(\sigma)}\big).
+\]
+\end{theorem}
+\begin{proof}
+$\err(h)\le\Pr_D[\pi_\sigma=0]$ for $h\in K_\sigma$; apply \cref{lem:occam} to the losses $1-\pi_\sigma$.
+\end{proof}
+
+For networks, $K_\sigma$ is a set of weights around a quantized network and $\pi_\sigma$ a sound interval bound; $f\in K_\sigma$ is checked on the weights. This works poorly for dense networks. If the residual $f-g$ is spread over $d$ coordinates, the worst case of $|\Delta w\cdot x|$ over a box or ball containing it (any set that is cheap to describe without knowing the residual's direction relative to $x$) is larger than its actual value by a factor of order $\sqrt d$. On a 784--100--10 MNIST network the ratio of certified to actual first-layer error is 12--13 at every step size we tried, and certifying 95\% of the training points needs about 8 bits per first-layer coefficient (\cref{sec:exp-t3}). Randomizing the quantization removes the $\sqrt d$.
+
+\paragraph{Dithered compression.} Let $\xi$ be public randomness drawn independently of $S$, of the test point and of any auxiliary randomness $\zeta$ used to tune the encoder. In our code $\xi$ is generated from fresh operating-system entropy after training and after tuning, and the pseudo-random generator is modelled as truly random, as for any randomized bound. An encoder maps $(f,\xi)$ to a description $\sigma=\sigma_{S,\zeta}(f,\xi)$; it may depend on $S$ and $\zeta$ arbitrarily, for instance through step sizes chosen on the training data. Each $(\sigma,\xi)$ defines a certificate $\pi_{\sigma,\xi}$.
+
+\begin{theorem}[dithered transfer]\label{thm:dither}
+Suppose that for every fixed encoder (every value of $(S,\zeta)$), every network $f$ and every $(x,y)$ there is an event $\mathrm{Bad}_{x,y}(f,\xi)$ with $\Pr_\xi[\mathrm{Bad}_{x,y}]\le\eta$ such that $\pi_{\sigma(f,\xi),\xi}(x,y)=1$ and not $\mathrm{Bad}_{x,y}$ imply $f(x)=y$. Then with probability $\ge1-\delta-\delta'$ over $(S,\zeta,\xi)$,
+\[
+\err(f)\le\Bin\big(\#\{i:\pi(x_i,y_i)=0\},m,\delta2^{-L(\sigma)}\big)+\eta/\delta'.
+\]
+\end{theorem}
+\begin{proof}
+$\err(f)\le\Pr_D[\pi=0]+\Pr_D[\mathrm{Bad}]$. Conditional on $\xi$, $S$ is i.i.d.\ from $D$ and $\{\pi_{\sigma,\xi}\}_\sigma$ is a fixed family, so \cref{lem:occam} bounds the first term for all $\sigma$ at once. Conditional on $(S,\zeta)$, which fixes $f$ and the encoder, Fubini gives $\E_\xi\Pr_D[\mathrm{Bad}]=\E_D\Pr_\xi[\mathrm{Bad}]\le\eta$, and Markov's inequality gives $\Pr_\xi[\Pr_D[\mathrm{Bad}]>\eta/\delta']\le\delta'$.
+\end{proof}
+Hyperparameters chosen by looking at $\xi$ itself would need a union bound in the Markov step; we choose them with an independent selection dither $\zeta$ and certify with a fresh $\xi$. Hyperparameters that change the certificate (step sizes, the basis, $t_1,t_2$) must be part of $\sigma$ or fixed in advance, so that the Occam step covers them.
+
+\begin{lemma}[subtractive dither \cite{schuchman1964dither}]\label{lem:dither}
+For $a\in\R$, $s>0$ and $U\sim\mathrm{Unif}[-\frac12,\frac12]$, the error $s(\mathrm{round}(a/s+U)-U)-a$ is uniform on $[-\frac s2,\frac s2]$ whatever $a$ is. With independent $U$'s per coordinate, the errors are independent, the error in a coordinate with step $s_k$ is uniform on $[-\frac{s_k}2,\frac{s_k}2]$, and their joint law does not depend on $f$.
+\end{lemma}
+
+The decoder knows $\xi$ and the integers $K=\mathrm{round}(a/s+\xi)$, so $g$ costs $L(K)$ bits while $g-f$ is noise of known law. The next lemma turns this into a per-input certificate for one-hidden-layer networks.
+
+\begin{lemma}[certificate for one-hidden-layer networks]\label{lem:cert}
+Let $f(x)=V\relu(Wx+b)+c$ with $W=W_0+AB^\top$ ($W_0$ the initialization, $B$ an orthonormal basis), $V\in\R^{C\times H}$, and let $g$ be obtained by subtractive dithering of $A$ (steps $s_{ik}\ge0$; a step of $0$ means the coefficient is sent exactly, as we do for coefficients that are exactly zero), $b-b_0$ (step $s^b$), $V-V_0$ ($s^V$) and $c-c_0$ ($s^c$). Fix $(x,y)$, put $\hat x=B^\top x$, $v_i=\sum_ks_{ik}^2\hat x_k^2/12+(s^b)^2/12$ and $\tau_i=t_1\sqrt{v_i}$, and let $u'_i$, $z'$ be $g$'s pre-activations and logits. For $c\ne y$ let $D_i=|V'_{yi}-V'_{ci}|+s^V$, let $w_i$ be $1$ if $u'_i\ge2\tau_i$, $0$ if $u'_i\le-2\tau_i$ and $2$ otherwise, and
+\begin{align*}
+\hat P_c&=\textstyle\sum_iw_iD_i^2v_i+\frac{(s^V)^2}6\sum_i\relu(u'_i+2\tau_i)^2+\frac{(s^c)^2}6,\qquad
+\hat B_c=\sum_{i:|u'_i|<2\tau_i}D_i\hat\beta_i,\\
+\hat\beta_i&=\min\Big(\tfrac{\sqrt{v_i}}2,\ \sqrt{2\pi v_i}\,\bar\Phi\big((|u'_i|-\tau_i)_+/\sqrt{v_i}\big)\Big).
+\end{align*}
+Let $\pi_g(x,y)=1$ iff $z'_y-z'_c>t_2\sqrt{2\hat P_c}+\hat B_c$ for every $c\ne y$. Then the hypothesis of \cref{thm:dither} holds with $\eta=2He^{-t_1^2/2}+2(C-1)e^{-t_2^2}$. (Binary networks with one logit: $D_i=|V'_i|+s^V/2$, the last two terms of $\hat P$ carry $1/12$, and $C-1$ is replaced by $1$.)
+\end{lemma}
+
+\begin{proof}
+Let $\epsilon,e,\Xi,\gamma$ be the dither errors of $A,b,V,c$, $\nu_i=\sum_k\epsilon_{ik}\hat x_k+e_i$, and $u_i$ the pre-activations of $f$, so $u'_i=u_i+\nu_i$.
+
+\emph{(a) Tails.} If $U\sim\mathrm{Unif}[-a,a]$ then $\E e^{\lambda U}=\sinh(\lambda a)/(\lambda a)\le e^{\lambda^2a^2/6}$, so $U$ is sub-Gaussian with variance proxy $a^2/3$, its variance. Hence the $\nu_i$ are independent, symmetric and sub-Gaussian with proxies $v_i$, and $G=\{|\nu_i|\le\tau_i\ \forall i\}$ has $\Pr[G^c]\le2He^{-t_1^2/2}$.
+
+\emph{(b) Decomposition.} Fix $c\ne y$; let $d_i=V_{yi}-V_{ci}$ and $\chi_i=\Xi_{yi}-\Xi_{ci}$. The margin error is
+$F=\sum_id_i(\relu(u_i+\nu_i)-\relu(u_i))+\sum_i\chi_i\relu(u_i+\nu_i)+\gamma_y-\gamma_c$.
+Replacing each $\nu_i$ by $\mathrm{clip}_{\tau_i}(\nu_i)$ gives $\tilde F$, and $F=\tilde F$ on $G$. With $\varphi_i(t)=\relu(u_i+\mathrm{clip}_{\tau_i}(t))-\relu(u_i)$: if $u_i\ge\tau_i$ then $\varphi_i=\mathrm{clip}_{\tau_i}$ (\emph{active}); if $u_i\le-\tau_i$ then $\varphi_i\equiv0$ (\emph{inactive}); otherwise $\varphi_i$ is 1-Lipschitz (\emph{marginal}).
+
+\emph{(c) Moment generating function.} Conditional on $(\nu_i)_i$, the $\Xi$-term is a centred linear form in independent uniforms with proxy at most $\frac{(s^V)^2}6\sum_i\relu(u_i+\tau_i)^2$, and $\gamma_y-\gamma_c$ has proxy $(s^c)^2/6$. For an active unit, $\mathrm{clip}(\nu_i)$ is symmetric with $|\mathrm{clip}(\nu_i)|\le|\nu_i|$, so $\E e^{\lambda d_i\mathrm{clip}(\nu_i)}=\E\cosh(\lambda d_i\,\mathrm{clip}(\nu_i))\le\E\cosh(\lambda d_i\nu_i)\le e^{\lambda^2d_i^2v_i/2}$. For a marginal unit, let $X'$ be an independent copy of $X=\nu_i$; by Jensen, $\E e^{\lambda(\varphi(X)-\E\varphi(X))}\le\E e^{\lambda(\varphi(X)-\varphi(X'))}=\E\cosh(\lambda(\varphi(X)-\varphi(X')))\le\E\cosh(\lambda(X-X'))\le e^{\lambda^2\cdot2v_i/2}$, a proxy of $2d_i^2v_i$. Multiplying the independent factors, $\tilde F-\E\tilde F$ is sub-Gaussian with proxy
+$P=\sum_{\mathrm{act}}d_i^2v_i+2\sum_{\mathrm{marg}}d_i^2v_i+\frac{(s^V)^2}6\sum_i\relu(u_i+\tau_i)^2+\frac{(s^c)^2}6$, and $\Pr[|\tilde F-\E\tilde F|\ge t_2\sqrt{2P}]\le2e^{-t_2^2}$.
+
+\emph{(d) Bias.} Only marginal units contribute to $\E\tilde F$. For the symmetric variable $\tilde\nu=\mathrm{clip}(\nu)$, $0\le\E\relu(u+\tilde\nu)-\relu(u)=\E(\tilde\nu-|u|)_+$, which is at most $\E\tilde\nu_+=\E|\tilde\nu|/2\le\sqrt v/2$ and at most $\E(\nu-|u|)_+=\int_{|u|}^\infty\Pr[\nu>t]\,dt\le\sqrt{2\pi v}\,\bar\Phi(|u|/\sqrt v)$.
+
+\emph{(e) Computing from $g$.} On $G$, $|u_i-u'_i|\le\tau_i$: so $u'_i\ge2\tau_i$ implies active, $u'_i\le-2\tau_i$ implies inactive, $|u_i|\ge(|u'_i|-\tau_i)_+$ and $\relu(u_i+\tau_i)\le\relu(u'_i+2\tau_i)$; always $|d_i|\le|V'_{yi}-V'_{ci}|+s^V$. Hence on $G$, $P\le\hat P_c$ and $|\E\tilde F|\le\hat B_c$.
+
+\emph{(f) Conclusion.} Let $\mathrm{Bad}=G^c\cup\bigcup_{c\ne y}\{|\tilde F_c-\E\tilde F_c|\ge t_2\sqrt{2P_c}\}$, so $\Pr[\mathrm{Bad}]\le\eta$. Off $\mathrm{Bad}$, $|F_c|<t_2\sqrt{2\hat P_c}+\hat B_c$ for all $c\ne y$, so $\pi_g(x,y)=1$ forces $z_y>z_c$ for all $c\ne y$, i.e.\ $f(x)=y$.
+\end{proof}
+
+The certificate depends only on $(K,\text{steps},\xi)$ and $(x,y)$, as \cref{thm:dither} requires. The constants are what make the bound typical-case: the threshold scales as $t_2\sqrt{2\sum_iD_i^2v_i}$, an $\ell_2$ aggregate of the per-coordinate noise, instead of the $\ell_1$ aggregate $\sum_i D_i\sum_ks_{ik}|\hat x_k|/2$ of a worst-case set.
+
+\begin{remark}[relation to PAC-Bayes]
+The law of $g=f+\epsilon$ is a posterior (uniform on a box around $f$), and $L(K)$ plays the role of its relative entropy to a prior. \Cref{thm:dither} uses one draw instead of an average over the posterior, pays $\eta/\delta'$ for it, and reaches the deterministic $f$ through a per-input concentration statement. The margin-based derandomizations of \citet{neyshabur2018pacbayes} and \citet{nagarajan2019deterministic} instead control the perturbation's effect uniformly over inputs, with norm-based bounds.
+\end{remark}
+
+\subsection{Initialization}\label{sec:init-theory}
+
+\begin{lemma}[the initialization is free]\label{lem:init}
+Let $\theta_0$ be drawn from any distribution independent of $S$, and let the code $(\Sigma_{\theta_0},L_{\theta_0})$ depend on $\theta_0$ (for instance, it describes $\theta-\theta_0$). Then \cref{lem:occam} holds for it with probability $\ge1-\delta$ over $(S,\theta_0)$.
+\end{lemma}
+\begin{proof}
+Conditional on $\theta_0=t$, $S\sim D^m$; apply \cref{lem:occam} to the fixed code $(\Sigma_t,L_t)$ and average over $t$.
+\end{proof}
+
+The same holds for every other piece of data-independent randomness: random projections, the dither, the DCT basis. A seed chosen as the best of $N$ after training costs $\log_2N$ bits; we charge 32 bits for the seed throughout, although with the seed fixed in advance even that is unnecessary. What the initialization can still cost is indirect: the description of the update $\theta-\theta_0$ depends on how training used $\theta_0$.
+
+\begin{proposition}[init-kernel codec, linearized regime]\label{prop:kernel}
+Let $J(x)=\partial_\theta f_{\theta_0}(x)$, $F_0=\E_{D_X}[J(x)^\top J(x)]$, $f^{\mathrm{lin}}_{\theta_0+\Delta}(x)=f_{\theta_0}(x)+J(x)\Delta$ and $P_r$ the projector onto the top-$r$ eigenvectors of $F_0$. Then
+\[
+\E_{D_X}\|f^{\mathrm{lin}}_{\theta_0+\Delta}(x)-f^{\mathrm{lin}}_{\theta_0+P_r\Delta}(x)\|^2=\|F_0^{1/2}(I-P_r)\Delta\|^2\le\lambda_{r+1}(F_0)\|(I-P_r)\Delta\|^2.
+\]
+\end{proposition}
+
+When $D_X$ is known, $F_0$ depends only on $\theta_0$ and $D_X$, so its eigenbasis is free (\cref{lem:init}) and $\theta_0+P_r\Delta$ is described by $r$ quantized coefficients. Heuristically, for uniform inputs on $\{\pm1\}^n$ and an initialization distribution invariant under permutations and sign flips of the input coordinates (e.g.\ i.i.d.\ symmetric weights), the \emph{expected} kernel is a function of $\langle x,x'\rangle$; its eigenfunctions are Walsh characters, and the degree-$\ell$ eigenspace has dimension $\binom n\ell$. The codec uses the empirical kernel of the one sampled $\theta_0$, which for wide networks is close to the expected one. If, in addition, the eigenvalues decrease with the degree, a lazily trained network fitting a target of degree $k$ (or the sign of one, as for majority functions and degree 1) needs $r\approx\sum_{\ell\le k}\binom n\ell$ coefficients, so this codec certifies generalization once $m\gtrsim n^k$, the familiar sample complexity of kernel methods on degree-$k$ targets. This is a heuristic: we have neither proved the eigenvalue ordering for our architecture nor varied $n$ in experiments. A function-space codec instead describes any network that is close to a $k$-junta, however it was trained, with about $\log_2\binom nk+2^k$ bits. The $n^k$ cost belongs to the weight-space codec, not to the network.
