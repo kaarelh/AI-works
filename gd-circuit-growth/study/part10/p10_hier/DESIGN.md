@@ -134,4 +134,31 @@ RESULTS_PLACEHOLDER
 
 ## 6. Weaknesses
 
-WEAKNESS_PLACEHOLDER
+- **The gain is QuickDraw's.** On the dev validation rows the level-2 bank helps the booster on `qd_dev`, `qd_a`, `qd_b`
+  (−0.07 to −0.14 log2 for ggbt alone) and does nothing on Fashion-MNIST (centred, aligned garments: translation
+  tolerance has nothing to buy). MNIST was not used. The effect on the portfolio is diluted by the stacker (ggbt has
+  0.25–0.5 of the weight) and by the members that did not change.
+- **Closer to a CNN in spirit.** The pooling sets recover the pixel grid (Part 9 discreteness audit D1); a sum-pool
+  followed by a max-pool over recovered neighbourhoods is a fixed (untrained) two-layer CNN-like feature hierarchy. It
+  never uses the layout, learns no filter and has no continuous direction, but the comparison with permutation-invariant
+  MLPs is even less information-matched than v2's; a CNN or a graph network on the recovered neighbourhoods is the fair
+  comparator, and was not run.
+- **No orientation.** Every level-1 and level-2 feature is isotropic (blob sums and their maxima). Oriented stroke
+  detectors, the obvious next level for line drawings, need a consistent direction across positions, which the
+  correlation ranking does not give; not attempted.
+- **Chosen on few cells, one seed.** The scale set {(4, 9), (9, 16), (16, 49)}, the 600-round cap and the 150 small-n
+  rounds were each chosen from one or two dev cells (booster alone, one LightGBM seed). Differences of 0.002–0.004 in the
+  tables of §3 are within run-to-run noise; the level-2 gain (0.008–0.014) is not.
+- **The 600-round cap and dropping the pairs were not tested at n = 60000 before the freeze.** The Part 9 post-hoc
+  ablation found the pairs worth −0.02 log2 there; the longer cap should more than pay for that, but this rests on the
+  one large-n dev cell.
+- **CPU at small n goes up.** In the k-fold regime ggbt is fitted 6 times with 150 rounds on a bank 1.56x v2's, so
+  fits at n <= 3000 cost more CPU than v2's (`qd_dev` n = 1000: 201 s against 132 s), even with the column-wise layout.
+- **Budget use goes up** (`qd_dev` n = 1000: 0.48 of the budget against 0.36); still well inside, and the guard (skip
+  ggbt if its projection takes the total above 0.9) never fired on dev.
+- **Memory.** The bank is 1.56x v2's (4840 against 3112 columns on QuickDraw); it is now freed once binned, which v2 did
+  not do.
+- **Invariance in distribution only** for the booster (LightGBM samples columns by index), as in v2.
+- **Prediction cost** per query is about v2's: the bank needs 2 · d · 3a ≈ 3.2e6 FLOPs (pooled sums) plus 71 a ≈ 5e4
+  comparisons (v2: 3.7e6 with the pairs); ≤ 6000 trees at ~10 FLOPs; `gknn`'s scan of the n pooled training rows
+  dominates as in v2.
