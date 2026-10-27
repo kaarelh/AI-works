@@ -1,6 +1,6 @@
 """Pixel-permutation invariance check of the bank member (Part 9, I2).  Fits fit_bank twice with the same random seed,
 once on the pixels in their stored order and once with the columns permuted by a random permutation, and compares the
-test-set class scores and predictions.  The member uses only Euclidean distances, inner products and per-feature
+class scores and predictions on 2000 held-back training-pool rows.  The member uses only Euclidean distances, inner products and per-feature
 quantiles, so the two fits must agree up to floating-point summation order.
 usage: python test_perm.py [dataset] [n]   (default qd_dev 2000; development data only)"""
 import os, sys, numpy as np, importlib.util
@@ -12,7 +12,7 @@ M = importlib.util.module_from_spec(spec); spec.loader.exec_module(M)
 ds = sys.argv[1] if len(sys.argv) > 1 else "qd_dev"; n = int(sys.argv[2]) if len(sys.argv) > 2 else 2000
 assert ds in ("mnist", "fashion_mnist", "qd_dev"), "development image sets only"
 D = DATA.load(ds); pool, te = DATA.splits(D, 0)
-X = D["X"][pool[:n]].astype(np.float32); y = D["y"][pool[:n]]; Xte = D["X"][te[:2000]].astype(np.float32)
+X = D["X"][pool[:n]].astype(np.float32); y = D["y"][pool[:n]]; Xte = D["X"][pool[-2000:]].astype(np.float32)   # held-back pool rows, not the test set
 perm = np.random.default_rng(123).permutation(X.shape[1])
 out = []
 for Xa, Xt in ((X, Xte), (X[:, perm].copy(), Xte[:, perm].copy())):
