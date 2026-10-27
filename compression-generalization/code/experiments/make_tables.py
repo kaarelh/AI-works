@@ -47,9 +47,9 @@ def sparse_exact_bound(r, delta=0.05):
     return occam_bound(k, 60000, bits, delta), bits
 
 
-def vc_dense(r, delta=0.05):
+def vc_dense(r, delta=0.05, m=60000):
     from cgb.bounds import vc_bound
-    return vc_bound(int(round(r["train_err_f"] * 60000)), 60000, r["params"], delta)
+    return vc_bound(int(round(r["train_err_f"] * m)), m, r["params"], delta)
 
 
 def write(name, body):
@@ -152,7 +152,7 @@ def t3():
                   r"of training points with $\pi_g=1$. `Noise $\sigma$': $f$ trained with Gaussian weight noise of "
                   r"$\sigma$ times each tensor's initial RMS. Baselines for $f$: the Occam bound with 32 bits per "
                   r"parameter, and the VC bound with $d$ equal to the number of parameters (optimistic, "
-                  r"\cref{sec:methods}). Chance level is 0.9.}\label{tab:t3}", r"\end{table}"]
+                  r"\cref{sec:methods}). One seed per row. Chance level is 0.9.}\label{tab:t3}", r"\end{table}"]
         write("t3.tex", "\n".join(lines) + "\n")
     rows = load(os.path.join(RES, "mnist", "t3_sparse.jsonl"))
     if rows:
@@ -168,23 +168,32 @@ def t3():
                   r"(trained, pruned to the stated fraction of coefficients, fine-tuned with the support fixed). The "
                   r"support is part of the description; only nonzero coefficients are dithered. The last two columns "
                   r"are the baseline for such a network: the Occam bound for coding $f$ exactly, with the same support "
-                  r"code and 32 bits per stored parameter.}\label{tab:t3sparse}",
+                  r"code and 32 bits per stored parameter. One seed per row.}\label{tab:t3sparse}",
                   r"\end{table}"]
         write("t3_sparse.tex", "\n".join(lines) + "\n")
     rows = load(os.path.join(RES, "boolean", "t3.jsonl"))
     if rows:
-        lines = [r"\begin{table}[t]", r"\centering\small", r"\begin{tabular}{l r r r r r r r r}", r"\toprule",
-                 r"task & $n$ & $m$ & $H$ & test err.\ $f$ & bits & training-data-only bound & bits & known-$D_X$ bound \\",
+        lines = [r"\begin{table}[t]", r"\centering\small", r"\setlength{\tabcolsep}{4pt}",
+                 r"\begin{tabular}{l r r r r r r r r r r}", r"\toprule",
+                 r" & & & & & \multicolumn{2}{c}{baselines} & \multicolumn{2}{c}{training data only} & "
+                 r"\multicolumn{2}{c}{known $D_X$} \\",
+                 r"\cmidrule(lr){6-7}\cmidrule(lr){8-9}\cmidrule(lr){10-11}",
+                 r"task & $n$ & $m$ & $H$ & test err.\ $f$ & 32-bit Occam & VC & bits & bound & bits & bound \\",
                  r"\midrule"]
         for r in sorted(rows, key=lambda r: (r["n"], r["task"], r["m"], r["width"], r["weight_noise"])):
-            known = dict(r, bits=r["T2known_bits"])
+            m = r["m"]
+            occ32 = occam_bound(int(round(r["train_err_f"] * m)), m, 32.0 * r["params"] + 64, 0.05)
             lines.append(f"{tname(r)}{', noise ' + format(r['weight_noise'], 'g') if r['weight_noise'] else ''} & {r['n']} & "
-                         f"{r['m']} & {r['width']} & {r['test_err_f']:.4f} & {r['t3_bits'] + 4:.0f} & {fmt(t3_bound(r))} & "
-                         f"{r['T2known_bits'] + 4:.0f} & {fmt(boolean_bound(dict(r['T2known'], m=r['m'])))}" + r" \\")
+                         f"{m} & {r['width']} & {r['test_err_f']:.4f} & {fmt(occ32, 2)} & {fmt(vc_dense(r, m=m), 2)} & "
+                         f"{r['t3_bits'] + 4:.0f} & {fmt(t3_bound(r))} & "
+                         f"{r['T2known_bits'] + 4:.0f} & {fmt(boolean_bound(dict(r['T2known'], m=m)))}" + r" \\")
         lines += [r"\bottomrule", r"\end{tabular}",
-                  r"\caption{Boolean tasks, one-hidden-layer networks: the training-data-only bound (\cref{thm:dither}), "
-                  r"which holds whatever the input distribution, against the bound that uses the known uniform input "
-                  r"distribution (\cref{thm:reduction}) on the same network.}\label{tab:boolean_t3}", r"\end{table}"]
+                  r"\caption{Boolean tasks, one-hidden-layer networks, one seed each: the training-data-only bound "
+                  r"(\cref{thm:dither}), which holds whatever the input distribution, against the bound that uses the "
+                  r"known uniform input distribution (\cref{thm:reduction}) on the same network. `Noise $\sigma$': $f$ "
+                  r"trained with Gaussian weight noise of $\sigma$ times each tensor's initial RMS. Baselines for $f$ as in "
+                  r"\cref{tab:t3}; with only 353--1665 parameters they are not vacuous here.}\label{tab:boolean_t3}",
+                  r"\end{table}"]
         write("boolean_t3.tex", "\n".join(lines) + "\n")
 
 
@@ -208,7 +217,8 @@ def init():
         lines += [r"\bottomrule", r"\end{tabular}",
                   r"\caption{MNIST, 784-256-10: description length and bounds when the update is coded relative to "
                   r"the (free) initialization or relative to zero, for three initialization scales and a deterministic "
-                  r"initialization. Best of 8 compression configurations each.}\label{tab:init}", r"\end{table}"]
+                  r"initialization. `Scale' multiplies the default (PyTorch) initialization. One network per row; best of 8 "
+                  r"compression configurations each, with the bound on $f$ union-bounded over the 8.}\label{tab:init}", r"\end{table}"]
         write("init.tex", "\n".join(lines) + "\n")
     rows = load(os.path.join(RES, "init", "init_kernel.jsonl"))
     if rows:
@@ -225,7 +235,7 @@ def init():
                   r"($\theta_0$ plus the top-$r$ eigenvectors of the uniform-input empirical NTK at $\theta_0$, both "
                   r"free) against function-space distillation, on the same networks. `Move': "
                   r"$\|\theta-\theta_0\|/\|\theta_0\|$; `lin.\ dis.': disagreement between $f$ and its linearization "
-                  r"at $\theta_0$.}\label{tab:kernel}", r"\end{table}"]
+                  r"at $\theta_0$. One seed per row.}\label{tab:kernel}", r"\end{table}"]
         write("init_kernel.tex", "\n".join(lines) + "\n")
 
 

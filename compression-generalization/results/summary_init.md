@@ -6,6 +6,13 @@ Each row: one trained f and code family, best over its compression configuration
 
 | init | init scale | code ref | test err f | best T1 | bits (T1) | best T2 | bits (T2) |
 |---|---|---|---|---|---|---|---|
+| dct | 1.0 | init | 0.0219 | 0.3734 | 31239 | 0.4047 | 31239 |
+| random | 0.3 | init | 0.0199 | 0.3674 | 30790 | 0.3971 | 30790 |
+| random | 0.3 | zero | 0.0199 | 0.3755 | 31506 | 0.4051 | 31506 |
+| random | 1.0 | init | 0.0197 | 0.3390 | 27647 | 0.3675 | 27647 |
+| random | 1.0 | zero | 0.0197 | 0.3565 | 29270 | 0.3862 | 29270 |
+| random | 3.0 | init | 0.0187 | 0.3174 | 24650 | 0.3457 | 24650 |
+| random | 3.0 | zero | 0.0187 | 0.3614 | 29627 | 0.3902 | 29627 |
 
 ## Boolean, n = 30, one hidden layer of 512: init-kernel codec vs distillation codec
 
