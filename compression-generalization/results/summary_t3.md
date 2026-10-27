@@ -23,6 +23,20 @@ One-hidden-layer MLPs trained with Adam (20 epochs, batch 128). Dithered compres
 | mnist | 32 | 2.0 | random | init | dct | 25450 | 0.0183 | 0.0319 | 75302 | 0.9318 | 0.6915 | 5.8, 3.9 | 7.6e-04 | 1.00 | 0.0321 |
 | mnist | 100 | 2.0 | random | init | dct | 79510 | 0.0037 | 0.0199 | 212868 | 0.9692 | 0.9327 | 5.8, 3.9 | 1.4e-03 | 1.00 | 0.0200 |
 
+## Networks with an exactly sparse first-layer update (trained, pruned in the DCT basis, fine-tuned)
+
+`exact code` = Occam bound for coding the sparse network exactly (same support code, 32 bits per stored parameter).
+
+| data | hidden | kept coefficients | train err f | test err f | bits | cert | T3 bound on f | exact code bits | exact code bound |
+|---|---|---|---|---|---|---|---|---|---|
+| mnist | 100 | 3.0% | 0.0267 | 0.0333 | 32451 | 0.9629 | 0.4065 | 124318 | 0.7972 |
+| mnist | 100 | 1.0% | 0.0440 | 0.0462 | 17660 | 0.9445 | 0.3139 | 65754 | 0.6175 |
+| mnist | 100 | 0.3% | 0.0770 | 0.0722 | 11419 | 0.9094 | 0.3038 | 44864 | 0.5535 |
+| mnist | 256 | 0.3% | 0.0456 | 0.0441 | 23240 | 0.9244 | 0.3992 | 114452 | 0.7916 |
+| mnist | 256 | 0.1% | 0.0678 | 0.0647 | 21669 | 0.9164 | 0.3977 | 98696 | 0.7701 |
+| fashion | 100 | 1.0% | 0.1549 | 0.1693 | 20172 | 0.8278 | 0.5009 | 66862 | 0.7460 |
+| fashion | 100 | 0.3% | 0.1840 | 0.1926 | 13166 | 0.7983 | 0.4675 | 45307 | 0.6800 |
+
 ## Boolean tasks: training-data-only bound (valid for any input distribution) vs known-distribution bound
 
 | task | n | m | width | weight noise | test err f | T3 bits | cert | T3 bound (any D) | Thm-2 bound (uniform D known) | Thm-2 bits |

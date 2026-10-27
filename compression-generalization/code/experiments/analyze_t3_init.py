@@ -55,6 +55,17 @@ def t3():
                    f"{r.get('code_ref', 'init')} | {r['basis']} | {W} | {r['train_err_f']:.4f} | {r['test_err_f']:.4f} | "
                    f"{r['bits']:.0f} | {r['cert_frac']:.4f} | {t3_bound(r):.4f} | {r['t1']}, {r['t2']} | "
                    f"{r['eta'] / r['delta_prime']:.1e} | {occ32:.2f} | {r['test_err_g']:.4f} |")
+    sp = load(os.path.join(RES, "mnist", "t3_sparse.jsonl"))
+    if sp:
+        from make_tables import sparse_exact_bound
+        out += ["\n## Networks with an exactly sparse first-layer update (trained, pruned in the DCT basis, fine-tuned)\n",
+                "`exact code` = Occam bound for coding the sparse network exactly (same support code, 32 bits per stored parameter).\n",
+                "| data | hidden | kept coefficients | train err f | test err f | bits | cert | T3 bound on f | exact code bits | exact code bound |",
+                "|" + "---|" * 10]
+        for r in sorted(sp, key=lambda r: (r["data"] != "mnist", r["widths"][1], -r["nonzero_fraction"])):
+            eb, ebits = sparse_exact_bound(r)
+            out.append(f"| {r['data']} | {r['widths'][1]} | {100 * r['nonzero_fraction']:.1f}% | {r['train_err_f']:.4f} | "
+                       f"{r['test_err_f']:.4f} | {r['bits']:.0f} | {r['cert_frac']:.4f} | {t3_bound(r):.4f} | {ebits:.0f} | {eb:.4f} |")
     bt = load(os.path.join(RES, "boolean", "t3.jsonl"))
     if bt:
         out += ["\n## Boolean tasks: training-data-only bound (valid for any input distribution) vs known-distribution bound\n",

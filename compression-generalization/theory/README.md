@@ -67,7 +67,7 @@ Hyperparameters chosen by looking at $\xi$ itself would need a union bound in th
 
 The decoder knows $\xi$ and the integers $K=\mathrm{round}(a/s+\xi)$, so $g$ has description length $L(K)$, typically small when $s$ is large compared with $|a|$, while $g-f$ is pure noise of known law. This is what lets the certificate use typical rather than worst-case behaviour.
 
-**Lemma 7 (certificate for one-hidden-layer networks).** Let $f(x)=V\,\mathrm{relu}(Wx+b)+c$ with $W=W_0+AB^\top$ ($W_0$ the initialization, $B$ an orthonormal basis, e.g. the 2-D DCT), $V\in\mathbb R^{C\times H}$. Let $g$ be obtained by subtractive dithering of $A$ (steps $s_{ik}$), $b-b_0$ (step $s^b$), $V-V_0$ (step $s^V$) and $c-c_0$ (step $s^c$). Fix $(x,y)$, put $\hat x=B^\top x$,
+**Lemma 7 (certificate for one-hidden-layer networks).** Let $f(x)=V\,\mathrm{relu}(Wx+b)+c$ with $W=W_0+AB^\top$ ($W_0$ the initialization, $B$ an orthonormal basis, e.g. the 2-D DCT), $V\in\mathbb R^{C\times H}$. Let $g$ be obtained by subtractive dithering of $A$ (steps $s_{ik}\ge0$; step 0 means the coefficient is sent exactly, as for coefficients that are exactly zero), $b-b_0$ (step $s^b$), $V-V_0$ (step $s^V$) and $c-c_0$ (step $s^c$). Fix $(x,y)$, put $\hat x=B^\top x$,
 $$v_i=\sum_k s_{ik}^2\hat x_k^2/12+(s^b)^2/12,\qquad \tau_i=t_1\sqrt{v_i},$$
 and let $u'_i$ be $g$'s pre-activations. For each class $c\ne y$ put $D_i=|V'_{yi}-V'_{ci}|+s^V$ (primes: $g$'s weights), $w_i=1$ if $u'_i\ge2\tau_i$, $w_i=0$ if $u'_i\le-2\tau_i$, $w_i=2$ otherwise, and
 $$\hat P_c=\sum_iw_iD_i^2v_i+\tfrac{(s^V)^2}{6}\sum_i\mathrm{relu}(u'_i+2\tau_i)^2+\tfrac{(s^c)^2}6,\qquad \hat B_c=\sum_{i:\,|u'_i|<2\tau_i}D_i\hat\beta_i,$$

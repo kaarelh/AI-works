@@ -22,24 +22,25 @@ What seems new here:
 - a *dithered transfer theorem*, which bounds the original network from the training set alone and removes the $\sqrt d$ loss of worst-case perturbation sets;
 - a quantitative study of how the initialization enters the description length.
 
-**(2) Compression schemes and bounds.** Parameter-counting (32 bits per weight) and VC bounds are 1.0 for every network below.
+**(2) Compression schemes and bounds.** The parameter-counting baselines (Occam with 32 bits per weight, and VC with $d$ = number of parameters) are 1.0 for every Boolean network and every wide MNIST network below. For the narrow MNIST networks they are 0.71–0.99, and for the sparse-update networks the exact 32-bit code gives 0.55–0.80 (see below).
 - **Boolean tasks, known (uniform) input distribution.** The disagreement term is free. A 289,281-parameter MLP on 50 bits compresses into a 28–100-bit truth table on the relevant coordinates, a threshold function, or a small quantized network distilled from $f$. The bound tracks $f$'s test error along the whole learning curve ([table](results/boolean/summary_n50.md), [figure](figures/boolean_n50.png)):
   - within 0.005 at $m=16000$;
   - 0.30 against 0.29 for networks that have only partly learned a 3-parity;
   - 0.17 against 0.14 for networks that **interpolate 10% label noise** ($g$ is the clean rule, and $\Pr[f\ne g]$ measures the damage memorization does).
-- **Boolean tasks, any input distribution.** On 20 bits the compressed networks agree with $f$ on all $2^{20}$ inputs, so the bound holds for every input distribution. For example, 0.0065 for 3-parity at $m=4000$ ([table](results/boolean/summary_n20.md)).
+- **Boolean tasks, any input distribution.** On 20 bits, once $f$ has learned the target, the compressed networks agree with $f$ on all but at most 8 of the $2^{20}$ inputs. Patching those exceptions gives a bound that holds for every input distribution, e.g. 0.0065 for 3-parity at $m=4000$ ([table](results/boolean/summary_n20.md)).
 - **MNIST / Fashion-MNIST with unlabeled inputs** (the setting of Bound to Disagree): see [summary](results/summary_t2.md).
 - **MNIST / Fashion-MNIST from the training set alone.** No validation data, no unlabeled data, no knowledge of the input distribution: a deterministic bound on the ReLU network that was trained ([summary](results/summary_t3.md), [figure](figures/t3_mnist.png)).
-  - Non-vacuous (below chance, 0.9) for narrow networks: 0.44 with 8 hidden units (test error 7.0%), 0.55 with 16.
+  - Non-vacuous (below chance, 0.9) for narrow networks: 0.44 with 8 hidden units (test error 7.0%; VC baseline 0.71, exact 32-bit code 0.94), 0.55 with 16 (baselines 0.87, 0.99).
   - Vacuous for wide dense ones: 0.87 at 64 units, 0.97 at 128. The certificate needs the weights described to the precision the margins demand, about 3 bits per first-layer coefficient.
-  - Networks whose first-layer update is sparse in a DCT basis: see the summary.
+  - Standard-width networks whose first-layer update is sparse in a DCT basis (trained, pruned, fine-tuned) do much better. A 100-unit network with 1% of its update coefficients nonzero has test error 4.6% and bound **0.31**, against 0.62 for coding that sparse network exactly with 32 bits per stored parameter; 256-unit networks reach 0.40.
+  - On Boolean tasks the same theorem gives bounds valid for **any input distribution** from the training set alone: 0.06–0.33 for 16–32-unit networks, 30–150 times looser than when the uniform distribution is known.
   - Worst-case weight sets would need about 8 bits per coefficient ([probe](results/mnist/t3_worstcase_probe.txt)).
 
 **(3) Initialization.**
 - *It costs nothing.* A code may depend on any randomness drawn independently of the data, so a seeded random initialization is free. Even a seed that had to be sent is 32 bits.
 - *Function-space codecs never touch it.* The Boolean truth tables and distilled students do not refer to $f$'s 289k random initial weights.
-- *Weight-space codecs*, which training-data-only bounds need, code the update relative to the initialization. In the dithered code this barely matters, since coding relative to zero costs about as much. A deterministic DCT initialization gave a more compressible network (65k vs 84k bits). Exact zero initialization does not train a ReLU MLP. See the [init study](results/summary_init.md).
-- *From a typical initialization.* Wide networks approach a deterministic limit, and the initialization contributes only fluctuations. In the linearized (kernel) regime, the eigenbasis of the initial kernel is free. Coding the update in it gives a codec whose cost reproduces the $n^k$ sample complexity of kernel methods on degree-$k$ targets, whereas a network that has found the relevant coordinates compresses to a junta. In the description-length picture, feature learning is what makes networks short.
+- *Weight-space codecs*, which training-data-only bounds need, code the update relative to the initialization. In the dithered code this barely matters, since coding relative to zero costs about as much. A deterministic DCT initialization gave a more compressible network (67k vs 84k bits). Exact zero initialization does not train a ReLU MLP. See the [init study](results/summary_init.md).
+- *From a typical initialization.* Wide networks approach a deterministic limit, and the initialization contributes only fluctuations. In the linearized (kernel) regime, the eigenbasis of the initial kernel is free (it depends only on $\theta_0$ and the known input distribution). Coding the update in its top-$r$ eigenvectors gives an *init-kernel codec* (Proposition 9). On lazily trained Boolean networks the best $r$ is exactly the dimension of the low-degree Walsh space the target lives in: $r=31=1+n$ for majority targets, $r=466=1+n+\binom n2$ for a 2-parity ([figure](figures/init_kernel.png)). So the codec's cost grows like $n^k$ for degree-$k$ targets, the sample complexity of kernel methods. In the rich regime it fails, while a distilled junta (20–50 bits) works in both regimes. In the description-length picture, feature learning is what makes trained networks short.
 
 ## How the training-data-only bound works
 

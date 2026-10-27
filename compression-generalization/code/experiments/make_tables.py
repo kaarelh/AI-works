@@ -33,6 +33,25 @@ def fmt(x, d=3):
     return f"{min(x, 1.0):.{d}f}"
 
 
+def sparse_exact_bound(r, delta=0.05):
+    """Occam bound for the sparse-update network f coded EXACTLY: seed, flags and
+    architecture as in the dithered code, the same per-band support code, and 32
+    bits for every nonzero first-layer coefficient and every b, V, c entry."""
+    H = r["widths"][1]
+    C = r["widths"][2]
+    nz = int(round(r["nonzero_fraction"] * 784 * H))
+    c = r["code"]
+    bits = (c["architecture"] + c["init seed"] + c["code flags"] + c["basis"] + c["support flag"]
+            + c["layer0 support"] + 32.0 * (nz + H + C * H + C) + 4)
+    k = int(round(r["train_err_f"] * 60000))
+    return occam_bound(k, 60000, bits, delta), bits
+
+
+def vc_dense(r, delta=0.05):
+    from cgb.bounds import vc_bound
+    return vc_bound(int(round(r["train_err_f"] * 60000)), 60000, r["params"], delta)
+
+
 def write(name, body):
     os.makedirs(TAB, exist_ok=True)
     open(os.path.join(TAB, name), "w").write(body)
@@ -107,8 +126,8 @@ def t2():
 def t3():
     rows = load(os.path.join(RES, "mnist", "t3.jsonl"))
     if rows:
-        lines = [r"\begin{table}[t]", r"\centering\small", r"\begin{tabular}{l r l l r r r r r}", r"\toprule",
-                 r"data & $H$ & training & code & test err.\ $f$ & bits & certified & bound on $f$ & 32-bit Occam \\",
+        lines = [r"\begin{table}[t]", r"\centering\small", r"\begin{tabular}{l r l l r r r r r r}", r"\toprule",
+                 r"data & $H$ & training & code & test err.\ $f$ & bits & certified & bound on $f$ & 32-bit Occam & VC \\",
                  r"\midrule"]
         def var(r):
             v = []
@@ -126,27 +145,30 @@ def t3():
             P = r["params"]
             occ32 = occam_bound(int(round(r["train_err_f"] * 60000)), 60000, 32.0 * P + 64, 0.05)
             lines.append(f"{r['data']} & {r['widths'][1]} & {var(r)} & {code(r)} & {r['test_err_f']:.4f} & {r['bits'] + 4:.0f} & "
-                         f"{r['cert_frac']:.3f} & {fmt(t3_bound(r))} & {fmt(occ32, 2)}" + r" \\")
+                         f"{r['cert_frac']:.3f} & {fmt(t3_bound(r))} & {fmt(occ32, 2)} & {fmt(vc_dense(r), 2)}" + r" \\")
         lines += [r"\bottomrule", r"\end{tabular}",
                   r"\caption{Bounds on the original one-hidden-layer network $f$ from the 60{,}000 training examples "
                   r"alone (\cref{thm:dither,lem:cert}): no validation set and no unlabeled data. `Certified': fraction "
                   r"of training points with $\pi_g=1$. `Noise $\sigma$': $f$ trained with Gaussian weight noise of "
-                  r"$\sigma$ times each tensor's initial RMS. Chance level is 0.9.}\label{tab:t3}", r"\end{table}"]
+                  r"$\sigma$ times each tensor's initial RMS. Baselines for $f$: the Occam bound with 32 bits per "
+                  r"parameter, and the VC bound with $d$ equal to the number of parameters (optimistic, "
+                  r"\cref{sec:methods}). Chance level is 0.9.}\label{tab:t3}", r"\end{table}"]
         write("t3.tex", "\n".join(lines) + "\n")
     rows = load(os.path.join(RES, "mnist", "t3_sparse.jsonl"))
     if rows:
-        lines = [r"\begin{table}[t]", r"\centering\small", r"\begin{tabular}{l r r r r r r r}", r"\toprule",
-                 r"data & $H$ & kept coefficients & test err.\ $f$ & bits & certified & bound on $f$ & 32-bit Occam \\",
+        lines = [r"\begin{table}[t]", r"\centering\small", r"\begin{tabular}{l r r r r r r r r}", r"\toprule",
+                 r"data & $H$ & kept coeff. & test err.\ $f$ & bits & certified & bound on $f$ & exact code: bits & bound \\",
                  r"\midrule"]
         for r in sorted(rows, key=lambda r: (r["data"] != "mnist", r["widths"][1], -r["nonzero_fraction"])):
-            P = r["params"]
-            occ32 = occam_bound(int(round(r["train_err_f"] * 60000)), 60000, 32.0 * P + 64, 0.05)
+            eb, ebits = sparse_exact_bound(r)
             lines.append(f"{r['data']} & {r['widths'][1]} & {100 * r['nonzero_fraction']:.1f}\\% & {r['test_err_f']:.4f} & "
-                         f"{r['bits'] + 4:.0f} & {r['cert_frac']:.3f} & {fmt(t3_bound(r))} & {fmt(occ32, 2)}" + r" \\")
+                         f"{r['bits'] + 4:.0f} & {r['cert_frac']:.3f} & {fmt(t3_bound(r))} & {ebits:.0f} & {fmt(eb)}" + r" \\")
         lines += [r"\bottomrule", r"\end{tabular}",
                   r"\caption{As \cref{tab:t3}, for networks whose first-layer update is exactly sparse in the DCT basis "
                   r"(trained, pruned to the stated fraction of coefficients, fine-tuned with the support fixed). The "
-                  r"support is part of the description; only nonzero coefficients are dithered.}\label{tab:t3sparse}",
+                  r"support is part of the description; only nonzero coefficients are dithered. The last two columns "
+                  r"are the baseline for such a network: the Occam bound for coding $f$ exactly, with the same support "
+                  r"code and 32 bits per stored parameter.}\label{tab:t3sparse}",
                   r"\end{table}"]
         write("t3_sparse.tex", "\n".join(lines) + "\n")
     rows = load(os.path.join(RES, "boolean", "t3.jsonl"))
@@ -222,8 +244,9 @@ def headline():
         bits = np.mean([(r["bits_any_D"] if anyD else r["bits"]) + 4 for r in rr])
         P = rr[0]["params"]
         occ = np.mean([occam_bound(int(round(r["train_err_f"] * m)), m, 32.0 * P + 64, 0.05) for r in rr])
+        vc = np.mean([r["baseline_vc_W"] for r in rr])
         rows.append((label, f"MLP, {P:,} params", "known $D_X$" if not anyD else "none (any $D$)",
-                     f"{n}-bit, $m={m}$", te, bd, bits, occ))
+                     f"{n}-bit, $m={m}$", te, bd, bits, occ, vc))
     bool_row(b50, "parity3", 0.0, 4000, r"\texttt{parity3}")
     bool_row(b50, "parity3", 0.0, 2000, r"\texttt{parity3}, partly learned")
     bool_row(b50, "junta6", 0.0, 4000, r"\texttt{junta6}")
@@ -238,7 +261,7 @@ def headline():
             b = min(rr, key=lambda r: t2_bound(r, K))
             occ = occam_bound(int(round(b["train_err_f"] * 60000)), 60000, 32.0 * b["params"] + 64, 0.05)
             rows.append(({"mnist": "MNIST", "fashion": "Fashion-MNIST"}[d], f"784-{H}-10", "unlabeled test inputs",
-                         "$m=60000$", b["test_err_f"], t2_bound(b, K), b["bits"] + 4, occ))
+                         "$m=60000$", b["test_err_f"], t2_bound(b, K), b["bits"] + 4, occ, b["baseline_vc_W"]))
     t3rows = load(os.path.join(RES, "mnist", "t3.jsonl"))
     for d, H in [("mnist", 8), ("mnist", 16)]:
         rr = [r for r in t3rows if r["data"] == d and r["widths"][1] == H and r.get("weight_noise", 0) == 0
@@ -246,22 +269,25 @@ def headline():
         for r in rr:
             occ = occam_bound(int(round(r["train_err_f"] * 60000)), 60000, 32.0 * r["params"] + 64, 0.05)
             rows.append(({"mnist": "MNIST", "fashion": "Fashion-MNIST"}[d], f"784-{H}-10", "none", "$m=60000$",
-                         r["test_err_f"], t3_bound(r), r["bits"] + 4, occ))
+                         r["test_err_f"], t3_bound(r), r["bits"] + 4, occ, vc_dense(r)))
     sp = load(os.path.join(RES, "mnist", "t3_sparse.jsonl"))
     for d, H, nz in [("mnist", 100, 0.01), ("mnist", 256, 0.003)]:
         rr = [r for r in sp if r["data"] == d and r["widths"][1] == H and abs(r["nonzero_fraction"] - nz) < 1e-4]
         for r in rr:
-            occ = occam_bound(int(round(r["train_err_f"] * 60000)), 60000, 32.0 * r["params"] + 64, 0.05)
+            occ = sparse_exact_bound(r)[0]
             rows.append(({"mnist": "MNIST", "fashion": "Fashion-MNIST"}[d], f"784-{H}-10, sparse update ({100 * nz:g}\\%)",
-                         "none", "$m=60000$", r["test_err_f"], t3_bound(r), r["bits"] + 4, occ))
-    lines = [r"\begin{table}[t]", r"\centering\small", r"\begin{tabular}{l l l l r r r r}", r"\toprule",
-             r"task & network $f$ & extra data & data & test err.\ $f$ & bound on $f$ & bits & 32-bit Occam \\", r"\midrule"]
+                         "none", "$m=60000$", r["test_err_f"], t3_bound(r), r["bits"] + 4, occ, None))
+    lines = [r"\begin{table}[t]", r"\centering\small", r"\begin{tabular}{l l l l r r r r r}", r"\toprule",
+             r"task & network $f$ & extra data & data & test err.\ $f$ & bound on $f$ & bits & 32-bit code & VC \\", r"\midrule"]
     for row in rows:
-        lines.append(f"{row[0]} & {row[1]} & {row[2]} & {row[3]} & {row[4]:.4f} & {fmt(row[5])} & {row[6]:,.0f} & {fmt(row[7], 2)}" + r" \\")
+        vc = "--" if row[8] is None else fmt(row[8], 2)
+        lines.append(f"{row[0]} & {row[1]} & {row[2]} & {row[3]} & {row[4]:.4f} & {fmt(row[5])} & {row[6]:,.0f} & {fmt(row[7], 2)} & {vc}" + r" \\")
     lines += [r"\bottomrule", r"\end{tabular}",
               r"\caption{Headline results: certified upper bounds on the test error of the trained network itself, at "
-              r"confidence 95\%, against its measured test error and the parameter-counting bound (32 bits per "
-              r"parameter). `Extra data': what the bound uses besides the training set; no row uses labelled "
+              r"confidence 95\%, against its measured test error and two parameter-counting baselines for the same "
+              r"network: the Occam bound for coding it exactly with 32 bits per parameter (for sparse-update networks: "
+              r"per stored parameter, plus the support), and the VC bound with $d$ equal to the number of parameters "
+              r"(optimistic). `Extra data': what the bound uses besides the training set; no row uses labelled "
               r"held-out data. Chance level is 0.5 for the Boolean tasks and 0.9 for MNIST. Boolean rows average three seeds. "
               r"`Bits': description length of the compressed or dithered network.}"
               r"\label{tab:headline}", r"\end{table}"]
