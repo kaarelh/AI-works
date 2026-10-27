@@ -11,7 +11,8 @@ name, suite = sys.argv[1], sys.argv[2]
 order = list({"dlheld": boolfuncs.make_dl_heldout_suite, "dlheld2": boolfuncs.make_dl_heldout2_suite,
               "dlheld3": boolfuncs.make_dl_heldout3_suite, "dlsymdev": boolfuncs.make_dl_symdev_suite,
               "dlheld4": boolfuncs.make_dl_heldout4_suite, "dlheld5": boolfuncs.make_dl_heldout5_suite,
-          "dlheld6": boolfuncs.make_dl_heldout6_suite}[suite](30)) if suite.startswith("dl") else list(TH.suite_targets(suite)[0])
+          "dlheld6": boolfuncs.make_dl_heldout6_suite,
+          "dlfamdev": boolfuncs.make_dl_famdev_suite, "dlheld7": boolfuncs.make_dl_heldout7_suite}[suite](30)) if suite.startswith("dl") else list(TH.suite_targets(suite)[0])
 parts = sorted(glob.glob(os.path.join(HERE, "results", f"toy__{name}__{suite}__part*.json")))
 P = [json.load(open(p)) for p in parts]
 out = dict(P[0]); out["fns"] = {}

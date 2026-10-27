@@ -441,3 +441,23 @@ def make_dl_heldout6_suite(d=30):
     sp = importlib.util.spec_from_file_location("heldout6_suite", p); m = importlib.util.module_from_spec(sp)
     sp.loader.exec_module(m)
     return m.make_dl_heldout6_suite(d)
+
+
+def _heldout6_family(d, seed, prefix):
+    """A fresh draw from dlheld6's family (part9/heldout6/FAMILY.md, written blind to the sum-feature design), renamed."""
+    import importlib.util, os
+    p = os.path.join(os.path.dirname(os.path.abspath(__file__)), "part9", "heldout6", "suite.py")
+    sp = importlib.util.spec_from_file_location("heldout6_suite", p); m = importlib.util.module_from_spec(sp)
+    sp.loader.exec_module(m)
+    return {prefix + k[len("h6_"):]: v for k, v in m.make_dl_heldout6_suite(d, seed=seed).items()}
+
+
+def make_dl_famdev_suite(d=30):
+    """Part 10 DEVELOPMENT suite: a draw (seed 61616) from dlheld6's family; targets fd_00 ... fd_11."""
+    return _heldout6_family(d, 61616, "fd_")
+
+
+def make_dl_heldout7_suite(d=30):
+    """Part 10 HELD-OUT suite, fixed before any Part 10 design: a draw (seed 70707) from dlheld6's family; f7_00 ... f7_11."""
+    return _heldout6_family(d, 70707, "f7_")
+

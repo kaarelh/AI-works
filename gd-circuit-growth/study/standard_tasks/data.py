@@ -8,7 +8,8 @@ Sources (cached under DATA_DIR):
                           the first 7000 drawings of each category, 6000 train / 1000 test per class (60000 / 10000);
                           pixels in [0, 1], columns permuted by one fixed random permutation (seed 9192), so that no
                           learner can use pixel adjacency (an MLP is invariant to it).  Part 9: qd_dev for development,
-                          qd_a and qd_b held out (fixed before any Part 9 design).
+                          qd_a and qd_b held out (fixed before any Part 9 design).  Part 10: qd_c and qd_d, the next 20
+                          categories of the same draw, held out (fixed before any Part 10 design).
 
 load(name) -> dict(X (N, d) float64, y (N,) int classes 0..C-1, types [d] in {'binary','categorical','continuous'},
                    C, split: 'standard' (mnist/fashion: given test set) or 'random')
@@ -30,6 +31,8 @@ HELDOUT2 = ["texture", "churn", "wine_quality_white", "page_blocks", "clean2", "
 # Part 9 (sum features, discrete image members): image sets.  qd_dev may be used for development; qd_a, qd_b are held out.
 DEV3 = ["qd_dev"]
 HELDOUT3 = ["qd_a", "qd_b"]
+# Part 10 (an improved discrete learner, its interpretation): fresh image sets, fixed before any Part 10 design.
+HELDOUT4 = ["qd_c", "qd_d"]
 QD = "https://storage.googleapis.com/quickdraw_dataset/full/numpy_bitmap/{}.npy"
 QD_CATS = "https://raw.githubusercontent.com/googlecreativelab/quickdraw-dataset/master/categories.txt"
 NS = [100, 300, 1000, 3000, 10000, 30000, 60000]
@@ -66,8 +69,8 @@ def _quickdraw(name, per_class=7000, n_test_pc=1000):
     """10-class QuickDraw task (see module docstring).  Downloads only the first per_class drawings of each category
     (HTTP range request on the .npy file)."""
     cats = [c.strip() for c in open(_get(QD_CATS, os.path.join(DATA_DIR, "quickdraw", "categories.txt"))).read().splitlines() if c.strip()]
-    pick = [cats[i] for i in np.random.default_rng(9191).permutation(len(cats))[:30]]
-    mine = {"qd_dev": pick[0:10], "qd_a": pick[10:20], "qd_b": pick[20:30]}[name]
+    pick = [cats[i] for i in np.random.default_rng(9191).permutation(len(cats))[:50]]      # the first 30 as in Part 9
+    mine = {"qd_dev": pick[0:10], "qd_a": pick[10:20], "qd_b": pick[20:30], "qd_c": pick[30:40], "qd_d": pick[40:50]}[name]
     Xtr, ytr, Xte, yte = [], [], [], []
     for c, cat in enumerate(mine):
         path = os.path.join(DATA_DIR, "quickdraw", cat.replace(" ", "_") + f".first{per_class}.npy")
