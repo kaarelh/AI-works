@@ -97,10 +97,24 @@ work. The new data sets (§2) went into the same commit. The protocol fixes:
   seed 0 (9 cells). The references there are the existing or queued result files.
 - Builder S's dev evaluation is the full toy grid with 3 seeds, on `designed` and `dlsymdev`, inputs permuted.
 
-**Amendment 2** (about 23:10 UTC, commit 7449313e; after builder S froze, before any held-out Part 9 run):
+**Amendment 2** (23:08 UTC, commit 7449313e; after builder S froze, before any held-out Part 9 run):
 - Builder S had seen the source code of `dlheld4`'s target definitions (§8, item 1).
 - A fifth suite, `dlheld5`, was therefore generated at random from a fixed generative family (§2.2).
-- Q1 is answered on both suites: `dlheld5` is the clean test, and `dlheld4` is reported with the exposure noted.
+- Q1 was to be answered on both suites, with `dlheld5` as "the clean test". Amendment 3 withdraws that label.
+
+**Amendment 3** (02:54 UTC on 27 October, commit 0c4db784; after the Part 9 protocol audit, before any run on the new
+suite and before the orchestrator had read any v2 toy result):
+- The protocol audit (`audit/protocol.md`, M1) found that `dlheld5` is not blind to the sum-feature design. The
+  orchestrator wrote its family 35 s after reading builder S's design summary, which included the list of forms S cannot
+  represent. Every `dlheld5` target lies inside S's representable class, and its accept sets are more oscillatory than
+  any dev target's: a many-run function of a sum costs S one group per value, as an interval does, but costs the networks
+  and v1's character search much more. The audit also found that `dlheld4`'s exposure went beyond the text search (M2;
+  §8, item 1).
+- A sixth suite, **`dlheld6`**, was written by a fresh agent blind to the design (§2.2). It was given only the
+  pre-registered description of the held-out suite, the Part 9 question, the format of three dev targets and the
+  constraints, and it stated its family before drawing once.
+- **Q1 is answered on `dlheld6`**, with the pre-registered criteria. `dlheld5` and `dlheld4` are secondary evidence,
+  reported with their exposures.
 
 ### 1.2 What is blind
 
@@ -108,8 +122,9 @@ work. The new data sets (§2) went into the same commit. The protocol fixes:
 |---|---|---|
 | toy `designed` (21) | development | integration rule (i) |
 | toy `dlsymdev` (8) | development, new in Part 9 | integration rule (i) |
-| **toy `dlheld4` (12)** | held out, fixed before design; builder S saw its definitions as source code before its design work (§8) | Q1, with the exposure noted |
-| **toy `dlheld5` (12)** | held out, generated after builder S froze; no one had seen how its targets behave when it was fixed | **Q1, the clean test** |
+| **toy `dlheld6` (12)** | held out; family written by an agent blind to the sum-feature design, from the pre-registered description; drawn once after every builder froze (Amendment 3) | **Q1** |
+| toy `dlheld5` (12) | held out, generated after builder S froze; blind to target identities but not to the design: its family was written after S's limits were read, inside S's representable class (Amendment 3) | Q1, secondary |
+| toy `dlheld4` (12) | held out, fixed before design; builder S saw its definitions as source code before its design work, and the task prompt quoted one of them (§8) | Q1, secondary, with the exposure noted |
 | toy `dlheld3` (10) | Part 8's fresh suite (contains sym9); results known | regression check, not evidence |
 | MNIST, Fashion-MNIST | development; seen in Part 8. During development the killed I2 session also scored on their test sets (§8) | integration rule (ii) |
 | QuickDraw `qd_dev` | development, new in Part 9 | integration rule (ii) |
@@ -218,7 +233,7 @@ Fashion-MNIST, v1 is about level with the strong MLP at n = 60000 on `qd_dev` (+
 
 ### 2.2 Toy suites
 
-All three suites are in `boolfuncs.py`, on {−1, +1}^30. Products of variables are parities in this encoding. The column
+All four suites are reached through `boolfuncs.py`, on {−1, +1}^30. Products of variables are parities in this encoding. The column
 P(f = +1) is computed from the definitions on 200000 uniform points.
 
 **`dlsymdev`** (development; `make_dl_symdev_suite`, seed 7171; 8 targets):
@@ -283,8 +298,40 @@ In the table, the signs s are listed for x1..xk.
 | h5rf0 (control) | random 9-gate formula on 7 inputs | 6 | 0.500 |
 | h5rf1 (control) | random 6-gate formula on 7 inputs | 6 | 0.750 |
 
-**Q1's symmetric subset** (`compare_part9.NONSUM`) is every target except the random formulas and the DNF: 9 targets on
-`dlheld4` and 10 on `dlheld5`.
+**`dlheld6`** (held out, Amendment 3; `heldout6/suite.py`, via `boolfuncs.make_dl_heldout6_suite`, seed 52817;
+12 targets h6_00 … h6_11). Its family was written by a fresh agent that had not seen the sum-feature design, any design
+note, `boolfuncs.py`, the other held-out suites or any result; its transcript shows tool calls only in its own folder
+and the scratchpad. It worked from the pre-registered one-line description ("9 symmetric / signed-sum targets of new
+sizes and accept-sets, mixtures with parities and gates, and 3 non-symmetric controls"), stated the family in
+`heldout6/FAMILY.md` §1–6 before drawing, and drew once.
+- **Strata (fixed slot counts, randomly assigned to names).** S1, a function of one signed sum (3 slots); S2, a function
+  of a sum XOR a parity of 1–3 other inputs (2); S3, a sum with a gate: AND / OR with a 1–2-input gate, MAJ with two
+  literals, or a multiplexer between two sums (2); S4, a threshold or band of s + a·τ with a ∈ {2, 3} and τ a literal,
+  a 2-input parity or an AND, or AND / OR / XOR of two sums (2); controls: a read-once AND/OR formula, a DNF with
+  overlapping terms and a decision list, on 5–10 inputs (3).
+- **Sums and accept sets.** Each block is plain or randomly signed with probability ½, of size 5–14 (4–7 for two-sum
+  forms). The accept set is a threshold, a centred band, an interval, a MOD-3 / MOD-4 class of the count, or an
+  arbitrary non-constant subset, each with probability 1/5.
+- **Balance** (the only rejection): P(f = +1) ∈ [0.25, 0.75], computed exactly; 5 redraws in total.
+- **As drawn:** both S3 slots came out as multiplexers, so no AND/OR-gate or majority form is in the suite.
+
+| target | stratum | definition | relevant inputs | P(f = +1) |
+|---|---|---|---|---|
+| h6_00 | S1 | [((s + 13)/2) mod 3 ≠ 1], s = x1 + … + x8 − x9 − … − x12 + x13 | 13 | 0.667 |
+| h6_01 | S1 | [s ∈ {−9, −7, −5, −1, 1, 7, 9}], s = −x1 + x2 − x3 + x4 + x5 + x6 − x7 − x8 − x9 | 9 | 0.602 |
+| h6_02 | S2 | [1 ≤ x1 + … + x9 ≤ 5] xor x10x11 | 11 | 0.500 |
+| h6_06 | S2 | [x1 + … + x6 ∈ {−6, −2, 0, 6}] xor x7x8 | 8 | 0.500 |
+| h6_07 | S3 | ¬x11 ? [x1 − x2 − … − x6 ∈ {−2, 4}] : [x7 + x8 + x9 − x10 ≤ 0] | 11 | 0.508 |
+| h6_08 | S3 | x11 ? [\|x1 + … + x4\| ≤ 2] : [((s2 + 6)/2) mod 3 = 0], s2 = −x5 − x6 + x7 − x8 + x9 − x10 | 11 | 0.609 |
+| h6_09 | S4 | [−4 ≤ x1 + … + x6 ≤ 0] xor [3 ≤ −x7 − x8 + x9 − x10 − x11 ≤ 5] | 11 | 0.588 |
+| h6_10 | S4 | [\|x1 + … + x12 − 3 x13\| > 1] | 13 | 0.686 |
+| h6_11 | S1 | [x1 + … + x7 = 1] | 7 | 0.273 |
+| h6_03 (control) | DNF | (¬x4 ∧ x5) ∨ (¬x2 ∧ ¬x6) ∨ (x1 ∧ ¬x3 ∧ x4) | 6 | 0.531 |
+| h6_04 (control) | read-once | ¬x1 ∨ (x2 ∧ ¬x3 ∧ (x4 ∨ x5)) | 5 | 0.594 |
+| h6_05 (control) | decision list | 7 rules on x1..x8 (heldout6/FAMILY.md §7) | 8 | 0.543 |
+
+**Q1's sum-structured subset** (`compare_part9.NONSUM` lists the controls) is every target except the random formulas,
+the DNFs and the decision list: 9 targets on `dlheld4`, 10 on `dlheld5` and 9 on `dlheld6`.
 
 ## 3. Sum features (builder S: DFG v1.2)
 
@@ -773,8 +820,13 @@ runs); CPU is process seconds per fit, under load from other jobs:
      were not tuned.
    - *An observation on the design file.* Its weaknesses section uses the form of `dlheld4`'s sumpar as its worked
      example.
+   - *What the protocol audit added* (`audit/protocol.md`, M2). The orchestrator's own task prompt to S had quoted a
+     truncation of sumpar ("sign(x1+...+x5 + 2 x6 x7)") as an example of an integer combination of found characters.
+     The block-size cap k_max = 24 (held-out tail13 needs 13, dev at most 11) and the 4 modulators were set 6–7 minutes
+     after the exposure; S's disclosure lists the first but not the second. S never loaded or ran `dlheld4`.
    - *Response.* `dlheld5` was generated after the freeze by rejection sampling from a fixed family (seed 9393, §2.2).
-     The networks, lin, hgb and v1 are run on it as on `dlheld4`.
+     The networks, lin, hgb and v1 are run on it as on `dlheld4`. The audit then found `dlheld5`'s family itself
+     designed with knowledge of S's limits (Amendment 3), and `dlheld6` was written blind to the design.
 2. **First container restart** (about 23:45 UTC, 26 October): the original I2 session was killed.
    - *What was lost.* The session had worked from about 22:50 UTC and had not frozen. It left a `learner.py` with an
      earlier bank, a `test_perm.py` and 14 scratch experiments; most stdout logs were lost.
@@ -797,8 +849,9 @@ runs); CPU is process seconds per fit, under load from other jobs:
      02:02 UTC, before the integration rule was applied.
    - p9_gates/DESIGN.md §6 ("Full dev evaluation") was left unfilled. The numbers in §4.3 are computed here from the
      result files.
-4. **Second container restart** (PLACEHOLDER: time, and which jobs were lost; between 01:18 and 01:32 UTC on
-   27 October, judging from the logs and commit a4b31569). There were **two container restarts in total**.
+4. **Second container restart** (about 01:30 UTC on 27 October; the machine's uptime dates the boot to 01:31). It
+   killed p9_gates's last dev cell (`qd_dev`, n = 60000, rerun with the frozen file) and the `hgb` QuickDraw references
+   (rerun per cell). There were **two container restarts in total**.
    - *Why `eval_cells.py`.* Because of the restarts, a resumable cell-level evaluator was introduced (commit a4b31569).
      - It uses the same protocol as `standard_tasks/harness.evaluate`: the same splits, the same per-fit random
        generator ([seed, n, 4242]), and it records test error, FLOPs and process CPU time.
