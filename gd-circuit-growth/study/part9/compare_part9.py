@@ -19,7 +19,10 @@ TOY = [("dlsymdev", "dev"), ("designed", "dev"), ("dlheld4", "held out; definiti
        ("dlheld6", "held out; family written by an agent blind to the S design (Amendment 3)")]
 NONSUM = {"dnf3x3", "h4rf0", "h4rf1", "h5rf0", "h5rf1", "h6_03", "h6_04", "h6_05"}   # controls (non-symmetric)
 IMG_HELD, IMG_DEV = ["qd_a", "qd_b"], ["qd_dev", "mnist", "fashion_mnist"]
-REFS = ("mlp", "mlp_reg", "mlp_strong", "mlp_strong1", "mlp_best")
+REFS = ("mlp", "mlp_reg", "mlp_strong", "mlp_strong1", "mlp_wide", "mlp_wide1", "mlp_xl", "mlp_best", "mlp_best+")
+NEW_MLP = ("mlp_wide", "mlp_wide1", "mlp_xl")                 # Amendment 4: wider (R1) and CPU-matched (R2) MLPs
+CONTEXT = ("mlp_pool", "cnn")                                 # Amendment 4 controls: MLP on pooled sums; CNN on unpermuted pixels
+
 
 
 def nst(name, suite):
@@ -38,7 +41,9 @@ def toy_part():
         if not NR:
             continue
         N = {c: nst(c, suite) for c, _ in cols}; have = [(c, h) for c, h in cols if N[c]]
-        refc = [k for k in ("nets", "nets_wd", "nets_cewd", "nets_best") if k in NR]
+        if any(k in NR for k in ("nets_cewd0.3", "nets_cewd1.0")):          # Amendment 4 (R3): keep the 3-variant best too
+            NR["nets_best3"] = {fn: min(NR[k][fn] for k in ("nets", "nets_wd", "nets_cewd") if k in NR and fn in NR[k]) for fn in NR["nets"]}
+        refc = [k for k in ("nets", "nets_wd", "nets_cewd", "nets_cewd0.3", "nets_cewd1.0", "nets_best3", "nets_best") if k in NR]
         L += [f"### `{suite}` ({role})", "", "| target | " + " | ".join(h for _, h in have) + " | " + " | ".join(refc) + " |",
               "|---|" + "---|" * (len(have) + len(refc))]
         for fn in NR["nets"]:
@@ -61,9 +66,15 @@ def toy_part():
     return L
 
 
+def ref(kind, ds):
+    """mlp_best = the pre-registered per-cell best (Part 8's MLP variants); mlp_best+ adds Amendment 4's R1 and R2."""
+    if kind == "mlp_best+":
+        return CH.ref("mlp_best", ds, variants=CH.MLP_VARIANTS + NEW_MLP)
+    return CH.ref(kind, ds) if kind in ("mlp_reg", "mlp_best") else CH.load(kind, ds)
+
+
 def img_cells(L_, ds, ref_kind, nmin=0, nmax=10 ** 9):
-    return [c for c in CH.cells(CH.load(L_, ds), CH.ref(ref_kind, ds) if ref_kind in ("mlp_reg", "mlp_best") else CH.load(ref_kind, ds), ds)
-            if nmin <= c["n"] <= nmax]
+    return [c for c in CH.cells(CH.load(L_, ds), ref(ref_kind, ds), ds) if nmin <= c["n"] <= nmax]
 
 
 def img_part():
@@ -73,7 +84,7 @@ def img_part():
         L += [f"### Summary, {split}", "",
               "| learner | reference | n range | cells | better | tie | worse | mean log2(err / ref err) |", "|---|---|---|---|---|---|---|---|"]
         for l in learners:
-            for k in REFS:
+            for k in REFS + (CONTEXT if l == V2 else ()):
                 for lo, hi, lab in ((0, 10 ** 9, "all"), (0, 3000, "n <= 3000"), (10000, 10 ** 9, "n >= 10000")):
                     C = [c for ds in names for c in img_cells(l, ds, k, lo, hi)]
                     if not C:
@@ -82,10 +93,10 @@ def img_part():
                     L.append(f"| {l} | {k} | {lab} | {len(C)} | {v.count('better')} | {v.count('tie')} | {v.count('worse')} | "
                              f"{np.mean([c['lr'] for c in C]):+.2f} |")
         L.append("")
-        L += ["| dataset | n | " + " | ".join(learners) + " | " + " | ".join(REFS) + " |", "|---|---|" + "---|" * (len(learners) + len(REFS))]
+        L += ["| dataset | n | " + " | ".join(learners) + " | " + " | ".join(REFS + CONTEXT) + " |",
+              "|---|---|" + "---|" * (len(learners) + len(REFS) + len(CONTEXT))]
         for ds in names:
-            R = {l: CH.load(l, ds) for l in learners + ["mlp", "mlp_strong", "mlp_strong1"]}
-            R["mlp_reg"], R["mlp_best"] = CH.ref("mlp_reg", ds), CH.ref("mlp_best", ds)
+            R = {l: ref(l, ds) for l in learners + list(REFS) + list(CONTEXT)}
             base = R["mlp"] or R["mlp_strong"]
             if base is None:
                 continue
@@ -95,7 +106,7 @@ def img_part():
                     if r is None or n not in r["ns"][:len(r["err"])]:
                         return "–"
                     return f"{np.nanmean(np.array(r['err'][r['ns'].index(n)], float)):.4f}"
-                L.append(f"| {ds} | {n} | " + " | ".join(g(l) for l in learners) + " | " + " | ".join(g(k) for k in REFS) + " |")
+                L.append(f"| {ds} | {n} | " + " | ".join(g(l) for l in learners) + " | " + " | ".join(g(k) for k in REFS + CONTEXT) + " |")
         L.append("")
     return L
 
@@ -107,10 +118,10 @@ def img_compute():
     L = ["## Images: compute per fit (own FLOP count / budget of 3 MLP runs; CPU seconds, process time)", "",
          "Prediction is not charged; see PART9.md for the per-query cost.", "",
          "| dataset | n | budget (FLOPs) | " + " | ".join(f"{l} FLOPs/budget" for l in (V2, "hyb_portfolio")) + " | "
-         + " | ".join(f"{l} CPU s" for l in (V2, "hyb_portfolio", "mlp", "mlp_strong")) + " |", "|---|---|---|" + "---|" * 6]
+         + " | ".join(f"{l} CPU s" for l in (V2, "hyb_portfolio", "mlp", "mlp_strong", "mlp_wide", "mlp_xl")) + " |", "|---|---|---|" + "---|" * 8]
     for ds in IMG_HELD:
         D = DATA.load(ds)
-        R = {l: CH.load(l, ds) for l in (V2, "hyb_portfolio", "mlp", "mlp_strong")}
+        R = {l: CH.load(l, ds) for l in (V2, "hyb_portfolio", "mlp", "mlp_strong", "mlp_wide", "mlp_xl")}
         if R[V2] is None:
             continue
         for a, n in enumerate(R[V2]["ns"]):
@@ -127,7 +138,36 @@ def img_compute():
                     return "–"
                 v = np.array(r["cpu_seconds"][r["ns"].index(n)], float)
                 return f"{np.nanmean(v):.0f}" if np.isfinite(v).any() else "–"
-            L.append(f"| {ds} | {n} | {B:.3g} | {fr(V2)} | {fr('hyb_portfolio')} | " + " | ".join(cp(l) for l in (V2, "hyb_portfolio", "mlp", "mlp_strong")) + " |")
+            L.append(f"| {ds} | {n} | {B:.3g} | {fr(V2)} | {fr('hyb_portfolio')} | " + " | ".join(cp(l) for l in (V2, "hyb_portfolio", "mlp", "mlp_strong", "mlp_wide", "mlp_xl")) + " |")
+    return L + [""]
+
+
+def img_attrib():
+    """Attribution per held-out image cell (Amendment 4, C3; cells fitted after the evaluator recorded it): stacking weight
+    by member family and the out-of-fold error of each family's best member, on the fit's own training rows."""
+    fam = lambda k: ("ggbt" if k == "ggbt" else "gknn" if k.startswith("gknn") else "knn" if k.startswith("knn")
+                     else "lin" if k.startswith("lin") else "dfg" if k.startswith("dfg") else k)
+    F = ("ggbt", "gknn", "gbt", "et", "knn", "lin")
+    L = ["## Images: attribution (stack weight by member family / best out-of-fold error in the family; training rows only)", "",
+         "| dataset | n | seed | " + " | ".join(F) + " | stack OOF | test err |", "|---|---|---|" + "---|" * (len(F) + 2)]
+    for ds in IMG_HELD:
+        p = os.path.join(CH.SH.RES, f"{V2}__{ds}.info.json")
+        if not os.path.exists(p):
+            continue
+        I = json.load(open(p)); r = CH.load(V2, ds)
+        for key in sorted(I, key=lambda k: (int(k.split("_")[0][1:]), k)):
+            inf = I[key]
+            if not inf or "weights" not in inf:
+                continue
+            n, sd = int(key.split("_")[0][1:]), int(key.split("_s")[1])
+            w = {}; e = {}
+            for k, v in inf["weights"].items():
+                w[fam(k)] = w.get(fam(k), 0.0) + v
+            for k, v in inf.get("member_oof_err", {}).items():
+                e[fam(k)] = min(e.get(fam(k), 1.0), v)
+            te = r["err"][r["ns"].index(n)][r["seeds"].index(sd)] if r and n in r["ns"] else float("nan")
+            L.append(f"| {ds} | {n} | {sd} | " + " | ".join(f"{w.get(f, 0):.2f} / {e[f]:.3f}" if f in e else "–" for f in F)
+                     + f" | {inf.get('stack_oof_err', float('nan')):.3f} | {te:.4f} |")
     return L + [""]
 
 
@@ -150,6 +190,6 @@ def rule_part():
 
 if __name__ == "__main__":
     L = ["# Part 9 results", "", "Generated by `compare_part9.py` from result files (definitions in its docstring and in "
-         "`../hybrid/compare_hybrid.py`).", ""] + rule_part() + toy_part() + img_part() + img_compute()
+         "`../hybrid/compare_hybrid.py`).", ""] + rule_part() + toy_part() + img_part() + img_compute() + img_attrib()
     open(os.path.join(HERE, "RESULTS.md"), "w").write("\n".join(L) + "\n")
     print("\n".join(L[:20]))

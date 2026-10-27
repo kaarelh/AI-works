@@ -35,7 +35,8 @@ SPLITS = [("held-out tabular (Part 7 set)", [d for d in DATA.HELDOUT if d not in
 TOY_SUITES = [("designed", "dev"), ("random", "held-out"), ("dlheld", "held-out"), ("dlheld2", "held-out"),
               ("dlheld3", "held-out (fresh Part 8 set)")]
 MLP_VARIANTS = ("mlp", "mlp_plus", "mlp_unit", "mlp_l2", "mlp_l2unit", "mlp_strong", "mlp_strong1")
-NET_VARIANTS = (("nets", ""), ("nets_wd", "_wd0.1"), ("nets_cewd", "_cewd0.1"))
+NET_VARIANTS = (("nets", ""), ("nets_wd", "_wd0.1"), ("nets_cewd", "_cewd0.1"),
+                ("nets_cewd0.3", "_cewd0.3"), ("nets_cewd1.0", "_cewd1.0"))      # the last two: Part 9 dlheld6 only
 
 
 def load(learner, ds):
@@ -43,9 +44,11 @@ def load(learner, ds):
     return json.load(open(p)) if os.path.exists(p) else None
 
 
-def ref(kind, ds):
+def ref(kind, ds, variants=MLP_VARIANTS):
+    """variants: the MLP variants mlp_best minimizes over (Part 9 adds wider and CPU-matched ones).  mlp_reg is
+    mlp_l2unit on image data (MNIST, Fashion-MNIST and the Part 9 QuickDraw sets), mlp_l2 elsewhere."""
     if kind == "mlp_reg":
-        return load("mlp_l2unit" if ds in IMG else "mlp_l2", ds)
+        return load("mlp_l2unit" if ds in IMG or ds.startswith("qd_") else "mlp_l2", ds)
     if kind != "mlp_best":
         return load(kind, ds)
     base = load("mlp", ds)
@@ -54,7 +57,7 @@ def ref(kind, ds):
     E, F, V = [], [], []
     for j, n in enumerate(base["ns"][:len(base["err"])]):
         best = ("mlp", base["err"][j], base["flops"][j])
-        for v in MLP_VARIANTS[1:]:
+        for v in variants[1:]:
             r = load(v, ds)
             if r is not None and n in r["ns"][:len(r["err"])]:
                 k = r["ns"].index(n)
