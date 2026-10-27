@@ -24,6 +24,10 @@ Raw network outputs live in a session scratch directory and are in neither branc
 
 [Part 8](#part-8-a-discrete-portfolio-against-gradient-descent-trained-networks-on-toy-and-real-tasks-26-october-2026) asks for one discrete method that beats gradient-descent-trained networks on both. A pre-registered portfolio (DFG plus boosted trees, ExtraTrees, kNN votes and logistic regression, stacked) does so on the toy suites (9 of 10 fresh targets) and on held-out tabular data on average (lower mean error on 8 of 10 fresh datasets; not significant). On images its error is lower than every MLP's up to n = 3000 (one cell resolved), but a regularized MLP ensemble beats it at n ≥ 30000. The toy wins come from DFG's character search, the real-task wins from the classical stack.
 
+[Part 9](#part-9-sum-features-and-permutation-invariant-image-members-2627-october-2026) continues in the two directions where Part 8 lost. Features that are functions of signed sums of inputs remove the loss on symmetric targets: on a held-out suite written blind to the design, 10 of 12 targets need clearly less data than the best network, none more. A pixel-permutation-invariant image member gives the lowest error of every permutation-invariant learner at all 7 training sizes on two fresh QuickDraw sets. But the image gain is carried by locality recovered from pixel correlations: an MLP given the same pooled sums matches it at n = 60000, and a small CNN is better.
+
+**Paper (Parts 6–9):** [`paper_discrete/discrete-learners-paper.pdf`](paper_discrete/discrete-learners-paper.pdf) (LaTeX sources, figure and table scripts in [`paper_discrete/`](paper_discrete/)).
+
 [Part 4](#part-4-does-compositional-structure-beyond-leap-matter-24-october-2026) tests whether compositional structure beyond leap complexity matters. [Part 5](#part-5-what-the-network-computes-while-it-learns-2425-october-2026) characterizes the sequence of functions a network computes while it learns, and gives models that reproduce it on held-out targets.
 
 [Part 3](#part-3-state-of-understanding-after-an-extended-session) gives the current state of understanding:
@@ -970,6 +974,56 @@ Parts 1–6 (n*, the data needed for 10% test error) and on Part 7's standard ta
 "Discrete" means no continuous feature parameters. Boosting is still functional gradient descent, and DFG's spectral
 features use continuous eigenvector directions. The fair wording is "beats gradient-descent-trained networks", not
 "beats gradient descent".
+
+## Part 9: sum features and permutation-invariant image members (26–27 October 2026)
+
+Full write-up: [`study/part9/PART9.md`](study/part9/PART9.md). Tables: [`study/part9/RESULTS.md`](study/part9/RESULTS.md).
+Protocol and amendments: [`study/part9/PROTOCOL.md`](study/part9/PROTOCOL.md). Audits: [`study/part9/audit/`](study/part9/audit/).
+
+**Question.** Continue in the two directions where Part 8's portfolio (v1) lost: symmetric functions (sym9: 1229
+samples against the networks' 350) and images at large n.
+
+**Setup** (Numerical):
+- *Pre-registration.* Held-out sets fixed before any design: a toy suite (`dlheld4`) and two fresh 10-class QuickDraw
+  sets (`qd_a`, `qd_b`; 60000 training images each, pixel columns permuted).
+- *Designs*, built independently on development data and frozen:
+  - DFG v1.2 adds *sum features*: indicators of the value of a signed sum Σ_{i∈S} s_i x_i, s_i = ±1, admitted by a χ²
+    test with a union bound over every subset, sign pattern and size up to 24;
+  - two pixel-permutation-invariant image members. The pre-registered rule picked `p9_gates`: nearest neighbours and
+    boosted trees on subset sums over the 4, 9 and 16 pixels most correlated with each pixel, plus prototype-pair
+    projections.
+- v2 (`hyb_portfolio2`) = v1 with both, frozen before any held-out run (one recorded crash fix afterwards).
+- *Audits and amendments.* Four audits ran on code and process before any v2 held-out result was read.
+  - The protocol audit found that `dlheld4` and a later suite `dlheld5` were both exposed to the sum-feature design. A
+    sixth suite, `dlheld6`, was written by an agent blind to the design, from the pre-registered one-line description,
+    and Q1 is answered on it.
+  - The fairness and discreteness audits led to stronger references (512- and 1024-wide MLP ensembles; two more weight
+    decays for the toy networks) and post-hoc controls (an MLP given v2's pooled sums; a CNN on unpermuted pixels).
+
+**Answer: yes to both pre-registered questions, with a large qualification on images.**
+- **Q1, toy (blind suite `dlheld6`).** v2 needs clearly less data than the per-target best network on 10 of 12 targets
+  and more on none: mean log2 n* ratio −1.45 against the pre-registered variants, about 2.7×. On the 9 sum-structured
+  targets v2 is at −1.53, v1 at +0.63. One target (a residue class mod 3 of a 13-input count) is learned by no learner.
+  The two exposed suites agree (−2.40 and −1.68).
+- **Q2, images (`qd_a`, `qd_b`, n ≥ 10000).** v2's mean log2 error ratio is −0.18 against the strong MLP ensemble and
+  the pre-registered `mlp_best` (3 cells better, 3 tied, none worse), and v1's is +0.01. Against the strengthened
+  references it is −0.13, and v2 has the lowest error of every permutation-invariant learner at all 14 cells. At
+  n = 60000 v2 has 12.0% and 14.9% error, against 12.9% and 15.2% for the 512-wide ensemble.
+- **What carries the image result** (controls and post-hoc ablation):
+  - the pooling sets recover the pixel grid from correlations (on the permuted dev set, 98% of the members of each
+    4-pixel set lie within one grid step);
+  - an MLP given the same pooled sums matches v2 at n = 60000 (12.3% and 14.7%);
+  - the winning member is gradient-boosted trees, whose gain over Part 8's tree member splits about evenly between the
+    pooled sums and longer boosting;
+  - a small CNN that sees the pixel layout is better still (12.0% at n = 10000 on `qd_a`, where v2 has 15.0%).
+- **Compute.** v2's FLOPs stay within the budget (largest image fit 0.62 of three MLP runs by its own count, ≈ 0.72
+  after the compute audit's correction; toy ≤ 0.82 of one network run). A v2 image fit takes 20–30 CPU minutes at n = 60000, against about a minute for the strong MLP ensemble,
+  and its prediction costs about 500× an MLP's per query.
+
+**Reading** (Heuristic). Sum features close the symmetric-function gap because they put "a function of one signed sum"
+into the dictionary, which a union bound searches for a few dozen nats; gradient descent has to find the sum's
+direction from a weak degree-2 statistic. The image result is about representation more than about discreteness:
+locality recovered from data, which a gradient-trained network can use as well.
 
 ## Files
 
