@@ -1,0 +1,379 @@
+"""Tractable envelopes and the envelope importance-sampling estimator.
+
+An envelope is a nonnegative arithmetic circuit phi with nodes
+    'ONE'            constant 1
+    'ZERO'           constant 0
+    'LIT' (i, b)     [x_i = b]
+    'BOX' j          [B_j(x) = 1] for a sub-function B_j of the circuit
+                     ("dense leaf"): its mass is estimated by Monte Carlo and
+                     it is sampled by rejection
+    'SUM' children   sum
+    'PROD' children  product of children with pairwise-disjoint supports
+so phi(x) counts the derivations (proof trees) of x. If phi(x) >= 1 whenever
+C(x) = 1 ("phi dominates C"), then with Q = D * phi / E_D[phi]
+
+    W = C(X) / phi(X),   X ~ Q,
+
+lies in [0, 1] and has mean p / E_D[phi]. Without boxes E_D[phi] is exact
+(bottom-up sum-product) and Q is sampled exactly (top-down: pick a SUM child
+with probability proportional to its mass, recurse into every PROD child,
+fill the remaining variables from D). Then p = E_D[phi] * E_Q[W], and the
+relative variance is at most K - 1, K = E_D[phi] / p = E[phi(X) | C(X) = 1].
+
+With boxes, masses are estimates m_hat; sampling with m_hat gives a proposal
+whose bias on every derivation T is the factor r(T) = prod_{boxes in T}
+m_hat/m. The final interval divides out the extreme values of r(T), which are
+computed exactly by max-/min-product dynamic programming over derivations
+from the boxes' confidence intervals.
+"""
+
+from __future__ import annotations
+
+import math
+from dataclasses import dataclass, field
+
+import numpy as np
+
+from .circuit import Circuit
+from .dist import Product
+from .stats import Estimate, sequential_mean
+
+
+@dataclass
+class Box:
+    nnf: object  # NNF instance
+    node: int
+    rho: dict  # restriction (within the node's support)
+    sup: int  # free support bitmask
+    value: float = float("nan")
+    lo: float = float("nan")
+    hi: float = float("nan")
+    evaluations: int = 0
+
+    def eval(self, X: np.ndarray) -> np.ndarray:
+        return self.nnf.eval_batch(X, self.node, self.rho)
+
+
+@dataclass
+class Envelope:
+    kind: list = field(default_factory=list)
+    data: list = field(default_factory=list)
+    sup: list = field(default_factory=list)
+    boxes: list = field(default_factory=list)
+    _cons: dict = field(default_factory=dict)
+    root: int = -1
+
+    def _mk(self, kind, data, sup):
+        key = (kind, data)
+        v = self._cons.get(key)
+        if v is not None:
+            return v
+        self.kind.append(kind)
+        self.data.append(data)
+        self.sup.append(sup)
+        self._cons[key] = len(self.kind) - 1
+        return len(self.kind) - 1
+
+    def one(self):
+        return self._mk("ONE", None, 0)
+
+    def zero(self):
+        return self._mk("ZERO", None, 0)
+
+    def lit(self, i, b):
+        return self._mk("LIT", (int(i), int(b)), 1 << int(i))
+
+    def box(self, nnf, node, rho, sup) -> int:
+        key = ("BOXKEY", id(nnf), node, tuple(sorted(rho.items())))
+        j = self._cons.get(key)
+        if j is None:
+            self.boxes.append(Box(nnf, node, dict(rho), sup))
+            j = len(self.boxes) - 1
+            self._cons[key] = j
+        return self._mk("BOX", j, sup)
+
+    def SUM(self, ch):
+        out = []
+        for c in ch:
+            if self.kind[c] == "ZERO":
+                continue
+            if self.kind[c] == "SUM":
+                out.extend(self.data[c])
+            else:
+                out.append(c)
+        if not out:
+            return self.zero()
+        if len(out) == 1:
+            return out[0]
+        out = tuple(sorted(out))  # keep multiplicity
+        s = 0
+        for c in out:
+            s |= self.sup[c]
+        return self._mk("SUM", out, s)
+
+    def PROD(self, ch):
+        out = []
+        for c in ch:
+            k = self.kind[c]
+            if k == "ZERO":
+                return self.zero()
+            if k == "ONE":
+                continue
+            if k == "PROD":
+                out.extend(self.data[c])
+            else:
+                out.append(c)
+        if not out:
+            return self.one()
+        if len(out) == 1:
+            return out[0]
+        out = tuple(sorted(out))
+        acc = 0
+        for c in out:
+            if acc & self.sup[c]:
+                raise ValueError("PROD children must have disjoint supports")
+            acc |= self.sup[c]
+        return self._mk("PROD", out, acc)
+
+    def cone(self, v=None):
+        v = self.root if v is None else v
+        seen, stack = set(), [v]
+        while stack:
+            u = stack.pop()
+            if u in seen:
+                continue
+            seen.add(u)
+            if self.kind[u] in ("SUM", "PROD"):
+                stack.extend(self.data[u])
+        return sorted(seen)
+
+    def size(self):
+        return len(self.cone())
+
+    def used_boxes(self) -> list[int]:
+        return sorted({self.data[u] for u in self.cone() if self.kind[u] == "BOX"})
+
+    # ------------------------------------------------------------ semantics
+    def _dp(self, D: Product, leaf_box, combine_sum, combine_prod) -> dict:
+        m: dict[int, float] = {}
+        for u in self.cone():
+            k = self.kind[u]
+            if k == "ONE":
+                m[u] = 1.0
+            elif k == "ZERO":
+                m[u] = 0.0
+            elif k == "LIT":
+                i, b = self.data[u]
+                m[u] = D.lit_prob(i, b)
+            elif k == "BOX":
+                m[u] = leaf_box(self.boxes[self.data[u]])
+            elif k == "SUM":
+                m[u] = combine_sum([m[c] for c in self.data[u]])
+            else:
+                m[u] = combine_prod([m[c] for c in self.data[u]])
+        return m
+
+    def masses(self, D: Product) -> dict[int, float]:
+        """E_D[phi_v] for every node v (boxes contribute their estimates)."""
+        return self._dp(D, lambda b: b.value, sum, math.prod)
+
+    def mass(self, D: Product) -> float:
+        return self.masses(D)[self.root]
+
+    def bias_range(self, D: Product) -> tuple[float, float]:
+        """(min_T r(T), max_T r(T)) over derivations T with nonzero weight,
+        where r(T) = prod_{boxes in T} value/true_mass, using the boxes'
+        confidence intervals for the true masses. Literal-only derivations
+        have r = 1. Computed with log-domain min/max DP."""
+
+        def leaf(b):
+            return (b.value / b.hi, b.value / b.lo) if b.lo > 0 else (0.0, math.inf)
+
+        lo_hi: dict[int, tuple] = {}
+        for u in self.cone():
+            k = self.kind[u]
+            if k in ("ONE", "LIT"):
+                lo_hi[u] = (1.0, 1.0)
+            elif k == "ZERO":
+                lo_hi[u] = (math.inf, -math.inf)  # no derivations
+            elif k == "BOX":
+                lo_hi[u] = leaf(self.boxes[self.data[u]])
+            elif k == "SUM":
+                ch = [lo_hi[c] for c in self.data[u]]
+                lo_hi[u] = (min(c[0] for c in ch), max(c[1] for c in ch))
+            else:
+                ch = [lo_hi[c] for c in self.data[u]]
+                lo_hi[u] = (math.prod(c[0] for c in ch), math.prod(c[1] for c in ch))
+        return lo_hi[self.root]
+
+    def evaluate(self, X: np.ndarray) -> np.ndarray:
+        """phi(x) for each row of X (N, n) bool; float array."""
+        X = np.asarray(X, dtype=bool)
+        val: dict[int, np.ndarray] = {}
+        N = X.shape[0]
+        for u in self.cone():
+            k = self.kind[u]
+            if k == "ONE":
+                val[u] = np.ones(N)
+            elif k == "ZERO":
+                val[u] = np.zeros(N)
+            elif k == "LIT":
+                i, b = self.data[u]
+                val[u] = (X[:, i] == bool(b)).astype(float)
+            elif k == "BOX":
+                val[u] = self.boxes[self.data[u]].eval(X).astype(float)
+            elif k == "SUM":
+                r = np.zeros(N)
+                for c in self.data[u]:
+                    r = r + val[c]
+                val[u] = r
+            else:
+                r = np.ones(N)
+                for c in self.data[u]:
+                    r = r * val[c]
+                val[u] = r
+        return val[self.root]
+
+    def sample(self, D: Product, N: int, rng: np.random.Generator,
+               masses: dict[int, float] | None = None, counter: list | None = None) -> np.ndarray:
+        """N samples from D * phi / E[phi] (exact if there are no boxes;
+        with boxes, SUM choices use the boxes' estimated masses)."""
+        m = self.masses(D) if masses is None else masses
+        assert m[self.root] > 0, "envelope has zero mass"
+        X = D.sample(N, rng)
+        order = self.cone()[::-1]  # parents before children
+        reach: dict[int, list] = {self.root: [np.arange(N)]}
+        for u in order:
+            parts = reach.pop(u, None)
+            if not parts:
+                continue
+            idx = np.concatenate(parts)
+            if idx.size == 0:
+                continue
+            k = self.kind[u]
+            if k == "LIT":
+                i, b = self.data[u]
+                X[idx, i] = bool(b)
+            elif k == "BOX":
+                self._rejection_fill(self.boxes[self.data[u]], D, X, idx, rng, counter)
+            elif k == "SUM":
+                ch = self.data[u]
+                w = np.array([m[c] for c in ch])
+                choice = rng.choice(len(ch), size=idx.size, p=w / w.sum())
+                for j, c in enumerate(ch):
+                    sel = idx[choice == j]
+                    if sel.size:
+                        reach.setdefault(c, []).append(sel)
+            elif k == "PROD":
+                for c in self.data[u]:
+                    reach.setdefault(c, []).append(idx)
+        return X
+
+    @staticmethod
+    def _rejection_fill(box: Box, D: Product, X, idx, rng, counter, max_rounds: int = 10_000):
+        cols = [i for i in range(D.n) if (box.sup >> i) & 1]
+        todo = idx
+        for _ in range(max_rounds):
+            if todo.size == 0:
+                return
+            k = max(64, int(1.5 * todo.size / max(box.value, 1e-3)))
+            Y = D.sample(k, rng)
+            ok = box.eval(Y)
+            if counter is not None:
+                counter[0] += k
+            acc = np.nonzero(ok)[0][: todo.size]
+            if acc.size:
+                X[np.ix_(todo[: acc.size], cols)] = Y[np.ix_(acc, cols)]
+                todo = todo[acc.size:]
+        raise RuntimeError("rejection sampling failed: box too sparse")
+
+
+def estimate_boxes(env: Envelope, D: Product, eps: float, delta: float,
+                   rng: np.random.Generator, max_samples: int = 10**6) -> int:
+    """Estimate every box mass to relative error eps (KL intervals at level
+    delta / #boxes). Returns total evaluations used."""
+    used = env.used_boxes()
+    if not used:
+        return 0
+    d = delta / len(used)
+    total = 0
+    for j in used:
+        b = env.boxes[j]
+
+        def draw(k, b=b):
+            return b.eval(D.sample(k, rng)).astype(float)
+
+        est = sequential_mean(draw, eps, d, max_samples=max_samples)
+        b.value, b.lo, b.hi = est.value, est.lo, est.hi
+        b.evaluations = est.samples
+        total += est.samples
+    return total
+
+
+def envelope_estimate(C: Circuit, D: Product, env: Envelope, eps: float = 0.1,
+                      delta: float = 0.05, max_samples: int = 10**6,
+                      rng: np.random.Generator | None = None, batch_cap: int = 1 << 15,
+                      box_eps: float | None = None) -> Estimate:
+    """(eps, delta) interval for p = Pr_D[C=1], assuming env dominates C.
+
+    If env does not dominate C, the interval is still valid for
+    Pr_D[C=1 and phi>0] <= p, so its lower end is a valid lower bound on p.
+    """
+    rng = np.random.default_rng() if rng is None else rng
+    used = env.used_boxes()
+    d_box = delta / 2 if used else 0.0
+    d_is = delta - d_box
+    box_evals = 0
+    if used:
+        # box errors compound along derivations; give each box eps/(4L)
+        L = max(1, _max_boxes_per_derivation(env))
+        box_evals = estimate_boxes(env, D, box_eps or eps / (4 * L), d_box, rng, max_samples)
+    m = env.masses(D)
+    Z = m[env.root]
+    if Z == 0.0:
+        return Estimate(0.0, 0.0, 0.0, 0, box_evals, delta, "envelope mass 0")
+    counter = [0]
+
+    def draw(k):
+        out = []
+        while k > 0:
+            b = min(k, batch_cap)
+            X = env.sample(D, b, rng, m, counter)
+            c = C.eval_bits(X)
+            phi = env.evaluate(X)
+            w = np.zeros(b)
+            w[c] = 1.0 / phi[c]
+            out.append(w)
+            k -= b
+        return np.concatenate(out)
+
+    eps_is = eps / 2 if used else eps
+    est = sequential_mean(draw, eps_is, d_is, max_samples=max_samples)
+    rmin, rmax = env.bias_range(D) if used else (1.0, 1.0)
+    lo = est.lo * Z / rmax if rmax < math.inf else 0.0
+    hi = est.hi * Z / rmin if rmin > 0 else math.inf
+    val = min(max(est.value * Z, lo), hi)
+    return Estimate(val, lo, hi, est.samples, est.samples + counter[0] + box_evals, delta,
+                    f"envelope mass {Z:.4g}, size {env.size()}, boxes {len(used)}")
+
+
+def _max_boxes_per_derivation(env: Envelope) -> int:
+    best: dict[int, int] = {}
+    for u in env.cone():
+        k = env.kind[u]
+        if k == "BOX":
+            best[u] = 1
+        elif k == "SUM":
+            best[u] = max(best[c] for c in env.data[u])
+        elif k == "PROD":
+            best[u] = sum(best[c] for c in env.data[u])
+        else:
+            best[u] = 0
+    return best[env.root]
+
+
+def dnf_envelope(terms, n: int) -> Envelope:
+    """Envelope SUM_j PROD_{l in term_j} [l] for a DNF (KLM as a special case)."""
+    E = Envelope()
+    E.root = E.SUM([E.PROD([E.lit(i, b) for (i, b) in t]) for t in terms])
+    return E
