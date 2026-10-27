@@ -184,6 +184,12 @@ Frozen 27 October 2026, 19:44 UTC (52 minutes after the start of the work), befo
 (`results/md5_before.txt`; `results/md5_after.txt` after the evaluation.) `__init__.py` is empty. Neither file was edited
 after the freeze.
 
+The evaluation was started at 19:44 as 8 shards in one shell session. Linux autogroup scheduling (enabled on this
+machine) shares CPU equally between sessions regardless of nice, so the 8 shards together got ≈ 0.55 cores (61 s of CPU
+each in 15 minutes) while the niced reference jobs, each in its own session, got ≈ 0.3–0.7 cores each. At 20:00 the 8
+shards were stopped (no result had been written; nothing was read from them) and restarted unchanged, two shards per
+session in four sessions (`setsid`), which gave them ≈ 1.4 cores. Only the restarted run produced results.
+
 ```
 # fixed dev evaluation, as run (8 target shards, then merge)
 sh study/part10/p10_sum/run_toy.sh designed dict,and3,maj3,maj9,thr10,par2 --perm --part=1
