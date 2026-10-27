@@ -141,6 +141,96 @@ class UP:
         return unassigned
 
 
+def affine_conjuncts(C: Circuit) -> list[tuple[int, int]]:
+    """Top-level conjuncts of C that are affine over GF(2) in the inputs
+    (cones made only of XOR, NOT and constants), as (mask, c) meaning
+    XOR_{i in mask} x_i = c."""
+    memo: dict[int, tuple[int, int] | None] = {}
+
+    def aff(g):
+        if g in memo:
+            return memo[g]
+        op = C.ops[g]
+        r = None
+        if op == "IN":
+            r = (1 << g, 0)
+        elif op == "CONST":
+            r = (0, int(C.params[g]))
+        elif op == "NOT":
+            a = aff(C.args[g][0])
+            r = None if a is None else (a[0], a[1] ^ 1)
+        elif op == "XOR":
+            m, c = 0, 0
+            for u in C.args[g]:
+                a = aff(u)
+                if a is None:
+                    m = None
+                    break
+                m ^= a[0]
+                c ^= a[1]
+            r = None if m is None else (m, c)
+        memo[g] = r
+        return r
+
+    out = []
+    stack = [C.output]
+    seen = set()
+    while stack:
+        g = stack.pop()
+        if g in seen:
+            continue
+        seen.add(g)
+        if C.ops[g] == "AND":
+            stack.extend(C.args[g])
+            continue
+        a = aff(g)
+        if a is not None:
+            out.append((a[0], 1 ^ a[1]))  # XOR(mask) ^ c = 1  <=>  XOR(mask) = 1 ^ c
+    return out
+
+
+def gauss_forced(rows: list[tuple[int, int]], known: dict[int, int]):
+    """Literals implied by the affine system, given known values. Returns a
+    dict of newly forced {var: bit}, or None if inconsistent."""
+    red = []
+    for m, c in rows:
+        for i, b in known.items():
+            if (m >> i) & 1:
+                m ^= 1 << i
+                c ^= b
+        if m == 0:
+            if c:
+                return None
+            continue
+        red.append([m, c])
+    # reduced row echelon form
+    piv_rows = []
+    for r in red:
+        m, c = r
+        for pm, pc, pb in piv_rows:
+            if (m >> pb) & 1:
+                m ^= pm
+                c ^= pc
+        if m == 0:
+            if c:
+                return None
+            continue
+        pb = m.bit_length() - 1
+        # eliminate pb from existing pivots
+        new = []
+        for pm, pc, b in piv_rows:
+            if (pm >> pb) & 1:
+                pm ^= m
+                pc ^= c
+            new.append((pm, pc, b))
+        piv_rows = new + [(m, c, pb)]
+    forced = {}
+    for m, c, b in piv_rows:
+        if m & (m - 1) == 0:  # single variable
+            forced[m.bit_length() - 1] = c
+    return forced
+
+
 def forced_input_literals(C: Circuit, probe: bool = True, rounds: int = 3) -> dict[int, int] | None:
     """Input literals implied by C(x) = 1, found by unit propagation on the
     Tseitin encoding plus failed-literal probing. Returns {input: bit}, or
@@ -172,7 +262,21 @@ def forced_input_literals(C: Circuit, probe: bool = True, rounds: int = 3) -> di
                         break
             if not changed:
                 break
-    return {v - 1: int(b) for v, b in val.items() if v - 1 < C.n}
+    lits = {v - 1: int(b) for v, b in val.items() if v - 1 < C.n}
+    # Gaussian elimination on affine top-level conjuncts, alternating with UP
+    rows = affine_conjuncts(C)
+    for _ in range(rounds if rows else 0):
+        g = gauss_forced(rows, lits)
+        if g is None:
+            return None
+        new = {i: b for i, b in g.items() if i not in lits}
+        if not new:
+            break
+        ok, val = up.propagate([(i + 1) if b else -(i + 1) for i, b in new.items()], base=val)
+        if not ok:
+            return None
+        lits = {v - 1: int(b) for v, b in val.items() if v - 1 < C.n}
+    return lits
 
 
 def check_rup_refutation(clauses: list[list[int]], proof: list[list[int]],

@@ -1,0 +1,332 @@
+\section{With a prover: proof-carrying importance sampling}\label{sec:part2}
+
+By \cref{thm:blackbox} a verifier can certify an upper bound below the
+sampling scale only by reading the circuit, and by \cref{thm:ma} no argument
+system does so for every circuit. The system below makes the deductive part as
+strong as any propositional proof system and leaves everything else to
+sampling. It is sound on every circuit and every argument, and complete
+exactly when the rarity of $C(x)=1$ has a short \emph{explanation}: a proof
+that the event is confined to a tractable region in which it is not rare.
+
+\subsection{The argument language}\label{sec:pcis}
+
+Fix a Cook--Reckhow proof system $P$ for propositional unsatisfiability
+(resolution with RUP/DRAT/LRAT certificates, cutting planes, Frege, extended
+Frege, \dots). For circuits $F,G$ write $F\vdash_PG$ for a $P$-refutation of
+$\mathrm{Tseitin}(F)\wedge[F=1]\wedge\mathrm{Tseitin}(G)\wedge[G=0]$, which
+certifies $F\Rightarrow G$.
+
+\begin{definition}[PCIS arguments]\label{def:pcis}
+An argument is a finite DAG fixed before the verifier flips any coin. Every node
+$v$ carries a circuit $C_v$ (the root carries $C$) whose target is
+$q_v=D(C_v)$, and one rule:
+\begin{description}[style=nextline,leftmargin=1.2em]
+\item[Deductive rules (checked by the verifier, no randomness).]
+\textsc{refute}: $C_v\vdash_P\bot$, so $q_v=0$.
+\textsc{exact}: $C_v$ is (or $P$-provably equivalent to) a d-DNNF, OBDD or
+SDD $R$, so $q_v=D(R)$ exactly.
+\textsc{sum}: $P$-proofs of $C_v\Leftrightarrow\bigvee_iC_i$ and of
+$C_i\wedge C_j\vdash_P\bot$; then $q_v=\sum_iq_i$.
+\textsc{prod}: $C_v=C_1\wedge C_2$ with syntactically disjoint supports; then
+$q_v=q_1q_2$.
+\textsc{split}: $q_v=(1-q_x)q_{v|x=0}+q_xq_{v|x=1}$, and $C_v\Rightarrow\ell$
+gives $q_v=D(\ell)q_{v|\ell}$.
+\textsc{mono}: $C_v\vdash_PC_w$ gives $q_v\le q_w$.
+\item[Statistical rules (each with a confidence budget $\delta_v$ and a sample
+size written in the argument).]
+\textsc{envelope}: an envelope $\Phi$ (\cref{def:envelope}) with
+$C_v\vdash_P\supp\Phi$, estimated by \cref{thm:envelope,thm:boxes} or by the
+FPRAS-guided sampler of \cref{thm:sis}.
+\textsc{proposal}: a lower bound from a proposal (\cref{sec:lower}).
+\textsc{mc}: plain Monte Carlo on $C_v$.
+\end{description}
+The verifier checks every certificate and that $\sum_v\delta_v\le\delta$,
+evaluates the statistical nodes with fresh coins, combines intervals by
+interval arithmetic through the deductive rules (all of which are monotone
+in their arguments), and outputs the root interval. If a domination proof
+is missing or wrong, the node is downgraded to a lower bound (upper end
+$+\infty$).
+\end{definition}
+
+\begin{theorem}[soundness]\label{thm:pcis-sound}
+For every circuit $C$, product distribution $D$ and string $\pi$,
+$\Pr[p\notin V(C,D,\pi)]\le\delta$.
+\end{theorem}
+
+\begin{proof}
+Each deductive rule states a true identity or inequality between the true
+targets, by soundness of $P$ and independence of variable-disjoint
+sub-circuits under $D$; interval arithmetic with nonnegative endpoints is
+inclusion-monotone. Let $B_v$ be the event that statistical node $v$ returns
+an interval missing $q_v$. Conditionally on everything computed before $v$
+starts, $v$'s target and sampling law are fixed and it uses fresh coins, so
+$\Pr[B_v\mid\text{history}]\le\delta_v$ by \cref{thm:envelope} (resp.\
+\cref{thm:boxes,thm:sis,prop:proposal}); a downgraded node fails only if its
+lower end exceeds $q_v$, which has the same bound. Hence
+$\Pr[\bigcup_vB_v]\le\sum_v\delta_v\le\delta$, and on the complement every
+interval, including the root's, contains its target.
+\end{proof}
+
+Adaptive choices inside a node (sequential stopping) are allowed; what must
+be fixed in advance is the set of nodes and their budgets, or a summable
+schedule $\delta_v=\delta\,2^{-v}$.
+
+\begin{proposition}[relative-error calculus]\label{prop:calculus}
+If every statistical leaf returns an interval of ratio at most $1+\eta$ and
+every derivation of the root from the leaves (one child at \textsc{sum},
+\textsc{split}; all children at \textsc{prod}) uses at most $d$ leaves, the
+root interval has ratio at most $(1+\eta)^d$. With $\eta=\eps/(2d)$ the
+ratio is at most $1+\eps$.
+\end{proposition}
+
+\begin{proof}
+Sums and convex combinations with exact weights do not increase the worst
+ratio of their summands; products multiply ratios.
+\end{proof}
+
+\subsection{The two-sided workhorse: certified envelopes}
+
+When the envelope is an arbitrary DNNF $E$ given by the prover, the
+derivation-weighted estimator of \cref{thm:envelope} can be needlessly slow:
+its relative variance is
+$\frac{D(E)}{p}\,\E[\varphi\mid E]\,\E[1/\varphi\mid C]-1$, which depends on the
+\emph{dispersion} of the number of derivations, and for
+$E=\bigwedge_{i\le m}(x_i\vee y_i)$ is $(10/9)^m-1$ under every reweighting of
+the $\vee$-edges, although $D(E)=(3/4)^m$ is known exactly. The
+Meel--de Colnet FPRAS for DNNF \cite{meel2026dnnf} removes the dispersion,
+through a Knuth-style sequential sampler whose weights are exactly unbiased
+whatever errors the counter makes.
+
+\begin{theorem}[FPRAS-guided envelope sampling]\label{thm:sis}
+Let $E$ be a DNNF and $D$ a product distribution with rational marginals.
+\begin{enumerate}[label=(\alph*)]
+\item (Weighted counting.) Smoothing $E$ and replacing each literal by a
+comparator on $\lceil\log_2b_i\rceil$ fresh bits gives a DNNF $E'$ with
+$\#E'=(\prod_ib_i)D(E)$; so the FPRAS approximates $D(E\mid\rho)$ for every
+partial assignment $\rho$.
+\item (Sampler.) Draw $x_1,\dots,x_n$ in turn: with counter outputs
+$A_c\approx D(E\mid\rho,x_i=c)$ (zero iff $E\mid\rho,x_i=c$ is unsatisfiable, which is
+decidable in linear time), set $x_i=c$ with probability
+$D_i(c)A_c/S$, $S=\sum_cD_i(c)A_c$, and multiply the weight $w$ by $S/A_{x_i}$.
+Then for every circuit $C$ and \emph{every} law of the counter's errors,
+$\E[C(x)\,w]=D(C\wedge E)$.
+\item (Cost.) With counter accuracy $1/(4n)$ and confidence $\eps/(16n)$ per
+call, $w\in[0.58,1.70]\cdot D(E)$ outside an event of weighted mass
+$(\eps/8)D(C\wedge E)$; clipping at $3\hat D(E)$ and running the stopping rule
+gives a $(1\pm\eps)$ estimate of $D(C\wedge E)$ with $O(K\log(1/\delta)/\eps^2)$
+samples, $K=D(E)/D(C\wedge E)$, each costing one evaluation of $C$ and $2n$
+counter calls.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+(a) Smoothing makes every derivation mention every variable exactly once,
+so the substituted comparator blocks are all constrained; then each $x$ has
+$(\prod_ib_i)D(x)$ preimages. (b) At each step the probability of choosing $c$
+times the weight factor is $D_i(c)$, whatever $A_0,A_1$ are; pre-drawing
+the counter outputs for every prefix and summing over paths gives
+$\E[C(x)w]=\sum_xD(x)C(x)\one_E(x)$ (the walk only enters satisfiable
+prefixes). (c) On the event that all $2n$ counts on the path are accurate,
+the weight telescopes to $D(E)/D(E\mid x)=D(E)$ up to $e^{\pm2.1/(4n)}$ per
+step; apply (b) to the indicator of the bad event to bound its contribution,
+then the stopping rule \cite{dklr2000}.
+\end{proof}
+
+\begin{theorem}[certified envelopes]\label{thm:certenv}
+Let $\mathcal R$ be the closure under decomposable products and finite unions
+of subcubes, OBDDs, SDDs, d-DNNFs and, under the uniform distribution, affine
+subspaces, together with DNNFs via \cref{thm:sis}. Let
+$\mathcal K_P(m,K)$ be the class of circuits $C$ for which there are
+$E_1,\dots,E_r\in\mathcal R$ and a $P$-proof $C\vdash_P\bigvee_jE_j$, all of
+total size at most $m$, with $\sum_jD(E_j)\le K\,p$. The PCIS verifier is sound
+on all circuits and complete on $\mathcal K_P(m,K)$, in time
+$\poly(m,|C|)+O(K\log(1/\delta)/\eps^2)\cdot(|C|+m)$ (plus FPRAS overhead for
+DNNF pieces). Without the proof the same samples still certify a lower
+bound.
+\end{theorem}
+
+\begin{proof}
+Soundness is \cref{thm:pcis-sound}. For completeness, sample $j\propto
+D(E_j)$, $x\sim D\mid E_j$, and set $W=C(x)\Lambda/\mathrm{cov}(x)$ with
+$\Lambda=\sum_jD(E_j)$ and $\mathrm{cov}(x)=|\{j:x\in E_j\}|$ (Karp--Luby--Madras
+\cite{klm1989}). Then $x$ has density $D(x)\mathrm{cov}(x)/\Lambda$, $0\le
+W\le\Lambda$, and $\E W=D(C\wedge\bigcup_jE_j)$, which is $p$ under the proved
+domination. Apply \cref{thm:envelope} with $Z=\Lambda$.
+\end{proof}
+
+\Cref{thm:certenv} lifts every tractable counting class from \emph{syntactic}
+envelopes (\cref{sec:part1}) to \emph{provable} ones. Examples:
+\begin{itemize}
+\item \emph{Hidden triggers.} $C=R\wedge T$ where $T$ is a test that holds only
+on a subcube $x_A=a$ but is not written as one: through a linear hash $[Mx_A=Ma]$
+over $\F_2$, through two differently built $\oplus$-trees for the same parities,
+through a multiplier. A SAT solver produces a refutation of $C\wedge(x_A\ne a)$;
+with $K=1/\Pr[R\mid x_A=a]$ the verifier needs $O(K/\eps^2)$ samples, Monte
+Carlo $2^{|A|}K/\eps^2$. Resolution needs exponential size for dense linear
+hashes, so here the proof system matters (\cref{sec:experiments}); extended
+resolution, or an affine envelope, handles them in polynomial size.
+\item \emph{Planted unions.} $C=\bigvee_j(T_j\wedge G_j)$, $T_j$ subcubes of
+large codimension, $G_j$ dense: $K\le$ (overlap)$/\min_j\Pr[G_j\mid T_j]$.
+\item \emph{Thresholds with side conditions.} $C=[w\cdot x\ge\theta]\wedge G$
+with integer $w$: a cutting-planes proof of $w\cdot x\ge\theta$ from $C$ and the
+soft envelope $\beta^{w\cdot x-\theta}$ ($\beta>1$ rational) give $K=O(\sqrt n)$
+(\cref{prop:tilting}); numerically $K=37$ at $n=800$, $p=4\cdot10^{-125}$.
+\item \emph{Hidden independence.} A proof that $C\Leftrightarrow\bigwedge_jC_j(x_{S_j})$
+with disjoint $S_j$ turns a product of $k$ moderately rare events into $k$
+separate estimations (\textsc{prod}).
+\end{itemize}
+
+\paragraph{Sandwiches.}
+A certificate may also give, for every gate $g$, OBDDs $L_g\subseteq
+g^{-1}(1)\subseteq U_g$ in a fixed variable order, checked gate by gate
+($L_{a\wedge b}\Rightarrow L_a\wedge L_b$, $U_a\wedge U_b\Rightarrow U_{a\wedge b}$,
+$L_{\neg a}\wedge U_a\equiv\bot$, $\neg L_a\Rightarrow U_{\neg a}$, and dually for
+$\vee$), each check an OBDD operation. Then $p\in[D(L_{\rm out}),D(U_{\rm
+out})]$ deterministically, and sampling $D\mid(U_{\rm out}\setminus L_{\rm out})$
+estimates the gap with $O\big(\frac{D(U\setminus L)}{p}\eps^{-2}\log\frac1\delta\big)$
+samples. No SAT proof is needed.
+
+\subsection{Lower bounds need no deduction}\label{sec:lower}
+
+\begin{proposition}[trace-reconstructible proposals]\label{prop:proposal}
+The prover supplies a seed law $P_R$ on $\bits^r$ with computable pmf and an
+exact sampler, a generator $\psi:\bits^r\to\bits^n$, an inverter
+$\phi:\bits^n\to\bits^r$, and a clip level $\tau$. For $R\sim P_R$ and
+$X=\psi(R)$ let $W=\one[\phi(X)=R]\,C(X)\min(D(X)/P_R(R),\tau)\in[0,\tau]$.
+Then for every $C$ and every choice of the other objects,
+\[
+\E W=\sum_{x\in C^{-1}(1):\,\psi(\phi(x))=x}\min\big(D(x),\tau P_R(\phi(x))\big)\le p,
+\]
+so the lower end of a KL interval for $\E W$ is a sound lower bound. It is
+within $1-\eps$ of $p$ after $O(K\log(1/\delta)/\eps^2)$ samples if
+$\tau\le Kp$ and the pairs $x$ with $D(x)\le\tau P_R(\phi(x))$ and
+$\psi(\phi(x))=x$ carry $(1-\eps/2)p$.
+\end{proposition}
+
+\begin{proof}
+$\psi$ is injective on $R^*=\{r:\phi(\psi(r))=r\}$ (if $\psi(r)=\psi(r')=x$
+then $r=\phi(x)=r'$) and maps it onto $\{x:\psi(\phi(x))=x\}$; substitute
+$x=\psi(r)$. Without the trace check each $x$ would be counted once per
+preimage and $\E W$ could exceed $p$.
+\end{proof}
+
+Special cases: autoregressive models or probabilistic circuits ($r=n$,
+$\psi=\phi=\mathrm{id}$, $P_R=Q$), witness lists (exact lower bound
+$\sum_iD(x^{(i)})$, no sampling), an unproved envelope, and generators with
+inverters such as normalising flows.
+
+\subsection{Surprise accounting, made exact}
+
+Write $\sigma=\log_2(1/p)$ for the surprise of the event. An envelope argument
+explains $\sigma_e=\log_2(1/D(E))$ bits deductively and leaves
+$\sigma_u=\log_2(D(E)/p)$ bits to sampling:
+\[
+\text{verifier time}\;=\;\poly(|\pi|,|C|)\;+\;O\big(2^{\sigma_u}\eps^{-2}\log(1/\delta)\big)\cdot(|C|+|E|).
+\]
+For a skeleton of independent components (\textsc{prod} at the top) the
+second term is $\sum_\lambda2^{\sigma_u(\lambda)}$ rather than
+$2^{\sum_\lambda\sigma_u(\lambda)}$: unexplained surprise spread over $t$
+independent components costs about $t\,2^{\sigma_u/t}$. Both terms are
+necessary in the black-box sense:
+
+\begin{theorem}[proof bits and surprise bits]\label{thm:surprise}
+Let a verifier access $C$ only through $T$ evaluations (adaptive, from any
+distributions) and read an $\ell$-bit argument; let $D$ be uniform.
+\begin{enumerate}[label=(\alph*)]
+\item If it is $\delta$-sound for lower bounds on all circuits and, for each
+subcube $S$ of codimension $k$, some argument makes it output $L>0$ on
+$\one_S$ with probability $1-\delta$, then $T\cdot2^\ell\ge(1-2\delta)2^k$.
+Each bit of argument buys at most one bit of surprise, and this is tight:
+revealing $j$ coordinates of $S$ leaves $T=O(2^{k-j}\eps^{-2}\log(1/\delta))$.
+\item Inside a certified envelope $E$, distinguishing $C_0=E\wedge[x_I=b]$
+from $C_1=E\wedge([x_I=b]\vee[x_{I'}=b'])$ (factor $1.5$ apart) needs
+$T\ge(1-2\delta)D(E)/p$ evaluations: the $2^{\sigma_u}$ term cannot be avoided
+by any method that treats the unexplained part of $C$ as a black box.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+(a) Couple the runs on $\one_S$ and on the zero function with the same coins;
+they differ only if a query lands in $S$, which for a fixed query has
+probability $2^{-k}$ over a uniformly random $S$ of the family. Soundness on
+the zero function forces the event ``some query lands in $S$'' to have
+probability at least $1-2\delta$ under the argument $\pi_S$; averaging over
+$S$ and summing over the at most $2^\ell$ arguments gives $1-2\delta\le
+2^\ell T2^{-k}$. (b) The same coupling, with $C_0$ in place of the zero
+function and the random subcube $[x_{I'}=b']$ planted.
+\end{proof}
+
+So the cost of certifying a rare event is governed by
+$\min_\pi\big(|\pi|+2^{\sigma_u(\pi)}\big)$, a two-part, MDL-like cost of the
+kind that ``surprise accounting'' \cite{hilton2024surprise} proposes for
+heuristic explanations, here with a sound verifier and a matching lower bound.
+
+\subsection{How much stronger is the prover?}\label{sec:separations}
+
+\paragraph{A universal verifier.} Fix a consistent theory $T$ (say ZFC). Let a
+$V_T$-argument be a randomized program $A$, a time bound $t$, a budget
+$\delta_A\le\delta$, and a $T$-proof of the bounded arithmetic sentence
+``at most $\delta_A2^t$ coin strings make $A^{(t)}(C,D)$ output an interval
+missing $\sum_xD(x)C(x)$''; $V_T$ checks the proof and runs $A$. It is sound
+whenever $T$ is (a false bounded sentence has a true $\Sigma_1$ negation,
+which $T$ would refute), and it $p$-simulates every argument system whose
+soundness $T$ proves, by instantiating that proof. So it can use any FPRAS,
+compiler, mixing-time bound or combinatorial theorem as a certified rule. This
+is the analogue, for estimation, of proof systems that are optimal relative to
+a theory \cite{kp1989}.
+
+\paragraph{Lower bounds: the prover helps unless $\NP\subseteq\BPP$.}
+Uniquely satisfiable circuits have $p=2^{-n}$, certified exactly by one
+witness. A sound Task-1 procedure that outputs any $L>0$ on all of them
+decides SAT via Valiant--Vazirani. Under one-way permutations,
+$C_y(x,r)=[(\pi(x),r,\langle x,r\rangle)=y]$ gives an average-case version
+with $(1+\eps)$-tight certificates.
+
+\paragraph{Upper bounds: the prover helps exactly when $P$ is not weakly
+automatable.} For a refutation system $P$ let $Z_P^m$ be the circuits $C$ with
+a $P$-refutation of size $m(|C|)$. A sound Task-1 procedure that outputs
+$[0,0]$ on all of $Z_P^m$ exists iff the canonical pair $(Z_P^m,\mathrm{SAT})$ is
+separable in randomized polynomial time (if it outputs $[0,0]$, the circuit
+cannot be satisfiable, by soundness; conversely run the separator). Padding
+turns this into a separation for positive, exactly certified $p$: with
+$\mathrm{pad}_a(C)(\beta,x,w)=(\beta\wedge x=0^n\wedge w=0^a)\vee(\neg\beta\wedge
+C(x))$, $p=2^{-n-a-1}$ exactly when $C$ is unsatisfiable (certified by one point
+and $P$'s refutation), while $p\ge2^{-n-1}$ when $C$ is satisfiable, so any Task-1
+procedure complete within a factor $2^a$ separates the canonical pair. Known
+results then give:
+
+\begin{corollary}\label{cor:automatability}
+If factoring Blum integers is hard for polynomial-size circuits, then for
+$P\in\{\mathrm{TC}^0\text{-Frege},\text{Frege}\}$ \cite{bpr2000}, and for
+extended Frege if RSA is secure \cite{kp1998}, there are circuit families on
+which the PCIS verifier with $P$ certifies $p$ exactly while no sound
+polynomial-time procedure without a prover is complete, even within a factor
+$2^a$.
+\end{corollary}
+
+\paragraph{Two-sided, exact.} Let $L\in\mathsf{UP}\cap\coNP$ with verifiers $A$
+(unique witness, $0^k$ never a witness) and $B$, and
+$C_u(\beta,v)=(\beta\wedge v=0^k)\vee(\neg\beta\wedge A(u,v))$, so
+$p(C_u)=2^{-k-1}(1+[u\in L])$. With $T$ proving uniqueness and disjointness,
+$V_T$ certifies both values exactly (by the witness of $A$ or of $B$), while a
+Task-1 procedure complete on $\{C_u\}$ decides $L$. For bits of the
+prime factorisation (AKS-certified primes) this gives a two-sided separation
+under ``factoring $\notin\BPP$''.
+
+\paragraph{Why not NP-hardness?} If SAT reduces (randomised, many-one) to the
+gap problem ``$p\ge\gamma t$ versus $p\le t$'' with unsatisfiable formulas
+mapped to the \emph{small} side, and some MA system is complete for upper
+bounds on that side, then $\coNP\subseteq\AM$: Arthur samples the reduction,
+Merlin sends arguments, Arthur accepts if most of them certify $U<\gamma t$.
+With the opposite orientation, Goldwasser--Sipser already puts the problem
+in $\AM$. Either way $\PH$ collapses \cite{bhz1987}. So upper-bound and
+two-sided separations must come from structured, non-$\NP$-hard assumptions
+(factoring, RSA, LWE), as above, while lower-bound separations may come from
+$\NP\not\subseteq\BPP$.
+
+\paragraph{Universality.} Upper bounds: complete for all circuits only if
+$\coNP\subseteq\MA$ (\cref{thm:ma}). Lower bounds: complete for all circuits
+within a constant factor iff $\mathrm{prSBP}\subseteq\mathrm{prMA}$
+\cite{bgm2006}; this fails relative to an oracle, and holds under derandomisation
+hypotheses strong enough to fool nondeterministic circuits, with a verifier
+whose soundness then depends on the hypothesis.

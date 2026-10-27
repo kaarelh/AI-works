@@ -225,3 +225,88 @@ def linear_hash_trigger(n_body: int, k: int, rng: np.random.Generator, rows: int
         m.append(C.add(Cr.ops[v], [m[u] for u in Cr.args[v]], Cr.params[v]))
     C.set_output(C.AND(trig, m[R]))
     return C, S, [int(t) for t in a], body
+
+
+def spn_trigger(n_body: int, k: int, rounds: int, rng: np.random.Generator, body_gates: int = 40):
+    """R(x_body) AND [SPN(x_S) == y]: a substitution-permutation network on
+    k = 4j bits (random bijective 4-bit S-boxes, random invertible dense
+    GF(2) linear layers, random round constants), compared with a fixed
+    output y = SPN(a). The trigger set is the single point x_S = a, but
+    neither unit propagation nor Gaussian elimination can see it; a CDCL
+    solver finds and refutes alternatives. Returns (C, S, a, body_vars)."""
+    assert k % 4 == 0
+    n = k + n_body
+    S = list(range(k))
+    body = list(range(k, n))
+    sboxes = [rng.permutation(16) for _ in range(rounds * (k // 4))]
+
+    def inv_matrix():
+        while True:
+            M = rng.integers(0, 2, size=(k, k))
+            A = M.copy()
+            r = 0
+            for c in range(k):
+                piv = [i for i in range(r, k) if A[i, c]]
+                if not piv:
+                    break
+                A[[r, piv[0]]] = A[[piv[0], r]]
+                for i in range(k):
+                    if i != r and A[i, c]:
+                        A[i] ^= A[r]
+                r += 1
+            if r == k:
+                return M
+
+    mats = [inv_matrix() for _ in range(rounds)]
+    consts = [rng.integers(0, 2, size=k) for _ in range(rounds)]
+    a = rng.integers(0, 2, size=k)
+
+    def spn_eval(bits):
+        b = np.array(bits) % 2
+        for r in range(rounds):
+            out = []
+            for j in range(k // 4):
+                v = int(b[4 * j] + 2 * b[4 * j + 1] + 4 * b[4 * j + 2] + 8 * b[4 * j + 3])
+                w = sboxes[r * (k // 4) + j][v]
+                out += [(w >> t) & 1 for t in range(4)]
+            b = (mats[r].dot(np.array(out)) + consts[r]) % 2
+        return b
+
+    y = spn_eval(a)
+    C = Circuit(n)
+    one = C.const(1)
+    wires = list(S)
+    for r in range(rounds):
+        out = []
+        for j in range(k // 4):
+            ins = wires[4 * j: 4 * j + 4]
+            box = sboxes[r * (k // 4) + j]
+            # each output bit as an OR of minterms over the 4 inputs
+            lit = {(t, bv): (ins[t] if bv else C.NOT(ins[t])) for t in range(4) for bv in (0, 1)}
+            for t in range(4):
+                terms = []
+                for v in range(16):
+                    if (box[v] >> t) & 1:
+                        terms.append(C.AND(*[lit[(u, (v >> u) & 1)] for u in range(4)]))
+                out.append(C.OR(*terms))
+        new = []
+        for i in range(k):
+            cols = [out[j] for j in range(k) if mats[r][i, j]]
+            g = C.XOR(*cols) if len(cols) > 1 else cols[0]
+            if consts[r][i]:
+                g = C.XOR(g, one)
+            new.append(g)
+        wires = new
+    checks = [w if y[i] else C.NOT(w) for i, w in enumerate(wires)]
+    trig = C.AND(*checks)
+    while True:
+        Cr = Circuit(n)
+        R = random_block_circuit(Cr, body, body_gates, rng)
+        Cr.set_output(R)
+        if Cr.eval_bits(rng.random((4096, n)) < 0.5).mean() >= 0.05:
+            break
+    m = list(range(n))
+    for v in range(n, len(Cr.ops)):
+        m.append(C.add(Cr.ops[v], [m[u] for u in Cr.args[v]], Cr.params[v]))
+    C.set_output(C.AND(trig, m[R]))
+    return C, S, [int(t) for t in a], body

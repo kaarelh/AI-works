@@ -185,7 +185,17 @@ class DFSB:
 
     # ---------------------------------------------------------- phase 2
     def estimate(self, eps: float = 0.1, delta: float = 0.05, max_leaf_samples: int = 10**6) -> Estimate:
-        root = self.build(self.N.root, root=True)
+        # circuit-level forcing (unit propagation, probing, Gaussian elimination)
+        from .cnf import forced_input_literals
+
+        rho0 = forced_input_literals(self.C) if self.probe_root else {}
+        if rho0 is None:
+            return Estimate(0.0, 0.0, 0.0, 0, 0, delta, "refuted by propagation")
+        if rho0:
+            inner = self.build(self.N.restrict(self.N.root, rho0), root=True)
+            root = TNode("force", self.N.root, lits=sorted(rho0.items()), children=[inner])
+        else:
+            root = self.build(self.N.root, root=True)
         leaves = _leaves(root)
         d = max(1, _depth_leaves(root))
         el = eps / (3 * d)
