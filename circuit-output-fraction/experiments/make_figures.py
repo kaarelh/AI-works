@@ -67,12 +67,18 @@ def surprise():
     rows = sorted(json.load(open(path)), key=lambda r: r["unexplained_bits"])
     fig, ax = plt.subplots(figsize=(3.4, 2.4))
     x = [r["unexplained_bits"] for r in rows]
-    ax.plot(x, [r["samples"] for r in rows], color=BLUE, marker="o", label="samples used")
+    ok = [r for r in rows if r["ratio"] <= 1.2 + 1e-9]
+    ax.plot([r["unexplained_bits"] for r in ok], [r["samples"] for r in ok], color=BLUE, marker="o",
+            label="samples used")
+    capped = [r for r in rows if r["ratio"] > 1.2 + 1e-9]
+    if capped:
+        ax.plot([r["unexplained_bits"] for r in capped], [r["samples"] for r in capped], ls="none",
+                marker="x", color=ORANGE, label="sample cap hit (ratio $>1.2$)")
     c = rows[0]["samples"]
     ax.plot(x, [c * 2 ** b for b in x], color=INK2, ls="--", lw=1.0, label="$\\propto 2^{\\sigma_u}$")
     ax.set_yscale("log")
     ax.set_xlabel("unexplained surprise $\\sigma_u$ (bits)")
-    ax.set_ylabel("samples to ratio $\\le 1.2$")
+    ax.set_ylabel("samples to ratio $\\leq 1.2$")
     ax.legend(fontsize=7)
     fig.tight_layout()
     fig.savefig(os.path.join(OUT, "fig_surprise.pdf"))
