@@ -3,8 +3,10 @@ seed) is reproduced (hooks.fit_image) and summarised; the learner never sees the
 objects back onto the 28 x 28 grid (hooks.grid_of).
   pooling      S_i(k), the k columns most correlated with column i: distance of the members from the centre pixel on the
                true grid (Chebyshev), the fraction within distance 1 / 2, and the overlap with the k truly nearest pixels
-  topology     Isomap of the graph that joins each column to the members of its S_i(9): shortest-path distances, classical
-               MDS to 2-D, Procrustes fit to the true pixel coordinates (r2 = 1 - Procrustes disparity)
+  topology     Isomap of the graph that joins column i to the members of S_i(k) (union: j in S_i(k) or i in S_j(k); mutual:
+               both), on its largest connected part: shortest-path distances, classical MDS to 2-D, Procrustes fit to the
+               true pixel coordinates (r2 = 1 - Procrustes disparity); variants (k, graph) = (4, union), (9, union),
+               (9, mutual), (16, mutual), all reported
   gain         the final ggbt booster's split gain by feature type (raw pixels, pooled sums at each k, prototype pairs)
                and its maps on the grid (a pooled sum at its centre pixel; a pair spread over pixels by |u_p|)
   contrib      per-class contribution maps (LightGBM pred_contrib on test points of the class, for that class's score;
@@ -53,28 +55,31 @@ maps["pool_examples"] = np.stack([np.isin(np.arange(784), g[np.where(As[max(ks)]
                                   for i in ex]) if len(ex) else np.zeros((0, 784), np.int8)
 maps["pool_example_centres"] = g[ex] if len(ex) else np.zeros(0, int)
 
-# ---- topology: Isomap of the S_i(9) graph
+# ---- topology: Isomap of the pooling-set graph (every variant reported; the embedding of k = 9, mutual is saved)
 from scipy.sparse import csr_matrix
-from scipy.sparse.csgraph import shortest_path
-kk = 9 if 9 in ks else ks[len(ks) // 2]; M = As[kk] > 0; pos = {int(i): c for c, i in enumerate(act)}
-rows, cols = [], []
-for c, i in enumerate(act):
-    for j in np.where(M[:, c])[0]:
-        if int(j) in pos and pos[int(j)] != c:
-            rows += [c, pos[int(j)]]; cols += [pos[int(j)], c]
-Gm = csr_matrix((np.ones(len(rows)), (rows, cols)), shape=(len(act), len(act)))
-SP = shortest_path(Gm, directed=False, unweighted=True)
-fin = np.isfinite(SP).all(1); comp = np.where(fin)[0] if fin.any() else np.arange(len(act))
-if not fin.all():                                                            # the largest connected part
-    from scipy.sparse.csgraph import connected_components
-    _, lab = connected_components(Gm, directed=False); big = np.bincount(lab).argmax(); comp = np.where(lab == big)[0]
-Dm = SP[np.ix_(comp, comp)] ** 2; J = np.eye(len(comp)) - 1.0 / len(comp); Bm = -0.5 * J @ Dm @ J
-ev, V = np.linalg.eigh(Bm); Y = V[:, -2:] * np.sqrt(np.maximum(ev[-2:], 0))
+from scipy.sparse.csgraph import shortest_path, connected_components
 from scipy.spatial import procrustes
-P = rc[act[comp]].astype(float); _, Ya, disp = procrustes(P, Y)
-out["topology"] = dict(k=kk, nodes=int(len(comp)), of_active=int(len(act)), procrustes_r2=round(float(1 - disp), 4),
-                       graph_edges=int(Gm.nnz // 2))
-maps["isomap"] = Y; maps["isomap_pixels"] = g[act[comp]]
+pos = {int(i): c for c, i in enumerate(act)}
+out["topology"] = {}
+for kk, mode in ((4, "union"), (9, "union"), (9, "mutual"), (16, "mutual")):
+    if kk not in ks:
+        continue
+    M = As[kk] > 0; nb = [set(pos[int(j)] for j in np.where(M[:, c])[0] if int(j) in pos) - {c} for c in range(len(act))]
+    rows, cols = [], []
+    for c in range(len(act)):
+        for j in nb[c]:
+            if mode == "union" or c in nb[j]:                         # union: j in S_i or i in S_j; mutual: both
+                rows += [c, j]; cols += [j, c]
+    Gm = csr_matrix((np.ones(len(rows)), (rows, cols)), shape=(len(act), len(act)))
+    _, lab = connected_components(Gm, directed=False); comp = np.where(lab == np.bincount(lab).argmax())[0]
+    SP = shortest_path(Gm[comp][:, comp], directed=False, unweighted=True)
+    J = np.eye(len(comp)) - 1.0 / len(comp); Bm = -0.5 * J @ (SP ** 2) @ J
+    ev, V = np.linalg.eigh(Bm); Y = V[:, -2:] * np.sqrt(np.maximum(ev[-2:], 0))
+    _, _, disp = procrustes(rc[act[comp]].astype(float), Y)
+    out["topology"][f"k{kk}_{mode}"] = dict(nodes=int(len(comp)), of_active=int(len(act)), procrustes_r2=round(float(1 - disp), 4),
+                                            graph_edges=int(Gm.nnz // 2))
+    if (kk, mode) == (9, "mutual"):
+        maps["isomap"] = Y; maps["isomap_pixels"] = g[act[comp]]
 
 # ---- the final ggbt booster
 gg = R.ggbt[-1] if R.ggbt else None

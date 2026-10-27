@@ -177,7 +177,7 @@ class SumBlock:
 
 
 def _block_search(X, rt, s2, Mt, excl, tk, mc, gcap=2048, kmax=24, npair=3, neig=2, nsingle=2, patience=5, fl=None,
-                  base=None, init=(), inner=True, npool=24, beam=0, bcap=1024):
+                  base=None, init=(), inner=True, npool=24, beam=0, bcap=1024, ntau=2):
     """Discrete search for one (S, s) block on the residual-like vector rt (r, or r * chi_mod).
     Candidates: (a) inputs ordered by |u_i| for the top-neig eigenvectors u of the off-diagonal pair matrix Mt
     (s = sign(u)), every prefix; (a') inputs ordered by the degree-1 coefficients |mean(rt x_i)| (s = their signs);
@@ -257,6 +257,32 @@ def _block_search(X, rt, s2, Mt, excl, tk, mc, gcap=2048, kmax=24, npair=3, neig
         prefixes(order, np.where(u[order] >= 0, 1.0, -1.0))
         if inner and base is None:
             wprefixes(order, np.where(u[order] >= 0, 1.0, -1.0))
+    if inner and base is None and allowed.sum() >= 4:           # v1.3: tau first - an inner term on a strong pair
+        Mu_ = np.abs(np.triu(Ms, 1)); tp_ = np.argsort(-Mu_.ravel())[:ntau]
+        for p_ in tp_:
+            j, l = divmod(int(p_), d)
+            if Mu_[j, l] <= 0:
+                continue
+            for kind, sj, sl in [("par", 1, 1)] + [("and", a_, b_) for a_ in (1, -1) for b_ in (1, -1)]:
+                inn0 = (1, kind, j, l, sj, sl); tv = _tau(Xg, inn0)
+                for q in np.argsort(-np.abs(lam))[:neig]:
+                    u = U[:, q]; order = [int(i) for i in np.argsort(-np.abs(u)) if allowed[i] and i not in (j, l)][:kmax]
+                    if len(order) < 2:
+                        continue
+                    sv = np.where(u[order] >= 0, 1.0, -1.0); Cs = np.cumsum(Xg[:, order] * sv[None, :], axis=1)
+                    for a in (2, 3, -2, -3):
+                        U_ = Cs + a * tv[:, None]; K0 = len(order) + 4
+                        Iu = np.rint(U_ + K0).astype(np.int64); If = np.rint(np.abs(U_)).astype(np.int64)
+                        Tu, lu = _mT(Iu, rg, 2 * K0 + 2); Tf, lf = _mT(If, rg, K0 + 1)
+                        if fl is not None:
+                            fl[0] += 8.0 * mg * len(order)
+                        for k in range(2, len(order) + 1):
+                            for fold, T, lev in ((False, Tu[k - 1], lu[k - 1]), (True, Tf[k - 1], lf[k - 1])):
+                                m = max(int(lev) - 1, 1); mgn = (T / s2 - m) * scale + m - _chi2_thr(m, tk(k) + tw)
+                                S = tuple(order[:k]); sk = sv[:k]
+                                key = (tuple(sorted(zip(S, (sk * sk[0]).astype(int).tolist()))), fold, (int(a * sk[0]), kind, j, l, sj, sl))
+                                if key not in best_w or best_w[key][0] < mgn:
+                                    best_w[key] = (mgn, S, tuple(sk), fold, (int(a), kind, j, l, sj, sl))
     c1 = X.T @ rt / n; c1[~allowed] = 0.0
     if fl is not None:
         fl[0] += 2.0 * n * d
@@ -499,7 +525,7 @@ class DFG:
                  local_max=12, blocks=True, ridge=1e-3, budget=(0.15, 0.03, 0.03), noise="residual", readout="ls",
                  small_n=True, cv_n=512, K_hi=6, budget_hi=0.03, background=True, logit_lam=1e-4, name=None,
                  sums=True, sum_kmax=24, sum_mod=4, sum_add=2, sum_gcap=2048, sum_mc=0.005, sum_prod=True, sum_nmin=32,
-                 sum_force=False, sum_seeds=(2, 3, 2), sum_inner=True, sum_beam=0, sum_beam_nmax=512, sum_force_nmin=64,
+                 sum_force=True, sum_seeds=(2, 3, 2), sum_inner=True, sum_beam=64, sum_beam_nmax=512, sum_force_nmin=48,
                  sum_force_r2=0.0):
         self.K, self.K_later, self.c, self.delta, self.rounds = K, K_later, c, delta, rounds
         self.max_new, self.max_feats, self.max_ext_bases, self.local_max = max_new, max_feats, max_ext_bases, local_max

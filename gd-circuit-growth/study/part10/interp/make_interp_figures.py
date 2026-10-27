@@ -23,7 +23,7 @@ def nstar(ns, e, thr=0.1):
 
 def toy_load():
     R = {}
-    for p in sorted(glob.glob(os.path.join(HERE, "results", "toy", tag, "*__s*.json"))):
+    for p in sorted(glob.glob(os.path.join(os.environ.get("INTERP_OUT", os.path.join(HERE, "results")), "toy", tag, "*__s*.json"))):
         r = json.load(open(p)); R[(r["suite"], r["target"], r["seed"])] = r
     return R
 
@@ -103,7 +103,7 @@ def fig_discovery(rows, name):
 
 def img_load():
     R = {}
-    for p in sorted(glob.glob(os.path.join(HERE, "results", "image", tag, "*.json"))):
+    for p in sorted(glob.glob(os.path.join(os.environ.get("INTERP_OUT", os.path.join(HERE, "results")), "image", tag, "*.json"))):
         r = json.load(open(p)); R[(r["dataset"], r["n"], r["seed"])] = (r, dict(np.load(p[:-5] + ".npz", allow_pickle=True)))
     return R
 
@@ -115,8 +115,8 @@ def fig_pool(R, key, name):
         im = m.reshape(28, 28).astype(float); im[c // 28, c % 28] = 2
         ax.imshow(im, cmap="Greys", vmin=0, vmax=2); ax.set_xticks([]); ax.set_yticks([])
     Y, pix = M["isomap"], M["isomap_pixels"]
-    a = axs[-1]; a.scatter(Y[:, 0], Y[:, 1], c=pix % 28, cmap="viridis", s=2); a.set_xticks([]); a.set_yticks([])
-    a.set_title(f"Isomap, Procrustes $R^2$={r['topology']['procrustes_r2']:.2f}", fontsize=6)
+    a = axs[-1]; a.scatter(Y[:, 0], Y[:, 1], c=pix % 28, cmap="viridis", s=2); a.set_xticks([]); a.set_yticks([]); a.set_aspect("equal", "datalim")
+    a.set_title(f"Isomap $R^2$={r['topology']['k9_mutual']['procrustes_r2']:.2f}", fontsize=6)
     axs[0].set_title(f"$S_i(16)$ on the true grid ({key[0]}, n = {key[1]})", fontsize=6, loc="left")
     fig.tight_layout(); fig.savefig(os.path.join(OUT, name)); plt.close(fig)
 
