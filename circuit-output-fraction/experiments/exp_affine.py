@@ -7,9 +7,9 @@ E2  600 inputs, 100 dense random parity checks (native XOR gates) AND a
     3-DNF: a family on which every DNNF envelope has size * K >= c 2^88
     (with probability >= 1 - 2^-99 over the checks), while the affine
     envelope has K = O(1).
-E3  The same kind of event at a size where the paper's DNNF-based
-    procedures can run: DFSB and the meta-procedure versus the affine methods
-    under the same budget.
+E3  The same kind of event at a size where DFSB can run (n = 36, m = 12;
+    m > n/6, so this illustrates the barrier rather than instantiating it):
+    DFSB versus the affine methods.
 E4  Two-round Feistel trigger [L XOR f(R) = t] AND side condition, with a
     nonlinear round function: triangular presolve (p = 2^-40 * q).
 E5  2-of-3 checksums through a threshold gate: the abstract interpretation
@@ -19,10 +19,14 @@ E6  Biased inputs Bern(1/3): banded LDPC checks (linear-order DP, exact
     masses) versus the copies gadget of the NP-hardness reduction (width
     above the cap: the method stays sound and becomes loose).
 E7  Coverage: repeated runs against exact values.
+
+Ground truths are computed without rareprob.affine: closed forms with a local
+GF(2) rank (E1, E2, E3, E4), local GF(2) elimination on the raw check rows and
+inclusion-exclusion (E5), an exact rational sweep over the bands (E6a),
+enumeration of the 2^24-element coset (E6b), brute force (E7).
 """
 
 import json
-import math
 import os
 import sys
 import time
@@ -31,11 +35,12 @@ import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "code"))
 
+from fractions import Fraction  # noqa
+from itertools import product as iprod  # noqa
+
 from rareprob import Circuit, Product, exact_prob  # noqa
-from rareprob.affine import (Affine, LinearOrderDP, affine_envelope, affine_envelope_estimate, gf2_rank,  # noqa
-                             make_pieces, presolve, presolve_estimate, xpt_check, xpt_honest, xpt_verify,
-                             bit_list, uniform_mask)
-from rareprob.circuit import unpack_bits  # noqa
+from rareprob.affine import (Affine, LinearOrderDP, affine_envelope, affine_envelope_estimate,  # noqa
+                             presolve, presolve_estimate, xpt_check, xpt_honest, xpt_verify)
 from rareprob.stats import mc_samples_needed  # noqa
 
 OUT = os.path.join(os.path.dirname(__file__), "results")
@@ -46,6 +51,50 @@ def log(*a):
     s = " ".join(str(x) for x in a)
     print(s, flush=True)
     LOG.append(s)
+
+
+# ------------------------------------------- ground truths independent of affine.py
+def bits_of(mask):
+    return [i for i in range(mask.bit_length()) if (mask >> i) & 1]
+
+
+def gf2_solve(rows):
+    """Gaussian elimination on [(mask, rhs)]: (consistent, rank, particular
+    solution, kernel basis) for the system mask . y = rhs."""
+    piv = {}                                   # pivot bit -> (mask, rhs), fully reduced
+    for r, b in rows:
+        for p, (r2, b2) in piv.items():
+            if (r >> p) & 1:
+                r, b = r ^ r2, b ^ b2
+        if r == 0:
+            if b:
+                return False, len(piv), None, None
+            continue
+        p = r.bit_length() - 1
+        for q in list(piv):
+            r2, b2 = piv[q]
+            if (r2 >> p) & 1:
+                piv[q] = (r2 ^ r, b2 ^ b)
+        piv[p] = (r, b)
+    width = max([r.bit_length() for r, _ in rows] + [0])
+    y0 = 0
+    for p, (r, b) in piv.items():
+        if b:
+            y0 |= 1 << p                       # free coordinates 0, pivot = rhs
+    kernel = []
+    for f in range(width):
+        if f in piv:
+            continue
+        v = 1 << f
+        for p, (r, _) in piv.items():
+            if (r >> f) & 1:
+                v |= 1 << p
+        kernel.append(v)
+    return True, len(piv), y0, kernel
+
+
+def rank_gf2(rows):
+    return gf2_solve([(r, 0) for r in rows])[1]
 
 
 def gxor(C, a, b):
@@ -67,11 +116,6 @@ def random_dnf(C, vars_, terms, width, rng):
     return C.OR(*ts) if len(ts) > 1 else ts[0]
 
 
-def prob_on(C_builder, k):
-    """Exact probability of a circuit on k <= 22 inputs (uniform)."""
-    return exact_prob(C_builder, None, max_n=24)
-
-
 def eval_rate(C, D, rng, N=1 << 16):
     X = D.sample_packed(N, rng)
     t = time.time()
@@ -83,10 +127,11 @@ def eval_rate(C, D, rng, N=1 << 16):
 
 
 def summarize(name, e, p, secs):
-    r = dict(method=name, lo=e.lo, hi=e.hi, ratio=(e.hi / e.lo if e.lo > 0 else math.inf),
+    r = dict(method=name, lo=e.lo, hi=e.hi, ratio=(e.hi / e.lo if e.lo > 0 else None),
              contains=bool(e.lo <= p <= e.hi) if p is not None else None, samples=e.samples,
              seconds=secs, note=e.note)
-    log(f"  {name:28s} [{e.lo:.4e}, {e.hi:.4e}] ratio {r['ratio']:.4f} contains={r['contains']} "
+    rs = f"{r['ratio']:.4f}" if r["ratio"] is not None else "inf"
+    log(f"  {name:28s} [{e.lo:.4e}, {e.hi:.4e}] ratio {rs} contains={r['contains']} "
         f"samples={e.samples} {secs:.2f}s  ({e.note})")
     return r
 
@@ -97,6 +142,57 @@ def mc_row(C, D, p, eps, delta, rng):
     log(f"  Monte Carlo: {N:.3e} samples for the same guarantee; at {rate:.3e} evaluations/s "
         f"that is {N / rate:.3e} s")
     return dict(samples=N, evals_per_second=rate, seconds=N / rate)
+
+
+def window_sweep(rows, n, q, k_pre, pred):
+    """Exact Pr[pred(x_0..x_{k_pre-1}) and every check], x_i ~ Bern(q) i.i.d.
+    (q a Fraction), for checks rows = [(S, rhs)] given by their coordinate
+    lists: a sweep over the coordinates whose state is the prefix (until it is
+    complete, then pred's value) and the parities of the open checks."""
+    first = [min(S) for S, _ in rows]
+    last = [max(S) for S, _ in rows]
+    member = [set(S) for S, _ in rows]
+    F = {((), ()): Fraction(1)}
+    openc = []
+    for i in range(n):
+        newc = openc + [j for j in range(len(rows)) if first[j] == i]
+        G = {}
+        for (pre, st), f in F.items():
+            par = dict(zip(openc, st))
+            for j in newc:
+                par.setdefault(j, 0)
+            for x, pr in ((0, 1 - q), (1, q)):
+                pp = dict(par)
+                if x:
+                    for j in newc:
+                        if i in member[j]:
+                            pp[j] ^= 1
+                if any(last[j] == i and pp[j] != rows[j][1] for j in newc):
+                    continue
+                npre = pre + (x,) if i < k_pre else pre
+                if i == k_pre - 1:
+                    if not pred(npre):
+                        continue
+                    npre = ("ok",)
+                key = (npre, tuple(pp[j] for j in newc if last[j] != i))
+                G[key] = G.get(key, 0) + f * pr
+        openc = [j for j in newc if last[j] != i]
+        F = G
+    return sum(F.values(), Fraction(0))
+
+
+def coset_probability(rows, n0, q, k):
+    """Exact sum over y in {H y = s} of q^(k|y|) (1-q)^(k(n0-|y|)) by
+    enumerating the coset (2^(n0 - rank) points) and counting weights."""
+    ok, r, y0, kernel = gf2_solve(rows)
+    if not ok:
+        return Fraction(0)
+    pts = np.array([y0], dtype=np.uint64)
+    for v in kernel:
+        pts = np.concatenate([pts, pts ^ np.uint64(v)])
+    counts = np.bincount(np.bitwise_count(pts).astype(np.int64), minlength=n0 + 1)
+    return sum((int(c) * q ** (k * w) * (1 - q) ** (k * (n0 - w)) for w, c in enumerate(counts) if c),
+               Fraction(0))
 
 
 # ------------------------------------------------------------------ E1
@@ -117,7 +213,7 @@ def e1(rng):
     # independent ground truth: if H restricted to the non-residual columns has
     # full rank m, then x_R is uniform given Hx = s, so p = 2^-m Pr[R]
     mask = ((1 << n) - 1) ^ ((1 << kres) - 1)
-    assert gf2_rank(rows) == m and gf2_rank([r & mask for r in rows]) == m
+    assert rank_gf2(rows) == m and rank_gf2([r & mask for r in rows]) == m
     # Pr[R] by enumeration of the residual block: evaluate C's gate R on 2^15 points
     X = np.zeros((1 << kres, n), dtype=bool)
     X[:, :kres] = ((np.arange(1 << kres)[:, None] >> np.arange(kres)) & 1).astype(bool)
@@ -154,10 +250,10 @@ def dense_parity_instance(n, m, kres, rng, terms=6):
     while True:
         rows = [int(sum(1 << i for i in range(n) if rng.random() < 0.5)) for _ in range(m)]
         mask = ((1 << n) - 1) ^ ((1 << kres) - 1)
-        if gf2_rank(rows) == m and gf2_rank([r & mask for r in rows]) == m:
+        if rank_gf2(rows) == m and rank_gf2([r & mask for r in rows]) == m:
             break
     for r in rows:
-        g = C.XOR(*bit_list(r))
+        g = C.XOR(*bits_of(r))
         checks.append(g if rng.random() < 0.5 else C.NOT(g))
     R = random_dnf(C, np.arange(kres), terms, 3, rng)
     C.set_output(C.AND(R, *checks))
@@ -176,8 +272,9 @@ def e2(rng):
     log(f"  exact p = 2^-100 * {prR:.4f} = {p:.4e};  c = Pr[C | V] = {prR:.4f}")
     lam = m - 12
     bound = prR * 2.0 ** lam
-    log(f"  barrier: with probability >= 1 - 2^(1-n/6) = 1 - 2^-99 over H, lambda_bal >= m - 12 = {lam},")
-    log(f"  so every smooth DNNF envelope of C has |G| * K >= c 2^{lam} = {bound:.3e}")
+    log(f"  barrier: on the event of cor:random-parity (probability >= 1 - 2^(1-n/6) = 1 - 2^-99 for a")
+    log(f"  uniform H), lambda_bal >= m - 12 = {lam}, so every smooth envelope circuit of C with fan-in-two")
+    log(f"  products and leaves on <= 2n/3 inputs has |G| * K >= c 2^{lam} = {bound:.3e}")
     out = dict(n=n, m=m, p=p, c=prR, lambda_bal_lower=lam, dnnf_size_times_K_lower=bound, rows=[])
     eps, delta = 0.05, 0.01
     t = time.time()
@@ -271,9 +368,10 @@ def e5(rng):
         gs = []
         for _ in range(rowsper):
             S = [int(i) for i in rng.choice(np.arange(kres, n), 12, replace=False)]
-            rows.append(sum(1 << i for i in S))
             g = xor_tree(C, S)
-            gs.append(g if rng.random() < 0.5 else C.NOT(g))
+            pos = rng.random() < 0.5
+            gs.append(g if pos else C.NOT(g))
+            rows.append((sum(1 << i for i in S), int(pos)))   # the check says parity(x_S) = pos
         blocks.append(rows)
         hs.append(C.AND(*gs))
     maj = C.THR(hs, [1, 1, 1], 2)
@@ -285,24 +383,11 @@ def e5(rng):
     X = np.zeros((1 << kres, n), dtype=bool)
     X[:, :kres] = ((np.arange(1 << kres)[:, None] >> np.arange(kres)) & 1).astype(bool)
     prR = float(sub.eval_bits(X).mean())
-    # certified affine forms of the three blocks, then inclusion-exclusion
-    from rareprob.affine import certified_affine
-    aff = certified_affine(C)
-    Vs = []
-    for h in hs:
-        A = Affine()
-        for g in C.args[h]:
-            mask, c = aff[g]
-            assert A.add(mask, 1 ^ c)
-        Vs.append(A)
+    # inclusion-exclusion over the three subspaces, from the raw check rows
+    # (local GF(2) elimination, independent of the module under test)
     def mass(sel):
-        A = Affine()
-        for i in sel:
-            M = A.meet(Vs[i])
-            if M is None:
-                return 0.0
-            A = M
-        return 2.0 ** -A.rank
+        ok, r, _, _ = gf2_solve([row for i in sel for row in blocks[i]])
+        return 2.0 ** -r if ok else 0.0
     p2of3 = mass([0, 1]) + mass([0, 2]) + mass([1, 2]) - 2 * mass([0, 1, 2])
     p = p2of3 * prR
     log(f"  exact p = Pr[2 of 3] * Pr[R] = {p2of3:.4e} * {prR:.4f} = {p:.4e}")
@@ -333,6 +418,7 @@ def e6(rng):
     V = Affine()
     checks = []
     x0 = rng.random(n) < 1 / 3
+    rows_a = []
     for j in range(m):
         lo = int(j * (n - 8) / m)
         S = [lo + d for d in range(8) if rng.random() < 0.6] or [lo]
@@ -340,6 +426,7 @@ def e6(rng):
         g = C.XOR(*S)
         checks.append(g if rhs else C.NOT(g))
         V.add(sum(1 << i for i in S), rhs)
+        rows_a.append((S, rhs))
     R = C.OR(C.AND(0, 1), C.AND(2, 3, 4), C.AND(C.NOT(5), 6))
     C.set_output(C.AND(R, *checks))
     D = Product(np.full(n, 1 / 3))
@@ -347,21 +434,24 @@ def e6(rng):
     dp = LinearOrderDP(V, D)
     log(f"  (a) banded LDPC n={n}, m={m} (rank {V.rank}): D(V) = {dp.mass:.4e} by the linear-order DP, "
         f"width 2^{dp.width}, {time.time() - t0:.2f}s")
-    # exact p = D(V) * Pr[R | V], Pr[R | V] by exact enumeration over the 7
-    # inputs of R inside the DP (condition on each assignment of x_0..x_6)
+    # exact p by an exact rational sweep over the coordinates (independent of
+    # the module): the state is (x_0..x_6 while they are being read, then the
+    # value of R) and the parities of the checks whose window is open
+    t0 = time.time()
+    p_exact = window_sweep(rows_a, n, Fraction(1 / 3), 7,
+                           lambda xs: (xs[0] and xs[1]) or (xs[2] and xs[3] and xs[4]) or ((not xs[5]) and xs[6]))
+    p = float(p_exact)
+    # cross-check with the module's dynamic program (conditioning on x_0..x_6)
     pr = 0.0
-    from itertools import product as iprod
     for bits in iprod([0, 1], repeat=7):
         xs = dict(enumerate(bits))
-        y = bool((xs[0] and xs[1]) or (xs[2] and xs[3] and xs[4]) or ((not xs[5]) and xs[6]))
-        if not y:
+        if not ((xs[0] and xs[1]) or (xs[2] and xs[3] and xs[4]) or ((not xs[5]) and xs[6])):
             continue
         W = V.copy()
-        ok = all(W.add(1 << i, b) for i, b in xs.items())
-        if ok:
+        if all(W.add(1 << i, b) for i, b in xs.items()):
             pr += LinearOrderDP(W, D).mass
-    p = pr
-    log(f"  exact p = {p:.4e}")
+    log(f"  exact p = {p:.6e} (exact rational sweep, {time.time() - t0:.1f}s); "
+        f"the module's DP gives {pr:.6e} (rel. diff {abs(pr / p - 1):.1e})")
     ra = dict(n=n, m=m, p=p, mass_V=dp.mass, width=dp.width, rows=[])
     eps, delta = 0.05, 0.01
     t0 = time.time()
@@ -381,8 +471,8 @@ def e6(rng):
     conj = []
     W = Affine()
     for r in Hrows:
-        S = [i * k for i in bit_list(r)]
-        rhs = int(sum(xs[bit_list(r)]) & 1)
+        S = [i * k for i in bits_of(r)]
+        rhs = int(sum(xs[bits_of(r)]) & 1)
         g = C.XOR(*S)
         conj.append(g if rhs else C.NOT(g))
         W.add(sum(1 << s for s in S), rhs)
@@ -394,14 +484,18 @@ def e6(rng):
     C.set_output(C.AND(*conj))
     D = Product(np.full(N, 1 / 3))
     t0 = time.time()
-    truth = LinearOrderDP(W, D, max_width=16)
-    log(f"  (b) copies gadget n0={n0}, m0={m0}, k={k} (N={N}): exact p = {truth.mass:.4e} by the DP at width "
-        f"2^{truth.width} ({time.time() - t0:.1f}s); the hardness reduction needs width ~ m0 -> infinity")
-    rb = dict(n0=n0, m0=m0, k=k, N=N, p=truth.mass, width=truth.width, rows=[])
+    pb = float(coset_probability([(r, int(sum(xs[bits_of(r)]) & 1)) for r in Hrows], n0, Fraction(1 / 3), k))
+    log(f"  (b) copies gadget n0={n0}, m0={m0}, k={k} (N={N}): exact p = {pb:.6e} by enumerating the coset "
+        f"({time.time() - t0:.1f}s)")
+    t0 = time.time()
+    dpb = LinearOrderDP(W, D, max_width=16)
+    log(f"  the linear-order DP has width 2^{dpb.width} and gives {dpb.mass:.6e} (rel. diff "
+        f"{abs(dpb.mass / pb - 1):.1e}, {time.time() - t0:.1f}s); the hardness reduction needs width ~ m0 -> infinity")
+    rb = dict(n0=n0, m0=m0, k=k, N=N, p=pb, width=dpb.width, rows=[])
     for cap in (6, 16):
         t0 = time.time()
         e = affine_envelope_estimate(C, D, eps, delta, rng, max_width=cap, max_samples=2 * 10**5)
-        rb["rows"].append(summarize(f"affine envelope, width cap {cap}", e, truth.mass, time.time() - t0))
+        rb["rows"].append(summarize(f"affine envelope, width cap {cap}", e, pb, time.time() - t0))
     out["copies"] = rb
     return out
 

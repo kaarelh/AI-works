@@ -29,16 +29,20 @@ Estimator TG.
     makes the whole procedure return "no verdict".
   * Normaliser: log Z(theta*) = int_0^theta* mu(u) du with mu(u) = E_u S
     nondecreasing, so log Z lies between the lower and upper Riemann sums on
-    any grid. One sample per grid point estimates the upper sum; its
-    variance is bounded from the data (pairs of neighbouring grid points and
-    Maurer's lower-tail inequality for nonnegative variables), and
-    Bernstein's inequality gives the interval.
+    any grid. One sample per grid point (S, Rao-Blackwellised over the colour
+    classes) estimates the upper sum; its variance is bounded from the data
+    (pairs of neighbouring grid points and Maurer's lower-tail inequality for
+    nonnegative variables), and Bernstein's inequality gives the interval.
+    Optionally the values are clipped to windows fixed by the pilot, and the
+    clipped mass is bounded by a KL upper bound on the mean exceedance.
   * Importance sampling: the KL sequential interval of stats.sequential_mean
     for V(theta*), U in [0, 1].
-  * Every sample is coupled to an exact sample except with probability
-    eta = delta / (4 N_tot) (Dobrushin bound plus a floating-point term), so
-    every returned interval contains p with probability >= 1 - delta, on
-    every input. The choice of theta* (a pilot run) does not affect this.
+  * delta is split in five: Bernstein, Maurer, window, importance sampling,
+    and the coupling: every sample is coupled to an exact sample except with
+    probability eta = delta / (5 N_tot) (Dobrushin bound plus a floating-point
+    term), so every returned interval contains p with probability >= 1 - delta,
+    on every input. The choice of theta* and of the window (a pilot run) does
+    not affect this.
 """
 
 from __future__ import annotations
@@ -49,13 +53,21 @@ from dataclasses import dataclass, field
 import numpy as np
 from scipy.special import expit
 
-from .circuit import Circuit
+from .circuit import Circuit, pack_rows, unpack_bits
 from .stats import Estimate, kl_interval, sequential_mean
 
 FLOAT_TV_PER_UPDATE = 2.0 ** -48  # per site update: rounding of the update probability + 53-bit uniforms
 
 
 # ---------------------------------------------------------------- the circuit class
+def threshold_to_int(t) -> int:
+    """The integer t' with [S >= t] = [S >= t'] for every integer-valued S: an
+    integer is kept, any other real t is rounded up (never truncated)."""
+    if isinstance(t, (int, np.integer)):
+        return int(t)
+    return int(math.ceil(t))  # raises on nan and +-inf
+
+
 @dataclass
 class LTC:
     """C(x) = [sum_j g_j(x_{A_j}) >= t] AND H(x).
@@ -76,7 +88,7 @@ class LTC:
         for A, T in zip(self.scopes, self.tables):
             assert len(set(A)) == len(A) and all(0 <= v < self.n for v in A), "bad scope"
             assert T.shape == (1 << len(A),) and np.all((T == 0) | (T == 1)), "bad table"
-        self.t = int(self.t)
+        self.t = threshold_to_int(self.t)
         if self.H is not None:
             assert self.H.n == self.n
 
@@ -176,11 +188,55 @@ def ltc_from_subcircuits(n, scopes, subcircuits, t, H=None) -> LTC:
     return LTC(n, scopes, tables, t, H)
 
 
-def ltc_from_circuit(C: Circuit, kmax: int = 12) -> LTC | None:
+def _thr_count_threshold(params, m: int, full_check: int = 4096) -> int | None:
+    """The integer t such that a THR gate with these params (m unit weights)
+    outputs [number of true children >= t], as Circuit itself evaluates it.
+
+    The threshold is read off the evaluator, not recomputed from the real
+    threshold, so its rounding convention cannot be got wrong: a copy of the
+    gate over m fresh inputs is evaluated at counts 0..m (all of them when m <
+    full_check; otherwise by bisection, which uses that the evaluator compares
+    the sum with a constant, plus checks at both sides of the result). Returns
+    t in [0, m+1] (m+1: never fires), or None if the gate is not a threshold of
+    the count."""
+    G = Circuit(m)
+    G.set_output(G.THR(list(range(m)), list(params[0]), params[1]))
+
+    def fires(counts) -> np.ndarray:
+        counts = np.asarray(counts, dtype=np.int64)
+        return G.eval_bits(np.arange(m)[None, :] < counts[:, None])
+
+    if m < full_check:
+        f = fires(np.arange(m + 1))
+        t = int(np.argmax(f)) if f.any() else m + 1
+        return t if np.array_equal(f, np.arange(m + 1) >= t) else None
+    f0, fm = fires([0, m])
+    if f0:
+        t = 0
+    elif not fm:
+        t = m + 1
+    else:
+        lo, hi = 0, m  # fires(lo) = 0, fires(hi) = 1
+        while hi - lo > 1:
+            mid = (lo + hi) // 2
+            if fires([mid])[0]:
+                hi = mid
+            else:
+                lo = mid
+        t = hi
+    probe = sorted({c for c in (0, t - 1, t, m) if 0 <= c <= m})
+    return t if np.array_equal(fires(probe), np.array(probe) >= t) else None
+
+
+def ltc_from_circuit(C: Circuit, kmax: int = 12, check_points: int = 256, rng=None) -> LTC | None:
     """Syntactic recognition: the output gate is a unit-weight THR gate whose
     children have supports of size <= kmax, or an AND with such a THR child
     (the other children form H). Truth tables of the children are computed by
-    enumerating their supports. Returns None if C has no such form."""
+    enumerating their supports, and the integer threshold by evaluating the
+    THR gate itself at the relevant counts (_thr_count_threshold), so the
+    returned LTC computes exactly the function of C. As a further guard, the
+    two are compared on check_points random inputs. Returns None if C has no
+    such form (or, defensively, if the comparison fails)."""
     out = C.output
     op = C.ops[out]
     thr, rest = None, []
@@ -203,17 +259,24 @@ def ltc_from_circuit(C: Circuit, kmax: int = 12) -> LTC | None:
         k = len(A)
         pts = np.zeros((1 << k, C.n), dtype=bool)
         pts[:, A] = ((np.arange(1 << k)[:, None] >> np.arange(k)) & 1).astype(bool)
-        from .circuit import pack_rows, unpack_bits
         val = unpack_bits(C.eval_packed(pack_rows(pts), gates=C.cone(g)), 1 << k)
         scopes.append(tuple(A))
         tables.append(val.astype(np.int64))
-    t = int(math.ceil(C.params[thr][1] - 1e-9))
+    t = _thr_count_threshold(C.params[thr], len(C.args[thr]))
+    if t is None:
+        return None
     H = None
     if rest:
         H = Circuit(C.n)
         H.ops, H.args, H.params = list(C.ops), list(C.args), list(C.params)
         H.output = rest[0] if len(rest) == 1 else H.AND(*rest)
-    return LTC(C.n, scopes, tables, t, H)
+    ltc = LTC(C.n, scopes, tables, t, H)
+    if check_points > 0:
+        rng = np.random.default_rng(0) if rng is None else rng
+        X = rng.integers(0, 2, size=(check_points, C.n))
+        if not np.array_equal(ltc.C(X), C.eval_bits(X.astype(bool))):
+            return None
+    return ltc
 
 
 def brute_force_p(ltc: LTC, q) -> float:
@@ -426,7 +489,22 @@ class LocalModel:
         z = self.types[:, None, None] + np.arange(-self.dmax, self.dmax + 1)[None, :, None] * thetas[None, None, :]
         return expit(z).reshape(len(self.types) * W * len(thetas))
 
-    def sweep(self, X: np.ndarray, thetas: np.ndarray, rt=None, U=None, rng=None, col=None):
+    def _cfg(self, X: np.ndarray, cl: dict) -> np.ndarray:
+        """Flat LUT index (row of the site in its class, neighbour configuration)."""
+        nb = cl["NB"]
+        if self.r <= 8:
+            c = X[nb[0]].copy()
+            for b in range(1, self.r):
+                c |= X[nb[b]] << np.uint8(b)
+            idx = c.astype(np.intp)
+        else:
+            idx = X[nb[0]].astype(np.intp)
+            for b in range(1, self.r):
+                idx |= X[nb[b]].astype(np.intp) << b
+        idx |= cl["rowbase"]
+        return idx
+
+    def sweep(self, X: np.ndarray, thetas: np.ndarray, rt=None, U=None, rng=None, col=None, buf=None):
         """One systematic heat-bath sweep, in place. X has shape (n+1, B), row n
         is the dummy site (0). U (n, B) gives the uniforms (else drawn from rng)."""
         B = X.shape[1]
@@ -436,18 +514,21 @@ class LocalModel:
             col = np.arange(B, dtype=np.intp)[None, :]
         for cl in self._cls:
             I = cl["I"]
-            cfg = X[cl["NB"][0]].astype(np.intp)
-            for b in range(1, self.r):
-                cfg |= X[cl["NB"][b]].astype(np.intp) << b
-            cfg |= cl["rowbase"]
+            idx = self._cfg(X, cl)
             if self.types is not None:
-                k = np.take(cl["rows"], cfg, mode="clip")
+                k = np.take(cl["rows"], idx, mode="clip")
                 k *= B
                 k += col
                 rho = np.take(rt, k, mode="clip")
             else:
-                rho = expit(cl["a"] + np.take(cl["lut"], cfg, mode="clip") * thetas[None, :])
-            u = U[I] if U is not None else rng.random((len(I), B))
+                rho = expit(cl["a"] + np.take(cl["lut"], idx, mode="clip") * thetas[None, :])
+            if U is not None:
+                u = U[I]
+            elif buf is not None:
+                u = buf[: len(I)]
+                rng.random(out=u)
+            else:
+                u = rng.random((len(I), B))
             X[I] = u < rho
 
     def glauber(self, thetas, sweeps: int, rng, batch: int = 2048) -> np.ndarray:
@@ -460,8 +541,9 @@ class LocalModel:
             X = np.zeros((self.n + 1, len(th)), dtype=np.uint8)
             rt = self._rt(th) if self.types is not None else None
             col = np.arange(len(th), dtype=np.intp)[None, :]
+            buf = np.empty((max(len(c) for c in self.classes), len(th)))
             for _ in range(sweeps):
-                self.sweep(X, th, rt=rt, rng=rng, col=col)
+                self.sweep(X, th, rt=rt, rng=rng, col=col, buf=buf)
             out[:, s0: s0 + len(th)] = X[: self.n]
         return out
 
@@ -525,11 +607,7 @@ class LocalModel:
         corr = np.zeros(B)
         for cl in self._cls:
             I = cl["I"]
-            cfg = Xp[cl["NB"][0]].astype(np.intp)
-            for b in range(1, self.r):
-                cfg |= Xp[cl["NB"][b]].astype(np.intp) << b
-            cfg |= cl["rowbase"]
-            dl = np.take(cl["lut"], cfg, mode="clip")
+            dl = np.take(cl["lut"], self._cfg(Xp, cl), mode="clip")
             rho = expit(cl["a"] + dl * thetas[None, :])
             corr += (dl * (rho - Xp[I])).sum(axis=0)
         return self.S_states(X) + corr / len(self._cls)
@@ -562,22 +640,43 @@ def bernstein_halfwidth(var_bound: float, b: float, delta: float) -> float:
     return c + math.sqrt(c * c + 2 * var_bound * ell)
 
 
-def ti_interval(S_vals: np.ndarray, theta: float, mu0: float, S_lo: int, S_hi: int,
-                delta_b: float, delta_m: float):
-    """Interval for log Z(theta) from one sample S_l ~ mu_{theta_l} per grid point
-    theta_l = l theta / L, l = 1..L (L even). Returns (lo, hi, info)."""
-    S_vals = np.asarray(S_vals, dtype=np.int64)
-    L = len(S_vals)
+def ti_interval(Y: np.ndarray, theta: float, mu0: float, S_lo: int, S_hi: int, delta_b: float,
+                delta_m: float, delta_o: float = 0.0, centres=None, w: float | None = None):
+    """Interval for log Z(theta) from one value Y_l per grid point theta_l = l theta / L,
+    l = 1..L (L even), where the Y_l are independent, Y_l in [S_lo, S_hi] and
+    E Y_l = E_{theta_l} S (e.g. S or its Rao-Blackwellisation at a sample of
+    mu_{theta_l}). Optional window: centres c_l and half-width w, fixed before
+    the Y_l are drawn; values are clipped to [c_l - w, c_l + w] and the clipped
+    mass is bounded by a pooled KL upper bound on the exceedances (level
+    delta_o). Valid with probability >= 1 - delta_b - delta_m - delta_o.
+    Returns (lo, hi, info)."""
+    Y = np.asarray(Y, dtype=float)
+    L = len(Y)
     assert L >= 2 and L % 2 == 0
     h = theta / L
     RS = float(S_hi - S_lo)
-    That = h * float(S_vals.sum())
-    Dsum = float(((S_vals[0::2] - S_vals[1::2]).astype(float) ** 2).sum() / 2)
-    # sum_l Var_l <= 2 sum_r E D_r (pairs (2r-1, 2r)); D_r in [0, RS^2 / 2]
-    Vsum = min(2 * maurer_sum_ucb(Dsum, RS * RS / 2, delta_m), L * RS * RS / 4)
-    u = bernstein_halfwidth(h * h * Vsum, h * RS, delta_b)
+    e_out = 0.0
+    if w is None:
+        Yc = Y
+        dev = Y
+        range_D, b, popo = RS * RS / 2, h * RS, L * RS * RS / 4
+    else:
+        c = np.clip(np.asarray(centres, dtype=float), S_lo, S_hi)
+        exc = np.maximum(np.abs(Y - c) - w, 0.0)
+        Mx = float(np.max(np.maximum(np.maximum(S_hi - c - w, c - w - S_lo), 0.0)))
+        if Mx > 0:
+            zhi = kl_interval(float(np.mean(exc / Mx)), L, delta_o)[1]
+            e_out = theta * Mx * zhi  # >= h sum_l E|Y_l - clip(Y_l)| w.p. 1 - delta_o
+        Yc = np.clip(Y, c - w, c + w)
+        dev = Yc - c
+        range_D, b, popo = 2 * w * w, 2 * h * w, L * w * w
+    Dsum = float(((dev[0::2] - dev[1::2]) ** 2).sum() / 2)
+    # sum_l Var(Yc_l) <= 2 sum_r E D_r (pairs (2r-1, 2r)), D_r in [0, range_D]
+    Vsum = min(2 * maurer_sum_ucb(Dsum, range_D, delta_m), popo)
+    u = bernstein_halfwidth(h * h * Vsum, b, delta_b)
+    That = h * float(Yc.sum())
     gap = h * (S_hi - mu0)  # upper minus lower Riemann sum <= h (mu(theta) - mu(0))
-    return That - u - gap, That + u, dict(T=That, u=u, gap=gap, Vsum=Vsum, L=L)
+    return That - u - e_out - gap, That + u + e_out, dict(T=That, u=u, e_out=e_out, gap=gap, Vsum=Vsum, L=L)
 
 
 # ---------------------------------------------------------------- the estimator TG
@@ -638,17 +737,20 @@ def _exact(log_p: float, note: str) -> LocalEstimate:
     return LocalEstimate(log_p, log_p, log_p, 0.0, note=note)
 
 
-def tg_estimate(ltc: LTC, q, eps: float = 0.2, delta: float = 0.05, gamma: float = 0.2,
+def tg_estimate(ltc: LTC, q, eps: float = 0.2, delta: float = 0.05, gamma: float = 0.25,
                 sampler: str = "glauber", theta: float | None = None, L: int | None = None,
-                max_is: int = 200_000, theta_cap: float = 4.0, pilot_points: int = 12,
-                pilot_chains: int = 64, rng=None, batch: int = 2048, verbose: bool = False) -> LocalEstimate:
-    """Sound interval for p = Pr_D[C = 1] for a local threshold circuit.
+                max_is: int = 200_000, theta_cap: float = 4.0, pilot_points: int = 10,
+                pilot_chains: int = 256, window: float | None = 8.0, rb: bool = True, rng=None,
+                batch: int = 1024) -> LocalEstimate:
+    """Sound interval for p = Pr_D[C = 1] for a local threshold circuit (TG).
 
     sampler: "glauber" (Dobrushin certificate at theta, margin gamma) or "cftp"
     (exact samples; requires supermodular S, no certificate). theta: the tilt
-    (default: chosen by a pilot run so that E_theta S ~ t). L: number of grid
-    points for the normaliser (default from eps). The interval contains p with
-    probability >= 1 - delta whatever theta, L, budgets and the pilot do."""
+    (default: from a pilot run, so that E_theta S ~ t). L: grid points for the
+    normaliser. window: half-width of the normaliser window in pilot standard
+    deviations (None: no window). rb: Rao-Blackwellise S in the normaliser.
+    The interval contains p with probability >= 1 - delta whatever theta, L,
+    the window, the budgets and the pilot do (they only affect its width)."""
     rng = np.random.default_rng() if rng is None else rng
     q = np.asarray(q, dtype=float)
     t = ltc.t
@@ -657,13 +759,11 @@ def tg_estimate(ltc: LTC, q, eps: float = 0.2, delta: float = 0.05, gamma: float
     if t <= ltc.S_lo and ltc.H is None:
         return _exact(0.0, "t <= min S: p = 1")
     model = LocalModel(ltc, q)
-    n = model.n
-    mu0 = model.mu0
-    d_b, d_m, d_v, d_c = delta / 4, delta / 4, delta / 4, delta / 4
+    n, mu0 = model.n, model.mu0
+    d_b = d_m = d_o = d_v = d_c = delta / 5
     note = []
 
-    # ---- tilt and sampler
-    cert = None
+    # ---- tilt, sampler, pilot (none of this affects soundness)
     if sampler == "glauber":
         th_max = model.theta_max(gamma, hi=theta_cap)
     elif sampler == "cftp":
@@ -672,19 +772,22 @@ def tg_estimate(ltc: LTC, q, eps: float = 0.2, delta: float = 0.05, gamma: float
         th_max = theta_cap
     else:
         raise ValueError(sampler)
+    pilot = _pilot(model, t, th_max if theta is None else min(theta, th_max), sampler, gamma,
+                   pilot_points, pilot_chains, rng, rb)
     if mu0 >= t:
         th = 0.0
     elif theta is not None:
         th = float(min(max(theta, 0.0), th_max))
     else:
-        th = _pilot(model, t, th_max, sampler, gamma, pilot_points, pilot_chains, rng)
+        th = pilot["theta"]
+    cert = None
     if th > 0 and sampler == "glauber":
         cert = model.certificate(th, gamma)
         if cert.alpha >= 1:
             th = 0.0
             note.append("certificate failed: theta = 0")
 
-    # ---- budgets and the coupling level
+    # ---- budgets and the coupling level (fixed before any counted sample)
     if th == 0.0:
         L = 0
     elif L is None:
@@ -706,8 +809,8 @@ def tg_estimate(ltc: LTC, q, eps: float = 0.2, delta: float = 0.05, gamma: float
             return (rng.random((n, len(thetas))) < q[:, None]).astype(np.uint8)
         if sampler == "glauber":
             return model.glauber(thetas, sweeps, rng, batch=batch)
-        X, s = model.cftp(thetas, rng)
-        cftp_sweeps += s
+        X, s_ = model.cftp(thetas, rng, batch=batch)
+        cftp_sweeps += s_
         if X is None:
             raise _Timeout()
         return X
@@ -716,13 +819,23 @@ def tg_estimate(ltc: LTC, q, eps: float = 0.2, delta: float = 0.05, gamma: float
         # ---- normaliser: log Z(th) in [zlo, zhi]
         if th > 0:
             grid = th * np.arange(1, L + 1) / L
-            Svals = np.concatenate([model.S_states(draw_states(grid[s0: s0 + batch]))
-                                    for s0 in range(0, L, batch)])
-            zlo, zhi, ti = ti_interval(Svals, th, mu0, ltc.S_lo, ltc.S_hi, d_b, d_m)
+            Y = []
+            for s0 in range(0, L, batch):
+                g = grid[s0: s0 + batch]
+                X = draw_states(g)
+                Y.append(model.S_rb_states(X, g) if rb else model.S_states(X).astype(float))
+            Y = np.concatenate(Y)
+            if window is not None and pilot["sd"] > 0:
+                cen = np.interp(grid, pilot["thetas"], pilot["mus"])
+                w = window * pilot["sd"] + 2.0
+                zlo, zhi, ti = ti_interval(Y, th, mu0, ltc.S_lo, ltc.S_hi, d_b, d_m, d_o, cen, w)
+            else:
+                zlo, zhi, ti = ti_interval(Y, th, mu0, ltc.S_lo, ltc.S_hi, d_b, d_m)
         else:
             zlo = zhi = 0.0
-            ti = dict(u=0.0, gap=0.0, Vsum=0.0, L=0)
-        # ---- importance sampling: V(th) = E_th[U]
+            ti = dict(u=0.0, e_out=0.0, gap=0.0, Vsum=0.0, L=0)
+
+        # ---- importance sampling: V(th) = E_th[U], U in [0, 1]
         def draw(k):
             return np.concatenate([model.U_states(draw_states(np.full(min(batch, k - s0), th)), th)
                                    for s0 in range(0, k, batch)])
@@ -730,13 +843,12 @@ def tg_estimate(ltc: LTC, q, eps: float = 0.2, delta: float = 0.05, gamma: float
         est = sequential_mean(draw, eps / 3, d_v, max_samples=max_is, first=min(batch, max_is))
     except _Timeout:
         return LocalEstimate(-math.inf, 0.0, -math.inf, th, note="CFTP timeout: no verdict")
-    widen = 1e-9
+    widen = 1e-9  # floating-point slack
     log_lo = (zlo - th * t + math.log(est.lo) - widen) if est.lo > 0 else -math.inf
     log_hi = min(0.0, zhi - th * t + (math.log(est.hi) if est.hi > 0 else -math.inf) + widen)
-    zmid = (zlo + zhi) / 2
-    log_val = zmid - th * t + math.log(est.value) if est.value > 0 else -math.inf
+    log_val = (zlo + zhi) / 2 - th * t + math.log(est.value) if est.value > 0 else -math.inf
     log_val = min(max(log_val, log_lo), log_hi)
-    upd = (L + est.samples) * n * (sweeps if sampler == "glauber" else 0) + cftp_sweeps * n
+    upd = (L + est.samples) * n * sweeps + cftp_sweeps * n
     note.append(f"theta={th:.4g}, L={L}, IS={est.samples}, sweeps={sweeps}, "
                 f"logZ in [{zlo:.4f},{zhi:.4f}], V in [{est.lo:.4g},{est.hi:.4g}]")
     if cert is not None:
@@ -745,7 +857,8 @@ def tg_estimate(ltc: LTC, q, eps: float = 0.2, delta: float = 0.05, gamma: float
     return LocalEstimate(log_lo, log_hi, log_val, th, L, est.samples, sweeps, float(upd), delta, "; ".join(note),
                          info=dict(ti=ti, V=(est.lo, est.hi, est.value), mu0=mu0, theta_max=th_max,
                                    alpha=None if cert is None else cert.alpha,
-                                   F=None if cert is None else cert.F))
+                                   F=None if cert is None else cert.F, cftp_sweeps=cftp_sweeps,
+                                   pilot_samples=pilot["samples"], pilot_site_updates=pilot["site_updates"]))
 
 
 class _Timeout(Exception):
@@ -753,38 +866,49 @@ class _Timeout(Exception):
 
 
 def _default_L(th: float, ltc: LTC, eps: float) -> int:
-    """Grid size so that the range and discretisation terms are small next to
-    eps (the variance term is governed by the data)."""
+    """Grid size for the normaliser (heuristic; any even L >= 2 is sound)."""
     RS = max(ltc.S_hi - ltc.S_lo, 1)
-    return int(min(max(2000, 60 * th * RS / eps), 400_000))
+    return int(min(max(2000, 40 * th * RS / eps), 400_000))
 
 
 def _pilot(model: LocalModel, t: int, th_max: float, sampler: str, gamma: float, points: int, chains: int,
-           rng) -> float:
-    """theta with E_theta S ~ t, by a coarse pilot (does not affect soundness)."""
-    if th_max <= 0:
-        return 0.0
-    grid = np.linspace(0, th_max, points + 1)[1:]
-    mus = [model.mu0]
-    for th in grid:
-        if sampler == "glauber":
-            cert = model.certificate(th, gamma)
-            s = cert.sweeps(1e-3, model.n) or 1
-            X = model.glauber(np.full(chains, th), s, rng)
-        else:
-            X, _ = model.cftp(np.full(chains, th), rng)
-            if X is None:
-                break
-        mus.append(float(model.S_states(X).mean()))
-    ths = np.concatenate([[0.0], grid[: len(mus) - 1]])
-    mus = np.maximum.accumulate(np.array(mus))
+           rng, rb: bool = True) -> dict:
+    """Coarse pilot on [0, th_max]: means and standard deviation of the
+    (Rao-Blackwellised) statistic, and the theta with E_theta S ~ t. Its output
+    is used only to choose theta and the normaliser window, so it affects the
+    width of TG's interval but not its validity. This is a heuristic (points
+    grid points, one mean of `chains` chains each, chains run to total
+    variation 1e-3, linear interpolation), not the median-of-means pilot that
+    thm:local(ii) analyses."""
+    mus, sds, ths, samples, updates = [model.mu0], [], [0.0], 0, 0
+    if th_max > 0:
+        for th in np.linspace(0, th_max, points + 1)[1:]:
+            if sampler == "glauber":
+                s = model.certificate(th, gamma).sweeps(1e-3, model.n) or 1
+                X = model.glauber(np.full(chains, th), s, rng)
+                updates += chains * s * model.n
+            else:
+                X, s_ = model.cftp(np.full(chains, th), rng)
+                updates += s_ * model.n
+                if X is None:
+                    break
+            Y = model.S_rb_states(X, th) if rb else model.S_states(X).astype(float)
+            samples += chains
+            ths.append(float(th))
+            mus.append(float(Y.mean()))
+            sds.append(float(Y.std()))
+    ths, mus = np.array(ths), np.maximum.accumulate(np.array(mus))
     if mus[-1] < t:
-        return float(ths[-1])
-    j = int(np.argmax(mus >= t))
-    if j == 0:
-        return 0.0
-    f = (t - mus[j - 1]) / max(mus[j] - mus[j - 1], 1e-12)
-    return float(ths[j - 1] + f * (ths[j] - ths[j - 1]))
+        theta = float(ths[-1])
+    else:
+        j = int(np.argmax(mus >= t))
+        if j == 0:
+            theta = 0.0
+        else:
+            f = (t - mus[j - 1]) / max(mus[j] - mus[j - 1], 1e-12)
+            theta = float(ths[j - 1] + f * (ths[j] - ths[j - 1]))
+    return dict(theta=theta, thetas=ths, mus=mus, sd=float(max(sds)) if sds else 0.0, samples=samples,
+                site_updates=float(updates))
 
 
 # ---------------------------------------------------------------- families

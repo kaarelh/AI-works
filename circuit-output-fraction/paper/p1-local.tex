@@ -1,0 +1,377 @@
+\subsection{Local threshold circuits}\label{sec:local}
+
+The modules above use decomposability, small width, monotone correlations or
+independent blocks. A natural class has none of these: counts of local
+detectors whose inputs overlap.
+
+\begin{definition}[local threshold circuit]\label{def:ltc}
+A \emph{local threshold circuit} (LTC) with arity $k\ge2$ and degree $d$ is
+$C=[S\ge t]\wedge H$ with
+\[
+S(x)=\sum_{j=1}^mg_j(x_{A_j}),\qquad |A_j|\le k,\qquad
+|\{j:i\in A_j\}|\le d\ \text{for every }i,
+\]
+$t$ an integer, the $g_j$ arbitrary Boolean sub-circuits and $H$ an arbitrary
+circuit ($H\equiv1$ for a pure LTC). It is recognised syntactically: the output
+gate is a unit-weight threshold gate, or an $\wedge$ with such a child, whose
+children have supports of size at most $k$; the truth tables of the $g_j$ cost
+$O(2^k|g_j|)$ evaluations, and the integer $t$ is the least number of true children at
+which the threshold gate itself, as the evaluator computes it, outputs $1$, so that no
+rounding convention for real thresholds can make the recognised function differ from $C$.
+\end{definition}
+
+Examples are ``at least $t$ of $m$ detectors fire'' for convolutional detectors
+on a grid ($k=d=r^2$ for $r\times r$ patches) and networks of bounded receptive
+field with a count readout. When the scopes overlap along an expander, for
+instance $g_e(x_u,x_v,y_e)$ for the edges $e=uv$ of a random cubic graph with a
+private input $y_e$ per edge, the treewidth is linear in $m$ with high probability
+(random cubic graphs are expanders \cite{friedman2008}, and a tree decomposition of
+width $w$ yields a balanced separator of $w+1$ vertices), so variable elimination takes
+exponential time; the circuit is neither unate nor an $\wedge$ of local events, and $S$
+is not a sum of independent blocks, so
+\cref{thm:janson-general,thm:cftp,prop:tilting} do not apply.
+
+\paragraph{Tilting.} For $\theta\ge0$ let $D_\theta(x)=D(x)e^{\theta S(x)}/Z(\theta)$
+with $Z(\theta)=\E_De^{\theta S}$, and $s(\theta)=\E_{D_\theta}S$. The function
+$e^{\theta(S-t)}$ is the soft envelope of \cref{sec:tilting}, but its proposal
+$D_\theta$ is now a Gibbs measure rather than a product, and its mass
+$Z(\theta)e^{-\theta t}$ has no closed form. Since $D_\theta$ has full support,
+for every circuit of this form
+\begin{equation}\label{eq:local-identity}
+p=Z(\theta)\,e^{-\theta t}\,v(\theta),\qquad v(\theta)=\E_{D_\theta}U,\qquad
+U=C(X)\,e^{-\theta(S(X)-t)}\in[0,1],
+\end{equation}
+and $U\ge e^{-\theta(s'-t)}\one[S=s',H=1]$ for every integer $s'\ge t$, so
+\begin{equation}\label{eq:local-anti}
+v(\theta)\ \ge\ e^{-\theta(s'-t)}\,\Pr_{D_\theta}[S=s',\,H=1].
+\end{equation}
+The looseness of the envelope is $K=1/v(\theta)$. Three things are needed:
+samples from $D_\theta$, the normaliser $Z(\theta)$, and a lower bound on $v(\theta)$.
+
+\paragraph{A locally checkable mixing certificate.} Write $q_i=D(x_i=1)\in(0,1)$,
+$a_i=\ln(q_i/(1-q_i))$, $\sigma(z)=1/(1+e^{-z})$, and
+$\Delta_i(x)=S(x^{i\gets1})-S(x^{i\gets0})$, which depends only on the
+neighbourhood $N(i)$ of $i$ (the variables sharing a scope with it;
+$|N(i)|\le d(k-1)$). Let $n_S\le km$ be the number of variables that lie in some
+scope; the others do not affect $S$, are independent of the rest under every
+$D_\theta$, and are resampled exactly in every sweep. The conditional law of $x_i$ under $D_\theta$ is
+$\Pr_{D_\theta}[x_i=1\mid x_{-i}]=\sigma(a_i+\theta\Delta_i(x))$. Let
+$c_{il}(\theta)$ be the largest change of this probability when only $x_l$
+changes, and
+\[
+\kappa_{il}(\theta)=\max_{x}\ \theta\,|\Delta_i(x)-\Delta_i(x^{l\,\mathrm{flipped}})|\cdot
+\max\{\sigma'(z):z\in\mathrm{hull}(a_i,\,a_i+\theta\Delta_i(x),\,a_i+\theta\Delta_i(x^{l\,\mathrm{flipped}}))\},
+\]
+computed by enumerating the $2^{|N(i)|}$ configurations of $N(i)$. A
+\emph{Dobrushin certificate} at $\theta$ is a vector $w>0$ and $\alpha<1$ with
+$\sum_l\kappa_{il}(\theta)w_l\le\alpha w_i$ for every $i$; it is checked in time
+$O(n\,d(k-1)2^{d(k-1)})$. The \emph{systematic scan} updates the colour classes of
+a greedy colouring of the conflict graph ($i\sim l$ iff they share a scope) in a
+fixed order, resampling all sites of a class simultaneously from their
+conditional laws (they are conditionally independent).
+
+\begin{lemma}[certified sampler]\label{lem:local-mix}
+\begin{enumerate}[label=(\alph*)]
+\item $c_{il}(\theta')\le\kappa_{il}(\theta)$ for $0\le\theta'\le\theta$; $\kappa_{il}$ is
+nondecreasing in $\theta$; and $\kappa_{il}(\theta)\le\theta n_{il}/2$, where $n_{il}$ is
+the number of scopes containing both $i$ and $l$, and $\sum_{l}n_{il}\le d(k-1)$.
+Hence $w=\one$, $\alpha=\theta d(k-1)/2$ is a certificate for every LTC whenever this
+$\alpha$ is below $1$; in particular $\alpha\le1-\gamma$ for
+$\theta\le\theta_0:=2(1-\gamma)/(d(k-1))$, whatever the $g_j$ are.
+\item If $(w,\alpha)$ is a certificate at $\theta$, then for every $\theta'\in[0,\theta]$ and
+every starting state, after $\tau$ sweeps the systematic scan at $\theta'$ is within
+total variation $F\alpha^\tau$ of $D_{\theta'}$, where $F=\sum_iw_i/\min_iw_i$.
+\item If moreover $\sum_i\kappa_{il}(\theta)\le1-\gamma$ for every $l$, then
+$\mathrm{Var}_{D_{\theta'}}(f)\le\frac1{4\gamma}\sum_i\mathrm{osc}_i(f)^2$ for all
+$\theta'\in[0,\theta]$ and all $f$, where $\mathrm{osc}_i(f)$ is the largest change of
+$f$ under a change of $x_i$. In particular $\mathrm{Var}_{D_{\theta'}}(S)\le n_Sd^2/(4\gamma)$.
+\end{enumerate}
+\end{lemma}
+
+Part (b) is Dobrushin's uniqueness condition \cite{dobrushin1970} in the weighted
+(matrix-norm) form of \cite{dgj2009}; we prove it by the standard coupling with
+shared uniforms. Part (c) uses path coupling \cite{bubleydyer1997} and contraction of
+the random-scan chain \cite[Section~13.1]{lpw2017}. Proofs are in \cref{app:local}. For monotone $g_j$ the
+change of each factor's contribution is at most $1$ instead of $2$, which doubles
+$\theta_0$; the enumerated bound $\kappa$ and the weights capture such gains
+automatically.
+
+\paragraph{The normaliser.} Since $\frac{d}{d\theta}\ln Z(\theta)=s(\theta)$ and
+$s'(\theta)=\mathrm{Var}_{D_\theta}(S)\ge0$, thermodynamic integration
+\cite{gm1998} with a monotone bracket needs no smoothness: on the grid
+$\theta_l=l\theta/L$, $h=\theta/L$,
+$h\sum_{l=0}^{L-1}s(\theta_l)\le\ln Z(\theta)\le h\sum_{l=1}^{L}s(\theta_l)$, and the two
+sums differ by $h(s(\theta)-s(0))\le h(S_{\max}-s(0))$, where $S_{\max}=\sum_j\max g_j$,
+$S_{\min}=\sum_j\min g_j$, and $s(0)=\E_DS$ is computed exactly by enumerating each scope.
+
+\begin{lemma}[normaliser interval]\label{lem:local-ti}
+Let $L$ be even, and let $Y_1,\dots,Y_L$ be independent random variables with values in
+$[S_{\min},S_{\max}]$ and $\E Y_l=s(\theta_l)$ (for example $Y_l=S(X_l)$ with $X_l\sim D_{\theta_l}$). Put
+$R=S_{\max}-S_{\min}$ and $\hat T=h\sum_lY_l$, let
+$\Sigma=\frac12\sum_{r\le L/2}(Y_{2r-1}-Y_{2r})^2$, and
+\begin{align*}
+\bar V&=\min\Big\{2\Big(\tfrac12a+\sqrt{\tfrac14a^2+\Sigma}\Big)^2,\ \tfrac14LR^2\Big\},&
+a&=R\sqrt{\ln(1/\delta_2)},\\
+u&=\tfrac13hR\ell+\sqrt{(\tfrac13hR\ell)^2+2h^2\bar V\ell},& \ell&=\ln(2/\delta_1).
+\end{align*}
+Then with probability at least $1-\delta_1-\delta_2$,
+$\ln Z(\theta)\in\big[\hat T-u-h(S_{\max}-s(0)),\ \hat T+u\big]$.
+\end{lemma}
+
+Here $\bar V$ is an upper confidence bound on $\sum_l\mathrm{Var}(Y_l)$ from pairs of
+neighbouring grid points (Maurer's inequality for nonnegative variables
+\cite{maurer2003}), and $u$ is Bernstein's bound for the sum. Any unbiased $Y_l$ with
+values in $[S_{\min},S_{\max}]$ will do. The implementation uses the
+Rao--Blackwellised statistic $\frac1{|\mathcal P|}\sum_{I\in\mathcal P}\E_{D_{\theta_l}}[S\mid
+x_{-I}]$, averaged over the colour classes $\mathcal P$ (computable exactly because the
+sites of a class are conditionally independent), which reduced the variance by factors
+$2.7$--$4.8$ on the Glauber instances of \cref{tab:local} and $1.5$--$2.4$ on its CFTP chain
+(measured at four tilts in $(0,\theta]$). It also clips $Y_l$ to windows $[c_l-w,c_l+w]$ fixed by a
+pilot run and bounds the clipped mass by a KL upper bound on the mean exceedance; this
+replaces $R$ by $2w$ in $u$ and adds $\pm\theta M\bar z$ to the interval, where $M$
+bounds the exceedances and $\bar z$ is the KL upper bound
+(\cref{lem:local-ti-window}).
+
+\paragraph{The procedure TG.}
+\begin{description}[style=sameline,leftmargin=1.5em]
+\item[(T0)] Recognise $C=[S\ge t]\wedge H$, tabulate the $g_j$, compute $k,d,S_{\min},S_{\max},s(0)$.
+If $t>S_{\max}$ output $[0,0]$; if $t\le S_{\min}$ and $H\equiv1$ output $[1,1]$.
+\item[(T1)] Choose $\theta\ge0$ with a Dobrushin certificate $(w,\alpha)$, by any rule (we
+use a pilot run aiming at $s(\theta)\approx t$; $\theta=0$ if $s(0)\ge t$). Fix $L$, the
+sample cap $N_{\rm IS}$, and $\eta=\delta/(5N_{\rm tot})$ with $N_{\rm tot}=L+N_{\rm IS}$.
+(Soundness needs only these samples coupled. The analysed pilot of \cref{app:local}
+also draws its samples by (T2), and there $N_{\rm tot}$ counts them too.)
+\item[(T2)] Every sample is the state of a fresh systematic scan from $x=0$ after
+$\tau$ sweeps, where $F\alpha^\tau\le\eta/2$ (half of $\eta$ is reserved for floating-point
+rounding of the update probabilities).
+\item[(T3)] Draw one sample at each $\theta_l$ and apply \cref{lem:local-ti} at levels
+$\delta/5,\delta/5$ (and $\delta/5$ for the window of \cref{lem:local-ti-window}, if used):
+$\ln Z(\theta)\in[z_-,z_+]$.
+\item[(T4)] Run the sequential KL procedure of \cref{thm:envelope}(iv) on $U$ with fresh
+samples at $\theta$, level $\delta/5$, cap $N_{\rm IS}$: $v(\theta)\in[v_-,v_+]$.
+\item[(T5)] Output $[e^{z_--\theta t}v_-,\ \min(1,e^{z_+-\theta t}v_+)]$.
+\end{description}
+With $\theta=0$ the samples are exact draws from $D$, $Z=1$, and TG is Monte Carlo.
+
+For completeness we use three hypotheses, with parameters $\beta,\nu\in(0,\frac12]$:
+\begin{description}[style=sameline,leftmargin=1.5em]
+\item[(H1)] $q_i\in[\beta,1-\beta]$ for every variable $i$ that lies in some scope.
+\item[(H2)] (private pivots) there are $\ge\nu m$ factors $j$, each with a \emph{private}
+variable $i_j\in A_j$ (in no other scope) such that
+$\Pr_D[g_j(x^{i_j\gets1})\ne g_j(x^{i_j\gets0})]\ge\nu$.
+\item[(H3)] $t\le s(\theta_0)$, with $\theta_0=2(1-\gamma)/(d(k-1))$ as in \cref{lem:local-mix}.
+\end{description}
+(H1) and (H2) are checked by enumerating scopes; (H3) says that the threshold is
+reachable by a certified tilt.
+
+\begin{theorem}[tilted Glauber estimator]\label{thm:local}
+\begin{enumerate}[label=(\roman*)]
+\item (Soundness.) For every LTC $C=[S\ge t]\wedge H$, every product distribution with
+$q_i\in(0,1)$ and every choice in (T1), the output of TG contains $p$ with probability
+at least $1-\delta$.
+\item (Completeness.) Fix $k,d,\gamma,\beta,\nu$ and $0<\eps\le1$, and let
+\[
+b=3+\tfrac{d}{\sqrt\gamma},\quad c_1=\tfrac{4e^5b^2k}{\nu^2\beta},\quad
+m_0=\max\Big\{\tfrac{4e^4kd^2}{\gamma\nu^4},\tfrac{64e^{10}b^2k}{\nu^4\beta^2}\Big\},\quad
+K_0=16e^{c_1}\sqrt{n_S}.
+\]
+Suppose $H\equiv1$, (H1)--(H3) hold and $m\ge m_0$, and run TG with the pilot of
+\cref{app:local},
+\[
+L=\Theta\Big(\Big(\frac{n_S}{\gamma(k-1)^2\eps^2}+\frac{m}{d(k-1)\eps}\Big)\ln\frac{10}\delta\Big),
+\]
+and a cap $N_{\rm IS}$ at least the sample count that \cref{thm:envelope}(iv) needs for
+$K=K_0$, accuracy $\eps/3$ and level $\delta/5$, which is
+$O(K_0(\ln\frac1\delta+\ln\ln K_0)/\eps^2)$. Then TG
+outputs an interval of ratio at most $1+\eps$ with probability at least $1-3\delta$, using
+$O\big((n_S+e^{c_1}\sqrt{n_S})\eps^{-2}\log(n_S/\delta)\big)$ samples plus
+$O(d^3\sqrt{n_S}\log(n_S/\delta)/(\gamma^2(k-1)))$ pilot samples, each costing
+$O(\gamma^{-1}\log(n/(\eps\delta)))$ sweeps of $n$ table look-ups.
+\item (Rarity.) Assume (H1) and (H2), and let $v_{\min}=e^{-4}\beta\nu^2m/2$ and
+$V_{\max}=n_Sd^2/(4\gamma)$. Then $s(\theta_0)-s(0)\ge\theta_0v_{\min}$; for
+$t=\lfloor s(\theta_0)\rfloor$, $p\le\exp(\theta_0-\theta_0^2v_{\min}/2)$; and for every integer
+$t\in[s(0),s(\theta_0)]$, $p\le\exp\big(-(t-s(0))^2v_{\min}/(2V_{\max}^2)\big)$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}[Proof of (i)]
+Consider the idealised procedure TG$^*$ in which every sample is exact. By
+\eqref{eq:local-identity}, $U\in[0,1]$ has mean $v(\theta)$ under $D_\theta$ for every
+$C$ of this form, so the interval of (T4) fails with probability at most $\delta/5$
+(\cref{thm:envelope}(iv) needs only i.i.d.\ $[0,1]$ samples); (T3) fails with probability
+at most $3\delta/5$ by \cref{lem:local-ti,lem:local-ti-window}. The choices in (T1) are made before the
+counted samples are drawn (or from independent pilot samples), so these bounds hold
+conditionally on them. On the complement, $p=Z(\theta)e^{-\theta t}v(\theta)$ lies in the
+output. TG differs from TG$^*$ only through its samplers: by \cref{lem:local-mix}(b)
+each sample can be coupled with an exact one, failing with probability at most
+$\eta$, and the total over at most $N_{\rm tot}$ samples is at most $\delta/5$. No
+hypothesis on $C$ beyond the syntax was used.
+\end{proof}
+
+The proofs of (ii) and (iii) are in \cref{app:local}. The key step of (ii) is
+anticoncentration: $\Pr_{D_\theta}[S=t]\ge e^{-c_1}/(16\sqrt{n_S})$ whenever
+$|s(\theta)-t|\le2\sqrt{n_S}$ (\cref{lem:local-anti}), obtained without a local central limit
+theorem from the private pivots, which given the rest of $x$ make $S$ a shifted sum of
+independent Bernoulli variables, and from the log-concavity of such sums. By (iii),
+$p=e^{-\Omega(m)}$ for every threshold $t\in[s(0)+cm,\,s(\theta_0)]$ with $c>0$ fixed (a
+range of length $\Omega(m)$ for small $c$), so there Monte Carlo needs $e^{\Omega(m)}$
+samples while TG needs $\poly(n)/\eps^2$; thresholds $t\le s(0)+2\sqrt{n_S}$ are not rare when
+$m\ge m_0$ ($p\ge e^{-c_1}/(16\sqrt{n_S})$ by \cref{lem:local-anti} at $\theta=0$). The constant
+$e^{c_1}$ is very pessimistic: in our Glauber experiments $v(\theta)\sqrt m$ is between
+$1.7$ and $2.3$. Tilting with a local CLT has been used to count
+independent sets and matchings of a given size
+\cite{daviesperkins2021,jpss2021}; here the statistic is an arbitrary sum of local
+sub-circuits, the regime is certified by the procedure itself, and the output is sound
+on every input.
+
+\begin{corollary}[side conditions]\label{cor:local-side}
+For $C=[S\ge t]\wedge H$ with an arbitrary circuit $H$, TG is sound
+(\cref{thm:local}(i)). Assume (H1)--(H3), $m\ge m_0$, and $\pi_H>0$ with
+$\Pr_{D_\vartheta}[H\mid S=t]\ge\pi_H$ for every $\vartheta\in[0,\theta_0]$ if $s(0)<t$, and
+$\Pr_D[H\mid S=\lceil s(0)\rceil]\ge\pi_H$ if $s(0)\ge t$. Then TG is complete as in
+\cref{thm:local}(ii) with $K_0$ replaced by $K_0/\pi_H$ (in the cap $N_{\rm IS}$ and in the
+importance-sampling cost). For instance $\pi_H=D(H)$ when $H$ reads only variables outside
+all scopes.
+\end{corollary}
+
+\begin{proof}
+The pilot and the normaliser do not involve $H$. In the proof of \cref{thm:local}(ii) the
+importance-sampling step uses $v(\theta)\ge\Pr_{D_\theta}[S=s']$, where $s'=t$ if $s(0)<t$
+and $s'=\lceil s(0)\rceil$ (and $\theta=0$) if $s(0)\ge t$; with $H$, \eqref{eq:local-anti} gives
+$v(\theta)\ge\Pr_{D_\theta}[S=s']\Pr_{D_\theta}[H\mid S=s']\ge\Pr_{D_\theta}[S=s']\,\pi_H$. Variables
+outside all scopes are independent of $S$ under every $D_\vartheta$, with law $D$.
+\end{proof}
+
+The condition must be imposed at $\lceil s(0)\rceil$ when $s(0)\ge t$: for $H=[S\le t]$ and
+suitable $t\le s(0)-cm$, $\Pr[H\mid S=t]=1$ while $p=\Pr_D[S=t]=e^{-\Omega(m)}$ (by (iii)
+applied to the tables $1-g_j$), and TG at $\theta=0$ is plain Monte Carlo.
+
+\paragraph{Beyond the Dobrushin regime.} For supermodular statistics the certificate
+can be dropped altogether.
+
+\begin{proposition}[self-certifying sampler]\label{prop:local-cftp}
+Suppose every $\Delta_i$ is nondecreasing in every $x_l$, $l\ne i$ (that is, $S$ is
+supermodular; checked by enumerating each neighbourhood). Replace the sampler (T2) by
+monotone coupling from the past \cite{pw1996} for the systematic scan driven by shared
+uniforms, with sweeps as time steps, and make TG output ``no verdict'' as soon as any run
+fails to coalesce within $T_{\max}$ sweeps. The result is sound for every $\theta\ge0$, with
+no certificate, and complete whenever coalescence takes $\poly(n)$ sweeps with high
+probability (e.g.\ under a certificate: $\Pr[\text{no coalescence after }\tau\text{
+sweeps}]\le F\alpha^\tau$) and $v(\theta)\ge1/\poly(n)$.
+\end{proposition}
+
+\begin{proof}
+With a shared uniform $u$, the update $x_i\gets\one[u<\sigma(a_i+\theta\Delta_i(x))]$ is
+nondecreasing in $x$ when $\theta\ge0$ and $\Delta_i$ is nondecreasing, so a sweep is a
+monotone random map that preserves $D_\theta$; the chains from $\mathbf0$ and $\mathbf1$
+sandwich all others, and when they coalesce the common state at time $0$ is an exact
+sample \cite{pw1996}. Couple the procedure with the one that never times out (which
+uses exact samples and is sound by the proof of \cref{thm:local}(i) without the $\eta$
+term): the two outputs agree whenever the capped procedure gives a verdict. Variance
+bounds are not needed, since \cref{lem:local-ti} uses only the data. Completeness:
+\cref{lem:local-ti} always yields width $O(\theta R\sqrt{\ln(1/\delta)/L})$ for $L\ge\ln(10/\delta)$, so
+$L=\poly(n)/\eps^2$ suffices, and (T4) needs $O((\log(1/\delta)+\log\log(1/v(\theta)))/(\eps^2v(\theta)))$
+samples (\cref{thm:envelope}(iv)).
+\end{proof}
+
+This differs from certified telescoping (\cref{thm:cftp}) in two ways. There the targets
+are conditional laws $D\mid F_{<k}$ under hard constraints, sampled by bounding chains
+for anti-monotone dynamics, and failed runs are discarded, so the truncation bias has to
+be certified empirically (\cref{prop:truncation}). Here the targets are soft tilts, the
+dynamics is monotone, and aborting the whole procedure on any timeout needs no
+certificate (the same abort rule would also make \cref{thm:cftp} sound without
+\cref{prop:truncation}, at the price of losing completeness when timeouts have small
+but non-negligible probability). On a chain of monomials $z_{j-1}z_jy_j$ the sampler
+needs about $26$ sweeps per exact sample at $\theta=2.5$ (counting both bounding chains
+and all restarts), where the row sums of the influence bound $\kappa$ are $2.5$ and the
+exact Dobrushin row sums $\max_i\sum_lc_{il}$ are $1.70$ (\cref{tab:local}).
+
+\begin{remark}[independent blocks]\label{rem:local-blocks}
+For blocks on disjoint variables (\cref{sec:tilting}) the tilted law is a product and
+none of the above is needed; three points complement \cref{prop:tilting}. (a) By
+\eqref{eq:local-anti}, $K\le e^{\theta(s'-t)}/\Pr_{D_\theta}[S=s']$ for every $\theta\ge0$
+and every integer $s'\ge t$, for arbitrary integer weights. (b) The bound
+$K=O(\sqrt k)$ is tight: for $k$ i.i.d.\ integer-valued blocks $g$ whose law has span
+$1$, and integers $t=ak$ with $a$ fixed and $\E g<a<\max g$, every $\theta\ge0$ has
+$K\ge K(\theta_a)=\Theta(\sqrt k)$ as $k\to\infty$, where $s(\theta_a)=t$ minimises
+$Z(\theta)e^{-\theta t}$, by the lattice form of the Bahadur--Rao theorem
+\cite{bahadurrao1960}; so tilting is logarithmically efficient but does not have bounded
+relative error. (c) At the top
+threshold $t=k_+$, $K\to1$ as $\theta\to\infty$: the tilted law tends to $D$ conditioned on
+every block firing. The proof of \cref{prop:tilting} extends to blocks with log-concave
+integer laws on contiguous supports, with $\sigma$ the standard deviation of $S$ under
+the tilt that makes $t$ a mode: $K\le\frac43(4\sigma+1)$.
+\end{remark}
+
+\paragraph{The certified ratio, not the variance, sets the cost.} \Cref{thm:envelope} pays
+$\Theta(K)$ samples whatever the relative variance $\rho$ of the weights is, and a
+variance-adaptive interval pays $O((\rho/\eps^2+K/\eps)\log(1/\delta))$. The $K/\eps$ term
+is unavoidable for any sound procedure that uses the weights as a black box, and for
+tilting envelopes $K$ can exceed $\rho$ exponentially.
+
+\begin{proposition}[certification gap]\label{prop:certgap}
+\begin{enumerate}[label=(\alph*)]
+\item Let $\mathcal A$ draw i.i.d.\ samples of a $[0,B]$-valued variable, stop
+adaptively, and output an interval that contains the mean with probability at least
+$1-\delta$ for every $[0,B]$-valued law. If for some law $P_0$ with mean $p\le B/3$ the
+interval has ratio at most $1+\eps$ ($\eps\le1/2$) with probability at least $1-\delta$, then
+$\E_{P_0}[N]\ge(1-3\delta)B/(3\eps p)$.
+\item Let $x_1,\dots,x_{n+M}$ be uniform with $M\ge n^2$ even, $g=x_1\wedge\dots\wedge x_n$,
+$S=2Mg+\sum_{i>n}x_i$ and $t=3M/2$. Then $C=[S\ge t]=g$ and $p=2^{-n}$. For every
+$\theta\ge0$ the tilting envelope $e^{\theta(S-t)}$ has $K\ge2^{n/2}$, while at
+$\theta=n\ln2/(2M)$ its weights have relative second moment at most $2.07$.
+\end{enumerate}
+\end{proposition}
+
+So a sound user of these weights needs $\Omega(2^{n/2}/\eps)$ samples, although
+$O(1/(\eps^2\delta))$ would suffice by Chebyshev's inequality if the variance were
+known. The fix is deductive: the one-step deduction $C\Rightarrow g$ yields the envelope $\prod_{i\le n}[x_i]$ with $K=1$. This is
+also why the counterexamples of Glasserman and Wang \cite{gw1997}, in which tilting has
+large variance, cannot cause wrong answers here, only slow ones. The proof is in
+\cref{app:local}.
+
+\paragraph{Experiments (\cref{tab:local}; \texttt{experiments/exp\_local.py}).} We ran TG
+with $\eps=0.3$, $\delta=0.05$ and margin $\gamma=0.25$ (Python with numpy, $15$--$22$\,ns per
+site update, pilot included, on a shared machine) on four families. (1) A chain LTC $g_j(z_{j-1},z_j,y_j)$ with random truth
+tables, each $y_j$ private and pivotal with probability $\ge\frac12$, $m=1600$, with the
+threshold set so that $p\approx10^{-20}$; exact $p$ from a transfer matrix (treewidth $2$;
+used only for checking). (2) A random cubic graph on $N=1500$ vertices with one random table
+$g_e(x_u,x_v,y_e)$ per edge ($m=2250$, $n=3750$) and $t$ at the mean of the most tilted
+certified measure; no exact or decomposition method applies. (3) The same family at
+$N=100$ and $p\approx10^{-3}$, against $10^7$ Monte Carlo samples. (4) The CFTP variant on a
+chain of $400$ monomials at $\theta=1.5$ and $2.5$, where the row sums of the influence bound
+$\kappa$ are $1.5$ and $2.5$ (exact Dobrushin row sums $1.27$ and $1.70$). The $\kappa$ row
+sums of the Glauber instances ($0.98$ for the chain, $1.34$ and $1.37$ for the cubic graphs;
+exact Dobrushin row sums $0.97$, $1.32$ and $1.35$) exceed $1-\gamma$, so the weighted
+certificate was used. The implementation replaces the pilot of \cref{app:local} by a
+heuristic one ($10$ tilts, one mean of $256$ chains each, chains run only to total
+variation $10^{-3}$, linear interpolation); the pilot fixes only $\theta$ and the window, so
+it affects the width but not the validity of the output, and \cref{thm:local}(ii) is a
+statement about the analysed pilot. Every interval with a reference value contained the
+exact $p$ or overlapped the Monte Carlo interval. With about $7\cdot10^4$ chain samples
+the certified ratios were $1.66$ at $p=10^{-20.19}$ (point estimate within $1.2\%$) and $1.84$
+at $p\approx10^{-23.7}$, where Monte Carlo would need about $2\cdot10^{22}$ and $3\cdot10^{25}$
+samples for the same ratio. Most of the width comes from the normaliser
+($\ln Z$ to $\pm0.15$ and $\pm0.19$, of which the window term is $0.06$ and $0.07$); the
+importance-sampling interval contributes a ratio of about $1.25$, with
+$v(\theta)\sqrt m\approx2.1$ and $2.2$. In the CFTP runs the ratios were $2.13$ and $2.88$ at
+$p=10^{-71.8}$ and $p=10^{-169.8}$. In $16$ repeated runs at $\delta=0.1$ on a chain with
+$m=270$, $q_i\in[0.3,0.7]$ and exact $p=10^{-4.45}$ (threshold at the mean of the most tilted certified measure), no interval
+missed $p$; the median ratio was $2.05$ and the median error of the point estimate $2.2\%$.
+
+\begin{table}[ht]
+\centering\scriptsize
+\setlength{\tabcolsep}{3.5pt}\begin{tabular}{@{}lrrrrrrrrr@{}}
+\toprule
+instance & $n$ & $\theta$ & $\log_{10}p$ (exact or MC) & certified $\log_{10}p$ & ratio & samples & sweeps & s & MC\\
+\midrule
+chain, $m=1600$ & 3201 & 0.492 & $-20.19$ & $[-20.30,\,-20.08]$ & 1.66 & 72{,}560 & 80 & 332 & $1.8\cdot10^{22}$\\
+cubic, $N=1500$ & 3750 & 0.447 & -- & $[-23.88,\,-23.61]$ & 1.84 & 72{,}560 & 95 & 480 & $3.3\cdot10^{25}$\\
+cubic, $N=100$ & 250 & 0.457 & $[-3.016,\,-2.993]$ & $[-3.050,\,-2.959]$ & 1.23 & 72{,}560 & 90 & 24 & $6.7\cdot10^{5}$\\
+CFTP, $m=400$ & 801 & 1.5 & $-71.80$ & $[-71.99,\,-71.66]$ & 2.13 & 81{,}280 & 22$^*$ & 32 & --\\
+CFTP, $m=400$ & 801 & 2.5 & $-169.76$ & $[-170.00,\,-169.54]$ & 2.88 & 81{,}280 & 26$^*$ & 36 & --\\
+\bottomrule
+\end{tabular}
+\caption{TG on local threshold circuits ($\eps=0.3$, $\delta=0.05$, $\gamma=0.25$ in every row; \texttt{exp\_local.py}). ``Samples'' counts pilot, normaliser and importance samples; each normaliser and importance sample is a fresh chain run for ``sweeps'' sweeps, and pilot chains run fewer sweeps (to total variation $10^{-3}$) ($^*$: CFTP, sweeps per counted exact sample, counting both bounding chains and restarts). ``s'': wall-clock seconds on a shared machine. ``MC'': samples a Monte Carlo KL interval needs for the same ratio at the same $\delta$, at the exact $p$, at the upper end of TG's interval when $p$ is unknown, and at the Monte Carlo estimate for $N=100$, whose $\log_{10}p$ column is the interval from $10^7$ Monte Carlo samples (72\,s).}
+\label{tab:local}
+\end{table}

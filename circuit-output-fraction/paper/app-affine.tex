@@ -1,0 +1,287 @@
+\section{Proofs for affine structure}\label{app:affine}
+
+Notation: for $T\subseteq[n]$, $\F_2^T$ is the set of vectors supported in $T$; $A_T$
+is the submatrix of the columns in $T$; for an affine $V=v_0+V_0$ and a cut $(Y,Z)$,
+$\pi_Y$ is the coordinate projection. For $V=\{Ax=b\}\ne\emptyset$,
+$\dim\pi_Y(V)=\dim V-\dim(V_0\cap\{x_Y=0\})=(n-\mathrm{rank}A)-(|Z|-\mathrm{rank}A_Z)$
+and symmetrically, so
+$\lambda_V(Y)=\mathrm{rank}A_Y+\mathrm{rank}A_Z-\mathrm{rank}A$.
+
+\subsection{XOR-DNNF envelopes (\cref{prop:xordnnf})}
+
+For a leaf form $\ell$ write $\bar\ell$ for its linear part, and for a derivation
+$\mathcal T$ (one child at each $\Sum$, all children at each $\Prod$) let
+$\Lambda(\mathcal T)$ be its occurrences of form leaves. The vectors $\bar\ell$,
+$\ell\in\Lambda(\mathcal T)$, are linearly independent: by induction, a leaf
+contributes one nonzero vector, a $\Sum$ inherits from its chosen child, and at a
+$\Prod$ the vectors below child $c$ lie in $\mathcal L(c)$, where they are independent,
+while the sum of the spaces $\mathcal L(c)$ is direct. For uniform $x$ and independent
+$\bar\ell_1,\dots,\bar\ell_r$, the vector $(\ell_1(x),\dots,\ell_r(x))$ is uniform on
+$\F_2^r$, because $x\mapsto(\bar\ell_i\cdot x)_i$ is onto. Hence
+$\mathrm{val}_{\mathcal T}(x)=w(\mathcal T)\prod_{\ell\in\Lambda(\mathcal T)}f_\ell(\ell(x))$,
+with $w(\mathcal T)$ the product of the weights and constants of $\mathcal T$, has
+$\E\,\mathrm{val}_{\mathcal T}=w(\mathcal T)\prod_\ell\frac{f_\ell(0)+f_\ell(1)}2$.
+Since $\varphi=\sum_{\mathcal T}\mathrm{val}_{\mathcal T}$ and the derivations below a
+$\Prod$ are tuples of derivations below its children, the bottom-up pass computes
+$\sum_{\mathcal T}\E\,\mathrm{val}_{\mathcal T}=\E\varphi$. The top-down choice selects
+$\mathcal T$ with probability $\E\,\mathrm{val}_{\mathcal T}/\E\varphi$ (the choice
+probabilities telescope, as in \cref{lem:envmass}). Given $\mathcal T$, the leaf values
+$v_\ell$ are independent with probabilities $f_\ell(v_\ell)/(f_\ell(0)+f_\ell(1))$, and
+$x$ is uniform on $\{x:\ell(x)=v_\ell\ \forall\ell\}$, which has $2^{n-r}$ points by
+independence. So
+$\Pr[x\mid\mathcal T]=2^{r-n}\prod_\ell\frac{f_\ell(\ell(x))}{f_\ell(0)+f_\ell(1)}=
+\frac{\mathrm{val}_{\mathcal T}(x)}{2^n\E\,\mathrm{val}_{\mathcal T}}$ and
+$\Pr[x]=\sum_{\mathcal T}\frac{\mathrm{val}_{\mathcal T}(x)}{2^n\E\varphi}=
+\frac{2^{-n}\varphi(x)}{\E\varphi}$.
+\hfill$\square$
+
+\subsection{The parity barrier (\cref{thm:parity-barrier})}
+
+\emph{Smoothing.} Let $\Phi$ have $S$ wires; then it has at most $S+1$ nodes (all
+reachable from the root). Add, for each $i\in[n]$, a leaf $\one_i$ computing the
+constant $1$ with declared support $\{i\}$ (in a DNNF, the constant-true function of
+$x_i$). Replace each wire from a $\Sum$ (or $\vee$) node $u$ to a child $c$ with
+$\sv(c)\subsetneq\sv(u)$ by a chain of binary $\Prod$ nodes multiplying $c$ by the
+leaves $\one_i$, $i\in\sv(u)\setminus\sv(c)$, and do the same above the root for
+$i\notin\sv(\mathrm{root})$. Replace every $\Prod$ with $k\ge3$ children by a chain of
+$k-1$ binary ones. The function is unchanged, products remain decomposable
+($i\notin\sv(c)$), and the result is smooth with at most
+$(S+1)+n+nS+n+S\le(n+2)(S+2)$ nodes.
+
+\emph{Decomposition.} Let $\Phi$ be smooth with binary products and leaves of support
+at most $2n/3$, and $n\ge2$. For a derivation $\mathcal T$ walk from the root: at a
+$\Sum$ go to the child chosen by $\mathcal T$, at a $\Prod$ go to the child with the
+larger support (ties broken by a fixed rule), and stop at the first node $g$ with
+$|\sv(g)|\le2n/3$. The root has support $[n]$ and leaves have at most $2n/3$
+variables, so $g$ exists. Its parent $u$ has $|\sv(u)|>2n/3$ and is not a $\Sum$, by
+smoothness. So $u$ is a $\Prod$ whose support is the disjoint union of its children's
+supports, and $|\sv(g)|\ge|\sv(u)|/2>n/3$, that is, $g\in G(\Phi)$. The walk is
+determined by its path $P$ (the nodes visited and the choices at $\Sum$ nodes). The
+derivations with walk $P$ are exactly $P$ together with an arbitrary derivation below
+$g$ and an arbitrary derivation below each off-path child $o$ of a $\Prod$ on $P$.
+Hence
+\[
+\varphi(x)=\sum_{g\in G(\Phi)}\varphi_g(x)\,\psi_g(x),\qquad
+\psi_g=\sum_{P\text{ ending at }g}w(P)\prod_{o\in\mathrm{off}(P)}\varphi_o,
+\]
+where $\varphi_v$ is the function computed at $v$ and $w(P)\ge0$ collects the weights
+on $P$. An off-path child $o$ is a sibling, under a decomposable $\Prod$, of a node
+whose support contains $\sv(g)$, so $\sv(o)\cap\sv(g)=\emptyset$. Thus every term is
+$t_g(x)=f_g(x_{Y_g})h_g(x_{Z_g})$ with $Y_g=\sv(g)$, $Z_g=[n]\setminus Y_g$ and
+$f_g,h_g\ge0$. For a DNNF, the same walk gives
+$E(x)=\bigvee_{g}(\varphi_g(x)\wedge\psi_g(x))$ with $\psi_g$ an $\vee$ of $\wedge$'s,
+so every term is the indicator of a rectangle $R_g=A_g\times B_g$ with $R_g\subseteq
+E^{-1}(1)$.
+
+\begin{lemma}[coset lemma]\label{lem:coset}
+Let $V$ be a nonempty affine subspace, $(Y,Z)$ a cut, $\lambda=\lambda_V(Y)$, and
+$f:\F_2^Y\to\R_{\ge0}$, $h:\F_2^Z\to\R_{\ge0}$. Then
+\[
+\sum_{x\in V}\sqrt{f(x_Y)h(x_Z)}\;\le\;\sqrt{|V|\,2^{-\lambda}\textstyle\sum_yf(y)\sum_zh(z)}.
+\]
+In particular, a rectangle $R=A\times B$ satisfies $|R\cap V|\le\sqrt{|V|2^{-\lambda}|R|}$.
+\end{lemma}
+
+\begin{proof}
+Let $W_Y=\{y:(y,0)\in V_0\}$ and $W_Z=\{z:(0,z)\in V_0\}$. For $y\in\pi_Y(V)$ the fibre
+$\{z:(y,z)\in V\}$ is a coset of $W_Z$, and $y,y'$ have the same fibre if and only if
+$y-y'\in W_Y$. So $V$ is the disjoint union of $N$ blocks $A_i\times B_i$, where the
+$A_i$ are the $W_Y$-cosets partitioning $\pi_Y(V)$ and the $B_i$ are distinct
+$W_Z$-cosets. Since $W_Y\times\{0\}=V_0\cap\ker\pi_Z$, we have $\dim W_Y=\dim
+V-\dim\pi_Z(V)$, so $N=|\pi_Y(V)|/|W_Y|=2^\lambda$ and $|V|=N|W_Y||W_Z|$. By
+Cauchy--Schwarz in each block and then across blocks,
+\[
+\sum_{x\in V}\sqrt{f h}=\sum_i\Big(\sum_{A_i}\sqrt f\Big)\Big(\sum_{B_i}\sqrt h\Big)
+\le\sqrt{|W_Y||W_Z|}\sum_i\sqrt{F_iH_i}\le\sqrt{|W_Y||W_Z|\textstyle\sum_iF_i\sum_iH_i},
+\]
+with $F_i=\sum_{A_i}f$ and $H_i=\sum_{B_i}h$. The $A_i$ are disjoint, and so are the
+$B_i$, and $|W_Y||W_Z|=|V|2^{-\lambda}$. For the rectangle take $f=\one_A$, $h=\one_B$.
+\end{proof}
+
+\emph{Proof of (a).} Smooth $\Phi$ first (this does not change $\varphi$ or $K$) and
+decompose. For $g\in G=G(\Phi)$ let $a_g=|V|^{-1}\sum_{x\in V}\min(1,t_g(x))$ and
+$b_g=|V|^{-1}\sum_{x\in\F_2^n}t_g(x)$. Since $\min(1,t)\le\sqrt t$, \cref{lem:coset}
+gives $a_g\le\sqrt{b_g2^{-\lambda_V(Y_g)}}\le\sqrt{b_g2^{-\lambda_{\rm bal}}}$, as
+$n/3<|Y_g|\le2n/3$. For $x\in C^{-1}(1)$, $1\le\min(1,\varphi(x))\le\sum_g\min(1,t_g(x))$,
+so $\sum_ga_g\ge c$. Also $\sum_gb_g=|V|^{-1}\sum_x\varphi(x)=2^n\E\varphi/|V|=Kc$,
+because $p=c|V|2^{-n}$. By Cauchy--Schwarz,
+$c\le2^{-\lambda_{\rm bal}/2}\sum_g\sqrt{b_g}\le2^{-\lambda_{\rm bal}/2}\sqrt{|G|Kc}$,
+that is, $|G|K\ge c2^{\lambda_{\rm bal}}$.
+
+\emph{Proof of (b).} Now $C^{-1}(1)\subseteq\bigcup_g(R_g\cap V)$ with
+$R_g\subseteq E^{-1}(1)$, so by \cref{lem:coset}
+$c|V|\le\sum_g\sqrt{|V|2^{-\lambda_{\rm bal}}|R_g|}\le|G|\sqrt{|V|2^{-\lambda_{\rm
+bal}}|E^{-1}(1)|}$. Substituting $|E^{-1}(1)|=(D(E)/p)\,c|V|$ and squaring gives
+$c\le|G|^22^{-\lambda_{\rm bal}}D(E)/p$. If $E\Rightarrow[x\in V]$ then $R_g\subseteq V$,
+so $|R_g|=|R_g\cap V|\le\sqrt{|V|2^{-\lambda_{\rm bal}}|R_g|}$, i.e.\
+$|R_g|\le|V|2^{-\lambda_{\rm bal}}$, and $c|V|\le|G||V|2^{-\lambda_{\rm bal}}$.
+\hfill$\square$
+
+\subsection{The corollaries}
+
+\emph{\Cref{cor:parity-ghw}.} As $H$ has full row rank, $y\mapsto y^\top H$ is
+injective, and $y^\top H_Y=0$ if and only if $y^\top H\in\F_2^Z$. So
+$\mathrm{rank}H_Y=m-\dim(R\cap\F_2^Z)$ and likewise for $Z$, and
+$\lambda_V(Y)=m-\dim(R\cap\F_2^Y)-\dim(R\cap\F_2^Z)$. An $r$-dimensional subspace of
+$R\cap\F_2^T$ has support at most $|T|$, so $\dim(R\cap\F_2^T)\le j^*$ whenever
+$|T|\le2n/3$; for a balanced $Y$ both $|Y|$ and $|Z|$ are at most $2n/3$.
+
+\emph{\Cref{cor:random-parity}.} Fix $T$ with $|T|\le2n/3$ and a $7$-dimensional
+subspace $\Lambda\subseteq\F_2^m$ with basis $y_1,\dots,y_7$. The columns of
+$H_{T^c}$ are independent and uniform, and for each column $h$ the vector $(y_i\cdot
+h)_{i\le7}$ is uniform on $\F_2^7$. So the probability that $y^\top H_{T^c}=0$ for all
+$y\in\Lambda$ is $2^{-7|T^c|}\le2^{-7n/3}$. There are at most $2^{7m}$ such subspaces
+and $2^n$ sets $T$, so the probability that some $T$ has
+$\dim\{y:y^\top H_{T^c}=0\}\ge7$ is at most $2^{n+7m-7n/3}\le2^{-n/6}$ for $m\le n/6$.
+Also $\Pr[\mathrm{rank}H<m]\le\sum_{y\ne0}\Pr[y^\top H=0]<2^{m-n}\le2^{-n/6}$. On the
+complement, $H$ has full rank and $\dim(R\cap\F_2^T)=\dim\{y:y^\top H_{T^c}=0\}\le6$
+for all $|T|\le2n/3$, so $\lambda_{\rm bal}\ge m-12$ by \cref{cor:parity-ghw}. Finally
+$|V|=2^{n-m}$ gives $p=c2^{-m}$ and $c2^{m-12}=c^2/(4096p)$.
+
+\emph{\Cref{cor:barrier-methods}.} Let $\widetilde\Phi$ be the smoothed circuit, so
+that $|G(\widetilde\Phi)|\le(n+2)(S+2)\le3(n+2)S$ for an envelope with $S\ge1$ wires.
+
+First, sample counts. If a KL interval $[\ell,u]$ for the mean $\mu$ of a $[0,1]$-valued
+variable, computed from $N$ samples with empirical mean $\hat\mu$ at level $\delta$, is
+valid and tight ($\ell\le\mu\le u\le(1+\eps)\ell$, $u\le1/2$), then
+$\hat\mu\in[\ell,u]$, $u-\hat\mu\le\eps\hat\mu$, and $N\KL(\hat\mu\|u)=\ln(2/\delta)$.
+Since $\KL(a\|b)\le(a-b)^2/(b(1-b))\le2\eps^2a$ for $a\le b\le\min((1+\eps)a,1/2)$, we
+get $N\ge\ln(2/\delta)/(2\eps^2(1+\eps)\mu)$. With $\mu=1/K$ this is
+$\Omega(K\log(1/\delta)/\eps^2)$ samples.
+
+(i) The estimator evaluates $\varphi$ on every sample, at cost at least $S$, so its work
+is at least $SK\ge|G(\widetilde\Phi)|K/(3(n+2))\ge c^2/(12288(n+2)p)$. Any
+implementation spends at least $S$ on the mass and draws $\Omega(K)$ samples, hence
+$\Omega(\sqrt{SK})=\Omega(c/\sqrt{np})$ work.
+(ii) The sampler of \cref{thm:sis} makes $2n$ counter calls per sample, each reading
+$E$, and needs $\Omega(D(E)/p)$ samples, because its clipped weight has mean
+$\Theta(1/K_E)$ on $[0,3]$. So its work is $\Omega(|E|K_E)$. As $K_E\ge1$,
+$|E|K_E\ge\sqrt{|E|^2K_E}\ge\sqrt{|G(\widetilde E)|^2K_E}/(3(n+2))=\Omega(c/(n\sqrt p))$.
+(iii) Without frontier gates, the DNNF $E$ of \cref{thm:cw} has literal and constant
+leaves, satisfies $E\equiv C\Rightarrow[x\in V]$, and has
+$S\le(|N|+1)(\mathrm{cw}+3)2^{\mathrm{cw}}$ wires. So (b) gives
+$3(n+2)S\ge|G(\widetilde E)|\ge c2^{m-12}$; take logarithms and use $\log_23<2$.
+(iv) A tree built with (T), (T$'$), (F), (D), (B) is turned into a DNNF $E\equiv C$: a
+(T) node is a literal or constant leaf; a (T$'$) atom and every other leaf $h$ (an
+(S)-leaf, a refuted node, which is the constant $0$, or a node left unexpanded) is a leaf
+with the function of the restricted node $h$ on its support; (F) is an $\wedge$ of the
+forced literals and the child, (D) an $\wedge$ or $\vee$ of the children, and (B) on $x$ is
+$(\neg x\wedge h|_{x=0})\vee(x\wedge h|_{x=1})$. The rules are identities and the
+$\wedge$'s are decomposable, because restriction removes assigned variables. A tree
+with $m_T$ nodes gives at most $(n+7)m_T$ wires, so after smoothing at most
+$(n+2)((n+7)m_T+2)\le(n+6)^2m_T$ nodes. Leaves may now have more than $2n/3$
+variables, and a walk may stop at such a leaf $B$ with $Y=\sv(B)$. Its term $B(x_Y)\wedge
+\psi_B(x_Z)$ is a rectangle inside $E^{-1}(1)=C^{-1}(1)\subseteq V$. If it is nonempty,
+$B^{-1}(1)$ lies in a single coset of $W_Y=\ker H_Y$, so
+$D(B)\le|W_Y|2^{-|Y|}=2^{-\mathrm{rank}H_Y}$. On the event of
+\cref{cor:random-parity}, $|Z|<n/3$ gives $\mathrm{rank}H_Y=m-\dim(R\cap\F_2^Z)\ge m-6$,
+so $D(B)\le2^{6-m}<1/K'$, contradicting the hypothesis on leaves with more than $2n/3$
+variables. So every nonempty term ends in $G(\widetilde E)$, the proof of (b) applies
+unchanged, and
+$(n+6)^2m_T\ge|G(\widetilde E)|\ge c2^{m-12}$.
+\hfill$\square$
+
+\subsection{Bounded width (\cref{prop:bw-dp})}
+
+Let $a_i$ be the columns of $A$ and $\sigma_t(x)=\sum_{i\in X_t}a_ix_i$. The live set
+$S_t=\mathrm{col}(A_{X_t})\cap(b+\mathrm{col}(A_{\bar X_t}))$ is the set of values of
+$\sigma_t$ on $V$: if $x\in V$ then $b-\sigma_t(x)=A_{\bar X_t}x_{\bar X_t}$, and every
+$s\in S_t$ is attained by combining $x_{X_t}$ with $\sigma_t=s$ and $x_{\bar X_t}$
+with $A_{\bar X_t}x_{\bar X_t}=b-s$. $S_t$ is empty or a coset of
+$\mathrm{col}(A_{X_t})\cap\mathrm{col}(A_{\bar X_t})$, whose dimension is
+$\mathrm{rank}A_{X_t}+\mathrm{rank}A_{\bar X_t}-\mathrm{rank}A=\lambda_V(X_t)$. Define
+gates $N_t[s]$, $s\in S_t$: for a leaf $t=\{i\}$, $N_t[0]=\neg x_i$ and $N_t[a_i]=x_i$
+(the constant-true function of $x_i$ if $a_i=0$); for children $t_1,t_2$,
+$N_t[s]=\bigvee_{s_1\in S_{t_1},\,s+s_1\in S_{t_2}}\big(N_{t_1}[s_1]\wedge
+N_{t_2}[s+s_1]\big)$. By induction $N_t[s](x)=1$ implies $\sigma_t(x)=s$, and
+$N_t[\sigma_t(x)](x)=1$ for $x\in V$; so $N_{\rm root}[b]=\one_V$. The $\wedge$'s are
+decomposable, the disjuncts of $N_t[s]$ have distinct $s_1$ and are therefore
+disjoint, and every $N_t[s]$ has support $X_t$. Each internal node has at most
+$|S_{t_1}||S_{t_2}|\le4^w$ $\wedge$-gates and $2^w$ $\vee$-gates, so there are at most
+$2n(4^w+1)$ gates. Masses and exact samples under any product distribution then follow
+from \cref{lem:envmass} (deterministic, so $K=1$). Finally, walking from the root to
+the larger child while $|X_t|>2n/3$ reaches a node with $n/3<|X_t|\le2n/3$, so
+$\lambda_{\rm bal}(V)\le w$.
+\hfill$\square$
+
+\subsection{Biased parity events (\cref{thm:biased-hard})}
+
+The copy constraints force $x_{i,c}=x_{i,0}=:y_i$ for all $c$, an event of probability
+$q^{k}$ if $y_i=1$ and $(1-q)^k$ if $y_i=0$. Summing over $y$ with $Hy=s$ gives the
+formula. Let $w^*$ be the minimum weight in the coset and
+$\theta=(1-q)^N\lambda^t$. The coset has at most $2^n$ elements and $\lambda<1$, so
+$\lambda^{w^*}\le p/(1-q)^N\le2^n\lambda^{w^*}$. If $w^*\le t$ then $p\ge\theta$; if
+$w^*\ge t+1$ then $p\le\theta\cdot2^n\lambda\le\theta2^{-2g-3}$ by the choice of $k$.
+An interval $[L,U]\ni p$ with $U\le2^gL$ therefore has $U\ge\theta$ in the first case and
+$U\le2^gp<\theta$ in the second. $\theta$ is a rational of polynomial bit length, so
+the comparison is efficient. This proves (a).
+
+(b) Given $\gamma>0$, take $g=n^a$ with $a=\lceil2/\gamma\rceil$ and the smallest
+allowed $k$. Then $N=nk=\Theta(n^{a+1})$ and $N^{1-\gamma}\le g$ for large $n$, because
+$(a+1)(1-\gamma)<a$. Running the procedure with $\delta=1/8$ and answering ``weight
+$\le t$'' if and only if $U\ge\theta$ is correct with probability at least $3/4$, which
+puts an $\NP$-complete problem in $\BPP$. For arguments take $g=1$. Merlin sends
+$\pi$, and Arthur runs the verifier and accepts if and only if $U<\theta/2$. If
+$w^*\ge t+1$, the honest $\pi$ gives, with probability at least $1-2\delta$, a valid
+interval with $U\le2L\le2p\le\theta/16$, so Arthur accepts. If $w^*\le t$, accepting
+means $U<\theta/2<p$, which soundness bounds by $\delta$. With $\delta\le1/6$ this is an
+$\MA$ protocol for the complement of the coset-weight problem, which is
+$\coNP$-complete. Then $\coNP\subseteq\MA\subseteq\AM$ and $\PH=\Sigma_2^p$
+\cite{bhz1987}. For $q>\frac12$ substitute $x\mapsto1-x$; this maps
+$\mathrm{Bern}(q)$ to $\mathrm{Bern}(1-q)$, keeps the copy constraints, and turns
+$Hx_{\cdot,0}=s$ into $Hx'_{\cdot,0}=s+H\one$.
+\hfill$\square$
+
+\subsection{Linear thresholds}
+
+\emph{\Cref{prop:ltf}.} Complementing the coordinates with negative weight puts $L$ in
+packing form $S=\{y:\sum_iv_iy_i\le\kappa\}$ with $v_i\ge0$, under the product
+distribution $\nu$ with marginals $\nu_i$. Coordinates with $\nu_i\in\{0,1\}$ are fixed
+first. Let $F_i(c)=\nu(\sum_{j\le i}v_jy_j\le c)$, so $F_0=\one[c\ge0]$ and
+$F_i(c)=(1-\nu_i)F_{i-1}(c)+\nu_iF_{i-1}(c-v_i)$. With $Q=1+\eps/(2n)$ set $G_0=F_0$,
+$H_i(c)=(1-\nu_i)G_{i-1}(c)+\nu_iG_{i-1}(c-v_i)$ and $G_i(c)=Q^{\lfloor\log_QH_i(c)\rfloor}$
+($0$ if $H_i(c)=0$). Since the recurrence is a positive combination, induction gives
+$H_i\le F_i\le Q^{i-1}H_i$ and $G_i\le H_i<QG_i$, hence $G_i\le F_i\le Q^iG_i$ and
+$G_n(\kappa)\le D(L)\le e^{\eps/2}G_n(\kappa)$. Each $G_i$ is a nondecreasing step
+function. Its positive values are at least $\beta/e$ with
+$\beta=\prod_j\min(\nu_j,1-\nu_j)\ge2^{-nb}$, the probability of one assignment, so it
+takes $O(n(nb+1)/\eps)$ distinct values and has as many breakpoints. $H_i$ is a merge of
+two shifted copies of $G_{i-1}$, which gives $O(n^3b/\eps)$ operations in all. The
+values $Q^j$ with $j=O(n(nb+1)/\eps)$, the $H_i(c)$ and the exponents
+$\lfloor\log_QH_i(c)\rfloor$ (found by comparing $H_i(c)$ with powers of $Q$) are
+rationals and integers of $\poly(n,b,1/\eps)$ bits, so all of this is exact arithmetic
+of that size; so is the acceptance probability below. To
+sample: start from $c_n=\kappa$ (assuming $G_n(\kappa)>0$; otherwise $D(L)=0$), and for
+$i=n,\dots,1$ set $y_i=1$ with probability $\nu_iG_{i-1}(c_i-v_i)/H_i(c_i)$ and
+$c_{i-1}=c_i-v_iy_i$. Every visited $G$ and $H$ is positive. The output $y\in S$ has
+probability
+$\nu(y)\prod_{i<n}r_i/H_n(\kappa)$ with $r_i=G_i(c_i)/H_i(c_i)\in(Q^{-1},1]$. Accepting
+with probability $Q^{-(n-1)}/\prod_{i<n}r_i\le1$ leaves probability
+$\nu(y)Q^{-(n-1)}/H_n(\kappa)$ for every $y\in S$, i.e.\ exactly $\nu\mid S$, with
+acceptance probability $\nu(S)Q^{-(n-1)}/H_n(\kappa)\ge e^{-\eps/2}$. Each step is a
+binary search. \hfill$\square$
+
+\emph{Unions with approximate masses.} Let the sets $P_1,\dots,P_T$ have exact
+samplers and lower approximations $G_j$ of their masses, $e^{-\eps'}D(P_j)\le G_j\le
+D(P_j)$, and let $C\Rightarrow\bigvee_jP_j$.
+Pick $j$ with probability $G_j/\hat G$, $\hat G=\sum_jG_j$, draw $x\sim D\mid P_j$, and
+let $W=C(x)/\mathrm{cov}(x)\in[0,1]$ with $\mathrm{cov}(x)=|\{j:x\in P_j\}|$. Then
+\[
+\hat G\,\E W=\sum_xD(x)C(x)\cdot\frac1{\mathrm{cov}(x)}\sum_{j\ni x}\frac{G_j}{D(P_j)}
+\in[e^{-\eps'}p,\,p],
+\]
+so $p\in[\hat G\ell,e^{\eps'}\hat Gu]$ for a valid interval $[\ell,u]$ for $\E W$. If
+$C\equiv\bigvee_jP_j$, then $\sum_jD(P_j)\le Tp$ and the looseness is at most $e^{\eps'}T$.
+For a variable-disjoint $\wedge$ of $r$ pieces, multiply masses approximated within
+$e^{-\eps'/r}$ and sample the factors independently. Affine subspaces on uniform
+coordinates have exact masses and samplers. \hfill$\square$
+
+\emph{\Cref{prop:affine-ltf}.} Complement as before (this changes $b$ by the columns of
+the complemented coordinates). For $t\le n$ and a live syndrome $s\in S_t$ (the set of
+\cref{prop:bw-dp} for the prefix $\{1,\dots,t\}$, of size at most $2^{w_0}$) let
+$F_t(s,c)=D(A_{\le t}x_{\le t}=s,\ \sum_{j\le t}v_jy_j\le c)$. Then
+$F_t(s,c)=(1-\nu_t)F_{t-1}(s,c)+\nu_tF_{t-1}(s+a_t,c-v_t)$, and both states on the right
+are live at $t-1$ whenever their value is nonzero, since $s+\{0,a_t\}\subseteq
+b+\mathrm{col}(A_{\ge t})$. So the recurrence closes on live states, and $D(C)=F_n(b,\kappa)$.
+The rounding, the bound on breakpoints and the rejection-corrected sampler are as for a
+single threshold, run on $2^{w_0}$ step functions per position. \hfill$\square$

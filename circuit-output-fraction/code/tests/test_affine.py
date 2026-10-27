@@ -3,16 +3,17 @@ of certified ANFs, of the presolve identity, of masses and samplers, and
 soundness (domination) of affine envelopes and XPT arguments on random and
 adversarial inputs."""
 
-import itertools
 import math
 
 import numpy as np
 import pytest
 
 from rareprob import Circuit, Product, exact_prob
-from rareprob.affine import (FULL, Affine, LinearOrderDP, Piece, anf_all, and_spine, affine_envelope,
+from fractions import Fraction
+
+from rareprob.affine import (Affine, LinearOrderDP, Piece, TooWide, anf_all, and_spine, affine_envelope,
                              affine_envelope_estimate, balanced_connectivity, bit_list, certified_affine,
-                             cut_connectivity, gf2_rank, klm_estimate, make_pieces, order_profile, parity,
+                             cut_connectivity, klm_estimate, make_pieces, order_profile, parity,
                              presolve, presolve_estimate, restrict_to, solved_form, uniform_mask, xpt_check,
                              xpt_honest, xpt_verify, _pivot_weight)
 from rareprob.circuit import pack_rows, unpack_bits
@@ -573,3 +574,248 @@ def test_random_checks_have_large_balanced_connectivity():
     n, m = 18, 3
     vals = [balanced_connectivity([int(rng.integers(1, 1 << n)) for _ in range(m)], n) for _ in range(5)]
     assert max(vals) >= 2
+
+
+def test_presolve_with_inner_estimator():
+    rng = np.random.default_rng(19)
+    n = 12
+    for _ in range(10):
+        C = random_mixed_circuit(n, rng, 3, 8)
+        p = exact_prob(C)
+        def inner(Cr, D, e, d):
+            return presolve_estimate(Cr, D, e, d, rng)
+        est = presolve_estimate(C, None, 0.1, 0.05, rng, inner=inner)
+        assert est.lo <= p <= est.hi
+
+
+def test_width_cap_relaxation_is_sound():
+    rng = np.random.default_rng(20)
+    n = 12
+    for _ in range(15):
+        C = random_mixed_circuit(n, rng, int(rng.integers(2, 5)), int(rng.integers(2, 10)), native_xor=True)
+        D = Product(rng.uniform(0.2, 0.8, n))
+        p = exact_prob(C, D)
+        spaces = affine_envelope(C)
+        pieces, relaxed = make_pieces(spaces, D, max_width=0)
+        # relaxed pieces are supersets: domination is kept
+        X = all_points(n)
+        y = C.eval_bits(X)
+        cov = np.zeros(len(X), dtype=bool)
+        for P in pieces:
+            cov |= members(P.V, n)
+        assert np.all(cov[y])
+        e = klm_estimate(C, D, pieces, eps=0.2, delta=0.05, rng=rng, max_samples=50_000)
+        assert e.lo <= p <= e.hi
+
+
+
+# ------------------------------------------- regression: referee counterexamples
+def covers(C, leaves):
+    X = all_points(C.n)
+    with np.errstate(invalid="ignore"):   # NaN sums from infinite weights are part of the semantics
+        y = C.eval_bits(X)
+    cov = np.zeros(len(X), dtype=bool)
+    for S, _ in leaves:
+        cov |= members(S, C.n)
+    return bool(np.all(cov[y]))
+
+
+def test_xpt_form_constant_must_be_a_bit():
+    # a split constant c outside {0, 1} once closed both branches: [0, 0] for p = 1/8
+    C = Circuit(6)
+    C.set_output(C.AND(C.NOT(0), 1, 2))
+    rng = np.random.default_rng(30)
+    for c in (2, -1, 3, 1.0, "1", None, [1]):
+        arg = {"split": ["form", [0], c], "children": [{"leaf": "open"}, {"leaf": "open"}]}
+        leaves, st = xpt_check(C, arg)
+        assert covers(C, leaves)
+        for D in (None, Product(np.full(6, 0.3))):
+            p = exact_prob(C, D)
+            e = xpt_verify(C, D, arg, eps=0.1, delta=0.05, rng=rng)
+            assert e.lo <= p <= e.hi
+    for bad in ({"split": ["form", [0.5], 0], "children": [{}, {}]},
+                {"split": ["form", "01", 0], "children": [{}, {}]},
+                {"split": ["form", [6], 0], "children": [{}, {}]},
+                {"split": ["gate", -1], "children": [{}, {}]},
+                {"split": ["gate", 2.0], "children": [{}, {}]},
+                {"split": [["gate"], 3], "children": [{}, {}]}):
+        leaves, _ = xpt_check(C, bad)
+        assert covers(C, leaves)
+    with pytest.raises(ValueError):
+        Affine().add(1, 2)
+
+
+def test_xpt_malformed_arguments_never_crash():
+    rng = np.random.default_rng(31)
+    C = Circuit(6)
+    C.set_output(C.AND(C.XOR(0, 1, 2), C.NOT(C.XOR(3, 4, 5))))
+    D = Product([0.3, 0.2, 0.25, 0.1, 0.4, 0.35])
+    p = exact_prob(C, D)
+    for order in ([0] * 6, [0, 1, 2, 3, 4, 5, 6], [0, 1, 2], "abc", ["a", 1, 2, 3, 4, 5],
+                  [5.0, 4, 3, 2, 1, 0], [True, False, 2, 3, 4, 5], 7, {"x": 1}):
+        e = xpt_verify(C, D, {"leaf": "open", "order": order}, eps=0.1, delta=0.05, rng=rng)
+        assert e.lo <= p <= e.hi
+    for arg in ([], "x", None, 5, {"split": ["gate", 0], "children": [{}, {}], "leaf": "closed"},
+                {"split": ["gate", 6], "children": ["open", None]}, {"leaf": "closed"}):
+        e = xpt_verify(C, D, arg, eps=0.1, delta=0.05, rng=rng)
+        assert e.lo <= p <= e.hi
+    # far deeper than Python's recursion limit
+    deep = {"leaf": "open"}
+    for _ in range(5000):
+        deep = {"split": ["form", [0, 1], 0], "children": [deep, {"leaf": "open"}]}
+    leaves, st = xpt_check(C, deep)
+    assert covers(C, leaves) and st["nodes"] > 2
+    # the dynamic program checks its order explicitly (no assert)
+    V = Affine.single(0b11, 1)
+    for order in ([0, 0, 2, 3, 4, 5], [0, 1, 2], ["a", 1, 2, 3, 4, 5]):
+        with pytest.raises(TooWide):
+            LinearOrderDP(V, D, order)
+
+
+def test_threshold_propagation_follows_the_evaluator():
+    cases = []
+    C = Circuit(3)
+    C.set_output(C.AND(C.THR([0, 1], [1.0, 1e-17], 1e-12 + 5e-18), 2))
+    cases.append((C, {"split": ["form", [0], 0], "children": [{"leaf": "open"}, {"leaf": "open"}]}))
+    for w, t in (([1e17, 3.0, 3.0, -1.0], 5.0), ([1e6 + 0.1, 0.3, 0.3], 0.6), ([2.0**53, 1.0, 1.0], 1.5),
+                 ([1.0, 1.0, 2.0**53], 1.5)):
+        C = Circuit(len(w))
+        C.set_output(C.THR(list(range(len(w))), w, t))
+        cases.append((C, {"leaf": "open"}))
+    C = Circuit(3)
+    C.set_output(C.NOT(C.THR([0, 1, 2], [1e16, 1.0, -1e16], 0.5)))
+    arg = {"leaf": "open"}
+    for i in (2, 1, 0):
+        arg = {"split": ["form", [i], 0], "children": [{"leaf": "open"}, arg]}
+    cases.append((C, arg))
+    rng = np.random.default_rng(32)
+    for C, arg in cases:
+        leaves, _ = xpt_check(C, arg)
+        assert covers(C, leaves)
+        p = exact_prob(C)
+        e = xpt_verify(C, None, arg, eps=0.1, delta=0.05, rng=rng)
+        assert e.lo <= p <= e.hi
+
+
+def random_real_threshold_circuit(n, rng):
+    W = [1e17, -1e17, 1e16, -1e16, 1e6 + 0.1, 0.3, -0.3, 0.1, 0.2, 3.0, -1.0, 1e-17, 2.0**53, 0.0,
+         float("inf"), float("nan")]
+    C = Circuit(n)
+    pool = list(range(n))
+    for _ in range(int(rng.integers(2, 8))):
+        a = [int(x) for x in rng.choice(pool, int(rng.integers(2, 5)))]   # repeats allowed
+        r = rng.random()
+        if r < 0.6:
+            w = [float(rng.choice(W[:14] if rng.random() < 0.9 else W)) for _ in a]
+            t = float(rng.choice([0.5, 0.6, 1.5, 5.0, 1e-12 + 5e-18, -1e16, 1e16, 0.0]))
+            g = C.THR(a, w, t)
+        elif r < 0.75:
+            g = C.XOR(*a)
+        elif r < 0.9:
+            g = C.AND(*a) if rng.random() < 0.5 else C.OR(*a)
+        else:
+            g = C.NOT(a[0])
+        pool.append(g)
+    return C.set_output(pool[-1])
+
+
+def test_xpt_sound_with_real_threshold_weights():
+    rng = np.random.default_rng(33)
+    n = 6
+    for trial in range(600):
+        C = random_real_threshold_circuit(n, rng)
+        arg = random_argument(C, rng, int(rng.integers(0, 6)))
+        leaves, _ = xpt_check(C, arg)
+        assert covers(C, leaves), trial
+
+
+def test_tiny_probabilities_get_valid_bounds():
+    rng = np.random.default_rng(34)
+    # p = 2^-1100: below the floating-point range; the upper end must stay positive
+    C = Circuit(1100)
+    C.set_output(C.AND(*range(1100)))
+    for f in (presolve_estimate, affine_envelope_estimate):
+        e = f(C, None, eps=0.1, delta=0.05, rng=rng, max_samples=20_000)
+        assert e.lo == 0.0 < e.hi <= 1e-320 and "log2 bounds [-1100" in e.note
+    # biased pivots: p = (1 - q)^1000 exactly, M = prod of 1000 factors
+    for k, q in ((1000, 0.3), (1000, 0.7), (1500, 0.35)):
+        C = Circuit(k)
+        C.set_output(C.AND(*[C.NOT(i) if q < 0.5 else i for i in range(k)]))
+        D = Product(np.full(k, q))
+        p = (1 - Fraction(q)) ** k if q < 0.5 else Fraction(q) ** k
+        e = presolve_estimate(C, D, eps=0.05, delta=0.01, rng=rng)
+        assert Fraction(e.lo) <= p <= Fraction(e.hi)
+    # subnormal masses under Bern(1/3)
+    for k in (650, 675):
+        C = Circuit(k)
+        C.set_output(C.AND(*range(k)))
+        D = Product(np.full(k, 1 / 3))
+        p = Fraction(1 / 3) ** k
+        e = affine_envelope_estimate(C, D, eps=0.05, delta=0.01, rng=rng)
+        assert Fraction(e.lo) <= p <= Fraction(e.hi) and e.hi > 0
+    # a piece 2^-1099 times lighter than the other is bounded, not dropped
+    n = 1101
+    C = Circuit(n)
+    C.set_output(C.OR(C.AND(*range(1100)), 1100))
+    p = Fraction(1, 2) + Fraction(1, 2 ** 1101)
+    e = affine_envelope_estimate(C, None, eps=0.05, delta=0.01, rng=rng)
+    assert Fraction(e.lo) <= p <= Fraction(e.hi) and "negligible" in e.note
+
+
+def banded_exact_mass(rows, n, q):
+    """Exact D(Ax = b) for checks supported on windows, by an exact rational
+    sweep over the coordinates that keeps the parities of the open checks
+    (independent of LinearOrderDP)."""
+    q = [Fraction(float(v)) for v in q]
+    first = [min(bit_list(r)) for r, _ in rows]
+    last = [max(bit_list(r)) for r, _ in rows]
+    F = {(): Fraction(1)}
+    openc = []
+    for i in range(n):
+        newc = openc + [j for j in range(len(rows)) if first[j] == i]
+        G = {}
+        for st, f in F.items():
+            par = dict(zip(openc, st))
+            for j in newc:
+                par.setdefault(j, 0)
+            for x, pr in ((0, 1 - q[i]), (1, q[i])):
+                if pr == 0:
+                    continue
+                pp = dict(par)
+                if x:
+                    for j in newc:
+                        if (rows[j][0] >> i) & 1:
+                            pp[j] ^= 1
+                if any(last[j] == i and pp[j] != rows[j][1] for j in newc):
+                    continue
+                key = tuple(pp[j] for j in newc if last[j] != i)
+                G[key] = G.get(key, 0) + f * pr
+        openc = [j for j in newc if last[j] != i]
+        F = G
+    return F.get((), Fraction(0))
+
+
+def test_dp_mass_error_within_its_bound():
+    rng = np.random.default_rng(35)
+    for trial in range(6):
+        n, m = (120, 45) if trial < 4 else (400, 150)
+        q = np.full(n, float(rng.choice([0.002, 0.003, 0.004, 1 / 3]))) if trial % 2 else rng.uniform(0.001, 0.6, n)
+        V, rows = Affine(), []
+        for j in range(m):
+            lo = int(j * (n - 6) / m)
+            S = [lo + d for d in range(6) if rng.random() < 0.6] or [lo]
+            r, b = sum(1 << i for i in S), int(rng.integers(0, 2))
+            W = V.copy()
+            if W.add(r, b):
+                V = W
+                rows.append((r, b))
+        D = Product(q)
+        dp = LinearOrderDP(V, D)
+        exact = banded_exact_mass(rows, n, q)
+        got = Fraction(dp.mass_m) * Fraction(2) ** dp.mass_e
+        assert exact > 0 and abs(got - exact) <= Fraction(dp.rel) * exact
+        if trial >= 4:
+            C = Circuit(n)
+            C.set_output(C.AND(*[C.XOR(*bit_list(r)) if b else C.NOT(C.XOR(*bit_list(r))) for r, b in rows]))
+            e = affine_envelope_estimate(C, D, eps=0.05, delta=0.01, rng=rng)
+            assert Fraction(e.lo) <= exact <= Fraction(e.hi)

@@ -1,11 +1,13 @@
 """Decompose-Force-Sample-Branch (DFSB): the Part-1 procedure.
 
 Recursively explain the rarity of C by exact structure, and sample only
-what is left. DFSB works on the NNF of C in which every gate of small
-support has been replaced by its reduced OBDD (small-cone canonicalisation,
-nnf.to_nnf), flattened with duplicate children removed, except that an
-*atom* (a node whose support has at most `exact_support` variables) is never
-merged into a larger parent. Rules, in this order, for a node h:
+what is left. DFSB works on the NNF of C in which every gate whose support
+has at most `small_cone` variables (default: `exact_support`) has been
+replaced by its reduced OBDD (small-cone canonicalisation, nnf.to_nnf),
+flattened with duplicate children removed, except that an *atom* (a node
+whose support has at most `exact_support` variables) is never merged into a
+larger parent. Opaque nodes are leaves: unit propagation ignores them and
+branching picks their smallest variable. Rules, in this order, for a node h:
 
   T   constants and literals: exact.
   T'  h is an atom: exact, by summing D over the 2^|var(h)| assignments of
@@ -21,9 +23,12 @@ merged into a larger parent. Rules, in this order, for a node h:
       N0/(4K) hits; estimated by Monte Carlo.
   E   envelope leaf: a syntactic envelope phi of h (rules of compile.py)
       passes the same pilot for E_Q[h/phi]. If phi has boxes, their pilot
-      masses are first re-estimated to ratio 1 + 1/(2L) with lower ends
-      >= 1/(16K) (L = boxes per derivation), else the test fails. A box-free
-      envelope of mass 0 makes h an exact zero.
+      masses are first re-estimated (level delta/(4 m r), at most
+      sample_cap(16K, 1/(2L), .) samples each) to ratio 1 + 1/(2L) with lower
+      ends >= 1/(16K) (L = boxes per derivation, r = boxes), else the test
+      fails; then the pilot proposal is within a factor e of the exact one on
+      every derivation, so acceptance certifies looseness <= 16 e K. A
+      box-free envelope of mass 0 makes h an exact zero.
   B   otherwise branch on the variable shared by the most children (ties:
       smallest index): P(h) = (1-q) P(h|x=0) + q P(h|x=1).
 
@@ -37,8 +42,9 @@ node operations, rounded outwards. Every leaf estimator is the doubling rule
 of stats.sequential_mean, capped at the sample size `sample_cap` that
 suffices (with probability 1 - delta/#leaves) for a leaf certified by phase
 1: mean >= 1/(16K) for S-leaves and box-free E-leaves; for E-leaves with
-boxes, importance-sampling mean >= 1/(64K) at accuracy eta/4 and box
-densities >= 1/(16K) at accuracy eta/(8L). At the cap a leaf returns its
+boxes (envelope.envelope_estimate, which re-estimates the boxes), the larger
+of the caps for importance-sampling mean >= 1/(64K) at accuracy eta/4 and
+for box densities >= 1/(16K) at accuracy eta/(8L). At the cap a leaf returns its
 current interval, which is still valid. Loose leaves get the same Monte
 Carlo rule with the smaller cap min(that cap, loose_cap). An E-leaf whose
 box rejection sampler exceeds its (polynomial) cap gets [0, 1].
@@ -233,7 +239,7 @@ def sample_cap(K: float, eta: float, delta: float, first: int = 1024) -> int:
 class DFSB:
     def __init__(self, C: Circuit, D: Product, K: float = 64.0, node_budget: int = 2000,
                  rng=None, use_envelopes: bool = True, shannon_env: int = 3, probe_root: bool = True,
-                 env_tau: float | None = 0.05, exact_support: int = 12, small_cone: int = 10,
+                 env_tau: float | None = 0.05, exact_support: int = 12, small_cone: int | None = None,
                  use_dense: bool = True, loose_cap: int = 10**5):
         self.C = C
         self.D = D
@@ -244,7 +250,8 @@ class DFSB:
         self.use_dense = use_dense
         self.shannon_env = shannon_env
         self.atom = exact_support
-        self.N = atom_nnf(C, exact_support, small_cone)
+        # small-cone canonicalisation threshold: by default the atom threshold
+        self.N = atom_nnf(C, exact_support, exact_support if small_cone is None else small_cone)
         self.nodes = 0
         self.pilot_evals = 0
         self.probe_root = probe_root
@@ -298,28 +305,61 @@ class DFSB:
     def _pilot_boxes(self, E) -> bool:
         """Re-estimate the pilot masses of E's boxes so that the proposal used
         by the envelope pilot is distorted by a factor at most e on every
-        derivation: each box interval must reach ratio 1 + 1/(2L) and have
-        lower end >= 1/(16K). Returns False if some box fails."""
+        derivation: each box interval (doubling rule, level delta/(4 m r),
+        at most sample_cap(16K, 1/(2L), .) samples) must reach ratio
+        1 + 1/(2L) and have lower end >= 1/(16K). Returns False if some box
+        fails; a box is abandoned as soon as its upper end is below 1/(16K)."""
         used = E.used_boxes()
         if not used:
             return True
         L = max(1, _max_boxes_per_derivation(E))
         eta_b = 1.0 / (2 * L)
+        floor = 1.0 / (16 * self.K)
         db = self.pilot_delta / (4 * self.budget * len(used))
         cap = sample_cap(16 * self.K, eta_b, db)
         for j in used:
             b = E.boxes[j]
-            est = sequential_mean(lambda k, b=b: self._draw(b.eval, k), eta_b, db, max_samples=cap)
-            self.pilot_evals += est.samples
-            if not (est.lo >= 1.0 / (16 * self.K) and est.hi <= (1 + eta_b) * est.lo):
+            total, N, stage, k, lo, hi = 0.0, 0, 0, 1024, 0.0, 1.0
+            ok = False
+            while N < cap:
+                stage += 1
+                k = min(k, cap - N)
+                total += float(self._draw(b.eval, k).sum())
+                N += k
+                l, h = kl_interval(total / N, N, db * 6.0 / (math.pi ** 2 * stage * stage))
+                lo, hi = max(lo, l), min(hi, h)
+                if hi < floor:
+                    break
+                if lo >= floor and hi <= (1 + eta_b) * lo:
+                    ok = True
+                    break
+                k = N
+            self.pilot_evals += N
+            if not ok:
                 return False
-            b.value, b.lo, b.hi = est.value, est.lo, est.hi
+            b.value, b.lo, b.hi = min(max(total / N, lo), hi), lo, hi
         return True
+
+    def _pilot_is(self, E, v: int, lm) -> bool:
+        """The (E) pilot: N0 samples of W = h/phi from E's proposal; accept if
+        their sum is at least N0/(4K)."""
+        Np = self._pilot_size()
+        try:
+            X = E.sample(self.D, Np, self.rng, lm)
+        except RuntimeError:  # a box's rejection sampler hit its cap
+            return False
+        self.pilot_evals += Np
+        c = self.N.eval_batch(X, v)
+        phi = E.evaluate(X)
+        w = np.where(c, 1.0 / np.maximum(phi, 1e-300), 0.0)
+        return w.sum() >= Np / (4 * self.K)
 
     def _pilot_env(self, v: int):
         """Envelope for rule (E): an Envelope if the pilot accepts it, the
         string "zero" if a box-free envelope has mass exactly 0 (then D(h) = 0),
-        or None."""
+        or None. With boxes, a first pilot with the compiler's rough box masses
+        screens out hopeless envelopes cheaply (declining (E) is always
+        allowed); the decisive pilot uses the re-estimated masses."""
         comp = EnvelopeCompiler(self.N, self.D, shannon=self.shannon_env, tau=self.env_tau, rng=self.rng)
         r = comp.env(v, {}, 0)
         self.pilot_evals += comp.pilot_evals
@@ -328,24 +368,19 @@ class DFSB:
         if E.kind[r] == "ONE":
             return None
         used = E.used_boxes()
-        if not self._pilot_boxes(E):
-            return None
         lm, _ = E.log_masses(self.D)
         if lm[r] == -math.inf:
             # phi = 0 D-almost surely and phi >= 1_h, so D(h) = 0 (box-free case)
             return "zero" if not used else None
+        if used:
+            if lm[r] >= 0.0 or not self._pilot_is(E, v, lm):
+                return None
+            if not self._pilot_boxes(E):
+                return None
+            lm, _ = E.log_masses(self.D)
         if lm[r] >= 0.0:  # mass >= 1: no better than Monte Carlo
             return None
-        Np = self._pilot_size()
-        try:
-            X = E.sample(self.D, Np, self.rng, lm)
-        except RuntimeError:  # a box's rejection sampler hit its cap
-            return None
-        self.pilot_evals += Np
-        c = self.N.eval_batch(X, v)
-        phi = E.evaluate(X)
-        w = np.where(c, 1.0 / np.maximum(phi, 1e-300), 0.0)
-        return E if w.sum() >= Np / (4 * self.K) else None
+        return E if self._pilot_is(E, v, lm) else None
 
     def build(self, v: int, root: bool = False, after_force: bool = False) -> TNode:
         N = self.N

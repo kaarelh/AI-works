@@ -22,14 +22,25 @@
   linear order of the coordinates (2^{lambda_i} states at position i).
 
 Every interval returned here contains p with probability >= 1 - delta for
-every circuit and every product distribution; a method that cannot certify
-anything returns [0, 1] or its deterministic upper bound.
+every circuit, every product distribution and (for XPT) every argument; a
+method that cannot certify anything returns [0, 1] or its deterministic upper
+bound.
+
+Floating point. Circuits are evaluated by Circuit.eval_packed, so a threshold
+gate means [fl-sum of w_i g_i, left to right, >= t - 1e-12]; the propagator
+reasons about exactly that function (rounded addition is monotone). Masses are
+carried as (mantissa, binary exponent, relative-error bound) with proven
+bounds (no logarithms), intervals are rounded outward, and a value that would
+underflow is replaced by a valid bound (the smallest positive double for an
+upper end), never by 0.
 """
 
 from __future__ import annotations
 
 import math
+import sys
 from dataclasses import dataclass, field
+from fractions import Fraction
 
 import numpy as np
 
@@ -38,6 +49,68 @@ from .dist import Product
 from .stats import Estimate, sequential_mean
 
 ONES = np.uint64(0xFFFFFFFFFFFFFFFF)
+
+
+# ============================================================ rounding helpers
+U53 = 2.0 ** -53            # unit roundoff of IEEE double (round to nearest)
+TINY = sys.float_info.min   # smallest positive normal double
+
+
+def _gamma(k: int) -> float:
+    """gamma_k = k u / (1 - k u): (1 + d_1)...(1 + d_k) with |d_i| <= u lies in
+    [1 - gamma_k, 1 + gamma_k] (Higham, Lemma 3.1); inflated slightly so that
+    the bound survives its own rounding."""
+    ku = k * U53
+    if ku >= 0.25:
+        return math.inf
+    return 1.01 * ku / (1.0 - ku)
+
+
+def _down(x: float) -> float:
+    """A float <= every real whose correctly rounded value is x (x >= 0)."""
+    return max(0.0, math.nextafter(x, -math.inf))
+
+
+def _up(x: float) -> float:
+    """A float >= every real whose correctly rounded value is x."""
+    return math.nextafter(x, math.inf)
+
+
+def _ldexp(x: float, e: int) -> float:
+    try:
+        return math.ldexp(x, e)
+    except OverflowError:
+        return math.inf
+
+
+def _ldexp_down(x: float, e: int) -> float:
+    """A float <= x * 2^e (x >= 0); exact unless the result is subnormal."""
+    y = _ldexp(x, e)
+    return y if y >= TINY or x == 0.0 else _down(y)
+
+
+def _ldexp_up(x: float, e: int) -> float:
+    """A float >= x * 2^e (x >= 0); positive whenever x > 0."""
+    y = _ldexp(x, e)
+    return y if y >= TINY or x == 0.0 else _up(y)
+
+
+def _scaled_interval(a_lo: float, a_hi: float, mant: float, exp: int, rel: float) -> tuple[float, float]:
+    """Outward-rounded [a_lo * M, a_hi * M] for an unknown M > 0 with
+    mant * 2^exp = M (1 + theta), |theta| <= rel <= 1/4."""
+    if rel > 0.25:
+        return 0.0, 1.0
+    f_lo = 1.0 if rel == 0 else _down(1.0 - rel)        # <= 1 / (1 + rel)
+    f_hi = 1.0 if rel == 0 else _up(1.0 + 2.0 * rel)    # >= 1 / (1 - rel)
+    lo = _ldexp_down(_down(_down(a_lo * mant) * f_lo), exp) if a_lo > 0 else 0.0
+    hi = _ldexp_up(_up(_up(a_hi * mant) * f_hi), exp) if a_hi > 0 else 0.0
+    return lo, min(hi, 1.0)
+
+
+def _log2_note(a_lo: float, a_hi: float, mant: float, exp: int) -> str:
+    """log2 of the interval ends before conversion to floats (for the note)."""
+    f = lambda a: (math.log2(a * mant) + exp) if a > 0 else -math.inf  # noqa: E731
+    return f"log2 bounds [{f(a_lo):.4f}, {f(a_hi):.4f}]"
 
 
 # ====================================================================== GF(2)
@@ -102,8 +175,12 @@ class Affine:
         return row, rhs
 
     def add(self, row: int, rhs: int) -> bool:
-        """Intersect with {row . x = rhs}; returns False if the result is empty."""
-        row, rhs = self.reduce(row, rhs)
+        """Intersect with {row . x = rhs}; returns False if the result is empty.
+        rhs must be 0 or 1 and row a nonnegative integer (anything else would
+        silently corrupt the system, so it raises)."""
+        if rhs not in (0, 1) or row < 0:
+            raise ValueError(f"Affine.add: bad constraint ({row!r}, {rhs!r})")
+        row, rhs = self.reduce(int(row), int(rhs))
         if row == 0:
             return rhs == 0
         self.rows[row.bit_length() - 1] = (row, rhs)
@@ -423,7 +500,10 @@ class Presolve:
     reduced: Circuit | None = None
     uniform_pivots: int = 0
     nonuniform: list = field(default_factory=list)   # pivots p with D_p != 1/2
-    log2_M: float = 0.0                              # log2 of the exact factor M
+    log2_M: float = 0.0                              # log2 of the factor M (for notes only)
+    M_mant: float = 1.0                              # M_mant * 2^M_exp = M (1 + theta),
+    M_exp: int = 0                                   # |theta| <= M_rel (M_rel = 0: exact)
+    M_rel: float = 0.0
 
     @property
     def rank(self) -> int:
@@ -556,10 +636,19 @@ def presolve(C: Circuit, D: Product | None = None, anf_cap: int = 64, use_solved
     nonu = [p for p in rref if q[p] != 0.5]
     P.nonuniform = nonu
     P.uniform_pivots = len(rref) - len(nonu) + len(solved)
-    lm = -float(P.uniform_pivots)
+    # M = 2^-(uniform pivots) * prod max(q_p, 1 - q_p), as a renormalised
+    # product: each factor (1 - q_p is one rounding) and each product is one
+    # rounding, frexp is exact, so M_mant * 2^M_exp = M (1 + theta) with
+    # |theta| <= gamma_{2k}; no logarithms, no underflow.
+    mant, e = 1.0, -P.uniform_pivots
     for p in nonu:
-        lm += math.log2(max(q[p], 1 - q[p]))
-    P.log2_M = lm
+        qp = float(q[p])
+        mant *= qp if qp >= 0.5 else 1.0 - qp
+        mant, de = math.frexp(mant)
+        e += de
+    P.M_mant, P.M_exp = mant, e
+    P.M_rel = _gamma(2 * len(nonu)) if nonu else 0.0
+    P.log2_M = math.log2(mant) + e
     return P
 
 
@@ -585,36 +674,46 @@ def presolve_estimate(C: Circuit, D: Product | None = None, eps: float = 0.1, de
     """Sound interval for p from the presolve. The residual mean E[W] is
     estimated by the doubling KL rule (or, if all pivots are uniform and
     `inner(Cr, D, eps, delta)` is given, by that sound estimator on the
-    reduced circuit). The certified upper bound p <= M always holds."""
+    reduced circuit). The certified upper bound p <= M always holds. The
+    interval is [a_lo M, a_hi M] rounded outward; when it lies below the
+    floating-point range the upper end is the smallest positive double and the
+    note gives the bounds in log2 form."""
     rng = np.random.default_rng() if rng is None else rng
     D = Product.uniform(C.n) if D is None else D
     P = presolve(C, D, anf_cap) if pre is None else pre
     if P.infeasible:
         return Estimate(0.0, 0.0, 0.0, 0, 0, delta, "presolve: inconsistent affine spine, p = 0")
     n = C.n
-    rel = 4 * (n + 2) * 2.0 ** -53
-    M_lo = 2.0 ** P.log2_M * (1 - rel)
-    M_hi = min(1.0, 2.0 ** P.log2_M * (1 + rel))
+    mant, ex, rel = P.M_mant, P.M_exp, P.M_rel
     note = f"presolve: rank {P.rank} (affine {len(P.rref)}, solved {len(P.solved)}), log2 M = {P.log2_M:.3f}"
     if inner is not None and not P.nonuniform:
-        e = inner(P.reduced, D, eps, delta)
-        lo, hi = e.lo * M_lo, min(e.hi * M_hi, M_hi)
-        return Estimate(min(max(e.value * 2.0 ** P.log2_M, lo), hi), lo, hi, e.samples, e.evaluations,
-                        delta, note + " | " + e.note)
+        e = inner(P.reduced, D, eps, delta)   # M = 2^-k exactly here
+        lo, hi = _scaled_interval(e.lo, min(e.hi, 1.0), mant, ex, rel)
+        val = min(max(_ldexp(e.value * mant, ex), lo), hi)
+        return Estimate(val, lo, hi, e.samples, e.evaluations, delta,
+                        note + " | " + e.note + "; " + _log2_note(e.lo, e.hi, mant, ex))
     Cr = P.reduced
-    tau = (n + 8) * 2.0 ** -52 if np.any(D.q != 0.5) else 0.0
+    # W is computed with relative error <= gamma_{3k} (k biased pivots: 1 - q,
+    # a division and a product each), i.e. absolute error <= gamma_{3k} as
+    # W <= 1; the Bernoulli sampler of a biased D is off by <= n 2^-53 in total
+    # variation. Both shift E[W] by at most tau.
+    k = len(P.nonuniform)
+    tau = (_gamma(3 * k + 2) + (n + 2) * U53) if np.any(D.q != 0.5) else 0.0
 
-    def draw(k):
-        X = D.sample_packed(k, rng)
-        y = unpack_bits(Cr.eval_packed(X), k).astype(float)
+    def draw(kk):
+        X = D.sample_packed(kk, rng)
+        y = unpack_bits(Cr.eval_packed(X), kk).astype(float)
         if P.nonuniform:
-            y *= _pivot_weight(P, D, X, k)
+            y *= _pivot_weight(P, D, X, kk)
         return y
 
     est = sequential_mean(draw, 0.999 * eps if tau == 0 else 0.99 * eps, delta, max_samples=max_samples)
-    lo = max(0.0, est.lo - tau) * M_lo
-    hi = min(1.0, est.hi + tau) * M_hi
-    val = min(max(est.value * 2.0 ** P.log2_M, lo), hi)
+    a_lo = _down(max(0.0, est.lo - tau)) if tau else est.lo
+    a_hi = min(1.0, _up(est.hi + tau)) if tau else est.hi
+    lo, hi = _scaled_interval(a_lo, a_hi, mant, ex, rel)
+    val = min(max(_ldexp(est.value * mant, ex), lo), hi)
+    if hi < 1e-300:
+        note += "; " + _log2_note(a_lo, a_hi, mant, ex)
     return Estimate(val, lo, hi, est.samples, est.samples, delta, note)
 
 
@@ -623,18 +722,47 @@ class TooWide(Exception):
     pass
 
 
+def valid_order(order, n: int):
+    """order as a list of Python ints if it is a permutation of range(n),
+    otherwise None (explicit checks: no assert, which python -O removes)."""
+    if order is None or isinstance(order, (str, bytes)):
+        return None
+    try:
+        out = list(order)
+    except TypeError:
+        return None
+    if len(out) != n or not all(isinstance(i, (int, np.integer)) and not isinstance(i, bool) for i in out):
+        return None
+    out = [int(i) for i in out]
+    return out if sorted(out) == list(range(n)) else None
+
+
 class LinearOrderDP:
-    """Exact D(V) and exact sampling from D restricted to V = {Ax = b} along a
+    """D(V) and exact sampling from D restricted to V = {Ax = b} along a
     linear order of the coordinates. After position t the state is the
     partial syndrome s = A_{<=t} x_{<=t}; it is kept only if it is live,
     s in b + col(A_{>t}). Live states form a coset of
     col(A_{<=t}) cap col(A_{>t}), of size 2^{lambda_t} with
-    lambda_t = rank A_{<=t} + rank A_{>t} - rank A."""
+    lambda_t = rank A_{<=t} + rank A_{>t} - rank A.
+
+    Floating point: every level is renormalised by an exact power of two and
+    must stay in the normal range (otherwise TooWide is raised and callers
+    relax the piece). A stored value is fl(fl(f0 * fl(1 - q)) + fl(f1 * q))
+    with f0, f1 stored values of the previous level, so each level multiplies
+    the relative error by at most (1 + u)^4 (three roundings, plus at most u
+    times the normal sum for a product that underflows). Hence
+    mass_m * 2^mass_e = D(V) (1 + theta) with |theta| <= gamma_{4n} <= rel =
+    gamma_{5n+5} (tested against exact rationals). A mass of 0 is exact: it
+    means that no state survives, by exact integer logic."""
 
     def __init__(self, V: Affine, D: Product, order=None, max_width: int = 16):
         n = D.n
-        order = list(range(n)) if order is None else [int(i) for i in order]
-        assert sorted(order) == list(range(n))
+        if order is None:
+            order = list(range(n))
+        else:
+            order = valid_order(order, n)
+            if order is None:
+                raise TooWide("the order is not a permutation of the coordinates")
         rows = list(V.rows.values())
         m = len(rows)
         cols = [0] * n
@@ -642,6 +770,8 @@ class LinearOrderDP:
         for j, (row, rhs) in enumerate(rows):
             b |= rhs << j
             for i in bit_list(row):
+                if i >= n:
+                    raise TooWide("constraint on a coordinate outside the distribution")
                 cols[i] |= 1 << j
         # suffix bases col(A_{>t}) for t = 0..n
         suffix: list[dict[int, int]] = [None] * (n + 1)
@@ -670,22 +800,23 @@ class LinearOrderDP:
             return True
 
         self.order, self.n, self.m = order, n, m
-        F = {0: 1.0} if live(0, 0) else {}
-        self.levels = [([0], np.array([1.0]))] if F else [([], np.array([]))]
+        self.levels = [([0], np.array([1.0]))] if live(0, 0) else [([], np.array([]))]
         self.trans = []
         self.width = 0
-        log_scale = 0.0  # true F_t = stored F_t * exp(log_scale)
+        scale_exp = 0  # true F_t = stored F_t * 2^scale_exp, exactly
         cap = 1 << max_width
         for t in range(1, n + 1):
             i = order[t - 1]
             qi = float(D.q[i])
+            q0 = 1.0 - qi
             a = cols[i]
             prev_states, prev_prob = self.levels[-1]
             pidx = {s: k for k, s in enumerate(prev_states)}
             new: dict[int, float] = {}
             for s, f in zip(prev_states, prev_prob):
+                f = float(f)
                 if qi < 1 and live(s, t):
-                    new[s] = new.get(s, 0.0) + f * (1 - qi)
+                    new[s] = new.get(s, 0.0) + f * q0
                 s1 = s ^ a
                 if qi > 0 and live(s1, t):
                     new[s1] = new.get(s1, 0.0) + f * qi
@@ -693,36 +824,44 @@ class LinearOrderDP:
                 raise TooWide(f"{len(new)} live states at position {t}")
             self.width = max(self.width, len(new).bit_length() - 1 if new else 0)
             states = list(new)
-            prob = np.array([new[s] for s in states])
-            if len(states) and prob.min() <= 0.0:
-                raise TooWide("floating-point underflow in the dynamic program")
+            prob = np.array([new[s] for s in states], dtype=float)
+            if len(states) and prob.min() < TINY:
+                raise TooWide("a live state's mass left the normal floating-point range")
             p1 = np.empty(len(states))
             i0 = np.empty(len(states), dtype=np.int64)
             i1 = np.empty(len(states), dtype=np.int64)
             for k, s in enumerate(states):
                 j0 = pidx.get(s, -1)
                 j1 = pidx.get(s ^ a, -1)
-                f1 = prev_prob[j1] * qi if j1 >= 0 else 0.0
+                f1 = float(prev_prob[j1]) * qi if j1 >= 0 else 0.0
                 p1[k] = min(1.0, f1 / prob[k])
                 i0[k], i1[k] = j0, j1
             if len(states):
-                mx = float(prob.max())
-                prob = prob / mx
-                log_scale += math.log(mx)
+                _, e = math.frexp(float(prob.max()))
+                prob = np.ldexp(prob, -e)   # exact while the values stay normal
+                scale_exp += e
+                if prob.min() < TINY:
+                    raise TooWide("a live state's mass left the normal floating-point range")
             self.trans.append((p1, i0, i1))
             self.levels.append((states, prob))
         last_states, last_prob = self.levels[-1]
-        if b in last_states:
-            self.mass = float(last_prob[last_states.index(b)]) * math.exp(log_scale)
-            if self.mass <= 0.0 or not math.isfinite(self.mass):
-                raise TooWide("mass not representable in floating point")
-        else:
-            self.mass = 0.0  # exactly: no point of V has positive probability
         self.b = b
+        self.rel = _gamma(5 * n + 5)
+        if b in last_states:
+            self.mass_m = float(last_prob[last_states.index(b)])
+            self.mass_e = scale_exp
+        else:
+            self.mass_m, self.mass_e = 0.0, 0  # exactly: no point of V has positive probability
+
+    @property
+    def mass(self) -> float:
+        """D(V) as a float (may underflow; use mass_m, mass_e for tiny masses)."""
+        return _ldexp(self.mass_m, self.mass_e)
 
     def sample(self, N: int, rng: np.random.Generator) -> np.ndarray:
         """(N, n) bool samples from D conditioned on V (requires mass > 0)."""
-        assert self.mass > 0
+        if not self.mass_m > 0:
+            raise ValueError("LinearOrderDP.sample: V has probability 0")
         X = np.zeros((N, self.n), dtype=bool)
         states, _ = self.levels[-1]
         cur = np.full(N, states.index(self.b), dtype=np.int64)
@@ -735,21 +874,24 @@ class LinearOrderDP:
 
 
 class Piece:
-    """An affine subspace with its exact D-mass and an exact D|V sampler:
-    closed form when every constraint is on uniform coordinates, otherwise
-    the linear-order dynamic program (which raises TooWide above the cap)."""
+    """An affine subspace with its D-mass, as mass_m * 2^mass_e = D(V)(1 + theta)
+    with |theta| <= rel, and an exact D|V sampler: closed form (exact mass
+    2^-codim) when every constraint is on uniform coordinates, otherwise the
+    linear-order dynamic program (which raises TooWide above the cap)."""
 
     def __init__(self, V: Affine, D: Product, U: int, order=None, max_width: int = 16):
         self.V = V
         self.D = D
         if V.support() & ~U == 0:
             self.dp = None
-            self.mass = 2.0 ** -V.rank if V.rank < 1020 else 0.0
-            if self.mass == 0.0:
-                raise TooWide("rank too large for floating point")
+            self.mass_m, self.mass_e, self.rel = 0.5, 1 - V.rank, 0.0
         else:
             self.dp = LinearOrderDP(V, D, order, max_width)
-            self.mass = self.dp.mass
+            self.mass_m, self.mass_e, self.rel = self.dp.mass_m, self.dp.mass_e, self.dp.rel
+
+    @property
+    def mass(self) -> float:
+        return _ldexp(self.mass_m, self.mass_e)
 
     def sample_packed(self, N: int, rng: np.random.Generator) -> np.ndarray:
         from .circuit import pack_rows
@@ -767,7 +909,8 @@ class Piece:
 
 def make_pieces(spaces: list[Affine], D: Product, max_width: int = 16, orders=None):
     """Pieces for a list of subspaces; a subspace whose dynamic program is too
-    wide is replaced by its constraints on uniform coordinates (a superset)."""
+    wide (or leaves the floating-point range, or comes with an invalid order)
+    is replaced by its constraints on uniform coordinates (a superset)."""
     U = uniform_mask(D)
     out, relaxed = [], 0
     for k, V in enumerate(spaces):
@@ -775,10 +918,7 @@ def make_pieces(spaces: list[Affine], D: Product, max_width: int = 16, orders=No
             out.append(Piece(V, D, U, None if orders is None else orders[k], max_width))
         except TooWide:
             relaxed += 1
-            try:
-                out.append(Piece(restrict_to(V, U), D, U))
-            except TooWide:
-                out.append(Piece(FULL, D, U))
+            out.append(Piece(restrict_to(V, U), D, U))
     return out, relaxed
 
 
@@ -788,22 +928,47 @@ def klm_estimate(C: Circuit, D: Product, pieces: list[Piece], eps: float = 0.1, 
     """Interval for p assuming C^-1(1) is contained in the union of the
     pieces (phi = number of pieces containing x): pick a piece with
     probability proportional to its mass, X ~ D|piece, W = C(X)/phi(X) in
-    [0, 1], E W = p / Z. Floating point: masses carry relative error eta and
-    the sampler is off by at most tau in total variation; the interval is
-    widened by both."""
+    [0, 1], E W = p / Z.
+
+    Floating point (all bounds proved, none heuristic). Masses are scaled by a
+    common power of two 2^E; a piece whose scaled mass would leave the normal
+    range (below 2^-1000 of the largest) is not sampled and its mass, at most
+    2^-999 * 2^E each, is added to the upper end (p <= D(C and union of the
+    sampled pieces) + their masses). With computed masses G_j = mu_j (1 +
+    theta_j), |theta_j| <= rel, and selection proportional to G_j, the
+    Karp-Luby-Madras identity becomes sum_j G_j * E W in [(1 - rel) p,
+    (1 + rel) p]; the scaled total is an exactly rounded rational sum (one
+    rounding). The realised sampler differs from the ideal one by at most tau
+    in total variation: the cumulative selection probabilities are correctly
+    rounded (2u each) and the uniform draw has 53-bit granularity (T 2^-52
+    in all); a dynamic-programming sampler multiplies path probabilities
+    that telescope exactly, with relative error gamma_{3n} plus at most 3u +
+    2^-53 per coordinate; the Bernoulli coordinates of D cost 2^-53 each.
+    The interval for E W is widened by tau and the result is rounded
+    outward."""
     rng = np.random.default_rng() if rng is None else rng
     n = C.n
-    pieces = [P for P in pieces if P.mass > 0 or P.dp is None]
-    T = len(pieces)
-    if T == 0:
+    pieces = [P for P in pieces if P.mass_m > 0]
+    if not pieces:
         return Estimate(0.0, 0.0, 0.0, 0, 0, delta, note + "empty envelope: p = 0")
-    masses = np.array([P.mass for P in pieces])
-    Z = float(masses.sum())
-    eta = 8 * (n + T + 4) * 2.0 ** -53
-    tau = (T + 2 * n + 16) * 2.0 ** -48
-    if Z == 0.0:
-        return Estimate(0.0, 0.0, 0.0, 0, 0, delta, note + "envelope mass 0")
-    cum = np.cumsum(masses / Z)
+    E = max(P.mass_e for P in pieces)
+    kept = [P for P in pieces if P.mass_e - E >= -1000]
+    n_drop = len(pieces) - len(kept)
+    slack = n_drop * 2.0 ** -999        # scaled upper bound on the dropped masses
+    T = len(kept)
+    scaled = [math.ldexp(P.mass_m, P.mass_e - E) for P in kept]   # exact: normal range
+    exact_cum = []
+    acc = Fraction(0)
+    for x in scaled:
+        acc += Fraction(x)
+        exact_cum.append(acc)
+    Zs = float(acc)                      # correctly rounded: relative error <= u
+    rel = max(P.rel for P in kept)
+    eta = 2.0 * (rel + 2 * U53)
+    if eta > 0.25:
+        return Estimate(0.0, 0.0, 1.0, 0, 0, delta, note + "mass bounds too weak; trivial interval")
+    tau = (2 * T + 16 * n + 32) * 2.0 ** -52
+    cum = np.array([float(c / acc) for c in exact_cum])
     cum[-1] = 1.0
     evals = [0]
 
@@ -814,10 +979,10 @@ def klm_estimate(C: Circuit, D: Product, pieces: list[Piece], eps: float = 0.1, 
         for t in np.unique(j):
             idx = np.nonzero(j == t)[0]
             kk = len(idx)
-            X = pieces[t].sample_packed(kk, rng)
+            X = kept[t].sample_packed(kk, rng)
             c = unpack_bits(C.eval_packed(X), kk)
             phi = np.zeros(kk)
-            for Pc in pieces:
+            for Pc in kept:
                 phi += unpack_bits(Pc.V.contains_packed(X), kk)
             w = np.zeros(kk)
             ok = c & (phi > 0)
@@ -827,16 +992,29 @@ def klm_estimate(C: Circuit, D: Product, pieces: list[Piece], eps: float = 0.1, 
         return out
 
     est = sequential_mean(draw, 0.99 * eps, delta, max_samples=max_samples)
-    Zlo, Zhi = Z * (1 - eta), Z * (1 + eta)
-    lo = max(0.0, est.lo - tau) * Zlo
-    hi = min(1.0, min(1.0, est.hi + tau) * Zhi, Zhi)
-    val = min(max(est.value * Z, lo), hi)
-    return Estimate(val, lo, hi, est.samples, evals[0], delta,
-                    note + f"affine envelope: {T} pieces, mass {Z:.4g}")
+    a_lo = _down(max(0.0, est.lo - tau))
+    a_hi = min(1.0, _up(est.hi + tau))
+    # p in [Zs a_lo (1 - eta), Zs a_hi (1 + eta) + slack] * 2^E, rounded outward
+    lo_s = _down(_down(Zs * a_lo) * _down(1.0 - eta)) if a_lo > 0 else 0.0
+    hi_s = _up(_up(Zs * a_hi) * _up(1.0 + eta))
+    hi_s = _up(hi_s + slack) if slack else hi_s
+    lo = _ldexp_down(lo_s, E) if lo_s > 0 else 0.0
+    hi = min(1.0, _ldexp_up(hi_s, E))
+    val = min(max(_ldexp(est.value * Zs, E), lo), hi)
+    zl = math.log2(Zs) + E
+    msg = note + f"affine envelope: {T} pieces, mass {_ldexp(Zs, E):.4g}"
+    if n_drop:
+        msg += f" (+{n_drop} negligible pieces bounded)"
+    if hi < 1e-300:
+        msg += f"; log2 mass {zl:.4f}; log2 bounds [{(math.log2(lo_s) + E) if lo_s > 0 else -math.inf:.4f}, " \
+               f"{math.log2(hi_s) + E:.4f}]"
+    return Estimate(val, lo, hi, est.samples, evals[0], delta, msg)
 
 
 # =========================================================== affine envelope
 def _simplify(L: list[Affine]) -> list[Affine]:
+    if len(L) == 1:   # nothing to deduplicate (and S.key() costs O(rank^2))
+        return [FULL] if L[0].rank == 0 else list(L)
     seen, out = set(), []
     for S in L:
         if S.rank == 0:
@@ -935,18 +1113,48 @@ class Contradiction(Exception):
     pass
 
 
+def thr_sum(w, bits) -> float:
+    """The weighted sum exactly as Circuit.eval_packed computes it: start at
+    0.0 and add w_i * float(bit_i) left to right in IEEE double."""
+    s = 0.0
+    for wi, b in zip(w, bits):
+        s += wi * (1.0 if b else 0.0)
+    return s
+
+
 class Propagator:
     """Gate propagation plus Gaussian elimination on certified affine gates.
     Rules: (R1) gate semantics forwards and backwards; (R2) a certified affine
     gate with a known value adds its form to the affine system S; (R3) a
     certified affine gate whose form is constant on V(S) gets that value. All
     rules are valid inferences about the true gate values of any x that
-    satisfies the current state."""
+    satisfies the current state.
+
+    Threshold gates are reasoned about as the evaluator computes them: the
+    left-to-right rounded sum of thr_sum compared with t - 1e-12. With finite
+    weights the partial sums are never NaN and rounded addition is monotone,
+    so the sum is monotone in every occurrence of every child (nondecreasing
+    for w > 0, nonincreasing for w < 0); setting each unknown occurrence
+    independently to its extreme value bounds the sum over all consistent
+    inputs (a relaxation when a child occurs twice). Non-finite weights only
+    allow forward evaluation with all children known."""
 
     def __init__(self, C: Circuit, anf_cap: int = 64):
         self.C = C
         self.cone = C.cone()
         self.aff = certified_affine(C, anf_cap)
+
+    @staticmethod
+    def _thr_extreme(ch, w, cv, high, fixed=None, fixed_b=None) -> float:
+        bits = []
+        for u, wi, c in zip(ch, w, cv):
+            if u == fixed:
+                bits.append(fixed_b)
+            elif c is not None:
+                bits.append(c)
+            else:   # the value that makes w_i * b largest (high) or smallest
+                bits.append(int(wi > 0) if high else int(wi < 0))
+        return thr_sum(w, bits)
 
     def run(self, S: Affine, sigma: dict[int, int]):
         C = self.C
@@ -1012,115 +1220,144 @@ class Propagator:
                         changed |= setv(v, sum(cv) & 1)
                     elif len(unk) == 1 and val is not None:
                         s = sum(c for c in cv if c is not None)
-                        # repeated children: a child listed twice cancels; handle generally
+                        # a child listed twice cancels; infer only for a single occurrence
                         if ch.count(unk[0]) == 1:
                             changed |= setv(unk[0], (val ^ s) & 1)
                 elif op == "THR":
                     w, t = C.params[v]
-                    t = t - 1e-12  # same comparison as Circuit.eval
-                    if len(set(ch)) != len(ch):
-                        if all(c is not None for c in cv):
-                            changed |= setv(v, int(sum(wi * c for wi, c in zip(w, cv)) >= t))
+                    tt = t - 1e-12  # the comparison of Circuit.eval_packed
+                    if all(c is not None for c in cv):
+                        changed |= setv(v, int(thr_sum(w, cv) >= tt))
                         continue
-                    lo = sum(min(0.0, wi) if c is None else wi * c for wi, c in zip(w, cv))
-                    hi = sum(max(0.0, wi) if c is None else wi * c for wi, c in zip(w, cv))
-                    if lo >= t:
+                    if not all(math.isfinite(wi) for wi in w):
+                        continue
+                    if self._thr_extreme(ch, w, cv, high=False) >= tt:
                         changed |= setv(v, 1)
-                    elif hi < t:
+                    elif not self._thr_extreme(ch, w, cv, high=True) >= tt:
                         changed |= setv(v, 0)
                     val = sigma.get(v)
-                    for u, wi, c in zip(ch, w, cv):
-                        if c is not None or wi == 0:
-                            continue
-                        good, bad = (1, 0) if wi > 0 else (0, 1)
-                        if val == 1 and hi - abs(wi) < t:      # u at its bad value cannot reach t
-                            changed |= setv(u, good)
-                        elif val == 0 and lo + abs(wi) >= t:   # u at its good value forces >= t
-                            changed |= setv(u, bad)
+                    if val is None:
+                        continue
+                    for u in dict.fromkeys(u for u, c in zip(ch, cv) if c is None):
+                        for bb in (0, 1):
+                            if val == 1 and not self._thr_extreme(ch, w, cv, True, u, bb) >= tt:
+                                changed |= setv(u, 1 - bb)   # u = bb cannot reach the threshold
+                            elif val == 0 and self._thr_extreme(ch, w, cv, False, u, bb) >= tt:
+                                changed |= setv(u, 1 - bb)   # u = bb forces the threshold
         return S, sigma
 
 
+def _is_int(x) -> bool:
+    return isinstance(x, (int, np.integer))
+
+
+def parse_split(C: Circuit, node):
+    """The split of an internal node, normalised to ('gate', g) or
+    ('form', mask, c) with c in {0, 1}, or None if the node is not a
+    well-formed internal node (it is then treated as an open leaf, which is
+    always sound). Explicit type and range checks on every prover field."""
+    if not isinstance(node, dict):
+        return None
+    sp, ch = node.get("split"), node.get("children")
+    if not isinstance(sp, (list, tuple)) or not isinstance(ch, (list, tuple)) or len(ch) != 2 or not sp:
+        return None
+    if not isinstance(sp[0], str):
+        return None
+    if sp[0] == "gate":
+        if len(sp) == 2 and _is_int(sp[1]) and 0 <= int(sp[1]) < len(C.ops):
+            return ("gate", int(sp[1]))
+        return None
+    if sp[0] == "form":
+        if len(sp) not in (2, 3) or not isinstance(sp[1], (list, tuple)):
+            return None
+        if not all(_is_int(i) and 0 <= int(i) < C.n for i in sp[1]):
+            return None
+        c = sp[2] if len(sp) == 3 else 0
+        if not _is_int(c) or int(c) not in (0, 1):
+            return None
+        mask = 0
+        for i in sp[1]:
+            mask ^= 1 << int(i)
+        return ("form", mask, int(c))
+    return None
+
+
 def _apply(state, split, branch):
+    """Add the branch assumption of a parsed split to a copy of the state."""
     S, sigma = state
     S, sigma = S.copy(), dict(sigma)
-    kind = split[0]
-    if kind == "form":
-        mask = 0
-        for i in split[1]:
-            mask ^= 1 << int(i)
-        c = int(split[2]) if len(split) > 2 else 0
-        if not S.add(mask, branch ^ c):
+    if split[0] == "form":
+        if not S.add(split[1], branch ^ split[2]):
             raise Contradiction
-    elif kind == "gate":
-        g = int(split[1])
+    else:
+        g = split[1]
         if sigma.get(g, branch) != branch:
             raise Contradiction
         sigma[g] = branch
-    else:
-        raise ValueError(split)
     return S, sigma
 
 
-def _well_formed(C: Circuit, node) -> bool:
-    """An internal node with a valid split and two children; anything else
-    is treated as an open leaf (which is always sound)."""
-    try:
-        sp, ch = node["split"], node["children"]
-        if len(ch) != 2 or not all(isinstance(c, dict) for c in ch):
-            return False
-        if sp[0] == "gate":
-            return 0 <= int(sp[1]) < len(C.ops)
-        if sp[0] == "form":
-            return all(0 <= int(i) < C.n for i in sp[1]) and len(sp) <= 3
-        return False
-    except (KeyError, TypeError, IndexError, ValueError):
-        return False
-
-
-def xpt_check(C: Circuit, arg: dict, anf_cap: int = 64):
+def xpt_check(C: Circuit, arg, anf_cap: int = 64):
     """Deterministic part of the XPT verifier. Returns (open leaves, stats):
-    the list of (V_leaf, order) for open leaves and for closed leaves whose
-    refutation failed (downgraded to open, which is sound), and counters."""
+    the list of (V_leaf, order) for open leaves, for closed leaves whose
+    refutation failed and for malformed nodes (all treated as open, which is
+    sound), and counters. The walk is iterative (no recursion limit), and an
+    order is used only if it is a permutation of range(n)."""
     Pg = Propagator(C, anf_cap)
-    stats = dict(nodes=0, closed=0, open=0, downgraded=0)
+    stats = dict(nodes=0, closed=0, open=0, downgraded=0, bad_orders=0)
     leaves = []
-
-    def walk(node, state):
+    stack = [(arg, Affine(), {C.output: 1})]
+    while stack:
+        node, S0, sig0 = stack.pop()
         stats["nodes"] += 1
         try:
-            S, sigma = Pg.run(state[0].copy(), dict(state[1]))
+            S, sigma = Pg.run(S0.copy(), dict(sig0))
         except Contradiction:
-            stats["closed"] += 1
-            return  # no x with C(x) = 1 reaches this node, whatever its label
-        if _well_formed(C, node):
+            stats["closed"] += 1  # no x with C(x) = 1 reaches this node, whatever its label
+            continue
+        sp = parse_split(C, node)
+        if sp is not None:
+            kids = []
             for b in (0, 1):
                 try:
-                    st = _apply((S, sigma), node["split"], b)
+                    S1, sig1 = _apply((S, sigma), sp, b)
                 except Contradiction:
                     stats["closed"] += 1
                     continue
-                walk(node["children"][b], st)
-            return
-        if node.get("leaf") == "closed":
-            stats["downgraded"] += 1
+                kids.append((node["children"][b], S1, sig1))
+            stack.extend(reversed(kids))   # visit branch 0 first
+            continue
+        order = None
+        if isinstance(node, dict):
+            if isinstance(node.get("leaf"), str) and node.get("leaf") == "closed":
+                stats["downgraded"] += 1
+            if node.get("order") is not None:
+                order = valid_order(node.get("order"), C.n)
+                stats["bad_orders"] += order is None
         stats["open"] += 1
-        leaves.append((S, node.get("order")))
-
-    walk(arg, (Affine(), {C.output: 1}))
+        leaves.append((S, order))
     return leaves, stats
 
 
-def xpt_verify(C: Circuit, D: Product | None, arg: dict, eps: float = 0.1, delta: float = 0.05, rng=None,
+def xpt_verify(C: Circuit, D: Product | None, arg, eps: float = 0.1, delta: float = 0.05, rng=None,
                anf_cap: int = 64, max_width: int = 16, max_samples: int = 10**6) -> Estimate:
     """XPT verifier: the deterministic check gives 1_C <= sum over open leaves
     of 1_{V_leaf} for every argument; then the KLM estimator. Sound for every
-    circuit and every argument (malformed parts only loosen the envelope)."""
+    circuit and every argument: malformed nodes become open leaves, malformed
+    orders are ignored, and wide orders relax the piece."""
     D = Product.uniform(C.n) if D is None else D
-    leaves, st = xpt_check(C, arg, anf_cap)
+    try:
+        leaves, st = xpt_check(C, arg, anf_cap)
+    except Exception as ex:  # defensive: an unforeseen input; the whole cube is a valid piece
+        leaves = [(Affine(), None)]
+        st = dict(nodes=0, closed=0, open=1, downgraded=0, bad_orders=0)
+        st["error"] = type(ex).__name__
     spaces = [S for S, _ in leaves]
     orders = [o for _, o in leaves]
     pieces, relaxed = make_pieces(spaces, D, max_width, orders)
     note = f"XPT: {st['nodes']} nodes, {st['closed']} closed, {st['open']} open ({st['downgraded']} downgraded); "
+    if st["bad_orders"]:
+        note += f"{st['bad_orders']} malformed orders ignored; "
     if relaxed:
         note += f"{relaxed} relaxed; "
     return klm_estimate(C, D, pieces, eps, delta, rng, max_samples, note)
@@ -1140,15 +1377,20 @@ def xpt_honest(C: Circuit, splits: list, anf_cap: int = 64) -> dict:
         if depth == len(splits):
             return {"leaf": "open"}
         sp = list(splits[depth])
+        node = {"split": sp, "children": [None, None]}
+        parsed = parse_split(C, node)
+        if parsed is None:
+            raise ValueError(f"xpt_honest: malformed split {sp!r}")
         kids = []
         for b in (0, 1):
             try:
-                st = _apply((S, sigma), sp, b)
+                st = _apply((S, sigma), parsed, b)
             except Contradiction:
                 kids.append({"leaf": "closed"})
                 continue
             kids.append(build(st, depth + 1))
-        return {"split": sp, "children": kids}
+        node["children"] = kids
+        return node
 
     return build((Affine(), {C.output: 1}), 0)
 
