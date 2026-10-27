@@ -891,7 +891,30 @@ runs); CPU is process seconds per fit, under load from other jobs:
      come from the same three datasets whose test cells rule (ii) scores. So the image numbers are not independent of
      the designs either.
    - *The killed session.* Its test-set looks on MNIST and Fashion-MNIST (item 2) also fall on those cells.
-9. PLACEHOLDER: Part 9 audits (protocol, compute, discreteness, fairness), if run, and what was done on their findings.
+9. **Part 9 audits** (`audit/`; four independent auditors, code and process only, run 02:00–02:55 UTC on 27 October
+   before any v2 held-out result was read; none reported a blocker). Major findings and what was done:
+
+   | audit | finding | action |
+   |---|---|---|
+   | protocol M1 | `dlheld5`'s family was written after S's limits were read and lies inside S's class | Amendment 3: `dlheld6`, written blind to the design; Q1 answered on it |
+   | protocol M2 | `dlheld4`'s exposure included the orchestrator's prompt and parameters set after it | item 1; p9_sum/DESIGN.md correction; dlheld4 secondary |
+   | compute F1 | v2's image fits take 22–29 CPU-min at n = 60000, over builder I1's 15-min target; `force_col_wise` not applied | CPU reported next to FLOPs everywhere (§7, RESULTS.md) |
+   | compute F2 | projected Fashion-MNIST n = 3000 cost ≈ 0.94 (0.77–1.12) of the budget, invisible to the guard | not run (Fashion-MNIST regression grid not run); disclosed in §7 |
+   | discreteness D1 | the pooling sets recover the pixel grid (on permuted `qd_dev`, 98% of S_i(4) members within 1 grid step) | wording (§9); controls `mlp_pool` and `cnn` (Amendment 4, C1–C2) |
+   | discreteness D2 | prototype-pair features are continuous, unfitted oblique projections | wording (§4.1, §9) |
+   | discreteness D3 | what carries the image gain was not recorded; ggbt's gain is confounded with more boosting rounds | the evaluator records attribution from 03:0x UTC (Amendment 4, C3); confound disclosed |
+   | fairness F1 | the image references are not at the FLOP frontier (a width-512 MLP beats the 3-net ensemble at n = 60000 on dev) | Amendment 4, R1 `mlp_wide` / `mlp_wide1`; Q2 also against `mlp_best+` |
+   | fairness F2 | FLOP-equal is not CPU-equal (4–12× the CPU of the budget's MLP runs) | Amendment 4, R2 `mlp_xl` (CPU-matched) |
+   | fairness F3 | an MLP is the comparator only formally, since the member recovers locality | wording; `cnn` context; the information-matched GD methods (Le Roux et al. 2007; Coates & Ng 2011; Neyshabur 2020) cited, not run |
+
+   Minor findings, all acted on: commit times in PROTOCOL.md (protocol m1a); learner md5 per cell (m1b); the killed I2's
+   `qd_dev` test look recorded (m2; p9_bank/DESIGN.md); the log lines the orchestrator saw before the freeze recorded (m3);
+   rule (i) called a sanity gate, in-sample (m4; item 8); prediction cost table (compute F3; §7); DFG v1.2's sum search
+   share corrected (compute F4–F5; §7); `mlp_l2unit` restored to the QuickDraw tables (fairness F5); `mlp_strong`'s
+   quantile encoding on QuickDraw documented (fairness F4 and discreteness D7: quantile was the better encoding in every
+   paired probe, so it was not rerun); toy weight decay strengthened on `dlheld6` (fairness F6; Amendment 4, R3);
+   `ggbt` invariant in distribution only (discreteness D4); the sum blocks' spectral seeds not load-bearing on 10 dev fits
+   and v1.1's (u·x)² block redundant on 3 (discreteness D5; not ablated on held-out data).
 
 ## 9. Limitations
 
