@@ -1,4 +1,21 @@
-"""hyb_portfolio2 (Part 9): the Part 8 portfolio with (i) its DFG member switched to DFG v1.2 = DFG v1.1 + sum-feature
+"""p10_codes (Part 10, image builder I2): v2 = hyb_portfolio2 (part9/hyb_portfolio2/learner.py, md5 e38af404...) with one
+change, in its image member 'gates' (ggbt's feature bank and LightGBM layout); everything else is v2's code, unchanged.
+
+THE CHANGE (see DESIGN.md).  ggbt's bank [x, pooled sums at k = 4, 9, 16, 300 prototype-pair projections] becomes
+  [x, pooled sums at k = 4, 9, 16, BARS],  with no prototype pairs and a smaller per-tree column fraction,
+where the bars are discrete local codes on the data-recovered topology: every non-constant pixel i has 8 most-correlated
+pixels (ranks 2..9 of the same ranked correlation lists that give v2's pooling sets); they are paired into 4 'axes' by
+least mutual correlation (on a grid: opposite neighbours), and the bar of (i, axis) is the straight run of pixels through
+i along that axis, continued by the same pairing rule at the next pixel ('go straight on'), BAR_L steps each way.  A bar
+feature is the subset sum of the pixels on it (weights in {0, 1}); 4 bars per pixel per length.  Split thresholds are
+LightGBM histogram bins (data quantiles), as before.  Every object is built from training-row statistics only (rounded
+correlations, fingerprint tie-breaks): a column permutation permutes the bars exactly (test_perm.py).  LightGBM runs with
+force_col_wise=True (bit-identical to the automatic layout on v2's bank, Part 9; checked again here) and the bank is
+built separately for the booster's fitting and inner-validation rows (memory).  gknn and every other member: v2's.
+
+v2's docstring follows.
+
+hyb_portfolio2 (Part 9): the Part 8 portfolio with (i) its DFG member switched to DFG v1.2 = DFG v1.1 + sum-feature
 blocks (part9/p9_sum/dfg12.py, md5 4ff2e0c9c324f0f1be93f604734b4a69) and (ii) the image member of p9_gates
 (part9/p9_gates/learner.py, md5 2728ac2b80597d9e559dedca6a70cb7c), chosen by the integration rule of PROTOCOL.md.
 This file is p9_gates/learner.py with two changes: the DFG module path and the default name; plus one post-freeze
@@ -324,15 +341,14 @@ def pair_dirs(X, y, m, rng):
     return (np.asarray(X[a[keep]], np.float32) - np.asarray(X[b[keep]], np.float32))
 
 
-def ggbt_feats(A, U, extra=None):
-    """Feature map of ggbt: [x, x @ A (pooled sums; p10_codes: and bar sums), x @ U^T (prototype-pair projections)
-    (+ p10_codes: extra(x), the pooled code counts, when given)], float32."""
+def ggbt_feats(A, U):
+    """Feature map of ggbt: [x, x @ A (pooled sums; p10_codes: and bar sums), x @ U^T (prototype-pair projections)], float32."""
     M = np.concatenate([A, U.T], 1).astype(np.float32)
 
     def f(Xr):
         Xr = np.asarray(Xr, np.float32)
-        return np.concatenate([Xr, Xr @ M] + ([extra[0](Xr)] if extra is not None else []), 1)
-    return f, M.shape[1] + (extra[1] if extra is not None else 0)
+        return np.concatenate([Xr, Xr @ M], 1)
+    return f, M.shape[1]
 
 
 def lgb_tree_flops(n_fit, n_bag, d_used, bins_used, leaves=31):
@@ -361,21 +377,19 @@ def _es_error(patience, min_rounds):
 
 
 def fit_ggbt(Xr, y, C, A, rng, seed, n_pairs=300, max_rounds=400, ff=0.12, bins=63, lr=0.1, leaves=31, es_min=5000,
-             es_patience=50, es_min_rounds=150, fixed_rounds=None, extra=None, col_wise=True):
+             es_patience=50, es_min_rounds=150, fixed_rounds=None, col_wise=True):
     """LightGBM on the gate bank.  Rounds: fixed_rounds if given; else early stopping on the error of a stratified inner
     validation split (min(10%, 5000) points; patience 50, at least 150 rounds) when len(y) >= es_min, up to max_rounds;
     else 100 rounds.  Returns (model, flops, rounds used).
-    p10_codes: extra = (feature function, its width, its FLOPs per row) for non-linear code features (None: none);
-    col_wise = LightGBM's force_col_wise (the same model as the automatic layout - Part 9 checked bit-identical
+    p10_codes: col_wise = LightGBM's force_col_wise (the same model as the automatic layout - Part 9 checked bit-identical
     predictions - 2-3x faster on this bank); the bank is built for the fitting rows and the inner-validation rows
     separately (no full-size copy: less memory)."""
     import lightgbm as lgb
     n, d = Xr.shape
     if len(np.unique(y)) < 2:
         return _Const(y, C), 0.0, 0
-    U = pair_dirs(Xr, y, n_pairs, rng); feat, m = ggbt_feats(A, U, extra)
-    m_lin = m - (extra[1] if extra is not None else 0)
-    fl = 2.0 * n * d * m_lin + (extra[2] * n if extra is not None else 0.0)   # projections (+ code features) of the training rows
+    U = pair_dirs(Xr, y, n_pairs, rng); feat, m = ggbt_feats(A, U)
+    fl = 2.0 * n * d * m                                              # projections of the training rows
     tr = np.arange(n); va = None
     if fixed_rounds is None and n >= es_min:
         h = int(min(5000, 0.1 * n)); f = _folds(y, max(2, int(round(n / h))), rng); va = np.where(f == 0)[0]; tr = np.where(f != 0)[0]
@@ -446,8 +460,8 @@ def fit_stacker(Ls, y, C, lam_w=1e-3, lam_b=1e-3):
 class Learner:
     def __init__(self, K=5, K_small=10, K_small_n=500, lin_one_n=10000, kfold_max=3000, hold_max=6000, ks=(1, 3, 9, 27), lin_C=(0.05, 1.0), gbt_trees=100,
                  et_trees=100, dfg_share=(0.35, 0.5), dfg_dmax=256, lam_w=1e-2, members=None, name="p10_codes",
-                 gates_k=9, gates_ks=(4, 9, 16), gates_pairs=0, gates_rounds=400, gates_ff=0.12, gates_dmin=256,
-                 codes_bars=(2,), gates_col_wise=True):
+                 gates_k=9, gates_ks=(4, 9, 16), gates_pairs=300, gates_rounds=400, gates_ff=0.12, gates_dmin=256,
+                 codes_bars=(2,), codes_pairs=0, codes_ff=0.07, codes_mode="both", gates_col_wise=True):
         self.K_small, self.K_small_n, self.lin_one_n = K_small, K_small_n, lin_one_n
         self.K, self.kfold_max, self.hold_max, self.ks, self.lin_C = K, kfold_max, hold_max, tuple(ks), tuple(lin_C)
         self.gbt_trees, self.et_trees, self.dfg_share, self.dfg_dmax, self.lam_w = gbt_trees, et_trees, dfg_share, dfg_dmax, lam_w
@@ -458,6 +472,7 @@ class Learner:
         self.gates_ks = tuple(gates_ks)              # pooling scales of ggbt's bank; gknn uses the scale gates_k
         # p10_codes: bar half-lengths of ggbt's bar bank (() = none) and LightGBM's column-wise layout
         self.codes_bars, self.gates_col_wise = tuple(codes_bars), bool(gates_col_wise)
+        self.codes_pairs, self.codes_ff, self.codes_mode = int(codes_pairs), float(codes_ff), codes_mode   # the bar member
 
     def _use(self, fam):
         return self.members is None or fam in self.members
@@ -612,9 +627,8 @@ class Learner:
             Bs = []                                                         # p10_codes: bars on the recovered topology
             for L in self.codes_bars:
                 Bm, fl = bar_sets(topo, d, L); Bs.append(Bm); charge("g_bars", fl)
-            Ag = np.concatenate([As[k] for k in self.gates_ks] + Bs, 1)     # ggbt's pooled sums, every scale (+ bars)
-            info["ggbt_bank"] = dict(pooled=int(sum(As[k].shape[1] for k in self.gates_ks)), bars=int(sum(b.shape[1] for b in Bs)),
-                                     pairs=int(self.gates_pairs))
+            Ag = np.concatenate([As[k] for k in self.gates_ks], 1)          # ggbt's pooled sums, every scale
+            info["ggbt_bank"] = dict(pooled=int(Ag.shape[1]), bars=int(sum(b.shape[1] for b in Bs)), mode=self.codes_mode)
             enc_pool = lambda Q, A=A: np.asarray(Q, np.float32) @ A
             if self._use("gknn"):
                 cost = knn_cost(len(H), n, A.shape[1]) + 2.0 * n * d * A.shape[1]
@@ -626,21 +640,33 @@ class Learner:
                             oof[f"gknn_{k}"] = _logp(0.9 * V[k] + 0.1 / C)
                             fitters[f"gknn_{k}"] = ("knn", "pool", k)
                     fitters["_knn_pool"] = (Zp, enc_pool)
-            if self._use("ggbt"):
-                ntr = len(splits[0][0]); m_g = Ag.shape[1] + self.gates_pairs
+            # p10_codes: the boosted members.  'replace': one member 'ggbt' on [x, pooled sums, bars] (codes_pairs pairs,
+            # column fraction codes_ff).  'both': v2's 'ggbt' unchanged (pooled sums + gates_pairs pairs, gates_ff, its
+            # generator rg: bit-identical to v2's member) and a second member 'cgbt' on [x, pooled sums, bars]
+            # (codes_pairs pairs, codes_ff, its own generator); the stacker weights both.
+            Ab = np.concatenate([Ag] + Bs, 1)                               # pooled sums + bars
+            if self.codes_mode == "replace" or not Bs:
+                specs = [("ggbt", Ab, self.codes_pairs if Bs else self.gates_pairs, self.codes_ff if Bs else self.gates_ff, rg)]
+            else:
+                specs = [("ggbt", Ag, self.gates_pairs, self.gates_ff, rg),
+                         ("cgbt", Ab, self.codes_pairs, self.codes_ff, np.random.default_rng([seed, 10]))]
+            for gname, Abank, npairs, gff, gen in specs:
+                if not self._use(gname):
+                    continue
+                ntr = len(splits[0][0]); m_g = Abank.shape[1] + npairs
                 refit = len(splits) > 1 or not big
-                cost = ggbt_cost(ntr, d, C, m_g, self.gates_rounds if ntr >= 5000 else 100, self.gates_ff) * (len(splits) + (1 if refit else 0))
+                cost = ggbt_cost(ntr, d, C, m_g, self.gates_rounds if ntr >= 5000 else 100, gff) * (len(splits) + (1 if refit else 0))
                 if spent[0] + cost <= 0.9 * budget:
                     P = np.zeros((len(H), C)); used = []
                     for tr, te in splits:
-                        mg, fl, r = fit_ggbt(X[tr], y[tr], C, Ag, rg, seed, self.gates_pairs, self.gates_rounds, self.gates_ff,
+                        mg, fl, r = fit_ggbt(X[tr], y[tr], C, Abank, gen, seed, npairs, self.gates_rounds, gff,
                                              col_wise=self.gates_col_wise)
                         # + its out-of-fold predictions: projections, and ~10 FLOPs per tree per row for the traversal
-                        charge("ggbt", fl + 2.0 * len(te) * d * m_g + 10.0 * r * C * len(te)); P[pos[te]] = mg.proba(X[te]); used.append(r)
-                    oof["ggbt"] = _logp(P); info["ggbt_rounds"] = used
+                        charge(gname, fl + 2.0 * len(te) * d * m_g + 10.0 * r * C * len(te)); P[pos[te]] = mg.proba(X[te]); used.append(r)
+                    oof[gname] = _logp(P); info[gname + "_rounds"] = used
                     # refit on all n (k-fold regime: the same fixed rounds; holdout regime with n d <= 1e7: the early-
                     # stopped round count); on large inputs the holdout-trained booster is the final one (as for gbt)
-                    fitters["ggbt"] = ("ggbt", int(max(used))) if refit else ("done", mg, lambda Q: Q)
+                    fitters[gname] = ("ggbt", int(max(used)), Abank, npairs, gff, gen) if refit else ("done", mg, lambda Q: Q)
 
         # ---- stacker
         names = sorted(oof)
@@ -664,8 +690,8 @@ class Learner:
                 share = min(self.dfg_share[1], 0.9 * (budget - spent[0]) / budget) / nd
                 m, fl = f[2](f[3], y, share, f[1]); charge(nm, fl)
                 finals.append((w[i], lambda A, m=m: m.proba(enc_pm(A))))
-            elif isinstance(f, tuple) and f[0] == "ggbt":                  # p9_gates: refit of ggbt on all n
-                m, fl, _ = fit_ggbt(X, y, C, Ag, rg, seed, self.gates_pairs, self.gates_rounds, self.gates_ff, fixed_rounds=f[1],
+            elif isinstance(f, tuple) and f[0] == "ggbt":                  # p9_gates: refit of ggbt (p10_codes: or cgbt) on all n
+                m, fl, _ = fit_ggbt(X, y, C, f[2], f[5], seed, f[3], self.gates_rounds, f[4], fixed_rounds=f[1],
                                     col_wise=self.gates_col_wise)
                 charge(nm, fl); finals.append((w[i], lambda Q, m=m: m.proba(Q)))
             elif isinstance(f, tuple) and f[0] == "done":
