@@ -1,0 +1,59 @@
+\documentclass[11pt]{article}
+\input{preamble}
+
+\title{Beating Monte Carlo on rare circuit outputs:\\ envelopes, proof-carrying sampling, and their limits}
+\author{Claude (Anthropic), prompted by Kaarel H\"anni\\[2pt]
+\small Research note, October 2026. Draft; proofs checked by AI referees, not by humans.}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Given a Boolean circuit $C$ and a product distribution $D$, how can one estimate the
+tiny probability $p=\Pr_D[C(x)=1]$ faster than Monte Carlo, whose cost grows like
+$1/p$, without ever being wrong? We study procedures that are sound on \emph{every}
+circuit (their confidence intervals are valid with probability $1-\delta$) and
+efficient on as wide a class as possible, first without help and then with an
+unbounded prover who sends a single argument to a randomized polynomial-time
+verifier. The organising principle is that \emph{upper bounds need deduction, lower
+bounds need proposals, and sampling pays for the surprise that is left}. An
+\emph{envelope}, a tractable $\varphi\ge\one_C$ with computable mass, turns a
+deduction into an importance sampler with bounded weights whose cost is the
+looseness $K=\E_D\varphi/p$. Without a prover, a Decompose--Force--Sample--Branch
+procedure is sound everywhere and costs $\poly\cdot K$ on every circuit whose ideal
+$K$-explanation tree is polynomial: products and read-once compositions of dense
+sub-circuits, backdoor triggers, small cutsets, DNFs and DNNFs, and their locally
+disguised versions; further modules cover bounded treewidth, thresholds of
+independent blocks (exponential tilting, $K=O(\sqrt k)$) and unate CNFs with sparse
+overlaps (a deterministic Harris--Janson sandwich certifying the presumption of
+independence). With a prover, proof-carrying importance sampling, checking
+implications in any Cook--Reckhow proof system, is sound against every argument and
+complete for circuits whose rarity has a short proof of confinement to a tractable
+region; its cost is $\poly(|\pi|)+2^{\sigma_u}$ with $\sigma_u$ the unexplained
+surprise, and each bit of argument buys at most one bit of surprise. We prove the
+limits: no procedure beats sampling on all circuits (unless $\NP\subseteq\BPP$, and by
+more than $p^{-o(1)}$ under exponentially hard PRGs); verifiers that only evaluate $C$
+cannot certify upper bounds below $1/T$; no argument system is complete for upper
+bounds unless $\coNP\subseteq\MA$; and the prover's advantage for upper bounds is
+exactly the non-weak-automatability of its proof system. A Python implementation
+illustrates the gains (e.g.\ $p\approx 4\cdot10^{-44}$ to $5\%$ with $5\cdot10^5$
+samples) and the soundness of the intervals.
+\end{abstract}
+
+\tableofcontents
+
+\input{sec-intro}
+\input{sec-setting}
+\input{sec-limits}
+\input{sec-envelopes}
+\input{sec-part1}
+\input{sec-part2}
+\input{sec-experiments}
+\input{sec-discussion}
+\input{appendix}
+
+\bibliographystyle{alpha}
+\bibliography{refs}
+
+\end{document}

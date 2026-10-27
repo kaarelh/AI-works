@@ -1,9 +1,9 @@
 """Exact output probability by variable elimination on the circuit's
-constraint graph (the Tseitin factor graph), with a greedy min-fill order.
+constraint graph (the Tseitin factor graph), with a greedy min-degree elimination order.
 
-Cost is O(|C| * 2^(w+1)) where w is the width of the elimination order, so
-this is polynomial for circuits of treewidth O(log |C|) (and the order found
-by min-fill is within the usual heuristic slack of the treewidth).
+Cost is O(|C| * 2^(w+1)) where w is the width of the elimination order found, so
+this is polynomial when the order has width O(log |C|); a greedy order is a
+heuristic, so a circuit of small treewidth may still be refused.
 Factors are dense numpy tables over at most `max_width + 1` binary variables;
 if the order needs more, we give up (return None) - an honest "no verdict".
 """
@@ -83,6 +83,8 @@ def exact_ve(C: Circuit, D: Product, max_width: int = 22):
     """Pr_D[C = 1] exactly (float), or None if the min-fill width exceeds max_width."""
     C = binarize(C)
     cone = C.cone()
+    if any(len(C.args[g]) + 1 > max_width + 1 for g in cone):
+        return None  # a single gate factor is already too wide
     factors: list[Factor] = []
     for g in cone:
         if C.ops[g] == "IN":
@@ -104,23 +106,19 @@ def exact_ve(C: Circuit, D: Product, max_width: int = 22):
             bucket[v].append(f)
     alive = {id(f): f for f in factors}
     scale = 0.0  # log-scale to avoid underflow
+    import heapq
+
+    heap = [(len(adj[v]), v) for v in remaining]
+    heapq.heapify(heap)
     while remaining:
-        # choose min-fill vertex (ties: min degree)
-        best, bestscore = None, None
-        for v in remaining:
-            nb = adj[v] & remaining
-            fill = 0
-            nbl = list(nb)
-            for i in range(len(nbl)):
-                ai = adj[nbl[i]]
-                for j in range(i + 1, len(nbl)):
-                    if nbl[j] not in ai:
-                        fill += 1
-            score = (fill, len(nb))
-            if bestscore is None or score < bestscore:
-                best, bestscore = v, score
-                if fill == 0 and len(nb) <= 1:
-                    break
+        # greedy min-degree order (lazy heap); give up as soon as the
+        # cheapest elimination is wider than max_width
+        while True:
+            dgr, best = heapq.heappop(heap)
+            if best in remaining and dgr == len(adj[best] & remaining):
+                break
+            if best in remaining:
+                heapq.heappush(heap, (len(adj[best] & remaining), best))
         v = best
         nb = adj[v] & remaining
         if len(nb) > max_width:
@@ -147,6 +145,8 @@ def exact_ve(C: Circuit, D: Product, max_width: int = 22):
             adj[a_].update(nb - {a_})
             adj[a_].discard(v)
         remaining.discard(v)
+        for a_ in nb:
+            heapq.heappush(heap, (len(adj[a_] & remaining), a_))
     rest = 1.0
     for f in alive.values():
         rest *= float(f.table) if not f.vars else float(f.table.sum())

@@ -99,7 +99,13 @@ $K$ is the expected number of derivations of a random accepted input, its
 \end{lemma}
 
 The first term is overcounting (union bounds); the second is mass that the
-deduction failed to exclude. In surprise-accounting terms
+deduction failed to exclude. $K$ bounds the relative variance; its exact value is
+$\frac{Z}{p}\E_D[1/\varphi\mid C=1]-1$, so what costs samples is the
+\emph{dispersion} of the number of derivations, not its mean: a deterministic
+DNNF has $\varphi=\one_C$ and zero variance, while
+$E=\bigwedge_{i\le m}(x_i\vee y_i)$, used as its own envelope, has relative variance
+$(10/9)^m-1$ under every reweighting of its $\vee$-edges. \Cref{thm:sis} removes
+this cost for DNNF envelopes. In surprise-accounting terms
 \cite{hilton2024surprise}: of the $\log_2(1/p)$ bits of surprise in the event
 $C(x)=1$, the envelope explains $\log_2(1/Z)$ bits by deduction and exact
 computation, at polynomial cost, and leaves $\log_2K$ bits to sampling, at
@@ -163,7 +169,7 @@ $\rho_{\max}/\rho_{\min}\le(1+\eps/(4L))^{2L}\le e^{\eps/2}$, and
 With boxes, the product of $k$ independent dense blocks has $K=1$ and costs
 $O(k^3R\log(k/\delta)/\eps^2)$ evaluations, against $2^{\Theta(k)}$ for Monte
 Carlo; a DNF whose terms are products of dense blocks has $K\le m$
-(\cref{thm:part1-classes}).
+(\cref{cor:dfsb}).
 
 \subsection{Soft envelopes: Chernoff bounds as certificates}\label{sec:tilting}
 
@@ -199,7 +205,7 @@ $p=Z_\theta\,\E_{Q_\theta}[e^{-\theta(S-t)}\one_{S\ge t}]\ge Z_\theta\,Q_\theta(
 
 When the block probabilities $p_j$ are known exactly, the integer-weight case
 can also be computed exactly by dynamic programming over $S$, and real weights
-have a deterministic FPTAS \cite{gopalan2011fptas}; the point of
+have a deterministic FPTAS under product distributions \cite{gkm2010,gopalan2011fptas}; the point of
 \cref{prop:tilting} is that the Chernoff bound, a one-line deduction from the
 syntax ``$C$ is a threshold of independent blocks'', explains all but
 $O(\log k)$ bits of the surprise, and sampling pays for the rest. The same
@@ -230,8 +236,9 @@ number of clauses sharing a variable.
 Flip the variables that occur negatively; then every $B_i$ is a principal
 up-set $\{x:x_{S_i}=\one\}$ under a product measure. The lower bound is the
 Harris--Kleitman inequality (the events $\neg B_i$ are decreasing, hence
-positively correlated). The upper bound is Janson's inequality
-\cite[Thm.~8.1.1]{alonspencer}. $D(B_i)$ and $D(B_i\wedge B_j)$ are products of
+positively correlated) \cite{harris1960}. The upper bound is Janson's inequality
+\cite{janson1990}, in the form of \cite[Thm.~8.1.1]{alonspencer} (with $\Delta$
+over ordered pairs). $D(B_i)$ and $D(B_i\wedge B_j)$ are products of
 marginals over $S_i$ and $S_i\cup S_j$.
 \end{proof}
 
@@ -239,6 +246,8 @@ So for unate CNFs whose dependent pairs carry total probability $\Delta\le\eps$,
 the deterministic estimate $\sqrt{M\cdot Me^{\Delta/(2(1-\eps_0))}}$ has
 relative error $O(\eps)$, however small $p$ is. Example: $m=6\cdot10^4$ random
 clauses of width $12$ over $2\cdot10^5$ variables give $p\approx4.7\cdot10^{-7}$ and an interval of ratio $1.17$ in one second
-(\cref{sec:experiments}). The general version (any $\bigwedge_iA_i$ with each
-$A_i$ a monotone sub-circuit in a common orientation) is in
-\cref{sec:part1}.
+(\cref{sec:experiments}). Riordan and Warnke \cite{riordan2015janson} show that
+Janson-type bounds hold for arbitrary up-sets, so the same sandwich applies to
+$\bigwedge_iA_i$ with each $A_i$ a monotone sub-circuit in a common orientation,
+with $D(B_i)$ and $D(B_i\wedge B_j)$ estimated rather than computed; we have not
+worked out the resulting error budget.

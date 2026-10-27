@@ -22,6 +22,7 @@ from rareprob.circuit import Circuit  # noqa: E402
 from rareprob.families import (dnf_circuit, dnf_exact, independent_blocks, obfuscated_dnf_circuit,  # noqa: E402
                                random_block_circuit, random_dnf_terms, trigger_circuit)
 from rareprob.stats import mc_samples_needed  # noqa: E402
+from rareprob.dfsb import dfsb_estimate  # noqa: E402
 from rareprob.tilting import Block, poisson_binomial_tail, tilted_estimate  # noqa: E402
 
 EPS, DELTA = 0.1, 0.05
@@ -47,13 +48,13 @@ def main():
 
     # 1. DNF, plain and obfuscated (auto compile), width w
     n, m = 64, 16
-    for w in (8, 16, 24, 32, 40, 48):
+    for w in (8, 16, 24, 32, 40, 48, 56):
         terms = random_dnf_terms(n, m, w, rng)
         D = Product.uniform(n)
         p = dnf_exact(terms, D)
         C = obfuscated_dnf_circuit(n, terms, rng, noise=2)
         t = time.time()
-        est = auto_estimate(C, D, eps=EPS, delta=DELTA, rng=rng, shannon=6)
+        est = dfsb_estimate(C, D, eps=EPS, delta=DELTA, rng=rng)
         record(rows, "dnf-obfuscated", w, p, est, time.time() - t, {"size": C.size})
 
     # 2. trigger / backdoor circuits: R(x_rest) AND [x_S = t], k trigger bits
@@ -68,7 +69,7 @@ def main():
             X[:, i] = bool(b)
         p = float(C.eval_bits(X).mean()) * 2.0 ** (-k)
         t = time.time()
-        est = auto_estimate(C, D, eps=EPS, delta=DELTA, rng=rng)
+        est = dfsb_estimate(C, D, eps=EPS, delta=DELTA, rng=rng)
         record(rows, "trigger", k, p, est, time.time() - t, {"size": C.size})
 
     # 3. AND of independent random blocks (6 variables each)
@@ -76,7 +77,7 @@ def main():
         C, p, probs = independent_blocks(kb, 6, 12, rng)
         D = Product.uniform(kb * 6)
         t = time.time()
-        est = auto_estimate(C, D, eps=EPS, delta=DELTA, rng=rng, max_samples=4 * 10**6)
+        est = dfsb_estimate(C, D, eps=EPS, delta=DELTA, rng=rng)
         record(rows, "blocks", kb, p, est, time.time() - t, {"size": C.size})
 
     # 4. threshold of independent blocks: exponential tilting (Chernoff envelope)

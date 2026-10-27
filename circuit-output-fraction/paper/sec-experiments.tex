@@ -1,0 +1,111 @@
+\section{Experiments}\label{sec:experiments}
+
+The package \texttt{rareprob} (Python, numpy) implements everything above:
+bit-parallel circuit evaluation, NNF conversion with small-cone
+canonicalisation, the envelope compiler and estimator with boxes, DFSB, variable
+elimination, exponential tilting, the Harris--Janson sandwich, Gaussian-elimination
+forcing, a two-watched-literal DRUP checker, and the PCIS verifier for envelope
+arguments (with an honest prover that calls a CDCL solver with proof logging).
+All intervals are Hoeffding--KL intervals combined by union bounds, exactly as in
+the proofs. Monte Carlo cost is not simulated for tiny $p$: we report the number of
+samples its KL interval needs, at the same $(\eps,\delta)$, when the empirical
+mean equals $p$ (this favours Monte Carlo). Scripts and raw results are in
+\texttt{experiments/}; every number below is reproduced by them.
+
+\paragraph{Soundness (\cref{tab:coverage}).} We ran each procedure many times at
+$\delta=0.1$ on random circuits and on families with exactly known $p$ (by
+enumeration, inclusion--exclusion or dynamic programming), and counted intervals
+that miss $p$. Adversarial arguments were included: a wrong envelope (a dropped
+term) with the honest proof of the right envelope, a wrong envelope with a list of
+random clauses as ``proof'', and an envelope disjoint from most of $C$'s mass with no
+proof. Every miss rate is below $\delta$, as it must be; most are $0$, because the
+union bounds and KL intervals are conservative.
+
+\begin{table}[ht]
+\centering\small
+\input{tables/coverage}
+\caption{Empirical miss rates at $\delta=0.1$ (\texttt{exp\_coverage.py}).}
+\label{tab:coverage}
+\end{table}
+
+\paragraph{Cost versus rarity (\cref{fig:speedup}, \cref{tab:speedup}).}
+Four families with exactly known $p$, at $\eps=0.1$, $\delta=0.05$:
+\begin{itemize}
+\item \emph{obfuscated DNF}: 16 random terms of width $w$ over 64 variables,
+every literal routed through $(x\oplus r)\oplus r$ gadgets, terms built as trees,
+the $\vee$ written as $\neg\wedge\neg$. Small-cone canonicalisation recovers the
+literals and the envelope is the DNF itself ($K\approx1$);
+\item \emph{triggers}: $R(x_{\rm body})\wedge[x_A=a]$ with the test written as
+$\neg(x_i\oplus a_i)$ gates and $R$ a dense random circuit; forcing finds $x_A=a$;
+\item \emph{products of blocks}: $\bigwedge_{j\le t}B_j$ with $B_j$ random
+12-gate circuits on disjoint 6-variable blocks (dense leaves);
+\item \emph{thresholds of blocks}: $[\sum_jB_j\ge t]$ over $k$ random blocks,
+by exponential tilting.
+\end{itemize}
+The cost of Monte Carlo grows like $2^{\sigma}$ in the surprise $\sigma=\log_2(1/p)$;
+ours stays polynomial: flat for DNFs and triggers, cubic in the number of
+blocks for products (the $d^2$ accuracy split of \cref{thm:dfsb}), and $O(\sqrt k)$
+for thresholds.
+
+\begin{figure}[ht]
+\centering
+\IfFileExists{figures/fig_speedup.pdf}{\includegraphics[width=\textwidth]{figures/fig_speedup.pdf}}{\fbox{figure pending}}
+\caption{Circuit evaluations to reach an interval of ratio $\le1.1$ ($\eps=0.1$,
+$\delta=0.05$) against the surprise $\log_2(1/p)$, compared with Monte Carlo's
+requirement (\texttt{exp\_speedup.py}).}
+\label{fig:speedup}
+\end{figure}
+
+\begin{table}[ht]
+\centering\scriptsize
+\input{tables/speedup}
+\caption{The runs of \cref{fig:speedup}. ``Cost'' counts all circuit evaluations,
+including pilots and box estimation.}
+\label{tab:speedup}
+\end{table}
+
+\paragraph{Certified independence.} For a unate 12-CNF with $6\cdot10^4$ random
+clauses over $2\cdot10^5$ variables, the Harris--Janson sandwich gives
+$p\in[4.34\cdot10^{-7},5.06\cdot10^{-7}]$ deterministically in about a second;
+Monte Carlo would need about $7\cdot10^9$ evaluations of a $6\cdot10^4$-clause
+circuit for the same ratio.
+
+\paragraph{What the prover adds (\cref{tab:arguments}, \cref{fig:proofs}).}
+Hidden triggers $R\wedge T(x_S)$ whose test accepts only $x_S=a$:
+\emph{linear-hash} tests $[Mx_S=Ma]$ with a dense $(k+4)\times k$ matrix over
+$\F_2$, and \emph{SPN} tests $[\mathrm{SPN}(x_S)=\mathrm{SPN}(a)]$ with random
+bijective 4-bit S-boxes and dense invertible linear layers. Without a prover,
+Gaussian-elimination forcing recognises linear hashes, but nothing in Part 1
+recognises SPN triggers, and DFSB returns an uninformative interval. With a prover,
+the argument is the subcube $x_S=a$ plus a DRUP proof (from Glucose) that
+$C\Rightarrow(x_S=a)$; the verifier checks it with its own RUP checker and samples
+only $R$. Resolution proofs grow exponentially with $k$ even for linear hashes
+(resolution cannot do Gaussian elimination efficiently), which shows concretely
+that the class of \cref{thm:certenv} depends on the proof system.
+
+\begin{table}[ht]
+\centering\scriptsize
+\IfFileExists{tables/arguments.tex}{\input{tables/arguments}}{(table pending)}
+\caption{Hidden triggers with and without a prover (\texttt{exp\_arguments.py}).
+Part 1 ratio is that of the DFSB interval ($\infty$: lower end $0$); Part 2 ratio
+is that of the verifier's interval after checking the proof.}
+\label{tab:arguments}
+\end{table}
+
+\begin{figure}[ht]
+\centering
+\begin{minipage}{0.48\textwidth}\centering
+\IfFileExists{figures/fig_proofs.pdf}{\includegraphics[width=\textwidth]{figures/fig_proofs.pdf}}{\fbox{figure pending}}
+\caption{DRUP proof size for hidden triggers.}\label{fig:proofs}
+\end{minipage}\hfill
+\begin{minipage}{0.48\textwidth}\centering
+\IfFileExists{figures/fig_surprise.pdf}{\includegraphics[width=\textwidth]{figures/fig_surprise.pdf}}{\fbox{figure pending}}
+\caption{Surprise accounting: samples needed when an argument reveals all but
+$\sigma_u$ bits of a 40-bit trigger.}\label{fig:surprise}
+\end{minipage}
+\end{figure}
+
+\paragraph{Surprise accounting (\cref{fig:surprise}).} For a 40-bit trigger, an
+argument that reveals $40-\sigma_u$ of the bits (a subcube envelope on those bits)
+leaves $\sigma_u$ bits to sampling; the number of samples grows as $2^{\sigma_u}$, as
+\cref{thm:surprise} says it must.

@@ -310,3 +310,33 @@ def spn_trigger(n_body: int, k: int, rounds: int, rng: np.random.Generator, body
         m.append(C.add(Cr.ops[v], [m[u] for u in Cr.args[v]], Cr.params[v]))
     C.set_output(C.AND(trig, m[R]))
     return C, S, [int(t) for t in a], body
+
+
+def dnf_of_blocks(m: int, L: int, b: int, n: int, rng: np.random.Generator, gates: int = 8):
+    """OR of m terms, each an AND of L random dense circuits on disjoint
+    b-variable blocks (blocks of different terms may overlap). Returns
+    (C, terms) with terms[i] = list of (vars, circuit-copy) for exact checks."""
+    C = Circuit(n)
+    tgates = []
+    for _ in range(m):
+        vs = rng.choice(n, size=L * b, replace=False)
+        outs = []
+        for j in range(L):
+            blk = [int(v) for v in vs[j * b:(j + 1) * b]]
+            while True:
+                Cb = Circuit(n)
+                g = random_block_circuit(Cb, blk, gates, rng)
+                Cb.set_output(g)
+                X = ((np.arange(1 << b)[:, None] >> np.arange(b)) & 1).astype(bool)
+                full = np.zeros((1 << b, n), dtype=bool)
+                full[:, blk] = X
+                pj = Cb.eval_bits(full).mean()
+                if 0.2 <= pj <= 0.8:
+                    break
+            mp = list(range(n))
+            for v in range(n, len(Cb.ops)):
+                mp.append(C.add(Cb.ops[v], [mp[u] for u in Cb.args[v]], Cb.params[v]))
+            outs.append(mp[g])
+        tgates.append(C.AND(*outs))
+    C.set_output(C.OR(*tgates))
+    return C

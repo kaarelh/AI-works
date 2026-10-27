@@ -9,7 +9,8 @@ what is left:
   D  the children of h's top gate split into variable-disjoint groups:
        AND:  P(h) = prod_j P(h_j)
        OR:   P(h) = 1 - prod_j (1 - P(h_j))
-  S  dense leaf: a pilot run finds P(h) >= 1/(4K); estimated by Monte Carlo.
+  S  dense leaf: a pilot of 64K ln(2m/delta) samples has hit rate >= 1/(4K);
+     estimated by Monte Carlo.
   E  envelope leaf: a syntactic envelope phi of h (rules of compile.py) has
      P(h)/E[phi] >= 1/(4K); estimated by envelope importance sampling.
   B  otherwise branch on the variable shared by the most children:
@@ -106,7 +107,8 @@ def nnf_forced(N: NNF, v: int, n: int, probe: bool = False):
 
 class DFSB:
     def __init__(self, C: Circuit, D: Product, K: float = 64.0, node_budget: int = 2000,
-                 rng=None, use_envelopes: bool = True, shannon_env: int = 3, probe_root: bool = True):
+                 rng=None, use_envelopes: bool = True, shannon_env: int = 3, probe_root: bool = True,
+                 env_tau: float | None = 0.05):
         self.C = C
         self.D = D
         self.K = K
@@ -118,29 +120,34 @@ class DFSB:
         self.nodes = 0
         self.pilot_evals = 0
         self.probe_root = probe_root
+        self.pilot_delta = 0.05
+        self.env_tau = env_tau
 
     # ---------------------------------------------------------- phase 1
+    def _pilot_size(self) -> int:
+        return int(64 * self.K * math.ceil(math.log(2 * self.budget / self.pilot_delta)))
+
     def _pilot_dense(self, v: int) -> bool:
-        N = int(64 * self.K)
+        N = self._pilot_size()
         X = self.D.sample(N, self.rng)
         self.pilot_evals += N
-        return int(self.N.eval_batch(X, v).sum()) >= 16
+        return int(self.N.eval_batch(X, v).sum()) >= N / (4 * self.K)
 
     def _pilot_env(self, v: int):
-        comp = EnvelopeCompiler(self.N, self.D, shannon=self.shannon_env)
+        comp = EnvelopeCompiler(self.N, self.D, shannon=self.shannon_env, tau=self.env_tau, rng=self.rng)
         r = comp.env(v, {}, 0)
         E = comp.E
         E.root = r
         if E.kind[r] == "ONE" or E.mass(self.D) >= 1.0:
             return None
-        Np = int(64 * self.K)
+        Np = self._pilot_size()
         m = E.masses(self.D)
         X = E.sample(self.D, Np, self.rng, m)
         self.pilot_evals += Np
         c = self.N.eval_batch(X, v)
         phi = E.evaluate(X)
         w = np.where(c, 1.0 / np.maximum(phi, 1e-300), 0.0)
-        return E if w.sum() >= 16 else None
+        return E if w.sum() >= Np / (4 * self.K) else None
 
     def build(self, v: int, root: bool = False) -> TNode:
         N = self.N
@@ -185,6 +192,7 @@ class DFSB:
 
     # ---------------------------------------------------------- phase 2
     def estimate(self, eps: float = 0.1, delta: float = 0.05, max_leaf_samples: int = 10**6) -> Estimate:
+        self.pilot_delta = delta
         # circuit-level forcing (unit propagation, probing, Gaussian elimination)
         from .cnf import forced_input_literals
 
