@@ -7,10 +7,12 @@ objects back onto the 28 x 28 grid (hooks.grid_of).
                both), on its largest connected part: shortest-path distances, classical MDS to 2-D, Procrustes fit to the
                true pixel coordinates (r2 = 1 - Procrustes disparity); variants (k, graph) = (4, union), (9, union),
                (9, mutual), (16, mutual), all reported
-  gain         the final ggbt booster's split gain by feature type (raw pixels, pooled sums at each k, prototype pairs)
-               and its maps on the grid (a pooled sum at its centre pixel; a pair spread over pixels by |u_p|)
+  gain         the final ggbt booster's split gain by feature type (raw pixels, pooled sums at each k, prototype pairs,
+               level-2 max-pooled maps) and its maps on the grid (a pooled or max-pooled feature at its centre pixel; a
+               pair spread over pixels by |u_p|)
   contrib      per-class contribution maps (LightGBM pred_contrib on test points of the class, for that class's score;
-               a pooled sum's contribution spread equally over its k pixels; a pair's over pixels by |u_p x_p|)
+               a pooled sum's contribution spread equally over its k pixels; a pair's over pixels by |u_p x_p|; a
+               max-pooled feature's over the k pixels of the neighbour j* whose sum attains the max, per point)
   pairs        the classes of the prototype pairs, gain by class pair
   stack        the stacker's weights and the members' out-of-fold errors
 usage: python image_structure.py <dataset> <n> [--seed=0] [--learner=path] [--tag=v2] [--m_contrib=1000]
@@ -81,55 +83,70 @@ for kk, mode in ((4, "union"), (9, "union"), (9, "mutual"), (16, "mutual")):
     if (kk, mode) == (9, "mutual"):
         maps["isomap"] = Y; maps["isomap_pixels"] = g[act[comp]]
 
-# ---- the final ggbt booster
+# ---- the final ggbt booster.  Its bank: [x (d), pooled sums at each k (n_active each), prototype pairs (v2; none in
+#      p10_hier), level-2 max-pooled maps m^(k,K) (p10_hier: one block of n_active per (op, k, K) in l2)]
 gg = R.ggbt[-1] if R.ggbt else None
 if gg is not None and gg["bst"] is not None:
-    bst, best, U, feat = gg["bst"], gg["best"], gg["U"], gg["feat"]
-    na = len(act); blocks = [("raw", 0, d)] + [(f"pool{k}", d + q * na, d + (q + 1) * na) for q, k in enumerate(ks)] + \
-        [("pairs", d + len(ks) * na, d + len(ks) * na + len(U))]
+    bst, best, U, feat, l2, Sa = gg["bst"], gg["best"], gg["U"], gg["feat"], gg.get("l2", ()), gg.get("Sa")
+    na = len(act); blocks = [("raw", 0, d)] + [(f"pool{k}", d + q * na, d + (q + 1) * na) for q, k in enumerate(ks)]
+    lo_pairs = d + len(ks) * na
+    if len(U):
+        blocks.append(("pairs", lo_pairs, lo_pairs + len(U)))
+    lo_l2 = lo_pairs + len(U)
+    for q, (op, k, K) in enumerate(l2):
+        blocks.append((f"{op}{k}_{K}", lo_l2 + q * na, lo_l2 + (q + 1) * na))
     gain = bst.feature_importance("gain", iteration=best); splits = bst.feature_importance("split", iteration=best)
     assert len(gain) == blocks[-1][2], (len(gain), blocks)
     tot = gain.sum()
-    out["gain"] = {b: dict(gain_frac=round(float(gain[lo:hi].sum() / tot), 4), split_frac=round(float(splits[lo:hi].sum() / splits.sum()), 4),
-                           n_used=int(np.sum(splits[lo:hi] > 0)), n=int(hi - lo)) for b, lo, hi in blocks}
-    gmap = {}
-    gm = np.zeros(784); gm[g] = gain[:d]; gmap["raw"] = gm
-    for q, k in enumerate(ks):
-        gm = np.zeros(784); lo = d + q * na; np.add.at(gm, g[act], gain[lo:lo + na]); gmap[f"pool{k}"] = gm
-    lo = d + len(ks) * na; Ua = np.abs(U); Ua = Ua / np.maximum(Ua.sum(1, keepdims=True), 1e-12)
-    gm = np.zeros(784); np.add.at(gm, g, Ua.T @ gain[lo:lo + len(U)]); gmap["pairs"] = gm
-    for kname, v in gmap.items():
-        maps["gain_" + kname] = v
-    # the pairs: classes and gain
-    pc = gg["pair_cls"]; pg = gain[lo:lo + len(U)]; C = D["C"]; G2 = np.zeros((C, C))
-    for (a, b), v in zip(pc, pg):
-        G2[min(a, b), max(a, b)] += v
-    maps["pair_class_gain"] = G2
-    top = np.argsort(-pg)[:12]; maps["pair_top_dirs"] = np.stack([np.bincount(g, weights=U[i], minlength=784) for i in top])
-    out["pairs"] = dict(n=int(len(U)), top=[dict(classes=[int(c) for c in pc[i]], gain_frac=round(float(pg[i] / tot), 5)) for i in top],
-                        gain_frac_top12=round(float(pg[top].sum() / tot), 4))
-    # per-class contribution maps on m test points per class
+    out["bank"] = [dict(name=b_, start=lo, stop=hi) for b_, lo, hi in blocks]
+    out["gain"] = {b_: dict(gain_frac=round(float(gain[lo:hi].sum() / tot), 4), split_frac=round(float(splits[lo:hi].sum() / splits.sum()), 4),
+                            n_used=int(np.sum(splits[lo:hi] > 0)), n=int(hi - lo)) for b_, lo, hi in blocks}
+    for b_, lo, hi in blocks:                                           # gain maps: a pooled / level-2 feature at its centre
+        gm = np.zeros(784)
+        if b_ == "raw":
+            gm[g] = gain[lo:hi]
+        elif b_ == "pairs":
+            Ua = np.abs(U); Ua = Ua / np.maximum(Ua.sum(1, keepdims=True), 1e-12); np.add.at(gm, g, Ua.T @ gain[lo:hi])
+        else:
+            np.add.at(gm, g[act], gain[lo:hi])
+        maps["gain_" + b_] = gm
+    C = D["C"]
+    if len(U):                                                          # the pairs: classes and gain
+        pc = gg["pair_cls"]; pg = gain[lo_pairs:lo_pairs + len(U)]; G2 = np.zeros((C, C))
+        for (a_, b2), v in zip(pc, pg):
+            G2[min(a_, b2), max(a_, b2)] += v
+        maps["pair_class_gain"] = G2
+        top = np.argsort(-pg)[:12]; maps["pair_top_dirs"] = np.stack([np.bincount(g, weights=U[i], minlength=784) for i in top])
+        out["pairs"] = dict(n=int(len(U)), top=[dict(classes=[int(c) for c in pc[i]], gain_frac=round(float(pg[i] / tot), 5)) for i in top],
+                            gain_frac_top12=round(float(pg[top].sum() / tot), 4))
+    # per-class contribution maps on m test points per class (LightGBM pred_contrib, for the true class's score)
     te = r["te"]; yte = D["y"][te]; rng = np.random.default_rng(1); m_c = max(1, mc // C)
     sel = np.concatenate([rng.choice(np.where(yte == c)[0], size=min(m_c, int(np.sum(yte == c))), replace=False) for c in range(C)])
     Xq = D["X"][te[sel]]; Fq = feat(Xq); CT = bst.predict(Fq, num_iteration=best, pred_contrib=True)
     nf = Fq.shape[1]; CT = CT.reshape(len(sel), C, nf + 1)
     cmaps = np.zeros((C, 784)); share = np.zeros((C, len(blocks)))
     Mpool = {k: (As[k] > 0) for k in ks}
+    Mem = {k: np.stack([np.where(Mpool[k][:, j])[0] for j in range(na)]) for k in ks}  # S_j(k) as column indices (na x k)
+    Pq = {k: np.asarray(Xq, np.float32) @ As[k] for k in ks}                         # level-1 maps of the query points
     for c in range(C):
         idx = np.where(yte[sel] == c)[0]; ct = CT[idx, c, :nf]                      # contributions to class c's score
-        pix = np.zeros((len(idx), 784)); pix[:, g] += ct[:, :d]
-        for q, k in enumerate(ks):
-            lo_ = d + q * na; w = ct[:, lo_:lo_ + na] / k                            # spread over the k members
-            pix[:, g] += w @ Mpool[k].T.astype(float)
-        lo_ = d + len(ks) * na; ux = np.abs(Xq[idx][:, None, :] * U[None, :, :])   # |u_p x_p| per point and pair
-        ux = ux / np.maximum(ux.sum(2, keepdims=True), 1e-12)
-        pix[:, g] += np.einsum("ip,ipj->ij", ct[:, lo_:lo_ + len(U)], ux)
-        cmaps[c] = pix.mean(0)
+        pix = np.zeros((len(idx), d)); pix += ct[:, :d]
+        for q, k in enumerate(ks):                                                   # a pooled sum: spread over its k members
+            lo_ = d + q * na; pix += (ct[:, lo_:lo_ + na] / k) @ Mpool[k].T.astype(float)
+        if len(U):                                                                   # a pair: over pixels by |u_p x_p|
+            ux = np.abs(Xq[idx][:, None, :] * U[None, :, :]); ux = ux / np.maximum(ux.sum(2, keepdims=True), 1e-12)
+            pix += np.einsum("ip,ipj->ij", ct[:, lo_pairs:lo_pairs + len(U)], ux)
+        for q, (op, k, K) in enumerate(l2):                                          # a max-pooled map: over the members of
+            lo_ = lo_l2 + q * na                                                     # the winning neighbour's S_j*(k)
+            win = Sa[np.arange(na)[None, :], np.argmax(Pq[k][idx][:, Sa[:, :K]], 2)]  # (points, n_active): j* per centre
+            cols = Mem[k][win]                                                       # (points, n_active, k) pixel columns
+            np.add.at(pix, (np.arange(len(idx))[:, None, None], cols), np.broadcast_to((ct[:, lo_:lo_ + na] / k)[:, :, None], cols.shape))
+        cm = np.zeros((len(idx), 784)); cm[:, g] = pix; cmaps[c] = cm.mean(0)
         for bi, (_, lo, hi) in enumerate(blocks):
             share[c, bi] = np.abs(ct[:, lo:hi]).sum(1).mean()
     maps["contrib"] = cmaps; maps["class_mean"] = np.stack([np.bincount(g, weights=D["X"][r["tr"]][D["y"][r["tr"]] == c].mean(0), minlength=784) for c in range(C)])
     share = share / share.sum(1, keepdims=True)
-    out["contrib_share"] = {b: [round(float(v), 4) for v in share[:, bi]] for bi, (b, _, _) in enumerate(blocks)}
+    out["contrib_share"] = {b_: [round(float(v), 4) for v in share[:, bi]] for bi, (b_, _, _) in enumerate(blocks)}
 out["cpu"] = round(time.process_time() - t0, 1)
 json.dump(out, open(base + ".json", "w"), indent=1, default=lambda v: v.item() if hasattr(v, "item") else str(v))
 np.savez_compressed(base + ".npz", **maps)

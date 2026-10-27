@@ -42,7 +42,7 @@ class Recorder:
     """Wraps HP's DFG._fit, pool_sets, pair_dirs and fit_ggbt for the duration of a with-block."""
 
     def __init__(self, HP):
-        self.HP = HP; self.dfg, self.pool, self.pairs, self.pair_cls, self.ggbt = [], [], [], [], []
+        self.HP = HP; self.dfg, self.pool, self.ranked, self.pairs, self.pair_cls, self.ggbt = [], [], [], [], [], []
 
     def __enter__(self):
         HP = self.HP; self._saved = {}
@@ -60,7 +60,9 @@ class Recorder:
         ps, pd, fg = self._saved["pool_sets"], self._saved["pair_dirs"], self._saved["fit_ggbt"]
 
         def pool_sets(X, ks, *a, **k):
-            As, fl = ps(X, ks, *a, **k); rec.pool.append({kk: v.copy() for kk, v in As.items()}); return As, fl
+            res = ps(X, ks, *a, **k); rec.pool.append({kk: v.copy() for kk, v in res[0].items()})
+            rec.ranked.append(res[2].copy() if len(res) > 2 else None)    # p10_hier: ranked neighbour lists (active index space)
+            return res
 
         def pair_dirs(X, y, m, rng):
             import copy
@@ -78,8 +80,11 @@ class Recorder:
         def fit_ggbt(Xr, y, *a, **k):
             m, fl, r = fg(Xr, y, *a, **k)
             c = _closure(type(m).proba) if hasattr(type(m), "proba") else {}
+            npairs = a[4] if len(a) > 4 else k.get("n_pairs", 300)        # fit_ggbt(Xr, y, C, A, rng, seed, n_pairs, ...)
             rec.ggbt.append(dict(n=len(y), model=m, bst=c.get("bst"), best=c.get("best"), feat=c.get("feat"), rounds=r,
-                                 U=rec.pairs[-1] if rec.pairs else None, pair_cls=rec.pair_cls[-1] if rec.pair_cls else None))
+                                 U=rec.pairs[-1] if (rec.pairs and npairs) else np.zeros((0, Xr.shape[1]), np.float32),
+                                 pair_cls=rec.pair_cls[-1] if (rec.pair_cls and npairs) else np.zeros((0, 2), int),
+                                 l2=tuple(k.get("l2", ())), Sa=k.get("Sa")))
             return m, fl, r
         HP.pool_sets, HP.pair_dirs, HP.fit_ggbt = pool_sets, pair_dirs, fit_ggbt
         return self
