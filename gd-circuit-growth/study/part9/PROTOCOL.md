@@ -133,7 +133,9 @@ but not at the frontier, and the image gain unattributed. Added now, none of the
   qd_b, n in {1000, 10000, 60000}, seed 0. It separates the representation from the learner.
 - **C2 `cnn`** (context only; discreteness D1): a small CNN on the *unpermuted* pixels (it uses the layout, which the
   MLPs and the discrete learners do not), the mlp_strong recipe otherwise; qd_a and qd_b, n in {1000, 10000, 60000},
-  seed 0. It is not a Q2 reference.
+  seed 0. It is not a Q2 reference. (Implementation note, 03:35 UTC, before it ran on qd_a / qd_b: one network at a fixed
+  weight decay of 0.1, without selection or ensembling, because a CNN step costs about 5x an MLP step on this CPU; a
+  smoke test with selection took 15 CPU-min at n = 300.)
 - **C3 attribution** (discreteness D3): from 03:0x UTC the evaluator also stores each fit's stack weights and per-member
   out-of-fold errors (training rows only); the remaining hyb_portfolio2 image cells record them. The learner is unchanged.
 - **Reporting:** `mlp_reg` maps to `mlp_l2unit` on QuickDraw too (fairness F5, a table bug); CPU seconds per fit are

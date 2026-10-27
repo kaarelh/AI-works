@@ -3,10 +3,11 @@ reference. It uses the pixel layout, which the MLPs and the discrete learners do
 by data.py's fixed permutation, seed 9192, which this script inverts).
 Network: 28x28x1 -> conv 3x3, 16, ReLU -> max-pool 2 -> conv 3x3, 32, ReLU -> max-pool 2 -> dense 128, ReLU, dropout 0.1
 -> C. Recipe as mlp_strong.py otherwise: pixels in [0, 1], batch 128, S = min(10000, max(2000, 50 epochs)) steps, AdamW
-with lr 1e-3 and cosine decay, decoupled weight decay in {0, 0.1, 1.0} chosen by validation accuracy (10% of the n
-points, last 4 of 40 checkpoints), then one network retrained on all n with the chosen wd.
-FLOPs (analytic, multiply-adds x 2): forward 2.44e6 per example; one training run 3 x 2.44e6 x 128 x S; a fit (3
-selection runs + 1) is 4 runs. Results: results/cnn__<ds>.json.
+with lr 1e-3 and cosine decay, one network. Decoupled weight decay: fixed at 0.1 by default (CNN_WDS; for compute: a
+CNN step costs ~5x an MLP step on this CPU). With more than one value in CNN_WDS, the value is chosen by validation
+accuracy (10% of the n points, last 4 of 40 checkpoints) and one network is retrained on all n.
+FLOPs (analytic, multiply-adds x 2): forward 2.44e6 per example; one training run 3 x 2.44e6 x 128 x S (with selection,
+len(WDS) + 1 runs). Results: results/cnn__<ds>.json.
 usage: python cnn_ref.py <qd_dataset> ...   (env CNN_NS: comma list of n; default 1000, 10000, 60000; seed 0 only)"""
 import os, sys, time, json, math, numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
@@ -14,7 +15,8 @@ import jax, jax.numpy as jnp
 import data as DATA
 from harness import RES
 
-B, NCK, LR, WDS, DROP = 128, 40, 1e-3, (0.0, 0.1, 1.0), 0.1
+B, NCK, LR, DROP = 128, 40, 1e-3, 0.1
+WDS = tuple(float(v) for v in os.environ.get("CNN_WDS", "0.1").split(","))
 CH1, CH2, HID = 16, 32, 128
 FWD = 2.0 * (28 * 28 * CH1 * 9 + 14 * 14 * CH2 * CH1 * 9 + 7 * 7 * CH2 * HID + HID * 10)
 
@@ -105,16 +107,18 @@ def run(name, ns):
         S = n_steps(n); t0 = time.time(); tr = pool[:n]
         nv = max(10, int(round(0.1 * n))); fit_idx, val_idx = tr[nv:], tr[:nv]
         train = make_net(C, S)
-        f1 = jax.jit(jax.vmap(train, in_axes=(0, None, None, None, 0, None, None)))
-        keys = jnp.stack([jax.random.PRNGKey(1000 * s + 10 * j + 1) for j in range(len(WDS))])
-        acc, _ = f1(keys, jnp.asarray(unpermute(D["X"][fit_idx])), jnp.asarray(D["y"][fit_idx]), len(fit_idx),
-                    jnp.asarray(WDS, jnp.float32), jnp.asarray(unpermute(D["X"][val_idx])), jnp.asarray(D["y"][val_idx]))
-        sc = np.asarray(acc)[:, -4:].mean(1); j = int(np.argmax(sc))
+        j = 0
+        if len(WDS) > 1:
+            f1 = jax.jit(jax.vmap(train, in_axes=(0, None, None, None, 0, None, None)))
+            keys = jnp.stack([jax.random.PRNGKey(1000 * s + 10 * j + 1) for j in range(len(WDS))])
+            acc, _ = f1(keys, jnp.asarray(unpermute(D["X"][fit_idx])), jnp.asarray(D["y"][fit_idx]), len(fit_idx),
+                        jnp.asarray(WDS, jnp.float32), jnp.asarray(unpermute(D["X"][val_idx])), jnp.asarray(D["y"][val_idx]))
+            sc = np.asarray(acc)[:, -4:].mean(1); j = int(np.argmax(sc))
         _, pred = jax.jit(train)(jax.random.PRNGKey(777 + s), jnp.asarray(unpermute(D["X"][tr])), jnp.asarray(D["y"][tr]), n,
                                  jnp.float32(WDS[j]), Xt, jnp.asarray(yt))
         err = float(np.mean(np.asarray(pred) != yt)); fl = 3.0 * FWD * B * S
         res["err"].append([err, float("nan"), float("nan")]); res["flops"].append([fl] * 3)
-        res["flops_total"].append([(len(WDS) + 1) * fl] * 3); res["chosen_wd"].append([WDS[j]])
+        res["flops_total"].append([(len(WDS) + 1 if len(WDS) > 1 else 1) * fl] * 3); res["chosen_wd"].append([WDS[j]])
         res["cpu_seconds"].append([time.time() - t0] * 3)
         print(f"  cnn {name} n={n} S={S} err={err:.4f} wd={WDS[j]} ({time.time() - t0:.0f}s)", flush=True)
         json.dump(res, open(path, "w"))
