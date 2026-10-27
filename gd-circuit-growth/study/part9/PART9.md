@@ -34,8 +34,8 @@ discreteness.**
   network on 10 of 12 targets and more on none (mean log2 n* ratio −1.45, about 2.7×), where v1 is behind on the same
   sum-structured targets (+0.63). Part 8's loss on symmetric functions is gone.
 - **Q2 (images at n ≥ 10000).** On the fresh QuickDraw sets v2 beats the strong MLP ensemble (mean log2 error ratio
-  −0.18; v1 +0.01) and has the lowest error of every permutation-invariant learner at all 14 cells, including against
-  wider and CPU-matched MLP ensembles added after the audits.
+  −0.18; v1 +0.01) and has the lowest error of every reference at 13 of 14 cells; a CPU-matched ensemble of 1024-wide
+  MLPs, added after the audits, ties it at n = 60000 on both sets.
 - **But** the image member's pooling sets recover the pixel grid from correlations, an MLP given the same pooled sums
   matches v2 at n = 60000, about half of the winning member's gain comes from boosting longer, v2 takes 20–30 CPU minutes per
   fit, and a small CNN that sees the layout is far better.
@@ -64,7 +64,7 @@ What the development data show (in-sample for the builders, who tuned on the sam
 
 Held-out answers (§6):
 - **Q1, `dlheld6`** (blind; Amendment 3): −1.45 against `nets_best` (10 better / 0 worse); sum-structured −1.53 against
-  v1's +0.63. R3_HEAD
+  v1's +0.63. With Amendment 4's two extra network weight decays: −1.25 (10 better / 2 worse).
 - **Q1, secondary:** `dlheld5` −2.40 (10 / 0) and `dlheld4` −1.68 (12 / 0); both exposed to the design (§8, item 1).
 - **Q2, `qd_a` and `qd_b`, n ≥ 10000:** −0.18 against `mlp_strong` and `mlp_best` (3 better / 3 tied / 0 worse), v1
   +0.01; −0.13 against `mlp_wide`. Controls and ablation: §6.3–6.4.
@@ -771,7 +771,21 @@ Brackets: clearly better / clearly worse targets. `dlheld5` and `dlheld4` are se
 5 of `dlheld5`'s 8 signed-sum targets (v2 only h5s1, which no learner learns), and v2's largest `dlheld5` margin is on
 h5s5 (421 against the networks' 12254). Per-target tables: RESULTS.md.
 
-**Amendment 4, R3** (logistic loss with weight decay 0.3 and 1.0 on `dlheld6`): R3 PENDING.
+**Amendment 4, R3** (logistic loss with weight decay 0.3 and 1.0 on `dlheld6`). n* of the two new variants, and
+`nets_best` over all five:
+
+| target | h6_00 | h6_01 | h6_02 | h6_06 | h6_07 | h6_08 | h6_09 | h6_10 | h6_11 | h6_03 | h6_04 | h6_05 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| nets_cewd0.3 | never | 1684 | 996 | 1872 | 2170 | 1720 | 744 | 501 | 362 | 235 | 113 | 62 |
+| nets_cewd1.0 | 12304 | 1655 | 1250 | 1877 | 1812 | 1856 | 751 | 451 | 357 | 231 | 121 | 75 |
+| nets_best (5) | 12304 | 1655 | 996 | 1872 | 1812 | 1720 | 744 | 451 | 357 | 231 | 96 | 56 |
+
+- They improve `nets_best` by 0.27 in log2 on average over the 8 sum-structured targets that both bests learn, within
+  the fairness audit's predicted 0.2–0.5.
+- The most regularized variant learns h6_00 (a residue class mod 3 of a 13-input count) at n* = 12304, the only learner
+  to do so; it is inside v2's feature class, but v2's search does not find it.
+- Against `nets_best` over five variants: v2 −1.25 (10 better, 2 worse: h6_00 and h6_10, 702 against 451);
+  sum-structured −1.26 (7 / 2), v1 +0.91 (3 / 6). Q1's criteria still hold.
 
 ### 6.3 Images `qd_a` and `qd_b` (Q2)
 
@@ -792,7 +806,7 @@ Test error (seed mean; seed 0 at n ≥ 30000; `mlp_xl` and the controls seed 0):
 | | 3000 | **0.223** | 0.251 | 0.280 | 0.264 | 0.261 | 0.269 | – | 0.264 | – | – |
 | | 10000 | **0.180** | 0.203 | 0.227 | 0.212 | 0.206 | 0.214 | – | 0.212 | 0.196 | – |
 | | 30000 | **0.156** | 0.178 | 0.194 | 0.171 | 0.166 | 0.172 | – | 0.171 | – | – |
-| | 60000 | **0.149** | 0.164 | 0.178 | 0.162 | 0.152 | 0.155 | XL_QDB | 0.162 | 0.147 | – |
+| | 60000 | 0.149 | 0.164 | 0.178 | 0.162 | 0.152 | 0.155 | **0.148** | 0.162 | 0.147 | – |
 
 Bold: lowest among the permutation-invariant learners (all but the two right-hand columns).
 
@@ -801,14 +815,17 @@ Bold: lowest among the permutation-invariant learners (all but the two right-han
 | mlp_strong (pre-registered) | 3 / 3 / 0 | −0.18 | −0.22 | +0.01 |
 | mlp_best (pre-registered) | 3 / 3 / 0 | −0.18 | −0.22 | +0.01 |
 | mlp_wide | 2 / 4 / 0 | −0.13 | −0.21 | +0.06 |
-| mlp_best+ (with R1, R2) | Q2PLUS | | | |
+| mlp_xl (CPU-matched; n = 60000 only) | 0 / 2 / 0 | −0.02 | – | +0.17 |
+| mlp_best+ (with R1, R2) | 2 / 4 / 0 | −0.11 | −0.21 | +0.07 |
 | mlp_pool (control) | 0 / 4 / 0 | −0.07 | −0.14 | +0.12 |
 
 - **Q2, as pre-registered: met** on all three parts (below 0 against `mlp_strong` and against `mlp_best`, and below
   v1's +0.01).
-- **Strengthened references.** `mlp_wide` (3 × 512-512) is the strongest MLP at every n ≥ 3000; at `qd_b` n = 60000 it
+- **Strengthened references.** `mlp_wide` (3 × 512-512) is the strongest MLP reference at every n from 3000 to 30000; at `qd_b` n = 60000 it
   is level with v2 (0.152 against 0.149). `mlp_xl` (3 × 1024-1024, n = 60000 only): 0.125 on `qd_a`, the best MLP
-  there, against v2's 0.120; XL_QDB_TEXT
+  there, against v2's 0.120; 0.148 on `qd_b`, against v2's 0.149. Both cells are ties: at the largest n a wide enough
+  MLP ensemble closes the gap. Its wall time was 400–450 s on the shared 4-core machine (process CPU time not
+  recorded), against v2's 1178–1757 CPU s.
 - **Control `mlp_pool`** (`mlp_strong` on [x, v2's pooled sums]): the strongest MLP at every n where it ran, and level
   with v2 at n = 60000 on both sets. v2 keeps a margin at n = 1000 and 10000 (5 of 6 cells tie by the rule; one,
   `qd_a` n = 1000, favours v2).
@@ -847,9 +864,10 @@ rows, seed 0:
 
 ### 6.6 Answers to Q1 and Q2
 
-- **Q1: yes**, on the blind suite (§6.1), and the two exposed suites agree. R3_ANSWER
-- **Q2: yes, as pre-registered** (§6.3), and v2 stays ahead of every permutation-invariant reference at every cell,
-  including the wider and CPU-matched ensembles. But the image result is carried by the representation (locality
+- **Q1: yes**, on the blind suite (§6.1), also against the five-variant `nets_best` (−1.25, 10 better / 2 worse; §6.2),
+  and the two exposed suites agree.
+- **Q2: yes, as pre-registered** (§6.3), and v2 is never worse than any reference; but the CPU-matched ensemble ties it
+  at n = 60000 on both sets. But the image result is carried by the representation (locality
   recovered from pixel correlations: `mlp_pool` matches v2 at n = 60000) and by boosting, and a CNN given the layout is
   far better (§6.4, §9).
 

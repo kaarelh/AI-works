@@ -24,7 +24,7 @@ Raw network outputs live in a session scratch directory and are in neither branc
 
 [Part 8](#part-8-a-discrete-portfolio-against-gradient-descent-trained-networks-on-toy-and-real-tasks-26-october-2026) asks for one discrete method that beats gradient-descent-trained networks on both. A pre-registered portfolio (DFG plus boosted trees, ExtraTrees, kNN votes and logistic regression, stacked) does so on the toy suites (9 of 10 fresh targets) and on held-out tabular data on average (lower mean error on 8 of 10 fresh datasets; not significant). On images its error is lower than every MLP's up to n = 3000 (one cell resolved), but a regularized MLP ensemble beats it at n ≥ 30000. The toy wins come from DFG's character search, the real-task wins from the classical stack.
 
-[Part 9](#part-9-sum-features-and-permutation-invariant-image-members-2627-october-2026) continues in the two directions where Part 8 lost. Features that are functions of signed sums of inputs remove the loss on symmetric targets: on a held-out suite written blind to the design, 10 of 12 targets need clearly less data than the best network, none more. A pixel-permutation-invariant image member gives the lowest error of every permutation-invariant learner at all 7 training sizes on two fresh QuickDraw sets. But the image gain is carried by locality recovered from pixel correlations: an MLP given the same pooled sums matches it at n = 60000, and a small CNN is better.
+[Part 9](#part-9-sum-features-and-permutation-invariant-image-members-2627-october-2026) continues in the two directions where Part 8 lost. Features that are functions of signed sums of inputs remove the loss on symmetric targets: on a held-out suite written blind to the design, 10 of 12 targets need clearly less data than the best pre-registered network variant, none more. A pixel-permutation-invariant image member beats a strong MLP ensemble on two fresh QuickDraw sets at n ≥ 10000. But the image gain is carried by locality recovered from pixel correlations: an MLP given the same pooled sums matches it at n = 60000, so does a CPU-matched ensemble of wider MLPs, and a small CNN is better.
 
 **Paper (Parts 6–9):** [`paper_discrete/discrete-learners-paper.pdf`](paper_discrete/discrete-learners-paper.pdf) (LaTeX sources, figure and table scripts in [`paper_discrete/`](paper_discrete/)).
 
@@ -1003,12 +1003,15 @@ samples against the networks' 350) and images at large n.
 **Answer: yes to both pre-registered questions, with a large qualification on images.**
 - **Q1, toy (blind suite `dlheld6`).** v2 needs clearly less data than the per-target best network on 10 of 12 targets
   and more on none: mean log2 n* ratio −1.45 against the pre-registered variants, about 2.7×. On the 9 sum-structured
-  targets v2 is at −1.53, v1 at +0.63. One target (a residue class mod 3 of a 13-input count) is learned by no learner.
-  The two exposed suites agree (−2.40 and −1.68).
+  targets v2 is at −1.53, v1 at +0.63. With two more network weight decays (added after the fairness audit) the mean is
+  −1.25, with 2 targets worse: the most regularized network learns a residue class mod 3 of a 13-input count
+  (n* = 12304), which v2 does not find although it is a function of one signed sum. The two exposed suites agree (−2.40
+  and −1.68).
 - **Q2, images (`qd_a`, `qd_b`, n ≥ 10000).** v2's mean log2 error ratio is −0.18 against the strong MLP ensemble and
   the pre-registered `mlp_best` (3 cells better, 3 tied, none worse), and v1's is +0.01. Against the strengthened
-  references it is −0.13, and v2 has the lowest error of every permutation-invariant learner at all 14 cells. At
-  n = 60000 v2 has 12.0% and 14.9% error, against 12.9% and 15.2% for the 512-wide ensemble.
+  references it is −0.11 (none worse), and v2 has the lowest error of every reference at 13 of 14 cells. At n = 60000 v2
+  has 12.0% and 14.9% error, against 12.9% and 15.2% for the 512-wide ensemble and 12.5% and 14.8% for the CPU-matched
+  1024-wide ensemble (two ties).
 - **What carries the image result** (controls and post-hoc ablation):
   - the pooling sets recover the pixel grid from correlations (on the permuted dev set, 98% of the members of each
     4-pixel set lie within one grid step);
