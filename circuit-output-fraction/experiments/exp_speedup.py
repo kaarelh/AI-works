@@ -72,6 +72,22 @@ def main():
         est = dfsb_estimate(C, D, eps=EPS, delta=DELTA, rng=rng)
         record(rows, "trigger", k, p, est, time.time() - t, {"size": C.size})
 
+    # 2b. triggers whose dense body has 20 variables (above the atom size, so
+    # DFSB samples the body after forcing the trigger)
+    for k in (20, 40, 80):
+        n = k + 20
+        C, trig, rest, R = trigger_circuit(n, k, rng, body_gates=60)
+        D = Product.uniform(n)
+        X = np.zeros((1 << 20, n), dtype=bool)
+        X[:, rest] = ((np.arange(1 << 20)[:, None] >> np.arange(20)) & 1).astype(bool)
+        for i, b in trig:
+            X[:, i] = bool(b)
+        p = float(C.eval_bits(X).mean()) * 2.0 ** (-k)
+        del X
+        t = time.time()
+        est = dfsb_estimate(C, D, eps=EPS, delta=DELTA, rng=rng)
+        record(rows, "trigger-body20", k, p, est, time.time() - t, {"size": C.size})
+
     # 3. AND of independent random blocks (6 variables each)
     for kb in (4, 8, 16, 24, 32):
         C, p, probs = independent_blocks(kb, 6, 12, rng)
@@ -79,6 +95,15 @@ def main():
         t = time.time()
         est = dfsb_estimate(C, D, eps=EPS, delta=DELTA, rng=rng)
         record(rows, "blocks", kb, p, est, time.time() - t, {"size": C.size})
+
+    # 3b. AND of independent random blocks of 16 variables (above the atom
+    # size: dense leaves are sampled, with the eps/(3d) accuracy split)
+    for kb in (2, 4, 8, 16):
+        C, p, probs = independent_blocks(kb, 16, 40, rng)
+        D = Product.uniform(kb * 16)
+        t = time.time()
+        est = dfsb_estimate(C, D, eps=EPS, delta=DELTA, rng=rng)
+        record(rows, "blocks16", kb, p, est, time.time() - t, {"size": C.size})
 
     # 4. threshold of independent blocks: exponential tilting (Chernoff envelope)
     for kb, frac in ((50, 0.75), (100, 0.75), (200, 0.75), (400, 0.75), (800, 0.75)):

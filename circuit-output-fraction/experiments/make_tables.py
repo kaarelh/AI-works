@@ -50,9 +50,12 @@ def arguments():
              "family & $k$ & $|C|$ & $p$ & Part 1 ratio & proof steps & check (s) & Part 2 ratio\\\\",
              "\\midrule"]
     for r in rows:
+        fam = "linear hash" if r["family"] == "linhash" else f"SPN, {r['rounds']} rounds"
+        if "proof_steps" not in r:  # instance hit the per-instance time limit
+            lines.append(f"{fam} & {r['k']} & & & \\multicolumn{{4}}{{l}}{{no proof within {r['timeout_seconds']} s}}\\\\")
+            continue
         p1 = r["part1_hi"] / r["part1_lo"] if r["part1_lo"] > 0 else math.inf
         p2 = r["part2_hi"] / r["part2_lo"] if r["part2_lo"] > 0 else math.inf
-        fam = "linear hash" if r["family"] == "linhash" else f"SPN, {r['rounds']} rounds"
         lines.append(f"{fam} & {r['k']} & {r['size']} & {sci(r['p'])} & "
                      f"{'$\\infty$' if p1 == math.inf else f'{p1:.3g}'} & {r['proof_steps']} & "
                      f"{r['verify_seconds']:.1f} & {p2:.3f}\\\\")

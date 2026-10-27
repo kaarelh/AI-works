@@ -29,8 +29,10 @@ plt.rcParams.update({
     "lines.linewidth": 1.5, "lines.markersize": 5,
 })
 
-NAMES = {"dnf-obfuscated": "obfuscated DNF\n(envelope leaf)", "trigger": "backdoor trigger\n(forcing)",
-         "blocks": "AND of random blocks\n(dense leaves)", "threshold": "threshold of blocks\n(tilting)"}
+# families on the sampling path (the trigger and 6-variable block families of the
+# table are computed exactly, with no sampling, so they have no curve here)
+NAMES = {"dnf-obfuscated": "obfuscated DNF\n(envelope leaf)", "trigger-body20": "trigger, 20-var body\n(forcing + dense leaf)",
+         "blocks16": "AND of 16-var blocks\n(dense leaves)", "threshold": "threshold of blocks\n(tilting)"}
 
 
 def speedup():
@@ -84,7 +86,7 @@ def proofs():
     rows = json.load(open(path))
     fig, ax = plt.subplots(figsize=(3.4, 2.4))
     for fam, col, lab in (("linhash", BLUE, "linear hash $[Mx_S=Ma]$"), ("spn", ORANGE, "SPN trigger")):
-        rs = sorted([r for r in rows if r["family"] == fam], key=lambda r: r["k"])
+        rs = sorted([r for r in rows if r["family"] == fam and "proof_steps" in r], key=lambda r: r["k"])
         ax.plot([r["k"] for r in rs], [r["proof_steps"] for r in rs], color=col, marker="o", label=lab)
     ax.set_yscale("log")
     ax.set_xlabel("trigger width $k$ (bits)")
