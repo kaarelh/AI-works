@@ -3,25 +3,51 @@
 DFSB branches on shared variables but treats overlapping $\vee$'s by envelopes.
 With the \#DNNF FPRAS available, non-deterministic $\vee$'s cost nothing, and
 the only obstacle is $\wedge$-gates whose children share variables. The following
-parameter measures exactly that, and generalises Darwiche's dtree conditioning \cite{darwiche2001dnnf} from CNFs to arbitrary circuits.
+parameter measures exactly that, and generalises Darwiche's dtree conditioning
+\cite{darwiche2001dnnf} from CNFs to arbitrary circuits: a binary $\wedge$-tree over
+the clauses of a CNF is a dtree, and $\kappa$ of its internal nodes below is their
+cluster (cutset plus context). Like the width of a dtree, it is a parameter of how
+the $\wedge$'s are bracketed, not of the function.
 
 \begin{definition}[context width]
-Work in the NNF of $C$ (size $\le2|C|$, nested gates flattened). For an
-$\wedge$-gate $g$ let $S_g=\bigcup_{a\ne b\text{ children of }g}\sv(a)\cap\sv(b)$ be
-its overlap. For a gate $h$ let $\mathrm{Up}(h)$ be the set of $\wedge$-gates from
-which $h$ is reachable (including $h$), and define the \emph{context}
+Let $N$ be the NNF of $C$ (\cref{sec:setting}) in which every $\wedge$-gate keeps the
+children it has in $C$: nested $\wedge$-gates are not merged, and the children of a
+gate form a set ($h\wedge h=h$). $|N|$ is its number of wires. For an $\wedge$-gate
+$g$ let $S_g=\bigcup_{a\ne b\text{ children of }g}\sv(a)\cap\sv(b)$ be its overlap.
+For a gate $h$ let $\mathrm{Up}(h)$ be the set of $\wedge$-gates from which $h$ is
+reachable (including $h$), and define the \emph{context}
 $\kappa(h)=\sv(h)\cap\bigcup_{g\in\mathrm{Up}(h)}S_g$. The context width is
-$\mathrm{cw}(C)=\max_h|\kappa(h)|$.
+$\mathrm{cw}(N)=\max_h|\kappa(h)|$.
 \end{definition}
 
+For $\{\wedge,\vee,\neg\}$-circuits $|N|\le2|C|$ (one copy of each gate per
+polarity). A fan-in-$k$ $\oplus$-gate becomes a chain with $12(k-1)$ wires for both
+polarities, so $|N|\le12|C|$ when $\oplus$-gates are present, and a threshold gate of
+fan-in $k$ with nonnegative integer weights of total $W$ becomes a sequential
+counter with $O(kW)$ wires; other threshold gates are covered only as frontier
+gates (see below). Merging an $\vee$-gate into an $\vee$-parent does not increase
+$\mathrm{cw}$ ($\vee$-gates have no overlap, and the sets $\mathrm{Up}(h)$ do not
+change), but merging $\wedge$-gates can: a CNF with clauses on the $n-w+1$ sliding
+windows of width $w$ of its variable order has $\mathrm{cw}=w$ as a left-deep
+$\wedge$-chain in window order, and $\mathrm{cw}=n-2$ (for $2\le w\le n-2$) as a single
+$\wedge$-gate over its clauses. We write $\mathrm{cw}^*(C)$ for the minimum of
+$\mathrm{cw}$ over the NNFs obtained from $N$ by merging $\wedge$-gates of fan-out $1$
+into their $\wedge$-parents and replacing $\wedge$-gates by binary trees of
+$\wedge$-gates over the same children (which at most doubles $|N|$); any bracketing an
+algorithm chooses, e.g.\ that of \cref{lem:pathcw}, bounds it.
+
 \begin{theorem}[context-width compilation]\label{thm:cw}
-Every circuit $C$ is equivalent to a DNNF of size $O(|C|\,\mathrm{cw}\,2^{\mathrm{cw}})$,
-computable in the same time. $\mathrm{cw}(C)=0$ iff the NNF of $C$ is already a
-DNNF. If moreover every $\vee$-gate has semantically disjoint children, the
-result is a d-DNNF. Consequently (via \cref{thm:sis}(a) and \cite{meel2026dnnf})
-$p$ has an FPRAS under every product distribution with rational marginals,
-running in time $\poly(|C|2^{\mathrm{cw}},n,\max_i\log b_i,1/\eps,\log(1/\delta))$;
-polynomial when $\mathrm{cw}=O(\log|C|)$.
+Let $N$ be an NNF of $C$ as above and $\mathrm{cw}=\mathrm{cw}(N)$. Then $C$ is
+equivalent to a DNNF with at most $(|N|+1)(\mathrm{cw}+3)2^{\mathrm{cw}}$ wires,
+computable in time $O(|N|(n+(\mathrm{cw}+1)2^{\mathrm{cw}}))$. $\mathrm{cw}(N)=0$ iff
+$N$ is a DNNF. If every $\vee$-gate of $N$ is deterministic (those produced by the
+$\oplus$- and threshold expansions are; those produced from $\wedge$-gates of $C$ under
+a negation need not be), the result is a d-DNNF, and $p$ is computed exactly in time
+linear in its size under every product distribution. Consequently (via
+\cref{thm:sis}(a) and \cite{meel2026dnnf}) $p$ has an FPRAS under every product
+distribution with rational marginals $q_i=a_i/b_i$, running in time
+$\poly(|N|2^{\mathrm{cw}},n,\max_i\log b_i,1/\eps,\log(1/\delta))$; polynomial when
+$\mathrm{cw}=O(\log|N|)$.
 \end{theorem}
 
 \begin{proof}
@@ -40,54 +66,122 @@ $\kappa(h)$, and the root is $M[\mathrm{root},\emptyset]$. Correctness is induct
 on $g|_\sigma=\mathrm{op}_jh_j|_{\sigma}$. Decomposability: inside $M$, the literals
 of $\tau$ live on $\kappa(h)\setminus\mathrm{dom}\,\pi$ and $N[h,\cdot]$ on
 $\sv(h)\setminus\kappa(h)$; at an $\wedge$-gate the children's variables lie in
-$\sv(h_j)\setminus\kappa(g)$, pairwise disjoint by F2. Each wire contributes
-$O(\mathrm{cw}\,2^{\mathrm{cw}})$ nodes. The d-DNNF claim holds because
-conditioning preserves disjointness and the $M$-nodes are deterministic.
+$\sv(h_j)\setminus\kappa(g)$, pairwise disjoint by F2.
+Size: a gate $h$ gives $2^{|\kappa(h)|}$ nodes $N[h,\cdot]$ with $\mathrm{fanin}(h)$
+wires each, at most $|N|2^{\mathrm{cw}}$ wires in all. A wire $g\to h$ gives
+$2^{|\mathrm{dom}\,\pi|}$ nodes $M[h,\pi]$ with at most $(t+2)2^t$ wires each,
+$t=|\kappa(h)|-|\mathrm{dom}\,\pi|$, so at most $(\mathrm{cw}+2)2^{\mathrm{cw}}$; the root
+adds as much. Time: supports, overlaps and contexts take $O(n)$ bit operations per
+wire of $N$, and each wire of the output is built in time $O(\mathrm{cw}+1)$.
+Since $S_g\subseteq\kappa(g)$, $\mathrm{cw}=0$ iff every $S_g$ is empty.
+The d-DNNF claim holds because conditioning preserves disjointness and the
+$M$-nodes are deterministic.
 \end{proof}
 
-\begin{example}[$\vee$'s are easy, $\wedge$'s are hard]
-Let $C=\bigvee_{i\le t}F_i$ where each $F_i$ is a CNF with clauses on sliding
-windows of width $w$ along its own variable order. Then $\mathrm{cw}=O(w)$, so an
-FPRAS exists, while $p$ can be $2^{-\Theta(n)}$. Exact computation is
-$\#\mathsf P$-hard already for ORs of $t=O(1)$ \emph{read-once} CNFs: edge-colour a
-bounded-degree graph with $\Delta+1$ colours, write its vertex-cover CNF as
-$\bigwedge_c\varphi_c$ with each $\varphi_c$ a matching CNF, and recover
-$\#\bigwedge_c\varphi_c$ from $\#\bigvee_{c\in S}\varphi_c$, $S\subseteq[\Delta+1]$,
-by inclusion--exclusion; counting vertex covers in graphs of degree $\ge3$ is
-$\#\mathsf P$-complete.
-\end{example}
-
-The same construction works with a \emph{frontier} of gates that are compiled
-otherwise (small support by tabulation, bounded treewidth by
-\cite{darwiche2009}): context width is then computed with frontier gates as
-leaves.
-
-\subsection{Modules and quotients}\label{sec:modules-quotients}
-
-A gate $g$ is a \emph{module} if every path from an input in $\sv(g)$ to the output
-passes through $g$. Then $C(x)=Q_g(g(x_{\sv(g)}),x_{\rm rest})$ for the quotient
-$Q_g$ obtained by replacing $g$ with a fresh input, and under a product
-distribution $g(x)$ is independent of $x_{\rm rest}$. Modules form a laminar family
-and can be found in $O(|C|\,n)$ time with dominators, as in fault-tree analysis \cite{dutuitrauzy1996}.
-
-\begin{lemma}[sensitivity of quotients]\label{lem:quotient}
-Let $F(q)=\Pr_{y\sim\bigotimes_j\mathrm{Bern}(q_j)}[Q(y)=1]$. If
-$\hat q_j\in e^{\pm\xi_j}q_j$ and $1-\hat q_j\in e^{\pm\xi_j}(1-q_j)$ for all $j$, then
-$F(\hat q)\in e^{\pm\sum_j\xi_j}F(q)$. If $Q$ is monotone (resp.\ antitone) in $y_j$,
-the condition on $q_j$ (resp.\ $1-q_j$) alone suffices for that coordinate.
+\begin{lemma}[bracketing along a path decomposition]\label{lem:pathcw}
+Let $F$ be a CNF whose primal graph (variables adjacent when they share a clause)
+has a path decomposition $B_1,\dots,B_r$ of width $k$. Let $\ell(c)$ be the index of
+the first bag containing $\sv(c)$ (one exists since $\sv(c)$ is a clique), order the
+clauses as $c_1,\dots,c_m$ with $\ell(c_1)\le\dots\le\ell(c_m)$, and bracket $F$ as the
+left-deep chain $a_1=c_1$, $a_j=a_{j-1}\wedge c_j$. Then $\kappa(a_j)$ and
+$\kappa(c_j)$ lie in $B_{\ell(c_j)}$, so $\mathrm{cw}\le k+1$. The same bound holds for
+an $\vee$ of such CNFs on the same variables whose chains share no $\wedge$-gate. For
+constant $k$, a path decomposition of width $k$, if one exists, is found in linear
+time \cite{bodlaender1996,bodlaenderkloks1996}, and the order from it in linear time.
 \end{lemma}
 
 \begin{proof}
-$F$ is multilinear: $F=q_jA+(1-q_j)B$ with $A,B\ge0$, so scaling either term by a
-factor in $e^{\pm\xi_j}$ scales $F$ within $e^{\pm\xi_j}$. If $Q$ is monotone in
-$y_j$ then $A\ge B$, and for $c\ge1$, $F(cq_j)=F+(c-1)q_j(A-B)\le F+(c-1)q_jA\le cF$;
-symmetrically for $c\le1$. Iterate over coordinates.
+Write $\ell_j=\ell(c_j)$. The bags containing a variable form an interval, so if
+$v\in\sv(c_i)\cap\sv(c_{i'})$ with $i\le j\le i'$ then $v\in B_{\ell_i}\cap B_{\ell_{i'}}
+\subseteq B_{\ell_j}$. The $\wedge$-gates above $a_j$ are $a_{j+1},\dots,a_m$, and
+$S_{a_{j'}}\subseteq\sv(c_{j'})$. So $v\in\kappa(a_j)$ means $v\in\sv(c_i)$ for some
+$i\le j$ and $v\in\sv(c_{j'})$ for some $j'\ge j$, hence $v\in B_{\ell_j}$. Further
+$\kappa(c_j)\subseteq\sv(c_j)\subseteq B_{\ell_j}$, a literal has $|\kappa|\le1$, and
+bags have at most $k+1$ elements. In an $\vee$ of such CNFs, $\vee$-gates add no
+overlap and the $\wedge$-gates above $a_j$ are those of its own chain; a clause or
+literal shared between chains still has $\kappa$ inside its own variables. For the
+running time: clauses have at most $k+1$ variables, so the primal graph has
+$O(k|F|)$ edges, and $\ell(c)$ is the largest index of a first bag of a variable
+of $c$.
 \end{proof}
 
-Walking the module tree bottom-up and estimating each module's probability with
-any sound method (exact for small quotients, the threshold dynamic program,
-DFSB, Monte Carlo for dense quotients) gives a sound estimator whose relative
-error is the sum of the modules' errors. Thresholds, majorities and other
-tractable functions of independent sub-circuits are the typical case: a threshold
-of $80$ random modules with $p\approx10^{-15}$ is estimated to $0.1\%$ in seconds.
+\begin{example}[$\vee$'s are easy, $\wedge$'s are hard]\label{ex:or-cnf}
+Let $C=\bigvee_{i\le t}F_i$ where each $F_i$ is a CNF with clauses on sliding
+windows of width $w$ along its own variable order, bracketed as a left-deep
+$\wedge$-chain in window order. The windows are a path decomposition of width $w-1$
+of each $F_i$, so $\mathrm{cw}\le w$ by \cref{lem:pathcw}, and an FPRAS exists when
+$w=O(\log n)$, while $p$ can be $2^{-\Theta(n)}$. Exact computation is $\#\mathsf
+P$-hard already for $\mathrm{cw}=0$, for ORs of at most $5$ \emph{read-once} CNFs:
+greedily edge-colour a graph of maximum degree $3$ with $5$ colours, write its
+vertex-cover CNF as $\bigwedge_{c\le5}\varphi_c$ with each $\varphi_c$ a matching
+(hence read-once) CNF, and use
+$\#\bigwedge_c\varphi_c=\sum_{\emptyset\ne S\subseteq[5]}(-1)^{|S|+1}\#\bigvee_{c\in S}\varphi_c$;
+counting vertex covers (equivalently, independent sets) is $\#\mathsf P$-complete
+in graphs of maximum degree $3$ \cite{greenhill2000}.
+\end{example}
 
+The same construction works with a \emph{frontier} of gates that are compiled
+otherwise: gates of small support by tabulation (as the implementation does), and
+circuits of treewidth $k$ into d-SDNNFs of size $2^{O(k)}|C|$ \cite{acms2020}.
+Context width is then computed with frontier gates (one per polarity) as leaves; a
+frontier gate $f$ compiled to a DNNF $D_f$ gives the nodes $N[f,\sigma]=D_f|_\sigma$,
+so the size becomes $\sum_f2^{|\kappa(f)|}|D_f|$ plus the bound of \cref{thm:cw} for
+the remaining gates, and the result is a d-DNNF only if every $D_f$ is one.
+
+\subsection{Modules and quotients}\label{sec:modules-quotients}
+
+A gate $g$ in the cone of the output is a \emph{module} if every path from an input
+in $\sv(g)$ to the output passes through $g$. Then $C(x)=Q_g(g(x_{\sv(g)}),x_{\rm rest})$
+for the \emph{quotient} $Q_g$ obtained by replacing $g$ with a fresh input, $x_{\rm
+rest}$ being the inputs outside $\sv(g)$, and under a product distribution $g(x)$ is
+independent of $x_{\rm rest}$. The supports of modules form a laminar family: if
+$v\in\sv(g)\cap\sv(h)$, a path from $x_v$ through $g$ to the output passes through
+$h$, so one of $g,h$ is in the cone of the other and their supports are nested.
+Modules are found in linear time \cite{dutuitrauzy1996}. The maximal modules
+$g_1,\dots,g_k$ strictly inside a module $g$ have disjoint supports, and $g$ is a
+function $Q_g(g_1,\dots,g_k,x_{\rm rest})$ of them and of its remaining inputs; this
+is the module tree.
+
+\begin{lemma}[sensitivity of quotients]\label{lem:quotient}
+Let $F(q)=\Pr_{y\sim\bigotimes_j\mathrm{Bern}(q_j)}[Q(y)=1]$ and $q,\hat q\in[0,1]^k$.
+If $\hat q_j\in e^{\pm\xi_j}q_j$ and $1-\hat q_j\in e^{\pm\xi_j}(1-q_j)$ for all $j$,
+then $F(\hat q)\in e^{\pm\sum_j\xi_j}F(q)$. If $Q$ is monotone (resp.\ antitone) in
+$y_j$, the condition on $q_j$ (resp.\ $1-q_j$) alone suffices for that coordinate.
+If $q_j\in[L_j,U_j]$ with $U_j\le\frac12$, then $\hat q_j=\sqrt{L_jU_j}$ satisfies both
+conditions with $\xi_j=\frac12\log(U_j/L_j)$ (and symmetrically, for $1-q_j$, if
+$L_j\ge\frac12$).
+\end{lemma}
+
+\begin{proof}
+$F$ is multilinear: $F=q_jA+(1-q_j)B$, with $A,B\ge0$ when the other coordinates
+lie in $[0,1]$, so scaling either term by a factor in $e^{\pm\xi_j}$ scales $F$ within
+$e^{\pm\xi_j}$. If $Q$ is monotone in $y_j$ then $A\ge B$, and for $c\ge1$ with
+$cq_j\le1$, $F\le F(cq_j)=F+(c-1)q_j(A-B)\le F+(c-1)q_jA\le cF$; symmetrically for
+$c\le1$. Change one coordinate at a time; every intermediate point lies in
+$[0,1]^k$. For the last claim let $r=\sqrt{U_j/L_j}$, so $\hat q_j=rL_j=U_j/r$ and
+$\hat q_j/q_j\in[1/r,r]$. The ratio $(1-\hat q_j)/(1-q_j)$ lies between
+$(1-\hat q_j)/(1-L_j)$ and $(1-\hat q_j)/(1-U_j)$, both in $[1/r,r]$ because
+$r(1-\hat q_j)-(1-L_j)=(r-1)(1-L_j-\hat q_j)\ge0$ and
+$r(1-U_j)-(1-\hat q_j)=(r-1)(1-U_j-\hat q_j)\ge0$ when $U_j\le\frac12$.
+\end{proof}
+
+Let $g$ be a module with maximal submodules $g_1,\dots,g_k$, and let
+$q_j=D(g_j)\in[L_j,U_j]$. Take $\hat q_j,\xi_j$ from the last part of
+\cref{lem:quotient} when $U_j\le\frac12$ or $L_j\ge\frac12$, and otherwise any
+$\hat q_j\in[L_j,U_j]$ and $\xi_j=\max\{\log(U_j/L_j),\log((1-L_j)/(1-U_j))\}$ (only
+the first term if $Q_g$ is monotone in $y_j$, only the second if it is antitone).
+An interval $[L_F,U_F]$ for $F(\hat q)$, i.e.\ for $Q_g$ under
+$\bigotimes_j\mathrm{Bern}(\hat q_j)$ and $D$ on $x_{\rm rest}$, from any sound method
+(exact for small quotients, the threshold dynamic program, DFSB, Monte Carlo), gives
+$D(g)\in[e^{-\sum_j\xi_j}L_F,e^{\sum_j\xi_j}U_F]$; an interval for $1-F(\hat q)$ (that
+is, for $\neg Q_g$) gives one for $D(\neg g)$ in the same way. Walking the module tree
+bottom-up and making each of the $M$ quotient estimates at confidence $\delta/M$
+gives an interval for $p$ that is valid with probability $1-\delta$ (union bound; each
+estimate is valid conditionally on the earlier ones). If at each module the rarer
+polarity of the quotient is estimated and every interval lies on one side of
+$\frac12$, the log-ratio $\log(U/L)$ of the final interval is the sum of the
+log-ratios of all quotient estimates. Completeness thus needs relative accuracy on
+the rarer of $D(g)$ and $D(\neg g)$ at every module; if every quotient is monotone or
+antitone in each $y_j$, it suffices to estimate at each module the polarity its
+parent's condition needs. Thresholds, majorities and other tractable functions of
+independent sub-circuits are the typical case.
