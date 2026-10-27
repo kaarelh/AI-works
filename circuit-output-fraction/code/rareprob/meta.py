@@ -1,10 +1,11 @@
 """The Part-1 meta-procedure: run every applicable sound method and intersect.
 
 Methods (each sound on every input, each recognises its class syntactically):
-  ve       exact variable elimination when the min-fill width is small
+  ve       exact variable elimination when a greedy elimination order is narrow
   janson   Harris-Janson sandwich when C is a unate CNF
   tilting  exponential tilting when C is a unit-weight threshold of
            sub-circuits on disjoint small blocks
+  ctx      context-width compilation to a DNNF (envelope estimator on it)
   dfsb     Decompose-Force-Sample-Branch (always applicable)
 With probability >= 1 - delta all intervals are valid simultaneously (each
 method gets delta / #methods), hence so is their intersection.
@@ -23,6 +24,9 @@ from .janson import is_unate, janson_interval
 from .stats import Estimate
 from .tilting import Block, tilted_estimate
 from .ve import exact_ve
+from .ctxwidth import compile_ctx
+from .envelope import envelope_estimate
+from .nnf import to_nnf
 
 
 def as_cnf(C: Circuit):
@@ -74,12 +78,13 @@ def as_block_threshold(C: Circuit, max_block: int = 12):
 
 
 def meta_estimate(C: Circuit, D: Product, eps: float = 0.1, delta: float = 0.05, rng=None,
-                  ve_width: int = 18, **dfsb_kw) -> Estimate:
+                  ve_width: int = 18, ctx_max_cw: int = 10, **dfsb_kw) -> Estimate:
     rng = np.random.default_rng() if rng is None else rng
     results = []
     cnf = as_cnf(C)
     thr = as_block_threshold(C)
-    methods = 2 + (cnf is not None and is_unate(cnf)) + (thr is not None)
+    ctx_env = compile_ctx(to_nnf(C, flatten=False), max_cw=ctx_max_cw) if ctx_max_cw else None
+    methods = 2 + (cnf is not None and is_unate(cnf)) + (thr is not None) + (ctx_env is not None)
     dm = delta / methods
     # exact variable elimination
     p = exact_ve(C, D, max_width=ve_width)
@@ -93,6 +98,10 @@ def meta_estimate(C: Circuit, D: Product, eps: float = 0.1, delta: float = 0.05,
         blocks, t = thr
         e = tilted_estimate(blocks, t, D, C.n, eps=eps, delta=dm, rng=rng)
         e.note = "tilting: " + e.note
+        results.append(e)
+    if ctx_env is not None and not any(r.lo > 0 and r.hi <= (1 + eps) * r.lo for r in results):
+        e = envelope_estimate(C, D, ctx_env, eps=eps, delta=dm, rng=rng)
+        e.note = "context-width DNNF: " + e.note
         results.append(e)
     if not any(r.lo > 0 and r.hi <= (1 + eps) * r.lo for r in results):
         e = dfsb_estimate(C, D, eps=eps, delta=dm, rng=rng, **dfsb_kw)

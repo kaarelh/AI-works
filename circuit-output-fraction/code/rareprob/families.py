@@ -340,3 +340,26 @@ def dnf_of_blocks(m: int, L: int, b: int, n: int, rng: np.random.Generator, gate
         tgates.append(C.AND(*outs))
     C.set_output(C.OR(*tgates))
     return C
+
+
+def chain_cnf_clauses(n: int, w: int, rng: np.random.Generator, order=None):
+    """Clauses on sliding windows of width w along a variable order (pathwidth <= w)."""
+    order = list(rng.permutation(n)) if order is None else order
+    return [[(int(v), int(rng.integers(0, 2))) for v in order[s:s + w]] for s in range(n - w + 1)]
+
+
+def or_of_chain_cnfs(n: int, t: int, w: int, rng: np.random.Generator, small_cone_safe: bool = True):
+    """OR of t CNFs, each with sliding-window clauses of width w along its own
+    random variable order. Context width O(w); exact counting #P-hard in general.
+    The AND of each CNF is built as a left-deep chain of binary ANDs (a path
+    dtree), which is what makes the context width small."""
+    C = Circuit(n)
+    tops = []
+    for _ in range(t):
+        cls = chain_cnf_clauses(n, w, rng)
+        gs = [C.OR(*[C.lit(i, b) for i, b in c]) for c in cls]
+        acc = gs[0]
+        for g in gs[1:]:
+            acc = C.AND(acc, g)
+        tops.append(acc)
+    return C.set_output(C.OR(*tops))

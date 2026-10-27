@@ -195,3 +195,65 @@ def test_nnf_restrict():
     Xr[:, 1] = False
     Xr[:, 4] = True
     assert np.array_equal(N.eval_batch(X, v), C.eval_bits(Xr))
+
+
+@pytest.mark.parametrize("seed", range(8))
+def test_ctxwidth_equivalent(seed):
+    from rareprob.ctxwidth import compile_ctx
+    rng = np.random.default_rng(400 + seed)
+    n = 10
+    C = random_circuit(n, 30, rng)
+    for flatten in (True, False):
+        N = to_nnf(C, flatten=flatten, small_cone=0)
+        E = compile_ctx(N, max_cw=n)
+        X = all_points(n)
+        phi = E.evaluate(X)
+        assert np.array_equal(phi > 0, C.eval_bits(X))
+        D = Product(rng.uniform(0.2, 0.8, n))
+        w = D.pmf(X)
+        assert math.isclose(E.mass(D), float((w * phi).sum()), rel_tol=1e-9)
+
+
+def test_ctxwidth_or_of_chains():
+    from rareprob.ctxwidth import compile_ctx, context_width
+    from rareprob.families import or_of_chain_cnfs
+    rng = np.random.default_rng(500)
+    C = or_of_chain_cnfs(14, 3, 3, rng)
+    N = to_nnf(C, flatten=False)
+    assert context_width(N) <= 3
+    E = compile_ctx(N)
+    D = Product.uniform(14)
+    p = exact_prob(C, D)
+    e = envelope_estimate(C, D, E, eps=0.1, delta=0.05, rng=rng)
+    assert e.contains(p)
+
+
+def test_cftp_exact_sampler():
+    from rareprob.cftp import UnateSystem, cftp_samples
+    from rareprob.janson import cnf_circuit
+    rng = np.random.default_rng(600)
+    n = 7
+    # every variable occurs in some clause (so y determines x)
+    cl = [[(i, 0), ((i + 1) % n, 0)] for i in range(n)] + [[(0, 0), (3, 0), (5, 0)]]
+    D = Product(rng.uniform(0.2, 0.6, n))
+    S = UnateSystem(cl, D)
+    Y, f = cftp_samples(S, list(range(len(cl))), 40000, rng)
+    assert f == 0
+    idx = (Y * (1 << np.arange(n))).sum(1)
+    emp = np.bincount(idx, minlength=1 << n) / len(idx)
+    X = all_points(n)
+    w = D.pmf(X) * cnf_circuit(n, cl).eval_bits(X)
+    w /= w.sum()
+    assert 0.5 * np.abs(emp - w).sum() < 0.03
+
+
+def test_telescoping_contains():
+    from rareprob.cftp import telescoping_estimate
+    from rareprob.janson import cnf_circuit
+    rng = np.random.default_rng(601)
+    n = 12
+    cl = [[(i, 0), (i + 1, 0)] for i in range(n - 1)] + [[(i, 0), (i + 2, 0)] for i in range(n - 2)]
+    D = Product(np.full(n, 0.35))
+    p = exact_prob(cnf_circuit(n, cl), D)
+    e = telescoping_estimate(cl, D, N=800, rng=rng)
+    assert e.lo <= p <= e.hi

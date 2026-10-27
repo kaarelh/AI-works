@@ -64,11 +64,51 @@ including pilots and box estimation.}
 \label{tab:speedup}
 \end{table}
 
-\paragraph{Certified independence.} For a unate 12-CNF with $6\cdot10^4$ random
-clauses over $2\cdot10^5$ variables, the Harris--Janson sandwich gives
-$p\in[4.34\cdot10^{-7},5.06\cdot10^{-7}]$ deterministically in about a second;
-Monte Carlo would need about $7\cdot10^9$ evaluations of a $6\cdot10^4$-clause
-circuit for the same ratio.
+\paragraph{Context width (\cref{tab:ctx}).} ORs of $t$ CNFs with clauses on
+sliding windows of width $w$, each CNF along its own random variable order, built as
+left-deep $\wedge$-chains. The compiler of \cref{thm:cw} finds context width $w$ and
+produces an equivalent DNNF; the envelope estimator on it needs only the minimum
+batch of $1{,}024$ samples, because the top $\vee$'s children are rare and almost
+disjoint ($K\approx1$). Instances with $n\le24$ agree with enumeration.
+
+\begin{table}[ht]
+\centering\scriptsize
+\IfFileExists{tables/ctx.tex}{\input{tables/ctx}}{(table pending)}
+\caption{Context-width compilation of ORs of window-CNFs (\texttt{exp\_ctx.py}).}
+\label{tab:ctx}
+\end{table}
+
+\paragraph{Certified independence (\cref{tab:janson}).} Unate random $k$-CNFs with
+up to $2\cdot10^5$ clauses: the Harris--Janson interval is deterministic, takes
+seconds to a few minutes in Python, and on $200$ small instances it contained the exact
+$p$ every time. At $n=2\cdot10^6$, $p\in[6.2,7.3]\cdot10^{-22}$; Monte Carlo would need
+about $10^{24}$ evaluations for the same ratio. The second-order sandwich of
+\cref{app:second-order} was checked against enumeration on 382 random instances with
+no violations.
+
+\begin{table}[ht]
+\centering\scriptsize
+\IfFileExists{tables/janson.tex}{\input{tables/janson}}{(table pending)}
+\caption{Harris--Janson sandwich for random unate CNFs (\texttt{exp\_janson.py}).}
+\label{tab:janson}
+\end{table}
+
+\paragraph{Certified telescoping (\cref{tab:cftp}).} Hard-core ladders: $x\sim
+\mathrm{Bern}(0.3)^{n}$ and $C$ = ``$x$ is an independent set of the $2\times L$
+ladder''. Janson's $\Delta$ is extensive, so the sandwich is useless; bounding-chain
+CFTP gives exact samples, the truncation certificates contribute a bias below
+$1\%$, and the certified intervals contain the exact $p$ (from variable elimination).
+In pure Python the constants are poor (each CFTP run costs thousands of updates), so
+for these moderate $p$ Monte Carlo is still cheaper; the point is that the cost grows
+polynomially in $L$ while $1/p$ grows exponentially, and that the method is sound
+without any mixing-time proof.
+
+\begin{table}[ht]
+\centering\scriptsize
+\IfFileExists{tables/cftp.tex}{\input{tables/cftp}}{(table pending)}
+\caption{Certified telescoping on hard-core ladders (\texttt{exp\_cftp.py}).}
+\label{tab:cftp}
+\end{table}
 
 \paragraph{What the prover adds (\cref{tab:arguments}, \cref{fig:proofs}).}
 Hidden triggers $R\wedge T(x_S)$ whose test accepts only $x_S=a$:

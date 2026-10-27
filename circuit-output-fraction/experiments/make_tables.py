@@ -60,7 +60,51 @@ def arguments():
     open(os.path.join(OUT, "arguments.tex"), "w").write("\n".join(lines) + "\n")
 
 
+def ctx():
+    path = os.path.join(RES, "ctx.json")
+    if not os.path.exists(path):
+        return
+    rows = json.load(open(path))
+    lines = ["\\begin{tabular}{rrrrrrrrr}", "\\toprule",
+             "$n$ & $t$ & $w$ & cw & $|C|$ & DNNF size & interval for $p$ & samples & time (s)\\\\", "\\midrule"]
+    for r in rows:
+        iv = f"[{sci(r['lo'])}, {sci(r['hi'])}]"
+        if r["exact_p"] is not None:
+            iv += f" ($p={sci(r['exact_p'])}$)"
+        lines.append(f"{r['n']} & {r['t']} & {r['w']} & {r['cw']} & {r['size']} & {r['dnnf_size']} & {iv} & "
+                     f"{r['samples']} & {r['compile_seconds'] + r['estimate_seconds']:.1f}\\\\")
+    lines += ["\\bottomrule", "\\end{tabular}"]
+    open(os.path.join(OUT, "ctx.tex"), "w").write("\n".join(lines) + "\n")
+
+
+def janson():
+    path = os.path.join(RES, "janson.json")
+    if not os.path.exists(path):
+        return
+    d = json.load(open(path))
+    lines = ["\\begin{tabular}{rrrrrr}", "\\toprule",
+             "$n$ & clauses & width & certified interval & ratio & time (s)\\\\", "\\midrule"]
+    for r in d["rows"]:
+        lines.append(f"{r['n']} & {r['m']} & {r['k']} & [{sci(r['lo'])}, {sci(r['hi'])}] & {r['ratio']:.3f} & "
+                     f"{r['seconds']:.1f}\\\\")
+    lines += ["\\bottomrule", "\\end{tabular}"]
+    open(os.path.join(OUT, "janson.tex"), "w").write("\n".join(lines) + "\n")
+
+
+def cftp():
+    path = os.path.join(RES, "cftp.json")
+    if not os.path.exists(path):
+        return
+    rows = json.load(open(path))
+    lines = ["\\begin{tabular}{rrrlll}", "\\toprule",
+             "$L$ & $n$ & $p$ (exact) & Harris--Janson window & certified telescoping & CFTP runs\\\\", "\\midrule"]
+    for r in rows:
+        lines.append(f"{r['L']} & {r['n']} & {sci(r['p'])} & [{sci(r['janson_lo'])}, {sci(r['janson_hi'])}] & "
+                     f"[{sci(r['lo'])}, {sci(r['hi'])}] & {sci(r['cftp_runs'])}\\\\")
+    lines += ["\\bottomrule", "\\end{tabular}"]
+    open(os.path.join(OUT, "cftp.tex"), "w").write("\n".join(lines) + "\n")
+
+
 if __name__ == "__main__":
-    coverage()
-    speedup()
-    arguments()
+    for f in (coverage, speedup, arguments, ctx, janson, cftp):
+        f()

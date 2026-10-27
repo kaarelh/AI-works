@@ -21,6 +21,7 @@ class NNF:
     sup: list = field(default_factory=list)  # variable support bitmask
     _cons: dict = field(default_factory=dict)
     root: int = -1
+    flatten: bool = True  # merge nested ANDs (ORs); off when the AND-tree shape matters
 
     def _mk(self, kind: str, data, sup: int) -> int:
         key = (kind, data)
@@ -54,7 +55,7 @@ class NNF:
                 return self.false()
             if k == "T":
                 continue
-            if k == "A":
+            if k == "A" and self.flatten:
                 out.extend(self.data[c])
             else:
                 out.append(c)
@@ -80,7 +81,7 @@ class NNF:
                 return self.true()
             if k == "F":
                 continue
-            if k == "O":
+            if k == "O" and self.flatten:
                 out.extend(self.data[c])
             else:
                 out.append(c)
@@ -259,7 +260,7 @@ def _small_cone_nnf(N: NNF, C: Circuit, g: int, sup_mask: int, q: int) -> int:
     return build_sub(tt, 0)
 
 
-def to_nnf(C: Circuit, thr_max_states: int = 4096, small_cone: int = 10) -> NNF:
+def to_nnf(C: Circuit, thr_max_states: int = 4096, small_cone: int = 10, flatten: bool = True) -> NNF:
     """NNF of C's output, size O(|C|) for AND/OR/NOT/XOR gates.
 
     Gates whose support has at most `small_cone` variables are tabulated and
@@ -268,7 +269,7 @@ def to_nnf(C: Circuit, thr_max_states: int = 4096, small_cone: int = 10) -> NNF:
     weights are expanded by a sequential-counter DP; other THR gates become
     opaque nodes.
     """
-    N = NNF()
+    N = NNF(flatten=flatten)
     N.circuit = C
     memo: dict[tuple[int, int], int] = {}
     sup = C.supports()
