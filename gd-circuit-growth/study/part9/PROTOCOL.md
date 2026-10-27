@@ -146,3 +146,11 @@ but not at the frontier, and the image gain unattributed. Added now, none of the
 `nets_best` over all network variants run on the suite (on `dlheld6`: nets, nets_wd, nets_cewd, nets_cewd0.3,
 nets_cewd1.0).
 
+
+**Post hoc, after the held-out results were read (27 October, ~06:20 UTC).**
+- The baseline `mlp` on `qd_a` had stopped after n = 30000 (its run was killed by a container restart and never resumed),
+  so the pre-registered `mlp_best` had no `qd_a` n = 60000 cell. It was resumed with `MLP_RESUME=1` (3 seeds at n = 60000,
+  as on `qd_b`).
+- `posthoc_ggbt.py` (discreteness audit D3): ggbt alone, refitted with the frozen `fit_ggbt` at n = 60000 on `qd_a` and
+  `qd_b`, seed 0, with its full bank, raw pixels only, pooled sums without pairs, and the full bank at 100 rounds. It
+  explains which part of ggbt carries its error; it is not evidence for Q2.
