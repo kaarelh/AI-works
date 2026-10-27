@@ -1,0 +1,566 @@
+[
+ {
+  "key": "core",
+  "summary": "I fixed the dfsb re-review's MAJOR deterministic miss with a proved error bound, plus a second deterministic miss in ve.py that I found myself. I resolved the remaining dfsb items in p1-dfsb.tex and p1-tail.tex, added the local-threshold (TG) and affine modules to meta_estimate, and updated thm:meta, including the CFTP cut-off. The full suite passes (245 tests).\n\nCode:\n- ve.py: new `ve_bounds` stores each table entry as a mantissa in [1/2,1) with an integer exponent. Nothing can underflow, and an exact zero is reported separately. It counts roundings per factor and returns p = mant\u00b72^exp\u00b7(1\u00b1\u03b3_r), where \u03b3_r is proved from IEEE round-to-nearest. `exact_ve` keeps its float return value for compatibility.\n- ve.py, newly found bug: the THR gate table used Python's sum(), which is compensated in Python \u22653.12. The circuit evaluator adds left to right, so the two differ. Example: THR([1e16,1,\u22121e16],0.5) under the uniform distribution has true p = 3/8, but old VE returned 0.5 \u00b1 1e-9, a certain miss. VE now uses the evaluator's summation order.\n- meta.py: the 2^-1000 branch is gone; VE's certified interval is returned at once. as_cnf now merges repeated literals and duplicate clauses and drops tautologies. A Janson lower end below the normal float range is flushed to 0.\n- meta.py, new modules: the affine presolve (DFSB on the reduced circuit when all pivots are uniform), the affine-union envelope, and TG. Each is gated on applicability before any sampling and runs at \u03b4/(3M). The two affine modules run only when they explain at least one bit; the affine checks also return p = 0 when they certify it.\n- dfsb.py and envelope.py: each box fill of an (E)-leaf's rejection sampler is now truncated after T_f = \u230816K ln(8N_f/\u03b4)\u2309 draws, where N_f bounds the number of fills; a truncated leaf outputs [0,1]. Phase-1 pilots are truncated the same way, which only makes the (E) test fail.\n- envelope.py: box-mass draws are chunked, and `_exp_up`/`_exp_down` are safe below the normal float range.\n- compile.py: a rule-application budget B. Past it, a node gets the constant-1 envelope, so the compiler's work is polynomial.\n\nPaper:\n- thm:dfsb cost statement: NNF size |N| = O(2^a|C|) replaces |C|, and the preprocessing that tabulates small cones (O(2^a|C|\u00b2)), the density pilots that find dense nodes (s_7\u00b7B evaluations per (E) test) and B are counted. The unexplained '+|\u03a6_h|' term is dropped.\n- thm:dfsb proof: the completeness budget is re-split as \u03b4/8+\u03b4/4+\u03b4/2+\u03b4/8+\u03b4 = 2\u03b4, with the truncation term proved.\n- Rule (R8) now says its invariance holds for fixed a, K and m. The absolute constant in the sample cap is renamed c_0.\n- cor:dfsb: (a) and (b) state their costs with the pilot and log log K terms; (c) requires a node budget at least the tree size.\n- The implementation's choices are stated where the procedures are described: a = 12, s_7 = 512, \u03c4 = 0.05, B = 2\u00b710^5, a greedy min-degree order with w \u2264 18, and which modules meta_estimate runs.\n- p1-tail.tex: the Local thresholds and Affine/quadratic module items and the algebraic-rarity limits item are added (edits 40, 59, 60, with corrected claims). thm:meta lists B, T, \u039b_max and the module caps, and its proof bounds CFTP's work via \u039b_max (aligned with the concurrent p1-cftp edit).\n- The scratch LaTeX build has no errors and nothing undefined or overfull from my files, apart from the gjl2019 citation.\n\nTests:\n- Run: VE against exact rationals on random circuits with extreme marginals; the 2^-1000 boundary; p = 0.3^1100; the threshold summation case; canonical CNFs; meta running presolve and TG; a 40-instance meta soundness loop; per-fill truncation, including a monkeypatched one-draw cap that still gives valid intervals.\n- Run: compiler budget domination, chunked box draws, and subnormal exponentials.\n- Stress checks: meta 0 misses in 720 runs with VE off; DFSB 0 misses in 300 runs, none on exact paths.",
+  "resolved": [
+   {
+    "item": "dfsb NF (major): meta.py VE underflow branch misses p just above 2^-1000",
+    "action": "Removed the branch. ve.py: new ve_bounds keeps each table entry as a mantissa in [1/2,1) with an int64 exponent (exact frexp/ldexp), counts roundings per factor, and returns p = mant*2^exp*(1+\u03b8) with |\u03b8| \u2264 \u03b3_r (Higham 3.1/3.3), plus an exact-zero flag. meta returns VE's outward-rounded interval at once, with log2 bounds in the note. Regression test test_ve_boundary_two_to_minus_1000 covers q=1/2, p = 2^-1000(1+2^-52) and the referee's 0.5\u00b11e-13 noise, and checks the certificate against exact rationals."
+   },
+   {
+    "item": "code-soundness (ve.py): return log p or bounds so tiny p never collapses to 0; keep exact zero separate",
+    "action": "VEResult carries mant/exp/rel, log2_bounds() and interval(): the lower end flushes to 0 below the normal range, the upper end stays positive. zero=True only when no positive term exists. Tests: p = 0.3^1100 (certificate contains the exact Fraction; meta gives [0, hi>0]); the zero case; subnormal and 1e-200 marginals."
+   },
+   {
+    "item": "New bug found in ve.py: THR gate tables used Python's compensated sum(), not the evaluator's left-to-right sum",
+    "action": "Added thr_sum, the evaluator's own order and comparison with t-1e-12. Old VE gave 0.5\u00b11e-9 for THR([1e16,1,-1e16],0.5) where the true p is 3/8. Regression test test_ve_threshold_uses_evaluator_sum."
+   },
+   {
+    "item": "code-soundness: meta.as_cnf must canonicalise clauses before Harris/Janson/CFTP",
+    "action": "as_cnf merges repeated literals (including two distinct NOT(x) gates), drops tautologies, removes duplicate clauses, and keeps an empty clause. Tests: test_as_cnf_canonicalises_clauses and the referee's (x0\u2228x0)\u2227(x1\u2228x1\u2228x2) example. meta also flushes a Janson lower end below 2*TINY to 0 and widens a subnormal upper end, covering the cftp re-review's subnormal Harris issue on the meta path."
+   },
+   {
+    "item": "dfsb NF (minor): truncation on the good event not budgeted; truncation length unspecified",
+    "action": "Paper: each box fill is truncated after T_f=\u230816K ln(8N_f/\u03b4)\u2309 draws, N_f = \u03a3 L\u00b7cap. The proof bounds truncation on the good event (box masses \u2265 1/(16K)) by \u03b4/8 and re-splits the completeness budget as \u03b4/8+\u03b4/4+\u03b4/2+\u03b4/8+\u03b4 = 2\u03b4, using 3m(\u03b4/2m)^6 \u2264 \u03b4/8 for the pilots. It also notes that failed or truncated (E) tests do not affect the pruning argument. Code: envelope._rejection_fill(fill_cap) truncates per fill; DFSB.estimate computes N_f and T_f for Phase 2; Phase-1 pilots use a cap too. Measured: 0 truncations in 42 real Phase-2 box leaves."
+   },
+   {
+    "item": "dfsb NF (minor): thm:dfsb cost accounting ((R8) tabulation, (R7) pilots, NNF size vs |C|, '+|\u03a6_h|')",
+    "action": "The theorem now counts evaluations of nodes of the canonicalised NNF N, with |N| = O(2^a|C|) for {\u2227,\u2228,\u00ac,\u2295}-circuits. It adds s_7\u00b7B (R7) pilot evaluations per (E)-test and O(2^a|C|^2) for (R8), and gives the remaining work as O(m(n+2^a+B)|N| + n^2(|C|+|N|) + n^3). The unexplained +|\u03a6_h| term is dropped. N, B, s_7 and \u03c4 are defined in the text, and the proof gives each cost. compile.py gained the rule budget (call_budget) that makes B real."
+   },
+   {
+    "item": "dfsb NF (minor): (R8) invariance needs fixed a; symbol c overloaded",
+    "action": "(R8) now says the invariance holds 'as long as a, K and m stay fixed (they depend on |C|, which such a rewrite can change)'. The cap constant is renamed c_0. The local-lemma bullet uses c' (an absolute constant) instead of c."
+   },
+   {
+    "item": "dfsb NF (minor): cor:dfsb (b) cost and (c) budget",
+    "action": "(b): for an atom C|_F there are no samples; otherwise O(K\u03b5^{-2}(log(1/\u03b4)+log log K)+K log(m/\u03b4)) evaluations. (c): exactness and no sampling now require a node budget at least the size of the tree. (a): the example cost is corrected to no samples for atom blocks and \u00d5(K t^3 \u03b5^{-2} log(m/\u03b4)) otherwise."
+   },
+   {
+    "item": "dfsb NF (minor): code-vs-paper simplifications (greedy VE order, ve_width 18, fixed atom size 12)",
+    "action": "Stated in the paper: p1-dfsb fixes a=12 and gives s_7=512, \u03c4=0.05, B=2\u00b710^5 and three Shannon expansions per path. The p1-tail treewidth bullet notes the greedy min-degree order with w \u2264 18 and the certified floating point. A paragraph after thm:meta lists the modules meta.py runs and those it omits. The dfsb.py docstring says the same."
+   },
+   {
+    "item": "cftp NF: thm:meta needs a \u039b/1/\u03c1 cut-off; CFTP class omits \u039b \u2264 poly",
+    "action": "thm:meta now lists T=|C|^c and \u039b_max=|C|^c, aligned with the \u039b_max that the concurrent p1-cftp.tex edit added. The proof bounds CFTP's work by poly(|C|,\u039b_max,1/\u03b5,log(1/\u03b4)). The module bullet states completeness as \u039b \u2264 \u039b_max (e.g. max b_i^+ \u2264 1/2 gives \u039b \u2264 8\u03bc^++2) plus \u03b3 > 0 with T \u2265 (n/\u03b3)ln(16n/\u03b7)."
+   },
+   {
+    "item": "external edit 40 (p1-tail Local thresholds item)",
+    "action": "Added, with a decline condition dk > c log|C|."
+   },
+   {
+    "item": "external edit 59 (p1-tail Affine and quadratic structure item)",
+    "action": "Replaced the Algebraic item. Corrected the claim about one linear threshold: prop:affine-ltf gives an FPTAS and an exact sampler, not an exact count. Added a width cut-off."
+   },
+   {
+    "item": "external edit 60 (p1-tail limits: algebraic rarity)",
+    "action": "Added, with the hypotheses of cor:barrier-methods (events filling a 1/poly(n) fraction of the solution set of m \u2264 n/6 checks) and the exact statement of thm:biased-hard (no sound procedure complete within 2^{N^{1-\u03b3}} unless NP\u2286BPP; no argument system within a factor 2 unless coNP\u2286MA). Changed 'Two natural kinds' to 'Three'."
+   },
+   {
+    "item": "external edits 50 and 68 (TG, presolve and affine envelope in meta_estimate)",
+    "action": "Implemented. Applicability is decided before any sampling and M counts all applicable methods (\u03b4/(3M) each). TG runs when ltc_from_circuit recognises C and the block-threshold form does not; it declines on ValueError or AssertionError, and its log-domain interval is converted with outward rounding. The presolve runs when rank > 0 and M \u2264 1/2, with inner DFSB when all pivots are uniform. The affine envelope runs when its mass is \u2264 1/2. A deductive p = 0 from an inconsistent spine or an empty envelope returns [0,0]. Each module is skipped once some interval is tight."
+   },
+   {
+    "item": "external edit 6 (envelope.py chunked box draws)",
+    "action": "estimate_boxes now draws in batches of 2^15. The sample stream is unchanged. Test test_estimate_boxes_draws_in_batches."
+   },
+   {
+    "item": "thm:meta module list and parameters",
+    "action": "The list adds Local thresholds and Affine/quadratic structure. The parameters now include B, T, \u039b_max and the sample caps and list budgets. The text notes that skipping procedures once an interval is tight changes neither soundness nor completeness, and lists what the implementation runs."
+   },
+   {
+    "item": "envelope.py subnormal exp (_exp_up/_exp_down)",
+    "action": "Below the normal range _exp_up adds 4 ulp(0) and _exp_down flushes to 0. Values in the normal range are unchanged. This also makes tilting.py and the TG conversion safe, since both use these helpers. Test test_exp_bounds_below_normal_range."
+   }
+  ],
+  "not_done": [
+   {
+    "item": "dfsb NF (major): sec-experiments.tex and tables/speedup.tex stale (blocks family now exact with 0 samples)",
+    "reason": "Not my files, and experiments are to be re-run by someone else. Already requested as external_edits_all.json item 5."
+   },
+   {
+    "item": "dfsb NF (major): abstract/sec-intro/sec-discussion/README claims",
+    "reason": "Not my files. Items 1\u20134 of external_edits_all.json cover part (i) (polarity/decomposability) and part (iii) (logarithmic-support cones), but still list DNNFs among circuits with polynomial ideal trees, which part (ii) says is false. I give a refined replacement in external_edits."
+   },
+   {
+    "item": "dfsb NF (minor) and proof#10/counterexample#5: gjl2019 missing from refs.bib",
+    "reason": "refs.bib is not mine; already requested as external_edits_all.json item 0. The scratch build still shows the citation undefined."
+   },
+   {
+    "item": "Bodlaender 5-approximate decomposition and a = floor(c log2|C|) in code",
+    "reason": "Not implemented. I stated the implementation's simplifications (greedy min-degree order with w \u2264 18, fixed a = 12) in the paper instead, which the task allows."
+   },
+   {
+    "item": "thm:cftp sample size for b_i^+ on non-CNF circuits",
+    "reason": "This belongs to p1-cftp.tex (not mine). The concurrent edit there now fixes N_b and adds \u039b_max, and thm:meta refers to that."
+   },
+   {
+    "item": "CFTP, local-lemma FPRAS, bounded-width DP, affine+LTF and Dickson modules in meta.py",
+    "reason": "Not added to meta_estimate. The paper now says the implementation omits them."
+   }
+  ],
+  "external_edits": [
+   {
+    "file": "paper/sec-experiments.tex",
+    "location": "line 3: 'The package \\texttt{rareprob} (Python, numpy) implements everything above:'",
+    "change": "The package \\texttt{rareprob} (Python, numpy) implements the procedures above, with the simplifications stated where they are described (a fixed atom size $a=12$ and fixed (R7) constants in DFSB, a greedy elimination order, and the subset of modules run by the meta-procedure, \\cref{sec:modules}):",
+    "reason": "The dfsb re-review flags 'implements everything above' as contradicting the code (greedy VE order with ve_width=18, exact_support=12). The paper now states these simplifications in p1-dfsb and p1-tail."
+   },
+   {
+    "file": "README.md",
+    "location": "code list: '`dfsb.py`: Decompose\u2013Force\u2013Sample\u2013Branch. `meta.py`: the meta-procedure that runs every applicable method and intersects.' and '`ve.py`: exact variable elimination.'",
+    "change": "`dfsb.py`: Decompose\u2013Force\u2013Sample\u2013Branch. `meta.py`: the meta-procedure: variable elimination, Harris\u2013Janson, tilting, tilted Glauber sampling for local thresholds, the affine presolve and affine envelopes, context width and DFSB, each at its share of \u03b4, intersected. ... `ve.py`: exact variable elimination with a proved floating-point error bound (mantissa/exponent tables, so tiny p never underflows).",
+    "reason": "meta.py now also runs TG, the presolve and affine envelopes. ve.py now returns certified bounds."
+   },
+   {
+    "file": "paper/main.tex",
+    "location": "abstract, the sentence ending 'products and read-once compositions of dense sub-circuits, backdoor triggers, small cutsets, DNFs and DNNFs, and their locally disguised versions.' (supersedes external_edits_all item 1)",
+    "change": "...costs $\\poly\\cdot K$ on every circuit whose ideal $K$-explanation tree is polynomial: read-once formulas (exactly), products and read-once compositions of dense sub-circuits that are not decomposable after forcing, backdoor triggers, small cutsets, and versions of these disguised inside cones of logarithmic support; DNFs and DNNFs are covered by its envelope leaves and the \\#DNNF FPRAS.",
+    "reason": "dfsb re-review NF (ii): T*_K excludes (E), and polynomial-size DNNFs can have exponential ideal trees (counter NNF example). DNNF coverage comes from (E)-leaves and prop:dnnf-env, not from the ideal-tree class."
+   },
+   {
+    "file": "paper/sec-intro.tex",
+    "location": "lines 67-70, 'This covers products and read-once compositions of arbitrary dense sub-circuits, ... disguised versions of all of these.' (supersedes external_edits_all item 2)",
+    "change": "This covers read-once formulas (exactly), products and read-once compositions of dense sub-circuits that are not decomposable after forcing (\\cref{cor:dfsb}), backdoor-style triggers, circuits with small cutsets (exactly, by cutset conditioning), and versions of these disguised by rewriting inside cones of logarithmic support; DNFs and DNNFs are covered by envelope leaves and the \\#DNNF FPRAS (\\cref{prop:dnnf-env}).",
+    "reason": "Same as above: the DNNF attribution (part ii) is missing from item 2."
+   },
+   {
+    "file": "README.md",
+    "location": "line 14, '...products and read-once compositions of arbitrary dense sub-circuits, backdoor-style triggers, circuits with small cutsets (exactly), DNFs and DNNFs, and locally disguised versions of all of these.' (supersedes external_edits_all item 4)",
+    "change": "...read-once formulas (exactly), products and read-once compositions of dense sub-circuits that are not decomposable after forcing, backdoor-style triggers, circuits with small cutsets (exactly), and versions of these disguised inside cones of logarithmic support; DNFs and DNNFs are covered by its envelope leaves and the #DNNF FPRAS.",
+    "reason": "Same DNNF attribution fix (dfsb re-review NF part ii)."
+   }
+  ],
+  "stale_numbers": "My changes make no experiment number stale. No experiment script calls meta_estimate. With the same seeds DFSB consumes the same random stream, because the batch sizes for rejection fills and chunked box draws are unchanged, unless a box fill is now truncated by T_f where the old 10,000-round cap was not hit; that happens only for boxes sparser than 1/(16K) (at most \u03b4/8 on the good event, 0 of 42 in my runs). exact_ve values used as ground truth in exp_cftp.py change only in the last bits, except for real-weight THR gates whose left-to-right float sum differs from Python's compensated sum (none in exp_cftp's CNFs). These numbers are stale for reasons predating this round, as the dfsb and cftp re-reviews note: sec-experiments' 'products of blocks (dense leaves)' and 'cubic in the number of blocks' text and tables/speedup.tex (costs 2.1e6\u20132.4e7), which DFSB with exact_support=12 now computes exactly with 0 samples, and the triggers and SPN rows; also the cftp table and the 'bias below 1%' sentence.",
+  "tests": "cd /home/user/AI-works/circuit-output-fraction/code && python3 -m pytest -q tests: 245 passed in 68.8s. test_fix_dfsb.py has 40 tests, including the new ones: test_ve_bounds_contain_exact_value[0-3], test_ve_boundary_two_to_minus_1000, test_ve_tiny_p_keeps_log_bounds, test_ve_threshold_uses_evaluator_sum, test_ve_extreme_marginals_no_underflow, test_as_cnf_canonicalises_clauses, test_as_cnf_repeated_literal_janson_example, test_meta_runs_presolve_on_parity_checks, test_meta_runs_tg_on_local_threshold, test_meta_module_soundness_random, test_rejection_fill_truncated_per_fill, test_dfsb_truncated_box_leaf_outputs_trivial_interval, test_compiler_rule_budget_keeps_domination, test_estimate_boxes_draws_in_batches and test_exp_bounds_below_normal_range. Extra checks with scripts in /tmp/claude-0/-home-user-AI-works/02f29707-9759-5ff3-9757-46e1f8b0fdfe/scratchpad/dfsbfix/: VE certificate against exact rationals 0/400 failures; meta with VE off 0 misses in 720 runs; DFSB stress 0/300 misses. The scratch LaTeX build of paper/ has 0 errors; the only undefined citation from my files is gjl2019."
+ },
+ {
+  "key": "ctx",
+  "summary": "I fixed all five remaining 'ctx-modules' re-review items in paper/p1-ctx.tex. I also added three tests to code/tests/test_fix_ctx.py that check the new claims. code/rareprob/ctxwidth.py needed no change, because the module walk is not implemented in code.\n\n(1) The module walk now clips its output to [e^{-\u03a3\u03be}L_F, min{1, e^{\u03a3\u03be}U_F}] and states [L_j,U_j] \u2286 [0,1].\n(2) The third rule is replaced by q\u0302_j = sqrt(L_jU_j) with the least valid \u03be_j = max{\u00bdlog(U_j/L_j), log((1\u2212L_j)/(1\u2212q\u0302_j)), log((1\u2212q\u0302_j)/(1\u2212U_j))}. When both of the first two rules apply, the walk takes the one with the smaller \u03be_j. A vanishing denominator gives \u03be_j=\u221e and the interval [0,1].\n(3) The completeness sentence is rewritten as an exact claim. Let each module estimate the polarity its parent's rule uses. Then the final log-ratio is at most S, the sum of all quotient log-ratios, when only the first two rules are used. In general it is at most e^{O(dS)}S, because the third rule's interval contains 1/2 and gives 2\u03be_j \u2264 (1+O(\u03c1_j))\u03c1_j.\n(4) The module-tree quotient is renamed R_g, with its own definition. Q_g now means only the quotient with respect to the output.\n(5) The frontier remark now reads 'is a d-DNNF if, in addition to the hypothesis of thm:cw, every D_f is one'.\n(6) Threshold gates: integer weights of either sign are now covered, with O(kW) wires, W = \u03a3|w_i|. A negative weight acts on the complemented input, since w\u00b7h = |w|\u00b7\u00ach \u2212 |w|.\n\nChecks:\n- A scratch simulation (/tmp/claude-0/-home-user-AI-works/02f29707-9759-5ff3-9757-46e1f8b0fdfe/scratchpad/ctxfix2/walk.py) ran 40,000 random module trees with clipping and the new rules. It found no coverage failures and no domain errors. With only rules 1\u20132, R/S \u2264 1. With rule 3, R \u2264 S\u00b7e^{0.36 dS} was observed. On the referee's depth-10 XOR chain, the final log-ratio is 0.00202 with the new rule versus 2.46 with the old one.\n- 2\u03be \u2264 \u03c1(1+4\u03c1) for \u03c1 \u2264 1/2, on either polarity.\n- The paper builds in a scratch copy with no errors and no overfull boxes in p1-ctx. Citations are undefined only because the refs.bib entries are still pending.",
+  "resolved": [
+   {
+    "item": "ctx-modules new finding: module-walk intervals must be clipped to [0,1] (q-hat could exceed 1; sqrt of a negative number; undefined log)",
+    "action": "paper/p1-ctx.tex walk paragraph: [L_j,U_j] \u2286 [0,1] is now stated, and the module output is [e^{-\u03a3\u03be}L_F, min{1, e^{\u03a3\u03be}U_F}], with a note that the clipping keeps q\u0302_j in [0,1]. The convention 'if a denominator vanishes, \u03be_j=\u221e and the bound is [0,1]' covers L_j=0 and U_j=1. test_module_walk_sound_and_additive checks coverage and q\u0302 \u2208 [0,1] on 1,500 random module trees; clipping is triggered 499 times."
+   },
+   {
+    "item": "ctx-modules new finding: third rule doubles the error near 1/2 for non-unate quotients; the completeness sentence read as sufficient",
+    "action": "The third rule is now q\u0302_j = sqrt(L_jU_j) with the least \u03be_j for which both conditions of lem:quotient hold on all of [L_j,U_j]: \u03be_j = max{\u00bdlog(U_j/L_j), log((1\u2212L_j)/(1\u2212q\u0302_j)), log((1\u2212q\u0302_j)/(1\u2212U_j))}. When both of the first two rules apply, the walk takes the one with the smaller \u03be_j; without this, completeness fails when a child estimates the polarity that matches an antitone input. The completeness claim is now exact: with each module estimating the polarity its parent's rule uses, the final log-ratio is \u2264 S under rules 1\u20132 and \u2264 e^{O(dS)}S in general (the third rule's interval contains 1/2, and 2\u03be_j \u2264 (1+O(\u03c1_j))\u03c1_j). New tests test_quotient_third_rule_near_additive (soundness, and 2\u03be \u2264 (1+4\u03c1)\u03c1 for either polarity) and test_module_walk_sound_and_additive (R \u2264 S when only rules 1\u20132 are used)."
+   },
+   {
+    "item": "ctx-modules new finding: Q_g defined twice with different meanings",
+    "action": "The module-tree quotient is renamed R_g, defined as 'obtained from the cone of g by replacing each g_j with a fresh input'. The walk uses 'Q be R_g or \u00acR_g'. Q_g now denotes only the quotient with respect to the output."
+   },
+   {
+    "item": "ctx-modules new finding: frontier remark 'd-DNNF only if every D_f is one' has the wrong direction",
+    "action": "Now reads 'the result is a d-DNNF if, in addition to the hypothesis of thm:cw, every D_f is one'."
+   },
+   {
+    "item": "ctx-modules new finding: threshold-weight statement (nonnegative only) disagrees with sec-setting and understates the reach",
+    "action": "p1-ctx.tex now says that a threshold gate with integer weights w_i becomes a sequential counter with O(kW) wires, W=\u03a3_i|w_i|, where a negative weight acts on the complemented input (w_i h = |w_i|\u00ach \u2212 |w_i|). The counter's ORs remain deterministic. test_negative_threshold_weights_by_complementing checks the identity, the absence of opaque nodes, the wire bound |N| \u2264 2|C| + 6k(W+1), and DNNF equivalence. The matching sec-setting.tex change is listed in external_edits."
+   }
+  ],
+  "not_done": [
+   {
+    "item": "Code for the module walk",
+    "reason": "No module-walk or quotient code exists in code/rareprob; the walk appears only in the paper. The tests implement the walk rules locally to check the paper's claims. ctxwidth.py needed no change."
+   },
+   {
+    "item": "Implementation of negative integer threshold weights in to_nnf",
+    "reason": "code/rareprob/nnf.py is not mine. It currently leaves negative-weight thresholds opaque. The paper's claim concerns the NNF as defined, and the implementation stays sound because opaque gates make compile_ctx decline. A verified patch is listed in external_edits."
+   },
+   {
+    "item": "Other open re-review items for ctx-modules (refs.bib entries; the stale O(|C| cw 2^cw) / 'errors that add' wording in sec-intro, abstract and README; the stale bound in p1-affine.tex / app-affine.tex)",
+    "reason": "Outside my files and outside this task. Earlier external edits already cover them, except p1-affine/app-affine; see the note in external_edits."
+   }
+  ],
+  "external_edits": [
+   {
+    "file": "paper/sec-setting.tex",
+    "location": "lines 12-13: 'threshold gates with polynomially bounded integer weights expand by a counter,'",
+    "change": "threshold gates with integer weights of either sign and polynomially bounded magnitude expand by a sequential counter (a negative weight acts on the complemented input),",
+    "reason": "This matches the revised p1-ctx.tex: integer weights w_i give a counter with O(kW) wires, W=\u03a3|w_i|, because w\u00b7h = |w|\u00b7\u00ach \u2212 |w|. It REPLACES the earlier optional fix:ctx-modules edit to the same lines ('nonnegative integer weights of polynomially bounded total ...'), which no longer matches p1-ctx.tex and should not be applied."
+   },
+   {
+    "file": "paper/sec-intro.tex",
+    "location": "the 'Modules' bullet (currently lines 78-79: '(thresholds, majorities) are estimated through their quotients, with errors that add.')",
+    "change": "\\item \\emph{Modules} (\\cref{lem:quotient}): functions of independent sub-circuits\n(thresholds, majorities) are estimated through their quotients; the logarithmic\nerrors add over the module tree, up to lower-order terms, when every quotient is\nestimated to small relative error on the polarity its parent uses.",
+    "reason": "This replaces the Modules half of the earlier pending fix:ctx-modules sec-intro edit, whose wording was 'relative accuracy on its rarer polarity'. The revised walk paragraph has log-ratio \u2264 S under the first two rules and \u2264 e^{O(dS)}S = S + O(dS^2) in general, where the parent's rule fixes the polarity: the matching one for a unate input, otherwise the rarer one. The Context-width half of that earlier edit is unaffected."
+   },
+   {
+    "file": "code/rareprob/nnf.py",
+    "location": "to_nnf, THR branch (the 'small = ...' line and the _thr_nnf call), plus the to_nnf docstring sentence 'THR gates with small nonnegative-integer weights are expanded ...'",
+    "change": "Replace\n    small = all(float(x).is_integer() and x >= 0 for x in w) and sum(w) <= thr_max_states\nby\n    small = all(float(x).is_integer() for x in w) and sum(abs(x) for x in w) <= thr_max_states\nand replace the call\n    memo[(h, q)] = _thr_nnf(N, [memo[(c, 1)] for c in a], [memo[(c, 0)] for c in a], [int(x) for x in w], t, q)\nby\n    # a negative weight acts on the complemented child: w*g = |w|*(not g) - |w|\n    pos = [memo[(c, int(x >= 0))] for c, x in zip(a, w)]\n    neg = [memo[(c, int(x < 0))] for c, x in zip(a, w)]\n    memo[(h, q)] = _thr_nnf(N, pos, neg, [abs(int(x)) for x in w], t - sum(x for x in w if x < 0), q)\nDocstring: 'THR gates with small integer weights (a negative weight on the complemented child) are expanded by a sequential-counter DP; other THR gates become opaque nodes.'",
+    "reason": "Optional; it makes the implementation match the p1-ctx.tex threshold statement. I checked it in a scratch copy of code/: all 208 tests plus a new test that directly compiles random negative-weight THR gates pass (209). That test checks no opaque nodes, |N| \u2264 2|C|+6k(W+1), and equivalence of the compiled DNNF. No experiment sends non-unit-weight thresholds through to_nnf (families.py and exp_affine.py use unit weights; localthr builds its THR copy only for evaluation), so no experiment numbers change."
+   },
+   {
+    "file": "paper/p1-affine.tex and paper/app-affine.tex",
+    "location": "cor:barrier-methods (iii) and its proof (the ctx-modules re-review's first new finding)",
+    "change": "If the fix for the stale O(|C| cw 2^cw) bound restricts (iii) to circuits whose NNF N is defined, as the referee suggests, word it as 'threshold gates only with integer weights' (or 'with integer weights of polynomially bounded magnitude'), not 'nonnegative-integer-weight ones'.",
+    "reason": "After this round, p1-ctx.tex expands every integer-weight threshold, with negative weights handled by complementing. The referee's suggested wording for that fix predates this change."
+   }
+  ],
+  "stale_numbers": "None. ctxwidth.py is unchanged, so results/ctx.json and the exp_ctx table are unaffected. The changes are paper text plus new tests, and no experiment reports module-walk numbers. The optional nnf.py external edit would not change any experiment either, since all experiment thresholds have unit weights.",
+  "tests": "cd /home/user/AI-works/circuit-output-fraction/code && python3 -m pytest -q tests: 208 passed in about 48 s. test_fix_ctx.py has 18 tests, 3 of them new: test_negative_threshold_weights_by_complementing, test_quotient_third_rule_near_additive and test_module_walk_sound_and_additive. LaTeX built in the scratch copy /tmp/claude-0/-home-user-AI-works/02f29707-9759-5ff3-9757-46e1f8b0fdfe/scratchpad/ctxfix2/build with no errors and no overfull boxes in p1-ctx. The undefined citations come from the refs.bib entries that are still pending, not from these changes."
+ },
+ {
+  "key": "cftp",
+  "summary": "All remaining 'cftp' re-review items that fall in my files are fixed, and so are the two Janson consistency edits. The full suite passes (230 tests).\n\nReproduction first: with 1061 unit clauses, q = [0.5]*1060 + [0.8*2^-10] and p = 12.8*2^-1074, the old code returned harris_lower = 13*2^-1074 and a Janson lower end of 13*2^-1074, both above p. The upper end was also wrong: at p = 13.4*2^-1074 (or 2.6 or 1000.4 units of 2^-1074), the old Janson upper end rounded to 13*2^-1074, below p.\n\nFix: janson.py now has exp_down(s, err) and exp_up(s, err). They give rigorous bounds on e^t for every t within err of s. Below twice the smallest normal float, exp_down returns 0 and exp_up adds 4 units of 2^-1074. harris_lower, janson_interval and the statistical ends of telescoping_estimate (a new helper, _stat_interval) all use them.\n\nWhile doing this I found that the old 1e-12 slack on the statistical ends did not provably cover the rounding in normal range either:\n- 1 - mean lost relative precision when a stage ratio is small;\n- the naive sum of K logs can be off by about K*2^-53*|log Z|;\n- prod(1+x)-1 cancels, and the error is amplified by -log1p(-eps0) as eps0 approaches 1.\n\nThe code now counts integers exactly and uses log1p or log by regime, fsum, and expm1(fsum(log1p)). It rounds h_k down and b, v and eps0 up, with stated error bounds. On 120 random CNFs with the same seeds, the new intervals differ from the old by at most 1e-12 relative, and none missed p.\n\nEmpty CNF: returns [1,1] where it used to crash.\n\nJanson: Delta is now summed over unordered pairs; the docstrings in janson.py and exp_janson.py say this.\n\nPaper (thm:cftp in p1-cftp.tex):\n- stages renamed I_k, with S_i kept for supports;\n- new input Lambda_max and a decline rule ('if Lambda > Lambda_max, output [0,1]');\n- the b_i^+ sample size is now N_b = ceil(192 m ln(6m/delta)) and its cost of m*N_b samples is counted;\n- the cost bound is now O(Lambda_max^3 log(Lambda_max/delta)/eps + Lambda_max^2 log(1/delta)/eps^2) runs, using K <= Lambda and 1/rho <= Lambda;\n- completeness: for a CNF with max b_i <= 1/2, or (except with probability delta/6) any unate C with max b_i <= 1/8, Lambda <= 24mu+3 <= 24m+3, so the cut-off 24m+3 costs no completeness there;\n- the proof gains a short paragraph showing b_i^+ <= 3b_i + 1/(8m), using the KL lower bound and Chernoff;\n- the implementation paragraph notes that cftp.py needs no Lambda_max because it takes N.\n\nThe paper builds without errors in a scratch copy. There are undefined citations from other files (bodlaender1996, bodlaenderkloks1996, greenhill2000, acms2020, finner1992, cited in p1-ctx.tex and p1-indep.tex), but no warnings from p1-cftp.tex.\n\nFiles: /home/user/AI-works/circuit-output-fraction/code/rareprob/janson.py, /home/user/AI-works/circuit-output-fraction/code/rareprob/cftp.py, /home/user/AI-works/circuit-output-fraction/code/tests/test_fix_cftp.py, /home/user/AI-works/circuit-output-fraction/experiments/exp_janson.py, /home/user/AI-works/circuit-output-fraction/paper/p1-cftp.tex.",
+  "resolved": [
+   {
+    "item": "cftp re-review: subnormal-range outward rounding in harris_lower (line 88) and the Harris clamp",
+    "action": "Reproduced the 1061-unit-clause case: harris_lower gave 13*2^-1074 > p = 12.8*2^-1074. harris_lower now returns exp_down(s, 2^-36(|cls|+2)), which is rigorous and gives 0 below 2^-1021. The deductive clamp lo = max(lo, harris) is therefore sound. Stage guarantees h_k are rounded down by (1-2^-50) and set to 0 if they fall below the normal range."
+   },
+   {
+    "item": "cftp re-review: subnormal-range outward rounding in janson_interval (line 90)",
+    "action": "Reproduced: lo = 13*2^-1074 > p at 12.8 units. Also found that the upper end fell below p at 13.4, 2.6 and 1000.4 units (hi = 13, 3 and 1000 units). lo = exp_down(logM, slack) and hi = min(1, exp_up(log_up, slack)). Checked against exact rationals on the 1061-clause family and on 15,000 random near-subnormal instances; the HEAD code missed 1 of those, the new code 0."
+   },
+   {
+    "item": "cftp re-review: statistical ends of telescoping_estimate (old cftp.py lines 253-255)",
+    "action": "New _stat_interval(med, b, eps0, kap) uses exp_down/exp_up with error 2^-48*(sum of magnitudes). log Z^ is now an fsum of log1p(-bad/n_k) or log((n_k-bad)/n_k), chosen by regime, with integer counts. b = fsum(th/(h-th)), v = expm1(fsum(log1p(x))) and eps0 are each rounded up by (1+2^-48). Checked against 60-digit decimal arithmetic on 200k random inputs and in a new unit test."
+   },
+   {
+    "item": "cftp re-review: empty-CNF regression (h.min() on K = 0)",
+    "action": "telescoping_estimate returns Estimate(1,1,1,...,'no clauses: p = 1') before staging. New test_empty_cnf also checks that janson_interval([]) contains 1."
+   },
+   {
+    "item": "cftp re-review: symbol S used for both stages and supports",
+    "action": "In thm:cftp and its proof the stages are now I_1..I_K (rho_k = prod_{i in I_k}, F_{<k} = F_{I_1 cup ... cup I_{k-1}}, F_{I_k}, 'no event of I_k', 'first event j of I_{k+1}'). S_i is kept for supports."
+   },
+   {
+    "item": "cftp re-review: decline rule / Lambda cut-off and b_i^+ sample size and cost in thm:cftp",
+    "action": "Added the input Lambda_max >= 1 and, in step (2), 'If Lambda > Lambda_max, output [0,1]'. b_i^+ for non-CNF circuits now comes from N_b = ceil(192 m ln(6m/delta)) samples, and the m*N_b samples are counted in the cost. Run count is O(Lambda_max^3 log(Lambda_max/delta)/eps + Lambda_max^2 log(1/delta)/eps^2), using K <= Lambda and 1/rho <= Lambda (proved in the Cost paragraph). Completeness now reads: if Lambda <= Lambda_max and theta_k <= eta/16, output [0,1] with probability <= delta/3. New proof paragraph 'The bounds b_i^+': b_i^+ <= 3b_i + 1/(8m) for all i except with probability delta/6, so for a CNF with max b_i <= 1/2, or any unate C with max b_i <= 1/8, Lambda <= 24mu+3 <= 24m+3. The cut-off Lambda_max = 24m+3 therefore costs no completeness there. The implementation paragraph notes that cftp.py takes N and needs no Lambda_max. Builds cleanly in a scratch copy."
+   },
+   {
+    "item": "external edit (fix:independence): janson.py Delta over unordered dependent pairs, docstring M exp(Delta/(1-max b))",
+    "action": "'Delta += v' moved inside 'if rank[k] < rank[j]', so Delta = sum_j d_j over unordered pairs. The docstring now reads 'M exp(Delta / (1 - max_i b_i)), Delta = sum_i d_i the sum over unordered dependent pairs'. The interval is unchanged because it uses d_j. Test test_janson_delta_unordered: (x0 v x1) & (x1 v x2), uniform, gives Delta = 0.125; HEAD gave 0.25."
+   },
+   {
+    "item": "external edit (fix:independence): exp_janson.py docstring/output text",
+    "action": "The docstring was already partly updated in HEAD. It is now reflowed and corrected: the interval is [M, prod_i(1-b_i+d_i)], inside [M, M e^{Delta/(1-eps)}], and the reported Delta is over unordered pairs. The printed note now reports unordered Delta through janson.py."
+   }
+  ],
+  "not_done": [
+   {
+    "item": "cftp re-review: thm:meta polynomial-time claim and the CFTP completeness class in paper/p1-tail.tex",
+    "reason": "Not my file. Another agent is already editing p1-tail.tex: its working-tree version adds a polynomial cut-off on Lambda and a proof sentence bounding the runs by poly(Lambda). Remaining alignment items are listed in external_edits."
+   },
+   {
+    "item": "cftp re-review: stale experiments text and table (paper/sec-experiments.tex 'bias below 1%', paper/tables/cftp.tex, experiments/results/cftp.json)",
+    "reason": "Not my files, and experiments are re-run by someone else. Listed in external_edits and stale_numbers."
+   },
+   {
+    "item": "Lambda_max decline rule in code/rareprob/cftp.py",
+    "reason": "Deliberately not implemented: the implementation takes N rather than eps, so its cost is R*K*N runs, polynomial without a cut-off. The paper's implementation paragraph now says so."
+   }
+  ],
+  "external_edits": [
+   {
+    "file": "paper/p1-tail.tex",
+    "location": "thm:meta, 'for \\cref{thm:cftp} a truncation time $T=|C|^{c}$ and the cut-off $|C|^{c}$ on $\\Lambda$' (current working-tree text)",
+    "change": "Name the parameter as in thm:cftp: '... and the cut-off $\\Lambda_{\\max}=|C|^{c}$ (or $24m+3$)'. In the proof's polynomial-time parenthesis add: 'and, if $C$ is not a CNF, $mN_b=O(m^2\\log(m/\\delta))$ samples for the $b_i^+$'.",
+    "reason": "thm:cftp now has an explicit input Lambda_max with a decline rule, and for non-CNF circuits it counts m*N_b samples, N_b = ceil(192 m ln(6m/delta)). thm:meta's polynomial-time claim should cover both (re-review new finding 1)."
+   },
+   {
+    "file": "paper/p1-tail.tex",
+    "location": "module bullet 'Unate circuits with sparse overlaps or fast coalescence' ('for instance when $\\max_ib_i^+\\le1/2$, as then $\\Lambda\\le8\\mu^++2$')",
+    "change": "Optionally state the class in terms of the true b_i, as thm:cftp now does: 'for instance for a CNF with $\\max_ib_i\\le1/2$, or a unate circuit with $\\max_ib_i\\le1/8$, where $\\Lambda\\le24\\mu+3\\le24m+3$ (\\cref{thm:cftp})'. Note that gamma must be at least 1/poly for a polynomial T to satisfy $T\\ge(n/\\gamma)\\ln(16n/\\eta)$.",
+    "reason": "b_i^+ is random for non-CNF circuits. The class 'gamma>0 and max b_i <= 1/2 (CNF) or 1/8 (general), Lambda_max >= 24m+3' is now proved in thm:cftp (re-review new finding 1: 'State the CFTP class as gamma > 0 together with max_i b_i <= 1/2, or more generally Lambda <= poly')."
+   },
+   {
+    "file": "paper/sec-experiments.tex",
+    "location": "paragraph 'Certified telescoping (tab:cftp)': 'the truncation certificates contribute a bias below $1\\%$'",
+    "change": "Replace with 'a bias factor below $e^{0.02}$', or quote the per-L values from the regenerated results/cftp.json ('bias' in each note).",
+    "reason": "The re-review found this false: the L=60 run's note gives bias 0.015, a factor of about 1.5% (re-review new finding 5)."
+   },
+   {
+    "file": "paper/tables/cftp.tex (via experiments/exp_cftp.py and make_tables.py)",
+    "location": "whole table",
+    "change": "Regenerate after this round, by running exp_cftp.py and then make_tables.py.",
+    "reason": "The table was produced by the old interval arithmetic, so the current telescoping_estimate does not reproduce it: the referee's rerun of L=20, seed 4 gave [0.020565, 0.026620] against the published [0.019845, 0.027916]. My rounding changes move the endpoints by under 1e-12 relative, so they do not add to this."
+   }
+  ],
+  "stale_numbers": "My changes stale two things.\n- experiments/results/janson.json and janson_log.txt: the 'Delta=' values in the notes (0.07594, 0.0685, 0.3086, 0.05845, 0.3435) are the old ordered-pair sums. After a rerun they will be halved. The paper does not quote them, and the lo/hi/ratio values that tab:janson quotes change only at about 1e-8 relative or less, invisible at the table's precision.\n- telescoping_estimate endpoints move by under 1e-12 relative (checked on 120 random instances with the same seeds), so cftp.json and tab:cftp gain no new staleness from me.\n\nAlready stale before this round (re-review new finding 5, not my files):\n- tab:cftp and results/cftp.json predate the per-stage bookkeeping;\n- in sec-experiments, 'the truncation certificates contribute a bias below 1%' is false, since L=60 has bias 0.015.",
+  "tests": "cd /home/user/AI-works/circuit-output-fraction/code && python3 -m pytest -q tests: 230 passed (about 70 s), run twice after the final edits.\n\nNew tests in code/tests/test_fix_cftp.py:\n- test_empty_cnf (crashed on HEAD);\n- test_janson_delta_unordered (HEAD gave Delta=0.25);\n- test_subnormal_harris_and_janson (1061 unit clauses at 12.8, 13.4, 13.6, 2.6, 0.6 and 1000.4 units of 2^-1074, exact rational p; HEAD fails both the lower end and the upper end);\n- test_exp_bounds_and_statistical_ends (exp_down, exp_up and _stat_interval against 60-digit decimal arithmetic across the subnormal range).\n\nAdditional checks in scratch:\n- 200k random _stat_interval and exp_down/exp_up cases against Decimal: 0 violations;\n- 15k random near-subnormal Janson/Harris instances against exact rationals: new code 0 misses, HEAD 1;\n- 120 random small unate CNFs against exact rational p at delta=0.2: 0 misses;\n- LaTeX build of a scratch copy of paper/: no errors from p1-cftp.tex."
+ },
+ {
+  "key": "pcis",
+  "summary": "I made all the requested changes in my three files, and the full test suite passes (246 tests).\n\n**argument.py.** HEAD already contained a sanitizer that closes both of the referee's support-lie attacks; I re-ran the referee's attack scripts to confirm. I tightened the rest of the verifier:\n- It reads only `kind`, `data` and `root` from the prover's envelope, each entry once. Kinds must be exact strings: a str subclass that compares equal to every kind used to pass.\n- It recomputes supports bottom-up and checks PROD disjointness on them, with or without a proof.\n- It accepts a proof only as DRUP text (str or ASCII bytes) or as a plain list/tuple of int clauses, and copies it into fresh Python ints with a new `canonical_proof()` (which drops deletions). Literals outside the domination CNF's variables, and DRUP tokens longer than 18 digits, make the proof invalid. Without this bound, a 5000-digit token raised a ValueError and crashed the verifier.\n- Honest proofs from `parse_drup` are accepted as before, so no experiment output changes.\n\n**test_fix_pcis.py.** I added regression tests for:\n- both referee attacks, with the honest proof present and without a proof (lower-bound mode);\n- the unknown-kind attack, a str-subclass kind and a bool index;\n- nine malformed proofs, including a step that changes between reads and a list subclass;\n- the accepted proof formats (list, tuple, text, bytes, numpy ints).\n\nThe attack tests fail on the old verifier (f2eed8a1), and two of the new tests fail on HEAD.\n\n**p2-pcis.tex.** I addressed every remaining item of the pcis re-review:\n- The hidden-trigger sentence now cites `tab:arguments` with no numbers.\n- The \"i.i.d.\" step in thm:sis(c), thm:sis(d) and the thm:certenv proof is replaced by an argument for adapted sequences: each walk's mean given the past lies between \u03bc\u208b and \u03bc\u208a, and the Chernoff bounds behind the KL interval still hold.\n- The missing side conditions are stated:\n  - \u03b3 < 1/(2n), so \u03b7 < 1.\n  - 0 \u2264 \u03b8 \u2264 \u03a3w\u1d62; a larger \u03b8 is a case for REFUTE.\n  - \"All constants of \u03a6 are nonnegative integers\" replaces the semantic \"integer-valued\".\n  - The verifier always clips W at 1 for the tilted envelope, which keeps a downgraded node's lower end valid.\n  - The overloaded letter G is renamed: the side condition and the planted-union sets are now H and H_j, and the good event is \ud835\udca2.\n- The wrong example after thm:certenv is now a DNNF whose leaves are affine atoms. The text says only that it falls outside the theorem's rules, and no longer claims there is no FPRAS.\n- Sandwiches: a threshold gate becomes a counter only if its weights are polynomially bounded, and an adder tree with a comparator otherwise.\n\nThe one external edit aimed at this file (thm:sis(a)) was already in the text, as the ctx-modules re-review also says. A scratch build of the paper has no undefined references and no overfull boxes in p2-pcis; the undefined citations are all in other files.",
+  "resolved": [
+   {
+    "item": "CRITICAL code-soundness finding, argument.py verify(): never read derived fields from the prover's envelope; validate from scratch; check PROD disjointness on recomputed supports, also without a proof",
+    "action": "Confirmed that the existing sanitize_envelope closes both attacks: the referee scripts t_attack_verify.py, t_attack_verify2.py and t_attack_kind.py all return [0,1] or a valid lower bound. Hardened it further. Only kind, data and root are read, each entry once. Kinds must be exact str and map to canonical constants; a str subclass equal to every kind was accepted by HEAD. Children must have smaller ids than their parents (so the DAG is acyclic), LIT data must be in range, supports are recomputed bottom-up, and PROD disjointness is checked on them. All of this runs before the proof check and in lower-bound mode. The docstrings state the trust model."
+   },
+   {
+    "item": "Code-soundness: accept proofs only as DRUP text/bytes or plain lists of ints that are copied",
+    "action": "Added canonical_proof() and _parse_drup_text() to argument.py. Accepted: exact str, ASCII bytes, or an exact list/tuple of exact list/tuple steps of Python or numpy ints (no bools), with deletion steps marked by exactly 'd'. These are copied once into fresh Python ints, and deletions are dropped (sound). Rejected: subclasses, unknown markers, literal 0 inside a clause, unterminated clauses, tokens longer than 18 digits, and literals outside the domination CNF's variables. Rejection means no valid proof, so the output is a lower bound only. Verdict.proof_steps now counts the accepted clauses."
+   },
+   {
+    "item": "Code-soundness: add both attacks from the referee report as regression tests",
+    "action": "Added to code/tests/test_fix_pcis.py: test_attack_lied_support_underestimate (C = x0 AND x1, PROD(x0, x0', x1) with a lied support, honest proof present), test_attack_lied_support_overestimate (C = x1 AND x2, SUM(PROD(x0=1, x0=0 lied), x1 x2), with and without a proof), test_unknown_kind_without_proof, two new MALFORMED envelopes (str-subclass kind, bool index), test_proof_format_rejected (10 cases, including a step that changes between reads, a list-subclass proof and an over-long token) and test_proof_formats_accepted. The attack tests fail on the pre-sanitizer verifier (f2eed8a1); the str-subclass and text-proof tests fail on HEAD."
+   },
+   {
+    "item": "pcis new finding: 'in our runs (sec:experiments)' evidence pointer",
+    "action": "The hidden-trigger bullet now reads 'the DRUP proofs found by a CDCL solver grow rapidly with |A| in our runs (\\cref{tab:arguments}); this is evidence, not a lower bound, ...' and quotes no numbers. The label is defined in sec-experiments.tex, so the reference resolves now; the table itself stays pending until the re-run."
+   },
+   {
+    "item": "pcis new finding: 'the walks are i.i.d. given D-hat' (thm:sis(c), (d) and thm:certenv)",
+    "action": "Rewrote the end of the thm:sis(c) proof. With F = D-hat plus the earlier walks, (b) and (*) hold given F, so every walk's conditional mean lies in [mu_-, mu_+] (on A; at most mu_+ always). The KL Chernoff bounds hold for such adapted [0,1]-valued sequences, because E[e^{lambda W'}|F] <= 1 - mu + mu e^lambda with mu = mu_+ for lambda >= 0 and mu = mu_- for lambda <= 0. Hence l <= mu_+, and u >= mu_- on A. In the statement, 'i.i.d.' is removed ('computed from the walks' values', 'with fresh coins'). (d) now uses mu_- > 1/(5K) and notes that the proof of thm:envelope(iv) uses only the lower tail. thm:certenv's proof applies the same adapted argument to min(Y,M)/M, in both soundness and completeness."
+   },
+   {
+    "item": "pcis new finding: unstated side conditions (i) eta < 1, (ii) theta bound, (iii) integer constants, (iv) clipping for downgraded tilted nodes, (v) letter G overloaded",
+    "action": "(i) thm:sis(c) now requires gamma < 1/(2n), so eta = 2n gamma < 1. (ii) def:pcis and the Thresholds bullet require an integer 0 <= theta <= sum_i w_i; a larger theta makes G unsatisfiable, a case for REFUTE. (iii) The ENVELOPE rule now reads 'when all constants of Phi are nonnegative integers, since then phi is integer-valued and supp Phi = [phi >= 1]'. (iv) def:pcis says the verifier always clips W at 1 for the tilted envelope (thm:envelope(iii)), which changes nothing under domination, and the soundness proof cites the clipping. (v) The Thresholds side condition is now H, consistent with cor:local-side; the planted-union G_j is now H_j; the good event in the proof of thm:sis is now \\mathcal G. G remains only for the domination circuit and the generic F |- G notation."
+   },
+   {
+    "item": "pcis new finding: wrong example after thm:certenv (affine atom times a union)",
+    "action": "Replaced it with 'a DNNF whose leaves are affine atoms instead of literals'. The text now says such a piece falls outside the rules of thm:certenv: they give it neither an exact mass nor a counter, and distributing its OR-gates gives a union of possibly exponentially many R_0 pieces. The 'no FPRAS' claim is dropped. It also notes that the derivation-count mass Z equals the Lambda of that union, and words the (3/4)^m example as 'Z = 1 while the mass is (3/4)^m'."
+   },
+   {
+    "item": "pcis new finding: Sandwiches threshold caveat",
+    "action": "Now reads 'Binarize C (fan-in two; a threshold gate becomes a counter if its weights are polynomially bounded, \\cref{sec:setting}, and an adder tree with a comparator otherwise)'."
+   },
+   {
+    "item": "External edit (fix:ctx-modules) for p2-pcis.tex thm:sis(a): define b_i, smoothing over all n variables, range-restricted comparator for not-x_i",
+    "action": "Checked the current text. It already has q_i = a_i/b_i, smoothing so that every derivation mentions every variable exactly once, one shared block y_i, x_i -> [y_i < a_i] and not-x_i -> [a_i <= y_i < b_i], and the proof of #E' = (prod b_i) D(E). The ctx-modules re-review says the same. No change needed."
+   }
+  ],
+  "not_done": [
+   {
+    "item": "pcis re-review proof #10 remainder: sec-experiments.tex l.122-125 still states as fact that resolution proofs grow exponentially",
+    "reason": "Not my file. It is already requested as external edit #17 (fix:pcis). See also the consistency note in external_edits."
+   },
+   {
+    "item": "Producing experiments/results/arguments.json, paper/tables/arguments.tex and figures/fig_proofs.pdf",
+    "reason": "Experiments are re-run by someone else after this round. Until then \\cref{tab:arguments} resolves, but the table prints '(table pending)'."
+   }
+  ],
+  "external_edits": [
+   {
+    "file": "experiments/exp_coverage.py",
+    "location": "section '# 6. adversarial arguments: wrong envelopes / bogus proofs / no proofs' (around lines 132-160)",
+    "change": "Add a malformed-envelope arm to each trial. Build an envelope with a lied support (append a duplicate literal node with sup 0 under a PROD, as in code/tests/test_fix_pcis.py::test_attack_lied_support_overestimate), run verify both with the honest proof of the unsanitized envelope and with proof=None, and tally contains(...) as 'argument: malformed envelope (lied supports)'. Optionally also pass the honest proof as DRUP text, to exercise canonical_proof.",
+    "reason": "The code-soundness referee noted that the experiment's 'adversarial arguments' do not cover malformed envelopes, the attack class behind the critical finding. sec-experiments.tex l.18 ('Adversarial arguments were included: ...') should then mention it."
+   },
+   {
+    "file": "paper/sec-experiments.tex",
+    "location": "l.122-124 ('Resolution proofs grow exponentially with $k$ even for linear hashes (resolution cannot do Gaussian elimination efficiently), ...'), which is the same place as entry #17 of external_edits_all.json",
+    "change": "When applying entry #17, word the growth claim to match the re-run table and p2-pcis.tex, which now says 'grow rapidly with |A| in our runs (\\cref{tab:arguments}); this is evidence, not a lower bound, and we conjecture that resolution needs exponential size'. Say 'exponentially' only if the re-run table supports it.",
+    "reason": "Keeps sec-experiments, p2-xpt (entry #16) and p2-pcis consistent with each other and with the data. The pcis re-review found the current sentence contradicts the conjecture in p2-pcis."
+   }
+  ],
+  "stale_numbers": "My changes make no recorded experiment number stale. The honest proofs from parse_drup and exp_coverage's bogus proof lists are lists of Python ints, which the verifier still accepts. canonical_proof draws no randomness, so seeded runs are unchanged. Verdict.proof_steps now excludes deletion steps, but the experiments record len(pf) themselves. Text that depends on the coming re-run: the hidden-trigger bullet in paper/p2-pcis.tex points to tab:arguments, which prints '(table pending)' until exp_arguments.py and make_tables.py are re-run. Its qualitative claim ('the DRUP proofs ... grow rapidly with |A| in our runs') must be checked against that table.",
+  "tests": "cd /home/user/AI-works/circuit-output-fraction/code && python3 -m pytest -q tests: 246 passed in 65.66s. tests/test_fix_pcis.py on its own has 50 tests, all passing. The new attack and proof-format tests fail on the pre-sanitizer argument.py (f2eed8a1); the str-subclass-kind test and the DRUP-text acceptance test fail on HEAD's argument.py. The referee's attack scripts (/tmp/claude-0/-home-user-AI-works/02f29707-9759-5ff3-9757-46e1f8b0fdfe/scratchpad/review/t_attack_verify.py, t_attack_verify2.py, t_attack_kind.py) give 0 misses in 20 runs each. The referee's fuzzer (/tmp/claude-0/-home-user-AI-works/02f29707-9759-5ff3-9757-46e1f8b0fdfe/scratchpad/pcis_r2/fuzz_arg.py: 1500 random lying envelopes) gives 1 miss at delta = 0.05, as before. The paper builds with latexmk in /tmp/claude-0/-home-user-AI-works/02f29707-9759-5ff3-9757-46e1f8b0fdfe/scratchpad/pcis_fix/build: no errors, no undefined references, no overfull boxes in p2-pcis. The undefined citations are in other files."
+ },
+ {
+  "key": "separations",
+  "summary": "I fixed every remaining item of the separations re-review that concerns /home/user/AI-works/circuit-output-fraction/paper/p2-sep.tex, and checked each request against the current text before applying it.\n\n- **Gap hypothesis.** \"Why not NP-hardness?\" now assumes gamma >= 1+1/poly(|C|) and says why smaller gaps do not matter. In the large-side case it now names O(1/(gamma-1)) copies, which raise the gap to at least 2.\n- **Converse by padding.** I proved the converse rather than dropping the claim, so \"the two conditions differ only by derandomisation\" is now justified. If prBPP=prP, the prover strictly helps on these tasks exactly when P is not weakly automatable.\n- **Notation clashes.** All four flagged clashes are removed, and I removed three more of the same kind (A, f, the old two-sided C_u definition).\n- **Wording.** I fixed both flagged wording items (Atserias-Mueller, injectivity) and the cosmetic V_T item: the instance now fixes eps and delta.\n\nThe section compiles in a scratch copy (/tmp/claude-0/-home-user-AI-works/02f29707-9759-5ff3-9757-46e1f8b0fdfe/scratchpad/sepbuild) with no warnings from p2-sep.tex. That build shows undefined citations in other files, all outside p2-sep.tex. A brute-force check with exact fractions confirms the new arithmetic: the pad_0 values, the tensoring count and the universality bound.\n\nThe major item from the re-review is still open and is outside my file: the abstract, the intro and the README still carry the retracted \"exactly\" claim and the unqualified NP-hardness sentence. I have restated those edits in external_edits, worded to match the new converse remark.",
+  "resolved": [
+   {
+    "item": "separations new finding (minor): orientation-2 tensoring in 'Why not NP-hardness?' needs gamma >= 1+1/poly",
+    "action": "The hypothesis is now gamma >= 1+1/poly(|C|), with the reason smaller gaps do not matter: a tight interval decides the gap only when 1+eps<gamma, and an efficient procedure reaches such eps in polynomial time only if 1/(gamma-1) is polynomial. The set lower bound step now says it uses O(1/(gamma-1)) independent copies, which raise the gap to at least 2."
+   },
+   {
+    "item": "separations new finding (minor): converse-by-padding remark for 'the two conditions differ by derandomisation'",
+    "action": "Kept the claim and proved it. For the systems of prop:canonical(c), a P-refutation of F gives one of Tseitin(C_F) AND [C_F=1], with polynomial overhead, for a circuit C_F computing F gate by gate (derive the clauses of F, or for Frege-type systems the equivalence of each gate variable with its subformula). So (F,1^k) -> C_F padded to size at least k reduces Pudlak's pair to the slice (Z_P^{m0},SAT) for a fixed polynomial m0. Hence P is weakly automatable iff that slice is separable in deterministic polynomial time, and if prBPP=prP the prover strictly helps on these tasks exactly when P is not weakly automatable. I used polynomial rather than linear m0, because the Frege-type transfer has polynomial overhead."
+   },
+   {
+    "item": "notation (i): beta is both the pad variable and the NP formula beta_ell in 'Hard slices'",
+    "action": "Renamed the 'Hard slices' formulas alpha_ell, beta_ell to varphi_ell, psi_ell. beta is now only the pad selector variable."
+   },
+   {
+    "item": "notation (ii): B is both the second NP set and the complement verifier in 'Two-sided'",
+    "action": "Renamed the 'Two-sided' verifiers A, B to R, R'. A and B now appear only as the NP pair in 'Hard slices'. I also renamed the V_T program A (and delta_A) to M (and delta_M), which removes a third meaning of A."
+   },
+   {
+    "item": "notation (iii): C_u defined twice",
+    "action": "The 'Hard slices' circuits are now F_u = varphi_{|u|}(u,.) ('the formula ..., as a circuit'), with Z={F_u : u in B} in the text and in the proof of the corollary. The two-sided gadget is now written C_u = pad_0(R(u,.)), which equals the old definition and reuses the pad notation. This removes the second explicit use of the beta variable."
+   },
+   {
+    "item": "notation (iv): G is both the generator and the envelope circuit",
+    "action": "Renamed the proof-complexity generator to g. G keeps the meaning it has in p2-pcis.tex: the circuit of an ENVELOPE node with C_v |-_P G. The hypothesis now reads 'no short proofs C_y |-_P G for the circuits G of ENVELOPE nodes (sec:pcis) whose envelopes have mass n^{-omega(1)}'. The old phrase 'envelope circuits G' did not match the paper's own definition, where an envelope circuit is the arithmetic circuit Phi."
+   },
+   {
+    "item": "wording (v): 'No polynomial-time algorithm finds ... in time polynomial in |F| and ...' contradicts itself",
+    "action": "Now reads: 'No algorithm finds resolution refutations of unsatisfiable CNFs F in time polynomial in |F| and the size of the shortest refutation of F unless P=NP'."
+   },
+   {
+    "item": "wording (vi): 'need a proof that f is injective' overstates",
+    "action": "Now reads: 'need a proof that f^{-1}(f(x_0))={x_0} (for V_T, e.g. the instance of a T-proof that f is injective)'."
+   },
+   {
+    "item": "cosmetic (proof #2 note): the V_T instance should also fix (eps,delta)",
+    "action": "The p-simulation now uses V'(.,.,pi',eps,delta), t=t'(|C|,|pi'|,1/eps,log(1/delta)), and the instance of the T-proof at (C,D,pi',eps,delta). This matches V(C,D,pi,eps,delta) in def:argument."
+   },
+   {
+    "item": "additional clash: f was both the one-way permutation and the SBP exponent in 'Universality'",
+    "action": "Renamed the exponent to j, the same letter as the converse direction of that paragraph (2^{-j} versus 2^{-j-1}). The arithmetic, 2^{-k(j+1)} <= 2^{-kj}/c for k >= log2 c, is checked by brute force."
+   },
+   {
+    "item": "consistency",
+    "action": "Changed 'randomised many-one' to 'randomized many-one', matching the other 12 uses in the file. I reflowed the edited paragraphs with a script that asserts the word sequence is unchanged."
+   }
+  ],
+  "not_done": [
+   {
+    "item": "separations new finding (major): the abstract (main.tex l.43-44), the intro (sec-intro.tex l.110-114) and README.md l.21/l.52 still state the retracted 'exactly the non-weak-automatability' claim, the unqualified NP-hardness barrier and 'non-automatability results'",
+    "reason": "These are outside my file and still unapplied. I re-reported them in external_edits, with wording that now reflects the converse proved in p2-sep.tex."
+   },
+   {
+    "item": "Optional open-problem item in sec-discussion.tex (weak automatability and envelope classes K_P(m,K))",
+    "reason": "Outside my file, and optional. p2-sep.tex already states this question as open."
+   }
+  ],
+  "external_edits": [
+   {
+    "file": "paper/main.tex",
+    "location": "abstract, lines 43-44: 'and the prover's advantage for upper bounds is\\nexactly the non-weak-automatability of its proof system.'",
+    "change": "Replace with: 'and, on circuits with short refutations, the prover strictly helps for upper bounds exactly when slices of its proof system's canonical pair are not separable in randomized polynomial time (for Frege-type systems if Blum integers are hard to factor), a condition that differs from non-weak-automatability only by derandomisation.'",
+    "reason": "The re-review lists this as major and unresolved: the abstract contradicts prop:canonical and the paragraph after it in p2-sep.tex. The wording uses the converse now proved in p2-sep.tex: for the systems of prop:canonical(c), P is weakly automatable iff a fixed slice is separable in deterministic polynomial time."
+   },
+   {
+    "file": "paper/sec-intro.tex",
+    "location": "lines 110-114, from 'for upper bounds exactly to' to 'unless $\\coNP\\subseteq\\AM$.'",
+    "change": "Replace with: 'for upper bounds on circuits with short refutations in the verifier's proof system exactly when slices of its canonical pair are not separable in randomized polynomial time (\\cref{prop:canonical}), which differs from non-weak-automatability only by derandomisation and holds for $\\mathrm{TC}^0$-Frege, Frege and extended Frege if Blum integers are hard to factor (\\cref{cor:automatability}); two-sidedly under the hardness of factoring. Upper-bound and two-sided separations cannot be based on $\\NP$-hardness under randomized many-one reductions unless $\\coNP\\subseteq\\AM$.'",
+    "reason": "Removes the retracted 'exactly to the extent ... not weakly automatable' claim, a major finding. It also restricts the NP-hardness barrier to upper-bound and two-sided separations under many-one reductions, as in p2-sep.tex 'Why not NP-hardness?'. As written now, it also covers the lower-bound separation, which p2-sep.tex derives from NP not in BPP."
+   },
+   {
+    "file": "README.md",
+    "location": "line 21, the sentence 'The prover's advantage for upper bounds is exactly the non-weak-automatability of its proof system (so it is real under standard cryptographic assumptions), and such separations cannot rest on NP-hardness alone.'",
+    "change": "Replace with: 'On circuits with short refutations in the verifier's proof system, the prover strictly helps for upper bounds exactly when slices of the system's canonical disjoint NP pair are not separable in randomized polynomial time; this differs from non-weak-automatability only by derandomisation, and holds for TC\u2070-Frege, Frege and extended Frege if Blum integers are hard to factor. Upper-bound and two-sided separations cannot rest on NP-hardness under randomized many-one reductions (unless coNP \u2286 AM).'",
+    "reason": "The same overclaim and unqualified barrier as in the abstract and intro. The re-review lists it as major and unresolved."
+   },
+   {
+    "file": "README.md",
+    "location": "line 52: 'the separations that rely on known non-automatability results (Bonet\u2013Pitassi\u2013Raz, Kraj\u00ed\u010dek\u2013Pudl\u00e1k)'",
+    "change": "Replace with: 'the separations that rely on known failures of feasible interpolation (Bonet\u2013Pitassi\u2013Raz; Kraj\u00ed\u010dek\u2013Pudl\u00e1k for extended Frege)'",
+    "reason": "The corollary rests on BPR's failure of feasible interpolation, not on non-automatability (re-review new finding)."
+   }
+  ],
+  "stale_numbers": "None. p2-sep.tex contains no experiment numbers, and no other text depends on the symbols I renamed: a grep of the paper finds no use outside p2-sep.tex of pad_a, the Hard-slices or two-sided C_u, V_T-argument internals, or 'envelope circuits G'.",
+  "tests": "Not run: I made no code changes, only edits to paper/p2-sep.tex. In a scratch copy of paper/ (/tmp/claude-0/-home-user-AI-works/02f29707-9759-5ff3-9757-46e1f8b0fdfe/scratchpad/sepbuild), the paper builds with pdflatex+bibtex and p2-sep.tex produces no warnings or overfull boxes. The undefined citations in that build, such as bodlaender1996, greenhill2000 and vardy1997, are all in other files. A brute-force check with exact fractions confirms three things: k=ceil(2ln2/(gamma-1)) copies give gap >= 2 for 1<gamma<=2; p(pad_0(R(u,.)))=2^{-k-1}(1+[u in Lambda]) for every witness position; and 2^{-k(j+1)} <= 2^{-kj}/c for k >= log2 c."
+ },
+ {
+  "key": "affine",
+  "summary": "The three tasks are done. Most edits are to text. The only code change is a docstring, and all 246 tests pass.\n(1) The cor:barrier-methods (iii) bound was already up to date. It now applies only when every threshold gate of C has integer weights, so that the NNF is defined, and N is an NNF of C as in thm:cw without frontier gates. The appendix proof (iii) matches.\n(2) The p2-xpt sentence calling resolution's failure on parity a fact now says it is a conjecture.\n(3) I re-read my sections against the current p1-dfsb, p1-ctx and p2-pcis. I fixed one stale appendix claim and two stale XPT claims, and renamed the XPT rules (R1)-(R3) to (X1)-(X3) so they no longer clash with (R1)-(R8) of sec:rules.\nA scratch build in /tmp/claude-0/-home-user-AI-works/02f29707-9759-5ff3-9757-46e1f8b0fdfe/scratchpad/build_affine compiles with no undefined references. The only undefined citations are the refs.bib entries requested earlier, and the overfull boxes are all in sec-envelopes.tex. Files changed: /home/user/AI-works/circuit-output-fraction/paper/p1-affine.tex, /home/user/AI-works/circuit-output-fraction/paper/app-affine.tex, /home/user/AI-works/circuit-output-fraction/paper/p2-xpt.tex, /home/user/AI-works/circuit-output-fraction/code/rareprob/affine.py (docstring only).",
+  "resolved": [
+   {
+    "item": "ctx-modules re-review new finding: cor:barrier-methods (iii) quotes the deleted O(|C| cw 2^cw) bound and applies to circuits without an NNF",
+    "action": "Checked the current text: it already used the thm:cw bound (|N|+1)(cw+3)2^cw and the derived cw >= m-14-log2((n+2)(|N|+1)(cw+3)/c). I re-derived the bound: 3(n+2)S >= c2^{m-12} and log2 3 < 2. It still did not restrict to circuits whose NNF is defined. Rewrote (iii) in p1-affine.tex: 'Let every threshold gate of C have integer weights, so that the NNF of C is defined (sec:ctxwidth), and let N be an NNF of C as in thm:cw, without frontier gates (|N| <= 12|C| for the gate-by-gate NNF of a {and,or,not,xor}-circuit). The DNNF that thm:cw builds from N ...'. This matches p1-ctx: integer weights, including negative ones by complementing the input, give counters; other thresholds are frontier gates only. app-affine (iii) now says 'For an NNF N without frontier gates, ...'."
+   },
+   {
+    "item": "External edit (fix:pcis) for p2-xpt.tex lines 4-5: resolution lower bound for dense linear hashes stated as fact",
+    "action": "Replaced it with: 'resolution appears to be the wrong system: the refutations of dense linear hashes that a CDCL solver finds grow rapidly, and we conjecture that resolution needs exponential size (sec:pcis)'. I used 'grow rapidly' rather than the requested 'exponentially' to match p2-pcis, which says 'grow rapidly with |A| in our runs' and calls this evidence, not a lower bound."
+   },
+   {
+    "item": "Stale claim in p2-xpt line 3: 'thm:certenv admits affine subspaces as envelope pieces'",
+    "action": "thm:certenv now admits as atoms only affine subspaces on uniform coordinates, inside R_0 products. Changed to 'admits affine subspaces on uniform coordinates as atoms of envelope pieces'."
+   },
+   {
+    "item": "Stale claim in p2-xpt: 'XPT is an instance of the certified-envelope rule' (the EXACT/atom rules now accept only checkable deterministic forms)",
+    "action": "Made the claim precise. A piece constrained only on uniform coordinates is an affine atom of thm:certenv. Along a linear order, the dynamic program of prop:bw-dp is an OBDD, which p2-pcis accepts as checked-deterministic: on a caterpillar tree, N_t[s] = (N_{t-1}[s] and not x_t) or (N_{t-1}[s+a_t] and x_t). So the composition with def:pcis and the inheritance of thm:pcis-sound still hold."
+   },
+   {
+    "item": "Stale statement in app-affine proof of cor:barrier-methods (ii): 'its clipped weight has mean Theta(1/K_E) on [0,3]'",
+    "action": "The current thm:sis(c) uses W' = C(x)min(w,M)/M in [0,1]. Changed to 'the values W' in [0,1] of thm:sis(c) have mean Theta(1/K_E)'. On the counter-accuracy event the mean lies between (1-eta)p/M and p/M, with M in [9/4,15/4]D(E)."
+   },
+   {
+    "item": "Rule-name clash: XPT rules (R1)-(R3) in def:xpt vs rules (R1)-(R8) of sec:rules, both cited in p1-affine",
+    "action": "Renamed the XPT rules to (X1)-(X3) everywhere they appear: the def:xpt list, the proof of thm:xpt(a), the dense-hash remark, 'threshold rule (X1) of sec:xpt' in p1-affine, and the Propagator docstring in affine.py. I found no other file that refers to the XPT rule names."
+   },
+   {
+    "item": "Re-check of p1-affine against current p1-dfsb (atoms, (T'), canonicalised NNF, T*_K, m_K)",
+    "action": "No change needed. cor:barrier-methods (iv) and its proof (rules (T),(T'),(F),(D),(B); leaves of T*_{K'} are constants, atoms and (S)-leaves; 'atom size a <= 2n/3'; the completeness guarantee needs m_{K'}(C) <= budget) match the current DFSB. The remark that rule (F) keeps only forced literals from Gaussian elimination at the root also still matches. All cross-references in my three files resolve."
+   }
+  ],
+  "not_done": [
+   {
+    "item": "Pending refs.bib entries for the affine citations",
+    "reason": "refs.bib is not my file. The 12 entries were already requested in external_edits_all.json (fix:affine-linear / integ:affine-linear) and are still missing, so the PDF shows them as undefined citations."
+   }
+  ],
+  "external_edits": [
+   {
+    "file": "paper/refs.bib",
+    "location": "end of file",
+    "change": "Append the 12 entries already listed verbatim in external_edits_all.json (source fix:affine-linear): bmvt1978, vardy1997, greensanders2008, duris2004, bova2016, wei1991, hlinenyoum2008, jerrumsinclair1993, goldbergjerrum2013binary, goldbergjerrum2013regular, koriche2013, lagniez2016.",
+    "reason": "They are still missing. A scratch build shows them as undefined citations from p1-affine.tex, app-affine.tex and p2-xpt.tex."
+   }
+  ],
+  "stale_numbers": "My edits make no number stale; the only code change is a docstring. However, dfsb.py was changed in this round by others (box-fill truncation T_f, pilot fill caps). On rerun of experiments/exp_affine.py the E3 DFSB numbers may change: the 'DFSB, 400 nodes' row of tab:affine (U/L 28.7, 1.5e6 samples, 52 s) and the matching sentence in the Experiments paragraph of p1-affine.tex ('DFSB with a 400-node budget spent 52 seconds and 1.5e6 samples and returned an interval of ratio 29'). The other affine rows do not depend on changed code, but the timings and the total 'about 75 seconds' may move.",
+  "tests": "cd /home/user/AI-works/circuit-output-fraction/code && python3 -m pytest -q tests: 246 passed in 61 s, both before and after the edits. A LaTeX scratch build at /tmp/claude-0/-home-user-AI-works/02f29707-9759-5ff3-9757-46e1f8b0fdfe/scratchpad/build_affine succeeds with 0 undefined references. The only undefined citations are the pending refs.bib entries, and the 3 overfull boxes are all in sec-envelopes.tex."
+ },
+ {
+  "key": "frontmatter",
+  "summary": "I applied every requested edit to the files I own, after checking each one against the current text and the current theorem statements in the p1-, p2- and app- files. I also added all 31 missing BibTeX entries and rewrote the abstract, intro Results, discussion and README so they agree with the theorems as they now stand. The paper builds cleanly in a scratch copy (pdflatex, bibtex, pdflatex x3; 80 pages): no undefined citations or references, no multiply-defined labels, no bibtex warnings, no overfull boxes.\n\nSeveral requests were stale, wrong or superseded, so I adjusted them before applying:\n- Edits 74, 76 and 77 supersede 61, 64 and 65.\n- Edit 13 now follows p1-ctx: integer weights, with negative weights acting on the complemented input.\n- Edit 8 said \"every circuit\"; it now covers circuits whose NNF has no opaque gates.\n- Edit 41: added the private-pivot hypothesis. \"Where p=e^{-Omega(m)}\" became \"a range that contains thresholds with p=e^{-Omega(m)}\", matching the corrected thm:local(iii).\n- Edit 74: the \"hard to approximate\" claim now states the exact factors of thm:biased-hard.\n- Edits 20 and 21:\n  - \"Hard to factor\" is now \"cannot be factored by polynomial-size circuits\".\n  - The two-sided separation is attributed to the verifier that checks proofs in a theory such as ZFC.\n  - The NP-hardness barrier is limited to upper-bound and two-sided separations, randomized many-one reductions and gaps of at least 1+1/poly, as in p2-sep.\n- Edit 19: the abstract uses the separations referee's shorter wording, which says the same thing.\n\nAbstract: 309 words. It no longer says \"exactly\" about weak automatability. It states the corrected DFSB class (read-once compositions of sub-circuits that are component-dense in their polarity). DNF and DNNF coverage is attributed to envelope leaves and the meta-procedure. Context width is tied to the bracketing. Local thresholds, affine structure and the parity barrier are included.\n\nIntro also gets:\n- the corrected thm:cw bound O(|N|(cw+1)2^cw), with bounded-pathwidth CNFs bracketed along a path decomposition;\n- the corrected module claim;\n- the XPT and Gibbs-envelope sentences;\n- the local-threshold headline result;\n- a revised SPN claim;\n- a related-work sentence for the new citations.\n\nI checked the SPN claim on the exp_arguments instances with the current code: DFSB is now exact on SPN triggers with k \u2264 12 (they are atoms) and on k=16 (by branching). So the old sentence \"DFSB returns an uninformative interval\" was false, and I replaced it in sec-experiments and the intro. The surprise-accounting wording now says \"for lower bounds\" and \"for two-sided intervals\" in the README and discussion.\n\nIn sec-experiments, the text no longer says \"every number below is reproduced by them\". The implementation's simplifications are now listed. I left all table numbers as they are; see stale_numbers.",
+  "resolved": [
+   {
+    "item": "refs.bib: missing citations (31 keys: gjl2019; acms2020, bodlaender1996, bodlaenderkloks1996, greenhill2000; finner1992; the 13 local-threshold keys; the 12 affine keys)",
+    "action": "Appended all 31 requested entries in the file's field style. Moved friedman2008's number into note={No.~910}, which removed the bibtex 'volume and number' warning. A scratch build has no undefined citations and no bibtex warnings."
+   },
+   {
+    "item": "edits 1, 9, 19, 44, 63: abstract (main.tex)",
+    "action": "Rewrote the abstract (309 words):\n- corrected DFSB class: read-once formulas; read-once compositions of sub-circuits component-dense in their polarity; triggers; cutsets;\n- DNF/DNNF coverage via envelope leaves and the meta-procedure;\n- context width depends on the bracketing (bounded-pathwidth CNF example);\n- independence, annealing, local thresholds, affine structure, and the parity barrier for decomposable envelopes with small leaves;\n- prover cost poly(|pi|)+2^sigma_u;\n- limits: canonical-pair slices instead of 'exactly the non-weak-automatability'; NP-hardness barrier qualified to randomized many-one reductions with gap 1+1/poly."
+   },
+   {
+    "item": "edits 2, 8, 20, 41, 42, 43, 62/75, 61/74: sec-intro.tex Results",
+    "action": "Rewrote the 'Without a prover' paragraph:\n- corrected cor:dfsb class;\n- logarithmic-support disguise;\n- DNF/DNNF coverage attributed to prop:dnnf-env and thm:meta.\n\nItems, all checked against current statements:\n- context width: O(|N|(cw+1)2^cw) for an NNF without opaque gates, the bracketing, lem:pathcw;\n- corrected module claim;\n- certified telescoping now names its completeness condition;\n- new local-thresholds item;\n- new affine item: presolve, envelopes, parity barrier with its hypotheses, biased hardness with its exact factors.\n\nThe prover paragraph gains the XPT and Gibbs sentences and the canonical-pair separation statement, with the open question and the qualified NP-hardness barrier. Experiments paragraph: added the local-threshold result, rounded the Janson interval outward to [6.18,7.35]e-22, and corrected the SPN claim. Added a related-work sentence for koriche2013, lagniez2016, daviesperkins2021 and jpss2021."
+   },
+   {
+    "item": "edits 3, 23: sec-discussion.tex",
+    "action": "'What the answers are' now:\n- lists context width, local thresholds and affine constraints;\n- says logarithmic-support disguise;\n- says complete on the union of the module classes (thm:meta);\n- adds the parity barrier and biased hardness, and the canonical-pair separation;\n- no longer claims 'exactly where'.\n\nOther changes:\n- 'both halves have a black-box meaning' wording;\n- distributed-surprise paragraph points to thm:cftp and thm:local;\n- open problems: added the parity-barrier pointer, the certified-annealing scope, the requested 'Weak automatability and envelopes' item, and a local-threshold pointer in Networks."
+   },
+   {
+    "item": "edits 4, 10, 21, 22, 46, 47, 48, 64/76, 65/77, 66: README.md",
+    "action": "Updated:\n- DFSB class and DNF/DNNF attribution;\n- context-width bullet (bracketing, size bound);\n- module claim;\n- local-threshold and affine bullets;\n- XPT/Gibbs and surprise-accounting wording in the prover bullet;\n- Limits paragraph (canonical-pair slices, open question, qualified NP-hardness barrier);\n- localthr.py and affine.py code entries;\n- exp_local and exp_affine in the experiments list and Reproduce loop;\n- Status: failure of feasible interpolation, plus the new proved results and their cited ingredients;\n- implementation notes (atom size 12, greedy VE order)."
+   },
+   {
+    "item": "edits 5, 11, 14, 17, 45, 69: sec-experiments.tex",
+    "action": "Opening paragraph:\n- lists all implemented procedures and the simplifications (atom size 12, greedy orders, heuristic TG pilot, counters only for nonnegative integer weights);\n- 'every number below is reproduced' replaced by 'each table and figure is generated from the raw output of the script named in its caption'.\n\nThen:\n- blocks family: now exact by (T') and (D) with no samples; the 'cubic in the number of blocks' claim is removed;\n- ctx bracketing sentence (edit 11);\n- Janson interval rounded outward;\n- cftp: 'bias factor below e^{0.02}';\n- added Local thresholds (tab:local) and Affine structure (tab:affine) pointer paragraphs;\n- hidden-trigger paragraph: DRUP proofs as evidence, not a resolution lower bound; SPN tests reached through small-cone atoms and branching (about 2^{|S|-a} leaves) instead of 'DFSB returns an uninformative interval'."
+   },
+   {
+    "item": "edits 27, 38, 39: sec-envelopes.tex",
+    "action": "Removed 'deterministic'. Listed the tilted Gibbs estimator as a variant of the envelope estimator. Added the prop:certgap sentence and the overlapping-blocks/rem:local-blocks sentence. Rounded the Janson example outward to [4.33,5.07]e-7. Fixed three small overfull boxes."
+   },
+   {
+    "item": "edits 24, 25, 26, 28, 29, 30 (listed as DONE)",
+    "action": "Checked that they are present in the current text; not touched."
+   },
+   {
+    "item": "edit 13: sec-setting.tex threshold expansion",
+    "action": "Now reads 'integer weights of polynomially bounded total W=sum|w_j| expand by a sequential counter with O(kW) wires (a negative weight acts on the complemented input)', matching p1-ctx and the ctx referee. The implementation's nonnegative-only restriction is noted in sec-experiments."
+   },
+   {
+    "item": "sec-limits.tex: lower-bound universality statement",
+    "action": "Qualified to 'under the uniform distribution', as in p2-sep."
+   },
+   {
+    "item": "edits 49, 67: code/rareprob/__init__.py",
+    "action": "Exported LTC, ltc_from_circuit, tg_estimate, presolve_estimate, affine_envelope_estimate and xpt_verify. Import checked: no circular imports."
+   }
+  ],
+  "not_done": [
+   {
+    "item": "Re-running experiments (exp_speedup, exp_coverage, exp_arguments, exp_cftp) and regenerating tables and figures",
+    "reason": "Excluded by the task; someone else does it after this round. Numbers left in place are listed in stale_numbers."
+   },
+   {
+    "item": "Hidden-trigger instance spn k=20",
+    "reason": "The quick sanity check of DFSB on the exp_arguments instances (current code, same seeds) was stopped after k=16 (440 s for that instance alone) so it would not tie up shared CPU. k=20 was not run."
+   }
+  ],
+  "external_edits": [
+   {
+    "file": "experiments/exp_coverage.py",
+    "location": "contains(e, p): 'return e.lo <= p * (1 + 1e-9) + 1e-300 and p <= e.hi * (1 + 1e-9) + 1e-300'",
+    "change": "Drop the 1e-9 relative slack (and the 1e-300 absolute slack), or shrink it to a few ulps, so that floating-point misses are counted. If a tolerance is kept, tell the sec-experiments owner so the Soundness paragraph can state it.",
+    "reason": "Code-soundness referee: this slack hid deterministic rounding misses (e.g. tilting at t=k). sec-experiments says it 'counted intervals that miss p', with no tolerance."
+   },
+   {
+    "file": "experiments/exp_speedup.py",
+    "location": "family 3, 'AND of independent random blocks (6 variables each)': dfsb_estimate(C, D, eps=EPS, delta=DELTA, rng=rng)",
+    "change": "No change needed for consistency: sec-experiments now describes this family as exact (atoms, zero samples). If the rerun should instead show the sampling path (the d^2 split of thm:dfsb), use blocks of more than 12 variables or pass exact_support=0 here; the sec-experiments 'products of blocks' bullet and the 'zero samples for products of atoms' sentence must then be changed back.",
+    "reason": "With the current DFSB (exact_support=12) the 6-variable blocks are atoms. The text was updated for this; the rerunner should know the alternative."
+   }
+  ],
+  "stale_numbers": "These numbers will change or need checking when the experiments are regenerated; I left them as they are.\n\n1. tab:speedup / fig:speedup (paper/tables/speedup.tex)\n   - The 'blocks' rows (cost 8.19e3 to 2.44e7, interval ratios, speed-ups) predate exact atoms. The current code computes these instances exactly with 0 samples, and the text already says so.\n   - Every DFSB cost now also counts the envelope compiler's density pilots (e.g. obfuscated DNF about 1.0e5 \u2192 1.3e5).\n   - The dnf-obfuscated rows at w=32, 40 and 48 (ratio 1.808, 270695.667 and inf at the 1e6 cap) contradict the text's 'flat for DNFs' and 'K\u22481'. Re-check after the rerun.\n2. Intro sentence 'p\u22487\u00b710^{-25} for an 80-bit trigger with 2\u00b710^4 samples' comes from the trigger-80 row (cost 1.92e4) and may change.\n3. Intro '2,450 adversarial and random trials': the current tab:coverage rows sum to 1,950. Reconcile after rerunning exp_coverage; tab:coverage itself is also stale relative to the current code.\n4. tab:cftp (paper/tables/cftp.tex, results/cftp.json) was produced with the old interval bookkeeping (cftp referee: L=20 now gives about [0.0206, 0.0266] against the published [0.0198, 0.0279]). Re-check the text's 'bias factor below e^{0.02}' (published L=60 bias 0.015) after the rerun.\n5. tab:arguments, fig:proofs and fig:surprise (results/arguments.json, surprise.json) are missing. These rest on them:\n   - the hidden-trigger paragraph: DRUP proof growth, and SPN tests reached by atoms and branching with about 2^{|S|-a} leaves;\n   - the intro claim that SAT-solver proofs certify SPN triggers which Part 1 handles only at a cost exponential in the trigger length;\n   - the surprise paragraph ('samples grow as 2^{\u03c3_u}').\n\n   My check with the current code and the same seeds: linhash k=12\u201324 are exact by forcing (0 evaluations); spn k=8 and 12 are exact as atoms; spn k=16 is exact by 15 branchings (1.1e8 evaluations, 440 s); k=20 was not run.\n6. Janson numbers are unchanged but now rounded outward: [6.18,7.35]e-22 in the intro and sec-experiments, [4.33,5.07]e-7 in sec-envelopes. Re-check them if exp_janson is rerun with the current janson.py (repeated-literal canonicalisation).\n7. Local-threshold numbers copied from tab:local into the intro (10^[-20.30,-20.08], exact 10^-20.19, 7\u00b710^4 samples, MC about 10^22), the README (factor 1.7, 7\u00b710^4 samples) and the sec-experiments pointer (10^-23.7, 10^-169.8) must follow any rerun of exp_local.\n8. tab:ctx and the intro's '4\u00b710^{-46} to 0.4% from 1,024 samples' were reproduced per the ctx re-review and should not change.",
+  "tests": "cd /home/user/AI-works/circuit-output-fraction/code && python3 -m pytest -q tests \u2192 246 passed in 60.55s, no failures. Importing rareprob with the new exports works. LaTeX: a scratch copy of paper/ at /tmp/claude-0/-home-user-AI-works/02f29707-9759-5ff3-9757-46e1f8b0fdfe/scratchpad/mine/build (pdflatex, bibtex, pdflatex x3) gives 80 pages with 0 undefined citations or references, 0 multiply-defined labels, 0 bibtex warnings and 0 overfull boxes."
+ }
+]
