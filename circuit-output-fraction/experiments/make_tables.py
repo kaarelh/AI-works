@@ -54,10 +54,14 @@ def arguments():
         if "proof_steps" not in r:  # instance hit the per-instance time limit
             lines.append(f"{fam} & {r['k']} & & & \\multicolumn{{4}}{{l}}{{no proof within {r['timeout_seconds']} s}}\\\\")
             continue
-        p1 = r["part1_hi"] / r["part1_lo"] if r["part1_lo"] > 0 else math.inf
+        if "part1_lo" in r:
+            p1 = r["part1_hi"] / r["part1_lo"] if r["part1_lo"] > 0 else math.inf
+            p1s = "$\\infty$" if p1 == math.inf else f"{p1:.3g}"
+        else:  # the prover-free procedures hit their time limit
+            p1s = f"none in {r['part1_timeout_seconds']} s"
         p2 = r["part2_hi"] / r["part2_lo"] if r["part2_lo"] > 0 else math.inf
         lines.append(f"{fam} & {r['k']} & {r['size']} & {sci(r['p'])} & "
-                     f"{'$\\infty$' if p1 == math.inf else f'{p1:.3g}'} & {r['proof_steps']} & "
+                     f"{p1s} & {r['proof_steps']} & "
                      f"{r['verify_seconds']:.1f} & {p2:.3f}\\\\")
     lines += ["\\bottomrule", "\\end{tabular}"]
     open(os.path.join(OUT, "arguments.tex"), "w").write("\n".join(lines) + "\n")
