@@ -430,3 +430,14 @@ def make_dl_heldout5_suite(d=30, seed=9393):
         add(f"h5rf{made}", fn, rel, f"random {gts}-gate formula on {k} inputs: " + desc)
         made += 1
     return S
+
+
+def make_dl_heldout6_suite(d=30):
+    """Sixth held-out Boolean suite (Part 9, Amendment 3): 12 targets drawn from a random family written, before any run,
+    by an agent blind to the sum-feature design, from the pre-registered description of the held-out suite
+    (part9/heldout6/FAMILY.md; definitions in part9/heldout6/suite.py)."""
+    import importlib.util, os
+    p = os.path.join(os.path.dirname(os.path.abspath(__file__)), "part9", "heldout6", "suite.py")
+    sp = importlib.util.spec_from_file_location("heldout6_suite", p); m = importlib.util.module_from_spec(sp)
+    sp.loader.exec_module(m)
+    return m.make_dl_heldout6_suite(d)

@@ -52,7 +52,7 @@ Pre-registered questions:
 Fashion-MNIST and `qd_dev` at n in {1000, 10000, 60000}, seed 0 (9 cells); the references there are the existing / queued
 result files. The S builder's dev evaluation is the full toy grid (3 seeds) on `designed` and `dlsymdev`, inputs permuted.
 
-**Amendment 2 (26 October, 23:1x UTC; after the sum-feature builder froze, before any held-out Part 9 run).** The S
+**Amendment 2 (26 October, 23:08 UTC, commit 7449313e; after the sum-feature builder froze, before any held-out Part 9 run).** The S
 builder reports that an over-long text search printed the *source code* of `make_dl_heldout4_suite` (the target
 definitions) at the start of its work; no dlheld4 data or results were touched. So `dlheld4` is not blind for the sum-feature
 component. A fifth suite, `dlheld5` (boolfuncs.make_dl_heldout5_suite, seed 9393), was generated now by rejection sampling
@@ -60,7 +60,7 @@ from a fixed random family of signed-sum targets (plus two random-formula contro
 was frozen; nobody has seen its targets' behaviour. Q1 is answered on both suites; `dlheld5` is the clean test, `dlheld4`
 is reported with the exposure noted. Networks (nets, nets_wd, nets_cewd), lin, hgb and v1 are run on dlheld5 as on dlheld4.
 
-## Integration and freeze (27 October 2026, ~02:20 UTC, before any held-out run of hyb_portfolio2)
+## Integration and freeze (27 October 2026, 02:11 UTC, commit a2489545, before any held-out run of hyb_portfolio2)
 
 - (i) Sum features: on `designed` + `dlsymdev` (permuted, against `nets_best`), p9_sum's mean log2 n* ratio is -2.30
   (29 better / 0 worse) against v1's -1.71 (23 / 5; v1 never learns band11); no dev target is worse than v1 by more than
@@ -74,8 +74,11 @@ is reported with the exposure noted. Networks (nets, nets_wd, nets_cewd), lin, h
   p9_sum on 3 toy fits (sym7 n=256, par3 n=64, thrsum n=512), to p9_gates on qd_dev n=1000, to v1 on satimage n=300.
 - Already run before this freeze, with frozen components whose inclusion did not depend on them: p9_sum (identical to
   hyb_portfolio2 on toy inputs) on dlheld4 and dlheld5. The headline toy rows are hyb_portfolio2's own runs.
+- (Added after the audit.) Before this freeze the orchestrator saw three held-out log lines printed by progress monitors:
+  the last line of v1's qd_a and qd_b logs, and one p9_sum dlheld5 line (h5t0: 10% test error at n = 104, networks 770).
+  Both rule parts were mechanical and reproduce exactly from dev files, so no integration decision depended on them.
 
-**Post-freeze crash fix (27 October, ~02:45 UTC).** The frozen hyb_portfolio2 crashed at its first held-out image cell
+**Post-freeze crash fix (27 October; made 02:14 UTC, committed 02:24, commits 1a99637a and 37763afa).** The frozen hyb_portfolio2 crashed at its first held-out image cell
 (qd_a and qd_b, n = 100, seed 0) before producing any result: the gates booster lowers LightGBM's `min_data_in_leaf`
 below the Dataset's construction value (20) when a member's training set has fewer than 500 points, which LightGBM refuses
 with feature pre-filtering on. The gates dev evaluation never covered n < 1000, so it was not seen. Fix: pre-filtering is

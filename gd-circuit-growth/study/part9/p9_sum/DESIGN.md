@@ -304,6 +304,11 @@ more than 0.5.
 - **Dev in-sample.** Every change in section 4 was made while looking at dev results (designed and dlsymdev). The
   dlsymdev margins are in-sample for the design, and the held-out `dlheld4` is the test. The data-access note in
   section 4 records that its target definitions were seen as source code before the design started.
+  **Correction (Part 9 audit, 27 October):** because of that exposure dlheld4 is not a test of this design; the
+  unsupported-form example in section 6 (`t + 2 x6 x7 + 2 x8 x9 x10`) is a held-out dlheld4 target, the orchestrator's task
+  prompt itself quoted a truncation of it, and k_max = 24 and the 4 modulators were set minutes after the exposure. The
+  held-out suite dlheld5 was specified after this document's limits were read, inside the representable class. A sixth
+  suite (dlheld6), written by an agent blind to this design, is the test (PROTOCOL.md, Amendment 3).
 - **Real data not evaluated beyond one fit.** Only one fit on kr_vs_kp (the one DEV dataset where DFG runs) was
   checked: same error up to one test point, 0.080 of the budget. The tabular / image results of the portfolio are
   unchanged wherever DFG does not run (any continuous column, or C > 2), by construction.

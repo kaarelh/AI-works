@@ -243,6 +243,12 @@ were already known from Part 8, but these were new test-set looks by a Part 9 bu
 test use; whether the lost logs included any is unknown. The resumed session switched every development evaluation to
 validation rows and touched the test sets only in the frozen run (section 7).
 
+**Correction (Part 9 audit, 27 October).** The killed session's transcript survives and shows one `qd_dev` test-set
+look: `run_one.py qd_dev 10000` printed test error 0.1626 at 23:34 UTC (an integration-rule cell; the frozen p9_bank later
+scored 0.1612 there), in the same step as changes to bank_fcap and the ridge lambda grid. The sentence above ("No surviving
+log shows `qd_dev` test use") is wrong. p9_bank's dev numbers are therefore slightly optimistic; p9_bank lost the integration
+rule anyway, so the bias runs against the winner.
+
 **What the resumed session changed** (23:50-00:26 UTC on 26-27 October): the fresh-pool screening with a screened first
 round and the rate filter; stratified thresholds; the Gram charge 2 N F^2 (the task's rule); budget share 0.45 -> 0.6,
 F up to 8000 and <= 5 |S|; the penalty grid with refinement; float64 projections and midpoint thresholds (exact

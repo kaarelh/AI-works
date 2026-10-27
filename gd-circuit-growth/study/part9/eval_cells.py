@@ -5,7 +5,7 @@ merged into standard_tasks/results/<name>__<dataset>.json in harness format.
 usage: python eval_cells.py <module:Class[:kwargs]> <dataset> [--img] [--ns=...] [--seeds=...] [--tag=name]
   --img: 3 seeds for n <= 10000, seed 0 only for n >= 30000 (the Part 8 / 9 image protocol; other seeds NaN).
 Fits with n >= 30000 hold a file lock, so that at most one runs at a time across processes (memory)."""
-import os, sys, json, time, numpy as np
+import os, sys, json, time, hashlib, numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__)); STUDY = os.path.dirname(HERE)
 sys.path.insert(0, HERE); sys.path.insert(0, os.path.join(STUDY, "hybrid"))
 import common
@@ -15,6 +15,7 @@ spec, ds = sys.argv[1], sys.argv[2]
 opt = {a.split("=", 1)[0][2:]: a.split("=", 1)[1] for a in sys.argv[3:] if a.startswith("--") and "=" in a}
 img = "--img" in sys.argv
 L = common.load_learner(spec); name = opt.get("tag", L.name)
+MD5 = hashlib.md5(open(sys.modules[type(L).__module__].__file__, "rb").read()).hexdigest()   # learner file, per cell
 D = DATA.load(ds)
 grid = [int(v) for v in opt["ns"].split(",")] if "ns" in opt else [n for n in DATA.grid(D) if n <= len(D["y"]) - D["n_test"]]
 seeds = [int(v) for v in opt.get("seeds", "0,1,2").split(",")]
@@ -37,7 +38,7 @@ for n in grid:
         fit = L.fit(D["X"][tr], D["y"][tr], list(D["types"]), D["C"], np.random.default_rng([s, n, 4242]))
         cpu = time.process_time() - t0
         err = float(np.mean(np.asarray(fit["predict"](D["X"][te])) != D["y"][te]))
-        json.dump(dict(n=n, seed=s, err=err, flops=float(fit.get("flops", np.nan)), cpu=cpu), open(f + ".tmp", "w"))
+        json.dump(dict(n=n, seed=s, err=err, flops=float(fit.get("flops", np.nan)), cpu=cpu, md5=MD5), open(f + ".tmp", "w"))
         os.replace(f + ".tmp", f)
         if lk is not None:
             fcntl.flock(lk, fcntl.LOCK_UN); lk.close()
@@ -49,6 +50,7 @@ for a, n in enumerate(grid):
         if os.path.exists(f):
             c = json.load(open(f)); err[a, b], fl[a, b], cpu[a, b] = c["err"], c["flops"], c["cpu"]
 r = dict(learner=name, dataset=ds, ns=grid, seeds=seeds, err=err.tolist(), flops=fl.tolist(), cpu_seconds=cpu.tolist(),
-         note="eval_cells.py" + ("; n >= 30000: seed 0 only" if img else ""))
+         note="eval_cells.py" + ("; n >= 30000: seed 0 only" if img else ""), learner_md5=MD5,
+         cell_md5=sorted({json.load(open(os.path.join(cdir, g))).get("md5", "not recorded") for g in os.listdir(cdir) if g.endswith(".json")}))
 json.dump(r, open(os.path.join(SH.RES, f"{name}__{ds}.json"), "w"))
 print(ds, "merged", [round(float(np.nanmean(e)), 4) for e in err], flush=True)

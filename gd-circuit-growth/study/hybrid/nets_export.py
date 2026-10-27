@@ -5,7 +5,7 @@ import os, sys, json, numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 import compare_hybrid as CH
 out = {}
-for suite, _ in CH.TOY_SUITES:
+for suite in [s for s, _ in CH.TOY_SUITES] + ["dlsymdev", "dlheld4", "dlheld5", "dlheld6"]:   # + the Part 9 suites
     for ref_name, suf in CH.NET_VARIANTS:
         d = CH.net_dir(suite, suf)
         if not os.path.isdir(d):
