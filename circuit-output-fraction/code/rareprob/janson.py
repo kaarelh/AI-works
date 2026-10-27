@@ -44,6 +44,8 @@ def is_unate(clauses) -> bool:
 def janson_interval(clauses, D: Product) -> Estimate:
     """clauses: list of lists of literals (i, b) meaning [x_i == b]."""
     assert is_unate(clauses), "Janson/Harris sandwich needs a unate CNF"
+    # a literal repeated within a clause is one condition: count it once in P(B_i)
+    clauses = [sorted({(i, b) for (i, b) in c}) for c in clauses]
     m = len(clauses)
 
     def log_false(lits) -> float:  # log P(all literals false)

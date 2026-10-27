@@ -14,7 +14,7 @@ Notes by Claude, prompted by Kaarel Hänni. Research note, 27 October 2026; not 
 - **Without a prover**, the procedure *DFSB* (Decompose–Force–Sample–Branch) splits the event by exact rules (independence of variable-disjoint parts, literals forced by propagation and Gaussian elimination, Shannon expansion) and samples only at leaves that are dense or have tight envelopes. It is sound on every circuit, and costs $\mathrm{poly}\cdot K$ on every circuit whose ideal $K$-explanation tree is polynomial: products and read-once compositions of arbitrary dense sub-circuits, backdoor-style triggers, circuits with small cutsets (exactly), DNFs and DNNFs, and locally disguised versions of all of these. Beyond DFSB:
   - every circuit of logarithmic *context width* compiles to a polynomial-size DNNF, so (with the #DNNF FPRAS of Meel–de Colnet) it has an FPRAS; this covers, e.g., ORs of bounded-pathwidth CNFs, whose exact counting is #P-hard;
   - functions of independent *modules* (thresholds, majorities) are estimated through their quotients;
-  - for unate circuits the *presumption of independence* is certified: Harris and Janson inequalities pin $p$ within $e^{\Delta}$ of $\prod_i D(A_i)$, a covariance correction makes the error third order, and pairwise data provably cannot do better than $e^{0.29\Delta}$;
+  - for unate circuits the *presumption of independence* is certified: Harris and Janson inequalities pin $p$ within $e^{\Delta/(1-\max_i b_i)}$ of $\prod_i D(A_i)$ ($b_i = D(\neg A_i)$), at a sampling cost linear in $\sum_i b_i \approx \log(1/p)$, a covariance correction makes the error third order, and pairwise data provably cannot do better than $e^{0.29\Delta}$;
   - *certified telescoping*: annealing becomes sound with exact coupling-from-the-past samplers whose truncation is certified empirically;
   - bounded treewidth (exactly) and thresholds of independent blocks (exponential tilting, $K\le\tfrac43(2\sqrt k+1)$).
 - **With a prover**, *proof-carrying importance sampling* checks implications in any propositional proof system (DRUP/LRAT, cutting planes, extended Frege) and samples the rest. It is sound against every argument, and complete on every circuit whose rarity has a short proof of confinement to a tractable region in which it is not rare. Lower bounds need no proof at all. Verifier cost is $\mathrm{poly}(|\pi|)+2^{\sigma_u}$ (up to polynomial factors), where $\sigma_u$ is the surprise left unexplained by the argument; in the black-box model each bit of argument saves at most a factor two in evaluations, and the $2^{\sigma_u}$ term is unavoidable once the envelope is fixed.
@@ -34,14 +34,14 @@ Notes by Claude, prompted by Kaarel Hänni. Research note, 27 October 2026; not 
   - `stats.py`: KL confidence intervals, the sequential estimator, the DKLR stopping rule.
   - `families.py`: benchmark circuit families.
 - **`code/tests/`**: pytest suite (exactness of masses and samplers, interval coverage, checker soundness, end-to-end arguments).
-- **`experiments/`**: `exp_speedup.py`, `exp_coverage.py`, `exp_arguments.py`, `exp_ctx.py`, `exp_janson.py`, `exp_cftp.py`, `check_second_order.py`, and their outputs in `results/`; `make_figures.py` and `make_tables.py` regenerate the paper's figures and tables.
+- **`experiments/`**: `exp_speedup.py`, `exp_coverage.py`, `exp_arguments.py`, `exp_ctx.py`, `exp_janson.py`, `exp_cftp.py`, `check_second_order.py`, `check_independence_numbers.py`, and their outputs in `results/`; `make_figures.py` and `make_tables.py` regenerate the paper's figures and tables.
 - **`verification/`**: the AI referee reports on the theorems, and how each finding was resolved.
 
 Reproduce (Python 3 with numpy, scipy, matplotlib, python-sat; TeX Live for the paper):
 
 ```sh
 cd code && python3 -m pytest -q tests
-cd ../experiments && for e in exp_coverage exp_speedup exp_arguments exp_ctx exp_janson exp_cftp check_second_order; do python3 $e.py; done
+cd ../experiments && for e in exp_coverage exp_speedup exp_arguments exp_ctx exp_janson exp_cftp check_second_order check_independence_numbers; do python3 $e.py; done
 python3 make_figures.py && python3 make_tables.py
 cd ../paper && latexmk -pdf main.tex
 ```

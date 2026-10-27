@@ -7,8 +7,13 @@ Methods (each sound on every input, each recognises its class syntactically):
            sub-circuits on disjoint small blocks
   ctx      context-width compilation to a DNNF (envelope estimator on it)
   dfsb     Decompose-Force-Sample-Branch (always applicable)
-With probability >= 1 - delta all intervals are valid simultaneously (each
-method gets delta / #methods), hence so is their intersection.
+Each method gets confidence delta / (3 M), M the number of methods that may
+run, so with probability >= 1 - delta/3 all intervals are valid
+simultaneously, hence so is their intersection; and a method that is complete
+on C (tight with probability >= 1 - 2 delta/(3M)) makes the intersection
+tight with probability >= 1 - delta. An empty intersection (possible only on
+the failure event) gives [0, 1]. Every method has a polynomial running-time
+bound (width cut-offs, sample caps), so the whole procedure does too.
 """
 
 from __future__ import annotations
@@ -85,11 +90,19 @@ def meta_estimate(C: Circuit, D: Product, eps: float = 0.1, delta: float = 0.05,
     thr = as_block_threshold(C)
     ctx_env = compile_ctx(to_nnf(C, flatten=False), max_cw=ctx_max_cw) if ctx_max_cw else None
     methods = 2 + (cnf is not None and is_unate(cnf)) + (thr is not None) + (ctx_env is not None)
-    dm = delta / methods
-    # exact variable elimination
+    dm = delta / (3 * methods)
+    # exact variable elimination (floating point with a log-scale; its relative
+    # error is bounded by the rounding of O(|C|) products, two-term sums and
+    # additions to a log-scale of size O(|log p| + |C|))
     p = exact_ve(C, D, max_width=ve_width)
     if p is not None:
-        return Estimate(p, p * (1 - 1e-9), p * (1 + 1e-9), 0, 0, 0.0, "exact (variable elimination)")
+        m = 2 * len(C.ops)  # gates after binarisation
+        if p >= 2.0 ** -1000:
+            wid = 1e-9 + 2.0 ** -50 * m * (abs(math.log(p)) + 1.4 * m + 8)
+            return Estimate(p, max(0.0, p * (1 - wid)), min(1.0, p * (1 + wid)), 0, 0, 0.0,
+                            "exact (variable elimination)")
+        # p underflowed (or is 0): only p < 2^-1000 is certified
+        results.append(Estimate(0.0, 0.0, 2.0 ** -1000, 0, 0, 0.0, "variable elimination: p < 2^-1000"))
     if cnf is not None and is_unate(cnf):
         e = janson_interval(cnf, D)
         e.note = "janson: " + e.note
@@ -109,8 +122,8 @@ def meta_estimate(C: Circuit, D: Product, eps: float = 0.1, delta: float = 0.05,
         results.append(e)
     lo = max(r.lo for r in results)
     hi = min(r.hi for r in results)
-    if lo > hi:  # possible only on the delta-probability failure event
-        lo, hi = min(lo, hi), max(lo, hi)
+    if lo > hi:  # possible only on the failure event: no verdict
+        lo, hi = 0.0, 1.0
     val = math.sqrt(lo * hi) if lo > 0 else hi / 2
     return Estimate(val, lo, hi, sum(r.samples for r in results), sum(r.evaluations for r in results),
                     delta, " | ".join(r.note for r in results))

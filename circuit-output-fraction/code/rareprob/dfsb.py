@@ -1,36 +1,59 @@
 """Decompose-Force-Sample-Branch (DFSB): the Part-1 procedure.
 
 Recursively explain the rarity of C by exact structure, and sample only
-what is left:
+what is left. DFSB works on the NNF of C in which every gate of small
+support has been replaced by its reduced OBDD (small-cone canonicalisation,
+nnf.to_nnf), flattened with duplicate children removed, except that an
+*atom* (a node whose support has at most `exact_support` variables) is never
+merged into a larger parent. Rules, in this order, for a node h:
 
-  T  constants and literals: exact.
-  F  literals forced by unit propagation on the Tseitin encoding of the
-     subproblem: P(h) = D(F) * P(h|F).
-  D  the children of h's top gate split into variable-disjoint groups:
-       AND:  P(h) = prod_j P(h_j)
-       OR:   P(h) = 1 - prod_j (1 - P(h_j))
-  S  dense leaf: a pilot of 64K ln(2m/delta) samples has hit rate >= 1/(4K);
-     estimated by Monte Carlo.
-  E  envelope leaf: a syntactic envelope phi of h (rules of compile.py) has
-     P(h)/E[phi] >= 1/(4K); estimated by envelope importance sampling.
-  B  otherwise branch on the variable shared by the most children:
-       P(h) = (1-q) P(h|x=0) + q P(h|x=1).
+  T   constants and literals: exact.
+  T'  h is an atom: exact, by summing D over the 2^|var(h)| assignments of
+      its support in rational arithmetic (rounded outwards to floats).
+      Atoms are leaves for D, B and the cutset Conf(C).
+  F   literals forced by unit propagation on the Tseitin encoding of h,
+      repeated on the restricted node until nothing new is derived:
+      P(h) = D(F) * P(h|F); a conflict means P(h) = 0.
+  D   the children of h's top gate split into variable-disjoint groups:
+        AND:  P(h) = prod_j P(h_j)
+        OR:   P(h) = 1 - prod_j (1 - P(h_j))
+  S   dense leaf: a pilot of N0 = 64K ceil(ln(2m/delta)) samples has at least
+      N0/(4K) hits; estimated by Monte Carlo.
+  E   envelope leaf: a syntactic envelope phi of h (rules of compile.py)
+      passes the same pilot for E_Q[h/phi]. If phi has boxes, their pilot
+      masses are first re-estimated to ratio 1 + 1/(2L) with lower ends
+      >= 1/(16K) (L = boxes per derivation), else the test fails. A box-free
+      envelope of mass 0 makes h an exact zero.
+  B   otherwise branch on the variable shared by the most children (ties:
+      smallest index): P(h) = (1-q) P(h|x=0) + q P(h|x=1).
 
-Two phases: phase 1 builds the tree with pilot samples (its randomness
-affects only the shape of the tree, never validity); phase 2 estimates every
-leaf with fresh samples to relative accuracy eps/(3d) at confidence
-delta/#leaves, where d is the largest number of leaves on one derivation,
-and combines leaf intervals by interval arithmetic through the exact,
-monotone node operations. The output interval is valid with probability
->= 1 - delta for every circuit; it is tight when every leaf is (K-dense
-leaves within the node budget), which is the class of circuits whose ideal
-K-explanation tree is small.
+Two phases: phase 1 builds the tree with pilot samples and a node budget m
+(nodes beyond it become "loose" leaves); its randomness affects only the
+shape of the tree, never validity. Phase 2 estimates every leaf with fresh
+samples to relative accuracy eta = eps/(3d) at confidence delta/#leaves,
+where d is the largest number of sampled leaves on one derivation, and
+combines leaf intervals by interval arithmetic through the exact, monotone
+node operations, rounded outwards. Every leaf estimator is the doubling rule
+of stats.sequential_mean, capped at the sample size `sample_cap` that
+suffices (with probability 1 - delta/#leaves) for a leaf certified by phase
+1: mean >= 1/(16K) for S-leaves and box-free E-leaves; for E-leaves with
+boxes, importance-sampling mean >= 1/(64K) at accuracy eta/4 and box
+densities >= 1/(16K) at accuracy eta/(8L). At the cap a leaf returns its
+current interval, which is still valid. Loose leaves get the same Monte
+Carlo rule with the smaller cap min(that cap, loose_cap). An E-leaf whose
+box rejection sampler exceeds its (polynomial) cap gets [0, 1].
+
+So the running time is polynomial in |C|, K, m, 1/eps and log(1/delta) on
+every circuit, the output interval is valid with probability >= 1 - delta
+on every circuit, and it is tight with probability >= 1 - 2 delta when the
+ideal K-explanation tree has at most m nodes.
 """
 
 from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
+from fractions import Fraction
 
 import numpy as np
 
@@ -38,15 +61,91 @@ from .circuit import Circuit
 from .cnf import UP
 from .compile import EnvelopeCompiler
 from .dist import Product
-from .envelope import envelope_estimate
+from .envelope import _max_boxes_per_derivation, envelope_estimate
 from .nnf import NNF, to_nnf
 from .stats import Estimate, kl_interval, sequential_mean
+
+
+def _popcount(s: int) -> int:
+    return bin(s).count("1")
+
+
+# --------------------------------------------------------- atom-aware NNF
+class AtomNNF(NNF):
+    """NNF that flattens nested gates of the same kind, except that an atom
+    (support of at most `atom` variables) is never merged into a non-atom
+    parent. Atoms are therefore single children of every larger gate, so
+    (D), (B) and Conf never look inside them."""
+
+    def __init__(self, atom: int):
+        super().__init__(flatten=True)
+        self.atom = atom
+
+    def _gate(self, kind: str, ch) -> int:
+        unit, absorbing = ("T", "F") if kind == "A" else ("F", "T")
+        flat = []
+        for c in ch:
+            k = self.kind[c]
+            if k == absorbing:
+                return self.false() if kind == "A" else self.true()
+            if k != unit:
+                flat.append(c)
+        s = 0
+        for c in flat:
+            s |= self.sup[c]
+        parent_atom = _popcount(s) <= self.atom
+        out = []
+        for c in flat:
+            if self.kind[c] == kind and (parent_atom or _popcount(self.sup[c]) > self.atom):
+                out.extend(self.data[c])
+            else:
+                out.append(c)
+        out = tuple(sorted(set(out)))
+        lits = {self.data[c] for c in out if self.kind[c] == "L"}
+        if any((v, 1 - b) in lits for (v, b) in lits):
+            return self.false() if kind == "A" else self.true()
+        if not out:
+            return self.true() if kind == "A" else self.false()
+        if len(out) == 1:
+            return out[0]
+        return self._mk(kind, out, s)
+
+    def AND(self, ch) -> int:
+        return self._gate("A", ch)
+
+    def OR(self, ch) -> int:
+        return self._gate("O", ch)
+
+
+def atom_nnf(C: Circuit, atom: int, small_cone: int) -> AtomNNF:
+    """The canonicalised NNF of C (to_nnf, small cones as reduced OBDDs),
+    rebuilt so that atoms are never merged into larger parents."""
+    N0 = to_nnf(C, small_cone=small_cone, flatten=False)
+    N = AtomNNF(atom)
+    N.circuit = C
+    m: dict[int, int] = {}
+    for u in N0.cone(N0.root):  # children have smaller ids
+        k = N0.kind[u]
+        if k == "T":
+            m[u] = N.true()
+        elif k == "F":
+            m[u] = N.false()
+        elif k == "L":
+            m[u] = N.lit(*N0.data[u])
+        elif k == "X":
+            m[u] = N._mk("X", N0.data[u], N0.sup[u])
+        elif k == "A":
+            m[u] = N.AND([m[c] for c in N0.data[u]])
+        else:
+            m[u] = N.OR([m[c] for c in N0.data[u]])
+    N.root = m[N0.root]
+    return N
 
 
 # ------------------------------------------------------------- tree nodes
 @dataclass
 class TNode:
-    kind: str  # const lit force and or branch mc env loose
+    kind: str  # const lit exact force and or branch mc env loose
     v: int = -1  # NNF node
     val: float = 0.0
     lits: list = field(default_factory=list)
@@ -105,23 +204,53 @@ def nnf_forced(N: NNF, v: int, n: int, probe: bool = False):
     return {x - 1: int(b) for x, b in val.items() if 1 <= x <= n}
 
 
+def sample_cap(K: float, eta: float, delta: float, first: int = 1024) -> int:
+    """A sample size N (a stage boundary of stats.sequential_mean, started at
+    `first` and doubling) such that, for i.i.d. [0,1] samples of mean at
+    least 1/K, the doubling rule at level delta has reached ratio 1 + eta by
+    N samples with probability at least 1 - delta.
+
+    At stage j (N = first 2^(j-1) samples) the empirical mean is below
+    mu0 (1 - t), mu0 = 1/K, t = sqrt(2 ln(1/delta) / (N mu0)), with
+    probability at most delta (multiplicative Chernoff bound); we return the
+    first stage at which the KL interval at level 6 delta / (pi^2 j^2) has
+    ratio <= 1 + eta at every mean >= mu0 (1 - t) (the ratio decreases with
+    the mean, so checking mu0 (1 - t) suffices). This is
+    O(K (log(1/delta) + log log K) / eta^2)."""
+    mu0 = 1.0 / K
+    for j in range(1, 200):
+        N = first * 2 ** (j - 1)
+        t = math.sqrt(2.0 * math.log(1.0 / delta) / (N * mu0))
+        if t >= 1.0:
+            continue
+        dj = delta * 6.0 / (math.pi ** 2 * j * j)
+        lo, hi = kl_interval(mu0 * (1.0 - t), N, dj)
+        if lo > 0 and hi <= (1.0 + eta) * lo:
+            return N
+    raise ValueError("sample_cap: parameters out of range")
+
+
 class DFSB:
     def __init__(self, C: Circuit, D: Product, K: float = 64.0, node_budget: int = 2000,
                  rng=None, use_envelopes: bool = True, shannon_env: int = 3, probe_root: bool = True,
-                 env_tau: float | None = 0.05):
+                 env_tau: float | None = 0.05, exact_support: int = 12, small_cone: int = 10,
+                 use_dense: bool = True, loose_cap: int = 10**5):
         self.C = C
         self.D = D
         self.K = K
         self.budget = node_budget
         self.rng = np.random.default_rng() if rng is None else rng
         self.use_env = use_envelopes
+        self.use_dense = use_dense
         self.shannon_env = shannon_env
-        self.N = to_nnf(C)
+        self.atom = exact_support
+        self.N = atom_nnf(C, exact_support, small_cone)
         self.nodes = 0
         self.pilot_evals = 0
         self.probe_root = probe_root
         self.pilot_delta = 0.05
         self.env_tau = env_tau
+        self.loose_cap = loose_cap
 
     # ---------------------------------------------------------- phase 1
     def _pilot_size(self) -> int:
@@ -133,40 +262,126 @@ class DFSB:
         self.pilot_evals += N
         return int(self.N.eval_batch(X, v).sum()) >= N / (4 * self.K)
 
+    def _exact(self, v: int) -> tuple[float, float]:
+        """Rule (T'): D(h) for a node of small support, exactly (rational
+        arithmetic over the truth table, with OBDD-style sharing), rounded
+        outwards to floats."""
+        s = self.N.sup[v]
+        vs = [i for i in range(self.C.n) if (s >> i) & 1]
+        k = len(vs)
+        X = np.zeros((1 << k, self.C.n), dtype=bool)
+        if k:
+            X[:, vs] = ((np.arange(1 << k)[:, None] >> np.arange(k)) & 1).astype(bool)
+        tt = np.asarray(self.N.eval_batch(X, v), dtype=bool)
+        q = [Fraction(float(self.D.q[i])) for i in vs]
+        memo: dict = {}
+
+        def prob(seg, depth):
+            if seg.all():
+                return Fraction(1)
+            if not seg.any():
+                return Fraction(0)
+            key = (depth, seg.tobytes())
+            r = memo.get(key)
+            if r is None:
+                # bit `depth` of the row index is the value of vs[depth]
+                r = (1 - q[depth]) * prob(seg[0::2], depth + 1) + q[depth] * prob(seg[1::2], depth + 1)
+                memo[key] = r
+            return r
+
+        P = prob(tt, 0)
+        f = float(P)  # correctly rounded
+        if Fraction(f) == P:
+            return f, f
+        return _dn(f), min(1.0, _up(f, P > 0))
+
+    def _pilot_boxes(self, E) -> bool:
+        """Re-estimate the pilot masses of E's boxes so that the proposal used
+        by the envelope pilot is distorted by a factor at most e on every
+        derivation: each box interval must reach ratio 1 + 1/(2L) and have
+        lower end >= 1/(16K). Returns False if some box fails."""
+        used = E.used_boxes()
+        if not used:
+            return True
+        L = max(1, _max_boxes_per_derivation(E))
+        eta_b = 1.0 / (2 * L)
+        db = self.pilot_delta / (4 * self.budget * len(used))
+        cap = sample_cap(16 * self.K, eta_b, db)
+        for j in used:
+            b = E.boxes[j]
+            est = sequential_mean(lambda k, b=b: self._draw(b.eval, k), eta_b, db, max_samples=cap)
+            self.pilot_evals += est.samples
+            if not (est.lo >= 1.0 / (16 * self.K) and est.hi <= (1 + eta_b) * est.lo):
+                return False
+            b.value, b.lo, b.hi = est.value, est.lo, est.hi
+        return True
+
     def _pilot_env(self, v: int):
+        """Envelope for rule (E): an Envelope if the pilot accepts it, the
+        string "zero" if a box-free envelope has mass exactly 0 (then D(h) = 0),
+        or None."""
         comp = EnvelopeCompiler(self.N, self.D, shannon=self.shannon_env, tau=self.env_tau, rng=self.rng)
         r = comp.env(v, {}, 0)
+        self.pilot_evals += comp.pilot_evals
         E = comp.E
         E.root = r
-        if E.kind[r] == "ONE" or E.mass(self.D) >= 1.0:
+        if E.kind[r] == "ONE":
+            return None
+        used = E.used_boxes()
+        if not self._pilot_boxes(E):
+            return None
+        lm, _ = E.log_masses(self.D)
+        if lm[r] == -math.inf:
+            # phi = 0 D-almost surely and phi >= 1_h, so D(h) = 0 (box-free case)
+            return "zero" if not used else None
+        if lm[r] >= 0.0:  # mass >= 1: no better than Monte Carlo
             return None
         Np = self._pilot_size()
-        X = E.sample(self.D, Np, self.rng, E.log_masses(self.D)[0])
+        try:
+            X = E.sample(self.D, Np, self.rng, lm)
+        except RuntimeError:  # a box's rejection sampler hit its cap
+            return None
         self.pilot_evals += Np
         c = self.N.eval_batch(X, v)
         phi = E.evaluate(X)
         w = np.where(c, 1.0 / np.maximum(phi, 1e-300), 0.0)
         return E if w.sum() >= Np / (4 * self.K) else None
 
-    def build(self, v: int, root: bool = False) -> TNode:
+    def build(self, v: int, root: bool = False, after_force: bool = False) -> TNode:
         N = self.N
         self.nodes += 1
         k = N.kind[v]
+        # T: constants and literals
         if k == "T":
             return TNode("const", v, val=1.0)
         if k == "F":
             return TNode("const", v, val=0.0)
         if k == "L":
             return TNode("lit", v, val=self.D.lit_prob(*N.data[v]))
+        # T': atoms
+        if _popcount(N.sup[v]) <= self.atom:
+            lo, hi = self._exact(v)
+            return TNode("exact", v, lo=lo, hi=hi)
         if self.nodes > self.budget:
             return TNode("loose", v)
-        # F: forced literals
-        f = nnf_forced(N, v, self.C.n, probe=root and self.probe_root)
-        if f is None:
-            return TNode("const", v, val=0.0)
-        if f:
-            child = N.restrict(v, f)
-            return TNode("force", v, lits=sorted(f.items()), children=[self.build(child)])
+        # F: forced literals, to a fixpoint (one tree node)
+        if not after_force:
+            lits: dict[int, int] = {}
+            cur = v
+            while True:
+                f = nnf_forced(N, cur, self.C.n, probe=root and self.probe_root)
+                if f is None:  # h refuted: D(h) = 0
+                    return TNode("const", v, val=0.0)
+                f = {i: b for i, b in f.items() if i not in lits}
+                if not f:
+                    break
+                lits.update(f)
+                cur = N.restrict(cur, f)
+                if N.kind[cur] in ("T", "F"):
+                    break
+            if lits:
+                return TNode("force", v, lits=sorted(lits.items()),
+                             children=[self.build(cur, after_force=True)])
         # D: variable-disjoint groups
         if k in ("A", "O"):
             groups = _groups(N, N.data[v])
@@ -175,11 +390,13 @@ class DFSB:
                 subs = [mk([N.data[v][j] for j in g]) for g in groups]
                 return TNode("and" if k == "A" else "or", v, children=[self.build(s) for s in subs])
         # S: dense
-        if self._pilot_dense(v):
+        if self.use_dense and self._pilot_dense(v):
             return TNode("mc", v)
         # E: envelope leaf
         if self.use_env:
             E = self._pilot_env(v)
+            if isinstance(E, str):
+                return TNode("const", v, val=0.0)
             if E is not None:
                 return TNode("env", v, env=E)
         # B: branch
@@ -190,7 +407,23 @@ class DFSB:
                                                     self.build(N.restrict(v, {x: 1}))])
 
     # ---------------------------------------------------------- phase 2
-    def estimate(self, eps: float = 0.1, delta: float = 0.05, max_leaf_samples: int = 10**6) -> Estimate:
+    def _draw(self, f, k: int, batch: int = 1 << 15) -> np.ndarray:
+        """k fresh values f(x), x ~ D, drawn in bounded batches."""
+        out = []
+        while k > 0:
+            c = min(k, batch)
+            out.append(np.asarray(f(self.D.sample(c, self.rng)), dtype=bool))
+            k -= c
+        return np.concatenate(out).astype(float) if out else np.zeros(0)
+
+    def _mc_leaf(self, t: TNode, eta: float, dl: float, cap: int) -> None:
+        e = sequential_mean(lambda k, v=t.v: self._draw(lambda X: self.N.eval_batch(X, v), k),
+                            eta, dl, max_samples=cap)
+        t.lo, t.hi, t.cost = e.lo, e.hi, e.samples
+
+    def estimate(self, eps: float = 0.1, delta: float = 0.05, max_leaf_samples: int | None = None) -> Estimate:
+        """Run both phases. `max_leaf_samples`, if given, lowers every leaf's
+        cap further (valid, but may cost completeness)."""
         self.pilot_delta = delta
         # circuit-level forcing (unit propagation, probing, Gaussian elimination)
         from .cnf import forced_input_literals
@@ -207,28 +440,31 @@ class DFSB:
         d = max(1, _depth_leaves(root))
         el = eps / (3 * d)
         dl = delta / max(1, len(leaves))
+        K = self.K
+
+        def capped(c):
+            return c if max_leaf_samples is None else max(1, min(c, max_leaf_samples))
+
         total = 0
         for t in leaves:
             if t.kind == "mc":
-                v = t.v
-
-                def draw(k, v=v):
-                    return self.N.eval_batch(self.D.sample(k, self.rng), v).astype(float)
-
-                e = sequential_mean(draw, el, dl, max_samples=max_leaf_samples)
-                t.lo, t.hi, t.cost = e.lo, e.hi, e.samples
-            elif t.kind == "env":
-                Cv = _NodeAsCircuit(self.N, t.v)
-                e = envelope_estimate(Cv, self.D, t.env, eps=el, delta=dl,
-                                      max_samples=max_leaf_samples, rng=self.rng)
-                t.lo, t.hi, t.cost = e.lo, e.hi, e.evaluations
+                self._mc_leaf(t, el, dl, capped(sample_cap(16 * K, el, dl)))
             elif t.kind == "loose":
-                # valid trivial bounds; Monte Carlo upper bound with the leaf budget
-                def draw(k, v=t.v):
-                    return self.N.eval_batch(self.D.sample(k, self.rng), v).astype(float)
-
-                e = sequential_mean(draw, el, dl, max_samples=min(max_leaf_samples, 10**5))
-                t.lo, t.hi, t.cost = e.lo, e.hi, e.samples
+                self._mc_leaf(t, el, dl, capped(min(sample_cap(16 * K, el, dl), self.loose_cap)))
+            elif t.kind == "env":
+                used = t.env.used_boxes()
+                if used:
+                    L = max(1, _max_boxes_per_derivation(t.env))
+                    cap = max(sample_cap(64 * K, el / 4, dl / 2),
+                              sample_cap(16 * K, el / (8 * L), dl / (2 * len(used))))
+                else:
+                    cap = sample_cap(16 * K, 0.999 * el, dl)
+                try:
+                    e = envelope_estimate(_NodeAsCircuit(self.N, t.v), self.D, t.env, eps=el, delta=dl,
+                                          max_samples=capped(cap), rng=self.rng)
+                    t.lo, t.hi, t.cost = e.lo, e.hi, e.evaluations
+                except RuntimeError:  # box rejection sampler hit its cap
+                    t.lo, t.hi, t.cost = 0.0, 1.0, 0
             total += t.cost
         lo, hi = _combine(root, self.D)
         val = math.exp(0.5 * (math.log(lo) + math.log(hi))) if lo > 0 else hi / 2
@@ -276,6 +512,7 @@ def _groups(N: NNF, ch) -> list[list[int]]:
 
 
 def _branch_var(N: NNF, v: int):
+    """The variable shared by the most children of v (ties: smallest index)."""
     ch = N.children(v)
     if not ch:
         s = N.sup[v]
@@ -346,7 +583,7 @@ def _combine(t: TNode, D: Product) -> tuple[float, float]:
         return t.val, t.val
     if k == "lit":
         return _dn(t.val), min(1.0, _up(t.val, t.val > 0))
-    if k in ("mc", "env", "loose"):
+    if k in ("mc", "env", "loose", "exact"):
         return t.lo, t.hi
     if k == "force":
         lo, hi = _combine(t.children[0], D)
@@ -386,5 +623,5 @@ def _combine(t: TNode, D: Product) -> tuple[float, float]:
 
 
 def dfsb_estimate(C: Circuit, D: Product, eps: float = 0.1, delta: float = 0.05, K: float = 64.0,
-                  node_budget: int = 2000, rng=None, **kw) -> Estimate:
-    return DFSB(C, D, K=K, node_budget=node_budget, rng=rng, **kw).estimate(eps, delta)
+                  node_budget: int = 2000, rng=None, max_leaf_samples: int | None = None, **kw) -> Estimate:
+    return DFSB(C, D, K=K, node_budget=node_budget, rng=rng, **kw).estimate(eps, delta, max_leaf_samples)

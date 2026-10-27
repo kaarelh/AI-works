@@ -19,9 +19,11 @@ context makes every AND decomposable:
                = SUM over tau (assignments to the rest of kappa(h)) of
                  PROD(literals of tau, N[h, pi + tau])    (a Shannon expansion).
 
-The result has at most (|N| + 1)(cw + 3) 2^cw wires (|N| = wires of N); nodes
-are never merged into their parents, since merging a shared SUM or PROD node
-copies its children and can make the output quadratic in |N|. It is returned
+The result has at most (|N| + 1)(cw + 3) 2^cw wires (|N| = wires of N). Nested
+SUM (PROD) nodes are merged into their SUM (PROD) parents, which saves nodes,
+but merging a shared node copies its children and can make the output
+quadratic in |N|; if the merged construction exceeds that bound, it is
+rebuilt without merging, which stays within it. It is returned
 as an Envelope whose supp is exactly C^{-1}(1) (OR -> SUM, AND -> PROD), so the
 envelope estimator applies with K = expected ambiguity, and it is exact
 (K = 1) when every OR of N is deterministic.
@@ -174,15 +176,42 @@ def compile_ctx(N: NNF, root: int | None = None, max_cw: int = 12) -> Envelope |
     return out["r"]
 
 
+class _OverBudget(Exception):
+    pass
+
+
 def _compile_ctx(N: NNF, root: int | None, max_cw: int) -> Envelope | None:
     root = N.root if root is None else root
     cone = N.cone(root)
     if any(N.kind[g] == "X" for g in cone):
         return None
     _, kappa = contexts(N, root)
-    if max((bin(k).count("1") for k in kappa.values()), default=0) > max_cw:
+    cw = max((bin(k).count("1") for k in kappa.values()), default=0)
+    if cw > max_cw:
         return None
+    budget = (sum(len(N.children(g)) for g in cone) + 1) * (cw + 3) * 2 ** cw
+    try:
+        return _build(N, root, cone, kappa, merge=True, budget=budget)
+    except _OverBudget:
+        return _build(N, root, cone, kappa, merge=False, budget=None)
+
+
+def _build(N: NNF, root: int, cone, kappa, merge: bool, budget) -> Envelope:
     E = Envelope()
+    wires = [0]
+
+    def mk(is_prod: bool, ch) -> int:
+        before = len(E.kind)
+        if merge:
+            r = E.PROD(ch) if is_prod else E.SUM(ch)
+        else:
+            r = _prod(E, ch) if is_prod else _sum(E, ch)
+        if len(E.kind) > before and E.kind[r] in ("SUM", "PROD"):
+            wires[0] += len(E.data[r])
+            if budget is not None and wires[0] > budget:
+                raise _OverBudget
+        return r
+
     kvars = {g: _bits(kappa[g]) for g in cone}
     memoN: dict = {}
     memoM: dict = {}
@@ -206,7 +235,7 @@ def _compile_ctx(N: NNF, root: int | None, max_cw: int) -> Envelope | None:
             for c in N.data[h]:
                 pi = tuple((v, asg[v]) for v in kvars[h] if (N.sup[c] >> v) & 1)
                 ch.append(Mm(c, pi))
-            r = _prod(E, ch) if k == "A" else _sum(E, ch)
+            r = mk(k == "A", ch)
         memoN[key] = r
         return r
 
@@ -224,9 +253,9 @@ def _compile_ctx(N: NNF, root: int | None, max_cw: int) -> Envelope | None:
             for tau in product((0, 1), repeat=len(free)):
                 d2 = dict(d)
                 d2.update(zip(free, tau))
-                terms.append(_prod(E, [E.lit(v, b) for v, b in zip(free, tau)]
-                                   + [Nn(c, tuple(d2[v] for v in kvars[c]))]))
-            r = _sum(E, terms)
+                terms.append(mk(True, [E.lit(v, b) for v, b in zip(free, tau)]
+                                + [Nn(c, tuple(d2[v] for v in kvars[c]))]))
+            r = mk(False, terms)
         memoM[key] = r
         return r
 

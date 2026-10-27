@@ -1,5 +1,5 @@
 """E5: certified presumption of independence. Harris-Janson sandwich for
-random unate k-CNFs: deterministic interval [M, M e^{Delta/(2(1-eps))}] for
+random unate k-CNFs: deterministic interval [M, M e^{Delta/(1-eps)}] (Delta over unordered dependent pairs) for
 p = Pr[all clauses satisfied]. Small instances are checked against exact
 enumeration; large ones report the interval and the Monte Carlo cost the same
 ratio would need. Writes results/janson.json."""

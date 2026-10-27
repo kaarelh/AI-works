@@ -1,59 +1,139 @@
 \subsection{The presumption of independence, certified}\label{sec:independence}
 
 Let $C=\bigwedge_{i=1}^mA_i$ be the top $\wedge$-tree of $C$ with arbitrary
-sub-circuits $A_i$ of supports $S_i$, $B_i=\neg A_i$, $b_i=D(B_i)$, and $G$ the
-dependency graph ($i\sim j$ iff $S_i\cap S_j\ne\emptyset$). The presumption of
-independence estimates $p$ by $M=\prod_i(1-b_i)$. Call $C$ \emph{unate} if there is
-a sign pattern such that every path from $x_v$ to the output has the same
-parity of negations; after flipping the negative variables, every $B_i$ is
-increasing. This is checked syntactically in $O(|C|n)$ time.
+sub-circuits $A_i$ of supports $S_i$, $B_i=\neg A_i$, $b_i=D(B_i)$, $\mu=\sum_ib_i$,
+and $G$ the dependency graph ($i\sim j$ iff $i\ne j$ and $S_i\cap S_j\ne\emptyset$).
+The presumption of independence estimates $p$ by $M=\prod_i(1-b_i)$.
+
+Call $C$ \emph{unate} if the following top-down propagation of polarities from
+the output reaches no input variable with both polarities: $\wedge$ and $\vee$ pass on the polarity they receive and $\neg$ flips it; a
+$\oplus$-gate passes both polarities to each input; a threshold gate passes its
+polarity to the inputs of nonnegative weight and the flipped one to the inputs of
+negative weight (a negative weight counts as a negation), whatever the size of the
+weights; any other gate disqualifies $C$. This is a syntactic check: one top-down
+pass computes the set of polarities with which each gate is reached, and together
+with the supports $S_i$ it takes $O(|C|n)$ time. If $C$ is unate, flip the variables
+that occur positively ($x_v\mapsto1-x_v$, $q_v\mapsto1-q_v$). By induction from the
+inputs, every gate reached only positively (negatively) now computes a decreasing
+(increasing) function, and a gate reached with both polarities has no variable in its
+cone; so every $A_i$ is decreasing and every $B_i$ increasing, and $D$ is still a
+product distribution. (Harris's inequality needs only that all $B_i$ be monotone in the same
+direction.)
 
 \begin{theorem}[certified independence, first order]\label{thm:janson-general}
-Let $C$ be unate. For any ordering of the events and
-$d_i=\sum_{j<i,\,j\sim i}D(B_i\wedge B_j)$,
+Let $C$ be unate with $\max_ib_i<1$ (if some $b_i=1$ then $p=M=0$). For any ordering
+of the events and $d_i=\sum_{j<i,\,j\sim i}D(B_i\wedge B_j)$,
 \[
-M\;\le\;p\;\le\;\prod_i(1-b_i+d_i)\;\le\;M\exp\Big(\frac{\Delta}{1-\max_ib_i}\Big),\qquad
-\Delta=\sum_{\{i,j\}:\,i\sim j}D(B_i\wedge B_j).
+M\le p\le\prod_i(1-b_i+d_i)\le M\exp\Big(\sum_i\frac{d_i}{1-b_i}\Big)\le
+M\exp\Big(\frac{\Delta}{1-\max_ib_i}\Big),
 \]
-The following procedure is sound on every circuit: check unateness; estimate
-every $b_i$ with $O((\mu+1)\eps^{-2})$ independent samples (median of
-$O(\log(1/\delta))$ repetitions for $\hat M$), estimate $\Delta$ by sampling
-dependent pairs, and output $[\hat Me^{-\eps/4},\hat Me^{3\eps/4}]$ only if all
-$\hat b_i\le1/3$ and $\hat\Delta\le\eps/16$. It is complete when $\max_ib_i\le1/4$ and
-$\Delta\le\eps/64$, at a cost of $O\big(\sum_i|A_i|\cdot((\mu+1)\eps^{-2}+|E(G)|\eps^{-1})\log(m/\delta)\big)$
-evaluations, independent of $p$ (which can be $e^{-\Theta(\mu)}$).
+where $\Delta=\sum_id_i=\sum_{\{i,j\}:\,i\sim j}D(B_i\wedge B_j)$ is a sum over unordered
+dependent pairs (the convention throughout).
+Let $0<\eps\le1$, $\eps'=\ln(1+\eps)\ge\eps\ln2$ and $0<\delta<1$. The following
+procedure is sound on every circuit:
+\begin{enumerate}[label=(\arabic*)]
+\item if $C$ is not unate, output $[0,1]$;
+\item \emph{pilot:} draw $N_0=\lceil8\ln(4/\delta)\rceil$ samples of $x_{S_i}$ for each
+$i$; let $\hat\mu_0$ be the sum over $i$ of the empirical frequencies of $B_i$;
+\item \emph{pre-test on $\Delta$:} for each edge $\{i,j\}$ of $G$ draw
+$N_\Delta=\lceil26\ln(4/\delta)/\eps'\rceil$ samples of $x_{S_i\cup S_j}$; let $\hat\Delta$
+be the sum over edges of the empirical frequencies of $B_i\wedge B_j$; if
+$\hat\Delta>\eps'/16$, output $[0,1]$;
+\item \emph{main stage and pre-test on $b$:} in each of $R=\lceil8\ln(4/\delta)\rceil$
+rounds $r$ draw $N=\lceil560(2\hat\mu_0+1)/\eps'^2+72\ln(4mR/\delta)\rceil$ fresh samples
+of $x_{S_i}$ for each $i$, giving frequencies $\hat b_i^{(r)}$; if some
+$\hat b_i^{(r)}>1/3$, output $[0,1]$; otherwise let
+$\hat M=\exp\big(\mathrm{median}_r\sum_i\log(1-\hat b_i^{(r)})\big)$ and output
+$[\hat Me^{-\eps'/4},\min\{1,\hat Me^{3\eps'/4}\}]$.
+\end{enumerate}
+It is complete, with probability $1-\delta/2$, on unate circuits with
+$\max_ib_i\le1/4$ and $\Delta\le\eps'/64$. Its expected cost is
+$O\big(\sum_i|A_i|\big[\big((\mu+1)\eps^{-2}+\log(m/\delta)\big)\log(1/\delta)
++\deg_G(i)\,\eps^{-1}\log(1/\delta)\big]\big)$ gate operations after the syntactic
+checks. As $\mu\le\log(1/p)+\Delta/(1-\max_ib_i)$, this is linear in $\mu$, hence in
+$\log(1/p)$ on the complete class, with no dependence on $1/p$ (which can be
+$e^{\Theta(\mu)}$).
 \end{theorem}
 
 \begin{proof}
-Write $p=\prod_i(1-c_i)$ with $c_i=\Pr[B_i\mid F_{<i}]$, $F_{<i}=\bigwedge_{j<i}\neg B_j$
-(nonzero by Harris unless some $b_j=1$). $B_i$ is increasing and $F_{<i}$
-decreasing, so $c_i\le b_i$ (Harris), giving $p\ge M$. Split the earlier events
-into neighbours $N$ and non-neighbours $R$ of $i$ (Boppana--Spencer \cite{boppanaspencer1989}): $B_i$ is
+\emph{Sandwich.} Flip as above. Write $p=\prod_i(1-c_i)$ with
+$c_i=\Pr[B_i\mid F_{<i}]$, $F_X=\bigwedge_{j\in X}\neg B_j$ (by Harris
+$\Pr[F_{<i}]\ge\prod_{j<i}(1-b_j)>0$). $B_i$ is increasing and $F_{<i}$ decreasing, so
+$c_i\le b_i$ (Harris), giving $p\ge M$. Split the earlier events into neighbours $N$
+and non-neighbours $R$ of $i$ (Boppana--Spencer \cite{boppanaspencer1989}): $B_i$ is
 independent of $F_R$ (disjoint supports), so $c_i\ge\Pr[B_iF_N\mid F_R]\ge
 b_i-\sum_{j\in N}\Pr[B_iB_j\mid F_R]\ge b_i-d_i$, the last step by Harris
 ($B_iB_j$ increasing, $F_R$ decreasing). Then $1-b_i+d_i\le(1-b_i)e^{d_i/(1-b_i)}$.
-For the procedure: the log of $\hat M$ deviates from $\log M$ by a sum of independent
-terms of total variance $O(\mu/N)$ plus a quadratic remainder of the same order,
-so $N=O((\mu+1)/\eps^2)$ and a median give $|\log\hat M-\log M|\le\eps/4$; the
-pre-tests reject with high probability when $\max b_i>1/2$ or $\Delta>\eps/4$, and
-otherwise $p\in[M,Me^{\eps/2}]$. Only $M$ needs relative accuracy; $\Delta$ and
-$\max_ib_i$ need additive accuracy.
+(If $b_i=0$ then $c_i=d_i=0$ and the $i$-th factors are $1$.)
+
+\emph{Procedure.} $\hat M\le1$, so the output lies in $[0,1]$, and when it is not
+$[0,1]$ its ratio is at most $e^{\eps'}=1+\eps$. Four failure events have probability
+at most $\delta/4$ each.
+(a) \emph{Pilot.} $N_0\hat\mu_0$ is a sum of independent Bernoulli variables with mean
+$N_0\mu$. If $N_0\mu\ge8\ln(4/\delta)$, Chernoff gives
+$\Pr[\hat\mu_0\le\mu/2]\le e^{-N_0\mu/8}\le\delta/4$; otherwise $\mu<1$. So
+$\mu\le2\hat\mu_0+1$, and hence $N\ge560\mu/\eps'^2$, except with probability $\delta/4$.
+(b) \emph{Pre-test on $\Delta$.} $N_\Delta\hat\Delta$ is a sum of independent Bernoulli
+variables with mean $\lambda=N_\Delta\Delta$. If $\Delta>\eps'/4$, then
+$\Pr[\hat\Delta\le\eps'/16]\le\Pr[N_\Delta\hat\Delta\le\lambda/4]\le e^{-9\lambda/32}\le
+e^{-9N_\Delta\eps'/128}\le\delta/4$. If $\Delta\le\eps'/64$, then with
+$\lambda'=N_\Delta\eps'/64\ge\lambda$, $\Pr[\hat\Delta>\eps'/16]\le
+e^{-\lambda'}(e/4)^{4\lambda'}=e^{-(1+4\ln(4/e))\lambda'}\le\delta/4$, as
+$26(1+4\ln(4/e))>64$.
+(c) \emph{Pre-test on $b$.} If some $b_i>1/2$, Hoeffding gives
+$\Pr[\hat b_i^{(1)}\le1/3]\le e^{-N/18}\le\delta/4$. If $\max_ib_i\le1/4$, the
+probability that some $\hat b_i^{(r)}>1/3$ is at most $mRe^{-N/72}\le\delta/4$.
+(d) \emph{Main stage.} Let $\max_ib_i\le1/2$ and $N\ge560\mu/\eps'^2$; fix a round, and
+let $F$ be the event that all its $\hat b_i\le1/3$. With $Y_i=\hat b_i-b_i$,
+$\Lambda=-\sum_iY_i/(1-b_i)$ and $Q=\sum_iY_i^2$ we have
+$\mathrm{Var}\,\Lambda=\sum_ib_i/(N(1-b_i))\le2\mu/N$ and $\E Q\le\mu/N$. On $F$, Taylor's
+theorem with $\hat b_i,b_i\le1/2$ gives $|\log(1-\hat b_i)-\log(1-b_i)+Y_i/(1-b_i)|\le2Y_i^2$,
+so $|\sum_i\log(1-\hat b_i)-\log M|\le|\Lambda|+2Q$, and by Chebyshev and Markov (with
+$\eps'\le\ln2$)
+\[
+\Pr\Big[F\wedge\Big|\sum_i\log(1-\hat b_i)-\log M\Big|>\frac{\eps'}4\Big]\le
+\frac{2\mu/N}{(\eps'/8)^2}+\frac{2\mu/N}{\eps'/8}\le\frac{140\,\mu}{N\eps'^2}\le\frac14.
+\]
+If every round passes the pre-test and the median is off by more than $\eps'/4$, at
+least $R/2$ of the independent rounds have this property, which has probability at
+most $e^{-R/8}\le\delta/4$.
+Outside these events, a non-trivial output has $\max_ib_i\le1/2$, $\Delta\le\eps'/4$ and
+$|\log\hat M-\log M|\le\eps'/4$, so by the sandwich
+$\hat Me^{-\eps'/4}\le M\le p\le Me^{2\Delta}\le\hat Me^{3\eps'/4}$, and $p\le1$. On the
+complete class only (b) and (c) can produce $[0,1]$. Cost: $\E\hat\mu_0=\mu$, so
+$\E N\le560(2\mu+1)/\eps'^2+72\ln(4mR/\delta)+1$; a sample of $x_{S_i}$ costs $O(|A_i|)$,
+and the pre-test on $\Delta$ uses $N_\Delta$ samples per edge. Finally
+$\mu\le-\log M\le\log(1/p)+\Delta/(1-\max_ib_i)$. The constants are not optimised.
 \end{proof}
 
 For a unate CNF all quantities are products of marginals and the sandwich is
-deterministic (\cref{thm:janson}); for triangle-freeness of $G(N,q)$ at
-$N=10^4$, $\mu=10$, the window is $e^{\pm0.023}$. The bound needs only
-\emph{syntactic} structure (unateness, supports); semantic monotonicity or
-independence is coNP-hard to check and invisible to sampling.
+deterministic (\cref{thm:janson}). For triangle-freeness of $G(N,q)$ ($B_i$: the
+$i$-th triangle is present) at $N=10^4$ and $\mu=10$, $\Delta=0.023$ and the window is
+$[M,Me^{0.023}]$. The bound needs only \emph{syntactic} structure (unateness,
+supports); semantic monotonicity or independence is coNP-hard to check and
+invisible to sampling.
 
 \paragraph{Second order.} Correcting by covariances,
 $M_2=\prod_i(1-b_i+C_i)$ with $C_i=\sum_{j<i,j\sim i}\mathrm{Cov}(B_i,B_j)$, the same
-Harris/Boppana--Spencer argument together with Bonferroni inequalities gives
-$|\log p-\log M_2|\le E_3$, where $E_3$ is a sum of third-order quantities
-(joint probabilities of connected triples, and singles times connected pairs).
-On triangle-freeness of $G(10^4,q)$ with $\mu=100$ ($p\approx e^{-99}$) the
-first-order window is $e^{2.1}$ while the second-order one is $e^{\pm0.055}$,
-in a regime where the local-lemma counting conditions fail. For principal up-sets Mousset, Noever, Panagiotou and Samotij \cite{mnps2020} give a full hierarchy of such bounds in terms of joint cumulants; the statement for arbitrary monotone sub-circuits and its proof are in \cref{app:second-order}.
+Harris/Boppana--Spencer argument together with Bonferroni inequalities gives,
+when $\max_ib_i<1$ and every $\beta_i=\sum_{j<i,j\sim i}b_j<1$,
+\[
+|\log p-\log M_2|\le E_3=\sum_i\frac{\Theta_i+\Theta'_i+\beta_iC_i}{(1-\beta_i)(1-b_i)},
+\]
+where $\Theta'_i=\sum D(B_iB_jB_k)$ and $\Theta_i=b_i\sum D(B_jB_k)$, both over the
+triples $\{i,j,k\}$ with $j,k<i$ that are connected in $G$ (\cref{thm:second-order}).
+So $\sum_i\Theta'_i$ is the total probability of connected triples, whatever the
+order. On triangle-freeness of $G(10^4,q)$ with $\mu=100$ the first-order window is
+$e^{1.07}$, while $E_3\le0.0184$ for every order, so $\log p=-98.93\pm0.02$. Here the
+symmetric local lemma holds ($e\,b\,(d+1)\approx5\cdot10^{-5}$, $d=3(N-3)$ the maximum
+degree of $G$), but the counting conditions of the local-lemma module of
+\cref{sec:modules}, which with $b$ in place of $2^{-k}$ allow each variable to lie in
+about $b^{-1/4.82}\approx80$ events, fail (each edge lies in $N-2$ triangles), and so
+does the condition of \cref{prop:kp} ($r=N-2$). All numbers in this section are
+computed by \texttt{experiments/check\_independence\_numbers.py}. For principal up-sets
+Mousset, Noever, Panagiotou and Samotij \cite{mnps2020} give a full hierarchy of such
+bounds in terms of joint cumulants; the statement for arbitrary monotone sub-circuits
+and its proof are in \cref{app:second-order}.
 
 \begin{proposition}[pairwise data is not enough]\label{prop:pairwise-barrier}
 Let all variables be Bernoulli$(q)$, $q\le1/2$. The ``stars'' $B_i=y\wedge z_i$
@@ -61,29 +141,86 @@ and the ``triangle'' $B_1=z_1z_2,B_2=z_2z_3,B_3=z_3z_1$ have the same dependency
 graph, the same $b_i=q^2$ and the same $D(B_i\wedge B_j)=q^3$; taking $M'$ disjoint
 copies, $\log(p_{\rm stars}/p_{\rm triangles})=M'\log\big(1+\frac{q^3(1-q)}{1-3q^2+2q^3}\big)\ge0.29\,\Delta$.
 So no certificate computed from single and pairwise probabilities can have a
-window narrower than $e^{0.29\Delta}$: Janson's $e^{\Delta/(1-b)}$ is optimal up to the
-constant in the exponent.
+window narrower than $e^{0.29\Delta}$: the window $e^{\Delta/(1-\max_ib_i)}$ of
+\cref{thm:janson-general} is optimal up to the constant in the exponent.
 \end{proposition}
 
 \begin{proof}
 $p_{\rm stars}=(1-q)+q(1-q)^3$ and $p_{\rm triangles}=(1-q)^3+3q(1-q)^2=1-3q^2+2q^3$;
-their difference is $q^3(1-q)$. The bound $0.29$ is the minimum over
-$q\in(0,1/2]$ of $\log(1+q^3(1-q)/(1-3q^2+2q^3))/(3q^3)$, attained near $q=0.28$.
+their difference is $q^3(1-q)$. Each copy contributes $3q^3$ to $\Delta$, and $0.29$ is
+the minimum over $q\in(0,1/2]$ of $\log(1+q^3(1-q)/(1-3q^2+2q^3))/(3q^3)$, which is
+$0.2939$, attained at $q=0.279$.
 \end{proof}
 
 \paragraph{Beyond pairs.} Two further certified routes need no monotonicity.
 (i) \emph{Interface dynamic programming.} If $Z$ contains every variable shared by
 two of the $A_i$, then
-$p=\sum_{z\in\bits^Z}D_Z(z)\prod_ia_i(z_{I_i})$ with $a_i(y)=\Pr[A_i\mid x_{I_i}=y]$,
-$I_i=S_i\cap Z$, computed by variable elimination along a tree decomposition of
-the interface hypergraph with Monte Carlo (or recursively estimated) factor
-tables; with interval arithmetic this is sound for every circuit, and it handles
-strong, extensive correlations (on a chain of $300$ modules with $p\approx3\cdot10^{-115}$,
-where independence is off by $e^{64}$, the log error was below $0.06$). This is
-DFSB's cutset rule organised by a tree decomposition. (ii) \emph{The Möbius
-expansion} $\log p=\sum_{T\text{ connected}}\mu(T)$, whose first-order terms are
-the presumption of independence and whose higher terms are log-interaction
-corrections computed from non-rare joint probabilities; a Kotecký--Preiss argument \cite{kp1986}
-certifies the tail when $\max_ib_i\le(2e^3d)^{-r}$ ($d$ the degree of $G$, $r$ the
-number of events per variable), giving an FPRAS for bounded $d$.
+\[
+p=\sum_{z\in\bits^Z}D_Z(z)\prod_ia_i(z_{I_i}),\qquad a_i(y)=\Pr[A_i\mid x_{I_i}=y],\ I_i=S_i\cap Z,
+\]
+computed by variable elimination along a tree decomposition of
+the interface hypergraph $\{I_i\}$ with Monte Carlo (or recursively estimated) factor
+tables. The expression is a polynomial with nonnegative coefficients in the
+$\sum_i2^{|I_i|}$ table entries, so interval arithmetic on confidence intervals for
+all entries (with a union bound) is sound for every circuit. If every entry's
+interval has ratio at most $e^{\eps'/m}$, the output's ratio is at most $e^{\eps'}=1+\eps$;
+an entry then costs $O(m^2\eps^{-2}\log(\sum_i2^{|I_i|}/\delta)/a_i(y))$ samples, so the
+route is complete and efficient when all entries are at least $1/\poly(|C|)$ and
+$\max_i|I_i|$ and the width of the decomposition are $O(\log|C|)$. It handles strong,
+extensive correlations: on a chain of $300$ modules with $p\approx3\cdot10^{-115}$,
+where independence is off by $e^{64}$, the certified interval for $\log p$ (at
+$\delta=0.05$) has width $7.3$ with $10^5$ samples per table entry and $0.073$ with $10^9$. This is DFSB's cutset
+rule organised by a tree decomposition.
+(ii) \emph{The Möbius expansion.} Let $Z_U=\Pr[\bigwedge_{i\in U}A_i]$ and, when all
+$Z_U>0$, $\kappa(T)=\sum_{U\subseteq T}(-1)^{|T\setminus U|}\log Z_U$. Then
+$\log p=\sum_{T\subseteq[m]}\kappa(T)$, and $\kappa(T)=0$ unless $T$ is connected in $G$
+(the $Z_U$ factorize over the components of $T$). The terms $\kappa(\{i\})=\log(1-b_i)$
+are the presumption of independence, and the higher ones are log-interaction
+corrections computed from non-rare probabilities. Let $d\ge1$ be the maximum degree
+of $G$ and $r$ the maximum number of supports $S_i$ containing a variable ($r\le d+1$).
 
+\begin{proposition}[cluster expansion]\label{prop:kp}
+Let $B_1,\dots,B_m$ be arbitrary events with supports $S_i$ under a product
+distribution, with $\max_ib_i\le(2e^3d)^{-r}$. Then $Z_U\ge e^{-|U|/e}$ for every $U$, and
+$\sum_{|T|\ge s}|\kappa(T)|\le me^{-s}$ for every $s$. Hence the following is sound on
+every circuit: certify $\max_ib_i\le(2e^3d)^{-r}$ by upper confidence bounds (else
+output $[0,1]$); compute confidence intervals for $\log Z_U$ for all $U\subseteq T$, $T$
+connected with $|T|<s=\lceil\ln(4m/\eps')\rceil$; combine them by interval arithmetic
+and widen by $me^{-s}\le\eps'/4$. If every $\log Z_U$ is known within
+$\pm\eps'/(4m(2ed)^s)$, the interval for $\log p$ has width at most $\eps'$. For bounded
+$d$ this is an FPRAS on the instances with $\max_ib_i\le(2e^3d)^{-r}/2$, using
+$(m/\eps)^{O(1+\log d)}\log(1/\delta)$ samples.
+\end{proposition}
+
+\begin{proof}[Proof sketch]
+Expanding $\prod_i(1-\one_{B_i})$, $p=\sum_{T}(-1)^{|T|}\Pr[\bigwedge_{i\in T}B_i]$,
+and $\Pr[\bigwedge_TB_i]$ factorizes over the connected components of $G[T]$. So $p$
+is the partition function of the polymer model whose polymers are the connected
+sets $\gamma$ of $G$, with weights $w(\gamma)=(-1)^{|\gamma|}\Pr[\bigwedge_{i\in\gamma}B_i]$,
+two polymers being compatible when they are disjoint and non-adjacent. By Finner's
+generalized Hölder inequality for product measures \cite{finner1992}, as every
+variable lies in at most $r$ supports, $|w(\gamma)|\le\prod_{i\in\gamma}b_i^{1/r}\le\beta^{|\gamma|}$
+with $\beta=(\max_ib_i)^{1/r}\le1/(2e^3d)$. A polymer incompatible with $\gamma$ meets one of
+the at most $(d+1)|\gamma|$ vertices of $\gamma$ and its neighbourhood, and at most
+$(ed)^{s-1}$ connected sets of size $s$ contain a given vertex, so
+\[
+\sum_{\gamma'\not\sim\gamma}|w(\gamma')|e^{2|\gamma'|}\le(d+1)|\gamma|\sum_{s\ge1}(ed)^{s-1}(e^2\beta)^s
+\le(d+1)|\gamma|\,e^2\beta\sum_{s\ge1}2^{1-s}\le\frac{d+1}{ed}|\gamma|\le|\gamma|.
+\]
+This is the Kotecký--Preiss condition \cite{kp1986} with $a(\gamma)=|\gamma|$ and decay
+$|\gamma|$. It gives an absolutely convergent cluster expansion
+$\log p=\sum_X\Phi(X)$ over clusters $X$ (multisets of polymers with connected
+incompatibility graph) with $\sum_{X\ni i}|\Phi(X)|e^{\|X\|}\le1$ for every $i$, where
+$X\ni i$ means $i\in\mathrm{supp}\,X=\bigcup_{\gamma\in X}\gamma$ and $\|X\|=\sum_{\gamma\in X}|\gamma|\ge|\mathrm{supp}\,X|$. The
+condition holds for the sub-model on every $U$, so $Z_U>0$ and
+$\log Z_U=\sum_{\mathrm{supp}\,X\subseteq U}\Phi(X)$; by Möbius inversion $\kappa(T)$ is the
+sum of $\Phi(X)$ over the clusters with support exactly $T$. Hence
+$\sum_{|T|\ge s}|\kappa(T)|\le\sum_i\sum_{X\ni i,\|X\|\ge s}|\Phi(X)|\le me^{-s}$ and
+$|\log Z_U|\le\sum_{i\in U}\sum_{X\ni i}|\Phi(X)|\le|U|/e$. With $s=\lceil\ln(4m/\eps')\rceil$ the
+truncation error is at most $\eps'/4$; the connected $T$ with $|T|<s$ have at most
+$m(2ed)^s$ subsets $U$ in all, so the estimation intervals add up to a width of at
+most $\eps'/2$.
+Each $Z_U\ge e^{-s/e}$ needs $O(e^{s/e}m^2(2ed)^{2s}\eps^{-2}\log(m(2ed)^s/\delta))$ samples, and
+$(2ed)^s=(m/\eps)^{O(1+\log d)}$; certifying $\max_ib_i$ costs
+$O((2e^3d)^r\log(m/\delta))$ samples per event, and $(2e^3d)^r=O(1)$ for bounded $d$.
+\end{proof}

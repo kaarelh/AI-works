@@ -4,15 +4,16 @@ DFSB branches on shared variables but treats overlapping $\vee$'s by envelopes.
 With the \#DNNF FPRAS available, non-deterministic $\vee$'s cost nothing, and
 the only obstacle is $\wedge$-gates whose children share variables. The following
 parameter measures exactly that, and generalises Darwiche's dtree conditioning
-\cite{darwiche2001dnnf} from CNFs to arbitrary circuits: a binary $\wedge$-tree over
-the clauses of a CNF is a dtree, and $\kappa$ of its internal nodes below is their
-cluster (cutset plus context). Like the width of a dtree, it is a parameter of how
-the $\wedge$'s are bracketed, not of the function.
+\cite{darwiche2001dnnf} from CNFs to arbitrary circuits (a binary $\wedge$-tree over
+the clauses of a CNF is a dtree). Like the width of a dtree, it is a parameter of
+how the $\wedge$'s are bracketed, not of the function.
 
 \begin{definition}[context width]
-Let $N$ be the NNF of $C$ (\cref{sec:setting}) in which every $\wedge$-gate keeps the
-children it has in $C$: nested $\wedge$-gates are not merged, and the children of a
-gate form a set ($h\wedge h=h$). $|N|$ is its number of wires. For an $\wedge$-gate
+Let $N$ be the NNF of $C$ (\cref{sec:setting}) built gate by gate: each $\wedge$- or
+$\vee$-gate of $C$ gives one gate per polarity with the same children (by De
+Morgan), $\oplus$- and threshold gates are expanded as described below, nested
+gates are not merged, and the children of a gate form a set ($h\wedge h=h$). $|N|$
+is its number of wires. For an $\wedge$-gate
 $g$ let $S_g=\bigcup_{a\ne b\text{ children of }g}\sv(a)\cap\sv(b)$ be its overlap.
 For a gate $h$ let $\mathrm{Up}(h)$ be the set of $\wedge$-gates from which $h$ is
 reachable (including $h$), and define the \emph{context}
@@ -68,11 +69,13 @@ of $\tau$ live on $\kappa(h)\setminus\mathrm{dom}\,\pi$ and $N[h,\cdot]$ on
 $\sv(h)\setminus\kappa(h)$; at an $\wedge$-gate the children's variables lie in
 $\sv(h_j)\setminus\kappa(g)$, pairwise disjoint by F2.
 Size: a gate $h$ gives $2^{|\kappa(h)|}$ nodes $N[h,\cdot]$ with $\mathrm{fanin}(h)$
-wires each, at most $|N|2^{\mathrm{cw}}$ wires in all. A wire $g\to h$ gives
+wires each, at most $|N|2^{\mathrm{cw}}$ wires together. A wire $g\to h$ gives
 $2^{|\mathrm{dom}\,\pi|}$ nodes $M[h,\pi]$ with at most $(t+2)2^t$ wires each,
 $t=|\kappa(h)|-|\mathrm{dom}\,\pi|$, so at most $(\mathrm{cw}+2)2^{\mathrm{cw}}$; the root
-adds as much. Time: supports, overlaps and contexts take $O(n)$ bit operations per
-wire of $N$, and each wire of the output is built in time $O(\mathrm{cw}+1)$.
+adds as much, for at most $(|N|+1)(\mathrm{cw}+3)2^{\mathrm{cw}}$ wires in all.
+Time: supports, overlaps and contexts take $O(n)$ bit operations per wire of $N$;
+each child of a node $N[g,\sigma]$ and each of the $2^t$ terms of a node $M[h,\pi]$
+is built in time $O(\mathrm{cw}+1)$.
 Since $S_g\subseteq\kappa(g)$, $\mathrm{cw}=0$ iff every $S_g$ is empty.
 The d-DNNF claim holds because conditioning preserves disjointness and the
 $M$-nodes are deterministic.
@@ -85,7 +88,7 @@ the first bag containing $\sv(c)$ (one exists since $\sv(c)$ is a clique), order
 clauses as $c_1,\dots,c_m$ with $\ell(c_1)\le\dots\le\ell(c_m)$, and bracket $F$ as the
 left-deep chain $a_1=c_1$, $a_j=a_{j-1}\wedge c_j$. Then $\kappa(a_j)$ and
 $\kappa(c_j)$ lie in $B_{\ell(c_j)}$, so $\mathrm{cw}\le k+1$. The same bound holds for
-an $\vee$ of such CNFs on the same variables whose chains share no $\wedge$-gate. For
+an $\vee$ of such CNFs whose chains share no $\wedge$-gate. For
 constant $k$, a path decomposition of width $k$, if one exists, is found in linear
 time \cite{bodlaender1996,bodlaenderkloks1996}, and the order from it in linear time.
 \end{lemma}
@@ -93,12 +96,12 @@ time \cite{bodlaender1996,bodlaenderkloks1996}, and the order from it in linear 
 \begin{proof}
 Write $\ell_j=\ell(c_j)$. The bags containing a variable form an interval, so if
 $v\in\sv(c_i)\cap\sv(c_{i'})$ with $i\le j\le i'$ then $v\in B_{\ell_i}\cap B_{\ell_{i'}}
-\subseteq B_{\ell_j}$. The $\wedge$-gates above $a_j$ are $a_{j+1},\dots,a_m$, and
+\subseteq B_{\ell_j}$. The $\wedge$-gates in $\mathrm{Up}(a_j)$ are among $a_j,\dots,a_m$, and
 $S_{a_{j'}}\subseteq\sv(c_{j'})$. So $v\in\kappa(a_j)$ means $v\in\sv(c_i)$ for some
 $i\le j$ and $v\in\sv(c_{j'})$ for some $j'\ge j$, hence $v\in B_{\ell_j}$. Further
 $\kappa(c_j)\subseteq\sv(c_j)\subseteq B_{\ell_j}$, a literal has $|\kappa|\le1$, and
 bags have at most $k+1$ elements. In an $\vee$ of such CNFs, $\vee$-gates add no
-overlap and the $\wedge$-gates above $a_j$ are those of its own chain; a clause or
+overlap and $\mathrm{Up}(a_j)$ lies in the chain of $a_j$; a clause or
 literal shared between chains still has $\kappa$ inside its own variables. For the
 running time: clauses have at most $k+1$ variables, so the primal graph has
 $O(k|F|)$ edges, and $\ell(c)$ is the largest index of a first bag of a variable
@@ -122,7 +125,8 @@ in graphs of maximum degree $3$ \cite{greenhill2000}.
 
 The same construction works with a \emph{frontier} of gates that are compiled
 otherwise: gates of small support by tabulation (as the implementation does), and
-circuits of treewidth $k$ into d-SDNNFs of size $2^{O(k)}|C|$ \cite{acms2020}.
+gates whose cone is a circuit of treewidth $k$ into d-SDNNFs of size $2^{O(k)}$ times
+that of the cone \cite{acms2020}.
 Context width is then computed with frontier gates (one per polarity) as leaves; a
 frontier gate $f$ compiled to a DNNF $D_f$ gives the nodes $N[f,\sigma]=D_f|_\sigma$,
 so the size becomes $\sum_f2^{|\kappa(f)|}|D_f|$ plus the bound of \cref{thm:cw} for
@@ -137,10 +141,12 @@ rest}$ being the inputs outside $\sv(g)$, and under a product distribution $g(x)
 independent of $x_{\rm rest}$. The supports of modules form a laminar family: if
 $v\in\sv(g)\cap\sv(h)$, a path from $x_v$ through $g$ to the output passes through
 $h$, so one of $g,h$ is in the cone of the other and their supports are nested.
-Modules are found in linear time \cite{dutuitrauzy1996}. The maximal modules
-$g_1,\dots,g_k$ strictly inside a module $g$ have disjoint supports, and $g$ is a
-function $Q_g(g_1,\dots,g_k,x_{\rm rest})$ of them and of its remaining inputs; this
-is the module tree.
+Modules are found in linear time \cite{dutuitrauzy1996}. For a module $g$, choose one
+module for each support that is maximal among the module supports properly inside
+$\sv(g)$. By laminarity the chosen $g_1,\dots,g_k$ have disjoint supports; every path
+from $\sv(g_j)$ to $g$ passes through $g_j$ (extended to the output it meets $g_j$, and
+$g_j$ is not above $g$ since $\sv(g_j)\subsetneq\sv(g)$); so $g=Q_g(g_1,\dots,g_k,x')$
+with $x'$ the remaining inputs of $\sv(g)$. This is the module tree.
 
 \begin{lemma}[sensitivity of quotients]\label{lem:quotient}
 Let $F(q)=\Pr_{y\sim\bigotimes_j\mathrm{Bern}(q_j)}[Q(y)=1]$ and $q,\hat q\in[0,1]^k$.
@@ -165,23 +171,24 @@ $r(1-\hat q_j)-(1-L_j)=(r-1)(1-L_j-\hat q_j)\ge0$ and
 $r(1-U_j)-(1-\hat q_j)=(r-1)(1-U_j-\hat q_j)\ge0$ when $U_j\le\frac12$.
 \end{proof}
 
-Let $g$ be a module with maximal submodules $g_1,\dots,g_k$, and let
-$q_j=D(g_j)\in[L_j,U_j]$. Take $\hat q_j,\xi_j$ from the last part of
-\cref{lem:quotient} when $U_j\le\frac12$ or $L_j\ge\frac12$, and otherwise any
-$\hat q_j\in[L_j,U_j]$ and $\xi_j=\max\{\log(U_j/L_j),\log((1-L_j)/(1-U_j))\}$ (only
-the first term if $Q_g$ is monotone in $y_j$, only the second if it is antitone).
-An interval $[L_F,U_F]$ for $F(\hat q)$, i.e.\ for $Q_g$ under
-$\bigotimes_j\mathrm{Bern}(\hat q_j)$ and $D$ on $x_{\rm rest}$, from any sound method
-(exact for small quotients, the threshold dynamic program, DFSB, Monte Carlo), gives
-$D(g)\in[e^{-\sum_j\xi_j}L_F,e^{\sum_j\xi_j}U_F]$; an interval for $1-F(\hat q)$ (that
-is, for $\neg Q_g$) gives one for $D(\neg g)$ in the same way. Walking the module tree
-bottom-up and making each of the $M$ quotient estimates at confidence $\delta/M$
-gives an interval for $p$ that is valid with probability $1-\delta$ (union bound; each
-estimate is valid conditionally on the earlier ones). If at each module the rarer
-polarity of the quotient is estimated and every interval lies on one side of
-$\frac12$, the log-ratio $\log(U/L)$ of the final interval is the sum of the
-log-ratios of all quotient estimates. Completeness thus needs relative accuracy on
-the rarer of $D(g)$ and $D(\neg g)$ at every module; if every quotient is monotone or
-antitone in each $y_j$, it suffices to estimate at each module the polarity its
-parent's condition needs. Thresholds, majorities and other tractable functions of
-independent sub-circuits are the typical case.
+Let $g$ be a module with submodules $g_1,\dots,g_k$ as above, let
+$q_j=D(g_j)\in[L_j,U_j]$, and let $Q$ be $Q_g$ or $\neg Q_g$, according to whether
+$D(g)$ or $D(\neg g)$ is wanted. Take $\hat q_j=\sqrt{L_jU_j}$ and
+$\xi_j=\frac12\log(U_j/L_j)$ if $U_j\le\frac12$ or $Q$ is monotone in $y_j$;
+symmetrically with $1-q_j$ if $L_j\ge\frac12$ or $Q$ is antitone in $y_j$; otherwise
+any $\hat q_j\in[L_j,U_j]$ and $\xi_j=\max\{\log(U_j/L_j),\log((1-L_j)/(1-U_j))\}$. By
+\cref{lem:quotient}, an interval $[L_F,U_F]$ for $\Pr[Q=1]$ under
+$\bigotimes_j\mathrm{Bern}(\hat q_j)$ and $D$ on $x'$, from any sound method (exact
+for small quotients, the threshold dynamic program, DFSB, Monte Carlo), gives
+$\Pr_D[Q(g_1,\dots,g_k,x')=1]\in[e^{-\sum_j\xi_j}L_F,e^{\sum_j\xi_j}U_F]$. Walking the
+module tree bottom-up and making each of the $M$ quotient estimates at confidence
+$\delta/M$ gives an interval for $p$ that is valid with probability $1-\delta$ (union
+bound; each estimate is valid conditionally on the earlier ones). When the first two
+rules apply throughout, and each module estimates the polarity its parent's rule
+uses (the rarer one, or the one matching a monotone or antitone input), the
+log-ratio $\log(U/L)$ of the final interval is the sum of the log-ratios of all
+quotient estimates. Completeness thus needs every quotient to be estimated to small
+relative error on its rarer polarity (two-sided relative accuracy) or, for quotients
+monotone or antitone in each input, on the polarity the parent uses. Thresholds,
+majorities and other tractable functions of independent sub-circuits are the typical
+case.
