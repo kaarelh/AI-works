@@ -47,6 +47,9 @@ class BooleanTarget:
             return self.table[idx]
         if self.rule == "threshold":  # sum of relevant bits >= 2
             return (Z.sum(axis=1) >= 2).astype(np.int64)
+        if self.rule == "teacher":  # sign of a small ReLU network on all relevant coordinates
+            U, v, t = self.table
+            return (np.maximum(Z.astype(np.float64) @ U.T, 0.0) @ v > t).astype(np.int64)
         raise ValueError(self.rule)
 
 
@@ -70,6 +73,15 @@ def make_target(name, n, seed=0):
         return BooleanTarget(name, n, perm[:k], "table", table=table)
     if name == "fullmaj":
         return BooleanTarget(name, n, np.arange(n), "majority")
+    if name.startswith("teacher"):
+        # Dense non-junta target: x -> [sum_j v_j relu(u_j . x) > t] with K hidden units,
+        # u_j ~ N(0, I/n), alternating signs v_j, and t the median (balanced classes).
+        K = int(name[len("teacher"):])
+        U = rng.standard_normal((K, n)) / np.sqrt(n)
+        v = np.where(np.arange(K) % 2 == 0, 1.0, -1.0)
+        Z = uniform_cube(n, 1 << 16, np.random.default_rng(2000 + seed)).astype(np.float64)
+        t = float(np.median(np.maximum(Z @ U.T, 0.0) @ v))
+        return BooleanTarget(name, n, np.arange(n), "teacher", table=(U, v, t))
     raise ValueError(name)
 
 

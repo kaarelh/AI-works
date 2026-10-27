@@ -70,7 +70,7 @@ def deterministic_dct_init(model, scale=1.0):
         model.layers[-1].bias.zero_()
 
 
-def np_forward(weights, X, chunk=1 << 16):
+def np_forward(weights, X, chunk=1 << 13):
     """Float64 forward pass of a weight list on numpy inputs; returns logits."""
     outs = []
     for s in range(0, X.shape[0], chunk):

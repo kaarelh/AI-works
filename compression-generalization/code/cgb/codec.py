@@ -105,18 +105,26 @@ def ste_quant(w, step):
 class QATNet(nn.Module):
     """A float MLP whose forward pass uses weights quantized at fixed steps."""
 
-    def __init__(self, mlp, steps_exp):
+    def __init__(self, mlp, steps_exp, ref=None):
         super().__init__()
         self.mlp = mlp
         self.steps_exp = steps_exp
         self.widths = mlp.widths
+        # Optional free reference (e.g. initialization rows): weights are quantized as
+        # ref + step * round((w - ref) / step), matching QuantMLP with `ref`.
+        self.ref = None if ref is None else [(torch.as_tensor(W, dtype=torch.float32),
+                                              torch.as_tensor(b, dtype=torch.float32)) for W, b in ref]
 
     def forward(self, x):
         L = len(self.mlp.layers)
         for i, lin in enumerate(self.mlp.layers):
             eW, eb = self.steps_exp[i]
-            W = ste_quant(lin.weight, QuantMLP.step_value(eW))
-            b = ste_quant(lin.bias, QuantMLP.step_value(eb))
+            if self.ref is None:
+                W = ste_quant(lin.weight, QuantMLP.step_value(eW))
+                b = ste_quant(lin.bias, QuantMLP.step_value(eb))
+            else:
+                W = self.ref[i][0] + ste_quant(lin.weight - self.ref[i][0], QuantMLP.step_value(eW))
+                b = self.ref[i][1] + ste_quant(lin.bias - self.ref[i][1], QuantMLP.step_value(eb))
             x = F.linear(x, W, b)
             if i < L - 1:
                 x = F.relu(x)
@@ -149,15 +157,19 @@ def default_steps(mlp, rel):
 
 
 def distill(student, Xs_pool, y_pool, *, steps=3000, batch=256, lr=3e-3, seed=0,
-            qat_steps_exp=None):
+            qat_steps_exp=None, qat_ref=None, soft=False):
     """Train `student` (an MLP on the selected coordinates) to match teacher
     labels y_pool on a pool Xs_pool of inputs drawn independently of the
     training set (already restricted to the student's coordinates).  With
-    qat_steps_exp, trains through the quantizer (straight-through)."""
+    qat_steps_exp, trains through the quantizer (straight-through), optionally
+    relative to a reference `qat_ref`.  With soft=True, y_pool holds the
+    teacher's probabilities (binary) or logits (multi-class) instead of labels."""
     g = torch.Generator().manual_seed(seed)
-    net = student if qat_steps_exp is None else QATNet(student, qat_steps_exp)
+    net = student if qat_steps_exp is None else QATNet(student, qat_steps_exp, ref=qat_ref)
     Xp = torch.as_tensor(Xs_pool, dtype=torch.float32)
     yp = torch.as_tensor(y_pool)
+    if soft:
+        yp = yp.float()
     opt = torch.optim.Adam(student.parameters(), lr=lr)
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=steps)
     N = Xp.shape[0]
@@ -167,6 +179,8 @@ def distill(student, Xs_pool, y_pool, *, steps=3000, batch=256, lr=3e-3, seed=0,
         out = net(Xp[idx])
         if binary:
             loss = F.binary_cross_entropy_with_logits(out[:, 0], yp[idx].float())
+        elif soft:
+            loss = F.kl_div(F.log_softmax(out, 1), F.log_softmax(yp[idx], 1), reduction="batchmean", log_target=True)
         else:
             loss = F.cross_entropy(out, yp[idx])
         opt.zero_grad()
