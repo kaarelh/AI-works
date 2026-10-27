@@ -1,64 +1,170 @@
-\section{Part 9 (in progress): sum features and discrete image members}\label{sec:part9}
+\section{Sum features and permutation-invariant image members (Part 9)}\label{sec:part9}
 
-\todo{This section holds the question and the pre-registered protocol of Part 9 (\repo{study/part9/PROTOCOL.md}, commits \texttt{82ca257d} and \texttt{f6ad9afe}, written before any Part 9 design work). Results, audits and the answers to Q1 and Q2 are to be added when the held-out runs are complete.}
+\subsection{Question and protocol}\label{sec:p9protocol}
 
-\paragraph{Question.} Part 8 left two clear failures of \code{hyb_portfolio} against gradient-descent-trained networks.
+Part 8 left two clear losses of \code{hyb_portfolio} (here \emph{v1}) against gradient-descent-trained networks (\cref{sec:portfolio}).
 \begin{enumerate}
-\item \emph{Symmetric functions.} On sym9 the portfolio needs 1229 samples against 350 for the best network. Its Fourier weight is spread over many characters, and a character search pays for each one.
-\item \emph{Images at large $n$.} On MNIST and Fashion-MNIST at $n\ge30000$, a regularized MLP ensemble wins clearly. Nearest neighbours and axis-aligned trees are the only image members.
+\item \emph{Symmetric functions.} On sym9 $=[|x_1+\dots+x_9|\le1]$, v1 needs 1229 samples and the best network 350. The function's Fourier weight is spread over many characters of degrees 2, 4, 6 and 8, and a character search pays for each one separately.
+\item \emph{Images at large $n$.} On MNIST and Fashion-MNIST at $n\ge30000$, a regularized ensemble of three MLPs is clearly better than v1, whose only image members are nearest neighbours and axis-aligned trees.
 \end{enumerate}
-Part 9 adds two things to the portfolio.
+Part 9 adds two things and tests them on fresh held-out sets.
 \begin{itemize}
-\item \emph{Sum features.} These are discrete functions of signed sums of inputs, added to the character search:
+\item \emph{Sum features}, discrete functions of signed sums of inputs:
 \[
 \phi(x)=g\Bigl(\textstyle\sum_{i\in S}s_ix_i\Bigr),\qquad S\subseteq[d],\ s_i\in\{-1,+1\},
 \]
-with $g$ the indicator of a set of values of the integer sum.
-\item \emph{Discrete, pixel-permutation-invariant image members.} They may make no use of pixel adjacency. The comparator is an MLP, which is invariant to a fixed permutation of its inputs; a method that used spatial structure would have to be compared with a convolutional network.
+with $g$ the indicator of a set of values of the integer sum. They enter DFG as a new block type (DFG v1.2).
+\item \emph{Discrete, pixel-permutation-invariant image members.} The comparator is an MLP, which is invariant to a fixed permutation of its inputs, so the image members may not use the pixel layout; a method that used it would have to be compared with a convolutional network. The QuickDraw sets are stored with their columns permuted.
 \end{itemize}
 
-\paragraph{Data access.}
+\paragraph{Pre-registration.} A protocol was committed before any Part 9 design work (\repo{study/part9/PROTOCOL.md}, commit \texttt{82ca257d}). It fixed:
 \begin{itemize}
-\item \emph{Development:}
+\item \emph{Data access.} Development: the toy \code{designed} suite and a new symmetric dev suite \code{dlsymdev}; MNIST, Fashion-MNIST and a new QuickDraw set \code{qd_dev}; the tabular DEV sets. Held out, fixed before any design: the toy suite \code{dlheld4} and the QuickDraw sets \code{qd_a}, \code{qd_b} (\cref{sec:p9data}).
+\item \emph{Budgets} as in Part 8: one network training run per toy fit, three MLP training runs per real fit, everything counted, prediction reported separately.
+\item \emph{References.} Toy: \code{nets}, \code{nets_wd}, \code{nets_cewd} (logistic loss and weight decay 0.1) and their per-target hindsight minimum \code{nets_best}, plus \code{lin} and v1. Images: \code{mlp}, \code{mlp_l2unit}, \code{mlp_strong} and its single network \code{mlp_strong1}, the per-cell hindsight minimum \code{mlp_best}, \code{hgb} and v1. Seed 0 only at $n\ge30000$ for every learner, 3 seeds below.
+\item \emph{Design tasks.} Builder S: DFG v1.2 as a replacement for the portfolio's DFG member. Builders I1 and I2: two independent image members, each added to the portfolio. Builders work on development data only, freeze, and run one full dev evaluation.
+\item \emph{An integration rule} (\cref{sec:p9int}), applied before any held-out run of the integrated learner \code{hyb_portfolio2} (here \emph{v2}).
+\item \emph{Two questions}, with Part 8's verdict rules:
   \begin{itemize}
-  \item the toy \code{designed} suite, and a new symmetric dev suite \code{dlsymdev} of 8 targets: sym7, exactly 3 of 8 inputs $+1$, a band of $|x_1+\dots+x_{11}|$, a tail of $|x_1+\dots+x_9|$, a signed-sum version of sym9, and three mixtures: $[|x_1+\dots+x_6|\le2]\oplus x_7x_8$, an equivalence of two symmetric functions of disjoint inputs, and sign$(x_1+\dots+x_6+3x_7x_8+\tfrac12)$ (definitions in \texttt{study/boolfuncs.py});
-  \item the images MNIST and Fashion-MNIST, already seen in Part 8;
-  \item a new QuickDraw \cite{ha2017sketch} set \code{qd_dev} of 10 categories;
-  \item the tabular DEV sets.
+  \item \textbf{Q1 (sum features).} On the held-out toy suite, is v2's mean $\log_2\nstar$ ratio against \code{nets_best} below 0, with more clearly-better than clearly-worse targets? Is it below v1's on the symmetric targets?
+  \item \textbf{Q2 (images at large $n$).} On \code{qd_a} and \code{qd_b} at $n\ge10000$, is v2's mean $\log_2(\text{error}/\text{reference error})$ below 0 against \code{mlp_strong} and against \code{mlp_best}, and below v1's?
   \end{itemize}
-  Part 8's held-out results are known and may be looked at, but they are not evidence.
-\item \emph{Held out, fixed before any design:}
-  \begin{itemize}
-  \item the toy suite \code{dlheld4} (12 targets), with 9 symmetric or signed-sum targets of new sizes and accept-sets, and mixtures with parities and gates: $[|x_1+\dots+x_{11}|\le1]$, exactly 4 of 9 inputs $+1$, $[|x_1+\dots+x_{13}|\ge5]$, $[|x_1+\dots+x_{10}|=2]$, a signed sum of 8 inputs equal to 0, $[|x_1+\dots+x_7|\le1]\oplus x_8$, $[|x_1+\dots+x_6|\le2]\wedge(x_7\vee x_8)$, sign$(x_1+\dots+x_5+2x_6x_7+2x_8x_9x_{10})$ and MAJ$([|x_1+\dots+x_5|\le1],x_6x_7,x_8)$;
-  \item 3 non-symmetric controls in the same suite: two fresh random formulas and a 3-term DNF;
-  \item the QuickDraw sets \code{qd_a} and \code{qd_b}: 10 categories each, disjoint from \code{qd_dev}, with 60000 training and 10000 test images, and columns permuted by one fixed permutation, as are \code{qd_dev}'s.
-  \end{itemize}
-\item \emph{Regression checks} (already seen, not evidence): \code{dlheld3}, tabular DEV and HELDOUT2, MNIST and Fashion-MNIST.
 \end{itemize}
 
-\paragraph{Budgets and references.} The budgets are as in Part 8: one network run per toy fit and three MLP runs per real fit, with everything counted and prediction cost reported separately.
-\begin{itemize}
-\item \emph{Toy references} (\code{dlsymdev}, \code{dlheld4}): \code{nets}, \code{nets_wd}, \code{nets_cewd} and \code{nets_best}, plus \code{lin} and the Part 8 learner \code{hyb_portfolio} (v1).
-\item \emph{Image references} (\code{qd_dev}, \code{qd_a}, \code{qd_b}): \code{mlp}, \code{mlp_l2unit}, \code{mlp_strong} and \code{mlp_strong1}, \code{mlp_best}, \code{hgb} and \code{hyb_portfolio} v1.
-\item \emph{Seeds:} seed 0 only at $n\ge30000$ for every learner, and 3 seeds below.
-\end{itemize}
+\paragraph{Amendments.} Four amendments were made, each recorded with its commit (\cref{tab:p9amend}). The first was a compute restriction before any design. The other three answer exposures and audit findings that came up during the work (\cref{sec:p9audits}); each was fixed before the results it affects were read, with one disclosed exception (Amendment 4).
 
-\paragraph{Designs and integration rule.} Builders work on development data only, freeze, and run a full dev evaluation once.
-\begin{itemize}
-\item \emph{S:} DFG v1.2, which is DFG v1.1 plus sum-feature blocks, delivered as a replacement of the portfolio's DFG member.
-\item \emph{I1, I2:} two independent discrete, permutation-invariant image members, each added to the portfolio.
-\end{itemize}
-\code{hyb_portfolio2} is \code{hyb_portfolio} with two possible changes, and it is frozen before any held-out Part 9 run.
-\begin{itemize}
-\item \emph{DFG v1.2 replaces v1.1} if, on the dev toy suites (\code{designed} and \code{dlsymdev}, permuted inputs, against \code{nets_best}), the S variant's mean $\log_2\nstar$ ratio is lower than v1's, and no dev target gets worse by more than 0.5 in $\log_2$.
-\item \emph{An image member is added:} the one of I1 and I2 whose portfolio variant has the lower mean $\log_2(\text{error}/\text{\code{mlp_best} error})$ over the dev image cells, if that mean is lower than v1's on the same cells.
-\end{itemize}
-The image member runs only on inputs that are all continuous with $d\ge256$, so tabular results are unchanged by construction. An amendment made before any design work, for compute, fixed the dev image cells as MNIST, Fashion-MNIST and \code{qd_dev} at $n\in\{1000,10000,60000\}$, seed 0 (9 cells). The S builder's dev evaluation is the full toy grid (3 seeds) on \code{designed} and \code{dlsymdev}, inputs permuted.
+\begin{table}[t]
+\centering\footnotesize\renewcommand{\arraystretch}{1.15}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{1.6cm}>{\raggedright\arraybackslash}p{3.0cm}>{\raggedright\arraybackslash}X}
+\toprule
+amendment & when & content\\
+\midrule
+1 & before any design (\texttt{f6ad9afe}) & the integration rule's dev image cells are MNIST, Fashion-MNIST and \code{qd_dev} at $n\in\{1000,10000,60000\}$, seed 0\\
+2 & after builder S froze, before any held-out run (\texttt{7449313e}) & S had seen the source of \code{dlheld4}'s target definitions; a fifth suite \code{dlheld5} is drawn from a fixed random family\\
+3 & after the protocol audit, before any run on the new suite (\texttt{0c4db784}) & \code{dlheld5}'s family was written after S's limits were read, inside S's representable class; a sixth suite \code{dlheld6} is written by an agent blind to the design, and Q1 is answered on it\\
+4 & after the four audits (\texttt{1a767058}, wording corrected in \texttt{bc22bb8c}) & stronger references (wider and CPU-matched MLPs; more toy weight decays) and post-hoc controls (an MLP on the image member's pooled features, a CNN on unpermuted pixels, member attribution). Fixed before any v2 toy result or Q2 image cell was read; the orchestrator had seen v2's \code{qd_a}/\code{qd_b} test errors at $n\le1000$ in progress logs\\
+\bottomrule
+\end{tabularx}
+\caption{Amendments to the Part 9 protocol (\repo{study/part9/PROTOCOL.md}).}
+\label{tab:p9amend}
+\end{table}
 
-\paragraph{Pre-registered questions.} Verdicts follow Part 8's rules.
-\begin{itemize}
-\item \textbf{Q1 (sum features).} On \code{dlheld4}, is \code{hyb_portfolio2}'s mean $\log_2\nstar$ ratio against \code{nets_best} below 0, with more clearly-better than clearly-worse targets? Is it below v1's on the symmetric targets?
-\item \textbf{Q2 (images at large $n$).} On \code{qd_a} and \code{qd_b} at $n\ge10000$, is \code{hyb_portfolio2}'s mean $\log_2(\text{error}/\text{reference error})$ below 0 against \code{mlp_strong} and against \code{mlp_best}, and below v1's?
-\end{itemize}
+\subsection{New data}\label{sec:p9data}
 
-\paragraph{Results.} \todo{integration decision (S, I1/I2) from the dev evaluation; \code{dlheld4} table against all network references and \code{hyb_portfolio} v1 (Q1); \code{qd_a}/\code{qd_b} learning curves and per-cell verdicts at $n\ge10000$ (Q2); regression checks on \code{dlheld3}, HELDOUT2 and MNIST/Fashion-MNIST; compute and prediction cost of the new members; audits and claims check.}
+\paragraph{QuickDraw.} The images are 28$\times$28 bitmaps from the QuickDraw game \cite{ha2017sketch}. Thirty of the 345 categories were drawn at random (seed 9191): the first 10 form \code{qd_dev}, the next 10 \code{qd_a}, the last 10 \code{qd_b}, so the three sets are disjoint.\footnote{\code{qd_dev}: ocean, motorbike, matches, grapes, paper clip, campfire, washing machine, soccer ball, frying pan, foot. \code{qd_a}: broccoli, oven, leaf, strawberry, The Eiffel Tower, star, piano, camouflage, coffee cup, skateboard. \code{qd_b}: spoon, lantern, computer, marker, door, fireplace, bench, streetlight, stove, panda.} Each category contributes 6000 training and 1000 test drawings, so each set has a 60000-point training pool and a 10000-point test set, with 10 balanced classes and $d=784$. The pixel columns are permuted by one fixed permutation (seed 9192) and scaled to $[0,1]$. QuickDraw is much harder than MNIST: on \code{qd_dev} the strong MLP ensemble ends at 13.2\% error at $n=60000$, against 1.4\% on MNIST.
+
+\paragraph{Toy suites} on $\{\pm1\}^{30}$, defined in \repo{study/boolfuncs.py}.
+\begin{itemize}
+\item \code{dlsymdev} (development, 8 targets): sym7, exactly 3 of 8 inputs $+1$, $|x_1+\dots+x_{11}|\in\{3,5\}$, $|x_1+\dots+x_9|\ge5$, a signed-sum version of sym9, and three mixtures: $[|x_1+\dots+x_6|\le2]\oplus x_7x_8$, an equivalence of symmetric functions of two disjoint blocks, and $\mathrm{sign}(x_1+\dots+x_6+3x_7x_8+\tfrac12)$.
+\item \code{dlheld4} (held out, fixed before any design, 12 targets): 9 symmetric or signed-sum targets of new sizes and accept sets, with mixtures with parities and gates (for instance $[|x_1+\dots+x_{13}|\ge5]$, $[|x_1+\dots+x_7|\le1]\oplus x_8$ and $\mathrm{sign}(x_1+\dots+x_5+2x_6x_7+2x_8x_9x_{10})$), and 3 non-symmetric controls (two random formulas and a 3-term DNF). Builder S saw its source code (\cref{sec:p9audits}).
+\item \code{dlheld5} (held out, 12 targets): 8 random signed sums with random accept sets, some combined with a gate, 2 threshold targets $\mathrm{sign}(t+w\chi_T+\tfrac12)$ and 2 random-formula controls, drawn once (seed 9393) after builder S froze. The audit found its family inside S's representable class (\cref{sec:p9audits}).
+\item \code{dlheld6} (held out, 12 targets, \cref{tab:dlheld6}): written by a fresh agent that had seen neither the sum-feature design nor any other suite or result, from the pre-registered one-line description ``9 symmetric / signed-sum targets of new sizes and accept-sets, mixtures with parities and gates, and 3 non-symmetric controls''. It stated a stratified random family in writing and drew from it once (seed 52817), rejecting draws only for balance, $\Pr[f=+1]\in[0.25,0.75]$ \repo{study/part9/heldout6/FAMILY.md}. Each block is plain or randomly signed with probability $\tfrac12$, and its accept set is a threshold, a centred band, an interval, a residue class mod 3 or 4, or an arbitrary non-constant set, each with probability $\tfrac15$.
+\end{itemize}
+Q1's \emph{sum-structured subset} is every target but the controls: 9 targets of \code{dlheld4}, 10 of \code{dlheld5} and 9 of \code{dlheld6}.
+
+\begin{table}[t]
+\centering\footnotesize\renewcommand{\arraystretch}{1.12}
+\begin{tabularx}{\linewidth}{l>{\raggedright\arraybackslash}p{2.2cm}>{\raggedright\arraybackslash}Xcc}
+\toprule
+target & stratum & definition & $k$ & $\Pr[f=+1]$\\
+\midrule
+h6\_00 & one sum & $[\tfrac12(s+13)\bmod3\ne1]$, $s=x_1+\dots+x_8-x_9-\dots-x_{12}+x_{13}$ & 13 & 0.667\\
+h6\_01 & one sum & $[s\in\{-9,-7,-5,-1,1,7,9\}]$, $s=-x_1+x_2-x_3+x_4+x_5+x_6-x_7-x_8-x_9$ & 9 & 0.602\\
+h6\_11 & one sum & $[x_1+\dots+x_7=1]$ & 7 & 0.273\\
+h6\_02 & sum $\oplus$ parity & $[1\le x_1+\dots+x_9\le5]\oplus x_{10}x_{11}$ & 11 & 0.500\\
+h6\_06 & sum $\oplus$ parity & $[x_1+\dots+x_6\in\{-6,-2,0,6\}]\oplus x_7x_8$ & 8 & 0.500\\
+h6\_07 & sum with a gate & $\lnot x_{11}\,?\,[x_1-x_2-\dots-x_6\in\{-2,4\}] : [x_7+x_8+x_9-x_{10}\le0]$ & 11 & 0.508\\
+h6\_08 & sum with a gate & $x_{11}\,?\,[|x_1+\dots+x_4|\le2] : [\tfrac12(s_2+6)\bmod3=0]$, $s_2=-x_5-x_6+x_7-x_8+x_9-x_{10}$ & 11 & 0.609\\
+h6\_09 & composite sums & $[-4\le x_1+\dots+x_6\le0]\oplus[3\le-x_7-x_8+x_9-x_{10}-x_{11}\le5]$ & 11 & 0.588\\
+h6\_10 & composite sums & $[|x_1+\dots+x_{12}-3x_{13}|>1]$ & 13 & 0.686\\
+h6\_03 & control (DNF) & $(\lnot x_4\wedge x_5)\vee(\lnot x_2\wedge\lnot x_6)\vee(x_1\wedge\lnot x_3\wedge x_4)$ & 6 & 0.531\\
+h6\_04 & control (read-once) & $\lnot x_1\vee(x_2\wedge\lnot x_3\wedge(x_4\vee x_5))$ & 5 & 0.594\\
+h6\_05 & control (decision list) & 7 rules on $x_1,\dots,x_8$ & 8 & 0.543\\
+\bottomrule
+\end{tabularx}
+\caption{The blind held-out suite \code{dlheld6}. $[\cdot]$ is $\pm1$-valued, $\oplus$ is the product of $\pm1$ values, $c\,?\,a:b$ is a multiplexer, and $k$ is the number of relevant inputs (the first $k$ columns; the discrete learners see the columns permuted). Both ``sum with a gate'' slots came out as multiplexers, so no AND/OR-gate or majority form was drawn.}
+\label{tab:dlheld6}
+\end{table}
+
+\subsection{Sum features: DFG v1.2}\label{sec:sumfeat}
+
+A \emph{block} is a subset $S$ of the inputs, signs $s_i\in\{\pm1\}$, and a fold flag; its statistic is the integer $t(x)=\sum_{i\in S}s_ix_i$, or $|t(x)|$ when folded. The training values of $t$ are cut into contiguous groups of at least $\max(3,0.005n)$ points, and the block's features are the group indicators $[t(x)\in\text{group }v]$, with the most populous group dropped. Every function of $t$, and so every symmetric function of the signed inputs in $S$, is then a linear combination of the block's features, up to merged rare values. There are three variants: \emph{additive} (the indicators themselves), \emph{modulated} ($\chi_T(x)$ times the indicators, for a character $\chi_T$ already in the model, with $T\cap S=\emptyset$) and \emph{product} (joint cells of two blocks on disjoint supports). An additive and a modulated block on the same $(S,s)$ together represent $g(t+w\chi_T)$ for any integer $w$.
+
+\paragraph{The test.} A candidate is accepted when the residual's projection on its group indicators passes a $\chi^2$ tail bound with a union bound over the whole class. With residual $r$, $\hat\sigma^2=\overline{r^2}$ and $n_v$ points in group $v$, the statistic is $T=\sum_v n_v\,\overline{r}_v^{\,2}/\hat\sigma^2$, and the block passes if $T>m+2\sqrt{mt}+2t$ \cite{laurent2000adaptive}, with $m$ the number of occupied groups minus one and
+\[
+t=\ln\bigl(4K\tbinom{d}{k}\,2^{k-1}\cdot2\,(1+\#\text{modulators})\,k_{\max}/\delta\bigr)
+\]
+for a block of size $k$ ($K=4$, $\delta=0.1$, $k_{\max}=24$). The bound covers every $(S,s)$ of every size up to $k_{\max}$, both fold variants and every modulator, so the adaptive search below does not invalidate it. It is not free: at $d=30$ the threshold is about 63 for $k=5$ and 95 for $k=11$, and since $T\le n$ no 7-input block can pass below $n\approx75$.
+
+\paragraph{The search} uses only the training residual. Candidates come from prefixes of the inputs ordered by the top eigenvectors of the residual pair matrix $\overline{r\,xx^\top}$ (an even symmetric function on $(S,s)$ makes its restriction to $S$ rank one with sign pattern $s$), from prefixes ordered by degree-1 correlation, and from greedy growth started at the strongest pairs; the best are refined by single add, remove and sign-flip moves, and the winner is tested on all $n$. Each DFG round tries up to 2 additive blocks, one product block, modulated blocks for the 4 heaviest characters, and products of earlier blocks. The readout, the stopping rule and the budget caps are v1.1's.
+
+\paragraph{What is discrete.} The hypothesis is a weighted sum of characters, group indicators of integer signed sums (optionally times a character), the inputs, and v1.1's spectral $(u\cdot x)^2$ features, which are unchanged and remain the one feature with a continuous direction. The eigenvectors only order inputs inside the search; removing them changed the test error by at most 0.002 on 10 dev fits (\cref{sec:p9audits}).
+
+\paragraph{Development.} Every change during development was driven by a failure on a dev target (local refinement for band11, degree-1 seeds for ex3of8, the product routes for twosym, and an acceptance test beyond the round's characters after a spurious block on sparsepoly). On the dev suites the S variant of the portfolio, \code{p9_sum}, has mean $\log_2\nstar$ ratio $-2.04$ against \code{nets_best} on \code{dlsymdev} (8 of 8 targets clearly better; v1: $+0.11$, 2 better and 5 worse, and v1 never learns band11) and $-2.39$ on \code{designed} (v1: $-2.32$; no target worse than v1 by more than 0.05). These numbers are in-sample: S built the design while looking at them.
+
+\subsection{Image members}\label{sec:p9img}
+
+Both members run only when every column is continuous and $d\ge256$, so tabular and toy inputs follow v1's code path, random stream and predictions. Both builders developed on validation rows of the training pool.
+
+\paragraph{\code{p9_gates} (builder I1).} Two objects are built from the training rows of each fit.
+\begin{itemize}
+\item \emph{Pooling sets.} For each non-constant column $i$ and $k\in\{4,9,16\}$, $S_i(k)$ is the set of the $k$ columns most correlated with column $i$ on the first $\le20000$ training rows. The pooled feature is the subset sum $p_i(x)=\sum_{j\in S_i(k)}x_j$. The sets are computed from a data statistic, never from the pixel layout, and a column permutation permutes them exactly.
+\item \emph{Prototype pairs.} 300 pairs $(a,b)$ of training points of different classes, with feature $(x_a-x_b)\cdot x$. A threshold on it compares the distances to the two prototypes.
+\end{itemize}
+The members are \code{gknn_<k>}, $k$-nearest-neighbour votes ($k\in\{1,3,9,27\}$) on the pooled sums at scale 9, and \code{ggbt}, LightGBM on the bank $[x,\ p(x)\text{ at scales }4,9,16,\ (x_a-x_b)\cdot x]$ of about 3000--3200 columns (31 leaves, learning rate 0.1, 12\% of the columns per tree, 63 bins, 100 rounds below 5000 points and otherwise early stopping on an inner validation split, 150--400 rounds). Each split of \code{ggbt} is a gate $[u\cdot x>t]$ with $u$ a pixel, a pooling set or a prototype pair and $t$ a bin boundary.
+
+\paragraph{\code{p9_bank} (builder I2)} is a closed-form ridge readout over a screened bank of prototype-pair threshold bits $[(x_a-x_b)\cdot x>t]$, with $b$ the nearest other-class point to $a$ in a reference sample, and the bank grown in 8 rounds by correlation with the current ridge residual. Its builder session was killed by a container restart and resumed by a new agent from the partial files.
+
+\paragraph{How discrete these are.} Nothing trains a neural network or fits a continuous feature direction. But the discreteness audit (\cref{sec:p9audits}) found that the two ingredients that matter are not discrete in any stronger sense. The pooling sets recover the pixel grid from correlations: on the permuted \code{qd_dev} data, 98\% of the members of $S_i(4)$ lie within one grid step of pixel $i$, so $p_i$ is a $3\times3$ or $5\times5$ sum-pool on the true grid, recovered from data \cite{leroux2007topology,coates2011receptive}. The prototype-pair projections are continuous oblique directions, unfitted but drawn from the data, in the same category as nearest neighbours. And LightGBM chooses its splits by gradient gain, which is functional gradient descent (\cref{sec:discreteness}). \code{ggbt} is permutation invariant only in distribution: a column permutation changes its predictions about as much as a new seed.
+
+\subsection{Integration and freeze}\label{sec:p9int}
+
+The rule, fixed before any design: v2 is v1 with (i) DFG v1.2 in place of DFG v1.1 if, on \code{designed} and \code{dlsymdev} (inputs permuted, against \code{nets_best}), the S variant's mean $\log_2\nstar$ ratio is below v1's and no dev target gets worse by more than 0.5 in $\log_2$; and (ii) the image member whose portfolio variant has the lower mean $\log_2(\text{error}/\text{\code{mlp_best} error})$ over the 9 dev image cells, if that mean is below v1's.
+\begin{itemize}
+\item (i) is met: $-2.30$ (29 targets better, 0 worse) against v1's $-1.71$ (23 better, 5 worse); the largest increase on any dev target is $+0.05$. This part of the rule is a sanity gate rather than evidence: S had fixed, on the same cells, the two regressions that had crossed the 0.5 threshold (andxor and sparsepoly).
+\item (ii) is met by \code{p9_gates}: $-0.105$ against \code{p9_bank}'s $-0.007$ and v1's $+0.046$ (\cref{tab:p9dev}).
+\end{itemize}
+v2 was assembled from \code{p9_gates}' file with two textual changes (the DFG module path and the name) and frozen at 02:11 UTC on 27 October (md5 \texttt{6837fa52\ldots}). Its first held-out image cell crashed at $n=100$: below 500 training points the gates booster lowered LightGBM's \texttt{min\_data\_in\_leaf} under its construction value, which the dev grid ($n\ge1000$) never exercised. A one-line fix that cannot act at $n\ge1000$ was made before any held-out result existed and is recorded (md5 \texttt{e38af404\ldots}); it leaves the predictions at \code{qd_dev}, $n=1000$ unchanged.
+
+\begin{table}[t]
+\centering\footnotesize
+\begin{tabular}{llccccc}
+\toprule
+dataset & $n$ & \code{p9_gates} & \code{p9_bank} & v1 & \code{mlp_strong} & \code{p9_gates} vs \code{mlp_best}\\
+\midrule
+MNIST & 1000 & \textbf{0.0722} & 0.0739 & 0.0789 & 0.0866 & better ($-0.26$)\\
+ & 10000 & 0.0299 & \textbf{0.0289} & 0.0318 & 0.0320 & tie ($-0.10$)\\
+ & 60000 & 0.0167 & 0.0194 & 0.0198 & \textbf{0.0143} & tie ($+0.22$)\\
+Fashion-MNIST & 1000 & \textbf{0.1805} & 0.1844 & 0.1839 & 0.1860 & tie ($-0.04$)\\
+ & 10000 & \textbf{0.1247} & 0.1299 & 0.1300 & 0.1264 & tie ($-0.02$)\\
+ & 60000 & \textbf{0.0964} & 0.1077 & 0.1072 & 0.0966 & tie ($-0.00$)\\
+\code{qd_dev} & 1000 & \textbf{0.2217} & 0.2402 & 0.2622 & 0.2704 & better ($-0.29$)\\
+ & 10000 & \textbf{0.1467} & 0.1612 & 0.1680 & 0.1749 & better ($-0.25$)\\
+ & 60000 & \textbf{0.1147} & 0.1302 & 0.1341 & 0.1324 & better ($-0.21$)\\
+\midrule
+\multicolumn{2}{l}{mean $\log_2$ vs \code{mlp_best}} & $-0.105$ & $-0.007$ & $+0.046$ & & \\
+\bottomrule
+\end{tabular}
+\caption{The 9 dev image cells of the integration rule: test error, seed 0 for the portfolio variants; \code{mlp_strong} (= \code{mlp_best} at every cell) is a 3-seed mean at $n\le10000$. Brackets: $\log_2(\text{error}/\text{\code{mlp_best} error})$. In-sample for the builders, who tuned on validation rows of the same datasets.}
+\label{tab:p9dev}
+\end{table}
+
+\subsection{Held-out results: toy suites}\label{sec:p9toy}
+
+\todo{dlheld6 (Q1) table and summary; dlheld5 and dlheld4 secondary; figure.}
+
+\subsection{Held-out results: images}\label{sec:p9images}
+
+\todo{qd\_a, qd\_b: summary against each reference by n range (Q2 as pre-registered and against mlp\_best+); per-n table; controls mlp\_pool and cnn; attribution; figure.}
+
+\subsection{Compute}\label{sec:p9compute}
+
+\todo{toy and image compute, CPU, prediction cost.}
+
+\subsection{Audits, exposures and deviations}\label{sec:p9audits}
+
+\todo{audit summary table and exposures.}
+
+\subsection{Answers to Q1 and Q2}\label{sec:p9answers}
+
+\todo{answers.}
