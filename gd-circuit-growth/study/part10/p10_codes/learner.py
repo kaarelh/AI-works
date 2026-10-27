@@ -361,17 +361,21 @@ def _es_error(patience, min_rounds):
 
 
 def fit_ggbt(Xr, y, C, A, rng, seed, n_pairs=300, max_rounds=400, ff=0.12, bins=63, lr=0.1, leaves=31, es_min=5000,
-             es_patience=50, es_min_rounds=150, fixed_rounds=None):
+             es_patience=50, es_min_rounds=150, fixed_rounds=None, extra=None, col_wise=True):
     """LightGBM on the gate bank.  Rounds: fixed_rounds if given; else early stopping on the error of a stratified inner
     validation split (min(10%, 5000) points; patience 50, at least 150 rounds) when len(y) >= es_min, up to max_rounds;
-    else 100 rounds.  Returns (model, flops, rounds used)."""
+    else 100 rounds.  Returns (model, flops, rounds used).
+    p10_codes: extra = (feature function, its width, its FLOPs per row) for non-linear code features (None: none);
+    col_wise = LightGBM's force_col_wise (the same model as the automatic layout - Part 9 checked bit-identical
+    predictions - 2-3x faster on this bank); the bank is built for the fitting rows and the inner-validation rows
+    separately (no full-size copy: less memory)."""
     import lightgbm as lgb
     n, d = Xr.shape
     if len(np.unique(y)) < 2:
         return _Const(y, C), 0.0, 0
-    U = pair_dirs(Xr, y, n_pairs, rng); feat, m = ggbt_feats(A, U)
-    fl = 2.0 * n * d * m                                              # projections of the training rows
-    F = feat(Xr)
+    U = pair_dirs(Xr, y, n_pairs, rng); feat, m = ggbt_feats(A, U, extra)
+    m_lin = m - (extra[1] if extra is not None else 0)
+    fl = 2.0 * n * d * m_lin + (extra[2] * n if extra is not None else 0.0)   # projections (+ code features) of the training rows
     tr = np.arange(n); va = None
     if fixed_rounds is None and n >= es_min:
         h = int(min(5000, 0.1 * n)); f = _folds(y, max(2, int(round(n / h))), rng); va = np.where(f == 0)[0]; tr = np.where(f != 0)[0]
@@ -380,25 +384,27 @@ def fit_ggbt(Xr, y, C, A, rng, seed, n_pairs=300, max_rounds=400, ff=0.12, bins=
     mcs = int(max(2, min(20, n_fit // 25)))
     params = dict(objective="multiclass", num_class=C, learning_rate=lr, num_leaves=leaves, max_bin=bins,
                   feature_fraction=ff, bagging_fraction=bag, bagging_freq=1 if bag < 1 else 0, min_data_in_leaf=mcs,
-                  min_sum_hessian_in_leaf=1e-3, num_threads=1, verbose=-1, seed=seed, deterministic=True)
+                  min_sum_hessian_in_leaf=1e-3, num_threads=1, verbose=-1, seed=seed, deterministic=True,
+                  **(dict(force_col_wise=True) if col_wise else {}))
     # post-freeze crash fix (27 Oct; PROTOCOL.md): LightGBM refuses min_data_in_leaf below the Dataset's construction value
     # (20) when features were pre-filtered; below 20 (n_fit < 500) pre-filtering is switched off.  Unchanged for n_fit >= 500.
-    dtr = lgb.Dataset(F[tr], y[tr], params=dict(max_bin=bins, verbose=-1, **({} if mcs >= 20 else dict(feature_pre_filter=False))),
-                      free_raw_data=True); dtr.construct()
-    nb = float(sum(dtr.feature_num_bin(j) for j in range(F.shape[1])))
-    fl += 16.0 * n_fit * F.shape[1]                                     # binning
+    F = feat(Xr[tr]); nF = F.shape[1]
+    dtr = lgb.Dataset(F, y[tr], params=dict(max_bin=bins, verbose=-1, **({} if mcs >= 20 else dict(feature_pre_filter=False))),
+                      free_raw_data=True); dtr.construct(); del F
+    nb = float(sum(dtr.feature_num_bin(j) for j in range(nF)))
+    fl += 16.0 * n_fit * nF                                             # binning
     cb = []
     vs = []
     if va is not None:
-        dva = lgb.Dataset(F[va], y[va], reference=dtr); vs = [dva]; es, est = _es_error(es_patience, min(es_min_rounds, rounds)); cb = [es]
+        dva = lgb.Dataset(feat(Xr[va]), y[va], reference=dtr); vs = [dva]; es, est = _es_error(es_patience, min(es_min_rounds, rounds)); cb = [es]
         params["metric"] = "multi_error"
     bst = lgb.train(params, dtr, num_boost_round=rounds, valid_sets=vs, callbacks=cb)
     trees = bst.num_trees()
-    fl += trees * lgb_tree_flops(n_fit, bag * n_fit, ff * F.shape[1], ff * nb, leaves)
+    fl += trees * lgb_tree_flops(n_fit, bag * n_fit, ff * nF, ff * nb, leaves)
     if va is not None:
         fl += trees * 20.0 * len(va)                                    # validation scores, one tree at a time
     best = int(est["it"]) if (va is not None and est["it"] > 0) else rounds
-    del F
+    bst.free_dataset(); del dtr, vs                                    # p10_codes: free the binned bank (memory)
 
     class M:
         def proba(self, Q):
@@ -439,8 +445,9 @@ def fit_stacker(Ls, y, C, lam_w=1e-3, lam_b=1e-3):
 # ---------------------------------------------------------------------------------------------------------- learner
 class Learner:
     def __init__(self, K=5, K_small=10, K_small_n=500, lin_one_n=10000, kfold_max=3000, hold_max=6000, ks=(1, 3, 9, 27), lin_C=(0.05, 1.0), gbt_trees=100,
-                 et_trees=100, dfg_share=(0.35, 0.5), dfg_dmax=256, lam_w=1e-2, members=None, name="hyb_portfolio2",
-                 gates_k=9, gates_ks=(4, 9, 16), gates_pairs=300, gates_rounds=400, gates_ff=0.12, gates_dmin=256):
+                 et_trees=100, dfg_share=(0.35, 0.5), dfg_dmax=256, lam_w=1e-2, members=None, name="p10_codes",
+                 gates_k=9, gates_ks=(4, 9, 16), gates_pairs=0, gates_rounds=400, gates_ff=0.12, gates_dmin=256,
+                 codes_bars=(2,), gates_col_wise=True):
         self.K_small, self.K_small_n, self.lin_one_n = K_small, K_small_n, lin_one_n
         self.K, self.kfold_max, self.hold_max, self.ks, self.lin_C = K, kfold_max, hold_max, tuple(ks), tuple(lin_C)
         self.gbt_trees, self.et_trees, self.dfg_share, self.dfg_dmax, self.lam_w = gbt_trees, et_trees, dfg_share, dfg_dmax, lam_w
@@ -449,6 +456,8 @@ class Learner:
         # p9_gates: the image member family 'gates' (sub-families 'gknn', 'ggbt')
         self.gates_k, self.gates_pairs, self.gates_rounds, self.gates_ff, self.gates_dmin = gates_k, gates_pairs, gates_rounds, gates_ff, gates_dmin
         self.gates_ks = tuple(gates_ks)              # pooling scales of ggbt's bank; gknn uses the scale gates_k
+        # p10_codes: bar half-lengths of ggbt's bar bank (() = none) and LightGBM's column-wise layout
+        self.codes_bars, self.gates_col_wise = tuple(codes_bars), bool(gates_col_wise)
 
     def _use(self, fam):
         return self.members is None or fam in self.members
@@ -598,9 +607,14 @@ class Learner:
         # ---- p9_gates: the image member family (only when every column is continuous and d >= 256)
         if self._use("gates") and is_image(types, d, self.gates_dmin):
             rg = np.random.default_rng([seed, 9])
-            As, fl = pool_sets(X, sorted(set(self.gates_ks) | {self.gates_k})); charge("g_pool", fl)
+            As, fl, topo = pool_sets_topo(X, sorted(set(self.gates_ks) | {self.gates_k})); charge("g_pool", fl)
             A = As[self.gates_k]                                            # gknn's pooled representation
-            Ag = np.concatenate([As[k] for k in self.gates_ks], 1)          # ggbt's pooled sums, every scale
+            Bs = []                                                         # p10_codes: bars on the recovered topology
+            for L in self.codes_bars:
+                Bm, fl = bar_sets(topo, d, L); Bs.append(Bm); charge("g_bars", fl)
+            Ag = np.concatenate([As[k] for k in self.gates_ks] + Bs, 1)     # ggbt's pooled sums, every scale (+ bars)
+            info["ggbt_bank"] = dict(pooled=int(sum(As[k].shape[1] for k in self.gates_ks)), bars=int(sum(b.shape[1] for b in Bs)),
+                                     pairs=int(self.gates_pairs))
             enc_pool = lambda Q, A=A: np.asarray(Q, np.float32) @ A
             if self._use("gknn"):
                 cost = knn_cost(len(H), n, A.shape[1]) + 2.0 * n * d * A.shape[1]
@@ -619,7 +633,8 @@ class Learner:
                 if spent[0] + cost <= 0.9 * budget:
                     P = np.zeros((len(H), C)); used = []
                     for tr, te in splits:
-                        mg, fl, r = fit_ggbt(X[tr], y[tr], C, Ag, rg, seed, self.gates_pairs, self.gates_rounds, self.gates_ff)
+                        mg, fl, r = fit_ggbt(X[tr], y[tr], C, Ag, rg, seed, self.gates_pairs, self.gates_rounds, self.gates_ff,
+                                             col_wise=self.gates_col_wise)
                         # + its out-of-fold predictions: projections, and ~10 FLOPs per tree per row for the traversal
                         charge("ggbt", fl + 2.0 * len(te) * d * m_g + 10.0 * r * C * len(te)); P[pos[te]] = mg.proba(X[te]); used.append(r)
                     oof["ggbt"] = _logp(P); info["ggbt_rounds"] = used
@@ -650,7 +665,8 @@ class Learner:
                 m, fl = f[2](f[3], y, share, f[1]); charge(nm, fl)
                 finals.append((w[i], lambda A, m=m: m.proba(enc_pm(A))))
             elif isinstance(f, tuple) and f[0] == "ggbt":                  # p9_gates: refit of ggbt on all n
-                m, fl, _ = fit_ggbt(X, y, C, Ag, rg, seed, self.gates_pairs, self.gates_rounds, self.gates_ff, fixed_rounds=f[1])
+                m, fl, _ = fit_ggbt(X, y, C, Ag, rg, seed, self.gates_pairs, self.gates_rounds, self.gates_ff, fixed_rounds=f[1],
+                                    col_wise=self.gates_col_wise)
                 charge(nm, fl); finals.append((w[i], lambda Q, m=m: m.proba(Q)))
             elif isinstance(f, tuple) and f[0] == "done":
                 m, enc = f[1], f[2]; finals.append((w[i], lambda A, m=m, enc=enc: m.proba(enc(A))))

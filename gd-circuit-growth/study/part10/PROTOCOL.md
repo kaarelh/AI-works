@@ -65,3 +65,24 @@ superiority.
 
 **Paper:** about the best learner: what it is, how it does against baselines on every suite and dataset of the study,
 and the interpretability results.
+
+## Decisions (recorded as they are made)
+
+**(T) toy component — adopted** (27 Oct, 21:35 UTC; computed by `compare_part10.py --dev` from the result files, before
+any held-out run of a Part 10 learner). `p10_sum` (DFG v1.3: weighted sum blocks u = t + a·τ, forced blocks at n ≥ 48,
+a beam search at n ≤ 128; `p10_sum/learner.py` md5 `5ee995add8601b90ee8b1d5612fede87`, `p10_sum/dfg13.py` md5
+`69cabe5c50345cb24079198ed52b562f`, frozen 19:44 UTC) against v2 on `designed` + `dlsymdev` + `dlfamdev` (41 targets,
+inputs permuted, 3 seeds): mean log2 n* ratio **−0.066** over the 40 targets both learn (< −0.05), largest per-target
+increase **+0.26** (fd_06; ≤ 0.5). v2's dev fits are p9_sum's on `designed` and `dlsymdev` (identical code path on toy
+inputs; checked: 110 of 110 seed-0 cells on `designed` equal) and hyb_portfolio2's on `dlfamdev`.
+
+**(I) image component — pending** `p10_codes` (builder I2), which started only when the toy builder finished (the
+workflow runs two agents at a time). `p10_hier` (I1; md5 `1da21bf797ca3f247103e31428d74fe5`) qualifies: mean
+log2(err / v2 err) over the 8 dev cells **−0.071** against v2's own errors (the builder's −0.068 used Part 9's
+p9_gates-dev errors for qd_dev and fashion_mnist; v2 itself was run on those 4 cells for Part 10), qd_a n = 60000 error
+0.1108 (≤ 0.1257), 924 CPU s (≤ 2636), FLOP fraction 0.44.
+
+**Scheduling.** v3's behaviour on toy inputs is fixed by (T) whatever (I) decides (the image members run only on images,
+and both image candidates leave every non-image path bit-identical to v2), so v3's held-out toy evaluation starts now as
+`p10_sum` on `dlheld7`; its results are not read before v3 is frozen, and v3 ≡ p10_sum on toy inputs is checked at
+assembly.
