@@ -47,7 +47,8 @@ def toy_part():
         L += [f"### `{suite}` ({role})", "", "| target | " + " | ".join(h for _, h in have) + " | " + " | ".join(refc) + " |",
               "|---|" + "---|" * (len(have) + len(refc))]
         for fn in NR["nets"]:
-            L.append(f"| {fn} | " + " | ".join(f(N[c].get(fn, np.nan)) for c, _ in have) + " | " + " | ".join(f(NR[k].get(fn, np.nan)) for k in refc) + " |")
+            L.append(f"| {fn} | " + " | ".join(f(N[c][fn]) if fn in N[c] else "–" for c, _ in have) + " | "
+                     + " | ".join(f(NR[k][fn]) if fn in NR[k] else "–" for k in refc) + " |")      # "–": not run
         L += ["", "| learner | reference | targets | mean log2 n* ratio | clearly better | clearly worse | learner never | sum-structured targets: n / mean / better / worse |",
               "|---|---|---|---|---|---|---|---|"]
         for c, h in have:

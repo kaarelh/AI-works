@@ -176,11 +176,115 @@ def app_part8_real():
     write("app_part8_real.tex", out)
 
 
+# ---- Part 9 ------------------------------------------------------------------------------------------------------------
+sys.path.insert(0, os.path.join(STUDY, "part9"))
+import compare_part9 as C9                                    # noqa: E402  (functions only)
+C9.V2 = "hyb_portfolio2"                                      # (compare_part9 reads its V2 from sys.argv)
+NETS9 = ("nets", "nets_wd", "nets_cewd", "nets_cewd0.3", "nets_cewd1.0")
+P9_TOY = [("dlheld6", "held out, blind (Q1)"), ("dlheld5", "held out, inside S's class"),
+          ("dlheld4", "held out, definitions seen by S"), ("dlsymdev", "development"), ("designed", "development")]
+
+
+def l2fmt(x):
+    return f"${x:+.2f}$" if np.isfinite(x) else ("both never" if np.isnan(x) else (r"$+\infty$" if x > 0 else r"$-\infty$"))
+
+
+def tab_p9_toy(suite, fname):
+    NR = CH.toy_nstars(suite)
+    V2, V1, L, G = (toy_n(k, suite) for k in ("hyb_portfolio2-perm", "hyb_portfolio-perm", "lin", "hgb"))
+    nets = [k for k in NETS9 if k in NR]
+    hdr = {"nets": r"\texttt{nets}", "nets_wd": r"\hd{\texttt{nets}\\\texttt{\_wd}}", "nets_cewd": r"\hd{\texttt{nets}\\\texttt{\_cewd}}",
+           "nets_cewd0.3": r"\hd{\texttt{cewd}\\0.3}", "nets_cewd1.0": r"\hd{\texttt{cewd}\\1.0}"}
+    out = [r"\begin{tabular}{l" + "r" * (4 + len(nets) + 3) + "}", r"\toprule",
+           r"target & v2 & v1 & \texttt{lin} & \texttt{hgb} & " + " & ".join(hdr[k] for k in nets)
+           + r" & \hd{\texttt{nets}\\\texttt{\_best}} & \hd{$\log_2$ v2 /\\\texttt{nets\_best}} & \hd{$\log_2$\\v2 / v1}\\", r"\midrule"]
+    order = [fn for fn in NR["nets"] if fn not in C9.NONSUM] + [fn for fn in NR["nets"] if fn in C9.NONSUM]
+    for i, fn in enumerate(order):
+        if fn in C9.NONSUM and (i == 0 or order[i - 1] not in C9.NONSUM):
+            out.append(r"\midrule")                                       # the controls below
+        nb = NR["nets_best"][fn]
+        out.append(f"{tt(fn)}{' (control)' if fn in C9.NONSUM else ''} & {f_n(V2.get(fn, np.nan))} & {f_n(V1.get(fn, np.nan))} & "
+                   f"{f_n(L.get(fn, np.nan))} & {f_n(G.get(fn, np.nan))} & "
+                   + " & ".join(f_n(NR[k][fn]) if fn in NR[k] else "---" for k in nets)
+                   + f" & {f_n(nb)} & {l2fmt(CH.l2r(V2.get(fn, np.nan), nb))} & {l2fmt(CH.l2r(V2.get(fn, np.nan), V1.get(fn, np.nan)))}" + r"\\")
+    out += [r"\bottomrule", r"\end{tabular}"]
+    write(fname, out)
+
+
+def tab_p9_toy_summary():
+    out = [r"\begin{tabular}{llcccc}", r"\toprule",
+           r"suite & status & \hd{v2 vs \texttt{nets\_best}\\all targets} & \hd{v2 vs \texttt{nets\_best}\\sum-structured} & "
+           r"\hd{v1 vs \texttt{nets\_best}\\sum-structured} & \hd{v2 vs v1\\sum-structured}\\", r"\midrule"]
+    sub = lambda A: {fn: v for fn, v in A.items() if fn not in C9.NONSUM}
+    cell = lambda A, R: (lambda t: f"${t['mean']:+.2f}$ ({t['better']}/{t['worse']})")(CH.toy_summary(A, R))
+    for suite, status in P9_TOY:
+        NR = CH.toy_nstars(suite); V2 = toy_n("hyb_portfolio2-perm", suite) or toy_n("p9_sum-perm", suite)
+        V1 = toy_n("hyb_portfolio-perm", suite)
+        out.append(f"\\texttt{{{suite}}} & {status} & {cell(V2, NR['nets_best'])} & {cell(sub(V2), NR['nets_best'])} & "
+                   f"{cell(sub(V1), NR['nets_best'])} & {cell(sub(V2), V1)}" + r"\\")
+    out += [r"\bottomrule", r"\end{tabular}"]
+    write("tab_p9_toy_summary.tex", out)
+
+
+P9_IMG_COLS = [("hyb_portfolio2", "v2"), ("hyb_portfolio", "v1"), ("hgb", r"\texttt{hgb}"), ("mlp_strong", r"\hd{\texttt{mlp}\\\texttt{\_strong}}"),
+               ("mlp_wide", r"\hd{\texttt{mlp}\\\texttt{\_wide}}"), ("mlp_wide1", r"\hd{\texttt{mlp}\\\texttt{\_wide1}}"),
+               ("mlp_xl", r"\hd{\texttt{mlp}\\\texttt{\_xl}}"), ("mlp_best", r"\hd{\texttt{mlp}\\\texttt{\_best}}"),
+               ("mlp_best+", r"\hd{\texttt{mlp}\\\texttt{\_best+}}"), ("mlp_pool", r"\hd{\texttt{mlp}\\\texttt{\_pool}}"), ("cnn", r"\texttt{cnn}")]
+
+
+def tab_p9_images():
+    out = [r"\begin{tabular}{ll" + "r" * len(P9_IMG_COLS) + "}", r"\toprule",
+           "set & $n$ & " + " & ".join(h for _, h in P9_IMG_COLS) + r"\\", r"\midrule"]
+    for ds in C9.IMG_HELD:
+        R = {k: C9.ref(k, ds) for k, _ in P9_IMG_COLS}
+        for n in DATA.grid(DATA.load(ds)):
+            def g(k):
+                r = R[k]
+                if r is None or n not in r["ns"][:len(r["err"])]:
+                    return "---"
+                v = np.nanmean(np.array(r["err"][r["ns"].index(n)], float))
+                return "---" if not np.isfinite(v) else f"{100 * v:.1f}"
+            vals = [g(k) for k, _ in P9_IMG_COLS]
+            ranked = [float(v) for (k, _), v in zip(P9_IMG_COLS, vals) if v != "---" and k not in ("cnn", "mlp_pool", "mlp_best", "mlp_best+")]
+            best = min(ranked) if ranked else None
+            cells = [r"\textbf{" + v + "}" if v != "---" and best is not None and float(v) == best and k not in ("cnn", "mlp_pool", "mlp_best", "mlp_best+")
+                     else v for (k, _), v in zip(P9_IMG_COLS, vals)]
+            out.append((r"\texttt{" + ds.replace("_", r"\_") + "}" if n == 100 else "") + f" & {n} & " + " & ".join(cells) + r"\\")
+        if ds != C9.IMG_HELD[-1]:
+            out.append(r"\midrule")
+    out += [r"\bottomrule", r"\end{tabular}"]
+    write("tab_p9_images.tex", out)
+
+
+def tab_p9_q2():
+    refs = [("mlp_strong", r"\texttt{mlp\_strong} (pre-registered)"), ("mlp_best", r"\texttt{mlp\_best} (pre-registered)"),
+            ("mlp_wide", r"\texttt{mlp\_wide}"), ("mlp_wide1", r"\texttt{mlp\_wide1}"), ("mlp_xl", r"\texttt{mlp\_xl} (CPU-matched)"),
+            ("mlp_best+", r"\texttt{mlp\_best+}"), ("mlp_pool", r"\texttt{mlp\_pool} (control)"), ("cnn", r"\texttt{cnn} (context; uses the layout)")]
+    out = [r"\begin{tabular}{lcccc}", r"\toprule",
+           r"reference & \hd{v2, $n\ge10000$: cells\\better / tie / worse} & \hd{v2, $n\ge10000$\\mean $\log_2$} & \hd{v2, $n\le3000$\\mean $\log_2$} & \hd{v1, $n\ge10000$\\mean $\log_2$}\\", r"\midrule"]
+    summ = lambda L, k, lo, hi: [c for ds in C9.IMG_HELD for c in C9.img_cells(L, ds, k, lo, hi)]
+    m = lambda C: f"${np.mean([c['lr'] for c in C]):+.2f}$" if C else "---"
+    for k, lab in refs:
+        A = summ(C9.V2, k, 10000, 10 ** 9); B = summ(C9.V2, k, 0, 3000); V = summ("hyb_portfolio", k, 10000, 10 ** 9)
+        v = [c["v"] for c in A]
+        out.append(f"{lab} & {len(A)}: {v.count('better')} / {v.count('tie')} / {v.count('worse')} & {m(A)} & {m(B)} & {m(V)}" + r"\\")
+    out += [r"\bottomrule", r"\end{tabular}"]
+    write("tab_p9_q2.tex", out)
+
+
+def p9_tables():
+    tab_p9_toy("dlheld6", "tab_p9_dlheld6.tex"); tab_p9_toy("dlheld5", "app_p9_dlheld5.tex"); tab_p9_toy("dlheld4", "app_p9_dlheld4.tex")
+    tab_p9_toy_summary(); tab_p9_images(); tab_p9_q2()
+
+
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
+    if sys.argv[1:] == ["p9"]:
+        p9_tables(); sys.exit(0)
     tab_dlheld3(); tab_toy_suites()
     app_toy("designed", [("DFG v1", "dfg-c1.0__designed")], "app_toy_designed.tex")
     app_toy("random", [("DFG v1", "dfg-c1.0__random")], "app_toy_random.tex", with_def=False)
     app_toy("dlheld", [("DFG v1$^-$", "dfg-c1.0-Khi4__dlheld"), ("DFG v1.1", "dfg-v1.1__dlheld")], "app_toy_dlheld.tex")
     app_toy("dlheld2", [("DFG v1.1", "dfg-v1.1-perm__dlheld2")], "app_toy_dlheld2.tex")
     app_part7(); app_part8_real()
+    p9_tables()
