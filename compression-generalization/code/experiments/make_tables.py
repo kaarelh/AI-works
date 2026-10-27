@@ -135,6 +135,22 @@ def t3():
                   r"of training points with $\pi_g=1$. `Noise $\sigma$': $f$ trained with Gaussian weight noise of "
                   r"$\sigma$ times each tensor's initial RMS. Chance level is 0.9.}\label{tab:t3}", r"\end{table}"]
         write("t3.tex", "\n".join(lines) + "\n")
+    rows = load(os.path.join(RES, "mnist", "t3_sparse.jsonl"))
+    if rows:
+        lines = [r"\begin{table}[t]", r"\centering\small", r"\begin{tabular}{l r r r r r r r}", r"\toprule",
+                 r"data & $H$ & kept coefficients & test err.\ $f$ & bits & certified & bound on $f$ & 32-bit Occam \\",
+                 r"\midrule"]
+        for r in sorted(rows, key=lambda r: (r["data"], r["widths"][1], -r["nonzero_fraction"])):
+            P = r["params"]
+            occ32 = occam_bound(int(round(r["train_err_f"] * 60000)), 60000, 32.0 * P + 64, 0.05)
+            lines.append(f"{r['data']} & {r['widths'][1]} & {100 * r['nonzero_fraction']:.1f}\\% & {r['test_err_f']:.4f} & "
+                         f"{r['bits'] + 4:.0f} & {r['cert_frac']:.3f} & {fmt(t3_bound(r))} & {fmt(occ32, 2)}" + r" \\")
+        lines += [r"\bottomrule", r"\end{tabular}",
+                  r"\caption{As \cref{tab:t3}, for networks whose first-layer update is exactly sparse in the DCT basis "
+                  r"(trained, pruned to the stated fraction of coefficients, fine-tuned with the support fixed). The "
+                  r"support is part of the description; only nonzero coefficients are dithered.}\label{tab:t3sparse}",
+                  r"\end{table}"]
+        write("t3_sparse.tex", "\n".join(lines) + "\n")
     rows = load(os.path.join(RES, "boolean", "t3.jsonl"))
     if rows:
         lines = [r"\begin{table}[t]", r"\centering\small", r"\begin{tabular}{l r r r r r r r r}", r"\toprule",

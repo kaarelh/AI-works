@@ -96,29 +96,29 @@ H = args.hidden
 eta = bad_event_prob(H, 10, args.t1, args.t2)
 
 
-def make(gs, pb, pu, seed):
+def make(gs, pb, pu, vm, seed):
     band_exp = np.round(4 * np.log2(gs * 0.01 * (bandrms / bandrms[0]) ** (-pb))).astype(int)
     unit_exp = np.round(4 * np.log2((alpha / np.median(alpha)) ** (-pu))).astype(int)
-    e_small = int(round(4 * math.log2(0.002 * gs)))
+    e_small = int(round(4 * math.log2(0.002 * gs * vm)))   # steps of the biases and the output layer
     ref = init if args.code_ref == "init" else [(0 * W, 0 * b) for W, b in init]
     return DitheredNet(F, ref, B, ids, unit_exp, band_exp, e_small, e_small, -40, seed=seed, A=Acoef)
 
 
 best = None
 sel_seed = secrets.randbits(63)
-for gs, pb, pu in itertools.product([0.25, 0.5, 1, 2, 4, 8], [0.5, 0.75, 1.0], [0.0, 0.5, 1.0]):
-    g = make(gs, pb, pu, sel_seed)
+for gs, pb, pu, vm in itertools.product([0.25, 0.5, 1, 2, 4, 8], [0.5, 0.75, 1.0], [0.0, 0.5, 1.0], [1, 4, 16]):
+    g = make(gs, pb, pu, vm, sel_seed)
     cert, _ = certificate_v2(g, Xtr[sub], ytr[sub], t1=args.t1, t2=args.t2)
     bits = g.description().bits
     kfail = int(round((~cert).mean() * m))
     est = occam_bound(kfail, m, bits, args.delta) + eta / args.delta_prime
     if best is None or est < best[0]:
-        best = (est, gs, pb, pu)
-    print(f"  gs={gs} pb={pb} pu={pu}: bits {bits:.0f} cert {cert.mean():.4f} est {est:.4f}", flush=True)
+        best = (est, gs, pb, pu, vm)
+    print(f"  gs={gs} pb={pb} pu={pu} vm={vm}: bits {bits:.0f} cert {cert.mean():.4f} est {est:.4f}", flush=True)
 
-est, gs, pb, pu = best
+est, gs, pb, pu, vm = best
 final_seed = secrets.randbits(63)
-g = make(gs, pb, pu, final_seed)
+g = make(gs, pb, pu, vm, final_seed)
 cert, slack = certificate_v2(g, Xtr, ytr, t1=args.t1, t2=args.t2)
 desc = g.description()
 kfail = int((~cert).sum())
@@ -128,7 +128,7 @@ res = {
     "lam": args.lam, "density": args.density, "ft_epochs": args.ft_epochs, "nonzero_fraction": float(np.mean(Acoef != 0)),
     "weight_noise": args.weight_noise, "code_ref": args.code_ref, "init": args.init, "params": f.num_params(), "train_err_f": k_f / m, "test_err_f": test_f,
     "basis": args.basis, "t1": args.t1, "t2": args.t2, "delta": args.delta, "delta_prime": args.delta_prime,
-    "eta": eta, "chosen": {"gs": gs, "pb": pb, "pu": pu}, "dither_seed": str(final_seed),
+    "eta": eta, "chosen": {"gs": gs, "pb": pb, "pu": pu, "vm": vm}, "search": "v2", "dither_seed": str(final_seed),
     "bits": desc.bits, "code": desc.summary(), "cert_frac": float(cert.mean()),
     "test_err_g": float(np.mean(np_predict(g.weights(), Xte) != yte)),
     "T3_bound_f": min(1.0, bound), "secs": round(time.time() - t0, 1),

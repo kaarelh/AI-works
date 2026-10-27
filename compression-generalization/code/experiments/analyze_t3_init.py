@@ -65,30 +65,41 @@ def t3():
                        f"{r['t3_bits']:.0f} | {r['cert_frac']:.4f} | {t3_bound(r):.4f} | "
                        f"{boolean_bound(dict(r['T2known'], m=r['m'])):.4f} | {r['T2known_bits']:.0f} |")
     open(os.path.join(RES, "summary_t3.md"), "w").write("\n".join(out) + "\n")
-    # figure: bound vs hidden width, standard and noise-trained, MNIST and Fashion
-    sel = [r for r in rows if r.get("init", "random") == "random" and r.get("code_ref", "init") == "init" and r["basis"] == "dct"]
+    # figure: bound vs hidden width (standard training, DCT code), plus sparse-update networks
+    sel = [r for r in rows if r.get("init", "random") == "random" and r.get("code_ref", "init") == "init"
+           and r["basis"] == "dct" and r.get("weight_noise", 0) == 0]
+    sp = load(os.path.join(RES, "mnist", "t3_sparse.jsonl"))
     if sel:
-        datas = sorted({r["data"] for r in sel})
-        fig, axes = plt.subplots(1, len(datas), figsize=(3.6 * len(datas), 2.9), squeeze=False, sharey=True)
+        datas = sorted({r["data"] for r in sel}, key=lambda d: d != "mnist")
+        fig, axes = plt.subplots(1, len(datas), figsize=(3.8 * len(datas), 3.0), squeeze=False, sharey=True)
         for ax, d in zip(axes[0], datas):
-            for j, wn in enumerate(sorted({r.get("weight_noise", 0) for r in sel if r["data"] == d})):
-                rr = sorted([r for r in sel if r["data"] == d and r.get("weight_noise", 0) == wn], key=lambda r: r["widths"][1])
-                H = [r["widths"][1] for r in rr]
-                lab = "standard training" if wn == 0 else f"trained with weight noise {wn:g}"
-                ax.plot(H, [t3_bound(r) for r in rr], color=SERIES[1 + 2 * j], lw=2, marker="o", ms=4,
-                        label=f"T3 bound on f, {lab}")
-                ax.plot(H, [r["test_err_f"] for r in rr], color=SERIES[0 + 3 * j], lw=1.5, ls="--", marker="s", ms=3,
-                        label=f"test error of f, {lab}")
+            rr = sorted([r for r in sel if r["data"] == d], key=lambda r: r["widths"][1])
+            H = [r["widths"][1] for r in rr]
+            ax.plot(H, [t3_bound(r) for r in rr], color=SERIES[1], lw=2, marker="o", ms=5,
+                    label="bound on f from training data only (dense update)")
+            ax.plot(H, [r["test_err_f"] for r in rr], color=SERIES[0], lw=2, ls="--", marker="s", ms=4,
+                    label="test error of f (dense update)")
+            ss = [r for r in sp if r["data"] == d]
+            if ss:
+                ax.scatter([r["widths"][1] for r in ss], [t3_bound(r) for r in ss], color=SERIES[2], marker="^", s=40,
+                           zorder=3, label="bound on f, sparse update (0.1-3% of coefficients)")
+                ax.scatter([r["widths"][1] for r in ss], [r["test_err_f"] for r in ss], facecolors="none",
+                           edgecolors=SERIES[2], marker="^", s=40, zorder=3, label="test error of f, sparse update")
             ax.axhline(0.9, color=INK2, lw=1, ls=":")
+            ax.text(H[0], 0.92, "chance", fontsize=7, color=INK2)
             ax.set_xscale("log", base=2)
+            ticks = sorted(set(H) | {r["widths"][1] for r in ss})
+            ax.set_xticks(ticks)
+            ax.set_xticklabels([str(t) for t in ticks])
+            ax.minorticks_off()
             ax.set_ylim(0, 1.02)
-            ax.set_title(d, fontsize=9)
-            ax.set_xlabel("hidden units", fontsize=8, color=INK2)
+            ax.set_title({"mnist": "MNIST", "fashion": "Fashion-MNIST"}.get(d, d), fontsize=9)
+            ax.set_xlabel("hidden units H", fontsize=8, color=INK2)
             style(ax)
         axes[0, 0].set_ylabel("error", fontsize=8, color=INK2)
         h, l = axes[0, 0].get_legend_handles_labels()
         fig.legend(h, l, loc="lower center", ncol=2, fontsize=7, frameon=False)
-        fig.tight_layout(rect=(0, 0.16, 1, 1))
+        fig.tight_layout(rect=(0, 0.17, 1, 1))
         fig.savefig(os.path.join(FIG, "t3_mnist.png"), dpi=170)
         fig.savefig(os.path.join(FIG, "t3_mnist.pdf"))
         plt.close(fig)

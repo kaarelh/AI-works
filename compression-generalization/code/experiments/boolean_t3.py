@@ -64,25 +64,25 @@ eta = bad_event_prob(H, 2, args.t1, args.t2)
 Xtr64 = Xtr.astype(np.float64)
 
 
-def make(gs, pu, seed):
+def make(gs, pu, vm, seed):
     unit_exp = np.round(4 * np.log2(gs * 0.01 * (alpha / np.median(alpha)) ** (-pu))).astype(int)
-    e_small = int(round(4 * math.log2(0.002 * gs)))
+    e_small = int(round(4 * math.log2(0.002 * gs * vm)))
     return DitheredNet(F, init, B, ids, unit_exp, np.zeros(1, dtype=int), e_small, e_small, -40, seed=seed)
 
 
 sel = secrets.randbits(63)
 sub = np.random.default_rng(1).choice(m, min(m, 6000), replace=False)
 best = None
-for gs, pu in itertools.product([0.25, 0.5, 1, 2, 4, 8, 16, 32], [0.0, 0.5, 1.0]):
-    g = make(gs, pu, sel)
+for gs, pu, vm in itertools.product([0.25, 0.5, 1, 2, 4, 8, 16, 32], [0.0, 0.5, 1.0], [1, 4, 16]):
+    g = make(gs, pu, vm, sel)
     cert, _ = certificate_v2(g, Xtr64[sub], ytr[sub], t1=args.t1, t2=args.t2)
     bits = g.description().bits
     est = occam_bound(int(round((~cert).mean() * m)), m, bits, args.delta) + eta / args.delta_prime
     if best is None or est < best[0]:
-        best = (est, gs, pu)
-_, gs, pu = best
+        best = (est, gs, pu, vm)
+_, gs, pu, vm = best
 fin = secrets.randbits(63)
-g = make(gs, pu, fin)
+g = make(gs, pu, vm, fin)
 cert, _ = certificate_v2(g, Xtr64, ytr, t1=args.t1, t2=args.t2)
 desc = g.description()
 t3 = min(1.0, occam_bound(int((~cert).sum()), m, desc.bits, args.delta) + eta / args.delta_prime)
@@ -96,7 +96,7 @@ fb = final_bound(fp, bestd["g"], n, Xtr, ytr, rng=np.random.default_rng(cert_see
 
 res = {"task": args.task, "n": n, "m": m, "width": H, "seed": args.seed, "weight_noise": args.weight_noise,
        "params": f.num_params(), "train": tr, "train_err_f": k_f / m, "test_err_f": test_err,
-       "t1": args.t1, "t2": args.t2, "eta": eta, "chosen": {"gs": gs, "pu": pu}, "dither_seed": str(fin),
+       "t1": args.t1, "t2": args.t2, "eta": eta, "chosen": {"gs": gs, "pu": pu, "vm": vm}, "dither_seed": str(fin),
        "t3_bits": desc.bits, "t3_code": desc.summary(), "cert_frac": float(cert.mean()), "T3_bound_f_anyD": t3,
        "T2known_bound_f": fb["bound_f"], "T2known_bits": fb["bits"], "T2known_label": bestd["label"],
        "T2known": fb, "m_train": m,
