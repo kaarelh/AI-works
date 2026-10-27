@@ -1,7 +1,8 @@
 """hyb_portfolio2 (Part 9): the Part 8 portfolio with (i) its DFG member switched to DFG v1.2 = DFG v1.1 + sum-feature
 blocks (part9/p9_sum/dfg12.py, md5 4ff2e0c9c324f0f1be93f604734b4a69) and (ii) the image member of p9_gates
 (part9/p9_gates/learner.py, md5 2728ac2b80597d9e559dedca6a70cb7c), chosen by the integration rule of PROTOCOL.md.
-This file is p9_gates/learner.py with two changes: the DFG module path and the default name.
+This file is p9_gates/learner.py with two changes: the DFG module path and the default name; plus one post-freeze
+crash fix in fit_ggbt (feature_pre_filter off when min_data_in_leaf < 20, i.e. member training sets below 500 points).
 
 p9_gates (Part 9, builder I1): the Part 8 portfolio hyb_portfolio, unchanged, plus one discrete, pixel-permutation-
 invariant IMAGE member family, 'gates', active only when every input column is continuous and d >= 256 (images).
@@ -315,7 +316,10 @@ def fit_ggbt(Xr, y, C, A, rng, seed, n_pairs=300, max_rounds=400, ff=0.12, bins=
     params = dict(objective="multiclass", num_class=C, learning_rate=lr, num_leaves=leaves, max_bin=bins,
                   feature_fraction=ff, bagging_fraction=bag, bagging_freq=1 if bag < 1 else 0, min_data_in_leaf=mcs,
                   min_sum_hessian_in_leaf=1e-3, num_threads=1, verbose=-1, seed=seed, deterministic=True)
-    dtr = lgb.Dataset(F[tr], y[tr], params=dict(max_bin=bins, verbose=-1), free_raw_data=True); dtr.construct()
+    # post-freeze crash fix (27 Oct; PROTOCOL.md): LightGBM refuses min_data_in_leaf below the Dataset's construction value
+    # (20) when features were pre-filtered; below 20 (n_fit < 500) pre-filtering is switched off.  Unchanged for n_fit >= 500.
+    dtr = lgb.Dataset(F[tr], y[tr], params=dict(max_bin=bins, verbose=-1, **({} if mcs >= 20 else dict(feature_pre_filter=False))),
+                      free_raw_data=True); dtr.construct()
     nb = float(sum(dtr.feature_num_bin(j) for j in range(F.shape[1])))
     fl += 16.0 * n_fit * F.shape[1]                                     # binning
     cb = []
