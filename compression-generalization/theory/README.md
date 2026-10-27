@@ -50,18 +50,18 @@ Lemma 1 is the case $K_\sigma=\{g_\sigma\}$, $\pi_\sigma(x,y)=\mathbf 1[g_\sigma
 
 ### Dithered compression
 
-Let $\xi$ be **public** randomness drawn independently of $S$ and of the test point (in the code: fresh OS entropy, drawn after training and recorded). An encoder maps $(f,\xi)$ to a description $\sigma(f,\xi)$, and each $(\sigma,\xi)$ defines a certificate $\pi_{\sigma,\xi}$.
+Let $\xi$ be **public** randomness drawn independently of $S$, of the test point, and of any auxiliary randomness $\zeta$ used to tune the encoder (in the code: generated from fresh OS entropy after training and tuning, and recorded; the PRNG is modelled as truly random). An encoder maps $(f,\xi)$ to a description $\sigma=\sigma_{S,\zeta}(f,\xi)$ (it may depend on $S$ and $\zeta$ arbitrarily, e.g. through step sizes), and each $(\sigma,\xi)$ defines a certificate $\pi_{\sigma,\xi}$.
 
-**Theorem 5 (dithered transfer).** Suppose that for every network $f$ and every $(x,y)$ there is an event $\mathrm{Bad}_{x,y}(f,\xi)$ with $\Pr_\xi[\mathrm{Bad}_{x,y}]\le\eta$ such that
+**Theorem 5 (dithered transfer).** Suppose that for every fixed encoder (every value of $(S,\zeta)$), every network $f$ and every $(x,y)$ there is an event $\mathrm{Bad}_{x,y}(f,\xi)$ with $\Pr_\xi[\mathrm{Bad}_{x,y}]\le\eta$ such that
 $$\pi_{\sigma(f,\xi),\xi}(x,y)=1\ \text{and not}\ \mathrm{Bad}_{x,y}(f,\xi)\ \Longrightarrow\ f(x)=y.$$
 Then with probability $\ge1-\delta-\delta'$ over $(S,\xi)$,
 $$\mathrm{err}(f)\le\overline{\mathrm{Bin}}\big(\#\{i:\pi(x_i,y_i)=0\},m,\delta2^{-L(\sigma)}\big)+\eta/\delta'.$$
 
-*Proof.* $\mathrm{err}(f)\le\Pr_D[\pi=0]+\Pr_D[\pi=1,f(x)\ne y]\le\Pr_D[\pi=0]+\Pr_D[\mathrm{Bad}_{x,y}]$. Conditional on $\xi$, $S$ is still i.i.d. from $D$ and $\{\pi_{\sigma,\xi}\}_\sigma$ is a fixed family, so Lemma 1 bounds the first term for all $\sigma$ simultaneously with probability $\ge1-\delta$. For the second, conditional on $S$ (so $f$ is fixed), Fubini gives $\mathbb E_\xi\Pr_D[\mathrm{Bad}]=\mathbb E_D\Pr_\xi[\mathrm{Bad}]\le\eta$ and Markov gives $\Pr_\xi[\Pr_D[\mathrm{Bad}]>\eta/\delta']\le\delta'$. $\square$
+*Proof.* $\mathrm{err}(f)\le\Pr_D[\pi=0]+\Pr_D[\pi=1,f(x)\ne y]\le\Pr_D[\pi=0]+\Pr_D[\mathrm{Bad}_{x,y}]$. Conditional on $\xi$, $S$ is still i.i.d. from $D$ and $\{\pi_{\sigma,\xi}\}_\sigma$ is a fixed family, so Lemma 1 bounds the first term for all $\sigma$ simultaneously with probability $\ge1-\delta$. For the second, conditional on $(S,\zeta)$ (so $f$ and the encoder are fixed), Fubini gives $\mathbb E_\xi\Pr_D[\mathrm{Bad}]=\mathbb E_D\Pr_\xi[\mathrm{Bad}]\le\eta$ and Markov gives $\Pr_\xi[\Pr_D[\mathrm{Bad}]>\eta/\delta']\le\delta'$. $\square$
 
-If the encoder's hyperparameters (step sizes) are chosen after looking at $\xi$, the Markov step needs a union bound over them; the experiments instead choose them with one dither and certify with a fresh one.
+Hyperparameters chosen by looking at $\xi$ itself would need a union bound in the Markov step; the experiments choose them with an independent selection dither $\zeta$ and certify with a fresh $\xi$. Hyperparameters that change the certificate (steps, basis, $t_1,t_2$) must be in $\sigma$ or fixed in advance; the code charges 2 bits for the choice of $(t_1,t_2)$ among four pairs and 2 bits for the initialization scheme and reference.
 
-**Lemma 6 (subtractive dither).** For $a\in\mathbb R$, $s>0$ and $U\sim\mathrm{Unif}[-\frac12,\frac12]$, the error $s(\mathrm{round}(a/s+U)-U)-a$ is uniform on $[-\frac s2,\frac s2]$ whatever $a$ is. Applied coordinatewise with independent $U$'s, the errors are i.i.d. uniform and independent of $f$.
+**Lemma 6 (subtractive dither).** For $a\in\mathbb R$, $s>0$ and $U\sim\mathrm{Unif}[-\frac12,\frac12]$, the error $s(\mathrm{round}(a/s+U)-U)-a$ is uniform on $[-\frac s2,\frac s2]$ whatever $a$ is. Applied coordinatewise with independent $U$'s, the errors are independent, uniform on $[-\frac{s_k}2,\frac{s_k}2]$ for a coordinate with step $s_k$, and their joint law does not depend on $f$.
 
 *Proof.* $a/s+U \bmod 1$ is uniform on $[0,1)$ for every $a$, and $\mathrm{round}(V)-V$ is a measure-preserving function of $V\bmod1$ onto $(-\frac12,\frac12]$. $\square$
 
@@ -94,7 +94,7 @@ and $\Pr[|\tilde F-\mathbb E\tilde F|\ge t_2\sqrt{2P}]\le2e^{-t_2^2}$.
 
 (f) Let $\mathrm{Bad}=G^c\cup\bigcup_{c\ne y}\{|\tilde F_c-\mathbb E\tilde F_c|\ge t_2\sqrt{2P_c}\}$; $\Pr[\mathrm{Bad}]\le\eta$. Off $\mathrm{Bad}$, $|F_c|<t_2\sqrt{2\hat P_c}+\hat B_c$ for every $c$, so $\pi_g(x,y)=1$ forces $z_y-z_c>0$ for all $c\ne y$, i.e. $f(x)=y$. $\square$
 
-The certificate depends on $(K,\text{steps},\xi)$ and $(x,y)$ only, as Theorem 5 requires. With $H\le100$, $C=10$, $t_1=6.5$, $t_2=4.5$: $\eta\le1.7\times10^{-7}$, and $\eta/\delta'\le2\times10^{-5}$ at $\delta'=0.01$. `tests/test_dither.py` checks the concentration claim by Monte Carlo at small $t_1,t_2$ (no violations).
+The certificate depends on $(K,\text{steps},\xi)$ and $(x,y)$ only, as Theorem 5 requires. The experiments use $t_1=5.8$, $t_2=3.9$; with $H\le128$ and $C=10$, $\eta/\delta'\le2\times10^{-3}$ at $\delta'=0.01$. `tests/test_dither.py` checks by Monte Carlo that the computed proxy matches the variance of the margin error in regimes where the bound should be tight (ratio about 1), and that a deliberately weakened threshold is detected (negative control).
 
 **Relation to PAC-Bayes.** The law of $g=f+\epsilon$ is a posterior $Q$ (uniform on a box around $f$) and the code for $K$ plays the role of $\mathrm{KL}(Q\|P)$. Theorem 5 uses one draw from $Q$ instead of averaging over $Q$, pays $\eta/\delta'$ for it, and concludes about the deterministic $f$ through a per-input concentration statement instead of a sup over all inputs (as in the margin-based derandomizations of Neyshabur et al. 2018 and Nagarajan & Kolter 2019).
 

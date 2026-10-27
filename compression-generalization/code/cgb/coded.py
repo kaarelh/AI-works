@@ -153,6 +153,7 @@ class CodedMLP(nn.Module):
         d = coding.Description()
         d.add("architecture", coding.elias_delta(self.L) + sum(coding.elias_delta(h) for h in self.widths[1:-1]))
         d.add("seed", seed_bits)
+        d.add("code flags", 2.0)  # init scheme (seeded / deterministic DCT) and reference (init / zero)
         for l, (q, qb) in enumerate(self.integers()):
             d.add("basis", 1.0)  # identity or DCT (band layout fixed in advance)
             for j in range(int(self.bands[l].max()) + 1):

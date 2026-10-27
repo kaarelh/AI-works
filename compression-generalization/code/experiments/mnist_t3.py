@@ -1,5 +1,5 @@
 """T3: training-data-only bound on the ORIGINAL one-hidden-layer network f via
-dithered compression (cgb/dither.py, theory Lemma D2).
+dithered compression (cgb/dither.py, Lemma 7 of the paper).
 
 Step configuration is chosen with one dither draw on a subsample of the
 training set; the reported bound uses a fresh dither drawn afterwards (from OS
@@ -36,8 +36,8 @@ ap.add_argument("--lr", type=float, default=1e-3)
 ap.add_argument("--wd", type=float, default=0.0)
 ap.add_argument("--seed", type=int, default=0)
 ap.add_argument("--basis", default="dct")
-ap.add_argument("--t1", type=float, default=6.5)
-ap.add_argument("--t2", type=float, default=4.5)
+ap.add_argument("--t1", type=float, default=5.8)
+ap.add_argument("--t2", type=float, default=3.9)
 ap.add_argument("--delta", type=float, default=0.04)
 ap.add_argument("--delta_prime", type=float, default=0.01)
 ap.add_argument("--threads", type=int, default=4)

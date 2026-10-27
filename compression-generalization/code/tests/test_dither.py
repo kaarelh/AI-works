@@ -53,7 +53,53 @@ def test_dither_concentration():
                 assert rate <= eta, (C, t1, t2, coarse, rate, eta)
 
 
+def calibration(regime, trials=2500, seed=3):
+    """Var_xi(F) / P_hat in a regime where Lemma 7's proxy should be exact:
+    'V' = only the output-layer dithers matter; 'active' = only the first-layer
+    dithers matter and every unit is far inside its active region."""
+    rng = np.random.default_rng(seed)
+    d, H, C = 20, 6, 3
+    W = rng.standard_normal((H, d)) / np.sqrt(d)
+    V = rng.standard_normal((C, H))
+    if regime == "V":
+        b = np.abs(rng.standard_normal(H)) + 1.0
+        e_first, e_V = -60, 0          # first-layer steps ~ 0
+    else:
+        b = np.full(H, 50.0)           # all units strongly active
+        e_first, e_V = -4, -60         # output-layer steps ~ 0
+    F = [(W, b), (V, np.zeros(C))]
+    I = [(W * 0, b * 0), (V * 0, np.zeros(C))]
+    x = rng.standard_normal((1, d))
+    zf = np_forward(F, x)
+    y = np.array([int(zf.argmax())])
+    c = (y[0] + 1) % C
+    Mf = zf[0, y[0]] - zf[0, c]
+    B = np.eye(d)
+    ids = np.zeros(d, dtype=int)
+    Fs, P = [], None
+    for t in range(trials):
+        g = DitheredNet(F, I, B, ids, np.zeros(H, int), np.array([e_first]), e_first, e_V, e_V, seed=77 + t)
+        zg = np_forward(g.weights(), x)
+        Fs.append(zg[0, y[0]] - zg[0, c] - Mf)
+        if P is None:
+            # sqrt(2 P) = T(t2 = 2) - T(t2 = 1) at fixed t1 (the bias does not depend on t2)
+            _, _, (_, T2) = certificate_v2(g, x, y, t1=6.0, t2=2.0, return_parts=True)
+            _, _, (_, T1) = certificate_v2(g, x, y, t1=6.0, t2=1.0, return_parts=True)
+            P = ((T2 - T1)[0, c]) ** 2 / 2
+    return float(np.var(Fs) / P)
+
+
+def test_dither_proxy_calibrated():
+    # a proxy that is too small (a bug in a constant) would give a ratio well above 1,
+    # a needlessly loose one a ratio well below 1
+    # Monte Carlo relative error of the variance estimate is about sqrt(2/2500) = 2.8%
+    for regime in ("V", "active"):
+        r = calibration(regime)
+        assert 0.88 < r < 1.12, (regime, r)
+
+
 if __name__ == "__main__":
+    print("calibration V", calibration("V"), "active", calibration("active"))
     for C in (1, 4):
         for t1, t2 in [(2.6, 1.6), (3.0, 1.4)]:
             for coarse in (-6, 0, 4):
