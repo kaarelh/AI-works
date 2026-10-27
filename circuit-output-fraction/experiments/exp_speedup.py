@@ -17,7 +17,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "code"))
 
-from rareprob import Product, auto_estimate, compile_envelope, envelope_estimate  # noqa: E402
+from rareprob import Circuit, Product, auto_estimate, compile_envelope, envelope_estimate  # noqa: E402
 from rareprob.circuit import Circuit  # noqa: E402
 from rareprob.families import (dnf_circuit, dnf_exact, independent_blocks, obfuscated_dnf_circuit,  # noqa: E402
                                random_block_circuit, random_dnf_terms, trigger_circuit)
@@ -40,6 +40,22 @@ def record(rows, family, param, p, est, secs, extra=None):
     rows.append(r)
     print(f"{family:14s} {str(param):8s} p={p:.3e} [{est.lo:.3e},{est.hi:.3e}] ok={r['contains']} "
           f"cost={r['cost']:.3g} mc={r['mc_cost']:.3g} {secs:.1f}s", flush=True)
+
+
+def cycle_threshold(C, vs, t):
+    """[sum_i (x_{v_i} XOR x_{v_{i+1}}) >= t] around the cycle vs: dense for
+    moderate t, not decomposable, and its support exceeds the atom size."""
+    m = len(vs)
+    xs = [C.XOR(vs[i], vs[(i + 1) % m]) for i in range(m)]
+    return C.THR(xs, [1.0] * m, float(t))
+
+
+def cycle_threshold_prob(m, t):
+    """Exact Pr[cycle_threshold] under uniform inputs: the XORs around a cycle
+    are uniform subject to even parity, so their number of ones is even and
+    Pr[sum = j] = 2 binom(m, j) / 2^m for even j."""
+    from math import comb
+    return sum(2 * comb(m, j) for j in range(t, m + 1) if j % 2 == 0) / 2.0 ** m
 
 
 def main():
@@ -72,21 +88,23 @@ def main():
         est = dfsb_estimate(C, D, eps=EPS, delta=DELTA, rng=rng)
         record(rows, "trigger", k, p, est, time.time() - t, {"size": C.size})
 
-    # 2b. triggers whose dense body has 20 variables (above the atom size, so
-    # DFSB samples the body after forcing the trigger)
+    # 2b. triggers whose body is a dense, non-decomposable block on 20 variables
+    # (a threshold over a cycle of XORs, above the atom size): after forcing the
+    # trigger DFSB must sample the body as a dense leaf
     for k in (20, 40, 80):
         n = k + 20
-        C, trig, rest, R = trigger_circuit(n, k, rng, body_gates=60)
+        S = rng.choice(n, size=k, replace=False)
+        tb = rng.integers(0, 2, size=k)
+        rest = [i for i in range(n) if i not in set(S.tolist())]
+        C = Circuit(n)
+        trig = C.AND(*[C.lit(int(i), int(b)) for i, b in zip(S, tb)])
+        body = cycle_threshold(C, rest, 12)
+        C.set_output(C.AND(trig, body))
         D = Product.uniform(n)
-        X = np.zeros((1 << 20, n), dtype=bool)
-        X[:, rest] = ((np.arange(1 << 20)[:, None] >> np.arange(20)) & 1).astype(bool)
-        for i, b in trig:
-            X[:, i] = bool(b)
-        p = float(C.eval_bits(X).mean()) * 2.0 ** (-k)
-        del X
+        p = cycle_threshold_prob(20, 12) * 2.0 ** (-k)
         t = time.time()
         est = dfsb_estimate(C, D, eps=EPS, delta=DELTA, rng=rng)
-        record(rows, "trigger-body20", k, p, est, time.time() - t, {"size": C.size})
+        record(rows, "trigger-cycle20", k, p, est, time.time() - t, {"size": C.size})
 
     # 3. AND of independent random blocks (6 variables each)
     for kb in (4, 8, 16, 24, 32):
@@ -96,14 +114,18 @@ def main():
         est = dfsb_estimate(C, D, eps=EPS, delta=DELTA, rng=rng)
         record(rows, "blocks", kb, p, est, time.time() - t, {"size": C.size})
 
-    # 3b. AND of independent random blocks of 16 variables (above the atom
-    # size: dense leaves are sampled, with the eps/(3d) accuracy split)
+    # 3b. AND of dense non-decomposable blocks on 16 variables each (thresholds
+    # over a cycle of XORs, above the atom size): dense leaves are sampled, with
+    # the eps/(3d) accuracy split of thm:dfsb
     for kb in (2, 4, 8, 16):
-        C, p, probs = independent_blocks(kb, 16, 40, rng)
-        D = Product.uniform(kb * 16)
+        n = 16 * kb
+        C = Circuit(n)
+        C.set_output(C.AND(*[cycle_threshold(C, list(range(16 * j, 16 * j + 16)), 10) for j in range(kb)]))
+        p = cycle_threshold_prob(16, 10) ** kb
+        D = Product.uniform(n)
         t = time.time()
         est = dfsb_estimate(C, D, eps=EPS, delta=DELTA, rng=rng)
-        record(rows, "blocks16", kb, p, est, time.time() - t, {"size": C.size})
+        record(rows, "blocks-cycle16", kb, p, est, time.time() - t, {"size": C.size})
 
     # 4. threshold of independent blocks: exponential tilting (Chernoff envelope)
     for kb, frac in ((50, 0.75), (100, 0.75), (200, 0.75), (400, 0.75), (800, 0.75)):

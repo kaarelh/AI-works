@@ -31,8 +31,8 @@ plt.rcParams.update({
 
 # families on the sampling path (the trigger and 6-variable block families of the
 # table are computed exactly, with no sampling, so they have no curve here)
-NAMES = {"dnf-obfuscated": "obfuscated DNF\n(envelope leaf)", "trigger-body20": "trigger, 20-var body\n(forcing + dense leaf)",
-         "blocks16": "AND of 16-var blocks\n(dense leaves)", "threshold": "threshold of blocks\n(tilting)"}
+NAMES = {"dnf-obfuscated": "obfuscated DNF\n(envelope leaf)", "trigger-cycle20": "trigger + 20-var dense body\n(forcing + dense leaf)",
+         "blocks-cycle16": "AND of 16-var dense blocks\n(dense leaves)", "threshold": "threshold of blocks\n(tilting)"}
 
 
 def speedup():
