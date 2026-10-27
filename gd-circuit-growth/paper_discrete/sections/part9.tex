@@ -189,7 +189,10 @@ Fashion-MNIST & 1000 & \textbf{0.1805} & 0.1844 & 0.1839 & 0.1860 & tie ($-0.04$
 
 \subsection{Compute}\label{sec:p9compute}
 
-\todo{toy and image compute, CPU, prediction cost.}
+\paragraph{Toy.} v2's largest fit uses 0.33, 0.82 and 0.65 of one network run's FLOPs on \code{dlheld4}, \code{dlheld5} and \code{dlheld6} (v1: 0.73, 0.76, 0.70), and at most 16--33 CPU seconds. The compute audit found the sum-block search charged to within about $\pm40\%$; it is not scaled by DFG's budget share, so the by-construction worst case rises from Part 8's $\approx1.1$ to $\approx1.2$ network runs, and the budget holds by measurement, not by construction.
+
+\paragraph{Images.} By its own count v2 uses 0.21--0.62 of the budget of three MLP runs on the held-out cells, the most at $n=3000$; the compute audit's correction of the library-tree formulas puts that cell at $\approx0.72$ (0.69--0.81). Equal FLOPs are far from equal CPU time. A v2 fit takes 1178--1757 CPU seconds at $n=60000$, against tens of seconds for \code{mlp_strong} (amortized over its vectorized seeds) and 210--270 seconds for \code{mlp_wide}; the gates member's LightGBM spends most of it on per-tree column copies, which the FLOP convention does not charge. Prediction, not charged for any learner, costs v2 about $2.8\times10^8$ FLOPs per query at $n=60000$, about $500\times$ an MLP's, because up to three nearest-neighbour scans over the training set are kept.
+
 
 \subsection{Audits, exposures and deviations}\label{sec:p9audits}
 
