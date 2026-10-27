@@ -10,8 +10,6 @@ integrated learner is [`hyb_portfolio2/learner.py`](hyb_portfolio2/learner.py) (
 the result files (`../hybrid/results/toy__<learner>__<suite>.json` for the toy suites,
 `../standard_tasks/results/<learner>__<dataset>.json` for images: `err[n][seed]`, `flops`, `cpu_seconds`).
 
-> **Draft.** Held-out numbers are marked RESULTS PENDING and other open items PLACEHOLDER. Every number in this draft
-> comes from development data, from the protocol, or from the design files.
 
 **Question.** Part 8 ended with two clear losses (HYBRID.md §3.4, §4.4):
 1. **sym9** = [|x1 + … + x9| ≤ 1], on the fresh toy suite `dlheld3`. v1 needed 1229 samples, and a network trained
@@ -30,7 +28,17 @@ before any held-out run.
   correlated pixels, and boosted trees over a bank of discrete gates on pixels, those pixel sums and pairs of training
   images.
 
-**Short answer: RESULTS PENDING.**
+**Short answer: yes to both pre-registered questions; the image answer is carried by a representation, not by
+discreteness.**
+- **Q1 (sum features).** On the blind held-out suite `dlheld6`, v2 needs clearly less data than the per-target best
+  network on 10 of 12 targets and more on none (mean log2 n* ratio −1.45, about 2.7×), where v1 is behind on the same
+  sum-structured targets (+0.63). Part 8's loss on symmetric functions is gone.
+- **Q2 (images at n ≥ 10000).** On the fresh QuickDraw sets v2 beats the strong MLP ensemble (mean log2 error ratio
+  −0.18; v1 +0.01) and has the lowest error of every permutation-invariant learner at all 14 cells, including against
+  wider and CPU-matched MLP ensembles added after the audits.
+- **But** the image member's pooling sets recover the pixel grid from correlations, an MLP given the same pooled sums
+  matches v2 at n = 60000, about half of the winning member's gain comes from boosting longer, v2 takes 20–30 CPU minutes per
+  fit, and a small CNN that sees the layout is far better.
 
 What the development data show (in-sample for the builders, who tuned on the same data):
 - **Sum features.** The dev toy suites are `designed` and the new symmetric suite `dlsymdev`: 29 targets, inputs
@@ -54,15 +62,15 @@ What the development data show (in-sample for the builders, who tuned on the sam
   run, md5 `6837fa52627c588318cce10f0c47ac8f`. After the freeze, and before any held-out result existed, a one-line
   crash fix was made for member training sets below 500 points (md5 `e38af40493816ef1bc82e4f16428dcdf`; §8, item 6).
 
-Held-out answers:
-- **Q1 (sum features), `dlheld5`:** RESULTS PENDING. This suite was generated at random after the sum-feature design
-  froze, and it is the clean test.
-- **Q1, `dlheld4`:** RESULTS PENDING. This suite was fixed before any design, but builder S saw its definitions as
-  source code. It is reported with that exposure noted.
-- **Q2 (images at n ≥ 10000), `qd_a` and `qd_b`:** RESULTS PENDING.
-- **Regression checks:** RESULTS PENDING.
+Held-out answers (§6):
+- **Q1, `dlheld6`** (blind; Amendment 3): −1.45 against `nets_best` (10 better / 0 worse); sum-structured −1.53 against
+  v1's +0.63. R3_HEAD
+- **Q1, secondary:** `dlheld5` −2.40 (10 / 0) and `dlheld4` −1.68 (12 / 0); both exposed to the design (§8, item 1).
+- **Q2, `qd_a` and `qd_b`, n ≥ 10000:** −0.18 against `mlp_strong` and `mlp_best` (3 better / 3 tied / 0 worse), v1
+  +0.01; −0.13 against `mlp_wide`. Controls and ablation: §6.3–6.4.
+- **Regression checks:** mushroom identical to v1; kr_vs_kp within about one test point.
 
-Some costs are already known from the dev cells:
+Costs:
 - A v2 fit on images at n = 60000 takes 1352–1749 CPU s and 4.4–6.2 GB of peak memory.
 - Prediction costs about 2.8e8 FLOPs per query there, about 500× an MLP's (§7).
 - Fit FLOPs are 0.25–0.46 of the budget on the dev image cells.
@@ -719,41 +727,131 @@ runs of v2 started at 02:12 UTC (commit c31daa07).
 
 ## 6. Held-out results
 
-RESULTS PENDING for every subsection. Tables will come from RESULTS.md (`compare_part9.py`). The toy rows will be v2's
-own runs (`toy__hyb_portfolio2-perm__<suite>.json`), with p9_sum's earlier runs alongside.
+Tables: [`RESULTS.md`](RESULTS.md) (`compare_part9.py`). The toy rows are v2's own runs
+(`../hybrid/results/toy__hyb_portfolio2-perm__<suite>.json`); p9_sum's earlier runs are identical on toy inputs.
+Every comparison rule is Part 8's (§1.3).
 
-### 6.1 Toy `dlheld5` (the clean test for Q1)
+### 6.1 Toy `dlheld6` (blind to the design; Q1)
 
-RESULTS PENDING: n* per target for v2, p9_sum, v1, lin, hgb, nets, nets_wd, nets_cewd and nets_best. Summaries against
-each network reference, on all 12 targets and on the 10 sum-structured targets. Largest FLOPs per fit.
+n* (inputs permuted for the discrete learners); `nets_best` = per-target minimum over nets, nets_wd and nets_cewd (the
+pre-registered variants; Amendment 4's two extra weight decays are in §6.2):
 
-### 6.2 Toy `dlheld4` (definitions seen by builder S)
+| target | v2 | v1 | lin | hgb | nets | nets_wd | nets_cewd | nets_best | log2 v2 / nets_best | log2 v2 / v1 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| h6_00 | never | never | never | never | never | never | never | never | both never | both never |
+| h6_01 | 429 | 7045 | never | never | 3071 | 1946 | 1706 | 1706 | −1.99 | −4.04 |
+| h6_02 | 428 | 464 | never | never | 1869 | 1401 | 1012 | 1012 | −1.24 | −0.12 |
+| h6_06 | 342 | 878 | never | never | 3726 | 3319 | 2366 | 2366 | −2.79 | −1.36 |
+| h6_07 | 678 | 2277 | never | 4492 | 3215 | 2619 | 2849 | 2619 | −1.95 | −1.75 |
+| h6_08 | 446 | 1179 | never | 5940 | 3119 | 2437 | 2732 | 2437 | −2.45 | −1.40 |
+| h6_09 | 392 | 2582 | never | 2706 | 1450 | 871 | 813 | 813 | −1.05 | −2.72 |
+| h6_10 | 702 | 8775 | never | never | 1414 | 915 | 621 | 621 | +0.18 | −3.64 |
+| h6_11 | 208 | 1009 | never | 2264 | 881 | 704 | 402 | 402 | −0.95 | −2.28 |
+| h6_03 (control) | 98 | 98 | never | 103 | 323 | 232 | 271 | 232 | −1.24 | 0.00 |
+| h6_04 (control) | 29 | 29 | 96 | 59 | 116 | 96 | 120 | 96 | −1.71 | 0.00 |
+| h6_05 (control) | 33 | 33 | 48 | 59 | 78 | 56 | 76 | 56 | −0.78 | 0.00 |
 
-RESULTS PENDING: the same tables, on 12 targets and on the 9 sum-structured ones. Exposure note (§8, item 1): sumpar,
-in particular, matches the form of the worked example in p9_sum/DESIGN.md §5b.
+- **Q1 criteria.** v2 against `nets_best`: mean log2 n* ratio **−1.45**, 10 clearly better, 0 clearly worse (h6_00 is
+  never learned by anyone; h6_10 is a tie). On the 9 sum-structured targets: **−1.53** (7 better, 0 worse), against
+  v1's **+0.63** (3 better, 4 worse). All three parts are met.
+- **v2 against v1** on the sum-structured targets: −2.16 (7 better, 0 worse); identical n* on the 3 controls.
+- **Largest fit:** 0.65 of one network run's FLOPs (v1: 0.70); at most 22 CPU s.
 
-### 6.3 Images `qd_a`
+### 6.2 Toy summaries, all Part 9 suites, and the extra network references
 
-RESULTS PENDING: test error by n (100 … 60000) for v2, v1, hgb, mlp, mlp_l2unit, mlp_strong, mlp_strong1 and mlp_best.
-Cell verdicts and mean log2 ratios against each MLP reference, for all n, n ≤ 3000 and n ≥ 10000 (Q2).
+| suite | status | v2 vs nets_best, all | v2, sum-structured | v1, sum-structured | v2 vs v1, sum-structured |
+|---|---|---|---|---|---|
+| `dlheld6` | held out, blind (Q1) | −1.45 (10 / 0) | −1.53 (7 / 0) | +0.63 (3 / 4) | −2.16 (7 / 0) |
+| `dlheld5` | held out, inside S's class | −2.40 (10 / 0) | −2.13 (8 / 0) | +0.03 (3 / 6) | −1.93 (9 / 0) |
+| `dlheld4` | held out, definitions seen by S | −1.68 (12 / 0) | −1.67 (9 / 0) | +0.19 (4 / 3) | −1.86 (8 / 0) |
+| `dlsymdev` | development | −2.04 (8 / 0) | −2.04 (8 / 0) | +0.11 (2 / 5) | −2.28 (8 / 0) |
+| `designed` | development | −2.39 (21 / 0) | −2.39 (21 / 0) | −2.32 (21 / 0) | −0.07 (2 / 0) |
 
-### 6.4 Images `qd_b`
+Brackets: clearly better / clearly worse targets. `dlheld5` and `dlheld4` are secondary (Amendment 3): v1 never learns
+5 of `dlheld5`'s 8 signed-sum targets (v2 only h5s1, which no learner learns), and v2's largest `dlheld5` margin is on
+h5s5 (421 against the networks' 12254). Per-target tables: RESULTS.md.
 
-RESULTS PENDING: as §6.3.
+**Amendment 4, R3** (logistic loss with weight decay 0.3 and 1.0 on `dlheld6`): R3 PENDING.
+
+### 6.3 Images `qd_a` and `qd_b` (Q2)
+
+Test error (seed mean; seed 0 at n ≥ 30000; `mlp_xl` and the controls seed 0):
+
+| set | n | v2 | v1 | hgb | mlp_strong | mlp_wide | mlp_wide1 | mlp_xl | mlp_best | mlp_pool (control) | cnn (context) |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| qd_a | 100 | **0.429** | 0.468 | 0.606 | 0.479 | 0.480 | 0.486 | – | 0.479 | – | – |
+| | 300 | **0.299** | 0.336 | 0.431 | 0.363 | 0.360 | 0.366 | – | 0.363 | – | – |
+| | 1000 | **0.226** | 0.263 | 0.313 | 0.283 | 0.284 | 0.294 | – | 0.283 | 0.256 | 0.210 |
+| | 3000 | **0.186** | 0.213 | 0.243 | 0.230 | 0.227 | 0.234 | – | 0.230 | – | – |
+| | 10000 | **0.150** | 0.172 | 0.194 | 0.184 | 0.178 | 0.187 | – | 0.184 | 0.164 | 0.120 |
+| | 30000 | **0.134** | 0.151 | 0.166 | 0.148 | 0.143 | 0.158 | – | 0.148 | – | – |
+| | 60000 | **0.120** | 0.142 | 0.152 | 0.133 | 0.129 | 0.142 | 0.125 | 0.133 | 0.123 | – |
+| qd_b | 100 | **0.473** | 0.507 | 0.595 | 0.495 | 0.495 | 0.505 | – | 0.495 | – | – |
+| | 300 | **0.357** | 0.399 | 0.461 | 0.399 | 0.395 | 0.411 | – | 0.399 | – | – |
+| | 1000 | **0.272** | 0.307 | 0.353 | 0.317 | 0.319 | 0.331 | – | 0.317 | 0.289 | – |
+| | 3000 | **0.223** | 0.251 | 0.280 | 0.264 | 0.261 | 0.269 | – | 0.264 | – | – |
+| | 10000 | **0.180** | 0.203 | 0.227 | 0.212 | 0.206 | 0.214 | – | 0.212 | 0.196 | – |
+| | 30000 | **0.156** | 0.178 | 0.194 | 0.171 | 0.166 | 0.172 | – | 0.171 | – | – |
+| | 60000 | **0.149** | 0.164 | 0.178 | 0.162 | 0.152 | 0.155 | XL_QDB | 0.162 | 0.147 | – |
+
+Bold: lowest among the permutation-invariant learners (all but the two right-hand columns).
+
+| reference | v2, n ≥ 10000: better / tie / worse | v2, n ≥ 10000: mean log2 | v2, n ≤ 3000: mean log2 | v1, n ≥ 10000: mean log2 |
+|---|---|---|---|---|
+| mlp_strong (pre-registered) | 3 / 3 / 0 | −0.18 | −0.22 | +0.01 |
+| mlp_best (pre-registered) | 3 / 3 / 0 | −0.18 | −0.22 | +0.01 |
+| mlp_wide | 2 / 4 / 0 | −0.13 | −0.21 | +0.06 |
+| mlp_best+ (with R1, R2) | Q2PLUS | | | |
+| mlp_pool (control) | 0 / 4 / 0 | −0.07 | −0.14 | +0.12 |
+
+- **Q2, as pre-registered: met** on all three parts (below 0 against `mlp_strong` and against `mlp_best`, and below
+  v1's +0.01).
+- **Strengthened references.** `mlp_wide` (3 × 512-512) is the strongest MLP at every n ≥ 3000; at `qd_b` n = 60000 it
+  is level with v2 (0.152 against 0.149). `mlp_xl` (3 × 1024-1024, n = 60000 only): 0.125 on `qd_a`, the best MLP
+  there, against v2's 0.120; XL_QDB_TEXT
+- **Control `mlp_pool`** (`mlp_strong` on [x, v2's pooled sums]): the strongest MLP at every n where it ran, and level
+  with v2 at n = 60000 on both sets. v2 keeps a margin at n = 1000 and 10000 (5 of 6 cells tie by the rule; one,
+  `qd_a` n = 1000, favours v2).
+- **Context `cnn`** (unpermuted pixels; `qd_a` at two cells): 0.210 at n = 1000 and 0.120 at n = 10000, better than
+  every permutation-invariant learner; v2 reaches 0.120 only at n = 60000.
+
+### 6.4 What carries v2's image error
+
+**Attribution** (recorded from 03:06 UTC: every cell with n ≥ 3000 except `qd_a` n = 3000 seed 0; out-of-fold errors on
+the fit's training rows): `ggbt` is the best single member at every recorded cell (at `qd_a` n = 60000: 0.127, against
+`gknn`'s 0.156 and `gbt`'s 0.159), and its stacking weight grows to 0.50–0.55 at n = 60000; `gknn` has the larger weight
+at n = 3000 in 4 of 5 fits. Part 8's members keep weights of 0.12–0.31. Full table: RESULTS.md.
+
+**Post-hoc ablation** (`posthoc_ggbt.py`, after the results were read): `ggbt` alone, refitted on the n = 60000 training
+rows, seed 0:
+
+| variant | rounds | qd_a | qd_b |
+|---|---|---|---|
+| frozen bank ([x, pooled sums at 4/9/16, 300 pairs]), early stopping | 400 / 378 | 0.119 | 0.144 |
+| no pairs | 390 / 364 | 0.121 | 0.146 |
+| raw pixels only, same schedule | 393 / 382 | 0.142 | 0.168 |
+| frozen bank, 100 rounds (v1's gbt schedule) | 100 | 0.136 | 0.162 |
+| v2, the whole portfolio | | 0.120 | 0.149 |
+
+- The pooled sums carry −0.22 to −0.25 in log2, longer boosting −0.17 to −0.19, the pairs −0.02.
+- `ggbt` alone is as good as v2 (at this size v2's final booster is trained on its 48600-point stacking split).
 
 ### 6.5 Regression checks (not evidence)
 
-RESULTS PENDING:
-- the tabular datasets where v2 differs from v1, because DFG runs there: mushroom (Part 7 HELDOUT) and kr_vs_kp (DEV);
-- MNIST and Fashion-MNIST on the full grid;
-- toy `dlheld3`, with sym9;
-- tabular HELDOUT2 and the other tabular datasets are identical to v1 by construction (§5).
-
-PLACEHOLDER: which of these are run.
+- **mushroom** (Part 7 HELDOUT, where DFG runs): identical to v1 at every n (0.0212, 0.0054, 0.0016, 0, 0).
+- **kr_vs_kp** (DEV): within about one test point of v1 at every n (0.0680 / 0.0676, 0.0300 / 0.0313, 0.0104 / 0.0100,
+  0.0033 / 0.0021).
+- Not run, for compute: MNIST and Fashion-MNIST on the full grid (the compute audit projected Fashion-MNIST n = 3000 at
+  0.94 (0.77–1.12) of the budget), and toy `dlheld3` (sym9; its symmetric targets are covered by the new suites).
+- Every other tabular dataset is identical to v1 by construction (§5).
 
 ### 6.6 Answers to Q1 and Q2
 
-RESULTS PENDING.
+- **Q1: yes**, on the blind suite (§6.1), and the two exposed suites agree. R3_ANSWER
+- **Q2: yes, as pre-registered** (§6.3), and v2 stays ahead of every permutation-invariant reference at every cell,
+  including the wider and CPU-matched ensembles. But the image result is carried by the representation (locality
+  recovered from pixel correlations: `mlp_pool` matches v2 at n = 60000) and by boosting, and a CNN given the layout is
+  far better (§6.4, §9).
 
 ## 7. Compute
 
@@ -796,7 +894,11 @@ runs); CPU is process seconds per fit, under load from other jobs:
   - *FLOP count.* Not affected, because the copies are data movement.
 - **Memory at n = 60000.** p9_gates peaks at about 6 GB process RSS: 6.2 GB on Fashion-MNIST and 4.4 GB on MNIST,
   against v1's ~3 GB. p9_bank peaks at 2.55 / 2.56 / 2.75 GB (MNIST / Fashion / `qd_dev`).
-- PLACEHOLDER: held-out compute (budget fractions and CPU of v2 on `qd_a`, `qd_b` and `dlheld4/5`).
+- **Held-out compute** (RESULTS.md, "compute per fit"). v2's own FLOP count is 0.21–0.62 of the budget on the
+  `qd_a` / `qd_b` cells, the most at n = 3000 (the compute audit projected ≈ 0.72 (0.69–0.81) there after correcting the
+  library-tree formulas). CPU per fit: 57–58 s at n = 100, 542–581 s at n = 3000, 1178–1757 s at n = 60000; the
+  recorded `mlp_strong` times are 25–71 s, `mlp_wide`'s 127–274 s. Toy: v2's largest fit is 0.33 / 0.82 / 0.65 of one
+  network run on `dlheld4` / `dlheld5` / `dlheld6` (v1: 0.73 / 0.76 / 0.70), at most 16 / 33 / 22 CPU s.
 
 **Prediction cost** (not counted, as for every learner):
 
@@ -918,7 +1020,24 @@ runs); CPU is process seconds per fit, under load from other jobs:
 
 ## 9. Limitations
 
-PLACEHOLDER: the final wording of the claim, written after the held-out results.
+**The claim.** v2 beats the study's gradient-descent-trained networks on both pre-registered questions: on a toy suite
+written blind to its design, and on two fresh image sets against permutation-invariant MLPs, wider and CPU-matched
+ensembles included. On the toy side the gain is a constant factor at d = 30 from a dictionary that contains functions of
+one signed sum (the scaling with d was not tested). On the image side the gain is carried by locality recovered from
+pixel correlations and by gradient-boosted trees: it is not evidence that discrete learning beats gradient-based learning
+on images, and a CNN given the layout is better.
+
+Limitations from the held-out runs:
+- **Representation, not discreteness** (§6.3–6.4): `mlp_pool` matches v2 at n = 60000; the pooling sets recover the
+  grid (discreteness audit D1); the prototype pairs are continuous projections and carry almost nothing.
+- **Boosting** is functional gradient descent, and about half of `ggbt`'s gain over Part 8's tree member is longer boosting.
+- **No information-matched GD comparator** (a locally connected or graph-convolutional network on the pooling sets, a
+  CNN on a recovered layout) was run; the CNN context was run at two cells only.
+- **Exposure.** Only `dlheld6` is blind to the sum-feature design, and its family was written by an agent from a one-line
+  description.
+- **The toy references** are one width-128 architecture; the sum-feature advantage is measured at d = 30 only.
+
+Limitations already known from development:
 
 Limitations already known from development:
 - **The image member is still a tree ensemble plus kNN.** `ggbt` is LightGBM over a richer discrete feature bank, and
@@ -997,4 +1116,8 @@ MLP_VARIANT=l2unit MLP_MAX_N=30000 python3 mlp.py qd_dev && MLP_VARIANT=l2unit p
 All commands were run with `nice -n 5` or `nice -n 10` and `OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1`, pinned to two
 cores per lane. The scratch drivers are `run_v2.sh`, `jax_refs.sh`, `cpu_refs*.sh`, `refs5.sh`, `nets5.sh`,
 `after_restart2.sh` and `equiv.py`, along with the builders' development scripts. They stay outside the repository.
-PLACEHOLDER: the paths that stay on the working branch.
+No Part 9 path stays on the working branch only: scratch drivers, logs, cells and network outputs live in the session
+scratch directory, outside the repository. The post-hoc ablation is `posthoc_ggbt.py` (outputs in `posthoc/`); the
+Amendment 4 references are `../standard_tasks/mlp_strong.py` with the environment overrides in its docstring
+(`MLP_TAG=mlp_wide MLP_W=512 MLP_WDS=0.1,1,3`; `MLP_TAG=mlp_xl MLP_W=1024 MLP_WDS=<wd> MLP_NS=60000`;
+`MLP_TAG=mlp_pool MLP_FEATS=pool MLP_NS=1000,10000,60000`) and `../standard_tasks/cnn_ref.py`.
