@@ -141,6 +141,12 @@ but not at the frontier, and the image gain unattributed. Added now, none of the
 - **Reporting:** `mlp_reg` maps to `mlp_l2unit` on QuickDraw too (fairness F5, a table bug); CPU seconds per fit are
   reported next to FLOPs.
 
+**Implementation notes for R2 and C2 (07:05 UTC, before either ran past its first cell; for compute).** A CNN step ran at
+about 1.3 GFLOP/s on this CPU (n = 1000 took 24 min), and `mlp_xl` with weight-decay selection would have taken 1-2 h per
+cell. So: `cnn` on `qd_a` at n = 1000 and 10000 only; `mlp_xl` at n = 60000 only (the cell where CPU parity matters), as
+an ensemble of 3 networks of width 1024 at the weight decay `mlp_wide` chose on validation at the same cell (0.1 on
+`qd_a`, 1 on `qd_b`; 4 training runs counting the trivial one-value selection run), which puts its CPU time near v2's.
+
 **Q2 is answered twice:** as pre-registered (against `mlp_strong` and the pre-registered `mlp_best`), and against
 `mlp_best+` = the per-cell best of every MLP variant including R1 and R2 (hindsight; R2 is not FLOP-matched). **Q1** uses
 `nets_best` over all network variants run on the suite (on `dlheld6`: nets, nets_wd, nets_cewd, nets_cewd0.3,
