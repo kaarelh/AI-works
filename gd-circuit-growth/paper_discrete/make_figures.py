@@ -10,6 +10,8 @@ Sources (all under gd-circuit-growth/study/):
   F5 fig_images.pdf          standard_tasks/results/{hyb_portfolio,mlp_strong,mlp_l2unit,mlp,hgb}__{mnist,fashion_mnist}.json
   F6 fig_ablations.pdf       hybrid/results/toy__{hyb_portfolio,abl_noDFG,abl_dfg}-perm__dlheld3.json and the real
                              ablation files standard_tasks/results/abl_*-quick__<dataset>.json, via ablations.py's functions
+  F7 fig_p9_toy.pdf         hybrid/results/toy__{hyb_portfolio2,hyb_portfolio}-perm__{dlheld6,dlheld5,dlheld4}.json; nets_best
+  F8 fig_p9_images.pdf      standard_tasks/results/{hyb_portfolio2,hyb_portfolio,mlp_strong,mlp_wide,mlp_xl,mlp_pool,cnn,hgb}__qd_{a,b}.json
 n* is the study's definition (toy harness `nstar`: seed-mean test error 0.1, log-interpolated on the factor-2 grid).
 """
 import os, sys, json, numpy as np
@@ -390,10 +392,84 @@ def fig6():
     return {k: (len(agg[k]), float(np.mean(agg[k]))) for k, _ in V}
 
 
+# ---- F7: Part 9 toy held-out suites, n* of hyb_portfolio2 and hyb_portfolio against nets_best --------------------------
+P9_SUITES = [("dlheld6", "(a) dlheld6: written blind to the design (Q1)"),
+             ("dlheld5", "(b) dlheld5: inside the sum features' class"), ("dlheld4", "(c) dlheld4: definitions seen")]
+P9_CONTROLS = {"dnf3x3", "h4rf0", "h4rf1", "h5rf0", "h5rf1", "h6_03", "h6_04", "h6_05"}
+
+
+def fig7():
+    fig, axs = plt.subplots(1, 3, figsize=(TEXTW, 2.55), sharey=True)
+    lo, hi, NEV = 20, 3.2e4, 2.2e4                               # "never" plotted at NEV
+    g = np.array([lo, hi])
+    for ax, (suite, title) in zip(axs, P9_SUITES):
+        NR = CH.toy_nstars(suite)
+        ax.plot(g, g, color=INK2, lw=0.8, ls="--", zorder=1)
+        ax.plot(g, g / 4, color="#a8a8a8", lw=0.6, ls=":", zorder=1)
+        for L, lab, fc, mk in (("hyb_portfolio-perm", "v1 (Part 8)", "white", "o"), ("hyb_portfolio2-perm", "v2 (Part 9)", COL[0], "o")):
+            r = CH.toy_load(L, suite)
+            if r is None:
+                continue
+            for fn, v in r["fns"].items():
+                x = NR["nets_best"][fn]; y = TH.nstar(r["ns"], mean_err(v["err"]))
+                x = x if np.isfinite(x) else NEV; y = y if np.isfinite(y) else NEV
+                ctl = fn in P9_CONTROLS
+                ax.scatter([x], [y], s=20, marker="s" if ctl else mk, facecolor=(fc if not ctl else ("white" if fc == "white" else COL[3])),
+                           edgecolor=(COL[0] if fc == "white" else "white") if not ctl else (COL[3] if fc == "white" else "white"),
+                           linewidth=0.8, zorder=3 if fc == "white" else 4)
+        ax.axhline(NEV, color="#c8c8c8", lw=0.5, zorder=0); ax.text(lo * 1.15, NEV * 0.82, "never", fontsize=6, color=INK2, va="top")
+        ax.set_xscale("log"); ax.set_yscale("log"); ax.set_xlim(lo, hi); ax.set_ylim(lo, hi); ax.set_aspect("equal")
+        ax.set_title(title, loc="left", fontsize=7.2)
+        ax.set_xlabel(r"$n^*$ of nets_best")
+    axs[0].set_ylabel(r"$n^*$ of the discrete learner")
+    h = [Line2D([], [], marker="o", ls="", mfc=COL[0], mec="white", ms=5, label="v2 = hyb_portfolio2, sum-structured target"),
+         Line2D([], [], marker="o", ls="", mfc="white", mec=COL[0], ms=5, label="v1 = hyb_portfolio, same targets"),
+         Line2D([], [], marker="s", ls="", mfc=COL[3], mec="white", ms=5, label="v2, control (v1: hollow square)"),
+         Line2D([], [], color=INK2, ls="--", lw=0.8, label="equal data"), Line2D([], [], color="#a8a8a8", ls=":", lw=0.6, label="4x less data")]
+    fig.legend(handles=h, loc="lower center", ncol=3, bbox_to_anchor=(0.5, -0.02), columnspacing=1.0, handletextpad=0.3)
+    fig.tight_layout(rect=(0, 0.13, 1, 1), w_pad=0.6)
+    save(fig, "fig_p9_toy.pdf")
+
+
+# ---- F8: Part 9 images, QuickDraw held-out sets ------------------------------------------------------------------------
+P9_STY = {"hyb_portfolio2": (COL[0], "o", "-", "v2 = hyb_portfolio2"), "hyb_portfolio": (COL[6], "o", ":", "v1 = hyb_portfolio"),
+          "mlp_strong": (COL[1], "s", "--", "mlp_strong (3 x 256-256)"), "mlp_wide": (COL[3], "s", "-.", "mlp_wide (3 x 512-512)"),
+          "mlp_xl": (COL[7], "P", "", "mlp_xl (3 x 1024-1024, CPU-matched)"), "mlp_pool": (COL[2], "^", "", "mlp_pool (MLP on [x, pooled sums])"),
+          "cnn": (INK2, "x", "", "cnn on unpermuted pixels (context)"), "hgb": (COL[4], "D", ":", "hgb")}
+
+
+def fig8():
+    fig, axs = plt.subplots(1, 2, figsize=(TEXTW, 3.05), sharey=True)
+    for ax, (ds, name) in zip(axs, (("qd_a", "(a) QuickDraw qd_a (held out)"), ("qd_b", "(b) QuickDraw qd_b (held out)"))):
+        allv = []
+        for L, (col, mk, ls, lab) in P9_STY.items():
+            if CH.load(L, ds) is None:
+                continue
+            n, e = curve_mean(L, ds); ok = np.isfinite(e); n, e = n[ok], e[ok]
+            ax.plot(n, e, color=col, marker=mk, ls=ls if ls else "none", ms=4.2 if mk != "x" else 5, mec="white" if mk not in ("x", "P") else col,
+                    mew=0.4 if mk not in ("x",) else 1.0, lw=1.3, zorder=4 if L == "hyb_portfolio2" else 3, label=lab)
+            allv += list(e)
+        ax.set_xscale("log"); ax.set_yscale("log")
+        ax.axvspan(9e3, 7.5e4, color="#f3f3f3", zorder=0, lw=0)
+        ax.text(1.0e4, 0.96, "Q2: n >= 10000", transform=matplotlib.transforms.blended_transform_factory(ax.transData, ax.transAxes),
+                fontsize=6.3, color=INK2, va="top")
+        ax.set_xlim(70, 8e4)
+        if allv:
+            ax.set_ylim(min(allv) * 0.85, max(allv) * 1.12)
+        ax.set_title(name, loc="left"); ax.set_xlabel("training-set size n")
+        ax.yaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{100 * v:g}%"))
+        ax.yaxis.set_minor_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{100 * v:g}%" if round(v * 100, 6) in (3, 5, 15, 20, 30, 40) else ""))
+    axs[0].set_ylabel("test error (seed mean; seed 0 at n >= 30000)")
+    h, l = axs[0].get_legend_handles_labels()
+    fig.legend(h, l, loc="lower center", ncol=4, bbox_to_anchor=(0.5, -0.01), columnspacing=1.0, handlelength=2.2, fontsize=6.5)
+    fig.tight_layout(rect=(0, 0.14, 1, 1), w_pad=0.8)
+    save(fig, "fig_p9_images.pdf")
+
+
 if __name__ == "__main__":
     os.makedirs(FIG, exist_ok=True)
-    which = sys.argv[1:] or ["1", "2", "3", "4", "5", "6"]
+    which = sys.argv[1:] or ["1", "2", "3", "4", "5", "6", "7", "8"]
     for w in which:
-        out = {"1": fig1, "2": fig2, "3": fig3, "4": fig4, "5": fig5, "6": fig6}[w]()
+        out = {"1": fig1, "2": fig2, "3": fig3, "4": fig4, "5": fig5, "6": fig6, "7": fig7, "8": fig8}[w]()
         if out:
             print(out)
