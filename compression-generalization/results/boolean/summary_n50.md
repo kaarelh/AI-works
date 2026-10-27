@@ -1,6 +1,6 @@
 # Boolean grid `n50`: bounds on the trained network f
 
-Each row averages 3 seeds (training sets and initializations). `test err f`: exact (n = 20, all 2^20 inputs) or on 3x10^5 fresh inputs. `bound on f`: Theorem 2 with delta = 0.05 (Occam term for g plus an upper bound on Pr[f != g] under the uniform input distribution), including the design charge of accounting.py (4 bits, disagreement at delta/16). `bits`: description length of g. `float32 Occam` and `VC (d = #params)`: parameter-counting baselines for f itself. Every bound is a valid upper bound for its own seed; the table shows means.
+Each row averages 3 seeds (training sets and initializations). `test err f`: exact (n = 20, all 2^20 inputs) or on 3x10^5 fresh inputs. `bound on f`: Theorem 2 with delta = 0.05 (Occam term for g plus an upper bound on Pr[f != g] under the uniform input distribution), including the design charge of accounting.py (4 bits, disagreement at delta/16; for n = 20 the disagreement is exact). `Occam part`, `Pr[f≠g] part` and `bits` are given without the design charge: the two parts add up to the uncharged bound, slightly below `bound on f`, and `bits` (the description length of g) leaves out the 4 design bits that the paper's tables include. `float32 Occam` and `VC (d = #params)`: parameter-counting baselines for f itself. Every bound is a valid upper bound for its own seed; the table shows means.
 
 | task | m | test err f | bound on f | Occam part | Pr[f≠g] part | bits | best g (seed 0) | float32 Occam | VC (d=#params) |
 |---|---|---|---|---|---|---|---|---|---|

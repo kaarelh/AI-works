@@ -44,8 +44,10 @@ def summarize(rows, grid):
              "Each row averages 3 seeds (training sets and initializations). `test err f`: exact "
              "(n = 20, all 2^20 inputs) or on 3x10^5 fresh inputs. `bound on f`: Theorem 2 with delta = 0.05 "
              "(Occam term for g plus an upper bound on Pr[f != g] under the uniform input distribution), "
-             f"including the design charge of accounting.py ({DESIGN_BITS:g} bits, disagreement at delta/{DESIGN_FACTOR}). "
-             "`bits`: description length of g. `float32 Occam` and `VC (d = #params)`: parameter-counting "
+             f"including the design charge of accounting.py ({DESIGN_BITS:g} bits, disagreement at delta/{DESIGN_FACTOR}; "
+             "for n = 20 the disagreement is exact). `Occam part`, `Pr[f≠g] part` and `bits` are given without the "
+             "design charge: the two parts add up to the uncharged bound, slightly below `bound on f`, and `bits` (the "
+             f"description length of g) leaves out the {DESIGN_BITS:g} design bits that the paper's tables include. `float32 Occam` and `VC (d = #params)`: parameter-counting "
              "baselines for f itself. Every bound is a valid upper bound for its own seed; the table shows means.\n"]
     has_any = any("bound_f_any_D" in r for r in rows)
     hdr = "| task | m | test err f | bound on f | Occam part | Pr[f≠g] part | bits | best g (seed 0) | float32 Occam | VC (d=#params) |"
