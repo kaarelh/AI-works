@@ -30,6 +30,7 @@ from rareprob.families import linear_hash_trigger, spn_trigger, trigger_circuit 
 from rareprob.stats import mc_samples_needed  # noqa
 
 EPS, DELTA = 0.1, 0.05
+TIME_LIMIT = 1200  # seconds per instance (prover + verifier)
 OUT = os.path.join(os.path.dirname(__file__), "results")
 os.makedirs(OUT, exist_ok=True)
 
@@ -43,45 +44,67 @@ def body_prob(C, S, a, body):
     return float(C.eval_bits(X).mean())
 
 
-def main():
-    rng = np.random.default_rng(99)
-    rows = []
-    for fam, k, r in [("linhash", 16, 0), ("linhash", 20, 0), ("linhash", 24, 0), ("linhash", 32, 0),
-                      ("spn", 8, 2), ("spn", 12, 2), ("spn", 16, 3), ("spn", 20, 3)]:
-        if fam == "linhash":
-            C, S, a, body = linear_hash_trigger(12, k, rng)
-        else:
-            C, S, a, body = spn_trigger(12, k, r, rng)
-        D = Product.uniform(C.n)
-        p = body_prob(C, S, a, body) * 2.0 ** (-k)
-        # Part 1 (no prover)
-        t = time.time()
-        forced = forced_input_literals(C)
-        e1 = dfsb_estimate(C, D, eps=EPS, delta=DELTA, rng=rng, node_budget=300)
-        t1 = time.time() - t
-        # Part 2: envelope = the trigger point, DRUP proof from a CDCL solver
-        E = Envelope()
-        E.root = E.PROD([E.lit(i, b) for i, b in zip(S, a)])
-        t = time.time()
-        pf = honest_proof(C, E)
-        tp = time.time() - t
-        t = time.time()
-        v = verify(C, D, E, pf, eps=EPS, delta=DELTA, rng=rng)
-        tv = time.time() - t
-        row = dict(family=fam, k=k, rounds=r, size=C.size, p=p, forced_by_part1=len(forced or {}),
-                   part1_lo=e1.lo, part1_hi=e1.hi, part1_ratio=e1.ratio, part1_cost=e1.evaluations,
-                   part1_seconds=t1, proof_steps=len(pf), prover_seconds=tp, proof_ok=v.proof_ok,
-                   verify_seconds=tv, part2_lo=v.estimate.lo, part2_hi=v.estimate.hi,
-                   part2_samples=v.estimate.samples, mc_cost=mc_samples_needed(p, EPS, DELTA),
-                   part2_contains=bool(v.estimate.lo <= p <= v.estimate.hi))
-        rows.append(row)
-        print(f"{fam:8s} k={k:2d} size={C.size:4d} p={p:.2e} | part1 [{e1.lo:.2e},{e1.hi:.2e}] "
-              f"forced={row['forced_by_part1']} | proof {len(pf)} steps, check {tv:.1f}s, "
-              f"[{v.estimate.lo:.2e},{v.estimate.hi:.2e}] ok={row['part2_contains']} | MC {row['mc_cost']:.1e}",
-              flush=True)
-    with open(os.path.join(OUT, "arguments.json"), "w") as f:
-        json.dump(rows, f, indent=1)
+def run_instance(fam, k, r, seed):
+    rng = np.random.default_rng(seed)
+    if fam == "linhash":
+        C, S, a, body = linear_hash_trigger(12, k, rng)
+    else:
+        C, S, a, body = spn_trigger(12, k, r, rng)
+    D = Product.uniform(C.n)
+    p = body_prob(C, S, a, body) * 2.0 ** (-k)
+    # Part 1 (no prover)
+    t = time.time()
+    forced = forced_input_literals(C)
+    e1 = dfsb_estimate(C, D, eps=EPS, delta=DELTA, rng=rng, node_budget=300)
+    t1 = time.time() - t
+    # Part 2: envelope = the trigger point, DRUP proof from a CDCL solver
+    E = Envelope()
+    E.root = E.PROD([E.lit(i, b) for i, b in zip(S, a)])
+    t = time.time()
+    pf = honest_proof(C, E)
+    tp = time.time() - t
+    t = time.time()
+    v = verify(C, D, E, pf, eps=EPS, delta=DELTA, rng=rng)
+    tv = time.time() - t
+    return dict(family=fam, k=k, rounds=r, size=C.size, p=p, forced_by_part1=len(forced or {}),
+                part1_lo=e1.lo, part1_hi=e1.hi, part1_ratio=e1.ratio, part1_cost=e1.evaluations,
+                part1_seconds=t1, proof_steps=len(pf), prover_seconds=tp, proof_ok=v.proof_ok,
+                verify_seconds=tv, part2_lo=v.estimate.lo, part2_hi=v.estimate.hi,
+                part2_samples=v.estimate.samples, mc_cost=mc_samples_needed(p, EPS, DELTA),
+                part2_contains=bool(v.estimate.lo <= p <= v.estimate.hi))
 
+
+def _worker(args, q):
+    q.put(run_instance(*args))
+
+
+def main():
+    import multiprocessing as mp
+    rows = []
+    insts = [("linhash", 12, 0), ("linhash", 16, 0), ("linhash", 20, 0), ("linhash", 24, 0),
+             ("spn", 8, 2), ("spn", 12, 2), ("spn", 16, 3), ("spn", 20, 3)]
+    for idx, (fam, k, r) in enumerate(insts):
+        q = mp.Queue()
+        pr = mp.Process(target=_worker, args=((fam, k, r, 99 + idx), q))
+        pr.start()
+        pr.join(TIME_LIMIT)
+        if pr.is_alive():
+            pr.terminate()
+            pr.join()
+            row = dict(family=fam, k=k, rounds=r, timeout_seconds=TIME_LIMIT)
+            print(f"{fam:8s} k={k:2d}: no proof within {TIME_LIMIT} s", flush=True)
+        else:
+            row = q.get()
+            print(f"{fam:8s} k={k:2d} size={row['size']:4d} p={row['p']:.2e} | part1 "
+                  f"[{row['part1_lo']:.2e},{row['part1_hi']:.2e}] forced={row['forced_by_part1']} | "
+                  f"proof {row['proof_steps']} steps ({row['prover_seconds']:.1f}s), check {row['verify_seconds']:.1f}s, "
+                  f"[{row['part2_lo']:.2e},{row['part2_hi']:.2e}] ok={row['part2_contains']} | MC {row['mc_cost']:.1e}",
+                  flush=True)
+        rows.append(row)
+        with open(os.path.join(OUT, "arguments.json"), "w") as f:
+            json.dump(rows, f, indent=1)
+
+    rng = np.random.default_rng(199)
     # E4: surprise accounting. Trigger of k = 40 bits; the argument reveals j
     # of them (subcube envelope on those j bits, domination is by unit
     # propagation); the verifier samples the rest.
@@ -105,8 +128,8 @@ def main():
                           contains=bool(v.estimate.lo <= p <= v.estimate.hi), ratio=v.estimate.ratio))
         print(f"revealed {j:2d}/{k}: samples {v.estimate.samples:9d} ratio {v.estimate.ratio:.3f} "
               f"contains {srows[-1]['contains']}", flush=True)
-    with open(os.path.join(OUT, "surprise.json"), "w") as f:
-        json.dump(srows, f, indent=1)
+        with open(os.path.join(OUT, "surprise.json"), "w") as f:
+            json.dump(srows, f, indent=1)
 
 
 if __name__ == "__main__":
