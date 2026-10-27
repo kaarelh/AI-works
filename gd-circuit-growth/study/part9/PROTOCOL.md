@@ -74,3 +74,12 @@ is reported with the exposure noted. Networks (nets, nets_wd, nets_cewd), lin, h
   p9_sum on 3 toy fits (sym7 n=256, par3 n=64, thrsum n=512), to p9_gates on qd_dev n=1000, to v1 on satimage n=300.
 - Already run before this freeze, with frozen components whose inclusion did not depend on them: p9_sum (identical to
   hyb_portfolio2 on toy inputs) on dlheld4 and dlheld5. The headline toy rows are hyb_portfolio2's own runs.
+
+**Post-freeze crash fix (27 October, ~02:45 UTC).** The frozen hyb_portfolio2 crashed at its first held-out image cell
+(qd_a and qd_b, n = 100, seed 0) before producing any result: the gates booster lowers LightGBM's `min_data_in_leaf`
+below the Dataset's construction value (20) when a member's training set has fewer than 500 points, which LightGBM refuses
+with feature pre-filtering on. The gates dev evaluation never covered n < 1000, so it was not seen. Fix: pre-filtering is
+switched off only when `min_data_in_leaf` < 20 (one line in fit_ggbt). Verified: identical predictions to the unfixed
+p9_gates at qd_dev n = 1000 (and the fix cannot act at n_fit >= 500, i.e. on every dev cell and every image cell with
+n >= 1000); runs at n = 100 and 300. New md5 **e38af40493816ef1bc82e4f16428dcdf**. No held-out result existed when the fix was
+made. The toy runs are unaffected (the gates member never runs on toy inputs); some toy shards ran before, some after.
