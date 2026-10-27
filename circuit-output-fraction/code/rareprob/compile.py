@@ -17,6 +17,11 @@ Rules, applied to the NNF of C under a partial assignment rho:
   any gate that a pilot sample finds dense (Pr >= tau)
                           -> BOX: the exact sub-function as a leaf, with
                              Monte-Carlo mass and rejection sampling
+                             (pilot of `pilot` samples per candidate node)
+  any node, once `call_budget` rule applications have been made
+                          -> 1 (so the compiler's work is polynomial: at most
+                             call_budget applications, each costing O(|N|)
+                             plus `pilot` evaluations for the density test)
 """
 
 from __future__ import annotations
@@ -45,8 +50,10 @@ class CompileStats:
 
 class EnvelopeCompiler:
     def __init__(self, N: NNF, D: Product, shannon: int = 4, node_budget: int = 200_000,
-                 tau: float | None = None, pilot: int = 512, rng=None):
+                 tau: float | None = None, pilot: int = 512, rng=None, call_budget: int | None = None):
         self.tau = tau
+        self.call_budget = node_budget if call_budget is None else call_budget
+        self.calls = 0
         self.slack = 2.0
         self.pilot = pilot
         self.rng = np.random.default_rng() if rng is None else rng
@@ -143,7 +150,13 @@ class EnvelopeCompiler:
         r = self.memo.get(key)
         if r is not None:
             return r
-        r = self._env(v, rho, depth)
+        if self.calls >= self.call_budget:
+            # out of budget: the constant 1 is always a valid envelope
+            self.stats.budget_exhausted = True
+            r = self.E.one()
+        else:
+            self.calls += 1
+            r = self._env(v, rho, depth)
         self.memo[key] = r
         if len(self.E.kind) > self.budget:
             self.stats.budget_exhausted = True

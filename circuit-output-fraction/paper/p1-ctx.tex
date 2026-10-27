@@ -24,9 +24,10 @@ $\mathrm{cw}(N)=\max_h|\kappa(h)|$.
 For $\{\wedge,\vee,\neg\}$-circuits $|N|\le2|C|$ (one copy of each gate per
 polarity). A fan-in-$k$ $\oplus$-gate becomes a chain with $12(k-1)$ wires for both
 polarities, so $|N|\le12|C|$ when $\oplus$-gates are present, and a threshold gate of
-fan-in $k$ with nonnegative integer weights of total $W$ becomes a sequential
-counter with $O(kW)$ wires; other threshold gates are covered only as frontier
-gates (see below). Merging an $\vee$-gate into an $\vee$-parent does not increase
+fan-in $k$ with integer weights $w_i$ becomes a sequential counter with $O(kW)$ wires,
+$W=\sum_i|w_i|$ (a negative weight acts on the complemented input,
+$w_ih=|w_i|\neg h-|w_i|$); other threshold gates are covered only as frontier gates
+(see below). Merging an $\vee$-gate into an $\vee$-parent does not increase
 $\mathrm{cw}$ ($\vee$-gates have no overlap, and the sets $\mathrm{Up}(h)$ do not
 change), but merging $\wedge$-gates can: a CNF with clauses on the $n-w+1$ sliding
 windows of width $w$ of its variable order has $\mathrm{cw}=w$ as a left-deep
@@ -130,7 +131,8 @@ that of the cone \cite{acms2020}.
 Context width is then computed with frontier gates (one per polarity) as leaves; a
 frontier gate $f$ compiled to a DNNF $D_f$ gives the nodes $N[f,\sigma]=D_f|_\sigma$,
 so the size becomes $\sum_f2^{|\kappa(f)|}|D_f|$ plus the bound of \cref{thm:cw} for
-the remaining gates, and the result is a d-DNNF only if every $D_f$ is one.
+the remaining gates, and the result is a d-DNNF if, in addition to the hypothesis of
+\cref{thm:cw}, every $D_f$ is one.
 
 \subsection{Modules and quotients}\label{sec:modules-quotients}
 
@@ -145,8 +147,9 @@ Modules are found in linear time \cite{dutuitrauzy1996}. For a module $g$, choos
 module for each support that is maximal among the module supports properly inside
 $\sv(g)$. By laminarity the chosen $g_1,\dots,g_k$ have disjoint supports; every path
 from $\sv(g_j)$ to $g$ passes through $g_j$ (extended to the output it meets $g_j$, and
-$g_j$ is not above $g$ since $\sv(g_j)\subsetneq\sv(g)$); so $g=Q_g(g_1,\dots,g_k,x')$
-with $x'$ the remaining inputs of $\sv(g)$. This is the module tree.
+$g_j$ is not above $g$ since $\sv(g_j)\subsetneq\sv(g)$); so $g=R_g(g_1,\dots,g_k,x')$,
+where $x'$ are the remaining inputs of $\sv(g)$ and $R_g$ is obtained from the cone of
+$g$ by replacing each $g_j$ with a fresh input. This is the module tree.
 
 \begin{lemma}[sensitivity of quotients]\label{lem:quotient}
 Let $F(q)=\Pr_{y\sim\bigotimes_j\mathrm{Bern}(q_j)}[Q(y)=1]$ and $q,\hat q\in[0,1]^k$.
@@ -172,23 +175,32 @@ $r(1-U_j)-(1-\hat q_j)=(r-1)(1-U_j-\hat q_j)\ge0$ when $U_j\le\frac12$.
 \end{proof}
 
 Let $g$ be a module with submodules $g_1,\dots,g_k$ as above, let
-$q_j=D(g_j)\in[L_j,U_j]$, and let $Q$ be $Q_g$ or $\neg Q_g$, according to whether
-$D(g)$ or $D(\neg g)$ is wanted. Take $\hat q_j=\sqrt{L_jU_j}$ and
+$q_j=D(g_j)\in[L_j,U_j]\subseteq[0,1]$, and let $Q$ be $R_g$ or $\neg R_g$, according to
+whether $D(g)$ or $D(\neg g)$ is wanted. Take $\hat q_j=\sqrt{L_jU_j}$ and
 $\xi_j=\frac12\log(U_j/L_j)$ if $U_j\le\frac12$ or $Q$ is monotone in $y_j$;
-symmetrically with $1-q_j$ if $L_j\ge\frac12$ or $Q$ is antitone in $y_j$; otherwise
-any $\hat q_j\in[L_j,U_j]$ and $\xi_j=\max\{\log(U_j/L_j),\log((1-L_j)/(1-U_j))\}$. By
-\cref{lem:quotient}, an interval $[L_F,U_F]$ for $\Pr[Q=1]$ under
-$\bigotimes_j\mathrm{Bern}(\hat q_j)$ and $D$ on $x'$, from any sound method (exact
-for small quotients, the threshold dynamic program, DFSB, Monte Carlo), gives
-$\Pr_D[Q(g_1,\dots,g_k,x')=1]\in[e^{-\sum_j\xi_j}L_F,e^{\sum_j\xi_j}U_F]$. Walking the
-module tree bottom-up and making each of the $M$ quotient estimates at confidence
-$\delta/M$ gives an interval for $p$ that is valid with probability $1-\delta$ (union
-bound; each estimate is valid conditionally on the earlier ones). When the first two
-rules apply throughout, and each module estimates the polarity its parent's rule
-uses (the rarer one, or the one matching a monotone or antitone input), the
-log-ratio $\log(U/L)$ of the final interval is the sum of the log-ratios of all
-quotient estimates. Completeness thus needs every quotient to be estimated to small
-relative error on its rarer polarity (two-sided relative accuracy) or, for quotients
-monotone or antitone in each input, on the polarity the parent uses. Thresholds,
-majorities and other tractable functions of independent sub-circuits are the typical
-case.
+symmetrically with $1-q_j$ if $L_j\ge\frac12$ or $Q$ is antitone in $y_j$ (if both
+rules apply, the one with the smaller $\xi_j$); otherwise $\hat q_j=\sqrt{L_jU_j}$ and
+the least $\xi_j$ for which both conditions of \cref{lem:quotient} hold for every
+$q_j\in[L_j,U_j]$, namely $\xi_j=\max\{\frac12\log\frac{U_j}{L_j},
+\log\frac{1-L_j}{1-\hat q_j},\log\frac{1-\hat q_j}{1-U_j}\}$ (if a denominator vanishes,
+$\xi_j=\infty$ and the bound below is $[0,1]$). By \cref{lem:quotient}, an interval
+$[L_F,U_F]$ for $\Pr[Q=1]$ under $\bigotimes_j\mathrm{Bern}(\hat q_j)$ and $D$ on $x'$,
+from any sound method (exact for small quotients, the threshold dynamic program, DFSB,
+Monte Carlo), gives
+$\Pr_D[Q(g_1,\dots,g_k,x')=1]\in[e^{-\sum_j\xi_j}L_F,\min\{1,e^{\sum_j\xi_j}U_F\}]$; the
+clipping at $1$ keeps every interval inside $[0,1]$, which the rules need (else
+$\hat q_j$ could leave $[0,1]$). Walking the module tree bottom-up and making each of the
+$M$ quotient estimates at confidence $\delta/M$ gives an interval for $p$ that is
+valid with probability $1-\delta$ (union bound; each estimate is valid conditionally
+on the earlier ones).
+
+Now let each module estimate the polarity its parent's rule uses: the one matching a
+monotone or antitone input, otherwise the rarer one. Under the first two rules,
+$2\xi_j$ is then at most the log-ratio $\rho_j$ of the interval returned for $g_j$;
+under the third, that interval contains $\frac12$ and $2\xi_j\le(1+O(\rho_j))\rho_j$.
+So the log-ratio $\log(U/L)$ of the final interval is at most the sum $S$ of the
+log-ratios of all quotient estimates when only the first two rules are used, and at most
+$e^{O(dS)}S$ in general, for $dS$ below a constant, $d$ the depth of the module tree.
+Completeness thus needs every quotient to be estimated to small relative error on
+the polarity its parent uses. Thresholds, majorities and other tractable functions
+of independent sub-circuits are the typical case.

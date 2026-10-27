@@ -29,7 +29,7 @@ import math
 import numpy as np
 
 from .dist import Product
-from .janson import is_unate
+from .janson import _NORMAL2, exp_down, exp_up, is_unate
 from .stats import Estimate, kl_interval
 
 
@@ -83,9 +83,8 @@ class UnateSystem:
         cls = list(cls)
         with np.errstate(divide="ignore"):
             s = float(np.sum(np.log1p(-self.pb_hi[cls]))) if cls else 0.0
-        if s == -math.inf:
-            return 0.0
-        return max(0.0, math.exp(s) * (1 - 2.0 ** -36 * (len(cls) + 2)))
+        # 2^-36 (|cls| + 2) bounds the rounding error of s; 0 below the normal range
+        return exp_down(s, 2.0 ** -36 * (len(cls) + 2))
 
     def neighbour_table(self, active: list[int]):
         """nbr[v] (deg_max, k_max-1) indices into y extended with columns
@@ -165,12 +164,27 @@ def _reps_for(delta: float, fail: float = 0.25) -> int:
         R += 2
 
 
+def _stat_interval(med: float, b: float, eps0: float, kap: float) -> tuple[float, float]:
+    """[e^{med - b - kap}/(1 + eps0), e^{med + b + kap}/(1 - eps0)], upper end 1 if
+    eps0 >= 1, rounded outwards: med carries a relative error below 2^-50, b, eps0
+    and kap are upper bounds, and 2^-48 times the sum of the magnitudes bounds the
+    rounding error of each exponent."""
+    l1 = math.log1p(eps0)
+    lo = exp_down(med - l1 - b - kap, 2.0 ** -48 * (abs(med) + l1 + b + kap))
+    if not eps0 < 1:
+        return lo, 1.0
+    l2 = -math.log1p(-eps0)
+    hi = exp_up(med + b + l2 + kap, 2.0 ** -48 * (abs(med) + b + l2 + kap))
+    return lo, min(1.0, hi)
+
+
 def telescoping_estimate(clauses, D: Product, delta: float = 0.05, N: int = 2000,
                          rng=None, T_max: int = 1 << 15) -> Estimate:
     """Certified telescoping for a unate CNF; the returned [lo, hi] contains p
     with probability >= 1 - delta, for every unate CNF, N and T_max.
 
-    If some clause is false with probability 1, p = 0 and [0, 0] is returned.
+    With no clauses p = 1 and [1, 1] is returned; if some clause is false with
+    probability 1, p = 0 and [0, 0] is returned.
     Otherwise, with stages k = 1..K and h_k <= prod_{c in k}(1 - D(B_c)) <= r_k
     (Harris), each of R repetitions (R odd, Pr[Bin(R, 1/4) >= (R+1)/2] <=
     delta/2) runs the stage-k sampler (CFTP truncated at T_max) N times and
@@ -201,13 +215,17 @@ def telescoping_estimate(clauses, D: Product, delta: float = 0.05, N: int = 2000
     realises a product law whose point masses are within e^{+-kappa} of D's
     (UnateSystem.kappa), so (1)-(3) are applied to that law with h_k replaced
     by e^{-2 kappa} h_k, and the interval is widened by e^{+-kappa}. The lower
-    end is raised to the deductive Harris bound prod_c (1 - D(B_c));
-    endpoints are rounded outwards. If the median repetition contains a zero
-    ratio, or the statistical upper end falls below the Harris bound, there is
-    no verdict. N is an input (not eps): the width of the interval is
-    data-driven, and it is wide unless N >> sum_k 1/h_k."""
+    end is raised to the deductive Harris bound prod_c (1 - D(B_c)). Rounding:
+    h_k is rounded down and b, v, eps0 up, log Z^ is summed with fsum, and
+    the endpoints are rounded outwards (the lower end is 0 below the normal
+    float range). If the median repetition contains a zero ratio, or the
+    statistical upper end falls below the Harris bound, there is no verdict.
+    N is an input (not eps): the width of the interval is data-driven, and it
+    is wide unless N >> sum_k 1/h_k."""
     rng = np.random.default_rng() if rng is None else rng
     S = UnateSystem(clauses, D)
+    if not S.clauses:
+        return Estimate(1.0, 1.0, 1.0, 0, 0, delta, "no clauses: p = 1")
     if any(S.sure):
         return Estimate(0.0, 0.0, 0.0, 0, 0, delta, "a clause is false with probability 1: p = 0")
 
@@ -219,42 +237,49 @@ def telescoping_estimate(clauses, D: Product, delta: float = 0.05, N: int = 2000
     stages = S.stages()
     K = len(stages)
     harris = S.harris_lower(range(len(S.clauses)))
-    # r_k >= h_k under D, hence >= e^{-2 kappa} h_k under the law the sampler realises
-    h = np.array([S.harris_lower(st) for st in stages]) * math.exp(-2 * S.kappa)
+    # r_k >= h_k under D, hence >= e^{-2 kappa} h_k under the law the sampler realises;
+    # the factor 1 - 2^-50 absorbs the rounding of exp and of the products (harris_lower
+    # is 0 or normal), and products below the normal range are set to 0
+    h = np.array([S.harris_lower(st) for st in stages]) * (math.exp(-2 * S.kappa) * (1 - 2.0 ** -50))
+    h[h < _NORMAL2] = 0.0
     R = _reps_for(delta / 2)
     fails = np.zeros(K, dtype=int)
     nmin = np.full(K, N)
     logs, evals = [], 0
     for _ in range(R):
-        logp = 0.0
+        terms = []
         active: list[int] = []
         for k, st in enumerate(stages):
             Y, f = cftp_samples(S, active, N, rng, T_max=T_max)
             evals += N
             fails[k] += f
-            if Y.shape[0] == 0:
+            nk = Y.shape[0]
+            if nk == 0:
                 return no_verdict(evals, "no coalescence")
-            nmin[k] = min(nmin[k], Y.shape[0])
-            rk = 1.0 - S.violated(Y, st).mean()
-            logp += math.log(rk) if rk > 0 else -math.inf
+            nmin[k] = min(nmin[k], nk)
+            bad = int(S.violated(Y, st).sum())
+            # log r^_k, r^_k = (nk - bad)/nk, with relative error below 2^-51
+            if bad == nk:
+                terms.append(-math.inf)
+            elif 2 * bad <= nk:
+                terms.append(math.log1p(-bad / nk))
+            else:
+                terms.append(math.log((nk - bad) / nk))
             active += st
-        logs.append(logp)
+        logs.append(math.fsum(terms))  # relative error below 2^-50
     # certified truncation per stage, pooling the R*N runs of that stage's sampler
     th = np.array([kl_interval(fails[k] / (R * N), R * N, delta / (2 * K))[1] for k in range(K)])
     if np.any(th >= h):
         return no_verdict(evals, "truncation not certified below the Harris guarantee")
-    b = float(np.sum(th / (h - th)))
-    v = math.prod(1 + (1 - h[k] + th[k]) / ((h[k] - th[k]) * nmin[k]) for k in range(K)) - 1
-    eps0 = 2 * math.sqrt(v)
+    g = h - th
+    up = 1 + 2.0 ** -48  # above the relative rounding errors (below 2^-50) of b, v and eps0
+    b = math.fsum(th / g) * up
+    v = math.expm1(math.fsum(np.log1p((1 - h + th) / (g * nmin))) * up) * up
+    eps0 = 2 * math.sqrt(v) * up
     med = float(np.median(logs))
     if med == -math.inf:
         return no_verdict(evals, "zero ratio in the median repetition")
-    kap = S.kappa  # from the sampled law's p back to D's p
-    lo = math.exp(med - math.log1p(eps0) - b - kap) * (1 - 1e-12)
-    if eps0 < 1:
-        hi = min(1.0, max(math.exp(med + b - math.log1p(-eps0) + kap) * (1 + 1e-12), math.ulp(0.0)))
-    else:
-        hi = 1.0
+    lo, hi = _stat_interval(med, b, eps0, S.kappa)  # kappa: from the sampled law's p back to D's p
     lo = max(lo, harris)  # Harris lower bound is deductive
     if hi < lo:
         return no_verdict(evals, "statistical upper end below the Harris bound")

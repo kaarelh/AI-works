@@ -1124,8 +1124,8 @@ def thr_sum(w, bits) -> float:
 
 class Propagator:
     """Gate propagation plus Gaussian elimination on certified affine gates.
-    Rules: (R1) gate semantics forwards and backwards; (R2) a certified affine
-    gate with a known value adds its form to the affine system S; (R3) a
+    Rules: (X1) gate semantics forwards and backwards; (X2) a certified affine
+    gate with a known value adds its form to the affine system S; (X3) a
     certified affine gate whose form is constant on V(S) gets that value. All
     rules are valid inferences about the true gate values of any x that
     satisfies the current state.

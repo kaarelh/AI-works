@@ -62,21 +62,31 @@ interesting one.
 (Decompose--Force--Sample--Branch) recursively splits the event by exact rules
 (independence of variable-disjoint parts, literals forced by propagation,
 Shannon expansion) and samples only at leaves that are dense or have tight
-envelopes. It is sound on every circuit, and complete, with cost
-$\tilde O(m\,K\,d^2\eps^{-2}\log(m/\delta))$ evaluations, on every circuit whose ideal
-$K$-explanation tree has $m$ nodes (\cref{thm:dfsb}). This covers products and
-read-once compositions of arbitrary dense sub-circuits, backdoor-style triggers,
-circuits with small cutsets (exactly, by cutset conditioning), DNFs and DNNFs, and,
-through sound local rewriting, disguised versions of all of these. Beyond it:
+envelopes. It is sound on every circuit, and complete, with
+$\tilde O(m\,K\,d^2\eps^{-2}\log(m/\delta))$ evaluations besides its pilots, on every
+circuit whose ideal $K$-explanation tree has $m$ nodes (\cref{thm:dfsb}). This covers
+read-once formulas (exactly); read-once compositions of sub-circuits each of which, in
+the polarity in which it occurs, is \emph{component-dense}: forcing and independence
+split it into exact or $K$-dense pieces (\cref{cor:dfsb}); backdoor-style triggers;
+circuits with small cutsets (exactly, by cutset conditioning); and versions of all of
+these disguised by rewriting cones of logarithmic support, which are computed exactly.
+DNFs and DNNFs, whose ideal trees can be exponential, are covered instead by envelope
+leaves built from their own envelopes ($K$ at most the number of terms for a DNF), and
+by the \#DNNF FPRAS, which the meta-procedure runs (\cref{prop:dnnf-env,thm:meta}).
+Beyond DFSB:
 \begin{itemize}
-\item \emph{Context width} (\cref{thm:cw}): every circuit compiles into an equivalent
-DNNF of size $O(|C|\,\mathrm{cw}\,2^{\mathrm{cw}})$, where $\mathrm{cw}$ measures how
-many variables an $\wedge$-gate must be conditioned on to become decomposable; with
-the \#DNNF FPRAS \cite{meel2026dnnf} this gives an FPRAS whenever
-$\mathrm{cw}=O(\log|C|)$, e.g.\ for ORs of bounded-pathwidth CNFs, whose exact
-counting is $\#\mathsf P$-hard.
+\item \emph{Context width} (\cref{thm:cw}): every circuit whose NNF $N$ has no opaque
+gates compiles into an equivalent DNNF of size $O(|N|(\mathrm{cw}+1)2^{\mathrm{cw}})$
+($|N|=O(|C|)$ for $\{\wedge,\vee,\neg,\oplus\}$-circuits), where $\mathrm{cw}$ measures,
+for the given bracketing of the $\wedge$-gates, how many variables a gate must be
+conditioned on to make every $\wedge$ decomposable; with the \#DNNF FPRAS
+\cite{meel2026dnnf} this gives an FPRAS whenever $\mathrm{cw}=O(\log|N|)$, e.g.\ for ORs
+of bounded-pathwidth CNFs, each bracketed along a path decomposition
+(\cref{lem:pathcw}), whose exact counting is $\#\mathsf P$-hard.
 \item \emph{Modules} (\cref{lem:quotient}): functions of independent sub-circuits
-(thresholds, majorities) are estimated through their quotients, with errors that add.
+(thresholds, majorities) are estimated through their quotients, walking the module
+tree; the log-ratios of the quotient estimates add, up to lower-order terms, when each
+module is estimated to small relative error on the polarity its parent uses.
 \item \emph{The presumption of independence, certified}
 (\cref{thm:janson-general}): for unate $\wedge$'s of arbitrary sub-circuits,
 Harris and Janson inequalities pin $p$ to within a factor
@@ -89,7 +99,28 @@ data provably cannot do better than $e^{0.29\Delta}$
 \item \emph{Certified telescoping} (\cref{thm:cftp}): annealing estimators become
 sound when the intermediate samplers are exact Las Vegas samplers (coupling from
 the past) whose truncation is certified empirically; this handles unate circuits
-where correlations are strong and extensive.
+with strong, extensive correlations whose bounding chains coalesce quickly.
+\item \emph{Local thresholds} (\cref{sec:local}): for $C=[\sum_jg_j(x_{A_j})\ge t]$
+with arbitrary sub-circuits $g_j$ of bounded arity and degree, whose scopes may
+overlap like an expander, exponential tilting with a heat-bath sampler whose mixing is
+certified by a locally checked Dobrushin condition, and a normaliser certified by
+thermodynamic integration, is sound on every input (\cref{thm:local}); if every $g_j$
+has a private pivotal input, it is complete with $\poly(n)/\eps^2$ samples at every
+threshold reachable by a certified tilt, a range that contains thresholds with
+$p=e^{-\Omega(m)}$. For supermodular statistics coupling from the past removes the
+certificate (\cref{prop:local-cftp}).
+\item \emph{Affine structure} (\cref{sec:affine}): certified affine gates and an exact
+affine and triangular presolve (\cref{prop:presolve}) factor out the parity-check part
+of the surprise exactly, in front of any sound estimator, and unions of affine
+subspaces give envelopes (\cref{thm:affenv}). Parity checks are also where
+decomposition fails: for $m\le n/6$ random checks and events that fill a $1/\poly(n)$
+fraction of their solution set, with high probability envelopes with small leaves,
+context-width compilation and DFSB's completeness guarantee cost Monte Carlo's price up
+to polynomial factors, and any use of a DNNF envelope at least its square root
+(\cref{thm:parity-barrier,cor:barrier-methods}). Under biased product distributions,
+small $\wedge$'s of parity checks on $N$ inputs admit no sound procedure complete within
+a factor $2^{N^{1-\gamma}}$ unless $\NP\subseteq\BPP$, and no argument system complete
+within a factor $2$ unless $\coNP\subseteq\MA$ (\cref{thm:biased-hard}).
 \item Bounded treewidth (exact), thresholds of independent blocks (exponential
 tilting with $K=O(\sqrt k)$, \cref{prop:tilting}), and the known FPRAS classes
 \cite{moitra2019,gkm2010}.
@@ -101,26 +132,40 @@ system (implications, exclusivity, independence) and sampling steps with
 declared confidence budgets. It is sound on every circuit and every argument
 (\cref{thm:pcis-sound}), and complete on every circuit that has a short proof of
 being confined to a tractable region in which it is not rare
-(\cref{thm:certenv}). Lower bounds need no proof at all. The verifier's cost is
+(\cref{thm:certenv}). Lower bounds need no proof at all. XOR-propagation-tree
+arguments add parity reasoning by gate propagation and Gaussian elimination, with
+affine pieces under product distributions (\cref{thm:xpt}), and Gibbs envelopes extend
+the soft envelopes to statistics with overlapping scopes, with the mixing certificate
+recomputed by the verifier (\cref{prop:gibbs}). The verifier's cost is
 $\poly(|\pi|)+2^{\sigma_u}$ (times $\eps^{-2}\log(1/\delta)$ and the cost of a
 sample), where $\sigma_u$ is the surprise left unexplained by the argument. In
 the black-box model both terms have a sharp meaning: each bit of argument
 reduces the number of evaluations needed for a lower bound by at most a factor
 $2$, and once an envelope is certified the $2^{\sigma_u}$ term cannot be avoided
-for two-sided intervals (\cref{thm:surprise}). The prover helps
-strictly: for lower bounds unless $\NP\subseteq\BPP$; for upper bounds exactly to
-the extent that the verifier's proof system is not weakly automatable
-(\cref{cor:automatability}); two-sidedly under the hardness of factoring. Such
-separations cannot be based on $\NP$-hardness alone unless $\coNP\subseteq\AM$.
+for two-sided intervals (\cref{thm:surprise}). The prover helps strictly: for lower
+bounds unless $\NP\subseteq\BPP$; for upper bounds on circuits with short
+refutations in the verifier's proof system $P$ (and on padded versions with exactly
+certified $p>0$) whenever the corresponding slice of the canonical pair of $P$ is not
+separable in randomized polynomial time (\cref{prop:canonical}), which holds for
+$\mathrm{TC}^0$-Frege, Frege and extended Frege if Blum integers cannot be factored by
+polynomial-size circuits (\cref{cor:automatability}); and two-sidedly, for a verifier
+that checks proofs in a theory such as ZFC, if factoring is not in $\BPP$. Whether
+weak automatability of $P$ removes the prover's advantage on general envelope classes
+is open. Upper-bound and two-sided separations cannot be derived from $\NP$-hardness by
+randomized many-one reductions to gap problems with gap at least $1+1/\poly$ unless
+$\coNP\subseteq\AM$.
 
 \paragraph{Experiments (\cref{sec:experiments}).} A Python implementation
 (\texttt{rareprob}) estimates, e.g., $p\approx4\cdot10^{-46}$ for an OR of eight
 window-CNFs on $800$ variables to $0.4\%$ from $1{,}024$ samples (by context-width
 compilation), $p\approx7\cdot10^{-25}$ for an 80-bit trigger with $2\cdot10^4$
-samples, and $p\in[6.2,7.3]\cdot10^{-22}$ for a $2\cdot10^5$-clause unate CNF
-deterministically; it certifies SPN-hidden triggers with SAT-solver proofs where all
-syntactic methods fail; and in 2{,}450 adversarial and random trials no interval
-missed $p$ more often than allowed.
+samples, and $p\in[6.18,7.35]\cdot10^{-22}$ for a $2\cdot10^5$-clause unate CNF
+deterministically; it certifies $p\in10^{[-20.30,-20.08]}$ (exact $10^{-20.19}$) for a
+chain of $1600$ overlapping random local detectors with $7\cdot10^4$ Glauber samples,
+where Monte Carlo would need about $10^{22}$; with SAT-solver proofs as arguments it
+certifies SPN-hidden triggers, which Part~1 handles only by tabulating small cones and
+branching, at a cost exponential in the trigger length; and in 2{,}450 adversarial and random trials no
+interval missed $p$ more often than allowed.
 
 \subsection{Related work}
 
@@ -138,7 +183,10 @@ counting \cite{darwiche2002map,samer2010}. Hashing-based counters
 sampling \cite{lai2023partialkc} and AND/OR importance sampling
 \cite{gogate2008andor} combine decomposition with sampling for variance reduction,
 without relative-error guarantees for rare events. Certified exact model counting
-\cite{bryant2023cpog} checks compilation by proofs.
+\cite{bryant2023cpog} checks compilation by proofs. Affine decision trees
+\cite{koriche2013} and the elimination of defined variables \cite{lagniez2016} use
+parity and functional structure in exact counting, and tilting with local central
+limit theorems counts independent sets of a given size \cite{daviesperkins2021,jpss2021}.
 \emph{Rare-event simulation} \cite{asmussenglynn2007,bucklew2004} studies
 importance sampling with bounded relative error; the soundness requirement
 here (valid intervals on every input) is the computer-science twist.

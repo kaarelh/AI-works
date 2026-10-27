@@ -1,7 +1,11 @@
 """Tests for the DFSB fixes: exact atoms (T'), atom-protected flattening,
 forcing to a fixpoint, zero-mass envelopes, Phase-2 sample caps, cutset
-conditioning with (S) and (E) disabled, and the meta-procedure's handling of
-underflow and empty intersections."""
+conditioning with (S) and (E) disabled, the meta-procedure's handling of
+underflow and empty intersections, certified variable elimination (log-scale
+bounds, the 2^-1000 boundary, the evaluator's threshold arithmetic), canonical
+CNF clauses, the local-threshold and affine modules of the meta-procedure,
+truncated rejection fills, the compiler's rule budget and subnormal-safe
+exponentials."""
 
 import math
 from fractions import Fraction
@@ -12,7 +16,12 @@ import pytest
 from rareprob.circuit import Circuit
 from rareprob.dfsb import DFSB, AtomNNF, atom_nnf, dfsb_estimate, sample_cap, _leaves
 from rareprob.dist import Product
-from rareprob.meta import meta_estimate
+from rareprob.compile import EnvelopeCompiler
+from rareprob.envelope import Box, Envelope, _exp_down, _exp_up, estimate_boxes
+from rareprob.janson import is_unate, janson_interval
+from rareprob.meta import as_cnf, meta_estimate
+from rareprob.nnf import to_nnf
+from rareprob.ve import exact_ve, ve_bounds
 from rareprob.stats import kl_interval, sequential_mean
 
 
@@ -254,3 +263,304 @@ def test_meta_exact_ve_contains():
     P = exact_fraction(C, D)
     e = meta_estimate(C, D, eps=0.1, delta=0.05, rng=rng)
     assert Fraction(e.lo) <= P <= Fraction(e.hi)
+
+
+# ------------------------------------------------------------ certified VE
+def _ve_contains(res, P: Fraction) -> bool:
+    """The certificate itself: p = mant 2^exp (1 + theta), |theta| <= rel."""
+    if res.zero:
+        return P == 0
+    m = Fraction(res.mant) * Fraction(2) ** res.exp
+    r = Fraction(res.rel)
+    return m * (1 - r) <= P <= m * (1 + r)
+
+
+@pytest.mark.parametrize("seed", range(4))
+def test_ve_bounds_contain_exact_value(seed):
+    rng = np.random.default_rng(900 + seed)
+    for _ in range(60):
+        n = int(rng.integers(3, 11))
+        C = random_circuit(n, int(rng.integers(3, 30)), rng)
+        q = rng.uniform(0, 1, n)
+        m = rng.random(n) < 0.2
+        q[m] = rng.integers(0, 2, m.sum())
+        m2 = rng.random(n) < 0.15
+        q[m2] = 10.0 ** rng.uniform(-300, -5, m2.sum())  # deep but normal marginals
+        D = Product(q)
+        P = exact_fraction(C, D)
+        res = ve_bounds(C, D, max_width=18)
+        if res is None:  # declined (width or a would-be underflow): always allowed
+            continue
+        assert _ve_contains(res, P)
+        lo, hi = res.interval()
+        assert Fraction(lo) <= P <= Fraction(hi)
+
+
+def test_ve_boundary_two_to_minus_1000():
+    """Regression: the old underflow branch certified p < 2^-1000 from a
+    floating-point VE value just below 2^-1000 while p was just above it."""
+    rng = np.random.default_rng(11)
+    n = 1000
+    C = Circuit(n)
+    C.set_output(C.AND(*range(n)))
+    cases = [np.full(n, 0.5)]
+    q = np.full(n, 0.5)
+    q[0] = math.nextafter(0.5, 1.0)  # p = 2^-1000 (1 + 2^-52), just above the old threshold
+    cases.append(q)
+    cases += [0.5 + rng.uniform(-1, 1, n) * 1e-13 for _ in range(12)]
+    for q in cases:
+        D = Product(q)
+        P = Fraction(1)
+        for x in q:
+            P *= Fraction(float(x))
+        res = ve_bounds(C, D, max_width=18)
+        assert res is not None and _ve_contains(res, P)
+        e = meta_estimate(C, D, eps=0.1, delta=0.05, rng=rng)
+        assert Fraction(e.lo) <= P <= Fraction(e.hi)
+        assert 0 < e.lo and e.hi <= e.lo * (1 + 1e-9)
+
+
+def test_ve_tiny_p_keeps_log_bounds():
+    """p = 0.3^1100 ~ 10^-575 is far below the float range: the certificate
+    still contains it, the float interval is [0, tiny] with hi > 0, and an
+    exact zero is reported only for p = 0."""
+    n = 1100
+    C = Circuit(n)
+    C.set_output(C.AND(*range(n)))
+    D = Product(np.full(n, 0.3))
+    res = ve_bounds(C, D, max_width=18)
+    P = Fraction(0.3) ** n
+    assert not res.zero and _ve_contains(res, P)
+    l2lo, l2hi = res.log2_bounds()
+    assert l2lo <= n * math.log2(0.3) <= l2hi and l2hi - l2lo < 1e-8
+    e = meta_estimate(C, D, eps=0.1, delta=0.05, rng=np.random.default_rng(0))
+    assert e.lo == 0.0 and 0 < e.hi < 1e-300
+    Z = Circuit(2)
+    Z.set_output(Z.AND(0, Z.NOT(0), 1))
+    rz = ve_bounds(Z, Product.uniform(2))
+    assert rz.zero and exact_ve(Z, Product.uniform(2)) == 0.0
+
+
+def test_ve_threshold_uses_evaluator_sum():
+    """Python's sum() is compensated; the evaluator adds left to right. With
+    weights (1e16, 1, -1e16) the two differ, and VE must follow the evaluator."""
+    C = Circuit(3)
+    C.set_output(C.THR([0, 1, 2], [1e16, 1.0, -1e16], 0.5))
+    D = Product.uniform(3)
+    P = exact_fraction(C, D)
+    assert P == Fraction(3, 8)
+    res = ve_bounds(C, D)
+    assert _ve_contains(res, P)
+    e = meta_estimate(C, D, eps=0.1, delta=0.05, rng=np.random.default_rng(0))
+    assert Fraction(e.lo) <= P <= Fraction(e.hi)
+
+
+def test_ve_extreme_marginals_no_underflow():
+    """Tables are mantissa/exponent pairs: products of tiny (even subnormal)
+    marginals and tables spanning more than the double range stay exact up to
+    the proved relative error."""
+    rng = np.random.default_rng(5)
+    for q0 in (1e-200, 1e-310, 0.3):
+        n = 8
+        C = Circuit(n)
+        C.set_output(C.OR(C.AND(*range(n)), C.AND(0, C.NOT(1))))
+        q = np.full(n, q0)
+        q[2] = 0.7
+        D = Product(q)
+        res = ve_bounds(C, D)
+        assert res is not None and _ve_contains(res, exact_fraction(C, D))
+    C = random_circuit(9, 25, rng)
+    q = 10.0 ** rng.uniform(-320, -1, 9)
+    D = Product(q)
+    res = ve_bounds(C, D)
+    assert res is not None and _ve_contains(res, exact_fraction(C, D))
+
+
+# ------------------------------------------------------------ canonical CNFs
+def test_as_cnf_canonicalises_clauses():
+    C = Circuit(3)
+    n0a, n0b = C.NOT(0), C.NOT(0)
+    c1 = C.OR(0, 0)                 # (x0 v x0)
+    c2 = C.OR(1, 1, 2)              # (x1 v x1 v x2)
+    c3 = C.OR(n0a, n0b, 2)          # (~x0 v ~x0 v x2): two distinct NOT gates
+    taut = C.OR(1, C.NOT(1))        # tautology
+    c2b = C.OR(2, 1)                # repeat of c2
+    C.set_output(C.AND(c1, c2, c3, taut, c2b))
+    cl = as_cnf(C)
+    assert sorted(map(tuple, cl)) == sorted([((0, 1),), ((1, 1), (2, 1)), ((0, 0), (2, 1))])
+    D = Product.uniform(3)
+    P = exact_fraction(C, D)
+    e = meta_estimate(C, D, eps=0.1, delta=0.05, rng=np.random.default_rng(0), ve_width=0)
+    assert Fraction(e.lo) <= P <= Fraction(e.hi)
+
+
+def test_as_cnf_repeated_literal_janson_example():
+    """(x0 v x0) & (x1 v x1 v x2): p = 3/8; the doubled literals must not be
+    counted twice by Harris/Janson."""
+    C = Circuit(3)
+    C.set_output(C.AND(C.OR(0, 0), C.OR(1, 1, 2)))
+    cl = as_cnf(C)
+    assert is_unate(cl)
+    e = janson_interval(cl, Product.uniform(3))
+    assert e.lo <= 0.375 <= e.hi
+    m = meta_estimate(C, Product.uniform(3), eps=0.1, delta=0.05, rng=np.random.default_rng(1), ve_width=0)
+    assert m.lo <= 0.375 <= m.hi
+
+
+# ------------------------------------------------------------ new meta modules
+def test_meta_runs_presolve_on_parity_checks():
+    rng = np.random.default_rng(3)
+    n, r = 30, 8
+    C = Circuit(n)
+    checks = [C.XOR(*[int(x) for x in rng.choice(n, 4, replace=False)]) for _ in range(r)]
+    R = C.OR(*[C.AND(int(a), int(b)) for a, b in rng.choice(n, (3, 2), replace=False)])
+    C.set_output(C.AND(*checks, R))
+    D = Product.uniform(n)
+    e = meta_estimate(C, D, eps=0.2, delta=0.05, rng=rng, ve_width=0, node_budget=200)
+    assert "presolve" in e.note
+    # p by enumeration over the 2^n cube is too big; check against VE instead
+    res = ve_bounds(C, D, max_width=25)
+    assert res is not None
+    lo, hi = res.interval()
+    assert e.lo <= hi and lo <= e.hi
+    assert e.lo > 0 and e.hi <= 1.2 * e.lo * (1 + 1e-9)
+
+
+def test_meta_runs_tg_on_local_threshold():
+    rng = np.random.default_rng(4)
+    n = 12
+    C = Circuit(n)
+    gs = [C.AND(i, (i + 1) % n) for i in range(n)]  # overlapping scopes
+    C.set_output(C.THR(gs, [1.0] * n, 6.0))
+    D = Product.uniform(n)
+    P = exact_fraction(C, D)
+    e = meta_estimate(C, D, eps=0.3, delta=0.05, rng=rng, ve_width=0, ctx_max_cw=0,
+                      ltc_L=4000, ltc_max_is=8000)
+    assert "local threshold (TG)" in e.note
+    assert Fraction(e.lo) <= P <= Fraction(e.hi)
+
+
+def test_meta_module_soundness_random():
+    rng = np.random.default_rng(77)
+    runs, fails = 0, 0
+    for _ in range(40):
+        n = int(rng.integers(4, 10))
+        C = Circuit(n)
+        kind = _ % 3
+        if kind == 0:
+            parts = [C.XOR(*[int(x) for x in rng.choice(n, 3, replace=False)]) for _ in range(2)]
+            C.set_output(C.AND(*parts, C.OR(*[int(x) for x in rng.choice(n, 2, replace=False)])))
+        elif kind == 1:
+            gs = [C.AND(*[int(x) for x in rng.choice(n, 2, replace=False)]) for _ in range(4)]
+            C.set_output(C.THR(gs, [1.0] * 4, float(rng.integers(1, 5))))
+        else:
+            C = random_circuit(n, int(rng.integers(3, 20)), rng)
+        q = np.full(n, 0.5) if rng.random() < 0.5 else rng.uniform(0.1, 0.9, n)
+        D = Product(q)
+        P = exact_fraction(C, D)
+        e = meta_estimate(C, D, eps=0.3, delta=0.1, rng=rng, ve_width=0, node_budget=50,
+                          max_leaf_samples=20000, ltc_L=2000, ltc_max_is=4000)
+        runs += 1
+        fails += not (Fraction(e.lo) <= P <= Fraction(e.hi))
+    assert fails <= 0.1 * runs + 2
+
+
+# ------------------------------------------------------------ truncated fills
+class _Sparse:
+    """A box whose estimate claims mass 1/2; its function is never true
+    (mass 0) or is x_0 (mass 1/2)."""
+
+    def __init__(self, n, mass):
+        self.sup = (1 << n) - 1
+        self.value = 0.5
+        self.mass = mass
+
+    def eval(self, X):
+        return np.zeros(len(X), dtype=bool) if self.mass == 0 else X[:, 0]
+
+
+def test_rejection_fill_truncated_per_fill():
+    n = 6
+    D = Product.uniform(n)
+    rng = np.random.default_rng(0)
+    X = D.sample(50, rng)
+    with pytest.raises(RuntimeError):
+        Envelope._rejection_fill(_Sparse(n, 0), D, X, np.arange(50), rng, [0], fill_cap=200)
+    cnt = [0]
+    X = D.sample(5000, rng)
+    Envelope._rejection_fill(_Sparse(n, 0.5), D, X, np.arange(5000), rng, cnt, fill_cap=200)
+    assert X[:, 0].all() and cnt[0] < 40 * 5000
+
+
+def test_dfsb_truncated_box_leaf_outputs_trivial_interval(monkeypatch):
+    """Phase 2 with a fill cap of one draw: box (E)-leaves are truncated and
+    output [0, 1], and the root interval stays valid."""
+    import rareprob.dfsb as dfsb_mod
+    orig = dfsb_mod.envelope_estimate
+    truncated = [0]
+
+    def tiny_cap(*a, **k):
+        k["fill_cap"] = 1
+        try:
+            return orig(*a, **k)
+        except RuntimeError:
+            truncated[0] += 1
+            raise
+
+    monkeypatch.setattr(dfsb_mod, "envelope_estimate", tiny_cap)
+    rng = np.random.default_rng(0)
+    fails = 0
+    for s in range(8):
+        n = 14
+        C = Circuit(n)
+        th = [C.THR([int(a) for a in rng.choice(n, 4, replace=False)], [0.7, 1.3, 0.9, 1.1], 1.0)
+              for _ in range(3)]  # opaque (real weights) and dense: boxes
+        ors = [C.OR(int(a), int(b)) for a, b in rng.choice(n, (6, 2))]
+        C.set_output(C.AND(*th, *ors))
+        D = Product.uniform(n)
+        P = exact_fraction(C, D)
+        e = DFSB(C, D, K=8, node_budget=60, rng=np.random.default_rng(s), exact_support=0, small_cone=0,
+                 use_dense=False).estimate(eps=0.5, delta=0.1, max_leaf_samples=20000)
+        fails += not (Fraction(e.lo) <= P <= Fraction(e.hi))
+    assert truncated[0] > 0 and fails <= 1
+
+
+# ------------------------------------------------------------ compiler budget, chunked boxes
+def test_compiler_rule_budget_keeps_domination():
+    rng = np.random.default_rng(12)
+    for budget in (1, 3, 10):
+        n = 10
+        C = random_circuit(n, 25, rng)
+        N = to_nnf(C)
+        D = Product.uniform(n)
+        comp = EnvelopeCompiler(N, D, shannon=3, call_budget=budget)
+        r = comp.env(N.root, {}, 0)
+        comp.E.root = r
+        assert comp.calls <= budget
+        X = rng.random((4000, n)) < 0.5
+        phi = comp.E.evaluate(X)
+        assert np.all(phi[C.eval_bits(X)] >= 1)
+
+
+def test_estimate_boxes_draws_in_batches():
+    n = 4
+    C = Circuit(n)
+    C.set_output(C.OR(0, 1))
+    N = to_nnf(C)
+    E = Envelope()
+    E.root = E.box(N, N.root, {}, (1 << n) - 1)
+    D = Product.uniform(n)
+    used = estimate_boxes(E, D, 0.002, 0.05, np.random.default_rng(0), max_samples=1 << 17)
+    b = E.boxes[0]
+    assert used > 1 << 15 and b.lo <= 0.75 <= b.hi
+
+
+# ------------------------------------------------------------ exponentials
+def test_exp_bounds_below_normal_range():
+    for x in (-700.0, -708.5, -720.0, -740.0, -745.2, -800.0):
+        up, dn = _exp_up(x), _exp_down(x)
+        assert up > 0 and up >= math.exp(x) + math.ulp(0.0) * (math.exp(x) < 2.3e-308)
+        assert dn <= math.exp(x)
+        if math.exp(x) < 4.5e-308:
+            assert dn == 0.0
+    assert _exp_up(-math.inf) == 0.0 and _exp_down(-math.inf) == 0.0

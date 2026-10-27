@@ -41,39 +41,48 @@ every update of the second phase sets $1$ in both chains, and $L=U=\one_W$ at th
 end. Disjoint windows are independent.
 
 \begin{theorem}[certified telescoping]\label{thm:cftp}
-Let $C$ be unate, flipped as above, $0<\eps\le1$, $\eps'=\ln(1+\eps)$ and
-$0<\delta<1$. Let $b_i^+\ge b_i$ be upper bounds: $b_i^+=b_i$, a product of
+Let $C$ be unate, flipped as above, $0<\eps\le1$, $\eps'=\ln(1+\eps)$, $0<\delta<1$
+and $\Lambda_{\max}\ge1$. Let $b_i^+\ge b_i$ be upper bounds: $b_i^+=b_i$, a product of
 marginals, if $C$ is a CNF; otherwise the upper end of the Hoeffding--KL interval
-(\cref{sec:envelopes}) for $b_i$ from samples of $x_{S_i}$, at level $\delta/(3m)$.
+(\cref{sec:envelopes}) at level $\delta/(3m)$ for $b_i$ from
+$N_b=\lceil192\,m\ln(6m/\delta)\rceil$ samples of $x_{S_i}$.
 \begin{enumerate}[label=(\arabic*)]
 \item If some $b_i^+=1$, output $[0,0]$ if $C$ is a CNF and $[0,1]$ otherwise.
 \item \emph{Stages:} scan the events in a fixed order, adding each to the current
-stage unless that brings $\rho_k=\prod_{i\in S_k}(1-b_i^+)$ below $1/2$, in which
-case it opens a new stage. Let $S_1,\dots,S_K$ be the stages, $\rho=\min_k\rho_k$,
-$\Lambda=\sum_k1/\rho_k$ and $\eta=\eps'\rho/(16K)$. Let $\mathcal A_k$ be the
-sampler above for $\pi_{k-1}=D\mid F_{<k}$, $F_{<k}=F_{S_1\cup\dots\cup S_{k-1}}$, with
-horizons doubling up to $T$, and $\theta_k=\Pr[\mathcal A_k$ does not halt$]$.
+stage unless that brings $\rho_k=\prod_{i\in I_k}(1-b_i^+)$ below $1/2$, in which
+case it opens a new stage. Let $I_1,\dots,I_K$ be the stages, $\rho=\min_k\rho_k$,
+$\Lambda=\sum_k1/\rho_k$ and $\eta=\eps'\rho/(16K)$. If $\Lambda>\Lambda_{\max}$,
+output $[0,1]$. Let $\mathcal A_k$ be the sampler above for $\pi_{k-1}=D\mid F_{<k}$,
+$F_{<k}=F_{I_1\cup\dots\cup I_{k-1}}$, with horizons doubling up to $T$, and
+$\theta_k=\Pr[\mathcal A_k$ does not halt$]$.
 \item \emph{Certificates:} for each $k$, run the test of \cref{prop:truncation} on
 $\mathcal A_k$ at level $\eta$, with $\delta/(3K)$ in place of $\delta$; if one
 fails, output $[0,1]$.
 \item \emph{Estimates:} in each of $R=\lceil8\ln(3/\delta)\rceil$ rounds and for each
 $k$, run $\mathcal A_k$ until $N=\lceil256\Lambda/\eps'^2\rceil$ runs have halted, and
-let $\hat r_k$ be the fraction of their outputs at which no event of $S_k$ occurs.
+let $\hat r_k$ be the fraction of their outputs at which no event of $I_k$ occurs.
 Output $[\hat Me^{-\eps'/2},\min\{1,\hat Me^{\eps'/2}\}]$, with $\hat M$ the median
 over the rounds of $\prod_k\hat r_k$.
 \end{enumerate}
-This procedure is sound for every unate circuit and every $T$; unless it outputs
-$[0,1]$, its output is exact or has $U\le(1+\eps)L$. If $\theta_k\le\eta/16$ for all
-$k$, it outputs $[0,1]$ in step~(3) with probability at most $\delta/3$; this holds when
+This procedure is sound for every unate circuit, $T$ and $\Lambda_{\max}$; unless it
+outputs $[0,1]$, its output is exact or has $U\le(1+\eps)L$. If $\Lambda\le\Lambda_{\max}$
+and $\theta_k\le\eta/16$ for all $k$, it outputs $[0,1]$ with probability at most
+$\delta/3$; the second condition holds when
 $\gamma=1-q_{\max}d_{\max}(k_{\max}-1)>0$ and $T\ge(n/\gamma)\ln(16n/\eta)$, where
 $q_{\max}=\max_vq_v$, every variable lies in at most $d_{\max}$ supports and
-$k_{\max}=\max_i|S_i|$. It uses $K\lceil8\ln(3K/\delta)/\eta\rceil$ runs for the
-certificates and, if all $\theta_k\le\eta$, at most $RKN/(1-\eta)$ runs in expectation
-for the estimates, each of at most $2T$ updates of two chains. If
-$\max_ib_i^+\le1/2$, then $\rho\ge1/2$, $\Lambda\le2K$ and $K\le4\mu^++1$ with
+$k_{\max}=\max_i|S_i|$. It uses $mN_b$ samples of the $x_{S_i}$ if $C$ is not a CNF,
+$K\lceil8\ln(3K/\delta)/\eta\rceil$ runs for the certificates and, if all
+$\theta_k\le\eta$, at most $RKN/(1-\eta)$ runs in expectation for the estimates, each
+of at most $2T$ updates of two chains. As $K\le\Lambda\le\Lambda_{\max}$ and
+$1/\rho\le\Lambda$, these are
+$O\big(\Lambda_{\max}^3\log(\Lambda_{\max}/\delta)/\eps+\Lambda_{\max}^2\log(1/\delta)/\eps^2\big)$
+runs. If $\max_ib_i^+\le1/2$, then $\rho\ge1/2$, $\Lambda\le2K$ and $K\le4\mu^++1$ with
 $\mu^+=\sum_ib_i^+$, so this is
 $O\big(K^2\log(K/\delta)/\eps+K(\mu^++1)\log(1/\delta)/\eps^2\big)$ runs, and
-$T=O((n/\gamma)\log(nK/\eps))$ suffices when $\gamma>0$.
+$T=O((n/\gamma)\log(nK/\eps))$ suffices when $\gamma>0$. This holds for a CNF with
+$\max_ib_i\le1/2$ and, except with probability $\delta/6$, for any unate $C$ with
+$\max_ib_i\le1/8$; in both cases $\Lambda\le24\mu+3\le24m+3$, so the cut-off
+$\Lambda_{\max}=24m+3$ costs no completeness there.
 \end{theorem}
 
 \begin{proof}
@@ -83,10 +92,10 @@ CNF, of probability at least $1-\delta/3$ otherwise) and that every $\mathcal A_
 whose certificate passes has $\theta_k\le\eta$ (by \cref{prop:truncation} and a union
 bound, given the stages, this fails with probability at most $\delta/3$). Assume $G$
 and that step~(4) is reached. By Harris, as the $\neg B_i$ are decreasing,
-$r_k=D(F_{\le k})/D(F_{<k})\ge D(F_{S_k})\ge\prod_{i\in S_k}(1-b_i)\ge\rho_k$. Halted
+$r_k=D(F_{\le k})/D(F_{<k})\ge D(F_{I_k})\ge\prod_{i\in I_k}(1-b_i)\ge\rho_k$. Halted
 runs of $\mathcal A_k$ output i.i.d.\ samples of a law $\pi'_{k-1}$ with
 $d_{\rm TV}(\pi'_{k-1},\pi_{k-1})\le\theta_k$, whatever the stopping rule, so
-$r'_k=\pi'_{k-1}(F_{S_k})$ has $|r'_k-r_k|\le\eta\le\rho_k/16$.
+$r'_k=\pi'_{k-1}(F_{I_k})$ has $|r'_k-r_k|\le\eta\le\rho_k/16$.
 \emph{Bias:} $Z'=\prod_kr'_k$ satisfies $Z'/p\in[(1-\eta/\rho)^K,(1+\eta/\rho)^K]
 \subseteq[1-\eps'/16,e^{\eps'/16}]$. \emph{Variance:} in a round the $\hat r_k$ are
 independent with $\E\hat r_k=r'_k$ and relative variance
@@ -115,21 +124,34 @@ preserve $L'\le L\le U\le U'$ for the pairs $(L,U)$ started at $-T$ and $(L',U')
 started at $-T'$.)
 
 \emph{Cost.} Horizons doubling up to $T$ cost at most $2T$ updates per run, and a run
-halts with probability $1-\theta_k$. A stage accepts a further event only if
-$\rho_k$ stays $\ge1/2$, so an event with $b_i^+>1/2$ is a stage of its own and every
-other stage has $\rho_k\ge1/2$. If $\max_ib_i^+\le1/2$, then $\rho\ge1/2$ and
+halts with probability $1-\theta_k$. As all $\rho_k\le1$, $K\le\Lambda$ and
+$1/\rho\le\Lambda$, so $\eta\ge\eps'/(16\Lambda^2)$. A stage accepts a further event
+only if $\rho_k$ stays $\ge1/2$, so an event with $b_i^+>1/2$ is a stage of its own
+and every other stage has $\rho_k\ge1/2$. If $\max_ib_i^+\le1/2$, then $\rho\ge1/2$ and
 $\Lambda\le2K$; with
 $s_i=-\ln(1-b_i^+)\le2\ln2\,b_i^+$ (convexity on $[0,1/2]$), stage $k<K$ was closed
-because $\sum_{i\in S_k}s_i+s_{j}>\ln2$ for the first event $j$ of $S_{k+1}$, and
+because $\sum_{i\in I_k}s_i+s_{j}>\ln2$ for the first event $j$ of $I_{k+1}$, and
 summing over $k<K$ gives $(K-1)\ln2<2\sum_is_i\le4\ln2\,\mu^+$. In general the same
 count gives $\Lambda\le8\mu^++2+2\sum_{i:\,b_i^+>1/2}(1-b_i^+)^{-1}$.
+
+\emph{The bounds $b_i^+$.} If $C$ is not a CNF, let $\hat b_i$ be the empirical
+frequency and $\ell=\ln(6m/\delta)$, so $N_b\KL(\hat b_i\|b_i^+)\le\ell$. As
+$\KL(a\|c)\ge(a-c)^2/(2\max\{a,c\})$, $t=b_i^+-\hat b_i$ satisfies
+$t^2\le2(\hat b_i+t)\ell/N_b$; if $t>\hat b_i$ this gives $t<4\ell/N_b\le1/(48m)$, so
+$b_i^+\le2\hat b_i+1/(16m)$. Chernoff's bound with $a=b_i/2+1/(32m)$, for which
+$b_i+a\le3a$, gives $\Pr[\hat b_i\ge b_i+a]\le e^{-N_b\KL(b_i+a\|b_i)}\le e^{-N_ba/6}\le
+\delta/(6m)$. So, except with probability $\delta/6$, $b_i^+\le3b_i+1/(8m)$ for all
+$i$; then $\max_ib_i\le1/8$ gives $\max_ib_i^+\le1/2$ and $\mu^+\le3\mu+1/8$, and
+$\Lambda\le2K\le8\mu^++2\le24\mu+3$ (for a CNF with $\max_ib_i\le1/2$, directly
+$\Lambda\le8\mu+2$).
 \end{proof}
 
 This covers, for instance, hard-core-type instances where Janson's $\Delta$ is
 extensive and the local-lemma conditions fail; beyond the provable regime the method
 stays sound and decides empirically whether it can answer.
 The implementation (\texttt{cftp.py}, for unate CNFs) changes only the bookkeeping:
-it takes $N$ rather than $\eps$, pools the estimation runs of stage $k$ into a
+it takes $N$ rather than $\eps$ (so its cost is $RKN$ runs and it needs no
+$\Lambda_{\max}$), pools the estimation runs of stage $k$ into a
 Hoeffding--KL upper bound $\theta_k^+$ on $\theta_k$ instead of the test of
 \cref{prop:truncation}, requires $\theta_k^+<\rho_k$, and widens the interval by the
 bias factors $e^{\pm a_k}$, $a_k=\theta_k^+/(\rho_k-\theta_k^+)$ (as

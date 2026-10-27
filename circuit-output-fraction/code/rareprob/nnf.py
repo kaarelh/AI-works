@@ -9,6 +9,8 @@ Nodes are hash-consed, so structurally equal nodes are shared.
 
 from __future__ import annotations
 
+import math
+
 from dataclasses import dataclass, field
 
 from .circuit import Circuit
@@ -265,8 +267,9 @@ def to_nnf(C: Circuit, thr_max_states: int = 4096, small_cone: int = 10, flatten
 
     Gates whose support has at most `small_cone` variables are tabulated and
     replaced by their exact reduced OBDD (a sound, exact simplification:
-    e.g. (x XOR r) XOR r becomes x). THR gates with small nonnegative-integer
-    weights are expanded by a sequential-counter DP; other THR gates become
+    e.g. (x XOR r) XOR r becomes x). THR gates with small integer weights (a
+    negative weight acts on the complemented child) are expanded by a
+    sequential-counter DP; other THR gates become
     opaque nodes.
     """
     N = NNF(flatten=flatten)
@@ -330,7 +333,7 @@ def to_nnf(C: Circuit, thr_max_states: int = 4096, small_cone: int = 10, flatten
                 continue
             if op == "THR":
                 w, t = C.params[h]
-                small = all(float(x).is_integer() and x >= 0 for x in w) and sum(w) <= thr_max_states
+                small = all(float(x).is_integer() for x in w) and sum(abs(x) for x in w) <= thr_max_states
                 if not small:
                     memo[(h, q)] = N.opaque(h, q, sup[h])
                     continue
@@ -339,8 +342,15 @@ def to_nnf(C: Circuit, thr_max_states: int = 4096, small_cone: int = 10, flatten
                     stack.append((h, q, True))
                     stack.extend((c, b, False) for c, b in need)
                     continue
-                memo[(h, q)] = _thr_nnf(N, [memo[(c, 1)] for c in a], [memo[(c, 0)] for c in a],
-                                        [int(x) for x in w], t, q)
+                # a negative weight acts on the complemented child:
+                # w*g = |w|*(not g) - |w|, so the threshold shifts by sum |w_neg|.
+                # The evaluator fires at sum >= t - 1e-12; with integer weights that
+                # is sum >= ceil(t - 1e-12), shifted exactly in integer arithmetic.
+                shift = sum(-int(x) for x in w if x < 0)
+                need = math.ceil(t - 1e-12) + shift
+                pos = [memo[(c, int(x >= 0))] for c, x in zip(a, w)]
+                neg = [memo[(c, int(x < 0))] for c, x in zip(a, w)]
+                memo[(h, q)] = _thr_nnf(N, pos, neg, [abs(int(x)) for x in w], float(need), q)
                 continue
             raise ValueError(op)
         return memo[(g, pol)]

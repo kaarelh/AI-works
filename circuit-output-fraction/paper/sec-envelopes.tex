@@ -1,10 +1,11 @@
 \section{Envelopes: the common mechanism}\label{sec:envelopes}
 
 Most of our upper-bound-capable methods, with and without a prover, are
-instances of one estimator (the exceptions are the deterministic
-correlation-inequality bounds of \cref{sec:janson,sec:independence}, the
-counter-guided sampler of \cref{thm:sis}, which is a variant of it, and the
-product-of-ratios estimators of \cref{sec:cftp}). It turns a \emph{deductive}
+instances of one estimator (the exceptions are the correlation-inequality bounds
+of \cref{sec:janson,sec:independence}, the product-of-ratios estimators of
+\cref{sec:cftp}, and two variants of it: the counter-guided sampler of
+\cref{thm:sis}, and the tilted Gibbs estimator of \cref{sec:local}, whose mass and
+proposal are themselves certified statistically). It turns a \emph{deductive}
 fact (``$C(x)=1$ implies $\varphi(x)\ge1$'') and an \emph{exact} computation
 ($\E_D\varphi$) into an importance sampler whose cost depends only on how loose
 the deduction is.
@@ -139,8 +140,10 @@ $\rho=\frac{Z}{p}\E_D[1/\varphi\mid C=1]-1\le K-1$ of $ZW$. The KL procedure of
 \cref{thm:envelope}(iv) ignores the variance and pays $\Theta(K)$ samples whatever
 $\rho$ is; a variance-adaptive interval (empirical Bernstein, or DKLR's algorithm
 $\mathcal{AA}$) pays $O\big((\rho/\eps^2+K/\eps)\log(1/\delta)\big)$, so a low dispersion
-of the derivation count helps only in the $\eps^{-2}$ term. A d-DNNF has $\varphi=\one_C$,
-$K=1$ and $\rho=0$. For $E=\bigwedge_{i\le m}(x_i\vee y_i)$ under the uniform
+of the derivation count helps only in the $\eps^{-2}$ term. The $K/\eps$ term cannot
+be avoided by a sound procedure that uses the weights as a black box, and for tilting
+envelopes $K$ can exceed $\rho$ exponentially (\cref{prop:certgap}). A d-DNNF has
+$\varphi=\one_C$, $K=1$ and $\rho=0$. For $E=\bigwedge_{i\le m}(x_i\vee y_i)$ under the uniform
 distribution, used as its own envelope, $K=(4/3)^m$, and the relative variance is at
 least $(10/9)^m-1$ under every reweighting of its $\vee$-edges (with equality for unit
 weights); both are exponential although $D(E)=(3/4)^m$ is known exactly.
@@ -186,7 +189,7 @@ total level $\delta/2$ (fixed or sequential),
 p\in\big[\hat Z\ell/\rho_{\max},\;\hat Zu/\rho_{\min}\big]
 \]
 with probability at least $1-\delta$. If each box interval satisfies
-$u_j\le(1+\eps/(8L))\ell_j$ and the importance-sampling stage is run to ratio
+$u_j\le(1+\eps/(8L))\ell_j$ and importance sampling is run to ratio
 $1+\eps/4$, the output is tight with probability $1-2\delta$, after
 $O(K(\log(1/\delta)+\log\log K)/\eps^2)$ samples of $\hat Q$, each costing
 $O(|C|+|\Phi|+\sum_j|B_j|+LR\max_j|B_j|)$ in expectation; estimating the boxes costs
@@ -217,7 +220,7 @@ gives the sample count. Computing $\varphi(X)$ evaluates every box, hence the
 $\sum_j|B_j|$ term.
 \end{proof}
 
-With boxes, the product of $k$ independent dense blocks has $K=1$ and costs
+With boxes, a product of $k$ independent dense blocks has $K=1$ and costs
 $O(k^3R\log(k/\delta)/\eps^2)$ evaluations, against $2^{\Theta(k)}$ for Monte
 Carlo; a DNF whose terms are products of dense blocks has an envelope (a $\Sum$ of
 $\Prod$s of boxes) whose positivity set is $C^{-1}(1)$ and with $\varphi\le m$, so
@@ -229,7 +232,7 @@ Envelopes need not be integer-valued. If
 $C(x)=[S(x)\ge t]$ with $S=\sum_{j=1}^k g_j(x_{B_j})$ a sum of
 $\{0,1\}$-valued sub-circuits on disjoint blocks, then for $\theta\ge0$
 \[
-\varphi_\theta(x)=e^{-\theta t}\prod_{j=1}^k\big([g_j=0]+e^{\theta}[g_j=1]\big)=e^{\theta(S(x)-t)}\ \ge\ \one[S(x)\ge t],\qquad
+\varphi_\theta(x)=e^{-\theta t}\prod_{j=1}^k\big([g_j=0]+e^{\theta}[g_j=1]\big)=e^{\theta(S(x)-t)}\ \ge\ \one[S(x)\ge t],\quad
 Z_\theta=e^{-\theta t}\prod_{j=1}^k\big(1-p_j+p_je^{\theta}\big),
 \]
 where $p_j=D(g_j=1)$. $Z_\theta$ is the Chernoff bound, a deductively valid
@@ -273,7 +276,10 @@ a deterministic FPTAS under product distributions via read-once branching progra
 \cite{gkm2010} (see also \cite{gopalan2011fptas}). The point of
 \cref{prop:tilting} is that the Chernoff bound, a one-line deduction from the syntax
 ``$C$ is a threshold of independent blocks'', explains all but $O(\log k)$ bits of the
-surprise, and sampling pays for the rest.
+surprise, and sampling pays for the rest. When the blocks overlap, the tilted proposal is
+a Gibbs measure; \cref{sec:local} certifies its sampler and normaliser, and
+\cref{rem:local-blocks} records that the $O(\sqrt k)$ bound is tight and that $K\to1$
+at the top threshold.
 
 \subsection{Certified presumption of independence}\label{sec:janson}
 
@@ -314,7 +320,7 @@ $\Delta\le\eps$, the geometric mean of the two ends has relative error at most
 $e^{\Delta}-1$, however small $p$ is. (Without a bound on $\eps_0$ the last form can
 be arbitrarily loose; the product form, with clauses ordered by decreasing $b_i$,
 stays tight.) Example: $m=6\cdot10^4$ random clauses of width $12$ over
-$2\cdot10^5$ variables give the certified interval $p\in[4.34,5.06]\cdot10^{-7}$
+$2\cdot10^5$ variables give the certified interval $p\in[4.33,5.07]\cdot10^{-7}$
 (ratio $1.17$) in about 30 seconds of pure Python (\cref{sec:experiments}). The
 version for unate $\wedge$'s of arbitrary monotone sub-circuits, with $b_i$ and
 $\Delta$ estimated by sampling, is \cref{thm:janson-general}.

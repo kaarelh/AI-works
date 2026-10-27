@@ -1,8 +1,10 @@
 \subsection{Affine arguments}\label{sec:xpt}
 
-\Cref{thm:certenv} admits affine subspaces as envelope pieces, with domination proved
-in any Cook--Reckhow system. For parity reasoning resolution is the wrong system,
-since dense linear hashes need exponentially long refutations (\cref{sec:pcis}). The
+\Cref{thm:certenv} admits affine subspaces on uniform coordinates as atoms of envelope
+pieces, with domination proved in any Cook--Reckhow system. For parity reasoning
+resolution appears to be the wrong system: the refutations of dense linear hashes that
+a CDCL solver finds grow rapidly, and we conjecture that resolution needs exponential
+size (\cref{sec:pcis}). The
 following arguments check domination with gate propagation and Gaussian elimination.
 This amounts to a tree-like case analysis over affine forms and gates, in the spirit
 of parity decision trees, and it extends affine pieces to product distributions.
@@ -17,12 +19,12 @@ children add $\ell(x)=0$ and $\ell(x)=1$) or on a gate $g$ (they add $g=0$ and $
 values: at the root $S=\emptyset$ and $\sigma(\mathrm{out})=1$, and at every node the
 branch assumptions are added and the state is closed under
 \begin{description}[style=sameline,leftmargin=1.5em]
-\item[(R1)] gate semantics, forwards and backwards (an $\wedge$ with value $1$ forces its
+\item[(X1)] gate semantics, forwards and backwards (an $\wedge$ with value $1$ forces its
 children to $1$, an $\wedge$ with value $0$ and all children but one equal to $1$ forces
 that child to $0$, and so on; for threshold gates, the range of the weighted sum allowed
 by the known children);
-\item[(R2)] if $g$ is certified affine with $\sigma(g)=v$, add $a_g\cdot x=v+c_g$ to $S$;
-\item[(R3)] if $g$ is certified affine and $a_g\cdot x$ is constant on the solution set
+\item[(X2)] if $g$ is certified affine with $\sigma(g)=v$, add $a_g\cdot x=v+c_g$ to $S$;
+\item[(X3)] if $g$ is certified affine and $a_g\cdot x$ is constant on the solution set
 $V(S)$, set $\sigma(g)$ to that constant.
 \end{description}
 A node is \emph{refuted} if $S$ becomes inconsistent or a gate receives both values.
@@ -55,7 +57,7 @@ $\poly(|\pi|,|C|,n,T)+O(tn4^w)+O\big(K\eps^{-2}(\log(1/\delta)+\log\log K)\big)\
 \begin{proof}
 (a) Let $x$ satisfy $C(x)=1$ and agree with a state: $x\in V(S)$, and the true gate
 values of $x$ agree with $\sigma$ where it is defined. Then $x$ agrees with the closed
-state, since each rule is a valid inference about the true gate values of $x$ (R2 and R3
+state, since each rule is a valid inference about the true gate values of $x$ ((X2) and (X3)
 use $g(x)=a_g\cdot x+c_g$, which certification makes an identity). So no such $x$
 reaches a refuted node. Following, at each split, the branch that matches $\ell(x)$ or
 $g(x)$, $x$ agrees with every state on its path, avoids refuted nodes, and ends at a
@@ -67,12 +69,14 @@ sample costs one evaluation of $C$, one piece sample ($O(n^2)$, or $O(n)$ with t
 dynamic program), and the membership tests for $\varphi$.
 \end{proof}
 
-XPT is an instance of the certified-envelope rule with a particular proof system, so
-it composes with the other rules of \cref{def:pcis} and inherits
-\cref{thm:pcis-sound}. It adds two things. First, parity reasoning in polynomial size.
-A dense linear hash $[Mx_A=Ma]$ needs no split at all, because (R1), (R2) and Gaussian
-elimination derive $x_A=a$. Splits on gates expose affine structure behind gates that
-the abstract interpretation of \cref{thm:affenv} treats as opaque. For example, if $C$
+XPT is an instance of the certified-envelope rule with a particular proof system: a
+piece constrained only on uniform coordinates is an affine atom of \cref{thm:certenv},
+and along a linear order the dynamic program of \cref{prop:bw-dp} is an OBDD, which is
+checked-deterministic. So XPT composes with the other rules of \cref{def:pcis} and
+inherits \cref{thm:pcis-sound}. It adds two things. First, parity reasoning in
+polynomial size. A dense linear hash $[Mx_A=Ma]$ needs no split at all, because (X1),
+(X2) and Gaussian elimination derive $x_A=a$. Splits on gates expose affine structure
+behind gates that the abstract interpretation of \cref{thm:affenv} treats as opaque. For example, if $C$
 requires two of three parity-check blocks through a threshold gate, two splits give
 three affine pieces with looseness close to that of the residual condition, while the
 Part-1 envelope stays at the trivial bound (E5 in \cref{tab:affine}: $p=4.9\cdot10^{-9}$,

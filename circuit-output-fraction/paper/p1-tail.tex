@@ -10,34 +10,52 @@ $O(|C|\,2^{w+1})$ \cite{darwiche2009,samer2010}. We use the order of the
 5-approximate tree decomposition of \cite{bodlaender2016} (width at most
 $5\,\mathrm{tw}+4$, found in time $2^{O(\mathrm{tw})}|C|$), or a greedy order if
 that is narrower, and decline if $w>c\log|C|$; so the module is complete when
-$5\,\mathrm{tw}+4\le c\log|C|$.
+$5\,\mathrm{tw}+4\le c\log|C|$. (Our implementation uses only a greedy min-degree order
+with $w\le18$, and floating point with a proved relative error bound: each table entry
+is a mantissa with an integer exponent, so nothing underflows.)
 \item \emph{Thresholds of independent blocks.} Exponential tilting
 (\cref{prop:tilting}): $K\le\frac43(2\sqrt k+1)$ for $k$ unit-weight blocks;
 real weights under product distributions via the branching-program FPTAS of
 \cite{gkm2010} (see also \cite{gopalan2011fptas}).
 \item \emph{Unate circuits with sparse overlaps or fast coalescence.}
 \Cref{thm:janson,thm:janson-general,thm:cftp}, the last with a polynomial
-truncation time.
+truncation time $T$ and a polynomial cut-off $\Lambda_{\max}$ (notation of
+\cref{thm:cftp}); it is then complete when $\Lambda\le\Lambda_{\max}$ (for instance
+when $\max_ib_i^+\le1/2$, as then $\Lambda\le8\mu^++2$) and
+$\gamma=1-q_{\max}d_{\max}(k_{\max}-1)>0$ with $T\ge(n/\gamma)\ln(16n/\eta)$. Clauses
+are canonicalised first: repeated literals merged, tautologies dropped.
 \item \emph{Small context width.} \Cref{thm:cw}, declining if
 $\mathrm{cw}>c\log|C|$, with the \#DNNF FPRAS or, in practice, the envelope
 estimator on the compiled DNNF.
 \item \emph{Local-lemma regime.} Under the uniform distribution, $k$-CNFs (more
-generally, local CSPs) whose variables lie in at most $d\le2^{ck}$ constraints admit
-FPRASs \cite{moitra2019,fgyz2021,fhy2021,jpv2021,hwy2022}; for $k$-CNFs,
+generally, local CSPs) whose variables lie in at most $d\le2^{c'k}$ constraints, for an
+absolute constant $c'>0$, admit FPRASs \cite{moitra2019,fgyz2021,fhy2021,jpv2021,hwy2022}; for $k$-CNFs,
 $d\lesssim2^{k/4.82}$ suffices up to factors polynomial in $k$ \cite{wangyin2024}.
 The condition is syntactic.
-\item \emph{Algebraic.} Under the uniform distribution, an affine system over $\F_2$
-together with at most one quadratic equation: Gaussian elimination substitutes the
-affine system into the quadratic polynomial, and Dickson's normal form of the
-result gives the exact count and an exact sampler \cite{ek1990}; products of such
-pieces on disjoint supports are usable as envelope pieces. (Systems of several
-quadratic equations are $\NP$-hard even to decide.)
+\item \emph{Local thresholds.} Unit-weight thresholds of sub-circuits with
+overlapping scopes of bounded size and degree, possibly $\wedge$ an arbitrary circuit
+(declining if $dk>c\log|C|$): tilted Glauber sampling with a locally checked Dobrushin
+certificate (\cref{thm:local}), or monotone coupling from the past for supermodular
+statistics (\cref{prop:local-cftp}).
+\item \emph{Affine and quadratic structure} (\cref{sec:affine}). Certified affine and
+solved-form conjuncts are factored out exactly (\cref{prop:presolve}), unions of affine
+subspaces serve as envelopes (\cref{thm:affenv}), affine systems of bounded width are
+counted and sampled exactly under every product distribution (\cref{prop:bw-dp}), and
+together with one linear threshold they have an FPTAS and an exact sampler
+(\cref{prop:affine-ltf}); widths above $c\log|C|$ are declined. Under the uniform
+distribution an affine system with at most one quadratic equation is counted exactly:
+Gaussian elimination substitutes the affine system into the quadratic polynomial, and
+Dickson's normal form of the result gives the exact count and an exact sampler
+\cite{ek1990}; the quadric changes the probability inside the affine space by at most
+a factor $4$ (\cref{prop:fourier}). (Systems of several quadratic equations are
+$\NP$-hard even to decide.)
 \end{itemize}
 
 \begin{theorem}[meta-procedure]\label{thm:meta}
-Fix the polynomial parameters of the procedures: $K=|C|^{\alpha}$ and
-$m=|C|^{\beta}$ for DFSB, the cut-offs $c\log|C|$ above, and a truncation time
-$|C|^{\gamma}$ for coupling from the past. Run DFSB and every applicable module,
+Fix the polynomial parameters of the procedures: $K=|C|^{\alpha}$, $m=|C|^{\beta}$ and
+the rule budget $B$ for DFSB; the cut-offs $c\log|C|$ above; for \cref{thm:cftp} a
+truncation time $T=|C|^{c}$ and the cut-off $\Lambda_{\max}=|C|^{c}$; and the sample
+caps and list budgets of the other modules. Run DFSB and every applicable module,
 $M$ procedures in all, each at confidence $\delta/(3M)$ and at an accuracy
 parameter for which its completeness gives $U\le(1+\eps)L$ (e.g.\
 $\eps'=\ln(1+\eps)$ for \cref{thm:janson-general}), with exact modules computing in
@@ -50,12 +68,20 @@ the union of the classes above (for these parameters and the given $\eps$).
 \begin{proof}
 With probability at least $1-\delta/3$ all $M$ intervals are valid simultaneously,
 and then so is their intersection, which is nonempty. Each procedure runs in
-polynomial time (\cref{thm:dfsb} and the cut-offs). If $C$ lies in the class of
-one procedure, its interval is tight with probability at least
+polynomial time (\cref{thm:dfsb}, the cut-offs and caps; \cref{thm:cftp} draws
+$\poly(|C|,\Lambda_{\max},1/\eps,\log(1/\delta))$ samples and runs of at most $2T$ updates). If $C$ lies
+in the class of one procedure, its interval is tight with probability at least
 $1-2\delta/(3M)\ge1-2\delta/3$, and a nonempty intersection $[L',U']\subseteq[L,U]$
 with $U\le(1+\eps)L$ has $U'\le(1+\eps)L'$; so the output is tight with probability
 at least $1-\delta$.
 \end{proof}
+
+Skipping the remaining procedures once some interval is tight changes neither
+property. Our implementation does so; it runs variable elimination (which, being
+exact, returns at once), the Janson sandwich, tilting, TG, the presolve (with DFSB on
+$\tilde R$ when all pivots are uniform) and affine envelopes when they explain at least
+one bit ($M\le1/2$, envelope mass at most $1/2$), context width and DFSB, and omits the
+other modules.
 
 \subsection{What remains out of reach}\label{sec:part1-limits}
 
@@ -67,7 +93,7 @@ since $p\ge2^{-n}$ there, running it for $2^{o(n)}\poly(|C|)$ steps and answerin
 ``satisfiable'' iff $L>0$, as in the proof of \cref{prop:worstcase}(a), would decide
 3-SAT in time $2^{o(n)}$. A speed-up exponential in the surprise is still possible:
 exact model counting by branching on the literals of an unsatisfied clause takes
-time $O^*(1.84^n)$, against about $2^n$ samples when $p=2^{-n}$. Two natural kinds of
+time $O^*(1.84^n)$, against about $2^n$ samples when $p=2^{-n}$. Three natural kinds of
 rarity also defeat the syntactic tools:
 \begin{itemize}
 \item \emph{Distributed surprise.} In a random 3-CNF with $m=\alpha n$ clauses,
@@ -85,5 +111,16 @@ and random 3-CNFs are not unate.
 \item \emph{Pseudorandom rarity.} Preimages $[G(x)=y]$ of a PRG $G$: by
 \cref{prop:worstcase}(b), if $G$ has security $2^{(1-o(1))k}$, nothing beats
 sampling on them by more than a factor $2^{o(k)}$.
+\item \emph{Algebraic rarity outside the decomposable world.} For events that fill a
+$1/\poly(n)$ fraction of the solution set of $m\le n/6$ random parity checks, the
+decomposition-based methods of
+this section (envelopes with small leaves, context width, DFSB's completeness
+guarantee) cost Monte Carlo's price up to polynomial factors, and any use of a DNNF
+envelope at least its square root (\cref{cor:barrier-methods}). Gaussian elimination
+handles such checks under the uniform distribution, but under $\mathrm{Bern}(1/3)$
+inputs small $\wedge$'s of parity checks on $N$ inputs admit no sound procedure complete
+within a factor $2^{N^{1-\gamma}}$ (fixed $\gamma>0$) unless $\NP\subseteq\BPP$, and no
+argument system complete
+within a factor $2$ unless $\coNP\subseteq\MA$ (\cref{thm:biased-hard}).
 \end{itemize}
 

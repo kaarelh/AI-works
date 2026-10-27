@@ -46,8 +46,17 @@ boxes (envelope.envelope_estimate, which re-estimates the boxes), the larger
 of the caps for importance-sampling mean >= 1/(64K) at accuracy eta/4 and
 for box densities >= 1/(16K) at accuracy eta/(8L). At the cap a leaf returns its
 current interval, which is still valid. Loose leaves get the same Monte
-Carlo rule with the smaller cap min(that cap, loose_cap). An E-leaf whose
-box rejection sampler exceeds its (polynomial) cap gets [0, 1].
+Carlo rule with the smaller cap min(that cap, loose_cap). Every box fill of
+the rejection sampler of an E-leaf is truncated after
+T = ceil(16 K ln(8 F / delta)) draws, F = sum over E-leaves with boxes of
+(boxes per derivation) * (cap), the number of fills phase 2 can make; a
+truncated leaf gets [0, 1]. Boxes of a certified E-leaf have mass >= 1/(16K),
+so on the good event of phase 1 no fill is truncated except with probability
+delta/8. (Phase-1 pilots truncate fills likewise; that only fails (E) tests.)
+
+Implementation choices within the paper's parameters: the atom size is the
+fixed exact_support = 12 (not floor(c log2 |C|)), and (R7) judges density
+by a pilot of 512 samples with threshold env_tau = 0.05 (compile.py).
 
 So the running time is polynomial in |C|, K, m, 1/eps and log(1/delta) on
 every circuit, the output interval is valid with probability >= 1 - delta
@@ -340,13 +349,21 @@ class DFSB:
             b.value, b.lo, b.hi = min(max(total / N, lo), hi), lo, hi
         return True
 
+    def _fill_cap(self, fills: float, delta: float) -> int:
+        """Draws after which one box fill is truncated: with box masses
+        >= 1/(16K), all of `fills` fills succeed within it except with
+        probability delta/8."""
+        return int(math.ceil(16 * self.K * math.log(8 * max(fills, 1.0) / delta)))
+
     def _pilot_is(self, E, v: int, lm) -> bool:
         """The (E) pilot: N0 samples of W = h/phi from E's proposal; accept if
         their sum is at least N0/(4K)."""
         Np = self._pilot_size()
+        L = max(1, _max_boxes_per_derivation(E))
+        cap = self._fill_cap(3 * self.budget * Np * L, self.pilot_delta)
         try:
-            X = E.sample(self.D, Np, self.rng, lm)
-        except RuntimeError:  # a box's rejection sampler hit its cap
+            X = E.sample(self.D, Np, self.rng, lm, fill_cap=cap)
+        except RuntimeError:  # a box fill was truncated: the test fails
             return False
         self.pilot_evals += Np
         c = self.N.eval_batch(X, v)
@@ -480,6 +497,19 @@ class DFSB:
         def capped(c):
             return c if max_leaf_samples is None else max(1, min(c, max_leaf_samples))
 
+        caps: dict[int, int] = {}
+        fills = 0.0  # box fills phase 2 can make: (boxes per derivation) * cap per E-leaf
+        for t in leaves:
+            if t.kind == "env":
+                used = t.env.used_boxes()
+                if used:
+                    L = max(1, _max_boxes_per_derivation(t.env))
+                    caps[id(t)] = capped(max(sample_cap(64 * K, el / 4, dl / 2),
+                                             sample_cap(16 * K, el / (8 * L), dl / (2 * len(used)))))
+                    fills += L * caps[id(t)]
+                else:
+                    caps[id(t)] = capped(sample_cap(16 * K, 0.999 * el, dl))
+        fill_cap = self._fill_cap(fills, delta)
         total = 0
         for t in leaves:
             if t.kind == "mc":
@@ -487,18 +517,11 @@ class DFSB:
             elif t.kind == "loose":
                 self._mc_leaf(t, el, dl, capped(min(sample_cap(16 * K, el, dl), self.loose_cap)))
             elif t.kind == "env":
-                used = t.env.used_boxes()
-                if used:
-                    L = max(1, _max_boxes_per_derivation(t.env))
-                    cap = max(sample_cap(64 * K, el / 4, dl / 2),
-                              sample_cap(16 * K, el / (8 * L), dl / (2 * len(used))))
-                else:
-                    cap = sample_cap(16 * K, 0.999 * el, dl)
                 try:
                     e = envelope_estimate(_NodeAsCircuit(self.N, t.v), self.D, t.env, eps=el, delta=dl,
-                                          max_samples=capped(cap), rng=self.rng)
+                                          max_samples=caps[id(t)], rng=self.rng, fill_cap=fill_cap)
                     t.lo, t.hi, t.cost = e.lo, e.hi, e.evaluations
-                except RuntimeError:  # box rejection sampler hit its cap
+                except RuntimeError:  # a box fill was truncated: no verdict for this leaf
                     t.lo, t.hi, t.cost = 0.0, 1.0, 0
             total += t.cost
         lo, hi = _combine(root, self.D)

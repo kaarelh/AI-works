@@ -1,6 +1,7 @@
 """Context width as a parameter of the bracketing (Section 'Context width'):
-the size bounds of the NNF and of the compiled DNNF, the path-decomposition
-bracketing lemma, and the quotient composition rule of 'Modules and quotients'."""
+the size bounds of the NNF and of the compiled DNNF, integer-weight thresholds by
+complementing, the path-decomposition bracketing lemma, and the quotient rules and
+module walk of 'Modules and quotients' (soundness with clipping, additivity)."""
 
 import itertools
 import math
@@ -223,3 +224,139 @@ def test_quotient_composition_rule():
             assert fh == 0
             continue
         assert abs(math.log(fh / f)) <= xi.sum() + 1e-12
+
+
+def test_negative_threshold_weights_by_complementing():
+    """A negative weight acts on the complemented input (w h = |w| not-h - |w|), so an
+    integer-weight threshold gate is a nonnegative one over literals of its inputs,
+    and its counter has O(k W) wires, W = sum |w_i|."""
+    rng = np.random.default_rng(17)
+    for _ in range(60):
+        n, k = 8, int(rng.integers(2, 6))
+        w = [int(x) for x in rng.integers(-4, 5, k)]
+        t = int(rng.integers(-6, 7))
+        C = random_circuit(n, 6, ["AND", "OR", "NOT"], rng)
+        kids = [int(g) for g in rng.choice(len(C.ops), size=k)]
+        C.set_output(C.THR(kids, w, t))
+        C2 = Circuit(n, list(C.ops[:-1]), list(C.args[:-1]), list(C.params[:-1]))
+        lits = [h if wi >= 0 else C2.NOT(h) for h, wi in zip(kids, w)]
+        C2.set_output(C2.THR(lits, [abs(wi) for wi in w], t + sum(-wi for wi in w if wi < 0)))
+        X = all_points(n)
+        assert np.array_equal(C.eval_bits(X), C2.eval_bits(X))
+        N = to_nnf(C2, flatten=False, small_cone=0)
+        assert all(N.kind[u] != "X" for u in N.cone())
+        W = sum(abs(wi) for wi in w)
+        assert nnf_wires(N) <= 2 * circuit_wires(C) + 6 * k * (W + 1)
+        E = compile_ctx(N, max_cw=n)
+        assert np.array_equal(E.evaluate(X) > 0, C.eval_bits(X))
+
+
+def _Fp(tab, qq):
+    """Pr[tab(y) = 1] for independent y_j with (Pr[y_j=1], Pr[y_j=0]) = qq[j]."""
+    return sum(math.prod(qq[j][y[j] == 0] for j in range(len(qq))) for y, v in tab.items() if v)
+
+
+def _xi(L, U, Lc, Uc, mono, anti):
+    """(xi_j, (qhat_j, 1 - qhat_j)) by the three rules of the module walk, from the
+    clipped intervals [L, U] for q_j and [Lc, Uc] for 1 - q_j."""
+    def lg(a, b):
+        return math.inf if b <= 0 else math.log(a / b)
+    cands = []
+    if U <= 0.5 or mono:
+        r = math.sqrt(L * U)
+        cands.append((0.5 * lg(U, L), (r, 1 - r)))
+    if L >= 0.5 or anti:
+        r = math.sqrt(Lc * Uc)
+        cands.append((0.5 * lg(Uc, Lc), (1 - r, r)))
+    if cands:
+        return min(cands, key=lambda c: c[0])
+    r = math.sqrt(L * U)
+    return max(0.5 * lg(U, L), lg(Uc, 1 - r), lg(1 - r, Lc)), (r, 1 - r)
+
+
+def test_quotient_third_rule_near_additive():
+    """Third rule (interval straddling 1/2, Q not unate): sound, and
+    2 xi_j <= (1 + 4 rho_j) rho_j for the log-ratio rho_j of either polarity, rho_j <= 1/2."""
+    rng = np.random.default_rng(18)
+    for _ in range(3000):
+        rho = float(rng.uniform(1e-6, 0.5))
+        L = float(rng.uniform(0.5 * math.exp(-rho), 0.5))
+        U = L * math.exp(rho)
+        if U >= 1:
+            continue
+        x, (qh, _) = _xi(L, U, 1 - U, 1 - L, False, False)
+        for r in (rho, math.log((1 - L) / (1 - U))):
+            assert 2 * x <= (1 + 4 * r) * r
+        for q in np.linspace(L, U, 7):
+            assert abs(math.log(qh / q)) <= x + 1e-12
+            assert abs(math.log((1 - qh) / (1 - q))) <= x + 1e-12
+
+
+def _unate(tab, k, j):
+    up = [(tab[y], tab[y[:j] + (1,) + y[j + 1:]]) for y in tab if y[j] == 0]
+    return all(a <= b for a, b in up), all(a >= b for a, b in up)
+
+
+def _random_module_tree(depth, rng):
+    k = 0 if depth == 0 else int(rng.integers(0, 4))
+    m = int(rng.integers(0 if k else 1, 3))
+    kids = [_random_module_tree(depth - 1, rng) for _ in range(k)]
+    probs = []
+    for _ in range(m):
+        q = float(rng.choice([rng.uniform(0.01, 0.99), rng.uniform(1e-4, 1e-2), rng.uniform(0.45, 0.55)]))
+        probs.append((q, 1 - q) if rng.random() < 0.5 else (1 - q, q))
+    ys = list(itertools.product((0, 1), repeat=k + m))
+    kind = int(rng.integers(0, 4))
+    if kind == 0:
+        tab = {y: int(sum(y) % 2) for y in ys}
+    elif kind == 1:
+        wt, th = rng.integers(-3, 4, k + m), int(rng.integers(-2, 4))
+        tab = {y: int(np.dot(wt, y) >= th) for y in ys}
+    else:
+        tab = {y: int(rng.integers(0, 2)) for y in ys}
+    qq = [c["pp"] for c in kids] + probs
+    pp = (_Fp(tab, qq), _Fp({y: 1 - v for y, v in tab.items()}, qq))
+    return {"kids": kids, "probs": probs, "tab": tab, "pp": pp}
+
+
+def _walk(node, pol, eta, rng):
+    """Module walk of 'Modules and quotients' for D(g) (pol=1) or D(not g) (pol=0),
+    each child estimating the polarity its parent's rule uses. Quotient estimates are
+    F(qhat) times random relative errors up to e^eta, clipped to [0, 1].
+    Returns (L, U, S = sum of quotient log-ratios, third rule used)."""
+    tab = node["tab"] if pol else {y: 1 - v for y, v in node["tab"].items()}
+    nin = len(node["kids"]) + len(node["probs"])
+    qq, X, S, used3 = [], 0.0, 0.0, False
+    for j, c in enumerate(node["kids"]):
+        mono, anti = _unate(tab, nin, j)
+        cp = int(mono) if mono != anti else (1 if mono else int(c["pp"][0] <= 0.5))
+        lo, hi, s, u3 = _walk(c, cp, eta, rng)
+        S, used3 = S + s, used3 or u3
+        L, U, Lc, Uc = (lo, hi, 1 - hi, 1 - lo) if cp else (1 - hi, 1 - lo, lo, hi)
+        L, U, Lc, Uc = max(L, 0.0), min(U, 1.0), max(Lc, 0.0), min(Uc, 1.0)
+        used3 = used3 or not (U <= 0.5 or mono or L >= 0.5 or anti)
+        x, qh = _xi(L, U, Lc, Uc, mono, anti)
+        assert 0 <= qh[0] <= 1 and 0 <= qh[1] <= 1
+        qq.append(qh)
+        X += x
+    f = _Fp(tab, qq + node["probs"])
+    a, b = rng.uniform(0, eta, 2)
+    LF, UF = f * math.exp(-a), min(1.0, f * math.exp(b))
+    if LF > 0:
+        S += math.log(UF / LF)
+    if X == math.inf:
+        return 0.0, 1.0, S, used3
+    return math.exp(-X) * LF, min(1.0, math.exp(X) * UF), S, used3
+
+
+def test_module_walk_sound_and_additive():
+    rng = np.random.default_rng(19)
+    for _ in range(1500):
+        tree = _random_module_tree(int(rng.integers(1, 6)), rng)
+        pol = int(tree["pp"][0] <= 0.5)
+        L, U, S, used3 = _walk(tree, pol, float(rng.choice([1e-3, 1e-2, 0.1, 1.0])), rng)
+        truth = tree["pp"][1 - pol]
+        assert 0 <= L <= U <= 1
+        assert L <= truth * (1 + 1e-9) and truth <= U * (1 + 1e-9)
+        if L > 0 and not used3:
+            assert math.log(U / L) <= S * (1 + 1e-9) + 1e-12

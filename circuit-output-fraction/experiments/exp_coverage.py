@@ -52,7 +52,7 @@ def tally(name, results, rows):
 
 
 def contains(e, p):
-    return e.lo <= p * (1 + 1e-9) + 1e-300 and p <= e.hi * (1 + 1e-9) + 1e-300
+    return e.lo <= p <= e.hi  # no slack: floating-point misses count as misses
 
 
 def main():
@@ -130,7 +130,7 @@ def main():
     tally("Harris-Janson sandwich (deterministic)", res, rows)
 
     # 6. adversarial arguments: wrong envelopes / bogus proofs / no proofs
-    res_honest, res_wrong_env, res_bogus, res_noproof = [], [], [], []
+    res_honest, res_wrong_env, res_bogus, res_noproof, res_lied = [], [], [], [], []
     for t in range(150):
         n = 16
         terms = random_dnf_terms(n, int(rng.integers(3, 8)), int(rng.integers(6, 11)), rng)
@@ -154,10 +154,26 @@ def main():
         E4.root = E4.PROD([E4.lit(i, 1 - b)] + [E4.lit(j, c) for j, c in terms[0][1:]])
         v4 = verify(C, D, E4, None, eps=0.2, delta=DELTA, rng=rng)
         res_noproof.append(contains(v4.estimate, p))
+        # malformed envelope: the honest DNF envelope plus a non-decomposable
+        # PROD(x_i, not x_i) whose second literal declares an empty support (a lie
+        # the verifier must not trust), with the honest proof and with none
+        E5 = dnf_envelope(terms, n)
+        i0 = int(rng.integers(0, n))
+        a5 = E5.lit(i0, 1)
+        E5.kind.append("LIT"); E5.data.append((i0, 0)); E5.sup.append(0)
+        b5 = len(E5.kind) - 1
+        E5.kind.append("PROD"); E5.data.append((a5, b5)); E5.sup.append(1 << i0)
+        c5 = len(E5.kind) - 1
+        E5.kind.append("SUM"); E5.data.append((E5.root, c5)); E5.sup.append(E5.sup[E5.root] | (1 << i0))
+        E5.root = len(E5.kind) - 1
+        for proof in (pf, None):
+            v5 = verify(C, D, E5, proof, eps=0.2, delta=DELTA, rng=rng)
+            res_lied.append(contains(v5.estimate, p))
     tally("argument: honest envelope + DRUP proof", res_honest, rows)
     tally("argument: wrong envelope + stale proof", res_wrong_env, rows)
     tally("argument: wrong envelope + bogus proof", res_bogus, rows)
     tally("argument: disjoint envelope, no proof", res_noproof, rows)
+    tally("argument: malformed envelope (lied supports)", res_lied, rows)
 
     with open(os.path.join(OUT, "coverage.json"), "w") as f:
         json.dump(rows, f, indent=1)

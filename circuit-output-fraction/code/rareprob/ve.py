@@ -6,22 +6,71 @@ this is polynomial when the order has width O(log |C|); a greedy order is a
 heuristic, so a circuit of small treewidth may still be refused.
 Factors are dense numpy tables over at most `max_width + 1` binary variables;
 if the order needs more, we give up (return None) - an honest "no verdict".
+
+Floating point (ve_bounds). Every table entry is held as a mantissa in
+[1/2, 1) (or 0) and an integer binary exponent, so nothing can underflow or
+overflow. A product of tables costs one IEEE multiplication of mantissas per
+factor and entry (frexp renormalisation is exact); summing out a variable
+aligns the smaller of two entries to the larger one's exponent (exact, or an
+absolute error below 2^-1075 against a sum of at least 1/2) and adds them.
+All quantities are nonnegative, so with r(f) the number of roundings on any
+path into the entries of factor f (0 for gate tables and marginals q, 1 for
+1 - q, r = sum r(f_i) + #factors - 1 for a product and + 2 for a sum), every
+computed entry equals its exact value times (1 + theta) with
+|theta| <= gamma_r = r u / (1 - r u) (Higham, Lemmas 3.1 and 3.3). So the
+result is p = mant * 2^exp * (1 + theta), |theta| <= rel, with a proved rel,
+and an exact zero (no positive term) is reported separately; a tiny p never
+becomes 0.
 """
 
 from __future__ import annotations
+
+import heapq
+import math
+import sys
+from dataclasses import dataclass
 
 import numpy as np
 
 from .circuit import Circuit
 from .dist import Product
 
+_U = 2.0 ** -53            # unit roundoff (round to nearest)
+_TINY = sys.float_info.min  # smallest positive normal double
+
+
+def _gamma(k: int) -> float:
+    """gamma_k = k u / (1 - k u), inflated slightly so that the bound
+    survives its own rounding."""
+    ku = k * _U
+    if ku >= 0.25:
+        return math.inf
+    return 1.01 * ku / (1.0 - ku)
+
 
 class Factor:
-    __slots__ = ("vars", "table")
+    """A nonnegative table over binary variables: entry = M * 2^E with M in
+    [1/2, 1) or M = 0 (then E is ignored); r is its rounding count."""
 
-    def __init__(self, vars_, table):
+    __slots__ = ("vars", "M", "E", "r")
+
+    def __init__(self, vars_, table=None, r: int = 0, M=None, E=None):
         self.vars = tuple(vars_)
-        self.table = table  # shape (2,)*len(vars)
+        if table is not None:
+            M, E = np.frexp(np.asarray(table, dtype=float))  # exact
+        self.M = M
+        self.E = np.asarray(E, dtype=np.int64)
+        self.r = r
+
+
+def thr_sum(w, bits) -> float:
+    """The weighted sum exactly as Circuit.eval_packed computes it: start at
+    0.0 and add w_i * float(bit_i) left to right in IEEE double (Python's
+    built-in sum() is compensated and may differ)."""
+    s = 0.0
+    for wi, b in zip(w, bits):
+        s += wi * (1.0 if b else 0.0)
+    return s
 
 
 def _gate_factor(C: Circuit, g: int) -> Factor:
@@ -44,23 +93,57 @@ def _gate_factor(C: Circuit, g: int) -> Factor:
             out = sum(ins) % 2
         elif op == "THR":
             w, t = C.params[g]
-            out = int(sum(wi * xi for wi, xi in zip(w, ins)) >= t - 1e-12)
+            out = int(thr_sum(w, ins) >= t - 1e-12)  # the evaluator's function
         else:
             raise ValueError(op)
         T[idx] = 1.0 if idx[pos[g]] == out else 0.0
     return Factor(vs, T)
 
 
+def _expand(arr: np.ndarray, fvars, vs) -> np.ndarray:
+    """View of a table over fvars, broadcastable to the axes vs."""
+    pos = {v: j for j, v in enumerate(vs)}
+    order = sorted(range(len(fvars)), key=lambda a: pos[fvars[a]])
+    shape = [1] * len(vs)
+    for a in order:
+        shape[pos[fvars[a]]] = 2
+    return np.transpose(arr, order).reshape(shape)
+
+
+_ZERO_E = -(1 << 40)  # exponent used for zero entries when aligning
+
+
 def _multiply(fs: list[Factor]) -> Factor:
+    """Product table: one IEEE multiplication of mantissas per factor and
+    entry, each followed by an exact frexp renormalisation."""
     vs = []
     for f in fs:
         for v in f.vars:
             if v not in vs:
                 vs.append(v)
-    letters = {v: chr(97 + j) if j < 26 else chr(65 + j - 26) for j, v in enumerate(vs)}
-    assert len(vs) <= 52
-    expr = ",".join("".join(letters[v] for v in f.vars) for f in fs) + "->" + "".join(letters[v] for v in vs)
-    return Factor(vs, np.einsum(expr, *[f.table for f in fs]))
+    full = (2,) * len(vs)
+    M = np.broadcast_to(_expand(fs[0].M, fs[0].vars, vs), full).copy()
+    E = np.broadcast_to(_expand(fs[0].E, fs[0].vars, vs), full).copy()
+    for f in fs[1:]:
+        M, e = np.frexp(M * _expand(f.M, f.vars, vs))  # product in [1/4, 1): normal
+        E = E + _expand(f.E, f.vars, vs) + e
+    return Factor(vs, r=sum(f.r for f in fs) + len(fs) - 1, M=M, E=E)
+
+
+def _sum_out(f: Factor, v: int) -> Factor:
+    """Sum the two slices of f along v: align the smaller entry to the larger
+    one's exponent (np.ldexp: exact, or an absolute error below 2^-1075
+    against a sum >= 1/2) and add (one rounding); renormalise exactly."""
+    ax = f.vars.index(v)
+    M0, M1 = np.take(f.M, 0, axis=ax), np.take(f.M, 1, axis=ax)
+    E0 = np.where(M0 > 0, np.take(f.E, 0, axis=ax), _ZERO_E)
+    E1 = np.where(M1 > 0, np.take(f.E, 1, axis=ax), _ZERO_E)
+    Em = np.maximum(E0, E1)
+    S = (np.ldexp(M0, np.maximum(E0 - Em, -2000).astype(np.int32))
+         + np.ldexp(M1, np.maximum(E1 - Em, -2000).astype(np.int32)))
+    M, e = np.frexp(S)
+    E = np.where(M > 0, Em + e, 0)
+    return Factor(f.vars[:ax] + f.vars[ax + 1:], r=f.r + 2, M=M, E=E)
 
 
 def binarize(C: Circuit) -> Circuit:
@@ -79,8 +162,52 @@ def binarize(C: Circuit) -> Circuit:
     return B
 
 
-def exact_ve(C: Circuit, D: Product, max_width: int = 22):
-    """Pr_D[C = 1] exactly (float), or None if the min-fill width exceeds max_width."""
+@dataclass
+class VEResult:
+    """p = 0 if zero; otherwise p = mant * 2^exp * (1 + theta), |theta| <= rel."""
+
+    zero: bool
+    mant: float = 0.0
+    exp: int = 0
+    rel: float = 0.0
+    width: int = 0
+
+    def log2_bounds(self) -> tuple[float, float]:
+        if self.zero:
+            return -math.inf, -math.inf
+        lm = math.log2(self.mant) + self.exp
+        # log2 is accurate to a few ulps of a value of size <= |lm|: widen generously
+        slack = 2.0 ** -40 * (abs(lm) + 1)
+        lo = lm + math.log2(1 - self.rel) - slack if self.rel < 1 else -math.inf
+        return lo, lm + math.log2(1 + self.rel) + slack
+
+    def interval(self) -> tuple[float, float]:
+        """[lo, hi] in floats, rounded outwards: lo may flush to 0 below the
+        normal range, hi is positive whenever p is."""
+        if self.zero:
+            return 0.0, 0.0
+        a = math.nextafter(math.nextafter(1.0 - self.rel, 0.0) * self.mant, 0.0)
+        b = math.nextafter(math.nextafter(1.0 + self.rel, math.inf) * self.mant, math.inf)
+        lo = math.ldexp(a, self.exp)
+        if lo < _TINY:  # subnormal or 0: ldexp rounded; step down
+            lo = max(0.0, math.nextafter(lo, 0.0))
+        try:
+            hi = math.ldexp(b, self.exp)
+        except OverflowError:
+            hi = math.inf
+        if hi < _TINY:
+            hi = math.nextafter(hi, math.inf)
+        return lo, min(1.0, hi)
+
+    @property
+    def value(self) -> float:
+        """Nearest float (0.0 if p underflows)."""
+        return 0.0 if self.zero else math.ldexp(self.mant, self.exp)
+
+
+def ve_bounds(C: Circuit, D: Product, max_width: int = 22) -> VEResult | None:
+    """Pr_D[C = 1] with a proved relative error bound (see the module
+    docstring), or None if the greedy order is wider than max_width."""
     C = binarize(C)
     cone = C.cone()
     if any(len(C.args[g]) + 1 > max_width + 1 for g in cone):
@@ -88,12 +215,11 @@ def exact_ve(C: Circuit, D: Product, max_width: int = 22):
     factors: list[Factor] = []
     for g in cone:
         if C.ops[g] == "IN":
-            q = D.q[g]
-            factors.append(Factor((g,), np.array([1 - q, q])))
+            q = float(D.q[g])
+            factors.append(Factor((g,), np.array([1.0 - q, q]), r=1))
         else:
             factors.append(_gate_factor(C, g))
     factors.append(Factor((C.output,), np.array([0.0, 1.0])))
-    # adjacency for min-fill
     adj: dict[int, set] = {v: set() for v in cone}
     for f in factors:
         for u in f.vars:
@@ -101,13 +227,11 @@ def exact_ve(C: Circuit, D: Product, max_width: int = 22):
     remaining = set(cone)
     bucket: dict[int, list[Factor]] = {v: [] for v in cone}
     for f in factors:
-        bucket_key = f.vars
-        for v in bucket_key:
+        for v in f.vars:
             bucket[v].append(f)
     alive = {id(f): f for f in factors}
-    scale = 0.0  # log-scale to avoid underflow
-    import heapq
-
+    mant, ex, r_acc = 1.0, 0, 0  # product of the eliminated scalars
+    width = 0
     heap = [(len(adj[v]), v) for v in remaining]
     heapq.heapify(heap)
     while remaining:
@@ -123,31 +247,36 @@ def exact_ve(C: Circuit, D: Product, max_width: int = 22):
         nb = adj[v] & remaining
         if len(nb) > max_width:
             return None
+        width = max(width, len(nb))
         fs = [f for f in bucket[v] if id(f) in alive]
+        if not fs:  # cannot happen: a product keeps the variables it was built on
+            return None
         for f in fs:
             del alive[id(f)]
-        prod = _multiply(fs) if fs else Factor((v,), np.ones(2))
-        ax = prod.vars.index(v)
-        new = Factor(prod.vars[:ax] + prod.vars[ax + 1:], prod.table.sum(axis=ax))
-        mx = new.table.max() if new.table.size else 0.0
-        if mx > 0 and new.vars:
-            new.table = new.table / mx
-            scale += np.log(mx)
-        elif not new.vars:
-            if mx == 0:
-                return 0.0
-            scale += np.log(float(new.table))
-            new.table = np.array(1.0)
-        alive[id(new)] = new
-        for u in new.vars:
-            bucket[u].append(new)
+        new = _sum_out(_multiply(fs), v)
+        if not np.any(new.M > 0):
+            return VEResult(True, width=width)  # no positive term: p = 0 exactly
+        if new.vars:
+            alive[id(new)] = new
+            for u in new.vars:
+                bucket[u].append(new)
+        else:
+            mant, e = math.frexp(mant * float(new.M))  # both in [1/2, 1)
+            ex += e + int(new.E)
+            r_acc += new.r + 1
         for a_ in nb:
             adj[a_].update(nb - {a_})
             adj[a_].discard(v)
         remaining.discard(v)
         for a_ in nb:
             heapq.heappush(heap, (len(adj[a_] & remaining), a_))
-    rest = 1.0
-    for f in alive.values():
-        rest *= float(f.table) if not f.vars else float(f.table.sum())
-    return float(np.exp(scale) * rest)
+    if alive:  # cannot happen: every factor's variables were eliminated
+        return None
+    return VEResult(False, mant, ex, _gamma(r_acc), width)
+
+
+def exact_ve(C: Circuit, D: Product, max_width: int = 22):
+    """Pr_D[C = 1] as the nearest float (which may underflow to 0 for a tiny
+    positive p; use ve_bounds for certified bounds), or None if declined."""
+    res = ve_bounds(C, D, max_width)
+    return None if res is None else res.value

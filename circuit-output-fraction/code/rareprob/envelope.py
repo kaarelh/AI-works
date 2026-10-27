@@ -30,6 +30,7 @@ from the boxes' confidence intervals.
 from __future__ import annotations
 
 import math
+import sys
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -37,6 +38,8 @@ import numpy as np
 from .circuit import Circuit
 from .dist import Product
 from .stats import Estimate, sequential_mean
+
+_TINY = sys.float_info.min  # smallest positive normal double
 
 
 @dataclass
@@ -276,10 +279,13 @@ class Envelope:
         return val[self.root]
 
     def sample(self, D: Product, N: int, rng: np.random.Generator,
-               masses: dict[int, float] | None = None, counter: list | None = None) -> np.ndarray:
+               masses: dict[int, float] | None = None, counter: list | None = None,
+               fill_cap: int | None = None) -> np.ndarray:
         """N samples from D * phi / E[phi] (exact if there are no boxes;
         with boxes, SUM choices use the boxes' estimated masses). `masses`
-        are log masses as returned by log_masses."""
+        are log masses as returned by log_masses. `fill_cap`: truncate every
+        box fill after that many draws (RuntimeError); a truncated sampler
+        agrees with the untruncated one until it stops."""
         m = self.log_masses(D)[0] if masses is None else masses  # log masses
         assert m[self.root] > -math.inf, "envelope has zero mass"
         X = D.sample(N, rng)
@@ -297,7 +303,7 @@ class Envelope:
                 i, b = self.data[u]
                 X[idx, i] = bool(b)
             elif k == "BOX":
-                self._rejection_fill(self.boxes[self.data[u]], D, X, idx, rng, counter)
+                self._rejection_fill(self.boxes[self.data[u]], D, X, idx, rng, counter, fill_cap)
             elif k == "SUM":
                 ch = self.data[u]
                 lw = np.array([m[c] for c in ch])
@@ -313,22 +319,38 @@ class Envelope:
         return X
 
     @staticmethod
-    def _rejection_fill(box: Box, D: Product, X, idx, rng, counter, max_rounds: int = 10_000):
+    def _rejection_fill(box: Box, D: Product, X, idx, rng, counter, fill_cap: int | None = None,
+                        max_rounds: int = 10_000):
+        """Fill the box's columns of the rows idx with i.i.d. draws from D
+        conditioned on the box: draws x ~ D in batches, and the j-th hit of
+        the stream fills the j-th pending row. With fill_cap = T, a fill that
+        has used more than T draws (counted from the previous hit) raises
+        RuntimeError, so each fill is truncated after T draws; without it,
+        at most max_rounds batches are drawn."""
         cols = [i for i in range(D.n) if (box.sup >> i) & 1]
         todo = idx
-        for _ in range(max_rounds):
-            if todo.size == 0:
-                return
+        since = 0  # draws used so far by the fill in progress
+        rounds = 0
+        while todo.size:
+            rounds += 1
+            if fill_cap is None and rounds > max_rounds:
+                raise RuntimeError("rejection sampling failed: box too sparse")
             k = max(64, int(1.5 * todo.size / max(box.value, 1e-3)))
             Y = D.sample(k, rng)
             ok = box.eval(Y)
             if counter is not None:
                 counter[0] += k
-            acc = np.nonzero(ok)[0][: todo.size]
-            if acc.size:
-                X[np.ix_(todo[: acc.size], cols)] = Y[np.ix_(acc, cols)]
-                todo = todo[acc.size:]
-        raise RuntimeError("rejection sampling failed: box too sparse")
+            hits = np.nonzero(ok)[0][: todo.size]
+            if fill_cap is not None:
+                starts = np.concatenate(([-since], hits[:-1] + 1)) if hits.size else np.zeros(0)
+                if np.any(hits - starts + 1 > fill_cap):
+                    raise RuntimeError("rejection sampling truncated: box fill exceeded its cap")
+                since = k - (int(hits[-1]) + 1) if hits.size else since + k
+                if hits.size < todo.size and since > fill_cap:
+                    raise RuntimeError("rejection sampling truncated: box fill exceeded its cap")
+            if hits.size:
+                X[np.ix_(todo[: hits.size], cols)] = Y[np.ix_(hits, cols)]
+                todo = todo[hits.size:]
 
 
 def estimate_boxes(env: Envelope, D: Product, eps: float, delta: float,
@@ -343,8 +365,13 @@ def estimate_boxes(env: Envelope, D: Product, eps: float, delta: float,
     for j in used:
         b = env.boxes[j]
 
-        def draw(k, b=b):
-            return b.eval(D.sample(k, rng)).astype(float)
+        def draw(k, b=b):  # bounded batches: a stage can be large
+            out = []
+            while k > 0:
+                c = min(k, 1 << 15)
+                out.append(np.asarray(b.eval(D.sample(c, rng)), dtype=bool))
+                k -= c
+            return np.concatenate(out).astype(float) if out else np.zeros(0)
 
         est = sequential_mean(draw, eps, d, max_samples=max_samples)
         b.value, b.lo, b.hi = est.value, est.lo, est.hi
@@ -356,8 +383,11 @@ def estimate_boxes(env: Envelope, D: Product, eps: float, delta: float,
 def envelope_estimate(C: Circuit, D: Product, env: Envelope, eps: float = 0.1,
                       delta: float = 0.05, max_samples: int = 10**6,
                       rng: np.random.Generator | None = None, batch_cap: int = 1 << 15,
-                      box_eps: float | None = None) -> Estimate:
+                      box_eps: float | None = None, fill_cap: int | None = None) -> Estimate:
     """(eps, delta) interval for p = Pr_D[C=1], assuming env dominates C.
+
+    fill_cap truncates every box fill of the rejection sampler after that
+    many draws (RuntimeError, which callers turn into [0, 1]).
 
     If env does not dominate C, the interval is still valid for
     Pr_D[C=1 and phi>0] <= p, so its lower end is a valid lower bound on p.
@@ -395,7 +425,7 @@ def envelope_estimate(C: Circuit, D: Product, env: Envelope, eps: float = 0.1,
         out = []
         while k > 0:
             b = min(k, batch_cap)
-            X = env.sample(D, b, rng, lm, counter)
+            X = env.sample(D, b, rng, lm, counter, fill_cap)
             c = C.eval_bits(X)
             phi = env.evaluate(X)
             w = np.zeros(b)
@@ -426,17 +456,25 @@ def envelope_estimate(C: Circuit, D: Product, env: Envelope, eps: float = 0.1,
 
 
 def _exp_up(x: float) -> float:
-    """An upper bound on e^x that is positive whenever x > -inf."""
+    """An upper bound on e^x that is positive whenever x > -inf. Below the
+    normal range math.exp has an absolute error of up to an ulp of 0, so
+    there it adds 4 such ulps (exact in the subnormal range)."""
     if x == -math.inf:
         return 0.0
-    return max(math.nextafter(math.exp(x) * (1 + 2.0 ** -50), math.inf), math.ulp(0.0))
+    y = math.exp(x)
+    if y < _TINY:
+        return y + 4 * math.ulp(0.0)
+    return math.nextafter(y * (1 + 2.0 ** -50), math.inf)
 
 
 def _exp_down(x: float) -> float:
-    """A lower bound on e^x."""
+    """A lower bound on e^x; 0 below twice the normal range's minimum."""
     if x == -math.inf:
         return 0.0
-    return max(0.0, math.nextafter(math.exp(x) * (1 - 2.0 ** -50), 0.0))
+    y = math.exp(x)
+    if y < 2 * _TINY:
+        return 0.0
+    return math.nextafter(y * (1 - 2.0 ** -50), 0.0)
 
 
 def _max_boxes_per_derivation(env: Envelope) -> int:

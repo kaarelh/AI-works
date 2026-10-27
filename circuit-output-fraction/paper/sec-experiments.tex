@@ -1,16 +1,26 @@
 \section{Experiments}\label{sec:experiments}
 
-The package \texttt{rareprob} (Python, numpy) implements everything above:
+The package \texttt{rareprob} (Python, numpy) implements the procedures above, with
+the simplifications stated where they are described (a fixed atom size $a=12$ and fixed
+(R7) constants in DFSB, a greedy elimination order, and the subset of modules run by the
+meta-procedure, \cref{sec:modules}):
 bit-parallel circuit evaluation, NNF conversion with small-cone
-canonicalisation, the envelope compiler and estimator with boxes, DFSB, variable
-elimination, exponential tilting, the Harris--Janson sandwich, Gaussian-elimination
-forcing, a two-watched-literal DRUP checker, and the PCIS verifier for envelope
-arguments (with an honest prover that calls a CDCL solver with proof logging).
-All intervals are Hoeffding--KL intervals combined by union bounds, exactly as in
-the proofs. Monte Carlo cost is not simulated for tiny $p$: we report the number of
-samples its KL interval needs, at the same $(\eps,\delta)$, when the empirical
-mean equals $p$ (this favours Monte Carlo). Scripts and raw results are in
-\texttt{experiments/}; every number below is reproduced by them.
+canonicalisation, the envelope compiler and estimator with boxes, DFSB and the
+meta-procedure, context-width compilation, variable elimination, exponential tilting,
+the Harris--Janson sandwich, certified telescoping, the tilted Glauber estimator, the
+affine presolve and affine envelopes, Gaussian-elimination forcing, a
+two-watched-literal DRUP checker, the PCIS verifier for envelope arguments with an
+honest prover that calls a CDCL solver with proof logging, and the XPT verifier.
+It simplifies some procedures: it fixes the atom size at $a=12$, uses greedy
+elimination orders, replaces the pilot of the tilted Glauber estimator by a heuristic
+one, and expands only threshold gates with nonnegative integer weights (others are
+opaque); none of this affects soundness. Intervals are computed as in the
+proofs (Hoeffding--KL intervals combined by union bounds, and the Bernstein and Maurer
+bounds of \cref{sec:local}). Monte Carlo cost is not simulated for tiny $p$: we report
+the number of samples its KL interval needs, at the same $(\eps,\delta)$, when the
+empirical mean equals $p$ (this favours Monte Carlo). Scripts are in
+\texttt{experiments/}, and each table and figure is generated from the raw output of
+the script named in its caption.
 
 \paragraph{Soundness (\cref{tab:coverage}).} We ran each procedure many times at
 $\delta=0.1$ on random circuits and on families with exactly known $p$ (by
@@ -38,14 +48,16 @@ literals and the envelope is the DNF itself ($K\approx1$);
 \item \emph{triggers}: $R(x_{\rm body})\wedge[x_A=a]$ with the test written as
 $\neg(x_i\oplus a_i)$ gates and $R$ a dense random circuit; forcing finds $x_A=a$;
 \item \emph{products of blocks}: $\bigwedge_{j\le t}B_j$ with $B_j$ random
-12-gate circuits on disjoint 6-variable blocks (dense leaves);
+12-gate circuits on disjoint 6-variable blocks; every block is an atom, so DFSB
+computes $p$ exactly by (T$'$) and (D), with no samples (\cref{cor:dfsb}(a)); blocks
+above the atom size would be dense leaves, sampled with the $d^2$ accuracy split of
+\cref{thm:dfsb};
 \item \emph{thresholds of blocks}: $[\sum_jB_j\ge t]$ over $k$ random blocks,
 by exponential tilting.
 \end{itemize}
 The cost of Monte Carlo grows like $2^{\sigma}$ in the surprise $\sigma=\log_2(1/p)$;
-ours stays polynomial: flat for DNFs and triggers, cubic in the number of
-blocks for products (the $d^2$ accuracy split of \cref{thm:dfsb}), and $O(\sqrt k)$
-for thresholds.
+ours stays polynomial: flat for DNFs and triggers, zero samples for products of
+atoms, and $O(\sqrt k)$ for thresholds.
 
 \begin{figure}[ht]
 \centering
@@ -66,9 +78,10 @@ including pilots and box estimation.}
 
 \paragraph{Context width (\cref{tab:ctx}).} ORs of $t$ CNFs with clauses on
 sliding windows of width $w$, each CNF along its own random variable order, built as
-left-deep $\wedge$-chains. The compiler of \cref{thm:cw} finds context width $w$ and
-produces an equivalent DNNF; the envelope estimator on it needs only the minimum
-batch of $1{,}024$ samples, because the top $\vee$'s children are rare and almost
+left-deep $\wedge$-chains in window order (the bracketing of \cref{lem:pathcw}, kept by
+the unflattened NNF). The compiler of \cref{thm:cw} finds context width $w$, the bound
+of \cref{ex:or-cnf}, and produces an equivalent DNNF; the envelope estimator on it needs
+only the minimum batch of $1{,}024$ samples, because the top $\vee$'s children are rare and almost
 disjoint ($K\approx1$). Instances with $n\le24$ agree with enumeration.
 
 \begin{table}[ht]
@@ -81,7 +94,7 @@ disjoint ($K\approx1$). Instances with $n\le24$ agree with enumeration.
 \paragraph{Certified independence (\cref{tab:janson}).} Unate random $k$-CNFs with
 up to $2\cdot10^5$ clauses: the Harris--Janson interval is deterministic, takes
 seconds to a few minutes in Python, and on $200$ small instances it contained the exact
-$p$ every time. At $n=2\cdot10^6$, $p\in[6.2,7.3]\cdot10^{-22}$; Monte Carlo would need
+$p$ every time. At $n=2\cdot10^6$, $p\in[6.18,7.35]\cdot10^{-22}$; Monte Carlo would need
 about $10^{24}$ evaluations for the same ratio. The second-order sandwich of
 \cref{app:second-order} was checked against enumeration on 382 random instances with
 no violations.
@@ -96,8 +109,9 @@ no violations.
 \paragraph{Certified telescoping (\cref{tab:cftp}).} Hard-core ladders: $x\sim
 \mathrm{Bern}(0.3)^{n}$ and $C$ = ``$x$ is an independent set of the $2\times L$
 ladder''. Janson's $\Delta$ is extensive, so the sandwich is useless; bounding-chain
-CFTP gives exact samples, the truncation certificates contribute a bias below
-$1\%$, and the certified intervals contain the exact $p$ (from variable elimination).
+CFTP gives exact samples, the truncation certificates contribute a bias factor below
+$e^{0.02}$, and the certified intervals contain the exact $p$ (from variable
+elimination).
 In pure Python the constants are poor (each CFTP run costs thousands of updates), so
 for these moderate $p$ Monte Carlo is still cheaper; the point is that the cost grows
 polynomially in $L$ while $1/p$ grows exponentially, and that the method is sound
@@ -110,18 +124,32 @@ without any mixing-time proof.
 \label{tab:cftp}
 \end{table}
 
+\paragraph{Local thresholds (\cref{tab:local}).} \Cref{sec:local} reports the tilted
+Glauber estimator on chain and random-cubic-graph local threshold circuits with random
+local tables ($p$ down to $10^{-23.7}$ with certified Glauber samplers, and
+$10^{-169.8}$ with coupling from the past beyond the Dobrushin regime), checked against
+exact transfer-matrix values for chains and $10^7$ Monte Carlo samples for a small
+cubic instance (\texttt{exp\_local.py}).
+
+\paragraph{Affine structure (\cref{tab:affine}).} \Cref{sec:affine} reports the
+presolve, affine envelopes, XPT arguments and DFSB on parity-check families under
+uniform and biased product distributions, with exact values computed without the
+module under test (\texttt{exp\_affine.py}).
+
 \paragraph{What the prover adds (\cref{tab:arguments}, \cref{fig:proofs}).}
 Hidden triggers $R\wedge T(x_S)$ whose test accepts only $x_S=a$:
 \emph{linear-hash} tests $[Mx_S=Ma]$ with a dense $(k+4)\times k$ matrix over
 $\F_2$, and \emph{SPN} tests $[\mathrm{SPN}(x_S)=\mathrm{SPN}(a)]$ with random
 bijective 4-bit S-boxes and dense invertible linear layers. Without a prover,
-Gaussian-elimination forcing recognises linear hashes, but nothing in Part 1
-recognises SPN triggers, and DFSB returns an uninformative interval. With a prover,
-the argument is the subcube $x_S=a$ plus a DRUP proof (from Glucose) that
-$C\Rightarrow(x_S=a)$; the verifier checks it with its own RUP checker and samples
-only $R$. Resolution proofs grow exponentially with $k$ even for linear hashes
-(resolution cannot do Gaussian elimination efficiently), which shows concretely
-that the class of \cref{thm:certenv} depends on the proof system.
+Gaussian-elimination forcing recognises linear hashes. SPN tests are reached only
+through small-cone canonicalisation: a test on at most $a=12$ variables is an atom
+whose OBDD exposes $x_S=a$ to forcing, and DFSB reduces larger tests to atoms by
+branching, with about $2^{|S|-a}$ leaves. With a prover, the argument is the subcube
+$x_S=a$ plus a DRUP proof (from Glucose) that $C\Rightarrow(x_S=a)$; the verifier
+checks it with its own RUP checker and samples only $R$. The DRUP proofs found by the
+solver grow exponentially with $k$ even for linear hashes (CDCL solvers do not perform
+Gaussian elimination); this is evidence, not a resolution lower bound, that the class
+of \cref{thm:certenv} depends on the proof system.
 
 \begin{table}[ht]
 \centering\scriptsize

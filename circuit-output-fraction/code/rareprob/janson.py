@@ -12,12 +12,13 @@ ordered by decreasing b_i, and d_i = sum_{j < i, j ~ i} P(B_i & B_j),
 (Harris-Kleitman for the lower bound; the Boppana-Spencer proof of Janson's
 inequality, Alon-Spencer Thm 8.1.1, for the upper). The product form stays
 finite and tight when some b_i is close to 1, unlike the textbook form
-M exp(Delta / (2 (1 - max_i b_i))). All quantities are products of
-marginals, so this is a deterministic poly-time interval for p: a
-(1 +- eps') estimate whenever the dependent pairs carry little probability,
-however small p is. This is the presumption of independence
-p ~ prod_i P(clause_i), with a certificate. Floating-point errors are
-bounded and the interval is rounded outwards.
+M exp(Delta / (1 - max_i b_i)), Delta = sum_i d_i the sum over unordered
+dependent pairs. All quantities are products of marginals, so this is a
+deterministic poly-time interval for p: a (1 +- eps') estimate whenever the
+dependent pairs carry little probability, however small p is. This is the
+presumption of independence p ~ prod_i P(clause_i), with a certificate.
+Floating-point errors are bounded and the interval is rounded outwards
+(exp_down, exp_up).
 """
 
 from __future__ import annotations
@@ -30,6 +31,30 @@ import numpy as np
 from .circuit import Circuit
 from .dist import Product
 from .stats import Estimate
+
+_NORMAL2 = 2.0 ** -1021  # twice the smallest positive normal float
+
+
+def exp_down(s: float, err: float = 0.0) -> float:
+    """A lower bound on e^t for every t >= s - err (err >= 0 bounds the error
+    of s). Below the normal range exp and products have absolute rather than
+    relative rounding errors, so there it returns 0."""
+    t = s - err - 2.0 ** -50 * (abs(s) + err)  # covers the rounding of this line
+    y = math.exp(t) * (1 - 2.0 ** -50)  # math.exp is faithful: relative error < 2^-52
+    return y if y >= _NORMAL2 else 0.0
+
+
+def exp_up(s: float, err: float = 0.0) -> float:
+    """An upper bound on e^t for every t <= s + err, positive unless s = -inf.
+    Below the normal range it adds 4 ulps of 0, more than the absolute rounding
+    errors of exp and of the product there."""
+    if s == -math.inf:
+        return 0.0
+    t = s + err + 2.0 ** -50 * (abs(s) + err)
+    if not t <= 709.0:
+        return math.inf
+    y = math.exp(t) * (1 + 2.0 ** -50)
+    return y if y >= _NORMAL2 else y + 4 * math.ulp(0.0)
 
 
 def is_unate(clauses) -> bool:
@@ -66,7 +91,7 @@ def janson_interval(clauses, D: Product) -> Estimate:
         for (i, b) in c:
             occ[i].append(j)
     d = np.zeros(m)  # d_j = sum over earlier dependent clauses k of P(B_j & B_k)
-    Delta = 0.0
+    Delta = 0.0  # sum over unordered dependent pairs (= sum_j d_j)
     for j, c in enumerate(clauses):
         nb = set()
         for (i, b) in c:
@@ -76,9 +101,9 @@ def janson_interval(clauses, D: Product) -> Estimate:
             union = dict(c)
             union.update(dict(clauses[k]))
             v = math.exp(log_false(union.items()))
-            Delta += v
             if rank[k] < rank[j]:
                 d[j] += v
+                Delta += v
     # outward rounding: relative error of each b_j, d_j is below w
     w = 2.0 ** -36 * (2 + max((len(c) for c in clauses), default=0) * 2)
     b_lo, b_hi = PB * (1 - w), np.minimum(1.0, PB * (1 + w))
@@ -86,12 +111,10 @@ def janson_interval(clauses, D: Product) -> Estimate:
     with np.errstate(divide="ignore"):
         logM = float(np.sum(np.log1p(-b_hi)))
         log_up = float(np.sum(np.log1p(np.minimum(0.0, -b_lo + d_hi))))
+    # absolute error bound on logM and log_up (rounding of log1p and of the sums)
     slack = 2.0 ** -36 * (m + 2)
-    lo = max(0.0, math.exp(logM) * (1 - slack)) if logM > -math.inf else 0.0
-    if log_up > -math.inf:
-        hi = min(1.0, max(math.exp(log_up) * (1 + slack), math.ulp(0.0)))
-    else:
-        hi = 0.0
+    lo = exp_down(logM, slack)
+    hi = min(1.0, exp_up(log_up, slack))
     val = math.exp(0.5 * (math.log(lo) + math.log(hi))) if lo > 0 else hi / 2
     return Estimate(val, lo, hi, 0, m ** 2, 0.0,
                     f"mu={float(PB.sum()):.4g}, Delta={Delta:.4g}, eps={float(PB.max()) if m else 0.0:.3g}")

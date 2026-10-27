@@ -64,10 +64,12 @@ cap, written in unary).]
 also be the atoms of \cref{thm:certenv}, which are used like boxes with exact
 mass and an exact conditional sampler) and a $P$-proof $C_v\vdash_PG$ for a
 circuit $G$ that implies $\varphi\ge1$ by construction: $G=\supp\Phi$ ($\Sum$
-read as $\vee$, $\Prod$ as $\wedge$, atoms as their circuits) when $\varphi$ is
-integer-valued, since then $\supp\Phi=[\varphi\ge1]$; and $G=[w\cdot x\ge\theta]$
-for the tilted envelope $\varphi=\beta^{w\cdot x-\theta}$ with rational $\beta\ge1$,
-integer $\theta$ and nonnegative integer weights in unary. It is estimated by
+read as $\vee$, $\Prod$ as $\wedge$, atoms as their circuits) when all constants
+of $\Phi$ are nonnegative integers, since then $\varphi$ is integer-valued and
+$\supp\Phi=[\varphi\ge1]$; and $G=[w\cdot x\ge\theta]$ for the tilted envelope
+$\varphi=\beta^{w\cdot x-\theta}$ with rational $\beta\ge1$, nonnegative integer weights
+in unary and an integer $0\le\theta\le\sum_iw_i$ (a larger $\theta$ makes $G$
+unsatisfiable, a case for \textsc{refute}). It is estimated by
 \cref{thm:envelope} (no boxes), by \cref{thm:boxes} (box leaves), by
 \cref{thm:sis}(c) when $\Phi$ is a DNNF $E$, or by the weighted Karp--Luby--Madras
 estimator of \cref{thm:certenv} when $\varphi=\sum_j\one_{E_j}$ with some DNNF
@@ -82,7 +84,9 @@ interval arithmetic through the deductive rules (all of which are monotone
 in their arguments), intersects with $[0,1]$, and outputs the root interval.
 A deductive node whose certificate is missing or wrong gets $[0,1]$. A
 statistical node whose domination proof is missing or wrong is downgraded to
-its lower end (upper end $1$). A statistical node that reaches its cap returns
+its lower end (upper end $1$); for the tilted envelope, which need not be
+integer-valued, the verifier always clips $W$ at $1$ (\cref{thm:envelope}(iii)),
+which changes nothing under domination. A statistical node that reaches its cap returns
 its current interval, valid by \cref{thm:envelope}(iv), or $[0,1]$ if the cap
 is reached inside a rejection loop. So the verifier runs in time polynomial in
 $|\pi|$ and $|C|$, plus the counter calls of \cref{thm:sis}.
@@ -107,9 +111,10 @@ guarantee of its estimator: \cref{thm:envelope}(ii), \cref{thm:boxes},
 \cref{thm:sis}(c) or \cref{thm:certenv} for \textsc{envelope},
 \cref{prop:proposal} for \textsc{proposal}, the KL interval for \textsc{mc}. A
 downgraded node fails only if its lower end exceeds $q_v$, which has the same
-bound (\cref{thm:envelope}(iii), and the lower ends in \cref{thm:sis}(c) and
-\cref{thm:certenv}). Hence $\Pr[\bigcup_vB_v]\le\sum_v\delta_v\le\delta$, and on the
-complement every interval, including the root's, contains its target.
+bound (\cref{thm:envelope}(iii), with $W$ clipped at $1$ for the tilted envelope,
+and the lower ends in \cref{thm:sis}(c) and \cref{thm:certenv}). Hence
+$\Pr[\bigcup_vB_v]\le\sum_v\delta_v\le\delta$, and on the complement every interval,
+including the root's, contains its target.
 \end{proof}
 
 Adaptive choices inside a node (sequential stopping) are allowed; what must
@@ -180,10 +185,11 @@ $\ge i$, $\E[f(x)\,w]=\E_D[f\one_E]$; in particular $\E[C(x)w]=D(C\wedge E)$.
 \item (Interval.) If $E$ is unsatisfiable, output $[0,0]$. Otherwise let $\hat D$
 be one counter call for $D(E)$ with accuracy $1/4$ and failure probability
 $\delta_r$, output $[0,1]$ if $\hat D\le0$, and else let $M=3\hat D$. Run walks as in
-(b) whose counter calls have accuracy $1/(4n)$ and failure probability $\gamma$, let
-$\eta=2n\gamma$, and let $[\ell,u]$ be the KL interval at level $\delta_s$ (for a
-fixed number of walks or with the schedule of \cref{thm:envelope}(iv)) for the
-mean of the i.i.d.\ variables $W'=C(x)\min(w,M)/M\in[0,1]$. Then for every circuit
+(b), with fresh coins, whose counter calls have accuracy $1/(4n)$ and failure
+probability $\gamma<1/(2n)$, let $\eta=2n\gamma<1$, and let $[\ell,u]$ be the KL interval
+at level $\delta_s$ (for a fixed number of walks or with the schedule of
+\cref{thm:envelope}(iv)) computed from the walks' values
+$W'=C(x)\min(w,M)/M\in[0,1]$. Then for every circuit
 $C$ and every counter that meets the guarantee above,
 \[
 \Pr\big[D(C\wedge E)\notin[M\ell,\;Mu/(1-\eta)]\big]\le\delta_r+\delta_s,
@@ -224,26 +230,33 @@ event that a counter call at step $i$ is inaccurate. $B_i$ is determined by the
 outputs at step $i$, which given the history make $B_i$ have probability at most
 $2\gamma$, and given those outputs the remaining steps have conditional mean
 $\E[f(x)w\mid\cdot\,]=M_{i-1}$ by (b). Hence $\E[f(x)w\one_{B_i}]\le2\gamma\,\E M_{i-1}
-=2\gamma\,\E_D[f\one_E]$, and on summing, the event $G$ that all calls on the path are
-accurate satisfies
+=2\gamma\,\E_D[f\one_E]$, and on summing, the event $\mathcal G$ that all calls on the
+path are accurate satisfies
 \[
-\E[f(x)\,w\,\one_{\neg G}]\le\eta\,\E_D[f\one_E].\tag{$\ast$}
+\E[f(x)\,w\,\one_{\neg\mathcal G}]\le\eta\,\E_D[f\one_E].\tag{$\ast$}
 \]
-On $G$, with $\alpha=1/(4n)$, $S\in[1-\alpha,1+\alpha]\cdot D(E\mid\rho)$ and
+On $\mathcal G$, with $\alpha=1/(4n)$, $S\in[1-\alpha,1+\alpha]\cdot D(E\mid\rho)$ and
 $A_{x_i}\in[1-\alpha,1+\alpha]\cdot D(E\mid\rho,x_i)$, and $\prod_iD(E\mid\rho_{i-1})/
 D(E\mid\rho_i)=D(E)/D(E\mid x)=D(E)$; as $((1+\alpha)/(1-\alpha))^n$ decreases in $n$
-from $5/3$ at $n=1$ (towards $e^{1/2}$), $w\in[\frac35,\frac53]\cdot D(E)$ on $G$. Let
-$\mathcal A$ be the event $\hat D\in[\frac34,\frac54]\cdot D(E)$, of probability at least
-$1-\delta_r$. On $\mathcal A$, $M\ge\frac94D(E)>w$ on $G$, so by $(\ast)$ with $f=C$,
-$\E[C(x)(w-\min(w,M))\mid\hat D]\le\E[C(x)w\one_{\neg G}\mid\hat D]\le\eta\,D(C\wedge
-E)$, and with (b), $(1-\eta)D(C\wedge E)\le M\,\E[W'\mid\hat D]\le D(C\wedge E)$; the
-upper inequality holds whatever $\hat D$ is. The walks are i.i.d.\ given $\hat D$, so
-with probability at least $1-\delta_s$ the KL interval contains $\E[W'\mid\hat D]$,
-and then $M\ell\le D(C\wedge E)$ and, on $\mathcal A$, $D(C\wedge E)\le Mu/(1-\eta)$.
+from $5/3$ at $n=1$ (towards $e^{1/2}$), $w\in[\frac35,\frac53]\cdot D(E)$ on $\mathcal G$.
+Let $\mathcal A$ be the event $\hat D\in[\frac34,\frac54]\cdot D(E)$, of probability at
+least $1-\delta_r$. Let $\mathcal F$ consist of $\hat D$ and the earlier walks; the
+counter guarantee holds given $\mathcal F$, so (b) and $(\ast)$ hold conditionally on
+$\mathcal F$. On $\mathcal A$, $M\ge\frac94D(E)>w$ on $\mathcal G$, so by $(\ast)$ with
+$f=C$, $\E[C(x)(w-\min(w,M))\mid\mathcal F]\le\E[C(x)w\one_{\neg\mathcal G}\mid\mathcal
+F]\le\eta\,D(C\wedge E)$, and with (b) every walk has $\mu_-\le\E[W'\mid\mathcal
+F]\le\mu_+$, where $\mu_+=D(C\wedge E)/M$ and $\mu_-=(1-\eta)\mu_+$; the upper
+inequality holds whatever $\hat D$ is. The walks need not be independent, but the
+Chernoff bounds behind the KL interval hold for such adapted $[0,1]$-valued
+sequences, since $\E[e^{\lambda W'}\mid\mathcal F]\le1-\mu+\mu e^\lambda$ with $\mu=\mu_+$
+for $\lambda\ge0$ and $\mu=\mu_-$ for $\lambda\le0$. So with probability at least
+$1-\delta_s$, $\ell\le\mu_+$, and on $\mathcal A$ also $u\ge\mu_-$: then $M\ell\le
+D(C\wedge E)$ and, on $\mathcal A$, $D(C\wedge E)\le Mu/(1-\eta)$.
 
-(d) On $\mathcal A$, $\E[W'\mid\hat D]\ge(1-\eta)D(C\wedge E)/(\frac{15}4D(E))>1/(5K)$.
-\Cref{thm:envelope}(iv), which only needs i.i.d.\ samples in $[0,1]$, with $\eps/2$ in
-place of $\eps$ gives $u\le(1+\eps/2)\ell$ after the stated number of walks with
+(d) On $\mathcal A$, $\mu_-\ge(1-\eta)D(C\wedge E)/(\frac{15}4D(E))>1/(5K)$. The proof
+of \cref{thm:envelope}(iv) uses only the lower tail of the empirical mean, so by the
+same Chernoff bound it applies to the walks with $\mu=1/(5K)$; with $\eps/2$ in place
+of $\eps$ it gives $u\le(1+\eps/2)\ell$ after the stated number of walks with
 probability at least $1-\delta_s$, and $(1+\eps/2)/(1-\eps/8)\le1+\eps$ for $\eps\le1$.
 \end{proof}
 
@@ -291,9 +304,11 @@ Let $\mathcal A$ be the event that every $\lambda_j$ of a DNNF piece lies in
 $[\frac34,\frac54]\cdot D(E_j)$, of probability at least $1-\delta/2$. On $\mathcal A$
 and on the good event of the walk, $w_j\le\frac53D(E_j)\le\frac{20}9\lambda_j$, so
 $Y\le\frac{20}9\hat\Lambda<M:=3\hat\Lambda$; for exact pieces $Y\le\hat\Lambda$. So by
-$(\ast)$ with $f=C/\mathrm{cov}$, $\E[Y-\min(Y,M)]\le\eta\,D(C\wedge\bigcup_jE_j)$ with
-$\eta=\eps/8$, and the argument of \cref{thm:sis}(c), with the KL interval at level
-$\delta/2$ for the mean of $\min(Y,M)/M$, shows that $[M\ell,Mu/(1-\eta)]$ contains
+$(\ast)$ with $f=C/\mathrm{cov}$, given the $\lambda_j$ and the earlier samples, each
+sample has $\E[Y-\min(Y,M)\mid\cdot\,]\le\eta\,D(C\wedge\bigcup_jE_j)$ with $\eta=\eps/8$,
+and the argument of \cref{thm:sis}(c) (conditional means of $\min(Y,M)/M$ at most
+$\mu_+=D(C\wedge\bigcup_jE_j)/M$, and at least $(1-\eta)\mu_+$ on $\mathcal A$), with the
+KL interval at level $\delta/2$, shows that $[M\ell,Mu/(1-\eta)]$ contains
 $D(C\wedge\bigcup_jE_j)$ with probability at least $1-\delta$, while its lower end
 fails with probability at most $\delta/2$ whatever the $\lambda_j$ are. Under the
 proved domination $D(C\wedge\bigcup_jE_j)=p$; without it,
@@ -303,9 +318,10 @@ $\eta=0$), and this is \cref{thm:envelope} for $\varphi=\mathrm{cov}=\sum_j\one_
 with $Z=\Lambda$ and $Q_\varphi(x)=D(x)\mathrm{cov}(x)/\Lambda$: the Karp--Luby--Madras
 estimator \cite{klm1989}.
 
-Completeness: on $\mathcal A$, $\hat\Lambda\le\frac54\Lambda$, so the mean of
-$\min(Y,M)/M$ is at least $(1-\eta)p/(\frac{15}4\Lambda)>1/(5K)$, and
-\cref{thm:envelope}(iv) with $\eps/2$ at level $\delta/2$ gives ratio at most
+Completeness: on $\mathcal A$, $\hat\Lambda\le\frac54\Lambda$, so the conditional means
+of $\min(Y,M)/M$ are at least $(1-\eta)p/(\frac{15}4\Lambda)>1/(5K)$, and
+\cref{thm:envelope}(iv) with $\eps/2$ at level $\delta/2$, as in \cref{thm:sis}(d),
+gives ratio at most
 $(1+\eps/2)/(1-\eps/8)\le1+\eps$ after $O(K(\log(1/\delta)+\log\log K)/\eps^2)$
 samples. Each costs one evaluation of $C$, the membership tests for
 $\mathrm{cov}(x)$ ($O(m)$), and one draw from a piece: $O(m+n^2)$ for a product of
@@ -315,13 +331,16 @@ $\poly(m,|C|,\log(1/\delta))$.
 \end{proof}
 
 Unions are allowed only at the top. A piece that is neither in $\mathcal R_0$ nor
-a DNNF, such as the product of an affine atom with a union, has in general
-neither an exact mass nor an FPRAS; it can only be used through the
+a DNNF, such as a DNNF whose leaves are affine atoms instead of literals, falls
+outside the rules of \cref{thm:certenv}: they give it neither an exact mass nor a
+counter, and distributing its $\vee$-gates over its $\wedge$-gates turns it into a union
+of possibly exponentially many $\mathcal R_0$ pieces. It can still be used through the
 derivation-count envelope that reads $\vee$ as $\Sum$ and has atoms as leaves
 (\cref{thm:envelope}, with \cref{lem:envmass} extended to atoms as in the proof of
-\cref{thm:boxes} with exact masses), and then the looseness is $Z/p$ with
-$Z=\E_D\varphi\ge D(\bigcup_jE_j)$, possibly exponentially larger (for
-$\bigwedge_{i\le m}(x_i\vee y_i)$, $Z=1$ and $D=(3/4)^m$).
+\cref{thm:boxes} with exact masses; its mass $Z$ is the $\Lambda$ of that union), and
+then the looseness is $Z/p$ with $Z=\E_D\varphi$ at least the mass of the piece, and
+possibly exponentially larger (for $\bigwedge_{i\le m}(x_i\vee y_i)$, $Z=1$ while the
+mass is $(3/4)^m$).
 
 \Cref{thm:certenv} lifts every tractable counting class from \emph{syntactic}
 envelopes (\cref{sec:part1}) to \emph{provable} ones. Examples:
@@ -334,24 +353,24 @@ $x_A=a$ with a refutation of $C\wedge(x_A\ne a)$; then $K=1/\Pr_D[R\mid x_A=a]$,
 the verifier needs $O(K(\log(1/\delta)+\log\log K)/\eps^2)$ samples where Monte Carlo
 needs $\Theta(K\log(1/\delta)/(D(x_A=a)\eps^2))$. Whether the refutation is short depends on
 $P$. For dense linear hashes the DRUP proofs found by a CDCL solver grow
-exponentially with $|A|$ in our runs (\cref{sec:experiments}); this is evidence,
+rapidly with $|A|$ in our runs (\cref{tab:arguments}); this is evidence,
 not a lower bound, and we conjecture that resolution needs exponential size.
 Extended resolution, which can simulate Gaussian elimination, refutes them in
 polynomial size, and an affine envelope handles them without a prover.
 Multiplier tests are notoriously hard for CDCL solvers.
-\item \emph{Planted unions.} $C=\bigvee_j(T_j\wedge G_j)$, $T_j$ subcubes of large
-codimension, $G_j$ dense. With the pieces $T_j$,
-$\sum_jD(T_j)\le\sum_jD(T_j\wedge G_j)/\min_j\Pr_D[G_j\mid T_j]$, so
-$K\le\omega/\min_j\Pr_D[G_j\mid T_j]$, where $\omega=\sum_jD(T_j\wedge G_j)/p$ is the
-expected number of $j$ with $x\in T_j\wedge G_j$ for $x\sim D\mid C$, at most
+\item \emph{Planted unions.} $C=\bigvee_j(T_j\wedge H_j)$, $T_j$ subcubes of large
+codimension, $H_j$ dense. With the pieces $T_j$,
+$\sum_jD(T_j)\le\sum_jD(T_j\wedge H_j)/\min_j\Pr_D[H_j\mid T_j]$, so
+$K\le\omega/\min_j\Pr_D[H_j\mid T_j]$, where $\omega=\sum_jD(T_j\wedge H_j)/p$ is the
+expected number of $j$ with $x\in T_j\wedge H_j$ for $x\sim D\mid C$, at most
 $\max_x|\{j:x\in T_j\}|$.
 \item \emph{Thresholds with side conditions.} A $P$-proof $C\vdash_P[w\cdot
 x\ge\theta]$ (in cutting planes, say), with nonnegative integer weights in unary
-and integer $\theta$, certifies the tilted envelope
+and an integer $0\le\theta\le\sum_iw_i$, certifies the tilted envelope
 $\varphi=\beta^{w\cdot x-\theta}=\beta^{-\theta}\prod_i([x_i=0]+\beta^{w_i}[x_i=1])$,
 $\beta\ge1$ rational, whose constants have polynomial bit length. If
-$C=[w\cdot x\ge\theta]\wedge G$, its looseness is
-$K=K_{\rm tilt}/\Pr_D[G\mid w\cdot x\ge\theta]$, where
+$C=[w\cdot x\ge\theta]\wedge H$, its looseness is
+$K=K_{\rm tilt}/\Pr_D[H\mid w\cdot x\ge\theta]$, where
 $K_{\rm tilt}=Z_\beta/D(w\cdot x\ge\theta)$ is the looseness on the threshold alone.
 For unit weights with $\E_D[\sum_ix_i]\le\theta<|\{i:q_i>0\}|$, \cref{prop:tilting}
 gives a rational $\beta$ (by bisection) with $K_{\rm tilt}\le\frac43(2\sqrt n+1)$. For
@@ -365,8 +384,9 @@ estimations.
 \end{itemize}
 
 \paragraph{Sandwiches.}
-Binarize $C$ (fan-in two; threshold gates expanded by a counter,
-\cref{sec:setting}). A certificate may give, for every gate $g$, OBDDs
+Binarize $C$ (fan-in two; a threshold gate becomes a counter if its weights are
+polynomially bounded, \cref{sec:setting}, and an adder tree with a comparator
+otherwise). A certificate may give, for every gate $g$, OBDDs
 $L_g\subseteq g^{-1}(1)\subseteq U_g$ in one fixed variable order, with
 $L_{x_i}=U_{x_i}=x_i$ at the inputs, $L_g=U_g=g$ at constant gates, and every
 other gate checked against its children: $L_{a\wedge b}\Rightarrow L_a\wedge L_b$ and
