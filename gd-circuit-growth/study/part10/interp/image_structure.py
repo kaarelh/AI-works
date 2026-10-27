@@ -14,6 +14,9 @@ objects back onto the 28 x 28 grid (hooks.grid_of).
                a pooled sum's contribution spread equally over its k pixels; a pair's over pixels by |u_p x_p|; a
                max-pooled feature's over the k pixels of the neighbour j* whose sum attains the max, per point)
   pairs        the classes of the prototype pairs, gain by class pair
+  bars         (v3) the oriented bars along correlation-recovered lines, checked on the true grid: the fraction that
+               are straight lattice lines through their centre, their orientations, contiguity; the most-used bars
+  boosters     every final booster (v2: ggbt; v3: ggbt and cgbt) analysed separately
   stack        the stacker's weights and the members' out-of-fold errors
 usage: python image_structure.py <dataset> <n> [--seed=0] [--learner=path] [--tag=v2] [--m_contrib=1000]
 writes results/image/<tag>/<dataset>__n<n>__s<seed>.json and .npz (maps, embedding)"""
@@ -83,70 +86,123 @@ for kk, mode in ((4, "union"), (9, "union"), (9, "mutual"), (16, "mutual")):
     if (kk, mode) == (9, "mutual"):
         maps["isomap"] = Y; maps["isomap_pixels"] = g[act[comp]]
 
-# ---- the final ggbt booster.  Its bank: [x (d), pooled sums at each k (n_active each), prototype pairs (v2; none in
-#      p10_hier), level-2 max-pooled maps m^(k,K) (p10_hier: one block of n_active per (op, k, K) in l2)]
-gg = R.ggbt[-1] if R.ggbt else None
-if gg is not None and gg["bst"] is not None:
-    bst, best, U, feat, l2, Sa = gg["bst"], gg["best"], gg["U"], gg["feat"], gg.get("l2", ()), gg.get("Sa")
+# ---- bars (v3 / p10_codes): the oriented subset sums along correlation-recovered lines, checked on the true grid
+if R.bars:
+    out["bars"] = {}
+    for L, Bm in sorted(R.bars.items()):
+        st = dict(n=int(Bm.shape[1]), straight=0, orient={"horizontal": 0, "vertical": 0, "diagonal": 0, "antidiagonal": 0},
+                  contiguous=0, length=[])
+        for c in range(Bm.shape[1]):
+            px = g[np.where(Bm[:, c] > 0)[0]]; rr, cc = px // 28, px % 28; st["length"].append(len(px))
+            o = ("horizontal" if np.all(rr == rr[0]) else "vertical" if np.all(cc == cc[0]) else
+                 "diagonal" if np.all(rr - cc == rr[0] - cc[0]) else "antidiagonal" if np.all(rr + cc == rr[0] + cc[0]) else None)
+            if o:
+                st["straight"] += 1; st["orient"][o] += 1
+                key = cc if o == "horizontal" else rr
+                if np.all(np.diff(np.sort(key)) == 1):
+                    st["contiguous"] += 1
+        st["straight_frac"] = round(st["straight"] / st["n"], 4); st["contiguous_frac"] = round(st["contiguous"] / st["n"], 4)
+        st["mean_length"] = round(float(np.mean(st.pop("length"))), 2)
+        out["bars"][f"L{L}"] = st
+    Lb = max(R.bars); Bm = R.bars[Lb]; ex = np.linspace(0, Bm.shape[1] - 1, 12).astype(int)
+    maps["bar_examples"] = np.stack([np.isin(np.arange(784), g[np.where(Bm[:, c] > 0)[0]]).astype(np.int8) for c in ex])
+
+
+def analyse_booster(gg, name):
+    """Gain and per-class contributions of one final booster; its bank = [x, the bank matrix's columns (pooled sums at
+    each k; bars of each L), prototype pairs, level-2 maps]."""
+    bst, best, U, feat, l2, Sa, bank = gg["bst"], gg["best"], gg["U"], gg["feat"], gg.get("l2", ()), gg.get("Sa"), gg.get("bank")
     na = len(act); blocks = [("raw", 0, d)] + [(f"pool{k}", d + q * na, d + (q + 1) * na) for q, k in enumerate(ks)]
-    lo_pairs = d + len(ks) * na
+    lo = d + len(ks) * na
+    nb_bank = bank.shape[1] if bank is not None else len(ks) * na
+    for L in sorted(R.bars):                                          # bars follow the pooled sums in the bank (v3: cgbt)
+        if lo + 4 * na <= d + nb_bank:
+            blocks.append((f"bars{L}", lo, lo + 4 * na)); lo += 4 * na
+    cols = {b_: (lo_, hi_) for b_, lo_, hi_ in blocks}
+    lo_pairs = d + nb_bank
     if len(U):
         blocks.append(("pairs", lo_pairs, lo_pairs + len(U)))
     lo_l2 = lo_pairs + len(U)
     for q, (op, k, K) in enumerate(l2):
         blocks.append((f"{op}{k}_{K}", lo_l2 + q * na, lo_l2 + (q + 1) * na))
     gain = bst.feature_importance("gain", iteration=best); splits = bst.feature_importance("split", iteration=best)
-    assert len(gain) == blocks[-1][2], (len(gain), blocks)
-    tot = gain.sum()
-    out["bank"] = [dict(name=b_, start=lo, stop=hi) for b_, lo, hi in blocks]
-    out["gain"] = {b_: dict(gain_frac=round(float(gain[lo:hi].sum() / tot), 4), split_frac=round(float(splits[lo:hi].sum() / splits.sum()), 4),
-                            n_used=int(np.sum(splits[lo:hi] > 0)), n=int(hi - lo)) for b_, lo, hi in blocks}
-    for b_, lo, hi in blocks:                                           # gain maps: a pooled / level-2 feature at its centre
+    assert len(gain) == blocks[-1][2], (name, len(gain), blocks)
+    tot = gain.sum(); res = {}
+    res["bank"] = [dict(name=b_, start=lo_, stop=hi_) for b_, lo_, hi_ in blocks]
+    res["rounds"] = int(best) if best else None
+    res["gain"] = {b_: dict(gain_frac=round(float(gain[lo_:hi_].sum() / tot), 4), split_frac=round(float(splits[lo_:hi_].sum() / splits.sum()), 4),
+                            n_used=int(np.sum(splits[lo_:hi_] > 0)), n=int(hi_ - lo_)) for b_, lo_, hi_ in blocks}
+    # column -> pixel membership (full column indices) for every bank feature that is a subset sum
+    member = {}
+    for q, k in enumerate(ks):
+        member[f"pool{k}"] = (As[k] > 0)
+    for L in sorted(R.bars):
+        if f"bars{L}" in cols:
+            member[f"bars{L}"] = (R.bars[L] > 0)
+    for b_, lo_, hi_ in blocks:                                         # gain maps: spread over the feature's pixels
         gm = np.zeros(784)
         if b_ == "raw":
-            gm[g] = gain[lo:hi]
+            gm[g] = gain[lo_:hi_]
         elif b_ == "pairs":
-            Ua = np.abs(U); Ua = Ua / np.maximum(Ua.sum(1, keepdims=True), 1e-12); np.add.at(gm, g, Ua.T @ gain[lo:hi])
+            Ua = np.abs(U); Ua = Ua / np.maximum(Ua.sum(1, keepdims=True), 1e-12); np.add.at(gm, g, Ua.T @ gain[lo_:hi_])
+        elif b_ in member:
+            M = member[b_].astype(float); M = M / np.maximum(M.sum(0, keepdims=True), 1); np.add.at(gm, g, M @ gain[lo_:hi_])
         else:
-            np.add.at(gm, g[act], gain[lo:hi])
-        maps["gain_" + b_] = gm
-    C = D["C"]
+            np.add.at(gm, g[act], gain[lo_:hi_])
+        maps[f"{name}_gain_{b_}"] = gm
     if len(U):                                                          # the pairs: classes and gain
-        pc = gg["pair_cls"]; pg = gain[lo_pairs:lo_pairs + len(U)]; G2 = np.zeros((C, C))
+        pc = gg["pair_cls"]; pg = gain[lo_pairs:lo_pairs + len(U)]; C = D["C"]; G2 = np.zeros((C, C))
         for (a_, b2), v in zip(pc, pg):
             G2[min(a_, b2), max(a_, b2)] += v
-        maps["pair_class_gain"] = G2
-        top = np.argsort(-pg)[:12]; maps["pair_top_dirs"] = np.stack([np.bincount(g, weights=U[i], minlength=784) for i in top])
-        out["pairs"] = dict(n=int(len(U)), top=[dict(classes=[int(c) for c in pc[i]], gain_frac=round(float(pg[i] / tot), 5)) for i in top],
+        maps[f"{name}_pair_class_gain"] = G2
+        top = np.argsort(-pg)[:12]; maps[f"{name}_pair_top_dirs"] = np.stack([np.bincount(g, weights=U[i], minlength=784) for i in top])
+        res["pairs"] = dict(n=int(len(U)), top=[dict(classes=[int(c) for c in pc[i]], gain_frac=round(float(pg[i] / tot), 5)) for i in top],
                             gain_frac_top12=round(float(pg[top].sum() / tot), 4))
-    # per-class contribution maps on m test points per class (LightGBM pred_contrib, for the true class's score)
-    te = r["te"]; yte = D["y"][te]; rng = np.random.default_rng(1); m_c = max(1, mc // C)
+    if "bars2" in cols or "bars4" in cols:                              # the most-used bars, drawn on the true grid
+        bb = [b_ for b_ in ("bars4", "bars2") if b_ in cols][0]; lo_, hi_ = cols[bb]
+        top = np.argsort(-gain[lo_:hi_])[:12]
+        maps[f"{name}_top_bars"] = np.stack([np.isin(np.arange(784), g[np.where(member[bb][:, t])[0]]).astype(np.int8) for t in top])
+        res["top_bars_gain_frac"] = round(float(gain[lo_:hi_][top].sum() / tot), 4)
+    # per-class contribution maps (pred_contrib on m test points per class, for the true class's score)
+    C = D["C"]; te = r["te"]; yte = D["y"][te]; rng = np.random.default_rng(1); m_c = max(1, mc // C)
     sel = np.concatenate([rng.choice(np.where(yte == c)[0], size=min(m_c, int(np.sum(yte == c))), replace=False) for c in range(C)])
     Xq = D["X"][te[sel]]; Fq = feat(Xq); CT = bst.predict(Fq, num_iteration=best, pred_contrib=True)
     nf = Fq.shape[1]; CT = CT.reshape(len(sel), C, nf + 1)
     cmaps = np.zeros((C, 784)); share = np.zeros((C, len(blocks)))
-    Mpool = {k: (As[k] > 0) for k in ks}
-    Mem = {k: np.stack([np.where(Mpool[k][:, j])[0] for j in range(na)]) for k in ks}  # S_j(k) as column indices (na x k)
-    Pq = {k: np.asarray(Xq, np.float32) @ As[k] for k in ks}                         # level-1 maps of the query points
     for c in range(C):
-        idx = np.where(yte[sel] == c)[0]; ct = CT[idx, c, :nf]                      # contributions to class c's score
+        idx = np.where(yte[sel] == c)[0]; ct = CT[idx, c, :nf]
         pix = np.zeros((len(idx), d)); pix += ct[:, :d]
-        for q, k in enumerate(ks):                                                   # a pooled sum: spread over its k members
-            lo_ = d + q * na; pix += (ct[:, lo_:lo_ + na] / k) @ Mpool[k].T.astype(float)
-        if len(U):                                                                   # a pair: over pixels by |u_p x_p|
-            ux = np.abs(Xq[idx][:, None, :] * U[None, :, :]); ux = ux / np.maximum(ux.sum(2, keepdims=True), 1e-12)
-            pix += np.einsum("ip,ipj->ij", ct[:, lo_pairs:lo_pairs + len(U)], ux)
-        for q, (op, k, K) in enumerate(l2):                                          # a max-pooled map: over the members of
-            lo_ = lo_l2 + q * na                                                     # the winning neighbour's S_j*(k)
-            win = Sa[np.arange(na)[None, :], np.argmax(Pq[k][idx][:, Sa[:, :K]], 2)]  # (points, n_active): j* per centre
-            cols = Mem[k][win]                                                       # (points, n_active, k) pixel columns
-            np.add.at(pix, (np.arange(len(idx))[:, None, None], cols), np.broadcast_to((ct[:, lo_:lo_ + na] / k)[:, :, None], cols.shape))
+        for b_, lo_, hi_ in blocks:
+            if b_ in member:                                           # a subset sum: spread equally over its pixels
+                M = member[b_].astype(float); M = M / np.maximum(M.sum(0, keepdims=True), 1); pix += ct[:, lo_:hi_] @ M.T
+            elif b_ == "pairs":
+                ux = np.abs(Xq[idx][:, None, :] * U[None, :, :]); ux = ux / np.maximum(ux.sum(2, keepdims=True), 1e-12)
+                pix += np.einsum("ip,ipj->ij", ct[:, lo_:hi_], ux)
         cm = np.zeros((len(idx), 784)); cm[:, g] = pix; cmaps[c] = cm.mean(0)
-        for bi, (_, lo, hi) in enumerate(blocks):
-            share[c, bi] = np.abs(ct[:, lo:hi]).sum(1).mean()
-    maps["contrib"] = cmaps; maps["class_mean"] = np.stack([np.bincount(g, weights=D["X"][r["tr"]][D["y"][r["tr"]] == c].mean(0), minlength=784) for c in range(C)])
+        for bi, (_, lo_, hi_) in enumerate(blocks):
+            share[c, bi] = np.abs(ct[:, lo_:hi_]).sum(1).mean()
+    maps[f"{name}_contrib"] = cmaps
     share = share / share.sum(1, keepdims=True)
-    out["contrib_share"] = {b_: [round(float(v), 4) for v in share[:, bi]] for bi, (b_, _, _) in enumerate(blocks)}
+    res["contrib_share"] = {b_: [round(float(v), 4) for v in share[:, bi]] for bi, (b_, _, _) in enumerate(blocks)}
+    return res
+
+
+# the final booster of each bank (the last fit recorded per bank width; the earlier ones are out-of-fold fits)
+finals = {}
+for gg in R.ggbt:
+    if gg["bst"] is not None:
+        finals[gg["bank"].shape[1] if gg.get("bank") is not None else 0] = gg
+names = {}
+for w_, gg in sorted(finals.items()):
+    names[w_] = "cgbt" if (R.bars and w_ > len(ks) * len(act)) else "ggbt"
+out["boosters"] = {}
+for w_, gg in finals.items():
+    out["boosters"][names[w_]] = analyse_booster(gg, names[w_])
+maps["class_mean"] = np.stack([np.bincount(g, weights=D["X"][r["tr"]][D["y"][r["tr"]] == c].mean(0), minlength=784) for c in range(D["C"])])
+if "ggbt" in out["boosters"]:                                           # backward-compatible keys (v2 figures)
+    out["gain"] = out["boosters"]["ggbt"]["gain"]; maps["contrib"] = maps["ggbt_contrib"]
+    if "pairs" in out["boosters"]["ggbt"]:
+        out["pairs"] = out["boosters"]["ggbt"]["pairs"]
 out["cpu"] = round(time.process_time() - t0, 1)
 json.dump(out, open(base + ".json", "w"), indent=1, default=lambda v: v.item() if hasattr(v, "item") else str(v))
 np.savez_compressed(base + ".npz", **maps)

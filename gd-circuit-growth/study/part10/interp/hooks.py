@@ -43,6 +43,7 @@ class Recorder:
 
     def __init__(self, HP):
         self.HP = HP; self.dfg, self.pool, self.ranked, self.pairs, self.pair_cls, self.ggbt = [], [], [], [], [], []
+        self.topo, self.bars = [], {}
 
     def __enter__(self):
         HP = self.HP; self._saved = {}
@@ -55,9 +56,18 @@ class Recorder:
                                 bg=np.array(vc["bg"]), value=val))
             return out
         self._saved["dfg"] = orig_fit; dfgm.DFG._fit = _fit
-        for name in ("pool_sets", "pair_dirs", "fit_ggbt"):
-            self._saved[name] = getattr(HP, name)
+        for name in ("pool_sets", "pair_dirs", "fit_ggbt", "pool_sets_topo", "bar_sets"):
+            if hasattr(HP, name):
+                self._saved[name] = getattr(HP, name)
         ps, pd, fg = self._saved["pool_sets"], self._saved["pair_dirs"], self._saved["fit_ggbt"]
+        pst, bs = self._saved.get("pool_sets_topo"), self._saved.get("bar_sets")
+
+        def pool_sets_topo(X, ks, *a, **k):                             # v3 (p10_codes): pooling sets + their topology
+            res = pst(X, ks, *a, **k); rec.pool.append({kk: v.copy() for kk, v in res[0].items()}); rec.topo.append(res[2])
+            rec.ranked.append(None); return res
+
+        def bar_sets(topo, d, L=2):                                     # v3: the bar matrices (d x 4 n_active) per L
+            res = bs(topo, d, L); rec.bars[L] = res[0].copy(); return res
 
         def pool_sets(X, ks, *a, **k):
             res = ps(X, ks, *a, **k); rec.pool.append({kk: v.copy() for kk, v in res[0].items()})
@@ -84,15 +94,20 @@ class Recorder:
             rec.ggbt.append(dict(n=len(y), model=m, bst=c.get("bst"), best=c.get("best"), feat=c.get("feat"), rounds=r,
                                  U=rec.pairs[-1] if (rec.pairs and npairs) else np.zeros((0, Xr.shape[1]), np.float32),
                                  pair_cls=rec.pair_cls[-1] if (rec.pair_cls and npairs) else np.zeros((0, 2), int),
-                                 l2=tuple(k.get("l2", ())), Sa=k.get("Sa")))
+                                 l2=tuple(k.get("l2", ())), Sa=k.get("Sa"), bank=a[1] if len(a) > 1 else k.get("A")))
             return m, fl, r
         HP.pool_sets, HP.pair_dirs, HP.fit_ggbt = pool_sets, pair_dirs, fit_ggbt
+        if pst is not None:
+            HP.pool_sets_topo = pool_sets_topo
+        if bs is not None:
+            HP.bar_sets = bar_sets
         return self
 
     def __exit__(self, *exc):
         self._dfgm.DFG._fit = self._saved["dfg"]
-        for name in ("pool_sets", "pair_dirs", "fit_ggbt"):
-            setattr(self.HP, name, self._saved[name])
+        for name, v in self._saved.items():
+            if name != "dfg":
+                setattr(self.HP, name, v)
         return False
 
 
