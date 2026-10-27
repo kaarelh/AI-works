@@ -25,7 +25,7 @@ opt = {a.split("=", 1)[0][2:]: a.split("=", 1)[1] for a in sys.argv[2:] if a.sta
 seed = int(opt.get("seed", 0)); tag = opt.get("tag", "v2"); path = opt.get("learner", H.V2)
 T = H.targets(suite); names = args[0].split(",") if args else list(T)
 HP = H.load_learner(path)
-out_dir = os.path.join(HERE, "results", "toy", tag); os.makedirs(out_dir, exist_ok=True)
+out_dir = os.path.join(os.environ.get("INTERP_OUT", os.path.join(HERE, "results")), "toy", tag)   # INTERP_OUT: live runs write outside the repository; os.makedirs(out_dir, exist_ok=True)
 
 
 def summarise(r, truth, F):

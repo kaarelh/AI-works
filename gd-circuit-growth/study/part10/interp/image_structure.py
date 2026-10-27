@@ -20,7 +20,7 @@ import hooks as H
 ds, n = sys.argv[1], int(sys.argv[2])
 opt = {a.split("=", 1)[0][2:]: a.split("=", 1)[1] for a in sys.argv[3:] if a.startswith("--") and "=" in a}
 seed = int(opt.get("seed", 0)); tag = opt.get("tag", "v2"); path = opt.get("learner", H.V2); mc = int(opt.get("m_contrib", 1000))
-out_dir = os.path.join(HERE, "results", "image", tag); os.makedirs(out_dir, exist_ok=True)
+out_dir = os.path.join(os.environ.get("INTERP_OUT", os.path.join(HERE, "results")), "image", tag); os.makedirs(out_dir, exist_ok=True)
 base = os.path.join(out_dir, f"{ds}__n{n}__s{seed}")
 
 HP = H.load_learner(path); t0 = time.process_time()

@@ -499,7 +499,8 @@ class DFG:
                  local_max=12, blocks=True, ridge=1e-3, budget=(0.15, 0.03, 0.03), noise="residual", readout="ls",
                  small_n=True, cv_n=512, K_hi=6, budget_hi=0.03, background=True, logit_lam=1e-4, name=None,
                  sums=True, sum_kmax=24, sum_mod=4, sum_add=2, sum_gcap=2048, sum_mc=0.005, sum_prod=True, sum_nmin=32,
-                 sum_force=False, sum_seeds=(2, 3, 2), sum_inner=True):
+                 sum_force=False, sum_seeds=(2, 3, 2), sum_inner=True, sum_beam=0, sum_beam_nmax=512, sum_force_nmin=64,
+                 sum_force_r2=0.0):
         self.K, self.K_later, self.c, self.delta, self.rounds = K, K_later, c, delta, rounds
         self.max_new, self.max_feats, self.max_ext_bases, self.local_max = max_new, max_feats, max_ext_bases, local_max
         self.blocks, self.ridge, self.budget, self.noise, self.readout = blocks, ridge, budget, noise, readout
@@ -509,6 +510,8 @@ class DFG:
         self.sum_mc, self.sum_prod, self.sum_nmin, self.sum_force = sum_mc, sum_prod, sum_nmin, sum_force
         self.sum_seeds = tuple(sum_seeds)                               # (eigenvectors, pairs, single inputs)
         self.sum_inner = sum_inner                                      # v1.3: weighted blocks u = t + a tau
+        self.sum_beam, self.sum_beam_nmax = sum_beam, sum_beam_nmax     # v1.3: beam search width (at n <= nmax)
+        self.sum_force_nmin, self.sum_force_r2 = sum_force_nmin, sum_force_r2
         self.name = name or ("dfg-v1.3" if readout == "logit" else f"dfg-v1.3-{readout}")
 
     def fit(self, X, y, rng=None):
@@ -677,6 +680,7 @@ class DFG:
             #      modulated by a current character chi_T (inputs of T excluded from S), and products of two accepted
             #      additive blocks.  One union bound over every (S, s) of size k, fold variant and modulator.
             sum_top = [0.0, None]                                       # best additive candidate (T / threshold)
+            th_top = [0.0]
             if self.sums and n >= self.sum_nmin and d >= 3:
                 nb = [k for k, _ in sorted([(k, abs(wi)) for (kind, k), wi in zip(feats, w) if kind == "chi" and k],
                                            key=lambda kv: -kv[1])][: self.sum_mod]
@@ -685,7 +689,8 @@ class DFG:
                 tkb = lambda b: tk(len(b.S)) + (_ln_inner(d) if b.inner is not None else 0.0)   # v1.3: weighted blocks
                 mc = max(3, int(self.sum_mc * n))
                 kw = dict(gcap=self.sum_gcap, kmax=KM, fl=fl, neig=self.sum_seeds[0], npair=self.sum_seeds[1],
-                          nsingle=self.sum_seeds[2], inner=self.sum_inner)
+                          nsingle=self.sum_seeds[2], inner=self.sum_inner,
+                          beam=self.sum_beam if n <= self.sum_beam_nmax else 0)
                 # blocks are searched on the round's residual r, but accepted only if they also pass the test on rS = r
                 # projected off this round's accepted characters (what they add beyond them); same threshold
                 new0 = [S for S, _ in sorted(cand.items(), key=lambda kv: -kv[1][0])[: self.max_new]]
@@ -708,7 +713,7 @@ class DFG:
                     TS = tS(b_, rrS); ok = ok and TS > th_
                     cands.append(b_)
                     if it == 0 and th_ > 0:
-                        sum_top[:] = [T_ / th_, b_]; mg0 = TS - th_
+                        sum_top[:] = [T_ / th_, b_]; mg0 = TS - th_; th_top[0] = th_
                     if ok and b_.key() not in have_blk:
                         blk.append(("sum", b_)); have_blk.add(b_.key())
                     if it + 1 < self.sum_add:
@@ -778,7 +783,8 @@ class DFG:
                             blk.append(("sum", P)); have_blk.add(P.key())
             new = sorted(cand.items(), key=lambda kv: -kv[1][0])[: self.max_new]
             if force and not new and not blk and forced[0] < 2:          # nothing passed: take the best guess
-                if self.sum_force and sum_top[1] is not None and sum_top[0] > top[0] ** 2:
+                if (self.sum_force and sum_top[1] is not None and sum_top[0] > top[0] ** 2 and n >= self.sum_force_nmin
+                        and sum_top[0] * th_top[0] / n >= self.sum_force_r2):
                     blk = [("sum", sum_top[1])]; have_blk.add(sum_top[1].key()); forced[0] += 1   # v1.2: a block
                 elif top[1] is not None:
                     new = [(top[1], (top[0], top[2]))]; forced[0] += 1
