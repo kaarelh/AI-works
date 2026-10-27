@@ -164,7 +164,7 @@ def test_garbage_proof_gives_lower_bound_only(proof):
     D = Product.uniform(3)
     assert not RUPChecker(domination_cnf(C, E)).refuted
     v = verify(C, D, E, proof, eps=0.1, delta=0.05, rng=np.random.default_rng(2))
-    assert not v.proof_ok and v.estimate.hi == math.inf and v.estimate.lo <= 0.5
+    assert not v.proof_ok and v.estimate.hi >= 1.0 and v.estimate.lo <= 0.5
     w = verify(C, D, E, honest_proof(C, E), eps=0.1, delta=0.05, rng=np.random.default_rng(3))
     assert w.proof_ok and w.estimate.contains(0.5)
 
@@ -197,7 +197,7 @@ def test_proof_format_rejected(proof):
     C, E = _needs_proof()
     D = Product.uniform(3)
     v = verify(C, D, E, proof, eps=0.1, delta=0.05, rng=np.random.default_rng(4))
-    assert not v.proof_ok and v.estimate.hi == math.inf and v.estimate.lo <= 0.5
+    assert not v.proof_ok and v.estimate.hi >= 1.0 and v.estimate.lo <= 0.5
 
 
 def test_proof_formats_accepted():

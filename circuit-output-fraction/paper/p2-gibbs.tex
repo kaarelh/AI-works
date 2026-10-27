@@ -9,22 +9,30 @@ This gives one more statistical rule for PCIS arguments.
 A node with circuit $C_v$ may carry: a statistic $S=\sum_jg_j(x_{A_j})$ given by scopes and
 truth tables; an integer $t'$ and a tilt $\theta\ge0$; either a weight vector $w>0$ and
 $\alpha<1$, or the claim that $S$ is supermodular; a $P$-proof of $C_v\vdash_P[S\ge t']$, with
-$[S\ge t']$ encoded by a fixed counting circuit (e.g.\ a totalizer); and budgets $L$,
-$N_{\rm IS}$, $\delta_v$. The verifier checks the proof, recomputes $\kappa(\theta)$ and checks
+$[S\ge t']$ encoded by a fixed counting circuit (e.g.\ a totalizer); budgets $L$,
+$N_{\rm IS}$ and a sweep cap $T_{\max}$, written in unary; and $\delta_v$. The verifier
+returns $[0,1]$ for the node unless $d(k-1)\le c\log(|\pi|+|C_v|)$, for a fixed constant
+$c$, so that every neighbourhood has at most $(|\pi|+|C_v|)^c$ configurations. It checks
+the proof, recomputes $\kappa(\theta)$ and checks
 $\sum_l\kappa_{il}(\theta)w_l\le\alpha w_i$ for all $i$ (or checks supermodularity and samples by
-monotone CFTP with abort, \cref{prop:local-cftp}), and runs steps (T2)--(T5) of TG at
-$\theta$ with $U=C_v(X)e^{-\theta(S(X)-t')}$.
+monotone CFTP, aborting with $[0,1]$ when a run exceeds $T_{\max}$ sweeps,
+\cref{prop:local-cftp}), returns $[0,1]$ if the $\tau$ of (T2) exceeds $T_{\max}$, and
+otherwise runs steps (T2)--(T5) of TG at $\theta$, without windows, with
+$U=C_v(X)e^{-\theta(S(X)-t')}$.
 \end{definition}
 
 \begin{proposition}[Gibbs envelopes]\label{prop:gibbs}
 For every circuit and every argument, a Gibbs-envelope node returns an interval containing
 $q_v=D(C_v)$ with probability at least $1-\delta_v$; if its proof is missing or wrong, the
-same computation with $U'=\min(1,U)$ still returns a valid lower bound. If $C_v$ has such a
-node with a proof of size $\poly(|C_v|)$, a certificate with $\alpha\le1-\gamma$ and
+same computation with $U'=\min(1,U)$ still returns a valid lower bound. The verifier runs
+in time polynomial in $|\pi|$ and $|C_v|$. If $C_v$ has such a
+node with a proof of size $\poly(|C_v|)$, $d(k-1)\le c\log|C_v|$, a certificate with
+$\alpha\le1-\gamma$ and
 $v_C(\theta)=\E_{D_\theta}[C_ve^{-\theta(S-t')}]\ge1/\poly(n)$, then for $0<\eps\le1$ the interval has
 ratio at most $1+\eps$ with probability $1-3\delta_v$ after
 $L+O\big((\log(1/\delta_v)+\log\log(1/v_C(\theta)))/(\eps^2v_C(\theta))\big)$ samples (with $N_{\rm IS}$
-at least the second term), where $L=O((\theta^2m^2/\eps^2+1)\log(1/\delta_v))$ always suffices,
+at least the second term and $T_{\max}$ at least the $\tau$ of (T2), which is
+$O(\gamma^{-1}\log(FN_{\rm tot}/\delta_v))$), where $L=O((\theta^2m^2/\eps^2+1)\log(1/\delta_v))$ always suffices,
 and $L=O((\theta^2n_Sd^2/(\gamma\eps^2)+\theta m/\eps+1)\log(1/\delta_v))$ when the column sums of
 $\kappa(\theta)$ are also at most $1-\gamma$.
 \end{proposition}
@@ -34,7 +42,9 @@ For every $C_v$, $\E_{D_\theta}[C_ve^{-\theta(S-t')}]=e^{\theta t'}q_v/Z(\theta)
 support; the proved implication gives $U\le1$. The proof of \cref{thm:local}(i) used nothing
 else, and the certificate is recomputed by the verifier, so no argument can make it
 false. Without the implication, $U'\le U$ has mean at most $e^{\theta t'}q_v/Z(\theta)$, so the lower
-ends of the intervals for $\E U'$ and $\ln Z$ still give a lower bound. Completeness is the
+ends of the intervals for $\E U'$ and $\ln Z$ still give a lower bound. Declining with $[0,1]$
+is always valid. The enumeration visits at most $n(|\pi|+|C_v|)^c$ configurations, and
+the budgets are in unary, so the verifier runs in polynomial time. Completeness is the
 argument of \cref{thm:local}(ii) with the anticoncentration step replaced by the assumption
 on $v_C(\theta)$ and the tilt supplied, so no pilot is run. Without a variance bound,
 $\bar V\le LR^2/4$ in \cref{lem:local-ti}, so with $\ell=\ln(10/\delta_v)$,

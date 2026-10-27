@@ -16,7 +16,7 @@ from rareprob.affine import (Affine, LinearOrderDP, Piece, TooWide, anf_all, and
                              cut_connectivity, klm_estimate, make_pieces, order_profile, parity,
                              presolve, presolve_estimate, restrict_to, solved_form, uniform_mask, xpt_check,
                              xpt_honest, xpt_verify, _pivot_weight)
-from rareprob.circuit import pack_rows, unpack_bits
+from rareprob.circuit import pack_rows, thr_param, unpack_bits
 
 
 # ------------------------------------------------------------------ helpers
@@ -41,9 +41,12 @@ def gate_values(C, X):
             val[v] = np.logical_or.reduce([val[u] for u in a])
         elif op == "XOR":
             val[v] = np.logical_xor.reduce([val[u] for u in a])
-        elif op == "THR":
-            w, t = C.params[v]
-            val[v] = sum(wi * val[u] for wi, u in zip(w, a)) >= t - 1e-12
+        elif op == "THR":  # exact: integer form, Python-integer sums
+            w, t = thr_param(C.params[v])
+            s = np.zeros(len(X), dtype=object)
+            for wi, u in zip(w, a):
+                s = s + val[u].astype(object) * wi
+            val[v] = (s >= t).astype(bool)
     return val
 
 
@@ -612,8 +615,7 @@ def test_width_cap_relaxation_is_sound():
 # ------------------------------------------- regression: referee counterexamples
 def covers(C, leaves):
     X = all_points(C.n)
-    with np.errstate(invalid="ignore"):   # NaN sums from infinite weights are part of the semantics
-        y = C.eval_bits(X)
+    y = C.eval_bits(X)
     cov = np.zeros(len(X), dtype=bool)
     for S, _ in leaves:
         cov |= members(S, C.n)
@@ -672,7 +674,9 @@ def test_xpt_malformed_arguments_never_crash():
             LinearOrderDP(V, D, order)
 
 
-def test_threshold_propagation_follows_the_evaluator():
+def test_threshold_propagation_is_exact():
+    """The propagator reasons about the exact threshold function, with the
+    weights of a repeated child added up."""
     cases = []
     C = Circuit(3)
     C.set_output(C.AND(C.THR([0, 1], [1.0, 1e-17], 1e-12 + 5e-18), 2))
@@ -699,15 +703,16 @@ def test_threshold_propagation_follows_the_evaluator():
 
 def random_real_threshold_circuit(n, rng):
     W = [1e17, -1e17, 1e16, -1e16, 1e6 + 0.1, 0.3, -0.3, 0.1, 0.2, 3.0, -1.0, 1e-17, 2.0**53, 0.0,
-         float("inf"), float("nan")]
+         10**20, -10**20, Fraction(1, 3)]
+    T = [0.5, 0.6, 1.5, 5.0, 1e-12 + 5e-18, -1e16, 1e16, 0.0, 0.30000000000000004, 1 + 10**20, Fraction(2, 3)]
     C = Circuit(n)
     pool = list(range(n))
     for _ in range(int(rng.integers(2, 8))):
         a = [int(x) for x in rng.choice(pool, int(rng.integers(2, 5)))]   # repeats allowed
         r = rng.random()
         if r < 0.6:
-            w = [float(rng.choice(W[:14] if rng.random() < 0.9 else W)) for _ in a]
-            t = float(rng.choice([0.5, 0.6, 1.5, 5.0, 1e-12 + 5e-18, -1e16, 1e16, 0.0]))
+            w = [W[int(rng.integers(len(W)))] for _ in a]
+            t = T[int(rng.integers(len(T)))]
             g = C.THR(a, w, t)
         elif r < 0.75:
             g = C.XOR(*a)

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .circuit import Circuit
+from .circuit import Circuit, const_value
 
 
 def gvar(g: int) -> int:
@@ -21,8 +21,10 @@ def tseitin(C: Circuit, offset: int = 0, gates=None) -> list[list[int]]:
 
     Gate g is variable g + 1 + offset, except inputs, which are always
     variables 1..n (shared between circuits encoded with different offsets).
-    THR gates are left unconstrained (a relaxation: still sound for
-    deriving implications, possibly weaker).
+    CONST gates are read through circuit.const_value (0 or 1). THR gates are
+    left unconstrained (a relaxation: every clause still holds at the true
+    gate values, so implications derived from them are sound, possibly
+    weaker).
     """
     n = C.n
 
@@ -37,7 +39,7 @@ def tseitin(C: Circuit, offset: int = 0, gates=None) -> list[list[int]]:
         if op == "IN":
             continue
         if op == "CONST":
-            cls.append([z] if C.params[g] else [-z])
+            cls.append([z] if const_value(C.params[g]) else [-z])
         elif op == "NOT":
             cls += [[z, a[0]], [-z, -a[0]]]
         elif op == "AND":
@@ -155,7 +157,7 @@ def affine_conjuncts(C: Circuit) -> list[tuple[int, int]]:
         if op == "IN":
             r = (1 << g, 0)
         elif op == "CONST":
-            r = (0, int(C.params[g]))
+            r = (0, const_value(C.params[g]))
         elif op == "NOT":
             a = aff(C.args[g][0])
             r = None if a is None else (a[0], a[1] ^ 1)

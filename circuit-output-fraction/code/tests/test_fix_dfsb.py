@@ -2,7 +2,7 @@
 forcing to a fixpoint, zero-mass envelopes, Phase-2 sample caps, cutset
 conditioning with (S) and (E) disabled, the meta-procedure's handling of
 underflow and empty intersections, certified variable elimination (log-scale
-bounds, the 2^-1000 boundary, the evaluator's threshold arithmetic), canonical
+bounds, the 2^-1000 boundary, exact threshold arithmetic), canonical
 CNF clauses, the local-threshold and affine modules of the meta-procedure,
 truncated rejection fills, the compiler's rule budget and subnormal-safe
 exponentials."""
@@ -341,14 +341,15 @@ def test_ve_tiny_p_keeps_log_bounds():
     assert rz.zero and exact_ve(Z, Product.uniform(2)) == 0.0
 
 
-def test_ve_threshold_uses_evaluator_sum():
-    """Python's sum() is compensated; the evaluator adds left to right. With
-    weights (1e16, 1, -1e16) the two differ, and VE must follow the evaluator."""
+def test_ve_threshold_is_exact():
+    """Threshold sums are exact: with weights (1e16, 1, -1e16) a rounded
+    left-to-right double sum loses the 1 (p would be 3/8); the gate fires
+    iff 1e16 (x0 - x2) + x1 >= 0.5, so p = 1/2, and VE agrees."""
     C = Circuit(3)
     C.set_output(C.THR([0, 1, 2], [1e16, 1.0, -1e16], 0.5))
     D = Product.uniform(3)
     P = exact_fraction(C, D)
-    assert P == Fraction(3, 8)
+    assert P == Fraction(1, 2)
     res = ve_bounds(C, D)
     assert _ve_contains(res, P)
     e = meta_estimate(C, D, eps=0.1, delta=0.05, rng=np.random.default_rng(0))

@@ -27,20 +27,23 @@ lower bounds need proposals; sampling pays for whatever surprise is left}.
 \begin{itemize}
 \item A lower bound $p\ge L$ can be certified by exhibiting mass: a proposal
 distribution concentrated where $C=1$, with computable likelihood ratios.
-Clipped importance weights make this sound for any proposal (\cref{prop:proposal}).
+Clipped importance weights make this sound for any proposal whose sampler and
+likelihoods the verifier derives from one object (\cref{prop:proposal}).
 \item An upper bound below the sampling scale cannot be certified by
-evaluating $C$, however cleverly: a verifier that makes $T$ evaluations cannot
-certify $p<1/T$ (up to constants), whatever argument it is given
-(\cref{thm:blackbox,thm:surprise}). It must read the circuit and \emph{deduce}
+evaluating $C$, however cleverly: under the uniform distribution (or any $D$ whose
+collision probability $\sum_xD(x)^2$ is much smaller than $1/T$), a verifier that
+makes $T$ evaluations cannot certify $p<1/T$ (up to constants), whatever argument it
+is given (\cref{thm:blackbox}). It must read the circuit and \emph{deduce}
 that $C(x)=1$ confines $x$ to a region of small, exactly computable measure.
 \item Combining the two, an \emph{envelope}, a tractable function $\varphi$ with
 $\varphi\ge\one_C$ whose mass $Z=\E_D\varphi$ is computable and from which one can
 sample, yields an importance sampler with bounded weights, hence two-sided
-intervals, at cost $O(K\eps^{-2}\log(1/\delta))$ where $K=Z/p$
+intervals, after $O(K(\log(1/\delta)+\log\log K)\eps^{-2})$ samples, where $K=Z/p$
 (\cref{thm:envelope}). The envelope explains $\log_2(1/Z)$ bits of the
-surprise; the remaining $\log_2K$ bits are paid for by sampling, and this
-residual cost is unavoidable for anything that treats the unexplained part as
-a black box (\cref{thm:surprise}(b)).
+surprise; the remaining $\log_2K$ bits are paid for by sampling, and this cannot be
+avoided: once the envelope is certified, a verifier that accesses the rest of $C$
+only through evaluations needs about $K$ of them on some circuits inside the envelope,
+whatever further argument it reads (\cref{thm:surprise}(b)).
 \end{itemize}
 Karp--Luby--Madras estimation of DNF probabilities \cite{klm1989}, exact
 counting for decision-DNNFs and bounded treewidth, exponential tilting for
@@ -53,8 +56,9 @@ impossible: it would put $\NP$ in $\BPP$, and with exponentially hard
 pseudorandom generators no procedure beats sampling by more than a $p^{-o(1)}$
 factor even on explicit small circuits (\cref{prop:worstcase}). With a prover, no
 argument system is complete for upper bounds unless $\coNP\subseteq\MA$
-(\cref{thm:ma}), and a verifier that only evaluates $C$ cannot certify upper
-bounds below about $1/T$ with $T$ evaluations (\cref{thm:blackbox}). Interaction would trivialise the problem (sum-check
+(\cref{thm:ma}), and under the uniform distribution (or any $D$ of small collision
+probability) a verifier that only evaluates $C$ cannot certify upper bounds below
+about $1/T$ with $T$ evaluations (\cref{thm:blackbox}). Interaction would trivialise the problem (sum-check
 gives exact $p$ for every circuit), so the one-message model is the
 interesting one.
 
@@ -64,10 +68,11 @@ interesting one.
 Shannon expansion) and samples only at leaves that are dense or have tight
 envelopes. It is sound on every circuit, and complete, with
 $\tilde O(m\,K\,d^2\eps^{-2}\log(m/\delta))$ evaluations besides its pilots, on every
-circuit whose ideal $K$-explanation tree has $m$ nodes (\cref{thm:dfsb}). This covers
+circuit whose ideal $K$-explanation tree has $m$ nodes, with at most $d$ sampled leaves
+whose estimates are multiplied together (\cref{thm:dfsb}). This covers
 read-once formulas (exactly); read-once compositions of sub-circuits each of which, in
-the polarity in which it occurs, is \emph{component-dense}: forcing and independence
-split it into exact or $K$-dense pieces (\cref{cor:dfsb}); backdoor-style triggers;
+the polarity in which it occurs, is \emph{component-dense}: unit propagation and
+independence split it into exact or $K$-dense pieces (\cref{cor:dfsb}); backdoor-style triggers;
 circuits with small cutsets (exactly, by cutset conditioning); and versions of all of
 these disguised by rewriting cones of logarithmic support, which are computed exactly.
 DNFs and DNNFs, whose ideal trees can be exponential, are covered instead by envelope
@@ -104,9 +109,11 @@ with strong, extensive correlations whose bounding chains coalesce quickly.
 with arbitrary sub-circuits $g_j$ of bounded arity and degree, whose scopes may
 overlap like an expander, exponential tilting with a heat-bath sampler whose mixing is
 certified by a locally checked Dobrushin condition, and a normaliser certified by
-thermodynamic integration, is sound on every input (\cref{thm:local}); if every $g_j$
-has a private pivotal input, it is complete with $\poly(n)/\eps^2$ samples at every
-threshold reachable by a certified tilt, a range that contains thresholds with
+thermodynamic integration, is sound on every input (\cref{thm:local}); if the marginals
+are bounded away from $0$ and $1$ and a constant fraction of the $g_j$ have private
+pivotal inputs, it is complete for $m\ge m_0$ with $\poly(n)/\eps^2$ samples (constants
+depending on the arity, the degree and these bounds) at every threshold up to the mean
+under the crude certified tilt $\theta_0$, a range that contains thresholds with
 $p=e^{-\Omega(m)}$. For supermodular statistics coupling from the past removes the
 certificate (\cref{prop:local-cftp}).
 \item \emph{Affine structure} (\cref{sec:affine}): certified affine gates and an exact
@@ -137,15 +144,20 @@ arguments add parity reasoning by gate propagation and Gaussian elimination, wit
 affine pieces under product distributions (\cref{thm:xpt}), and Gibbs envelopes extend
 the soft envelopes to statistics with overlapping scopes, with the mixing certificate
 recomputed by the verifier (\cref{prop:gibbs}). The verifier's cost is
-$\poly(|\pi|)+2^{\sigma_u}$ (times $\eps^{-2}\log(1/\delta)$ and the cost of a
-sample), where $\sigma_u$ is the surprise left unexplained by the argument. In
-the black-box model both terms have a sharp meaning: each bit of argument
-reduces the number of evaluations needed for a lower bound by at most a factor
-$2$, and once an envelope is certified the $2^{\sigma_u}$ term cannot be avoided
-for two-sided intervals (\cref{thm:surprise}). The prover helps strictly: for lower
+$\poly(|\pi|)+2^{\sigma_u}$ (the second term times
+$\eps^{-2}(\log(1/\delta)+\log(1+\sigma_u))$ and the cost of a sample), where $|\pi|$
+is the size of the argument's deductive part (envelopes, proofs, circuits, but not its
+unary sample caps) and $\sigma_u$ is the surprise it leaves unexplained. Both terms
+have a sharp meaning for verifiers that use (part of) $C$ only through evaluations: each
+bit of argument reduces the number of evaluations needed for a lower bound by at most a
+factor $2$, and once an envelope is certified, a verifier that accesses the rest of $C$ only through evaluations needs
+about $2^{\sigma_u}$ of them on some circuits for a two-sided interval, whatever
+further argument it reads, which the envelope estimator achieves
+(\cref{thm:surprise}). The prover helps strictly: for lower
 bounds unless $\NP\subseteq\BPP$; for upper bounds on circuits with short
-refutations in the verifier's proof system $P$ (and on padded versions with exactly
-certified $p>0$) whenever the corresponding slice of the canonical pair of $P$ is not
+refutations in the verifier's proof system $P$ (and, for resolution, cutting planes and
+Frege-type systems, on padded versions with exactly certified $p>0$) whenever the
+corresponding slice of the canonical pair of $P$ is not
 separable in randomized polynomial time (\cref{prop:canonical}), which holds for
 $\mathrm{TC}^0$-Frege, Frege and extended Frege if Blum integers cannot be factored by
 polynomial-size circuits (\cref{cor:automatability}); and two-sidedly, for a verifier
@@ -156,16 +168,21 @@ randomized many-one reductions to gap problems with gap at least $1+1/\poly$ unl
 $\coNP\subseteq\AM$.
 
 \paragraph{Experiments (\cref{sec:experiments}).} A Python implementation
-(\texttt{rareprob}) estimates, e.g., $p\approx4\cdot10^{-46}$ for an OR of eight
-window-CNFs on $800$ variables to $0.4\%$ from $1{,}024$ samples (by context-width
-compilation), $p\approx7\cdot10^{-25}$ for an 80-bit trigger with $2\cdot10^4$
-samples, and $p\in[6.18,7.35]\cdot10^{-22}$ for a $2\cdot10^5$-clause unate CNF
-deterministically; it certifies $p\in10^{[-20.30,-20.08]}$ (exact $10^{-20.19}$) for a
-chain of $1600$ overlapping random local detectors with $7\cdot10^4$ Glauber samples,
-where Monte Carlo would need about $10^{22}$; with SAT-solver proofs as arguments it
-certifies SPN-hidden triggers, which Part~1 handles only by tabulating small cones and
-branching, at a cost exponential in the trigger length; and in 2{,}450 adversarial and random trials no
-interval missed $p$ more often than allowed.
+(\texttt{rareprob}) computes, e.g., $p\approx4\cdot10^{-25}$ for an 80-bit trigger
+exactly, with no samples, and $p\approx2.7\cdot10^{-25}$ for an 80-bit trigger on a
+dense, non-decomposable 20-variable body to ratio $1.03$ with $1.8\cdot10^5$
+evaluations; it estimates $p\approx4\cdot10^{-46}$ for an OR of eight window-CNFs on
+$800$ variables to $0.4\%$ from $1{,}024$ samples (by context-width compilation), and
+certifies $p\in[6.19,7.35]\cdot10^{-22}$ for a unate CNF with $2\cdot10^5$ clauses
+deterministically and $p\in10^{[-20.30,-20.08]}$ (exact $10^{-20.19}$) for a chain of
+$1600$ overlapping random local detectors with about $7\cdot10^4$ Glauber samples, where
+Monte Carlo would need about $2\cdot10^{22}$. When $d$ dense leaves must be sampled and
+multiplied, the cost grows like $d^3$, and Monte Carlo is cheaper on $\wedge$'s of up to
+three dense 16-variable blocks. With SAT-solver proofs as arguments
+the verifier certifies a 20-bit SPN-hidden trigger on which Part~1, which sees such
+tests only by tabulating small cones and branching, gives no answer within $900$
+seconds. In $2{,}250$ random and adversarial trials, $750$ of them with dishonest
+arguments, no interval missed $p$.
 
 \subsection{Related work}
 

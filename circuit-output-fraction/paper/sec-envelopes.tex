@@ -39,11 +39,12 @@ gives the envelope obtained by reading $\vee$ as $\Sum$ and $\wedge$ as $\Prod$.
 Let $\Phi$ have literal and constant leaves only, $D$ be a product distribution
 with rational marginals, and $Z>0$. Then $Z=\E_D\varphi$ is computed by one
 bottom-up pass ($\Sum\mapsto$ sum of children's masses, $\Prod\mapsto$ product)
-with $O(|\Phi|)$ operations on rationals of $\poly(|\Phi|,b)$ bits ($b$ the bit
-length of the marginals), and the following top-down procedure samples exactly
-from $Q_\varphi(x)=D(x)\varphi(x)/Z$: at a $\Sum$ gate choose a child with
-probability proportional to its mass; at a $\Prod$ gate visit all children; at a
-literal leaf set the literal; finally draw every unset variable from $D$.
+with $O(|\Phi|)$ operations on rationals of $\poly(|\Phi|,b)$ bits ($b$ the total
+bit length of the marginals and of the constants of $\Phi$), and the following
+top-down procedure samples exactly from $Q_\varphi(x)=D(x)\varphi(x)/Z$: at a
+$\Sum$ gate choose a child with probability proportional to its mass; at a
+$\Prod$ gate visit all children; at a literal leaf set the literal; finally draw
+every unset variable from $D$.
 \end{lemma}
 
 \begin{proof}
@@ -67,8 +68,10 @@ along every derivation the computed weight and the sampler's choice probabilitie
 telescope, so the relative error of $\hat Z\cdot\E_{\hat Q}W$ is at most
 $e^{\pm\eta}$, where $\eta$ is the largest sum of local rounding errors on a
 derivation (a max-sum dynamic program over $\Phi$); the discreteness of the
-uniform draws adds an absolute $O((n+|\Phi|)2^{-53})$ to $\E W$; and the output
-interval is widened by both and rounded outwards.
+categorical draws at $\Sum$ gates adds an absolute $O((n+|\Phi|)2^{-53})$ to $\E W$
+(the remaining inputs are drawn from $D$ exactly, so the rejection fills of
+\cref{sec:boxes} are exact and the box estimates rest on exact samples); and the
+output interval is widened by both and rounded outwards.
 
 \subsection{The envelope estimator}
 
@@ -128,10 +131,11 @@ trivial envelope $\varphi\equiv1$, with $K=1/p$; exact computation is $\varphi=C
 (when $C$ is itself a d-DNNF), with $K=1$. In between:
 
 \begin{lemma}[what $K$ measures]\label{lem:K}
-For $p>0$, $K=\E_D[\varphi\mid C=1]+\E_D[\varphi\,\one_{C=0}]/p$. For an envelope with
-literal leaves whose positivity set $\{\varphi>0\}$ equals $C^{-1}(1)$ (e.g.\ a DNNF
-for $C$), $K$ is the expected number of satisfied derivations of $x\sim D\mid C=1$,
-its \emph{expected ambiguity}. For a DNF with $m$ terms, $K\le m$.
+For $p>0$, $K=\E_D[\varphi\mid C=1]+\E_D[\varphi\,\one_{C=0}]/p$. For an envelope
+with literal leaves and unit constants whose positivity set $\{\varphi>0\}$ equals
+$C^{-1}(1)$ (e.g.\ a DNNF for $C$), $K$ is the expected number of satisfied
+derivations of $x\sim D\mid C=1$, its \emph{expected ambiguity}. For a DNF with
+$m$ terms, $K\le m$.
 \end{lemma}
 
 The first term is overcounting (union bounds); the second is mass that the
@@ -230,7 +234,9 @@ $K\le m$ by \cref{lem:K}.
 
 Envelopes need not be integer-valued. If
 $C(x)=[S(x)\ge t]$ with $S=\sum_{j=1}^k g_j(x_{B_j})$ a sum of
-$\{0,1\}$-valued sub-circuits on disjoint blocks, then for $\theta\ge0$
+$\{0,1\}$-valued sub-circuits on disjoint blocks (since $S$ is an integer and the
+comparison is exact, we take $t$ to be an integer, replacing it by $\lceil t\rceil$),
+then for $\theta\ge0$
 \[
 \varphi_\theta(x)=e^{-\theta t}\prod_{j=1}^k\big([g_j=0]+e^{\theta}[g_j=1]\big)=e^{\theta(S(x)-t)}\ \ge\ \one[S(x)\ge t],\quad
 Z_\theta=e^{-\theta t}\prod_{j=1}^k\big(1-p_j+p_je^{\theta}\big),
@@ -271,8 +277,8 @@ tilt can be loose by a factor $p^{-\Theta(1)}$: with
 $S=(k+1)y+\sum_{i\le k}x_i$, $q_y=\eta$, $q_x=1/2$ and $t=k+1$, so $p=\eta$, the
 optimal Chernoff envelope has $K=2^{25.7}$ at $k=20$, $p=2^{-40}$. When the $p_j$ are
 known exactly, the unit-weight case is also computable exactly by dynamic
-programming over $S$ (pseudo-polynomial in general weights), and real weights have
-a deterministic FPTAS under product distributions via read-once branching programs
+programming over $S$ (pseudo-polynomial in general weights), and arbitrary weights
+have a deterministic FPTAS under product distributions via read-once branching programs
 \cite{gkm2010} (see also \cite{gopalan2011fptas}). The point of
 \cref{prop:tilting} is that the Chernoff bound, a one-line deduction from the syntax
 ``$C$ is a threshold of independent blocks'', explains all but $O(\log k)$ bits of the
@@ -317,10 +323,13 @@ $S_i\cup S_j$.
 
 So for unate CNFs with $\eps_0\le1/2$ whose dependent pairs carry total probability
 $\Delta\le\eps$, the geometric mean of the two ends has relative error at most
-$e^{\Delta}-1$, however small $p$ is. (Without a bound on $\eps_0$ the last form can
-be arbitrarily loose; the product form, with clauses ordered by decreasing $b_i$,
-stays tight.) Example: $m=6\cdot10^4$ random clauses of width $12$ over
-$2\cdot10^5$ variables give the certified interval $p\in[4.33,5.07]\cdot10^{-7}$
-(ratio $1.17$) in about 30 seconds of pure Python (\cref{sec:experiments}). The
+$e^{\Delta}-1$, however small $p$ is. Without a bound on $\eps_0$ the last form can
+be arbitrarily loose, but the product form, with clauses ordered by decreasing
+$b_i$, is at most $M\exp(2\Delta/(1-\Delta))$ for $\Delta<1$: if clause $i$ shares a
+variable with an earlier clause $j$, then $d_i\ge D(B_i\wedge B_j)\ge b_i+b_j-1\ge
+2b_i-1$, so $1-b_i\ge(1-\Delta)/2$; otherwise $d_i=0$. Example: $m=6\cdot10^4$
+random clauses of width $12$ over $2\cdot10^5$ variables give the certified interval
+$p\in[4.33,5.07]\cdot10^{-7}$ (ratio $1.17$) in under a minute of pure Python
+(\cref{tab:janson}). The
 version for unate $\wedge$'s of arbitrary monotone sub-circuits, with $b_i$ and
 $\Delta$ estimated by sampling, is \cref{thm:janson-general}.

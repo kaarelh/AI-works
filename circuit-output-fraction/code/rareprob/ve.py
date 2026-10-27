@@ -32,7 +32,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .circuit import Circuit
+from .circuit import Circuit, const_value, thr_param, thr_value
 from .dist import Product
 
 _U = 2.0 ** -53            # unit roundoff (round to nearest)
@@ -63,26 +63,20 @@ class Factor:
         self.r = r
 
 
-def thr_sum(w, bits) -> float:
-    """The weighted sum exactly as Circuit.eval_packed computes it: start at
-    0.0 and add w_i * float(bit_i) left to right in IEEE double (Python's
-    built-in sum() is compensated and may differ)."""
-    s = 0.0
-    for wi, b in zip(w, bits):
-        s += wi * (1.0 if b else 0.0)
-    return s
-
-
 def _gate_factor(C: Circuit, g: int) -> Factor:
+    """0/1 table of [gate value == gate function of its children]; threshold
+    gates exactly, in the integer form of circuit.thr_param."""
     op, a = C.ops[g], C.args[g]
     vs = list(dict.fromkeys(list(a) + [g]))
     k = len(vs)
     T = np.zeros((2,) * k)
     pos = {v: j for j, v in enumerate(vs)}
+    if op == "THR":
+        w, t = thr_param(C.params[g])
     for idx in np.ndindex(*(2,) * k):
         ins = [idx[pos[u]] for u in a]
         if op == "CONST":
-            out = C.params[g]
+            out = const_value(C.params[g])
         elif op == "NOT":
             out = 1 - ins[0]
         elif op == "AND":
@@ -92,8 +86,7 @@ def _gate_factor(C: Circuit, g: int) -> Factor:
         elif op == "XOR":
             out = sum(ins) % 2
         elif op == "THR":
-            w, t = C.params[g]
-            out = int(thr_sum(w, ins) >= t - 1e-12)  # the evaluator's function
+            out = thr_value(w, t, ins)
         else:
             raise ValueError(op)
         T[idx] = 1.0 if idx[pos[g]] == out else 0.0

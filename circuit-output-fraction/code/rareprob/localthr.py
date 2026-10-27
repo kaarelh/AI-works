@@ -53,19 +53,21 @@ from dataclasses import dataclass, field
 import numpy as np
 from scipy.special import expit
 
-from .circuit import Circuit, pack_rows, unpack_bits
+from .circuit import Circuit, as_rational, pack_rows, thr_canonical, unpack_bits
 from .stats import Estimate, kl_interval, sequential_mean
 
-FLOAT_TV_PER_UPDATE = 2.0 ** -48  # per site update: rounding of the update probability + 53-bit uniforms
+FLOAT_TV_PER_UPDATE = 2.0 ** -48  # floor of the per-update allowance (LocalModel.float_tv)
+_U = 2.0 ** -53
 
 
 # ---------------------------------------------------------------- the circuit class
 def threshold_to_int(t) -> int:
     """The integer t' with [S >= t] = [S >= t'] for every integer-valued S: an
-    integer is kept, any other real t is rounded up (never truncated)."""
+    integer is kept, any other real t (a float at its exact binary value) is
+    rounded up exactly. Raises ValueError on nan and +-inf."""
     if isinstance(t, (int, np.integer)):
         return int(t)
-    return int(math.ceil(t))  # raises on nan and +-inf
+    return int(math.ceil(as_rational(t)))
 
 
 @dataclass
@@ -84,13 +86,16 @@ class LTC:
     def __post_init__(self):
         self.scopes = [tuple(int(v) for v in A) for A in self.scopes]
         self.tables = [np.asarray(T, dtype=np.int64).ravel() for T in self.tables]
-        assert len(self.scopes) == len(self.tables)
+        if len(self.scopes) != len(self.tables):
+            raise ValueError("one table per scope")
         for A, T in zip(self.scopes, self.tables):
-            assert len(set(A)) == len(A) and all(0 <= v < self.n for v in A), "bad scope"
-            assert T.shape == (1 << len(A),) and np.all((T == 0) | (T == 1)), "bad table"
+            if len(set(A)) != len(A) or not all(0 <= v < self.n for v in A):
+                raise ValueError("bad scope")
+            if T.shape != (1 << len(A),) or not np.all((T == 0) | (T == 1)):
+                raise ValueError("bad table")
         self.t = threshold_to_int(self.t)
-        if self.H is not None:
-            assert self.H.n == self.n
+        if self.H is not None and self.H.n != self.n:
+            raise ValueError("H must have the same inputs")
 
     @property
     def m(self) -> int:
@@ -163,7 +168,7 @@ class LTC:
                 kids.append(C.OR(*terms))
         if not kids:
             kids.append(C.const(0))
-        thr = C.THR(kids, [1.0] * len(kids), float(self.t))
+        thr = C.THR(kids, [1] * len(kids), int(self.t))
         if self.H is None:
             return C.set_output(thr)
         h = _copy_into(C, self.H)
@@ -188,55 +193,32 @@ def ltc_from_subcircuits(n, scopes, subcircuits, t, H=None) -> LTC:
     return LTC(n, scopes, tables, t, H)
 
 
-def _thr_count_threshold(params, m: int, full_check: int = 4096) -> int | None:
-    """The integer t such that a THR gate with these params (m unit weights)
-    outputs [number of true children >= t], as Circuit itself evaluates it.
-
-    The threshold is read off the evaluator, not recomputed from the real
-    threshold, so its rounding convention cannot be got wrong: a copy of the
-    gate over m fresh inputs is evaluated at counts 0..m (all of them when m <
-    full_check; otherwise by bisection, which uses that the evaluator compares
-    the sum with a constant, plus checks at both sides of the result). Returns
-    t in [0, m+1] (m+1: never fires), or None if the gate is not a threshold of
-    the count."""
-    G = Circuit(m)
-    G.set_output(G.THR(list(range(m)), list(params[0]), params[1]))
-
-    def fires(counts) -> np.ndarray:
-        counts = np.asarray(counts, dtype=np.int64)
-        return G.eval_bits(np.arange(m)[None, :] < counts[:, None])
-
-    if m < full_check:
-        f = fires(np.arange(m + 1))
-        t = int(np.argmax(f)) if f.any() else m + 1
-        return t if np.array_equal(f, np.arange(m + 1) >= t) else None
-    f0, fm = fires([0, m])
-    if f0:
-        t = 0
-    elif not fm:
-        t = m + 1
-    else:
-        lo, hi = 0, m  # fires(lo) = 0, fires(hi) = 1
-        while hi - lo > 1:
-            mid = (lo + hi) // 2
-            if fires([mid])[0]:
-                hi = mid
-            else:
-                lo = mid
-        t = hi
-    probe = sorted({c for c in (0, t - 1, t, m) if 0 <= c <= m})
-    return t if np.array_equal(fires(probe), np.array(probe) >= t) else None
+def _thr_count_threshold(params, m: int) -> int | None:
+    """The integer t in [0, m+1] such that a THR gate with these params and m
+    children outputs [number of true children >= t] (m+1: never fires), or
+    None if the gate is not a threshold of the count. Read off the exact
+    canonical integer form of the gate (circuit.thr_canonical): with unit
+    weights it is the threshold there, which lies in [0, m+1]; with all
+    weights 0 the gate is constant."""
+    w, t = thr_canonical(*params)
+    if len(w) != m:
+        return None
+    if all(x == 1 for x in w):
+        return min(max(t, 0), m + 1)
+    if all(x == 0 for x in w):
+        return 0 if t <= 0 else m + 1
+    return None
 
 
 def ltc_from_circuit(C: Circuit, kmax: int = 12, check_points: int = 256, rng=None) -> LTC | None:
     """Syntactic recognition: the output gate is a unit-weight THR gate whose
     children have supports of size <= kmax, or an AND with such a THR child
     (the other children form H). Truth tables of the children are computed by
-    enumerating their supports, and the integer threshold by evaluating the
-    THR gate itself at the relevant counts (_thr_count_threshold), so the
-    returned LTC computes exactly the function of C. As a further guard, the
-    two are compared on check_points random inputs. Returns None if C has no
-    such form (or, defensively, if the comparison fails)."""
+    enumerating their supports, and the integer threshold is read off the THR
+    gate's exact integer form (_thr_count_threshold), so the returned LTC
+    computes exactly the function of C. As a further guard, the two are
+    compared on check_points random inputs. Returns None if C has no such
+    form (or, defensively, if the comparison fails)."""
     out = C.output
     op = C.ops[out]
     thr, rest = None, []
@@ -244,11 +226,11 @@ def ltc_from_circuit(C: Circuit, kmax: int = 12, check_points: int = 256, rng=No
         thr = out
     elif op == "AND":
         for a in C.args[out]:
-            if thr is None and C.ops[a] == "THR" and all(w == 1.0 for w in C.params[a][0]):
+            if thr is None and C.ops[a] == "THR" and all(w == 1 for w in thr_canonical(*C.params[a])[0]):
                 thr = a
             else:
                 rest.append(a)
-    if thr is None or not all(w == 1.0 for w in C.params[thr][0]):
+    if thr is None or not all(w == 1 for w in thr_canonical(*C.params[thr])[0]):
         return None
     sup = C.supports()
     scopes, tables = [], []
@@ -301,16 +283,17 @@ class Certificate:
     F: float
     weighted: bool
     alpha_unweighted: float
+    tv_update: float = FLOAT_TV_PER_UPDATE  # floating-point allowance per site update (LocalModel.float_tv)
 
     def sweeps(self, eta: float, n: int) -> int | None:
-        """Smallest s with F alpha^s + s n 2^-48 <= eta (None if impossible)."""
-        if self.alpha >= 1:
+        """Smallest s with F alpha^s + s n tv_update <= eta (None if impossible)."""
+        if self.alpha >= 1 or not math.isfinite(self.tv_update):
             return None
         if self.alpha <= 0:
             s = 1
         else:
             s = max(1, math.ceil(math.log(self.F / (eta / 2)) / -math.log(self.alpha)))
-        if self.F * self.alpha ** s + s * n * FLOAT_TV_PER_UPDATE > eta:
+        if self.F * self.alpha ** s + s * n * self.tv_update > eta:
             return None
         return s
 
@@ -424,6 +407,18 @@ class LocalModel:
     def influence_exact(self, theta: float) -> np.ndarray:
         return self._pairs(theta, exact=True)
 
+    def float_tv(self, theta: float) -> float:
+        """Bound on Pr[the floating-point heat-bath update of a site differs
+        from the exact one], per site update, for every tilt in [0, theta].
+        The logit a_i = log q_i - log1p(-q_i) is computed with error
+        <= 9u|a_i| + 12u (logs within 4 ulps, |log q| + |log(1-q)| <=
+        |a| + 2 ln 2), forming a_i + theta Delta adds u(|a_i| + 2 theta dmax),
+        expit has slope <= 1/4 and relative error <= 4u, and a 53-bit uniform
+        adds u: in all u (2.5 |a_i| + 0.5 theta dmax + 8), u = 2^-53. Never
+        below FLOAT_TV_PER_UPDATE."""
+        amax = float(np.abs(self.a).max(initial=0.0))
+        return max(FLOAT_TV_PER_UPDATE, _U * (2.5 * amax + 0.5 * theta * self.dmax + 8.0))
+
     def certificate(self, theta: float, gamma: float = 0.0, iters: int = 3000) -> Certificate:
         """Best of the unweighted (row sums) and a weighted (resolvent vector)
         Dobrushin bound at theta; the inequality is verified explicitly."""
@@ -452,6 +447,7 @@ class LocalModel:
                                    math.log(best.F * 1e10) / -math.log(max(best.alpha, 1e-300))):
                 best = cand
         best.alpha = best.alpha * (1 + 1e-12)  # rounding margin
+        best.tv_update = self.float_tv(theta)
         return best
 
     def theta_max(self, gamma: float, hi: float = 8.0, tol: float = 1e-3) -> float:
@@ -750,7 +746,10 @@ def tg_estimate(ltc: LTC, q, eps: float = 0.2, delta: float = 0.05, gamma: float
     normaliser. window: half-width of the normaliser window in pilot standard
     deviations (None: no window). rb: Rao-Blackwellise S in the normaliser.
     The interval contains p with probability >= 1 - delta whatever theta, L,
-    the window, the budgets and the pilot do (they only affect its width)."""
+    the window, the budgets and the pilot do (they only affect its width).
+    Tilts are capped at 1e290 / (max|S| + |t| + n dmax + 1), so that no
+    intermediate quantity overflows; a NaN theta or theta_cap gives no
+    verdict."""
     rng = np.random.default_rng() if rng is None else rng
     q = np.asarray(q, dtype=float)
     t = ltc.t
@@ -762,6 +761,10 @@ def tg_estimate(ltc: LTC, q, eps: float = 0.2, delta: float = 0.05, gamma: float
     n, mu0 = model.n, model.mu0
     d_b = d_m = d_o = d_v = d_c = delta / 5
     note = []
+    S_abs = max(abs(ltc.S_lo), abs(ltc.S_hi))
+    if (theta is not None and math.isnan(theta)) or not theta_cap >= 0:
+        return LocalEstimate(-math.inf, 0.0, -math.inf, 0.0, note="theta or theta_cap is NaN or negative: no verdict")
+    theta_cap = min(float(theta_cap), 1e290 / (S_abs + abs(t) + n * model.dmax + 1))
 
     # ---- tilt, sampler, pilot (none of this affects soundness)
     if sampler == "glauber":
@@ -772,7 +775,7 @@ def tg_estimate(ltc: LTC, q, eps: float = 0.2, delta: float = 0.05, gamma: float
         th_max = theta_cap
     else:
         raise ValueError(sampler)
-    pilot = _pilot(model, t, th_max if theta is None else min(theta, th_max), sampler, gamma,
+    pilot = _pilot(model, t, th_max if theta is None else min(max(theta, 0.0), th_max), sampler, gamma,
                    pilot_points, pilot_chains, rng, rb)
     if mu0 >= t:
         th = 0.0
@@ -800,6 +803,12 @@ def tg_estimate(ltc: LTC, q, eps: float = 0.2, delta: float = 0.05, gamma: float
         sweeps = cert.sweeps(eta, n)
         if sweeps is None:
             return LocalEstimate(-math.inf, 0.0, -math.inf, th, note="certificate too weak for eta: no verdict")
+    if th == 0.0 and N_tot * n * _U > d_c:
+        # draws from D use 53-bit uniforms: each coordinate is coupled to an
+        # exact draw except with probability <= 2^-53
+        return LocalEstimate(-math.inf, 0.0, -math.inf, th, note="too many samples for the coupling budget: no verdict")
+    if th > 0 and sampler == "cftp" and 2 * N_tot * n * model.float_tv(th) > d_c:
+        return LocalEstimate(-math.inf, 0.0, -math.inf, th, note="CFTP: tilt too large for the coupling budget: no verdict")
     cftp_sweeps = 0
 
     def draw_states(thetas):
@@ -843,9 +852,25 @@ def tg_estimate(ltc: LTC, q, eps: float = 0.2, delta: float = 0.05, gamma: float
         est = sequential_mean(draw, eps / 3, d_v, max_samples=max_is, first=min(batch, max_is))
     except _Timeout:
         return LocalEstimate(-math.inf, 0.0, -math.inf, th, note="CFTP timeout: no verdict")
-    widen = 1e-9  # floating-point slack
+    if sampler == "cftp" and cftp_sweeps * n * model.float_tv(th) > d_c:
+        # every site update of a counted CFTP run is coupled to the exact one
+        # except with probability float_tv; a union bound over at most
+        # d_c / float_tv updates (checked here) costs d_c
+        return LocalEstimate(-math.inf, 0.0, -math.inf, th, note="CFTP: too many updates for the coupling budget: no verdict")
+    # Floating-point slack, from a few ulps of every quantity involved (u =
+    # 2^-53, 2^-46 = 128u): the values Y (S plus the Rao-Blackwell correction,
+    # at most n dmax, whose update probabilities carry the error of float_tv),
+    # their sum over L grid points times h, the IS weights exp(-theta (S - t))
+    # (relative error <= u (theta |S - t| + 3)), the logs and the final sums.
+    lg = (abs(math.log(est.lo)) if est.lo > 0 else 0.0) + (abs(math.log(est.hi)) if est.hi > 0 else 0.0)
+    amax = float(np.abs(model.a).max(initial=0.0))
+    widen = 2.0 ** -46 * (math.log2(L + n + 2) + 2) * (
+        1 + abs(zlo) + abs(zhi) + lg
+        + th * (abs(t) + S_abs + n * model.dmax * (1 + 2.5 * amax + 0.5 * th * model.dmax)))
     log_lo = (zlo - th * t + math.log(est.lo) - widen) if est.lo > 0 else -math.inf
     log_hi = min(0.0, zhi - th * t + (math.log(est.hi) if est.hi > 0 else -math.inf) + widen)
+    if math.isnan(log_lo) or math.isnan(log_hi) or math.isnan(widen):
+        return LocalEstimate(-math.inf, 0.0, -math.inf, th, note="non-finite intermediate value: no verdict")
     log_val = (zlo + zhi) / 2 - th * t + math.log(est.value) if est.value > 0 else -math.inf
     log_val = min(max(log_val, log_lo), log_hi)
     upd = (L + est.samples) * n * sweeps + cftp_sweeps * n

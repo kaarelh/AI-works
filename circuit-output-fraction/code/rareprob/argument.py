@@ -21,9 +21,12 @@ prover's objects (stored supports, hash-consing tables, boxes):
   3. it runs the envelope importance sampler and outputs an interval.
 A malformed envelope is a failed deductive certificate: the output is the
 trivial interval [0, 1]. If pi is missing, malformed or invalid, the verifier
-still outputs a valid LOWER bound (the upper end becomes +inf): the importance
+still outputs a valid LOWER bound (the upper end becomes 1): the importance
 weights C/phi lie in [0, 1] on the proposal's support because phi is
 integer-valued, and their mean is Pr[C = 1 and phi > 0] / E[phi] <= p / E[phi].
+If E[phi] >= 1 the estimator uses phi = 1 (plain Monte Carlo) instead, and
+if it fails on a well-formed but extreme envelope (e.g. by overflow), the
+output is [0, 1].
 
 The verifier has no EXACT rule: it never trusts a claim of determinism (a
 d-DNNF whose OR-gates are not checked to be deterministic is only a DNNF, and
@@ -31,13 +34,12 @@ reading it as a d-DNNF can overcount; x OR x would get mass 2 q).
 
 Soundness (every circuit, every argument): Pr[p not in interval] <= delta.
 Completeness: if C has an envelope with K = E[phi]/p and a DRUP proof of
-size s, the honest verifier's work is O(s-checking + K log(1/delta)/eps^2
-samples of cost O(|C| + |phi|)).
+size s, the honest verifier's work is O(s-checking + K (log(1/delta) +
+log log K)/eps^2 samples of cost O(|C| + |phi|)).
 """
 
 from __future__ import annotations
 
-import math
 import operator
 import re
 from dataclasses import dataclass
@@ -68,7 +70,10 @@ def sanitize_envelope(env, n: int) -> Envelope | None:
     None if it is malformed.
 
     Only env.kind, env.data and env.root are read, each entry once; derived
-    fields (env.sup, the hash-consing table, boxes) are ignored. The copy
+    fields (env.sup, the hash-consing table, boxes) are ignored. env.kind,
+    env.data and every gate's child list must be plain lists or tuples
+    (exact types), so copying them is linear in the argument's size; an
+    arbitrary iterable could be unbounded. The copy
     keeps the node indices, kinds and child order of env (so the support
     circuit, and hence the domination CNF, is the one the prover encoded),
     with supports recomputed bottom-up from the leaves. Accepted: kinds that
@@ -79,8 +84,10 @@ def sanitize_envelope(env, n: int) -> Envelope | None:
     accepted in arguments.
     """
     try:
-        kinds = list(env.kind)
-        datas = list(env.data)
+        kinds, datas = env.kind, env.data
+        if type(kinds) not in (list, tuple) or type(datas) not in (list, tuple):
+            return None
+        kinds, datas = list(kinds), list(datas)
         root = _index(env.root)
     except Exception:
         return None
@@ -105,11 +112,15 @@ def sanitize_envelope(env, n: int) -> Envelope | None:
             if k in ("ONE", "ZERO"):
                 clean[u] = (k, None)
             elif k == "LIT":
+                if type(d) not in (list, tuple) or len(d) != 2:
+                    return None
                 i, b = (_index(t) for t in d)
                 if not (0 <= i < n and b in (0, 1)):
                     return None
                 clean[u] = (k, (i, b))
             else:
+                if type(d) not in (list, tuple):
+                    return None
                 ch = tuple(_index(c) for c in d)
                 if not ch or any(not 0 <= c < u for c in ch):
                     return None
@@ -296,9 +307,15 @@ def verify(C: Circuit, D: Product, env: Envelope, proof, eps: float = 0.1, delta
                 ok = RUPChecker(cnf).check_refutation(clauses)
         except Exception:
             ok = False
-    # 3. sampling
-    est = envelope_estimate(C, D, env, eps=eps, delta=delta, max_samples=max_samples, rng=rng)
+    # 3. sampling; an envelope that makes the estimator fail (e.g. by
+    #    overflow) gets the trivial interval, which is valid
+    try:
+        est = envelope_estimate(C, D, env, eps=eps, delta=delta, max_samples=max_samples, rng=rng)
+    except (ArithmeticError, ValueError, RuntimeError, MemoryError) as exc:
+        return Verdict(Estimate(0.0, 0.0, 1.0, 0, 0, delta,
+                                f"envelope estimator failed ({type(exc).__name__}): trivial interval"),
+                       ok, steps)
     if not ok:
-        est = Estimate(est.lo, est.lo, math.inf, est.samples, est.evaluations, delta,
+        est = Estimate(est.lo, est.lo, 1.0, est.samples, est.evaluations, delta,
                        est.note + "; no valid domination proof: lower bound only")
     return Verdict(est, ok, steps)

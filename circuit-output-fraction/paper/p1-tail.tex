@@ -15,23 +15,30 @@ with $w\le18$, and floating point with a proved relative error bound: each table
 is a mantissa with an integer exponent, so nothing underflows.)
 \item \emph{Thresholds of independent blocks.} Exponential tilting
 (\cref{prop:tilting}): $K\le\frac43(2\sqrt k+1)$ for $k$ unit-weight blocks;
-real weights under product distributions via the branching-program FPTAS of
+arbitrary weights under product distributions via the branching-program FPTAS of
 \cite{gkm2010} (see also \cite{gopalan2011fptas}).
 \item \emph{Unate circuits with sparse overlaps or fast coalescence.}
 \Cref{thm:janson,thm:janson-general,thm:cftp}, the last with a polynomial
-truncation time $T$ and a polynomial cut-off $\Lambda_{\max}$ (notation of
-\cref{thm:cftp}); it is then complete when $\Lambda\le\Lambda_{\max}$ (for instance
-when $\max_ib_i^+\le1/2$, as then $\Lambda\le8\mu^++2$) and
-$\gamma=1-q_{\max}d_{\max}(k_{\max}-1)>0$ with $T\ge(n/\gamma)\ln(16n/\eta)$. Clauses
-are canonicalised first: repeated literals merged, tautologies dropped.
+truncation time $T$ and the cut-off $\Lambda_{\max}=24|C|+3$ (notation of
+\cref{thm:cftp}); it is then complete when $\Lambda\le\Lambda_{\max}$ and
+$\gamma=1-q_{\max}d_{\max}(k_{\max}-1)>0$ with
+$T\ge(n/\gamma)\ln(256n\Lambda_{\max}^2/\eps')$, which implies the condition of
+\cref{thm:cftp} on $T$ as $\eta\ge\eps'/(16\Lambda^2)$. The condition on $\Lambda$
+holds for CNFs with all $b_i\le1/2$ and, except with probability $\delta/6$, for
+other unate circuits with all $b_i\le1/8$, since then $\Lambda\le24\mu+3$ and
+$\mu\le m\le|C|$. Clauses are canonicalised first: repeated literals merged,
+tautologies dropped.
 \item \emph{Small context width.} \Cref{thm:cw}, declining if
 $\mathrm{cw}>c\log|C|$, with the \#DNNF FPRAS or, in practice, the envelope
 estimator on the compiled DNNF.
-\item \emph{Local-lemma regime.} Under the uniform distribution, $k$-CNFs (more
-generally, local CSPs) whose variables lie in at most $d\le2^{c'k}$ constraints, for an
-absolute constant $c'>0$, admit FPRASs \cite{moitra2019,fgyz2021,fhy2021,jpv2021,hwy2022}; for $k$-CNFs,
-$d\lesssim2^{k/4.82}$ suffices up to factors polynomial in $k$ \cite{wangyin2024}.
-The condition is syntactic.
+\item \emph{Local-lemma regime.} Under the uniform distribution, $k$-CNFs whose
+variables lie in at most $d\le2^{c'k}$ clauses, for an absolute constant $c'>0$, admit
+FPRASs \cite{moitra2019,fgyz2021,jpv2021,hwy2022}; for $k$-CNFs, $d\lesssim2^{k/4.82}$
+suffices up to factors polynomial in $k$ \cite{wangyin2024}. More generally, so do
+local CSPs in which every constraint is violated with probability at most $\beta$
+and shares variables with at most $\Delta$ others, if $\beta\Delta^{c}\lesssim1$ for
+an absolute constant $c$ \cite{fhy2021,jpv2021,hwy2022}. The conditions are
+syntactic (for constraints on $O(\log|C|)$ variables, $\beta$ is computed exactly).
 \item \emph{Local thresholds.} Unit-weight thresholds of sub-circuits with
 overlapping scopes of bounded size and degree, possibly $\wedge$ an arbitrary circuit
 (declining if $dk>c\log|C|$): tilted Glauber sampling with a locally checked Dobrushin
@@ -47,14 +54,14 @@ distribution an affine system with at most one quadratic equation is counted exa
 Gaussian elimination substitutes the affine system into the quadratic polynomial, and
 Dickson's normal form of the result gives the exact count and an exact sampler
 \cite{ek1990}; the quadric changes the probability inside the affine space by at most
-a factor $4$ (\cref{prop:fourier}). (Systems of several quadratic equations are
-$\NP$-hard even to decide.)
+a factor $4$ unless it makes it $0$ (\cref{prop:fourier}). (Systems of several
+quadratic equations are $\NP$-hard even to decide.)
 \end{itemize}
 
 \begin{theorem}[meta-procedure]\label{thm:meta}
 Fix the polynomial parameters of the procedures: $K=|C|^{\alpha}$, $m=|C|^{\beta}$ and
 the rule budget $B$ for DFSB; the cut-offs $c\log|C|$ above; for \cref{thm:cftp} a
-truncation time $T=|C|^{c}$ and the cut-off $\Lambda_{\max}=|C|^{c}$; and the sample
+truncation time $T=|C|^{c}$ and the cut-off $\Lambda_{\max}=24|C|+3$; and the sample
 caps and list budgets of the other modules. Run DFSB and every applicable module,
 $M$ procedures in all, each at confidence $\delta/(3M)$ and at an accuracy
 parameter for which its completeness gives $U\le(1+\eps)L$ (e.g.\
@@ -69,19 +76,22 @@ the union of the classes above (for these parameters and the given $\eps$).
 With probability at least $1-\delta/3$ all $M$ intervals are valid simultaneously,
 and then so is their intersection, which is nonempty. Each procedure runs in
 polynomial time (\cref{thm:dfsb}, the cut-offs and caps; \cref{thm:cftp} draws
-$\poly(|C|,\Lambda_{\max},1/\eps,\log(1/\delta))$ samples and runs of at most $2T$ updates). If $C$ lies
-in the class of one procedure, its interval is tight with probability at least
-$1-2\delta/(3M)\ge1-2\delta/3$, and a nonempty intersection $[L',U']\subseteq[L,U]$
-with $U\le(1+\eps)L$ has $U'\le(1+\eps)L'$; so the output is tight with probability
-at least $1-\delta$.
+$\poly(|C|,\Lambda_{\max},1/\eps,\log(1/\delta))$ samples and runs, each run of
+at most $2T$ updates). If $C$ lies in the class of one procedure, its interval is
+tight with probability at least $1-2\delta/(3M)\ge1-2\delta/3$, and a nonempty
+intersection $[L',U']\subseteq[L,U]$ with $U\le(1+\eps)L$ has $U'\le(1+\eps)L'$; so
+the output is tight with probability at least $1-\delta$.
 \end{proof}
 
 Skipping the remaining procedures once some interval is tight changes neither
-property. Our implementation does so; it runs variable elimination (which, being
-exact, returns at once), the Janson sandwich, tilting, TG, the presolve (with DFSB on
-$\tilde R$ when all pivots are uniform) and affine envelopes when they explain at least
-one bit ($M\le1/2$, envelope mass at most $1/2$), context width and DFSB, and omits the
-other modules.
+property, and neither does returning at once an interval that is valid and tight
+with certainty. Our implementation does both. In this order it runs variable
+elimination, the Janson sandwich for unate CNFs, tilting, the presolve (with DFSB on
+$\tilde R$ when all pivots are uniform) and affine envelopes when they explain at
+least one bit (presolve factor and envelope mass at most $1/2$), TG, context width and
+DFSB; it returns at once the result of variable elimination, and $p=0$ or $p=1$ when
+the affine structure or the attainable sums of a block threshold decide $C$; and it
+omits the other modules.
 
 \subsection{What remains out of reach}\label{sec:part1-limits}
 

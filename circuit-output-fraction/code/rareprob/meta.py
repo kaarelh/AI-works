@@ -22,10 +22,11 @@ intersection; and a method that is complete on C (tight with probability
 >= 1 - 2 delta/(3M)) makes the intersection tight with probability >= 1 - delta.
 A method is skipped once some interval is already tight (this changes neither
 soundness nor completeness), and a deterministic certificate (VE, p = 0 from
-the affine structure) is returned at once. An empty intersection (possible
-only on the failure event) gives [0, 1]. Every method has a polynomial
-running-time bound (width cut-offs, sample caps, budgets), so the whole
-procedure does too.
+the affine structure, a block threshold whose t lies outside the attainable
+sums) is returned at once. An empty intersection (possible only on the
+failure event) gives [0, 1], and upper ends are capped at 1. Every method has
+a polynomial running-time bound (width cut-offs, sample caps, budgets), so
+the whole procedure does too.
 """
 
 from __future__ import annotations
@@ -35,7 +36,7 @@ import math
 import numpy as np
 
 from .affine import affine_envelope, anf_all, klm_estimate, make_pieces, presolve, presolve_estimate
-from .circuit import Circuit
+from .circuit import Circuit, thr_canonical
 from .ctxwidth import compile_ctx
 from .dfsb import dfsb_estimate
 from .dist import Product
@@ -88,12 +89,14 @@ def as_cnf(C: Circuit):
 
 def as_block_threshold(C: Circuit, max_block: int = 12):
     """(blocks, t) if C's output is THR with unit weights over sub-circuits on
-    pairwise disjoint supports of at most max_block variables."""
+    pairwise disjoint supports of at most max_block variables; t is the
+    threshold of the gate's exact canonical integer form
+    (circuit.thr_canonical), so [S >= t] is the gate's function."""
     g = C.output
     if C.ops[g] != "THR":
         return None
-    w, t = C.params[g]
-    if any(x != 1.0 for x in w):
+    w, t = thr_canonical(*C.params[g])
+    if any(x != 1 for x in w):
         return None
     sup = C.supports()
     used = 0
@@ -104,8 +107,7 @@ def as_block_threshold(C: Circuit, max_block: int = 12):
             return None
         used |= s
         vs = [i for i in range(C.n) if (s >> i) & 1]
-        sub = Circuit(C.n, list(C.ops), list(C.args), list(C.params), u)
-        blocks.append(Block(vs, sub, 1.0))
+        blocks.append(Block(vs, C.with_output(u), 1))
     return blocks, t
 
 
@@ -177,6 +179,8 @@ def meta_estimate(C: Circuit, D: Product, eps: float = 0.1, delta: float = 0.05,
     if thr is not None and not _tight(results, eps):
         blocks, t = thr
         e = tilted_estimate(blocks, t, D, C.n, eps=eps, delta=dm, rng=rng)
+        if e.delta == 0.0 and e.lo == e.hi:  # deterministic: t outside the attainable sums
+            return e
         e.note = "tilting: " + e.note
         results.append(e)
     if pre is not None and not _tight(results, eps):
@@ -204,7 +208,7 @@ def meta_estimate(C: Circuit, D: Product, eps: float = 0.1, delta: float = 0.05,
         e.note = "dfsb: " + e.note
         results.append(e)
     lo = max(r.lo for r in results)
-    hi = min(r.hi for r in results)
+    hi = min(1.0, min(r.hi for r in results))
     if lo > hi:  # possible only on the failure event: no verdict
         lo, hi = 0.0, 1.0
     val = math.sqrt(lo * hi) if lo > 0 else hi / 2

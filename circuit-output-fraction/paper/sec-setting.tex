@@ -2,24 +2,33 @@
 
 \paragraph{Circuits.}
 A circuit $C$ on inputs $x_1,\dots,x_n$ is a directed acyclic graph whose
-internal nodes (gates) compute $\wedge$, $\vee$ (any fan-in), $\neg$, $\oplus$
-or a threshold function $[\sum_j w_j y_j \ge t]$ of their inputs; one gate is
-the output. $|C|$ is the number of wires. For a gate $g$,
+leaves are the inputs and the constants $0$ and $1$, and whose internal nodes
+(gates) compute $\wedge$, $\vee$ (any fan-in), $\neg$, $\oplus$ or a threshold
+function $[\sum_j w_j y_j \ge t]$ of their inputs; one gate is the output. The
+weights $w_j$ and the threshold $t$ are rationals given in binary (a
+floating-point number stands for its exact binary value), and the comparison is
+exact, with no tolerance (our implementation evaluates threshold gates the same
+way). $|C|$ is the number of wires. For a gate $g$,
 $\sv(g)\subseteq[n]$ is the set of input variables in its cone (its
 \emph{support}; always the syntactic one). Pushing negations to the inputs gives
-the negation normal form (NNF) of $C$: an $\{\wedge,\vee\}$-circuit over literals.
-For $\{\wedge,\vee,\neg\}$-circuits it has at most two copies of every gate, one
-per polarity; a $\oplus$-gate of fan-in $k$ expands to $O(k)$ gates per polarity,
-a threshold gate with integer weights of polynomially bounded total $W=\sum_j|w_j|$
-expands by a sequential counter with $O(kW)$ wires (a negative weight acts on the
-complemented input), and other gates stay opaque. An $\wedge$-gate of an NNF is \emph{decomposable} if
-its children have pairwise disjoint supports, and an $\vee$-gate is
-\emph{deterministic} if its children are pairwise inconsistent; an NNF all of whose
-$\wedge$-gates are decomposable is a DNNF, and a d-DNNF if moreover all its
-$\vee$-gates are deterministic \cite{darwiche2002map}.
+the negation normal form (NNF) of $C$: an $\{\wedge,\vee\}$-circuit over literals
+and constants. For $\{\wedge,\vee,\neg\}$-circuits it has at most two copies of
+every gate, one per polarity; a $\oplus$-gate of fan-in $k$ expands to $O(k)$ gates
+per polarity, a threshold gate whose weights, scaled to integers, have polynomially
+bounded total $W=\sum_j|w_j|$ expands by a sequential counter with $O(kW)$ wires (a
+negative weight acts on the complemented input), and other gates stay opaque. An
+$\wedge$-gate of an NNF is \emph{decomposable} if its children have pairwise
+disjoint supports, and an $\vee$-gate is \emph{deterministic} if its children are
+pairwise inconsistent; an NNF all of whose $\wedge$-gates are decomposable is a
+DNNF, and a d-DNNF if moreover all its $\vee$-gates are deterministic
+\cite{darwiche2002map}.
 
 \paragraph{Distributions.}
-$D$ is a product distribution on $\bits^n$ with $\Pr[x_i=1]=q_i$. Product
+$D$ is a product distribution on $\bits^n$ with rational marginals
+$\Pr[x_i=1]=q_i$, again given in binary (a floating-point marginal stands for its
+exact value). The \emph{input size} of $(C,D)$ is $|C|$ plus the total bit length
+of the $q_i$ and of the weights and thresholds of $C$; running times that mention
+only $|C|$ count arithmetic operations on such numbers. Product
 structure is what makes ``disjoint supports'' mean ``independent''. A
 distribution given by a sampler circuit $S:\bits^m\to\bits^n$ reduces to the
 uniform case: $\Pr_{x\sim S(U_m)}[C(x)=1]=\Pr_{u\sim U_m}[(C\circ S)(u)=1]$.
@@ -43,8 +52,8 @@ verdict''). It is \emph{sound} if for every circuit $C$ and every $D$,
 \]
 It is \emph{complete} on a class $\mathcal C$ if for all $C\in\mathcal C$,
 with probability at least $1-\delta$ the interval is tight:
-$U\le(1+\eps)L$. It is \emph{efficient} if it runs in time
-$\poly(|C|,1/\eps,\log(1/\delta))$.
+$U\le(1+\eps)L$. It is \emph{efficient} if it runs in time polynomial in the
+input size, $1/\eps$ and $\log(1/\delta)$.
 \end{definition}
 
 A sound procedure that is complete on $\mathcal C$ gives, on $\mathcal C$, a
@@ -73,7 +82,8 @@ the circuit.
 A procedure beats sampling on a class $\mathcal C$ if it is sound, efficient,
 and complete on $\mathcal C$, and $\mathcal C$ contains circuits with
 $p=n^{-\omega(1)}$ (for most of our classes, $p=2^{-\Omega(n)}$). Its cost is then
-polynomial in the surprise $\log(1/p)$ rather than in $1/p$.
+polynomial in the input size whatever $p$ is, whereas that of Monte Carlo grows like
+$1/p$, exponentially in the surprise.
 \end{definition}
 
 \paragraph{Prover-assisted estimation.}
@@ -85,8 +95,8 @@ flips coins (for instance to sample) and outputs an interval $[L,U]$.
 $V$ is \emph{sound} if for every circuit $C$, every $D$ and every string
 $\pi$, $\Pr_{\text{coins of }V}\big[p_D(C)\notin V(C,D,\pi,\eps,\delta)\big]\le\delta$.
 It is \emph{complete} on $\mathcal C$ if for every $C\in\mathcal C$ there is a
-$\pi$ of size $\poly(|C|)$ such that with probability $1-\delta$ the output is
-tight. One-sided variants (lower-bound or upper-bound arguments) are defined
+$\pi$ of size polynomial in the input size such that with probability $1-\delta$
+the output is tight. One-sided variants (lower-bound or upper-bound arguments) are defined
 in the obvious way.
 \end{definition}
 

@@ -13,11 +13,11 @@ S(x)=\sum_{j=1}^mg_j(x_{A_j}),\qquad |A_j|\le k,\qquad
 \]
 $t$ an integer, the $g_j$ arbitrary Boolean sub-circuits and $H$ an arbitrary
 circuit ($H\equiv1$ for a pure LTC). It is recognised syntactically: the output
-gate is a unit-weight threshold gate, or an $\wedge$ with such a child, whose
-children have supports of size at most $k$; the truth tables of the $g_j$ cost
-$O(2^k|g_j|)$ evaluations, and the integer $t$ is the least number of true children at
-which the threshold gate itself, as the evaluator computes it, outputs $1$, so that no
-rounding convention for real thresholds can make the recognised function differ from $C$.
+gate is a threshold gate with equal positive weights, or an $\wedge$ with such a child,
+whose children have supports of size at most $k$; the truth tables of the $g_j$ cost
+$O(2^k|g_j|)$ evaluations, and $t$ is the least number of true children at which the
+threshold gate outputs $1$ (with weight $w$ and threshold $t'$, $t=\lceil t'/w\rceil$,
+computed exactly as in \cref{sec:setting}), so the recognised function is that of $C$.
 \end{definition}
 
 Examples are ``at least $t$ of $m$ detectors fire'' for convolutional detectors
@@ -142,8 +142,11 @@ sample cap $N_{\rm IS}$, and $\eta=\delta/(5N_{\rm tot})$ with $N_{\rm tot}=L+N_
 (Soundness needs only these samples coupled. The analysed pilot of \cref{app:local}
 also draws its samples by (T2), and there $N_{\rm tot}$ counts them too.)
 \item[(T2)] Every sample is the state of a fresh systematic scan from $x=0$ after
-$\tau$ sweeps, where $F\alpha^\tau\le\eta/2$ (half of $\eta$ is reserved for floating-point
-rounding of the update probabilities).
+$\tau$ sweeps, where $F\alpha^\tau\le\eta/2$. (In floating point a site update, coupled
+with the exact one through its uniform, differs from it with probability at most
+$\eta_{\rm fl}=\max\{2^{-48},2^{-53}(\frac52\max_i|a_i|+\frac12\theta\Delta_{\max}+8)\}$,
+$\Delta_{\max}=\max_{i,x}|\Delta_i(x)|$, and our implementation gives no verdict unless
+$F\alpha^\tau+\tau n\eta_{\rm fl}\le\eta$.)
 \item[(T3)] Draw one sample at each $\theta_l$ and apply \cref{lem:local-ti} at levels
 $\delta/5,\delta/5$ (and $\delta/5$ for the window of \cref{lem:local-ti-window}, if used):
 $\ln Z(\theta)\in[z_-,z_+]$.
@@ -162,7 +165,7 @@ $\Pr_D[g_j(x^{i_j\gets1})\ne g_j(x^{i_j\gets0})]\ge\nu$.
 \item[(H3)] $t\le s(\theta_0)$, with $\theta_0=2(1-\gamma)/(d(k-1))$ as in \cref{lem:local-mix}.
 \end{description}
 (H1) and (H2) are checked by enumerating scopes; (H3) says that the threshold is
-reachable by a certified tilt.
+reachable by the crude certified tilt $\theta_0$.
 
 \begin{theorem}[tilted Glauber estimator]\label{thm:local}
 \begin{enumerate}[label=(\roman*)]
@@ -175,8 +178,8 @@ b=3+\tfrac{d}{\sqrt\gamma},\quad c_1=\tfrac{4e^5b^2k}{\nu^2\beta},\quad
 m_0=\max\Big\{\tfrac{4e^4kd^2}{\gamma\nu^4},\tfrac{64e^{10}b^2k}{\nu^4\beta^2}\Big\},\quad
 K_0=16e^{c_1}\sqrt{n_S}.
 \]
-Suppose $H\equiv1$, (H1)--(H3) hold and $m\ge m_0$, and run TG with the pilot of
-\cref{app:local},
+Suppose $H\equiv1$, (H1)--(H3) hold and $m\ge m_0$, and run TG without windows (so
+that (T3) applies \cref{lem:local-ti} alone), with the pilot of \cref{app:local},
 \[
 L=\Theta\Big(\Big(\frac{n_S}{\gamma(k-1)^2\eps^2}+\frac{m}{d(k-1)\eps}\Big)\ln\frac{10}\delta\Big),
 \]
@@ -203,8 +206,9 @@ at most $3\delta/5$ by \cref{lem:local-ti,lem:local-ti-window}. The choices in (
 counted samples are drawn (or from independent pilot samples), so these bounds hold
 conditionally on them. On the complement, $p=Z(\theta)e^{-\theta t}v(\theta)$ lies in the
 output. TG differs from TG$^*$ only through its samplers: by \cref{lem:local-mix}(b)
-each sample can be coupled with an exact one, failing with probability at most
-$\eta$, and the total over at most $N_{\rm tot}$ samples is at most $\delta/5$. No
+(and, in floating point, the condition in (T2)) each sample can be coupled with an exact
+one, failing with probability at most $\eta$, and the total over at most $N_{\rm tot}$
+samples is at most $\delta/5$. No
 hypothesis on $C$ beyond the syntax was used.
 \end{proof}
 
@@ -255,9 +259,9 @@ supermodular; checked by enumerating each neighbourhood). Replace the sampler (T
 monotone coupling from the past \cite{pw1996} for the systematic scan driven by shared
 uniforms, with sweeps as time steps, and make TG output ``no verdict'' as soon as any run
 fails to coalesce within $T_{\max}$ sweeps. The result is sound for every $\theta\ge0$, with
-no certificate, and complete whenever coalescence takes $\poly(n)$ sweeps with high
-probability (e.g.\ under a certificate: $\Pr[\text{no coalescence after }\tau\text{
-sweeps}]\le F\alpha^\tau$) and $v(\theta)\ge1/\poly(n)$.
+no certificate, and complete whenever $\theta\le\poly(n)$, coalescence takes $\poly(n)$
+sweeps with high probability (e.g.\ under a certificate: $\Pr[\text{no coalescence after
+}\tau\text{ sweeps}]\le F\alpha^\tau$) and $v(\theta)\ge1/\poly(n)$.
 \end{proposition}
 
 \begin{proof}
@@ -267,10 +271,15 @@ monotone random map that preserves $D_\theta$; the chains from $\mathbf0$ and $\
 sandwich all others, and when they coalesce the common state at time $0$ is an exact
 sample \cite{pw1996}. Couple the procedure with the one that never times out (which
 uses exact samples and is sound by the proof of \cref{thm:local}(i) without the $\eta$
-term): the two outputs agree whenever the capped procedure gives a verdict. Variance
-bounds are not needed, since \cref{lem:local-ti} uses only the data. Completeness:
-\cref{lem:local-ti} always yields width $O(\theta R\sqrt{\ln(1/\delta)/L})$ for $L\ge\ln(10/\delta)$, so
-$L=\poly(n)/\eps^2$ suffices, and (T4) needs $O((\log(1/\delta)+\log\log(1/v(\theta)))/(\eps^2v(\theta)))$
+term): the two outputs agree whenever the capped procedure gives a verdict. (Our
+implementation, in floating point, also gives no verdict once the counted runs exceed
+$\delta/(5\eta_{\rm fl})$ site updates, so that all of them are coupled with exact
+updates except with probability $\delta/5$.) Variance
+bounds are not needed, since \cref{lem:local-ti} uses only the data. Completeness: without
+windows, \cref{lem:local-ti} with $\bar V\le LR^2/4$ and $R\le m$ gives width
+$O(\theta m\sqrt{\ln(1/\delta)/L})$ for $L\ge\ln(10/\delta)$, and the gap term is at most $\theta m/L$, so
+$L=O((\theta^2m^2/\eps^2+1)\log(1/\delta))$ suffices, which is $\poly(n)/\eps^2$ for
+$\theta\le\poly(n)$; (T4) needs $O((\log(1/\delta)+\log\log(1/v(\theta)))/(\eps^2v(\theta)))$
 samples (\cref{thm:envelope}(iv)).
 \end{proof}
 
@@ -331,8 +340,8 @@ large variance, cannot cause wrong answers here, only slow ones. The proof is in
 \cref{app:local}.
 
 \paragraph{Experiments (\cref{tab:local}; \texttt{experiments/exp\_local.py}).} We ran TG
-with $\eps=0.3$, $\delta=0.05$ and margin $\gamma=0.25$ (Python with numpy, $15$--$22$\,ns per
-site update, pilot included, on a shared machine) on four families. (1) A chain LTC $g_j(z_{j-1},z_j,y_j)$ with random truth
+with $\eps=0.3$, $\delta=0.05$ and margin $\gamma=0.25$ (Python with numpy, two runs at a time
+on a shared machine, $15$--$38$\,ns per site update, pilot included) on four families. (1) A chain LTC $g_j(z_{j-1},z_j,y_j)$ with random truth
 tables, each $y_j$ private and pivotal with probability $\ge\frac12$, $m=1600$, with the
 threshold set so that $p\approx10^{-20}$; exact $p$ from a transfer matrix (treewidth $2$;
 used only for checking). (2) A random cubic graph on $N=1500$ vertices with one random table
@@ -344,8 +353,9 @@ $\kappa$ are $1.5$ and $2.5$ (exact Dobrushin row sums $1.27$ and $1.70$). The $
 sums of the Glauber instances ($0.98$ for the chain, $1.34$ and $1.37$ for the cubic graphs;
 exact Dobrushin row sums $0.97$, $1.32$ and $1.35$) exceed $1-\gamma$, so the weighted
 certificate was used. The implementation replaces the pilot of \cref{app:local} by a
-heuristic one ($10$ tilts, one mean of $256$ chains each, chains run only to total
-variation $10^{-3}$, linear interpolation); the pilot fixes only $\theta$ and the window, so
+heuristic one ($10$ tilts, one mean of $256$ chains each, $128$ in the CFTP and coverage
+runs, Glauber chains run only to total variation $10^{-3}$, linear interpolation); the
+pilot fixes only $\theta$ and the window, so
 it affects the width but not the validity of the output, and \cref{thm:local}(ii) is a
 statement about the analysed pilot. Every interval with a reference value contained the
 exact $p$ or overlapped the Monte Carlo interval. With about $7\cdot10^4$ chain samples
@@ -365,13 +375,13 @@ missed $p$; the median ratio was $2.05$ and the median error of the point estima
 \toprule
 instance & $n$ & $\theta$ & $\log_{10}p$ (exact or MC) & certified $\log_{10}p$ & ratio & samples & sweeps & s & MC\\
 \midrule
-chain, $m=1600$ & 3201 & 0.492 & $-20.19$ & $[-20.30,\,-20.08]$ & 1.66 & 72{,}560 & 80 & 332 & $1.8\cdot10^{22}$\\
-cubic, $N=1500$ & 3750 & 0.447 & -- & $[-23.88,\,-23.61]$ & 1.84 & 72{,}560 & 95 & 480 & $3.3\cdot10^{25}$\\
-cubic, $N=100$ & 250 & 0.457 & $[-3.016,\,-2.993]$ & $[-3.050,\,-2.959]$ & 1.23 & 72{,}560 & 90 & 24 & $6.7\cdot10^{5}$\\
-CFTP, $m=400$ & 801 & 1.5 & $-71.80$ & $[-71.99,\,-71.66]$ & 2.13 & 81{,}280 & 22$^*$ & 32 & --\\
-CFTP, $m=400$ & 801 & 2.5 & $-169.76$ & $[-170.00,\,-169.54]$ & 2.88 & 81{,}280 & 26$^*$ & 36 & --\\
+chain, $m=1600$ & 3201 & 0.492 & $-20.19$ & $[-20.30,\,-20.08]$ & 1.66 & 72{,}560 & 80 & 687 & $1.8\cdot10^{22}$\\
+cubic, $N=1500$ & 3750 & 0.447 & -- & $[-23.88,\,-23.61]$ & 1.84 & 72{,}560 & 95 & 824 & $3.3\cdot10^{25}$\\
+cubic, $N=100$ & 250 & 0.457 & $[-3.016,\,-2.993]$ & $[-3.050,\,-2.959]$ & 1.23 & 72{,}560 & 90 & 23 & $6.7\cdot10^{5}$\\
+CFTP, $m=400$ & 801 & 1.5 & $-71.80$ & $[-71.99,\,-71.66]$ & 2.13 & 81{,}280 & 22$^*$ & 38 & --\\
+CFTP, $m=400$ & 801 & 2.5 & $-169.76$ & $[-170.00,\,-169.54]$ & 2.88 & 81{,}280 & 26$^*$ & 40 & --\\
 \bottomrule
 \end{tabular}
-\caption{TG on local threshold circuits ($\eps=0.3$, $\delta=0.05$, $\gamma=0.25$ in every row; \texttt{exp\_local.py}). ``Samples'' counts pilot, normaliser and importance samples; each normaliser and importance sample is a fresh chain run for ``sweeps'' sweeps, and pilot chains run fewer sweeps (to total variation $10^{-3}$) ($^*$: CFTP, sweeps per counted exact sample, counting both bounding chains and restarts). ``s'': wall-clock seconds on a shared machine. ``MC'': samples a Monte Carlo KL interval needs for the same ratio at the same $\delta$, at the exact $p$, at the upper end of TG's interval when $p$ is unknown, and at the Monte Carlo estimate for $N=100$, whose $\log_{10}p$ column is the interval from $10^7$ Monte Carlo samples (72\,s).}
+\caption{TG on local threshold circuits ($\eps=0.3$, $\delta=0.05$, $\gamma=0.25$ in every row; \texttt{exp\_local.py}). ``Samples'' counts pilot, normaliser and importance samples; each normaliser and importance sample is a fresh chain run for ``sweeps'' sweeps, and pilot chains run fewer sweeps (to total variation $10^{-3}$) ($^*$: CFTP, sweeps per counted exact sample, counting both bounding chains and restarts). ``s'': wall-clock seconds on a shared machine, two runs at a time. ``MC'': samples a Monte Carlo KL interval needs for the same ratio at the same $\delta$, at the exact $p$, at the upper end of TG's interval when $p$ is unknown, and at the Monte Carlo estimate for $N=100$, whose $\log_{10}p$ column is the interval from $10^7$ Monte Carlo samples (77\,s).}
 \label{tab:local}
 \end{table}

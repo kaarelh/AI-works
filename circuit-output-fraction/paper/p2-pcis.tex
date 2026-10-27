@@ -2,9 +2,9 @@
 
 By \cref{thm:blackbox} a verifier can certify an upper bound below the
 sampling scale only by reading the circuit, and by \cref{thm:ma} no argument
-system does so for every circuit. The system below makes the deductive part as
-strong as any propositional proof system and leaves everything else to
-sampling. It is sound on every circuit and every argument, and complete
+system does so for every circuit unless $\coNP\subseteq\MA$. The system below
+makes the deductive part as strong as any propositional proof system and leaves
+everything else to sampling. It is sound on every circuit and every argument, and complete
 whenever the rarity of $C(x)=1$ has a short \emph{explanation}: a proof
 that the event is confined to a tractable region in which it is not rare
 (\cref{thm:certenv}).
@@ -12,11 +12,18 @@ that the event is confined to a tractable region in which it is not rare
 \subsection{The argument language}\label{sec:pcis}
 
 Fix a Cook--Reckhow proof system $P$ for propositional unsatisfiability
-(resolution with RUP/\allowbreak DRAT/\allowbreak LRAT certificates, cutting planes, Frege, extended
-Frege, \dots). For circuits $F,G$ write $F\vdash_P\bot$ for a $P$-refutation of
+(resolution with RUP/\allowbreak DRUP certificates; DRAT or LRAT, whose RAT steps
+$p$-simulate extended resolution; cutting planes; Frege; extended Frege; \dots).
+For circuits $F,G$ write $F\vdash_P\bot$ for a $P$-refutation of
 $\mathrm{Tseitin}(F)\wedge[F=1]$, and $F\vdash_PG$ for a $P$-refutation of
 $\mathrm{Tseitin}(F)\wedge[F=1]\wedge\mathrm{Tseitin}(G)\wedge[G=0]$, with
 disjoint auxiliary variables for $F$ and $G$, which certifies $F\Rightarrow G$.
+$\mathrm{Tseitin}$ encodes a threshold gate by the clauses of its sequential-counter
+or adder-tree expansion (weights and threshold scaled to integers, \cref{sec:setting}),
+or, in systems that state them directly (cutting planes, $\mathrm{TC}^0$-Frege), by
+its defining inequalities or threshold connective. Leaving the gate unconstrained, as
+our checker does, is a sound relaxation (it only weakens the formula refuted), but
+then no refutation can use the gate.
 
 Exact counting needs determinism, which is a semantic property: deciding
 whether a DNNF is deterministic is $\coNP$-hard (for a CNF $F$, let $R_1$ be a
@@ -78,18 +85,23 @@ pieces $E_j$.
 (\cref{prop:proposal}).
 \par\textsc{mc}: plain Monte Carlo on $C_v$.
 \end{description}
-The verifier checks every certificate and that $\sum_v\delta_v\le\delta$,
-evaluates the statistical nodes with fresh coins, combines intervals by
+The verifier outputs $[0,1]$ if $\sum_v\delta_v>\delta$. Otherwise it checks every
+certificate, evaluates the statistical nodes with fresh coins, combines intervals by
 interval arithmetic through the deductive rules (all of which are monotone
 in their arguments), intersects with $[0,1]$, and outputs the root interval.
-A deductive node whose certificate is missing or wrong gets $[0,1]$. A
-statistical node whose domination proof is missing or wrong is downgraded to
-its lower end (upper end $1$); for the tilted envelope, which need not be
-integer-valued, the verifier always clips $W$ at $1$ (\cref{thm:envelope}(iii)),
-which changes nothing under domination. A statistical node that reaches its cap returns
-its current interval, valid by \cref{thm:envelope}(iv), or $[0,1]$ if the cap
-is reached inside a rejection loop. So the verifier runs in time polynomial in
-$|\pi|$ and $|C|$, plus the counter calls of \cref{thm:sis}.
+A deductive node whose certificate is missing or wrong gets $[0,1]$. Before
+sampling, the verifier checks the object of every statistical node: decomposability,
+with supports it recomputes; the checks of its atoms (those above for
+checked-deterministic circuits, $q_i=1/2$ on affine atoms); nonnegative rational
+constants; and, for the tilted form, a rational $\beta\ge1$. A node whose object fails
+gets $[0,1]$. A statistical node whose domination proof is missing or wrong is
+downgraded to its lower end (upper end $1$). Whenever
+$\Phi$ has a constant that is not an integer (as the tilted envelope does), the verifier
+clips $W$ at $1$ (\cref{thm:envelope}(iii)), which changes nothing under domination. A
+statistical node that reaches its cap returns its current interval, valid by
+\cref{thm:envelope}(iv), or $[0,1]$ if the cap is reached inside a rejection loop. So
+the verifier runs in time polynomial in $|\pi|$ and $|C|$, plus the counter calls of
+\cref{thm:sis}.
 \end{definition}
 
 \begin{theorem}[soundness]\label{thm:pcis-sound}
@@ -111,8 +123,12 @@ guarantee of its estimator: \cref{thm:envelope}(ii), \cref{thm:boxes},
 \cref{thm:sis}(c) or \cref{thm:certenv} for \textsc{envelope},
 \cref{prop:proposal} for \textsc{proposal}, the KL interval for \textsc{mc}. A
 downgraded node fails only if its lower end exceeds $q_v$, which has the same
-bound (\cref{thm:envelope}(iii), with $W$ clipped at $1$ for the tilted envelope,
-and the lower ends in \cref{thm:sis}(c) and \cref{thm:certenv}). Hence
+bound: by \cref{thm:envelope}(iii), with $W$ clipped at $1$ when $\Phi$ has
+non-integer constants; for box leaves, because the proof of \cref{thm:boxes} gives
+$\hat Z\,\E W\le\rho_{\max}D(C_v\wedge\varphi>0)\le\rho_{\max}q_v$ without domination
+(with $W\le1$, as $\varphi$ is integer-valued or $W$ is clipped), so $\hat
+Z\ell/\rho_{\max}$ is still a lower bound; and by the lower ends in \cref{thm:sis}(c)
+and \cref{thm:certenv}. Hence
 $\Pr[\bigcup_vB_v]\le\sum_v\delta_v\le\delta$, and on the complement every interval,
 including the root's, contains its target.
 \end{proof}
@@ -342,21 +358,27 @@ then the looseness is $Z/p$ with $Z=\E_D\varphi$ at least the mass of the piece,
 possibly exponentially larger (for $\bigwedge_{i\le m}(x_i\vee y_i)$, $Z=1$ while the
 mass is $(3/4)^m$).
 
-\Cref{thm:certenv} lifts every tractable counting class from \emph{syntactic}
-envelopes (\cref{sec:part1}) to \emph{provable} ones. Examples:
+\Cref{thm:certenv} lifts the tractable classes it admits as pieces (subcubes,
+checked-deterministic circuits, affine atoms, and DNNFs through the FPRAS) from
+\emph{syntactic} envelopes (\cref{sec:part1}) to \emph{provable} ones. Examples:
 \begin{itemize}
 \item \emph{Hidden triggers.} $C=R\wedge T$ where $T$ is a test that holds only
 on a subcube $x_A=a$ but is not written as one: a linear hash $[Mx_A=Ma]$ over
-$\F_2$ with $M$ of full column rank, or a multiplier test $[c\cdot x_A=c\cdot a]$
-with $x_A$ read as an integer and a constant $c\ge1$. The argument is the piece
-$x_A=a$ with a refutation of $C\wedge(x_A\ne a)$; then $K=1/\Pr_D[R\mid x_A=a]$, and
-the verifier needs $O(K(\log(1/\delta)+\log\log K)/\eps^2)$ samples where Monte Carlo
-needs $\Theta(K\log(1/\delta)/(D(x_A=a)\eps^2))$. Whether the refutation is short depends on
-$P$. For dense linear hashes the DRUP proofs found by a CDCL solver grow
-rapidly with $|A|$ in our runs (\cref{tab:arguments}); this is evidence,
-not a lower bound, and we conjecture that resolution needs exponential size.
+$\F_2$ with $M$ of full column rank, a test $[\mathrm{SPN}(x_A)=\mathrm{SPN}(a)]$ for
+a bijective substitution-permutation network, or a multiplier test $[c\cdot x_A=c\cdot a]$ with $x_A$ read as an integer and a constant
+$c\ge1$. The argument is the piece $x_A=a$ with a refutation of $C\wedge(x_A\ne a)$;
+then $K=1/\Pr_D[R\mid x_A=a]$, and the verifier needs
+$O(K(\log(1/\delta)+\log\log K)/\eps^2)$ samples where Monte Carlo needs
+$\Theta(K\log(1/\delta)/(D(x_A=a)\eps^2))$. Whether the refutation is short depends on
+$P$. In our runs (\cref{tab:arguments}) the DRUP proofs found by a CDCL solver for
+dense linear hashes grow from $329$ steps at $|A|=12$ to $32910$ at $|A|=24$; this is
+evidence, not a lower bound, and we conjecture that resolution needs exponential size.
 Extended resolution, which can simulate Gaussian elimination, refutes them in
-polynomial size, and an affine envelope handles them without a prover.
+polynomial size, and Gaussian elimination in \cref{sec:part1} handles them exactly
+without a prover. For a three-round SPN on $|A|=20$ bits, a proof of $25944$ steps is
+verified in $28$\,s, with interval $[9.50,9.54]\cdot10^{-7}\ni p$, while
+\cref{sec:part1} gives no verdict within $900$\,s; on $16$ bits it is the other way
+round: \cref{sec:part1} is exact, and the solver finds no proof within $1200$\,s.
 Multiplier tests are notoriously hard for CDCL solvers.
 \item \emph{Planted unions.} $C=\bigvee_j(T_j\wedge H_j)$, $T_j$ subcubes of large
 codimension, $H_j$ dense. With the pieces $T_j$,
@@ -384,9 +406,11 @@ estimations.
 \end{itemize}
 
 \paragraph{Sandwiches.}
-Binarize $C$ (fan-in two; a threshold gate becomes a counter if its weights are
-polynomially bounded, \cref{sec:setting}, and an adder tree with a comparator
-otherwise). A certificate may give, for every gate $g$, OBDDs
+A second certificate, outside \cref{def:pcis}, needs no SAT proof. The verifier
+binarizes $C$ (fan-in
+two; with weights and threshold scaled to integers, a threshold gate becomes a counter
+if its weights are polynomially bounded, \cref{sec:setting}, and an adder tree with a
+comparator otherwise). The certificate gives, for every gate $g$, OBDDs
 $L_g\subseteq g^{-1}(1)\subseteq U_g$ in one fixed variable order, with
 $L_{x_i}=U_{x_i}=x_i$ at the inputs, $L_g=U_g=g$ at constant gates, and every
 other gate checked against its children: $L_{a\wedge b}\Rightarrow L_a\wedge L_b$ and
@@ -400,4 +424,9 @@ deterministically, and since $p=D(L_{\rm out})+D(U_{\rm out}\setminus L_{\rm
 out})\Pr_D[C\mid U_{\rm out}\setminus L_{\rm out}]$, exact samples of $D\mid(U_{\rm
 out}\setminus L_{\rm out})$ estimate the gap with
 $O\big(\frac{D(U_{\rm out}\setminus L_{\rm out})}{p}\eps^{-2}\log\frac1\delta\big)$
-samples. No SAT proof is needed.
+samples. The certificate is sound on its own: if a check fails the verifier
+outputs $[0,1]$, and otherwise the interval $D(L_{\rm out})+D(U_{\rm out}\setminus
+L_{\rm out})[\ell,u]$, with $[\ell,u]$ a KL interval for $\Pr_D[C\mid U_{\rm
+out}\setminus L_{\rm out}]$, fails only when $[\ell,u]$ does. With this interval
+guarantee it can also serve as a statistical leaf of \cref{def:pcis}, and the proof of
+\cref{thm:pcis-sound} covers it unchanged.

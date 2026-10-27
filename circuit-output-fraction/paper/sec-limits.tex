@@ -40,9 +40,9 @@ gives the claim.
 
 Monte Carlo on $C_{G(s)}$ costs $O(2^k\poly(k))$. So if $G$ is
 exponentially hard ($T(k)=2^{(1-o(1))k}$), no sound procedure beats sampling on
-this family by more than a $2^{o(k)}=p^{-o(1)}$ factor, even though every
-instance is a small, explicit circuit. Beating sampling is a matter of
-structure: the classes of \cref{sec:part1} are where the structure is visible to
+this family by more than a $2^{o(k)}$ factor ($p^{-o(1)}$ when $p=2^{-\Theta(k)}$),
+even though every instance is a small, explicit circuit. Beating sampling is a
+matter of structure: the classes of \cref{sec:part1} are where the structure is visible to
 a polynomial-time algorithm, and those of \cref{sec:part2} are where it is
 visible to a polynomial-time verifier given a hint.
 
@@ -52,8 +52,9 @@ Lower and upper bounds behave very differently. A lower bound $p\ge L$ can be
 witnessed by \emph{showing} probability mass: a proposal distribution $Q$
 concentrated on $C^{-1}(1)$ (\cref{sec:lower}). An upper bound must exclude
 mass that the verifier has not seen. The next theorem makes this precise:
-a verifier that only evaluates $C$ cannot certify an upper bound much below
-the reciprocal of its number of evaluations, whatever argument it is given.
+under the uniform distribution (or any $D$ of small collision probability), a
+verifier that only evaluates $C$ cannot certify an upper bound much below the
+reciprocal of its number of evaluations, whatever argument it is given.
 
 \begin{theorem}[sampling cannot certify upper bounds]\label{thm:blackbox}
 Let $V$ be a verifier that receives an argument $\pi$, has oracle access to
@@ -82,8 +83,8 @@ $\Pr_{r,t}[\text{the runs differ}]\le T2^{-k}$, and
 \]
 Some $t$ attains at least the average; for it, $V$ outputs $U<2^{-k}\le
 p(f_t)$ with that probability, which soundness bounds by $\delta$.
-For the last claim take $k=\lceil\log_2(1/\eta)\rceil-1\le n$, so that
-$\eta<2^{-k}\le2\eta$.
+For the last claim take $k=\max(0,\lceil\log_2(1/\eta)\rceil-1)\le n$, so that
+$\eta\le2^{-k}\le2\eta$.
 \end{proof}
 
 \begin{remark}
@@ -94,16 +95,20 @@ independence $D(H)\ge2^{-k-1}$ except with probability $4\cdot2^{k}\sum_xD(x)^2$
 (for a product distribution, $\sum_xD(x)^2=\prod_i(q_i^2+(1-q_i)^2)$). The bound
 becomes $\Pr[V^f(\pi)\text{ outputs }U<2^{-k-1}]\le\delta+T2^{-k}+4\cdot2^k\sum_xD(x)^2$.
 It also extends to verifiers that see a circuit for $f$ and its size but use the
-circuit only through evaluations, provided the planted gadget is padded to a
-topology independent of $(A,b)$ (each row as $\bigoplus_j(x_j\wedge a_{ij})\oplus b_i$
-with constant leaves $a_{ij},b_i$): then the bound holds for \emph{some} circuit for
-$f$ of size $|C|+O(nk)$, namely $C\vee(0\wedge G_{A_0,b_0})$. It cannot hold for
-every circuit computing $f$: a verifier that sees $|C|=3$ knows $p\in\{0\}\cup[1/8,1]$.
+circuit only through evaluations, provided the planted gadget $G_{A,b}=[Ax=b]$ is
+padded to a topology independent of $(A,b)$ (each row as
+$\bigoplus_j(x_j\wedge a_{ij})\oplus b_i$ with constant leaves $a_{ij},b_i$): the
+planted circuits $C\vee(1\wedge G_{A,b})$ then all have the topology and size of
+$C\vee(0\wedge G_{A_0,b_0})$, so the bound holds for \emph{some} circuit for $f$ of
+size $|C|+O(nk)$, namely the latter. It cannot hold for every circuit computing $f$:
+under the uniform distribution, a verifier that sees $|C|=3$ knows
+$p\in\{0\}\cup[1/8,1]$.
 \end{remark}
 
 The verifiers of \cref{sec:part2} escape \cref{thm:blackbox} by reading the
 circuit: they check a proof that $C(x)=1$ forces $x$ into a region of small,
-exactly computable measure. In general such proofs cannot always exist:
+exactly computable measure. Short such proofs cannot always exist unless
+$\coNP\subseteq\MA$:
 
 \begin{theorem}[no complete upper-bound arguments]\label{thm:ma}
 Suppose a sound argument system (soundness error $\delta\le1/3$) is complete
@@ -125,12 +130,14 @@ $\coNP\subseteq\MA$ gives $\PH=\MA$).
 The lower-bound side is weaker but not free: a system complete for lower
 bounds within a constant factor on all circuits under the uniform distribution
 exists iff
-$\mathrm{pr}\SBP\subseteq\mathrm{prMA}$ for the class $\SBP$ of \cite{bgm2006}
+$\mathrm{pr}\SBP\subseteq\mathrm{pr}\MA$ for the class $\SBP$ of \cite{bgm2006}
 (amplify the $\SBP$ gap by conjunctions of copies; conversely send the scale with
-an MA proof), and in particular it would give $\SBP\subseteq\MA$. Since
-$\MA\subseteq\SBP\subseteq\AM$, with an oracle relative to which
-$\SBP\not\subseteq\Sigma_2^p$, we should not expect proposal-based lower bounds for
-every circuit either.
+an $\MA$ proof), and in particular it would give $\SBP\subseteq\MA$. Since
+$\MA\subseteq\Sigma_2^p$ relativizes and there is an oracle relative to which
+$\SBP\not\subseteq\Sigma_2^p$ \cite{bgm2006}, no relativizing argument shows that
+such a system exists. It does exist if $\mathrm{pr}\AM=\mathrm{pr}\NP$, which
+follows from standard derandomisation hypotheses (\cref{sec:separations}); its
+soundness then rests on the hypothesis.
 
 \subsection{Interaction trivialises the problem}
 
@@ -138,12 +145,14 @@ The restriction to one message is essential:
 
 \begin{proposition}\label{prop:interactive}
 \begin{enumerate}[label=(\alph*)]
-\item (Sum-check \cite{lfkn1992}.) For every circuit $C$ and product $D$ with
-dyadic marginals (total denominator bits $B$), after threshold gates are compiled
-into $\{\wedge,\vee,\neg,\oplus\}$-subcircuits $C'$, the exact value of $p$ has an
-interactive proof over a prime field with $|\F|>2^{B+1}$, with a polynomial-time
-verifier, $O(n+|C'|)$ rounds and soundness error $O((n+|C'|)\,d/|\F|)$, where
-$d\le|C'|+2$ bounds the individual degrees of the arithmetised Tseitin summand.
+\item (Sum-check \cite{lfkn1992}.) For every circuit $C$ and product $D$, let $B$ be
+the total bit length of the denominators of the marginals, and let $C'$ be $C$ with
+its threshold gates compiled into $\{\wedge,\vee,\neg,\oplus\}$-subcircuits (scale the
+weights to integers and add them in binary), so that $|C'|$ is at most quadratic in
+the input size. The exact value of $p$ has an interactive proof over a prime field
+with $|\F|>2^{B+1}$, with a polynomial-time verifier, $O(n+|C'|)$ rounds and
+soundness error $O((n+|C'|)\,d/|\F|)$, where $d\le|C'|+2$ bounds the individual
+degrees of the arithmetised Tseitin summand.
 \item (Set lower bounds \cite{gs1986}.) For uniform $D$ (or dyadic product $D$, via
 the sampler reduction), two-round public-coin protocols, repeated in parallel,
 certify $p\ge L/c$ for a constant $c$ for every circuit.

@@ -5,7 +5,8 @@ which Gaussian elimination computes exactly under the uniform distribution. They
 also where decomposition fails. Take $m\le n/6$ random parity checks and an event
 inside their solution set that holds on at least a $1/\poly(n)$ fraction of it. With
 high probability over the checks, the envelope estimator with decomposable
-envelopes, context-width compilation and the node budget behind DFSB's completeness
+envelopes whose leaves have at most $2n/3$ variables, context-width compilation and the
+node budget behind DFSB's completeness
 guarantee then cost Monte Carlo's price up to a polynomial factor, and every use of a
 DNNF envelope costs at least its square root
 (\cref{thm:parity-barrier,cor:barrier-methods}). This subsection
@@ -85,9 +86,11 @@ that follow; under biased pivots each pivot costs a factor up to $\rho$ in sampl
 Rule (F) of DFSB also applies Gaussian elimination to affine conjuncts at the root,
 but it keeps only the literals the system forces, that is, rows of the reduced system
 with a single variable. A rank-$r$ system without such rows explains nothing there,
-and $r$ bits here. Examples: the event $[\mathrm{CRC}(x)=0]\wedge R(x)$ has
-$p=2^{-r}D(\tilde R)$ with $r$ the rank of the CRC map, and a Feistel round $[L\oplus f(R)=t]$ has
-probability $2^{-|L|}$ for every round function $f$ (E4 in \cref{tab:affine}). More
+and $r$ bits here. Examples, under the uniform distribution (or whenever the pivots can
+be chosen uniform): the event $[\mathrm{CRC}(x)=0]\wedge R(x)$ has
+$p=2^{-r}D(\tilde R)$ with $r$ the rank of the CRC map, and a Feistel round $[L\oplus f(R)=t]$,
+whose pivots are the coordinates of $L$, has probability $2^{-|L|}$ for every round
+function $f$ (E4 in \cref{tab:affine}). More
 generally, under the uniform distribution a map $F$ composed of coordinate
 permutations and triangular flips
 $\tau(x)=x\oplus g(x_{-i})e_i$ with $i\in U$ preserves $D$ (each flip is a
@@ -234,25 +237,24 @@ every $E$ as in (b) has $|G(E)|^2D(E)/p\ge c^2/(4096p)$.
 On the event of \cref{cor:random-parity}, for $C^{-1}(1)\subseteq V=\{Hx=s\}$:
 \begin{enumerate}[label=(\roman*)]
 \item \emph{Envelopes.} The envelope estimator with any envelope circuit $\Phi$
-whose leaves have supports of at most $2n/3$ variables (literal, constant and small
-box leaves, as produced by (R1)--(R8) of \cref{sec:rules} or by \cref{thm:cw})
-evaluates $\varphi$ at every sample and needs $\Omega(K)$ samples, so its work is
+whose leaves have supports of at most $2n/3$ variables (for instance literal and
+constant leaves, the (R8) atoms of \cref{sec:rules} when $a\le2n/3$, (R7) boxes on at
+most $2n/3$ variables, and the leaves of \cref{thm:cw}) evaluates $\varphi$ at every sample and needs $\Omega(K)$ samples, so its work is
 $\Omega(c^2/(np))$: Monte Carlo's number of samples up to a factor $O(n/c^2)$. Any
 implementation reads $\Phi$ to compute the mass and draws $\Omega(K)$ samples, so it
 does $\Omega(c/\sqrt{np})$ work: at most a quadratic speed-up.
 \item \emph{The \#DNNF route.} \Cref{thm:sis} and \cref{prop:dnnf-env} with a DNNF
 $E\supseteq C$ (small leaves) read $E$ at every sample and need $\Omega(D(E)/p)$
 samples, hence do $\Omega(c/(n\sqrt p))$ work.
-\item \emph{Context width.} Let every threshold gate of $C$ have integer weights, so
-that the NNF of $C$ is defined (\cref{sec:ctxwidth}), and let $N$ be an NNF of $C$ as
-in \cref{thm:cw}, without frontier gates ($|N|\le12|C|$ for the gate-by-gate NNF of a
-$\{\wedge,\vee,\neg,\oplus\}$-circuit). The DNNF that \cref{thm:cw} builds from $N$
+\item \emph{Context width.} Let $N$ be an NNF of $C$ as in \cref{thm:cw}, without
+frontier gates (threshold gates are expanded by counters, \cref{sec:ctxwidth};
+$|N|\le12|C|$ for the gate-by-gate NNF of a $\{\wedge,\vee,\neg,\oplus\}$-circuit). The DNNF that \cref{thm:cw} builds from $N$
 has literal and constant leaves, is equivalent to $C$, and has at most
 $(|N|+1)(\mathrm{cw}+3)2^{\mathrm{cw}}$ wires, so
 $\mathrm{cw}\ge m-14-\log_2\big((n+2)(|N|+1)(\mathrm{cw}+3)/c\big)$.
 \item \emph{DFSB.} Every tree built with the exact rules (T), (T$'$), (F), (D), (B) of
-\cref{sec:dfsb} in which every leaf $h$ with more than $2n/3$ variables has
-$D(h)\ge1/K'$, where $K'<2^{m-6}$, has at least $c\,2^{m-12}/(n+6)^2$ nodes. This
+\cref{sec:dfsb} in which every leaf $h$ with more than $2n/3$ variables, other than a
+refuted one, has $D(h)\ge1/K'$, where $K'<2^{m-6}$, has at least $c\,2^{m-12}/(n+6)^2$ nodes. This
 applies to the ideal tree $T^*_{K'}(C)$ when the atom size $a$ is at most $2n/3$, since
 its leaves are constants, atoms and (S)-leaves with $D(h)\ge1/K'$. So the completeness
 guarantee of \cref{thm:dfsb}, which needs $m_{K'}(C)$ to be at most the node budget,
@@ -267,8 +269,8 @@ for (i), (iii) and (iv), and at least its square root for any use of a DNNF enve
 For smaller $c$ the bounds weaken; for $c=2^{-m/2}$, for instance, $c^2/p=p^{-1/3}$.
 Meanwhile
 the presolve computes the factor $2^{-m}$ exactly, and the affine envelope of
-$[Hx=s]\wedge R$ with opaque $R$ has $K=1/c$. The bound is tight in the following
-sense.
+$[Hx=s]\wedge R$ with opaque $R$ has $K=1/c$. Conversely, bounded connectivity along a
+whole tree suffices.
 
 \begin{proposition}[bounded width; any product distribution]\label{prop:bw-dp}
 Let $V=\{Ax=b\}$ and let $\mathcal T$ be a rooted binary tree with leaf set $[n]$ such
@@ -292,12 +294,15 @@ binary matroid of $A$ minus one, since the usual connectivity function
 \cite{hlinenyoum2008} is $\lambda_V+1$. Together with \cref{thm:parity-barrier}(b) for
 $C=E=\one_V$ ($c=1$), the smallest smooth DNNF for $\one_V$ with fan-in-two
 $\wedge$-gates and leaves on at most $2n/3$ variables (for instance literal leaves) has
-between $2^{\lambda_{\rm bal}(V)}$ and $2n(4^{\mathrm{bw}(V)}+1)$ gates.
+between $2^{\lambda_{\rm bal}(V)}$ and $2n(4^{\mathrm{bw}(V)}+1)$ gates. The two ends are
+polynomially related when $\mathrm{bw}(V)=\lambda_{\rm bal}(V)+O(1)$, but not in general: for
+$V=V_1\times V_2$ with $V_1,V_2$ on the two halves of $[n]$, $\lambda_{\rm bal}(V)=0$, while
+$\mathrm{bw}(V)\ge\mathrm{bw}(V_1)$ can be linear in $n$.
 
 \paragraph{Biased product distributions.}
-Linear bijections preserve only the uniform measure, and triangular flips only
-uniform coordinates. Under a biased product distribution the same tiny circuits become
-hard.
+Linear bijections preserve the uniform measure, but a triangular flip on coordinate $i$
+(with $g\not\equiv0$) preserves a product distribution with marginals in $(0,1)$ only if
+$q_i=\frac12$. Under a biased product distribution the same tiny circuits become hard.
 
 \begin{theorem}[biased parity events]\label{thm:biased-hard}
 Fix a rational $q\in(0,1)\setminus\{\frac12\}$. For $H\in\F_2^{m\times n}$,
@@ -332,7 +337,7 @@ Ising partition function of a binary matroid, which has an FPRAS for graphic
 under a complexity-theoretic assumption, none for binary matroids in general
 \cite{goldbergjerrum2013binary}. In E6 of \cref{tab:affine}, banded LDPC checks
 under $\mathrm{Bern}(1/3)$ ($p\approx2.6\cdot10^{-31}$) are estimated to $4\%$ in
-$0.2$ seconds by the affine envelope with exact dynamic-programming masses, whereas the
+$0.3$ seconds by the affine envelope with exact dynamic-programming masses, whereas the
 biased-pivot presolve only certifies $p\le1.3\cdot10^{-22}$ within its budget.
 
 \paragraph{Linear thresholds.}
@@ -342,9 +347,9 @@ generally not.
 
 \begin{proposition}[single LTFs \cite{gopalan2011fptas}]\label{prop:ltf}
 For $L=[w\cdot x\le\theta]$ with integer weights and a product distribution with
-marginals of $b$ bits, $D(L)$ has a deterministic FPTAS using $O(n^3b/\eps)$ exact
-operations on rationals of $\poly(n,b,1/\eps)$ bits, and $D\mid L$ has an exact sampler using
-$O(n\log(nb/\eps))$ expected operations per sample after the same preprocessing.
+marginals of $\beta$ bits, $D(L)$ has a deterministic FPTAS using $O(n^3\beta/\eps)$ exact
+operations on rationals of $\poly(n,\beta,1/\eps)$ bits, and $D\mid L$ has an exact sampler using
+$O(n\log(n\beta/\eps))$ expected operations per sample after the same preprocessing.
 \end{proposition}
 
 Gopalan, Klivans, Meka, \v{S}tefankovi\v{c}, Vempala and Vigoda note that their
@@ -362,7 +367,7 @@ $e^{\eps/3}T$ (\cref{app:affine}).
 Let $C=[Ax=b]\wedge[w\cdot x\le\theta]$ with integer $w$, and let $x_1,\dots,x_n$ be
 ordered so that $\lambda_t=\mathrm{rank}A_{\le t}+\mathrm{rank}A_{>t}-\mathrm{rank}A\le
 w_0$ for every $t$. Then $D(C)$ has a deterministic FPTAS using
-$O(n^32^{w_0}b/\eps)$ operations under every product distribution with $b$-bit
+$O(n^32^{w_0}\beta/\eps)$ operations under every product distribution with $\beta$-bit
 marginals, and $D\mid C$ has an exact sampler.
 \end{proposition}
 
@@ -454,20 +459,22 @@ to $2\cdot10^{-14}$. Monte Carlo is charged the number of samples its KL interva
 for the same ratio. E3 illustrates DFSB on a dense parity event at a size where it can
 run; with $m=12>n/6$ it lies outside \cref{cor:random-parity}, so it is not an instance
 of the barrier. On $36$ inputs with $12$ dense checks ($p=8.8\cdot10^{-5}$), DFSB with a
-$400$-node budget spent $52$ seconds and $1.5\cdot10^6$ samples and returned an interval
-of ratio $29$, while the presolve needed $1.6\cdot10^4$ samples and $0.04$ seconds; at
+$400$-node budget spent $55$ seconds and $1.5\cdot10^6$ samples and returned an interval
+of ratio $29$, while the presolve needed $1.6\cdot10^4$ samples and $0.02$ seconds; at
 this size plain Monte Carlo is cheap too ($3.7\cdot10^7$ bit-parallel evaluations, about
-$0.15$ seconds). In $600$ estimates on random $16$-input circuits under uniform and
+$0.2$ seconds). In $600$ estimates on random $16$-input circuits under uniform and
 product distributions (E7), no interval missed the exact value. The whole experiment
-takes about $75$ seconds.
+takes about $77$ seconds.
 
-The implementation is sound in floating point as well. Masses are carried as a
+The implementation is sound in floating point as well. Threshold gates are evaluated and
+propagated exactly, in integer form (\cref{sec:setting}), so the threshold rule (X1) of
+\cref{sec:xpt} is a valid inference about $C$. Masses are carried as a
 mantissa and a binary exponent with proven relative-error bounds (at most
 $\gamma_{5n+5}$ for the dynamic program, where $\gamma_k=ku/(1-ku)$ and $u=2^{-53}$),
 every interval is rounded outward, and an upper end below the range of doubles becomes
-the smallest positive double rather than $0$. Threshold gates are propagated with the
-evaluator's own left-to-right rounded sums, which are monotone in every input, so the
-threshold rule (X1) of \cref{sec:xpt} is exact for the function the circuit computes.
+the smallest positive double rather than $0$. The Hoeffding--KL intervals exclude a value
+only when its divergence certainly exceeds the bound, allowing for the rounding of the
+empirical mean.
 
 \begin{table}[t]
 \centering\footnotesize
@@ -476,20 +483,20 @@ threshold rule (X1) of \cref{sec:xpt} is exact for the function the circuit comp
 \toprule
 instance (Monte Carlo samples) & $n$ & $p$ & method & $U/L$ & samples & sec.\\
 \midrule
-E1 gadget checks ($1.2\cdot10^{18}$) & 120 & $1.54\cdot10^{-14}$ & presolve & $1.045$ & $3.3\cdot10^4$ & $0.17$\\
- & & & affine envelope, $K=1.39$ & $1.042$ & $1.6\cdot10^4$ & $0.32$\\
-E2 random checks ($4.1\cdot10^{34}$) & 600 & $4.30\cdot10^{-31}$ & presolve & $1.045$ & $3.3\cdot10^4$ & $2.2$\\
+E1 gadget checks ($1.2\cdot10^{18}$) & 120 & $1.54\cdot10^{-14}$ & presolve & $1.045$ & $3.3\cdot10^4$ & $0.25$\\
+ & & & affine envelope, $K=1.39$ & $1.042$ & $1.6\cdot10^4$ & $0.34$\\
+E2 random checks ($4.1\cdot10^{34}$) & 600 & $4.30\cdot10^{-31}$ & presolve & $1.045$ & $3.3\cdot10^4$ & $2.0$\\
  & & & affine envelope, $K=1.38$ & $1.041$ & $1.6\cdot10^4$ & $2.6$\\
-E4 Feistel ($4.8\cdot10^{16}$) & 92 & $3.69\cdot10^{-13}$ & triangular presolve & $1.042$ & $6.6\cdot10^4$ & $0.12$\\
- & & & affine envelope & $U{=}5\cdot10^{-5}$ & $10^5$ & $0.08$\\
-E5 two of three ($3.6\cdot10^{12}$) & 90 & $4.89\cdot10^{-9}$ & affine envelope & $U{=}5\cdot10^{-5}$ & $10^5$ & $0.18$\\
- & & & XPT, two splits & $1.040$ & $6.6\cdot10^4$ & $0.44$\\
-E6a banded ($6.9\cdot10^{34}$) & 300 & $2.59\cdot10^{-31}$ & affine envelope + DP & $1.041$ & $4.1\cdot10^3$ & $0.17$\\
- & & & biased-pivot presolve & $U{=}1.3\cdot10^{-22}$ & $2\cdot10^5$ & $1.6$\\
-E6b copies & 216 & $1.47\cdot10^{-43}$ & affine env., width $\le2^6$ & $U{=}5\cdot10^{-5}$ & $2\cdot10^5$ & $0.8$\\
+E4 Feistel ($4.8\cdot10^{16}$) & 92 & $3.69\cdot10^{-13}$ & triangular presolve & $1.042$ & $6.6\cdot10^4$ & $0.20$\\
+ & & & affine envelope & $U{=}5.0\cdot10^{-5}$ & $10^5$ & $0.14$\\
+E5 two of three ($3.6\cdot10^{12}$) & 90 & $4.89\cdot10^{-9}$ & affine envelope & $U{=}5.0\cdot10^{-5}$ & $10^5$ & $0.16$\\
+ & & & XPT, 7-node argument & $1.040$ & $6.6\cdot10^4$ & $0.40$\\
+E6a banded ($6.9\cdot10^{34}$) & 300 & $2.59\cdot10^{-31}$ & affine envelope + DP & $1.041$ & $4.1\cdot10^3$ & $0.29$\\
+ & & & biased-pivot presolve & $U{=}1.3\cdot10^{-22}$ & $2\cdot10^5$ & $1.9$\\
+E6b copies & 216 & $1.47\cdot10^{-43}$ & affine env., width $\le2^6$ & $U{=}5.1\cdot10^{-5}$ & $2\cdot10^5$ & $0.54$\\
  & & & affine env., width $\le2^{16}$ & $1.006$ & $1.0\cdot10^3$ & $1.4$\\
-E3 dense checks ($3.7\cdot10^7$) & 36 & $8.77\cdot10^{-5}$ & presolve & $1.083$ & $1.6\cdot10^4$ & $0.04$\\
- & & & DFSB, 400 nodes & $28.7$ & $1.5\cdot10^6$ & $52$\\
+E3 dense checks ($3.7\cdot10^7$) & 36 & $8.77\cdot10^{-5}$ & presolve & $1.083$ & $1.6\cdot10^4$ & $0.02$\\
+ & & & DFSB, 400 nodes & $28.7$ & $1.5\cdot10^6$ & $55$\\
 \bottomrule
 \end{tabular}
 \caption{Affine methods ($\eps=0.05$, $\delta=0.01$; E3: $\eps=0.1$, $\delta=0.05$). E1: 45

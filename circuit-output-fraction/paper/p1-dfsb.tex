@@ -30,8 +30,8 @@ applies:
 $2^{|\sv(h)|}\le|C|^c$ assignments of $\sv(h)$.
 \item[(F)] Unit propagation on $\mathrm{Tseitin}(h)\wedge[h=1]$, repeated on the
 restricted node until it derives nothing new, derives a nonempty set of input
-literals $F$ (at the root, also failed-literal probing and Gaussian elimination on
-conjuncts that are affine over $\F_2$): $D(h)=D(F)\cdot D(h|_F)$, since
+literals $F$ (at the root only, alternating with failed-literal probing and with
+Gaussian elimination over $\F_2$, see below): $D(h)=D(F)\cdot D(h|_F)$, since
 $h\Rightarrow F$ and $h|_F$ does not depend on the variables of $F$. If it derives a
 conflict, $D(h)=0$.
 \item[(D)] The children of $h$'s top gate fall into at least two
@@ -52,13 +52,22 @@ If $\Phi_h$ has no boxes and mass $0$, then $D(h)=0$.
 \item[(B)] Otherwise branch on the variable shared by the most children (ties:
 smallest index): $D(h)=(1-q_x)D(h|_{x=0})+q_xD(h|_{x=1})$.
 \end{description}
+The root's elimination uses the affine equations implied by the conjuncts of $C$,
+the gates reached from the output through $\wedge$-gates that are not atoms: an atom
+conjunct contributes the equations of the affine hull of its satisfying assignments,
+and a conjunct built by $\oplus$ and $\neg$ from inputs and from atoms with affine
+functions contributes its equation. Like the other rules, it reads atoms only through
+their functions.
+
 Phase 1 builds the tree with a node budget $m$; nodes beyond the budget become
 ``loose'' leaves. Phase 2 estimates every leaf with fresh samples at confidence
 $\delta/\ell$, where $\ell$ is the number of leaves and $d$ the largest number of
 leaves on one derivation (all children at (D)-$\wedge$, one child elsewhere), and
 combines the leaf intervals through the exact node operations, all of which are
-monotone. Let $\eta=\eps/(3d)$. Every estimator is the doubling rule of
-\cref{thm:envelope}(iv) run towards ratio $1+\eta'$ at level $\delta'$ and capped at
+monotone (our implementation rounds outwards and also carries log-domain bounds,
+which stay tight for $p$ below the floating-point range). Let $\eta=\eps/(3d)$.
+Every estimator is the doubling rule of \cref{thm:envelope}(iv) run towards ratio
+$1+\eta'$ at level $\delta'$ and capped at
 $N(K',\eta',\delta')=c_0K'\eta'^{-2}(\log(1/\delta')+\log\log K')$ samples, a size by
 which it has stopped with probability $1-\delta'$ whenever its mean is at least
 $1/K'$ ($c_0$ an absolute constant); at the cap it outputs its current interval,
@@ -92,11 +101,13 @@ O\big(mK\log(m/\delta)\big)+\tilde O\Big(\ell\cdot K\,d^2\,\eps^{-2}\log(\ell/\d
 \]
 plus $s_7B$ for the (R7) pilots of each (E)-test, and
 $\tilde O(r_hL^2Kd^2\eps^{-2}\log(mr_h/\delta))$ box evaluations for each
-(E)-test or (E)-leaf whose envelope has boxes. An evaluation costs $O(|N|)$, where
-$|N|=O(2^a|C|)$ for $\{\wedge,\vee,\neg,\oplus\}$-circuits (threshold counters add
-their size), and $O(|N|+|\Phi_h|)$ at an (E)-leaf plus $O(LK\max_j|B_j|)$ in
-expectation for rejection sampling. The remaining work is $O(2^a|C|^2)$ for (R8) and
-$O\big(m(n+2^a+B)|N|+n^2(|C|+|N|)+n^3\big)$ arithmetic operations.
+(E)-test or (E)-leaf whose envelope has boxes. An evaluation costs $O(|N|)$, and
+$O(|N|+|\Phi_h|)$ at an (E)-leaf plus $O(LK\max_j|B_j|)$ in expectation for
+rejection sampling; here $|N|=O(|N^\circ|^2)$ for the NNF $N^\circ$ before flattening,
+and $|N^\circ|=O(2^a|C|)$ for $\{\wedge,\vee,\neg,\oplus\}$-circuits (threshold
+counters add their size). The remaining work is $O(2^a|C|^2)$ for (R8) and the atoms'
+affine hulls, and $O\big(m(n+2^a+B)|N|+n^2(a|C|+|N|)+n^3\big)$ arithmetic
+operations.
 \end{theorem}
 
 \begin{proof}
@@ -135,18 +146,23 @@ probability at most $(1-\frac1{16K})^{T_{\rm f}}\le\delta/(8N_{\rm f})$, so with
 probability $1-\delta/8$ no leaf is truncated. Hence, with probability
 $1-\delta$ more, every leaf estimator stops before its cap, with ratio at most
 $1+\eta$ (for boxes via \cref{thm:boxes}), which gives the stated counts; and
-$(1+\eps/(3d))^d\le e^{\eps/3}$, so the root ratio is at most $1+\eps$: products multiply leaf ratios; positive
-combinations with exact weights do not increase them; and for
-$f(x)=1-\prod_j(1-x_j)$, which is monotone and concave along rays with
+$(1+\eps/(3d))^d\le e^{\eps/3}$, so the root ratio is at most $1+\eps$: products
+multiply leaf ratios; positive combinations with exact weights do not increase them;
+and for $f(x)=1-\prod_j(1-x_j)$, which is monotone and concave along rays with
 $f(0)=0$, $x'\le bx$ implies $f(x')\le bf(x)$ and $x'\ge ax$ implies $f(x')\ge
 af(x)$, so (D)-$\vee$ nodes do not increase ratios either. The failure
 probabilities add up to $\delta/8+\delta/4+\delta/2+\delta/8+\delta=2\delta$.
-Costs: each evaluation reads the cone of a node of $N$; (R8) replaces at most $2|C|$
-gates (one per polarity) by OBDDs of $O(2^a)$ nodes, which gives the bound on $|N|$,
-and tabulating each costs $O(2^a|C|)$. Per tree node, (F) costs $O(n|N|)$ (at most $n$
-rounds of unit propagation), (T$'$) $O(2^a|N|)$, and building $\Phi_h$ $O(B|N|)$ besides
-the pilot evaluations of (R7) (at most $B$ rule applications, $s_7$ evaluations
-each); the root's probing and elimination cost $O(n^2(|C|+|N|)+n^3)$.
+Costs: each evaluation reads the cone of a node of $N$, or of a restriction of one;
+(R8) replaces at most $2|C|$ gates (one per polarity) by OBDDs of $O(2^a)$ nodes,
+which gives the bound on $|N^\circ|$, and tabulating each costs $O(2^a|C|)$.
+Flattening copies the children of a shared gate into each parent of the same kind,
+so a gate of $N$, or of a restriction, has at most $|N^\circ|$ distinct children, and
+there are at most $|N^\circ|$ gates; hence $|N|=O(|N^\circ|^2)$, which can be
+attained. Per tree node, (F) costs $O(n|N|)$ (at most $n$ rounds of unit
+propagation), (T$'$) $O(2^a|N|)$, and building $\Phi_h$ $O(B|N|)$ besides the pilot
+evaluations of (R7) (at most $B$ rule applications, $s_7$ evaluations each). The
+root's elimination has at most $a$ rows per conjunct, so its probing and elimination
+cost $O(n^2(a|C|+|N|)+n^3)$.
 \end{proof}
 
 With $K=K(|C|)$ and $m=m(|C|)$ fixed polynomials, DFSB therefore beats sampling
@@ -165,11 +181,15 @@ Let $s=|C|$.
 tree built by (T), (T$'$), (F) and (D) alone. If each of its leaves that is not
 exact (by (T), (T$'$) or a refutation) has probability at least $1/K$, then $m_K(C)=O(s)$. This
 includes read-once $\{\wedge,\vee,\neg\}$-formulas, computed exactly, and read-once
-compositions $F(\lambda_1,\dots,\lambda_t)$ on disjoint variable sets in which each
-$\lambda_i$, in the polarity in which it occurs in $F$ (positive if $F$ is monotone),
-satisfies the hypothesis itself: for instance, is an atom, or is $K$-dense and not
-decomposable after (F) (forcing does not lower its probability:
-$D(\lambda\mid F)=D(\lambda)/D(F)\ge D(\lambda)$ for $\lambda\Rightarrow F$). E.g.\ an
+compositions $F(\lambda_1,\dots,\lambda_t)$ of non-constant $\lambda_i$ on disjoint
+variable sets such that, for each $\lambda_i$ in the polarity in which it occurs in
+$F$ (positive if $F$ is monotone) and each set $G$ of literals that $\lambda_i$
+implies, $\lambda_i|_G$ satisfies the hypothesis for the component tree built with
+(F) restricted to unit propagation (as at every node below the root: probing and
+elimination act only at the root of $C$). For instance, $\lambda_i$ is an atom, or is
+$K$-dense and no $\lambda_i|_G$ is (D)-decomposable (forcing does not lower the
+probability: $D(\lambda_i|_G)=D(\lambda_i)/D(G)\ge D(\lambda_i)$, as
+$\lambda_i\Rightarrow G$). E.g.\ an
 $\wedge$ of $t$ such blocks of probability $1/2$ has $p=2^{-t}$; it costs no samples
 if the blocks are atoms, and otherwise $\tilde O(Kt^3\eps^{-2}\log(m/\delta))$
 evaluations ($d=\ell=t$, plus the pilots).
@@ -186,7 +206,8 @@ every $K$, and with (S) and (E) disabled and a node budget $m$ at least the size
 resulting tree, DFSB is exact cutset conditioning \cite{pearl1988}: $O(s\,3^r)$ nodes
 and no sampling.
 \item \emph{Global variables.} If fixing some set $Z$ of $r$ variables makes $C$
-satisfy (a), the variant that first enumerates $Z$ uses $O(2^rs)$ nodes.
+satisfy (a), the variant that first enumerates $Z$ and runs DFSB on each restriction
+uses $O(2^rs)$ nodes.
 \end{enumerate}
 \end{corollary}
 
@@ -216,8 +237,16 @@ $T^*_K$, which stops no later, is a pruning of it.
 (S), so $T^*_K(C)$ is the component tree, which has $O(s)$ nodes by the count in
 (c) (it has no (B)-nodes, so all $\sigma$ are empty). In a read-once formula every
 non-atom gate is decomposable, so all leaves are exact. In a read-once composition
-(F) and (D) act on each $\lambda_i$ as on $\lambda_i$ alone, since the $\lambda_i$ share
-no variables, so the leaves of the component tree of $C$ are those of the $\lambda_i$.
+the $\lambda_j$ take both values, independently of each other, so a literal on the
+variables of $\lambda_i$ is implied by $C$ only if $\lambda_i$, in its polarity, is a
+top-level conjunct of the NNF of $F$ (the only way a read-once formula fixes one of
+its variables) and implies that literal. So the root's (F), which derives only
+literals implied by $C$, restricts each $\lambda_i$ by a set $G_i$ of literals that
+$\lambda_i$ implies ($G_i=\emptyset$ unless $\lambda_i$ is such a
+conjunct). Below the root, (F) is unit propagation, which, like (D), acts on each
+$\lambda_i|_{G_i}$ as on $\lambda_i|_{G_i}$ alone, as the $\lambda_i$ share no
+variables; so the non-exact leaves of the component tree of $C$ are those of the
+component trees of the $\lambda_i|_{G_i}$ with (F) restricted to unit propagation.
 (b) and (d) are immediate.
 \end{proof}
 
@@ -247,9 +276,10 @@ of the variable indices, computed by tabulation; in DFSB these are atoms, exact
 leaves by (T$'$). Equal functions have equal reduced OBDDs, which hash-consing
 identifies, so replacing a sub-circuit computing a gate (whose internal gates feed
 nothing else) by an equivalent circuit with the same support of at most $a$
-variables changes neither the canonicalised NNF nor, hence, the tree of DFSB and
-membership in the classes above, as long as $a$, $K$ and $m$ stay fixed (they depend
-on $|C|$, which such a rewrite can change); and gadgets such as $(x\oplus r)\oplus r$
+variables changes neither the canonicalised NNF nor the gates of $C$ above the atoms
+nor the atoms' functions, which is all that the root's elimination reads; hence it
+changes neither the tree of DFSB nor membership in the classes above, as long as
+$a$, $K$ and $m$ stay fixed (they depend on $|C|$, which such a rewrite can change); and gadgets such as $(x\oplus r)\oplus r$
 become the literal $x$. Rewritings of cones with more than $a$ variables are not covered:
 $A\wedge B\mapsto(A\wedge B)\wedge(A\vee B)$ makes the top gate non-decomposable.
 \end{enumerate}
@@ -258,10 +288,11 @@ Shannon expansions per path.
 
 \begin{proposition}[DNNF envelopes]\label{prop:dnnf-env}
 If the NNF of $C$ (after (R8)) is a DNNF, rules (R1)--(R3) produce its own
-arithmetic circuit $\varphi$, whose positivity set is $C^{-1}(1)$; so
-$K\le\E_D[\varphi\mid C=1]$, its expected ambiguity, with equality unless (R6)
-replaces a sub-envelope. For a DNF with $m$ terms (contradictory terms and repeated
-literals are removed by the simplification of \cref{sec:dfsb}), $K\le m$
+arithmetic circuit $\varphi$, whose positivity set is $C^{-1}(1)$; so, unless the
+budget $B$ runs out, $K\le\E_D[\varphi\mid C=1]$, its expected ambiguity, with
+equality unless (R6) or (R7) replaces a sub-envelope by one of no larger mass. For
+a DNF with $m$ terms (contradictory terms and repeated literals are removed by the
+simplification of \cref{sec:dfsb}), $K\le m$
 (Karp--Luby--Madras). Under product distributions with rational marginals, the
 FPRAS of \cite{meel2026dnnf} with the sampler of \cref{thm:sis} removes the
 dependence on the ambiguity (its looseness is $D(E)/p=1$), in time

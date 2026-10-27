@@ -252,7 +252,10 @@ class Envelope:
 
     def evaluate(self, X: np.ndarray) -> np.ndarray:
         """phi(x) for each row of X (N, n) bool; float array."""
-        X = np.asarray(X, dtype=bool)
+        with np.errstate(over="ignore", invalid="ignore"):  # counts may overflow to inf
+            return self._evaluate(np.asarray(X, dtype=bool))
+
+    def _evaluate(self, X: np.ndarray) -> np.ndarray:
         val: dict[int, np.ndarray] = {}
         N = X.shape[0]
         for u in self.cone():
@@ -272,9 +275,14 @@ class Envelope:
                     r = r + val[c]
                 val[u] = r
             else:
+                # a zero factor makes the product 0 even if another factor
+                # overflowed to inf (the exact counts are finite)
                 r = np.ones(N)
+                zero = np.zeros(N, dtype=bool)
                 for c in self.data[u]:
+                    zero |= val[c] == 0
                     r = r * val[c]
+                r[zero] = 0.0
                 val[u] = r
         return val[self.root]
 
@@ -287,7 +295,8 @@ class Envelope:
         box fill after that many draws (RuntimeError); a truncated sampler
         agrees with the untruncated one until it stops."""
         m = self.log_masses(D)[0] if masses is None else masses  # log masses
-        assert m[self.root] > -math.inf, "envelope has zero mass"
+        if not m[self.root] > -math.inf:
+            raise ValueError("envelope has zero mass: nothing to sample")
         X = D.sample(N, rng)
         order = self.cone()[::-1]  # parents before children
         reach: dict[int, list] = {self.root: [np.arange(N)]}
@@ -392,11 +401,19 @@ def envelope_estimate(C: Circuit, D: Product, env: Envelope, eps: float = 0.1,
     If env does not dominate C, the interval is still valid for
     Pr_D[C=1 and phi>0] <= p, so its lower end is a valid lower bound on p.
 
+    If the (estimated) mass is at least 1, the envelope is no better than
+    Monte Carlo and is replaced by phi = 1, which dominates every circuit:
+    the interval is then plain Monte Carlo's, valid whatever env is. The
+    output interval lies in [0, 1].
+
     Floating point: masses are kept in the log domain, and the interval is
     widened by e^{+-eta} (the max-path rounding bound of log_masses), by an
-    absolute tau on the mean of W in [0,1] for the discreteness of the uniform
-    draws (each Bernoulli or categorical draw is off by at most 2^-53 per
-    category in total variation), and rounded outwards on conversion.
+    absolute tau on the mean of W in [0,1] for the discreteness of the
+    categorical draws at SUM nodes (each is off by at most 2^-53 per category
+    in total variation; Product.sample, which fills the other variables and
+    feeds the box estimates and rejection fills, is exact), and rounded
+    outwards on conversion. phi is evaluated with a zero factor absorbing an
+    overflowed one, so W = C/phi is a number in [0, 1].
     """
     rng = np.random.default_rng() if rng is None else rng
     used = env.used_boxes()
@@ -412,13 +429,28 @@ def envelope_estimate(C: Circuit, D: Product, env: Envelope, eps: float = 0.1,
     if used:
         # deductive upper bound p <= E_D[phi] <= mass with every box at its upper end
         lm_hi, eta_hi = env.log_masses(D, box_value=lambda b: b.hi)
-        z_upper = _exp_up(lm_hi[env.root] + eta_hi)
+        z_upper = min(1.0, _exp_up(lm_hi[env.root] + eta_hi))
     else:
-        z_upper = math.inf
+        z_upper = 1.0
     if logZ == -math.inf:
         if not used:  # exact zero mass: phi = 0 everywhere, and phi dominates C
-            return Estimate(0.0, 0.0, 0.0, 0, box_evals, delta, "envelope mass 0")
+            return Estimate(0.0, 0.0, 0.0, 0, 0, delta, "envelope mass 0")
         return Estimate(0.0, 0.0, z_upper, 0, box_evals, delta, "estimated envelope mass 0")
+    if logZ >= 0.0:
+        # no better than Monte Carlo: phi = 1 (Product.sample is exact)
+        def draw_mc(k):
+            out = []
+            while k > 0:
+                b = min(k, batch_cap)
+                out.append(np.asarray(C.eval_bits(D.sample(b, rng)), dtype=bool).astype(float))
+                k -= b
+            return np.concatenate(out) if out else np.zeros(0)
+
+        est = sequential_mean(draw_mc, 0.999 * eps, d_is, max_samples=max_samples)
+        hi = min(est.hi, z_upper)
+        lo = min(est.lo, hi)
+        return Estimate(min(max(est.value, lo), hi), lo, hi, est.samples, est.samples + box_evals, delta,
+                        f"envelope mass e^{logZ:.4g} >= 1: Monte Carlo (phi = 1)")
     counter = [0]
 
     def draw(k):
@@ -426,13 +458,14 @@ def envelope_estimate(C: Circuit, D: Product, env: Envelope, eps: float = 0.1,
         while k > 0:
             b = min(k, batch_cap)
             X = env.sample(D, b, rng, lm, counter, fill_cap)
-            c = C.eval_bits(X)
+            c = np.asarray(C.eval_bits(X), dtype=bool)
             phi = env.evaluate(X)
             w = np.zeros(b)
-            w[c] = 1.0 / phi[c]
+            ok = c & (phi > 0)  # every sample has phi > 0; phi is integer-valued
+            w[ok] = 1.0 / phi[ok]
             out.append(w)
             k -= b
-        return np.concatenate(out)
+        return np.concatenate(out) if out else np.zeros(0)
 
     eps_is = eps / 4 if used else 0.999 * eps  # slack for the outward rounding
     est = sequential_mean(draw, eps_is, d_is, max_samples=max_samples)
@@ -449,7 +482,8 @@ def envelope_estimate(C: Circuit, D: Product, env: Envelope, eps: float = 0.1,
         hi = _exp_up(math.log(hi_is) + logZ + eta - math.log(rmin)) if hi_is > 0 else 0.0
     else:
         hi = math.inf
-    hi = min(hi, z_upper)
+    hi = min(hi, z_upper, 1.0)
+    lo = min(lo, hi)
     val = min(max(est.value * math.exp(logZ), lo), hi)
     return Estimate(val, lo, hi, est.samples, est.samples + counter[0] + box_evals, delta,
                     f"envelope mass {math.exp(logZ):.4g}, size {env.size()}, boxes {len(used)}")
@@ -461,6 +495,8 @@ def _exp_up(x: float) -> float:
     there it adds 4 such ulps (exact in the subnormal range)."""
     if x == -math.inf:
         return 0.0
+    if not x < 709.0:  # e^x near or beyond the float range (or x is nan)
+        return math.inf
     y = math.exp(x)
     if y < _TINY:
         return y + 4 * math.ulp(0.0)
@@ -469,8 +505,10 @@ def _exp_up(x: float) -> float:
 
 def _exp_down(x: float) -> float:
     """A lower bound on e^x; 0 below twice the normal range's minimum."""
-    if x == -math.inf:
+    if not x > -math.inf:  # -inf (or nan)
         return 0.0
+    if x >= 709.0:
+        return sys.float_info.max  # below e^x
     y = math.exp(x)
     if y < 2 * _TINY:
         return 0.0

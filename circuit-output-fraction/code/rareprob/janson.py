@@ -66,11 +66,26 @@ def is_unate(clauses) -> bool:
     return True
 
 
+def check_clauses(clauses, n: int) -> None:
+    """Raise ValueError unless every literal is (i, b) with an integer
+    0 <= i < n and b in {0, 1} and the CNF is unate."""
+    for c in clauses:
+        for lit in c:
+            i, b = lit
+            if int(i) != i or not 0 <= i < n or b not in (0, 1):
+                raise ValueError(f"bad literal {lit!r}: need (i, b) with 0 <= i < {n} and b in {{0, 1}}")
+    if not is_unate(clauses):
+        raise ValueError("the CNF is not unate: a variable occurs with both signs")
+
+
 def janson_interval(clauses, D: Product) -> Estimate:
-    """clauses: list of lists of literals (i, b) meaning [x_i == b]."""
-    assert is_unate(clauses), "Janson/Harris sandwich needs a unate CNF"
+    """clauses: list of lists of literals (i, b) meaning [x_i == b]. Raises
+    ValueError unless the literals are well formed and the CNF is unate (the
+    Harris and Janson bounds need it; an explicit check, since an assert
+    would vanish under python -O)."""
+    check_clauses(clauses, D.n)
     # a literal repeated within a clause is one condition: count it once in P(B_i)
-    clauses = [sorted({(i, b) for (i, b) in c}) for c in clauses]
+    clauses = [sorted({(int(i), int(b)) for (i, b) in c}) for c in clauses]
     m = len(clauses)
 
     def log_false(lits) -> float:  # log P(all literals false)

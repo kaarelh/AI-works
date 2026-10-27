@@ -4,16 +4,18 @@ Node kinds: 'T' (true), 'F' (false), 'L' (literal x_var = val), 'A' (and),
 'O' (or), 'X' (opaque: an arbitrary sub-circuit, kept as a black box; used
 for gates such as large-weight thresholds that have no small NNF).
 
-Nodes are hash-consed, so structurally equal nodes are shared.
+Nodes are hash-consed, so structurally equal nodes are shared. With
+flatten=False, to_nnf builds the gate-by-gate NNF: the AND/OR node of circuit
+gate g in polarity q is keyed by (g, q) as well, so structurally equal but
+distinct gates (e.g. equal AND-gates in two chains) stay distinct nodes, and
+the bracketing that context width is measured on is exactly the circuit's.
 """
 
 from __future__ import annotations
 
-import math
-
 from dataclasses import dataclass, field
 
-from .circuit import Circuit
+from .circuit import Circuit, const_value, thr_param
 
 
 @dataclass
@@ -25,8 +27,8 @@ class NNF:
     root: int = -1
     flatten: bool = True  # merge nested ANDs (ORs); off when the AND-tree shape matters
 
-    def _mk(self, kind: str, data, sup: int) -> int:
-        key = (kind, data)
+    def _mk(self, kind: str, data, sup: int, tag=None) -> int:
+        key = (kind, data) if tag is None else (kind, data, tag)
         v = self._cons.get(key)
         if v is not None:
             return v
@@ -49,7 +51,7 @@ class NNF:
     def opaque(self, gate: int, pol: int, sup: int) -> int:
         return self._mk("X", (int(gate), int(pol)), sup)
 
-    def AND(self, ch) -> int:
+    def AND(self, ch, tag=None) -> int:
         out = []
         for c in ch:
             k = self.kind[c]
@@ -73,9 +75,9 @@ class NNF:
         s = 0
         for c in out:
             s |= self.sup[c]
-        return self._mk("A", out, s)
+        return self._mk("A", out, s, tag)
 
-    def OR(self, ch) -> int:
+    def OR(self, ch, tag=None) -> int:
         out = []
         for c in ch:
             k = self.kind[c]
@@ -98,7 +100,7 @@ class NNF:
         s = 0
         for c in out:
             s |= self.sup[c]
-        return self._mk("O", out, s)
+        return self._mk("O", out, s, tag)
 
     def restrict(self, v: int, rho: dict, _memo: dict | None = None) -> int:
         """Node for v with the variables in rho fixed, simplified (constants
@@ -200,9 +202,7 @@ class NNF:
                     Xu = X.copy()
                     for i, b in self.data[u][2]:
                         Xu[:, i] = bool(b)
-                C = self.circuit
-                sub = Circuit(C.n, list(C.ops), list(C.args), list(C.params), g)
-                r = sub.eval_bits(Xu)
+                r = self.circuit.with_output(g).eval_bits(Xu)
                 val[u] = r if pol else ~r
         return val[v]
 
@@ -223,10 +223,13 @@ class NNF:
             elif k == "O":
                 memo[u] = int(any(memo[c] for c in self.data[u]))
             else:
-                g, pol = self.data[u]
-                assert circuit is not None
-                sub = Circuit(circuit.n, list(circuit.ops), list(circuit.args), list(circuit.params), g)
-                memo[u] = int(sub(x) == pol)
+                g, pol = self.data[u][:2]
+                if len(self.data[u]) > 2 and self.data[u][2]:
+                    x = list(x)
+                    for i, b in self.data[u][2]:
+                        x[i] = b
+                C = self.circuit if circuit is None else circuit
+                memo[u] = int(C.with_output(g)(x) == pol)
         return memo[self.root if v is None else v]
 
 
@@ -239,8 +242,7 @@ def _small_cone_nnf(N: NNF, C: Circuit, g: int, sup_mask: int, q: int) -> int:
     k = len(vs)
     X = _np.zeros((1 << k, C.n), dtype=bool)
     X[:, vs] = ((_np.arange(1 << k)[:, None] >> _np.arange(k)) & 1).astype(bool)
-    sub = Circuit(C.n, list(C.ops), list(C.args), list(C.params), g)
-    tt = sub.eval_bits(X) == bool(q)
+    tt = C.with_output(g).eval_bits(X) == bool(q)
     memo: dict = {}
 
     def build_sub(seg, depth):
@@ -267,10 +269,11 @@ def to_nnf(C: Circuit, thr_max_states: int = 4096, small_cone: int = 10, flatten
 
     Gates whose support has at most `small_cone` variables are tabulated and
     replaced by their exact reduced OBDD (a sound, exact simplification:
-    e.g. (x XOR r) XOR r becomes x). THR gates with small integer weights (a
-    negative weight acts on the complemented child) are expanded by a
-    sequential-counter DP; other THR gates become
-    opaque nodes.
+    e.g. (x XOR r) XOR r becomes x). A THR gate, in its exact integer form
+    (circuit.thr_param), is expanded by a sequential-counter DP when the sum
+    of its absolute weights is at most thr_max_states (a negative weight acts
+    on the complemented child); other THR gates become opaque nodes. With
+    flatten=False the NNF is gate-by-gate (see the module docstring).
     """
     N = NNF(flatten=flatten)
     N.circuit = C
@@ -293,7 +296,7 @@ def to_nnf(C: Circuit, thr_max_states: int = 4096, small_cone: int = 10, flatten
                 memo[(h, q)] = _small_cone_nnf(N, C, h, sup[h], q)
                 continue
             if op == "CONST":
-                memo[(h, q)] = N.true() if C.params[h] == q else N.false()
+                memo[(h, q)] = N.true() if const_value(C.params[h]) == q else N.false()
                 continue
             if op == "NOT":
                 key = (a[0], 1 - q)
@@ -310,10 +313,11 @@ def to_nnf(C: Circuit, thr_max_states: int = 4096, small_cone: int = 10, flatten
                     stack.extend((c, q2, False) for c, q2 in need)
                     continue
                 ch = [memo[(c, q)] for c in a]
+                tag = None if flatten else (h, q)
                 if (op == "AND") == (q == 1):
-                    memo[(h, q)] = N.AND(ch)
+                    memo[(h, q)] = N.AND(ch, tag)
                 else:
-                    memo[(h, q)] = N.OR(ch)
+                    memo[(h, q)] = N.OR(ch, tag)
                 continue
             if op == "XOR":
                 need = [(c, b) for c in a for b in (0, 1) if (c, b) not in memo]
@@ -332,25 +336,23 @@ def to_nnf(C: Circuit, thr_max_states: int = 4096, small_cone: int = 10, flatten
                 memo[(h, q)] = par[q]
                 continue
             if op == "THR":
-                w, t = C.params[h]
-                small = all(float(x).is_integer() for x in w) and sum(abs(x) for x in w) <= thr_max_states
-                if not small:
+                w, t = thr_param(C.params[h])
+                if sum(abs(x) for x in w) > thr_max_states:
                     memo[(h, q)] = N.opaque(h, q, sup[h])
                     continue
-                need = [(c, b) for c in a for b in (0, 1) if (c, b) not in memo]
+                kids = [(c, x) for c, x in zip(a, w) if x != 0]
+                need = [(c, b) for c, _ in kids for b in (0, 1) if (c, b) not in memo]
                 if need:
                     stack.append((h, q, True))
                     stack.extend((c, b, False) for c, b in need)
                     continue
-                # a negative weight acts on the complemented child:
-                # w*g = |w|*(not g) - |w|, so the threshold shifts by sum |w_neg|.
-                # The evaluator fires at sum >= t - 1e-12; with integer weights that
-                # is sum >= ceil(t - 1e-12), shifted exactly in integer arithmetic.
-                shift = sum(-int(x) for x in w if x < 0)
-                need = math.ceil(t - 1e-12) + shift
-                pos = [memo[(c, int(x >= 0))] for c, x in zip(a, w)]
-                neg = [memo[(c, int(x < 0))] for c, x in zip(a, w)]
-                memo[(h, q)] = _thr_nnf(N, pos, neg, [abs(int(x)) for x in w], float(need), q)
+                # exact integer arithmetic: a negative weight acts on the
+                # complemented child, w*g = |w|*(not g) - |w|, so the threshold
+                # rises by the sum of the |negative weights|
+                shift = sum(-x for _, x in kids if x < 0)
+                pos = [memo[(c, int(x > 0))] for c, x in kids]
+                neg = [memo[(c, int(x < 0))] for c, x in kids]
+                memo[(h, q)] = _thr_nnf(N, pos, neg, [abs(x) for _, x in kids], t + shift, q)
                 continue
             raise ValueError(op)
         return memo[(g, pol)]
@@ -359,16 +361,15 @@ def to_nnf(C: Circuit, thr_max_states: int = 4096, small_cone: int = 10, flatten
     return N
 
 
-def _thr_nnf(N: NNF, pos, neg, w, t, q) -> int:
-    """NNF for [sum_i w_i g_i >= t] == q via suffix DP over achievable sums.
+def _thr_nnf(N: NNF, pos, neg, w, need: int, q) -> int:
+    """NNF for [sum_i w_i g_i >= need] == q (positive integer w_i, integer
+    need) via suffix DP over achievable sums.
 
-    state(k, s) = NNF for 'sum over children k.. of w_i g_i >= t - s' (q=1).
+    state(k, s) = NNF for 'sum over children k.. of w_i g_i >= need - s' (q=1).
     The OR at each state is deterministic (it branches on child k).
     """
     m = len(w)
-    import math as _m
-
-    need = _m.ceil(t - 1e-12)
+    need = int(need)
     suffix = [0] * (m + 1)
     for k in range(m - 1, -1, -1):
         suffix[k] = suffix[k + 1] + w[k]

@@ -129,7 +129,7 @@ def threshold_of_blocks(k: int, b: int, gates: int, t: float, rng: np.random.Gen
     for j in range(k):
         vs = list(range(j * b, (j + 1) * b))
         outs.append(random_block_circuit(C, vs, gates, rng))
-    C.set_output(C.THR(outs, [1.0] * k, t))
+    C.set_output(C.THR(outs, [1] * k, t))
     return C, outs
 
 
@@ -149,10 +149,9 @@ def chain_circuit(n: int, rng: np.random.Generator, width: int = 3):
 
 def dnf_exact(terms, D) -> float:
     """Exact Pr[DNF] by inclusion-exclusion over term subsets (m <= ~22)."""
-    import itertools
-
     m = len(terms)
-    assert m <= 22
+    if m > 22:
+        raise ValueError("dnf_exact: inclusion-exclusion needs at most 22 terms")
     tot = 0.0
     # iterate subsets via Gray-code-free recursion with pruning of contradictions
     def rec(j, lits, sign_count):
@@ -234,7 +233,8 @@ def spn_trigger(n_body: int, k: int, rounds: int, rng: np.random.Generator, body
     output y = SPN(a). The trigger set is the single point x_S = a, but
     neither unit propagation nor Gaussian elimination can see it; a CDCL
     solver finds and refutes alternatives. Returns (C, S, a, body_vars)."""
-    assert k % 4 == 0
+    if k % 4:
+        raise ValueError("spn_trigger: k must be a multiple of 4")
     n = k + n_body
     S = list(range(k))
     body = list(range(k, n))

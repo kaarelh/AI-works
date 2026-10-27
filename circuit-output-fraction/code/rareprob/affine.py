@@ -26,13 +26,15 @@ every circuit, every product distribution and (for XPT) every argument; a
 method that cannot certify anything returns [0, 1] or its deterministic upper
 bound.
 
-Floating point. Circuits are evaluated by Circuit.eval_packed, so a threshold
-gate means [fl-sum of w_i g_i, left to right, >= t - 1e-12]; the propagator
-reasons about exactly that function (rounded addition is monotone). Masses are
-carried as (mantissa, binary exponent, relative-error bound) with proven
-bounds (no logarithms), intervals are rounded outward, and a value that would
-underflow is replaced by a valid bound (the smallest positive double for an
-upper end), never by 0.
+Threshold and constant gates. A threshold gate means [sum_i w_i g_i >= t]
+exactly, read in its integer form (circuit.thr_param) by the evaluator and
+by the propagator alike; a CONST gate's value is circuit.const_value of its
+parameter (0 or 1) everywhere.
+
+Floating point. Masses are carried as (mantissa, binary exponent,
+relative-error bound) with proven bounds (no logarithms), intervals are
+rounded outward, and a value that would underflow is replaced by a valid
+bound (the smallest positive double for an upper end), never by 0.
 """
 
 from __future__ import annotations
@@ -44,7 +46,7 @@ from fractions import Fraction
 
 import numpy as np
 
-from .circuit import Circuit, unpack_bits
+from .circuit import Circuit, const_value, thr_param, unpack_bits
 from .dist import Product
 from .stats import Estimate, sequential_mean
 
@@ -366,7 +368,7 @@ def anf_mul(a: ANF, b: ANF, cap: int, work: int):
 def anf_gate(op: str, kids: list, param, cap: int, work: int):
     """ANF of a gate from its children's ANFs (None = unknown)."""
     if op == "CONST":
-        return ANF_ONE if param else ANF_ZERO
+        return ANF_ONE if const_value(param) else ANF_ZERO
     if any(k is None for k in kids):
         return None
     if op == "NOT":
@@ -434,7 +436,7 @@ def solved_form(C: Circuit, g: int, i: int, sup: list[int], cap: int = 64, work:
         if (sup[u] >> i) & 1:
             return A[u]
         if C.ops[u] == "CONST":
-            return ANF_ONE if C.params[u] else ANF_ZERO
+            return ANF_ONE if const_value(C.params[u]) else ANF_ZERO
         if u not in atom_bit:
             atom_bit[u] = len(atom_bit) + 1
         return anf_var(atom_bit[u])
@@ -538,7 +540,7 @@ def presolve(C: Circuit, D: Product | None = None, anf_cap: int = 64, use_solved
     for g, b in spine:
         a = A.get(g)
         if C.ops[g] == "CONST":
-            if int(C.params[g]) != b:
+            if const_value(C.params[g]) != b:
                 P.infeasible = True
                 return P
             continue
@@ -1092,7 +1094,7 @@ def affine_envelope(C: Circuit, cap: int = 16, anf_cap: int = 64, anf=None) -> l
                           _join(_meet(p1, p2, cap), _meet(n1, n2, cap), cap))
             Ep[v], En[v] = p1, n1
         elif op == "CONST":
-            Ep[v], En[v] = ([FULL], []) if C.params[v] else ([], [FULL])
+            Ep[v], En[v] = ([FULL], []) if const_value(C.params[v]) else ([], [FULL])
         else:  # THR or opaque
             Ep[v], En[v] = [FULL], [FULL]
     return Ep[C.output]
@@ -1113,15 +1115,6 @@ class Contradiction(Exception):
     pass
 
 
-def thr_sum(w, bits) -> float:
-    """The weighted sum exactly as Circuit.eval_packed computes it: start at
-    0.0 and add w_i * float(bit_i) left to right in IEEE double."""
-    s = 0.0
-    for wi, b in zip(w, bits):
-        s += wi * (1.0 if b else 0.0)
-    return s
-
-
 class Propagator:
     """Gate propagation plus Gaussian elimination on certified affine gates.
     Rules: (X1) gate semantics forwards and backwards; (X2) a certified affine
@@ -1130,31 +1123,40 @@ class Propagator:
     rules are valid inferences about the true gate values of any x that
     satisfies the current state.
 
-    Threshold gates are reasoned about as the evaluator computes them: the
-    left-to-right rounded sum of thr_sum compared with t - 1e-12. With finite
-    weights the partial sums are never NaN and rounded addition is monotone,
-    so the sum is monotone in every occurrence of every child (nondecreasing
-    for w > 0, nonincreasing for w < 0); setting each unknown occurrence
-    independently to its extreme value bounds the sum over all consistent
-    inputs (a relaxation when a child occurs twice). Non-finite weights only
-    allow forward evaluation with all children known."""
+    Threshold gates are reasoned about exactly, in their integer form
+    (circuit.thr_param), with the weights of a repeated child added up, so
+    the sum is sum_u W_u g_u over distinct children u. Its least (largest)
+    value given the known children puts every unknown child with W_u > 0 at
+    0 (1) and every one with W_u < 0 at 1 (0); a gate or child value is
+    inferred when it holds in every completion of the unknown children
+    (taken as free, which can only lose inferences, never add one)."""
 
     def __init__(self, C: Circuit, anf_cap: int = 64):
         self.C = C
         self.cone = C.cone()
         self.aff = certified_affine(C, anf_cap)
+        self.thr = {}
+        for v in self.cone:
+            if C.ops[v] == "THR":
+                w, t = thr_param(C.params[v])
+                agg: dict[int, int] = {}
+                for u, wi in zip(C.args[v], w):
+                    agg[u] = agg.get(u, 0) + wi
+                self.thr[v] = ([u for u in agg if agg[u]], [agg[u] for u in agg if agg[u]], t)
 
     @staticmethod
-    def _thr_extreme(ch, w, cv, high, fixed=None, fixed_b=None) -> float:
-        bits = []
-        for u, wi, c in zip(ch, w, cv):
-            if u == fixed:
-                bits.append(fixed_b)
-            elif c is not None:
-                bits.append(c)
-            else:   # the value that makes w_i * b largest (high) or smallest
-                bits.append(int(wi > 0) if high else int(wi < 0))
-        return thr_sum(w, bits)
+    def _thr_range(ch, w, cv) -> tuple[int, int]:
+        """Least and largest sum over the completions of the known values cv."""
+        lo = hi = 0
+        for wi, c in zip(w, cv):
+            if c is not None:
+                lo += wi * c
+                hi += wi * c
+            elif wi > 0:
+                hi += wi
+            else:
+                lo += wi
+        return lo, hi
 
     def run(self, S: Affine, sigma: dict[int, int]):
         C = self.C
@@ -1191,7 +1193,7 @@ class Propagator:
                     continue
                 ch = C.args[v]
                 if op == "CONST":
-                    changed |= setv(v, int(C.params[v]))
+                    changed |= setv(v, const_value(C.params[v]))
                     continue
                 cv = [sigma.get(u) for u in ch]
                 val = sigma.get(v)
@@ -1224,26 +1226,25 @@ class Propagator:
                         if ch.count(unk[0]) == 1:
                             changed |= setv(unk[0], (val ^ s) & 1)
                 elif op == "THR":
-                    w, t = C.params[v]
-                    tt = t - 1e-12  # the comparison of Circuit.eval_packed
-                    if all(c is not None for c in cv):
-                        changed |= setv(v, int(thr_sum(w, cv) >= tt))
-                        continue
-                    if not all(math.isfinite(wi) for wi in w):
-                        continue
-                    if self._thr_extreme(ch, w, cv, high=False) >= tt:
+                    ch, w, t = self.thr[v]
+                    cv = [sigma.get(u) for u in ch]
+                    lo, hi = self._thr_range(ch, w, cv)
+                    if lo >= t:
                         changed |= setv(v, 1)
-                    elif not self._thr_extreme(ch, w, cv, high=True) >= tt:
+                    elif hi < t:
                         changed |= setv(v, 0)
                     val = sigma.get(v)
                     if val is None:
                         continue
-                    for u in dict.fromkeys(u for u, c in zip(ch, cv) if c is None):
-                        for bb in (0, 1):
-                            if val == 1 and not self._thr_extreme(ch, w, cv, True, u, bb) >= tt:
-                                changed |= setv(u, 1 - bb)   # u = bb cannot reach the threshold
-                            elif val == 0 and self._thr_extreme(ch, w, cv, False, u, bb) >= tt:
-                                changed |= setv(u, 1 - bb)   # u = bb forces the threshold
+                    for u, wi, c in zip(ch, w, cv):
+                        if c is not None:
+                            continue
+                        # if the other value of u cannot keep the sum on the
+                        # required side of t, u takes this one
+                        if val == 1 and hi - abs(wi) < t:
+                            changed |= setv(u, int(wi > 0))
+                        elif val == 0 and lo + abs(wi) >= t:
+                            changed |= setv(u, int(wi < 0))
         return S, sigma
 
 
@@ -1297,25 +1298,55 @@ def _apply(state, split, branch):
     return S, sigma
 
 
-def xpt_check(C: Circuit, arg, anf_cap: int = 64):
+def _arg_nodes(arg) -> int:
+    """Number of distinct internal-node objects reachable from arg through
+    well-formed 'children' pairs (each object counted once, so cyclic or
+    shared structures are finite)."""
+    seen, stack = set(), [arg]
+    while stack:
+        node = stack.pop()
+        if not isinstance(node, dict) or id(node) in seen:
+            continue
+        seen.add(id(node))
+        ch = node.get("children")
+        if isinstance(ch, (list, tuple)) and len(ch) == 2:
+            stack.extend(ch)
+    return len(seen)
+
+
+def xpt_check(C: Circuit, arg, anf_cap: int = 64, max_nodes: int | None = None):
     """Deterministic part of the XPT verifier. Returns (open leaves, stats):
     the list of (V_leaf, order) for open leaves, for closed leaves whose
     refutation failed and for malformed nodes (all treated as open, which is
     sound), and counters. The walk is iterative (no recursion limit), and an
-    order is used only if it is a permutation of range(n)."""
+    order is used only if it is a permutation of range(n).
+
+    Arguments are in-memory objects, so they may share subtrees or contain
+    cycles. A node met again on its own root path (a cycle) is an open leaf,
+    and the walk visits at most max_nodes nodes (default: twice the number
+    of distinct node objects, plus one, which a tree never exceeds even when
+    it shares leaf objects); the nodes still pending then become open leaves.
+    Treating any node as an open leaf is sound: every x with C(x) = 1 that
+    reaches it lies in its affine space."""
     Pg = Propagator(C, anf_cap)
-    stats = dict(nodes=0, closed=0, open=0, downgraded=0, bad_orders=0)
+    stats = dict(nodes=0, closed=0, open=0, downgraded=0, bad_orders=0, truncated=0)
+    budget = 2 * _arg_nodes(arg) + 1 if max_nodes is None else int(max_nodes)
     leaves = []
-    stack = [(arg, Affine(), {C.output: 1})]
+    stack = [(arg, Affine(), {C.output: 1}, ())]
     while stack:
-        node, S0, sig0 = stack.pop()
+        node, S0, sig0, path = stack.pop()
+        if stats["nodes"] >= budget:
+            stats["truncated"] += 1
+            stats["open"] += 1
+            leaves.append((S0, None))
+            continue
         stats["nodes"] += 1
         try:
             S, sigma = Pg.run(S0.copy(), dict(sig0))
         except Contradiction:
             stats["closed"] += 1  # no x with C(x) = 1 reaches this node, whatever its label
             continue
-        sp = parse_split(C, node)
+        sp = parse_split(C, node) if id(node) not in path else None
         if sp is not None:
             kids = []
             for b in (0, 1):
@@ -1324,7 +1355,7 @@ def xpt_check(C: Circuit, arg, anf_cap: int = 64):
                 except Contradiction:
                     stats["closed"] += 1
                     continue
-                kids.append((node["children"][b], S1, sig1))
+                kids.append((node["children"][b], S1, sig1, path + (id(node),)))
             stack.extend(reversed(kids))   # visit branch 0 first
             continue
         order = None
@@ -1350,7 +1381,7 @@ def xpt_verify(C: Circuit, D: Product | None, arg, eps: float = 0.1, delta: floa
         leaves, st = xpt_check(C, arg, anf_cap)
     except Exception as ex:  # defensive: an unforeseen input; the whole cube is a valid piece
         leaves = [(Affine(), None)]
-        st = dict(nodes=0, closed=0, open=1, downgraded=0, bad_orders=0)
+        st = dict(nodes=0, closed=0, open=1, downgraded=0, bad_orders=0, truncated=0)
         st["error"] = type(ex).__name__
     spaces = [S for S, _ in leaves]
     orders = [o for _, o in leaves]
@@ -1358,6 +1389,8 @@ def xpt_verify(C: Circuit, D: Product | None, arg, eps: float = 0.1, delta: floa
     note = f"XPT: {st['nodes']} nodes, {st['closed']} closed, {st['open']} open ({st['downgraded']} downgraded); "
     if st["bad_orders"]:
         note += f"{st['bad_orders']} malformed orders ignored; "
+    if st["truncated"]:
+        note += f"{st['truncated']} nodes beyond the node budget left open; "
     if relaxed:
         note += f"{relaxed} relaxed; "
     return klm_estimate(C, D, pieces, eps, delta, rng, max_samples, note)

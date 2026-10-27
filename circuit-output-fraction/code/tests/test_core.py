@@ -160,7 +160,7 @@ def test_argument_sound_and_complete():
     E2 = dnf_envelope(terms[:-1], n)
     assert honest_proof(C, E2) is None
     v2 = verify(C, D, E2, pf, eps=0.1, delta=0.05, rng=rng)
-    assert not v2.proof_ok and v2.estimate.hi == math.inf and v2.estimate.lo <= p
+    assert not v2.proof_ok and v2.estimate.hi >= 1.0 and v2.estimate.lo <= p
 
 
 @pytest.mark.parametrize("seed", range(6))

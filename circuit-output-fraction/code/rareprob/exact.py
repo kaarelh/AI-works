@@ -1,16 +1,47 @@
-"""Exact output probabilities by enumeration (small n), for testing."""
+"""Exact output probabilities by enumeration (small n), for testing.
+
+The circuit evaluator is exact (threshold gates in integer arithmetic), so
+these are the exact probabilities of the function the circuit defines.
+eval_reference is an independent gate-by-gate evaluator in Python integers,
+for cross-checking the vectorised one."""
 
 from __future__ import annotations
 
 import numpy as np
 
-from .circuit import Circuit, unpack_bits
+from .circuit import Circuit, const_value, thr_param, thr_value, unpack_bits
 from .dist import Product
+
+
+def eval_reference(C: Circuit, x) -> int:
+    """C(x) gate by gate in Python integers (no numpy, no packing)."""
+    val: dict[int, int] = {}
+    for v in C.cone():
+        op, a = C.ops[v], C.args[v]
+        if op == "IN":
+            val[v] = int(bool(x[v]))
+        elif op == "CONST":
+            val[v] = const_value(C.params[v])
+        elif op == "NOT":
+            val[v] = 1 - val[a[0]]
+        elif op == "AND":
+            val[v] = int(all(val[u] for u in a))
+        elif op == "OR":
+            val[v] = int(any(val[u] for u in a))
+        elif op == "XOR":
+            val[v] = sum(val[u] for u in a) & 1
+        elif op == "THR":
+            w, t = thr_param(C.params[v])
+            val[v] = thr_value(w, t, [val[u] for u in a])
+        else:
+            raise ValueError(op)
+    return val[C.output]
 
 
 def all_inputs_packed(n: int) -> np.ndarray:
     """Packed (n, 2^n/64) array enumerating {0,1}^n (n >= 6)."""
-    assert n >= 6
+    if n < 6:
+        raise ValueError("all_inputs_packed needs n >= 6")
     N = 1 << n
     idx = np.arange(N, dtype=np.uint64)
     rows = []
@@ -22,7 +53,8 @@ def all_inputs_packed(n: int) -> np.ndarray:
 
 def exact_prob(C: Circuit, D: Product | None = None, max_n: int = 26) -> float:
     n = C.n
-    assert n <= max_n, "enumeration too large"
+    if n > max_n:
+        raise ValueError("enumeration too large")
     if n < 6:
         X = ((np.arange(1 << n)[:, None] >> np.arange(n)) & 1).astype(bool)
         y = C.eval_bits(X)
@@ -46,7 +78,8 @@ def exact_prob_rational(C: Circuit, D: Product | None = None, max_n: int = 22):
     from fractions import Fraction
 
     n = C.n
-    assert n <= max_n, "enumeration too large"
+    if n > max_n:
+        raise ValueError("enumeration too large")
     X = ((np.arange(1 << n)[:, None] >> np.arange(n)) & 1).astype(bool)
     y = C.eval_bits(X)
     if D is None or np.all(D.q == 0.5):

@@ -4,6 +4,7 @@ enumeration of the tilted measure), coverage of the normaliser interval and of
 the estimator TG on small instances with exactly known p."""
 
 import math
+from fractions import Fraction
 
 import numpy as np
 import pytest
@@ -288,9 +289,9 @@ def test_recognition_round_trip():
 @pytest.mark.parametrize("T", [3.0, 3 + 5e-10, 3 - 5e-10, 3 + 1e-13, 3 - 1e-13, 2.5, 3.5 - 1e-15, 0.0, -2.0,
                                7.0, 7 + 1e-6, 1e6])
 def test_recognised_threshold_matches_evaluator(T):
-    """Regression: the integer threshold is read off the evaluator, so thresholds
-    just above or below an integer (inside or outside the evaluator's rounding
-    tolerance) are recognised exactly; the recognised LTC computes C."""
+    """Regression: thresholds just above or below an integer are recognised
+    exactly (ceil of the exact binary value, clipped to [0, m+1]), and the
+    recognised LTC computes C."""
     n = 8
     C = Circuit(n)
     kids = [C.AND(i, i + 1) for i in range(n - 1)]
@@ -298,6 +299,7 @@ def test_recognised_threshold_matches_evaluator(T):
     X = all_points(n)
     ltc = ltc_from_circuit(C)
     assert ltc is not None
+    assert ltc.t == min(max(math.ceil(Fraction(T)), 0), len(kids) + 1)
     assert np.array_equal(ltc.C(X), C.eval_bits(X.astype(bool))), (T, ltc.t)
     q = np.full(n, 0.5)
     p = float(C.eval_bits(X.astype(bool)).mean())
@@ -308,7 +310,7 @@ def test_recognised_threshold_matches_evaluator(T):
 
 def test_recognised_threshold_with_side_condition_and_large_fanin():
     """THR gate under an AND (side condition H), threshold k + 5e-10, and a
-    fan-in above the full-enumeration limit (bisection path)."""
+    large fan-in."""
     n = 10
     C = Circuit(n)
     kids = [C.OR(C.AND(i, (i + 1) % n), C.NOT((i + 3) % n)) for i in range(n)]

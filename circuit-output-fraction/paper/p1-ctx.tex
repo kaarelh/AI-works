@@ -9,12 +9,14 @@ the clauses of a CNF is a dtree). Like the width of a dtree, it is a parameter o
 how the $\wedge$'s are bracketed, not of the function.
 
 \begin{definition}[context width]
-Let $N$ be the NNF of $C$ (\cref{sec:setting}) built gate by gate: each $\wedge$- or
-$\vee$-gate of $C$ gives one gate per polarity with the same children (by De
-Morgan), $\oplus$- and threshold gates are expanded as described below, nested
-gates are not merged, and the children of a gate form a set ($h\wedge h=h$). $|N|$
-is its number of wires. For an $\wedge$-gate
-$g$ let $S_g=\bigcup_{a\ne b\text{ children of }g}\sv(a)\cap\sv(b)$ be its overlap.
+Let $N$ be the NNF of $C$ (\cref{sec:setting}) built gate by gate from the output:
+an $\wedge$- or $\vee$-gate of $C$ gives one gate for each polarity in which it occurs
+below the output, with the same children (by De Morgan), $\oplus$- and threshold
+gates are expanded as described below, nested gates are not merged, distinct gates
+of $C$ stay distinct even when they have the same children (identifying them can
+raise $\mathrm{cw}$), and the children of a gate form a set ($h\wedge h=h$). So $N$
+consists of the gates reachable from its root; $|N|$ is its number of wires. For an
+$\wedge$-gate $g$ let $S_g=\bigcup_{a\ne b\text{ children of }g}\sv(a)\cap\sv(b)$ be its overlap.
 For a gate $h$ let $\mathrm{Up}(h)$ be the set of $\wedge$-gates from which $h$ is
 reachable (including $h$), and define the \emph{context}
 $\kappa(h)=\sv(h)\cap\bigcup_{g\in\mathrm{Up}(h)}S_g$. The context width is
@@ -24,19 +26,20 @@ $\mathrm{cw}(N)=\max_h|\kappa(h)|$.
 For $\{\wedge,\vee,\neg\}$-circuits $|N|\le2|C|$ (one copy of each gate per
 polarity). A fan-in-$k$ $\oplus$-gate becomes a chain with $12(k-1)$ wires for both
 polarities, so $|N|\le12|C|$ when $\oplus$-gates are present, and a threshold gate of
-fan-in $k$ with integer weights $w_i$ becomes a sequential counter with $O(kW)$ wires,
-$W=\sum_i|w_i|$ (a negative weight acts on the complemented input,
-$w_ih=|w_i|\neg h-|w_i|$); other threshold gates are covered only as frontier gates
-(see below). Merging an $\vee$-gate into an $\vee$-parent does not increase
-$\mathrm{cw}$ ($\vee$-gates have no overlap, and the sets $\mathrm{Up}(h)$ do not
-change), but merging $\wedge$-gates can: a CNF with clauses on the $n-w+1$ sliding
-windows of width $w$ of its variable order has $\mathrm{cw}=w$ as a left-deep
-$\wedge$-chain in window order, and $\mathrm{cw}=n-2$ (for $2\le w\le n-2$) as a single
-$\wedge$-gate over its clauses. We write $\mathrm{cw}^*(C)$ for the minimum of
-$\mathrm{cw}$ over the NNFs obtained from $N$ by merging $\wedge$-gates of fan-out $1$
-into their $\wedge$-parents and replacing $\wedge$-gates by binary trees of
-$\wedge$-gates over the same children (which at most doubles $|N|$); any bracketing an
-algorithm chooses, e.g.\ that of \cref{lem:pathcw}, bounds it.
+fan-in $k$ whose weights $w_i$, scaled to integers, have total $W=\sum_i|w_i|$ becomes
+a sequential counter with $O(kW)$ wires (a negative weight acts on the complemented
+input, $w_ih=|w_i|\neg h-|w_i|$); threshold gates with large $W$ are covered only as
+frontier gates (see below). Merging an $\vee$-gate into an $\vee$-parent does not
+increase $\mathrm{cw}$ ($\vee$-gates have no overlap, and the sets $\mathrm{Up}(h)$ do
+not change), but merging $\wedge$-gates can: for $2\le w\le n-2$, a CNF with clauses on
+the $n-w+1$ sliding windows of width $w$ of its variable order has $\mathrm{cw}=w$ as a
+left-deep $\wedge$-chain in window order (for every $w$, $\mathrm{cw}\le w$), and
+$\mathrm{cw}=n-2$ as a single $\wedge$-gate over its clauses. We write
+$\mathrm{cw}^*(C)$ for the minimum of $\mathrm{cw}$ over the NNFs obtained from $N$ by
+merging $\wedge$-gates of fan-out $1$ into their $\wedge$-parents and replacing
+$\wedge$-gates by binary trees of $\wedge$-gates over the same children (which at most
+doubles $|N|$); any bracketing an algorithm chooses, e.g.\ that of \cref{lem:pathcw},
+bounds it.
 
 \begin{theorem}[context-width compilation]\label{thm:cw}
 Let $N$ be an NNF of $C$ as above and $\mathrm{cw}=\mathrm{cw}(N)$. Then $C$ is
@@ -128,7 +131,8 @@ The same construction works with a \emph{frontier} of gates that are compiled
 otherwise: gates of small support by tabulation (as the implementation does), and
 gates whose cone is a circuit of treewidth $k$ into d-SDNNFs of size $2^{O(k)}$ times
 that of the cone \cite{acms2020}.
-Context width is then computed with frontier gates (one per polarity) as leaves; a
+Context width is then computed with frontier gates (one per polarity in which they
+occur) as leaves; a
 frontier gate $f$ compiled to a DNNF $D_f$ gives the nodes $N[f,\sigma]=D_f|_\sigma$,
 so the size becomes $\sum_f2^{|\kappa(f)|}|D_f|$ plus the bound of \cref{thm:cw} for
 the remaining gates, and the result is a d-DNNF if, in addition to the hypothesis of
@@ -176,14 +180,19 @@ $r(1-U_j)-(1-\hat q_j)=(r-1)(1-U_j-\hat q_j)\ge0$ when $U_j\le\frac12$.
 
 Let $g$ be a module with submodules $g_1,\dots,g_k$ as above, let
 $q_j=D(g_j)\in[L_j,U_j]\subseteq[0,1]$, and let $Q$ be $R_g$ or $\neg R_g$, according to
-whether $D(g)$ or $D(\neg g)$ is wanted. Take $\hat q_j=\sqrt{L_jU_j}$ and
-$\xi_j=\frac12\log(U_j/L_j)$ if $U_j\le\frac12$ or $Q$ is monotone in $y_j$;
-symmetrically with $1-q_j$ if $L_j\ge\frac12$ or $Q$ is antitone in $y_j$ (if both
-rules apply, the one with the smaller $\xi_j$); otherwise $\hat q_j=\sqrt{L_jU_j}$ and
-the least $\xi_j$ for which both conditions of \cref{lem:quotient} hold for every
-$q_j\in[L_j,U_j]$, namely $\xi_j=\max\{\frac12\log\frac{U_j}{L_j},
-\log\frac{1-L_j}{1-\hat q_j},\log\frac{1-\hat q_j}{1-U_j}\}$ (if a denominator vanishes,
-$\xi_j=\infty$ and the bound below is $[0,1]$). By \cref{lem:quotient}, an interval
+whether $D(g)$ or $D(\neg g)$ is wanted. For any $\hat q_j\in[0,1]$, the least $\xi_j$
+for which the conditions of \cref{lem:quotient} hold for every $q_j\in[L_j,U_j]$ is the
+largest of $\log\frac{U_j}{\hat q_j}$, $\log\frac{\hat q_j}{L_j}$ (omitted if $Q$ is
+antitone in $y_j$), $\log\frac{1-L_j}{1-\hat q_j}$ and $\log\frac{1-\hat q_j}{1-U_j}$
+(omitted if $Q$ is monotone in $y_j$), reading $\log\frac00$ as $0$; we use it,
+rounded upward, for the $\hat q_j$ actually computed, and if it is infinite the bound
+below is $[0,1]$. If $L_j=U_j$, take $\hat q_j=L_j$, so that $\xi_j=0$. Otherwise three
+rules choose $\hat q_j$: $\sqrt{L_jU_j}$ if $U_j\le\frac12$ or $Q$ is monotone in
+$y_j$, for which $\xi_j=\frac12\log(U_j/L_j)$ by \cref{lem:quotient}; symmetrically
+$1-\sqrt{(1-L_j)(1-U_j)}$ if $L_j\ge\frac12$ or $Q$ is antitone in $y_j$ (if both rules
+apply, the one with the smaller $\xi_j$); otherwise $\sqrt{L_jU_j}$, for which
+$\xi_j=\max\{\frac12\log\frac{U_j}{L_j},\log\frac{1-L_j}{1-\hat q_j},\log\frac{1-\hat
+q_j}{1-U_j}\}$ (all up to the rounding of $\hat q_j$). By \cref{lem:quotient}, an interval
 $[L_F,U_F]$ for $\Pr[Q=1]$ under $\bigotimes_j\mathrm{Bern}(\hat q_j)$ and $D$ on $x'$,
 from any sound method (exact for small quotients, the threshold dynamic program, DFSB,
 Monte Carlo), gives
@@ -194,13 +203,21 @@ $M$ quotient estimates at confidence $\delta/M$ gives an interval for $p$ that i
 valid with probability $1-\delta$ (union bound; each estimate is valid conditionally
 on the earlier ones).
 
-Now let each module estimate the polarity its parent's rule uses: the one matching a
-monotone or antitone input, otherwise the rarer one. Under the first two rules,
-$2\xi_j$ is then at most the log-ratio $\rho_j$ of the interval returned for $g_j$;
-under the third, that interval contains $\frac12$ and $2\xi_j\le(1+O(\rho_j))\rho_j$.
-So the log-ratio $\log(U/L)$ of the final interval is at most the sum $S$ of the
-log-ratios of all quotient estimates when only the first two rules are used, and at most
-$e^{O(dS)}S$ in general, for $dS$ below a constant, $d$ the depth of the module tree.
-Completeness thus needs every quotient to be estimated to small relative error on
-the polarity its parent uses. Thresholds, majorities and other tractable functions
-of independent sub-circuits are the typical case.
+Which polarity of a submodule is rare is not known before it is estimated, so every
+module $g$ below the output is estimated in both polarities, with $Q=R_g$ and with
+$Q=\neg R_g$ (two of the $M$ estimates, from the same submodule intervals), and for
+each input the parent uses whichever of the two intervals for $q_j$, or their
+intersection, gives the smallest $\xi_j$. For completeness, call a polarity
+\emph{used}: the positive one of the output and, for a module used with quotient $Q$
+and each $j$, the positive (negative) polarity of $g_j$ if $Q$ is monotone (antitone)
+in $y_j$, and otherwise the rarer one, of probability at most $\frac12$. Let $\rho_j$ be
+the log-ratio of the interval for $g_j$ in its used polarity. If $Q$ is monotone or
+antitone in $y_j$, or that interval lies in $[0,\frac12]$, the first two rules give
+$2\xi_j\le\rho_j$; otherwise that interval contains $\frac12$ and the rules give
+$2\xi_j\le(1+O(\rho_j))\rho_j$. So the log-ratio $\log(U/L)$ of the final interval is
+at most the sum $S$ of the log-ratios of the quotient estimates in used polarities
+when the third rule is never needed, and at most $e^{O(dS)}S$ in general, for $dS$
+below a constant, $d$ the depth of the module tree. Completeness thus needs only the
+quotient estimates in used polarities to have small relative error. Thresholds,
+majorities and other tractable functions of independent sub-circuits are the typical
+case.

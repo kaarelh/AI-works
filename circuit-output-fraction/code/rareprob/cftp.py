@@ -29,16 +29,18 @@ import math
 import numpy as np
 
 from .dist import Product
-from .janson import _NORMAL2, exp_down, exp_up, is_unate
+from .janson import _NORMAL2, check_clauses, exp_down, exp_up
 from .stats import Estimate, kl_interval
 
 
 class UnateSystem:
     def __init__(self, clauses, D: Product):
-        assert is_unate(clauses)
+        # explicit check (an assert would vanish under python -O): the Harris
+        # bound and the anti-monotone sampler need a unate CNF
+        check_clauses(clauses, D.n)
         self.n = D.n
         # a repeated literal is one condition: B_c = {y_S = 1} with S the SET of variables of c
-        self.clauses = [sorted({(i, b) for i, b in c}) for c in clauses]
+        self.clauses = [sorted({(int(i), int(b)) for i, b in c}) for c in clauses]
         bad = {}
         for c in self.clauses:
             for i, b in c:
@@ -86,24 +88,6 @@ class UnateSystem:
         # 2^-36 (|cls| + 2) bounds the rounding error of s; 0 below the normal range
         return exp_down(s, 2.0 ** -36 * (len(cls) + 2))
 
-    def neighbour_table(self, active: list[int]):
-        """nbr[v] (deg_max, k_max-1) indices into y extended with columns
-        n (always 1) and n+1 (always 0)."""
-        n = self.n
-        inc = [[] for _ in range(n)]
-        for c in active:
-            for v in self.vars[c]:
-                inc[v].append([u for u in self.vars[c] if u != v])
-        dmax = max(1, max(len(x) for x in inc))
-        kmax = max(1, max((len(o) for x in inc for o in x), default=1))
-        T = np.full((n, dmax, kmax), n, dtype=np.int64)  # pad with the always-1 column
-        for v in range(n):
-            for j, others in enumerate(inc[v]):
-                T[v, j, :len(others)] = others
-            for j in range(len(inc[v]), dmax):
-                T[v, j, 0] = n + 1  # absent clause: contains an always-0 entry, never fires
-        return T
-
     def violated(self, Y: np.ndarray, cls: list[int]) -> np.ndarray:
         """Any clause in cls violated (all y = 1) for each row of Y (B, n)."""
         out = np.zeros(Y.shape[0], dtype=bool)
@@ -113,55 +97,136 @@ class UnateSystem:
 
 
 def cftp_samples(sys_: UnateSystem, active: list[int], B: int, rng, T0: int | None = None,
-                 T_max: int = 1 << 16):
+                 T_max: int = 1 << 16, chunk: int = 1024):
     """B independent runs of bounding-chain CFTP for D(.|no active clause
-    violated). Returns (samples of the halted runs as y arrays, number failed)."""
+    violated). Returns (samples of the halted runs as (b, n) y arrays,
+    number failed).
+
+    Only the variables A of the active clauses form the chain: the target is
+    D(.|F) on A times the independent marginals elsewhere, so the other
+    variables are drawn directly with the chain's own update law
+    (y_v = [u < r_v]; r_v = 0 for a variable in no clause), and coalescence
+    is tested on A only. The horizon starts at T0 = min(4|A|, T_max) (at
+    least 1) and doubles while some run has not coalesced and T <= T_max.
+    The randomness of the update at each time is fixed for every run across
+    horizons, as CFTP requires; it is regenerated from per-block seeds in
+    time chunks of `chunk` steps for the runs still pending, so memory is
+    O(B (|A| + chunk)) instead of O(B T_max)."""
     n = sys_.n
-    nbr = sys_.neighbour_table(active)
+    A = sorted({v for c in active for v in sys_.vars[c]})
+    nA = len(A)
     r = sys_.r
-    T0 = T0 or 4 * n
-    # randomness for times -1, -2, ...: grows as T doubles
-    sites = rng.integers(0, n, size=(B, T0))
-    us = rng.random((B, T0))
-    T = T0
-    done = np.zeros(B, dtype=bool)
     result = np.zeros((B, n), dtype=bool)
-    while True:
-        idx = np.nonzero(~done)[0]
-        if idx.size == 0 or T > T_max:
-            break
-        L = np.zeros((idx.size, n + 2), dtype=bool)
-        U = np.ones((idx.size, n + 2), dtype=bool)
-        L[:, n] = True
-        U[:, n + 1] = False
-        rows = np.arange(idx.size)
-        for t in range(T - 1, -1, -1):  # time -(t+1) ... -1
-            v = sites[idx, t]
-            u = us[idx, t]
-            acc = u < r[v]
-            nb = nbr[v]  # (b, dmax, kmax)
-            okU = ~U[rows[:, None, None], nb].all(axis=2).any(axis=1)
-            okL = ~L[rows[:, None, None], nb].all(axis=2).any(axis=1)
-            L[rows, v] = acc & okU
-            U[rows, v] = acc & okL
-        coal = (L[:, :n] == U[:, :n]).all(axis=1)
-        result[idx[coal]] = L[coal, :n]
-        done[idx[coal]] = True
-        # double: prepend fresh randomness for times -(T+1) ... -2T
-        sites = np.concatenate([sites, rng.integers(0, n, size=(B, T))], axis=1)
-        us = np.concatenate([us, rng.random((B, T))], axis=1)
+    rest = np.setdiff1d(np.arange(n), np.array(A, dtype=np.int64))
+    if rest.size:
+        result[:, rest] = rng.random((B, rest.size)) < r[rest]
+    if nA == 0 or B == 0:
+        return result, 0
+    nbr = _local_neighbours(sys_, active, A)
+    rA = r[A]
+    A_arr = np.array(A, dtype=np.int64)
+    T = max(1, min(int(T0) if T0 else 4 * nA, T_max))
+    blocks: list[tuple[int, int, int, np.ndarray]] = []  # (start, length, seed, owners)
+    covered = 0
+    pending = np.arange(B)
+    while pending.size and T <= T_max:
+        if T > covered:  # fresh randomness for times -(covered+1) ... -T
+            blocks.append((covered, T - covered, int(rng.integers(0, 2**63)), pending.copy()))
+            covered = T
+        b = pending.size
+        L = np.zeros((b, nA + 2), dtype=bool)
+        U = np.ones((b, nA + 2), dtype=bool)
+        L[:, nA] = True
+        U[:, nA + 1] = False
+        rows = np.arange(b)
+        for start, length, seed, owners in reversed(blocks):
+            sel = np.searchsorted(owners, pending)  # pending is a subset of owners
+            nchunks = -(-length // chunk)
+            for ci in range(nchunks - 1, -1, -1):
+                w = min(chunk, length - ci * chunk)
+                g = np.random.Generator(np.random.PCG64(np.random.SeedSequence([seed, ci])))
+                sites = g.integers(0, nA, size=(owners.size, w))[sel]
+                us = g.random((owners.size, w))[sel]
+                for t in range(w - 1, -1, -1):  # time -(start + ci*chunk + t + 1), earliest first
+                    v = sites[:, t]
+                    acc = us[:, t] < rA[v]
+                    nb = nbr[v]  # (b, dmax, kmax)
+                    okU = ~U[rows[:, None, None], nb].all(axis=2).any(axis=1)
+                    okL = ~L[rows[:, None, None], nb].all(axis=2).any(axis=1)
+                    L[rows, v] = acc & okU
+                    U[rows, v] = acc & okL
+        coal = (L[:, :nA] == U[:, :nA]).all(axis=1)
+        result[np.ix_(pending[coal], A_arr)] = L[coal, :nA]
+        pending = pending[~coal]
         T *= 2
-    return result[done], int((~done).sum())
+    done = np.ones(B, dtype=bool)
+    done[pending] = False
+    return result[done], int(pending.size)
+
+
+def _local_neighbours(sys_: UnateSystem, active: list[int], A: list[int]) -> np.ndarray:
+    """nbr[j] (deg_max, k_max - 1): for the j-th variable of A, the other
+    variables (as indices into A) of each active clause containing it, padded
+    with column |A| (always 1); absent clauses contain column |A| + 1
+    (always 0), so they never fire."""
+    nA = len(A)
+    pos = {v: j for j, v in enumerate(A)}
+    inc: list[list[list[int]]] = [[] for _ in range(nA)]
+    for c in active:
+        vs = [pos[v] for v in sys_.vars[c]]
+        for j in vs:
+            inc[j].append([u for u in vs if u != j])
+    dmax = max(1, max(len(x) for x in inc))
+    kmax = max(1, max((len(o) for x in inc for o in x), default=1))
+    T = np.full((nA, dmax, kmax), nA, dtype=np.int64)
+    for j in range(nA):
+        for d, others in enumerate(inc[j]):
+            T[j, d, :len(others)] = others
+        for d in range(len(inc[j]), dmax):
+            T[j, d, 0] = nA + 1
+    return T
 
 
 def _reps_for(delta: float, fail: float = 0.25) -> int:
-    """Smallest odd R with Pr[Bin(R, fail) >= (R+1)/2] <= delta."""
-    R = 1
-    while True:
-        tail = sum(math.comb(R, j) * fail**j * (1 - fail) ** (R - j) for j in range((R + 1) // 2, R + 1))
-        if tail <= delta:
-            return R
-        R += 2
+    """Smallest odd R with Pr[Bin(R, fail) >= (R+1)/2] <= delta (0 < fail < 1/2).
+
+    The tail is evaluated in log space (no overflow for tiny delta) with a
+    margin of 1e-9 in the log for its rounding, and the search is a
+    bisection over odd R: the majority of an odd number of independent
+    trials that succeed with probability 1 - fail > 1/2 errs less often as R
+    grows. Its upper bracket R_H, the smallest odd R >= ln(1/delta) /
+    (2 (1/2 - fail)^2), is valid by Hoeffding's inequality,
+    Pr[Bin(R, fail) >= R/2] <= exp(-2 R (1/2 - fail)^2)."""
+    if not 0 < fail < 0.5:
+        raise ValueError("_reps_for needs 0 < fail < 1/2")
+    if not delta > 0:
+        raise ValueError("_reps_for needs delta > 0")
+    if delta >= fail:
+        return 1
+    lf, l1f, ld = math.log(fail), math.log1p(-fail), math.log(delta)
+
+    def ok(R: int) -> bool:
+        lg = math.lgamma(R + 1)
+        terms = [lg - math.lgamma(j + 1) - math.lgamma(R - j + 1) + j * lf + (R - j) * l1f
+                 for j in range((R + 1) // 2, R + 1)]
+        M = max(terms)
+        return M + math.log(math.fsum(math.exp(t - M) for t in terms)) + 1e-9 <= ld
+
+    hi = math.ceil(-ld / (2 * (0.5 - fail) ** 2))
+    hi += 1 - hi % 2  # odd, and valid by Hoeffding
+    lo = 1  # invalid: delta < fail = Pr[Bin(1, fail) >= 1]
+    while hi - lo > 2:  # invariant: lo invalid, hi valid, both odd
+        mid = (lo + hi) // 2
+        mid += 1 - mid % 2
+        if mid >= hi:
+            mid = hi - 2
+        if mid <= lo:
+            break
+        if ok(mid):
+            hi = mid
+        else:
+            lo = mid
+    return hi
 
 
 def _stat_interval(med: float, b: float, eps0: float, kap: float) -> tuple[float, float]:
@@ -268,7 +333,9 @@ def telescoping_estimate(clauses, D: Product, delta: float = 0.05, N: int = 2000
             active += st
         logs.append(math.fsum(terms))  # relative error below 2^-50
     # certified truncation per stage, pooling the R*N runs of that stage's sampler
-    th = np.array([kl_interval(fails[k] / (R * N), R * N, delta / (2 * K))[1] for k in range(K)])
+    # (the failure fraction is a quotient of integers: relative error below 2^-52)
+    th = np.array([kl_interval(fails[k] / (R * N), R * N, delta / (2 * K), rel_err=2.0 ** -52)[1]
+                   for k in range(K)])
     if np.any(th >= h):
         return no_verdict(evals, "truncation not certified below the Harris guarantee")
     g = h - th

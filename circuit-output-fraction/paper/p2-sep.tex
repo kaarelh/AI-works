@@ -1,10 +1,11 @@
 \subsection{How much stronger is the prover?}\label{sec:separations}
 
-\paragraph{A universal verifier.} Fix a consistent theory $T$ that proves every
-true $\Delta_0(\exp)$ sentence (an arithmetic sentence with exponentiation all of
-whose quantifiers are bounded), for instance any consistent extension of
-$I\Delta_0+\exp$, such as ZFC. A $V_T$-argument is a randomized program $M$, a time
-bound $t$ written in unary, a budget $\delta_M\le\delta$, and a $T$-proof of the
+\paragraph{A universal verifier.} Fix a consistent theory $T$ with a
+polynomial-time decidable set of axioms that proves every true $\Delta_0(\exp)$
+sentence (an arithmetic sentence with exponentiation all of whose quantifiers are
+bounded): for instance any such extension of $I\Delta_0+\exp$, or ZFC through its
+standard interpretation of arithmetic. A $V_T$-argument is a randomized program $M$,
+a time bound $t$ written in unary, a budget $\delta_M\le\delta$, and a $T$-proof of the
 $\Delta_0(\exp)$ sentence ``at most $\delta_M2^t$ strings $r\in\bits^t$ make $M$,
 run for $t$ steps on $(C,D)$ with coins $r$, fail to output an interval containing
 $\sum_xD(x)C(x)$''. $V_T$ checks the proof and runs $M$ for $t$ steps (outputting
@@ -146,10 +147,15 @@ only test given formulas for short refutations does not obviously find.
 $A=\{u:\exists y\,\varphi_{|u|}(u,y)\}$ and $B=\{u:\exists z\,\psi_{|u|}(u,z)\}$
 with polynomial-size formulas $\varphi_\ell,\psi_\ell$, such that
 $\varphi_\ell(u,y)\wedge\psi_\ell(u,z)$, with $u,y,z$ all variables, has
-$P$-refutations of polynomial size. Suppose $P$ is closed under restrictions and
-passes from a refutation of a formula to one of its Tseitin encoding with
-polynomial overhead (as $\mathrm{TC}^0$-Frege, Frege and extended Frege do, by
-deriving the equivalence of each gate variable with its subformula). For $u\in B$
+$P$-refutations of polynomial size, the formulas being in the language of $P$.
+Suppose $P$ is closed under restrictions and passes from a refutation of a formula
+to one of its Tseitin encoding with polynomial overhead (as $\mathrm{TC}^0$-Frege,
+Frege and extended Frege do, by deriving the equivalence of each gate variable with
+its subformula). Here the Tseitin encoding defines every gate: for
+$\mathrm{TC}^0$-Frege, a threshold gate by its threshold connective (\cref{sec:pcis});
+for Frege and extended Frege, the threshold connectives of a $\mathrm{TC}^0$-Frege
+formula are first replaced by polynomial-size $\mathrm{NC}^1$ formulas. The relaxation
+that leaves threshold gates unconstrained is not meant here. For $u\in B$
 with witness $z_0$, restricting such a refutation by $(u,z_0)$ (the true closed
 formula $\psi_\ell(u,z_0)$ has a short proof) shows that the formula
 $F_u=\varphi_{|u|}(u,\cdot)$, as a circuit, lies in $Z_P^m$ for a polynomial $m$; for
@@ -222,20 +228,21 @@ separation under the worst-case assumption ``factoring $\notin\BPP$'', with $V_T
 complete on both sides.
 
 \paragraph{Why not NP-hardness?} Suppose SAT reduces, by a randomized many-one
-reduction, to the gap problem ``$p\ge\gamma t$ versus $p\le t$'' on circuits $C$, with
-$\gamma\ge1+1/\poly(|C|)$ (smaller gaps do not matter: a tight interval decides the
-gap problem when $1+\eps<\gamma$, and an efficient procedure reaches such $\eps$ in
-polynomial time only if $1/(\gamma-1)$ is polynomial). If unsatisfiable formulas go to
-the small side and some MA system certifies $U<\gamma t$ there (for instance, is
-complete there with $1+\eps<\gamma$), then $\coNP\subseteq\AM$: Arthur samples the
-reduction (repeated in parallel), Merlin sends arguments, and Arthur accepts if most
-of them certify $U<\gamma t$; this is an $\mathsf{AMA}$ protocol, and
-$\mathsf{AMA}=\AM$ \cite{babai1985}. If unsatisfiable formulas go to the large side,
-the set lower bound protocol \cite{gs1986}, applied to the conjunction of
-$O(1/(\gamma-1))$ independent copies of the circuit (which raises the gap to at least
-$2$), already puts the complement of SAT in $\AM$. A reduction that maps unsatisfiable
-formulas to a middle band of $p$ and satisfiable ones outside it is handled by
-combining the two protocols. In each case $\PH$ collapses \cite{bhz1987}. So
+reduction, to the gap problem ``$p\ge t_1$ versus $p\le t_0$'' on circuits $C$, with
+$t_1\ge\gamma t_0$ and $\gamma\ge1+1/\poly(|C|)$, where $t_0=0$ is allowed (smaller
+gaps do not matter: a tight interval decides the gap problem when $1+\eps<\gamma$, and
+an efficient procedure reaches such $\eps$ in polynomial time only if $1/(\gamma-1)$ is
+polynomial). If unsatisfiable formulas go to the small side and some MA system
+certifies $U<t_1$ there (for instance, is complete there with $1+\eps<\gamma$), then
+$\coNP\subseteq\AM$: Arthur samples the reduction (repeated in parallel), Merlin sends
+arguments, and Arthur accepts if most of them certify $U<t_1$; this is an
+$\mathsf{AMA}$ protocol, and $\mathsf{AMA}=\AM$ \cite{babai1985}. If unsatisfiable
+formulas go to the large side, the set lower bound protocol \cite{gs1986}, applied to
+the conjunction of $O(1/(\gamma-1))$ independent copies of the circuit (which raises
+the gap to at least $2$), already puts the complement of SAT in $\AM$. A reduction
+that maps one side into a band of $p$ and the other outside it is handled by combining
+the two protocols, with Merlin naming the side of the band when the unsatisfiable
+formulas lie outside it. In each case $\PH$ collapses \cite{bhz1987}. So
 upper-bound and two-sided separations cannot be derived from $\NP$-hardness by
 randomized many-one reductions (adaptive reductions to the gap problem are not
 covered); here they come from structured assumptions, such as the hardness of
@@ -248,15 +255,16 @@ on all circuits exists iff $\mathrm{pr}\SBP\subseteq\mathrm{pr}\MA$, for the cla
 $\SBP$ of \cite{bgm2006}. If $V$ is such a system, with factor $c$, and a promise
 problem has a randomized polynomial-time machine that accepts with probability
 above $2^{-j}$ on yes-instances and below $2^{-j-1}$ on no-instances, the
-conjunction $C$ of $k\ge\log_2c$ runs with independent coins has $p(C)>2^{-kj}$,
-respectively $p(C)<2^{-kj}/c$, so accepting iff $V$ outputs $L\ge2^{-kj}/c$ is an
-$\MA$ protocol.
+conjunction $C$ of $k\ge\max(1,\lceil\log_2c\rceil)$ runs with independent coins
+has $p(C)>2^{-kj}$, respectively $p(C)<2^{-kj}/c$, so accepting iff $V$ outputs
+$L\ge2^{-kj}/c$ is an $\MA$ protocol.
 Conversely, ``$p(C)>2^{-j}$ versus $p(C)<2^{-j-1}$'' is in $\mathrm{pr}\SBP$; given
 an $\MA$ protocol for it, the argument consisting of $j=\lfloor\log_2(1/p)\rfloor+1$
 and Merlin's proof, with output $L=2^{-j-1}$ if Arthur accepts and $L=0$ otherwise,
 is sound and complete within the factor $4$. A constant factor improves to $1+\eps$
 by applying the system to the conjunction of $O(1/\eps)$ independent copies of $C$
-and taking the corresponding root of $L$. The inclusion fails relative to an oracle
+and taking the corresponding root of $L$, rounded down to a rational of polynomial bit
+length (still at most $p$, as $L\le p^k$ for $k$ copies). The inclusion fails relative to an oracle
 (one with $\SBP\not\subseteq\Sigma_2^p$ \cite{bgm2006}, while $\MA\subseteq\Sigma_2^p$
 relativizes). It holds if $\mathrm{pr}\AM=\mathrm{pr}\NP$, since
 $\mathrm{pr}\SBP\subseteq\mathrm{pr}\AM$ by the set lower bound protocol
