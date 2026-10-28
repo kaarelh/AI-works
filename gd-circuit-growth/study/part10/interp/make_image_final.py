@@ -603,14 +603,26 @@ def fig_pairs():
     picks = [k for k in [("v3", "qd_dev", 10000, 0), ("v3", "fashion_mnist", 10000, 0), ("v3", "mnist", 10000, 0)] if k in R and "ggbt_pair_class_gain" in R[k]["m"]]
     if not picks:
         return
-    fig, axs = plt.subplots(1, len(picks), figsize=(7.0, 2.6))
-    axs = np.atleast_1d(axs)
-    for ax, k in zip(axs, picks):
-        G2 = R[k]["m"]["ggbt_pair_class_gain"]; G = (G2 + G2.T) / G2.sum(); lab = LAB.get(k[1], [str(i) for i in range(10)])
-        im = ax.imshow(G, cmap="viridis"); ax.set_xticks(range(10)); ax.set_yticks(range(10))
-        ax.set_xticklabels([l[:9] for l in lab], rotation=90, fontsize=5); ax.set_yticklabels([l[:9] for l in lab], fontsize=5)
-        ax.set_title(f"{DSN[k[1]]} n = {k[2]}: ggbt pair gain by class pair\n(pairs: {100 * R[k]['j']['boosters']['ggbt']['gain']['pairs']['gain_frac']:.0f}% of ggbt's gain)", fontsize=6)
-        fig.colorbar(im, ax=ax, fraction=0.046, pad=0.02).ax.tick_params(labelsize=5)
+    fig, axs = plt.subplots(2, len(picks), figsize=(7.0, 4.9), squeeze=False)
+    for q, k in enumerate(picks):
+        M = R[k]["m"]; G2 = M["ggbt_pair_class_gain"]; G = (G2 + G2.T) / G2.sum(); lab = LAB.get(k[1], [str(i) for i in range(10)])
+        cnt = np.zeros((10, 10))
+        for a_, b_ in M["ggbt_pair_cls"]:
+            cnt[a_, b_] += 1; cnt[b_, a_] += 1 if a_ != b_ else 0
+        per = np.where(cnt >= 3, (G2 + G2.T) / np.maximum(cnt, 1) / (G2.sum() / len(M["ggbt_pair_cls"])), np.nan)
+        for row, (A, ttl, cm) in enumerate(((G, "share of the pairs' gain", "viridis"),
+                                            (per, "gain per drawn pair / mean pair\n(blank: < 3 pairs drawn)", "magma"))):
+            ax = axs[row, q]; im = ax.imshow(A, cmap=cm); ax.set_xticks(range(10)); ax.set_yticks(range(10))
+            ax.set_xticklabels([l[:9] for l in lab], rotation=90, fontsize=5); ax.set_yticklabels([l[:9] for l in lab], fontsize=5)
+            if row == 0:
+                ax.set_title(f"{DSN[k[1]]} n = {k[2]} (pairs: {100 * R[k]['j']['boosters']['ggbt']['gain']['pairs']['gain_frac']:.0f}% of ggbt's gain)\n{ttl}", fontsize=6)
+            else:
+                ax.set_title(ttl, fontsize=6)
+            for i in range(10):
+                for j in range(10):
+                    if row == 0 and cnt[i, j] > 0 and i < j:
+                        ax.text(j, i, int(cnt[i, j]), ha="center", va="center", fontsize=3.8, color="w")
+            fig.colorbar(im, ax=ax, fraction=0.046, pad=0.02).ax.tick_params(labelsize=5)
     fig.tight_layout(); save(fig, "fig_img_pairs.pdf")
 
 
