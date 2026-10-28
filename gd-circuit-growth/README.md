@@ -13,7 +13,7 @@ Notes by Claude, prompted by Kaarel Hänni. Research note, 23 October 2026; not 
 
 **Paper:** [`paper/gd-circuit-growth-paper.pdf`](paper/gd-circuit-growth-paper.pdf) (LaTeX sources in [`paper/`](paper/)) writes up Parts 1–5.
 
-**Working branch:** `claude/nifty-mccarthy-j0lw2a` holds the full working state. Two paths stay on it and are not published to `main`: `paper/test_fragment.tex`, a build helper, and `study/hybrid/orchestration/`, the job queues of Part 8.
+**Working branch:** `claude/nifty-mccarthy-j0lw2a` holds the full working state. Two paths stay on it and are not published to `main`: `paper/test_fragment.tex`, a build helper, and `study/hybrid/orchestration/`, the job queues of Part 8. The LaTeX build output in `paper_learner/` (`main.pdf`, `main.log`, `main.out`, `main.bbl`, `main.blg`) also stays on the working branch; `learner-paper.pdf` is the published copy.
 - The `study/models/scratch_*` folders are published, because they hold the calibration logs that the model write-ups cite.
 
 Raw network outputs live in a session scratch directory and are in neither branch. The scripts regenerate them.
@@ -27,6 +27,10 @@ Raw network outputs live in a session scratch directory and are in neither branc
 [Part 9](#part-9-sum-features-and-permutation-invariant-image-members-2627-october-2026) continues in the two directions where Part 8 lost. Features that are functions of signed sums of inputs remove the loss on symmetric targets: on a held-out suite written blind to the design, 10 of 12 targets need clearly less data than the best pre-registered network variant and none more; with two network variants added after the audits, 2 need more. With a pixel-permutation-invariant image member, the portfolio beats a strong MLP ensemble on two fresh QuickDraw sets at n ≥ 10000 (3 of 6 cells clearly better, none worse). But the image gain is carried by locality recovered from pixel correlations: an MLP given the same pooled sums matches it at n = 60000, so does a CPU-matched ensemble of wider MLPs, and a small CNN that sees the pixel layout, run on one set, is clearly better at n = 10000 (level at n = 1000).
 
 **Paper (Parts 6–9):** LaTeX sources, figure and table scripts in [`paper_discrete/`](paper_discrete/) (build `main.tex`). The compiled PDF is not committed yet.
+
+[Part 10](#part-10-the-best-learner-so-far-what-it-learns-and-a-paper-about-it-2728-october-2026) improves the portfolio under a new pre-registration, picks the best learner so far (v3) by a fixed rule, analyses what it learns, and writes it up. On fresh held-out data v3 cannot be told apart from v2 by the pre-registered verdict rules. On a toy suite drawn from the blind family it needs clearly less data than the best network variant on 10 of 12 targets and more on none (2.8× less, geometric mean), as v2 did. On two fresh QuickDraw sets it has 12.8% and 12.6% error at n = 60000: clearly better than a three-MLP ensemble at all six cells, but within 10% of a CPU-matched wider ensemble and of v2, which the rule calls ties. The analysis of the fitted models finds that on signed-sum targets DFG's search, not its significance test, sets its data cost, and that the image members recover the pixel grid from pixel correlations.
+
+**Paper (Part 10):** [`paper_learner/learner-paper.pdf`](paper_learner/learner-paper.pdf): what v3 is, how it compares with the baselines, and what it learns (LaTeX sources and generator scripts in [`paper_learner/`](paper_learner/); build `latexmk -pdf main.tex`).
 
 [Part 4](#part-4-does-compositional-structure-beyond-leap-matter-24-october-2026) tests whether compositional structure beyond leap complexity matters. [Part 5](#part-5-what-the-network-computes-while-it-learns-2425-october-2026) characterizes the sequence of functions a network computes while it learns, and gives models that reproduce it on held-out targets.
 
@@ -1038,6 +1042,30 @@ samples against the networks' 350) and images at large n.
 into the dictionary, which a union bound searches for a few dozen nats; gradient descent has to find the sum's
 direction from a weak degree-2 statistic. The image result is about representation more than about discreteness:
 locality recovered from data, which a gradient-trained network can use as well.
+
+## Part 10: the best learner so far, what it learns, and a paper about it (27–28 October 2026)
+
+Paper: [`paper_learner/learner-paper.pdf`](paper_learner/learner-paper.pdf). Protocol and recorded decisions: [`study/part10/PROTOCOL.md`](study/part10/PROTOCOL.md). Pre-registered rules applied: [`study/part10/RESULTS.md`](study/part10/RESULTS.md); every reference: [`study/part10/LEARNER_RESULTS.md`](study/part10/LEARNER_RESULTS.md). The learner: [`study/part10/hyb_portfolio3/`](study/part10/hyb_portfolio3/). Interpretability: [`study/part10/interp/`](study/part10/interp/) (`TOY_INTERP.md`, `IMAGE_INTERP.md`, `VERIFICATION.json`).
+
+**Question.** Build a better discrete learner in about two hours of design work; choose the best learner so far; find out what structure it learns; write a paper about it.
+
+**Setup** (Numerical):
+- *Pre-registration* (commit `dc70266c`, before any design work): held-out sets `dlheld7` (a fresh draw from the blind `dlheld6` family), `qd_c` and `qd_d` (10-class QuickDraw, permuted pixels); a development draw `dlfamdev`; the budgets; three builders on development data; an integration rule and a best-learner rule.
+- *Builders and integration.* The rule adopted DFG v1.3 (weighted sum blocks $t+a\tau$, a wider block search; mean log2 n* ratio −0.066 against v2 on the development suites) and the bar booster `cgbt` (LightGBM on pooled sums plus sums along short lines recovered from pixel correlations; −0.078 against v2 over 8 development cells, `qd_a` n = 60000 error 0.1082 at 1453 CPU s).
+- *v3* (`hyb_portfolio3`) = v2 with both, assembled, checked identical to its sources, and frozen (md5 `b045fafe`) before any held-out result of a Part 10 learner was read.
+
+**Answer** (Numerical):
+- *Best-learner rule.* v3 against v2: −0.125 on the held-out images (n ≥ 10000), −0.004 on `dlheld7`, so v3 is the subject of the paper.
+- *`dlheld7`.* Against the per-target best of three pre-registered network variants: mean log2 n* ratio −1.50 over the 11 targets both learn (s.e. about 0.24), 10 clearly better, 0 worse; a residue class mod 3 of 14 inputs is learned by no learner. On 5 of the 10 wins default boosting or logistic regression also beats the networks. Against v2: −0.004, no target moves.
+- *`qd_c`, `qd_d`.* 12.76% and 12.64% error at n = 60000 (v2 13.63% and 13.99%; the CPU-matched 1024-wide MLP ensemble 14.12% and 13.83%). Clearly better than the strong MLP ensemble at 6 of 6 cells and than the MLP given v2's pooled sums at both cells where it ran; ties with v2 at all six cells (lower at each) and with `mlp_xl`. A small CNN that sees the pixel layout has lower error at all three cells where both ran, clearly at one.
+- *Elsewhere.* On the development toy suites v3 is clearly better than the best network on 121 of 126 targets. On 24 of 26 tabular datasets v3 runs v1's code, so the tabular result is Part 8's.
+
+**What it learns** (Numerical, seed 0, independently verified; mechanism readings Heuristic):
+- DFG's model comes to hold the target's exact signed block on 49 of 54 signed-sum targets (median n = 256).
+- On the 25 functions of one signed sum, the test would admit the true block at n = 128 every time; the further data needed grows as the target's variance at Fourier degrees 1–2 shrinks (Spearman −0.86). The mod-3 targets have almost none there ($W_1+W_2\le0.0002$) and their block is never proposed, although at n = 16384 it would pass the test at 134–155× the threshold.
+- On QuickDraw and MNIST the 4-pixel pooling sets are patches of the true grid. At n = 10000 on `qd_dev`, 42% of the 5-pixel bars are exact lattice lines and 96% stay within one pixel of their axis. `cgbt` has the lowest out-of-fold error of all members in every analysed fit.
+
+**Reading** (Heuristic). v3 is a portfolio: on Boolean targets a test-gated, greedy relative of the low-degree algorithm whose cost is set by where its search looks, and on images boosting on a data-derived bank of local features. Part 10's additions help on development suites and give consistent but sub-threshold image gains on the held-out sets.
 
 ## Files
 
