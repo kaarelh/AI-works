@@ -99,6 +99,14 @@ errors on those cells, run for Part 10 (`hyb_portfolio2__{qd_dev,fashion_mnist}.
   of f7_00–f7_04, the MLP references' qd_c progress lines), never a result of v2 or of a Part 10 learner on dlheld7,
   qd_c or qd_d. v2's dlheld7 results and v3's toy side's (`toy__p10_sum-perm__dlheld7.json`) were committed unread.
 
+**Note (found by the image interpretability analyst, 28 Oct ~02:00).** v2's own dev cells on qd_dev and fashion_mnist
+(`p10/v2dev.sh`, 19:2x UTC) were run without forcing single-threaded BLAS, while the candidates' cells and every
+reference lane force it. BLAS threading changes summation order and can move kNN ties and booster early stopping: v2 at
+qd_dev n = 10000 seed 0 gives 0.1463 multi-threaded and 0.1467 single-threaded (an analysis refit; ggbt stopped at 166
+vs 123 rounds). The integration rule compared both image candidates against the same v2 numbers, so the choice between
+them (−0.078 vs −0.071) is unaffected, and both are far from the −0.05 qualification threshold. Every Part 10 held-out
+run (v3, v2 and the references) is single-threaded.
+
 **v3 = `hyb_portfolio3`** (`part10/hyb_portfolio3/`, assembled by `assemble_v3.py`, frozen 27 Oct 23:45 UTC):
 `learner.py` md5 **`b045fafe1e24418620bf8c503aa601c6`** (= p10_codes/learner.py with the DFG module path pointing at
 `hyb_portfolio3/dfg13.py`, the default name and a header), `dfg13.py` md5 `69cabe5c50345cb24079198ed52b562f`
