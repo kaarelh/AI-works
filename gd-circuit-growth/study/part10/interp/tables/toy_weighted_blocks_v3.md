@@ -31,5 +31,11 @@
 | designed | majpar | – | – | 512 | (x1+x2+x3+x4-3*x6x5) | other relevant input | 0.39 | 1 | 6 | 0.00 | no |
 | designed | mux | – | – | 256 | (x1+x2+x3+3*x4) | other relevant input | 0.23 | 1 | 5 | 0.00 | yes |
 | designed | thr10 | – | – | 512 | (x1-x2+x3+x6+x7+2*x10) | other relevant input | 0.85 | 2 | 9 | 0.03 | no |
+| dlheld3 | cnf3 | – | – | 256 | (-x4+x5+x6-3*AND(-x2,-x1)) | in a class | 1.00 | 2 | 6 | 0.0042 | no |
+| dlheld3 | dlist8 | – | – | 256 | (x18-x29+3*x1) x (x1-x2+x3-x4) | other relevant input | 0.52 | 4 | 8 | 0.03 | no |
+| dlheld3 | h3rf1 | – | – | 256 | (x2-x4+3*AND(-x6,x5)) | other relevant input | 0.28 | 3 | 8 | 0.04 | no |
+| dlheld2 | h2rf0 | – | – | 128 | (-x5+x7-2*x1) | other relevant input | 1.00 | 2 | 8 | 0.05 | no |
+| dlheld2 | h2rf1 | – | – | 512 | (-x2-x7+3*x6) | other relevant input | 0.21 | 1 | 6 | 0.00 | no |
+| dlheld2 | thr20 | – | – | 512 | (-x1+x2-x3+x7-x8-x9-x11-x12-x13-x15+x20+2*x6) | other relevant input | 0.41 | 4 | 11 | 0.03 | no |
 
 tau_where: tau's inputs lie in a true symmetry class, are other relevant inputs (a parity partner, a mux selector, a gate literal or the true inner term), or are irrelevant; cells_with_weighted: analysed n whose model has any weighted block (of cells).

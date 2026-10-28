@@ -411,7 +411,24 @@ def nonsum_table(rows, S3):
                   "the span of the model's features; n_span95: first n with span_r2 >= 0.95; n_chi / n_sum: number of character / "
                   "sum-block terms at n_max.")
     write_csv("toy_nonsum_v3.csv", out, list(out[0].keys()) if out else [])
-    return out
+    # per suite: carried by characters (chi_frac >= 0.9 at n_max), spanned (span_r2 >= 0.95), a block among the 3 leading terms
+    SS = []
+    for su in OTHER_SUITES:
+        R = [o for o in out if o["suite"] == su]
+        if not R:
+            continue
+        blk = [o["target"] for o in R if any(x.startswith(("(", "|", "chi[x")) and ("+" in x or "-x" in x) for x in o["lead"].split("; ")[:3])]
+        SS.append(dict(suite=su, targets=len(R), err_last_le_005=sum(o["err_last"] <= 0.005 for o in R),
+                       chi90=sum((o["chi_frac"] or 0) >= 0.9 for o in R), no_fourier=sum(o["chi_frac"] is None for o in R),
+                       span95=sum((o["span_r2"] or 0) >= 0.95 for o in R), block_lead=len(blk), block_targets=", ".join(blk) or "–",
+                       median_chi_frac=float(np.median([o["chi_frac"] for o in R if o["chi_frac"] is not None])) if any(o["chi_frac"] is not None for o in R) else None,
+                       with_class=", ".join(f"{o['target']} ({o['classes']}: {fmt_n(o['n_struct'])})" for o in R if o["classes"] != "–") or "–"))
+    write_md("toy_nonsum_by_suite.md", SS, ["suite", "targets", "err_last_le_005", "chi90", "no_fourier", "median_chi_frac", "span95", "block_lead", "block_targets", "with_class"],
+             head="### Non-sum suites, by suite (v3, seed 0, at each target's largest analysed n)",
+             note="err_last_le_005: test error <= 0.005 at n_max; chi90: targets whose model's characters carry >= 90% of the non-constant Fourier weight; "
+                  "no_fourier: more than 16 relevant inputs (no exact Fourier table); span95: span R^2 >= 0.95; block_lead: a sum block among the three "
+                  "leading terms; with_class: targets with a signed-symmetry class of size >= 3 (class sizes: n_struct).")
+    return out, SS
 
 
 
@@ -913,7 +930,7 @@ def main():
                            suites_v3=sorted(set(k[0] for k in S3)), suites_v2=sorted(set(k[0] for k in S2)),
                            nstar_v3_files=sorted(set(v[1] for v in N3.values())), nstar_v2_files=sorted(set(v[1] for v in N2.values()))))
     out["by_suite"], out["by_kind"] = recovery_tables(rows)
-    out["nonsum"] = nonsum_table(rows, S3)
+    out["nonsum"], out["nonsum_by_suite"] = nonsum_table(rows, S3)
     PW = load_power_w(); T = timing(rows, PW, P); out["timing"] = timing_summary(T)
     out["power_w"] = {f"{k[0]}/{k[1]}": dict(n_detect_w=v["n_detect_w"], n_detect_unit=v["n_detect_unit"], file=os.path.basename(v["_path"])) for k, v in PW.items()}
     out["identity"] = dict(v3=check_identity(S3, "v3"), v2=check_identity(S2, "v2"))
