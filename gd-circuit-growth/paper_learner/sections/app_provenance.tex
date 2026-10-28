@@ -49,7 +49,7 @@ The rules (\cref{sec:discipline}) were applied by \repo{study/part10/compare_par
 
 \subsection{Disclosures and notes}\label{sec:disc-provenance-disclosures}
 
-\paragraph{What was seen that should not have been, or might have been.} The protocol records three items.
+\paragraph{What was seen of held-out data.} The protocol and the builders' notes record three items.
 \begin{itemize}
 \item \emph{The \code{p10_hier} builder}, about 15 minutes after its freeze, printed the last 5 lines of the orchestrator's log of the baseline \code{mlp} on \code{qd_c} while finding out why its $n=60000$ cell was waiting for the shared lock. Those lines are the baseline MLP's \code{qd_c} test errors at $n=100$--3000. Nothing about a discrete learner on \code{qd_c} was shown, and the learner file was already frozen and read-only. \code{p10_hier} was not adopted.
 \item \emph{The \code{p10_sum} builder} recorded incidental exposures: a process listing that showed the command lines of reference jobs on \code{qd_c}, and a one-line function signature \texttt{make\_dl\_heldout7\_suite} printed at the end of a source range, with no body. Nothing about \code{dlheld7}'s targets was seen.
@@ -58,7 +58,7 @@ The rules (\cref{sec:discipline}) were applied by \repo{study/part10/compare_par
 
 \paragraph{BLAS threading.} The image analyst found at about 02:00 on 28 October that v2's own development cells on \code{qd_dev} and Fashion-MNIST had been run without forcing single-threaded BLAS, while the candidates' cells and every reference lane force it. Thread count changes summation order, which can move nearest-neighbour ties and booster early stopping: v2 at \code{qd_dev}, $n=10000$, seed 0 gives 0.1463 multi-threaded and 0.1467 in a single-threaded analysis refit (\code{ggbt} stopped at 166 and 123 rounds). The integration rule compared both image candidates with the same v2 numbers, so the choice between them ($-0.078$ against $-0.071$) is unaffected, and both are far from the $-0.05$ threshold. Every Part 10 held-out run, of v3, v2 and the references, is single-threaded. The note was added to the protocol at 02:03 (\texttt{a2b8470e}).
 
-\paragraph{Memory and job control.} Up to about ten jobs shared 4 cores and 16 GB. The builders ran at nice 0. Every reference and analysis process ran at nice $\ge5$, was resumable (per cell for the image evaluations, per target for the networks), and had a raised \texttt{oom\_score\_adj}, so that under memory pressure the kernel would kill it before an evaluation of a learner. Large fits ($n\ge30000$) took a shared lock. The out-of-memory kills were:
+\paragraph{Memory and job control.} Up to about ten jobs shared 4 cores and 16 GB. The builders ran at nice 0. Every reference and analysis process ran at nice $\ge5$, was resumable (per cell for the image evaluations, per target for the networks), and had a raised \texttt{oom\_score\_adj}, so that under memory pressure the kernel would kill it before a builder's process or v3's evaluation. Large fits ($n\ge30000$) took a shared lock. The out-of-memory kills were:
 \begin{itemize}
 \item the baseline \code{mlp} on \code{qd_c}, at about 20:00--20:15 during the builders' evaluations, after its $n\le10000$ cells had finished;
 \item \code{p10_hier}'s \code{qd_dev} evaluation process (about 20:29, above);
@@ -115,7 +115,7 @@ The corrections of readings are these:
 \begin{itemize}
 \item \texttt{cd study/part10 \&\& python3 compare\_part10.py} (the rules; writes \texttt{RESULTS.md});
 \item \texttt{python3 compare\_learner.py} (every comparison; writes \texttt{LEARNER\_RESULTS.\{md,json\}});
-\item \texttt{cd ../../paper\_learner \&\& python3 make\_tables.py \&\& python3 make\_figures.py \&\& python3 make\_interp.py};
+\item \texttt{cd ../../paper\_learner}, then \texttt{python3 make\_tables.py}, \texttt{python3 make\_figures.py} and \texttt{python3 make\_interp.py};
 \item \texttt{latexmk -pdf main.tex}.
 \end{itemize}
 The result files are:
