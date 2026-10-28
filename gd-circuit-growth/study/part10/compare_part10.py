@@ -114,7 +114,10 @@ def toy_held():
         fns = sorted(set.intersection(*[set(v) for v in NR.values()]))
         NR["nets_best"] = {fn: min(NR[k][fn] for k in NETS7 if k in NR) for fn in fns}
     cols = [(V3 + "-perm", "v3"), (V2 + "-perm", "v2"), ("lin", "lin"), ("hgb", "hgb")]
-    N = {c: C9.nst(c, "dlheld7") for c, _ in cols}; have = [(c, h) for c, h in cols if N[c]]
+    N = {c: C9.nst(c, "dlheld7") for c, _ in cols}
+    if not N[V3 + "-perm"]:                                  # v3 on toy inputs = p10_sum (hyb_portfolio3/ASSEMBLY.md)
+        N[V3 + "-perm"] = C9.nst("p10_sum-perm", "dlheld7")
+    have = [(c, h) for c, h in cols if N[c]]
     L = ["## Held-out toy suite `dlheld7` (d = 30; n*; inputs permuted for v2 / v3)", ""]
     if not NR or not have:
         return L + ["(results not complete)", ""], {}

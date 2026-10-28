@@ -117,3 +117,9 @@ on a qd_dev fit, ≡ v2 on optdigits, ≡ p10_sum on kr_vs_kp — all prediction
 and both image candidates leave every non-image path bit-identical to v2), so v3's held-out toy evaluation starts now as
 `p10_sum` on `dlheld7`; its results are not read before v3 is frozen, and v3 ≡ p10_sum on toy inputs is checked at
 assembly.
+
+**Best-learner rule — v3 is the best learner** (28 Oct, 04:25 UTC; `compare_part10.py`, RESULTS.md), after every
+held-out cell of v3 and v2 was in: images, mean log2(err v3 / err v2) over the qd_c / qd_d cells with n >= 10000 (4
+cells: seed mean at 10000, seed 0 at 60000) **−0.125** (< 0); toy, mean log2 n* ratio v3 / v2 on dlheld7 **−0.004**
+(<= +0.1). The paper is about v3. (v3's toy results are p10_sum's, `toy__p10_sum-perm__<suite>.json`; v3 = p10_sum on
+toy inputs, ASSEMBLY.md.)
