@@ -37,26 +37,28 @@ Adopted image variant: **p10_codes-dev** (the qualifying candidate with the lowe
 | f7_07 | 174 | 174 | never | 1373 | 445 | 443 | 415 | 415 |
 | f7_08 | 634 | 634 | never | never | 5843 | 3239 | 2932 | 2932 |
 | f7_09 | 215 | 215 | never | never | 1000 | 883 | 928 | 883 |
+| f7_10 | 82 | 82 | 87 | 114 | 210 | 120 | 119 | 119 |
+| f7_11 | 55 | 55 | 119 | 63 | 114 | 144 | 141 | 114 |
 
 | learner | reference | targets | mean log2 n* ratio | clearly better | clearly worse | learner never |
 |---|---|---|---|---|---|---|
 | v3 | nets_wd | 12 | -1.83 | 11 | 0 | 0 |
 | v3 | nets_cewd0.3 | 12 | -1.59 | 10 | 0 | 0 |
-| v3 | nets_cewd1.0 | 10 | -1.72 | 8 | 0 | 0 |
-| v3 | nets_best | 10 | -1.66 | 8 | 0 | 0 |
+| v3 | nets_cewd1.0 | 12 | -1.58 | 10 | 0 | 0 |
+| v3 | nets_best | 12 | -1.50 | 10 | 0 | 0 |
 | v3 | v2 | 12 | -0.00 | 0 | 0 | 0 |
 | v2 | nets_wd | 12 | -1.83 | 11 | 0 | 0 |
 | v2 | nets_cewd0.3 | 12 | -1.59 | 10 | 0 | 0 |
-| v2 | nets_cewd1.0 | 10 | -1.71 | 8 | 0 | 0 |
-| v2 | nets_best | 10 | -1.66 | 8 | 0 | 0 |
+| v2 | nets_cewd1.0 | 12 | -1.57 | 10 | 0 | 0 |
+| v2 | nets_best | 12 | -1.50 | 10 | 0 | 0 |
 | lin | nets_wd | 12 | -0.46 | 2 | 7 | 7 |
 | lin | nets_cewd0.3 | 12 | -0.21 | 2 | 7 | 7 |
-| lin | nets_cewd1.0 | 10 | -0.04 | 0 | 7 | 7 |
-| lin | nets_best | 10 | +0.07 | 0 | 7 | 7 |
+| lin | nets_cewd1.0 | 12 | -0.19 | 1 | 7 | 7 |
+| lin | nets_best | 12 | -0.06 | 1 | 7 | 7 |
 | hgb | nets_wd | 12 | +0.01 | 5 | 6 | 2 |
 | hgb | nets_cewd0.3 | 12 | +0.18 | 4 | 6 | 2 |
-| hgb | nets_cewd1.0 | 10 | +0.43 | 3 | 6 | 2 |
-| hgb | nets_best | 10 | +0.49 | 3 | 6 | 2 |
+| hgb | nets_cewd1.0 | 12 | +0.20 | 4 | 6 | 2 |
+| hgb | nets_best | 12 | +0.28 | 4 | 6 | 2 |
 
 ## Held-out images `qd_c`, `qd_d` (QuickDraw, pixel-permuted): test error (seed mean; seed 0 at n = 60000)
 
@@ -70,14 +72,17 @@ Adopted image variant: **p10_codes-dev** (the qualifying candidate with the lowe
 | hyb_portfolio3 | mlp_wide | n >= 10000 | 4 | 3 | 1 | 0 | -0.24 |
 | hyb_portfolio3 | mlp_xl | all | 2 | 0 | 2 | 0 | -0.14 |
 | hyb_portfolio3 | mlp_xl | n >= 10000 | 2 | 0 | 2 | 0 | -0.14 |
-| hyb_portfolio3 | mlp_best | all | 2 | 2 | 0 | 0 | -0.34 |
-| hyb_portfolio3 | mlp_best | n <= 3000 | 1 | 1 | 0 | 0 | -0.31 |
-| hyb_portfolio3 | mlp_best | n >= 10000 | 1 | 1 | 0 | 0 | -0.37 |
-| hyb_portfolio3 | mlp_best+ | all | 2 | 2 | 0 | 0 | -0.32 |
-| hyb_portfolio3 | mlp_best+ | n <= 3000 | 1 | 1 | 0 | 0 | -0.31 |
-| hyb_portfolio3 | mlp_best+ | n >= 10000 | 1 | 1 | 0 | 0 | -0.34 |
+| hyb_portfolio3 | mlp_best | all | 6 | 6 | 0 | 0 | -0.31 |
+| hyb_portfolio3 | mlp_best | n <= 3000 | 2 | 2 | 0 | 0 | -0.29 |
+| hyb_portfolio3 | mlp_best | n >= 10000 | 4 | 4 | 0 | 0 | -0.32 |
+| hyb_portfolio3 | mlp_best+ | all | 6 | 4 | 2 | 0 | -0.25 |
+| hyb_portfolio3 | mlp_best+ | n <= 3000 | 2 | 2 | 0 | 0 | -0.29 |
+| hyb_portfolio3 | mlp_best+ | n >= 10000 | 4 | 2 | 2 | 0 | -0.22 |
 | hyb_portfolio3 | mlp_pool | all | 2 | 2 | 0 | 0 | -0.22 |
 | hyb_portfolio3 | mlp_pool | n >= 10000 | 2 | 2 | 0 | 0 | -0.22 |
+| hyb_portfolio3 | cnn | all | 2 | 0 | 2 | 0 | +0.12 |
+| hyb_portfolio3 | cnn | n <= 3000 | 1 | 0 | 1 | 0 | +0.13 |
+| hyb_portfolio3 | cnn | n >= 10000 | 1 | 0 | 1 | 0 | +0.12 |
 | hyb_portfolio3 | v2 | all | 6 | 0 | 6 | 0 | -0.10 |
 | hyb_portfolio3 | v2 | n <= 3000 | 2 | 0 | 2 | 0 | -0.04 |
 | hyb_portfolio3 | v2 | n >= 10000 | 4 | 0 | 4 | 0 | -0.13 |
@@ -89,34 +94,62 @@ Adopted image variant: **p10_codes-dev** (the qualifying candidate with the lowe
 | hyb_portfolio2 | mlp_wide | n >= 10000 | 4 | 2 | 2 | 0 | -0.11 |
 | hyb_portfolio2 | mlp_xl | all | 2 | 0 | 2 | 0 | -0.02 |
 | hyb_portfolio2 | mlp_xl | n >= 10000 | 2 | 0 | 2 | 0 | -0.02 |
-| hyb_portfolio2 | mlp_best | all | 2 | 2 | 0 | 0 | -0.25 |
-| hyb_portfolio2 | mlp_best | n <= 3000 | 1 | 1 | 0 | 0 | -0.26 |
-| hyb_portfolio2 | mlp_best | n >= 10000 | 1 | 1 | 0 | 0 | -0.24 |
-| hyb_portfolio2 | mlp_best+ | all | 2 | 2 | 0 | 0 | -0.23 |
-| hyb_portfolio2 | mlp_best+ | n <= 3000 | 1 | 1 | 0 | 0 | -0.26 |
-| hyb_portfolio2 | mlp_best+ | n >= 10000 | 1 | 1 | 0 | 0 | -0.20 |
+| hyb_portfolio2 | mlp_best | all | 6 | 5 | 1 | 0 | -0.22 |
+| hyb_portfolio2 | mlp_best | n <= 3000 | 2 | 2 | 0 | 0 | -0.25 |
+| hyb_portfolio2 | mlp_best | n >= 10000 | 4 | 3 | 1 | 0 | -0.20 |
+| hyb_portfolio2 | mlp_best+ | all | 6 | 4 | 2 | 0 | -0.15 |
+| hyb_portfolio2 | mlp_best+ | n <= 3000 | 2 | 2 | 0 | 0 | -0.25 |
+| hyb_portfolio2 | mlp_best+ | n >= 10000 | 4 | 2 | 2 | 0 | -0.10 |
 | hyb_portfolio2 | mlp_pool | all | 2 | 0 | 2 | 0 | -0.11 |
 | hyb_portfolio2 | mlp_pool | n >= 10000 | 2 | 0 | 2 | 0 | -0.11 |
-| hyb_portfolio | mlp_strong | all | 3 | 0 | 3 | 0 | -0.02 |
-| hyb_portfolio | mlp_strong | n <= 3000 | 1 | 0 | 1 | 0 | -0.07 |
-| hyb_portfolio | mlp_strong | n >= 10000 | 2 | 0 | 2 | 0 | +0.01 |
-| hyb_portfolio | mlp_wide | all | 3 | 0 | 2 | 1 | +0.03 |
-| hyb_portfolio | mlp_wide | n <= 3000 | 1 | 0 | 1 | 0 | -0.06 |
-| hyb_portfolio | mlp_wide | n >= 10000 | 2 | 0 | 1 | 1 | +0.07 |
-| hyb_portfolio | mlp_xl | all | 1 | 0 | 0 | 1 | +0.21 |
-| hyb_portfolio | mlp_xl | n >= 10000 | 1 | 0 | 0 | 1 | +0.21 |
+| hyb_portfolio2 | cnn | all | 2 | 0 | 0 | 2 | +0.22 |
+| hyb_portfolio2 | cnn | n <= 3000 | 1 | 0 | 0 | 1 | +0.17 |
+| hyb_portfolio2 | cnn | n >= 10000 | 1 | 0 | 0 | 1 | +0.26 |
+| hyb_portfolio | mlp_strong | all | 6 | 0 | 6 | 0 | -0.03 |
+| hyb_portfolio | mlp_strong | n <= 3000 | 2 | 0 | 2 | 0 | -0.06 |
+| hyb_portfolio | mlp_strong | n >= 10000 | 4 | 0 | 4 | 0 | -0.02 |
+| hyb_portfolio | mlp_wide | all | 6 | 0 | 4 | 2 | +0.03 |
+| hyb_portfolio | mlp_wide | n <= 3000 | 2 | 0 | 2 | 0 | -0.06 |
+| hyb_portfolio | mlp_wide | n >= 10000 | 4 | 0 | 2 | 2 | +0.07 |
+| hyb_portfolio | mlp_xl | all | 2 | 0 | 0 | 2 | +0.18 |
+| hyb_portfolio | mlp_xl | n >= 10000 | 2 | 0 | 0 | 2 | +0.18 |
+| hyb_portfolio | mlp_best | all | 6 | 0 | 6 | 0 | -0.03 |
+| hyb_portfolio | mlp_best | n <= 3000 | 2 | 0 | 2 | 0 | -0.06 |
+| hyb_portfolio | mlp_best | n >= 10000 | 4 | 0 | 4 | 0 | -0.02 |
+| hyb_portfolio | mlp_best+ | all | 6 | 0 | 4 | 2 | +0.04 |
+| hyb_portfolio | mlp_best+ | n <= 3000 | 2 | 0 | 2 | 0 | -0.06 |
+| hyb_portfolio | mlp_best+ | n >= 10000 | 4 | 0 | 2 | 2 | +0.08 |
+| hgb | mlp_strong | all | 6 | 0 | 2 | 4 | +0.16 |
+| hgb | mlp_strong | n <= 3000 | 2 | 0 | 0 | 2 | +0.17 |
+| hgb | mlp_strong | n >= 10000 | 4 | 0 | 2 | 2 | +0.15 |
+| hgb | mlp_wide | all | 6 | 0 | 1 | 5 | +0.22 |
+| hgb | mlp_wide | n <= 3000 | 2 | 0 | 0 | 2 | +0.18 |
+| hgb | mlp_wide | n >= 10000 | 4 | 0 | 1 | 3 | +0.24 |
+| hgb | mlp_xl | all | 2 | 0 | 0 | 2 | +0.35 |
+| hgb | mlp_xl | n >= 10000 | 2 | 0 | 0 | 2 | +0.35 |
+| hgb | mlp_best | all | 6 | 0 | 2 | 4 | +0.16 |
+| hgb | mlp_best | n <= 3000 | 2 | 0 | 0 | 2 | +0.17 |
+| hgb | mlp_best | n >= 10000 | 4 | 0 | 2 | 2 | +0.15 |
+| hgb | mlp_best+ | all | 6 | 0 | 1 | 5 | +0.23 |
+| hgb | mlp_best+ | n <= 3000 | 2 | 0 | 0 | 2 | +0.18 |
+| hgb | mlp_best+ | n >= 10000 | 4 | 0 | 1 | 3 | +0.25 |
 
 | dataset | n | hyb_portfolio3 | hyb_portfolio2 | hyb_portfolio | hgb | mlp_strong | mlp_wide | mlp_xl | mlp_best | mlp_best+ | mlp_pool | cnn |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | qd_c | 100 | – | – | – | – | – | – | – | 0.5849 | 0.5849 | – | – |
 | qd_c | 300 | – | – | – | – | – | – | – | 0.4724 | 0.4724 | – | – |
-| qd_c | 1000 | 0.2658 | 0.2748 | – | – | 0.3301 | 0.3302 | – | 0.3301 | 0.3301 | – | – |
+| qd_c | 1000 | 0.2658 | 0.2748 | 0.3168 | 0.3752 | 0.3301 | 0.3302 | – | 0.3301 | 0.3301 | – | 0.2436 |
 | qd_c | 3000 | – | – | – | – | – | – | – | 0.3099 | 0.3099 | – | – |
-| qd_c | 10000 | 0.1617 | 0.1779 | – | – | 0.2094 | 0.2041 | – | 0.2094 | 0.2041 | 0.1937 | – |
-| qd_c | 60000 | 0.1276 | 0.1363 | – | – | 0.1608 | 0.1412 | 0.1412 | – | – | 0.1448 | – |
-| qd_d | 1000 | 0.2612 | 0.2671 | 0.3021 | – | 0.3162 | 0.3140 | – | – | – | – | – |
-| qd_d | 10000 | 0.1638 | 0.1782 | 0.1970 | – | 0.2030 | 0.1989 | – | – | – | – | – |
-| qd_d | 60000 | 0.1264 | 0.1399 | 0.1597 | – | 0.1534 | 0.1431 | 0.1383 | – | – | – | – |
+| qd_c | 10000 | 0.1617 | 0.1779 | 0.2005 | 0.2276 | 0.2094 | 0.2041 | – | 0.2094 | 0.2041 | 0.1937 | 0.1484 |
+| qd_c | 30000 | – | – | – | – | – | – | – | 0.2111 | 0.2111 | – | – |
+| qd_c | 60000 | 0.1276 | 0.1363 | 0.1577 | 0.1822 | 0.1608 | 0.1412 | 0.1412 | 0.1608 | 0.1412 | 0.1448 | – |
+| qd_d | 100 | – | – | – | – | – | – | – | 0.5408 | 0.5408 | – | – |
+| qd_d | 300 | – | – | – | – | – | – | – | 0.4443 | 0.4443 | – | – |
+| qd_d | 1000 | 0.2612 | 0.2671 | 0.3021 | 0.3533 | 0.3162 | 0.3140 | – | 0.3162 | 0.3140 | – | – |
+| qd_d | 3000 | – | – | – | – | – | – | – | 0.2881 | 0.2881 | – | – |
+| qd_d | 10000 | 0.1638 | 0.1782 | 0.1970 | 0.2185 | 0.2030 | 0.1989 | – | 0.2030 | 0.1989 | – | – |
+| qd_d | 30000 | – | – | – | – | – | – | – | 0.2090 | 0.2090 | – | – |
+| qd_d | 60000 | 0.1264 | 0.1399 | 0.1597 | 0.1748 | 0.1534 | 0.1431 | 0.1383 | 0.1534 | 0.1383 | – | – |
 
 ## Best-learner rule
 
