@@ -195,6 +195,22 @@ for k in keys:
                       "–" if gw is None else f"{gw['straight']:.3f}", "–" if gw is None else f"{gw['elong_ge09']:.3f}",
                       "–" if gw is None else f"{gw['within1']:.3f}", "–" if gw is None else o(gw["orient"]),
                       "–" if gw is None else f"{gw['frac_used']:.3f}", "–" if gw is None else f"{gw['top10pct_share']:.3f}"])
+rows4b = []
+ONM = {0: "horizontal", 45: "/", 90: "vertical", 135: "\\"}
+for k in keys:
+    tag, ds, n, s_ = k
+    if n != 10000 or (tag, ds, n, 2) not in BG or BG[(tag, ds, n, 2)]["w"] is None:
+        continue
+    G = R[k]["j"]["boosters"]["cgbt"]["gain"]; pc = R[k]["m"]["pool_centres"]
+    for L in (2, 4):
+        B = BG[(tag, ds, n, L)]; top = np.argsort(-B["w"])[:10]; items = []
+        for t in top:
+            c_ = int(pc[t // 4]); px = B["PL"][t][B["PL"][t] >= 0]
+            items.append(f"({c_ // 28},{c_ % 28}) {ONM[int(B['an'][t])]}{'' if B['st'][t] else ' bent'} {len(px)}px {100 * B['w'][t] * G[f'bars{L}']['gain_frac']:.2f}%")
+        SUM.setdefault("top_bars", {})[f"{ds}/n{n}/L{L}"] = items
+        rows4b.append([ds, n, L, "; ".join(items)])
+T4b = md_table(["dataset", "n", "L", "the 10 bars with most gain: centre (row, col), principal orientation ('bent' = not a straight "
+                "lattice line), pixels, share of cgbt's total gain"], rows4b)
 T4 = md_table(["dataset", "n", "L", "bars", "mean pixels", "straight", "contiguous", "elong. median", "elong. >= 0.9",
                "within 1 px of a line", "orient. 0/45/90/135", "straight (gain-wtd)", "elong. >= 0.9 (gain-wtd)",
                "within 1 px (gain-wtd)", "orient. (gain-wtd)", "frac. of bars used", "gain share of top 10% bars"], rows4)
@@ -205,7 +221,12 @@ MEMS = ["cgbt", "ggbt", "gknn_1", "gknn_3", "gknn_9", "gknn_27", "knn_std_1", "k
 rows5 = []; SUM["stack"] = {}
 for k in keys:
     tag, ds, n, s = k; r = R[k]["j"]; W = r["weights"] or {}; O = r["member_oof_err"] or {}
-    SUM["stack"][f"{tag}/{ds}/n{n}"] = dict(weights=W, oof=O, stack_oof=r.get("stack_oof_err"))
+    fam = {"cgbt": ["cgbt"], "ggbt": ["ggbt"], "gknn": [m for m in W if m.startswith("gknn")], "knn (Part 8)": [m for m in W if m.startswith("knn")],
+           "gbt+et (Part 8)": ["gbt", "et"], "lin (Part 8)": [m for m in W if m.startswith("lin")]}
+    tw = sum(W.values())
+    SUM["stack"][f"{tag}/{ds}/n{n}"] = dict(weights=W, oof=O, stack_oof=r.get("stack_oof_err"), total_weight=tw,
+                                            family_share={f_: sum(W.get(m, 0) for m in ms) / tw for f_, ms in fam.items()},
+                                            member_cpu=r.get("member_cpu"))
     rows5.append([tag, ds, n] + [("–" if m not in O else f"{W.get(m, 0):.3f} / {O[m]:.3f}") for m in MEMS])
 T5 = md_table(["learner", "dataset", "n"] + MEMS, rows5)
 
@@ -384,9 +405,10 @@ def fig_topology():
         w1 = [R[k]["j"]["pooling"][f"k{q}"]["within1"] for k in picks]; w2 = [R[k]["j"]["pooling"][f"k{q}"]["within2"] for k in picks]
         ax.bar(x, w2, wd, color=c2); ax.bar(x, w1, wd, color=c1, label=f"k = {q}")
         ax.plot(x, [R[k]["j"]["pooling"][f"k{q}"]["overlap_nearest"] for k in picks], "k.", ms=2.5)
-    ax.set_xticks(np.arange(len(picks))); ax.set_xticklabels([f"{DSN[k[1]]}\n{k[2]}" for k in picks], fontsize=5); ax.set_ylim(0, 1.02)
+    ax.set_xticks(np.arange(len(picks))); ax.set_xticklabels([f"{DSN[k[1]]}\n{k[2]}" for k in picks], fontsize=5); ax.set_ylim(0, 1.17)
+    ax.set_yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
     ax.set_title("(c) members of $S_i(k)$ within 1 (dark) / 2 (light)\nChebyshev steps of $i$; dots: overlap with k nearest", loc="left", fontsize=6)
-    ax.legend(frameon=False, fontsize=5, loc="lower left", ncol=3)
+    ax.legend(frameon=False, fontsize=5, loc="upper center", ncol=3)
     # (d) example pooling sets S_i(16) and bars on the true grid (qd_dev n = 10000)
     k = ("v3", "qd_dev", 10000, 0) if ("v3", "qd_dev", 10000, 0) in R else picks[-1]; M = R[k]["m"]
     ax = fig.add_subplot(gs[1, 4:6]); im = np.zeros((28, 28, 3)) + 1.0
@@ -421,9 +443,9 @@ def fig_bars():
     picks = [k for k in [("v3", "qd_dev", 10000, 0), ("v3", "fashion_mnist", 10000, 0), ("v3", "mnist", 10000, 0)] if k in R]
     if not picks:
         return
-    fig = plt.figure(figsize=(7.0, 1.12 * len(picks) + 1.9))
+    fig = plt.figure(figsize=(7.0, 1.12 * len(picks) + 2.1))
     gs = fig.add_gridspec(len(picks) + 1, 8, height_ratios=[1] * len(picks) + [1.55], hspace=0.5, wspace=0.08,
-                          left=0.075, right=0.99, top=0.95, bottom=0.075)
+                          left=0.075, right=0.99, top=0.95, bottom=0.1)
     nm = {0: "0° (horiz.)", 45: "45° ('/')", 90: "90° (vert.)", 135: "135° ('\\')"}
     for q, k in enumerate(picks):
         M = R[k]["m"]; bg = M["class_mean"].mean(0); pc = M["pool_centres"]; G = R[k]["j"]["boosters"]["cgbt"]["gain"]
@@ -470,8 +492,9 @@ def fig_bars():
                 Bd = BG[("v3", ds, 10000, L)]
                 ax.plot([10000 * off], [np.mean(Bd["st"] > 0)], mk, ms=3, color=c, mfc="none")
                 ax.plot([10000 * off], [np.mean(Bd["dv"] <= 1)], mk, ms=3, color=c)
-    ax.set_xscale("log"); ax.set_ylim(0, 1.02); ax.set_xlabel("n (qd_dev); right: n = 10000 on qd_a (v),\nFashion (^), MNIST (D)", fontsize=5.5)
-    ax.legend(frameon=False, fontsize=4.8, loc="center left"); ax.set_title("(b) vs n and dataset", loc="left", fontsize=6.5)
+    ax.set_xscale("log"); ax.set_xlabel("n (qd_dev); right: n = 10000 on qd_a (v),\nFashion (^), MNIST (D)", fontsize=5.5)
+    ax.set_ylim(0, 1.32); ax.set_yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0]); ax.legend(frameon=False, fontsize=4.6, loc="upper center", ncol=2)
+    ax.set_title("(b) vs n and dataset (L=2 blue, L=4 red)", loc="left", fontsize=6.5)
     ax = fig.add_subplot(gb_[0, 2]); x = np.arange(4); width = 0.8 / (2 * len(picks))
     for q, k in enumerate(picks):
         for j, L in enumerate((2, 4)):
@@ -535,7 +558,7 @@ def fig_stack():
     if ("v2", "qd_dev", 10000, 0) in R:
         ax.plot([10000], [R[("v2", "qd_dev", 10000, 0)]["j"]["err"]], "kx", ms=4, label="v2 (test)")
     ax.set_xscale("log"); ax.set_xlabel("n (qd_dev)"); ax.set_ylabel("out-of-fold error (members); test error (v3, v2)")
-    ax.legend(frameon=False, fontsize=5, ncol=2); ax.set_title("members' out-of-fold errors, qd_dev", loc="left")
+    ax.set_ylim(0.06, 0.42); ax.legend(frameon=False, fontsize=5, ncol=3, loc="lower left"); ax.set_title("members' out-of-fold errors, qd_dev", loc="left")
     save(fig, "fig_img_stack.pdf")
 
 
@@ -594,7 +617,7 @@ open(os.path.join(TAB, "img_runs.md"), "w").write("# Image analysis runs: test e
 open(os.path.join(TAB, "img_pooling.md"), "w").write("# Pooling sets S_i(k) on the true grid\n\n" + src + T2)
 open(os.path.join(TAB, "img_topology.md"), "w").write("# Isomap Procrustes R^2 of the pooling-set graphs (nodes in the largest component)\n\n" + src + T3)
 open(os.path.join(TAB, "img_bars.md"), "w").write("# Bars on the true grid (v3); gain-weighted = weighted by cgbt's split gain\n\n"
-                                                  "Orientation 45 = '/' (row decreases as column increases), 135 = '\\\\'.\n\n" + src + T4)
+                                                  "Orientation 45 = '/' (row decreases as column increases), 135 = '\\\\'.\n\n" + src + T4 + "\n" + T4b)
 open(os.path.join(TAB, "img_stack.md"), "w").write("# Stacker weight / out-of-fold error per member\n\n" + src + T5)
 open(os.path.join(TAB, "img_gain.md"), "w").write("# Split gain by feature type in the final boosters\n\n" + src + T6)
 open(os.path.join(TAB, "img_pairs.md"), "w").write("# ggbt's prototype pairs: gain by class pair\n\n" + src + T7)

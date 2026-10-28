@@ -248,11 +248,23 @@ def write_csv(name, rows, cols):
     return p
 
 
+def _cell(v):
+    if v is None:
+        return "–"
+    if isinstance(v, bool):
+        return "yes" if v else "no"
+    if isinstance(v, float):
+        if not np.isfinite(v):
+            return "never" if v > 0 else "-inf"
+        return f"{v:.0f}" if abs(v) >= 10 else f"{v:.2f}" if abs(v) >= 0.01 or v == 0 else f"{v:.4f}"
+    return str(v)
+
+
 def write_md(name, rows, cols, head=None, note=None):
     p = os.path.join(TAB, name)
     L = ([f"{head}", ""] if head else []) + ["| " + " | ".join(cols) + " |", "|" + "---|" * len(cols)]
     for r in rows:
-        L.append("| " + " | ".join(str(r.get(c, "")).replace("|", "\\|") for c in cols) + " |")
+        L.append("| " + " | ".join(_cell(r.get(c)).replace("|", "\\|") for c in cols) + " |")
     if note:
         L += ["", note]
     open(p, "w").write("\n".join(L) + "\n")
@@ -386,7 +398,7 @@ def nonsum_table(rows, S3):
 
 
 # ------------------------------------------------------------------------------------------------ Q2: timing
-def timing(rows, PW=None):
+def timing(rows, PW=None, P=None):
     """Per sum-structured target with a class of size >= 3: n_detect (power), n_struct (v3, seed 0), n* (seed 0 from the
     same fits; and 3 seeds where available).  log2 ratios; never-found targets are reported separately (not in medians)."""
     T = []
@@ -398,10 +410,13 @@ def timing(rows, PW=None):
                  n_struct=r["n_struct"], n_stable=r["n_stable"], nstar_s0=r["nstar_s0"], nstar3=r["nstar3"], n_max=r["n_max"],
                  reach_deg1=r.get("reach_deg1"), reach_eig=r.get("reach_eig"), W1=r.get("W1"), W2=r.get("W2"),
                  n_reach=r.get("n_reach"), n_reach5=r.get("n_reach5"))
+        q["ratio_at_struct"] = None
         q["n_detect_unitpart"], q["detect_source"] = None, "toy_power"
         if PW and (r["suite"], r["target"]) in PW:              # weighted target: the true block is the weighted one
             q["n_detect_unitpart"] = q["n_detect"]; q["n_detect"] = PW[(r["suite"], r["target"])]["n_detect_w"]; q["detect_source"] = "toy_power_w"
         q["l2_struct_detect"] = l2(r["n_struct"], q.get("n_detect")) if r["n_struct"] and q.get("n_detect") else None
+        if r["n_struct"] and P is not None:
+            q["ratio_at_struct"] = ratio_at(P, (r["suite"], r["target"]), r["n_struct"])
         q["l2_nstar_struct"] = l2(r["nstar_s0"], r["n_struct"]) if r["n_struct"] else None
         q["l2_nstar3_struct"] = l2(r["nstar3"], r["n_struct"]) if r["n_struct"] and r["nstar3"] else None
         T.append(q)
@@ -592,7 +607,13 @@ def fig_wdfg(B, path):
 
 
 # ------------------------------------------------------------------------------------------------ Q5: v3 against v2
-def v2v3(rows, S3, S2):
+def ratio_at(P, key, n):
+    p = P.get(key)
+    c = None if p is None else next((c for c in p["cells"] if c["n"] == n), None)
+    return None if c is None else round(max(c["unfold"]["ratio"], c["fold"]["ratio"], c["modulated"]["ratio"]), 3)
+
+
+def v2v3(rows, S3, S2, P=None):
     out = []
     for r in rows:
         if r["suite"] not in SUM_SUITES or (r["suite"], r["target"]) not in S2:
@@ -623,7 +644,8 @@ def v2v3(rows, S3, S2):
                         n_struct_v2=n2, n_struct_v3=n3, nstar3_v2=r["nstar3_v2"], nstar3_v3=r["nstar3"],
                         nstar_s0_v2=nstar([c["n"] for c in b["cells"]], [c["err"] for c in b["cells"]]), nstar_s0_v3=r["nstar_s0"],
                         l2_nstar3=l2(r["nstar3"], r["nstar3_v2"]), l2_nstar_s0=l2(r["nstar_s0"], nstar([c["n"] for c in b["cells"]], [c["err"] for c in b["cells"]])),
-                        mechanism=mech, n_weighted_first=first_w, cells_differ=len(diff), cells_common=len(common),
+                        mechanism=mech, n_weighted_first=first_w, ratio_at_struct_v3=ratio_at(P or {}, (r["suite"], r["target"]), n3) if n3 else None,
+                        stack_at_struct_v3={k: v for k, v in c3["weights"].items() if k.startswith("dfg")} if c3 else None, cells_differ=len(diff), cells_common=len(common),
                         v3_at_struct=lead_terms(c3) if c3 else "", v2_at_v3_struct=lead_terms(next((c for c in b["cells"] if c["n"] == n3), {})) if n3 else ""))
     return out
 
@@ -819,7 +841,7 @@ def main():
                            nstar_v3_files=sorted(set(v[1] for v in N3.values())), nstar_v2_files=sorted(set(v[1] for v in N2.values()))))
     out["by_suite"], out["by_kind"] = recovery_tables(rows)
     out["nonsum"] = nonsum_table(rows, S3)
-    PW = load_power_w(); T = timing(rows, PW); out["timing"] = timing_summary(T)
+    PW = load_power_w(); T = timing(rows, PW, P); out["timing"] = timing_summary(T)
     out["power_w"] = {f"{k[0]}/{k[1]}": dict(n_detect_w=v["n_detect_w"], n_detect_unit=v["n_detect_unit"], file=os.path.basename(v["_path"])) for k, v in PW.items()}
     out["identity"] = dict(v3=check_identity(S3, "v3"), v2=check_identity(S2, "v2"))
     write_csv("toy_timing.csv", T, list(T[0].keys()) if T else [])
@@ -838,9 +860,9 @@ def main():
     out["failures"] = F
     if F:
         fig_failures([f for f in F if (f["suite"], f["target"]) in FAIL], P, S3, os.path.join(FIG, "fig_toy_failures.pdf"))
-    V = v2v3(rows, S3, S2)
+    V = v2v3(rows, S3, S2, P)
     write_md("toy_v2_v3.md", V, ["suite", "target", "kind", "mixture", "classes", "n_struct_v2", "n_struct_v3", "nstar_s0_v2", "nstar_s0_v3",
-                                 "nstar3_v2", "nstar3_v3", "l2_nstar3", "mechanism", "cells_differ", "cells_common", "v3_at_struct", "v2_at_v3_struct"],
+                                 "nstar3_v2", "nstar3_v3", "l2_nstar3", "mechanism", "ratio_at_struct_v3", "stack_at_struct_v3", "cells_differ", "cells_common", "v3_at_struct", "v2_at_v3_struct"],
              head="### v3 (DFG v1.3) against v2 (DFG v1.2) on the sum-structured suites (seed 0 structure runs; n* also 3 seeds)",
              note="mechanism: what v3's model has at its n_struct when that is earlier than v2's ('weighted block': a block with an inner term "
                   "a*tau; 'small-n search': n_struct <= 128 without a weighted block, i.e. the beam search, and the forced variant when it has "

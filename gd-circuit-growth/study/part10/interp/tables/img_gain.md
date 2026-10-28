@@ -1,12 +1,18 @@
 # Split gain by feature type in the final boosters
 
-Source files: $SCRATCH/p10/interp_out_final/image/v3/fashion_mnist__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n1000__s0.json (and the .npz next to each).
+Source files: $SCRATCH/p10/interp_out_final/image/v3/fashion_mnist__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/mnist__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_a__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n1000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n3000__s0.json (and the .npz next to each).
 
 | learner | dataset | n | booster | rounds | rows fitted | test err alone | raw: gain share (features used / all) | pool4: gain share (features used / all) | pool9: gain share (features used / all) | pool16: gain share (features used / all) | bars2: gain share (features used / all) | bars4: gain share (features used / all) | pairs: gain share (features used / all) |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | v3 | qd_dev | 1000 | cgbt | 100 | 1000 | 0.2208 | 0.025 (452/784) | 0.033 (525/676) | 0.073 (551/676) | 0.152 (608/676) | 0.256 (2210/2704) | 0.461 (2360/2704) | – |
 | v3 | qd_dev | 1000 | ggbt | 100 | 1000 | 0.2478 | 0.065 (590/784) | 0.098 (619/676) | 0.157 (647/676) | 0.277 (666/676) | – | – | 0.404 (300/300) |
+| v3 | qd_dev | 3000 | cgbt | 100 | 3000 | 0.1851 | 0.019 (497/784) | 0.032 (546/676) | 0.062 (580/676) | 0.142 (617/676) | 0.239 (2362/2704) | 0.506 (2473/2704) | – |
+| v3 | qd_dev | 3000 | ggbt | 100 | 3000 | 0.1968 | 0.056 (620/784) | 0.102 (650/676) | 0.151 (662/676) | 0.300 (673/676) | – | – | 0.391 (300/300) |
 | v3 | qd_dev | 10000 | cgbt | 229 | 10000 | 0.1368 | 0.012 (552/784) | 0.022 (592/676) | 0.045 (626/676) | 0.151 (642/676) | 0.241 (2520/2704) | 0.529 (2596/2704) | – |
 | v3 | qd_dev | 10000 | ggbt | 123 | 10000 | 0.1578 | 0.037 (625/784) | 0.095 (656/676) | 0.156 (670/676) | 0.317 (676/676) | – | – | 0.395 (300/300) |
 | v3 | fashion_mnist | 10000 | cgbt | 255 | 10000 | 0.1216 | 0.085 (692/784) | 0.096 (726/784) | 0.100 (725/784) | 0.118 (718/784) | 0.249 (2894/3136) | 0.352 (2911/3136) | – |
 | v3 | fashion_mnist | 10000 | ggbt | 242 | 10000 | 0.1222 | 0.157 (750/784) | 0.153 (769/784) | 0.162 (778/784) | 0.147 (780/784) | – | – | 0.381 (299/300) |
+| v3 | mnist | 10000 | cgbt | 135 | 10000 | 0.0278 | 0.013 (345/784) | 0.045 (415/682) | 0.071 (489/682) | 0.069 (583/682) | 0.295 (1961/2728) | 0.507 (2066/2728) | – |
+| v3 | mnist | 10000 | ggbt | 190 | 7998 | 0.0392 | 0.054 (437/784) | 0.121 (535/682) | 0.182 (630/682) | 0.231 (662/682) | – | – | 0.412 (300/300) |
+| v3 | qd_a | 10000 | cgbt | 161 | 10000 | 0.1442 | 0.012 (516/784) | 0.027 (563/676) | 0.045 (605/676) | 0.124 (639/676) | 0.250 (2418/2704) | 0.543 (2524/2704) | – |
+| v3 | qd_a | 10000 | ggbt | 206 | 8000 | 0.1654 | 0.041 (639/784) | 0.109 (659/676) | 0.186 (671/676) | 0.365 (676/676) | – | – | 0.299 (300/300) |
