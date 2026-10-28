@@ -215,6 +215,10 @@ def detect(P, key):
     ns = [out["n_" + v] for v in ("unfold", "fold", "modulated") if out["n_" + v]]
     out["n_detect"] = min(ns) if ns else None
     out["n_detect_plain"] = min([v for v in (out["n_unfold"], out["n_fold"]) if v] or [None]) if (out["n_unfold"] or out["n_fold"]) else None
+    # search reach: first n at which the search's orders list the true class first (top |S| of the best of the two top
+    # eigenvectors of the residual pair matrix, or of the degree-1 order), and within the top |S| + 5
+    out["n_reach"] = next((c["n"] for c in p["cells"] if max(max(c["search"]["eig"]), c["search"]["deg1"]) >= 1.0), None)
+    out["n_reach5"] = next((c["n"] for c in p["cells"] if max(max(c["search"]["eig_k5"]), c["search"]["deg1_k5"]) >= 1.0), None)
     out["cells"] = p["cells"]
     return out
 
@@ -282,7 +286,7 @@ def target_rows(S3, S2, P, N3, N2, NN):
         if dt:
             row.update(n_detect=dt["n_detect"], n_unfold=dt["n_unfold"], n_fold=dt["n_fold"], n_mod=dt["n_modulated"],
                        W1=round(dt["W"][1], 4) if len(dt["W"]) > 1 else None, W2=round(dt["W"][2], 4) if len(dt["W"]) > 2 else None,
-                       power_k=dt["k"], power_file=os.path.basename(dt["path"]))
+                       power_k=dt["k"], power_file=os.path.basename(dt["path"]), n_reach=dt["n_reach"], n_reach5=dt["n_reach5"])
             cd = next((c for c in dt["cells"] if c["n"] == dt["n_detect"]), None)
             if cd:
                 row["reach_deg1"] = round(cd["search"]["deg1"], 2); row["reach_eig"] = round(max(cd["search"]["eig"]), 2)
@@ -294,13 +298,13 @@ SUITES_ORDER = SUM_SUITES + OTHER_SUITES
 
 
 def recovery_tables(rows):
-    cols = ["suite", "target", "kind", "mixture", "k", "classes", "n_struct", "n_stable", "n_detect", "nstar3", "nstar_s0",
+    cols = ["suite", "target", "kind", "mixture", "k", "classes", "n_struct", "n_stable", "n_detect", "n_reach5", "nstar3", "nstar_s0",
             "nets_best", "n_max", "err_last", "lead"]
     sel = [r for r in rows if r["suite"] in SUM_SUITES]
     fmt = []
     for r in sel:
         q = dict(r)
-        for c in ("n_struct", "n_stable", "n_detect", "nstar3", "nstar_s0", "nets_best"):
+        for c in ("n_struct", "n_stable", "n_detect", "n_reach5", "nstar3", "nstar_s0", "nets_best"):
             q[c] = fmt_n(r.get(c)) if r.get(c) is not None or c in ("n_struct", "n_stable") else "–"
         if r["classes"] == "–":
             q["n_struct"] = q["n_stable"] = "n/a"
@@ -316,7 +320,7 @@ def recovery_tables(rows):
                   "the final DFG model at n_max (share = sd of the term's output on the test inputs; quad = a spectral feature; "
                   "background = the kernel background). The structure runs stop after two consecutive n with err <= 0.005.")
     write_csv("toy_recovery_v3.csv", rows, ["suite", "target", "desc", "kind", "mixture", "k", "classes", "n_struct", "n_stable",
-              "n_detect", "n_unfold", "n_fold", "n_mod", "reach_deg1", "reach_eig", "W1", "W2", "nstar3", "nstar3_file", "nstar_s0",
+              "n_detect", "n_unfold", "n_fold", "n_mod", "n_reach", "n_reach5", "reach_deg1", "reach_eig", "W1", "W2", "nstar3", "nstar3_file", "nstar_s0",
               "nstar3_v2", "n_struct_v2", "n_stable_v2", "nets_best", "nets_variants", "n_max", "err_last", "err_dfg_last",
               "w_dfg_last", "span_r2_last", "fourier_chi_last", "inner_last", "n_inner", "n_inner_exact", "inner_by_n", "lead", "struct_file", "power_file"])
     # by suite
@@ -391,7 +395,8 @@ def timing(rows, PW=None):
         q = dict(suite=r["suite"], target=r["target"], kind=r["kind"], mixture=r["mixture"], k_power=r.get("power_k"),
                  n_detect=r.get("n_detect"), n_unfold=r.get("n_unfold"), n_fold=r.get("n_fold"), n_mod=r.get("n_mod"),
                  n_struct=r["n_struct"], n_stable=r["n_stable"], nstar_s0=r["nstar_s0"], nstar3=r["nstar3"], n_max=r["n_max"],
-                 reach_deg1=r.get("reach_deg1"), reach_eig=r.get("reach_eig"), W1=r.get("W1"), W2=r.get("W2"))
+                 reach_deg1=r.get("reach_deg1"), reach_eig=r.get("reach_eig"), W1=r.get("W1"), W2=r.get("W2"),
+                 n_reach=r.get("n_reach"), n_reach5=r.get("n_reach5"))
         q["n_detect_unitpart"], q["detect_source"] = None, "toy_power"
         if PW and (r["suite"], r["target"]) in PW:              # weighted target: the true block is the weighted one
             q["n_detect_unitpart"] = q["n_detect"]; q["n_detect"] = PW[(r["suite"], r["target"])]["n_detect_w"]; q["detect_source"] = "toy_power_w"
@@ -418,6 +423,17 @@ def timing_summary(T):
                                   below_targets=[t["target"] for t in T if t["l2_nstar_struct"] is not None and t["l2_nstar_struct"] < -0.5],
                                   above_targets=[t["target"] for t in T if t["l2_nstar_struct"] is not None and t["l2_nstar_struct"] > 0.5]),
              nstar3_vs_struct=dict(n=len(c), median=float(np.median(c)) if c else None))
+    # search reach against structure: is the exact block found before / when / after the spectral order reaches S?
+    R = [t for t in T if t["n_struct"]]
+    S["struct_vs_reach5"] = dict(n=len(R), struct_before=sum(1 for t in R if t["n_reach5"] and t["n_struct"] < t["n_reach5"]),
+                                 struct_at=sum(1 for t in R if t["n_reach5"] == t["n_struct"]),
+                                 struct_after=sum(1 for t in R if t["n_reach5"] and t["n_struct"] > t["n_reach5"]),
+                                 reach_never=sum(1 for t in R if not t["n_reach5"]),
+                                 l2_median=float(np.median([math.log2(t["n_struct"] / t["n_reach5"]) for t in R if t["n_reach5"]])) if any(t["n_reach5"] for t in R) else None)
+    # does the later of (detect, reach5) predict n_struct better than detect alone?
+    D = [t for t in R if t["n_detect"]]
+    S["struct_vs_max_detect_reach5"] = dict(n=len(D), exact=sum(1 for t in D if t["n_reach5"] and max(t["n_detect"], t["n_reach5"]) == t["n_struct"]),
+                                            within1=sum(1 for t in D if t["n_reach5"] and abs(math.log2(t["n_struct"] / max(t["n_detect"], t["n_reach5"]))) <= 1))
     return S
 
 

@@ -104,6 +104,34 @@ T2 = md_table(["learner", "dataset", "n", "k", "mean Chebyshev dist. of members"
 T3 = md_table(["learner", "dataset", "n", "active pixels", "k=4 union", "k=9 union", "k=9 mutual", "k=16 mutual"], rows3)
 
 
+def graph_edges(M, k, mode):
+    """The edges of image_structure.py's pooling-set graph (k, union / mutual), as pairs of grid pixels."""
+    cen = M["pool_centres"].astype(int); mem = M[f"pool{k}_members"].astype(int); S = {int(c): set(int(x) for x in m) - {int(c)} for c, m in zip(cen, mem)}
+    E = set()
+    for i, nb in S.items():
+        for j in nb:
+            if j in S and (mode == "union" or i in S[j]):
+                E.add((min(i, j), max(i, j)))
+    return E
+
+
+rows3b = []; SUM["graph_edges"] = {}
+for k in keys:
+    tag, ds, n, s_ = k; M = R[k]["m"]
+    if "pool4_members" not in M or tag != "v3":
+        continue
+    row = [ds, n]
+    for kk, mode in ((4, "union"), (9, "union"), (9, "mutual"), (16, "mutual")):
+        E = np.array(sorted(graph_edges(M, kk, mode))); L_ = np.max(np.abs(np.stack([E[:, 0] // 28 - E[:, 1] // 28, E[:, 0] % 28 - E[:, 1] % 28], 1)), 1)
+        d_ = dict(edges=int(len(E)), len_le1=float(np.mean(L_ <= 1)), len_gt2=int(np.sum(L_ > 2)), len_gt5=int(np.sum(L_ > 5)), max_len=int(L_.max()))
+        SUM["graph_edges"][f"{ds}/n{n}/k{kk}_{mode}"] = d_
+        row.append(f"{d_['edges']}: {d_['len_le1']:.3f} / {d_['len_gt2']} / {d_['len_gt5']}")
+    rows3b.append(row)
+T3 += ("\nEdges of the same graphs by their true Chebyshev length: total edges: fraction of length <= 1 / number longer than 2 / "
+       "number longer than 5 (computed from the pooling-set member lists in the .npz).\n\n" +
+       md_table(["dataset", "n", "k=4 union", "k=9 union", "k=9 mutual", "k=16 mutual"], rows3b))
+
+
 # ----------------------------------------------------------------------------------------------- bars: geometry, gain
 def bar_geom(PL):
     """Per bar (rows of pixel ids, -1 padded): straight lattice line through its pixels (0 none, 1 horiz., 2 vert.,
@@ -374,62 +402,76 @@ def draw_bars(ax, PL, idx, w, bg):
     ax.set_xlim(-0.5, 27.5); ax.set_ylim(27.5, -0.5); ax.set_xticks([]); ax.set_yticks([])
 
 
+def block(m, f=2):
+    """A 784-map summed over f x f blocks of the grid (for the sparse per-bar gain maps)."""
+    return m.reshape(28 // f, f, 28 // f, f).sum((1, 3))
+
+
 def fig_bars():
     picks = [k for k in [("v3", "qd_dev", 10000, 0), ("v3", "fashion_mnist", 10000, 0), ("v3", "mnist", 10000, 0)] if k in R]
     if not picks:
         return
-    fig = plt.figure(figsize=(7.0, 1.55 * len(picks) + 1.45))
-    gs = fig.add_gridspec(len(picks) + 1, 8, height_ratios=[1] * len(picks) + [1.05], hspace=0.45, wspace=0.15)
+    fig = plt.figure(figsize=(7.0, 1.12 * len(picks) + 1.9))
+    gs = fig.add_gridspec(len(picks) + 1, 8, height_ratios=[1] * len(picks) + [1.55], hspace=0.5, wspace=0.08,
+                          left=0.075, right=0.99, top=0.95, bottom=0.075)
+    nm = {0: "0° (horiz.)", 45: "45° ('/')", 90: "90° (vert.)", 135: "135° ('\\')"}
     for q, k in enumerate(picks):
-        M = R[k]["m"]; bg = M["class_mean"].mean(0); pc = M["pool_centres"]
+        M = R[k]["m"]; bg = M["class_mean"].mean(0); pc = M["pool_centres"]; G = R[k]["j"]["boosters"]["cgbt"]["gain"]
         for j, L in enumerate((2, 4)):
             B = BG[(k[0], k[1], k[2], L)]; w = B["w"]; top = np.argsort(-w)[:12]
             ax = fig.add_subplot(gs[q, j]); draw_bars(ax, B["PL"], top, w, bg)
-            ax.set_title(f"{DSN[k[1]]}: top 12 bars, L = {L}\n({100 * w[top].sum():.1f}% of the L = {L} bar gain)", fontsize=5.5)
-            # gain of bars of each principal orientation at their centre pixel
-            for a_i, a in enumerate((0, 45, 90, 135)):
-                if j == 1:
-                    continue
-            # (orientation maps: L = 2 and L = 4 pooled)
+            ax.set_title(f"top 12, L = {L}: {100 * w[top].sum() * G[f'bars{L}']['gain_frac']:.1f}%", fontsize=5.5)
+            if j == 0:
+                ax.set_ylabel(DSN[k[1]], fontsize=7)
         Wsum = {}
         for L in (2, 4):
-            B = BG[(k[0], k[1], k[2], L)]; lo = 0
+            B = BG[(k[0], k[1], k[2], L)]
             for a in (0, 45, 90, 135):
                 gm = np.zeros(784); sel = B["an"] == a
-                np.add.at(gm, np.repeat(pc, 4)[sel], (B["w"] * R[k]["j"]["boosters"]["cgbt"]["gain"][f"bars{L}"]["gain_frac"])[sel])
-                Wsum[a] = Wsum.get(a, 0) + gm
-        vmax = max(v.max() for v in Wsum.values())
+                np.add.at(gm, np.repeat(pc, 4)[sel], (B["w"] * G[f"bars{L}"]["gain_frac"])[sel]); Wsum[a] = Wsum.get(a, 0) + gm
+        vmax = max(block(v).max() for v in Wsum.values())
         for a_i, a in enumerate((0, 45, 90, 135)):
-            ax = fig.add_subplot(gs[q, 2 + a_i]); ax.imshow(Wsum[a].reshape(28, 28), cmap="magma_r", vmin=0, vmax=vmax)
-            ax.set_xticks([]); ax.set_yticks([])
-            nm = {0: "horizontal (0°)", 45: "'/' (45°)", 90: "vertical (90°)", 135: "'\\' (135°)"}[a]
-            ax.set_title(f"{nm}\n{100 * Wsum[a].sum():.1f}% of cgbt gain", fontsize=5.5)
-        # bar gain vs pooled gain, per pixel: where the bars carry gain
+            ax = fig.add_subplot(gs[q, 2 + a_i]); ax.imshow(block(Wsum[a]), cmap="magma_r", vmin=0, vmax=vmax); ax.set_xticks([]); ax.set_yticks([])
+            ax.set_title(f"{nm[a]}: {100 * Wsum[a].sum():.1f}%", fontsize=5.5)
         ax = fig.add_subplot(gs[q, 6]); gb = M["cgbt_gain_bars2"] + M["cgbt_gain_bars4"]
-        ax.imshow(gb.reshape(28, 28), cmap="magma_r"); ax.set_xticks([]); ax.set_yticks([]); ax.set_title("bar gain\nper pixel", fontsize=5.5)
+        ax.imshow(gb.reshape(28, 28), cmap="magma_r"); ax.set_xticks([]); ax.set_yticks([])
+        ax.set_title(f"all bars: {100 * (G['bars2']['gain_frac'] + G['bars4']['gain_frac']):.0f}%", fontsize=5.5)
         ax = fig.add_subplot(gs[q, 7]); gp = M["cgbt_gain_pool4"] + M["cgbt_gain_pool9"] + M["cgbt_gain_pool16"]
-        ax.imshow(gp.reshape(28, 28), cmap="magma_r"); ax.set_xticks([]); ax.set_yticks([]); ax.set_title("pooled-sum gain\nper pixel", fontsize=5.5)
-    # bottom row: geometry, all bars vs gain-weighted
-    ax = fig.add_subplot(gs[-1, 0:3]); k = picks[0]; width = 0.2
-    cats = ["straight", "contig.", "elong.≥0.9", "≤1 px off line"]
+        ax.imshow(gp.reshape(28, 28), cmap="magma_r"); ax.set_xticks([]); ax.set_yticks([])
+        ax.set_title(f"pooled sums: {100 * sum(G[f'pool{x}']['gain_frac'] for x in (4, 9, 16)):.0f}%", fontsize=5.5)
+    # bottom row: (a) geometry of all bars vs gain-weighted (qd_dev n = 10000); (b) geometry vs n and dataset; (c) orientation
+    gb_ = gs[-1, :].subgridspec(1, 3, width_ratios=[1.25, 0.9, 1.25], wspace=0.32)
+    ax = fig.add_subplot(gb_[0, 0]); k = picks[0]; width = 0.2
+    cats = ["straight", "contiguous", "elong. ≥ 0.9", "≤ 1 px off line"]
     for j, (L, c) in enumerate(((2, "#1f77b4"), (4, "#d62728"))):
-        B = BG[(k[0], k[1], k[2], L)]; w = B["w"]; ln = np.sum(B["PL"] >= 0, 1)
+        B = BG[(k[0], k[1], k[2], L)]; w = B["w"]
         allv = [np.mean(B["st"] > 0), np.mean(B["co"]), np.mean(B["el"] >= 0.9), np.mean(B["dv"] <= 1)]
         gw = [w @ (B["st"] > 0), w @ B["co"], w @ (B["el"] >= 0.9), w @ (B["dv"] <= 1)]
         x = np.arange(4) + (2 * j - 1.5) * width
         ax.bar(x, allv, width, color=c, alpha=0.4, label=f"L = {L}, all bars"); ax.bar(x + width, gw, width, color=c, label=f"L = {L}, gain-weighted")
-    ax.set_xticks(np.arange(4)); ax.set_xticklabels(cats); ax.set_ylim(0, 1); ax.legend(frameon=False, fontsize=5, ncol=2, loc="upper right")
-    ax.set_title(f"bar geometry on the true grid ({DSN[k[1]]}, n = {k[2]})", loc="left", fontsize=6.5)
-    ax = fig.add_subplot(gs[-1, 4:8]); x = np.arange(4); width = 0.8 / (2 * len(picks))
+    ax.set_xticks(np.arange(4)); ax.set_xticklabels(cats, fontsize=5.5); ax.set_ylim(0, 1.18); ax.legend(frameon=False, fontsize=5, ncol=2, loc="upper left")
+    ax.set_title(f"(a) bar geometry on the true grid ({DSN[k[1]]}, n = {k[2]})", loc="left", fontsize=6.5)
+    ax = fig.add_subplot(gb_[0, 1]); ns = [n for n in (1000, 3000, 10000) if (("v3", "qd_dev", n, 2)) in BG]
+    for L, c in ((2, "#1f77b4"), (4, "#d62728")):
+        ax.plot(ns, [np.mean(BG[("v3", "qd_dev", n, L)]["st"] > 0) for n in ns], "-o", ms=2.5, color=c, label=f"straight, L={L}")
+        ax.plot(ns, [np.mean(BG[("v3", "qd_dev", n, L)]["dv"] <= 1) for n in ns], "--s", ms=2.5, color=c, label=f"≤ 1 px off, L={L}")
+        for mk, ds, off in (("^", "fashion_mnist", 1.25), ("D", "mnist", 1.5), ("v", "qd_a", 1.12)):
+            if ("v3", ds, 10000, L) in BG:
+                Bd = BG[("v3", ds, 10000, L)]
+                ax.plot([10000 * off], [np.mean(Bd["st"] > 0)], mk, ms=3, color=c, mfc="none")
+                ax.plot([10000 * off], [np.mean(Bd["dv"] <= 1)], mk, ms=3, color=c)
+    ax.set_xscale("log"); ax.set_ylim(0, 1.02); ax.set_xlabel("n (qd_dev); right: n = 10000 on qd_a (v),\nFashion (^), MNIST (D)", fontsize=5.5)
+    ax.legend(frameon=False, fontsize=4.8, loc="center left"); ax.set_title("(b) vs n and dataset", loc="left", fontsize=6.5)
+    ax = fig.add_subplot(gb_[0, 2]); x = np.arange(4); width = 0.8 / (2 * len(picks))
     for q, k in enumerate(picks):
         for j, L in enumerate((2, 4)):
-            B = BG[(k[0], k[1], k[2], L)]
-            ax.bar(x + (2 * q + j) * width - 0.4 + width / 2, [B["w"] @ (B["an"] == a) for a in (0, 45, 90, 135)], width,
-                   color=plt.cm.tab10(q), alpha=0.5 + 0.5 * j, label=f"{DSN[k[1]]} L={L}")
-            ax.plot(x + (2 * q + j) * width - 0.4 + width / 2, [np.mean(B["an"] == a) for a in (0, 45, 90, 135)], "k_", ms=4)
-    ax.set_xticks(x); ax.set_xticklabels(["0° (horiz.)", "45° ('/')", "90° (vert.)", "135° ('\\')"])
-    ax.set_ylabel("share of bar gain"); ax.legend(frameon=False, fontsize=5, ncol=3, loc="upper right"); ax.set_ylim(0, 0.62)
-    ax.set_title("principal orientation: gain share (bars) vs share of all bars (black ticks)", loc="left", fontsize=6.5)
+            B = BG[(k[0], k[1], k[2], L)]; xx = x + (2 * q + j) * width - 0.4 + width / 2
+            ax.bar(xx, [B["w"] @ (B["an"] == a) for a in (0, 45, 90, 135)], width, color=plt.cm.tab10(q), alpha=0.45 + 0.55 * j,
+                   label=f"{DSN[k[1]]} L={L}")
+            ax.plot(xx, [np.mean(B["an"] == a) for a in (0, 45, 90, 135)], "k_", ms=3.5)
+    ax.set_xticks(x); ax.set_xticklabels([nm[a] for a in (0, 45, 90, 135)], fontsize=5.5)
+    ax.set_ylabel("share of the bars' gain", fontsize=6); ax.legend(frameon=False, fontsize=4.8, ncol=3, loc="upper right"); ax.set_ylim(0, 0.55)
+    ax.set_title("(c) orientation: gain share (ticks: all bars)", loc="left", fontsize=6.5)
     save(fig, "fig_img_bars.pdf")
 
 
