@@ -1,0 +1,99 @@
+\section{How it is evaluated}\label{sec:protocol}
+
+\subsection{Tasks}\label{sec:tasks}
+
+\paragraph{Toy Boolean targets.} Inputs are uniform on $\cube$ with $d=30$, and labels are $\pm1$ values of a target $f$. There are 11 suites, 138 targets in all, summarized in \cref{tab:status} and defined in \repo{study/boolfuncs.py}.
+\begin{itemize}
+\item \code{designed} (21) and \code{random} (20). Parities, majorities, halfspaces, staircases, compositions, a multiplexer, a DNF, a decision list and random small formulas.
+\item \code{dlheld}, \code{dlheld2}, \code{dlheld3} (12, 7, 10). Dense halfspaces and majorities, $\chi_5$, multiplexers, symmetric functions such as $[|x_1+\dots+x_9|\le1]$, mixtures of parities with gates, and random formulas.
+\item \code{dlsymdev} (8). Symmetric and signed-sum targets used for development.
+\item \code{dlheld4}, \code{dlheld5}, \code{dlheld6} (12 each). Signed sums with threshold, band, interval, residue-class and arbitrary accept sets, some mixed with parities and gates, plus 2--3 non-symmetric controls per suite.
+\item \code{dlfamdev} and \code{dlheld7} (12 each). Two fresh draws (seeds 61616 and 70707) from \code{dlheld6}'s family. That family was written by an agent blind to the sum-feature design \repo{study/part9/heldout6/FAMILY.md}. It has 9 structured slots and 3 controls: sums, sums times a parity, sums with a gate, and compositions of sums. Each slot draws its accept set uniformly from five types, one of them a residue class mod 3 or 4.
+\end{itemize}
+Every suite puts the relevant inputs first. The discrete learners therefore see the columns in a fresh random order in every fit, so that tie-breaking by column index cannot help them.
+
+\paragraph{Tabular data.} There are 26 PMLB datasets \cite{olson2017pmlb}: 5 for development, 11 held out in Part 7 (including mushroom), and 10 fresh in Part 8 (HELDOUT2). They have continuous, categorical, binary and mixed features and 2--26 classes.
+
+\paragraph{Images.} MNIST \cite{lecun1998mnist}, Fashion-MNIST \cite{xiao2017fashion} and five 10-class sets of QuickDraw bitmaps \cite{ha2017sketch}. The QuickDraw sets use 50 categories drawn at random from the 345 (seed 9191) and split into five disjoint sets of ten:
+\begin{itemize}
+\item \code{qd_dev}, development;
+\item \code{qd_a} and \code{qd_b}, held out in Part 9;
+\item \code{qd_c} and \code{qd_d}, held out in Part 10.\footnote{\code{qd_c}: hospital, submarine, telephone, bathtub, hockey stick, key, snake, bowtie, hat, binoculars. \code{qd_d}: basketball, purse, train, pencil, remote control, camel, onion, harp, squiggle, beard.}
+\end{itemize}
+Each set has 6000 training and 1000 test drawings per class, so a 60000-point training pool and a 10000-point test set. The 784 pixel columns are scaled to $[0,1]$ and permuted by one fixed permutation (seed 9192). Every reference MLP is invariant to that permutation.
+
+\subsection{References}\label{sec:refs}
+
+\paragraph{Networks on the toy targets.} These are the companion paper's $\mu$P two-hidden-layer ReLU MLPs \cite{gdcircuit2026,yang2021feature}: width 128, Adam at learning rate $10^{-3}$, batch 64, 20000 steps on a fixed training set, read at the final step. There are five variants:
+\begin{itemize}
+\item \code{nets}: square loss;
+\item \code{nets_wd}: decoupled weight decay 0.1;
+\item \code{nets_cewd}, \code{nets_cewd0.3}, \code{nets_cewd1.0}: logistic loss with weight decay 0.1, 0.3 and 1.0.
+\end{itemize}
+Not every variant was run on every suite (\cref{tab:status}). \code{nets_best} is, per target, the variant with the smallest $\nstar$ among those run: a hindsight choice that favours the networks. \code{lin} (cross-validated L2 logistic regression on the raw inputs) and \code{hgb} (scikit-learn's histogram gradient boosting, default settings \cite{pedregosa2011sklearn}) are calibration references.
+
+\paragraph{MLPs on standard tasks.} All are ReLU MLPs with softmax cross-entropy:
+\begin{itemize}
+\item \code{mlp}: 256-256, Adam, learning rate and stopping point chosen on validation;
+\item \code{mlp_reg}: the same with an L2 penalty chosen on validation;
+\item \code{mlp_strong}: quantile-transformed inputs, AdamW with cosine decay, weight decay in $\{0,0.1,1\}$ chosen on validation, dropout 0.1, an ensemble of 3;
+\item \code{mlp_wide}: the same at width 512 with weight decay in $\{0.1,1,3\}$;
+\item \code{mlp_xl}: width 1024 at $n=60000$, at the weight decay \code{mlp_wide} chose there. Its CPU time per fit is close to the discrete learners'.
+\end{itemize}
+\code{mlp_best} is the per-cell hindsight minimum over the Part 7--8 variants, and \code{mlp_best+} adds the wider ones. Two further learners are \emph{not} references:
+\begin{itemize}
+\item \code{mlp_pool}, \code{mlp_strong} given v2's correlation-pooled sums as extra inputs, is a control for how much of the image result is representation;
+\item \code{cnn}, a small convolutional network on the \emph{unpermuted} pixels, is context: it uses the layout that every other learner here is denied.
+\end{itemize}
+
+\paragraph{Earlier versions.} v1 (Part 8) and v2 (Part 9) are run as references wherever their predictions can differ from v3's.
+
+\subsection{Metrics, verdicts and budgets}\label{sec:metrics}
+
+\paragraph{Toy targets.} $\nstar$ is the training-set size at which the seed-mean test error reaches 0.1. It is interpolated in $\log n$ on the grid $n=16,32,\dots,16384$, with 3 seeds (2 on \code{random}) and one 4096-point test set per target. A comparison is the $\log_2$ ratio $\log_2(\nstar_{\rm learner}/\nstar_{\rm ref})$. A target is \emph{clearly better} or \emph{clearly worse} when the ratio is below $-0.25$ or above $+0.25$, or when only one of the two reaches 10\% error. Suite means are taken over targets both learn.
+
+\paragraph{Standard tasks.} Test error is measured on a fixed test set at $n\in\{100,300,1000,3000,10000,30000,60000\}$ (up to the pool size). There are 3 seeds, except on images at $n\ge30000$, where every learner runs seed 0 only. A cell is \emph{better} or \emph{worse} when the seed-mean errors differ by more than 10\% relative and by more than 2 standard errors. The s.e.\ comes from the seed spread of both learners and is at least the test set's binomial noise; otherwise the cell is a \emph{tie}. Errors are floored at 0.002 in $\log_2$ ratios.
+
+\paragraph{Budgets.} Compute is counted in FLOPs, everything a learner does in a fit included, prediction excluded.
+\begin{itemize}
+\item \emph{Toy fit:} at most one training run of the toy networks, $1.62\times10^{11}$ FLOPs at $d=30$.
+\item \emph{Real-data fit:} at most three training runs of the baseline MLP, the baseline's own cost including its learning-rate search.
+\end{itemize}
+CPU time per fit is reported separately, because equal FLOPs are far from equal CPU time.
+
+\subsection{How v3 was built and what is held out for it}\label{sec:discipline}
+
+\paragraph{Pre-registration.} The Part 10 protocol \repo{study/part10/PROTOCOL.md} was committed before any design work (\texttt{dc70266c}). It fixed six things:
+\begin{itemize}
+\item the fresh held-out sets \code{dlheld7}, \code{qd_c} and \code{qd_d}, and a development draw \code{dlfamdev};
+\item the budgets;
+\item three builder tasks on development data only: a toy component (DFG's sum-feature search) and two image components from different angles;
+\item an \emph{integration rule}. The toy component is adopted if its mean $\log_2\nstar$ ratio against v2 on \code{designed}, \code{dlsymdev} and \code{dlfamdev} is below $-0.05$, with no target worse by more than 0.5. The image component with the lower mean $\log_2$ error ratio against v2 over 8 development cells is adopted if that mean is below $-0.05$ and, at \code{qd_a} with $n=60000$, its error is within 5\% of v2's, its CPU time is at most $1.5\times$ v2's, and it stays within the FLOP budget;
+\item a \emph{best-learner rule}. v3 replaces v2 as the learner of this paper if its mean $\log_2$ error ratio against v2 on \code{qd_c} and \code{qd_d} at $n\ge10000$ is below 0, and its mean $\log_2\nstar$ ratio against v2 on \code{dlheld7} is at most $+0.1$;
+\item the held-out reference runs.
+\end{itemize}
+The builders froze their files, recorded md5 sums and ran the fixed development evaluation. The rules were then applied mechanically (\cref{sec:decisions}). v3 was assembled and checked identical to its sources on every input type, then frozen (md5 \texttt{b045fafe}). Only then were held-out results of any Part 10 learner read.
+
+\begin{table}[t]
+\centering\footnotesize\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{3.1cm}c>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{3.0cm}}
+\toprule
+set & size & status for v3 & network references\\
+\midrule
+toy \code{designed}, \code{dlsymdev}, \code{dlfamdev} & 41 & development; in-sample for the toy component & variants run there\\
+toy \code{random}, \code{dlheld}--\code{dlheld5} & 73 & held out for earlier versions; development data in Part 10 (not used by the toy builder) & \code{nets}, \code{nets_wd}; \code{nets_cewd} from \code{dlheld3} on\\
+toy \code{dlheld6} & 12 & held out in Part 9; used by the Part 10 toy builder & all five variants\\
+toy \code{dlheld7} & 12 & \textbf{held out} & \code{nets_wd}, \code{nets_cewd0.3}, \code{nets_cewd1.0}\\
+\addlinespace
+tabular (26 sets) & 26 & v3 runs v1's code there, except on kr\_vs\_kp and mushroom, where DFG runs; HELDOUT2 is held out for that code (Part 8) & MLP variants\\
+\addlinespace
+MNIST, Fashion-MNIST, \code{qd_dev} & 3 & development & MLP variants\\
+\code{qd_a}, \code{qd_b} & 2 & held out in Part 9; development data in Part 10 & \code{mlp_strong}, \code{mlp_wide}, \code{mlp_xl}\\
+\code{qd_c}, \code{qd_d} & 2 & \textbf{held out} & \code{mlp_strong}, \code{mlp_wide}, \code{mlp_xl}\\
+\bottomrule
+\end{tabularx}
+\caption{Every set and its status for v3. ``Held out'' sets were fixed in a commit before any Part 10 design work, and no result of a Part 10 learner on them was read before v3 was frozen.}
+\label{tab:status}
+\end{table}
+
+\paragraph{What is in-sample.} v3 is the last of several pre-registered steps, and every step used the earlier held-out sets as development data. For v3 as a whole, only \code{dlheld7}, \code{qd_c} and \code{qd_d} are untouched. The other suites still measure the learner, but they are not held out for its design: the toy builder developed on \code{dlheld6}, and the image builders on \code{qd_dev}, \code{qd_a} and Fashion-MNIST. On tabular data the claim is narrower and cleaner: v3's code path there is v1's, frozen in Part 8 before HELDOUT2 was fixed.
