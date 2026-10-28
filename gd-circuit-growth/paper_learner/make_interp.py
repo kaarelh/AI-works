@@ -18,6 +18,7 @@ tabulated values in figures/fig_interp.json.
 usage: OMP_NUM_THREADS=1 nice -n 5 python3 make_interp.py"""
 import os, csv, json, ast, math, numpy as np
 import matplotlib
+import matplotlib.ticker
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
@@ -31,7 +32,7 @@ TOY = os.path.join(INTERP, "results", "toy_final")
 IMG = os.path.join(INTERP, "results", "image_final")
 FIG, TAB = os.path.join(HERE, "figures"), os.path.join(HERE, "tables")
 os.makedirs(FIG, exist_ok=True); os.makedirs(TAB, exist_ok=True)
-plt.rcParams.update({"font.size": 7.5, "axes.titlesize": 7.5, "axes.labelsize": 7.5, "legend.fontsize": 6.5,
+plt.rcParams.update({"font.family": "DejaVu Sans", "mathtext.fontset": "dejavusans", "font.size": 7.5, "axes.titlesize": 7.5, "axes.labelsize": 7.5, "legend.fontsize": 6.5,
                      "xtick.labelsize": 6.5, "ytick.labelsize": 6.5, "pdf.fonttype": 42, "axes.linewidth": 0.6})
 W = 6.5                                                   # text width, inches
 OUT = {}                                                  # every plotted / tabulated value -> figures/fig_interp.json
@@ -127,32 +128,33 @@ lines += ["\\addlinespace", tex_row("all", T["all"]), "\\bottomrule", "\\end{tab
 open(os.path.join(TAB, "tab_interp_toy.tex"), "w").write("\n".join(lines) + "\n")
 
 # ---------------------------------------------------------------------------------------------- fig_toy_timing
-fig = plt.figure(figsize=(W, 3.75))
-gs = fig.add_gridspec(1, 2, width_ratios=[1.08, 1], wspace=0.27, left=0.115, right=0.985, top=0.9, bottom=0.125)
+fig = plt.figure(figsize=(W, 4.1))
+gs = fig.add_gridspec(1, 2, width_ratios=[1.08, 1], wspace=0.29, left=0.125, right=0.985, top=0.91, bottom=0.115)
 ax = fig.add_subplot(gs[0, 0])
 P = sorted(pure, key=lambda r: -r["low"])
 X = lambda n: l2(min(n, NEVER))
 for i, r in enumerate(P):
     y = len(P) - 1 - i
     ax.plot([X(r["nd"]), X(r["ns"] or NEVER)], [y, y], "-", color="#bbbbbb", lw=2.2, zorder=1, solid_capstyle="butt")
-    ax.plot(X(r["nd"]), y, "o", mfc="white", mec="k", ms=4.2, mew=0.8, zorder=3)
     if r["ns"]:
         ax.plot(X(r["ns"]), y, "s", color="#1f77b4", ms=4.2, zorder=3)
     else:
-        ax.plot(X(NEVER), y, "s", mfc="white", mec="#1f77b4", ms=4.2, zorder=3)
+        ax.plot(X(NEVER), y, "s", mfc="white", mec="#1f77b4", mew=0.9, ms=4.2, zorder=3)
+    # n_detect drawn after n_struct and larger, so that where the two coincide the circle rings the square
+    ax.plot(X(r["nd"]), y, "o", mfc="none", mec="k", ms=6.2, mew=0.9, zorder=5)
     ns0 = r["ns0"] if math.isfinite(r["ns0"]) else NEVER
-    ax.plot(X(ns0), y, "D", color="#d62728", ms=2.8, zorder=4)
-ax.set_yticks(range(len(P))); ax.set_yticklabels([f"{r['target']}  {r['low']:.2f}" for r in P][::-1], fontsize=5.8)
+    ax.plot(X(ns0), y, "|", color="#d62728", ms=7, mew=1.3, zorder=6)     # a thin tick, so it does not hide the square
+ax.set_yticks(range(len(P))); ax.set_yticklabels([f"{r['target']}  {r['low']:.2f}" for r in P][::-1], fontsize=6.5)
 ax.set_xticks(range(4, 16)); ax.set_xticklabels([f"$2^{{{k}}}$" for k in range(4, 15)] + ["never"], fontsize=6.2)
 ax.axvline(14.5, color="#999", lw=0.5, ls=":")
 ax.set_xlim(3.6, 15.4); ax.set_ylim(-0.7, len(P) - 0.3)
 ax.set_xlabel("training-set size $n$ (seed 0)")
 ax.set_title("(a) the 25 pure symmetric targets, by low-degree share", loc="left")
-ax.text(-0.01, 1.005, "low-deg. share", transform=ax.transAxes, ha="right", va="bottom", fontsize=5.6)
-h = [Line2D([], [], marker="o", mfc="white", mec="k", ls="", ms=4.2, label="$n_{\\rm detect}$: true block passes the test"),
-     Line2D([], [], marker="s", color="#1f77b4", ls="", ms=4.2, label="$n_{\\rm struct}$: exact block in the model"),
-     Line2D([], [], marker="D", color="#d62728", ls="", ms=2.8, label="$n^*$: 10% test error")]
-ax.legend(handles=h, loc="upper right", frameon=True, framealpha=0.95, edgecolor="none", fontsize=5.8, borderpad=0.3, handletextpad=0.3)
+ax.text(-0.01, 1.005, "low-deg. share", transform=ax.transAxes, ha="right", va="bottom", fontsize=6.5)
+h = [Line2D([], [], marker="o", mfc="none", mec="k", mew=0.9, ls="", ms=6.2, label="$n_{\\rm detect}$: test passes"),
+     Line2D([], [], marker="s", color="#1f77b4", ls="", ms=4.2, label="$n_{\\rm struct}$: exact block"),
+     Line2D([], [], marker="|", color="#d62728", ls="", ms=7, mew=1.3, label="$n^*$: 10% error")]
+ax.legend(handles=h, loc="upper right", frameon=True, framealpha=0.95, edgecolor="none", fontsize=6.5, borderpad=0.3, handletextpad=0.3)
 ax.grid(axis="x", color="#eeeeee", lw=0.5); ax.set_axisbelow(True)
 # (b) delay vs low-degree share, all 54 (mixtures with the corrected detection points)
 ax = fig.add_subplot(gs[0, 1]); FL = 1e-4
@@ -162,17 +164,17 @@ for m, lab in MIX:
     sel = [r for r in rows if r["mixture"] == m]; mk, c, filled = MK[m]
     ax.plot([max(r["low"], FL) for r in sel], [delay(r) if r["ns"] else l2(NEVER / 128) for r in sel], mk, ms=4.6 if mk != "*" else 6, ls="",
             mfc=c if filled else "white", mec=c, mew=0.9, alpha=0.9, label=f"{lab} ({len(sel)})", zorder=3 if filled else 2)
-ax.set_xscale("log"); ax.set_xlim(6e-5, 1.0)
+ax.set_xscale("log"); ax.set_xlim(6e-5, 1.5)
 ax.set_xticks([1e-4, 1e-3, 1e-2, 1e-1, 1]); ax.set_xticklabels(["$\\leq 10^{-4}$", "$10^{-3}$", "$10^{-2}$", "$10^{-1}$", "1"])
 dmax = l2(NEVER / 128)
-ax.set_yticks([-2, -1, 0, 1, 2, 3, 4, 5, 6, dmax]); ax.set_yticklabels(["-2", "-1", "0", "1", "2", "3", "4", "5", "6", "never"])
+ax.set_yticks([-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, dmax]); ax.set_yticklabels(["-2", "-1", "0", "1", "2", "3", "4", "5", "6", "7", "never"])
 ax.axhline(dmax - 0.5, color="#999", lw=0.5, ls=":"); ax.axhline(0, color="#999", lw=0.5)
 ax.set_ylim(-2.6, dmax + 0.6)
 ax.set_xlabel("low-degree share $(W_1+W_2)/(1-W_0)$")
 ax.set_ylabel("$\\log_2(n_{\\rm struct}/n_{\\rm detect})$")
 ax.set_title("(b) search delay against low-degree signal", loc="left")
-ax.text(0.03, 0.80, f"pure: Spearman $\\rho={rho_p:.2f}$\nall 54: $\\rho={rho_a:.2f}$", transform=ax.transAxes, ha="left", va="top", fontsize=6.2)
-ax.legend(loc="lower left", fontsize=5.8, frameon=True, framealpha=0.95, edgecolor="none", ncol=2, columnspacing=0.6,
+ax.text(0.03, 0.80, f"pure: Spearman $\\rho={rho_p:.2f}$\nall 54: $\\rho={rho_a:.2f}$", transform=ax.transAxes, ha="left", va="top", fontsize=6.5)
+ax.legend(loc="lower left", fontsize=6.5, frameon=True, framealpha=0.95, edgecolor="none", ncol=2, columnspacing=0.6,
           handletextpad=0.2, borderpad=0.3)
 ax.grid(color="#eeeeee", lw=0.5); ax.set_axisbelow(True)
 save(fig, "fig_toy_timing.pdf")
@@ -184,7 +186,7 @@ PICKS = [("dlheld4", "tail13", 256, "band $[|t|\\geq5]$"), ("dlheld6", "h6_11", 
          ("dlheld6", "h6_01", 512, "arbitrary set, signed"), ("dlheld7", "f7_01", 256, "threshold $[t\\leq1]$"),
          ("dlheld6", "h6_10", 256, "$[|t-3x_{13}|>1]$, $\\tau=x_{13}$", "tau"), ("dlheld6", "h6_10", 512, "$[|t-3x_{13}|>1]$, $\\tau=x_{13}$", "tau"),
          ("dlheld7", "f7_10", 256, "$[t+2x_6\\leq-1]$, $\\tau=x_6$", "tau"), ("dlheld7", "f7_09", 256, "$[t\\leq0]\\,x_{11}x_{12}$, $\\tau=x_{11}x_{12}$", "tau")]
-fig, axs = plt.subplots(2, 4, figsize=(W, 3.45), squeeze=False); OUT["fig_toy_g"] = []
+fig, axs = plt.subplots(2, 4, figsize=(W, 3.8), squeeze=False); OUT["fig_toy_g"] = []
 for ax, pk in zip(axs.ravel(), PICKS):
     su, tg, n, title = pk[:4]
     if len(pk) == 4:
@@ -205,21 +207,22 @@ for ax, pk in zip(axs.ravel(), PICKS):
         err = J["err_dfg"]
     OUT["fig_toy_g"].append(dict(suite=su, target=tg, n=n, err_dfg=err, agree_all_levels=agree,
                                  dropped_points=int(np.sum((g[:, 1] if len(pk) == 4 else g[:, 2])[~keep]))))
-    ax.set_title(f"{tg}, $n={n}$\n{title}", fontsize=6.4, linespacing=1.25); ax.axhline(0, color="#888", lw=0.4)
-    ax.set_ylim(-1.6, 1.6); ax.tick_params(labelsize=6)
-    ax.text(0.03, 0.04, f"DFG err {err:.3f}", transform=ax.transAxes, fontsize=5.6, color="#444")
+    ax.set_title(f"{tg}, $n={n}$\n{title}", fontsize=7, linespacing=1.25); ax.axhline(0, color="#888", lw=0.4)
+    ax.set_ylim(-1.6, 1.6); ax.tick_params(labelsize=6.5)
+    ax.xaxis.set_major_locator(matplotlib.ticker.MaxNLocator(nbins=5, integer=True))   # t is an integer statistic
+    ax.text(0.03, 0.04, f"DFG err {err:.3f}", transform=ax.transAxes, fontsize=6.5, color="#444")
 for ax in axs[1]:
     ax.set_xlabel("$t$ = true signed sum", fontsize=6.6)
 h = [Patch(color="#cccccc", label="$E[f\\mid t]$ (truth)"), Line2D([], [], color="#d62728", marker="o", ms=2.6, lw=0.8, label="mean DFG output"),
      Line2D([], [], color="#1f77b4", lw=0.8, alpha=0.6, label="$\\tau=+1$: truth"), Line2D([], [], color="#1f77b4", marker="o", ls="", ms=2.6, label="$\\tau=+1$: DFG"),
      Line2D([], [], color="#ff7f0e", lw=0.8, alpha=0.6, label="$\\tau=-1$: truth"), Line2D([], [], color="#ff7f0e", marker="o", ls="", ms=2.6, label="$\\tau=-1$: DFG")]
-fig.legend(handles=h, loc="lower center", ncol=6, fontsize=6, frameon=False)
+fig.legend(handles=h, loc="lower center", ncol=6, fontsize=6.5, frameon=False, columnspacing=1.0, handletextpad=0.4)
 fig.tight_layout(rect=(0, 0.06, 1, 1), h_pad=0.6, w_pad=0.4)
 save(fig, "fig_toy_g.pdf")
 
 # ===================================================================================================== toy: failures
-fig = plt.figure(figsize=(W, 2.35))
-gs = fig.add_gridspec(1, 3, width_ratios=[1, 1.35, 1], wspace=0.34, left=0.075, right=0.99, top=0.88, bottom=0.25)
+fig = plt.figure(figsize=(W, 2.6))
+gs = fig.add_gridspec(1, 3, width_ratios=[1, 1.35, 1], wspace=0.36, left=0.075, right=0.99, top=0.89, bottom=0.25)
 MOD3 = [("dlfamdev", "fd_10", "#1f77b4"), ("dlheld6", "h6_00", "#ff7f0e"), ("dlheld7", "f7_05", "#2ca02c")]
 LATE = [("dlsymdev", "band11", "#7f7f7f"), ("dlheld5", "h5s7", "#9467bd")]
 EASY = [("dlheld4", "tail13", "#8c564b")]
@@ -240,15 +243,17 @@ for s, t, c in MOD3 + LATE:
     cl = PW[t]["cells"]; ns = [x["n"] for x in cl]; rr = [max(x["search"]["eig"]) for x in cl]
     ax.plot(ns, rr, "-" if (s, t, c) in MOD3 else "--", marker="o", ms=2.2, lw=0.9, color=c, label=t)
     ch = chance_best_of_two(PW[t]["k"])
-    if (s, t, c) in MOD3:
-        ax.plot([2 ** 14 * 1.25], [ch], "<", color=c, ms=4, clip_on=False)
+    if (s, t, c) in MOD3:                                              # chance level, off the data at the right, with its value
+        xc = {"fd_10": 1.75, "h6_00": 1.5, "f7_05": 2.05}[t]           # staggered, so that 0.49 and 0.52 do not overlap
+        ax.plot([2 ** 14 * xc], [ch], "<", color=c, ms=4, clip_on=False)
     OUT["fig_toy_failures"]["power"][t] = dict(n=ns, reach_eig_best_of_2=rr, chance=ch, k=PW[t]["k"],
                                                ratio=[max(x["unfold"]["ratio"], x["fold"]["ratio"]) for x in cl])
-ax.set_xscale("log", base=2); ax.set_xticks([2 ** k for k in (4, 6, 8, 10, 12, 14)]); ax.set_ylim(0, 1.05)
+ax.set_xscale("log", base=2); ax.set_xticks([2 ** k for k in (4, 6, 8, 10, 12, 14)]); ax.set_xlim(right=2 ** 14 * 2.2)
+ax.set_ylim(0, 1.42); ax.set_yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])          # the band above 1 holds the legend
 ax.set_xlabel("$n$ (seed-0 training rows)"); ax.set_ylabel("fraction of $S$ in the first $|S|$")
 ax.set_title("(a) does the search order reach $S$?", loc="left")
 hh, ll = ax.get_legend_handles_labels(); hh.append(Line2D([], [], ls=":", marker="o", ms=2.2, lw=0.9, color="#8c564b")); ll.append("tail13")
-ax.legend(hh, ll, fontsize=5.6, frameon=False, loc="upper left", handlelength=1.6, ncol=2, columnspacing=0.6)
+ax.legend(hh, ll, fontsize=6.5, frameon=False, loc="upper center", handlelength=1.1, handletextpad=0.3, ncol=3, columnspacing=0.45, borderaxespad=0.2)
 ax = fig.add_subplot(gs[0, 1])
 CATS = [("true", "true"), ("drop_1", "$-1$"), ("drop_2", "$-2$"), ("drop_3", "$-3$"), ("drop_4", "$-4$"), ("add_1", "$+1$"), ("add_2", "$+2$"),
         ("flip_1", "flip 1"), ("flip_2", "flip 2"), ("mixed_3", "3 mixed"), ("pairs_in_max", "pair in $S$"),
@@ -259,7 +264,7 @@ for j, (s, t, c) in enumerate(MOD3):
     ax.plot(np.arange(len(CATS)) + (j - 1) * 0.18, v, "o", ms=3.2, color=c, label=t)
     OUT["fig_toy_failures"]["landscape"][t] = dict(zip([k for k, _ in CATS], v))
 ax.axhline(1, color="k", lw=0.6); ax.set_yscale("log"); ax.set_ylim(0.03, 400)
-ax.set_xticks(range(len(CATS))); ax.set_xticklabels([lab for _, lab in CATS], rotation=60, ha="right", fontsize=5.9)
+ax.set_xticks(range(len(CATS))); ax.set_xticklabels([lab for _, lab in CATS], rotation=60, ha="right", fontsize=6.5)
 for xv in (0.5, 4.5, 6.5, 8.5, 9.5):
     ax.axvline(xv, color="#dddddd", lw=0.5)
 ax.set_ylabel("$T$ / threshold ($n=16384$)")
@@ -271,7 +276,7 @@ for s, t, c in MOD3 + LATE[1:] + EASY:
             marker="o", ms=2.2, lw=0.9, color=c, label=t)                 # same line styles as panel (a), whose legend serves both
     OUT["fig_toy_failures"]["fourier"][t] = [float(x) for x in fw]
 ax.axvspan(0.5, 2.5, color="#eeeeee", zorder=0); ax.set_ylim(0, 0.5)
-ax.annotate("tail13: 0.65", xy=(2, 0.5), xytext=(3.2, 0.46), fontsize=5.6, color="#8c564b",
+ax.annotate("tail13: 0.65", xy=(2, 0.5), xytext=(3.2, 0.46), fontsize=6.5, color="#8c564b",
             arrowprops=dict(arrowstyle="->", color="#8c564b", lw=0.6))
 ax.set_xlabel("Fourier degree $|S|$"); ax.set_ylabel("share of Var $f$")
 ax.set_xticks([1, 3, 5, 7, 9, 11, 13]); ax.set_xlim(0.5, 14.5)
@@ -309,7 +314,7 @@ def bar_geom(PL):
 
 G = {}
 lines = ["\\begin{tabular}{llrrrrrrrr}", "\\toprule",
-         " & & \\multicolumn{4}{c}{pooling sets: members other than $i$} & \\multicolumn{2}{c}{Isomap $R^2$} & \\multicolumn{2}{c}{bars: exact lines}\\\\",
+         " & & \\multicolumn{4}{c}{pooling sets: members other than $i$} & \\multicolumn{2}{c}{Isomap $R^2$} & \\multicolumn{2}{c}{\\hd{bars:\\\\exact lines}}\\\\",
          "\\cmidrule(lr){3-6}\\cmidrule(lr){7-8}\\cmidrule(lr){9-10}",
          "set & $n$ & \\hd{$S_i(4)$\\\\$\\le1$ step} & \\hd{$S_i(9)$\\\\$\\le1$ step} & \\hd{$S_i(9)$\\\\$\\le2$ steps} & \\hd{$S_i(9)$\\\\$>2$ steps} & "
          "\\hd{$k=4$\\\\union} & \\hd{$k=9$\\\\mutual} & $L=2$ & $L=4$\\\\", "\\midrule"]
@@ -335,9 +340,9 @@ FAM = [("cgbt", lambda m: m == "cgbt"), ("ggbt", lambda m: m == "ggbt"), ("gknn"
        ("knn", lambda m: m.startswith("knn")), ("gbt+et", lambda m: m in ("gbt", "et")), ("lin", lambda m: m.startswith("lin"))]
 S = {}
 lines = ["\\begin{tabular}{llrrrrrrrrrrr}", "\\toprule",
-         " & & \\multicolumn{6}{c}{share of the stacking weight} & \\multicolumn{2}{c}{out-of-fold error} & \\multicolumn{3}{c}{test error}\\\\",
+         " & & \\multicolumn{6}{c}{share of the stacking weight} & \\multicolumn{2}{c}{\\hd{out-of-fold\\\\error}} & \\multicolumn{3}{c}{test error}\\\\",
          "\\cmidrule(lr){3-8}\\cmidrule(lr){9-10}\\cmidrule(lr){11-13}",
-         "set & $n$ & \\code{cgbt} & \\code{ggbt} & \\code{gknn} & \\code{knn} & \\hd{\\code{gbt},\\\\\\code{et}} & \\code{lin} & "
+         "set & $n$ & \\code{cgbt} & \\code{ggbt} & \\code{gknn} & \\code{knn} & \\hd{\\code{gbt},\\\\\\code{et}} & \\code{lin_C} & "
          "\\code{cgbt} & \\code{ggbt} & stack & \\hd{\\code{cgbt}\\\\alone} & \\hd{\\code{ggbt}\\\\alone}\\\\", "\\midrule"]
 for (ds, n), lab in [(r, None) for r in RUNS] + [(("v2", 10000), "v2")]:
     j = J2 if lab == "v2" else J[(ds, n)]; Wt = j["weights"]; tw = sum(Wt.values()); O = j["member_oof_err"]
@@ -407,7 +412,7 @@ def mesh(ax, Y, pix):
                 segs.append([m2[i][::-1] * [1, -1], m2[idx[q]][::-1] * [1, -1]]); cols.append(t / 27)
     from matplotlib.collections import LineCollection
     ax.add_collection(LineCollection(segs, colors=plt.cm.viridis(np.array(cols)), linewidths=0.3))
-    ax.autoscale(); ax.set_aspect("equal"); ax.set_xticks([]); ax.set_yticks([])
+    ax.autoscale(); ax.set_aspect("equal"); ax.set_box_aspect(1); ax.set_xticks([]); ax.set_yticks([])
     return 1 - disp
 
 
@@ -441,11 +446,11 @@ def bar_weights(ds, n, L):
 
 
 fig = plt.figure(figsize=(W, 3.6))
-gs = fig.add_gridspec(2, 4, hspace=0.32, wspace=0.06, left=0.01, right=0.99, top=0.93, bottom=0.01)
+gs = fig.add_gridspec(2, 4, hspace=0.42, wspace=0.06, left=0.01, right=0.99, top=0.9, bottom=0.01)
 mq, mf, mm = M[("qd_dev", 10000)], M[("fashion_mnist", 10000)], M[("mnist", 10000)]
 bgq, bgf, bgm = mq["class_mean"].mean(0), mf["class_mean"].mean(0), mm["class_mean"].mean(0)
 cen_q = [int(c) for c in mq["pool_example_centres"]]
-ax = fig.add_subplot(gs[0, 0]); draw_sets(ax, mq, cen_q, 9, bgq); ax.set_title("(a) six $S_i(9)$, qd_dev", fontsize=6.8)
+ax = fig.add_subplot(gs[0, 0]); draw_sets(ax, mq, cen_q, 9, bgq); ax.set_title("(a) six $S_i(9)$,\nqd_dev", fontsize=7)
 # Fashion: centres whose S_i(9) holds the most mirror pixels (same row +-1, columns summing to 27 +- 2), spread out
 pcf = mf["pool_centres"].astype(int); memf = mf["pool9_members"].astype(int)
 mir = np.array([np.sum((np.abs(S_ // 28 - c // 28) <= 1) & (np.abs(S_ % 28 + c % 28 - 27) <= 2) & (cheb(S_, c) > 2)) for c, S_ in zip(pcf, memf)])
@@ -455,20 +460,20 @@ for c in cand:
         cen_f.append(c)
     if len(cen_f) == 3:
         break
-ax = fig.add_subplot(gs[0, 1]); draw_sets(ax, mf, cen_f, 9, bgf); ax.set_title("(b) three $S_i(9)$, Fashion", fontsize=6.8)
+ax = fig.add_subplot(gs[0, 1]); draw_sets(ax, mf, cen_f, 9, bgf); ax.set_title("(b) three $S_i(9)$,\nFashion", fontsize=7)
 OUT["fig_img_grid"] = dict(qd_centres=cen_q, fashion_centres=cen_f, fashion_sets_with_mirror_k9=int(np.sum(mir > 0)), fashion_active=int(len(pcf)))
 for q, (ds, nm) in enumerate((("qd_dev", "qd_dev"), ("fashion_mnist", "Fashion"))):
     ax = fig.add_subplot(gs[0, 2 + q]); m = M[(ds, 10000)]
     r2 = mesh(ax, m["isomap"], m["isomap_pixels"].astype(int))
-    ax.set_title(f"({'cd'[q]}) Isomap, {nm}: $R^2={r2:.2f}$", fontsize=6.8)
+    ax.set_title(f"({'cd'[q]}) Isomap, {nm}:\n$R^2={r2:.2f}$", fontsize=7)
 rng = np.random.default_rng(0); PLq = mq["bars4_pixels"]
 rand_idx = rng.choice(len(PLq), 12, replace=False)
-ax = fig.add_subplot(gs[1, 0]); draw_bars(ax, PLq, rand_idx, bgq); ax.set_title("(e) 12 random 9-pixel bars, qd_dev", fontsize=6.8)
+ax = fig.add_subplot(gs[1, 0]); draw_bars(ax, PLq, rand_idx, bgq); ax.set_title("(e) 12 random 9-pixel bars,\nqd_dev", fontsize=7)
 OUT["fig_img_grid"]["random_bars"] = [int(t) for t in rand_idx]
 for q, (ds, nm, bg) in enumerate((("qd_dev", "qd_dev", bgq), ("mnist", "MNIST", bgm), ("fashion_mnist", "Fashion", bgf))):
     w, gf = bar_weights(ds, 10000, 4); top = np.argsort(-w)[:12]
     ax = fig.add_subplot(gs[1, 1 + q]); draw_bars(ax, M[(ds, 10000)]["bars4_pixels"], top, bg)
-    ax.set_title(f"({'fgh'[q]}) top 12 by gain, {nm}: {100 * w[top].sum() * gf:.1f}%", fontsize=6.8)
+    ax.set_title(f"({'fgh'[q]}) top 12 bars by gain,\n{nm}: {100 * w[top].sum() * gf:.1f}% of the gain", fontsize=7)
     OUT["fig_img_grid"][f"top12_bars4_{ds}_share_of_cgbt_gain"] = float(w[top].sum() * gf)
 save(fig, "fig_img_grid.pdf")
 
@@ -476,7 +481,7 @@ save(fig, "fig_img_grid.pdf")
 LAB = {"qd_dev": ["ocean", "motorbike", "matches", "grapes", "paper clip", "campfire", "washing m.", "soccer ball", "frying pan", "foot"],
        "mnist": [str(i) for i in range(10)]}
 fig = plt.figure(figsize=(W, 5.5))
-gsc = fig.add_gridspec(9, 10, height_ratios=[1, 1, 1, 1, 0.22, 1, 1, 1, 1], left=0.12, right=0.995, top=0.965, bottom=0.005,
+gsc = fig.add_gridspec(9, 10, height_ratios=[1, 1, 1, 1, 0.22, 1, 1, 1, 1], left=0.14, right=0.995, top=0.965, bottom=0.005,
                        wspace=0.05, hspace=0.1)
 OUT["fig_img_contrib"] = {}
 for b0, ds, dn in ((0, "qd_dev", "qd_dev"), (5, "mnist", "MNIST")):
@@ -487,14 +492,14 @@ for b0, ds, dn in ((0, "qd_dev", "qd_dev"), (5, "mnist", "MNIST")):
         for c in range(10):
             a_ = fig.add_subplot(gsc[b0 + i, c]); v = A[c]
             if kind == "ink":
-                a_.imshow(v.reshape(28, 28), cmap="Greys"); a_.set_title(LAB[ds][c], fontsize=6.2, pad=2)
-            else:
-                s_ = np.abs(v).max() or 1; a_.imshow(v.reshape(28, 28), cmap="RdBu_r", vmin=-s_, vmax=s_)
+                a_.imshow(v.reshape(28, 28), cmap="Greys"); a_.set_title(LAB[ds][c], fontsize=6.8, pad=2)
+            else:                                                       # 99th percentile of |value|: the top 1% saturate
+                s_ = float(np.percentile(np.abs(v), 99)) or 1; a_.imshow(v.reshape(28, 28), cmap="RdBu_r", vmin=-s_, vmax=s_)
             a_.set_xticks([]); a_.set_yticks([])
             for sp in a_.spines.values():
                 sp.set_linewidth(0.4)
             if c == 0:
-                a_.set_ylabel(nm, fontsize=6.2, rotation=0, ha="right", va="center")
+                a_.set_ylabel(nm, fontsize=6.8, rotation=0, ha="right", va="center")
     OUT["fig_img_contrib"][ds] = dict(blank_share_cgbt=[float(x) for x in ((m["cgbt_contrib"] - m["cgbt_contrib_inked"]).sum(1) / m["cgbt_contrib"].sum(1))],
                                       blank_share_ggbt=[float(x) for x in ((m["ggbt_contrib"] - m["ggbt_contrib_inked"]).sum(1) / m["ggbt_contrib"].sum(1))],
                                       corr_cgbt_ggbt=[float(np.corrcoef(m["cgbt_contrib"][c], m["ggbt_contrib"][c])[0, 1]) for c in range(10)])

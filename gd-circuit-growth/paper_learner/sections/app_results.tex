@@ -1,0 +1,122 @@
+\section{Further results}\label{app:further}
+
+This appendix holds the in-sample detail behind \cref{sec:results-toy,sec:results-img}: the toy suites target by target (\cref{app:further-toy}), what changed from v2 to v3 on toy inputs (\cref{app:further-v2v3}), the tabular datasets (\cref{app:further-tab}), the development image sets (\cref{app:further-img}) and the compute of the image fits (\cref{app:further-compute}). None of it is held out for v3.
+
+\subsection{The toy suites in detail}\label{app:further-toy}
+
+\paragraph{Pooled over the held-out suites} \status{Numerical}. Pooled over the seven held-out suites (\code{dlheld}, \code{dlheld2}, \code{dlheld3}--\code{dlheld7}; 77 targets), the mean $\log_2\nstar$ ratio against \code{nets_best} is $-1.87$ over the 74 targets both learn. v3 is clearly better on 72 targets and clearly worse on 1 (h6\_00). This matches \repo{study/part10/LEARNER_RESULTS.md}; the development check \code{random} is not included. The pooled number is a summary of the record, not a held-out estimate: 65 of the 77 targets were development data for v3, and only the 12 of \code{dlheld7} are held out. The held-out estimate is the \code{dlheld7} row alone.
+
+\paragraph{The wins that need no feature search} \status{Numerical}. Over all suites they are of three kinds.
+\begin{itemize}
+\item \emph{Halfspaces.} Logistic regression alone is clearly better than \code{nets_best} on halfspace-like targets: dict, maj3, maj9, rand2 and thr10 on \code{designed}, maj15 and thr30 on \code{dlheld}, maj21 and thr20 on \code{dlheld2}, thrint on \code{dlheld3} and f7\_10 on \code{dlheld7}. On these, v3 is within the tie band of \code{lin} (thr10 121 against 113, thr20 124 against 117, thr30 149 against 148, maj9 80 against 80, maj15 105 against 110, maj21 109 against 116, thrint 139 against 137, f7\_10 82 against 87) or clearly below it (maj3 31 against 56, dict 16 against 27, rand2 16 against 50).
+\item \emph{Formulas, decision lists and multiplexers.} \code{hgb} is clearly better than \code{nets_best} on six targets of \code{dlheld} (the random formulas hrf0, hrf1 and hrf2, the majority of majorities majmaj5, the multiplexer mux6 and the staircase stair6), on three of \code{dlheld2} (dnf4x2, h2rf0, h2rf1), on the five formula and multiplexer targets of \code{dlheld3} (cnf3, dlist8, h3rf0, h3rf1, mux11), on 8 of the 11 non-symmetric controls of \code{dlheld4}--\code{dlheld7}, on the multiplexer f7\_11, and narrowly on h5s4, a signed-sum condition OR a literal (1465 against 1801).
+\item \emph{Random formulas.} On the development check \code{random}, \code{hgb} is clearly better than \code{nets_best} on 9 of the 20 formulas and \code{lin} on 2 (rf06, rf10). v3 is clearly better than both on all 20 (\cref{tab:toy-suites}).
+\end{itemize}
+Where the calibration references fail, they fail often: \code{hgb} never reaches 10\% error on 5 of the 12 targets of \code{dlheld4} and on 6 of \code{dlheld5}, and \code{lin} on 11 of \code{dlheld4} and all 12 of \code{dlheld5}.
+
+\paragraph{The next-smallest margins} \status{Numerical}. After the five targets of \cref{sec:res-toy-fail}, the smallest margin against \code{nets_best} is inter2 (\code{dlheld}, an AND of two halfspaces on 10 inputs: 346 against 454, $-0.39$). Then come the halfspace-like thrint ($-0.46$) and f7\_10 ($-0.53$), where \code{lin} is already as good as v3, a random formula of \code{random}, rf00 ($-0.62$), and h5s2 ($-0.68$), an arbitrary accept set whose weight at degrees 1--2 is also small.
+
+\subsection{What changed from v2 to v3 on toy inputs}\label{app:further-v2v3}\label{sec:res-v2v3}
+
+\begin{table}[t]
+\centering{\footnotesize
+\input{tables/tab_toy_v2v3.tex}}
+\caption{Every toy target on which v3's $\nstar$ differs clearly from v2's ($|\log_2\text{ratio}|>0.25$), on all suites with results for both \status{Numerical}. There are 14 such targets among the 138. None is on \code{dlheld3} or on the held-out \code{dlheld7}. Source: \repo{study/part10/LEARNER_RESULTS.json}.}
+\label{tab:toy-v2v3}
+\end{table}
+
+\paragraph{The change} \status{Numerical}. The only difference between v2 and v3 on toy inputs is DFG: v1.3 replaces v1.2 (\cref{sec:dfg}). v1.3 adds three things to the sum-block search, all of which act together:
+\begin{itemize}
+\item weighted blocks $u=t+a\tau$;
+\item forced blocks in the small-$n$ variant at $n\ge48$;
+\item a beam search at $n\le128$.
+\end{itemize}
+On the development suites the integration rule measured a mean $\log_2\nstar$ ratio of $-0.066$ against v2 over 40 targets, with the largest increase $+0.26$ on fd\_06 (\cref{sec:decisions}). That is a small gain. \Cref{tab:toy-v2v3} shows where it sits over all suites: 12 targets clearly better and 2 clearly worse, out of 138. Structure runs of both versions on the six sum-structured suites (68 targets with the controls) show where the changes act. Over the 64 of those targets with a finite 3-seed $\nstar$ for both, the mean $\log_2\nstar$ ratio of v3 to v2 is $-0.116$ (in-sample: every suite except \code{dlheld7} is development data for v3, and the toy builder developed on \code{dlheld6}; on the held-out \code{dlheld7} the mean is $-0.004$, \cref{sec:res-dlheld7}).
+
+\paragraph{Where $\nstar$ moved, and what the models show.} The descriptions below come from the interpretability analysis (seed 0, \cref{sec:interp-toy}) and report what the fitted DFG model contains \status{Numerical}. No ablation separates the three additions: the attribution of each change to weighted blocks or to the small-$n$ search is read off what v3's model holds at its $n_{\rm struct}$, so these labels are observations, not attributions \status{Heuristic}.
+\begin{itemize}
+\item \emph{Weighted blocks change what is learned} on four targets whose exact structure v2's models never match: h6\_10 ($n_{\rm struct}=256$ in v3; $\nstar$ 702 $\to$ 206), h6\_07 (512, with the selector as inner literal; 678 $\to$ 447), h6\_08 (1024; 446 $\to$ 449) and sumpar (2048, with $(x_1+\dots+x_5+2x_6x_7)$; 164 in both).
+\item \emph{h6\_10} $=[|x_1+\dots+x_{12}-3x_{13}|>1]$ (\code{dlheld6}). v3's model holds the weighted block $|\pm(x_1+\dots+x_{12})+3x_{13}|$ from $n=256$, with the right relative sign from $n=512$. v2 does represent the target exactly from $n=512$, by two folded 13-input blocks $|s+x_{13}|$ and $|s-x_{13}|$ that the matcher does not count, and which together determine the target (DFG error 0.000 at $n=1024$). v3's model is nearly right one doubling earlier ($n=256$: DFG error 0.017, with the inner sign wrong, against v2's 0.33), and both are exact from 512. So the change is in how early the structure is found, not in what can be represented. This is the target the weighted blocks were designed for, on a suite the builder used, so it is not evidence for v3. It turns one of \code{dlheld6}'s two Part 9 losses to the networks (h6\_10: v2 702 against \code{nets_best} 451) into a win (206); the other, h6\_00, remains.
+\item \emph{h6\_07} (\code{dlheld6}), a multiplexer between conditions on two signed sums. The selector $x_{11}$ enters the model as the heavy literal of weighted blocks: from $n=512$ on the 4-input branch, $(x_7+x_8+x_9-x_{10}-3x_{11})$, and from $n=1024$ on the 6-input branch, $(x_1-x_2-\dots-x_6+3x_{11})$.
+\item \emph{The beam and forced blocks move the first exact block one doubling earlier} on five pure targets (sym7 to 64; fd\_09, tail13, sym11 and h6\_11 to 128) and on the gate mixture majsym (to 128). On sym7 (\code{dlsymdev}, $\nstar$ 110 $\to$ 55) and majsym (\code{dlheld4}, 189 $\to$ 90) the block is in the forced variant, below the threshold (0.89 of it for sym7; 0.36--0.39 for majsym's plain block): forced, not admitted. On sym7 at $n=64$ the stacker puts all its DFG weight on that forced member. For fd\_09, tail13, sym11 and h6\_11 the true block already passes the test at 128 (1.34--1.62 times the threshold; the unweighted test is the same in both versions), so the earlier find is a difference in the search, not attributable to the beam specifically.
+\item \emph{Later or lost.} h5t1's $n_{\rm struct}$ moves from 256 to 512, with identical portfolio errors. f7\_11 loses the joint structure: v2 holds both classes at 2048 and 4096, v3 never in one model ($\nstar$ 55 in both).
+\item \emph{Not diagnosed:} parmaj, far9, h5rf0, sym8 and rf03. h5rf0 is a random-formula control (268 to 203), sym8 is on \code{dlheld2} (100 to 53) and rf03 is a random formula of \code{random} (78 to 62). On development data the toy builder traced parmaj to the beam at $n=128$ and far9 to forced blocks at $n=64$ (source: \repo{study/part10/p10_sum/DESIGN.md}).
+\item \emph{The two losses}, not diagnosed: hrf0 (\code{dlheld}, a random formula; 46 to 62, $+0.43$, the larger of the two), on a suite the toy builder did not use; and fd\_06 ($+0.26$), an XOR of conditions on two signed sums.
+\item \emph{The same $n_{\rm struct}$ is not the same fit.} 41 targets have the same $n_{\rm struct}$ in both versions. On them the 3-seed $\nstar$ still moves, from $-0.30$ (far9) to $+0.26$ (fd\_06) in $\log_2$ (mean $-0.005$ over 40), and the portfolio's errors differ at some analysed $n$ on 26 of the 41. They are identical at every analysed $n$ on 20 of the 68 targets.
+\end{itemize}
+
+\paragraph{Where weighted blocks appear} \status{Numerical}. The weighted class is used far more widely than for h6\_10. At some $n$, 26 of the 68 targets of the six sum-structured suites have a weighted block with at least 20\% of the largest term's share: 16 sum-structured targets and 10 of the 14 controls. Its inner term $\tau$ is one of five kinds.
+\begin{itemize}
+\item the true weighted term: h6\_10, f7\_10, h5t0, h5t1;
+\item a parity partner or one of its literals: symxpar ($+3x_7x_8$), h6\_06 (first $+2x_7$ at $n=512$, then $\pm3x_7x_8$), f7\_07, symxor ($-2x_8$);
+\item a multiplexer's selector: h6\_07, h6\_08, f7\_03 ($\pm3x_{11}$);
+\item the other inputs of a gate: h5s4 ($+3x_6$), symand ($+3\,\mathrm{AND}(-x_8,-x_7)$), majsym ($+2x_6x_7$);
+\item an input or inputs of a true class: h6\_09 ($+3\,\mathrm{AND}(x_9,-x_{10})$) and, at $n=16384$ only, h5s7 ($+3x_{11}$, a literal of its own class).
+\end{itemize}
+The other 10 are controls (all but dnf3x3, f7\_02, h4rf0 and h5rf1), mostly decision lists, DNFs and read-once formulas. There the inner term is an AND of two literals in 9 cases and a literal in 1, typically inside a weighted threshold, as in h6\_04's $(x_1+x_2-3\,\mathrm{AND}(x_4,-x_3))$. On 8 of the 26 targets (symxpar, f7\_06, f7\_10, h6\_03, h5s7, h5t0, h5t1, majsym) the weighted block appears at a single analysed $n$. On most of the 26, $\nstar$ does not move clearly (\cref{tab:toy-v2v3}).
+
+\noindent\emph{Reading} \status{Heuristic}. Any function of a block and one more $\pm1$ term that the block's partition cannot separate, such as a parity partner, a selector or a gate, can be written wholly or partly as a function of $s+a\tau$. The search finds these because $\tau$ is usually a strong single input or pair. The class was built for h6\_10 and is used far more widely, mostly without a measurable change in $\nstar$.
+
+\subsection{Tabular data in detail}\label{app:further-tab}
+
+\paragraph{kr\_vs\_kp} \status{Numerical}. v3's own runs differ from v1's at 3 of 4 sizes, but no cell differs clearly (at $n=1000$, 0.0075 against 0.0100; at the full 2397, 0.0029 against 0.0021).
+
+\paragraph{Per dataset} \status{Numerical}. The per-dataset picture is Part 8's (\repo{study/hybrid/RESULTS.md}).
+\begin{itemize}
+\item \emph{HELDOUT2.} The large margins against \code{mlp_best} are on ann\_thyroid ($-0.77$), clean2 ($-1.12$, mostly from $n\le300$) and churn ($-0.35$). Three of the 8 datasets with lower error are within about $\pm0.05$. The losses are texture ($+0.61$; no cell resolves, since errors are below 1.6\% from $n=1000$) and krkopt ($+0.19$; clearly worse at $n\ge10000$).
+\item \emph{The Part 7 set.} The largest wins are dna ($-0.77$) and ring ($-0.50$). The losses are nursery ($+0.70$), pendigits ($+0.19$) and connect\_4 ($+0.03$, worse at full $n$).
+\end{itemize}
+
+\paragraph{What Part 8 found} \cite{discretelearners2026}.
+\begin{itemize}
+\item \emph{DFG does not carry the tabular results.} DFG runs on none of the HELDOUT2 datasets. In Part 7, DFG's own dictionaries were about as good as a plain MLP on tabular data and worse than a regularized one.
+\item \emph{No single member family matches the stack.} On Part 8's 48 ablation cells (HELDOUT2 and two image sets, $n\le3000$, seeds 0--1), LightGBM alone was $+0.08$ against the best MLP, where the full stack was $-0.19$. Different members carry different datasets: trees carry churn, ann\_thyroid and clean2, $k$-NN carries banana, and logistic regression carries texture.
+\item \emph{Default \code{hgb} alone does not beat the MLPs.} Against \code{mlp_best} it is $+0.08$ on HELDOUT2 and $+0.14$ on the Part 7 set (\repo{study/hybrid/RESULTS.md}). The stack's mean $\log_2$ ratio against it is about $-0.25$ on both (\cref{tab:real}).
+\end{itemize}
+
+\subsection{The development image sets}\label{app:further-img}
+
+\begin{table}[tbp]
+\centering{\footnotesize\setlength{\tabcolsep}{3.0pt}\renewcommand{\arraystretch}{1.12}
+\input{tables/tab_images_cells_dev.tex}}
+\caption{Test error (\%) at every development image cell with a v3 result \status{Numerical}. Conventions as in \cref{tab:img-cells}. Panel (a): v3 is seed 0 and the references are seed means. Panel (b): v3 and v2 are seed 0, and \code{mlp_strong}, \code{hgb} and v1 are seed means. ``Fashion'' is Fashion-MNIST. Source: \repo{study/part10/LEARNER_RESULTS.json}.}
+\label{tab:img-cells-dev}
+\end{table}
+
+\begin{table}[tbp]
+\centering{\footnotesize\setlength{\tabcolsep}{5pt}
+\input{tables/tab_images_summary_dev.tex}}
+\caption{v3 against each image reference on the development sets \status{Numerical}. Conventions as in \cref{tab:img-summary}. Both panels compare single v3 fits (seed 0) with the references' seed means where 3 seeds exist (v2 in panel (b), \code{mlp_xl}, \code{mlp_pool}, \code{cnn} and all $n=60000$ cells are seed 0). Source: \repo{study/part10/LEARNER_RESULTS.json}.}
+\label{tab:img-summary-dev}
+\end{table}
+
+\Cref{tab:img-cells-dev,tab:img-summary-dev} give v3 at the cells of its fixed development evaluation. These sets are not held out for v3, and the cells are in-sample for a choice:
+\begin{itemize}
+\item \emph{Tuning.} \code{p10_codes}'s builder tuned on validation rows of the training pools of \code{qd_dev}, \code{qd_a} and Fashion-MNIST (not \code{qd_b}; \repo{study/part10/p10_codes/DESIGN.md}); \code{p10_hier}'s builder also used \code{qd_b}'s (\repo{study/part10/p10_hier/DESIGN.md}). Neither tuned on a test set.
+\item \emph{Selection.} After each freeze, the candidate's test error was computed once at 8 cells: \code{qd_dev} and Fashion-MNIST at $n\in\{1000,10000\}$, and \code{qd_a} and \code{qd_b} at $n\in\{3000,10000\}$. A pre-registered ninth cell, \code{qd_a} at $n=60000$, checked error, budget and CPU time. The integration rule then used these test errors to qualify the two candidates and choose between them; it took the one with the lower mean $\log_2$ ratio against v2 (\cref{sec:decisions}).
+\end{itemize}
+The v3 numbers here are therefore the errors of the candidate that these very numbers selected. With two candidates this close the selection effect is small, but these cells are not a test of v3. Each v3 entry is one fit (seed 0).
+
+\paragraph{\code{qd_a} and \code{qd_b}} (held out in Part 9) \status{Numerical}.
+\begin{itemize}
+\item \emph{References.} v3 is clearly better than \code{mlp_strong}, \code{mlp_wide}, \code{hgb} and v1 at all 5 cells. It is also clearly better than \code{mlp_xl} at \code{qd_a}, $n=60000$ (10.82\% against 12.46\%, 13.2\% lower), and than \code{mlp_pool} at the 3 cells where both were run (at \code{qd_a}, $n=60000$: 10.82\% against 12.25\%).
+\item \emph{v2.} All 5 cells are ties, with v3 2.6--9.6\% lower (mean $\log_2$ ratio $-0.089$). Here v2's entries are seed means. Against v2's seed-0 fits, as the integration rule compared them, the margins are similar: for example 17.48\% against 18.75\% at \code{qd_a}, $n=3000$.
+\item \emph{The context.} The \code{cnn} on unpermuted pixels is the only learner better than v3: 12.00\% against 14.22\% at \code{qd_a}, $n=10000$, an error 15.6\% lower. Among v3's cells, only the one at $n=60000$ (10.82\%) is below it.
+\item \emph{Comparison with Part 9.} At $n=60000$, v2 tied \code{mlp_xl} on both sets (11.97\% against 12.46\% on \code{qd_a}; 14.88\% against 14.79\% on \code{qd_b}). The control \code{mlp_pool} matched v2 (12.25\% and 14.74\%). v3's \code{qd_a} cell (10.82\%) is clearly better than both. v3 was not run at \code{qd_b}, $n=60000$.
+\end{itemize}
+
+\paragraph{\code{qd_dev} and Fashion-MNIST} (development throughout) \status{Numerical}.
+\begin{itemize}
+\item \emph{\code{qd_dev}.} v3 is clearly better than \code{mlp_strong}, \code{hgb} and v1 at both cells, for example 13.30\% against \code{mlp_strong}'s 17.49\% at $n=10000$. It ties v2 at both cells (21.18\% against 22.22\%, 13.30\% against 14.63\%). v2's cells here were run with multi-threaded BLAS, unlike every v3 and held-out run (\cref{sec:disc-provenance-disclosures}).
+\item \emph{Fashion-MNIST.} Against \code{mlp_strong} (= \code{mlp_best}), v2, v1 and \code{hgb} every cell is a tie. v3 has 17.97\% and 12.38\% against \code{mlp_strong}'s 18.60\% and 12.64\% (3.4\% and 2.0\% lower). Only the weaker baseline \code{mlp} (at $n=10000$, 14.45\%) and \code{mlp_reg} (20.32\% and 14.17\%) are clearly worse than v3. This is the set where the bars do not help. On the builder's validation rows, a booster on \code{cgbt}'s bank was worse there than one on v2's bank (18.30\% against 17.74\% at $n=1000$; \repo{study/part10/p10_codes/DESIGN.md}, \S4.2). \code{cgbt}'s raw stacking weight is 0.05 and 0.07 there (shares of the total weight 0.07 and 0.10), against 0.23--0.50 (shares 0.28--0.68) on the QuickDraw development cells.
+\item \emph{Larger $n$.} v3 was not run on Fashion-MNIST beyond $n=10000$. v2's image path (\code{p9_gates}, Part 9, seed 0) reached 9.64\% at $n=60000$, against \code{mlp_strong}'s 9.66\%.
+\end{itemize}
+
+\subsection{Compute of the image fits in detail}\label{app:further-compute}
+
+\paragraph{CPU time} \status{Numerical}. Three details of \cref{sec:res-img-compute}:
+\begin{itemize}
+\item \emph{Why v3 is not slower at $n=60000$.} There v3 takes about as long as v2 (1.05$\times$ on \code{qd_c}, 0.96$\times$ on \code{qd_d}), although it fits a second booster. \code{cgbt} takes 668 and 760 s. But v3's \code{ggbt} takes 482 and 474 s against v2's 1091 and 1305 s. The reason is that v3 sets LightGBM's column-wise layout, which leaves the predictions unchanged (\repo{study/part10/p10_codes/DESIGN.md}, \S1). Part 9 found this fix but did not apply it to v2.
+\item \emph{A like-for-like estimate.} The comparison with v2 is not like for like. v3's time minus \code{cgbt}'s, 693 and 704 s, estimates v2 with the same layout. By that estimate the second booster about doubles the CPU time of a fit at $n=60000$.
+\item \emph{How rough the MLP times are.} They are wall-clock seconds on the shared machine, and they vary with the load from concurrent jobs. The same \code{mlp_strong} recipe took 384 s per fit at \code{qd_c}, $n=1000$, and 98 s at \code{qd_d}, $n=1000$. In Part 9 it took 28 s at \code{qd_a}.
+\end{itemize}

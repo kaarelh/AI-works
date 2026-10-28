@@ -49,9 +49,9 @@ def figure(fn):
     return fn
 
 
-def save(fig, name):
+def save(fig, name, tight=True):
     p = os.path.join(FIG, name)
-    fig.savefig(p, bbox_inches="tight", pad_inches=0.03)
+    fig.savefig(p, bbox_inches="tight" if tight else None, pad_inches=0.03)
     plt.close(fig)
     print("wrote", p)
 
@@ -158,7 +158,7 @@ def fig_toy_nstar():
     ax.plot(g, g, color=INK2, lw=0.9, ls="--", zorder=1)
     ax.plot(g, g / 4, color="#9a9a9a", lw=0.8, ls=":", zorder=1)
     ax.text(1.25e4, 1.25e4 * 0.72, "equal data", fontsize=6.5, color=INK2, ha="right", va="top", rotation=45, rotation_mode="anchor")
-    ax.text(1.25e4, 1.25e4 / 4 * 0.72, "4x less data", fontsize=6.5, color=INK2, ha="right", va="top", rotation=45, rotation_mode="anchor")
+    ax.text(1.25e4, 1.25e4 / 4 * 0.72, "4$\\times$ less data", fontsize=6.5, color=INK2, ha="right", va="top", rotation=45, rotation_mode="anchor")
     ax.axhline(NEV, color="#c4c4c4", lw=0.6, zorder=0); ax.axvline(NEV, color="#c4c4c4", lw=0.6, zorder=0)   # the "never" edges
     ax.text(lo * 1.12, NEV * 0.86, "never", fontsize=6.5, color=INK2, va="top", ha="left")
     ax.text(NEV * 0.86, lo * 1.12, "never", fontsize=6.5, color=INK2, va="bottom", ha="right", rotation=90)
@@ -171,8 +171,9 @@ def fig_toy_nstar():
         ax.scatter(x, y, s=s, marker=mk, facecolor=fc, edgecolor=ec, linewidth=0.8 if key != "earlier" else 0.4, zorder=z,
                    alpha=0.95)
         present = [su for su in suites if any(p["suite"] == su for p in Q)]
+        name = "random, dlheld\u2013dlheld5" if present == suites and key == "earlier" else ", ".join(present)
         handles.append(Line2D([], [], marker=mk, ls="", mfc=fc, mec=ec, mew=0.8, ms=math.sqrt(s) + 1.0,
-                              label=f"{', '.join(present)} ({len(Q)})\n{lab}"))
+                              label=f"{name} ({len(Q)})\n{lab}"))
     # the targets named in the text
     lab = {p["target"]: p for p in P}
     def note(t, txt, dx, dy, ha="right"):
@@ -191,12 +192,12 @@ def fig_toy_nstar():
                     color=INK, ha="right", va="center", arrowprops=dict(arrowstyle="-", color=INK2, lw=0.5, shrinkA=0, shrinkB=3))
     ax.set_xscale("log"); ax.set_yscale("log"); ax.set_xlim(lo, hi); ax.set_ylim(lo, hi); ax.set_aspect("equal")
     ax.set_xlabel(r"$n^*$ of nets_best (per-target best network variant on the suite)")
-    ax.set_ylabel(r"$n^*$ of v3 (hyb_portfolio3), inputs permuted per fit")
+    ax.set_ylabel(r"$n^*$ of v3, inputs permuted per fit")
     ax.legend(handles=handles, loc="upper left", bbox_to_anchor=(1.03, 1.0), handletextpad=0.4, borderaxespad=0.0,
               labelspacing=1.0, fontsize=7, title="suites by status for v3\n(targets plotted)", title_fontsize=7,
               alignment="left")
-    fig.tight_layout()
-    save(fig, "fig_toy_nstar.pdf")
+    fig.subplots_adjust(left=0.09, right=0.62, bottom=0.11, top=0.98)   # saved at exactly TEXTW: no shrinking in LaTeX
+    save(fig, "fig_toy_nstar.pdf", tight=False)
     N = toy_numbers(J, P); N["points"] = P
     json.dump(N, open(os.path.join(FIG, "fig_toy_nstar.json"), "w"), indent=1)    # "never" is stored as Infinity
     print(json.dumps({k: v for k, v in N.items() if k != "points"}, default=str))
@@ -205,13 +206,13 @@ def fig_toy_nstar():
 # ---- fig_images: learning curves on the held-out QuickDraw sets (sections/results_images.tex) ------------------------------
 IMG_RES = os.path.join(STUDY, "standard_tasks", "results")
 IMG_STY = {   # result-file learner name: (colour, marker, line style, line width, hollow marker, legend label)
-    "hyb_portfolio3": (COL[0], "o", "-", 2.0, False, "v3 = hyb_portfolio3"),
-    "hyb_portfolio2": (COL[6], "o", "--", 1.2, True, "v2 = hyb_portfolio2"),
-    "hyb_portfolio": ("#8a8a8a", "o", ":", 1.2, True, "v1 = hyb_portfolio"),
+    "hyb_portfolio3": (COL[0], "o", "-", 2.0, False, "v3"),
+    "hyb_portfolio2": (COL[6], "o", "--", 1.2, True, "v2"),
+    "hyb_portfolio": ("#8a8a8a", "o", ":", 1.2, True, "v1"),
     "hgb": (COL[4], "D", ":", 1.2, False, "hgb"),
-    "mlp_strong": (COL[1], "s", "--", 1.2, False, "mlp_strong (3 x 256-256)"),
-    "mlp_wide": (COL[3], "s", "-.", 1.2, False, "mlp_wide (3 x 512-512)"),
-    "mlp_xl": (COL[7], "P", "none", 0.0, False, "mlp_xl (3 x 1024-1024, CPU-matched)"),
+    "mlp_strong": (COL[1], "s", "--", 1.2, False, "mlp_strong (3\u00d7256-256)"),
+    "mlp_wide": (COL[3], "v", "-.", 1.2, False, "mlp_wide (3\u00d7512-512)"),
+    "mlp_xl": (COL[7], "P", "none", 0.0, False, "mlp_xl (3\u00d71024-1024, CPU-matched)"),
     "mlp_pool": (COL[2], "^", "none", 0.0, False, "mlp_pool (mlp_strong on [x, v2's pooled sums]; control)"),
     "cnn": (INK2, "x", "none", 0.0, False, "cnn on unpermuted pixels (context)"),
 }
@@ -260,7 +261,8 @@ def fig_images():
         v3 = {n: e for n, e, _ in pts[ds].get("hyb_portfolio3", [])}
         ax.axhspan(dn, up, color="#efefef", lw=0, zorder=0)
         ax.axhline(0, color=COL[0], lw=2.0, zorder=2)
-        ax.text(780, dn + 0.012, "within 10% of v3's error (cell rule: a tie)", fontsize=6.3, color=INK2, va="bottom", ha="left")
+        if "cnn" not in pts[ds]:                                    # the cnn markers would overprint the label in (c)
+            ax.text(780, dn + 0.012, "within 10% of v3's error (cell rule: a tie)", fontsize=6.3, color=INK2, va="bottom", ha="left")
         for L, (col, mk, ls, lw, hollow, lab) in IMG_STY.items():
             if L == "hyb_portfolio3" or L not in pts[ds]:
                 continue

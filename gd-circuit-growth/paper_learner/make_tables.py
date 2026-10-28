@@ -21,7 +21,7 @@ def summ(t):
 
 
 TOY_ROLE = {"designed": "dev", "random": "dev check (P6)$^c$", "dlheld": "held out (P6)", "dlheld2": "held out (P6)",
-            "dlheld3": "held out (P8)", "dlsymdev": "dev (P9)", "dlheld4": "held out (P9)$^a$", "dlheld5": "held out (P9)",
+            "dlheld3": "held out (P8)$^d$", "dlsymdev": "dev (P9)", "dlheld4": "held out (P9)$^a$", "dlheld5": "held out (P9)",
             "dlheld6": "held out (P9), dev (P10)$^b$", "dlfamdev": "dev (P10)", "dlheld7": "\\textbf{held out (P10)}"}
 ORDER = ["designed", "random", "dlheld", "dlheld2", "dlheld3", "dlsymdev", "dlheld4", "dlheld5", "dlheld6", "dlfamdev", "dlheld7"]
 
@@ -38,6 +38,19 @@ def tab_toy_suites():
     open(os.path.join(OUT, "tab_toy_suites.tex"), "w").write("\n".join(L) + "\n")
 
 
+def tex_desc(s):
+    """A target's definition string from study/boolfuncs.py as LaTeX: comparison and arrow signs as math, minus signs as
+    math minus (no line break after them, unlike a text hyphen), and a break point after each comma."""
+    import re
+    s = re.sub(r"sum_\(i<=(\d+)\) s_i x_i", "\x01\\1\x01", s)                 # dlheld5's signed sums, set as math below
+    s = s.replace("_", "\\_").replace("&", "\\&").replace("<=", "$\\le$").replace(">=", "$\\ge$").replace("->", "$\\to$")
+    s = s.replace("{", "\\{").replace("}", "\\}")
+    s = re.sub(r"(?<=[0-9a-z)])-(?=[0-9x(])", lambda m: "\\allowbreak{}-", s)   # in a sum, break before a minus, never after it
+    s = re.sub(r"\+(?=x)", lambda m: "+\\allowbreak{}", s)                         # and after a plus
+    s = re.sub(r"-(?=[0-9x(])", "$-$", s).replace(",", ",\\allowbreak{}")
+    return re.sub("\x01(\\d+)\x01", lambda m: "$\\sum_{i\\le" + m.group(1) + "}s_ix_i$", s)
+
+
 def tab_dlheld7():
     r = J["toy"].get("dlheld7")
     if not r:
@@ -52,10 +65,41 @@ def tab_dlheld7():
     L = ["\\begin{tabularx}{\\linewidth}{l>{\\raggedright\\arraybackslash}X" + "r" * len(cols) + "}", "\\toprule",
          "target & definition & " + " & ".join(hdr) + "\\\\", "\\midrule"]
     for t, v in sorted(r["per_target"].items()):
-        desc = T[t]["desc"].replace("_", "\\_").replace("&", "\\&").replace("<=", "$\\le$").replace(">=", "$\\ge$").replace("->", "$\\to$")
+        desc = tex_desc(T[t]["desc"])
         L.append(f"{t.replace('_', chr(92) + '_')} & {{\\scriptsize {desc}}} & " + " & ".join(ns(v.get(c)) for c in cols) + "\\\\")
     L += ["\\bottomrule", "\\end{tabularx}"]
     open(os.path.join(OUT, "tab_dlheld7.tex"), "w").write("\n".join(L) + "\n")
+
+
+SUM_SUITES = [("dlsymdev", "make_dl_symdev_suite"), ("dlheld4", "make_dl_heldout4_suite"), ("dlheld5", "make_dl_heldout5_suite"),
+              ("dlheld6", "make_dl_heldout6_suite"), ("dlfamdev", "make_dl_famdev_suite")]
+
+
+def tab_sumdefs():
+    """Definitions of every target of the sum-structured suites other than dlheld7 (which tab_dlheld7 defines), from
+    study/boolfuncs.py, for the names appendix (app_names.tex).  A target is a non-symmetric control when it is not
+    among the 54 sum-structured targets of the interpretability analysis (study/part10/interp/tables/toy_timing.csv)."""
+    import sys, csv
+    sys.path.insert(0, os.path.join(HERE, "..", "study"))
+    import boolfuncs
+    sym = {r["target"] for r in csv.DictReader(open(os.path.join(HERE, "..", "study", "part10", "interp", "tables", "toy_timing.csv")))}
+    head = ["\\begin{tabularx}{\\linewidth}{ll>{\\raggedright\\arraybackslash}X}", "\\toprule", "suite & target & definition\\\\", "\\midrule"]
+    L = list(head)
+    for k, (su, fn) in enumerate(SUM_SUITES):
+        T = getattr(boolfuncs, fn)(30)
+        if su == "dlheld6":                                             # two floats: a page each
+            L += ["\\bottomrule", "\\end{tabularx}"]
+            open(os.path.join(OUT, "tab_sumdefs.tex"), "w").write("\n".join(L) + "\n")
+            L = list(head)
+        elif k:
+            L.append("\\addlinespace[3pt]")
+        for i, (tg, v) in enumerate(T.items()):
+            d = v["desc"].split(":")[0] if v["desc"].startswith("random") else v["desc"]
+            d = tex_desc(d.replace("~", "\x00")).replace("\x00", "$\\neg$")
+            ctl = "" if tg in sym else " \\emph{(control)}"
+            L.append(f"{code(su) if i == 0 else ''} & {tg.replace('_', chr(92) + '_')} & {d}{ctl}\\\\")
+    L += ["\\bottomrule", "\\end{tabularx}"]
+    open(os.path.join(OUT, "tab_sumdefs2.tex"), "w").write("\n".join(L) + "\n")
 
 
 def tab_real():
@@ -83,12 +127,15 @@ def tab_real():
 # compare_hybrid.cells (better / worse: > 10% relative and > 2 s.e.).  Stacking weights, FLOPs and CPU seconds: the result
 # files study/standard_tasks/results/<learner>__<dataset>.json and .info.json.
 RES = os.path.join(HERE, "..", "study", "standard_tasks", "results")
-IMG_PANELS = [("(a) held out for v3 (Part 10): 3 seeds at $n\\le10000$, seed 0 at $n=60000$", ["qd_c", "qd_d"],
+# The held-out panel goes to the main text (tables/tab_images_{cells,summary}.tex, results_images.tex); the two
+# development panels to the appendix (tables/tab_images_{cells,summary}_dev.tex, app_results.tex).
+IMG_PANELS = [("held out for v3 (Part 10): 3 seeds at $n\\le10000$, seed 0 at $n=60000$", ["qd_c", "qd_d"],
                "images, Part 10 held out (QuickDraw qd_c, qd_d)"),
-              ("(b) Part 9 held-out sets, development data for v3: v3 seed 0", ["qd_a", "qd_b"],
+              ("(a) Part 9 held-out sets, development data for v3: v3 seed 0", ["qd_a", "qd_b"],
                "images, Part 9 held out (qd_a, qd_b; v3 at its seed-0 dev cells)"),
-              ("(c) development sets: v3 and v2 seed 0", ["qd_dev", "fashion_mnist"],
+              ("(b) development sets: v3 and v2 seed 0", ["qd_dev", "fashion_mnist"],
                "images, development (qd_dev, Fashion-MNIST; seed-0 dev cells)")]
+IMG_FILES = [("", IMG_PANELS[:1]), ("_dev", IMG_PANELS[1:])]
 IMG_NAME = {"qd_c": "\\code{qd_c}", "qd_d": "\\code{qd_d}", "qd_a": "\\code{qd_a}", "qd_b": "\\code{qd_b}",
             "qd_dev": "\\code{qd_dev}", "fashion_mnist": "Fashion"}
 hd2 = lambda a, b: "\\hd{\\code{" + a + "}\\\\\\code{" + b + "}}"
@@ -126,8 +173,13 @@ def tab_images_cells():
     """Test error (%) per cell; bold = lowest of IMG_BOLD; a reference's entry is marked where v3 is not clearly better."""
     CL = _cl()
     nc = 2 + len(IMG_COLS)
+    for suffix, panels in IMG_FILES:
+        _tab_images_cells(CL, nc, suffix, panels)
+
+
+def _tab_images_cells(CL, nc, suffix, panels):
     L = ["\\begin{tabular}{lr" + "c" * len(IMG_COLS) + "}", "\\toprule", "set & $n$ & " + " & ".join(h for _, h in IMG_COLS) + "\\\\"]
-    for title, sets, _ in IMG_PANELS:
+    for title, sets, _ in panels:
         L += ["\\midrule", f"\\multicolumn{{{nc}}}{{l}}{{\\emph{{{title}}}}}\\\\"]
         for i, ds in enumerate(sets):
             rows = J["images"].get(ds, {})
@@ -149,7 +201,7 @@ def tab_images_cells():
                     return s + (f"\\rlap{{{mk}}}" if mk else "")
                 L.append(f"{IMG_NAME[ds]} & {n} & " + " & ".join(cell(c) for c, _ in IMG_COLS) + "\\\\")
     L += ["\\bottomrule", "\\end{tabular}"]
-    open(os.path.join(OUT, "tab_images_cells.tex"), "w").write("\n".join(L) + "\n")
+    open(os.path.join(OUT, f"tab_images_cells{suffix}.tex"), "w").write("\n".join(L) + "\n")
 
 
 def tab_images_summary():
@@ -158,12 +210,17 @@ def tab_images_summary():
             ("mlp_best", "\\code{mlp_best}"), ("mlp_best+", "\\code{mlp_best+}"), ("hgb", "\\code{hgb}"),
             ("hyb_portfolio2", "v2"), ("hyb_portfolio", "v1"), ("mlp_pool", "\\code{mlp_pool} (control)"),
             ("cnn", "\\code{cnn} (context)")]
+    for suffix, panels in IMG_FILES:
+        _tab_images_summary(REFS, suffix, panels)
+
+
+def _tab_images_summary(REFS, suffix, panels):
     f = lambda x: ("--", "--") if not x else (f"{x['cells']} ({x['better']}/{x['tie']}/{x['worse']})", f"${x['mean']:+.3f}$")
     L = ["\\begin{tabular}{lcccc}", "\\toprule",
          " & \\multicolumn{2}{c}{all $n$} & \\multicolumn{2}{c}{$n\\ge10000$}\\\\",
          "\\cmidrule(lr){2-3}\\cmidrule(lr){4-5}",
          "reference & cells (better/tie/worse) & mean $\\log_2$ ratio & cells (better/tie/worse) & mean $\\log_2$ ratio\\\\"]
-    for title, sets, lab in IMG_PANELS:
+    for title, sets, lab in panels:
         R = J["real"].get(lab, {})
         L += ["\\midrule", "\\multicolumn{5}{l}{\\emph{" + title.split(":")[0] + ": " + ", ".join(IMG_NAME[d] for d in sets) + "}}\\\\"]
         for k, nm in REFS:
@@ -172,7 +229,7 @@ def tab_images_summary():
                 continue
             L.append(f"{nm} & " + " & ".join(f(a)) + " & " + " & ".join(f(b)) + "\\\\")
     L += ["\\bottomrule", "\\end{tabular}"]
-    open(os.path.join(OUT, "tab_images_summary.tex"), "w").write("\n".join(L) + "\n")
+    open(os.path.join(OUT, f"tab_images_summary{suffix}.tex"), "w").write("\n".join(L) + "\n")
 
 
 IMG_FAMILY = lambda m: ("cgbt" if m == "cgbt" else "ggbt" if m == "ggbt" else "gknn" if m.startswith("gknn") else
@@ -294,6 +351,6 @@ def tab_toy_v2v3():
 
 
 if __name__ == "__main__":
-    tab_toy_suites(); tab_dlheld7(); tab_real(); tab_images_summary(); tab_images_cells(); tab_toy_v2v3()
+    tab_toy_suites(); tab_dlheld7(); tab_sumdefs(); tab_real(); tab_images_summary(); tab_images_cells(); tab_toy_v2v3()
     tab_images_stack(); tab_images_compute()
     print(sorted(os.listdir(OUT)))

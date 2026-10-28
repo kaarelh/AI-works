@@ -1,0 +1,71 @@
+\section{Names used in this paper}\label{app:names}
+
+\Cref{tab:names} lists the names of learners, members, references, sets and terms that the paper uses, and \cref{tab:sumdefs,tab:sumdefs2} define the targets of the sum-structured suites other than \code{dlheld7}, which \cref{tab:dlheld7} defines. Every target is defined in \repo{study/boolfuncs.py}.
+
+\begin{table}[p]
+\centering\scriptsize\renewcommand{\arraystretch}{1.05}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}X}
+\toprule
+name & meaning\\
+\midrule
+\multicolumn{2}{l}{\emph{Learners}}\\
+v1, v2, v3 & the study's portfolios of Part 8, 9 and 10: \code{hyb_portfolio}, \code{hyb_portfolio2}, \code{hyb_portfolio3} in the code (\cref{tab:members})\\
+DFG & discrete feature growth, the Boolean member (\cref{sec:dfg}); v1.1 in v1, v1.2 in v2, v1.3 in v3\\
+\code{p10_sum} & the Part 10 toy builder's candidate (DFG v1.3); v3's code on toy inputs\\
+\code{p10_codes} & the adopted Part 10 image candidate (adds \code{cgbt}); v3's code on images\\
+\code{p10_hier} & the other Part 10 image candidate (a max-pooling level in \code{ggbt}'s bank); not adopted\\
+\code{p9_sum}, \code{p9_gates} & v2's Part 9 components on toy inputs and on images (v2's code there)\\
+\addlinespace
+\multicolumn{2}{l}{\emph{Members of v3} (\cref{tab:members})}\\
+\code{dfg}, \code{dfg_forced} & DFG and its small-$n$ variant that forces the best candidate\\
+\code{ggbt} & the blob booster: LightGBM on pixels, pooled sums and prototype pairs\\
+\code{cgbt} & the bar booster: LightGBM on pixels, pooled sums and bar sums (new in v3)\\
+\code{gknn_k} & nearest-neighbour votes on the 9-pixel pooled sums\\
+\code{gbt}, \code{et}, \code{knn_<metric>_k}, \code{lin_C} & Part 8's LightGBM, ExtraTrees, nearest-neighbour votes and logistic regression on the raw columns\\
+\addlinespace
+\multicolumn{2}{l}{\emph{References} (\cref{sec:refs})}\\
+\code{nets}, \code{nets_wd}, \code{nets_cewd}, \code{nets_cewd0.3}, \code{nets_cewd1.0} & the toy networks: square loss; weight decay 0.1; logistic loss with weight decay 0.1, 0.3, 1.0\\
+\code{nets_best} & per target, the network variant with the smallest $\nstar$ among those run (hindsight)\\
+\code{lin}, \code{hgb} & calibration references: cross-validated logistic regression on the inputs (a separate run, not the member \code{lin_C}); default histogram gradient boosting\\
+\code{mlp}, \code{mlp_reg} & Part 7's baseline MLP (256-256) and its L2-regularized version\\
+\code{mlp_strong}, \code{mlp_wide}, \code{mlp_xl} & ensembles of three MLPs at width 256, 512 and 1024; \code{mlp_strong1} and \code{mlp_wide1} are their single networks; \code{mlp_xl} is CPU-matched\\
+\code{mlp_best}, \code{mlp_best+} & per-cell minimum over the Part 7--8 MLP variants (hindsight); \code{mlp_best+} adds the wider ones\\
+\code{mlp_pool} & control: \code{mlp_strong} given v2's pooled sums\\
+\code{cnn} & context: a small CNN on the unpermuted pixels\\
+\addlinespace
+\multicolumn{2}{l}{\emph{Sets} (\cref{sec:tasks,tab:status})}\\
+\code{designed}, \code{random}, \code{dlheld}, \code{dlheld2}--\code{dlheld7}, \code{dlsymdev}, \code{dlfamdev} & the 11 toy suites; ``the blind family'' is the generator of \code{dlheld6}, \code{dlfamdev} and \code{dlheld7}\\
+HELDOUT2; the Part 7 set & the 10 fresh tabular datasets of Part 8; the 11 held out in Part 7\\
+\code{qd_dev}, \code{qd_a}--\code{qd_d}; Fashion & the five QuickDraw sets; Fashion-MNIST\\
+target prefixes & f7\_ \code{dlheld7}; h6\_ \code{dlheld6}; h5 \code{dlheld5}; h4 (controls) \code{dlheld4}; fd\_ \code{dlfamdev}; h2rf, h3rf, hrf random formulas of \code{dlheld2}, \code{dlheld3}, \code{dlheld}; rf \code{random}. \code{dlsymdev}, \code{dlheld4} and the earlier suites use descriptive names (sym7, band11, tail13, majsym, thr10, maj9, mux6, \dots)\\
+\addlinespace
+\multicolumn{2}{l}{\emph{Terms}}\\
+$\nstar$ & training-set size at which the seed-mean test error reaches 10\% (\cref{sec:metrics})\\
+cell; clearly better, tie & a (set, $n$) pair; the pre-registered verdicts (\cref{sec:metrics})\\
+budget & one toy network run, or three runs of the baseline \code{mlp}, in FLOPs (\cref{sec:metrics})\\
+character; block & $\chi_S(x)=\prod_{i\in S}x_i$; indicators of the groups of a signed sum $t=\sum_{i\in S}s_ix_i$, folded ($|t|$), modulated, product, split or weighted (\cref{sec:dfg})\\
+sum-structured target & one of the 54 targets of \code{dlsymdev}, \code{dlheld4}--\code{dlheld7} and \code{dlfamdev} that is not a control\\
+$S_i(k)$; bar & the $k$-pixel pooling set of pixel $i$; a sum along a recovered line, half-length $L$ (\cref{sec:image})\\
+$n_{\rm struct}$, $n_{\rm detect}$, share, reach & discovery size, detection size, a term's share and the search's reach (\cref{sec:interp-toy})\\
+Part $k$ & the $k$-th part of the study; Parts 6--9 are reported in \cite{discretelearners2026}, Parts 1--5 in \cite{gdcircuit2026}\\
+\bottomrule
+\end{tabularx}
+\caption{Names used in this paper.}
+\label{tab:names}
+\end{table}
+
+\begin{table}[p]
+\centering{\scriptsize\renewcommand{\arraystretch}{1.1}
+\input{tables/tab_sumdefs.tex}}
+\caption{The targets of \code{dlsymdev}, \code{dlheld4} and \code{dlheld5}, as defined in \repo{study/boolfuncs.py}; \code{dlheld6} and \code{dlfamdev} are in \cref{tab:sumdefs2}, \code{dlheld7} in \cref{tab:dlheld7}. Conventions as there: $[\cdot]$ is $\pm1$, \texttt{*} multiplies $\pm1$ values, \texttt{c ? a : b} is a multiplexer, $\neg$ negates a literal, and in \code{dlheld5} $s$ lists the signs $s_i$ and $[t\in A]$ the accept set $A$. ``(control)'': one of the 14 non-symmetric controls; the other targets are the sum-structured ones, together with the 9 of \code{dlheld7}.}
+\label{tab:sumdefs}
+\end{table}
+
+\begin{table}[p]
+\centering{\scriptsize\renewcommand{\arraystretch}{1.1}
+\input{tables/tab_sumdefs2.tex}}
+\caption{The targets of \code{dlheld6} and \code{dlfamdev}, as defined in \repo{study/boolfuncs.py}. Conventions as in \cref{tab:sumdefs}.}
+\label{tab:sumdefs2}
+\end{table}
+
+\clearpage

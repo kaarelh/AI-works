@@ -1,6 +1,6 @@
 \section{How Part 10 was run}\label{app:provenance}
 
-Part 10 and this paper were produced by an AI system, Claude (Anthropic), on 27--28 October 2026. Kaarel H\"anni posed the request (\cref{sec:intro}). No human has reviewed the code, the results or this text. Times are UTC. The records are:
+Part 10 and this paper were produced by an AI system, Claude (Anthropic), on 27--28 October 2026. Kaarel H\"anni posed the request: ``a couple more hours'' on a better discrete learner, then interpretability of the best learner so far, and then a paper about it that explains what kind of learner it is, how well it does against the baselines, and what the interpretability shows. No human has reviewed the code, the results or this text. Times are UTC. The records are:
 \begin{itemize}
 \item the protocol \repo{study/part10/PROTOCOL.md}, written before any design work and amended only by dated decision entries and notes;
 \item the builders' notes \repo{study/part10/p10_sum/DESIGN.md}, \repo{study/part10/p10_hier/DESIGN.md} and \repo{study/part10/p10_codes/DESIGN.md};
@@ -70,9 +70,15 @@ Every killed job was rerun with the same code and seeds, keeping its finished ce
 
 \subsection{The interpretability workflow}\label{app:interp-workflow}
 
-\paragraph{Analysts.} Two analysts, one for the toy side and one for images, ran instrumented reruns of v3's (and, for comparison, v2's) seed-0 evaluation fits, with the learner's internals recorded (\cref{sec:interp}). The image analysis used \code{qd_dev}, \code{qd_a}, MNIST and Fashion-MNIST and opened no result on \code{qd_c} or \code{qd_d}. The toy analysis covers every toy suite, and the six sum-structured ones in detail, \code{dlheld7} included; its \code{dlheld7} runs were made from 00:16 on 28 October, after v3's freeze. The work ran in parallel with the held-out evaluation and was committed at 03:54 on 28 October (\texttt{9214cfde}), before the best-learner rule was applied at 04:20. The rule is mechanical, and the analysis did not touch its inputs. The protocol fixed the analysis as descriptive, not as evidence that the learner is better than anything.
+\paragraph{Analysts.} Two analysts, one for the toy side and one for images, ran instrumented reruns of v3's (and, for comparison, v2's) seed-0 evaluation fits, with the learner's internals recorded (\cref{sec:interp}). The protocol fixed the analysis as analysis of the chosen learner, to be run after the held-out results were in; in practice it ran in parallel with the held-out evaluation, on v3 before the best-learner rule had chosen it. The image analysis used \code{qd_dev}, \code{qd_a}, MNIST and Fashion-MNIST and opened no result on \code{qd_c} or \code{qd_d}. The toy analysis covers every toy suite, and the six sum-structured ones in detail, \code{dlheld7} included; its \code{dlheld7} runs were made from 00:16 on 28 October, after v3's freeze. The work ran in parallel with the held-out evaluation and was committed at 03:54 on 28 October (\texttt{9214cfde}), before the best-learner rule was applied at 04:20. The rule is mechanical, and the analysis did not touch its inputs. The protocol fixed the analysis as descriptive, not as evidence that the learner is better than anything.
 
-\paragraph{Verifications.} Each side had two independent verifiers. One recomputed every number from the files with its own scripts; the other reviewed the readings against the files and the code. \Cref{tab:verif} counts the verdicts. ``Corrected'' means that the verifier changed a number, narrowed a statement or rejected a reading. Each verifier also listed further problems that were not tied to one claim.
+\paragraph{Identity of the analysed fits.} Every analysed fit is seed 0, and each $(\text{target},n)$ or $(\text{set},n)$ pair is one fit. The fits are instrumented reruns of the evaluation's own fits: the same training rows, column permutation and random streams, with the learner's internals recorded.
+\begin{itemize}
+\item \emph{Toy.} At all 875 cells of v3 (every toy suite) and all 477 cells of v2 (the six sum-structured suites) that have an evaluation result, the reruns' test errors equal the evaluation's seed-0 errors. Equal errors at every cell are strong evidence that the fits are the same, but not a proof. The analysis's own check (\texttt{check\_identity} in \repo{study/part10/interp/toy_interp.py}) covered 587 of the v3 cells, because v3's result files on \code{random} and \code{dlheld}--\code{dlheld3} were incomplete when it ran. \repo{paper_learner/check_toy_identity.py} repeats the same comparison on the final result files (output: \texttt{check\_toy\_identity.json}); it adds the 288 cells of those four suites, all equal.
+\item \emph{Images.} The four v3 fits that have an evaluation cell (\code{qd_dev} at $n=1000$ and $10000$, \code{qd_a} and Fashion-MNIST at $n=10000$) reproduce its test error, stacking weights, \code{ggbt}'s number of rounds and every member's out-of-fold error. The fits at \code{qd_dev}, $n=3000$, and MNIST, $n=10000$, have no cell and are unchecked. No result on \code{qd_c} or \code{qd_d} was opened. v2's analysis fit at \code{qd_dev}, $n=10000$, differs from its evaluation cell by BLAS threading (\cref{sec:disc-provenance-disclosures}).
+\end{itemize}
+
+\paragraph{Verifications.} The analyses are \repo{study/part10/interp/TOY_INTERP.md} and \repo{study/part10/interp/IMAGE_INTERP.md}, with their scripts, tables and result files in the same folder; the verifications are in \repo{study/part10/interp/VERIFICATION.json}. Each side had two independent verifiers. One recomputed every number from the files with its own scripts; the other reviewed the readings against the files and the code. Where a verifier corrected a number or a reading, \cref{sec:interp} uses the corrected one. \Cref{tab:verif} counts the verdicts. ``Corrected'' means that the verifier changed a number, narrowed a statement or rejected a reading. Each verifier also listed further problems that were not tied to one claim.
 
 \begin{table}[ht]
 \centering\footnotesize\setlength{\tabcolsep}{5pt}
@@ -92,7 +98,7 @@ images & reading & 11 & 2 & 9 & 11\\
 
 The corrections that change numbers in \cref{sec:interp} are these:
 \begin{itemize}
-\item \emph{The detection test for modulated blocks.} The analysis script tested a modulated block on a residual that was neither centred nor fitted on the modulator, and so counted the modulator character's own signal as block signal. A verifier recomputed it as DFG tests it. Seven gate and multiplexer targets became detectable later, which changes the count of targets detectable at $n=128$ from 43 to 39, the median delay over the targets found from 1 doubling to 0, and Spearman's $\rho$ over all 54 from $-0.44$ to $-0.54$.
+\item \emph{The detection test for modulated blocks}, recomputed as DFG tests it (\cref{app:interp-mixtures}): seven gate and multiplexer targets became detectable later, so the targets detectable at $n=128$ went from 43 to 39, the median delay over the targets found from 1 doubling to 0, and Spearman's $\rho$ over all 54 from $-0.44$ to $-0.54$.
 \item \emph{Counts and scopes.} The beam and forced blocks move 5 pure symmetric targets plus one gate mixture, not 6 pure targets. The pooling-set locality fractions exclude the centre pixel. The share of evidence on blank pixels is not above one half for every class; several classes are listed as exceptions.
 \end{itemize}
 The corrections of readings are these:
@@ -108,19 +114,27 @@ The corrections of readings are these:
 
 \subsection{This paper and reproducibility}\label{app:repro}
 
-\paragraph{This paper.} Its sections were drafted by the orchestrating session and by separate writing agents, each from the records it names, and then compiled together. The tables and figures are generated from the result files: \texttt{make\_tables.py} and \texttt{make\_figures.py} from \repo{study/part10/LEARNER_RESULTS.json} and the result files it reads, and \texttt{make\_interp.py} from the analysis files. \repo{study/part10/LEARNER_RESULTS.json} is written by \repo{study/part10/compare_learner.py}, whose docstring says which result file stands for v3 on each input type.
+\paragraph{This paper.} Its sections were drafted by the orchestrating session and by separate writing agents, each from the records it names, and then compiled together. Every table and figure is generated from the result files: \texttt{make\_tables.py} and \texttt{make\_figures.py} from \repo{study/part10/LEARNER_RESULTS.json} and the result files it reads, and \texttt{make\_interp.py} from the analysis files, applying the verifiers' corrections. The plotted values are in \texttt{figures/*.json} (\texttt{fig\_toy\_nstar.json}, \texttt{fig\_images.json}, \texttt{fig\_interp.json}). \repo{study/part10/LEARNER_RESULTS.json} is written by \repo{study/part10/compare_learner.py}, whose docstring says which result file stands for v3 on each input type.
+
+\paragraph{Which result files stand for v3.}
+\begin{itemize}
+\item \emph{Toy.} On toy inputs v3 runs exactly the code of the Part 10 toy candidate \code{p10_sum}; its predictions were checked identical at assembly (\repo{study/part10/hyb_portfolio3/ASSEMBLY.md}). v3's toy results are therefore the \code{p10_sum-perm} result files in \repo{study/hybrid/results/}. v2's are the \code{hyb_portfolio2-perm} files, and on \code{designed} and \code{dlsymdev} the \code{p9_sum-perm} files (the same code on toy inputs).
+\item \emph{Images.} On \code{qd_c} and \code{qd_d} they are v3's own runs (\code{hyb_portfolio3}). On the development sets it is the frozen image candidate \code{p10_codes}, whose predictions on images are identical to v3's (checked identical on one \code{qd_dev} fit at assembly, $n=300$; \repo{study/part10/hyb_portfolio3/ASSEMBLY.md}).
+\end{itemize}
 
 \paragraph{Claims check.} After drafting, three independent AI checkers, each with its own instructions, checked the paper's claims on 28 October. One covered the two results sections, one the interpretability section, and one the abstract, the introduction, \cref{sec:learner,sec:protocol,sec:discussion} and this appendix. Each compared the text with the result files, the records named in it and the learner code, recomputed what it could, and listed each problem with a severity (error, misleading, minor) and a proposed correction. They found stale counts from runs that had landed after drafting, a few arithmetic and transcription errors (for example the \code{cnn}'s relative error on \code{qd_a}, and the order of HELDOUT2 and v1's freeze), several verifier corrections of the interpretability analyses that had not been carried over, statements broader than the evidence (for example ``fail because'' for a descriptive seed-0 analysis), and details of the learner description that did not match the code. Their corrections were applied before the final regeneration of every table and figure, with counts updated for the runs that landed in the meantime (\code{random} for v3, the remaining \code{dlheld7} network targets, and the image references on \code{qd_c} and \code{qd_d}). The check is not an audit of leakage, compute or reference strength of the kind made in Parts 8 and 9.
 
+\paragraph{Editorial revision.} After the claims check, three reviewing agents (on readability, structure and layout) commented on the presentation, and an editing agent reorganised the paper: it added the comparison with familiar learners and the hypothesis class of \cref{sec:learner}, \cref{tab:headline}, the glossary and target definitions of \cref{app:names}, and moved in-sample and per-target detail to \cref{app:further,app:interp-detail}. A further agent compared every number of the revised text with the checked text, and the few new ones (the spread of the \code{dlheld7} ratios, the split of the 30 calibration wins, the \code{cnn}'s recipe) with the result files and code.
+
 \paragraph{Regenerating the numbers.} From \texttt{gd-circuit-growth/}:
-\begin{itemize}
+\begin{itemize}\raggedright
 \item \texttt{cd study/part10 \&\& python3 compare\_part10.py} (the rules; writes \texttt{RESULTS.md});
 \item \texttt{python3 compare\_learner.py} (every comparison; writes \texttt{LEARNER\_RESULTS.\{md,json\}});
 \item \texttt{cd ../../paper\_learner}, then \texttt{python3 make\_tables.py}, \texttt{python3 make\_figures.py}, \texttt{python3 make\_interp.py} and \texttt{python3 check\_toy\_identity.py};
 \item \texttt{latexmk -pdf main.tex}.
 \end{itemize}
 The result files are:
-\begin{itemize}
+\begin{itemize}\raggedright
 \item \texttt{<learner>\_\_<dataset>.json}, with \texttt{.info.json} records, in \repo{study/standard_tasks/results/};
 \item \texttt{toy\_\_<learner>\_\_<suite>.json} in \repo{study/hybrid/results/}.
 \end{itemize}
