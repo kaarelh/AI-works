@@ -40,6 +40,17 @@
 | dlheld2 | sym8 | \|x1 + ... + x8\| >= 4 | 8 | – | 59 | – | 64 | 1024 | 0.34 | 1.00 | 14 | 1 | 0.80 | \|x1+x2+x3+x4+x5+x6+x7+x8\| (0.59); quad(23 inputs) (0.19); chi[x2,x5] (0.08) |
 | dlheld2 | thr20 | sign(w.x[1..20]), Gaussian w | 20 | – | 126 | – | – | 16384 | – | 0.84 | 61 | 7 | 0.17 | chi[x6] (0.38); chi[x3] (0.26); chi[x1] (0.26) |
 | dlheld2 | xmaj | x1 x2 MAJ(x3,x4,x5) | 5 | – | 67 | 128 | 128 | 256 | 1.00 | 1.00 | 5 | 0 | 1.00 | chi[x1,x2,x3] (0.50); chi[x1,x2,x3,x4,x5] (0.49); chi[x1,x2,x5] (0.49) |
+| dlheld | hrf0 | random 7-gate formula on 6 inputs: g6=0or~5; g7=2or6; g8=7an | 5 | – | 60 | – | 256 | 512 | 0.79 | 1.00 | 10 | 5 | 0.80 | chi[x4] (0.63); (-x1+x3+x4+x5-x6) (0.18); chi[x4,x5] (0.18) |
+| dlheld | hrf1 | random 7-gate formula on 6 inputs: g6=~2xor~0; g7=6xor~5; g8 | 5 | – | 103 | 256 | 512 | 512 | 0.92 | 0.95 | 41 | 1 | 0.80 | chi[x1,x3,x4,x6] (0.47); chi[x1,x3,x6] (0.46); chi[x1,x6] (0.36) |
+| dlheld | hrf2 | random 8-gate formula on 6 inputs: g6=3or5; g7=4xor~6; g8=~7 | 5 | – | 50 | – | 128 | 512 | 0.78 | 0.95 | 2 | 1 | 0.63 | chi[x1] (0.62); (x3-x4+x5-x6-3*x1) (0.42); chi[x1,x4] (0.18) |
+| dlheld | inter2 | AND of two Gaussian halfspaces on x1..x10 | 10 | – | 355 | – | – | 8192 | 0.85 | 0.94 | 150 | 8 | 0.48 | chi[x9] (0.32); chi[x3] (0.26); chi[x2] (0.20) |
 | dlheld | maj15 | MAJ(x1..x15) | 15 | – | 82 | – | 128 | 256 | 0.66 | 1.00 | 30 | 2 | 0.70 | (x1+x2+x3+x4+x5+x6+x7+x8+x9+x10+x11+x12+x13+x14+x15) (0.49); (x1+x2+x3+x4+x5+x6+x7+x8+x9+x10+x11+x12+x13+x14+x15) x \|-x17+x30\| (0.26); chi[x1] (0.13) |
+| dlheld | majmaj5 | MAJ of three MAJ5s | 15 | – | 357 | – | – | 2048 | 0.64 | 0.92 | 29 | 16 | 0.74 | chi[x10]*\|x6+x7+x8+x9\| (0.29); chi[x6] (0.22); chi[x8] (0.19) |
+| dlheld | majpar5 | MAJ of five pairs x1x2..x9x10 | 10 | – | 159 | – | – | 1024 | 0.70 | 0.76 | 5 | 1 | 0.84 | chi[x1,x2] (0.40); chi[x5,x6] (0.39); chi[x7,x8] (0.39) |
+| dlheld | majxor | MAJ(x1..x5) XOR MAJ(x6..x10) | 10 | – | 223 | – | – | 2048 | 0.50 | 0.85 | 26 | 2 | 0.78 | \|x1+x2+x3+x4+x5-x6-x7-x8-x9-x10\| (0.24); \|x1+x2+x3+x4+x5+x6+x7+x8+x9+x10\| (0.23); chi[x2,x6] (0.14) |
+| dlheld | mux6 | 6-multiplexer: address x1 x2, data x3..x6 | 6 | – | 155 | – | 512 | 512 | 0.88 | 0.95 | 14 | 1 | 0.41 | chi[x1,x3] (0.28); chi[x2,x4] (0.27); chi[x2,x6] (0.27) |
+| dlheld | par5 | x1 x2 x3 x4 x5 | 5 | – | 61 | 64 | 64 | 256 | 1.00 | 1.00 | 1 | 0 | 0.67 | chi[x1,x2,x3,x4,x5] (1.00) |
+| dlheld | stair6 | sign(x1 + x1x2 + ... + x1..x6 + 1/2) | 6 | – | 196 | – | – | 512 | 0.65 | 0.78 | 6 | 1 | 0.92 | chi[x2,x4,x6] (0.32); chi[x1,x2,x3,x4,x5] (0.31); chi[x1,x2,x3] (0.31) |
+| dlheld | thr30 | sign(w.x), Gaussian w on all inputs | 30 | – | 136 | – | – | 16384 | – | 0.81 | 59 | 5 | 0.15 | chi[x3] (0.45); chi[x22] (0.31); chi[x19] (0.31) |
 
 chi_frac: the share of the target's non-constant Fourier weight that sits on characters chi_S of the final model at n_max (sum of fhat(S)^2 over them / (1 - fhat(empty)^2); targets with more than 16 relevant inputs have no Fourier table: '–'); n_chi90: first n with chi_frac >= 0.9; span_r2: held-out R^2 of f on the span of the model's features; n_span95: first n with span_r2 >= 0.95; n_chi / n_sum: number of character / sum-block terms at n_max.

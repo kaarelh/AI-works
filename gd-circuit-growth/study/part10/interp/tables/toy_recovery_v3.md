@@ -30,8 +30,8 @@
 | dlheld7 | f7_05 | modular | pure | 14 | 14 | > 16384 | > 16384 | – | 0/1 | – | 128 | – | never | never | never | 16384 | 0.32 | background (0.04) |
 | dlheld7 | f7_06 | control | control | 8 | 5 | 256 | 256 | 256 | 1/1 | 256 | 128 | 2048 | 44 | 53 | 108 | 512 | 0.00 | chi[x8] (0.58); (x6-x7+3*x8) (0.25); chi[x7,x8] (0.23) |
 | dlheld7 | f7_07 | interval | parity | 13 | 12 | 256 | 256 | 256 | 1/1 | 256 | 128 | 1024 | 174 | 193 | 443 | 2048 | 0.0039 | chi[x13] (0.40); (-x1+x2-x3+x4+x5+x6+x7+x8-x9+x10-x11+x12-3*x13) (0.29); (-x1+x2-x3+x4+x5+x6+x7+x8-x9+x10-x11+x12+3*x13) (0.28) |
-| dlheld7 | f7_08 | arbitrary | pure | 11 | 11 | 512 | 512 | 512 | 1/1 | 1024 | 128 | 1024 | 634 | 443 | 5843 | 8192 | 0.00 | (x1+x2+x3+x4+x5+x6+x7+x8+x9+x10+x11) (1.01); quad(20 inputs) (0.18) |
-| dlheld7 | f7_09 | threshold | parity | 12 | 10 | 256 | lost at 512 | 256 | 0/1 | 256 | 128 | – | 215 | 213 | 1000 | 512 | 0.00 | chi[x9,x11,x12] (0.30); chi[x7,x11,x12] (0.29); chi[x2,x11,x12] (0.29) |
+| dlheld7 | f7_08 | arbitrary | pure | 11 | 11 | 512 | 512 | 512 | 1/1 | 1024 | 128 | 1024 | 634 | 443 | 3239 | 8192 | 0.00 | (x1+x2+x3+x4+x5+x6+x7+x8+x9+x10+x11) (1.01); quad(20 inputs) (0.18) |
+| dlheld7 | f7_09 | threshold | parity | 12 | 10 | 256 | lost at 512 | 256 | 0/1 | 256 | 128 | – | 215 | 213 | 883 | 512 | 0.00 | chi[x9,x11,x12] (0.30); chi[x7,x11,x12] (0.29); chi[x2,x11,x12] (0.29) |
 | dlheld7 | f7_10 | threshold | weighted | 6 | 5 | 128 | 128 | 128 | 1/1 | 128 | 128 | 32 | 82 | 88 | 210 | 256 | 0.00 | (x1+x2+x3+x4+x5+2*x6) (0.57); chi[x6] (0.43); chi[x3] (0.22) |
 | dlheld7 | f7_11 | arbitrary+band | mux | 11 | 4+6 | > 4096 | > 4096 | 128/2048 | 1/2 | 1024 | 128 | 1024 | 55 | 73 | 114 | 4096 | 0.0002 | chi[x11] (0.69); chi[x2,x4,x11] (0.14); chi[x1,x4] (0.13) |
 | dlheld6 | h6_00 | modular | pure | 13 | 13 | > 16384 | > 16384 | – | 0/1 | – | 128 | – | never | never | 12304 | 16384 | 0.34 | background (0.05) |
@@ -65,10 +65,10 @@
 | dlheld4 | h4rf1 | control | control | 6 | – | n/a | n/a | – | – | 256 | – | – | – | 19 | 143 | 512 | 0.00 | chi[x5] (0.56); chi[x3,x5] (0.34); chi[x3] (0.24) |
 | dlheld4 | majsym | band | gate | 8 | 5 | 128 | 128 | 128 | 1/1 | 256 | 256 | 1024 | – | 91 | 595 | 1024 | 0.00 | chi[x8] (0.50); chi[x6,x7] (0.48); chi[x6,x7]*(-x1-x2-x3-x4-x5+x8) (0.27) |
 | dlheld4 | ssym8 | interval | pure | 8 | 8 | 128 | 128 | 128 | 1/1 | 128 | 128 | 128 | 177 | 103 | 396 | 256 | 0.00 | \|x1+x2-x3+x4-x5-x6+x7-x8\| (0.88) |
-| dlheld4 | sumpar | threshold | weighted | 10 | 5+3 | 2048 | 2048 | 2048/512 | 2/2 | 256 | 256 | 16 | – | 163 | 1837 | 2048 | 0.00 | chi[x8,x9,x10] (0.52); chi[x6,x7] (0.45); chi[x1,x2,x3,x4,x5] (0.23) |
+| dlheld4 | sumpar | threshold | weighted | 10 | 5+3 | 2048 | 2048 | 2048/512 | 2/2 | 256 | 256 | 16 | 164 | 163 | 1837 | 2048 | 0.00 | chi[x8,x9,x10] (0.52); chi[x6,x7] (0.45); chi[x1,x2,x3,x4,x5] (0.23) |
 | dlheld4 | sym11 | band | pure | 11 | 11 | 128 | 128 | 128 | 1/1 | 128 | 128 | 128 | 160 | 110 | 374 | 256 | 0.00 | quad(25 inputs) (0.52); \|x1+x2+x3+x4+x5+x6+x7+x8+x9+x10+x11\| (0.34); \|x1+x2+x3+x4+x5+x6+x7+x8+x9+x10+x11\| x \|x15+x30\| (0.23) |
-| dlheld4 | symand | band | gate | 8 | 6 | 256 | 256 | 256 | 1/1 | 512 | 256 | 128 | – | 164 | 370 | 1024 | 0.00 | (-x1-x2-x3-x4-x5-x6+3*AND(-x8,-x7)) (0.39); chi[x7,x8] (0.35); chi[x8] (0.35) |
-| dlheld4 | symxor | band | parity | 8 | 7 | 512 | 512 | 512 | 1/1 | 512 | 128 | – | – | 437 | 946 | 2048 | 0.00 | (x1+x2+x3+x4+x5+x6+x7+2*x8) (0.19); chi[x1,x7,x8] (0.19); chi[x3,x6,x8] (0.19) |
+| dlheld4 | symand | band | gate | 8 | 6 | 256 | 256 | 256 | 1/1 | 512 | 256 | 128 | 151 | 164 | 370 | 1024 | 0.00 | (-x1-x2-x3-x4-x5-x6+3*AND(-x8,-x7)) (0.39); chi[x7,x8] (0.35); chi[x8] (0.35) |
+| dlheld4 | symxor | band | parity | 8 | 7 | 512 | 512 | 512 | 1/1 | 512 | 128 | – | 405 | 437 | 946 | 2048 | 0.00 | (x1+x2+x3+x4+x5+x6+x7+2*x8) (0.19); chi[x1,x7,x8] (0.19); chi[x3,x6,x8] (0.19) |
 | dlheld4 | tail13 | band | pure | 13 | 13 | 128 | 128 | 128 | 1/1 | 128 | 128 | 256 | 100 | 100 | 420 | 256 | 0.0046 | quad(24 inputs) (0.41); \|x1+x2+x3+x4+x5+x6+x7+x8+x9+x10+x11+x12+x13\| (0.34); \|x1+x2+x3+x4+x5+x6+x7+x8+x9+x10+x11+x12+x13\| x \|x16+x20\| (0.19) |
 
 n_struct: first analysed n with every true signed-symmetry class of size >= 3 matched exactly by a block, factor or modulator; n_stable: from then on at every analysed n; n_detect: first n at which DFG's test accepts the true (largest) block (toy_power, seed-0 rows); nstar3: v3's 3-seed n* (toy__p10_sum-perm__<suite>.json), '–' where that file is not yet written; nstar_s0: seed-0 n* from the structure run; lead: the largest terms of the final DFG model at n_max (share = sd of the term's output on the test inputs; quad = a spectral feature; background = the kernel background). The structure runs stop after two consecutive n with err <= 0.005.
