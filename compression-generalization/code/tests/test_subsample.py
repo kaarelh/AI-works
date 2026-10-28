@@ -1,6 +1,6 @@
 """Tests for unit subsampling (cgb/subsample.py): the Maurey identity
-E_I ||g - f||^2 = (A^2 - ||f - c||^2) / k on an empirical distribution, the top-k
-refit guarantee, and the update version."""
+E_I ||g - f||^2 = (A^2 - ||f - c||^2) / k on an empirical distribution (binary and
+multi-class), the top-k refit guarantee, and the update version (with c != c_0)."""
 import os
 import sys
 
@@ -48,18 +48,42 @@ def test_maurey_identity_multiclass():
 
 
 def test_topk_refit_tail_guarantee():
+    """With importances measured on the fitting sample, the least-squares refit of
+    the top-k units has fitting-sample MSE <= (tail sum)^2, up to the tiny ridge."""
     rng = np.random.default_rng(2)
     w = _net(rng)
     X = rng.choice([-1.0, 1.0], size=(3000, 20))
     f = np_forward(w, X)
     s = ss.unit_importance(w[1][0], ss.relu_features(*w[0], X))
-    for k in (5, 30, 100):
+    ridge_slack = 1e-6 * (np.sum(w[1][0] ** 2) + np.sum(w[1][1] ** 2)) * np.mean(ss.relu_features(*w[0], X) ** 2) * 10
+    for k in (5, 30, 100, 299, 300):
         g, idx, _ = ss.subsample_one_layer(w, k, X, rng, "topk", refit=True)
         tail = np.sort(s)[::-1][k:].sum()
-        assert np.mean((np_forward(g, X) - f) ** 2) <= tail ** 2 * (1 + 1e-6) + 1e-12
+        assert np.mean((np_forward(g, X) - f) ** 2) <= tail ** 2 + ridge_slack, k
 
 
-def test_update_identity_and_exact_at_full_width():
+def test_update_maurey_identity():
+    """Update version: E ||g - f||^2 = (A_delta^2 - ||f - f_0 - (c - c_0)||^2) / k, with c != c_0."""
+    rng = np.random.default_rng(4)
+    w0 = _net(rng)
+    (W, b), (V, c) = w0
+    w = [(W + 0.3 * rng.standard_normal(W.shape) / np.sqrt(W.shape[1]), b + 0.05),
+         (V + rng.standard_normal(V.shape) / 300, c + 0.1)]
+    X = rng.choice([-1.0, 1.0], size=(2000, 20))
+    f, f0 = np_forward(w, X), np_forward(w0, X)
+    P, P0 = ss.relu_features(*w[0], X), ss.relu_features(*w0[0], X)
+    D = P * w[1][0][0] - P0 * w0[1][0][0]
+    Ad = np.sqrt(np.mean(D ** 2, 0)).sum()
+    pred = (Ad ** 2 - np.mean((f - f0 - (w[1][1] - w0[1][1])) ** 2)) / 10
+    errs = []
+    for r in range(2000):
+        lg, idx, info = ss.subsample_update(w, w0, 10, X, np.random.default_rng(r), "maurey", refit=False)
+        errs.append(np.mean((lg(X) - f) ** 2))
+    se = np.std(errs) / np.sqrt(len(errs))
+    assert abs(np.mean(errs) - pred) < 4 * se + 1e-3 * pred, (np.mean(errs), pred)
+
+
+def test_update_refit_exact_at_full_width():
     rng = np.random.default_rng(3)
     w0 = _net(rng)
     (W, b), (V, c) = w0
@@ -72,6 +96,6 @@ def test_update_identity_and_exact_at_full_width():
 
 if __name__ == "__main__":
     for t in [test_maurey_identity, test_maurey_identity_multiclass, test_topk_refit_tail_guarantee,
-              test_update_identity_and_exact_at_full_width]:
+              test_update_maurey_identity, test_update_refit_exact_at_full_width]:
         t()
         print(t.__name__, "ok")

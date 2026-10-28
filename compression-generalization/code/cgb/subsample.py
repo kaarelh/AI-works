@@ -13,10 +13,14 @@ Then E_I g = f, and with p_i proportional to ||a_i|| ||phi_i||_{L2(D_X)},
 
     E_I ||g - f||^2_{L2(D_X)} <= A^2 / k,   A = sum_i ||a_i|| ||phi_i||_{L2(D_X)}
 
-(the "D_X path norm"; see search/README.md).  The same holds for the update
-f - f_0 relative to the free initialization: each unit contributes
-delta_i = a_i phi_i - a_i^0 phi_i^0, and sampling the delta_i gives
-g = f_0 + (1/k) sum_j delta_{I_j} / p_{I_j} with A_delta = sum_i ||delta_i||.
+(the "D_X path norm"; see search/README.md; with A and p estimated on a pool,
+the identity is exact for the pool's empirical distribution).  The same holds
+for the update relative to the free initialization: f - f_0 = (c - c_0) +
+sum_i delta_i with delta_i = a_i phi_i - a_i^0 phi_i^0, and sampling with
+p_i = ||delta_i|| / A_delta gives g = f_0 + (c - c_0) + (1/k) sum_j
+delta_{I_j} / p_{I_j}, with E ||g - f||^2 = (A_delta^2 - ||f - f_0 - (c - c_0)||^2) / k.
+Least-squares refits use a tiny ridge (1e-6 of the mean feature variance) for
+numerical stability.
 
 Two-hidden-layer networks are subsampled layer by layer (last hidden layer
 first), refitting the next layer's weights by least squares after each step.

@@ -80,8 +80,10 @@ def subsample_summary():
                  + (f"{i['margin_quantiles'][4]:.2f} |" if "margin_quantiles" in i else "- |"))
     L.append("\n## Certified bound on err(f) per search family (bits of g in parentheses)\n")
     fams = [f for f in FAMS if any(f in r["final"] for r in runs.values())]
-    L.append("| task | net | width | depth | seed | test err f | " + " | ".join(FAM_NAMES[f] for f in fams) + " |")
-    L.append("|---|---|---|---|---|---|" + "---|" * len(fams))
+    oracle = {(o["task"], o["param"], o["width"], o["depth"], o["seed"]): o for o in load("oracle_teacher.jsonl")}
+    L.append("| task | net | width | depth | seed | test err f | " + " | ".join(FAM_NAMES[f] for f in fams)
+             + " | best search | oracle: the true teacher |")
+    L.append("|---|---|---|---|---|---|" + "---|" * len(fams) + "---|---|")
     for k in sorted(runs, key=sort_key):
         r = runs[k]
         cells = []
@@ -91,8 +93,14 @@ def subsample_summary():
                 cells.append(f"{x['bound_f']:.3f} ({x['bits']:.0f})")
             else:
                 cells.append("-")
+        best = min(r["final"].values(), key=lambda x: x["bound_f"])
+        o = oracle.get(k)
         L.append(f"| {r['task']} | {r['param']} | {r['width']} | {r['depth']} | {r['seed']} | {r['test_err_f']:.4f} | "
-                 + " | ".join(cells) + " |")
+                 + " | ".join(cells) + f" | {best['bound_f']:.3f} | "
+                 + (f"{o['best']['bound_f']:.3f} ({o['best']['bits']:.0f})" if o else "-") + " |")
+    L.append("\nThe oracle column codes the true teacher network (known to us, not to the search) at the best of "
+             "seven step sizes, certified on its own fresh sample; it shows what a search that found the target "
+             "would certify.\n")
     L.append("\n## Disagreement Pr[f != g] of the float surrogate after keeping k units and refitting the output "
              "layer (no quantization), on the selection pool\n")
     ks_show = [4, 16, 64, 256, 1024]
@@ -163,9 +171,21 @@ def curves_figure(runs):
     plt.close(fig)
 
 
+def dedup_twins(rows):
+    """Two runners may finish the same configuration; keep the first row of each."""
+    seen, out = set(), []
+    for r in rows:
+        k = (r["kind"], r["seed"], r["twin_seed"], tuple(t["frac"] for t in r["twins"])) + (
+            (r["task"], r["noise"], r["m"]) if r["kind"] == "boolean" else (r["data"], r["widths"][1]))
+        if k not in seen:
+            seen.add(k)
+            out.append(r)
+    return out
+
+
 def twin_summary():
-    rows = load("twin_boolean.jsonl")
-    img = load("twin_images.jsonl")
+    rows = dedup_twins(load("twin_boolean.jsonl"))
+    img = dedup_twins(load("twin_images.jsonl"))
     if not rows and not img:
         return
     grid = collections.defaultdict(list)

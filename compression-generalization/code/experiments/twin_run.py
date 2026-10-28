@@ -1,21 +1,26 @@
 """Bound a trained network by a twin trained on part of its own training set.
 
-f is trained on all of S.  A twin f_s is trained, with the same algorithm, seed
-and hyperparameters, on the first s training points S_I (a subset fixed before
-the data are seen).  Then
+f is trained on all of S.  A twin f_s is trained, with the same algorithm and
+hyperparameters (and the same seed unless --twin_seed other), on a subset S_I of
+s training points fixed before the data are seen (the first s points for Boolean
+tasks, a fixed random permutation for images).  Then
 
     err(f) <= err(f_s) + Pr_x[f(x) != f_s(x)],
 
 err(f_s) is bounded by its errors on the m - s held-out points S \\ I (which f_s
 never saw; exact binomial tail), and Pr[f != f_s] is bounded by a
 Clopper-Pearson interval on fresh inputs from the known input distribution
-(Boolean tasks) or on unlabeled test inputs (images).  No description length
+(Boolean tasks) or on unlabeled test inputs (images; these are assumed to be
+i.i.d. from the training input distribution, as in Theorem 2's experiments).
+Each row (one fraction) is a valid bound on its own; frac = 0.5 is the
+pre-registered choice and the other fractions are diagnostics (reporting the
+best of several would need a union bound).  No description length
 and no search: the training algorithm plays the role of the decoder, and
 fixing I in advance removes the union bound of sample compression.
 
 Usage:
-  python twin_run.py boolean --task parity3 --m 16000 --frac 0.5 --out ...
-  python twin_run.py images --data mnist --hidden 256 --frac 0.5 --out ...
+  python twin_run.py boolean --task parity3 --m 16000 --fracs 0.5 --out ...
+  python twin_run.py images --data mnist --hidden 256 --fracs 0.5 --out ...
 """
 import argparse
 import json
@@ -55,6 +60,19 @@ args = ap.parse_args()
 torch.set_num_threads(args.threads)
 T0 = time.time()
 fracs = [float(x) for x in args.fracs.split(",")]
+
+
+def run_key(r):
+    common = (r["kind"], r["seed"], r["twin_seed"], tuple(t["frac"] for t in r["twins"]))
+    return common + ((r["task"], r["noise"], r["m"]) if r["kind"] == "boolean" else (r["data"], r["widths"][1]))
+
+
+# Skip a configuration that already has a result (lets several runners share one job list).
+my_key = (args.kind, args.seed, args.twin_seed, tuple(fracs)) + (
+    (args.task, args.noise, args.m) if args.kind == "boolean" else (args.data, args.hidden))
+if os.path.exists(args.out) and any(run_key(json.loads(l)) == my_key for l in open(args.out) if l.strip()):
+    print("exists:", my_key)
+    sys.exit(0)
 d1 = d2 = args.delta / 2
 tseed = args.seed if args.twin_seed == "same" else args.seed + 100
 
@@ -128,6 +146,7 @@ else:
                                                     "bound_f", "test_err_twin"]}), flush=True)
     res = {"kind": "images", "data": args.data, "widths": widths, "epochs": args.epochs, "seed": args.seed,
            "twin_seed": args.twin_seed, "test_err_f": test_f, "twins": rows}
+res["delta"] = args.delta
 res["secs"] = round(time.time() - T0, 1)
 os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
 with open(args.out, "a") as fh:
