@@ -320,7 +320,8 @@ def fig_topology():
                          ("v3", "fashion_mnist", 10000, 0), ("v3", "mnist", 10000, 0)] if k in R]
     if not picks:
         return
-    fig = plt.figure(figsize=(7.0, 4.3)); gs = fig.add_gridspec(2, 6, height_ratios=[1.0, 1.05], hspace=0.35, wspace=0.12)
+    fig = plt.figure(figsize=(7.0, 4.6)); gs = fig.add_gridspec(2, 6, height_ratios=[1.0, 1.15], hspace=0.42, wspace=0.12,
+                                                                left=0.07, right=0.99, top=0.9, bottom=0.1)
     for q, k in enumerate(picks):
         M = R[k]["m"]; r = R[k]["j"]; ax = fig.add_subplot(gs[0, q])
         pix = M["isomap_pixels"]; r2 = mesh(ax, M["isomap"], pix, np.stack([pix // 28, pix % 28], 1))
@@ -336,18 +337,18 @@ def fig_topology():
             if ("v3", ds, 10000, 0) in R:
                 ax.plot([10000 * (1.12 + 0.12 * "s^D".index(mk))], [R[("v3", ds, 10000, 0)]["j"]["topology"][v]["procrustes_r2"]], mk,
                         ms=3, color=c, mfc="none")
-    ax.set_xscale("log"); ax.set_ylim(-0.05, 1.02); ax.set_xlabel("n (qd_dev; open markers at n = 10000: qd_a s, Fashion ^, MNIST D)")
+    ax.set_xscale("log"); ax.set_ylim(-0.05, 1.02); ax.set_xlabel("n (qd_dev); open: n = 10000 on\nqd_a (square), Fashion (triangle), MNIST (diamond)", fontsize=5.5)
     ax.set_ylabel("Procrustes $R^2$"); ax.legend(frameon=False, fontsize=5.5, loc="lower left"); ax.set_title("(b) topology recovery by graph", loc="left")
     # (c) pooling-set geometry: fraction of members within Chebyshev distance 1 and 2
-    ax = fig.add_subplot(gs[1, 2:4]); labs, w1, w2, ov = [], [], [], []
-    for k in picks:
-        P = R[k]["j"]["pooling"]
-        for q in (4, 9, 16):
-            labs.append(f"{DSN[k[1]][:4]} {k[2] // 1000}k k{q}"); w1.append(P[f"k{q}"]["within1"]); w2.append(P[f"k{q}"]["within2"]); ov.append(P[f"k{q}"]["overlap_nearest"])
-    x = np.arange(len(labs)); ax.bar(x, w2, color="#c6dbef", label="within 2"); ax.bar(x, w1, color="#2171b5", label="within 1")
-    ax.plot(x, ov, "k.", ms=3, label="overlap with k nearest")
-    ax.set_xticks(x); ax.set_xticklabels(labs, rotation=90, fontsize=4.5); ax.set_ylim(0, 1.02)
-    ax.set_title("(c) members of $S_i(k)$ near $i$ (Chebyshev)", loc="left"); ax.legend(frameon=False, fontsize=5, loc="lower left")
+    ax = fig.add_subplot(gs[1, 2:4]); wd = 0.26
+    for j, (q, c1, c2) in enumerate(((4, "#08519c", "#9ecae1"), (9, "#a63603", "#fdae6b"), (16, "#006d2c", "#a1d99b"))):
+        x = np.arange(len(picks)) + (j - 1) * wd
+        w1 = [R[k]["j"]["pooling"][f"k{q}"]["within1"] for k in picks]; w2 = [R[k]["j"]["pooling"][f"k{q}"]["within2"] for k in picks]
+        ax.bar(x, w2, wd, color=c2); ax.bar(x, w1, wd, color=c1, label=f"k = {q}")
+        ax.plot(x, [R[k]["j"]["pooling"][f"k{q}"]["overlap_nearest"] for k in picks], "k.", ms=2.5)
+    ax.set_xticks(np.arange(len(picks))); ax.set_xticklabels([f"{DSN[k[1]]}\n{k[2]}" for k in picks], fontsize=5); ax.set_ylim(0, 1.02)
+    ax.set_title("(c) members of $S_i(k)$ within 1 (dark) / 2 (light)\nChebyshev steps of $i$; dots: overlap with k nearest", loc="left", fontsize=6)
+    ax.legend(frameon=False, fontsize=5, loc="lower left", ncol=3)
     # (d) example pooling sets S_i(16) and bars on the true grid (qd_dev n = 10000)
     k = ("v3", "qd_dev", 10000, 0) if ("v3", "qd_dev", 10000, 0) in R else picks[-1]; M = R[k]["m"]
     ax = fig.add_subplot(gs[1, 4:6]); im = np.zeros((28, 28, 3)) + 1.0
@@ -458,7 +459,7 @@ def fig_stack():
     picks = [k for k in keys]
     if not picks:
         return
-    fig = plt.figure(figsize=(7.0, 3.0)); gs = fig.add_gridspec(1, 2, width_ratios=[1.35, 1], wspace=0.35)
+    fig = plt.figure(figsize=(7.0, 3.2)); gs = fig.add_gridspec(1, 2, width_ratios=[1.35, 1], wspace=0.3, left=0.16, right=0.99, top=0.86, bottom=0.13)
     ax = fig.add_subplot(gs[0, 0])
     grp = [("cgbt", ["cgbt"], "#e6550d"), ("ggbt", ["ggbt"], "#2171b5"), ("gknn", ["gknn_1", "gknn_3", "gknn_9", "gknn_27"], "#6baed6"),
            ("kNN (Part 8)", [m for m in MEMS if m.startswith("knn")], "#bcbddc"), ("gbt / et (Part 8)", ["gbt", "et"], "#74c476"),
@@ -481,7 +482,7 @@ def fig_stack():
     ax.plot(ns, [R[("v3", "qd_dev", n, 0)]["j"]["err"] for n in ns], "k-", lw=1.4, marker="s", ms=3, label="v3 (test)")
     if ("v2", "qd_dev", 10000, 0) in R:
         ax.plot([10000], [R[("v2", "qd_dev", 10000, 0)]["j"]["err"]], "kx", ms=4, label="v2 (test)")
-    ax.set_xscale("log"); ax.set_xlabel("n (qd_dev)"); ax.set_ylabel("out-of-fold error (members), test error (stack)")
+    ax.set_xscale("log"); ax.set_xlabel("n (qd_dev)"); ax.set_ylabel("out-of-fold error (members); test error (v3, v2)")
     ax.legend(frameon=False, fontsize=5, ncol=2); ax.set_title("members' out-of-fold errors, qd_dev", loc="left")
     save(fig, "fig_img_stack.pdf")
 

@@ -65,10 +65,12 @@ KIND = {
     "f7_06": ("control", "control"), "f7_07": ("interval", "parity"), "f7_08": ("arbitrary", "pure"),
     "f7_09": ("threshold", "parity"), "f7_10": ("threshold", "weighted"), "f7_11": ("arbitrary+band", "mux"),
 }
-# the true weighted inner term of the weighted targets (original 0-indexed inputs; None: not representable as one
-# v1.3 inner term, e.g. sumpar's degree-3 parity)
-INNER = {"thrsum": ("par", (6, 7), 3), "h6_10": ("lit", (12,), 3), "f7_10": ("lit", (5,), 2),
-         "h5t0": ("par", (7, 8), 2), "h5t1": ("par", (5, 6), 2), "sumpar": None}
+# the true weighted inner term of the weighted targets: (kind, original 0-indexed inputs, a relative to the class's
+# normalised signs, i.e. a * s_true[first input of the class]); None: not representable as one v1.3 inner term (sumpar's
+# degree-3 parity).  thrsum: s + 3 x7x8; h6_10: s - 3 x13; f7_10: s + 2 x6; h5t0: s = (-1, 1, 1, 1, 1, -1, 1) . x + 2 x8x9;
+# h5t1: s = (1, -1, 1, -1, 1) . x + 2 x6x7
+INNER = {"thrsum": ("par", (6, 7), 3), "h6_10": ("lit", (12,), -3), "f7_10": ("lit", (5,), 2),
+         "h5t0": ("par", (7, 8), -2), "h5t1": ("par", (5, 6), 2), "sumpar": None}
 
 
 def nstar(ns, e, thr=0.1):
@@ -178,24 +180,28 @@ def lead_terms(c, k=3, min_share=0.05):
     return "; ".join(f"{term_str(t)} ({t['share']:.2f})" for t in T[:k] if t["share"] >= min_share * top)
 
 
-def inner_found(c, tgt):
-    """For a weighted target: is the true inner term in the model, as a block's inner term a*tau or as a modulator?"""
+def inner_found(c, tgt, cls0=None):
+    """For a weighted target: is the true inner term in the model?  'exact' (a block with inner term a*tau on the true
+    inputs and the true weight relative to the block's signs), 'a=<learned> (true <a>)' (same tau, other weight or relative
+    sign), 'modulator' (chi_tau modulates a block), 'product factor' (tau's inputs form the second factor of a product
+    block), or 'no'."""
     want = INNER.get(tgt)
     if want is None:
         return None
-    kind, inp, a = want
+    kind, inp, a_true = want; best = "no"
     for t in (c.get("terms") or []):
         if t["kind"] != "sum":
             continue
         inn = t.get("inner")
         if inn and inn.get("kind") == kind and sorted(inn.get("inputs") or []) == sorted(inp):
-            return f"inner {inn['a']:+d}*{kind}"
+            sg = dict(zip(t["S"], t["signs"])); i0 = min(cls0) if cls0 else min(sg)
+            a_rel = inn["a"] * sg.get(i0, 1)
+            return "exact" if a_rel == a_true else f"a={a_rel:+d} (true {a_true:+d})"
         if sorted(t.get("mod") or []) == sorted(inp):
-            return "modulator"
-        for f in t.get("factors") or []:                           # a product block's second factor |x_j +- x_l|
-            if len(t.get("factors")) > 1 and sorted(f["S"]) == sorted(inp):
-                return "product factor"
-    return "no"
+            best = "modulator"
+        elif best == "no" and len(t.get("factors") or []) > 1 and any(sorted(f["S"]) == sorted(inp) for f in t["factors"][1:]):
+            best = "product factor"
+    return best
 
 
 def detect(P, key):
@@ -268,9 +274,11 @@ def target_rows(S3, S2, P, N3, N2, NN):
                    nstar3_v2=n2[0] if n2 else None, nets_best=nn[0] if nn else None, nets_variants=nn[1] if nn else "",
                    n_struct_v2=ns2, n_stable_v2=st2, struct_file=os.path.basename(r["_path"]))
         if tg in INNER:
-            row["inner_last"] = inner_found(last, tg)
-            fi = next((c["n"] for c in C if inner_found(c, tg) not in (None, "no")), None)
-            row["n_inner"] = fi
+            c0 = big[0]["S"] if big else None
+            row["inner_last"] = inner_found(last, tg, c0)
+            row["n_inner"] = next((c["n"] for c in C if inner_found(c, tg, c0) not in (None, "no")), None)
+            row["n_inner_exact"] = next((c["n"] for c in C if inner_found(c, tg, c0) == "exact"), None)
+            row["inner_by_n"] = "; ".join(f"{c['n']}: {inner_found(c, tg, c0)}" for c in C)
         if dt:
             row.update(n_detect=dt["n_detect"], n_unfold=dt["n_unfold"], n_fold=dt["n_fold"], n_mod=dt["n_modulated"],
                        W1=round(dt["W"][1], 4) if len(dt["W"]) > 1 else None, W2=round(dt["W"][2], 4) if len(dt["W"]) > 2 else None,
@@ -310,7 +318,7 @@ def recovery_tables(rows):
     write_csv("toy_recovery_v3.csv", rows, ["suite", "target", "desc", "kind", "mixture", "k", "classes", "n_struct", "n_stable",
               "n_detect", "n_unfold", "n_fold", "n_mod", "reach_deg1", "reach_eig", "W1", "W2", "nstar3", "nstar3_file", "nstar_s0",
               "nstar3_v2", "n_struct_v2", "n_stable_v2", "nets_best", "nets_variants", "n_max", "err_last", "err_dfg_last",
-              "w_dfg_last", "span_r2_last", "fourier_chi_last", "inner_last", "n_inner", "lead", "struct_file", "power_file"])
+              "w_dfg_last", "span_r2_last", "fourier_chi_last", "inner_last", "n_inner", "n_inner_exact", "inner_by_n", "lead", "struct_file", "power_file"])
     # by suite
     S = []
     for su in SUM_SUITES:
@@ -373,7 +381,7 @@ def nonsum_table(rows, S3):
 
 
 # ------------------------------------------------------------------------------------------------ Q2: timing
-def timing(rows):
+def timing(rows, PW=None):
     """Per sum-structured target with a class of size >= 3: n_detect (power), n_struct (v3, seed 0), n* (seed 0 from the
     same fits; and 3 seeds where available).  log2 ratios; never-found targets are reported separately (not in medians)."""
     T = []
@@ -384,7 +392,10 @@ def timing(rows):
                  n_detect=r.get("n_detect"), n_unfold=r.get("n_unfold"), n_fold=r.get("n_fold"), n_mod=r.get("n_mod"),
                  n_struct=r["n_struct"], n_stable=r["n_stable"], nstar_s0=r["nstar_s0"], nstar3=r["nstar3"], n_max=r["n_max"],
                  reach_deg1=r.get("reach_deg1"), reach_eig=r.get("reach_eig"), W1=r.get("W1"), W2=r.get("W2"))
-        q["l2_struct_detect"] = l2(r["n_struct"], r.get("n_detect")) if r["n_struct"] and r.get("n_detect") else None
+        q["n_detect_unitpart"], q["detect_source"] = None, "toy_power"
+        if PW and (r["suite"], r["target"]) in PW:              # weighted target: the true block is the weighted one
+            q["n_detect_unitpart"] = q["n_detect"]; q["n_detect"] = PW[(r["suite"], r["target"])]["n_detect_w"]; q["detect_source"] = "toy_power_w"
+        q["l2_struct_detect"] = l2(r["n_struct"], q.get("n_detect")) if r["n_struct"] and q.get("n_detect") else None
         q["l2_nstar_struct"] = l2(r["nstar_s0"], r["n_struct"]) if r["n_struct"] else None
         q["l2_nstar3_struct"] = l2(r["nstar3"], r["n_struct"]) if r["n_struct"] and r["nstar3"] else None
         T.append(q)
@@ -480,7 +491,11 @@ def below_discovery(S3):
         ns, _ = first_struct(r); rel = set(r["truth"]["relevant"])
         for c in r["cells"]:
             rel_n = None if ns is None else round(math.log2(c["n"] / ns))
+            w = c["weights"]          # which DFG variant the summarised model is: the last fit on all n (dfg_forced is
+            #                           refitted after dfg when both are kept); with no stack weight the last out-of-fold fit
+            variant = "forced" if "dfg_forced" in w else "default" if "dfg" in w else ("forced" if c["n"] <= 512 else "default")
             q = dict(suite=su, target=tg, n=c["n"], n_struct=ns, rel=rel_n, phase="never" if ns is None else ("below" if c["n"] < ns else "at/after"),
+                     variant=variant, w_tot=round(sum(w.values()), 3), w_dfg_abs=round(sum(v for k, v in w.items() if k.startswith("dfg")), 3),
                      err=round(c["err"], 4), err_dfg=None if c.get("err_dfg") is None else round(c["err_dfg"], 4), w_dfg=c["w_dfg"],
                      source="final" if c.get("dfg_source") == "final" else "oof")
             q.update(member_shares(c["weights"])); q.update(cell_contents(c, rel, big_classes(r)))
@@ -507,6 +522,20 @@ def below_summary(B):
     for b in B:
         if b["rel"] is not None:
             rel.setdefault(b["rel"], []).append(b)
+    for ph in ("below", "never"):
+        for var in ("default", "forced"):
+            R = [b for b in B if b["phase"] == ph and b["variant"] == var]
+            if R:
+                S[f"{ph}_{var}"] = dict(cells=len(R), empty=sum(b["empty"] for b in R), spurious_chi_cells=sum(b["spur_chi"] > 0 for b in R),
+                                        true_chi_cells=sum(b["true_chi"] > 0 for b in R), partial_block_cells=sum(b["partial"] for b in R),
+                                        spur_degrees=sorted(set(x for b in R for x in b["deg_spur"])))
+    byn = {}
+    for b in B:
+        byn.setdefault(b["n"], []).append(b)
+    S["by_n"] = {int(n): dict(cells=len(v), mean_w_dfg=round(float(np.mean([b["w_dfg"] for b in v])), 3),
+                              zero_dfg=sum(b["w_dfg"] == 0 for b in v), found=sum(b["exact"] for b in v),
+                              mean_shares={m: round(float(np.mean([b[m] for b in v])), 3) for m, _ in MEMBERS})
+                 for n, v in sorted(byn.items())}
     S["by_log2_n_over_n_struct"] = {int(k): dict(cells=len(v), median_w_dfg=float(np.median([b["w_dfg"] for b in v])),
                                                  mean_w_dfg=round(float(np.mean([b["w_dfg"] for b in v])), 3),
                                                  empty=sum(b["empty"] for b in v), spur=sum(b["spur_chi"] > 0 for b in v),
@@ -688,6 +717,42 @@ def load_g():
 
 
 
+
+def check_identity(S, tag):
+    """The structure runs reproduce the evaluation's seed-0 cells: compare their test errors with the result files'."""
+    res = dict(cells=0, equal=0, differ=[])
+    for (su, tg), r in S.items():
+        for nm in NSTAR_FILES[tag]:
+            p = os.path.join(RES, f"toy__{nm}__{su}.json")
+            if not os.path.exists(p):
+                continue
+            D = json.load(open(p)); f = D["fns"].get(tg)
+            if f is None:
+                break
+            for c in r["cells"]:
+                if c["n"] in D["ns"]:
+                    e = f["err"][D["ns"].index(c["n"])][0]
+                    if e is None or (isinstance(e, float) and not np.isfinite(e)):
+                        continue
+                    res["cells"] += 1
+                    if abs(e - c["err"]) < 1e-9:
+                        res["equal"] += 1
+                    else:
+                        res["differ"].append([su, tg, c["n"], e, c["err"]])
+            break
+    return res
+
+
+def load_power_w():
+    W = {}
+    for p in sorted(glob.glob(os.path.join(os.path.dirname(FINAL), "toy_power_w", "*.json"))):
+        J = json.load(open(p)); J["_path"] = p
+        J["n_detect_w"] = next((c["n"] for c in J["cells"] if max(c["weighted"]["ratio"], c["weighted_fold"]["ratio"]) > 1), None)
+        J["n_detect_unit"] = next((c["n"] for c in J["cells"] if max(c["unit"]["ratio"], c["unit_fold"]["ratio"]) > 1), None)
+        W[(J["suite"], J["target"])] = J
+    return W
+
+
 def fig_v2v3(V, path):
     import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
     plt.rcParams.update({"font.size": 7, "axes.titlesize": 7, "axes.labelsize": 7, "legend.fontsize": 6})
@@ -737,7 +802,9 @@ def main():
                            nstar_v3_files=sorted(set(v[1] for v in N3.values())), nstar_v2_files=sorted(set(v[1] for v in N2.values()))))
     out["by_suite"], out["by_kind"] = recovery_tables(rows)
     out["nonsum"] = nonsum_table(rows, S3)
-    T = timing(rows); out["timing"] = timing_summary(T)
+    PW = load_power_w(); T = timing(rows, PW); out["timing"] = timing_summary(T)
+    out["power_w"] = {f"{k[0]}/{k[1]}": dict(n_detect_w=v["n_detect_w"], n_detect_unit=v["n_detect_unit"], file=os.path.basename(v["_path"])) for k, v in PW.items()}
+    out["identity"] = dict(v3=check_identity(S3, "v3"), v2=check_identity(S2, "v2"))
     write_csv("toy_timing.csv", T, list(T[0].keys()) if T else [])
     fig_timing(T, os.path.join(FIG, "fig_toy_timing.pdf"))
     F = failure_rows(rows, S3, P, [f for f in FAIL] + [(r["suite"], r["target"]) for r in rows if r["suite"] in SUM_SUITES and r["classes"] != "–"
