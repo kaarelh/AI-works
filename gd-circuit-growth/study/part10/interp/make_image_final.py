@@ -306,6 +306,23 @@ for ds in ("qd_dev", "fashion_mnist", "mnist", "qd_a"):
                           fmt(d.get("class_err_ggbt_alone", {}).get(lab[c]), 3), fmt(d.get("class_err_cgbt_alone", {}).get(lab[c]), 3)])
         rows8.append([ds, n, "**all**", f"{d['err_v2']:.4f}", f"{d['err_v3']:.4f}", f"{d['err_v3'] - d['err_v2']:+.4f}", "", ""])
 T8 = md_table(["dataset", "n", "class", "v2 err", "v3 err", "v3 - v2", "ggbt alone (v3 fit)", "cgbt alone (v3 fit)"], rows8)
+rows8b = []; SUM["alone"] = {}                                         # every v3 fit: the boosters alone vs the stacked learner
+for k in keys:
+    tag, ds, n, s_ = k; M = R[k]["m"]
+    if tag != "v3" or "cgbt_test_pred" not in M:
+        continue
+    y = M["test_y"]; lab = LAB.get(ds, [str(i) for i in range(10)]); d = {}
+    for nm, p_ in (("v3", M["test_pred"]), ("cgbt", M["cgbt_test_pred"]), ("ggbt", M["ggbt_test_pred"])):
+        d[nm] = dict(err=float(np.mean(p_ != y)), cls={lab[c]: float(np.mean(p_[y == c] != c)) for c in range(10)})
+    d["cgbt_ggbt_agree"] = float(np.mean(M["cgbt_test_pred"] == M["ggbt_test_pred"]))
+    d["ggbt_refit"] = R[k]["j"]["boosters"]["ggbt"].get("refit_on_all_n")
+    SUM["alone"][f"{ds}/n{n}"] = d
+    rows8b.append([ds, n, f"{d['v3']['err']:.4f}", f"{d['cgbt']['err']:.4f}", f"{d['ggbt']['err']:.4f}" + ("" if d["ggbt_refit"] else " (oof fit)"),
+                   f"{d['cgbt_ggbt_agree']:.3f}",
+                   "; ".join(f"{c_}: {d['cgbt']['cls'][c_]:.3f}/{d['ggbt']['cls'][c_]:.3f}" for c_ in lab)])
+T8 += ("\nv3's two boosters alone on the same test points (each booster's own argmax; 'oof fit': the stacker gave ggbt no "
+       "weight, so it was not refitted and the booster shown is its out-of-fold fit on n - 2000 rows):\n\n" +
+       md_table(["dataset", "n", "v3 (stacked)", "cgbt alone", "ggbt alone", "cgbt-ggbt agreement", "per class: cgbt / ggbt"], rows8b))
 
 
 # ------------------------------------------------------------------------- T9: contribution maps, quantified
