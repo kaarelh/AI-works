@@ -157,17 +157,18 @@ block's partition, not the increment over it, so a strong block drags an irrelev
 | h5t0 | sign(s + 2 x8x9 + 1/2) | 256: `s x \|x8+x9\|` (product factor); 512: `(s + 2 x9x8)` exact |
 | thrsum | sign(x1+…+x6 + 3 x7x8 + 1/2) | 256, 512: `(x1+…+x6) x \|x7−x8\|` (product factor) |
 | h5t1 | sign(s + 2 x6x7 + 1/2) | 512: `(s + 3 x6x7) x \|−x6+x7\|` (weight 3, not 2, inside a product with the parity's factor) |
-| sumpar | sign(x1+…+x5 + 2 x6x7 + 2 x8x9x10) | degree-3 inner term not representable; the model is `chi[x8,x9,x10]`, `chi[x6,x7]`, `chi[x1..x5]` and degree-1 terms |
+| sumpar | sign(x1+…+x5 + 2 x6x7 + 2 x8x9x10) | a degree-3 inner term is not in v1.3's class; the model is characters: DFG error 0 from n = 256 with `chi[x6,x7]`, `chi[x8,x9,x10]` and degree-1 terms (both classes matched in one model only at 2048) |
 
-A product with `|x_j ± x_l|` or a modulator by tau represents every function of (s, tau), so all six are represented
-exactly at the largest n except h6_10 at 256. h6_10 at 256 is an aliasing case: [|s + 3 x13| ∉ {5, 7}] equals the target
+A product with a factor `|x_j ± x_l|` represents every function of (s, x_j·x_l), and a block modulated by tau next to an
+additive block on s every function of (s, tau); the first five targets are fitted to DFG error 0 at their largest
+analysed n. h6_10 at 256 is an aliasing case: [|s + 3 x13| ∉ {5, 7}] equals the target
 except where |s| >= 8, which explains its 1.7% error (§3).
 
 ### 1.4 Exact representations the matcher does not count
 
 *Measured* (per-target JSONs): f7_11 (a multiplexer between a 4-input and a 6-input block) has each class exactly at
-some n (4-input at 128, 6-input at 2048) but never both in one model; its 4-input branch [s1 ∈ {±4}] is carried by
-characters of degree <= 4 instead (n\*_3 55). h6_02 = [1 <= s <= 5]·x10·x11 is fitted to DFG error 0.002 at n = 512 by
+some n (4-input at 128, 6-input at 2048) but never both in one model; at n = 4096 its 4-input branch [s1 ∈ {±4}] is
+carried by characters of degree 2–3 with and without the selector (`chi[x2,x4,x11]`, `chi[x1,x4]`; n\*_3 55). h6_02 = [1 <= s <= 5]·x10·x11 is fitted to DFG error 0.002 at n = 512 by
 `chi[x1,x10,x11]*|x2+…+x9|` plus characters x_j·x10·x11, and at 1024 by the degree-11 character on x1..x11 (share 0.55)
 plus degree-3 characters. v2's h6_10 at n >= 512 uses two folded 13-input blocks `|s + x13|`, `|s − x13|`, which
 together determine (|s|, sign(s·x13)) and hence f (error 0.000 at 1024, `results/toy_final/v2/dlheld6__h6_10__s0.json`).
@@ -186,8 +187,10 @@ PENDING_NONSUM
 - **Detection is cheap.** The true block (weighted block for the five weighted targets) passes DFG's test at n = 128 for
   43 targets, 256 for 6, 512 for 3 and 1024 for 2 (twosym, fd_06: one block of a two-sum target explains only part of
   it). For 9 targets (all mixtures with a parity) only the modulated statistic passes; the plain block never does.
-- **The exact structure comes later.** Of the 49 targets found, n_struct is before n_detect for 5 (sym7, majsym and three
-  two-sum targets, where the test on the largest block alone is too strict), equal for 16, one doubling later for 13,
+- **The exact structure comes later.** Of the 49 targets found, n_struct is before n_detect for 5: sym7 and majsym, found
+  by the forced variant below the threshold (T / threshold 0.89 and 0.71 at n_struct, `tables/toy_timing.csv`
+  `ratio_at_struct`), and the two-sum targets twosym, fd_05, fd_06, whose largest block alone explains only part of f.
+  It is equal for 16, one doubling later for 13,
   two or more for 15 (band11, f7_03, f7_08, h6_01, h6_08, h5s1, h5s2, h5s3, h5s5, h5s6, h5s7, h5t1, band10, sumpar,
   symxor). log2(n_struct / n_detect): median 1.0, mean 1.04.
 - **The readout is not the bottleneck.** log2(n\*_0 / n_struct): median −0.35, mean −0.64; within ±0.5 for 34, below
@@ -227,7 +230,7 @@ sign of E[f | ·].
 
 The learned g follows the truth level by level, including the non-convex accept sets (h6_01's
 {−9, −7, −5, −1, 1, 7, 9}) and the two branches of a weighted or modulated target. The values are not ±1: the logistic
-readout rescales them and overshoots at rare levels (tail13 at |t| = 11, f7_01 at t = 13). h6_10 at n = 256 shows the
+readout rescales them and overshoots at the rare extreme levels (tail13 at |t| = 11, f7_01 at |t| = 13). h6_10 at n = 256 shows the
 aliasing of §1.3: right at every frequent level, wrong at |t| >= 8 with one sign of x13. Below the discovery n the same
 plot is flat: h6_10 at n = 128 (`results/toy_final/toy_g/v3/dlheld6__h6_10__n128.json`) has DFG error 0.39 and agrees
 on 0.70 of the points, the majority rate.
@@ -249,7 +252,7 @@ Fourier weight by degree).
 - *Why the search cannot reach it:* at n = 16384 the statistic of the true block falls by about 4× per missing input
   (drop 1: 41 / 36 / 35; drop 2: 11 / 9.4 / 9.2; drop 3: 2.9 / 2.5 / 2.4; drop 4: 0.84 / 0.73 / 0.65 times the
   threshold) and by 3–4× per wrong sign or extra input; every candidate with 3 errors of mixed kinds still passes (the
-  fraction above threshold is 1.00), with 4 missing inputs none does at the median. But no 1- or 2-input piece of the
+  fraction above threshold is 1.00), with 4 missing inputs the median is below it. But no 1- or 2-input piece of the
   block carries signal: the best pair inside S is at 0.15 / 0.25 / 0.12 of its threshold, the best pair among 12 inputs
   outside S at 0.33 / 0.20 / 0.20, random blocks of the true size at 0.07. The search's orders reach S no better than
   chance (eigenvector prefix 0.50 / 0.54 / 0.57 of S against |S|/30 = 0.33 / 0.43 / 0.47). Within 3 errors of the
@@ -286,17 +289,18 @@ analysed n.
 
 | change | targets: n_struct v2 → v3 (seed 0); n\* v2 → v3 (3 seeds, else seed 0) |
 |---|---|
-| **weighted blocks** change what is learned | h6_10: never → 256 (weighted `\|s ± 3 x13\|`; exact sign from 512); n\*_3 702 → 206. h6_07: never → 512 (`s1 + 3 x11` with the selector as inner literal); n\*_3 678 → 447. h6_08: never → 1024 (`s2 − 3 x11`, products with `s1 + 3 x11`); n\*_3 446 → 449. f7_10: same n (128), but at 256 the model is the exact `(x1+…+x5 + 2 x6)` where v2 keeps `chi[x6]*\|s\|`; n\*_3 82 → 82. symxpar, h6_06, f7_07: the parity partner as inner term, same n_struct and n\* |
+| **weighted blocks** change what is learned | h6_10: never → 256 (weighted `\|s ± 3 x13\|`; exact sign from 512); n\*_3 702 → 206. h6_07: never → 512 (`s1 + 3 x11` with the selector as inner literal); n\*_3 678 → 447. h6_08: never → 1024 (`s2 − 3 x11`, products with `s1 + 3 x11`); n\*_3 446 → 449. f7_10: same n_struct (128), but at 256 v3's model is the exact `(x1+…+x5 + 2 x6)` where v2 has `chi[x6]*\|s\|` and the unit-weight `(x1+…+x5 − x6)`; n\*_3 82 both. symxpar, h6_06, f7_07: the parity partner as inner term, same n_struct; n\*_3 111 → 111, 342 → 349, 174 → 174 |
 | **small-n beam + forced blocks** (n <= 128) | sym7 128 → 64 (forced variant only; at 64 the true block is at 0.89 of the threshold, so it was forced, not accepted), n\*_3 110 → 55. fd_09 256 → 128 (passes the test at 128: 1.62), n\*_3 171 → 101. h6_11 256 → 128, n\*_0 212 → 100 (n\*_3 208 → 184). tail13, sym11, majsym 256 → 128, n\*_0 199 → 100, 219 → 110, 188 → 91 |
 | later in v3 | h5t1 256 → 512 (portfolio errors identical at every n) |
 | lost | f7_11: v2 has both classes at 2048, v3 never in one model (n\*_3 55 both) |
-| nothing | 41 targets have the same n_struct, among them the three mod-3 counts, band11, all of dlheld5's arbitrary sets except h5t1, ex3of8, twosym |
+| nothing | 41 targets (3 of them controls) have the same n_struct in both, among them all eight of dlheld5's arbitrary accept sets, band11, ex3of8 and twosym; the three mod-3 counts and h6_02 have it in neither |
 
 *Measured, where weighted blocks appear in v3's models* (`tables/toy_weighted_blocks_v3.md`): 26 targets have a
-weighted block with share >= 20% of the largest term at some n. Its inner term is a true weighted term (h6_10, f7_10,
-h5t0, h5t1), a parity partner (symxpar, h6_06, f7_07), a multiplexer selector (h6_07, h6_08, f7_03), a gate literal or
-AND of two literals (h5s4, symand, symxor, majsym) — and in 9 controls (decision lists, DNFs, read-once formulas) an
-AND of two literals inside a weighted threshold, e.g. h6_04 `(x1+x2 − 3 AND(x4,−x3))`.
+weighted block with share >= 20% of the largest term at some n. Its inner term is the true weighted term (h6_10, f7_10,
+h5t0, h5t1), a parity partner (symxpar `+3 x7x8`, h6_06, f7_07, symxor `−2 x8`), a multiplexer selector (h6_07, h6_08,
+f7_03: `±3 x11`), the other inputs of a gate (h5s4 `+3 x6`, symand `+3 AND(−x8,−x7)`, majsym `+2 x6x7` with x8 in the
+block), or an AND of two inputs of the same class (h6_09, h5s7 at 16384); and in 10 of the 14 controls (decision
+lists, DNFs, read-once formulas) an AND of two literals inside a weighted threshold, e.g. h6_04 `(x1+x2 − 3 AND(x4,−x3))`.
 
 *Reading.* The weighted class is used far more widely than for the one target it was built for (h6_10): any function of
 a block and one more ±1 term that the block's partition cannot separate (a parity partner, a selector, a gate) can be
@@ -311,15 +315,16 @@ measurable.
 n >= n_struct, and the 5 never-found targets add 49 cells.
 
 - **Contents.** Of the 216 cells below n_struct, the summarised model is the forced variant in 177 and the default in
-  39. The default variant is empty (constant + kernel background only) in 26 of its 39 cells; its other cells hold a
-  few true degree-1 characters (thresholds) or the linear block. The forced variant holds 1–2 forced characters of
+  39. The default variant is empty (constant + kernel background only) in 26 of its 39 cells; the others hold
+  degree-1 characters (true ones in 13 cells, spurious ones in 9). The forced variant holds 1–2 forced characters of
   degree 1–4 (degree up to 7 from the subsampled high-degree search) that are spurious (not inside the relevant set)
   in 152 of 177 cells; 87 of 177 also hold a true character (a parity partner, a gate literal, a threshold's input).
   Partial blocks (a sum block that does not match exactly) appear in 21 cells, 14 of them one doubling before n_struct.
 - **Error.** Median DFG test error 0.41 below n_struct (the portfolio's 0.37), 0.0 from n_struct on.
 - **Stack weights.** The DFG members' share of the stack weight: median 0.21 (mean 0.33) below n_struct, 0.89 (mean
   0.87) from n_struct on, 0.20 on never-found targets. Below n_struct the stack's total weight is small (median 0.35,
-  against 1.52 from n_struct on), so the stack is close to its bias, a constant predictor; the members' mean shares
+  against 1.52 from n_struct on; in 17 of the 216 cells every weight is 0), so the stack is close to its bias, a
+  constant predictor; the members' mean shares (a cell with no weight counts as 0 for every member)
   there: kNN 0.28, dfg_forced 0.22, LightGBM 0.13, logistic regression 0.12, dfg 0.11, ExtraTrees 0.05. By
   log2(n / n_struct): the median DFG share is 0.03 at −3, 0.21 at −2, 0.44 at −1, 0.87 at 0, 0.92 at +1.
 - **By n** (all 54 targets, `by_n`): the mean DFG share rises from 0.27–0.30 at n = 16–64 to 0.52 at 128, 0.72 at 256
