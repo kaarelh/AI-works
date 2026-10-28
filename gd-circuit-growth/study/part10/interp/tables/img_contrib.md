@@ -2,7 +2,7 @@
 
 class-excess ink: pixels where the class mean image exceeds the mean of the 10 class means by > 0.05; class-deficit: below it by > 0.05.
 
-Source files: $SCRATCH/p10/interp_out_final/image/v3/fashion_mnist__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/mnist__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_a__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n1000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n3000__s0.json (and the .npz next to each).
+Source files: $SCRATCH/p10/interp_out_final/image/v2/qd_dev__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/fashion_mnist__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/mnist__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_a__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n1000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n3000__s0.json (and the .npz next to each).
 
 | learner | dataset | booster | class | positive share of |contrib| | pos. on class-excess ink | pos. on class-deficit | neg. on class-excess | neg. on class-deficit | corr(map, class mean - mean) | net evidence: inked / blank pixels of the point | |contrib| share by feature type |
 |---|---|---|---|---|---|---|---|---|---|---|---|
@@ -86,3 +86,13 @@ Source files: $SCRATCH/p10/interp_out_final/image/v3/fashion_mnist__n10000__s0.j
 | v3 | qd_a | ggbt | camouflage | 0.99 | 0.89 | 0.02 | 0.26 | 0.01 | +0.82 | +5.15 / +0.57 | raw:0.13 pool4:0.17 pool9:0.18 pool16:0.26 pairs:0.26 |
 | v3 | qd_a | ggbt | coffee cup | 1.00 | 0.32 | 0.31 | 0.00 | 0.00 | -0.19 | +4.69 / +4.82 | raw:0.08 pool4:0.16 pool9:0.25 pool16:0.30 pairs:0.21 |
 | v3 | qd_a | ggbt | skateboard | 1.00 | 0.36 | 0.47 | 0.00 | 0.82 | +0.34 | +10.47 / +6.20 | raw:0.06 pool4:0.11 pool9:0.16 pool16:0.21 pairs:0.47 |
+| v2 | qd_dev | ggbt | ocean | 1.00 | 0.33 | 0.47 | 0.00 | 0.88 | +0.34 | +5.11 / +6.30 | raw:0.04 pool4:0.14 pool9:0.18 pool16:0.34 pairs:0.29 |
+| v2 | qd_dev | ggbt | motorbike | 1.00 | 0.45 | 0.36 | 0.00 | 0.00 | +0.02 | +4.61 / +3.63 | raw:0.09 pool4:0.15 pool9:0.21 pool16:0.27 pairs:0.28 |
+| v2 | qd_dev | ggbt | matches | 1.00 | 0.07 | 0.60 | 0.00 | 0.24 | -0.29 | +1.72 / +2.94 | raw:0.08 pool4:0.14 pool9:0.18 pool16:0.31 pairs:0.29 |
+| v2 | qd_dev | ggbt | grapes | 1.00 | 0.73 | 0.07 | 0.00 | 0.03 | +0.76 | +3.64 / +0.95 | raw:0.08 pool4:0.12 pool9:0.24 pool16:0.31 pairs:0.25 |
+| v2 | qd_dev | ggbt | paper clip | 1.00 | 0.42 | 0.30 | 0.00 | 0.56 | +0.34 | +4.34 / +3.12 | raw:0.06 pool4:0.12 pool9:0.21 pool16:0.31 pairs:0.30 |
+| v2 | qd_dev | ggbt | campfire | 1.00 | 0.67 | 0.11 | 0.24 | 0.00 | +0.61 | +4.46 / +2.20 | raw:0.08 pool4:0.14 pool9:0.20 pool16:0.32 pairs:0.26 |
+| v2 | qd_dev | ggbt | washing machine | 1.00 | 0.74 | 0.03 | 0.00 | 0.00 | +0.69 | +8.49 / +3.05 | raw:0.05 pool4:0.13 pool9:0.22 pool16:0.35 pairs:0.24 |
+| v2 | qd_dev | ggbt | soccer ball | 1.00 | 0.78 | 0.02 | 0.00 | 0.00 | +0.63 | +8.11 / +1.51 | raw:0.06 pool4:0.11 pool9:0.16 pool16:0.38 pairs:0.29 |
+| v2 | qd_dev | ggbt | frying pan | 1.00 | 0.20 | 0.45 | 0.00 | 0.03 | +0.08 | +3.55 / +2.86 | raw:0.07 pool4:0.14 pool9:0.17 pool16:0.27 pairs:0.34 |
+| v2 | qd_dev | ggbt | foot | 1.00 | 0.19 | 0.62 | 0.00 | 0.00 | -0.40 | +3.78 / +3.15 | raw:0.07 pool4:0.10 pool9:0.21 pool16:0.29 pairs:0.33 |

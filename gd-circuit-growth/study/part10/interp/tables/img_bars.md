@@ -2,7 +2,7 @@
 
 Orientation 45 = '/' (row decreases as column increases), 135 = '\\'.
 
-Source files: $SCRATCH/p10/interp_out_final/image/v3/fashion_mnist__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/mnist__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_a__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n1000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n3000__s0.json (and the .npz next to each).
+Source files: $SCRATCH/p10/interp_out_final/image/v2/qd_dev__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/fashion_mnist__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/mnist__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_a__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n1000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n3000__s0.json (and the .npz next to each).
 
 | dataset | n | L | bars | mean pixels | straight | contiguous | elong. median | elong. >= 0.9 | within 1 px of a line | orient. 0/45/90/135 | straight (gain-wtd) | elong. >= 0.9 (gain-wtd) | within 1 px (gain-wtd) | orient. (gain-wtd) | frac. of bars used | gain share of top 10% bars |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|

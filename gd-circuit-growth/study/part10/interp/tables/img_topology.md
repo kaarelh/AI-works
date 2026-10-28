@@ -1,6 +1,6 @@
 # Isomap Procrustes R^2 of the pooling-set graphs (nodes in the largest component)
 
-Source files: $SCRATCH/p10/interp_out_final/image/v3/fashion_mnist__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/mnist__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_a__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n1000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n3000__s0.json (and the .npz next to each).
+Source files: $SCRATCH/p10/interp_out_final/image/v2/qd_dev__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/fashion_mnist__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/mnist__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_a__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n1000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n3000__s0.json (and the .npz next to each).
 
 | learner | dataset | n | active pixels | k=4 union | k=9 union | k=9 mutual | k=16 mutual |
 |---|---|---|---|---|---|---|---|
@@ -10,6 +10,7 @@ Source files: $SCRATCH/p10/interp_out_final/image/v3/fashion_mnist__n10000__s0.j
 | v3 | fashion_mnist | 10000 | 784 | 0.134 (784) | 0.230 (784) | 0.231 (784) | 0.234 (784) |
 | v3 | mnist | 10000 | 682 | 0.918 (682) | 0.477 (682) | 0.969 (674) | 0.519 (674) |
 | v3 | qd_a | 10000 | 676 | 0.988 (676) | 0.238 (676) | 0.827 (676) | 0.254 (676) |
+| v2 | qd_dev | 10000 | 676 | 0.973 (676) | 0.858 (676) | 0.917 (676) | 0.072 (676) |
 
 Edges of the same graphs by their true Chebyshev length: total edges: fraction of length <= 1 / number longer than 2 / number longer than 5 (computed from the pooling-set member lists in the .npz).
 

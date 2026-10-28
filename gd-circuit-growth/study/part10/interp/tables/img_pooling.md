@@ -1,6 +1,6 @@
 # Pooling sets S_i(k) on the true grid
 
-Source files: $SCRATCH/p10/interp_out_final/image/v3/fashion_mnist__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/mnist__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_a__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n1000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n3000__s0.json (and the .npz next to each).
+Source files: $SCRATCH/p10/interp_out_final/image/v2/qd_dev__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/fashion_mnist__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/mnist__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_a__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n1000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n3000__s0.json (and the .npz next to each).
 
 | learner | dataset | n | k | mean Chebyshev dist. of members | frac. within 1 | frac. within 2 | 95th pct dist. | max dist. | overlap with k nearest | members > 2 steps away / of which mirror pixels (row +-1, c + c' = 27 +- 2) |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -22,3 +22,6 @@ Source files: $SCRATCH/p10/interp_out_final/image/v3/fashion_mnist__n10000__s0.j
 | v3 | qd_a | 10000 | 4 | 0.751 | 0.9989 | 1.0 | 1.0 | 2 | 0.8291 | 0 / 0 |
 | v3 | qd_a | 10000 | 9 | 1.108 | 0.8371 | 0.9903 | 2.0 | 25 | 0.8596 | 59 / 33 |
 | v3 | qd_a | 10000 | 16 | 2.26 | 0.5302 | 0.8124 | 5.0 | 25 | 0.7663 | 2029 / 679 |
+| v2 | qd_dev | 10000 | 4 | 0.755 | 0.9952 | 1.0 | 1.0 | 2 | 0.8243 | 0 / 0 |
+| v2 | qd_dev | 10000 | 9 | 1.067 | 0.8521 | 0.9949 | 2.0 | 25 | 0.8775 | 31 / 14 |
+| v2 | qd_dev | 10000 | 16 | 2.195 | 0.5232 | 0.8445 | 4.0 | 25 | 0.7815 | 1682 / 403 |
