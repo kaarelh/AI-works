@@ -113,17 +113,17 @@ def tex_row(lab, s):
     rng = "--" if not s["n_struct_range"] else f"{s['n_struct_range'][0]}--{s['n_struct_range'][1]}"
     nev = ", ".join(t.replace("_", "\\_") for t in s["never"]) or "--"
     return (f"{lab} & {s['targets']} & {s['found']} & {fmt_n(s['median_n_struct'])} & {rng} & {s['detect_at_128']} & "
-            f"{s['delay_0']} / {s['delay_1']} / {s['delay_2plus']} & {nev}\\\\")
+            f"{s['delay_earlier']} / {s['delay_0']} / {s['delay_1']} / {s['delay_2plus']} & {nev}\\\\")
 
 
-lines = ["\\begin{tabular}{lrrrrrcl}", "\\toprule",
+lines = ["\\begin{tabularx}{\\linewidth}{lrrrrrc>{\\raggedright\\arraybackslash}X}", "\\toprule",
          " & targets & \\hd{exact\\\\structure} & \\hd{median\\\\$n_{\\rm struct}$} & \\hd{range of\\\\$n_{\\rm struct}$} & "
-         "\\hd{detectable\\\\at $n=128$} & \\hd{delay 0 / 1 / $\\ge$2\\\\doublings} & never found\\\\", "\\midrule",
+         "\\hd{detectable\\\\at $n=128$} & \\hd{delay (doublings)\\\\$<0$ / 0 / 1 / $\\ge2$} & never found\\\\", "\\midrule",
          "\\multicolumn{8}{l}{\\emph{by mixture}}\\\\"]
 lines += [tex_row(lab, T["by_mixture"][m]) for m, lab in MIX]
 lines += ["\\addlinespace", "\\multicolumn{8}{l}{\\emph{by accept set} (a two-block target counts once under each kind it has)}\\\\"]
 lines += [tex_row(lab, T["by_kind"][k]) for k, lab in KINDS]
-lines += ["\\addlinespace", tex_row("all", T["all"]), "\\bottomrule", "\\end{tabular}"]
+lines += ["\\addlinespace", tex_row("all", T["all"]), "\\bottomrule", "\\end{tabularx}"]
 open(os.path.join(TAB, "tab_interp_toy.tex"), "w").write("\n".join(lines) + "\n")
 
 # ---------------------------------------------------------------------------------------------- fig_toy_timing
