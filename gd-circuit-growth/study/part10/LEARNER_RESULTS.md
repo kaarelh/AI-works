@@ -77,9 +77,9 @@ Pooled over the 6 held-out suites (65 targets): mean log2 n* ratio v3 / nets_bes
 | tabular, development | hgb | all | 5 | 24 | 4 | 20 | 0 | -0.270 | 5 of 5 (p = 0.062) |
 | tabular, development | hgb | n <= 3000 | 5 | 20 | 4 | 16 | 0 | -0.294 | 5 of 5 (p = 0.062) |
 | tabular, development | hgb | n >= 10000 | 1 | 2 | 0 | 2 | 0 | -0.026 | 1 of 1 (p = 1) |
-| images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp | all | 1 | 2 | 2 | 0 | 0 | -0.543 | 1 of 1 (p = 1) |
-| images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp | n <= 3000 | 1 | 1 | 1 | 0 | 0 | -0.505 | 1 of 1 (p = 1) |
-| images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp | n >= 10000 | 1 | 1 | 1 | 0 | 0 | -0.582 | 1 of 1 (p = 1) |
+| images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp | all | 2 | 5 | 5 | 0 | 0 | -0.525 | 2 of 2 (p = 0.5) |
+| images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp | n <= 3000 | 2 | 2 | 2 | 0 | 0 | -0.468 | 2 of 2 (p = 0.5) |
+| images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp | n >= 10000 | 2 | 3 | 3 | 0 | 0 | -0.563 | 2 of 2 (p = 0.5) |
 | images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp_strong | all | 2 | 6 | 6 | 0 | 0 | -0.314 | 2 of 2 (p = 0.5) |
 | images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp_strong | n <= 3000 | 2 | 2 | 2 | 0 | 0 | -0.294 | 2 of 2 (p = 0.5) |
 | images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp_strong | n >= 10000 | 2 | 4 | 4 | 0 | 0 | -0.324 | 2 of 2 (p = 0.5) |
@@ -88,21 +88,21 @@ Pooled over the 6 held-out suites (65 targets): mean log2 n* ratio v3 / nets_bes
 | images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp_wide | n >= 10000 | 2 | 4 | 3 | 1 | 0 | -0.235 | 2 of 2 (p = 0.5) |
 | images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp_xl | all | 2 | 2 | 0 | 2 | 0 | -0.138 | 2 of 2 (p = 0.5) |
 | images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp_xl | n >= 10000 | 2 | 2 | 0 | 2 | 0 | -0.138 | 2 of 2 (p = 0.5) |
-| images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp_best | all | 1 | 2 | 2 | 0 | 0 | -0.343 | 1 of 1 (p = 1) |
-| images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp_best | n <= 3000 | 1 | 1 | 1 | 0 | 0 | -0.313 | 1 of 1 (p = 1) |
-| images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp_best | n >= 10000 | 1 | 1 | 1 | 0 | 0 | -0.373 | 1 of 1 (p = 1) |
-| images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp_best+ | all | 1 | 2 | 2 | 0 | 0 | -0.325 | 1 of 1 (p = 1) |
-| images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp_best+ | n <= 3000 | 1 | 1 | 1 | 0 | 0 | -0.313 | 1 of 1 (p = 1) |
-| images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp_best+ | n >= 10000 | 1 | 1 | 1 | 0 | 0 | -0.336 | 1 of 1 (p = 1) |
+| images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp_best | all | 2 | 5 | 5 | 0 | 0 | -0.321 | 2 of 2 (p = 0.5) |
+| images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp_best | n <= 3000 | 2 | 2 | 2 | 0 | 0 | -0.294 | 2 of 2 (p = 0.5) |
+| images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp_best | n >= 10000 | 2 | 3 | 3 | 0 | 0 | -0.339 | 2 of 2 (p = 0.5) |
+| images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp_best+ | all | 2 | 5 | 4 | 1 | 0 | -0.268 | 2 of 2 (p = 0.5) |
+| images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp_best+ | n <= 3000 | 2 | 2 | 2 | 0 | 0 | -0.289 | 2 of 2 (p = 0.5) |
+| images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp_best+ | n >= 10000 | 2 | 3 | 2 | 1 | 0 | -0.254 | 2 of 2 (p = 0.5) |
 | images, Part 10 held out (QuickDraw qd_c, qd_d) | hgb | all | 2 | 6 | 6 | 0 | 0 | -0.471 | 2 of 2 (p = 0.5) |
 | images, Part 10 held out (QuickDraw qd_c, qd_d) | hgb | n <= 3000 | 2 | 2 | 2 | 0 | 0 | -0.467 | 2 of 2 (p = 0.5) |
 | images, Part 10 held out (QuickDraw qd_c, qd_d) | hgb | n >= 10000 | 2 | 4 | 4 | 0 | 0 | -0.473 | 2 of 2 (p = 0.5) |
 | images, Part 10 held out (QuickDraw qd_c, qd_d) | hyb_portfolio2 | all | 2 | 6 | 0 | 6 | 0 | -0.097 | 2 of 2 (p = 0.5) |
 | images, Part 10 held out (QuickDraw qd_c, qd_d) | hyb_portfolio2 | n <= 3000 | 2 | 2 | 0 | 2 | 0 | -0.040 | 2 of 2 (p = 0.5) |
 | images, Part 10 held out (QuickDraw qd_c, qd_d) | hyb_portfolio2 | n >= 10000 | 2 | 4 | 0 | 4 | 0 | -0.125 | 2 of 2 (p = 0.5) |
-| images, Part 10 held out (QuickDraw qd_c, qd_d) | hyb_portfolio | all | 1 | 3 | 3 | 0 | 0 | -0.271 | 1 of 1 (p = 1) |
-| images, Part 10 held out (QuickDraw qd_c, qd_d) | hyb_portfolio | n <= 3000 | 1 | 1 | 1 | 0 | 0 | -0.210 | 1 of 1 (p = 1) |
-| images, Part 10 held out (QuickDraw qd_c, qd_d) | hyb_portfolio | n >= 10000 | 1 | 2 | 2 | 0 | 0 | -0.302 | 1 of 1 (p = 1) |
+| images, Part 10 held out (QuickDraw qd_c, qd_d) | hyb_portfolio | all | 2 | 6 | 6 | 0 | 0 | -0.281 | 2 of 2 (p = 0.5) |
+| images, Part 10 held out (QuickDraw qd_c, qd_d) | hyb_portfolio | n <= 3000 | 2 | 2 | 2 | 0 | 0 | -0.232 | 2 of 2 (p = 0.5) |
+| images, Part 10 held out (QuickDraw qd_c, qd_d) | hyb_portfolio | n >= 10000 | 2 | 4 | 4 | 0 | 0 | -0.305 | 2 of 2 (p = 0.5) |
 | images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp_pool | all | 1 | 2 | 2 | 0 | 0 | -0.222 | 1 of 1 (p = 1) |
 | images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp_pool | n >= 10000 | 1 | 2 | 2 | 0 | 0 | -0.222 | 1 of 1 (p = 1) |
 | images, Part 10 held out (QuickDraw qd_c, qd_d) | cnn | all | 1 | 1 | 0 | 1 | 0 | +0.126 | 0 of 1 (p = 1) |
@@ -171,12 +171,17 @@ Pooled over the 6 held-out suites (65 targets): mean log2 n* ratio v3 / nets_bes
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | qd_c | 100 | – | – | – | – | 0.5849 | – | – | – | – | 0.5849 | 0.5849 | – | – |
 | qd_c | 300 | – | – | – | – | 0.4724 | – | – | – | – | 0.4724 | 0.4724 | – | – |
-| qd_c | 1000 | 0.2658 | 0.2748 | – | 0.3752 | 0.3772 | – | 0.3301 | 0.3302 | – | 0.3301 | 0.3301 | – | 0.2436 |
+| qd_c | 1000 | 0.2658 | 0.2748 | 0.3168 | 0.3752 | 0.3772 | – | 0.3301 | 0.3302 | – | 0.3301 | 0.3301 | – | 0.2436 |
 | qd_c | 3000 | – | – | – | – | 0.3099 | – | – | – | – | 0.3099 | 0.3099 | – | – |
-| qd_c | 10000 | 0.1617 | 0.1779 | – | 0.2276 | 0.2420 | – | 0.2094 | 0.2041 | – | 0.2094 | 0.2041 | 0.1937 | – |
-| qd_c | 60000 | 0.1276 | 0.1363 | – | 0.1822 | – | – | 0.1608 | 0.1412 | 0.1412 | – | – | 0.1448 | – |
-| qd_d | 1000 | 0.2612 | 0.2671 | 0.3021 | 0.3533 | – | – | 0.3162 | 0.3140 | – | – | – | – | – |
-| qd_d | 10000 | 0.1638 | 0.1782 | 0.1970 | 0.2185 | – | – | 0.2030 | 0.1989 | – | – | – | – | – |
+| qd_c | 10000 | 0.1617 | 0.1779 | 0.2005 | 0.2276 | 0.2420 | – | 0.2094 | 0.2041 | – | 0.2094 | 0.2041 | 0.1937 | – |
+| qd_c | 30000 | – | – | – | – | 0.2111 | – | – | – | – | 0.2111 | 0.2111 | – | – |
+| qd_c | 60000 | 0.1276 | 0.1363 | 0.1577 | 0.1822 | 0.1908 | – | 0.1608 | 0.1412 | 0.1412 | 0.1608 | 0.1412 | 0.1448 | – |
+| qd_d | 100 | – | – | – | – | 0.5408 | – | – | – | – | 0.5408 | 0.5408 | – | – |
+| qd_d | 300 | – | – | – | – | 0.4443 | – | – | – | – | 0.4443 | 0.4443 | – | – |
+| qd_d | 1000 | 0.2612 | 0.2671 | 0.3021 | 0.3533 | 0.3520 | – | 0.3162 | 0.3140 | – | 0.3162 | 0.3140 | – | – |
+| qd_d | 3000 | – | – | – | – | 0.2881 | – | – | – | – | 0.2881 | 0.2881 | – | – |
+| qd_d | 10000 | 0.1638 | 0.1782 | 0.1970 | 0.2185 | 0.2360 | – | 0.2030 | 0.1989 | – | 0.2030 | 0.1989 | – | – |
+| qd_d | 30000 | – | – | – | – | 0.2090 | – | – | – | – | 0.2090 | 0.2090 | – | – |
 | qd_d | 60000 | 0.1264 | 0.1399 | 0.1597 | 0.1748 | – | – | 0.1534 | 0.1431 | 0.1383 | – | – | – | – |
 | qd_a | 3000 | 0.1748 | 0.1860 | 0.2128 | 0.2431 | 0.2584 | 0.2583 | 0.2302 | 0.2267 | – | 0.2302 | 0.2267 | – | – |
 | qd_a | 10000 | 0.1422 | 0.1500 | 0.1721 | 0.1940 | 0.2160 | 0.2094 | 0.1844 | 0.1783 | – | 0.1844 | 0.1783 | 0.1642 | 0.1200 |
