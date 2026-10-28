@@ -101,6 +101,18 @@ if R.bars:
                 key = cc if o == "horizontal" else rr
                 if np.all(np.diff(np.sort(key)) == 1):
                     st["contiguous"] += 1
+        # softer geometry: principal axis of the bar's pixel coordinates (elongation = top eigenvalue share, 1 = a line,
+        # 0.5 = isotropic), its orientation (nearest of 0 / 45 / 90 / 135 degrees) and the pixels' largest distance from it
+        el, dev, ang = [], [], {0: 0, 45: 0, 90: 0, 135: 0}
+        for c in range(Bm.shape[1]):
+            px = g[np.where(Bm[:, c] > 0)[0]]; P = np.stack([px // 28, px % 28], 1).astype(float); P -= P.mean(0)
+            ev, V = np.linalg.eigh(P.T @ P / len(P)); el.append(ev[1] / max(ev.sum(), 1e-12))
+            u = V[:, 1]; dev.append(float(np.max(np.abs(P @ np.array([-u[1], u[0]])))))
+            a_ = (np.degrees(np.arctan2(-u[0], u[1])) % 180); ang[int(45 * round(a_ / 45)) % 180] += 1
+        el, dev = np.array(el), np.array(dev)
+        st.update(elong_median=round(float(np.median(el)), 3), elong_ge_0_9=round(float(np.mean(el >= 0.9)), 4),
+                  max_perp_dev_median=round(float(np.median(dev)), 3), within_1px_of_line=round(float(np.mean(dev <= 1.0)), 4),
+                  principal_orient=ang)
         st["straight_frac"] = round(st["straight"] / st["n"], 4); st["contiguous_frac"] = round(st["contiguous"] / st["n"], 4)
         st["mean_length"] = round(float(np.mean(st.pop("length"))), 2)
         out["bars"][f"L{L}"] = st
