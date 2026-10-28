@@ -267,7 +267,8 @@ ax.set_title("(b) candidates near the true block", loc="left")
 ax = fig.add_subplot(gs[0, 2])
 for s, t, c in MOD3 + LATE[1:] + EASY:
     fw = np.array(PW[t]["fourier_by_degree"], float)
-    ax.plot(range(1, len(fw)), fw[1:] / (1 - fw[0]), "-" if (s, t, c) in MOD3 else ":", marker="o", ms=2.2, lw=0.9, color=c, label=t)
+    ax.plot(range(1, len(fw)), fw[1:] / (1 - fw[0]), "-" if (s, t, c) in MOD3 else ("--" if (s, t, c) in LATE else ":"),
+            marker="o", ms=2.2, lw=0.9, color=c, label=t)                 # same line styles as panel (a), whose legend serves both
     OUT["fig_toy_failures"]["fourier"][t] = [float(x) for x in fw]
 ax.axvspan(0.5, 2.5, color="#eeeeee", zorder=0); ax.set_ylim(0, 0.5)
 ax.annotate("tail13: 0.65", xy=(2, 0.5), xytext=(3.2, 0.46), fontsize=5.6, color="#8c564b",
@@ -337,7 +338,7 @@ lines = ["\\begin{tabular}{llrrrrrrrrrrr}", "\\toprule",
          " & & \\multicolumn{6}{c}{share of the stacking weight} & \\multicolumn{2}{c}{out-of-fold error} & \\multicolumn{3}{c}{test error}\\\\",
          "\\cmidrule(lr){3-8}\\cmidrule(lr){9-10}\\cmidrule(lr){11-13}",
          "set & $n$ & \\code{cgbt} & \\code{ggbt} & \\code{gknn} & \\code{knn} & \\hd{\\code{gbt},\\\\\\code{et}} & \\code{lin} & "
-         "\\code{cgbt} & \\code{ggbt} & v3 & \\hd{\\code{cgbt}\\\\alone} & \\hd{\\code{ggbt}\\\\alone}\\\\", "\\midrule"]
+         "\\code{cgbt} & \\code{ggbt} & stack & \\hd{\\code{cgbt}\\\\alone} & \\hd{\\code{ggbt}\\\\alone}\\\\", "\\midrule"]
 for (ds, n), lab in [(r, None) for r in RUNS] + [(("v2", 10000), "v2")]:
     j = J2 if lab == "v2" else J[(ds, n)]; Wt = j["weights"]; tw = sum(Wt.values()); O = j["member_oof_err"]
     sh = {f: sum(v for k, v in Wt.items() if fn(k)) / tw for f, fn in FAM}

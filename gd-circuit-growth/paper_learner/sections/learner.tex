@@ -2,32 +2,32 @@
 
 \subsection{In one paragraph}
 
-v3 (\code{hyb_portfolio3}) is a \emph{stacked portfolio}. Each member produces class probabilities. A convex stacker, fitted on the members' out-of-fold log-probabilities, combines them. Which members run is decided by the input type alone.
+v3 (\code{hyb_portfolio3}) is a \emph{stacked portfolio}. Each member produces class probabilities. A convex stacker, fitted on the members' out-of-fold log-probabilities, combines them. Which members run is decided by the input type, $n$ and the budget.
 \begin{itemize}
 \item \emph{On Boolean inputs} (the toy suites, and binary tabular data with two classes), the member that matters is \emph{DFG}: discrete feature growth. DFG enumerates a structured dictionary of discrete features (Fourier characters $\chi_S(x)=\prod_{i\in S}x_i$ and indicator functions of integer signed sums $\sum_{i\in S}s_ix_i$). It admits a feature only when that feature's correlation with the current residual passes a statistical test, with a union bound over the whole class the feature was drawn from. It then reads the admitted features out by least squares, refined by logistic regression.
-\item \emph{On images}, the members that matter are \emph{gradient-boosted trees over a fixed bank of subset sums of pixels}. The subsets are built from the training data alone: blobs of mutually correlated pixels, and short ``bars'' along lines recovered from the correlations. The pixel layout is never read.
+\item \emph{On images}, the members that carry most stacking weight at $n\ge10^4$ are \emph{gradient-boosted trees over a fixed bank of subset sums of pixels} (at $n=1000$, $k$-NN votes on the same sums carry more). The subsets are built from the training data alone: blobs of the pixels most correlated with each pixel, and short ``bars'' along lines recovered from the correlations. The pixel layout is never read.
 \item \emph{Everywhere}, LightGBM, ExtraTrees, $k$-nearest-neighbour votes and multinomial logistic regression run as well.
 \end{itemize}
-No member fits a continuous feature direction by gradient descent. The fitted continuous quantities are readout weights, tree leaf values and stacking weights. Two components are borderline, and they are discussed in \cref{sec:whatdiscrete}.
+No member fits a continuous feature direction by gradient descent. The fitted continuous quantities are readout weights (including those of a logistic regression on the inputs), tree leaf values and stacking weights. Two components are borderline, and they are discussed in \cref{sec:whatdiscrete}.
 
 \subsection{The portfolio and its budget}\label{sec:portfolio}
 
 \begin{table}[t]
 \centering\footnotesize\renewcommand{\arraystretch}{1.2}
-\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{2.1cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{3.2cm}}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{2.35cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{3.2cm}}
 \toprule
 member & what it is & when it runs\\
 \midrule
-\code{dfg}, \code{dfg_forced} & DFG v1.3 (\cref{sec:dfg}); \code{dfg_forced} is its small-$n$ variant, which forces the best candidate when nothing passes & 2 classes, every column binary or categorical, $\le256$ bits\\
+\code{dfg}, \code{dfg_forced} & DFG v1.3 (\cref{sec:dfg}); \code{dfg_forced} is its small-$n$ variant, which forces the best candidate when nothing passes & 2 classes, every column binary or categorical, $\le256$ bits; \code{dfg_forced} at $n\le512$\\
 \code{ggbt} & LightGBM on $[x$, pooled subset sums $p_i^{(k)}(x)=\sum_{j\in S_i(k)}x_j$ for $k=4,9,16$, 300 prototype-pair projections$]$ (\cref{sec:image}) & images (every column continuous, $d\ge256$)\\
 \code{cgbt} & LightGBM on $[x$, the same pooled sums, bar sums $\sum_{j\in\text{bar}}x_j$ for bar half-lengths 2 and 4$]$ & images\\
 \code{gknn_k} & $k$-NN votes ($k\in\{1,3,9,27\}$) on the pooled sums at $k=9$ & images\\
-\code{gbt}, \code{et} & LightGBM (100 rounds) and ExtraTrees (100 trees) on the raw columns & always\\
+\code{gbt}, \code{et} & \code{gbt}: LightGBM (100 rounds) on the raw columns (categoricals as categories; rows 0.5, columns 0.25 per tree when $nd>10^7$); \code{et}: ExtraTrees (100 trees) on the standardized encoding & always\\
 \code{knn_<metric>_k} & $k$-NN votes on standardized columns (and on a common scale when column scales differ) & always\\
-\code{lin_C} & multinomial L2 logistic regression, $C\in\{0.05,1\}$ & always\\
+\code{lin_C} & multinomial L2 logistic regression on the standardized encoding, $C\in\{0.05,1\}$ ($C=1$ only for $n>10^4$) & always\\
 \bottomrule
 \end{tabularx}
-\caption{The members of v3. On toy inputs the image members do not run. On images, DFG does not run.}
+\caption{The members of v3. On toy inputs the image members do not run. On images, DFG does not run. Any member is skipped when the budget guard (\cref{sec:portfolio}) says so.}
 \label{tab:members}
 \end{table}
 
@@ -42,11 +42,11 @@ fitted by L2-penalized multinomial log-loss, which is convex. Out-of-fold predic
 \item \emph{Toy fits:} one training run of the study's networks, $1.6\times10^{11}$ FLOPs at $d=30$.
 \item \emph{Real-data fits:} three training runs of the reference MLP, $1.2$--$6.2\times10^{12}$ FLOPs on the image sets, depending on $n$.
 \end{itemize}
-Every member's FLOPs are counted (library trees by an audited per-tree formula), and members whose projected cost would exceed 90\% of the budget are skipped. DFG's out-of-fold fits share 35\% of the budget and its final fits at most 50\%. Prediction is not charged. CPU time per fit is reported alongside.
+Every member's FLOPs are counted: the image boosters by the compute audit's per-tree formula, and Part 8's \code{gbt} member by its original formula, which Part 9's audit found low by $1.14$--$1.46\times$ at $n=3000$. A member is skipped when its projected cost would take the total above 90\% of the budget (95\% for logistic regression). DFG's out-of-fold fits share 35\% of the budget and its final fits at most 50\%. Prediction is not charged. CPU time per fit is reported alongside.
 
 \subsection{DFG v1.3 on Boolean inputs}\label{sec:dfg}
 
-DFG works with the residual $r=y-\hat y$ of a least-squares fit of the $\pm1$ labels on the current features, and with $s=\mathrm{rms}(r)$. It runs in rounds. Each round searches several candidate classes and admits everything that passes its test. The fit is then redone, and the next round starts from the new residual. Training stops when a round admits nothing, when every training sign is right, or at 75\% of the budget.
+DFG works with the residual $r=y-\hat y$ of a least-squares fit of the $\pm1$ labels on the current features, and with $s=\mathrm{rms}(r)$. It runs in rounds. Each round searches several candidate classes and admits everything that passes its test. The fit is then redone, and the next round starts from the new residual. Training stops when a round admits nothing, when every training sign is right, after 8 rounds, when the feature count reaches $n/2$, or once 75\% of DFG's budget share is spent.
 
 \paragraph{Characters.} The candidates are every $\chi_S$ with $|S|\le4$ over all $d$ inputs (degree 3 after the first round; degrees 5--6 on a budget-limited subsample), extensions $S\cup\{j\}$ and $S\cup\{j,l\}$ of admitted characters, and every subset of the at most 12 inputs already in use (a Walsh transform). A character from a class of size $N$ is admitted when
 \begin{equation}\label{eq:chartest}
@@ -58,29 +58,30 @@ The small classes (extensions and local subsets) have low thresholds. Features o
 \begin{itemize}
 \item \emph{modulated} blocks multiply the indicators by an admitted character $\chi_T$, with $T\cap S=\emptyset$;
 \item \emph{product} blocks take the joint cells of two blocks on disjoint supports;
-\item \emph{split} blocks rewrite a mixed-sign block as $|t_A-t_B|$;
+\item \emph{split} blocks replace a mixed-sign candidate by the product block of its positive-sign part and a block searched on its negative-sign part (the joint cells of $t_A$ and $t_B$);
 \item v1.3's \emph{weighted} blocks use $u=t+a\,\tau(x)$ with $a\in\{\pm2,\pm3\}$ and $\tau$ a literal, a parity of two inputs or an AND of two literals.
 \end{itemize}
 A block is admitted when the residual's projection on its indicators passes a $\chi^2$ tail bound \cite{laurent2000adaptive} with a union bound over its whole class:
 \begin{equation}\label{eq:blocktest}
 T=\sum_v n_v\,\bar r_v^{\,2}/\hat\sigma^2\;>\;m+2\sqrt{m\,\tau_k}+2\tau_k,\qquad \tau_k=\ln\!\Bigl(4K\tbinom dk2^{k-1}\cdot2\,(1+\#\text{modulators})\,k_{\max}/\delta\Bigr),
 \end{equation}
-where $m$ is the number of occupied groups minus one and $k_{\max}=24$. Weighted blocks pay a further $\ln(2(4d+20\binom d2))\approx9.8$ nats for their inner term. The bound covers every $(S,s)$ of every size, both fold variants and every modulator, so the adaptive search does not invalidate it. It is not free: at $d=30$ no 7-input block can pass below $n\approx75$.
+where $m$ is the number of occupied groups minus one and $k_{\max}=24$. Weighted blocks pay a further $\ln(2(4d+20\binom d2))\approx9.8$ nats for their inner term. The bound covers every $(S,s)$ of every size, both fold variants and every modulator, so the adaptive search does not invalidate it. It is not free: at $d=30$ no 7-input block can pass below $n\approx67$, and below $n\approx75$ with three or more value groups.
 
-\paragraph{The block search} uses only the training residual. Candidates come from four sources:
+\paragraph{The block search} uses only the training residual. Candidates come from five sources:
 \begin{itemize}
 \item prefixes of the inputs ordered by the top eigenvectors of the residual pair matrix $\overline{r\,xx^\top}$ (an even symmetric function of $t$ makes its restriction to $S$ rank one with sign pattern $s$);
 \item prefixes ordered by the degree-1 coefficients $\overline{r\,x_i}$;
-\item greedy growth from the strongest pairs;
-\item at $n\le128$ (v1.3), a width-32 beam over $(S,s)$.
+\item greedy growth from the 3 strongest pairs and the 2 strongest single inputs;
+\item in the additive search, v1.3's weighted candidates: weighted eigenvector prefixes, an inner term on the strongest pair, and extensions of the two best unweighted candidates;
+\item at $n\le128$, in the first additive search of a round (v1.3), a width-32 beam over $(S,s)$.
 \end{itemize}
 The best candidates are refined by single add, remove and sign-flip moves, then tested on all $n$. A block must also pass the test on the residual after the round's admitted characters are projected out.
 
 \paragraph{Readout and small $n$.} DFG predicts the sign of the least-squares fit on its features, refined by 15 Newton steps of L2-regularized logistic regression when $n\ge8p$. It adds one Hebbian step on the final residual over all $d$ inputs, a ``kernel background''. With few points the union bound passes nothing. The forced variant then takes the best character, or (v1.3, $n\ge48$) the best block, anyway. The stacker decides by cross-validation whether to trust it.
 
-\paragraph{Why this is sample-efficient where it works} \status{Heuristic}. With $\rho$ the correlation of a feature with the residual in units of $s$, the test~\eqref{eq:chartest} admits it and no null competitor once $n\gtrsim2\ln(4KN/\delta)/\rho^2$. For a $k$-sparse character $N\le d^k$, so the sample cost is about $2k\ln d/\rho^2$: the Occam rate. Enumeration costs about $nN$ FLOPs, which at $d=30$ fits inside one network run up to degree 4. DFG is in effect a greedy, budgeted, test-gated version of the classical low-degree algorithm \cite{linial1993constant}, with a second dictionary for symmetric functions of signed sums. Gradient-trained networks pay the other way round, about $d^{k-1}$ samples for a $k$-parity \cite{abbe2023leap,gdcircuit2026}.
+\paragraph{Why this is sample-efficient where it works} \status{Heuristic}. With $\rho$ the correlation of a feature with the residual in units of $s$, the test~\eqref{eq:chartest} admits it and no null competitor once $n\gtrsim2\ln(4KN/\delta)/\rho^2$. For a $k$-sparse character $N\le d^k$, so the sample cost is about $2k\ln d/\rho^2$: the Occam rate. Enumeration costs about $nN$ FLOPs, which at $d=30$ fits inside one network run up to degree 4. DFG is in effect a greedy, budgeted, test-gated version of the classical low-degree algorithm \cite{linial1993constant}, with a second dictionary for symmetric functions of signed sums. Gradient-trained networks pay the other way round, close to $d^{k-1}$ samples for a $k$-parity with $k\le3$ (somewhat fewer at $k=4$) \cite{abbe2023leap,gdcircuit2026}.
 
-\paragraph{Where it cannot work.} The test bounds detection, but the search must also \emph{propose} the right candidate. Block candidates are seeded by degree-1 and degree-2 statistics of the residual. A target whose block has almost no Fourier weight at degrees 1 and 2 is invisible to the seeds, however large $n$ is. A residue class mod 3 of a 10--14-input count is such a target (\cref{sec:interp-toy}).
+\paragraph{Where it cannot work.} The test bounds detection, but the search must also \emph{propose} the right candidate. Block candidates are seeded by degree-1 and degree-2 statistics of the residual. A target whose block has almost no Fourier weight at degrees 1 and 2 is invisible to the seeds at every $n$ of the study's grid ($\le16384$); for h6\_00 and f7\_05 the seeds' statistics are zero in expectation. A residue class mod 3 of a 10--14-input count is such a target (\cref{sec:interp-toy}).
 
 \subsection{The image members}\label{sec:image}
 
@@ -90,7 +91,7 @@ The comparator on images is an MLP, which is invariant to a fixed permutation of
 
 \paragraph{Bars} (v3). The 8 most correlated pixels of $i$ are paired greedily into 4 axes, least correlated pair first. On a grid, opposite neighbours are the least correlated pair. A bar of half-length $L$ is $i$, the two ends of an axis, and $L-1$ further steps in each direction. Each step goes ``straight on'': from $j$, reached from $i'$, it moves to the partner of $i'$ in $j$'s own pairing. A bar is a subset sum along a recovered line through $i$, of up to 5 ($L=2$) or 9 ($L=4$) pixels, with 4 orientations per pixel. The orientation labels are canonical per pixel but not consistent across pixels. The bars are therefore per-position features: nothing is shared across positions, as a convolution would share it.
 
-\paragraph{The boosters.} \code{ggbt} and \code{cgbt} are LightGBM \cite{ke2017lightgbm} with 31 leaves, learning rate 0.1, 63 histogram bins, and per-tree column fractions 0.12 and 0.05. Below 5000 training points they run 100 rounds. Above that they stop early on the error of an inner validation split (patience 50, 150--400 rounds). Every split is a gate $[f(x)>\theta]$, with $f$ a pixel, a blob sum, a bar sum or (in \code{ggbt}) a prototype-pair projection $(x_a-x_b)\cdot x$ for two training points of different classes, and $\theta$ a histogram-bin boundary. A tree is a conjunction of such gates along each path. The ensemble is a sum of trees fitted by functional gradient descent (boosting).
+\paragraph{The boosters.} \code{ggbt} and \code{cgbt} are LightGBM \cite{ke2017lightgbm} with 31 leaves, learning rate 0.1, 63 histogram bins, and per-tree column fractions 0.12 and 0.05. Below 5000 training points they run 100 rounds. Above that they stop early on the error of an inner validation split (patience 50, 150--400 rounds). Every split is a gate $[f(x)>\theta]$, with $f$ a pixel, a blob sum, a bar sum or (in \code{ggbt}) a prototype-pair projection $(x_a-x_b)\cdot x$ for two random training points of different classes, and $\theta$ a histogram-bin boundary. A tree is a conjunction of such gates along each path. The ensemble is a sum of trees fitted by functional gradient descent (boosting).
 
 \subsection{What is discrete, and what is not}\label{sec:whatdiscrete}
 
@@ -100,14 +101,15 @@ The comparator on images is an MLP, which is invariant to a fixed permutation of
 \toprule
 object & how it is chosen & continuous parameters?\\
 \midrule
-characters $\chi_S$, blocks $(S,s,\text{fold},a,\tau,\text{modulator})$ & enumeration, greedy or beam search, statistical tests & no\\
+characters $\chi_S$, blocks $(S,s,\text{fold},a,\tau,$ modulator$)$ & enumeration, greedy or beam search, statistical tests & no\\
 group boundaries of a block, histogram bins & training quantiles / counts & no\\
 pooling sets, bars & correlation ranking of pixels on training rows & no\\
 DFG readout weights & least squares, then logistic Newton steps & yes (linear readout)\\
+logistic regression \code{lin}: weights on the standardized inputs & convex log-loss (L-BFGS) & yes (linear readout on the inputs)\\
 tree splits; leaf values & greedy split search on histograms; Newton steps (boosting) & leaf values\\
 stacking weights & convex log-loss & yes ($\le$ 30 weights)\\
 DFG's spectral features $(u\cdot x)^2$ & top eigenvectors of the residual pair matrix & borderline (directions $u$)\\
-\code{ggbt}'s prototype pairs $x_a-x_b$ & two random training points & borderline (directions from data)\\
+\code{ggbt}'s prototype pairs $x_a-x_b$ & two random training points of different classes & borderline (directions from data)\\
 \bottomrule
 \end{tabularx}
 \caption{What v3 chooses discretely and what it fits continuously.}
@@ -116,7 +118,7 @@ DFG's spectral features $(u\cdot x)^2$ & top eigenvectors of the residual pair m
 
 \Cref{tab:discrete} lists what v3 fits.
 \begin{itemize}
-\item \emph{No feature is learned by gradient descent.} Features are enumerated or built from data statistics, and admitted by tests or by greedy split search. The continuous fits are linear readouts and leaf values.
+\item \emph{No feature is learned by gradient descent.} Features are enumerated or built from data statistics, and admitted by tests or by greedy split search. The continuous fits are linear readouts and leaf values. The one readout on the inputs themselves, \code{lin}, is a convex logistic regression fitted by a quasi-Newton method (L-BFGS).
 \item \emph{Boosting is functional gradient descent.} So the image members are best described as ``a fixed, data-derived feature hierarchy read out by gradient-boosted trees''.
 \item \emph{The comparison is with gradient-descent-trained networks, not with gradient descent.} On images, the pooling sets and bars recover the pixel grid from correlations (\cref{sec:interp-img}). The members use locality in spirit, though not in the letter. A comparator that is told the layout, such as a small CNN, is reported as context only.
 \end{itemize}

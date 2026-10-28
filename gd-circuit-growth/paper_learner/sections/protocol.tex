@@ -8,7 +8,7 @@
 \item \code{dlheld}, \code{dlheld2}, \code{dlheld3} (12, 7, 10). Dense halfspaces and majorities, $\chi_5$, multiplexers, symmetric functions such as $[|x_1+\dots+x_9|\le1]$, mixtures of parities with gates, and random formulas.
 \item \code{dlsymdev} (8). Symmetric and signed-sum targets used for development.
 \item \code{dlheld4}, \code{dlheld5}, \code{dlheld6} (12 each). Signed sums with threshold, band, interval, residue-class and arbitrary accept sets, some mixed with parities and gates, plus 2--3 non-symmetric controls per suite.
-\item \code{dlfamdev} and \code{dlheld7} (12 each). Two fresh draws (seeds 61616 and 70707) from \code{dlheld6}'s family. That family was written by an agent blind to the sum-feature design \repo{study/part9/heldout6/FAMILY.md}. It has 9 structured slots and 3 controls: sums, sums times a parity, sums with a gate, and compositions of sums. Each slot draws its accept set uniformly from five types, one of them a residue class mod 3 or 4.
+\item \code{dlfamdev} and \code{dlheld7} (12 each). Two fresh draws (seeds 61616 and 70707) from \code{dlheld6}'s family. That family was written by an agent blind to the sum-feature design \repo{study/part9/heldout6/FAMILY.md}. It has 9 structured slots and 3 controls: sums, sums times a parity, sums with a gate, and compositions of sums. Each block's accept set is drawn uniformly from five types, one of them a residue class mod 3 or 4, except in the inner-term form $u=s+a\tau$, which uses a threshold or a band.
 \end{itemize}
 Every suite puts the relevant inputs first. The discrete learners therefore see the columns in a fresh random order in every fit, so that tie-breaking by column index cannot help them.
 
@@ -46,13 +46,13 @@ Not every variant was run on every suite (\cref{tab:status}). \code{nets_best} i
 \item \code{cnn}, a small convolutional network on the \emph{unpermuted} pixels, is context: it uses the layout that every other learner here is denied.
 \end{itemize}
 
-\paragraph{Earlier versions.} v1 (Part 8) and v2 (Part 9) are run as references wherever their predictions can differ from v3's.
+\paragraph{Earlier versions.} v1 (Part 8) and v2 (Part 9) are run as references. v2 is run on every toy suite and at every image cell of v3. v1 is run at every image cell of v3 and on every toy suite except \code{dlfamdev} and \code{dlheld7}. On tabular data without DFG, v1's, v2's and v3's code paths are the same.
 
 \subsection{Metrics, verdicts and budgets}\label{sec:metrics}
 
 \paragraph{Toy targets.} $\nstar$ is the training-set size at which the seed-mean test error reaches 0.1. It is interpolated in $\log n$ on the grid $n=16,32,\dots,16384$, with 3 seeds (2 on \code{random}) and one 4096-point test set per target. A comparison is the $\log_2$ ratio $\log_2(\nstar_{\rm learner}/\nstar_{\rm ref})$. A target is \emph{clearly better} or \emph{clearly worse} when the ratio is below $-0.25$ or above $+0.25$, or when only one of the two reaches 10\% error. Suite means are taken over targets both learn.
 
-\paragraph{Standard tasks.} Test error is measured on a fixed test set at $n\in\{100,300,1000,\allowbreak3000,10000,\allowbreak30000,60000\}$ (up to the pool size). There are 3 seeds, except on images at $n\ge30000$, where every learner runs seed 0 only. A cell is \emph{better} or \emph{worse} when the seed-mean errors differ by more than 10\% relative and by more than 2 standard errors. The s.e.\ comes from the seed spread of both learners and is at least the test set's binomial noise; otherwise the cell is a \emph{tie}. Errors are floored at 0.002 in $\log_2$ ratios.
+\paragraph{Standard tasks.} Test error is measured on a fixed test set at $n\in\{100,300,1000,\allowbreak3000,10000,\allowbreak30000,60000\}$ (up to the pool size). There are 3 seeds, except on images at $n\ge30000$, where every learner runs seed 0 only, except the baseline \code{mlp}, which has 3 seeds at every $n$. The control \code{mlp_pool} and the context \code{cnn} ran seed 0 only at every $n$, and \code{mlp_xl} at $n=60000$ only. A cell is \emph{better} or \emph{worse} when the seed-mean errors differ by more than 10\% relative and by more than 2 standard errors. The s.e.\ comes from the seed spread of both learners and is at least the test set's binomial noise; otherwise the cell is a \emph{tie}. Errors are floored at 0.002 in $\log_2$ ratios.
 
 \paragraph{Budgets.} Compute is counted in FLOPs, everything a learner does in a fit included, prediction excluded.
 \begin{itemize}
@@ -80,12 +80,13 @@ The builders froze their files, recorded md5 sums and ran the fixed development 
 \toprule
 set & size & status for v3 & network references\\
 \midrule
-toy \code{designed}, \code{dlsymdev}, \code{dlfamdev} & 41 & development; in-sample for the toy component & variants run there\\
-toy \code{random}, \code{dlheld}--\code{dlheld5} & 73 & held out for earlier versions; development data in Part 10 (not used by the toy builder) & \code{nets}, \code{nets_wd}; \code{nets_cewd} from \code{dlheld3} on\\
+toy \code{designed}, \code{dlsymdev}, \code{dlfamdev} & 41 & development; in-sample for the toy component & variants run there (none on \code{dlfamdev})\\
+toy \code{random} & 20 & development check for DFG in Part 6, evaluated with Part 8's held-out suites; development data in Part 10 (not used by the toy builder) & \code{nets}, \code{nets_wd}\\
+toy \code{dlheld}--\code{dlheld5} & 53 & held out for earlier versions; development data in Part 10 (not used by the toy builder) & \code{nets}, \code{nets_wd}; \code{nets_cewd} from \code{dlheld3} on\\
 toy \code{dlheld6} & 12 & held out in Part 9; used by the Part 10 toy builder & all five variants\\
 toy \code{dlheld7} & 12 & \textbf{held out} & \code{nets_wd}, \code{nets_cewd0.3}, \code{nets_cewd1.0}\\
 \addlinespace
-tabular (26 sets) & 26 & v3 runs v1's code there, except on kr\_vs\_kp and mushroom, where DFG runs; HELDOUT2 is held out for that code (Part 8) & MLP variants\\
+tabular (26 sets) & 26 & v3 runs v1's code there, except on kr\_vs\_kp and mushroom, where DFG v1.3 replaces v1's DFG v1.1 (kr\_vs\_kp: the toy builder's development check); HELDOUT2 is held out for that code (Part 8) & MLP variants\\
 \addlinespace
 MNIST, Fashion-MNIST, \code{qd_dev} & 3 & development & MLP variants\\
 \code{qd_a}, \code{qd_b} & 2 & held out in Part 9; development data in Part 10 & \code{mlp_strong}, \code{mlp_wide}, \code{mlp_xl}\\
@@ -96,4 +97,4 @@ MNIST, Fashion-MNIST, \code{qd_dev} & 3 & development & MLP variants\\
 \label{tab:status}
 \end{table}
 
-\paragraph{What is in-sample.} v3 is the last of several pre-registered steps, and every step used the earlier held-out sets as development data. For v3 as a whole, only \code{dlheld7}, \code{qd_c} and \code{qd_d} are untouched. The other suites still measure the learner, but they are not held out for its design: the toy builder developed on \code{dlheld6}, and the image builders on \code{qd_dev}, \code{qd_a} and Fashion-MNIST. On tabular data the claim is narrower and cleaner: v3's code path there is v1's, frozen in Part 8 before HELDOUT2 was fixed.
+\paragraph{What is in-sample.} v3 is the last of several pre-registered steps, and every step used the earlier held-out sets as development data. For v3 as a whole, only \code{dlheld7}, \code{qd_c} and \code{qd_d} are untouched. The other suites still measure the learner, but they are not held out for its design: the toy builder developed on \code{dlheld6}, and the image builders on validation rows of \code{qd_dev}, \code{qd_a}, \code{qd_b} and Fashion-MNIST (and MNIST for topology diagnostics). On tabular data the claim is narrower and cleaner: v3's code path there is v1's. HELDOUT2 was fixed before any Part 8 design work (commit \texttt{04a215b2}), and v1 was frozen before it was run there, so HELDOUT2 is held out for that code.

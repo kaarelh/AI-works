@@ -8,7 +8,7 @@ Part 10 and this paper were produced by an AI system, Claude (Anthropic), on 27-
 \item the verification record of the interpretability analyses, \repo{study/part10/interp/VERIFICATION.json}.
 \end{itemize}
 
-\paragraph{Organisation.} One orchestrating session wrote the protocol, fixed the held-out sets, ran every evaluation and reference, applied the rules and assembled v3. It delegated four kinds of work to separate agents with their own instructions: the three builders; two interpretability analysts; four verifiers of the analyses; and the drafting of sections of this paper. The builders worked on development data only. The orchestrator read no held-out result of a Part 10 learner before that learner was frozen (\cref{sec:disc-provenance-disclosures} lists what it did read).
+\paragraph{Organisation.} One orchestrating session wrote the protocol, fixed the held-out sets, ran every held-out evaluation and reference run, applied the rules and assembled v3. It delegated five kinds of work to separate agents with their own instructions: the three builders; two interpretability analysts; four verifiers of the analyses; the drafting of sections of this paper; and three checkers of its claims (\cref{app:repro}). The builders worked on development data only. The orchestrator read no held-out result of a Part 10 learner before that learner was frozen (\cref{sec:disc-provenance-disclosures} lists what it did read).
 
 \subsection{Protocol and builders}\label{app:builders}
 
@@ -21,15 +21,15 @@ Part 10 and this paper were produced by an AI system, Claude (Anthropic), on 27-
 builder & component & development & frozen (md5) & fixed development evaluation\\
 \midrule
 T, \code{p10_sum} & DFG v1.3: weighted sum blocks, forced blocks at $n\ge48$, beam at $n\le128$ & 18:52--19:44 (52 min) & 19:44 (\texttt{5ee995ad}; \texttt{dfg13.py} \texttt{69cabe5c}) & 20:00--21:35 on \code{designed}, \code{dlsymdev}, \code{dlfamdev}, 3 seeds; kr\_vs\_kp at $n=1000$\\
-I1, \code{p10_hier} & a max-pooling second level in \code{ggbt}'s bank; pairs dropped & 18:52--19:45 (about 55 min) & 19:45 (\texttt{1da21bf7}) & 19:45--21:35 on the 8 image cells and \code{qd_a} at $n=60000$, seed 0\\
-I2, \code{p10_codes} & a second booster \code{cgbt} on pooled sums and bars & 21:37--22:10 (35 min) & 22:10 (\texttt{fd688acd}) & 22:10--23:43, the same 9 cells; interrupted at 22:40 and resumed (below)\\
+I1, \code{p10_hier} & a max-pooling second level in \code{ggbt}'s bank; pairs dropped & 18:52--19:45 (53 min) & 19:45 (\texttt{1da21bf7}) & 19:45--21:35 on the 8 image cells and \code{qd_a} at $n=60000$, seed 0\\
+I2, \code{p10_codes} & a second booster \code{cgbt} on pooled sums and bars & 21:37--22:10 (33 min) & 22:10 (\texttt{fd688acd}) & 22:10--23:43, the same 9 cells; interrupted at 22:40 and resumed (below)\\
 \bottomrule
 \end{tabularx}
 \caption{The three Part 10 builders, 27 October. Times from each builder's \texttt{DESIGN.md}; the evaluation's end for \code{p10_codes} is the commit that recorded it (\texttt{16ef5fde}). Every evaluation cell records the md5 of the file it ran.}
 \label{tab:builders}
 \end{table}
 
-\paragraph{The builders} are summarized in \cref{tab:builders}. Each changed one component of v2, delivered a full learner file, a \texttt{DESIGN.md} and an md5 at its freeze, and then ran the fixed development evaluation once. Development used validation rows of the development sets only, never a test set. Three events during the evaluations are recorded in the notes:
+\paragraph{The builders} are summarized in \cref{tab:builders}. Each changed one component of v2, delivered a full learner file, a \texttt{DESIGN.md} and an md5 at its freeze, and then ran the fixed development evaluation once. The image builders used validation rows of the development sets only. The toy builder scored its DFG-alone checks on fresh validation draws, and its portfolio checks on the toy harness's test points of the development suites (\code{designed}, \code{dlsymdev}, \code{dlfamdev}, \code{dlheld6}). No builder used a held-out set. Three events during the evaluations are recorded in the notes:
 \begin{itemize}
 \item \emph{\code{p10_sum}.} Its evaluation was started at 19:44 as 8 shards in one shell session. The machine's autogroup scheduler gave the shards together about 0.55 cores, so at 20:00 they were stopped, before any result was written, and restarted unchanged in four sessions. Only the restarted run produced results.
 \item \emph{\code{p10_hier}.} Its \code{qd_dev} process was killed by the shared memory limit at about 20:29 and restarted; the finished $n=1000$ cell was kept and $n=10000$ refitted with the same random streams. Its $n=60000$ cell waited 1 h 28 min for the shared large-fit lock and ran 21:13--21:35.
@@ -56,7 +56,7 @@ The rules (\cref{sec:discipline}) were applied by \repo{study/part10/compare_par
 \item \emph{The orchestrator}, before v3's freeze, read reference results on held-out data: the \code{nets_wd} training logs of f7\_00--f7\_04 on \code{dlheld7} and the MLP references' \code{qd_c} progress lines. It read no result of v2 or of a Part 10 learner on \code{dlheld7}, \code{qd_c} or \code{qd_d}. v2's \code{dlheld7} results and v3's toy results there were committed unread.
 \end{itemize}
 
-\paragraph{BLAS threading.} The image analyst found at about 02:00 on 28 October that v2's own development cells on \code{qd_dev} and Fashion-MNIST had been run without forcing single-threaded BLAS, while the candidates' cells and every reference lane force it. Thread count changes summation order, which can move nearest-neighbour ties and booster early stopping: v2 at \code{qd_dev}, $n=10000$, seed 0 gives 0.1463 multi-threaded and 0.1467 in a single-threaded analysis refit (\code{ggbt} stopped at 166 and 123 rounds). The integration rule compared both image candidates with the same v2 numbers, so the choice between them ($-0.078$ against $-0.071$) is unaffected, and both are far from the $-0.05$ threshold. Every Part 10 held-out run, of v3, v2 and the references, is single-threaded. The note was added to the protocol at 02:03 (\texttt{a2b8470e}).
+\paragraph{BLAS threading.} The image analyst found at about 02:00 on 28 October that v2's own development cells on \code{qd_dev} and Fashion-MNIST had been run without forcing single-threaded BLAS, while the candidates' cells and every reference lane force it. Thread count changes summation order, which can move nearest-neighbour ties and booster early stopping: v2 at \code{qd_dev}, $n=10000$, seed 0 gives 0.1463 multi-threaded and 0.1467 in a single-threaded analysis refit (\code{ggbt} stopped at 166 and 123 rounds). An earlier analysis refit, with unrecorded thread settings, reproduces the cell's 0.1463 exactly, so the BLAS explanation fits the evidence but was not verified. The integration rule compared both image candidates with the same v2 numbers, so the choice between them ($-0.078$ against $-0.071$) is unaffected, and both are far from the $-0.05$ threshold. Every Part 10 held-out run, of v3, v2 and the references, is single-threaded. The note was added to the protocol at 02:03 (\texttt{a2b8470e}).
 
 \paragraph{Memory and job control.} Up to about ten jobs shared 4 cores and 16 GB. The builders ran at nice 0. Every reference and analysis process ran at nice $\ge5$, was resumable (per cell for the image evaluations, per target for the networks), and had a raised \texttt{oom\_score\_adj}, so that under memory pressure the kernel would kill it before a builder's process or v3's evaluation. Large fits ($n\ge30000$) took a shared lock. The out-of-memory kills were:
 \begin{itemize}
@@ -64,7 +64,7 @@ The rules (\cref{sec:discipline}) were applied by \repo{study/part10/compare_par
 \item \code{p10_hier}'s \code{qd_dev} evaluation process (about 20:29, above);
 \item v2's held-out image evaluation, more than once between about 22:00 and 00:30. One kill, at about 00:24, happened while two image analysis fits were running; the analyst then held its own processes at the highest kill priority, and v2's held-out cells were moved to nice 0 and out of the killer's preference, since they feed the best-learner rule;
 \item reference processes while v3's $n=60000$ cells ran: v1 on \code{qd_c}, \code{mlp_xl} on \code{qd_d}, \code{mlp_pool} and \code{cnn} on \code{qd_c};
-\item \code{nets_cewd0.3} and \code{nets_cewd1.0} on \code{dlheld7} at about 02:40, with 6 of 12 targets saved each.
+\item \code{nets_cewd0.3} and \code{nets_cewd1.0} on \code{dlheld7} at about 02:40, with 6 of 12 targets saved each (both have since completed all 12).
 \end{itemize}
 Every killed job was rerun with the same code and seeds, keeping its finished cells or targets. The container restart at 22:40 also stopped every job lane; the lanes were resumed the same way.
 
@@ -104,18 +104,19 @@ The corrections of readings are these:
 \item the bars' straightness is a property of the construction and the data, not of the booster;
 \item the regions named in the contribution maps were chosen after looking at them.
 \end{itemize}
-\Cref{sec:interp} uses the corrected numbers and wording throughout. \texttt{make\_interp.py} hard-codes the verifier's corrected detection points and regenerates every interpretability figure and table from the analysis files.
+\Cref{sec:interp} uses the corrected numbers and wording; where the claims check below found a correction that had not been carried over, it was applied. \texttt{make\_interp.py} hard-codes the verifier's corrected detection points and regenerates every interpretability figure and table from the analysis files.
 
 \subsection{This paper and reproducibility}\label{app:repro}
 
-\paragraph{This paper.} Its sections were drafted by the orchestrating session and by separate writing agents, each from the records it names, and then compiled together. The tables and figures are generated from the result files: \texttt{make\_tables.py} and \texttt{make\_figures.py} from \repo{study/part10/LEARNER_RESULTS.json} and the result files it reads, and \texttt{make\_interp.py} from the analysis files. \repo{study/part10/LEARNER_RESULTS.json} is written by \repo{study/part10/compare_learner.py}, whose docstring says which result file stands for v3 on each input type. No independent claims check of this paper has been made.
-\todo{If a claims check of this paper is run, describe it here, and update the author footnote.}
+\paragraph{This paper.} Its sections were drafted by the orchestrating session and by separate writing agents, each from the records it names, and then compiled together. The tables and figures are generated from the result files: \texttt{make\_tables.py} and \texttt{make\_figures.py} from \repo{study/part10/LEARNER_RESULTS.json} and the result files it reads, and \texttt{make\_interp.py} from the analysis files. \repo{study/part10/LEARNER_RESULTS.json} is written by \repo{study/part10/compare_learner.py}, whose docstring says which result file stands for v3 on each input type.
+
+\paragraph{Claims check.} After drafting, three independent AI checkers, each with its own instructions, checked the paper's claims on 28 October. One covered the two results sections, one the interpretability section, and one the abstract, the introduction, \cref{sec:learner,sec:protocol,sec:discussion} and this appendix. Each compared the text with the result files, the records named in it and the learner code, recomputed what it could, and listed each problem with a severity (error, misleading, minor) and a proposed correction. They found stale counts from runs that had landed after drafting, a few arithmetic and transcription errors (for example the \code{cnn}'s relative error on \code{qd_a}, and the order of HELDOUT2 and v1's freeze), several verifier corrections of the interpretability analyses that had not been carried over, statements broader than the evidence (for example ``fail because'' for a descriptive seed-0 analysis), and details of the learner description that did not match the code. Their corrections were applied before the final regeneration of every table and figure, with counts updated for the runs that landed in the meantime (\code{random} for v3, the remaining \code{dlheld7} network targets, and the image references on \code{qd_c} and \code{qd_d}). The check is not an audit of leakage, compute or reference strength of the kind made in Parts 8 and 9.
 
 \paragraph{Regenerating the numbers.} From \texttt{gd-circuit-growth/}:
 \begin{itemize}
 \item \texttt{cd study/part10 \&\& python3 compare\_part10.py} (the rules; writes \texttt{RESULTS.md});
 \item \texttt{python3 compare\_learner.py} (every comparison; writes \texttt{LEARNER\_RESULTS.\{md,json\}});
-\item \texttt{cd ../../paper\_learner}, then \texttt{python3 make\_tables.py}, \texttt{python3 make\_figures.py} and \texttt{python3 make\_interp.py};
+\item \texttt{cd ../../paper\_learner}, then \texttt{python3 make\_tables.py}, \texttt{python3 make\_figures.py}, \texttt{python3 make\_interp.py} and \texttt{python3 check\_toy\_identity.py};
 \item \texttt{latexmk -pdf main.tex}.
 \end{itemize}
 The result files are:

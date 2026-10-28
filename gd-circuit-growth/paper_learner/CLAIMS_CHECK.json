@@ -1,0 +1,779 @@
+{
+ "note": "Findings of the three independent claims checks of the learner paper (workflow wf_a375cea7-4e2, Check phase). All were applied or adapted by the Fix phase; see app_provenance.tex.",
+ "checks": [
+  {
+   "agent": "a0813173afa743fde",
+   "checked": "Scope: paper_learner/sections/interp.tex (316 lines), its tables (tab_interp_toy, tab_interp_img_geom, tab_interp_img_stack, tab_interp_img_gain) and figures (fig_toy_g, fig_toy_timing, fig_toy_failures, fig_img_grid, fig_img_contrib). I checked them against study/part10/interp/TOY_INTERP.md, IMAGE_INTERP.md, VERIFICATION.json (all 4 verifier records), tables/*.md|csv, results/toy_final/{v2,v3,power,toy_landscape,toy_g}, results/image_final/v3/*.json|npz, PROTOCOL.md, hyb_portfolio3/learner.py, and for consistency learner.tex, results_toy.tex, results_images.tex, discussion.tex, intro.tex and app_provenance.tex. Methods: (1) Reran a copy of make_interp.py into scratch (scratchpad/paper_check/mi.py, out/). All 4 interp tables and fig_interp.json are byte-identical to the paper's, so the tables reproduce. (2) Recomputed by script: the identity check with the current result files (ident.py, ident2.py). dlheld 84/84, dlheld2 49/49 and dlheld3 67/67 cells are now equal, and random 39/39 on 8 of 20 targets. Also recomputed: DFG error at n_struct (max 0.030, fd_06); test ratios for pure targets (\u22640.887 at 64; 1.073\u20131.775 at 128); the mod-3 power files (reach 0.50/0.54/0.57; Fourier peaks 7/9/11; 155.0/139.5/133.9\u00d7); best-of-two chance levels (0.40/0.49/0.52, also by Monte Carlo); landscape medians and pass fractions; n*_0 vs n_struct (22/22 pure in (\u22121,0]; median \u22120.35 over 49); n_struct vs n_reach5 (22/11/8, with 8 never reaching); and the delay table rows by hand. (3) Recomputed the v2/v3 statistics (v2v3.py): \u22120.116 over 64, per-suite means with dlheld7 at \u22120.004, 41 same-n_struct targets with mean \u22120.005 over 40 and 26 differing, 20 identical, plus the specific n* values. Also checked the weighted-block table (26 targets, 8 single-cell, h5s7's inner term is a literal) and the network n* (h6_00 learned only by nets_cewd1.0 at 12304; f7_05 by none, now 12 targets for cewd1.0). (4) Images: recomputed paired stack/cgbt/ggbt test comparisons (img1.py: qd_a z=1.04, MNIST z=2.16, Fashion \u22121.31) and pair-gain concentration by class pair (img2.py: top 10 share 0.285/0.503/0.362; best-single-pair share 0.59 for trouser\u2013boot and 0.69 for MNIST 1\u20132). Checked member counts (18) and cgbt's minimum OOF error, gain/column ratios, bar statistics against img_bars.md, region shares against img_regions.md, the h6_10 n=128 toy_g rows (mean output 0.01\u20130.90, not flat), and v2's h6_10 representation. Confirmed that the paper's 5%/12% column fractions match learner.py (codes_ff=0.05, gates_ff=0.12); the image reading-verifier's '12%' for cgbt is the verifier's own error. (5) Rendered all 5 figures to PNG and read panel titles and legends; checked the cross-references, citations and log (no overfull boxes in the interp section), and that tab:verif's verdict counts match VERIFICATION.json. Everything not listed as a problem reproduced. That covers 49/54, median 256, by-suite counts, 15/30/41, the corrected detection points and 39/54, \u03c1 \u22120.86/\u22120.80/\u22120.54/\u22120.44, the below-n_struct counts and weights, the quirk example, the weighted-target inner terms and DFG errors, 34281 and the block totals, the geometry and Isomap values, the stack shares and errors, the gain ratios, the map shares and correlations, the per-class v2\u2192v3 errors, and the 302 of 530 CPU s. Scratch scripts are in /tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/paper_check/.",
+   "problems": [
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.53, 'Never found' list, bullet 'Arbitrary accept sets need the most data (median 512; ...)'",
+     "problem": "This contradicts tab:interp-toy, where the residue-class row has median n_struct 768, above the arbitrary-set median of 512. TOY_INTERP.md \u00a71.1 limits the claim to 'the kinds learned on most of their targets'; the paper dropped that qualifier.",
+     "correction": "'Of the accept kinds learned on most of their targets, arbitrary sets need the most data (median 512; h5s7 8192, h5s1 16384). The only residue-class blocks that are learned are the 6-input multiplexer branches of f7_03 (mod 4, n=512) and h6_08 (mod 3, n=1024).'",
+     "severity": "error"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.122, bullet 'The basin is narrow': 'the best pair inside S is at 0.15, 0.25 and 0.12 of the threshold, below the best pair outside S (0.33, 0.20, 0.20)'",
+     "problem": "This is false for h6_00. In toy_landscape/dlheld6__h6_00__n16384.json, pairs_in_max is 0.2484 and pairs_out_max is 0.2021, so the best pair inside S is above the best pair outside it. TOY_INTERP.md and both verifiers give the two numbers without 'below'.",
+     "correction": "'... the best pair inside S is at 0.15, 0.25 and 0.12 of the threshold, at the level of the best pair among 12 inputs outside S (0.33, 0.20, 0.20), and random blocks of the true size are at 0.07.'",
+     "severity": "error"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.150, 'Where weighted blocks appear', fifth kind: 'an AND of two inputs of the same class: h6_09, and h5s7 at n=16384'",
+     "problem": "The verifier's correction (verify-numbers:toy C10, verify-reading:toy C10) was not applied. h5s7's weighted block is (x1+x2-x3-x5-x6+x7-x8-x9+x10-x12+x13+3*x11), whose inner term is a single literal of its own class (tables/toy_weighted_blocks_v3.csv). Only h6_09's block, 3*AND(x9,-x10), has an AND inner term. This also makes the claim at l.16 ('Where a verifier corrected a number or a reading, this section uses the corrected one') and app_provenance's 'uses the corrected numbers and wording throughout' untrue.",
+     "correction": "'an input or inputs of a true class: h6_09 (+3 AND(x9,-x10)) and, at n=16384 only, h5s7 (+3x11, a literal of its own class).'",
+     "severity": "error"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.164, 'The other suites': 'These runs are not checked against evaluation files, and their n* is seed 0.'",
+     "problem": "This applies the statement to all 70 targets, but the 21 designed targets were checked: their 108 cells are part of the 587 at l.7. This contradicts l.7, which exempts only random and dlheld\u2013dlheld3. The statement is also out of date. v3's result files on dlheld, dlheld2 and dlheld3 now exist with 3 seeds. My rerun of the check_identity logic (scratch ident2.py) gives equal seed-0 errors at 84/84 (dlheld), 49/49 (dlheld2) and 67/67 (dlheld3) cells. random has 39/39 equal cells on the 8 of 20 targets present in its part files.",
+     "correction": "Now: 'The runs on designed were checked with the sum-structured ones (108 cells); those on random and dlheld\u2013dlheld3 were not, and their n* is seed 0.' After the final regeneration: extend the check and state 'the reruns' errors equal the evaluation's seed-0 errors at all N cells, including dlheld\u2013dlheld3 (200 cells)'. Update l.7 and l.8 to match.",
+     "severity": "error"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.297, 'ggbt's prototype pairs': 'Within the class pairs with the most gain, one drawn pair carries 0.85\u20130.90 of it.'",
+     "problem": "This is false for the top class pair on two of the three sets. Recomputed from ggbt_gain_vec and ggbt_pair_cls (scratch img2.py), the best single drawn pair's share of its class pair's gain is 0.59 for Fashion's trouser\u2013boot (rank 1) and 0.69 for MNIST's 1\u20132 (rank 1). The 0.85\u20130.90 values are grapes\u2013soccer ball 0.85, motorbike\u2013frying pan 0.85, shirt\u2013sneaker 0.89 and MNIST 0\u20131 0.90.",
+     "correction": "'In several of the class pairs with the most gain one drawn pair carries most of it (grapes\u2013soccer ball 0.85, motorbike\u2013frying pan 0.85, shirt\u2013sneaker 0.89, MNIST 0\u20131 0.90), but not in all (trouser\u2013boot 0.59, MNIST 1\u20132 0.69).'",
+     "severity": "error"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.168 (Caveats: 'Everything above is seed 0.') and l.314 (Summary: 'every number is from one seed')",
+     "problem": "Both are false. The section quotes 3-seed n* values: the mean log2 n* ratio over the 64 targets with a finite 3-seed n*, h6_10 702\u2192206, h6_07 678\u2192447, the range from \u22120.30 (far9) to +0.26 (fd_06), and h5s1's '3-seed n* is never'. discussion.tex l.43 ('Everything in sec:interp is seed 0') repeats the error.",
+     "correction": "l.168: 'Every structure measurement above is seed 0; n* values marked 3-seed are means over seeds 0\u20132. n_struct, n_detect and the model contents can differ on other seeds.' l.314: 'Nothing here is an ablation of the learner or a causal test, and every structural measurement is from one seed (seed 0).' Make the same change in discussion.tex l.43.",
+     "severity": "error"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.83, 'Below the discovery size the same plot is flat: for h6_10 at n=128 ... the sign agrees on 0.70 of the points, the majority rate.'",
+     "problem": "The plot is not flat, and verify-reading:toy C8 corrected exactly this. In toy_g/v3/dlheld6__h6_10__n128.json the mean DFG output is positive at every (t, x13) level but varies from 0.01 to 0.90, with higher values for x13=\u22121. So the sign pattern is the majority's. The DFG error (0.39) is also worse than a constant predictor (0.30). Separately, the eight panels are hand-picked, and the text does not say so.",
+     "correction": "'Below the discovery size the model has no block structure: for h6_10 at n=128 the mean output is positive at every (t, x13) level (0.01\u20130.90), so its sign agrees with E[f|\u00b7] only on the majority's 0.70 of the points, and the DFG error (0.39) is worse than a constant predictor's (0.30).' Also add: 'The eight panels were chosen by hand; over all 53 exact cells of the 22 found pure targets the agreement is at least 0.985 (verify-reading:toy C8).'",
+     "severity": "misleading"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.135, 'Over the 64 targets with a finite 3-seed n* for both, the mean log2 n* ratio of v3 to v2 is \u22120.116.'",
+     "problem": "The section does not say this is almost entirely development data. Five of the six suites (dlsymdev, dlfamdev, dlheld4\u20136) are development data for v3, and dlheld6 was used by the toy builder. Per-suite means from tables/toy_v2_v3.csv: dlsymdev \u22120.178, dlfamdev \u22120.055, dlheld4 \u22120.191, dlheld5 \u22120.035, dlheld6 \u22120.245, and only \u22120.004 on the held-out dlheld7. h6_10, the largest single change, is the target the weighted class was designed for, on a suite the builder used. results_toy.tex states all this; the interp section does not.",
+     "correction": "Append: '(in-sample: every suite except dlheld7 is development data for v3, and the toy builder developed on dlheld6; on the held-out dlheld7 the mean is \u22120.004, \\cref{sec:res-dlheld7}).'",
+     "severity": "misleading"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.285 (Blank pixels), l.295 (Reading: 'digits are told apart largely by where they are open'), l.313 (Summary: 'Much of the evidence in its maps lies on blank pixels')",
+     "problem": "The blank-pixel shares are given without the baseline that verify-reading:image C7 requires. Blank pixels make up 0.745 (qd_dev), 0.734 (qd_a), 0.825 (MNIST) and 0.546 (Fashion) of the same test images. So cgbt's 0.61/0.62/0.69/0.56 means that per pixel, inked pixels carry more evidence on QuickDraw and MNIST, and Fashion is at par. Without the baseline, 'largely by where they are open' over-reaches.",
+     "correction": "Add to the Blank pixels bullet: 'Blank pixels are 0.75, 0.73, 0.83 and 0.55 of these images (qd_dev, qd_a, MNIST, Fashion), so per pixel, inked pixels carry more of the evidence on QuickDraw and MNIST, and Fashion is at par.' Reading: 'In these maps a sizable part of a class's evidence sits where the class has no ink and other classes do; for several digits the largest named region is an open one (0, 1, 3, 4, 7).' Summary: '... a large share of the evidence in its maps lies on blank pixels, though less than their share of the image on QuickDraw and MNIST.'",
+     "severity": "misleading"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.297, 'the most gain goes to contrasts of very different silhouettes ... Similar-looking classes get almost none'",
+     "problem": "The examples come only from Fashion and MNIST. On qd_dev the top class pair by gain per drawn pair is grapes\u2013soccer ball (5.31\u00d7, 3 drawn), two round shapes that are qd_dev's third most confused pair (verify-reading:image C9). The negative relation with confusion holds only on Fashion (\u22120.59). The MNIST (and qd_a) pairs belong to ggbt's out-of-fold fit, which got stacker weight 0.",
+     "correction": "'On Fashion-MNIST the most gain per drawn pair goes to contrasts of very different silhouettes (trouser\u2013boot 5.8\u00d7, shirt\u2013sneaker 4.9\u00d7), and similar classes get almost none (T-shirt\u2013dress 0.01, sandal\u2013boot 0.02, T-shirt\u2013shirt 0.04). Elsewhere there is no such pattern: qd_dev's top class pair is grapes\u2013soccer ball (5.3\u00d7), two round shapes and its third most confused pair. MNIST's pairs (1\u20132 4.0\u00d7, 0\u20131 3.5\u00d7) are from ggbt's out-of-fold fit, which has stacker weight 0.'",
+     "severity": "misleading"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.3, 'The protocol fixed it as analysis of the chosen learner, to be run after the held-out results were in'",
+     "problem": "This is accurate about the protocol but omits the deviation, so readers will assume the analysis followed it. app_provenance.tex (app:interp-workflow) says the work ran in parallel with the held-out evaluation and was committed at 03:54, before the best-learner rule chose v3 (04:20; PROTOCOL.md says 04:25).",
+     "correction": "Add: 'In practice it ran in parallel with the held-out evaluation, on v3 before the best-learner rule had chosen it, and touched none of the rule's inputs (\\cref{app:interp-workflow}).'",
+     "severity": "misleading"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.177 (image analysis scope) and l.302\u2013305 (v3 against v2 errors)",
+     "problem": "The section never says that qd_dev, qd_a, MNIST and Fashion-MNIST are all development sets for v3 (PROTOCOL.md 'Data access'). The v2\u2192v3 error differences quoted there (0.1467\u21920.1330, qd_a 0.1509\u21920.1422, MNIST 0.0299\u21920.0255, per-class gains) are in-sample.",
+     "correction": "At l.177 add: 'All four sets are development data for v3 (the held-out image sets are qd_c and qd_d), so the error comparisons below are in-sample; the held-out comparison is in \\cref{sec:res-img-gain}.'",
+     "severity": "misleading"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.137, h6_10: 'v3 finds the structure earlier, not a structure v2 lacks'",
+     "problem": "Both versions first represent h6_10 exactly at the same n. v3's exact weighted block (right relative sign) appears at 512, and v2's two folded 13-input blocks give DFG error 0.000 from 512 (results/toy_final/v2/dlheld6__h6_10__s0.json). What v3 has one doubling earlier is a nearly right model: at n=256, |s+3x13| with the wrong inner sign, DFG error 0.017 against v2's 0.33.",
+     "correction": "'... v2 does represent h6_10 exactly from n=512 ...; v3's model is nearly right one doubling earlier (n=256: DFG error 0.017, with the inner sign wrong, against v2's 0.33), and both are exact from 512.'",
+     "severity": "misleading"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.313, Summary (Images): 'and mirror-image pairs on Fashion-MNIST'",
+     "problem": "The quantifier is missing. Only 57 of 784 four-pixel sets (7%) contain the mirror pixel, and 0.88 of non-centre members lie within one step (tab:interp-img-geom). verify-reading:image C1 requires the quantifier, and intro.tex says 'at some pixels'. The heading at l.191 ('local neighbourhoods, except on Fashion-MNIST') over-generalizes the same way.",
+     "correction": "Summary: '... on QuickDraw and MNIST, and on Fashion-MNIST local sets of which 7% (at k=4) include the centre's mirror pixel.' Heading l.191: 'Pooling sets are local neighbourhoods; on Fashion-MNIST some include the mirror pixel'.",
+     "severity": "misleading"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.162, 'and that the forced variant's spurious characters below that point get little weight'",
+     "problem": "This over-reaches (verify-reading:toy C11). Below n_struct, DFG has nonzero weight in 62% of cells, its median share is 0.21, and dfg_forced has the second-largest mean member share (0.22, after kNN's 0.28). The stacker weights members, not individual characters. What is small is the total weight (median 0.35).",
+     "correction": "'... and that below that point the DFG members get a modest share (median 0.21) of a total weight that is itself small (median 0.35, against 1.52), so their spurious characters have little absolute weight.'",
+     "severity": "misleading"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.164, 'Formulas are carried mostly by characters of degree 1\u20134: characters carry at least 90% of the non-constant Fourier weight on 23 of the 67 targets'",
+     "problem": "The measure is presence, not carriage: model coefficients are not compared with the target's Fourier coefficients (verify-reading:toy C12). Also, 23 of 67 (a minority, over all non-sum targets, not just formulas) does not support 'mostly'; the per-suite median coverage (0.77\u20130.88) does. In the same paragraph, 'often a weighted one' should be 9 of the 25.",
+     "correction": "'Formulas are carried mostly by characters of degree 1\u20134: the characters present in the model cover a per-suite median of 0.77\u20130.88 of the target's non-constant Fourier weight, and at least 90% on 23 of the 67 targets with an exact Fourier table (presence only; coefficients not compared). 25 of the 70 models have a sum block among their three leading terms, 9 of them weighted.'",
+     "severity": "misleading"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.8, \\todo text",
+     "problem": "The TODO lists only random, dlheld and dlheld2, but dlheld3 was also unchecked (check_identity ignores the __part02 shard). v3's complete files for dlheld, dlheld2 and dlheld3 now exist, and the identity holds at 200/200 cells. random is still partial (8 of 20 targets, 39/39 cells equal).",
+     "correction": "TODO: 'When v3's result files on random are complete, extend the identity check to random; dlheld\u2013dlheld3 now check 200/200 cells.' At the final pass, rewrite l.7 to give the full count (787 cells on designed, dlsymdev, dlfamdev and dlheld\u2013dlheld7, plus random).",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.63, 'In about 15 cells (13\u201314 targets; the two verifications count 15 and 16 cells)'",
+     "problem": "The fudge is unnecessary. The sentence describes the true block inside a product, and on that criterion both verifiers agree: 15 cells in 13 targets, shares 0.13\u20130.40. The 16th cell (h6_07, n=512) has a factor that contains the selector, so it is not the true block.",
+     "correction": "'In 15 cells (13 targets) the true block appears inside a product with a factor on two irrelevant inputs (shares 0.13\u20130.40), ...'",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.58, 'A spectral feature on the same inputs often sits next to the block.'",
+     "problem": "The spectral features are not on the same inputs. At the largest analysed n, 11 of the 22 found pure targets have a quad term. Its support contains all of the block's inputs plus 9\u201317 others, 20\u201330 inputs in all (e.g. far9: 21 inputs next to a 9-input block; tail13: 24).",
+     "correction": "'In 11 of the 22, a spectral feature whose support contains the block's inputs (and 9\u201317 others) sits next to the block.'",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.138, 'The beam and forced blocks move the first exact block one doubling earlier on five pure targets ... fd_09's block passes the test at 128.'",
+     "problem": "Only fd_09 is mentioned, but for fd_09, tail13, sym11 and h6_11 the true block passes the round-0 test at v3's n_struct of 128 (ratio 1.34\u20131.62, toy_v2_v3.csv). So, per verify-reading:toy C9 and results_toy.tex, the earlier find is a search difference and is not attributable to the beam or forced blocks specifically.",
+     "correction": "'... For fd_09, tail13, sym11 and h6_11 the true block already passes the test at 128 (1.34\u20131.62 times the threshold), so the earlier find is a difference in the search, not attributable to the beam specifically.'",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.106, 'through greedy growth, local refinement or, at n\u2264128, the beam'",
+     "problem": "The mechanism is not measured: the reach measure covers only the eigenvector and degree-1 orders. Yet it is stated as fact inside a Numerical paragraph.",
+     "correction": "'... the block is found before those orders list its inputs, presumably through greedy growth, local refinement or, at n\u2264128, the beam (not measured).'",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.99, Reading: 'DFG's data cost is set by its search, not by its test and not by its readout.'",
+     "problem": "verify-reading:toy C4 requires saying that no intervention isolates the search, for example seeding the block search with the true block or running with beam=0. The delay could also come from acceptance in later rounds or from variant and stacker selection.",
+     "correction": "Add: 'No intervention isolates the search (such as seeding it with the true block); acceptance in later rounds and the stacker's choice of variant could also contribute.'",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.51\u201352 ('Never found') and definitions (l.29)",
+     "problem": "Two caveats from verify-reading:toy C1 are missing. (1) 'Never' means not by the largest analysed n: the runs stop after two cells with error \u22640.005, at 4096 for f7_11 and 1024 for h6_02. (2) For the six weighted targets, the exact-structure criterion covers only the unit-weight part s. At h6_10's n_struct (256) the inner sign is wrong.",
+     "correction": "Add to the definitions: 'For a weighted target u=s+a\u03c4 the class is the unit-weight part s; the inner term is checked separately (below).' Add to 'Never found': '(by the largest analysed n; f7_11's and h6_02's runs stopped at 4096 and 1024 because the portfolio's error was already \u22640.005)'.",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.127, 'The targets found late (n_struct\u22651024, two or more doublings after detection) are consistent with the same mechanism in weaker form.'",
+     "problem": "The class defined this way also includes h6_08 (1024, delay 2) and sumpar (2048, delay 3), and neither is discussed. sumpar is late because its degree-3 inner term lies outside v1.3's class, which is a different mechanism.",
+     "correction": "'The pure targets found late, and h5s1, are consistent with the same mechanism in weaker form (h6_08 and sumpar are late for representational reasons; sumpar's inner term is outside v1.3's class).'",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.16, 'Two independent verifiers per side recomputed the numbers from the files and reviewed the readings.'",
+     "problem": "This contradicts app_provenance.tex (app:interp-workflow): one verifier per side recomputed the numbers, and the other reviewed the readings.",
+     "correction": "'Two independent verifiers per side: one recomputed every number from the files, the other reviewed the readings against the files and the code.'",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.202, 'qd_a's k=9 union graph is as local as qd_dev's (both \u22650.99 within two steps)'",
+     "problem": "This contradicts the section's own table. tab:interp-img-geom (centre excluded) gives 0.989 for qd_a and 0.994 for qd_dev. The \u22650.99 figure comes from IMAGE_INTERP.md's centre-included values.",
+     "correction": "'(0.994 and 0.989 of the other members within two steps)'.",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.202 vs l.3 and l.314 ('nothing here is an ablation' / 'Nothing here is an ablation or a causal test')",
+     "problem": "Section-internal inconsistency: l.202 reports a verifier's 'oracle ablation' that removes long edges from the pooling-set graphs.",
+     "correction": "Say 'nothing here is an ablation of the learner' at l.3 and l.314.",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.241, 'The 14 held-out fits show the same shift at n\u226510000'",
+     "problem": "Only 8 of the 14 held-out fits are at n\u226510000. At n=1000 the k-NN on pooled sums keeps the largest family weight in 5 of 6 fits (results_images.tex). Also, ggbt's weight in v3 there is 0\u20130.12, not 0.",
+     "correction": "'The 8 held-out fits at n\u226510000 show the same shift (ggbt's weight falls from 0.25\u20130.50 in v2 to 0\u20130.12 in v3; \\cref{sec:res-img-gain}).'",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.232 and l.236, 'cgbt has the lowest out-of-fold error of all 18 members in every v3 fit' / 'cgbt alone beats ggbt alone on QuickDraw and MNIST'",
+     "problem": "Caveats required by verify-reading:image C4 and C6 are missing. The OOF margin over ggbt is within holdout noise on Fashion (0.1256 vs 0.1271, 2000 rows) and at qd_dev n=1000 (0.272 vs 0.280). On qd_a and MNIST the test comparison pits cgbt's 10000-row fit against ggbt's 8000-row out-of-fold fit; only the table footnote says so.",
+     "correction": "Add after the first bullet: 'The margin over ggbt is within holdout noise on Fashion-MNIST and at qd_dev, n=1000.' Add after 'on QuickDraw and MNIST:' '(on qd_a and MNIST against ggbt's out-of-fold fit on fewer rows; the like-for-like out-of-fold errors, 0.161 vs 0.172 and 0.031 vs 0.043, point the same way)'.",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.254, 'The bars carry 0.72\u20130.80 of cgbt's split gain on QuickDraw and MNIST'",
+     "problem": "The cited table (tab:interp-img-gain, n=10000 only) shows 0.77\u20130.80. The 0.72 is qd_dev at n=1000, which is not in the table.",
+     "correction": "'The bars carry 0.77\u20130.80 of cgbt's split gain on QuickDraw and MNIST at n=10000 (0.72 at qd_dev, n=1000) and 0.60 on Fashion-MNIST.'",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.218, bullet 'Orientation. All four orientations occur about equally often.'",
+     "problem": "The scope is not stated, and the claim is false for Fashion-MNIST, where the shares are 0.37/0.12/0.40/0.12 (mostly horizontal and vertical; img_bars.md).",
+     "correction": "'Orientation. On QuickDraw all four orientations occur about equally often; on Fashion-MNIST horizontal and vertical bars dominate (0.37 and 0.40 at L=2).'",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.292, Ocean: 'class means 0.37, 0.33, 0.30, 0.29, against 0.26 for the other classes together'",
+     "problem": "The 0.258 is the mean over all nine non-ocean classes, including the four named. Ocean's own ink in the band (0.134), the key comparison, is not given (img_regions.md).",
+     "correction": "'... where ocean has little ink (0.13, against 0.26 for the other nine classes) and soccer ball, campfire, grapes and washing machine have the most (0.37, 0.33, 0.30, 0.29).'",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.301, 'So the fits differ by cgbt and the stacking weights only.'",
+     "problem": "Identity was checked only for ggbt and the pooling sets. Members whose weight moves between zero and positive (e.g. gbt+et 0.11 in v2 vs 0.03 in v3) also differ in whether they are refitted on all n (results_images.tex).",
+     "correction": "'So, as far as checked, the fits differ by cgbt, the stacking weights, and which members are refitted.'",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.262, 'the top 5-pixel bar, centred at row 1, column 18'",
+     "problem": "This bar has 4 pixels (img_bars.md: '(1,18) horizontal bent 4px 1.02%').",
+     "correction": "'the top L=2 bar (4 pixels), centred at row 1, column 18, ...'",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "fig:interp-toy-fail caption (l.112) and figures/fig_toy_failures.pdf",
+     "problem": "(1) 'band11 and h5s7 (dashed) are found when the order reaches S': panel (a) plots the fraction in the first |S|, which at n_struct is 0.82 for band11 (it reaches 1.0 only at 4096) and 0.92 for h5s7. The criterion is all of S within the first |S|+5. (2) The legend in panel (a) lists tail13, which is drawn only in panel (c); h5s7 is dashed in (a) but dotted in (c).",
+     "correction": "Caption: 'band11 and h5s7 (dashed) are found at the first n at which all of S lies within the order's first |S|+5 inputs (plotted fraction 0.82 and 0.92).' Figure: move tail13 to a legend in (c), or say in the caption that the legend in (a) also serves (c); use the same line style for h5s7 in both panels.",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "l.96, Spearman \u03c1 \u22120.86 over the 25 targets",
+     "problem": "The text does not say how the three never-found targets enter. The \u22120.86 imputes n_struct = 2^15 for them; only the figure caption says so.",
+     "correction": "'... is \u22120.86 over the 25 targets (a target never found counted as n_struct=2^15), and \u22120.80 over the 22 found.'",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "tab:interp-img-stack (tables/tab_interp_img_stack.tex), test-error column header 'v3'",
+     "problem": "The last row (v2's analysis fit) puts v2's error, 0.1467, in the column headed 'v3'.",
+     "correction": "Rename the column to 'stack' (make_interp.py header), or leave that cell's header blank for the v2 row and say in the caption 'test error of the stacked learner (v3; v2 in the last row)'.",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/interp.tex",
+     "location": "fig:interp-img-contrib caption (l.278); tab:interp-img-geom caption (l.187)",
+     "problem": "The contribution-map caption is the only interp float without a \\status label. The geometry caption does not say that MNIST's k=9 mutual Isomap R\u00b2 (0.97) is over 674 of 682 pixels.",
+     "correction": "Add \\status{Numerical} to the fig:interp-img-contrib caption. Add to tab:interp-img-geom's caption: 'MNIST's k=9 mutual graph covers 674 of its 682 non-constant pixels.'",
+     "severity": "minor"
+    }
+   ]
+  },
+  {
+   "agent": "aca72a7e3b4a67c4a",
+   "checked": "Scope: sections/results_toy.tex, sections/results_images.tex, every tables/*.tex they input, and figures fig_toy_nstar.pdf and fig_images.pdf. I edited nothing in the paper. I did not run compare_learner.py or make_tables.py in place, because both write outside the scratch area. Instead I imported study/part10/compare_learner.py from a scratch wrapper and wrote its output to /tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/paper_check/LR.json. It is byte-identical to the committed LEARNER_RESULTS.json (05:23). The tables in tables/ (05:23) match it. I also regenerated both figures with make_figures.py into .../paper_check/figs/ (fig_toy_nstar.{pdf,json}, fig_images.{pdf,json}).\n\nMain finding: the tables are current, but results_toy.tex (written 04:40) and both figures (04:38 and 04:41) are stale. Since they were made, these results have landed:\n- v3 on dlheld and dlheld2: complete, 3 seeds, full grid (toy__p10_sum-perm__dlheld{,2}.json);\n- the Part 7 mlp on qd_c and qd_d at n=100 to 60000, 3 seeds;\n- hgb on qd_d;\n- v1 on qd_c;\n- cnn on qd_c;\n- nets_cewd1.0 on all 12 dlheld7 targets.\nOnly v3 on random is still running.\n\nHow I checked:\n- Recomputed every dlheld7 n*, log2 ratio, clearly-better count, per-variant mean and calibration split from the per_target entries.\n- Recomputed the pooled, rest and all-plotted toy statistics. Recounted the v2/v3 changes (13 of 118).\n- Recomputed toy FLOP fractions (flops / gd_flops) and CPU maxima over all 10 complete suites.\n- Recomputed every image cell verdict with compare_hybrid.cells, plus the percentages, seed-paired differences and the best-learner rule cells.\n- From the .info.json records: stacking-weight families, OOF errors, identity of shared members and ggbt rounds, cgbt times, and budget fractions. Checked the budget formula against common.budget_real and the MLP flops_total.\n- Checked the dev cells (p10_codes-dev, p10_hier-dev, hyb_portfolio2, p9_gates-dev).\n- Checked per-dataset tabular means against mlp_best, and mushroom and kr_vs_kp (v3 vs v1).\n- Cross-checked text against: PROTOCOL.md, RESULTS.md, ASSEMBLY.md, the p10_codes, p10_sum and p10_hier DESIGN.md files, PART9.md, part9/audit/compute.md, hybrid/PROTOCOL.md, RESULTS.md and HYBRID.md, TOY_INTERP.md, the interp tables and per-target JSONs (toy_final/v3, power/), and every correction in VERIFICATION.json.\n- Rendered the old and regenerated figures to check their content and legibility. The LaTeX log shows no overfull boxes in scope.\n\nCorrect and unchanged:\n- every dlheld7 number in the text and in tab_dlheld7;\n- tab_real and the tabular text numbers, apart from the HELDOUT2 history sentence;\n- the best-learner-rule numbers;\n- the 14 seed-paired differences (0.47 to 1.86 points);\n- all stack and OOF claims;\n- the compute table, apart from the one wording issue listed below;\n- the DESIGN \u00a74.2 ablation numbers;\n- the mod-3 numbers as corrected by the verifiers.",
+   "problems": [
+    {
+     "file": "sections/results_toy.tex",
+     "location": "l.70-76 (Results paragraph), l.60, l.56 figure caption; figures/fig_toy_nstar.pdf/.json",
+     "problem": "These counts are stale: v3's complete 3-seed runs on dlheld (12) and dlheld2 (7) are now in LEARNER_RESULTS.json and tab_toy_suites. fig_toy_nstar.pdf/.json (04:38) plots only 87 targets from 7 suites. intro.tex already says '9 suites', so the two sections contradict each other.",
+     "correction": "Regenerate fig_toy_nstar. Then write: 'On the 106 targets of fig:toy-nstar, v3 is clearly better than nets_best on 101 and needs at least 4x less data on 42. Five targets are not wins' (the same five). The regenerated legend reads 'dlheld, dlheld2, dlheld3, dlheld4, dlheld5 (53)'. In the caption, write 'nets_best is a minimum over 2 variants on designed, dlheld and dlheld2, 3 on dlsymdev and dlheld3-dlheld5, ...'.",
+     "severity": "error"
+    },
+    {
+     "file": "sections/results_toy.tex",
+     "location": "l.86-87 (Pooled over the held-out suites) and the \\todo",
+     "problem": "The pooled numbers are stale and no longer 'match LEARNER_RESULTS.md'. That file's _pooled_heldout now covers 7 suites and 77 targets: mean -1.87 over 74 targets, 72 clearly better, 1 clearly worse.",
+     "correction": "Write: 'Pooled over the seven held-out suites (dlheld, dlheld2, dlheld3-dlheld7; 77 targets), the mean log2 n* ratio against nets_best is -1.87 over the 74 targets both learn. v3 is clearly better on 72 targets and clearly worse on 1 (h6_00) ... 65 of the 77 targets were development data for v3, and only the 12 of dlheld7 are held out.' Delete the \\todo.",
+     "severity": "error"
+    },
+    {
+     "file": "sections/results_toy.tex",
+     "location": "l.90-94 (lin and hgb paragraph)",
+     "problem": "These counts are stale and the lists of calibration wins are incomplete. They omit lin's wins on maj15 and thr30 (dlheld) and on maj21 and thr20 (dlheld2). They omit hgb's wins on hrf0, hrf1, hrf2, majmaj5, mux6 and stair6 (dlheld) and on dnf4x2, h2rf0 and h2rf1 (dlheld2). The pooled split '17 of the 58 ... other 41: -2.00, 36 better, 1 worse' no longer matches the data.",
+     "correction": "Add the missing targets to both lists. Then write: 'one of the two calibration references is clearly better than nets_best on 30 of the 77 targets. On the other 47, v3's mean against nets_best is -2.11 (44 both learn), with 42 targets clearly better and 1 clearly worse' (fig_toy_nstar.json heldout_pooled.rest after regeneration).",
+     "severity": "error"
+    },
+    {
+     "file": "sections/results_toy.tex",
+     "location": "l.91 ('v3 is at or below lin's level')",
+     "problem": "v3 is above lin on thr10 (121 vs 113) and thrint (139 vs 137), so 'at or below' is inaccurate. The new halfspace targets are not listed.",
+     "correction": "Write: 'On these, v3 is within the tie band of lin (thr10 121 vs 113, thr20 124 vs 117, thr30 149 vs 148, maj9 80 vs 80, maj15 105 vs 110, maj21 109 vs 116, thrint 139 vs 137, f7_10 82 vs 87) or clearly below it (maj3 31 vs 56, dict 16 vs 27, rand2 16 vs 50).'",
+     "severity": "misleading"
+    },
+    {
+     "file": "sections/results_toy.tex",
+     "location": "l.78-84 (The margin is smallest on the held-out draw)",
+     "problem": "The nets_wd list leaves out dlheld (-2.03) and dlheld2 (-1.99). With dlheld2 the ordering is barely kept: -1.83 (dlheld7) and -1.94 (dlheld6), then -1.99 (dlheld2). On 11 to 12 targets per suite such gaps are within noise, so the heading over-reaches. The explanation also names only dlheld3-dlheld5 as 'written within the study'.",
+     "correction": "Write: 'earlier held-out suites: -2.03 on dlheld, -1.99 on dlheld2, -2.07 on dlheld3, -2.25 on dlheld4 and -2.66 on dlheld5'. Soften the heading and conclusion, for example: 'The two draws of the blind family give the two smallest margins, but dlheld2 is within 0.05 of dlheld6, and differences of this size on 12-target suites are within noise.' Change 'dlheld3-dlheld5 were written within the study' to 'dlheld-dlheld5 ...'.",
+     "severity": "misleading"
+    },
+    {
+     "file": "sections/results_toy.tex",
+     "location": "l.117 (h6_10 bullet, last sentence)",
+     "problem": "'It does turn dlheld6's one Part 9 loss to the networks' is wrong. In Part 9, v2 was clearly worse on two dlheld6 targets: h6_00, which only nets_cewd1.0 learns, and h6_10, 702 against 451 (PART9.md \u00a76.1). l.154 of the same section says h6_00 'was v2's loss as well', which contradicts this sentence.",
+     "correction": "Write: 'It turns one of dlheld6's two Part 9 losses to the networks (h6_10: v2 702 against nets_best 451) into a win (206); the other, h6_00, remains.'",
+     "severity": "error"
+    },
+    {
+     "file": "sections/results_toy.tex",
+     "location": "l.118 (h6_07 bullet)",
+     "problem": "The sentence 'x1-x2-...-x6+3x11 from n=512' does not match the model file. In interp/results/toy_final/v3/dlheld6__h6_07__s0.json the weighted block at n=512 is on the 4-input branch: (x7+x8+x9-x10-3*x11), share 0.43. The 6-input weighted block (x1-x2-...-x6+3*x11), share 0.40, first appears at n=1024. At n=512 the 6-input sum appears only unweighted, inside the spurious product (x1-...-x6+x11) x |x15+x20|.",
+     "correction": "Write: 'The selector x11 enters the model as the heavy literal of weighted blocks: from n=512 on the 4-input branch, (x7+x8+x9-x10-3x11), and from n=1024 on the 6-input branch, (x1-x2-...-x6+3x11).'",
+     "severity": "error"
+    },
+    {
+     "file": "sections/results_toy.tex",
+     "location": "l.119 (sym7 / majsym bullet: '0.89 and 0.71 of it')",
+     "problem": "majsym's 0.71 is toy_power's modulated statistic at n=128 (power/dlheld4__majsym.json). VERIFICATION.json verify-reading:toy C4 found that statistic inflated for majsym: the corrected modulated ratio is at most 0.11 at every n up to 4096. The plain block is at 0.36 (unfolded) and 0.39 (folded) of the threshold.",
+     "correction": "Write: '... below the test's threshold (0.89 of it for sym7; 0.36-0.39 for majsym's plain block) ...'. Alternatively, drop majsym's number and say only 'well below'.",
+     "severity": "misleading"
+    },
+    {
+     "file": "sections/results_toy.tex",
+     "location": "l.102-103 (tab:toy-v2v3 caption and \\todo), l.113, l.121-122, l.126",
+     "problem": "The v2-to-v3 counts are stale. tab_toy_v2v3 now lists 13 targets among 118 (11 better, 2 worse), including dlheld2 sym8 (100 to 53, -0.92) and dlheld hrf0 (46 to 62, +0.43). The text still says '11 such targets among the 99', '10 ... better and 1 ... worse, out of 99', 'fd_06, the one loss' and '10 of 99, 9 of which v3 now learns at n<=256'. hrf0 is the larger loss, and it is on a suite the toy builder did not use.",
+     "correction": "Caption: 'There are 13 such targets among the 118.' l.113: '11 targets clearly better and 2 clearly worse, out of 118.' Add to the not-diagnosed items: 'sym8 (dlheld2, 100 to 53)' and 'hrf0 (dlheld, a random formula; 46 to 62, +0.43, the larger of the two losses)'. Change 'fd_06, the one loss' to 'fd_06, one of two losses'. l.126: '11 of 118, 10 of which v3 now learns at n<=256'. Remove the \\todo.",
+     "severity": "error"
+    },
+    {
+     "file": "sections/results_toy.tex",
+     "location": "l.152 (next-smallest margins)",
+     "problem": "This is stale. The smallest non-tie margin against nets_best is now inter2 (dlheld, an AND of two 10-input halfspaces: 346 against 454, -0.39). lin never learns inter2, so it does not fit 'halfspace-like targets where lin is already as good as v3'.",
+     "correction": "Write: 'The next-smallest margin is inter2 (dlheld, an AND of two halfspaces on 10 inputs: 346 against 454, -0.39). Then come the halfspace-like thrint (-0.46) and f7_10 (-0.53), where lin is already as good as v3, and then h5s2 (-0.68) ...'",
+     "severity": "error"
+    },
+    {
+     "file": "sections/results_toy.tex",
+     "location": "l.40 (Compute)",
+     "problem": "'Over the eight suites with complete v3 runs' is stale. Ten suites now have complete runs (dlheld and dlheld2 added). The values do not change: the maximum is still 0.828 (h5s7, dlheld5), and the CPU maximum is still 45.8 s (designed, thr10).",
+     "correction": "Change to 'Over the ten suites with complete v3 runs'.",
+     "severity": "minor"
+    },
+    {
+     "file": "sections/results_toy.tex",
+     "location": "l.49 (tab:toy-suites caption \\todo)",
+     "problem": "The \\todo says 'the three (not run) rows'. Only random is still '(not run)'. The dlheld and dlheld2 rows are filled.",
+     "correction": "Change to: 'v3's run on random is in progress; its (not run) row changes when it lands.' Drop the references to dlheld and dlheld2.",
+     "severity": "minor"
+    },
+    {
+     "file": "sections/results_toy.tex",
+     "location": "l.141 ('The model stays empty')",
+     "problem": "A caveat required by VERIFICATION.json is missing (verify-reading:toy C6 (2); verify-numbers other_problems). At several n>=1024, including n=16384 for fd_10 and h6_00, the summarised DFG model is an out-of-fold fit on 13107 rows that the stacker gave zero weight, not a final member.",
+     "correction": "Add: '(At several of these n, including n=16384 for fd_10 and h6_00, the summarised model is an out-of-fold DFG fit on 13107 rows with zero stacking weight.)'",
+     "severity": "misleading"
+    },
+    {
+     "file": "sections/results_toy.tex",
+     "location": "l.140 ('Every seed of the block search reads the block's inputs off those degrees')",
+     "problem": "This is an interpretive reading inside a paragraph marked \\status{Numerical}.",
+     "correction": "Mark the sentence \\status{Heuristic}, or move it after the measured bullets as a reading.",
+     "severity": "minor"
+    },
+    {
+     "file": "sections/results_toy.tex",
+     "location": "l.154 (The one loss)",
+     "problem": "'measured its search landscape' is inaccurate. p10_sum/DESIGN.md \u00a71d measured the landscape of fd_10 (mod 3 of 10 inputs, n=16384) and extended the conclusion to h6_00.",
+     "correction": "Write: 'The Part 10 toy builder measured the search landscape of the analogous fd_10 and concluded that a random-restart search would need far more than 10^5 restarts; fd_10 and h6_00 were left unlearned (p10_sum/DESIGN.md).'",
+     "severity": "minor"
+    },
+    {
+     "file": "tables/tab_toy_suites.tex",
+     "location": "row 'random' (status 'dev check'); results_toy.tex l.66",
+     "problem": "The table labels random 'dev check'. The text (l.66) and tab:status call it 'held out for v1 or v2', and the Part 8 protocol lists random under final evaluation.",
+     "correction": "Use one label for random in all three places. 'held out (P8)' matches study/hybrid/PROTOCOL.md; alternatively, explain 'dev check' in the caption.",
+     "severity": "minor"
+    },
+    {
+     "file": "sections/results_toy.tex",
+     "location": "l.166 (What is held out: 'HELDOUT2 ... was fixed in Part 8 after v1 was frozen')",
+     "problem": "This is factually wrong. HELDOUT2 was fixed in commit 04a215b2 before any Part 8 design work (study/hybrid/PROTOCOL.md, l.8), so before v1 existed. protocol.tex l.98 has the same error ('frozen in Part 8 before HELDOUT2 was fixed').",
+     "correction": "Write: 'HELDOUT2 (10 datasets) was fixed in a commit before any Part 8 design work. v1 was developed on the 5 development datasets only, and its code path has not changed since.' Make the same fix in protocol.tex.",
+     "severity": "error"
+    },
+    {
+     "file": "sections/results_toy.tex",
+     "location": "l.178 and l.194",
+     "problem": "In l.178 the parenthesis '(9 of 10, p=0.021)' reads as applying to both mlp_strong and hgb, but mlp_strong is 8 of 10 (p=0.11). In l.194, 'it is not worse than the MLPs on fresh tabular data' overstates: texture (+0.61) and krkopt (+0.19) have higher mean error than mlp_best, and krkopt is clearly worse at n>=10000.",
+     "correction": "l.178: '-0.284 against mlp_strong (8 of 10, p=0.11) and -0.250 against hgb (9 of 10, p=0.021)'. l.194: 'it is not worse than the MLPs on average on fresh tabular data (2 of 10 datasets have higher mean error) ...'.",
+     "severity": "minor"
+    },
+    {
+     "file": "sections/results_images.tex",
+     "location": "l.47 and \\todo l.49 (mlp_best item)",
+     "problem": "This is stale and contradicts tab_images_summary. The Part 7 mlp has run on qd_c and qd_d at every n up to 60000, 3 seeds (mlp__qd_{c,d}.json). mlp_best is therefore defined at all 6 cells and equals mlp_strong at each: 6/0/0, mean -0.314. mlp_best+ has 6 cells: 4 better and 2 ties (the n=60000 cells, mlp_wide 14.12 on qd_c and mlp_xl 13.83 on qd_d), mean -0.245.",
+     "correction": "Write: 'mlp_best equals mlp_strong at all six held-out cells (v3 clearly better at all six, mean -0.31). mlp_best+ adds the wider ensembles: 4 better and 2 ties, the two n=60000 cells, mean -0.25. v3 is also clearly better than the Part 7 baseline mlp at all six cells (-0.53).' Delete the \\todo.",
+     "severity": "error"
+    },
+    {
+     "file": "sections/results_images.tex",
+     "location": "l.55-56 and \\todo l.59 (hgb and v1 items)",
+     "problem": "Both items are stale and contradict tab_images_summary (hgb 6 cells, -0.471; v1 6 cells, -0.281). hgb has run on qd_d, and v1 on qd_c.",
+     "correction": "hgb: 'clearly better at all 6 cells, with errors 25-30% lower (qd_c 29-30%, qd_d 25-28%); mean log2 ratio -0.47.' v1: 'clearly better at all 6 cells, by 13.5-20.9% (qd_c 16.1%, 19.4%, 19.1%; qd_d 13.5%, 16.9%, 20.9%); mean -0.28.' Delete the \\todo.",
+     "severity": "error"
+    },
+    {
+     "file": "sections/results_images.tex",
+     "location": "l.64-66 (cnn item and \\todo); l.140; l.176 (Weak points); l.42 and l.175",
+     "problem": "The cnn has run on qd_c (cnn__qd_c.json, seed 0): 24.36% at n=1000 and 14.84% at n=10000, against v3's 26.58% and 16.17%. Its error is 8.4% and 8.2% lower at those cells; both are ties by the cell rule (the table marks them \u00b0; summary +0.125). The text still says the runs are in progress, and twice says the cnn has run at 'the one cell where both have run'. abstract.tex ('both cells') and the discussion.tex \\todo are also out of date, and the sections contradict each other.",
+     "correction": "l.64: 'Its qd_c runs (seed 0) give 24.36% and 14.84%, 8.4% and 8.2% below v3's errors: two ties by the cell rule, but lower at both cells.' l.140 and l.176: 'The cnn has lower error at all three cells where both have run: clearly at qd_a, n=10000 (12.00% against 14.22%), and within 10% at both qd_c cells.' Add to l.42 and l.175: '... than every reference's (the context cnn's is lower at both qd_c cells)'. Make abstract.tex say 'all three cells' and remove the stale discussion.tex \\todo.",
+     "severity": "error"
+    },
+    {
+     "file": "sections/results_images.tex",
+     "location": "l.92 ('12.00% against 14.22% ..., an error 18.5% lower')",
+     "problem": "The arithmetic is wrong. 12.00/14.22 = 0.844, so the cnn's error is 15.6% lower. 18.5% is how much higher v3's error is (14.22/12.00 = 1.185; summary +0.245).",
+     "correction": "Write 'an error 15.6% lower' (or 'v3's error is 18.5% higher').",
+     "severity": "error"
+    },
+    {
+     "file": "figures/fig_images.pdf (and figures/fig_images.json)",
+     "location": "generated 04:41",
+     "problem": "The figure is stale. It lacks v1 on qd_c, hgb on qd_d and cnn on qd_c, all of which are now in the result files and the tables. A regenerated version is at /tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/paper_check/figs/fig_images.pdf. In it the cnn crosses below v3 on qd_c.",
+     "correction": "Rerun make_figures.py fig_images. The caption needs no change.",
+     "severity": "error"
+    },
+    {
+     "file": "sections/results_images.tex",
+     "location": "l.99 (Fashion-MNIST: 'Every comparison is a tie')",
+     "problem": "This is true only for the references in the tables. Against the baseline mlp at n=10000 (14.45%) and mlp_reg at both cells (20.32% and 14.17%), v3 is clearly better (LEARNER_RESULTS.json, development images: mlp 3/1/0, mlp_reg 4/0/0).",
+     "correction": "Write: 'Against mlp_strong (= mlp_best), v2, v1 and hgb every Fashion-MNIST cell is a tie; only the weaker mlp (n=10000) and mlp_reg are clearly worse than v3.'",
+     "severity": "misleading"
+    },
+    {
+     "file": "sections/results_images.tex",
+     "location": "l.99 ('cgbt's stacking weight is 0.05 and 0.07 there, against 0.23-0.50 on the QuickDraw development cells')",
+     "problem": "These are raw stacker weights. interp.tex (l.233, l.305, tab_interp_img_stack) reports cgbt's share of the total stacking weight on the same Fashion n=10000 fit as 0.10. A reader sees 0.07 here and 0.10 there for 'cgbt's weight'.",
+     "correction": "Name the quantity: 'cgbt's raw stacking weight is 0.05 and 0.07 there (shares of the total weight 0.07 and 0.10), against 0.23-0.50 (shares 0.28-0.68) on the QuickDraw development cells.' Or quote shares throughout, as interp.tex does.",
+     "severity": "misleading"
+    },
+    {
+     "file": "sections/results_images.tex",
+     "location": "l.9 (Noise) and l.17 (Runs)",
+     "problem": "'At n=60000 every learner ran seed 0 only' is false for the Part 7 mlp, which has 3 seeds at n=30000 and 60000 on qd_c and qd_d. 'These are the pre-registered cells' leaves out the pre-registered cnn cells (qd_c, n in {1000, 10000}), and the Part 7 mlp runs were not pre-registered.",
+     "correction": "l.9: 'At n=60000 every learner except the Part 7 mlp ran seed 0 only.' l.17: add 'the context cnn ran on qd_c at n in {1000, 10000}, seed 0 (pre-registered); the Part 7 mlp, which defines mlp_best, ran 3 seeds at every n.'",
+     "severity": "minor"
+    },
+    {
+     "file": "sections/results_images.tex",
+     "location": "l.82-83 (Tuning / Selection)",
+     "problem": "'The image builders tuned on validation rows of qd_dev, qd_a and Fashion-MNIST' is inaccurate. p10_hier also used qd_b's validation rows (p10_hier/DESIGN.md l.8-9), so qd_b informed the candidate choice. 'A ninth cell ... was added as a check' suggests it was post hoc, but PROTOCOL.md pre-registered it ('plus one large-n check').",
+     "correction": "Write: 'p10_codes's builder tuned on validation rows of qd_dev, qd_a and Fashion-MNIST (not qd_b); p10_hier's builder also used qd_b's.' And: 'a pre-registered ninth cell, qd_a at n=60000, checked error, budget and CPU.'",
+     "severity": "minor"
+    },
+    {
+     "file": "sections/results_images.tex",
+     "location": "l.156 ('cgbt adds 0.05-0.22')",
+     "problem": "cgbt's own FLOP charge is 0.14-0.22 of the budget (info.json flops.cgbt / budget). The range 0.05-0.22 is the difference between v3 and v2. It is smaller than cgbt's charge in some fits because v3's ggbt is not refitted when its weight is 0.",
+     "correction": "Write: 'cgbt itself is charged 0.14-0.22 of the budget; the net increase over v2 is 0.05-0.22, because ggbt is not refitted where its weight is 0.'",
+     "severity": "minor"
+    },
+    {
+     "file": "sections/results_images.tex",
+     "location": "l.7 (Which file is v3) and l.166 (mlp_xl 'about as long as v3')",
+     "problem": "l.7: the assembly identity check between v3 and p10_codes on images is a single fit (qd_dev, n=300; ASSEMBLY.md). l.166: mlp_xl takes 2196 s against v3's 1361 s on qd_c (1.6x) and 1335 s against 1464 s on qd_d (0.9x), and these compare wall time with CPU time.",
+     "correction": "l.7: '(checked identical on one qd_dev fit at assembly).' l.166: 'mlp_xl takes 0.9-1.6x v3's time (wall against CPU seconds), which is the sense in which it is CPU-matched.'",
+     "severity": "minor"
+    },
+    {
+     "file": "tables/tab_images_cells.tex / tab_images_summary.tex captions (in results_images.tex l.24, l.31)",
+     "location": "captions",
+     "problem": "In the cells caption, 'mlp_best+ is the per-cell minimum over all MLP references' is inaccurate: mlp_pool is excluded, and at qd_a, n=60000 its 12.25% is below mlp_best+'s 12.46%. In the summary caption, 'Panels (b) and (c) compare single v3 fits (seed 0) with the references' seed means' is inaccurate: v2 in panel (c), mlp_xl, mlp_pool and cnn, and every n=60000 cell are seed 0.",
+     "correction": "Cells caption: 'mlp_best+ is the per-cell minimum over the Part 7-9 MLP variants (mlp_pool excluded)'. Summary caption: '... with the references' seed means where 3 seeds exist (v2 in panel (c), mlp_xl, mlp_pool, cnn and all n=60000 cells are seed 0).'",
+     "severity": "minor"
+    }
+   ]
+  },
+  {
+   "agent": "ae2ef01457687ae53",
+   "checked": "Regenerated the numbers in scratch only, so nothing outside paper_learner/ was modified. I ran a copy of compare_learner.py with STUDY pointing at the study, writing to /tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/paper_check/part10/, and a copy of make_tables.py writing to .../paper_check/paper/tables/. I diffed both against the committed LEARNER_RESULTS and paper tables. The only difference is v3 on random, which is now complete. cnn on qd_c n=10000, nets_cewd1.0 on dlheld7 (12 of 12), hgb, v1 and mlp on qd_c/qd_d, and v3 on dlheld and dlheld2 are all present.\n\nRecomputed with short scripts:\n- dlheld7 per target (\u22121.504; 10 better / 0 worse; 5 wins already won by hgb or lin; v3/v2 \u22120.004).\n- Every suite against nets_best and nets_wd (range \u22121.50 to \u22122.44; smallest nets_wd margins on dlheld7 \u22121.83 and dlheld6 \u22121.94).\n- Image relative errors: mlp_strong 17.4\u201322.8%, v2 2.2\u20139.65%, mlp_xl 8.6 and 9.6%, mlp_pool 16.5 and 11.9%, cnn.\n- 14 of 14 seed-paired fits below v2. Cell verdicts v3 against v1 on kr_vs_kp and mushroom (all ties; mushroom identical).\n- FLOP fractions: 0.845 and 0.851 at n=3000, gbt 0.276 of the budget, giving 0.88\u20130.98. Toy max 0.83 of one run.\n- Budgets (1.62e11; 1.24\u20136.2e12), the block-test thresholds, 9.78 nats, and block counts 1.54e10\u20131.19e12.\n\nChecked learner.tex line by line against hyb_portfolio3/learner.py and dfg13.py (md5 b045fafe and 69cabe5c confirmed). Checked protocol and provenance against PROTOCOL.md, RESULTS.md, ASSEMBLY.md/assembly_checks.json, the three DESIGN.md files, FAMILY.md, HYBRID.md, data.py and the git log (all commit hashes and times). Checked the interpretability numbers against TOY_INTERP/IMAGE_INTERP, toy_timing.csv, fig_interp.json and VERIFICATION.json, including the verifiers' corrections, and the history against README.md and paper_discrete. Citation keys all resolve, and main.log has no undefined references.\n\nNumbers confirmed correct, among others: 49/54, median 256, 25 pure targets all detectable at 128, \u03c1 \u22120.86, 134\u2013155\u00d7, 98.3\u201399.9%, cgbt lowest OOF error, tabular \u22120.168 at p=0.11, the integration and best-learner numbers, the verification counts, and 43\u219239 detectable, delay 1\u21920, \u03c1 \u22120.44\u2192\u22120.54.",
+   "problems": [
+    {
+     "file": "paper_learner/sections/abstract.tex",
+     "location": "\"...and a small CNN that sees the layout has lower error at both cells where it has run.\"",
+     "problem": "Out of date. cnn__qd_c.json now also has n=10000: 14.84% against v3's 16.17%, a tie by the cell rule (LEARNER_RESULTS: cnn n>=10000 0/1/0). The cnn has now run at three cells where v3 also ran (qd_a 10^4, qd_c 10^3, qd_c 10^4), and every cnn cell is seed 0 only (the file's note says so).",
+     "correction": "\"...and a small CNN that sees the layout (one seed) has lower error at all three cells where both have run: clearly at qd_a, n=10^4 (12.00% against 14.22%), and within the tie band at qd_c, n=10^3 and 10^4 (24.36% against 26.58%, 14.84% against 16.17%).\"",
+     "severity": "error"
+    },
+    {
+     "file": "paper_learner/sections/discussion.tex",
+     "location": "Images bullet 2 (\"A small CNN that sees the layout has lower error than v3 at both cells where it has run...\") and the \\todo after it",
+     "problem": "Out of date. The cnn qd_c n=10000 cell has landed (0.1484 against v3's 0.1617, a tie, seed 0), so the todo can be resolved. This section also contradicts results_images.tex l.176 (\"better at the one cell where both have run\") and the regenerated tab_images_cells/tab_images_summary, which show cnn at 3 shared cells (0 better / 2 tie / 1 worse for v3).",
+     "correction": "Replace the bullet with: \"A small CNN that sees the layout (seed 0 only) has lower error than v3 at all three cells where both have run: clearly at qd_a, n=10000 (12.00% against 14.22%), and within the tie band at qd_c, n=1000 and 10000 (24.36% against 26.58%; 14.84% against 16.17%).\" Delete the \\todo. Make the same fix in results_images.tex l.176.",
+     "severity": "error"
+    },
+    {
+     "file": "paper_learner/sections/intro.tex",
+     "location": "What was found, 'Every toy suite' bullet: \"On the 9 suites with v3 and network results so far ...\" and the \\todo on random",
+     "problem": "Out of date. toy__p10_sum-perm__random.json is complete (commit 187c8882). Regenerated with compare_learner.py: random v3 vs nets_best is -2.26 (20 better / 0 worse), vs v2 -0.02, vs nets_wd -2.26. So all 10 suites with network results now have v3. The range -1.50 to -2.44 and the single clearly-worse target (h6_00) are unchanged.",
+     "correction": "\"On the 10 suites with network results (all but dlfamdev), v3's suite means against the per-suite best network range from -1.50 to -2.44, and a network is clearly better on one target only (h6_00, ...).\" Delete the \\todo.",
+     "severity": "error"
+    },
+    {
+     "file": "paper_learner/sections/protocol.tex",
+     "location": "What is in-sample: \"v3's code path there is v1's, frozen in Part 8 before HELDOUT2 was fixed.\"",
+     "problem": "The order is reversed. HELDOUT2 was fixed in commit 04a215b2 (26 Oct 06:05 UTC), \"before any Part 8 design work\" (study/hybrid/HYBRID.md l.65; data.py comment \"fixed before any hybrid was designed\"). v1 was designed and frozen after that, then run on HELDOUT2 once.",
+     "correction": "\"...v3's code path there is v1's. HELDOUT2 was fixed before any Part 8 design work (commit 04a215b2), and v1 was frozen before it was run there, so HELDOUT2 is held out for that code.\"",
+     "severity": "error"
+    },
+    {
+     "file": "paper_learner/sections/abstract.tex",
+     "location": "\"On a fresh 12-target Boolean suite (d=30), drawn from a family written by an agent blind to the design, v3 needs clearly less data...\" (also intro.tex 'Held-out toy suite' bullet: \"12 targets drawn from the blind family of Part 9\")",
+     "problem": "The family is blind to the Part 9 (v2) design only (FAMILY.md: \"did not see the learner's design\"). It is not blind to v3's toy component. The Part 10 toy builder developed on dlheld6 and dlfamdev, two other draws from this family (p10_sum/DESIGN.md l.17). v1.3's weighted class u = t + a*tau, with a in {\u00b12,\u00b13} and tau a literal, a parity of two inputs or an AND of two literals, is exactly the family's S4(a) stratum (FAMILY.md \u00a73). In addition, v3 equals v2 on dlheld7: mean -0.004, 0 targets clearly changed. So the toy result does not test the Part 10 change.",
+     "correction": "Abstract: \"...drawn from a family written in Part 9 by an agent blind to the Part 9 design (v3's toy component was developed on two other draws of the same family), v3 needs clearly less data ... and more on none; v2 does the same (v3/v2 mean -0.004).\" Intro: add \"The family was blind to Part 9's design, not to v3's: the Part 10 toy builder developed on dlheld6 and dlfamdev.\"",
+     "severity": "misleading"
+    },
+    {
+     "file": "paper_learner/sections/abstract.tex",
+     "location": "\"The mod-3 targets fail because they have no weight at those degrees, although their block would pass the test at 134\u2013155 times the threshold.\"",
+     "problem": "Two problems. (1) It is factually wrong for fd_10. VERIFICATION.json (verify-reading:toy C6 and other_problems 7) found W1 = 4e-5 and single and pair coefficients of about 0.002 for fd_10; \"zero in expectation\" holds only for h6_00 and f7_05 (toy_timing.csv: fd_10 W2 = 0.0002). (2) \"fail because\" is a causal reading of a descriptive, seed-0 analysis with no ablation.",
+     "correction": "\"On the three mod-3 targets the search never proposes the block, consistent with their near-zero weight at those degrees (W1+W2 <= 0.0002; zero for h6_00 and f7_05), although at n=16384 the true block would pass the test at 134\u2013155 times the threshold.\"",
+     "severity": "misleading"
+    },
+    {
+     "file": "paper_learner/sections/intro.tex",
+     "location": "'What DFG learns' bullet: \"The three residue classes mod 3 have no weight there, and the search never proposes their block...\"",
+     "problem": "Same factual error as in the abstract: fd_10 has W1 = 4e-5, W2 = 0.0002, and coefficients of about 0.002 (VERIFICATION.json verify-reading:toy C6 and other 7). The bullet also does not say that the analysis is seed 0.",
+     "correction": "\"The three residue classes mod 3 have almost no weight there (W1+W2 <= 0.0002; exactly zero for h6_00 and f7_05), and the search never proposes their block...\". Add \"(seed 0)\" to the bullet.",
+     "severity": "misleading"
+    },
+    {
+     "file": "paper_learner/sections/discussion.tex",
+     "location": "'Where neither has a foothold': \"The residue classes mod 3 of 10\u201314-input counts have no Fourier weight at degrees 1 and 2.\"",
+     "problem": "Wrong for fd_10, whose single and pair coefficients are about 0.002, nonzero but undetectable before n of roughly 10^6 (VERIFICATION.json verify-reading:toy C6 and other 7). The verifier corrected this wording.",
+     "correction": "\"...have almost no Fourier weight at degrees 1 and 2 (none for h6_00 and f7_05; coefficients of about 0.002 for fd_10, undetectable at the study's n).\"",
+     "severity": "misleading"
+    },
+    {
+     "file": "paper_learner/sections/abstract.tex",
+     "location": "\"...and the data needed beyond that grows as the residual's degree-1 and degree-2 statistics point to the block more weakly.\"",
+     "problem": "The sentence states the measured quantity as a mechanism. What was measured is the Spearman correlation (-0.86 over the 25 pure targets, seed 0) between the delay and the target's share of variance at Fourier degrees 1\u20132, (W1+W2)/(1-W0) (toy_timing.csv low2; fig_interp.json). No residual statistic was measured.",
+     "correction": "\"...and the data needed beyond that grows as the target's share of variance at Fourier degrees 1\u20132 shrinks (Spearman -0.86 over those 25).\"",
+     "severity": "misleading"
+    },
+    {
+     "file": "paper_learner/sections/abstract.tex",
+     "location": "\"On tabular data v3 is a classical stack whose margin over MLPs is not significant.\"",
+     "problem": "Too broad. Against the baseline mlp the sign test is significant: 9 of 10 HELDOUT2 datasets (p=0.021) and 10 of 11 Part 7 datasets (p=0.012). On the Part 7 set it is also significant against mlp_strong (p=0.012) (LEARNER_RESULTS). The p=0.11 result is for mlp_best, mlp_reg and mlp_strong on HELDOUT2.",
+     "correction": "\"On tabular data v3 is a classical stack whose margin over the hindsight-best MLP is not significant (lower mean error on 8 of 10 fresh datasets, sign test p=0.11).\"",
+     "severity": "misleading"
+    },
+    {
+     "file": "paper_learner/sections/discussion.tex",
+     "location": "\"...can beat permutation-invariant MLP ensembles that spend 2\u20139 times its FLOP budget, and can tie the one whose time per fit matches its own.\"",
+     "problem": "The 9.2-budget ensemble is mlp_xl, the one v3 only ties. v3 beats mlp_strong (2.0 budgets) at 6 of 6 cells and mlp_wide (5.0 budgets) at 5 of 6 (a tie at qd_c 60000) (tab_images_compute, tab_images_summary). It also leaves out that ggbt's bank contains 300 prototype-pair projections, not only subset sums.",
+     "correction": "\"...can beat MLP ensembles that spend 2.0 and 5.0 times its FLOP budget (mlp_strong at all six held-out cells, mlp_wide at five of six), and ties the 1024-wide ensemble, which spends 9.2 budgets and about as much time per fit.\"",
+     "severity": "misleading"
+    },
+    {
+     "file": "paper_learner/sections/discussion.tex",
+     "location": "Images bullet 1: \"v3 is clearly better than it at both (16.5% and 11.9% lower error), so v3's bars add something an MLP on v2's features does not have.\"",
+     "problem": "The inference goes further than the evidence. v3 against v2 is a tie at both cells (9.1% and 6.4% lower), so the step from v2-ties-mlp_pool to v3-beats-mlp_pool rests on differences inside the tie band. mlp_pool is seed 0 at both cells (mlp_pool__qd_c.json), compared there with v3's 3-seed mean at n=10^4. cgbt differs from ggbt in three ways (bars, no pairs, column fraction 0.05), so the gain cannot be attributed to the bars alone.",
+     "correction": "\"v3 is clearly better than it at both (16.5% and 11.9% lower error; mlp_pool seed 0), while v3 and v2 tie there. This is consistent with cgbt's bank adding something an MLP on v2's features does not have, but it is not a test of the bars.\"",
+     "severity": "misleading"
+    },
+    {
+     "file": "paper_learner/sections/intro.tex",
+     "location": "Contribution 3: \"a comparison of v3 with every reference on every toy suite and real dataset of the study\"",
+     "problem": "Not true as stated. v3 has no MNIST run: no p10_codes-dev__mnist or hyb_portfolio3__mnist file, and compare_learner.py leaves MNIST out. dlfamdev has no network, lin or hgb runs. v1 has no toy run on dlfamdev or dlheld7. hgb has no run on designed or dlsymdev (LEARNER_RESULTS shows '\u2013').",
+     "correction": "\"a comparison of v3 with every reference that was run, on every toy suite and every real dataset of the study except MNIST (where v3 enters only the interpretability analysis), with the status of each set for v3 stated\".",
+     "severity": "misleading"
+    },
+    {
+     "file": "paper_learner/sections/app_provenance.tex",
+     "location": "Builders paragraph: \"Development used validation rows of the development sets only, never a test set.\"",
+     "problem": "False for the toy builder. p10_sum/DESIGN.md \u00a74 says its portfolio checks were scored \"on the harness's points\" and compared with \"v2's stored fits\". These are test errors of development suites, e.g. h6_10 n* 171 against 702, and sym7 at n=64 0.457 \u2192 0.000. Only the two image builders used validation rows only.",
+     "correction": "\"The image builders used validation rows of the development sets only. The toy builder scored its DFG-alone checks on fresh validation draws, and its portfolio checks on the toy harness's test points of the development suites (designed, dlsymdev, dlfamdev, dlheld6). No builder used a held-out set.\"",
+     "severity": "misleading"
+    },
+    {
+     "file": "paper_learner/sections/learner.tex",
+     "location": "Budget paragraph: \"Every member's FLOPs are counted (library trees by an audited per-tree formula), and members whose projected cost would exceed 90% of the budget are skipped.\"",
+     "problem": "Only ggbt and cgbt use the audited lgb_tree_flops (learner.py l.365). Part 8's gbt member is still charged by its original formula (fit_gbt l.177: 10nd per tree plus 8\u00b731\u00b7d\u00b7255). Part 9's audit found that formula too low by 1.14\u20131.46\u00d7 at n=3000, and results_images.tex l.157 and discussion.tex say \"v3 keeps that charge\", so the two sections contradict each other. The guard is also cumulative: a member is skipped if spent + projected cost > 0.9 of the budget (0.95 for lin).",
+     "correction": "\"Every member's FLOPs are counted: the image boosters by the compute audit's per-tree formula, and Part 8's gbt member by its original formula, which Part 9's audit found low by 1.14\u20131.46\u00d7 at n=3000. A member is skipped when its projected cost would take the total above 90% of the budget (95% for logistic regression).\"",
+     "severity": "misleading"
+    },
+    {
+     "file": "paper_learner/sections/learner.tex",
+     "location": "Sum-block variants: \"split blocks rewrite a mixed-sign block as |t_A\u2212t_B|\"",
+     "problem": "The code works differently (dfg13.py l.767\u2013778). The split move builds a block on the positive-sign inputs (t_A, folded if the candidate was) and searches a second block over the joint cells with it, initialised with the negative-sign inputs. The result is a product block, a function of (t_A, t_B), not of |t_A\u2212t_B|.",
+     "correction": "\"split blocks replace a mixed-sign candidate by the product block of its positive-sign part and a block searched on its negative-sign part (the joint cells of t_A and t_B)\".",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/learner.tex",
+     "location": "Block search: \"Candidates come from four sources: ... greedy growth from the strongest pairs; at n\u2264128 (v1.3), a width-32 beam\"",
+     "problem": "Incomplete. The code also grows greedily from the 2 strongest single inputs (sum_seeds=(2,3,2)). In the additive search it adds v1.3's weighted candidates: weighted eigenvector prefixes, tau-first on the strongest pair, and extensions of the 2 best refined candidates (l.231\u2013285, 443\u2013491). The beam runs only in the first additive search of a round.",
+     "correction": "\"...greedy growth from the 3 strongest pairs and the 2 strongest single inputs; in the additive search, v1.3's weighted candidates (weighted eigenvector prefixes, an inner term on the strongest pair, extensions of the two best unweighted candidates); and at n\u2264128, in the first additive search of a round, a width-32 beam over (S,s).\"",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/learner.tex",
+     "location": "Where it cannot work: \"...is invisible to the seeds, however large n is.\"",
+     "problem": "Too strong. fd_10's single and pair coefficients are about 0.002, which would become detectable at n of roughly 10^6 (VERIFICATION.json verify-reading:toy C6). Only h6_00 and f7_05 have zero low-degree statistics in expectation.",
+     "correction": "\"...is invisible to the seeds at every n of the study's grid (\u226416384); for h6_00 and f7_05 the seeds' statistics are zero in expectation.\"",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/learner.tex",
+     "location": "\"It is not free: at d=30 no 7-input block can pass below n\u224875.\"",
+     "problem": "Computed from eq. (blocktest), with k=7 and no modulators: tau_7 = 27.6 nats, so the threshold is 66.8 at m=1, 72.1 at m=2 and 76.5 at m=3 (70.3\u201384.1 with four modulators). Since T \u2264 n, the hard bound is n > 67. The figure \u224875 holds for three or more occupied groups (it comes from p9_sum/DESIGN.md \u00a75b).",
+     "correction": "\"...no 7-input block can pass below n\u224867, and below n\u224875 with three or more value groups.\"",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/learner.tex",
+     "location": "tab:members rows gbt/et (\"on the raw columns ... always\"), lin_C (\"C\u2208{0.05,1}\"), dfg_forced; and \"Which members run is decided by the input type alone.\"",
+     "problem": "Several details do not match learner.py. ExtraTrees is fitted on the standard encoding Zs (z-scored, \u00b11, one-hot; fit_et(Zs,...)), not on the raw columns. gbt subsamples rows 0.5 and columns 0.25 per tree when nd>10^7. lin uses only C=1 for n>10^4 (lin_one_n). dfg_forced runs only at n\u2264512 (cv_n). Which members run also depends on n and on the budget guard.",
+     "correction": "Write \"gbt: LightGBM on the raw columns (categoricals as categories; rows 0.5, columns 0.25 per tree when nd>10^7); et: ExtraTrees on the standardized encoding\", \"lin_C: C\u2208{0.05,1} (C=1 only for n>10^4)\" and \"dfg_forced: n\u2264512\". Change the sentence to \"Which members run is decided by the input type, n and the budget.\"",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/learner.tex",
+     "location": "DFG intro: \"Training stops when a round admits nothing, when every training sign is right, or at 75% of the budget.\"",
+     "problem": "Incomplete. DFG also stops after 8 rounds (rounds=8) or when least squares has no room left (p \u2264 n/2) (dfg13.py l.594\u2013598, 823\u2013825). The 75% cap applies to DFG's own budget share, not to the fit's budget.",
+     "correction": "\"...when every training sign is right, after 8 rounds, when the feature count reaches n/2, or once 75% of DFG's budget share is spent.\"",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/learner.tex",
+     "location": "tab:discrete (and abstract: \"No member fits a feature direction by gradient descent.\")",
+     "problem": "The table leaves out the lin member. Its weights on the standardized inputs are a continuous linear direction, fitted by L-BFGS (a gradient-based quasi-Newton method) on convex log-loss. The prototype pairs are also two random training points of different classes, which the table does not say.",
+     "correction": "Add a row: \"logistic regression lin: weights on standardized inputs | convex log-loss (L-BFGS) | yes (linear readout on the raw inputs)\", and write \"two random training points of different classes\". Abstract: \"No member learns features by gradient descent; the continuous fits are convex linear readouts (including a logistic regression on the inputs), tree leaf values and stacking weights.\"",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/protocol.tex",
+     "location": "What is in-sample: \"...and the image builders on qd_dev, qd_a and Fashion-MNIST.\"",
+     "problem": "Incomplete. Both image builders' DESIGN.md files list validation rows of qd_dev, qd_a, qd_b and Fashion-MNIST. p10_codes also used MNIST for topology diagnostics, and p10_hier used optdigits.",
+     "correction": "\"...and the image builders on validation rows of qd_dev, qd_a, qd_b and Fashion-MNIST (and MNIST for topology diagnostics).\"",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/protocol.tex",
+     "location": "Earlier versions: \"v1 (Part 8) and v2 (Part 9) are run as references wherever their predictions can differ from v3's.\"",
+     "problem": "v1 (hyb_portfolio-perm) has no toy run on dlfamdev or dlheld7, where its DFG v1.1 would differ from v3's (no toy__hyb_portfolio-perm__dlheld7.json; the v1 column is '\u2013' in LEARNER_RESULTS).",
+     "correction": "\"v2 is run on every toy suite and held-out image set, and v1 on every image set and on every toy suite except dlfamdev and dlheld7.\"",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/protocol.tex",
+     "location": "Standard tasks: \"There are 3 seeds, except on images at n\u226530000, where every learner runs seed 0 only.\"",
+     "problem": "A caveat is missing. The control mlp_pool and the context cnn ran seed 0 only at every n (mlp_pool__qd_c.json; cnn__qd_c/qd_a.json, note \"seed 0 only\"), and mlp_xl ran only at 60000. At n=10^3 and 10^4 they are therefore compared with v3's 3-seed means.",
+     "correction": "Add: \"The control mlp_pool and the context cnn ran seed 0 only at every n, and mlp_xl at n=60000 only.\"",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/protocol.tex",
+     "location": "tab:status rows",
+     "problem": "Three rows are inaccurate. (1) random was a Part 6 development check (compare_learner.py role), not a set \"held out for earlier versions\". (2) For designed/dlsymdev/dlfamdev, \"variants run there\" hides that dlfamdev has no network runs. (3) In the tabular row, \"where DFG runs\" suggests v1 has no DFG there, but v1 runs DFG v1.1 on kr_vs_kp and mushroom. kr_vs_kp was also the toy builder's tabular development check.",
+     "correction": "(1) Split the row: \"random: development check in Part 6; dlheld\u2013dlheld5: held out for earlier versions\". (2) Write \"variants run there (none on dlfamdev)\". (3) Write \"...except on kr_vs_kp and mushroom, where DFG v1.3 replaces v1's DFG v1.1 (kr_vs_kp: the toy builder's development check)\".",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/protocol.tex",
+     "location": "Tasks, dlfamdev/dlheld7: \"Each slot draws its accept set uniformly from five types, one of them a residue class mod 3 or 4.\"",
+     "problem": "Not true for every slot. In FAMILY.md \u00a73, the S4(a) inner-term form uses only a threshold or a centred band. The five-type ACCEPT draw applies to the S1\u2013S3 and S4(b) blocks.",
+     "correction": "\"Each block's accept set is drawn uniformly from five types, one of them a residue class mod 3 or 4, except in the inner-term form u = s + a\u00b7tau, which uses a threshold or a band.\"",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/discussion.tex",
+     "location": "'Images: locality recovered from data': \"A 2-D embedding of the pooling-set graph matches the grid with R^2 0.97\u20130.99\" and \"the bars are short, nearly straight runs along it\"",
+     "problem": "(1) The R\u00b2 range is true only at n\u22653000. tab_interp_img_geom gives k=4 union R\u00b2 0.84 at qd_dev n=1000, 0.97/0.97 at 3000/10000 and 0.99 on qd_a (MNIST 0.92). (2) On QuickDraw the bars are exact lattice lines in only 33\u201342% of cases (L=2) and 16\u201325% (L=4); 96% (L=2) but 63% (L=4) lie within 1 px of a line. The verifier noted that straightness comes from the construction and the data (verify-reading:image C3).",
+     "correction": "\"...matches the grid with R\u00b2 0.97\u20130.99 at n\u22653000 (0.84 at n=1000; seed 0)\". Write \"...and the 5-pixel bars lie within a pixel of a straight run in about 96% of cases (the 9-pixel bars in 63%)\".",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/discussion.tex",
+     "location": "'Why it works', second paragraph: \"the seed-0 10% error point falls in the doubling just below the first grid size at which the model holds the exact block. What sets the data cost is when the search first proposes the block.\"",
+     "problem": "The first statement holds for the 22 found pure targets; the 3 mod-3 targets are never found. Because n_struct is a grid value, it is mostly a matter of grid resolution (verify-reading:toy other 6). \"What sets the data cost\" is a causal reading with no ablation; the verifier asked for 'consistent with' (C7).",
+     "correction": "\"...and on each of the 22 found targets the seed-0 10% error point lies within the doubling below the first grid size at which the model holds the exact block. This is consistent with the data cost being set by when the search first proposes the block [Heuristic].\"",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/discussion.tex",
+     "location": "Limits, 'Small held-out sets': \"...and only 5 of its 10 wins need feature search.\"",
+     "problem": "\"need feature search\" is a reading. What was measured is that on 5 of the 10 wins default hgb or lin already beats nets_best clearly (f7_02, f7_04, f7_06, f7_10, f7_11).",
+     "correction": "\"...and on 5 of its 10 wins default gradient boosting or logistic regression already beats the networks.\"",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/discussion.tex",
+     "location": "Limits, first bullet: \"h5s7 ... with 0.015 of its variance at degrees 1\u20132\"; \"h5s1 is learned by no learner\"",
+     "problem": "(1) The share of variance is (W1+W2)/(1\u2212W0) = 0.0166 (toy_timing.csv low2). W1+W2 = 0.0153 is the share of total Fourier weight. (2) v3's seed-0 run does reach 10% error on h5s1 (n*_0 \u2248 14263, n_struct 16384); only the 3-seed n* is 'never'.",
+     "correction": "\"...with 0.017 of its variance at degrees 1\u20132...\" and \"h5s1 reaches 10% error in no learner's 3-seed mean (v3 seed 0 at n\u224814000)...\"",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/discussion.tex",
+     "location": "'Where neither has a foothold': \"The networks mostly fail too: none learns f7_05, and only the most regularized variant learns h6_00\"",
+     "problem": "A caveat is missing. The third mod-3 target, fd_10, is in dlfamdev, which has no network runs.",
+     "correction": "Add \"(fd_10, in dlfamdev, has no network runs)\".",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/discussion.tex",
+     "location": "'What kind of learner': \"Pixels, sums over blobs of 4, 9 and 16 mutually correlated pixels, and sums over 5- and 9-pixel bars ... Trees split on them\"",
+     "problem": "S_i(k) is the set of the k pixels most correlated with pixel i, not a set of mutually correlated pixels (pool_sets). Bars have up to 5 or 9 pixels, because they stop early. ggbt's bank also has 300 prototype-pair projections (x_a\u2212x_b)\u00b7x, which are not subset sums.",
+     "correction": "\"Pixels, sums over the 4, 9 and 16 pixels most correlated with each pixel, sums over bars of up to 5 and 9 pixels along lines recovered from the correlations, and (in ggbt) 300 differences of two training images...\"",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/abstract.tex",
+     "location": "\"On images the main members are gradient-boosted trees...\"; \"On images the pooling sets are local neighbourhoods of the true pixel grid\"",
+     "problem": "(1) At n=1000 the pooled k-NN votes carry more stacking weight than the boosters (qd_c gknn 0.38 against cgbt 0.27; qd_d 0.30 against 0.23; qd_dev 0.44 against 0.32; tab_images_stack, tab_interp_img_stack), and stacking weights are not influence. (2) The locality finding holds on QuickDraw and MNIST. On Fashion-MNIST 7% of the 4-pixel sets include a mirror-image pixel, and the Isomap R\u00b2 is 0.13.",
+     "correction": "\"On images the members that carry most stacking weight at n\u226510^4 are gradient-boosted trees...\" and \"On QuickDraw and MNIST the pooling sets are local neighbourhoods of the true pixel grid...\"",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/intro.tex",
+     "location": "'What the image members encode': \"...and on QuickDraw and MNIST it takes over the old booster's stacking weight.\"",
+     "problem": "In the analysis this is compared with v2 only at qd_dev n=10000; there is no v2 analysis on MNIST. The stacker splits weight between two nearly collinear boosters on one holdout, and weights on log-probabilities are not contributions (verify-reading:image C4).",
+     "correction": "\"...and in the analysed QuickDraw and MNIST fits it holds most of the boosters' stacking weight (0.32\u20130.56 against ggbt's 0\u20130.09; v2's ggbt had 0.41 at qd_dev n=10^4).\"",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/intro.tex",
+     "location": "Parts 1\u20135 bullet: \"d^{1.0}, d^{1.9} and d^{2.4} for k=2,3,4. That is close to the leap and correlational-SQ rate d^{k-1}\"; opening: \"a study that has asked this question in ten parts\"",
+     "problem": "(1) The README \u00a73.1 says this is close to d^{k-1} for k\u22643 and somewhat below it for k=4 (2.40 against 3). learner.tex repeats \"about d^{k-1} samples\". (2) Parts 1\u20135 asked what gradient descent does on Boolean targets. The question whether a discrete learner can match it begins in Part 6.",
+     "correction": "(1) \"...close to the leap and correlational-SQ rate d^{k-1} for k\u22643, and somewhat below it for k=4\". (2) \"...the latest learner of a ten-part study, whose Parts 6\u201310 have asked this question.\"",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/app_provenance.tex",
+     "location": "BLAS threading paragraph",
+     "problem": "A caveat from VERIFICATION.json is missing (verify-numbers:image C0 and other_problems 0; verify-reading:image C0). An earlier v2 analysis fit, results/image/v2/qd_dev__n10000__s0.json from 27 Oct 19:44, whose thread setting is unknown, reproduces the cell's 0.1463 exactly (ggbt 166 rounds). The BLAS cause fits the evidence but is not verified.",
+     "correction": "Add: \"An earlier analysis refit, with unrecorded thread settings, reproduces the cell's 0.1463 exactly. The BLAS explanation fits the evidence but was not verified.\"",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/app_provenance.tex",
+     "location": "tab:builders development column \"18:52\u201319:45 (about 55 min)\" and \"21:37\u201322:10 (35 min)\"; Organisation: \"ran every evaluation and reference\"",
+     "problem": "(1) The times give 53 and 33 minutes; p10_hier's own DESIGN.md also says \"freeze at 53 min\", while p10_codes says \"about 35\". (2) The builders ran their own fixed development evaluations (the same appendix says so; the orchestrator only resumed p10_codes').",
+     "correction": "(1) Write \"(53 min)\" and \"(33 min)\". (2) \"...ran every held-out evaluation and reference run...\"",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/tables/tab_toy_suites.tex",
+     "location": "row \\code{random}",
+     "problem": "Out of date: it shows \"(not run)\". Regenerated in scratch from the current result files, it reads \"random & dev check & 20 & -2.26 (20/0) & -0.02 (1/0) & -1.29 (20/0) & -1.78 (20/0)\". tab_toy_v2v3.tex also lacks the row \"random & rf03 & 78 & 62 & -0.32 & 276\". study/part10/LEARNER_RESULTS.md and .json are out of date in the same way.",
+     "correction": "Rerun compare_learner.py and make_tables.py (the final pass) before compiling.",
+     "severity": "minor"
+    },
+    {
+     "file": "paper_learner/sections/app_provenance.tex",
+     "location": "\"No independent claims check of this paper has been made.\" and its \\todo (also the main.tex footnote)",
+     "problem": "An independent claims check of abstract, intro, learner, protocol, discussion and provenance has now been run (this report). The sentence and the footnote (\"the comparisons of this paper were not audited independently\") need updating once its corrections are applied.",
+     "correction": "Describe the check, its scope (these six sections against the result files, records and learner code) and which corrections were applied, and update the footnote to match.",
+     "severity": "minor"
+    }
+   ]
+  }
+ ]
+}

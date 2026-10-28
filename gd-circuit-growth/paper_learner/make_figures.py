@@ -86,7 +86,7 @@ def summary(pairs):
 TOY_GROUPS = [   # (key, suites, legend label, marker, face, edge, size, z) -- status of each suite for v3 (protocol.tex, tab:status)
     ("dev", ["designed", "dlsymdev"], "development", "o", "white", "#8a8a8a", 20, 2),
     ("earlier", ["random", "dlheld", "dlheld2", "dlheld3", "dlheld4", "dlheld5"],
-     "held out for v1 or v2;\ndevelopment data in Part 10", "o", COL[0], "white", 22, 3),
+     "held out for v1 or v2 (random: a\ndevelopment check in Part 6);\ndevelopment data in Part 10", "o", COL[0], "white", 22, 3),
     ("dlheld6", ["dlheld6"], "held out in Part 9;\nused by the Part 10 toy builder", "D", COL[3], INK2, 22, 4),
     ("dlheld7", ["dlheld7"], "held out for v3", "s", COL[7], INK, 40, 5),
 ]

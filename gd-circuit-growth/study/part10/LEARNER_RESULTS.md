@@ -9,7 +9,7 @@ Mean log2 n* ratio over targets both learn; clearly better / worse: |log2 ratio|
 | suite | role | targets | v3 vs nets_best | v3 vs every network variant (min / max mean) | v3 vs v2 | v3 vs v1 | v3 vs lin | v3 vs hgb | v3 never |
 |---|---|---|---|---|---|---|---|---|---|
 | designed | development | 21 | -2.42 (21/0) | -3.07 / -2.42 (2 variants) | -0.03 (1/0) | -0.10 (3/0) | -0.85 (19/0) | – | 0 |
-| random | development check (Part 6) | (v3 not run yet) | | | | | | | |
+| random | development check (Part 6) | 20 | -2.26 (20/0) | -2.92 / -2.26 (2 variants) | -0.02 (1/0) | -0.02 (1/0) | -1.29 (20/0) | -1.78 (20/0) | 0 |
 | dlheld | held out, Part 6 | 12 | -2.03 (12/0) | -2.52 / -2.03 (2 variants) | +0.02 (0/1) | -0.28 (2/1) | -0.62 (10/0) | -2.13 (10/0) | 0 |
 | dlheld2 | held out, Part 6 | 7 | -1.99 (7/0) | -2.62 / -1.99 (2 variants) | -0.14 (1/0) | -0.45 (1/0) | -0.58 (5/0) | -2.79 (6/0) | 0 |
 | dlheld3 | held out, Part 8 | 10 | -1.80 (10/0) | -2.52 / -1.95 (3 variants) | -0.04 (0/0) | -0.40 (1/0) | -0.99 (9/0) | -1.82 (9/0) | 0 |

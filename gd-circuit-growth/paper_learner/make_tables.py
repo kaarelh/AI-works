@@ -20,7 +20,7 @@ def summ(t):
     return f"{m} ({t['better']}/{t['worse']})"
 
 
-TOY_ROLE = {"designed": "dev", "random": "dev check", "dlheld": "held out (P6)", "dlheld2": "held out (P6)",
+TOY_ROLE = {"designed": "dev", "random": "dev check (P6)$^c$", "dlheld": "held out (P6)", "dlheld2": "held out (P6)",
             "dlheld3": "held out (P8)", "dlsymdev": "dev (P9)", "dlheld4": "held out (P9)$^a$", "dlheld5": "held out (P9)",
             "dlheld6": "held out (P9), dev (P10)$^b$", "dlfamdev": "dev (P10)", "dlheld7": "\\textbf{held out (P10)}"}
 ORDER = ["designed", "random", "dlheld", "dlheld2", "dlheld3", "dlsymdev", "dlheld4", "dlheld5", "dlheld6", "dlfamdev", "dlheld7"]
