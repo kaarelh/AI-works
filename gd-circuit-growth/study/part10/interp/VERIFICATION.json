@@ -1,0 +1,671 @@
+{
+ "note": "Interpretability workflow wf_e9c41027-63c (28 Oct 2026): analysts' structured summaries and the two independent verifications per side (numbers recomputed from the files; interpretation reviewed). Corrections apply to the write-ups TOY_INTERP.md and IMAGE_INTERP.md and are carried into the paper.",
+ "agents": [
+  {
+   "label": "analyse:image",
+   "result": {
+    "writeup": "/home/user/AI-works/gd-circuit-growth/study/part10/interp/IMAGE_INTERP.md",
+    "figures": [
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/figures/fig_img_topology.pdf",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/figures/fig_img_bars.pdf",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/figures/fig_img_gain.pdf",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/figures/fig_img_stack.pdf",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/figures/fig_img_contrib_qd_dev.pdf",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/figures/fig_img_contrib_fashion.pdf",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/figures/fig_img_contrib_mnist.pdf",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/figures/fig_img_contrib_qd_a.pdf",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/figures/fig_img_pairs.pdf"
+    ],
+    "tables": [
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/img_runs.md",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/img_pooling.md",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/img_far_members.md",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/img_topology.md",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/img_bars.md",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/img_stack.md",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/img_gain.md",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/img_pairs.md",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/img_class_err.md",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/img_contrib.md",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/img_regions.md",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/img_summary.json"
+    ],
+    "claims": [
+     {
+      "id": "C0-sanity",
+      "claim": "Every v3 analysis fit that has an evaluation cell reproduces it exactly (test error and every recorded field: weights, ggbt rounds, out-of-fold errors); the v2 qd_dev n=10000 analysis fit does not (0.1467 vs cell 0.1463).",
+      "evidence": "v3: qd_dev n=1000 0.2118=0.2118, n=10000 0.1330=0.1330, qd_a n=10000 0.1422=0.1422, Fashion n=10000 0.1238=0.1238 (p10_codes-dev cells; v3 = p10_codes on images). v2 qd_dev n=10000: 0.1467 vs hyb_portfolio2 cell 0.1463; the cell's ggbt early-stopped at 166 rounds vs 123 in the analysis fit, lin_1.0 OOF 0.357 vs 0.3575, stacker OOF 0.148 vs 0.1445; the analysis value equals Part 9's p9_gates-dev 0.1467. v2 dev cells were run by p10/v2dev.sh without single-threaded BLAS (plausible cause, unverified). qd_dev n=3000 (0.1753) and MNIST (0.0255) have no v3 cell. Seed 0.",
+      "files": [
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/img_runs.md",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/results/image_final/v3/qd_dev__n10000__s0.json",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/results/image_final/v2/qd_dev__n10000__s0.json"
+      ]
+     },
+     {
+      "id": "C1-pooling",
+      "claim": "The 4-pixel pooling sets are local neighbourhoods on QuickDraw and MNIST; on Fashion-MNIST they mix in mirror-image pixels; MNIST's few long links come from almost-never-inked border pixels.",
+      "evidence": "Fraction of S_i(4) members within 1 Chebyshev step: qd_dev 0.987/0.993/0.995 at n=1000/3000/10000, qd_a 0.999, MNIST 0.982, Fashion 0.910 (n=10000). Fashion: all 65 members >2 steps away at k=4 are mirror pixels (same row +-1, columns summing to 27+-2); 619 of 1006 at k=9. MNIST: 23 far members at 13 centre pixels inked in at most 0.04% of the 10000 training images. qd_dev k=9 far members 79 -> 31 from n=1000 to 10000.",
+      "files": [
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/img_pooling.md",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/img_far_members.md"
+      ]
+     },
+     {
+      "id": "C2-isomap",
+      "claim": "Isomap recovery of the global grid is high for the k=4 union graph on QuickDraw/MNIST and fails on Fashion; graph variants with a few long edges collapse.",
+      "evidence": "Procrustes R^2, k=4 union: qd_dev 0.842 / 0.970 / 0.973 (n=1000/3000/10000), qd_a 0.988, MNIST 0.918, Fashion 0.134. k=9 mutual: 0.874/0.888/0.917, qd_a 0.827, MNIST 0.969, Fashion 0.231. k=16 mutual: 0.011/0.011/0.072 on qd_dev (450 edges longer than 2 steps, 49 longer than 5 at n=10000). qd_a k=9 union 0.238 with 10 edges longer than 5 vs qd_dev 0.858 with 6.",
+      "files": [
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/img_topology.md",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/figures/fig_img_topology.pdf"
+      ]
+     },
+     {
+      "id": "C3-bars",
+      "claim": "Bars are mostly near-straight short stroke templates on QuickDraw but exact lattice lines only for a minority; straightness grows with n; they are less straight on MNIST and rarely lines on Fashion.",
+      "evidence": "qd_dev n=10000, L=2: 0.421 exact lattice lines, 0.958 within 1 px of the principal axis, median elongation 0.982; L=4: 0.244 and 0.635. Exact lines L=2: 0.327/0.379/0.421 at n=1000/3000/10000; L=4: 0.157/0.206/0.244. MNIST 0.203/0.062, Fashion 0.108/0.037 (L=2/L=4). Gain-weighted bars are straighter on QuickDraw/MNIST (qd_dev L=4 0.323 vs 0.244; MNIST L=2 0.362 vs 0.203), not on Fashion (0.089 vs 0.108).",
+      "files": [
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/img_bars.md",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/figures/fig_img_bars.pdf"
+      ]
+     },
+     {
+      "id": "C4-stack",
+      "claim": "cgbt has the lowest out-of-fold error of all members in every run and takes over ggbt's role in the stack on QuickDraw and MNIST; on Fashion the stacker weights Part 8's gbt/et/lin most.",
+      "evidence": "OOF cgbt vs ggbt: 0.272/0.280 (qd_dev 1000), 0.1967/0.2117 (3000), 0.1495/0.161 (10000), 0.1605/0.1715 (qd_a), 0.031/0.0425 (MNIST), 0.1256/0.1271 (Fashion). cgbt share of total stacker weight: 0.316/0.404/0.470 on qd_dev, 0.560 qd_a, 0.404 MNIST, 0.104 Fashion. ggbt share qd_dev n=10000: 0.413 (v2 analysis fit; 0.371 v2 cell) -> 0.074 (v3); 0 on qd_a and MNIST. Fashion: gbt+et 0.498, lin 0.201.",
+      "files": [
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/img_stack.md",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/img_summary.json",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/figures/fig_img_stack.pdf"
+      ]
+     },
+     {
+      "id": "C5-gain",
+      "claim": "In cgbt the bars carry about three quarters of the split gain on QuickDraw and MNIST and three fifths on Fashion; in ggbt the prototype pairs carry about 40%.",
+      "evidence": "cgbt bars L=2+L=4 gain share: 0.717 (qd_dev 1000), 0.745 (3000), 0.770 (10000), 0.793 (qd_a), 0.802 (MNIST), 0.601 (Fashion); L=4 carries 1.7-2.2x the L=2 gain (1.4x Fashion). ggbt pairs: 0.404/0.391/0.395 qd_dev, 0.381 Fashion, 0.412 MNIST, 0.299 qd_a (oof fit). Bars are 0.754 of cgbt's splits at qd_dev 10000; top 10% of bars carry 0.65-0.66 of bar gain on qd_dev.",
+      "files": [
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/img_gain.md",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/figures/fig_img_gain.pdf"
+      ]
+     },
+     {
+      "id": "C6-alone",
+      "claim": "cgbt alone beats ggbt alone on the test set on QuickDraw and MNIST; on Fashion they are equal and the stack is slightly worse than either alone.",
+      "evidence": "Test error, stack / cgbt alone / ggbt alone: qd_dev 1000 0.2118/0.2208/0.2478; 3000 0.1753/0.1851/0.1968; 10000 0.1330/0.1368/0.1578; qd_a 0.1422/0.1442/0.1654 (ggbt oof fit); MNIST 0.0255/0.0278/0.0392 (ggbt oof fit); Fashion 0.1238/0.1216/0.1222.",
+      "files": [
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/img_class_err.md"
+      ]
+     },
+     {
+      "id": "C7-blank-evidence",
+      "claim": "Much of each class's evidence is the absence of ink; cgbt and ggbt's subset-sum features rely on blank pixels about equally; ggbt looks more ink-centred only because of its pairs.",
+      "evidence": "Share of net evidence on pixels blank in the point (mean over classes): cgbt 0.61 (qd_dev), 0.56 (Fashion), 0.69 (MNIST), 0.62 (qd_a); ggbt 0.39/0.40/0.44/0.43, and 0.60/0.53/0.68/0.61 with its pair part removed (approximate). cgbt vs ggbt map correlation per class 0.63-0.94 (qd_dev/Fashion/MNIST), 0.40-0.88 (qd_a). 100 test points per class, TreeSHAP contributions, n=10000.",
+      "files": [
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/img_contrib.md",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/img_summary.json"
+      ]
+     },
+     {
+      "id": "C8-class-maps",
+      "claim": "Concrete class evidence: e.g. MNIST 0 = the empty hole; ocean = horizon ends plus (cgbt) an empty diagonal band where round classes draw; boot = empty strip left of the shaft; trouser = gap between the legs; cgbt draws these as oriented segments, ggbt as blobs.",
+      "evidence": "Region shares of the class's net evidence, cgbt / ggbt: MNIST 0 centre 0.461/0.409 on 3.2% of the image (99% blank); ocean diagonal band 0.258/0.227 (cgbt 84% blank), horizon line 0.178/0.395; motorbike gap between wheels 0.200/0.163; campfire base 0.358/0.318; Fashion boot left of shaft 0.410/0.246 (class ink 0.001 vs 0.342 for other classes); trouser gap 0.256/0.308; sandal upper-left 0.390/0.303; MNIST 7 '/' band left of the stem 0.301/0.225. Regions chosen after looking at the maps.",
+      "files": [
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/img_regions.md",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/figures/fig_img_contrib_qd_dev.pdf",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/figures/fig_img_contrib_fashion.pdf",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/figures/fig_img_contrib_mnist.pdf"
+      ]
+     },
+     {
+      "id": "C9-pairs",
+      "claim": "The prototype pairs with gain contrast very different silhouettes, not confusable classes; gain is concentrated in a few pairs.",
+      "evidence": "Gain per drawn pair relative to the mean pair (>=3 drawn): Fashion trouser-boot 5.76 (9 pairs), shirt-sneaker 4.87 (5), vs T-shirt-dress 0.01, sandal-boot 0.02, T-shirt-shirt 0.04; MNIST 1-2 4.02, 0-1 3.50; qd_dev grapes-soccer ball 5.31 (3), motorbike-frying pan 3.18 (8). Top 10 of 300 pairs carry 0.29 (qd_dev), 0.50 (Fashion), 0.36 (MNIST) of the pair gain. n=10000.",
+      "files": [
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/img_pairs.md",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/figures/fig_img_pairs.pdf"
+      ]
+     },
+     {
+      "id": "C10-v3-vs-v2",
+      "claim": "On qd_dev n=10000 v3 lowers the error from 0.1467 to 0.1330 (analysis fits) with ggbt bit-identical in both; the gains are in campfire, grapes, matches, motorbike, the classes where cgbt alone beats ggbt alone most.",
+      "evidence": "v3-right/v2-wrong 2.08% of test points, reverse 0.71%; per class v2->v3: campfire 0.200->0.158, grapes 0.280->0.243, matches 0.269->0.247, motorbike 0.110->0.095, foot 0.120->0.120. ggbt test predictions agree 100%, pooling sets identical, ggbt maps correlate 1.000. cgbt alone vs ggbt alone: campfire 0.155/0.201, grapes 0.229/0.262. Fashion: v2 cell 0.1259 vs v3 0.1238 but the two runs' ggbt differ (162 vs 242 rounds, OOF 0.1321 vs 0.1271), so cgbt's part is not separable. qd_a cells: v2 0.1509, v3 0.1422. cgbt CPU 293 of 526 s at qd_dev 10000.",
+      "files": [
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/img_class_err.md",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/img_runs.md",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/img_summary.json"
+      ]
+     }
+    ],
+    "caveats": [
+     "OPERATIONAL, needs orchestrator action: at about 00:24 UTC (dmesg uptime 6275 s) the memory-cgroup OOM killer killed PID 21899 (eval_cells.py hyb_portfolio2.learner qd_c, oom_score_adj 900) while two of my analysis fits (v3 qd_dev and v3 Fashion at n=10000, about 1.5-2.2 GB each) were running. protect_builders.sh had reset my processes to the same adj 900, so the kernel chose the larger evaluation process. My runs very likely contributed to the memory pressure. That lane continued with qd_d (PID 10282). v2's qd_c cells that were in progress need a rerun (eval_cells resumes per cell). I did not open any qd_c/qd_d result.",
+     "Afterwards I held my own processes at oom_score_adj 1000. The v2 Fashion n=10000 analysis was OOM-killed twice (my process both times, as intended) and I did not retry it, to protect the evaluation runs. v2 on Fashion is described only from its evaluation cell's record (hyb_portfolio2__fashion_mnist/n10000_s0.json, info field).",
+     "The v2 qd_dev n=10000 analysis fit does not reproduce its Part 10 cell (0.1467 vs 0.1463): ggbt early-stopped at 123 vs 166 rounds. The v2 dev cells were run without single-threaded BLAS (p10/v2dev.sh); this is a plausible but unverified cause. Its test error equals Part 9's p9_gates-dev result (0.1467).",
+     "qd_dev n=3000 (0.1753) and MNIST n=10000 (0.0255) have no v3 evaluation cell, so they are unchecked. MNIST v2 comparison uses Part 9's p9_gates-dev result (0.0299, harness.evaluate), which equals v2 on images at this n.",
+     "ggbt got stacker weight 0 on MNIST and qd_a, so the ggbt analysed there is its out-of-fold fit (7998 and 8000 rows), not a final member.",
+     "One seed (0) and one fit per run. Out-of-fold errors at n=10000 rest on a 2000-row holdout (s.e. about 0.008).",
+     "Contribution maps depend on the spreading rule: pair contributions are placed on inked pixels by construction. The regions in img_regions.md were chosen after looking at the maps, so they describe the maps and are not an independent test.",
+     "I edited image_structure.py with additive recordings only (per-feature gain vectors, bar and pool pixel lists, per-type and inked-pixel contribution maps, test predictions, booster-alone errors, pair classes); the fit itself is unchanged. I added make_image_final.py, image_far_members.py and image_regions.py. Analysis outputs are in $SCRATCH/p10/interp_out_final/image/{v3,v2}, with copies in interp/results/image_final/. Nothing is committed; interp/ also contains another agent's toy-side modifications."
+    ]
+   }
+  },
+  {
+   "label": "verify-numbers:image",
+   "result": {
+    "verdicts": [
+     {
+      "id": "C0-sanity",
+      "verdict": "confirmed",
+      "note": "Recomputed with my own script (scratch c0.py) from $SCRATCH/p10/interp_out_final/image/<tag>/*.json and the cells in $SCRATCH/p9/cells/, seed 0. All four v3 fits that have a cell equal it in err, weights (all 11 members), ggbt_rounds, stack_oof_err and all 18 member_oof_err: qd_dev n=1000 0.2118, n=10000 0.1330, qd_a 0.1422, Fashion 0.1238. Only info['times'] differs, which is CPU timing and not deterministic. The repo copies in results/image_final equal the scratch files. v2 qd_dev n=10000: 0.1467 vs 0.1463, ggbt rounds 123 vs 166, stacker OOF 0.1445 vs 0.148, lin_1.0 OOF 0.3575 vs 0.357, ggbt OOF 0.161 in both, and 11 weights differ. standard_tasks/results/p9_gates-dev__qd_dev.json gives 0.1467 at n=10000. v2dev.sh sets no BLAS thread variables; the img_final_lane*.sh scripts set OMP/OPENBLAS/MKL to 1. The cell's lin_0.05 time is 54.35 s against 3.23 s in the analysis fit, which fits multithreaded BLAS. Evidence the write-up leaves out: an earlier v2 analysis fit, results/image/v2/qd_dev__n10000__s0.json (log $SCRATCH/p10/interp/img_v2_qd_dev_10000.log, Oct 27 19:44), reproduces the cell exactly: err 0.1463, ggbt 166 rounds, ggbt weight 0.302 and all other weights identical. The script that launched that run is not on disk, so its thread setting cannot be confirmed. Its sibling script interp_img_v2.sh sets no thread variables, which, if it was used, supports the BLAS explanation. The cell fit is therefore reproducible, and this should be stated. qd_dev n=3000 and MNIST have no v3 cell (checked)."
+     },
+     {
+      "id": "C1-pooling",
+      "verdict": "confirmed",
+      "note": "Recomputed from the pool{k}_members / pool_centres arrays in the npz (scratch c1.py), and ink frequencies from the training rows pool[:10000] of DATA.splits(D,0) (scratch c1b.py). Within 1 step at k=4: 0.9874/0.9933/0.9952 (qd_dev n=1000/3000/10000), qd_a 0.9989, MNIST 0.9820, Fashion 0.9104. Fashion k=4: 65 far members at 57 centres, all 65 mirror pixels; k=9: 619 of 1006. Fashion far centres have median ink frequency 0.4002, against 0.5246 for all pixels. MNIST k=4: 23 far members at 13 centres, ink frequency median 0.0001 and max 0.0004, 0 mirror. qd_dev k=9: 79 -> 46 -> 31 far members (n=1000 -> 10000), 14 of the 31 mirror. Overlap with the k nearest pixels also reproduces: qd_dev 0.8243/0.8775/0.7815, MNIST 0.7713/0.8317/0.7502, Fashion 0.6929/0.6932/0.6674."
+     },
+     {
+      "id": "C2-isomap",
+      "verdict": "confirmed",
+      "note": "I rebuilt the union and mutual graphs from the member lists and redid shortest paths, classical MDS and Procrustes (scratch c2.py). Every R^2 and edge count reproduces, and my k=9 mutual embedding equals the saved isomap array exactly. k=4 union: 0.8423/0.9697/0.9731 on qd_dev, qd_a 0.9881, MNIST 0.9185, Fashion 0.1337. k=9 mutual: 0.8743/0.8882/0.9167, qd_a 0.8271, MNIST 0.9691 (674 nodes), Fashion 0.2305. k=16 mutual: 0.0107/0.0106/0.0721, with 450 edges longer than 2 and 49 longer than 5 at n=10000. qd_a k=9 union: 0.2385 with 10 edges longer than 5; qd_dev: 0.8582 with 6. A caveat for the 'few long edges collapse' reading: MNIST's k=4 union graph has 23 edges longer than 5 and still scores 0.918. A handful of long edges does not always collapse the embedding."
+     },
+     {
+      "id": "C3-bars",
+      "verdict": "confirmed",
+      "note": "Recomputed straightness, elongation, within-1-px, orientation and gain-weighted values from bars{L}_pixels and cgbt_gain_vec (scratch c3.py); the bar centre act[t//4] lies in every bar. qd_dev n=10000 L=2: straight 0.421, within 1 px 0.958, elongation median 0.982. L=4: 0.244 and 0.635. Exact lines L=2: 0.327/0.379/0.421; L=4: 0.157/0.206/0.244. MNIST 0.203/0.062, Fashion 0.108/0.037. Gain-weighted straight: qd_dev L=4 0.323, MNIST L=2 0.362, Fashion L=2 0.089. 'Straightness grows with n' holds for the exact-line fraction only. At L=4, within 1 px is flat (0.634/0.620/0.635), and gain-weighted straightness at L=2 is not monotone (0.413/0.379/0.432). Fashion bars containing a mirror pixel, measured by me to support the write-up's reading: 0.27 (L=2) and 0.30 (L=4); qd_dev 0.02 and 0.09."
+     },
+     {
+      "id": "C4-stack",
+      "verdict": "confirmed",
+      "note": "Recomputed from the weights and member_oof_err in each JSON and in the v2 cell info (scratch c4.py). cgbt has the lowest OOF error of all 18 members in every v3 run: 0.272/0.1967/0.1495/0.1605/0.031/0.1256, against ggbt 0.280/0.2117/0.161/0.1715/0.0425/0.1271. cgbt share of total weight: 0.316/0.404/0.470 on qd_dev, 0.560 qd_a, 0.404 MNIST, 0.104 Fashion. ggbt share at qd_dev n=10000: v2 analysis fit 0.413, v2 cell 0.371, v3 0.074; 0 on qd_a and MNIST. Fashion: gbt+et 0.498, lin 0.201 (lin_0.05 0.129 + lin_1.0 0.004 of total 0.663). cgbt has the largest single weight everywhere except Fashion, where gbt has it (0.173)."
+     },
+     {
+      "id": "C5-gain",
+      "verdict": "confirmed",
+      "note": "Recomputed from cgbt_gain_vec / ggbt_gain_vec and the bank ranges (scratch c5.py). cgbt bars L=2+L=4: 0.717/0.745/0.770/0.793/0.802/0.601. L=4/L=2 gain ratio: 1.80/2.12/2.20/2.17/1.72, and 1.41 on Fashion. ggbt pairs: 0.404/0.391/0.394 (JSON 0.3945)/0.381 Fashion/0.412 MNIST/0.299 qd_a. Bars make 0.754 of cgbt's splits at qd_dev n=10000 (0.324 + 0.429). Top 10% of bars carry 0.652 (L=2) and 0.659 (L=4) of bar gain, at qd_dev n=10000 only; at n=1000 the figure is 0.763/0.761, and at n=3000 0.650/0.694."
+     },
+     {
+      "id": "C6-alone",
+      "verdict": "confirmed",
+      "note": "Recomputed from test_pred, cgbt_test_pred, ggbt_test_pred and test_y (scratch c6.py). Stack / cgbt / ggbt: qd_dev 1000 0.2118/0.2208/0.2478; 3000 0.1753/0.1851/0.1968; 10000 0.1330/0.1368/0.1578; qd_a 0.1422/0.1442/0.1654 (ggbt fitted on 8000 rows); MNIST 0.0255/0.0278/0.0392 (7998 rows); Fashion 0.1238/0.1216/0.1222. Agreement between the two boosters: 0.888/0.915/0.933/0.921/0.981/0.966. The overall statement holds, but there are per-class exceptions: qd_dev n=3000 motorbike 0.153 vs 0.150, qd_a Eiffel Tower 0.051 vs 0.047, qd_dev n=10000 foot 0.123 vs 0.121."
+     },
+     {
+      "id": "C7-blank-evidence",
+      "verdict": "confirmed",
+      "note": "Recomputed from <booster>_contrib, _contrib_inked and _contrib_pairs (scratch c7.py). Blank share, mean over classes: cgbt 0.609/0.555/0.693/0.622 (qd_dev/Fashion/MNIST/qd_a); ggbt 0.390/0.404/0.444/0.427; ggbt without pairs 0.603/0.527/0.683/0.611. Per-type maps sum exactly to the total maps. cgbt vs ggbt map correlations: qd_dev 0.674-0.929, Fashion 0.662-0.867, MNIST 0.627-0.938, qd_a 0.398-0.875. Two caveats. (1) The correlations are taken over all 784 pixels, including the 108 (QuickDraw) and 102 (MNIST) constant pixels where both maps are 0. Over active pixels only they are qd_dev 0.628-0.924, MNIST 0.602-0.938, qd_a 0.333-0.865. (2) The pair approximation is small: pixels with 0 < x <= 0.1 hold only 0.5-0.8% of the ink mass of the test images (scratch c7b.py)."
+     },
+     {
+      "id": "C8-class-maps",
+      "verdict": "confirmed",
+      "note": "I re-implemented the regions from image_regions.py's definitions and recomputed every share, blank fraction, area and ink value in img_regions.md (scratch c8.py); all reproduce. MNIST 0 centre: 0.461/0.409, area 0.032, blank 0.99. Ocean diagonal band: 0.258/0.227, cgbt blank 0.84. Horizon line: 0.178/0.395. Motorbike: 0.200/0.163. Campfire base: 0.358/0.318. Boot: 0.410/0.246, ink 0.001 vs 0.342. Trouser: 0.256/0.308. Sandal: 0.390/0.303. MNIST 7: 0.301/0.225. In the rendered figures the 7's '/' band, the 0's hole, the boot strip, the trouser gap and ocean's diagonal band are visible as described. One reading in the text is partly wrong. \u00a73.1 names soccer ball, frying pan and washing machine as the round classes that draw in ocean's band. By class mean ink in the band, the order is soccer ball 0.371, campfire 0.326, grapes 0.298, washing machine 0.286. Frying pan has 0.199, below the other-class mean of 0.258."
+     },
+     {
+      "id": "C9-pairs",
+      "verdict": "confirmed",
+      "note": "Recomputed from ggbt_pair_cls and the pair part of ggbt_gain_vec (scratch c9.py); the class-pair gain matrix matches the saved one. Gain per drawn pair relative to the mean pair: Fashion trouser-boot 5.76 (9), shirt-sneaker 4.87 (5), T-shirt-dress 0.01 (4), sandal-boot 0.02 (5), T-shirt-shirt 0.04 (5). MNIST 1-2 4.02 (8), 0-1 3.50 (5). qd_dev grapes-soccer ball 5.31 (3), motorbike-frying pan 3.18 (8). Top 10 of 300 pairs carry 0.285 (qd_dev), 0.503 (Fashion) and 0.362 (MNIST) of the pair gain. Pairs drawn per class pair range from 1 to 16, with none missing. Other confusable pairs are also low: Fashion pullover-coat 0.12, shirt-coat 0.20, sneaker-boot 0.07; MNIST 4-9 0.40, 7-9 0.20, 1-7 0.16."
+     },
+     {
+      "id": "C10-v3-vs-v2",
+      "verdict": "corrected",
+      "correction": "The three largest per-class gains from v2 to v3 (campfire, grapes, matches) are the three classes where cgbt alone beats ggbt alone most. The fourth-largest cgbt advantage, however, is frying pan (0.129 vs 0.155, gap 0.026), and frying pan barely improves (0.121 -> 0.119). Motorbike, the fourth-largest gain, has only the fifth-largest gap (0.021). Over the 10 classes, the Spearman rank correlation between the v2->v3 gain and the cgbt-ggbt gap is 0.79. All other numbers in the claim reproduce.",
+      "note": "Recomputed (scratch c6.py). Points right in v3 and wrong in v2: 0.0208; the reverse: 0.0071. Per class: campfire 0.200->0.158, grapes 0.280->0.243, matches 0.269->0.247, motorbike 0.110->0.095, foot 0.120->0.120. ggbt test predictions agree on 100% of points, the gain vectors are bit-identical, the pooling sets are identical, and the ggbt maps are identical (max abs diff 0). cgbt/ggbt alone: campfire 0.155/0.201, grapes 0.229/0.262. Cells: Fashion v2 0.1259 (ggbt 162 rounds, OOF 0.1321) vs v3 0.1238 (242 rounds, 0.1271); qd_a v2 0.1509 vs v3 0.1422; there both cells' ggbt stopped at 206 rounds with OOF 0.1715. CPU: cgbt 293.16 s of the analysis process's 526.2 s; the cell itself records cgbt 301.71 s of 529.6 s."
+     }
+    ],
+    "other_problems": [
+     "\u00a70 and \u00a76 leave out an earlier v2 analysis fit, study/part10/interp/results/image/v2/qd_dev__n10000__s0.json (log $SCRATCH/p10/interp/img_v2_qd_dev_10000.log). It reproduces the v2 cell exactly: 0.1463, ggbt 166 rounds, identical weights. So the 0.1463 fit is reproducible, and if that run used the same thread setting as v2dev.sh (its launch script is not on disk) it supports the BLAS-threading explanation that \u00a70 calls unverified.",
+     "\u00a71.3 table: elongation >= 0.9 for MNIST L=2 is given as 0.631, but image_structure.py's float64 value in the JSON is 0.6294. qd_a L=2 is 0.749 against the JSON's 0.7478. make_image_final.py thresholds the float32 copies, and a few bars sit exactly at elongation 0.9 (6 MNIST L=2 bars). The effect is trivial, but the table disagrees with the analysis JSON.",
+     "\u00a73.1, ocean: 'the place where the round classes (soccer ball, frying pan, washing machine) draw their outlines'. Frying pan's mean ink in the band is 0.199, below the other classes' mean of 0.258. The classes with most ink there are soccer ball 0.371, campfire 0.326, grapes 0.298 and washing machine 0.286 (class_mean in the qd_dev n=10000 npz).",
+     "\u00a75.3 reading 'the largest per-class gains (campfire, grapes, matches, motorbike) are the classes where cgbt alone beats ggbt alone most': frying pan has the 4th-largest cgbt advantage (0.026) with almost no gain (0.002); motorbike ranks 5th (0.021). Spearman correlation 0.79.",
+     "\u00a73.2, bag: the text's 'empty top centre' and 'empty patch below it' are the regions named 'handle' and 'inside the handle' in img_regions.md / image_regions.py. The bag's own ink in the 'handle' region is 0.104 against 0.358 for the other classes, so the table's name is misleading; the two files name the same region differently.",
+     "\u00a73.3, MNIST 9: the bottom-row segment is 'mostly empty in the point' only for cgbt (blank 0.70); for ggbt the blank fraction is 0.29. The 9's mean ink there is higher than the other classes' (0.223 vs 0.162).",
+     "\u00a73 says the maps are those of the v3 fits, but fig_img_contrib_qd_dev.pdf takes its ggbt rows from the v2 run (labelled 'ggbt (v2 run)'). The maps are bit-identical, so only the description is inconsistent.",
+     "\u00a71.2: fig_img_topology.pdf (a) is said to draw 'an edge between every two grid neighbours'. mesh() draws only horizontal and vertical (4-neighbour) edges, while the write-up defines neighbours as the 8 Chebyshev neighbours.",
+     "\u00a72.2: 'top 10% of bars carry 0.65-0.66 of the bar gain on qd_dev' holds at n=10000 only; at n=1000 it is 0.76 and at n=3000 0.65/0.69 (img_bars.md).",
+     "\u00a75.3 cost: the 526 s and 670.5 s totals are the analysis process's CPU around hooks.fit_image (fit_cpu), not the learner's own record. The evaluation cells record cpu 529.6 s and cgbt 301.7 s for qd_dev n=10000.",
+     "\u00a72.3: '(25, 12) a horizontal bar on the bottom row' \u2014 row 25 is the third row from the bottom (rows 26-27 exist); 'near the bottom edge' would be accurate.",
+     "Every other number I checked in the write-up, its tables and figures reproduces. That covers: the \u00a70 tables; \u00a71.1 overlaps and ink frequencies; \u00a71.2 edge counts; \u00a71.3 table except the elongation rounding above; \u00a72.1 tables and the 0.2-1.0-point stack advantage; \u00a72.2 gain and split shares; \u00a72.3 top bars, positions and orientation shares; \u00a73 positive-mass >= 0.96 and the per-type |contrib| shares (cgbt bars 0.78 / pooled 0.20 / pixels 0.02, ggbt pooled 0.64 / pairs 0.29 / pixels 0.07); \u00a74; \u00a75.2 per-class errors; the \u00a75.3 agreement rates; the fig_img_bars panel titles (top-12 shares, orientation %, 77%/60%/80% bars); fig_img_stack weights and OOF curves; fig_img_gain bars; fig_img_pairs matrices; fig_img_topology R^2 titles and markers. Scripts and renders: /tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/p10/verify_image/ (c0.py ... c9.py, fbars.py, png/)."
+    ]
+   }
+  },
+  {
+   "label": "verify-reading:image",
+   "result": {
+    "verdicts": [
+     {
+      "id": "C0-sanity",
+      "verdict": "confirmed",
+      "note": "I compared the cell records with the analysis JSONs. For the 4 v3 cells, the weights dict, member_oof_err dict, stack_oof_err and ggbt_rounds are exactly equal and so is the test error. 'Every recorded field' should be narrowed: the cells' flops and budget_frac were not compared (the analysis JSON does not record them), and cgbt's rounds are not in the cell record. The cells are p10_codes (md5 fd688acd...) and the analysis ran hyb_portfolio3 (b045fafe...); ASSEMBLY.md checked image identity only at qd_dev n=300, so these exact matches extend that check. The BLAS cause is still unverified but fits the evidence: p10/v2dev.sh exports no thread variables, while p10_codes' run_dev_eval.sh exports OMP/OPENBLAS=1. lin_1.0, which does not depend on ggbt's bank, also differs (OOF 0.357 vs 0.3575), which points to run-level numerical differences rather than a ggbt-specific change. p9_gates-dev qd_dev n=10000 = 0.1467 is verified."
+     },
+     {
+      "id": "C1-pooling",
+      "verdict": "corrected",
+      "correction": "At k=4 the sets are local on QuickDraw (n>=1000) and MNIST (n=10000, seed 0): 0.98-1.00 of members lie within one grid step, counting the centre itself (0.976-0.999 of the 3 non-centre members). On Fashion-MNIST, 57 of 784 four-pixel sets (7%) contain the centre's mirror pixel, and the sets are less local overall (0.88 of non-centre members within 1 step). At k=9, 70% of Fashion's sets have a member more than 2 steps away; 62% of those far members are mirror pixels. MNIST's 23 long links at k=4 start at 13 border pixels (columns 0-5 and 26-27) that are non-zero in at most 0.04% of the training images.",
+      "note": "Recomputed from the npz member lists. The 'within 1' column of img_pooling.md includes the centre, which is trivially at distance 0; excluding it gives Fashion 0.910 -> 0.881 and MNIST 0.982 -> 0.976. 'Mix in mirror-image pixels' is true for only 7% of the k=4 sets; it needs this quantifier. The MNIST far-link centres are (2,3),(2,4),(3,3),(5,2),(8,0),(15,0),(16,0),(17,1),(18,0),(18,1),(21,27),(22,26),(22,27), all border pixels, so 'border' is confirmed. img_far_members counts 'inked' as x>0, while the maps use x>0.1."
+     },
+     {
+      "id": "C2-isomap",
+      "verdict": "confirmed",
+      "note": "I ran an oracle ablation on the saved pooling sets, removing graph edges longer than 5 grid steps and re-running the same Isomap/Procrustes. It restores R^2 on every QuickDraw/MNIST graph (0.962-0.990): qd_a k=9 union 0.238 -> 0.978 (10 edges dropped); qd_dev n=10000 k=16 mutual 0.072 -> 0.990; qd_dev n=1000 k=9 union 0.259 -> 0.980; MNIST k=9 union 0.477 -> 0.978. On Fashion, k=9 union goes 0.230 -> 0.954 (dropping >5) and 0.970 (dropping >2), so Fashion's failure is also caused by the long, mostly mirror, edges. This supports the write-up's untested reading. Wording: k=16 mutual has 450 edges longer than 2 steps, which is not 'a few'; only its 49 edges longer than 5 steps cause the collapse. Say 'a few edges longer than 5 steps'. Seed 0, one fit per n."
+     },
+     {
+      "id": "C3-bars",
+      "verdict": "corrected",
+      "correction": "Bars are short pixel sets along correlation-recovered lines, fixed before any tree is fitted. On qd_dev at n=10000 (seed 0), 0.42 (L=2) and 0.24 (L=4) are exact lattice lines, and 0.96 / 0.64 lie within 1 px of their principal axis. The exact-line fraction grows with n (L=2: 0.33/0.38/0.42) and depends strongly on how often the centre pixel is inked: on qd_dev L=2 it rises from 0.08 to 0.81 between the least and most inked quartile of centres. Exact-line fractions are 0.20/0.06 on MNIST and 0.11/0.04 on Fashion. Gain-weighted bars are straighter at L=4 on QuickDraw and at both lengths on MNIST. On qd_dev most of that excess comes from where the gain sits (frequently inked central pixels), not from a preference among bars at the same place, and at L=2 on qd_dev there is no gain preference (0.432 vs 0.421).",
+      "note": "Checks used the training rows and the npz. (1) 'Stroke templates' is interpretation: bars come from the correlation ranking, so their straightness is a property of the construction and the data, not of the booster. (2) 'Within 1 px' is a weak criterion for 5-pixel sets; it is 0.957 already at n=1000 and does not move with n. (3) Confound: corr(centre ink frequency, straight) is +0.56 (L=2) and +0.48 (L=4) on qd_dev n=10000. Predicting gain-weighted straightness from ink-frequency-quartile composition alone gives 0.303 vs measured 0.323 at L=4 (all bars 0.244), and 0.506 vs measured 0.432 at L=2. MNIST L=2: all 0.203, measured 0.362, predicted 0.270, so a residual preference remains there. qd_a L=4: 0.245 / 0.332 / 0.281. The claim's evidence cites only qd_dev L=4 and leaves out the null L=2 result (0.379 vs 0.379 at n=3000; 0.432 vs 0.421 at n=10000)."
+     },
+     {
+      "id": "C4-stack",
+      "verdict": "corrected",
+      "correction": "In each of the six runs (seed 0) cgbt has the lowest out-of-fold error of all members. The margin over ggbt is within holdout noise on Fashion (0.1256 vs 0.1271 on 2000 rows) and at qd_dev n=1000 (0.272 vs 0.280). cgbt gets the largest single-member weight on QuickDraw and MNIST (share of total weight 0.32-0.56). At qd_dev n=10000, ggbt's share falls from 0.41 (v2 analysis fit; 0.37 in the v2 cell) to 0.07 in v3; on qd_a and MNIST ggbt gets weight 0 in v3, with no v2 weights shown for comparison. On Fashion the largest single weights go to Part 8's gbt (0.173), et (0.157) and lin_0.05 (0.129), with ggbt at 0.103 and cgbt at 0.069. The weights multiply log-probabilities of different calibration, so they are not shares of the decision.",
+      "note": "'Takes over ggbt's role' is measured against v2 only at qd_dev n=10000. cgbt and ggbt agree on 0.92-0.98 of test points. The convex stacker splits weight between these two near-collinear members on one 2000-row holdout, so 'ggbt dropped' is a property of one fit. Boosters early-stopped on error give over-confident log-probabilities (clipped at 1e-5), while ET, logistic regression and kNN votes are smoother, so equal weights do not mean equal influence."
+     },
+     {
+      "id": "C5-gain",
+      "verdict": "corrected",
+      "correction": "Bars are two thirds of cgbt's columns (0.658 on QuickDraw/MNIST, 0.667 on Fashion). With LightGBM sampling 12% of columns per tree, they carry 0.72-0.80 of its split gain on QuickDraw and MNIST, 1.09-1.22 times their column share. On Fashion they carry 0.60, below their column share (0.90x). Per column, the 9-pixel bars (1.40-1.65x) and, on QuickDraw, the 16-pixel pooled sums (1.51-1.85x) carry the most gain. The 5-pixel bars carry less than the average column everywhere (0.73-0.90x). In ggbt the 300 pairs (about 10% of its columns) carry 0.38-0.41 of the gain, 3-4x their column share; the exception is qd_a's out-of-fold fit at 0.30. Split gain is training-loss reduction at the best iteration and is shared arbitrarily among overlapping features (each L=2 bar is a subset of an L=4 bar; pooled sets overlap bars). It describes how the trees split, not what the predictions depend on.",
+      "note": "Column shares come from the n fields of the booster gain records in the analysis JSONs. The L=4/L=2 ratio (1.7-2.2x, 1.4x Fashion) is fair because the two have equal column counts. The MNIST and qd_a ggbt values come from out-of-fold fits (7998 and 8000 rows). 'About 40%' needs '(0.30 on qd_a)'."
+     },
+     {
+      "id": "C6-alone",
+      "verdict": "corrected",
+      "correction": "On the test set, cgbt alone beats ggbt alone on qd_dev at n=1000/3000/10000 (paired discordant counts 235/505, 232/349, 135/345; z = -9.9, -4.9, -9.6). It also beats ggbt on qd_a (183/395) and MNIST (29/143). There, ggbt is the 8000-row out-of-fold fit and cgbt the 10000-row fit; the like-for-like out-of-fold errors (0.1605 vs 0.1715, 0.031 vs 0.0425) point the same way. On Fashion the two boosters cannot be told apart (0.1216 vs 0.1222; 139 vs 145 discordant points, z = -0.4). The stack is not better than either booster there: it is 0.16-0.22 points worse, which is within test-set noise (paired z = +1.0 and +1.3). Seed 0, one fit.",
+      "note": "Paired comparisons were computed from test_pred, cgbt_test_pred and ggbt_test_pred in the npz files. 'Slightly worse' is not resolved by the test set. The write-up's \u00a72.1 says 'on QuickDraw and MNIST the stack is better than cgbt alone by 0.2-1.0 points'; the qd_a case (0.2 points, z = -1.0) is not resolved either."
+     },
+     {
+      "id": "C7-blank-evidence",
+      "verdict": "corrected",
+      "correction": "With each subset sum's TreeSHAP contribution (to the class's own raw score) spread equally over its pixels, 0.56-0.69 of cgbt's net contribution falls on pixels blank in the point (mean over classes; 0.15-0.92 by class). Blank pixels make up 0.55-0.83 of those same images (qd_dev 0.745, qd_a 0.734, MNIST 0.825, Fashion 0.546 of the 784 pixels), so per pixel, inked pixels carry more of the evidence on QuickDraw and MNIST, and Fashion is at par. ggbt's subset-sum features give similar shares (0.53-0.68). ggbt's lower overall share (0.39-0.44) comes from the pair spreading rule, which puts pair contributions only on inked pixels by construction. Because a partially inked subset sum's contribution is split by member count, these shares cannot separate evidence from absent ink from evidence from present ink.",
+      "note": "Recomputed on the same 100 points per class (rng 1, streamed from the cached data). (1) 'Each class' is false: grapes 0.35, soccer ball 0.32, campfire 0.39 (qd_dev); pullover 0.25, shirt 0.28, coat 0.29 (Fashion); camouflage 0.15 (qd_a); digit 8 0.42 (MNIST). (2) On the bars, among (point, bar) cases with at least one inked member, 43% (L=2) / 52% (L=4) of the members are blank on qd_dev (MNIST 43/54%, Fashion 19/24%). About half of a partially inked bar's contribution is therefore booked as blank, even when the bar's ink drove it. (3) 'Rely on blank pixels about equally' is largely built in, since both boosters' non-pair features are equal-spread subset sums over overlapping footprints. (4) The maps contain no ablation or occlusion test, so they make no causal statement."
+     },
+     {
+      "id": "C8-class-maps",
+      "verdict": "corrected",
+      "correction": "In the mean contribution maps (seed 0, n=10000, 100 test points per class, contributions to the class's own raw score), the regions chosen after looking at the maps take large shares. MNIST 0: the empty centre takes 0.46 (cgbt) / 0.41 (ggbt) on 3.2% of the image. Ocean: the horizon ends (0.17/0.21) and, for cgbt, a diagonal band (0.26) where ocean has less ink (0.134) than the other classes (0.258; most in soccer ball 0.37, campfire 0.33, grapes 0.30, washing machine 0.29). Boot: the empty strip left of the shaft (0.41/0.25). Trouser: the region between the legs (0.26/0.31; class ink 0.26 vs 0.50). cgbt's maps look like oriented segments and ggbt's like blobs because the spreading rule paints each feature's contribution over its footprint (bars are line segments, pooled sets are compact blobs).",
+      "note": "The analyst flags that the regions are post hoc; that is correct, so the region shares describe the maps rather than test them. Per-class ink in the ocean band, from class_mean: frying pan 0.199, below the other-class mean, so 'round classes (soccer ball, frying pan, washing machine)' is partly wrong. The segment-vs-blob contrast is a consequence of the feature shapes, not a learned property; only which segments carry weight is informative. The C7 caveat applies: 'empty' regions' shares include contributions of features that are partly inked. 'MNIST 0 = the empty hole' overstates a 46% share."
+     },
+     {
+      "id": "C9-pairs",
+      "verdict": "corrected",
+      "correction": "Pair gain is concentrated: the top 10 of 300 pairs carry 0.29 (qd_dev), 0.50 (Fashion) and 0.36 (MNIST) of the pair gain, against 0.033 if gain were uniform. On Fashion-MNIST, the class pairs with most gain per drawn pair contrast dissimilar silhouettes, and the most confused class pairs carry little (Spearman -0.59 between gain per pair and the pair's test confusion). On qd_dev at n=10000 (+0.07) and MNIST (-0.11) there is no such relation, and qd_dev's top class pair, grapes-soccer ball (two round shapes), is its third most confused pair. Class-pair values often rest on a single drawn image pair, so they describe this fit's pairs, not the classes.",
+      "note": "For each class pair with at least 3 drawn pairs, I correlated gain per drawn pair (ggbt_pair_class_gain / count) with ggbt-alone confusion a<->b: qd_dev n=3000 -0.34 (p 0.02), qd_dev n=10000 +0.07 (p 0.66), Fashion -0.59 (p<0.001), MNIST -0.11 (p 0.46), qd_a -0.34 (p 0.02). The write-up names 'confusable' classes by intuition, with no measure. The best single pair carries 0.85 of grapes-soccer ball (3 pairs), 0.85 of motorbike-frying pan (8), 0.89 of shirt-sneaker (5) and 0.90 of MNIST 0-1 (5). The MNIST (and qd_a) pairs belong to ggbt's out-of-fold fit, which got stacker weight 0."
+     },
+     {
+      "id": "C10-v3-vs-v2",
+      "verdict": "corrected",
+      "correction": "On qd_dev at n=10000 (seed 0, analysis fits), v3 lowers the test error from 0.1467 to 0.1330 (208 vs 71 discordant points). ggbt is bit-identical in both fits: gain and split vectors, test predictions and contribution maps are exactly equal. The gains are significant in campfire, grapes, matches and motorbike (per-class paired z between -3.0 and -5.9). These are among the five classes where cgbt alone beats ggbt alone most, and include the three with the highest v2 error. Frying pan, fourth by cgbt's advantage (0.026), barely changes (0.121 -> 0.119).",
+      "note": "Bit-identity was verified from the npz files with np.array_equal on ggbt_gain_vec, ggbt_split_vec, ggbt_test_pred and ggbt_pair_cls; the contrib max difference is 0. Ranking classes by cgbt's advantage over ggbt alone gives campfire .046, matches .034, grapes .033, frying pan .026, motorbike .021. The rank correlation with the per-class v3 gain is about 0.79, not one-to-one. The Fashion and qd_a statements and the CPU figure are as described."
+     }
+    ],
+    "other_problems": [
+     "\u00a72.2 and fig_img_gain.pdf give gain shares without the column-share reference: bars are 2/3 of cgbt's columns, pairs about 10% of ggbt's, and LightGBM uses feature_fraction 0.12 per tree. Readers will take 'bars carry three quarters of the gain' as dominance, but it is 1.1-1.2x the column share on QuickDraw/MNIST and 0.9x on Fashion. Add column shares, or gain per column.",
+     "fig_img_stack.pdf annotates raw stacker weights (e.g. cgbt 0.34 at qd_dev n=10000), while the text and tables quote shares of total weight (0.470) for the same quantity. Neither shows influence, because the weights act on log-probabilities of different calibration.",
+     "\u00a72.3 reading 'on MNIST the horizontal bars are favoured, in places where a horizontal stroke or gap tells digits apart' does not fit the top bars. MNIST's top L=2 bar (centre (1,18), 1.02% of cgbt's gain) has pixels inked (x>0.1) in 0-7.5% of training images. The (25,12) L=4 bar lies on row 25 (2-10% inked), and the (19,24) L=2 bar's pixels are inked in 1-4%. These look like detectors of the digit's extent in the margins, not of strokes.",
+     "\u00a73 calls the TreeSHAP contributions to the true class's own raw score in a multiclass softmax 'evidence' for the class. That is not the margin over competing classes, and with no occlusion or ablation test nothing shows a region is necessary. The 'Measured' paragraphs should say this.",
+     "\u00a73.4 and \u00a73.1 'both boosters use mostly the same places' (map correlation 0.63-0.94): cgbt and ggbt share the raw pixels and all pooled-sum features, and both use the same spreading rule, so some of this agreement is built in.",
+     "\u00a75.3 'cgbt is a better booster than ggbt (lower out-of-fold and test error at every n measured)': on qd_a and MNIST the test comparison pits ggbt's 8000-row out-of-fold fit against cgbt's 10000-row fit. Only the out-of-fold comparison is like-for-like.",
+     "\u00a70 says out-of-fold differences at n=10000 have s.e. about 0.008 (unpaired). For member-vs-member comparisons on the same 2000 rows the paired s.e. is much smaller. Say which is meant, and note that the stacker weights are fitted on the same holdout.",
+     "img_far_members.md defines 'inked' as x>0, while the contribution maps and regions use x>0.1. State both definitions where the ink frequencies are quoted.",
+     "fig_img_contrib_qd_dev.pdf labels the ggbt row 'ggbt (v2 run)', but the text says the maps come from the v3 fits. They are identical, so this is harmless but inconsistent.",
+     "Gain-weighted bar statistics (straightness, orientation) rest on few bars: the top 10% of bars carry 0.65-0.86 of the bar gain. They come from one seed and one fit, and need that qualifier.",
+     "My check scripts (read-only use of the saved npz/json and of the cached data, streamed; no refits): /tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/review_img/chk1.py (bit-identity, paired test comparisons, column shares), chk2.py (pairs vs confusion, Isomap long-edge ablation), chk3.py (locality without the centre), chk4.py (blank-pixel baseline, bar attribution split, straightness vs ink frequency, MNIST top bars), chk5.py (ocean band ink per class, MNIST far links), chk6.py (per-class v3 vs v2)."
+    ]
+   }
+  },
+  {
+   "label": "analyse:toy",
+   "result": {
+    "writeup": "/home/user/AI-works/gd-circuit-growth/study/part10/interp/TOY_INTERP.md",
+    "figures": [
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/figures/fig_toy_timing.pdf",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/figures/fig_toy_g.pdf",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/figures/fig_toy_failures.pdf",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/figures/fig_toy_v2v3.pdf",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/figures/fig_toy_wdfg.pdf"
+    ],
+    "tables": [
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_recovery_v3.md",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_recovery_v3.csv",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_recovery_by_suite.md",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_recovery_by_kind.md",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_nonsum_v3.md",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_nonsum_v3.csv",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_nonsum_by_suite.md",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_timing.csv",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_failures.md",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_failures.csv",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_landscape.md",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_v2_v3.md",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_v2_v3.csv",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_weighted_blocks_v3.md",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_weighted_blocks_v3.csv",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_below_discovery.csv",
+     "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_summary.json"
+    ],
+    "claims": [
+     {
+      "id": "C0-identity",
+      "claim": "The structure runs reproduce the evaluation exactly: the seed-0 test errors of the toy_structure runs equal the seed-0 errors in the evaluation's result files at every cell where both exist.",
+      "evidence": "587 of 587 v3 cells (p10_sum-perm files: designed, dlsymdev, dlfamdev, dlheld4-7) and 477 of 477 v2 cells equal (toy_interp.py check_identity, |diff| < 1e-9).",
+      "files": [
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_summary.json",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/results/toy_final/v3",
+       "/home/user/AI-works/gd-circuit-growth/study/hybrid/results"
+      ]
+     },
+     {
+      "id": "C1-recovery",
+      "claim": "On the 54 sum-structured targets of dlsymdev, dlfamdev, dlheld4-7 (controls excluded), v3's DFG model contains the exact structure (every signed-symmetry class of size >= 3 matched by a block, product factor or modulator in one model) at some analysed n for 49; median first n 256 (range 64-16384). By suite: dlsymdev 8/8 (median 128), dlfamdev 8/9, dlheld7 7/9, dlheld6 7/9, dlheld5 10/10, dlheld4 9/9. By accept kind: threshold 11/11, band 19/20, interval 10/11, arbitrary 15/16 (median 512), modular 2/5 (only the 6-input mux sub-blocks).",
+      "evidence": "n_struct per target from the final-matcher structure runs, seed 0; n_struct distribution 64:1, 128:14, 256:15, 512:11, 1024:4, 2048:2, 8192:1, 16384:1; never: fd_10, f7_05, h6_00 (mod-3), f7_11 (classes never jointly), h6_02 (alternative representation).",
+      "files": [
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_recovery_v3.md",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_recovery_by_suite.md",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_recovery_by_kind.md"
+      ]
+     },
+     {
+      "id": "C2-forms",
+      "claim": "Recurring learned forms: one folded block for even accept sets and an unfolded one otherwise; parities enter first as a character chi_P (coefficient E[g]) and then modulate a block; gates and multiplexer selectors enter as characters and (v3) as the heavy inner literal of a weighted block (e.g. h6_07 (x1-x2-...-x6 + 3 x11)); two sums as product blocks or 'split' blocks over the union. 14 cells carry a spurious product of the true block with a 2-input factor of irrelevant inputs (share 0.13-0.52).",
+      "evidence": "Leading terms (share = sd of term's output on 4096 test inputs) at each target's largest analysed n, e.g. band11 |x1+..+x11| 0.97, fd_04 chi[x7,x8,x9]*|x1+..+x6| 1.06, twosym |x1..x5| x |x6..x10| 0.72; spurious factors e.g. sym7 at n=128 |x1+..+x7| x |x15-x16| 0.40.",
+      "files": [
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_recovery_v3.md",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/results/toy_final/v3"
+      ]
+     },
+     {
+      "id": "C3-weighted-inner",
+      "claim": "Weighted targets: the inner term is exact in v3's model for h6_10 from n=512 (at 256 the weight is right but the relative sign wrong: |s+3x13|, DFG error 0.017, wrong only at |s|>=8), f7_10 from 256 (modulated chi[x6]*|s| at 128), h5t0 from 512; thrsum and h5t1 are represented through a product with |x7-x8| / |x7-x6|; sumpar (degree-3 inner term, outside v1.3's class) is carried by characters with DFG error 0 from n=256.",
+      "evidence": "inner_by_n column; toy_g refit of h6_10 at 256: disagreement only at (t,x13) in {(-8,+1),(-10,+1),(8,-1),(10,-1)}, 68 of 4096 test points.",
+      "files": [
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_recovery_v3.csv",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/results/toy_final/toy_g/v3/dlheld6__h6_10__n256.json"
+      ]
+     },
+     {
+      "id": "C4-timing",
+      "claim": "Detection is cheap and the search sets the sample complexity: the true block passes DFG's own test at n=128 for 43 of 54 targets; n_struct is a median one doubling later (log2(n_struct/n_detect) median 1.0, mean 1.04; 5 earlier, 16 equal, 13 one doubling later, 15 two or more); n* (seed 0) is at or before n_struct (log2(n*_0/n_struct) median -0.35, mean -0.64, never above +0.5; 3-seed median -0.33 over 48 targets).",
+      "evidence": "n_detect from toy_power (round-0 test on largest true class, unfolded/folded/modulated; weighted targets from toy_power_w with v1.3's threshold: all five detectable at 128); n_struct and n*_0 from the seed-0 structure runs; n*_3 from toy__p10_sum-perm__<suite>.json.",
+      "files": [
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_timing.csv",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_summary.json",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/results/toy_final/power",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/results/toy_final/toy_power_w",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/figures/fig_toy_timing.pdf"
+      ]
+     },
+     {
+      "id": "C5-delay-lowdegree",
+      "claim": "The delay beyond detection tracks the target's low-degree Fourier signal: Spearman correlation between log2(n_struct/n_detect) (never = 2^15) and (W1+W2)/(1-W0) is -0.44 over all 54 sum-structured targets (p=0.001) and -0.86 over the 25 pure symmetric targets (p=3e-8).",
+      "evidence": "W_k exact Fourier weights by degree from the power files; scipy spearmanr in toy_interp.py (timing.delay_vs_low2). The 12 targets with share < 0.05 include the three mod-3 counts and the late h5s1, h5s2, h5s3, h5s7, band11.",
+      "files": [
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_summary.json",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_timing.csv"
+      ]
+     },
+     {
+      "id": "C6-mod3",
+      "claim": "The three residue-class-mod-3 counts (fd_10, h6_00, f7_05) fail by search, not detection: the model is constant + kernel background at every n >= 1024 (DFG error 0.324/0.343/0.325 at 16384, the minority rate); the true block passes the test from n=128 and is 155/139/134 x its threshold at 16384; W1 = 0, W2 <= 0.0002; candidates with 3 mixed errors still pass (fraction 1.00) but the best pair inside S is at 0.15/0.25/0.12 of its threshold (pairs outside 0.33/0.20/0.20, random blocks 0.07), and the search orders reach S at chance (eigvec 0.50/0.54/0.57 vs |S|/30 = 0.33/0.43/0.47). Only 34281 candidates lie within 3 errors, against 1.5e10/4.9e11/1.2e12 candidates of the true size.",
+      "evidence": "toy_landscape.py at n=16384 on seed-0 training rows (200 random candidates per perturbation type), toy_power.py ratios and search reach, structure runs; count = sum_{t<=3} 2^t C(30,t).",
+      "files": [
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_landscape.md",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_failures.md",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/results/toy_final/toy_landscape",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/figures/fig_toy_failures.pdf"
+      ]
+     },
+     {
+      "id": "C7-late",
+      "claim": "Late targets follow the same mechanism: band11 (W1=0, W2=0.047) detectable at 128, found at 1024 when the top eigenvector first covers S within |S|+5; h5s7 (W1+W2=0.015) found at 8192; h5s1 has 92% of its variance on one degree-11 character, the plain block has no signal, the modulated block needs chi[x10,x11] (coefficient -0.031) first, found at 16384 (seed 0; 3-seed n* never).",
+      "evidence": "power files (search reach eig/eig_k5 by n), landscape at band11 n=512 (true 5.4, one sign flip 0.61), h5s7 n=2048 (true 18.6, 3 mixed errors pass 12%), structure runs fourier_top.",
+      "files": [
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_failures.md",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_landscape.md",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/results/toy_final/v3/dlheld5__h5s1__s0.json"
+      ]
+     },
+     {
+      "id": "C8-g",
+      "claim": "Where the block is present the learned function of the block statistic matches the truth level by level (agreement 1.00 for tail13@256, h6_11@128, h6_01@512, f7_01@256, h6_10@512, f7_10@256, f7_09@256; 0.98 for h6_10@256), including non-convex accept sets and both branches of weighted/modulated targets; below discovery it is flat (h6_10@128: agreement 0.70 = majority rate, DFG error 0.39).",
+      "evidence": "Stored g lists [t, count, E[f|t], mean DFG value] of the structure runs; toy_gfit.py refits split by tau (reproducing the structure cells' errors).",
+      "files": [
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/figures/fig_toy_g.pdf",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/results/toy_final/toy_g/v3"
+      ]
+     },
+     {
+      "id": "C9-v2v3",
+      "claim": "v3 vs v2 on the six sum suites (68 targets): mean log2 n* ratio -0.116 (3 seeds, 64 targets), -0.106 (seed 0, 65 targets); identical portfolio errors at every analysed n on 20 targets. Weighted blocks change what is learned on h6_10 (n_struct never -> 256; n*_3 702 -> 206), h6_07 (never -> 512; 678 -> 447) and h6_08 (never -> 1024; 446 -> 449); the small-n beam/forced blocks move n_struct 256 -> 128 or 128 -> 64 on sym7 (n*_3 110 -> 55; forced, true block at 0.89 of threshold), fd_09 (171 -> 101), tail13 (176 -> 100), sym11 (203 -> 160), majsym (189 -> 90), h6_11 (208 -> 184); 41 targets have the same n_struct; h5t1 is later in v3 (256 -> 512) with identical errors; f7_11 loses the joint structure.",
+      "evidence": "Seed-0 structure runs of both learners; 3-seed n* from toy__p10_sum-perm__<suite>.json and toy__hyb_portfolio2-perm / toy__p9_sum-perm files.",
+      "files": [
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_v2_v3.md",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/figures/fig_toy_v2v3.pdf",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/results/toy_final/v2"
+      ]
+     },
+     {
+      "id": "C10-weighted-usage",
+      "claim": "Weighted blocks appear (share >= 20% of the largest term) in 26 targets' v3 models: true weighted terms (h6_10, f7_10, h5t0, h5t1), parity partners (symxpar, h6_06, f7_07, symxor), mux selectors (h6_07, h6_08, f7_03), gate inputs (h5s4, symand, majsym), ANDs within a class (h6_09, h5s7), and 10 of the 14 controls (AND of two literals inside a weighted threshold).",
+      "evidence": "weighted_usage over all analysed cells of the v3 structure runs.",
+      "files": [
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_weighted_blocks_v3.md"
+      ]
+     },
+     {
+      "id": "C11-below",
+      "claim": "Below n_struct (216 cells of the 49 found targets) the default DFG variant is empty (constant + kernel background) in 26 of its 39 cells; the recorded forced variant (177 cells) holds spurious characters of degree 1-4 (up to 7) in 152; partial blocks in 21 cells (14 one doubling before n_struct). DFG's stack weight share: median 0.21 below n_struct vs 0.89 from n_struct on (0.03 at log2(n/n_struct)=-3, 0.44 at -1, 0.87 at 0); below n_struct the stack's total weight is small (median 0.35 vs 1.52; all zero in 17 cells) and kNN has the largest mean share (0.28).",
+      "evidence": "below_discovery rows per (target, n) from the v3 structure runs; variant inferred from stack weights (last full-n DFG fit).",
+      "files": [
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_below_discovery.csv",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_summary.json",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/figures/fig_toy_wdfg.pdf"
+      ]
+     },
+     {
+      "id": "C12-nonsum",
+      "claim": "On the 70 non-sum-suite targets (designed, dlheld3, dlheld2, dlheld, random) all reach test error <= 0.005 (max 0.0039, thr30 at 16384); the model's characters carry >= 90% of the non-constant Fourier weight for 23 of 67 targets with a Fourier table (per-suite medians 0.77-0.88), span R2 >= 0.95 for 54 of 70; parities are single characters (share 1.00), majorities/symmetric targets get one block (maj9, maj15, maj21, sym9 at n=128, sym8 at 64), halfspaces are carried by degree-1 characters through the linear block, and 25 of 70 models use a (often weighted) sum block among their three leading terms.",
+      "evidence": "fourier_chi and span_r2 at each target's largest analysed n from the v3 structure runs.",
+      "files": [
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_nonsum_by_suite.md",
+       "/home/user/AI-works/gd-circuit-growth/study/part10/interp/tables/toy_nonsum_v3.md"
+      ]
+     }
+    ],
+    "caveats": [
+     "Structure analysis is seed 0 only; n_struct, n_detect and model contents may differ on other seeds (3-seed n* quoted where available).",
+     "The exact-structure criterion is strict: some models reach zero error with other exact representations (v2's h6_10 two 13-input folded blocks; h6_02's degree-11 character; f7_11's character expansion of a 4-input branch); n_dfg01 is reported alongside.",
+     "n_detect uses toy_power.py's round-0 test on the largest class with v1.2's union bound (shared by v1.3 for unweighted blocks, one modulator count); the five weighted targets use toy_power_w.py with v1.3's weighted threshold. For two-sum targets the largest block alone can be undetectable while the pair is.",
+     "Search-reach measures only the eigenvector and degree-1 orders, not greedy growth, refinement or the beam; n_struct precedes n_reach5 for 22 targets.",
+     "When both DFG variants are kept by the stacker, the summarised model is the forced variant (last full-n fit); 'variant' below discovery is inferred from the stack weights.",
+     "v3 3-seed n* was not available for random and dlheld-dlheld3 when the tables were made (seed-0 n* given there); dlheld7 network references (nets_best) used nets_wd for all targets and cewd0.3/cewd1.0 only for f7_00-f7_05 (runs in progress); dlfamdev has no network runs.",
+     "The orchestrator had already committed earlier versions of some of these files ('Part 10: results and interp files so far'); the current versions in the working tree are newer and not committed by me.",
+     "hooks.symmetry_classes is computed from 4096 random inputs; several controls have small classes (fd_07, h5rf0, h5rf1, h4rf0, f7_04, f7_06, h6_05, dnf3x3) and are excluded from all sum-structured summaries."
+    ]
+   }
+  },
+  {
+   "label": "verify-numbers:toy",
+   "result": {
+    "verdicts": [
+     {
+      "id": "C0-identity",
+      "verdict": "confirmed",
+      "note": "Recomputed independently (verify_toy/c0.py). v3 structure runs against toy__p10_sum-perm__<suite>.json, seed-0 column: 587 of 587 cells equal (designed 108, dlfamdev 83, dlheld4 77, dlheld5 91, dlheld6 91, dlheld7 90, dlsymdev 47). v2 against hyb_portfolio2-perm, falling back to p9_sum-perm for dlsymdev: 477 of 477 equal. The remaining 288 v3 cells (dlheld, dlheld2, dlheld3, random) have no v3 result file and were not checked. Every run follows the grid and the stop-after-two-cells-with-error<=0.005 rule."
+     },
+     {
+      "id": "C1-recovery",
+      "verdict": "corrected",
+      "correction": "Two of the by-kind counts include a target twice. twosym is band+band and is counted twice under band; h6_09 is interval+interval and is counted twice under interval. Counting distinct targets: band 18 of 19 (median n_struct 192, not 256) and interval 9 of 10 (median 256). The same double count is in the section 1.1 table of TOY_INTERP.md and in tables/toy_recovery_by_kind.md. Everything else reproduces: 49 of 54; median 256 (64-16384); distribution 64:1, 128:14, 256:15, 512:11, 1024:4, 2048:2, 8192:1, 16384:1; never fd_10, h6_00, h6_02, f7_05, f7_11; by suite 8/8 (median 128), 8/9, 7/9, 7/9, 10/10, 9/9; threshold 11/11; arbitrary 15/16 (median 512); modular 2/5 (f7_03's mod-4 block at 512, h6_08's mod-3 block at 1024, both 6-input mux sub-blocks).",
+      "note": "My own matcher, which reads the stored terms, agrees with the stored exact flags. The only differences are 8 v3 cells where the matching term lies beyond the top 10 terms that were stored."
+     },
+     {
+      "id": "C2-forms",
+      "verdict": "corrected",
+      "correction": "The spurious-product quirk covers 16 cells in 14 targets, not 14 cells in 14 targets. h5s0 has it at three n (256, 512, 2048). Shares range 0.13-0.52, test error <= 0.0083. The count of 14 targets and the 0.52 maximum both depend on h6_07 at 512, whose first factor is (x1-x2-...-x6+x11): the true class plus the selector, not the class alone. If the factor must equal the class exactly, the count is 15 cells in 13 targets, with shares 0.13-0.40.",
+      "note": "All quoted leading terms and shares reproduce at each target's largest n: band11 0.97, fd_04 1.06, twosym 0.72 + 0.36, sym7 at 128 0.40, far9 0.43 + quad 0.26, ex3of8 0.80, h6_01 0.91, h5s2 0.92, f7_08 1.01, fd_01 0.28-0.29, f7_01 0.26 / 0.19, fd_02 0.87 / 0.41, symxpar 0.73, h6_07 0.40, h6_08 0.30, f7_03 0.24, fd_11 0.74 / 0.40, f7_00 0.69. f7_09 chi[x11,x12]*(...) at 256 is confirmed."
+     },
+     {
+      "id": "C3-weighted-inner",
+      "verdict": "corrected",
+      "correction": "sumpar's DFG error is not 0 'from n=256'. It is 0 at 256, 1024 and 2048, but 0.0132 at 512 (portfolio 0.0127). Also, the 2048 model is not characters only: it contains the weighted block (x1+...+x5+2*x6x7), share 0.10, whose inner term matches the x6x7 term exactly.",
+      "note": "Confirmed: h6_10 at 256 is |s+3x13| (a=+3, true -3), DFG error 0.0166, and exact from 512 (also at 1024). In the toy_g refit, all errors fall in the cells (t,x13) = (-10,+1) 4 points, (-8,+1) 31, (8,-1) 30, (10,-1) 3, which sum to 68 of 4096 = 0.0166; agreement 0.983. f7_10: modulator at 128, exact at 256. h5t0: product factor at 256, exact at 512. thrsum: product with |x7-x8| at 256 and 512. h5t1: (s+3x6x7) x |-x6+x7| at 512. sumpar: both classes in one model only at 2048."
+     },
+     {
+      "id": "C4-timing",
+      "verdict": "confirmed",
+      "note": "Recomputed from power/, toy_power_w/ and the structure runs (verify_toy/c4.py). n_detect: 43 at 128, 6 at 256, 3 at 512, 2 at 1024 (fd_06, twosym). All five weighted targets are detectable at 128; their unit-weight parts at 256-512. 9 targets are detected only by the modulated statistic, all of them parity mixtures. log2(n_struct/n_detect) over 49: median 1.0, mean 1.041; 5 earlier (sym7, majsym, twosym, fd_05, fd_06), 16 equal, 13 one doubling later, 15 two or more. log2(n*_0/n_struct): median -0.353, mean -0.639, max -0.19; 34 within +-0.5, 15 below. 3-seed: median -0.329 over 48 targets (h5s1's n*_3 is never). Note: one target's 3-seed value is +0.52, so 'never above +0.5' holds for seed 0 only, as the claim says."
+     },
+     {
+      "id": "C5-delay-lowdegree",
+      "verdict": "confirmed",
+      "note": "Recomputed with scipy spearmanr: rho -0.437 (p 0.00096) over 54 targets; -0.863 (p 2.8e-8) over the 25 pure targets. The 12 targets with share < 0.05 are band11, f7_05, fd_04, fd_10, h5s1, h5s2, h5s3, h5s7, h6_00, h6_02, h6_06, symxor. I recomputed the Fourier weights of fd_10, h6_00, band11 and h5s1 by brute-force Walsh transform; they equal the power files. Excluding the 5 never-found targets, rho is -0.39 (p 0.006)."
+     },
+     {
+      "id": "C6-mod3",
+      "verdict": "corrected",
+      "correction": "(1) f7_05's DFG error at 16384 is 0.32446, which rounds to 0.324, not 0.325 (the 0.325 comes from rounding twice). (2) W1 is not exactly 0 for fd_10: W1 = 0.00004 and W2 = 0.00017 (h6_00 and f7_05 are 0 to 5 decimals). (3) The eigenvector reach 0.50/0.54/0.57 is the best of two eigenvectors. The chance level for the best of two random orders is 0.40/0.49/0.52, not |S|/30 = 0.33/0.43/0.47. Against that baseline the 'at chance' reading holds; against |S|/30 the quoted values sit above chance.",
+      "note": "Reproduced from toy_landscape/, power/ and the structure runs. The models are constant + background at every n >= 1024 (fd_10 from 128, f7_05 from 256). The DFG error equals the test set's minority rate exactly. The true block passes unfolded from 128 (folded from 512); T/threshold at 16384 is 155.0/139.5/133.9. mixed_3 pass fraction 1.00; pairs inside S 0.147/0.248/0.119; pairs outside 0.334/0.202/0.202; random blocks 0.068/0.073/0.074. 34281 = sum_{t<=3} 2^t C(30,t). C(30,k)2^(k-1) = 1.54e10 / 4.91e11 / 1.19e12."
+     },
+     {
+      "id": "C7-late",
+      "verdict": "confirmed",
+      "note": "band11: W1 0, W2 0.0472; T/threshold > 1 from 128; n_struct 1024, the first n with eig_k5 = 1.0 (eig 0.82). At 512: true 5.41, one flip 0.61, pairs inside 0.27. h5s7: W1+W2 0.0153; n_struct 8192 (eig 0.92, eig_k5 1.0); at 2048 true 18.6, mixed_3 pass 11.5%. h5s1: coefficient of x1...x11 0.9609 (share 0.923); plain block 0.04 at 16384; modulated passes from 128; chi[x10,x11] coefficient -0.03125 (W2 0.00098); found at 16384; n*_3 never."
+     },
+     {
+      "id": "C8-g",
+      "verdict": "confirmed",
+      "note": "Agreement recomputed from the stored g lists and the toy_g rows: 1.00 for tail13@256, h6_11@128, h6_01@512, f7_01@256, h6_10@512, f7_10@256 and f7_09@256; 0.983 for h6_10@256. h6_10@128: agreement 0.696, equal to the majority rate 0.696; DFG error 0.394. Every toy_g refit's err and err_dfg equal the structure cell's."
+     },
+     {
+      "id": "C9-v2v3",
+      "verdict": "confirmed",
+      "note": "Mean log2 n* ratio: -0.1165 over 64 targets (3 seeds) and -0.1064 over 65 (seed 0). 20 targets have identical errors, with the same n sets. h6_10: never -> 256, 702 -> 206. h6_07: never -> 512, 678 -> 447. h6_08: never -> 1024, 446 -> 449. sym7: 128 -> 64, 110 -> 55, ratio 0.887 at 64, stack weights dfg_forced only. fd_09: 171 -> 101 (passes at 128, 1.618). tail13 176 -> 100; sym11 203 -> 160; majsym 189 -> 90; h6_11 208 -> 184 (n*_0 212 -> 100). 41 targets have the same n_struct (3 of them controls: fd_07, h5rf1, f7_06). h5t1: 256 -> 512 with identical errors. f7_11: v2 has both classes at 2048 and 4096, v3 never. Not mentioned in the claim or the write-up: sumpar changes from never (v2) to 2048 (v3)."
+     },
+     {
+      "id": "C10-weighted-usage",
+      "verdict": "corrected",
+      "correction": "The total of 26 targets and the 10 of 14 controls reproduce. Two descriptions are wrong. (1) h5s7's weighted block (first at n=16384) has as inner term a single literal of the class, 3*x11, not an AND of two class inputs. Only h6_09 (3*AND(x9,-x10)) is an AND within a class. (2) Among the 10 controls, 9 have an AND inner term; f7_06's is a literal, (x6-x7+3*x8).",
+      "note": "The controls without a weighted block are dnf3x3, f7_02, h4rf0 and h5rf1. h6_06's first weighted block (n=512) is (x1+...+x6+x8+2*x7): a literal of the parity pair. The x7x8 form (+-3 x7x8) appears at larger n."
+     },
+     {
+      "id": "C11-below",
+      "verdict": "confirmed",
+      "note": "Cell counts: 216 below, 123 at or after, 49 never. Below n_struct: 39 default cells (26 empty) and 177 forced. In forced cells, spurious characters appear in 152 cells (degrees 1, 2, 3, 4, 6, 7) and true characters in 87. Partial blocks: 21 cells, 14 of them at rel -1. Median DFG error 0.415 (portfolio 0.372). DFG weight share: median 0.214 / mean 0.332 below, 0.894 / 0.867 from n_struct on, 0.202 never. Total weight: median 0.35 vs 1.516; 17 cells with all weights zero. Mean member shares: knn 0.283, dfg_forced 0.219, gbt 0.131, lin 0.121, dfg 0.113, et 0.054. By log2(n/n_struct): -3 0.033, -2 0.205, -1 0.442, 0 0.873, +1 0.915. By n (mean): 0.272/0.300/0.284 at 16-64, then 0.524, 0.716, 0.792. The stored w_dfg agrees with the weights dict in every cell."
+     },
+     {
+      "id": "C12-nonsum",
+      "verdict": "confirmed",
+      "note": "70 targets (designed 21, dlheld3 10, dlheld2 7, dlheld 12, random 20), all with error <= 0.005; maximum 0.0039 (thr30 at 16384). chi_frac >= 0.9 for 23 of 67; per-suite medians 0.875 / 0.777 / 0.773 / 0.781 / 0.805. Span R2 >= 0.95 for 54 of 70. A sum block among the 3 leading terms for 25 of 70. Parities are single characters with chi_frac 1. n_struct: maj9, maj15, maj21, sym9 at 128; sym8 at 64. thr10 has 209 characters at 4096 (chi_frac 0.958). thr20/thr30 span R2 0.84 / 0.81. poly4: span 0.75, error 0 at 512."
+     }
+    ],
+    "other_problems": [
+     "Short answer, 'v3 against v2': it says the small-n beam and forced blocks move the first exact block on '6 pure symmetric targets'. One of the six, majsym = MAJ([|x1+..+x5|<=1], x6x7, x8), is a gate mixture. That makes 5 pure targets (sym7, fd_09, tail13, sym11, h6_11) plus majsym.",
+     "Section 5 change table leaves out sumpar: n_struct is never in v2 and 2048 in v3, where v3's model contains the weighted block (x1+...+x5+2*x6x7). fig_toy_v2v3 plots sumpar in red as 'weighted block'. As written, the table accounts for 53 of the 54 sum-structured targets.",
+     "Section 2, 'Search orders': 'for 8 the orders never reach S on the plain residual (the parity mixtures)'. Only 7 of the 8 are parity mixtures (fd_02, fd_04, symxor, h5s1, h6_06, f7_09, symxpar); the eighth, h6_07, is a multiplexer.",
+     "Section 6, 'Contents': it says the non-empty default-variant cells below n_struct 'hold degree-1 characters'. The true characters there include degrees 2-5: chi[x7,x8] in thrsum at 64 and 128, and degree-2, 3 and 5 characters in sumpar at 1024.",
+     "Section 4, mod-3 counts: 'falls by 3-4x per wrong sign or extra input' holds only for the first error (155 -> 47/50, 139 -> 41/43, 134 -> 39/39, i.e. 3.1-3.4x). The second added input or flipped sign costs 2.2-2.7x (47 -> 19, 50 -> 23; 41 -> 15, 43 -> 17; 39 -> 14, 39 -> 16).",
+     "Sections 1.1 and 1.2 repeat the claim-level errors: the kind table's band 20/19 and interval 11/10 count twosym and h6_09 twice; the '14 cells (14 targets)' spurious-product count is 16 cells in 14 targets.",
+     "Section 1.3, sumpar row: 'DFG error 0 from n = 256' is not true at 512 (0.0132).",
+     "fig_toy_g.pdf drops (t, tau) levels with fewer than 5 test points (keep = count >= 5); neither the figure nor the write-up says so. For h6_10 at n=256, two of the four misclassified cells ((-10,+1), 4 points; (10,-1), 3 points) are not plotted, so the panel shows the error only at |t| = 8, while the text says 'wrong at |t| >= 8'.",
+     "fig_toy_failures.pdf panel (b) and the 'chance' column of tables/toy_failures.md draw chance as |S|/d. For the plotted best-of-two-eigenvectors prefix, chance is 0.40/0.49/0.52 for |S| = 10/13/14, so the dashed line understates it. The degree-1 order is a single order and |S|/d is correct for it.",
+     "Section 7 caveat on network variants for dlheld7: the tables actually use nets_cewd0.3 for all 12 dlheld7 targets; only nets_cewd1.0 was limited to f7_00-f7_05. The result directories now also have nets_cewd1.0 for f7_06. Every nets_best value in tables/toy_recovery_v3.csv still equals the current files.",
+     "toy_v2_v3 'mechanism' and fig_toy_v2v3 label controls as substantive changes: h4rf0 is 'other' and f7_04 is 'weighted block'. The write-up text does not rely on these, but the figure legend does not mark them as controls.",
+     "Checks that passed: every column of tables/toy_recovery_v3.csv that I recomputed (n_struct, n_stable, n_max, err_last, nstar_s0, nstar3, nstar3_v2, n_dfg01, n_struct_v2, n_detect, n_reach5, W1, W2) matches on all 138 rows; tables/toy_v2_v3.csv n* and cells_differ match on all 68 rows; the learner and dfg13 md5s match; the +9.8-nat weighted threshold increment is confirmed. Scripts are in /tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/p10/verify_toy/ (c0.py through c12.py, match.py, ctab.py, ctab2.py, cextra.py, cfour.py)."
+    ]
+   }
+  },
+  {
+   "label": "verify-reading:toy",
+   "result": {
+    "verdicts": [
+     {
+      "id": "C0-identity",
+      "verdict": "confirmed",
+      "note": "Supported as worded ('at every cell where both exist'). Three limits: (1) toy_interp.check_identity compares test errors only (one scalar per cell), not predictions or models. Equal errors at 587/587 and 477/477 cells (to 1e-9) are strong evidence of identical fits but do not prove them. (2) v3's evaluation files are p10_sum-perm, which equals v3 on toy inputs per PROTOCOL/ASSEMBLY. Column 0 of 'err' is seed 0 (seeds [0,1,2] in the files; checked). (3) No v3 evaluation file exists for random or dlheld-dlheld2, and check_identity ignores the dlheld3 __part02 shard. So the 49 non-sum structure runs from random and dlheld-dlheld3 behind \u00a71.5 are not checked against any evaluation."
+     },
+     {
+      "id": "C1-recovery",
+      "verdict": "corrected",
+      "correction": "On the 54 sum-structured targets (seed 0), v3's DFG model has, at some analysed n, a sum block, product factor or modulator on exactly the signed input set of every symmetry class of size >= 3 for 49 targets; median first n 256 (range 64-16384); by suite and kind as stated. For the six weighted targets this covers only the unit-weight part. The inner term is exact only for h6_10 from 512, f7_10 from 256 and h5t0 from 512; at h6_10's n_struct of 256 the inner sign is wrong. 'Never' means not by the largest analysed n: f7_11 (n_max 4096) and h6_02 (n_max 1024) stopped because the portfolio had already reached error <= 0.005 with other representations.",
+      "note": "The criterion checks the set and signs only, not the learned accept set or fold. It still tracks function well: at each of the 49 targets' n_struct the DFG member's test error is <= 0.03 (my check over the v3 JSONs). Matcher looseness: a modulator chi_M carries no signs, so it counts as an exact match even for a class with definite signs. fd_06's 4-input signed class is matched only by chi[x1,x2,x3,x4] at n = 2048-8192. This affects its n_stable (1024), not n_struct."
+     },
+     {
+      "id": "C2-forms",
+      "verdict": "corrected",
+      "correction": "These are examples at each target's largest n, not a systematic count. Over the 22 found pure targets, the block is folded for even accept sets and unfolded otherwise, with one exception: h5s6, set {-9,-5,-1,1,5}, is a folded block at 512-1024, wrong only at t = -9 (DFG error 0.002). Parity mixtures carry chi_P as a character plus a block modulated by it. That order is imposed by DFG, which takes modulators only from the current characters. E[g] is the target's Fourier coefficient on chi_P, not a measured model weight. Spurious products of a true-class block with a 2-input factor of irrelevant inputs: my count over the stored top-10 terms is 15 cells in 13 targets (share 0.13-0.40). No code in toy_interp.py produces the '14 cells (14 targets)' figure. The cited h6_07@512 term (0.52) has the selector x11 inside its first factor, so it is not a product of the true block.",
+      "note": "The Reading on the product test is confirmed by dfg13.py. Products of candidates and of accepted additive blocks are accepted when the total projection of the joint partition beats chi2_thr(m, tkb(a)+tkb(b)), not when the increment over block A does. A strong A therefore carries any second factor through."
+     },
+     {
+      "id": "C3-weighted-inner",
+      "verdict": "corrected",
+      "correction": "As stated, except for sumpar. It is fitted by characters with DFG error 0 at 256 and 1024 (0.013 at 512). At 2048 the model also holds the product (x8+x9+x10) x (x1+...+x5 + 2*x6x7), which contains the true weighted inner term 2*x6x7 and represents the target exactly. thrsum's product factor is still present at 512, but its leading terms there are characters.",
+      "note": "h6_10@256 checked: the four disagreeing (t, x13) cells in toy_g/v3/dlheld6__h6_10__n256.json hold 68 test points, which equals err_dfg x 4096 = 68. Inner terms by n match the toy_recovery_v3.csv inner_by_n column."
+     },
+     {
+      "id": "C4-timing",
+      "verdict": "corrected",
+      "correction": "The true block would pass DFG's round-0 block test at n = 128 for about 39 of 54 targets (43 with toy_power's uncentred modulated statistic). For parity and gate mixtures this assumes the best modulator among the true relevant inputs is already a character in the model. Correcting n_detect for 7 gate/mux targets gives log2(n_struct/n_detect): 6 earlier, 20 equal, 9 one doubling later, 14 two or more; median 0, mean 0.88 (toy_power as it stands: median 1.0, mean 1.04). n*_0 is never later than n_struct. For 42 of 49 targets it falls in the grid interval ending at n_struct, so the median -0.35 mostly reflects grid resolution. The data are consistent with the delay arising after detection (proposal by the search, acceptance on the deflated residual, variant and stacker selection). No intervention isolates the search, for example seeding _block_search with the true block via init, or running v1.3 with beam=0. 'The search sets the sample complexity' is a reading, and for 15 targets n* comes more than half a doubling before n_struct, carried by characters.",
+      "note": "Flaw in toy_power.py's modulated test. It projects r*chi_M with r = y - mean(y) (not deflated by chi_M) and does not centre it. The statistic therefore includes n*mean(r*chi_M)^2, which is the modulator character's own signal. DFG tests modulated blocks on a residual already fitted on chi_M, where mean(r*chi_T) is about 0. I recomputed on the seed-0 rows with the same M and the residual deflated by [1, chi_M] (/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/review/modtest.py, output in modtest_out.txt). Pure parity mixtures (f = g*chi_P) are unchanged. At n = 128 the ratio falls from 1.18 to 0.79 for fd_11, 1.23 to 0.63 for h5s4, 1.04 to 0.56 for f7_03 and 1.20 to 0.20 for f7_11. Corrected n_detect: 256, 256, 512 and 1024. h6_07 is 0.79 at 256 and passes at 512. For fd_08 and majsym the modulated ratios are <= 0.11 at every n <= 4096, so their n_detect of 512 and 256 is entirely chi_M's signal; the plain block passes at 2048 and 512. Weighted targets' n_detect uses the unit-weight class for n_struct but the weighted block for detection: h5t1 counts as '2+ doublings' only because of this."
+     },
+     {
+      "id": "C5-delay-lowdegree",
+      "verdict": "corrected",
+      "correction": "Over the 25 pure symmetric targets, log2(n_struct/n_detect) has Spearman -0.86 with (W1+W2)/(1-W0). It is -0.80 over the 22 found targets, without imputing 2^15 for the three mod-3 counts, and -0.89 after partialling out class size k (k itself correlates +0.58 with the delay). Over all 54 targets the correlation is weaker: -0.44, or -0.39 over the 49 found. For mixtures both inputs are doubtful. The low-degree share is dominated by the gate and selector characters' own weight, not the block's pair signal (fd_08 0.94, f7_11 0.83). n_detect is inflated for 7 gate/mux targets by the modulated-test flaw; with corrected n_detect the all-54 value is -0.54.",
+      "note": "Spearman p-values treat targets as independent draws, but they come from a few designed families. The list of 12 targets with share < 0.05 is correct."
+     },
+     {
+      "id": "C6-mod3",
+      "verdict": "corrected",
+      "correction": "The core conclusion holds: the three mod-3 counts fail by search, not detection. The true block is 134-155x its threshold at 16384, and the pairs and singles inside S are at noise. Corrections: (1) W1 = 4e-5 and W2 = 1.7e-4 for fd_10; W1 = W2 = 0 to 5 decimals only for h6_00 and f7_05. (2) At several n >= 1024, including 16384 for fd_10 and h6_00, the DFG model summarised is an out-of-fold fit on 13107 rows with zero stack weight, not a final member. (3) The eigenvector reach (0.50/0.54/0.57) is the best of two eigenvectors at one n. That is consistent with chance, but the |S|/30 baseline applies to a single order; the maximum of two is higher. (4) 'Every candidate with 3 mixed errors passes' rests on 200 random draws at one n.",
+      "note": "The \u00a74 Reading that 'pair and single statistics are zero in expectation, so larger n does not help' is true for h6_00 and f7_05 only. fd_10's single and pair coefficients are about 0.002: nonzero, but undetectable before n of roughly 10^6. The 34281 count and the size-k totals are right as combinatorics. The 'within about 3 errors' basin rests on medians (drop_4 median below 1); other 4-error mixes were not measured."
+     },
+     {
+      "id": "C7-late",
+      "verdict": "confirmed",
+      "note": "Numbers check against power/, toy_landscape/ and the h5s1 JSON. h5s1: fhat(x1..x11) = 0.961 and W0 = 0, so 92% of the variance; fhat(x10,x11) = -0.031. At 16384 the dfg_log shows chi[x10,x11] accepted before the chi-modulated block. 'Same mechanism' rests on single-seed coincidences (n_struct = n_reach5 for band11 and h5s7) and should read 'consistent with'. h5s1's bottleneck is detecting the modulator character. Its modulated test uses the oracle M = {x10,x11}; there the uncentred and deflated statistics agree because f = g*chi exactly (1.27 vs 1.26 at n = 128). At n = 1024-8192, h5s1's summarised DFG model is an empty out-of-fold fit."
+     },
+     {
+      "id": "C8-g",
+      "verdict": "corrected",
+      "correction": "In 8 hand-picked panels (7 targets), the sign of the DFG model's mean value at each level of the true signed sum t, or of (t, tau), matches the sign of E[f | level] on 98-100% of test points. This includes non-convex sets and both branches of weighted and modulated targets. Over all 53 exact cells of the 22 pure targets (stored g lists) agreement is >= 0.985 (lowest: fd_09 at 128 and 256). For h6_10@128 the mean value is positive in every (t, x13) cell (0.01-0.90, varying with x13), so its sign pattern is the majority's (0.70). The DFG error there (0.39) is worse than a constant predictor.",
+      "note": "The quantity is the whole DFG model's conditional mean, including quad features, characters and spurious products, not the block's own g. With DFG test error 0 the agreement is 1 by construction; generally agreement is about 1 - DFG error (h6_10@256: 0.983 vs error 0.0166). The 'agree' column is not computed by toy_interp.py, the script named for all tables."
+     },
+     {
+      "id": "C9-v2v3",
+      "verdict": "corrected",
+      "correction": "The numbers are as stated, but three mechanism attributions need qualifying. (1) The labels ('weighted block', 'small-n search (beam)') come from a heuristic in toy_interp.v2v3: v3's n_struct <= 128 with no weighted block there. They are not from ablations, and v1.3 changes weighted candidates, beam and forced blocks at once. For sym7 and majsym the earlier block was forced (true block below threshold). For fd_09, tail13, sym11 and h6_11 the true block passes the same round-0 test at their v3 n_struct of 128 (ratio 1.34-1.62), so the earlier find is a search difference not attributed to the beam specifically. (2) For h6_10, v2's 'never' is an artifact of the strict matcher. v2 represents h6_10 exactly with two 13-input folded blocks (error 0.000 at 1024), and v3's block at 256 has the wrong inner sign. The real change is n*_3 702 -> 206. (3) h6_08 changes representation only (n*_3 446 -> 449). 'Identical portfolio errors at every analysed n' means every n analysed in both runs.",
+      "note": "The \u00a75 Reading 'where v2 already had the structure at the same n (41 targets), v1.3 changes nothing measurable' over-reaches. On those targets n*_3 moves from -0.30 (far9) to +0.26 (fd_06) doublings, mean -0.005 over 40, and portfolio errors differ at some analysed n on 26 of the 41."
+     },
+     {
+      "id": "C10-weighted-usage",
+      "verdict": "corrected",
+      "correction": "At some analysed n (seed 0; first cell with share >= 20% of the largest term), 26 sum-suite targets' models contain a weighted block. Its inner term is: the true tau (h6_10, wrong relative sign at 256; f7_10; h5t0; h5t1, weight 3 vs true 2); a parity partner (symxpar, h6_06, f7_07, symxor); a mux selector (h6_07, h6_08, f7_03); a gate input (h5s4, symand, majsym); an input of a true class (h6_09: AND(x9,-x10); h5s7: the literal x11 of its own class, at 16384 only, not an AND); or, in 10 of the 14 controls, an AND of two literals (9 controls) or a literal (f7_06: 3*x8).",
+      "note": "Several of these occur in a single cell (cells_with_weighted = 1 of 5-11 for symxpar, f7_06, f7_10, h5s7, h5t0, h5t1, majsym)."
+     },
+     {
+      "id": "C11-below",
+      "verdict": "corrected",
+      "correction": "Below n_struct (216 cells), DFG has zero stack weight in 83 cells. In those cells the summarised model is an out-of-fold fit that is not part of the final predictor; this covers 76 of the 177 'forced' cells, whose variant is inferred from n <= 512. The default variant is empty in 26 of the 39 cells where it is the summarised model. Those 39 are a stacker-selected subset (only default kept, or n > 512), and 24 of them are at n <= 64, where DFG's union-bound test accepts almost nothing. DFG's stack weight share: median 0.21 and mean 0.33 below n_struct, against 0.89 from n_struct on. kNN's mean share (0.28) is the largest of any single member, but the two DFG variants together have more (0.33). Total stack weight is small below n_struct (median 0.35 vs 1.52; zero in 17 cells).",
+      "note": "Weight shares on log-probabilities are not contributions to the prediction. The \u00a76 Readings 'DFG contributes almost nothing and is mostly switched off' (DFG has nonzero weight in 62% of below cells) and 'the stack is close to its bias' (not measured) over-reach. The Short-answer sentence putting 'kNN gets the largest mean share' next to DFG's median is misleading."
+     },
+     {
+      "id": "C12-nonsum",
+      "verdict": "corrected",
+      "correction": "All 70 non-sum targets reach test error <= 0.005 at their largest analysed n (seed 0; max 0.0039, thr30 at 16384). The characters present in the model cover >= 90% of the target's non-constant Fourier weight for 23 of 67 (presence only; model coefficients are not compared with fhat). Span R2 >= 0.95 for 54 of 70. 25 of 70 models have a sum block among their three leading terms, 9 of them weighted.",
+      "note": "No v3 evaluation files exist for random or dlheld-dlheld2, and only a dlheld3 shard, so these structure runs are not identity-checked and their n* is seed 0. The block/parity/majority examples check out (maj9, maj15, maj21, sym9 at 128, sym8 at 64)."
+     }
+    ],
+    "other_problems": [
+     "toy_power.py's modulated test is wrong for mixtures. It uses r*chi_M with r = y - mean(y), uncentred and not deflated by chi_M, so it counts the modulator character's own signal n*mean(r*chi_M)^2 as block signal. DFG tests on a residual already fitted on chi_M. Seven gate/mux targets are affected (fd_08, majsym, fd_11, h5s4, f7_03, f7_11, h6_07), and with them the '43 at 128' count, the delay distribution, fig_toy_timing (a), toy_timing.csv, toy_failures.md (fd_08, f7_11 n_mod) and the all-54 Spearman. Recomputation: /tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/review/modtest.py and modtest_out.txt.",
+     "fig_toy_timing (a) and fig_toy_v2v3 (a) jitter points as (x*j, y/j) with j up to 2^+-0.39 and 2^+-0.3. This moves points perpendicular to the identity line by up to 0.78 and 0.6 doublings, the very direction the panels are read in, so cells with n_struct = n_detect (16) or equal n_struct in v2 and v3 (41) look earlier or later. Labels also overlap in fig_toy_timing (c) (fd_11/h5t0/h5t1/fd_05) and fig_toy_v2v3 (a) (h6_11/tail13/fd_09).",
+     "Provenance: \u00a70 says toy_interp.py produces 'all tables and figures below', but the \u00a73 'agree' column and the \u00a71.2 count '14 cells (14 targets)' are computed by no code in toy_interp.py. My count over the stored terms is 15 cells in 13 targets, and the cited h6_07@512 term contains the selector x11.",
+     "toy_structure stores only the top 10 terms per cell, while n_struct and fourier_chi use the full list. Re-deriving matches from the stored JSONs can therefore miss blocks: symxor@1024 and h6_08@2048 matches are not reproducible from the stored terms.",
+     "The matcher accepts a modulator chi_M with no sign check as an exact match for a signed class (fd_06, n = 2048-8192). The write-up does not mention this.",
+     "\u00a75 Reading 'v1.3 changes nothing measurable' on the 41 same-n_struct targets is contradicted by n*_3 changes from -0.30 (far9) to +0.26 (fd_06) and by differing portfolio errors on 26 of the 41.",
+     "The \u00a72 'readout is not the bottleneck' figure compares an interpolated n* with the grid value n_struct (the first grid point with the structure). 42 of 49 values of log2(n*_0/n_struct) lie in (-1, 0], so the negative median is mostly grid resolution. The 3-seed comparison mixes 3-seed n* with seed-0 n_struct, and one 3-seed value is +0.52.",
+     "The \u00a74 statement 'W1 = 0 and W2 <= 0.0002 for all three' is false for fd_10 (W1 = 4e-5). The Reading 'pair and single statistics are zero in expectation' holds only for h6_00 and f7_05.",
+     "'DFG error ... at n = 16384' for fd_10 and h6_00 (and other mod-3 cells at n >= 1024) is from out-of-fold DFG fits on 13107 rows that the stacker dropped. The caveat in \u00a70 is general and not attached to these numbers. f7_05's 0.3245 is quoted as 0.325.",
+     "The \u00a71.2 claim 'folded for even accept sets, unfolded otherwise' has an unmentioned exception: h5s6 (set {-9,-5,-1,1,5}) gets a folded block.",
+     "Missing caveat: n_detect, the landscape and the search reach are all round-0 quantities on the uncentred, undeflated residual and use the true relevant inputs for the modulator (an oracle). For mixtures, the block DFG actually tests in later rounds sits on a residual deflated by the gate characters. Example: fd_08 is found at 1024, before its plain block passes the round-0 test at 2048.",
+     "Missing caveat: n_struct and the summarised model depend on the stacker. When DFG gets zero weight the summary is an out-of-fold fit; when both variants are kept only the forced variant is seen. This applies to 83 of 216 below-n_struct cells.",
+     "Mechanism attributions in \u00a75 and in the fig_toy_v2v3 legend ('small-n search (beam)', 'weighted block') come from a heuristic, not an ablation. The legend presents them as established mechanisms."
+    ]
+   }
+  }
+ ]
+}
