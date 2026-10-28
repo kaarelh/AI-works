@@ -336,6 +336,13 @@ for k in keys:
                                    pos_from_blank=float(np.clip(bl, 0, None).sum() / max(np.clip(bl, 0, None).sum() + np.clip(ik, 0, None).sum(), 1e-12)))
         cs = r["boosters"][b]["contrib_share"]
         SUM["contrib"][f"{tag}/{ds}/n{n}/{b}"] = dict(per_class=out, share_by_type={t: float(np.mean(v)) for t, v in cs.items()})
+        if all("net_blank" in o for o in out.values()):                 # share of the net evidence on blank pixels
+            bs = {c_: o["net_blank"] / (o["net_blank"] + o["net_inked"]) for c_, o in out.items()}
+            SUM["contrib"][f"{tag}/{ds}/n{n}/{b}"].update(blank_share=bs, blank_share_mean=float(np.mean(list(bs.values()))))
+            if f"{b}_contrib_pairs" in M:                               # without the pairs (whose part sits on inked pixels by
+                # construction; pair contributions on faintly inked pixels, 0 < x <= 0.1, count as blank here: approximate)
+                bs2 = {lab[c]: float((cm[c] - M[f"{b}_contrib_inked"][c]).sum() / (cm[c] - M[f"{b}_contrib_pairs"][c]).sum()) for c in range(len(cm))}
+                SUM["contrib"][f"{tag}/{ds}/n{n}/{b}"].update(blank_share_no_pairs=bs2, blank_share_no_pairs_mean=float(np.mean(list(bs2.values()))))
         for c in range(len(cm)):
             o = out[lab[c]]
             rows9.append([tag, ds, b, lab[c], f"{o['pos_frac']:.2f}", f"{o['pos_on_excess']:.2f}", f"{o['pos_on_deficit']:.2f}",

@@ -288,7 +288,9 @@ def target_rows(S3, S2, P, N3, N2, NN):
                    nstar_s0=nstar([c["n"] for c in C], [c["err"] for c in C]),
                    nstar3=n3[0] if n3 else None, nstar3_file=n3[1] if n3 else "",
                    nstar3_v2=n2[0] if n2 else None, nets_best=nn[0] if nn else None, nets_variants=nn[1] if nn else "",
-                   n_struct_v2=ns2, n_stable_v2=st2, struct_file=os.path.basename(r["_path"]))
+                   n_struct_v2=ns2, n_stable_v2=st2, struct_file=os.path.basename(r["_path"]),
+                   n_dfg01=next((c["n"] for c in C if c.get("err_dfg") is not None and c["err_dfg"] <= 0.01), None),
+                   n_dfg01_v2=next((c["n"] for c in r2["cells"] if c.get("err_dfg") is not None and c["err_dfg"] <= 0.01), None) if r2 else None)
         if tg in INNER:
             c0 = big[0]["S"] if big else None
             row["inner_last"] = inner_found(last, tg, c0)
@@ -310,13 +312,13 @@ SUITES_ORDER = SUM_SUITES + OTHER_SUITES
 
 
 def recovery_tables(rows):
-    cols = ["suite", "target", "kind", "mixture", "k", "classes", "n_struct", "n_stable", "n_detect", "n_reach5", "nstar3", "nstar_s0",
+    cols = ["suite", "target", "kind", "mixture", "k", "classes", "n_struct", "n_stable", "n_dfg01", "n_detect", "n_reach5", "nstar3", "nstar_s0",
             "nets_best", "n_max", "err_last", "lead"]
     sel = [r for r in rows if r["suite"] in SUM_SUITES]
     fmt = []
     for r in sel:
         q = dict(r)
-        for c in ("n_struct", "n_stable", "n_detect", "n_reach5", "nstar3", "nstar_s0", "nets_best"):
+        for c in ("n_struct", "n_stable", "n_dfg01", "n_detect", "n_reach5", "nstar3", "nstar_s0", "nets_best"):
             q[c] = fmt_n(r.get(c)) if r.get(c) is not None or c in ("n_struct", "n_stable") else "–"
         if r["classes"] == "–":
             q["n_struct"] = q["n_stable"] = "n/a"
@@ -333,7 +335,7 @@ def recovery_tables(rows):
                   "background = the kernel background). The structure runs stop after two consecutive n with err <= 0.005.")
     write_csv("toy_recovery_v3.csv", rows, ["suite", "target", "desc", "kind", "mixture", "k", "classes", "n_struct", "n_stable",
               "n_detect", "n_unfold", "n_fold", "n_mod", "n_reach", "n_reach5", "reach_deg1", "reach_eig", "W1", "W2", "nstar3", "nstar3_file", "nstar_s0",
-              "nstar3_v2", "n_struct_v2", "n_stable_v2", "nets_best", "nets_variants", "n_max", "err_last", "err_dfg_last",
+              "nstar3_v2", "n_struct_v2", "n_stable_v2", "n_dfg01", "n_dfg01_v2", "nets_best", "nets_variants", "n_max", "err_last", "err_dfg_last",
               "w_dfg_last", "span_r2_last", "fourier_chi_last", "inner_last", "n_inner", "n_inner_exact", "inner_by_n", "lead", "struct_file", "power_file"])
     # by suite
     S = []
@@ -409,7 +411,7 @@ def timing(rows, PW=None, P=None):
                  n_detect=r.get("n_detect"), n_unfold=r.get("n_unfold"), n_fold=r.get("n_fold"), n_mod=r.get("n_mod"),
                  n_struct=r["n_struct"], n_stable=r["n_stable"], nstar_s0=r["nstar_s0"], nstar3=r["nstar3"], n_max=r["n_max"],
                  reach_deg1=r.get("reach_deg1"), reach_eig=r.get("reach_eig"), W1=r.get("W1"), W2=r.get("W2"),
-                 n_reach=r.get("n_reach"), n_reach5=r.get("n_reach5"))
+                 n_reach=r.get("n_reach"), n_reach5=r.get("n_reach5"), n_dfg01=r["n_dfg01"])
         q["ratio_at_struct"] = None
         q["n_detect_unitpart"], q["detect_source"] = None, "toy_power"
         if PW and (r["suite"], r["target"]) in PW:              # weighted target: the true block is the weighted one
@@ -641,7 +643,7 @@ def v2v3(rows, S3, S2, P=None):
         e3 = {c["n"]: c["err"] for c in a["cells"]}; e2 = {c["n"]: c["err"] for c in b["cells"]}
         common = sorted(set(e3) & set(e2)); diff = [n for n in common if abs(e3[n] - e2[n]) > 1e-12]
         out.append(dict(suite=r["suite"], target=r["target"], kind=r["kind"], mixture=r["mixture"], classes=r["classes"],
-                        n_struct_v2=n2, n_struct_v3=n3, nstar3_v2=r["nstar3_v2"], nstar3_v3=r["nstar3"],
+                        n_struct_v2=n2, n_struct_v3=n3, n_dfg01_v2=r["n_dfg01_v2"], n_dfg01_v3=r["n_dfg01"], nstar3_v2=r["nstar3_v2"], nstar3_v3=r["nstar3"],
                         nstar_s0_v2=nstar([c["n"] for c in b["cells"]], [c["err"] for c in b["cells"]]), nstar_s0_v3=r["nstar_s0"],
                         l2_nstar3=l2(r["nstar3"], r["nstar3_v2"]), l2_nstar_s0=l2(r["nstar_s0"], nstar([c["n"] for c in b["cells"]], [c["err"] for c in b["cells"]])),
                         mechanism=mech, n_weighted_first=first_w, ratio_at_struct_v3=ratio_at(P or {}, (r["suite"], r["target"]), n3) if n3 else None,
@@ -861,7 +863,7 @@ def main():
     if F:
         fig_failures([f for f in F if (f["suite"], f["target"]) in FAIL], P, S3, os.path.join(FIG, "fig_toy_failures.pdf"))
     V = v2v3(rows, S3, S2, P)
-    write_md("toy_v2_v3.md", V, ["suite", "target", "kind", "mixture", "classes", "n_struct_v2", "n_struct_v3", "nstar_s0_v2", "nstar_s0_v3",
+    write_md("toy_v2_v3.md", V, ["suite", "target", "kind", "mixture", "classes", "n_struct_v2", "n_struct_v3", "n_dfg01_v2", "n_dfg01_v3", "nstar_s0_v2", "nstar_s0_v3",
                                  "nstar3_v2", "nstar3_v3", "l2_nstar3", "mechanism", "ratio_at_struct_v3", "stack_at_struct_v3", "cells_differ", "cells_common", "v3_at_struct", "v2_at_v3_struct"],
              head="### v3 (DFG v1.3) against v2 (DFG v1.2) on the sum-structured suites (seed 0 structure runs; n* also 3 seeds)",
              note="mechanism: what v3's model has at its n_struct when that is earlier than v2's ('weighted block': a block with an inner term "

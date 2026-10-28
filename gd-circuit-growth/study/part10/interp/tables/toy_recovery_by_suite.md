@@ -4,6 +4,6 @@
 |---|---|---|---|---|---|---|---|
 | dlsymdev | 8 | 8 | 128 | 5 | 7 | – | 0 |
 | dlfamdev | 9 | 8 | 192 | 4 | 7 | fd_10 | 3 |
-| dlheld7 | 2 | 2 | 256 | 0 | 2 | – | 1 |
+| dlheld7 | 3 | 3 | 256 | 0 | 3 | – | 2 |
 
 structured = the family's / suite's sum-structured targets (every one has a signed-symmetry class of size >= 3); the non-symmetric controls are counted separately (fd_07, a DNF, has a 3-input symmetric class; it is not counted).
