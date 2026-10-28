@@ -239,6 +239,9 @@ def twin_summary():
               "`compression` is the main paper's unlabeled-data bound (Theorem 2, best of K configurations).\n",
               "| data | H | twin seed | test err f | compression bound | frac | twin held-out errors | twin bound | "
               "test err twin | Pr[f != twin] on test inputs |", "|---|---|---|---|---|---|---|---|---|---|"]
+        ms = load("mnist_subsample.jsonl")
+        for x in ms:
+            t2.setdefault((x["data"], x["width"]), []).append(dict(x, test_err_f=x["test_err_f"]))
         for r in img:
             H = r["widths"][1]
             cc = t2.get((r["data"], H), [])
@@ -249,6 +252,47 @@ def twin_summary():
                          f"{t['heldout_errors']}/{t['heldout_n']} | {t['bound_f']:.4f} | {t['test_err_twin']:.4f} | "
                          f"{t['dis_count'] / t['n_unlabeled']:.4f} |")
     open(os.path.join(RES, "summary_twin.md"), "w").write("\n".join(L) + "\n")
+    twin_figure(g, grid)
+
+
+def twin_figure(g, grid):
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    keys = [k for k in sorted(g, key=lambda k: (k[1], TASK_ORDER.index(k[0]) if k[0] in TASK_ORDER else 9, k[0]))
+            if k[2] == 16000 and not k[0].startswith("teacher")]   # teacher4 has no main-grid compression bound
+    if not keys:
+        return
+    lab, te, cb, tb = [], [], [], []
+    for k in keys:
+        rr = g[k]
+        lab.append(k[0] + (" (10% noise)" if k[1] else ""))
+        te.append(np.mean([r["test_err_f"] for r in rr]))
+        comp = [boolean_bound(grid[(k[0], k[1], k[2], r["seed"])][0]) for r in rr if (k[0], k[1], k[2], r["seed"]) in grid]
+        cb.append(np.mean(comp) if comp else np.nan)
+        tb.append(np.mean([t["bound_f"] for r in rr for t in r["twins"] if abs(t["frac"] - 0.5) < 1e-9]))
+    x = np.arange(len(keys))
+    fig, ax = plt.subplots(figsize=(7.5, 3.0))
+    w = 0.27
+    floor = 1e-4
+    ax.bar(x - w, np.maximum(te, floor), w, bottom=0, label="test error of f", color="#4c78a8")
+    ax.bar(x, cb, w, label="compression bound (main paper)", color="#f58518")
+    ax.bar(x + w, tb, w, label="twin bound (s = m/2)", color="#54a24b")
+    for xi, t in zip(x, te):
+        if t < floor:
+            ax.text(xi - w, floor * 1.15, "0", ha="center", fontsize=7, color="#4c78a8")
+    ax.set_xticks(x)
+    ax.set_xticklabels(lab, rotation=20, fontsize=8, ha="right")
+    ax.set_yscale("log")
+    ax.set_ylim(floor, 0.5)
+    ax.set_ylabel("error / bound", fontsize=8)
+    ax.set_title("n = 50, m = 16000, f = MLP (50, 512, 512, 1); means over 3 seeds", fontsize=8)
+    ax.legend(fontsize=7, frameon=False)
+    ax.grid(axis="y", alpha=0.3)
+    fig.tight_layout()
+    for ext in ("png", "pdf"):
+        fig.savefig(os.path.join(FIG, f"search_twin.{ext}"), dpi=150)
+    plt.close(fig)
 
 
 def mnist_summary():
