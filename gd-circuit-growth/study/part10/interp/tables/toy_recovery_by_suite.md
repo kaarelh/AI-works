@@ -7,5 +7,6 @@
 | dlheld7 | 9 | 7 | 256 | 1 | 7 | f7_05, f7_11 | 3 |
 | dlheld6 | 9 | 7 | 512 | 1 | 6 | h6_00, h6_02 | 3 |
 | dlheld5 | 10 | 10 | 512 | 0 | 6 | – | 2 |
+| dlheld4 | 1 | 1 | 128 | 1 | 1 | – | 0 |
 
 structured = the family's / suite's sum-structured targets (every one has a signed-symmetry class of size >= 3); the non-symmetric controls are counted separately (fd_07, a DNF, has a 3-input symmetric class; it is not counted).

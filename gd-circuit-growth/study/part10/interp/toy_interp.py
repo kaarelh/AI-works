@@ -799,6 +799,30 @@ def load_power_w():
     return W
 
 
+
+def weighted_usage(S3):
+    """Every v3 model (any n) with a weighted block (inner term a*tau) among its terms with share >= 20% of the largest:
+    the first such n, the block, and where tau's inputs sit relative to the target (in the largest class; another
+    relevant input; irrelevant)."""
+    out = []
+    for (su, tg), r in sorted(S3.items(), key=lambda kv: (SUITES_ORDER.index(kv[0][0]), kv[0][1])):
+        rel = set(r["truth"]["relevant"]); big = big_classes(r); cls = set().union(*[set(c["S"]) for c in big]) if big else set()
+        for c in r["cells"]:
+            T = c.get("terms") or []
+            top = max([t["share"] for t in T if t["kind"] != "const"] + [1e-12])
+            W = [t for t in T if t["kind"] == "sum" and t.get("inner") and t["share"] >= 0.2 * top]
+            if W:
+                t = W[0]; inp = set(t["inner"]["inputs"])
+                where = "in a class" if inp <= cls else "other relevant input" if inp <= rel else "irrelevant"
+                n_last = sum(1 for cc in r["cells"] if any(x["kind"] == "sum" and x.get("inner") for x in cc.get("terms") or []))
+                out.append(dict(suite=su, target=tg, kind=KIND.get(tg, ("–", "–"))[0], mixture=KIND.get(tg, ("–", "–"))[1], n_first=c["n"],
+                                block=t["desc"], tau_kind=t["inner"]["kind"], a=t["inner"]["a"], tau_inputs="+".join(f"x{i + 1}" for i in sorted(inp)),
+                                tau_where=where, share_rel=round(t["share"] / top, 2), cells_with_weighted=n_last, cells=len(r["cells"]),
+                                err_dfg=c.get("err_dfg"), exact_here=exact_all(c)))
+                break
+    return out
+
+
 def fig_v2v3(V, path):
     import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
     plt.rcParams.update({"font.size": 7, "axes.titlesize": 7, "axes.labelsize": 7, "legend.fontsize": 6})
@@ -878,6 +902,13 @@ def main():
     out["v2v3"] = dict(targets=len(V), mech={m: [v["target"] for v in V if v["mechanism"] == m] for m in sorted(set(v["mechanism"] for v in V))},
                        mean_l2_nstar3=float(np.mean(l3)) if l3 else None, n_l2_nstar3=len(l3), mean_l2_nstar_s0=float(np.mean(l0)) if l0 else None,
                        n_l2_nstar_s0=len(l0), identical_targets=[v["target"] for v in V if v["cells_differ"] == 0])
+    WU = weighted_usage(S3)
+    write_md("toy_weighted_blocks_v3.md", WU, ["suite", "target", "kind", "mixture", "n_first", "block", "tau_where", "share_rel", "cells_with_weighted", "cells", "err_dfg", "exact_here"],
+             head="### Where v3's models use a weighted block u = t + a*tau (seed 0; first n with one among the terms of share >= 20% of the largest)",
+             note="tau_where: tau's inputs lie in a true symmetry class, are other relevant inputs (a parity partner, a mux selector, a gate literal or "
+                  "the true inner term), or are irrelevant; cells_with_weighted: analysed n whose model has any weighted block (of cells).")
+    write_csv("toy_weighted_blocks_v3.csv", WU, list(WU[0].keys()) if WU else [])
+    out["weighted_usage"] = dict(targets=len(WU), by_where={w: [x["target"] for x in WU if x["tau_where"] == w] for w in sorted(set(x["tau_where"] for x in WU))})
     B = below_discovery(S3)
     write_csv("toy_below_discovery.csv", B, list(B[0].keys()) if B else [])
     out["below"] = below_summary(B)
