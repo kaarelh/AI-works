@@ -104,18 +104,22 @@ NSTAR_FILES = {"v3": ["p10_sum-perm"], "v2": ["hyb_portfolio2-perm", "p9_sum-per
 
 
 def load_nstar(tag):
-    """{(suite, target): (n*, file)} from the 3-seed result files (the first listed learner name that has the suite)."""
+    """{(suite, target): (n*, file)} from the 3-seed result files (the first listed learner name that has the suite; a
+    suite still being run is read from its per-target shards toy__<learner>__<suite>__partNN.json); only targets whose
+    3 x 11 cells are all finite."""
     out = {}
     for su in SUM_SUITES + OTHER_SUITES:
         for nm in NSTAR_FILES[tag]:
             p = os.path.join(RES, f"toy__{nm}__{su}.json")
-            if not os.path.exists(p):
+            files = [p] if os.path.exists(p) else sorted(glob.glob(os.path.join(RES, f"toy__{nm}__{su}__part*.json")))
+            if not files:
                 continue
-            d = json.load(open(p))
-            for fn, r in d["fns"].items():
-                e = np.array(r["err"], float)
-                if e.ndim == 2 and e.shape[1] >= 3 and np.isfinite(e).all():
-                    out[(su, fn)] = (nstar(d["ns"], np.nanmean(e, 1)), os.path.basename(p))
+            for q in files:
+                d = json.load(open(q))
+                for fn, r in d["fns"].items():
+                    e = np.array(r["err"], float)
+                    if e.ndim == 2 and e.shape[1] >= 3 and np.isfinite(e).all():
+                        out[(su, fn)] = (nstar(d["ns"], np.nanmean(e, 1)), os.path.basename(q))
             break
     return out
 
