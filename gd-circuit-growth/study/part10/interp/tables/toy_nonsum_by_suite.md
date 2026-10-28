@@ -6,5 +6,6 @@
 | dlheld3 | 10 | 10 | 3 | 0 | 0.78 | 8 | 3 | cnf3, par3or, sym9 | cnf3 (3+3+3: –), h3rf0 (3: –), par3or (3: 128), poly4 (3+4: –), sym9 (9: 128), thrint (6: 512) |
 | dlheld2 | 7 | 7 | 1 | 2 | 0.77 | 5 | 2 | maj21, sym8 | h2rf0 (3: 512), h2rf1 (3: –), maj21 (21: 128), sym8 (8: 64), xmaj (3: –) |
 | dlheld | 12 | 12 | 2 | 1 | 0.78 | 6 | 5 | hrf0, hrf2, maj15, majmaj5, majxor | hrf0 (3: –), hrf2 (4: 128), maj15 (15: 128), majmaj5 (5+5+5: –), majxor (5+5: –), par5 (5: –), thr30 (3: –) |
+| random | 20 | 20 | 7 | 0 | 0.81 | 16 | 9 | rf00, rf01, rf05, rf06, rf07, rf10, rf12, rf13, rf19 | rf00 (3: –), rf02 (3: 64), rf06 (4: –), rf11 (3: –), rf13 (3: 128), rf17 (4: –) |
 
 err_last_le_005: test error <= 0.005 at n_max; chi90: targets whose model's characters carry >= 90% of the non-constant Fourier weight; no_fourier: more than 16 relevant inputs (no exact Fourier table); span95: span R^2 >= 0.95; block_lead: a sum block among the three leading terms; with_class: targets with a signed-symmetry class of size >= 3 (class sizes: n_struct).

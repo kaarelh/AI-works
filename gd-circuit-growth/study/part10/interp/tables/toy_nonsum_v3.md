@@ -52,5 +52,25 @@
 | dlheld | par5 | x1 x2 x3 x4 x5 | 5 | – | 61 | 64 | 64 | 256 | 1.00 | 1.00 | 1 | 0 | 0.67 | chi[x1,x2,x3,x4,x5] (1.00) |
 | dlheld | stair6 | sign(x1 + x1x2 + ... + x1..x6 + 1/2) | 6 | – | 196 | – | – | 512 | 0.65 | 0.78 | 6 | 1 | 0.92 | chi[x2,x4,x6] (0.32); chi[x1,x2,x3,x4,x5] (0.31); chi[x1,x2,x3] (0.31) |
 | dlheld | thr30 | sign(w.x), Gaussian w on all inputs | 30 | – | 136 | – | – | 16384 | – | 0.81 | 59 | 5 | 0.15 | chi[x3] (0.45); chi[x22] (0.31); chi[x19] (0.31) |
+| random | rf00 | random 6-gate formula on 5 inputs: g5=~4and~3; g6=~5or1; g7= | 4 | – | 39 | – | 128 | 256 | 0.81 | 1.00 | 3 | 2 | 0.32 | chi[x3] (0.79); (x2+x3+x4+x5) (0.23); chi[x3]*(-x1+x2+x4+x5+x19-x26) (0.14) |
+| random | rf01 | random 4-gate formula on 5 inputs: g5=4xor~2; g6=0or5; g7=~6 | 4 | – | 52 | – | 128 | 256 | 0.67 | 1.00 | 2 | 1 | 0.82 | chi[x1,x2] (0.66); (x1-x2-2*x3x5) (0.45); chi[x2] (0.18) |
+| random | rf02 | random 7-gate formula on 4 inputs: g4=0xor1; g5=2and~4; g6=~ | 3 | – | 49 | 128 | 64 | 128 | 1.00 | 1.00 | 4 | 0 | 0.83 | chi[x1,x3] (0.48); chi[x2,x3] (0.48); chi[x1,x2] (0.48) |
+| random | rf03 | random 5-gate formula on 4 inputs: g4=~3and0; g5=4xor3; g6=~ | 4 | – | 132 | 256 | 256 | 512 | 0.81 | 1.00 | 7 | 2 | 0.69 | chi[x1,x3] (0.54); chi[x1] (0.50); chi[x2] (0.26) |
+| random | rf04 | random 7-gate formula on 4 inputs: g4=1xor~3; g5=0and4; g6=5 | 3 | – | 52 | 64 | 64 | 128 | 0.75 | 1.00 | 3 | 1 | 0.37 | chi[x1,x2] (0.52); chi[x1,x4] (0.51); chi[x1] (0.35) |
+| random | rf05 | random 5-gate formula on 5 inputs: g5=3or~4; g6=~4or5; g7=~2 | 4 | – | 65 | – | 64 | 256 | 0.69 | 1.00 | 34 | 4 | 0.72 | chi[x2,x3,x5] (0.62); (x2+x3+x5-2*x4) (0.35); chi[x2] (0.24) |
+| random | rf06 | random 7-gate formula on 5 inputs: g5=3xor~1; g6=5or2; g7=6o | 5 | – | 16 | – | 128 | 256 | 0.88 | 1.00 | 1 | 3 | 0.37 | chi[x5] (0.88); (x1+x2-x3+x4-x5) (0.16); chi[x5]*\|x1+x2-x3+x4+x7+x14\| (0.12) |
+| random | rf07 | random 8-gate formula on 4 inputs: g4=0xor1; g5=~1or2; g6=4a | 4 | – | 73 | – | 128 | 256 | 0.62 | 0.83 | 4 | 1 | 0.39 | (-x1+x2+2*x4x3) (0.55); chi[x1] (0.36); chi[x1,x2] (0.35) |
+| random | rf08 | random 8-gate formula on 4 inputs: g4=~2and~1; g5=4and3; g6= | 3 | – | 19 | – | – | 64 | 0.80 | 0.80 | 31 | 0 | 0.53 | chi[x3] (0.66); chi[x2,x4] (0.29); chi[x2] (0.21) |
+| random | rf09 | random 8-gate formula on 4 inputs: g4=2xor~1; g5=~1or~2; g6= | 3 | – | 49 | 128 | 128 | 256 | 1.00 | 1.00 | 3 | 0 | 0.80 | chi[x2,x3,x4] (0.50); chi[x4] (0.50); chi[x2,x3] (0.49) |
+| random | rf10 | random 8-gate formula on 4 inputs: g4=~0xor~2; g5=~4and~2; g | 3 | – | 35 | – | 64 | 128 | 0.73 | 1.00 | 3 | 1 | 0.31 | chi[x1] (0.80); (x1+x3+x4) (0.41); chi[x3] (0.27) |
+| random | rf11 | random 4-gate formula on 4 inputs: g4=0and~2; g5=4and0; g6=3 | 3 | – | 56 | 64 | 64 | 128 | 1.00 | 1.00 | 1 | 0 | 0.98 | chi[x2,x3,x4] (1.00) |
+| random | rf12 | random 5-gate formula on 5 inputs: g5=~0or2; g6=5xor~4; g7=2 | 5 | – | 73 | – | 256 | 256 | 0.58 | 1.00 | 4 | 1 | 0.78 | chi[x4] (0.51); chi[x1,x5] (0.35); (x2+x5-3*x4) x (-x3+x4+3*x1x5) (0.28) |
+| random | rf13 | random 7-gate formula on 4 inputs: g4=~0xor~3; g5=4xor1; g6= | 3 | – | 34 | 64 | 64 | 128 | 0.67 | 1.00 | 2 | 1 | 0.86 | chi[x1,x2,x4] (0.86); (x1-x2+x4) (0.43); chi[x1] (0.16) |
+| random | rf14 | random 5-gate formula on 5 inputs: g5=~1xor~4; g6=~0xor2; g7 | 4 | – | 53 | 64 | 64 | 128 | 1.00 | 1.00 | 4 | 0 | 0.95 | chi[x1,x5] (0.51); chi[x1,x2,x5] (0.50); chi[x2,x3,x5] (0.50) |
+| random | rf15 | random 4-gate formula on 4 inputs: g4=~3xor1; g5=~4or3; g6=~ | 3 | – | 23 | – | – | 64 | 0.80 | 0.79 | 31 | 0 | 0.30 | chi[x1] (0.61); chi[x4] (0.35); chi[x1,x4] (0.30) |
+| random | rf16 | random 7-gate formula on 4 inputs: g4=~0and~2; g5=4xor~1; g6 | 3 | – | 45 | 64 | 64 | 128 | 1.00 | 1.00 | 3 | 0 | 0.81 | chi[x1,x2,x3] (0.51); chi[x3] (0.50); chi[x1,x2] (0.50) |
+| random | rf17 | random 3-gate formula on 5 inputs: g5=~4xor3; g6=~5xor0; g7= | 4 | – | 56 | 64 | 64 | 128 | 1.00 | 1.00 | 1 | 0 | 0.98 | chi[x1,x2,x4,x5] (1.00) |
+| random | rf18 | random 3-gate formula on 4 inputs: g4=~0xor3; g5=4or~2; g6=~ | 3 | – | 47 | 64 | 64 | 128 | 1.00 | 1.00 | 4 | 0 | 0.23 | chi[x1] (0.51); chi[x3,x4] (0.50); chi[x4] (0.49) |
+| random | rf19 | random 6-gate formula on 4 inputs: g4=~2xor1; g5=4xor3; g6=~ | 4 | – | 56 | – | 128 | 256 | 0.73 | 0.91 | 3 | 1 | 0.87 | chi[x2,x3,x4] (0.62); (x2-x3+x4+3*x1) (0.42); chi[x1,x3,x4] (0.36) |
 
 chi_frac: the share of the target's non-constant Fourier weight that sits on characters chi_S of the final model at n_max (sum of fhat(S)^2 over them / (1 - fhat(empty)^2); targets with more than 16 relevant inputs have no Fourier table: '–'); n_chi90: first n with chi_frac >= 0.9; span_r2: held-out R^2 of f on the span of the model's features; n_span95: first n with span_r2 >= 0.95; n_chi / n_sum: number of character / sum-block terms at n_max.

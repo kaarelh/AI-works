@@ -41,5 +41,11 @@
 | dlheld | hrf2 | – | – | 256 | (-x3+x4-x5+3*x1) x \|x1+x6\| | other relevant input | 0.40 | 2 | 6 | 0.00 | no |
 | dlheld | inter2 | – | – | 2048 | (x1-x2-x3-x4+x6-x7+x9+3*x10) | other relevant input | 0.45 | 1 | 10 | 0.0029 | no |
 | dlheld | thr30 | – | – | 2048 | (-x4-x5+x7+x8+x9-x11-x13+x16+x18+x19-x21-x22-x25-x26+x27+x28-3*x3) | other relevant input | 0.30 | 3 | 11 | 0.01 | no |
+| random | rf01 | – | – | 256 | (x1-x2-2*x3x5) | other relevant input | 0.68 | 1 | 5 | 0.00 | no |
+| random | rf04 | – | – | 128 | (-x2-x4+2*x1) | other relevant input | 0.60 | 1 | 4 | 0.00 | no |
+| random | rf05 | – | – | 256 | (x2+x3+x5-2*x4) | other relevant input | 0.56 | 1 | 5 | 0.00 | no |
+| random | rf07 | – | – | 256 | (-x1+x2+2*x4x3) | other relevant input | 1.00 | 1 | 5 | 0.00 | no |
+| random | rf12 | – | – | 256 | (x2+x5-3*x4) x (-x3+x4+3*x1x5) | other relevant input | 0.54 | 1 | 5 | 0.00 | no |
+| random | rf19 | – | – | 128 | (x1-x2-2*x4x3) | other relevant input | 0.27 | 2 | 5 | 0.00 | no |
 
 tau_where: tau's inputs lie in a true symmetry class, are other relevant inputs (a parity partner, a mux selector, a gate literal or the true inner term), or are irrelevant; cells_with_weighted: analysed n whose model has any weighted block (of cells).

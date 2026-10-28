@@ -15,8 +15,8 @@ toy_interp.py`, or without `INTERP_OUT` from the copies in `results/toy_final/`)
 [`results/toy_final/`](results/toy_final/): `v3/` and `v2/` (toy_structure.py, final matcher, one JSON per suite and
 target), `power/` (toy_power.py), `toy_power_w/` (toy_power_w.py, weighted blocks), `toy_landscape/` (toy_landscape.py),
 `toy_g/v3/` (toy_gfit.py). n\* files: `study/hybrid/results/toy__p10_sum-perm__<suite>.json` (v3; v3 = p10_sum on toy
-inputs, PROTOCOL.md; dlheld5 from its per-target shards `__partNN.json`; dlheld4 not yet run, so 3-seed n\* of v3 is
-missing there), `toy__hyb_portfolio2-perm__<suite>.json` / `toy__p9_sum-perm__<suite>.json` (v2). Tables:
+inputs, PROTOCOL.md; available for designed, dlsymdev, dlfamdev and dlheld4–7 when the tables were made, not yet for
+random and dlheld–dlheld3), `toy__hyb_portfolio2-perm__<suite>.json` / `toy__p9_sum-perm__<suite>.json` (v2). Tables:
 [`tables/`](tables/); numbers quoted from `tables/toy_summary.json` are given with their key. Figures:
 [`figures/fig_toy_*.pdf`](figures/).
 
@@ -36,8 +36,9 @@ missing there), `toy__hyb_portfolio2-perm__<suite>.json` / `toy__p9_sum-perm__<s
   search, not by the test and not by the readout.
 - **Where it fails.** The three residue classes mod 3 of 10–14 inputs (fd_10, h6_00, f7_05) are never learned: the
   true block passes the test from n = 128 and is 134–155 times its threshold at n = 16384, but the targets have zero
-  weight at degrees 1 and 2, no pair or single input inside the block carries any signal (0.12–0.25 of the threshold,
-  the same as pairs outside it), and only candidates within about 3 errors of the truth are detectable: 34281
+  weight at degrees 1 and 2, no pair or single input inside the block carries signal (the best pair inside it is at
+  0.12–0.25 of its threshold, the best pair outside it at 0.20–0.33), and only candidates within about 3 errors of the
+  truth are detectable: 34281
   candidates among 1.5·10^10–1.2·10^12 of the same size. The model stays at the constant plus the kernel background.
 - **v3 against v2.** Weighted blocks change what is learned on h6_10 (n\* 702 → 206, 3 seeds) and on the multiplexers
   (selector as an inner literal); the small-n beam and forced blocks move the first exact block from n = 256 to 128
@@ -52,7 +53,7 @@ missing there), `toy__hyb_portfolio2-perm__<suite>.json` / `toy__p9_sum-perm__<s
 **Fits.** `toy_structure.py` reproduces the evaluation's toy fits (`eval_toy.py --perm`: the same training rows, column
 permutation and rng) with the learner's internals recorded (`hooks.py`), seed 0, on the n grid 16, 32, …, 16384,
 stopping after two consecutive n with test error <= 0.005. *Check:* the structure runs' test errors equal the seed-0
-errors in the evaluation's result files at all 313 v3 cells and 477 v2 cells where both exist (`tables/toy_summary.json`,
+errors in the evaluation's result files at all 587 v3 cells and 477 v2 cells where both exist (`tables/toy_summary.json`,
 `identity`).
 
 **The model.** The final DFG member: the last DFG fit on all n rows. When the stacker keeps both DFG variants, that is
@@ -114,7 +115,8 @@ from the 3-seed result files, `n*_0` from the seed-0 structure runs (the same fi
 
 (A two-block target counts under both of its accept kinds.) The two modular blocks that are learned are 6-input
 sub-blocks of multiplexers (h6_08's mod 3 at n = 1024, f7_03's mod 4 at n = 512); the three pure mod-3 counts on 10, 13
-and 14 inputs are never learned (§4). Arbitrary accept sets need the most data (median 512; h5s7 8192, h5s1 16384).
+and 14 inputs are never learned (§4). Of the kinds learned on most of their targets, arbitrary accept sets need the
+most data (median 512; h5s7 8192, h5s1 16384).
 
 ### 1.2 What the model looks like when it has the structure
 
@@ -177,7 +179,45 @@ The DFG member reaches error <= 0.01 before n_struct on f7_11, h6_02, h5t1 and s
 
 ### 1.5 Non-sum suites (designed, random, dlheld–dlheld3)
 
-PENDING_NONSUM
+*Measured* (`tables/toy_nonsum_by_suite.md`; per target `tables/toy_nonsum_v3.md`). These 70 targets (designed 21,
+dlheld3 10, dlheld2 7, dlheld 12, random 20) all reach test error <= 0.005 at their largest analysed n (seed 0; the
+largest is 0.0039, thr30 at n = 16384). What carries the model there:
+
+| suite | targets | characters carry >= 90% of the Fourier weight | median share carried | span R² >= 0.95 | a sum block among the 3 leading terms |
+|---|---|---|---|---|---|
+| designed | 21 | 10 | 0.88 | 19 | 6 |
+| dlheld3 | 10 | 3 | 0.78 | 8 | 3 |
+| dlheld2 | 7 | 1 (2 without a Fourier table) | 0.77 | 5 | 2 |
+| dlheld | 12 | 2 (1 without) | 0.78 | 6 | 5 |
+| random | 20 | 7 | 0.81 | 16 | 9 |
+
+("Share carried" = the target's non-constant Fourier weight on the characters chi_S of the model at the largest n;
+targets with more than 16 relevant inputs have no exact Fourier table. Span R² = held-out R² of f on the span of the
+model's features.)
+
+- **Parities and small juntas are their own characters.** par2–par5 and rf11, rf17 are one character with share 1.00;
+  and3, maj3, andxor, rf02, rf09, rf14, rf16, rf18 are their full Fourier expansions (share carried 1.00). For a parity
+  or a 3-input class the characters are the exact structure, so the block matcher's '–' there (maj3, par3, par4, par5)
+  is not a failure.
+- **Majorities and symmetric targets** get the block, unfolded for majorities and folded for even sets: maj9
+  `(x1+…+x9)` (0.65) at n_struct 128, maj15 at 128, maj21 `(x1+…+x21)` at 128, sym9 `|x1+…+x9|` at 128, sym8
+  `|x1+…+x8|` at 64, thrint's
+  6-input class at 512, rmaj9's three 3-input classes at 512. Two-majority targets are split blocks: majxor
+  `|x1+…+x5 − x6−…−x10|`, majmaj5 a block modulated by one input of another majority (`chi[x10]*|x6+…+x9|`).
+- **Halfspaces with unequal weights** (thr10, thr20, thr30, inter2) are carried by degree-1 characters through the
+  linear block (thr10: 209 characters at n = 4096, 96% of the Fourier weight; thr20 and thr30 at n = 16384 have span R²
+  0.84 and 0.81 and test errors 0.003 and 0.004: the logistic readout separates what least squares does not span).
+- **Sign of a sum of characters** (poly4, stair5/6, sparsepoly): the characters themselves (poly4: `chi[x3,x4,x5]`,
+  `chi[x7,…,x10]`, `chi[x1,x2]`, 0.50–0.51 each; span R² 0.75, test error <= 0.005 at 512).
+- **Formulas** (DNF / CNF, random formulas, decision lists, multiplexers): characters of degree 1–4 carry most of the
+  weight (the per-suite median share carried is 0.77–0.88); 25 of the 70 models also have a sum block among their
+  leading terms,
+  often weighted with an AND or parity inner term: dnf3 `(−x4+x5−x6) x (−x7−x8+x9 − 3 AND(x1,x3))` (0.48), rf07
+  `(−x1+x2 + 2 x4x3)` (0.55), rand3 `(−x1+x2+x3) x (−x4−x6 + 2 x5)` (0.51).
+
+*Reading.* Outside the sum-structured suites the model is what Part 6's DFG learned (a sparse set of low-degree
+characters, plus the linear block for halfspaces); sum blocks enter where the target has a symmetric class of 5 or more
+inputs, and small (weighted) blocks enter as compact encodings of gates.
 
 ## 2. Timing: detection, search and readout
 
@@ -194,8 +234,8 @@ PENDING_NONSUM
   two or more for 15 (band11, f7_03, f7_08, h6_01, h6_08, h5s1, h5s2, h5s3, h5s5, h5s6, h5s7, h5t1, band10, sumpar,
   symxor). log2(n_struct / n_detect): median 1.0, mean 1.04.
 - **The readout is not the bottleneck.** log2(n\*_0 / n_struct): median −0.35, mean −0.64; within ±0.5 for 34, below
-  −0.5 for 15 (thresholds and gate targets whose linear part or literals give 10% error before the block is exact, e.g.
-  fd_08 n\*_0 26 against n_struct 1024), above +0.5 for none. With the 3-seed n\* (38 targets): median −0.31.
+  −0.5 for 15 (targets whose characters, i.e. a linear part, a parity or gate literals, give 10% error before the block
+  is exact, e.g. fd_08 n\*_0 26 against n_struct 1024; `nstar_vs_struct.below_targets`), above +0.5 for none. With the 3-seed n\* (48 targets): median −0.33.
 - **What sets the delay.** log2(n_struct / n_detect) (never found: n_struct := 2^15) against the share of Var f at
   degrees 1–2, (W1 + W2) / (1 − W0) from the power files: Spearman −0.44 over all 54 (p = 0.001), −0.86 over the 25 pure
   symmetric targets (p = 3·10⁻⁸). The 12 targets with share < 0.05 include all three never-learned mod-3 counts and the
@@ -243,8 +283,8 @@ Fourier weight by degree).
 
 **The residue classes mod 3** (fd_10 = [B mod 3 = 0] on 10 signed inputs, h6_00 = [B mod 3 ≠ 1] on 13, f7_05 =
 [B mod 3 ≠ 0] on 14):
-- *What the model contains:* nothing but the constant and the kernel background at every n >= 1024 (DFG error = the
-  minority rate, 0.32 / 0.34 / 0.32 at n = 16384). At smaller n the forced variant adds 1–2 spurious characters or a
+- *What the model contains:* nothing but the constant and the kernel background at every n >= 1024 (fd_10 and f7_05
+  from n = 256); DFG error 0.324 / 0.343 / 0.325 at n = 16384, the minority rate. At smaller n the forced variant adds 1–2 spurious characters or a
   spurious partial block (h6_00 at 256: `|−x4+x12−x22−x23|`, 2 of 4 inputs in S).
 - *Is the block detectable?* Yes, from n = 128 unfolded (512 folded); at n = 16384 the true block is at 155 / 139 / 134
   times DFG's threshold (`power/` files, `ratio_unfold_max`).
@@ -283,14 +323,14 @@ Fourier weight by degree).
 
 *Measured* (`tables/toy_v2_v3.md`; summary `tables/toy_summary.json` `v2v3`; figure
 [`figures/fig_toy_v2v3.pdf`](figures/fig_toy_v2v3.pdf)). On the six sum-structured suites (68 targets including the
-controls): mean log2 n\* ratio v3 / v2 −0.097 over the 49 targets with 3-seed n\* for both (dlheld4 has no v3 3-seed run
-yet), −0.106 over 65 targets with seed-0 n\* for both. On 20 targets the portfolio's test error is identical at every
+controls): mean log2 n\* ratio v3 / v2 −0.116 over the 64 targets with a finite 3-seed n\* for both, −0.106 over 65
+targets with a finite seed-0 n\* for both. On 20 targets the portfolio's test error is identical at every
 analysed n.
 
 | change | targets: n_struct v2 → v3 (seed 0); n\* v2 → v3 (3 seeds, else seed 0) |
 |---|---|
 | **weighted blocks** change what is learned | h6_10: never → 256 (weighted `\|s ± 3 x13\|`; exact sign from 512); n\*_3 702 → 206. h6_07: never → 512 (`s1 + 3 x11` with the selector as inner literal); n\*_3 678 → 447. h6_08: never → 1024 (`s2 − 3 x11`, products with `s1 + 3 x11`); n\*_3 446 → 449. f7_10: same n_struct (128), but at 256 v3's model is the exact `(x1+…+x5 + 2 x6)` where v2 has `chi[x6]*\|s\|` and the unit-weight `(x1+…+x5 − x6)`; n\*_3 82 both. symxpar, h6_06, f7_07: the parity partner as inner term, same n_struct; n\*_3 111 → 111, 342 → 349, 174 → 174 |
-| **small-n beam + forced blocks** (n <= 128) | sym7 128 → 64 (forced variant only; at 64 the true block is at 0.89 of the threshold, so it was forced, not accepted), n\*_3 110 → 55. fd_09 256 → 128 (passes the test at 128: 1.62), n\*_3 171 → 101. h6_11 256 → 128, n\*_0 212 → 100 (n\*_3 208 → 184). tail13, sym11, majsym 256 → 128, n\*_0 199 → 100, 219 → 110, 188 → 91 |
+| **small-n beam + forced blocks** (n <= 128) | sym7 128 → 64 (forced variant only; at 64 the true block is at 0.89 of the threshold, so it was forced, not accepted), n\*_3 110 → 55. fd_09 256 → 128 (passes the test at 128: 1.62), n\*_3 171 → 101. h6_11 256 → 128, n\*_0 212 → 100 (n\*_3 208 → 184). tail13, sym11, majsym 256 → 128, n\*_3 176 → 100, 203 → 160, 189 → 90 |
 | later in v3 | h5t1 256 → 512 (portfolio errors identical at every n) |
 | lost | f7_11: v2 has both classes at 2048, v3 never in one model (n\*_3 55 both) |
 | nothing | 41 targets (3 of them controls) have the same n_struct in both, among them all eight of dlheld5's arbitrary accept sets, band11, ex3of8 and twosym; the three mod-3 counts and h6_02 have it in neither |
@@ -349,4 +389,4 @@ DFG's weight is abrupt: one doubling of n takes the median share from 0.44 to 0.
 - The search-reach measure covers the eigenvector and degree-1 orders only, not greedy growth, refinement or the beam.
 - The network n\* (`nets_best`) on dlheld7 uses the variants present when the tables were made: `nets_wd` for all 12
   targets, `nets_cewd0.3` / `nets_cewd1.0` only for f7_00–f7_05 (runs in progress). dlfamdev has no network runs.
-- v3's 3-seed n\* on dlheld4 was not yet available; dlheld4 rows use seed 0 only.
+- v3's 3-seed n\* on random and dlheld–dlheld3 was not available when the tables were made; those rows give seed-0 n\*.
