@@ -17,13 +17,17 @@ Definitions:
               unweighted block class, which v1.3 shares with v1.2)
   n*          10% test-error threshold, log-interpolated (3 seeds where the result file has them; *_s0 = seed 0 only,
               from the structure runs, which reproduce the evaluation's seed-0 cells)
-usage: python toy_interp.py [--figs]"""
+Also: toy_power_w.py (weighted blocks' detection), toy_landscape.py (the statistic around the true block), toy_gfit.py
+(learned g split by tau), read from $INTERP_OUT/{toy_power_w,toy_landscape,toy_g/v3}.
+usage: INTERP_OUT=<live outputs> python toy_interp.py      (without INTERP_OUT: reads the copies in results/toy_final/)"""
 import os, sys, json, glob, math, csv, numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__)); STUDY = os.path.dirname(os.path.dirname(HERE))
 SCR = "/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/p10"
-FINAL = os.path.join(os.environ.get("INTERP_OUT", os.path.join(SCR, "interp_out_final")), "toy")
-POWER = os.path.join(SCR, "interp_out", "toy_power")
+_IO = os.environ.get("INTERP_OUT")                     # live analysis outputs; else the copies in results/toy_final
+EXTRA = _IO if _IO else os.path.join(HERE, "results", "toy_final")
+FINAL = os.path.join(_IO, "toy") if _IO else EXTRA      # <FINAL>/{v3,v2}/<suite>__<target>__s0.json
+POWER = os.path.join(SCR, "interp_out", "toy_power") if _IO else os.path.join(EXTRA, "power")
 RES = os.path.join(STUDY, "hybrid", "results")
 TAB = os.path.join(HERE, "tables"); FIG = os.path.join(HERE, "figures")
 os.makedirs(TAB, exist_ok=True); os.makedirs(FIG, exist_ok=True)
@@ -782,7 +786,7 @@ def fig_g(S3, G, picks, path):
 
 def load_g():
     G = {}
-    for p in sorted(glob.glob(os.path.join(os.path.dirname(FINAL), "toy_g", "v3", "*.json"))):
+    for p in sorted(glob.glob(os.path.join(EXTRA, "toy_g", "v3", "*.json"))):
         J = json.load(open(p)); J["_path"] = p; G[(J["suite"], J["target"], J["n"])] = J
     return G
 
@@ -816,7 +820,7 @@ def check_identity(S, tag):
 
 def load_power_w():
     W = {}
-    for p in sorted(glob.glob(os.path.join(os.path.dirname(FINAL), "toy_power_w", "*.json"))):
+    for p in sorted(glob.glob(os.path.join(EXTRA, "toy_power_w", "*.json"))):
         J = json.load(open(p)); J["_path"] = p
         J["n_detect_w"] = next((c["n"] for c in J["cells"] if max(c["weighted"]["ratio"], c["weighted_fold"]["ratio"]) > 1), None)
         J["n_detect_unit"] = next((c["n"] for c in J["cells"] if max(c["unit"]["ratio"], c["unit_fold"]["ratio"]) > 1), None)
@@ -845,6 +849,18 @@ def weighted_usage(S3):
                                 tau_where=where, share_rel=round(t["share"] / top, 2), cells_with_weighted=n_last, cells=len(r["cells"]),
                                 err_dfg=c.get("err_dfg"), exact_here=exact_all(c)))
                 break
+    return out
+
+
+
+def landscape_table():
+    out = []
+    for p in sorted(glob.glob(os.path.join(EXTRA, "toy_landscape", "*.json"))):
+        J = json.load(open(p))
+        out.append(dict(suite=J["suite"], target=J["target"], n=J["n"], k=J["k"], true=J["true"],
+                        **{f"{k}": J[k]["median"] for k in ("drop_1", "drop_2", "drop_3", "drop_4", "add_1", "add_2", "flip_1", "flip_2", "mixed_3", "random_k")},
+                        mixed_3_frac_gt1=J["mixed_3"]["frac_gt1"], pairs_in_max=J["pairs_in_max"], singles_in_max=J["singles_in_max"],
+                        pairs_out_max=J["pairs_out_max"], file=os.path.basename(p)))
     return out
 
 
@@ -901,7 +917,7 @@ def main():
     write_csv("toy_timing.csv", T, list(T[0].keys()) if T else [])
     fig_timing(T, os.path.join(FIG, "fig_toy_timing.pdf"))
     F = failure_rows(rows, S3, P, [f for f in FAIL] + [(r["suite"], r["target"]) for r in rows if r["suite"] in SUM_SUITES and r["classes"] != "–"
-                                                      and (r["n_struct"] is None or r["n_struct"] >= 1024) and (r["suite"], r["target"]) not in FAIL])
+                                                      and r["kind"] != "control" and (r["n_struct"] is None or r["n_struct"] >= 1024) and (r["suite"], r["target"]) not in FAIL])
     write_md("toy_failures.md", F, ["suite", "target", "k_class", "n_struct", "n_max", "err_last", "n_unfold", "n_fold", "n_mod",
                                     "ratio_unfold_max", "ratio_fold_max", "W1", "W2", "W_le3", "deg_peak", "reach_eig_max", "reach_deg1_max",
                                     "chance", "best_jaccard_last", "nstar3", "nets_best", "lead"],
@@ -934,6 +950,15 @@ def main():
                   "the true inner term), or are irrelevant; cells_with_weighted: analysed n whose model has any weighted block (of cells).")
     write_csv("toy_weighted_blocks_v3.csv", WU, list(WU[0].keys()) if WU else [])
     out["weighted_usage"] = dict(targets=len(WU), by_where={w: [x["target"] for x in WU if x["tau_where"] == w] for w in sorted(set(x["tau_where"] for x in WU))})
+    LS = landscape_table()
+    write_md("toy_landscape.md", LS, ["suite", "target", "n", "k", "true", "drop_1", "drop_2", "drop_3", "drop_4", "add_1", "add_2", "flip_1",
+                                       "flip_2", "mixed_3", "mixed_3_frac_gt1", "random_k", "pairs_in_max", "singles_in_max", "pairs_out_max"],
+             head="### DFG's block statistic around the true block (T / threshold, best of unfolded and folded; seed-0 training rows, round 0)",
+             note="toy_landscape.py: true = the true block; drop_j / add_j / flip_j = median over 200 random candidates with j inputs removed / "
+                  "j random inputs added / j signs flipped; mixed_3 = 3 errors of mixed kinds (and the fraction of those above the threshold); "
+                  "random_k = random blocks of the true size; pairs_in_max / singles_in_max = the best 2-input / 1-input block inside S; "
+                  "pairs_out_max = the best pair among 12 inputs outside S. > 1 means the candidate passes DFG's test.")
+    out["landscape"] = LS
     B = below_discovery(S3)
     write_csv("toy_below_discovery.csv", B, list(B[0].keys()) if B else [])
     out["below"] = below_summary(B)

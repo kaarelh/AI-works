@@ -28,5 +28,6 @@
 | dlheld4 | majsym | band | gate | 1024 | (x1+x2+x3+x4+x5+x8+2*x6x7) | other relevant input | 0.40 | 1 | 7 | 0.00 | yes |
 | dlheld4 | symand | band | gate | 256 | (x1+x2+x3+x4+x5+x6+3*AND(-x8,-x7)) | other relevant input | 1.00 | 3 | 7 | 0.01 | yes |
 | dlheld4 | symxor | band | parity | 512 | (x1+x2+x3+x4+x5+x6+x7-2*x8) | other relevant input | 1.00 | 2 | 8 | 0.0059 | yes |
+| designed | thr10 | – | – | 512 | (x1-x2+x3+x6+x7+2*x10) | other relevant input | 0.85 | 2 | 9 | 0.03 | no |
 
 tau_where: tau's inputs lie in a true symmetry class, are other relevant inputs (a parity partner, a mux selector, a gate literal or the true inner term), or are irrelevant; cells_with_weighted: analysed n whose model has any weighted block (of cells).
