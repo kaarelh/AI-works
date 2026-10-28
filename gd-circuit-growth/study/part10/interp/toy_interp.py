@@ -533,7 +533,7 @@ def fig_timing(T, path):
     axs[1].axvline(2 ** 15, color="#bbb", lw=0.5, ls=":"); axs[1].text(2 ** 15.1, 2 ** 3.8, "never", fontsize=5, rotation=90)
     for x0 in (1, 2):
         axs[0].plot([8, 2 ** 15], [8 * 2 ** x0, 2 ** (15 + x0)], color="#ccc", lw=0.5, ls="--")
-    axs[0].text(2 ** 9.5, 2 ** 14.55, "never (top row):\n" + ", ".join(never), fontsize=4.8, va="top")
+    axs[0].text(2 ** 9.6, 2 ** 3.9, "never (top row):\n" + ", ".join(never), fontsize=4.8, va="bottom")
     from matplotlib.lines import Line2D
     h = [Line2D([], [], marker=m, ls="", color="#777", mec="k", mew=0.3, label=k) for k, m in mk.items()]
     h += [Line2D([], [], marker="o", ls="", color=c, mec="k", mew=0.3, label=k) for k, c in col.items()]
@@ -916,8 +916,8 @@ def fig_v2v3(V, path):
 
 G_PICKS = [("dlheld4", "tail13", 256, "band |s| >= 5"), ("dlheld6", "h6_11", 128, "interval s == 1"),
            ("dlheld6", "h6_01", 512, "arbitrary, signed"), ("dlheld7", "f7_01", 256, "threshold s <= 1"),
-           ("dlheld6", "h6_10", 256, "|s - 3 x13| > 1; tau = x13", "tau"), ("dlheld6", "h6_10", 512, "|s - 3 x13| > 1; tau = x13", "tau"),
-           ("dlheld7", "f7_10", 256, "s + 2 x6 <= -1; tau = x6", "tau"), ("dlheld7", "f7_09", 256, "[s <= 0] x11 x12; tau = x11 x12", "tau")]
+           ("dlheld6", "h6_10", 256, "|s-3x13|>1, tau=x13", "tau"), ("dlheld6", "h6_10", 512, "|s-3x13|>1, tau=x13", "tau"),
+           ("dlheld7", "f7_10", 256, "s+2x6<=-1, tau=x6", "tau"), ("dlheld7", "f7_09", 256, "[s<=0]x11x12, tau=x11x12", "tau")]
 FAIL = [("dlfamdev", "fd_10"), ("dlheld6", "h6_00"), ("dlheld7", "f7_05"), ("dlsymdev", "band11"), ("dlheld7", "f7_08"),
         ("dlheld5", "h5s1"), ("dlheld5", "h5s7")]
 
