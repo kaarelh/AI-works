@@ -20,5 +20,7 @@
 | dlfamdev | fd_07 | control | control | 8 | 3 | 128 | 512 | 128 | 32 | 98 | 76 | – | 512 | 0.0 | (x1+x4+x6-x8) (0.34); chi[x1,x8] (0.30); chi[x2,x3,x5] (0.28) |
 | dlfamdev | fd_08 | interval | gate | 13 | 11 | 1024 | 1024 | 512 | 16384 | 29 | 26 | – | 4096 | 0.0 | chi[x12] (0.52); chi[x13] (0.51); chi[x12,x13] (0.40) |
 | dlfamdev | fd_09 | arbitrary | pure | 6 | 6 | 128 | 128 | 128 | 256 | 101 | 102 | – | 1024 | 0.0 | (x1+x2+x3+x4+x5+x6) (0.51); chi[x6] (0.18); chi[x5] (0.18) |
+| dlfamdev | fd_10 | modular | pure | 10 | 10 | > 16384 | > 16384 | 128 | – | never | never | – | 16384 | 0.324 | background (0.05) |
+| dlfamdev | fd_11 | band | gate | 10 | 9 | 256 | 256 | 128 | 1024 | 123 | 120 | – | 512 | 0.0 | chi[x10] (0.74); \|x1+x2+x3+x4+x5+x6+x7+x8+x9\| x (x10-x14) (0.40); background (0.08) |
 
 n_struct: first analysed n with every true signed-symmetry class of size >= 3 matched exactly by a block, factor or modulator; n_stable: from then on at every analysed n; n_detect: first n at which DFG's test accepts the true (largest) block (toy_power, seed-0 rows); nstar3: v3's 3-seed n* (toy__p10_sum-perm__<suite>.json), '–' where that file is not yet written; nstar_s0: seed-0 n* from the structure run; lead: the largest terms of the final DFG model at n_max (share = sd of the term's output on the test inputs; quad = a spectral feature; background = the kernel background). The structure runs stop after two consecutive n with err <= 0.005.

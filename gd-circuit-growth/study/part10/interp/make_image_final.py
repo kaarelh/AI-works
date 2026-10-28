@@ -94,13 +94,23 @@ for k in keys:
                    for q in (4, 9, 16))
         SUM.setdefault("pool_same_v2_v3", {})[f"{ds}/n{n}"] = bool(same)
     for q in r["pooling"]["ks"]:
-        P = r["pooling"][f"k{q}"]
-        rows2.append([tag, ds, n, q, P["mean_dist"], P["within1"], P["within2"], P["p95_dist"], P["max_dist"], P["overlap_nearest"]])
+        P = r["pooling"][f"k{q}"]; far = mir = 0
+        M = R[k]["m"]
+        if f"pool{q}_members" in M:                                     # members > 2 steps away; of them, mirror pixels
+            for c, mem in zip(M["pool_centres"].astype(int), M[f"pool{q}_members"].astype(int)):
+                for j in mem:
+                    r1, c1, r2, c2 = c // 28, c % 28, j // 28, j % 28
+                    if j != c and max(abs(r1 - r2), abs(c1 - c2)) > 2:
+                        far += 1; mir += int(abs(r1 - r2) <= 1 and abs(c1 + c2 - 27) <= 2)
+            SUM.setdefault("pool_far", {})[f"{tag}/{ds}/n{n}/k{q}"] = dict(far=far, mirror=mir, members=int(len(M["pool_centres"]) * (q - 1)))
+        rows2.append([tag, ds, n, q, P["mean_dist"], P["within1"], P["within2"], P["p95_dist"], P["max_dist"], P["overlap_nearest"],
+                      f"{far} / {mir}" if f"pool{q}_members" in M else "–"])
     T = r["topology"]
     rows3.append([tag, ds, n, r["pooling"]["n_active"]] + [f"{T[v]['procrustes_r2']:.3f} ({T[v]['nodes']})" if v in T else "–"
                                                          for v in ("k4_union", "k9_union", "k9_mutual", "k16_mutual")])
 T2 = md_table(["learner", "dataset", "n", "k", "mean Chebyshev dist. of members", "frac. within 1", "frac. within 2",
-               "95th pct dist.", "max dist.", "overlap with k nearest"], rows2)
+               "95th pct dist.", "max dist.", "overlap with k nearest",
+               "members > 2 steps away / of which mirror pixels (row +-1, c + c' = 27 +- 2)"], rows2)
 T3 = md_table(["learner", "dataset", "n", "active pixels", "k=4 union", "k=9 union", "k=9 mutual", "k=16 mutual"], rows3)
 
 
@@ -530,32 +540,32 @@ def fig_stack():
 
 
 def fig_contrib(ds, name):
-    rows_ = [("class mean (training)", None, None)]
-    for tag, b in (("v3", "cgbt"), ("v3", "ggbt"), ("v2", "ggbt")):
-        k = (tag, ds, 10000, 0)
-        if k in R and f"{b}_contrib" in R[k]["m"]:
-            rows_.append((f"{tag} {b}", k, b))
-    k3 = ("v3", ds, 10000, 0)
+    """Rows: class mean; cgbt; ggbt (v2's run if present: the same booster, see T8); cgbt's bars only; cgbt on the
+    pixels blank in the point; ggbt's pooled sums only; ggbt's pairs only.  Each map scaled to its own max |value|."""
+    k3, k2 = ("v3", ds, 10000, 0), ("v2", ds, 10000, 0)
     if k3 not in R:
         return
-    if "cgbt_contrib_bars2" in R[k3]["m"]:
-        rows_.append(("v3 cgbt: bars only", k3, "bars"))
-    if "ggbt_contrib_pairs" in R[k3]["m"]:
-        rows_.append(("v3 ggbt: pairs only", k3, "pairs"))
-    lab = LAB.get(ds, [str(i) for i in range(10)]); Mu = R[k3]["m"]["class_mean"]
-    fig, axs = plt.subplots(len(rows_), 10, figsize=(7.0, 0.78 * len(rows_) + 0.25))
-    for i, (nm, k, b) in enumerate(rows_):
+    kg = k2 if k2 in R else k3; M3, Mg = R[k3]["m"], R[kg]["m"]
+    rows_ = [("class mean\n(training)", lambda c: Mu[c], "ink"),
+             ("v3 cgbt", lambda c: M3["cgbt_contrib"][c], "c"),
+             (f"ggbt ({kg[0]} run)", lambda c: Mg["ggbt_contrib"][c], "c"),
+             ("cgbt:\nbars only", lambda c: M3["cgbt_contrib_bars2"][c] + M3["cgbt_contrib_bars4"][c], "c")]
+    if "cgbt_contrib_inked" in M3:
+        rows_.append(("cgbt: on pixels\nblank in the image", lambda c: M3["cgbt_contrib"][c] - M3["cgbt_contrib_inked"][c], "c"))
+    rows_ += [("ggbt: pooled\nsums only", lambda c: Mg["ggbt_contrib_pool4"][c] + Mg["ggbt_contrib_pool9"][c] + Mg["ggbt_contrib_pool16"][c], "c"),
+              ("ggbt: pairs only", lambda c: Mg["ggbt_contrib_pairs"][c], "c")]
+    lab = LAB.get(ds, [str(i) for i in range(10)]); Mu = M3["class_mean"]
+    fig, axs = plt.subplots(len(rows_), 10, figsize=(7.0, 0.72 * len(rows_) + 0.2))
+    for i, (nm, f, kind) in enumerate(rows_):
         for c in range(10):
-            a = axs[i, c]
-            if k is None:
-                a.imshow(Mu[c].reshape(28, 28), cmap=CM_INK); a.set_title(lab[c][:13], fontsize=5.5)
+            a = axs[i, c]; v = f(c)
+            if kind == "ink":
+                a.imshow(v.reshape(28, 28), cmap=CM_INK); a.set_title(lab[c][:13], fontsize=5.5)
             else:
-                M = R[k]["m"]
-                v = (M["cgbt_contrib_bars2"][c] + M["cgbt_contrib_bars4"][c]) if b == "bars" else M["ggbt_contrib_pairs"][c] if b == "pairs" else M[f"{b}_contrib"][c]
-                s = np.abs(v).max() or 1; a.imshow(v.reshape(28, 28), cmap="RdBu_r", vmin=-s, vmax=s)
+                s_ = np.abs(v).max() or 1; a.imshow(v.reshape(28, 28), cmap="RdBu_r", vmin=-s_, vmax=s_)
             a.set_xticks([]); a.set_yticks([])
-        axs[i, 0].set_ylabel(nm, fontsize=5, rotation=0, ha="right", va="center")
-    fig.subplots_adjust(left=0.13, right=0.995, top=0.93, bottom=0.01, wspace=0.04, hspace=0.06)
+        axs[i, 0].set_ylabel(nm, fontsize=5.2, rotation=0, ha="right", va="center")
+    fig.subplots_adjust(left=0.135, right=0.995, top=0.955, bottom=0.005, wspace=0.04, hspace=0.06)
     save(fig, name)
 
 

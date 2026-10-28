@@ -3,6 +3,6 @@
 | suite | structured | recovered | median_n_struct | at_le_128 | at_le_512 | never | controls |
 |---|---|---|---|---|---|---|---|
 | dlsymdev | 8 | 8 | 128 | 5 | 7 | – | 0 |
-| dlfamdev | 8 | 8 | 128 | 5 | 7 | – | 2 |
+| dlfamdev | 10 | 9 | 128 | 5 | 8 | fd_10 | 2 |
 
 structured = targets with at least one signed-symmetry class of size >= 3; controls (no such class) excluded.

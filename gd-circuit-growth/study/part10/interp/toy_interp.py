@@ -326,22 +326,23 @@ def recovery_tables(rows):
     # by suite
     S = []
     for su in SUM_SUITES:
-        R = [r for r in sel if r["suite"] == su and r["classes"] != "–"]
+        R = [r for r in sel if r["suite"] == su and r["classes"] != "–" and r["kind"] != "control"]
         if not R:
             continue
         rec = [r for r in R if r["n_struct"] is not None]
         S.append(dict(suite=su, structured=len(R), recovered=len(rec), never=", ".join(r["target"] for r in R if r["n_struct"] is None) or "–",
                       median_n_struct=fmt_n(float(np.median([r["n_struct"] for r in rec]))) if rec else "–",
                       at_le_128=sum(1 for r in rec if r["n_struct"] <= 128), at_le_512=sum(1 for r in rec if r["n_struct"] <= 512),
-                      controls=sum(1 for r in sel if r["suite"] == su and r["classes"] == "–")))
+                      controls=sum(1 for r in sel if r["suite"] == su and r["kind"] == "control")))
     write_md("toy_recovery_by_suite.md", S, ["suite", "structured", "recovered", "median_n_struct", "at_le_128", "at_le_512", "never", "controls"],
              head="### Exact structure recovered by v3's DFG member, by suite (seed 0)",
-             note="structured = targets with at least one signed-symmetry class of size >= 3; controls (no such class) excluded.")
+             note="structured = the family's / suite's sum-structured targets (every one has a signed-symmetry class of size >= 3); the "
+                       "non-symmetric controls are counted separately (fd_07, a DNF, has a 3-input symmetric class; it is not counted).")
     # by kind / mixture
     K = []
     groups = {}
     for r in sel:
-        if r["classes"] == "–":
+        if r["classes"] == "–" or r["kind"] == "control":
             continue
         for kk in r["kind"].split("+"):
             groups.setdefault(("accept", kk), []).append(r)
@@ -390,7 +391,7 @@ def timing(rows, PW=None):
     same fits; and 3 seeds where available).  log2 ratios; never-found targets are reported separately (not in medians)."""
     T = []
     for r in rows:
-        if r["suite"] not in SUM_SUITES or r["classes"] == "–" or r.get("n_detect") is None and r.get("power_file") is None:
+        if r["suite"] not in SUM_SUITES or r["classes"] == "–" or r["kind"] == "control" or r.get("power_file") is None:
             continue
         q = dict(suite=r["suite"], target=r["target"], kind=r["kind"], mixture=r["mixture"], k_power=r.get("power_k"),
                  n_detect=r.get("n_detect"), n_unfold=r.get("n_unfold"), n_fold=r.get("n_fold"), n_mod=r.get("n_mod"),
@@ -502,7 +503,7 @@ def cell_contents(c, rel, cls):
 def below_discovery(S3):
     out = []
     for (su, tg), r in S3.items():
-        if su not in SUM_SUITES or not big_classes(r):
+        if su not in SUM_SUITES or not big_classes(r) or KIND.get(tg, ("control",))[0] == "control":
             continue
         ns, _ = first_struct(r); rel = set(r["truth"]["relevant"])
         for c in r["cells"]:

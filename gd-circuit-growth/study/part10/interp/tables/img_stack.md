@@ -1,8 +1,9 @@
 # Stacker weight / out-of-fold error per member
 
-Source files: $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n1000__s0.json (and the .npz next to each).
+Source files: $SCRATCH/p10/interp_out_final/image/v3/fashion_mnist__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n10000__s0.json, $SCRATCH/p10/interp_out_final/image/v3/qd_dev__n1000__s0.json (and the .npz next to each).
 
 | learner | dataset | n | cgbt | ggbt | gknn_1 | gknn_3 | gknn_9 | gknn_27 | knn_std_1 | knn_std_3 | knn_std_9 | knn_std_27 | knn_raw_1 | knn_raw_3 | knn_raw_9 | knn_raw_27 | gbt | et | lin_0.05 | lin_1.0 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | v3 | qd_dev | 1000 | 0.252 / 0.272 | 0.071 / 0.280 | 0.076 / 0.327 | 0.091 / 0.320 | 0.181 / 0.324 | 0.000 / 0.382 | 0.020 / 0.372 | 0.051 / 0.388 | 0.000 / 0.445 | 0.000 / 0.549 | 0.055 / 0.361 | 0.000 / 0.396 | 0.000 / 0.419 | 0.000 / 0.516 | 0.000 / 0.342 | 0.000 / 0.338 | 0.000 / 0.371 | 0.000 / 0.404 |
 | v3 | qd_dev | 10000 | 0.342 / 0.149 | 0.054 / 0.161 | 0.040 / 0.207 | 0.069 / 0.196 | 0.012 / 0.190 | 0.000 / 0.211 | 0.029 / 0.249 | 0.024 / 0.238 | 0.000 / 0.243 | 0.000 / 0.266 | 0.059 / 0.244 | 0.054 / 0.228 | 0.019 / 0.235 | 0.000 / 0.263 | 0.000 / 0.189 | 0.025 / 0.234 | 0.000 / 0.301 | 0.000 / 0.357 |
+| v3 | fashion_mnist | 10000 | 0.069 / 0.126 | 0.103 / 0.127 | 0.000 / 0.202 | 0.000 / 0.180 | 0.000 / 0.180 | 0.000 / 0.196 | 0.000 / 0.189 | 0.008 / 0.193 | 0.000 / 0.185 | 0.000 / 0.204 | 0.020 / 0.188 | 0.000 / 0.188 | 0.000 / 0.189 | 0.000 / 0.203 | 0.173 / 0.134 | 0.157 / 0.155 | 0.129 / 0.159 | 0.004 / 0.200 |
