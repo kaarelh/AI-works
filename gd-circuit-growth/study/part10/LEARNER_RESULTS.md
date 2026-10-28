@@ -11,7 +11,7 @@ Mean log2 n* ratio over targets both learn; clearly better / worse: |log2 ratio|
 | designed | development | 21 | -2.42 (21/0) | -3.07 / -2.42 (2 variants) | -0.03 (1/0) | -0.10 (3/0) | -0.85 (19/0) | – | 0 |
 | random | development check (Part 6) | (v3 not run yet) | | | | | | | |
 | dlheld | held out, Part 6 | (v3 not run yet) | | | | | | | |
-| dlheld2 | held out, Part 6 | (v3 not run yet) | | | | | | | |
+| dlheld2 | held out, Part 6 | 7 | -1.99 (7/0) | -2.62 / -1.99 (2 variants) | -0.14 (1/0) | -0.45 (1/0) | -0.58 (5/0) | -2.79 (6/0) | 0 |
 | dlheld3 | held out, Part 8 | 10 | -1.80 (10/0) | -2.52 / -1.95 (3 variants) | -0.04 (0/0) | -0.40 (1/0) | -0.99 (9/0) | -1.82 (9/0) | 0 |
 | dlsymdev | development, Part 9 | 8 | -2.22 (8/0) | -3.07 / -2.23 (3 variants) | -0.18 (2/0) | -2.48 (8/0) | n/a (8/0) | – | 0 |
 | dlheld4 | held out, Part 9 (definitions seen by a builder) | 12 | -1.87 (12/0) | -2.78 / -1.93 (3 variants) | -0.19 (3/0) | -1.58 (8/0) | -1.54 (12/0) | -2.85 (11/0) | 0 |
@@ -20,7 +20,7 @@ Mean log2 n* ratio over targets both learn; clearly better / worse: |log2 ratio|
 | dlfamdev | development, Part 10 | 12 | – | – | -0.05 (1/1) | – | – | – | |
 | dlheld7 | held out, Part 10 (fresh draw of the blind family) | 12 | -1.50 (10/0) | -1.83 / -1.58 (3 variants) | -0.00 (0/0) | – | -0.70 (9/0) | -1.64 (9/0) | 1 |
 
-Pooled over the 5 held-out suites (58 targets): mean log2 n* ratio v3 / nets_best -1.82 over 55 targets both learn; clearly better 53, clearly worse 1.
+Pooled over the 6 held-out suites (65 targets): mean log2 n* ratio v3 / nets_best -1.84 over 62 targets both learn; clearly better 60, clearly worse 1.
 
 ## Standard tasks: test error against references (cell verdicts as in Part 8)
 
@@ -94,9 +94,9 @@ Pooled over the 5 held-out suites (58 targets): mean log2 n* ratio v3 / nets_bes
 | images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp_best+ | all | 1 | 2 | 2 | 0 | 0 | -0.325 | 1 of 1 (p = 1) |
 | images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp_best+ | n <= 3000 | 1 | 1 | 1 | 0 | 0 | -0.313 | 1 of 1 (p = 1) |
 | images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp_best+ | n >= 10000 | 1 | 1 | 1 | 0 | 0 | -0.336 | 1 of 1 (p = 1) |
-| images, Part 10 held out (QuickDraw qd_c, qd_d) | hgb | all | 1 | 3 | 3 | 0 | 0 | -0.502 | 1 of 1 (p = 1) |
-| images, Part 10 held out (QuickDraw qd_c, qd_d) | hgb | n <= 3000 | 1 | 1 | 1 | 0 | 0 | -0.497 | 1 of 1 (p = 1) |
-| images, Part 10 held out (QuickDraw qd_c, qd_d) | hgb | n >= 10000 | 1 | 2 | 2 | 0 | 0 | -0.504 | 1 of 1 (p = 1) |
+| images, Part 10 held out (QuickDraw qd_c, qd_d) | hgb | all | 2 | 6 | 6 | 0 | 0 | -0.471 | 2 of 2 (p = 0.5) |
+| images, Part 10 held out (QuickDraw qd_c, qd_d) | hgb | n <= 3000 | 2 | 2 | 2 | 0 | 0 | -0.467 | 2 of 2 (p = 0.5) |
+| images, Part 10 held out (QuickDraw qd_c, qd_d) | hgb | n >= 10000 | 2 | 4 | 4 | 0 | 0 | -0.473 | 2 of 2 (p = 0.5) |
 | images, Part 10 held out (QuickDraw qd_c, qd_d) | hyb_portfolio2 | all | 2 | 6 | 0 | 6 | 0 | -0.097 | 2 of 2 (p = 0.5) |
 | images, Part 10 held out (QuickDraw qd_c, qd_d) | hyb_portfolio2 | n <= 3000 | 2 | 2 | 0 | 2 | 0 | -0.040 | 2 of 2 (p = 0.5) |
 | images, Part 10 held out (QuickDraw qd_c, qd_d) | hyb_portfolio2 | n >= 10000 | 2 | 4 | 0 | 4 | 0 | -0.125 | 2 of 2 (p = 0.5) |
@@ -105,6 +105,8 @@ Pooled over the 5 held-out suites (58 targets): mean log2 n* ratio v3 / nets_bes
 | images, Part 10 held out (QuickDraw qd_c, qd_d) | hyb_portfolio | n >= 10000 | 1 | 2 | 2 | 0 | 0 | -0.302 | 1 of 1 (p = 1) |
 | images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp_pool | all | 1 | 2 | 2 | 0 | 0 | -0.222 | 1 of 1 (p = 1) |
 | images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp_pool | n >= 10000 | 1 | 2 | 2 | 0 | 0 | -0.222 | 1 of 1 (p = 1) |
+| images, Part 10 held out (QuickDraw qd_c, qd_d) | cnn | all | 1 | 1 | 0 | 1 | 0 | +0.126 | 0 of 1 (p = 1) |
+| images, Part 10 held out (QuickDraw qd_c, qd_d) | cnn | n <= 3000 | 1 | 1 | 0 | 1 | 0 | +0.126 | 0 of 1 (p = 1) |
 | images, Part 9 held out (qd_a, qd_b; v3 at its seed-0 dev cells) | mlp | all | 2 | 5 | 5 | 0 | 0 | -0.546 | 2 of 2 (p = 0.5) |
 | images, Part 9 held out (qd_a, qd_b; v3 at its seed-0 dev cells) | mlp | n <= 3000 | 2 | 2 | 2 | 0 | 0 | -0.499 | 2 of 2 (p = 0.5) |
 | images, Part 9 held out (qd_a, qd_b; v3 at its seed-0 dev cells) | mlp | n >= 10000 | 2 | 3 | 3 | 0 | 0 | -0.578 | 2 of 2 (p = 0.5) |
@@ -169,13 +171,13 @@ Pooled over the 5 held-out suites (58 targets): mean log2 n* ratio v3 / nets_bes
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | qd_c | 100 | – | – | – | – | 0.5849 | – | – | – | – | 0.5849 | 0.5849 | – | – |
 | qd_c | 300 | – | – | – | – | 0.4724 | – | – | – | – | 0.4724 | 0.4724 | – | – |
-| qd_c | 1000 | 0.2658 | 0.2748 | – | 0.3752 | 0.3772 | – | 0.3301 | 0.3302 | – | 0.3301 | 0.3301 | – | – |
+| qd_c | 1000 | 0.2658 | 0.2748 | – | 0.3752 | 0.3772 | – | 0.3301 | 0.3302 | – | 0.3301 | 0.3301 | – | 0.2436 |
 | qd_c | 3000 | – | – | – | – | 0.3099 | – | – | – | – | 0.3099 | 0.3099 | – | – |
 | qd_c | 10000 | 0.1617 | 0.1779 | – | 0.2276 | 0.2420 | – | 0.2094 | 0.2041 | – | 0.2094 | 0.2041 | 0.1937 | – |
 | qd_c | 60000 | 0.1276 | 0.1363 | – | 0.1822 | – | – | 0.1608 | 0.1412 | 0.1412 | – | – | 0.1448 | – |
-| qd_d | 1000 | 0.2612 | 0.2671 | 0.3021 | – | – | – | 0.3162 | 0.3140 | – | – | – | – | – |
-| qd_d | 10000 | 0.1638 | 0.1782 | 0.1970 | – | – | – | 0.2030 | 0.1989 | – | – | – | – | – |
-| qd_d | 60000 | 0.1264 | 0.1399 | 0.1597 | – | – | – | 0.1534 | 0.1431 | 0.1383 | – | – | – | – |
+| qd_d | 1000 | 0.2612 | 0.2671 | 0.3021 | 0.3533 | – | – | 0.3162 | 0.3140 | – | – | – | – | – |
+| qd_d | 10000 | 0.1638 | 0.1782 | 0.1970 | 0.2185 | – | – | 0.2030 | 0.1989 | – | – | – | – | – |
+| qd_d | 60000 | 0.1264 | 0.1399 | 0.1597 | 0.1748 | – | – | 0.1534 | 0.1431 | 0.1383 | – | – | – | – |
 | qd_a | 3000 | 0.1748 | 0.1860 | 0.2128 | 0.2431 | 0.2584 | 0.2583 | 0.2302 | 0.2267 | – | 0.2302 | 0.2267 | – | – |
 | qd_a | 10000 | 0.1422 | 0.1500 | 0.1721 | 0.1940 | 0.2160 | 0.2094 | 0.1844 | 0.1783 | – | 0.1844 | 0.1783 | 0.1642 | 0.1200 |
 | qd_a | 60000 | 0.1082 | 0.1197 | 0.1421 | 0.1523 | 0.1665 | 0.1521 | 0.1332 | 0.1285 | 0.1246 | 0.1332 | 0.1246 | 0.1225 | – |
