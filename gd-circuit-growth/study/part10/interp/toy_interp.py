@@ -290,6 +290,8 @@ def target_rows(S3, S2, P, N3, N2, NN):
                    nstar3_v2=n2[0] if n2 else None, nets_best=nn[0] if nn else None, nets_variants=nn[1] if nn else "",
                    n_struct_v2=ns2, n_stable_v2=st2, struct_file=os.path.basename(r["_path"]),
                    n_dfg01=next((c["n"] for c in C if c.get("err_dfg") is not None and c["err_dfg"] <= 0.01), None),
+                   n_class_first="/".join(fmt_n(next((c["n"] for c in C if c.get("classes") and c["classes"][q]["exact"]), None)) for q in range(len(big))) if big else "–",
+                   classes_exact_last=f"{sum(x['exact'] for x in last.get('classes') or [])}/{len(big)}" if big else "–",
                    n_dfg01_v2=next((c["n"] for c in r2["cells"] if c.get("err_dfg") is not None and c["err_dfg"] <= 0.01), None) if r2 else None)
         if tg in INNER:
             c0 = big[0]["S"] if big else None
@@ -312,7 +314,7 @@ SUITES_ORDER = SUM_SUITES + OTHER_SUITES
 
 
 def recovery_tables(rows):
-    cols = ["suite", "target", "kind", "mixture", "k", "classes", "n_struct", "n_stable", "n_dfg01", "n_detect", "n_reach5", "nstar3", "nstar_s0",
+    cols = ["suite", "target", "kind", "mixture", "k", "classes", "n_struct", "n_stable", "n_class_first", "classes_exact_last", "n_dfg01", "n_detect", "n_reach5", "nstar3", "nstar_s0",
             "nets_best", "n_max", "err_last", "lead"]
     sel = [r for r in rows if r["suite"] in SUM_SUITES]
     fmt = []
@@ -324,6 +326,8 @@ def recovery_tables(rows):
             q["n_struct"] = q["n_stable"] = "n/a"
         elif r["n_struct"] is None:
             q["n_struct"] = q["n_stable"] = f"> {r['n_max']}"
+        elif r["n_stable"] is None:
+            q["n_stable"] = f"lost at {r['n_max']}"
         fmt.append(q)
     write_md("toy_recovery_v3.md", fmt, cols,
              head="### v3's DFG member on the sum-structured suites (seed 0; final matcher)",
@@ -333,7 +337,7 @@ def recovery_tables(rows):
                   "'–' where that file is not yet written; nstar_s0: seed-0 n* from the structure run; lead: the largest terms of "
                   "the final DFG model at n_max (share = sd of the term's output on the test inputs; quad = a spectral feature; "
                   "background = the kernel background). The structure runs stop after two consecutive n with err <= 0.005.")
-    write_csv("toy_recovery_v3.csv", rows, ["suite", "target", "desc", "kind", "mixture", "k", "classes", "n_struct", "n_stable",
+    write_csv("toy_recovery_v3.csv", rows, ["suite", "target", "desc", "kind", "mixture", "k", "classes", "n_struct", "n_stable", "n_class_first", "classes_exact_last",
               "n_detect", "n_unfold", "n_fold", "n_mod", "n_reach", "n_reach5", "reach_deg1", "reach_eig", "W1", "W2", "nstar3", "nstar3_file", "nstar_s0",
               "nstar3_v2", "n_struct_v2", "n_stable_v2", "n_dfg01", "n_dfg01_v2", "nets_best", "nets_variants", "n_max", "err_last", "err_dfg_last",
               "w_dfg_last", "span_r2_last", "fourier_chi_last", "inner_last", "n_inner", "n_inner_exact", "inner_by_n", "lead", "struct_file", "power_file"])

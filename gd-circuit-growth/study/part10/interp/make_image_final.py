@@ -85,6 +85,33 @@ for k in keys:
 T1 = md_table(["learner", "dataset", "n", "seed", "test err (analysis fit)", "test err (evaluation cell)", "equal",
                "stacker oof err", "fit CPU s", "cell file"], rows)
 
+# ------------------------------------------- T1b: the evaluation cells' own records (info) next to the analysis fits
+def fam_share(W):
+    tw = sum(W.values()) or 1.0
+    fam = {"cgbt": ["cgbt"], "ggbt": ["ggbt"], "gknn": [m for m in W if m.startswith("gknn")], "knn": [m for m in W if m.startswith("knn")],
+           "gbt+et": ["gbt", "et"], "lin": [m for m in W if m.startswith("lin")]}
+    return {f_: sum(W.get(m, 0) for m in ms) / tw for f_, ms in fam.items()}, tw
+
+
+rows1b = []; SUM["cells"] = {}
+for tag, ds, n in (("v3", "qd_dev", 10000), ("v2", "qd_dev", 10000), ("v3", "fashion_mnist", 10000), ("v2", "fashion_mnist", 10000),
+                   ("v3", "qd_a", 10000), ("v3", "qd_dev", 1000)):
+    cf = os.path.join(CELLS, CELL_DIR[tag].format(ds=ds), f"n{n}_s0.json")
+    if not os.path.exists(cf):
+        continue
+    c = json.load(open(cf)); I = c.get("info", {}); W = I.get("weights", {}); O = I.get("member_oof_err", {}); fs, tw = fam_share(W)
+    a = get(tag, ds, n)
+    for src, err, rnd, so, Ww, Oo in (("evaluation cell", c["err"], I.get("ggbt_rounds"), I.get("stack_oof_err"), W, O),) + (
+            (("analysis fit", a["j"]["err"], a["j"].get("ggbt_rounds"), a["j"].get("stack_oof_err"), a["j"]["weights"], a["j"]["member_oof_err"]),) if a else ()):
+        f2, t2 = fam_share(Ww)
+        SUM["cells"][f"{tag}/{ds}/n{n}/{src}"] = dict(err=err, ggbt_rounds=rnd, stack_oof=so, ggbt_oof=Oo.get("ggbt"), cgbt_oof=Oo.get("cgbt"),
+                                                    family_share=f2, total_weight=t2, file=rel(cf) if src == "evaluation cell" else rel(a["path"]))
+        rows1b.append([tag, ds, n, src, f"{err:.4f}", rnd, fmt(so), fmt(Oo.get("ggbt")), fmt(Oo.get("cgbt")), f"{t2:.3f}",
+                       " ".join(f"{k_}:{v_:.3f}" for k_, v_ in f2.items() if v_ > 0)])
+T1 += ("\nThe evaluation cells' own records (`info` in the cell file) next to the analysis fits:\n\n" +
+       md_table(["learner", "dataset", "n", "source", "test err", "ggbt rounds", "stacker oof err", "ggbt oof err", "cgbt oof err",
+                 "total weight", "weight share by family"], rows1b))
+
 # ------------------------------------------------------------------------------------------ T2/T3: pooling, topology
 rows2, rows3 = [], []
 for k in keys:
@@ -505,7 +532,8 @@ def fig_bars():
         gw = [w @ (B["st"] > 0), w @ B["co"], w @ (B["el"] >= 0.9), w @ (B["dv"] <= 1)]
         x = np.arange(4) + (2 * j - 1.5) * width
         ax.bar(x, allv, width, color=c, alpha=0.4, label=f"L = {L}, all bars"); ax.bar(x + width, gw, width, color=c, label=f"L = {L}, gain-weighted")
-    ax.set_xticks(np.arange(4)); ax.set_xticklabels(cats, fontsize=5.5); ax.set_ylim(0, 1.18); ax.legend(frameon=False, fontsize=5, ncol=2, loc="upper left")
+    ax.set_xticks(np.arange(4)); ax.set_xticklabels(cats, fontsize=5.5); ax.set_ylim(0, 1.3); ax.set_yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
+    ax.legend(frameon=False, fontsize=5, ncol=2, loc="upper left")
     ax.set_title(f"(a) bar geometry on the true grid ({DSN[k[1]]}, n = {k[2]})", loc="left", fontsize=6.5)
     ax = fig.add_subplot(gb_[0, 1]); ns = [n for n in (1000, 3000, 10000) if (("v3", "qd_dev", n, 2)) in BG]
     for L, c in ((2, "#1f77b4"), (4, "#d62728")):
