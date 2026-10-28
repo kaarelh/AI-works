@@ -1,0 +1,127 @@
+\section{How Part 10 was run}\label{app:provenance}
+
+Part 10 and this paper were produced by an AI system, Claude (Anthropic), on 27--28 October 2026. Kaarel H\"anni posed the request (\cref{sec:intro}). No human has reviewed the code, the results or this text. Times are UTC. The records are:
+\begin{itemize}
+\item the protocol \repo{study/part10/PROTOCOL.md}, written before any design work and amended only by dated decision entries and notes;
+\item the builders' notes \repo{study/part10/p10_sum/DESIGN.md}, \repo{study/part10/p10_hier/DESIGN.md} and \repo{study/part10/p10_codes/DESIGN.md};
+\item the assembly record \repo{study/part10/hyb_portfolio3/ASSEMBLY.md};
+\item the verification record of the interpretability analyses, \repo{study/part10/interp/VERIFICATION.json}.
+\end{itemize}
+
+\paragraph{Organisation.} One orchestrating session wrote the protocol, fixed the held-out sets, ran every evaluation and reference, applied the rules and assembled v3. It delegated four kinds of work to separate agents with their own instructions: the three builders; two interpretability analysts; four verifiers of the analyses; and the drafting of sections of this paper. The builders worked on development data only. The orchestrator read no held-out result of a Part 10 learner before that learner was frozen (\cref{sec:disc-provenance-disclosures} lists what it did read).
+
+\subsection{Protocol and builders}\label{app:builders}
+
+\paragraph{The protocol} was committed at 18:50 on 27 October (\texttt{dc70266c}), before any design work. It fixed the held-out sets \code{dlheld7}, \code{qd_c} and \code{qd_d} and the development draw \code{dlfamdev}; the budgets; the three builders' tasks and their fixed development evaluations; the integration rule; the held-out evaluation with its references; the best-learner rule; and the plan for the interpretability analysis and this paper (\cref{sec:discipline}).
+
+\begin{table}[ht]
+\centering\footnotesize\setlength{\tabcolsep}{4pt}\renewcommand{\arraystretch}{1.15}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{2.0cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{2.1cm}>{\raggedright\arraybackslash}p{2.0cm}>{\raggedright\arraybackslash}p{3.6cm}}
+\toprule
+builder & component & development & frozen (md5) & fixed development evaluation\\
+\midrule
+T, \code{p10_sum} & DFG v1.3: weighted sum blocks, forced blocks at $n\ge48$, beam at $n\le128$ & 18:52--19:44 (52 min) & 19:44 (\texttt{5ee995ad}; \texttt{dfg13.py} \texttt{69cabe5c}) & 20:00--21:35 on \code{designed}, \code{dlsymdev}, \code{dlfamdev}, 3 seeds; kr\_vs\_kp at $n=1000$\\
+I1, \code{p10_hier} & a max-pooling second level in \code{ggbt}'s bank; pairs dropped & 18:52--19:45 (about 55 min) & 19:45 (\texttt{1da21bf7}) & 19:45--21:35 on the 8 image cells and \code{qd_a} at $n=60000$, seed 0\\
+I2, \code{p10_codes} & a second booster \code{cgbt} on pooled sums and bars & 21:37--22:10 (35 min) & 22:10 (\texttt{fd688acd}) & 22:10--23:43, the same 9 cells; interrupted at 22:40 and resumed (below)\\
+\bottomrule
+\end{tabularx}
+\caption{The three Part 10 builders, 27 October. Times from each builder's \texttt{DESIGN.md}; the evaluation's end for \code{p10_codes} is the commit that recorded it (\texttt{16ef5fde}). Every evaluation cell records the md5 of the file it ran.}
+\label{tab:builders}
+\end{table}
+
+\paragraph{The builders} are summarized in \cref{tab:builders}. Each changed one component of v2, delivered a full learner file, a \texttt{DESIGN.md} and an md5 at its freeze, and then ran the fixed development evaluation once. Development used validation rows of the development sets only, never a test set. Three events during the evaluations are recorded in the notes:
+\begin{itemize}
+\item \emph{\code{p10_sum}.} Its evaluation was started at 19:44 as 8 shards in one shell session. The machine's autogroup scheduler gave the shards together about 0.55 cores, so at 20:00 they were stopped, before any result was written, and restarted unchanged in four sessions. Only the restarted run produced results.
+\item \emph{\code{p10_hier}.} Its \code{qd_dev} process was killed by the shared memory limit at about 20:29 and restarted; the finished $n=1000$ cell was kept and $n=10000$ refitted with the same random streams. Its $n=60000$ cell waited 1 h 28 min for the shared large-fit lock and ran 21:13--21:35.
+\item \emph{\code{p10_codes}.} It started after the other two builders had finished. The container restarted at 22:40, with 2 of its 9 cells done, and the workflow that ran the builders was lost. The orchestrator resumed the evaluation with the builder's own script. The cells are resumable and record the learner's md5, which was unchanged. The orchestrator took the builder's summary from its \texttt{DESIGN.md}, whose evaluation and cost placeholders (\S3, \S5) the builder never filled.
+\end{itemize}
+
+\subsection{The integration and best-learner decisions}\label{sec:decisions}
+
+The rules (\cref{sec:discipline}) were applied by \repo{study/part10/compare_part10.py} from the result files, and each decision was entered in the protocol when it was made. The numbers are in \repo{study/part10/RESULTS.md}.
+\begin{itemize}
+\item \emph{Toy component: adopted} (21:35; commit \texttt{33df158e}, 21:50). Against v2 on \code{designed}, \code{dlsymdev} and \code{dlfamdev} (41 targets, inputs permuted, 3 seeds), \code{p10_sum}'s mean $\log_2\nstar$ ratio is $-0.066$ over the 40 targets both learn: $-0.028$ on \code{designed}, $-0.178$ on \code{dlsymdev} and $-0.055$ on \code{dlfamdev}. The largest increase is $+0.26$ (fd\_06). The rule asked for a mean below $-0.05$ and no increase above 0.5. v2's development fits are \code{p9_sum}'s on \code{designed} and \code{dlsymdev}, the same code on toy inputs (110 of 110 seed-0 cells on \code{designed} checked equal), and v2's own on \code{dlfamdev}.
+\item \emph{Image component: \code{p10_codes} adopted} (23:40). Both candidates qualified, and the rule takes the one with the lower mean $\log_2$ error ratio against v2 over the 8 development cells. \code{p10_codes} had $-0.078$; at \code{qd_a}, $n=60000$, 10.82\% error (limit 12.57\%), 1453 CPU s (limit 2636 s) and 0.58 of the FLOP budget. \code{p10_hier} had $-0.071$, 11.08\%, 924 s and 0.44. The builders' own numbers used Part 9's \code{p9_gates} development errors for v2 on \code{qd_dev} and Fashion-MNIST (so \code{p10_hier}'s note reports $-0.068$); the rule used v2's own runs on those cells, made for Part 10.
+\item \emph{Assembly and freeze} (23:45; commit \texttt{20003f85}, 23:50). The script \repo{study/part10/assemble_v3.py} built v3 from the learner file of \code{p10_codes}, with DFG v1.3. \texttt{learner.py} has md5 \texttt{b045fafe1e24418620bf8c503aa601c6} and \texttt{dfg13.py} \texttt{69cabe5c50345cb24079198ed52b562f}. All 15 identity checks on development data gave identical predictions: v3 against \code{p10_sum} on 12 toy fits and on kr\_vs\_kp, against \code{p10_codes} on a \code{qd_dev} fit, and against v2 on optdigits. The files were made read-only.
+\item \emph{Scheduling.} Neither image candidate changes any non-image code path, so v3's behaviour on toy inputs was fixed by the toy decision alone. v3's held-out toy evaluation therefore started after the toy decision, as \code{p10_sum} on \code{dlheld7}. Its results were not read before v3 was frozen, and v3 $\equiv$ \code{p10_sum} on toy inputs was checked at assembly.
+\item \emph{Best-learner rule: v3} (commit \texttt{adcbfd0c}, 04:20 on 28 October; the protocol entry says 04:25). It was applied after every held-out cell of v3 and v2 was in. The mean $\log_2$ error ratio of v3 to v2 over the four held-out image cells with $n\ge10000$ is $-0.125$ (rule: below 0), and the mean $\log_2\nstar$ ratio on \code{dlheld7} is $-0.004$ (rule: at most $+0.1$).
+\end{itemize}
+
+\subsection{Disclosures and notes}\label{sec:disc-provenance-disclosures}
+
+\paragraph{What was seen that should not have been, or might have been.} The protocol records three items.
+\begin{itemize}
+\item \emph{The \code{p10_hier} builder}, about 15 minutes after its freeze, printed the last 5 lines of the orchestrator's log of the baseline \code{mlp} on \code{qd_c} while finding out why its $n=60000$ cell was waiting for the shared lock. Those lines are the baseline MLP's \code{qd_c} test errors at $n=100$--3000. Nothing about a discrete learner on \code{qd_c} was shown, and the learner file was already frozen and read-only. \code{p10_hier} was not adopted.
+\item \emph{The \code{p10_sum} builder} recorded incidental exposures: a process listing that showed the command lines of reference jobs on \code{qd_c}, and a one-line function signature \texttt{make\_dl\_heldout7\_suite} printed at the end of a source range, with no body. Nothing about \code{dlheld7}'s targets was seen.
+\item \emph{The orchestrator}, before v3's freeze, read reference results on held-out data: the \code{nets_wd} training logs of f7\_00--f7\_04 on \code{dlheld7} and the MLP references' \code{qd_c} progress lines. It read no result of v2 or of a Part 10 learner on \code{dlheld7}, \code{qd_c} or \code{qd_d}. v2's \code{dlheld7} results and v3's toy results there were committed unread.
+\end{itemize}
+
+\paragraph{BLAS threading.} The image analyst found at about 02:00 on 28 October that v2's own development cells on \code{qd_dev} and Fashion-MNIST had been run without forcing single-threaded BLAS, while the candidates' cells and every reference lane force it. Thread count changes summation order, which can move nearest-neighbour ties and booster early stopping: v2 at \code{qd_dev}, $n=10000$, seed 0 gives 0.1463 multi-threaded and 0.1467 in a single-threaded analysis refit (\code{ggbt} stopped at 166 and 123 rounds). The integration rule compared both image candidates with the same v2 numbers, so the choice between them ($-0.078$ against $-0.071$) is unaffected, and both are far from the $-0.05$ threshold. Every Part 10 held-out run, of v3, v2 and the references, is single-threaded. The note was added to the protocol at 02:03 (\texttt{a2b8470e}).
+
+\paragraph{Memory and job control.} Up to about ten jobs shared 4 cores and 16 GB. The builders ran at nice 0. Every reference and analysis process ran at nice $\ge5$, was resumable (per cell for the image evaluations, per target for the networks), and had a raised \texttt{oom\_score\_adj}, so that under memory pressure the kernel would kill it before an evaluation of a learner. Large fits ($n\ge30000$) took a shared lock. The out-of-memory kills were:
+\begin{itemize}
+\item the baseline \code{mlp} on \code{qd_c}, at about 20:00--20:15 during the builders' evaluations, after its $n\le10000$ cells had finished;
+\item \code{p10_hier}'s \code{qd_dev} evaluation process (about 20:29, above);
+\item v2's held-out image evaluation, more than once between about 22:00 and 00:30. One kill, at about 00:24, happened while two image analysis fits were running; the analyst then held its own processes at the highest kill priority, and v2's held-out cells were moved to nice 0 and out of the killer's preference, since they feed the best-learner rule;
+\item reference processes while v3's $n=60000$ cells ran: v1 on \code{qd_c}, \code{mlp_xl} on \code{qd_d}, \code{mlp_pool} and \code{cnn} on \code{qd_c};
+\item \code{nets_cewd0.3} and \code{nets_cewd1.0} on \code{dlheld7} at about 02:40, with 6 of 12 targets saved each.
+\end{itemize}
+Every killed job was rerun with the same code and seeds, keeping its finished cells or targets. The container restart at 22:40 also stopped every job lane; the lanes were resumed the same way.
+
+\subsection{The interpretability workflow}\label{app:interp-workflow}
+
+\paragraph{Analysts.} Two analysts, one for the toy side and one for images, ran instrumented reruns of v3's (and, for comparison, v2's) seed-0 evaluation fits, with the learner's internals recorded (\cref{sec:interp}). The image analysis used \code{qd_dev}, \code{qd_a}, MNIST and Fashion-MNIST and opened no result on \code{qd_c} or \code{qd_d}. The toy analysis covers every toy suite, and the six sum-structured ones in detail, \code{dlheld7} included; its \code{dlheld7} runs were made from 00:16 on 28 October, after v3's freeze. The work ran in parallel with the held-out evaluation and was committed at 03:54 on 28 October (\texttt{9214cfde}), before the best-learner rule was applied at 04:20. The rule is mechanical, and the analysis did not touch its inputs. The protocol fixed the analysis as descriptive, not as evidence that the learner is better than anything.
+
+\paragraph{Verifications.} Each side had two independent verifiers. One recomputed every number from the files with its own scripts; the other reviewed the readings against the files and the code. \Cref{tab:verif} counts the verdicts. ``Corrected'' means that the verifier changed a number, narrowed a statement or rejected a reading. Each verifier also listed further problems that were not tied to one claim.
+
+\begin{table}[ht]
+\centering\footnotesize\setlength{\tabcolsep}{5pt}
+\begin{tabular}{llcccc}
+\toprule
+side & verifier & claims & confirmed & corrected & further problems listed\\
+\midrule
+toy & numbers & 13 & 8 & 5 & 12\\
+toy & reading & 13 & 2 & 11 & 13\\
+images & numbers & 11 & 10 & 1 & 12\\
+images & reading & 11 & 2 & 9 & 11\\
+\bottomrule
+\end{tabular}
+\caption{The verifications of the interpretability analyses. Source: \repo{study/part10/interp/VERIFICATION.json}.}
+\label{tab:verif}
+\end{table}
+
+The corrections that change numbers in \cref{sec:interp} are these:
+\begin{itemize}
+\item \emph{The detection test for modulated blocks.} The analysis script tested a modulated block on a residual that was neither centred nor fitted on the modulator, and so counted the modulator character's own signal as block signal. A verifier recomputed it as DFG tests it. Seven gate and multiplexer targets became detectable later, which changes the count of targets detectable at $n=128$ from 43 to 39, the median delay over the targets found from 1 doubling to 0, and Spearman's $\rho$ over all 54 from $-0.44$ to $-0.54$.
+\item \emph{Counts and scopes.} The beam and forced blocks move 5 pure symmetric targets plus one gate mixture, not 6 pure targets. The pooling-set locality fractions exclude the centre pixel. The share of evidence on blank pixels is not above one half for every class; several classes are listed as exceptions.
+\end{itemize}
+The corrections of readings are these:
+\begin{itemize}
+\item the ``learned function of the block'' is the whole DFG model's conditional mean, not the block's own coefficients;
+\item for fd\_10 the pair statistics are small (about 0.002) but not zero;
+\item stacking-weight shares are not contributions to the prediction;
+\item split-gain shares must be read against column shares;
+\item the bars' straightness is a property of the construction and the data, not of the booster;
+\item the regions named in the contribution maps were chosen after looking at them.
+\end{itemize}
+\Cref{sec:interp} uses the corrected numbers and wording throughout. \texttt{make\_interp.py} hard-codes the verifier's corrected detection points and regenerates every interpretability figure and table from the analysis files.
+
+\subsection{This paper and reproducibility}\label{app:repro}
+
+\paragraph{This paper.} Its sections were drafted by the orchestrating session and by separate writing agents, each from the records it names, and then compiled together. The tables and figures are generated from the result files: \texttt{make\_tables.py} and \texttt{make\_figures.py} from \repo{study/part10/LEARNER_RESULTS.json} and the result files it reads, and \texttt{make\_interp.py} from the analysis files. \repo{study/part10/LEARNER_RESULTS.json} is written by \repo{study/part10/compare_learner.py}, whose docstring says which result file stands for v3 on each input type. No independent claims check of this paper has been made.
+\todo{If a claims check of this paper is run, describe it here, and update the author footnote.}
+
+\paragraph{Regenerating the numbers.} From \texttt{gd-circuit-growth/}:
+\begin{itemize}
+\item \texttt{cd study/part10 \&\& python3 compare\_part10.py} (the rules; writes \texttt{RESULTS.md});
+\item \texttt{python3 compare\_learner.py} (every comparison; writes \texttt{LEARNER\_RESULTS.\{md,json\}});
+\item \texttt{cd ../../paper\_learner \&\& python3 make\_tables.py \&\& python3 make\_figures.py \&\& python3 make\_interp.py};
+\item \texttt{latexmk -pdf main.tex}.
+\end{itemize}
+The result files are:
+\begin{itemize}
+\item \texttt{<learner>\_\_<dataset>.json}, with \texttt{.info.json} records, in \repo{study/standard_tasks/results/};
+\item \texttt{toy\_\_<learner>\_\_<suite>.json} in \repo{study/hybrid/results/}.
+\end{itemize}
+
+\paragraph{What is not in the repository.} The job drivers and queue scripts of Part 10, the builders' development scripts and logs, and the analyses' raw outputs stayed in the session scratch directory. The drivers only wrap the committed scripts, the builders' notes give the commands of their evaluations, and copies of the analysis outputs that the paper uses are in \repo{study/part10/interp/results/}.

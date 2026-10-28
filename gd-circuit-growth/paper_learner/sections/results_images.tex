@@ -18,14 +18,14 @@ On images v3 runs its image members and the classical ones (\cref{tab:members});
 \item \emph{Where to look.} Panel (a) of \cref{tab:img-cells} gives every held-out cell, panel (a) of \cref{tab:img-summary} the verdicts, and \cref{fig:images} the learning curves.
 \end{itemize}
 
-\begin{table}[t]
+\begin{table}[tbp]
 \centering{\scriptsize\setlength{\tabcolsep}{3.4pt}\renewcommand{\arraystretch}{1.12}
 \input{tables/tab_images_cells.tex}}
 \caption{Test error (\%) on every image cell with a v3 result \status{Numerical}. Seed mean of 3 at $n\le10000$ and seed 0 at $n=60000$, except where a panel says otherwise. \code{mlp_xl}, \code{mlp_pool} and \code{cnn} are seed 0 everywhere. Bold: the lowest error among v3, v2, v1, \code{hgb}, \code{mlp_strong}, \code{mlp_wide} and \code{mlp_xl}. A reference's entry carries $^{\circ}$ where the cell is a tie with v3 and $^{\ast}$ where the reference is clearly better than v3. An unmarked entry is clearly worse than v3. ``--'': not run (yet). \code{mlp_best+} is the per-cell minimum over all MLP references, and it is defined only at the $n$ where the Part 7 \code{mlp} has run. \code{mlp_pool} is \code{mlp_strong} given v2's pooled sums (a control). \code{cnn} sees the unpermuted pixels (context, not a reference). Panel (b): v3 is seed 0 and the references are seed means. Panel (c): v3 and v2 are seed 0, and \code{mlp_strong}, \code{hgb} and v1 are seed means. ``Fashion'' is Fashion-MNIST. Source: \repo{study/part10/LEARNER_RESULTS.json}; markers by \code{compare_hybrid.cells}.}
 \label{tab:img-cells}
 \end{table}
 
-\begin{table}[t]
+\begin{table}[tbp]
 \centering{\footnotesize\setlength{\tabcolsep}{5pt}
 \input{tables/tab_images_summary.tex}}
 \caption{v3 against each image reference \status{Numerical}. ``Cells'' counts the (set, $n$) pairs compared, with v3 better / tied / worse by the cell rule (\cref{sec:metrics}). ``Mean $\log_2$ ratio'' is the mean over those cells of $\log_2$(v3's error / the reference's error); negative means v3 is lower. \code{mlp_best} is the per-cell minimum over the Part 7--8 MLP variants (\code{mlp}, its regularized versions, \code{mlp_strong} and its single network \code{mlp_strong1}). \code{mlp_best+} adds \code{mlp_wide}, its single network \code{mlp_wide1}, and \code{mlp_xl}. Both are defined only where the Part 7 \code{mlp} has run. Panels (b) and (c) compare single v3 fits (seed 0) with the references' seed means. Source: \repo{study/part10/LEARNER_RESULTS.json}.}
@@ -104,7 +104,7 @@ The v3 numbers here are therefore the errors of the candidate that these very nu
 % ------------------------------------------------------------------------------------------------------------------
 \subsection{Where the gain over v2 comes from}\label{sec:res-img-gain}
 
-\begin{table}[t]
+\begin{table}[tbp]
 \centering{\scriptsize\setlength{\tabcolsep}{3.3pt}
 \input{tables/tab_images_stack.tex}}
 \caption{What carries v3 and v2 on the held-out image sets \status{Numerical}. Left: stacking weight per member family (seed mean of 3 fits at $n\le10000$; one fit at $n=60000$). \code{gknn}: $k$-NN votes on the pooled sums. \code{knn}: $k$-NN votes on the pixels. ``rest'': Part 8's \code{gbt}, \code{et} and \code{lin}; \code{lin} has weight 0 in every fit here. Right: out-of-fold error on the training rows of the two boosters and of the whole stack (5-fold at $n\le3000$; one holdout of 2000 rows at $n=10000$ and 6000 rows at $n=60000$). \code{ggbt}'s out-of-fold error is the same in v3 and v2 in every fit. The weights multiply log-probabilities of different calibration, so they are not shares of the decision. Source: \texttt{hyb\_portfolio\{3,2\}\_\_qd\_\{c,d\}.info.json} in \repo{study/standard_tasks/results/}.}
@@ -144,7 +144,7 @@ What v3 shows is narrower: a learner that never reads the pixel layout, and whos
 % ------------------------------------------------------------------------------------------------------------------
 \subsection{Compute}\label{sec:res-img-compute}
 
-\begin{table}[t]
+\begin{table}[tbp]
 \centering{\scriptsize\setlength{\tabcolsep}{3.2pt}
 \input{tables/tab_images_compute.tex}}
 \caption{Compute per fit on the held-out image cells \status{Numerical}. Budget: three training runs of the baseline MLP (\code{common.budget_real}), $1.24$, $2.42$ and $6.21\times10^{12}$ FLOPs at $n=1000$, 10000 and 60000. FLOPs / budget: each learner's own count, everything in the fit included and prediction excluded. CPU s: process CPU seconds per fit, and the seconds v3 attributes to \code{cgbt}. A range is over the 3 seeds; $n=60000$ has one fit. The MLP references record wall-clock seconds per fit on the shared 4-core machine, not process CPU time (the \texttt{cpu\_seconds} field of their result files), with their FLOPs per fit in units of the budget in brackets. Sources: the result files and \texttt{.info.json} records in \repo{study/standard_tasks/results/}.}
