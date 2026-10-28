@@ -39,7 +39,7 @@ check, `hyb_portfolio3/ASSEMBLY.md`). Every v3 fit that has an evaluation cell r
 `qd_dev` does not: it gives 0.1467 against the cell's 0.1463. The cell's own record (`info` in the cell file) shows a
 different fit: v2's booster `ggbt` early-stopped at 166 rounds there and at 123 here, `lin_1.0`'s out-of-fold error is
 0.357 there and 0.3575 here, and the stacker's out-of-fold error 0.148 there and 0.1445 here; `ggbt`'s out-of-fold error
-is 0.161 in both. My fit equals Part 9's evaluation of the same image member (`p9_gates`, identical to v2 on images at
+is 0.161 in both. My fit has the same test error as Part 9's evaluation of the same image member (`p9_gates`, identical to v2 on images at
 this n; `standard_tasks/results/p9_gates-dev__qd_dev.json`: 0.1467). The v2 dev cells were run by `$SCRATCH/p10/v2dev.sh`,
 which sets no BLAS thread variables; every analysis fit (and every v3 evaluation fit) runs with single-threaded BLAS.
 *Reading:* `ggbt`'s bank features are BLAS products (x times the pooling and pair matrices), so a different summation
@@ -118,7 +118,8 @@ than 5 steps, and its R² is 0.24 against 0.86. The robust variant is the k = 4 
 n ≥ 3000, 0.92 on MNIST, 0.13 on Fashion. The learner never uses a global embedding; it uses each set as a local sum, so
 §1.1 is the relevant measure for the features and this section is a summary of how map-like the recovered neighbourhoods
 are. Figure `fig_img_topology.pdf` (a) draws the k = 9 mutual embedding as the true pixel lattice (an edge between every
-two grid neighbours): on QuickDraw and MNIST a recognisable sheet with a fold near one corner, on Fashion a crumpled one.
+two grid neighbours): on QuickDraw and MNIST a recognisable sheet (on `qd_dev` folded near the upper left), on Fashion a
+crumpled one.
 
 ### 1.3 Bars
 
@@ -188,7 +189,7 @@ The boosters alone on the test set (each booster's own prediction; `tables/img_c
 *Reading.* `cgbt` has the lowest out-of-fold error of all members in every run and the largest weight everywhere except
 Fashion-MNIST; it took over most of `ggbt`'s role (on `qd_dev` at n = 10000 `ggbt`'s share falls from 0.413 in v2 to
 0.074 in v3, and on `qd_a` and MNIST `ggbt` is dropped). The rest of the weight goes to the nearest-neighbour members
-(`gknn` on pooled sums and Part 8's kNN on pixels), which make different errors from the boosters. On QuickDraw and MNIST
+(`gknn` on pooled sums and Part 8's kNN on pixels). On QuickDraw and MNIST
 the stack is better than `cgbt` alone by 0.2–1.0 points. On Fashion-MNIST the stacker spreads half of its weight over
 Part 8's `gbt` and `et` and a fifth over logistic regression, whose out-of-fold errors are higher (0.1336, 0.1547,
 0.1587), and the stacked learner (0.1238) is slightly worse on the test set than either booster alone (0.1216, 0.1222).
@@ -221,7 +222,8 @@ but carry 0.395 of its gain. Almost every bar is split on at least once (`qd_dev
 0.78–0.84 on Fashion and 0.86 on MNIST (`img_bars.md`, last column).
 
 *Reading.* In `cgbt` the bars carry three quarters of the gain on QuickDraw and MNIST and three fifths on Fashion, with the
-9-pixel bars about twice the 5-pixel ones; the pooled sums keep 0.19–0.26 (0.31 on Fashion) and raw pixels almost
+9-pixel bars carrying 1.7–2.2 times the gain of the 5-pixel ones (1.4 times on Fashion); the pooled sums keep 0.18–0.26
+(0.31 on Fashion) and raw pixels almost
 nothing except on Fashion, where single pixels (garment edges at fixed positions) carry 0.085–0.157. The shares hardly
 change with n on `qd_dev`. In `ggbt`, the pairs and the largest pooling scale carry most of the gain.
 
@@ -287,18 +289,19 @@ regions were drawn after looking at the maps, so their shares describe the maps,
   classes (soccer ball, frying pan, washing machine) draw their outlines. The horizon line itself carries only 0.178.
 - **motorbike.** The empty patch at the bottom centre, between the wheels (0.200 for `cgbt`, 0.163 for `ggbt`, on 0.026
   of the image; the class has ink 0.036 there, the others 0.275); `cgbt` adds pieces of the wheels' strokes.
-- **matches.** Empty pixels beside the stick (left of it: 0.134 / 0.111), and the stick's length.
+- **matches.** Empty pixels beside the stick (left of it: 0.134 / 0.111, on 0.041 of the image).
 - **grapes.** The dense ink of the centre (0.355 / 0.347 on 0.069 of the image), and a ring of empty pixels near the
   border (no outline).
-- **paper clip.** The clip's rounded top end at the top edge (0.107 / 0.125 on 0.031 of the image); empty sides.
+- **paper clip.** The clip's rounded top end at the top edge (0.107 / 0.125 on 0.031 of the image); empty sides
+  (0.060 / 0.090).
 - **campfire.** The base of the fire (0.358 / 0.318 on 0.080 of the image, on ink); empty left and right sides
   (0.097 / 0.084).
 - **washing machine.** The corners of the square body (upper corners 0.188 / 0.236); `cgbt` draws them as short diagonal
   strokes, `ggbt` as blobs.
 - **soccer ball.** The outline: `cgbt` follows the upper-left arc as a chain of diagonal bars (0.176 on 0.060 of the
   image, against 0.122 for `ggbt`), plus the left and right sides (0.223 / 0.242).
-- **frying pan.** The two ends of the horizontal shape at the left and right edges (0.073 / 0.094), empty space below
-  the pan (0.095 / 0.097) and above it.
+- **frying pan.** The two ends of the horizontal shape at the left and right edges (0.073 / 0.094) and empty space below
+  the pan (0.095 / 0.097).
 - **foot.** Empty pixels in the middle (0.223 / 0.169, blank 0.95 / 0.68) and the sole along the bottom (0.091 / 0.104).
 
 *Reading.* Both boosters use mostly the same places; much of the evidence for a class is the absence of ink where its
@@ -320,8 +323,8 @@ empty band for ocean, the corner strokes of the washing machine.
   1.07: the inked part of that region is negative).
 - **shirt.** The left shoulder and collar (0.277 / 0.306 on 0.041 of the image, on ink).
 - **sneaker.** The same empty upper-left region as sandal (0.364 / 0.261) and the heel at the right edge (0.104 / 0.137).
-- **bag.** An empty top centre (0.177 / 0.128; class ink 0.104 against 0.358), the left edge of the bag's body
-  (0.115 / 0.122) and the empty space under it.
+- **bag.** An empty top centre (0.177 / 0.128; class ink 0.104 against 0.358), an empty patch below it (0.090 / 0.071)
+  and the left edge of the bag's body (0.115 / 0.122).
 - **boot.** An empty vertical strip left of the boot's shaft (0.410 / 0.246 on 0.046 of the image; class ink 0.001
   against 0.342) and the ankle (0.094 / 0.092).
 
@@ -342,16 +345,17 @@ shoe is *not* (the upper left, where garments and bags have ink) and by the heel
 - **7.** A '/' diagonal band of empty pixels left of the stem (0.301 / 0.225), drawn by `cgbt` as a chain of bars, and
   the stem's bottom end (0.089 / 0.048).
 - **8.** The central crossing of the strokes (0.262 / 0.296, on ink).
-- **9.** Empty space in the lower left (0.080 / 0.075) and a horizontal segment on the bottom rows (0.084 / 0.028).
+- **9.** Empty space in the lower left (0.080 / 0.075) and a horizontal segment on the bottom rows, mostly empty in the
+  point (0.084 / 0.028).
 
 *Reading.* Here `cgbt`'s maps look like line drawings (the 7's diagonal band, the 2's horizontal segment, the parallel
 strips of the 1), where `ggbt`'s are blobs; in every listed "empty" region `cgbt` puts a larger share of its evidence
-than `ggbt` except for 6 and 9 (equal). The digits are told apart mostly by where they are open.
+than `ggbt` except for 6 (0.146 against 0.154). The digits are told apart mostly by where they are open.
 
 ### 3.4 cgbt vs ggbt maps
 
 *Measured:* the maps correlate at 0.63–0.94 (above); `cgbt`'s evidence is 78% bars by absolute contribution; its share
-on blank pixels (0.56–0.69) equals `ggbt`'s without the pairs (0.53–0.68).
+on blank pixels (0.56–0.69) is within 0.03 of `ggbt`'s without the pairs (0.53–0.68).
 
 *Reading.* `cgbt` does not look at different places from `ggbt`; it looks at the same places through thinner, oriented
 windows. Both boosters rely on empty regions about equally once the pairs are set aside; the pairs are what makes
@@ -361,7 +365,7 @@ strokes and gaps) for `cgbt`, isotropic blobs for `ggbt`'s pooled sums, and clas
 ## 4. The prototype pairs of ggbt
 
 A pair projection is (x_a − x_b) · x for two training images a, b of different classes; 300 pairs are drawn at random,
-so the number of pairs per class pair varies (3–16 here).
+so the number of pairs per class pair varies (1 to 16 at n = 10000; no class pair is missing).
 
 *Measured* (`tables/img_pairs.md`, `img_summary.json` key `pairs`; figure `fig_img_pairs.pdf`):
 - The pairs carry 0.38–0.41 of `ggbt`'s gain (0.30 for `qd_a`'s out-of-fold fit) and every pair is split on (299–300 of
@@ -403,8 +407,8 @@ __V2F_SAME__ So v3 = v2's members plus `cgbt`, with a refitted stacker.
   wrong in v2, 0.71% the reverse. Per class (v2 → v3): campfire 0.200 → 0.158, grapes 0.280 → 0.243, matches 0.269 →
   0.247, motorbike 0.110 → 0.095, soccer ball 0.082 → 0.075, washing machine 0.060 → 0.055, paper clip 0.138 → 0.134,
   ocean 0.087 → 0.084, frying pan 0.121 → 0.119, foot 0.120 → 0.120. `cgbt` alone vs `ggbt` alone on the same classes:
-  campfire 0.155 vs 0.201, grapes 0.229 vs 0.262, matches 0.254 vs 0.288, motorbike 0.105 vs 0.126; foot is the only
-  class where `cgbt` alone is worse (0.123 vs 0.121).
+  campfire 0.155 vs 0.201, grapes 0.229 vs 0.262, matches 0.254 vs 0.288, motorbike 0.105 vs 0.126; on `qd_dev` foot is
+  the only class where `cgbt` alone is worse (0.123 vs 0.121).
 __V2F_ERR_BULLET__
 - Evaluation cells of the same learners (`$SCRATCH/p9/cells/`, seed 0, n = 10000): `qd_a` v2 0.1509
   (`hyb_portfolio2__qd_a`), v3 0.1422; on MNIST the Part 9 evaluation of v2's image member gives 0.0299
@@ -422,11 +426,12 @@ __V2F_ERR_BULLET__
   vs 0.0392 (MNIST, same caveat), 0.1216 vs 0.1222 (Fashion). They agree on 0.93 (`qd_dev`), 0.92 (`qd_a`), 0.98
   (MNIST) and 0.97 (Fashion) of the test points.
 - *Gain mix:* bars 0.72–0.80 of its gain on QuickDraw and MNIST, 0.60 on Fashion (§2.2).
-- *Cost:* at `qd_dev` n = 10000, `cgbt` takes 293 CPU s of v3's 526 s fit (`ggbt` 131 s); on Fashion 286 of 671 s.
+- *Cost* (process CPU seconds the learner attributes to each member, `info['times']`, out-of-fold fit and refit): at
+  `qd_dev` n = 10000, `cgbt` 293 s of v3's 526 s fit (`ggbt` 131 s); on Fashion 286 s of 670.5 s.
 
 *Reading.* On QuickDraw and MNIST `cgbt` is a better booster than `ggbt` (lower out-of-fold and test error at every n
-measured) and replaces it in the stack; v3's error drop on `qd_dev` comes from classes whose evidence is a stroke or gap
-of a particular shape at a particular place (campfire's base, grapes' cluster, matches' stick, motorbike's wheels). On
+measured) and replaces it in the stack. On `qd_dev` the largest per-class gains (campfire, grapes, matches, motorbike) are
+the classes where `cgbt` alone beats `ggbt` alone most; I have no measurement that ties them to particular bars. On
 Fashion-MNIST, whose bars are poor lines (§1.3) and whose evidence is silhouette outlines that pooled sums and single
 pixels already capture, `cgbt` and `ggbt` are equal and the stack gains nothing from either.
 
