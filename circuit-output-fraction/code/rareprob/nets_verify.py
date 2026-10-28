@@ -57,7 +57,14 @@ contains the subcube's 2^r points (r free coordinates) and much more.
   certify that subcube. milp_min(..., integer=False) finds such points with
   a MILP solver (scipy/HiGHS; the point is re-evaluated, so a found witness
   is checked); box_search is a cheaper local search. Diagnostics only: they
-  never certify anything.
+  never certify anything. milp_min(..., integer=True) minimises f over the
+  subcube's POINTS (branch and cut); only its re-checked failing points are
+  used (as witnesses of p >= 2^-d), never its optimality claims.
+* oracle_tree_static / oracle_tree_greedy: the size of the branch-and-bound
+  tree a PERFECT engine would need (a subcube decided as soon as it contains
+  no failing point or only failing points), computed from the exact failing
+  set. A diagnostic separating the geometry of the failing set from the
+  looseness of the bounds.
 
 Soundness on every net (adversarial weights included)
 -----------------------------------------------------
@@ -746,8 +753,9 @@ def estimate_undecided(net: MLP, res: BabResult, eps: float, delta: float, rng: 
             ka += int(((f >= bd.pt_fail) & (f < bd.pt_safe)).sum())
         N += k
         dj = delta * 6.0 / (math.pi ** 2 * j * j)
-        l1, _ = kl_interval(kd / N, N, dj)
-        _, h1 = kl_interval((kd + ka) / N, N, dj)
+        # kd / N is one correctly rounded division: relative error <= 2^-53
+        l1, _ = kl_interval(kd / N, N, dj, rel_err=2.0 ** -52)
+        _, h1 = kl_interval((kd + ka) / N, N, dj, rel_err=2.0 ** -52)
         # p = F + Zu mu; F and Zu are exact dyadic rationals; round outwards
         l = (F + Zu * l1) * (1 - 2.0 ** -50)
         h = min(res.hi, (F + amb + Zu * h1) * (1 + 2.0 ** -50))
@@ -855,6 +863,84 @@ def lp_bound_1hidden(net: MLP, x0: np.ndarray) -> float:
 
 
 # --------------------------------------------------------------------------
+# the tree a perfect deductive engine would need (diagnostic)
+
+
+def oracle_tree_static(fail_points: np.ndarray, d: int, order=None, r_stop: int = 0) -> dict:
+    """Input branch and bound with a PERFECT engine: a subcube is decided as
+    soon as it contains no failing point (safe) or only failing points
+    (failing); otherwise it is split on the next coordinate of the fixed
+    `order` (default 0, 1, ..., d-1). Subcubes with <= r_stop free
+    coordinates are leaves (enumerated). fail_points: (F, d) array of +-1,
+    the exact failing set (from an exact run with collect=...).
+
+    Returns the number of tree nodes, the number of impure (split) nodes per
+    depth and the number of enumerated leaves. Diagnostic only: deciding a
+    subcube exactly is itself a hard problem (the minimum of f over it), so
+    this measures how much of the cost of real branch and bound is due to the
+    geometry of the failing set and how much to the looseness of the bounds."""
+    X = np.asarray(fail_points)
+    order = np.arange(d) if order is None else np.asarray(order)
+    F = X.shape[0]
+    nodes = 1
+    impure = []
+    if F == 0:
+        return dict(nodes=1, impure=[], leaves_enumerated=0, F=0)
+    bits = (X[:, order] > 0).astype(np.int64)
+    key = np.zeros(F, dtype=object) if d > 62 else np.zeros(F, dtype=np.int64)
+    leaves = 0
+    for k in range(0, d - r_stop + 1):
+        # nodes at depth k that exist: children of impure nodes at depth k-1
+        if k > 0:
+            key = key * 2 + bits[:, k - 1]
+        uniq, cnt = np.unique(key, return_counts=True)
+        full = 1 << (d - k)
+        n_imp = int((cnt < full).sum())
+        if k == d - r_stop:
+            leaves = n_imp
+            break
+        impure.append(n_imp)
+        nodes += 2 * n_imp
+        if n_imp == 0:
+            break
+    return dict(nodes=int(nodes), impure=impure, leaves_enumerated=int(leaves), F=int(F))
+
+
+def oracle_tree_greedy(fail_points: np.ndarray, d: int, r_stop: int = 0) -> dict:
+    """The same with an adaptive order: in every impure subcube, split the
+    free coordinate on which its failing points are most unbalanced (if they
+    all agree on it, one child is safe at once). A heuristic for a small
+    tree; the tree of an optimal order can only be smaller."""
+    X = (np.asarray(fail_points) > 0).astype(np.int8)
+    F = X.shape[0]
+    if F == 0:
+        return dict(nodes=1, leaves_enumerated=0, F=0)
+    nodes = 1
+    leaves = 0
+    stack = [(np.arange(F), np.ones(d, dtype=bool))]
+    while stack:
+        idx, free = stack.pop()
+        r = int(free.sum())
+        n = idx.size
+        if n == 0 or n == (1 << r):
+            continue  # pure
+        if r <= r_stop:
+            leaves += 1
+            continue
+        S = X[idx][:, free]
+        ones = S.sum(0)
+        j_loc = int(np.argmax(np.abs(2 * ones.astype(np.int64) - n)))
+        j = np.nonzero(free)[0][j_loc]
+        fr = free.copy()
+        fr[j] = False
+        nodes += 2
+        m = X[idx, j] == 1
+        stack.append((idx[m], fr))
+        stack.append((idx[~m], fr))
+    return dict(nodes=int(nodes), leaves_enumerated=int(leaves), F=int(F))
+
+
+# --------------------------------------------------------------------------
 # cost of Monte Carlo
 
 
@@ -867,13 +953,16 @@ def mc_cost(p: float, eps: float, delta: float) -> float:
 # diagnostics with a MILP solver (floating-point, NOT used for certification)
 
 
-def milp_min(net: MLP, x0: np.ndarray, integer: bool = True, time_limit: float = 60.0):
+def milp_min(net: MLP, x0: np.ndarray, integer: bool = True, time_limit: float = 60.0, want_info: bool = False):
     """min f over the subcube x0 (integer=True: its points; False: its box)
     by the big-M MILP encoding of the ReLUs, solved by scipy's HiGHS. The
     intervals [l, u] come from Bounder (valid). Returns (value, x, status,
-    mip nodes). HiGHS works with tolerances, so the value is a diagnostic; a
-    returned point x can be re-evaluated, which makes "f(x) < t" a checkable
-    witness."""
+    mip nodes), or with want_info a dict that also has the solver's dual
+    bound and f re-evaluated at x. HiGHS works with floating-point
+    tolerances and its proof is not checkable here, so the value and the
+    dual bound are diagnostics, NOT certificates; a returned point x is
+    re-evaluated, which makes "f(x) < t" a checkable witness (a sound lower
+    bound p >= 2^-d)."""
     from scipy.optimize import Bounds, LinearConstraint, milp
     bd = Bounder(net)
     x0 = np.asarray(x0, dtype=np.float64)
@@ -947,10 +1036,17 @@ def milp_min(net: MLP, x0: np.ndarray, integer: bool = True, time_limit: float =
     cost[prev_idx] = bd.Ws[-1][0]
     res = milp(cost, constraints=LinearConstraint(np.array(rows), rlo, rhi), integrality=integ,
                bounds=Bounds(lo, hi), options=dict(time_limit=time_limit))
+    info = dict(status=int(res.status), message=str(res.message), nodes=getattr(res, "mip_node_count", None),
+                dual_bound=(float(res.mip_dual_bound + bd.bs[-1][0])
+                            if getattr(res, "mip_dual_bound", None) is not None else None),
+                value=None, x=None, f_x=None)
     if res.x is None:
-        return np.nan, None, res.status, None
+        return (info if want_info else (np.nan, None, res.status, None))
     x = x0.copy()
     x[free] = res.x[:r]
     if integer:
         x[free] = np.where(x[free] > 0, 1.0, -1.0)
+    info.update(value=float(res.fun + bd.bs[-1][0]), x=x, f_x=float(bd.forward(x[None])[0]))
+    if want_info:
+        return info
     return float(res.fun + bd.bs[-1][0]), x, res.status, getattr(res, "mip_node_count", None)

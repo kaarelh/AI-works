@@ -19,7 +19,18 @@ Checks:
   5. group tilt envelopes: domination on every failing x; the mass Z equals
      sum_x D(x) phi(x) (to 1e-9 relative); the sampler matches the ideal law
      (chi-square, d = 8).
-  6. coverage of envelope_interval (two-sided) over repeated runs.
+  6. sign-pattern (softplus) envelopes: domination on every failing x, the
+     mass equals sum_x D(x) phi(x) (within logZ_err), the sampler matches the
+     ideal law (chi-square, d = 8), and the barrier Z >= exp(theta (t - F(0))).
+  7. perturb-and-MAP: the certified bound (EnumMAPOracle, n = 200,
+     delta = 0.05) is >= p; and the Hazan-Jaakkola inequality
+     log E e^{-theta F} <= E R holds for the sample mean of R up to 4 standard
+     errors (a statistical check of the implementation).
+  8. coverage of envelope_interval (two-sided) over repeated runs (tilt,
+     group and sign-pattern envelopes).
+  9. small_width_interval (nets with <= 3 hidden units): lo <= p <= hi.
+ 10. cube-certified tilt envelopes (when symmetric_gap > 0): domination on
+     every failing x and E_Q W = p / Z exactly (enumeration).
 Output: results/soundness.json and a summary line per family.
 """
 
@@ -205,6 +216,69 @@ def check_net(kind, net, rng, report):
             rec["chi2_z"] = (chi2 - dof) / math.sqrt(2 * dof) if dof > 0 else 0.0
             if rec["chi2_z"] > 5 or obs[~ok].sum() > 5 * max(1, n * ideal[~ok].sum()) + 20:
                 report["fail"].append(("sampler", kind, rec["chi2_z"]))
+    # 6. sign-pattern envelope
+    if len(net.Ws) == 2 and np.any(na.one_layer(net)[2] < 0):
+        W, b, a, c = na.one_layer(net)
+        spe = na.sign_pattern_envelope(net, n_split=min(4, int((a < 0).sum())), restarts=1, rng=rng)
+        lphi = spe.log_phi(X)
+        if np.any(lphi[fails] < -1e-12):
+            report["fail"].append(("signpat_domination", kind, float(lphi[fails].min())))
+        mx = float(lphi.max())
+        logZb = mx + math.log(float(np.mean(np.exp(lphi - mx))))
+        if abs(logZb - spe.logZ) > spe.logZ_err + 1e-12 * (1 + abs(logZb)):
+            report["fail"].append(("signpat_mass", kind, logZb - spe.logZ))
+        F0 = float(na.exact_output(net, np.zeros(net.d)))
+        if spe.logZ < spe.theta * (float(net.threshold) - F0) - 1e-9 * (1 + abs(spe.logZ)):
+            report["fail"].append(("signpat_barrier", kind, spe.logZ, spe.theta * (net.threshold - F0)))
+        rec["signpat_K"] = spe.Z / p if p > 0 else None
+        if net.d == 8:
+            n = 200000
+            Xs = spe.sample(n, rng)
+            idx = ((Xs > 0) * (1 << np.arange(8))).sum(1)
+            obs = np.bincount(idx, minlength=256)
+            ids = ((X > 0) * (1 << np.arange(8))).sum(1)
+            ideal = np.zeros(256)
+            ideal[ids] = np.exp(lphi - mx) / np.sum(np.exp(lphi - mx))
+            ok = ideal * n > 5
+            chi2 = float(np.sum((obs[ok] - n * ideal[ok]) ** 2 / (n * ideal[ok])))
+            dof = int(ok.sum()) - 1
+            rec["signpat_chi2_z"] = (chi2 - dof) / math.sqrt(2 * dof) if dof > 0 else 0.0
+            if rec["signpat_chi2_z"] > 5 or obs[~ok].sum() > 5 * max(1, n * ideal[~ok].sum()) + 20:
+                report["fail"].append(("signpat_sampler", kind, rec["signpat_chi2_z"]))
+    # 9. exact DP interval for narrow nets
+    if len(net.Ws) == 2 and net.Ws[0].shape[0] <= 3:
+        lo_, hi_ = na.small_width_interval(net, budget=60)
+        rec["dp_interval"] = (lo_, hi_)
+        if not (lo_ <= p <= hi_):
+            report["fail"].append(("small_width_interval", kind, p, lo_, hi_))
+    # 7. perturb-and-MAP
+    if net.d >= 4:
+        orc = na.EnumMAPOracle(net)
+        # 10. cube-certified tilt
+        if na.symmetric_gap(orc.F, float(net.threshold)) > 0:
+            env = na.cube_tilt_envelope(net, orc, iters=60)
+            lw = env.A0 + X @ env.alpha - env.logZ
+            if np.any(lw[fails] > 1e-12):
+                report["fail"].append(("cubetilt_domination", kind, float(lw[fails].max())))
+            Q = np.prod(np.where(X > 0, env.pi, 1 - env.pi), axis=1)
+            EW = float(np.sum(Q * env.weight(X, fails)))
+            if p > 0 and EW > 0 and abs(math.log(EW) + env.logZ - math.log(p)) > 1e-9:
+                report["fail"].append(("cubetilt_mass", kind, math.log(EW) + env.logZ - math.log(p)))
+            if p > 0 and EW == 0 and env.logZ < 600:
+                report["fail"].append(("cubetilt_mass_zero", kind, env.logZ))
+            rec["cubetilt_logK"] = env.logZ - math.log(p) if p > 0 else None
+        Fx = np.array([float(v) for v in net.forward(X)])
+        for th in (1.0, 5.0):
+            for blk in (1, 2):
+                bd = na.perturb_map_bound(orc, th, blk, 200, 0.05, rng)
+                rec[f"PM_{th:g}_{blk}"] = bd.value
+                if bd.value < p:
+                    report["fail"].append(("pmap_bound", kind, p, bd.value))
+                m0 = float((-th * Fx).max())
+                lz = m0 + math.log(float(np.mean(np.exp(-th * Fx - m0))))
+                R = na.perturb_map_samples(orc, th, blk, 400, rng)
+                if R.mean() + 4 * R.std(ddof=1) / math.sqrt(R.size) + 1e-9 < lz:
+                    report["fail"].append(("pmap_HJ", kind, float(R.mean()), lz))
     report["nets"].append(rec)
 
 
@@ -213,7 +287,7 @@ def coverage(rng, report, runs=60):
     are useful (mostly-active units make F nearly affine, plus two kinked
     units), threshold at a low quantile; every interval is compared with the
     exact p. delta = 0.1 per interval."""
-    cnt = {"runs": 0, "miss": 0, "p": [], "K": []}
+    cnt = {"runs": 0, "miss": 0, "p": [], "K": [], "kind": []}
     for trial in range(6):
         d = 10
         W = rng.normal(0, 1, (5, d))
@@ -226,11 +300,14 @@ def coverage(rng, report, runs=60):
         p, X = exact_p(net)
         envs = [na.tilt_envelope(net, restarts=2, rng=rng),
                 na.group_tilt_envelope(net, [3, 4], budget=40, restarts=2, rng=rng)]
+        if np.any(a < 0):
+            envs.append(na.sign_pattern_envelope(net, n_split=int(min(3, (a < 0).sum())), restarts=2, rng=rng))
         for env in envs:
             if env.logZ > 0 or p == 0:  # worse than Monte Carlo: envelope_interval refuses it
                 continue
             cnt["p"].append(p)
             cnt["K"].append(math.exp(env.logZ) / p)
+            cnt["kind"].append(type(env).__name__)
             for r in range(runs):
                 est = na.envelope_interval(env, eps=0.3, delta=0.1, max_samples=40000, rng=rng)
                 cnt["runs"] += 1

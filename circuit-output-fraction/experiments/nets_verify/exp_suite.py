@@ -6,7 +6,7 @@ meet-in-the-middle enumeration of the whole cube and against Monte Carlo
 (3 ln(2/delta) / (eps^2 p) samples for ratio 1 + eps), and the anytime
 interval: deterministic [lo, hi] after a cost budget (in forward-pass equivalents), and the two-sided
 interval obtained by sampling inside the undecided subcubes (one hidden
-layer, squared loss). Usage: exp_suite.py [--out=FILE] [name filters...];
+layer, squared loss). Usage: exp_suite.py [--out=FILE] [--time=SECONDS] [name filters...];
 writes results/suite.json (or FILE; summarize.py merges results/suite*.json).
 """
 
@@ -45,6 +45,7 @@ def main(names=None, out_name="suite.json"):
         out = dict(name=name, d=row["d"], widths=row["widths"], loss=row["loss"], z=row["z"], p_exact=p,
                    fail_count=row["fail_count"], f0=float(bd.forward(np.zeros((1, row["d"])))[0]), t=bd.t)
         res = bab(net, r_enum=4, min_rate=0.01, bounder=bd, time_limit=TIME_LIMIT)
+        out["time_limit"] = TIME_LIMIT
         S = res.summary()
         S.pop("levels", None)
         out["exact_run"] = S
@@ -84,7 +85,10 @@ def main(names=None, out_name="suite.json"):
 if __name__ == "__main__":
     args = sys.argv[1:]
     out_name = "suite.json"
-    if args and args[0].startswith("--out="):
-        out_name = args[0][len("--out="):]
+    while args and args[0].startswith("--"):
+        if args[0].startswith("--out="):
+            out_name = args[0][len("--out="):]
+        elif args[0].startswith("--time="):
+            TIME_LIMIT = float(args[0][len("--time="):])
         args = args[1:]
     main(args or None, out_name)

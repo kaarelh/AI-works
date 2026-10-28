@@ -13,6 +13,7 @@ Per net (one hidden layer):
   mcd        McDiarmid with the certified mean                     (upper bound)
   tiltZ      mass of the best exponential-tilt envelope (K = Z/p)
   groupZ     mass of the tilt envelope keeping the top pair exactly
+  (the sign-pattern envelopes are run by signpattern.py)
 Two hidden layers: tiltZ from the CROWN affine minorant.
 MC cost: 3 ln(2/delta) / (eps^2 p) samples with eps = 0.1, delta = 0.05; an
 envelope of mass Z costs about Z times that (speed-up 1/Z); an upper bound U
@@ -82,6 +83,7 @@ def run(names=None):
         p = e.get("p_exact")
         r = {"name": e["name"], "d": e["d"], "widths": e["widths"], "loss": e["loss"], "p": p,
              "z": e["z"], "f0": float(net.forward(np.zeros((1, net.d)))[0]), "t": net.threshold,
+             "f0_minus_t": float(net.forward(np.zeros((1, net.d)))[0]) - net.threshold,
              "tau": na.forward_error_bound(net)}
         r["N_MC"] = 3 * math.log(2 / DELTA) / (EPS ** 2 * p) if p else None
         t0 = time.time()

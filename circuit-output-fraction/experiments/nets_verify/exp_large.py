@@ -80,7 +80,8 @@ def main():
         json.dump(out, open(os.path.join(OUT, "large.json"), "w"), indent=1)
     for d in [32, 48, 64]:
         net, _ = train_constant(d, [32], 3000, np.random.default_rng(5000 + d))
-        out.append(analyse(f"own_mse_d{d}_w32_s3000", net, rng))
+        # (seeds differ from exp_barrier.py's own_mse_d*_w32_s3000 nets: hence the suffix)
+        out.append(analyse(f"own_mse_d{d}_w32_s3000_seedB", net, rng))
         json.dump(out, open(os.path.join(OUT, "large.json"), "w"), indent=1)
 
 

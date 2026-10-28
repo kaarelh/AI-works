@@ -9,7 +9,11 @@ a lower bound >= (1 - eps) p has at least (1 - eps) F failing leaves and any
 proof of an upper bound <= (1 + eps) p must isolate all but an eps-fraction
 of the failures in leaves of their own), the connected components of the
 failing set under Hamming distance 1, and the dimension of a greedily grown
-all-failing subcube around each failing point. Writes
+all-failing subcube around each failing point; and the size of the
+branch-and-bound tree a PERFECT deductive engine would need (a subcube is
+decided as soon as it is pure: rareprob.nets_verify.oracle_tree_static with
+the coordinate order 0..d-1 and oracle_tree_greedy), against the tree that
+CROWN actually needs (the same exact run) and 2^d. Writes
 results/isolation.json.
 """
 
@@ -22,7 +26,7 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "..", "code"))
 from rareprob.nets import load_net  # noqa: E402
-from rareprob.nets_verify import bab  # noqa: E402
+from rareprob.nets_verify import bab, mc_cost, oracle_tree_greedy, oracle_tree_static  # noqa: E402
 
 NETS = os.path.join(HERE, "..", "nets")
 OUT = os.path.join(HERE, "results")
@@ -100,11 +104,19 @@ def main(max_fail=20000):
             dims.append(dim)
         dims = np.array(dims)
         mean_x = X.mean(0)
+        ora = {}
+        for rs in (0, 4):
+            a = oracle_tree_static(X, d, r_stop=rs)
+            g = oracle_tree_greedy(X, d, r_stop=rs)
+            ora[f"r_stop={rs}"] = dict(static_nodes=a["nodes"], static_leaves_enumerated=a["leaves_enumerated"],
+                                     greedy_nodes=g["nodes"], greedy_leaves_enumerated=g["leaves_enumerated"])
         o = dict(name=row["name"], d=d, F=F, p=row["p_exact"], min_dist=int(dist.min()), mean_dist=float(dist.mean()),
                  frac_dist_le_2=float((dist <= 2).mean()), frac_with_failing_neighbour=nb / F,
                  mean_abs_coord_of_mean_failing_input=float(np.abs(mean_x).mean()),
                  random_pair_mean_dist=d / 2, components=len(sizes), largest_components=sizes[:5],
-                 mean_component_size=F / len(sizes), greedy_failing_subcube_dim_hist=np.bincount(dims).tolist())
+                 mean_component_size=F / len(sizes), greedy_failing_subcube_dim_hist=np.bincount(dims).tolist(),
+                 oracle_tree=ora, crown_tree_nodes=res.nodes_total, crown_nodes_bounded=res.nodes_bounded,
+                 crown_points_enumerated=res.points_enumerated, crown_fpe=res.fpe, mc_samples=mc_cost(row["p_exact"], 0.1, 0.05))
         print(o, flush=True)
         out.append(o)
         json.dump(out, open(os.path.join(OUT, "isolation.json"), "w"), indent=1)

@@ -83,6 +83,30 @@ def isolation():
     for o in rows:
         print(f"| {o['name']} | {o['F']} | {o['mean_dist']:.1f} ({o['d'] // 2}) | {o['min_dist']} | {o['frac_with_failing_neighbour']:.2f} "
               f"| {o.get('components', '-')} | {o.get('largest_components', ['-'])[0] if o.get('largest_components') else '-'} | {o.get('greedy_failing_subcube_dim_hist', '-')} |")
+    print("\n## Tree of a perfect engine (pure subcubes decided) vs the CROWN tree\n")
+    print("| net | d | F | 2^d | CROWN tree nodes | CROWN cost (fpe) | perfect engine, static order | perfect engine, adaptive | F (d - log2 F) | MC samples (eps=0.1) |")
+    print("|---|---|---|---|---|---|---|---|---|---|")
+    for o in rows:
+        if "oracle_tree" not in o:
+            continue
+        ot = o["oracle_tree"]["r_stop=0"]
+        F, d = o["F"], o["d"]
+        print(f"| {o['name']} | {d} | {F} | {g(2.0 ** d)} | {g(float(o['crown_tree_nodes']))} | {g(o['crown_fpe'])} | {g(float(ot['static_nodes']))} "
+              f"| {g(float(ot['greedy_nodes']))} | {g(F * (d - math.log2(F)))} | {g(o['mc_samples'])} |")
+
+
+def milp():
+    rows = load("milp.json")
+    if not rows:
+        return
+    print("\n## HiGHS MILP for min f over the cube (unsound floating-point engine; witnesses re-checked)\n")
+    print("| net | d | f(0)-t | CROWN root lb - t | p exact | MILP status | nodes | seconds | best f found | dual bound | witness (sound) | solver claims p=0 | sound B&B, same time: [lo, hi] | B&B seconds |")
+    print("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+    for o in rows:
+        b = o.get("bab")
+        bs = f"[{g(b['lo'])}, {g(b['hi'])}]" + (" exact" if b["exact"] else "") if b else "-"
+        print(f"| {o['name']} | {o['d']} | {o['f0_minus_t']:+.3f} | {o['crown_root_lb_minus_t']:+.3g} | {g(o['p_exact'])} | {o['milp_status']} | {o['milp_nodes']} "
+              f"| {o['milp_seconds']} | {g(o['incumbent_f'], 4)} | {g(o['dual_bound'], 4)} | {o['witness']} | {o['solver_claims_p_zero']} | {bs} | {b['seconds'] if b else '-'} |")
 
 
 def zero():
@@ -96,6 +120,24 @@ def zero():
         b = o["bab"]
         print(f"| {o['loss']} | {o['d']} | {o['steps']} | {o['seed']} | {o['z']:.1f} | {o['f0'] - o['t']:+.3f} | {o['p_zero_certified']} "
               f"| {o['p_positive_certified']} | {g(b['hi'])} | {g(b['fpe'])} | {g(o['full_enum_fpe'])} | {b['seconds']} |")
+    pos = [o for o in rows if o.get("F")]
+    if pos:
+        print("\nNets of this family with p > 0 (exact count by B&B):\n")
+        print("| loss | d | steps | seed | F | p | B&B nodes bounded | B&B cost (fpe) | perfect-engine tree | MC samples |")
+        print("|---|---|---|---|---|---|---|---|---|---|")
+        for o in sorted(pos, key=lambda o: (o["loss"], o["d"], o["steps"], o["seed"])):
+            b = o["bab"]
+            print(f"| {o['loss']} | {o['d']} | {o['steps']} | {o['seed']} | {o['F']} | {g(o['F'] / 2.0 ** o['d'])} | {b['nodes_bounded']} "
+                  f"| {g(b['fpe'])} | {o['oracle_tree_nodes']} | {g(o['mc_samples'])} |")
+    print("\nCost of certifying p = 0 by d (median over the nets of the family with p = 0 certified):\n")
+    print("| loss | d | nets | p=0 certified | median cost (fpe) | max cost (fpe) | enumeration (fpe) |")
+    print("|---|---|---|---|---|---|---|")
+    import statistics
+    for loss in ["mse", "bce"]:
+        for d in sorted({o["d"] for o in rows if o["loss"] == loss}):
+            R_ = [o for o in rows if o["loss"] == loss and o["d"] == d]
+            c = [o["bab"]["fpe"] for o in R_ if o["p_zero_certified"]]
+            print(f"| {loss} | {d} | {len(R_)} | {len(c)} | {g(statistics.median(c)) if c else '-'} | {g(max(c)) if c else '-'} | {g(R_[0]['full_enum_fpe'])} |")
 
 
 def large():
@@ -115,6 +157,20 @@ def large():
               f"| [{g(b['lo'])}, {g(b['hi'])}] | {fs} | {m['hits']}, [{g(m['interval'][0])}, {g(m['interval'][1])}] |")
 
 
+def gap():
+    rows = load("gap.json")
+    if not rows:
+        return
+    print("\n## Looseness vs subcube dimension r (medians over 100 random subcubes)\n")
+    print("| net | iota | r | margin (cube min - t) | CROWN gap | optimised-slope gap | any box bound: gap >= | CROWN cert | slopes cert | centre fails |")
+    print("|---|---|---|---|---|---|---|---|---|---|")
+    for o in rows:
+        for x in o["rows"]:
+            if x["r"] in (4, 8, 12):
+                print(f"| {o['name']} | {g(o['iota'])} | {x['r']} | {x['margin']:.3f} | {x['crown_gap']:.3f} | {x['alpha_gap']:.3f} | {x['centre_gap']:.3f} "
+                      f"| {x['crown_cert']:.2f} | {x['alpha_cert']:.2f} | {x['centre_fails']:.2f} |")
+
+
 if __name__ == "__main__":
     suite()
     variants()
@@ -122,6 +178,8 @@ if __name__ == "__main__":
     isolation()
     zero()
     large()
+    milp()
+    gap()
     for name in ["check_soundness.json"]:
         o = load(name)
         if o:
