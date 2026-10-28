@@ -9,6 +9,10 @@ inputs (Theorem 2, the design charge, a 4-bit family prefix).  Also records, for
 every restart, its training error and its disagreement with f and with the target,
 so the success probability of a single restart can be read off.
 
+Every run on a network belongs to one search family: analyze_search.py keeps, among all
+runs on that network (any k, steps or step grid), the one with the lowest estimated bound,
+which uses only the training set and the selection pool, and reports its certification.
+
 Usage: python restarts_run.py --task teacher4 --param std --width 512 --k 4 --restarts 32 --out ...
 """
 import argparse
@@ -42,6 +46,7 @@ ap.add_argument("--k", type=int, default=4)
 ap.add_argument("--restarts", type=int, default=32)
 ap.add_argument("--steps", type=int, default=6000)
 ap.add_argument("--qat_steps", type=int, default=600)
+ap.add_argument("--rels", default="1.0,0.5,0.25", help="quantization steps relative to each layer's rms weight")
 ap.add_argument("--out", required=True)
 args = ap.parse_args()
 torch.set_num_threads(1)
@@ -88,7 +93,7 @@ for r in range(args.restarts):
     w = st.weights()
     row = {"restart": r, "train_err": float(np.mean(predict(w, Xtr) != ytr)),
            "dis_f_sel": float(np.mean(predict(w, Xsel) != ysel)), "err_target": float(np.mean(predict(w, Xt) != yt))}
-    for rel in (1.0, 0.5, 0.25):
+    for rel in [float(v) for v in args.rels.split(",")]:
         s2 = copy.deepcopy(st)
         exps = [(int(round(4 * math.log2(rel * float(np.sqrt(np.mean(W ** 2)))))),
                  int(round(4 * math.log2(rel * max(float(np.sqrt(np.mean(b ** 2))), float(np.sqrt(np.mean(W ** 2))))))))
@@ -110,9 +115,9 @@ Xc = uniform_cube(n, 200_000, np.random.default_rng(cert_seed))
 dis = int(np.sum(g.predict(Xc) != (f_logits(Xc) > 0).astype(np.int64)))
 bound = min(1.0, occam_bound(k_err, m, g.bits + DESIGN_BITS + 4.0, 0.025) + cp_upper(dis, 200_000, 0.025 / DESIGN_FACTOR))
 res = {"task": args.task, "param": args.param, "width": args.width, "depth": args.depth, "seed": args.seed, "k": args.k,
-       "restarts": args.restarts, "steps": args.steps, "rows": rows,
+       "restarts": args.restarts, "steps": args.steps, "qat_steps": args.qat_steps, "rels": args.rels, "rows": rows,
        "best": {"restart": r, "rel": rel, "bits": g.bits, "train_err_g": k_err, "dis_count": dis, "n_cert": 200_000,
-                "bound_f": bound}, "cert_seed": str(cert_seed), "secs": round(time.time() - T0, 1)}
+                "est": est, "bound_f": bound}, "cert_seed": str(cert_seed), "secs": round(time.time() - T0, 1)}
 os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
 with open(args.out, "a") as fh:
     fh.write(json.dumps(res) + "\n")
