@@ -703,6 +703,7 @@ def fig_failures(F, P, S3, path):
         b.set_ylabel("fraction of S\nreached", fontsize=6)
         c = axs[i, 2]; W = p["fourier_by_degree"]
         c.bar(range(1, len(W)), W[1:], color="#7f7f7f", width=0.7); c.set_xlim(0.3, 14.7); c.set_ylabel("Fourier weight", fontsize=6)
+        c.set_xticks(range(1, 15, 2))
         c.text(0.98, 0.9, f"W1+W2 = {sum(W[1:3]):.3f}", transform=c.transAxes, ha="right", va="top", fontsize=5.5)
         for q in axs[i]:
             q.tick_params(labelsize=5.5)
