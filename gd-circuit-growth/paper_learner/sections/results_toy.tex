@@ -1,0 +1,194 @@
+\section{How well it does: toy targets and tabular data}\label{sec:results-toy}
+
+This section compares v3 with every reference on the Boolean toy suites (\cref{sec:res-dlheld7,sec:res-toy-all,sec:res-v2v3,sec:res-toy-fail}) and on the 26 tabular datasets (\cref{sec:res-tabular}). The image sets are in \cref{sec:results-img}.
+
+\paragraph{Sources.} \repo{study/part10/LEARNER_RESULTS.json} holds every number below for which no other file is named. The script \repo{study/part10/compare_learner.py} computes it from the result files. The tables are generated from it by \texttt{make\_tables.py}, and \cref{fig:toy-nstar} and the derived toy summaries by \texttt{make\_figures.py} (written to \texttt{figures/fig\_toy\_nstar.json}).
+\begin{itemize}
+\item \emph{Toy.} On toy inputs v3 runs exactly the code of the Part 10 toy candidate \code{p10_sum}; its predictions were checked identical at assembly \repo{study/part10/hyb_portfolio3/ASSEMBLY.md}. v3's toy results are therefore the \code{p10_sum-perm} result files in \repo{study/hybrid/results/}. v2's are the \code{hyb_portfolio2-perm} files, and on \code{designed} and \code{dlsymdev} the \code{p9_sum-perm} files (the same code on toy inputs).
+\item \emph{Metrics} (\cref{sec:metrics}). $\nstar$ is the training-set size at which the seed-mean test error reaches 10\%. There are 3 seeds per $n$ (2 on \code{random}) and one 4096-point test set per target. The discrete learners see the inputs permuted afresh in every fit. ``Clearly better'' means a $\log_2\nstar$ ratio below $-0.25$, or that only v3 reaches 10\% error by $n=16384$.
+\end{itemize}
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{The held-out suite \code{dlheld7}}\label{sec:res-dlheld7}
+
+\code{dlheld7} is the only toy suite held out for v3. It has 12 targets, a fresh draw (seed 70707) from the blind family of \code{dlheld6}, and it was fixed in a commit before any Part 10 design work. No result of a Part 10 learner on it was read before v3 was frozen (\cref{sec:discipline}). \Cref{tab:dlheld7} gives every target's definition and $\nstar$.
+
+\begin{table}[t]
+\centering{\footnotesize\setlength{\tabcolsep}{3pt}\renewcommand{\arraystretch}{1.15}
+\input{tables/tab_dlheld7.tex}}
+\caption{The held-out toy suite \code{dlheld7}: $\nstar$, the training-set size at 10\% test error (mean of 3 seeds, interpolated in $\log n$), for v3, v2, the three pre-registered network variants, their per-target minimum \code{nets_best}, and the calibration references \code{lin} and \code{hgb} \status{Numerical}. v3 and v2 see the inputs permuted per fit. ``never'': 10\% error is not reached by $n=16384$. In the definitions, $[\cdot]$ is $+1$ when the condition holds and $-1$ otherwise; \texttt{*} multiplies $\pm1$ values; \texttt{c ? a : b} is a multiplexer ($a$ when $c=+1$); a literal \texttt{x5} or \texttt{-x5} inside AND/OR, a decision-list rule or a selector stands for $x_5=+1$ or $x_5=-1$. f7\_02, f7\_04 and f7\_06 are the family's non-symmetric controls. Source: \repo{study/part10/LEARNER_RESULTS.json}.}
+\label{tab:dlheld7}
+\end{table}
+
+\paragraph{Against the networks} \status{Numerical}.
+\begin{itemize}
+\item \emph{Against \code{nets_best}:} mean $\log_2\nstar$ ratio $-1.50$ over the 11 targets that both learn, about $2.8\times$ less data. v3 is clearly better on 10 of 12 targets and clearly worse on none.
+\item \emph{The two that are not wins.} f7\_01, a threshold of a 13-input count, is a tie: 106 against 119. f7\_05, a residue class mod 3 of a 14-input count, is learned by no learner (\cref{sec:res-toy-fail}).
+\item \emph{Against each variant alone:} $-1.83$ against \code{nets_wd} (11 of 12 targets clearly better), $-1.59$ against \code{nets_cewd0.3} (10 of 12) and $-1.58$ against \code{nets_cewd1.0} (10 of 12). No variant is clearly better than v3 on any target.
+\item \emph{Largest margins.} f7\_00, an OR of conditions on two signed sums: 203 against 1545 ($\log_2$ ratio $-2.93$). f7\_08, an arbitrary accept set of an 11-input count: 634 against 2932. f7\_03, a multiplexer between a residue class mod 4 of a 6-input count and a condition on $|s|$ for a 4-input count $s$: 352 against 1599. f7\_09, a threshold of a signed 10-input sum times the parity $x_{11}x_{12}$: 215 against 883.
+\item \emph{Smallest margins.} The two halfspaces: f7\_01 (106 against 119) and f7\_10, $[x_1+\dots+x_5+2x_6\le-1]$ (82 against 119).
+\end{itemize}
+
+\paragraph{Which wins need no feature search} \status{Numerical}. \code{lin} reaches 10\% error on only 4 of the 12 targets, and \code{hgb} on 9. v3's mean $\log_2$ ratio is $-0.70$ against \code{lin} (over those 4) and $-1.64$ against \code{hgb} (over those 9); it is clearly better than \code{hgb} on 9 targets and than \code{lin} on 9, and clearly worse than neither on any. The wins over the networks fall into two groups.
+\begin{itemize}
+\item \emph{Five wins need no feature search.} A learner that searches no features is already clearly better than \code{nets_best} on five targets: \code{hgb} on the three controls (f7\_02, a DNF; f7\_04, a decision list; f7\_06, a read-once formula) and on the multiplexer f7\_11, and \code{lin} on the halfspace f7\_10. On these five, v3 is ahead of the better calibration reference by factors of 1.06--1.35 only ($\log_2$ ratios $-0.09$ to $-0.43$).
+\item \emph{Five wins need the feature search.} On the other seven targets neither \code{lin} nor \code{hgb} beats the networks. \code{hgb} needs 684--6208 samples or never reaches 10\%, and \code{lin} learns only f7\_01. There v3's mean against \code{nets_best} is $-1.80$: clearly better on 5 (f7\_00, f7\_03, f7\_07, f7\_08, f7\_09, all sum-structured), a tie on f7\_01, and f7\_05 learned by none.
+\end{itemize}
+
+\paragraph{Against v2} \status{Numerical}. The mean $\log_2\nstar$ ratio is $-0.004$. No target is clearly better or worse, and the largest per-target change is $0.09$ in $\log_2$ (f7\_04: 70 against 74). So the Part 10 toy component changes nothing measurable on the held-out suite. The best-learner rule only asked that v3 not be worse than v2 there (mean $\le+0.1$). v3 became the learner of this paper through its image side (\cref{sec:results-img}).
+
+\paragraph{Compute} \status{Numerical}. Every v3 fit on \code{dlheld7} used at most 0.53 of one network training run's FLOPs (f7\_04). Over the eight suites with complete v3 runs the maximum is 0.83 (h5s7 on \code{dlheld5}). CPU time per fit is at most 46\,s on the shared 4-core machine (\code{designed}, thr10). Source: the \texttt{flops} and \texttt{cpu\_seconds} fields of the v3 result files.
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{Every toy suite}\label{sec:res-toy-all}
+
+\begin{table}[t]
+\centering{\footnotesize\setlength{\tabcolsep}{4pt}
+\input{tables/tab_toy_suites.tex}}
+\caption{v3 on every toy suite \status{Numerical}. Each entry is the mean $\log_2\nstar$ ratio of v3 to the reference over the targets both learn, with the numbers of targets on which v3 is clearly better / clearly worse in brackets. ``n/a'': the reference learns none of the targets, so no mean exists; ``--'': the reference was not run on the suite. \code{nets_best} is the per-target minimum over the network variants run on the suite, which differ between suites (\cref{tab:status}). Status: the Part (P6--P10) in which the suite was held out or used for development. Only \code{dlheld7} is held out for v3; for v3 every other suite is development data. $^a$The Part 9 sum-feature builder saw the source of \code{dlheld4}. $^b$The Part 10 toy builder developed on \code{dlheld6}. Source: \repo{study/part10/LEARNER_RESULTS.json}.
+\todo{v3's runs on \code{random}, \code{dlheld} and \code{dlheld2} are in progress; the three ``(not run)'' rows, \cref{fig:toy-nstar} and the pooled numbers of \cref{sec:res-toy-all} change when they land.}}
+\label{tab:toy-suites}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_toy_nstar.pdf}
+\caption{$\nstar$ of v3 (inputs permuted per fit) against \code{nets_best} for every target of every toy suite with network references, one point per target \status{Numerical}. Colour and shape give the status of the suite for v3 (\cref{tab:status}); the held-out suite \code{dlheld7} is drawn as large outlined squares. ``never'': 10\% error not reached by $n=16384$, drawn at the edge. Points below the dashed line need less data than the best network variant, and points below the dotted line at least $4\times$ less. \code{nets_best} is a minimum over 2 variants on \code{designed}, 3 on \code{dlsymdev} and \code{dlheld3}--\code{dlheld5}, 5 on \code{dlheld6} and the 3 pre-registered ones on \code{dlheld7}. \code{dlfamdev} has no network runs and is not shown. Generated by \texttt{make\_figures.py} (\texttt{fig\_toy\_nstar}) from \repo{study/part10/LEARNER_RESULTS.json}; the plotted values are in \texttt{figures/fig\_toy\_nstar.json}.}
+\label{fig:toy-nstar}
+\end{figure}
+
+\Cref{tab:toy-suites} summarizes all 11 suites, and \cref{fig:toy-nstar} shows every target with a network reference.
+
+\paragraph{The status of each suite} (\cref{tab:status}) decides how much a row says about v3.
+\begin{itemize}
+\item \emph{Development for v3:} \code{designed}, \code{dlsymdev} and \code{dlfamdev}. The integration rule was computed on them.
+\item \emph{Used by the Part 10 toy builder:} \code{dlheld6}, held out in Part 9. The builder designed weighted blocks after v2's failure on its target h6\_10.
+\item \emph{Earlier held-out suites:} \code{random} and \code{dlheld}--\code{dlheld5}. They were held out for v1 or v2 and are development data in Part 10, but the toy builder did not use them \repo{study/part10/p10_sum/DESIGN.md}. Some of them shaped earlier versions: v1's failure on sym9 (\code{dlheld3}) motivated the sum blocks of v2, and the Part 9 builder saw the source of \code{dlheld4}.
+\item \emph{Held out for v3:} \code{dlheld7} only.
+\end{itemize}
+
+\paragraph{Results} \status{Numerical}. On the 87 targets of \cref{fig:toy-nstar}, v3 is clearly better than \code{nets_best} on 82 and needs at least $4\times$ less data on 35. Five targets are not wins:
+\begin{itemize}
+\item h6\_00 (\code{dlheld6}) is clearly worse: only the most regularized network learns it, at 12304;
+\item f7\_01 (\code{dlheld7}) and h5s7 (\code{dlheld5}) are ties;
+\item f7\_05 (\code{dlheld7}) and h5s1 (\code{dlheld5}) are learned by no learner.
+\end{itemize}
+\Cref{sec:res-toy-fail} discusses them. The suite means against \code{nets_best} range from $-1.50$ to $-2.44$ (\cref{tab:toy-suites}).
+
+\paragraph{The margin is smallest on the held-out draw} \status{Numerical}. The suite means against \code{nets_best} are not comparable across suites, because \code{nets_best} minimizes over different sets of variants. \code{nets_wd} is the one variant run on every suite. Against it, v3's mean $\log_2\nstar$ ratio is:
+\begin{itemize}
+\item development suites: $-2.42$ on \code{designed} and $-2.53$ on \code{dlsymdev};
+\item earlier held-out suites: $-2.07$ on \code{dlheld3}, $-2.25$ on \code{dlheld4} and $-2.66$ on \code{dlheld5};
+\item the two draws of the blind family: $-1.94$ on \code{dlheld6} and $-1.83$ on \code{dlheld7}.
+\end{itemize}
+The two draws of the blind family give the smallest margins, and the held-out draw the smallest of all. Two explanations fit this, and the data do not separate them \status{Heuristic}. Several of the other suites informed the design of v3 or of an earlier version, so some selection in v3's favour is expected there. And the suites differ in kind: \code{dlheld3}--\code{dlheld5} were written within the study, mostly from families close to its development targets, while the blind family was written by an agent that had not seen the sum-feature design.
+
+\paragraph{Pooled over the held-out suites} \status{Numerical}. Pooled over the five held-out suites with v3 results so far (\code{dlheld3}--\code{dlheld7}, 58 targets), the mean $\log_2\nstar$ ratio against \code{nets_best} is $-1.82$ over the 55 targets both learn. v3 is clearly better on 53 targets and clearly worse on 1 (h6\_00). This matches \repo{study/part10/LEARNER_RESULTS.md}. The pooled number is a summary of the record, not a held-out estimate: 46 of the 58 targets were development data for v3, and only the 12 of \code{dlheld7} are held out. The held-out estimate is the \code{dlheld7} row alone.
+\todo{Add \code{dlheld} and \code{dlheld2} (19 targets) to the pooled numbers when v3's runs land.}
+
+\paragraph{\code{lin} and \code{hgb}} \status{Numerical}. Some of the wins over the networks need no feature search, and they are of two kinds.
+\begin{itemize}
+\item \emph{Halfspaces.} Logistic regression alone is clearly better than \code{nets_best} on halfspace-like targets: dict, maj3, maj9, rand2 and thr10 on \code{designed}, thrint on \code{dlheld3} and f7\_10 on \code{dlheld7}. On these, v3 is at or below \code{lin}'s level (thr10: 121 against 113; maj9: 80 against 80; thrint: 139 against 137; maj3: 31 against 56).
+\item \emph{Formulas, decision lists and multiplexers.} \code{hgb} is clearly better than \code{nets_best} on the five formula and multiplexer targets of \code{dlheld3} (cnf3, dlist8, h3rf0, h3rf1, mux11), on 8 of the 11 non-symmetric controls of \code{dlheld4}--\code{dlheld7}, on the multiplexer f7\_11, and narrowly on h5s4, a signed-sum condition OR a literal (1465 against 1801).
+\end{itemize}
+Across the held-out suites, one of the two calibration references is clearly better than \code{nets_best} on 17 of the 58 targets. On the other 41, v3's mean against \code{nets_best} is $-2.00$, with 36 targets clearly better and 1 clearly worse. So the margins do not come from targets that are easy for trees or linear models. They come from the targets with parity or signed-sum structure, where both \code{lin} and \code{hgb} fail: for example, \code{hgb} never reaches 10\% error on 5 of the 12 targets of \code{dlheld4} and on 6 of \code{dlheld5}, and \code{lin} on 11 of \code{dlheld4} and all 12 of \code{dlheld5}. Part 8's ablations located the toy wins in DFG \cite{discretelearners2026}.
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{What changed from v2 to v3}\label{sec:res-v2v3}
+
+\begin{table}[t]
+\centering{\footnotesize
+\input{tables/tab_toy_v2v3.tex}}
+\caption{Every toy target on which v3's $\nstar$ differs clearly from v2's ($|\log_2\text{ratio}|>0.25$), on all suites with results for both \status{Numerical}. There are 11 such targets among the 99. None is on \code{dlheld3} or on the held-out \code{dlheld7}. Source: \repo{study/part10/LEARNER_RESULTS.json}.
+\todo{Regenerate when v3's runs on \code{random}, \code{dlheld} and \code{dlheld2} land.}}
+\label{tab:toy-v2v3}
+\end{table}
+
+The only difference between v2 and v3 on toy inputs is DFG: v1.3 replaces v1.2 (\cref{sec:dfg}). v1.3 adds three things to the sum-block search, all of which act together:
+\begin{itemize}
+\item weighted blocks $u=t+a\tau$;
+\item forced blocks in the small-$n$ variant at $n\ge48$;
+\item a beam search at $n\le128$.
+\end{itemize}
+On the development suites the integration rule measured a mean $\log_2\nstar$ ratio of $-0.066$ against v2 over 40 targets, with the largest increase $+0.26$ on fd\_06 \repo{study/part10/RESULTS.md}. That is a small gain. \Cref{tab:toy-v2v3} shows where it sits: 10 targets clearly better and 1 clearly worse, out of 99.
+
+\paragraph{Where $\nstar$ moved, and what the models show.} The descriptions below come from the interpretability analysis (seed 0, \cref{sec:interp-toy}). They report what the fitted DFG model contains; no ablation separates the three changes, so they are observations, not attributions \status{Heuristic}.
+\begin{itemize}
+\item \emph{h6\_10} $=[|x_1+\dots+x_{12}-3x_{13}|>1]$ (\code{dlheld6}): 702 to 206. v3's model holds the weighted block $|\pm(x_1+\dots+x_{12})+3x_{13}|$ from $n=256$, with the right relative sign from $n=512$. v2 could represent the target as well: from $n=512$ its model holds two folded 13-input blocks, $|s+x_{13}|$ and $|s-x_{13}|$, which together determine the target (DFG error 0.000 at $n=1024$). So the change is in how early the structure is found, not in what can be represented. This is the target the weighted blocks were designed for, on a suite the builder used, so it is not evidence for v3. It does turn \code{dlheld6}'s one Part 9 loss to the networks (v2 702 against \code{nets_best} 451) into a win (206).
+\item \emph{h6\_07} (\code{dlheld6}), a multiplexer between conditions on two signed sums: 678 to 447. The selector $x_{11}$ enters the model as the heavy literal of a weighted block, $x_1-x_2-\dots-x_6+3x_{11}$, from $n=512$.
+\item \emph{sym7} (\code{dlsymdev}, 110 to 55) and \emph{majsym} (\code{dlheld4}, 189 to 90). At the first $n$ at which v3's model holds the exact block (64 and 128, one doubling earlier than v2's), the block is in the forced variant, below the test's threshold (0.89 and 0.71 of it). On sym7 at $n=64$ the stacker puts all its DFG weight on that forced member.
+\item \emph{fd\_09, tail13, sym11}: the exact block appears one doubling earlier, at 128 instead of 256. The true block already passes DFG's test at 128 (the unweighted test is the same in both versions), so the difference is in the search.
+\item \emph{parmaj, far9, h5rf0} (h5rf0 is a random-formula control): not diagnosed. On development data the toy builder traced parmaj to the beam at $n=128$ and far9 to forced blocks at $n=64$ \repo{study/part10/p10_sum/DESIGN.md}.
+\item \emph{fd\_06}, the one loss ($+0.26$), an XOR of conditions on two signed sums: not diagnosed.
+\end{itemize}
+The weighted class is used far more widely than for h6\_10. A weighted block with at least 20\% of the largest term's share appears at some $n$ in the models of 26 targets of the six sum-structured suites: 16 sum-structured targets and 10 of the 14 controls. In the controls its inner term is an AND of two literals in 9 cases and a literal in 1 (\cref{sec:interp-toy}). On most of these 26 targets $\nstar$ does not move clearly (\cref{tab:toy-v2v3}).
+
+\paragraph{Why nothing moved on \code{dlheld7}} \status{Heuristic}. The gains of v1.3 are concentrated on a few targets: 10 of 99, 9 of which v3 now learns at $n\le256$. A 12-target draw can easily contain none of them. The three draws of the blind family agree with this: v3's mean against v2 is $-0.05$ on \code{dlfamdev} (development), $-0.25$ on \code{dlheld6} (used by the builder) and $-0.004$ on \code{dlheld7}. \code{dlheld7} has one weighted-sum target, f7\_10. It is a halfspace that v2 already learns at the same $\nstar$ (82), although at $n=256$ only v3's model holds the exact weighted block.
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{Targets nobody learns, and where v3 is not better}\label{sec:res-toy-fail}
+
+\paragraph{Residue classes mod 3} \status{Numerical}. Three targets are residue classes mod 3 of a signed count of 10--14 inputs:
+\begin{itemize}
+\item fd\_10 on 10 inputs (\code{dlfamdev}, development);
+\item h6\_00 on 13 (\code{dlheld6});
+\item f7\_05 $=[\tfrac12(s+14)\bmod3\ne0]$, $s=x_1+\dots+x_{14}$, on 14 (\code{dlheld7}).
+\end{itemize}
+v3 and v2 learn none of them by $n=16384$. On f7\_05, neither does any network variant, \code{lin} or \code{hgb}. On h6\_00, the only learner that does is the most regularized network (\code{nets_cewd1.0}, $\nstar=12304$). fd\_10 has no network runs. The interpretability analysis (\cref{sec:interp-toy}) finds that these targets fail in DFG's search, not in its test:
+\begin{itemize}
+\item \emph{The test would accept the block.} The true block passes DFG's test from $n=128$, and at $n=16384$ it is 134--155 times its threshold.
+\item \emph{The search cannot find it.} The targets have almost no Fourier weight at degrees 1 and 2: about $2\times10^{-4}$ for fd\_10, and zero to five decimals for h6\_00 and f7\_05. Every seed of the block search reads the block's inputs off those degrees. The best pair of inputs inside the block scores 0.12--0.25 of its threshold, and the search's input orders reach the block no better than chance.
+\item \emph{The model stays empty.} At every $n\ge1024$, DFG's model holds only the constant and the kernel background, and its test error is the minority rate (0.32--0.34).
+\end{itemize}
+\Cref{sec:dfg} explains why a block with no low-degree foothold is invisible to the seeds.
+
+\paragraph{h5s1} (\code{dlheld5}) is a signed 9-input count with accept set $\{-9,-5,-1,3,9\}$, multiplied by the parity $x_{10}x_{11}$. No learner reaches 10\% error by $n=16384$ (3 seeds). 92\% of its variance lies on the single degree-11 character $x_1\cdots x_{11}$. The modulated block passes DFG's test from $n=128$, but DFG takes modulators only from the characters already in its model, and the coefficient of $x_{10}x_{11}$ is only $-0.031$. On seed 0, v3 finds the structure only at $n=16384$.
+
+\paragraph{Ties} \status{Numerical}.
+\begin{itemize}
+\item \emph{f7\_01} $=[x_1+\dots+x_{13}\le1]$ is a halfspace. v3 (106), \code{lin} (111) and the logistic-loss networks (119--121) are all within the tie band. Its 13-input block is in v3's model, but so are degree-1 characters, and a linear readout of the inputs alone already does about as well.
+\item \emph{h5s7} is an arbitrary accept set of a signed 13-input count, with $\nstar$ 6760 against 7641 (\code{nets_cewd}). Its weight at degrees 1--2 is only 0.015. The true block passes the test from $n=128$, but the search first finds it at $n=8192$ (seed 0): the same mechanism as the mod-3 counts, in weaker form.
+\end{itemize}
+The next-smallest margins are on halfspace-like targets where \code{lin} is already as good as v3: thrint ($-0.46$) and f7\_10 ($-0.53$). After them comes h5s2 ($-0.68$), an arbitrary accept set whose weight at degrees 1--2 is also small.
+
+\paragraph{The one loss.} h6\_00 is the only target of any suite on which a network is clearly better than v3. It was v2's loss as well. The Part 10 toy builder measured its search landscape and found no feasible way to search for it \repo{study/part10/p10_sum/DESIGN.md}.
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{Tabular data}\label{sec:res-tabular}
+
+\paragraph{What v3 runs on tabular data.} DFG runs only when there are 2 classes and every column is binary or categorical ($\le256$ bits). The image members run only on images. Of the 26 tabular datasets, only two qualify for DFG: kr\_vs\_kp (development) and mushroom (Part 7 held-out set).
+\begin{itemize}
+\item \emph{The other 24 datasets.} v3 runs v1's code: the stack of LightGBM, ExtraTrees, $k$-NN and logistic regression. Its predictions were checked identical to v2's on one optdigits fit, and v2 runs v1's code path there. So v3's results on these datasets are v1's Part 8 result files.
+\item \emph{mushroom.} v3's own runs give the same seed-mean test error as v1 at every $n$.
+\item \emph{kr\_vs\_kp.} v3's own runs differ from v1 at 3 of 4 sizes, but no cell differs clearly (at $n=1000$, 0.0075 against 0.0100; at the full 2397, 0.0029 against 0.0021).
+\end{itemize}
+
+\paragraph{What is held out.} HELDOUT2 (10 datasets) was fixed in Part 8 after v1 was frozen. It contains no dataset on which DFG runs, and v3's code path on it has not changed since. It is therefore held out for this code path. The Part 7 held-out set is held out in the weaker sense that the Part 8 designers had read its MLP references. The 5 development datasets are in-sample.
+
+\begin{table}[t]
+\centering{\footnotesize\setlength{\tabcolsep}{4pt}
+\input{tables/tab_real.tex}}
+\caption{v3 on the tabular datasets against the MLP references and \code{hgb} \status{Numerical}. ``Cells'': the $(\text{dataset},n)$ pairs compared, each a mean over 3 seeds, with the verdict rule of \cref{sec:metrics}. ``Mean $\log_2$ ratio'': of v3's test error to the reference's, over cells, errors floored at 0.002. The last column counts the datasets whose mean ratio over $n$ is below 0, with the two-sided sign-test $p$. \code{mlp_best} is the per-cell best of the Part 7--8 MLP variants (hindsight). \code{mlp_strong} was run on the Part 7 set only at $n\le10000$ (54 of 59 cells) and not on the development sets. On 24 of the 26 datasets v3's code path is v1's, so these are Part 8's numbers, except for v3's own runs on mushroom (identical errors) and kr\_vs\_kp. Source: \repo{study/part10/LEARNER_RESULTS.json}.}
+\label{tab:real}
+\end{table}
+
+\paragraph{Results} (\cref{tab:real}) \status{Numerical}.
+\begin{itemize}
+\item \emph{HELDOUT2, against \code{mlp_best}:} mean $\log_2$ error ratio $-0.168$, a geometric-mean error about 11\% lower. 10 of 53 cells are better and 2 worse. The mean error is lower on 8 of 10 datasets, which is not significant (sign test $p=0.11$).
+\item \emph{HELDOUT2, against single references:} the margins are larger: $-0.445$ against the baseline \code{mlp} (9 of 10 datasets, $p=0.021$), $-0.284$ against \code{mlp_strong} and $-0.250$ against \code{hgb} (9 of 10, $p=0.021$).
+\item \emph{The Part 7 set:} $-0.114$ against \code{mlp_best} (12 better, 3 worse, 8 of 11 datasets, $p=0.23$) and $-0.259$ against \code{hgb} (10 of 11, $p=0.012$).
+\item \emph{Development:} $-0.244$ against \code{mlp_best}, lower on 5 of 5 ($p=0.062$).
+\end{itemize}
+The per-dataset picture is Part 8's \repo{study/hybrid/RESULTS.md}.
+\begin{itemize}
+\item \emph{HELDOUT2.} The large margins against \code{mlp_best} are on ann\_thyroid ($-0.77$), clean2 ($-1.12$, mostly from $n\le300$) and churn ($-0.35$). Three of the 8 datasets with lower error are within about $\pm0.05$. The losses are texture ($+0.61$; no cell resolves, since errors are below 1.6\% from $n=1000$) and krkopt ($+0.19$; clearly worse at $n\ge10000$).
+\item \emph{The Part 7 set.} The largest wins are dna ($-0.77$) and ring ($-0.50$). The losses are nursery ($+0.70$), pendigits ($+0.19$) and connect\_4 ($+0.03$, worse at full $n$).
+\end{itemize}
+
+\paragraph{Where the tabular result comes from} \status{Heuristic}. The tabular numbers are those of a classical stack, and they say little about discrete feature search. Part 8 found three things \cite{discretelearners2026}:
+\begin{itemize}
+\item \emph{DFG does not carry them.} DFG runs on none of the HELDOUT2 datasets. In Part 7, DFG's own dictionaries were about as good as a plain MLP on tabular data and worse than a regularized one.
+\item \emph{No single member family matches the stack.} On Part 8's 48 ablation cells (HELDOUT2 and two image sets, $n\le3000$, seeds 0--1), LightGBM alone was $+0.08$ against the best MLP, where the full stack was $-0.19$. Different members carry different datasets: trees carry churn, ann\_thyroid and clean2, $k$-NN carries banana, and logistic regression carries texture.
+\item \emph{Default \code{hgb} alone does not beat the MLPs.} Against \code{mlp_best} it is $+0.08$ on HELDOUT2 and $+0.14$ on the Part 7 set \repo{study/hybrid/RESULTS.md}. The stack's mean $\log_2$ ratio against it is about $-0.25$ on both (\cref{tab:real}).
+\end{itemize}
+This agrees with the tabular-learning literature. Tree ensembles tend to beat plain MLPs on medium-sized tabular data \cite{grinsztajn2022tree,shwartzziv2022tabular}. Stacking diverse models adds to that \cite{wolpert1992stacked,erickson2020autogluon}. And careful regularization and tuning of the MLP narrow the gap \cite{kadra2021welltuned,gorishniy2021revisiting}. The MLP references here are standard recipes without tabular-specific architectures, so the margins would likely shrink against a tuned tabular network \status{Heuristic}. The tabular evidence for v3 is therefore modest: it is not worse than the MLPs on fresh tabular data, it is better on average without statistical significance, and the reason is the classical stack, unchanged since Part 8.

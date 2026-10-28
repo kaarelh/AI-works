@@ -61,7 +61,8 @@ def tab_dlheld7():
 def tab_real():
     REFS = [("mlp", "\\code{mlp}"), ("mlp_reg", "\\code{mlp_reg}"), ("mlp_strong", "\\code{mlp_strong}"), ("mlp_best", "\\code{mlp_best}"),
             ("hgb", "\\code{hgb}")]
-    L = ["\\begin{tabular}{llccc}", "\\toprule", "split & reference & cells (better / tie / worse) & mean $\\log_2$ ratio & datasets lower (sign test $p$)\\\\", "\\midrule"]
+    L = ["\\begin{tabular}{llccc}", "\\toprule", "split & reference & \\hd{cells\\\\(better / tie / worse)} & \\hd{mean\\\\$\\log_2$ ratio} & "
+         "\\hd{datasets with lower\\\\mean error (sign test $p$)}\\\\", "\\midrule"]
     for lab in ["tabular, Part 7 held-out set", "tabular, Part 8 fresh set (HELDOUT2)", "tabular, development"]:
         R = J["real"].get(lab, {})
         first = True
@@ -238,11 +239,11 @@ def tab_images_compute():
             return []
         return [float(x) for x in r[key][r["ns"].index(n)]]
 
-    L = ["\\begin{tabular}{lrcccccccccc}", "\\toprule",
-         " & & & \\multicolumn{2}{c}{FLOPs / budget} & \\multicolumn{3}{c}{CPU s per fit} & "
+    L = ["\\begin{tabular}{lrccccccccc}", "\\toprule",
+         " & & \\multicolumn{2}{c}{FLOPs / budget} & \\multicolumn{3}{c}{CPU s per fit} & "
          "\\multicolumn{4}{c}{MLP references: wall s per fit (FLOPs / budget)}\\\\",
-         "\\cmidrule(lr){4-5}\\cmidrule(lr){6-8}\\cmidrule(lr){9-12}",
-         "set & $n$ & budget & v3 & v2 & v3 & of which \\code{cgbt} & v2 & \\code{mlp_strong} & \\code{mlp_wide} & \\code{mlp_xl} & \\code{mlp_pool}\\\\",
+         "\\cmidrule(lr){3-4}\\cmidrule(lr){5-7}\\cmidrule(lr){8-11}",
+         "set & $n$ & v3 & v2 & v3 & \\hd{of which\\\\\\code{cgbt}} & v2 & \\code{mlp_strong} & \\code{mlp_wide} & \\code{mlp_xl} & \\code{mlp_pool}\\\\",
          "\\midrule"]
     for ds in ("qd_c", "qd_d"):
         for n in (1000, 10000, 60000):
@@ -250,7 +251,7 @@ def tab_images_compute():
             r3, r2 = _res("hyb_portfolio3", ds), _res("hyb_portfolio2", ds)
             if r3 is None or not seeds(r3, "err", n):
                 continue
-            row = [IMG_NAME[ds], str(n), f"${bud / 1e12:.2f}\\times10^{{12}}$"]
+            row = [IMG_NAME[ds], str(n)]
             row += [rng([f / bud for f in seeds(r, "flops", n)], lambda v: f"{v:.2f}") for r in (r3, r2)]
             cg = [a["times"].get("cgbt") for a in _fits("hyb_portfolio3", ds, n)]
             row += [rng(seeds(r3, "cpu_seconds", n), lambda v: f"{v:.0f}"), rng(cg, lambda v: f"{v:.0f}"),
