@@ -80,11 +80,11 @@ def summary(pairs):
 
 # ---- fig_toy_nstar ----------------------------------------------------------------------------------------------------------
 TOY_GROUPS = [   # (key, suites, legend label, marker, face, edge, size, z) -- status of each suite for v3 (protocol.tex, tab:status)
-    ("dev", ["designed", "dlsymdev"], "development (designed, dlsymdev)", "o", "white", "#8a8a8a", 20, 2),
+    ("dev", ["designed", "dlsymdev"], "development", "o", "white", "#8a8a8a", 20, 2),
     ("earlier", ["random", "dlheld", "dlheld2", "dlheld3", "dlheld4", "dlheld5"],
-     "held out for v1/v2, development data in Part 10\n(random, dlheld-dlheld5)", "o", COL[0], "white", 22, 3),
-    ("dlheld6", ["dlheld6"], "dlheld6 (held out in Part 9; used by the\nPart 10 toy builder)", "D", COL[3], INK2, 22, 4),
-    ("dlheld7", ["dlheld7"], "dlheld7 (held out for v3)", "s", COL[7], INK, 40, 5),
+     "held out for v1 or v2;\ndevelopment data in Part 10", "o", COL[0], "white", 22, 3),
+    ("dlheld6", ["dlheld6"], "held out in Part 9;\nused by the Part 10 toy builder", "D", COL[3], INK2, 22, 4),
+    ("dlheld7", ["dlheld7"], "held out for v3", "s", COL[7], INK, 40, 5),
 ]
 NETS = ("nets", "nets_wd", "nets_cewd", "nets_cewd0.3", "nets_cewd1.0")
 
@@ -115,6 +115,9 @@ def toy_numbers(J, P):
     for su in sorted({p["suite"] for p in P}):
         Q = [p for p in P if p["suite"] == su]
         out["suites"][su] = summary([(p["v3"], p["nets_best"]) for p in Q])
+        # nets_wd is the one variant run on every suite, so it is the comparable reference across suites
+        out["suites"][su]["vs_nets_wd"] = summary([(p["v3"], p["nets_wd"]) for p in Q if p.get("nets_wd") is not None])
+        out["suites"][su]["variants"] = [k for k in NETS if any(p.get(k) is not None for p in Q)]
     # dlheld7: each network variant on its own, and the targets on which a calibration reference (lin or hgb) is already
     # clearly better than nets_best (wins that need no feature search)
     Q = [p for p in P if p["suite"] == "dlheld7"]
@@ -146,14 +149,13 @@ def fig_toy_nstar():
     J = load_lr(); P = toy_points(J)
     lo, hi, NEV = 10, 4.6e4, 2.8e4                                     # "never" (no 10% error by n = 16384) drawn at NEV
     pos = lambda v: NEV if not math.isfinite(v) else v
-    fig, ax = plt.subplots(figsize=(4.9, 4.6))
+    fig, ax = plt.subplots(figsize=(TEXTW, 4.3))
     g = np.array([lo, hi])
     ax.plot(g, g, color=INK2, lw=0.9, ls="--", zorder=1)
     ax.plot(g, g / 4, color="#9a9a9a", lw=0.8, ls=":", zorder=1)
-    ax.text(1.25e4, 1.25e4 * 0.78, "equal data", fontsize=6.5, color=INK2, ha="right", va="top", rotation=45, rotation_mode="anchor")
-    ax.text(1.25e4, 1.25e4 / 4 * 0.78, "4x less data", fontsize=6.5, color=INK2, ha="right", va="top", rotation=45, rotation_mode="anchor")
-    for v in ("x", "y"):                                               # the "never" edge on both axes
-        (ax.axhline if v == "y" else ax.axvline)(NEV, color="#c4c4c4", lw=0.6, zorder=0)
+    ax.text(1.25e4, 1.25e4 * 0.72, "equal data", fontsize=6.5, color=INK2, ha="right", va="top", rotation=45, rotation_mode="anchor")
+    ax.text(1.25e4, 1.25e4 / 4 * 0.72, "4x less data", fontsize=6.5, color=INK2, ha="right", va="top", rotation=45, rotation_mode="anchor")
+    ax.axhline(NEV, color="#c4c4c4", lw=0.6, zorder=0); ax.axvline(NEV, color="#c4c4c4", lw=0.6, zorder=0)   # the "never" edges
     ax.text(lo * 1.12, NEV * 0.86, "never", fontsize=6.5, color=INK2, va="top", ha="left")
     ax.text(NEV * 0.86, lo * 1.12, "never", fontsize=6.5, color=INK2, va="bottom", ha="right", rotation=90)
     handles = []
@@ -164,33 +166,36 @@ def fig_toy_nstar():
         x = [pos(p["nets_best"]) for p in Q]; y = [pos(p["v3"]) for p in Q]
         ax.scatter(x, y, s=s, marker=mk, facecolor=fc, edgecolor=ec, linewidth=0.8 if key != "earlier" else 0.4, zorder=z,
                    alpha=0.95)
-        handles.append(Line2D([], [], marker=mk, ls="", mfc=fc, mec=ec, mew=0.8, ms=math.sqrt(s) + 0.6,
-                              label=f"{lab} ({len(Q)})"))
-    # a few targets named in the text
+        present = [su for su in suites if any(p["suite"] == su for p in Q)]
+        handles.append(Line2D([], [], marker=mk, ls="", mfc=fc, mec=ec, mew=0.8, ms=math.sqrt(s) + 1.0,
+                              label=f"{', '.join(present)} ({len(Q)})\n{lab}"))
+    # the targets named in the text
     lab = {p["target"]: p for p in P}
     def note(t, txt, dx, dy, ha="right"):
         if t in lab:
             p = lab[t]
             ax.annotate(txt, (pos(p["nets_best"]), pos(p["v3"])), xytext=(dx, dy), textcoords="offset points", fontsize=6.5,
                         color=INK, ha=ha, va="center", arrowprops=dict(arrowstyle="-", color=INK2, lw=0.5, shrinkA=0, shrinkB=3))
-    note("f7_01", "f7_01", -14, 12)
-    note("f7_10", "f7_10", -16, 6)
-    note("f7_00", "f7_00", 10, -12, ha="left")
-    note("h5s7", "h5s7", -12, 12)
-    note("h6_00", "h6_00 (v3 never;\nnets 12304)", -10, -16)
+    note("f7_01", "f7_01", -16, 12)
+    note("f7_10", "f7_10", -18, 4)
+    note("f7_00", "f7_00", 12, -10, ha="left")
+    note("h5s7", "h5s7", -14, 10)
+    note("h6_00", "h6_00: v3 never, nets_best 12304", -14, -11)
     nev2 = [p["target"] for p in P if not math.isfinite(p["v3"]) and not math.isfinite(p["nets_best"])]
     if nev2:
-        ax.annotate(", ".join(nev2) + ":\nno learner", (NEV, NEV), xytext=(-12, -26), textcoords="offset points", fontsize=6.5,
+        ax.annotate(", ".join(nev2) + ": no learner reaches 10%", (NEV, NEV), xytext=(-10, 8), textcoords="offset points", fontsize=6.5,
                     color=INK, ha="right", va="center", arrowprops=dict(arrowstyle="-", color=INK2, lw=0.5, shrinkA=0, shrinkB=3))
     ax.set_xscale("log"); ax.set_yscale("log"); ax.set_xlim(lo, hi); ax.set_ylim(lo, hi); ax.set_aspect("equal")
     ax.set_xlabel(r"$n^*$ of nets_best (per-target best network variant on the suite)")
     ax.set_ylabel(r"$n^*$ of v3 (hyb_portfolio3), inputs permuted per fit")
-    ax.legend(handles=handles, loc="upper left", handletextpad=0.3, borderaxespad=0.5, labelspacing=0.55, fontsize=6.6)
+    ax.legend(handles=handles, loc="upper left", bbox_to_anchor=(1.03, 1.0), handletextpad=0.4, borderaxespad=0.0,
+              labelspacing=1.0, fontsize=7, title="suites by status for v3\n(targets plotted)", title_fontsize=7,
+              alignment="left")
     fig.tight_layout()
     save(fig, "fig_toy_nstar.pdf")
     N = toy_numbers(J, P); N["points"] = P
     json.dump(N, open(os.path.join(FIG, "fig_toy_nstar.json"), "w"), indent=1)    # "never" is stored as Infinity
-    print(json.dumps({k: v for k, v in N.items() if k != "points"}, indent=1, default=str))
+    print(json.dumps({k: v for k, v in N.items() if k != "points"}, default=str))
 
 
 if __name__ == "__main__":

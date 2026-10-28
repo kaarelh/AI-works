@@ -115,6 +115,33 @@ def tab_images_cells():
     open(os.path.join(OUT, "tab_images_cells.tex"), "w").write("\n".join(L) + "\n")
 
 
+def tab_toy_v2v3():
+    """Every toy target whose n* moved clearly between v2 and v3 (|log2 ratio| > 0.25, or only one learns it), all suites
+    (results_toy.tex); v2 = hyb_portfolio2-perm (p9_sum-perm on designed / dlsymdev), v3 = p10_sum-perm."""
+    L = ["\\begin{tabular}{llrrrr}", "\\toprule",
+         "suite & target & v2 & v3 & $\\log_2(\\text{v3}/\\text{v2})$ & \\code{nets_best}\\\\", "\\midrule"]
+    rows, last = [], None
+    for su in ORDER:
+        r = J["toy"].get(su)
+        if not r:
+            continue
+        for t, v in r["per_target"].items():
+            a, b = v.get("v3"), v.get("v2")
+            if a is None or b is None:
+                continue
+            lr = math.log2(a / b) if (fin(a) and fin(b)) else (math.inf if fin(b) else (-math.inf if fin(a) else math.nan))
+            if abs(lr) > 0.25:
+                rows.append((ORDER.index(su), lr, su, t, v))
+    for _, lr, su, t, v in sorted(rows):
+        if last is not None and su != last:
+            L.append("\\addlinespace")
+        L.append(f"{code(su) if su != last else ''} & {t.replace('_', chr(92) + '_')} & {ns(v['v2'])} & {ns(v['v3'])} & "
+                 f"{'$' + format(lr, '+.2f') + '$' if math.isfinite(lr) else ('v3 only' if lr < 0 else 'v2 only')} & {ns(v.get('nets_best'))}\\\\")
+        last = su
+    L += ["\\bottomrule", "\\end{tabular}"]
+    open(os.path.join(OUT, "tab_toy_v2v3.tex"), "w").write("\n".join(L) + "\n")
+
+
 if __name__ == "__main__":
-    tab_toy_suites(); tab_dlheld7(); tab_real(); tab_images_summary(); tab_images_cells()
+    tab_toy_suites(); tab_dlheld7(); tab_real(); tab_images_summary(); tab_images_cells(); tab_toy_v2v3()
     print(sorted(os.listdir(OUT)))
