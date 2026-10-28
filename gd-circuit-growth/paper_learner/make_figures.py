@@ -11,6 +11,10 @@ numbers, figures/<name>.json with the plotted points and those numbers).
                   network variants present on that suite); log-log, identity and 4x lines, "never" drawn at the edge,
                   dlheld7 highlighted.  The .json adds the suite / status-group summaries quoted in
                   sections/results_toy.tex (with compare_hybrid.toy_summary's definitions).
+  fig_images      test error against n on the held-out QuickDraw sets qd_c, qd_d (v3, v2, v1, hgb, mlp_strong,
+                  mlp_wide, mlp_xl; the control mlp_pool and the context cnn where present), log-log, and each
+                  reference's log2(error / v3 error); from standard_tasks/results/<learner>__<set>.json (seed
+                  mean, seed 0 at n = 60000).  figures/fig_images.json holds the plotted points.
 """
 import os, sys, json, math
 import numpy as np
@@ -196,6 +200,100 @@ def fig_toy_nstar():
     N = toy_numbers(J, P); N["points"] = P
     json.dump(N, open(os.path.join(FIG, "fig_toy_nstar.json"), "w"), indent=1)    # "never" is stored as Infinity
     print(json.dumps({k: v for k, v in N.items() if k != "points"}, default=str))
+
+
+# ---- fig_images: learning curves on the held-out QuickDraw sets (sections/results_images.tex) ------------------------------
+IMG_RES = os.path.join(STUDY, "standard_tasks", "results")
+IMG_STY = {   # result-file learner name: (colour, marker, line style, line width, hollow marker, legend label)
+    "hyb_portfolio3": (COL[0], "o", "-", 2.0, False, "v3 = hyb_portfolio3"),
+    "hyb_portfolio2": (COL[6], "o", "--", 1.2, True, "v2 = hyb_portfolio2"),
+    "hyb_portfolio": ("#8a8a8a", "o", ":", 1.2, True, "v1 = hyb_portfolio"),
+    "hgb": (COL[4], "D", ":", 1.2, False, "hgb"),
+    "mlp_strong": (COL[1], "s", "--", 1.2, False, "mlp_strong (3 x 256-256)"),
+    "mlp_wide": (COL[3], "s", "-.", 1.2, False, "mlp_wide (3 x 512-512)"),
+    "mlp_xl": (COL[7], "P", "none", 0.0, False, "mlp_xl (3 x 1024-1024, CPU-matched)"),
+    "mlp_pool": (COL[2], "^", "none", 0.0, False, "mlp_pool (mlp_strong on [x, v2's pooled sums]; control)"),
+    "cnn": (INK2, "x", "none", 0.0, False, "cnn on unpermuted pixels (context)"),
+}
+IMG_DX = {L: 1.06 ** (i - 4) for i, L in enumerate(IMG_STY)}     # small horizontal offsets so markers at one n do not hide
+
+
+def img_curve(L, ds):
+    """[(n, test error)] from standard_tasks/results/<L>__<ds>.json: seed mean (seed 0 only where the others are NaN)."""
+    p = os.path.join(IMG_RES, f"{L}__{ds}.json")
+    if not os.path.exists(p):
+        return []
+    r = json.load(open(p))
+    out = []
+    for n, e in zip(r["ns"], r["err"]):
+        e = np.array(e, float)
+        if np.isfinite(e).any():
+            out.append((int(n), float(np.nanmean(e)), int(np.isfinite(e).sum())))
+    return out
+
+
+@figure
+def fig_images():
+    sets = [("qd_c", "qd_c (held out)"), ("qd_d", "qd_d (held out)")]
+    fig, axs = plt.subplots(2, 2, figsize=(TEXTW, 5.2), sharex=True, gridspec_kw=dict(height_ratios=[1.25, 1]))
+    pts, allv = {}, []
+    up, dn = math.log2(1 / 0.9), math.log2(1 / 1.1)              # the cell rule's 10% relative thresholds, as log2(ref / v3)
+    for c, (ds, name) in enumerate(sets):
+        ax = axs[0, c]; pts[ds] = {}
+        for L, (col, mk, ls, lw, hollow, lab) in IMG_STY.items():
+            P = img_curve(L, ds)
+            if not P:
+                continue
+            pts[ds][L] = P
+            n = np.array([p[0] for p in P], float) * IMG_DX[L]; e = np.array([p[1] for p in P])
+            ax.plot(n, e, color=col, marker=mk, ls=ls, lw=lw, ms=6 if mk in ("P", "x") else 4.6,
+                    mfc="white" if hollow else col, mec=col if (hollow or mk in ("x", "P")) else "white",
+                    mew=1.0 if (hollow or mk == "x") else 0.4, zorder=5 if L == "hyb_portfolio3" else 3, label=lab)
+            allv += list(e)
+        ax.set_xscale("log"); ax.set_yscale("log")
+        ax.set_title(f"({'ab'[c]}) {name}: test error", loc="left")
+        ax.yaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{100 * v:g}%"))
+        ax.yaxis.set_minor_formatter(matplotlib.ticker.FuncFormatter(
+            lambda v, _: f"{100 * v:g}%" if round(v * 100, 6) in (12, 15, 20, 25, 30, 40) else ""))
+        # bottom: each reference's error relative to v3's at the same n
+        ax = axs[1, c]
+        v3 = {n: e for n, e, _ in pts[ds].get("hyb_portfolio3", [])}
+        ax.axhspan(dn, up, color="#efefef", lw=0, zorder=0)
+        ax.axhline(0, color=COL[0], lw=2.0, zorder=2)
+        ax.text(800, up - 0.012, "within 10% of v3's error", fontsize=6.3, color=INK2, va="top", ha="left")
+        for L, (col, mk, ls, lw, hollow, lab) in IMG_STY.items():
+            if L == "hyb_portfolio3" or L not in pts[ds]:
+                continue
+            Q = [(n, math.log2(max(e, 0.002) / max(v3[n], 0.002))) for n, e, _ in pts[ds][L] if n in v3]
+            if not Q:
+                continue
+            n = np.array([q[0] for q in Q], float) * IMG_DX[L]; y = np.array([q[1] for q in Q])
+            ax.plot(n, y, color=col, marker=mk, ls=ls, lw=lw, ms=6 if mk in ("P", "x") else 4.6,
+                    mfc="white" if hollow else col, mec=col if (hollow or mk in ("x", "P")) else "white",
+                    mew=1.0 if (hollow or mk == "x") else 0.4, zorder=3)
+        ax.set_xscale("log"); ax.set_ylim(-0.42, 0.62)
+        ax.set_title(f"({'cd'[c]}) {ds}: " + r"$\log_2$(reference error / v3 error)", loc="left")
+        ax.set_xlabel("training-set size n")
+    for ax in axs.flat:
+        ax.set_xlim(700, 9.5e4)
+        ax.set_xticks([1000, 10000, 60000]); ax.set_xticklabels(["1000", "10000", "60000"])
+        ax.xaxis.set_minor_locator(matplotlib.ticker.NullLocator())
+    lo, hi = min(allv) * 0.9, max(allv) * 1.08
+    for ax in axs[0]:
+        ax.set_ylim(lo, hi)
+    axs[0, 0].set_ylabel("test error (seed mean;\nseed 0 at n = 60000)")
+    axs[1, 0].set_ylabel(r"$\log_2$ error ratio" + "\n(> 0: v3 lower)")
+    seen = {}
+    for ax in axs[0]:
+        for h, l in zip(*ax.get_legend_handles_labels()):
+            seen.setdefault(l, h)
+    fig.legend(list(seen.values()), list(seen.keys()), loc="lower center", ncol=3, bbox_to_anchor=(0.5, -0.005),
+               columnspacing=1.0, handlelength=2.4, fontsize=6.5)
+    fig.tight_layout(rect=(0, 0.11, 1, 1), h_pad=0.8, w_pad=1.0)
+    save(fig, "fig_images.pdf")
+    json.dump(dict(source="study/standard_tasks/results/<learner>__<set>.json; seed mean, seed 0 where only it was run",
+                   points={ds: {L: [dict(n=n, err=e, seeds=s) for n, e, s in P] for L, P in d.items()} for ds, d in pts.items()}),
+              open(os.path.join(FIG, "fig_images.json"), "w"), indent=1)
 
 
 if __name__ == "__main__":
