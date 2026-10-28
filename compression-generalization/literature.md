@@ -163,7 +163,7 @@ The VC dimension of piecewise-linear nets is O(W L log W), with a nearly matchin
 
 **Distillation with augmentation.** Hsu, Ji, Telgarsky & Wang (ICLR 2021) show that f inherits g's bound plus a softmax distillation distance. The distance is measured on samples from an augmentation distribution whose density ratio to D_X is bounded; per the sweep's reading, the concrete construction mixes uniform noise and a kernel density estimate. In a snippet of their Figure 1, standard bounds are about 10^15 and distillation shrinks them by about 10^10 (ResNet8, test error 0.067 on CIFAR-10 and 0.008 on MNIST). The bounds therefore appear to remain far above 1 (my inference), and Bazinet et al. say the constants are not computable.
 
-**Bound to Disagree.** Bazinet, Zantedeschi & Germain (UAI 2026; OpenReview CZeG5HW1Y5, per the repo README; PMLR 337:491–520 and arXiv 2602.23128 not re-verified in the citation-check pass) implement exactly (1) with route (a):
+**Bound to Disagree.** Bazinet, Zantedeschi & Germain (UAI 2026, PMLR 337:491–520; arXiv 2602.23128; OpenReview CZeG5HW1Y5; checked against the paper on 28 October 2026) implement exactly (1) with route (a):
 
   R(f) ≤ cert_{δ₁}(h) + Bin̄(|U|·d_U(f, h), |U|, δ₂), with δ₁ + δ₂ = δ,
 
@@ -185,7 +185,7 @@ Numbers (repo; each checked against the notebook outputs):
 
 The coreset surrogate's certificate is a test-set bound on the part of the training split outside the coreset. That is valid, because those labels are independent of g, but the labelled data is effectively split.
 
-Headline and baseline values. Rows marked † are hard-coded in the repo's headline figure (front_page_plot.ipynb). The k-means partition values and the CIFAR CNN norm value come from bounds_from_literature.ipynb instead. The 1.78%, 4.83% and 28.13% values appear only hard-coded in the figure; no saved notebook output reproduces them.
+Headline and baseline values. Rows marked † are hard-coded in the repo's headline figure (front_page_plot.ipynb). The k-means partition values and the CIFAR CNN norm value come from bounds_from_literature.ipynb instead. In the repository, the 1.78%, 4.83% and 28.13% values appear only hard-coded in the figure, and no saved notebook output reproduces them; the paper reports all three as means ± standard deviations over five runs (Table 2, and Table 5 for the PAC-Bayes values): 1.78±0.10% in arXiv v1 (1.79±0.19% in arXiv v2 and the PMLR version), 4.83±0.32% and 28.13±1.55%.
 
 | | MNIST | CIFAR-10 |
 |---|---|---|
