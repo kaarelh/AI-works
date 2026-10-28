@@ -1,0 +1,81 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[a4paper,margin=1.35cm,top=1.0cm,bottom=1.0cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{multicol}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xcolor}
+\setlist{nosep,leftmargin=1.1em,topsep=1pt}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{3pt}
+\setlength{\columnsep}{1.4em}
+\pagestyle{empty}
+\newcommand{\head}[1]{\par{\large\bfseries #1}\par\smallskip}
+\newcommand{\sub}[1]{{\bfseries #1}\enspace}
+\newcommand{\err}{\mathrm{err}}
+
+\begin{document}
+
+{\LARGE\bfseries Bounding a trained network's error by compressing it}\\[2pt]
+{\small Summary of the \texttt{compression-generalization} project, prompted by Kaarel H\"anni. Written by Claude (Anthropic), 28 October 2026. Not reviewed by a human: proofs and numbers were checked by AI referees, and the follow-up's citations against the papers. Paper, follow-up note, code and records: \url{https://github.com/kaarelh/AI-works/tree/main/compression-generalization}.}
+
+\medskip
+\sub{The idea.} If a network $g$ with an $L$-bit description, in a code fixed before the data, agrees with the trained network $f$ on most inputs, then with probability $1-\delta_1-\delta_2$
+\[
+\err(f)\ \le\ \overline{\mathrm{Bin}}\big(k_S(g),\,m,\,\delta_1 2^{-L}\big)\;+\;\overline{\mathrm{Bin}}\big(j,\,N,\,\delta_2\big),
+\]
+an Occam bound on $g$'s $k_S(g)$ training errors plus a binomial bound on $\Pr[f\ne g]$ from $j$ disagreements on $N$ fresh inputs. No validation labels are needed. The questions: how to certify the second term, and how to find $g$.
+
+\smallskip
+{\small\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{@{}Xlccl@{}}
+\toprule
+\textbf{Setting} & \textbf{Network $f$} & \textbf{Test error} & \textbf{Bound} & \textbf{Surrogate $g$} \\
+\midrule
+\multicolumn{5}{@{}l}{\emph{Known input distribution} (Boolean, uniform on $\{\pm1\}^{50}$, $m=16{,}000$)} \\
+\quad noise-free junta and threshold targets & MLP, 289k param. & 0--0.001 & 0.002--0.005 & 28--98-bit table or student \\
+\quad 10\% label noise that $f$ interpolates & same & 0.14 & 0.17 & the clean rule \\
+\quad dense targets (random ReLU teachers) & MLPs & 0.02--0.07 & 0.11--0.21 & best of 32 restarts \\
+\emph{Any input distribution} (20 bits, 3-parity, $m=4000$) & MLP & 0 & 0.0065 & exact equivalence + patches \\
+\emph{Unlabeled inputs} (MNIST) & 784-100-10 & 0.023 & 0.31 & 18k-bit coded network \\
+\quad twin trained on a fixed half of the data & 784-1024-10 & 0.016 & 0.042 & retraining, no search \\
+\emph{Training set only}, dithered transfer (MNIST) & 784-8-10 & 0.070 & 0.44 & weight-space certificate \\
+\quad pruned to a sparse DCT update, fine-tuned & 784-100-10 & 0.046 & 0.31 & same \\
+\bottomrule
+\end{tabularx}}
+
+{\footnotesize Parameter-counting and VC bounds are 1.0 for the Boolean MLPs and the dense wide MNIST networks, but 0.71 (VC) for 784-8-10 and 0.62 (exact code) for the sparse network. The training-set-only bound is vacuous for wide dense networks (0.97 at 128 hidden units).}
+
+\raggedcolumns
+\begin{multicols}{2}
+\head{Main paper}
+\begin{itemize}
+\item \sub{Prior art.} The reduction with unlabeled inputs goes back to K\"a\"ari\"ainen (2005); Bazinet, Zantedeschi and Germain (UAI 2026) apply it to deep networks (1.8--4.8\% on an MNIST CNN). Bounds on a compressed $g$ alone (Arora et al.\ 2018; Lotfi et al.\ 2022) do not bound $f$.
+\item \sub{Known $D_X$ is free.} On Boolean tasks a 289k-parameter MLP compresses in function space to 28--98 bits; the bound nears test error as $m$ grows and stays informative for partly learned networks (3-parity 0.30 vs 0.29; 6-junta 0.34 vs 0.17).
+\item \sub{Any input distribution.} On 20-bit inputs, listing the inputs where $f$ and its compressed network disagree gives bounds valid for every input distribution, if $f$ is nearly exact: at most 8 exceptions below $10^{-5}$ test error (3-parity: 0.0065), but 72--178 and bounds 0.33--0.59 at ${\approx}10^{-4}$.
+\item \sub{Training set only.} New mechanism, a \emph{dithered transfer theorem}; not tighter than Biggs and Guedj (2022) on erf/GELU nets. Compressing $f$ by subtractive dithered quantization with public randomness makes $g-f$ independent noise, so a certificate computed from $g$ alone transfers through the same Occam bound to $f$ itself (proved for one-hidden-layer ReLU networks), without the $\sqrt d$ loss of worst-case perturbation sets. It needs the weights to the precision the margins demand, so it is non-vacuous only for narrow networks or ones pruned and fine-tuned to a sparse update for the bound (at higher test error).
+\item \sub{Initialization costs nothing.} Codes may use any data-independent randomness; function-space codecs never refer to it. An init-kernel codec selects rank $1+n$ for majority targets (lazy training, $n=30$ only).
+\item \sub{Open problem.} A training-set-only certificate that sees functional simplicity ($f$ close to a 5-junta) instead of weight-space proximity.
+\end{itemize}
+
+\columnbreak
+\head{Follow-up: can $g$ be found efficiently?}
+\begin{itemize}
+\item \sub{Validity needs no search budget;} compute only affects tightness. With a short noise-free target, exhaustive search certifies every trained network to within $(L_t\ln2+\ln\frac1\delta)/m$ of its error, plus sampling slack.
+\item \sub{Worst case: hard.} If pseudorandom functions exist, no polynomial-time algorithm with queries to $f$ finds an efficient $g$ that beats chance on uniform inputs, although $f$ is short (classical).
+\item \sub{Boolean tasks: polynomial search sufficed.} Influence search recovers every junta and threshold target (31--98 bits) in seconds to minutes. On dense targets (signs of random 4- and 8-unit ReLU networks), single runs reach 1.24--1.92 times the bound the true teacher gives, because small students get stuck; 32 restarts of a teacher-width student (a width sweep recovered the width on the 2 networks tried), trained longer and quantized finer, reach 0.96--1.11 times, in about 12 CPU-minutes per network.
+\item \sub{Subsampling hidden units} (Maurey: $\mathbb E\|g-f\|^2=(A^2-\|f-c\|^2)/k$, $A$ the path norm) works when few units carry $f$: 2 units on mean-field networks for majority targets, but 16--32 on standard ones (bounds 0.07--0.30). Alone it was never the best search.
+\item \sub{Subsampling the data works better:} a twin trained on a fixed half, tested on the other half and compared with $f$ on unlabeled inputs, gave 3--7 times tighter bounds than compression on all four MNIST/Fashion MLPs (Bazinet et al.'s 1.8\% uses the same construction). It loses near the learning threshold, on the 50-bit majority and with interpolated label noise.
+\item \sub{Is $f$ close to a short program?} Yes by definition for short targets; the dense teachers are long relative to $m$; on MNIST we found no short $g$ close to $f$ (best: 6--12k bits, 0.255). Tiny 697- to 1,936-parameter MNIST networks reported at 99\% suggest one may exist; untested.
+\end{itemize}
+\end{multicols}
+
+\vspace{-4pt}
+{\footnotesize\sub{Caveats.} Mostly one seed per network; small Boolean tasks; MLPs only on images; codecs tuned on the same data (charged 4 bits and $\delta/16$); all checking by AI, not humans. Follow-up citations were checked against the papers (Springer, SIAM, AAAI ones via later papers); main-paper related work rests partly on search snippets.}
+
+\end{document}
