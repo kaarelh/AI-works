@@ -304,6 +304,7 @@ def target_rows(S3, S2, P, N3, N2, NN):
             row["n_inner_exact"] = next((c["n"] for c in C if inner_found(c, tg, c0) == "exact"), None)
             row["inner_by_n"] = "; ".join(f"{c['n']}: {inner_found(c, tg, c0)}" for c in C)
         if dt:
+            W_ = dt["W"]; row["low2"] = round((W_[1] + (W_[2] if len(W_) > 2 else 0)) / max(1 - W_[0], 1e-12), 4)   # share of Var f at degree 1-2
             row.update(n_detect=dt["n_detect"], n_unfold=dt["n_unfold"], n_fold=dt["n_fold"], n_mod=dt["n_modulated"],
                        W1=round(dt["W"][1], 4) if len(dt["W"]) > 1 else None, W2=round(dt["W"][2], 4) if len(dt["W"]) > 2 else None,
                        power_k=dt["k"], power_file=os.path.basename(dt["path"]), n_reach=dt["n_reach"], n_reach5=dt["n_reach5"])
@@ -419,7 +420,7 @@ def timing(rows, PW=None, P=None):
                  n_detect=r.get("n_detect"), n_unfold=r.get("n_unfold"), n_fold=r.get("n_fold"), n_mod=r.get("n_mod"),
                  n_struct=r["n_struct"], n_stable=r["n_stable"], nstar_s0=r["nstar_s0"], nstar3=r["nstar3"], n_max=r["n_max"],
                  reach_deg1=r.get("reach_deg1"), reach_eig=r.get("reach_eig"), W1=r.get("W1"), W2=r.get("W2"),
-                 n_reach=r.get("n_reach"), n_reach5=r.get("n_reach5"), n_dfg01=r["n_dfg01"])
+                 n_reach=r.get("n_reach"), n_reach5=r.get("n_reach5"), n_dfg01=r["n_dfg01"], low2=r.get("low2"))
         q["ratio_at_struct"] = None
         q["n_detect_unitpart"], q["detect_source"] = None, "toy_power"
         if PW and (r["suite"], r["target"]) in PW:              # weighted target: the true block is the weighted one
@@ -449,6 +450,15 @@ def timing_summary(T):
                                   below_targets=[t["target"] for t in T if t["l2_nstar_struct"] is not None and t["l2_nstar_struct"] < -0.5],
                                   above_targets=[t["target"] for t in T if t["l2_nstar_struct"] is not None and t["l2_nstar_struct"] > 0.5]),
              nstar3_vs_struct=dict(n=len(c), median=float(np.median(c)) if c else None))
+    # search delay beyond detection against the share of Var f at degrees 1-2 (never found: n_struct = 2^15)
+    from scipy.stats import spearmanr
+    Q = [t for t in T if t["n_detect"] and t.get("low2") is not None]
+    dl = lambda t: math.log2((t["n_struct"] or 2 ** 15) / t["n_detect"])
+    rho = spearmanr([t["low2"] for t in Q], [dl(t) for t in Q]); Qp = [t for t in Q if t["mixture"] == "pure"]
+    rhop = spearmanr([t["low2"] for t in Qp], [dl(t) for t in Qp])
+    S["delay_vs_low2"] = dict(n=len(Q), spearman=round(float(rho.statistic), 3), p=float(rho.pvalue), n_pure=len(Qp),
+                              spearman_pure=round(float(rhop.statistic), 3), p_pure=float(rhop.pvalue),
+                              low2_lt_0_05=[t["target"] for t in Q if t["low2"] < 0.05])
     # search reach against structure: is the exact block found before / when / after the spectral order reaches S?
     R = [t for t in T if t["n_struct"]]
     S["struct_vs_reach5"] = dict(n=len(R), struct_before=sum(1 for t in R if t["n_reach5"] and t["n_struct"] < t["n_reach5"]),
@@ -468,35 +478,44 @@ def fig_timing(T, path):
     plt.rcParams.update({"font.size": 7, "axes.titlesize": 7, "axes.labelsize": 7, "legend.fontsize": 6})
     mk = {"pure": "o", "parity": "s", "gate": "^", "mux": "D", "two sums": "P", "weighted": "*"}
     col = {"dlsymdev": "#1f77b4", "dlfamdev": "#ff7f0e", "dlheld7": "#2ca02c", "dlheld6": "#d62728", "dlheld5": "#9467bd", "dlheld4": "#8c564b"}
-    fig, axs = plt.subplots(1, 2, figsize=(7.0, 3.0))
-    TOP = 2 ** 15.4; jit = lambda t: 2 ** (0.12 * ((sum(map(ord, t["target"])) % 7) - 3))
+    fig, axs = plt.subplots(1, 3, figsize=(7.0, 2.55))
+    TOP = 2 ** 15.3; jit = lambda t: 2 ** (0.13 * ((sum(map(ord, t["target"])) % 7) - 3))
+    never = sorted(t["target"] for t in T if not t["n_struct"])
+
+    def dot(ax, x, y, t):
+        ax.scatter(x, y, marker=mk.get(t["mixture"], "o"), s=16 if t["mixture"] != "weighted" else 34, facecolor=col[t["suite"]],
+                   edgecolor="k", lw=0.3, alpha=0.85)
     for t in T:
-        x = t["n_detect"] if t["n_detect"] else TOP; y = t["n_struct"] if t["n_struct"] else TOP
-        axs[0].scatter(x * jit(t), y / jit(t), marker=mk.get(t["mixture"], "o"), s=22 if t["mixture"] != "weighted" else 40,
-                       facecolor=col[t["suite"]], edgecolor="k", lw=0.3, alpha=0.85)
-        if not t["n_struct"] or (t["l2_struct_detect"] or 0) >= 2 or (t["l2_struct_detect"] is not None and t["l2_struct_detect"] < 0):
-            axs[0].annotate(t["target"], (x * jit(t), y / jit(t)), fontsize=5, xytext=(3, -2), textcoords="offset points")
+        y = t["n_struct"] / jit(t) if t["n_struct"] else TOP
+        if t["n_detect"]:
+            dot(axs[0], t["n_detect"] * jit(t), y, t)
+        if t["n_struct"] and (t["l2_struct_detect"] or 0) >= 3:
+            axs[0].annotate(t["target"], (t["n_detect"] * jit(t), y), fontsize=5, xytext=(3, -2), textcoords="offset points")
+        xr = t["n_reach5"] * jit(t) if t["n_reach5"] else TOP
+        if t["n_reach5"] or t["n_struct"]:
+            dot(axs[1], xr, y, t)
         if t["n_struct"]:
             ys = t["nstar_s0"] if np.isfinite(t["nstar_s0"]) else TOP
-            axs[1].scatter(t["n_struct"] * jit(t), ys, marker=mk.get(t["mixture"], "o"), s=22 if t["mixture"] != "weighted" else 40,
-                           facecolor=col[t["suite"]], edgecolor="k", lw=0.3, alpha=0.85)
+            dot(axs[2], t["n_struct"] * jit(t), ys, t)
             if t["l2_nstar_struct"] is not None and abs(t["l2_nstar_struct"]) > 1.0:
-                axs[1].annotate(t["target"], (t["n_struct"] * jit(t), ys), fontsize=5, xytext=(3, -2), textcoords="offset points")
-    for ax, (xl, yl) in zip(axs, [("n_detect (true block passes DFG's test)", "n_struct (v3 has the exact structure)"),
-                                 ("n_struct (v3, seed 0)", "n* (v3, seed 0, 10% error)")]):
+                axs[2].annotate(t["target"], (t["n_struct"] * jit(t), ys), fontsize=5, xytext=(3, -2), textcoords="offset points")
+    labs = [("n_detect: true block passes DFG's test", "n_struct: v3 has the exact structure"),
+            ("n_reach5: search order reaches S (top |S|+5)", "n_struct"), ("n_struct (seed 0)", "n* (seed 0, 10% test error)")]
+    for ax, (xl, yl) in zip(axs, labs):
         ax.set_xscale("log", base=2); ax.set_yscale("log", base=2); ax.plot([8, 2 ** 15], [8, 2 ** 15], color="#888", lw=0.6)
-        ax.set_xlim(2 ** 3.5, 2 ** 15.8); ax.set_ylim(2 ** 3.5, 2 ** 15.8); ax.set_xlabel(xl); ax.set_ylabel(yl)
-        ax.axhline(2 ** 15, color="#bbb", lw=0.5, ls=":"); ax.axvline(2 ** 15, color="#bbb", lw=0.5, ls=":")
-        ax.tick_params(labelsize=6)
-    axs[0].text(2 ** 15.45, 2 ** 3.8, "never", fontsize=5, rotation=90); axs[0].text(2 ** 3.7, 2 ** 15.45, "never", fontsize=5)
-    axs[1].text(2 ** 3.7, 2 ** 15.45, "never", fontsize=5)
+        ax.set_xlim(2 ** 3.5, 2 ** 15.7); ax.set_ylim(2 ** 3.5, 2 ** 15.7); ax.set_xlabel(xl, fontsize=6); ax.set_ylabel(yl, fontsize=6)
+        ax.axhline(2 ** 15, color="#bbb", lw=0.5, ls=":"); ax.tick_params(labelsize=5.5)
+        ax.set_xticks([2 ** k for k in range(4, 16, 2)]); ax.set_yticks([2 ** k for k in range(4, 16, 2)])
+    axs[1].axvline(2 ** 15, color="#bbb", lw=0.5, ls=":"); axs[1].text(2 ** 15.1, 2 ** 3.8, "never", fontsize=5, rotation=90)
     for x0 in (1, 2):
         axs[0].plot([8, 2 ** 15], [8 * 2 ** x0, 2 ** (15 + x0)], color="#ccc", lw=0.5, ls="--")
+    axs[0].text(2 ** 9.5, 2 ** 14.55, "never (top row):\n" + ", ".join(never), fontsize=4.8, va="top")
     from matplotlib.lines import Line2D
     h = [Line2D([], [], marker=m, ls="", color="#777", mec="k", mew=0.3, label=k) for k, m in mk.items()]
     h += [Line2D([], [], marker="o", ls="", color=c, mec="k", mew=0.3, label=k) for k, c in col.items()]
-    axs[1].legend(handles=h, loc="upper left", fontsize=5, frameon=False, ncol=2)
-    axs[0].set_title("(a) structure found vs. block detectable"); axs[1].set_title("(b) 10% error vs. structure found")
+    axs[2].legend(handles=h, loc="upper left", fontsize=4.8, frameon=False, ncol=2)
+    axs[0].set_title("(a) found vs. detectable"); axs[1].set_title("(b) found vs. reached by the search order")
+    axs[2].set_title("(c) 10% error vs. found")
     fig.tight_layout(); fig.savefig(path); plt.close(fig)
 
 
@@ -751,11 +770,13 @@ def fig_g(S3, G, picks, path):
         ax.set_ylim(-1.6, 1.6)
     for ax in axs.ravel()[len(picks):]:
         ax.axis("off")
-    axs[0, 0].legend(frameon=False, fontsize=5, loc="lower left")
-    for ax in axs.ravel():
-        if ax.get_legend_handles_labels()[1] and "tau" in ax.get_legend_handles_labels()[1][0]:
-            ax.legend(frameon=False, fontsize=5, loc="lower left"); break
-    fig.tight_layout(); fig.savefig(path); plt.close(fig)
+    from matplotlib.lines import Line2D
+    from matplotlib.patches import Patch
+    h = [Patch(color="#cccccc", label="E[f | t] (truth)"), Line2D([], [], color="#d62728", marker="o", ms=2.5, lw=0.8, label="mean DFG value"),
+         Line2D([], [], color="#1f77b4", lw=0.8, alpha=0.6, label="tau = +1: truth (step)"), Line2D([], [], color="#1f77b4", marker="o", ls="", ms=2.5, label="tau = +1: mean DFG value"),
+         Line2D([], [], color="#ff7f0e", lw=0.8, alpha=0.6, label="tau = -1: truth (step)"), Line2D([], [], color="#ff7f0e", marker="o", ls="", ms=2.5, label="tau = -1: mean DFG value")]
+    fig.legend(handles=h, loc="lower center", ncol=6, fontsize=5.5, frameon=False)
+    fig.tight_layout(rect=(0, 0.05, 1, 1)); fig.savefig(path); plt.close(fig)
     return used
 
 
