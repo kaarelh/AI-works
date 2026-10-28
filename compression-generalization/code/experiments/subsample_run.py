@@ -283,6 +283,20 @@ def distill_and_quantize(family, net, label, float_steps, lr, seed, ref=None, ex
         consider(family, g, f"{label} rel={rel}", rel=rel, float_dis=fd, **meta)
 
 
+def distill_and_quantize_pool(family, net, label, Xp, yp, float_steps, lr, seed, **meta):
+    """As distill_and_quantize, on a given pool with soft targets yp."""
+    Xp32 = Xp.astype(np.float32)
+    if float_steps:
+        distill(net, Xp32, yp, steps=float_steps, lr=lr, seed=seed, soft=True)
+    fd = float_dis(net.weights())
+    for rel in rels:
+        s2 = copy.deepcopy(net)
+        exps = exps_for(s2.weights(), rel)
+        distill(s2, Xp32, yp, steps=args.qat_steps, lr=1e-3, seed=seed + 1000, qat_steps_exp=exps, soft=True)
+        g, _ = quant_code(s2.weights(), np.arange(n), exps)
+        consider(family, g, f"{label} rel={rel}", rel=rel, float_dis=fd, **meta)
+
+
 # ----------------------------------------------------------------------------- path norm, margins
 info = {}
 if args.depth == 1:
@@ -437,6 +451,25 @@ if args.depth == 1 and want("greedy"):
         distill_and_quantize("greedy_distill", to_mlp(gw), f"greedy k={k}", args.distill_steps // 2, 1e-3,
                              args.seed + k, k=k, mode="greedy")
     timing["greedy"] = time.time() - t
+
+if want("mixed"):
+    # Distil on fresh inputs AND on the training set.  f interpolates S, so its labels there are the
+    # true labels; weighting the training points keeps g's training error (the Occam term) small.
+    t = time.time()
+    reps = max(1, int(round(len(Xdis) / m)))
+    Xmix = np.concatenate([Xdis] + [Xtr] * reps)
+    ymix = np.concatenate([pdis] + [ytr.astype(np.float64)] * reps)
+    for k in ks:
+        st = MLP([n] + [k] * args.depth + [1], seed=args.seed + 31 * k)
+        distill_and_quantize_pool("mixed_scratch", st, f"k={k}", Xmix, ymix, args.distill_steps, 3e-3, args.seed + k, k=k)
+        if args.depth == 1:
+            (W1, b1), (V, c) = Fw
+            order = ss.greedy_units(ss.relu_features(W1, b1, Xfit), zfit[:, None], k, return_order=True)
+            idx = np.sort(order)
+            Wo, bo = ss.refit_linear(ss.relu_features(W1[idx], b1[idx], Xfit), zfit[:, None])
+            distill_and_quantize_pool("mixed_greedy", to_mlp([(W1[idx].copy(), b1[idx].copy()), (Wo, bo)]), f"greedy k={k}",
+                                      Xmix, ymix, args.distill_steps // 2, 1e-3, args.seed + k, k=k)
+    timing["mixed"] = time.time() - t
 
 if args.depth == 2 and want("sub_refit"):
     (W1, b1), (W2, b2), (V, c) = Fw

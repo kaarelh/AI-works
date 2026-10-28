@@ -1,6 +1,6 @@
 # Finding the short surrogate efficiently: compute, subsampling, and a twin bound
 
-Follow-up to the main note (overview [`../README.md`](../README.md), statements and proofs [`../theory/README.md`](../theory/README.md)), prompted by Kaarel Hänni. Research note by Claude, 27–28 October 2026; not reviewed by a human. The propositions were checked by AI referees ([verification](#verification)), not by humans. Literature claims come from search-result snippets: the session's network policy blocked arxiv.org and most publisher sites, so no paper page could be opened ([`literature_sweep.json`](literature_sweep.json)).
+Follow-up to the main note (overview [`../README.md`](../README.md), statements and proofs [`../theory/README.md`](../theory/README.md)), prompted by Kaarel Hänni. Research note by Claude, 27–28 October 2026; not reviewed by a human. The propositions were checked by AI referees, and the report by an AI review against the raw results ([verification](#verification)), not by humans. The session's network policy blocked arxiv.org and most publisher sites. Apart from a few papers whose full text or official code could be read (Bazinet et al.'s among them), literature claims rest on search-result snippets ([`literature_sweep.json`](literature_sweep.json)); claims recalled from memory are marked as such.
 
 **The question.** With a known input distribution $D_X$, Theorem 2 of the main note bounds the trained network $f$ through any description $g$:
 
@@ -10,30 +10,31 @@ where $k_S(g)$ is $g$'s number of training errors and $j$ the number of disagree
 
 ## Short answers
 
-- **Unlimited compute.** If the labels come from a target with an $L_t$-bit description, an exhaustive search over short descriptions certifies *every* trained network to within $(L_t\ln2+\ln(1/\delta))/m$ of its true error, plus sampling slack (Proposition 2). Generalization on a simple-target task implies closeness to a simple function. Beyond that, the limit is the best Occam bound of any program at sample size $m$. On MNIST at $m=60{,}000$ we know of no program short enough to bring that below about 0.1.
-- **Is closeness true in practice?** In the sense the bound needs, agreement with $f$ up to about $f$'s own error, yes on every task we tried. Every Boolean network is within its test error of the short target. On MNIST, networks are within 1.5–2% of a retrained twin. What fails is *finding* a short $g$ (dense targets), or the Occam cost of the shortest known $g$ (MNIST).
+- **Unlimited compute.** If the labels come from a target with an $L_t$-bit description, an exhaustive search over short descriptions certifies *every* trained network to within $(L_t\ln2+\ln(1/\delta))/m$ of its true error, plus sampling slack (Proposition 2). In general the limit is the best Occam bound of any program at sample size $m$. On MNIST at $m=60{,}000$ the best we know of is 9–12% (Lotfi et al. 2022), against the 1–2% test error of a trained network.
+- **Is closeness to a simple function true in practice?** Only partly.
+  - On a noise-free task, $f$ is within its test error of the target by definition ($\Pr[f\ne t]=\mathrm{err}(f)$). That makes $f$ close to a *short* function only when the target is short relative to $m$. For the junta and threshold-function targets (31–98 bits) it is, and the bounds are 0.002–0.007.
+  - For the dense targets of Section 3 (signs of random 4- and 8-unit ReLU networks on 50 inputs), the target costs 1,434 or 2,744 bits. At $m=16{,}000$ its Occam term alone is 0.08 or 0.14, so even a perfect search certifies only 2.6–5 times the test error.
+  - On MNIST we found no short function close to $f$. The best surrogates (6,000–12,000 bits) disagree with $f$ on 3.6–5.4% of inputs and certify 0.255. $f$ is within 1.5–2% of a retrained twin, but the twin is not a short program. That supports the twin bound below, not closeness to a simple function.
 - **Compute.**
-  - Certification is cheap, but brute-force search costs about $2^L$ evaluations.
-  - Black-box search is as hard as learning small circuits from membership queries, which is impossible in polynomial time if pseudorandom functions exist (Proposition 3, classical).
-  - Polynomial-time searches that exploit structure work where the structure is there. On every junta and threshold-function target, an influence-guided codec recovers the target (31–98 bits, bounds 0.002–0.007) in 10 seconds to 4 minutes per network.
-  - On dense targets (the sign of a random 4- or 8-unit ReLU network on all 50 inputs), every polynomial-time search we tried stops at 1.24–1.92 times the bound the true target itself would give.
-- **Subsampling hidden units** (Maurey sampling, top-$k$, greedy selection, each with a least-squares refit) works when the function is carried by a few units, and Proposition 4 says when.
-  - On mean-field-trained networks, 2 units reproduce the two majority targets and 4 the 3-parity (144–244 bits, bounds 0.007–0.011).
-  - On standard networks the majorities need 16–32 units and 1,200–3,300 bits (0.07–0.30).
-  - 3-parity is carried by 4–8 units in every regime, and the random 6-junta needs 16–32 in every regime.
-  - The path norm behind the guarantee is width-independent for mean-field nets and grows with width for standard ones.
-  - As a starting point for distillation, subsampling helps on some networks (dense 4-unit target: 0.153–0.167 against 0.217–0.225 from scratch) and not on others. On MNIST it is about as good as distillation from scratch.
-  - It does not close the gap on dense targets.
-- **Subsampling the data instead.** If retraining is allowed, a twin trained on a fixed half of the training set gives a bound with one extra training run and no search (Proposition 5, a special case of Kääriäinen 2005). The twin is tested on the other half, and its disagreement with $f$ is measured on fresh or unlabeled inputs.
+  - Certification is cheap, but brute-force search costs about $2^LN$ evaluations ($2^L$ candidates, each checked on $N$ inputs).
+  - Black-box search is as hard as learning small circuits from membership queries, which is impossible in polynomial time if pseudorandom functions exist (Proposition 3, classical). That is a statement about worst-case functions, not about the networks gradient descent produces on learnable tasks.
+  - Searches that exploit structure work where the structure is there. On every junta and threshold-function target, an influence-guided codec recovers the target (31–98 bits, bounds 0.002–0.007) in 9 seconds to under 3 minutes per network.
+  - On the dense targets, every search we ran once per network stopped at 1.24–1.92 times the bound the true teacher itself would give. These were the influence codec, distillation, and unit subsampling or greedy selection followed by a refit or a distillation, with at most 2,000 distillation steps. Their descriptions were about as close to $f$ as the teacher is, but made 4–9 times as many training errors.
+  - Training the small student from 32 random initializations and keeping the best (5.4–6.4 CPU-minutes per network) brought every dense network to 0.97–1.25 times the oracle: 0.97–1.01 for the 8-unit target, 1.13–1.25 for the 4-unit one. A third of the initializations succeed for the 4-unit target, and 3–6 of 32 come within 10% of the oracle for the 8-unit one, so a few to a dozen restarts suffice on average. On these targets the gap was an optimization failure of small students, which a modest, linear amount of extra compute removes.
+- **Subsampling hidden units** (Maurey sampling, top-$k$ or greedy selection, each with a least-squares refit of the output layer) works when the function is carried by a few units, and Proposition 4 says when. On its own it was never the best search on any network.
+  - On one-hidden-layer mean-field networks, 2 units reproduce the two majority targets and 4 the 3-parity (144–244 bits, bounds 0.007–0.011).
+  - On standard one-hidden-layer networks, the majorities need 16–32 units and 1,200–3,300 bits (0.07–0.30). On two-hidden-layer networks, subsampling with a refit gives only 0.21–0.66.
+  - The path norm behind the guarantee is width-independent for mean-field networks and grows with width for standard ones.
+  - As a starting point for distillation it sometimes helps. Before the restarts, subsampling or greedy selection followed by distillation gave the best bound on 3 of the 8 teacher4 networks (0.153–0.167, against 0.21–0.22 for a student distilled from scratch). On MNIST, keeping the top 64 of 1,024 units and fine-tuning gives 0.272, against 0.255 for a 32-unit student distilled from scratch.
+- **Subsampling the data instead.** If retraining is allowed, a twin trained on a fixed half of the training set gives a bound with one extra training run and no search (Proposition 5). The twin is tested on the other half, and its disagreement with $f$ is measured on fresh or unlabeled inputs. This is a special case of Kääriäinen (2005), and the tightest published bounds of Bazinet et al. (2026), 1.8% on an MNIST CNN, use the same construction.
   - MNIST: 0.042 for a 1024-unit network with test error 1.55%, where the best compression bound is 0.255.
-  - Boolean tasks at $m=16{,}000$: 0.0005.
-  - It fails where half the data is not enough to learn (3-parity at $m=4000$: 0.62 against 0.007 for compression) and on interpolated label noise (0.22–0.23 against 0.17).
+  - Boolean tasks at $m=16{,}000$: 0.0005 on 5-bit majority, 3-parity and AND-3, and 0.0016 on the random 6-junta (means over 3 seeds). On the two-hidden-layer teacher4 network it gives 0.118, against 0.121 for the true-teacher oracle and 0.137 for the best search.
+  - It loses to compression in three places. The first is where half the data is not enough to learn (3-parity at $m=4000$: 0.62 against 0.007; 6-junta at $m=4000$: 0.34 against 0.042). The second is the majority of all 50 bits at every $m$ (0.011 against 0.004 at $m=16{,}000$). The third is interpolated label noise (at $m=16{,}000$: 0.22–0.23 against 0.17).
 
 Bottom line:
-- Worst-case search is hopeless.
-- Structured search solves the junta and threshold-function cases.
-- On dense targets, subsampling and the other polynomial-time searches leave a factor of 1.2–1.9 to the oracle.
-- With a known input distribution, the cheapest route to a tight bound on real networks is retraining, not compression, when the training algorithm is available.
+- Worst-case search is hopeless, but nothing we ran into needed exponential search. (On MNIST the limit we hit is description length, not search.)
+- Structured search solves the junta and threshold-function targets. On the dense targets, single runs of cheap searches leave a factor of 1.2–1.9 to the oracle, and random restarts of a small student close most of it in minutes. Subsampling hidden units alone is not competitive, except on mean-field networks.
+- When the training algorithm and unlabeled inputs (or a known $D_X$) are available, retraining a twin gave the tightest bounds on all four MNIST and Fashion-MNIST MLPs we tried (784-H-10, one training recipe, one seed each). They were 3–7 times tighter than our compression bounds, and cheaper to obtain. Other architectures are untested. On the Boolean tasks neither route dominates.
 
 ## 1. What unlimited compute buys
 
@@ -45,7 +46,7 @@ Write $K_\epsilon(f)=\min\{L(g):\Pr_{D_X}[f\ne g]\le\epsilon\}$ for the $\epsilo
 
 So compute affects how good the bound is, not whether it holds, with two pieces of bookkeeping:
 - Any number of candidates can be compared for free on a separate *selection* sample from $D_X$.
-- Certifying $K$ candidates and reporting the best costs $\delta_2\to\delta_2/K$. Choosing among $K$ codes costs $\log_2K$ bits; the main note charges 4 bits and $\delta_2/16$ for this.
+- Certifying several candidates and reporting the best costs a union bound: weight $w_i$ with $\sum_iw_i\le1$ on candidate $i$, and its disagreement term at $\delta_2w_i$. Choosing among $K$ codes costs $\log_2K$ bits. The main note charges 4 bits and $\delta_2/16$ for its codec designs; Section 3 charges another 4 bits and $\delta_2/16$ for naming one of up to 16 search families.
 
 **Proposition 2 (completeness for simple noise-free targets).** Suppose the labels are $y=t(x)$ for a target $t$ with an $L_t$-bit description in the code. Then for *every* trained $f$, the description $g=t$ gives, with probability $\ge1-\delta_1-\delta_2$,
 
@@ -55,18 +56,22 @@ and $\overline{\mathrm{Bin}}(j,N,\delta_2)=\mathrm{err}(f)+O\big(\sqrt{\mathrm{e
 
 *Proof.* $t$ makes no training errors, and the exact binomial tail with $k=0$ is $1-(\delta_12^{-L_t})^{1/m}\le(L_t\ln2+\ln(1/\delta_1))/m$. Also $\Pr[f\ne t]=\mathrm{err}(f)$. $\square$
 
-So on tasks with a short target, generalization plus the simple target imply that $f$ is close to a simple function. A search that does not know $t$ but chooses $g$ on a selection sample (separate from the certification sample) then certifies *any* trained network to within $(L_t\ln2+\ln(1/\delta_1))/m$ plus sampling slack.
+So on tasks with a short target, generalization plus the simple target imply that $f$ is close to a simple function. A search that does not know $t$ but chooses $g$ on a selection sample (separate from the certification sample) then certifies *any* trained network to within $(L_t\ln2+\ln(1/\delta_1))/m$ plus sampling slack. "Short" is relative to $m$: the dense targets of Section 3 cost 1,434 and 2,744 bits, and their Occam terms alone at $m=16{,}000$ are 0.08 and 0.14.
 
 With binary labels flipped independently with probability $\eta$, $g=t$ gives $\eta+O\big(\sqrt{\eta(L_t\ln2+\ln(1/\delta_1))/m}+(L_t\ln2+\ln(1/\delta_1))/m\big)+\Pr[f\ne t]$, against $\mathrm{err}(f)=\eta+(1-2\eta)\Pr[f\ne t]$. The excess is $2\eta\Pr[f\ne t]$ plus the Occam slack.
 
 **Where the limit then lies.** For Theorem 2 with a code fixed before $S$, the bound is at least $B^*=\min_\sigma\overline{\mathrm{Bin}}(k_S(g_\sigma),m,\delta_12^{-L(\sigma)})$, the best Occam bound of any program at sample size $m$. With unlimited search it is at most about $B^*+\Pr[f\ne g^*]\le\mathrm{err}(f)+B^*+\mathrm{err}(g^*)$, where $g^*$ attains $B^*$. So past some point the limit is set by the task and the code, not by the network.
 - *Noise-free Boolean tasks of the main note:* $B^*\approx(L\ln2+\ln(1/\delta))/m$ with $L=28$–98 bits (plus 4 design bits).
 - *MNIST at $m=60{,}000$:* every $10^3$ bits adds about 1.2 points ($10^3\ln2/m$) to the Occam term. An Occam term of 0.1 needs a program of at most about 6,200 bits at 1% training error, 4,400 bits at 2%, or 9,100 bits at zero training error.
-  - The tightest bound we know of for a code fixed in advance is 11.6% (Lotfi et al. 2022; 9.0% with a transfer prior), for a program of about $3\times10^3$ bits. Reaching that figure at that length takes roughly 4% training error.
-  - Our own codec needs $1.8\times10^4$ bits for a surrogate with 3.7% test error, and $2.8\times10^4$ bits for one with 2.6% (`../results/summary_t2.md`).
+  - The tightest bound we know of for a code fixed before the data is 11.6% (Lotfi et al. 2022), for a program of about $3\times10^3$ bits; reaching that figure at that length takes roughly 4% training error. With a prior pretrained on other data (also fixed before $S$) it is 9.0%.
+  - Our own codecs need about $1.2\times10^4$ bits for a surrogate with 3.7% test error (a 64-unit student distilled from the 1024-unit network of Section 3: 12,493 bits, `../results/search/mnist_subsample.jsonl`), and $2.8\times10^4$ bits for one with 2.6% (784-256-10, `../results/summary_t2.md`).
   - The smallest networks reported to reach 99% accuracy have about $2\times10^3$ parameters (an unreviewed GitHub record).
 
-We know of no MNIST program short enough for an Occam term of 0.1 at 1–2% training error, and nothing rules one out. Bounds that do not use a fixed code escape this floor: sample-compression and data-dependent-prior bounds (Pick-To-Learn 3.1%; Bazinet et al. 2026, 1.8–3.5%) and the twin bound of Section 4.
+We know of no MNIST program short enough for an Occam term of 0.1 at 1–2% training error, and nothing rules one out. Bounds that do not use a fixed code escape this floor. On an MNIST CNN with 0.50% test error, Bazinet et al. (2026) report bounds on $f$ of:
+- 3.5% through a compressed surrogate with a data-dependent prior;
+- 3.9% through a Pick-To-Learn surrogate, whose own sample-compression certificate is 3.1%;
+- 4.8% through a PAC-Bayes surrogate;
+- 1.8% through a surrogate retrained on a random subset of the training set and tested on the rest: a hold-out bound, the twin bound of Section 4 ([`../literature.md`](../literature.md), Bound to Disagree).
 
 ## 2. Compute
 
@@ -102,11 +107,12 @@ None of this covers networks that gradient descent finds on tasks it learns. For
 - *The main note's Boolean codec* combines influence estimation and a truth table on the top coordinates with distilled quantized students. It took about 0.5–5 minutes per network on one CPU thread (median about 2 minutes), mostly for distillation.
 - *Distillation* fits a small student to $f$'s labels on fresh inputs. That is learning with *unlimited* labelled data, so there is no statistical obstacle, only an optimization one, and no guarantee.
   - Stanton et al. (2021) find that students often fail to match their teachers even when they have the capacity to.
+  - Small two-layer ReLU students trained on a same-size ReLU teacher often converge to spurious local minima, and over-parameterizing the student makes this rarer (Safran and Shamir, ICML 2018; from memory, not checked in this session). Section 3 sees exactly this, and random restarts fix most of it.
   - Boix-Adsera (2024) formalizes "PAC-distillation" and shows it can be much cheaper than learning from scratch when the teacher's internal representations can be read off.
 - *White-box compression of $f$ itself*, such as subsampling hidden units (Section 3), with guarantees in terms of norms of $f$.
 - *Using the learning algorithm as the decoder* (Section 4). Description length can be measured relative to any decoder fixed in advance, including "run the training algorithm on these examples", as in sample compression (Littlestone and Warmuth 1986). The search is then retraining, which is polynomial.
 
-## 3. Subsampling hidden units
+## 3. Subsampling hidden units, and other searches
 
 A one-hidden-layer network is a sum over its units, $f(x)=c+\sum_{i=1}^Na_i\varphi_i(x)$ with $\varphi_i(x)=\mathrm{relu}(w_i\cdot x+b_i)$ and $a_i\in\mathbb R^C$ the output weights of unit $i$. Let $s_i=\|a_i\|\,\|\varphi_i\|_{L_2(D_X)}$ and $A=\sum_is_i$, the path norm of $f$ under $D_X$.
 
@@ -130,10 +136,10 @@ In practice $s_i$ and $A$ are estimated on a pool of inputs. The identity is the
 
 Variants:
 - *Top-$k$ with refit.* Keep the $k$ units with the largest importances $\hat s_i$, measured on a fitting sample, and refit the output layer by least squares on $f$'s logits there. Keeping the original output weights is feasible for the least-squares problem, so the refit's mean squared error on the fitting sample is at most $(\sum_{i\notin\text{top }k}\hat s_i)^2$, up to the tiny ridge used for numerical stability. This is not a bound under $D_X$.
-- *Greedy selection* (orthogonal matching pursuit over $f$'s units). Ye et al. (ICML 2020) analyse greedy forward selection from a large trained network and show that the selected sub-network's loss approaches that of the full network at rate $O(1/k)$ for two-layer networks.
+- *Greedy selection* (orthogonal matching pursuit over $f$'s units). Ye et al. (ICML 2020) analyse greedy forward selection of neurons from a large network. For two-layer networks, the selected $k$-neuron sub-network has loss $L^*_N+O(1/k)$, where $L^*_N$ is the best loss over convex combinations of all $N$ neurons, and $O(1/k^2)$ when the large network is sufficiently over-parameterized (rates from search snippets). The guarantee is for their selection rule, not for matching pursuit with a least-squares refit.
 - *Subsampling the update.* The initialization is free (main note, Lemma 8) and $f-f_0=(c-c_0)+\sum_i\delta_i$ with $\delta_i=a_i\varphi_i-a_i^0\varphi_i^0$. Sampling with $p_i=\|\delta_i\|_{L_2(D_X)}/A_\Delta$, $A_\Delta=\sum_i\|\delta_i\|$, gives $g=f_0+(c-c_0)+\frac1k\sum_j\delta_{I_j}/p_{I_j}$ with $\mathbb E\|g-f\|^2=(A_\Delta^2-\|f-f_0-(c-c_0)\|^2)/k$.
 
-Related work: Mussay et al. (ICLR 2020) prune neurons exactly by this importance-sampling estimator, with data-independent sensitivities. Baykal et al. (ICLR 2019) importance-sample weights by empirical sensitivity and derive generalization bounds for the compressed network.
+Related work: Mussay et al. (ICLR 2020) prune neurons with an estimator of the same form: i.i.d. draws with probability proportional to a data-independent sensitivity, with outgoing weights rescaled by count$/(p_i\times\text{draws})$. Their code keeps drawing until it has a fixed number of distinct neurons, so the number of draws is random and the estimator only approximates the fixed-$k$ one above. Baykal et al. (ICLR 2019) importance-sample weights by empirical sensitivity and derive generalization bounds for the compressed network.
 
 **When can this work?** The Maurey guarantee gives disagreement at most $\Pr[\text{margin}\le\gamma]+\epsilon$ with $k=(A^2-\|f-c\|^2)/(\epsilon\gamma^2)$ units. It certifies a compression only if this $k$ is much smaller than $N$. It gives a non-vacuous bound only if the description of the kept units, about $k_{\rm unique}(d+1+C)b$ bits (plus $\log_2N$ per unit when they are coded relative to their initialization), is much smaller than $m$. The precision $b$ must also be fine enough that quantization errors are small next to $\gamma$. This is a sufficient condition; refitting and greedy selection can do much better than the bound. How the constant scales with width:
 - *Mean-field scaling* ($a_i=\tilde a_i/N$ with $\tilde a_i=O(1)$): $A=O(1)$ whatever the width $N$, so a width-independent $k$ suffices. This matches the "dropout stability" of mean-field SGD solutions (Shevchenko and Mondelli 2020), whose loss change after removing neurons depends on how many are kept, not on $N$.
@@ -144,90 +150,99 @@ The experiments measure $A$, $A_\Delta$, the margins and the participation ratio
 
 ### Experiments
 
-Code `code/experiments/subsample_run.py`; full tables in [`../results/search/summary_subsample.md`](../results/search/summary_subsample.md); figure [`../figures/search_curves.png`](../figures/search_curves.png).
+Code `code/experiments/subsample_run.py` and `restarts_run.py`; full tables in [`../results/search/summary_subsample.md`](../results/search/summary_subsample.md); figures [`../figures/search_curves.png`](../figures/search_curves.png) and [`../figures/search_restarts.png`](../figures/search_restarts.png).
 
 **Setup.**
-- *Tasks.* Inputs are uniform on $\{\pm1\}^{50}$ and $m=16{,}000$. There are four junta or threshold targets: majority of 5 bits, majority of all 50, 3-parity, and a random 6-junta. There are two dense non-junta targets, `teacher4` and `teacher8`: the sign of a random 4- or 8-unit ReLU network on all 50 inputs, with balanced classes. In those, every input bit has influence 5–12%, so influence-guided junta search cannot find them.
+- *Tasks.* Inputs are uniform on $\{\pm1\}^{50}$ and $m=16{,}000$. There are four junta or threshold targets: majority of 5 bits, majority of all 50, 3-parity, and a random 6-junta. There are two dense non-junta targets, `teacher4` and `teacher8`: the sign of a random 4- or 8-unit ReLU network on all 50 inputs, thresholded at its median (46% and 50% positive; for teacher4 the median is 0, where the ReLU sum has an atom). In those, every input bit has influence between about 3.5% and 29% (median about 9%), so influence-guided junta search cannot find them.
 - *Networks $f$.* One hidden layer, trained to zero training error in three regimes:
   - standard initialization with Adam (512 and 4,096 units);
   - mean-field parametrization $f=\frac1N\sum_ia_i\,\mathrm{relu}(w_i\cdot x+b_i)$ with SGD at learning rate $0.2N$ (512 and 4,096 units);
-  - standard initialization ×2 with momentum SGD (512 units). Its parameters move 40–60% of their initial norm, so it is not truly lazy; the files call it `lazy`.
+  - standard initialization ×2 with momentum SGD (512 units). Its parameters move 18–56% of their initial norm (standard Adam training: 24–153%; mean-field: 330–1,340%). It moves the least of the three regimes but is not truly lazy; the files call it `lazy`.
 
-  The main note's two-hidden-layer (50, 512, 512, 1) networks are included too. One seed per network, with a second seed for four of them.
-- *Search families,* all polynomial-time:
+  The main note's two-hidden-layer (50, 512, 512, 1) networks for 5-bit majority, 3-parity and the 6-junta are included too, with a teacher4 network of the same shape trained the same way. One seed per network, with a second seed for four of them.
+- *Search families,* all polynomial-time, each run once per network unless stated:
   - the main note's influence codec;
-  - distillation from scratch into a $k$-unit student;
+  - distillation from scratch into a $k$-unit student (2,000 steps on $f$'s labels over fresh inputs);
   - keeping $k$ units (Maurey sampling, top-$k$ by importance, uniform; greedy matching pursuit) and refitting the output layer by least squares, with the kept units coded absolutely or relative to their initialization rows;
   - subsampling the update relative to the initialization;
-  - subsampling or greedy selection followed by distillation.
+  - subsampling or greedy selection followed by distillation;
+  - on the 13 dense-target networks, distillation on $f$'s soft labels over fresh inputs together with the training set (where $f$'s labels are the true labels), from scratch or after greedy selection;
+  - on the same 13 networks, 32 random restarts of a student with the teacher's width ($k=4$ for teacher4, 8 for teacher8), each trained for 6,000 steps on that mixed data. The restart with the best estimated bound (training-set Occam term plus disagreement on the selection sample) is kept. The same 32 student initializations were used for every network.
 
-  Every candidate is quantized at three step sizes, for $k\in\{2,4,\dots,64\}$. Each family's best candidate is chosen on a 30,000-input selection sample and certified on $2\times10^5$ fresh inputs. The bound is Theorem 2 with the main note's design charge, plus 3 bits for the family.
-- *Oracle.* The last column codes the true teacher network, known to us but not to any search, at the best of seven step sizes. It shows what a search that found the target would certify.
+  Every candidate is quantized at three step sizes, for $k\in\{2,4,\dots,64\}$. Each family's best candidate is chosen on the training set and a 30,000-input selection sample, then certified on $2\times10^5$ fresh inputs. The bound is Theorem 2 with the main note's design charge, plus a 4-bit prefix naming one of up to 16 search families, with each family's disagreement term at $\delta_2/16$. Every family pays this, the influence codec included, so the best of the families certified on a network, however many were run, is itself a valid bound.
+- *Oracle.* The last column codes the true teacher network, known to us but not to any search, at the best of seven step sizes ($\log_27$ bits and $\delta_2/7$ for the choice). It shows what a search that found the target would certify.
 
-Bound on $\mathrm{err}(f)$ per search family, with the bits of $g$ in parentheses; bold is the best search for that network:
+Bound on $\mathrm{err}(f)$ per search family, with the bits of $g$ in parentheses; bold is the best search for that network. The two distillation columns include the fresh-plus-training-input variants, and the refit column excludes the update family (never the best).
 
-| target | network f | test err. f | influence codec | distill from scratch | best subsample/greedy + refit | best subsample/greedy + distill | true target (oracle) |
-|---|---|---|---|---|---|---|---|
-| maj5 | standard 512 | 0.0000 | **0.002** (41) | 0.006 (131) | 0.068 (1201) | 0.008 (170) | - |
-| maj5 | standard 4096 | 0.0000 | **0.002** (41) | 0.006 (131) | 0.130 (2207) | 0.008 (172) | - |
-| maj5 | SGD x2 512 | 0.0000 | **0.002** (41) | 0.006 (132) | 0.200 (2507) | 0.008 (168) | - |
-| maj5 | mean-field 512 | 0.0000 | **0.002** (41) | 0.006 (131) | 0.007 (144) | 0.007 (145) | - |
-| maj5 | mean-field 4096 | 0.0000 | **0.002** (41) | 0.006 (131) | 0.007 (152) | 0.007 (151) | - |
-| fullmaj | standard 512 | 0.0000 | **0.002** (44) | 0.004 (72) | 0.196 (2370) | 0.006 (136) | - |
-| fullmaj | standard 4096 | 0.0001 | **0.002** (44) | 0.004 (72) | 0.267 (3252) | 0.008 (167) | - |
-| fullmaj | SGD x2 512 | 0.0018 | **0.004** (44) | 0.006 (72) | 0.299 (1862) | 0.024 (259) | - |
-| fullmaj | mean-field 512 | 0.0000 | **0.002** (44) | 0.004 (71) | 0.008 (178) | 0.004 (74) | - |
-| fullmaj | mean-field 4096 | 0.0000 | **0.002** (44) | 0.004 (71) | 0.008 (185) | 0.009 (191) | - |
-| parity3 | standard 512 | 0.0000 | **0.002** (31) | 0.014 (323) | 0.016 (363) | 0.010 (218) | - |
-| parity3 | standard 512, seed 1 | 0.0000 | **0.002** (31) | 0.015 (342) | 0.015 (346) | 0.012 (280) | - |
-| parity3 | standard 4096 | 0.0000 | **0.002** (31) | 0.015 (350) | 0.009 (205) | 0.008 (180) | - |
-| parity3 | SGD x2 512 | 0.0000 | **0.002** (31) | 0.018 (401) | 0.010 (216) | 0.010 (218) | - |
-| parity3 | mean-field 512 | 0.0000 | **0.002** (31) | 0.016 (363) | 0.009 (207) | 0.010 (212) | - |
-| parity3 | mean-field 512, seed 1 | 0.0000 | **0.002** (31) | 0.023 (524) | 0.010 (216) | 0.012 (261) | - |
-| parity3 | mean-field 4096 | 0.0000 | **0.002** (31) | 0.016 (358) | 0.011 (244) | 0.012 (263) | - |
-| junta6 | standard 512 | 0.0000 | **0.005** (98) | 0.044 (1032) | 0.139 (2252) | 0.025 (567) | - |
-| junta6 | standard 4096 | 0.0006 | **0.005** (98) | 0.037 (852) | 0.180 (2616) | 0.026 (587) | - |
-| junta6 | SGD x2 512 | 0.0015 | **0.007** (98) | 0.040 (880) | 0.130 (2390) | 0.031 (680) | - |
-| junta6 | mean-field 512 | 0.0000 | **0.005** (98) | 0.037 (861) | 0.086 (2073) | 0.029 (679) | - |
-| junta6 | mean-field 4096 | 0.0000 | **0.005** (98) | 0.045 (1051) | 0.119 (1412) | 0.045 (1043) | - |
-| teacher4 | standard 512 | 0.0408 | 0.200 (1427) | 0.217 (1961) | 0.308 (1879) | **0.153** (1016) | 0.122 (1434) |
-| teacher4 | standard 512, seed 1 | 0.0402 | **0.189** (1880) | 0.225 (2685) | 0.293 (1416) | 0.199 (1827) | 0.123 (1434) |
-| teacher4 | standard 4096 | 0.0517 | 0.226 (1412) | 0.224 (1920) | 0.359 (2656) | **0.167** (1007) | 0.133 (1434) |
-| teacher4 | SGD x2 512 | 0.0422 | 0.214 (1419) | 0.225 (1947) | 0.262 (979) | **0.153** (977) | 0.123 (1434) |
-| teacher4 | mean-field 512 | 0.0221 | 0.199 (1847) | **0.198** (2625) | 0.259 (2803) | 0.209 (1854) | 0.103 (1434) |
-| teacher4 | mean-field 512, seed 1 | 0.0212 | **0.170** (977) | 0.214 (2740) | 0.262 (1805) | 0.218 (1806) | 0.104 (1434) |
-| teacher4 | mean-field 4096 | 0.0214 | **0.184** (1446) | 0.202 (2627) | 0.215 (1071) | 0.195 (973) | 0.103 (1434) |
-| teacher8 | standard 512 | 0.0557 | **0.258** (1377) | 0.271 (1927) | 0.428 (2764) | 0.268 (2723) | 0.193 (2744) |
-| teacher8 | standard 4096 | 0.0624 | 0.285 (1705) | **0.268** (1907) | 0.455 (2689) | 0.277 (2625) | 0.201 (2744) |
-| teacher8 | SGD x2 512 | 0.0683 | 0.295 (1751) | **0.283** (1892) | 0.478 (3780) | 0.326 (2705) | 0.208 (2744) |
-| teacher8 | mean-field 512 | 0.0344 | 0.263 (2673) | **0.254** (1952) | 0.345 (3467) | 0.306 (2611) | 0.173 (2744) |
-| teacher8 | mean-field 4096 | 0.0340 | 0.266 (2680) | **0.259** (1970) | 0.361 (3507) | 0.310 (3505) | 0.174 (2744) |
-| maj5 | standard 512 x2 layers | 0.0000 | **0.002** (41) | 0.007 (156) | 0.367 (5426) | 0.009 (187) | - |
-| parity3 | standard 512 x2 layers | 0.0000 | **0.002** (31) | 0.013 (285) | 0.209 (4356) | 0.015 (328) | - |
-| junta6 | standard 512 x2 layers | 0.0000 | **0.005** (98) | 0.030 (688) | 0.656 (13970) | 0.048 (1136) | - |
-| teacher4 | standard 512 x2 layers | 0.0395 | 0.225 (2714) | **0.164** (1099) | 0.582 (5780) | 0.328 (4698) | 0.120 (1434) |
+| target | network f | test err. f | influence codec | distill from scratch | subsample/greedy + refit | subsample/greedy + distill | best of 32 restarts | true target (oracle) |
+|---|---|---|---|---|---|---|---|---|
+| maj5 | standard 512 | 0.0000 | **0.002** (41) | 0.006 (131) | 0.068 (1201) | 0.008 (170) | - | - |
+| maj5 | standard 4096 | 0.0000 | **0.002** (41) | 0.006 (131) | 0.131 (2207) | 0.008 (172) | - | - |
+| maj5 | SGD x2 512 | 0.0000 | **0.002** (41) | 0.006 (132) | 0.200 (2507) | 0.008 (168) | - | - |
+| maj5 | mean-field 512 | 0.0000 | **0.002** (41) | 0.006 (131) | 0.007 (144) | 0.007 (145) | - | - |
+| maj5 | mean-field 4096 | 0.0000 | **0.002** (41) | 0.006 (131) | 0.007 (152) | 0.007 (151) | - | - |
+| fullmaj | standard 512 | 0.0000 | **0.003** (44) | 0.004 (72) | 0.196 (2370) | 0.006 (136) | - | - |
+| fullmaj | standard 4096 | 0.0001 | **0.003** (44) | 0.004 (72) | 0.268 (3252) | 0.008 (167) | - | - |
+| fullmaj | SGD x2 512 | 0.0018 | **0.005** (44) | 0.006 (72) | 0.300 (1862) | 0.024 (259) | - | - |
+| fullmaj | mean-field 512 | 0.0000 | **0.003** (44) | 0.004 (71) | 0.008 (178) | 0.004 (74) | - | - |
+| fullmaj | mean-field 4096 | 0.0000 | **0.003** (44) | 0.004 (71) | 0.008 (185) | 0.009 (191) | - | - |
+| parity3 | standard 512 | 0.0000 | **0.002** (31) | 0.014 (323) | 0.016 (363) | 0.010 (218) | - | - |
+| parity3 | standard 512, seed 1 | 0.0000 | **0.002** (31) | 0.015 (342) | 0.015 (346) | 0.013 (280) | - | - |
+| parity3 | standard 4096 | 0.0000 | **0.002** (31) | 0.016 (350) | 0.009 (205) | 0.008 (180) | - | - |
+| parity3 | SGD x2 512 | 0.0000 | **0.002** (31) | 0.018 (401) | 0.010 (216) | 0.010 (218) | - | - |
+| parity3 | mean-field 512 | 0.0000 | **0.002** (31) | 0.016 (363) | 0.009 (207) | 0.010 (212) | - | - |
+| parity3 | mean-field 512, seed 1 | 0.0000 | **0.002** (31) | 0.023 (524) | 0.010 (216) | 0.012 (261) | - | - |
+| parity3 | mean-field 4096 | 0.0000 | **0.002** (31) | 0.016 (358) | 0.011 (244) | 0.012 (263) | - | - |
+| junta6 | standard 512 | 0.0000 | **0.005** (98) | 0.044 (1032) | 0.140 (2252) | 0.025 (567) | - | - |
+| junta6 | standard 4096 | 0.0006 | **0.006** (98) | 0.038 (852) | 0.180 (2616) | 0.026 (587) | - | - |
+| junta6 | SGD x2 512 | 0.0015 | **0.007** (98) | 0.040 (880) | 0.130 (2390) | 0.031 (680) | - | - |
+| junta6 | mean-field 512 | 0.0000 | **0.005** (98) | 0.037 (861) | 0.086 (2073) | 0.029 (679) | - | - |
+| junta6 | mean-field 4096 | 0.0000 | **0.005** (98) | 0.045 (1051) | 0.119 (1412) | 0.045 (1043) | - | - |
+| teacher4 | standard 512 | 0.0408 | 0.200 (1427) | 0.210 (1923) | 0.309 (1879) | 0.153 (1016) | **0.142** (975) | 0.122 (1434) |
+| teacher4 | standard 512, seed 1 | 0.0402 | 0.190 (1880) | 0.212 (2733) | 0.294 (1416) | 0.193 (1849) | **0.150** (990) | 0.123 (1434) |
+| teacher4 | standard 4096 | 0.0517 | 0.226 (1412) | 0.222 (2747) | 0.360 (2656) | 0.167 (1007) | **0.154** (961) | 0.133 (1434) |
+| teacher4 | SGD x2 512 | 0.0422 | 0.214 (1419) | 0.215 (2757) | 0.263 (979) | 0.154 (977) | **0.145** (963) | 0.124 (1434) |
+| teacher4 | mean-field 512 | 0.0221 | 0.200 (1847) | 0.198 (2625) | 0.279 (1972) | 0.209 (1854) | **0.125** (990) | 0.103 (1434) |
+| teacher4 | mean-field 512, seed 1 | 0.0212 | 0.171 (977) | 0.200 (2748) | 0.263 (1805) | 0.219 (1806) | **0.130** (955) | 0.104 (1434) |
+| teacher4 | mean-field 4096 | 0.0214 | 0.185 (1446) | 0.198 (2604) | 0.216 (1071) | 0.195 (973) | **0.126** (993) | 0.103 (1434) |
+| teacher8 | standard 512 | 0.0557 | 0.259 (1377) | 0.256 (2766) | 0.428 (2764) | 0.265 (2742) | **0.195** (1752) | 0.194 (2744) |
+| teacher8 | standard 4096 | 0.0624 | 0.286 (1705) | 0.266 (1944) | 0.456 (2689) | 0.277 (2625) | **0.204** (1851) | 0.201 (2744) |
+| teacher8 | SGD x2 512 | 0.0683 | 0.296 (1751) | 0.272 (2733) | 0.479 (3780) | 0.318 (1903) | **0.211** (1876) | 0.208 (2744) |
+| teacher8 | mean-field 512 | 0.0344 | 0.264 (2673) | 0.255 (1952) | 0.346 (3467) | 0.296 (3461) | **0.171** (1827) | 0.173 (2744) |
+| teacher8 | mean-field 4096 | 0.0340 | 0.267 (2680) | 0.251 (2781) | 0.361 (3507) | 0.306 (3514) | **0.169** (1815) | 0.174 (2744) |
+| maj5 | standard 512 x2 layers | 0.0000 | **0.002** (41) | 0.007 (156) | 0.367 (5426) | 0.009 (187) | - | - |
+| parity3 | standard 512 x2 layers | 0.0000 | **0.002** (31) | 0.013 (285) | 0.209 (4356) | 0.015 (328) | - | - |
+| junta6 | standard 512 x2 layers | 0.0000 | **0.005** (98) | 0.030 (688) | 0.657 (13970) | 0.048 (1136) | - | - |
+| teacher4 | standard 512 x2 layers | 0.0395 | 0.226 (2714) | 0.152 (1109) | 0.583 (5780) | 0.329 (4698) | **0.137** (1001) | 0.121 (1434) |
 
 **What the experiments show.**
-1. *Juntas and threshold functions: search is solved.* The influence codec recovers the target on every network (31–98 bits, bounds 0.002–0.007). Distillation from scratch comes next (0.004–0.045).
+1. *Juntas and threshold functions: search is solved.* The influence codec recovers the target on every network (31–98 bits, bounds 0.002–0.007). Next come distillation from scratch on the majority targets and on the two-hidden-layer networks (0.004–0.030), and subsample- or greedy-initialized refits or distillations on the one-hidden-layer 3-parity and 6-junta networks (0.008–0.045). On all twelve of those, these beat distillation from scratch (0.014–0.045), though on the mean-field 4,096-unit 6-junta only narrowly.
 2. *Subsampling works where Proposition 4 says it should.*
-   - On mean-field networks, 2 kept units reproduce the majority targets exactly and 4 the 3-parity, giving 144–244-bit descriptions and bounds 0.007–0.011.
-   - On standard and SGD networks, the majorities need 16–32 units. Each unit carries 50 dense input weights, so the descriptions cost 1,200–3,300 bits and the bounds 0.07–0.30.
+   - On one-hidden-layer mean-field networks, 2 kept units reproduce the majority targets exactly and 4 the 3-parity, giving 144–244-bit descriptions and bounds 0.007–0.011.
+   - On one-hidden-layer standard and SGD networks, the majorities need 16–32 units. Each unit carries 50 dense input weights, so the descriptions cost 1,200–3,300 bits and the bounds 0.07–0.30.
    - The floating-point curves show where the cost lies: 16 top units already reach 1.8% disagreement on the standard 512-unit majority network. Finding the units is cheap; describing them is not.
-   - 3-parity is carried by 4–8 units in every regime (bounds 0.009–0.016). The random 6-junta needs 16–32 in every regime (0.09–0.18).
-   - The path norm behaves as the scaling argument predicts. For mean-field nets it is width-independent: 5-bit majority $A=10.0$ at both widths, teacher4 97.8 and 96.4. For standard nets it grows: 26.7 to 47.4, and 90.6 to 140.9.
+   - On one-hidden-layer networks, 3-parity is carried by 4–8 units in every regime (bounds 0.009–0.016), and the random 6-junta needs 16–32 in every regime (0.09–0.18).
+   - On the two-hidden-layer networks, subsampling with a refit (Maurey or top-$k$, coded absolutely; greedy selection and init-relative coding were not run there) gives only 0.21–0.66 (4,356–13,970 bits). Subsampling followed by distillation still reaches 0.009–0.048 on the junta and threshold targets.
+   - For mean-field networks the path norm is width-independent, as the scaling argument predicts: 5-bit majority $A=10.0$ and 9.9 at the two widths, teacher4 97.8 and 96.4. For standard networks it grows with width, but more slowly than the $\sqrt N$ of the argument: by 1.2–1.8 times from 512 to 4,096 units (for example 26.7 to 47.4 and 90.6 to 140.9), against $\sqrt8\approx2.8$.
    - The Maurey bound itself is loose. For the mean-field majority network it promises disagreement at most 0.95 at $k=4$ (the measured value is 0); for the standard network, 0.74 at $k=32$ (measured 0.12).
 3. *Subsampling the update relative to the initialization* was never the best family.
-4. *Dense targets: a search gap.*
-   - The best search on each dense-target network reaches only 0.15–0.28, while the true teacher, a 1,434-bit (teacher4) or 2,744-bit (teacher8) description, would give 0.10–0.21. The ratio of best search to oracle is 1.24–1.92.
-   - Subsampling or greedy selection followed by distillation is the best family on 3 of the 8 teacher4 networks (0.153–0.167 against 0.217–0.225 from scratch), and never on teacher8.
-   - The floating-point disagreement falls slowly with $k$ for every selection rule (figure). The dense target is spread over many units of $f$, as one would expect for a function that is not a junta.
-5. *Compute.* Each family took between 9 seconds and 13 minutes per network on one CPU thread; training $f$ took 2–84 seconds.
+4. *Dense targets: a search gap, and where it sits.*
+   - Run once per network, the best search reaches 0.15–0.27, while the true teacher, a 1,434-bit (teacher4) or 2,744-bit (teacher8) description, would give 0.10–0.21. The ratio of best search to oracle is 1.24–1.92.
+   - The descriptions these searches found are about as close to $f$ as the teacher is: $\Pr[f\ne g]$ is 2.3–6.2%, against 2.2–6.9% for the teacher. The difference is in the training set. There $f$ equals the labels, and the found descriptions disagree with it on 2.5–5.8% of points, against 0.5–0.7% for the quantized teacher. With the teacher's training-error count they would give 0.84–1.16 times the oracle on 12 of the 13 networks (the exception is a 2,625-bit description). So distilling toward $f$ found a $g$ close to $f$ but not close to the target, and the bound needs both.
+   - Adding the training set to the distillation data (where $f$'s labels are the true labels) did not fix this on its own. The training errors stayed at 2.3–7.6%, and the best bound improved on 5 of the 13 networks, by at most 0.013.
+   - The failure was optimization. Over the 32 restarts, a student with the teacher's own width typically ended at 4.9–6.2% training error (the median over restarts), while the best restart reached 0.9–1.9%. The outcome is bimodal. For the 4-unit target, 10–11 of the 32 initializations came within 1.5 times the oracle (estimated bound), and none of the others did. For the 8-unit target, 3–6 came within 1.1 times the oracle and 22–27 within 1.5 times. The successful initializations were almost the same for every network, so success depends on the student's initialization far more than on which $f$ it is distilled from.
+   - Keeping the best of 32 restarts brought every dense network to 0.97–1.25 times the oracle (table, figure). Teacher8 reached 0.97–1.01: a 1,750–1,880-bit 8-unit student is shorter than the 2,744-bit coded teacher and almost as accurate. Teacher4 reached 1.13–1.25: the best 4-unit students land 1.4–2.2% from the target but not on it, and after quantization they keep 2.2–2.7% training error.
+   - Twice the teacher's width did not help on the one network tried. Eight-unit students for teacher4 reached the good basin in almost every restart, but their longer descriptions gave 0.159, against 0.142 for 4 units.
+   - The floating-point disagreement after subsampling and refitting falls slowly with $k$ for every selection rule (figure). The dense target is spread over many units of $f$, as one would expect for a function that is not a junta.
+5. *Compute.* Each family run once took between 9 seconds and 13 minutes per network on one CPU thread, and the 32 restarts 5.4–6.4 minutes (about 11 seconds per restart). Training $f$ took 2–84 seconds.
 
 **MNIST** ([`../results/search/summary_mnist_subsample.md`](../results/search/summary_mnist_subsample.md)). For a 784-1024-10 network (test error 1.55%, $A=360$, effective units 612), with the unlabeled-data bound of the main note and a union bound over 78 configurations:
 - the best surrogate is a 32-unit student distilled from scratch: 6,148 bits, $\Pr[f\ne g]=5.4\%$, bound 0.255;
 - keeping the top 64 units, refitting and fine-tuning gives 11,733 bits, 3.6%, bound 0.272;
 - Maurey sampling gives 0.304;
 - coding the whole network gives 0.444.
+
+Here the limit is description length rather than search (Section 1), so restarts were not tried.
 
 ## 4. Subsampling the data: the twin bound
 
@@ -249,21 +264,21 @@ No description length and no search appear. In the language of compression, $f_s
 - Kääriäinen (COLT 2005) bounds the classifier trained on all the labelled data through the classifiers of a cross-validation run, each certified on its held-out fold. Unlabeled data derandomizes this (the "semibound" package of Kääriäinen and Langford, ICML 2005). Proposition 5 is the one-twin special case, and with a known $D_X$ its unlabeled-data requirement is free.
 - The triangle inequality for the disagreement metric goes back to Schuurmans (1997) and to co-validation (Madani, Pennock, Flake 2004).
 - Jiang et al. (ICLR 2022) observe that two SGD runs disagree on test inputs at about the test error (the generalization-disagreement equality). That suggests the bound will be about twice the test error when the twin generalizes like $f$.
-- Bazinet et al. (2026) build certified surrogates by retraining on selected subsets of the training data (coresets, Pick-To-Learn), paying a sample-compression cost for the selection.
+- Bazinet et al. (2026) bound a trained network through a certified surrogate plus a disagreement term certified on held-out unlabeled inputs. Their tightest bounds (1.8% on an MNIST CNN, 17.4% on a CIFAR-10 ResNet-18) use a surrogate retrained on a random, data-independent subset of the training data and certified on its complement as a test set. That is Proposition 5 applied to deep networks. Their selected coresets and Pick-To-Learn surrogates do pay a sample-compression cost (3.9% on MNIST for Pick-To-Learn).
 
 We pre-register $s=m/2$ (the same seed as $f$) and report other fractions only as diagnostics: reporting the best of several would need a union bound. For images, the test inputs used without their labels are assumed to be i.i.d. from the training input distribution, as in Theorem 2's experiments.
 
 ### Experiments
 
-Code `code/experiments/twin_run.py`; tables in [`../results/search/summary_twin.md`](../results/search/summary_twin.md); figure [`../figures/search_twin.png`](../figures/search_twin.png). Each twin is trained on a fixed subset of $s=m/2$ training points with the same seed as $f$. $f$ is exactly the network of the main note's experiments (same data, seed and training), so the compression bounds below are on the same $f$; the analysis checks this by comparing test errors.
+Code `code/experiments/twin_run.py`; tables in [`../results/search/summary_twin.md`](../results/search/summary_twin.md); figure [`../figures/search_twin.png`](../figures/search_twin.png). Each twin is trained on a fixed subset of $s=m/2$ training points with the same seed as $f$. In every row the compression bound is on the same $f$ (same data, seed and training). For the junta and threshold rows and the 100- and 256-unit image rows, $f$ is the main note's network, and the analysis checks this by comparing test errors. For teacher4 and the 784-1024-10 network, $f$ is this note's own network from Section 3 (teacher4's test error, 0.0395, matches the Section 3 run). Boolean rows are means over 3 seeds, except teacher4, which is seed 0, the network with search and oracle bounds (its 3-seed mean twin bound is 0.114).
 
 | setting | test err. $f$ | compression bound (same $f$) | twin bound ($s=m/2$) | $\Pr[f\ne f_s]$ |
 |---|---|---|---|---|
-| Boolean, $m=16{,}000$, 5-bit majority (3 seeds) | 0.0000 | 0.0024 | **0.0005** | 0.0000 |
+| Boolean, $m=16{,}000$, 5-bit majority | 0.0000 | 0.0024 | **0.0005** | 0.0000 |
 | Boolean, $m=16{,}000$, 3-parity | 0.0000 | 0.0018 | **0.0005** | 0.0000 |
 | Boolean, $m=16{,}000$, random 6-junta | 0.0000 | 0.0047 | **0.0016** | 0.0003 |
 | Boolean, $m=16{,}000$, majority of 50 | 0.0011 | **0.0037** | 0.0108 | 0.0047 |
-| Boolean, $m=16{,}000$, teacher4 (seed 0) | 0.0395 | 0.164 (oracle 0.120) | **0.118** | 0.048 |
+| Boolean, $m=16{,}000$, teacher4 (seed 0, two hidden layers) | 0.0395 | 0.137 (oracle 0.121) | **0.118** | 0.049 |
 | Boolean, $m=16{,}000$, 5-bit majority, 10% label noise | 0.1390 | **0.174** | 0.230 | 0.077 |
 | Boolean, $m=4000$, 3-parity | 0.0000 | **0.0070** | 0.619 | 0.297 |
 | Boolean, $m=4000$, random 6-junta | 0.0223 | **0.042** | 0.336 | 0.149 |
@@ -272,56 +287,67 @@ Code `code/experiments/twin_run.py`; tables in [`../results/search/summary_twin.
 | MNIST 784-1024-10 | 0.0155 | 0.255 | **0.042** | 0.015 |
 | Fashion-MNIST 784-256-10 | 0.1106 | 0.619 | **0.210** | 0.084 |
 
-- **Where the twin wins.** Once a network trained on half the data has learned the task, the twin bound is close to the test error. It beats every compression bound we have on the image networks, by a factor of 3–7. On the teacher4 network it matches the true-teacher oracle (0.118 vs 0.120) without knowing the target. On MNIST it is about 2.5–2.7 times the test error, consistent with the observation that independently trained networks disagree at about their test error (Jiang et al. 2022). A twin with a different seed gives about the same: 0.052 against 0.050 for the 256-unit network.
+- **Where the twin wins.** Once a network trained on half the data has learned the task, the twin bound is about 2–3 times the test error (1.9 on Fashion-MNIST, 2.5–2.7 on MNIST, 3.0 on teacher4), as the disagreement equality of Jiang et al. (2022) predicts. It beats every compression bound we have on the image networks, by a factor of 3–7. On the teacher4 network it is slightly below the true-teacher oracle (0.118 against 0.121) and the best search (0.137) without knowing the target. A twin with a different seed gives about the same: 0.052 against 0.050 for the 256-unit MNIST network.
 - **Where it loses.**
   - Near the learning threshold: a twin on 2,000 examples has not learned 3-parity, while $f$ on 4,000 has.
+  - When the target is short and $f$ is already close to it: on the majority of all 50 bits the twin loses at every $m$ (0.085, 0.063 and 0.011 against 0.069, 0.027 and 0.004 at $m$ = 2,000, 4,000 and 16,000). The twin's own error and its disagreement with $f$ each exceed $f$'s error, while the compressed surrogate is the 44-bit target.
   - With interpolated label noise: each network memorizes its own flipped labels, so they disagree on about 8% of inputs, while the compressed surrogate is the clean rule.
   - So the two bounds are complementary.
-- **Other fractions** ($s=m/4$, $3m/4$; diagnostics only, not used for any reported bound) trade the twin's accuracy against the size of its test set. $3m/4$ is better for every image network and for most Boolean tasks.
+- **Other fractions** ($s=m/4$, $3m/4$; diagnostics only, not used for any reported bound) trade the twin's accuracy against the size of its test set. $3m/4$ is better for every image network it was run on (MNIST with 100 and 256 units, Fashion-MNIST; the 1024-unit network was run at $m/2$ only) and for 16 of the 22 Boolean settings.
 
 ## 5. Is closeness true in practice?
 
-What Theorem 2 needs is a short $g$ with $\Pr[f\ne g]$ not much larger than $\mathrm{err}(f)$. The evidence:
-- *Tasks with a simple target.* Closeness follows from generalization (Proposition 2). On the junta and threshold-function tasks, every network that generalized was within its test error of the 31–98-bit target, and the target was found in polynomial time on every network.
-- *Dense targets.* $f$ (2–7% test error) is within its test error of a 1,434- or 2,744-bit description (the teacher), so closeness holds. The polynomial-time searches found descriptions of 1,000–2,600 bits that disagree with $f$ on 2–7% of inputs, enough for bounds 1.24–1.92 times the oracle. The shortfall is the search, not closeness.
-- *MNIST.* $f$ agrees with a retrained twin up to 1.5–2%, about its own error, and with 6,000–12,000-bit surrogates up to 3.6–5.4%. Whether a program short enough for a tight Occam term exists at 1–2% disagreement is open; Section 1 gives the arithmetic.
+What Theorem 2 needs is a *short* $g$ with few training errors and $\Pr[f\ne g]$ not much larger than $\mathrm{err}(f)$. The evidence:
+- *Tasks with a short target.* Closeness to the target holds by definition, $\Pr[f\ne t]=\mathrm{err}(f)$ (Proposition 2), so the only questions are whether the target is short relative to $m$ and whether it can be found. On the junta and threshold-function tasks it is (31–98 bits), and the target was found in polynomial time on every network.
+- *Dense targets.* $f$ (2–7% test error) is within its test error of a 1,434- or 2,744-bit description (the teacher), so closeness holds. At $m=16{,}000$ that description is not short: its Occam term alone (0.08 or 0.14) makes even the oracle bound 2.6–5 times the test error. Single-run searches found descriptions as close to $f$ as the teacher, but less accurate on the training set; restarts found descriptions nearly as good as the teacher (0.97–1.25 times the oracle bound).
+- *MNIST.* $f$ agrees with 6,000–12,000-bit surrogates up to 3.6–5.4%, and those certify only 0.255. It agrees with a retrained twin up to 1.5–2%, about its own error, but the twin is an 800,000-parameter network, not a short $g$ for Theorem 2. Whether a program short enough for a tight Occam term exists at 1–2% disagreement is open; Section 1 gives the arithmetic.
 - *Literature.*
-  - Compressed and distilled networks agree with their parents except on a small set of atypical inputs (Hooker et al. 2019, "pruning identified exemplars").
-  - The disagreement left by distillation is often an optimization failure rather than a capacity limit (Stanton et al. 2021).
+  - Pruned networks match their dense parents' top-line accuracy, and the differences concentrate on a small set of atypical, often mislabeled or low-quality inputs (Hooker et al. 2019, "pruning identified exemplars"; the paper reports set-level differences, not pointwise agreement).
+  - Distilled students, by contrast, can disagree substantially with their teachers even when they could match them exactly. The gap is often an optimization failure rather than a capacity limit (Stanton et al. 2021), as in our dense-target runs.
   - Two networks trained by SGD disagree at about their test error (Jiang et al. 2022).
-  - All three fit the picture above: closeness at the level of $f$'s own error is the norm; closeness to a *short* program is a property of the task and of how much search one can afford.
+  - So closeness at about the level of $f$'s own error is typical for retrained twins and for pruned copies of $f$. For distilled students it depends on the optimization. Closeness to a *short* program is a property of the task and of how much search one can afford.
 
 ## 6. What this suggests
 
-1. **With a known input distribution or unlabeled data, try the twin first.** It costs one retraining, needs no search, and was 3–7 times tighter than compression on every image network. Compression helps where the twin is weak: near the learning threshold, with interpolated noise, or when the training algorithm is not available.
-2. **Use structure-aware search, not generic search.** Influences (juntas) and Fourier methods (sparse spectra) are provably polynomial and found every junta target. Greedy selection from $f$'s own units beats random sampling in function space, and it is a good starting point for distillation. That the network has already solved the hard "find a good unit" subproblem (Bach 2017) is the reason to search inside it.
-3. **Train for compressibility if a compression bound is the goal.** Mean-field-trained networks were compressible by plain subsampling (2 units for the majority targets), standard ones were not, at equal test error. Whether this extends to deep or convolutional networks is open.
-4. **Search-gap targets.** The dense teacher targets give a clean benchmark: a known short description, networks that learn it, and a measurable gap (1.24–1.92×). Natural next attempts:
+1. **With a known input distribution or unlabeled data, try the twin first.** It costs one retraining, needs no search, and was 3–7 times tighter than compression on every image network. Compression helps near the learning threshold, when the target is short and $f$ is already close to it (majority of 50), with interpolated noise, or when the training algorithm is not available.
+2. **Use structure-aware search, and give it restarts.** Influence estimation is provably polynomial for juntas and found every junta target here. Fourier methods such as Kushilevitz–Mansour are provably polynomial for sparse spectra, but we did not run them. For dense targets, distilling into a small student is the right search, but a single run is not enough: for the 4-unit target two thirds of small-student initializations got stuck, and 32 restarts fixed it. Greedy selection from $f$'s own units is a good starting point when only one run is affordable. That the network has already solved the hard "find a good unit" subproblem is the reason to search inside it (Bach, "Breaking the curse of dimensionality with convex neural networks", JMLR 2017).
+3. **Mean-field training made plain subsampling work, but did not improve the best bound.** With a refit alone, mean-field networks compressed to 2 units on the majority targets (bound 0.007–0.008), where standard ones needed 16–32 units (0.07–0.30). The best certified bound, set by the influence codec, was 0.002–0.007 on the junta and threshold targets in every regime. Subsampling and then distilling gave 0.006–0.024 on standard majority networks too. On the dense targets, mean-field networks had about half the test error, and their best bounds were lower by about as much as their oracle bounds (after restarts, 0.125–0.130 against 0.137–0.154 on teacher4): that reflects $f$'s accuracy, not its compressibility. The regimes also differ in optimizer (plain SGD at learning rate $0.2N$ against Adam), and most have one seed. Whether training for compressibility helps a compression bound is therefore open, as is whether it extends to deep or convolutional networks.
+4. **The dense teacher targets are a useful benchmark** for search: a known short description, networks that learn it, and a measurable gap. Restarts closed it for the 8-unit target and left 1.13–1.25 for the 4-unit one. Natural next steps:
+   - longer training or a final fine-tuning of the best restarts on the training set, aimed at the 2% residual training error;
+   - harder versions (wider or deeper teachers, larger $n$), to see how the success rate per restart falls;
    - progressive distillation from intermediate checkpoints, which provably helps on sparse parities (Panigrahi et al. 2025);
    - white-box "PAC-distillation" that reads features off $f$'s hidden layer (Boix-Adsera 2024);
-   - ridge-leverage-score unit sampling, which needs about the effective dimension of $f$'s features rather than $A^2/\gamma^2$ units (Bach 2017).
+   - ridge-leverage-score unit sampling, which needs about the effective dimension of $f$'s features rather than $A^2/\gamma^2$ units (Bach, "On the equivalence between kernel quadrature rules and random feature expansions", JMLR 2017; from memory, not checked in this session).
 5. **Open theory.**
    - Is the white-box search problem (find $g$ with $L(g)\le K_\epsilon(f)+s$) hard for networks that gradient descent produces?
-   - Is there a family of tasks where $f$ is learnable and its target short, but no polynomial-time procedure finds a short surrogate?
+   - Is there a family of tasks where $f$ is learnable and its target short, but no polynomial-time procedure finds a short surrogate? The restart results suggest looking where small students' basins of attraction are exponentially rare.
    - The twin bound sidesteps both questions by measuring description length relative to the training algorithm itself.
 
 ## Verification
 
-The propositions and the subsampling code were checked by three independent AI referees (Propositions 1–2, Proposition 3, Propositions 4–5 with the code), each claimed defect then going to an independent adjudicator. The record is in [`verification_theory.json`](verification_theory.json).
-- Real defects found and fixed include: a missing output-bias shift in the update version of Proposition 4; a factor of 2 (not 4) in the multi-class corollary; the exact conditions under which Proposition 1's "validity is free" holds; the quantifiers and citations of Proposition 3; the junta-search condition $\epsilon<2^{-k-1}$; and an overstated MNIST paragraph.
-- No error was found in the main identities, and the code was confirmed to implement them. Monte Carlo tests of the identities are in `code/tests/test_subsample.py`.
-- The literature sweep, five topic searches plus one on prior art for the twin bound, each with a verification pass, is in [`literature_sweep.json`](literature_sweep.json). Its main limitation: no paper page could be opened from this session, so citations rest on search-result snippets and on official code repositories.
+- *Theory.* The propositions and the subsampling code were checked by three independent AI referees (Propositions 1–2, Proposition 3, Propositions 4–5 with the code), each claimed defect then going to an independent adjudicator. The record is in [`verification_theory.json`](verification_theory.json).
+  - Real defects found and fixed include: a missing output-bias shift in the update version of Proposition 4; a factor of 2 (not 4) in the multi-class corollary; the exact conditions under which Proposition 1's "validity is free" holds; the quantifiers and citations of Proposition 3; the junta-search condition $\epsilon<2^{-k-1}$; and an overstated MNIST paragraph.
+  - No error was found in the main identities, and the code was confirmed to implement them. Monte Carlo tests of the identities are in `code/tests/test_subsample.py`.
+- *The report.* Before publication, three AI reviewers checked the draft against the raw results: the numbers in the short answers and Sections 1–2, the numbers in the experiments, and a skeptical referee reading of the claims, the comparisons and the credit to prior work. Each of their 42 findings went to an independent verifier, which confirmed 37 and rejected 5. The record is in [`verification_review.json`](verification_review.json).
+  - All 37 were fixed. Among them: ranges that covered only part of the rows they described (the twin's Boolean results, the one- versus two-hidden-layer networks, the codec's run time); the diagnosis of the dense-target gap, which is in the training error, not in the disagreement; Bazinet et al.'s tightest bound, which is a twin-type bound and had been listed as sample compression; the search-family charge, now 4 bits and $\delta_2/16$ for every family including the codec; a misstated result of Ye et al.; and a recommendation to train for compressibility that the data do not support.
+  - The restart experiment, the fresh-plus-training-input distillation and the revised accounting came after this review, so their numbers were checked only by the analysis script and by us.
+- *Literature.* The sweep (five topic searches plus one on prior art for the twin bound, each with a verification pass) is in [`literature_sweep.json`](literature_sweep.json). Its main limitation: almost no paper page could be opened from this session, so most citations rest on search-result snippets and on official code repositories.
 
 ## Files and reproduction
 
 - `code/cgb/subsample.py`: Maurey, top-$k$, uniform and greedy unit selection, least-squares refit, update and two-layer variants.
-- `code/experiments/subsample_run.py`: the Boolean search study (one network per call). It saves $f$ to `$CGB_NETS`, default `~/.cache/cgb_nets`. With `--families greedy --load_saved` it adds the greedy families on a saved network.
+- `code/experiments/subsample_run.py`: the Boolean search study (one network per call). It saves $f$ to `$CGB_NETS`, default `~/.cache/cgb_nets`. With `--load_saved` and `--families greedy` or `--families mixed` it adds the greedy or the fresh-plus-training-input families on a saved network.
+- `code/experiments/restarts_run.py`: the random-restart search on a saved network.
 - `code/experiments/oracle_teacher.py`: the true-teacher reference.
 - `code/experiments/mnist_subsample.py`: the MNIST surrogates.
 - `code/experiments/twin_run.py`: the twin bound.
-- `code/experiments/analyze_search.py`: summaries and figures.
+- `code/experiments/analyze_search.py`: summaries and figures, with the final accounting (it recomputes every family's bound from the raw counts).
 - `code/tests/test_subsample.py`: Monte Carlo tests of the Maurey identities and the top-$k$ guarantee.
-- Results: `results/search/*.jsonl` and `summary_*.md`. Figures: `figures/search_curves.png`, `figures/search_twin.png`.
-- Command lines: for each task in {maj5, fullmaj, parity3, junta6, teacher4, teacher8} and network in {std 512, std 4096, mf 512, mf 4096, lazy 512}, run `python3 subsample_run.py --task T --param P --width N --out ../../results/search/subsample.jsonl`, then the same with `--families greedy --load_saved --out ../../results/search/subsample_greedy.jsonl`.
-- `twin_run.py boolean --task T --m M --seed S [--noise 0.1]` uses the main grid's tasks, $m\in\{2000,4000,16000\}$ and seeds 0–2. `twin_run.py images --data D --hidden H` and `mnist_subsample.py --hidden 1024` cover the images.
-- Everything ran on 4 CPU cores in about five hours.
+- Results: `results/search/*.jsonl` and `summary_*.md`. Figures: `figures/search_curves.png`, `figures/search_restarts.png`, `figures/search_twin.png`.
+- Command lines (from `code/experiments/`):
+  - For each task in {maj5, fullmaj, parity3, junta6, teacher4, teacher8} and network in {std 512, std 4096, mf 512, mf 4096, lazy 512}: `python3 subsample_run.py --task T --param P --width N --out ../../results/search/subsample.jsonl`, then the same with `--families greedy --load_saved --out ../../results/search/subsample_greedy.jsonl`. Second seeds and two-hidden-layer networks take `--seed 1` and `--depth 2`.
+  - For the dense targets, also `--families mixed --load_saved --out ../../results/search/subsample_mixed.jsonl`, and `python3 restarts_run.py --task T --param P --width N [--seed S] [--depth D] --k K --out ../../results/search/restarts.jsonl` with $K=4$ for teacher4 and 8 for teacher8 (plus $K=8$ for teacher4 standard 512).
+  - `python3 oracle_teacher.py` for the oracle column.
+  - `twin_run.py boolean --task T --m M --seed S [--noise 0.1]` uses the main grid's tasks, $m\in\{2000,4000,16000\}$ and seeds 0–2. `twin_run.py images --data D --hidden H` and `mnist_subsample.py --hidden 1024` cover the images.
+  - `python3 analyze_search.py` regenerates the summaries and figures.
+- Everything ran on 4 CPU cores in about six hours.

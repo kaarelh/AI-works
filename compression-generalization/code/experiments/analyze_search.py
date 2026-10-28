@@ -1,7 +1,7 @@
 """Summaries and figures for the search study (results/search/*.jsonl).
 
 Writes results/search/summary_subsample.md, summary_twin.md, summary_mnist_subsample.md
-and figures/search_curves.{png,pdf}, figures/search_twin.{png,pdf}.
+and figures/search_curves.{png,pdf}, figures/search_restarts.{png,pdf}, figures/search_twin.{png,pdf}.
 """
 import collections
 import json
@@ -13,17 +13,20 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(HERE, ".."))
-from accounting import boolean_bound, t2_bound  # noqa: E402
+from accounting import boolean_bound, t2_bound, DESIGN_BITS, DESIGN_FACTOR  # noqa: E402
+from cgb.bounds import occam_bound, cp_upper  # noqa: E402
 
 ROOT = os.path.join(HERE, "..", "..")
 RES = os.path.join(ROOT, "results", "search")
 FIG = os.path.join(ROOT, "figures")
 FAMS = ["codec", "scratch", "sub_refit", "sub_refit_init", "greedy_refit", "greedy_refit_init", "update_refit",
-        "sub_distill", "greedy_distill"]
+        "sub_distill", "greedy_distill", "mixed_scratch", "mixed_greedy", "restarts_k4", "restarts_k8"]
 FAM_NAMES = {"codec": "influence codec", "scratch": "distill from scratch", "sub_refit": "subsample+refit",
              "sub_refit_init": "subsample+refit (init-rel.)", "greedy_refit": "greedy+refit",
              "greedy_refit_init": "greedy+refit (init-rel.)", "update_refit": "subsample update",
-             "sub_distill": "subsample+distill", "greedy_distill": "greedy+distill"}
+             "sub_distill": "subsample+distill", "greedy_distill": "greedy+distill",
+             "mixed_scratch": "distill on fresh+training inputs", "mixed_greedy": "greedy, then distill on fresh+training inputs",
+             "restarts_k4": "best of 32 restarts, 4 units", "restarts_k8": "best of 32 restarts, 8 units"}
 
 
 def load(name):
@@ -35,18 +38,65 @@ def net_key(r):
     return (r["task"], r["param"], r["width"], r["depth"], r["seed"])
 
 
+FAMILY_BITS = 4.0     # a prefix code over up to 16 search families (every family pays it)
+FAMILY_SLOTS = 16     # = 2**FAMILY_BITS: each family's disagreement term is taken at delta_2 / 16 as well
+
+
+def family_bound(x, fam, delta=0.05):
+    """Theorem 2 for one family's certified candidate, with a 4-bit family prefix (the runs
+    charged 3 bits to every family but the influence codec and the restarts, whose recorded
+    bits carry none) and the disagreement term at delta/2 / DESIGN_FACTOR / FAMILY_SLOTS.
+    Every one of the 16 family codes thus gets weight 1/16 in both terms, so the minimum over
+    whichever families were certified on a network, however many and however chosen, is
+    itself a valid bound."""
+    extra = FAMILY_BITS - (0.0 if fam == "codec" or fam.startswith("restarts") else 3.0)
+    occ = occam_bound(x["train_err_g"], 16000, x["bits"] + extra + DESIGN_BITS, delta / 2)
+    return min(1.0, occ + cp_upper(x["dis_count"], x.get("n_cert", 200_000), delta / 2 / DESIGN_FACTOR / FAMILY_SLOTS))
+
+
 def merged_runs():
-    """subsample.jsonl rows, with the greedy families of subsample_greedy.jsonl merged in."""
+    """subsample.jsonl rows, with the greedy and mixed families of the follow-up files merged in;
+    every family's bound is recomputed with family_bound (bound_f_run keeps the run's value)."""
     runs = {net_key(r): r for r in load("subsample.jsonl")}
-    for g in load("subsample_greedy.jsonl"):
-        k = net_key(g)
+    for name, pref in (("subsample_greedy.jsonl", "greedy"), ("subsample_mixed.jsonl", "mixed")):
+        for g in load(name):
+            k = net_key(g)
+            if k in runs:
+                assert abs(runs[k]["test_err_f"] - g["test_err_f"]) < 1e-12, k   # the same network
+                runs[k]["final"].update({f: v for f, v in g["final"].items() if f.startswith(pref)})
+                runs[k]["info"].update({x: v for x, v in g["info"].items() if x == "float_curves_greedy"})
+                runs[k]["candidates"] += [c for c in g["candidates"] if c["family"].startswith(pref)]
+                runs[k]["timing"].update({x: v for x, v in g["timing"].items() if x in ("greedy", "mixed")})
+    for g in load("restarts.jsonl"):                 # restarts_run.py: one certified candidate per run
+        k, fam = net_key(g), f"restarts_k{g['k']}"
         if k in runs:
-            assert abs(runs[k]["test_err_f"] - g["test_err_f"]) < 1e-12, k   # the same network
-            runs[k]["final"].update({f: v for f, v in g["final"].items() if f.startswith("greedy")})
-            runs[k]["info"].update({x: v for x, v in g["info"].items() if x == "float_curves_greedy"})
-            runs[k]["candidates"] += [c for c in g["candidates"] if c["family"].startswith("greedy")]
-            runs[k]["timing"].update({x: v for x, v in g["timing"].items() if x == "greedy"})
+            b = g["best"]
+            runs[k]["final"][fam] = {"label": f"restart {b['restart']}, rel {b['rel']}", "bits": b["bits"],
+                                     "train_err_g": b["train_err_g"], "dis_count": b["dis_count"],
+                                     "n_cert": b["n_cert"], "bound_f": b["bound_f"]}
+            runs[k]["timing"][fam] = g["secs"]
+            runs[k].setdefault("restarts", {})[fam] = g
+    for r in runs.values():
+        for fam, x in r["final"].items():
+            x.setdefault("bound_f_run", x["bound_f"])
+            x["bound_f"] = family_bound(x, fam)
     return runs
+
+
+def oracle_rows():
+    """True-teacher references, with log2(7) bits and delta_2/7 for picking the best of 7 step sizes
+    on the certification sample."""
+    out = {}
+    for o in load("oracle_teacher.jsonl"):
+        for row in o["oracle"]:
+            r = {"bits": row["bits"], "train_err_g": row["train_err_g"],   # row bits include a 3-bit family prefix
+                 "dis_count": int(round(row["dis_hat"] * 200_000)), "n_cert": 200_000}
+            occ = occam_bound(r["train_err_g"], 16000, r["bits"] + 3.0 + DESIGN_BITS, 0.025)   # + log2(7) for the step choice
+            row["bound_f_corr"] = min(1.0, occ + cp_upper(r["dis_count"], 200_000, 0.025 / DESIGN_FACTOR / 7))
+        o["best"] = min(o["oracle"], key=lambda z: z["bound_f_corr"])
+        o["best"]["bound_f"] = o["best"]["bound_f_corr"]
+        out[(o["task"], o["param"], o["width"], o["depth"], o["seed"])] = o
+    return out
 
 
 TASK_ORDER = ["maj5", "fullmaj", "parity3", "junta6", "teacher4", "teacher8"]
@@ -65,7 +115,8 @@ def subsample_summary():
     L = ["# Searching for a short surrogate g of a trained Boolean network f\n",
          "n = 50, m = 16000 uniform training inputs, one network per row. Each search family's best candidate "
          "(chosen on a 30k selection pool) is certified on 2x10^5 fresh inputs; `bound` is Theorem 2 with the "
-         "design charge of accounting.py. `A` is the D_X path norm sum_i ||a_i|| ||phi_i||, `A_upd` the same for "
+         "design charge of accounting.py, a 4-bit prefix naming one of up to 16 search families, and the disagreement "
+         "term at delta_2/16 for the same 16 slots (so the best of the families certified on a network is also a valid bound). `A` is the D_X path norm sum_i ||a_i|| ||phi_i||, `A_upd` the same for "
          "the update relative to the initialization, `N_eff` = A^2 / sum_i s_i^2 the effective number of units, "
          "`|f| med` the median |logit|. Families: " + "; ".join(f"`{k}` = {v}" for k, v in FAM_NAMES.items()) + ".\n"]
     L.append("## Networks\n")
@@ -80,7 +131,7 @@ def subsample_summary():
                  + (f"{i['margin_quantiles'][4]:.2f} |" if "margin_quantiles" in i else "- |"))
     L.append("\n## Certified bound on err(f) per search family (bits of g in parentheses)\n")
     fams = [f for f in FAMS if any(f in r["final"] for r in runs.values())]
-    oracle = {(o["task"], o["param"], o["width"], o["depth"], o["seed"]): o for o in load("oracle_teacher.jsonl")}
+    oracle = oracle_rows()
     L.append("| task | net | width | depth | seed | test err f | " + " | ".join(FAM_NAMES[f] for f in fams)
              + " | best search | oracle: the true teacher |")
     L.append("|---|---|---|---|---|---|" + "---|" * len(fams) + "---|---|")
@@ -116,6 +167,33 @@ def subsample_summary():
             if d:
                 L.append(f"| {r['task']} | {r['param']} | {r['width']} | {mode} | "
                          + " | ".join(f"{d[k]:.4f}" if k in d else "-" for k in ks_show) + " |")
+    rs = [(k, fam, g) for k in sorted(runs, key=sort_key) for fam, g in runs[k].get("restarts", {}).items()]
+    if rs:
+        L.append("\n## Random restarts of a small student (restarts_run.py)\n")
+        L.append("Each restart is a k-unit student trained from its own random initialization for 6,000 Adam steps on "
+                 "f's soft labels over fresh inputs plus the training set, then quantized at three step sizes. "
+                 "Per-restart columns give min / median / max over the 32 restarts (float student, before "
+                 "quantization); `best est. after R` is the running minimum of the estimated bound (training-set "
+                 "Occam term plus disagreement on the selection pool) after R restarts. `certified` is the "
+                 "restart chosen by that estimate, certified on fresh inputs (with the family prefix and "
+                 "delta_2/16 as above); `previous best` is the best of the other families on the same network.\n")
+        L.append("| task | net | width | depth | seed | k | train err | Pr[f != g] | err vs target | best est. after R = 1 / 4 / 8 / 32 "
+                 "| certified (bits, train err, Pr[f != g]) | previous best | oracle | secs |")
+        L.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+        for k, fam, g in rs:
+            r = runs[k]
+            rows = g["rows"]
+            q = lambda key: "/".join(f"{v:.3f}" for v in (np.min([x[key] for x in rows]), np.median([x[key] for x in rows]),
+                                                           np.max([x[key] for x in rows])))
+            est = np.minimum.accumulate([min(x[c] for c in x if c.startswith("est_")) for x in rows])
+            x = r["final"][fam]
+            prev = min(v["bound_f"] for f2, v in r["final"].items() if not f2.startswith("restarts"))
+            o = oracle.get(k)
+            L.append(f"| {r['task']} | {r['param']} | {r['width']} | {r['depth']} | {r['seed']} | {g['k']} | {q('train_err')} | {q('dis_f_sel')} | "
+                     f"{q('err_target')} | " + " / ".join(f"{est[i - 1]:.3f}" for i in (1, 4, 8, 32) if i <= len(est))
+                     + f" | {x['bound_f']:.3f} ({x['bits']:.0f}, {x['train_err_g'] / 16000:.4f}, "
+                     f"{x['dis_count'] / x['n_cert']:.4f}) | {prev:.3f} | "
+                     + (f"{o['best']['bound_f']:.3f}" if o else "-") + f" | {g['secs']:.0f} |")
     L.append("\n## Compute (seconds, one CPU thread)\n")
     L.append("| task | net | width | depth | train f | " + " | ".join(sorted({t for r in runs.values() for t in r["timing"]})) + " |")
     tk = sorted({t for r in runs.values() for t in r["timing"]})
@@ -126,6 +204,50 @@ def subsample_summary():
                  + " | ".join(f"{r['timing'][t]:.0f}" if t in r["timing"] else "-" for t in tk) + " |")
     open(os.path.join(RES, "summary_subsample.md"), "w").write("\n".join(L) + "\n")
     curves_figure(runs)
+    restarts_figure(runs, oracle)
+
+
+def restarts_figure(runs, oracle):
+    """Estimated bound of the best student after R random restarts, relative to the oracle bound,
+    with the best of the one-run families as a marker at R = 0."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    items = [(k, fam, g) for k in sorted(runs, key=sort_key) for fam, g in runs[k].get("restarts", {}).items()
+             if k in oracle and g["k"] == (4 if k[0] == "teacher4" else 8)]
+    if not items:
+        return
+    colors = {"teacher4": "#4c78a8", "teacher8": "#e45756"}
+    fig, ax = plt.subplots(figsize=(5.2, 3.2))
+    for k, fam, g in items:
+        ob = oracle[k]["best"]["bound_f"]
+        est = np.minimum.accumulate([min(x[c] for c in x if c.startswith("est_")) for x in g["rows"]])
+        prev = min(v["bound_f"] for f2, v in runs[k]["final"].items() if not f2.startswith("restarts"))
+        c = colors.get(k[0], "#777777")
+        R = np.arange(1, len(est) + 1)
+        ax.plot(R, est / ob, color=c, lw=1.2, alpha=0.8, drawstyle="steps-post")
+        ax.plot([0.7], [prev / ob], marker="o", ms=4, color=c, alpha=0.8, clip_on=False)
+        ax.plot([len(est)], [runs[k]["final"][fam]["bound_f"] / ob], marker="s", ms=4, color=c, alpha=0.8)
+    for t, c in colors.items():
+        ax.plot([], [], color=c, lw=1.2, label=f"{t} (k = {4 if t == 'teacher4' else 8} units)")
+    ax.plot([], [], "o", color="#555555", ms=4, label="best one-run family (certified)")
+    ax.plot([], [], "s", color="#555555", ms=4, label="best restart (certified)")
+    ax.axhline(1.0, color="#333333", lw=0.8, ls="--")
+    ax.text(1.0, 1.0, "true teacher (oracle)", fontsize=7, ha="left", va="bottom", color="#333333")
+    ax.set_xscale("log", base=2)
+    ax.set_xticks([1, 2, 4, 8, 16, 32])
+    ax.set_xticklabels(["1", "2", "4", "8", "16", "32"])
+    ax.set_xlim(0.6, 36)
+    ax.set_xlabel("random restarts R (about 11 s of one CPU thread each)", fontsize=8)
+    ax.set_ylabel("bound / oracle bound", fontsize=8)
+    ax.set_title("Dense targets: best student after R restarts (estimated bound)", fontsize=8)
+    ax.tick_params(labelsize=7)
+    ax.grid(alpha=0.3)
+    ax.legend(fontsize=7, frameon=False, loc="upper right")
+    fig.tight_layout()
+    for ext in ("png", "pdf"):
+        fig.savefig(os.path.join(FIG, f"search_restarts.{ext}"), dpi=150)
+    plt.close(fig)
 
 
 def curves_figure(runs):
