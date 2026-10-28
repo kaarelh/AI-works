@@ -13,36 +13,36 @@ Mean log2 n* ratio over targets both learn; clearly better / worse: |log2 ratio|
 | dlheld | held out, Part 6 | (v3 not run yet) | | | | | | | |
 | dlheld2 | held out, Part 6 | (v3 not run yet) | | | | | | | |
 | dlheld3 | held out, Part 8 | (v3 not run yet) | | | | | | | |
-| dlsymdev | development, Part 9 | 8 | -2.22 (8/0) | -3.07 / -2.23 (3 variants) | -0.18 (2/0) | -2.48 (8/0) | +nan (8/0) | – | 0 |
+| dlsymdev | development, Part 9 | 8 | -2.22 (8/0) | -3.07 / -2.23 (3 variants) | -0.18 (2/0) | -2.48 (8/0) | n/a (8/0) | – | 0 |
 | dlheld4 | held out, Part 9 (definitions seen by a builder) | (v3 not run yet) | | | | | | | |
-| dlheld5 | held out, Part 9 | (v3 not run yet) | | | | | | | |
-| dlheld6 | held out, Part 9 (blind family) | (v3 not run yet) | | | | | | | |
+| dlheld5 | held out, Part 9 | 12 | -2.44 (10/0) | -3.14 / -2.45 (3 variants) | -0.04 (1/0) | -1.47 (10/0) | n/a (11/0) | -4.11 (11/0) | 1 |
+| dlheld6 | held out, Part 9 (blind family) | 12 | -1.50 (11/1) | -2.37 / -1.58 (5 variants) | -0.25 (2/0) | -1.82 (8/0) | -1.13 (11/0) | -2.21 (10/0) | 1 |
 | dlfamdev | development, Part 10 | 12 | – | – | -0.05 (1/1) | – | – | – | |
-| dlheld7 | held out, Part 10 (fresh draw of the blind family) | 12 | -1.70 (10/0) | -1.83 / -1.56 (3 variants) | -0.00 (0/0) | – | -0.70 (9/0) | -1.64 (9/0) | 1 |
+| dlheld7 | held out, Part 10 (fresh draw of the blind family) | 12 | -1.69 (10/0) | -1.83 / -1.60 (3 variants) | -0.00 (0/0) | – | -0.70 (9/0) | -1.64 (9/0) | 1 |
 
-Pooled over the 1 held-out suites (12 targets): mean log2 n* ratio v3 / nets_best -1.70 over 11 targets both learn; clearly better 10, clearly worse 0.
+Pooled over the 3 held-out suites (36 targets): mean log2 n* ratio v3 / nets_best -1.88 over 33 targets both learn; clearly better 31, clearly worse 1.
 
 ## Standard tasks: test error against references (cell verdicts as in Part 8)
 
 | split | reference | n range | datasets | cells | better | tie | worse | mean log2(err / ref) | datasets with lower mean (sign test p) |
 |---|---|---|---|---|---|---|---|---|---|
-| tabular, Part 7 held-out set | mlp | all | 10 | 54 | 21 | 32 | 1 | -0.324 | 9 of 10 (p = 0.021) |
-| tabular, Part 7 held-out set | mlp | n <= 3000 | 10 | 40 | 14 | 25 | 1 | -0.376 | 9 of 10 (p = 0.021) |
+| tabular, Part 7 held-out set | mlp | all | 11 | 59 | 22 | 36 | 1 | -0.331 | 10 of 11 (p = 0.012) |
+| tabular, Part 7 held-out set | mlp | n <= 3000 | 11 | 44 | 15 | 28 | 1 | -0.387 | 10 of 11 (p = 0.012) |
 | tabular, Part 7 held-out set | mlp | n >= 10000 | 3 | 8 | 5 | 3 | 0 | -0.153 | 2 of 3 (p = 1) |
-| tabular, Part 7 held-out set | mlp_reg | all | 10 | 54 | 16 | 35 | 3 | -0.142 | 8 of 10 (p = 0.11) |
-| tabular, Part 7 held-out set | mlp_reg | n <= 3000 | 10 | 40 | 12 | 26 | 2 | -0.148 | 8 of 10 (p = 0.11) |
+| tabular, Part 7 held-out set | mlp_reg | all | 11 | 59 | 16 | 40 | 3 | -0.160 | 9 of 11 (p = 0.065) |
+| tabular, Part 7 held-out set | mlp_reg | n <= 3000 | 11 | 44 | 12 | 30 | 2 | -0.175 | 9 of 11 (p = 0.065) |
 | tabular, Part 7 held-out set | mlp_reg | n >= 10000 | 3 | 8 | 3 | 4 | 1 | -0.144 | 2 of 3 (p = 1) |
-| tabular, Part 7 held-out set | mlp_strong | all | 10 | 49 | 22 | 25 | 2 | -0.338 | 9 of 10 (p = 0.021) |
-| tabular, Part 7 held-out set | mlp_strong | n <= 3000 | 10 | 40 | 17 | 21 | 2 | -0.342 | 9 of 10 (p = 0.021) |
+| tabular, Part 7 held-out set | mlp_strong | all | 11 | 54 | 22 | 30 | 2 | -0.339 | 10 of 11 (p = 0.012) |
+| tabular, Part 7 held-out set | mlp_strong | n <= 3000 | 11 | 44 | 17 | 25 | 2 | -0.352 | 10 of 11 (p = 0.012) |
 | tabular, Part 7 held-out set | mlp_strong | n >= 10000 | 3 | 3 | 2 | 1 | 0 | -0.131 | 2 of 3 (p = 1) |
-| tabular, Part 7 held-out set | mlp_best | all | 10 | 54 | 12 | 39 | 3 | -0.096 | 7 of 10 (p = 0.34) |
-| tabular, Part 7 held-out set | mlp_best | n <= 3000 | 10 | 40 | 8 | 30 | 2 | -0.098 | 8 of 10 (p = 0.11) |
+| tabular, Part 7 held-out set | mlp_best | all | 11 | 59 | 12 | 44 | 3 | -0.114 | 8 of 11 (p = 0.23) |
+| tabular, Part 7 held-out set | mlp_best | n <= 3000 | 11 | 44 | 8 | 34 | 2 | -0.125 | 9 of 11 (p = 0.065) |
 | tabular, Part 7 held-out set | mlp_best | n >= 10000 | 3 | 8 | 3 | 4 | 1 | -0.096 | 2 of 3 (p = 1) |
-| tabular, Part 7 held-out set | mlp_best+ | all | 10 | 54 | 12 | 39 | 3 | -0.096 | 7 of 10 (p = 0.34) |
-| tabular, Part 7 held-out set | mlp_best+ | n <= 3000 | 10 | 40 | 8 | 30 | 2 | -0.098 | 8 of 10 (p = 0.11) |
+| tabular, Part 7 held-out set | mlp_best+ | all | 11 | 59 | 12 | 44 | 3 | -0.114 | 8 of 11 (p = 0.23) |
+| tabular, Part 7 held-out set | mlp_best+ | n <= 3000 | 11 | 44 | 8 | 34 | 2 | -0.125 | 9 of 11 (p = 0.065) |
 | tabular, Part 7 held-out set | mlp_best+ | n >= 10000 | 3 | 8 | 3 | 4 | 1 | -0.096 | 2 of 3 (p = 1) |
-| tabular, Part 7 held-out set | hgb | all | 10 | 54 | 20 | 33 | 1 | -0.266 | 9 of 10 (p = 0.021) |
-| tabular, Part 7 held-out set | hgb | n <= 3000 | 10 | 40 | 17 | 22 | 1 | -0.294 | 9 of 10 (p = 0.021) |
+| tabular, Part 7 held-out set | hgb | all | 11 | 59 | 20 | 38 | 1 | -0.259 | 10 of 11 (p = 0.012) |
+| tabular, Part 7 held-out set | hgb | n <= 3000 | 11 | 44 | 17 | 26 | 1 | -0.287 | 10 of 11 (p = 0.012) |
 | tabular, Part 7 held-out set | hgb | n >= 10000 | 3 | 8 | 2 | 6 | 0 | -0.133 | 1 of 3 (p = 1) |
 | tabular, Part 8 fresh set (HELDOUT2) | mlp | all | 10 | 53 | 15 | 36 | 2 | -0.445 | 9 of 10 (p = 0.021) |
 | tabular, Part 8 fresh set (HELDOUT2) | mlp | n <= 3000 | 10 | 40 | 12 | 28 | 0 | -0.520 | 10 of 10 (p = 0.002) |
@@ -62,21 +62,27 @@ Pooled over the 1 held-out suites (12 targets): mean log2 n* ratio v3 / nets_bes
 | tabular, Part 8 fresh set (HELDOUT2) | hgb | all | 10 | 53 | 12 | 40 | 1 | -0.250 | 9 of 10 (p = 0.021) |
 | tabular, Part 8 fresh set (HELDOUT2) | hgb | n <= 3000 | 10 | 40 | 10 | 29 | 1 | -0.248 | 8 of 10 (p = 0.11) |
 | tabular, Part 8 fresh set (HELDOUT2) | hgb | n >= 10000 | 2 | 6 | 1 | 5 | 0 | -0.168 | 2 of 2 (p = 0.5) |
-| tabular, development | mlp | all | 4 | 20 | 2 | 18 | 0 | -0.243 | 4 of 4 (p = 0.12) |
-| tabular, development | mlp | n <= 3000 | 4 | 16 | 1 | 15 | 0 | -0.245 | 4 of 4 (p = 0.12) |
+| tabular, development | mlp | all | 5 | 24 | 4 | 20 | 0 | -0.379 | 5 of 5 (p = 0.062) |
+| tabular, development | mlp | n <= 3000 | 5 | 20 | 3 | 17 | 0 | -0.408 | 5 of 5 (p = 0.062) |
 | tabular, development | mlp | n >= 10000 | 1 | 2 | 1 | 1 | 0 | -0.163 | 1 of 1 (p = 1) |
-| tabular, development | mlp_reg | all | 4 | 20 | 2 | 18 | 0 | -0.177 | 4 of 4 (p = 0.12) |
-| tabular, development | mlp_reg | n <= 3000 | 4 | 16 | 2 | 14 | 0 | -0.194 | 4 of 4 (p = 0.12) |
+| tabular, development | mlp_reg | all | 5 | 24 | 3 | 21 | 0 | -0.267 | 5 of 5 (p = 0.062) |
+| tabular, development | mlp_reg | n <= 3000 | 5 | 20 | 3 | 17 | 0 | -0.298 | 5 of 5 (p = 0.062) |
 | tabular, development | mlp_reg | n >= 10000 | 1 | 2 | 0 | 2 | 0 | -0.105 | 1 of 1 (p = 1) |
-| tabular, development | mlp_best | all | 4 | 20 | 0 | 20 | 0 | -0.150 | 4 of 4 (p = 0.12) |
-| tabular, development | mlp_best | n <= 3000 | 4 | 16 | 0 | 16 | 0 | -0.160 | 3 of 4 (p = 0.62) |
+| tabular, development | mlp_best | all | 5 | 24 | 1 | 23 | 0 | -0.244 | 5 of 5 (p = 0.062) |
+| tabular, development | mlp_best | n <= 3000 | 5 | 20 | 1 | 19 | 0 | -0.270 | 4 of 5 (p = 0.38) |
 | tabular, development | mlp_best | n >= 10000 | 1 | 2 | 0 | 2 | 0 | -0.105 | 1 of 1 (p = 1) |
-| tabular, development | mlp_best+ | all | 4 | 20 | 0 | 20 | 0 | -0.150 | 4 of 4 (p = 0.12) |
-| tabular, development | mlp_best+ | n <= 3000 | 4 | 16 | 0 | 16 | 0 | -0.160 | 3 of 4 (p = 0.62) |
+| tabular, development | mlp_best+ | all | 5 | 24 | 1 | 23 | 0 | -0.244 | 5 of 5 (p = 0.062) |
+| tabular, development | mlp_best+ | n <= 3000 | 5 | 20 | 1 | 19 | 0 | -0.270 | 4 of 5 (p = 0.38) |
 | tabular, development | mlp_best+ | n >= 10000 | 1 | 2 | 0 | 2 | 0 | -0.105 | 1 of 1 (p = 1) |
-| tabular, development | hgb | all | 4 | 20 | 4 | 16 | 0 | -0.263 | 4 of 4 (p = 0.12) |
-| tabular, development | hgb | n <= 3000 | 4 | 16 | 4 | 12 | 0 | -0.290 | 4 of 4 (p = 0.12) |
+| tabular, development | hgb | all | 5 | 24 | 4 | 20 | 0 | -0.270 | 5 of 5 (p = 0.062) |
+| tabular, development | hgb | n <= 3000 | 5 | 20 | 4 | 16 | 0 | -0.294 | 5 of 5 (p = 0.062) |
 | tabular, development | hgb | n >= 10000 | 1 | 2 | 0 | 2 | 0 | -0.026 | 1 of 1 (p = 1) |
+| images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp_strong | all | 1 | 3 | 3 | 0 | 0 | -0.288 | 1 of 1 (p = 1) |
+| images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp_strong | n <= 3000 | 1 | 1 | 1 | 0 | 0 | -0.276 | 1 of 1 (p = 1) |
+| images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp_strong | n >= 10000 | 1 | 2 | 2 | 0 | 0 | -0.295 | 1 of 1 (p = 1) |
+| images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp_wide | all | 1 | 3 | 3 | 0 | 0 | -0.242 | 1 of 1 (p = 1) |
+| images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp_wide | n <= 3000 | 1 | 1 | 1 | 0 | 0 | -0.266 | 1 of 1 (p = 1) |
+| images, Part 10 held out (QuickDraw qd_c, qd_d) | mlp_wide | n >= 10000 | 1 | 2 | 2 | 0 | 0 | -0.230 | 1 of 1 (p = 1) |
 | images, Part 9 held out (qd_a, qd_b; v3 at its seed-0 dev cells) | mlp | all | 2 | 5 | 5 | 0 | 0 | -0.546 | 2 of 2 (p = 0.5) |
 | images, Part 9 held out (qd_a, qd_b; v3 at its seed-0 dev cells) | mlp | n <= 3000 | 2 | 2 | 2 | 0 | 0 | -0.499 | 2 of 2 (p = 0.5) |
 | images, Part 9 held out (qd_a, qd_b; v3 at its seed-0 dev cells) | mlp | n >= 10000 | 2 | 3 | 3 | 0 | 0 | -0.578 | 2 of 2 (p = 0.5) |
@@ -143,11 +149,11 @@ Pooled over the 1 held-out suites (12 targets): mean log2 n* ratio v3 / nets_bes
 | qd_c | 300 | – | – | – | – | 0.4724 | – | – | – | – | 0.4724 | 0.4724 | – | – |
 | qd_c | 1000 | – | – | – | – | 0.3772 | – | 0.3301 | 0.3302 | – | 0.3301 | 0.3301 | – | – |
 | qd_c | 3000 | – | – | – | – | 0.3099 | – | – | – | – | 0.3099 | 0.3099 | – | – |
-| qd_c | 10000 | – | – | – | – | 0.2420 | – | 0.2094 | 0.2041 | – | 0.2094 | 0.2041 | – | – |
-| qd_c | 60000 | – | – | – | – | – | – | 0.1608 | 0.1412 | – | – | – | – | – |
-| qd_d | 1000 | – | – | – | – | – | – | 0.3162 | 0.3140 | – | – | – | – | – |
-| qd_d | 10000 | – | – | – | – | – | – | 0.2030 | – | – | – | – | – | – |
-| qd_d | 60000 | – | – | – | – | – | – | 0.1534 | – | – | – | – | – | – |
+| qd_c | 10000 | – | – | – | – | 0.2420 | – | 0.2094 | 0.2041 | – | 0.2094 | 0.2041 | 0.1937 | – |
+| qd_c | 60000 | – | – | – | – | – | – | 0.1608 | 0.1412 | 0.1412 | – | – | – | – |
+| qd_d | 1000 | 0.2612 | – | – | – | – | – | 0.3162 | 0.3140 | – | – | – | – | – |
+| qd_d | 10000 | 0.1638 | – | – | – | – | – | 0.2030 | 0.1989 | – | – | – | – | – |
+| qd_d | 60000 | 0.1264 | – | – | – | – | – | 0.1534 | 0.1431 | – | – | – | – | – |
 | qd_a | 3000 | 0.1748 | 0.1860 | 0.2128 | 0.2431 | 0.2584 | 0.2583 | 0.2302 | 0.2267 | – | 0.2302 | 0.2267 | – | – |
 | qd_a | 10000 | 0.1422 | 0.1500 | 0.1721 | 0.1940 | 0.2160 | 0.2094 | 0.1844 | 0.1783 | – | 0.1844 | 0.1783 | 0.1642 | 0.1200 |
 | qd_a | 60000 | 0.1082 | 0.1197 | 0.1421 | 0.1523 | 0.1665 | 0.1521 | 0.1332 | 0.1285 | 0.1246 | 0.1332 | 0.1246 | 0.1225 | – |
