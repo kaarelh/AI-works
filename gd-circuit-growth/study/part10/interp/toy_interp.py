@@ -828,12 +828,10 @@ def fig_v2v3(V, path):
     fig.tight_layout(); fig.savefig(path); plt.close(fig)
 
 
-G_PICKS = [("dlheld4", "tail13", 512, "band |s| >= 5"), ("dlheld6", "h6_11", 256, "interval s == 1"),
-           ("dlheld6", "h6_01", 1024, "arbitrary, signed"), ("dlheld7", "f7_01", 512, "threshold s <= 1"),
-           ("dlheld6", "h6_10", 256, "weighted: |s - 3 x13| > 1; tau = x13", "tau"),
-           ("dlheld7", "f7_10", 128, "weighted: s + 2 x6 <= -1; tau = x6", "tau"),
-           ("dlsymdev", "symxpar", 128, "[|s| <= 2] * x7x8; tau = x7x8", "tau"),
-           ("dlheld7", "f7_09", 256, "[s <= 0] * x11x12; tau = x11x12", "tau")]
+G_PICKS = [("dlheld4", "tail13", 256, "band |s| >= 5"), ("dlheld6", "h6_11", 128, "interval s == 1"),
+           ("dlheld6", "h6_01", 512, "arbitrary, signed"), ("dlheld7", "f7_01", 256, "threshold s <= 1"),
+           ("dlheld6", "h6_10", 256, "|s - 3 x13| > 1; tau = x13", "tau"), ("dlheld6", "h6_10", 512, "|s - 3 x13| > 1; tau = x13", "tau"),
+           ("dlheld7", "f7_10", 256, "s + 2 x6 <= -1; tau = x6", "tau"), ("dlheld7", "f7_09", 256, "[s <= 0] x11 x12; tau = x11 x12", "tau")]
 FAIL = [("dlfamdev", "fd_10"), ("dlheld6", "h6_00"), ("dlheld7", "f7_05"), ("dlsymdev", "band11"), ("dlheld7", "f7_08"),
         ("dlheld5", "h5s1"), ("dlheld5", "h5s7")]
 
