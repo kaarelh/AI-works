@@ -80,31 +80,45 @@ confident correct prediction. The proof uses a random-restriction form of
 the Aspnes--Beigel--Furst--Rudich bound that depends only logarithmically
 on the amplitude of the posterior mean. Its coercivity input, a lower bound
 on the one-sided empirical square loss of all low-degree polynomials on a
-random sample, is a theorem of the collection's Lean project; the rest of
-the proof is not formalized. An $\exp(\Omega(d))$ lower bound, the analogue
-of the subcritical theorem in this collection, remains open for both
-learners. For the sign-only learner the proof suggests that it would
-follow from two open log-free estimates at linear degree, for one-sided
+random sample, is a theorem of the accompanying Lean project; the rest of
+the proof is not formalized. An $\exp(\Omega(d))$ lower bound remains
+open for both learners. For the sign-only learner the proof suggests that
+it would follow from two open log-free estimates at linear degree, for one-sided
 coercivity and for the sampled tail Gram matrix. For the margin learner we
-prove that the step of the subcritical theorem which bounds the
-posterior's conditioning cost by a polynomial per sample is false at the
-standard scaling: for $\tanh$ networks and
+prove that a step used for priors with diverging hidden preactivations
+fails at standard scaling: the conditioning cost, the negative logarithm
+of the prior probability of the margin and training-label event, cannot
+be bounded by a polynomial per sample. Specifically, for $\tanh$ networks
+and
 $\exp(d^{\epsilon})\le n\le e^{cd}$, with probability at least $7/8$ the
 cost per sample is superpolynomial in $d$. A sharper lower bound, of order
 $a^2$ over the prior tail variance per sample when $\log n\asymp d$ and
 valid with probability at least $3/4$, shows that no upper bound on that
 cost can match the first one, and that with our tail-Gram bound the
-head-bound argument of the subcritical paper, applied at the margin scale,
+bound on the low-degree component used for those priors, applied at the
+margin scale,
 cannot give an exponential bound whatever upper bound on the cost holds.
 Both bounds use the same Lean coercivity theorem. Versions for every
 $\delta\in(0,1/8)$, with probabilities $1-2\delta$ and $1-4\delta$, are
-proved conditionally on the chaining estimate that the paper proof of the
-subcritical theorem uses. Numerical spectra and small-dimensional
+proved conditionally on an external chaining estimate stated in the paper.
+Numerical spectra and small-dimensional
 posterior computations illustrate the results.
 \end{abstract}
 
 \section{Introduction and results}
-The collection's subcritical theorem \cite{subcritical} proves an
+We study how many labeled examples a Bayesian neural-network classifier
+needs to predict parity with high posterior confidence. Full parity on
+$\{-1,1\}^d$ is the product of all $d$ coordinates; $k$-sparse parity
+is the product of a fixed set of $k$ coordinates. Our two learners share
+a Gaussian network prior and condition on the observed labels. The
+margin learner also requires the output magnitude to exceed a fixed
+positive margin on every Boolean input; the sign-only learner imposes
+no such global condition. For both, an input counts as successfully
+predicted only if its correct label has posterior probability strictly
+above $2/3$. We take width to infinity before studying growth in the
+input dimension, with depth fixed unless stated otherwise.
+
+The subcritical-scaling result of \cite{subcritical} proves an
 $\exp(\Omega(d))$ sample lower bound for full parity under a family of
 Gaussian network priors whose width scaling is indexed by an exponent
 $\gamma<1$. In that family the hidden preactivations diverge with width,
@@ -112,10 +126,12 @@ $\tanh$ acts as a sign function, and the limiting covariance is the
 iterated arcsine kernel. The usual NNGP scaling
 \cite{neal,leeetal,matthews} is different: it keeps the preactivations of
 order one, so the limit is the dual-activation kernel \cite{daniely} of
-$\tanh$ itself. In the exponent notation of the collection's FAQ
-(Question~9) this scaling is the tuple $(0,1,\ldots,1,1)$, which is not on
-the one-parameter line $(\gamma-1,\gamma,\ldots,\gamma,\gamma+1)$.
-The collection's NNGP note \cite{nngpnote} proves a $\Theta(2^d)$ bound
+$\tanh$ itself. To compare the width scalings, list the exponents $b$
+in the factors $N^{-b}$ of the first-layer, hidden-layer and readout
+weight variances. Standard scaling then has tuple
+$(0,1,\ldots,1,1)$, which is not on the one-parameter line
+$(\gamma-1,\gamma,\ldots,\gamma,\gamma+1)$ used in \cite{subcritical}.
+The NNGP analysis in \cite{nngpnote} proves a $\Theta(2^d)$ bound
 for a $\tanh$ NNGP whose depth grows linearly with $d$, and states that the
 fixed-depth problem is open.
 
@@ -153,7 +169,7 @@ $n\le\exp(10^{-3}d\log\log d/\log d)$ iid uniform examples of full parity
 leave, for $d\ge d_0$ and with probability at least $13/16$, at least
 $3/8$ of the inputs without confidence above $2/3$ in the width limit. Its
 coercivity input (Theorem~\ref{thm:leancoer}) is a theorem of the
-collection's Lean project \cite{leanproject}, closed with the standard
+accompanying Lean project \cite{leanproject}, closed with the standard
 axioms; the rest of
 the proof is conventional and not formalized. For
 $n\le n_0(d)=d^{\Theta(\sqrt d)}$ the conclusion already follows from
@@ -165,8 +181,10 @@ $b<1$.
 \item \textbf{The exponential question} (open). We do not know whether
 $\exp(\Omega(d))$ samples are needed. For the margin learner,
 Section~\ref{sec:obstruction} shows that one specific step of the
-subcritical proof fails. That step bounds the conditioning cost per sample
-by a polynomial in $d$ (at most $Cd^{1+\beta}$). Here, for
+subcritical proof fails. The conditioning cost is the negative logarithm
+of the prior probability of the global-margin and training-label event.
+That step bounds the cost per sample by a polynomial in $d$ (at most
+$Cd^{1+\beta}$). Here, for
 $\exp(d^\epsilon)\le n\le e^{c_{\rm G}d}$, where $c_{\rm G}>0$ is the
 constant of Lemma~\ref{lem:gram}, that cost is superpolynomial in $d$ with
 probability at least $7/8$ (Propositions~\ref{prop:obstruction}
@@ -192,6 +210,12 @@ one-sided coercivity bound at linear degree and a log-free bound on the
 sampled tail Gram matrix (Remark~\ref{rem:CG}; an extension suggested by
 the proof, not a result).
 \end{enumerate}
+In the proof descriptions below, the \emph{head} is the component of a
+function on the cube with polynomial degree at most a chosen cutoff;
+the \emph{tail} contains the higher degrees. The tail Gram matrix is
+the covariance matrix of this higher-degree Gaussian component at the
+sample inputs. Section~\ref{sec:model} defines these quantities.
+
 The sign-only result on every training set uses only a universal
 inequality between consecutive level masses of an isotropic kernel
 (Lemma~\ref{lem:levels}). The margin result additionally needs a lower
@@ -249,7 +273,7 @@ real-valued labels is kernel interpolation. For it, the span argument of
 methods on parities (references in \cite{beyondparity}) concern squared
 error or correlation of the mean. Our learners condition on signs, or on signs and a global margin, and
 are judged by posterior confidence. That is a different criterion
-(\cite[Section~5]{nngpnote}; FAQ Question~7).
+(see also \cite[Section~5]{nngpnote}).
 
 \section{Model, width limits, and the cube spectrum}
 \label{sec:model}
@@ -284,9 +308,8 @@ training inputs. Define the events
  B^{\rm mar}_S&=\{z:\ |z(x)|>a\ \forall x\in\X,\ f(X_i)z(X_i)>0\ \forall i\},\\
  B^{\rm sgn}_S&=\{z:\ f(X_i)z(X_i)>0\ \forall i\}.
 \end{align*}
-The \emph{margin learner} is the prior conditioned on $B^{\rm mar}_S$; this
-is the collection's convention (FAQ Question~1). The \emph{sign-only
-learner} is the prior conditioned on $B^{\rm sgn}_S$. For either learner put
+The \emph{margin learner} is the prior conditioned on $B^{\rm mar}_S$.
+The \emph{sign-only learner} is the prior conditioned on $B^{\rm sgn}_S$. For either learner put
 \begin{align*}
  q_{N,S}(x)&=\Pp\{f(x)z_N(x)>0\mid z_N\in B_S\},\\
  F_N(S)&=\Pp_x\{q_{N,S}(x)\le2/3\},\qquad
@@ -624,7 +647,7 @@ $\log\binom dt\ge(\sqrt d/5-1)\log(5\sqrt d)\ge\frac{\sqrt d}{10}\log d
 Corollary~\ref{cor:signonly} also covers the \emph{margin} learner when
 the readout variance is $\sigma_L^2N^{-b}$ with $b<1$, all other variances
 being as in \eqref{eq:weights}. This is the tuple $(0,1,\ldots,1,b)$ in the
-notation of FAQ Question~9. Indeed $z_N=N^{(1-b)/2}\tilde z_N$, where
+width-exponent notation introduced in Section~1. Indeed $z_N=N^{(1-b)/2}\tilde z_N$, where
 $\tilde z_N$ is the output at $b=1$. So the margin event is
 $\{|\tilde z_N(x)|>\varepsilon_N\ \forall x\}$ with
 $\varepsilon_N=aN^{-(1-b)/2}\to0$. For fixed $\varepsilon>0$ and large $N$,
@@ -952,8 +975,8 @@ large $d$, and \eqref{eq:mixture} gives the bound on $F_N$.
 \begin{remark}[Thresholds, constants, activations]\label{rem:activations}
 (1) Taking $s+1\le\delta\sqrt d$ in the proof gives
 $\lim_NR_N\ge\frac12-\frac\delta{\sqrt{2\pi}}-o(1)$ for
-$n\le\exp(\frac\delta4\sqrt d\log d)$. For $q>1/2$ take any $\delta<\sqrt{2\pi}(q-\frac12)$ and $c_q=\delta/4$; the inequality below holds at every width and passes to the limit since $R_N\to R_S$. By the second inequality in FAQ
-Question~5, $F_q\ge(R-(1-q))/q$, so for each fixed $q>1/2$ the
+$n\le\exp(\frac\delta4\sqrt d\log d)$. For $q>1/2$ take any $\delta<\sqrt{2\pi}(q-\frac12)$ and $c_q=\delta/4$; the inequality below holds at every width and passes to the limit since $R_N\to R_S$. The same decomposition as in \eqref{eq:mixture}, with threshold $q$,
+gives $F_q\ge(R-(1-q))/q$, so for each fixed $q>1/2$ the
 fraction of inputs with correct-label probability at most $q$ stays
 bounded below in a range $n\le\exp(c_q\sqrt d\log d)$. (2) The constant
 $\frac1{20}$ is not optimized. (3) The proof uses $\tanh$ only through

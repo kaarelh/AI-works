@@ -23,15 +23,17 @@
 \begin{document}
 \maketitle
 \begin{abstract}
-We prove fixed-depth polynomial sample-complexity bounds for Bayesian neural networks with any fixed globally Lipschitz activation that vanishes at zero. The class includes ReLU, exact GELU, SiLU, and tanh. A bounded-weight teacher of width $C$ can be learned at every learner width $N\ge C$, with one polynomial sample bound simultaneously valid for every Gaussian prior scale at least as strong as mean field. In particular, the same bound covers all exponents $\gamma\ge1$, including the deep mean-field endpoint, without deterioration as $\gamma$ approaches one. The prior is conditioned before training on a strict absolute output margin at every Boolean input; training conditions on exact agreement with noiseless labels. A width-independent capacity estimate handles unbounded, nonhomogeneous activations by allowing auxiliary neuron-specific Lipschitz functions. Spectral truncation controls stronger priors. At mean field, a Gaussian projection separates a bounded bulk from a tail of controlled reproducing-kernel energy, and stable covariance reconstruction yields a finite auxiliary implementation. The actual Bayesian learner continues to use its single fixed activation. We also give a simpler strong-prior proof and an exact same-depth GELU implementation of layered Boolean circuits with at most twice the width. The quantitative polynomials are loose and retain poor depth dependence.
+We prove polynomial sample-complexity bounds at fixed depth for Bayesian neural networks with any fixed globally Lipschitz activation that vanishes at zero, including ReLU, exact GELU, SiLU, and tanh. The target has a width-$C$ implementation with weights bounded by $C$ and strict signed output margin greater than $1/2$ on the Boolean cube. The learner's Gaussian prior is conditioned on the same absolute margin at every input, then on agreement with noiseless training labels. One polynomial sample bound controls posterior average sign error simultaneously at every learner width $N\ge C$ and every mean-field-or-stronger prior scale. Here the scale parameter $\sigma^2$ is the internal weight variance, and the covered range is $0<\sigma^2\le1/N$. This includes all power scalings $\sigma^2=N^{-\gamma}$ with $\gamma\ge1$, without deterioration as $\gamma$ approaches one. The proof places all but a small relative amount of prior mass in a finite class of Boolean functions. Spectral truncation supplies that class at small scales; at mean field, a bounded Gaussian part and controlled tail atoms yield finite covariance reconstructions. The counting class allows neuron-specific Lipschitz activations, while the Bayesian learner uses its one fixed activation. We also give a simpler strong-prior proof and an exact same-depth GELU implementation of layered Boolean circuits with at most twice the width. The sample polynomials have poor depth dependence.
 \end{abstract}
 
 \section{Introduction}
-Can a neural-network posterior learn a small implementing network without paying for the much larger width of the learner? Bounded-activation proofs often compress hidden states by sampling neurons. ReLU and GELU require different care: individual hidden states can be arbitrarily large, and GELU does not permit the exact rescaling identities available for ReLU.
+We study noiseless Boolean learning when a small neural network implements the target and the Bayesian learner may be much wider. Both networks have the same depth and activation. Before seeing data, the learner retains only parameters whose outputs stay strictly away from zero at every Boolean input; training then retains the functions that agree with all observed labels. The question is whether the number of examples needed to control this posterior can depend on the teacher's width and weight bound while remaining independent of the learner's width.
+
+Bounded-activation proofs can compress hidden states by sampling neurons. ReLU and GELU require additional control because individual hidden states can be arbitrarily large, and GELU does not permit the exact rescaling identities available for ReLU.
 
 We prove that neither boundedness nor homogeneity is necessary for a fixed-depth result. A globally Lipschitz activation $\phi$ satisfying $\phi(0)=0$ is enough. The proof controls the product of layer Frobenius norms, embeds the resulting networks into an auxiliary class with neuron-specific Lipschitz activations, and bounds that larger class using a one-dimensional activation cover. This gives a finite class of globally margin-separated Boolean functions at each fixed energy, simultaneously across all widths.
 
-That capacity statement has two applications. First, in the strong-prior limit, Gaussian rates suppress functions whose minimum energy exceeds the target's. Second, at every mean-field-or-stronger scale, a Gaussian functional compression argument replaces typical margin-separated draws by auxiliary networks of controlled complexity. For small scales, spectral truncation discards the operator-small bulk. At larger scales, including mean field, bounded exponential tilts describe the regular part of the hidden covariance, while a separate reproducing-kernel argument retains rare large neurons. Combining the two constructions gives one polynomial bound across the entire range of scales.
+That capacity statement has two applications. In the strong-prior limit, taken at each fixed learner width, Gaussian rates suppress functions whose minimum energy exceeds the target's. At every mean-field-or-stronger scale, a separate argument approximates margin-separated draws outside a small exceptional event by auxiliary networks of controlled complexity. For small scales, spectral truncation discards matrix components with small operator norm. At larger scales, including mean field, bounded exponential tilts describe the regular part of the hidden covariance, while a reproducing-kernel argument retains the contribution of rare large neurons. Comparing the exceptional mass with the target mass then gives one polynomial sample bound across the entire range of scales.
 
 These are information-theoretic guarantees for exact Bayesian conditioning, not claims about efficient posterior computation. They concern iid noiseless learning on the Boolean cube and the specified global-margin conditioning. The polynomial degree depends on depth; a polynomial-depth theorem requires additional ideas or restrictions. Established tools used below include Rademacher contraction and peeling, Gaussian concentration, and finite-class Occam learning~\cite{golowich,blumer,borell}. We give the particular estimates and normalization needed here.
 
@@ -41,7 +43,7 @@ Fix input dimension $d\ge1$, depth $L\ge2$, and $H=L-1$ hidden layers. Let $\cX=
  h^0(x)=\bar x,\qquad h^s(x)=\phi(W^s h^{s-1}(x))\quad(1\le s<L),
  \qquad z_w(x)=v^\top h^{L-1}(x),
 \]
-where activation is coordinatewise and every hidden layer has width $N$. There are no separate internal biases; constant wires can carry offsets. Define the weighted Gaussian energy
+where activation is coordinatewise and every hidden layer has width $N$. The appended input coordinate supplies first-layer offsets. There are no separate internal biases: any constant wire used to supply later offsets must be implemented by the network and counted in its width. Define the weighted Gaussian energy
 \begin{equation}\label{eq:energy}
  \kappa_N(w)=\frac dN\norm{W^1}_F^2+
  \sum_{s=2}^{L-1}\norm{W^s}_F^2+N\norm v_2^2.
@@ -91,9 +93,10 @@ The probability statements are over the training inputs. The posterior may mix t
 \end{equation}
 Thus using $\varepsilon/3$ in an average-risk bound gives correct-label probability strictly greater than $2/3$ except on an input set of measure at most $\varepsilon$. Posterior-majority error is at most twice the average sign error.
 
-Examples include ReLU and tanh with $\lambda=1$; exact GELU $\phi(t)=t\Phi(t)$ and SiLU $\phi(t)=t/(1+e^{-t})$ with $\lambda=2$; and centered softplus $\phi(t)=\log(1+e^t)-\log2$ with $\lambda=1$. A nonzero activation offset is not covered by the theorem as stated.
+Examples include ReLU and tanh with $\lambda=1$; exact GELU $\phi(t)=t\Phi(t)$, where $\Phi$ is the standard normal distribution function, and SiLU $\phi(t)=t/(1+e^{-t})$ with $\lambda=2$; and centered softplus $\phi(t)=\log(1+e^t)-\log2$ with $\lambda=1$. A nonzero activation offset is not covered by the theorem as stated.
 
 \section{A capacity estimate without boundedness or homogeneity}
+The next estimates turn an energy bound into a bound on the number of Boolean functions that can be represented with a global margin. To make normalization possible without assuming homogeneity, we count a larger class in which each neuron can have its own Lipschitz activation. This enlargement is used only in the proof.
 Let $\Psi$ be the family of all globally $1$-Lipschitz real functions $\psi$ with $\psi(0)=0$.
 
 \begin{lemma}[A scalar activation cover]\label{lem:activation-net}
@@ -178,7 +181,7 @@ The output is $\lambda^H\prod_sm_s$ times a norm-one linear readout of $g_H$. Ap
 \end{proof}
 
 \begin{remark}
-This normalization embeds a fixed-activation network into a larger auxiliary class. It changes the scalar activations. It is not a parameter rescaling inside the original GELU learner and does not assume GELU is homogeneous. The actual prior and teacher continue to use the single fixed activation $\phi$.
+This normalization embeds a fixed-activation network into a larger auxiliary class by changing the scalar activations. It therefore applies to GELU without a homogeneity assumption. The prior and teacher continue to use the single fixed activation $\phi$; only the auxiliary representation uses the normalized functions.
 \end{remark}
 
 For $K>0$ let $\cF(K)$ contain every Boolean function admitting a depth-$L$, globally strict-margin-$1/2$ implementation of energy at most $K$, at some finite equal hidden width, allowing each hidden neuron its own activation vanishing at zero with Lipschitz constant at most $\lambda$. This is an auxiliary counting class, larger than the fixed-$\phi$ learner's function class. Proposition~\ref{prop:product-rad} and its proof apply unchanged to this neuron-specific class. Define
@@ -200,6 +203,7 @@ The appended inputs have norm $\sqrt{d+1}$. Shattering $m$ cube inputs with glob
 \end{proof}
 
 \section{The strong-prior learning theorem}
+The teacher gives a width-independent energy budget. At each fixed learner width, sufficiently small Gaussian variance makes functions above that budget negligible relative to the target. The common finite function class from the preceding section then supplies the sample bound.
 \begin{lemma}[Exact width enlargement]\label{lem:clone}
 The target teacher can be implemented at every width $N\ge C$ with the same real-valued output and energy at most
 \[
@@ -273,7 +277,7 @@ The surrogate networks used for counting may have different zero-at-zero Lipschi
 The global-margin conditioning is also substantive. It converts the real-output capacity bound into a finite class of Boolean functions and lets us compare raw target mass with raw exceptional mass. Removing it, changing the likelihood, or learning real outputs requires additional arguments.
 
 \paragraph{Provenance and verification.}
-This paper extends the collaborative strong-prior setup and Gaussian-prior learning program, including contributions from Claude, to unbounded activations. The capacity, spectral, mean-field reconstruction, and exact GELU compilation arguments have undergone independent AI-agent mathematical review. The main learning statements have Lean proofs; the repository records their exact scope and exclusions.
+This paper is part of the collaborative Gaussian-prior learning program, including contributions from Claude. The capacity, spectral, mean-field reconstruction, and exact GELU compilation arguments have undergone independent AI-agent mathematical review. The main learning statements have Lean proofs; the repository's theorem-coverage record specifies the certified endpoints and their exclusions.
 
 \begin{thebibliography}{9}
 \bibitem{blumer} A. Blumer, A. Ehrenfeucht, D. Haussler, and M. K. Warmuth. Occam's razor. \emph{Information Processing Letters} 24(6):377--380, 1987.

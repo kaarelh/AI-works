@@ -17,7 +17,8 @@
 We prove a sample bound for Bayesian neural-network learning that depends
 on the size of a small target implementation and is independent of the
 learner's potentially much larger width. The model is a fixed-depth tanh
-network at mean-field Gaussian scaling: internal weight variance is $1/N$
+network at mean-field Gaussian scaling: input-layer weight variance is
+$1/d$, internal weight variance is $1/N$
 and readout variance is $1/N^2$
 at hidden width $N$. Before training, the prior retains only networks whose
 outputs have absolute value greater than $1/2$ on the entire Boolean input
@@ -58,8 +59,9 @@ strict margin and all weights bounded by $C$. Our result gives a sample
 bound polynomial in $d,C$, the inverse desired error, and the logarithm of
 the inverse failure probability, uniformly for every learner width
 $N\geq C$. It holds for any common training and test distribution on the
-Boolean cube. In particular, on almost all test inputs the posterior gives
-the correct label probability greater than $2/3$. Section~2 states the precise guarantee in
+Boolean cube. Outside a set of prescribed small test probability, the
+posterior gives the correct label probability greater than $2/3$.
+Section~\ref{sec:model} states the precise guarantee in
 terms of the smallest such implementation size $C_L(f)$.
 
 The result is finite-dimensional throughout. It does not require the learner
@@ -88,10 +90,10 @@ scaling, where the random internal matrices retain operator norm of
 constant order as width grows. We work instead with the correlations of
 hidden activations across inputs. Finite exponential tests, a convex
 duality argument, and covariance stability permit these correlations to be
-represented by smaller networks. The formal proof below supplies all three
+represented by smaller networks. The proof supplies all three
 ingredients and then completes the posterior estimate.
 
-\section{Model and main result}
+\section{Model and main result}\label{sec:model}
 Let $d\geq1$, $L\geq2$, and $\mathcal X=\{-1,1\}^d$.
 The augmented input is $\bar x=(1,x_1,\ldots,x_d)$. A depth-$L$ network
 has $L-1$ hidden layers of common width $N$ and computes
@@ -181,6 +183,11 @@ probability bound is unavailable.
 \input{compression.tex}
 
 \section{Likely full-margin draws have small descriptions}
+We now combine the covariance tests and finite realizations. The goal is
+one finite family of Boolean functions that contains the sign function of
+every globally margin-separated draw outside a controlled exceptional
+event. Its size will be bounded by rounding the weights of the smaller
+networks, independently of the learner's width.
 Let $m=2^d$ and $r=L-1$. Index fields and covariance matrices by the
 $m$ cube inputs. Define
 \[
@@ -190,6 +197,9 @@ $m$ cube inputs. Define
  \quad(1\leq s\leq r),
 \]
 where $h_i^s$ denotes the activation of neuron $i$ evaluated on all inputs.
+The activation matrices in this display are uncentered second moments.
+For each internal hidden layer, the preceding second-moment matrix is
+exactly the covariance of its centered Gaussian preactivation vector.
 Write $\mathsf M_Q$ for the law of $\tanh(Z)$ when
 $Z\sim\mathcal N(0,Q)$. Conditional on the preceding layers, the rows
 $h_1^s,\ldots,h_N^s$ are independent with law

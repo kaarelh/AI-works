@@ -27,36 +27,41 @@
 \maketitle
 
 \begin{abstract}
+We study exact Bayesian prediction with fully connected tanh networks,
+a linear readout, and independent centered Gaussian weights. For input
+dimension $d$, hidden width $N$, and scale $0<t\le1$, the weight variances
+are $t^2/d$ in the first layer, $t^2/N$ in intermediate layers, and
+$t^2/N^2$ in the readout. The posterior conditions on an absolute output
+margin greater than $1/2$ at every Boolean input and exact agreement with
+noiseless training labels. A test input counts as correctly predicted
+only when its correct label has posterior probability greater than $2/3$.
+
 Assume that polynomial-size Boolean circuits cannot all be replaced by
 polynomial-size, logarithmic-depth threshold circuits:
 $\Pp\ne\TC^1$, with both classes nonuniform.
-Then the original Gaussian tanh Bayesian learner has no distribution-free
-sample bound jointly polynomial in input dimension, teacher width, and
-teacher depth that is independent of learner width. This holds separately
-for every prescribed mean-field-or-stronger scale schedule, including each
-fixed exponent $\gamma\ge1$. The failure already occurs at fixed accuracy
-and confidence. Training is noiseless; the posterior fits every observed
-label exactly and is conditioned to have an absolute output margin at
-every Boolean input. No computational limitation is imposed on inference.
+Then this learner has no distribution-free sample bound jointly
+polynomial in input dimension $d$, teacher complexity $C$, and depth $L$
+that holds at every learner width $N\ge C$. Here $C$ bounds both the
+teacher's hidden width and all its weight magnitudes, and $L$ is the
+common depth of teacher and learner. The conclusion holds for every
+prescribed positive scale schedule, including every power-law scale
+$t=N^{(1-\gamma)/2}$ with $\gamma\ge1$, already at fixed accuracy and
+confidence. Inference may use unlimited computation.
 
-The proof combines an established posterior circuit ceiling with a finite
-majority argument: distribution-free learning by mixtures of small
-threshold circuits forces an exact small threshold circuit for the target.
-We give this statistical reduction and the bounded-weight Boolean-to-tanh
-implementation explicitly. The analytic posterior ceiling is stated with
-its full quantifiers and cited as an input. The conclusion rules out a
-universal polynomial guarantee; it does not establish exponential depth
-dependence. Obtaining that guarantee while retaining the target class and
-the other learning conventions therefore requires changing the prior;
-restricting its support is one possible change. The main theorem is
-formalized in Lean for the stated Gaussian posterior, including the
-finite-width analytic ceiling at the fixed probability level used in
-the reduction.
+The proof shows that, at sufficiently large finite width and sufficient
+depth, most posterior mass lies on functions computable by small,
+logarithmic-depth threshold circuits. A finite majority
+argument turns distribution-free learning by mixtures of these functions
+into an exact threshold-circuit representation of every polynomial-size
+Boolean computation, contradicting the complexity assumption. The main
+theorem, including the required finite-width posterior bound, is proved
+in Lean. The conclusion rules out a universal polynomial guarantee;
+it does not establish an exponential lower bound in depth.
 \end{abstract}
 
 \section{Introduction}
 
-A natural goal for Bayesian neural-network learning is a sample bound
+A natural goal for Bayesian neural-network learning (NNbayes) is a sample bound
 polynomial in the size of a circuit implementing the target, independently
 of the much larger network used by the learner. At each fixed depth,
 Gaussian tanh priors at mean-field scaling and stronger scales admit such
@@ -66,7 +71,8 @@ polynomial bound \emph{at every fixed depth} from one polynomial jointly
 in width and depth.
 
 This paper gives a conditional negative answer to the latter question for
-the original unrestricted Gaussian prior. Under the circuit-complexity
+the Gaussian prior defined in Section~\ref{sec:model}, without an
+additional robustness restriction. Under the circuit-complexity
 conjecture $\Pp\ne\TC^1$, a universal joint-polynomial sample bound is
 impossible. This is a statistical obstruction, even for exact Bayesian
 inference with unlimited computation. It does not arise from the difficulty
@@ -75,7 +81,7 @@ of running a posterior-sampling algorithm.
 The mechanism is a mismatch between target expressivity and posterior
 expressivity at limited sample counts. Every small Boolean circuit can be
 implemented by a polynomial-resource tanh teacher with bounded weights.
-An analytic theorem for the original posterior nevertheless places most
+An analytic theorem for this posterior nevertheless places most
 posterior mass on functions having threshold circuits of size polynomial
 in dimension, sample count, and learner depth, and of logarithmic
 threshold depth. If the learner succeeded for every input distribution
@@ -88,17 +94,21 @@ large finite learner widths. So is the distribution quantifier: training
 and testing use the same distribution, but the guarantee must hold for
 every such distribution. No distribution shift is involved.
 
-We present the conditional impossibility as the main result. The
-underlying analytic circuit ceiling was established in
-\cite{barriers}. Its proof is substantially longer than the reduction
-here; Section~\ref{sec:analytic} states exactly what is imported and
-explains its role. All subsequent probabilistic and complexity-theoretic
-steps are supplied below.
+Section~\ref{sec:model} defines the learner, teacher resources, and
+circuit classes. We then state the conditional impossibility theorem and
+prove it by combining a posterior circuit bound with finite boosting and
+a bounded-weight implementation of Boolean circuits. The analytic bound
+is the part of the argument requiring substantial background:
+Section~\ref{sec:analytic} states it with its full quantifiers, and
+Appendix~\ref{app:analytic-mechanism} explains its proof. The detailed
+entropy and approximation estimates are developed in \cite{barriers};
+the accompanying Lean proof includes the instances needed here. The
+statistical and circuit-complexity reduction is given in full below.
 
 \section{Learner, target complexity, and circuit classes}
 \label{sec:model}
 
-\subsection{The original Gaussian tanh posterior}
+\subsection{The Gaussian tanh posterior}
 
 Let $d\ge1$, $X_d=\{-1,1\}^d$, and $f:X_d\to\{-1,1\}$.
 A network has weighted depth $L\ge3$, hidden width $N$, augmented input
@@ -200,6 +210,7 @@ families. The class $\TC^1$ consists of functions with polynomial-size
 threshold circuit families of depth $O(\log(d+2))$. One may use
 unbounded-fan-in majority gates and ordinary Boolean gates as the
 threshold basis. The class $\TC^0$ uses constant depth instead.
+Threshold-circuit size counts gates plus their incoming wires.
 All circuit classes in this paper are nonuniform.
 
 The assumption $\Pp\ne\TC^1$ says that some polynomial-size computations
@@ -252,8 +263,8 @@ bounded-weight teachers. The difficult distribution and the learner width
 may depend on the proposed sample polynomial.
 
 \begin{corollary}[What must change]\label{cor:change}
-Under the same complexity assumption, no theorem can give the original
-learner a sample guarantee polynomial jointly in $d,C,L$ at every
+Under the same complexity assumption, no theorem can give the learner of Section~\ref{sec:model}
+a sample guarantee polynomial jointly in $d,C,L$ at every
 eligible learner width, for every target in Section~\ref{sec:model} and
 every common training/test law.
 Consequently, obtaining such a guarantee while retaining the architecture, that target
@@ -276,9 +287,9 @@ functions representable by threshold circuits of size at most $R^b$ and
 depth at most $b\log R$, for a sufficiently large universal constant $b$.
 The particular circuit for a function need not be unique.
 
-\begin{proposition}[Established analytic ceiling]\label{prop:ceiling}
+\begin{proposition}[Posterior circuit ceiling]\label{prop:ceiling}
 There are universal positive constants $b,c_0,c_1$ such that the following
-holds for every integer sample budget $n\ge1$ for the original posterior \eqref{eq:prior}--\eqref{eq:conditioning}.
+holds for every integer sample budget $n\ge1$ for the posterior \eqref{eq:prior}--\eqref{eq:conditioning}.
 Put $R=d+n+L+2$ and suppose
 \begin{equation}\label{eq:padding}
  L\ge c_0\log R.
@@ -297,9 +308,8 @@ scales. In particular, the width threshold is independent of $t$ and
 of the input law.
 \end{proposition}
 
-This is the circuit conclusion of the uniform actual-posterior ceiling
-in \cite{barriers}, where it is labeled
-\texttt{thm:uniform-ceiling}; no new analytic ceiling is claimed here. Its proof has three ingredients. First,
+Proposition~\ref{prop:ceiling} is the uniform finite-width posterior
+circuit bound of \cite{barriers}. Its proof has three ingredients. First,
 finite-event relative-entropy certificates associate most posterior mass
 with controlled covariance paths of bounded action. A target-mass
 construction for a sample memorizer supplies the posterior denominator
@@ -610,8 +620,8 @@ bounds and positive bounds for particular target representations.
 \paragraph{Robust prior restrictions.}
 Positive joint-polynomial results obtained by discarding unstable
 networks change the learner. Theorem~\ref{thm:main} gives a conditional
-reason that some change is needed for a theorem with the full original
-target and distribution quantifiers. It does not identify the best
+reason that some change is needed for a theorem with the target class and
+width and distribution quantifiers of Definition~\ref{def:poly}. It does not identify the best
 restriction, establish that trained networks satisfy one, or prove that
 support restriction is preferable to every other modification.
 
@@ -636,7 +646,7 @@ covers positive finite scales; it does not assert the separately defined
 zero-temperature posterior obtained by taking a limit at fixed width.
 
 The checked proof includes the finite-width target-mass construction,
-conditional-entropy path extraction, all three physical-scale regimes,
+conditional-entropy path extraction, all three scale regimes described in Appendix~\ref{app:analytic-mechanism},
 finite arithmetic and threshold-circuit compilation, bounded-weight
 teacher compilation, posterior-to-weak-voter transfer, finite boosting,
 and the circuit-family implication. Its axiom reports contain only
@@ -644,8 +654,9 @@ Lean's standard \texttt{propext}, \texttt{Classical.choice}, and
 \texttt{Quot.sound}.
 
 This verification claim concerns the main theorem. The analytic ceiling
-is formalized at $\beta=1/6$, with integer resource envelopes, which is
-all the reduction needs. The stronger statement of
+is formalized for the instances needed in the reduction: $\beta=1/6$,
+integer resource envelopes, a target with an eligible realizing teacher,
+and samples of the specified length. The stronger statement of
 Proposition~\ref{prop:ceiling} for every $\beta\in(0,1)$ and the uniform
 hard-family conclusion of Corollary~\ref{cor:hard-family} are not claimed
 to be formalized here. The verification record identifies the final
@@ -679,8 +690,10 @@ conditioning probability by $\exp(-NA_0)$, where
 \[
  A_0\le Hc_t+V_*+B\left(a\ell+\frac{\ell^2}{H}\right)
 \]
-for a universal $B$. Here $V_*$ is the finite baseline of the scalar
-control problem. This construction applies to every target-labeled sample;
+for a universal $B$. Here $V_*$ is a universal finite constant: the
+baseline cost of the one-dimensional variance-control problem in
+\cite{barriers}. It is independent of dimension, sample count, depth,
+and scale. This construction applies to every target-labeled sample;
 it does not require the target itself to have a small representation.
 
 Conditioning the weight law on a sufficiently massive event gives a
@@ -761,7 +774,7 @@ $a=0$ and $a=1/4$. Their constants are chosen before the dimension,
 depth, scale, or sample. Enlarging the common size and depth constants
 therefore puts every path satisfying \eqref{eq:appendix-action} in one
 class $\mathcal H_R$. The outside-class path extracted above is
-impossible. Hence the original posterior gives $\mathcal H_R$ mass at
+impossible. Hence the posterior \eqref{eq:conditioning} gives $\mathcal H_R$ mass at
 least $5/6$, as required by the main theorem's finite majority reduction.
 
 
@@ -770,8 +783,6 @@ least $5/6$, as required by the main theorem's finite majority reduction.
 ChatGPT-6 Astra, Kaarel H\"anni, and Dmitry Vaintrob.
 \emph{Frobenius product, parallel circuits, and sample-complexity barriers
 for deep Gaussian Bayesian networks}. Research manuscript, 2026.
-\url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/boolean-depth-barriers}.
-The present paper uses the uniform actual-posterior circuit ceiling,
-Theorem \texttt{thm:uniform-ceiling}, in the accompanying LaTeX source.
+\href{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/boolean-depth-barriers}{Manuscript, source, and proof notes}.
 \end{thebibliography}
 \end{document}

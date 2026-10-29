@@ -17,17 +17,21 @@
 \date{25 October 2026}
 \begin{document}\maketitle
 \begin{abstract}
-We assemble target-mass constructions for the original Gaussian tanh
-posterior uniformly over all prior prefactors $0<t\le1$, including the
-critical endpoint and arbitrarily small prefactors. For each fixed
+We bound the prior probability that a Gaussian tanh network realizes a
+Boolean target with output margin greater than $1/2$ on every input.
+These target-mass bounds give learning guarantees for the posterior
+conditioned on that global absolute margin and exact training labels,
+uniformly over all prior prefactors $0<t\le1$. Here $t$ multiplies the
+weight standard deviations, and $t=1$ is the critical scale. For each fixed
 threshold depth, the sample bound is polynomial jointly in input
 dimension, circuit resources, and learner depth at every realizable
 width. Fourier variation gives a second polynomial target class at
 every learner depth. The proof combines a critical scalar program,
 an exact change of Gaussian reference, and a separate short-padding
 construction. The finite-width intrinsic learning and critical scalar
-inputs are stated explicitly; this note is an integration of audited
-research arguments, not a self-contained replacement for those inputs.
+inputs are stated explicitly. The conclusions depend on those imported
+analytic results; the local scale-change and padding arguments are
+proved here.
 \end{abstract}
 
 \section{Model and conclusions}
@@ -49,7 +53,24 @@ A realizable width means $\mu_{N,t}(A_f)>0$. The learning criterion is:
 for $0<\varepsilon,\delta<1$, with training probability at least $1-\delta$, the posterior assigns
 probability strictly greater than $2/3$ to the correct label outside a
 set of test-distribution mass at most $\varepsilon$. The input
-distribution is arbitrary.
+distribution is arbitrary. References below to the \emph{original
+posterior} mean this conditioned finite-width law.
+
+The event $A_f$ is the set of parameters realizing the entire target
+with the required signed margin. We call its prior probability the
+\emph{target mass}; $a_{N,t}(f)$ is its negative logarithm divided by
+width. The prior prefactor $t$ scales every weight standard deviation.
+The endpoint $t=1$ is called critical, and all smaller $t$ give a more
+concentrated prior. For a target circuit with $h$ gate stages,
+\emph{padding} means the $H-h$ hidden layers remaining after the circuit
+has been encoded in a network prefix.
+
+We state the two learning conclusions first, then list the imported
+intrinsic-learning and scalar-control inputs. Sections~3--4 show how to
+reuse the critical construction at other scales, with separate arguments
+for long and short padding. Section~5 applies the construction to Fourier
+expansions. The closing dependency list identifies the supporting proofs;
+the analytic learning statements here are not claimed to be machine verified.
 
 \begin{theorem}[Threshold circuits, all scales and learner depths]
 \label{thm:threshold}
@@ -101,8 +122,12 @@ Set
  b=t^{-2}-1,\qquad \theta=b/2,\qquad
  c_t=\frac{t^{-2}-1+2\log t}{2}.
 \]
-Let $V_*$ be the critical scalar Bellman baseline from the critical
-depth analysis. Define $\mathcal R(D)\ge1$ by
+Let $V_*$ be the critical scalar Bellman baseline: the limiting minimum
+scalar continuation cost as its starting variance tends to zero. This
+input comes from \emph{Depth and learning bounds for critical Bayesian
+neural networks}; the precise source locations are listed at the end.
+It is independent of the target and serves as the reference cost in the
+bounds below. Define $\mathcal R(D)\ge1$ by
 \[
  \mathcal R(D)-1-\log\mathcal R(D)=2D.
 \]
@@ -347,12 +372,12 @@ length $T$ and width $W$. Thus $S=O(\log^2 L)$ and the learner
 has enough padding for Proposition~\ref{prop:long}.
 \end{proof}
 
-\section*{Proof dependencies and audit status}
-The local scale-change, residual monotonicity, score downgrade,
-short-padding estimates, and their combination with the intrinsic
-bounds have been independently checked by the upper-bound,
-critical-depth, and complexity-barrier agents. The following scratch
-notes identify the imported analytic arguments precisely:
+\section*{Proof dependencies and verification scope}
+The scale-change identity, residual monotonicity, score downgrade, and
+short-padding estimates are proved above. Their learning consequences
+also use the intrinsic and critical scalar inputs stated in Section~2.
+The following proof notes and source sections supply those imported
+analytic arguments:
 \begin{itemize}
 \item \texttt{uniform-scale-intrinsic.md} and
 \texttt{uniform-sharp-intrinsic.md}: normalized all-width learning.
@@ -367,7 +392,13 @@ scalar steering, occupation, finite channel, and controlled Fourier
 seed sections: the quantitative critical inputs (5)--(6).
 \end{itemize}
 The named proof notes accompany this manuscript in the
-\path{proof-notes/} directory. Exact links to the critical-depth
-source inputs appear in the package README and dependency manifest.
+\path{proof-notes/} directory. The critical-depth manuscript is
+\emph{Depth and learning bounds for critical Bayesian neural networks},
+by ChatGPT-6 Astra, Kaarel H\"anni, and Dmitry Vaintrob (2026), in the
+repository directory \path{works-in-progress/critical-depth/source/}.
+Its scalar baseline is defined in \path{critical-rate-foundations.tex};
+the finite-width channel and Fourier seed inputs are in
+\path{critical-finite-width-channel.tex} and
+\path{critical-controlled-fourier-seeds.tex}.
 These analytic learning statements are not claimed to be machine verified.
 \end{document}

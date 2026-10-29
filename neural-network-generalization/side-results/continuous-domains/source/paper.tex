@@ -19,10 +19,12 @@
 We prove sample-complexity bounds for Bayesian tanh networks with inputs in
 any compact subset of the Euclidean unit ball, including an entire sphere.
 A real-valued target is implemented by a teacher of width $C$, depth $L$,
-and weight bound $B$. For every learner width $N\geq C$, the sample bound
+and weight bound $B$. For every learner of the same depth and width
+$N\geq C$, the sample bound
 is polynomial in $d,C,B$ at fixed depth, independently of $N$.
-The result holds in the strong-prior limit and at every finite-scale
-exponent $\gamma\geq1$, including mean-field scaling. Gaussian weights
+The result holds as the prior scale tends to zero at each fixed learner
+width, and at the finite scales specified by every exponent
+$\gamma\geq1$, including mean-field scaling. Gaussian weights
 and a family of smooth, strongly log-concave non-Gaussian weights are covered.
 Training observes clean real-valued labels and conditions on fitting them
 within a positive tolerance $\rho$; testing uses a larger tolerance
@@ -47,15 +49,16 @@ A small neural-network implementation can be a useful source of statistical
 complexity even when the Bayesian learner has many more parameters. This
 paper establishes such a guarantee on continuous input domains. The sample
 requirement depends on the width and weight magnitude of a teacher, rather
-than on the width of the learner. The dependence on depth is allowed to be
-large: throughout the paper, depth is fixed.
+than on the width of the learner. The learner and teacher have the same
+depth. The dependence on that depth is allowed to be large: throughout
+the paper, depth is fixed.
 
 There is a basic obstacle to directly importing a Boolean-domain model.
 A continuous real-valued network whose output is bounded away from zero
 everywhere on a connected domain has a constant sign. Thus conditioning a
 prior to have an absolute margin at every point of a connected sphere
-would exclude every nonconstant binary classifier. We instead work with
-the raw independent-weight prior and condition only on the observed
+would exclude every nonconstant binary classifier. We instead start from
+independent weight coordinates and condition only on the observed
 training constraints. Our principal result concerns real-valued regression,
 which permits nonconstant targets on the whole sphere without a margin
 assumption. For example, $f(x)=\tanh(x_1)$ on $S^{d-1}$ is covered by a
@@ -70,9 +73,20 @@ outputs at fixed prior scale is a different problem. We nevertheless obtain
 an exact-interpolation corollary by taking the strong-prior limit first and
 then sending the training tolerance to zero, in that specified order.
 
+We study two ways to set the prior scale. In the strong-prior limit, the
+scale tends to zero with learner width held fixed. In the finite-scale
+family, it is a prescribed power of learner width. The exponent one is
+the mean-field endpoint; larger exponents give smaller prior scales.
+Equations~\eqref{eq:strong-scales} and~\eqref{eq:finite-scales} specify
+the normalization separately for each layer. The sample bound is
+independent of learner width in both cases, although the strong-prior
+scale threshold may depend on that width.
+
 The proofs have three parts. First, a neighborhood of a cloned teacher has
 enough prior mass, with an exponential rate independent of the learner
-width (the mass itself may decrease with width). Second, a finite family
+width (the mass itself may decrease with width). Cloning means duplicating
+teacher neurons and dividing their outgoing weights so that the wider
+network computes the same function. Second, a finite family
 approximates all but a sufficiently small amount of prior mass. Third, a
 union bound shows that an inaccurate member of this family is unlikely to
 fit the data. For continuous domains, Lipschitz control lets us use a finite
@@ -86,6 +100,15 @@ here, and identify where that paper contains a longer proof of a shared
 compression calculation. The new continuous-domain reductions, posterior
 arguments, teacher-tube construction, and approximate-readout duality are
 proved below.
+
+Section~\ref{sec:posterior} gives the two posterior estimates used
+throughout. Sections~\ref{sec:mass} and~\ref{sec:energy-cover} construct
+the teacher neighborhood and the bounded-energy cover.
+Section~\ref{sec:strong-above} combines them for the strong-prior limit
+and exponents above one. Section~\ref{sec:meanfield} proves the
+mean-field endpoint using covariance approximation instead of removing
+small matrix components. Sections~\ref{sec:exact} and
+\ref{sec:classification} discuss exact interpolation and classification.
 
 \section{Model and main results}\label{sec:model}
 Fix $d\geq1$, $L\geq2$, and a nonempty compact set
@@ -209,12 +232,18 @@ sets as well as balls and spheres.
 \end{remark}
 
 \section{Two posterior estimates}\label{sec:posterior}
+Both estimates compare the prior mass of inaccurate fitted networks
+with the mass of a neighborhood that fits every possible sample.
+The first estimate uses a finite approximation family; the second uses
+only a lower bound on this neighborhood's mass.
 Let
 \begin{equation}\label{eq:tube}
  U_\rho=\{w:\sup_{x\in X}|z_w(x)-f(x)|<\rho\}.
 \end{equation}
-This is an open parameter event, since $X$ is compact. It lower-bounds
-the posterior denominator for every sample.
+This event consists of networks whose outputs stay within the training
+tolerance of the teacher throughout the domain; we call it a
+\emph{teacher tube}. It is open in parameter space, since $X$ is compact.
+Its prior mass lower-bounds the posterior denominator for every sample.
 
 \begin{lemma}[Learning from a finite approximate cover]\label{lem:posterior}
 Suppose $\mu(U_\rho)>0$, a measurable event $G$ obeys
@@ -375,6 +404,8 @@ hold simultaneously on the continuous domain.
 \end{proof}
 
 \section{Uniform covers for bounded energy}\label{sec:energy-cover}
+We now construct a finite family that approximates every bounded-energy
+network uniformly on the input domain, regardless of learner width.
 The following finite-input calculation is the deterministic compression
 ingredient shared with~\cite{nongaus}. Only the logarithm of the number
 of input points enters it.
@@ -472,6 +503,10 @@ a fixed-depth polynomial majorant and is independent of $N$.
 \end{proof}
 
 \section{The strong-prior and super-mean-field proofs}\label{sec:strong-above}
+At fixed width and small prior scale, networks with excessive energy
+have negligible posterior mass. At exponents above one, the analogous
+finite-scale argument first removes matrix components with small
+singular values. Both routes lead to the same bounded-energy cover.
 \begin{proof}[Proof of Theorem~\ref{thm:strong}]
 Fix $N$ and the exact clone $w_*$. The tube $U_\rho$ is an open
 neighborhood of $w_*$. Evenness and~\eqref{eq:law} give two-sided

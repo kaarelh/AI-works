@@ -22,22 +22,28 @@
 \begin{document}
 \maketitle
 \begin{abstract}
-A small circuit gives an online mistake bound under an appropriate circuit
-prior. We prove converses for three concrete learning rules. A learner that
+We ask when few online prediction mistakes imply that a Boolean target
+has a small circuit. Complexity is the number of two-input NAND gates,
+with no depth restriction. Inputs are presented one at a time, every
+label is revealed after prediction, and the conclusions require complete
+revelation of the domain whose complexity is measured.
+
+We prove converses for three specified learning rules. A learner that
 always selects a smallest consistent circuit makes at least
-$C(f)/(3d+3)$ mistakes before learning a Boolean function on its full
-$d$-dimensional domain. For Bayesian posterior sampling with a geometric
-gate-count prior and uniform wiring, expected total mistakes $M$ imply
-$C(f)=O(dM\log(d+dM))$. A prefix circuit language with explicit exception
-constructors improves this to $O(dM+1)$ while retaining the usual
-$O(C(f)\log(d+C(f))+1)$ upper bound. The Bayesian proofs control logarithmic
-loss by sampling mistakes using injective, cheap repairs of circuit
-descriptions. They apply to any order revealing the whole domain and to
-infinite iid sampling on any fixed support. Coverage, the specified learning
-rule, and posterior sampling are substantive hypotheses. The conclusions
-do not hold for arbitrary learners or arbitrary priors, and the Bayesian
-argument gives no converse for majority prediction. These are mathematical
-results whose main statements also have Lean formalizations.
+$C(f)/(3d+3)$ mistakes on the full $d$-dimensional Boolean cube. For
+Bayesian prediction by a fresh posterior sample each round, a geometric
+gate-count prior with uniform wiring gives
+$C(f)=O(dM\log(d+dM))$, where $M$ is expected total mistakes. A prefix
+circuit language with explicit exception constructors improves this to
+$O(dM+1)$ while retaining the usual
+$O(C(f)\log(d+C(f))+1)$ upper bound. Both Bayesian arguments use
+injective, inexpensive repairs of circuit descriptions to control log
+loss by sampling mistakes. The results allow any complete reveal order
+and infinite iid sampling on any fixed support, with complexity measured
+on that support. They rely on the specified learning rules and priors;
+the Bayesian proof does not give a converse for majority prediction.
+The main finite and infinite-stream statements have Lean proofs for the
+concrete circuit models and priors.
 \end{abstract}
 
 \section{Setup and what a converse can say}
@@ -71,8 +77,27 @@ theorems below concern specified circuit-induction procedures and their
 complete observations, not a representation theorem for every successful
 predictor.
 
+We study three ways to select predictions from circuits consistent with
+the revealed labels. The first chooses a circuit of minimum gate count.
+The other two use exact Bayesian conditioning and draw a fresh circuit
+from the resulting posterior at each round. They differ only in their
+priors on circuit descriptions. The geometric prior penalizes both gate
+count and the addresses of each gate's inputs; the prefix prior gives a
+fixed encoding cost to an exception at one specified input.
+
+A common repair operation drives all three arguments. First we construct
+that operation and prove the deterministic converse. We then express
+Bayesian learning as cumulative log loss and bound that loss using the
+repair cost under each prior. The final sections extend the conclusions
+to iid inputs and explain the roles of coverage, prediction rule, and
+circuit representation.
+
 \section{A one-point circuit repair}
 
+The repair retains the original circuit and appends gates that change
+its answer at one chosen input. It leaves every other answer intact.
+Keeping the original gate list also lets us recover the source
+description, which is essential when summing Bayesian prior masses.
 Put $R_d=3d+3$.
 
 \begin{lemma}[Injective overwrite]\label{lem:repair}
@@ -450,9 +475,13 @@ posterior can be empty. These are statistical and representation
 statements, with no efficient circuit minimization or posterior sampler
 asserted.
 
-\paragraph{Acknowledgment and status.}
-The argument develops the one-point exception-repair and log-loss ideas
-in the collaborative circuit-induction discussion. The explicit circuit
-priors, injectivity checks, and converse estimates are supplied here.
-The main statements have Lean proofs; the repository records the exact models and exclusions.
+\paragraph{Scope of the formal proofs.}
+The Lean development proves the deterministic, geometric-prior, and
+prefix-prior converse theorems with their stated constants, including
+their infinite-iid versions. It uses actual NAND gate lists and the
+specified probability laws. Prefix programs are represented by abstract
+syntax with the stated lengths and proved Kraft counting; an executable
+bitstring serializer and parser are not included. The limitation examples
+in this section and the circuit-counting asymptotic are explanatory
+mathematical arguments outside that formalization.
 \end{document}

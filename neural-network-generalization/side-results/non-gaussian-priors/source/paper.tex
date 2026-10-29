@@ -15,37 +15,42 @@
 \date{October 18, 2026}
 \begin{document}\maketitle
 \begin{abstract}
-Can a Bayesian neural network learn a small circuit when its independent
-weight priors are not Gaussian? We prove that three width-independent
-learning guarantees survive for a natural family of non-Gaussian coordinate
-laws: even densities $Z^{-1}e^{-V}$, with variance one and curvature bounded
-above and below by positive constants. The guarantees cover the strong-prior
-limit, taken separately at each fixed width, and the finite-scale regimes
-$\gamma>1$ and $\gamma=1$, in every case at every width at least the
-target's bounded-weight network
-complexity. The sample bound is polynomial in input dimension and target
-complexity at each fixed depth, independently of the learner's width.
-The model uses tanh hidden layers, a linear readout, an absolute output
-margin imposed at every Boolean input before training, and exact
-conditioning on noiseless labels. The prediction guarantee controls the
-actual posterior, including mixtures: its correct-label probability exceeds
-$2/3$ on almost all test inputs.
-The proof uses a translation-entropy bound for target mass and concentration
-of strongly log-concave measures. At mean-field scaling, a relative Lindeberg
-estimate controls log partition functions for finite covariance tests
-with polynomial losses;
-an ordinary central limit approximation would not provide the needed bound.
-We also give a broader quadratic-tail extension of the strong-prior result.
-No efficient posterior computation or polynomial dependence on depth is
-asserted.
+We prove width-independent learning bounds for Bayesian tanh networks
+whose independent weight coordinates need not be Gaussian. The target
+has a fixed-depth tanh implementation with bounded width and weights.
+The coordinate laws have even densities $Z^{-1}e^{-V}$, variance one,
+and curvature bounded above and below by positive constants. Before
+training, the learner's prior is conditioned on absolute output margin
+greater than $1/2$ at every Boolean input; training then conditions on
+agreement with noiseless labels. At every learner width at least the
+target's bounded-weight network complexity, polynomially many examples
+suffice for posterior correct-label probability to exceed $2/3$ outside
+a test set of prescribed small probability, with high sample probability.
+We cover the strong-prior limit, taken separately at each fixed width,
+and each finite-scale exponent $\gamma\geq1$, where the internal weight
+variance is $N^{-\gamma}$ at width $N$. For each fixed depth, exponent,
+and coordinate law, the sample bound is polynomial in input dimension
+and target complexity and independent of learner width. The endpoint
+$\gamma=1$ has a separate proof; no uniformity as $\gamma\downarrow1$
+is claimed. The proofs combine a translation-entropy bound for target
+mass with concentration of strongly log-concave measures. At mean field,
+a relative Lindeberg estimate controls log partition functions for
+covariance tests with polynomial losses. We also give a broader
+quadratic-tail extension of the strong-prior result. The guarantees are
+statistical, with no claim of efficient posterior computation or
+polynomial dependence on depth.
 \end{abstract}
 
 \section{Introduction}
 A useful sample bound for a large Bayesian neural network should depend on
-the size of a small implementation of the target, rather than on the number
-of parameters available to the learner. Gaussian weight priors permit such
-bounds in several small-scale and mean-field regimes. This paper establishes
-that exact Gaussianity is unnecessary for three of those guarantees.
+the size of a small implementation of the target and remain independent of
+the number of parameters available to the learner. We study this question
+for noiseless Boolean targets represented by bounded-weight tanh networks
+at a specified depth. The learner has tanh hidden layers, a linear
+readout, and independent weight coordinates drawn from a fixed scalar law
+with layer-dependent scales. We prove that a family of non-Gaussian laws
+supports width-independent learning in both a small-scale limit and
+finite-scale regimes that include mean field.
 
 Our main family consists of independent coordinates with a fixed even
 density $q(t)=Z^{-1}e^{-V(t)}$, standardized to variance one, where
@@ -55,8 +60,8 @@ density $q(t)=Z^{-1}e^{-V(t)}$, standardized to variance one, where
 \end{equation}
 The lower bound supplies concentration. The upper bound makes a translated
 copy of a small target inexpensive in relative entropy. These are
-restrictions on a one-dimensional weight law, rather than restrictions
-selected separately for each network function. A genuinely non-Gaussian
+restrictions on a one-dimensional weight law, fixed before the target
+function is chosen. A non-Gaussian
 example is the variance-standardized law with density proportional to
 $\exp\{-t^2/2-b\log\cosh t\}$, for any fixed $b>0$.
 
@@ -69,7 +74,11 @@ uniformly over every learner width at least that complexity. There are
 three regimes: a common scale tending to zero at fixed width; finite-scale
 priors with exponent $\gamma>1$; and the mean-field endpoint $\gamma=1$.
 The latter two statements require neither a small-scale limit nor an
-infinite-width limit.
+infinite-width limit. The polynomial may depend on the fixed exponent;
+the endpoint proof does not make the bounds uniform as the exponent
+approaches one. Target complexity throughout means the width and weight
+bound of a tanh implementation, defined precisely below, rather than
+ordinary Boolean gate count.
 
 The three proofs use a shared statistical principle. A finite collection
 of simply describable functions contains all but a sufficiently small
@@ -82,13 +91,17 @@ removed that way. We instead approximate empirical hidden-layer covariances
 by controlled exponential tilts, and then realize those covariances by
 small finite networks.
 
-The new difficulty at the mean-field endpoint is that non-Gaussian internal
+At the mean-field endpoint, non-Gaussian internal
 rows are not determined by their covariance. We resolve it with a relative
 Lindeberg comparison for log partition functions. Its error is polynomial
 in the tilt budget and independent of the number of input points. This
 avoids both an exponential dependence on the tilt budget and a factor equal
-to the size of the Boolean cube. All supporting compression and posterior
-arguments are included below and in the appendices.
+to the size of the Boolean cube. The first-layer law is kept exactly;
+Gaussian comparison laws for later layers are used only to construct
+small networks representing the same Boolean functions. The learner's
+weights retain their prescribed non-Gaussian laws at every layer. All
+supporting compression and posterior arguments are included below and in
+the appendices.
 
 \section{Model and guarantees}\label{sec:model}
 Let $d\geq1$, $L\geq2$, and $\mathcal X=\{-1,1\}^d$. Write
@@ -197,6 +210,11 @@ A different fixed confidence threshold in $(0,1)$ follows from
 \eqref{eq:confidence} by changing constants.
 
 \section{Two elementary posterior estimates}\label{sec:posterior}
+We use two routes from prior mass to learning. A small class containing
+almost all mass relative to the target gives a width-independent bound
+at large widths. A lower bound on target mass alone covers the remaining
+bounded widths. In both cases the target remains consistent with every
+noiseless sample, so its prior mass lower-bounds the posterior denominator.
 \begin{lemma}[A finite relevant class]\label{lem:finite-posterior}
 Suppose a prior on finitely many functions assigns positive mass to $f$.
 Let $\mathcal H$ contain $f$, with $\log|\mathcal H|\leq H$ and
@@ -256,7 +274,8 @@ comparison itself needs substantially less: centered variance-one internal
 coordinates with $\E[|\xi|^3e^{|\xi|}]<\infty$, suitable square-exponential
 moments at the boundary layers, and a separate target-mass lower bound.
 
-The theorems preserve the original global margin restriction. They do not
+The theorems require the global margin restriction defined in
+Section~\ref{sec:model}. They do not
 assert the same result after conditioning only on margins at training
 points, under label noise, or for ReLU activations. Neither do they settle
 which non-Gaussian laws at their natural width scales retain exactly the

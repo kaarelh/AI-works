@@ -46,18 +46,21 @@ The proof combines a two-ball covering lemma, finite-set sampling of a
 short prefix, and bounded-precision lookup tables; it does not require
 computable activations or well-conditioned intermediate layers.
 
-For the original tanh Gaussian posterior conditioned only on a global
-absolute margin and exact training labels, we prove a sample-to-circuit
+For a Gaussian tanh network prior conditioned only on a global
+absolute output margin and exact training labels, we prove a sample-to-circuit
 converse uniformly at every finite scale $0<\sigma^2\le1/N$.
 The circuit resources are polynomial in input dimension, sample count,
 and learner depth. The theorem requires logarithmic depth padding
 and uses a width threshold exponential in input dimension.
+Here $\sigma^2=t^2/N$, where the weight variances are $t^2/d$ in the
+first layer, $t^2/N$ in hidden layers, and $t^2/N^2$ in the linear readout.
 Its proof combines finite canonical features, Gaussian block covers,
 and factorially convergent parallel Picard iteration. The block covers
 keep the number of representatives polynomial even when the common
 prior prefactor approaches one. All confidence-failure tolerances
-$\varepsilon<1/2$ are allowed. A separate above-critical product
-ceiling gives circuit resources independent of learner depth.
+$\varepsilon<1/2$ are allowed. A separate product ceiling for fixed exponents above one, in the
+convention $\sigma^2=N^{-\gamma}$, gives circuit resources independent
+of learner depth.
 Consequently, for any prescribed prior-scale schedule in the stated
 range, a universal sample bound polynomial jointly in teacher
 resources and learner depth would imply
@@ -95,10 +98,20 @@ these states. A separate sampling argument bounds the width of the
 retained prefix. Normalizing each layer before numerical simulation
 removes any dependence on the sizes of intermediate signals.
 
-The result has consequences for Bayesian learning. In the original
-Gaussian tanh model, the prior is conditioned on
-$|z(x)|>1/2$ at every Boolean input and on the observed labels.
-Above Gaussian exponent one, an existing finite-scale posterior ceiling
+The result has consequences for Bayesian learning. We use a fully
+connected tanh network with common hidden width $N$ and scalar linear
+output $z$. Its independent Gaussian weights have variances $t^2/d$ in
+the first layer, $t^2/N$ in the later hidden layers, and $t^2/N^2$ in
+the readout. Write $\sigma^2=t^2/N$ for the common variance after the
+energy-coordinate rescaling defined in Section~\ref{sec:ceiling}.
+The prior is conditioned on $|z(x)|>1/2$ at every Boolean input and on
+the observed labels. Test prediction succeeds when the correct label
+has posterior probability strictly above $2/3$; the confidence-failure
+mass is the input probability of the remaining points.
+
+The exponent convention is $\sigma^2=N^{-\gamma}$, or
+$t^2=N^{1-\gamma}$. We call $\gamma=1$, equivalently $t=1$, the
+critical scale. For an exponent fixed above one, an existing finite-scale posterior ceiling
 places most posterior mass on Boolean functions with product polynomial
 in the input dimension and sample count, uniformly in learner depth.
 Combining that ceiling with our circuit theorem gives a converse: a
@@ -121,7 +134,7 @@ $L\ge C\log(d+n+L+2)$, and chooses width above
 $2^{Cd}\poly(d+n,L)$. These qualifications still permit the universal
 polynomial-bound implication below.
 
-Fixed prefactors $0<t<1$ need one more argument, since their exponent
+Fixed prior prefactors $0<t<1$ need one more argument, since their exponent
 gaps shrink with width. For the two largest eigenvalues of a
 controlled row's second moment, Gaussian entropy bounds its
 two-ball covering radius more strongly than its ordinary Lipschitz
@@ -137,6 +150,14 @@ block admits a constant-size cover. Only logarithmically many
 blocks are needed, while parallel Picard iteration evaluates their
 potentially long prefix. The final theorem is uniform over every
 $0<t\le1$, equivalently every $0<\sigma^2\le1/N$.
+
+All circuit classes used here are nonuniform: a separate circuit may
+be chosen at each input dimension. The class $\Ppoly$ consists of
+families with polynomial-size Boolean circuits. The classes $\TC^0$
+and $\TC^1$ use polynomial-size threshold circuits of constant and
+logarithmic depth, respectively; $\NC$ uses polynomial-size,
+bounded-fan-in Boolean circuits of polylogarithmic depth. Section~\ref{sec:conventions}
+gives the gate conventions.
 
 There are two separate consequences. A universal joint polynomial
 sample upper bound would collapse $\Ppoly$ to nonuniform $\TC^1$.
@@ -163,8 +184,19 @@ scale-change target mass in Section~\ref{sec:fixed-prefactor}, and the
 circuit-target learning bound in Section~\ref{sec:negative}. The
 critical endpoint is proved separately, rather than inferred by taking
 a limit in the above-one result.
-The conditional sufficiency direction also uses the companion
-normalized intrinsic learning theorem, stated explicitly where needed.
+The conditional sufficiency direction also uses the normalized intrinsic
+learning theorem from \emph{Uniform prior-scale bounds for structured
+Boolean targets}~\cite{uniformtargets}, stated explicitly where needed.
+
+The reading order follows these dependencies. Sections~3--4 prove the
+product-to-circuit theorem; Sections~\ref{sec:ceiling}--\ref{sec:converse}
+apply the product ceiling; Sections~\ref{sec:critical-parallel}--\ref{sec:uniform-prefactor}
+treat the critical scale and all smaller prefactors. The final sections
+derive the complexity consequences. Appendix~\ref{app:dependencies}
+identifies every imported analytic input. The associated Lean modules
+verify analytic prefix compression and relevant-coordinate reduction.
+They do not formalize the finite-bit circuit compiler, the posterior
+converses, the target-mass inputs, or the complexity-class implications.
 
 \paragraph{Relation to previous work.}
 Norm-controlled generalization and compression are well established.
@@ -181,7 +213,7 @@ networks, often removing explicit depth dependence.
 Our sampling and normalization arguments belong to this broader
 norm-compression framework. The conclusion studied here is an exact
 nonuniform circuit for a globally margined Boolean classifier, followed
-by a comparison with the original conditioned Bayesian posterior.
+by a comparison with the conditioned Bayesian posterior defined here.
 A norm-based generalization estimate alone does not make that
 posterior-to-teacher-complexity comparison.
 
@@ -612,7 +644,7 @@ activation. The resulting representation has the same output and
 product $P_{\mathrm{eff}}$. Apply Theorem~\ref{thm:main}.
 \end{proof}
 
-\section{The original Gaussian posterior and its ceiling}
+\section{The Gaussian posterior and its ceiling}
 \label{sec:ceiling}
 
 Fix input dimension $d\ge1$, weighted depth $L\ge3$, and common hidden
@@ -640,7 +672,10 @@ be the raw prior conditioned on
  y_i z(x_i)>0\quad(1\le i\le m).
 \]
 There are no further constraints on hidden activations, internal
-margins, operator norms, or parameter size. Let
+margins, operator norms, or parameter size. References below to the
+\emph{original posterior} mean this directly conditioned finite-width
+law, as distinguished from the controlled or limiting models used in
+the proof. Let
 \[
  p_S(f(x)\mid x)=Q_S\{f(x)z(x)>0\}.
 \]
@@ -1556,7 +1591,7 @@ full-cube circuit class. It does not assert a polynomial width
 threshold for this endpoint converse. It suffices for a necessary
 condition on a sample guarantee required at every admissible width.
 
-\section{Every fixed subcritical prefactor}
+\section{Every fixed prior prefactor below one}
 \label{sec:fixed-prefactor}
 
 Fix $0<t<1$ while allowing the width to grow. The corresponding
@@ -3130,8 +3165,8 @@ constant, since $L_j^\alpha/\log(L_j+2)\to\infty$.
 
 The product structural theorem is unconditional and applies to arbitrary
 finite depths, widths, and neuronwise zero-preserving $1$-Lipschitz
-activations. Its statistical consequence uses the exact original tanh
-posterior at finite Gaussian scale. The product route covers every
+activations. Its statistical consequence uses the tanh posterior of
+Section~\ref{sec:ceiling} at finite Gaussian scale. The product route covers every
 fixed gap $\gamma\ge1+\zeta$ without a resource dependence on
 the learner depth in the circuit conclusion.
 Canonical features, near-baseline action, and the block cover

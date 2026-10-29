@@ -17,28 +17,51 @@
 \begin{document}
 \maketitle
 \begin{abstract}
-For a tanh network with one hidden layer, we prove an all-width Gaussian
-Bayesian learning bound essentially linear in the weighted squared norm
-of a small teacher. The result includes the raw Gaussian prior, the prior
+For Bayesian learning with a tanh network containing one hidden layer,
+we bound the number of examples needed for small posterior-averaged
+test-margin error. The bound is essentially linear, up to logarithms, in
+the weighted squared norm of a teacher network that realizes the Boolean
+target with a positive margin. The result includes the raw Gaussian prior, the prior
 conditioned on an absolute margin everywhere, and a specified robust prior.
 Training requires signed outputs above a fixed positive margin. The sample
-bound is independent of learner width and holds at every mean-field or
-stronger Gaussian scale. With hidden coefficients at most the teacher width
+bound is independent of learner width: one event in the training sample
+works for every width at least the teacher width and every mean-field or
+stronger Gaussian scale, defined below. With hidden coefficients at most the teacher width
 and bounded readout coefficients, the width dependence is quadratic.
 Allowing the readout coefficients also to reach the width gives a quartic
 sufficient bound. The proof represents tanh ridges as
 mixtures of halfspaces, compresses their votes, and controls posterior
-readout energy. Independent AI-agent review checked the argument; it is
-formalized in Lean for the main learning statements, with scope recorded in the repository.
+readout energy. The three explicit sample budgets and the stated
+quadratic and quartic consequences of the first budget have Lean proofs;
+the scope of verification is specified below.
 \end{abstract}
 \section{Result and scope}\label{result-and-scope}
 
-For one hidden layer, the mean-field-and-stronger Gaussian learner
-admits a direct finite-class argument. Its sample bound is linear, up to
-logarithms, in a normalized target-cylinder cost. No deep-network
-compression is needed.
+An overparameterized learner may have many more hidden neurons than the
+network needed to represent its target. We show that its sample bound can
+depend on the teacher's weighted squared norm while remaining independent
+of the learner's width. For one hidden layer, this follows from a direct
+finite-class argument: bounded readout energy lets us approximate the
+network by a vote of finitely many affine halfspaces.
 
-Let \(d,C\ge1\), put \(\bar x=(x,1)\), and write the learner as
+The probability cost of placing the Gaussian weights near a replicated
+teacher controls the posterior's readout energy. We call this neighborhood
+a target cylinder, and denote its normalized negative-log-probability
+bound by \(D_*\). The resulting sample bound is linear in \(D_*\), up to
+logarithms.
+
+\paragraph{Reading guide.}
+This section defines the learner, the three prior choices, and the sample
+budgets, then states their consequences for teacher width.
+Section~\ref{proof} proves the first budget through target mass, a readout
+tail bound, halfspace compression, and finite-class generalization.
+Section~\ref{checks-and-limitations} records the scope, and
+Section~\ref{sharpening-the-dimension-factor-by-counting-sample-patterns}
+improves the dimension dependence by counting halfspace patterns only on
+the sampled inputs.
+
+Let \(d,C\ge1\), let \(f:\{-1,1\}^d\to\{-1,1\}\) be the target,
+put \(\bar x=(x,1)\), and write the learner as
 \(z_w(x)=\sum_{r=1}^N v_r\tanh(W_r\cdot\bar x)\). For a teacher
 
 \[
@@ -51,6 +74,8 @@ write \(A_1=\sum_j|a_j|\), \(A_2^2=\sum_j a_j^2\), and
 arbitrary width \(N\ge C\), independent Gaussian entries of variance
 \(t^2/d\) in the first layer and \(t^2/N^2\) in the readout, where
 \(0<t\le1\).
+Here \(t=1\) is the finite mean-field scale; smaller positive \(t\)
+gives a stronger Gaussian prior, concentrating more mass near zero.
 
 Any of the following priors is allowed:
 
@@ -85,6 +110,9 @@ Fix an arbitrary input distribution \(D\) on the Boolean cube and draw the input
 error means \(f(X)z(X)\le1/4\), which bounds ordinary sign error. With
 global-margin conditioning, the two errors coincide; this equality is
 not asserted for the raw or robust-only priors.
+The posterior average integrates this error over a network drawn from the
+conditioned prior and an independent test input drawn from \(D\). Write
+\(Q\) for this posterior.
 
 Let \(s=3\) in cases 1 and 3, and \(s=2c+3\) in case 2. Set
 
@@ -165,7 +193,7 @@ D_*\le d(d+1)W^2+2s^2 C^2V^2
   \(C\). Both statements hold even for the raw Gaussian prior, without
   an initial margin or robustness restriction.
 \item
-  Under the original bounded-weight-complexity convention \(W,V\le C\),
+  Under the convention that both coefficient bounds satisfy \(W,V\le C\),
   it gives \(D_*=O(d^2C^2+s^2C^4+d\log(dCs))\), and hence quartic
   dependence on \(C\). This proof does \textbf{not} establish quadratic
   dependence for that full class.
@@ -288,7 +316,7 @@ at most
 M_d\le(e2^d)^{d+1},\qquad\log M_d\le h_d,
 \]
 
-by the VC dimension \(d+1\) and Sauer's lemma.
+by the Vapnik--Chervonenkis (VC) dimension \(d+1\) and Sauer's lemma.
 
 Independently sample \(m\) halfspaces from the representation of \(z\)
 and put
@@ -322,6 +350,10 @@ Use the ramp loss
 0,&u\ge7/16.
 \end{cases}
 \]
+
+Write \(R_\psi(h)\) for the expected ramp loss on a fresh labeled input and
+\(\widehat R_\psi(h)\) for its average over the training sample;
+\(R_{1/4}(Q)\) denotes the posterior-averaged test-margin error.
 
 On a training point, a successful approximation has signed compressed
 output strictly above \(7/16\), because every original posterior draw
@@ -359,6 +391,18 @@ This proves the simultaneous theorem.
 
 \section{Checks and limitations}\label{checks-and-limitations}
 
+\paragraph{Formal verification.}
+Lean proofs cover all three displayed sufficient sample budgets with
+their exact constants, the actual prior choices, and the common sample
+event for all widths and scales. They also cover the weighted-norm
+estimate on \(D_*\), retaining its \(\log(1/\rho)\) term, and the first
+budget's quadratic and quartic width consequences. The additional
+logarithmic width consequence of the dimension-sharpened budget is not
+separately stated in Lean. The
+\href{https://github.com/kaarelh/AI-works/blob/main/neural-network-generalization/lean/review/BatchTwo-coverage.md}{formal-coverage record}
+and its linked statement review distinguish these claims from the prose
+proof. Independent AI-agent review supplements these formal checks.
+
 \begin{itemize}
 \tightlist
 \item
@@ -377,8 +421,9 @@ This proves the simultaneous theorem.
 \item
   The theorem works with the existing Gaussian mean-field and stronger
   scalings: \(t=N^{(1-\gamma)/2}\) gives every \(\gamma\ge1\). It also
-  covers every sufficiently strong finite-width scale of the original
-  strong-prior parametrization, by setting \(t=\sqrt N\sigma\le1\).
+  covers the variance parametrization with first-layer variance
+  \(N\sigma^2/d\) and readout variance \(\sigma^2/N\) whenever
+  \(t=\sqrt N\sigma\le1\).
 \item
   The first bound uses simple finite-cube counting. The additional
   argument below improves the dimension factor to \(d\), up to
@@ -389,8 +434,10 @@ This proves the simultaneous theorem.
   meaningful shallow comparator here is a real-valued tanh hidden layer
   and linear readout implementing a Boolean function.
 \item
-  This is an independent derivation, not a claimed optimization of the
-  old degree-510/10974 compression formulas.
+  The argument uses the representation of a single tanh layer as a
+  mixture of halfspaces. Its width consequences apply to this shallow
+  architecture; they do not establish corresponding improvements for
+  arbitrary-depth networks.
 \end{itemize}
 
 \section{Sharpening the dimension factor by counting sample
@@ -406,7 +453,8 @@ lemma}\label{a-relative-growth-function-lemma}
 
 Let \(\mathcal A\) be a finite class of measurable sets and let
 \(\Pi_{\mathcal A}(r)\) be its maximum number of distinct membership
-patterns on \(r\) points. For an iid sample of size \(n\), with
+patterns on \(r\) points. For an independent, identically distributed
+(iid) sample of size \(n\), with
 probability at least \(1-\delta\),
 
 \[
@@ -544,7 +592,8 @@ rather than being assumed as an external theorem.
 
 \paragraph{Acknowledgments and status.}
 The parameter conventions and prior-conditioning questions come from the
-collaborative NNBayes research program. This paper supplies a separate
+collaborative neural-network Bayesian learning (NNBayes) research program.
+This paper supplies a separate
 shallow proof; the accompanying review records describe its independent
 AI-agent mathematical checks. The paper has not received a full human
 mathematical review.

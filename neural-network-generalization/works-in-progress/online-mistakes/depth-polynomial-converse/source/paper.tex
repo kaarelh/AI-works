@@ -20,25 +20,30 @@
 \date{Research draft, 22 October 2026}
 \begin{document}\maketitle
 \begin{abstract}
-Does making few online prediction mistakes force a Bayesian neural-network
-learner's target to have a small implementation, with polynomial rather
-than exponential dependence on depth? We prove such a converse for a
-Gaussian tanh prior restricted by bounded output magnitude and a
-label-independent certificate controlling propagation of internal noise.
-The certificate allows compensated layer expansion and includes networks
-whose internal matrices have operator norm at most one. It is preserved by
-cloning and direct sums. An exact singleton correction then increases the
-square root of minimum energy by only a polynomial-depth additive cost.
-A deterministic robustness compressor turns the resulting quadratic
-energy bound into an explicit circuit-width bound with fourth-power
-mistake dependence and no exponent depending on depth. The theorem
-concerns the limit taking prior variance to zero at each fixed width and
-then letting width tend to infinity. It handles tied minimizers,
-posterior sampling, majority prediction, and posterior-confidence
-failures, in any complete input-reveal order. The original fixed-width
-converse, and cheap implementations of every small deep Boolean circuit
-under this stronger restriction, remain open. The main gain-restricted converse and its stated prediction-rule
-corollaries have Lean proofs.
+We prove that few online mistakes force a Boolean target to have a small
+bounded-weight tanh network, with a bound polynomial jointly in input
+dimension, depth, and mistake count. Complexity is the least common
+hidden width of a network at the stated depth, with signed margin greater
+than $1/2$ and weights bounded by that width. The learner receives every
+true label after prediction and eventually observes every domain point.
+Its Gaussian prior is restricted by an upper output cap and a
+label-independent certificate bounding how internal disturbances can
+amplify at the output.
+
+The result takes prior variance to zero at each fixed learner width,
+then lets width tend to infinity. The limiting predictors may mix tied
+minimum-energy functions. The converse applies to posterior sampling,
+majority prediction, and posterior-confidence failures in any complete
+reveal order, using either actual or expected total counts. An exact
+one-point correction gives a quadratic energy bound in the mistake
+count. A deterministic stability-based compression theorem converts it
+into an explicit width bound with fourth-power mistake dependence and
+no exponent depending on depth. The certificate is preserved by cloning
+and direct sums and permits compensated expansion between layers.
+A corresponding converse at each fixed learner width remains open, as
+does a polynomial-energy realization of every small deep Boolean circuit
+inside this support. The main gain-restricted converse, its prediction
+conventions, and the iterated prior limit have Lean proofs.
 \end{abstract}
 
 \section{Question and scope}
@@ -58,21 +63,44 @@ polynomial-depth compressor. We address these separately: a fixed output
 cap makes corrections inexpensive, while a stable internal-noise
 certificate supplies a polynomial-depth compressor.
 
-Our conclusion concerns bounded-weight tanh-network width at the stated
-depth, rather than unrestricted-depth NAND gate count. The new argument
-combines an exact singleton construction with the deterministic compressor
-underlying the earlier polynomial-depth learning result
-\cite{quartic}. We reproduce the required compression argument below.
-The prior restriction is specified in weights and outputs, without
-reference to training labels, target complexity, or mistake count.
+The target complexity is bounded-weight tanh-network width at the stated
+depth: the smallest common hidden width for which all weights are bounded
+by that width and the signed output exceeds $1/2$ on the entire cube.
+The network that witnesses the conclusion may be different from every
+network used by the learner and need not satisfy the learner's extra
+support restrictions. Depth counts hidden layers plus the linear readout.
+
+The output cap bounds the magnitude of every clean network output. The
+gain certificate bounds the cumulative effect of disturbances inserted
+at hidden layers, allowing each tanh slope to range over its full
+possible interval. Both conditions are specified using weights and
+outputs before training, without reference to labels, target complexity,
+or mistake count. A minimum-action rule selects among consistent
+functions of least infimum energy over all supported network widths;
+Section~\ref{sec:statement} makes this definition precise.
+
+The proof combines an exact singleton construction with the deterministic
+compressor underlying the polynomial-depth learning result
+\cite{quartic}. Here a singleton correction changes the real output at
+one cube point and nowhere else. Its exactness preserves all earlier
+labels and margin slack. The compressor then replaces an energy-bounded,
+stable network by a bounded-width network with the same target signs.
 
 The order of limits is substantive. We take the strong-prior limit at
 each fixed width first, and only then let width tend to infinity. This
 supplies the extra neurons used by an exception branch. We do not assert
 that the converse holds at every fixed realizable width, or that this
-limit is one of the finite-exponent width-first posteriors.
+limit agrees with a posterior obtained by sending width to infinity
+first under a fixed power-law variance schedule.
 
-\section{A prior with controlled internal amplification}
+Section~\ref{sec:prior} defines the prior and its stability certificate;
+Section~\ref{sec:statement} states the exact converse. We then establish
+closure under parallel construction and the Gaussian limit, construct
+one-point corrections, and show that increases in the minimum action
+force mistakes. The final compression step turns this action bound into
+the claimed target complexity.
+
+\section{A prior with controlled internal amplification}\label{sec:prior}
 Fix $d\ge1$, $L\ge2$, $H=L-1$, $U>1$, and $\Lambda>1$.
 Let $\cX=\{-1,1\}^d$ and $\bar x=(x,1)$. A network with $H$ hidden
 layers of common width $N$ has
@@ -112,8 +140,10 @@ Let $\cS_{N,\Lambda,U}$ be the following open parameter set:
 \end{equation}
 The prior is the raw Gaussian conditioned on this set. Training further
 conditions on exact agreement of output signs with the revealed labels.
-Thus we retain the original global lower-margin convention and add an
-upper output cap and an internal-amplification certificate.
+The lower margin makes every supported network define a Boolean sign
+function on the whole cube. The upper cap controls the amplitude of later
+one-point repairs, and the gain condition supplies the stability needed
+for compression.
 
 \begin{remark}[Interpretation]
 The diagonals in \eqref{eq:gain} range over all possible slopes of tanh,
@@ -156,7 +186,7 @@ $1+G_N^2\le\Lambda^2(1+HE_v)$ since $\Lambda>1$.
 Clipping is one-Lipschitz.
 \end{proof}
 
-\section{Statement of the converse}
+\section{Statement of the converse}\label{sec:statement}
 For a Boolean function $g$, let $a_N(g)$ be the infimum of
 $\kappa_N(w)$ over $w\in\cS_{N,\Lambda,U}$ with sign function $g$,
 with value $+\infty$ when there is no such implementation. Set
@@ -219,6 +249,12 @@ argument; it is not inferred from small sign error or bounded hidden
 activations. A hard-conditioning prior need not describe ordinary SGD.
 
 \section{Cloning, direct sums, and the Gaussian limit}
+
+Two operations connect the prior to the correction argument. Cloning
+creates space at larger widths while preserving a network's function.
+A direct sum runs two branches in parallel and adds their outputs. The
+next lemma tracks their energy and noise gain; these identities allow an
+exception branch to be added without losing the gain certificate.
 
 \begin{lemma}[Closure under cloning and direct sums]\label{lem:closure}
 Uniformly clone each neuron of a width-$n$ network $k$ times, divide its
@@ -315,6 +351,13 @@ exist because their number is finite.
 
 \section{Exact singleton corrections with controlled amplification}
 
+A useful exception must be exact on the finite domain: any error away
+from the corrected point could consume the margin of an earlier label.
+The construction below first represents a point indicator with affine
+tanh features, then carries it through the remaining layers with
+controlled energy. Its depth dependence is the key to the final
+polynomial bound.
+
 \begin{lemma}[An inexpensive exact point indicator]\label{lem:singleton}
 For every $a\in\cX$ and $t\in\R$, the function
 $tI_a(x)=t\mathbf1\{x=a\}$ has implementations at depth $L$ with
@@ -389,6 +432,11 @@ readout energy by $4(H+2)$. In particular, the initial minimum action is
 at most $P_{d,H,U}$.
 
 \section{Mistakes bound the minimum action}
+A mistake need not remove every minimum-action function. The proof counts
+only the rounds that do remove them all. Each such round is necessarily
+a mistake under every stated prediction convention, and the exact repair
+bounds how far the minimum action can rise.
+
 Let $K_t$ be the smallest $a_\infty$ among functions consistent with the
 first $t$ revealed labels. This minimum exists, since the domain has
 finitely many functions and all have finite action. It is nondecreasing.
@@ -545,6 +593,17 @@ The present proof does not remove that obstruction. Finally, direct sums
 need spare neurons. A fixed-width converse needs a way to create that
 space without repeatedly paying a constant energy factor, while retaining
 the prior's support restriction. That step is not supplied here.
+
+\paragraph{Scope of the formal proofs.}
+The Lean development proves the exact ceiling in
+Theorem~\ref{thm:main} for the gain-restricted prior, including the
+specified prediction conventions, actual and expected infinite-stream
+counts, and the iterated Gaussian posterior limit. It also proves the
+stability and reconstruction statements used by that theorem. The
+optional learner defined by strict internal operator-norm bounds has its
+own action and posterior; that separate learner is outside the current
+formalization. The big-$O$ simplification and the interpretive discussion
+are not separate formal endpoints.
 
 \begin{thebibliography}{9}
 \bibitem{quartic} ChatGPT-6 Astra, Claude Fable 5 and Opus 5, Kaarel H\"anni,

@@ -17,24 +17,26 @@
 \date{22 October 2026}
 \begin{document}\maketitle
 \begin{abstract}
-We prove a sample bound polynomial jointly in Boolean teacher width and depth for Bayesian ReLU and GELU networks, at every learner width above the compiled teacher width and every mean-field-or-stronger Gaussian scale. The prior retains networks whose clipped predictions survive averaging neurons into a limited number of populations. Populations may have arbitrary sizes; their permitted number is calibrated by scale-normalized readout energy. Every layered bounded-fan-in Boolean circuit has a positive-mass implementation satisfying the condition. ReLU perturbations need not contract through depth: an exponentially small parameter radius has only a polynomial negative-log-prior cost. Positive homogeneity removes population-mass parameters from the ReLU computation; a uniformly Lipschitz perspective transformation controls them for GELU. The bound is quadratic in teacher width up to logarithms, with a coarser literal quadratic-width envelope of degree nine in the remaining resources. This is a structural prior restriction, not a proved property of ordinary internally stable or gradient-trained networks. The main learning statements and polynomial corollaries have Lean proofs.
+We prove a sample bound polynomial jointly in teacher width and depth for Bayesian ReLU and exact GELU networks with a specified restriction on their prior. The target is a layered NOR, COPY, and NOT circuit of width $C$, counting a constant-one wire at every stage. One sample event controls posterior margin error simultaneously at every learner width $N\ge C$ for ReLU or $N\ge2C$ for GELU, and at every mean-field-or-stronger Gaussian scale. The prior retains networks whose clipped predictions change little when neurons are averaged into a limited number of populations. The populations may have arbitrary sizes; their permitted number depends on readout energy and output magnitude. Every stipulated circuit has a positive-mass implementation satisfying this condition. ReLU's positive homogeneity removes population sizes from the compressed computation; a uniformly Lipschitz rescaled activation controls them for GELU. Perturbations may amplify through depth, but only the logarithm of their required parameter precision enters the prior-mass cost. The sample bound is quadratic in teacher width up to logarithms; a coarser bound has literal quadratic width dependence and degree nine in the remaining resources. The population restriction is an assumption on the prior, with no claim that ordinary trained networks satisfy it. The main learning statements and polynomial corollaries have Lean proofs.
 \end{abstract}
 
 \section{The learning question and the restriction}
-For ReLU networks, product-of-layer-norm capacity bounds give a width-independent Gaussian Bayesian learning theorem at fixed depth, but its degree in teacher width grows with depth. We obtain polynomial depth dependence by restricting the prior to networks whose predictions are stable under merging redundant neurons. This supplies a direct finite description with polynomially many coefficients.
+We study a Bayesian network trained on noiseless examples from a Boolean circuit. The learner may have arbitrarily large width, and both the teacher's width and depth are allowed to grow. Our goal is a sample bound polynomial in these teacher resources and independent of learner width. We obtain it by conditioning the Gaussian prior on a concrete property: averaging neurons within suitable populations must approximately preserve the network's clipped output on every Boolean input.
 
-Two features distinguish the argument from bounded-activation population constructions. ReLU's positive homogeneity removes population sizes from the normalized computation. And although perturbations can amplify exponentially through depth, their admissible parameter radius enters the prior-mass estimate only logarithmically. The result concerns exact Bayesian conditioning, not an efficient posterior sampler or the output law of gradient descent.
+This merging property supplies a finite description with polynomially many coefficients. Product-of-layer-norm capacity estimates give fixed-depth ReLU bounds whose degree in teacher width grows with depth; counting the merged descriptions instead gives polynomial dependence on depth as well. The restriction is independent of the target. A positive-mass neighborhood of a compiled Boolean circuit satisfies it, so the restricted posterior remains defined after every noiseless training sample.
+
+Two features make the construction work for these activations. ReLU's positive homogeneity removes population sizes from the normalized computation, while GELU requires additional size parameters whose effect can be controlled uniformly. Although perturbations can amplify exponentially through depth, their admissible parameter radius enters the prior-mass estimate only logarithmically. The result concerns exact Bayesian conditioning. It supplies neither an efficient posterior sampler nor a description of the output law of gradient descent.
 
 \section{Model and population condition}
 Fix $d\ge1$, $L\ge2$, $H=L-1$, and $\mathcal X=\{-1,1\}^d$. Write $\bar x=(x,1)$. All hidden layers have width $N$:
 \[
  h^1=\relu(W^1\bar x),\quad h^s=\relu(W^sh^{s-1})\ (2\le s\le H),\quad z_w=v^\top h^H.
 \]
-There are no separate internal biases; counted constant wires can supply offsets. The raw prior $\mu_{N,t}$ has independent Gaussian entries of variances
+The appended input coordinate supplies first-layer offsets. There are no separate internal biases; a constant wire used for later offsets is an ordinary neuron counted in the layer width. The raw prior $\mu_{N,t}$ has independent Gaussian entries of variances
 \[
  t^2/d\text{ in }W^1,\qquad t^2/N\text{ in }W^s\ (s\ge2),\qquad t^2/N^2\text{ in }v,\quad0<t\le1.
 \]
-Thus $t=N^{(1-\gamma)/2}$ includes every $\gamma\ge1$. Set
+The value $t=1$ is the mean-field scale; smaller $t$ gives a stronger prior. Thus $t=N^{(1-\gamma)/2}$ includes every $\gamma\ge1$. Set
 \[
  E_v=N\norm v_2^2,\quad M(w)=\max_x|z_w(x)|,\quad T(u)=\min\{1/2,\max\{-1/2,u\}\}.
 \]
@@ -48,12 +50,12 @@ With $q=\max_s q_s$, the event $\mathcal A_N$ requires some such partitions sati
 \end{equation}
 The condition does not use the target or its complexity. The count budget is invariant under readout rescaling; the clipped comparison retains fixed margins. The complete event is invariant under neuron permutations. Populations are unsigned: arbitrary hidden sign flips are not symmetries of ReLU networks. Finitely many witnesses at fixed $N$ make the event Borel.
 
-The prior is $\mu_{N,t}$ conditioned on $\mathcal A_N$. One may additionally impose the original all-input margin event $|z_w(x)|>1/2$ everywhere. Training further conditions on $f(X_i)z_w(X_i)>1/2$. The theorem holds for either prior convention and tests the event $f(X)z_w(X)\le1/4$.
+The prior is $\mu_{N,t}$ conditioned on $\mathcal A_N$. One may additionally impose the all-input margin event $|z_w(x)|>1/2$ everywhere. Training further conditions on $f(X_i)z_w(X_i)>1/2$. The theorem holds for either prior convention and tests the event $f(X)z_w(X)\le1/4$. Thus the training margin is larger than the test margin; the gap allows merging and coefficient rounding while retaining a useful prediction guarantee.
 
 \section{Explicit learning theorem}
 The target is a single-output layered Boolean circuit of width $C\ge1$ and $H$ stages, using NOR, COPY, and NOT. One constant-one wire is carried through every stage, including the final stage, and counts toward $C$. Compilation from another bounded-fan-in basis must count its width and depth overhead. Bits are $0,1$; target labels are $-1,1$.
 
-This reserved-wire convention is also used in the Lean statements. If an
+The constant wire supplies internal offsets and the final readout's conversion from bits to signs. If an
 ordinary width-$C_0$ circuit has no reserved constant wire, adding one at
 each stage gives the theorem with $C=C_0+1$, hence learner width
 $N\ge C_0+1$ for ReLU and $N\ge2(C_0+1)$ for the GELU compilation below.
@@ -61,7 +63,7 @@ The overhead matters at small widths: a width-one ReLU network with a
 bias-free linear readout has output of one weak sign everywhere, so it
 cannot learn a nonconstant Boolean literal with strict signed margins.
 
-Define
+The first group of constants bounds the negative logarithm of the raw probability of a neighborhood implementing the target. The radius may shrink exponentially with depth, but its logarithm is the quantity used in the mass bound. Define
 \begin{align}
  a&=4,&b_L&=\sqrt{16\log9+8\log(4L)},&S_0&=2+2\sqrt{10C}+b_L,\notag\\
  D_0&=d+1+H\sqrt C,&\rho&=\min\left\{\frac1{16},\frac1{64a\sqrt{10C}\,D_0S_0^H}\right\},\notag\\
@@ -69,7 +71,7 @@ Define
  D_*&=B_0+q_0\log\frac{e\sqrt{2\pi}}{2\rho}+\log2.
  \label{eq:target}
 \end{align}
-For $0<\varepsilon,\delta<1$, set
+The next budgets bound readout energy, the number of populations, and the coefficients of a merged network. Rounding those coefficients produces a finite set of predictions whose logarithmic size determines the sample bound. For $0<\varepsilon,\delta<1$, set
 \begin{align}
  B&=\max\{8,8[D_*+\log(4/\varepsilon)]\},&Q&=\lceil1+16B\rceil,\notag\\
  J&=4\left[D_*+\log(4/\varepsilon)+2H\log Q
@@ -104,6 +106,7 @@ For a universal constant $A$ and $S=2+d+L+\log(4/\varepsilon)$, a sufficient bou
 This coarser estimate prunes irrelevant circuit wires before absorbing logarithmic width terms into depth. Neither estimate is a claim of optimality.
 
 \section{A positive-mass Boolean implementation}
+The lemma below makes the learning model nonempty at every allowed width and scale. Its target neighborhood lies in the merging event and has enough mass to lower-bound every noiseless posterior denominator.
 \begin{lemma}[Target cylinder]\label{lem:cylinder}
 For every $N\ge C$ and $0<t\le1$, a set of raw probability at least $\exp(-ND_*/t^2)$ lies in $\mathcal A_N$ and satisfies $f(x)z_w(x)>1$ everywhere. It also satisfies the optional global margin.
 \end{lemma}
@@ -166,6 +169,7 @@ Multiply over the constrained coordinates and include the bulk probability $1/2$
 The radius decreases exponentially with depth. Only its logarithm enters the mass budget. The $N^2$ Gaussian bulk coordinates are never forced into a small Euclidean ball.
 
 \section{Compressed coordinates and finite coding}
+For each fixed choice of populations, we can express the merged network using one coordinate per population. A Gaussian tail bound then controls these coordinates even when the witnessing populations are selected after the network is drawn. The finite grid obtained by rounding is used only to compare predictions and count possibilities; it is an auxiliary class for the proof.
 For fixed populations put
 \[
  B^1=F_1^\top W^1/\sqrt N,\quad B^s=F_s^\top W^sF_{s-1},\quad b=\sqrt N F_H^\top v.
@@ -366,12 +370,12 @@ If $p(x)=\Prb_w\{f(x)z_w(x)>1/4\}$, then the theorem implies
 \[
  \Prb_X\{p(X)\le\theta\}\le\varepsilon/(1-\theta),\qquad0<\theta<1.
 \]
-The strict $>2/3$ criterion follows by adjusting accuracy by a factor of three. Correct-sign probability is at least the correct-margin probability. No MAP predictor is silently substituted for the posterior.
+The strict $>2/3$ criterion follows by adjusting accuracy by a factor of three. Correct-sign probability is at least the correct-margin probability. These conclusions concern the full posterior distribution, including mixtures.
 
 The restriction expresses stability under a specific structured change of the weights. It is not proved equivalent to robustness against arbitrary calibrated internal disturbances, nor established for typical trained networks. Its positive-mass Boolean implementation shows useful representability, not universal empirical applicability. An arbitrary analog ReLU teacher is not identified with a Boolean circuit of the same width and depth.
 
 These theorems therefore give polynomial-depth results for specified restricted priors, at all mean-field-or-stronger scales. They do not settle the unrestricted polynomial-depth learning question. Exponentially small parameter radii are harmless in this construction because only their logarithm is paid; exponentially large compressed width would not be harmless, and the population condition prevents that loss.
 
 \paragraph{Provenance and verification.}
-The proof adapts the earlier collaborative tanh population construction and Gaussian partition bound, including contributions from Claude. The ReLU normalized representation, GELU perspective extension and exact compiler, noncontracting target-cylinder estimate, and resulting depth-polynomial theorems are supplied here. The main learning statements have Lean proofs, with scope recorded in the repository.
+The population construction and Gaussian partition estimates build on collaborative work on tanh networks, including contributions from Claude. This paper supplies the ReLU normalized representation, GELU perspective extension and exact compiler, noncontracting target-cylinder estimate, and resulting depth-polynomial theorems. The main learning statements have Lean proofs, with their scope recorded in the repository.
 \end{document}

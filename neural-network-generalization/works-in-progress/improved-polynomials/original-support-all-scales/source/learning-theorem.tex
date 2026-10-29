@@ -20,6 +20,11 @@ $t=N^{(1-\gamma)/2}$ therefore gives every $\gamma\ge1$. Define
            \sum_{s=2}^H\|W^s\|_F^2+N\|v\|^2,
  \qquad E_v(w)=N\|v\|^2.
 \]
+Here $\|\cdot\|_F$ is the Frobenius norm, the square root of the sum of
+squared matrix entries. Vector norms are Euclidean, and
+$\|\cdot\|_{\rm op}$ below is the corresponding operator norm.
+The scale $t=1$ is the finite mean-field prior;
+smaller positive $t$ concentrates its weights more strongly near zero.
 In these energy coordinates the Gaussian density is proportional to
 $\exp[-N\kappa_N/(2t^2)]$.
 
@@ -38,7 +43,8 @@ This is an adversarial finite perturbation, not a Gaussian-noise average or
 a derivative evaluated only at the clean computation. Noisy hidden states
 need not stay in $[-1,1]^N$.
 
-Our training likelihood is
+Draw the training inputs independently from $D$, so the sample is
+independent and identically distributed (iid). Our training likelihood is
 \begin{equation}\label{eq:standalone-likelihood}
  \mathcal L_S(w)=\prod_{i=1}^n
        \mathbf1\{f(X_i)z_w(X_i)>1/2\}.
@@ -67,7 +73,8 @@ The posterior $Q_{S,N,t,c}$ additionally conditions on
 probability by the target construction below. No tractable sampling
 algorithm is assumed or supplied by the theorem.
 
-The clipping scale is set by the existing likelihood convention. For
+The clipping scale is set by the training margin in
+\eqref{eq:standalone-likelihood}. For
 example, changing a raw output from $10$ to $1$ causes no score change.
 Clipping at $\pm1/2$ gives a weaker condition than clipping at $\pm1$ with
 the same tolerance and noise radius, because
@@ -108,8 +115,9 @@ scale $\gamma=1$ and every stronger-prior scale $\gamma>1$.
 \end{theorem}
 
 The same theorem holds if the prior is additionally conditioned on
-$|z_w(x)|>1/2$ at every input, as in the original globally margin-conditioned
-model. The proof below applies unchanged to this variant. The target cylinder constructed below already satisfies this extra
+$|z_w(x)|>1/2$ at every input. This is the globally margin-conditioned
+variant discussed in~\cite{earlier}. The proof below applies unchanged to
+this variant. The target cylinder constructed below already satisfies this extra
 condition. Its probability bound and every subsequent statistical step are
 therefore unchanged. Under that additional condition, test-margin error
 coincides with sign error. Dropping the extra condition is permitted, but is
@@ -139,6 +147,12 @@ posterior mixtures; they do not require concentration on one predictor.
 
 The constructive compression statement needed here concerns numerical
 outputs before any robustness condition is used.
+We write $D_{\rm KL}(Q\Vert\mu)$ for the Kullback--Leibler (KL)
+divergence, or relative entropy, of $Q$ from $\mu$. The common law
+$\Gamma_Q$ in the next lemma lets the statistical proof average over one
+finite class even though the comparison coupling can vary with the input.
+The notation $Q\ll\mu$ means that $Q$ is absolutely continuous with
+respect to $\mu$.
 
 \begin{lemma}[Entropy compression before the prediction comparison]
 \label{lem:raw-entropy-compression}
@@ -306,7 +320,7 @@ Thus all bulk norms are at most $b_Lt$ with conditional probability at
 least $1/2$.
 
 \paragraph{Finite disturbance robustness.}
-Allow a separate RMS disturbance of size $\tau_0$ at each hidden layer and
+Allow a separate root-mean-square (RMS) disturbance of size $\tau_0$ at each hidden layer and
 scalar output disturbance at most $\tau_0$. This includes the entire
 total-budget ball $\|\eta\|_*\le\tau_0$.
 Write $e_s=\|h^s_\eta-b^s\|_2/\sqrt N$.

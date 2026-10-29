@@ -19,32 +19,48 @@
 \date{Research draft, 21 October 2026}
 \begin{document}\maketitle
 \begin{abstract}
-For uniformly sampled Boolean inputs, the strong-prior, above-mean-field,
-and mean-field learning results imply a stronger conclusion than eventual
-fixed accuracy: the total number of mistakes over an infinite learning
-stream has a polynomial bound, independent of learner width. The bound
-holds in expectation and with high probability, and applies both to
-posterior sampling and to counting a prediction as a failure unless the
-correct label has posterior probability greater than $2/3$. The new
-statistical argument works for any consistency posterior whose relevant
-functions have a short finite description, even if their prior weights are
-extremely unequal. Deleting repeated inputs reduces the infinite iid
-stream to a uniformly random permutation. A harmonic bound over its random
-prefixes then gives an overhead of order the input dimension. We state
-precisely the structural facts imported from the neural-network papers,
-give explicit budgets, and distinguish this result from an arbitrary-order
-mistake guarantee. A prediction-preserving neuron-merging restriction also
-retains polynomial dependence on depth. These new cumulative conclusions
-have Lean proofs for the core statistical theorem and three boxed neural applications. Optional extensions have the narrower coverage recorded in the repository.
+We study exact Bayesian prediction of a deterministic Boolean function
+when inputs are sampled uniformly and every true label is revealed after
+prediction. At fixed depth, we bound the total mistakes over the entire
+infinite stream by a polynomial in the input dimension and target-network
+complexity, independently of learner width. Here target complexity is the
+least hidden width of a network with signed margin greater than $1/2$ and
+weights bounded by that width. The result covers three Gaussian priors:
+sufficiently small variance at each fixed width, the specified positive
+variances above mean-field scaling, and finite-variance mean-field tanh.
+The bounds hold in expectation and with high probability for posterior
+sampling and for failures to assign the correct label posterior
+probability greater than $2/3$.
+
+The statistical argument uses a finite class carrying nearly all posterior
+mass, with no lower bound on the relative weights within that class.
+Repeated inputs cause no further errors; the order of first appearances
+is a uniform random permutation. A harmonic bound over its prefixes adds
+only an overhead of order the input dimension to the logarithm of the
+class size. We give explicit neural budgets and explain why uniform
+sampling matters. A separate neuron-merging support restriction also
+yields polynomial dependence on depth. The core statistical theorem and
+three main neural applications have Lean proofs; the optional extensions
+have more limited formal coverage.
 \end{abstract}
 
 \section{Prediction protocol and the result}
+
+A bound on error at one sample size need not bound the number of errors
+made while learning. We ask for a cumulative guarantee: after all future
+predictions are counted, how many mistakes can remain? On a finite
+noiseless domain, exact conditioning makes every previously observed
+input harmless. The issue is therefore how much error the learner incurs
+on first appearances. The argument below controls this cost using a
+finite description of the functions that retain appreciable posterior
+mass.
 
 Let $\cX$ be a finite set of size $m\ge2$, let
 $f:\cX\to\{-1,1\}$, and let $\pi$ be a prior on Boolean functions
 with $\pi(f)>0$. Before round $j$, the learner has seen the true labels
 of the preceding inputs and forms the exact consistency posterior
-$\Pi_{j-1}$. The next input $X_j$ is then presented, a prediction is
+$\Pi_{j-1}$: the prior restricted to functions agreeing with every
+revealed label, then normalized. The next input $X_j$ is then presented, a prediction is
 made, and its true label $f(X_j)$ is revealed. Every label is revealed,
 including after a correct prediction. Define
 \[
@@ -76,7 +92,16 @@ total variables $S,F_\theta,Z$ have the same laws in the two protocols
 (using fresh posterior randomness on first appearances). We can therefore
 prove all bounds for $m$ rounds without replacement.
 
-For $\cX=\{-1,1\}^d$, the neural-network consequences are:
+For the neural applications, the domain is $\cX=\{-1,1\}^d$.
+Depth $L$ means $L-1$ hidden layers of a common width, with a constant
+input coordinate and a linear readout. Write $C=C_L(f)$ for the least
+width of such a target implementation with signed output margin greater
+than $1/2$ on every input and all weights bounded in magnitude by that
+width. The target uses the same activation as the learner. Learner width
+$N$ and target complexity $C$ are separate quantities: the claims apply
+at every $N\ge C$.
+
+The neural-network consequences are:
 \begin{itemize}
 \item At every fixed depth, the strong-prior learner has a total mistake
 bound polynomial in $d$ and bounded-weight target-network complexity,
@@ -89,7 +114,17 @@ over all admissible widths. Its polynomial may depend on $\gamma$.
 the same polynomial bound at every admissible width.
 \end{itemize}
 High-probability bounds are polynomial in $\log(1/\delta)$ as well.
-The theorem does not replace uniform random input order by arbitrary order.
+The parameter $\gamma$ controls how the Gaussian variances decrease with
+learner width; the precise variances and the strong-prior limit are given
+in Section~\ref{sec:neural}. Each main conclusion fixes depth before
+calling the bound polynomial. The separate support-restricted extension
+in Section~\ref{sec:depth} treats varying depth.
+
+We first prove the cumulative finite-class bound and a complementary
+direct prior-mass bound. Section~\ref{sec:neural} combines these estimates
+with stated neural compression and mass bounds.
+Section~\ref{sec:inputs} explains which changes to the input protocol
+preserve the argument and which can invalidate it.
 
 \section{A cumulative bound from a finite relevant class}
 
@@ -219,7 +254,7 @@ width and inverse prior variance. The relevant-class theorem avoids that
 factor at large widths; the lemma covers the remaining widths where its
 cost is already polynomial.
 
-\section{Application to the three neural-network regimes}
+\section{Application to the three neural-network regimes}\label{sec:neural}
 
 \subsection{Model and imported structural results}
 
@@ -232,9 +267,10 @@ activation, and a linear readout. Define
 \]
 The raw Gaussian is conditioned, before training, on
 $|z_w(x)|>1/2$ for every input. It therefore induces a prior on Boolean
-sign functions. Training uses exact label agreement. Let $C=C_L(f)$ be
-the least width of a depth-$L$ implementation with strict margin $1/2$
-and all weights bounded in magnitude by that width.
+sign functions. Training uses exact label agreement. Throughout these
+applications, $C=C_L(f)$ is the bounded-weight target width defined in
+Section~1. The prior's global margin condition is imposed before observing
+any training labels.
 
 We use the following proved structural facts from
 \cite{strong,above,meanfield}. These are imports, not newly established
@@ -395,7 +431,7 @@ settled by this imported ReLU argument. These assertions use the
 ReLU paper's homogeneous balancing and capacity proofs, not an extension
 of the bounded-activation compression theorem by assertion.
 
-\section{Depth-polynomial support restrictions}
+\section{Depth-polynomial support restrictions}\label{sec:depth}
 
 In this section $C$ denotes the width of a layered \emph{Boolean} circuit
 whose stages fit the learner's hidden layers. Constant wires and any
@@ -420,8 +456,17 @@ the finite loss class must be fixed before drawing the input order. Here
 the cumulative posterior error variable uses the tested margin event
 $fz_w\le1/4$; the resulting bounds also control sign errors.
 
-The neuron-merging papers~\cite{merging,naturality} supply exactly this
-form of deterministic compression. Retained networks have a compressed
+The neuron-merging papers~\cite{merging,naturality} supply this form of
+deterministic compression for their specified priors. Their support
+requires that hidden neurons can be grouped and merged while preserving
+clipped outputs on the whole cube, with the number of retained groups
+controlled by readout energy. The two papers use different grouping and
+symmetry conventions; each supplies its own finite cover and target-mass
+bound. In the notation below, $c>0$ is the radius constant in the optional
+internal-noise stability condition, and $0<t\le1$ multiplies the raw
+Gaussian standard deviations in all layers.
+
+Retained networks have a compressed
 grid representative whose clipped output differs uniformly by at most
 $3/32$. Training uses signed margin $>1/2$, so the representative has
 signed clipped output $\ge13/32$ on training inputs. A tested margin error
@@ -445,7 +490,7 @@ finite-function mean-field argument still gives the fixed-depth cumulative
 result after using its robust target-mass cylinder; it does not preserve
 the improved polynomial depth dependence.
 
-\section{Which input assumptions matter?}
+\section{Which input assumptions matter?}\label{sec:inputs}
 
 \paragraph{Uniform random order is doing real work.}
 A class of $m+1$ simple functions can require $m$ mistakes in a prescribed
@@ -495,11 +540,24 @@ supply a small circuit unless its predictions have controlled computational
 descriptions. The results here establish the upper direction for specified
 Bayesian learners; a converse requires an additional argument.
 
+\paragraph{Scope of the formal proofs.}
+The Lean development proves Theorem~\ref{thm:finite} for both uniform
+protocols and the exact budgets in Corollaries~\ref{cor:strong},
+\ref{cor:above}, and~\ref{cor:meanfield}, for cumulative posterior error
+and sampled mistakes. The confidence conversion is proved generically
+for both protocols; the majority conversion is proved pathwise for the
+permutation protocol. These conversions are not separately instantiated
+at the neural endpoints. The optional ReLU formulas, the general merging
+extension, the nonuniform expectation extension, and the order
+counterexamples are outside this certification. The merging extension
+has separate, narrower proofs for cumulative posterior risk under a
+specified ReLU support; sampled-error tails are not included there.
+
 \appendix
 \section{Explicit imported neural-network budgets}\label{app:budgets}
 
 For reproducibility, the quantities below are the scalar bounds supplied
-by the earlier proofs. Their mathematical roles are stated in Section~4.
+by the earlier proofs. Their mathematical roles are stated in Section~\ref{sec:neural}.
 They are intentionally loose.
 
 \paragraph{A common norm-sublevel count.}

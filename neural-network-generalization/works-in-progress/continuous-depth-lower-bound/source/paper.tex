@@ -17,15 +17,18 @@
 \begin{document}\maketitle
 \begin{abstract}
 We construct bounded-weight tanh teachers of constant width and depth $L$
-for which a Gaussian Bayesian neural-network learner requires
+for which a Gaussian Bayesian neural-network learner of the same depth
+requires
 $\exp(\Omega(L))$ examples to generalize. Inputs follow one fixed nonatomic
 distribution on an arc of the unit circle, and training observes the
 teacher's real-valued outputs. The posterior conditions only on fitting
-these outputs within a fixed positive tolerance. In the strong-prior
-limit, and at every finite prior exponent $\gamma>1$ at widths above a
-polynomial threshold in sample size and depth, the posterior fails to assign probability greater than
-$2/3$ to a correct prediction on at least half the test inputs, with sample
-probability at least $49/50$.
+these outputs within a fixed positive tolerance; testing uses a larger
+tolerance. We show that the posterior fails to assign probability greater
+than $2/3$ to a correct prediction on at least half the test inputs.
+At each fixed admissible learner width, this failure has limiting lower
+sample probability at least $49/50$ as the prior scale tends to zero.
+At every finite prior exponent $\gamma>1$, the same probability bound
+holds at widths above a polynomial threshold in sample size and depth.
 The teacher iterates a fixed expanding map. Its outputs differ by a constant
 on exponentially close paired inputs. A sample of subexponential size,
 however, admits an exact interpolant with sufficiently low quadratic
@@ -53,17 +56,20 @@ restricting the networks in its prior? On arbitrary continuous input
 distributions, the answer is negative for the Gaussian learners considered
 here. We give a family with fixed input dimension, fixed teacher width,
 fixed weight bound, fixed training and testing tolerances, and a single
-fixed input distribution. Only the teacher depth grows. Learning requires
-exponentially many examples in that depth.
+fixed input distribution. The teacher and learner have the same depth.
+As that depth grows, the learner requires exponentially many examples
+at the widths and prior scales specified below.
 
 The obstruction is a property of the learning rule, rather than an
 information-theoretic impossibility for every algorithm. A teacher can
 iterate a small expanding map, producing a highly oscillatory function.
-The independent Gaussian weight prior instead rewards a low-energy
-interpolant of the observed sample. At large learner width, such an
-interpolant can transmit a scalar signal through many layers with a
-small excess energy cost. Its product of layer norms, and hence its
-Lipschitz constant, is polynomial in the sample size. Below an exponential
+The independent Gaussian weight prior favors a low-energy
+interpolant of the observed sample, where energy is the weighted sum of
+squared parameters determined by the prior variances. At large learner
+width, such an interpolant can transmit a scalar signal through many
+layers with a small excess energy cost. Its product of layer norms has
+a polynomial bound in the sample size, which also bounds its Lipschitz
+constant. Below an exponential
 sample size this smoothness prevents it from approximating the teacher.
 
 The proof requires more than a large Lipschitz constant for one teacher
@@ -74,16 +80,30 @@ full posterior. A measure-preserving pairing of test inputs shows that
 mixing individually inaccurate predictions cannot repair the confidence
 guarantee.
 
-We prove the strong-prior result first, then give a finite-scale extension
-for every fixed exponent above one. The latter uses Gaussian isoperimetry
+The three prior regimes have different limit conventions. The
+strong-prior result sends the prior scale to zero at each fixed finite
+learner width above the stated sample-dependent threshold. The
+finite-scale result uses a specified power of learner width, for every
+fixed exponent above one, and supplies a polynomial sufficient width.
+Its proof uses Gaussian isoperimetry
 to remove a typical small-operator-norm Gaussian component. The actual
 posterior parameter vector need not itself have small Frobenius energy.
-We include the required memorization and perturbation arguments, so the
-proof does not require another paper from this research program.
-At the mean-field endpoint, a separate argument uses entropy costs and
+The required memorization and perturbation arguments are included below.
+At the mean-field endpoint $\gamma=1$, a separate argument uses entropy costs and
 finite-dimensional large deviations. It establishes the same depth
 obstruction for the fixed nonatomic distribution as width tends to
-infinity, without a quantitative threshold on width.
+infinity with depth and the realized sample held fixed. It gives no
+quantitative threshold on width.
+
+Sections~\ref{sec:map} and~\ref{sec:distribution} construct the expanding
+teacher, the fixed input law, and the paired-input approximation barrier.
+Section~\ref{sec:memorization} builds an exact interpolant with a controlled
+product of layer norms. Section~\ref{sec:posterior} uses it to bound the
+posterior's output variation, and Section~\ref{sec:proof} combines these
+bounds. Section~\ref{sec:exact} treats exact interpolation in the specified
+iterated limit. Section~\ref{sec:critical-depth-lower} gives the separate
+mean-field proof, and Section~\ref{sec:smoothing} constructs smooth input
+densities when the distribution may vary with depth.
 
 \section{Model and main conclusions}\label{sec:main}
 For input $x\in S^1\subset\R^2$, write $\bar x=(1,x)$ and consider
@@ -136,8 +156,10 @@ Here are explicit sample-dependent resource bounds used in the theorems:
  \qquad T_n=4M_n n,\qquad
  K_n(L)=2+(L+14)T_n^{1/(L-1)}.
 \end{equation}
-These bounds are fixed polynomials in $n$ up to logarithmic factors.
-In particular $M_n$ and $T_n$ admit universal polynomial upper bounds.
+The separation scale determines the slope needed for memorization, and
+the resulting width and energy resources are used in the posterior
+comparison. In particular $M_n$ and $T_n$ admit universal polynomial
+upper bounds in sample size.
 
 \begin{theorem}[Exponential lower bound in the strong-prior limit]
 \label{thm:strong}
@@ -194,6 +216,9 @@ These conclusions are specific to the stated learner. They are not a
 lower bound for every method that knows the teacher family.
 
 \section{A constant-width expanding teacher}\label{sec:map}
+The teacher will iterate a scalar map with two separated inverse
+branches. Each inverse branch contracts distances, so repeated inverse
+steps create close input pairs whose teacher outputs remain separated.
 Define
 \begin{equation}\label{eq:map}
  J=[-3/4,3/4],\qquad
@@ -255,6 +280,11 @@ constant rail uses only the input constant and internal linear weights.
 
 \section{A fixed input distribution and an approximation barrier}
 \label{sec:distribution}
+An infinite sequence of independent branch choices defines a scalar
+probability law that is invariant under the expanding map. Embedding
+that law on the circle gives one input distribution for every depth.
+The same construction supplies a pairing that tests the accuracy of an
+entire posterior mixture.
 For independent fair signs $b_1,b_2,\ldots$, let
 \[
  T=\lim_{j\to\infty}\phi_{b_1}\circ\cdots\circ\phi_{b_j}(0).

@@ -11,7 +11,9 @@ hidden layers, each of width $N$, tanh activations, and a linear readout:
  \qquad \bar x=(x,1).
 \]
 The first layer includes a bias coordinate; internal constants are carried
-by ordinary hidden wires. Let $\mu_{N,t}$ be the product Gaussian with entry
+by ordinary hidden wires. The parameter vector $w$ comprises all weight
+matrices and the readout vector. Let $\mu_{N,t}$ be the product Gaussian
+with entry
 variances $t^2/d$ in $W^1$, $t^2/N$ in the internal matrices, and $t^2/N^2$
 in $v$, where $0<t\le1$. The exponent convention
 $t=N^{(1-\gamma)/2}$ therefore gives every $\gamma\ge1$. Define
@@ -20,7 +22,10 @@ $t=N^{(1-\gamma)/2}$ therefore gives every $\gamma\ge1$. Define
            \sum_{s=2}^H\|W^s\|_F^2+N\|v\|^2,
  \qquad E_v(w)=N\|v\|^2.
 \]
-In these energy coordinates the Gaussian density is proportional to
+Here the subscript $F$ denotes the Frobenius norm; vector norms are
+Euclidean, and the subscript $\mathrm{op}$ below denotes the induced
+Euclidean operator norm. In these energy coordinates the Gaussian density
+is proportional to
 $\exp[-N\kappa_N/(2t^2)]$.
 
 A disturbance is added after every hidden activation and at the readout:
@@ -105,8 +110,9 @@ scale $\gamma=1$ and every stronger-prior scale $\gamma>1$.
 \end{theorem}
 
 The same theorem holds if the prior is additionally conditioned on
-$|z_w(x)|>1/2$ at every input, as in the original globally margin-conditioned
-model. This variant is argued here; it is not part of the Lean-checked
+$|z_w(x)|>1/2$ at every input. We call this additional restriction
+\emph{global clean-margin conditioning}. This variant is argued here;
+it is not part of the Lean-checked
 statement, which concerns the robust-only posterior. The target cylinder constructed below already satisfies this extra
 condition. Its probability bound and every subsequent statistical step are
 therefore unchanged. Under that additional condition, test-margin error
@@ -136,7 +142,9 @@ posterior mixtures; they do not require concentration on one predictor.
 \label{sec:theory-statistical}
 
 The constructive compression statement needed here concerns numerical
-outputs before any robustness condition is used.
+outputs before any robustness condition is used. We write
+$D_{\rm KL}$ for Kullback--Leibler divergence, also called relative
+entropy; absolute continuity is denoted by $\ll$.
 
 \begin{lemma}[Entropy compression before the prediction comparison]
 \label{lem:raw-entropy-compression}
@@ -304,8 +312,8 @@ Thus all bulk norms are at most $b_Lt$ with conditional probability at
 least $1/2$.
 
 \paragraph{Finite disturbance robustness.}
-Allow a separate RMS disturbance of size $\tau_0$ at each hidden layer and
-scalar output disturbance at most $\tau_0$. This includes the entire
+Allow a separate root-mean-square (RMS) disturbance of size $\tau_0$ at each
+hidden layer and scalar output disturbance at most $\tau_0$. This includes the entire
 total-budget ball $\|\eta\|_*\le\tau_0$.
 Write $e_s=\|h^s_\eta-b^s\|_2/\sqrt N$.
 If $e_{s-1}\le e_*$, every clone-group mean differs from its ideal bit by

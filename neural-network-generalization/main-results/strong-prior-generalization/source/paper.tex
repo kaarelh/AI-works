@@ -35,7 +35,7 @@
 \begin{document}
 \maketitle
 \begin{abstract}
-Can a Bayesian neural network learn a function with a small implementation even when the learner has arbitrarily many neurons? We prove a positive result for noiseless Boolean prediction under a layer-scaled Gaussian prior, conditioned to give a fixed output margin at every input. At each fixed depth, the number of examples needed for small posterior prediction error is polynomial in the input dimension and the target's bounded-weight network complexity, independently of the learner's width. The learner can have any width large enough to contain the target; its prior variance must then be sufficiently small, with a threshold that may depend on that width. The key prior statement is that function probabilities, at their small-variance exponential rate, are governed by a complexity measure polynomially equivalent to bounded-weight network complexity. We prove this by combining a Gaussian rate calculation, a neuron-cloning construction, and compression by reverse-order subsampling. The resulting learning guarantee is polynomial at fixed depth, but does not give polynomial dependence on depth. A separate tanh construction shows an obstruction to obtaining such a depth bound by uniform norm-sublevel counting alone.
+Can a Bayesian neural network learn a function with a small implementation even when the learner has arbitrarily many neurons? We prove a positive result for noiseless Boolean prediction under a layer-scaled Gaussian prior, conditioned to give a fixed output margin at every input. At each fixed depth, the number of examples needed for small posterior prediction error is polynomial in the input dimension and the target's bounded-weight network complexity, independently of the learner's width. This complexity jointly bounds the width of an implementing network and the magnitude of every weight. The learner can have any width large enough to contain the target; its prior variance must then be sufficiently small, with a threshold that may depend on that width. The key prior statement is that function probabilities, at their small-variance exponential rate, are governed by a complexity measure polynomially equivalent to bounded-weight network complexity. We prove this by combining a Gaussian rate calculation, a neuron-cloning construction, and compression by reverse-order subsampling. The resulting learning guarantee is polynomial at fixed depth, but does not give polynomial dependence on depth. A separate tanh construction shows an obstruction to obtaining such a depth bound by uniform norm-sublevel counting alone.
 \end{abstract}
 
 \section{Introduction}
@@ -45,7 +45,7 @@ Here Bayesian neural-network learning, or NNBayes, means conditioning a distribu
 
 Our main theorem answers the question affirmatively in the \emph{strong-prior limit}: the prior variance tends to zero at a fixed learner width. For every fixed depth $L$, a target of bounded-weight network complexity $C$ can be learned from a number of examples polynomial in the input dimension $d$, in $C$, and in the inverse accuracy, and logarithmic in the inverse failure probability. This sample bound is independent of the learner width $N$, and holds for every $N\geq C$. The order matters: choose any such finite width, and then take the variance sufficiently small. The required variance threshold may depend on $N$; the theorem does not require or take an infinite-width limit. Also, ``polynomial'' here means at fixed depth: the bound need not be polynomial in $L$.
 
-The argument rests on a statement about the prior itself. At small variance, the exponential rates of relative function probabilities are given by differences between the minimum weighted squared parameter norms of their margin-preserving implementations. We show that this minimum norm is polynomially equivalent to bounded-weight network complexity, uniformly over larger learner widths. This gives a precise sense in which the Gaussian parameter prior induces a circuit prior. Boolean circuits of bounded fan-in with $C$ gates and depth less than $L$ also supply depth-$L$ bounded-weight network implementations with $C_L(f)=O(C)$ when the activation is nonconstant, as we prove in \cref{sec:circuit-simulation}.
+The argument rests on a statement about the prior itself. At small variance, the exponential rates of relative function probabilities are given by differences between the minimum weighted squared parameter norms of their margin-preserving implementations. We show that this minimum norm is polynomially equivalent to bounded-weight network complexity, uniformly over larger learner widths. Here the complexity is the least integer that bounds both the implementing network's width and all its weight magnitudes. We call the induced function prior a \emph{circuit prior} in this sense: its exponential rates are polynomially related to the complexity of bounded-weight implementations. Boolean circuits of bounded fan-in with $C$ gates and depth less than $L$ also supply depth-$L$ bounded-weight network implementations with $C_L(f)=O(C)$ when the activation is nonconstant, as we prove in \cref{sec:circuit-simulation}.
 
 Two constructions establish the complexity comparison. Cloning neurons embeds a small target network into any larger width at bounded norm cost. Conversely, any network of bounded weighted norm can be compressed to polynomial width while preserving its Boolean function. Compression is the main technical step: it first removes large entries using thresholds proportional to their row norms, then samples hidden neurons in reverse layer order. Reverse order makes each concentration bound range over the already compressed next layer, rather than over the original width. Counting these compressed networks bounds the number of functions whose norm is no larger than the target's. All higher-norm functions have vanishing total prior mass relative to the target as the variance tends to zero, so an Occam argument yields the learning theorem. This comparison requires no absolute lower bound on the target's prior probability.
 
@@ -95,7 +95,7 @@ Its density is proportional to $\exp[-\kappa_N(w)/(2\sigma^2)]$. Before observin
 \[
  \pi_{N,\sigma}(g)=\frac{\mu_{N,\sigma}(U_{N,g})}{\mu_{N,\sigma}(U_N)}.
 \]
-This global margin conditioning is part of the model. It cannot be replaced silently by conditioning only on the observed training points.
+This conditioning restricts the prior at every input, including inputs that will not appear in the training sample. It is imposed before any labels are observed.
 
 Let $D$ be any distribution on $\cX$. Given $S_n=((x_i,f(x_i)))_{i=1}^n$ with independent $x_i\sim D$, the posterior $\Pi_{N,\sigma}(\cdot\mid S_n)$ is $\pi_{N,\sigma}$ restricted to functions consistent with all labels. Define
 \[
@@ -177,6 +177,10 @@ For a complexity-$C$ witness, the original first-layer contribution is at most $
 \end{proof}
 
 \section{Compression by reverse-order subsampling}\label{sec:compression}
+We now prove the converse to the cloning estimate: a bounded weighted norm
+gives a bounded-width implementation. The construction first approximates
+the real-valued output, then rescales the readout to preserve the required
+Boolean margin.
 \input{compression}
 \input{packing-circuits}
 
@@ -223,7 +227,7 @@ Our complexity comparison is between a margin-constrained norm and a bounded-wei
 
 Depth enters compression through the amplification of errors by downstream operator norms. Proposition~\ref{prop:depth-lower-bound} shows, for tanh, that low-norm sublevel sets can indeed contain doubly exponentially many functions as depth increases in an appropriate joint parameter regime. This is a limitation of a uniform norm-sublevel counting strategy. It is not a lower bound on the sample complexity of the Bayesian learner for a circuit-simple target: the competing functions would also have to receive sufficient posterior mass.
 
-Finally, every statistical statement here uses fresh inputs from the same distribution as the training inputs. Neither an adversarial online mistake bound nor a claim about total mistakes over an unbounded iid stream is proved. Those require arguments beyond the finite-sample posterior bound established above.
+Every statistical statement concerns a fresh input from the same distribution as the training inputs, after a fixed number of independent training examples. Bounds on adversarial online mistakes or on total mistakes over an unbounded iid stream would require additional arguments.
 
 \appendix
 \input{depth-lower-bound}
