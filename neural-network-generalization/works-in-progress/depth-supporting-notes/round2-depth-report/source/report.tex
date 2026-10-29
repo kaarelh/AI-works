@@ -22,12 +22,18 @@
 \newcommand{\poly}{\operatorname{poly}}
 \title{Polynomial depth in Bayesian neural-network learning:\\unrestricted Gaussian priors, trained networks,\\and numerical stability}
 \author{Research report prepared by ChatGPT-6 Astra and Claude (Fable 5 and Opus 5)\thanks{Authors are listed in alphabetical order.}\\for Kaarel H\"anni}
-\date{17 October 2026 --- second investigation}
+\date{Research report --- 17 October 2026}
 \begin{document}
 \maketitle
 \begin{abstract}
-We continue the investigation of depth dependence in Gaussian Bayesian
-learning of Boolean functions. Without an additional robustness restriction,
+We study the depth dependence of exact Bayesian learning of Boolean
+functions with fully connected tanh networks and a linear readout.
+At width $N$, the independent Gaussian weights have variances
+$t^2/d$, $t^2/N$, and $t^2/N^2$ in the input, internal, and readout layers.
+The scale is a prescribed schedule $t=t(d,L,N)$; in the power-law cases
+$t=N^{(1-\gamma)/2}$. Learning conditions on noiseless labels.
+Unless stated otherwise, the prior also requires an absolute output
+margin greater than $1/2$ at every Boolean input. Without an additional robustness restriction,
 a Gaussian-distance argument gives an all-width finite-variance theorem for
 every fixed exponent $\gamma>1$. Its target-dependent cost is polynomial in
 $Q_*=[(K+2)/L]^{L/2}$, where $K$ is the energy of a unit-margin target
@@ -40,7 +46,7 @@ $\gamma>1$. Any fixed intrinsic target depth is also covered, with
 polynomial degree depending on that depth.
 Linear thresholds with inverse-polynomial geometric margin
 also have joint polynomial bounds. It does not establish a joint polynomial
-bound for every small circuit or resolve arbitrary-width mean-field learning.
+bound for every small circuit or give an all-width mean-field theorem.
 We also give an elementary polynomial-width result uniform in all
 $\gamma\ge1$. At $\gamma=1$, a separate construction shows that absolute
 prior-cost counting has exponential depth dependence. At a common depth
@@ -52,28 +58,44 @@ training examples, and the test guarantee holds at a smaller margin.
 Trusted input regions and soft stability penalties give further variants.
 Experiments on synthetic Boolean tasks and small handwritten-digit networks
 separate near-boundary failures from stability of confident predictions.
-Explicit gradient-descent basins show that the original robustness condition
+Explicit gradient-descent basins show that all-input sign robustness against small internal disturbances
 is not a universal consequence of successful training.
 \end{abstract}
 
 \paragraph{Status.}
 This report contains mathematical proofs, independent adversarial proof
-reviews by other AI agents, and reproducible experiments. These new results
-have not been formalized in Lean. Pointwise sufficient certificates generally use floating-point arithmetic.
+reviews by other AI agents, and reported experiments.
+The empirical section states the limits of the publicly packaged reproduction
+materials; this writing review did not rerun the training experiments. This report is not itself a Lean formalization. Pointwise sufficient certificates generally use floating-point arithmetic.
 Twenty global positive certificates and selected negative witnesses are
 additionally verified with interval arithmetic and exact rational checks. Bounds are qualitative polynomial bounds
 with deliberately loose constants, not practical sample estimates.
 The foundational posterior-compression proof and Gaussian target-cylinder
-construction from the preceding investigation are reproduced in the
-appendices, so the new statistical statements can be read independently.
+construction are reproduced in the
+appendices, so the statistical statements can be read independently.
 No novelty claim is made for standard finite-parameter counting,
 product-norm Rademacher methods, Gaussian concentration, or the general
 idea of learning through stability and compression.
 
-\section{What is resolved, and what remains open}
+\paragraph{Scope and later developments (29 October 2026).}
+The report records the results and experiments of 17 October.
+Later work gives an \href{https://github.com/kaarelh/AI-works/blob/main/neural-network-generalization/main-results/meanfield-all-width/paper.pdf}{all-width mean-field theorem at fixed depth} and a \href{https://github.com/kaarelh/AI-works/blob/main/neural-network-generalization/works-in-progress/conditional-nonpolynomial-learning/paper.pdf}{conditional obstruction to a universal joint-polynomial bound}. The latter assumes
+$\mathsf P/\mathrm{poly}\ne\mathsf{TC}^1$; it does not prove an
+exponential depth lower bound. These developments should be distinguished
+from this report's unconditional obstructions to particular proof methods.
+
+\paragraph{Reading guide.}
+Section~\ref{sec:model} defines the architecture, posterior, complexity
+conventions, and reusable estimates. The subsequent sections treat
+unrestricted-prior upper bounds and rate-counting obstructions, then
+trained-network examples and stability-restricted alternatives. The
+appendices supply the critical variational formula, target-cylinder
+construction, compression theorem, and stability certificate used throughout.
+
+\section{Results and limitations}
 
 Throughout, ``unrestricted'' means no additional internal robustness
-restriction. It retains the original all-input output-margin conditioning
+restriction. It retains the all-input output-margin conditioning defined above
 unless a theorem explicitly changes that convention.
 
 \begin{enumerate}
@@ -93,7 +115,8 @@ arbitrary fixed deeper implementation, the bound is polynomial in added
 depth but can still be exponential in the original implementation energy.
 The result also extends to any fixed intrinsic target depth, with polynomial
 degree depending on that depth. A single polynomial jointly in target
-size and intrinsic depth, and arbitrary-width $\gamma=1$ learning, remain open.
+size and intrinsic depth, and arbitrary-width $\gamma=1$ learning,
+are not established by this report; see the later developments above.
 More quantitatively, if a target representation has depth $D_0$, width $C$,
 and weight bound $R$, the unrestricted $\gamma>1$ sample bound is
 $(2+d+C+R)^{O_\zeta(D_0)}$ times a polynomial in learner depth and the
@@ -111,14 +134,14 @@ fails even at a fixed rate threshold.
 These results do not compare competing functions with a simple target and
 are not sample lower bounds.
 \item \textbf{Gradient-trained networks.}
-The original all-cube condition can fail because of small clean outputs
+The all-cube sign-robustness condition can fail because of small clean outputs
 away from the data, even when observed predictions are accurate and stable.
 Positive finite experiments do not establish a universal training law.
 We prove a stronger negative statement: there are open basins of gradient
 descent converging to exact, low-energy, internally fragile fits.
 Parameter flatness alone also does not imply internal activation stability.
 \item \textbf{Other conditions.}
-The most useful new condition controls the change in the numerical output
+The numerical-stability condition controls the change in the numerical output
 rather than requiring its sign to be stable everywhere. With positive
 training margins, it gives a joint polynomial theorem for every
 $\gamma\ge1$ and every width above a layered Boolean circuit's width,
@@ -131,7 +154,7 @@ prior or likelihood, rather than conclusions about unchanged Gaussian
 weights.
 \end{enumerate}
 
-The open unrestricted question is genuinely target-specific. A large class
+A learning lower bound for the unrestricted prior must be target-specific. A large class
 of low-energy functions is not by itself a lower bound for this Bayesian
 learner: one must compare their Gaussian posterior mass with that of a
 small target. Conversely, fragility of one implementation does not imply
@@ -162,13 +185,14 @@ The Gaussian energy and readout energy are
        \sum_{s=2}^{L-1}\|W^s\|_F^2+N\|v\|_2^2,
  \qquad E_v=N\|v\|_2^2.
 \]
-The raw prior $\mu_{N,t}$ has independent entry variances
+For a prescribed scale schedule $t=t(d,L,N)>0$, the raw prior
+$\mu_{N,t}$ has independent entry variances
 $t^2/d,t^2/N,t^2/N^2$, respectively. Its density in energy coordinates
 is proportional to $\exp[-N\kappa_N/(2t^2)]$.
 Put $\sigma^2=t^2/N$; exponent $\gamma$ means $t^2=N^{1-\gamma}$.
 Our unified robustness theorems use $0<t\le1$, hence all $\gamma\ge1$.
 
-The original prior is this Gaussian conditioned on
+The baseline prior is this Gaussian conditioned on
 $|z_w(x)|>1/2$ at \emph{every} Boolean input. Given independent training
 inputs $x_i\sim D$ with $y_i=f(x_i)$, condition on correct training signs.
 The resulting posterior is written $Q_S$.
@@ -190,7 +214,7 @@ For robustness, use additive postactivation and output disturbances
  \|\eta\|_*^2=\sum_{s<L}\frac{\|\eta^s\|_2^2}{N}+|\eta^L|^2.
  \tag{1}\label{eq:noisenorm}
 \]
-The previously proposed reference radius is
+The reference sign-robustness radius is
 $r_{\rm ref}(w)=.01/\sqrt{1+JE_v(w)}$.
 A second calibration uses
 $S_N=(d/N)\|W^1\|_F^2+\sum_{2\le s<L}\|W^s\|_{\rm op}^2+E_v$
@@ -205,7 +229,8 @@ on the entire cube.
 \paragraph{Circuit terminology.}
 For the robustness theorems, a width-$C$ layered Boolean circuit has
 $L-1$ stages over fan-in-two AND, OR, NOT, COPY, and constant gates,
-including its constant rail. This is distinct from the minimum width of
+including a constant $+1$ wire at every stage, including the final
+hidden stage. The width counts this wire and any gate-compilation overhead. This is distinct from the minimum width of
 an arbitrary analog tanh network at exactly the same depth. Whenever the
 latter is used, the needed margin and weight bound are stated explicitly.
 On inputs in $\{-1,1\}$, the preactivations
@@ -274,9 +299,11 @@ all-width learning without imposing a hard energy cutoff.
 
 The general unrestricted theorem still carries
 $Q_*=[(K+2)/L]^{L/2}$. The shallow-target construction bounds this
-quantity polynomially for several substantial target classes. Eliminating
-its exponential dependence for general small deep circuits, or proving that some such targets require it under the
-specified Gaussian posterior, remains the central mathematical problem.
+quantity polynomially for several substantial target classes. This report does not remove
+its exponential dependence for general small deep circuits. The later
+conditional obstruction cited above rules out a universal joint-polynomial
+bound under a circuit-complexity assumption, but leaves the rate of
+sample-complexity growth unresolved.
 At $\gamma=1$, the typical Gaussian bulk has order-one operator norm,
 so the small-bulk proof does not apply. The finite-width result and the
 robustness-based results cover this exponent under their stated hypotheses.
@@ -331,8 +358,9 @@ The Brunn--Minkowski inequality in Gauss space.
 \url{https://doi.org/10.1007/BF01425510}.
 \bibitem{previous} ChatGPT-6 Astra and Claude (Fable 5 and Opus 5). \emph{Depth dependence, internal robustness,
 and Bayesian neural-network learning}. Research report for K. H\"anni,
-17 October 2026, preceding investigation. Source and proofs reproduced
-where used in the present report.
+17 October 2026.
+\url{https://github.com/kaarelh/AI-works/blob/main/neural-network-generalization/works-in-progress/depth-supporting-notes/round1-depth-report/paper.pdf}.
+The compression and target-cylinder proofs are reproduced in this report.
 \bibitem{fable} Claude Fable 5. \emph{Robustness kills the exp(depth):
 Compression, depth, and neural-network priors}. User-supplied research note,
 \texttt{robust-depth.pdf}.

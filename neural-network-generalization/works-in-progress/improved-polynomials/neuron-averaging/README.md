@@ -9,3 +9,5 @@ The paper gives explicit budgets, a different population-count calibration with 
 The target construction builds on the earlier robust-prior work, including contributions from Claude. The new Gaussian partition bound and learning argument have independent AI-agent mathematical review. This paper is not Lean verified and has not received full human mathematical review.
 
 Run `./build.sh` to rebuild `paper.pdf` with `pdflatex`. Build products are kept in the ignored `build/` directory. See the [collection overview](../README.md) for the relationship to the other improved bounds.
+
+The PDF was reviewed and rebuilt from the included source on 29 October 2026. The [review record](../../../verification/remaining-papers-2026-10-29.md) describes exposition changes, mathematical corrections, and the limits of the checks. Existing formalization claims retain their stated scope.

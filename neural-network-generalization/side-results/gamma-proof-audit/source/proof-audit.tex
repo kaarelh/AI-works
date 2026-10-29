@@ -6,13 +6,24 @@
 \usepackage[colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
 \setlength{\emergencystretch}{3em}
 \newtheorem{proposition}{Proposition}
-\title{Proof audit and scope of the scaling results}
+\title{An audit of Gaussian-prior scaling arguments\\for Bayesian neural-network learning}
 \author{ChatGPT-6 Astra}
 \date{October 15, 2026}
 \begin{document}
 \maketitle
 
-This report records the findings from checking the supplied Fable draft and its cited mean-field argument. The accompanying papers give the replacement proofs in full. All learning statements below use the prior conditioned on an absolute output margin at \emph{every} Boolean input, followed by noiseless observed-label conditioning. A confidence-success statement means that the posterior probability of the correct label is strictly greater than $2/3$.
+This report audits two arguments available on 15 October 2026: Claude
+Fable 5's manuscript \emph{The circuit prior across the whole strong prior
+regime: cloning and subsampling at every $\gamma>1$}, and the mean-field
+paper identified in Section 2. It distinguishes defects in those arguments
+from counterexamples to their intended learning conclusions.
+
+The classification model has input $x\in\{-1,1\}^d$, augmented input
+$(1,x)$, $L-1$ width-$N$ hidden layers, and a linear readout. Independent
+Gaussian weight variances are $N^{1-\gamma}/d$ in the first layer,
+$N^{-\gamma}$ internally, and $N^{-\gamma-1}$ in the readout.
+The classifier prior is conditioned on an absolute output margin at
+\emph{every} Boolean input, followed by noiseless observed-label conditioning. A confidence-success statement means that the posterior probability of the correct label is strictly greater than $2/3$.
 
 \input{reviews/fable-audit.tex}
 
@@ -37,7 +48,7 @@ At $\xi=0$, choose $u=2^{d/2}{\bf1}_{\{x\}}$. Then
 \]
 The estimate forces $A\geq2^{d/2}/\sqrt M$. Thus polynomial width and a polynomial regularity constant cannot satisfy the stated invariant. Replacing the population norm by a pointwise norm, or replacing pointwise output control by an averaged loss bound, changes the induction that would need to be proved.
 
-This is a defect in the proof as written. It is not a counterexample to the desired mean-field learning theorem. The new endpoint paper establishes an independent theorem for tanh under the requested posterior convention, using an exact finite-domain variational principle and compression of its minimizers.
+This is a defect in the proof as written, not a counterexample to the mean-field learning conclusion. The \href{https://github.com/kaarelh/AI-works/blob/main/neural-network-generalization/side-results/gamma-ge1-endpoint/paper.pdf}{endpoint paper} establishes an independent theorem for tanh under the margin-conditioned posterior defined above, using an exact finite-domain variational principle and compression of its minimizers.
 
 \section{Two further steps requiring repair in that appendix}
 \subsection{A second-moment tail does not follow from bounded entropy}
@@ -67,24 +78,27 @@ The explanation accompanying Lemma B.13 treats a realized reconstructed network 
 \]
 The random output $\tanh(V_N)$ has a nonvanishing variance for every $N$. Increasing the number of summands improves its covariance approximation but does not make that realized field concentrate about its mean. If a suffix averages $M$ independent such rows, its fluctuation is governed by that averaging as well, not solely by the lower-layer width $N$.
 
-Accordingly, a proof passing from a comparison of expected suffix outputs to a pointwise finite-network approximation must track the fresh-noise fluctuations and the dependence of their covariance on the sampled features. The observation above isolates the missing step in the stated reasoning; it is not asserted as a counterexample satisfying every auxiliary regularity condition of the final theorem. The new compression proof avoids this issue by concentrating empirical feature covariance matrices and evaluating a bounded readout directly.
+Accordingly, a proof passing from a comparison of expected suffix outputs to a pointwise finite-network approximation must track the fresh-noise fluctuations and the dependence of their covariance on the sampled features. The observation above isolates the missing step in the stated reasoning; it is not asserted as a counterexample satisfying every auxiliary regularity condition of the final theorem. The endpoint compression proof avoids this issue by concentrating empirical feature covariance matrices and evaluating a bounded readout directly.
 
-\section{What the replacement proofs establish}
+\section{Replacement proofs and their historical scope}
+The statements in this section describe the initial replacement papers.
+Later work (as of 29 October 2026) gives an
+\href{https://github.com/kaarelh/AI-works/blob/main/neural-network-generalization/main-results/meanfield-all-width/paper.pdf}{all-width mean-field theorem} and \href{https://github.com/kaarelh/AI-works/blob/main/neural-network-generalization/main-results/subcritical-exponential/paper.pdf}{exponential subcritical sample lower bounds}. These later conclusions are not claimed as consequences of the flawed arguments audited above.
 \paragraph{Every fixed $\gamma>1$, arbitrary fixed depth.}
-For any bounded $1$-Lipschitz activation and a target with finite bounded-weight network complexity $C$, the new strong-scaling paper proves polynomial sample complexity uniformly for every learner width $N\geq C$. The polynomial degree may depend on $\gamma$ and the depth. A common cylinder construction supplies the target-mass bound for every $\gamma\geq1$.
+For any bounded $1$-Lipschitz activation and a target with finite bounded-weight network complexity $C$, the \href{https://github.com/kaarelh/AI-works/blob/main/neural-network-generalization/main-results/gamma-above-one/paper.pdf}{strong-scaling paper} proves polynomial sample complexity uniformly for every learner width $N\geq C$. The polynomial degree may depend on $\gamma$ and the depth. A common cylinder construction supplies the target-mass bound for every $\gamma\geq1$.
 
 \paragraph{The mean-field endpoint $\gamma=1$.}
 For tanh at arbitrary fixed depth, the endpoint paper derives the exact speed-$N$ rate by Sanov's theorem and continuous contraction. A minimum-rate full-margin representation has feature laws tilted by bounded quadratic forms. Output optimality bounds the readout coefficients in $\ell^1$; Gaussian integration by parts controls all earlier quadratic forms. A dimension-independent covariance estimate then gives polynomial-width, bounded-weight realizations of all bounded-rate Boolean functions. Counting these functions proves polynomial sample complexity for every sufficiently large width. The proof does not give a quantitative bound on that width threshold. For one hidden layer, a separate proof gives the stronger every-width result for all $\gamma\geq1$, under the general bounded Lipschitz activation assumption.
 
 \paragraph{Below the critical exponent.}
-For tanh and each fixed $\gamma<1$, the hidden kernel freezes to an explicit iterated-arcsine kernel. The posterior limit is a minimum-full-margin-energy classifier for $0<\gamma<1$, a globally margin-conditioned Gaussian classifier for $\gamma=0$, and a Gaussian sign classifier for $\gamma<0$. For $\gamma\leq0$ at a specified depth $O(d)$, the new confidence criterion gives an exact expected failure rate $(1-2^{-d})^n$; taking $d=k$ yields exponential sample complexity for parity. The universal claim for every fixed depth and every $\gamma<1$ remains unresolved here. In particular, the $0<\gamma<1$ classification problem is not settled by the regression-mean parity eigenvalue argument.
+For tanh and each fixed $\gamma<1$, the hidden kernel freezes to an explicit iterated-arcsine kernel. The posterior limit is a minimum-full-margin-energy classifier for $0<\gamma<1$, a globally margin-conditioned Gaussian classifier for $\gamma=0$, and a Gaussian sign classifier for $\gamma<0$. For $\gamma\leq0$ at a specified depth $O(d)$, the strict $2/3$ confidence criterion gives an exact expected failure rate $(1-2^{-d})^n$; taking $d=k$ yields exponential sample complexity for parity. The universal claim for every fixed depth and every $\gamma<1$ is not established by these initial replacement arguments. In particular, the $0<\gamma<1$ classification problem is not settled by the regression-mean parity eigenvalue argument.
 
 \section{Effect of the confidence convention}
 Let $R$ be average posterior wrong-label probability and let $F$ be the fraction of test inputs where correct-label probability is at most $2/3$. For every posterior,
 \[
  \max\{0,(3R-1)/2\}\leq F\leq\min\{1,3R\}.
 \]
-The positive learning results therefore imply the requested confidence guarantee with a constant-factor change in accuracy. The near-independent NNGP example gives more: every unseen input fails the confidence test, and every seen input passes, so $F$ is exactly the unseen fraction. This resolves the possible tiny-majority-bias ambiguity in that example. It does not convert all small-eigenvalue statements into classification sample lower bounds.
+The positive learning results therefore imply the stated confidence guarantee with a constant-factor change in accuracy. The near-independent NNGP example gives more: every unseen input fails the confidence test, and every seen input passes, so $F$ is exactly the unseen fraction. Thus even a small correct-label majority on unseen inputs would not suffice under this confidence criterion. It does not convert all small-eigenvalue statements into classification sample lower bounds.
 
 The independent checks covered the cylinder construction, spectral tail, aggregate probability bound, finite-class counting, critical variational representation, minimizer stationarity, covariance comparison, forward compression, and the subcritical posterior limits. Mathematical conclusions in the papers are distinguished from remaining questions; compilation and numerical sanity checks were used only to check presentation and catch inconsistencies.
 \end{document}

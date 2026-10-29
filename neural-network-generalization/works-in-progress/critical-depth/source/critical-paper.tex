@@ -21,7 +21,8 @@
 Can a Bayesian neural network learn with polynomial dependence on its
 learner depth, without restricting the prior to internally stable networks?
 We prove such bounds for the original critical Gaussian prior on tanh
-networks, with the usual global output-margin condition and exact noiseless
+networks, conditioned on absolute output margin greater than $1/2$ at
+every Boolean input and exact noiseless
 training fit. The bounds hold at every width capable of implementing the
 target. Every parity has polynomial sample complexity once learner depth
 is a sufficiently large multiple of $\log(d+L+2)$, independently of parity
@@ -34,7 +35,8 @@ depth: joint polynomial dependence on arbitrary teacher width and depth
 remains open.
 
 The proof gives an intrinsic theorem at every finite width $N$. If
-$a_N$ is the target's normalized negative log-prior mass, the sample bound
+$a_N$ is the target's normalized negative log-mass under the raw Gaussian
+prior, the sample bound
 is a universal polynomial in dimension, depth, $a_N$, and logarithmic
 accuracy factors, times $\exp(C\sqrt{L(a_N-V_*)_+})$, where
 $V_*\in(1,2)$ is a scalar baseline. Forward conditional entropy extracts
@@ -61,7 +63,8 @@ network has $L-1$ hidden layers and computes
 There are no biases after the augmented input. Under the raw critical
 Gaussian prior $\mu_{N,1}$, entries are independent centered Gaussians
 with variances $1/d$ in $W^1$, $1/N$ in internal matrices, and $1/N^2$
-in $v$. For a Boolean function $f$, write
+in $v$. We also write $\mu_N=\mu_{N,1}$ for this raw weight law.
+For a Boolean function $f$, write
 \[
  A_{N,f}=\{w:f(x)z_w(x)>1/2\text{ for every }x\in\mathcal X\},
  \qquad
@@ -84,9 +87,23 @@ and put $Q_0(x,y)=(1+x\cdot y)/d$. The rate is
 \]
 The last term is infinite outside the covariance range. The matrices
 $Q(\nu)$ are uncentered second moments, not necessarily centered
-covariances.
+covariances. We use $H=L-1$ for the number of hidden layers and $r$
+for a terminal readout cost when it is not otherwise specified. All
+logarithms are natural, and $u_+=\max\{u,0\}$.
 
 \subsection{Learning at every realizable width}
+
+Write $A_N=\bigcup_g A_{N,g}$ and
+$\pi_N(g)=\mu_N(A_{N,g})/\mu_N(A_N)$. After a labeled sample $S$,
+let $p_N(f(x)\mid x)$ denote the posterior probability of the correct
+label at $x$, with conditioning on $S$ implicit; we also abbreviate it
+as $p_N(x)$ when the target is fixed. Thus
+\[
+ p_N(f(x)\mid x)=
+ \frac{\sum_{g:\,g|_S=f|_S,\,g(x)=f(x)}\mu_N(A_{N,g})}
+      {\sum_{g:\,g|_S=f|_S}\mu_N(A_{N,g})}.
+\]
+The common global-margin normalization cancels in this ratio.
 
 A width is \emph{realizable} if a depth-$L$, width-$N$ tanh network
 of the specified architecture implements the target's signs on the cube
@@ -105,6 +122,11 @@ $1-\delta$, that the correct-label posterior probability exceeds $2/3$
 outside a set of $\mathcal D$-mass at most $\varepsilon$.
 The conclusions apply to the full posterior, including mixtures.
 
+For the normalized cube Fourier expansion, put
+\[
+ \chi_S(x)=\prod_{i\in S}x_i,\qquad
+ \widehat f(S)=2^{-d}\sum_{x\in\mathcal X}f(x)\chi_S(x).
+\]
 For Fourier variation
 $A_F(f)=\sum_{S\subseteq[d]}|\widehat f(S)|$, put
 $R_F=(d+L+2)A_F(f)$. Theorem~\ref{thm:critical-all-width-fourier-learning}
@@ -284,6 +306,30 @@ apply at each specified realizable width.
 The analytic proofs have received independent AI-agent mathematical
 review; they have not been formalized in Lean. Constants are not
 optimized, and no efficient posterior-sampling algorithm is claimed.
+
+\subsection{Reading guide}
+
+Section~\ref{sec:critical-all-width-target-learning} collects the
+finite-width learning statements before their proofs. Their common
+argument has two inputs: the entropy-certificate and intrinsic learning
+results in Sections~\ref{sec:critical-finite-witness}
+and~\ref{sec:critical-intrinsic-finite-width-learning}, and the target-mass
+constructions in Sections~\ref{sec:critical-finite-width-channel}--
+\ref{sec:critical-finite-width-circuit-mass}. The intrinsic argument
+uses the approximate entropy budget and anchored compression from
+Sections~\ref{sec:critical-approximate-entropy}
+and~\ref{sec:critical-anchored-compression}.
+
+For the underlying variational analysis, begin with the scalar value in
+Section~\ref{sec:critical-rate-foundations}; Appendix~\ref{sec:critical-variational}
+proves its connection to the actual prior's large-width rate. The
+Fourier and circuit constructions bound target costs, whereas
+Section~\ref{sec:critical-sublevel-learning} counts competing functions
+and supplies the separate rate-based learning theorem.
+The later geometric comparisons and parity lower bounds give limitations
+and complementary results; they are not additional premises for the
+every-width conclusions. In particular, the smaller-depth parity theorem
+is stated in Section~\ref{sec:critical-nearly-logarithmic-depth}.
 
 \input{critical-all-width-target-learning.tex}
 \input{critical-main-theorem.tex}

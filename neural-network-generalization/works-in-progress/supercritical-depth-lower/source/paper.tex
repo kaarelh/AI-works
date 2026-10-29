@@ -60,12 +60,28 @@ Confidence and majority prediction differ: $1/2+e^{-cd}$ can have the correct ma
 
 The prior in \eqref{eq:prior} has exactly the same width powers as the coefficient-one mean-field prior. It is therefore naturally called mean-field scaling with a different fixed variance prefactor. If one instead insists on the exact coefficient-one formula $t=N^{(1-\gamma)/2}$, it corresponds to $\gamma_N=1-2\log(t)/\log(N)<1$, approaching one from below; it is not a fixed subcritical exponent. The lower bound does not cover the canonical $0<t\le1$ family, whose unrestricted Boolean depth question remains open.
 
-There is no contradiction with fixed-depth, width-independent polynomial learning. That guarantee extends to each fixed $t>1$: in the bounded-activation proof, the cloning bulk gains a factor $t$ and covariance stability gains a factor $t^2$, both harmless at fixed depth. Equivalently, writing $W=tU$ replaces the activation by $u\mapsto\tanh(tu)$ and the fixed output margin by $1/(2t)$, which remain within fixed-depth Lipschitz-activation methods. The new theorem shows that the resulting polynomial cannot be uniform jointly in depth. A bound $A_H(1+d)^{D_H}$ at fixed teacher width and accuracy must have $\log A_H+D_H\log H\ge c_tH-O_t(1)$ along the lower-bound sequence.
+For each fixed $t>1$, fixed-depth, width-independent polynomial learning
+still applies: writing $W=tU$ replaces the activation by
+$u\mapsto\tanh(tu)$ and the margin by $1/(2t)$, within fixed-depth
+Lipschitz-activation methods. The theorem shows that this polynomial
+cannot be uniform jointly in depth. A bound $A_H(1+d)^{D_H}$ at fixed
+teacher width and accuracy must satisfy
+$\log A_H+D_H\log H\ge c_tH-O_t(1)$ along the lower-bound sequence.
 
-The prefactor is not removable while keeping the original tanh learner: $u\mapsto\tanh(tu)$ has derivative $t$ at zero, whereas tanh has derivative one. Output-margin changes alone leave the hidden covariance dynamics unchanged. The positive white equilibrium used here exists precisely for $t>1$.
+Absorbing $t$ into the activation changes its derivative at zero to $t$.
+Changing the output margin alone leaves the hidden covariance dynamics
+unchanged; their positive white equilibrium exists precisely for $t>1$.
 
 \paragraph{Relation to prior work.}
 The free variance and correlation recursions, their ordered and chaotic phases, and the associated signal-propagation depth scales are established subjects in random-network theory; see Poole et al.~\cite{poole} and Schoenholz et al.~\cite{schoenholz}. Deep Gaussian-process limits likewise use recursive hidden covariances to describe Bayesian networks at infinite width~\cite{lee}. We use these covariance dynamics as an input. The question here concerns an actual finite-width posterior after a rare full-domain margin event. Its resolution requires multiplicative comparison of the probabilities of different truth tables, including configurations atypical under the unconditioned prior. The empirical transport, uniform full-margin mass bound, and exact readout comparison below provide that additional step; unconditioned kernel convergence alone would not justify it.
+
+\paragraph{Guide to the proof.}
+The empirical Gram state is
+$Q_j(x,y)=N^{-1}\sum_i h_i^j(x)h_i^j(y)$; conditional on the last
+hidden layer, the output vector is exactly $N(0,t^2Q_H/N)$.
+Uniform empirical contraction and an occupation bound control covariance
+transport. A separate lower bound on every $w_f$ then lets the Gaussian
+readout comparison convert additive exceptions into probability ratios.
 
 \section{Covariance chains and free dynamics}
 Write $F(s)=\E\tanh^2(\sqrt{s}Z)$ for standard normal $Z$ and $T(q)=F(t^2q)$. The ratio $F(s)/s$ strictly decreases: pointwise, $\tanh(u)/u$ strictly decreases for $u>0$. Since $T'(0)=t^2>1$ and $T(q)<1$, there is a unique positive fixed point $q_*\in(0,1)$, with $0<T'(q_*)<1$.
@@ -432,9 +448,12 @@ Finally, for an unseen input pair each consistent truth table with the table obt
 \end{proof}
 
 \section{Interpretation and limitations}
-At $t>1$, the scalar variance has a positive equilibrium and the free covariance dynamics near its white matrix are contractive. Depth erases the distinction between sign gauges. Unfavorable empirical layers can delay this mixing, but their total quality cost is controlled even at probabilities much smaller than the globally margined function events. The exact readout comparison turns small feature-covariance distance into small ratios of actual probabilities.
-
-A free Gaussian-process limit alone would not prove this. Global-margin conditioning changes typical feature configurations, and near-equality of leading large-deviation actions does not control finite-width ratios. The separate all-label mass bound, the $\exp(-\Theta(Nd))$ exceptional estimate, and exact readout dilation close that gap.
+At $t>1$, the positive scalar equilibrium supports covariance contraction
+near a white matrix. The occupation estimate controls delays from atypical
+empirical layers. Comparing their probability with the all-label mass
+bound, then applying exact Gaussian readout dilation, gives finite-width
+truth-table ratios. This supplies the additional step beyond unconditioned
+Gaussian-process convergence or leading-action comparisons.
 
 The theorem concerns the displayed joint depth--width family and a fixed prefactor above one. The positive white equilibrium mechanism is absent at $t\le1$; no unrestricted-depth lower bound for that original family is claimed. This research draft has undergone independent AI-agent mathematical checks, but has not been formalized in Lean.
 

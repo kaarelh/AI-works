@@ -29,7 +29,7 @@ For a universal constant `K`, a sufficient bound is
 n ≥ (K/ε)[S^13 + log(1/δ)].
 ```
 
-The paper also gives a more informative explicit nested budget. With sample probability at least `1−δ`, posterior-average test-margin error is at most `ε`, **simultaneously for every `N≥C` and every `0<t≤1`**, where the Gaussian variances are `t²/d`, `t²/N`, and `t²/N²`. Thus one polynomial covers all `γ≥1` through `t=N^((1−γ)/2)`, including finite-width mean field. Apply the bound with `ε/3` for strict `>2/3` posterior confidence on all but `ε` test mass.
+The paper also gives a more informative explicit nested budget. With sample probability at least `1−δ`, posterior-average test-margin error is at most `ε`, **simultaneously for every `N≥C` and every `0<t≤1`**, where the Gaussian variances are `t²/d`, `t²/N`, and `t²/N²`. Thus one polynomial covers all `γ≥1` through the prescribed schedule `t(N)=N^((1−γ)/2)`, including finite-width mean field; other prescribed schedules `t(d,L,N)` in `(0,1]` are also allowed. Apply the bound with `ε/3` for strict `>2/3` posterior confidence on all but `ε` test mass.
 
 The learner conditions the restricted prior on signed training output above `1/2`; test failure means signed output at most `1/4`. The optional additional global output-margin condition is allowed. Training and testing use the same arbitrary distribution on the Boolean cube, with noiseless labels.
 
@@ -41,8 +41,10 @@ Appendix A separately proves a fixed-depth polynomial theorem for the **original
 
 Balanced cloning of the teacher, with a controlled readout rescaling, gives an exact implementation satisfying the population count condition. Gaussian perturbations can amplify exponentially through depth, so its guaranteed neighborhood may be exponentially small. The prior-mass argument pays the **logarithm** of that radius, which is polynomial in depth. Gaussian tails control every candidate partition before one is selected. A finite parameter grid then describes the resulting small merged networks; exponential precision again costs only its logarithm.
 
-This permits general bounded-weight neural teachers, even when their hidden values grow exponentially. Their weights and signed margin are counted explicitly. It does not prove the same theorem under the original internal-noise restriction alone or under an unrestricted Gaussian prior.
+This permits general bounded-weight neural teachers, even when their hidden values grow exponentially. Their weights and signed margin are counted explicitly. It does not prove the same joint polynomial-depth theorem under the original internal-noise restriction alone or under an unrestricted Gaussian prior.
 
 **Status:** conventional proof with independent AI-agent mathematical reviews; **not Lean formalized** and not human peer reviewed. The earlier formalizations do not automatically certify this extension. The result is kept among supporting research papers, with the original two formalized batches unchanged.
 
 Run `bash build.sh` to rebuild the PDF. Authors: OpenAI Codex, Kaarel Hänni, and Dmitry Vaintrob. The paper acknowledges the earlier population arguments and their contributors.
+
+The PDF was reviewed and rebuilt from the included source on 29 October 2026. The [review record](../../verification/remaining-papers-2026-10-29.md) describes exposition changes, mathematical corrections, and the limits of the checks. Existing formalization claims retain their stated scope.

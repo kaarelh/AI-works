@@ -12,7 +12,7 @@
 \newcommand{\poly}{\operatorname{poly}}
 \title{Depth-uniform Gaussian Bayesian learning\\of shallow Boolean targets}
 \author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
-\date{Research draft --- 17 October 2026}
+\date{17 October 2026}
 \begin{document}
 \maketitle
 \begin{abstract}
@@ -23,7 +23,7 @@ one-hidden-layer representation of width $C$, weights bounded by $R$, and
 signed output margin at least one. For each fixed $\zeta>0$, we prove a
 sample bound polynomial in input dimension, $C,R$, learner depth, inverse
 error, and logarithmic inverse confidence, simultaneously for every learner
-width above its depth-specific bounded-weight circuit complexity and every
+width at least the target's actual bounded-weight complexity at that depth, and every
 Gaussian exponent $\gamma\ge1+\zeta$. No internal robustness restriction
 or infinite-width limit is required. The result covers parity, all
 symmetric Boolean functions, and polynomial-size DNF/CNF. An extension
@@ -53,7 +53,10 @@ There are no biases after the augmented input. Define
  \kappa_N(w)=\frac dN\|W^1\|_F^2+
     \sum_{s=2}^{L-1}\|W^s\|_F^2+N\|v\|_2^2.
 \]
-The raw Gaussian $\mu_{N,t}$ has independent entry variances
+Fix a prescribed scale schedule $t=t(d,L,N)>0$, abbreviated $t(N)$
+when $d,L$ are fixed; a constant schedule is allowed.
+At each specified dimension, depth and width, the raw Gaussian
+$\mu_{N,t}$ has independent entry variances
 $t^2/d,t^2/N,t^2/N^2$, respectively. In energy coordinates its density is
 proportional to $\exp[-N\kappa_N/(2t^2)]$.
 Write $\sigma^2=t^2/N$. The exponent-$\gamma$ convention is
@@ -81,6 +84,10 @@ The polynomial degree may depend on $\zeta$; no uniform limit as
 $\zeta\downarrow0$ is asserted. No claim of computationally efficient
 posterior evaluation is made.
 
+For a sample $S$, write $Q_S$ for the weight posterior and define its
+Gibbs error by
+$\operatorname{GibbsErr}(Q_S)=\mathbb E_{w\sim Q_S}
+\Pr_{X\sim D}\{\operatorname{sign}z_w(X)\ne f(X)\}$.
 If $p_S(x)$ is posterior probability of the correct label, then
 \[
  D\{x:p_S(x)\le q\}
@@ -101,8 +108,8 @@ Rademacher control bounds its generalization error. Finally, a shallow
 representation can be padded and transmitted through any number of layers
 so that the relevant product-norm cost stays polynomial in its shallow
 parameters. All arguments and quantitative estimates needed for this
-result are included here. The draft has undergone independent AI-agent
-proof reviews but is not Lean-certified.
+result are included here. These are ordinary mathematical proofs; this
+paper does not claim Lean certification.
 
 \paragraph{Related representation-cost questions.}
 Jacot~\cite{jacot2023} studies the infinite-depth limit of normalized
@@ -125,7 +132,12 @@ themselves settle the Gaussian-posterior question considered here.
 The result separates learner depth from shallow target complexity. A target
 that has only an exponentially large shallow representation need not receive
 a polynomial bound in the size of a much smaller deep representation.
-The unrestricted general small-deep-circuit problem therefore remains open.
+This paper does not settle the unrestricted problem for arbitrary small
+deep circuits. As of 29 October 2026, a later result~\cite{conditional2026}
+rules out a universal polynomial bound in target resources and learner
+depth, uniformly over admissible widths, assuming nonuniform
+$\mathsf P/\mathrm{poly}\ne\mathsf{TC}^1$.
+The unconditional classification remains open.
 The mean-field exponent $\gamma=1$ also remains outside the Gaussian-distance
 argument: its typical hidden Gaussian bulk has order-one operator norm.
 This failure of one proof is not a sample lower bound. The present result
@@ -134,6 +146,10 @@ condition would require another argument or a change of prediction and
 training conventions.
 
 \begin{thebibliography}{9}
+\bibitem{conditional2026} ChatGPT-6 Astra, K. H\"anni, and D. Vaintrob.
+A conditional obstruction to polynomial sample complexity in unrestricted NNbayes.
+29 October 2026.
+\href{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/conditional-nonpolynomial-learning}{Source and PDF}.
 \bibitem{jacot2023} A. Jacot.
 Implicit bias of large depth networks: a notion of rank for nonlinear functions.
 \emph{ICLR}, 2023. \url{https://arxiv.org/abs/2209.15055}.

@@ -38,3 +38,5 @@ Build with a TeX Live installation containing `latexmk`:
 ```
 
 Authors: ChatGPT-6 Astra, Kaarel Hänni, and Dmitry Vaintrob.
+
+The PDF was reviewed and rebuilt from the included source on 29 October 2026. The [review record](../../verification/remaining-papers-2026-10-29.md) describes exposition changes, mathematical corrections, and the limits of the checks. Existing formalization claims retain their stated scope.

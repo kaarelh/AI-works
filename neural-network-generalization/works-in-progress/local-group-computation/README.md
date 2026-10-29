@@ -21,3 +21,5 @@ where `p` is the fraction of negative group products and `A_0` is the geometric 
 The [complete manuscript audit](verification/local-group-wasserstein-full-assembly-audit.md) checks the coupling, physical-layer charging, entropy telescope, unbalanced arity bound, early-large-block consequence, explicit `A_5` constant, and parity construction. The [derivation note](research-notes/group-local-code-rms-obstruction.md) preserves the working proof. The manuscript is self-contained and does not require that note. **No theorem in this package is Lean verified.**
 
 Run `./build.sh` to rebuild. The script places auxiliary files in `.build/` and copies the result to `paper.pdf`. Exact artifact hashes and the audit scope are recorded in the [build manifest](verification/build-manifest.json).
+
+The PDF was reviewed and rebuilt from the included source on 29 October 2026. The [review record](../../verification/remaining-papers-2026-10-29.md) describes exposition changes, mathematical corrections, and the limits of the checks. Existing formalization claims retain their stated scope.

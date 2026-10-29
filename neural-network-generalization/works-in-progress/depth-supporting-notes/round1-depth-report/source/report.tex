@@ -46,71 +46,34 @@ and noise-stability literature supports the naturalness of the condition,
 but not its universal validity for ordinary gradient-trained networks.
 \end{abstract}
 
-\paragraph{Status and scope.}
-This is a research report with mathematical derivations and independent
-proof reviews by other AI agents, not a Lean-certified extension of the published main
-results. We retain the original all-input clean margin and posterior-confidence
-conventions unless explicitly stated. The attached Claude note~\cite{fable}
-is the starting point for robust compression; the Bernstein improvement,
-statistical bridges, and counterexample refinements are worked out here.
+\paragraph{Scope and relation to later work.}
+This report develops the mathematical arguments from the investigation of
+17 October 2026. Its proofs are conventional and do not claim Lean
+certification. We retain the all-input clean margin and posterior-confidence
+conventions defined below. Fable's research note~\cite{fable}
+supplies the robust-subsampling argument; this report derives its Bernstein
+refinement, the Gaussian posterior bounds, and the capacity counterexamples.
 The explicit bounds are deliberately loose and not proposed as practical
 numerical estimates.
 No claim of priority over the broader robustness/compression literature is made.
 
-\paragraph{Assessment of the attached note.}
-The exact-simulation argument and its main robust-subsampling proof check out;
-we found no major error in that proof. Its necessity discussion concerns
-uniform norm compression and counting, rather than a proved sample lower
-bound for the specified Gaussian posterior. Its robust/plain complexity
-sandwich also does not identify arbitrary analog complexity with robust
-complexity at the same architecture. The present report supplies explicit
-robust circuit witnesses and the additional Gaussian posterior arguments.
-
-\section{Findings and unresolved questions}
-
-There are three distinct questions.
-\begin{enumerate}
-\item \emph{Can the old uniform norm-counting argument have polynomial depth?}
-No. At depth $L=d+O(1)$ and width $2^{d+1}$, polynomial weighted norm already
-contains every Boolean truth table. This remains true with a global input
-Lipschitz constant polynomial in $d$.
-\item \emph{Does the exact unrestricted Gaussian Bayesian learner therefore
-need exponentially many samples for a polynomial-complexity target?}
-This does not follow, and remains unresolved in this investigation. The missing
-step is a target-specific prior/posterior mass or minimum-energy comparison.
-\item \emph{Can a natural internal robustness condition give polynomial depth?}
-Yes, under precise support and target hypotheses. An all-layer margin is an
-established notion rather than a property invented solely for this proof.
-Saturated Boolean circuits satisfy an inverse-polynomial version without
-depth-dependent error accumulation.
-\end{enumerate}
-
-The resulting learning statements are summarized below. In the unified theorem,
-``polynomial'' means one polynomial whose degree and coefficients are independent
-of both depth and $\gamma\ge1$.
-
-\begin{center}
-\begin{tabular}{>{\raggedright\arraybackslash}p{.24\linewidth}>{\raggedright\arraybackslash}p{.37\linewidth}>{\raggedright\arraybackslash}p{.28\linewidth}}
-\toprule
-Regime & Additional support condition & Result established here\\
-\midrule
-Every $\gamma\ge1$, including mean field & Fixed all-layer margin, or either calibrated support rule in Sections~\ref{sec:selfcal} and~\ref{sec:readout-reference} & One polynomial bound; every width above circuit width\\[3pt]
-Strong-prior limit & The same margin conditions & Polynomial depth; in fact every Gaussian scale $\sigma^2\le1/N$\\[3pt]
-Any variance, including $\gamma=1$ & All-layer margin and a width-independent hard energy budget & Polynomial depth by a finite-class bound\\[3pt]
-Unrestricted Gaussian prior & Original global clean margin only & General necessity unresolved; constants and dictators have a depth-independent strong-limit bound\\
-\bottomrule
-\end{tabular}
-\end{center}
-
-The circuit targets in this table are ordinary bounded-fan-in Boolean
-circuits, expressed in layers. They are not silently identified with
-arbitrary analog tanh networks at exactly the same depth. Polynomial-overhead
-digital simulation gives an expressivity statement, but can increase both
-depth and minimum required width; see Appendix~\ref{sec:digitize}.
+The source note's necessity discussion concerns uniform norm compression
+and counting. Those properties alone do not imply a sample lower bound
+for the Gaussian posterior, nor identify analog and robust target complexity
+at the same architecture. Explicit robust circuit witnesses and posterior
+arguments are therefore required below. As of 29 October 2026, a separate
+result~\cite{conditional2026} rules out a universal sample bound polynomial
+in target resources and learner depth, uniformly over all admissible learner
+widths, assuming nonuniform $\mathsf P/\mathrm{poly}\ne\mathsf{TC}^1$.
+That conditional obstruction supplements this report's historical open
+question; the unconditional classification remains unresolved.
 
 \section{Model and an all-layer margin}
 
-Let $L\ge2$, $d\ge1$, and let every hidden layer have width $N$.
+Let $f:\X\to\{-1,1\}$ be a target and let $D$ be any probability
+distribution on the Boolean cube. Training examples are independent
+pairs $(X_i,f(X_i))$ with $X_i\sim D$. Let $L\ge2$, $d\ge1$,
+and let every hidden layer have width $N$.
 The input is $h^0=(1,x)$ for $x\in\X$; there are no subsequent biases.
 Set
 \[
@@ -124,10 +87,20 @@ finite-variance target-mass estimates use $\phi=\tanh$. The weighted energy is
  \sum_{s=2}^{L-1}\|W^s\|_F^2+N\|v\|_2^2.
 \]
 For auxiliary classifiers produced by rounding, set $\sgn(0)=+1$.
-The strong-prior Gaussian density in weighted coordinates is proportional
-to $\exp(-\kappa_N/(2\sigma^2))$. At exponent $\gamma$, the independent
+Fix a prescribed scale schedule $t=t(d,L,N)>0$, written $t(N)$ when
+$d,L$ are fixed; constant schedules are allowed. The raw entry variances
+are $t^2/d,t^2/N,t^2/N^2$, respectively. With $\sigma^2=t^2/N$,
+the Gaussian density in weighted coordinates is proportional
+to $\exp(-\kappa_N/(2\sigma^2))$. A strong-prior limit sends
+$\sigma\downarrow0$ at fixed $d,L,N$.
+At exponent $\gamma$, set $t=N^{(1-\gamma)/2}$; the independent
 entry variances are $N^{1-\gamma}/d$, $N^{-\gamma}$, and
 $N^{-1-\gamma}$ for the first, internal, and readout layers respectively.
+Without an extra support restriction, the posterior conditions the raw
+Gaussian on $|z_w(x)|>1/2$ for every cube input and on
+$f(X_i)z_w(X_i)>0$ for all observed inputs. A robustness-conditioned
+posterior additionally imposes the support condition specified below.
+All logarithms are natural unless a base is displayed.
 
 Use additive \emph{postactivation} perturbations:
 \[
@@ -161,7 +134,7 @@ noise tolerance, or robustness at one layer at a time is weaker.
 This is an absolute-RMS version of the all-layer-margin idea of Wei and
 Ma~\cite{weima2020}. Their normalization uses hidden-state norms, rather than
 the fixed $\sqrt N$ used here. The two are not automatically equivalent when
-hidden activity can collapse. The attached note instead gives each layer
+hidden activity can collapse. Fable's note~\cite{fable} instead gives each layer
 its own RMS budget $\tau$ and retains output margin $1/3$. The total norm and
 maximum per-layer norm differ by at most $\sqrt L$; either convention can
 give polynomial depth. The sharper proof below allocates noise by layer
@@ -175,6 +148,49 @@ The fraction of test inputs with correct-label probability at most $2/3$ is
 at most $3R_D(\Pi)$. All learning bounds below therefore imply the original
 confidence guarantee by replacing the desired error parameter by one third
 of its value. They are not new majority-vote lower bounds.
+
+\section{Findings and unresolved questions}
+
+There are three distinct questions.
+\begin{enumerate}
+\item \emph{Can the old uniform norm-counting argument have polynomial depth?}
+No. At depth $L=d+O(1)$ and width $2^{d+1}$, polynomial weighted norm already
+contains every Boolean truth table. This remains true with a global input
+Lipschitz constant polynomial in $d$.
+\item \emph{Does the exact unrestricted Gaussian Bayesian learner therefore
+need exponentially many samples for a polynomial-complexity target?}
+This does not follow from norm counting, and was unresolved in the
+17 October investigation. The missing
+step is a target-specific prior/posterior mass or minimum-energy comparison.
+\item \emph{Can a natural internal robustness condition give polynomial depth?}
+Yes, under precise support and target hypotheses. An all-layer margin is an
+established notion rather than a property invented solely for this proof.
+Saturated Boolean circuits satisfy an inverse-polynomial version without
+depth-dependent error accumulation.
+\end{enumerate}
+
+The resulting learning statements are summarized below. In the unified theorem,
+``polynomial'' means one polynomial whose degree and coefficients are independent
+of both depth and $\gamma\ge1$.
+
+\begin{center}
+\begin{tabular}{>{\raggedright\arraybackslash}p{.24\linewidth}>{\raggedright\arraybackslash}p{.37\linewidth}>{\raggedright\arraybackslash}p{.28\linewidth}}
+\toprule
+Regime & Additional support condition & Result established here\\
+\midrule
+Every $\gamma\ge1$, including mean field & Fixed all-layer margin, or either calibrated support rule in Sections~\ref{sec:selfcal} and~\ref{sec:readout-reference} & One polynomial bound; every width above circuit width\\[3pt]
+Strong-prior limit & The same margin conditions & Polynomial depth; in fact every Gaussian scale $\sigma^2\le1/N$\\[3pt]
+Any variance, including $\gamma=1$ & All-layer margin and a width-independent hard energy budget & Polynomial depth by a finite-class bound\\[3pt]
+Unrestricted Gaussian prior & Original global clean margin only & General necessity unresolved; constants and dictators have a depth-independent strong-limit bound\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The circuit targets in this table are ordinary bounded-fan-in Boolean
+circuits, expressed in layers. They are not silently identified with
+arbitrary analog tanh networks at exactly the same depth. Polynomial-overhead
+digital simulation gives an expressivity statement, but can increase both
+depth and minimum required width; see Appendix~\ref{sec:digitize}.
 
 \section{Compression with polynomial depth dependence}
 
@@ -211,7 +227,7 @@ sampled sources at each layer. Its sampled coordinates are exactly the
 small network's coordinates. Its layer-$s-1$ activation depends only on
 samples through layer $s-2$, and is independent of the fresh source sample
 used for layer $s$. This conditional independence is the central point in
-the attached note's exact-simulation argument.
+the exact-simulation argument of Fable~\cite{fable}.
 
 Fix an input and condition on those earlier samples. A fresh contribution
 to an internal preactivation vector is
@@ -420,15 +436,17 @@ The robust digital cylinder gives, for every $\gamma\ge1$,
  \qquad D=\poly(d,C,L).
 \end{equation}
 For a tail parameter $K\ge1$, put $a=r/(4\sqrt L)$.
-The Gaussian singular-value-tail argument in the existing $\gamma>1$
-paper implies that, once
+The Gaussian singular-value-tail argument in
+\emph{Width-uniform Bayesian generalization above the mean-field
+scaling}~\cite{aboveone} implies that, once
 \[
  N^{\gamma-1}\ge\max\{8(d+1),64/a^2\},
 \]
 discarding singular values at most $a$ from the internal matrices leaves
 energy at most $LK$, outside raw probability $Le^{-KN^\gamma/8}$.
 
-Unlike the old proof, no downstream product of operator norms is needed.
+Robustness converts the discarded spectral part into bounded activation
+noise without a downstream product of operator norms.
 Along any radius-$r/2$ noisy pass of the truncated network, hidden states
 have norm at most $(1+r/2)\sqrt N$. Each discarded matrix produces an
 additional normalized postactivation error at most $a(1+r/2)$. Combining
@@ -449,8 +467,12 @@ Choose
  (32\sqrt L/r)^{2/(\gamma-1)}\}\right\rceil.
 \]
 For $N\ge T$, the exceptional mass divided by target mass is at most
-$\varepsilon/2$. For $C\le N<T$, the target-mass-only posterior bound costs
-at most $DT^\gamma$. Consequently the sufficient bound
+$\varepsilon/2$. For $C\le N<T$, the negative logarithm of the target mass is
+at most $DT^\gamma$. To use this directly, integrate over the prior:
+a fixed function of error greater than $\varepsilon/2$ agrees with all
+$n$ labels with probability at most $e^{-n\varepsilon/2}$.
+Divide this expected consistent bad mass by the target-mass lower
+bound and apply Markov's inequality. Consequently the sufficient bound
 \[
  n\ge\frac2\varepsilon\left[
  \max\{H(d,L,LK,r/2),DT^\gamma\}
@@ -664,8 +686,9 @@ ordinary gradient descent yields an inverse-polynomial worst-input,
 simultaneous RMS robustness radius. The distinction is material:
 IID noise and worst-case noise differ by a factor $\sqrt N$ in linearized
 response, and an all-input guarantee is much stronger than a typical-data
-guarantee. The attached note's referenced numerical scripts were not supplied;
-their reported experiments are not treated as independently reproduced here.
+guarantee. The numerical scripts referenced by Fable's note~\cite{fable}
+were unavailable to the 17 October investigation; its reported experiments
+are not treated as independently reproduced here.
 
 \subsection{A small reproducible training probe}
 
@@ -705,7 +728,10 @@ seed has spectral product $7.38\times10^6$, sufficient local radius
 $4.99\times10^{-5}$, and a found attack at $.0933$; this is a large gap
 between available bounds, not a proof of robustness at $.0933$.
 The tested depth range and gaps do not establish polynomial scaling.
-Scripts, all-seed tables, saved weights, and raw data accompany this report.
+These numbers record the 17 October experiment. The original investigation
+retained scripts, all-seed tables, saved weights, and raw data; this
+standalone manuscript package does not include that full experimental
+archive or constitute a new reproduction of it.
 
 A separate, subsequently predeclared stress cohort used hidden depths $32,64$
 with the same optimizer settings and three seeds for both tasks. All six
@@ -800,15 +826,17 @@ Conversely, a circuit-description prior mixed with a positive full-support
 Gaussian component can retain fragile networks in support and still give
 polynomial-depth sample bounds through target prior mass. Thus hard robustness
 support is not logically necessary for Bayesian learning in general.
-The precise unresolved question concerns the particular Gaussian learner.
+The question addressed by this report concerns the particular Gaussian
+learner; the conditional obstruction in~\cite{conditional2026} is a later
+result about that same learner.
 
-The empirical next step is to measure all-layer margins or sound finite-tube
-certificates across depth and width, keeping random-noise tests, attacks, and
-certificates separate. The theoretical next step is to settle the unrestricted
-Gaussian case, by a general polynomial-depth bound or a genuine simple-target
-posterior lower bound. Replacing all-input robustness by
-typical-input robustness would be valuable, but needs a new statistical
-argument; arbitrary exceptional sets can otherwise memorize the training data.
+The reported experiments leave the scaling of finite-radius certificates
+with depth and width undetermined. The mathematical results leave an
+unconditional unrestricted-Gaussian classification undetermined as well;
+the later conditional obstruction does not supply an explicit exponential
+simple-target lower bound. Replacing all-input robustness by typical-input
+robustness also needs an additional statistical argument, since an
+unconstrained exceptional set can contain the training data.
 
 \appendix
 \section{Robust Gaussian target mass}\label{sec:cylinder}
@@ -895,9 +923,18 @@ reciprocal.
 \input{clean-transport-certificate.tex}
 
 \begin{thebibliography}{9}
+\bibitem{conditional2026} ChatGPT-6 Astra, K. H\"anni, and D. Vaintrob.
+\emph{A conditional obstruction to polynomial sample complexity in unrestricted NNbayes.}
+29 October 2026.
+\href{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/conditional-nonpolynomial-learning}{Source and PDF}.
+\bibitem{aboveone} ChatGPT-6 Astra, Claude Fable 5 and Opus 5,
+K. H\"anni, and D. Vaintrob.
+\emph{Width-uniform Bayesian generalization above the mean-field scaling.}
+2026.
+\url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/main-results/gamma-above-one}.
 \bibitem{fable} Claude Fable 5. \emph{Robustness kills the exp(depth):
 subsampling noise-stable nets at width $\poly(d,K,1/\tau)(d+\log L)$.}
-27 August 2026. User-supplied research note, \texttt{robust-depth.pdf}.
+27 August 2026. Unpublished research note, \texttt{robust-depth.pdf}.
 \bibitem{project} ChatGPT-6 Astra, Claude (Fable 5, Opus 5, and Opus 5.5), K. H\"anni, and D. Vaintrob.
 \emph{Bayesian neural-network generalization: main papers and Lean project.}
 \url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization}.

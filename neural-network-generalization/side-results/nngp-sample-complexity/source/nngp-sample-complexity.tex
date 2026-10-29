@@ -66,6 +66,14 @@ The implication is one-sided. A posterior can give the correct label probability
 \paragraph{What is held fixed.}
 An NNGP is specified by its activation, depth, input normalization, all layer variances, and bias convention. Its overall output amplitude matters because $a$ is fixed. Multiplying $K$ by $s^2$ replaces the effective margin by $a/s$. Section~\ref{sec:tanh} gives a particular fully connected tanh model with an appended constant input and no additional biases. Its layer gains are explicit and differ from the unit-gain scaling in the notes. All results before that section apply to a general finite Gaussian covariance, subject to their stated assumptions.
 
+\paragraph{Proof roadmap.}
+We first write the exact posterior as a ratio of Gaussian orthant
+probabilities. Fourier analysis then separates prior-mass estimates,
+regression bounds, and information bounds for classification. A rank-two
+example shows why these distinctions matter. The final construction
+combines a comparison valid after global conditioning with quantitative
+decay of tanh correlations, giving an explicit confidence learning curve.
+
 \section{The posterior is a collection of orthant probabilities}\label{sec:exact}
 For a Boolean $g$, define
 \[
@@ -87,7 +95,7 @@ For positive-definite $K$, each weight is the ordinary Gaussian integral
 \end{equation}
 Thus every finite case is well-defined without any regression surrogate. Formula~\eqref{eq:posterior} also makes clear which missing estimate a sample lower bound must supply: relative weights of target-inconsistent functions that survive the observed labels.
 
-The familiar interpolation formula $K(x,T)K(T,T)^{-1}f(T)$ is the conditional mean after observing \emph{real equalities} $Z(T)=f(T)$. It is not the posterior in~\eqref{eq:BS}. Even ordinary GP classification has a non-Gaussian posterior~\cite{gpml}; here the all-input restriction adds constraints at the unobserved points. In particular, the posterior mean need not have the usual span-of-training-kernels representation. Conditioning on the full Boolean cube preserves its coordinate permutations and simultaneous sign flips, but does not preserve arbitrary rotations of the ambient Euclidean space. A lower bound for a rotationally invariant regression method therefore requires a new argument before it applies here.
+The familiar interpolation formula $K(x,T)K(T,T)^{-1}f(T)$ is the conditional mean after observing \emph{real equalities} $Z(T)=f(T)$. It is not the posterior in~\eqref{eq:BS}. Even ordinary GP classification has a non-Gaussian posterior~\cite{gpml}; here the all-input restriction adds constraints at the unobserved points. In particular, the posterior mean need not have the usual span-of-training-kernels representation. When the covariance has cube symmetries, the global margin event preserves those symmetries, as well as global output sign reversal. It does not preserve arbitrary rotations of the ambient output space. A lower bound for a rotationally invariant regression method therefore requires a new argument before it applies here.
 
 \section{What Fourier eigenvalues do establish}\label{sec:fourier}
 Let $\chi_U(x)=\prod_{j\in U}x_j$. If $K$ is invariant under simultaneous coordinatewise sign flips, then
@@ -314,7 +322,7 @@ In particular,
 \end{equation}
 For fixed $\eta$ and fixed posterior-error tolerance $\varepsilon\in(0,1/2-\eta)$, the necessary and sufficient order of the expected sample complexity is $\Theta(2^d)$. For $\varepsilon\le1/4$ and fixed $\eta<1/4$, it is $\Theta(2^d\log(1/\varepsilon))$.
 \end{theorem}
-The statement covers parities on any $k\le d$ coordinates. Setting $d=k$ gives an exponential lower bound in the size of an XOR circuit under the source's posterior-probability criterion. It does not assert a majority-vote lower bound for finite $L$: the majority could exploit small deviations of a marginal from $1/2$ that this proof deliberately does not estimate in sign.
+The statement covers parities on any $k\le d$ coordinates. Setting $d=k$ gives an exponential lower bound in the size of an XOR circuit under the posterior-probability criterion defined here. It does not assert a majority-vote lower bound for finite $L$: the majority could exploit small deviations of a marginal from $1/2$ that this proof deliberately does not estimate in sign.
 
 For confidence rather than expectation,~\eqref{eq:uniformrisk} also gives explicit bounds. No sample with
 \[
@@ -456,12 +464,19 @@ Choose $\rho=c_a\eta/M^2$ in Lemma~\ref{lem:decay}. Since $\log M=d\log2$, the r
 In particular $K_L$ is positive definite. Apply Lemma~\ref{lem:comparison} to $B=B_S$. At an observed input the error probability is zero. At an unobserved input the independent posterior has error $1/2$, and total variation changes that probability by at most $\eta$. This proves~\eqref{eq:uniformrisk}. Averaging $U_S/M$ gives~\eqref{eq:expectedrisk}; solving the two exponential bounds gives the stated sample orders.
 \end{proof}
 
-\section{What this resolves, and what still needs a proof}\label{sec:scope}
+\section{Scope of the Gaussian-process conclusion}\label{sec:scope}
 Under the actual conventions, exponentially poor \emph{posterior confidence} is possible for a small-circuit target in a genuine tanh NNGP. The finite-depth theorem establishes this directly for a fully specified family, including the global margin event. It does not use posterior-mean regression.
 
 There is no sample-complexity conclusion based just on circuit size and the phrase ``NNGP.'' Depth, variances, bias convention, the input distribution, and the error criterion must be specified. Even a small parity eigenvalue and full cube symmetry do not suffice, as Proposition~\ref{prop:fast} demonstrates. Symmetry alone also cannot prohibit rapid parity learning: the uniform posterior over all signed parities is equivariant under coordinate permutations and flips and learns with $O(d+\log(1/\delta))$ uniform samples. Its constraints can be solved by linear algebra over $\mathbb F_2$; each wrong signed parity is eliminated with probability at least $1/2$ per sample, so a union bound proves this rate. One must use the particular posterior, not merely its symmetries.
 
-For the more specific question suggested by Appendix J of the notes---\emph{fixed shallow depth, unit-gain isotropic tanh, the all-input margin prior, and a $k$-bit parity}---this note does \emph{not} establish an $\exp(k)$ or $d^{\Omega(k)}$ sample lower bound. Nor does it establish efficient learning in that setting. The existing argument from the parity eigenvalue to such a lower bound has a missing statistical step; a regression theorem does not fill it. For majority-vote prediction there is a second missing step, because large posterior error alone is insufficient. Resolving this fixed-depth problem requires a quantitative comparison of the compatible orthant weights in~\eqref{eq:posterior}, or another argument that applies directly to that likelihood and decision rule.
+For the more specific question suggested by Appendix J of the notes---\emph{fixed shallow depth, unit-gain isotropic tanh, the all-input margin prior, and a $k$-bit parity}---this note does \emph{not} establish an $\exp(k)$ or $d^{\Omega(k)}$ sample lower bound. Nor does it establish efficient learning in that setting. The existing argument from the parity eigenvalue to such a lower bound has a missing statistical step; a regression theorem does not fill it. For majority-vote prediction there is a second missing step, because large posterior error alone is insufficient. A proof for that finite-gain model would require a quantitative comparison
+of the compatible orthant weights in~\eqref{eq:posterior}, or another
+argument for its likelihood and decision rule. The fixed-depth full-parity
+lower bound in the later paper~\cite{subcritical-exponential} concerns a
+different width schedule: the hidden tanh activations saturate and the
+limiting kernel is an iterated arcsine kernel. That theorem therefore
+does not identify the finite-gain tanh model considered in this paragraph
+with the saturated model.
 
 For a small-circuit generalization theorem, the object needed is likewise a bound on the relative posterior mass of wrong but sample-consistent functions. The strong-prior argument supplies such a bound through norm sublevel counts. An NNGP Fourier diagonalization supplies a useful coordinate system, but does not by itself supply the corresponding counting or likelihood estimate.
 
@@ -476,6 +491,11 @@ where the $\xi_x$ are independent standard Gaussians. As $\tau\downarrow0$, $Z_\
 With the uniform-measure eigenvalue convention, adding $\tau I_M$ adds $\tau/M$ to each $\lambda_U$. If a diagonal-one covariance is desired, divide by $1+\tau$; the same convergence argument applies. Thus an arbitrarily small parity eigenvalue can coexist with rapid learning even in positive-definite, fully symmetric Gaussian models. These examples still make no tanh-realizability claim.
 
 \begin{thebibliography}{9}
+\bibitem{subcritical-exponential}
+ChatGPT-6 Astra, K. H\"anni, and D. Vaintrob.
+\emph{Exponential parity sample complexity below the mean-field scaling}.
+Companion manuscript, October 2026.
+
 \bibitem{notes}
 Dmitry Vaintrob and Kaarel H\"anni.
 \emph{A Generalization Result for Overparametrized Neural Net Bayesian Learning}.

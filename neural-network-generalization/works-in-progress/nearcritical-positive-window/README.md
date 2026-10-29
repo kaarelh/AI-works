@@ -27,3 +27,5 @@ A separate [proved scalar comparison](research-notes/supercritical-scalar-baseli
 - [Uniform intrinsic theorem](../boolean-depth-barriers/proof-notes/uniform-sharp-intrinsic.md), [scale-sensitive compression](../boolean-depth-barriers/proof-notes/uniform-scale-intrinsic.md), and [finite-width certificate](../boolean-depth-barriers/proof-notes/finite-width-dual-certificate.md).
 
 Run `./build.sh` with `pdflatex` installed. The source builds in two passes. The package includes independent mathematical audits and exact source/file hashes; no theorem here is Lean verified.
+
+The PDF was reviewed and rebuilt from the included source on 29 October 2026. The [review record](../../verification/remaining-papers-2026-10-29.md) describes exposition changes, mathematical corrections, and the limits of the checks. Existing formalization claims retain their stated scope.

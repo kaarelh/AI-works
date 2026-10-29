@@ -28,3 +28,5 @@ The five promoted main results and their Lean files are unchanged. This paper re
 ## Build
 
 Run `bash build.sh` in this directory with a standard TeX Live installation. It performs three LaTeX passes in `build/` and refreshes `paper.pdf`. All LaTeX inputs and figures are included under `source/`; no network access is needed.
+
+The PDF was reviewed and rebuilt from the included source on 29 October 2026. The [review record](../../verification/remaining-papers-2026-10-29.md) describes exposition changes, mathematical corrections, and the limits of the checks. Existing formalization claims retain their stated scope.

@@ -6,20 +6,43 @@
 \usepackage{amsmath,amssymb,amsthm,booktabs,tabularx,microtype,enumitem}
 \usepackage{xcolor}
 \usepackage[colorlinks=true,linkcolor=blue!45!black,urlcolor=blue!45!black]{hyperref}
-\hypersetup{pdftitle={Proof audit and editorial decisions: strong-prior paper},pdfauthor={ChatGPT-6 Astra}}
+\hypersetup{pdftitle={A proof audit of strong-prior Bayesian neural-network generalization},pdfauthor={ChatGPT-6 Astra}}
 \newcommand{\E}{\mathbb E}
 \newcommand{\PP}{\mathbb P}
 \newcommand{\R}{\mathbb R}
 \newcommand{\norm}[1]{\left\lVert#1\right\rVert}
 \setlength{\emergencystretch}{2em}
 \setlist{itemsep=3pt,topsep=5pt}
-\title{Proof audit and editorial decisions\\\large Companion to the strong-prior paper}
+\title{A proof audit of strong-prior Bayesian\\neural-network generalization}
 \author{Prepared by ChatGPT-6 Astra for Kaarel H\"anni and Dmitry Vaintrob}
 \date{October 15, 2026}
 \begin{document}
 \maketitle
 
-This report checks Appendices A--L of \emph{A Generalization Result for Overparametrized Neural Net Bayesian Learning}, using the \href{https://kaarelh.github.io/ai/nnbayes-generalization.pdf}{source slides}. Page references below are the PDF's printed slide numbers, including the appendix numbers beyond 38. It distinguishes false statements, missing proofs, and statements that become rigorous after making their assumptions precise. The companion paper contains the repaired main proof; the broader scaling and online-learning claims are not part of its theorem.
+This report checks Appendices A--L of \emph{A Generalization Result for Overparametrized Neural Net Bayesian Learning}, using the \href{https://kaarelh.github.io/ai/nnbayes-generalization.pdf}{source slides}. Page references below are the PDF's printed slide numbers, including the appendix numbers beyond 38. It distinguishes false statements, missing proofs, and statements that become rigorous after making their assumptions precise. The companion paper, \href{https://github.com/kaarelh/AI-works/blob/main/neural-network-generalization/main-results/strong-prior-generalization/paper.pdf}{\emph{Width-independent generalization in the strong-prior limit of Bayesian neural networks}}, contains the repaired main proof. The audit concerns the slide arguments as available on 15 October 2026; it does not classify the results of later papers.
+
+\paragraph{Model and notation.}
+Inputs are $x\in\{-1,1\}^d$, with augmented input $(1,x)$.
+A depth-$L$ network has $L-1$ hidden layers of width $N$, bounded
+$1$-Lipschitz hidden activation $\phi:\R\to[-1,1]$, and linear output $z_w$.
+Its weighted squared norm is
+\[
+ \kappa_N(w)=\frac dN\|W^1\|_F^2+
+ \sum_{\ell=2}^{L-1}\|W^\ell\|_F^2+N\|v\|_2^2.
+\]
+The raw Gaussian $\mu_{N,\sigma}$ has density proportional to
+$\exp[-\kappa_N(w)/(2\sigma^2)]$.
+For a Boolean function $g$, let
+$U_g=\{w:g(x)z_w(x)>1/2\text{ for every }x\}$ and
+$\kappa_N(g)=\inf_{w\in U_g}\kappa_N(w)$.
+Conditioning on $\bigcup_g U_g$ gives the function prior $\pi$;
+learning further conditions on the observed noiseless labels.
+The strong-prior limit fixes $d,L,N$ before sending $\sigma$ to zero.
+
+\paragraph{Later developments (29 October 2026).}
+The gaps recorded below concern the source arguments, not impossibility
+of the proposed conclusions. Separate later papers establish
+\href{https://github.com/kaarelh/AI-works/blob/main/neural-network-generalization/main-results/robust-polynomial-depth/paper.pdf}{polynomial-depth learning under a robustness restriction}, \href{https://github.com/kaarelh/AI-works/blob/main/neural-network-generalization/main-results/subcritical-exponential/paper.pdf}{subcritical sample lower bounds}, and \href{https://github.com/kaarelh/AI-works/blob/main/neural-network-generalization/works-in-progress/online-mistakes/README.md}{online mistake guarantees under stated sampling protocols}. \href{https://github.com/kaarelh/AI-works/blob/main/neural-network-generalization/works-in-progress/relu-learning/paper.pdf}{ReLU learning} likewise uses a different compression argument.
 
 \section*{Main outcome}
 The strong-prior, fixed-depth, width-independent generalization theorem survives the audit. Its proof needs an explicit linear readout, globally bounded Lipschitz hidden activations, the prior's conditioning on a margin at \emph{every} Boolean input, and the order of limits ``fix width, then decrease variance.'' The subsampling argument is valid after spelling out its independence and telescoping details. There is no identified fatal error in the main proof thread.
@@ -57,7 +80,7 @@ L & Mostly valid & Assumptions stated explicitly; stronger tanh assumptions sepa
 \normalsize
 
 \section{Appendix A: the relevance-based bound (slides 40--43)}
-The proof is valid. Its central advantage is that it controls a posterior without requiring a unique minimum-cost function. There is a simpler version sufficient for this paper. If $f\in A$, $|A|\leq M$, and $\pi(A^c)\leq\tau\pi(f)$, the posterior mass outside $A$ is at most $\tau$ on \emph{every} training sample: the denominator is always at least $\pi(f)$. A union bound eliminates all members of $A$ with error greater than $a$ after
+The proof is valid. Its central advantage is that it controls a posterior without requiring a unique minimum-cost function. There is a simpler version sufficient for the strong-prior companion paper. If $f\in A$, $|A|\leq M$, and $\pi(A^c)\leq\tau\pi(f)$, the posterior mass outside $A$ is at most $\tau$ on \emph{every} training sample: the denominator is always at least $\pi(f)$. A union bound eliminates all members of $A$ with error greater than $a$ after
 \[
  n\geq a^{-1}\bigl(\log M+\log(1/\delta)\bigr).
 \]
@@ -81,7 +104,7 @@ The packing proof is valid. When $\kappa_N(g)$ is an unattained infimum, compact
 
 The phrase ``the learner stays in a ball'' is inaccurate at finite $\sigma$. The parameter posterior has no such compact support. What is counted is a set of \emph{functions}, each with a low-norm representative; the posterior mass of the remaining functions tends to zero relative to the target. The paper avoids the support claim.
 
-In fact the parameter sensitivity can be bounded independently of width in the rescaled coordinates $u^\ell=\sqrt{c_\ell}W^\ell$. On $\norm{u},\norm{v}\leq R$,
+In fact the parameter sensitivity can be bounded independently of width in the rescaled coordinates $u^\ell=\sqrt{c_\ell}W^\ell$, where $c_1=d/N$, $c_L=N$, and $c_\ell=1$ internally. On $\norm{u},\norm{v}\leq R$,
 \[
  |z_u(x)-z_v(x)|\leq\Lambda_L(R,d)\norm{u-v},\quad
  \Lambda_L(R,d)^2=\frac{d+1}{d}R^{2(L-1)}+\sum_{j=0}^{L-2}R^{2j}.
@@ -114,7 +137,7 @@ The connections to Occam learning and norm-based capacity control are appropriat
 
 Buzaglo et al.'s ICML 2024 paper is correctly relevant; its regimes and priors differ from the present small-variance result. The exact reference is \emph{How Uniform Random Weights Induce Non-uniform Bias: Typical Interpolating Neural Networks Generalize with Narrow Teachers}, PMLR 235:5035--5081.
 
-The inference ``tiny target prior probability implies slow learning'' is not valid by itself. Consider a prior on two functions $\{f,g\}$ with $\pi(f)=\epsilon$ and $\pi(g)=1-\epsilon$. If a single observed point distinguishes them, the posterior becomes certain of $f$ after that observation, regardless of how small $\epsilon$ is. A small target mass can make an upper bound based on $\log(1/\pi(f))$ uninformative; it does not establish a lower bound. The claimed reverse implications about circuit complexity and learnability are therefore not included.
+The slides themselves note (slide 93) that tiny target mass alone does not prove a sample lower bound. This distinction also matters for their related-work and complexity discussion. The inference ``tiny target prior probability implies slow learning'' is not valid by itself. Consider a prior on two functions $\{f,g\}$ with $\pi(f)=\epsilon$ and $\pi(g)=1-\epsilon$. If a single observed point distinguishes them, the posterior becomes certain of $f$ after that observation, regardless of how small $\epsilon$ is. A small target mass can make an upper bound based on $\log(1/\pi(f))$ uninformative; it does not establish a lower bound. The claimed reverse implications about circuit complexity and learnability are therefore not included.
 
 \section{Appendix G: the depth example (slides 70--75)}
 The main phenomenon is correct for tanh, but the original amplification sketch does not control accumulated linearization error. The paper replaces it with an exact construction and proves that a universal constant $A$ satisfies the following: if $L\geq4$, $1\leq q\leq d$, and $N\geq2^{q+1}$, every Boolean function of a specified $q$ coordinates has a margin-one implementation with
@@ -141,7 +164,7 @@ Under the first interpretation, the quantized tanh construction can be made rigo
 \]
 This is a useful counterexample for quantization margins alone, but it changes the model of the present paper. The positive robust-prior theorem in the main slides is not proved by this counterexample or by observing that a relative-weight condition excludes it.
 
-A smaller correction: the choice $h=1/r$ is sufficient, not forced by a margin requirement. The displayed reader/output budget is correct. With reader cost $R=n_2\mu z_t^2 2^d/(4n)$ and, at the $|z_{\rm out}|>1/2$ infimum, output cost $O=N/(4\alpha^2 n_{L-1})$ with $N=2n2^d$ and $M=2^d$, one has $RO=\mu c'^2M^2/(8F)$. Hence $R+O\leq B$ is achievable exactly when $M^2\leq 2B^2F/(\mu c'^2)$, as displayed. (An earlier version of this audit stated a factor-four smaller bound in error.) This appendix is excluded from the first paper.
+A smaller correction: the choice $h=1/r$ is sufficient, not forced by a margin requirement. The displayed reader/output budget is correct. With reader cost $R=n_2\mu z_t^2 2^d/(4n)$ and, at the $|z_{\rm out}|>1/2$ infimum, output cost $O=N/(4\alpha^2 n_{L-1})$ with $N=2n2^d$ and $M=2^d$, one has $RO=\mu c'^2M^2/(8F)$. Hence, in the continuous budget relaxation, the infimum of $R+O$ is at most $B$ exactly when $M^2\leq 2B^2F/(\mu c'^2)$. Actual strict-margin feasibility requires slack, and integer neuron counts must be checked separately. (An earlier version of this audit stated a factor-four smaller bound in error.) This appendix is excluded from the strong-prior companion paper.
 
 \section{Appendix I: large-width regime classification (slides 81--90)}
 The elementary one-input Gaussian energy calculation is sound. For a fixed activation vector $a$, prescribing $w\cdot a=b$ has minimum squared row norm $b^2/\norm a^2$. But this does not identify the posterior cost of a layer performing a computation on many inputs.
@@ -178,7 +201,7 @@ Fix a nonconstant parity $\chi_S$ and $0<\epsilon<1$. The kernel
 \]
 is positive semidefinite, has $K_\epsilon(x,x)=1$, and has parity eigenvalue $\epsilon$. Its RKHS is the span of $1$ and $\chi_S$. Observing one sample of each label in noiseless regression to $\chi_S$ uniquely forces the interpolating function to be $\chi_S$, independently of $\epsilon$. Under uniform inputs, both labels have been observed except with probability $2^{1-n}$. Thus $O(\log(1/\delta))$ samples suffice, even as $1/\lambda_S\to\infty$.
 
-This disproves the generic implication ``resolving a direction requires $\Omega(1/\lambda)$ samples.'' A trace estimate cannot supply that missing implication. A valid lower bound needs a specified estimator, noise or regularization model, or a separately proved class-level restriction. This does not invalidate class-level kernel-regression lower bounds: the separate NNGP note proves one directly from the dimension of the training-kernel span. The missing transfer is to the actual margin-conditioned classification posterior.
+This disproves the generic implication ``resolving a direction requires $\Omega(1/\lambda)$ samples.'' A trace estimate cannot supply that missing implication. A valid lower bound needs a specified estimator, noise or regularization model, or a separately proved class-level restriction. This does not invalidate class-level kernel-regression lower bounds: the \href{https://github.com/kaarelh/AI-works/blob/main/neural-network-generalization/side-results/nngp-sample-complexity/paper.pdf}{Gaussian-process classification note} proves one directly from the dimension of the training-kernel span. The missing transfer is to the actual margin-conditioned classification posterior.
 
 \subsection*{Major error 2: the actual prior is already conditioned}
 In the slides' main model, the prior is conditioned on $A=\{|z(x)|>1/2\ \forall x\}$. Fourier coefficients are no longer Gaussian after this conditioning. For $a=1/2$, the parity's function-prior mass is
@@ -190,7 +213,7 @@ The denominator can be small and cannot be dropped. The raw Gaussian upper bound
 \subsection*{Other unsupported inferences}
 Tiny target mass does not imply a large relevant set: the two-function example in Appendix F has $M=2$ for every $\pi(f)>0$. A shared Fourier eigenbasis also does not transfer a statistical lower bound from the NTK to the NNGP; eigenvalues and learning rules matter. Symmetry by itself implies neither decreasing eigenvalues with degree nor $\lambda_k\asymp d^{-k}$. Such claims need additional activation, bias, regularity, and fixed-degree assumptions; some allowed kernels have entire zero-eigenvalue degrees.
 
-These problems affect the NNGP discussion, not the strong-prior theorem. The entire appendix is outside the requested first paper and is excluded.
+These problems affect the NNGP discussion, not the strong-prior theorem. The entire appendix is outside the strong-prior companion paper and is excluded.
 
 \section{Appendix K: online ordering and MDL (slides 104--109)}
 The conjunction ladder is a rigorous counterexample to a deterministic simplest-consistent \emph{formula} learner when $d\geq3$, the listed gate costs are fixed, and ties are deterministic. At Hamming-weight stage $k$, consistency with all lower-weight negative examples implies that a nonzero Boolean polynomial has no monomial of degree below $k$. A cheapest formula must therefore have at least $k$ variable leaves and $k-1$ binary gates. At equality it depends on exactly those $k$ variables and is zero on every assignment except all ones, so it is their conjunction. Presenting its unique weight-$k$ positive point eliminates exactly that candidate. The learner makes $2^d$ or $2^d-1$ mistakes, depending on the first constant tie, while the target has description length $\Theta(d\log d)$.

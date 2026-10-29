@@ -4,7 +4,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage{lmodern,microtype,amsmath,amssymb,amsthm,mathtools}
 \usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
-\hypersetup{pdftitle={Superpolynomial sample lower bounds below the mean-field scaling},pdfauthor={ChatGPT-6 Astra; Kaarel Hanni; Dmitry Vaintrob}}
+\hypersetup{pdftitle={Superpolynomial sample lower bounds below the mean-field scaling: the earlier positive-exponent argument},pdfauthor={ChatGPT-6 Astra; Kaarel Hanni; Dmitry Vaintrob}}
 \setlength{\emergencystretch}{2em}
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{lemma}[theorem]{Lemma}
@@ -14,7 +14,8 @@
 \newcommand{\E}{\mathbb E}\newcommand{\Pp}{\mathbb P}
 \newcommand{\R}{\mathbb R}\newcommand{\X}{\mathcal X}
 \DeclareMathOperator{\sign}{sign}\DeclareMathOperator{\Var}{Var}
-\title{Superpolynomial sample lower bounds for globally margin-conditioned\ Bayesian neural networks below the mean-field scaling}
+\title{Superpolynomial sample lower bounds below the mean-field scaling:\\
+the earlier positive-exponent argument}
 \author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
 \date{October 15, 2026}
 \begin{document}\maketitle
@@ -33,11 +34,24 @@ actual network's moderate-deviation rate, an explicit spectral estimate
 for its saturated kernel, and an elementary polynomial-threshold lower
 bound. It does not replace the posterior by a Gaussian posterior and
 therefore also covers $\gamma\ge1/2$, where higher-order corrections can
-select among tied Gaussian-rate minimizers. An $\exp(\Omega(k))$ bound
-at fixed positive test error is not established here.
+select among tied Gaussian-rate minimizers. This earlier positive-exponent
+draft is included in the later unified superpolynomial paper; a separate
+paper subsequently proves an exponential bound for independent uniform
+samples. The proof retained here applies to every training set at its
+stated superpolynomial scale.
 \end{abstract}
 
 \section{Model and main result}
+\paragraph{Status and proof roadmap.}
+This is the positive-exponent precursor to the unified paper
+\emph{Superpolynomial sample lower bounds for globally margin-conditioned
+Bayesian neural networks below the mean-field scaling}. Its proof is
+self-contained: kernel concentration gives the actual network's
+large-deviation rate, a spectral estimate controls low-energy Fourier
+tails, and a polynomial-threshold obstruction converts that control into
+posterior error and confidence bounds. The exponential IID improvement
+is cited in the final scope discussion.
+
 Fix a dimension $d$, depth $L\ge2$, width $N$, margin $a>0$, and
 $0<\gamma<1$. On $\X=\{-1,1\}^d$, let
 \[
@@ -52,11 +66,18 @@ weights have variances
  \Var(W^s_{ij})=N^{-\gamma}\ (1<s<L),\quad
  \Var(W^L_i)=N^{-\gamma-1}.
 \end{equation}
+Equivalently, prescribe the normalized weight scale
+$t(N)=N^{(1-\gamma)/2}$ before varying width. The three variances are
+$t(N)^2/d$, $t(N)^2/N$, and $t(N)^2/N^2$, respectively.
+Thus $\gamma$ is fixed while the scalar scale follows this width schedule.
+
 The prior is conditioned on the all-input event
 $A_a=\{|z_N(x)|>a\text{ for every }x\in\X\}$.
 Training then conditions on exact, noiseless signs
 $\sign z_N(x_i)=f(x_i)$. Equivalently, the posterior is the original
 weight law conditioned on $A_a$ and these observed signs.
+The positive orthant probabilities established below ensure that this
+posterior is defined for every sufficiently large width.
 
 For a sample $S$, write
 \[
@@ -425,7 +446,12 @@ prior mass or cannot be the most likely exact function before every
 point is observed. The confidence conclusion concerns the marginal
 label probabilities in~\eqref{eq:confidence}.
 
-The exponential-in-$k$ sample question remains open. The present
+The later paper~\cite{subcritical-exponential} proves an
+$\exp(\Omega(k))$ lower bound for independent uniform samples at every
+fixed $\gamma<1$ and fixed depth. Its probability guarantee is for each
+specified sample size. The superpolynomial result here has a distinct
+advantage: it holds for every training set of the indicated size.
+The following discussion explains the limitation of this earlier proof. The present
 method first upper-bounds the energy of the learner's minimizers and
 then bounds what any function of that energy can accomplish. Its
 limitation is concrete: a polynomial with roots between consecutive
@@ -434,6 +460,20 @@ $O(\sqrt{k})$, and its sign agrees with parity on a fixed large
 fraction of the cube. Scaling that polynomial to a global margin
 gives kernel energy $\exp(O(\sqrt{k}\log k))$. Thus energy alone
 cannot give an $\exp(\Omega(k))$ necessary scale at fixed error.
+Here is the spectral justification for that energy estimate.
+For $j\le r$, choose the odd integer $m\in\{j,j+1\}$.
+The coefficient estimate~\eqref{eq:coeff} and the walk event
+which flips each of $m$ specified coordinates once give
+\[
+ \lambda_j\ge\frac{c_Lm!}{m^2(k+1)^m}
+ \ge\frac{c_L}{(r+1)^2(k+1)^{r+1}}.
+\]
+Using integer roots of parity opposite to $k$ in the variable
+$\sum_i x_i$ makes the central-band polynomial $P$ satisfy
+$1\le|P(x)|\le(2k)^r$ everywhere. Its Fourier degree is at most
+$r=O(\sqrt{k})$. The feasible output $aP$ therefore has energy
+at most
+$[a^2/(2c_L)](r+1)^2(k+1)^{r+1}(2k)^{2r}$, as claimed.
 A stronger sample lower bound would have to use more about the
 compatible minimum-energy interpolants and the training constraints.
 Conversely, that approximation does not prove a learning upper
@@ -474,6 +514,11 @@ Unused neurons are set to zero. Thus the same polynomial bounds
 hold at every fixed depth.
 
 \begin{thebibliography}{9}
+\bibitem{subcritical-exponential}
+ChatGPT-6 Astra, K. H\"anni, and D. Vaintrob.
+\emph{Exponential parity sample complexity below the mean-field scaling}.
+Companion manuscript, October 2026.
+
 \bibitem{ABFR} J. Aspnes, R. Beigel, M. Furst, and S. Rudich.
 \emph{The expressive power of voting polynomials}.
 Combinatorica 14(2):135--148, 1994.

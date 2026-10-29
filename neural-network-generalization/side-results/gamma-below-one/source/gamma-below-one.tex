@@ -42,18 +42,10 @@ prediction counts as successful only when the posterior probability
 of its correct label exceeds $2/3$. For $\gamma\le0$ and depth
 at least a constant multiple of $d$, we prove that, for every target, the
 failure fraction is exactly the unseen fraction in the width limit; even
-parity on $d$ bits then needs $\Theta(2^d)$ examples. The
-stronger claim that every fixed
-$\gamma<1$ requires exponentially many examples for a $k$-bit parity
-is not established: a small parity eigenvalue alone does not imply
-that claim for this posterior.
-Note added (October 2026): the later paper \emph{Exponential parity sample complexity
-below the mean-field scaling} proves an $\exp(\Omega(k))$ confidence lower bound
-for full $k$-bit parity ($d=k$) at every fixed $\gamma<1$ and fixed depth, in the
-width-first limit. For sparse parity with $0<\gamma<1$, the paper \emph{Exponential sample
-lower bounds for sparse parity under a globally separated neural prior} proves an
-$\exp(\Omega(k))$ bound; the natural $\exp\{\Omega(k\log(ed/k))\}$ scale at fixed depth
-remains open.
+parity on $d$ bits then needs $\Theta(2^d)$ examples. The fixed-depth full-parity lower bound was subsequently proved in a
+companion paper. The present paper supplies the limiting-prior structure
+and explains why a small parity eigenvalue alone is insufficient for a
+sample lower bound.
 \end{abstract}
 
 \section{Model, posterior, and order of limits}
@@ -73,6 +65,11 @@ Gaussian, with variances
  \qquad \operatorname{Var}(W^s_{ij})=N^{-\gamma}\ (1<s<L),
  \qquad \operatorname{Var}(W^L_i)=N^{-\gamma-1}.
 \end{equation}
+Equivalently, prescribe the normalized weight scale
+$t(N)=N^{(1-\gamma)/2}$ before varying width. The three variances are
+$t(N)^2/d$, $t(N)^2/N$, and $t(N)^2/N^2$, respectively.
+Thus $\gamma$ is fixed while the scalar scale follows this width schedule.
+
 This is the strong-prior scaling line in the source notes~\cite{notes},
 continued below $\gamma=1$. The main statements are specific to this
 line. Changing the relative layer variances or inserting additional
@@ -132,6 +129,13 @@ Every width limit in this paper takes $N\to\infty$ with $d,L,\gamma,a$
 fixed. Sample-complexity statements then study the resulting family
 as $d,k,n$ vary, where $k$ is the parity size. We do not exchange these
 limits or claim quantitative uniformity in $d$ or $L$.
+
+\paragraph{Proof roadmap.}
+Section~\ref{sec:gamma-less-one} proves exponential concentration of hidden
+covariances and derives the three posterior regimes. Section~\ref{sec:classification-bounds}
+then identifies the paired Fourier spectrum, studies compatible constant
+and coordinate functions, and proves confidence bounds. Its final
+counterexample separates these results from an eigenvalue-only inference.
 
 \input{source/gamma-lt1.tex}
 
@@ -242,7 +246,7 @@ prior rate such as~\eqref{eq:parity-kernel-energy} does not alone yield
 a lower bound on examples: a few observations can remove all
 competitors with larger prior mass.
 
-\section{The unresolved exponential parity question}
+\section{Historical scope and subsequent parity bounds}
 
 For the precise architecture~\eqref{eq:model-variances}, a fixed kernel
 does govern every fixed $\gamma<1$. This follows from exponential
@@ -259,14 +263,16 @@ The freezing proof separates the scales $N$ and $N^\gamma$. At
 $\gamma=1$ they coincide, so the argument cannot discard feature
 deviations at the scale relevant to learning.
 
-Note added (October 2026): the later paper \emph{Exponential parity sample complexity
-below the mean-field scaling} proves an $\exp(\Omega(k))$ confidence lower bound
-for full $k$-bit parity ($d=k$) at every fixed $\gamma<1$ and fixed depth, in the
-width-first limit. For sparse parity with $0<\gamma<1$, the paper \emph{Exponential sample
-lower bounds for sparse parity under a globally separated neural prior} proves an
-$\exp(\Omega(k))$ bound; the natural $\exp\{\Omega(k\log(ed/k))\}$ scale at fixed depth
-remains open. The following paragraph describes
-the state of the argument when this paper was written.
+The later companion paper~\cite{subcritical-exponential} proves an
+$\exp(\Omega(d))$ confidence lower bound for full parity at every fixed
+$\gamma<1$ and fixed depth, with probability at least $3/4$ over independent
+uniform samples at each specified sample size below the bound.
+For growing sparse parity with $0<\gamma<1$, a separate paper proves
+an $\exp(\Omega(k))$ bound~\cite{growing-sparse-positive}; the natural
+$\exp\{\Omega(k\log(ed/k))\}$ scale at fixed depth is outside those
+results. The following paragraph describes the missing steps in the
+earlier argument presented here, rather than an unresolved full-parity
+claim.
 
 The statements proved here do not establish a uniform
 $\exp(\Omega(k))$ sample lower bound for $k$-bit parity throughout
@@ -283,6 +289,16 @@ gaps in an attempted deduction, rather than a proved counterexample
 for the specified neural-network kernel.
 
 \begin{thebibliography}{9}
+\bibitem{subcritical-exponential}
+ChatGPT-6 Astra, K. H\"anni, and D. Vaintrob.
+\emph{Exponential parity sample complexity below the mean-field scaling}.
+Companion manuscript, October 2026.
+
+\bibitem{growing-sparse-positive}
+ChatGPT-6 Astra, K. H\"anni, and D. Vaintrob.
+\emph{Exponential sample lower bounds for sparse parity under a globally
+separated neural prior}. Companion manuscript, October 2026.
+
 \bibitem{notes}
 D. Vaintrob and K. H\"anni.
 \emph{A Generalization Result for Overparametrized Neural Net Bayesian Learning}.

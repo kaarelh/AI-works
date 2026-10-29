@@ -30,30 +30,52 @@ def rebuild(paper):
         if proc.returncode:
             result['error'] = proc.stdout[-2500:] + proc.stderr[-1000:]
             return result
-        result['pdf_text_matches'] = text_of_pdf(leaf / 'paper.pdf') == text_of_pdf(out / 'paper.pdf')
-        log = (out / 'build/paper.log').read_text(errors='replace')
+        pdf_name = paper.get('pdf_file', 'paper.pdf')
+        result['pdf_text_matches'] = text_of_pdf(leaf / pdf_name) == text_of_pdf(out / pdf_name)
+        # Read final TeX logs, not captured first-pass console transcripts.
+        logs = [p for p in out.rglob('*.log') if not re.fullmatch(r'pass\d+\.log', p.name)]
+        log = '\n'.join(p.read_text(errors='replace') for p in logs)
         result['unresolved_references'] = bool(re.search(r'There were undefined references|Reference .* undefined|Citation .* undefined', log))
         result['latex_warnings'] = re.findall(r'^LaTeX Warning:.*', log, re.M)
         return result
 
 
+def markdown_links(text):
+    """Find inline link destinations outside fenced/indented code and code spans."""
+    prose = []
+    fence = None
+    for line in text.splitlines():
+        marker = re.match(r'^ {0,3}(`{3,}|~{3,})', line)
+        if marker:
+            token = marker.group(1)
+            if fence is None:
+                fence = token
+            elif token[0] == fence[0] and len(token) >= len(fence):
+                fence = None
+            continue
+        if fence is not None or line.startswith(('    ', '\t')):
+            continue
+        prose.append(re.sub(r'(`+).*?\1', '', line))
+    return re.findall(r'\]\(([^)]+)\)', '\n'.join(prose))
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--rebuild', action='store_true', help='Run two LaTeX passes per paper in temporary directories.')
+    parser.add_argument('--rebuild', action='store_true', help='Run each paper build script in a temporary directory.')
     parser.add_argument('--jobs', type=int, default=4)
     args = parser.parse_args()
     catalog = json.loads((ROOT / 'catalog.json').read_text())
     failures = []
     for paper in catalog:
         leaf = ROOT / paper['path']
-        pdf = leaf / 'paper.pdf'
+        pdf = leaf / paper.get('pdf_file', 'paper.pdf')
         if not pdf.is_file() or hashlib.sha256(pdf.read_bytes()).hexdigest() != paper['pdf_sha256']:
             failures.append(f"PDF checksum mismatch: {paper['slug']}")
         for rel in ('README.md', 'build.sh', paper['source_entry']):
             if not (leaf / rel).is_file():
                 failures.append(f'Missing file: {leaf / rel}')
     for readme in ROOT.rglob('*.md'):
-        for link in re.findall(r'\]\(([^)]+)\)', readme.read_text()):
+        for link in markdown_links(readme.read_text()):
             parsed = urlsplit(link.strip('<>'))
             if parsed.scheme or not parsed.path:
                 continue

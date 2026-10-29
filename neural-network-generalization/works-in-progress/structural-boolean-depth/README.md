@@ -92,3 +92,5 @@ independent mathematical review. This package is not Lean verified;
 the imported analytic theorems retain the verification status recorded
 in their own packages. No unconditional exponential sample lower bound
 or generic subexponential compiler is claimed.
+
+The PDF was reviewed and rebuilt from the included source on 29 October 2026. The [review record](../../verification/remaining-papers-2026-10-29.md) describes exposition changes, mathematical corrections, and the limits of the checks. Existing formalization claims retain their stated scope.

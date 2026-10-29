@@ -22,7 +22,42 @@
 \author{Research report prepared by OpenAI Codex for Kaarel H\"anni}
 \date{17 October 2026}
 \begin{document}
+\section*{Robust posterior compression: standalone supplement}
+This supplement gives the posterior-compression argument from
+\emph{Depth dependence, internal robustness, and Bayesian neural-network
+learning} (17 October 2026). The construction approximates each
+posterior prediction by a distribution on one finite class; a common
+coupling over all test inputs is not required.
 \section{Model}
+Let $d\ge1$, $N\ge1$, and $L\ge2$. On $x\in\{-1,1\}^d$,
+a width-$N$ network computes
+\[
+ h^0=(1,x),\qquad h^s=\phi(W^sh^{s-1})\ (1\le s<L),
+ \qquad z_w(x)=v^Th^{L-1}.
+\]
+The scalar activation $\phi$ is bounded by one in absolute value and
+is $1$-Lipschitz. There are no biases after the augmented input.
+Use additive postactivation perturbations
+$h^s_\eta=\phi(W^sh^{s-1}_\eta)+\eta^s$ and
+$z_w(x;\eta)=v^Th^{L-1}_\eta+\eta^L$, measured by
 \begin{equation}\label{eq:noisenorm}\|\eta\|_*^2=\sum_{s<L}\|\eta^s\|^2/N+|\eta^L|^2.\end{equation}
+A network has all-layer sign margin $r$ when its clean sign is
+preserved strictly at every cube input for every $\|\eta\|_*\le r$.
+For auxiliary classifiers set $\operatorname{sign}(0)=+1$.
+For a prescribed schedule $t=t(d,L,N)\in(0,1]$, abbreviated $t(N)$
+at fixed $d,L$, the raw Gaussian $\mu_{N,t}$ has independent entry
+variances $t^2/d,t^2/N,t^2/N^2$. Constant schedules are included.
+For laws $Q\ll\mu$, write
+$D_{\rm KL}(Q\Vert\mu)=\int\log(dQ/d\mu)\,dQ$.
+For independent examples labeled by a target $f$ and input law $D$,
+the posterior Gibbs error is
+$\mathbb E_{w\sim Q}\Pr_{X\sim D}
+\{\operatorname{sign}z_w(X)\ne f(X)\}$.
 \input{robust-entropy-compression.tex}
+\begin{thebibliography}{9}
+\bibitem{talagrand} M. Talagrand.
+Transportation cost for Gaussian and other product measures.
+\emph{Geometric and Functional Analysis} 6 (1996), 587--600.
+\url{https://doi.org/10.1007/BF02249265}.
+\end{thebibliography}
 \end{document}

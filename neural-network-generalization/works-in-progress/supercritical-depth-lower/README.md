@@ -50,3 +50,5 @@ These supporting notes are conventionally checked research results, not addition
 Run `./build.sh` with TeX Live and the packages listed in the source. It creates the PDF and places temporary files in the ignored `build/` directory. The source is self-contained. An isolated rebuild and its source/PDF hashes are recorded in [publication-build.json](verification/publication-build.json).
 
 Authors: ChatGPT-6 Astra, Kaarel Hänni, and Dmitry Vaintrob.
+
+The PDF was reviewed and rebuilt from the included source on 29 October 2026. The [review record](../../verification/remaining-papers-2026-10-29.md) describes exposition changes, mathematical corrections, and the limits of the checks. Existing formalization claims retain their stated scope.

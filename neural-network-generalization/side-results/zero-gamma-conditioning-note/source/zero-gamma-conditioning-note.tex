@@ -22,7 +22,7 @@
 \date{October 15, 2026}
 \begin{document}\maketitle
 \begin{abstract}
-We study the exact Gaussian-process posterior obtained by imposing a fixed absolute output margin at every Boolean input and then observing noiseless training signs. This is the $\gamma=0$ width limit of a specified Gaussian $\tanh$ network prior. For fixed depth, a random sample of size $n\le e^{d/25}$ has, simultaneously for every labeling, a raw conditioning probability at least $\exp[-C(d^2+nd+D_r\log d)]$, where $r\sim d/200$ and $D_r$ is the dimension of degree-$r$ Boolean polynomials. Consequently the actual latent posterior has average training log loss $O(d)$ when $n\ge D_r\log d$. We also prove that a posterior output draw has magnitude at least $c d^{(1-\beta)/2}$ at all but an $O(1/d)$ fraction of inputs in expectation, where $\beta=2^{-(L-1)}$. The proofs retain every global margin constraint. They use a comparison covariance, localized interpolation, and independent auxiliary subsets. These are conditioning estimates, not an exponential sample-complexity lower bound or an identification of posterior confidence with mean prediction. All kernel estimates needed for the conclusions are included.
+We study the exact Gaussian-process posterior obtained by imposing a fixed absolute output margin at every Boolean input and then observing noiseless training signs. This is the $\gamma=0$ width limit of a specified Gaussian $\tanh$ network prior. For fixed depth, a random sample of size $n\le e^{d/25}$ has, simultaneously for every labeling, a raw conditioning probability at least $\exp[-C(d^2+nd+D_r\log d)]$, where $r\sim d/200$ and $D_r$ is the dimension of Boolean polynomials of degree at most $r$. Consequently the actual latent posterior has average training log loss $O(d)$ when $n\ge D_r\log d$. We also prove that a posterior output draw has magnitude at least $c d^{(1-\beta)/2}$ at all but an $O(1/d)$ fraction of inputs in expectation, where $\beta=2^{-(L-1)}$. The proofs retain every global margin constraint. They use a comparison covariance, localized interpolation, and independent auxiliary subsets. These are conditioning estimates, not an exponential sample-complexity lower bound or an identification of posterior confidence with mean prediction. All kernel estimates needed for the conclusions are included.
 \end{abstract}
 
 \section{Model and results}
@@ -77,9 +77,20 @@ with independent centered Gaussian entries and variances
 \[
  \Var W^1_{ij}=N/d,\qquad \Var W^s_{ij}=1\ (1<s<L),\qquad \Var W^L_i=N^{-1}.
 \]
-These are the $\gamma=0$ scalings. At fixed $d,L$, the empirical hidden-layer covariances converge, by conditional laws of large numbers and induction, to iterates of $\Psi$. Indeed preactivation variances diverge, $\tanh$ converges to the sign function under a Gaussian coupling, and the Gaussian sign-correlation identity is $\E\sign U\sign V=(2/\pi)\arcsin\rho$. Continuous matrix square roots and bounded convergence justify the conditional covariance limit, including singular intermediate matrices. The first layer normalizes the augmented inputs to correlation $(1+x\cdot y)/(d+1)$. The final output is conditionally Gaussian with the empirical last-hidden covariance, so $z_N\Rightarrow G$ as a vector on the finite cube.
+Equivalently, the normalized weight scale follows the prescribed schedule
+$t(N)=\sqrt N$: the three variances are $t(N)^2/d$, $t(N)^2/N$,
+and $t(N)^2/N^2$. These are the $\gamma=0$ scalings. At fixed $d,L$, the empirical hidden-layer covariances converge, by conditional laws of large numbers and induction, to iterates of $\Psi$. Indeed preactivation variances diverge, $\tanh$ converges to the sign function under a Gaussian coupling, and the Gaussian sign-correlation identity is $\E\sign U\sign V=(2/\pi)\arcsin\rho$. Continuous matrix square roots and bounded convergence justify the conditional covariance limit, including singular intermediate matrices. The first layer normalizes the augmented inputs to correlation $(1+x\cdot y)/(d+1)$. The final output is conditionally Gaussian with the empirical last-hidden covariance, so $z_N\Rightarrow G$ as a vector on the finite cube.
 
 The spectral proof in Appendix~\ref{app:spectrum} shows $K$ is positive definite. Every boundary $G(x)=\pm a$ or $G(x)=0$ is a null set, and every compatible open margin-and-label event has positive probability. Ratios of probabilities therefore show convergence to the posterior used here when $N\to\infty$ at fixed $d,L,a,S$. No interchange of width and dimension limits is claimed.
+
+\paragraph{Proof roadmap.}
+Localized kernel functions interpolate arbitrary labels while maintaining
+a margin on the whole cube. A damped low-degree comparison covariance
+turns this construction into a lower bound on the conditioning
+probability. The exact latent density then gives the training-loss
+bounds. Finally, independent auxiliary input sets convert the same
+conditioning cost into an amplitude bound for actual output draws.
+The appendices supply the spectral and random covariance estimates.
 
 \section{A comparison covariance and a global interpolation bound}
 For a covariance $J$ on the cube, use the Gaussian Cameron--Martin norm $\|h\|_J^2=h^TJ^{-1}h$. For a translation-invariant kernel it equals $\sum_U\widehat h(U)^2/\lambda^J_{|U|}$, using normalized Walsh coefficients.
@@ -244,13 +255,21 @@ Bad auxiliary samples contribute at most their exponentially small probability. 
 \section{What these estimates do not prove}
 For parity labels $f(x)=\prod_i x_i$, define the actual confidence $q_S(x)=\Pp(f(x)G(x)>0\mid A_S)$ and the failure fraction $F_S=\Pp_x\{q_S(x)\le2/3\}$. Theorem~\ref{thm:main} does not give a positive lower bound on $F_S$. Its training-loss bound still needs a valid comparison with population loss for this globally conditioned posterior. Its amplitude estimate gives magnitudes, not signs or correlation with parity.
 
-In particular, a small positive lower bound on the posterior-draw error would be insufficient: if $R_S=\E[\Pp_x(f(x)G(x)<0)\mid A_S]$, then $R_S\le1/3+(2/3)F_S$. This implication would require $R_S>1/3$ to force a positive confidence-failure fraction. Nor is the sign of a posterior mean used as a substitute for confidence. The latent posterior contains the full factor $\prod_xB_a(H(x))$; no log-concavity of this posterior is assumed. Establishing an exponential sample lower bound with these conventions remains outside the conclusions of this note.
+In particular, a small positive lower bound on the posterior-draw error would be insufficient: if $R_S=\E[\Pp_x(f(x)G(x)<0)\mid A_S]$, then $R_S\le1/3+(2/3)F_S$. This implication would require $R_S>1/3$ to force a positive confidence-failure fraction. Nor is the sign of a posterior mean used as a substitute for confidence. The latent posterior contains the full factor $\prod_xB_a(H(x))$; no log-concavity of this posterior is assumed. An exponential sample lower bound is proved separately in the later
+paper~\cite{subcritical-exponential}, including this globally conditioned
+Gaussian endpoint. The present theorem remains an auxiliary conditioning
+estimate; its displayed conclusions alone do not imply that lower bound.
 
 \appendix
 \input{spectral}
 \input{tail-gram}
 
 \begin{thebibliography}{9}
+\bibitem{subcritical-exponential}
+ChatGPT-6 Astra, K. H\"anni, and D. Vaintrob.
+\emph{Exponential parity sample complexity below the mean-field scaling}.
+Companion manuscript, October 2026.
+
 \bibitem{flajolet2009} P. Flajolet and R. Sedgewick. \emph{Analytic Combinatorics}. Cambridge University Press, 2009. Chapter VI.
 \bibitem{tropp2008} J. A. Tropp. Norms of random submatrices and sparse approximation. \emph{Comptes Rendus Math\'ematique} 346:1271--1274, 2008. \href{https://tropp.caltech.edu/papers/Tro08-Norms-Random-v3.pdf}{Author manuscript}, Theorem 1.1.
 \end{thebibliography}

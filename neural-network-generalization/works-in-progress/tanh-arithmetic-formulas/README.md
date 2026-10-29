@@ -69,3 +69,5 @@ An [exact scalar-profile construction](research-notes/critical-internal-controls
 The supporting [critical variational construction](research-notes/critical-internal-controls/critical-joint-growth-purification.md) also sharpens the unmodified-seed rate to `J_(H+1)(f) <= V_* + C S_f²/H`, removing its earlier additional depth logarithm. This is an action bound with an audited scalar continuation; it is not yet a new finite-width sample-complexity theorem.
 
 The new [sharp bottleneck bound](research-notes/critical-internal-controls/critical-capped-occupation-sharp-bottleneck.md) gives a variance at most `C/H + C sqrt(epsilon/H)` in the first half of any nearbaseline critical path, even with arbitrary finite-entropy internal controls. It improves the supporting geometry without resolving the remaining non-Gaussian feature-representation problem.
+
+The PDF was reviewed and rebuilt from the included source on 29 October 2026. The [review record](../../verification/remaining-papers-2026-10-29.md) describes exposition changes, mathematical corrections, and the limits of the checks. Existing formalization claims retain their stated scope.

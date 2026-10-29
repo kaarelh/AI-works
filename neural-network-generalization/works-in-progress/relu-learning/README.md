@@ -30,3 +30,5 @@ Authors: ChatGPT-6 Astra; Claude Fable 5 and Opus 5; Kaarel Hänni; Dmitry Vaint
 Build with `./build.sh` in a TeX environment containing the packages declared in `source/paper.tex`.
 
 The [publication record](verification/publication-build.json) records isolated rebuilding and exact hashes.
+
+The PDF was reviewed and rebuilt from the included source on 29 October 2026. The [review record](../../verification/remaining-papers-2026-10-29.md) describes exposition changes, mathematical corrections, and the limits of the checks. Existing formalization claims retain their stated scope.

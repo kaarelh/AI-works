@@ -25,3 +25,5 @@ The [independent mean-shift audit](verification/finite-width-boolean-circuit-mea
 ## Build
 
 Run `./build.sh` from this directory. It requires `pdflatex` and the standard packages listed in the source. Auxiliary files go in `.build/`; the final document is copied to `paper.pdf`. The [build manifest](verification/build-manifest.json) records exact source and PDF hashes.
+
+The PDF was reviewed and rebuilt from the included source on 29 October 2026. The [review record](../../verification/remaining-papers-2026-10-29.md) describes exposition changes, mathematical corrections, and the limits of the checks. Existing formalization claims retain their stated scope.

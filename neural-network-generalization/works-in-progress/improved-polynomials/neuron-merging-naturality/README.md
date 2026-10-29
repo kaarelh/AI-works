@@ -66,3 +66,5 @@ The package also includes a larger historical checkpoint inventory, the alternat
 The signed and unequal-group extension resolves specific artificial features of the original restriction. It remains a substantive structural assumption. A quadratic bound under **only** the original internal-noise restriction is still open, as is a general explanation of when ordinary training produces these population structures.
 
 Run `./build.sh` to rebuild the paper. To replay the published trained-network witnesses and all three interval certificates, install NumPy, SciPy, and mpmath, then run `python replay.py --interval` from `experiments/`. The [publication record](verification/publication-build.json) records hashes, isolated source rebuilding, and empirical replay. No new Lean claim is made.
+
+The PDF was reviewed and rebuilt from the included source on 29 October 2026. The [review record](../../../verification/remaining-papers-2026-10-29.md) describes exposition changes, mathematical corrections, and the limits of the checks. Existing formalization claims retain their stated scope.

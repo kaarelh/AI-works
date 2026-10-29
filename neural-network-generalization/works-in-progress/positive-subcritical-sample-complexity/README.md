@@ -1,4 +1,4 @@
-# Superpolynomial sample lower bounds below the mean-field scaling (earlier positive-gamma version)
+# Superpolynomial sample lower bounds below the mean-field scaling: the earlier positive-exponent argument
 
 **Status:** Superseded standalone draft
 
@@ -11,3 +11,5 @@ Earlier self-contained 0 < gamma < 1 version of the superpolynomial lower-bound 
 Run `bash build.sh` in this directory with a standard TeX Live installation. The script runs two LaTeX passes, stores temporary output in `build/`, and refreshes `paper.pdf`. No network access is required.
 
 The PDF was rebuilt from unchanged source using two LaTeX passes, resolving cross-references that were missing in the earlier one-pass PDF. Its mathematical text has not been rewritten for this collection. Later results and current scope are summarized in the collection index.
+
+The PDF was reviewed and rebuilt from the included source on 29 October 2026. The [review record](../../verification/remaining-papers-2026-10-29.md) describes exposition changes, mathematical corrections, and the limits of the checks. Existing formalization claims retain their stated scope.

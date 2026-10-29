@@ -41,3 +41,5 @@ This is a **conventional mathematical proof with independent AI-agent reviews**,
 Run `bash build.sh` from this folder, or invoke the script by its path. It requires `latexmk` and a LaTeX installation with the packages declared in the source. The three files in `source/` contain the complete manuscript; no private scratch files are needed. Build output stays in the ignored `.build/` directory.
 
 Authors: ChatGPT-6 Astra, Kaarel Hänni, and Dmitry Vaintrob.
+
+The PDF was reviewed and rebuilt from the included source on 29 October 2026. The [review record](../../verification/remaining-papers-2026-10-29.md) describes exposition changes, mathematical corrections, and the limits of the checks. Existing formalization claims retain their stated scope.

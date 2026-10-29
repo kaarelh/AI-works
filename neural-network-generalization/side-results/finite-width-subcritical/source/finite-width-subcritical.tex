@@ -24,7 +24,7 @@ on the training labels. The guarantee concerns the actual posterior:
 its correct-label probability exceeds $2/3$ on almost all test inputs.
 Consequently, polynomial widths permit polynomial-sample learning of
 parity, and every subexponential width sequence permits subexponential
-sample complexity. These statements concern simultaneous growth of width
+sample complexity for parity. These statements concern simultaneous growth of width
 and dimension. They do not settle sample complexity when width first tends
 to infinity at each fixed dimension. The proof gives an explicit Gaussian
 probability bound by cloning a small target network and constraining only
@@ -135,6 +135,14 @@ The guarantee is statistical. No efficient method for evaluating the
 posterior is asserted. The following proofs are finite-dimensional and
 do not require a Gaussian-process approximation.
 
+\paragraph{Proof roadmap.}
+We clone a small target into groups of neurons at width $N$. Only its
+action on group-constant vectors needs a small Gaussian neighborhood;
+the remaining internal directions are controlled by an operator norm
+bound. A uniform perturbation estimate preserves every input margin.
+Multiplying the scalar Gaussian probabilities gives the target mass,
+which a finite-class posterior argument converts into the sample bound.
+
 \section{Cloning the target at an arbitrary width}
 Choose a width-$C$ implementation of $f$ from its complexity definition.
 Multiply its readout by $4a$. Write its hidden matrices as $B^s$ and
@@ -164,9 +172,13 @@ same group-constant subspace.
 
 Put
 \begin{equation}\label{eq:cylinder-radius}
- t=N^{(1-\gamma)/2}\ge1,
+ t=t(N)=N^{(1-\gamma)/2}\ge1,
  \qquad \rho=\rho_0t^{-(L-1)}.
 \end{equation}
+Here $t(N)$ is the prescribed width schedule determined by the fixed
+exponent $\gamma$. Every estimate below is at a chosen width, so $t(N)$
+is a scalar during that estimate; its dependence on $N$ is retained in
+the final probability cost.
 The normalized coordinates $\sqrt d\,W^1_{ij}$,
 $\sqrt N\,W^s_{ij}$ for $2\le s<L$, and $\alpha_j=NW^L_j$
 are independent centered Gaussians with standard deviation $t$.
@@ -368,5 +380,12 @@ internal directions are retained at their prior scale; their effect is
 controlled by shrinking the constrained radius. For $\gamma<1$, this
 shrinking costs an additional $\log N$ per constrained direction.
 That finite-width cost is why these learning guarantees coexist with
-possible statistical obstructions after taking width to infinity first.
+the width-first statistical obstructions proved in the later
+companion paper~\cite{subcritical-exponential}.
+\begin{thebibliography}{9}
+\bibitem{subcritical-exponential}
+ChatGPT-6 Astra, K. H\"anni, and D. Vaintrob.
+\emph{Exponential parity sample complexity below the mean-field scaling}.
+Companion manuscript, October 2026.
+\end{thebibliography}
 \end{document}
