@@ -22,7 +22,7 @@
 \newcommand{\sgn}{\operatorname{sign}}
 \title{A conditional obstruction to polynomial sample complexity\newline in unrestricted NNbayes}
 \author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
-\date{Research draft --- 26 October 2026}
+\date{Research draft --- 29 October 2026}
 \begin{document}
 \maketitle
 
@@ -48,9 +48,10 @@ its full quantifiers and cited as an input. The conclusion rules out a
 universal polynomial guarantee; it does not establish exponential depth
 dependence. Obtaining that guarantee while retaining the target class and
 the other learning conventions therefore requires changing the prior;
-restricting its support is one possible change. A Lean formalization checks
-the concrete-model reduction conditional on the analytic ceiling; the proof
-of that analytic input remains outside the formalization.
+restricting its support is one possible change. The main theorem is
+formalized in Lean for the stated Gaussian posterior, including the
+finite-width analytic ceiling at the fixed probability level used in
+the reduction.
 \end{abstract}
 
 \section{Introduction}
@@ -511,7 +512,8 @@ $O(\log R_d)=O(\log(d+2))$. The constants are uniform in $d$.
 Finitely many remaining input dimensions can be hardcoded.
 
 Every family in $\Pp$ therefore belongs to nonuniform $\TC^1$.
-The reverse inclusion is standard, so $\Pp=\TC^1$.
+The reverse inclusion is Lemma~\ref{lem:threshold-boolean}, so
+$\Pp=\TC^1$.
 \end{proof}
 
 Taking the contrapositive proves Theorem~\ref{thm:main}.
@@ -621,31 +623,147 @@ which that posterior assigns mass, and because distribution-free
 prediction can be converted into an exact finite circuit.
 
 \paragraph{Formal verification scope.}
-The accompanying Lean project defines the actual Gaussian prior,
-tanh network, global-margin posterior, iid sample law, and concrete
-Boolean and threshold circuits used in the statement. It proves the
-bounded-weight teacher compiler, the posterior-to-weak-voter transfer,
-the deterministic boosting argument, the actual circuit composition,
-threshold-to-Boolean simulation, polynomial family resource bounds,
-and the final circuit-class implication.
-
-There is one remaining analytic premise. The Lean theorem
-\begin{center}
-\texttt{conditionalImpossibility\_of\_posteriorCeiling}
-\end{center}
-proves the implication from the concrete proposition
-\texttt{AnalyticPosteriorCeiling} to the concrete main claim
-\texttt{ConditionalImpossibility}. The former is the finite-width
-Gaussian posterior statement corresponding to
-Proposition~\ref{prop:ceiling}, with integer resource envelopes; it is
-not an abstract oracle standing in for a different learner.
-\emph{Its proof has not been formalized.} The latter proposition states
+The accompanying Lean development proves Theorem~\ref{thm:main} for the
+actual Gaussian prior, tanh network, global-margin posterior, iid sample
+law, and concrete Boolean and threshold circuits defined above. Its final
+proved proposition, \texttt{ConditionalImpossibility}, states
 $\Pp\ne\TC^1\Rightarrow\forall t\,\neg\mathsf{PolyLearn}(t)$ with
-the exact conventions above, but has no closed Lean proof from the
-complexity assumption alone. Neither proposition is postulated as an
-axiom. Thus the package formally verifies the reduction and its
-concrete definitions, not the complete main theorem. The verification
-record gives file-level coverage and exact build information.
+exactly these conventions. The equivalent finite counterexample
+formulation is also proved. The complexity separation remains an
+assumption; the posterior circuit ceiling is a proved dependency, not
+an additional hypothesis of the final theorem. The scale quantifier
+covers positive finite scales; it does not assert the separately defined
+zero-temperature posterior obtained by taking a limit at fixed width.
+
+The checked proof includes the finite-width target-mass construction,
+conditional-entropy path extraction, all three physical-scale regimes,
+finite arithmetic and threshold-circuit compilation, bounded-weight
+teacher compilation, posterior-to-weak-voter transfer, finite boosting,
+and the circuit-family implication. Its axiom reports contain only
+Lean's standard \texttt{propext}, \texttt{Classical.choice}, and
+\texttt{Quot.sound}.
+
+This verification claim concerns the main theorem. The analytic ceiling
+is formalized at $\beta=1/6$, with integer resource envelopes, which is
+all the reduction needs. The stronger statement of
+Proposition~\ref{prop:ceiling} for every $\beta\in(0,1)$ and the uniform
+hard-family conclusion of Corollary~\ref{cor:hard-family} are not claimed
+to be formalized here. The verification record identifies the final
+entry point, exact checked sources, and reproducible build.
+
+\appendix
+\section{How the analytic posterior ceiling is obtained}
+\label{app:analytic-mechanism}
+
+This appendix describes the analytic argument needed for the main theorem,
+at the fixed exceptional mass $\beta=1/6$. The scalar entropy and
+approximation estimates used below are proved in \cite{barriers}; the
+accompanying Lean development also proves their required instances and
+constructs the final finite threshold circuits.
+
+\paragraph{From posterior mass to a controlled path.}
+Write $H=L-1$, $\ell=\log R$, and
+\[
+ a=t^{-2}-1,\qquad c_t=\frac{a-\log(1+a)}2.
+\]
+A controlled feature path records the Gram matrices of all Boolean inputs
+through the hidden layers. Its layer law has relative entropy $D_j$ with
+respect to the corresponding Gaussian row law. If $b$ is its final linear
+readout, its action is
+\[
+ \mathcal A=\sum_{j=1}^{H}D_j+\frac{\|b\|^2}{2t^2}.
+\]
+The path realizes the same Boolean function with strict signed margin
+$1/2$. A sample-memorizer construction lower-bounds the actual finite-width
+conditioning probability by $\exp(-NA_0)$, where
+\[
+ A_0\le Hc_t+V_*+B\left(a\ell+\frac{\ell^2}{H}\right)
+\]
+for a universal $B$. Here $V_*$ is the finite baseline of the scalar
+control problem. This construction applies to every target-labeled sample;
+it does not require the target itself to have a small representation.
+
+Conditioning the weight law on a sufficiently massive event gives a
+finite relative-entropy budget. Conditional entropy decomposition,
+finite-dimensional approximation, and margin repair then extract a
+genuine controlled path from that event. Choose extraction slack of order
+$1/(t^2H)$. The repair width is polynomial in the \emph{normalized} action
+$t^2A_0$ and the other resources, with the factor exponential in $d$ already
+allowed in \eqref{eq:width}. Thus its width threshold is uniform in $t$.
+If more than $1/6$ of posterior mass lay outside the proposed circuit
+class, this extraction would produce an outside-class path with
+\[
+ \mathcal A\le Hc_t+V_*+
+ B'\left(a\ell+\frac{\ell^2}{H}\right).
+ \tag{A.1}\label{eq:appendix-action}
+\]
+The remaining task is to compile every such path into the common class.
+
+\paragraph{Small raw action, including the critical endpoint.}
+A scalar occupation estimate controls paths satisfying
+$\mathcal A\le V_*+O(\ell^2/H)$. Adaptive Gaussian feature replacement
+reduces their representations to polynomially many coordinates. After
+normalization, the resulting recursion is a contractive linear part plus
+residual maps whose total Lipschitz budget is $O(\ell)$. This construction
+works for all $0<t\le1$ when the stated raw-action bound holds.
+
+The normalization multiplies the final readout by at most
+$\exp(O(\ell))$, so inverse-polynomial accuracy in normalized coordinates
+still preserves the original sign. These paths admit parallel, rather
+than layer-by-layer, evaluation. Unrolling the normalized linear part
+gives a strictly causal equation with
+propagators $T_{ji}$ of norm at most one. Simultaneous Picard updates take
+form
+\[
+ u^{(k+1)}_j=b_j(x)+\sum_{i<j}T_{ji}F_i(u^{(k)}_i).
+\]
+With $\Lambda=\sum_i\operatorname{Lip}(F_i)=O(\ell)$, the truncation and
+rounding error is bounded by
+$C\Lambda^k/k!+\delta e^{\Lambda}$.
+Consequently $k=O(\ell)$ updates and inverse-polynomial rounding precision
+preserve the output sign. Scalar lookup, affine arithmetic, radial
+clipping, and their finite-grid implementations give constant threshold
+depth per update and polynomial total size. The lookup tables range over
+polynomial-size scalar grids, not the Boolean input truth table.
+
+\paragraph{Scales bounded away from the critical endpoint.}
+When $a\ge1/4$, the excess action in \eqref{eq:appendix-action}, divided
+by $a$, is $O(\ell)$ after depth padding. The entropy two-ball estimate
+then gives a polynomial-size cover of a normalized prefix after
+$O(\ell)$ stages. Normalized layer maps are nonexpansive and admit
+polynomial-size, constant-depth arithmetic approximations. Oppositely
+labeled representatives are separated by an inverse-polynomial distance,
+because the remaining network and readout preserve the final margin.
+An actual threshold circuit computes the prefix and classifies it by
+squared distances to these representatives. Its size is polynomial and
+its depth is $O(\ell)$.
+
+\paragraph{Long paths near the critical endpoint.}
+Suppose $0<a<1/4$. If $aH\le Q\ell$, the bound $c_t\le a^2/2$
+turns \eqref{eq:appendix-action} into the small-raw-action case, with a
+constant depending only on $B'$ and $Q$.
+Otherwise, for a sufficiently large universal $Q$, scalar last-exit and
+occupation estimates select a prefix of length $O(\ell/a)$. Its adjusted
+entropy cost is $O(a\ell)$, and the accumulated variance and square-root
+entropy budgets are $O(\ell)$. A block-cover argument supplies
+polynomially many representatives drawn from actual inputs; representatives
+with opposite labels are separated at inverse-polynomial scale.
+Although the prefix may
+have far more than $O(\ell)$ layers, its normalized residual Lipschitz
+budget is $O(\ell)$, so the same parallel Picard construction evaluates
+it in $O(\ell)$ threshold depth. The distance classifier completes the
+circuit. Normalizing the actual Gaussian row gains also keeps the
+quadrature and rounding resources polynomial independently of $t$.
+
+\paragraph{Recombination.}
+These cases cover every $0<t\le1$, including both boundary values
+$a=0$ and $a=1/4$. Their constants are chosen before the dimension,
+depth, scale, or sample. Enlarging the common size and depth constants
+therefore puts every path satisfying \eqref{eq:appendix-action} in one
+class $\mathcal H_R$. The outside-class path extracted above is
+impossible. Hence the original posterior gives $\mathcal H_R$ mass at
+least $5/6$, as required by the main theorem's finite majority reduction.
+
 
 \begin{thebibliography}{9}
 \bibitem{barriers}

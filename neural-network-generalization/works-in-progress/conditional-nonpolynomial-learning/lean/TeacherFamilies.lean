@@ -5,7 +5,7 @@ import TeacherCompilation
 # Polynomial circuit families have polynomial-resource tanh teachers
 
 This is the concrete teacher side of the complexity reduction. It is distinct
-from the still-unproved actual-posterior circuit ceiling.
+from the separately proved actual-posterior circuit ceiling.
 -/
 
 noncomputable section

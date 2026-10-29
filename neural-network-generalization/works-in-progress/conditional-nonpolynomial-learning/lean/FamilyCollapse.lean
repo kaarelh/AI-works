@@ -8,8 +8,9 @@ import CircuitFamilies
 /-!
 # The family-level complexity reduction
 
-The analytic posterior ceiling remains an explicit premise. The results here
-do not assert it or supply a closed proof of the full neural theorem.
+This module proves the reusable reduction with the analytic posterior ceiling
+as an explicit premise. `ClosedConditionalImpossibility.lean` supplies its proved
+analytic input and the closed main theorem.
 -/
 
 noncomputable section
@@ -58,9 +59,9 @@ theorem majority_depth_logarithmic {d R B K D : ℕ}
   have := Nat.mul_le_mul_left K hR
   nlinarith
 
-/-- The full complexity-family implication, conditional on the one explicitly
-unproved analytic ceiling. All subsequent probability, circuit, teacher and
-asymptotic resource steps are verified here and in imported Lean modules. -/
+/-- The full complexity-family implication from the analytic ceiling, which is
+proved separately in the final assembly. All subsequent probability, circuit,
+teacher and asymptotic resource steps are verified here and in imported modules. -/
 theorem PPoly_subset_TC1_of_ceiling (hceiling : AnalyticPosteriorCeiling)
     (T : CanonicalSchedule) (hlearn : UniversalPolynomialGuarantee T) :
     PPoly ⊆ TC1 := by
@@ -107,9 +108,9 @@ theorem PPoly_subset_TC1_of_ceiling (hceiling : AnalyticPosteriorCeiling)
   exact majority_depth_logarithmic
     (FamilyResources.polynomial_log2_bound B m d (ceilingResource d n r) hR) hdep
 
-/-- The requested concrete main statement follows from the isolated analytic
-proof obligation. The extra premise is explicit and must not be omitted in
-claims about the verification coverage. -/
+/-- The concrete main statement follows from the analytic ceiling. This
+reusable reduction is instantiated without an extra premise by
+`conditionalImpossibility` in `ClosedConditionalImpossibility.lean`. -/
 theorem conditionalImpossibility_of_posteriorCeiling
     (hceiling : AnalyticPosteriorCeiling) : ConditionalImpossibility := by
   intro hsep T hlearn

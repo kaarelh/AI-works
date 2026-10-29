@@ -6,15 +6,15 @@
 
 The learner retains global absolute margin greater than `1/2`, exact fit of noiseless training labels, and a strict `>2/3` posterior correct-label criterion. Training and testing have the same arbitrary input distribution. The guarantee being ruled out must cover every learner width above teacher width; inference has no computational restriction.
 
-The paper makes the conditional negative result central. It gives the complete finite majority/boosting reduction, the bounded-weight Boolean-to-tanh implementation, and the order of quantifiers in the circuit-class collapse. Its analytic input is the actual-posterior circuit ceiling from the [parallel-complexity paper](../boolean-depth-barriers/), stated explicitly here with its width, depth, scale, and sample conditions.
+The paper makes the conditional negative result central. It gives the complete finite majority/boosting reduction, the bounded-weight Boolean-to-tanh implementation, and the order of quantifiers in the circuit-class collapse. Its analytic input is the actual-posterior circuit ceiling from the [parallel-complexity paper](../boolean-depth-barriers/), stated explicitly here with its width, depth, scale, and sample conditions. The appendix explains its proof mechanism, and the Lean development proves the required fixed-probability version from the actual Gaussian model.
 
 This is **not an exponential-depth lower bound**. It rules out a universal polynomial guarantee under the stated conjecture. If the target class and the other learning conventions are retained, obtaining that guarantee requires changing the prior; a robustness restriction is one possible change. Restricting the target class or input laws, or changing other parts of the learning setup, are alternative ways to change the premises.
 
 ## Formal verification
 
-**The complete main theorem is not yet Lean verified.** The [Lean project](lean/README.md) defines the actual Gaussian posterior and concrete circuit classes and proves the statistical reduction, teacher compilation, circuit constructions, and family-level complexity implication. The main [formal statement](lean/NNBayesStatement.lean) matches the paper's learner and quantifiers.
+**The central theorem and its finite counterexample formulation have closed Lean proofs.** The [main entry point](lean/ClosedConditionalImpossibility.lean) proves `ConditionalImpossibility` with no analytic premise beyond the stated complexity-class separation. It includes the actual Gaussian posterior ceiling, all three scale regimes, explicit circuit compilation, teacher compilation, finite boosting and the family-level contrapositive.
 
-The [final reduction](lean/FamilyCollapse.lean) proves the main implication under one explicit additional premise: the [actual-posterior circuit ceiling](lean/AnalyticCeiling.lean). That analytic premise is stated concretely but remains unproved in Lean. It is not introduced as an axiom or hidden in the definition of the learner. The [verification record](verification/README.md) records the exact coverage and build checks.
+An [independent expanded statement](lean/IndependentLiteralMainAudit.lean) spells out the actual posterior failure event and positive conditioning denominators. The [verification record](verification/README.md) provides source hashes, clean-build records and independent statement audits. The formal claim covers positive finite-scale schedules; the exact zero-temperature limiting posterior and the paper's stronger fixed-hard-family corollary are not separately formalized here.
 
 ## Reproduction
 

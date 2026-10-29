@@ -1,5 +1,9 @@
 # Collection verification
 
+## Conditional nonpolynomial learning, 29 October 2026
+
+The [conditional impossibility paper](../works-in-progress/conditional-nonpolynomial-learning/verification/) has a closed Lean proof of its central theorem for the actual Gaussian tanh posterior. The proof includes the scale-uniform posterior circuit ceiling, finite circuit compiler and circuit-class reduction. Its separate package preserves the original five-result and second-batch numbering; the linked record states the exact scope, source hashes and fresh-build checks.
+
 This record concerns packaging and source reproducibility. Mathematical review records are retained in the relevant paper folders.
 
 The [19 October 2026 review](review-2026-10-19.md) records a collection-wide check of the Lean statements and of the unformalized mathematics, with the resulting revisions.

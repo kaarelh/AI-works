@@ -3,19 +3,18 @@ import PosteriorBridge
 import FiniteReductionCircuits
 
 /-!
-# The remaining analytic posterior-circuit ceiling
+# The actual posterior-circuit ceiling
 
-`AnalyticPosteriorCeiling` is a concrete PROOF TARGET, not a proved theorem or
-an axiom. The definition below is a sufficient integer-budget version of the
-uniform actual-posterior ceiling imported by the paper. It states precisely
-which Gaussian posterior must put mass on precisely which finite-resource
-threshold-circuit class. The class does not depend on the sample, scale or width.
+`AnalyticPosteriorCeiling` defines the concrete integer-budget version of the
+uniform actual-posterior ceiling, at beta=1/6. Its closed proof is
+`analyticPosteriorCeiling` in `ClosedConditionalImpossibility.lean`.
+It concerns the original Gaussian posterior and a threshold-circuit class
+independent of sample, scale and width. No ceiling is declared as an axiom.
 
-Natural logarithms in the manuscript can be changed to `Nat.log2` after changing
-universal constants. At beta=1/6 the width summand `2*W*H` dominates `W*H*log 6`.
-The analytical proof of this assertion remains to be formalized. The theorem at
-the end verifies its finite actual-posterior consequence, with that missing
-assertion explicitly present as a hypothesis.
+Natural logarithms can be changed to `Nat.log2` by changing universal constants.
+At beta=1/6 the width summand `2*W*H` dominates `W*H*log 6`.
+The final theorem here is the reusable finite consequence of the ceiling;
+the actual analytic proof is supplied by the modules under `analytic/`.
 -/
 
 noncomputable section
@@ -60,8 +59,8 @@ def CeilingAt (b : CeilingConstants) : Prop :=
       (5/6:ℝ) ≤ ∑ g, if g ∈ ceilingClass b d n r then
         networkPosterior Real.tanh (1/2) (canonicalPrior T d N r) f s g else 0
 
-/-- The explicit missing analytic result. Defining this proposition does NOT
-prove it; no axiom or closed theorem of this type is declared here. -/
+/-- The concrete analytic proposition proved by `analyticPosteriorCeiling`
+in `ClosedConditionalImpossibility.lean`. -/
 def AnalyticPosteriorCeiling : Prop := ∃ b : CeilingConstants, CeilingAt b
 
 /-- Pointwise learning-to-majority reduction under the separately stated

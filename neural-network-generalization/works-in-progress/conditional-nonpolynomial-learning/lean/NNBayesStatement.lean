@@ -5,8 +5,8 @@ import Mathlib.Tactic.FieldSimp
 /-!
 # The concrete Gaussian NNbayes statement
 
-`ConditionalImpossibility` below is the exact proof target, a definition of a
-proposition rather than a proved theorem. Its Gaussian prior, network outputs,
+`ConditionalImpossibility` below defines the exact main statement. Its closed
+proof is `conditionalImpossibility` in `ClosedConditionalImpossibility.lean`. Its Gaussian prior, network outputs,
 global-margin conditioning, posterior and iid sample probability are the
 existing concrete definitions. No abstract learner or posterior ceiling is a
 hypothesis of that proposition.
@@ -121,7 +121,7 @@ def PolynomialCounterexample (T : CanonicalSchedule) (A : ℝ) (k : ℕ) : Prop 
 /-- Logical expansion of failure: every proposed polynomial has an actual
 counterexample at a sample count at least its claimed sufficient threshold.
 This theorem is proved; it does not assert the complexity conjecture or the
-unproved neural-to-circuit implication. -/
+neural-to-circuit implication, whose proof is assembled separately. -/
 theorem not_polynomial_guarantee_iff (T : CanonicalSchedule) :
     ¬ UniversalPolynomialGuarantee T ↔
       ∀ A : ℝ, 0 < A → ∀ k : ℕ, PolynomialCounterexample T A k := by
@@ -155,18 +155,18 @@ theorem canonical_posteriorDenominator_pos (T : CanonicalSchedule)
   exact small_posteriorDenominator_pos (by omega) tanh_continuous f hf hCN
     (div_pos ht (Real.sqrt_pos.mpr hNr)) s
 
-/-- Exact concrete statement requested in the paper. This declaration is a
-PROOF TARGET, not a theorem: no analytic premise is silently assumed and no
-closed proof of this proposition is supplied by this file. -/
+/-- Exact concrete statement of the paper. The closed theorem of this type is
+`conditionalImpossibility` in `ClosedConditionalImpossibility.lean`; no additional
+analytic premise appears in that theorem. -/
 def ConditionalImpossibility : Prop :=
   PPoly ≠ TC1 → ∀ T : CanonicalSchedule, ¬ UniversalPolynomialGuarantee T
 
-/-- Equivalent concrete counterexample formulation of the same proof target. -/
+/-- Equivalent concrete counterexample formulation of the same main statement. -/
 def ConditionalCounterexamples : Prop :=
   PPoly ≠ TC1 → ∀ T : CanonicalSchedule,
     ∀ A : ℝ, 0 < A → ∀ k : ℕ, PolynomialCounterexample T A k
 
-/-- The two exact main proof targets have equivalent quantifiers. -/
+/-- The two exact main statements have equivalent quantifiers. -/
 theorem conditional_statement_iff :
     ConditionalImpossibility ↔ ConditionalCounterexamples := by
   constructor
