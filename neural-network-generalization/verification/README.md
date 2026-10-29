@@ -1,5 +1,9 @@
 # Collection verification
 
+## FAQ and joint width–depth polynomials, 29 October 2026
+
+The [FAQ review](faq-refresh-2026-10-29.md) makes teacher width and depth explicit in the improved sample bounds, with derivations from each paper's budgets and separate formal-coverage labels. The general pass updates the conditional depth obstruction, finite-width subcritical upper bound, confidence constants, empirical scope, and extension status. Papers and Lean sources are unchanged.
+
 ## Remaining papers: standalone and mathematical review, 29 October 2026
 
 The [second review](remaining-papers-2026-10-29.md) covers the other 48 canonical manuscripts and six companions/supplements, with local mathematical corrections, detailed review limits, and isolated rebuilds. Together with the first pass below, it covers all 66 canonical manuscripts. The conditional-impossibility abstract was also clarified to state its prescribed width-dependent scale. No Lean sources changed. The new record supplies current manuscript hashes; older records remain snapshots of their stated dates.
