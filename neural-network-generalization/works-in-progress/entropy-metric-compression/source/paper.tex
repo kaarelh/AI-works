@@ -23,22 +23,23 @@
 We prove sample bounds for Gaussian Bayesian tanh networks restricted to
 predictions stable under simultaneous internal disturbances. For a layered
 Boolean teacher of width $C$ and $L-1$ gate stages, a sufficient sample
-count is $\widetilde O(C^4L^{11})$, uniformly over every learner width
+count is $\widetilde O(C^4L^9)$, uniformly over every learner width
 $N\ge C$ and every mean-field-or-stronger scale $\gamma\ge1$.
-For $\gamma\ge8/7$ the bound improves to $\widetilde O(C^4L^9)$.
-A separate stronger-scale argument gives
-$\widetilde O(\min\{C^4L^7,C^{9/2}L^6\})$ for $\gamma\ge2$
-and in the strong-prior limit at each fixed width. The robustness
-restriction is the same in all these statements. Input dimension,
+For $\gamma\ge7/4$, the bound improves to $\widetilde O(C^4L^8)$.
+At $\gamma\ge2$, and in the strong-prior limit at each fixed width,
+a separate argument gives
+$\widetilde O(\min\{C^4L^7,C^{9/2}L^6\})$. The same stronger bound
+also holds at a positive scale ceiling independent of learner width.
+The robustness restriction is unchanged throughout. Input dimension,
 robustness calibration, accuracy, and confidence are fixed in these
-rate displays. The all-scale proof uses an entropy-weighted regression
-and a positive estimate of the Gaussian variance to construct a smaller
-finite comparison class. A direct Bayesian bound handles widths where
-the information needed to describe that construction is too costly.
-The stronger-scale proof uses multilevel sampling of two consecutive
-layers. We give the model, exact budgets, new proofs, and explicitly
-state the previously established reconstruction estimates used.
-These are conventional mathematical proofs, not Lean formalizations.
+rate displays. The all-scale proof combines entropy-weighted regression
+with a Gaussian-weighted description of uniformly sampled coefficient
+rows. A spectral truncation separates a bounded-energy network from a
+background of small operator norm and yields the uniform cold-scale
+bound. Multilevel sampling supplies the depth-six tradeoff.
+We give exact budgets and proofs, and explicitly state the previously
+established reconstruction estimates used. These results are conventional
+mathematical proofs, not Lean formalizations.
 \end{abstract}
 
 \section{Introduction}
@@ -52,45 +53,56 @@ are stable under a calibrated ball of simultaneous internal disturbances.
 The restriction is stated in full below and is fixed before observing
 training labels.
 
-The main result is quartic dependence on teacher width throughout the
-mean-field-or-stronger Gaussian regime: $\widetilde O(C^4L^{11})$
-samples suffice at every learner width $N\ge C$. At moderately stronger
-scales the bound is $\widetilde O(C^4L^9)$. At still stronger scales,
-a different method gives a choice between $\widetilde O(C^4L^7)$ and
-$\widetilde O(C^{9/2}L^6)$. The latter improves depth dependence at a
-small cost in the width exponent; it is not a quartic-width depth-six
-bound. All statements allow an arbitrary common iid training and test
-input distribution.
+The main result is $\widetilde O(C^4L^9)$ samples throughout the
+mean-field-or-stronger Gaussian regime, at every learner width $N\ge C$.
+For $\gamma\ge7/4$, a separate interpolation gives
+$\widetilde O(C^4L^8)$. At $\gamma\ge2$, the bounds are
+$\widetilde O(C^4L^7)$ and $\widetilde O(C^{9/2}L^6)$; one may choose
+the smaller. The latter improves depth dependence at a cost in the
+width exponent. All statements allow an arbitrary common iid training
+and test input distribution.
 
 The all-scale construction measures approximation error using a matrix
-that records the conditional Gaussian entropy in different active
+that records conditional Gaussian entropy in different active
 directions. Independent-batch regression controls error in that metric.
-An upper estimate of the total variance then permits a stable nonlinear
-projection and just one Gaussian coefficient per reconstructed row.
-The resulting comparison functions are finite arithmetic programs; they
+An upper estimate of the total variance permits a stable nonlinear
+projection and one Gaussian coefficient per reconstructed row. The
+resulting comparison functions are finite arithmetic programs; they
 need not be neural networks. Only the original posterior networks must
-satisfy the stated robustness restriction. A direct prior-mass bound
-handles the remaining widths and also sharpens the dependence on the
-Gaussian scale.
+satisfy the robustness restriction.
 
-The second construction approximates two consecutive activation layers
-using antithetic multilevel sampling. Its accuracy and cost depend on
-aggregate squared weights. Allocating spectral cutoffs across layers
-using their individual energies yields the depth-six tradeoff.
-Neither construction adds a merging, coherence, or spectral-product
-condition to the prior.
+A substantial saving comes from the probabilities assigned to these
+finite descriptions. Uniformly sampled rows inherit only their fraction
+of a full Gaussian block's relative entropy. We use their quantized
+Gaussian probabilities in the comparison prior, and encode the remaining
+parameters separately. This is a proof device: the actual Bayesian
+learner's prior is unchanged. Direct posterior bounds handle widths
+where constructing the code would cost too much, and a finite mixture
+of reference priors gives one event valid for all widths and scales.
+
+The stronger bounds use a different idea. Clamping each internal
+matrix's singular values at a constant times the Gaussian scale leaves
+a residual network whose energy has a width-independent posterior tail.
+The clamped part has small operator norm. When the scale is sufficiently
+small, discarding it uses only part of the allowed internal disturbance.
+This gives a positive cold-scale threshold independent of learner width,
+and interpolating it with a direct Bayesian bound gives the intermediate
+$\gamma\ge7/4$ result. Multilevel sampling of two consecutive activation
+layers gives the separate depth-six tradeoff. No merging, coherence,
+or spectral-product condition is added to the prior.
 
 After the model and main statements, we give the simpler energy-based
-code and its posterior argument. The appendices provide the target
-cylinder, the prior reconstruction and density estimates, and the three
-new arguments: entropy-metric compression
-(Appendix~\ref{app:entropy-metric}), the direct posterior and scale
-interpolation bound (Appendix~\ref{app:scale-interpolation}), and
-multilevel compression (Appendix~\ref{app:mlmc-code}). The supporting
-energy and factor codes are retained to make their exact hypotheses
-and their role in the new bounds explicit; those supporting codes
-build on~\cite{sequential}. No efficient posterior
-inference algorithm or optimality of the sample powers is asserted.
+code and its posterior argument. The appendices give the target
+cylinder and supporting reconstruction estimates, followed by
+entropy-metric compression (Appendix~\ref{app:entropy-metric}),
+Gaussian-weighted coding and its all-scale learning theorem
+(Appendices~\ref{app:weighted-entropy}--\ref{app:weighted-code}),
+multilevel compression (Appendix~\ref{app:mlmc-code}), and the
+spectral cold-scale bound and interpolation
+(Appendices~\ref{app:spectral-cold}--\ref{app:spectral-interpolation}).
+The supporting sequential and factored codes build on~\cite{sequential}.
+No efficient posterior inference algorithm or optimality of the sample
+powers is asserted.
 
 \section{Learner, target, and robustness restriction}
 
@@ -169,26 +181,15 @@ Put $F_0=1+\log^2(2+C)$ and $G=\log(2+CL)$.
 There is a constant $A_0$, depending only on these four quantities,
 such that
 \[
- n\ge A_0 C^4L^{11}F_0^4G^2
+ n\ge A_0 C^4L^9F_0^4G^2
 \]
 implies, with sample probability at least $1-\delta$,
 $R(Q_{S,N,t,c})\le\varepsilon$ simultaneously for every $N\ge C$
-and every $0<t\le1$.
+and every $0<t\le1$. In particular, this includes every
+$\gamma\ge1$.
 
-More precisely, for each $\gamma\ge1$ it suffices to require
-\[
- n\ge A_0F_0^4G^2\left[
- C^4L^9+
- C^{(6\gamma-2)/(3\gamma-2)}
- L^{(13\gamma-2)/(3\gamma-2)}\right]
-\]
-to obtain the same conclusion simultaneously for $N\ge C$ and
-$0<t^2\le N^{1-\gamma}$. In particular,
-$A_0C^4L^9F_0^4G^2$ samples suffice for $\gamma\ge8/7$.
-The constant can be chosen independently of $\gamma$.
-
-The statements hold for every Boolean teacher and iid input law
-specified above. They also hold after adding the label-independent
+The statement holds for every Boolean teacher and iid input law
+specified above. It also holds after adding the label-independent
 prior restriction $|z_w(x)|>1/2$ at every Boolean input.
 \end{theorem}
 
@@ -197,40 +198,47 @@ Use the product target cost in \eqref{eq:product-cylinder-cost} and
 the posterior budgets in \eqref{eq:factor-posterior-budgets}.
 The readout-tail calculation in Appendix~\ref{app:factor-code} retains
 posterior mass at least $1-\beta$ on a common robustness radius $r$.
-Its retained law $Q'$ satisfies $Q'\le e^{NK/t^2}\mu_{N,t}$.
-Apply Theorem~\ref{thm:em-compression} to this law. The ramp comparison
-in Appendix~\ref{app:factor-code} gives precisely
-\eqref{eq:si-comparison}, with the same $\alpha,\beta$.
-For the complementary information range use the raw posterior density
-bound and Lemma~\ref{lem:si-grid}. Theorem~\ref{thm:si-envelope}
-then applies with the finite code (EM25) and threshold
-$\Delta=\max\{K,2LD_0\}$.
-
-At fixed $d,c,\varepsilon$, the explicit budgets give
+Its retained law $Q'$ satisfies $Q'\le \exp(NK/t^2)\mu_{N,t}$.
+Theorem~\ref{thm:weighted-code-kl} supplies a comparison law whose
+uniformly sampled coefficient rows are charged by their Gaussian
+relative entropy. The remaining parameters have a finite description
+of order $LK^2/e^2$, apart from logarithms.
+The scale and width cases, their common statistical event, and their
+exact budgets are in Theorem~\ref{thm:weighted-all-scales}.
+Corollary~\ref{cor:weighted-powers} substitutes
 \[
- K=O(CLF_0),\quad r^{-2}=O(CL^2F_0),\quad
- e^{-1}=O(CL^3F_0),\quad \eta^{-1}=O(L),
+ K=O(CLF_0),\qquad r^{-2}=O(CL^2F_0),\qquad
+ e^{-1}=O(CL^3F_0),\qquad \eta^{-1}=O(L)
 \]
-\[
- q=O(C^2L^4F_0^2),\qquad
- m=O\bigl([C^2L^4F_0^2+t_0^4 C^2L^6F_0^2]G\bigr).
-\]
-The scalar grid costs $O(G)$ per coefficient, and the entropy-matrix
-message costs $O(q^2G)$ per layer. Thus the constants in
-\eqref{eq:si-class} may be chosen with
-\[
- A=O(C^4L^9F_0^4G^2),\qquad
- B=O(C^4L^{11}F_0^4G^2).
-\]
-The remaining finite-family confidence charge is logarithmic.
-Equations~\eqref{eq:si-sample-envelope} and
-\eqref{eq:si-generic-gamma} prove the two claims. The exponents of
-$F_0$ and $G$ in the interpolated term are at most four and two,
-respectively, uniformly in $\gamma\ge1$. Its width exponent is at
-most four, and its depth exponent is at most nine when $\gamma\ge8/7$.
-The same target cylinder survives optional global-margin conditioning,
-so the identical denominator, tail, and coupling arguments apply.
+and proves the displayed logarithmic factor as well as the
+simultaneous quantifiers. The same target cylinder survives optional
+global-margin conditioning, so the denominator, tail, and comparison
+arguments apply to that variant too.
 \end{proof}
+
+\begin{corollary}[Intermediate Gaussian exponents]
+\label{cor:headline-intermediate}
+At fixed $d,c,\varepsilon,\delta$, a sufficient sample count is
+\[
+ O\!\left(C^4L^8F_0^4\log^2(2+L)G\right)
+\]
+simultaneously for every $N\ge C$ and every
+$0<t^2\le N^{-3/4}$, hence for every $\gamma\ge7/4$.
+More precisely, for each fixed $\gamma>1$ the sufficient order is
+\[
+ \widetilde O\!\left(\min\left\{
+ C^4L^9,\quad
+ C^4L^7+C^{2+1/(\gamma-1)}L^{4+3/(\gamma-1)}
+ \right\}\right).
+\]
+The prediction convention and optional margin restriction are those
+of Theorem~\ref{thm:headline-all-scales}.
+\end{corollary}
+
+The proof, exact statistical budget, and interpretation of this
+interpolation are in Corollary~\ref{cor:spectral-interpolation}.
+At $\gamma=7/4$, the two-term order before simplifying the width
+power is $\widetilde O(C^4L^7+C^{10/3}L^8)$.
 
 \begin{theorem}[A further depth improvement at stronger scales]
 \label{thm:headline-mlmc}
@@ -244,10 +252,17 @@ including every $\gamma\ge2$. The same order suffices in the
 strong-prior limit at each fixed width. Both conclusions refer to
 posterior-average test-margin failure $R(Q)\le\varepsilon$ with
 sample probability at least $1-\delta$.
+
+The same sample order holds simultaneously for all $N\ge C$ at every
+positive scale $t^2\le u_c$, where
+$u_c=r_{\rm sp}^2/[256(L-1)]$ and $r_{\rm sp}$ is defined in
+\eqref{eq:spectral-budget}. This ceiling depends on teacher resources,
+calibration, and accuracy, but not on learner width.
 \end{theorem}
 
-The full finite-scale alternatives, sample budget, and proof are in
-Theorem~\ref{thm:mlmc-posterior}. The depth-six branch improves the
+The finite exponent alternatives and proof are in
+Theorem~\ref{thm:mlmc-posterior}; the positive width-independent
+ceiling is proved in Theorem~\ref{thm:spectral-cold}. The depth-six branch improves the
 powers when $C<L^2$. The baseline quartic code and its probability
 calculation are given next; the multilevel construction replaces only
 that code.
@@ -263,7 +278,7 @@ quartic dependence on teacher width. Define
  \rho&=\min\{1/4,A/[4(d+1)],Ae_*/(64\sqrt C)\},\notag\\
  q_0&=d+2+(L-2)C,\notag\\
  B_0&=9dA^2+18(L-2)CA^2+2a^2C,\notag\\
- D_*&=B_0+q_0\log\frac{e\sqrt{2\pi}}{2\rho}+\log2.
+ D_*&=B_0+q_0\log\frac{\exp(1)\sqrt{2\pi}}{2\rho}+\log2.
  \label{eq:target-cost}
 \end{align}
 These constants provide a target-realizing subset of the prior support of
@@ -544,7 +559,7 @@ fixed-depth consequences.
 The energy-based baseline just proved has a total-energy cutoff.
 At mean-field scaling, typical internal Frobenius energy grows with
 learner width, so that particular proof cannot give its stated quartic
-rate throughout the scale range. Entropy-metric compression avoids a
+rate throughout the scale range. Entropy-metric compression with Gaussian-weighted coding avoids a
 width-independent total-energy cutoff and proves the all-scale theorem
 instead. Both methods use the same prior support.
 
@@ -666,13 +681,13 @@ These loose constants cover the fan-in-two gate implementation above.
 For $Z\sim\mathcal N(0,t^2)$, $\rho\le1/4$, and any center $m$,
 \[
  \Pr\{|Z-m|\le\rho t\}
- \ge\frac{2\rho}{e\sqrt{2\pi}}\exp(-m^2/t^2).
+ \ge\frac{2\rho}{\exp(1)\sqrt{2\pi}}\exp(-m^2/t^2).
 \]
 Multiplication over the coordinates and the independent bulk event gives
 \begin{equation}\label{eq:standalone-cylinder-mass}
  \mu_{N,t}(\text{target cylinder})
  \ge\exp(-ND_*/t^2),\qquad
- D_*=B_0+q\log\frac{e\sqrt{2\pi}}{2\rho}+\log2.
+ D_*=B_0+q\log\frac{\exp(1)\sqrt{2\pi}}{2\rho}+\log2.
 \end{equation}
 Here $D_*\ge1$ and is bounded by a universal polynomial in $d,L,C,c$.
 The construction and estimate hold at every integer width $N\ge C$.
@@ -681,7 +696,11 @@ The construction and estimate hold at every integer width $N\ge C$.
 \input{factor-code}
 \input{entropy-metric}
 \input{scale-interpolation}
+\input{weighted-entropy}
+\input{weighted-code}
 \input{multilevel-code}
+\input{spectral-code}
+\input{spectral-interpolation}
 
 \begin{thebibliography}{9}
 \bibitem{sequential}

@@ -1,0 +1,251 @@
+\section{A width-independent positive cold-scale range}
+\label{app:spectral-cold}
+
+An operator-norm truncation separates a small Gaussian background from
+a bounded-energy network. The background need not have small Frobenius
+norm: its operator norm controls its effect at every bounded virtual
+hidden state. The excess above that operator-norm threshold has Gaussian
+concentration independent of learner width. This gives a positive range
+of scales on which the stronger energy-based sample bounds hold at
+\emph{all} learner widths, rather than requiring $t^2\le1/N$.
+
+\subsection{Gaussian spectral excess and its posterior tail}
+
+For a square matrix $W$ and $a\ge0$, let $\mathcal B_a$ be the closed
+operator-norm ball of radius $a$. If the singular values of $W$ are
+$\sigma_i$, its Frobenius projection onto $\mathcal B_a$ clamps each
+singular value to $\min\{\sigma_i,a\}$. The residual therefore has
+singular values $(\sigma_i-a)_+$. Fix the absolute threshold constant
+\[
+ a_0=8.
+\]
+For a network $w$, leave the first layer and readout unchanged and
+replace each internal matrix by its residual above $a_0t$:
+\[
+ V^1=W^1,\qquad v_V=v,\qquad
+ V^s=W^s-B^s,\quad
+ B^s=\operatorname{Proj}_{\mathcal B_{a_0t}}(W^s)
+              \quad(2\le s\le H).
+\]
+In particular $\|B^s\|_{\rm op}\le a_0t$.
+Define the spectral-excess radius
+\begin{equation}\label{eq:spectral-radius}
+ \mathcal E_t(w)^2=\kappa_N(V)
+ =\frac dN\|W^1\|_F^2+N\|v\|_2^2
+       +\sum_{s=2}^H
+            \operatorname{dist}_F(W^s,\mathcal B_{a_0t})^2.
+\end{equation}
+
+\begin{lemma}[A width-independent spectral-excess estimate]
+\label{lem:spectral-excess}
+Under the raw Gaussian law $\mu_{N,t}$, with $u=t^2$,
+\[
+ \mathbb E\mathcal E_t^2\le u(d+2H),
+\]
+and for every $s\ge0$,
+\begin{equation}\label{eq:spectral-concentration}
+ \mu_{N,t}\{\mathcal E_t\ge\mathbb E\mathcal E_t+s\}
+       \le\exp\left(-\frac{Ns^2}{2u}\right).
+\end{equation}
+\end{lemma}
+\begin{proof}
+A pair of $1/4$-nets of the unit sphere, each of cardinality at most
+$9^N$, gives for an internal Gaussian matrix the elementary bound
+\[
+ \Pr\{\|W\|_{\rm op}>x\}
+ \le2\exp\left(2N\log9-\frac{Nx^2}{8u}\right).
+\]
+Indeed, the operator norm is at most twice the largest bilinear form
+on the two nets, and each such form is Gaussian of variance $u/N$.
+Writing $R=\operatorname{dist}_F(W,\mathcal B_{8t})$, we have
+$R^2\le N(\|W\|_{\rm op}-8t)_+^2$. Hence
+\begin{align*}
+ \mathbb E R^2
+ &\le 4N\int_0^\infty s
+       \exp\left(2N\log9-
+                   \frac{N(8t+s)^2}{8u}\right)ds\\
+ &\le 16u\exp[-N(8-2\log9)]\le u.
+\end{align*}
+The last inequality follows from $N\ge1$ and
+$16\exp[-(8-2\log9)]<1$.
+The expected first-layer contribution to \eqref{eq:spectral-radius}
+is $u(d+1)$ and the readout contribution is $u$.
+There are $H-1$ internal matrices. Thus the expectation is at most
+$u(d+H+1)\le u(d+2H)$.
+
+In the weighted coordinates
+\[
+ y=\bigl(\sqrt{d/N}\,W^1,\ W^2,\ldots,W^H,\ \sqrt N\,v\bigr),
+\]
+the raw law has independent coordinates of common variance $u/N$.
+The quantity $\mathcal E_t$ is Euclidean distance to the closed convex
+product set whose first and readout coordinates are zero and whose
+internal blocks belong to $\mathcal B_{8t}$. Distance to a nonempty
+closed set is 1-Lipschitz. Thus $\mathcal E_t$, as a function of a
+standard Gaussian vector, is $t/\sqrt N$-Lipschitz.
+
+For completeness, the Gaussian Lipschitz concentration estimate used
+here follows from the log-Sobolev inequality and Herbst's calculation.
+For a positive smooth function $g$, Ornstein--Uhlenbeck entropy
+dissipation and score commutation give
+\[
+ \operatorname{Ent}_{\gamma}(g)
+ \le\frac12\mathbb E_\gamma\frac{\|\nabla g\|^2}{g}.
+\]
+For $g=e^{\lambda F}$ and a function $F$ of Lipschitz constant $\sigma$,
+this implies
+$\log\mathbb E e^{\lambda(F-\mathbb EF)}\le\lambda^2\sigma^2/2$:
+if $\chi(\lambda)=\log\mathbb Ee^{\lambda F}$, the entropy inequality
+says $\lambda\chi'-\chi\le\lambda^2\sigma^2/2$, and integration
+from zero proves the assertion. Markov's inequality and optimization in
+$\lambda$ give the upper tail $e^{-s^2/(2\sigma^2)}$.
+Smooth approximation gives the same result for Lipschitz distance
+functions. Substituting $\sigma=t/\sqrt N$ proves
+\eqref{eq:spectral-concentration}.
+\end{proof}
+
+Let $D_*=D_*^{\rm prod}$ be the product target-cylinder cost. The actual
+posterior, for every correctly labeled training sample, obeys
+\[
+ Q_{S,N,t,c}\le\exp(ND_*/u)\mu_{N,t}.
+\]
+Fix $0<\varepsilon<1$ and set
+\begin{equation}\label{eq:spectral-budget}
+ \begin{split}
+ \beta&=\varepsilon/2,\\
+ K_{\rm sp}&=2(d+2H)+4[D_*+\log(1/\beta)],\\
+ r_{\rm sp}&=\min\{1/6,c/\sqrt{1+HK_{\rm sp}}\},
+ \qquad \rho_{\rm sp}=r_{\rm sp}/2.
+ \end{split}
+\end{equation}
+Then, uniformly over all $N\ge C$ and $0<u\le1$,
+\begin{equation}\label{eq:spectral-posterior-tail}
+ Q_{S,N,t,c}\{\kappa_N(V)>K_{\rm sp}\}\le\beta.
+\end{equation}
+To see this, put $b_0=d+2H$ and $A=D_*+\log(1/\beta)$.
+The inequality
+$\sqrt{2b_0+4A}\ge\sqrt{b_0}+\sqrt{2A}$ and the preceding lemma imply
+\[
+ \mu_{N,t}\{\mathcal E_t^2>K_{\rm sp}\}
+ \le \exp(-NA/u).
+\]
+Multiply by the posterior density bound. Since $N/u\ge1$, the result
+is at most $\exp[-N\log(1/\beta)/u]\le\beta$.
+
+\subsection{Combining spectral truncation with an energy code}
+
+On the retained event, the original readout satisfies
+$E_v=N\|v\|^2\le\kappa_N(V)\le K_{\rm sp}$.
+Every original network in the posterior support is therefore robust on
+the common radius $r_{\rm sp}$. No robustness of the residual network
+$V$ is required.
+
+Apply either the dense sampling code or the multilevel code to $V$,
+with energy cutoff $K_{\rm sp}$ and disturbance budget
+$\rho_{\rm sp}=r_{\rm sp}/2$. Both constructions have full virtual
+hidden states $\widehat h^s(x)\in[-1,1]^N$ and reproduce their decoded
+output by injections $\eta$ into $V$, with
+$\|\eta\|_*\le\rho_{\rm sp}$.
+For the dense construction the proved bound is even
+$\rho_{\rm sp}/2$; the weaker common bound suffices here.
+At these \emph{same} virtual states define injections into the original
+network by
+\[
+ \xi^1=\eta^1,\qquad
+ \xi^s=\eta^s+
+   \tanh(V^s\widehat h^{s-1})-
+   \tanh(W^s\widehat h^{s-1})\quad(2\le s\le H),
+ \qquad \xi^{\rm out}=\eta^{\rm out}.
+\]
+The readout is unchanged, and these injections reproduce exactly the
+same states and decoded output. Since tanh is 1-Lipschitz,
+\[
+ \frac1{\sqrt N}\left\|
+ \tanh(V^s\widehat h^{s-1})-
+ \tanh(W^s\widehat h^{s-1})\right\|_2
+ \le\|B^s\|_{\rm op}\le8t.
+\]
+Therefore
+\[
+ \|\xi\|_*\le\rho_{\rm sp}+8t\sqrt{H-1}.
+\]
+The following positive scale ceiling is sufficient:
+\begin{equation}\label{eq:spectral-cutoff}
+ u_c=\frac{r_{\rm sp}^2}{256H}.
+\end{equation}
+For $t^2\le u_c$, the right side is at most $r_{\rm sp}$.
+The original support condition consequently gives clipped-score error
+at most $1/16$ for the decoded representative at every Boolean input.
+The representative and the residual network $V$ need not satisfy that
+support condition themselves.
+
+Let $J_{\rm den}(K,\rho)$ denote the dense-code budget in
+\eqref{eq:budget}, recalculated with energy $K$ and radius $\rho$.
+Let $J_{\rm ML}(K,\rho)$ denote the bound in
+\eqref{eq:mlmc-budget} at those same resources. Put
+\begin{equation}\label{eq:spectral-code-budget}
+ J_{\rm sp}=\min\{J_{\rm den}(K_{\rm sp},\rho_{\rm sp}),
+                    J_{\rm ML}(K_{\rm sp},\rho_{\rm sp})\}.
+\end{equation}
+Choose whichever finite comparison class has the smaller known upper
+bound; this choice is made before the sample is drawn and needs no
+extra union bound.
+
+\begin{theorem}[Positive cold scales uniformly over learner width]
+\label{thm:spectral-cold}
+For the Boolean teacher, Gaussian tanh learner, and unchanged robustness
+support of the paper, suppose
+\[
+ n\ge\frac2\varepsilon\,[J_{\rm sp}+\log(1/\delta)].
+\]
+Then, with sample probability at least $1-\delta$,
+\[
+ R(Q_{S,N,t,c})\le\varepsilon
+\]
+simultaneously for every $N\ge C$ and every $0<t^2\le u_c$, with
+$K_{\rm sp},r_{\rm sp},u_c,J_{\rm sp}$ as above.
+The ceiling $u_c$ is positive and independent of learner width.
+The same conclusion holds with optional label-independent global-margin
+conditioning.
+\end{theorem}
+\begin{proof}
+For every retained original network that fits the training margins,
+the preceding construction supplies a representative in the common
+chosen finite class. Its clipped score differs by at most $1/16$ at
+every input. Its empirical ramp loss is therefore zero, and its ramp
+loss is one at every test-margin failure of the original network.
+For any fixed representative with mean ramp loss greater than
+$\varepsilon/2$, the probability of zero empirical ramp loss is at
+most $\exp(-n\varepsilon/2)$. A union bound over the finite class shows
+that every fitting retained original network has test-margin error
+at most $\varepsilon/2$ on one sample event of probability at least
+$1-\delta$. This event is independent of $N,t$.
+Adding the discarded posterior mass in
+\eqref{eq:spectral-posterior-tail}, at most $\beta=\varepsilon/2$,
+proves the claim. The optional initial global-margin condition keeps
+the same target-cylinder denominator and the same support, so all
+steps remain valid.
+\end{proof}
+
+At fixed $d,c,\varepsilon,\delta$, the product-cylinder calculation gives
+\[
+ K_{\rm sp}=O(CLF_0),\qquad
+ r_{\rm sp}^{-2}=O(CL^2F_0),\qquad
+ u_c^{-1}=O(CL^3F_0),
+ \qquad F_0=1+\log^2(2+C).
+\]
+Thus the same sufficient sample order as in the stronger-scale energy
+result holds throughout this width-independent cold interval:
+\[
+ \widetilde O\!\left(\min\{C^4L^7,C^{9/2}L^6\}\right).
+\]
+Its log-retaining form, with $G=\log(2+CL)$, is
+\[
+ O\!\left(G\min\left\{
+ C^4L^7F_0^4\log^2(2+L),\quad
+ C^{9/2}L^6F_0^{9/2}\log(2+L)
+ \right\}\right).
+\]
+The finite-scale statement is stronger than merely taking a limit at
+each fixed width: it provides a positive scale threshold common to
+all widths above target complexity.

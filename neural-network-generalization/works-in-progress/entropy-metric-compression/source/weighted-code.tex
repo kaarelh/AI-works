@@ -1,0 +1,191 @@
+\section{A common posterior bound over dyadic Gaussian scales}
+\label{app:weighted-code}
+
+The Gaussian-weighted code can be tuned to a fixed upper scale.
+Tuning the variance sample count to each fixed upper scale keeps the
+Gaussian row cost below the finite-parameter cost. A finite sequence
+of dyadic scale intervals suffices for this choice. The resulting bound is simultaneous in learner
+width and Gaussian scale.
+
+Use the posterior resources in
+\eqref{eq:factor-posterior-budgets}, with the product-cylinder cost
+$D_*$, so that the retained posterior has density at most
+$\exp(NK/t^2)$ relative to its raw Gaussian law. In particular
+$\beta=\varepsilon/4$, $\alpha=\varepsilon/12$, and
+$e=\alpha r^2/(1000L)<1$.
+The rank cap $q$, message charge $D_0$, and the pilot, correction, and
+readout counts do not depend on the scale ceiling. Only the variance
+count and its consequent scalar mesh need to change.
+
+Put
+\begin{equation}\label{eq:weighted-dyadic-scales}
+ J_*=\lfloor\log_2(1/e)\rfloor,\qquad
+ v_j=2^{-j}\quad(0\le j\le J_*),\qquad B_*=J_*+1.
+\end{equation}
+Every $u\in(e,1]$ has an index $j$ for which
+$v_j/2<u\le v_j$, and every listed $v_j$ lies in $[e,1]$.
+For each $j$, use the weighted code with ceiling $t_0=\sqrt{v_j}$.
+Write $k_j$ for its variance count, $J_{b,j}$ for its finite-code budget
+\eqref{eq:weighted-finite-budget}, $p_j$ for its Gaussian dimension
+\eqref{eq:weighted-gaussian-dimension}, and $\Pi_{j,u}$ for its
+code reference prior. All these objects are fixed before observing data.
+For the cold range $0<u\le e$, let $J_c$ be the ordinary finite-code
+budget (EM25) at ceiling $t_0=\sqrt e$.
+
+The information threshold and the common charge are
+\begin{equation}\label{eq:weighted-dyadic-budget}
+ \begin{split}
+ \Delta&=\max\left\{K,\ 2LD_0,\
+                  \max_{0\le j\le J_*}\frac{2Kk_j}{v_j}\right\},\\
+ \mathcal B&=\max\left\{\Delta+1,\ J_c,\
+       \max_{0\le j\le J_*}
+       \left[J_{b,j}+\frac{4Lk_jK}{v_j}+1\right]\right\}.
+ \end{split}
+\end{equation}
+Let $M,R_\tau$ be the Gaussian reference-family sizes in
+Lemma~\ref{lem:si-grid}, with its parameter $J=\Delta$.
+For each dyadic interval also define
+\begin{equation}\label{eq:weighted-dyadic-grid}
+ R_j=1+\left\lfloor\frac{p_j}{2}\log2\right\rfloor,\qquad
+ \tau_{j,\ell}=\sqrt{v_j}\exp(-\ell/p_j)
+          \quad(0\le\ell<R_j),
+\end{equation}
+and put
+\[
+ R_{\max}=\max_j R_j,\qquad
+ \Lambda=\log\frac{3[MR_\tau+B_*R_{\max}+1]}{\delta}.
+\]
+
+\begin{theorem}[Weighted-code learning at every mean-field-or-stronger scale]
+\label{thm:weighted-all-scales}
+Under the model and Boolean-teacher conventions of the paper, the
+sample condition
+\begin{equation}\label{eq:weighted-sample-budget}
+ n\ge\frac4\varepsilon[\mathcal B+\Lambda]
+\end{equation}
+implies, with probability at least $1-\delta$ over the iid training
+sample,
+\[
+ R(Q_{S,N,t,c})\le\varepsilon
+ \qquad\text{simultaneously for every }N\ge C,
+                      \quad0<t\le1.
+\]
+The same statement holds after adding the label-independent prior
+restriction $|z_w(x)|>1/2$ at every Boolean input.
+\end{theorem}
+\begin{proof}
+We use one sample-independent reference prior on a tagged predictor
+space. Give weight $1/3$ to each of the following parts:
+\begin{enumerate}
+\item the finite Gaussian family for $NK/t^2\le\Delta$;
+\item the uniform law on the ordinary cold finite class;
+\item a uniform choice of $j$, then a uniform choice of
+$\ell\in\{0,\ldots,R_j-1\}$, followed by the weighted code reference
+law $\Pi_{j,\tau_{j,\ell}^2}$.
+\end{enumerate}
+Use the test-margin indicator loss on the raw Gaussian part and the
+ramp loss on both comparison-code parts. These form one bounded loss
+on the tagged space. Apply Lemma~\ref{lem:si-risk} once.
+
+Write $u=t^2$ and $b=NK/u$. If $b\le\Delta$, the finite Gaussian
+family applies to the actual posterior. Its empirical indicator loss
+is zero. Including the mixture weight and confidence term, its charge
+is at most $\mathcal B+\Lambda$, so its risk is at most
+$2(\mathcal B+\Lambda)/n$.
+
+Suppose $b>\Delta$. Then
+$N/u>\max\{1,2LD_0/K\}$, as required by both compression arguments.
+The readout-tail estimate retains mass at least $1-\beta$ on the common
+robustness radius $r$, and its normalized retained law satisfies the
+same density bound with the specified $K$.
+If $u\le e$, apply the ordinary code at ceiling $\sqrt e$. Its
+relative-entropy charge is at most $J_c$ before mixture weights.
+
+If $u>e$, choose $j$ with $v_j/2<u\le v_j$. From
+\eqref{eq:weighted-dyadic-budget},
+\[
+ N=bu/K>\frac{2k_j u}{v_j}>k_j.
+\]
+Thus sampling the variance group without replacement is permitted.
+Theorem~\ref{thm:weighted-code-kl} gives a law on the $j$th code space
+with relative entropy at most
+\[
+ J_{b,j}+2Lk_jK/u
+ \le J_{b,j}+4Lk_jK/v_j.
+\]
+Choose $\ell=\lfloor p_j\log(\sqrt{v_j}/t)\rfloor$.
+Then $0\le\ell<R_j$, $\tau_{j,\ell}\ge t$, and
+$p_j\log(\tau_{j,\ell}/t)<1$ (with a non-strict bound also sufficient).
+For centered isotropic Gaussians in $p_j$ dimensions,
+\[
+ \frac{d\mathcal N(0,t^2I)}
+      {d\mathcal N(0,\tau_{j,\ell}^2I)}\le\exp(1).
+\]
+The quantizer and remaining finite-code reference law are fixed within
+this dyadic interval. Pushing the domination through the quantizer
+therefore changes the relative-entropy charge by at most one. The
+mixture and confidence costs are bounded by $\Lambda$.
+
+In either compression branch, the common pointwise coupling gives
+empirical ramp loss at most $\alpha$ and
+$R(Q_{S,N,t,c})\le\beta+\alpha+R_\psi(\Gamma)$.
+Lemma~\ref{lem:si-risk} consequently bounds the desired risk by
+\[
+ \beta+3\alpha+\frac2n[\mathcal B+\Lambda]
+ \le\varepsilon.
+\]
+All comparisons use the same sample event. Optional global-margin
+conditioning retains the same target cylinder, readout-tail bound,
+and canonical compression argument, so the proof is unchanged.
+\end{proof}
+
+\begin{corollary}[Quartic width and ninth-power depth]
+\label{cor:weighted-powers}
+Fix $d,c,\varepsilon,\delta$ and put
+$F_0=1+\log^2(2+C)$ and $G=\log(2+CL)$.
+There is a constant $A_0$ depending only on these fixed quantities such
+that
+\[
+ n\ge A_0 C^4L^9F_0^4G^2
+\]
+suffices in Theorem~\ref{thm:weighted-all-scales}.
+\end{corollary}
+\begin{proof}
+At fixed input dimension, suppressing only logarithms in the explicit
+resources, the finite part of every dyadic code has
+\[
+ J_{b,j}=\widetilde O(LK^2/e^2).
+\]
+The finite Gaussian row dimension affects the scale-grid charge only
+logarithmically. Since $v_j\in[e,1]$, the explicit variance count obeys
+\[
+ \frac{k_j}{v_j}
+ =\widetilde O\left(\frac1{v_j}+\frac{v_j}{e^2}\right)
+ =\widetilde O(e^{-2}).
+\]
+It follows that
+\[
+ \Delta=\widetilde O(LK^2/e^2),\qquad
+ \mathcal B=\widetilde O(LK^2/e^2).
+\]
+For the cold code the scale term in (EM26) is only $LK/e$, so it is
+also absorbed by this bound. These resource statements keep input
+dimension fixed; the exact formulas above retain its full dependence.
+
+For the target-cylinder budgets,
+\[
+ K=O(CLF_0),\quad e^{-1}=O(CL^3F_0),\quad
+ q=O(C^2L^4F_0^2),\quad m_b=O(qG).
+\]
+The finite parameter count is $O(Lq^2G)$, and its scalar mesh costs
+$O(G)$ per parameter. Thus
+$J_{b,j}=O(C^4L^9F_0^4G^2)$ uniformly in $j$.
+The weighted-row charge and raw cutoff are smaller:
+\[
+ \max_j Lk_jK/v_j=O(C^3L^8F_0^3G),\qquad
+ LD_0=O(C^4L^9F_0^4G).
+\]
+The ordinary cold code has the same leading finite-parameter order,
+and all remaining scale-family charges are logarithmic. Substituting
+these estimates in \eqref{eq:weighted-sample-budget} proves the claim.
+\end{proof}

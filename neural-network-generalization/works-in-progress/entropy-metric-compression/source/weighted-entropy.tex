@@ -1,0 +1,268 @@
+\section{A Gaussian-weighted code for uniformly sampled rows}
+\label{app:weighted-entropy}
+
+The number of uniformly sampled variance-estimation rows is larger than
+that of the pilot and correction rows. Giving every quantized coefficient
+the same coding probability is unnecessarily expensive for the uniform
+rows. This appendix uses their Gaussian reference probabilities. The
+construction still uses the clipped and rounded virtual computation;
+there is no change to the prior support or to the prediction convention.
+In particular, a uniform sample is taken from a completed virtual layer,
+not used to decide which of that layer's rows will be rounded.
+
+\subsection{Uniform subsets and a fixed reference law}
+
+\begin{lemma}[Relative entropy of a uniform row subset]
+\label{lem:weighted-shearer}
+Let $Y=(Y_1,\ldots,Y_N)$ have a law $P$ on a finite product space, and
+let $\rho$ be a probability reference law for one row. If $I$ is a
+uniform $k$-element subset of $\{1,\ldots,N\}$ independent of $Y$,
+with $1\le k\le N$, list its elements in increasing order. Then
+\[
+ D_{\rm KL}(\operatorname{Law}(Y_I)\Vert\rho^{\otimes k})
+ \le\frac{k}{N}D_{\rm KL}(P\Vert\rho^{\otimes N}).
+\]
+The same assertion holds conditionally on any variables under which $I$
+is independent and uniform. If the finite rows are obtained by applying
+the same measurable quantizer to continuous rows, the right side may
+be replaced by their relative entropy before quantization.
+\end{lemma}
+\begin{proof}
+For a fixed subset $I$, the chain rule and the fact that extra
+conditioning increases average relative entropy give
+\[
+ D(P_{Y_I}\Vert\rho^{\otimes k})
+ \le\sum_{i\in I}\mathbb E
+ D(P_{Y_i\mid Y_1,\ldots,Y_{i-1}}\Vert\rho).
+\]
+Average over the uniform subset. Every index occurs with probability
+$k/N$, and the full chain rule gives the asserted right side.
+Convexity in the first argument removes the subset index from the law
+on the left. Conditional application and data processing prove the
+remaining assertions. Infinite relative entropy makes the inequality
+vacuous; all uses below have finite relative entropy.
+\end{proof}
+
+Use the budgets (EM6)--(EM25) with a fixed upper scale
+$0<t_0\le1$, and put
+\[
+ k=m_K,\qquad m_b=m_0+m_A+m_R,\qquad m=k+m_b.
+\]
+We require $N\ge k$ in this construction. Each variance batch is now
+sampled uniformly \emph{without replacement}. Its average obeys the
+same Hoeffding bound as in (EM17): for values in $[0,1]$, the exponential
+moment of a sum sampled without replacement is no larger than the
+corresponding moment with replacement. Indeed, this comparison is the
+inequality between an elementary symmetric mean of the positive numbers
+$e^{\theta y_i}$ and their arithmetic mean to the same power.
+Thus the existing value of $m_K$ and the existing variance-padding and
+reconstruction estimates remain valid.
+
+There is one minor padding convention. At an internal layer of actual
+active rank $\ell\le q$, append $q-\ell$ independent Gaussian
+coordinates of variance $t^2$ to every active row. The corresponding
+rows of $F$ are zero, and the unused block of the metric is diagonal;
+the metric projection therefore keeps those coordinates zero. Clip the
+\emph{full} $q$-dimensional row at $B_H$, then round all its coordinates
+at mesh $\zeta$. The extra coordinates enter no unrounded preactivation.
+Their possible effect through clipping is covered by the existing bound
+$V_H=8K+2q$. The Gaussian scalar $tg_i$ is clipped and rounded as before.
+The resulting row quantizer is fixed: it does not depend on the actual
+rank, input, Gaussian scale, learner width, or finite message.
+
+The first-layer raw coordinates are $\sqrt d\,W^1_i$, whose Gaussian
+reference covariance is $t^2I_{d+1}$. Its fixed quantizer clips at $B_1$,
+rescales by $1/\sqrt d$ as needed for the stored weights, and rounds at
+mesh $\zeta$. Let $\Psi_1$ denote this quantizer and let $\Psi_h$ denote
+the fixed internal-row quantizer just described. For $u=t^2$ define
+\[
+ \rho_{1,u}=(\Psi_1)_\#\mathcal N(0,uI_{d+1}),\qquad
+ \rho_{h,u}=(\Psi_h)_\#\mathcal N(0,uI_{q+1}).
+\]
+Both are laws on fixed finite alphabets. The internal quantizer includes
+both the padded active vector and its Gaussian scalar.
+
+After constructing a complete virtual layer, independently draw its
+uniform $k$-row variance batch. Record the quantized coefficient rows as
+$Z_s$, in increasing order of their original indices. If the last hidden
+layer does not need a variance batch, draw an unused one there as well;
+this harmless convention keeps the dimensions fixed. The reference law
+for all these records is
+\[
+ \Pi_u^Z=\rho_{1,u}^{\otimes k}
+          \otimes\bigotimes_{s=2}^{L-1}\rho_{h,u}^{\otimes k}.
+\]
+It is a fixed pushforward of a centered Gaussian vector with covariance
+$uI_p$, where
+\begin{equation}\label{eq:weighted-gaussian-dimension}
+ p=k(d+1)+(L-2)k(q+1).
+\end{equation}
+This reference law is independent of the learner width and of all the
+other encoded parameters.
+
+\subsection{A joint entropy bound through the canonical construction}
+
+The auxiliary prefix is enriched to retain the coefficient data and
+fresh indices from completed stages, so that $Z_1,\ldots,Z_{s-1}$ are
+measurable from the incoming prefix $A_s$. One may retain all active
+coordinates and Gaussian reconstruction variables that were supplied to
+the prefix kernel. This does not mean retaining the discarded original
+orthogonal block: an input-specific transport need not preserve its
+realization. The retained data are exactly data available to the canonical
+kernel, and adjoining them is an allowed pushforward in the bounded-density
+lemma.
+
+At stage $s$, write $X_s$ for the current original block and $Y_s$ for
+the unprocessed original blocks. The domination invariant remains
+\[
+ Q_{A_s,X_s,Y_s}\le \exp(b_s)
+           (\nu_s\otimes P_{X_s}\otimes P_{Y_s}),\qquad
+ b_s\le NK/u+sD_0.
+\]
+Fresh uniform subset indices, independent Gaussian padding, and retained
+past row records are all part of the prefix kernel; none needs an
+additional message to future weights. As before, a finite query-and-metric
+message costs at most $D_0$ per stage. In particular,
+\begin{equation}\label{eq:weighted-average-block}
+ \mathbb E_{A_s,Y_s}
+ D_{\rm KL}(Q_{X_s\mid A_s,Y_s}\Vert P_{X_s})\le b_s.
+\end{equation}
+This is the KL chain rule applied to the domination inequality. It is
+an averaged bound, so it has no $\log(1/\eta)$ term.
+
+On a successful density test, the orthogonal active projection followed
+by independent Gaussian padding has relative entropy at most that of
+$X_s$, conditional on $(A_s,Y_s)$. Appending the independent Gaussian
+row scalar changes no entropy. All source-sampling randomness used for
+these rows is fresh conditional on the prefix and the finite message,
+and is independent of the current active matrix. Therefore
+Lemma~\ref{lem:weighted-shearer}, followed by the fixed quantizer, gives
+\[
+ D(Q_{Z_s\mid A_s,Y_s}\Vert\rho_{h,u}^{\otimes k})
+ \le \frac{k}{N}
+       D(Q_{X_s\mid A_s,Y_s}\Vert P_{X_s})
+\]
+on the successful branches. On a density-test abort or a later default
+branch, generate an unused record from the reference law and ignore it
+in the decoder; its entropy contribution is zero. On other approximation failures, keep the already generated row record
+even if the decoder subsequently ignores it. No success conditioning
+is applied to this record. In particular,
+we do not replace an unused row record by a deterministic zero, which
+would change its reference-relative entropy.
+
+The first layer has the simpler unconditional bound
+\[
+ D(Q_{Z_1}\Vert\rho_{1,u}^{\otimes k})
+ \le(k/N)D(Q_{W^1}\Vert\mu_{W^1})\le kK/u.
+\]
+If $N/u>\max\{1,2LD_0/K\}$, then $b_s\le2NK/u$ at every stage.
+Since the past records are measurable from $A_s$, conditioning, convexity,
+\eqref{eq:weighted-average-block}, and the chain rule now give
+\begin{equation}\label{eq:weighted-z-kl}
+ \begin{split}
+ D(Q_{Z_1,\ldots,Z_{L-1}}\Vert\Pi_u^Z)
+ &\le D(Q_{Z_1}\Vert\rho_{1,u}^{\otimes k})
+       +\sum_{s=2}^{L-1}\mathbb E
+       D(Q_{Z_s\mid A_s,Y_s}\Vert\rho_{h,u}^{\otimes k})\\
+ &\le 2LkK/u.
+ \end{split}
+\end{equation}
+For the first term, the conditioning-free first-layer bound is used.
+The proof prices the current uniform row subset; it does not assert a
+global debit for all conditional active entropies.
+
+\subsection{The remaining finite description}
+
+Only the variance group has size $k$. The pilot, independent correction,
+and readout groups together have size $m_b$. Only the dedicated $m_R$ source
+positions have nonzero readout coefficients; the other source groups
+serve the internal reconstructions. The linear estimator
+$\widehat\psi=Fh_{\rm src}$ has identically zero columns on the variance
+group, so only its $m_0+m_A\le m_b$ source columns need encoding.
+The variance group enters solely through the prescribed average of
+its squared activation values. Its coefficient records are the $Z_s$
+variables already described.
+
+All other selected rows are stored in the ordinary finite grid. A biased
+sample may coincide with a uniform sample or with another biased sample.
+It is legitimate simply to store its rounded coefficients again: the
+actual code has the corresponding equal values, while a reference code
+may have unequal values. The decoder is defined in either case. No
+original neuron address, learner-width label, or equality partition is
+needed. The reconstruction uses the recorded row functions in their
+prescribed source-group positions.
+
+Let $\mathcal J_b$ be the alphabet of all these remaining finite
+parameters. The preceding description gives the bound
+\begin{equation}\label{eq:weighted-finite-budget}
+ \begin{gathered}
+ P_b=m_b(d+1)+(L-2)(2q+1)m_b+m_R,\\
+ J_b=L\log2+P_b\log(3+4B_{\rm code}/\zeta)
+                     +(L-2)q^2\log A_T,\\
+ \log|\mathcal J_b|\le J_b.
+ \end{gathered}
+\end{equation}
+The first summand permits abort flags. The coefficient count includes
+the biased active rows and Gaussian scalars, the nonzero columns of
+$F$, and the readout. The last summand encodes the rounded positive
+definite metric matrices. Invalid descriptions use a fixed default
+predictor.
+
+Let $J$ denote the resulting finite record. The decoder is a fixed map
+of $(J,Z)$ to a predictor. Define the code reference prior
+\[
+ \Pi_u=\operatorname{Unif}(\mathcal J_b)\otimes\Pi_u^Z.
+\]
+Importantly, $\Pi_u^Z$ is independent of $J$. Regardless of the actual
+dependence between the two code parts,
+\[
+ D(Q_{J,Z}\Vert\Pi_u)
+ =D(Q_Z\Vert\Pi_u^Z)+\log|\mathcal J_b|-H_Q(J\mid Z).
+\]
+Thus dependence between the adaptively selected finite rows and the
+uniform rows costs at most the finite description length, once.
+
+\begin{theorem}[Gaussian-weighted arithmetic code]
+\label{thm:weighted-code-kl}
+Use the budgets above with $0<u=t^2\le t_0^2$. Suppose
+\[
+ Q\le \exp(NK/u)\mu_{N,t},\qquad N\ge k,\qquad
+ N/u>\max\{1,2LD_0/K\}.
+\]
+There is a code law $\Gamma_Q$ whose decoded predictor has the same
+pointwise internal-disturbance coupling guarantee as
+Theorem~\ref{thm:em-compression}, and whose relative entropy obeys
+\begin{equation}\label{eq:weighted-kl}
+ D(\Gamma_Q\Vert\Pi_u)\le J_b+2LkK/u.
+\end{equation}
+The code space, decoder, finite alphabet, and quantizer maps are fixed
+independently of $N$ and the actual scale $u$; only their Gaussian reference probabilities
+depend on $u$.
+\end{theorem}
+\begin{proof}
+The only changes to the approximation construction are the irrelevant
+Gaussian padding and sampling the variance group without replacement.
+The preceding moment and Hoeffding calculations show that the original
+clipping, variance repair, rounding, and disturbance budgets still apply.
+Every full virtual layer is clipped and rounded before its variance batch
+is selected; hence this batch is a genuine independent uniform subset of
+the source layer used in the variance estimate. The prefix enlargement
+uses only variables available to its existing kernel and preserves the
+bounded-density induction and conditional coupling argument. Thus the
+same decoded predictor law has the stated pointwise comparison.
+Equations~\eqref{eq:weighted-z-kl} and
+\eqref{eq:weighted-finite-budget}, together with the conditional-entropy
+identity just above the theorem, prove \eqref{eq:weighted-kl}.
+\end{proof}
+
+At fixed ancillary resources, the explicit budgets give
+$m_b=\widetilde O(K/e)$ and
+$k=\widetilde O(1+t_0^4e^{-2})$.
+Consequently the two charges are
+\[
+ J_b=\widetilde O(LK^2/e^2),\qquad
+ 2LkK/u=\widetilde O\bigl((LK/u)(1+t_0^4/e^2)\bigr).
+\]
+The next appendix combines this weighted code at warmer scales with the
+ordinary finite code at colder scales, and with the direct posterior
+bound at smaller widths.
