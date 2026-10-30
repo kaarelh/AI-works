@@ -1,5 +1,9 @@
 # Collection verification
 
+## Quadratic-width and improved-depth results, 29 October 2026
+
+Two [new manuscripts](depth-improvements-2026-10-29.md) give a literal `dC+LC²` sample polynomial under a digital-population prior, analog variants near that rate, and sequential-quantization depth improvements under the unchanged original robust support. Their proofs have independent mathematical reviews and isolated build checks; neither is Lean formalized. The catalog now has 68 canonical manuscripts.
+
 ## FAQ and joint width–depth polynomials, 29 October 2026
 
 The [FAQ review](faq-refresh-2026-10-29.md) makes teacher width and depth explicit in the improved sample bounds, with derivations from each paper's budgets and separate formal-coverage labels. The general pass updates the conditional depth obstruction, finite-width subcritical upper bound, confidence constants, empirical scope, and extension status. Papers and Lean sources are unchanged.

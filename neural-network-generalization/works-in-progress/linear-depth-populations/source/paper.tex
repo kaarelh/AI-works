@@ -1,0 +1,620 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,geometry,amsmath,amssymb,amsthm,mathtools,enumitem}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue]{hyperref}
+\geometry{margin=1in}
+\setlength{\emergencystretch}{3em}
+\hypersetup{pdftitle={Quadratic-width and linear-depth learning bounds for Bayesian networks with stable populations},pdfauthor={ChatGPT-6 Astra; Claude Fable 5 and Opus 5; Kaarel Hanni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Prb}{\mathbb P}
+\newcommand{\norm}[1]{\left\|#1\right\|}
+\newcommand{\clip}{\mathrm{clip}}
+\title{Quadratic-width and linear-depth learning bounds\protect\\for Bayesian networks with stable populations}
+\author{ChatGPT-6 Astra \and Claude Fable 5 and Opus 5 \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{Research draft, 29 October 2026}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We prove sample bounds comparable to the parameter count of a small
+teacher, independently of arbitrarily larger learner width, for exact
+Bayesian learning with Gaussian tanh priors restricted by stability and
+redundancy of neuron populations.
+For a Boolean teacher of width $C$ and $L-1$ gate stages, a digital-population
+condition gives sufficient samples $O(dC+LC^2)$ at fixed calibration,
+accuracy, and confidence, with no hidden logarithm of $C$ or $L$.
+The condition requires that averaging neurons preserve predictions, that
+the averaged hidden states be nearly Boolean with a fixed relative margin
+at every gate, and that the number of populations be calibrated by readout
+energy. It is specified without knowing the target or its complexity.
+Every eligible Boolean circuit has a positive-Gaussian-mass implementation
+satisfying it. A condition allowing analog hidden states instead requires
+internal-noise stability to persist after averaging; it gives
+$\widetilde O(dC+LC^2)$, with a stronger per-layer version giving
+$O(C^2L\log^5(2+C))$ at fixed other resources.
+All guarantees hold simultaneously at every learner width $N\ge C$ and
+every positive mean-field-or-stronger Gaussian scale, including finite
+mean field. These are different structural prior restrictions, not an
+improvement for unrestricted networks or for internal-noise stability alone.
+The proofs do not establish that ordinary trained networks satisfy the
+conditions, and are not Lean formalized.
+\end{abstract}
+
+\section{Introduction}
+
+A dense network with width $C$ and depth $L$ has roughly $dC+LC^2$
+parameters. A Bayesian learner may have arbitrarily larger width, so counting
+its own parameters does not explain learning a target with a small
+implementation. A useful statistical goal is a sample bound comparable,
+up to logarithms, to the parameter count of the smaller implementation.
+
+We obtain such a bound for Boolean-circuit targets by restricting the prior
+in three ways. The network must admit averaging into a limited number of
+neuron populations; this averaging must preserve its clipped predictions;
+and the averaged network itself must tolerate finite simultaneous internal
+disturbances. The population budget is calibrated by the network's own
+readout energy and the architecture, not by the unknown target complexity.
+The restriction has positive Gaussian probability and admits every Boolean
+teacher considered below.
+
+The new stability requirement matters for the depth dependence. A generic
+parameter cover propagates rounding errors through all layers and therefore
+needs an exponentially fine grid. Here the rounded network is viewed instead
+as the unrounded network with an explicitly constructed disturbance after
+each activation. Tanh bounds the rounded hidden states, so the total
+required disturbance is polynomially small in the grid mesh and depth.
+Finite-radius robustness then controls the final clipped output without
+multiplying layer norms.
+
+There are three precise versions of the result:
+\begin{enumerate}[leftmargin=*]
+\item Robustness of the averaged representation on the usual aggregate
+noise ball gives the nearly parameter-count bound of
+Theorem~\ref{thm:main}.
+\item Allowing each layer its full calibrated noise budget gives a bound
+literally linear in depth, with only width logarithms
+(Theorem~\ref{thm:perlayer}).
+\item Saturation and relative gate margins permit a constant-precision
+digital code. With a stronger population-energy calibration this gives
+literal quadratic width and linear depth
+(Theorem~\ref{thm:digital}). The digital and analog conditions are different
+support restrictions; neither is asserted to follow from the other.
+\end{enumerate}
+The first construction counts dense compressed-network parameters. The
+last counts constant-radius nets for normalized gate rows and avoids
+weight-magnitude and precision costs altogether. The Boolean target is
+a bounded-fan-in circuit; the quadratic benchmark is sufficient, not a
+claim that quadratic dependence is necessary.
+
+The theorems include actual finite mean-field priors and all stronger
+scales. The same training-sample event works at every eligible learner
+width and scale. Neither an infinite-width approximation nor an efficient
+posterior-sampling algorithm is asserted. Earlier population-averaging
+arguments motivate the model and its Gaussian estimates \cite{averaging};
+all estimates needed for the present theorem are proved below.
+
+\section{Learner, teacher, and prior restriction}
+
+Let $d\ge1$, $L\ge2$, and $H=L-1$. Inputs lie in
+$\mathcal X=\{-1,1\}^d$, with an arbitrary probability distribution $D$.
+Write $\bar x=(x,1)$. A network of hidden width $N$ has
+\[
+ h^1=\tanh(W^1\bar x),\qquad
+ h^s=\tanh(W^sh^{s-1})\quad(2\le s\le H),\qquad
+ z_w(x)=v^\top h^H.
+\]
+There are no additional hidden biases; a constant input coordinate and
+counted constant wires supply them in Boolean implementations.
+The raw Gaussian law $\mu_{N,t}$ has independent centered entries with
+variances
+\begin{equation}\label{eq:prior}
+ \frac{t^2}{d}\text{ in }W^1,\qquad
+ \frac{t^2}{N}\text{ in }W^s\ (s\ge2),\qquad
+ \frac{t^2}{N^2}\text{ in }v,\qquad 0<t\le1.
+\end{equation}
+The scale may be prescribed as a function $t=t(d,L,N)$.
+In particular, $t(N)=N^{(1-\gamma)/2}$ gives every $\gamma\ge1$ in the
+usual exponent family. Define the readout energy and clipped score by
+\[
+ E_v(w)=N\norm v_2^2,\qquad T(u)=\clip(u,-1/2,1/2).
+\]
+
+\paragraph{Population averaging.}
+A balanced partition into $q$ populations has group sizes in
+$\{\lfloor N/q\rfloor,\lceil N/q\rceil\}$. For each hidden layer choose
+such a partition and let $P_s$ be its orthogonal averaging projection.
+The averaged network $\bar w$ has
+\begin{equation}\label{eq:projection}
+ \bar W^1=P_1W^1,\qquad
+ \bar W^s=P_sW^sP_{s-1}\ (s\ge2),\qquad
+ \bar v=P_Hv.
+\end{equation}
+Its clean hidden activations are constant within populations. Consequently
+it computes exactly the same function as a network of width $q$ obtained
+by collecting equal neurons. Notice that
+$E_v(\bar w)\le E_v(w)$.
+
+\paragraph{Internal disturbances.}
+For a network $u$ of width $N$, add a vector $\eta^s$ after each tanh
+activation and a scalar $\eta^{\rm out}$ at the output. Denote its output
+by $z_u(x;\eta)$. The disturbance norm and calibrated radius are
+\begin{equation}\label{eq:noise}
+ \norm\eta_*^2=\sum_{s=1}^H\frac{\norm{\eta^s}_2^2}{N}
+                    +|\eta^{\rm out}|^2,
+ \qquad r_c(u)=\frac{c}{\sqrt{1+H E_v(u)}},\qquad c>0.
+\end{equation}
+The disturbed states need not lie in $[-1,1]^N$.
+
+\paragraph{The support condition.}
+Fix $\lambda\ge1$ and $c>0$ before observing labels. Let
+$\mathcal S_{N,\lambda,c}$ consist of those networks for which some
+$q\le N$ and balanced partitions satisfy all three conditions:
+\begin{align}
+ q&\le1+E_v(w)/\lambda,\label{eq:count}\\
+ \sup_{x\in\mathcal X}|T(z_w(x))-T(z_{\bar w}(x))|
+   &\le1/16,\label{eq:clean}\\
+ |T(z_{\bar w}(x;\eta))-T(z_{\bar w}(x))|
+   &\le1/32\quad
+   (x\in\mathcal X,\ \norm\eta_*\le r_c(\bar w)).\label{eq:robust}
+\end{align}
+In \eqref{eq:robust}, $\bar w$ denotes the averaged network in
+\eqref{eq:projection}. Thus the radius is calibrated by the averaged
+network's \emph{own} readout energy. The partitions may depend on the
+weights, but not on the training labels.
+
+The support is Borel. There are finitely many partition choices and inputs;
+for each choice the noise supremum is over a compact ball whose radius
+depends continuously on the weights. Equivalently one may rescale to a fixed
+unit ball and use a countable dense set.
+
+The learner first restricts $\mu_{N,t}$ to this support and then, for a
+sample $S=((X_i,f(X_i)))_{i=1}^n$, conditions on
+\begin{equation}\label{eq:training}
+ f(X_i)z_w(X_i)>1/2\quad(1\le i\le n).
+\end{equation}
+Write the posterior as $Q_{S,N,t}$. Two further restrictions may optionally
+be retained: global clean margin $|z_w(x)|>1/2$ at every input, and the
+original-network internal stability condition
+\begin{equation}\label{eq:optional}
+ |T(z_w(x;\eta))-T(z_w(x))|\le1/16
+ \quad(x\in\mathcal X,\ \norm\eta_*\le r_c(w)).
+\end{equation}
+The theorem holds for either, both, or neither of these optional restrictions.
+When global margin is imposed, \eqref{eq:training} is equivalent to
+conditioning on the exact training signs.
+
+\paragraph{Teacher convention.}
+The target is computed by a single-output, depth-$H$, width-$C$ layered
+Boolean circuit with NAND, COPY, and NOT gates. A reserved constant-one
+wire at every stage, including the final stage, is included in $C$, and
+$C\ge2$. Compilation from a different basis must count its width and depth
+overhead. A circuit of smaller logical depth can be padded with COPY gates.
+Thus $L$ is the actual learner depth and the common depth after teacher
+padding; it cannot be replaced by a shallower teacher's intrinsic depth
+while leaving learner depth unspecified. This comparator is a Boolean
+circuit, not an arbitrary real-weight neural teacher.
+
+\section{An explicit learning theorem}
+
+Define target constants
+\begin{align}
+ e_*&=\frac1{16\sqrt{2C}},&\tau_0&=e_*/4,\notag\\
+ b_L&=\sqrt{16\log9+8\log(4L)},&
+ A&=\max\{32b_L,2\log(8/e_*)\},\notag\\
+ a&=\max\{4\sqrt\lambda,256c\},&
+ \rho&=\min\{1/4,A/[4(d+1)],Ae_*/(64\sqrt C)\},\notag\\
+ q_0&=d+2+(H-1)C,&
+ B_0&=9dA^2+18(H-1)CA^2+2a^2C,\notag\\
+ D_*&=B_0+q_0\log\frac{e\sqrt{2\pi}}{2\rho}+\log2.
+ \label{eq:targetconstants}
+\end{align}
+For $0<\varepsilon,\delta<1$, set
+\begin{align}
+ B&=\max\{8,8[D_*+\log(4/\varepsilon)]\},&
+ Q&=\lceil1+B/\lambda\rceil,\notag\\
+ J&=8\left[D_*+\log(4/\varepsilon)+(H+1)\log Q
+       +\frac{\log2}{2}\{d+2+(H-1)Q\}\right],\notag\\
+ R&=1+\sqrt{QJ},&P_Q&=Q(d+2)+(H-1)Q^2,\notag\\
+ \zeta&=\min\left\{\frac1{32},
+ \frac{c}{2\sqrt{(1+HB)((d+1)^2+HQ^2)}}\right\}.
+ \label{eq:budgets}
+\end{align}
+
+\begin{theorem}[Nearly parameter-count learning]\label{thm:main}
+Let $f$ have the counted Boolean implementation above. If
+\begin{equation}\label{eq:samples}
+ n\ge\frac2\varepsilon\left[
+ P_Q\log(3+4R/\zeta)+\log(1/\delta)\right],
+\end{equation}
+then, with probability at least $1-\delta$ over iid $X_i\sim D$,
+\begin{equation}\label{eq:conclusion}
+ \E_{w\sim Q_{S,N,t}}D\{x:f(x)z_w(x)\le1/4\}\le\varepsilon
+\end{equation}
+simultaneously for every integer $N\ge C$ and every $0<t\le1$.
+All posterior normalizers are positive. The same conclusion holds with
+any choice of the optional restrictions described above.
+\end{theorem}
+
+\begin{corollary}[Joint width--depth rate]\label{cor:rate}
+Take $\lambda=d+L$. For fixed $c,\varepsilon,\delta$, the sufficient sample
+bound in Theorem~\ref{thm:main} is
+\[
+ \widetilde O(dC+LC^2),
+\]
+where the soft-$O$ suppresses logarithmic factors in $d,C,L$.
+More precisely, at fixed $d,c,\varepsilon,\delta$, put
+\[
+ F=1+\log^2(2+C)+\log(2+L),\qquad G=\log(2+CL).
+\]
+Then a sufficient bound is $O(C^2LF^2G)$. In particular its fixed-width
+depth dependence is $O(L\log^3(2+L))$, and its fixed-depth width dependence
+is $O(C^2\log^5(2+C))$.
+\end{corollary}
+
+\begin{remark}[Prediction and limiting conventions]
+The posterior-average sign error is no greater than the margin error in
+\eqref{eq:conclusion}. If $p_S(x)=Q_{S,N,t}\{f(x)z_w(x)>0\}$, then
+$D\{p_S\le2/3\}\le3\varepsilon$ and
+$D\{p_S\le1/2\}\le2\varepsilon$. Replacing $\varepsilon$ by
+$\varepsilon/3$ in the budget gives strict correct-label probability above
+$2/3$ outside test mass $\varepsilon$.
+The theorem covers all $\gamma\ge1$ by the substitution following
+\eqref{eq:prior}, and arbitrarily small positive scales at each fixed width.
+It also bounds the corresponding limsup risk as $t\downarrow0$.
+If parameter posteriors have a weak limit, its sign-error bound follows by
+Portmanteau using the open event $fz_w<1/4$. This observation does not claim
+that the closed margin event $fz_w\le1/4$ automatically transfers unchanged
+at boundary mass.
+\end{remark}
+
+\section{A positive-mass robust Boolean implementation}
+
+\begin{lemma}[Target cylinder]\label{lem:cylinder}
+For every $N\ge C$ and $0<t\le1$, there is a set of weights of raw Gaussian
+probability at least $\exp(-ND_*/t^2)$ which belongs to
+$\mathcal S_{N,\lambda,c}$, satisfies both optional restrictions, and has
+$f(x)z_w(x)>1$ at every input.
+\end{lemma}
+\begin{proof}
+Partition the neurons into $C$ balanced clone groups of sizes $k_b$, so
+$C/2\le N/k_b\le2C$. Fill unused logical slots with constants or copies.
+The ideal state $b^s(x)\in\{-1,1\}^N$ is constant on each group and has
+norm $\sqrt N$. Let $P_s$ average these groups.
+
+Give every gate gain $A$. In the $\{-1,1\}$ convention NAND uses the
+signed affine expression $1-u-v$, COPY uses $u$, and NOT uses $-u$.
+The counted constant wire supplies the first term inside hidden layers.
+Every ideal signed preactivation is at least $A$, and at most three
+coefficients of magnitude $A$ enter a gate. Divide each coefficient
+between two logical wires equally over the source clones. Let the readout
+average the output-wire clones with total coefficient $a$. Call these
+weights $w_*$.
+
+Use standardized coordinates $\sqrt d W^1$, $\sqrt N W^s$, and $Nv$,
+whose raw Gaussian variances are all $t^2$. Restrict each first-layer
+coordinate, each internal row's coordinate along each of the $C$
+normalized clone-group directions, and each readout coordinate to within
+$\rho t$ of its teacher value. Every internal matrix can then be written
+\[
+ W^s=W_*^s+R^s+E^s,\qquad R^s=R^sP_{s-1},\qquad
+ \norm{R^s}_{\rm op}\le\rho t\sqrt C,\qquad E^sP_{s-1}=0.
+\]
+The unconstrained Gaussian matrices $E^s$ are independent of these
+coordinate restrictions. Two $1/4$-nets on the Euclidean unit sphere,
+each of size at most $9^N$, give
+\[
+ \Prb\{\norm{E^s}_{\rm op}>b_Lt\}
+ \le2\exp(2N\log9-Nb_L^2/8)\le\frac1{2L}.
+\]
+Indeed, a fixed bilinear form has variance at most $t^2/N$, and twice the
+largest value over the nets bounds the operator norm. Hence all the bulk
+norm bounds hold with conditional probability at least $1/2$.
+
+We verify a stronger disturbance invariant than needed: allow RMS
+magnitude at most $\tau_0$ separately at each hidden layer, and an output
+disturbance at most $\tau_0$. Write
+$e_s=\norm{h^s_\eta-b^s}_2/\sqrt N$. If $e_{s-1}\le e_*$, every
+clone-group mean differs from its ideal bit by at most
+$e_*\sqrt{N/k_b}\le1/16$. The intended signed gate preactivation
+therefore remains at least $A/2$.
+For $\xi\in\{-1,1\}$ the elementary inequality
+\[
+ \xi q\ge A/2\quad\Longrightarrow\quad
+ |\tanh(q+u)-\xi|\le2e^{-A/2}+8|u|/A
+\]
+holds: if $|u|<A/4$, use the tanh tail bound, and otherwise the right side
+is at least two. Since $E^sb^{s-1}=0$ and
+$\norm{h^{s-1}_\eta}_2/\sqrt N\le1+\tau_0$, it follows that
+\[
+ e_s\le2e^{-A/2}+(8/A)\rho\sqrt C(1+\tau_0)
+                  +(8b_L/A)e_{s-1}+\tau_0\le e_*.
+\]
+Each summand is at most $e_*/4$ by \eqref{eq:targetconstants}.
+The first-layer preactivation perturbation is at most
+$\rho(d+1)\le A/4$, which initializes the same invariant. At the readout,
+\[
+ f(x)z_w(x;\eta)\ge15a/16-\rho(1+\tau_0)-\tau_0>1.
+\]
+
+The readout center and perturbation satisfy
+$\sqrt N\norm{v_*}_2\ge a\sqrt{C/2}$ and
+$\sqrt N\norm{v-v_*}_2\le\rho$. Thus
+\begin{equation}\label{eq:witnessenergy}
+ E_v(w)\ge a^2C/8\ge2\lambda C,\qquad
+ r_c(w)\le\frac{2\sqrt2c}{a\sqrt C}\le\tau_0.
+\end{equation}
+This proves original-network stability \eqref{eq:optional} with zero
+clipped variation, as well as the global margin and count condition.
+
+The clone projections map this cylinder into itself. Averaging rows
+preserves the constrained intervals because teacher rows agree within each
+group, and right projection kills $E^s$. First-layer and readout intervals
+are preserved as well. Consequently the averaged network has the same
+noisy margin invariant, and its own readout energy satisfies
+\eqref{eq:witnessenergy}. Both its clean and noisy clipped scores equal
+$f(x)/2$ throughout its calibrated noise ball. This proves
+\eqref{eq:robust}, even with zero in place of $1/32$, and proves
+\eqref{eq:clean} with zero error.
+
+There are $Nq_0$ independent constrained coordinates; the sum of the
+squared centers is at most $NB_0$. For a scalar
+$Z\sim\mathcal N(0,t^2)$ and $\rho\le1/4$,
+\[
+ \Prb\{|Z-m|\le\rho t\}\ge
+ \frac{2\rho}{e\sqrt{2\pi}}e^{-m^2/t^2}.
+\]
+This follows by bounding the density on the interval and using
+$(|m|/t+\rho)^2/2\le m^2/t^2+\rho^2$.
+Multiply these estimates and the independent bulk-event probability
+$1/2$. Since $t\le1$ and $N/t^2\ge1$, the product is at least
+$\exp(-ND_*/t^2)$.
+\end{proof}
+
+\section{Posterior control of adaptive population choices}
+
+For a fixed partition tuple, let $k_{s,a}$ be its group sizes. The exact
+width-$q$ quotient has coefficients
+\begin{align*}
+ U^1_{aj}&=k_{1,a}^{-1}\sum_{i\in a}W^1_{ij},\\
+ U^s_{ab}&=k_{s,a}^{-1}\sum_{i\in a,\ j\in b}W^s_{ij},\\
+ u_b&=\sum_{j\in b}v_j.
+\end{align*}
+Define its energy and parameter count by
+\[
+ \kappa_q=\frac dq\norm{U^1}_F^2+
+       \sum_{s=2}^H\norm{U^s}_F^2+q\norm u_2^2,
+ \qquad P_q=q(d+2)+(H-1)q^2.
+\]
+
+\begin{lemma}[A partition-uniform Gaussian tail]\label{lem:partitions}
+For every integer $Q\ge1$ and $J>0$,
+\begin{align*}
+ &\mu_{N,t}\{\text{some balanced partition tuple with }
+           q\le\min(N,Q)\text{ has }\kappa_q>J\}\\
+ &\qquad\le Q\exp\left(HN\log Q+
+ \frac N2[d+2+(H-1)Q]\log2-\frac{NJ}{8t^2}\right).
+\end{align*}
+\end{lemma}
+\begin{proof}
+For fixed partitions, the quotient coefficients are independent centered
+Gaussians, with variances respectively
+\[
+ \frac{t^2}{dk_{1,a}},\qquad
+ \frac{t^2k_{s-1,b}}{Nk_{s,a}},\qquad
+ \frac{t^2k_{H,b}}{N^2}.
+\]
+After the weights in $\kappa_q$ are applied, every squared Gaussian
+coordinate has variance at most $2t^2/N$. Balance gives
+$N/(qk)\le2$, $qk/N\le2$, and ratios of group sizes at most two.
+Therefore
+\[
+ \E\exp\left(\frac{N\kappa_q}{8t^2}\right)\le2^{P_q/2},
+ \qquad
+ \Prb(\kappa_q>J)\le e^{-NJ/(8t^2)}2^{P_q/2}.
+\]
+There are at most $q^{HN}$ ordered partition tuples. If $q\le N$, then
+$P_q/N\le d+2+(H-1)q$. Sum the bound over
+$q\le\min(N,Q)$ and use the upper bound $Q$ on that sum's length.
+This controls partitions before any weight-dependent selection.
+\end{proof}
+
+\begin{lemma}[Posterior truncation]\label{lem:truncation}
+Outside posterior mass at most $\varepsilon/2$, every network has
+$E_v(w)\le B$ and a witnessing partition with $q\le Q$ and
+$\kappa_q\le J$.
+\end{lemma}
+\begin{proof}
+For every correctly labeled sample, Lemma~\ref{lem:cylinder} lower-bounds
+the raw probability of all prior restrictions and training constraints by
+$e^{-ND_*/t^2}$. Under the raw Gaussian, $NE_v/t^2$ is chi-square with
+$N$ degrees of freedom. Its exponential moment gives, for $B\ge8$,
+\[
+ \mu_{N,t}(E_v>B)\le
+ e^{-NB/(4t^2)}2^{N/2}\le e^{-NB/(8t^2)}.
+\]
+After dividing by the conditioning probability, the definition of $B$
+bounds this posterior probability by $\varepsilon/4$. On its complement,
+\eqref{eq:count} supplies $q\le Q$.
+
+For the exceptional partition event of Lemma~\ref{lem:partitions}, use
+$t\le1$ and $N\ge1$ to bound every positive exponent term by $N/t^2$
+times the corresponding term in $J/8$. Its raw probability is then at most
+\[
+ e^{-ND_*/t^2}e^{-(N/t^2)\log(4/\varepsilon)}.
+\]
+Posterior normalization bounds it by $\varepsilon/4$. Off these two
+exceptional events every partition of size at most $Q$ has energy at most
+$J$, so any witnessing partition can be chosen.
+\end{proof}
+
+\section{Robust rounding without an exponential depth cost}
+
+\begin{lemma}[Rounding as an internal disturbance]\label{lem:rounding}
+Every retained network from Lemma~\ref{lem:truncation} has a candidate
+$g$ in a fixed finite class $\mathcal G$, independent of $N,t$, such that
+\[
+ \sup_{x\in\mathcal X}|T(z_w(x))-T(g(x))|\le3/32,
+ \qquad \log|\mathcal G|\le P_Q\log(3+4R/\zeta).
+\]
+\end{lemma}
+\begin{proof}
+Choose a witnessing partition and its quotient $(U,u)$ of width $q\le Q$.
+The energy bound implies that every coefficient has magnitude at most
+$\sqrt{QJ}<R$. Round each coefficient to a grid in $[-R,R]$ containing
+zero, with error at most $\zeta$ and at most $3+4R/\zeta$ possible values.
+Let $(U',u')$ denote the rounded quotient and $h'^s$ its clean hidden
+trajectory. Tanh gives $|h'^s_a|\le1$ at every depth.
+
+The rounded trajectory is exactly the unrounded quotient's trajectory
+with the after-activation disturbances
+\begin{align*}
+ \eta^1_a&=\tanh((U'^1\bar x)_a)-\tanh((U^1\bar x)_a),\\
+ \eta^s_a&=\tanh((U'^sh'^{s-1})_a)-\tanh((U^sh'^{s-1})_a),\\
+ \eta^{\rm out}&=(u'-u)^\top h'^H.
+\end{align*}
+Lift each hidden disturbance constantly over its original population.
+This gives the same trajectory in the averaged width-$N$ network, without
+any factor depending on population sizes. By tanh's Lipschitz bound,
+\[
+ |\eta^1_a|\le(d+1)\zeta,\qquad
+ |\eta^s_a|\le q\zeta\ (s\ge2),\qquad
+ |\eta^{\rm out}|\le q\zeta.
+\]
+Hence the normalized total disturbance satisfies
+\[
+ \norm\eta_*^2\le[(d+1)^2+Hq^2]\zeta^2
+ \le\frac{c^2}{4(1+HB)}\le r_c(\bar w)^2,
+\]
+because $E_v(\bar w)\le E_v(w)\le B$.
+Applying the merged network's own robustness condition yields
+\[
+ \sup_x|T(z_{\bar w}(x))-T(z_{U',u'}(x))|\le1/32.
+\]
+Together with \eqref{eq:clean}, the total clipped approximation error is
+at most $3/32$.
+
+Zero-pad the quotient to width $Q$. This preserves its function since
+$\tanh(0)=0$, and it preserves the selected grid. There are $P_Q$ physical
+parameters, so the class of all width-$Q$ networks on this grid has the
+claimed log cardinality. Its grids and budgets depend only on the teacher
+resources, architecture, and statistical tolerances, not learner width or
+Gaussian scale.
+\end{proof}
+
+\section{Generalization and the explicit rate}
+
+\begin{proof}[Proof of Theorem~\ref{thm:main}]
+Let $\psi$ be one on $(-\infty,11/32]$, zero on
+$[13/32,\infty)$, and affine between these values. Any retained,
+training-consistent $w$ has a candidate $g\in\mathcal G$ with zero
+training losses $\psi(f(X_i)T(g(X_i)))$. Indeed, its correct clipped
+training score is $1/2$ and the approximation error is at most $3/32$.
+Whenever $f(x)z_w(x)\le1/4$, the candidate's correct clipped score is at
+most $11/32$, so the ramp loss equals one.
+
+For a fixed loss in $[0,1]$ of population mean $r$, the probability that
+all $n$ iid losses vanish is at most $(1-r)^n\le e^{-nr}$: the probability
+of a positive loss is at least its mean. A union bound over
+$\mathcal G$ gives an event of probability at least $1-\delta$ on which
+every zero-training-loss candidate has population loss at most
+\[
+ \frac{\log|\mathcal G|+\log(1/\delta)}n.
+\]
+This single event does not depend on $N$ or $t$. On it, integrate the
+pointwise loss comparison over retained posterior networks and bound the
+exceptional posterior mass by $\varepsilon/2$. Lemmas
+\ref{lem:truncation} and \ref{lem:rounding} and \eqref{eq:samples} give
+\[
+ \E_Q D\{fz_w\le1/4\}\le\varepsilon/2+
+ \frac{\log|\mathcal G|+\log(1/\delta)}n\le\varepsilon.
+\]
+Lemma~\ref{lem:cylinder} proves positive normalizers for every stated
+choice of optional restrictions.
+\end{proof}
+
+\begin{proof}[Proof of Corollary~\ref{cor:rate}]
+The target constants give
+\[
+ D_*=O\bigl((d+LC)\log^2(2dLC)+(\lambda+c^2)C\bigr).
+\]
+Thus, with $\lambda=d+L$ and fixed $c,\varepsilon,\delta$,
+$Q=\widetilde O(C)$ because $d+LC\le(d+L)C$.
+The quantities $J,R,\zeta^{-1}$ are polynomially bounded in $d,C,L$
+up to logarithms. Consequently the grid logarithm is
+$O(\log(2+d+C+L))$ up to additional logarithms of these resources, and
+\eqref{eq:samples} gives $\widetilde O(dC+LC^2)$.
+
+For the sharper fixed-$d$ statement, the target gain has $A^2=O(F)$ and
+$D_*=O(CLF)$. Hence
+\[
+ B=O(CLF),\quad Q=O(CF),\quad J=O(CLF),\quad
+ R=O(C\sqrt L F),\quad P_Q=O(C^2LF^2).
+\]
+The explicit mesh has a polynomial inverse in $C,L,F$; for example
+$\zeta^{-1}=O(1+C^{3/2}L^{3/2}F^{3/2})$ at fixed $d,c$.
+Therefore $\log(3+4R/\zeta)=O(G)$. Multiplication gives
+$O(C^2LF^2G)$ and the stated specializations.
+\end{proof}
+
+\input{per-layer}
+
+\input{digital}
+
+\section{Interpretation and limitations}
+
+The analog bounds are close, up to width logarithms, to the dense parameter
+count of a width-$C$, depth-$L$ representation. The digital theorem removes
+those logarithms under a different structural condition and calibration.
+These are upper bounds from specified priors and proofs, not optimality
+theorems. A bounded-fan-in
+Boolean circuit can have a description of only $O(LC\log(C+d))$ bits, so
+quadratic width is not a universal lower bound for the target class.
+
+The analog stability hypothesis has an operational meaning: a compressed or merged
+network must remain stable after it replaces the original model. Matching
+clean outputs alone does not ensure reliable behavior under numerical or
+internal perturbations. The Boolean witnesses have this property because
+saturated gates repeatedly restore approximate bits to their intended
+logical values. The support condition nevertheless remains strong. No
+claim is made that SGD or Adam typically produces it, or that an efficient
+algorithm finds its witnessing populations.
+
+The original network's internal robustness alone does not supply the new
+argument. Clean-output closeness of two networks does not compare their
+noisy hidden trajectories. Requiring robustness of the averaged
+representation closes exactly this gap. The architecture-dependent count
+calibration $\lambda=d+L$ is also part of the changed prior; it is not a
+free improvement for the baseline population count. The digital theorem
+instead uses $\lambda=(d+L)(1+\log(d+2))$ and a logarithmically weighted
+population budget; its global output margin is needed to transfer the
+finite sign code back to the actual posterior predictor.
+
+The proof uses bounded hidden activations at the rounding step. Extending
+this exact argument to an unbounded activation requires a suitable bound
+on the rounded trajectory or a separate control of large neuron activity.
+The theorem as stated is for tanh, and the target-mass proof uses its
+bit-restoring saturation. Finally, the result guarantees statistical
+performance of ideal Bayesian conditioning and does not provide an
+efficient inference algorithm.
+
+\paragraph{Verification status.}
+This manuscript gives conventional proofs and has not been formalized in
+Lean. Its main ingredients are adapted and sharpened from the population
+averaging analysis \cite{averaging}; prior formal verification of related
+learning theorems does not certify this new support condition or its
+sample bound.
+
+\begin{thebibliography}{9}
+\bibitem{averaging}
+ChatGPT-6 Astra, Claude Fable 5 and Opus 5, Kaarel H\"anni, and Dmitry Vaintrob.
+\emph{Quadratic-width learning bounds for Bayesian networks with stable
+neuron populations}. Research draft, 21 October 2026.
+\href{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/improved-polynomials/neuron-averaging}{Repository manuscript and source}.
+\end{thebibliography}
+\end{document}

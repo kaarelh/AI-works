@@ -1,0 +1,362 @@
+\section{Sequential quantization at every mean-field-or-stronger scale}
+\label{app:all-scales-quantization}
+
+The deterministic compressor used in the main theorem requires a bound
+on total network energy. At the finite mean-field scale, the unconditioned
+Gaussian background can have growing total energy. An entropy-based
+compressor avoids that difficulty. In this appendix we combine the same
+sequential-quantization principle with the active-direction and covariance
+reconstruction estimates of~\cite{all-scales}. The result improves the
+unchanged internal-noise prior at every $0<t\le1$, including $\gamma=1$.
+This appendix is not a new proof of those active-direction estimates: we
+state precisely which properties are imported and prove the modification
+that removes the coding precision's extra depth factor. Neither this
+modification nor its new depth exponent is Lean formalized.
+
+\subsection{Budgets and learning statement}
+
+Use the model, support $\mathcal R_{N,c}$, and posterior
+$Q_{S,N,t,c}$ from \eqref{eq:support}--\eqref{eq:conditioning}.
+Let $D_*$ be any target-cylinder cost satisfying the conclusion of
+Appendix~\ref{app:cylinder}. Thus the raw posterior conditioning event
+has probability at least $\exp(-ND_*/t^2)$, for every correctly labeled
+sample and every $N\ge C$, $0<t\le1$. For
+$0<\varepsilon,\delta<1$, put
+\begin{align*}
+ \beta&=\varepsilon/4,&
+ B_v&=\max\{8,8[D_*+\log(1/\beta)]\},&
+ K&=D_*+1,\\
+ r&=\min\{1/6,c/\sqrt{1+(L-1)B_v}\},&
+ \alpha&=\varepsilon/12.
+\end{align*}
+Define the compression parameters
+\begin{align*}
+ e&=\frac{\alpha r^2}{1000L},&
+ \eta&=\frac{\alpha}{100L},&
+ q_a&=\left\lceil\frac{2K}{e\eta}\right\rceil,\\
+ D_0&=[(d+1)q_a+2]\log2,&
+ V&=8K+2q_a,&
+ B_H^2&=4V/e,\\
+ K_0&=(4K+2\log2)/\eta,&
+ B_1^2&=4[4K+2(d+1)\log2]/e.
+\end{align*}
+The letter $q_a$ denotes the number of retained active directions; it
+is unrelated to a population partition or a support restriction.
+Let $m$ be the least integer no smaller than each of
+\begin{align*}
+ &10000(V+q_a+1)/e,\\
+ &64(q_a+1)\log(4(q_a+1)/\eta),\\
+ &512K_0r^{-2}[d\log2+\log(2/\eta)+1].
+\end{align*}
+Finally set
+\begin{align*}
+ M&=\max\{m,\lceil LD_0/K\rceil,1\},&
+ B_G&=\max\{2,2\sqrt{\log(6m/e)}\},\\
+ P_*&=M(d+1)+(L-2)M^2+M,&
+ B_{\rm small}^2&=\frac{4(4MK+2P_*\log2)}\alpha,\\
+ B_{\rm large}&=\max\left\{
+ B_1,\frac{2B_H\sqrt{q_a+1}}m+\frac{\sqrt2 B_G}{\sqrt m},
+ \frac{\sqrt{K_0}}m,1\right\},\\
+ B_*&=1+\max\{B_{\rm small},B_{\rm large},1\},&
+ \zeta&=\frac{\sqrt e}{4(M+d+1)},\\
+ J_*&=P_*\log(3+4B_*/\zeta).
+\end{align*}
+All square roots above denote the nonnegative root.
+
+\begin{theorem}[An improved all-scale budget]
+\label{thm:all-scales-sequential}
+Under the Boolean-teacher convention of the main theorem, the condition
+\begin{equation}\label{eq:all-scales-sequential-budget}
+ n\ge\frac{16}{\varepsilon}\left[J_*+\log(1/\delta)\right]
+\end{equation}
+implies, with probability at least $1-\delta$ over iid training inputs,
+\[
+ \E_{w\sim Q_{S,N,t,c},\,X\sim D}
+     \mathbf1\{f(X)z_w(X)\le1/4\}\le\varepsilon
+\]
+simultaneously for every $N\ge C$ and every $0<t\le1$.
+The conclusion is also valid if global clean-output-margin conditioning
+is added to the prior. No population-merging or additional robustness
+assumption is made.
+\end{theorem}
+
+With $d,c,\varepsilon,\delta$ fixed, write
+\[
+ F=1+\log^2(2+C)+\log(2+L),\qquad G=\log(2+CL).
+\]
+The target constants and the budgets above give
+\begin{equation}\label{eq:all-scales-sequential-rate}
+ n=O(C^6L^{17}F^6G).
+\end{equation}
+This improves the former $O(C^6L^{18}F^6G)$ budget while preserving its
+fixed-depth $O(C^6\log^{13}(2+C))$ width consequence.
+A further target-cylinder sharpening below removes the $\log(2+L)$
+term from $F$.
+
+\subsection{Imported entropy and reconstruction estimates}
+
+We use the following properties of the construction in the appendix
+``Finite posterior compression by internal-noise coupling''
+of~\cite{all-scales}. Its lemmas on future-weight entropy, whole-layer
+active directions, and whitened sampling prove these properties for
+\emph{any bounded virtual prefix}. They do not require a Gaussian law
+for the prefix and do not assume its robustness.
+
+First, suppose a prefix is $A$, the current original weight block is $X$,
+and the future blocks are $Y$, with product Gaussian reference law
+$P_X\otimes P_Y$. For a finite message $J$, a retained quantity
+$H_0=f(A,J,X)$, and a new prefix $A'$ which is a randomized function of
+$(A,J,H_0)$ using fresh randomness conditionally independent of $Y$,
+\begin{equation}\label{eq:imported-future-entropy}
+ \E_{A'}D_{\rm KL}(Q_{Y\mid A'}\Vert P_Y)
+ \le \E_A D_{\rm KL}(Q_{X,Y\mid A}\Vert P_X\otimes P_Y)
+       +\mathcal H(J\mid A).
+\end{equation}
+Here $\mathcal H$ denotes conditional Shannon entropy. The inequality
+is the KL chain rule and data processing; deterministic processing of
+$A'$ cannot increase its left side.
+
+Second, if $Q\ll\mu_{N,t}$ has
+$D_{\rm KL}(Q\Vert\mu_{N,t})\le NK/t^2$ and $N>M$, the budgets above
+permit the following sequential construction. Its current virtual layer
+has $N$ rows, each evaluated on $m$ stored source neurons from the
+preceding layer. The first original layer is clipped rowwise at
+physical standardized norm $B_1$. Each internal stage retains at most
+$q_a$ active input directions, clips the active row norms at $B_H$,
+reconstructs the complementary covariance by whitened source sampling,
+and clips its new Gaussian coefficients at $B_G$. The finite message
+selecting active inputs has entropy at most $D_0$; all other new
+randomness is fresh conditional on the prefix and active matrix. Hence
+\eqref{eq:imported-future-entropy} bounds the unprocessed original-weight
+entropy at stage $s$ by
+\[
+ B_s\le NK/t^2+sD_0\le2NK/t^2.
+\]
+For every fixed input $x$, the conditional reconstruction couplings give
+expected squared RMS activation injection less than $20e$ per hidden
+stage, with success indicators. The first layer has the smaller bound
+$e$. Before any later row selection, each new internal coefficient has
+absolute value at most
+\[
+ \frac{2B_H\sqrt{q_a+1}}m+\frac{\sqrt2B_G}{\sqrt m}.
+\]
+The readout is truncated at $N\norm v^2\le K_0$ and reconstructed using
+$m$ source samples, with coefficient bound $\sqrt{K_0}/m$ and uniform
+output error at most $r/16$. The sum of probabilities of rank, Gram,
+and readout failures is at most $3L\eta$.
+
+For clarity, the quantitative source-reconstruction input is the
+following estimate. For bounded source activations $|h_j(x)|\le1$,
+active dimension at most $q_a$, and active matrix $H_0$, its whitened
+half-uniform, half-leverage sampling law has expected squared RMS
+error, with the good-Gram indicator, at most
+\[
+ \frac{2\norm{H_0}_F^2/N+16(q_a+1)}m.
+\]
+The averaged active energy is bounded by $V$, while the Gram failure
+probability is at most $\eta$. These facts, Gaussian clipping, the
+active-direction transport estimate, and the squared triangle
+inequality give the stated $20e$ bound. Each bound holds for every
+bounded prefix to which the entropy estimate applies. These are the
+nontrivial reconstruction estimates imported from~\cite{all-scales};
+the argument below does not infer them merely from an existing
+compressed network's clean-output accuracy.
+
+\subsection{Rounding inside the canonical construction}
+
+Choose fixed scalar lattice rounding with error at most $\zeta$ and
+with zero fixed. After first-layer clipping, round all its coefficients
+before constructing any later prefix. At each internal stage apply the
+imported reconstruction procedure to the \emph{already rounded} prefix,
+then round every newly constructed virtual row before processing the
+next original layer. Finally round the reconstructed readout. Keep the
+source rows selected at subsequent stages, as in the unrounded
+construction. There is no terminal rounding pass.
+
+This modification preserves the preceding estimates. Tanh keeps the
+rounded virtual activations in $[-1,1]$. Each preceding state is
+specified before the next fresh source list is sampled. Thus the
+boundedness and conditional-independence assumptions of the sampling
+estimate remain valid. Rounding new rows is a deterministic function
+of the same prefix, message, active matrix and fresh Gaussian variables
+as their unrounded construction. It therefore preserves
+\eqref{eq:imported-future-entropy} without adding a message.
+The resulting prefix may have a discrete law; that law never receives
+a Gaussian relative-entropy comparison.
+
+Fix an input $x$. The conditional transports can be glued while keeping
+the original full-network marginal equal to $Q$ and the outgoing
+rounded-prefix/future-weight marginal equal to the next canonical
+stage's law. To do so, extend each transition by the previous
+conditional law of past original weights given its incoming prefix and
+remaining original weights. This disintegration preserves all earlier
+computed prefixes. Define the new postactivation injections by
+\[
+ \eta^s=h^s_{\rm rounded\ virtual}(x)
+       -\tanh\bigl(W^s_{\rm original}
+                         h^{s-1}_{\rm rounded\ virtual}(x)\bigr).
+\]
+The final candidate output is exactly the original network's output
+under these injections and the analogous readout injection. Its
+marginal law is independent of $x$, although the coupling may depend
+on $x$.
+
+Coefficient rounding changes a first-layer preactivation by at most
+$(d+1)\zeta$, and every later virtual preactivation by at most
+$m\zeta$. Both are at most $\sqrt e/4$. Consequently the expected
+squared RMS hidden injection, including rounding, is at most
+\[
+ 2(20e)+2(e/16)<41e.
+\]
+Outside the abort events, Markov's inequality gives
+\[
+ \Prb\left\{\sum_{s<L}\norm{\eta^s}^2/N>r^2/16\right\}
+ \le\frac{656Le}{r^2}=0.656\alpha.
+\]
+The total abort probability is at most $3L\eta=0.03\alpha$.
+The readout rounding error is at most $m\zeta\le\sqrt e/4\le r/64$,
+where the last inequality uses $\alpha\le1/8$ and $L\ge2$.
+Together with its sampling error, the scalar injection is at most
+$5r/64$. On the good event,
+\[
+ \norm\eta_*\le\sqrt{r^2/16+25r^2/4096}
+       =\frac{\sqrt{281}}{64}r<r/2.
+\]
+The exceptional probability is less than $\alpha$.
+
+When $N\le M$, the Gaussian entropy-moment inequality instead gives,
+with probability at least $1-\alpha/4$, the coefficient bound
+$B_{\rm small}$ above. On this event round every original coefficient
+and compute the rounded network sequentially; on its complement use a
+zero-readout default. At each input the rounded computation is the
+original network under injections satisfying
+\[
+ \norm\eta_*^2
+ \le\zeta^2[(d+1)^2+(L-1)N^2]
+ \le\zeta^2 L(M+d+1)^2=Le/16<r^2/4.
+\]
+This identity uses bounded rounded hidden activations, not a bound on
+products of original matrix norms.
+
+All retained coefficients, after rounding, lie in $[-B_*,B_*]$.
+Padding each candidate to width $M$ with zero neurons is exact for tanh.
+A grid with at most $3+4B_*/\zeta$ entries per coefficient gives a finite
+class $\mathcal H_*$ with
+\begin{equation}\label{eq:all-scales-code}
+ \log|\mathcal H_*|\le J_*.
+\end{equation}
+The construction proves the following strengthened finite-code statement:
+for every such $Q$ there is one law $\Gamma_Q$ on $\mathcal H_*$ such
+that, at each fixed input, a coupling has
+\[
+ h(x)=z_w(x;\eta),\qquad \norm\eta_*<r/2
+\]
+except on probability at most $\alpha$. Only the coupling, not its two
+marginals, can depend on the input.
+
+\subsection{Posterior and statistical argument}
+
+Under the raw Gaussian, $NE_v/t^2$ is chi-square with $N$ degrees of
+freedom. The target-cylinder denominator and the exponential moment
+bound give posterior mass at most $\beta$ to $E_v>B_v$. The retained
+conditional posterior $Q'$ satisfies
+\[
+ D_{\rm KL}(Q'\Vert\mu_{N,t})
+ \le ND_*/t^2+\log(1/(1-\beta))\le NK/t^2.
+\]
+Every retained original network is robust on the common radius $r$.
+Apply the strengthened finite-code statement to $Q'$. On each good
+coupling the clipped-score error is at most $1/16$.
+
+Let $\psi$ be one on $(-\infty,1/3]$, zero on $[5/12,\infty)$,
+and affine between these intervals. A correctly fitted training point
+has candidate ramp loss zero on the good coupling. A test-margin
+failure of the original network has candidate ramp loss one there.
+For the finite class $\mathcal H_*$, a relative Chernoff inequality
+and a union bound give, on a sample event of probability at least
+$1-\delta$,
+\[
+ \E_D\psi(f(X)T(h(X)))
+ \le \frac2n\sum_{i=1}^n\psi(f(X_i)T(h(X_i)))
+       +\frac{8[J_*+\log(1/\delta)]}{n}
+ \qquad(h\in\mathcal H_*).
+\]
+Averaging over $\Gamma_{Q'}$, comparing population risks, and restoring
+the discarded posterior mass bounds the desired risk by
+\[
+ \beta+3\alpha+\frac{8[J_*+\log(1/\delta)]}{n}
+ \le\varepsilon
+\]
+under \eqref{eq:all-scales-sequential-budget}. The finite class and sample
+event do not depend on $N,t$. This proves
+Theorem~\ref{thm:all-scales-sequential}. Adding global-margin conditioning
+changes none of these steps, since the same target cylinder is retained.
+
+\subsection{Width--depth accounting and a sharper target cylinder}
+
+For fixed $d,c,\varepsilon,\delta$, the displayed budgets give
+\begin{align*}
+ D_*,K,B_v&=O(CLF),&r^{-2}&=O(CL^2F),\\
+ e^{-1}&=O(CL^3F),&\eta^{-1}&=O(L),\\
+ q_a,V&=O(C^2L^5F^2),&M&=O(C^3L^8F^3),\\
+ P_*&=O(C^6L^{17}F^6).
+\end{align*}
+Both $B_*$ and $\zeta^{-1}$ are polynomial in $C,L,F$, so
+$\log(3+4B_*/\zeta)=O(G)$. The old terminal grid had an additional
+factor $L$ here. This establishes \eqref{eq:all-scales-sequential-rate}.
+
+There is a separate improvement to the target-cylinder budget which
+changes neither the prior nor the compression. In
+Appendix~\ref{app:cylinder}, replace the depth-dependent bulk cutoff by
+\[
+ b=\sqrt{16\log9+8\log4},\qquad
+ A=\max\{32b,2\log(8/e_*)\}.
+\]
+Each unconstrained Gaussian bulk matrix has, by the same two-net bound,
+\[
+ \Prb\{\norm{E^s}_{\rm op}>bt\}
+ \le2\exp(2N\log9-Nb^2/8)=2\cdot4^{-N}\le1/2.
+\]
+The bulk matrices are conditionally independent across layers.
+Their simultaneous success probability is therefore at least
+$2^{-(H-1)}$. Every deterministic stability estimate in the cylinder
+proof is unchanged. Recompute $B_0,q_0,\rho$ with this constant-cutoff
+choice of $A$ and use the conservative cost
+\begin{equation}\label{eq:product-cylinder-cost}
+ D_*^{\rm prod}=B_0+q_0\log\frac{e\sqrt{2\pi}}{2\rho}+H\log2.
+\end{equation}
+Indeed $N/t^2\ge1$ absorbs the product-event cost into this rate.
+At fixed $d,c$, with $F_0=1+\log^2(2+C)$, one has
+$D_*^{\rm prod}=O(CLF_0)$. Substituting this valid cylinder cost in
+Theorem~\ref{thm:all-scales-sequential} gives
+\begin{corollary}[Depth logarithms removed from the target gain]
+\label{cor:all-scales-product-cylinder}
+For fixed $d,c,\varepsilon,\delta$, the unchanged robust prior admits
+sufficient sample count
+\[
+ O\!\left(C^6L^{17}[1+\log^2(2+C)]^6\log(2+CL)\right)
+\]
+at every $N\ge C$ and every $0<t\le1$. At fixed teacher width this is
+$O(L^{17}\log(2+L))$.
+\end{corollary}
+The same cylinder replacement is also available in the quartic main
+theorem; it is independent of the sampling and quantization argument.
+Its proof uses the target constants only through their valid mass lower
+bound. With this substitution the quartic sufficient order becomes
+\[
+ O\!\left(C^4L^7[1+\log^2(2+C)]^4\log^2(2+L)\log(2+CL)\right).
+\]
+At fixed teacher width this is $O(L^7\log^3(2+L))$.
+
+\begin{remark}[A conservative joint polynomial]
+Put $S=2+d+L+C+c+c^{-1}+\varepsilon^{-1}+\log(1/\delta)$.
+The coarse accounting in~\cite{all-scales} for the unchanged budgets gives
+$e^{-1}=O(S^8)$, $M=O(S^{21})$, $P_*=O(S^{43})$, and
+$B_*=O(S^{22})$. The new mesh has
+$\zeta^{-1}=O(S^{25})$. Thus $J_*=O(S^{43}\log S)$ and
+\eqref{eq:all-scales-sequential-budget} is $O(S^{44}\log S)$,
+hence $O(S^{45})$. This deliberately loose degree-45 envelope is a
+consequence of the conventional modification proved here. It does not
+replace or enlarge the existing Lean certification of the earlier
+degree-46 envelope.
+\end{remark}

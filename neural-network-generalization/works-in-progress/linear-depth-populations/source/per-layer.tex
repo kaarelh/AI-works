@@ -1,0 +1,169 @@
+\section{Removing depth logarithms with per-layer stability}
+\label{sec:perlayer}
+
+A stronger disturbance condition removes even the depth logarithms from
+Corollary~\ref{cor:rate}, while continuing to allow analog hidden states.
+The condition is a product of noise balls: every layer may be perturbed
+by its full allowed amount simultaneously. We also use a Euclidean-ball
+parameter count, so that merely having more layers does not enlarge the
+required range of a typical coded coefficient.
+
+Fix $\lambda\ge1$ and $c>0$. Retain the balanced-population count
+\eqref{eq:count} and clean approximation \eqref{eq:clean}, but replace
+\eqref{eq:robust} by
+\begin{equation}\label{eq:perlayer-stability}
+ |T(z_{\bar w}(x;\eta))-T(z_{\bar w}(x))|\le\frac1{32}
+ \quad\text{whenever}\quad
+ \frac{\norm{\eta^s}_2}{\sqrt N}\le\tau_c(\bar w)\ (1\le s\le H),
+ \quad |\eta^{\rm out}|\le\tau_c(\bar w),
+\end{equation}
+where
+\[
+ \tau_c(\bar w)=\frac{c}{\sqrt{1+E_v(\bar w)/\lambda}}.
+\]
+This uses the averaged full-width network's own readout energy. It is a
+stronger disturbance requirement than the aggregate-radius condition:
+any vector of aggregate norm at most $r_c(\bar w)$ obeys each bound above,
+since $H\ge1$ and $\lambda\ge1$. As before, the prior can optionally
+retain global margin and original-network stability \eqref{eq:optional}.
+The training condition remains \eqref{eq:training}.
+
+For this support, replace the target constants in
+\eqref{eq:targetconstants} by
+\begin{align}
+ b&=\sqrt{16\log9+8\log4},&
+ A&=\max\{32b,2\log(8/e_*)\},\notag\\
+ a&=\sqrt\lambda\max\{4,256c\},&
+ D_{\rm pl}&=B_0+q_0\log\frac{e\sqrt{2\pi}}{2\rho}+(H-1)\log2.
+ \label{eq:perlayer-target}
+\end{align}
+Here $e_*,\tau_0,\rho,q_0,B_0$ retain their previous formulas, evaluated
+with the new $A,a$. In particular the gate gain $A$ no longer depends on
+depth. Define $B,Q,J,P_Q$ by \eqref{eq:budgets}, with $D_{\rm pl}$ in
+place of $D_*$, and set
+\begin{equation}\label{eq:perlayer-mesh}
+ \tau_B=\frac c{\sqrt{1+B/\lambda}},\qquad
+ \zeta_{\rm pl}=\frac{\tau_B}{2\max\{d+1,Q\}},\qquad
+ K_{\rm ball}=\sqrt{2\pi e}.
+\end{equation}
+
+\begin{theorem}[Linear depth under per-layer stability]
+\label{thm:perlayer}
+Under the preceding support and teacher conventions, the conclusions of
+Theorem~\ref{thm:main} hold if
+\begin{equation}\label{eq:perlayer-sample}
+ n\ge\frac2\varepsilon\left[
+ P_Q\log\left(K_{\rm ball}
+       \left(1+\frac{\sqrt{QJ/P_Q}}{\zeta_{\rm pl}}\right)\right)
+       +\log(1/\delta)\right].
+\end{equation}
+For $\lambda=d+L$ and fixed $d,c,\varepsilon,\delta$, this sufficient
+bound is
+\[
+ O\bigl(C^2L\log^5(2+C)\bigr).
+\]
+In particular, there is no hidden logarithm of depth in this rate.
+\end{theorem}
+
+\begin{proof}
+We first check the target cylinder. At each internal layer, the same
+Gaussian two-net bound as before now gives
+\[
+ \Prb\{\norm{E^s}_{\rm op}>bt\}
+ \le2\exp(2N\log9-Nb^2/8)=2\cdot4^{-N}\le\frac12.
+\]
+The internal bulk matrices are independent of one another and of the
+constrained scalar coordinates. Thus all $H-1$ bulk bounds hold with
+probability at least $2^{-(H-1)}$. Paying this probability directly,
+rather than choosing a cutoff that makes their intersection probability
+at least $1/2$, removes the depth dependence from $b$ and $A$.
+The scalar interval calculation in Lemma~\ref{lem:cylinder} gives raw
+cylinder probability at least $e^{-ND_{\rm pl}/t^2}$.
+
+The same saturation induction proves signed output greater than one under
+RMS perturbation at most $\tau_0$ separately at every hidden layer and
+output. Projection maps the cylinder into itself, so both $w$ and
+$\bar w$ satisfy this invariant. For the averaged network,
+\[
+ E_v(\bar w)\ge a^2C/8,\qquad
+ \tau_c(\bar w)\le\frac{c\sqrt{8\lambda}}{a\sqrt C}
+                  \le\tau_0.
+\]
+The new per-layer condition holds with zero clipped variation. Also
+$E_v(w)\ge2\lambda C$, proving the population-count condition, and
+$a\ge256c$ proves the optional original-network stability as before.
+The target normalizer bound is therefore valid for each stated prior.
+
+Lemma~\ref{lem:truncation} applies unchanged with this target cost.
+Outside posterior mass $\varepsilon/2$, there is a witnessing quotient
+of width $q\le Q$, with $\kappa_q\le J$, and
+$E_v(\bar w)\le E_v(w)\le B$. Hence its permissible per-layer radius
+is at least $\tau_B$.
+
+Round quotient coefficients to the nearest multiple of
+$\zeta_{\rm pl}$. The construction in Lemma~\ref{lem:rounding}
+expresses the rounded trajectory exactly through population-constant
+internal disturbances. Every first-layer coordinate disturbance is at
+most $(d+1)\zeta_{\rm pl}$, and every subsequent hidden or output
+disturbance is at most $q\zeta_{\rm pl}$. Consequently each layer's RMS
+norm and the output disturbance are at most $\tau_B/2$. The per-layer
+condition bounds the rounded-to-averaged clipped error by $1/32$, and
+the total approximation error is again at most $3/32$.
+
+It remains to count rounded coefficients without a depth-dependent range
+penalty. Since $d\ge1$ and $q\le Q$, the sum of squares of all unweighted
+quotient parameters is at most $QJ$. After zero-padding to width $Q$, their
+vector lies in a Euclidean ball in dimension $P_Q$ of radius
+$S=\sqrt{QJ}$. Consider all lattice points produced by nearest-grid
+rounding of any vector in this ball. Their cubes of side
+$\zeta_{\rm pl}$ have disjoint interiors and lie in the ball of radius
+$S+\zeta_{\rm pl}\sqrt{P_Q}$.
+For every positive integer $P$ and radius $R$,
+\[
+ \mathrm{vol}(B_R)\le
+ \left(\sqrt{\frac{2\pi e}{P}}R\right)^P.
+\]
+For example, integrate
+$\mathbf1_{\norm x\le R}\le\exp(\alpha R^2-\alpha\norm x^2)$ and
+choose $\alpha=P/(2R^2)$. Dividing by the lattice-cube volume yields
+\[
+ |\mathcal G|\le
+ \left[K_{\rm ball}
+       \left(1+\frac{\sqrt{QJ/P_Q}}{\zeta_{\rm pl}}\right)\right]^{P_Q}.
+\]
+Padding includes every $q\le Q$ in the same ball, so no separate count of
+partitions or widths is needed at this step. The grid candidates need
+not themselves satisfy the prior restrictions.
+
+The ramp and finite-class argument from Theorem~\ref{thm:main} now give
+\eqref{eq:perlayer-sample}, on a single event for every $N\ge C$ and
+$0<t\le1$.
+
+For the rate, put $F_C=1+\log^2(2+C)$ and fix $d,c,\varepsilon,\delta$.
+At $\lambda=d+L$, the modified target cylinder has
+\[
+ D_{\rm pl}=O(LCF_C),\qquad B=O(LCF_C),\qquad
+ Q=O(CF_C),\qquad J=O(LCF_C).
+\]
+More specifically, $D_{\rm pl}+\log(4/\varepsilon)\le B/8$ and
+$B/\lambda\le Q$. The formula for $J$ therefore gives $J=O(LQ)$ at
+fixed dimension. If $H\ge2$, then
+$P_Q\ge(H-1)Q^2$, so $QJ/P_Q=O(1)$ uniformly in depth. Also
+\[
+ \zeta_{\rm pl}^{-1}
+ =\frac{2\max\{d+1,Q\}\sqrt{1+B/\lambda}}c
+ =O(Q^{3/2})
+\]
+at fixed $d,c$. Thus the logarithm in \eqref{eq:perlayer-sample} is
+$O(\log(2+C))$, while $P_Q=O(LC^2F_C^2)$. If $H=1$, then $L=2$
+is fixed and the same claimed bound follows directly from the displayed
+budgets. This proves $O(C^2L\log^5(2+C))$.
+\end{proof}
+
+The two changes have distinct roles. Requiring simultaneous per-layer
+robustness makes the rounding precision independent of depth, and counting
+an energy ball rather than a coordinate cube removes a depth factor from
+the apparent coefficient range. Neither follows merely from clean
+population averaging. This theorem still permits analog population
+responses; the digital-margin condition introduced separately gives a
+stronger, literal $C^2L$ bound.
