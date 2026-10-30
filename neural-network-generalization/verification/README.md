@@ -1,5 +1,9 @@
 # Collection verification
 
+## Further depth improvement, 29 October 2026
+
+[Further depth improvement: bounded-density and factor coding, 29 October 2026](factored-depth-2026-10-29.md) records the conventional C⁵L¹² all-scale theorem, its independent checks, and the unchanged quartic bound.
+
 ## Quadratic-width and improved-depth results, 29 October 2026
 
 Two [new manuscripts](depth-improvements-2026-10-29.md) give a literal `dC+LC²` sample polynomial under a digital-population prior, analog variants near that rate, and sequential-quantization depth improvements under the unchanged original robust support. Their proofs have independent mathematical reviews and isolated build checks; neither is Lean formalized. The catalog now has 68 canonical manuscripts.

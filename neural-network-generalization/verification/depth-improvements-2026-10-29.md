@@ -1,5 +1,7 @@
 # Quadratic-width and improved-depth results, 29 October 2026
 
+**Historical publication snapshot.** The sequential-quantization manuscript was subsequently extended by the [bounded-density and factor-coding result](factored-depth-2026-10-29.md). The source/PDF hashes in this record’s JSON companion identify the earlier revision, not the current PDF.
+
 Two conventional manuscripts extend the polynomial bounds in the [technical FAQ](../TECHNICAL-FAQ.md#23-what-are-the-explicit-sample-complexity-polynomials-and-are-practical-sample-bounds-close). They do not change earlier paper sources or Lean proofs.
 
 ## New results and their distinct assumptions

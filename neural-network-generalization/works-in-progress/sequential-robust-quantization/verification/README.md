@@ -1,22 +1,13 @@
 # Review and verification scope
 
-The [paper](../paper.pdf) improves depth dependence under the unchanged calibrated internal-noise support. Both the quartic stronger-scale theorem and the sextic all-scales extension have conventional proofs; neither improvement is Lean formalized.
+The [paper](../paper.pdf) proves `Õ(C⁵L¹²)` at all mean-field-or-stronger scales and `Õ(C⁴L⁷)` at stronger scales, keeping the original calibrated internal-noise support. Both are conventional proofs; **neither improvement is Lean formalized**.
 
-The main proof includes the Gaussian target cylinder, deterministic sampled compressor, posterior total-energy tail and sample bound. The all-scales appendix imports specified active-direction and bounded-prefix reconstruction estimates from the [earlier paper](../../improved-polynomials/original-support-all-scales/), then proves the modification. It explicitly distinguishes imported estimates from the new quantization argument.
+The quartic proof includes the Gaussian target cylinder, sampled compressor, posterior total-energy tail and statistical bound. The first all-scale appendix imports specified active-direction and bounded-prefix reconstruction estimates from the [earlier paper](../../improved-polynomials/original-support-all-scales/), and proves sequential quantization. The [new factor-code appendix](../source/factor-code.tex) proves the bounded-density refinement and factored Gaussian reconstruction, with exact budgets and the fifth-power rate. It distinguishes these proofs from the imported estimates.
 
-Independent AI-agent reviews checked:
+The [current review record](../../../verification/factored-depth-2026-10-29.md) describes the independent mathematical checks. In particular, reviewers checked density disintegration and finite-message propagation, probability reference measures, all abort paths, shared-Gaussian-sketch marginals, factor clipping and rounding, the smaller dense fallback, and the `C⁵L¹²` and degree-33 exponents. A separate fresh-reader review examined the integrated theorem statements and new proof. The [current build/hash record](../../../verification/factored-depth-2026-10-29.json) identifies this revision.
 
-- Rounding during the virtual pass preserves independence from the next fresh source list. Conditional Bernstein estimates therefore remain valid for the rounded prefix.
-- The sampled unrounded coefficients retain their energy expectation; the energy event and successful approximation event need not be independent to intersect.
-- Every quantization discrepancy is included in a disturbance of the original network. No robustness of a compressed network is assumed.
-- Deterministic prefix rounding adds no future-entropy message in the all-scales construction. Its stochastic-kernel, bounded-prefix, transport-coupling and coefficient hypotheses still match the imported estimates.
-- The all-scales hidden injection bound `41e`, exceptional probability below `0.686α`, and successful total disturbance below `r/2`, including the small-width branch.
-- Finite grid counts, fixed sample events uniform in width/scale, posterior-tail normalizers, and the ramp-risk conversion.
-- The new `L⁷` and `L¹⁷` exponents, the depth-independent target gain obtained by multiplying bulk probabilities, and the conventional degree-45 envelope.
-- The complete integrated manuscript, read independently of the preceding research conversation.
+The [earlier review](../../../verification/depth-improvements-2026-10-29.md) checked the quartic sampling proof and the intermediate sextic quantization bound. Its JSON hashes identify that historical revision. The new bounded-density result applies to the actual conditioned posterior, not to arbitrary KL-bounded laws. Candidate laws are independent of the input; pointwise comparison couplings may depend on it. No compressed network is assumed to inherit the original network's robustness.
 
-The stronger-scale theorem applies to sufficiently small positive scales at each fixed width and to all finite `t≤N^−1/2` (`γ≥2`). The all-scales theorem applies to every positive `t≤1` (`γ≥1`). The confidence conclusion follows by rescaling the posterior-average margin-error tolerance. Arbitrary posterior weak limits at an exact closed margin boundary are not silently inferred from a bound at positive scale.
+The quartic theorem permits sufficiently small positive scales at each fixed width and every finite `t≤N^−1/2` (`γ≥2`). The all-scale theorem permits every positive `t≤1` (`γ≥1`). Risk bounds cover arbitrary posterior mixtures. A positive-scale bound is not silently promoted to a statement about an independently defined weak posterior limit at a closed margin boundary.
 
-The original support and target class are preserved. Boolean width counts a reserved constant wire at every stage and uses `C≥2`. The improvements do not establish a quartic rate at mean field, a quadratic rate for this support, or optimal depth powers. No optional martingale-based logarithm improvement is claimed.
-
-The [collection publication record](../../../verification/depth-improvements-2026-10-29.md) and [build/hash record](../../../verification/depth-improvements-2026-10-29.json) identify the final sources and independent rebuilds. Existing Lean files and their earlier certified degree-46 result are unchanged.
+The target class and support are unchanged. Boolean width counts a reserved constant wire at every stage and uses `C≥2`. A lower quartic depth exponent, quartic width at mean field, quadratic width for this support, and optimal depth powers remain open. Existing Lean sources and the earlier certified degree-46 result are unchanged. No efficient inference or practical numerical sample count is asserted.

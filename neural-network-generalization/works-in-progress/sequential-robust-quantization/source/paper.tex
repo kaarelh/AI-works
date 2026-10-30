@@ -20,52 +20,62 @@
 \begin{document}
 \maketitle
 \begin{abstract}
-We prove an explicit learning bound for Gaussian Bayesian tanh networks
-whose clipped predictions are stable under simultaneous internal disturbances.
-For a layered Boolean teacher of width $C$ and depth $L-1$, a sufficient
-sample count is $\widetilde O(C^4L^7)$ when input dimension, robustness
-calibration, accuracy, and confidence are fixed. The guarantee is independent
-of learner width above $C$. It applies in the strong-prior limit at every
-fixed width and to actual finite priors at every scaling exponent
-$\gamma\ge2$. The support restriction is an explicit calibrated internal-noise
-condition; no population-merging hypothesis is added.
-The proof samples neurons and rounds their weights during the virtual
-forward computation. Conditional independence needed for concentration
-survives this interleaving, while rounding becomes a controlled disturbance
-of the uncompressed robust network. This removes the extra depth factor from
-exponentially fine parameter coding. We give the complete target-cylinder,
-compression, posterior-tail, and statistical arguments. An entropy-based extension gives $\widetilde O(C^6L^{17})$ samples at
-every $\gamma\ge1$, including finite mean field. It uses stated reconstruction
-estimates from an earlier paper. These improvements are not Lean formalized;
-the quartic rate at $1\le\gamma<2$ remains open.
+We prove learning bounds for Gaussian Bayesian tanh networks whose clipped
+predictions are stable under simultaneous internal disturbances. For a
+layered Boolean teacher of width $C$ and depth $L-1$, a sufficient sample
+count is $\widetilde O(C^5L^{12})$ throughout the mean-field-or-stronger
+scaling regime $\gamma\ge1$, independently of learner width above $C$.
+At stronger finite scales $\gamma\ge2$, and in the strong-prior limit at
+each fixed width, a separate argument gives $\widetilde O(C^4L^7)$.
+Input dimension, robustness calibration, accuracy, and confidence are fixed
+in these rate displays. No population-merging hypothesis is imposed.
+The all-scale proof uses a bounded-density property of the conditioned
+posterior to retain fewer active directions, and represents a Gaussian
+reconstruction by products of smaller matrices. Rounding during the
+virtual forward computation makes approximation errors internal
+disturbances of the uncompressed robust network. We state the earlier
+reconstruction estimates used and prove the new density and factor-coding
+arguments. The quartic proof also includes the target-cylinder, sampling,
+and posterior-tail arguments. These results are conventional proofs,
+not Lean formalizations; improving the quartic depth power remains open.
 \end{abstract}
 
 \section{Introduction}
 
-A polynomial-depth learning theorem is more informative when its powers of
-teacher width and depth are explicit. For a prior restricted by stability
-under internal noise, an earlier compression argument gives a quartic
-teacher-width bound at sufficiently strong Gaussian scales
-\cite{quartic}. Its joint width--depth estimate is
-$\widetilde O(C^4L^8)$. One depth factor comes from coding a compressed
-network to exponentially fine weight precision: a small rounding error
-can otherwise be amplified by every subsequent layer.
+Can an overparametrized Bayesian neural network learn a small circuit with
+sample complexity polynomial in both circuit width and depth? For tanh
+networks restricted by stability under internal disturbances, the answer
+is positive. The question here is how large that polynomial must be.
+We study exact Gaussian Bayesian prediction conditioned on noiseless
+training margins, and retain the same calibrated internal-noise support
+throughout the paper.
 
-We remove that factor without changing the prior restriction. The key is
-to round the sampled weights \emph{while constructing} the virtual
-computation. Each rounding error can then be included in the disturbances
-against which the original network is already stable. The sampled network
-need not inherit a robustness property of its own. This distinction is
-necessary: clean-output approximation alone does not imply that an
-arbitrary later parameter perturbation remains harmless.
+Our all-scale result is $\widetilde O(C^5L^{12})$ samples, valid at every
+learner width $N\ge C$ and every mean-field-or-stronger Gaussian scale.
+A separate stronger-scale argument gives $\widetilde O(C^4L^7)$.
+Both allow any common iid training and test distribution. These are
+sufficient statistical bounds; neither optimality nor an efficient
+posterior-sampling algorithm is asserted.
 
-Our result is statistical. The learner is the exact posterior, and no
-efficient sampling or inference algorithm is asserted. The target is a
-layered Boolean circuit, not an arbitrary real-weight neural teacher.
-The theorem applies to any common iid training and test input distribution.
-Appendix~\ref{app:all-scales-quantization} transfers the same rounding
-principle to an entropy-based compressor and improves the all-scale depth
-power from eighteen to seventeen, without changing the prior support.
+Three ideas give the improved bounds. First, round sampled weights
+\emph{while constructing} the virtual computation. Each rounding error
+then becomes a disturbance covered by the original network's stability;
+the compressed network need not inherit stability. Second, the actual
+posterior has a bounded density relative to its Gaussian prior. Propagating
+this bound through finite-message reconstruction gives sharper active-rank
+tails than a relative-entropy estimate alone. Third, the reconstructed
+matrices can be stored as products of smaller matrices. A shared Gaussian
+sketch approximates the residual Gaussian field at each fixed input,
+while keeping a single candidate law for all inputs.
+
+The quartic theorem and its proof come first. They improve the earlier
+$\widetilde O(C^4L^8)$ bound of~\cite{quartic} by one depth power.
+Appendix~\ref{app:all-scales-quantization} states the imported reconstruction
+estimates and gives the intermediate sextic bound.
+Appendix~\ref{app:factor-code} proves the bounded-density and factor-coding
+improvements that yield the fifth-power, twelfth-depth result. The target
+is a layered Boolean circuit; circuit width includes constant wires and
+compilation overhead as specified next.
 
 \section{Learner, target, and robustness restriction}
 
@@ -135,9 +145,37 @@ depth. If the learner matches the teacher's depth, $L=h+1$; if it is deeper,
 its actual $L$ occurs in the bound. Width independence does not mean depth
 independence.
 
-\section{Explicit learning theorem}
+\section{Learning results}
 
-Define
+\begin{theorem}[All-scale width and depth bound]
+\label{thm:headline-all-scales}
+Fix $d,c,\varepsilon,\delta$ with $c>0$ and $0<\varepsilon,\delta<1$.
+There is a constant $A$, depending only on these four quantities, such that
+\[
+ n\ge A C^5L^{12}[1+\log^2(2+C)]^5\log(2+CL)
+\]
+implies, with sample probability at least $1-\delta$,
+$R(Q_{S,N,t,c})\le\varepsilon$ simultaneously for every $N\ge C$ and
+$0<t\le1$. This holds for every Boolean teacher and common iid input law
+specified above. The same conclusion holds after additionally restricting
+the prior to $|z_w(x)|>1/2$ at every Boolean input.
+
+With all resources variable, a universal constant times
+$[2+d+L+C+c+c^{-1}+\varepsilon^{-1}+\log(1/\delta)]^{33}$
+is also a sufficient sample count.
+\end{theorem}
+
+The exact budget, its statistical dependence, and the proof are in
+Appendix~\ref{app:factor-code}, specifically
+Theorem~\ref{thm:factor-all-scales}, Corollary~\ref{cor:factor-powers}, and
+Remark~\ref{rem:factor-joint-polynomial}. The result applies to the actual
+finite posterior at every indicated scale. Its proof uses bounded density,
+not merely a relative-entropy bound on an arbitrary weight distribution.
+
+\subsection{A sharper width power at stronger scales}
+
+The following separate argument trades its stronger scale hypothesis for
+quartic dependence on teacher width. Define
 \begin{align}
  e_*&=\frac1{16\sqrt{2C}},\qquad \tau_0=e_*/4,\notag\\
  b_L&=\sqrt{16\log9+8\log(4L)},\notag\\
@@ -570,6 +608,7 @@ Here $D_*\ge1$ and is bounded by a universal polynomial in $d,L,C,c$.
 The construction and estimate hold at every integer width $N\ge C$.
 
 \input{all-scales}
+\input{factor-code}
 
 \begin{thebibliography}{9}
 \bibitem{quartic}
