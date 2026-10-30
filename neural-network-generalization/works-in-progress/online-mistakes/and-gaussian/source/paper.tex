@@ -1,0 +1,169 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,geometry,amsmath,amssymb,amsthm,mathtools}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\geometry{margin=1in}
+\setlength{\emergencystretch}{2em}
+\hypersetup{pdftitle={Online learning of AND under Gaussian neural-network priors},pdfauthor={ChatGPT-6 Astra; Claude; Kaarel Hanni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{remark}[theorem]{Remark}
+\title{Online learning of AND under Gaussian neural-network priors}
+\author{ChatGPT-6 Astra \and Claude (Anthropic) \and Kaarel H\"anni \and Dmitry Vaintrob}
+\date{Research draft, 30 October 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+The conjunction of all input bits can force exponentially many online
+mistakes for a deterministic learner that selects a smallest consistent
+Boolean circuit. Does the same target defeat exact Bayesian prediction
+with Gaussian neural-network priors? We prove two contrasting results
+for fully connected tanh networks at the weak-prior scaling $\gamma=0$,
+retaining a global output-margin restriction and exact label conditioning.
+At each fixed depth, the conjunction has a polynomial negative log
+function probability, so posterior sampling makes only polynomially many
+expected mistakes on every input order. Posterior majority and a fixed
+confidence criterion obey corresponding bounds. These statements hold
+in the Gaussian-process width limit and at every sufficiently large
+finite width. In contrast, at depth $O(d)$ the function prior becomes
+nearly uniform on all Boolean functions: at every sufficiently large
+width, every ordering of the $2^d$ inputs incurs at least
+$(2/5)2^d$ expected sampled mistakes, and every new input fails the
+strict $2/3$ confidence criterion. This lower bound does not establish
+majority-prediction errors. An arbitrarily small first-layer variance anisotropy gives a separate
+strong-prior exponential lower bound, for AND and for a unit-weight
+one-neuron majority target. Breaking exact variance symmetry is essential to
+that construction. We also analyze why the minimum-circuit conjunction
+argument does not identify the minimum-energy neural functions. No counterexample for the equal-variance strong-prior or
+$\gamma\ge1$ regimes is proved here.
+\end{abstract}
+
+\section{The learning question and the model}
+The target is the Boolean conjunction
+$f_\wedge(x)=+1$ only at $x=(1,\ldots,1)$, on
+$\mathcal X=\{-1,1\}^d$; it is negative elsewhere. Its minimum
+binary AND/OR/NOT circuit size is $d-1$. An online learner sees an
+input, predicts a label, and receives its true label. Every observation
+is retained. Inputs may be chosen using the entire past, but before
+the current private random prediction. A fixed input permutation is
+an important special case.
+
+For deterministic minimum-circuit selection, a conjunction ladder can
+force $2^d-d-2$ mistakes~\cite{occam}. After all inputs of Hamming weight
+below $k$ have been labeled negative, and the all-ones input positive,
+the smallest consistent circuits are $k$-variable conjunctions. Each
+has a different remaining weight-$k$ positive input. A query at the
+selected conjunction's input therefore causes a mistake. Fresh uniform
+randomization over those circuits changes that conclusion. A neural
+posterior, however, weights functions by parameter-space probability,
+not gate count, so neither the deterministic construction nor its
+uniform-tie remedy transfers without a new argument.
+
+We use $L-1$ hidden layers of common width $N$, tanh activations, a
+linear readout, and one appended constant input. There are no biases
+in later layers. The independent centered Gaussian weight variances
+in the one-parameter family are
+\begin{equation}\label{eq:model-gamma}
+ \operatorname{Var}(W^1_{ij})=N^{1-\gamma}/d,\qquad
+ \operatorname{Var}(W^s_{ij})=N^{-\gamma}\ (1<s<L),\qquad
+ \operatorname{Var}(v_i)=N^{-\gamma-1}.
+\end{equation}
+The main positive and negative theorems of this note concern
+$\gamma=0$. Before observing labels, condition on the label-independent
+event $|z_w(x)|>a$ for every input; the default is $a=1/2$.
+For a function $g$, write
+\[
+ U_g=\{w:g(x)z_w(x)>a\ \forall x\},\qquad
+ \pi_N(g)=\frac{\mathbb P(U_g)}{\mathbb P(\bigcup_hU_h)}.
+\]
+Training conditions this fixed function prior on all observed labels.
+Nothing flattens function ranks, changes mass ratios, or replaces the
+posterior with an optimizer. A separately labeled final subsection
+changes the first-layer variances by arbitrarily small unequal factors
+and proves a strong-prior lower bound for that perturbed prior.
+
+When a bounded-weight teacher complexity is used below, $C_L(f)$
+denotes the least hidden width of a depth-$L$ tanh implementation of
+$f$ whose coefficients all have magnitude at most that width and whose
+signed outputs exceed $1/2$ everywhere. Thus $N\ge C_L(f)$ is a
+specific sufficient-width convention, not merely representability by
+unbounded real weights. The anisotropic majority example satisfies it
+with $C_2(f)=N=1$.
+
+A sampled mistake means that a fresh posterior function gives the
+wrong label. A majority mistake means that the more probable label is
+wrong, with any stated tie rule. A confidence failure means that the
+correct label has probability at most $2/3$. Nearly fair predictions
+can cause many sampling and confidence errors while their slight
+majority is correct; we keep these claims separate.
+
+The order of limits is explicit throughout: first fix $d$ and a finite
+$L$, then let $N$ grow. Choosing $L=L_d=O(d)$ in the lower bound is
+compatible with this order. The finite-width thresholds are not
+quantified. In particular, none of these width-limit statements
+interchanges the strong-prior limit, which instead makes Gaussian
+variance tend to zero at each fixed width.
+
+\input{gp-upper}
+\input{gp-lower}
+\input{and-geometry}
+
+\section{What the results do and do not settle}
+The depth-$O(d)$ lower bound is a counterexample for the actual
+independent-Gaussian neural prior. The inputs need no adversarial
+ordering. Its proof controls full-margin orthant probabilities, not
+merely unconditioned covariance or Gaussian total variation, so the
+initial support restriction is retained. It concerns a weak prior;
+it is not a counterexample to the fixed-depth circuit-prior guarantees
+for sufficiently small variance, above mean field, or mean field.
+
+At fixed depth in the Gaussian-process regime, the explicit AND
+upper bound rules out an exponential asymptotic lower bound once width
+is sufficiently large. It pays a factor $(\pi/2)^{L-1}$ and depends on
+a fixed common Gaussian scale when such a scale is included. The bound
+is not uniform in a scale tending to zero, and the eventual-width
+statement is not an all-width quantitative theorem.
+
+For the equal-coordinate-variance strong-prior learner, and for the
+$\gamma\ge1$ family, an exponential arbitrary-order AND lower bound
+remains unproved. The neural phase calculation identifies a failure
+of the circuit proof, not a positive theorem for all subsequent phases
+or all widths. Conversely, an elementary upper bound through
+$-\log\pi_N(f_\wedge)$ becoming large does not prove many mistakes.
+The anisotropic one-neuron example shows that an arbitrarily small
+change in coordinate variances can give exponential mistakes even for
+a unit-weight, width-one majority teacher, while retaining polynomial
+iid sample complexity. The variance perturbation is fixed before
+the common prior scale is made sufficiently small. This does not
+justify interchanging those two limits or asserting the result at
+exactly equal coordinate variances.
+
+The structured-input guarantees of~\cite{neural-online} remain valid
+and do not cover arbitrary input sequences.
+
+\paragraph{Verification.}
+The new results have conventional proofs and independent AI-agent
+mathematical reviews. They are not Lean formalized. Earlier Lean
+coverage of the Gaussian width limits does not automatically verify
+these new consequences. The accompanying verification record specifies
+the checked statements, source hashes, and PDF build checks.
+
+\begin{thebibliography}{9}
+\raggedright
+\bibitem{nn-subcritical}
+ChatGPT-6 Astra, Kaarel H\"anni, and Dmitry Vaintrob.
+\emph{Exponential parity sample complexity below the mean-field scaling}.
+\url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/main-results/subcritical-exponential}.
+\bibitem{occam}
+ChatGPT-6 Astra, Claude, Kaarel H\"anni, and Dmitry Vaintrob.
+\emph{Exponential mistakes and polynomial guarantees for circuit Occam learning}.
+\url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/online-mistakes/occam-distribution-shift}.
+\bibitem{neural-online}
+ChatGPT-6 Astra, Claude, Kaarel H\"anni, and Dmitry Vaintrob.
+\emph{Online mistake bounds for Gaussian neural networks and priors preserving their function rankings}.
+\url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/online-mistakes/neural-function-priors}.
+\end{thebibliography}
+\end{document}

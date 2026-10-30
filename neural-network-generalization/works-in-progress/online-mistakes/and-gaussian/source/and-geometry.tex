@@ -1,0 +1,440 @@
+% Width-one geometry and the separately specified anisotropic prior.
+% Requires amsmath, amssymb, amsthm; lemma/proposition/corollary environments.
+\section{Exact width-one geometry at the start of an AND layer}
+\label{sec:and-width-one}
+
+This section concerns a width-one network with one hidden tanh unit,
+\[
+ z_{a,b}(x)=b\tanh\!\left(a_0+\sum_{i=1}^d a_i x_i\right),
+ \qquad x\in\{-1,1\}^d,
+ \qquad
+ \kappa(a,b)=d\sum_{i=0}^d a_i^2+b^2.
+\]
+The prior is the centered Gaussian with density proportional to
+$\exp[-\kappa(a,b)/(2\sigma^2)]$, conditioned before training on
+$|z_{a,b}(x)|>1/2$ at every cube input.
+For a Boolean threshold function $g$, define its affine unit-margin cost
+\[
+ Q(g)=\min\left\{\sum_{i=0}^d a_i^2:
+       g(x)\left(a_0+\sum_{i=1}^d a_i x_i\right)\ge1
+       \text{ for every }x\right\}.
+\]
+The minimum exists: the feasible set is a nonempty closed polyhedron
+and the objective is coercive. Non-threshold functions are not represented
+by this width-one architecture.
+
+\begin{lemma}[Reduction to affine margin cost]\label{lem:and-affine-reduction}
+For every represented Boolean function $g$, its minimum strict-margin
+neural energy is
+\[
+ E(g)=\Phi_d(Q(g)),\qquad
+ \Phi_d(Q)=\min_{u>0}\left\{dQu^2+\frac14\coth^2u\right\}.
+\]
+The function $\Phi_d$ is strictly increasing on $Q>0$.
+\end{lemma}
+\begin{proof}
+Replacing $(a,b)$ by $(-a,-b)$ preserves the real output and energy, so
+we can take $b>0$. A strict output margin requires $b>1/2$. Put
+$u=\operatorname{arctanh}(1/(2b))>0$. The constraints imply
+$g(x)(a_0+\sum_i a_i x_i)>u$, so
+$\sum_i a_i^2\ge u^2Q(g)$ and $b^2=\frac14\coth^2u$.
+Conversely, multiply a unit-margin minimizer for $g$ by $(1+\epsilon)u$
+and take $b=\frac12\coth u$. This gives strict output margin, with
+energy tending to the displayed expression as $\epsilon\downarrow0$.
+This proves equality of the infima. For $Q>0$ the objective tends to
+infinity at both endpoints $u\downarrow0$ and $u\to\infty$, so its
+minimum is attained at some $u_Q>0$. If $Q_2>Q_1$, then
+\[
+ \Phi_d(Q_2)
+ =dQ_1u_{Q_2}^2+\tfrac14\coth^2u_{Q_2}
+   +d(Q_2-Q_1)u_{Q_2}^2
+ >\Phi_d(Q_1).
+\]
+\end{proof}
+
+\paragraph{Small-variance function probabilities.}
+For this finite-dimensional Gaussian law, the function event
+$U_g=\{(a,b):g(x)z_{a,b}(x)>1/2\ \forall x\}$ satisfies
+\begin{equation}\label{eq:affine-rate}
+ \lim_{\sigma\downarrow0}\sigma^2\log\mathbb P_\sigma(U_g)
+ =-\frac12 E(g).
+\end{equation}
+Indeed, the lower Gaussian large-deviation bound applies to the open
+set $U_g$, and the upper bound applies to its closure. Their energy
+infima coincide: any parameter vector with all signed outputs at
+least $1/2$ can be approximated from within $U_g$ by multiplying the
+readout by $1+\epsilon$. The standard finite-dimensional Gaussian
+rate function is half the quadratic energy. The argument holds
+unchanged for every positive definite diagonal quadratic energy.
+There are only finitely many represented Boolean functions. Therefore,
+after conditioning on any fixed label history, all strong-prior
+posterior mass concentrates on its minimum-energy functions; if the
+minimum is unique, its posterior probability tends to one.
+
+Write $|x|_+=|\{i:x_i=+1\}|$. Fix $2\le k\le d$ and consider the
+history that labels $1^d$ positive and every input with $|x|_+<k$
+negative. These labels agree with the AND target, which is positive
+only at $1^d$. No labels at other inputs are imposed yet.
+
+\begin{lemma}[Essential affine coefficients]\label{lem:and-essential}
+In a minimum-squared-norm unit-margin representation of a threshold
+function, every nonzero input coefficient is essential to that function,
+and every essential input coefficient has absolute value at least one.
+\end{lemma}
+\begin{proof}
+If the function is independent of $x_i$, then, for each fixed assignment
+of the other coordinates, both signs of $x_i$ have the same label.
+Averaging their two signed margin inequalities shows that setting
+$a_i=0$ preserves every unit-margin constraint. It strictly decreases
+squared norm if $a_i\ne0$. If $x_i$ is essential, two neighboring cube
+points differing only in $x_i$ have opposite labels. Their affine scores
+have opposite signs and magnitudes at least one; their difference has
+magnitude $2|a_i|$. Hence $|a_i|\ge1$.
+\end{proof}
+
+\begin{proposition}[All minimizers at a complete lower-layer prefix]
+\label{prop:and-phase-minimizers}
+Among all width-one Boolean functions consistent with this history,
+the smallest affine unit-margin cost is
+\[
+ Q_{d,k}=
+ \begin{cases}
+  2k-1,&d\ge2k-1,\\
+  d+(2k-1-d)^2,&d<2k-1.
+ \end{cases}
+\]
+If $d\ge2k-1$, the minimizing functions are precisely
+\[
+ h_T(x)=+1
+ \quad\Longleftrightarrow\quad
+ |\{i\in T:x_i=+1\}|\ge k,
+ \qquad |T|\in\{2k-1,2k-2\}.
+\]
+Their minimizing affine scores have coefficient one on $T$, zero
+elsewhere, and bias zero for $|T|=2k-1$ or bias $-1$ for $|T|=2k-2$.
+If $d<2k-1$, there is exactly one minimizing function: the symmetric
+threshold $|x|_+\ge k$, with coefficients one and bias $d-2k+1$.
+The corresponding minimum neural energy is $\Phi_d(Q_{d,k})$.
+\end{proposition}
+\begin{proof}
+Choose a minimizing function and its minimum-norm unit-margin affine
+representation. Lemma~\ref{lem:and-essential} applies. Let $p$ be the
+number of positive input coefficients, write their sum as $P$, and let
+$B$ be the sum of absolute values of the negative input coefficients.
+In particular $P\ge p$.
+
+One has $p\ge k$: the input which is positive exactly on the positive
+coefficient coordinates has affine score at least that at $1^d$, hence
+at least one. If $p<k$, the history requires this input to be negative,
+a contradiction.
+
+If $p\ge2k-1$, the positive coefficients alone contribute squared norm
+at least $p\ge2k-1$. If $p\le2k-2$, average the negative margin
+constraints over inputs that are positive on exactly $k-1$ of those
+$p$ coordinates and negative everywhere else. This gives
+\[
+ a_0-P+B+\frac{2(k-1)}pP\le-1.
+\]
+Since $1-2(k-1)/p\le0$ and $P\ge p$,
+\[
+ a_0\le\left(1-\frac{2(k-1)}p\right)P-B-1
+       \le p-2k+1-B\le p-2k+1<0.
+\]
+Consequently the total squared norm is at least
+\[
+ p+(2k-1-p)^2.
+\tag{*}
+\]
+For integer $p\le2k-2$, this is at least $2k-1$, with equality only
+at $p=2k-2$. Together with the preceding branch, equality at $2k-1$
+forces either $p=2k-1$ with zero bias or $p=2k-2$ with bias $-1$.
+It also forces every positive coefficient to equal one and excludes
+all negative coefficients. The displayed functions realize these
+bounds: all their affine scores are odd integers, and their positive
+inputs contain at least $k$ positive coordinates.
+
+If $d<2k-1$, every admissible $p$ lies between $k$ and $d\le2k-2$.
+The expression in (*) strictly decreases as integer $p$ increases
+in this range. It is therefore minimized only at $p=d$, giving
+$d+(2k-1-d)^2$. Equality forces all coefficients to equal one and
+the bias to equal $d-2k+1$. This score also takes odd integer values
+and realizes the required symmetric threshold. The energy conclusion
+follows from Lemma~\ref{lem:and-affine-reduction}.
+\end{proof}
+
+\paragraph{Why the circuit conjunction characterization fails here.}
+A conjunction of $k$ positive literals has
+\[
+ Q(\operatorname{AND}_k)=k+(k-1)^2=k^2-k+1.
+\]
+To verify the lower bound, remove irrelevant coefficients, use
+essentiality to make each remaining positive coefficient at least one,
+and average the $k$ negative constraints obtained by flipping one of
+the $k$ selected coordinates. This forces the bias to be at most
+$-(k-1)$. Unit coefficients and that bias attain equality.
+For $k\ge3$ and $d\ge2k-1$,
+\[
+ Q(\operatorname{AND}_k)-(2k-1)=(k-1)(k-2)>0.
+\]
+Thus every $k$-conjunction is strictly more expensive than the actual
+minimizers at this prefix. The globally smallest circuit functions
+at the analogous circuit prefix are $k$-conjunctions; the Gaussian
+neural energy gives a different answer already in this one-unit model.
+
+\paragraph{Exact masses in this particular minimizing class.}
+Equality of minimum energy alone does not imply equal Gaussian function
+probabilities. Here, however, an additional exact symmetry does imply it.
+Ordinary input permutations make all functions with a fixed support
+size equally probable. To connect the two support sizes, take
+$j\in T$ with $|T|=2k-1$ and transform the affine parameters by
+\[
+ a'_0=-a_j,\qquad a'_j=a_0,\qquad a'_i=a_i\quad(i\ne j).
+\]
+This signed column swap preserves the Gaussian law and energy.
+For $x\in\{-1,1\}^d$, set
+\[
+ y_j=-x_j,\qquad y_i=x_ix_j\quad(i\ne j).
+\]
+Then $a'_0+\sum_i a'_ix_i=x_j(a_0+\sum_i a_iy_i)$, so oddness of
+tanh gives $z'(x)=x_jz(y)$. The map $x\mapsto y$ is a bijection,
+and hence the global-margin event is preserved. Applied to majority
+on $T$, the transformed sign is
+\[
+ x_j\operatorname{sign}\!\left(\sum_{i\in T}y_i\right)
+ =\operatorname{sign}\!\left(-1+\sum_{i\in T\setminus\{j\}}x_i\right),
+\]
+which is precisely the threshold of $k$ positives on the even support
+$T\setminus\{j\}$. Thus all functions in the minimizing class have
+exactly equal prior mass at every positive variance. Equal mass persists
+among whichever of them survive later label conditioning.
+
+By the fixed-width Gaussian rate theorem and finiteness of the Boolean
+function class, the strong-prior posterior at this prefix converges to
+uniform sampling from these minimizers. At positive variance it also
+assigns mass to higher-energy functions; it is not exactly this uniform
+minimum-class rule. In other histories, equal energies need not be
+accompanied by the symmetry just proved.
+
+\begin{corollary}[The first minimum-energy tier cannot itself cause an
+exponential phase]\label{cor:and-first-tier}
+Suppose $d\ge2k-1$ and start from the complete lower-layer prefix above.
+Let
+\[
+ M_{d,k}=\binom d{2k-1}+\binom d{2k-2}.
+\]
+For the width-one strong-prior limiting posterior, the expected number
+of sampled mistakes before this minimum-energy tier is exhausted is at
+most $1+\log M_{d,k}\le1+(d+1)\log2$. The bound includes the round which exhausts
+it. It holds under every adaptive nonanticipating continuation. If
+$d<2k-1$ and $k<d$, its sole initial minimum is eliminated by the first
+weight-$k$ negative example, causing one mistake on that example. If
+$k=d$, the prefix has already revealed the entire cube and no further
+mistakes are possible.
+\end{corollary}
+\begin{proof}
+While at least one of the original minimizers survives, it still has
+energy $\Phi_d(Q_{d,k})$, so every strong-prior posterior is uniform
+on the surviving original minimizers. Eliminating a fraction $q<1$
+of a uniform finite class reduces its logarithmic size by at least $q$.
+The final exhaustion costs at most one. Summing these conditional error
+probabilities and taking expectations proves the claim. The singleton
+case follows from the unique symmetric threshold's positive prediction
+on every weight-$k$ input.
+\end{proof}
+
+\paragraph{Limits of the conclusion.}
+The proposition characterizes the first energy tier at a complete
+lower-layer prefix. After that tier is exhausted, higher-energy
+functions can become optimal; their complete sequence is not
+characterized here. Thus the corollary is not an upper bound for the
+whole Hamming layer or for the entire AND-learning process.
+All statements concern width one, one hidden tanh unit, and global
+margin conditioning. For a growing AND target, width one need not
+satisfy the separate theorem convention $N\ge C_L(f)$, because that
+complexity also bounds the magnitude of every teacher weight. No
+extension to all admissible widths, and no exponential lower bound
+for the original Gaussian neural posterior, is asserted by this width-one calculation.
+
+\subsection{An arbitrarily small anisotropy changes the width-one answer}
+\label{sec:and-anisotropy}
+
+The preceding equality of masses uses exact symmetry. The next result
+changes the prior and is not a lower bound for the canonical isotropic
+first-layer law. It also retains width one; it does not satisfy the
+separate $N\ge C_L(f)$ convention for the growing AND target in general.
+It does show that a small independent-Gaussian perturbation can turn the
+same concrete neural minimizing class into an exponential mistake path.
+
+\begin{proposition}[Near-isotropic independent-Gaussian variant]
+\label{prop:and-anisotropic}
+Let $k\ge2$ and $d\ge8k$. For every $\eta>0$, there are coefficients
+$1\le\lambda_i\le1+\eta$, $0\le i\le d$, with the following property.
+Use a width-one prior with independent centered Gaussian weights
+\[
+ \operatorname{Var}(a_i)=\frac{\sigma^2}{d\lambda_i},\qquad
+ \operatorname{Var}(b)=\sigma^2,
+\]
+and the same all-input output-margin conditioning. Its quadratic energy is
+\[
+ \kappa_\lambda(a,b)=d\sum_{i=0}^d\lambda_i a_i^2+b^2.
+\]
+For the AND target, there is a fixed distinct-input order on
+which the strong-prior posterior makes at least
+\[
+ \frac{\binom d k}{\binom{2k-1}k}\ge2^k
+\]
+posterior-sampling mistakes with probability one. Posterior majority is
+wrong on the same rounds.
+
+For every fixed $0<\zeta<1/2$, one sufficiently small positive variance
+makes the actual Gaussian posterior's wrong-label probability at least
+$1-\zeta$ on every one of these rounds. Its expected sampled mistakes
+on them are therefore at least $(1-\zeta)2^k$, and its majority is
+wrong on every one. In particular, $k=\lfloor d/8\rfloor$ gives
+an exponential lower bound for this perturbed width-one model.
+\end{proposition}
+\begin{proof}
+Start with the history of Proposition~\ref{prop:and-phase-minimizers}.
+Let $\mathcal C$ be its minimizing class and $Q_0=2k-1$. Every other
+consistent threshold function has strictly larger isotropic affine cost.
+There are finitely many threshold functions, so their costs exceed $Q_0$
+by a positive common gap $\Delta$.
+
+For $\epsilon>0$, put $\lambda_i=1+\epsilon v_i$, where the numbers
+$v_i\in(0,1]$ have distinct sums over distinct subsets of
+$\{0,\ldots,d\}$; for example $v_i=2^{-i}$ has this property.
+For each fixed threshold function $h$, let
+\[
+ Q_h(\epsilon)=\min\left\{\sum_i(1+\epsilon v_i)a_i^2:
+             h(x)(a_0+\textstyle\sum_{i\ge1}a_ix_i)\ge1
+             \text{ for all }x\right\}.
+\]
+Its isotropic optimizer $a_h$ is unique by strict convexity. The
+optimizers at $\epsilon\downarrow0$ converge to $a_h$: boundedness
+follows from comparison with $a_h$, and every limit point is an isotropic
+optimizer. Comparing the perturbed and unperturbed objectives in both
+directions consequently gives
+\[
+ Q_h(\epsilon)=Q_h(0)+\epsilon\sum_i v_i(a_h)_i^2+o(\epsilon).
+\]
+For $h\in\mathcal C$, the nonzero squared coordinates of $a_h$ are
+exactly the indicator of its odd support $T$, or of its even support
+$T$ together with the bias index $0$. These augmented supports are
+pairwise different. Their derivative sums are therefore pairwise
+distinct. Since $\mathcal C$ is finite, all its perturbed costs are
+pairwise distinct for sufficiently small positive $\epsilon$.
+
+For every $h\in\mathcal C$,
+$Q_h(\epsilon)\le(1+\epsilon)Q_0$. All other initially consistent
+functions have $Q_h(\epsilon)\ge Q_0+\Delta$, because $v_i>0$.
+Taking also $\epsilon<\Delta/Q_0$ and $\epsilon\le\eta$ ensures that
+every member of $\mathcal C$ remains cheaper than every outsider.
+The affine-to-tanh reduction is unchanged, with $Q_h(\epsilon)$ in
+place of $Q(h)$, so the same ordering holds for neural energies.
+
+Until $\mathcal C$ is exhausted, the currently consistent function of
+minimum energy is therefore a unique member of $\mathcal C$. Choose
+any $k$-element subset of its support and query the input positive
+exactly on that subset. The selected function predicts positive; the
+AND target is negative because $k<d$. The query is new, since a
+consistent selected function cannot be positive on a previously
+revealed negative query. This step eliminates exactly those candidate
+supports containing the queried $k$-set.
+
+There are $\binom d{2k-1}$ candidates with odd support size $2k-1$.
+A single $k$-set query eliminates at most
+$\binom{d-k}{k-1}$ of these. Exhausting $\mathcal C$ therefore
+requires at least
+\[
+ \frac{\binom d{2k-1}}{\binom{d-k}{k-1}}
+ =\frac{\binom d k}{\binom{2k-1}k}
+ \ge\frac{(d/k)^k}{4^k}\ge2^k
+\]
+queries, each a certain mistake in the strong-prior limit.
+Use a fixed convention for choosing each $k$-set; the complete query
+sequence can then be computed before the run and completed to a
+permutation of the cube. It does not inspect any current random draw.
+
+Finally, at each of these finitely many histories the minimum-energy
+function is unique with a positive energy gap. The Gaussian rate
+argument applies to every positive definite diagonal quadratic energy.
+Thus, as the common variance tends to zero, the posterior mass of that
+function tends to one. Taking the minimum of finitely many positive
+variance thresholds makes its wrong-label probability at least
+$1-\zeta$ at every selected round simultaneously. The input sequence
+and labels are fixed, so posterior randomness at earlier rounds does
+not alter this argument.
+\end{proof}
+
+\begin{corollary}[An admissible width-one majority target]
+\label{cor:majority-anisotropic}
+Let $d\ge17$ be odd and put $k=\lfloor d/8\rfloor$. The conclusion
+of Proposition~\ref{prop:and-anisotropic} also holds for the target
+\[
+ f_{\rm maj}(x)=\operatorname{sign}\!\left(\sum_{i=1}^d x_i\right).
+\]
+This target has bounded-weight teacher complexity $C_2(f_{\rm maj})=1$,
+so the learner width $N=1$ satisfies $N\ge C_2(f_{\rm maj})$.
+For every $\eta>0$, an independent-Gaussian first-layer covariance
+perturbation with $1\le\lambda_i\le1+\eta$ therefore admits a fixed
+input permutation with at least $2^{\lfloor d/8\rfloor}$ certain
+strong-prior mistakes. At all sufficiently small positive variances,
+the expected sampled mistakes on those rounds are at least
+$(1-\zeta)2^{\lfloor d/8\rfloor}$ for any prescribed
+$0<\zeta<1/2$, and posterior majority is wrong on all of them.
+\end{corollary}
+\begin{proof}
+The network $z(x)=\tanh(\sum_i x_i)$ has one hidden unit, zero bias,
+and all input and readout weights equal to one. Since $d$ is odd,
+$|\sum_i x_i|\ge1$ on the cube, so its signed output margin is at
+least $\tanh(1)>1/2$. Thus its bounded-weight teacher complexity is
+one.
+
+The construction in Proposition~\ref{prop:and-anisotropic} uses only
+the positive label at $1^d$ and negative labels at inputs of Hamming
+weight at most $k$. Because $k<d/2$, all these labels agree with
+$f_{\rm maj}$. Consequently every posterior and every forced query
+in that construction is unchanged when the target is $f_{\rm maj}$.
+After that finite sequence, reveal any remaining inputs with their
+majority labels. The same Gaussian prior, energy gaps, and positive
+variance thresholds prove the stated bounds.
+\end{proof}
+
+\paragraph{Scope of the perturbed examples.}
+The parameters of the width-one target
+$\tanh(\sum_i x_i-d+1)$ have magnitude $O(d)$ and strict output margin
+$\tanh(1)>1/2$. Thus the example has a simple, polynomially bounded
+neural teacher, but this AND realization does not establish the
+bounded-weight width-admissibility convention.
+Corollary~\ref{cor:majority-anisotropic} removes that width issue for
+a different simple target. Both examples change the exact coordinate
+symmetry of the first layer. Neither is an exponential lower bound
+for the canonical isotropic prior; no extension of the AND lower
+bound to all admissible larger learner widths is established.
+
+\paragraph{High probability and ordinary iid learning.}
+The finite-variance lower bound can also force all the designated
+mistakes with probability at least $1-\delta$: if there are $T$ forced
+rounds, apply the proposition with $\zeta<\delta/T$ and use a union
+bound. Choosing also $\zeta<1/3$ makes every designated round a failure
+of the strict $2/3$ confidence requirement.
+
+The same model retains polynomial iid sample complexity. Its supported
+Boolean functions are affine threshold functions. The arrangement of
+$m=2^d$ homogeneous hyperplanes in the $(d+1)$-dimensional affine
+coefficient space gives at most
+$2\sum_{j=0}^d\binom{m-1}{j}\le2(d+1)m^d$
+possible strict sign patterns. For iid examples from any fixed input
+distribution, a union bound therefore implies that every consistent
+function has error at most $\varepsilon$, except with probability
+$\delta$, once
+\[
+ n\ge\frac{\log\bigl(2(d+1)2^{d^2}\bigr)+\log(1/\delta)}
+              {\varepsilon}.
+\]
+This controls posterior-sampling test error for every prior on this
+class. The test-distribution probability of inputs failing strict $2/3$ confidence is at
+most three times the posterior-averaged error. Thus the anisotropic
+example separates polynomial iid learning from exponential online
+mistakes under an adversarially chosen fixed order; it does not merely
+use a model that was already statistically hard under iid data.

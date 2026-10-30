@@ -1,0 +1,244 @@
+\section{An exponential conjunction lower bound at growing depth}
+\label{sec:gp-deep-and}
+
+The unchanged Gaussian learner can make exponentially many sampled
+mistakes on a conjunction when depth grows with dimension. This result
+uses the weak-prior scaling $\gamma=0$. It does not address the
+fixed-depth strong-prior or $\gamma\ge1$ regimes.
+
+Throughout this section, $d\ge2$, $\mathcal X=\{-1,1\}^d$, and $m=2^d$.
+We use tanh hidden layers, one appended constant input, no later biases,
+and the independent Gaussian variances
+\begin{equation}\label{eq:gp-lower-variances}
+ \operatorname{Var}(W^1_{ij})=\frac Nd,\qquad
+ \operatorname{Var}(W^s_{ij})=1\quad(1<s<L),\qquad
+ \operatorname{Var}(v_i)=\frac1N.
+\end{equation}
+The prior is conditioned on $|z_w(x)|>1/2$ at every cube input, and
+training retains every exact label. Predictions use a fresh posterior
+sample. Define
+\begin{equation}\label{eq:gp-lower-depth}
+ \begin{split}
+ k_0(d)&=\left\lceil\frac{\log(d+1)}{\log(4/3)}\right\rceil,\\
+ k_1(d)&=\left\lceil\frac{\log(50m^2)}{\log(3/2)}\right\rceil,\qquad
+ L_d=1+k_0(d)+k_1(d).
+ \end{split}
+\end{equation}
+In particular, $L_d=O(d)$.
+
+\begin{theorem}[Growing-depth Gaussian NNBayes on the big AND]
+\label{thm:gp-deep-and}
+Let $f_{\mathrm{AND}}$ be positive only at $(1,\ldots,1)$ and negative
+elsewhere. At depth $L_d$ and the variances
+\eqref{eq:gp-lower-variances}, there exists $N_0(d)\ge d$ such that,
+for every finite $N\ge N_0(d)$, the following statements hold.
+
+After every realizable label history, the correct-label posterior
+probability at each previously unseen input belongs to $[2/5,3/5]$.
+Consequently, on every ordering of all $m$ distinct inputs,
+\begin{equation}\label{eq:gp-lower-mistakes}
+ \mathbb E M_m\ge\frac25\,2^d,\qquad
+ \mathbb P\{M_m\le2^d/5\}\le e^{-2^d/20}.
+\end{equation}
+Every query is also a failure to assign the correct label posterior
+probability strictly greater than $2/3$. The ordering may be fixed in
+advance or selected adaptively from previously unseen inputs, before
+the current private posterior draw.
+
+The target has a same-depth tanh implementation of width $d$, with
+every coefficient bounded by $d$ and strict signed output margin
+greater than $1/2$.
+\end{theorem}
+
+The width threshold is only asserted to exist; no quantitative bound
+on $N_0(d)$ is proved. The mistake statements concern posterior
+sampling and posterior confidence. They do not give a
+posterior-majority mistake lower bound.
+
+\begin{lemma}[The fixed-dimensional width limit]
+\label{lem:gp-lower-width-limit}
+For each fixed $d,L$, under the raw prior
+\eqref{eq:gp-lower-variances}, the vector of outputs converges in law to
+a centered Gaussian vector with covariance
+\begin{equation}\label{eq:gp-lower-kernel}
+ K_L(x,y)=\Psi^{\circ(L-1)}
+       \left(\frac{1+x\cdot y}{d+1}\right),
+ \qquad \Psi(t)=\frac2\pi\arcsin(t).
+\end{equation}
+\end{lemma}
+\begin{proof}
+For hidden layer $s$, write
+$Q_N^s(x,y)=N^{-1}\sum_{i=1}^N h_i^s(x)h_i^s(y)$.
+First-layer rows are independent Gaussian fields with covariance
+$N(1+x\cdot y)/d$ before applying tanh. As their scale tends to
+infinity, tanh converges almost surely to the sign of a coupled
+Gaussian coordinate. The Gaussian sign-correlation identity gives
+the limiting second moment
+$\Psi((1+x\cdot y)/(d+1))$. Boundedness of the summands gives convergence
+of the empirical second moments in probability, simultaneously over
+the finitely many input pairs.
+
+Conditionally on a preceding layer, the next preactivation rows are
+independent Gaussian fields with covariance $NQ_N^{s-1}$. If the
+preceding empirical covariance tends to a fixed matrix with diagonal
+one, the corresponding tanh second moments converge to its entrywise
+Gaussian sign correlations. This follows by a continuous
+Gaussian-square-root coupling and dominated convergence; each
+limiting scalar coordinate is nondegenerate. Conditional variances
+of the empirical second moments are at most $1/N$.
+Induction over the fixed number of layers therefore gives
+$Q_N^{L-1}\to K_L$ in probability. Finally, the conditional readout
+law is exactly $\mathcal N(0,Q_N^{L-1})$. Convergence of its
+characteristic function proves the claim.
+\end{proof}
+
+Although the theorem chooses $L=L_d$, this use of
+Lemma~\ref{lem:gp-lower-width-limit} is legitimate: dimension and its
+chosen finite depth are fixed before width tends to infinity. No
+width-limit theorem uniform in increasing depth is required.
+
+\begin{lemma}[Covariance close to the identity]
+\label{lem:gp-lower-white}
+At the depth \eqref{eq:gp-lower-depth},
+\[
+ \|K_{L_d}-I_m\|_{\mathrm{op}}\le\eta,\qquad
+ \eta=\frac1{100m}.
+\]
+\end{lemma}
+\begin{proof}
+For distinct cube vertices,
+$|(1+x\cdot y)/(d+1)|\le1-2/(d+1)$.
+The map $\Psi$ is odd, increasing, and convex on $[0,1]$.
+Since $\Psi(1/2)=1/3$ and $\Psi(1)=1$, its chord on $[1/2,1]$ gives
+\[
+ 1-\Psi(t)\ge\frac43(1-t)\qquad(1/2\le t\le1).
+\]
+Hence an iterate starting at most $1-2/(d+1)$ must fall below or equal
+to $1/2$ within $k_0(d)$ steps: otherwise its gap from one would
+be at least $2(4/3)^{k_0(d)}/(d+1)\ge2$, which is impossible.
+On $[0,1/2]$, the chord from zero to $(1/2,1/3)$ gives
+$\Psi(t)\le(2/3)t$. The next $k_1(d)$ steps thus make every
+off-diagonal entry have absolute value at most
+\[
+ \frac12(2/3)^{k_1(d)}\le\frac1{100m^2}.
+\]
+All diagonal entries equal one. The absolute row-sum bound for the
+operator norm of a symmetric matrix completes the proof.
+\end{proof}
+
+\begin{lemma}[Uniform comparison of full-margin orthants]
+\label{lem:gp-lower-orthants}
+Suppose $G\sim\mathcal N(0,K)$ on $m$ coordinates and
+$\|K-I_m\|_{\mathrm{op}}\le1/(100m)$. For each sign vector
+$g\in\{-1,1\}^m$, put
+\[
+ p_g=\mathbb P\{g_iG_i>1/2\text{ for all }i\}.
+\]
+Then every $p_g$ is positive and
+$\max_g p_g/\min_g p_g<4/3$.
+\end{lemma}
+\begin{proof}
+Let $\eta=1/(100m)$, $a=1/2$, and let
+$\overline\Phi(t)$ denote the standard Gaussian upper tail.
+The eigenvalues of $K$ lie in $[1-\eta,1+\eta]$.
+Its density is bounded below by
+\[
+ (2\pi)^{-m/2}(1+\eta)^{-m/2}
+ \exp\left(-\frac{\|z\|^2}{2(1-\eta)}\right)
+\]
+and above by the same expression with the two occurrences of
+$1+\eta$ and $1-\eta$ interchanged.
+Integrating over any specified full-margin orthant gives
+\[
+ \ell\le p_g\le u,
+\]
+where
+\[
+ \ell=\left(\frac{1-\eta}{1+\eta}\right)^{m/2}
+       \overline\Phi\left(\frac a{\sqrt{1-\eta}}\right)^m,
+ \qquad
+ u=\left(\frac{1+\eta}{1-\eta}\right)^{m/2}
+       \overline\Phi\left(\frac a{\sqrt{1+\eta}}\right)^m.
+\]
+We bound their ratio without discarding the global-margin condition.
+For $\eta\le1/2$,
+$\log((1+\eta)/(1-\eta))\le3\eta$.
+Both tail arguments lie in $[0,1]$. Writing $\phi$ for the standard
+Gaussian density, on that interval
+\[
+ \frac{\phi(t)}{\overline\Phi(t)}
+ \le\frac{\phi(0)}{\int_1^2\phi(s)\,ds}
+ \le\frac{\phi(0)}{\phi(2)}=e^2<8.
+\]
+The difference between the arguments is at most
+$a\eta(1-\eta)^{-3/2}\le\sqrt2\,\eta$.
+Integrating the logarithmic derivative of $\overline\Phi$ gives
+\[
+ \log\frac u\ell
+ \le (3+8\sqrt2)m\eta<15m\eta=\frac3{20}
+ <\log\frac43.
+\]
+The final inequality follows, for example, from
+$\log(1+1/3)\ge1/4$.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:gp-deep-and}]
+Apply Lemmas~\ref{lem:gp-lower-white} and
+\ref{lem:gp-lower-orthants} to the Gaussian width limit.
+For each Boolean function $g$, define its raw neural probability
+\[
+ p_{N,g}=\mathbb P\{g(x)z_N(x)>1/2\text{ for every }x\}.
+\]
+The limiting Gaussian is nonsingular, so the boundary of each such
+orthant has probability zero. Lemma~\ref{lem:gp-lower-width-limit}
+therefore gives $p_{N,g}\to p_g>0$.
+There are finitely many Boolean functions at fixed dimension.
+The strict limiting ratio bound implies the existence of $N_0(d)$
+such that, for every $N\ge N_0(d)$,
+\begin{equation}\label{eq:gp-lower-finite-ratio}
+ \frac{\max_g p_{N,g}}{\min_g p_{N,g}}\le\frac32.
+\end{equation}
+Global-margin conditioning divides all these masses by one common
+normalizer, preserving their ratios.
+
+After $s$ distinct inputs have been labeled, exactly
+$2^{m-s-1}$ full Boolean functions extend the history with either
+specified label at a new input. Equation~\eqref{eq:gp-lower-finite-ratio}
+therefore places the posterior probability of either label in
+$[2/5,3/5]$. This argument is uniform over all histories and does
+not depend on their probability or on the target. Conditional
+expectation gives the first bound in \eqref{eq:gp-lower-mistakes}.
+
+For the second bound, let $I_t$ be the sampled mistake indicator.
+Conditionally on the past and the current previously unseen input,
+\[
+ \mathbb E[2^{-I_t}\mid\text{past, current input}]
+ =1-\frac12\mathbb P(I_t=1\mid\text{past, current input})
+ \le\frac45.
+\]
+Iterating and applying Markov's inequality gives
+\[
+ \mathbb P\{M_m\le m/5\}
+ \le 2^{m/5}(4/5)^m\le e^{-m/20},
+\]
+using $\log2<3/4$ and $\log(4/5)\le-1/5$.
+The confidence claim follows from $3/5<2/3$.
+
+Finally, realize $f_{\mathrm{AND}}$ with one active neuron in each
+hidden layer, padding to width $d$. The first active neuron computes
+$\tanh(\sum_jx_j-(d-1))$; each later active neuron computes
+$\tanh(2h)$ from the previous one; the readout has coefficient one.
+The first signed activation is at least $\tanh(1)>1/2$.
+Since $2\tanh(1)>1$, subsequent layers preserve a signed activation
+of magnitude at least $\tanh(1)$. Every coefficient has magnitude at
+most $d$ for $d\ge2$, and the desired strict margin follows.
+\end{proof}
+
+The theorem applies, in particular, to a fixed lexicographic ordering
+of the cube. It does not use a circuit tie rule or inspect a sampled
+hypothesis before choosing its query. The conjunction has $d-1$
+Boolean AND gates and only $O(d+L_d)$ nonzero coefficients in the
+displayed neural implementation. Its exponential mistake count is
+compatible with fixed-depth polynomial theorems because $L_d$ grows
+with $d$, and because \eqref{eq:gp-lower-variances} lies at
+$\gamma=0$.

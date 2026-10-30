@@ -1,0 +1,161 @@
+\section{A polynomial bound for AND at fixed depth}
+\label{gpupper:section}
+
+The wide-network Gaussian limit also gives a positive result that
+restricts where an AND lower bound can occur. Fix $d\ge1$ and $L\ge2$,
+write $m=2^d$ and $r=L-1$, and let
+\[
+ \begin{gathered}
+ f_\wedge(x)=+1\ \Longleftrightarrow\ x=(1,\ldots,1),
+ \qquad \Psi(t)=\frac2\pi\arcsin t,\\
+ K_r(x,y)=\Psi^{\circ r}\!\left(\frac{1+x\cdot y}{d+1}\right).
+ \end{gathered}
+\]
+Consider $G\sim\mathcal N(0,K_r)$, conditioned before observing labels
+on $|G(x)|>a$ at every Boolean input. We take $a=1/2$ in the neural
+application. This is the $\gamma=0$ limiting function prior of the actual
+layer-scaled Gaussian tanh network; the nonpositive-exponent
+posterior-limit proposition in~\cite{nn-subcritical} supplies this limit.
+
+\begin{theorem}[Fixed-depth AND target mass]\label{gpupper:mass}
+Put
+\begin{equation}\label{gpupper:budget}
+ A=a+\sqrt{2\log(4m)},\qquad
+ D_{d,L,a}=A^2(d+1)(d^2-d+1)\left(\frac\pi2\right)^r.
+\end{equation}
+The unconditioned Gaussian probability of the target's full margin
+event satisfies
+\begin{equation}\label{gpupper:rawmass}
+ \mathbb P\{f_\wedge(x)G(x)>a\text{ for every }x\}
+ \ge\frac14 e^{-D_{d,L,a}}.
+\end{equation}
+Consequently the globally margin-conditioned function prior has
+\begin{equation}\label{gpupper:targetcost}
+ -\log\pi_\infty(f_\wedge)\le D_{d,L,a}+\log4.
+\end{equation}
+At fixed $L$ and fixed $a$, the right side is polynomial in $d$.
+\end{theorem}
+
+\begin{proof}
+The Taylor coefficients of $\Psi$ are nonnegative, and its linear
+coefficient is $2/\pi$. Composition preserves nonnegativity and gives
+linear coefficient $c_r=(2/\pi)^r$. The Schur product theorem therefore
+implies
+\begin{equation}\label{gpupper:kernelminorant}
+ K_r\succeq c_r\rho,\qquad
+ \rho(x,y)=\frac{1+x\cdot y}{d+1}.
+\end{equation}
+Indeed, the remaining positive Taylor terms are positive semidefinite
+entrywise powers of $\rho$. Thus we may realize the Gaussian vector as
+\[
+ G(x)=\sqrt{\frac{c_r}{d+1}}
+       \left(Z_0+\sum_{i=1}^d Z_i x_i\right)+V(x),
+\]
+where $Z_0,\ldots,Z_d$ are independent standard normals and $V$ is an
+independent Gaussian vector with covariance $K_r-c_r\rho$.
+
+Shift only the $Z_i$ so that the output mean becomes
+\[
+ h(x)=A\left(\sum_{i=1}^d x_i-d+1\right).
+\]
+The sign of $h$ is $f_\wedge$, and $f_\wedge(x)h(x)\ge A$ everywhere.
+The relative entropy of the shifted joint Gaussian law with respect to
+the original joint law is
+\begin{equation}\label{gpupper:shiftentropy}
+ \frac12\frac{d+1}{c_r}
+ \left(A^2(d-1)^2+dA^2\right)=\frac12D_{d,L,a}.
+\end{equation}
+This construction also proves the usual squared reproducing-kernel
+norm bound for $h$, without needing to invert the full kernel matrix.
+
+Every centered output has variance one. With
+$T=\sqrt{2\log(4m)}$, a Gaussian tail bound and a union bound give
+\[
+ \mathbb P\{\max_x|G(x)|\ge T\}
+ \le2m e^{-T^2/2}=\frac12.
+\]
+Hence the shifted law gives probability at least $1/2$ to
+$\mathcal E=\{f_\wedge(x)G(x)>a\text{ for every }x\}$.
+The strict inequalities cause no difficulty: each boundary is a scalar
+Gaussian equality event and has probability zero.
+
+Let $p$ and $q\ge1/2$ be the probabilities of $\mathcal E$ under the
+original and shifted laws. Relative entropy decreases under the map
+that records membership in $\mathcal E$, so
+\[
+ \frac12D_{d,L,a}
+ \ge q\log\frac qp+(1-q)\log\frac{1-q}{1-p}
+ \ge q\log\frac1p-\log2
+ \ge\frac12\log\frac1p-\log2.
+\]
+This proves~\eqref{gpupper:rawmass}. Conditioning on the union of all
+full-margin function events can only increase the probability of
+$\mathcal E$, proving~\eqref{gpupper:targetcost}.
+\end{proof}
+
+\begin{corollary}[Every-order online guarantee, including finite width]
+\label{gpupper:online}
+For the limiting prior, let $B=D_{d,L,a}+\log4$. Against the AND target,
+on every nonanticipating input-selection strategy with labels revealed
+after each prediction, ordinary consistency Bayes has
+\begin{itemize}
+\item expected total fresh posterior-sampling mistakes at most $B$;
+\item at most $B/\log2$ posterior-majority mistakes;
+\item at most $B/\log(3/2)$ rounds on which the correct label has
+posterior probability at most $2/3$.
+\end{itemize}
+These include infinite streams. For the actual Gaussian tanh networks
+at $\gamma=0$, the same statements hold, with $B$ replaced by
+$D_{d,L,a}+\log8$, for every sufficiently large finite width $N$.
+The width threshold can depend on $d,L,a$ but not on the input history,
+its order, or its length.
+\end{corollary}
+
+\begin{proof}
+For any fixed prior $\pi$ and realizable target $f$, let $p_t$ be the
+posterior probability of its correct label at the round-$t$ query.
+Exact conditioning telescopes to
+\[
+ \sum_{t=1}^T-\log p_t\le-\log\pi(f).
+\]
+The sampling bound follows from $1-p_t\le-\log p_t$ and monotone
+convergence. A majority mistake has $p_t\le1/2$, while a failure of
+correct-label probability strictly greater than $2/3$ contributes at
+least $\log(3/2)$.
+
+For fixed $d,L$, the unconditioned finite-width output vector converges
+in distribution to $G$ by the hidden-kernel and Gaussian-readout limit
+in~\cite{nn-subcritical}. The boundary of the full target margin event
+has limiting probability zero. Its raw probability therefore converges
+to a value at least $e^{-D_{d,L,a}}/4$, and is at least
+$e^{-D_{d,L,a}}/8$ for all sufficiently large $N$. Global margin
+conditioning again increases the target probability. Applying the same
+fixed-prior potential identity proves all three bounds simultaneously
+for every history; no posterior convergence uniform over histories is
+being assumed.
+\end{proof}
+
+\paragraph{Other fixed Gaussian scales and negative exponents.}
+The same argument applies to $G\sim\mathcal N(0,\sigma^2K_r)$ for any
+fixed $\sigma>0$. Replace the budget in~\eqref{gpupper:budget} by
+\begin{equation}\label{gpupper:scalebudget}
+ D_{d,L,a,\sigma}
+ =\left(\frac a\sigma+\sqrt{2\log(4m)}\right)^2
+   (d+1)(d^2-d+1)\left(\frac\pi2\right)^r.
+\end{equation}
+Multiplying all layer standard deviations by this fixed $\sigma$
+leaves the saturated hidden-kernel limit unchanged and scales the
+readout covariance by $\sigma^2$, so the finite-width transfer is valid
+for this model as well. For the $\gamma<0$ limit from~\cite{nn-subcritical},
+the global margin disappears after output normalization. Set $a=0$ in
+the argument; the sign-only limiting prior and all sufficiently large
+finite widths obey the corresponding bound. The original finite-width
+margin becomes a vanishing normalized threshold, and the limiting
+Gaussian assigns zero probability to its boundaries.
+
+These bounds are polynomial in $d$ for each fixed depth and fixed
+positive scale, but contain the factor $(\pi/2)^{L-1}$. They therefore
+do not rule out an exponential AND lower bound at depth growing with
+$d$. Nor is the finite-width threshold quantified here or uniform as
+$\sigma\downarrow0$. This is a width-first statement and does not
+interchange the strong-prior order of limits.
