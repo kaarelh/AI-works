@@ -1,0 +1,294 @@
+\section{Adaptive switching among fixed sources}
+\label{sec:structured}
+
+The number of energy or probability levels causes no difficulty when
+fresh inputs retain sufficient randomness within each of finitely many
+fixed sources. The source can change after every observation. The
+following result extends the finite-class environment arguments of
+\cite{occam} to a posterior with a uniformly controlled tail. Its tail
+cost depends on the number of distinct possible inputs, rather than on
+the duration of the stream.
+
+Let $\mathcal X$ be a finite domain of size $m$, with fixed target $f$.
+After the first $t-1$ labels, let $\Pi_{t-1}$ be a distribution on functions
+that is supported on functions agreeing with all those labels and is
+determined before the next input is drawn. Suppose a fixed finite set
+$A$ contains $f$ and satisfies
+\begin{equation}\label{eq:structured-tail}
+ \log|A|\le h,\qquad \Pi_{t-1}(A^c)\le\beta
+ \quad\text{after every realizable history}.
+\end{equation}
+For an exact consistency posterior with prior $\pi$, the sufficient
+condition
+\begin{equation}\label{eq:structured-prior-ratio}
+ \pi(A^c)\le\beta\pi(f),\qquad \pi(f)>0,
+\end{equation}
+implies~\eqref{eq:structured-tail}: the posterior denominator is at least
+the mass of the always-consistent target. The hypothesis is thus uniform
+over rare histories as well as typical ones.
+
+Fix distributions $D_1,\ldots,D_K$ on $\mathcal X$, with $K\ge1$.
+At each round a scheduler chooses a source using the full observed past,
+then obtains a fresh independent input from that source. Its choice may
+also use fresh randomness, but not the unrevealed source samples or the
+current private predictor draw. The learner need not observe the source
+identity. Predictable mixtures of the fixed sources are included by
+regarding the source choice as latent. Choose $0<\varepsilon_i\le1$ such
+that
+\begin{equation}\label{eq:structured-gap}
+ D_i(g\ne f)\in\{0\}\cup[\varepsilon_i,1]
+ \qquad(g\in A).
+\end{equation}
+One may use the smallest positive disagreement probability, or any lower
+bound on it. If there is no positive disagreement, any such
+$\varepsilon_i$ is valid.
+
+At the actual input $X_t$, write
+\[
+ q_t=\Pi_{t-1}\{g:g(X_t)\ne f(X_t)\},\qquad
+ S_\infty=\sum_{t\ge1}q_t.
+\]
+For fresh sampling from $\Pi_{t-1}$, let $M_\infty$ be the total mistakes.
+The draw can occur after $X_t$ is revealed, provided its conditional law
+is still $\Pi_{t-1}$.
+
+\begin{theorem}[Posterior learning under interleaved iid sources]
+\label{thm:structured-posterior}
+Under~\eqref{eq:structured-tail} and~\eqref{eq:structured-gap}, arbitrary
+adaptive switching among the fixed sources satisfies
+\begin{equation}\label{eq:structured-expectation}
+ \mathbb E S_\infty=\mathbb E M_\infty
+ \le \sum_{i=1}^K
+ \left[1+(h+1)\left(1+\log\frac1{\varepsilon_i}\right)\right]
+       +\beta m.
+\end{equation}
+For $0<\delta<1$, define
+\begin{gather*}
+ J_i=1+\left\lceil\log_2\frac1{\varepsilon_i}\right\rceil,
+ \qquad \Lambda=\sum_{i=1}^KJ_i,
+ \\
+ a_r=h+\log\frac{r\Lambda}{\delta},
+ \qquad B_r=(\Lambda+K)a_r+2K \quad(r=2,3).
+\end{gather*}
+Then
+\begin{align}
+ \mathbb P\left\{S_\infty>
+       (e-1)B_2+\log\frac2\delta+\beta m\right\}
+       &\le\delta,\label{eq:structured-S-tail}\\
+ \mathbb P\left\{M_\infty>
+       (e-1)(B_3+\beta m)+2\log\frac3\delta\right\}
+       &\le\delta.\label{eq:structured-M-tail}
+\end{align}
+These are separate probability statements. They hold over the entire
+possibly infinite horizon and therefore also at every stopping time.
+\end{theorem}
+
+\begin{proof}
+Split each realized-query error probability as
+\[
+ q_t=q_t^{\mathrm{in}}+q_t^{\mathrm{out}},\qquad
+ q_t^{\mathrm{out}}=
+ \Pi_{t-1}\{g\notin A:g(X_t)\ne f(X_t)\}.
+\]
+Every retained function is correct on a previously observed input.
+Thus, for the actual realized queries,
+\begin{equation}\label{eq:structured-tail-charge}
+ q_t^{\mathrm{out}}\le
+ \beta\,\mathbf1\{X_t\notin\{X_1,\ldots,X_{t-1}\}\},
+ \qquad \sum_{t\ge1}q_t^{\mathrm{out}}\le\beta m.
+\end{equation}
+This is a pathwise inequality and needs no assumption on input order.
+It is different from a bound on risk averaged over the next source draw.
+
+For the inside contribution, couple source $i$ to its own independent iid
+stream. Let $R_{i,n}$ be the maximum $D_i$-risk of a member of $A$ agreeing
+with the first $n$ labels in that stream, ignoring labels from other
+sources. A function with risk $u$ survives with probability $(1-u)^n$;
+therefore, for $n\ge1$,
+\begin{equation}\label{eq:structured-prefix-tail}
+ \mathbb P\{R_{i,n}>u\}\le\min\{1,e^{h-nu}\}.
+\end{equation}
+At a visit to source $i$ after $n$ of its samples have been seen, all
+inside-$A$ posterior functions survive that local prefix. Consequently,
+conditional on the observed past and the chosen source, but \emph{before}
+the new input is drawn,
+\begin{equation}\label{eq:structured-inside-drift}
+ \mathbb E[q_t^{\mathrm{in}}\mid\text{past, source }i]
+ \le R_{i,n}.
+\end{equation}
+The same bound holds for the indicator of a sampled mistake from a
+function in $A$. Arbitrary relative posterior weights within $A$ are
+allowed. Other sources' observations can only further reduce the set of
+possible functions.
+
+The random variable $R_{i,n}$ is either zero or at least
+$\varepsilon_i$. For $u>0$,
+\[
+ \sum_{n\ge1}\min\{1,e^{h-nu}\}
+ \le\int_0^\infty\min\{1,e^{h-tu}\}\,dt=\frac{h+1}{u}.
+\]
+For $0<u<\varepsilon_i$, use instead
+$\mathbb P(R_{i,n}>u)\le\min\{1,e^{h-n\varepsilon_i}\}$,
+by union bounding all positive-risk functions. Integrating the tail and
+using Tonelli's theorem gives
+\[
+ \sum_{n\ge1}\mathbb E R_{i,n}
+ \le(h+1)\left(1+\log\frac1{\varepsilon_i}\right).
+\]
+The initial local round costs at most one. Each local counter $(i,n)$ is
+used at most once, irrespective of the adaptive interleaving. Summing
+\eqref{eq:structured-inside-drift}, adding
+\eqref{eq:structured-tail-charge}, and using conditional expectation for
+the fresh sampled predictions proves~\eqref{eq:structured-expectation}.
+
+We give the high-probability argument with a generic $a>0$. For
+$1\le j\le J_i$, set $n_{i,j}=\lceil a2^j\rceil$. Except on an event of
+probability at most $\Lambda e^{h-a}$, all prefix inequalities
+\[
+ R_{i,n_{i,j}}\le2^{-j}
+\]
+hold. Since $2^{-J_i}<\varepsilon_i$, the last one forces risk zero.
+Monotonicity of $R_{i,n}$ supplies a deterministic envelope: use one
+before $n_{i,1}$, use $2^{-j}$ from $n_{i,j}$ until $n_{i,j+1}-1$, and
+use zero from $n_{i,J_i}$ onwards. Its sum over all local counts for
+source $i$ is at most
+\[
+ 2a+1+\sum_{j=1}^{J_i-1}(a+2^{-j})
+ \le(J_i+1)a+2.
+\]
+Stop the inside process before using any prefix that violates this
+applicable envelope. Whether the current prefix violates it is known
+from the observed local history before drawing the next input. Until
+stopping, the sum of conditional mean bounds is at most
+$B=(\Lambda+K)a+2K$ on every path. For either the stopped fractional
+variable $q_t^{\mathrm{in}}$ or the stopped inside-mistake indicator,
+$0\le Y_t\le1$ and
+\[
+ \mathbb E[e^{Y_t}\mid\text{past, chosen source}]
+ \le 1+(e-1)\mathbb E[Y_t\mid\text{past, chosen source}].
+\]
+The exponential-supermartingale argument therefore bounds its total by
+$(e-1)B+\log(1/\eta)$ apart from probability $\eta$. This holds uniformly
+in time. On the simultaneous good-prefix event, stopping never occurs.
+Taking $a=a_2$, $\eta=\delta/2$, and adding the pathwise outside sum proves
+\eqref{eq:structured-S-tail}.
+
+For sampled mistakes use $a=a_3$ and $\eta=\delta/3$ for the inside
+process. For the outside process a different conditioning stage is
+appropriate: condition on the past, the chosen source, and the
+\emph{realized current input}, immediately before the private function
+draw. The outside-mistake indicator $Z_t^{\mathrm{out}}$ then has
+conditional mean $q_t^{\mathrm{out}}$, and
+\[
+ \mathbb E\!\left[
+ e^{Z_t^{\mathrm{out}}-(e-1)q_t^{\mathrm{out}}}
+ \mid\text{past, source, current input}\right]\le1.
+\]
+Taking the further expectation over the source and input makes the
+product a nonnegative supermartingale at the ends of complete rounds.
+By~\eqref{eq:structured-tail-charge}, its compensator is bounded
+pathwise by $(e-1)\beta m$. Thus outside mistakes total at most
+$(e-1)\beta m+\log(3/\delta)$, apart from probability $\delta/3$.
+A union bound over prefix failure, the inside tail, and the outside tail
+proves~\eqref{eq:structured-M-tail}. Infinite sums follow by monotone
+limits, or directly from the time-uniform supermartingale bounds.
+\end{proof}
+
+Pointwise, the number of posterior-majority mistakes is at most
+$2S_\infty$, and the number of failures to assign the correct label
+posterior probability strictly greater than $2/3$ is at most
+$3S_\infty$. Thus~\eqref{eq:structured-expectation} gives these expectation
+bounds with factors two and three, respectively;
+\eqref{eq:structured-S-tail} gives their high-probability counterparts.
+Majority prediction may depend on the query; it is controlled through
+this posterior-risk comparison, not by assuming the majority function
+itself belongs to $A$.
+
+\paragraph{Finite pools.}
+Fix $K$ finite pools of sizes $m_i\ge1$, independently uniformly permute
+each, and adaptively interleave their unrevealed entries. Repeated inputs
+within or between pools are allowed. The random-pool prefix argument of
+\cite{occam}, applied to the inside posterior, gives
+\begin{equation}\label{eq:structured-pools}
+ \mathbb E M\le
+ K+2(h+1)\sum_{i=1}^K H_{m_i-1}+\beta m,
+ \qquad H_0=0.
+\end{equation}
+Indeed, after $n$ entries of pool $i$, the conditional inside risk is at
+most $m_iR_{i,n}/(m_i-n)$, and
+$\sum_{n=1}^{m_i-1}m_i/[n(m_i-n)]=2H_{m_i-1}$. The outside term is still
+\eqref{eq:structured-tail-charge}, regardless of duplicate entries.
+For pools with at most $2^d$ entries, this is
+$O(K(h+1)(d+1))+\beta2^d$.
+The same stopping and tail split gives a sampled high-probability bound
+$(e-1)(B+\beta m)+2\log(3/\delta)$, using
+$a=h+\log(3\sum_i m_i/\delta)$ and
+$B=K+2a\sum_i H_{m_i-1}$. For cumulative posterior risk use the
+corresponding two-event allocation, as in~\eqref{eq:structured-S-tail}.
+
+\begin{corollary}[Structured shifts for the original Gaussian NNBayes learners]
+\label{cor:structured-neural}
+Use any of the strong-prior, fixed-$\gamma>1$, or mean-field tanh regimes
+of Lemma~\ref{lem:neural-inputs}, with the same target and depth
+qualifications. Let $m=2^d$, $\beta=1/m$, and let $H_\beta$ majorize both
+the lemma's relevant-class logarithmic count $h_\beta$ and its direct
+prior-cost budget $J_\beta$ where that alternative is used. For $K\ge1$
+fixed sources uniform on arbitrary nonempty subsets of the cube,
+\begin{equation}\label{eq:structured-neural-expectation}
+ \mathbb E M_\infty\le
+ K\bigl[1+(H_\beta+1)(1+d\log2)\bigr]+1.
+\end{equation}
+With
+\[
+ a=H_\beta+\log\frac{3K(d+1)}\delta,
+ \qquad B=K(d+2)a+2K,
+\]
+one also has
+\begin{equation}\label{eq:structured-neural-tail}
+ \mathbb P\left\{M_\infty>
+ (e-1)(B+1)+2\log\frac3\delta\right\}\le\delta.
+\end{equation}
+Thus at fixed depth, and fixed $\gamma$ where applicable, these are
+polynomial total-mistake bounds in $d,C,K,\log(1/\delta)$, independently
+of learner width. The scheduler may switch indefinitely and arbitrarily
+abruptly among the fixed sources. Corresponding majority and confidence
+bounds follow from the cumulative posterior risk. Fixed finite pools
+with at most $2^d$ entries each have the same polynomial conclusion.
+\end{corollary}
+
+\begin{proof}
+In the relevant-class branch of Lemma~\ref{lem:neural-inputs}, the
+prior-ratio condition gives~\eqref{eq:structured-tail} after every
+history. Every positive disagreement probability on a uniform subset of
+the cube is at least $2^{-d}$, so use $\varepsilon_i=2^{-d}$ for every
+source. Then $J_i=d+1$, $\Lambda=K(d+1)$, $h\le H_\beta$, and
+$\beta m=1$. Theorem~\ref{thm:structured-posterior} gives the displayed
+bounds.
+
+In the direct-prior-cost branch, no common finite class is needed or
+asserted. Exact Bayesian telescoping gives
+$S_\infty\le-\log\pi(f)\le J_\beta\le H_\beta$ for every input sequence,
+and posterior sampling has tail
+$(e-1)H_\beta+\log(1/\delta)$. These are bounded by the displayed budgets.
+The same branch distinction gives the posterior-risk claim. For finite
+pools take the maximum of the direct budget and the relevant-class
+budget in~\eqref{eq:structured-pools}; no finite-class assertion is made
+in the direct branch. The imported budgets are polynomial after substituting
+$\log(1/\beta)=d\log2$.
+\end{proof}
+
+For strong prior the variance is chosen sufficiently small at each fixed
+width before the stream begins, with the original possibility that its
+threshold depends on width. One such choice covers all histories and
+all subsequent switches. Any simultaneous limit of the correctly
+conditioned predictive posteriors as the variance tends to zero at that
+fixed width also satisfies the result: each limiting posterior is
+supported on the target-energy sublevel, giving $\beta=0$. This refers
+to limits \emph{after conditioning on each history}; conditioning a
+limiting prior that has assigned zero mass to the target is not the
+argument.
+
+The sources themselves must be fixed in advance. A polynomial number of
+sources with arbitrary switching is a substantive extension of the
+uniform-stream theorem, but does not cover every deterministic order:
+encoding an arbitrary cube order as singleton sources uses $K=2^d$.

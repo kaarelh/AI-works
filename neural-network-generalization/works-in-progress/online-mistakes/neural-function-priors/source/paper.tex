@@ -1,0 +1,202 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,geometry,amsmath,amssymb,amsthm,mathtools}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\geometry{margin=1in}
+\hypersetup{pdftitle={Online mistake bounds for Gaussian neural networks and priors preserving their function rankings},pdfauthor={ChatGPT-6 Astra; Claude; Kaarel Hanni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{remark}[theorem]{Remark}
+\title{Online mistake bounds for Gaussian neural networks\\and priors preserving their function rankings}
+\author{ChatGPT-6 Astra \and Claude (Anthropic) \and Kaarel H\"anni \and Dmitry Vaintrob}
+\date{Research draft, 30 October 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+A small neural implementation can give polynomial learning bounds even
+when its Gaussian prior probability is extremely small. This leaves a
+question for online learning under distribution shift: can the learner
+make only polynomially many mistakes over its entire lifetime, rather
+than merely attain small test error on one distribution?
+
+We give two results, keeping their different priors explicit. First, the
+usual Gaussian tanh posterior, with global output-margin support and
+exact label conditioning, has polynomial total mistakes under arbitrary
+adaptive switching among finitely many fixed input environments. For
+environments uniform on arbitrary subsets of the Boolean cube, the bound
+is independent of learner width and polynomial in target complexity and
+input dimension at fixed depth. It covers sufficiently small variance
+at each width, every fixed above-mean-field exponent, and mean field.
+The proof permits arbitrary probability ratios among surviving neural
+functions. A small posterior tail is charged only on first appearances,
+so an infinite stream incurs no horizon-times-tail penalty.
+
+Second, we change the function prior while preserving its entire ordering
+and all exact ties. Averaging weights $1/[r(r+1)]$ across tied ranks gives
+a fixed prior whose target negative log probability is at most twice the
+logarithm of its inclusive rank, plus a constant. Existing neural
+compression and mass bounds make this logarithmic rank polynomial in
+target complexity, uniformly in width. Ordinary conditioning under the
+modified prior therefore gives polynomial total mistakes on every
+nonanticipating adaptive input sequence. This prior is realizable on the
+same neural parameter space, but is generally not an independent Gaussian.
+We also give a near-minimum-energy sampling alternative that does not need
+exact ties. No arbitrary-order polynomial theorem for the unchanged
+large-width Gaussian learner is claimed.
+\end{abstract}
+
+\section{The distinction between ordering and probability ratios}
+
+Consider online prediction of a fixed Boolean function: each input is
+presented, a label is predicted, and the true label is then revealed.
+All observations are retained. A useful simplicity principle would bound
+the total number of mistakes by a polynomial in the complexity of a
+target implementation, even when the queried input region changes.
+
+Fresh uniform selection among smallest consistent circuits has such a
+bound on arbitrary input orders: there are at most $s$ gate-count levels
+below a target of size $s$, and each level has a logarithmic candidate
+elimination budget~\cite{occam}. Real-valued neural energies do not supply
+that argument. They can have many distinct levels below the target's
+energy, and equal leading Gaussian rate does not imply equal function
+probabilities. Exact neural symmetries do create some ties, but neither
+polynomially many levels nor uniform function probabilities within every tied energy level
+follows from the usual neural compression theorem.
+
+The distinction is visible in a finite example. On points
+$x_1,\ldots,x_m$, let $f$ be constantly positive and let $g_i$ be positive
+except at $x_i$. Give $g_i$ energy $1+i\eta/(m+1)$ and $f$ energy
+$1+\eta$, where $\eta>0$ is arbitrarily small. Exact minimum-energy
+prediction makes $m$ mistakes on $x_1,\ldots,x_m$, despite the narrow
+energy interval and logarithmic class size $\log(m+1)$. This is an
+abstract obstruction to an inference from energy counting alone, not a
+construction of these energies in the Gaussian neural model.
+
+Our first result retains the Gaussian prior and places explicit
+conditions on how inputs arrive. Our second retains the same functions,
+likelihood, and prior ranking, but changes the probability ratios.
+It then permits arbitrary input orders. All arguments are statistical;
+we do not assert computationally efficient inference or rank evaluation.
+
+\section{Neural model and available structural estimates}
+
+Let $d\ge1$, $L\ge2$, and let $N$ be the common hidden width. Inputs are
+$x\in\{-1,1\}^d$, augmented by a constant coordinate. There are $L-1$
+hidden layers with coordinatewise tanh activation and a linear readout:
+\[
+ h^1(x)=\tanh(W^1(1,x)),\qquad
+ h^j(x)=\tanh(W^jh^{j-1}(x)),\qquad
+ z_w(x)=v^{\mathsf T}h^{L-1}(x).
+\]
+There are no additional internal biases. The weighted energy is
+\[
+ \kappa_N(w)=\frac dN\|W^1\|_F^2
+       +\sum_{j=2}^{L-1}\|W^j\|_F^2+N\|v\|_2^2.
+\]
+For a Boolean function $g$ define its strict global-margin event and
+minimum energy by
+\[
+ U_{N,g}=\{w:g(x)z_w(x)>1/2\text{ for every }x\},\qquad
+ \kappa_N(g)=\inf_{w\in U_{N,g}}\kappa_N(w).
+\]
+Let $\mathcal H_N$ contain precisely the functions with nonempty
+$U_{N,g}$. It is a finite set of distinct functions. Each such event is
+open and has positive mass under every nondegenerate Gaussian prior.
+Let $U_N=\bigcup_{g\in\mathcal H_N}U_{N,g}$ be the label-independent
+global absolute-margin event.
+
+In the strong-prior parameterization, the energy coordinates are
+independent centered Gaussians of variance $\sigma^2$. Thus individual
+weight variances are $\sigma^2N/d$ in the first layer, $\sigma^2$ internally,
+and $\sigma^2/N$ in the readout. The finite-variance family sets
+$\sigma^2=N^{-\gamma}$, giving variances
+$N^{1-\gamma}/d,N^{-\gamma},N^{-\gamma-1}$. Mean field is $\gamma=1$.
+Write $\mu$ for the raw Gaussian and
+\[
+ \pi(g)=\frac{\mu(U_{N,g})}{\mu(U_N)}
+\]
+for its induced function prior after global-margin conditioning. The
+learning posterior further conditions on every revealed label exactly.
+In particular, repeated inputs have zero posterior error.
+
+The target complexity $C=C_L(f)$ is the least hidden width of a same-depth
+tanh implementation with signed margin greater than $1/2$ everywhere
+and every coefficient bounded in magnitude by that width. We assume
+$C<\infty$ and allow every $N\ge C$. All polynomial claims below hold at
+fixed depth; for the above-mean-field family the exponent $\gamma>1$ is
+also fixed. Their degrees need not be uniform as $\gamma$ decreases to
+one. The mean-field conclusion is supplied by a separate estimate.
+Natural logarithms are used, and $0<\delta<1$ denotes a confidence level.
+
+\input{neural-inputs}
+\input{structured}
+\input{rank}
+
+\section{What changes and what remains unresolved}
+
+The structured-environment theorem concerns the original Gaussian
+posterior. It never replaces unequal posterior weights by uniform ones.
+The sources are fixed before the process, while switches or mixture
+weights can depend on the full observed past. Allowing an arbitrary new
+source at no cost would invalidate the conclusion: encoding every
+adversarial query as its own singleton source makes their number as large
+as the domain. The theorem therefore supplies a concrete class of
+distribution shifts, rather than a claim that most imaginable sequences
+are benign.
+
+The prior transformation concerns a different learner. It preserves which
+function is preferred to which, but changes how strongly it is preferred.
+This is enough to improve the general online bound because the
+logarithm of the number of functions preferred to a small target is
+polynomial, even when the original target probability is extremely small.
+Since the maximizing functions do not change, the improvement is a
+theorem about posterior sampling and posterior majority, not about
+choosing one posterior mode.
+
+Function-level flattening also differs from increasing the variance of
+the original independent Gaussian weights. Function masses integrate
+parameter density over different regions of parameter space; changing a
+scalar temperature does not generally remove their volume differences.
+No theorem here identifies either function-level construction with an
+independent-coordinate weight prior. Nor does counting low-energy
+functions alone establish their Gaussian mass ratios.
+
+For the unchanged Gaussian learner at unrestricted large width, a
+polynomial total-mistake bound for every adaptive input order remains
+open in the fixed-depth setting considered here. Its elementary
+bound $-\log\pi(f)$ can grow with width or diverge as variance decreases;
+this fact alone is not a lower bound on actual mistakes. The geometric
+bands and rank-based prior are precise positive alternatives, not a
+resolution of that remaining question. The global-margin support
+condition and fixed-depth quantifiers remain part of all neural
+applications in this paper.
+
+\paragraph{Verification.}
+The new online transfers and function-prior constructions have
+conventional proofs and independent AI-agent mathematical reviews.
+They are not Lean formalizations. Existing formal verification of the
+imported neural learning results does not automatically certify these
+new consequences.
+
+\begin{thebibliography}{9}
+\raggedright
+\bibitem{strong} ChatGPT-6 Astra, Claude Fable 5 and Opus 5, Kaarel H\"anni, and Dmitry Vaintrob.
+\emph{Width-independent generalization in the strong-prior limit of Bayesian neural networks}.
+\url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/main-results/strong-prior-generalization}.
+\bibitem{above} ChatGPT-6 Astra, Claude, Kaarel H\"anni, and Dmitry Vaintrob.
+\emph{Width-uniform Bayesian generalization above the mean-field scaling}.
+\url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/main-results/gamma-above-one}.
+\bibitem{meanfield} ChatGPT-6 Astra, Kaarel H\"anni, and Dmitry Vaintrob.
+\emph{Mean-field Bayesian circuit learning at every width above target complexity}.
+\url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/main-results/meanfield-all-width}.
+\bibitem{online} ChatGPT-6 Astra, Claude, Kaarel H\"anni, and Dmitry Vaintrob.
+\emph{Polynomially many total mistakes for Bayesian neural-network learning}.
+\url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/online-mistakes/upper}.
+\bibitem{occam} ChatGPT-6 Astra, Claude, Kaarel H\"anni, and Dmitry Vaintrob.
+\emph{Exponential mistakes and polynomial guarantees for circuit Occam learning}.
+\url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/online-mistakes/occam-distribution-shift}.
+\end{thebibliography}
+\end{document}

@@ -1,0 +1,205 @@
+\section{Rank flattening of the function prior}
+\label{rank:section}
+
+All logarithms in this section are natural. Let $\mathcal H$ be a finite
+set of distinct Boolean functions, let $M=|\mathcal H|\ge1$, and let
+$\pi$ be a strictly positive prior on $\mathcal H$. For $f\in\mathcal H$,
+define its strict and inclusive ranks by
+\[
+ a_f=|\{g:\pi(g)>\pi(f)\}|,\qquad
+ b_f=|\{g:\pi(g)\ge\pi(f)\}|.
+\]
+Define the \emph{rank-flattened prior}
+\begin{equation}\label{rank:prior}
+ Z_M=\frac{M}{M+1},\qquad
+ q_\pi(f)=\frac{1}{Z_M(a_f+1)(b_f+1)}.
+\end{equation}
+This transformation is performed once, before observing any labels.
+Afterwards, $q_\pi$ is updated by ordinary conditioning on consistency.
+
+\begin{proposition}[Normalization, preferences, and target cost]
+\label{rank:normalization}
+The law $q_\pi$ is a probability distribution and preserves every strict
+ordering and every tie of $\pi$:
+\[
+ \pi(f)>\pi(g)\iff q_\pi(f)>q_\pi(g),\qquad
+ \pi(f)=\pi(g)\iff q_\pi(f)=q_\pi(g).
+\]
+In particular, the two consistency posteriors have the same sets of
+maximum-a-posteriori functions on every history. Writing $R_f=b_f$,
+\begin{equation}\label{rank:cost}
+ \log\frac1{q_\pi(f)}
+ =\log Z_M+\log(a_f+1)+\log(b_f+1)
+ \le\log\bigl(R_f(R_f+1)\bigr)
+ \le2\log(R_f+1).
+\end{equation}
+\end{proposition}
+
+\begin{proof}
+Order functions by decreasing $\pi$-mass. A tie block occupies consecutive
+ranks $a+1,\ldots,b$. Its mean weight under $w_r=1/[r(r+1)]$ is
+\[
+ \frac1{b-a}\sum_{r=a+1}^b\frac1{r(r+1)}
+ =\frac1{b-a}\left(\frac1{a+1}-\frac1{b+1}\right)
+ =\frac1{(a+1)(b+1)}.
+\]
+Thus the unnormalized masses in~\eqref{rank:prior} sum to
+$\sum_{r=1}^M w_r=Z_M$. Since $w_r$ is strictly decreasing, its averages
+over successive disjoint rank blocks strictly decrease. This proves the
+ordering and tie assertions. Conditioning multiplies all surviving
+masses by a common positive constant, so it preserves the maximizing
+set. Finally $a_f+1\le b_f=R_f$ and $Z_M<1$ give~\eqref{rank:cost}.
+\end{proof}
+
+\begin{theorem}[Arbitrary-order prediction after rank flattening]
+\label{rank:online}
+Fix a target $f_*\in\mathcal H$. At round $t$, an input $x_t$ is chosen,
+the learner predicts, and the label $f_*(x_t)$ is revealed. The inputs may
+depend on the whole preceding history, including past randomized
+predictions, but are chosen before the learner's fresh randomization at
+the current round. Let $q_t$ be the consistency posterior of the fixed
+prior $q_\pi$, and set
+\[
+ p_t=q_t\{g:g(x_t)=f_*(x_t)\},\qquad
+ B_* =\log\frac1{q_\pi(f_*)}.
+\]
+Uniformly over such input-selection rules, including infinite streams,
+the following hold.
+\begin{enumerate}
+\item Fresh posterior sampling has expected total mistakes at most
+$B_*$, which is bounded by~\eqref{rank:cost}.
+\item Posterior majority, with any tie rule, has at most $B_*/\log2$
+mistakes.
+\item The number of rounds with $p_t\le2/3$ is at most
+$B_*/\log(3/2)$.
+\end{enumerate}
+For fresh posterior sampling, with probability at least $1-\delta$, the
+total number of mistakes is also at most
+$(e-1)B_*+\log(1/\delta)$, for every $0<\delta<1$.
+\end{theorem}
+
+\begin{proof}
+Let $V_t$ be the functions consistent with the first $t-1$ labels.
+Because $f_*\in V_t$, all posterior denominators are positive. On every
+realized path and at every finite horizon $T$,
+\begin{equation}\label{rank:potential}
+ \prod_{t=1}^T p_t=q_\pi(V_{T+1})\ge q_\pi(f_*),
+ \qquad \sum_{t=1}^T-\log p_t\le B_*.
+\end{equation}
+The conditional mistake probability of a fresh posterior draw is
+$u_t=1-p_t\le-\log p_t$. Taking expectations and then applying monotone
+convergence proves the first assertion, including the infinite horizon.
+A majority mistake implies $p_t\le1/2$, and a round with $p_t\le2/3$
+contributes at least $\log(3/2)$ to~\eqref{rank:potential}. This proves
+the next two assertions pathwise.
+
+For the last assertion, let $I_t$ be the sampled mistake indicator.
+Conditionally on the history and $x_t$,
+\[
+ \mathbb E[e^{I_t}]=1+(e-1)u_t\le e^{(e-1)u_t}.
+\]
+Consequently $\exp(\sum_{t\le T}I_t-(e-1)\sum_{t\le T}u_t)$ is a
+nonnegative supermartingale starting at one. Since
+$\sum_{t\le T}u_t\le B_*$ pathwise, Markov's inequality gives the stated
+bound at each finite horizon. Letting the horizon increase proves the
+same bound for the total number of mistakes.
+\end{proof}
+
+The theorem concerns posterior sampling and posterior majority, not
+posterior MAP. In fact Proposition~\ref{rank:normalization} shows that
+rank flattening leaves the MAP prediction rule unchanged if its tie
+rule is unchanged. Nor does the theorem concern repeatedly rank
+flattening a changing posterior: its proof uses one fixed predata prior.
+
+\begin{corollary}[Arbitrary-order neural learning with preserved function rankings]
+\label{rank:neural}
+Use any Gaussian regime and eligible width in
+Lemma~\ref{lem:neural-inputs}, and transform its actual induced function
+prior by~\eqref{rank:prior}. With the rank budget $H_{1/2}$ from
+Corollary~\ref{cor:neural-rank}, the online guarantees of
+Theorem~\ref{rank:online} hold with
+\[
+ B_*\le 2H_{1/2}+\log2.
+\]
+This is polynomial in $d,C$ at fixed depth, and fixed $\gamma>1$ where
+applicable, independently of learner width. It includes the positive
+mean-field variance. In the strong-prior case it holds for every
+sufficiently small positive variance at each fixed width, with the
+variance threshold independent of the stream and its length.
+\end{corollary}
+\begin{proof}
+Corollary~\ref{cor:neural-rank} gives $\log R_f\le H_{1/2}$.
+Use~\eqref{rank:cost} and
+$\log[R(R+1)]\le2\log R+\log2$, then apply
+Theorem~\ref{rank:online}. Neither the construction of the transformed
+prior nor its posterior updates require knowing the target or its
+complexity. That complexity is used only to prove the bound.
+\end{proof}
+
+An alternative ranks directly by increasing minimum energy
+$\kappa_N(g)$, treating equal energies as ties. Its inclusive target rank
+is at most the energy-sublevel count from Lemma~\ref{lem:neural-inputs}.
+The same construction then gives an arbitrary-order budget
+$2F_L(d,B_L(d,C))+\log2$ at every $N\ge C$, without a variance parameter.
+It preserves energy ordering, rather than exact finite-variance Gaussian
+probability ordering. No limiting equality of prefactors is assumed.
+
+\paragraph{Realization as a parameter prior.}
+Let $\mu^U$ be the original parameter law conditioned on the global
+margin event, and let $g(w)\in\mathcal H$ be its induced function, so
+$\mu^U\{w:g(w)=f\}=\pi(f)$. The probability law
+\begin{equation}\label{rank:lift}
+ \frac{d\nu}{d\mu^U}(w)=\frac{q_\pi(g(w))}{\pi(g(w))}
+\end{equation}
+has induced function law $q_\pi$. Indeed, its integral over the event
+$\{g(w)=f\}$ is $q_\pi(f)$. It preserves the conditional distribution
+of parameters within each function event. This is a global reweighting
+of function masses; it generally destroys Gaussianity and coordinate
+independence. It is neither ordinary Gaussian temperature adjustment nor
+an efficient sampling claim. Raising a function mass to a power and
+raising a parameter density to that power are different operations,
+since integration and taking powers do not generally commute.
+
+\paragraph{An alternative that samples near the minimum energy.}
+Exact real-valued energies need not be tied for a related construction
+to work. Let $E:\mathcal H\to[0,\infty)$ and
+$H_j=\{g:E(g)\le2^j\}$ for $j\ge0$. On each history choose the least $j$
+for which $H_j$ has a consistent function, and sample uniformly over its
+distinct consistent functions. Retain every past label when the budget
+increases. If the least surviving energy is $m\ge1$, every sampled energy
+is at most $2m$; for $m<1$, it is at most one.
+
+\begin{corollary}[Geometric energy bands]\label{rank:bands}
+For the preceding learner, put
+$J_* =\lceil\log_2\max\{1,E(f_*)\}\rceil$. Then
+\[
+ \mathbb E[\text{total mistakes}]
+ \le J_*+\sum_{j=0}^{J_*}\log\max\{1,|H_j|\}.
+\]
+In particular, if $\log|H_j|\le A2^{jp}$ whenever $H_j$ is nonempty,
+with $A>0$ and $p>0$, this bound is at most
+\[
+ J_*+A\frac{2^{p(J_*+1)}-1}{2^p-1},
+\]
+and hence polynomial in the target energy for fixed $p$. The neural energy
+and entropy bounds of Lemma~\ref{lem:neural-inputs} give a
+width-independent polynomial at fixed depth.
+\end{corollary}
+
+\begin{proof}
+The selected budget never decreases and never exceeds $J_*$. During a
+fixed-budget phase, let $n_t$ be its number of consistent functions.
+Except on a round that empties the phase, the error probability obeys
+$1-n_{t+1}/n_t\le\log(n_t/n_{t+1})$, so these costs telescope to at most
+$\log|H_j|$. Each emptied phase costs at most one additional mistake;
+there are at most $J_*$ such phases because $H_{J_*}$ contains the target.
+Sum the bounds and, for an infinite stream, use monotone convergence.
+\end{proof}
+
+A fixed Bayesian alternative mixes the uniform laws on nonempty $H_j$
+with weights proportional to $2^{-j-1}$. Its target negative log-mass is
+at most $\log|H_{J_*}|+(J_*+1)\log2$, so the potential
+argument~\eqref{rank:potential} immediately gives the corresponding online
+bounds. Both energy constructions introduce ties between different
+energies in one geometric bin; rank flattening preserves every original
+strict probability preference.
