@@ -1,0 +1,542 @@
+\section{A multilevel code for two-step reconstructions}
+\label{app:mlmc-code}
+
+This appendix gives another finite class of representatives for the
+original robustness support. Its members are finite programs using
+arithmetic, tanh, Euclidean projection, and a fixed finite median rule.
+They need not themselves be robust networks. All randomness below is
+used only to prove the existence of a representative in a fixed finite
+class; the representative is deterministic after its coefficients and
+finite computation graph have been recorded.
+
+\begin{theorem}[Multilevel finite code]
+\label{thm:mlmc-code}
+There is a universal constant $A$ with the following property. Let
+$d,H\ge1$, $K>0$, and $0<r\le1/6$, and put
+\[
+ E=K+H+1,\qquad
+ T_0=d+\log(2H+2),\qquad
+ \Lambda=\log(2+d+E+r^{-1}).
+\]
+There is a finite class $\mathcal G_{K,r,d,H}$, independent of learner
+width, such that
+\begin{equation}\label{eq:mlmc-budget}
+ \log|\mathcal G_{K,r,d,H}|
+ \le A T_0\left[\frac{E^3}{r^3}
+                  +\frac{(d+1)E^2}{r^2}\right]\Lambda.
+\end{equation}
+For every width $N$ and every network $w$ with $\kappa_N(w)\le K$,
+there is $g\in\mathcal G_{K,r,d,H}$ whose output is the output of the
+original network with input-dependent disturbances of stacked norm at
+most $r$. Consequently, if $w\in\mathcal R_{N,c}$ and
+$r\le c/\sqrt{1+HE_v(w)}$, then
+\[
+ \sup_{x\in\{-1,1\}^d}|T(z_w(x))-T(g(x))|\le1/16.
+\]
+\end{theorem}
+
+We prove the theorem in three steps. First we construct an economical
+code for a map containing two activations. We then embed such maps in
+a virtual computation of the original network. Finally we choose
+spectral cutoffs and error allocations jointly across layers.
+
+\subsection{A two-activation sampling lemma}
+
+Consider the vector-valued map
+\begin{equation}\label{eq:mlmc-map}
+ F(z,z')=\sum_{i=1}^N w_i\tanh\left(a_i\cdot z+
+                \sum_{j=1}^N R_{ij}\tanh(c_j\cdot z')\right),
+ \qquad w_i\in\R^{q_o},
+\end{equation}
+where $a_i\in\R^{q_a}$ and $c_j\in\R^{q_c}$. Assume
+\begin{equation}\label{eq:mlmc-map-energy}
+ N\sum_i\norm{w_i}_2^2\le k_o,\quad
+ \norm{R}_F^2\le k_R,\quad
+ \frac1N\sum_i\norm{a_i}_2^2\le k_a,\quad
+ \frac1N\sum_j\norm{c_j}_2^2\le k_c.
+\end{equation}
+Write
+\[
+ A_i=\sum_j|R_{ij}|,\qquad M_i=\max\{1,A_i\},\qquad
+ B=\sum_i\norm{w_i}_2,
+\]
+\begin{equation}\label{eq:mlmc-work-resources}
+ D=\sum_i\norm{w_i}_2M_i,\qquad
+ Z=\sum_i\frac{\norm{w_i}_2}{M_i}.
+\end{equation}
+Cauchy--Schwarz gives
+\begin{equation}\label{eq:mlmc-work-energy}
+ B\le\sqrt{k_o},\qquad B^2\le ZD,\qquad
+ D^2\le2k_o(1+k_R).
+\end{equation}
+Indeed, $\sum_i A_i^2\le N\norm{R}_F^2$, so
+$D\le\sqrt{k_o}(1+\sqrt{k_R})$.
+
+\begin{lemma}[Antithetic map sampling]
+\label{lem:mlmc-map-sampling}
+Fix $\tau>0$ and a finite collection of evaluation arguments. There
+is a random finite program approximating \eqref{eq:mlmc-map} with the
+following properties. At each fixed argument, its error is at most
+$9\tau$ except on an event of probability at most $e^{-c_1g}$, where
+$g$ is the odd number of independent median groups. Its expected number
+of stored scalar coefficients is at most
+\begin{equation}\label{eq:mlmc-map-work}
+ c_2g(1+q_a+q_c+q_o)
+                 \frac{k_o(1+k_R)}{\tau^2}.
+\end{equation}
+After an event of constant probability bounding total coefficient work,
+the program can be rounded to a fixed grid with one further error at
+most a constant times $\tau$. All parameter ranges and the inverse
+grid mesh are polynomial in the energy and dimension upper bounds,
+the evaluation-argument norm bounds, $\tau^{-1}$, and the work bound.
+No original-width neuron index is needed in the stored program.
+
+The probability assertion also holds conditionally when the evaluation
+arguments have been produced by earlier independent random programs.
+\end{lemma}
+
+\begin{proof}
+We give the sampling, coefficient, and rounding details. Deterministic
+feature pruning will first ensure finite coefficient ranges. Removing
+roots with $\norm{a_i}_2>B_a$ changes the map by at most
+\[
+ \sum_{\norm{a_i}_2>B_a}\norm{w_i}_2
+       \le\sqrt{k_ok_a}/B_a.
+\]
+Deleting columns $j$ with $\norm{c_j}_2>B_c$ from $R$ changes it by at
+most
+\begin{align*}
+ \sum_i\norm{w_i}_2\sum_{j:\norm{c_j}_2>B_c}|R_{ij}|
+ &\le\sqrt{k_o/N}\,
+       \sqrt{\#\{j:\norm{c_j}_2>B_c\}\,k_R}\\
+ &\le\sqrt{k_ok_Rk_c}/B_c.
+\end{align*}
+Choose the two cutoffs to make these errors at most $\tau$ each;
+zero numerators require no cutoff. All old energy upper bounds remain
+valid after pruning. Recompute $A_i,M_i,B,D,Z$ for the pruned map.
+If $B\le\tau$, the zero map already has the required accuracy, so
+assume $B>\tau$.
+
+For $A_i>0$, sample $J$ with probability $|R_{iJ}|/A_i$ and put
+\[
+ X_i=A_i\operatorname{sgn}(R_{iJ})\tanh(c_J\cdot z').
+\]
+Then $|X_i|\le A_i$ and
+$\E X_i=\mu_i:=\sum_jR_{ij}\tanh(c_j\cdot z')$.
+For $A_i=0$, use $X_i=0$. Let
+\[
+ n_{i,0}=\lceil M_i^2\rceil,\qquad n_{i,l}=2^l n_{i,0}.
+\]
+At level zero define
+$\Delta_{i,0}=\tanh(a_i\cdot z+\overline X_{i,n_{i,0}})$.
+At level $l\ge1$, split $n_{i,l}$ independent observations into two
+equal halves with averages $Y,Y'$, and define
+\begin{equation}\label{eq:mlmc-antithetic}
+ \Delta_{i,l}=
+ \tanh\left(a_i\cdot z+\frac{Y+Y'}2\right)
+ -\frac12\tanh(a_i\cdot z+Y)
+ -\frac12\tanh(a_i\cdot z+Y').
+\end{equation}
+All three evaluations reuse the same child activations. The bounded
+second derivative of tanh and the fourth moment of a bounded sample
+average imply, with universal constants,
+\begin{equation}\label{eq:mlmc-level-estimates}
+ \E|\Delta_{i,l}|^2\le c_3 2^{-2l},\qquad
+ \left|\E\tanh(a_i\cdot z+\overline X_{i,n_{i,l}})
+             -\tanh(a_i\cdot z+\mu_i)\right|
+       \le c_4 2^{-l}.
+\end{equation}
+For completeness, Taylor's theorem bounds the absolute value in
+\eqref{eq:mlmc-antithetic} by
+$\norm{\tanh''}_\infty|Y-Y'|^2/8$.
+The fourth moment of a centered average of $m$ independent variables
+bounded by $2A_i$ is at most a universal constant times $A_i^4/m^2$.
+Since $n_{i,0}\ge A_i^2$, this proves the first estimate. The second
+follows from the same Taylor bound and the variance of the average.
+The estimates are uniform in both evaluation arguments.
+
+Choose a finite last level $l_*$ and let
+\[
+ p_i=\frac{\norm{w_i}_2}{M_iZ},\qquad
+ \pi_l=\frac{2^{-3l/2}}{\sum_{j=0}^{l_*}2^{-3j/2}}.
+\]
+Zero-weight roots are omitted. Independently choose a root and level,
+and return the vector $Y=w_i\Delta_{i,l}/(p_i\pi_l)$.
+The antithetic expectations telescope. Therefore, if $F_*=\E Y$,
+\begin{equation}\label{eq:mlmc-root-estimates}
+ \norm{F_*-F}_2\le c_4B2^{-l_*},\qquad
+ \E\norm{Y}_2^2\le c_5ZD,
+ \qquad \E\operatorname{work}(Y)\le c_6D/Z.
+\end{equation}
+Here scalar work counts child activations, with a fixed constant for
+each root. The identities proving the last two estimates are
+\[
+ \sum_i\frac{\norm{w_i}_2^2}{p_i}=ZD,\quad
+ \sum_i p_iM_i^2=D/Z,\quad
+ \sum_l2^{-2l}/\pi_l=O(1),\quad
+ \sum_l\pi_l2^l=O(1).
+\]
+Choose $2^{l_*}\ge c_4\sqrt{k_o}/\tau$, or a larger common polynomial
+upper bound, making the bias at most $\tau$.
+
+Average $m=\lceil c_7ZD/\tau^2\rceil$ independent copies of $Y$ in
+each group. For sufficiently large $c_7$, Chebyshev's inequality makes
+the probability of vector error exceeding $\tau$ about $F_*$ at most
+$1/64$. The expected work of a group is
+\[
+ O(D^2/\tau^2+D/Z)=O(D^2/\tau^2),
+\]
+because $B>\tau$ and $B^2\le ZD$ imply
+$D/Z\le D^2/B^2<D^2/\tau^2$.
+
+Use $g$ independent groups and the following fixed median rule: choose
+the first group output with at least $(g+1)/2$ group outputs within
+distance $4\tau$, and return zero if there is no such group. Except
+with probability $e^{-c_1g}$, a strict majority of the groups lie
+within $\tau$ of $F_*$. Every such group qualifies, and every selected
+group lies within $5\tau$ of $F_*$. If each group output is subsequently
+changed by at most $\tau$, the same rule returns a point within
+$6\tau$ of $F_*$. This follows because the qualifying ball must
+intersect the strict majority of good groups. Thus no Lipschitz property
+of the median operation is needed. Combining the two pruning errors,
+finite-level bias, and the rounded median gives error at most $9\tau$.
+
+Multiplying scalar work by $1+q_a+q_c+q_o$ bounds the number of recorded
+scalar coefficients: record each selected root feature, each child
+feature, its signed inner coefficient, and the vector coefficient of
+each term in a group average. This proves \eqref{eq:mlmc-map-work}.
+For several maps, apply Markov's inequality to their \emph{total
+dimension-weighted coefficient work}, rather than separately to their
+unweighted child counts. On an event of constant probability, this
+total is at most its chosen common deterministic bound $W$. Every
+selected root then has $M_i^2\le n_{i,l}\le W$.
+
+The vector coefficient of an averaged term is bounded by
+\[
+ \norm{\frac{w_i}{mp_i\pi_l}}_2
+ \le\frac{\tau^2M_i}{c_7D\pi_l}
+ \le\frac{\tau\sqrt W}{c_7\pi_l},
+\]
+using $D\ge B>\tau$. Inner coefficients have magnitude at most
+$A_i\le\sqrt W$. Feature pruning bounded the remaining feature
+coefficients, and the finite-level inverse probabilities are polynomial
+in the common resources. Thus every recorded coefficient lies in a
+fixed polynomially bounded interval.
+
+Suppose all evaluation arguments have norm at most a fixed polynomial
+bound. There are at most $W$ stored coefficients and only two nested
+activation levels. The 1-Lipschitz property of tanh shows that rounding
+all coefficients to a sufficiently fine reciprocal-polynomial mesh
+changes every group output by at most $\tau$, uniformly on these
+arguments. The preceding median argument applies after this rounding.
+The forest topology, its group assignment, and its half-list divisions
+have description length $O(W\log(2+W))$. Only numeric feature vectors
+are stored, so no original-width neuron label appears. Finally, all
+stochastic estimates were uniform at a fixed argument. Conditioning on
+arguments produced by independent preceding programs therefore preserves
+them, and a union bound applies to any finite collection of arguments.
+\end{proof}
+
+\subsection{Realization inside the original robustness ball}
+
+Write $|h|_N=\norm{h}_2/\sqrt N$ and let $k_s=\norm{W^s}_F^2$ for
+$2\le s\le H$, with $k_{H+1}=E_v(w)$. Split each internal matrix by
+singular value truncation at a threshold $a_s\in(0,1)$:
+\[
+ W^s=A_s+R_s,\qquad A_s=U_s\Sigma_sV_s^\top,\qquad
+ \norm{R_s}_{\rm op}\le a_s,\qquad
+ q_s=\operatorname{rank}A_s\le k_s/a_s^2.
+\]
+For drive coordinates $t_s\in\R^{q_s}$ use the original-space vector
+$u_s=\sqrt N U_st_s$. An exact low-rank drive of a tanh state $h$ is
+$t_s=\Sigma_sV_s^\top h/\sqrt N$, of norm at most $\sqrt{k_s}$.
+
+The first drive is the one-activation map
+$\Sigma_2V_2^\top h^1(x)/\sqrt N$. The next drive uses $h^1(x)$ as its
+left boundary. All later drive maps have the two-activation form
+\begin{equation}\label{eq:mlmc-drive-map}
+ \frac1{\sqrt N}\Sigma_sV_s^\top
+ \tanh\left(\sqrt N U_{s-1}t_{s-1}
+       +R_{s-1}\tanh(\sqrt N U_{s-2}t_{s-2})\right).
+\end{equation}
+In Lemma~\ref{lem:mlmc-map-sampling}, the output-energy bound is $k_s$,
+the residual-energy bound is $k_{s-1}$, and the root and child feature
+second moments are $q_{s-1}$ and $q_{s-2}$. For an early map using the
+original first state, its child features are rows of $W^1$, whose
+normalized squared norm sum is at most $K/d$. The final readout has
+the same form with scalar output and output-energy bound $k_{H+1}$.
+
+Construct and round each map while advancing the computation. After
+each drive map, project its output onto the ball of radius
+$\sqrt{\max(K,H,1)}$. This does not increase error about its exact
+target drive. Let $\widehat t_s$ be the resulting coordinates and
+define full virtual states by
+\[
+ \widehat h^1=h^1,\qquad
+ \widehat h^2=\tanh(\sqrt N U_2\widehat t_2+R_2h^1),
+\]
+\begin{equation}\label{eq:mlmc-virtual-state}
+ \widehat h^s=\tanh\left(\sqrt N U_s\widehat t_s+
+                  R_s\tanh(\sqrt N U_{s-1}\widehat t_{s-1})\right),
+ \qquad s\ge3.
+\end{equation}
+These full states are used only to verify the disturbance bound; the
+stored program advances the drive coordinates through its finite map
+codes and evaluates the final readout code.
+
+Suppose the drive-map errors are at most $\delta_s$, and the final
+readout-map error is at most $\delta_{H+1}$. Their exact targets are
+the low-rank drives of the already rounded preceding virtual states.
+For $s\ge3$, comparison with the original recurrence gives
+\[
+ |\widehat h^s-\tanh(W^s\widehat h^{s-1})|_N
+ \le\delta_s+a_sa_{s-1}.
+\]
+Indeed, the low-rank preactivation discrepancy has normalized norm
+at most $\delta_s$, while the discarded older residual passes through
+$R_{s-1}$ and $R_s$, with a 1-Lipschitz tanh between. Its left boundary
+is a tanh state of normalized norm at most one. At stage two the bound
+is just $\delta_2$; the first-state disturbance is zero. Consequently
+the original-network disturbances realizing the virtual output satisfy
+\begin{equation}\label{eq:mlmc-disturbance}
+ \norm\eta_*
+ \le\left(\sum_{s=2}^{H+1}\delta_s^2\right)^{1/2}
+   +\left(\sum_{s=3}^H a_s^2a_{s-1}^2\right)^{1/2}.
+\end{equation}
+For $H=1$, only the one-activation readout map is needed; for $H=2$,
+the exact first-state boundary is retained throughout.
+
+Every stage uses fresh map samples independent of earlier map programs.
+Lemma~\ref{lem:mlmc-map-sampling} therefore applies conditionally at
+the already rounded prefix. Choose $g=O(T_0)$ so a union bound over
+all $2^d$ inputs and all maps fails with probability at most $1/100$.
+The coefficient-work event can be chosen to fail with probability at
+most $1/100$, so the two events intersect. All rounding is already
+included in the map errors in \eqref{eq:mlmc-disturbance}.
+
+\subsection{Adaptive cutoffs and a common finite class}
+
+Put $e_s=1+k_s$ for the internal blocks and the readout. Their sum is
+at most $E=K+H+1$. For a sufficiently small universal constant $c_0$,
+choose
+\begin{equation}\label{eq:mlmc-cutoffs}
+ a_s^2=\frac{c_0r\sqrt{e_s}}{\sqrt E},\qquad 2\le s\le H.
+\end{equation}
+Then $a_s<1$ and
+\[
+ \sum_{s=3}^H a_s^2a_{s-1}^2
+ =\frac{c_0^2r^2}{E}\sum_{s=3}^H\sqrt{e_se_{s-1}}
+ \le c_0^2r^2.
+\]
+With $\alpha=\sqrt E/(c_0r)$, the retained ranks satisfy
+$q_s\le\alpha\sqrt{e_s}$.
+
+Ignoring fixed constants, define each map's coefficient resource as
+\begin{equation}\label{eq:mlmc-profile-resource}
+ B_s=(1+q_{s-2}+q_{s-1}+q_s)k_s(1+k_{s-1}).
+\end{equation}
+At the first two maps, replace the missing input dimension by $d+1$
+and omit a nonexistent residual factor. At the readout, replace the
+output dimension by one and the output energy by $k_{H+1}$. These
+conventions give exactly the resources in
+Lemma~\ref{lem:mlmc-map-sampling}. Apart from the first two original-
+input contributions, they are bounded by a universal constant times
+\[
+ \alpha e_se_{s-1}
+    (\sqrt{e_{s-2}}+\sqrt{e_{s-1}}+\sqrt{e_s}).
+\]
+At boundary indices in this estimate, set a missing $e_j$ equal to one;
+the finitely many auxiliary indices change the following bounds only
+by universal constants.
+For each of the three indicated shifts $j$,
+\[
+ \sum_s e_s^{1/2}e_{s-1}^{1/2}e_j^{1/4}
+ \le(\max_j e_j)^{1/4}\sum_s\sqrt{e_se_{s-1}}
+ \le c_8' E^{5/4}.
+\]
+Using $\sqrt{u+v+w}\le\sqrt u+\sqrt v+\sqrt w$, and treating the
+two original-input terms separately, gives
+\begin{equation}\label{eq:mlmc-profile-sum}
+ \left(\sum_s\sqrt{\max(1,B_s)}\right)^2
+ \le c_8\left[\frac{E^3}{r}+(d+1)E^2\right].
+\end{equation}
+Inserting the ones increases the unsquared sum by at most $H+1$,
+so its additional squared contribution is $O(H^2)$, already absorbed
+by the right side. Each original-input term contributes at most a constant
+times $\sqrt{d+1}\,E$ before squaring.
+
+Let $S_0$ be the square root of the right side of
+\eqref{eq:mlmc-profile-sum}, enlarged by a fixed constant. Set
+\[
+ \delta_s^2=\frac{r^2}{64S_0}\sqrt{\max(1,B_s)},
+\]
+and round each $\delta_s$ downward to a power-of-two multiple of a fixed
+reciprocal-polynomial base, losing at most a factor two. Thus
+$\sum_s\delta_s^2\le r^2/64$, every nonzero tolerance has a common
+reciprocal-polynomial lower bound, and
+\begin{equation}\label{eq:mlmc-total-work}
+ \sum_s B_s\delta_s^{-2}
+ \le c_9\left[\frac{E^3}{r^3}
+                    +\frac{(d+1)E^2}{r^2}\right].
+\end{equation}
+Apply the sampling lemma with $\tau_s$ a sufficiently small fixed
+multiple of $\delta_s$. Equations \eqref{eq:mlmc-disturbance} and
+\eqref{eq:mlmc-cutoffs} put the complete virtual computation inside
+the radius-$r$ disturbance ball.
+
+To make the code common to all widths and all retained networks, record
+the integer rank profile, the dyadic tolerance choices, and the finite
+map forests. Every rank is at most $E/(c_0r)$. The bounds
+\eqref{eq:mlmc-total-work} and $g=O(T_0)$ give a common polynomial bound
+$W$ on total coefficient work on the chosen Markov event. Feature
+cutoffs, coefficient magnitudes, inverse grid mesh, and finite last
+levels are all polynomial in $2+d+E+r^{-1}$, with universal degrees:
+this follows from the common rank bound, the common lower tolerance
+bound, and the coefficient estimates in the sampling lemma. Fix those
+ranges and that grid before defining the class of all recorded programs.
+The possible topology, ranks, and tolerance choices cost
+$O(W\Lambda+H\Lambda)$ nats; the coefficient grid costs $O(W\Lambda)$.
+Since $H\le E$ and $r\le1/6$, the former additional term is absorbed.
+This proves \eqref{eq:mlmc-budget}. The class contains no learner-width labels,
+so the same class works for every $N$. This completes the proof of
+Theorem~\ref{thm:mlmc-code}.
+
+\subsection{The original posterior at the stronger scales}
+\label{sec:mlmc-posterior}
+
+The new code changes neither the prior nor the conditioning event.
+The following statement records the exact scale hypotheses used with it.
+Use the product-cylinder cost
+$D_*=D_*^{\rm prod}$ from \eqref{eq:product-cylinder-cost}, and
+write
+\[
+ P_N=N(d+1)+(L-2)N^2+N.
+\]
+For the chosen energy cutoff $K$, retain the radius
+\[
+ r=\min\{1/6,c/\sqrt{1+HK}\}.
+\]
+Let $J_{\rm ML}$ be the upper bound in \eqref{eq:mlmc-budget}, and let
+$J$ be the earlier dense-code budget in \eqref{eq:budget}, with this same
+$K$ and $r$. Put
+\[
+ J_{\rm best}=\min\{J,J_{\rm ML}\}.
+\]
+This minimum is legitimate without a union penalty: choose, from the
+known resource bounds, whichever of the two common finite classes has
+the smaller stated cardinality bound.
+
+\begin{theorem}[A mixed width--depth bound at the original stronger scales]
+\label{thm:mlmc-posterior}
+Fix $0<\varepsilon,\delta<1$. Suppose the target has the Boolean
+implementation specified in the paper. The sample condition
+\[
+ n\ge\frac2\varepsilon
+       \left[J_{\rm best}+\log(1/\delta)\right]
+\]
+implies, with sample probability at least $1-\delta$,
+$R(Q_{S,N,t,c})\le\varepsilon$ simultaneously at every indicated width
+and scale in either of the following regimes:
+\begin{enumerate}
+\item Set $K=8D_*$. Allow every $N\ge C$ and every positive scale with
+\[
+ t^2\le\min\left\{1,
+ \frac{ND_*}{(P_N/2)\log2+\log(2/\varepsilon)}\right\}.
+\]
+\item Set
+\[
+ K=8D_*+4(d+L)+4\log(2/\varepsilon).
+\]
+Allow every $N\ge C$ and $0<t\le N^{-1/2}$, in particular every
+power-law scale with $\gamma\ge2$.
+\end{enumerate}
+In the first regime, at each fixed width the same sample event gives
+$\limsup_{t\downarrow0}R(Q_{S,N,t,c})\le\varepsilon$.
+At fixed $d,c,\varepsilon,\delta$, a sufficient sample count is
+\[
+ \widetilde O\!\left(
+      \min\{C^4L^7,C^{9/2}L^6\}\right).
+\]
+\end{theorem}
+
+\begin{proof}
+Every robust network with $\kappa_N(w)\le K$ has calibrated radius at
+least $r$. Theorem~\ref{thm:mlmc-code}, or the earlier dense code,
+therefore supplies a representative with clipped-score error at most
+$1/16$ at every Boolean input. The representative need not be a robust
+network; only its membership in a common finite class is used next.
+
+Use the ramp loss that is one at signed clipped scores at most $1/3$
+and zero at scores at least $5/12$. Every representative of a fitting
+network has zero empirical ramp loss, because its signed clipped
+training score is at least $7/16$. At every test-margin failure of the
+original network, its representative has signed clipped score at most
+$5/16$, so the ramp loss is one. A union bound over the chosen finite
+class shows that, on a single sample event of probability at least
+$1-\delta$, every retained fitting network has test-margin error at
+most $\varepsilon/2$. This sample event is independent of learner width
+and Gaussian scale.
+
+The product-cylinder lower bound and the Gaussian exponential moment give
+the same tail as \eqref{eq:tail}, with the current valid cylinder cost:
+\[
+ Q_{S,N,t,c}\{\kappa_N>K\}
+ \le\exp\!\left[-\frac{NK}{4t^2}
+       +\frac{P_N}{2}\log2+\frac{ND_*}{t^2}\right].
+\]
+In the first regime the displayed scale inequality makes this at most
+$\varepsilon/2$. In the second regime use
+$t^2P_N/N\le d+L$ and the stated value of $K$, exactly as in the proof
+of Theorem~\ref{thm:main}. Adding the discarded mass proves the risk
+claim. At fixed $N$, the first scale inequality holds for all sufficiently
+small positive $t$, proving the stated strong-prior conclusion without
+identifying a separately defined zero-temperature posterior.
+
+Finally, the product-cylinder calculation gives
+$K=\widetilde O(CL)$ and $r^{-2}=\widetilde O(CL^2)$.
+The budget \eqref{eq:mlmc-budget}, with $K+H+1=\widetilde O(CL)$,
+is therefore $\widetilde O(C^{9/2}L^6)$ at the fixed resources stated
+in the theorem. Taking the better of this and the existing
+$\widetilde O(C^4L^7)$ code gives the final display.
+\end{proof}
+
+\begin{corollary}[Explicit logarithms in the mixed-power budget]
+\label{cor:mlmc-powers}
+Fix $d,c,\varepsilon,\delta$, and put
+$F_0=1+\log^2(2+C)$ and $G=\log(2+CL)$.
+In either regime of Theorem~\ref{thm:mlmc-posterior}, a sufficient
+sample count is
+\[
+ O\!\left(G\min\left\{
+ C^4L^7F_0^4\log^2(2+L),\;
+ C^{9/2}L^6F_0^{9/2}\log(2+L)
+ \right\}\right).
+\]
+In particular, at fixed teacher width the new branch is
+$O(L^6\log^2(2+L))$.
+\end{corollary}
+
+\begin{proof}
+The product-cylinder cost satisfies $D_*^{\rm prod}=O(CLF_0)$.
+For either stated energy cutoff,
+\[
+ E=O(CLF_0),\qquad r^{-2}=O(CL^2F_0),\qquad
+ T_0=O(\log(2+L)),\qquad \Lambda=O(G).
+\]
+Consequently the leading term in \eqref{eq:mlmc-budget} is
+\[
+ O\!\left(C^{9/2}L^6F_0^{9/2}\log(2+L)G\right).
+\]
+The term $(d+1)E^2r^{-2}$ has order $O(C^3L^4F_0^3)$ and is smaller
+at the fixed ancillary resources. The dense-code calculation with the
+same product-cylinder substitution gives
+$O(C^4L^7F_0^4\log^2(2+L)G)$, as recorded after
+Corollary~\ref{cor:all-scales-product-cylinder}. Taking the better code
+and applying Theorem~\ref{thm:mlmc-posterior} proves the result.
+\end{proof}
+
+The second branch improves the stated depth dependence at fixed teacher
+width, and is smaller at the level of the displayed powers when
+$C<L^2$. It does not establish a better uniform quartic-width exponent.
+No bounded spectral product, column coherence, additional output-margin
+condition, or modified robustness support is used.

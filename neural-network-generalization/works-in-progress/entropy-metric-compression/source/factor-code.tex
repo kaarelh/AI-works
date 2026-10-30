@@ -1,0 +1,595 @@
+\section{Bounded-density compression with factored Gaussian reconstruction}
+\label{app:factor-code}
+
+The all-scale code in Appendix~\ref{app:all-scales-quantization} can be
+sharpened in two further ways. First, the actual conditioned posterior has
+a bounded density relative to the raw Gaussian. Propagating this stronger
+property through the virtual computation removes the factor $1/\eta$
+from the active-direction cutoff. This argument is specific to bounded
+density; it does not upgrade the compression theorem for arbitrary laws
+having only a relative-entropy bound. Second, the active part of each
+reconstructed matrix already has small rank, and its fresh Gaussian part
+can be replaced by a small-rank Gaussian factorization. Coding the factors
+then gives a sufficient sample order $\widetilde O(C^5L^{12})$ at every
+$0<t\le1$. The support remains exactly $\mathcal R_{N,c}$. This is a supporting
+code: the entropy-metric construction in the next appendix improves its
+fifth-power width dependence to the headline quartic bound.
+
+We give the density and factorization arguments below. We use the
+whole-layer active-direction and whitened-sampling estimates stated in
+Appendix~\ref{app:all-scales-quantization}, with their original proofs
+in~\cite{all-scales}. As in that appendix, every comparison coupling is
+allowed to depend on the input, whereas the candidate law is not. The
+argument and the improved exponents are conventional proofs and are not
+Lean formalized.
+
+\subsection{Explicit budgets and learning statement}
+
+Use the product-cylinder cost $D_*=D_*^{\rm prod}$ from
+\eqref{eq:product-cylinder-cost}. For $0<\varepsilon,\delta<1$, define
+\begin{align}
+ \beta&=\varepsilon/4,&
+ B_v&=\max\{8,8[D_*+\log(1/\beta)]\},&
+ K&=D_*+1,\notag\\
+ r&=\min\{1/6,c/\sqrt{1+(L-1)B_v}\},&
+ \alpha&=\varepsilon/12,&
+ e&=\frac{\alpha r^2}{1000L},\qquad
+ \eta=\frac{\alpha}{100L}.
+ \label{eq:factor-posterior-budgets}
+\end{align}
+Set
+\begin{align}
+ q&=\left\lceil\frac{2K+\log(1/\eta)}e\right\rceil,&
+ D_0&=[(d+1)q+2]\log2,&
+ V&=8K+2q,\notag\\
+ B_H^2&=4V/e,&
+ K_0&=(4K+2\log2)/\eta,&
+ B_1^2&=4[4K+2(d+1)\log2]/e.
+ \label{eq:factor-active-budgets}
+\end{align}
+Let $m$ be the least integer no smaller than each of
+\begin{align}
+ &10000(V+q+1)/e,\notag\\
+ &64(q+1)\log(4(q+1)/\eta),\label{eq:factor-source-width}\\
+ &512K_0r^{-2}[d\log2+\log(2/\eta)+1].\notag
+\end{align}
+The factor rank and the small-width cutoff are
+\begin{equation}\label{eq:factor-rank-cutoff}
+ p=\lceil1000/e\rceil,\qquad k=q+p,\qquad
+ n_0=\max\{1,\lceil LD_0/K\rceil\}.
+\end{equation}
+In particular, the cutoff $n_0$ need not be as large as $m$.
+Define factor bounds and parameter counts by
+\begin{align}
+ B_g^2&=4p/e,\qquad A_f=\max\{B_H,B_g,1\},\notag\\
+ B_f&=\max\{2\sqrt{q+1}/m,\sqrt{2/\eta},1\},\notag\\
+ P_{\rm small}&=n_0(d+1)+(L-2)n_0^2+n_0,\notag\\
+ P_{\rm fac}&=m(d+1)+2(L-2)mk+m,\notag\\
+ B_{\rm small}^2&=\frac{4(4n_0K+2P_{\rm small}\log2)}\alpha,\notag\\
+ B_{\rm code}&=1+\max\{B_{\rm small},B_1,A_f,B_f,
+                                      \sqrt{K_0}/m,1\}.
+ \label{eq:factor-code-bounds}
+\end{align}
+Finally, choose the common scalar mesh
+\begin{equation}\label{eq:factor-mesh}
+ \zeta=\min\left\{1,
+ \frac{\sqrt e}{4(d+1)},\frac{\sqrt e}{4m},
+ \frac{\sqrt e}{4mk(A_f+B_f+1)},
+ \frac{\sqrt e}{4(n_0+d+1)}\right\},
+\end{equation}
+and put
+\begin{equation}\label{eq:factor-code-budget}
+ J_{\rm fac}=\log2+
+ \max\{P_{\rm small},P_{\rm fac}\}
+               \log(3+4B_{\rm code}/\zeta).
+\end{equation}
+All these quantities are independent of learner width and Gaussian scale.
+
+\begin{theorem}[All-scale learning by a factored code]
+\label{thm:factor-all-scales}
+Under the Boolean-teacher convention of the main theorem, the condition
+\begin{equation}\label{eq:factor-sample-budget}
+ n\ge\frac{16}{\varepsilon}
+             [J_{\rm fac}+\log(1/\delta)]
+\end{equation}
+implies, with probability at least $1-\delta$ over iid training inputs,
+\[
+ \E_{w\sim Q_{S,N,t,c},\,X\sim D}
+       \mathbf1\{f(X)z_w(X)\le1/4\}\le\varepsilon
+\]
+simultaneously for every $N\ge C$ and every $0<t\le1$.
+The same conclusion holds if the posterior conditioning additionally
+requires the label-independent global margin $|z_w(x)|>1/2$ for every
+input $x$.
+No population-merging assumption or additional internal-noise condition
+is imposed.
+\end{theorem}
+
+\begin{corollary}[Improved width and depth powers]
+\label{cor:factor-powers}
+For fixed $d,c,\varepsilon,\delta$, let $F_0=1+\log^2(2+C)$.
+A sufficient sample count in Theorem~\ref{thm:factor-all-scales} has order
+\begin{equation}\label{eq:factor-powers}
+ O\!\left(C^5L^{12}F_0^5\log(2+CL)\right)
+       =\widetilde O(C^5L^{12}).
+\end{equation}
+At fixed teacher width this is $O(L^{12}\log(2+L))$; at fixed depth it is
+$O(C^5\log^{11}(2+C))$.
+\end{corollary}
+
+\subsection{A bounded-density invariant for unprocessed weights}
+
+The following lemma strengthens the entropy bookkeeping at the point
+where an active rank must hold with high probability. A measure inequality
+means domination on every measurable set.
+
+\begin{lemma}[Conditional density and finite-message propagation]
+\label{lem:factor-density}
+Suppose that
+\[
+ Q_{A,X,Y}\le e^b(\nu_A\otimes P_X\otimes P_Y),
+\]
+where $\nu_A,P_X,P_Y$ are probability reference laws. Write
+$u=dQ_{A,Y}/d(\nu_A\otimes P_Y)$. Then
+\[
+ Q\{u(A,Y)<\eta\}\le\eta,
+\]
+and, outside this event,
+\begin{equation}\label{eq:factor-conditional-entropy}
+ D_{\rm KL}(Q_{X\mid A,Y}\Vert P_X)
+       \le b+\log(1/\eta).
+\end{equation}
+Suppose also that $J=j(A,Y)$ takes values in a fixed finite alphabet
+$\mathcal J$, that $H_0=h(A,J,X)$, and that a new prefix $A'$ is generated
+from $(A,J,H_0)$ through a kernel whose fresh randomness has no further
+dependence on $Y$. There is a probability reference law $\nu_{A'}$ such
+that
+\begin{equation}\label{eq:factor-density-propagation}
+ Q_{A',Y}\le e^{b+\log|\mathcal J|}
+                            (\nu_{A'}\otimes P_Y).
+\end{equation}
+The original domination also implies
+\[
+ \E_{Q_A}D_{\rm KL}(Q_{X,Y\mid A}\Vert P_X\otimes P_Y)\le b.
+\]
+\end{lemma}
+\begin{proof}
+Let $F\le e^b$ be the joint density relative to
+$\nu_A\otimes P_X\otimes P_Y$. Disintegration gives conditional density
+$F(a,x,y)/u(a,y)$ for $Q_{X\mid a,y}$ wherever $u>0$.
+Thus its relative entropy is at most $b-\log u(a,y)$.
+Also
+\[
+ Q\{u<\eta\}=
+ \int_{\{u<\eta\}}u\,d(\nu_A\otimes P_Y)\le\eta.
+\]
+This is an unconditional probability bound under the canonical joint law;
+it need not hold separately at every fixed prefix.
+
+For propagation, augment the reference law by an independent uniformly
+distributed message in $\mathcal J$. The actual augmented law satisfies
+\[
+ Q_{A,J,X,Y}\le e^b|\mathcal J|
+  (\nu_A\otimes\operatorname{Unif}(\mathcal J)
+                       \otimes P_X\otimes P_Y).
+\]
+Apply the retained-data map and the same prefix kernel to both sides.
+Under the reference law, its inputs and fresh randomness are independent
+of $Y$, so its pushforward factors as $\nu_{A'}\otimes P_Y$.
+This proves \eqref{eq:factor-density-propagation}. The last assertion
+follows from the KL chain rule and the nonnegativity of
+$D_{\rm KL}(Q_A\Vert\nu_A)$.
+\end{proof}
+
+
+
+Suppose initially that a law $Q$ on original weights satisfies
+\begin{equation}\label{eq:factor-initial-density}
+ Q\le\exp(NK/t^2)\,\mu_{N,t}.
+\end{equation}
+The virtual prefix records the constructed network, not just its value at
+one selected input. Clipping and rounding the first layer are deterministic
+channels applied to that original block and initialize the domination
+invariant with exponent $NK/t^2$. At an internal stage, let $X$ be the
+current original block and $Y$ the remaining original blocks. Induction
+with Lemma~\ref{lem:factor-density} gives exponent
+\[
+ b_s\le NK/t^2+sD_0\le2NK/t^2\qquad(N>n_0).
+\]
+At that stage abort if its marginal density $u(A,Y)$ is below $\eta$.
+Otherwise \eqref{eq:factor-conditional-entropy} and the imported
+whole-layer active-direction lemma, applied with tolerance $e$, give
+\[
+ \dim U\le\frac{t^2}{Ne}
+             [b_s+\log(1/\eta)]
+       \le\frac{2K+\log(1/\eta)}e\le q.
+\]
+The active query list is selected from the conditional law given $(A,Y)$,
+so it is a function of $(A,Y)$. Its basis is a function of the prefix and
+the list, using fixed Gram--Schmidt conventions. The selected list and an
+abort symbol admit a fixed alphabet of log-cardinality at most $D_0$.
+For reference messages never chosen by the actual selection rule, extend
+the basis and transition kernel by fixed measurable default rules. This
+makes the uniform-message reference construction in the lemma defined
+on its entire domain.
+
+All abort paths remain in the canonical probability law. On an abort,
+use a fixed default prefix, retain an unsuccessful flag, and use default
+transitions thereafter. Do not condition any intermediate law on success.
+The density-test abort is included in the finite message; later aborts
+arising from fresh randomness are part of the prefix channel. Consequently
+the invariant applies on the full law, and the unsuccessful paths are
+discarded only in the final approximation probability estimate.
+
+The domination invariant also provides the old averaged entropy bound.
+Thus the imported Gaussian entropy-moment estimate still gives
+\begin{equation}\label{eq:factor-active-moment}
+ \E\left[\norm{H_0}_F^2/N;\ \text{active success}\right]
+       \le4t^2b_s/N+2t^2q\log2\le V.
+\end{equation}
+In particular, the definitions of $V,B_H,B_1$, and $K_0$ need no extra
+factor of $1/\eta$. The improvement in $q$ uses the density hypothesis
+\eqref{eq:factor-initial-density}; an arbitrary KL bound alone would not
+justify it.
+
+For comparison, using this new rank cutoff with the dense sequential code
+of Appendix~\ref{app:all-scales-quantization} already gives
+$O(C^6L^{15}F_0^6\log(2+CL))$ samples. The factor construction below saves
+additional powers of both resources.
+
+\subsection{A small-rank replacement for the Gaussian field}
+
+We recall the source-sampling notation needed for the new step.
+The source activations obey $|h_j(x)|\le1$. If $U$ has $\ell\le q$
+orthonormal columns, put $u_j=\sqrt N U_{j,:}$. The half-uniform,
+half-leverage law gives weights $a_j=1/(Np_j)\le2$ and
+$a_j\norm{u_j}^2\le2\ell$. Draw $m$ source indices $J_b$, and define
+\[
+ \widehat G=\frac1m\sum_ba_{J_b}u_{J_b}u_{J_b}^{\top},\qquad
+ D_{b,:}=\sqrt{a_{J_b}/m}\,u_{J_b}^{\top}\widehat G^{-1/2}.
+\]
+On the good Gram event, $\widehat G\succeq I/2$ and $D^\top D=I$.
+For $\ell=0$, the active matrices are empty and the following projection
+is the identity. Write
+\[
+ P=I-DD^\top,\qquad
+ c_b(x)=\sqrt{a_{J_b}/m}\,h_{J_b}(x),\qquad
+ \widehat C(x,x)=\norm{Pc(x)}^2\le2.
+\]
+The ideal field in the imported whitened-sampling estimate has active mean
+$H_0\psi(x)$ and independent Gaussian rows of variance $t^2C(x,x)$.
+The original reconstruction has mean $H_0\widehat v(x)$ and variance
+$t^2\widehat C(x,x)$.
+
+\begin{lemma}[Factored Gaussian reconstruction]
+\label{lem:factor-gaussian}
+Conditional on the source samples and retained active data, draw an
+independent standard Gaussian matrix $R\in\R^{p\times m}$ and independent
+standard Gaussian row vectors $g_i\in\R^p$, for all virtual target rows.
+Replace the reconstructed coefficients by
+\begin{equation}\label{eq:factor-coefficients}
+ \widetilde W_{ib}=
+   \frac{a_{J_b}}m H_{0,i}\mathbin\cdot u_{J_b}
+   +t\sqrt{\frac{a_{J_b}}{mp}}\,(g_i^\top RP)_b.
+\end{equation}
+This coefficient law does not depend on the input. At every fixed input
+it can be coupled to the ideal field so that the expected squared RMS
+evaluation error, with the good Gram indicator, is at most
+\begin{equation}\label{eq:factor-reconstruction-error}
+ \frac{4\norm{H_0}_F^2/N+32(q+1)}m+\frac8p.
+\end{equation}
+The coefficient matrix in \eqref{eq:factor-coefficients} has rank at most
+$\ell+p$.
+\end{lemma}
+\begin{proof}
+Fix the input and abbreviate $\sigma^2=\widehat C(x,x)$.
+Conditional on $R$, the new Gaussian evaluations are independent across
+rows with variance $t^2s^2$, where
+\[
+ s=\norm{RPc(x)}/\sqrt p.
+\]
+If $\sigma>0$, then $s^2/\sigma^2$ has the law of a chi-square variable
+with $p$ degrees of freedom divided by $p$. Rationalizing the square root
+therefore gives
+\begin{equation}\label{eq:factor-sd-error}
+ \E_R(s-\sigma)^2
+ \le\sigma^2\E(\chi_p^2/p-1)^2
+ =2\sigma^2/p\le4/p.
+\end{equation}
+For $\sigma=0$ the statement is immediate.
+
+To make the coupling explicit, draw $R$ and independent standard normals
+$Z_i$, independent of $R$. Use Gaussian row evaluations $t\sigma Z_i$
+for the old reconstruction and $tsZ_i$ for the new one. Disintegrating
+$g_i$ conditional on its projection along $RPc(x)$ realizes the latter
+evaluation while keeping its full conditional marginal standard Gaussian.
+Thus the coefficient law is exactly the law in
+\eqref{eq:factor-coefficients}. Disintegration likewise extends the old
+Gaussian evaluation to its coefficient field. The degenerate zero-variance
+case is handled by independent completion. Only this comparison coupling,
+not either field marginal, depends on $x$.
+
+The old whitened reconstruction estimate is
+$[2\norm{H_0}_F^2/N+16(q+1)]/m$. Couple through that reconstruction and
+apply the squared triangle inequality with
+\eqref{eq:factor-sd-error}. This yields
+\eqref{eq:factor-reconstruction-error}. Finally the active term factors
+through $\R^\ell$ and the Gaussian term through $\R^p$, proving the
+rank claim.
+\end{proof}
+
+Integrating \eqref{eq:factor-reconstruction-error} with the success
+indicator and using \eqref{eq:factor-active-moment}, the first line of
+\eqref{eq:factor-source-width}, and $p\ge1000/e$, bounds this error by
+\[
+ \frac{4V+32(q+1)}m+\frac8p<e/8.
+\]
+The comparison requires no simultaneous coupling of all inputs.
+Conditional independence of rows given $R$ suffices; independence of the
+new rows after averaging over $R$ is not asserted or needed.
+
+\subsection{Bounded factors and their sequential rounding}
+
+At each internal stage first clip active rows of norm greater than $B_H$
+to zero, exactly as in the imported construction. Equation
+\eqref{eq:factor-active-moment} and bounded activations give squared RMS
+activation cost at most $4V/B_H^2=e$. Apply
+Lemma~\ref{lem:factor-gaussian} to this clipped matrix.
+
+Abort if $\norm R_F^2>pm/\eta$. Since $\E\norm R_F^2=pm$, this event
+has conditional probability at most $\eta$. Also replace each $g_i$ by
+zero when $\norm{g_i}^2>B_g^2=4p/e$. This row replacement has probability
+at most $e/4$ and hence expected squared activation change at most $e$:
+two tanh values differ by at most two. All virtual rows are clipped before
+any later row selection, including selections depending on future weights.
+
+On success, write the resulting coefficients as $A_iB$, with zero padding
+to factor dimension $k=q+p$, where
+\[
+ A_i=(H_{0,i},g_i),\qquad
+ B_{{\rm active},ab}=a_{J_b}u_{J_b,a}/m,
+\]
+\[
+ B_{{\rm Gaussian},ab}
+       =t\sqrt{a_{J_b}/(mp)}\,(RP)_{ab}.
+\]
+Every left factor entry has absolute value at most $A_f$. Every right
+factor entry has absolute value at most $B_f$, since
+\[
+ |a_{J_b}u_{J_b,a}/m|\le2\sqrt{q+1}/m,
+\qquad
+ t\sqrt{\frac{a_{J_b}}{mp}}|(RP)_{ab}|
+ \le\sqrt{\frac2{mp}}\norm R_F\le\sqrt{2/\eta}.
+\]
+
+Round both factor arrays to the common scalar mesh \eqref{eq:factor-mesh}
+before computing the next virtual prefix. For each bounded incoming state,
+\begin{equation}\label{eq:factor-rounding-injection}
+ |(A_{i,\rm round}B_{\rm round}-A_iB)h|
+ \le mk(A_f+B_f+1)\zeta\le\sqrt e/4.
+\end{equation}
+Here each product changes by at most
+$(A_f+B_f+1)\zeta$, because $\zeta\le1$.
+Round first-layer coefficients and reconstructed readout coefficients
+directly. Their preactivation errors are at most $(d+1)\zeta$ and
+$m\zeta$, respectively, again at most $\sqrt e/4$.
+The rounded candidate is an ordinary depth-$L$ tanh network: its internal
+matrix is the product of two rounded factor arrays. Factorization adds
+no activation layer.
+
+All source samples, $R$, and Gaussian row factors are fresh randomness
+conditional on the prefix, query list, and retained active matrix.
+Clipping, factor multiplication, and rounding are deterministic subsequent
+operations. They therefore form a channel of the precise kind required
+by Lemma~\ref{lem:factor-density}. The reference-prefix law need not be
+Gaussian or have a density on its own coordinate space. The comparison
+coupling does not replace this canonical channel in the density induction.
+
+\subsection{The disturbance budget and the finite class}
+
+Consider first $N>n_0$ and a law satisfying
+\eqref{eq:factor-initial-density}. The first layer is clipped at the
+physical standardized row bound $B_1$ and then rounded. Its expected
+squared RMS activation injection is less than $3e$ by the imported
+first-layer estimate and the squared triangle inequality.
+At an internal stage the five contributions are active-direction
+transport, active-row clipping, reconstruction, Gaussian-row clipping,
+and factor rounding. Their expected squared RMS bounds, with success
+indicators, are respectively
+\[
+ 2e,\quad e,\quad e/8,\quad e,\quad e/16.
+\]
+Another squared triangle inequality bounds their sum by
+$5(2+1+1/8+1+1/16)e<21e$. In particular the conservative bound $41e$
+from Appendix~\ref{app:all-scales-quantization} remains available.
+
+The good Gram probability follows from the second line of
+\eqref{eq:factor-source-width}. Use the original readout construction:
+truncate at $N\norm v^2\le K_0$, sample source indices with probabilities
+proportional to $|v_i|$, and use signed coefficients of magnitude
+$\norm v_1/m\le\sqrt{K_0}/m$. The last line of
+\eqref{eq:factor-source-width} gives output sampling error at most $r/16$
+uniformly over the finite input domain except with probability $\eta$.
+The energy truncation also fails with probability at most $\eta$.
+Including density-test, Gram, and shared-sketch aborts at internal stages,
+the total abort probability is at most $4L\eta$.
+
+For each fixed input, glue the conditional transports as in
+Appendix~\ref{app:all-scales-quantization}: retain the full original-weight
+marginal $Q$ and the canonical outgoing prefix/future-weight marginal at
+each transition. Extend the transition by the previous conditional law of
+past original weights. This preserves every earlier computed prefix.
+The final candidate output is exactly the original network under the
+postactivation and readout injections defined by its rounded virtual
+computation. No robustness of an intermediate candidate is assumed.
+
+On the non-aborted paths, Markov's inequality gives
+\[
+ \Prb\left\{\sum_{s<L}\norm{\eta^s}^2/N>r^2/16,
+                         \ \text{no abort}\right\}
+ \le\frac{656Le}{r^2}=0.656\alpha.
+\]
+Readout rounding adds at most $\sqrt e/4\le r/64$. Thus, outside probability
+at most $0.656\alpha+4L\eta<\alpha$, the total disturbance satisfies
+\[
+ \norm\eta_*\le
+ \sqrt{r^2/16+(r/16+r/64)^2}
+       =\frac{\sqrt{281}}{64}r<r/2.
+\]
+
+The construction above does not require $m\le N$. Source sampling is with
+replacement, and duplicated indices give duplicated stored neurons. The
+Gram lemma also allows this: on its good event $D$ has orthonormal columns,
+and $\ell\le q<m$. Hence the only width cutoff needed for this branch is
+$N>n_0$, which pays for the accumulated message exponents.
+
+For $N\le n_0$, the original density bound implies a KL bound
+$NK/t^2$. The Gaussian entropy-moment inequality gives, for all physical
+standardized coordinates together,
+\[
+ \E_Q\norm{tZ_{\rm all}}^2
+       \le4n_0K+2P_{\rm small}\log2.
+\]
+With probability at least $1-\alpha/4$, every actual coefficient is at
+most $B_{\rm small}$ in absolute value. On that event round the original
+network directly; otherwise use a zero-output default. The bounded rounded
+activations give the exact injection bound
+\[
+ \norm\eta_*^2
+ \le\zeta^2[(d+1)^2+(L-1)N^2]
+ \le\zeta^2L(n_0+d+1)^2\le Le/16<r^2/4.
+\]
+Pad these small networks only to width $n_0$.
+
+The large branch keeps the $m$ selected rows at each layer. It stores
+$m(d+1)$ first-layer scalars, $2mk$ factor scalars for each internal
+matrix, and $m$ readout scalars. The small branch stores at most
+$P_{\rm small}$ scalars. Every rounded scalar in either branch belongs
+to a fixed alphabet of at most $3+4B_{\rm code}/\zeta$ values.
+The union of these two fixed finite classes, denoted $\mathcal H_{\rm fac}$,
+therefore satisfies
+\begin{equation}\label{eq:factor-finite-class}
+ \log|\mathcal H_{\rm fac}|\le J_{\rm fac}.
+\end{equation}
+In particular one does not count the small branch as a dense network of
+width $m$.
+
+We have proved that every law satisfying
+\eqref{eq:factor-initial-density} admits a single candidate law
+$\Gamma_Q$ on $\mathcal H_{\rm fac}$ with the following property: at each
+fixed input it has a coupling with $w\sim Q$ and a disturbance such that
+\begin{equation}\label{eq:factor-final-coupling}
+ h(x)=z_w(x;\eta),\qquad \norm\eta_*<r/2
+\end{equation}
+except with probability at most $\alpha$. Both marginals are independent
+of the input used to form the comparison coupling.
+
+\subsection{Posterior comparison and polynomial accounting}
+
+\begin{proof}[Proof of Theorem~\ref{thm:factor-all-scales}]
+The product target cylinder gives raw conditioning probability at least
+$\exp(-ND_*/t^2)$. The chi-square exponential moment for the readout,
+combined with this denominator, gives
+\[
+ Q_{S,N,t,c}\{E_v>B_v\}
+ \le\exp\left(-\frac{NB_v}{4t^2}
+                  +\frac N2\log2+\frac{ND_*}{t^2}\right)
+ \le\beta.
+\]
+Let $Q'$ be the posterior conditioned on $E_v\le B_v$. Unlike a generic
+law controlled only in relative entropy, it satisfies the literal
+density bound
+\[
+ \frac{dQ'}{d\mu_{N,t}}
+ \le\frac{\exp(ND_*/t^2)}{1-\beta}
+ \le\exp(NK/t^2).
+\]
+Every original network in its support is robust on the common radius $r$.
+Consequently \eqref{eq:factor-final-coupling} implies clipped-score error
+at most $1/16$ on its good event.
+
+Use the ramp $\psi$ from the earlier statistical proof: it is one on
+$(-\infty,1/3]$, zero on $[5/12,\infty)$, and affine in between.
+Every training point has candidate ramp loss zero on the good coupling;
+every original test-margin failure has candidate loss one there.
+A relative Chernoff bound and a union bound over
+$\mathcal H_{\rm fac}$ give, on one sample event of probability at least
+$1-\delta$,
+\[
+ \E_D\psi(f(X)T(h(X)))
+ \le\frac2n\sum_{i=1}^n\psi(f(X_i)T(h(X_i)))
+       +\frac{8[J_{\rm fac}+\log(1/\delta)]}{n}
+ \quad(h\in\mathcal H_{\rm fac}).
+\]
+Averaging this inequality under $\Gamma_{Q'}$, applying the two marginal
+comparisons, and restoring the discarded readout tail bounds the desired
+risk by
+\[
+ \beta+3\alpha+
+       \frac{8[J_{\rm fac}+\log(1/\delta)]}{n}\le\varepsilon.
+\]
+The finite class and sample event do not depend on $N,t$, which gives the
+simultaneous conclusion. Additional global clean-margin conditioning retains
+the same target cylinder, density bound, and readout-tail argument, so the
+same proof applies to that stated optional variant.
+\end{proof}
+
+\begin{proof}[Proof of Corollary~\ref{cor:factor-powers}]
+The product-cylinder constants give, at fixed ancillary resources,
+\[
+ K,B_v=O(CLF_0),\qquad r^{-2}=O(CL^2F_0),\qquad
+ e^{-1}=O(CL^3F_0),\qquad \eta^{-1}=O(L).
+\]
+The term $\log(1/\eta)$ in the rank bound is dominated by the target cost
+$K$. Therefore
+\[
+ q,V=O(C^2L^4F_0^2),\qquad p=O(CL^3F_0),\qquad
+ m=O(C^3L^7F_0^3),\qquad n_0=O(CL^4F_0).
+\]
+The Gram and readout terms in the maximum defining $m$, including their
+logarithms, are dominated by its first term at this fixed-resource scale.
+It follows that
+\[
+ P_{\rm fac}=O(C^5L^{12}F_0^5),\qquad
+ P_{\rm small}=O(C^2L^9F_0^2).
+\]
+All coefficient bounds and inverse meshes are polynomial in $C,L,F_0$,
+so $\log(3+4B_{\rm code}/\zeta)=O(\log(2+CL))$.
+Substitution into \eqref{eq:factor-code-budget} and
+\eqref{eq:factor-sample-budget} proves the claimed order and both special
+cases.
+\end{proof}
+
+\begin{remark}[A conservative joint polynomial for the factored code]
+\label{rem:factor-joint-polynomial}
+Put
+\[
+ S=2+d+L+C+c+c^{-1}+\varepsilon^{-1}+\log(1/\delta).
+\]
+The target-cylinder estimates and
+\eqref{eq:factor-posterior-budgets} give
+\[
+ K,B_v=O(S^3),\qquad r^{-2}=O(S^6),\qquad
+ e^{-1}=O(S^8),\qquad \eta^{-1}=O(S^2).
+\]
+The new budgets consequently satisfy
+\[
+ q,V=O(S^{11}),\quad D_0=O(S^{12}),\quad
+ m=O(S^{19}),\quad n_0=O(S^{13}),\quad p=O(S^8),
+\]
+\[
+ P_{\rm fac}=O(S^{31}),\quad P_{\rm small}=O(S^{27}),\quad
+ B_{\rm small}^2=O(S^{28}),\quad B_{\rm code}=O(S^{14}).
+\]
+For the mesh, $A_f=O(S^{10})$ and $B_f=O(S)$; the latter uses the
+first lower bound on $m$ to bound $\sqrt{q+1}/m$ by a constant.
+Thus $\zeta^{-1}=O(S^{44})$, where the factor-rounding denominator
+dominates the other displayed choices. It follows that
+\[
+ J_{\rm fac}=O(S^{31}\log S),\qquad
+ n=O(S^{32}\log S)\subseteq O(S^{33}).
+\]
+This degree-33 envelope is deliberately conservative. Like the refined
+width and depth powers above, it is a consequence of the present
+conventional argument and carries no Lean-certification claim.
+\end{remark}
