@@ -1,0 +1,130 @@
+% Requires amsmath, amssymb, amsthm and theorem/lemma/remark environments.
+\section{Polynomial mistakes for fresh uniform ties and minimum-class majority}
+
+Let $\mathcal C_j$ be a finite set of circuit descriptions of size $j$,
+and write $N_j=|\mathcal C_j|$. Distinct descriptions computing the same
+function are counted separately. Let $f$ have a description of size $s$.
+All labels are noiseless, every label is revealed after prediction, and
+all subsequent predictions must be consistent with every revealed label.
+No algorithmic efficiency is asserted.
+
+\subsection{Fresh uniform tie-breaking: arbitrary adaptive input order}
+
+\begin{theorem}[Fresh uniform minimum-description prediction]\label{thm:uniform-min}
+On each round, choose a fresh uniformly random description from the
+currently consistent descriptions of minimum size, and predict with it.
+The input may be chosen adaptively using the entire past and the learner's
+previous predictions, but must be chosen before the fresh random choice
+of the current description. Put
+\[
+ B_s=s+\sum_{j=0}^s\log\max\{1,N_j\}.
+\]
+Then the total number $M_\infty$ of mistakes over an arbitrarily long,
+possibly infinite, input sequence satisfies
+\[
+ \mathbb E M_\infty\le B_s,
+ \qquad
+ \mathbb P\{M_\infty\ge(e-1)B_s+\log(1/\delta)\}\le\delta.
+\]
+For the all-binary-gate convention of this paper, and hence also for NAND,
+\[
+ B_s\le s+s(s+1)\log(4(d+s+1)),
+\]
+as in \eqref{eq:tier-count}. The empty size-zero class is omitted.
+In particular this is a polynomial total-mistake guarantee for exact
+minimum-size prediction under fully adaptive nonanticipating input order.
+The learner need not know $s$.
+\end{theorem}
+
+\begin{proof}
+Immediately before a label is revealed, let $j$ be the minimum surviving
+size, let $n$ be the number of surviving descriptions at that size, and
+let $q$ be the fraction of these descriptions wrong on the current input.
+The conditional probability of the learner's mistake is exactly $q$.
+If $q<1$, the surviving count at this same size becomes $n(1-q)$ and
+\[
+ q\le-\log(1-q)=\log n-\log(n(1-q)).
+\]
+Thus the sum of all such $q$ while size $j$ is the minimum is at most
+$\log N_j$. If $q=1$, the size-$j$ class is exhausted and this transition
+costs one. Minimum size never decreases. It never exceeds $s$, and the
+size-$s$ class cannot be exhausted because the target survives. There are
+therefore at most $s$ exhausted tiers. On every realization,
+\[
+ \sum_{t\ge1}q_t\le B_s.
+\]
+For the actual mistake indicators $Z_t$, conditional on the past and the
+current input, $\mathbb E Z_t=q_t$ and
+\[
+ \mathbb E\exp\{Z_t-(e-1)q_t\}
+ =e^{-(e-1)q_t}(1+(e-1)q_t)\le1.
+\]
+Consequently $\exp\{M_T-(e-1)\sum_{t\le T}q_t\}$ is a nonnegative
+supermartingale, also when the next input is chosen from the full past.
+Monotone convergence proves the expectation bound, and Ville's inequality
+proves the time-uniform tail bound. The counting estimate is \eqref{eq:tier-count}.
+\end{proof}
+
+\begin{remark}[What the tie rule does and does not say]
+Uniformity is over the specified finite set of minimum-size descriptions,
+not automatically over distinct Boolean functions. Uniform sampling over
+the latter also works if the corresponding finite counts are used.
+The random choice must be fresh and private until the current input is
+fixed. A single random ordering of descriptions, reused forever, is not
+conditionally uniform after an adaptive input chooser has observed
+predictions, so the above proof does not apply to that rule.
+\end{remark}
+
+\begin{corollary}[Minimum-tier majority]\label{cor:minimum-majority}
+Predicting the majority label among the currently consistent descriptions
+of minimum size, with arbitrary ties, makes at most $2B_s$ mistakes on
+every input sequence. This can also be implemented as a query-dependent
+choice of a minimum-size consistent circuit agreeing with that majority.
+\end{corollary}
+
+\begin{proof}
+The same pathwise bound on $\sum q_t$ holds without any random prediction
+rule. Each majority mistake has $q_t\ge1/2$.
+\end{proof}
+
+
+\subsection{The conjunction ladder under fresh uniform ties}
+\begin{proposition}[Fresh uniform ties on the same ladder]
+\label{prop:uniform-ties-ladder}
+Use the all-binary-gate or AND/OR/NOT basis, with all gates charged.
+Suppose that before every prediction the learner freshly samples
+uniformly from all consistent circuits of minimum gate count.
+Consider the level-by-level input order from
+Section~\ref{sec:exact-occam-lower}, with the order
+within each level chosen before the current fresh random draw.
+For each $k=2,\ldots,d-1$, its expected mistakes in level $k$ are
+exactly
+\[
+  H_{\binom dk}=\sum_{r=1}^{\binom dk}\frac1r.
+\]
+Thus its expected mistakes in these levels are
+\[
+  \sum_{k=2}^{d-1}H_{\binom dk}=\Theta(d^2),
+\]
+and the initial $d+2$ queries contribute at most $d+2$ further
+mistakes.
+\end{proposition}
+\begin{proof}
+Lemma~\ref{lem:lower-support} shows that the minimum circuits
+in level $k$ compute precisely the surviving $k$-conjunctions.
+Permuting input coordinates is a bijection between the size-$(k-1)$
+circuits computing any two such conjunctions. They therefore have
+equal numbers of minimum-size descriptions, in each of these two
+bases. Since all descriptions computing a given function agree
+on the entire observed history, uniformity over minimum circuit
+descriptions induces uniformity over the surviving conjunctions.
+
+If $r$ remain, any unqueried input of weight $k$ is predicted
+incorrectly by exactly one of them. The conditional mistake
+probability is $1/r$, and the revealed negative label removes
+exactly that conjunction. Summing gives the harmonic number.
+For the asymptotic estimate, $H_n\le1+\ln n$ gives an upper bound
+$O(d^2)$. For $\Theta(d)$ central values of $k$,
+$\binom dk=\exp(\Omega(d))$, so
+$H_{\binom dk}\ge\ln\binom dk=\Omega(d)$, proving the lower bound.
+\end{proof}

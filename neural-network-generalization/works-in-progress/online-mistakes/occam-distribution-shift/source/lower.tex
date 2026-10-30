@@ -1,0 +1,157 @@
+% Includable section. Requires amsmath/amssymb/amsthm and theorem,
+% lemma, proposition, and remark environments in the main document.
+% The conjunction ladder is existing work, not a new result.
+\section{An exponential lower bound for exact circuit minimization}
+\label{sec:exact-occam-lower}
+
+The conjunction ladder below is the construction from Appendix~K of
+the Vaintrob--H\"anni slides \cite{slides}, proved for unrestricted
+binary-gate circuits by H\"anni and Claude \cite{soi}.
+We give an elementary support-based proof and make the prediction
+protocol explicit. Its lower bound is exponential in the target's
+\emph{minimum gate count}, and every hypothesis used by the learner
+really is a globally smallest consistent circuit.
+
+Throughout this section a circuit is a finite, acyclic, single-output
+circuit over either all sixteen two-input Boolean gates or the standard
+basis consisting of binary AND and OR and unary NOT. Constants are
+available as source wires, and arbitrary fan-out is allowed. The output
+must be a gate, so a circuit has at least one gate. Size counts every
+gate, including NOT, and $C(f)$ denotes the minimum size of a circuit
+computing $f$ on the full Boolean cube.
+
+A \emph{history-only minimum-circuit learner} chooses a circuit $h_t$
+of minimum gate count among all circuits consistent with the first
+$t-1$ labeled examples, and predicts $h_t(x_t)$. Its choice of $h_t$
+can depend on the entire past, but not on the current query $x_t$.
+For deterministic learners this includes every fixed ordering of
+equal-size circuit descriptions or equal-complexity functions.
+
+\begin{lemma}[Support forces exact minimality]
+\label{lem:lower-support}
+A circuit of $s$ gates depends on at most $s+1$ input variables.
+Suppose $h(1^d)=1$ and $h(x)=0$ whenever $|x|<k$.
+Then $h$ depends on at least $k$ variables. If it depends on exactly
+$k$ variables, it is the conjunction of those variables.
+\end{lemma}
+\begin{proof}
+Prune gates having no path to the output, leaving $t\le s$ gates.
+Of their at most $2t$ input slots, at least $t-1$ reference other
+remaining gates. Thus at most $t+1\le s+1$ slots can hold distinct
+input variables. This argument permits unary gates and shared wires.
+
+Let $S$ be the essential-variable set of $h$, and let $1_S$ denote
+its indicator in $\{0,1\}^d$. If $|S|<k$, then
+$h(1_S)=h(1^d)=1$, contradicting the lower-weight negative labels.
+If $|S|=k$, extend any assignment on $S$ other than $1_S$ by zeros
+outside $S$. The resulting input has weight below $k$, so its label
+is zero. The all-ones assignment on $S$ has label one. Hence
+$h(x)=\bigwedge_{j\in S}x_j$.
+\end{proof}
+
+\begin{theorem}[Conjunction ladder for exact minimum circuits]
+\label{thm:exact-occam-ladder}
+Let $d\ge3$ and $f(x)=\bigwedge_{j=1}^d x_j$.
+Then $C(f)=d-1$. For every deterministic history-only
+minimum-circuit learner, there is a permutation of $\{0,1\}^d$
+on which its total number of mistakes is at least
+\[
+  \sum_{k=2}^{d-1}\binom dk
+  =2^d-d-2
+  =2^{C(f)+1}-C(f)-3.
+\]
+The permutation may depend on the learner's tie rule.
+\end{theorem}
+\begin{proof}
+First reveal $1^d$ with label one, then $0^d$ and all singleton
+inputs with label zero. For $k=2,\ldots,d-1$, process the inputs of
+weight $k$, choosing the order within the level as follows.
+
+At the beginning of this phase, every input of weight less than $k$
+has been revealed with label zero. At an intermediate step, let
+$\mathcal R$ be the collection of $k$-sets whose indicator inputs
+have not yet been queried. If $\mathcal R\ne\varnothing$, each
+\[
+  h_S(x)=\bigwedge_{j\in S}x_j,\qquad S\in\mathcal R,
+\]
+is consistent and has a circuit of $k-1$ gates. Every consistent
+circuit has at least $k-1$ gates by Lemma~\ref{lem:lower-support}.
+Consequently the \emph{global} minimum over all consistent circuits
+is exactly $k-1$.
+
+Every minimizing circuit depends on at most $k$ variables and at
+least $k$ variables. The same lemma therefore says that it computes
+$h_S$ for a $k$-set $S$. Consistency forces $S\in\mathcal R$.
+Query $1_S$. The learner predicts one and the target label is zero.
+Moreover, for another $k$-set $T$,
+\[
+  h_T(1_S)=1\quad\Longleftrightarrow\quad T\subseteq S
+  \quad\Longleftrightarrow\quad T=S.
+\]
+Thus this query eliminates precisely one of the surviving
+$k$-conjunctions. Repeat until the level is exhausted. Every input
+in every level $k=2,\ldots,d-1$ is a mistake.
+
+The query can be determined before prediction because the learner's
+current hypothesis is a deterministic function of its past.
+Equivalently, simulate the construction in advance to obtain a
+fixed permutation for this learner. Finally, $f$ depends on all
+$d$ variables, so Lemma~\ref{lem:lower-support} gives
+$C(f)\ge d-1$; the usual AND tree attains equality.
+\end{proof}
+
+\paragraph{A fixed tie rule and a fixed input order.}
+There is also a direct nonadaptive example. At each size $s\ge1$,
+rank canonical left-associated conjunction circuits on $(s+1)$-sets
+first, ordered lexicographically by their supports, and rank all
+other circuits afterward in any fixed order. Choose the first
+consistent circuit of minimum size. Present $1^d$, $0^d$, all
+singletons, and then the levels of weight $2,\ldots,d-1$ in that
+same lexicographic order. At every step after the singleton level,
+the current hypothesis is the conjunction indexed by the next
+input. The number of mistakes is exactly $2^d-d-2$. Both orderings
+are fixed independently of the run. The theorem is stronger in a
+different direction: every deterministic history-only tie rule
+has some bad ordering, without asserting one ordering bad for
+all tie rules.
+
+\paragraph{Why the singleton level is omitted.}
+Under the mandatory-output-gate convention, a one-gate
+$x_i\wedge x_j$ is consistent with the initial positive example,
+the zero vector, and every singleton negative. Therefore the
+first level need not incur any mistakes. If instead an input or
+constant wire may itself be a zero-gate output, the proof starts
+at $k=1$ and yields $2^d-2$ mistakes after the two initial examples,
+with the same target complexity $d-1$. This stronger count uses
+a different, explicitly stated circuit convention.
+
+\paragraph{The complexity measure matters.}
+The theorem is literally exponential in the minimum number of
+gates. For the explicit gate-list language that encodes size in
+unary and then gate types and wire addresses, the target has
+description length $b=\Theta(d\log d)$. In that measure the
+conclusion is $2^{\Omega(b/\log b)}$, not a proved
+$2^{\Omega(b)}$ bound. A constant-factor compilation into a
+NAND-only basis does not automatically transfer the theorem:
+compilation need not preserve which consistent circuits are
+smallest. The next section proves the NAND-only statement directly.
+
+\paragraph{Scope of the tie-breaking quantifier.}
+The deterministic theorem does not permit an adversary to inspect
+a hidden fresh random circuit before selecting its query. Nor does
+it cover a deterministic learner that uses the current query to
+choose between minimum circuits. For example, after receiving $x_t$,
+a learner may take the majority label among all current minimum
+circuits and then select a minimum circuit giving that label.
+This still selects a smallest consistent circuit at every round.
+Each mistake halves the candidates at the current size, or exhausts
+that size. If $N_s$ bounds the number of size-$s$ descriptions, its
+mistakes are at most
+\[
+  \sum_{s=1}^{C(f)}\bigl(1+\log_2 N_s\bigr)
+  =O\!\left(C(f)^2\log(d+C(f))\right).
+\]
+Thus specifying only ``a smallest circuit each round'' leaves a
+material ambiguity: the exponential lower bound concerns a single
+deterministic hypothesis chosen from the past, before using the
+current query.

@@ -1,0 +1,218 @@
+\section{Arbitrary history-dependent tie-breaking in changing environments}
+
+The next results apply to every finite class $H$ containing $f$, with
+$h=\log|H|$. On each round the learner selects a consistent member of $H$
+using the previous history, before seeing the next sampled input. It may
+randomize and its tie rule may depend on all previous source identities,
+inputs, labels, and predictions. Minimum-size consistent circuits satisfy
+this requirement with
+$H=\bigcup_{j\le s}\mathcal C_j$, provided the choice of a minimum circuit
+does not depend on the current sampled input. In this case
+\[
+ h\le\log s+s\log16+2s\log(d+s+1).
+\]
+The input-independent choice condition matters: a different consistent
+hypothesis chosen after seeing each input can have much greater aggregate
+error than any individual consistent hypothesis.
+
+\begin{theorem}[Adaptively interleaved random-order environments]\label{thm:random-pools}
+Fix $K$ finite input pools of sizes $m_1,\ldots,m_K\ge1$; repeated inputs
+inside or between pools are allowed. Independently uniformly permute each
+pool. At each round a scheduler, using the full observed past but no
+unrevealed entries, chooses a nonexhausted pool and reveals its next
+entry. It may stop at any time. Then every learner just specified satisfies
+\[
+ \mathbb E M\le K+2(h+1)\sum_{i=1}^K H_{m_i-1},
+ \qquad H_0=0.
+\]
+For $0<\delta<1$, put
+\[
+ a=h+\log\frac{2\sum_i m_i}{\delta},\qquad
+ B_\delta=K+2a\sum_i H_{m_i-1}.
+\]
+With probability at least $1-\delta$,
+\[
+ M\le(e-1)B_\delta+\log(2/\delta).
+\]
+In particular, if each pool has at most $2^d$ entries, expectation is
+$O(K(h+1)(d+1))$, and high probability adds only polynomial dependence on
+$\log(K/\delta)$ and $d$.
+\end{theorem}
+
+\begin{proof}
+For pool $i$, let $R_{i,n}$ be the maximum pool error fraction of a member
+of $H$ agreeing with the first $n$ entries in that pool, ignoring all other
+labels. A candidate with error fraction $r$ survives that prefix with
+probability at most $(1-r)^n\le e^{-nr}$. Thus
+\[
+ \mathbb P(R_{i,n}>u)\le\min\{1,e^{h-nu}\},
+ \qquad \mathbb E R_{i,n}\le(h+1)/n.
+\]
+At the next visit to pool $i$, the selected predictor is consistent with
+that prefix; all of its pool errors lie in the $m_i-n$ remaining entries.
+Its conditional error probability is at most
+$m_iR_{i,n}/(m_i-n)$. Charging each used local count $(i,n)$ once and
+enlarging to all possible local counts gives the expectation bound because
+\[
+ \sum_{n=1}^{m_i-1}\frac{m_i}{n(m_i-n)}=2H_{m_i-1}.
+\]
+The first visit to each pool costs at most one. This argument is unchanged
+by arbitrary adaptive interleaving because each unused next entry remains
+uniformly distributed among its own pool's remaining entries.
+
+For high probability, a union bound makes all inequalities
+$R_{i,n}\le a/n$, $1\le n<m_i$, hold except with probability $\delta/2$.
+Stop the mistake process immediately before using a failed prefix. Until
+that stopping time its total conditional error probabilities are at most
+$B_\delta$. The exponential supermartingale used above bounds its mistakes
+by $(e-1)B_\delta+\log(2/\delta)$ except with probability $\delta/2$.
+On the simultaneous good-prefix event the process never stops, proving
+the claim.
+\end{proof}
+
+\begin{theorem}[Interleaved iid environments]
+Fix $K$ distributions $D_1,\ldots,D_K$. A scheduler uses the full past to
+choose a source, then receives a fresh independent input from that source.
+For every source having at least one nonzero disagreement risk in $H$, let
+\[
+ \varepsilon_i=
+ \min\{D_i(g\ne f):g\in H,\ D_i(g\ne f)>0\}.
+\]
+Omit and reindex sources on which all hypotheses agree with $f$; $K$
+now counts only the remaining sources. If there are none, $M_\infty=0$
+and no probability budget is needed. Otherwise,
+\[
+ \mathbb E M_\infty\le
+ \sum_{i=1}^K\{1+(h+1)(1+\log(1/\varepsilon_i))\}.
+\]
+For a high-probability bound set
+\[
+ J_i=1+\lceil\log_2(1/\varepsilon_i)\rceil,\quad
+ L=\sum_iJ_i,\quad a=h+\log(2L/\delta),\quad
+ B_\delta=(L+K)a+2K.
+\]
+Then, with probability at least $1-\delta$,
+\[
+ M_\infty\le(e-1)B_\delta+\log(2/\delta).
+\]
+On a finite support with smallest positive atom $p_i$, one may replace
+$\varepsilon_i$ by $p_i$. In particular, sources uniform on arbitrary
+subsets of $\{0,1\}^d$ give an expectation of $O(K(h+1)(d+1))$ even with
+unlimited adaptive switching among disjoint regions.
+\end{theorem}
+
+The source need not be observed by the learner. In particular the theorem
+covers arbitrary predictable mixture weights over the fixed $D_i$: choose
+a latent source from the current weights and then draw from that source.
+There is no bound on the number of switches or on the distance between
+the source distributions.
+
+\begin{proof}
+Couple source $i$ to its own iid stream and let $R_{i,n}$ be the maximum
+$D_i$-risk of a hypothesis surviving the first $n$ samples of that stream.
+The same union bound gives
+$\mathbb P(R_{i,n}>u)\le\min\{1,e^{h-nu}\}$.
+The variable $R_{i,n}$ is either zero or at least $\varepsilon_i$.
+For $u>0$, monotonicity of the integrand gives
+\[
+ \sum_{n\ge1}\min\{1,e^{h-nu}\}
+ \le\int_0^\infty\min\{1,e^{h-tu}\}\,dt=(h+1)/u.
+\]
+Consequently Tonelli's theorem, using $\varepsilon_i$ in place of $u$
+for $0<u<\varepsilon_i$, yields
+\[
+ \sum_{n\ge1}\mathbb E R_{i,n}
+ \le(h+1)\left\{\int_0^{\varepsilon_i}\frac{du}{\varepsilon_i}
+                   +\int_{\varepsilon_i}^1\frac{du}{u}\right\}
+ =(h+1)(1+\log(1/\varepsilon_i)).
+\]
+The initial local round has risk at most one. On every visit to source $i$
+after $n$ samples, the current consistent predictor has risk at most
+$R_{i,n}$, regardless of observations from other sources. Each local count
+is used at most once. Summing these bounds proves the expectation claim.
+
+For high probability, for each $1\le j\le J_i$ put
+$n_{i,j}=\lceil a2^j\rceil$. A union bound gives, simultaneously,
+\[
+ R_{i,n_{i,j}}\le2^{-j}
+\]
+except with probability $Le^{h-a}=\delta/2$. Since
+$2^{-J_i}<\varepsilon_i$, the last inequality implies
+$R_{i,n_{i,J_i}}=0$. By monotonicity of $R_{i,n}$, the initial block costs
+at most $2a+1$ and each subsequent block costs at most $a+2^{-j}$, so
+\[
+ \sum_{n\ge0}R_{i,n}\le(J_i+1)a+2.
+\]
+Stop immediately before using a prefix which violates the applicable
+block bound. Until stopping, the conditional error sum is at most
+$B_\delta$. The same exponential-supermartingale bound and the good-event
+union bound establish the stated infinite-horizon probability guarantee.
+\end{proof}
+
+\begin{remark}[Bounded arbitrary departures]
+Either environment theorem remains valid with at most $A$ extra arbitrary
+input rounds, with an additive $A$ in the actual mistake bound and its
+expectation. The extra noiseless observations only shrink the version
+space. The clean source counters and their latent orders are unchanged.
+This includes a finite adversarial excursion followed by arbitrarily
+many further source switches.
+\end{remark}
+
+
+\subsection{Randomizing within Hamming layers restores a polynomial bound}
+
+For circuits over all two-input Boolean gates, or over the
+AND/OR/NOT basis, a simple randomization of the input order changes
+the same example. Let $f(x)=\bigwedge_{i=1}^d x_i$, present $1^d$
+and $0^d$ first, and then present the remaining Hamming levels in
+increasing order. Independently for each level, use a uniformly
+random permutation of that level. The learner remains deterministic
+and chooses a smallest consistent circuit using any rule depending
+only on the preceding history.
+
+For $k\ge2$, after all smaller levels have been labeled zero, the
+globally minimum consistent functions are precisely the surviving
+$k$-variable conjunctions. Here is the elementary reason. If $h$
+depends on the variables in $R$, then $h(1_R)=h(1^d)=1$, so
+$|R|\ge k$. A circuit with $r$ binary gates depends on at most
+$r+1$ variables. Surviving $k$-conjunctions attain size $k-1$;
+at that minimum size, $h$ depends on exactly $k$ variables.
+Every non-all-ones assignment on these variables has a zero
+extension of weight below $k$, so $h$ is their conjunction.
+The same argument applies to AND/OR/NOT circuits with all gates
+charged, since unary gates add no dependencies.
+
+Suppose that $m$ weight-$k$ inputs remain. The learner's chosen
+conjunction is wrong at precisely one of them, its own support
+indicator. Conditional on the complete preceding history, the next
+input is uniform over the $m$ remaining inputs. Its conditional
+mistake probability is therefore exactly $1/m$, regardless of the
+history-dependent deterministic tie rule. Consequently stage $k$
+has exactly
+\[
+ H_{\binom dk}=\sum_{m=1}^{\binom dk}\frac1m
+\]
+expected mistakes. The first two inputs and the weight-one level
+contribute between zero and $d+2$ mistakes, so
+\[
+ \sum_{k=2}^{d-1} H_{\binom dk}
+ \;\le\; \mathbb E M
+ \;\le\; d+2+\sum_{k=2}^{d-1} H_{\binom dk}
+ \;=\;\Theta(d^2).
+\]
+For the upper bound, $H_N\le1+\ln N\le1+d\ln2$.
+For the lower bound, for each integer
+$d/4\le k\le d/2$,
+$\binom dk\ge(d/k)^k\ge2^{d/4}$, hence
+$H_{\binom dk}\ge(d/4)\ln2$; there are $\Omega(d)$
+such levels. The assertion is asymptotic in $d$.
+
+Thus the order still progresses strictly from low to high Hamming
+weight after the initial positive example; only the order inside
+each level is randomized. This suffices to reduce the deterministic
+learner's expected mistake count from exponential to quadratic in
+the target's minimum gate count $d-1$. The exact phase expectations
+hold for every deterministic history-only tie rule. No analogous
+upper bound is asserted here for pure NAND circuits, because the
+NAND proof uses certificates rather than a classification of every
+minimum consistent function.

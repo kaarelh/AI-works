@@ -1,0 +1,196 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,geometry,amsmath,amssymb,amsthm,mathtools,booktabs}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\geometry{margin=1in}
+\hypersetup{pdftitle={Exponential mistakes and polynomial guarantees for circuit Occam learning},pdfauthor={ChatGPT-6 Astra; Claude; Kaarel Hanni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Prb}{\mathbb P}
+\title{Exponential mistakes and polynomial guarantees\\for circuit Occam learning}
+\author{ChatGPT-6 Astra \and Claude (Anthropic) \and Kaarel H\"anni \and Dmitry Vaintrob}
+\date{Research draft, 30 October 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+An online circuit Occam learner predicts using a smallest circuit
+consistent with all previously revealed labels. Does a small target
+circuit imply few mistakes when inputs arrive from changing or adversarial
+regions? The answer depends decisively on how the learner selects among
+equally small circuits.
+
+For every deterministic selection rule based on the previous history,
+the conjunction of $d$ variables admits a distinct-input ordering with at
+least $2^d-d-2$ mistakes. We certify exact circuit minimality, including
+unrestricted NAND circuits, where the target's minimum gate count is
+$2d-2$. This gives an exponential lower bound in the target gate count.
+The corresponding two-input-gate result was already proved in earlier
+work; we present a short proof and a NAND certificate argument.
+
+Conversely, freshly sampling uniformly among the smallest consistent
+circuits gives $O(s^2\log(d+s))$ total expected mistakes for a target of
+size $s$, on every nonanticipating adaptive input sequence. Majority
+prediction within the minimum-size class has a deterministic bound of
+the same order. For any history-based tie rule, arbitrary adaptive
+interleaving of $K$ fixed input environments gives polynomial mistake
+bounds when the environments have controlled disagreement probabilities;
+in particular, arbitrary uniform subsets of the Boolean cube give
+$O(K(s+1)\log(d+s+2)(d+1))$. Local random shuffling of the conjunction
+example reduces exponential mistakes to quadratic expected mistakes.
+We also prove bounds for continuing adaptive distribution drift and a
+precise constant-fraction-elimination assumption. Exponentially small
+distance from uniform, even with exponentially small total successive
+drift, does not alone prevent exponentially many mistakes. All results concern
+noiseless online feedback, not unlabeled transfer after training.
+\end{abstract}
+
+\section{The question and the prediction protocol}
+
+Simplicity-based prediction can extrapolate because one compact rule may
+apply in many regions of its input space. A worst-case online guarantee
+asks for more: after every prediction the true label is revealed, and
+the total number of mistakes should be polynomial in the complexity of
+that rule, even if the queried region changes. We study this question for
+exact minimum-circuit prediction, with unlimited computation.
+
+Fix $d\ge1$ and a target $f:\{0,1\}^d\to\{0,1\}$. At round $t$, an
+input $x_t$ is presented, the learner predicts, and $f(x_t)$ is revealed.
+The label function never changes. Inputs may repeat, but exact consistency
+makes a repeated input harmless. The conjunction-ladder lower bounds use
+no repetitions; the near-uniform adaptive construction later uses repeats.
+The mistake count is over the whole sequence, including an infinite
+sequence where indicated. This is an online guarantee with feedback,
+not a fixed-model test guarantee under an arbitrary new distribution.
+
+A circuit is an acyclic list of gates with two initial constant wires
+and the $d$ variable wires. Each gate reads earlier wires; fan-out and
+sharing are unrestricted. The output is the final gate, and size is the
+number of gates. We use either all sixteen two-input Boolean gates or
+only two-input NAND gates, stating the basis explicitly. Binary AND/OR
+and unary NOT are also covered by the first lower-bound proof.
+No free inversions are allowed in the NAND-only result.
+The target size $s=C(f)$ is the minimum gate count in the chosen basis.
+All logarithms are natural unless a base is displayed. Every confidence
+parameter $\delta$ below lies in $(0,1)$.
+
+Three prediction rules must be distinguished:
+\begin{enumerate}
+\item A \emph{deterministic history-based selector} chooses one smallest
+consistent circuit from previous observations and evaluates that circuit
+on the next input. This includes a fixed ordering of circuit descriptions
+to resolve ties. The circuit choice does not use the current input.
+\item A \emph{fresh uniform selector} draws independently and uniformly
+from the currently smallest consistent circuit descriptions each round.
+The current input is fixed before that fresh draw, which is private until
+then. An adaptive input chooser may use all previous predictions.
+\item A \emph{minimum-class majority predictor} takes the majority label
+of the smallest consistent descriptions on the current input. It may
+equivalently select a smallest circuit giving that label, but its circuit
+selection then uses the current input.
+\end{enumerate}
+Uniformity over descriptions need not mean uniformity over functions.
+Our general counting bounds allow duplicate descriptions. None of these
+rules is automatically the posterior of a Gaussian neural-network prior.
+
+\paragraph{The main distinction.}
+The first rule has an exponential worst-case lower bound, even for an
+AND target. The second and third have polynomial upper bounds for every
+allowed input order. Thus ``choose a smallest consistent circuit'' alone
+does not specify a learner well enough to determine its online behavior.
+The exponential construction can use a simply described order, so low
+description complexity of the input sequence alone is not a sufficient
+positive assumption. Our positive results for the first rule instead
+give explicit stochastic conditions on how new inputs are selected.
+
+\paragraph{Circuit counts.}
+There are exactly
+\[
+ N_j=\prod_{i=1}^j16(d+i+1)^2
+\]
+size-$j$ descriptions in the all-binary-gate model, and the same product
+without the factors $16$ for NAND. In particular, with $N_0=0$,
+\begin{align}
+ h_s:=\log\sum_{j=1}^sN_j
+ &\le\log s+s\log16+2s\log(d+s+1),\label{eq:class-count}\\
+ B_s:=s+\sum_{j=1}^s\log N_j
+ &\le s+s(s+1)\log(4(d+s+1)).\label{eq:tier-count}
+\end{align}
+The learner need not know $s$; these are proof budgets. The realizing
+target ensures that no consistent minimum-size choice ever exceeds $s$.
+
+\paragraph{Relation to earlier work.}
+The conjunction ladder appeared in the Vaintrob--H\"anni slides
+\cite{slides}. H\"anni and Claude \cite{soi} proved its exact
+minimum-circuit version for all binary gates and distinguished it from
+Bayesian averaging. We reproduce that result with an elementary support
+proof, then give a separate NAND-only proof. The positive arguments are
+self-contained finite-class and version-space calculations, including
+the standard halving principle \cite{littlestone}. They make the input,
+tie-breaking, and complexity conventions explicit. These are conventional
+proofs with independent AI-agent checks, not Lean formalizations.
+
+\input{lower}
+\input{nand}
+\input{selection}
+\input{environments}
+\input{smooth}
+\input{genericity}
+
+\section{What follows, and what remains open}
+
+The exact-minimality issue in the AND example is resolved for both
+unrestricted binary-gate circuits and NAND-only circuits. No difficult
+general circuit lower bound is needed: support size proves the former,
+and a small positive certificate proves the latter. The target labels
+are fixed in advance. For each deterministic history-based learner, the
+adversarial construction can be simulated in advance into one fixed
+permutation; it does not assert one permutation that defeats all learners.
+
+There are rigorous positive results without changing that deterministic
+selection rule. Independent shuffling inside each Hamming-weight level
+already changes the conjunction example from exponential to quadratic
+expected mistakes in the binary-gate basis. The environment theorems
+allow unrelated and disjoint regions, arbitrary adaptive switches and
+mixtures, and infinitely many rounds. Their polynomial bound charges the
+number of fixed environments and their smallest positive disagreement
+probabilities. Persistent-reference bounds permit continuing adaptive
+drift instead. By contrast, tiny but persistent omissions of carefully
+selected rare inputs can still produce exponentially many mistakes, even
+with exponentially small distance from uniform and total successive drift.
+These are explicit sufficient conditions and obstructions, not a measure
+under which most conceivable input sequences are typical.
+
+The genericity premise captures a different intuition: errors of the
+chosen simplest rule should often also be errors of many surviving
+simple rules. Its potential argument is exact, but verifying the premise
+for realistic deterministic data streams remains a substantive task.
+The randomized minimum-size theorem needs no such premise; it pays a
+separate counting budget at each complexity level. Ordinary Bayesian
+prediction under a fixed circuit-description prior has yet another
+potential: cumulative log loss is bounded by the target's negative log
+prior mass. These mechanisms should not be identified with each other.
+
+Nothing here establishes an arbitrary-order polynomial mistake bound for
+the particular Gaussian neural-network learners studied elsewhere.
+Nor does the exponential circuit-Occam example disprove such a bound for
+their posterior mixtures. Transferring a result requires controlling the
+actual prediction law, not merely the complexity of one selected mode.
+
+\begin{thebibliography}{9}
+\bibitem{slides} Dmitry Vaintrob and Kaarel H\"anni.
+\emph{Neural-network Bayesian generalization}, presentation, Appendix K.
+\url{https://kaarelh.github.io/ai/nnbayes-generalization.pdf}.
+\bibitem{soi} Kaarel H\"anni and Claude (Anthropic).
+\emph{Solomonoff Operator Induction: Definitions, Versions and Basic Theorems}.
+October 2026. Section ``Circuit SOI'' and its appendix proofs.
+\url{https://github.com/kaarelh/AI-works/blob/main/solomonoff-operator-induction/paper/main.pdf}.
+\bibitem{littlestone} Nick Littlestone.
+Learning quickly when irrelevant attributes abound: A new linear-threshold
+algorithm. \emph{Machine Learning} 2, 285--318, 1988.
+\end{thebibliography}
+\end{document}

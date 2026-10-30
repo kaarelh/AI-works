@@ -1,0 +1,216 @@
+% Standalone includable section. Requires amsmath, amssymb and a theorem environment.
+\section{Adaptive shifts with a persistent reference distribution}
+\label{sec:reference-shifts}
+
+A deterministic choice among minimum circuits also has a polynomial
+all-time mistake guarantee under a useful class of non-i.i.d. processes.
+The condition is that the next-input distribution may adapt to the whole
+past, but remains comparable to one fixed reference distribution.  In
+particular, it continues to sample every reference region often enough.
+The reference need not be uniform.
+
+Let $\mathcal H$ be a finite class of $N$ Boolean hypotheses containing a
+fixed target $h_\star$.  Write $\mathcal F_t$ for the information available
+after round $t$, and suppose the learner chooses an
+$\mathcal F_{t-1}$-measurable $h_t\in\mathcal H$ that is consistent with
+all preceding examples.  The choice may depend arbitrarily on the past,
+including learner randomness included in the filtration.  Its circuit
+must be chosen before seeing the current input.  Labels are always
+$h_\star(X_t)$.  Denote the conditional law of $X_t$ given $\mathcal F_{t-1}$ by $P_t$.
+The comparison below is with respect to this same filtration, including
+any learner randomness revealed before the current input.
+
+\begin{proposition}[Adaptive reference comparability]
+\label{prop:adaptive-reference}
+Suppose that, almost surely, for every round $t$ and measurable set $A$,
+\[
+ a\mu(A)\le P_t(A)\le b\mu(A),
+ \qquad 0<a\le1\le b<\infty,
+\]
+where $\mu$ is a fixed probability distribution.  Suppose also that every
+positive disagreement probability
+$\mu\{h\ne h_\star\}$, for $h\in\mathcal H$, is at least $0<\gamma\le1$.
+Then the total number $M_\infty$ of mistakes satisfies
+\[
+ \mathbb E M_\infty
+ \le b\left[1+\frac{\log N+1}{a}
+                    \left(1+\log\frac1\gamma\right)\right].
+\]
+In particular, $M_\infty<\infty$ almost surely.
+\end{proposition}
+
+\begin{proof}
+For $h\in\mathcal H$, put $p(h)=\mu\{h\ne h_\star\}$ and let
+$\mathcal V_n$ be the hypotheses consistent with the first $n$ examples.
+The conditional lower bound implies
+\[
+ \Pr(h\in\mathcal V_n)\le(1-ap(h))^n\le e^{-anp(h)}.
+\]
+Set $R_n=\max_{h\in\mathcal V_n}p(h)$.  By a union bound,
+\[
+ \Pr(R_n>u)\le\min\{1,Ne^{-anu}\}, \qquad u>0.
+\]
+For $0<u<\gamma$, the same bound holds with $u$ replaced by $\gamma$,
+because each positive $p(h)$ is at least $\gamma$.
+For any $q>0$, monotonicity gives
+\[
+ \sum_{n=0}^{\infty}\min\{1,Ne^{-anq}\}
+ \le 1+\int_0^\infty\min\{1,Ne^{-atq}\}\,dt
+ =1+\frac{\log N+1}{aq}.
+\]
+Integrating the tail probability over $0<u<1$, splitting at $\gamma$,
+and using Tonelli's theorem therefore yields
+\[
+ \mathbb E\sum_{n=0}^{\infty}R_n
+ \le 1+\frac{\log N+1}{a}
+                     \left(1+\log\frac1\gamma\right).
+\]
+Conditional on $\mathcal F_{t-1}$, the learner's mistake probability is
+at most $b\,p(h_t)\le bR_{t-1}$.  Summation proves the claim.
+\end{proof}
+
+For the uniform reference on $\{0,1\}^d$, one may take
+$\gamma=2^{-d}$.  If hypotheses have binary descriptions of at most $L$
+bits, then $N<2^{L+1}$, giving
+\[
+ \mathbb E M_\infty
+ =O\!\left(\frac ba(L+1)(d+1)\right).
+\]
+This applies to an exact minimum-description consistent circuit, since a
+realizing target of description length $L$ keeps every selected circuit
+within that class.  For minimum gate count $s$, standard circuit counting
+gives $\log N=O((s+1)\log(d+s+2))$.  No efficient algorithm for finding the exact minimum
+is asserted.  For a nonuniform finite reference, $\gamma$ may instead be
+bounded below by its smallest positive atom; polynomial bounds hold when
+$\log(1/\gamma)$ and $b/a$ are polynomial in the problem parameters.
+
+For example, a process of the form
+\[
+ P_t=(1-\eta)\mu+\eta Q_t, \qquad 0\le\eta<1,
+ \qquad Q_t(A)\le B\mu(A),
+\]
+may choose $Q_t$ adaptively.  It satisfies the proposition with
+$a=1-\eta$ and $b=1-\eta+\eta B$.  It need never become i.i.d. or converge
+to a limiting distribution.
+
+\paragraph{Summably many departures from the comparison condition.}
+The same conclusion has a robust extension.  Suppose there are
+nonnegative $\mathcal F_{t-1}$-measurable $\varepsilon_t$ such that
+\[
+ a\mu(A)-\varepsilon_t\le P_t(A)
+ \le b\mu(A)+\varepsilon_t,
+ \qquad \sum_{t\ge1}\varepsilon_t\le V\quad\hbox{almost surely}.
+\]
+Then
+\[
+ \mathbb E M_\infty
+ \le V+b\left[1+\frac{\log N+V+1}{a}
+                         \left(1+\log\frac1\gamma\right)\right].
+\]
+Indeed, for each fixed $h$, the process
+\[
+ \mathbf1\{h\in\mathcal V_n\}
+ \exp\!\left(anp(h)-\sum_{t=1}^n\varepsilon_t\right)
+\]
+is a nonnegative supermartingale.  Thus
+$\Pr(h\in\mathcal V_n)\le e^{V-anp(h)}$.
+The preceding proof applies with $N$ replaced by $Ne^V$, while the
+conditional mistake probability is at most $bR_{t-1}+\varepsilon_t$.
+In particular, with $a=b=1$ this covers
+$\sum_t\|P_t-\mu\|_{\mathrm{TV}}\le V$.
+Here total variation is $\sup_A|P(A)-Q(A)|$.
+This assumption controls cumulative distance from a fixed reference; it
+is different from bounding only the successive changes
+$\sum_t\|P_{t+1}-P_t\|_{\mathrm{TV}}$.
+
+
+% Includable exact-minimum-circuit obstruction for upper-only smoothness.
+\subsection{Tiny persistent shifts can defeat deterministic minimum circuits}
+\label{sec:smooth-lower}
+
+An upper density bound alone does not suffice even for exact minimum
+circuits.  The failure can persist when every conditional input law is
+exponentially close to uniform and, for a fixed ranking of circuits, the
+sum of successive distribution changes is exponentially small.
+This construction uses repeated inputs.
+
+\begin{proposition}[Upper smoothness does not ensure few mistakes]
+\label{prop:upper-smooth-lower}
+Use a fixed finite fan-in-two gate basis containing AND, and count gates.
+Let $d\ge4$ be divisible by four, let $\mu$ be uniform on
+$\{0,1\}^d$, and put $\delta=e^{-d/8}$.
+For every deterministic, history-only exact-minimum consistent circuit
+rule, there is an adaptive input process with target
+$f(x)=\bigwedge_{j=1}^d x_j$, of minimum size $d-1$, such that
+\[
+ P_t(A)\le\frac{\mu(A)}{1-\delta}\quad\hbox{for every set }A,
+ \qquad \|P_t-\mu\|_{\rm TV}\le\delta
+ \quad\hbox{for every round }t,
+\]
+yet the learner makes at least $2^{d/2}$ mistakes almost surely.
+If the rule selects the first consistent minimum circuit in a fixed
+ranking, the same process also satisfies
+\[
+ \sum_{t\ge1}\|P_{t+1}-P_t\|_{\rm TV}
+ \le\frac{\delta}{1-\delta}\quad\hbox{almost surely}.
+\]
+There is a deterministic horizon $T$ with $\log T=O(d)$ at which
+$\mathbb E M_T\ge2^{d/2-1}$.
+\end{proposition}
+
+\begin{proof}
+Put $k=3d/4$, let $R=\{x:|x|<k\}$, and write
+$r=|R|$, $m=\binom dk$, and $N=2^d$.
+First draw independently and uniformly from $B=R\cup\{1^d\}$ until
+every point of $B$ has appeared.  This stopping time is finite almost
+surely.  These examples force any consistent function to depend on at
+least $k$ coordinates: a function depending on a set $S$ of fewer than
+$k$ coordinates cannot distinguish $1^d$ from $1_S\in R$.
+A circuit with $s$ binary gates depends on at most $s+1$ coordinates.
+Every $k$-variable conjunction is consistent and has $k-1$ gates, so
+minimum size is exactly $k-1$.
+
+Moreover, every minimum circuit computes a $k$-variable conjunction.
+It depends on exactly $k$ coordinates, say $S$, and is one on their
+all-ones assignment.  Every other assignment to $S$ occurs on a point
+of weight below $k$ and is labeled zero.  Its function is therefore
+precisely $\bigwedge_{j\in S}x_j$.
+
+While any $k$-conjunction remains consistent, let $S_t$ be the support of
+the learner's current minimum circuit and choose $P_t$ uniform on
+$B\cup\{1_{S_t}\}$.  The current circuit is determined by the past, so
+this defines a valid adaptive input process.
+A draw from $B$ causes no mistake and eliminates no remaining
+$k$-conjunction.  A draw of $1_{S_t}$ has conditional probability
+$1/(r+2)$, causes a mistake, and eliminates exactly that conjunction:
+two distinct $k$-subsets are not contained in one another.  Therefore
+minimum size remains $k-1$ until all $m$ conjunctions have been
+eliminated.  Those $m$ errors occur almost surely.  Thereafter retain the
+final distribution, whose entire support has already been observed.
+
+Hoeffding's inequality gives
+\[
+ 1-r/N=\Pr\{\operatorname{Bin}(d,1/2)\ge3d/4\}
+ \le e^{-d/8}=\delta.
+\]
+Every conditional law is uniform on a set of size $r+1$ or $r+2$.
+Its density relative to $\mu$ is at most $N/(r+1)\le(1-\delta)^{-1}$,
+and its total variation distance from $\mu$ is at most
+$1-(r+1)/N\le\delta$, including the initial and final stages.
+Under a fixed ranking, repeated points of $B$ leave the selected circuit
+unchanged.  There are $m$ hard phases.  The initial switch and the
+$m-1$ switches between their laws each have total variation $1/(r+2)$;
+there is no final switch.  Thus total successive variation is
+$m/(r+2)\le\delta/(1-\delta)$, using $m\le N-r\le N\delta$.
+
+Finally, $m=\binom{d}{d/4}\ge(d/(d/4))^{d/4}=2^{d/2}$.
+This construction permits repeated inputs; the earlier exponential
+lower bounds use a permutation with no repeats. The expected time through the initial stage and all hard phases is
+\[
+ (r+1)H_{r+1}+m(r+2),
+\]
+where $H_n$ is the $n$th harmonic number.  Taking $T$ to be the ceiling of
+twice this expectation gives $\mathbb E M_T\ge m/2$ by Markov's
+inequality, and $\log T=O(d)$.  This horizon is exponential in $d$;
+only its logarithm is linear in $d$.
+\end{proof}

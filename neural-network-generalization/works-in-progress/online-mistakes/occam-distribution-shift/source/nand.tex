@@ -1,0 +1,129 @@
+\section{The same separation for pure NAND circuits}
+
+The separation also holds when every gate is a two-input NAND. Size
+means the number of NAND gates; intermediate results and input wires may
+be reused without restriction. Constants may be allowed or omitted.
+Negations and complemented edges are not free operations in this model.
+
+\begin{lemma}[A positive certificate for a NAND circuit]
+\label{lem:occam:nand-certificate}
+Let a NAND circuit with $s\ge1$ gates compute $h$, and suppose
+$h(1^d)=1$. There is a set $R\subseteq[d]$ with
+$|R|\le\lfloor s/2\rfloor+1$ such that $h(x)=1$ whenever
+$x_i=1$ for every $i\in R$. In particular, $h(1_R)=1$.
+\end{lemma}
+
+\begin{proof}
+Evaluate every gate at $1^d$, calling it true or false according to its
+value. Starting at the true output gate, retain one false-valued input
+of each selected true NAND gate, and both true-valued inputs of each
+selected false NAND gate. Recurse to the selected sources, stopping at
+variables and constants. Identify repeated occurrences of the same
+source or gate, but keep repeated edges when both input slots select
+the same source. The resulting proof graph is a connected rooted
+directed acyclic multigraph.
+
+Let $T,F,L$ be its numbers of true gates, false gates, and distinct
+source leaves, respectively. Every selected false gate has a selected
+true parent, whereas every true gate selects only one input. Thus
+$F\le T$: choose one true parent of each false gate; distinct false
+gates cannot choose the same parent. There are $T+2F$ selected edges
+and $T+F+L$ vertices. Connectedness gives
+\[
+ T+F+L-1\le T+2F,\qquad L\le F+1.
+\]
+Since $T+F\le s$ and $F\le T$, we obtain
+$L\le\lfloor s/2\rfloor+1$.
+
+Let $R$ consist of the distinct variable leaves, so $|R|\le L$.
+Every one of these variables is one at $1^d$. Fixing them to one
+forces every selected gate to retain its value at $1^d$, by induction
+in circuit order: a selected false NAND has both inputs forced true,
+and a selected true NAND has one input forced false. Constants retain
+their values without any restriction on the input. The output
+therefore remains one. The argument explicitly permits sharing and
+repeated input wires.
+\end{proof}
+
+\begin{corollary}[Exact NAND complexity of conjunctions]
+\label{cor:occam:nand-and}
+For $k\ge2$, the conjunction of $k$ distinct variables has minimum
+NAND-circuit size $2k-2$.
+\end{corollary}
+
+\begin{proof}
+An AND of two signals is a NAND followed by a NAND with its two inputs
+tied together. Replacing every gate in an AND tree gives $2k-2$ gates.
+Conversely, every positive certificate for a conjunction must include
+all its $k$ variables. The lemma gives
+$k\le\lfloor s/2\rfloor+1$, hence $s\ge2k-2$.
+\end{proof}
+
+\begin{theorem}[Exponential mistakes for smallest NAND circuits]
+\label{thm:occam:nand-ladder}
+Fix $d\ge3$ and let $f(x)=\bigwedge_{i=1}^d x_i$. Consider any
+deterministic learner which, before receiving the next input, chooses
+a minimum-size NAND circuit consistent with all preceding examples.
+There is a permutation of $\{0,1\}^d$, labeled throughout by $f$,
+on which the learner makes at least
+\[
+ 2^d-d-2
+   =2^{s/2+1}-s/2-3
+ \quad\hbox{mistakes},\qquad s=C_{\mathrm{NAND}}(f)=2d-2.
+\]
+The permutation may depend on the deterministic learner, but can be
+fixed before the sequence is presented.
+\end{theorem}
+
+\begin{proof}
+First present $1^d$ with label one, then every input of weight zero
+or one with label zero. For $k=2,\ldots,d-1$, present the weight-$k$
+inputs as follows.
+
+At any point in stage $k$, every input of weight below $k$ has already
+been labeled zero. If a consistent circuit has $r$ gates, the lemma
+provides a positive certificate $R$ with
+$|R|\le\lfloor r/2\rfloor+1$. Consistency requires $|R|\ge k$,
+since otherwise $h(1_R)=1$ contradicts a previous label. Therefore
+every consistent circuit has at least $2k-2$ gates.
+
+As long as some weight-$k$ input $1_S$ remains unshown, the conjunction
+$\bigwedge_{i\in S}x_i$ is consistent: it is one at $1^d$, zero below
+weight $k$, and among weight-$k$ inputs it is one only at $1_S$.
+It has $2k-2$ NAND gates. Thus the learner's minimum consistent size
+is exactly $2k-2$. A positive certificate $R$ for its chosen circuit
+has $|R|\le k$, and consistency forces $|R|\ge k$. Present $1_R$.
+This input has not been shown before, the learner predicts one, and
+the target label is zero because $|R|=k<d$.
+
+Repeating this step presents every weight-$k$ input as a mistake.
+Summing over $k=2,\ldots,d-1$ gives
+$\sum_{k=2}^{d-1}\binom dk=2^d-d-2$. The initial points and these
+levels comprise the whole hypercube. Because the learner is
+deterministic, the constructed sequence can be simulated and fixed
+in advance. The target labels never depend on the learner.
+\end{proof}
+
+\paragraph{A simple fixed tie rule and input order.}
+For every $k\ge2$, fix the usual left-associated AND chain on a sorted
+list of $k$ variable indices and replace each AND by its two-NAND
+implementation. At size $2k-2$, place these canonical circuits first,
+ordered lexicographically by their supports, and place all remaining
+circuit descriptions afterward in any fixed order. At other sizes,
+use any fixed order. Present $1^d$, then $0^d$, then the remaining inputs in
+increasing Hamming weight, using lexicographic support order within
+each level. At every stage $k\ge2$, the minimum consistent size is
+$2k-2$, and the first surviving canonical conjunction has exactly the
+support of the next input. This fixed tie rule and fixed input order
+therefore realize the lower bound. No classification of all
+minimum-size NAND hypotheses as conjunctions is required.
+
+\paragraph{Conventions.}
+The argument starts at $k=2$, so it applies both when outputs must be
+gates and when direct wires or constants are allowed as zero-gate
+outputs. If desired, the certificate lemma extends to those
+zero-gate cases: a projection has a one-variable certificate and
+constant one has the empty certificate. The result concerns gate
+count. In a literal gate-list code with input addresses, the target's
+description length is $\Theta(d\log d)$, so the lower bound becomes
+$2^{\Omega(\ell/\log\ell)}$ in that description length.
