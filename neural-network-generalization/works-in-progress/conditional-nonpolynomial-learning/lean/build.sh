@@ -131,7 +131,10 @@ print(f'Fresh build: {len(ordered)} local modules; '
 PY
 
 cd "$task_project"
-mapfile -t task_external < "$task_output/external-targets.txt"
+task_external=()
+while IFS= read -r task_target; do
+  task_external+=("$task_target")
+done < "$task_output/external-targets.txt"
 if ((${#task_external[@]})); then
   "$task_lake" build "${task_external[@]}"
 fi

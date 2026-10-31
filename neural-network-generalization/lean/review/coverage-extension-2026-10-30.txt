@@ -1,0 +1,188 @@
+NNBayes statement audit and coverage extensions — 30–31 October 2026
+================================================================
+Baseline: 4ae26f467789a6aec9802f672a3c46e694cc60dd.
+Scope: the sixteen papers with main formalizations (the original five,
+the second batch of ten, and conditional nonpolynomial learning). No new
+formalization project was started for the other papers. The accompanying
+OOD research proof is conventional mathematics, not a new Lean coverage claim.
+
+The review compares the model definitions, hypotheses, quantifier order,
+prediction rules, literal budgets, and main conclusions with paper statements
+and abstract claims. A successful Lean build and semantic correspondence are
+separate evidence. This record does not certify every auxiliary display or
+informal proof in the collection.
+
+Model checks
+------------
+The Boolean input encoding, augmented constant input, depth L=r+2, actual
+Gaussian variances, all-input strict output margin, exact label conditioning,
+positive posterior denominators, actual bounded-weight teacher complexity,
+and strict-confidence threshold were checked. Posterior sampling, majority
+prediction, and the sign of a posterior mean are different rules. Width-first
+and scale-first limits were not interchanged. IID, uniform IID, permutation,
+and adversarial-order protocols were kept separate. Continuous-domain results
+are regression statements on the actual stated input laws, not Boolean-cube
+classification statements.
+
+Main correspondence across the sixteen papers
+---------------------------------------------
+1. Strong-prior generalization: main statement and abstract fixed-depth
+   polynomial learning claim match. The scale threshold may depend on width
+   and precedes the input law, sample count, and failure probability.
+   NEW: norm/teacher-complexity polynomial comparisons and norm-sublevel
+   counting in NormComplexityComparison.lean. These use a looser quantization
+   count; they do not certify the sharper displayed Euclidean packing formula.
+
+2. Gamma above one: main all-width finite-scale statement matches, for each
+   fixed gamma>1. The polynomial may depend on gamma and depth. The inverse
+   raw-prior-mass-to-complexity comparison is now proved, in both directions,
+   in PriorMassComplexity.lean. The inverse polynomial is uniform over every
+   learner width N>=1, with no teacher-width restriction. Positive raw mass
+   is explicit because Lean defines log(0). The forward direction uses the
+   actual cylinder polynomial for all gamma>=1 and N>=C.
+
+3. Mean-field all-width: main statement matches, including one sample event
+   for risk <=epsilon/3 and strict >2/3 confidence outside epsilon mass.
+   It is tanh-specific. No extra minimum width beyond teacher complexity.
+
+4. Subcritical exponential: main statement matches, including constants
+   chosen before gamma<1 and width-first limits. The parity teacher already
+   has a closed polynomial-complexity realization. Sharper separate negative-
+   gamma constants and some standalone sampling estimates remain uncovered.
+
+5. Robust polynomial depth: polynomial conclusion matches under the formal
+   circuit convention. IMPORTANT WIDTH GAP: Lean counts a constant wire at
+   every stage, including the final stage. The paper's nonconstant width-one
+   cases can require formal width two. The literal smallest learner width is
+   not fully certified by the current theorem. Localized/distributional and
+   certificate variants are not all covered by this main endpoint.
+
+6. Unbounded/Lipschitz activations: the main strong-prior and uniform-band
+   statements match their stated existential polynomial budgets.
+   NEW: GELU bounded-complexity consequence, exact power-prior/band identity,
+   all-gamma>=1 band membership, and simultaneous confidence consequences at
+   the manuscript budgets in BatchTwoActivationCorollaries.lean.
+
+7. ReLU/GELU polynomial depth: main claims match with the manuscript's explicit
+   counted constant-one wire. Existing sharp scales and width-growth results
+   are retained. This is not a theorem for arbitrary unbounded activations.
+
+8. Improved original-support all-scale learning: the exponents C^6 log^13 and
+   the degree-46 polynomial conclusion are covered. IMPORTANT GAPS: the same
+   constant-wire issue affects literal small widths; the proof uses a larger
+   finite-concentration allocation (200 in place of the printed 16). The
+   numerical allocation is not certified by preserving polynomial exponents.
+
+9. Shallow sharp bounds: the main three explicit budgets match.
+   NEW: readout L1 bound from weighted energy, norm-only sample budget, and
+   quadratic-width resource bound for the sharper budget, plus an actual
+   all-width/all-scale norm endpoint in BatchTwoShallowNormMain.lean. These
+   are explicit inequalities, not a separately formalized Big-O statement.
+
+10. Online upper bounds: the three actual-prior regimes and the permutation
+    and infinite uniform-IID protocols match the main claims.
+    NEW: arbitrary confidence thresholds, including 2/3 and worst-tie 1/2,
+    and infinite-majority-count conversion, at the existing sharp neural
+    budgets in BatchTwoOnlinePredictionMain.lean. No arbitrary-order upper
+    bound is inferred. Ancillary nonuniform-IID, merging and sampled-error
+    refinements and the paper's counterexamples are not all formalized.
+
+11. Circuit converse: principal finite/permutation and IID statements match,
+    with the explicit resource constants and the actual circuit syntax.
+    Prefix coding has the proved Kraft/counting interpretation; an executable
+    bitstream serializer/parser is not supplied by that theorem.
+
+12. Neural polynomial-depth converse: main claims match the actual bounded
+    gain setting and the stated order of limits. The optional operator-norm
+    extension remains outside the proved endpoint.
+
+13. Non-Gaussian priors: all three original main endpoints match the stated
+    smooth, even, strongly log-concave coordinate laws.
+    NEW: the broader two-sided quadratic-envelope strong-prior proposition
+    is now proved in BatchTwoQuadraticEnvelope{Model,Rate,Main}.lean, for
+    actual independent coordinate laws, not an assumed rate oracle. Densities
+    may differ by coordinate, need not be even or smooth or log-concave, and
+    envelope prefactors may depend on width. The energy exponents have a
+    common bounded ratio. This proves fixed-width sufficiently-small-scale
+    learning, not a uniform-in-width threshold.
+    NEW (31 October): QuadraticTailEnvelopes and QuadraticTailRate derive
+    arbitrarily tight global envelopes from positive continuous densities
+    and their actual two-sided quadratic log-tail limits. The exact limit
+    sigma^2 log mass -> -a*kappa and strict energy ordering now follow.
+    No rate theorem or global envelope is assumed in that endpoint.
+
+14. Continuous domains: both principal regression endpoints match.
+    NEW: the existing low-energy-interpolant theorem is integrated; minimum-
+    energy exact interpolants now exist by compactness and have the witness
+    energy bound. One sample event controls all eligible widths, every
+    minimizer and every probability mixture of minimizers, in
+    BatchTwoContinuousMinimizers.lean. Exact iterated Bayesian weak limits and
+    separate binary-likelihood classification statements remain uncovered.
+    Full measurability of the original two success events is not supplied by
+    those endpoint declarations; the new minimizer theorem has an explicitly
+    measurable sample event.
+
+15. Continuous depth lower bound: all three main regimes match the fixed
+    nonatomic unit-circle input law and bounded width-three teacher.
+    NEW: exact minimizers and every supported mixture have regression error
+    at least 1/2 and confidence-failure mass at least 1/2 even at correct-
+    probability threshold 1/2. A measurable event of probability >=49/50
+    simultaneously controls every eligible learner width and every mixture,
+    via the memorizer, compact energy sublevels and pairing barrier, in
+    BatchTwoContinuousDepthMinimizers.
+    Iterated weak-limit identification and varying smooth-density variants
+    remain uncovered. No uniform-sphere or Boolean-cube lower bound follows.
+
+16. Conditional nonpolynomial learning: the main theorem matches the sole
+    explicit complexity-class premise PPoly != TC1 and the actual positive-
+    scale Gaussian model. No posterior-ceiling premise remains in the closed
+    theorem. The statement is not an exponential-depth or zero-scale theorem.
+    NEW: FixedHardFamily.lean chooses a polynomial-teacher hard family before
+    the sample budget. Infinitely many dimensions have one input law common
+    to every sample length from ZERO up to that budget, all eligible widths,
+    and every scale schedule. GaussianOutputSymmetry proves exact one-half
+    label confidence at zero samples and supplies the formerly missing case.
+    The auxiliary arbitrary-beta ceiling (beyond beta=1/6) remains uncovered.
+
+Build and trust checks
+----------------------
+Pinned Lean 4.32.0 and mathlib revision
+81a5d257c8e410db227a6665ed08f64fea08e997.
+The main library was rebuilt from source with the additions integrated:
+  lake build NeuralGeneralization
+  lake env lean CheckMain.lean
+  lake env lean CheckConfidence.lean
+  lake env lean CheckParity.lean
+  lake env lean CheckRobust.lean
+  lake env lean Audit.lean
+  lake build NeuralGeneralization.BatchTwoAudit
+  lake env lean CheckCoverageExtensions.lean
+All passed. The last gate checks 72 named extension theorems and rejects any
+axiom other than propext, Classical.choice, or Quot.sound. The ordinary Audit
+also checks imported project declarations transitively.
+
+All 585 conditional-paper modules were compiled from source, followed by
+FixedHardFamily.lean (586 total). The fresh source build was started with the
+published build script and resumed after 252 modules with a three-worker
+import-DAG driver, using the same pinned compiler and dependency paths. The
+closed main endpoints and both new hard-family endpoints report standard
+axioms only. The build script's Bash-4-only mapfile call was replaced with a
+Bash-3-compatible read loop so it works with the system Bash on macOS.
+
+The original 1,313-entry collection manifest, 585-entry conditional manifest,
+and 14-entry component manifest matched before edits. After edits, only the
+intentionally extended root imports differ among those recorded Lean sources.
+A comment/string-aware scan of project Lean source (excluding dependencies
+and generated directories) found no sorry/admit/custom-axiom/native_decide or
+unsafe proof bypasses. This static check supplements, rather than replaces,
+the compiler and axiom checks. New source hashes and build evidence are in the
+verification records alongside this review and the research note.
+
+Remaining work is real
+----------------------
+The new proofs do not close every coverage gap. In particular, the two width
+conventions, the printed 16 allocation, broader circuit simulation, sharp
+packing formulas, exact Bayesian weak limits, arbitrary-beta conditional
+ceiling, and the listed ancillary results still require additional proofs or an explicitly
+approved change to the paper statements. No paper was weakened just to make
+its statement agree with the current formalization.

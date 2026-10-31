@@ -1,5 +1,7 @@
 # Second batch: ten formalized papers
 
+> **30 October 2026 extension:** [The current coverage record](coverage-extension-2026-10-30.txt) documents new checked activation/confidence, online-majority, shallow-norm, quadratic-envelope, and exact-minimizer results. The rows below retain the earlier main-endpoint map; exclusions now closed by those additions are identified in the new record. The constant-wire and numerical-allocation gaps remain open.
+
 The ten papers were selected for extending the activation class, improving the complexity bounds, controlling total mistakes and their converses, extending the priors and input domains, and establishing a depth obstruction. Their main learning statements are proved for the actual models specified in the manuscripts. The original five results retain their separate entry points and presentation.
 
 The entry point is [BatchTwoMain.lean](../NeuralGeneralization/BatchTwoMain.lean). The [axiom audit](../NeuralGeneralization/BatchTwoAudit.lean) covers the main endpoints and imports the more detailed shallow, online and non-Gaussian audits. A passing kernel check and a comparison with the manuscript are separate checks: this table records the latter. The collection verification record records the fresh source build.

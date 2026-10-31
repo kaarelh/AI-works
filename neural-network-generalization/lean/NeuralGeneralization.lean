@@ -5,3 +5,6 @@ import NeuralGeneralization.SubcriticalMain
 import NeuralGeneralization.SubcriticalCircuitCorollary
 import NeuralGeneralization.RobustMain
 import NeuralGeneralization.BatchTwoMain
+import NeuralGeneralization.NormComplexityComparison
+import NeuralGeneralization.GaussianOutputSymmetry
+import NeuralGeneralization.PriorMassComplexity

@@ -20,7 +20,13 @@ import NeuralGeneralization.BatchTwoContinuousFiniteMain
 import NeuralGeneralization.BatchTwoContinuousDepthStrongMain
 import NeuralGeneralization.BatchTwoContinuousDepthPowerManuscript
 import NeuralGeneralization.BatchTwoContinuousDepthCriticalMain
-
+import NeuralGeneralization.BatchTwoActivationCorollaries
+import NeuralGeneralization.BatchTwoOnlinePredictionMain
+import NeuralGeneralization.BatchTwoShallowNormMain
+import NeuralGeneralization.BatchTwoQuadraticEnvelopeMain
+import NeuralGeneralization.BatchTwoContinuousMinimizers
+import NeuralGeneralization.BatchTwoContinuousDepthMinimizers
+import NeuralGeneralization.QuadraticTailRate
 /-! Main learning statements of the ten-paper second formalization batch.
 See `review/BatchTwo-coverage.md` for theorem correspondence and exclusions.
 The original five-paper entry points are unchanged. -/

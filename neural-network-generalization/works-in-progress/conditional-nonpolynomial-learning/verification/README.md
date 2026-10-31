@@ -21,11 +21,13 @@ The first states that every prescribed positive scale schedule in `0 < t ≤ 1` 
 | Actual finite-width posterior circuit ceiling needed in the proof | Proved at exceptional mass `1/6`, with universal integer resource envelopes and scale-independent width threshold |
 | The three physical-scale regimes, finite arithmetic and threshold-circuit compilation, teacher compilation, finite boosting, and circuit-family collapse | Proved dependencies of the final entry points |
 | The stronger analytic-ceiling proposition stated for every exceptional mass `β ∈ (0,1)` | Not claimed to be fully formalized by this package |
-| The fixed-hard-family corollary, with one input law defeating every sample, width, and scale in its stated ranges | Conventional proof in the paper; its full quantifier strengthening is not claimed to be formalized here |
+| The fixed-hard-family corollary, with one input law defeating every sample, width, and scale in its stated ranges | Added 30–31 October in `FixedHardFamily.lean` for every sample length from zero up to the budget; the zero-sample case uses exact Gaussian output-sign symmetry |
 | An exponential lower bound in teacher depth | Not asserted by the paper or the Lean theorem |
 | A separately defined exact zero-scale posterior limit at fixed width | Not covered by the positive-scale schedule statement |
 
 The final theorem's circuit classes are concrete finite NAND and threshold circuits. The statistical objects are the actual finite neural-network prior and posterior; they are not abstract oracle fields chosen to encode the desired conclusion. The former component theorem `conditionalImpossibility_of_posteriorCeiling` remains useful, but its premise is now discharged by `analyticPosteriorCeiling` in the closed entry-point module.
+
+The 30 October extension is checked separately from the historical 585-module publication record below; see [the current coverage record](../../../lean/review/coverage-extension-2026-10-30.txt).
 
 ## Source and build checks
 

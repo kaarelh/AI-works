@@ -1,0 +1,79 @@
+Isotropic strong-prior OOD continuation — 31 October 2026
+========================================================
+The requested superpolynomial mistake lower bound remains OPEN in this work.
+The original isotropic Gaussian prior, global strict margin, exact label
+conditioning and bounded-weight teacher convention are retained throughout
+that question. A variance perturbation, arbitrary MAP tie-break, growing-depth
+weak-prior limit or abstract Occam learner does not answer it.
+
+Proved mistake bound
+--------------------
+source/majority-ood.tex gives the full conventional proof for odd majority,
+C_2(f)=1 and learner width N=1. An explicitly specified input order gives
+Omega(d^2) expected posterior-sampling mistakes in the strong-prior limit,
+and a finite-small-scale high-probability consequence. It gives only a linear
+lower bound for posterior-majority mistakes. The proof includes the exact
+Gaussian symmetry across the two minimum-support sizes; equal energy alone
+is not used to infer equal posterior weights. This is not Lean formalized.
+
+New exact obstruction to an integer-energy shortcut
+---------------------------------------------------
+For x in {-1,1}^8 let
+  f(x) = sign(13 + 7x1 + 6x2 + 6x3 + 4x4 + 4x5 + 4x6 + 3x7 + 2x8).
+The unique minimum of a0^2+...+a8^2 subject to
+  f(x)(a0 + sum_i ai xi) >= 1 for all 256 inputs
+is attained at
+  a* = (13,7,6,6,4,4,4,5/2,5/2),    Q(f)=701/2.
+
+The adjacent script check_fractional_energy.py verifies every margin and
+an exact nonnegative dual certificate, using Python Fraction only. In the
+lexicographic (-1,+1) ordering of inputs, the active rows have indices
+  28, 35, 67, 96, 131, 132, 136, 144
+and their multipliers are respectively
+  (145,171,171,209,373,111,111,111)/4.
+Their conic combination equals a*, and their scalar product with a* sums
+to 701/2. For any feasible a,
+  ||a||^2 = ||a*||^2 + 2<a*,a-a*> + ||a-a*||^2 >= 701/2,
+with equality only at a*. This is a complete rational optimality proof.
+
+The seed function is the weighted voting game [12;7,6,6,4,4,4,3,2]. That
+example is discussed by Freixas and Kurz, "On minimum integer representations
+of weighted games", https://arxiv.org/abs/1103.0868 . The Euclidean optimum
+and certificate above were computed and independently checked here; they
+are not attributed to the integer-representation result.
+
+Why this matters, and its limits
+--------------------------------
+Exact small-cube enumeration through d=5 and the earlier random searches
+had only found odd-integer Q values. A proposed general integer-energy
+argument could therefore have falsely suggested only polynomially many
+energy levels below a bounded teacher's cost. The certificate disproves
+that premise. It does not prove a large number of levels, construct an
+adverse sequence, or establish any mistake lower bound for this function.
+
+A further random search (60 functions each at d=10,11,12, with rational
+feasibility and dual checks on accepted candidates) found no fractional
+example. This failure is search evidence only; the explicit certificate
+above is decisive. Random search is poorly suited to finding the special
+symmetries needed by this route.
+
+Other routes examined in this continuation
+------------------------------------------
+1. Ordinary online maximum-margin projection bounds do not automatically
+   apply: the global all-input absolute margin makes the feasible parameter
+   set a union of sign chambers, not the convex training-margin polytope.
+2. Duplicating coordinates or conditioning on helper-coordinate examples
+   could imitate a nonisotropic metric on a restricted input set, but does
+   not yet preserve the full-cube global-margin event or exclude cheaper
+   unintended classifiers. No embedding theorem has been proved.
+3. Equal-energy candidates can have different Gaussian prefactors. Treating
+   their posterior as uniform, or selecting a convenient MAP tie-break,
+   would require an additional symmetry/asymptotic proof. The quadratic
+   majority construction has that symmetry; a proposed exponential extension
+   currently does not.
+
+The next substantive target is an explicit isotropic construction with many
+successive distinguishable minimum-energy classes, together with control of
+its Gaussian tie weights and a polynomial bounded-weight teacher. The
+fractional certificate removes one apparent obstruction; it does not finish
+that construction.

@@ -1,0 +1,133 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath,amssymb,amsthm,geometry,hyperref}
+\geometry{margin=1in}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newcommand{\sgn}{\operatorname{sign}}
+\title{A quadratic OOD mistake lower bound for isotropic, width-one NNBayes}
+\author{Research note, 30 October 2026}
+\date{}
+\begin{document}\maketitle
+\noindent\textbf{Status.} This is a conventional mathematical proof, not a Lean formalization. It preserves the original isotropic Gaussian prior and its all-input margin conditioning. It proves a quadratic lower bound in input dimension; it does \emph{not} prove the requested superpolynomial lower bound. The affine reduction and minimum-tier characterization below are the ones in the repository's \texttt{and-gaussian/source/and-geometry.tex}; the capped-deletion argument and its sum across layers give the extension here.
+
+\paragraph{Model.}
+On $\{-1,1\}^d$, use one hidden tanh neuron,
+\[
+ z_{a,b}(x)=b\tanh(a_0+\sum_{i=1}^d a_ix_i),\qquad
+ a_i\sim N(0,\sigma^2/d),\quad b\sim N(0,\sigma^2),
+\]
+independently, with the prior conditioned on $|z_{a,b}(x)|>1/2$ for \emph{every} cube input. Update by exact agreement with all revealed labels. Sample a fresh posterior classifier each round. Let $M_\sigma$ denote its total mistakes on a specified fixed order, and let majority prediction mean majority of posterior label probabilities, not the sign of a posterior mean score.
+
+\begin{theorem}\label{thm:main}
+Let $d=2m+1\ge5$ and $f(x)=\sgn(\sum_i x_i)$. This target has bounded-weight teacher complexity $C_2(f)=1$, so learner width $N=1$ is admissible. Reveal $1^d$ first, then all inputs of Hamming weight $0,1,\ldots,m$ in that order, using any fixed order within each layer; complete this to a permutation arbitrarily. Put
+\[
+ B_d=H_d+\sum_{k=2}^{m}\log\!\left(1+
+       \frac{\binom{d+1}{k}}{\binom{2k-1}{k}}\right),
+ \qquad H_d=\sum_{j=1}^d\frac1j.
+\]
+Then
+\[
+ \liminf_{\sigma\downarrow0}\mathbb E M_\sigma\ \ge B_d=\Omega(d^2).
+\]
+In particular, for $K=\lfloor d/8\rfloor\ge2$,
+\[
+ B_d\ge H_d+(\log2)\left(\frac{K(K+1)}2-1\right).
+\]
+For every fixed such $d$, there exists $\sigma_0>0$ such that every $0<\sigma<\sigma_0$ has $\mathbb E M_\sigma\ge B_d/2$. For fresh independent posterior draws,
+\[
+ \mathbb P\{M_\sigma\ge B_d/4\}\ge1-e^{-B_d/16}.
+\]
+On the same order, posterior-majority prediction makes at least $m$ mistakes for all sufficiently small positive $\sigma$. This last conclusion is linear, not quadratic.
+\end{theorem}
+
+\begin{lemma}[Capped deletion]
+Start with $M$ equally weighted candidates. Successive queries remove $a_j$ of the $r_j$ survivors, where $0\le a_j\le D$, $r_1=M$, and the class is eventually exhausted. A posterior sampled uniformly from the survivors has total expected mistakes at least $\log(1+M/D)$ up to exhaustion.
+\end{lemma}
+\begin{proof}
+Ignore zero deletions. At each step the mistake probability is $a_j/r_j$. Since $r_j-a_j+D\ge r_j$,
+\[
+ \frac{a_j}{r_j}\ge\int_{r_j-a_j}^{r_j}\frac{du}{u+D}.
+\]
+The intervals partition $[0,M]$, so summing gives $\log((M+D)/D)$. This argument includes the final deletion; no positive survivor or surviving true hypothesis is assumed after it.
+\end{proof}
+
+\paragraph{Affine cost and Gaussian concentration.}
+For a represented Boolean threshold function $g$ define
+\[
+ Q(g)=\min\{\|a\|_2^2:g(x)(a_0+\sum_i a_ix_i)\ge1\ \forall x\}.
+\]
+The minimum exists. Its strict output-margin neural energy infimum is
+\[
+ E(g)=\Phi_d(Q(g)),\qquad
+ \Phi_d(Q)=\min_{u>0}\{dQu^2+\tfrac14\coth^2u\},
+\]
+and $\Phi_d$ is strictly increasing on $Q>0$. Indeed, take $b>0$ by simultaneously changing the signs of $a,b$, set $u=\operatorname{arctanh}(1/(2b))$, and rescale an affine unit-margin optimizer to approach the strict constraints. The displayed objective diverges at both endpoints, and evaluation at a minimizer for the larger $Q$ proves strict monotonicity.
+
+The raw Gaussian function mass satisfies
+\[
+ \lim_{\sigma\downarrow0}\sigma^2\log\mathbb P_\sigma(U_g)=-E(g)/2,
+ \quad U_g=\{(a,b):g(x)z_{a,b}(x)>1/2\ \forall x\}.
+\]
+The Gaussian open-set lower bound and closed-set upper bound agree: multiplying the readout of any weak-margin parameter by $1+\epsilon$ approximates it from the strict event. Thus, at any fixed consistent history, higher-energy functions have vanishing posterior mass relative to the minimum-energy class. There are finitely many Boolean functions and finitely many histories along the order considered here. All posterior denominators are positive because the teacher has strict global margin.
+
+\paragraph{Exact minimum class at a layer boundary.}
+At the start of layer $k\ge2$, history contains $1^d$ labeled positive and every input of weight less than $k$ labeled negative. For $d\ge2k-1$, the minimum cost is $2k-1$, and all minimizers are
+\[
+ h_T(x)=+1\ \Longleftrightarrow\ |\{i\in T:x_i=+1\}|\ge k,
+ \qquad |T|\in\{2k-1,2k-2\}.
+\]
+Here is the geometric argument, to make the dependency explicit. In a minimum-norm representation, an irrelevant coefficient vanishes by averaging the two corresponding margin constraints. An essential input coefficient has absolute value at least one, by comparing a neighboring oppositely labeled pair. Let $p$ be the number of positive input coefficients, $P$ their sum, and $B$ the sum of absolute negative coefficients. Necessarily $p\ge k$: the input positive exactly at these $p$ coordinates scores at least as highly as $1^d$. If $p\ge2k-1$, cost is at least $2k-1$. Otherwise average the negative constraints over the $(k-1)$-subsets of the positive coordinates to obtain
+\[
+ a_0\le (1-2(k-1)/p)P-B-1\le p-2k+1.
+\]
+Consequently $Q\ge p+(2k-1-p)^2\ge2k-1$. Equality forces exactly the displayed supports, unit positive coefficients, no negative coefficients, and bias $0$ or $-1$. Conversely these weights have odd integer scores and attain the bound.
+
+All these functions have \emph{exactly equal} raw Gaussian mass, at every $\sigma>0$. Permuting inputs handles equal support sizes. For an odd support $T$ and $j\in T$, the signed column swap
+\[
+ a'_0=-a_j,\quad a'_j=a_0,\quad a'_i=a_i\ (i\ne j)
+\]
+preserves the isotropic first-layer law. With $y_j=-x_j$ and $y_i=x_ix_j$ for $i\ne j$, the transformed score is $x_j$ times the original score at $y$. The cube map is bijective and tanh is odd, so global margin is preserved. The transformed majority on $T$ is precisely the $k$-threshold on $T\setminus\{j\}$ with bias $-1$. This proves equality across both support sizes. Equal costs alone would not have sufficed.
+
+\begin{proof}[Proof of Theorem~\ref{thm:main}]
+The bounded teacher is $z(x)=\tanh(\sum_i x_i)$: all coefficients are at most one, its width is one, and its signed margin is at least $\tanh(1)>1/2$ since $d$ is odd.
+
+At layer $k\ge2$, the number of minimum-class candidates is
+\[
+ M_{d,k}=\binom d{2k-1}+\binom d{2k-2}=\binom{d+1}{2k-1}.
+\]
+A weight-$k$ negative query eliminates exactly the candidates whose support contains its positive coordinate set, hence at most
+\[
+ D_{d,k}=\binom{d-k}{k-1}+\binom{d-k}{k-2}
+        =\binom{d-k+1}{k-1}
+\]
+of the original candidates. Previously removed candidates are of course not removed again. Every candidate contains a $k$-subset, so revealing the entire layer exhausts this class. While any original candidate survives, all other surviving functions have strictly greater energy, and the strong-prior posterior converges to the uniform distribution on these survivors. Capped deletion gives a contribution at least
+\[
+ \log(1+M_{d,k}/D_{d,k})
+ =\log\!\left(1+\binom{d+1}{k}/\binom{2k-1}{k}\right).
+\]
+Higher-energy tiers visited after exhaustion can only add mistakes. Thus no characterization of those later tiers is being assumed.
+
+After the positive $1^d$ and negative $(-1)^d$, the minimum-cost class is the $d$ positive dictators. (Any nonconstant function has an essential coefficient of magnitude at least one; equality permits only a signed dictator or a constant.) The weight-one layer deletes them one at a time, contributing exactly $H_d$ before that tier is exhausted.
+
+These portions of the layers are disjoint. Their finitely many posterior error probabilities converge to the just-computed uniform-tier probabilities, so summing and discarding all other nonnegative errors proves the liminf bound. For $2\le k\le K$,
+\[
+ \frac{\binom{d+1}{k}}{\binom{2k-1}{k}}
+ \ge\left(\frac{d+1}{4k}\right)^k\ge2^k,
+\]
+using $\binom{d+1}{k}\ge((d+1)/k)^k$ and $\binom{2k-1}{k}\le4^k$. Summation gives the explicit quadratic bound.
+
+The definition of liminf gives one positive $\sigma_0$ valid for the whole fixed finite sequence with mean at least $B_d/2$. Conditional on its deterministic label history, fresh posterior predictions are independent Bernoulli trials with those error probabilities. The usual exponential-moment Chernoff proof gives $\mathbb P(M_\sigma<\mathbb E M_\sigma/2)\le e^{-\mathbb E M_\sigma/8}$, implying the displayed high-probability bound. Equivalently the same estimate follows by multiplying the conditional exponential-moment bounds.
+
+Finally, in each of layers $1,\ldots,m$, the query exhausting its initial minimum tier is wrong for \emph{all} surviving minimum-tier functions. Its wrong-label posterior probability therefore tends to one. These are $m$ distinct queries. A common sufficiently small positive scale makes all of them majority mistakes.
+\end{proof}
+
+\paragraph{What remains open.}
+This proves unbounded mistakes despite teacher complexity one, but dimension grows and the bound is only quadratic in it. It is therefore not a counterexample to a polynomial bound in dimension and teacher complexity. The original anisotropic construction does give exponential mistakes, but changes the prior and is not being substituted for the requested isotropic result. An exponential lower bound here would require control of additional energy tiers or another construction. No claim of such a result is made.
+
+\paragraph{Optional asymptotic evaluation.}
+Stirling's uniform entropy estimate gives
+\[
+ B_d=\frac{1-\log2}{4}d^2+O(d\log d).
+\]
+Indeed, the Riemann sum has integrand $H(p)-2p\log2$ on $0<p<1/2$, whose integral is $(1-\log2)/4$. The simpler explicit bound above already proves the theorem and does not require this refinement.
+\end{document}
