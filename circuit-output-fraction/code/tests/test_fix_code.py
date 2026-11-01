@@ -52,3 +52,12 @@ def test_tilting_boundary_threshold_contains_p():
         blocks, t = as_block_threshold(C)
         e = tilted_estimate(blocks, t, D, C.n, eps=0.1, delta=0.05, rng=rng)
         assert e.lo <= p <= e.hi
+
+
+def test_kl_interval_rejects_invalid_arguments():
+    from rareprob.stats import kl_interval
+    for args in ((0.5, -1, 0.05), (0.5, 10, 0.0), (0.5, 10, 1.0), (float("nan"), 10, 0.05)):
+        with pytest.raises(ValueError):
+            kl_interval(*args)
+    with pytest.raises(ValueError):
+        kl_interval(0.5, 10, 0.05, rel_err=-1e-3)

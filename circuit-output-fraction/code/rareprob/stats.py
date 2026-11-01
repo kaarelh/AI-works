@@ -58,6 +58,8 @@ def kl_interval(mean: float, N: int, delta: float, rel_err: float = 0.0) -> tupl
     relative error of `mean` itself (e.g. of a floating-point sum): the
     lower end is computed at mean (1 - rel_err) and the upper end at
     mean (1 + rel_err); both ends increase with the mean."""
+    if N < 0 or not (0.0 < delta < 1.0) or not math.isfinite(mean) or rel_err < 0:
+        raise ValueError("kl_interval: need N >= 0, 0 < delta < 1, a finite mean and rel_err >= 0")
     if N == 0:
         return 0.0, 1.0
     c = math.log(2.0 / delta) / N * (1 + 2.0 ** -49)
