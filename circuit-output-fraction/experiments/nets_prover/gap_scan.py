@@ -46,7 +46,8 @@ def main():
             t0 = time.time()
             mins = np.array([cn.enum_points(x)[1].min() for x in X0])
             centre = cn.forward(X0)
-            ivs, c, c_abs = cn.intervals(X0)
+            ivs, clo, chi = cn.intervals(X0)
+            c = 0.5 * clo + 0.5 * chi
             lin0 = cn.check_lin(X0, None, 1, ivs)
             al, _ = _opt_alpha(cn, X0, 1, ivs, c, 80)
             lin = np.maximum(lin0, cn.check_lin(X0, [al] + [None] * (cn.L - 1), 1, ivs))

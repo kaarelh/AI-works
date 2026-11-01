@@ -1,168 +1,124 @@
-"""Soundness on nets that were not trained: planted failures and random nets.
+"""Soundness on nets that were not trained (adversarial_nets.py).
 
-1. hidden: f = c - a1 relu(<x,u> - (d - 2m)) / (2m) - relu(<x_S, b> - (k - 1)) + small random units.
-   Failures: a Hamming ball around u (visible: f decreases towards it) and
-   the subcube {x_S = b} (hidden: f is flat outside it). The SMC lower bound
-   must stay below p; it can only see the ball.
-2. needle: only the subcube with k = d (one failing point).
-3. coverage: random untrained nets (He init, output bias shifted so that p is
-   about 1e-3 .. 1e-6) at d = 20 with exact p; many runs at delta = 0.05 and
-   at delta = 0.3, counting how often the bound exceeds p.
+Parts (all write to results/adversarial.jsonl, one "kind" each):
+  planted   hidden failure sets: a visible Hamming ball plus a hidden subcube
+            (d = 24 and d = 40), and a single needle (d = 24). The bound must
+            stay below p; it can only see the ball.
+  random    coverage on random untrained nets (He init, output bias shifted so
+            that p is about 1e-6 .. 1e-3, d = 20, exact p): 10 runs each at
+            delta = 0.05 and 0.3.
+  float     the float64 attacks of the red-team review (gradual underflow,
+            FMA order, overflow; exact-real p = 0, or 1/2 for the overflow
+            net): 5 runs each; every bound must be <= p.
+  campaign  the red-team coverage campaign rerun on the fixed code: 9
+            adversarial shapes x 5 tiny-budget configurations x delta in
+            {0.2, 0.5} x RUNS runs; miss rates of the reported bound, of the
+            SMC part and of the witness bound.
 
-usage: python3 run_adversarial.py   (writes results/adversarial.jsonl)
+usage: python3 run_adversarial.py [--jobs J] [planted] [random] [float] [campaign]
 """
 
-import json
-import math
 import os
 import sys
-import time
 
-os.environ.setdefault("OMP_NUM_THREADS", "1")
-import numpy as np  # noqa: E402
-
-HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(HERE, "..", "..", "code"))
-from rareprob.nets import MLP, exact_failure_count, init_mlp  # noqa: E402
+from common import RES, jobs_arg, run_parallel, seed_of
+import numpy as np  # noqa: E402  (after common, which sets OMP_NUM_THREADS=1)
+import adversarial_nets as A  # noqa: E402
+from rareprob.nets import init_mlp  # noqa: E402
 from rareprob.nets_lower import lower_bound, random_cube  # noqa: E402
 
-OUT = os.path.join(HERE, "results")
-os.makedirs(OUT, exist_ok=True)
+PATH = os.path.join(RES, "adversarial.jsonl")
+RUNS = 150
+CONFIGS = {
+    "R4_N50": dict(N=50, R=4, moves=2, rho=0.3),
+    "R2_N30": dict(N=30, R=2, moves=1, rho=0.3),
+    "R8_N100_stratified": dict(N=100, R=8, moves=2, rho=0.3, stratify=True),
+    "R8_N50_untuned_2flips": dict(N=50, R=8, moves=1, rho=0.3, tune=False, fixed_flips=2),
+    "sequential_N50": dict(N=50, R=64, moves=2, rho=0.3, target_ratio=0.9, min_R=2),
+}
 
 
-def planted(d, m, k, rng, ball=True, noise=0.002, width=16):
-    u = rng.choice([-1.0, 1.0], d)
-    S = rng.choice(d, k, replace=False)
-    b = rng.choice([-1.0, 1.0], k)
-    W = [rng.normal(0, 1 / math.sqrt(d), (width, d))]
-    a = list(rng.normal(0, noise, width))
-    bias = list(np.zeros(width))
-    if ball:
-        W.append(u[None, :])
-        a.append(-0.75 / (2 * m))
-        bias.append(-(d - 2 * m))
-    w = np.zeros(d)
-    w[S] = b
-    W.append(w[None, :])
-    a.append(-1.0)
-    bias.append(-(k - 1.0))
-    W1 = np.concatenate(W, axis=0)
-    return MLP([W1, np.array(a)[None, :]], [np.array(bias), np.array([1.0])], threshold=0.5, loss="mse")
+def run_row(kind, case, net, p, rng, delta=0.05, **kw):
+    res = lower_bound(net, delta=delta, rng=rng, **kw)
+    return dict(kind=kind, case=case, d=net.d, p_exact=p, L=res.lower, L_bet=res.smc_lower, L_wit=res.witness_lower,
+                ratio=res.lower / p if p > 0 else None, point_estimate=float(np.mean(res.Z)) if res.Z else 0.0,
+                miss=bool(res.lower > p), flagged=res.flagged, evals=res.evals, K=len(res.plan.levels),
+                seconds=round(res.seconds, 2))
 
 
-def run_case(name, net, rng, delta=0.05, trials=5, **kw):
-    t = time.time()
-    p = exact_failure_count(net) / float(1 << net.d)
+def planted_job(case):
+    rng = np.random.default_rng(seed_of("planted", case))
+    if case == "hidden_d40_k26":
+        net, p, p_vis = A.hidden_d40(np.random.default_rng(7))
+        rows = [run_row("planted", case, net, p, rng, N=1000, R=32) for _ in range(5)]
+        for r in rows:
+            r["p_visible"] = p_vis
+        return rows
+    net = A.planted(24, 8, 14, rng) if case == "hidden_k14_ball" else A.planted(24, 8, 24, rng, ball=False)
+    p = A.exact_p(net)
+    return [run_row("planted", case, net, p, rng, N=1000, R=32) for _ in range(5 if case == "hidden_k14_ball" else 3)]
+
+
+def random_job(i):
+    rng = np.random.default_rng(seed_of("random", i))
+    d = 20
+    net = init_mlp(d, [32], rng)
+    f = net.forward(random_cube(rng, 200000, d))
+    target = 10 ** rng.uniform(-6, -3)
+    net.bs[-1] = net.bs[-1] + (0.5 - np.quantile(f, min(0.5, target * 3)))
+    p = A.exact_p(net)
+    if p == 0:
+        return []
     rows = []
-    for tr in range(trials):
-        res = lower_bound(net, delta=delta, rng=rng, **kw)
-        rows.append(dict(kind="planted", case=name, d=net.d, p_exact=p, trial=tr, L=res.lower, L_bet=res.smc_lower,
-                         L_wit=res.witness_lower, ratio=res.lower / p if p > 0 else float("nan"),
-                         point_estimate=float(np.mean(res.Z)), miss=bool(res.lower > p),
-                         evals=res.evals_pilot + res.evals_final, K=len(res.plan.levels)))
-        print(json.dumps(rows[-1]), flush=True)
+    for delta in (0.05, 0.3):
+        for run in range(10):
+            r = run_row("random", f"random_{i}", net, p, rng, delta=delta, N=300, R=16)
+            r.update(delta=delta, run=run)
+            rows.append(r)
     return rows
 
 
-def coverage(rng, d=20, nets=20, runs=10):
-    rows = []
-    for i in range(nets):
-        net = init_mlp(d, [32], rng)
-        f = net.forward(random_cube(rng, 200000, d))
-        target = 10 ** rng.uniform(-6, -3)
-        q = np.quantile(f, min(0.5, target * 3)) if target * 3 < 1 else np.median(f)
-        net.bs[-1] = net.bs[-1] + (0.5 - q)  # move the threshold to about the target quantile
-        cnt = exact_failure_count(net)
-        p = cnt / float(1 << d)
-        if cnt == 0:
-            continue
-        for delta in (0.05, 0.3):
-            for r in range(runs):
-                res = lower_bound(net, delta=delta, N=300, R=16, rng=rng)
-                rows.append(dict(kind="coverage", net=i, d=d, p_exact=p, delta=delta, run=r, L=res.lower,
-                                 L_bet=res.smc_lower, L_clip=res.clipped_lower, L_min=res.minmarkov_lower,
-                                 miss_bet=bool(res.smc_lower > p), miss_clip=bool(res.clipped_lower > p),
-                                 miss_min=bool(res.minmarkov_lower > p), miss=bool(res.lower > p),
-                                 ratio=res.smc_lower / p))
-        sub = [r for r in rows if r["net"] == i]
-        print(f"coverage net {i}: p={p:.3g} mean ratio(delta=.05)="
-              f"{np.mean([r['ratio'] for r in sub if r['delta'] == 0.05]):.3f} "
-              f"misses={sum(r['miss'] for r in sub)}", flush=True)
-    return rows
+def float_job(case):
+    make, p = A.FLOAT_ATTACKS[case]
+    net = make()
+    rng = np.random.default_rng(seed_of("float", case))
+    kw = dict(N=1000, R=32) if net.d >= 40 else dict(N=200, R=16)
+    return [run_row("float", case, net, p, rng, **kw) for _ in range(5)]
 
 
-def hidden_d40(rng, trials=5):
-    """d = 40: visible ball (Hamming radius 2 around u, 821 points) and a hidden
-    subcube of codimension 26 (2^14 points), with f flat (up to noise below
-    0.03) elsewhere. p is computed exactly from the two candidate sets, since
-    outside them f >= 0.6 - 0.03."""
-    d, m, k = 40, 6, 26
-    u = rng.choice([-1.0, 1.0], d)
-    S = rng.choice(d, k, replace=False)
-    b = rng.choice([-1.0, 1.0], k)
-    width = 16
-    Wn = rng.normal(0, 1 / math.sqrt(d), (width, d))
-    an = rng.normal(0, 3e-5, width)
-    noise_bound = float(np.sum(np.abs(an) * np.abs(Wn).sum(axis=1)))
-    assert noise_bound < 0.03, noise_bound
-    w = np.zeros(d)
-    w[S] = b
-    W1 = np.concatenate([Wn, u[None, :], w[None, :]], axis=0)
-    a = np.concatenate([an, [-0.8 / (2 * m), -1.0]])
-    bias = np.concatenate([np.zeros(width), [-(d - 2 * m), -(k - 1.0)]])
-    net = MLP([W1, a[None, :]], [bias, np.array([1.0])], threshold=0.5, loss="mse")
-    # candidates: Hamming ball of radius 2 around u, and the subcube
-    from itertools import combinations
-    ball = [u.copy()]
-    for i in range(d):
-        x = u.copy(); x[i] *= -1; ball.append(x)
-    for i, j in combinations(range(d), 2):
-        x = u.copy(); x[i] *= -1; x[j] *= -1; ball.append(x)
-    free = np.setdiff1d(np.arange(d), S)
-    idx = np.arange(1 << len(free))
-    cube = np.empty((len(idx), d))
-    cube[:, S] = b
-    cube[:, free] = np.where((idx[:, None] >> np.arange(len(free))) & 1, 1.0, -1.0)
-    cand = np.unique(np.concatenate([np.array(ball), cube]), axis=0)
-    f = net.forward(cand)
-    assert np.all(np.abs(f - 0.5) > 0.02)
-    fails = cand[f < 0.5]
-    vis = int((net.forward(np.array(ball)) < 0.5).sum())
-    p = len(fails) / float(1 << d)
-    p_vis = vis / float(1 << d)
-    rows = []
-    for tr in range(trials):
-        res = lower_bound(net, delta=0.05, rng=rng, N=1000, R=32)
-        rows.append(dict(kind="planted", case="hidden_d40_k26", d=d, p_exact=p, p_visible=p_vis, trial=tr,
-                         L=res.lower, L_bet=res.smc_lower, L_wit=res.witness_lower, ratio=res.lower / p,
-                         point_estimate=float(np.mean(res.Z)), miss=bool(res.lower > p),
-                         evals=res.evals_pilot + res.evals_final, K=len(res.plan.levels)))
-        print(json.dumps(rows[-1]), flush=True)
-    return rows
+def campaign_job(args):
+    name, cfg, delta = args
+    net = A.ADVERSARIAL[name]()
+    p = A.exact_p(net)
+    rng = np.random.default_rng(seed_of("campaign", name, cfg, delta))
+    miss = dict(lower=0, smc=0, wit=0)
+    flagged = ratio = 0.0
+    for _ in range(RUNS):
+        r = lower_bound(net, delta=delta, rng=rng, **CONFIGS[cfg])
+        miss["lower"] += r.lower > p
+        miss["smc"] += r.notes["stratum"] + r.smc_lower > p
+        miss["wit"] += r.witness_lower > p
+        flagged += r.flagged / max(1, len(r.Z))
+        ratio += r.lower / p if p > 0 else 0.0
+    return dict(kind="campaign", net=name, d=net.d, p_exact=p, config=cfg, delta=delta, runs=RUNS,
+                miss_lower=miss["lower"] / RUNS, miss_smc=miss["smc"] / RUNS, miss_witness=miss["wit"] / RUNS,
+                flagged_fraction=flagged / RUNS, mean_ratio=ratio / RUNS if p > 0 else None)
 
 
 def main():
-    if sys.argv[1:] == ["hidden"]:
-        rows = hidden_d40(np.random.default_rng(7))
-        with open(os.path.join(OUT, "adversarial_hidden.jsonl"), "w") as f:
-            for r in rows:
-                f.write(json.dumps(r) + "\n")
-        return
-    rng = np.random.default_rng(99)
-    rows = []
-    d = 24
-    rows += run_case("hidden_k14_ball", planted(d, 8, 14, rng), rng, N=1000, R=32)
-    rows += run_case("needle_k24", planted(d, 8, d, rng, ball=False), rng, N=1000, R=32, trials=3)
-    rows += coverage(rng)
-    with open(os.path.join(OUT, "adversarial.jsonl"), "w") as f:
-        for r in rows:
-            f.write(json.dumps(r) + "\n")
-    cov = [r for r in rows if r["kind"] == "coverage"]
-    for delta in (0.05, 0.3):
-        c = [r for r in cov if r["delta"] == delta]
-        print(f"delta={delta}: runs={len(c)} misses: bet={sum(r['miss_bet'] for r in c)} "
-              f"clip={sum(r['miss_clip'] for r in c)} min={sum(r['miss_min'] for r in c)} "
-              f"combined={sum(r['miss'] for r in c)}")
+    args = sys.argv[1:]
+    n_jobs = jobs_arg(args)
+    parts = args or ["planted", "random", "float", "campaign"]
+    if "float" in parts:
+        run_parallel(float_job, list(A.FLOAT_ATTACKS), PATH, n_jobs)
+    if "planted" in parts:
+        run_parallel(planted_job, ["hidden_k14_ball", "needle_k24", "hidden_d40_k26"], PATH, n_jobs)
+    if "random" in parts:
+        run_parallel(random_job, list(range(20)), PATH, n_jobs, lambda r: f"{r['case']} delta={r['delta']} "
+                     f"ratio={r['ratio']:.3f} miss={r['miss']}")
+    if "campaign" in parts:
+        jobs = [(n, c, dl) for n in A.ADVERSARIAL for c in CONFIGS for dl in (0.5, 0.2)]
+        run_parallel(campaign_job, jobs, PATH, n_jobs)
 
 
 if __name__ == "__main__":

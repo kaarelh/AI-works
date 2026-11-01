@@ -16,7 +16,10 @@ Compared with f(0) - t (the box barrier: if f(0) < t no box relaxation
 certifies the root) and with the sound input branch and bound (CROWN,
 r_enum = 6, frontier cap 2^24 subcubes, 2^21 for d > 64, cost cap 2e8
 forward-pass equivalents) run on the same nets with the same time limit
-(field "bab"). Writes results/milp.json.
+(field "bab"). The time limit is an upper limit, not the effort spent: at
+d >= 48 the branch and bound stopped after 10 ... 19 s and 4e4 ... 9e5 fpe on
+its projected-cost or frontier cap (bab.seconds, bab.fpe, bab.stopped), not
+after 180 s. Writes results/milp.json.
 """
 
 import json

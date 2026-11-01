@@ -100,13 +100,16 @@ def milp():
     if not rows:
         return
     print("\n## HiGHS MILP for min f over the cube (unsound floating-point engine; witnesses re-checked)\n")
-    print("| net | d | f(0)-t | CROWN root lb - t | p exact | MILP status | nodes | seconds | best f found | dual bound | witness (sound) | solver claims p=0 | sound B&B, same time: [lo, hi] | B&B seconds |")
-    print("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+    print("The sound B&B had the same 180 s time limit, plus a 2e8 fpe cost cap and a frontier cap; the columns give")
+    print("what it actually spent and why it stopped (at d >= 48 it stopped on a cap after 10-19 s, not at 180 s).\n")
+    print("| net | d | f(0)-t | CROWN root lb - t | p exact | MILP status | nodes | seconds | best f found | dual bound | witness (sound) | solver claims p=0 | sound B&B: [lo, hi] | B&B fpe | B&B seconds (stopped) |")
+    print("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
     for o in rows:
         b = o.get("bab")
         bs = f"[{g(b['lo'])}, {g(b['hi'])}]" + (" exact" if b["exact"] else "") if b else "-"
         print(f"| {o['name']} | {o['d']} | {o['f0_minus_t']:+.3f} | {o['crown_root_lb_minus_t']:+.3g} | {g(o['p_exact'])} | {o['milp_status']} | {o['milp_nodes']} "
-              f"| {o['milp_seconds']} | {g(o['incumbent_f'], 4)} | {g(o['dual_bound'], 4)} | {o['witness']} | {o['solver_claims_p_zero']} | {bs} | {b['seconds'] if b else '-'} |")
+              f"| {o['milp_seconds']} | {g(o['incumbent_f'], 4)} | {g(o['dual_bound'], 4)} | {o['witness']} | {o['solver_claims_p_zero']} | {bs} "
+              f"| {g(b['fpe']) if b else '-'} | {(str(b['seconds']) + ' (' + (b['stopped'] or 'done') + ')') if b else '-'} |")
 
 
 def zero():
@@ -129,15 +132,17 @@ def zero():
             b = o["bab"]
             print(f"| {o['loss']} | {o['d']} | {o['steps']} | {o['seed']} | {o['F']} | {g(o['F'] / 2.0 ** o['d'])} | {b['nodes_bounded']} "
                   f"| {g(b['fpe'])} | {o['oracle_tree_nodes']} | {g(o['mc_samples'])} |")
-    print("\nCost of certifying p = 0 by d (median over the nets of the family with p = 0 certified):\n")
-    print("| loss | d | nets | p=0 certified | median cost (fpe) | max cost (fpe) | enumeration (fpe) |")
-    print("|---|---|---|---|---|---|---|")
-    import statistics
-    for loss in ["mse", "bce"]:
-        for d in sorted({o["d"] for o in rows if o["loss"] == loss}):
-            R_ = [o for o in rows if o["loss"] == loss and o["d"] == d]
-            c = [o["bab"]["fpe"] for o in R_ if o["p_zero_certified"]]
-            print(f"| {loss} | {d} | {len(R_)} | {len(c)} | {g(statistics.median(c)) if c else '-'} | {g(max(c)) if c else '-'} | {g(R_[0]['full_enum_fpe'])} |")
+    zs = load("zero_summary.json")
+    if zs:
+        print("\nFrequency of p = 0 and cost of certifying it (results/zero_summary.json; cost over the nets with p = 0 certified):\n")
+        print("| training | loss | d | nets | p=0 certified | p>0 exact | open | certified at the root | median fpe | max fpe | median s | max s | enumeration (fpe) |")
+        print("|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+        for r in zs["table"]:
+            fr, sr = r["fpe_range"], r["seconds_range"]
+            print(f"| {r['regime']} | {r['loss']} | {r['d']} | {r['nets']} | {r['p_zero_certified']} | {r['p_positive_exact']} | {r['open']} "
+                  f"| {r['root_certified']} | {g(r['fpe_median'])} | {g(fr[1]) if fr else '-'} | {g(r['seconds_median'])} "
+                  f"| {g(sr[1]) if sr else '-'} | {g(r['full_enum_fpe'])} |")
+        print("\nTotals (long training):", zs["totals"])
 
 
 def large():
@@ -145,16 +150,36 @@ def large():
     if not rows:
         return
     print("\n## Large d\n")
-    print("| net | f(0)-t | CROWN certified fraction at r = 2,4,6,8,10,12,16,20,24,32,... | r50 | B&B interval at 1e7 fpe | full run (900 s) | MC with 1e7 samples: hits, interval |")
-    print("|---|---|---|---|---|---|---|")
+    print("B&B run with max_fpe = 1e7: the budget is checked against bounding every node of the next level, so the")
+    print("runs stop well below it; the columns give the cost actually spent (fpe and wall-clock seconds).\n")
+    print("| net | f(0)-t | CROWN certified fraction at r = 2,4,6,8,10,12,16,20,24,32,... | r50 | B&B interval | B&B spent: fpe, s (stopped) | full run (900 s) | MC with 1e7 samples: hits, interval, s |")
+    print("|---|---|---|---|---|---|---|---|")
     for o in rows:
         c = o["crown_cert_rate"]
         b = o["bab_budget"]
         m = o["mc_same_budget"]
         full = o.get("bab_full")
-        fs = f"[{g(full['lo'])}, {g(full['hi'])}], {g(full['fpe'])} fpe" if full else "not tried (d - r50 > 30)"
+        fs = (f"[{g(full['lo'])}, {g(full['hi'])}], {g(full['fpe'])} fpe, {full.get('seconds', '-')} s" if full
+              else "not tried (d - r50 > 30)")
         print(f"| {o['name']} | {o['f0_minus_t']:+.3f} | {', '.join(f'{c[k]:.2f}' for k in sorted(c, key=int))} | {o.get('crown_r50', '-')} "
-              f"| [{g(b['lo'])}, {g(b['hi'])}] | {fs} | {m['hits']}, [{g(m['interval'][0])}, {g(m['interval'][1])}] |")
+              f"| [{g(b['lo'])}, {g(b['hi'])}] | {g(b['fpe'])}, {b.get('seconds', '-')} ({b.get('stopped', '-')}) | {fs} "
+              f"| {m['hits']}, [{g(m['interval'][0])}, {g(m['interval'][1])}], {m.get('seconds', '-')} |")
+
+
+def wallclock():
+    o = load("wallclock.json")
+    if not o:
+        return
+    print("\n## Exact count by B&B against Monte Carlo (eps = 0.1, delta = 0.05) in fpe and in wall-clock seconds\n")
+    print("(seconds measured in one session on a shared 4-core machine; '~': B&B seconds estimated from its fpe)\n")
+    print("| net | F | p | B&B fpe | B&B s | MC samples | MC s | MC/B&B (fpe) | MC/B&B (s) |")
+    print("|---|---|---|---|---|---|---|---|---|")
+    for r in o["rows"]:
+        if r["mc_seconds"] is None:
+            continue
+        est = "~" if "bab_s_per_fpe_estimated" in r else ""
+        print(f"| {r['name']} | {r['fail_count']} | {g(r['p'])} | {g(r['bab_fpe'])} | {est}{g(r['bab_seconds'])} | {g(r['mc_samples'])} "
+              f"| {g(r['mc_seconds'])} | {g(r['mc_over_bab_fpe'])} | {g(r['mc_over_bab_seconds'])} |")
 
 
 def gap():
@@ -179,6 +204,7 @@ if __name__ == "__main__":
     zero()
     large()
     milp()
+    wallclock()
     gap()
     for name in ["check_soundness.json"]:
         o = load(name)

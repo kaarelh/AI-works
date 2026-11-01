@@ -89,7 +89,15 @@ Soundness on every net (adversarial weights included)
    |z| <= rho~ and |l| <= rho~ + tau). We use tau = 2^-30 (M + 1), so the
    exact value of the bound is within tau of the computed one (the +1 covers
    underflow). Weights that are not finite, or so large that rho~ exceeds
-   1e300, are rejected (ValueError) rather than bounded. The phase-split
+   1e300, are rejected (ValueError) rather than bounded. The guard bounds
+   every forward value and every interval-arithmetic (IBP) quantity, but not
+   the products of weight matrices formed by the backward pass (|W_3||W_2|
+   can overflow when |W_1| is tiny). Overflow makes a quantity infinite or
+   NaN, never finite and wrong, so every backward pass checks that its
+   coefficients and offsets are finite: a non-finite CROWN interval of a
+   hidden layer is replaced by its IBP interval, and a non-finite bound on
+   f by -inf (lower) or +inf (upper), so the subcube stays undecided. A
+   NaN interval is never read as a stable unit. The phase-split
    bounds add terms beta_j z_j with unbounded multipliers; they subtract the
    extra margin 2^-30 sum_j beta_j (rho~_1j + tau_1).
 3. Intermediate intervals are padded outwards by tau_k = 2^-30 (rho~_k + 1)
@@ -103,9 +111,14 @@ Soundness on every net (adversarial weights included)
    tau (points with t - tau <= f_computed < t + tau are ambiguous and go
    into the gap of the interval). The thresholds t +- 2 tau and t +- tau are
    computed in exact rational arithmetic and rounded outwards once, so the
-   float comparisons imply the exact inequalities.
+   float comparisons imply the exact inequalities. An evaluated point counts
+   as failing only if f_computed < t - tau and as safe only if
+   f_computed >= t + tau; everything else, NaN included, is ambiguous.
 5. Branch and bound is a partition of the cube into subcubes, so the counts
-   F, A, U and the safe count add up to 2^d exactly (Python integers).
+   F, A, U and the safe count add up to 2^d exactly (Python integers). A
+   subcube is split only while it has a free coordinate (r_enum >= 0 is
+   required, and checked); the balance is checked with an explicit
+   exception, not an assert (asserts vanish under python -O).
 None of this uses training, the data, or any property of the weights: the
 interval is valid for every MLP. The node budget, the branching rule and the
 slope optimiser affect only the width of the interval.
@@ -114,11 +127,22 @@ The sampling stage is sound by the envelope estimator argument: samples are
 exact uniform draws from the undecided union, and the KL interval (stats) is
 applied separately to the definite-failure indicator (lower end) and to the
 definite-or-ambiguous indicator (upper end), with a union bound over the
-doubling stages.
+doubling stages. The deterministic parts F / 2^d and U / 2^d enter rounded
+outwards (they need not be floats when d > 53).
+
+Cost accounting. Costs are flops and forward-pass equivalents (fpe, flops
+divided by those of one evaluation of the net). The budget max_fpe is
+checked before each breadth-first level against the cost of bounding EVERY
+node of the level, although the probe (min_rate > 0) usually bounds only
+`probe` of them; so a run stops before max_fpe whenever the next level is
+large, and can stop far below it (at d = 64 the runs with max_fpe = 1e7
+stopped after 3e4 fpe). BabResult.fpe and .seconds are what was spent, and
+.stopped says why the run ended.
 """
 
 from __future__ import annotations
 
+import hashlib
 import math
 import time
 from dataclasses import dataclass, field
@@ -137,10 +161,23 @@ _TAU_SCALE = 2.0 ** -30
 # bounds on subcubes
 
 
+def net_fingerprint(net: MLP) -> str:
+    """A hash of the float64 bytes of the weights, biases and threshold: a
+    Bounder or BabResult is only ever used for the net it was built from."""
+    h = hashlib.sha256(repr((len(net.Ws), len(net.bs))).encode())
+    for A in list(net.Ws) + list(net.bs):
+        a = np.ascontiguousarray(np.asarray(A, dtype=np.float64))
+        h.update(repr(a.shape).encode())
+        h.update(a.tobytes())
+    h.update(np.float64(float(net.threshold)).tobytes())
+    return h.hexdigest()
+
+
 class Bounder:
     """Linear-relaxation bounds of an MLP over batches of subcube boxes."""
 
     def __init__(self, net: MLP):
+        self.fingerprint = net_fingerprint(net)
         self.Ws = [np.ascontiguousarray(W, dtype=np.float64) for W in net.Ws]
         self.bs = [np.asarray(b, dtype=np.float64).ravel() for b in net.bs]
         self.absW = [np.abs(W) for W in self.Ws]
@@ -151,17 +188,19 @@ class Bounder:
         dims = [self.d] + self.widths + [1]
         # longest chain of floating-point operations in any computed quantity
         n_ops = sum(dims) * 4 + 64
-        assert n_ops < 2 ** 17, "network too large for the fixed rounding margin"
+        if n_ops >= 2 ** 17:
+            raise ValueError("network too large for the fixed rounding margin")
         if not all(np.isfinite(W).all() for W in self.Ws) or not all(np.isfinite(b).all() for b in self.bs):
             raise ValueError("non-finite weights")
         rho = np.ones(self.d)
         self.tau_layer = []
         self.rho = []
         for k in range(self.L + 1):
-            if k == 0:
-                rho = self.absW[0] @ rho + np.abs(self.bs[0])
-            else:
-                rho = self.absW[k] @ (2.5 * rho + 2.0 * self.tau_layer[-1]) + np.abs(self.bs[k])
+            with np.errstate(over="ignore", invalid="ignore"):
+                if k == 0:
+                    rho = self.absW[0] @ rho + np.abs(self.bs[0])
+                else:
+                    rho = self.absW[k] @ (2.5 * rho + 2.0 * self.tau_layer[-1]) + np.abs(self.bs[k])
             if not np.isfinite(rho).all() or rho.max() > 1e300:
                 raise ValueError("weights too large for float64 bound propagation")
             self.rho.append(rho)
@@ -186,7 +225,10 @@ class Bounder:
     # ---- the backward (CROWN) pass -----------------------------------------
     def _relax(self, l, u):
         """Slopes for the intervals [l, u] of one layer: lower slope default,
-        upper slope lam and upper offset -lam l (0 for stable units)."""
+        upper slope lam and upper offset -lam l (0 for stable units). The
+        intervals must be finite (a NaN would read as a dead unit)."""
+        if not (np.isfinite(l).all() and np.isfinite(u).all()):
+            raise FloatingPointError("non-finite pre-activation interval")
         active = l >= 0.0
         unstable = (l < 0.0) & (u > 0.0)
         with np.errstate(divide="ignore", invalid="ignore"):
@@ -201,21 +243,33 @@ class Bounder:
         A: (B, q, m_{k_top}) (h_0 = x), c0: (B, q). relax[k-1] = (active,
         unstable, lam, off) of hidden layer k; alphas[k-1] the lower slopes.
         Returns the bound (B, q), and if keep also the coefficient on h_1
-        (pre-relaxation) and on x."""
+        (pre-relaxation), the coefficient on x and the constant (so that the
+        affine function c0 + A.x lies below the output on each box).
+
+        Overflow: the products of weight matrices formed here are not bounded
+        by the guard on rho, and an overflowed entry is +-inf or NaN, which
+        max/min/where could hide later (np.maximum(-inf, 0) = 0). So the
+        coefficients and offsets are checked after every layer, and every
+        bound with a non-finite ingredient is returned as -inf (no
+        information) instead of its computed value."""
         A_h1 = None
-        for k in range(k_top, 0, -1):
-            active, unstable, lam, off = relax[k - 1]
-            s_lo = np.where(unstable, alphas[k - 1], active.astype(np.float64))
-            Ap = np.maximum(A, 0.0)
-            An = np.minimum(A, 0.0)
-            if k == 1 and keep:
-                A_h1 = A
-            Aeff = Ap * s_lo[:, None, :] + An * lam[:, None, :]
-            c0 = c0 + np.einsum("bqm,bm->bq", An, off) + Aeff @ self.bs[k - 1]
-            A = Aeff @ self.Ws[k - 1]
-        val = c0 + np.einsum("bqd,bd->bq", A, X0) - np.einsum("bqd,bd->bq", np.abs(A), R)
+        bad = np.zeros(c0.shape, dtype=bool)
+        with np.errstate(over="ignore", invalid="ignore"):
+            for k in range(k_top, 0, -1):
+                active, unstable, lam, off = relax[k - 1]
+                s_lo = np.where(unstable, alphas[k - 1], active.astype(np.float64))
+                Ap = np.maximum(A, 0.0)
+                An = np.minimum(A, 0.0)
+                if k == 1 and keep:
+                    A_h1 = A
+                Aeff = Ap * s_lo[:, None, :] + An * lam[:, None, :]
+                c0 = c0 + np.einsum("bqm,bm->bq", An, off) + Aeff @ self.bs[k - 1]
+                A = Aeff @ self.Ws[k - 1]
+                bad |= ~(np.isfinite(A).all(axis=2) & np.isfinite(c0))
+            val = c0 + np.einsum("bqd,bd->bq", A, X0) - np.einsum("bqd,bd->bq", np.abs(A), R)
+        val = np.where(bad | ~np.isfinite(val), -np.inf, val)
         if keep:
-            return val, A_h1, A
+            return val, A_h1, A, c0
         return val
 
     def layer_bounds(self, X0, R):
@@ -239,6 +293,8 @@ class Bounder:
             # CROWN, all units of layer k at once
             Wk = np.broadcast_to(self.Ws[k - 1], (B,) + self.Ws[k - 1].shape)
             bk = np.broadcast_to(self.bs[k - 1], (B, self.Ws[k - 1].shape[0]))
+            # (-inf / +inf where CROWN overflowed: then IBP alone, which the
+            # guard on rho keeps finite)
             lo_c = self._lower_linear(Wk, bk, k - 1, X0, R, relax, alphas)
             hi_c = -self._lower_linear(-Wk, -bk, k - 1, X0, R, relax, alphas)
             tau = self.tau_layer[k - 1]
@@ -266,7 +322,7 @@ class Bounder:
         bounds, relax, alphas = self.layer_bounds(X0, R)
         WL = np.broadcast_to(self.Ws[-1], (B,) + self.Ws[-1].shape)
         bL = np.broadcast_to(self.bs[-1], (B, 1))
-        lb, A_h1, A_x = self._lower_linear(WL, bL, self.L, X0, R, relax, alphas, keep=True)
+        lb, A_h1, A_x, _ = self._lower_linear(WL, bL, self.L, X0, R, relax, alphas, keep=True)
         lb = lb[:, 0]
         if alpha_iters and self.L == 1:
             lb = np.maximum(lb, self._opt_alpha_1hidden(X0, R, bounds[0], relax[0], alphas[0], alpha_iters))
@@ -274,11 +330,39 @@ class Bounder:
         if want_upper:
             ub = -self._lower_linear(-WL, -bL, self.L, X0, R, relax, alphas)[:, 0]
         # branching score: sum over unstable first-layer units of
-        # |coefficient on h_1| * |W_ji|, plus |g_i| / 2 (the linear part)
+        # |coefficient on h_1| * |W_ji|, plus |g_i| / 2 (the linear part);
+        # only a heuristic (non-finite entries become 0: still a free coordinate)
         unst = relax[0][1]
-        wcoef = np.abs(A_h1[:, 0, :]) * unst
-        score = np.where(R > 0, wcoef @ self.absW[0] + 0.5 * np.abs(A_x[:, 0, :]), -1.0)
+        with np.errstate(invalid="ignore", over="ignore"):
+            wcoef = np.abs(A_h1[:, 0, :]) * unst
+            raw = wcoef @ self.absW[0] + 0.5 * np.abs(A_x[:, 0, :])
+        score = np.where(R > 0, np.where(np.isfinite(raw), raw, 0.0), -1.0)
         return lb, ub, score
+
+    def affine_lower(self, x0=None) -> tuple[float, np.ndarray, float]:
+        """An affine minorant of f on the box of the subcube x0 (default: the
+        whole cube [-1, 1]^d): (h, g, err) with
+
+            f(x) >= h + g.x - err   for every real x of the box, exactly,
+
+        h, g and err taken as the exact values of the returned floats. It is
+        the linear function of the CROWN backward pass with the default
+        slopes (validity: item 1 of the module docstring); err = tau covers
+        the rounding of h and g (item 2: every coefficient and the constant
+        are within gamma_n of the same expressions in absolute values, whose
+        sum over a point of the box is at most M). Raises FloatingPointError
+        if the backward pass overflowed."""
+        x0 = np.zeros(self.d) if x0 is None else np.asarray(x0, dtype=np.float64)
+        X0 = x0[None, :]
+        R = (X0 == 0).astype(np.float64)
+        bounds, relax, alphas = self.layer_bounds(X0, R)
+        WL = self.Ws[-1][None]
+        bL = self.bs[-1][None]
+        val, _, A, c0 = self._lower_linear(WL, bL, self.L, X0, R, relax, alphas, keep=True)
+        h, g = float(c0[0, 0]), A[0, 0].copy()
+        if not (math.isfinite(val[0, 0]) and math.isfinite(h) and np.isfinite(g).all()):
+            raise FloatingPointError("the backward pass overflowed")
+        return h, g, self.tau
 
     def alpha_bound(self, X0, iters: int) -> np.ndarray:
         """Lower bound of f with optimised slopes (one hidden layer)."""
@@ -298,8 +382,10 @@ class Bounder:
         a_j > 0) and beta are optimised by projected supergradient ascent;
         every iterate is valid. Returns the minimum over the 2^depth leaves
         of the best leaf bound (B,), i.e. a valid lower bound of f over the
-        box, and the number of leaves bounded."""
-        assert self.L == 1
+        box, and the number of leaves bounded. A non-finite iterate counts as
+        -inf."""
+        if self.L != 1:
+            raise ValueError("phase splitting is implemented for one hidden layer")
         X0 = np.asarray(X0, dtype=np.float64)
         R = (X0 == 0).astype(np.float64)
         B = X0.shape[0]
@@ -309,7 +395,9 @@ class Bounder:
         bounds, relax, alphas = self.layer_bounds(X0, R)
         l, u = bounds[0]
         active, unstable, lam, off = relax[0]
-        loose = np.where(unstable & (a < 0), -a * (-l * u) / np.where(unstable, u - l, 1.0), -np.inf)
+        with np.errstate(over="ignore", invalid="ignore"):
+            loose = np.where(unstable & (a < 0), -a * (-l * u) / np.where(unstable, u - l, 1.0), -np.inf)
+        loose = np.where(np.isnan(loose), np.inf, loose)  # (only a branching heuristic)
         D = int(min(depth, max(0, int((loose > -np.inf).sum(1).min()))))
         sel = np.argsort(-loose, axis=1)[:, :D]  # (B, D)
         P = np.where((np.arange(1 << D)[:, None] >> np.arange(D)) & 1, 1.0, -1.0)  # (2^D, D) signs
@@ -335,23 +423,24 @@ class Bounder:
         alpha = np.where(pos_u, al, 0.0)
         beta = np.zeros_like(alpha)
         best = np.full(B * nl, -np.inf)
-        for it in range(iters):
-            coef = a * (s_fix + alpha * pos_u) - beta * S  # coefficient on z_j
-            g = coef @ W
-            h = h_fix + (a * alpha * pos_u - beta * S) @ b
-            val = h + np.einsum("bd,bd->b", g, Xl) - np.einsum("bd,bd->b", np.abs(g), Rl)
-            # the beta terms are not covered by tau: subtract their own
-            # rounding margin, 2^-30 sum_j beta_j (rho_1j + tau_1)
-            val = val - _TAU_SCALE * (beta @ (self.rho[0] + self.tau_layer[0]))
-            best = np.maximum(best, val)
-            xs = Xl - np.sign(g) * Rl
-            zst = xs @ W.T + b
-            ga = a * zst * pos_u
-            gb = -S * zst * fixed
-            nrm = np.sqrt((ga ** 2).sum(1, keepdims=True) + (gb ** 2).sum(1, keepdims=True)) + 1e-12
-            st = 0.5 / math.sqrt(it + 1) / nrm
-            alpha = np.clip(alpha + st * ga, 0.0, 1.0)
-            beta = np.maximum(beta + st * gb * np.maximum(1.0, np.abs(a).max()), 0.0)
+        with np.errstate(over="ignore", invalid="ignore"):
+            for it in range(iters):
+                coef = a * (s_fix + alpha * pos_u) - beta * S  # coefficient on z_j
+                g = coef @ W
+                h = h_fix + (a * alpha * pos_u - beta * S) @ b
+                val = h + np.einsum("bd,bd->b", g, Xl) - np.einsum("bd,bd->b", np.abs(g), Rl)
+                # the beta terms are not covered by tau: subtract their own
+                # rounding margin, 2^-30 sum_j beta_j (rho_1j + tau_1)
+                val = val - _TAU_SCALE * (beta @ (self.rho[0] + self.tau_layer[0]))
+                best = np.maximum(best, np.where(np.isfinite(val), val, -np.inf))
+                xs = Xl - np.sign(g) * Rl
+                zst = xs @ W.T + b
+                ga = a * zst * pos_u
+                gb = -S * zst * fixed
+                nrm = np.sqrt((ga ** 2).sum(1, keepdims=True) + (gb ** 2).sum(1, keepdims=True)) + 1e-12
+                st = 0.5 / math.sqrt(it + 1) / nrm
+                alpha = np.clip(alpha + st * ga, 0.0, 1.0)
+                beta = np.maximum(beta + st * gb * np.maximum(1.0, np.abs(a).max()), 0.0)
         return best.reshape(B, nl).min(1), nl
 
     # ---- cost model (flops) ------------------------------------------------
@@ -403,37 +492,40 @@ class Bounder:
         alpha = np.where(pos_u, alpha0, 0.0)
         best = np.full(X0.shape[0], -np.inf)
         step = 0.5
-        for it in range(iters):
-            s = s_fixed + alpha * pos_u
-            S = a * s
-            g = S @ W
-            h = h_fixed + (a * alpha * pos_u) @ b
-            val = h + np.einsum("bd,bd->b", g, X0) - np.einsum("bd,bd->b", np.abs(g), R)
-            best = np.maximum(best, val)
-            xs = X0 - np.sign(g) * R  # minimising vertex
-            zst = xs @ W.T + b
-            grad = a * zst * pos_u
-            # normalised step per node
-            nrm = np.sqrt((grad ** 2).sum(1, keepdims=True)) + 1e-12
-            alpha = np.clip(alpha + step / math.sqrt(it + 1) * grad / nrm, 0.0, 1.0)
+        with np.errstate(over="ignore", invalid="ignore"):
+            for it in range(iters):
+                s = s_fixed + alpha * pos_u
+                S = a * s
+                g = S @ W
+                h = h_fixed + (a * alpha * pos_u) @ b
+                val = h + np.einsum("bd,bd->b", g, X0) - np.einsum("bd,bd->b", np.abs(g), R)
+                best = np.maximum(best, np.where(np.isfinite(val), val, -np.inf))
+                xs = X0 - np.sign(g) * R  # minimising vertex
+                zst = xs @ W.T + b
+                grad = a * zst * pos_u
+                # normalised step per node
+                nrm = np.sqrt((grad ** 2).sum(1, keepdims=True)) + 1e-12
+                alpha = np.clip(alpha + step / math.sqrt(it + 1) * grad / nrm, 0.0, 1.0)
         return best
 
     # ---- exact evaluation of small subcubes ------------------------------
     def enumerate_subcubes(self, X0, chunk_points: int = 1 << 21, collect: list | None = None):
         """For subcubes with the same number r of free coordinates, the number
-        of definitely failing (f < t - tau) and ambiguous (|f - t| <= tau)
-        points of each. Returns two int arrays. If collect is a list, the
-        failing points are appended to it (as int8 arrays)."""
+        of definitely failing (f < t - tau) and ambiguous (neither f < t - tau
+        nor f >= t + tau: |f - t| <= tau, or f not a number) points of each.
+        Returns two int arrays. If collect is a list, the failing points are
+        appended to it (as int8 arrays)."""
         X0 = np.asarray(X0, dtype=np.float64)
         B, d = X0.shape
         R = X0 == 0
         r = int(R[0].sum())
-        assert (R.sum(1) == r).all()
+        if not (R.sum(1) == r).all():
+            raise ValueError("subcubes of different dimensions")
         if r == 0:
             f = self.forward(X0)
             if collect is not None:
                 collect.append(X0[f < self.pt_fail].astype(np.int8))
-            return (f < self.pt_fail).astype(np.int64), ((f >= self.pt_fail) & (f < self.pt_safe)).astype(np.int64)
+            return (f < self.pt_fail).astype(np.int64), self._ambiguous(f).astype(np.int64)
         free = np.nonzero(R)[1].reshape(B, r)
         idx = np.arange(1 << r)
         P = np.where((idx[:, None] >> np.arange(r)) & 1, 1.0, -1.0)  # (2^r, r)
@@ -457,8 +549,14 @@ class Bounder:
                 fr = free[sl][bi]
                 pts[np.arange(len(bi))[:, None], fr] = P[pi]
                 collect.append(pts.astype(np.int8))
-            na[sl] = ((f >= self.pt_fail) & (f < self.pt_safe)).sum(1)
+            na[sl] = self._ambiguous(f).sum(1)
         return nf, na
+
+    def _ambiguous(self, f: np.ndarray) -> np.ndarray:
+        """Points decided neither way: not f < t - tau and not f >= t + tau
+        (NaN included; it cannot occur under the guard on rho, but is never
+        counted as safe)."""
+        return ~(f < self.pt_fail) & ~(f >= self.pt_safe)
 
 
 # --------------------------------------------------------------------------
@@ -507,6 +605,7 @@ class BabResult:
     levels: list = field(default_factory=list)
     stopped: str = ""
     fail_cubes: list = field(default_factory=list)  # certified failing subcubes (with collect)
+    net_fp: str = ""  # net_fingerprint of the net it was computed for
 
     @property
     def lo(self) -> float:
@@ -539,11 +638,14 @@ def bab(net: MLP, r_enum: int = 6, max_nodes: int = 10 ** 8, max_fpe: float = ma
         rng: np.random.Generator | None = None, verbose: bool = False, collect: list | None = None) -> BabResult:
     """Breadth-first input branch and bound (see the module docstring).
 
-    r_enum: subcubes with at most this many free coordinates are enumerated.
+    r_enum: subcubes with at most this many free coordinates are enumerated
+      (an int >= 0; 0 enumerates single points only).
     max_nodes, max_fpe: budgets on the number of tree nodes and on the cost
       (forward-pass equivalents, bounding and enumeration together); when
       processing the next level could exceed either, the frontier becomes the
-      undecided set.
+      undecided set. The projected cost of a level assumes that all of its
+      nodes are bounded, although the probe may skip most of them: a run can
+      therefore stop well below max_fpe (res.fpe is the cost spent).
     alpha_iters: slope-optimisation iterations (one hidden layer), applied to
       the nodes that plain CROWN leaves undecided, at levels with at most
       alpha_max_free free coordinates.
@@ -565,19 +667,26 @@ def bab(net: MLP, r_enum: int = 6, max_nodes: int = 10 ** 8, max_fpe: float = ma
       (memory); a level whose children could exceed it ends the run.
     collect: a list that receives the failing points found by enumeration
       (certified failing subcubes go to res.fail_cubes).
+    bounder: a Bounder built for this same net (checked by fingerprint).
     Costs are counted in flops and in forward-pass equivalents (fpe).
     """
+    if isinstance(r_enum, bool) or not isinstance(r_enum, (int, np.integer)) or r_enum < 0:
+        # r_enum < 0 would split points that have no free coordinate left
+        raise ValueError("r_enum must be an integer >= 0")
+    if batch < 1:
+        raise ValueError("batch must be >= 1")
     t0 = time.time()
     rng = rng or np.random.default_rng(0)
-    bd = bounder or Bounder(net)
+    bd = _bounder_for(net, bounder)
     d = bd.d
-    res = BabResult(d=d)
+    res = BabResult(d=d, net_fp=bd.fingerprint)
     thr_safe = bd.thr_safe
     thr_fail = bd.thr_fail
     col = np.abs(bd.Ws[-1])
-    for k in range(bd.L, 0, -1):
-        col = col @ bd.absW[k - 1]
-    static_order = np.argsort(-col[0])
+    with np.errstate(over="ignore", invalid="ignore"):
+        for k in range(bd.L, 0, -1):
+            col = col @ bd.absW[k - 1]
+    static_order = np.argsort(-np.nan_to_num(col[0], nan=np.inf))  # (a heuristic order)
     frontier = np.zeros((1, d), dtype=np.int8)
     depth = 0
 
@@ -693,7 +802,8 @@ def bab(net: MLP, r_enum: int = 6, max_nodes: int = 10 ** 8, max_fpe: float = ma
             res.stopped = "failure found"
             break
         depth += 1
-    assert res.fail + res.ambiguous + res.safe + res.undecided == 1 << d
+    if res.fail + res.ambiguous + res.safe + res.undecided != 1 << d:
+        raise RuntimeError("branch and bound lost track of the partition")
     res.seconds = time.time() - t0
     res.fpe = res.flops / bd.flops_forward
     return res
@@ -701,6 +811,30 @@ def bab(net: MLP, r_enum: int = 6, max_nodes: int = 10 ** 8, max_fpe: float = ma
 
 # --------------------------------------------------------------------------
 # sampling inside the undecided subcubes (envelope estimator)
+
+
+def _bounder_for(net: MLP, bounder: Bounder | None) -> Bounder:
+    """`bounder` if it was built for `net` (else ValueError), or a new one."""
+    if bounder is None:
+        return Bounder(net)
+    if not isinstance(bounder, Bounder) or bounder.fingerprint != net_fingerprint(net):
+        raise ValueError("bounder was built for another net")
+    return bounder
+
+
+def _check_cubes(res: BabResult) -> np.ndarray:
+    """The undecided subcubes, checked to be equal-size subcubes of total
+    size res.undecided (the sampler draws a cube, then its free bits, which
+    is uniform on the union only for equal sizes)."""
+    C = res.undecided_cubes
+    if not isinstance(C, np.ndarray) or C.ndim != 2 or C.shape[0] == 0 or C.shape[1] != res.d \
+            or not np.all((C == -1) | (C == 0) | (C == 1)):
+        raise ValueError("undecided_cubes must be a nonempty array of subcubes in {-1, 0, +1}^d")
+    free = (C == 0).sum(1)
+    r = int(free[0])
+    if not np.all(free == r) or C.shape[0] << r != res.undecided:
+        raise ValueError("undecided_cubes must be equal-size subcubes of total size res.undecided")
+    return C
 
 
 @dataclass
@@ -726,19 +860,30 @@ def estimate_undecided(net: MLP, res: BabResult, eps: float, delta: float, rng: 
     estimated from exact uniform samples of the union (all undecided subcubes
     of a BFS frontier have the same size, so a uniform cube then uniform free
     bits is exact). Doubling batches, KL intervals at level delta_j = 6 delta /
-    (pi^2 j^2); stops when hi <= (1 + eps) lo or at max_samples (still valid)."""
-    bd = bounder or Bounder(net)
+    (pi^2 j^2); stops when hi <= (1 + eps) lo or at max_samples (still valid).
+    The counts enter as dyadic rationals rounded outwards (F / 2^d need not
+    be a float when d > 53); the interval starts from the deterministic one,
+    [res.lo, res.hi]."""
+    if isinstance(first, bool) or not isinstance(first, (int, np.integer)) or first < 1:
+        raise ValueError("first must be an integer >= 1")
+    if isinstance(max_samples, bool) or not isinstance(max_samples, (int, np.integer)) or max_samples < 0:
+        raise ValueError("max_samples must be an integer >= 0")
+    bd = _bounder_for(net, bounder)
+    if not isinstance(res, BabResult) or res.net_fp != bd.fingerprint or res.d != bd.d:
+        raise ValueError("res was not computed by bab for this net")
     d = res.d
-    F = res.fail / 2.0 ** d
     if res.undecided == 0:
         return TwoSided(res.lo, res.hi, 0, res.lo, res.hi, 0.0, 0)
-    cubes = res.undecided_cubes
-    Zu = res.undecided / 2.0 ** d
-    amb = res.ambiguous / 2.0 ** d
+    cubes = _check_cubes(res)
+    F_lo = _dyadic(res.fail, d, up=False)
+    FA_hi = _dyadic(res.fail + res.ambiguous, d, up=True)
+    Zu_lo = _dyadic(res.undecided, d, up=False)
+    Zu_hi = _dyadic(res.undecided, d, up=True)
+    Zu = Zu_hi
     N = kd = ka = 0
     j = 0
     k = first
-    lo, hi = F, res.hi
+    lo, hi = res.lo, res.hi
     while N < max_samples:
         j += 1
         k = min(k, max_samples - N)
@@ -750,15 +895,17 @@ def estimate_undecided(net: MLP, res: BabResult, eps: float, delta: float, rng: 
             X = np.where(X == 0, Z, X)
             f = bd.forward(X)
             kd += int((f < bd.pt_fail).sum())
-            ka += int(((f >= bd.pt_fail) & (f < bd.pt_safe)).sum())
+            ka += int(bd._ambiguous(f).sum())
         N += k
         dj = delta * 6.0 / (math.pi ** 2 * j * j)
         # kd / N is one correctly rounded division: relative error <= 2^-53
         l1, _ = kl_interval(kd / N, N, dj, rel_err=2.0 ** -52)
         _, h1 = kl_interval((kd + ka) / N, N, dj, rel_err=2.0 ** -52)
-        # p = F + Zu mu; F and Zu are exact dyadic rationals; round outwards
-        l = (F + Zu * l1) * (1 - 2.0 ** -50)
-        h = min(res.hi, (F + amb + Zu * h1) * (1 + 2.0 ** -50))
+        # p = F / 2^d + Zu mu (+ ambiguous points of the tree, in the upper
+        # end); the dyadic parts are rounded outwards, the two float
+        # operations covered by the factors 1 -+ 2^-50
+        l = (F_lo + Zu_lo * l1) * (1 - 2.0 ** -50)
+        h = min(res.hi, (FA_hi + Zu_hi * h1) * (1 + 2.0 ** -50))
         lo, hi = max(lo, l), min(hi, h)
         if lo > 0 and hi <= (1 + eps) * lo:
             break

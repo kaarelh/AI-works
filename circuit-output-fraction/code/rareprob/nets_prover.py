@@ -22,7 +22,7 @@ plus a sample budget N for the open part. Two certificate kinds:
   'lin'   linear bound propagation (CROWN / DeepPoly type) with slopes chosen
           by the prover: every unstable unit relaxed from below gets a slope
           alpha in [0, 1] (alpha z <= relu(z) for all z), every unit relaxed
-          from above the chord through its interval; intermediate intervals
+          from above a chord through its interval; intermediate intervals
           (two or more hidden layers) are recomputed by the verifier itself.
           For one hidden layer, the best slopes give the value of the LP
           (triangle) relaxation over the subcube's box.
@@ -58,65 +58,72 @@ Soundness on every net and every argument
   missing, malformed, non-finite, or fails its check is DEMOTED to an open
   leaf (its points join the sampled envelope), which keeps the interval
   valid (the envelope estimator is sound whatever the envelope is). The
-  verifier recomputes every interval, slope of a chord, quadratic
-  coefficient and matrix itself from the net and the prover's free
-  parameters (alpha in [0, 1] after clipping, theta in [0, 1]^2 after
-  clipping, mu, s); a free parameter can only make a bound weaker, never
-  wrong.
-* Floating point. Every computed bound is a straight-line program in +, -,
-  x, |.| and max(., 0) of the float inputs (weights, biases, the subcube,
-  the prover's parameters and the verifier's own slopes, which are treated
-  as exact parameters whose validity is checked separately). For any
-  evaluation order its error is at most gamma_D times the same program run
-  on absolute values (Higham, Lemma 3.1 / 3.4), with D < 2^20 operations
-  along any path (asserted), so gamma_D < 2^-32; we carry the absolute
-  version along and subtract REL = 2^-30 times it (plus 2^-1000 for
-  underflow). Chord slopes are fl(U / fl(U - L)) (1 + 2^-26), which exceeds
-  U / (U - L) exactly; they are re-checked and replaced by 1 (always valid
-  for L <= 0) otherwise. Units whose backward coefficient G_j is so small
-  that its sign is uncertain (|G_j| <= 5 REL |G|_abs) are dropped and
-  charged 5 REL |G|_abs max(U_j, 0), so the choice of relaxation side never
-  depends on a rounded sign.
-* PSD check. Higham (Thm 10.3): if Cholesky in floating point runs to
-  completion on A_f (any order of the inner products), then
-  R^T R = A_f + dA with |dA| <= gamma_{n+1} |R^T||R|, hence
-  lambda_min(A_f) >= -gamma tr(A_f) / (1 - gamma) (use ||R||_F^2 = tr(R^T R)).
-  We run our own textbook Cholesky on A_f = fl(A - c I) with c larger than
-  that, plus the Frobenius norm of the entrywise error bound of A; so the
-  exact matrix M - diag(mu) - s I is PSD. (We use gamma_{2n+4}.)
+  verifier recomputes every interval, chord slope, quadratic coefficient and
+  matrix itself from the net and the prover's free parameters (alpha in
+  [0, 1] after clipping, theta in [0, 1]^2 after clipping, mu, s); a free
+  parameter can only make a bound weaker, never wrong.
+* Arithmetic. The SAFE/FAIL checks run in outward-rounded interval
+  arithmetic: every quantity is a pair of floats enclosing the exact real
+  number that the certificate's mathematics refers to, and soundness rests
+  on two elementary facts about IEEE binary64 (section "outward rounding"
+  below), not on a global rounding budget. In particular
+  - the side on which an unstable ReLU is relaxed is chosen from the
+    enclosure of its exact backward coefficient G_j: from below if G_j >= 0
+    surely, from above if G_j <= 0 surely; otherwise the unit is dropped and
+    charged G_lo,j U_j (valid since 0 <= h_j <= U_j);
+  - chord slopes are U / dn(U - L) rounded up, valid by construction;
+  - the quadratic pieces of 'quad' are validated by interval evaluation of
+    their defining inequalities (the verifier picks the constant term as
+    the best value that this proof allows), M is enclosed entrywise, and
+    the PSD test covers every symmetric matrix in that enclosure (Cholesky
+    with Higham's backward-error bound, gradual underflow included, after an
+    exact power-of-two scaling);
+  - gradual underflow, underflow to zero and overflow are covered by the
+    same enclosures; a bound that is not finite rejects the certificate.
 * Points. An enumerated or sampled point is classified from its float64
-  value, whose error is at most REL (|f|_abs + 1) =: tau for any summation
-  order (|f|_abs the absolute forward pass over the cube); thresholds
-  t +- tau are rounded outwards once (Fractions). Points with
-  |f_float - t| <= tau are re-evaluated in exact rational arithmetic. So the
-  counts F are exact for the exact-arithmetic net, and sampled indicators
-  are exact.
+  value, whose error is at most tau for any summation order (tau is a
+  forward error bound for the whole cube: Higham's gamma terms plus the
+  underflow of every product, propagated layer by layer; no absolute floor,
+  so tau scales with the net). Points with |f_float - t| <= tau, and points
+  whose float value is not finite, are re-evaluated in exact rational
+  arithmetic. So the counts F are exact for the exact-arithmetic net, and
+  sampled indicators are exact.
 * Sampling. Exact uniform draws from the open union (a uniform integer
   below Z by rejection, then the leaf containing it), indicator of failure
   in {0, 1}, Hoeffding-KL interval at level delta (stats.kl_interval): the
   only randomness, so Pr[p not in output] <= delta.
 
-None of this uses training or any property of the weights.
+None of this uses training or any property of the weights; any finite
+float64 weights are accepted (non-finite weights or threshold raise
+ValueError: then f is not a real function).
 
 The prover
 ----------
 `prove` builds such a tree breadth first: at each node it tries 'lin' with
-default and then optimised slopes (projected supergradient ascent on the
-exact bound), 'lin' for FAIL, then 'quad' (Adam on a smoothed eigenvalue
-objective) for nodes whose 'lin' bound is within a window of t; it splits
-the remaining nodes on the coordinate chosen by strong branching (largest
-worse-child bound among the top-k coordinates by influence on the unstable
-units), stops at r <= r_leaf (ENUM), and finally replaces every subtree
-whose verification costs more than enumerating its subcube by ENUM. With
-open_policy="auto" (or "both") it then turns failure-containing subtrees
-into OPEN leaves, top down, wherever sampling them (to ratio 1 + eps) is
-cheaper than verifying them. `knuth_estimate` estimates the size and cost of
-the prover's tree from random root-to-leaf probes; `witness_lower_bound`
-checks a list of failing points (lower bounds need no deduction).
-Costs are counted in floating-point operations and reported in forward-pass
-equivalents (fpe): flops / flops of one evaluation of the net (see the cost
-model in CertNet: an incremental verifier that updates the first-layer
-offsets along the tree).
+default slopes, then slopes optimised by projected supergradient ascent on
+the bound (only where the default bound is within `opt_window` standard
+deviations of t), 'lin' for FAIL, then 'quad' (Adam on a smoothed
+eigenvalue objective) for nodes whose 'lin' bound is within a window of t;
+it splits the remaining nodes on the coordinate chosen by strong branching
+(largest worse-child bound among the top-k coordinates by influence on the
+unstable units), stops at r <= r_leaf (ENUM), and finally replaces every
+subtree whose verification costs more than enumerating its subcube by ENUM.
+With open_policy="auto" (or "both") it then turns failure-containing
+subtrees into OPEN leaves, top down, wherever sampling them (to ratio
+1 + eps) is cheaper than verifying them. The prover's search uses plain
+floating point; it accepts a leaf only if the rigorous check clears t by
+2^-30 |f|_abs, and checks 'quad' certificates exactly as the verifier will,
+so that its certificates survive the verifier's differently batched (and so
+differently rounded) recomputation.
+`knuth_estimate` estimates the size and cost of the prover's tree from
+random root-to-leaf probes; `witness_lower_bound` checks a list of failing
+points (lower bounds need no deduction).
+
+Costs are counted in floating-point operations of the verifier as
+implemented (matrix products; every leaf recomputes its first-layer offsets)
+and reported in forward-pass equivalents (fpe): flops / flops of one
+evaluation of the net. `verify` also reports its wall-clock time and the
+number of exact rational re-evaluations of points.
 """
 
 from __future__ import annotations
@@ -131,42 +138,147 @@ import numpy as np
 from .nets import MLP
 from .stats import kl_interval
 
-U53 = 2.0 ** -53
-REL = 2.0 ** -30
-TINY = 2.0 ** -1000
-LAM_UP = 1.0 + 2.0 ** -26  # chord slopes are inflated by this (>> the 2^-30 rounding budget)
+U53 = 2.0 ** -53  # unit roundoff of binary64, rounding to nearest
+ETA = 2.0 ** -1074  # smallest positive float; one rounding below 2^-1022 errs by at most ETA / 2
 
 # leaf / node codes of the serialised tree
 SPLIT, SAFE, FAIL, ENUM, OPEN = "split", "safe", "fail", "enum", "open"
 _DEBUG = False
 
 
-def _lo(x, err):
-    """A float <= every real v with |v - x| <= err (x, err computed floats;
-    err may itself be off by a relative 2^-40)."""
-    return x - err * (1.0 + 2.0 ** -40) - np.abs(x) * 2.0 ** -50 - TINY
+# ---------------------------------------------------------------------------
+# outward rounding
+#
+# Two facts about IEEE binary64 with rounding to nearest (gradual underflow
+# included) make every enclosure below rigorous:
+#  (R1) one operation +, -, *, / or sqrt of floats whose computed result r is
+#       not NaN has its exact result in [nextafter(r, -inf), nextafter(r, inf)]
+#       (also when r overflowed to +-inf, and in the subnormal range);
+#  (R2) a matrix product C = fl(A @ B) of floats with inner dimension n,
+#       computed by the classical algorithm in any summation order, with or
+#       without fused multiply-adds, satisfies |C - A B| <= g_n |A||B| + n ETA
+#       entrywise (Higham, Lemma 3.5, with the underflow model
+#       fl(x op y) = (x op y)(1 + d) + e, |d| <= u, |e| <= ETA / 2, e = 0 for
+#       + and -), where g_n >= n u / (1 - n u); and E = fl(|A| @ |B|) bounds
+#       |A||B| <= (E + n ETA) / (1 - g_n) <= E (1 + 2 g_n) + 2 n ETA.
+# Sums of floats are the case of (R2) without products (no underflow term).
+# Non-finite values propagate (NaN compares false, infinities stay infinite)
+# and every certificate whose final bound is not finite is rejected.
 
 
-def _hi(x, err):
-    return x + err * (1.0 + 2.0 ** -40) + np.abs(x) * 2.0 ** -50 + TINY
+def _dn(x):
+    return np.nextafter(x, -np.inf)
 
 
-def _gamma(n: int) -> float:
-    return n * U53 / (1.0 - n * U53)
+def _up(x):
+    return np.nextafter(x, np.inf)
+
+
+def _gam(n: int) -> float:
+    """A float >= gamma_n = n u / (1 - n u) for n < 2^40 (exactly n (1 + 2^-12) u)."""
+    return (n + n / 4096.0) * U53
+
+
+def _cg(n: int) -> float:
+    """A float >= 1 + 2 gamma_n >= 1 / (1 - gamma_n)."""
+    return math.nextafter(1.0 + 2.0 * _gam(n), math.inf)
+
+
+def _midrad(lo, hi):
+    """A midpoint and a radius with [lo, hi] inside [mid - rad, mid + rad]."""
+    mid = 0.5 * lo + 0.5 * hi
+    return mid, np.maximum(_up(hi - mid), _up(mid - lo))
+
+
+def _imm_pt(Am, Ar, B, Babs):
+    """Enclosure (lo, hi) of every A @ B with |A - Am| <= Ar (entrywise; Ar
+    None: A = Am) and B exact (Babs = |B|). By (R2):
+    |A B - fl(Am B)| <= g_n |Am||B| + n ETA + Ar |B| <= V |B| + n ETA with
+    V = up(g_n |Am| + Ar)."""
+    n = Am.shape[-1]
+    C = Am @ B
+    V = _up(_gam(n) * np.abs(Am))
+    if Ar is not None:
+        V = _up(V + Ar)
+    R = _up(_up((V @ Babs) * _cg(n)) + 3 * n * ETA)
+    return _dn(C - R), _up(C + R)
+
+
+def _imm_iv(Am, Ar, Bm, Br):
+    """Enclosure (lo, hi) of every A @ B with |A - Am| <= Ar, |B - Bm| <= Br:
+    |A B - fl(Am Bm)| <= (g_n |Am| + Ar)(|Bm| + Br) + |Am| Br + n ETA."""
+    n = Am.shape[-1]
+    cg = _cg(n)
+    C = Am @ Bm
+    Aabs = np.abs(Am)
+    V = _up(_up(_gam(n) * Aabs) + Ar)
+    Bb = _up(np.abs(Bm) + Br)
+    R = _up(_up(_up((V @ Bb) * cg) + _up((Aabs @ Br) * cg)) + 5 * n * ETA)
+    return _dn(C - R), _up(C + R)
+
+
+def _mul_iv(alo, ahi, blo, bhi):
+    """Elementwise enclosure of the products of [alo, ahi] and [blo, bhi]."""
+    p1, p2, p3, p4 = alo * blo, alo * bhi, ahi * blo, ahi * bhi
+    lo = np.minimum(np.minimum(p1, p2), np.minimum(p3, p4))
+    hi = np.maximum(np.maximum(p1, p2), np.maximum(p3, p4))
+    return _dn(lo), _up(hi)
+
+
+def _sum_lo(T):
+    """A float <= the exact sum of the floats T over the last axis, for any
+    summation order: |fl(sum) - sum| <= gamma_n sum|T| <= 2 g_n fl(sum|T|)."""
+    n = T.shape[-1]
+    s = T.sum(-1)
+    E = np.abs(T).sum(-1)
+    return _dn(s - _up(_up(E * (2.0 * _gam(n))) + 3 * n * ETA))
+
+
+def _mv_up(Aabs, x):
+    """A float array >= the exact Aabs @ x (Aabs, x >= 0)."""
+    n = Aabs.shape[-1]
+    return _up(_up((Aabs @ x) * _cg(n)) + 2 * n * ETA)
+
+
+def _poly_iv(k, b, z):
+    """Enclosure of k z^2 + b z (floats; k >= 0)."""
+    zz_lo, zz_hi = _dn(z * z), _up(z * z)
+    lo = _dn(_dn(k * zz_lo) + _dn(b * z))
+    hi = _up(_up(k * zz_hi) + _up(b * z))
+    return lo, hi
 
 
 def _round_down(q: Fraction) -> float:
-    x = float(q)
-    while Fraction(x) > q:
+    """The greatest float64 <= q (-inf if there is none)."""
+    try:
+        x = float(q)
+    except OverflowError:
+        return -math.inf if q < 0 else np.finfo(float).max
+    while math.isfinite(x) and Fraction(x) > q:  # stepping below -FMAX gives -inf: correct
         x = math.nextafter(x, -math.inf)
     return x
 
 
 def _round_up(q: Fraction) -> float:
-    x = float(q)
-    while Fraction(x) < q:
+    """The least float64 >= q (inf if there is none)."""
+    try:
+        x = float(q)
+    except OverflowError:
+        return math.inf if q > 0 else -np.finfo(float).max
+    while math.isfinite(x) and Fraction(x) < q:  # stepping above FMAX gives inf: correct
         x = math.nextafter(x, math.inf)
     return x
+
+
+def _subcube(root, d: int) -> np.ndarray:
+    """A subcube vector in {-1, 0, +1}^d (int8), validated BEFORE the cast
+    (a cast first would truncate, e.g. 0.6 to 0)."""
+    if root is None:
+        return np.zeros(d, dtype=np.int8)
+    r = np.asarray(root, dtype=np.float64)
+    if r.shape != (d,) or not np.all((r == -1.0) | (r == 0.0) | (r == 1.0)):
+        raise ValueError("root must be a vector in {-1, 0, +1}^d")
+    return r.astype(np.int8)
 
 
 def _cholesky_ok(A: np.ndarray) -> bool:
@@ -186,6 +298,55 @@ def _cholesky_ok(A: np.ndarray) -> bool:
             if not np.isfinite(R[j, j + 1:]).all():
                 return False
     return True
+
+
+def _psd_box(Alo: np.ndarray, Ahi: np.ndarray) -> bool:
+    """True only if every symmetric matrix A with Alo <= A <= Ahi (entrywise;
+    Alo, Ahi symmetric) is positive semidefinite.
+
+    With mid, rad the midpoint-radius form, scaled exactly by a power of two
+    so that the largest entry is about 1 (PSD is invariant under positive
+    scaling; the scaling rounds only below 2^-1022, by at most ETA / 2, which
+    is added to rad): every such A is mid + D with ||D||_2 <= ||rad||_F =: fr.
+    Cholesky of Af = fl(mid - c I) runs to completion => R^T R = Af + dA with
+    |dA| <= g_{n+1} |R^T||R| + uf (Higham, Thm 10.3; uf = (2n + 4 rmax) ETA
+    for the underflow of products and divisions, rmax >= max r_jj), hence
+    lambda_min(Af) >= -h, h = g (1 + 2g)(tr Af + n uf) + n uf. Forming Af
+    errs on the diagonal by at most ed = 2u max|Af_ii|. So A >= (c - h - ed -
+    fr) I, and we check c >= h + ed + fr with every term rounded up."""
+    n = Alo.shape[0]
+    if not (np.isfinite(Alo).all() and np.isfinite(Ahi).all()):
+        return False
+    mid, rad = _midrad(Alo, Ahi)
+    top = max(float(np.abs(mid).max()), float(rad.max()))
+    if not math.isfinite(top):
+        return False
+    if top == 0.0:
+        return True
+    e = math.frexp(top)[1]
+    mid = np.ldexp(mid, -e)
+    rad = _up(_up(np.ldexp(rad, -e)) + ETA)
+    sq = _up(rad * rad)
+    fr = float(_up(math.sqrt(float(_mv_up(sq.reshape(1, -1), np.ones(n * n))[0]))))
+    g = _gam(n + 1)
+    dmax = float(np.abs(np.diag(mid)).max())
+    c_try = 2.0 * (fr + 4.0 * g * (n * dmax + 1.0)) + 64.0 * n * n * ETA
+    for _ in range(2):
+        Af = mid - c_try * np.eye(n)
+        if not _cholesky_ok(Af):
+            return False
+        dA = np.diag(Af)
+        amax = float(np.abs(dA).max())
+        tr = float(-_sum_lo(-dA.reshape(1, -1))[0])  # >= exact trace of Af
+        rmax = 2.0 * max(1.0, amax)
+        uf = float(_up((2 * n + 4 * rmax) * ETA))
+        h = float(_up(_up(_up(g * _cg(n + 1)) * _up(max(tr, 0.0) + n * uf)) + n * uf))
+        ed = float(_up(2.0 * U53 * amax))
+        need = float(_up(_up(h + ed) + fr))
+        if c_try >= need:
+            return True
+        c_try = 2.0 * need  # retry once with a larger shift
+    return False
 
 
 # ---------------------------------------------------------------------------
@@ -211,21 +372,34 @@ class CertNet:
         self.L = len(self.Ws) - 1
         self.widths = [W.shape[0] for W in self.Ws[:-1]]
         dims = [self.d] + self.widths + [1]
-        # longest chain of floating-point operations along any path of any
-        # computed quantity (bounds, matrices, Cholesky pivots): well below 2^20
-        n_ops = 8 * sum(dims) + 4 * (self.d + 2) ** 2 + 64
-        if n_ops >= 2 ** 20:
-            raise ValueError("network too large for the fixed rounding budget REL")
-        rho = np.ones(self.d)
-        for k in range(self.L + 1):
-            rho = self.absW[k] @ rho + self.absb[k]
-            if not np.isfinite(rho).all() or rho.max() > 1e290:
-                raise ValueError("weights too large for float64 bounds")
+        # [W_k | b_k] for the backward passes, and the first layer transposed
+        self.We = [np.ascontiguousarray(np.concatenate([W, b[:, None]], 1)) for W, b in zip(self.Ws, self.bs)]
+        self.Weabs = [np.abs(W) for W in self.We]
+        self.W1T = np.ascontiguousarray(self.Ws[0].T)
+        self.absW1T = np.abs(self.W1T)
+        # products x0_i W_ji with x0 in {-1, 0, 1} are exact, so the offsets
+        # c = W_1 x0 + b_1 and the radii err by at most g_{d+1} ||[W_1 b_1]_j||_1
+        with np.errstate(all="ignore"):
+            row1 = _mv_up(self.Weabs[0], np.ones(self.d + 1))
+            self.err1 = _up(_up(_gam(self.d + 1) * row1) + 3 * (self.d + 1) * ETA)
+        # forward error bound for points: |f_float(x) - f(x)| <= tau_pt on the
+        # whole cube, any summation order (also the split sums of enum_count)
+        rho = np.ones(self.d)  # >= |h_k(x)|
+        err = np.zeros(self.d)  # >= |h_k computed - h_k exact|
+        with np.errstate(all="ignore"):
+            for k in range(self.L + 1):
+                n = self.Ws[k].shape[1] + 3
+                Wr = _mv_up(self.absW[k], _up(rho + err))
+                err = _up(_up(_mv_up(self.absW[k], err) + _up(_gam(n) * _up(Wr + self.absb[k]))) + 3 * n * ETA)
+                rho = _up(_mv_up(self.absW[k], rho) + self.absb[k])
         self.absf = float(rho[0])
-        self.tau_pt = REL * (self.absf * (1.0 + 2.0 ** -40) + 1.0)
-        T, tau = Fraction(self.t), Fraction(self.tau_pt)
-        self.pt_fail = _round_down(T - tau)  # f_float < this  => f < t exactly
-        self.pt_safe = _round_up(T + tau)  # f_float >= this => f >= t exactly
+        self.tau_pt = float(err[0])
+        if math.isfinite(self.tau_pt):
+            T, tau = Fraction(self.t), Fraction(self.tau_pt)
+            self.pt_fail = _round_down(T - tau)  # f_float < this  => f < t exactly
+            self.pt_safe = _round_up(T + tau)  # f_float >= this => f >= t exactly
+        else:  # every point is re-evaluated exactly
+            self.pt_fail, self.pt_safe = -math.inf, math.inf
         self.fpe_flops = 2.0 * sum(a * b for a, b in zip(dims[:-1], dims[1:]))
         self._exact = None
         self.n_exact_evals = 0
@@ -233,9 +407,10 @@ class CertNet:
     # ---- point evaluation ---------------------------------------------------
     def forward(self, X: np.ndarray) -> np.ndarray:
         h = np.asarray(X, dtype=np.float64)
-        for W, b in zip(self.Ws[:-1], self.bs[:-1]):
-            h = np.maximum(h @ W.T + b, 0.0)
-        return (h @ self.Ws[-1].T + self.bs[-1])[..., 0]
+        with np.errstate(all="ignore"):
+            for W, b in zip(self.Ws[:-1], self.bs[:-1]):
+                h = np.maximum(h @ W.T + b, 0.0)
+            return (h @ self.Ws[-1].T + self.bs[-1])[..., 0]
 
     def exact_f(self, x) -> Fraction:
         """f(x) in exact rational arithmetic (x in {-1,+1}^d)."""
@@ -260,18 +435,28 @@ class CertNet:
             h = [v if v > 0 else 0 for v in z] if k < self.L else z
         return h[0]
 
+    def _ambiguous(self, fvals: np.ndarray):
+        """Sure failures (count) and the indices that need exact evaluation
+        (|f_float - t| <= tau or f_float not finite). A value that is not
+        finite decides nothing, whatever the thresholds (with tau = inf the
+        thresholds are -inf and +inf, and inf >= inf would otherwise read an
+        overflowed output as safe)."""
+        fin = np.isfinite(fvals)
+        sure_fail = fin & (fvals < self.pt_fail)
+        sure_safe = fin & (fvals >= self.pt_safe)
+        return int(np.count_nonzero(sure_fail)), np.nonzero(~(sure_fail | sure_safe))[0]
+
     def classify(self, X: np.ndarray, fvals: np.ndarray) -> int:
         """Exact number of failing points among the rows of X, given their
         float64 values fvals (computed in any summation order)."""
-        fails = int(np.count_nonzero(fvals < self.pt_fail))
-        amb = np.nonzero((fvals >= self.pt_fail) & (fvals < self.pt_safe))[0]
+        fails, amb = self._ambiguous(fvals)
         T = Fraction(self.t)
         for i in amb:
             if self.exact_f(X[i]) < T:
                 fails += 1
         return fails
 
-    # ---- cost model (flops) ----------------------------------------------------
+    # ---- cost model (flops of the implementation) ------------------------------
     def flops_point_enum(self) -> float:
         """Per enumerated point in a meet-in-the-middle sweep: one addition of
         the two first-layer half tables, the ReLUs, the later layers."""
@@ -284,162 +469,118 @@ class CertNet:
     def flops_enum(self, r: int) -> float:
         r1 = r // 2
         r2 = r - r1
-        tables = 2.0 * self.widths[0] * (r1 * 2 ** r1 + r2 * 2 ** r2)
+        tables = 2.0 * self.widths[0] * (self.d + r1 * 2 ** r1 + r2 * 2 ** r2)
         return tables + (2.0 ** r) * self.flops_point_enum()
 
-    # The counts below are those of a verifier that walks the tree top down and
-    # updates the first-layer offsets c = W_1 x0 + b_1, their absolute version
-    # and the radii sum_{i free} |W_1[:, i]| by one column per edge (charged to
-    # every node as flops_node), so that a leaf only pays for its free
-    # coordinates. (The numpy implementation recomputes them per leaf, which
-    # costs O(m_1 d) more per leaf and gives the same guarantees.)
     def flops_node(self) -> float:
-        return 6.0 * self.widths[0] + 1.0
+        """Parsing one node (copying its subcube vector)."""
+        return float(self.d)
 
-    def _back_flops(self, ktop: int, r: int) -> float:
-        """One backward pass (value and absolute version) from layer ktop
-        to the free inputs, for one row."""
-        dims = [r] + self.widths + [1]
-        f = 0.0
-        for k in range(ktop, 1, -1):
-            f += 2.0 * (2.0 * dims[k] * dims[k - 1]) + 12.0 * dims[k - 1]
-        # first layer: Lam_1 . c (fixed part) and Lam_1 W_1[:, free]
-        f += 2.0 * (2.0 * dims[1] + 2.0 * dims[1] * r) + 2.0 * r
-        return f
+    def _flops_back(self, R: int, k0: int, stop_h1: bool = False) -> float:
+        """One interval backward pass of R rows from h_k0: two matrix products
+        (value and error bound) per layer."""
+        dims = [self.d] + self.widths
+        return sum(4.0 * R * dims[k] * (dims[k - 1] + 1) for k in range(k0, 1 if stop_h1 else 0, -1))
 
-    def flops_lin(self, r: int) -> float:
-        """One 'lin' check: intermediate bounds (2 m_k rows for every hidden
-        layer k >= 2) and the output pass."""
-        m = self.widths
-        f = 0.0
+    def flops_lin(self, r: int = 0) -> float:
+        """One 'lin' check as implemented (the free inputs do not matter: the
+        first-layer offsets and radii are recomputed for every subcube): two
+        products for the first layer, 2 m_k backward rows for every hidden
+        layer k >= 2 (intermediate bounds), and the output pass."""
+        f = 4.0 * self.d * self.widths[0]
         for k in range(2, self.L + 1):
-            f += 2 * m[k - 1] * self._back_flops(k, r)
-        return f + self._back_flops(self.L + 1, r)
+            f += self._flops_back(2 * self.widths[k - 1], k - 1)
+        return f + self._flops_back(1, self.L)
 
     def flops_quad(self, r: int) -> float:
-        """'lin' up to h_1, the quadratic coefficients, M and its absolute
-        version, the Cholesky factorisation."""
+        """'lin' up to h_1, the interval matrix M ((r+1) x (r+1)), its
+        PSD test (Cholesky)."""
         n = r + 1
         m1 = self.widths[0]
-        return self.flops_lin(r) + 40.0 * m1 + 2.0 * (2.0 * m1 * n * n + 2.0 * m1 * n) + n ** 3 / 3.0 + 4.0 * n * n
+        f = 4.0 * self.d * m1
+        for k in range(2, self.L + 1):
+            f += self._flops_back(2 * self.widths[k - 1], k - 1)
+        f += self._flops_back(1, self.L, stop_h1=True)
+        return f + 8.0 * m1 * n + 6.0 * m1 * n * n + 6.0 * m1 * n + n ** 3 / 3.0 + 20.0 * n * n
 
     # ---- interval bounds over subcubes ------------------------------------------
     def layer1(self, X0: np.ndarray):
-        """X0: (B, d) in {-1, 0, +1} (0 = free). Returns c (B, m1), c_abs, and
-        the padded enclosures L1 <= z_1 <= U1 over each subcube."""
+        """X0: (B, d) in {-1, 0, +1} (0 = free). Returns enclosures (clo, chi)
+        of the offsets c = W_1 x0 + b_1 and (L1, U1) of z_1 over each subcube."""
         X0 = np.asarray(X0, dtype=np.float64)
+        if not np.all((X0 == 0.0) | (X0 == 1.0) | (X0 == -1.0)):
+            raise ValueError("subcubes must be vectors in {-1, 0, +1}^d")  # (the error bound needs exact products)
         F = (X0 == 0.0).astype(np.float64)
-        c = X0 @ self.Ws[0].T + self.bs[0]
-        c_abs = np.abs(X0) @ self.absW[0].T + self.absb[0]
-        rad = F @ self.absW[0].T
-        err = REL * (c_abs + rad)
-        return c, c_abs, _lo(c - rad, err), _hi(c + rad, err)
+        with np.errstate(all="ignore"):  # overflow gives infinite enclosures: undecided
+            c = X0 @ self.W1T + self.bs[0]
+            rad = F @ self.absW1T
+            clo, chi = _dn(c - self.err1), _up(c + self.err1)
+            radhi = _up(rad + self.err1)
+            return clo, chi, _dn(clo - radhi), _up(chi + radhi)
 
     def intervals(self, X0: np.ndarray):
-        """Padded enclosures [L_k, U_k] of every hidden pre-activation over
-        each subcube; layers >= 2 by backward bound propagation with the
-        verifier's own (adaptive) slopes. Also returns layer-1 c, c_abs."""
+        """Enclosures [L_k, U_k] of every hidden pre-activation over each
+        subcube; layers >= 2 by backward bound propagation with the verifier's
+        own (adaptive) slopes. Also returns the layer-1 offsets (clo, chi)."""
         X0 = np.asarray(X0, dtype=np.float64)
-        c, c_abs, L1, U1 = self.layer1(X0)
+        clo, chi, L1, U1 = self.layer1(X0)
         ivs = [(L1, U1)]
-        B = X0.shape[0]
         for k in range(2, self.L + 1):
             m = self.widths[k - 1]
-            eye = np.eye(m)
-            Lam = np.concatenate([eye, -eye], 0)[None].repeat(B, 0)  # (B, 2m, m)
-            val, vabs, extra = self._backward(Lam, np.abs(Lam), k, ivs, X0, None)
-            lb = _lo(val, REL * vabs + extra)
-            low = lb[:, :m]
-            up = -lb[:, m:]
-            ivs.append((low, up))
-        return ivs, c, c_abs
+            G0 = np.concatenate([self.Ws[k - 1], -self.Ws[k - 1]], 0)
+            b0 = np.concatenate([self.bs[k - 1], -self.bs[k - 1]])
+            lb = self._backward(X0, G0, b0, k - 1, ivs, None)
+            ivs.append((lb[:, :m], -lb[:, m:]))
+        return ivs, clo, chi
 
-    @staticmethod
-    def _relax(G, Gabs, L, U, alpha):
-        """Slopes and offsets relaxing h = relu(z), z in [L, U], on the side
-        given by the sign of the coefficient G (lower if G >= 0). Shapes:
-        G, Gabs (B, R, m); L, U (B, m); alpha None or (B, m). Returns slope,
-        offset (B, R, m) and the charge for sign-uncertain units (B, R)."""
-        L = L[:, None, :]
-        U = U[:, None, :]
-        act = L >= 0.0
-        ina = U <= 0.0
-        uns = ~(act | ina)
-        with np.errstate(divide="ignore", invalid="ignore", over="ignore"):
-            lam = np.where(uns, U / np.where(uns, U - L, 1.0) * LAM_UP, 0.0)
-            # re-check lam (U - L) >= U exactly; otherwise use 1 (valid: L <= 0)
-            chk = lam * U - lam * L - U
-            chk_abs = lam * U + lam * np.abs(L) + U
-            ok = np.isfinite(chk) & (chk - REL * chk_abs - TINY >= 0.0)
-        lam = np.where(uns & ~ok, 1.0, lam)
-        if alpha is None:
-            a_lo = (U >= -L).astype(np.float64)
-        else:
-            a_lo = np.clip(np.nan_to_num(alpha, nan=0.0), 0.0, 1.0)[:, None, :]
-        pos = G >= 0.0
-        slope = np.where(act, 1.0, np.where(ina, 0.0, np.where(pos, a_lo, lam)))
-        off = np.where(uns & ~pos, -lam * L, 0.0)
-        unc = uns & (np.abs(G) <= 5.0 * REL * Gabs)
-        slope = np.where(unc, 0.0, slope)
-        off = np.where(unc, 0.0, off)
-        charge = (np.where(unc, 5.0 * REL * Gabs * np.maximum(U, 0.0), 0.0)).sum(-1)
-        return slope, off, charge
-
-    def _backward(self, Lam, Lam_abs, ktop, ivs, X0, alphas, stop_h1=False):
-        """Lower bound of Lam . z_ktop over each subcube (ktop = L + 1 is the
-        output). Lam: (B, R, m_ktop). alphas: None or list over hidden layers
-        (index k - 1 for layer k) of (B, m_k) arrays or None.
-        Returns (val, val_abs, extra) with val - extra a lower bound up to
-        rounding REL * val_abs; with stop_h1, returns the coefficients on
-        h_1 instead: (G, G_abs, const, const_abs, extra)."""
-        B, R, _ = Lam.shape
-        const = np.zeros((B, R))
-        cabs = np.zeros((B, R))
-        extra = np.zeros((B, R))
-        for k in range(ktop, 1, -1):  # z_k = W_k h_{k-1} + b_k
-            W, b = self.Ws[k - 1], self.bs[k - 1]
-            const += Lam @ b
-            cabs += Lam_abs @ self.absb[k - 1]
-            G = Lam @ W
-            Gabs = Lam_abs @ self.absW[k - 1]
-            if stop_h1 and k == 2:
-                return G, Gabs, const, cabs, extra
-            Lk, Uk = ivs[k - 2]
-            al = None if alphas is None else alphas[k - 2]
-            slope, off, charge = self._relax(G, Gabs, Lk, Uk, al)
-            Lam = G * slope
-            Lam_abs = Gabs * np.abs(slope)
-            const += (G * off).sum(-1)
-            cabs += (Gabs * np.abs(off)).sum(-1)
-            extra += charge
-        const += Lam @ self.bs[0]
-        cabs += Lam_abs @ self.absb[0]
-        g = Lam @ self.Ws[0]
-        gabs = Lam_abs @ self.absW[0]
-        X0 = np.asarray(X0, dtype=np.float64)
-        F = (X0 == 0.0).astype(np.float64)
-        val = const + (g * X0[:, None, :]).sum(-1) - (np.abs(g) * F[:, None, :]).sum(-1)
-        vabs = cabs + (gabs * np.abs(X0)[:, None, :]).sum(-1) + (gabs * F[:, None, :]).sum(-1)
-        return val, vabs, extra
+    def _backward(self, X0, G0, b0, k0, ivs, alphas, stop_h1=False):
+        """Rigorous lower bound, over each subcube (rows of X0), of
+        G0[r] . h_k0(x) + b0[r] for every row r of the exact G0 (R, m_k0),
+        b0 (R,) (h_k = relu(z_k), k0 >= 1). alphas: None or a list over hidden
+        layers (index k - 1 for layer k) of (B, m_k) slopes or None.
+        Returns lb (B, R); with stop_h1, returns (Glo, Ghi, parts): the
+        enclosure (B, R, m_1) of the coefficient on h_1 and the lower bounds
+        (B, R, *) whose sum bounds the constant from below."""
+        B = X0.shape[0]
+        R, m = G0.shape
+        Glo = Ghi = np.broadcast_to(G0, (B, R, m))
+        parts = [np.broadcast_to(np.asarray(b0, dtype=np.float64)[None, :, None], (B, R, 1))]
+        with np.errstate(all="ignore"):
+            for k in range(k0, 0, -1):
+                if stop_h1 and k == 1:
+                    return Glo, Ghi, parts
+                Lk, Uk = ivs[k - 1]
+                al = None if alphas is None else alphas[k - 1]
+                Llo, Lhi, cst = _relax(Glo, Ghi, Lk, Uk, al)
+                parts.append(cst)
+                mid, rad = _midrad(Llo, Lhi)
+                mk = mid.shape[-1]
+                lo, hi = _imm_pt(mid.reshape(-1, mk), rad.reshape(-1, mk), self.We[k - 1], self.Weabs[k - 1])
+                lo = lo.reshape(B, R, -1)
+                hi = hi.reshape(B, R, -1)
+                parts.append(lo[..., -1:])  # >= Lambda . b_k
+                Glo, Ghi = lo[..., :-1], hi[..., :-1]
+            # the coefficient on x, minimised over the subcube
+            X = np.asarray(X0, dtype=np.float64)[:, None, :]
+            T = np.where(X == 1.0, Glo, np.where(X == -1.0, -Ghi, -np.maximum(np.abs(Glo), np.abs(Ghi))))
+            parts.append(T)
+            return _sum_lo(np.concatenate([np.broadcast_to(p, (B, R, p.shape[-1])) for p in parts], -1))
 
     # ---- certificate checks ----------------------------------------------------------
     def check_lin(self, X0: np.ndarray, alphas, sign: int, ivs=None):
         """Rigorous lower bound of sign * f over each subcube with the given
-        slopes. Returns an array of floats (B,) (-inf where malformed)."""
+        slopes. Returns an array of floats (B,) (-inf where not finite)."""
         X0 = np.asarray(X0, dtype=np.float64)
-        B = X0.shape[0]
         if ivs is None:
             ivs, _, _ = self.intervals(X0)
-        Lam = np.full((B, 1, 1), float(sign))
-        val, vabs, extra = self._backward(Lam, np.abs(Lam), self.L + 1, ivs, X0, alphas)
-        lb = _lo(val, REL * vabs + extra)[:, 0]
+        lb = self._backward(X0, sign * self.Ws[-1], sign * self.bs[-1], self.L, ivs, alphas)[:, 0]
         return np.where(np.isfinite(lb), lb, -np.inf)
 
-    def quad_matrix(self, x0: np.ndarray, alphas, theta, sign: int = 1, ivs=None, c_data=None):
-        """The matrix M (n x n, n = r + 1) of the quadratic minorant
-        Y^T M Y <= sign * f on the subcube x0 (Y = (free coordinates, 1)),
-        built from the prover's theta exactly as the verifier builds it,
-        with its absolute version Ma and the charge `extra`."""
+    def quad_matrix(self, x0: np.ndarray, alphas, theta, sign: int = 1, ivs=None, cdat=None):
+        """Entrywise enclosure (Mlo, Mhi) of a symmetric matrix M (n x n,
+        n = r + 1) with Y^T M Y <= sign * f on the subcube x0 (Y = (free
+        coordinates, 1)), built from the prover's theta exactly as the
+        verifier builds it. cdat: the subcube's layer-1 offsets (clo, chi)."""
         x0 = np.asarray(x0, dtype=np.float64).reshape(1, -1)
         free = np.nonzero(x0[0] == 0.0)[0]
         m1 = self.widths[0]
@@ -448,66 +589,66 @@ class CertNet:
             raise ValueError("theta: wrong shape")
         theta = np.clip(np.nan_to_num(theta, nan=0.0), 0.0, 1.0)
         if ivs is None:
-            ivs, c, c_abs = self.intervals(x0)
+            ivs, clo, chi = self.intervals(x0)
         else:
-            c, c_abs = c_data
-        Lam = np.full((1, 1, 1), float(sign))
-        G, Gabs, const, cabs, extra = self._backward(Lam, np.abs(Lam), self.L + 1, ivs, x0, alphas, stop_h1=True)
-        G, Gabs = G[0, 0], Gabs[0, 0]
-        const, cabs, extra = float(const[0, 0]), float(cabs[0, 0]), float(extra[0, 0])
+            clo, chi = cdat
+        Glo, Ghi, parts = self._backward(x0, sign * self.Ws[-1], sign * self.bs[-1], self.L, ivs, alphas,
+                                         stop_h1=True)
+        Glo, Ghi = Glo[0, 0], Ghi[0, 0]
+        const = _sum_lo(np.concatenate([np.broadcast_to(p, (1, 1, p.shape[-1])) for p in parts], -1))[0, 0]
         L1, U1 = ivs[0][0][0], ivs[0][1][0]
-        c, c_abs = c[0], c_abs[0]
-        kap, bet, gam, ex2 = _quad_coeffs(G, Gabs, L1, U1, theta)
-        extra += ex2
-        V = self.Ws[0][:, free]
-        Vt = np.concatenate([V, c[:, None]], 1)  # (m1, n)
-        Vta = np.concatenate([np.abs(V), c_abs[:, None]], 1)
-        M = (Vt.T * (G * kap)) @ Vt
-        Ma = (Vta.T * (Gabs * np.abs(kap))) @ Vta
-        lin = Vt.T @ (G * bet)
-        lina = Vta.T @ (Gabs * np.abs(bet))
-        M[:, -1] += lin / 2.0
-        M[-1, :] += lin / 2.0
-        Ma[:, -1] += lina / 2.0
-        Ma[-1, :] += lina / 2.0
-        M[-1, -1] += const + float((G * gam).sum())
-        Ma[-1, -1] += cabs + float((Gabs * np.abs(gam)).sum())
-        return M, Ma, extra
+        with np.errstate(all="ignore"):
+            kap, bet, gam, charge = _quad_coeffs(Glo, Ghi, L1, U1, theta)
+            Dlo, Dhi = _mul_iv(Glo, Ghi, kap, kap)
+            Blo, Bhi = _mul_iv(Glo, Ghi, bet, bet)
+            Clo, _ = _mul_iv(Glo, Ghi, gam, gam)
+            # sign * f >= Y^T M Y with M = sum_j D_j v_j v_j^T + (linear terms) + const e_n e_n^T,
+            # v_j = (W_1[j, free], c_j); const is a float lower bound, used as an exact number
+            const = float(_sum_lo(np.concatenate([[const], Clo, charge]).reshape(1, -1))[0])
+            Vlo = np.concatenate([self.Ws[0][:, free], clo[0][:, None]], 1)
+            Vhi = np.concatenate([self.Ws[0][:, free], chi[0][:, None]], 1)
+            Plo, Phi = _mul_iv(Vlo, Vhi, Dlo[:, None], Dhi[:, None])
+            Vm, Vr = _midrad(Vlo, Vhi)
+            Pm, Pr = _midrad(Plo, Phi)
+            Mlo, Mhi = _imm_iv(Vm.T, Vr.T, Pm, Pr)
+            Bm, Br = _midrad(Blo, Bhi)
+            llo, lhi = _imm_iv(Vm.T, Vr.T, Bm[:, None], Br[:, None])
+            llo, lhi = llo[:, 0], lhi[:, 0]
+            hlo, hhi = _dn(0.5 * llo[:-1]), _up(0.5 * lhi[:-1])
+            Mlo[:-1, -1] = _dn(Mlo[:-1, -1] + hlo)
+            Mhi[:-1, -1] = _up(Mhi[:-1, -1] + hhi)
+            Mlo[-1, :-1] = _dn(Mlo[-1, :-1] + hlo)
+            Mhi[-1, :-1] = _up(Mhi[-1, :-1] + hhi)
+            Mlo[-1, -1] = _dn(_dn(Mlo[-1, -1] + llo[-1]) + const)
+            Mhi[-1, -1] = _up(_up(Mhi[-1, -1] + lhi[-1]) + const)
+        # M is symmetric: both enclosures of an entry hold
+        return np.maximum(Mlo, Mlo.T), np.minimum(Mhi, Mhi.T)
 
-    def check_quad(self, x0: np.ndarray, alphas, theta, mu, shift, sign: int = 1, ivs=None, c_data=None):
+    def check_quad(self, x0: np.ndarray, alphas, theta, mu, shift, sign: int = 1, ivs=None, cdat=None):
         """Rigorous lower bound of sign * f over one subcube from a 'quad'
         certificate, or -inf if the PSD check fails or anything is
-        malformed."""
+        malformed or not finite."""
         x0 = np.asarray(x0, dtype=np.float64).reshape(1, -1)
         n = int((x0[0] == 0.0).sum()) + 1
-        mu = np.asarray(mu, dtype=np.float64).ravel()
-        shift = float(shift)
+        try:
+            mu = np.asarray(mu, dtype=np.float64).ravel()
+            shift = float(shift)
+        except (TypeError, ValueError):
+            return -math.inf
         if mu.shape != (n,) or not np.isfinite(mu).all() or not math.isfinite(shift):
             return -math.inf
         try:
-            M, Ma, extra = self.quad_matrix(x0, alphas, theta, sign, ivs, c_data)
+            Mlo, Mhi = self.quad_matrix(x0, alphas, theta, sign, ivs, cdat)
         except ValueError:
             return -math.inf
-        if not (np.isfinite(M).all() and np.isfinite(Ma).all()):
-            return -math.inf
-        A = M - np.diag(mu) - shift * np.eye(n)
-        if not np.isfinite(A).all():
-            return -math.inf
-        g = _gamma(2 * n + 4)
-        tr = float(np.trace(A))
-        tau_ch = g * max(tr, 0.0) * (1.0 + 2.0 ** -30) / (1.0 - g) + n * TINY
-        # entrywise bound on |A_computed - A_exact| (M's rounding and the two
-        # subtractions); forming A - cm I adds at most REL (|A_ii| + cm) <=
-        # 1.01 E_ii + REL cm on the diagonal, so 3 (tau_ch + ||E||_F) covers all
-        Etot = REL * (Ma + np.diag(np.abs(mu) + abs(shift)))
-        frob = float(np.sqrt((Etot * Etot).sum())) * (1.0 + 2.0 ** -40)
-        cm = 3.0 * (tau_ch + frob) + TINY
-        Af = A - cm * np.eye(n)
-        if not _cholesky_ok(Af):
-            return -math.inf
-        tot = float(mu.sum()) + n * shift
-        tot_abs = float(np.abs(mu).sum()) + n * abs(shift)
-        lb = _lo(tot, REL * tot_abs + extra)
+        with np.errstate(all="ignore"):
+            Alo, Ahi = Mlo.copy(), Mhi.copy()
+            idx = np.arange(n)
+            Alo[idx, idx] = _dn(_dn(np.diag(Mlo) - mu) - shift)
+            Ahi[idx, idx] = _up(_up(np.diag(Mhi) - mu) - shift)
+            if not _psd_box(Alo, Ahi):
+                return -math.inf
+            lb = float(_sum_lo(np.concatenate([mu, [_dn(n * shift)]]).reshape(1, -1))[0])
         return lb if math.isfinite(lb) else -math.inf
 
     # ---- enumeration -----------------------------------------------------------------
@@ -521,22 +662,21 @@ class CertNet:
         fa, fb = free[:r1], free[r1:]
         Ya = _half(len(fa))
         Yb = _half(len(fb))
-        base = self.Ws[0] @ x0 + self.bs[0]
-        A = Ya @ self.Ws[0][:, fa].T + base  # (2^r1, m1)
-        Bt = Yb @ self.Ws[0][:, fb].T  # (2^r2, m1)
-        rows = max(1, chunk // Bt.shape[0])
+        T = Fraction(self.t)
         fails = 0
-        for s in range(0, A.shape[0], rows):
-            Z = (A[s:s + rows, None, :] + Bt[None, :, :]).reshape(-1, A.shape[1])
-            h = np.maximum(Z, 0.0)
-            for W, b in zip(self.Ws[1:-1], self.bs[1:-1]):
-                h = np.maximum(h @ W.T + b, 0.0)
-            fv = (h @ self.Ws[-1].T + self.bs[-1])[:, 0]
-            nf = int(np.count_nonzero(fv < self.pt_fail))
-            amb = np.nonzero((fv >= self.pt_fail) & (fv < self.pt_safe))[0]
-            if amb.size:
+        with np.errstate(all="ignore"):
+            base = self.Ws[0] @ x0 + self.bs[0]
+            A = Ya @ self.Ws[0][:, fa].T + base  # (2^r1, m1)
+            Bt = Yb @ self.Ws[0][:, fb].T  # (2^r2, m1)
+            rows = max(1, chunk // Bt.shape[0])
+            for s in range(0, A.shape[0], rows):
+                Z = (A[s:s + rows, None, :] + Bt[None, :, :]).reshape(-1, A.shape[1])
+                h = np.maximum(Z, 0.0)
+                for W, b in zip(self.Ws[1:-1], self.bs[1:-1]):
+                    h = np.maximum(h @ W.T + b, 0.0)
+                fv = (h @ self.Ws[-1].T + self.bs[-1])[:, 0]
+                nf, amb = self._ambiguous(fv)
                 nb = Bt.shape[0]
-                T = Fraction(self.t)
                 for i in amb:
                     ia, ib = s + i // nb, i % nb
                     x = x0.copy()
@@ -544,7 +684,7 @@ class CertNet:
                     x[fb] = Yb[ib]
                     if self.exact_f(x) < T:
                         nf += 1
-            fails += nf
+                fails += nf
         return fails
 
     def enum_points(self, x0: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -562,105 +702,100 @@ def _half(k: int) -> np.ndarray:
     return np.where((idx[:, None] >> np.arange(k)) & 1, 1.0, -1.0)
 
 
-def _quad_coeffs(G, Gabs, L, U, theta):
-    """Per first-layer unit, a valid quadratic minorant (G_j > 0) or
-    majorant (G_j < 0) q_j(z) = kap z^2 + bet z + gam of relu(z) on
-    [L_j, U_j], built from the prover's theta_j = (s, rho) in [0, 1]^2:
-      minorant  s (1 - rho) z + s rho z (z - L) / (U - L)   (convex; the second
-                term is the quadratic through (L, 0), (0, 0), (U, U)),
+def _relax(Glo, Ghi, L, U, alpha):
+    """Linear relaxation of h = relu(z), z in [L, U] ((B, m) enclosures), for
+    an exact coefficient G in [Glo, Ghi] ((B, R, m)): returns the enclosure
+    (Llo, Lhi) of a coefficient Lambda and lower bounds cst (B, R, m) with
+    G h >= Lambda z + cst for every z in [L, U]:
+      active (L >= 0): Lambda = G;  inactive (U <= 0): Lambda = 0;
+      unstable, G >= 0 surely: relu(z) >= a z, a in [0, 1] (alpha, clipped);
+      unstable, G <= 0 surely: relu(z) <= lam (z - L), lam = up(U / dn(U - L))
+        >= U / (U - L); cst = Lambda (-L);
+      unstable, sign of G unknown: Lambda = 0, cst = Glo U (0 <= h <= U)."""
+    L = L[:, None, :]
+    U = U[:, None, :]
+    act = L >= 0.0
+    ina = U <= 0.0
+    uns = ~(act | ina)
+    pos = Glo >= 0.0
+    neg = (Ghi <= 0.0) & ~pos
+    known = uns & (pos | neg)
+    if alpha is None:
+        a = (U >= -L).astype(np.float64)
+    else:
+        a = np.clip(np.nan_to_num(np.asarray(alpha, dtype=np.float64), nan=0.0), 0.0, 1.0)[:, None, :]
+    lam = _up(U / _dn(U - L))
+    s = np.where(pos, a, lam)
+    Llo = np.where(act, Glo, np.where(known, _dn(Glo * s), 0.0))
+    Lhi = np.where(act, Ghi, np.where(known, _up(Ghi * s), 0.0))
+    cst = np.where(uns & neg, _dn(Llo * -L), np.where(uns & ~(pos | neg), _dn(Glo * U), 0.0))
+    return Llo, Lhi, cst
+
+
+def _quad_coeffs(Glo, Ghi, L, U, theta):
+    """Per first-layer unit j a quadratic q_j(z) = kap z^2 + bet z + gam with
+    q_j <= relu on [L_j, U_j] if G_j >= 0 surely (minorant) and q_j >= relu
+    there if G_j <= 0 surely (majorant), from the prover's theta_j = (s, rho)
+    in [0, 1]^2:
+      minorant  s (1 - rho) z + s rho z (z - L) / (U - L) (convex; the second
+                term is the quadratic through (L, 0), (0, 0), (U, U));
       majorant  rho * (the convex quadratic through (L, 0) and (U, U) with
                 curvature min(-L, U) / (U - L)^2) + (1 - rho) * chord.
-    The constant is moved by a small margin (down for a minorant, up for a
-    majorant) and every validity condition is then checked in floating point
-    with rounding margins; a unit that fails is replaced by an always-valid
-    relaxation (0 from below; z - L from above). Units of uncertain sign are
-    dropped and charged. Returns kap, bet, gam, charge."""
-    m = G.shape[0]
+    The verifier computes kap and bet from theta in floating point and then
+    PROVES validity by interval evaluation, choosing gam as the best value
+    for which the proof goes through (for k = kap >= 0):
+      minorant: q(L) <= 0, q(0) <= 0, q(U) <= U  (convexity does the rest);
+      majorant: q(L) >= 0, q'(L) >= 0, and [(q - z)(U) >= 0, (q - z)'(U) <= 0]
+                or [(q - z)(0) >= 0, (q - z)'(0) >= 0].
+    A unit whose proof fails gets an always-valid piece: 0 from below, the
+    chord lam (z - L) from above. Active units get q = z, inactive ones
+    q = 0; units whose G straddles 0 get q = 0 and the charge Glo U.
+    Returns kap, bet, gam (floats, (m,)) and charge (lower bounds, (m,))."""
+    m = L.shape[0]
+    act = L >= 0.0
+    ina = U <= 0.0
+    uns = ~(act | ina)
+    pos = uns & (Glo >= 0.0)
+    neg = uns & (Ghi <= 0.0) & ~pos
+    strad = uns & ~pos & ~neg
     kap = np.zeros(m)
-    bet = np.zeros(m)
+    bet = np.where(act, 1.0, 0.0)
     gam = np.zeros(m)
-    extra = 0.0
-    for j in range(m):
-        Lj, Uj = float(L[j]), float(U[j])
-        if Lj >= 0.0:  # active: h = z
-            bet[j] = 1.0
-            continue
-        if Uj <= 0.0:  # inactive: h = 0
-            continue
-        if abs(G[j]) <= 5.0 * REL * Gabs[j]:  # sign uncertain: drop, charge
-            extra += 5.0 * REL * Gabs[j] * Uj
-            continue
-        s, rho = float(theta[j, 0]), float(theta[j, 1])
-        w = Uj - Lj
-        if G[j] > 0.0:
-            k_ = s * rho / w
-            b_ = s * (1.0 - rho) - s * rho * Lj / w
-            if not (math.isfinite(k_) and math.isfinite(b_) and k_ >= 0.0):
-                continue  # zero minorant
-            g_ = -4.0 * REL * (k_ * (Lj * Lj + Uj * Uj) + abs(b_) * (abs(Lj) + Uj) + Uj) - TINY
-            if _lower_ok(k_, b_, g_, Lj, Uj):
-                kap[j], bet[j], gam[j] = k_, b_, g_
-            # else: zero minorant (kap = bet = gam = 0)
-        else:
-            K = min(-Lj, Uj) / (w * w)
-            k_ = rho * K * (1.0 - 2.0 ** -20)
-            bp = Uj / w * LAM_UP - k_ * w
-            ok = False
-            if math.isfinite(k_) and math.isfinite(bp) and k_ >= 0.0:
-                b_ = bp - 2.0 * k_ * Lj
-                g_ = k_ * Lj * Lj - bp * Lj
-                g_ += 4.0 * REL * (k_ * (Lj * Lj + Uj * Uj) + abs(b_) * (abs(Lj) + Uj) + abs(g_) + Uj) + TINY
-                ok = _upper_ok(k_, b_, g_, Lj, Uj)
-            if ok:
-                kap[j], bet[j], gam[j] = k_, b_, g_
-            else:  # z - L + margin >= relu(z) on [L, U] (L < 0)
-                g_ = -Lj + 4.0 * REL * (abs(Lj) + Uj) + TINY
-                kap[j], bet[j], gam[j] = 0.0, 1.0, g_
-                if not _upper_ok(0.0, 1.0, g_, Lj, Uj):  # cannot happen; be safe
-                    raise AssertionError("fallback majorant rejected")
-    return kap, bet, gam, extra
-
-
-def _lower_ok(k, b, g, L, U) -> bool:
-    """Rigorous check that q(z) = k z^2 + b z + g <= relu(z) on [L, U]
-    (L < 0 < U, k >= 0): for convex q this holds iff q(L) <= 0, q(0) <= 0
-    and q(U) <= U."""
-    if not (k >= 0.0 and math.isfinite(k) and math.isfinite(b) and math.isfinite(g)):
-        return False
-    qL = k * L * L + b * L + g
-    aL = k * L * L + abs(b * L) + abs(g)
-    qU = k * U * U + b * U + g - U
-    aU = k * U * U + abs(b * U) + abs(g) + U
-    return _hi(qL, REL * aL) <= 0.0 and _hi(g, 0.0) <= 0.0 and _hi(qU, REL * aU) <= 0.0
-
-
-def _upper_ok(k, b, g, L, U) -> bool:
-    """Rigorous check that q(z) = k z^2 + b z + g >= relu(z) on [L, U]
-    (L < 0 < U, k >= 0), via the sufficient conditions
-    q(L) >= 0, q'(L) >= 0 (q increasing on [L, 0]) and
-    [(q-z)(U) >= 0, (q-z)'(U) <= 0] or [(q-z)(0) >= 0, (q-z)'(0) >= 0]."""
-    if not (k >= 0.0 and math.isfinite(k) and math.isfinite(b) and math.isfinite(g)):
-        return False
-    qL = k * L * L + b * L + g
-    aL = k * L * L + abs(b * L) + abs(g)
-    vU = k * U * U + b * U + g - U
-    aU = k * U * U + abs(b * U) + abs(g) + U
-    if k == 0.0:
-        # q linear: q >= 0 on [L, 0] iff q(L), q(0) >= 0; q - z >= 0 on [0, U]
-        # iff (q - z)(0) = g >= 0 and (q - z)(U) >= 0
-        return _lo(qL, REL * aL) >= 0.0 and _lo(g, 0.0) >= 0.0 and _lo(vU, REL * aU) >= 0.0
-    dL = 2.0 * k * L + b
-    adL = 2.0 * k * abs(L) + abs(b)
-    if _lo(qL, REL * aL) < 0.0 or _lo(dL, REL * adL) < 0.0:
-        return False
-    dU = 2.0 * k * U + b - 1.0
-    adU = 2.0 * k * U + abs(b) + 1.0
-    if _lo(vU, REL * aU) >= 0.0 and _hi(dU, REL * adU) <= 0.0:
-        return True
-    d0 = b - 1.0
-    if _lo(g, REL * abs(g)) >= 0.0 and _lo(d0, REL * (abs(b) + 1.0)) >= 0.0:
-        return True
-    return False
+    charge = np.where(strad, _dn(Glo * U), 0.0)
+    s, rho = theta[:, 0], theta[:, 1]
+    w = U - L
+    # minorants
+    k = s * rho / w
+    b = s * (1.0 - rho) - s * rho * L / w
+    _, PL = _poly_iv(k, b, L)
+    _, PU = _poly_iv(k, b, U)
+    g = np.minimum(0.0, np.minimum(-PL, -_up(PU - U)))
+    ok = pos & (k >= 0.0) & np.isfinite(k) & np.isfinite(b) & np.isfinite(g)
+    kap = np.where(ok, k, kap)
+    bet = np.where(ok, b, bet)
+    gam = np.where(ok, g, gam)
+    # majorants
+    K = np.minimum(-L, U) / (w * w)
+    k = rho * K * (1.0 - 2.0 ** -20)
+    bp = U / w - k * w
+    b = bp - 2.0 * k * L
+    PLlo, _ = _poly_iv(k, b, L)
+    PUlo, _ = _poly_iv(k, b, U)
+    dL = _dn(_dn(2.0 * k * L) + b)  # <= q'(L)
+    dU = _up(_up(_up(2.0 * k * U) + b) - 1.0)  # >= (q - z)'(U)
+    d0 = _dn(b - 1.0)  # <= (q - z)'(0)
+    g_u = np.maximum(-PLlo, _up(U - PUlo))
+    g_0 = np.maximum(-PLlo, 0.0)
+    fin = (k >= 0.0) & np.isfinite(k) & np.isfinite(b) & (dL >= 0.0)
+    ok_u = neg & fin & (dU <= 0.0) & np.isfinite(g_u)
+    ok_0 = neg & fin & ~ok_u & (d0 >= 0.0) & np.isfinite(g_0)
+    lam = _up(U / _dn(U - L))
+    g_ch = _up(lam * -L)
+    chord = neg & ~ok_u & ~ok_0
+    kap = np.where(ok_u | ok_0, k, kap)
+    bet = np.where(ok_u | ok_0, b, np.where(chord, lam, bet))
+    gam = np.where(ok_u, g_u, np.where(ok_0, g_0, np.where(chord, g_ch, gam)))
+    return kap, bet, gam, charge
 
 
 # ---------------------------------------------------------------------------
@@ -681,7 +816,8 @@ class VerifyResult:
     rejected: str | None = None  # whole argument rejected (output [0, 1])
     flops: dict = field(default_factory=dict)
     fpe: float = 0.0  # verifier cost in forward-pass equivalents
-    seconds: float = 0.0
+    seconds: float = 0.0  # wall-clock of the verifier
+    exact_evals: int = 0  # points re-evaluated in rational arithmetic (not in fpe)
     arg_bytes: int = 0
 
     @property
@@ -762,14 +898,19 @@ def verify(net, arg, delta: float = 0.05, rng: np.random.Generator | None = None
     failing fraction of the subcube."""
     t0 = time.time()
     cn = net if isinstance(net, CertNet) else CertNet(net)
+    ev0 = cn.n_exact_evals
     rng = rng if rng is not None else np.random.default_rng()
     d = cn.d
-    root = np.zeros(d, dtype=np.int8) if root is None else np.asarray(root, dtype=np.int8).copy()
-    if root.shape != (d,) or not np.all(np.isin(root, (-1, 0, 1))):
-        raise ValueError("root must be a vector in {-1, 0, +1}^d")
+    root = _subcube(root, d)
     total = 1 << int((root == 0).sum())
     flops = {"parse": 0.0, "lin": 0.0, "quad": 0.0, "enum": 0.0, "sample": 0.0}
     res = VerifyResult(0.0, 1.0, False, 0, 0, flops=flops)
+
+    def done():
+        res.exact_evals = cn.n_exact_evals - ev0
+        res.seconds = time.time() - t0
+        return res
+
     try:
         res.arg_bytes = argument_bytes(arg)
     except Exception:
@@ -778,8 +919,7 @@ def verify(net, arg, delta: float = 0.05, rng: np.random.Generator | None = None
     tree = arg.get("tree") if isinstance(arg, dict) else None
     if not isinstance(tree, (list, tuple)) or len(tree) == 0:
         res.rejected = "no tree"
-        res.seconds = time.time() - t0
-        return res
+        return done()
     leaves = []  # (x0 int8 array, node)
     stack = [root]
     pos = 0
@@ -812,13 +952,11 @@ def verify(net, arg, delta: float = 0.05, rng: np.random.Generator | None = None
             raise ValueError("trailing nodes")
     except Exception as e:  # malformed: no verdict
         res.rejected = f"malformed tree: {e}"
-        res.seconds = time.time() - t0
-        return res
+        return done()
     sizes = [1 << int((x0 == 0).sum()) for x0, _ in leaves]
     if sum(sizes) != total:  # cannot happen for a parsed binary trie
         res.rejected = "leaves do not partition the cube"
-        res.seconds = time.time() - t0
-        return res
+        return done()
     flops["parse"] = float(len(tree)) * cn.flops_node()
     # ---- leaf checks
     F = 0
@@ -874,18 +1012,16 @@ def verify(net, arg, delta: float = 0.05, rng: np.random.Generator | None = None
         for s in range(0, len(jobs), chunk):
             part = jobs[s:s + chunk]
             X0 = np.array([x0 for _, x0, _ in part], dtype=np.float64)
-            if part[0][2] is None:
-                al = None
-            else:
-                al = []
-                for k in range(cn.L):
-                    if part[0][2][k] is None:
-                        al.append(None)
-                    else:
-                        al.append(np.concatenate([a[k] for _, _, a in part], 0))
-            for _, x0, _ in part:
-                flops["lin"] += cn.flops_lin(int((x0 == 0).sum()))
-            lb = cn.check_lin(X0, al, sign)
+            flops["lin"] += len(part) * cn.flops_lin()
+            try:
+                if part[0][2] is None:
+                    al = None
+                else:
+                    al = [None if part[0][2][k] is None else np.concatenate([a[k] for _, _, a in part], 0)
+                          for k in range(cn.L)]
+                lb = cn.check_lin(X0, al, sign)
+            except Exception:
+                lb = np.full(len(part), -np.inf)
             for (idx, x0, _), v in zip(part, lb):
                 kind = leaves[idx][1][0]
                 ok = (v >= cn.t) if sign == 1 else (v > -cn.t)
@@ -915,21 +1051,20 @@ def verify(net, arg, delta: float = 0.05, rng: np.random.Generator | None = None
         else:
             OL = np.array(open_leaves, dtype=np.float64)
             fails = 0
-            done = 0
+            done_n = 0
             B = 1 << 16
-            while done < N:
-                k = min(B, N - done)
+            while done_n < N:
+                k = min(B, N - done_n)
                 X = _draw_open(rng, OL, Z, k)
                 fails += cn.classify(X, cn.forward(X))
-                done += k
+                done_n += k
             flops["sample"] = float(N) * cn.fpe_flops
             res.n_samples, res.sample_fails = N, fails
             l, u = kl_interval(fails / N, N, delta, rel_err=2.0 ** -51)
             res.lo = _round_down(Fraction(F, total) + Fraction(Z, total) * Fraction(l))
             res.hi = min(1.0, _round_up(Fraction(F, total) + Fraction(Z, total) * Fraction(u)))
     res.fpe = sum(flops.values()) / cn.fpe_flops
-    res.seconds = time.time() - t0
-    return res
+    return done()
 
 
 def _draw_open(rng: np.random.Generator, OL: np.ndarray, Z: int, k: int) -> np.ndarray:
@@ -979,6 +1114,10 @@ class ProverConfig:
     fail_leaves: bool = True  # also certify subcubes where every point fails
     r_leaf: int = 6  # nodes with r <= r_leaf that are not certified become ENUM leaves
     alpha_iters: int = 40  # supergradient steps for the slopes
+    opt_window: float = math.inf  # optimise slopes only if the default bound is within opt_window * std(f) of t
+    warm_start: bool = False  # start a child's slope ascent from its parent's optimised slopes
+    cert_margin: float = 2.0 ** -30  # certify only with a margin cert_margin * |f|_abs (rounding differences
+    # between the prover's batched checks and the verifier's may move a bound by ~1e-15 |f|_abs)
     quad_rmin: int = 5  # try 'quad' only on subcubes with at least this many free inputs
     quad_window: float = 3.0  # ... whose 'lin' bound is within quad_window * std(f) of t
     quad_iters: int = 300
@@ -1015,63 +1154,117 @@ def _uns_mask(L, U):
 
 
 def _h1_coeffs(cn: CertNet, X0: np.ndarray, sign: int, ivs):
-    """Coefficients G (B, m1) on h_1 and constant (B,) of the backward pass
-    with default slopes on layers >= 2."""
+    """The prover's floating-point backward pass to h_1 with default slopes
+    on layers >= 2: coefficients G (B, m1) and constant (B,)."""
     B = X0.shape[0]
-    Lam = np.full((B, 1, 1), float(sign))
-    G, Gabs, const, cabs, extra = cn._backward(Lam, np.abs(Lam), cn.L + 1, ivs, X0, None, stop_h1=True)
-    return G[:, 0, :], const[:, 0] - extra[:, 0]
+    G = np.repeat(sign * cn.Ws[-1], B, 0)
+    const = np.full(B, sign * float(cn.bs[-1][0]))
+    with np.errstate(all="ignore"):
+        for k in range(cn.L, 1, -1):
+            Lk, Uk = ivs[k - 1]
+            act = Lk >= 0.0
+            uns = _uns_mask(Lk, Uk)
+            lam = np.where(uns, Uk / np.where(uns, Uk - Lk, 1.0), 0.0)
+            slope = np.where(act, 1.0, np.where(uns, np.where(G >= 0.0, (Uk >= -Lk).astype(float), lam), 0.0))
+            const = const + (G * np.where(uns & (G < 0.0), -lam * Lk, 0.0)).sum(1)
+            Lam = G * slope
+            const = const + Lam @ cn.bs[k - 1]
+            G = Lam @ cn.Ws[k - 1]
+    return G, const
 
 
-def _opt_alpha(cn: CertNet, X0: np.ndarray, sign: int, ivs, c, iters: int):
+def _lin_float(cn: CertNet, X0: np.ndarray, sign: int, ivs, c, alpha1=None):
+    """The prover's floating-point value of the 'lin' bound (default slopes
+    on layers >= 2; alpha1 or the default on layer 1); c: layer-1 offsets."""
+    G, const = _h1_coeffs(cn, X0, sign, ivs)
+    L1, U1 = ivs[0]
+    F = (X0 == 0.0).astype(np.float64)
+    with np.errstate(all="ignore"):
+        uns = _uns_mask(L1, U1)
+        lam = np.where(uns, U1 / np.where(uns, U1 - L1, 1.0), 0.0)
+        a = (U1 >= -L1).astype(np.float64) if alpha1 is None else alpha1
+        slope = np.where(L1 >= 0.0, 1.0, np.where(uns, np.where(G >= 0.0, a, lam), 0.0))
+        off = np.where(uns & (G < 0.0), -lam * L1, 0.0)
+        Lam = G * slope
+        g = Lam @ cn.Ws[0]
+        return const + (G * off).sum(1) + (Lam * c).sum(1) - (np.abs(g) * F).sum(1)
+
+
+def _opt_alpha(cn: CertNet, X0: np.ndarray, sign: int, ivs, c, iters: int, target: float | None = None,
+               init=None):
     """Projected supergradient ascent (Adam) on the first-layer slopes of the
-    lower bound of sign * f over each subcube. Returns alpha (B, m1) and the
-    (non-rigorous) bound values."""
+    lower bound of sign * f over each subcube (c: layer-1 offsets). Returns
+    alpha (B, m1) and the (non-rigorous) bound values. With a target, a
+    subcube leaves the ascent once its value exceeds the target by a small
+    margin, or when, every 10 steps, its progress over the last 10 steps
+    extrapolated to the remaining steps would not reach the target. init:
+    starting slopes (B, m1), NaN rows for the default (the prover passes the
+    parent's optimised slopes)."""
     G, const = _h1_coeffs(cn, X0, sign, ivs)
     L1, U1 = ivs[0]
     W1 = cn.Ws[0]
     F = (X0 == 0.0).astype(np.float64)
-    act = L1 >= 0.0
-    uns = _uns_mask(L1, U1)
-    pos = uns & (G >= 0.0)
-    neg = uns & (G < 0.0)
-    with np.errstate(divide="ignore", invalid="ignore"):
+    with np.errstate(all="ignore"):
+        act = L1 >= 0.0
+        uns = _uns_mask(L1, U1)
+        pos = uns & (G >= 0.0)
+        neg = uns & (G < 0.0)
         lam = np.where(uns, U1 / np.where(uns, U1 - L1, 1.0), 0.0)
-    base_slope = np.where(act, 1.0, np.where(neg, lam, 0.0))
-    off = np.where(neg, -lam * L1, 0.0)
-    const1 = const + (G * off).sum(1)
-    alpha = np.where(pos, (U1 >= -L1).astype(np.float64), 0.0)
+        base_slope = np.where(act, 1.0, np.where(neg, lam, 0.0))
+        off = np.where(neg, -lam * L1, 0.0)
+        const1 = const + (G * off).sum(1)
+        alpha = np.where(pos, (U1 >= -L1).astype(np.float64), 0.0)
+        if init is not None:
+            alpha = np.where(pos & np.isfinite(init), np.clip(np.nan_to_num(init), 0.0, 1.0), alpha)
+        # non-finite inputs (huge weights): such subcubes are not optimised
+        bad = ~(np.isfinite(G).all(1) & np.isfinite(c).all(1) & np.isfinite(base_slope).all(1) & np.isfinite(const1))
+        G, c, base_slope = (np.where(bad[:, None], 0.0, a) for a in (G, c, base_slope))
+        const1 = np.where(bad, -np.inf, const1)
 
-    def value(alpha):
-        slope = np.where(pos, alpha, base_slope)
-        Lam1 = G * slope
-        g = Lam1 @ W1
-        val = const1 + (Lam1 * c).sum(1) - (np.abs(g) * F).sum(1)
-        return val, g
+        def value(alpha, ix):
+            slope = np.where(pos[ix], alpha, base_slope[ix])
+            Lam1 = G[ix] * slope
+            g = Lam1 @ W1
+            val = const1[ix] + (Lam1 * c[ix]).sum(1) - (np.abs(g) * F[ix]).sum(1)
+            return val, g
 
-    best_val, g = value(alpha)
-    best = alpha.copy()
-    m = np.zeros_like(alpha)
-    v = np.zeros_like(alpha)
-    lr = 0.1
-    for it in range(1, iters + 1):
-        sg = np.sign(g) * F
-        grad = np.where(pos, G * (c - sg @ W1.T), 0.0)
-        m = 0.9 * m + 0.1 * grad
-        v = 0.999 * v + 0.001 * grad * grad
-        step = lr * (m / (1 - 0.9 ** it)) / (np.sqrt(v / (1 - 0.999 ** it)) + 1e-12)
-        alpha = np.clip(alpha + step, 0.0, 1.0)
-        val, g = value(alpha)
-        better = val > best_val
-        best_val = np.where(better, val, best_val)
-        best[better] = alpha[better]
+        ix = np.arange(X0.shape[0])
+        best_val, g = value(alpha, ix)
+        best = alpha.copy()
+        m = np.zeros_like(alpha)
+        v = np.zeros_like(alpha)
+        lr = 0.1
+        if target is not None:
+            margin = 1e-6 * (abs(target) + np.abs(best_val[np.isfinite(best_val)]).max(initial=1.0))
+        prev = best_val.copy()
+        for it in range(1, iters + 1):
+            if target is not None and it % 10 == 1 and it > 1:
+                gain = best_val[ix] - prev[ix]
+                keep = (best_val[ix] < target + margin) & (best_val[ix] + gain * (iters - it + 1) / 10.0 >= target)
+                prev[ix] = best_val[ix]
+                ix, g = ix[keep], g[keep]
+                m, v = m[keep], v[keep]
+                if ix.size == 0:
+                    break
+            a = alpha[ix]
+            sg = np.sign(g) * F[ix]
+            grad = np.where(pos[ix], G[ix] * (c[ix] - sg @ W1.T), 0.0)
+            m = 0.9 * m + 0.1 * grad
+            v = 0.999 * v + 0.001 * grad * grad
+            step = lr * (m / (1 - 0.9 ** it)) / (np.sqrt(v / (1 - 0.999 ** it)) + 1e-12)
+            a = np.clip(a + step, 0.0, 1.0)
+            alpha[ix] = a
+            val, g = value(a, ix)
+            better = val > best_val[ix]
+            best_val[ix[better]] = val[better]
+            best[ix[better]] = a[better]
     return best, best_val
 
 
 def _quad_family(G, L, U, th):
     """Batched prover-side version of the verifier's quadratic family
-    (without the margins): kap, bet, gam (B, m) and their derivatives with
-    respect to theta = (s, rho)."""
+    (without the verifier's constant terms): kap, bet, gam (B, m) and their
+    derivatives with respect to theta = (s, rho)."""
     act = L >= 0.0
     uns = _uns_mask(L, U)
     pos = uns & (G > 0.0)
@@ -1089,7 +1282,6 @@ def _quad_family(G, L, U, th):
     db[..., 0] = np.where(pos, (1 - rho) - rho * L / w, 0.0)
     db[..., 1] = np.where(pos, s * (-1 - L / w), 0.0)
     K = np.where(uns, np.minimum(-L, U) / w ** 2, 0.0)
-    Bq = U / w - K * w
     kap = np.where(neg, rho * K, kap)
     bet = np.where(neg, U / w - rho * K * w - 2 * rho * K * L, bet)
     gam = np.where(neg, rho * K * L ** 2 - (U / w - rho * K * w) * L, gam)
@@ -1099,13 +1291,37 @@ def _quad_family(G, L, U, th):
     return kap, bet, gam, dk, db, dg
 
 
+def _quad_shift(cn: CertNet, x0, theta, mu, sign, ivb, cdat):
+    """The prover's shift for given theta and mu: the least eigenvalue of the
+    centre of the verifier's enclosure of M - diag(mu), minus a few times the
+    verifier's margin; retried with larger margins. Returns (shift, bound)."""
+    Mlo, Mhi = cn.quad_matrix(x0, None, theta, sign, ivb, cdat)
+    mid, rad = _midrad(Mlo, Mhi)
+    A0 = mid - np.diag(mu)
+    if not (np.isfinite(A0).all() and np.isfinite(rad).all()):
+        return None, -math.inf
+    lam = float(np.linalg.eigvalsh(A0)[0])
+    n = A0.shape[0]
+    with np.errstate(all="ignore"):
+        scale = float(np.abs(A0).max()) + float(rad.max())
+        marg = float(np.sqrt((rad * rad).sum())) + 4.0 * (n + 2) * U53 * (n * scale) + 1e-14 * scale
+    for f in (2.0, 16.0, 256.0):
+        s = lam - f * marg
+        lb = cn.check_quad(x0, None, theta, mu, s, sign, ivb, cdat)
+        if math.isfinite(lb):
+            return s, cn.check_quad(x0, None, theta, mu, s, sign)  # exactly as the verifier will
+    return None, -math.inf
+
+
 def _opt_quad(cn: CertNet, X0: np.ndarray, sign: int, iters: int):
     """Adam on the smoothed objective sum(mu) + n * softmin(eig(M(theta) -
     diag(mu))) for a batch of subcubes with the same number r of free
     inputs. Returns a list of certificates (dicts) and their rigorous
     bounds (as checked by the verifier's own code)."""
     B = X0.shape[0]
-    ivs, c, c_abs = cn.intervals(X0)
+    ivs, clo, chi = cn.intervals(X0)
+    with np.errstate(all="ignore"):
+        c = 0.5 * clo + 0.5 * chi
     G, const = _h1_coeffs(cn, X0, sign, ivs)
     L1, U1 = ivs[0]
     W1 = cn.Ws[0]
@@ -1129,66 +1345,72 @@ def _opt_quad(cn: CertNet, X0: np.ndarray, sign: int, iters: int):
         M[:, -1, -1] += const + (G * gam).sum(1)
         return M, dk, db, dg
 
-    M, *_ = build(th)
-    mu = np.diagonal(M, axis1=1, axis2=2).copy()
-    params = [th, mu]
-    mom = [np.zeros_like(th), np.zeros_like(mu)]
-    vel = [np.zeros_like(th), np.zeros_like(mu)]
-    best = np.full(B, -np.inf)
-    best_th, best_mu = th.copy(), mu.copy()
-    taus = np.geomspace(0.05, 1e-4, iters)  # smoothing of the minimum eigenvalue
-    eye = np.eye(n)
-    for it in range(iters):
-        M, dk, db, dg = build(th)
-        S = M - mu[:, :, None] * eye
-        w, Vv = np.linalg.eigh(S)
-        val = mu.sum(1) + n * w[:, 0]
-        better = val > best
-        best = np.where(better, val, best)
-        best_th[better] = th[better]
-        best_mu[better] = mu[better]
-        z = -(w - w[:, :1]) / taus[it]
-        e = np.exp(z)
-        pz = e / e.sum(1, keepdims=True)
-        P = np.einsum("bik,bk,bjk->bij", Vv, pz, Vv, optimize=True)
-        gmu = 1 - n * np.diagonal(P, axis1=1, axis2=2)
-        PV = np.einsum("bjp,bpq->bjq", Vt, P)
-        q = (PV * Vt).sum(2)
-        sv = PV[:, :, -1]
-        p22 = P[:, -1, -1]
-        gth = (n * G * q)[..., None] * dk + (n * G * sv)[..., None] * db + (n * G * p22[:, None])[..., None] * dg
-        grads = [gth, gmu]
-        for i in range(2):
-            mom[i] = 0.9 * mom[i] + 0.1 * grads[i]
-            vel[i] = 0.999 * vel[i] + 0.001 * grads[i] ** 2
-            mh = mom[i] / (1 - 0.9 ** (it + 1))
-            vh = vel[i] / (1 - 0.999 ** (it + 1))
-            params[i] += 0.05 * mh / (np.sqrt(vh) + 1e-12)
-        np.clip(params[0], 0.0, 1.0, out=params[0])
-        th, mu = params
-    certs, bounds = [], []
-    for b in range(B):
+    certs, bounds = [None] * B, np.full(B, -np.inf)
+    with np.errstate(all="ignore"):
+        M, *_ = build(th)
+        good = np.isfinite(M).all(axis=(1, 2)) & np.isfinite(G).all(1) & np.isfinite(Vt).all(axis=(1, 2))
+        if not good.any():
+            return certs, bounds
+        mu = np.where(np.isfinite(M), M, 0.0).diagonal(axis1=1, axis2=2).copy()
+        params = [th, mu]
+        mom = [np.zeros_like(th), np.zeros_like(mu)]
+        vel = [np.zeros_like(th), np.zeros_like(mu)]
+        best = np.full(B, -np.inf)
+        best_th, best_mu = th.copy(), mu.copy()
+        taus = np.geomspace(0.05, 1e-4, iters)  # smoothing of the minimum eigenvalue
+        eye = np.eye(n)
+        gi = np.nonzero(good)[0]
+        for it in range(iters):
+            M, dk, db, dg = build(th)
+            S = M - mu[:, :, None] * eye
+            ok = good & np.isfinite(S).all(axis=(1, 2))
+            if not ok.any():
+                break
+            gi = np.nonzero(ok)[0]
+            w, Vv = np.linalg.eigh(S[gi])
+            val = np.full(B, -np.inf)
+            val[gi] = mu[gi].sum(1) + n * w[:, 0]
+            better = val > best
+            best = np.where(better, val, best)
+            best_th[better] = th[better]
+            best_mu[better] = mu[better]
+            z = -(w - w[:, :1]) / taus[it]
+            e = np.exp(z)
+            pz = e / e.sum(1, keepdims=True)
+            P = np.einsum("bik,bk,bjk->bij", Vv, pz, Vv, optimize=True)
+            gmu = np.zeros_like(mu)
+            gmu[gi] = 1 - n * np.diagonal(P, axis1=1, axis2=2)
+            PV = np.einsum("bjp,bpq->bjq", Vt[gi], P)
+            q = (PV * Vt[gi]).sum(2)
+            sv = PV[:, :, -1]
+            p22 = P[:, -1, -1]
+            Gg = G[gi]
+            gth = np.zeros_like(th)
+            gth[gi] = ((n * Gg * q)[..., None] * dk[gi] + (n * Gg * sv)[..., None] * db[gi]
+                       + (n * Gg * p22[:, None])[..., None] * dg[gi])
+            grads = [np.nan_to_num(gth), np.nan_to_num(gmu)]
+            for i in range(2):
+                mom[i] = 0.9 * mom[i] + 0.1 * grads[i]
+                vel[i] = 0.999 * vel[i] + 0.001 * grads[i] ** 2
+                mh = mom[i] / (1 - 0.9 ** (it + 1))
+                vh = vel[i] / (1 - 0.999 ** (it + 1))
+                params[i] += 0.05 * mh / (np.sqrt(vh) + 1e-12)
+            np.clip(params[0], 0.0, 1.0, out=params[0])
+            th, mu = params
+    for b in np.nonzero(np.isfinite(best))[0]:
         x0 = X0[b:b + 1]
         ivb = [(Lk[b:b + 1], Uk[b:b + 1]) for Lk, Uk in ivs]
         try:
-            Mv, Ma, extra = cn.quad_matrix(x0, None, best_th[b], sign, ivb, (c[b:b + 1], c_abs[b:b + 1]))
-            A0 = Mv - np.diag(best_mu[b])
-            lam = float(np.linalg.eigvalsh(A0)[0])
-            # the verifier's margin (check_quad) for this matrix, times 4
-            nn = A0.shape[0]
-            Et = REL * (Ma + np.diag(np.abs(best_mu[b]) + abs(lam)))
-            gm = _gamma(2 * nn + 4)
-            marg = 3.0 * (gm * abs(float(np.trace(A0))) / (1 - gm) + float(np.sqrt((Et * Et).sum())))
-            s = lam - 4.0 * marg - 1e-12 * (1.0 + abs(lam))
-            cert = {"kind": "quad", "alpha": None, "theta": best_th[b].copy(), "mu": best_mu[b].copy(), "shift": s}
-            lb = cn.check_quad(x0, None, cert["theta"], cert["mu"], s, sign, ivb, (c[b:b + 1], c_abs[b:b + 1]))
+            s, lb = _quad_shift(cn, x0, best_th[b], best_mu[b], sign, ivb, (clo[b:b + 1], chi[b:b + 1]))
         except (ValueError, np.linalg.LinAlgError, FloatingPointError) as e:
             if _DEBUG:
                 print("quad prover failure:", repr(e))
-            cert, lb = None, -math.inf
-        certs.append(cert)
-        bounds.append(lb)
-    return certs, np.array(bounds)
+            s, lb = None, -math.inf
+        if s is not None:
+            certs[b] = {"kind": "quad", "alpha": None, "theta": best_th[b].copy(), "mu": best_mu[b].copy(),
+                        "shift": s}
+            bounds[b] = lb
+    return certs, bounds
 
 
 def _split_scores(cn: CertNet, X0: np.ndarray, ivs):
@@ -1197,15 +1419,17 @@ def _split_scores(cn: CertNet, X0: np.ndarray, ivs):
     G, _ = _h1_coeffs(cn, X0, 1, ivs)
     L1, U1 = ivs[0]
     uns = _uns_mask(L1, U1)
-    wgt = np.abs(G) * np.where(uns, np.minimum(-L1, U1), 0.0)
-    sc = wgt @ cn.absW[0]
+    with np.errstate(all="ignore"):
+        wgt = np.nan_to_num(np.abs(G) * np.where(uns, np.minimum(-L1, U1), 0.0))
+        sc = np.nan_to_num(wgt @ cn.absW[0])
     return np.where(X0 == 0.0, sc + 1e-300, -1.0)
 
 
-def _choose_split(cn: CertNet, X0: np.ndarray, ivs, k: int):
+def _choose_split(cn: CertNet, X0: np.ndarray, ivs, c, k: int):
     """Strong branching: among the top-k coordinates by score, the one whose
-    worse child has the largest default 'lin' bound (for f and, if better,
-    for -f)."""
+    worse child has the largest default 'lin' bound (prover-side floats; for
+    one hidden layer the children's first-layer intervals are updated from
+    the parent's by one column)."""
     sc = _split_scores(cn, X0, ivs)
     B, d = X0.shape
     k = max(1, min(k, int((X0[0] == 0).sum())))
@@ -1217,14 +1441,28 @@ def _choose_split(cn: CertNet, X0: np.ndarray, ivs, k: int):
         kids[np.arange(B), j, 0, top[:, j]] = -1.0
         kids[np.arange(B), j, 1, top[:, j]] = 1.0
     flat = kids.reshape(-1, d)
-    lb = cn.check_lin(flat, None, 1).reshape(B, k, 2)
-    worst = lb.min(2)
+    with np.errstate(all="ignore"):
+        if cn.L == 1:
+            L1, U1 = ivs[0]
+            rad = 0.5 * (U1 - L1)
+            col = np.transpose(cn.Ws[0][:, top], (1, 2, 0))  # (B, k, m1)
+            sgn = np.array([-1.0, 1.0])[None, None, :, None]
+            cc = (c[:, None, None, :] + sgn * col[:, :, None, :]).reshape(-1, c.shape[1])
+            rr = np.repeat(rad[:, None, :] - np.abs(col), 2, axis=1).reshape(-1, c.shape[1])
+            lb = _lin_float(cn, flat, 1, [(cc - rr, cc + rr)], cc)
+        else:
+            ivc, clo, chi = cn.intervals(flat)
+            lb = _lin_float(cn, flat, 1, ivc, 0.5 * clo + 0.5 * chi)
+    worst = np.nan_to_num(lb, nan=-np.inf).reshape(B, k, 2).min(2)
     return top[np.arange(B), worst.argmax(1)]
 
 
 def _std_f(cn: CertNet, rng, n=20000):
     X = rng.choice([-1.0, 1.0], size=(n, cn.d))
-    return float(cn.forward(X).std())
+    v = cn.forward(X)
+    with np.errstate(all="ignore"):
+        s = float(np.std(v[np.isfinite(v)])) if np.isfinite(v).any() else math.inf
+    return s if math.isfinite(s) else math.inf
 
 
 def prove(net, cfg: ProverConfig | None = None, verbose: bool = False, root=None):
@@ -1236,14 +1474,17 @@ def prove(net, cfg: ProverConfig | None = None, verbose: bool = False, root=None
     rng = np.random.default_rng(cfg.seed)
     d, t = cn.d, cn.t
     sig = _std_f(cn, rng)
+    margin = cfg.cert_margin * cn.absf if math.isfinite(cn.absf) else math.inf
+    t_safe, mt_safe = t + margin, -t + margin  # SAFE needs lb(f) >= t_safe, FAIL lb(-f) > mt_safe
     # node storage
-    X0s = [np.zeros(d, dtype=np.int8) if root is None else np.asarray(root, dtype=np.int8).copy()]
+    X0s = [_subcube(root, d)]
     kind = [None]
     cert = [None]
     split = [-1]
     kids = [None]
     nfail = [0]  # prover's failure count of a leaf (ENUM: enumerated; FAIL: all)
     depth = [0]
+    warm = [None]  # the parent's optimised slopes (prover-side warm start)
     frontier = [0]
     info = ProofInfo()
     while frontier:
@@ -1252,27 +1493,36 @@ def prove(net, cfg: ProverConfig | None = None, verbose: bool = False, root=None
             ids = frontier[s0:s0 + cfg.chunk]
             X0 = np.array([X0s[i] for i in ids], dtype=np.float64)
             rr = (X0 == 0.0).sum(1)
-            ivs, c, c_abs = cn.intervals(X0)
+            ivs, clo, chi = cn.intervals(X0)
+            with np.errstate(all="ignore"):
+                c = 0.5 * clo + 0.5 * chi
             done = np.zeros(len(ids), dtype=bool)
             # SAFE by 'lin'
             if "lin" in cfg.kinds:
                 lb0 = cn.check_lin(X0, None, 1, ivs)
                 best_lb = lb0.copy()
-                for b in np.nonzero(lb0 >= t)[0]:
+                for b in np.nonzero(lb0 >= t_safe)[0]:
                     kind[ids[b]], cert[ids[b]] = SAFE, {"kind": "lin", "alpha": None}
                     done[b] = True
-                sel = np.nonzero(~done)[0]
+                sel = np.nonzero(~done & (lb0 >= t - cfg.opt_window * sig))[0]
                 if sel.size and cfg.alpha_iters > 0:
                     ivs_s = [(Lk[sel], Uk[sel]) for Lk, Uk in ivs]
-                    al, _ = _opt_alpha(cn, X0[sel], 1, ivs_s, c[sel], cfg.alpha_iters)
-                    alist = [al] + [None] * (cn.L - 1)
-                    lb1 = cn.check_lin(X0[sel], alist, 1, ivs_s)
-                    best_lb[sel] = np.maximum(best_lb[sel], lb1)
-                    for j, b in enumerate(sel):
-                        if lb1[j] >= t:
-                            kind[ids[b]] = SAFE
-                            cert[ids[b]] = {"kind": "lin", "alpha": [al[j].copy()] + [None] * (cn.L - 1)}
-                            done[b] = True
+                    init = np.array([warm[ids[b]] if warm[ids[b]] is not None else np.full(cn.widths[0], np.nan)
+                                     for b in sel])
+                    al, fval = _opt_alpha(cn, X0[sel], 1, ivs_s, c[sel], cfg.alpha_iters, target=t, init=init)
+                    if cfg.warm_start:
+                        for j, b in enumerate(sel):
+                            warm[ids[b]] = al[j]
+                    cand = np.nonzero(fval >= t_safe)[0]
+                    best_lb[sel] = np.maximum(best_lb[sel], fval)
+                    if cand.size:
+                        alist = [al[cand]] + [None] * (cn.L - 1)
+                        lb1 = cn.check_lin(X0[sel[cand]], alist, 1, [(Lk[cand], Uk[cand]) for Lk, Uk in ivs_s])
+                        for j, b in enumerate(sel[cand]):
+                            if lb1[j] >= t_safe:
+                                kind[ids[b]] = SAFE
+                                cert[ids[b]] = {"kind": "lin", "alpha": [al[cand[j]].copy()] + [None] * (cn.L - 1)}
+                                done[b] = True
             else:
                 best_lb = np.full(len(ids), -np.inf)
             # FAIL by 'lin'
@@ -1281,20 +1531,20 @@ def prove(net, cfg: ProverConfig | None = None, verbose: bool = False, root=None
                 if sel.size:
                     ivs_s = [(Lk[sel], Uk[sel]) for Lk, Uk in ivs]
                     ub0 = cn.check_lin(X0[sel], None, -1, ivs_s)
-                    cand = sel[ub0 > -t - 2 * sig]  # optimise slopes only near t
+                    cand = sel[ub0 > -t - min(2 * sig, cfg.opt_window * sig)]  # optimise slopes only near t
                     for j, b in enumerate(sel):
-                        if ub0[j] > -t:
+                        if ub0[j] > mt_safe:
                             kind[ids[b]], cert[ids[b]] = FAIL, {"kind": "lin", "alpha": None}
                             nfail[ids[b]] = 1 << int(rr[b])
                             done[b] = True
                     cand = np.array([b for b in cand if not done[b]], dtype=int)
                     if cand.size and cfg.alpha_iters > 0:
                         ivs_c = [(Lk[cand], Uk[cand]) for Lk, Uk in ivs]
-                        al, _ = _opt_alpha(cn, X0[cand], -1, ivs_c, c[cand], cfg.alpha_iters)
+                        al, _ = _opt_alpha(cn, X0[cand], -1, ivs_c, c[cand], cfg.alpha_iters, target=-t)
                         alist = [al] + [None] * (cn.L - 1)
                         ub1 = cn.check_lin(X0[cand], alist, -1, ivs_c)
                         for j, b in enumerate(cand):
-                            if ub1[j] > -t:
+                            if ub1[j] > mt_safe:
                                 kind[ids[b]] = FAIL
                                 cert[ids[b]] = {"kind": "lin", "alpha": [al[j].copy()] + [None] * (cn.L - 1)}
                                 nfail[ids[b]] = 1 << int(rr[b])
@@ -1309,7 +1559,7 @@ def prove(net, cfg: ProverConfig | None = None, verbose: bool = False, root=None
                         gg = grp[g0:g0 + 256]
                         certs, lbq = _opt_quad(cn, X0[gg], 1, cfg.quad_iters)
                         for j, b in enumerate(gg):
-                            if lbq[j] >= t and certs[j] is not None:
+                            if lbq[j] >= t_safe and certs[j] is not None:
                                 kind[ids[b]], cert[ids[b]] = SAFE, certs[j]
                                 done[b] = True
             # leaves and splits
@@ -1318,8 +1568,8 @@ def prove(net, cfg: ProverConfig | None = None, verbose: bool = False, root=None
             for b in leafs:
                 i = ids[b]
                 kind[i] = ENUM
-                _, fv = cn.enum_points(X0[b])
-                nfail[i] = int((fv < t).sum())
+                X, fv = cn.enum_points(X0[b])
+                nfail[i] = cn.classify(X, fv)
             spl = rest[rr[rest] > cfg.r_leaf]
             if spl.size:
                 over = len(X0s) + 2 * spl.size > cfg.node_budget
@@ -1328,13 +1578,14 @@ def prove(net, cfg: ProverConfig | None = None, verbose: bool = False, root=None
                     for b in spl:
                         if cfg.budget_leaf == "enum":
                             kind[ids[b]] = ENUM
-                            _, fv = cn.enum_points(X0[b]) if rr[b] <= 22 else (None, None)
-                            nfail[ids[b]] = int((fv < t).sum()) if fv is not None else 0
+                            if rr[b] <= 22:
+                                X, fv = cn.enum_points(X0[b])
+                                nfail[ids[b]] = cn.classify(X, fv)
                         else:
                             kind[ids[b]] = OPEN
                 else:
                     ivs_s = [(Lk[spl], Uk[spl]) for Lk, Uk in ivs]
-                    var = _choose_split(cn, X0[spl], ivs_s, cfg.strong_k)
+                    var = _choose_split(cn, X0[spl], ivs_s, c[spl], cfg.strong_k)
                     for b, v in zip(spl, var):
                         i = ids[b]
                         kind[i], split[i] = SPLIT, int(v)
@@ -1349,9 +1600,11 @@ def prove(net, cfg: ProverConfig | None = None, verbose: bool = False, root=None
                             kids.append(None)
                             nfail.append(0)
                             depth.append(depth[i] + 1)
+                            warm.append(warm[i])
                             ch.append(len(X0s) - 1)
                             nxt.append(len(X0s) - 1)
                         kids[i] = ch
+                        warm[i] = None
         if verbose:
             print(f"  level done: {len(frontier)} nodes, next {len(nxt)}, total {len(X0s)}, "
                   f"{time.time() - t_start:.1f}s", flush=True)
@@ -1376,7 +1629,7 @@ def prove(net, cfg: ProverConfig | None = None, verbose: bool = False, root=None
                 cost[i] = cn.flops_node() + cn.flops_enum(int(rv[i]))
                 nfail[i] = int(fsum[i])
         elif k == SAFE or k == FAIL:
-            cost[i] = cn.flops_node() + (cn.flops_quad(int(rv[i])) if cert[i]["kind"] == "quad" else cn.flops_lin(int(rv[i])))
+            cost[i] = cn.flops_node() + (cn.flops_quad(int(rv[i])) if cert[i]["kind"] == "quad" else cn.flops_lin())
             fsum[i] = nfail[i]
         elif k == ENUM:
             cost[i] = cn.flops_node() + cn.flops_enum(int(rv[i]))
@@ -1403,7 +1656,7 @@ def prove(net, cfg: ProverConfig | None = None, verbose: bool = False, root=None
                 tree.append((k, cert[i]))
                 lv[cert[i]["kind"]] = lv.get(cert[i]["kind"], 0) + 1
                 rh[int(rv[i])] = rh.get(int(rv[i]), 0) + 1
-                pred += cn.flops_quad(int(rv[i])) if cert[i]["kind"] == "quad" else cn.flops_lin(int(rv[i]))
+                pred += cn.flops_quad(int(rv[i])) if cert[i]["kind"] == "quad" else cn.flops_lin()
             elif k == ENUM:
                 tree.append((ENUM,))
                 pred += cn.flops_enum(int(rv[i]))
@@ -1491,7 +1744,9 @@ def knuth_estimate(net, cfg: ProverConfig | None = None, probes: int = 64, seed:
         ids = np.nonzero(alive)[0]
         X0 = X[ids]
         rr = (X0 == 0.0).sum(1)
-        ivs, c, c_abs = cn.intervals(X0)
+        ivs, clo, chi = cn.intervals(X0)
+        with np.errstate(all="ignore"):
+            c = 0.5 * clo + 0.5 * chi
         lb = cn.check_lin(X0, None, 1, ivs)
         if cfg.alpha_iters:
             al, _ = _opt_alpha(cn, X0, 1, ivs, c, cfg.alpha_iters)
@@ -1515,7 +1770,7 @@ def knuth_estimate(net, cfg: ProverConfig | None = None, probes: int = 64, seed:
             if decided[j]:
                 if out_kind[i] is None:
                     out_kind[i] = "safe" if lb[j] >= t else "fail"
-                est_cost[i] += w * (cn.flops_node() + (cn.flops_quad(int(rr[j])) if out_kind[i] == "quad" else cn.flops_lin(int(rr[j]))))
+                est_cost[i] += w * (cn.flops_node() + (cn.flops_quad(int(rr[j])) if out_kind[i] == "quad" else cn.flops_lin()))
                 alive[i] = False
             elif rr[j] <= cfg.r_leaf:
                 out_kind[i] = "enum"
@@ -1526,7 +1781,7 @@ def knuth_estimate(net, cfg: ProverConfig | None = None, probes: int = 64, seed:
         spl = np.nonzero(alive[ids])[0]
         if spl.size:
             ivs_s = [(Lk[spl], Uk[spl]) for Lk, Uk in ivs]
-            var = _choose_split(cn, X0[spl], ivs_s, cfg.strong_k)
+            var = _choose_split(cn, X0[spl], ivs_s, c[spl], cfg.strong_k)
             for j, v in zip(spl, var):
                 i = ids[j]
                 X[i, int(v)] = rng.choice([-1.0, 1.0])

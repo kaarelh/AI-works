@@ -1,0 +1,407 @@
+SMC lower bounds (rareprob.nets_lower) on MLPs trained to output 1. Machine: a shared 4-core machine (other jobs ran concurrently; seconds are wall-clock and noisy).
+Costs: fpe = forward-pass equivalents (one evaluation of the net on one input); seconds = wall clock.
+
+HEADLINES (computed from the tables below; delta = 0.05; costs include the pilot).
+  exact suite, p >= 1e-5, budget M: mean L/p 0.860-0.900 at 3.7e+05-2.1e+06 fpe (0.4-5.1 s)
+  exact suite, p >= 1e-5, budget L: mean L/p 0.920-0.942 at 2.2e+06-1.4e+07 fpe (5.4-34.9 s)
+  bce_d28_w32_s100 (p = 7.45e-09, 2 failing inputs): M: L/p 0.616 at 3.7e+06 fpe (3.2 s), speedup x1.07e+03 (KL, fpe), x2.69e+03 (task, fpe); witnesses 1.00 p; L: L/p 0.807 at 2.3e+07 fpe (22.7 s), speedup x836 (KL, fpe), x1.78e+03 (task, fpe); witnesses 1.00 p
+  mse_d24_w32_s1500 (p = 9.72e-06, 163 failing inputs): M: L/p 0.852 at 2.4e+06 fpe (1.4 s), speedup x10.6 (KL, fpe), x21.8 (task, fpe); witnesses 1.00 p; L: L/p 0.924 at 1.4e+07 fpe (18.3 s), speedup x7.24 (KL, fpe), x14.1 (task, fpe); witnesses 1.00 p
+  mse_d24_w32_s2000 (p = 5.96e-08, 1 failing inputs): M: L/p 0.538 at 3.4e+06 fpe (1.7 s), speedup x94.4 (KL, fpe), x258 (task, fpe); witnesses 1.00 p; L: L/p 0.784 at 1.9e+07 fpe (22.5 s), speedup x94.9 (KL, fpe), x205 (task, fpe); witnesses 1.00 p
+  mse_d28_w64_s1000 (p = 3.32e-07, 89 failing inputs): M: L/p 0.803 at 3e+06 fpe (2.3 s), speedup x135 (KL, fpe), x288 (task, fpe); witnesses 0.99 p; L: L/p 0.919 at 1.8e+07 fpe (31.0 s), speedup x144 (KL, fpe), x282 (task, fpe); witnesses 1.00 p
+  exact suite: 315 runs, 0 with L > p, 0 flagged replicates
+  mean of Z/p per (net, budget M or L): 0.913-1.029 (lowest bce_d28_w32_s100 M: 0.913 +- 0.060, 160 replicates; highest mse_d28_w32x32_s300 M: 1.029 +- 0.011)
+  smc_mse_d32_w64_s600 [smc] d=32 z=5.51 p_ref=2.21e-08: S: 0.574 [min 0.534] (with witnesses 0.866) at 1.1e+06 fpe (2 s); M: 0.859 [min 0.813] (with witnesses 1.003) at 3.6e+06 fpe (8 s); L: 0.916 [min 0.886] (with witnesses 1.021) at 2e+07 fpe (38 s)
+  smc2_mse_d64_w64_s1500 [smc] d=64 z=6.88 p_ref=7.62e-13: S: 0.618 [min 0.577] at 1.7e+06 fpe (5 s); M: 0.792 [min 0.694] at 5.7e+06 fpe (17 s); L: 0.945 [min 0.909] at 3.3e+07 fpe (96 s)
+  smc2_mse_d64_w64_s2000 [smc] d=64 z=8.40 p_ref=2.4e-18: S: 0.000 [min 0.000] (with witnesses 0.053) at 2.2e+06 fpe (6 s); M: 0.048 [min 0.000] (with witnesses 0.173) at 8e+06 fpe (20 s); L: 0.168 [min 0.117] (with witnesses 0.422) at 4.8e+07 fpe (128 s)
+  smc_bce_d64_w64x64_s300 [smc] d=64 z=5.16 p_ref=7.34e-16: S: 0.518 [min 0.322] at 2.3e+06 fpe (11 s); M: 0.846 [min 0.794] at 7.2e+06 fpe (33 s); L: 0.891 [min 0.857] at 4.2e+07 fpe (273 s)
+  smc_bce_d64_w64x64_s600 [smc] d=64 z=6.11 p_ref=0: no reference replicate reached the last level (8.3e+07 fpe, 238 s), 0 witnesses: every bound is 0
+  smc_mse_d64_w32x32_s300 [smc] d=64 z=3.67 p_ref=2.93e-05: S: 0.844 [min 0.817] at 6.3e+05 fpe (3 s); M: 0.844 [min 0.821] at 2.1e+06 fpe (10 s); L: 0.935 [min 0.909] at 1.2e+07 fpe (49 s)
+  smc_mse_d64_w32x32_s600 [smc] d=64 z=5.52 p_ref=3.22e-08: S: 0.673 [min 0.633] at 1.2e+06 fpe (4 s); M: 0.891 [min 0.863] at 3.5e+06 fpe (13 s); L: 0.973 [min 0.951] at 2e+07 fpe (66 s)
+  smc_mse_d64_w64_s1000 [smc] d=64 z=4.24 p_ref=7.36e-06: S: 0.859 [min 0.851] at 7.4e+05 fpe (4 s); M: 0.850 [min 0.845] at 2.3e+06 fpe (9 s); L: 0.944 [min 0.933] at 1.4e+07 fpe (56 s)
+  smc_mse_d64_w64_s1500 [smc] d=64 z=5.54 p_ref=5.77e-09: S: 0.762 [min 0.709] at 1.2e+06 fpe (4 s); M: 0.888 [min 0.834] at 3.9e+06 fpe (12 s); L: 0.964 [min 0.948] at 2.2e+07 fpe (69 s)
+  smc2_mse_d128_w64_s1000 [smc] d=128 z=6.81 p_ref=2.82e-15: S: 0.790 [min 0.737] at 2.1e+06 fpe (13 s); M: 0.854 [min 0.811] at 6.8e+06 fpe (39 s); L: 0.940 [min 0.932] at 3.9e+07 fpe (304 s)
+  smc2_mse_d128_w64_s1500 [smc] d=128 z=8.87 p_ref=0: no reference replicate reached the last level (1.2e+08 fpe, 488 s), 0 witnesses: every bound is 0
+  smc_mse_d128_w64_s600 [smc] d=128 z=3.90 p_ref=1.85e-05: S: 0.866 [min 0.855] at 6.3e+05 fpe (6 s); M: 0.865 [min 0.858] at 2.1e+06 fpe (17 s); L: 0.939 [min 0.932] at 1.2e+07 fpe (140 s)
+  smc_mse_d128_w64_s1000 [smc] d=128 z=5.83 p_ref=5.59e-11: S: 0.782 [min 0.734] at 1.5e+06 fpe (12 s); M: 0.844 [min 0.826] at 4.8e+06 fpe (32 s); L: 0.934 [min 0.929] at 2.8e+07 fpe (257 s)
+  bce_d64_w64_s100 [suite] d=64 z=4.47 p_ref=2.29e-08: S: 0.800 [min 0.747] at 1.1e+06 fpe (4 s); M: 0.829 [min 0.803] at 3.5e+06 fpe (15 s); L: 0.919 [min 0.905] at 2e+07 fpe (80 s)
+  bce_d64_w64_s300 [suite] d=64 z=7.06 p_ref=0: no reference replicate reached the last level (7.9e+07 fpe, 182 s), 0 witnesses: every bound is 0
+  bce_d64_w64_s1000 [suite] d=64 z=8.76 p_ref=0: no reference replicate reached the last level (7.1e+07 fpe, 163 s), 0 witnesses: every bound is 0
+  mse_d64_w64_s300 [suite] d=64 z=1.74 p_ref=0.0392: S: 0.876 [min 0.843] at 1.8e+05 fpe (1 s); M: 0.880 [min 0.870] at 7.1e+05 fpe (4 s); L: 0.953 [min 0.948] at 4.1e+06 fpe (19 s)
+  mse_d64_w64_s1000 [suite] d=64 z=4.35 p_ref=4.88e-06: S: 0.864 [min 0.815] at 7.4e+05 fpe (3 s); M: 0.883 [min 0.850] at 2.4e+06 fpe (10 s); L: 0.940 [min 0.934] at 1.4e+07 fpe (54 s)
+  mse_d64_w64_s3000 [suite] d=64 z=9.97 p_ref=0: no reference replicate reached the last level (8e+07 fpe, 201 s), 0 witnesses: every bound is 0
+  bce_d128_w128x128_s100 [suite] d=128 z=5.31 p_ref=9.08e-12: S: 0.798 [min 0.726] at 1.6e+06 fpe (25 s); M: 0.828 [min 0.769] at 5.2e+06 fpe (94 s); L: 0.928 [min 0.915] at 3.1e+07 fpe (372 s)
+  bce_d128_w128x128_s300 [suite] d=128 z=6.54 p_ref=5.18e-21: S: 0.464 [min 0.369] at 3e+06 fpe (36 s); M: 0.666 [min 0.600] at 9.7e+06 fpe (123 s); L: 0.865 [min 0.778] at 5.7e+07 fpe (546 s)
+  bce_d128_w128x128_s1000 [suite] d=128 z=7.81 p_ref=2.64e-37: S: 0.000 [min 0.000] at 4.5e+06 fpe (47 s); M: 0.000 [min 0.000] (with witnesses 0.026) at 1.6e+07 fpe (192 s); L: 0.183 [min 0.086] (with witnesses 0.467) at 9.9e+07 fpe (1134 s)
+  wall clock per fpe, SMC / batched Monte Carlo on the same net and process, over 114 (net, budget) cells: median 0.96, 10-90% 0.67-1.58, range 0.45-3.37
+  sequential, target 0.9, mse_d24_w32_s1000 (p = 0.000358): ratio 0.891 at 2e+06 fpe (2 s), speedup x0.669 (KL, fpe)
+  sequential, target 0.9, mse_d24_w32_s1500 (p = 9.72e-06): ratio 0.874 at 4.1e+06 fpe (3 s), speedup x8.63 (KL, fpe)
+  sequential, target 0.9, mse_d24_w32_s2000 (p = 5.96e-08): ratio 0.881 at 3.2e+07 fpe (23 s), speedup x202 (KL, fpe)
+  sequential, target 0.9, bce_d28_w32_s60 (p = 1.32e-05): ratio 0.885 at 2.7e+06 fpe (4 s), speedup x11.4 (KL, fpe)
+  sequential, target 0.9, bce_d28_w32_s100 (p = 7.45e-09): ratio 0.876 at 3.4e+07 fpe (31 s), speedup x1.41e+03 (KL, fpe)
+  sequential, target 0.9, bce_d28_w64x64_s60 (p = 1.89e-05): ratio 0.907 at 2.8e+06 fpe (8 s), speedup x12 (KL, fpe)
+  sequential, target 0.9, mse_d28_w32x32_s500 (p = 0.000134): ratio 0.899 at 2.4e+06 fpe (5 s), speedup x1.68 (KL, fpe)
+  sequential, target 0.9, mse_d28_w64_s600 (p = 6.02e-05): ratio 0.905 at 2.6e+06 fpe (5 s), speedup x4.03 (KL, fpe)
+  sequential, target 0.9, mse_d28_w64_s1000 (p = 3.32e-07): ratio 0.912 at 1e+07 fpe (16 s), speedup x217 (KL, fpe)
+  sequential, target 0.9, smc_mse_d32_w64_s600 (p = 2.26e-08): ratio 0.830 at 5.9e+06 fpe (10 s), speedup x1.39e+03 (KL, fpe)
+  sequential, target 0.9, bce_d64_w64_s100 (p = 2.29e-08): ratio 0.889 at 5.3e+06 fpe (18 s), speedup x3.72e+03 (KL, fpe)
+  sequential, target 0.9, mse_d64_w64_s300 (p = 0.0392): ratio 0.928 at 8.7e+05 fpe (3 s), speedup x0.031 (KL, fpe)
+  sequential, target 0.9, mse_d64_w64_s1000 (p = 4.88e-06): ratio 0.890 at 3.1e+06 fpe (11 s), speedup x29.8 (KL, fpe)
+  sequential, target 0.9, smc2_mse_d64_w64_s1500 (p = 7.62e-13): ratio 0.934 at 3.3e+07 fpe (58 s), speedup x5.23e+07 (KL, fpe)
+  sequential, target 0.9, smc_bce_d64_w64x64_s300 (p = 7.34e-16): ratio 0.980 at 5.2e+07 fpe (138 s), speedup x3.69e+11 (KL, fpe)
+  sequential, target 0.9, smc_mse_d64_w32x32_s300 (p = 2.93e-05): ratio 0.920 at 2.8e+06 fpe (8 s), speedup x10.9 (KL, fpe)
+  sequential, target 0.9, smc_mse_d64_w32x32_s600 (p = 3.22e-08): ratio 0.929 at 8.5e+06 fpe (19 s), speedup x4.12e+03 (KL, fpe)
+  sequential, target 0.9, smc_mse_d64_w64_s1000 (p = 7.36e-06): ratio 0.938 at 3.3e+06 fpe (8 s), speedup x63.1 (KL, fpe)
+  sequential, target 0.9, smc_mse_d64_w64_s1500 (p = 5.77e-09): ratio 0.930 at 6.6e+06 fpe (13 s), speedup x3.05e+04 (KL, fpe)
+  sequential, target 0.9, bce_d128_w128x128_s100 (p = 9.08e-12): ratio 0.898 at 8.9e+06 fpe (80 s), speedup x6.6e+06 (KL, fpe)
+  sequential, target 0.9, bce_d128_w128x128_s300 (p = 5.18e-21): ratio 0.887 at 6.7e+07 fpe (524 s), speedup x1.25e+15 (KL, fpe)
+  sequential, target 0.9, smc2_mse_d128_w64_s1000 (p = 2.82e-15): ratio 0.880 at 1.5e+07 fpe (55 s), speedup x9.11e+09 (KL, fpe)
+  sequential, target 0.9, smc_mse_d128_w64_s600 (p = 1.85e-05): ratio 0.901 at 2.9e+06 fpe (16 s), speedup x10.8 (KL, fpe)
+  sequential, target 0.9, smc_mse_d128_w64_s1000 (p = 5.59e-11): ratio 0.924 at 7.7e+06 fpe (35 s), speedup x2.27e+06 (KL, fpe)
+
+TABLE N1. Exact suite (d <= 28). p = exact failure probability (fail = number of failing inputs); MC(0.1) = Monte Carlo cost of a two-sided eps = 0.1 interval, 3 ln(2/delta)/(eps^2 p) samples, in fpe and in seconds; per budget: mean [min] of L_bet/p over the runs, mean witness ratio, mean reported L/p (L = max of the two), cost (pilot included) in fpe and seconds, speedups over Monte Carlo at the mean ratio (KL = one-sided KL lower end reaching the same ratio; task = 3 ln(2/delta)/((1-ratio)^2 p)), in fpe and in seconds.
+net                            p     fail     z  MC(0.1)     MC s B  n   K      fpe     sec        L_bet/p  wit/p    L/p  xKL fpe    xKL s xtask fpe  xtask s miss
+bce_d28_w32_s30          0.00189   507779  2.58  5.9e+05     0.46 S  5   4  3.4e+05     0.6  0.835 [0.805]  0.026  0.835     0.31     0.12      0.64     0.24    0
+bce_d28_w32_s30          0.00189   507779  2.58  5.9e+05     0.46 M  5   4    1e+06     1.7  0.888 [0.853]  0.053  0.888     0.22      0.1      0.44      0.2    0
+bce_d28_w32_s30          0.00189   507779  2.58  5.9e+05     0.46 L  5   4  6.1e+06    10.5  0.935 [0.932]  0.271  0.935     0.12    0.064      0.23     0.12    0
+bce_d28_w32_s60         1.32e-05     3543  3.30  8.4e+07       76 S  5   7  6.7e+05     0.9  0.805 [0.780]  0.817  0.843       15      9.9        33       21    0
+bce_d28_w32_s60         1.32e-05     3543  3.30  8.4e+07       76 M  5   7  2.1e+06     2.6  0.872 [0.849]  0.979  0.979       12      7.6        24       15    0
+bce_d28_w32_s60         1.32e-05     3543  3.30  8.4e+07       76 L  5   8  1.4e+07    17.9  0.932 [0.907]  1.000  1.000        7      5.5        14       11    0
+bce_d28_w32_s100        7.45e-09        2  3.98  1.5e+11  1.5e+05 S  5  12  1.2e+06     1.4  0.402 [0.224]  1.000  1.000  1.1e+03  8.5e+02   3.6e+03  2.7e+03    0
+bce_d28_w32_s100        7.45e-09        2  3.98  1.5e+11  1.5e+05 M  5  12  3.7e+06     3.2  0.616 [0.581]  1.000  1.000  1.1e+03  1.3e+03   2.7e+03  3.4e+03    0
+bce_d28_w32_s100        7.45e-09        2  3.98  1.5e+11  1.5e+05 L  5  12  2.3e+07    22.7  0.807 [0.759]  1.000  1.000  8.4e+02  9.1e+02   1.8e+03  1.9e+03    0
+bce_d28_w32_s150               0        0  4.69        -        - S  5  12  1.1e+06     1.3   L = 0 in all                                                       0
+bce_d28_w32_s150               0        0  4.69        -        - M  5  13    4e+06     3.5   L = 0 in all                                                       0
+bce_d28_w32_s150               0        0  4.69        -        - L  5  13  2.4e+07    24.4   L = 0 in all                                                       0
+bce_d28_w64x64_s20        0.0933 25051039  1.26  1.2e+04    0.044 S  5   2  1.1e+05     0.6  0.882 [0.865]  0.000  0.882    0.034    0.022     0.075    0.048    0
+bce_d28_w64x64_s20        0.0933 25051039  1.26  1.2e+04    0.044 M  5   2  3.7e+05     1.3  0.885 [0.873]  0.002  0.885    0.011    0.011     0.024    0.024    0
+bce_d28_w64x64_s20        0.0933 25051039  1.26  1.2e+04    0.044 L  5   2  2.2e+06     8.1  0.942 [0.936]  0.009  0.942   0.0077   0.0085     0.016    0.018    0
+bce_d28_w64x64_s40       0.00228   613171  2.36  4.8e+05      1.6 S  5   4  3.4e+05     1.3  0.876 [0.808]  0.018  0.876     0.46     0.33      0.93     0.67    0
+bce_d28_w64x64_s40       0.00228   613171  2.36  4.8e+05      1.6 M  5   4    1e+06     3.4  0.880 [0.846]  0.047  0.880     0.16     0.16      0.32     0.32    0
+bce_d28_w64x64_s40       0.00228   613171  2.36  4.8e+05      1.6 L  5   4  6.1e+06    21.5  0.939 [0.934]  0.263  0.939     0.11     0.12      0.21     0.22    0
+bce_d28_w64x64_s60      1.89e-05     5071  3.05  5.9e+07  2.1e+02 S  5   7  6.3e+05     1.9  0.831 [0.772]  0.796  0.842       16       15        32       31    0
+bce_d28_w64x64_s60      1.89e-05     5071  3.05  5.9e+07  2.1e+02 M  5   7  2.1e+06     5.1  0.870 [0.852]  0.987  0.987      8.4       12        17       24    0
+bce_d28_w64x64_s60      1.89e-05     5071  3.05  5.9e+07  2.1e+02 L  5   7  1.2e+07    34.9  0.931 [0.906]  1.000  1.000      5.3      7.7        10       15    0
+bce_d28_w64x64_s100            0        0  3.82        -        - S  5  14  1.3e+06     2.7   L = 0 in all                                                       0
+bce_d28_w64x64_s100            0        0  3.82        -        - M  5  13  4.1e+06     8.6   L = 0 in all                                                       0
+bce_d28_w64x64_s100            0        0  3.82        -        - L  5  13  2.4e+07    47.2   L = 0 in all                                                       0
+mse_d24_w32_s300          0.0712  1193958  1.47  1.6e+04    0.016 S  5   2  1.1e+05     0.2  0.889 [0.851]  0.006  0.889    0.052    0.018      0.11    0.038    0
+mse_d24_w32_s300          0.0712  1193958  1.47  1.6e+04    0.016 M  5   2  3.7e+05     0.4  0.877 [0.868]  0.020  0.877    0.013   0.0065     0.028    0.014    0
+mse_d24_w32_s300          0.0712  1193958  1.47  1.6e+04    0.016 L  5   2  2.2e+06     5.5  0.936 [0.931]  0.111  0.936   0.0085   0.0057     0.018    0.012    0
+mse_d24_w32_s600         0.00828   138936  2.40  1.3e+05     0.13 S  5   3  2.6e+05     0.5  0.859 [0.824]  0.082  0.859     0.13    0.038      0.26    0.078    0
+mse_d24_w32_s600         0.00828   138936  2.40  1.3e+05     0.13 M  5   3  7.7e+05     0.8  0.874 [0.845]  0.171  0.874    0.054    0.028      0.11    0.057    0
+mse_d24_w32_s600         0.00828   138936  2.40  1.3e+05     0.13 L  5   3  4.5e+06    10.4  0.939 [0.926]  0.623  0.939    0.041    0.031      0.08    0.061    0
+mse_d24_w32_s1000       0.000358     6012  3.46  3.1e+06      2.9 S  5   5  4.4e+05     0.7  0.861 [0.799]  0.646  0.861      1.8     0.82       3.6      1.7    0
+mse_d24_w32_s1000       0.000358     6012  3.46  3.1e+06      2.9 M  5   5  1.5e+06     1.1  0.882 [0.827]  0.939  0.939     0.73     0.54       1.5      1.1    0
+mse_d24_w32_s1000       0.000358     6012  3.46  3.1e+06      2.9 L  5   5  8.4e+06    13.5  0.937 [0.927]  1.000  1.000     0.48     0.47      0.92     0.91    0
+mse_d24_w32_s1500       9.72e-06      163  4.47  1.1e+08  1.2e+02 S  5   7  6.7e+05     0.9  0.813 [0.737]  0.977  0.977       23       17        49       36    0
+mse_d24_w32_s1500       9.72e-06      163  4.47  1.1e+08  1.2e+02 M  5   8  2.4e+06     1.4  0.852 [0.805]  1.000  1.000       11      9.9        22       20    0
+mse_d24_w32_s1500       9.72e-06      163  4.47  1.1e+08  1.2e+02 L  5   8  1.4e+07    18.3  0.924 [0.905]  1.000  1.000      7.2      9.4        14       18    0
+mse_d24_w32_s2000       5.96e-08        1  5.37  1.9e+10  1.9e+04 S  5  11  9.9e+05     1.1  0.293 [0.153]  1.000  1.000       98       73   3.8e+02  2.8e+02    0
+mse_d24_w32_s2000       5.96e-08        1  5.37  1.9e+10  1.9e+04 M  5  11  3.4e+06     1.7  0.538 [0.428]  1.000  1.000       94  1.1e+02   2.6e+02  2.9e+02    0
+mse_d24_w32_s2000       5.96e-08        1  5.37  1.9e+10  1.9e+04 L  5  11  1.9e+07    22.5  0.784 [0.769]  1.000  1.000       95  1.3e+02   2.1e+02  2.9e+02    0
+mse_d28_w32x32_s100       0.0604 16224649  1.50  1.8e+04    0.029 S  5   2  1.1e+05     0.3  0.900 [0.885]  0.000  0.900    0.077    0.038      0.16     0.08    0
+mse_d28_w32x32_s100       0.0604 16224649  1.50  1.8e+04    0.029 M  5   2  3.7e+05     0.6  0.873 [0.861]  0.001  0.873    0.014    0.012     0.031    0.025    0
+mse_d28_w32x32_s100       0.0604 16224649  1.50  1.8e+04    0.029 L  5   2  2.2e+06     5.4  0.940 [0.935]  0.008  0.940    0.012   0.0095     0.024    0.019    0
+mse_d28_w32x32_s200       0.0147  3948451  2.08  7.5e+04     0.13 S  5   3  2.2e+05     0.6  0.872 [0.862]  0.002  0.872      0.1    0.066      0.21     0.13    0
+mse_d28_w32x32_s200       0.0147  3948451  2.08  7.5e+04     0.13 M  5   3  7.1e+05     0.9  0.863 [0.838]  0.009  0.863    0.027    0.027     0.057    0.056    0
+mse_d28_w32x32_s200       0.0147  3948451  2.08  7.5e+04     0.13 L  5   3  4.1e+06     9.6  0.937 [0.933]  0.047  0.937    0.023    0.022     0.046    0.043    0
+mse_d28_w32x32_s300      0.00358   960130  2.54  3.1e+05     0.46 S  5   4  3.2e+05     0.7  0.849 [0.828]  0.014  0.849     0.21     0.13      0.43     0.27    0
+mse_d28_w32x32_s300      0.00358   960130  2.54  3.1e+05     0.46 M  5   4    1e+06     1.2  0.900 [0.870]  0.054  0.900     0.15     0.13       0.3     0.27    0
+mse_d28_w32x32_s300      0.00358   960130  2.54  3.1e+05     0.46 L  5   4  6.1e+06    11.2  0.934 [0.924]  0.267  0.934    0.061    0.063      0.12     0.12    0
+mse_d28_w32x32_s500     0.000134    36023  3.39  8.2e+06       15 S  5   6  5.3e+05     1.0  0.845 [0.791]  0.176  0.845      3.2      2.6       6.5      5.3    0
+mse_d28_w32x32_s500     0.000134    36023  3.39  8.2e+06       15 M  5   6  1.7e+06     1.9  0.874 [0.866]  0.439  0.874      1.5      1.7         3      3.5    0
+mse_d28_w32x32_s500     0.000134    36023  3.39  8.2e+06       15 L  5   6    1e+07    16.3  0.921 [0.904]  0.919  0.924     0.68      1.1       1.3      2.2    0
+mse_d28_w64_s300          0.0129  3468961  2.25  8.6e+04     0.16 S  5   3  2.2e+05     0.4  0.869 [0.841]  0.002  0.869     0.11     0.11      0.23     0.22    0
+mse_d28_w64_s300          0.0129  3468961  2.25  8.6e+04     0.16 M  5   3  7.1e+05     0.9  0.887 [0.873]  0.008  0.887    0.047    0.045     0.095    0.091    0
+mse_d28_w64_s300          0.0129  3468961  2.25  8.6e+04     0.16 L  5   3  4.1e+06    11.7  0.942 [0.936]  0.045  0.942    0.032    0.027     0.062    0.052    0
+mse_d28_w64_s600        6.02e-05    16155  3.92  1.8e+07       30 S  5   6  5.5e+05     0.8  0.861 [0.741]  0.252  0.861      8.5      8.7        17       18    0
+mse_d28_w64_s600        6.02e-05    16155  3.92  1.8e+07       30 M  5   6  1.8e+06     1.6  0.860 [0.843]  0.570  0.860      2.6      3.2       5.3      6.5    0
+mse_d28_w64_s600        6.02e-05    16155  3.92  1.8e+07       30 L  5   7  1.2e+07    23.5  0.920 [0.909]  0.973  0.973      1.2      1.4       2.4      2.8    0
+mse_d28_w64_s1000       3.32e-07       89  5.25  3.3e+09  6.3e+03 S  5  10  9.6e+05     1.3  0.712 [0.558]  0.849  0.849  1.8e+02  2.2e+02   4.2e+02    5e+02    0
+mse_d28_w64_s1000       3.32e-07       89  5.25  3.3e+09  6.3e+03 M  5  10    3e+06     2.3  0.803 [0.724]  0.993  0.993  1.3e+02    2e+02   2.9e+02  4.4e+02    0
+mse_d28_w64_s1000       3.32e-07       89  5.25  3.3e+09  6.3e+03 L  5  10  1.8e+07    31.0  0.919 [0.862]  1.000  1.000  1.4e+02  2.4e+02   2.8e+02  4.6e+02    0
+mse_d28_w64_s1500              0        0  6.60        -        - S  5  13  1.2e+06     1.5   L = 0 in all                                                       0
+mse_d28_w64_s1500              0        0  6.60        -        - M  5  13  4.1e+06     3.0   L = 0 in all                                                       0
+mse_d28_w64_s1500              0        0  6.60        -        - L  5  13  2.4e+07    39.7   L = 0 in all                                                       0
+
+EFFICIENCY (exact suite). Pooled replicates of budgets M and L: mean Z/p (unbiasedness check), relvar = Var Z / (E Z)^2, cost per replicate (final batch) in fpe and seconds, kappa = relvar x cost (fpe), Monte Carlo's (1-p)/p, gain = MC kappa / SMC kappa.
+  bce_d28_w32_s30        L replicates  320 mean Z/p 0.999 +- 0.004 relvar 0.005 cost 9.3e+04 fpe (0.16 s) kappa 490 MC 528 gain 1.08
+  bce_d28_w32_s30        M replicates  160 mean Z/p 1.014 +- 0.010 relvar 0.015 cost 3.1e+04 fpe (0.0512 s) kappa 455 MC 528 gain 1.16
+  bce_d28_w32_s60        L replicates  320 mean Z/p 0.999 +- 0.006 relvar 0.012 cost 2.07e+05 fpe (0.275 s) kappa 2.58e+03 MC 7.58e+04 gain 29.4
+  bce_d28_w32_s60        M replicates  160 mean Z/p 1.009 +- 0.017 relvar 0.043 cost 6.3e+04 fpe (0.0776 s) kappa 2.74e+03 MC 7.58e+04 gain 27.7
+  bce_d28_w32_s100       L replicates  320 mean Z/p 0.963 +- 0.028 relvar 0.266 cost 3.45e+05 fpe (0.346 s) kappa 9.19e+04 MC 1.34e+08 gain 1.46e+03
+  bce_d28_w32_s100       M replicates  160 mean Z/p 0.913 +- 0.060 relvar 0.680 cost 1.11e+05 fpe (0.0934 s) kappa 7.55e+04 MC 1.34e+08 gain 1.78e+03
+  bce_d28_w64x64_s20     L replicates  320 mean Z/p 1.004 +- 0.002 relvar 0.002 cost 3.3e+04 fpe (0.125 s) kappa 50.5 MC 9.72 gain 0.192
+  bce_d28_w64x64_s20     M replicates  160 mean Z/p 1.007 +- 0.006 relvar 0.005 cost 1.1e+04 fpe (0.0385 s) kappa 59.9 MC 9.72 gain 0.162
+  bce_d28_w64x64_s40     L replicates  320 mean Z/p 1.002 +- 0.004 relvar 0.005 cost 9.3e+04 fpe (0.33 s) kappa 480 MC 437 gain 0.909
+  bce_d28_w64x64_s40     M replicates  160 mean Z/p 1.007 +- 0.011 relvar 0.019 cost 3.1e+04 fpe (0.103 s) kappa 577 MC 437 gain 0.757
+  bce_d28_w64x64_s60     L replicates  320 mean Z/p 0.997 +- 0.006 relvar 0.012 cost 1.83e+05 fpe (0.534 s) kappa 2.18e+03 MC 5.29e+04 gain 24.2
+  bce_d28_w64x64_s60     M replicates  160 mean Z/p 1.002 +- 0.014 relvar 0.033 cost 6.1e+04 fpe (0.153 s) kappa 1.99e+03 MC 5.29e+04 gain 26.6
+  mse_d24_w32_s300       L replicates  320 mean Z/p 0.998 +- 0.003 relvar 0.002 cost 3.3e+04 fpe (0.085 s) kappa 66.6 MC 13.1 gain 0.196
+  mse_d24_w32_s300       M replicates  160 mean Z/p 0.997 +- 0.006 relvar 0.006 cost 1.1e+04 fpe (0.0127 s) kappa 63.2 MC 13.1 gain 0.206
+  mse_d24_w32_s600       L replicates  320 mean Z/p 1.002 +- 0.004 relvar 0.004 cost 6.9e+04 fpe (0.16 s) kappa 285 MC 120 gain 0.419
+  mse_d24_w32_s600       M replicates  160 mean Z/p 0.998 +- 0.009 relvar 0.014 cost 2.3e+04 fpe (0.023 s) kappa 318 MC 120 gain 0.377
+  mse_d24_w32_s1000      L replicates  320 mean Z/p 1.003 +- 0.006 relvar 0.011 cost 1.29e+05 fpe (0.207 s) kappa 1.4e+03 MC 2.79e+03 gain 1.99
+  mse_d24_w32_s1000      M replicates  160 mean Z/p 1.012 +- 0.013 relvar 0.027 cost 4.5e+04 fpe (0.0309 s) kappa 1.21e+03 MC 2.79e+03 gain 2.31
+  mse_d24_w32_s1500      L replicates  320 mean Z/p 0.996 +- 0.009 relvar 0.026 cost 2.13e+05 fpe (0.279 s) kappa 5.64e+03 MC 1.03e+05 gain 18.2
+  mse_d24_w32_s1500      M replicates  160 mean Z/p 1.004 +- 0.024 relvar 0.089 cost 7.1e+04 fpe (0.0409 s) kappa 6.3e+03 MC 1.03e+05 gain 16.3
+  mse_d24_w32_s2000      L replicates  320 mean Z/p 0.971 +- 0.035 relvar 0.404 cost 2.97e+05 fpe (0.344 s) kappa 1.2e+05 MC 1.68e+07 gain 140
+  mse_d24_w32_s2000      M replicates  160 mean Z/p 0.944 +- 0.089 relvar 1.401 cost 1e+05 fpe (0.0509 s) kappa 1.4e+05 MC 1.68e+07 gain 119
+  mse_d28_w32x32_s100    L replicates  320 mean Z/p 1.003 +- 0.003 relvar 0.002 cost 3.3e+04 fpe (0.0824 s) kappa 67.1 MC 15.5 gain 0.232
+  mse_d28_w32x32_s100    M replicates  160 mean Z/p 0.995 +- 0.007 relvar 0.008 cost 1.1e+04 fpe (0.0176 s) kappa 93.4 MC 15.5 gain 0.167
+  mse_d28_w32x32_s200    L replicates  320 mean Z/p 1.000 +- 0.003 relvar 0.004 cost 6.3e+04 fpe (0.147 s) kappa 221 MC 67 gain 0.303
+  mse_d28_w32x32_s200    M replicates  160 mean Z/p 0.984 +- 0.008 relvar 0.011 cost 2.1e+04 fpe (0.0269 s) kappa 241 MC 67 gain 0.278
+  mse_d28_w32x32_s300    L replicates  320 mean Z/p 0.997 +- 0.004 relvar 0.005 cost 9.3e+04 fpe (0.173 s) kappa 425 MC 279 gain 0.655
+  mse_d28_w32x32_s300    M replicates  160 mean Z/p 1.029 +- 0.011 relvar 0.018 cost 3.1e+04 fpe (0.0372 s) kappa 572 MC 279 gain 0.487
+  mse_d28_w32x32_s500    L replicates  320 mean Z/p 0.986 +- 0.006 relvar 0.011 cost 1.53e+05 fpe (0.251 s) kappa 1.74e+03 MC 7.45e+03 gain 4.27
+  mse_d28_w32x32_s500    M replicates  160 mean Z/p 1.009 +- 0.016 relvar 0.040 cost 5.1e+04 fpe (0.0564 s) kappa 2.04e+03 MC 7.45e+03 gain 3.66
+  mse_d28_w64_s300       L replicates  320 mean Z/p 1.005 +- 0.003 relvar 0.003 cost 6.3e+04 fpe (0.18 s) kappa 196 MC 76.4 gain 0.391
+  mse_d28_w64_s300       M replicates  160 mean Z/p 1.012 +- 0.009 relvar 0.011 cost 2.1e+04 fpe (0.0276 s) kappa 241 MC 76.4 gain 0.316
+  mse_d28_w64_s600       L replicates  320 mean Z/p 0.985 +- 0.006 relvar 0.012 cost 1.83e+05 fpe (0.361 s) kappa 2.24e+03 MC 1.66e+04 gain 7.41
+  mse_d28_w64_s600       M replicates  160 mean Z/p 0.992 +- 0.015 relvar 0.038 cost 5.3e+04 fpe (0.0461 s) kappa 1.99e+03 MC 1.66e+04 gain 8.34
+  mse_d28_w64_s1000      L replicates  320 mean Z/p 1.027 +- 0.019 relvar 0.111 cost 2.73e+05 fpe (0.474 s) kappa 3.04e+04 MC 3.02e+06 gain 99.2
+  mse_d28_w64_s1000      M replicates  160 mean Z/p 1.027 +- 0.044 relvar 0.295 cost 8.9e+04 fpe (0.0685 s) kappa 2.63e+04 MC 3.02e+06 gain 115
+  fitted log10 kappa vs log10 (1/p) over the 26 rows with p <= 1e-2: slope 0.44 (Monte Carlo: 1), i.e. gain ~ (1/p)^0.56
+
+TABLE N2. d = 32 ... 128 (set smc = this lane's own nets, results/scaling_nets; set suite = the suite's d = 64/128 nets). p_ref = mean of 100 fixed-plan SMC replicates (N = 3000) +- s.e. (unbiased for D(A_K) <= p, not a bound); ratios are L_bet / p_ref (and / p for the enumerated d = 32 net); witnesses = distinct certified failing inputs (best run); costs in fpe and seconds; speedups at the mean ratio against p_ref.
+smc_mse_d32_w64_s600 [smc]: d=32 widths=[64] mse z=5.51 p_ref=2.21e-08 +- 6.7e-10 (relvar 0.0915, K=11, 3.07e+07 fpe, 30 s; witnesses 97); checks: exact enumeration: 2.26e-08 +- 0 (97 / 4.3e+09, 4743 s)
+    S: ratio 0.574 [min 0.534] (vs exact p: 0.562), reported (max with the witness bound) 0.866; K 11 1.08e+06 fpe 2.2 s; witnesses 86 (= 0.905 p_ref); speedup KL x967 fpe x1.27e+03 s, task x2.54e+03 fpe x3.34e+03 s
+    M: ratio 0.859 [min 0.813] (vs exact p: 0.841), reported (max with the witness bound) 1.003; K 12 3.64e+06 fpe 7.9 s; witnesses 96 (= 1.01 p_ref); speedup KL x3.36e+03 fpe x4.14e+03 s, task x6.87e+03 fpe x8.44e+03 s
+    L: ratio 0.916 [min 0.886] (vs exact p: 0.898), reported (max with the witness bound) 1.021; K 11 2.04e+07 fpe 38.2 s; witnesses 97 (= 1.02 p_ref); speedup KL x1.78e+03 fpe x2.31e+03 s, task x3.49e+03 fpe x4.53e+03 s
+smc2_mse_d64_w64_s1500 [smc]: d=64 widths=[64] mse z=6.88 p_ref=7.62e-13 +- 2.3e-14 (relvar 0.0899, K=18, 5.2e+07 fpe, 151 s; witnesses 72572)
+    S: ratio 0.618 [min 0.577], reported (max with the witness bound) 0.618; K 18 1.74e+06 fpe 5.2 s; witnesses 1936 (= 0.000138 p_ref); speedup KL x2.28e+07 fpe x3e+07 s, task x5.73e+07 fpe x7.53e+07 s
+    M: ratio 0.792 [min 0.694], reported (max with the witness bound) 0.792; K 18 5.67e+06 fpe 17.1 s; witnesses 8437 (= 0.0006 p_ref); speedup KL x2.75e+07 fpe x4.14e+07 s, task x5.91e+07 fpe x8.9e+07 s
+    L: ratio 0.945 [min 0.909], reported (max with the witness bound) 0.945; K 18 3.28e+07 fpe 95.8 s; witnesses 41266 (= 0.00294 p_ref); speedup KL x7.63e+07 fpe x9.78e+07 s, task x1.46e+08 fpe x1.88e+08 s
+smc2_mse_d64_w64_s2000 [smc]: d=64 widths=[64] mse z=8.40 p_ref=2.4e-18 +- 9.3e-19 (relvar 14.8, K=28, 7.82e+07 fpe, 206 s; witnesses 23)
+    S: ratio 0.000 [min 0.000], reported (max with the witness bound) 0.053; K 24 2.23e+06 fpe 6.3 s; witnesses 4 (= 0.0904 p_ref); speedup KL x5.3e+10 fpe x7.3e+10 s, task x2.07e+12 fpe x2.85e+12 s
+    M: ratio 0.048 [min 0.000], reported (max with the witness bound) 0.173; K 25 7.97e+06 fpe 19.8 s; witnesses 10 (= 0.226 p_ref); speedup KL x7.51e+10 fpe x1.07e+11 s, task x6.39e+11 fpe x9.09e+11 s
+    L: ratio 0.168 [min 0.117], reported (max with the witness bound) 0.422; K 26 4.79e+07 fpe 127.8 s; witnesses 19 (= 0.429 p_ref); speedup KL x2.74e+10 fpe x3.85e+10 s, task x1.39e+11 fpe x1.96e+11 s
+smc_bce_d64_w64x64_s300 [smc]: d=64 widths=[64, 64] bce z=5.16 p_ref=7.34e-16 +- 3.1e-17 (relvar 0.172, K=22, 6.41e+07 fpe, 182 s; witnesses 10111)
+    S: ratio 0.518 [min 0.322], reported (max with the witness bound) 0.518; K 23 2.26e+06 fpe 11.0 s; witnesses 819 (= 0.0605 p_ref); speedup KL x1.03e+10 fpe x1.23e+10 s, task x2.87e+10 fpe x3.43e+10 s
+    M: ratio 0.846 [min 0.794], reported (max with the witness bound) 0.846; K 22 7.25e+06 fpe 32.9 s; witnesses 2959 (= 0.219 p_ref); speedup KL x4.27e+10 fpe x5.33e+10 s, task x8.8e+10 fpe x1.1e+11 s
+    L: ratio 0.891 [min 0.857], reported (max with the witness bound) 0.891; K 22 4.2e+07 fpe 273.2 s; witnesses 9072 (= 0.67 p_ref); speedup KL x1.52e+10 fpe x1.92e+10 s, task x3.04e+10 fpe x3.82e+10 s
+smc_bce_d64_w64x64_s600 [smc]: d=64 widths=[64, 64] bce z=6.11 p_ref=0 +- 0 (relvar -, K=29, 8.28e+07 fpe, 238 s; witnesses 0)
+    no replicate survived the last level: every bound is 0 (witnesses 0)
+smc_mse_d64_w32x32_s300 [smc]: d=64 widths=[32, 32] mse z=3.67 p_ref=2.93e-05 +- 3.3e-07 (relvar 0.0122, K=7, 1.85e+07 fpe, 76 s; witnesses 625994); checks: plain (ref run): 2.89e-05 +- 1.5e-06 (394 / 1.4e+07, 58 s); plain: 2.91e-05 +- 5.4e-07 (2910 / 1e+08, 621 s)
+    S: ratio 0.844 [min 0.817], reported (max with the witness bound) 0.844; K 7 6.33e+05 fpe 2.8 s; witnesses 24108 (= 4.46e-11 p_ref); speedup KL x11.9 fpe x11.4 s, task x24.6 fpe x23.5 s
+    M: ratio 0.844 [min 0.821], reported (max with the witness bound) 0.844; K 7 2.06e+06 fpe 10.0 s; witnesses 57085 (= 1.05e-10 p_ref); speedup KL x3.65 fpe x2.83 s, task x7.54 fpe x5.83 s
+    L: ratio 0.935 [min 0.909], reported (max with the witness bound) 0.935; K 7 1.19e+07 fpe 49.4 s; witnesses 420457 (= 7.77e-10 p_ref); speedup KL x3.84 fpe x4.21 s, task x7.41 fpe x8.13 s
+smc_mse_d64_w32x32_s600 [smc]: d=64 widths=[32, 32] mse z=5.52 p_ref=3.22e-08 +- 6.6e-10 (relvar 0.042, K=11, 3.07e+07 fpe, 110 s; witnesses 258970); checks: blocks: 2.57e-08 +- 4e-09 (154 / 6e+09, 317 s); blocks: 3.2e-08 +- 3e-09 (767 / 2.4e+10, 1783 s)
+    S: ratio 0.673 [min 0.633], reported (max with the witness bound) 0.673; K 12 1.15e+06 fpe 3.9 s; witnesses 19210 (= 3.24e-08 p_ref); speedup KL x1.17e+03 fpe x1.13e+03 s, task x2.79e+03 fpe x2.69e+03 s
+    M: ratio 0.891 [min 0.863], reported (max with the witness bound) 0.891; K 11 3.53e+06 fpe 13.2 s; witnesses 68974 (= 1.16e-07 p_ref); speedup KL x4.15e+03 fpe x5.45e+03 s, task x8.27e+03 fpe x1.09e+04 s
+    L: ratio 0.973 [min 0.951], reported (max with the witness bound) 0.973; K 11 1.98e+07 fpe 65.6 s; witnesses 263119 (= 4.44e-07 p_ref); speedup KL x1.23e+04 fpe x1.52e+04 s, task x2.31e+04 fpe x2.86e+04 s
+smc_mse_d64_w64_s1000 [smc]: d=64 widths=[64] mse z=4.24 p_ref=7.36e-06 +- 7.2e-08 (relvar 0.0095, K=8, 2.16e+07 fpe, 87 s; witnesses 685835); checks: plain (ref run): 7.23e-06 +- 3.6e-07 (393 / 5.4e+07, 260 s)
+    S: ratio 0.859 [min 0.851], reported (max with the witness bound) 0.859; K 8 7.36e+05 fpe 3.8 s; witnesses 28294 (= 2.08e-10 p_ref); speedup KL x50.3 fpe x36.2 s, task x103 fpe x73.9 s
+    M: ratio 0.850 [min 0.845], reported (max with the witness bound) 0.850; K 8 2.29e+06 fpe 9.2 s; witnesses 74944 (= 5.52e-10 p_ref); speedup KL x14.1 fpe x12.1 s, task x29 fpe x24.9 s
+    L: ratio 0.944 [min 0.933], reported (max with the witness bound) 0.944; K 8 1.39e+07 fpe 56.0 s; witnesses 505883 (= 3.73e-09 p_ref); speedup KL x18.1 fpe x18.2 s, task x34.6 fpe x34.9 s
+smc_mse_d64_w64_s1500 [smc]: d=64 widths=[64] mse z=5.54 p_ref=5.77e-09 +- 9.6e-11 (relvar 0.0273, K=12, 3.37e+07 fpe, 104 s; witnesses 211869); checks: blocks: 6.27e-09 +- 1.2e-09 (94 / 1.5e+10, 751 s)
+    S: ratio 0.762 [min 0.709], reported (max with the witness bound) 0.762; K 12 1.19e+06 fpe 4.0 s; witnesses 7904 (= 7.43e-08 p_ref); speedup KL x1.3e+04 fpe x1.7e+04 s, task x2.86e+04 fpe x3.75e+04 s
+    M: ratio 0.888 [min 0.834], reported (max with the witness bound) 0.888; K 12 3.87e+06 fpe 11.8 s; witnesses 34845 (= 3.28e-07 p_ref); speedup KL x1.97e+04 fpe x2.58e+04 s, task x3.93e+04 fpe x5.16e+04 s
+    L: ratio 0.964 [min 0.948], reported (max with the witness bound) 0.964; K 12 2.17e+07 fpe 68.9 s; witnesses 130277 (= 1.22e-06 p_ref); speedup KL x3.55e+04 fpe x4.14e+04 s, task x6.72e+04 fpe x7.83e+04 s
+smc2_mse_d128_w64_s1000 [smc]: d=128 widths=[64] mse z=6.81 p_ref=2.82e-15 +- 5.7e-17 (relvar 0.041, K=21, 6.11e+07 fpe, 310 s; witnesses 190707)
+    S: ratio 0.790 [min 0.737], reported (max with the witness bound) 0.790; K 21 2.12e+06 fpe 13.4 s; witnesses 7900 (= 8.24e-21 p_ref); speedup KL x1.95e+10 fpe x2.24e+10 s, task x4.21e+10 fpe x4.83e+10 s
+    M: ratio 0.854 [min 0.811], reported (max with the witness bound) 0.854; K 21 6.8e+06 fpe 39.3 s; witnesses 24741 (= 2.58e-20 p_ref); speedup KL x1.31e+10 fpe x1.58e+10 s, task x2.69e+10 fpe x3.23e+10 s
+    L: ratio 0.940 [min 0.932], reported (max with the witness bound) 0.940; K 21 3.94e+07 fpe 303.7 s; witnesses 142692 (= 1.49e-19 p_ref); speedup KL x1.42e+10 fpe x1.71e+10 s, task x2.74e+10 fpe x3.29e+10 s
+smc2_mse_d128_w64_s1500 [smc]: d=128 widths=[64] mse z=8.87 p_ref=0 +- 0 (relvar -, K=40, 1.16e+08 fpe, 488 s; witnesses 0)
+    no replicate survived the last level: every bound is 0 (witnesses 0)
+smc_mse_d128_w64_s600 [smc]: d=128 widths=[64] mse z=3.90 p_ref=1.85e-05 +- 1.7e-07 (relvar 0.00803, K=7, 1.85e+07 fpe, 64 s; witnesses 395461); checks: plain (ref run): 1.93e-05 +- 9.4e-07 (418 / 2.2e+07, 73 s)
+    S: ratio 0.866 [min 0.855], reported (max with the witness bound) 0.866; K 7 6.33e+05 fpe 6.4 s; witnesses 12993 (= 2.07e-30 p_ref); speedup KL x25.9 fpe x19.6 s, task x52.6 fpe x39.8 s
+    M: ratio 0.865 [min 0.858], reported (max with the witness bound) 0.865; K 7 2.06e+06 fpe 17.3 s; witnesses 43250 (= 6.88e-30 p_ref); speedup KL x7.9 fpe x5.49 s, task x16 fpe x11.2 s
+    L: ratio 0.939 [min 0.932], reported (max with the witness bound) 0.939; K 7 1.19e+07 fpe 140.4 s; witnesses 255096 (= 4.06e-29 p_ref); speedup KL x7 fpe x6.71 s, task x13.5 fpe x12.9 s
+smc_mse_d128_w64_s1000 [smc]: d=128 widths=[64] mse z=5.83 p_ref=5.59e-11 +- 9.3e-13 (relvar 0.0274, K=15, 4.28e+07 fpe, 130 s; witnesses 516407)
+    S: ratio 0.782 [min 0.734], reported (max with the witness bound) 0.782; K 15 1.46e+06 fpe 11.5 s; witnesses 22202 (= 1.17e-24 p_ref); speedup KL x1.31e+06 fpe x1.39e+06 s, task x2.85e+06 fpe x3.01e+06 s
+    M: ratio 0.844 [min 0.826], reported (max with the witness bound) 0.844; K 15 4.77e+06 fpe 31.6 s; witnesses 47620 (= 2.5e-24 p_ref); speedup KL x8.22e+05 fpe x7.52e+05 s, task x1.7e+06 fpe x1.55e+06 s
+    L: ratio 0.934 [min 0.929], reported (max with the witness bound) 0.934; K 15 2.76e+07 fpe 257.0 s; witnesses 350525 (= 1.84e-23 p_ref); speedup KL x8.59e+05 fpe x1.02e+06 s, task x1.66e+06 fpe x1.97e+06 s
+bce_d64_w64_s100 [suite]: d=64 widths=[64] bce z=4.47 p_ref=2.29e-08 +- 3.4e-10 (relvar 0.0216, K=11, 3.07e+07 fpe, 121 s; witnesses 422007)
+    S: ratio 0.800 [min 0.747], reported (max with the witness bound) 0.800; K 12 1.12e+06 fpe 4.5 s; witnesses 31231 (= 7.41e-08 p_ref); speedup KL x5.04e+03 fpe x5.77e+03 s, task x1.08e+04 fpe x1.23e+04 s
+    M: ratio 0.829 [min 0.803], reported (max with the witness bound) 0.829; K 11 3.53e+06 fpe 15.2 s; witnesses 96542 (= 2.29e-07 p_ref); speedup KL x2.25e+03 fpe x2.53e+03 s, task x4.7e+03 fpe x5.29e+03 s
+    L: ratio 0.919 [min 0.905], reported (max with the witness bound) 0.919; K 11 1.98e+07 fpe 80.0 s; witnesses 250814 (= 5.95e-07 p_ref); speedup KL x1.91e+03 fpe x1.8e+03 s, task x3.73e+03 fpe x3.51e+03 s
+bce_d64_w64_s300 [suite]: d=64 widths=[64] bce z=7.06 p_ref=0 +- 0 (relvar -, K=27, 7.88e+07 fpe, 182 s; witnesses 0)
+    no replicate survived the last level: every bound is 0 (witnesses 0)
+bce_d64_w64_s1000 [suite]: d=64 widths=[64] bce z=8.76 p_ref=0 +- 0 (relvar -, K=25, 7.08e+07 fpe, 163 s; witnesses 0)
+    no replicate survived the last level: every bound is 0 (witnesses 0)
+mse_d64_w64_s300 [suite]: d=64 widths=[64] mse z=1.74 p_ref=0.0392 +- 0.00019 (relvar 0.00231, K=3, 6.38e+06 fpe, 32 s; witnesses 834542); checks: plain (ref run): 0.0352 +- 0.0019 (359 / 1e+04, 0 s)
+    S: ratio 0.876 [min 0.843], reported (max with the witness bound) 0.876; K 3 1.83e+05 fpe 0.9 s; witnesses 27254 (= 3.77e-14 p_ref); speedup KL x0.0483 fpe x0.0344 s, task x0.101 fpe x0.0718 s
+    M: ratio 0.880 [min 0.870], reported (max with the witness bound) 0.880; K 3 7.09e+05 fpe 3.6 s; witnesses 91176 (= 1.26e-13 p_ref); speedup KL x0.0132 fpe x0.00882 s, task x0.0276 fpe x0.0184 s
+    L: ratio 0.953 [min 0.948], reported (max with the witness bound) 0.953; K 3 4.11e+06 fpe 19.2 s; witnesses 538194 (= 7.44e-13 p_ref); speedup KL x0.0158 fpe x0.0142 s, task x0.0314 fpe x0.0282 s
+mse_d64_w64_s1000 [suite]: d=64 widths=[64] mse z=4.35 p_ref=4.88e-06 +- 5.7e-08 (relvar 0.0135, K=8, 2.16e+07 fpe, 84 s; witnesses 555099); checks: plain (ref run): 5.2e-06 +- 2.5e-07 (426 / 8.2e+07, 351 s)
+    S: ratio 0.864 [min 0.815], reported (max with the witness bound) 0.864; K 8 7.36e+05 fpe 3.2 s; witnesses 18042 (= 2e-10 p_ref); speedup KL x81.6 fpe x65.7 s, task x166 fpe x134 s
+    M: ratio 0.883 [min 0.850], reported (max with the witness bound) 0.883; K 8 2.4e+06 fpe 9.5 s; witnesses 60834 (= 6.75e-10 p_ref); speedup KL x34.3 fpe x36.9 s, task x68.7 fpe x73.9 s
+    L: ratio 0.940 [min 0.934], reported (max with the witness bound) 0.940; K 8 1.39e+07 fpe 54.2 s; witnesses 374681 (= 4.16e-09 p_ref); speedup KL x23.4 fpe x23.3 s, task x45.1 fpe x44.8 s
+mse_d64_w64_s3000 [suite]: d=64 widths=[64] mse z=9.97 p_ref=0 +- 0 (relvar -, K=28, 8e+07 fpe, 201 s; witnesses 0)
+    no replicate survived the last level: every bound is 0 (witnesses 0)
+bce_d128_w128x128_s100 [suite]: d=128 widths=[128, 128] bce z=5.31 p_ref=9.08e-12 +- 1.8e-13 (relvar 0.0373, K=16, 4.59e+07 fpe, 364 s; witnesses 397349)
+    S: ratio 0.798 [min 0.726], reported (max with the witness bound) 0.798; K 17 1.64e+06 fpe 24.8 s; witnesses 27789 (= 8.99e-24 p_ref); speedup KL x8.51e+06 fpe x9.42e+06 s, task x1.82e+07 fpe x2.02e+07 s
+    M: ratio 0.828 [min 0.769], reported (max with the witness bound) 0.828; K 16 5.22e+06 fpe 94.2 s; witnesses 74479 (= 2.41e-23 p_ref); speedup KL x3.76e+06 fpe x4.74e+06 s, task x7.86e+06 fpe x9.91e+06 s
+    L: ratio 0.928 [min 0.915], reported (max with the witness bound) 0.928; K 17 3.09e+07 fpe 372.3 s; witnesses 519628 (= 1.68e-22 p_ref); speedup KL x3.96e+06 fpe x4.1e+06 s, task x7.67e+06 fpe x7.95e+06 s
+bce_d128_w128x128_s300 [suite]: d=128 widths=[128, 128] bce z=6.54 p_ref=5.18e-21 +- 2.5e-22 (relvar 0.229, K=29, 8.54e+07 fpe, 624 s; witnesses 185958)
+    S: ratio 0.464 [min 0.369], reported (max with the witness bound) 0.464; K 30 2.99e+06 fpe 35.7 s; witnesses 12496 (= 7.1e-15 p_ref); speedup KL x8.35e+14 fpe x1.27e+15 s, task x2.49e+15 fpe x3.78e+15 s
+    M: ratio 0.666 [min 0.600], reported (max with the witness bound) 0.666; K 30 9.73e+06 fpe 123.5 s; witnesses 33583 (= 1.91e-14 p_ref); speedup KL x8.21e+14 fpe x1.24e+15 s, task x1.97e+15 fpe x2.98e+15 s
+    L: ratio 0.865 [min 0.778], reported (max with the witness bound) 0.865; K 30 5.7e+07 fpe 546.4 s; witnesses 264363 (= 1.5e-13 p_ref); speedup KL x1.02e+15 fpe x1.28e+15 s, task x2.07e+15 fpe x2.6e+15 s
+bce_d128_w128x128_s1000 [suite]: d=128 widths=[128, 128] bce z=7.81 p_ref=2.64e-37 +- 1.6e-37 (relvar 36.8, K=51, 1.49e+08 fpe, 1315 s; witnesses 21)
+    S: ratio 0.000 [min 0.000], reported (max with the witness bound) 0.000; K 49 4.49e+06 fpe 46.9 s; witnesses 0 (= 0 p_ref); speedup KL x0 fpe x0 s, task x0 fpe x0 s
+    M: ratio 0.000 [min 0.000], reported (max with the witness bound) 0.026; K 51 1.62e+07 fpe 192.1 s; witnesses 7 (= 0.0779 p_ref); speedup KL x5.81e+28 fpe x8.87e+28 s, task x2.58e+30 fpe x3.95e+30 s
+    L: ratio 0.183 [min 0.086], reported (max with the witness bound) 0.467; K 53 9.9e+07 fpe 1134.3 s; witnesses 55 (= 0.612 p_ref); speedup KL x1.3e+29 fpe x2.89e+29 s, task x6.34e+29 fpe x1.41e+30 s
+
+SEQUENTIAL (anytime-valid): replicates (N = 1000) are added until L_bet >= target x running mean (at most 512); ratio = L_bet / p (p exact, or p_ref); cost in fpe and seconds; speedups at the mean ratio.
+  mse_d24_w32_s1000          [exact] p=0.000358 target 0.8: ratio 0.787 [min 0.727] R 20 (stopped 3/3) 8.9e+05 fpe 1.1 s; speedup KL x0.355 fpe x0.303 s
+  mse_d24_w32_s1000          [exact] p=0.000358 target 0.9: ratio 0.891 [min 0.874] R 43 (stopped 3/3) 1.96e+06 fpe 2.0 s; speedup KL x0.669 fpe x0.58 s
+  mse_d24_w32_s1500          [exact] p=9.72e-06 target 0.8: ratio 0.823 [min 0.763] R 20 (stopped 3/3) 1.54e+06 fpe 1.2 s; speedup KL x11.3 fpe x12.6 s
+  mse_d24_w32_s1500          [exact] p=9.72e-06 target 0.9: ratio 0.874 [min 0.814] R 57 (stopped 3/3) 4.14e+06 fpe 3.4 s; speedup KL x8.63 fpe x7.43 s
+  mse_d24_w32_s2000          [exact] p=5.96e-08 target 0.8: ratio 0.723 [min 0.688] R 168 (stopped 3/3) 1.82e+07 fpe 13.3 s; speedup KL x58.4 fpe x74.3 s
+  mse_d24_w32_s2000          [exact] p=5.96e-08 target 0.9: ratio 0.881 [min 0.801] R 352 (stopped 1/3) 3.23e+07 fpe 22.7 s; speedup KL x202 fpe x212 s
+  bce_d28_w32_s60            [exact] p=1.32e-05 target 0.8: ratio 0.802 [min 0.782] R 20 (stopped 3/3) 1.44e+06 fpe 2.2 s; speedup KL x6.94 fpe x3.82 s
+  bce_d28_w32_s60            [exact] p=1.32e-05 target 0.9: ratio 0.885 [min 0.876] R 43 (stopped 3/3) 2.75e+06 fpe 4.5 s; speedup KL x11.4 fpe x9 s
+  bce_d28_w32_s100           [exact] p=7.45e-09 target 0.8: ratio 0.732 [min 0.615] R 108 (stopped 3/3) 1.2e+07 fpe 11.1 s; speedup KL x765 fpe x800 s
+  bce_d28_w32_s100           [exact] p=7.45e-09 target 0.9: ratio 0.876 [min 0.827] R 327 (stopped 3/3) 3.38e+07 fpe 30.6 s; speedup KL x1.41e+03 fpe x1.34e+03 s
+  bce_d28_w64x64_s60         [exact] p=1.89e-05 target 0.8: ratio 0.801 [min 0.767] R 20 (stopped 3/3) 1.3e+06 fpe 3.6 s; speedup KL x5.3 fpe x5 s
+  bce_d28_w64x64_s60         [exact] p=1.89e-05 target 0.9: ratio 0.907 [min 0.862] R 45 (stopped 3/3) 2.85e+06 fpe 7.7 s; speedup KL x12 fpe x11 s
+  mse_d28_w32x32_s500        [exact] p=0.000134 target 0.8: ratio 0.792 [min 0.746] R 20 (stopped 3/3) 1.09e+06 fpe 2.3 s; speedup KL x0.815 fpe x1.45 s
+  mse_d28_w32x32_s500        [exact] p=0.000134 target 0.9: ratio 0.899 [min 0.889] R 46 (stopped 3/3) 2.42e+06 fpe 5.0 s; speedup KL x1.68 fpe x2.11 s
+  mse_d28_w64_s600           [exact] p=6.02e-05 target 0.8: ratio 0.827 [min 0.815] R 20 (stopped 3/3) 1.25e+06 fpe 2.5 s; speedup KL x2.34 fpe x2.6 s
+  mse_d28_w64_s600           [exact] p=6.02e-05 target 0.9: ratio 0.905 [min 0.867] R 43 (stopped 3/3) 2.59e+06 fpe 4.7 s; speedup KL x4.03 fpe x4.59 s
+  mse_d28_w64_s1000          [exact] p=3.32e-07 target 0.8: ratio 0.787 [min 0.729] R 32 (stopped 3/3) 3.04e+06 fpe 4.8 s; speedup KL x112 fpe x136 s
+  mse_d28_w64_s1000          [exact] p=3.32e-07 target 0.9: ratio 0.912 [min 0.803] R 109 (stopped 3/3) 1.01e+07 fpe 15.8 s; speedup KL x217 fpe x210 s
+  smc_mse_d32_w64_s600       [exact] p=2.26e-08 target 0.9: ratio 0.830 [min 0.815] R 51 (stopped 2/2) 5.86e+06 fpe 10.0 s; speedup KL x1.39e+03 fpe x1.47e+03 s
+  bce_d64_w64_s100           [ref  ] p=2.29e-08 target 0.9: ratio 0.889 [min 0.879] R 48 (stopped 2/2) 5.27e+06 fpe 18.5 s; speedup KL x3.72e+03 fpe x2.44e+03 s
+  mse_d64_w64_s300           [ref  ] p=0.0392 target 0.9: ratio 0.928 [min 0.919] R 40 (stopped 2/2) 8.67e+05 fpe 2.9 s; speedup KL x0.031 fpe x0.0198 s
+  mse_d64_w64_s1000          [ref  ] p=4.88e-06 target 0.9: ratio 0.890 [min 0.886] R 42 (stopped 2/2) 3.15e+06 fpe 10.6 s; speedup KL x29.8 fpe x27.1 s
+  smc2_mse_d64_w64_s1500     [ref  ] p=7.62e-13 target 0.9: ratio 0.934 [min 0.931] R 193 (stopped 2/2) 3.26e+07 fpe 58.4 s; speedup KL x5.23e+07 fpe x7.8e+07 s
+  smc_bce_d64_w64x64_s300    [ref  ] p=7.34e-16 target 0.9: ratio 0.980 [min 0.961] R 234 (stopped 2/2) 5.2e+07 fpe 138.3 s; speedup KL x3.69e+11 fpe x4.47e+11 s
+  smc_mse_d64_w32x32_s300    [ref  ] p=2.93e-05 target 0.9: ratio 0.920 [min 0.916] R 44 (stopped 2/2) 2.79e+06 fpe 8.1 s; speedup KL x10.9 fpe x13.8 s
+  smc_mse_d64_w32x32_s600    [ref  ] p=3.22e-08 target 0.9: ratio 0.929 [min 0.913] R 82 (stopped 2/2) 8.46e+06 fpe 19.0 s; speedup KL x4.12e+03 fpe x7.22e+03 s
+  smc_mse_d64_w64_s1000      [ref  ] p=7.36e-06 target 0.9: ratio 0.938 [min 0.938] R 44 (stopped 2/2) 3.25e+06 fpe 7.9 s; speedup KL x63.1 fpe x51.3 s
+  smc_mse_d64_w64_s1500      [ref  ] p=5.77e-09 target 0.9: ratio 0.930 [min 0.916] R 58 (stopped 2/2) 6.64e+06 fpe 12.8 s; speedup KL x3.05e+04 fpe x4.41e+04 s
+  bce_d128_w128x128_s100     [ref  ] p=9.08e-12 target 0.9: ratio 0.898 [min 0.886] R 57 (stopped 2/2) 8.88e+06 fpe 80.1 s; speedup KL x6.6e+06 fpe x7.98e+06 s
+  bce_d128_w128x128_s300     [ref  ] p=5.18e-21 target 0.9: ratio 0.887 [min 0.876] R 228 (stopped 2/2) 6.67e+07 fpe 523.7 s; speedup KL x1.25e+15 fpe x2.01e+15 s
+  smc2_mse_d128_w64_s1000    [ref  ] p=2.82e-15 target 0.9: ratio 0.880 [min 0.842] R 70 (stopped 2/2) 1.5e+07 fpe 54.7 s; speedup KL x9.11e+09 fpe x1.3e+10 s
+  smc_mse_d128_w64_s600      [ref  ] p=1.85e-05 target 0.9: ratio 0.901 [min 0.898] R 46 (stopped 2/2) 2.89e+06 fpe 15.7 s; speedup KL x10.8 fpe x8.8 s
+  smc_mse_d128_w64_s1000     [ref  ] p=5.59e-11 target 0.9: ratio 0.924 [min 0.923] R 52 (stopped 2/2) 7.66e+06 fpe 34.7 s; speedup KL x2.27e+06 fpe x2.61e+06 s
+
+STRATIFICATION (budget M, 3 trials): mean ratio of (stratum + SMC bound) without / with stratification.
+  mse_d24_w32_s1000      plain 0.870 [0.852-0.887]  stratified 0.863 [0.852-0.876]
+  mse_d24_w32_s1500      plain 0.857 [0.841-0.880]  stratified 0.922 [0.890-0.947]
+  mse_d28_w64_s600       plain 0.859 [0.843-0.869]  stratified 0.866 [0.857-0.882]
+  mse_d28_w64_s1000      plain 0.795 [0.719-0.908]  stratified 0.764 [0.711-0.791]
+
+ADVERSARIAL NETS (run_adversarial.py).
+  float   fma_tie_d10              d= 10 p=0 runs 5: L = 0, 0, 0, 0, 0; misses 0; point estimates 0, 0, 0, 0, 0
+  float   overflow_d5              d=  5 p=0.5 runs 5: L = 0, 0, 0, 0, 0; misses 0; point estimates 0, 0, 0, 0, 0
+  float   underflow_ball_bce_d12   d= 12 p=0 runs 5: L = 0, 0, 0, 0, 0; misses 0; point estimates 0, 0, 0, 0, 0
+  float   underflow_ball_bce_d40   d= 40 p=0 runs 5: L = 0, 0, 0, 0, 0; misses 0; point estimates 0, 0, 0, 0, 0
+  float   underflow_mse_d10        d= 10 p=0 runs 5: L = 0, 0, 0, 0, 0; misses 0; point estimates 0, 0, 0, 0, 0
+  float   underflow_mse_d40        d= 40 p=0 runs 5: L = 0, 0, 0, 0, 0; misses 0; point estimates 0, 0, 0, 0, 0
+  float   visible_ball_d14         d= 14 p=0 runs 5: L = 0, 0, 0, 0, 0; misses 0; point estimates 0, 0, 0, 0, 0
+  float   visible_ball_d40         d= 40 p=0 runs 5: L = 0, 0, 0, 0, 0; misses 0; point estimates 0, 0, 0, 0, 0
+  float   visible_ball_d64         d= 64 p=0 runs 5: L = 0, 0, 0, 0, 0; misses 0; point estimates 0, 0, 0, 0, 0
+  planted hidden_d40_k26           d= 40 p=1.56e-08 runs 5: L = 0, 0, 0, 0, 0; misses 0; point estimates 0, 0, 0, 0, 0
+  planted hidden_k14_ball          d= 24 p=7.9e-05 runs 5: L = 7.9e-05, 7.9e-05, 7.9e-05, 7.88e-05, 7.9e-05; misses 0; point estimates 6.79e-05, 6.41e-05, 4.52e-05, 3.43e-05, 9.16e-05
+  planted needle_k24               d= 24 p=5.96e-08 runs 3: L = 0, 0, 0; misses 0; point estimates 0, 0, 0
+  random untrained nets, delta = 0.05: 200 runs on 20 nets; misses 0; mean ratio 0.987
+  random untrained nets, delta = 0.3: 200 runs on 20 nets; misses 4; mean ratio 0.989
+  campaign delta = 0.2: 45 cells x 150 runs; worst miss rate of the reported bound 0.127 (integer_ties, sequential_N50); worst SMC part 0.127; witness bound misses 0; mean flagged fraction 0.000
+  campaign delta = 0.5: 45 cells x 150 runs; worst miss rate of the reported bound 0.287 (integer_ties, sequential_N50); worst SMC part 0.287; witness bound misses 0; mean flagged fraction 0.000
+
+COMBINING RULES on the suite replicates (ablation.py combine).
+  budget M: 90 runs; mean ratio betting 0.839, clipped KL 0.564 [0.16-0.74], min-Markov 0.570 [0.00-0.83]; misses 0 / 0
+  budget L: 90 runs; mean ratio betting 0.918, clipped KL 0.696 [0.51-0.78], min-Markov 0.682 [0.00-0.89]; misses 0 / 0
+
+UNBIASEDNESS of the variants, and coverage of the other rules (ablation.py unbiased).
+  variant=MH, 0 steps (no mixing), d=12, target=0.00195, replicates=20000, mean_over_target=0.968, z=-0.778
+  variant=MH, 1 step, 3 flips, d=12, target=0.00195, replicates=20000, mean_over_target=0.999, z=-0.0455
+  variant=MH, 2 steps, d=12, target=0.00195, replicates=20000, mean_over_target=1.01, z=1.09
+  variant=block Gibbs r=2, 1 step, d=12, target=0.00195, replicates=20000, mean_over_target=0.992, z=-0.505
+  variant=MH, 2 steps, pooled, d=12, target=0.00195, replicates=20000, mean_over_target=0.996, z=-0.301
+  variant=MH, 5 steps, tuned flips, pooled, d=12, target=0.00195, replicates=20000, mean_over_target=1.01, z=1.19
+  variant=block Gibbs r=3, 3 steps, d=12, target=0.00195, replicates=20000, mean_over_target=1, z=0.0822
+  variant=soft, d=12, target=0.00195, replicates=20000, mean_over_target=0.993, z=-0.458
+  variant=soft, 3 flips, d=12, target=0.00195, replicates=20000, mean_over_target=0.988, z=-0.594
+  law=two-point q=0.05, R=8, delta=0.1, trials=1000, miss_bet=0.008, miss_clip=0, miss_minm=0
+  law=two-point q=0.05, R=32, delta=0.1, trials=1000, miss_bet=0, miss_clip=0, miss_minm=0
+  law=lognormal sigma=2, R=8, delta=0.1, trials=1000, miss_bet=0, miss_clip=0, miss_minm=0
+  law=lognormal sigma=2, R=32, delta=0.1, trials=1000, miss_bet=0.002, miss_clip=0, miss_minm=0
+  law=exponential, R=8, delta=0.1, trials=1000, miss_bet=0.005, miss_clip=0, miss_minm=0
+  law=exponential, R=32, delta=0.1, trials=1000, miss_bet=0.005, miss_clip=0, miss_minm=0
+
+KERNELS (ablation.py kernels; 40 replicates, N = 1000, levels of the method's pilot).
+  name=mse_d24_w32_s1500, p=9.72e-06, variant=MH 1 flip, K=8, mean=0.974, relvar=0.131, cost_per_replicate=7.1e+04, kappa=9.28e+03, r_bet=0.833, seconds_per_replicate=0.0339
+  name=mse_d24_w32_s1500, p=9.72e-06, variant=MH tuned (the method), K=8, mean=0.985, relvar=0.0981, cost_per_replicate=7.1e+04, kappa=6.97e+03, r_bet=0.852, seconds_per_replicate=0.066
+  name=mse_d24_w32_s1500, p=9.72e-06, variant=block Gibbs r=3, 3 steps, K=8, mean=1.13, relvar=0.125, cost_per_replicate=1.48e+05, kappa=1.84e+04, r_bet=0.969, seconds_per_replicate=0.13
+  name=mse_d24_w32_s1500, p=9.72e-06, variant=MH tuned, pooled, K=8, mean=1.12, relvar=0.125, cost_per_replicate=7.1e+04, kappa=8.88e+03, r_bet=0.96, seconds_per_replicate=0.0735
+  name=mse_d28_w64_s1000, p=3.32e-07, variant=MH 1 flip, K=10, mean=0.952, relvar=0.379, cost_per_replicate=9.1e+04, kappa=3.45e+04, r_bet=0.744, seconds_per_replicate=0.0709
+  name=mse_d28_w64_s1000, p=3.32e-07, variant=MH tuned (the method), K=10, mean=0.906, relvar=0.25, cost_per_replicate=9.1e+04, kappa=2.28e+04, r_bet=0.717, seconds_per_replicate=0.0949
+  name=mse_d28_w64_s1000, p=3.32e-07, variant=block Gibbs r=3, 3 steps, K=10, mean=1.37, relvar=0.549, cost_per_replicate=1.9e+05, kappa=1.04e+05, r_bet=0.971, seconds_per_replicate=0.236
+  name=bce_d28_w32_s60, p=1.32e-05, variant=MH tuned (the method), K=8, mean=0.983, relvar=0.0505, cost_per_replicate=7.1e+04, kappa=3.59e+03, r_bet=0.869, seconds_per_replicate=0.0716
+  name=bce_d28_w32_s60, p=1.32e-05, variant=MH 1 flip, K=7, mean=0.964, relvar=0.0405, cost_per_replicate=6.1e+04, kappa=2.47e+03, r_bet=0.857, seconds_per_replicate=0.0402
+  name=bce_d28_w32_s60, p=1.32e-05, variant=MH tuned, pooled, K=8, mean=0.998, relvar=0.0262, cost_per_replicate=7.1e+04, kappa=1.86e+03, r_bet=0.892, seconds_per_replicate=0.0894
+  name=bce_d28_w32_s60, p=1.32e-05, variant=block Gibbs r=3, 3 steps, K=7, mean=0.956, relvar=0.0484, cost_per_replicate=1.27e+05, kappa=6.15e+03, r_bet=0.844, seconds_per_replicate=0.0802
+  name=mse_d28_w64_s1000, p=3.32e-07, variant=MH tuned, pooled, K=10, mean=1.03, relvar=0.252, cost_per_replicate=9.1e+04, kappa=2.29e+04, r_bet=0.808, seconds_per_replicate=0.0906
+
+SOFT LEVELS (ablation.py soft; 40 replicates, N = 1000).
+  name=mse_d24_w32_s1500, p=9.72e-06, variant=soft levels, 1 flip(s), K=7, mean=0.964, relvar=0.186, cost_per_replicate=6.1e+04, kappa=1.13e+04, r_bet=0.805, seconds_per_replicate=0.046
+  name=mse_d24_w32_s1500, p=9.72e-06, variant=soft levels, 3 flip(s), K=7, mean=0.908, relvar=1.89, cost_per_replicate=6.1e+04, kappa=1.16e+05, r_bet=0.519, seconds_per_replicate=0.0742
+  name=mse_d28_w64_s1000, p=3.32e-07, variant=soft levels, 1 flip(s), K=10, mean=0.862, relvar=1.36, cost_per_replicate=9.1e+04, kappa=1.24e+05, r_bet=0.534, seconds_per_replicate=0.0837
+  name=mse_d28_w64_s1000, p=3.32e-07, variant=soft levels, 3 flip(s), K=14, mean=3.05, relvar=36.2, cost_per_replicate=1.31e+05, kappa=4.74e+06, r_bet=0.0873, seconds_per_replicate=0.2
+
+PROPOSALS (ablation.py proposals; 1e6 proposal samples in 32 batches).
+  name=mse_d24_w32_s1500, d=24, p=9.72e-06, p_kind=exact, proposal=autoregressive logistic, fit_samples=3799, fit_distinct=143, fit_evals=689176, n=1000000, r_bet=0.752, mean_over_p=0.856, per_sample_relvar=255, seconds=3.5
+  name=mse_d24_w32_s1500, d=24, p=9.72e-06, p_kind=exact, proposal=kernel mixture, fit_samples=3799, fit_distinct=143, fit_evals=689176, n=1000000, r_bet=0.835, mean_over_p=0.97, per_sample_relvar=3.07e+03, seconds=11.9
+  name=mse_d24_w32_s1000, d=24, p=0.000358, p_kind=exact, proposal=autoregressive logistic, fit_samples=1982, fit_distinct=1443, fit_evals=397672, n=1000000, r_bet=0.892, mean_over_p=1.03, per_sample_relvar=1.27e+03, seconds=2.6
+  name=mse_d24_w32_s1000, d=24, p=0.000358, p_kind=exact, proposal=kernel mixture, fit_samples=1982, fit_distinct=1443, fit_evals=397672, n=1000000, r_bet=0.766, mean_over_p=0.948, per_sample_relvar=9.46e+03, seconds=36.1
+  name=bce_d28_w32_s60, d=28, p=1.32e-05, p_kind=exact, proposal=autoregressive logistic, fit_samples=1645, fit_distinct=1151, fit_evals=592008, n=1000000, r_bet=0.878, mean_over_p=0.997, per_sample_relvar=56.5, seconds=2.1
+  name=bce_d28_w32_s60, d=28, p=1.32e-05, p_kind=exact, proposal=kernel mixture, fit_samples=1645, fit_distinct=1151, fit_evals=592008, n=1000000, r_bet=0.861, mean_over_p=1.02, per_sample_relvar=3.28e+03, seconds=22.3
+  name=smc_mse_d64_w64_s1000, d=64, p=7.36e-06, p_kind=ref, proposal=autoregressive logistic, fit_samples=4619, fit_distinct=4343, fit_evals=696344, n=1000000, r_bet=0.667, mean_over_p=0.774, per_sample_relvar=1.75e+03, seconds=8.7
+  name=smc_mse_d64_w64_s1000, d=64, p=7.36e-06, p_kind=ref, proposal=kernel mixture, fit_samples=4619, fit_distinct=4343, fit_evals=696344, n=1000000, r_bet=1.82e-06, mean_over_p=1.15e-05, per_sample_relvar=6e+05, seconds=29.6
+  name=mse_d28_w64_s1000, d=28, p=3.32e-07, p_kind=exact, proposal=autoregressive logistic, fit_samples=2983, fit_distinct=70, fit_evals=883512, n=1000000, r_bet=0.664, mean_over_p=0.76, per_sample_relvar=639, seconds=2.4
+  name=mse_d28_w64_s1000, d=28, p=3.32e-07, p_kind=exact, proposal=kernel mixture, fit_samples=2983, fit_distinct=70, fit_evals=883512, n=1000000, r_bet=0.71, mean_over_p=0.807, per_sample_relvar=89.4, seconds=3.2
+  name=mse_d28_w64_s600, d=28, p=6.02e-05, p_kind=exact, proposal=autoregressive logistic, fit_samples=2417, fit_distinct=1558, fit_evals=494840, n=1000000, r_bet=0.772, mean_over_p=0.924, per_sample_relvar=6.6e+03, seconds=2.6
+  name=mse_d28_w64_s600, d=28, p=6.02e-05, p_kind=exact, proposal=kernel mixture, fit_samples=2417, fit_distinct=1558, fit_evals=494840, n=1000000, r_bet=0.499, mean_over_p=0.855, per_sample_relvar=1.35e+05, seconds=25.8
+  name=smc_mse_d64_w64_s1500, d=64, p=5.77e-09, p_kind=ref, proposal=autoregressive logistic, fit_samples=2317, fit_distinct=1791, fit_evals=1089112, n=1000000, r_bet=0.323, mean_over_p=1.3, per_sample_relvar=4.25e+05, seconds=7.9
+  name=smc_mse_d64_w64_s1500, d=64, p=5.77e-09, p_kind=ref, proposal=kernel mixture, fit_samples=2317, fit_distinct=1791, fit_evals=1089112, n=1000000, r_bet=4.78e-05, mean_over_p=0.000304, per_sample_relvar=5.83e+05, seconds=26.2
+  name=smc_mse_d128_w64_s600, d=128, p=1.85e-05, p_kind=ref, proposal=autoregressive logistic, fit_samples=2571, fit_distinct=2520, fit_evals=598152, n=1000000, r_bet=0.691, mean_over_p=0.858, per_sample_relvar=9.5e+03, seconds=23.1
+  name=smc_mse_d128_w64_s600, d=128, p=1.85e-05, p_kind=ref, proposal=kernel mixture, fit_samples=2571, fit_distinct=2520, fit_evals=598152, n=1000000, r_bet=3.98e-18, mean_over_p=2.11e-16, per_sample_relvar=8.9e+05, seconds=31.8
+
+CHECKS.TXT:
+  1. forward error bound: max over inputs and over three evaluation orders of |f - F|, against E*/2
+     trained d8 w6: E*/2 = 1.31e-14, max |f - F| over 256 inputs = 5.16e-16, ok = True, E*/(2 max) = 25.4
+     random d8 w5x4: E*/2 = 1.91e-14, max |f - F| over 256 inputs = 3.52e-16, ok = True, E*/(2 max) = 54.2
+     magnitudes 1e-17..1e17, then 1e-130..1e130: E*/2 = 1.37e+122, max |f - F| over 256 inputs = 1.02e+121, ok = True, E*/(2 max) = 13.4
+     red-team underflow_mse_d10: E*/2 = 1.47e-14, max |f - F| over 256 inputs = 3.55e-15, ok = True, E*/(2 max) = 4.14
+     red-team underflow_ball_bce_d12: E*/2 = 1.59e-22, max |f - F| over 256 inputs = 8.27e-25, ok = True, E*/(2 max) = 192
+     red-team visible_ball_d14: E*/2 = 1.59e-22, max |f - F| over 256 inputs = 8.27e-25, ok = True, E*/(2 max) = 192
+     red-team fma_tie_d10: E*/2 = 1.52e-14, max |f - F| over 256 inputs = 3.55e-15, ok = True, E*/(2 max) = 4.27
+     suite mse_d24_w32_s1500: E*/2 = 1.28e-13, max |f - F| over 40 inputs = 4.49e-16, ok = True, E*/(2 max) = 285
+     suite mse_d28_w64_s1000: E*/2 = 2.77e-13, max |f - F| over 40 inputs = 6.83e-16, ok = True, E*/(2 max) = 405
+     suite mse_d28_w32x32_s500: E*/2 = 1.2e-12, max |f - F| over 40 inputs = 6.51e-16, ok = True, E*/(2 max) = 1.84e+03
+     suite bce_d28_w32_s100: E*/2 = 2.41e-13, max |f - F| over 40 inputs = 1.17e-15, ok = True, E*/(2 max) = 205
+     red-team overflow_d5: E* = inf (no bound: an evaluation can overflow)
+  2. unbiasedness of fixed-level SMC (mean of replicates vs exact D(A_K))
+     net d=12, D(A_K) = 0.001221, 6 levels
+     MH, 2 steps, tuned flips  : mean/D(A_K) = 1.0102, z-score = +0.57 (20000 replicates, N = 20, flagged 0)
+     MH, 0 steps (no mixing)   : mean/D(A_K) = 1.0129, z-score = +0.24 (20000 replicates, N = 20, flagged 0)
+     MH, 1 step, 3 flips       : mean/D(A_K) = 0.9985, z-score = -0.05 (20000 replicates, N = 20, flagged 0)
+  3. coverage of betting_lower on synthetic laws with mean 1 (delta = 0.1, 1000 trials each; a sound bound exceeds the mean in at most a delta fraction)
+     two-point q=0.05   R= 8: miss rate betting 0.0070, sequential running max 0.0600
+     two-point q=0.05   R=32: miss rate betting 0.0020, sequential running max 0.0650
+     two-point q=0.5    R= 8: miss rate betting 0.0030, sequential running max 0.0400
+     two-point q=0.5    R=32: miss rate betting 0.0060, sequential running max 0.0560
+     lognormal sigma=2  R= 8: miss rate betting 0.0040, sequential running max 0.0270
+     lognormal sigma=2  R=32: miss rate betting 0.0020, sequential running max 0.0290
+     exponential        R= 8: miss rate betting 0.0080, sequential running max 0.0200
+     exponential        R=32: miss rate betting 0.0020, sequential running max 0.0370
+     near-constant      R= 8: miss rate betting 0.0000, sequential running max 0.0000
+     near-constant      R=32: miss rate betting 0.0000, sequential running max 0.0000
+
+MIXING.TXT:
+  mse_d24_w32_s2000        d= 24 K=12 flips=[12, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1] acceptance=[0.21, 0.2, 0.23, 0.15, 0.11, 0.09, 0.05, 0.01, 0.01, 0.0, 0.0] distinct final particles (of the survivors among 1000) per run=[1, 1, 1, 1]
+  bce_d28_w32_s100         d= 28 K=12 flips=[12, 6, 3, 2, 1, 1, 1, 1, 1, 1, 1] acceptance=[0.23, 0.15, 0.18, 0.16, 0.22, 0.15, 0.1, 0.07, 0.04, 0.04, 0.02] distinct final particles (of the survivors among 1000) per run=[2, 1, 1, 2]
+  mse_d28_w64_s1000        d= 28 K=10 flips=[12, 2, 1, 1, 1, 1, 1, 1, 1] acceptance=[0.21, 0.2, 0.22, 0.15, 0.1, 0.09, 0.06, 0.04, 0.02] distinct final particles (of the survivors among 1000) per run=[27, 12, 9, 15]
+  smc_mse_d32_w64_s600     d= 32 K=11 flips=[16, 3, 2, 1, 1, 1, 1, 1, 1, 1] acceptance=[0.18, 0.21, 0.17, 0.22, 0.19, 0.15, 0.12, 0.07, 0.05, 0.03] distinct final particles (of the survivors among 1000) per run=[22, 27, 15, 24]
+  smc_mse_d64_w64_s1500    d= 64 K=12 flips=[16, 8, 4, 3, 2, 1, 1, 1, 1, 1, 1] acceptance=[0.22, 0.14, 0.16, 0.15, 0.16, 0.25, 0.21, 0.16, 0.15, 0.13, 0.1] distinct final particles (of the survivors among 1000) per run=[280, 238, 213, 201]
+  smc_mse_d128_w64_s600    d=128 K= 7 flips=[16, 16, 8, 8, 6, 4] acceptance=[0.43, 0.22, 0.23, 0.16, 0.16, 0.2] distinct final particles (of the survivors among 1000) per run=[216, 227, 227, 229]
+  bce_d64_w64_s100         d= 64 K=11 flips=[16, 12, 6, 4, 4, 3, 2, 2, 1, 1] acceptance=[0.34, 0.18, 0.22, 0.21, 0.16, 0.16, 0.2, 0.17, 0.29, 0.26] distinct final particles (of the survivors among 1000) per run=[273, 272, 275, 277]
+  bce_d128_w128x128_s100   d=128 K=16 flips=[16, 16, 16, 12, 8, 8, 6, 4, 4, 3, 3, 3, 2, 2, 2] acceptance=[0.52, 0.32, 0.2, 0.18, 0.18, 0.15, 0.17, 0.22, 0.19, 0.22, 0.19, 0.17, 0.22, 0.19, 0.17] distinct final particles (of the survivors among 1000) per run=[291, 338, 302, 280]
+
+FAILURES.TXT:
+  mse_d24_w32_s1000: 4000 failing inputs (sampled to <= 4000); |mean failing input| per coordinate: mean 0.072, max 0.215; pairwise Hamming distance median 12, min 1; clusters under single flips: 984 (largest 2496, singletons 782); ||sum_j a_j w_j|| = 0.0632 vs sum_j |a_j| ||w_j|| = 5.42; even part mean 0.677 (failing 0.140), linear part sd 0.032 (failing mean 0.210, typical mean 0.201)
+  mse_d24_w32_s1500: 163 failing inputs (sampled to <= 4000); |mean failing input| per coordinate: mean 0.106, max 0.202; pairwise Hamming distance median 12, min 1; clusters under single flips: 74 (largest 25, singletons 55); ||sum_j a_j w_j|| = 0.0713 vs sum_j |a_j| ||w_j|| = 4.96; even part mean 0.646 (failing 0.122), linear part sd 0.036 (failing mean 0.223, typical mean 0.214)

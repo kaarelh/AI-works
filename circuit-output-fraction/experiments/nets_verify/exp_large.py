@@ -9,16 +9,22 @@ d = 32, 48, 64 (one hidden layer of width 32, squared loss, 3000 steps):
     certified (r50: the largest r with at least half certified; the tree has
     about 2^(d - r50) leaves); when d - r50 <= 30, a full run (900 s limit)
     tries to certify p = 0;
-  * the deterministic interval after a budget of 1e7 forward-pass
-    equivalents (expected: [0, 1]);
-  * Monte Carlo with the same budget (1e7 samples): the number of failures
-    seen and the one-sided KL upper bound, for comparison.
+  * the deterministic interval of a branch-and-bound run with max_fpe = 1e7
+    forward-pass equivalents (expected: [0, 1]). The budget is checked
+    against the cost of bounding EVERY node of the next level, while the
+    probe (min_rate = 0.01) bounds only 512 of them, so these runs stop far
+    below 1e7: the fpe and wall-clock seconds actually spent are recorded
+    (bab_budget.fpe, .seconds, .stopped);
+  * Monte Carlo with 1e7 samples: the number of failures seen and the
+    one-sided KL upper bound, for comparison.
+Costs: fpe and wall-clock seconds on a shared 4-core machine.
 Writes results/large.json.
 """
 
 import json
 import os
 import sys
+import time
 
 import numpy as np
 
@@ -46,7 +52,8 @@ def analyse(name, net, rng):
         cert[r] = float((lb >= bd.thr_safe).mean())
     o["crown_cert_rate"] = cert
     res = bab(net, r_enum=4, min_rate=0.01, max_fpe=BUDGET, bounder=bd, batch=256)
-    o["bab_budget"] = dict(fpe=res.fpe, lo=res.lo, hi=res.hi, depth=res.max_depth, nodes_bounded=res.nodes_bounded,
+    o["bab_budget"] = dict(max_fpe=BUDGET, fpe=res.fpe, seconds=round(res.seconds, 2), stopped=res.stopped, lo=res.lo,
+                          hi=res.hi, depth=res.max_depth, nodes_bounded=res.nodes_bounded,
                           certified_safe_nodes=res.certified_safe_nodes)
     # where would certification start? r50 = largest r with rate >= 1/2;
     # the tree then has at least about 2^(d - r50) leaves
@@ -60,11 +67,12 @@ def analyse(name, net, rng):
                              nodes_bounded=full.nodes_bounded)
     N = int(BUDGET)
     hits = 0
+    t0 = time.time()
     for s in range(0, N, 1 << 18):
         X = rng.choice([-1.0, 1.0], size=(min(1 << 18, N - s), d))
         hits += int((bd.forward(X) < bd.t).sum())
     lo, hi = kl_interval(hits / N, N, 0.05)
-    o["mc_same_budget"] = dict(samples=N, hits=hits, interval=[lo, hi])
+    o["mc_same_budget"] = dict(samples=N, hits=hits, interval=[lo, hi], seconds=round(time.time() - t0, 2))
     print(json.dumps(o), flush=True)
     return o
 

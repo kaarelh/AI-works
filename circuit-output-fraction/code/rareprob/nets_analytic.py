@@ -1,5 +1,6 @@
-"""Prover-free analytic upper bounds and exact-mass envelopes for the failure
-probability of ReLU MLPs (rareprob.nets) on the uniform cube.
+"""Prover-free analytic upper bounds, exact-mass envelopes and the barrier
+diagnostics for the failure probability of ReLU MLPs (rareprob.nets) on the
+uniform cube.
 
 Setting. f is an MLP from nets.py; D is uniform on {-1,+1}^d; the rare event is
 [F(x) < t] with F the net in EXACT real arithmetic on its float64 weights (each
@@ -9,24 +10,27 @@ also bounds the probability of [f_fl(x) < t] for f evaluated in float64 in ANY
 summation order (the reference p_exact of experiments/nets is one such order),
 and of [F(x) < t].
 
-Everything is for an arbitrary net of the architecture: no assumption on the
-weights is used in any soundness argument; the trained-net structure only
-affects how tight the bounds are.
+Everything is for an arbitrary net of the architecture, with any float64
+weights: no assumption on the weights is used in any soundness argument (the
+trained-net structure only affects how tight the bounds are). Overflow is
+never trusted: a quantity that overflows becomes the trivial bound in the
+safe direction (_down_vec, _up_vec), a forward pass that overflows is decided
+in rational arithmetic (fails_exact), and an envelope or oracle whose mass or
+table is not finite is refused (ValueError).
 
 What is here
 ------------
 * Floating point: forward_error_bound (|f_fl - F| <= tau on the cube, any
-  summation order), fails_exact (the exact indicator [F(x) < t], rechecked in
-  rational arithmetic in the ambiguous band).
+  summation order; inf on overflow), fails_exact (the exact indicator
+  [F(x) < t], rechecked in rational arithmetic in the ambiguous band and
+  wherever the float value is not a number).
 
 * Quantised linear forms and exact dynamic programming. quantize() writes a
   form z = v.x + b as z = q (n.x) + b + r.x with n integer, q a power of two
   and |r.x| <= e for every x in the box (e = sum_i |v_i - q n_i|, rounded up).
-  form_dp() computes the exact law of the integer vector s = N x (k <= 3 rows)
-  under any product measure on the cube by convolution over the inputs (exact
-  in float64 for the uniform measure and d <= 53; otherwise with a stated
-  relative error bound); sample_backward() draws x exactly-up-to-rounding from
-  any reweighting of that law (backward sampling through the stored DP tables).
+  form_dp() computes the law of the integer vector s = N x (k <= 3 rows)
+  under the uniform measure by convolution over the inputs (exact in float64
+  for d <= 53; relative error dp_rel(d) beyond; d > 1000 refused).
 
 * Bounds (one hidden layer, f = c + sum_j a_j relu(z_j), z_j = w_j.x + b_j;
   "even form": f = c' + lam.x + sum_j (a_j/2)|z_j| with lam = (1/2) sum_j a_j w_j):
@@ -42,34 +46,42 @@ What is here
     Finner-type bound E prod_k Y_k <= prod_k ||Y_k||_{p_k} (p_k >= 1) is >=
     prod_k E Y_k, so this is a floor for all decoupled Chernoff bounds with the
     same parts (computed with cell maxima, so it does not exceed the true floor
-    up to quantisation in the safe direction). independent_units_chernoff is the
-    same with cell minima (not a bound; for comparison).
-  - mcdiarmid: bounded differences with the certified mean (mean_lower_bound).
+    up to quantisation in the safe direction).
+  - mcdiarmid: bounded differences with the certified mean (mean_lower_bound),
+    computed through the ratio s / ||c||_2 so that nothing overflows.
 
 * Envelopes (exact mass, exact sampler, two-sided intervals by the envelope
   estimator of the paper, Thm. envelope):
   - TiltEnvelope: phi(x) = exp(theta (t' - g(x))) for an affine g with g <= F on
-    the cube (per-unit linear relaxations: relu(z) >= s z, s in [0,1], for
-    a_j > 0 and relu(z) <= kappa z + nu on the pre-activation range for
-    a_j < 0; or a CROWN-type backward pass for two hidden layers). Mass
+    the cube: per-unit linear relaxations on the box (tilt_envelope: relu(z) >=
+    s z, s in [0,1], for a_j > 0 and relu(z) <= kappa z + nu on the
+    pre-activation range for a_j < 0), the CROWN minorant of
+    rareprob.nets_verify for any depth (tilt_envelope_deep), or a minorant
+    certified on the cube itself by one MAP call (cube_tilt_envelope). Mass
     exp(theta (t' - g_0)) prod_i cosh(theta gamma_i); sampler: independent
-    tilted coins (exact for their float probabilities, and E_Q W = p / Z holds
-    exactly for those). Box barrier: g <= F on the box gives g(0) <= F(0), so by
-    Jensen Z >= exp(theta (t' - F(0))) >= 1 whenever F(0) < t.
-  - GroupTiltEnvelope: the same with a group S of hidden units (|S| <= 2) kept
-    exactly: phi(x) = exp(theta (t' - H_S(N_S x) - g_rest(x))) with H_S the
-    pessimistic value of sum_{j in S} a_j relu(z_j) on the quantisation cell.
-    Mass by DP under the tilted product measure (with a certified error bar
-    logZ_err); sampler by backward DP.
+    tilted coins (drawn exactly for their float probabilities, and
+    E_Q W = p / Z holds exactly for those).
   - SignPatternEnvelope: phi = exp(theta (t' - g)) prod_{j in N} (1 + e^{alpha_j z_j})
     for a set N of negative-weight units (a softplus bound on their relus),
     i.e. a positive mixture of 2^|N| tilts over their sign patterns: exact mass
     by summing over the patterns, exact sampler (pattern, then coins).
-  - envelope_interval: the two-sided interval (KL, sequential) from any of them.
-  Barrier for all of them (every positive mixture of tilts): E_D e^{beta.x} =
-  prod cosh beta_i >= 1, so Z >= phi(0); when domination is proved by
-  inequalities valid on all of R^d (as here), phi(0) >= exp(theta (t' - F(0))),
-  so Z > 1 whenever F(0) < t.
+  - envelope_interval: the two-sided interval (KL, sequential) from either.
+
+* Barriers (proved; measured by experiments/nets_analytic/barrier_table.py):
+  - Box barrier. For every positive mixture of full-support exponential tilts
+    whose domination is proved on the box [-1,1]^d (TiltEnvelope from box
+    relaxations, SignPatternEnvelope): E_D e^{beta.x} = prod cosh beta_i >= 1
+    gives Z >= phi(0), and domination at the point 0 of the box gives
+    phi(0) >= exp(theta (t' - F(0))), so Z > 1 whenever F(0) < t. The barrier
+    is about this family only: envelopes that are not log-linear in x (for
+    example ones that keep a few hidden units exactly through the law of
+    their quantised forms, "group-DP" or cell envelopes) are not covered, and
+    on the small-ball net F = |sum_i x_i|, t = 1 such an envelope has Z < 1
+    although F(0) < t (tests/test_nets_analytic.py).
+  - Cube barrier (symmetric_gap): if min_x (F(x) + F(-x))/2 < t, every tilt
+    envelope from an affine minorant valid on the cube, however certified, has
+    Z >= 1.
+  - Decoupling floor (decoupling_floor), above.
 
 * small_width_interval: for at most 3 hidden units, a deterministic interval
   for p from the exact joint DP law of all pre-activations (exact up to the
@@ -88,36 +100,28 @@ What is here
   a box relaxation; it escapes the box barrier but not the cube barrier: it
   exists only when symmetric_gap > 0.
 
-* Oracle diagnostics from the full table (d <= 30): symmetric_gap (the cube
-  barrier for affine minorants: if min_x (F(x) + F(-x))/2 < t, every tilt
-  envelope has Z >= 1, whatever certifies its minorant), best_tilt_oracle,
-  moment_bounds.
-
-Findings on the trained nets (experiments/nets_analytic, results/summary.txt):
-(1) every decoupled bound is >= 0.2 (>= 0.6 on every net with exact p <= 1e-3),
-and every envelope with exact mass and exact sampler whose domination is
-proved by box-valid inequalities has Z >= 1 (no gain over Monte Carlo) on all
-nets except one. The reasons are structural: the concentration of f comes
-from cancellations BETWEEN hidden units (sum_j a_j w_j ~ 0, and the parts of
-the positive- and negative-weight units are strongly correlated), which every
-decoupled bound discards (decoupling floor >> p on the MSE nets) and Hoelder
-pays for a second time (comonotone variance (sum_k sd F_k)^2 is 37-450 times
-Var f on the squared-loss nets, 13-17 on the logistic ones); positive mixtures of tilts fail by the box barrier (F(0) < t on every
-squared-loss net with d <= 28); bounds on the positive units alone are
-vacuous (Pr[E+ <= max_x(t - c' - L - E-)] >= 0.98); few-form envelopes cannot
-contain the failures (hindsight K* >= 843 for p <= 4e-4).
+Findings on the trained nets (experiments/nets_analytic, README.md there):
+(1) every decoupled bound is far above p on the squared-loss nets
+(decoupling floor >> p; the concentration of f comes from cancellations
+BETWEEN hidden units, which every decoupled bound discards, and Hoelder pays
+for it a second time); every box-relaxed tilt and sign-pattern envelope has
+Z >= 1 on every net with F(0) < t, as the box barrier says, and the box tilts
+have Z >= 1 on all the others too.
 (2) Methods that call an exact optimisation over the cube escape the box
 barrier: perturb-and-MAP certifies roughly half of the log-rarity
-(U ~ p^0.5; exact for subcubes, ~75% for halfspaces, O(1) nats per small
-ball), and the cube-certified tilt gives two-sided intervals with K = 221 at
-p = 6e-8 when symmetric_gap > 0; but each MAP call is a verification problem
-(HiGHS: seconds for width 32 up to d = 64, minutes to unsolved for width 64).
+(U ~ p^0.5), and the cube-certified tilt gives two-sided intervals with
+K = Z / p = 221 at p = 6e-8 when symmetric_gap > 0; but each MAP call is an
+NP-hard optimisation over the cube (here answered by enumeration).
 (3) Where F(0) - t is large (long logistic training at d = 64), the
-sign-pattern envelope has Z = 4.9e-3 (exact mass, exact sampler).
-(4) With <= 3 hidden units, small_width_interval is exact.
+sign-pattern envelope has Z = 4.9e-3 (exact mass, exact sampler); with the
+sequential interval this gives about 80 times fewer samples than Monte Carlo
+for the same upper bound, not 1/Z = 205.
+(4) With <= 3 hidden units, small_width_interval is exact up to quantisation.
 
 Soundness of each method is stated in its docstring; experiments/nets_analytic/
-check_soundness.py checks them by brute force on small adversarial nets.
+check_soundness.py checks them by brute force on small adversarial nets, and
+tests/test_nets_analytic.py holds the regression tests for every
+counterexample found by adversarial review.
 """
 
 from __future__ import annotations
@@ -140,11 +144,32 @@ def gamma(n: int) -> float:
     return n * U / (1.0 - n * U)
 
 
+_MAX = float(np.finfo(np.float64).max)
+
+
 def _up(x: float, rel: float = 2.0 ** -40) -> float:
     """x enlarged by a relative 2^-40 (covers the rounding of the few
     operations that produced it); used for quantities that must be upper
-    bounds."""
+    bounds. NaN becomes +inf (no information)."""
+    if x != x:
+        return math.inf
     return x + abs(x) * rel + 1e-300 if x >= 0 else x * (1 - rel)
+
+
+def _down_vec(v: np.ndarray, rel: float = 2.0 ** -48) -> np.ndarray:
+    """Lower bounds for the computed values v: v lowered by a relative `rel`
+    (covers the rounding of the few operations that produced v). Non-finite
+    values: +inf (an overflow, so the exact value exceeds the largest
+    float) becomes the largest float, NaN becomes -inf."""
+    v = np.asarray(v, dtype=np.float64)
+    with np.errstate(invalid="ignore", over="ignore"):
+        out = v - np.abs(v) * rel - 1e-300
+    return np.where(np.isnan(out), np.where(v == np.inf, _MAX, -np.inf), out)
+
+
+def _up_vec(v: np.ndarray, rel: float = 2.0 ** -48) -> np.ndarray:
+    """Upper bounds for the computed values v (mirror image of _down_vec)."""
+    return -_down_vec(-np.asarray(v, dtype=np.float64), rel)
 
 
 # --------------------------------------------------------------------------
@@ -153,24 +178,31 @@ def _up(x: float, rel: float = 2.0 ** -40) -> float:
 
 
 def _absmv(Wabs: np.ndarray, v: np.ndarray, n: int) -> np.ndarray:
-    """Upper bound of |W| v (v >= 0) computed in float, rounded up."""
-    r = Wabs @ v
-    return r * (1 + gamma(n + 2)) + 1e-300
+    """Upper bound of |W| v (v >= 0) computed in float, rounded up (inf on
+    overflow)."""
+    with np.errstate(over="ignore", invalid="ignore"):
+        r = Wabs @ v
+        return r * (1 + gamma(n + 2)) + 1e-300
 
 
 def box_bounds(net: MLP) -> list[tuple[np.ndarray, np.ndarray]]:
     """Interval bounds [lo, hi] on every hidden pre-activation over the box
-    [-1,1]^d (interval arithmetic, rounded outwards)."""
+    [-1,1]^d (interval arithmetic, rounded outwards; an overflowed end becomes
+    -inf or +inf)."""
     lo_h = -np.ones(net.d)
     hi_h = np.ones(net.d)
     out = []
     for k, (W, b) in enumerate(zip(net.Ws[:-1], net.bs[:-1])):
         Wp, Wn = np.maximum(W, 0.0), np.minimum(W, 0.0)
-        mid_lo = Wp @ lo_h + Wn @ hi_h + b
-        mid_hi = Wp @ hi_h + Wn @ lo_h + b
-        slack = _absmv(np.abs(W), np.maximum(np.abs(lo_h), np.abs(hi_h)), W.shape[1]) * gamma(W.shape[1] + 2) \
-            + np.abs(b) * gamma(2)
-        lo, hi = mid_lo - slack, mid_hi + slack
+        with np.errstate(over="ignore", invalid="ignore"):
+            mid_lo = Wp @ lo_h + Wn @ hi_h + b
+            mid_hi = Wp @ hi_h + Wn @ lo_h + b
+            slack = _absmv(np.abs(W), np.maximum(np.abs(lo_h), np.abs(hi_h)), W.shape[1]) * gamma(W.shape[1] + 2) \
+                + np.abs(b) * gamma(2)
+            lo, hi = mid_lo - slack, mid_hi + slack
+        # overflow: NaN or infinite ends carry no information
+        lo = np.where(np.isnan(lo), -np.inf, lo)
+        hi = np.where(np.isnan(hi), np.inf, hi)
         out.append((lo, hi))
         lo_h, hi_h = np.maximum(lo, 0.0), np.maximum(hi, 0.0)
     return out
@@ -183,19 +215,22 @@ def forward_error_bound(net: MLP) -> float:
     Layer by layer: if the inputs of a layer carry an error at most E (vector)
     and have magnitude at most A, the computed pre-activation fl(W h_fl + b)
     differs from W h + b by at most |W| E + gamma_{n+1} (|W| (A + E) + |b|);
-    relu is 1-Lipschitz. A comes from box_bounds."""
+    relu is 1-Lipschitz. A comes from box_bounds. If anything overflows,
+    tau = inf (then every comparison with t is left to rational arithmetic)."""
     E = np.zeros(net.d)
     A = np.ones(net.d)
     bnds = box_bounds(net)
     for k, (W, b) in enumerate(zip(net.Ws, net.bs)):
         n = W.shape[1]
         Wa = np.abs(W)
-        E = _absmv(Wa, E, n) + gamma(n + 1) * (_absmv(Wa, A + E, n) + np.abs(b))
-        E = E * (1 + 1e-6)
+        with np.errstate(over="ignore", invalid="ignore"):
+            E = _absmv(Wa, E, n) + gamma(n + 1) * (_absmv(Wa, A + E, n) + np.abs(b))
+            E = E * (1 + 1e-6)
         if k < len(net.Ws) - 1:
             lo, hi = bnds[k]
             A = np.maximum(np.abs(lo), np.abs(hi))
-    return float(E[0]) * 1.01 + 1e-300
+    tau = float(E[0]) * 1.01 + 1e-300
+    return tau if math.isfinite(tau) else math.inf
 
 
 def exact_output(net: MLP, x) -> Fraction:
@@ -216,12 +251,15 @@ def exact_output(net: MLP, x) -> Fraction:
 def fails_exact(net: MLP, X: np.ndarray, tau: float | None = None) -> np.ndarray:
     """The exact indicator [F(x) < t] for the rows of X (+-1 entries): the float
     forward pass decides every row with |f_fl - t| > tau; the others (in
-    practice none) are recomputed in rational arithmetic."""
+    practice none) are recomputed in rational arithmetic, including every row
+    whose float value is not a number (an overflow) and all rows if tau is
+    infinite."""
     if tau is None:
         tau = forward_error_bound(net)
-    f = net.forward(X)
-    out = f < net.threshold
-    amb = np.nonzero(np.abs(f - net.threshold) <= tau)[0]
+    with np.errstate(all="ignore"):
+        f = net.forward(X)
+        out = f < net.threshold
+        amb = np.nonzero(~(np.abs(f - net.threshold) > tau))[0]
     t = Fraction(float(net.threshold))
     for r in amb:
         out[r] = exact_output(net, X[r]) < t
@@ -249,12 +287,14 @@ class Forms:
 
     def z_lo(self, s: np.ndarray, j: int) -> np.ndarray:
         """Lower end of the interval of z_j on the cell s_j (float, rounded down)."""
-        v = self.q * s + self.b[j] - self.e[j]
-        return v - np.abs(v) * 2.0 ** -50 - 1e-300
+        with np.errstate(over="ignore", invalid="ignore"):
+            v = self.q * s + self.b[j] - self.e[j]
+        return _down_vec(v, 2.0 ** -50)
 
     def z_hi(self, s: np.ndarray, j: int) -> np.ndarray:
-        v = self.q * s + self.b[j] + self.e[j]
-        return v + np.abs(v) * 2.0 ** -50 + 1e-300
+        with np.errstate(over="ignore", invalid="ignore"):
+            v = self.q * s + self.b[j] + self.e[j]
+        return _up_vec(v, 2.0 ** -50)
 
 
 def quantize(V: np.ndarray, b: np.ndarray, q: float) -> Forms:
@@ -276,7 +316,11 @@ def grid_for(V: np.ndarray, budget: int) -> float:
     """The largest power of two q such that every row of round(V/q) has l1 norm
     at most budget (so each DP axis has at most 2 budget + 1 cells)."""
     V = np.atleast_2d(np.asarray(V, dtype=float))
-    q = 2.0 ** math.ceil(math.log2(np.abs(V).sum(axis=1).max() / budget + 1e-300))
+    with np.errstate(over="ignore"):
+        top = float(np.abs(V).sum(axis=1).max())
+    if not math.isfinite(top):
+        raise ValueError("grid_for: weights too large for quantisation (overflow)")
+    q = 2.0 ** math.ceil(math.log2(top / budget + 1e-300))
     while np.abs(np.round(V / q)).sum(axis=1).max() > budget:
         q *= 2
     while q > 2.0 ** -60 and np.abs(np.round(V / (q / 2))).sum(axis=1).max() <= budget:
@@ -286,14 +330,13 @@ def grid_for(V: np.ndarray, budget: int) -> float:
 
 @dataclass
 class DPLaw:
-    """Law of s = N x under the product measure Pr[x_i = +1] = pi_i, as a dense
-    array over prod_j [-S_j, S_j] (index = s + S). rel bounds the relative error
-    of every entry (0: exact)."""
+    """Law of s = N x under the uniform measure on the cube, as a dense array
+    over prod_j [-S_j, S_j] (index = s + S). rel bounds the relative error of
+    every entry (0: exact)."""
 
     P: np.ndarray
     S: np.ndarray
     rel: float
-    tables: list | None = None  # the partial laws after 0..d inputs (for sampling)
 
     def values(self, j: int) -> np.ndarray:
         """s_j at every cell (broadcastable against P)."""
@@ -303,90 +346,40 @@ class DPLaw:
         return (np.arange(self.P.shape[j]) - self.S[j]).reshape(shape)
 
 
-def form_dp(N: np.ndarray, pi=None, keep: bool = False) -> DPLaw:
-    """Exact law of s = N x (N integer, k x d with k <= 3) for independent x_i
-    with Pr[x_i = +1] = pi_i (uniform if pi is None; pi may also be a pair
-    (pi_plus, pi_minus) of separately computed probabilities, which avoids the
-    cancellation in 1 - pi_i for nearly deterministic coins), by d convolution steps on
-    the box prod_j [-S_j, S_j], S_j = sum_i |N_ji| (every partial sum stays in
-    the box, so the cyclic shifts never wrap around).
+def dp_rel(d: int) -> float:
+    """Relative error of every entry of form_dp's law for d inputs: 0 for
+    d <= 53 (every entry is c / 2^i with an integer c < 2^i <= 2^53), and
+    gamma(d + 1) otherwise (each step adds two nonnegative halves, exact
+    except for one rounding)."""
+    return 0.0 if d <= 53 else gamma(d + 1)
 
-    Floating point: for the uniform measure every entry is c / 2^i with an
-    integer c < 2^i, exact for d <= 53 (rel = 0). Otherwise each step computes
-    pi P + (1 - pi) P' with nonnegative terms (relative error <= 3u per step,
-    on top of the inherited one), so rel = gamma(3 d)."""
+
+def form_dp(N: np.ndarray) -> DPLaw:
+    """Exact law of s = N x (N integer, k x d with k <= 3) under the uniform
+    measure on {-1,+1}^d, by d convolution steps on the box
+    prod_j [-S_j, S_j], S_j = sum_i |N_ji| (every partial sum stays in the box,
+    so the cyclic shifts never wrap around).
+
+    Floating point: after i steps every entry is c / 2^i with an integer
+    c < 2^i, so the law is exact for d <= 53 and has relative error at most
+    dp_rel(d) otherwise. No entry underflows while d <= 1000 (the smallest
+    positive entry is >= 2^-d); larger d is refused."""
     N = np.atleast_2d(np.asarray(N, dtype=np.int64))
     k, d = N.shape
+    if d > 1000:
+        raise ValueError("form_dp: d > 1000 (entries could underflow)")
     S = np.abs(N).sum(axis=1)
     shape = tuple(int(2 * s + 1) for s in S)
     if np.prod(shape) > 5e7:
         raise ValueError("DP too large")
     P = np.zeros(shape)
     P[tuple(int(s) for s in S)] = 1.0
-    tables = [P.copy()] if keep else None
-    uniform = pi is None
     for i in range(d):
         sh = tuple(int(v) for v in N[:, i])
         up = np.roll(P, sh, axis=tuple(range(k)))
         dn = np.roll(P, tuple(-v for v in sh), axis=tuple(range(k)))
-        if uniform:
-            P = 0.5 * up + 0.5 * dn
-        else:
-            pp, pm = _coin(pi, i)
-            P = pp * up + pm * dn
-        if keep:
-            tables.append(P.copy())
-    rel = 0.0 if (uniform and d <= 53) else gamma(3 * d + 3)
-    return DPLaw(P, S, rel, tables)
-
-
-def sample_backward(law: DPLaw, N: np.ndarray, pi: np.ndarray | None, weights: np.ndarray, n: int,
-                    rng: np.random.Generator) -> np.ndarray:
-    """Draw n inputs x from the measure proportional to pi(x) w(N x), where
-    w = weights (an array over the cells of law) and pi the product measure of
-    the DP: first s ~ P(s) w(s) / Z, then x_d, ..., x_1 backwards, x_i = +1
-    with probability pi_i P_{i-1}(s - N_i) / P_i(s). The probabilities are
-    floats: the law sampled is within total variation (d + #cells + 4) 2^-52 of
-    the ideal one (each categorical or Bernoulli draw from a float probability
-    vector is off by at most 2^-53 per category, and the probabilities carry a
-    relative error below 2^-40); envelope_interval widens by this amount."""
-    N = np.atleast_2d(np.asarray(N, dtype=np.int64))
-    k, d = N.shape
-    if law.tables is None:
-        raise ValueError("form_dp(..., keep=True) needed")
-    tw = law.P * weights
-    flat = tw.ravel() / tw.sum()
-    cells = rng.choice(flat.size, size=n, p=flat)
-    idx = np.array(np.unravel_index(cells, law.P.shape))  # (k, n)
-    X = np.empty((n, d))
-    for i in range(d - 1, -1, -1):
-        Pp = law.tables[i]
-        col = N[:, i][:, None]
-        ip, im = idx - col, idx + col  # previous index if x_i = +1 / -1
-        vp = Pp[tuple(ip)] if np.all((ip >= 0) & (ip < np.array(Pp.shape)[:, None])) else _safe_get(Pp, ip)
-        vm = Pp[tuple(im)] if np.all((im >= 0) & (im < np.array(Pp.shape)[:, None])) else _safe_get(Pp, im)
-        cp_, cm_ = (0.5, 0.5) if pi is None else _coin(pi, i)
-        a = cp_ * vp
-        bb = cm_ * vm
-        pr = a / (a + bb)
-        xp = rng.random(n) < pr
-        X[:, i] = np.where(xp, 1.0, -1.0)
-        idx = np.where(xp[None, :], ip, im)
-    return X
-
-
-def _coin(pi, i):
-    if isinstance(pi, tuple):
-        return pi[0][i], pi[1][i]
-    return pi[i], 1.0 - pi[i]
-
-
-def _safe_get(P: np.ndarray, ix: np.ndarray) -> np.ndarray:
-    ok = np.all((ix >= 0) & (ix < np.array(P.shape)[:, None]), axis=0)
-    out = np.zeros(ix.shape[1])
-    if ok.any():
-        out[ok] = P[tuple(ix[:, ok])]
-    return out
+        P = 0.5 * up + 0.5 * dn
+    return DPLaw(P, S, dp_rel(d))
 
 
 # --------------------------------------------------------------------------
@@ -406,22 +399,19 @@ def one_layer(net: MLP):
 def unit_cells(net: MLP, j: int, budget: int = 4096):
     """For hidden unit j: the exact law of its quantised pre-activation and the
     pessimistic value of a_j relu(z_j) on every cell (a lower bound on the
-    unit's contribution to F for every x in the cell)."""
+    unit's contribution to F for every x in the cell), and the relative error
+    bound of the cell probabilities."""
     W, b, a, c = one_layer(net)
     q = grid_for(W[j:j + 1], budget)
     fm = quantize(W[j:j + 1], b[j:j + 1], q)
     law = form_dp(fm.N)
     s = law.values(0)
-    if a[j] >= 0:
-        v = a[j] * np.maximum(fm.z_lo(s, 0), 0.0)
-    else:
-        v = a[j] * np.maximum(fm.z_hi(s, 0), 0.0)
-    return law.P.ravel(), _down_vec(v.ravel())
-
-
-def _down_vec(v: np.ndarray) -> np.ndarray:
-    """v lowered by a relative 2^-48 (covers the rounding of a_j * max(z, 0))."""
-    return v - np.abs(v) * 2.0 ** -48 - 1e-300
+    with np.errstate(over="ignore", invalid="ignore"):
+        if a[j] >= 0:
+            v = a[j] * np.maximum(fm.z_lo(s, 0), 0.0)
+        else:
+            v = a[j] * np.maximum(fm.z_hi(s, 0), 0.0)
+    return law.P.ravel(), _down_vec(v.ravel()), law.rel
 
 
 def group_cells(net: MLP, G: list[int], budget: int, form: str = "relu", values: str = "pess"):
@@ -434,27 +424,29 @@ def group_cells(net: MLP, G: list[int], budget: int, form: str = "relu", values:
 
     The pessimistic values are lower bounds on the group's contribution for
     every x in the cell (z_j lies in [z_lo, z_hi] there), which is what the
-    upper bounds need; "opt" gives upper bounds (used only to bound the
-    decoupling floor from below)."""
+    upper bounds need; "opt" gives upper bounds (used by the decoupling floor
+    and small_width_interval). Overflowed or undefined values become the
+    trivial bound (-inf for "pess", +inf for "opt"; _down_vec, _up_vec). The
+    cell probabilities carry the relative error dp_rel(d)."""
     W, b, a, c = one_layer(net)
     q = grid_for(W[G], budget)
     fm = quantize(W[G], b[G], q)
     law = form_dp(fm.N)
     val = np.zeros(law.P.shape)
-    for r, j in enumerate(G):
-        s = law.values(r)
-        zl, zh = fm.z_lo(s, r), fm.z_hi(s, r)
-        if form == "relu":
-            lo_v, hi_v = np.maximum(zl, 0.0), np.maximum(zh, 0.0)  # relu increasing
-        else:
-            lo_v = np.where((zl <= 0) & (zh >= 0), 0.0, np.minimum(np.abs(zl), np.abs(zh)))
-            hi_v = np.maximum(np.abs(zl), np.abs(zh))
-        coef = a[j] if form == "relu" else 0.5 * a[j]
-        small, large = (lo_v, hi_v) if coef >= 0 else (hi_v, lo_v)
-        v = coef * (small if values == "pess" else large)
-        val = val + (_down_vec(v) if values == "pess" else v + np.abs(v) * 2.0 ** -48)
-    val = _down_vec(val) if values == "pess" else val + np.abs(val) * 2.0 ** -48
-    return law.P.ravel(), val.ravel()
+    bound = _down_vec if values == "pess" else _up_vec
+    with np.errstate(over="ignore", invalid="ignore"):
+        for r, j in enumerate(G):
+            s = law.values(r)
+            zl, zh = fm.z_lo(s, r), fm.z_hi(s, r)
+            if form == "relu":
+                lo_v, hi_v = np.maximum(zl, 0.0), np.maximum(zh, 0.0)  # relu increasing
+            else:
+                lo_v = np.where((zl <= 0) & (zh >= 0), 0.0, np.minimum(np.abs(zl), np.abs(zh)))
+                hi_v = np.maximum(np.abs(zl), np.abs(zh))
+            coef = a[j] if form == "relu" else 0.5 * a[j]
+            small, large = (lo_v, hi_v) if coef >= 0 else (hi_v, lo_v)
+            val = val + bound(coef * (small if values == "pess" else large))
+    return law.P.ravel(), bound(val).ravel()
 
 
 def linear_part(net: MLP):
@@ -583,7 +575,10 @@ def chernoff_holder(net: MLP, groups: list[list[int]] | None = None, form: str =
     1e-9 (1 + |terms|)."""
     from scipy.optimize import minimize
 
-    data, C, err, groups = _setup(net, groups, form, budget)
+    try:
+        data, C, err, groups = _setup(net, groups, form, budget)
+    except ValueError as exc:  # forms that cannot be quantised (overflow): the trivial bound
+        return Bound(1.0, 0.0, note=f"trivial bound: {exc}")
     tp = _up(float(net.threshold) + forward_error_bound(net)) + err
     rng = rng or np.random.default_rng(0)
 
@@ -648,38 +643,54 @@ def decoupling_floor(net: MLP, groups: list[list[int]] | None = None, form: str 
     return math.exp(min(best.fun, 0.0))
 
 
-def independent_units_chernoff(net: MLP, form: str = "even") -> float:
-    """NOT a bound: decoupling_floor with singleton groups."""
-    return decoupling_floor(net, None, form, None, rigorous_floor=False)
-
-
 def mean_lower_bound(net: MLP, budget: int = 4096) -> float:
     """A certified lower bound on E F (one hidden layer): c + sum_j E of the
-    pessimistic per-cell value of a_j relu(z_j) (exact DP law per unit)."""
+    pessimistic per-cell value of a_j relu(z_j) (exact DP law per unit);
+    -inf if anything overflows."""
     W, b, a, c = one_layer(net)
     tot = [c]
-    for j in range(W.shape[0]):
-        if a[j] == 0:
-            continue
-        P, v = unit_cells(net, j, budget)
-        tot.append(float(np.dot(P, v)) - abs(float(np.dot(P, np.abs(v)))) * 2.0 ** -40)
+    with np.errstate(over="ignore", invalid="ignore"):
+        for j in range(W.shape[0]):
+            if a[j] == 0:
+                continue
+            try:
+                P, v, rel = unit_cells(net, j, budget)
+            except ValueError:  # a form that cannot be quantised (overflow)
+                return -math.inf
+            tot.append(float(np.dot(P, v)) - abs(float(np.dot(P, np.abs(v)))) * (2.0 ** -40 + rel))
+    if not all(math.isfinite(x) for x in tot):
+        return -math.inf
     return math.fsum(tot) - 2.0 ** -40 * math.fsum(abs(x) for x in tot)
 
 
 def mcdiarmid(net: MLP) -> Bound:
     """Bounded differences: flipping x_i changes F by at most
     c_i = 2 sum_j |a_j| |w_ji| (relu is 1-Lipschitz), so for s = E F - t' > 0,
-    Pr[F < t'] <= exp(-2 s^2 / sum_i c_i^2) (McDiarmid). E F is bounded below
-    by mean_lower_bound."""
+    Pr[F < t'] <= exp(-2 (s / ||c||_2)^2) (McDiarmid). E F is bounded below
+    by mean_lower_bound.
+
+    Floating point: the ratio s / ||c||_2 is formed before squaring (s^2 and
+    sum c_i^2 can overflow separately), ||c||_2 is computed with scaling and
+    rounded up, the ratio rounded down. Anything non-finite gives the trivial
+    bound 1; c = 0 (F constant) with s > 0 gives 0."""
     W, b, a, c = one_layer(net)
-    ci = 2 * np.abs(a) @ np.abs(W)
-    V = float(np.sum(ci ** 2)) * (1 + 1e-12)
-    tp = _up(float(net.threshold) + forward_error_bound(net))
-    s = mean_lower_bound(net) - tp
-    if s <= 0:
-        return Bound(1.0, 0.0, "mean bound below threshold")
-    lb = -2 * s * s / V * (1 - 1e-12)
-    return Bound(math.exp(lb), lb, params={"sum_ci2": V, "margin": s})
+    with np.errstate(over="ignore", invalid="ignore"):
+        ci = 2 * np.abs(a) @ np.abs(W)
+        cmax = float(np.max(ci)) if ci.size else 0.0
+        tp = _up(float(net.threshold) + forward_error_bound(net))
+        s = mean_lower_bound(net) - tp
+        if not (math.isfinite(s) and math.isfinite(cmax)):
+            return Bound(1.0, 0.0, "overflow: trivial bound")
+        if s <= 0:
+            return Bound(1.0, 0.0, "mean bound below threshold")
+        if cmax == 0.0:
+            return Bound(0.0, -math.inf, "F is constant above the threshold")
+        norm = cmax * math.sqrt(float(np.sum((ci / cmax) ** 2))) * (1 + gamma(ci.size + 8))
+        ratio = s / norm * (1 - 4 * U)
+    if not math.isfinite(ratio):
+        return Bound(1.0, 0.0, "overflow: trivial bound")
+    lb = -2.0 * ratio * ratio * (1 - 4 * U)
+    return Bound(math.exp(lb), lb, params={"norm_c": norm, "margin": s})
 
 
 # --------------------------------------------------------------------------
@@ -731,14 +742,26 @@ class TiltEnvelope:
     """phi(x) = exp(theta (t' - g(x))) >= 1 whenever F(x) < t' (because g <= F),
     represented through its sampler: independent coins with
     Pr[x_i = +1] = pi_i, pi_i = e^{-theta gamma_i} / (2 cosh(theta gamma_i)) (as
-    floats). Its exact mass for the float pi is Z (see logZ)."""
+    floats, drawn exactly by dist.Product). With Q this product measure and
+    Z = exp(logZ), the weight W = 1[F < t] D / (Z Q) lies in [0, 1] and
+    E_Q W = p / Z exactly; log(D/Q)(x) = A0 + alpha.x up to the rounding of the
+    logs and of the sum, which log_weight_err bounds."""
 
     pi: np.ndarray
-    alpha: np.ndarray  # log(D/Q)(x) = A0 + alpha.x exactly for the float pi
+    alpha: np.ndarray  # log(D/Q)(x) = A0 + alpha.x for the float pi (up to rounding)
     A0: float
-    logZ: float  # certified: A0 + alpha.x <= logZ whenever F(x) < t'
+    logZ: float  # certified: log(D/Q)(x) <= logZ whenever F(x) < t'
     net: MLP
     note: str = ""
+
+    @property
+    def log_weight_err(self) -> float:
+        """A bound on |computed log W - exact log W|: the logs behind A0 and
+        alpha are within a relative 2^-52 of the exact ones, and the
+        (d + 2)-term sum A0 + alpha.x - logZ is rounded with relative error
+        gamma(d + 2) of its absolute terms."""
+        tot = abs(self.A0) + float(np.abs(self.alpha).sum()) + abs(self.logZ)
+        return gamma(2 * self.alpha.size + 8) * tot + 2.0 ** -50
 
     def sample(self, n: int, rng: np.random.Generator) -> np.ndarray:
         from .dist import Product
@@ -770,8 +793,8 @@ def _tilt_from_affine(net: MLP, g0: float, gam: np.ndarray, err: float, theta: f
     dev = float(np.sum(np.abs(alpha - y)))
     logZ = A0 + theta * (tp - g0 + err) + dev
     logZ = logZ + 1e-12 * (1 + abs(A0) + abs(theta * (tp - g0)) + dev)
-    if not np.all(np.isfinite(alpha)):
-        raise ValueError("degenerate tilt")
+    if not (np.all(np.isfinite(alpha)) and math.isfinite(logZ)):
+        raise ValueError("degenerate tilt (non-finite mass or weights)")
     return TiltEnvelope(pi, alpha, A0, float(logZ), net, note)
 
 
@@ -805,44 +828,23 @@ def tilt_envelope(net: MLP, restarts: int = 3, rng: np.random.Generator | None =
     return _tilt_from_affine(net, g0, gam, err, th, note="affine relaxation, one hidden layer")
 
 
-def affine_minorant_deep(net: MLP, slope: str = "adaptive"):
-    """CROWN-type affine lower bound g(x) <= F(x) on the box for any depth:
-    backward pass; a relu whose coefficient lam is >= 0 is bounded below by
-    alpha z (alpha = 1 if lo >= 0, 0 if hi <= 0, else [hi > -lo]), one with
-    lam < 0 above by the chord hi (z - lo) / (hi - lo). Intermediate bounds from
-    box_bounds. Returns (g0, gamma, err)."""
-    bnds = box_bounds(net)
-    L = len(net.Ws)
-    lam = net.Ws[-1][0].copy()
-    const = [float(net.bs[-1][0])]
-    absacc = abs(const[0])
-    for k in range(L - 2, -1, -1):
-        lo, hi = bnds[k]
-        slope_v = np.zeros_like(lam)
-        off = np.zeros_like(lam)
-        for j in range(lam.size):
-            if hi[j] <= 0:
-                continue
-            if lo[j] >= 0:
-                slope_v[j] = 1.0
-                continue
-            if lam[j] >= 0:
-                slope_v[j] = 1.0 if hi[j] > -lo[j] else 0.0
-            else:
-                slope_v[j] = hi[j] / (hi[j] - lo[j])
-                off[j] = -slope_v[j] * lo[j]
-        lam2 = lam * slope_v
-        const.append(float(np.dot(lam, off)))
-        const.append(float(np.dot(lam2, net.bs[k])))
-        absacc += float(np.abs(lam) @ np.abs(off) + np.abs(lam2) @ np.abs(net.bs[k]))
-        lam = lam2 @ net.Ws[k]
-    g0 = math.fsum(const)
-    err = 1e-10 * (1 + absacc + float(np.abs(lam).sum()))  # generous rounding allowance
-    return g0, lam, err
+def affine_minorant_deep(net: MLP):
+    """CROWN-type affine lower bound g(x) = g0 + gamma.x - err <= F(x) on the
+    box [-1, 1]^d (hence on the cube) for any depth: the backward pass of
+    rareprob.nets_verify.Bounder with its default slopes and padded
+    intermediate intervals; err = Bounder.tau covers every rounding (see the
+    soundness argument of nets_verify). Returns (g0, gamma, err); raises
+    ValueError if the weights are too large or the backward pass overflows."""
+    from .nets_verify import Bounder
+    try:
+        return Bounder(net).affine_lower()
+    except FloatingPointError as exc:
+        raise ValueError(f"CROWN minorant not available: {exc}") from exc
 
 
 def tilt_envelope_deep(net: MLP) -> TiltEnvelope:
-    """Tilt envelope from affine_minorant_deep, theta optimised."""
+    """Tilt envelope from affine_minorant_deep (the CROWN minorant on the box),
+    theta optimised (any theta is valid)."""
     from scipy.optimize import minimize_scalar
 
     g0, gam, err = affine_minorant_deep(net)
@@ -856,127 +858,23 @@ def tilt_envelope_deep(net: MLP) -> TiltEnvelope:
     return _tilt_from_affine(net, g0, gam, err, math.exp(r.x), note="CROWN affine minorant")
 
 
-@dataclass
-class GroupTiltEnvelope:
-    """phi(x) = exp(theta (t' - c - H_S(N_S x) - g_rest(x))) where g_rest is the
-    affine relaxation of the units outside S and H_S(s) <= sum_{j in S} a_j
-    relu(z_j) for every x in the cell s. Since F >= c + H_S + g_rest, phi >= 1
-    whenever F < t'. Mass: exp(theta (t' - c - g_rest0)) prod_i cosh(theta gamma_i)
-    * sum_s P_pi(s) exp(-theta H_S(s)) with P_pi the DP law of s under the
-    tilted coins; sampler: s, then x backwards (sample_backward)."""
-
-    net: MLP
-    S: list
-    fm: Forms
-    law: DPLaw
-    H: np.ndarray
-    pi: np.ndarray
-    theta: float
-    g0: float
-    gam: np.ndarray
-    err: float
-    logZ: float  # the computed log mass
-    logZ_err: float = 0.0  # |logZ - log(exact mass)| <= logZ_err
-
-    def sample(self, n: int, rng: np.random.Generator) -> np.ndarray:
-        hmin = self.H[self.law.P > 0].min()
-        with np.errstate(under="ignore"):
-            wts = np.exp(-self.theta * np.maximum(self.H - hmin, 0.0))
-        return sample_backward(self.law, self.fm.N, self.pi, wts, n, rng)
-
-    def weight(self, X: np.ndarray, fails: np.ndarray) -> np.ndarray:
-        """W = 1[fail] / phi(x) with phi = Z Q(x) / D(x) computed from the ideal
-        tilted measure. log phi(x) = theta (t' - c - H_S(s) - g_rest(x)) >= 0 on
-        failures; we evaluate it directly from its definition."""
-        tp = _up(float(self.net.threshold) + forward_error_bound(self.net))
-        s = (X @ self.fm.N.T).astype(np.int64)  # exact (integers)
-        Hx = self.H[tuple((s + self.fm.N.__abs__().sum(axis=1)).T)]
-        logphi = self.theta * (tp - self.g0 - Hx - X @ self.gam + self.err)
-        return np.where(fails, np.exp(-np.maximum(logphi, 0.0)), 0.0)
-
-    @property
-    def Z(self) -> float:
-        return math.exp(min(self.logZ, 700.0))
-
-
-def group_tilt_envelope(net: MLP, S: list[int], budget: int = 300, theta: float | None = None,
-                        restarts: int = 2, rng: np.random.Generator | None = None) -> GroupTiltEnvelope:
-    """Build a GroupTiltEnvelope keeping the units S exactly (|S| <= 2 with the
-    default budget). Parameters (theta, the slopes of the other units) are
-    chosen to minimise the mass; domination holds for any choice."""
-    from scipy.optimize import minimize
-
-    W, b, a, c = one_layer(net)
-    m = W.shape[0]
-    tp = _up(float(net.threshold) + forward_error_bound(net))
-    q = grid_for(W[S], budget)
-    fm = quantize(W[S], b[S], q)
-    law0 = form_dp(fm.N)
-    H = np.zeros(law0.P.shape)
-    for r, j in enumerate(S):
-        sv = law0.values(r)
-        z = fm.z_lo(sv, r) if a[j] >= 0 else fm.z_hi(sv, r)
-        H = H + _down_vec(a[j] * np.maximum(z, 0.0))
-    H = _down_vec(H)
-    rng = rng or np.random.default_rng(0)
-    c_noconst = 0.0
-
-    def build(p):
-        th = math.exp(p[0])
-        s = 1 / (1 + np.exp(-p[1:]))
-        g0, gam, err = affine_minorant_1(net, s, s, skip=set(S))
-        return th, g0, gam, err
-
-    def logZ_of(p, exact=False):
-        th, g0, gam, err = build(p)
-        from scipy.special import expit
-        gmax = float(np.max(np.abs(gam))) if gam.size else 0.0
-        if gmax > 0:
-            th = min(th, 17.0 / gmax)  # non-degenerate coins (any theta is valid)
-        y = th * gam
-        pi = (expit(-2.0 * y), expit(2.0 * y))  # e^{-+y} / (2 cosh y), each to a relative ulp
-        law = form_dp(fm.N, pi, keep=exact)
-        lw = -th * H
-        mx = lw[law.P > 0].max()  # over reachable cells only
-        with np.errstate(over="ignore", under="ignore"):
-            tot = float(np.sum(np.where(law.P > 0, law.P * np.exp(np.minimum(lw - mx, 0.0)), 0.0)))
-        if not (tot > 0 and math.isfinite(tot)):
-            return 1e300, (th, g0, gam, err, pi, law)
-        inner = math.log(tot) + mx
-        lz = th * (tp - g0 + err) + float(np.sum(np.logaddexp(y, -y) - math.log(2))) + inner
-        return lz, (th, g0, gam, err, pi, law)
-
-    best = None
-    for r in range(restarts):
-        p0 = np.concatenate([[rng.uniform(-2, 3)], rng.normal(0, 1, m)])
-        bnds = [(-12.0, 8.0)] + [(-30.0, 30.0)] * m
-        res = minimize(lambda p: logZ_of(p)[0], p0, method="L-BFGS-B", bounds=bnds, options={"maxiter": 200})
-        if best is None or res.fun < best.fun:
-            best = res
-    lz, (th, g0, gam, err, pi, law) = logZ_of(best.x, exact=True)
-    if lz >= 1e300:
-        raise ValueError("degenerate group envelope")
-    # rounding: the three summands of lz are each computed with a relative
-    # error far below 1e-12 (sums of at most 1e6 nonnegative terms, logs,
-    # products), the DP entries carry law.rel, and the float coins differ from
-    # the ideal ones by a relative 2^-52 each
-    y = th * gam
-    lz_err = 1e-12 * (1 + abs(th * (tp - g0 + err)) + float(np.sum(np.abs(y))) + abs(lz)) \
-        + 2 * law.rel + net.d * 2.0 ** -50
-    return GroupTiltEnvelope(net, list(S), fm, law, H, pi, th, g0, gam, err, float(lz), float(lz_err))
-
-
 def envelope_interval(env, eps: float = 0.1, delta: float = 0.05, max_samples: int = 10 ** 6,
                       rng: np.random.Generator | None = None) -> Estimate:
     """The envelope estimator: x ~ Q (the envelope's sampler), W = 1[F(x) < t] /
     phi(x) in [0, 1], E W = p / Z with p = Pr[F < t] (exact indicator). The KL
     sequential interval for E W at level delta, multiplied by Z, contains p with
-    probability >= 1 - delta for every net. For GroupTiltEnvelope the sampled
-    law is within total variation eta of the ideal one (sample_backward), so the
-    interval for E W is widened by eta on both sides."""
+    probability >= 1 - delta for every net. Floating point: the computed
+    weights are within a factor exp(+-err) of the exact ones (err from the
+    envelope); for SignPatternEnvelope the sampled law is within total
+    variation eta of the ideal mixture (float subset probabilities and float
+    coin probabilities), so the interval for E W is first widened by eta."""
     rng = rng or np.random.default_rng()
     net = env.net
     tau = forward_error_bound(net)
+    if not math.isfinite(env.logZ):
+        raise ValueError("envelope mass not finite")
+    if env.logZ > 0:  # worse than the trivial envelope phi = 1 (Monte Carlo)
+        raise ValueError("envelope mass above 1: use plain Monte Carlo")
 
     def draw(k):
         out = []
@@ -985,32 +883,25 @@ def envelope_interval(env, eps: float = 0.1, delta: float = 0.05, max_samples: i
             out.append(env.weight(X, fails_exact(net, X, tau)))
         return np.concatenate(out)
 
-    if env.logZ > 0:  # worse than the trivial envelope phi = 1 (Monte Carlo)
-        raise ValueError("envelope mass above 1: use plain Monte Carlo")
     est = sequential_mean(draw, eps, delta, max_samples=max_samples)
     Z = math.exp(env.logZ)
     if isinstance(env, SignPatternEnvelope):
         # the subset T is drawn from float probabilities (total variation
-        # <= (#subsets + 2) 2^-52 from the ideal mixture weights), the coins
-        # exactly (dist._bernoulli); weights and mass carry relative errors
-        # bounded by env.logZ_err
-        eta = ((1 << len(env.N)) + 2) * 2.0 ** -52
+        # <= (#subsets + 2) 2^-52 + (e^{2 logZ_err} - 1) from the ideal mixture
+        # weights, whose logs are within logZ_err), the coins
+        # exactly for float probabilities within env.coin_tv (in total) of the
+        # ideal ones; weights and mass carry relative errors bounded by
+        # env.logZ_err
+        eta = ((1 << len(env.N)) + 2) * 2.0 ** -52 + math.expm1(2 * env.logZ_err) + env.coin_tv
         lo, hi = max(0.0, est.lo - eta), min(1.0, est.hi + eta)
-        zl, zh = Z * math.exp(-env.logZ_err), Z * math.exp(env.logZ_err)
-        lo, hi = lo * math.exp(-env.logZ_err), hi * math.exp(env.logZ_err)
-    elif isinstance(env, GroupTiltEnvelope):
-        # sampled law within total variation eta of Q = D phi / Z; Z known to
-        # within a factor exp(+-logZ_err)
-        eta = (net.d + env.law.P.size + 4) * 2.0 ** -52
-        lo, hi = max(0.0, est.lo - eta), min(1.0, est.hi + eta)
-        zl, zh = Z * math.exp(-env.logZ_err), Z * math.exp(env.logZ_err)
+        err = env.logZ_err
     else:
-        # E_Q W = p / Z exactly for the float coins (TiltEnvelope.weight uses
-        # the same logZ); the weights themselves carry a relative rounding
-        # error below 1e-12
+        # TiltEnvelope: E_Q W = p / Z exactly for the float coins (sampled
+        # exactly); the computed weights are within exp(+-log_weight_err)
         lo, hi = est.lo, est.hi
-        zl, zh = Z, Z
-    return Estimate(est.value * Z, lo * zl * (1 - 1e-12), min(1.0, hi * zh * (1 + 1e-12)),
+        err = env.log_weight_err
+    lo, hi = lo * math.exp(-err), hi * math.exp(err)
+    return Estimate(est.value * Z, lo * Z * (1 - 1e-12), min(1.0, hi * Z * (1 + 1e-12)),
                     est.samples, est.evaluations, delta, note=f"Z={Z:.3e}")
 
 
@@ -1021,19 +912,25 @@ def envelope_interval(env, eps: float = 0.1, delta: float = 0.05, max_samples: i
 
 def small_width_interval(net: MLP, budget: int | None = None) -> tuple[float, float]:
     """For a one-hidden-layer net with at most 3 hidden units: a deterministic
-    interval [lo, hi] containing p = Pr[F < t]. The joint law of the quantised
-    pre-activations s = N x is exact (form_dp); on each cell F lies between
-    c + (smallest value of sum_j a_j relu(z_j) on the cell) and c + (largest),
-    so cells whose largest value is < t fail entirely and cells whose smallest
-    value is >= t do not fail at all:
+    interval [lo, hi] containing p = Pr[F < t], and also Pr[f_fl < t] for f
+    evaluated in float64 in any order (|f_fl - F| <= tau). The joint law of
+    the quantised pre-activations s = N x is exact (form_dp); on each cell F
+    lies between c + (smallest value of sum_j a_j relu(z_j) on the cell) and
+    c + (largest), so cells whose largest value is < t - tau fail entirely and
+    cells whose smallest value is >= t + tau do not fail at all:
 
-        lo = D(cells with c + max < t),   hi = D(cells with c + min < t).
+        lo = D(cells with c + max < t - tau),
+        hi = D(cells NOT proved to have c + min >= t + tau).
 
-    Exact cell probabilities (uniform measure, d <= 53); the comparisons use
-    values rounded outward (group_cells). Cost poly(d) * (2 budget + 1)^m: the
-    regime where analytic DP is exact, independent of how rare the event is."""
+    A cell whose value is undefined (an overflow) is never counted in lo and
+    always counted in hi. The comparisons use values rounded outward
+    (group_cells). The cell probabilities are exact for d <= 53 and carry the
+    relative error dp_rel(d) beyond (form_dp, which refuses d > 1000); the
+    sums are correctly rounded (fsum) and then rounded outwards by that error.
+    Cost poly(d) * (2 budget + 1)^m: the regime where analytic DP is exact,
+    independent of how rare the event is."""
     W, b, a, c = one_layer(net)
-    m = W.shape[0]
+    m, d = W.shape
     if m > 3:
         raise ValueError("at most 3 hidden units")
     budget = budget or {1: 1 << 16, 2: 2000, 3: 150}[m]
@@ -1041,11 +938,23 @@ def small_width_interval(net: MLP, budget: int | None = None) -> tuple[float, fl
     P, vlo = group_cells(net, G, budget, "relu", "pess")
     _, vhi = group_cells(net, G, budget, "relu", "opt")
     t = float(net.threshold)
-    # F >= c_lo + vlo and F <= c_hi + vhi on each cell (c is a float, exact)
-    # (the float sum c + v is within (|c| + |v|) 2^-53 of the exact one)
-    lo = float(P[c + vhi < t - (abs(c) + np.abs(vhi)) * 2.0 ** -50 - 1e-300].sum())
-    hi = float(P[c + vlo < t + (abs(c) + np.abs(vlo)) * 2.0 ** -50 + 1e-300].sum())
-    return lo, min(1.0, hi)
+    tau = forward_error_bound(net)
+    # F >= c + vlo and F <= c + vhi on each cell (c is a float, exact); the
+    # float sum c + v is within (|c| + |v|) 2^-53 of the exact one, and the
+    # float sums t -+ tau are covered by the same slack (tau << |t| or tiny)
+    with np.errstate(over="ignore", invalid="ignore"):
+        slack = 2.0 ** -50 * (abs(t) + tau) + 1e-300
+        fail_all = c + vhi < t - tau - (abs(c) + np.abs(vhi)) * 2.0 ** -50 - slack
+        safe_all = c + vlo >= t + tau + (abs(c) + np.abs(vlo)) * 2.0 ** -50 + slack
+    lo, hi = math.fsum(P[fail_all]), math.fsum(P[~safe_all])  # exact for d <= 53
+    rel = dp_rel(d)
+    if rel > 0:
+        # entries within a relative rel, fsum within 2^-53; the slack 2^-52
+        # and one step outwards cover the rounding of these two lines (an
+        # empty sum is exactly 0 and stays 0)
+        lo = math.nextafter(lo * (1 - rel - 2.0 ** -52), -math.inf) if lo > 0 else 0.0
+        hi = math.nextafter(hi * (1 + rel + 2.0 ** -52), math.inf) if hi > 0 else 0.0
+    return max(0.0, lo), min(1.0, hi)
 
 
 # --------------------------------------------------------------------------
@@ -1061,7 +970,8 @@ class SignPatternEnvelope:
     alpha_j >= theta |a_j|, and g = g0 - err + gam.x is the affine relaxation
     of all other units (affine_minorant_1 with N skipped: relu(z) >= s z for
     a_j > 0, the chord of the box range for a_j < 0). Domination, for every x
-    in R^d (in particular every cube point):
+    of the box [-1, 1]^d (the chords hold on the box ranges of the units; in
+    particular at every cube point):
 
         exp(theta (t' - F)) = exp(theta (t' - [c + sum_{j not in N} a_j relu(z_j)]))
                               * prod_{j in N} exp(theta |a_j| relu(z_j))
@@ -1081,9 +991,17 @@ class SignPatternEnvelope:
 
     Barrier: E_D e^{beta . x} = prod_i cosh beta_i >= 1, so Z >= phi(0) =
     e^{theta (t' - g0 + err)} prod_{j in N} (1 + e^{alpha_j b_j})
-    >= exp(theta (t' - F(0))): if F(0) < t then Z > 1 for every choice of the
-    parameters (the same holds for every positive mixture of tilts whose
-    domination is proved by inequalities valid on all of R^d)."""
+    >= exp(theta (t' - F(0))) (domination at the point 0 of the box): if
+    F(0) < t then Z > 1 for every choice of the parameters. The same holds
+    for every positive mixture of full-support exponential tilts whose
+    domination is proved on the box; it does NOT hold for envelopes that are
+    not log-linear in x, such as ones that keep a few hidden units exactly
+    through the law of their quantised forms (cell, or group-DP, envelopes:
+    on the small-ball net F = |sum_i x_i| they reach Z < 1 with F(0) < t).
+
+    Sampling: the subsets are drawn from float probabilities and the coins
+    exactly for float probabilities; coin_tv bounds the total variation
+    between the float coins and the ideal ones, summed over the d coins."""
 
     net: MLP
     theta: float
@@ -1096,6 +1014,7 @@ class SignPatternEnvelope:
     logZ: float
     logZ_err: float
     log_terms: np.ndarray  # log mass of each subset T (bit r of T <-> N[r])
+    coin_tv: float = 0.0  # sum_i |float coin probability - ideal one|, any T
 
     def _beta(self, T: np.ndarray) -> np.ndarray:
         W, b, a, c = one_layer(self.net)
@@ -1240,7 +1159,14 @@ def _sign_pattern_fixed(net, n_split, restarts, rng, theta_grid):
     # <= max|beta| + |A|, each with a relative error below 2^-50
     scale = abs(th * (tp - g0 + err)) + float(np.abs(bn).sum()) + float(np.abs(th * gam).sum() + np.abs(Wn).sum())
     lz_err = 1e-12 * (1 + scale) + (d + len(N) + 4) * 2.0 ** -50 * (1 + scale)
-    return SignPatternEnvelope(net, th, g0, gam, err, list(N), al, tp, float(lz), float(lz_err), logs)
+    # coins: beta_T,i is a sum of <= |N| + 1 float terms (error <= gamma(|N| + 3)
+    # times their absolute values), the coin probability expit(2 beta) moves by
+    # at most |d beta| / 2 and is itself rounded (<= 2^-52)
+    coin_tv = d * 2.0 ** -52 + 0.5 * gamma(len(N) + 3) * float(np.abs(th * gam).sum() + np.abs(Wn).sum())
+    if not (math.isfinite(lz) and math.isfinite(lz_err) and math.isfinite(coin_tv)):
+        raise ValueError("degenerate sign-pattern envelope (non-finite mass)")
+    return SignPatternEnvelope(net, th, g0, gam, err, list(N), al, tp, float(lz), float(lz_err), logs,
+                               float(coin_tv))
 
 
 # --------------------------------------------------------------------------
@@ -1277,13 +1203,17 @@ class EnumMAPOracle:
     gB[v], an UPPER bound on max_x [-theta F(x) + g(x)] with F the exact net:
     the float table value f_fl is within tau of F, so the computed maximum plus
     theta tau (plus a relative 2^-40 for the float additions) is an upper
-    bound. Also sound bounds Fmin <= min F, Fmax >= max F."""
+    bound. Also sound bounds Fmin <= min F, Fmax >= max F. Nets whose float
+    table overflows are refused."""
 
     def __init__(self, net: MLP, dtype=np.float64):
         self.net = net
-        self.F, self.k1, self.k2 = _half_table(net, dtype)
+        with np.errstate(all="ignore"):
+            self.F, self.k1, self.k2 = _half_table(net, dtype)
         self.tau = forward_error_bound(net) + (0.0 if dtype == np.float64 else
                                                float(np.abs(self.F).max()) * 2.0 ** -22)
+        if not (np.isfinite(self.F).all() and math.isfinite(self.tau)):
+            raise ValueError("EnumMAPOracle: the float table is not finite (overflow)")
         self.Fmin = float(self.F.min()) - self.tau
         self.Fmax = float(self.F.max()) + self.tau
         self.calls = 0
@@ -1350,7 +1280,8 @@ def perturb_map_bound(oracle: EnumMAPOracle, theta: float, block: int, n: int, d
                       rng: np.random.Generator) -> Bound:
     """Rigorous upper bound on p = Pr[F < t] (probability >= 1 - delta):
 
-        p <= E e^{theta (t - F)} = e^{theta t} E_D e^{-theta F} <= exp(theta t + E R),
+        p <= Pr[F < t'] <= E e^{theta (t' - F)} = e^{theta t'} E_D e^{-theta F}
+      <= exp(theta t' + E R),   t' = t + tau (so that float evaluations are covered too),
 
     with E R bounded above from n samples by maurer_pontil_upper on
     X = (R + theta Fmax) / (theta (Fmax - Fmin)) in [0, 1] (the oracle's R is
@@ -1358,21 +1289,28 @@ def perturb_map_bound(oracle: EnumMAPOracle, theta: float, block: int, n: int, d
     Gumbels are generated in floating point; their deviation from the ideal
     law shifts E R by far less than the added 1e-9 d.
     Sound for every net given a MAP oracle that returns upper bounds; theta
-    and block must be fixed before the samples are drawn."""
+    and block must be fixed before the samples are drawn. Anything non-finite
+    (an overflow of theta F) gives the trivial bound 1."""
     R = perturb_map_samples(oracle, theta, block, n, rng)
-    rng_w = theta * (oracle.Fmax - oracle.Fmin)
-    X = (R + theta * oracle.Fmax) / rng_w
-    ub = maurer_pontil_upper(X, delta)
-    ER = ub * rng_w - theta * oracle.Fmax + 1e-9 * oracle.net.d
-    logb = theta * float(oracle.net.threshold) + ER
-    logb += 1e-12 * (1 + abs(logb) + theta * abs(oracle.Fmax))
+    with np.errstate(all="ignore"):
+        rng_w = theta * (oracle.Fmax - oracle.Fmin)
+        X = (R + theta * oracle.Fmax) / rng_w
+        ok = math.isfinite(rng_w) and rng_w > 0 and bool(np.all(np.isfinite(X)))
+        ub = maurer_pontil_upper(X, delta) if ok else 1.0
+        ER = ub * rng_w - theta * oracle.Fmax + 1e-9 * oracle.net.d
+        tp = _up(float(oracle.net.threshold) + oracle.tau)
+        logb = theta * tp + ER
+        logb += 1e-12 * (1 + abs(logb) + theta * abs(oracle.Fmax))
+    if not (ok and math.isfinite(logb)):
+        logb = 0.0
+    with np.errstate(all="ignore"):
+        R_mean, R_sd = float(R.mean()), float(R.std(ddof=1))
     return Bound(math.exp(min(logb, 0.0)), logb, note=f"perturb-MAP, block {block}",
-                 params={"theta": theta, "block": block, "n": n, "R_mean": float(R.mean()),
-                         "R_sd": float(R.std(ddof=1)), "map_calls": n})
+                 params={"theta": theta, "block": block, "n": n, "R_mean": R_mean, "R_sd": R_sd, "map_calls": n})
 
 
 # --------------------------------------------------------------------------
-# oracle diagnostics from the full table (d <= 30): ceilings of method families
+# the cube barrier and the cube-certified tilt (full table, d <= 30)
 # --------------------------------------------------------------------------
 
 
@@ -1403,47 +1341,6 @@ def _table_argmin(F: np.ndarray, th: float, uA: np.ndarray, uB: np.ndarray, rows
     return best, pos
 
 
-def best_tilt_oracle(F: np.ndarray, t: float, iters: int = 200, seed: int = 0) -> dict:
-    """The smallest mass of an exponential-tilt envelope exp(theta (t - g0 - gam.x))
-    with g0 + gam.x <= F on the WHOLE cube (exact domination, checked against
-    the table): minimise theta t - min_x (theta F(x) - u.x) + sum_i log cosh u_i
-    over (theta, u = theta gam), a convex function (subgradient: x*), by
-    L-BFGS, with |u_i| <= 17 (as in _tilt_from_affine). A ceiling for the
-    tilt family (the inner minimum is the NP-hard verification problem; see
-    cube_tilt_envelope for the certified version)."""
-    from scipy.optimize import minimize
-    from .nets import _half_inputs
-    k1 = int(round(math.log2(F.shape[0])))
-    k2 = int(round(math.log2(F.shape[1])))
-    HA, HB = _half_inputs(k1), _half_inputs(k2)
-    gap = symmetric_gap(F, t)
-    if gap <= 0:
-        return {"logZ": 0.0, "barred": True, "sym_gap": gap}
-    if float(F.min()) > t:
-        # p = 0: the constant minorant g = min F > t gives Z -> 0 as theta -> oo
-        return {"logZ": -math.inf, "barred": False, "sym_gap": gap, "theta": math.inf}
-
-    def obj(p):
-        th = math.exp(p[0])
-        u = p[1:]
-        mn, (a_, b_) = _table_argmin(F, th, HA @ u[:k1], HB @ u[k1:])
-        xs = np.concatenate([HA[a_], HB[b_]])
-        lz = th * t - mn + float(np.sum(np.logaddexp(u, -u) - math.log(2)))
-        g = np.concatenate([[th * (t - float(F[a_, b_]))], xs + np.tanh(u)])
-        return lz, g
-
-    rng = np.random.default_rng(seed)
-    best = None
-    for r in range(3):
-        p0 = np.concatenate([[rng.uniform(-1, 3)], np.zeros(k1 + k2)])
-        res = minimize(obj, p0, jac=True, method="L-BFGS-B", options={"maxiter": iters},
-                       bounds=[(-10.0, 12.0)] + [(-17.0, 17.0)] * (k1 + k2))
-        if best is None or res.fun < best.fun:
-            best = res
-    return {"logZ": float(min(best.fun, 0.0)), "barred": False, "sym_gap": gap,
-            "theta": math.exp(best.x[0])}
-
-
 def cube_tilt_envelope(net: MLP, oracle: "EnumMAPOracle", iters: int = 200, seed: int = 0,
                        starts: int = 3) -> TiltEnvelope:
     """An exponential-tilt envelope whose affine minorant is certified on the
@@ -1457,7 +1354,7 @@ def cube_tilt_envelope(net: MLP, oracle: "EnumMAPOracle", iters: int = 200, seed
     as for tilt_envelope (exact). The pair (theta, gam) is chosen by
     minimising log Z = theta (t' - g0(gam)) + sum_i log cosh(theta gam_i), a
     convex function, with one MAP call per evaluation (here the table of
-    `oracle`, so this is best_tilt_oracle; any choice is valid). The final g0
+    `oracle`; any choice is valid). The final g0
     is recomputed from the oracle's certified upper bound on
     max_x (gam.x - F(x)). Barred (Z >= 1 for every gam) when
     symmetric_gap(F, t) < 0. Returns the envelope; .note records the number of
@@ -1496,67 +1393,3 @@ def cube_tilt_envelope(net: MLP, oracle: "EnumMAPOracle", iters: int = 200, seed
     g0 = -M - 1e-12 * (1 + abs(M) + float(np.abs(gam).sum()))
     env = _tilt_from_affine(net, g0, gam, 0.0, th, note=f"cube-certified tilt, {calls[0] + 1} MAP calls")
     return env
-
-
-def moment_bounds(P: np.ndarray, v: np.ndarray, t: float, kmax: int = 60) -> dict:
-    """From the exact law of f (probabilities P on values v): the polynomial
-    Markov bounds E (f - mu)^{2k} / (mu - t)^{2k}, k = 1..kmax/2 (what any
-    exact-moment method of order 2k can certify; computing E f^{2k} exactly
-    needs the joint law of 2k hidden units)."""
-    mu = float(np.dot(P, v))
-    if mu <= t:
-        return {"best": 1.0, "order": 0, "by_order": {}}
-    out = {}
-    for k in range(2, kmax + 1, 2):
-        out[k] = float(np.dot(P, (v - mu) ** k) / (mu - t) ** k)
-    kb = min(out, key=out.get)
-    return {"best": min(1.0, out[kb]), "order": kb, "by_order": out}
-
-
-# --------------------------------------------------------------------------
-# diagnostics (exhaustive; d <= 28)
-# --------------------------------------------------------------------------
-
-
-def enumerate_outputs(net: MLP, fn, block: int = 1 << 20):
-    """Call fn(X, f) on consecutive blocks of the enumeration of {-1,+1}^d."""
-    from .nets import all_inputs
-    d = net.d
-    for s in range(0, 1 << d, block):
-        X = all_inputs(d, s, min(s + block, 1 << d))
-        fn(X, net.forward(X))
-
-
-def output_histogram(net: MLP, bins: int = 200000, lo: float | None = None, hi: float | None = None):
-    """Exact counts of f over the cube in fine bins (by enumeration), with the
-    smallest value seen in each bin: enough for the exact (oracle) Chernoff
-    bound up to the bin resolution (using bin minima keeps it an upper bound)."""
-    W, b = net.Ws[0], net.bs[0]
-    if lo is None:
-        lo, hi = -50.0, 50.0
-    edges = np.linspace(lo, hi, bins + 1)
-    cnt = np.zeros(bins)
-    mn = np.full(bins, np.inf)
-
-    def fn(X, f):
-        ix = np.clip(np.searchsorted(edges, f, side="right") - 1, 0, bins - 1)
-        cnt[:] += np.bincount(ix, minlength=bins)
-        np.minimum.at(mn, ix, f)
-
-    enumerate_outputs(net, fn)
-    ok = cnt > 0
-    return cnt[ok], mn[ok]
-
-
-def oracle_chernoff(cnt: np.ndarray, vmin: np.ndarray, t: float, d: int) -> float:
-    """min_theta exp(theta t) E exp(-theta f) from exact counts (bin minima):
-    the best any Chernoff (MGF) bound can do; not a method, a ceiling."""
-    from scipy.optimize import minimize_scalar
-    P = cnt / 2.0 ** d
-
-    def lb(lt):
-        th = math.exp(lt)
-        return th * t + _lse(-th * vmin, P)
-
-    r = minimize_scalar(lb, bounds=(-6, 8), method="bounded")
-    return math.exp(min(r.fun, 0.0))

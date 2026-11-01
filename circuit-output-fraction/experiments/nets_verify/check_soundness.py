@@ -11,6 +11,12 @@
    the gap of the interval, never in the certified count).
 3. Sampling in undecided subcubes: empirical miss rate of the two-sided
    interval at delta = 0.2 over repeated runs.
+4. Overflow window (the adversarial review's counterexample class): nets with
+   2-4 hidden layers, a tiny first layer (1e-250 ... 1e-8) and huge later
+   layers (1e100 ... 1e160), rescaled until the weight guard rho <= 1e300 just
+   passes, so that products of weight matrices in the backward pass overflow;
+   plus the review's depth-3 net (p = 1, once certified p = 0). Branch and
+   bound against exact rational counting under several settings.
 Writes results/check_soundness.json.
 """
 
@@ -132,9 +138,65 @@ def main():
         tw = estimate_undecided(net, res, eps=0.3, delta=0.2, rng=rng, max_samples=4096, first=64)
         out["coverage_runs"] += 1
         out["coverage_misses"] += int(not (tw.lo <= p <= tw.hi))
+    # 4. the overflow window
+    out.update(overflow_nets=0, overflow_rejected=0, overflow_runs=0, overflow_violations=0)
+    for trial in range(300):
+        net = overflow_net(rng) if trial else review_net()
+        if net is None:
+            out["overflow_rejected"] += 1
+            continue
+        ex = exact_count(net)
+        out["overflow_nets"] += 1
+        for kw in [dict(r_enum=0), dict(r_enum=1, branch="static"), dict(r_enum=0, max_nodes=3),
+                   dict(r_enum=1, stop_on_failure=True)]:
+            res = bab(net, **kw)
+            out["overflow_runs"] += 1
+            ok = res.fail <= ex <= res.fail + res.ambiguous + res.undecided
+            out["overflow_violations"] += int(not ok)
     print(out)
     json.dump(out, open(os.path.join(HERE, "results", "check_soundness.json"), "w"), indent=1)
-    assert out["bound_violations"] == 0 and out["bab_violations"] == 0
+    if out["bound_violations"] or out["bab_violations"] or out["overflow_violations"]:
+        raise SystemExit("soundness violation")
+
+
+def review_net():
+    """d = 3, widths [1, 2, 1]: the layer-3 CROWN product overflows; p = 1."""
+    return MLP([np.full((1, 3), 1e-200), np.array([[1e154], [1e154]]), np.array([[1e154, 1e154]]),
+                np.array([[-0.4]])], [np.array([1e-15]), np.zeros(2), np.zeros(1), np.array([2e291])],
+               threshold=0.0)
+
+
+def overflow_net(rng):
+    """A random net in the overflow window, or None if the guard rejects it."""
+    L = int(rng.integers(2, 5))
+    d = int(rng.integers(2, 6))
+    sizes = [d] + [int(rng.integers(1, 4)) for _ in range(L)] + [1]
+    Ws, bs = [], []
+    e1 = rng.uniform(-250, -8)
+    for i, (a, b) in enumerate(zip(sizes[:-1], sizes[1:])):
+        sc = 10 ** e1 if i == 0 else (10 ** rng.uniform(-3, 0) if i == len(sizes) - 2 else 10 ** rng.uniform(100, 160))
+        Ws.append(rng.choice([-1.0, 1.0], (b, a)) * rng.uniform(0.5, 1.5, (b, a)) * sc)
+        bs.append(rng.normal(0, 1, b) * (10 ** rng.uniform(-16, -8) if i == 0 else 0.0))
+    net = MLP(Ws, bs, threshold=0.0)
+    for _ in range(60):
+        try:
+            Bounder(net)
+            break
+        except ValueError:
+            k = int(rng.integers(1, L)) if L > 1 else 0
+            net.Ws[k] = net.Ws[k] * 0.3
+    else:
+        return None
+    X = np.where((np.arange(1 << d)[:, None] >> np.arange(d)) & 1, 1.0, -1.0)
+    f = net.forward(X)
+    net.bs[-1] = net.bs[-1] + float(rng.choice([-1, 1])) * abs(f).max() * rng.uniform(0, 2)
+    f = net.forward(X)
+    net.threshold = float(np.quantile(f, rng.random()))
+    try:
+        Bounder(net)
+    except ValueError:
+        return None
+    return net
 
 
 if __name__ == "__main__":

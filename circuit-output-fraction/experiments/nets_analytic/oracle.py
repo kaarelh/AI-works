@@ -53,9 +53,63 @@ sys.path.insert(0, os.path.join(HERE, "..", "..", "code"))
 sys.path.insert(0, HERE)
 from rareprob.nets import load_net, _half_inputs  # noqa: E402
 from rareprob import nets_analytic as na  # noqa: E402
-from run_suite import greedy_pairs, dobrushin_alpha  # noqa: E402
+from barrier_table import greedy_pairs, dobrushin_alpha  # noqa: E402
 
 NETS = os.path.join(HERE, "..", "nets")
+
+
+def best_tilt_oracle(F, t, iters=200, seed=0):
+    """The smallest mass of an exponential-tilt envelope exp(theta (t - g0 - gam.x))
+    with g0 + gam.x <= F on the WHOLE cube (exact domination, checked against
+    the table): minimise theta t - min_x (theta F(x) - u.x) + sum_i log cosh u_i
+    over (theta, u = theta gam), a convex function (subgradient: x*), by
+    L-BFGS, with |u_i| <= 17. A ceiling for the tilt family (the inner minimum
+    is the NP-hard verification problem; nets_analytic.cube_tilt_envelope is
+    the certified version)."""
+    from scipy.optimize import minimize
+    k1 = int(round(math.log2(F.shape[0])))
+    k2 = int(round(math.log2(F.shape[1])))
+    HA, HB = _half_inputs(k1), _half_inputs(k2)
+    gap = na.symmetric_gap(F, t)
+    if gap <= 0:
+        return {"logZ": 0.0, "barred": True, "sym_gap": gap}
+    if float(F.min()) > t:
+        # p = 0: the constant minorant g = min F > t gives Z -> 0 as theta -> oo
+        return {"logZ": -math.inf, "barred": False, "sym_gap": gap, "theta": math.inf}
+
+    def obj(p):
+        th = math.exp(p[0])
+        u = p[1:]
+        mn, (a_, b_) = na._table_argmin(F, th, HA @ u[:k1], HB @ u[k1:])
+        xs = np.concatenate([HA[a_], HB[b_]])
+        lz = th * t - mn + float(np.sum(np.logaddexp(u, -u) - math.log(2)))
+        g = np.concatenate([[th * (t - float(F[a_, b_]))], xs + np.tanh(u)])
+        return lz, g
+
+    rng = np.random.default_rng(seed)
+    best = None
+    for r in range(3):
+        p0 = np.concatenate([[rng.uniform(-1, 3)], np.zeros(k1 + k2)])
+        res = minimize(obj, p0, jac=True, method="L-BFGS-B", options={"maxiter": iters},
+                       bounds=[(-10.0, 12.0)] + [(-17.0, 17.0)] * (k1 + k2))
+        if best is None or res.fun < best.fun:
+            best = res
+    return {"logZ": float(min(best.fun, 0.0)), "barred": False, "sym_gap": gap, "theta": math.exp(best.x[0])}
+
+
+def moment_bounds(P, v, t, kmax=60):
+    """From the exact law of f (probabilities P on values v): the polynomial
+    Markov bounds E (f - mu)^{2k} / (mu - t)^{2k}, k = 1..kmax/2 (what any
+    exact-moment method of order 2k can certify; computing E f^{2k} exactly
+    needs the joint law of 2k hidden units)."""
+    mu = float(np.dot(P, v))
+    if mu <= t:
+        return {"best": 1.0, "order": 0, "by_order": {}}
+    out = {}
+    for k in range(2, kmax + 1, 2):
+        out[k] = float(np.dot(P, (v - mu) ** k) / (mu - t) ** k)
+    kb = min(out, key=out.get)
+    return {"best": min(1.0, out[kb]), "order": kb, "by_order": out}
 
 
 def histogram(F, bins=400000, rows=512):
@@ -141,7 +195,7 @@ def oracle(name, p):
     r["fmin"], r["fmax"] = float(F.min()), float(F.max())
     r["sym_gap"] = na.symmetric_gap(F, t)
     if r["sym_gap"] > 0:
-        bt = na.best_tilt_oracle(F, t)
+        bt = best_tilt_oracle(F, t)
         r["best_tilt_logZ"] = bt["logZ"]
     else:
         r["best_tilt_logZ"] = 0.0  # barred: Z >= 1 for every affine minorant on the cube
@@ -153,7 +207,7 @@ def oracle(name, p):
     r["chernoff_exact"] = math.exp(min(best.fun, 0.0))
     r["log_chernoff_exact"] = float(best.fun)
     r["theta_star"] = math.exp(best.x)
-    mb = moments_table(F, t) if d <= 24 else na.moment_bounds(P, v, t)
+    mb = moments_table(F, t) if d <= 24 else moment_bounds(P, v, t)
     r["moment_best"], r["moment_order"] = mb["best"], mb["order"]
     r["moment_by_order"] = {k: v for k, v in mb.get("by_order", {}).items() if k in (2, 4, 6, 8, 12, 20, 30, 40)}
     # perturb-and-MAP (exact MAP by enumeration), a few configurations

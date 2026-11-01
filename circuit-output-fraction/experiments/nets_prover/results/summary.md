@@ -1,19 +1,68 @@
 
-### Suite, certificates 'lin' (eps = 0.1, delta = 0.05; costs in forward-pass equivalents)
+### Suite nets with exact p (d <= 28): exact certificates (current verifier)
 
-| net | p | F | exact cert: fpe | nodes | KB | hybrid: fpe | ratio | p in interval | MC fpe | enum fpe | MC / best | enum / exact cert |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| mse_d24_w32_s300 | 0.071 | 1193958 | 1.1e+06 | 364307 | 13752 | 5e+04 | 1.093 | True | 1.6e+04 | 1.3e+06 | 0.31 | 1.2 |
-| mse_d24_w32_s600 | 0.0083 | 138936 | 7.5e+05 | 565769 | 26110 | 4.3e+05 | 1.095 | True | 1.3e+05 | 1.3e+06 | 0.31 | 1.8 |
-| mse_d24_w32_s1000 | 0.00036 | 6012 | 3.5e+05 | 454387 | 26109 | 3.5e+05 | 1.082 | True | 3.1e+06 | 1.3e+06 | 8.9 | 3.9 |
-| mse_d24_w32_s1500 | 9.7e-06 | 163 | 1.8e+05 | 287323 | 18398 | 1.8e+05 | 1.000 | True | 1.1e+08 | 1.3e+06 | 6.4e+02 | 7.5 |
-| mse_d24_w32_s2000 | 6e-08 | 1 | 1.1e+05 | 169715 | 11305 | 1.1e+05 | 1.000 | True | 1.9e+10 | 1.3e+06 | 1.8e+05 | 13 |
-| bce_d28_w32_s30 | 0.0019 | 507779 | 3.2e+06 | 829391 | 48912 | 1.9e+06 | 1.095 | True | 5.9e+05 | 1.9e+07 | 0.31 | 5.8 |
-| bce_d28_w32_s60 | 1.3e-05 | 3543 | 1.7e+05 | 258907 | 22015 | 1.7e+05 | 1.085 | True | 8.4e+07 | 1.9e+07 | 5e+02 | 1.1e+02 |
-| bce_d28_w32_s100 | 7.5e-09 | 2 | 1.6e+04 | 21593 | 2425 | 1.6e+04 | 1.000 | True | 1.5e+11 | 1.9e+07 | 9.5e+06 | 1.2e+03 |
-| bce_d28_w32_s150 | 0 | 0 | 2e+03 | 2305 | 284 | - | - | - | - | 1.9e+07 | - | 9.4e+03 |
+Costs in forward-pass equivalents (fpe) and wall-clock seconds on a shared 4-core machine, other jobs running; numpy, one BLAS thread per process. MC: 3 ln(2/delta) / (eps^2 p) samples, eps = 0.1, delta = 0.05. 'end to end' = prover (with its Knuth plan) + verifier.
 
-### Knuth estimates of the uncollapsed tree (r_leaf = 5), all suite nets
+| net | p | F | plan | nodes | verifier fpe | verifier s | prover s | end to end s | MC fpe | MC s | enum fpe | enum s | MC/cert (fpe) | MC/cert (s, end to end) | enum/cert (fpe) | enum/cert (s) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| mse_d24_w32_s300 | 0.071 | 1193958 | certificate | 42227 | 1.3e+06 | 7.2 | 1.1e+02 | 1.1e+02 | 1.6e+04 | 0.0069 | 1.3e+06 | 5.4 | 0.012 | 6.1e-05 | 1 | 0.048 |
+| mse_d24_w32_s600 | 0.0083 | 138936 | certificate | 177329 | 1.2e+06 | 7.5 | 76 | 83 | 1.3e+05 | 0.065 | 1.3e+06 | 5.1 | 0.11 | 0.00077 | 1.1 | 0.061 |
+| mse_d24_w32_s1000 | 0.00036 | 6012 | certificate | 305973 | 8.7e+05 | 8 | 49 | 57 | 3.1e+06 | 1.1 | 1.3e+06 | 5.2 | 3.5 | 0.019 | 1.5 | 0.091 |
+| mse_d24_w32_s1500 | 9.7e-06 | 163 | certificate | 253127 | 5.4e+05 | 5 | 29 | 34 | 1.1e+08 | 48 | 1.3e+06 | 5.8 | 2.1e+02 | 1.4 | 2.5 | 0.17 |
+| mse_d24_w32_s2000 | 6e-08 | 1 | certificate | 160647 | 3.2e+05 | 2.4 | 16 | 18 | 1.9e+10 | 7.1e+03 | 1.3e+06 | 5.2 | 5.8e+04 | 3.9e+02 | 4.2 | 0.28 |
+| bce_d28_w32_s30 | 0.0019 | 507779 | certificate | 1201597 | 3.4e+06 | 39 | 2.1e+02 | 2.5e+02 | 5.9e+05 | 0.23 | 1.9e+07 | 71 | 0.17 | 0.00094 | 5.4 | 0.29 |
+| bce_d28_w32_s60 | 1.3e-05 | 3543 | certificate | 237621 | 5e+05 | 5.9 | 31 | 37 | 8.4e+07 | 32 | 1.9e+07 | 65 | 1.7e+02 | 0.86 | 37 | 1.8 |
+| bce_d28_w32_s100 | 7.5e-09 | 2 | certificate | 20789 | 4.1e+04 | 0.31 | 3.9 | 4.2 | 1.5e+11 | 6.7e+04 | 1.9e+07 | 69 | 3.6e+06 | 1.6e+04 | 4.5e+02 | 16 |
+| bce_d28_w32_s150 | 0 | 0 | certificate | 2061 | 4.1e+03 | 0.032 | 1.4 | 1.4 | - | - | 1.9e+07 | 74 | - | - | 4.5e+03 | 51 |
+| mse_d28_w64_s300 | 0.013 | 3468961 | enumeration | 1 | 1.9e+07 | 1.5e+02 | 1.3 | 1.5e+02 | 8.6e+04 | 0.07 | 1.9e+07 | 1.5e+02 | 0.0046 | 0.00047 | 1 | 0.99 |
+| mse_d28_w64_s600 | 6e-05 | 16155 | enumeration | 1 | 1.9e+07 | 1.5e+02 | 1.1 | 1.5e+02 | 1.8e+07 | 13 | 1.9e+07 | 1.5e+02 | 0.99 | 0.088 | 1 | 0.99 |
+| mse_d28_w64_s1000 | 3.3e-07 | 89 | enumeration | 1 | 1.9e+07 | 1.5e+02 | 1.5 | 1.5e+02 | 3.3e+09 | 2.6e+03 | 1.9e+07 | 1.5e+02 | 1.8e+02 | 17 | 1 | 0.99 |
+| mse_d28_w64_s1500 | 0 | 0 | pieces | 4983651 | 1e+07 | 1.3e+02 | 8e+02 | 9.3e+02 | - | - | 1.9e+07 | 1.4e+02 | - | - | 1.8 | 0.16 |
+| mse_d28_w32x32_s100 | 0.06 | 16224649 | enumeration | 1 | 1.5e+08 | 2e+02 | 6.8 | 2.1e+02 | 1.8e+04 | 0.016 | 1.5e+08 | 2e+02 | 0.00012 | 7.8e-05 | 1 | 0.97 |
+| mse_d28_w32x32_s200 | 0.015 | 3948451 | enumeration | 1 | 1.5e+08 | 2e+02 | 7.1 | 2.1e+02 | 7.5e+04 | 0.062 | 1.5e+08 | 2e+02 | 0.0005 | 0.00029 | 1 | 0.97 |
+| mse_d28_w32x32_s300 | 0.0036 | 960130 | enumeration | 1 | 1.5e+08 | 1.9e+02 | 6.5 | 2e+02 | 3.1e+05 | 0.28 | 1.5e+08 | 1.9e+02 | 0.002 | 0.0014 | 1 | 0.97 |
+| mse_d28_w32x32_s500 | 0.00013 | 36023 | enumeration | 1 | 1.5e+08 | 2e+02 | 7.2 | 2e+02 | 8.2e+06 | 7 | 1.5e+08 | 2e+02 | 0.054 | 0.034 | 1 | 0.97 |
+| bce_d28_w64x64_s20 | 0.093 | 25051039 | enumeration | 1 | 1.9e+08 | 5e+02 | 24 | 5.2e+02 | 1.2e+04 | 0.02 | 1.9e+08 | 5e+02 | 6.2e-05 | 3.9e-05 | 1 | 0.95 |
+| bce_d28_w64x64_s40 | 0.0023 | 613171 | enumeration | 1 | 1.9e+08 | 4.7e+02 | 24 | 4.9e+02 | 4.8e+05 | 0.79 | 1.9e+08 | 4.7e+02 | 0.0025 | 0.0016 | 1 | 0.95 |
+| bce_d28_w64x64_s60 | 1.9e-05 | 5071 | enumeration | 1 | 1.9e+08 | 4.6e+02 | 22 | 4.8e+02 | 5.9e+07 | 1e+02 | 1.9e+08 | 4.6e+02 | 0.31 | 0.21 | 1 | 0.95 |
+| bce_d28_w64x64_s100 | 0 | 0 | enumeration | 1 | 1.9e+08 | 4.9e+02 | 21 | 5.1e+02 | - | - | 1.9e+08 | 4.9e+02 | - | - | 1 | 0.96 |
+
+Hybrid arguments (failure-containing subtrees sampled, sized for ratio 1.1):
+
+| net | open points | samples | interval | ratio | contains p | fpe | verifier s |
+|---|---|---|---|---|---|---|---|
+| mse_d24_w32_s300 | 16777216 | 49762 | [0.06703, 0.07324] | 1.093 | True | 5e+04 | 0.054 |
+| mse_d24_w32_s600 | 16777216 | 427633 | [0.007985, 0.008741] | 1.095 | True | 4.3e+05 | 0.47 |
+| mse_d24_w32_s1000 | 5406720 | 220372 | [0.0003425, 0.0003727] | 1.088 | True | 8.2e+05 | 5.1 |
+| bce_d28_w32_s30 | 268435456 | 1872108 | [0.001788, 0.00196] | 1.096 | True | 1.9e+06 | 2.3 |
+| bce_d28_w32_s60 | 87040 | 3659 | [1.292e-05, 1.439e-05] | 1.114 | True | 5e+05 | 6 |
+
+### 'lin' + 'quad' certificates against 'lin' alone (same nets, same plan)
+
+| net | p | F | nodes (lin+quad / lin) | quad leaves | verifier fpe (lin+quad / lin) | verifier s (lin+quad / lin) | prover s (lin+quad / lin) |
+|---|---|---|---|---|---|---|---|
+| mse_d24_w32_s1500 | 9.7e-06 | 163 | 119503 / 253127 | 38605 | 8e+05 / 5.4e+05 | 48 / 5 | 1.1e+03 / 29 |
+| mse_d24_w32_s2000 | 6e-08 | 1 | 77075 / 160647 | 28483 | 5.4e+05 / 3.2e+05 | 40 / 2.4 | 6.5e+02 / 16 |
+| bce_d28_w32_s100 | 7.5e-09 | 2 | 10597 / 20789 | 2556 | 9.6e+04 / 4.1e+04 | 4.3 / 0.31 | 2.1e+02 / 3.9 |
+| bce_d28_w32_s150 | 0 | 0 | 987 / 2061 | 265 | 1.4e+04 / 4.1e+03 | 0.54 / 0.032 | 53 / 1.4 |
+
+### d = 64: certificate attempt (p = 0), bce_d64_w64_s1000 (current verifier)
+
+Top tree of depth k = 10 by the prover's own splits, then 1024 pieces proved and verified in a uniformly random order, 4 worker processes, budget 110 min wall-clock on a shared 4-core machine, other jobs running; numpy, one BLAS thread per process.
+
+| pieces done | fraction of cube certified exactly | failing points found | nodes | verifier fpe | prover worker s | verifier worker s | wall s |
+|---|---|---|---|---|---|---|---|
+| 691 / 1024 | 0.6748 | 0 | 2.99e+07 | 5.96e+07 | 2.45e+04 | 2.01e+03 | 6652 |
+
+Whole-cube totals (mean over the pieces done x 2^k, +- standard error): nodes 4.43e+07 +- 1e+06; verifier_fpe 8.83e+07 +- 2.1e+06; prover_worker_seconds 3.63e+04 +- 9e+02; verify_worker_seconds 2.98e+03 +- 77
+
+### Soundness checks (current verifier)
+
+bound_checks = 37553, bound_violations = 0, exact_runs = 260, exact_mismatch = 0, tamper_runs = 1144, tamper_misses = 0, tamper_rejected = 416, tamper_demoted = 10459, coverage_runs = 1300, coverage_misses = 13, witness_runs = 52, seconds = 687.8930594921112
+
+### [previous version] Knuth estimates of the uncollapsed tree (r_leaf = 5), all suite nets
+
+fpe in the previous (incremental) cost model; the implemented verifier costs 2 to 4 times more per leaf.
 
 | net | d | z | p | lin: nodes | lin: fpe | lin+quad: nodes | lin+quad: fpe | full enum fpe | MC fpe |
 |---|---|---|---|---|---|---|---|---|---|
@@ -45,7 +94,7 @@
 | bce_d64_w64_s300 | 64 | 7.06 | - | 1.5e+10 | 9e+09 | - | - | 5.7e+17 | - |
 | bce_d64_w64_s1000 | 64 | 8.76 | - | 2.9e+07 | 2.1e+07 | - | - | 5.7e+17 | - |
 
-### Scaling with d (one hidden layer, width 32; Knuth estimates, r_leaf = 5; medians over seeds)
+### [previous version] Scaling with d (one hidden layer, width 32; Knuth estimates, r_leaf = 5)
 
 | family | d | z (median) | p (exact or MC 1e6) | cert fpe (Knuth) | cert fpe (real, d<=24) | enum fpe | MC fpe |
 |---|---|---|---|---|---|---|---|
@@ -80,7 +129,7 @@
 | mse 1500 steps | 48 | 6.33 | 0, 0, 0 | 1.5e+09 | - | 1.1e+13 | - |
 | mse 1500 steps | 64 | 6.96 | 0, 0, 0 | 4.7e+12 | - | 5.7e+17 | - |
 
-### Relaxation gap vs subcube dimension r (medians over random subcubes; f in its own units)
+### [previous version] Relaxation gap vs subcube dimension r (medians over random subcubes)
 
 | net | r | margin min f - t | gap lin | gap quad | certified lin | certified quad | pure | centre >= t |
 |---|---|---|---|---|---|---|---|---|
@@ -155,7 +204,7 @@
 | bce_d64_w64_s1000 | 14 | 5.701 | 0.666 | 0.523 | 1.00 | 1.00 | 1.00 | 1.00 |
 | bce_d64_w64_s1000 | 16 | 5.501 | 0.868 | 0.704 | 1.00 | 1.00 | 1.00 | 1.00 |
 
-### d = 64: verified certificates of random pieces (prover's own splits for k steps)
+### [previous version] d = 64: verified certificates of random pieces (prover's own splits for k steps)
 
 | net | k | pieces: free inputs r, nodes, verifier fpe, exact, failing points | whole-cube estimate (mean, geomean) |
 |---|---|---|---|
@@ -165,7 +214,7 @@
 | bce_d64_w64_s100 | 29 | r=35, 5467 nodes, 2.6e+03 fpe, exact, F=0; r=35, 9025 nodes, 4.1e+03 fpe, exact, F=0 | 1.8e+12, 1.7e+12 |
 | mse_d64_w64_s1000 | 40 | r=24, 36767 nodes, 9.8e+03 fpe, exact, F=0; r=24, 46557 nodes, 1.2e+04 fpe, exact, F=0 | 1.2e+16, 1.2e+16 |
 
-### d = 64, 128: budgeted certificates + sampling of the open part
+### [previous version] d = 64, 128: budgeted certificates + sampling of the open part
 
 | net | nodes | certified fraction | open fraction | samples | fails | interval | fpe | MC same cost: p <= |
 |---|---|---|---|---|---|---|---|---|
@@ -173,7 +222,3 @@
 | mse_d64_w64_s1000 | 196607 | 0 | 1 | 200000 | 3 | [1.8e-06, 5.2e-05] | 2.1e+05 | 1.8e-05 |
 | mse_d64_w64_s3000 | 196607 | 0 | 1 | 200000 | 0 | [0, 1.8e-05] | 2.1e+05 | 1.8e-05 |
 | bce_d64_w64_s100 | 196607 | 0 | 1 | 200000 | 0 | [0, 1.8e-05] | 2.1e+05 | 1.8e-05 |
-
-### Soundness checks
-
-bound_checks = 15084, bound_violations = 0, exact_runs = 120, exact_mismatch = 0, tamper_runs = 528, tamper_misses = 0, tamper_rejected = 192, tamper_demoted = 8621, coverage_runs = 600, coverage_misses = 7, witness_runs = 24, seconds = 252.8943476676941

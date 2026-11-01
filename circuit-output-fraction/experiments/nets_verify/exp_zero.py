@@ -11,7 +11,9 @@ it returns the exact failure count (p = 0 certified when it is 0) or a
 valid interval. For d <= 24 the count is checked against the
 meet-in-the-middle enumeration. When p > 0 is counted exactly, the size of
 the tree a perfect engine would need (oracle_tree_static) and the Monte Carlo
-cost are recorded too. Writes results/zero.json.
+cost are recorded too. Costs: forward-pass equivalents (fpe) and wall-clock
+seconds (shared 4-core machine). Writes results/zero.json (one record per
+net) and results/zero_summary.json (frequency and cost by d).
 """
 
 import json
@@ -49,6 +51,46 @@ def jobs():
                 yield ("mse", d, steps, seed)
 
 
+def summarize():
+    """results/zero_summary.json: per loss, d and training regime, how many
+    nets have p = 0 certified, p > 0 counted exactly or stay open, and the
+    cost of the runs that certify p = 0 (fpe and wall-clock seconds; medians
+    and ranges). 'long' training is >= 1000 steps (squared loss) or >= 300
+    (logistic loss), 'short' the 300 and 600 step squared-loss runs."""
+    rows = json.load(open(os.path.join(OUT, "zero.json")))
+    groups = {}
+    for o in rows:
+        regime = "short" if (o["loss"] == "mse" and o["steps"] < 1000) else "long"
+        groups.setdefault((regime, o["loss"], o["d"]), []).append(o)
+    table = []
+    for (regime, loss, d), os_ in sorted(groups.items()):
+        z = [o for o in os_ if o["p_zero_certified"]]
+        pos = [o for o in os_ if o["bab"]["exact"] and o["bab"]["fail"] > 0]
+        fpe = sorted(o["bab"]["fpe"] for o in z)
+        sec = sorted(o["bab"]["seconds"] for o in z)
+        table.append(dict(regime=regime, loss=loss, d=d, nets=len(os_), p_zero_certified=len(z),
+                          p_positive_exact=len(pos), open=len(os_) - len(z) - len(pos),
+                          root_certified=sum(o["bab"]["nodes_total"] == 1 for o in z),
+                          fpe_median=float(np.median(fpe)) if fpe else None,
+                          fpe_range=[fpe[0], fpe[-1]] if fpe else None,
+                          seconds_median=float(np.median(sec)) if sec else None,
+                          seconds_range=[sec[0], sec[-1]] if sec else None,
+                          full_enum_fpe=os_[0]["full_enum_fpe"],
+                          open_runs=[dict(steps=o["steps"], seed=o["seed"], hi=o["bab"]["hi"], fpe=o["bab"]["fpe"],
+                                          seconds=o["bab"]["seconds"], stopped=o["bab"]["stopped"])
+                                     for o in os_ if not o["bab"]["exact"]]))
+    long_ = [o for o in rows if not (o["loss"] == "mse" and o["steps"] < 1000)]
+    totals = dict(long_nets=len(long_), long_p_zero=sum(o["p_zero_certified"] for o in long_),
+                  long_p_positive_exact=sum(o["bab"]["exact"] and o["bab"]["fail"] > 0 for o in long_),
+                  long_open=sum(not o["bab"]["exact"] for o in long_))
+    out = dict(note="one hidden layer of width 32; B&B with CROWN, r_enum = 6, time limit 600 s per net; "
+                    "fpe = forward-pass equivalents; seconds = wall-clock on a shared 4-core machine",
+               totals=totals, table=table)
+    json.dump(out, open(os.path.join(OUT, "zero_summary.json"), "w"), indent=1)
+    print(json.dumps(totals))
+    return out
+
+
 def main(limit_d=None):
     path = os.path.join(OUT, "zero.json")
     out = json.load(open(path)) if os.path.exists(path) else []
@@ -79,7 +121,8 @@ def main(limit_d=None):
             o["mc_samples"] = mc_cost(res.fail / 2.0 ** d, 0.1, 0.05)
         if d <= 24:
             o["enum_count"] = exact_failure_count(net)
-            assert res.fail <= o["enum_count"] <= res.fail + res.ambiguous + res.undecided
+            if not res.fail <= o["enum_count"] <= res.fail + res.ambiguous + res.undecided:
+                raise RuntimeError(f"interval does not contain the enumerated count: {loss} d={d} steps={steps}")
         print(json.dumps({k: v for k, v in o.items() if k != "bab"}),
               dict(fail=S["fail"], exact=S["exact"], fpe="%.3g" % S["fpe"], s=S["seconds"], hi=S["hi"]), flush=True)
         out.append(o)
@@ -88,3 +131,4 @@ def main(limit_d=None):
 
 if __name__ == "__main__":
     main(int(sys.argv[1]) if len(sys.argv) > 1 else None)
+    summarize()

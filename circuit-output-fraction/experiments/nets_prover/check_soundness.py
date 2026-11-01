@@ -2,10 +2,17 @@
 
 1. Bounds. For random and adversarial nets (random weights at scales 1e-6 ..
    1e6, small-integer weights with many exact ties f = t, nets with a point at
-   f = t - 2^-60 that float64 evaluates to t, trained nets) and random
-   subcubes: every 'lin' and 'quad' bound (honest certificates from the
-   prover's optimisers, and random parameters) must be <= the exact minimum
-   of sign * f over the subcube (computed in rational arithmetic).
+   f = t - 2^-60 that float64 evaluates to t, trained nets, and the red team's
+   families: exact power-of-two ReLU rescalings by up to 2^+-450, output and
+   threshold scaled by 2^-1000 .. 2^900, hidden layers x 2^e with subnormal
+   output weights (lin_sub, quad_sub), weights near the overflow threshold,
+   and two-hidden-layer nets whose backward coefficient G cancels to the
+   order of its rounding error with t placed at the certified bound) and
+   random subcubes: every 'lin' and 'quad' bound (honest certificates from
+   the prover's optimisers, random / subnormal / extreme parameters, and quad
+   certificates with the LARGEST shift the verifier accepts, found by
+   bisection) must be <= the exact minimum of sign * f over the subcube
+   (computed in rational arithmetic).
 2. Exact certificates. prove + verify with no open leaf must return exactly
    p (exact rational count), for every net.
 3. Malformed and dishonest arguments (on each net): forged SAFE / FAIL leaves
@@ -20,7 +27,7 @@
    enumeration (ENUM leaves above max_enum_r free inputs are sampled instead),
    and witness lists (duplicates, non-failing and malformed points mixed in).
 
-Usage: python3 check_soundness.py [n_nets]  -> results/soundness.json
+Usage: python3 check_soundness.py [n_random] [n_red_team_each]  -> results/soundness.json
 """
 import copy
 import json
@@ -88,6 +95,59 @@ def make_nets(rng, n_random):
     return nets
 
 
+def _rescale(net, e_hidden, e_out=0):
+    """Exact ReLU rescaling by powers of two (p unchanged)."""
+    Ws = [W.copy() for W in net.Ws]
+    bs = [np.asarray(b, dtype=float).copy() for b in net.bs]
+    for k in range(len(Ws) - 1):
+        e = np.broadcast_to(np.asarray(e_hidden[k]), (Ws[k].shape[0],))
+        Ws[k] = np.ldexp(Ws[k], e[:, None])
+        bs[k] = np.ldexp(bs[k], e)
+        Ws[k + 1] = np.ldexp(Ws[k + 1], -e[None, :])
+    Ws[-1] = np.ldexp(Ws[-1], -e_out)
+    bs[-1] = np.ldexp(bs[-1], -e_out)
+    return MLP(Ws, bs, threshold=math.ldexp(net.threshold, -e_out))
+
+
+def _base(rng, d, widths):
+    sizes = [d] + widths + [1]
+    net = MLP([rng.normal(0, 1, (b, a)) for a, b in zip(sizes[:-1], sizes[1:])],
+              [rng.normal(0, 0.5, b) for b in sizes[1:]], threshold=0.0)
+    X = rng.choice([-1.0, 1.0], size=(512, d))
+    net.threshold = float(np.quantile(net.forward(X), rng.uniform(0.05, 0.4)))
+    return net
+
+
+def red_team_nets(rng, n_each):
+    """The families on which the earlier verifier failed (scaled down)."""
+    nets = []
+    for i in range(n_each):
+        d = int(rng.integers(5, 9))
+        L = int(rng.integers(1, 3))
+        w = [int(rng.integers(2, 8)) for _ in range(L)]
+        nets.append((f"rescaled{i}", _rescale(_base(rng, d, w), [rng.integers(-450, 451, m) for m in w])))
+        nets.append((f"outscale{i}", _rescale(_base(rng, d, w), [0] * L, int(rng.integers(-900, 1001)))))
+        e = int(rng.integers(200, 960))
+        nets.append((f"subnormal_out{i}", _rescale(_base(rng, d, w[:1]), [e], 0)))
+        e1, e2 = int(rng.integers(900, 960)), int(rng.integers(60, 130))
+        nets.append((f"lin_sub{i}", _rescale(_base(rng, d, w[:1]), [e1], e2)))
+        e1 = int(rng.integers(150, 500))
+        nets.append((f"quad_sub{i}", _rescale(_base(rng, d, w[:1]), [e1], max(0, 1074 - 2 * e1 + int(rng.integers(-30, 10))))))
+        big = _base(rng, d, w[:1])
+        big.Ws[0] = big.Ws[0] / np.abs(big.Ws[0]).sum(1, keepdims=True) * 10.0 ** rng.uniform(300, 308)
+        big.bs[0] = big.bs[0] * 0.0
+        nets.append((f"huge{i}", big))
+        # two hidden layers, G on h_1 cancelling to ~1e-8 relative; t at the certified bound
+        p, a1, a2 = 1 + rng.random(), 1 + rng.random(), 1 + rng.random()
+        q = (p * a1) * (1 + 10 * 2.0 ** -30) / a2 + int(rng.integers(-40, 41)) * 2.0 ** -52
+        b2 = np.array([2.0 ** -28 * a1, 2.0 ** -28 * a2])
+        net = MLP([np.ones((1, 1)), np.array([[a1], [a2]]), np.array([[p, -q]])],
+                  [np.array([-0.5]), b2, np.array([-(p * b2[0] - q * b2[1])])], threshold=0.0)
+        net.threshold = float(CertNet(net).check_lin(np.zeros((1, 1)), None, 1)[0])
+        nets.append((f"cancel{i}", net))
+    return nets
+
+
 def random_subcube(rng, d):
     x0 = np.zeros(d)
     r = int(rng.integers(0, d + 1))
@@ -109,14 +169,20 @@ def check_bounds(cn, pts, vals, rng, n_sub=40):
         sel = np.nonzero(in_subcube(pts, x0))[0]
         vmin = min(vals[i] for i in sel)
         vmax = max(vals[i] for i in sel)
-        ivs, c, c_abs = cn.intervals(x0[None])
+        ivs, clo, chi = cn.intervals(x0[None])
+        c = 0.5 * clo + 0.5 * chi
         cands = [("lin0+", cn.check_lin(x0[None], None, 1, ivs)[0], 1),
                  ("lin0-", cn.check_lin(x0[None], None, -1, ivs)[0], -1)]
         al, _ = _opt_alpha(cn, x0[None], 1, ivs, c, 30)
         cands.append(("linopt+", cn.check_lin(x0[None], [al] + [None] * (cn.L - 1), 1, ivs)[0], 1))
+        al, _ = _opt_alpha(cn, x0[None], -1, ivs, c, 30)
+        cands.append(("linopt-", cn.check_lin(x0[None], [al] + [None] * (cn.L - 1), -1, ivs)[0], -1))
         ral = [rng.uniform(-0.5, 1.5, (1, m)) for m in cn.widths]
         cands.append(("linrand+", cn.check_lin(x0[None], ral, 1, ivs)[0], 1))
         cands.append(("linrand-", cn.check_lin(x0[None], ral, -1, ivs)[0], -1))
+        tiny = [np.full((1, m), 5e-324) * rng.integers(1, 4, (1, m)) for m in cn.widths]
+        cands.append(("lintiny+", cn.check_lin(x0[None], tiny, 1, ivs)[0], 1))
+        cands.append(("lintiny-", cn.check_lin(x0[None], tiny, -1, ivs)[0], -1))
         if (x0 == 0).sum() >= 1:
             for sign in (1, -1):
                 certs, lq = _opt_quad(cn, x0[None], sign, 80)
@@ -130,7 +196,14 @@ def check_bounds(cn, pts, vals, rng, n_sub=40):
                     c2 = certs[0]
                     for bump in (1e-12, 1e-9, 1e-6, 1e-3):
                         cands.append((f"quadbump{sign}", cn.check_quad(x0, None, c2["theta"], c2["mu"],
-                                                                     c2["shift"] + bump, sign), sign))
+                                                                     c2["shift"] * (1 - bump) + bump * 1e-300,
+                                                                     sign), sign))
+                # malicious: the largest shift the verifier accepts (bisection), for random / extreme theta
+                for th in (rng.uniform(0, 1, (cn.widths[0], 2)), np.ones((cn.widths[0], 2)),
+                           np.column_stack([np.full(cn.widths[0], 1e-310), np.ones(cn.widths[0])])):
+                    lb = max_shift_bound(cn, x0, th, sign)
+                    if lb is not None:
+                        cands.append((f"quadmax{sign}", lb, sign))
         for name, lb, sign in cands:
             checks += 1
             ref = vmin if sign == 1 else -vmax
@@ -138,6 +211,30 @@ def check_bounds(cn, pts, vals, rng, n_sub=40):
                 viol += 1
                 print("  BOUND VIOLATION", name, lb, float(ref))
     return checks, viol
+
+
+def max_shift_bound(cn, x0, th, sign):
+    """The bound of a quad certificate with diagonally dominant mu and the
+    largest shift that check_quad accepts (bisection), or None."""
+    try:
+        Mlo, Mhi = cn.quad_matrix(x0, None, th, sign)
+    except ValueError:
+        return None
+    M = 0.5 * Mlo + 0.5 * Mhi
+    mu = np.diag(M) - (np.abs(M).sum(1) - np.abs(np.diag(M)))
+    if not np.isfinite(mu).all():
+        return None
+    scale = max(1e-300, float(np.abs(mu).max()))
+    lo, hi = -4.0 * scale, 4.0 * scale
+    if not math.isfinite(cn.check_quad(x0, None, th, mu, lo, sign)):
+        return None
+    for _ in range(60):
+        mid = 0.5 * (lo + hi)
+        if math.isfinite(cn.check_quad(x0, None, th, mu, mid, sign)):
+            lo = mid
+        else:
+            hi = mid
+    return cn.check_quad(x0, None, th, mu, lo, sign)
 
 
 def tamper(arg, rng, d, m_widths, kind):
@@ -223,7 +320,8 @@ def main():
     report = {"nets": [], "bound_checks": 0, "bound_violations": 0, "exact_runs": 0, "exact_mismatch": 0,
               "tamper_runs": 0, "tamper_misses": 0, "tamper_rejected": 0, "tamper_demoted": 0,
               "coverage_runs": 0, "coverage_misses": 0}
-    for name, net in make_nets(rng, n_random):
+    n_red = int(sys.argv[2]) if len(sys.argv) > 2 else 4
+    for name, net in make_nets(rng, n_random) + red_team_nets(rng, n_red):
         try:
             cn = CertNet(net)
         except ValueError as e:
@@ -234,7 +332,7 @@ def main():
         F = sum(1 for v in vals if v < T)
         ties = sum(1 for v in vals if v == T)
         p = Fraction(F, 1 << cn.d)
-        ch, vi = check_bounds(cn, pts, vals, rng)
+        ch, vi = check_bounds(cn, pts, vals, rng, n_sub=40 if cn.d <= 8 else 20)
         report["bound_checks"] += ch
         report["bound_violations"] += vi
         rec = {"name": name, "d": cn.d, "widths": cn.widths, "F": F, "ties": ties, "bound_checks": ch, "bound_viol": vi}

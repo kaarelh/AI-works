@@ -52,11 +52,11 @@ def main():
             depth = 0
             ended = None
             for step in range(k):
-                ivs, c, c_abs = cn.intervals(x0[None])
+                ivs, clo, chi = cn.intervals(x0[None])
                 if cn.check_lin(x0[None], None, 1, ivs)[0] >= cn.t:
                     ended = "certified on the path"
                     break
-                v = int(_choose_split(cn, x0[None], ivs, cfg.strong_k)[0])
+                v = int(_choose_split(cn, x0[None], ivs, 0.5 * clo + 0.5 * chi, cfg.strong_k)[0])
                 path_cost += 2.0 ** depth * cn.flops_node()
                 x0[v] = rng.choice([-1.0, 1.0])
                 depth += 1
