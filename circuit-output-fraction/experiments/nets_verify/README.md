@@ -44,8 +44,16 @@ adversarial review measured a factor of about 2.2 under heavier load).
   end at the round-to-nearest F / 2^d, one ulp above p at d = 57; it now
   starts at the rounded-down count. (3) r_enum < 0 split points with no free
   coordinate, and only an `assert` (removed by python -O) caught it; r_enum
-  is now validated and every guard is an explicit exception. Each
-  counterexample is a regression test in `code/tests/test_nets_verify.py`.
+  is now validated and every guard is an explicit exception. (4) A later
+  review found that `estimate_undecided` accepted a first batch `first < 1`
+  (a negative batch drew no sample, the KL interval collapsed, and
+  [0.5, 0.5 + 4e-16] came back for p = 513/1024), and that `bab` and
+  `estimate_undecided` accepted a `Bounder` or `BabResult` built for another
+  net (an "exact" [0, 0] for p = 513/1024). Both are now rejected: `first`
+  and `max_samples` are validated, and `Bounder` and `BabResult` carry a
+  fingerprint of the net's weights and threshold. Each counterexample is a
+  regression test in `code/tests/test_nets_verify.py`; `check_soundness.py`
+  re-run on the final code gives the same counts (6 s).
 * **p = 0 is common and is what deduction does best** (`exp_zero.py`,
   re-run on the final code; `results/zero_summary.json`). Of 107
   one-hidden-layer nets (width 32) trained for >= 1000 (squared loss) or

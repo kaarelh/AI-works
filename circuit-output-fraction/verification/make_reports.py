@@ -131,6 +131,36 @@ def main():
         write("round3-consistency.md", lines)
         summary.append(("final", "consistency", "claims and numbers", Counter(f["severity"] for f in r["findings"]),
                         r["verdict"]))
+    nd = load("nets_design_and_breaking.json")
+    if nd:
+        for r in nd["results"]:
+            des, br = r["design"], r["breaking"]
+            lines = [f"# Trained networks, design round: {r['key']}", "", clean(des["summary"]), "", "## Methods", ""]
+            for m in des["methods"]:
+                lines += [f"### {clean(m['name'])} ({clean(m['kind'])})", "", f"**Soundness.** {clean(m['soundness'])}", "",
+                          f"**Results.** {clean(m['results'])}", "", f"**Verdict.** {clean(m['verdict'])}", ""]
+            lines += ["## Adversarial soundness check", "", f"**Verdict.** {clean(br['verdict'])}", ""]
+            lines += [f"- [{a['severity']}] {clean(a['method'])}: {clean(a['attack'])} Result: {clean(a['result'])}"
+                      for a in br["attacks"]]
+            write(f"nets-design-{r['key']}.md", lines)
+        sy = nd["synth"]
+        write("nets-design-synthesis.md", ["# Trained networks: synthesis of the design round", "", "## What works", "",
+                                           clean(sy["works"]), "", "## What fails", "", clean(sy["fails"]), "",
+                                           "## Recommendation", "", clean(sy["recommendation"]), "", "## Outline", "",
+                                           clean(sy["outline"])])
+    ni = load("nets_integration.json")
+    if ni:
+        lines = ["# Trained networks: integration, referees and fixes", ""]
+        for c in ni["code"]:
+            lines += [f"## Code owner: {c['key']}", "", clean(c["summary"]), ""] + [f"- {clean(x)}" for x in c["fixes"]] + [""]
+        lines += ["## Writing", "", clean(ni["write"]["summary"]), ""]
+        for r in ni["refs"]:
+            lines += [f"## Referee ({r['lens']} lens)", "", f"**Verdict.** {clean(r['verdict'])}", ""] + findings_md(r["findings"])
+            summary.append(("nets", "trained networks", r["lens"], Counter(f["severity"] for f in r["findings"]), r["verdict"]))
+        lines += ["## Fixes", "", clean(ni["fix"]["summary"]), ""]
+        lines += [f"- {clean(x['item'])}: {clean(x['action'])}" for x in ni["fix"]["resolved"]]
+        lines += [f"- not done: {clean(x['item'])}: {clean(x['reason'])}" for x in ni["fix"]["not_done"]]
+        write("nets-integration.md", lines)
     json.dump([dict(round=a, topic=b, lens=c, counts=dict(d), verdict=e) for a, b, c, d, e in summary],
               open(os.path.join(HERE, "summary.json"), "w"), indent=1)
     for a, b, c, d, e in summary:

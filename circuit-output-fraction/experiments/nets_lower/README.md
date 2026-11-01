@@ -46,6 +46,17 @@ ablation; headlines).
 
 `results/logs/` holds the console logs of the runs; it stays on the working branch.
 
+Fixes from the last code review, each with its counterexample as a regression
+test in `code/tests/test_nets_lower.py`: exact counts k / 2^d (witnesses, the
+stratum, stratum + betting bound) are rounded down, not to nearest, which
+rounded up in the subnormal range (d >= 1075); the end of `betting_lower`
+subtracts two ulps when the result is subnormal, where its relative margin is
+lost; bet sizes outside [0, 1] are rejected; and witnesses passed to
+`lower_bound` are re-evaluated on the net in use (rows that are not cube
+points are refused by `Witnesses.add`). None changes a number on a trained
+net: `check_nets_lower.py` (147 s) and `run_stratified.py` (22 s), re-run on
+the final code, give the same results (wall-clock on a shared 4-core machine).
+
 Order: `run_scaling.py`, `run_suite.py`, `run_sequential.py` (needs the
 references), then the others in any order, then `summarize.py`. Every run has a
 fixed seed (`common.seed_of`).

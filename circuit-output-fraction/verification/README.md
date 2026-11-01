@@ -12,6 +12,7 @@ The proofs and the code of this project were checked by AI referees, not by huma
 | 2 | consolidation: residual re-review findings and all cross-file edits | 7 owners | |
 | 3 (final) | a fresh referee per topic, reviewing the current text and code from scratch and auditing every earlier finding | 12 | 4 / 4 / 72 |
 | fix 3 | final fixes; all experiments rerun on the final code; then a consistency referee on abstract, introduction, experiments, discussion and README, and its fixes | 8 owners, 1 referee | consistency: 0 / 3 / 23, all fixed |
+| trained networks | case study of MLPs trained to output a constant (Section 8): five design approaches, each claimed-sound method attacked by an adversarial agent (floating-point holes found and fixed), synthesis; then code fixes with regression tests, the new section, two referees (proof lens, code lens) and their fixes | 5 designs, 4 attacks, 2 referees | referees: 0 / 4 / 18, all fixed |
 
 Audit in round 3 of the 239 findings of the earlier rounds: 231 resolved, 5 partially resolved (all minor, then fixed in fix 3), 3 superseded because the text was removed.
 
@@ -50,4 +51,5 @@ Soundness bugs in the code (all fixed, each with a regression test):
 - `raw/round2_consolidation.json`: the consolidation round.
 - `raw/round3_final_referee.json`, `raw/round3_final_fixes.json`: the final referee round and the fixes after it.
 - `raw/round3_consistency_and_sync.json`: the final experiment rerun, the text synchronisation, the consistency referee and the last fixes.
+- `raw/nets_design_and_breaking.json`, `raw/nets_integration.json`: the trained-network case study (design round with adversarial soundness checks and synthesis; integration, referee reports and fixes).
 - `reports/`: all of the above as Markdown.

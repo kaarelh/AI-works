@@ -375,6 +375,13 @@ to ~1e-8 of its size with t set to the certified bound (the drop-rule attack).
 * 1,300 sampled (hybrid) runs at delta = 0.1: 13 misses (1.0%);
 * 52 witness lists with duplicates, non-failing and malformed points: 0 errors.
 
+Re-run on the final code (after the fixes for outputs that overflow to +inf, for roots
+that are not in {-1, 0, +1}^d, and for thresholds near the largest float): the same
+counts, in 427 s of wall-clock on a shared 4-core machine. The counterexamples behind
+those fixes are regression tests in `code/tests/test_nets_prover.py`
+(`test_regression_overflow_to_inf_is_not_surely_safe`,
+`test_regression_non_integer_roots_are_rejected`, `test_threshold_at_the_largest_float`).
+
 The same campaign on the previous verifier is what the red team ran (with these families scaled up):
 there it found the wrong exact answers listed above.
 

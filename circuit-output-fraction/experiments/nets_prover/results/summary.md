@@ -58,7 +58,7 @@ Whole-cube totals (mean over the pieces done x 2^k, +- standard error): nodes 4.
 
 ### Soundness checks (current verifier)
 
-bound_checks = 37553, bound_violations = 0, exact_runs = 260, exact_mismatch = 0, tamper_runs = 1144, tamper_misses = 0, tamper_rejected = 416, tamper_demoted = 10459, coverage_runs = 1300, coverage_misses = 13, witness_runs = 52, seconds = 687.8930594921112
+bound_checks = 37553, bound_violations = 0, exact_runs = 260, exact_mismatch = 0, tamper_runs = 1144, tamper_misses = 0, tamper_rejected = 416, tamper_demoted = 10459, coverage_runs = 1300, coverage_misses = 13, witness_runs = 52, seconds = 426.5487518310547
 
 ### [previous version] Knuth estimates of the uncollapsed tree (r_leaf = 5), all suite nets
 

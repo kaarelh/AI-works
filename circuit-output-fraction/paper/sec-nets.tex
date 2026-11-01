@@ -124,7 +124,9 @@ and now a regression test: products that underflow to subnormal numbers (or to z
 and are then multiplied by huge downstream weights; a fused multiply--add that rounds a
 subnormal tie differently from a separate product and sum; partial sums that overflow
 although every weight is finite; a NaN produced by an overflow and then read as a
-``dead'' unit; and a unit dropped from a linear bound without charging the rounding of
+``dead'' unit; an output that overflows to $+\infty$ and was then read as surely above
+$t$; an exact count $|W|/2^d$ rounded to nearest, hence up, in the subnormal range
+($d\ge1075$); and a unit dropped from a linear bound without charging the rounding of
 its own coefficient. Each made some version of our code return a wrong certified
 answer, typically an ``exact'' $p=0$ for a net with $p=\frac12$ or $p=1$. None affects
 the trained nets, whose weights are far from these ranges, but soundness on every net
@@ -211,10 +213,10 @@ planted net with $d=40$, $k=26$ and $p=\nnPlantedP$ (a visible failure set of
 \nnPlantedVisF{} inputs, $p=\nnPlantedPvis$ before planting, plus a hidden subcube),
 the splitting lower bound of \cref{sec:nets-lower} returned $L=0$ and the point
 estimate $0$ in all \nnPlantedRuns{} runs (each at most $\nnPlantedFpe$ fpe and
-$\nnPlantedSec$\,s): sound. The hidden subcube was missed, as it must be: for uniform
-$b$, $T$ evaluations hit it with probability at most $T2^{-26}$ (the coupling in the
-proof of (c)). At this budget the visible part was not reached either, which (c) does
-not force. So efficiency on trained nets must come from their
+$\nnPlantedSec$\,s): sound. The hidden subcube was missed, as expected: averaged over
+$b$, $T$ evaluations hit it with probability at most $T2^{-26}$, here at most
+\nnPlantedHit{} per run (the coupling in the proof of (c)). At this budget the visible
+part was not reached either, which (c) does not force. So efficiency on trained nets must come from their
 structure, and soundness may not assume it.
 
 \subsection{What trained failure sets look like}\label{sec:nets-structure}
@@ -354,8 +356,9 @@ steps per level, each flipping $r_k$ random coordinates and accepted iff the poi
 $A_k$. A replicate in which some computed value is not finite or lies within $2e$ of
 the level being tested reports $Z=0$; otherwise it reports the exact rational
 $\prod_kN_k/N$ rounded down. Every evaluated $x$ with finite $v<t_{\rm cert}$ joins a
-witness set $W$. The output is $L=\max(L_R,|W|/2^d)$ with $L_R$ from
-\cref{prop:betting}; in sequential mode replicates are added until $L_R$ reaches a
+witness set $W$ (witnesses supplied from outside are re-evaluated first). The output
+is $L=\max(L_R,|W|/2^d)$, with $|W|/2^d$ rounded down and $L_R$ from
+\cref{prop:betting} (its grid $\Lambda$ is checked to lie in $[0,1]$); in sequential mode replicates are added until $L_R$ reaches a
 target fraction of their running mean.
 
 \begin{corollary}[soundness on every net]\label{cor:nets-lower}

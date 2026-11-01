@@ -223,6 +223,9 @@ def soundness_numbers():
     mnum("nnPlantedPvis", pv)
     mint("nnPlantedVisF", round(pv * 2 ** planted[0]["d"]))
     mnum("nnPlantedFpe", max(a["evals"] for a in planted))
+    # bound on the chance that one run's evaluations hit the hidden 2^-k subcube, averaged over b
+    k_hidden = int(re.search(r"_k(\d+)$", planted[0]["case"]).group(1))
+    mfix("nnPlantedHit", max(a["evals"] for a in planted) / 2 ** k_hidden, 2)
     mnum("nnPlantedSec", max(a["seconds"] for a in planted))
     mint("nnPlantedRuns", len(planted))
     assert all(a["L"] == 0 and a["point_estimate"] == 0 for a in planted)

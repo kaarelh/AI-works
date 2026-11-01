@@ -351,5 +351,25 @@
    "minor": 23
   },
   "verdict": "Mostly consistent. Every experiment-derived number I checked in the abstract, introduction, experiments section, body sections and README matches the results files exactly. Regenerating all six generated tables from experiments/results/*.json with a copy of make_tables.py gives files byte-identical to paper/tables/*.tex. The hand-written tab:local and tab:affine also match local.json and affine.json, and the figures match their captions. The test step passes (327 passed in 84 s). The problems are about scope and wording, not arithmetic. There are 3 major findings: (1) the README, and the intro's first sentence, never say that D must be a product distribution; (2) the intro and README overstate the reach of the sampling version of the certified-independence procedure; (3) the trigger family is described as having a 16-variable body that is also called an atom (atoms have at most 12 variables). There are 23 minor findings: missing hypotheses (uniform D, unit weights, uniform pivots, opaque gates, conditions on the parity barrier), small inaccuracies in captions and the experiments text, one anachronistic citation, one loose paraphrase of an ARC conjecture, and README notation and status issues."
+ },
+ {
+  "round": "nets",
+  "topic": "trained networks",
+  "lens": "proof",
+  "counts": {
+   "major": 2,
+   "minor": 12
+  },
+  "verdict": "The proofs are correct, but the text overclaims in places. I re-derived every proof in paper/sec-nets.tex and the new splitting theorem in paper/p2-lower.tex, and none has a mathematical error: Lemma 8.1, Propositions 8.2, 8.3 (with its constants) and 8.5\u20138.8, Corollary 8.4, Theorem 6.10, Corollary 6.11 and the variance remark all hold as stated. Rerunning experiments/make_nets_tables.py into a scratch folder reproduces all 320 macros and the 8 tables byte for byte, and the numbers I traced back to the results files agree. There are two major problems. The first is how strongly the text states the lower-bound and mixing results at large d, where p_ref is unverified and comes from the same estimator. The second is that sec-discussion claims to have \"answered\" open problem 7 with evidence that is partly empirical. Eleven minor problems follow: statement and proof versus the actual verifier checks, how some numbers are defined (mixing loss families, two different enumeration costs, percentile ranges), one wrong sentence about completeness, the Monte Carlo yardstick, and wording. Nothing critical."
+ },
+ {
+  "round": "nets",
+  "topic": "trained networks",
+  "lens": "code",
+  "counts": {
+   "major": 2,
+   "minor": 6
+  },
+  "verdict": "I found one new deterministic soundness break at float64 extremes, in nets_prover, and one in nets_lower. Everything else that claims soundness held up under my attacks.\n\n1. **nets_prover (verify):** a point whose float output overflows to +inf is classed as \"surely safe\". On a hand-built d = 1 net, verify reports the exact interval [0.5, 0.5] when the true p = 1.\n2. **nets_lower:** the count |S|/2^d is rounded to nearest. When that value is subnormal (d >= 1075) the witness bound rounds up, giving 4\u00b72^-1075 when p = 3\u00b72^-1075.\n\nThe other six findings are malformed-argument or robustness defects:\n- unvalidated bet sizes (lams) in betting_lower;\n- witnesses passed to lower_bound are trusted without re-checking;\n- `first < 0` in estimate_undecided;\n- a bounder for one net silently used for another in bab;\n- root cast to int8 before it is validated in verify;\n- a crash in CertNet when the threshold is the largest float.\n\nFive of these six produce wrong intervals or bounds (each demonstrated); the CertNet one is a crash only. None of the eight affects any trained-suite number.\n\nEvery attack found in the earlier red-team round has a regression test, and all pass:\n- 132 nets tests in 50.6 s;\n- 459 tests (the whole suite) in 112 s, on a shared 4-core machine.\n\nA fuzz of 197 deep nets (3 to 5 hidden layers) found 0 violations."
  }
 ]
