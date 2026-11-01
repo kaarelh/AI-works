@@ -12,15 +12,19 @@ namespace NeuralGeneralization.SubcriticalNegativeLargeSample
 open ConcreteModel AdaptiveCutoff SmallSampleCutoff SubcriticalNeuralEndpoints
 open GaussianSignCone GaussianPosteriorFeatures GaussianSignPosteriorBridge
 
-/-- For every negative exponent the actual neural posterior has confidence
-failure bounded below throughout a fixed exponential sample interval. The
-dimension threshold and exponential constant are independent of gamma. -/
-theorem eventually_negative_large_sample_lower_bound (k : ℕ) (a : ℝ) :
+/-- The sharp buffered Gaussian sign-posterior lower bound in the adaptive
+large-sample interval. This is the paper's 3/8 fraction, before transfer to
+finite-width neural networks. -/
+def gaussianFailure (d k n : ℕ) (s : Fin n → Cube d) : ℝ :=
+  ConfidenceClipping.failure
+    (correctConfidence (parity d)
+      (NeuralGeneralization.posterior (NetworkGaussianFunctionLimit.gaussianFunctionMass d k 0)
+        (consistent (parity d) s))) (13/20)
+
+theorem eventually_gaussian_large_sample_lower_bound (k : ℕ) :
     ∃ c : ℝ, 0<c ∧ ∀ᶠ d : ℕ in atTop, ∀ n : ℕ,
       Real.exp (logDimension d^3)≤(n:ℝ) → (n:ℝ)≤Real.exp (c*(d:ℝ)) →
-      ∀ γ : ℝ, γ<0 →
-      (3/4:ℝ)≤sampleProbability (uniformLaw d) n (fun s =>
-        (1/16:ℝ)≤Filter.liminf (MainStatements.parityFailure d k n a γ s) atTop) := by
+      (3/4:ℝ)≤sampleProbability (uniformLaw d) n (fun s => (3/8:ℝ)≤gaussianFailure d k n s) := by
   classical
   let A : ℝ := (2:ℝ)^79
   have hA : (2:ℝ)^79≤A := le_rfl
@@ -42,7 +46,7 @@ theorem eventually_negative_large_sample_lower_bound (k : ℕ) (a : ℝ) :
   have hc : 0<c := lt_min hc₀ (by norm_num)
   refine ⟨c,hc,?_⟩
   filter_upwards [hcutoff,hgood,logDimension_tendsto.eventually_ge_atTop 2,
-    eventually_ge_atTop 1] with d hcutoff hgood hlog hd n hmin hmax γ hγ
+    eventually_ge_atTop 1] with d hcutoff hgood hlog hd n hmin hmax
   have hd0 : 0<d := by omega
   have hn4 : 4≤n := by
     have hh := pow_le_pow_left₀ (by norm_num : (0:ℝ)≤2) hlog 3
@@ -144,7 +148,32 @@ theorem eventually_negative_large_sample_lower_bound (k : ℕ) (a : ℝ) :
     (by simpa only [Fintype.card_fin,adaptive_tail_trace] using hvariance)
     (by simpa only [Fintype.card_fin] using htailU)
     (by simpa only [Fintype.card_fin] using hheadActual)
-  have hlim := negative_confidence_liminf_of_gaussian_failure hd0 k hγ a s (13/20) (by norm_num)
-  exact (show (1/16:ℝ)≤3/8 by norm_num).trans (hlow.trans hlim)
+  unfold gaussianFailure
+  change (3/8:ℝ)≤ConfidenceClipping.failure
+    (correctConfidence (parity d) (NeuralGeneralization.posterior
+      (walshFunctionMass (walshCoefficients (arcsineProfile d (k+1))) 0)
+      (consistent (parity d) s))) (13/20)
+  have heq := funext (parity_gaussian_confidence_eq _ (iterated_arcsine_coefficient_pos d k) s)
+  rw [heq]
+  exact hlow
+
+/-- The original weaker endpoint is retained for the common subcritical
+assembly; its proof now derives from the sharp Gaussian statement. -/
+theorem eventually_negative_large_sample_lower_bound (k : ℕ) (a : ℝ) :
+    ∃ c : ℝ, 0<c ∧ ∀ᶠ d : ℕ in atTop, ∀ n : ℕ,
+      Real.exp (logDimension d^3)≤(n:ℝ) → (n:ℝ)≤Real.exp (c*(d:ℝ)) →
+      ∀ γ : ℝ, γ<0 →
+      (3/4:ℝ)≤sampleProbability (uniformLaw d) n (fun s =>
+        (1/16:ℝ)≤Filter.liminf (MainStatements.parityFailure d k n a γ s) atTop) := by
+  obtain ⟨c,hc,he⟩ := eventually_gaussian_large_sample_lower_bound k
+  refine ⟨c,hc,?_⟩
+  filter_upwards [he,eventually_ge_atTop 1] with d hd hd1 n hmin hmax γ hγ
+  apply (hd n hmin hmax).trans
+  apply sampleProbability_mono
+  intro s hs
+  have ht := NetworkGaussianFunctionLimit.gamma_negative_confidence_liminf
+    (by omega) k hγ a (parity d) s (uniformLaw d) (13/20) (by norm_num)
+  rw [uniform_bufferedFailure_eq] at ht
+  exact (show (1/16:ℝ)≤3/8 by norm_num).trans (hs.trans ht)
 
 end NeuralGeneralization.SubcriticalNegativeLargeSample

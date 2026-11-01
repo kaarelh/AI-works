@@ -79,14 +79,14 @@ theorem universal_polynomial_depth_learning:
           D.real {x|correctConfidence (robustPosterior (N:=N) (r:=r) Real.tanh c σ B.computes sample)
             (fun x=>labelReal (B.computes x)) (networkOutput Real.tanh) (1/4) x≤(2/3:ℝ)}≤ε := by
   obtain ⟨K,hK,hent⟩:=entropy_global_polynomial
-  refine ⟨200*(K+1),by positivity,?_⟩
+  refine ⟨16*(K+1),by positivity,?_⟩
   intro d C r hd hC B c ε δ hc hε hε1 hδ hδ1 D hD n hn
   letI:IsProbabilityMeasure D:=hD
   let S:=problemSize d C r c ε δ
   obtain ⟨hS,hds,hCs,hrs,hcs,hcis,hεs,hδs⟩:=problemSize_bounds d C r hc hε hδ hδ1
   have hS0:0<S:=by dsimp [S];linarith
   have hn0:0<n:=by
-    have hh:0<(n:ℝ):=lt_of_lt_of_le (by positivity : 0<200*(K+1)*S^46) hn
+    have hh:0<(n:ℝ):=lt_of_lt_of_le (by positivity : 0<16*(K+1)*S^46) hn
     exact_mod_cast hh
   have he:=hent d C r hC c ε S hc hε hε1 hS hds hCs hrs hcs hcis hεs
   have hS45:S≤S^45:=by simpa using pow_le_pow_right₀ (by linarith : 1≤S) (show 1≤45 by omega)
@@ -95,26 +95,26 @@ theorem universal_polynomial_depth_learning:
     have hh:=mul_le_mul_of_nonneg_left hεs hε.le
     rw [mul_inv_cancel₀ hε.ne'] at hh
     exact hh
-  have hmul:=mul_le_mul_of_nonneg_left hεS (show 0≤200*(K+1)*S^45 by positivity)
+  have hmul:=mul_le_mul_of_nonneg_left hεS (show 0≤16*(K+1)*S^45 by positivity)
   have hnε:=mul_le_mul_of_nonneg_right hn hε.le
-  have hpow:200*(K+1)*S^45*(ε*S)=200*(K+1)*S^46*ε:=by ring
+  have hpow:16*(K+1)*S^45*(ε*S)=16*(K+1)*S^46*ε:=by ring
   rw [hpow] at hmul
-  have hbudget:200*(entropy d C r c ε+Real.log (1/δ))≤(n:ℝ)*ε:=by
+  have hbudget:16*(entropy d C r c ε+Real.log (1/δ))≤(n:ℝ)*ε:=by
     nlinarith
   exact learning_scaled_variance hd hC B hc hε hε1 hδ D n hn0 hbudget
 
 theorem universal_sample_budget:
     ∃A:ℝ,0<A ∧ ∀(d C r:ℕ),0<C→∀c ε δ:ℝ,0<c→0<ε→ε≤1→0<δ→δ≤1→∀n:ℕ,
       A*(problemSize d C r c ε δ)^46≤(n:ℝ)→
-      0<n ∧ 200*(entropy d C r c ε+Real.log (1/δ))≤(n:ℝ)*ε := by
+      0<n ∧ 16*(entropy d C r c ε+Real.log (1/δ))≤(n:ℝ)*ε := by
   obtain ⟨K,hK,hent⟩:=entropy_global_polynomial
-  refine ⟨200*(K+1),by positivity,?_⟩
+  refine ⟨16*(K+1),by positivity,?_⟩
   intro d C r hC c ε δ hc hε hε1 hδ hδ1 n hn
   let S:=problemSize d C r c ε δ
   obtain ⟨hS,hds,hCs,hrs,hcs,hcis,hεs,hδs⟩:=problemSize_bounds d C r hc hε hδ hδ1
   have hS0:0<S:=by dsimp [S];linarith
   have hn0:0<n:=by
-    have hh:0<(n:ℝ):=lt_of_lt_of_le (by positivity : 0<200*(K+1)*S^46) hn
+    have hh:0<(n:ℝ):=lt_of_lt_of_le (by positivity : 0<16*(K+1)*S^46) hn
     exact_mod_cast hh
   have he:=hent d C r hC c ε S hc hε hε1 hS hds hCs hrs hcs hcis hεs
   have hS45:S≤S^45:=by simpa using pow_le_pow_right₀ (by linarith : 1≤S) (show 1≤45 by omega)
@@ -123,11 +123,11 @@ theorem universal_sample_budget:
     have hh:=mul_le_mul_of_nonneg_left hεs hε.le
     rw [mul_inv_cancel₀ hε.ne'] at hh
     exact hh
-  have hmul:=mul_le_mul_of_nonneg_left hεS (show 0≤200*(K+1)*S^45 by positivity)
+  have hmul:=mul_le_mul_of_nonneg_left hεS (show 0≤16*(K+1)*S^45 by positivity)
   have hnε:=mul_le_mul_of_nonneg_right hn hε.le
-  have hpow:200*(K+1)*S^45*(ε*S)=200*(K+1)*S^46*ε:=by ring
+  have hpow:16*(K+1)*S^45*(ε*S)=16*(K+1)*S^46*ε:=by ring
   rw [hpow] at hmul
-  have hbudget:200*(entropy d C r c ε+Real.log (1/δ))≤(n:ℝ)*ε:=by
+  have hbudget:16*(entropy d C r c ε+Real.log (1/δ))≤(n:ℝ)*ε:=by
     nlinarith
   exact ⟨hn0,hbudget⟩
 

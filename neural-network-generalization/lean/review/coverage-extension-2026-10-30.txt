@@ -1,6 +1,9 @@
 NNBayes statement audit and coverage extensions — 30–31 October 2026
 ================================================================
-Baseline: 4ae26f467789a6aec9802f672a3c46e694cc60dd.
+Original baseline: 4ae26f467789a6aec9802f672a3c46e694cc60dd.
+Latest extension baseline: 0ea26b6b6e3ec7ae34263c4df7322734d4eee932.
+The latest extension changes Lean proofs and verification records only.
+All papers and their statements are unchanged.
 Scope: the sixteen papers with main formalizations (the original five,
 the second batch of ten, and conditional nonpolynomial learning). No new
 formalization project was started for the other papers. The accompanying
@@ -30,8 +33,13 @@ Main correspondence across the sixteen papers
    polynomial learning claim match. The scale threshold may depend on width
    and precedes the input law, sample count, and failure probability.
    NEW: norm/teacher-complexity polynomial comparisons and norm-sublevel
-   counting in NormComplexityComparison.lean. These use a looser quantization
-   count; they do not certify the sharper displayed Euclidean packing formula.
+   counting in NormComplexityComparison.lean.
+   NEW (second extension): ParameterSensitivityMain and NormBallPacking prove
+   the literal sensitivity Lambda^2=((d+1)/d)R^{2(L-1)}+sum_{j=0}^{L-2}R^{2j}
+   and packing count (1+2R Lambda)^P, P=N(d+1)+(L-2)N^2+N. Compactness supplies
+   weak-margin representatives at the strict-margin energy infimum; no false
+   strict-infimum attainment premise is used. General nonpolynomial-activation
+   circuit simulation and the growing-depth norm-ball appendix remain open.
 
 2. Gamma above one: main all-width finite-scale statement matches, for each
    fixed gamma>1. The polynomial may depend on gamma and depth. The inverse
@@ -48,7 +56,10 @@ Main correspondence across the sixteen papers
 4. Subcritical exponential: main statement matches, including constants
    chosen before gamma<1 and width-first limits. The parity teacher already
    has a closed polynomial-complexity realization. Sharper separate negative-
-   gamma constants and some standalone sampling estimates remain uncovered.
+   gamma constants are now covered: SubcriticalNegativeSharp proves a 3/8
+   confidence-failure fraction with sample probability at least 3/4, including
+   zero samples and the finite-width liminf conclusion for every gamma<0.
+   Some standalone sampling estimates remain uncovered.
 
 5. Robust polynomial depth: polynomial conclusion matches under the formal
    circuit convention. IMPORTANT WIDTH GAP: Lean counts a constant wire at
@@ -69,9 +80,11 @@ Main correspondence across the sixteen papers
 
 8. Improved original-support all-scale learning: the exponents C^6 log^13 and
    the degree-46 polynomial conclusion are covered. IMPORTANT GAPS: the same
-   constant-wire issue affects literal small widths; the proof uses a larger
-   finite-concentration allocation (200 in place of the printed 16). The
-   numerical allocation is not certified by preserving polynomial exponents.
+   constant-wire issue affects literal small widths. The leading finite-
+   concentration factor has now been improved from 200 to the printed 16,
+   through all scale and width-growth corollaries. This is 16 times the FORMAL
+   entropy resource: the paper's literal J and compression-parameter allocation
+   are still not proved. The numerical-budget gap is therefore only narrowed.
 
 9. Shallow sharp bounds: the main three explicit budgets match.
    NEW: readout L1 bound from weighted energy, norm-only sample budget, and
@@ -84,8 +97,15 @@ Main correspondence across the sixteen papers
     NEW: arbitrary confidence thresholds, including 2/3 and worst-tie 1/2,
     and infinite-majority-count conversion, at the existing sharp neural
     budgets in BatchTwoOnlinePredictionMain.lean. No arbitrary-order upper
-    bound is inferred. Ancillary nonuniform-IID, merging and sampled-error
-    refinements and the paper's counterexamples are not all formalized.
+    bound is inferred.
+    NEW (second extension): BatchTwoOnlineNonuniformMain proves the actual
+    infinite-IID expected total bound 3+(h+1)(1+log T)+m beta, with
+    T=ceil(p_min^{-1}log(2/p_min)), for arbitrary full-support finite input laws.
+    BatchTwoOnlineAdverseOrder gives the explicit point-exception prior,
+    per-round error >1-1/R, the actual posterior-draw expectation, and majority
+    and confidence failures. It is not a Gaussian NNBayes OOD counterexample.
+    Its biased-IID first-appearance probability, the general merging extension,
+    some sampled-tail refinements, and optional ReLU formulas remain open.
 
 11. Circuit converse: principal finite/permutation and IID statements match,
     with the explicit resource constants and the actual circuit syntax.
@@ -116,11 +136,25 @@ Main correspondence across the sixteen papers
     energy exact interpolants now exist by compactness and have the witness
     energy bound. One sample event controls all eligible widths, every
     minimizer and every probability mixture of minimizers, in
-    BatchTwoContinuousMinimizers.lean. Exact iterated Bayesian weak limits and
-    separate binary-likelihood classification statements remain uncovered.
-    Full measurability of the original two success events is not supplied by
-    those endpoint declarations; the new minimizer theorem has an explicitly
-    measurable sample event.
+    BatchTwoContinuousMinimizers.lean.
+    NEW (second extension): actual normalized Gaussian posteriors are tight
+    as scale tends to zero. Every positive scale sequence has a weakly
+    convergent subsequence. Every iterated scale-then-tolerance weak limit is
+    supported on minimum-energy exact interpolants; both stages exist without
+    uniqueness or regular-value assumptions. BatchTwoContinuousIteratedMain
+    transfers the same simultaneous all-width learning event to every such
+    limit. Joint paths and reversed limits are not asserted.
+    BatchTwoContinuousSuccessMeasurability proves measurability of the literal
+    posterior risk and confidence success events, including zero denominators.
+    BatchTwoContinuousClassificationFullSupport closes the separate binary-
+    margin-likelihood corollary: all N>=C, strong prior and every fixed gamma>=1,
+    polynomial in B and inverse teacher margin, and the margin need hold only
+    almost everywhere. Null-input labels need not be measurable. The learner
+    conditions only on the original binary training margins. Its ordinary
+    measurable-label success event is proved measurable in ClassificationMeasurability.
+    BatchTwoContinuousScoreSigns proves the general score-to-sign confidence
+    transfer with the additive near-zero target mass. The separate spherical
+    anti-concentration constant is still not a checked endpoint.
 
 15. Continuous depth lower bound: all three main regimes match the fixed
     nonatomic unit-circle input law and bounded width-three teacher.
@@ -130,8 +164,10 @@ Main correspondence across the sixteen papers
     simultaneously controls every eligible learner width and every mixture,
     via the memorizer, compact energy sublevels and pairing barrier, in
     BatchTwoContinuousDepthMinimizers.
-    Iterated weak-limit identification and varying smooth-density variants
-    remain uncovered. No uniform-sphere or Boolean-cube lower bound follows.
+    NEW (second extension): BatchTwoContinuousIteratedMain proves existence
+    and the same failure bounds for every actual iterated Gaussian weak limit.
+    The varying smooth-density variant remains open. No uniform-sphere or
+    Boolean-cube lower bound follows.
 
 16. Conditional nonpolynomial learning: the main theorem matches the sole
     explicit complexity-class premise PPoly != TC1 and the actual positive-
@@ -142,10 +178,14 @@ Main correspondence across the sixteen papers
     to every sample length from ZERO up to that budget, all eligible widths,
     and every scale schedule. GaussianOutputSymmetry proves exact one-half
     label confidence at zero samples and supplies the formerly missing case.
-    The auxiliary arbitrary-beta ceiling (beyond beta=1/6) remains uncovered.
+    NEW (second extension): ArbitraryPosteriorCeiling proves the auxiliary
+    ceiling for every 0<beta<1, with the paper's logarithmic beta width slack,
+    uniform over all labels, all m<=n including zero, and all eligible scales.
+    It uses the actual raw Gaussian bad-mass and denominator estimates and
+    the proved circuit-construction bound; no ceiling oracle is assumed.
 
-Build and trust checks
-----------------------
+First extension verification (published in 0ea26b6)
+--------------------------------------------------
 Pinned Lean 4.32.0 and mathlib revision
 81a5d257c8e410db227a6665ed08f64fea08e997.
 The main library was rebuilt from source with the additions integrated:
@@ -178,11 +218,37 @@ unsafe proof bypasses. This static check supplements, rather than replaces,
 the compiler and axiom checks. New source hashes and build evidence are in the
 verification records alongside this review and the research note.
 
+Second extension verification
+-----------------------------
+The main library, including all new imports, builds from the same pinned
+Lean and mathlib revisions (4,655 build jobs). CheckMain, CheckConfidence,
+CheckParity, CheckRobust, Audit, BatchTwoAudit and CheckCoverageExtensions
+all pass. The last gate checks 98 named endpoints; every dependency axiom
+is propext, Classical.choice or Quot.sound. The comment/string-aware scan of
+1,955 project Lean files found no proof placeholders or bypass tokens.
+All 588 conditional-package modules were freshly compiled with no reused
+local objects. The added conditional endpoint gate also passes. All 561
+checked paper/source files are byte-identical to the extension baseline.
+Current logs, source hashes, unchanged-paper verification, and the fresh
+conditional-package build are recorded in
+verification/coverage-gaps-2026-10-31/.
+
 Remaining work is real
 ----------------------
-The new proofs do not close every coverage gap. In particular, the two width
-conventions, the printed 16 allocation, broader circuit simulation, sharp
-packing formulas, exact Bayesian weak limits, arbitrary-beta conditional
-ceiling, and the listed ancillary results still require additional proofs or an explicitly
-approved change to the paper statements. No paper was weakened just to make
-its statement agree with the current formalization.
+This is not a claim of complete paper coverage. Still open:
+* Strong-prior: arbitrary continuous nonpolynomial activation gate simulation;
+  growing-depth norm-ball appendix. The sharp packing formula is now closed.
+* Subcritical: the full row-dependent squared-Lipschitz-process statement and
+  arbitrary-distribution squared-sampling estimates with the printed resources.
+* Robust polynomial depth: the constant-wire width mismatch, and all remaining
+  localized/distributional, certificate, rescaling, general-margin, monotone-
+  score, two-margin-transport and unlabelled-pool variants.
+* Improved original support: the same width mismatch and the paper's literal
+  J/compression constants. Matching the leading 16 alone does not close J.
+* Online: biased-IID adverse-order probability, general merging and sampled-
+  tail refinements, and optional exact ReLU budgets.
+* Neural converse: the separate strict-operator-norm-support learner.
+* Continuous depth: the varying smooth-density lower-bound construction.
+* Some optional examples/discussion (including spherical score-to-sign bounds
+  and executable prefix-code serialization) have no separate endpoint.
+No paper was changed or weakened to make a statement fit an existing proof.

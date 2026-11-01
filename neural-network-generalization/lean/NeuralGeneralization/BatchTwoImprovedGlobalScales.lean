@@ -30,7 +30,7 @@ theorem learning_scaled_variance (hd:0<d) (hC:0<C)
     (B:LayeredBooleanCircuit d C r) {c ε δ:ℝ} (hc:0<c) (hε:0<ε) (hε1:ε≤1) (hδ:0<δ)
     (D:Measure (Cube d)) [IsProbabilityMeasure D]
     (n:ℕ) (hn:0<n)
-    (hbudget:200*(entropy d C r c ε+Real.log (1/δ))≤(n:ℝ)*ε):
+    (hbudget:16*(entropy d C r c ε+Real.log (1/δ))≤(n:ℝ)*ε):
     ∃E:Set (Fin n→Cube d),MeasurableSet E ∧
       1-δ≤(CompressionSampling.iidSamples D n).real E ∧
       ∀sample∈E,∀N,C≤N→∀σ,0<σ→(N:ℝ)*σ^2≤1→
@@ -58,7 +58,7 @@ theorem learning_power (hd:0<d) (hC:0<C)
     (B:LayeredBooleanCircuit d C r) {c ε δ:ℝ} (hc:0<c) (hε:0<ε) (hε1:ε≤1) (hδ:0<δ)
     (D:Measure (Cube d)) [IsProbabilityMeasure D]
     (n:ℕ) (hn:0<n)
-    (hbudget:200*(entropy d C r c ε+Real.log (1/δ))≤(n:ℝ)*ε):
+    (hbudget:16*(entropy d C r c ε+Real.log (1/δ))≤(n:ℝ)*ε):
     ∃E:Set (Fin n→Cube d),MeasurableSet E ∧
       1-δ≤(CompressionSampling.iidSamples D n).real E ∧
       ∀sample∈E,∀N,C≤N→∀γ:ℝ,1≤γ→

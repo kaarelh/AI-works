@@ -2,6 +2,8 @@
 
 This project proves the original five main learning statements and the main statements of ten additional papers. The second batch extends the activations, priors, domains, polynomial bounds, online learning and converses. [Second-batch coverage](review/BatchTwo-coverage.md) · [Main entry point](NeuralGeneralization/BatchTwoMain.lean) · [Axiom audit](NeuralGeneralization/BatchTwoAudit.lean).
 
+The [current paper-to-Lean correspondence review](review/coverage-extension-2026-10-30.txt) records the newly proved packing, weak-limit, binary-classification and online endpoints, and the remaining gaps. In particular, the robust and improved-support circuit-width convention and the latter paper’s literal compression-budget constants are not yet fully matched.
+
 The original five statements concern the actual finite Gaussian neural-network model. The proofs use only Lean's standard axioms
 `propext`, `Classical.choice`, and `Quot.sound`: there are no admitted proofs or
 project axioms asserting analytic or probabilistic ingredients.

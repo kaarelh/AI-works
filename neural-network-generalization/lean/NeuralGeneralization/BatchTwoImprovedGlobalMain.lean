@@ -72,7 +72,7 @@ theorem all_width_all_scale_learning (hd:0<d) (hC:0<C)
     (B:LayeredBooleanCircuit d C r) {c ε δ:ℝ} (hc:0<c) (hε:0<ε) (hε1:ε≤1) (hδ:0<δ)
     (D:Measure (Cube d)) [IsProbabilityMeasure D]
     (n:ℕ) (hn:0<n)
-    (hbudget:200*(entropy d C r c ε+Real.log (1/δ))≤(n:ℝ)*ε):
+    (hbudget:16*(entropy d C r c ε+Real.log (1/δ))≤(n:ℝ)*ε):
     ∃E:Set (Fin n→Cube d),MeasurableSet E ∧
       1-δ≤(CompressionSampling.iidSamples D n).real E ∧
       ∀sample∈E,∀N,C≤N→∀t,0<t→t≤1→
@@ -87,9 +87,9 @@ theorem all_width_all_scale_learning (hd:0<d) (hC:0<C)
   classical
   letI:Nonempty (CandidateCode d C r c ε):=⟨fun _=>⟨0,by apply Finset.mem_Icc.mpr;constructor <;> omega⟩⟩
   let loss:=candidateLoss B.computes (candidate d C r c ε)
-  let E:=BatchTwoRelativeStatistics.generalizationEvent D loss n (ε/100)
+  let E:=BatchTwoRelativeStatistics.generalizationEvent D loss n (ε/8)
   have hmeas:MeasurableSet E:=BatchTwoRelativeStatistics.measurable_generalizationEvent D loss
-    (fun _=>measurable_of_finite _) n (ε/100)
+    (fun _=>measurable_of_finite _) n (ε/8)
   have hprob:1-δ≤(CompressionSampling.iidSamples D n).real E :=
     BatchTwoRelativeStatistics.finite_class_good_probability_log D loss
       (fun _=>measurable_of_finite _) (candidateLoss_bounds B.computes (candidate d C r c ε))
@@ -125,7 +125,7 @@ theorem all_width_all_scale_learning (hd:0<d) (hC:0<C)
   obtain ⟨Γ,hΓ,π,hfail⟩:=retained_score_compression hd hC hCN B hc hε hε1 ht ht1 sample
   letI:IsProbabilityMeasure Γ:=hΓ
   have hrisk:gibbsMarginRisk D Q (fun x=>labelReal (B.computes x)) (networkOutput Real.tanh) (1/4)≤
-      ε/100+3*(ε/100)+ε/100 := by
+      ε/100+3*(ε/100)+ε/8 := by
     apply posterior_margin_risk_on_relative_event D B.computes (candidate d C r c ε) hn sample hs Q Q' Γ
       (networkOutput Real.tanh) (fun x=>(continuous_networkOutput tanh_continuous x).measurable) π hfail
     · intro i
