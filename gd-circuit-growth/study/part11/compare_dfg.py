@@ -138,7 +138,7 @@ def run(name, suite):
     src = "merged"
     if r is None:
         if not P:
-            _RUN[key] = (None, "not yet run")
+            _RUN[key] = (None, "file present but unreadable (being written?): re-run" if os.path.exists(merged) else "not yet run")
             return _RUN[key]
         r = dict(P[0]); r["fns"] = {}; src = f"{len(P)} unmerged shard" + "s" * (len(P) > 1)
         for x in P:
@@ -228,6 +228,14 @@ def summ(A, B):
     assert (t["targets"], t["better"], t["worse"], t["learner_never"]) == (p["targets"], p["better"], p["worse"], p["learner_never"])
     t.update(both=p["both"], neither=p["neither"], median=p["median"], ratios=r)
     return t
+
+
+NBINS = ("<= 64", "64 - 256", "256 - 1024", "> 1024", "never")
+
+
+def nbin(v):
+    """n* range (grid points 64, 256, 1024) for the breakdowns."""
+    return "never" if not np.isfinite(v) else "<= 64" if v <= 64 else "64 - 256" if v <= 256 else "256 - 1024" if v <= 1024 else "> 1024"
 
 
 def expo(vals):
@@ -404,6 +412,17 @@ def q2():
         q = pstats(x["ratio"] for x in X)
         L.append(f"| {su} | {len(X)} | {sum(x['identical'] for x in X)} | {sum(1 for x in X if x['ratio'] < 0)} / "
                  f"{sum(1 for x in X if x['ratio'] > 0)} | {q['better']} / {q['worse']} | {f_m(q['mean'], 3)} |")
+    L += ["", "The same, by v3's n* on the target:", "",
+          "| v3's n* | targets | DFG lower / higher | clearly lower / higher (beyond ±0.25) | mean DFG vs v3 (both reach) | median |",
+          "|---|---|---|---|---|---|"]
+    out["dfg_vs_v3_by_v3_nstar"] = {}
+    for lab in NBINS:
+        X = [x for x in v3cmp if nbin(x["v3"]) == lab]
+        if not X:
+            continue
+        q = pstats(x["ratio"] for x in X); out["dfg_vs_v3_by_v3_nstar"][lab] = q
+        L.append(f"| {lab} | {len(X)} | {sum(1 for x in X if x['ratio'] < 0)} / {sum(1 for x in X if x['ratio'] > 0)} | "
+                 f"{q['better']} / {q['worse']} | {f_m(q['mean'], 3)} | {f_m(q['median'], 3)} |")
     big = [x for x in v3cmp if abs(x["ratio"]) > THR]
     L += ["", f"Targets where DFG alone and v3 differ by more than {THR} in log2 n* (or only one reaches 10% error): {len(big)}.", ""]
     if big:
@@ -693,7 +712,10 @@ def q6():
             fr = float(np.nanmax(f)) / CH.common.budget_real(D["X"][pool_[:n]], list(D["types"]), D["C"], n) if np.isfinite(f).any() else None
             c, cv = cell_mean(r, n, "cpu_seconds"), cell_mean(v3, n, "cpu_seconds")
             out[ds]["compute"][n] = dict(flops_frac=fr, cpu=c, v3_cpu=cv)
-            L.append(f"| {ds} | {n} | {'–' if fr is None else f'{fr:.3f}'} | {'–' if c is None else f'{c:.1f}'} | {'–' if cv is None else f'{cv:.1f}'} |")
+            L.append(f"| {ds} | {n} | {'–' if fr is None else f'{fr:.3f}'} | {'–' if c is None else f'{c:.2f}'} | {'–' if cv is None else f'{cv:.2f}'} |")
+    nores = {ds: [k for k in TAB_REFS if have[ds] is not None and not CH.cells(have[ds], tab_ref(k, ds), ds)] for ds in TAB}
+    out["references_without_cells"] = nores
+    L += [""] + [f"References with no result on {ds}: {', '.join(v)}." for ds, v in nores.items() if v]
     return L + [""], out
 
 
@@ -705,12 +727,12 @@ def compute():
          f"Part 11 queue ran {len(glob.glob(os.path.join(QUEUE, 'logs', 'worker_*.log'))) or 'several'} worker processes in parallel at "
          f"nice 10 on a machine with {os.cpu_count()} CPUs; v3's were measured in Part 10, under that run's own load, so CPU "
          "comparisons are rough.", "",
-         "| run | suite | d | fits | max FLOPs per fit / one network run (target, n) | fits above 0.75 of a run | CPU s per fit: median / max |",
+         "| run | suite | d | fits | max FLOPs per fit / one network run (target, n) | fits above 0.75 / above 1 run | CPU s per fit: median / max |",
          "|---|---|---|---|---|---|---|"]
     out = dict(runs={}, by_n={})
     jobs = [("dfg13-perm", su) for su in TOY] + [("dfg13-perm", f"designed_d{d}") for d in DSC if d != 30] + \
            [("lowdeg-perm", su) for su in TOY] + [(f"dfg13-{tag}-perm", su) for tag, *_ in ABL for su in ABL_SUITES]
-    agg = defaultdict(lambda: dict(fits=0, fmax=0.0, over=0, cpu=[]))
+    agg = defaultdict(lambda: dict(fits=0, fmax=0.0, over=0, over1=0, cpu=[]))
     for name, su in jobs:
         r, st = run(name, su)
         if r is None:
@@ -719,15 +741,15 @@ def compute():
         C = np.concatenate([np.array(v["cpu_seconds"], float).ravel() for v in r["fns"].values()])
         fits = int(sum(np.isfinite(f).sum() for f, _ in F))
         fm, (tt, nn_) = max(((float(np.nanmax(f)), (t, r["ns"][int(np.nanargmax(np.nanmax(f, 1)))])) for f, t in F), key=lambda x: x[0])
-        over = int(sum((f > 0.75).sum() for f, _ in F))
-        out["runs"][f"{name}|{su}"] = dict(status=st, d=r["d"], fits=fits, max_flops_frac=fm, at=[tt, nn_], over_075=over,
+        over = int(sum((f > 0.75).sum() for f, _ in F)); over1 = int(sum((f > 1.0).sum() for f, _ in F))
+        out["runs"][f"{name}|{su}"] = dict(status=st, d=r["d"], fits=fits, max_flops_frac=fm, at=[tt, nn_], over_075=over, over_1=over1,
                                             cpu_median=float(np.nanmedian(C)), cpu_max=float(np.nanmax(C)))
         if name.startswith("dfg13-") and name != "dfg13-perm":
-            a = agg[name]; a["fits"] += fits; a["fmax"] = max(a["fmax"], fm); a["over"] += over; a["cpu"] += list(C)
+            a = agg[name]; a["fits"] += fits; a["fmax"] = max(a["fmax"], fm); a["over"] += over; a["over1"] += over1; a["cpu"] += list(C)
             continue
-        L.append(f"| {name} | {su} | {r['d']} | {fits} | {fm:.3f} ({tt}, {nn_}) | {over} | {np.nanmedian(C):.2f} / {np.nanmax(C):.1f} |")
+        L.append(f"| {name} | {su} | {r['d']} | {fits} | {fm:.3f} ({tt}, {nn_}) | {over} / {over1} | {np.nanmedian(C):.2f} / {np.nanmax(C):.1f} |")
     for name, a in agg.items():
-        L.append(f"| {name} | the {len(ABL_SUITES)} ablation suites | 30 | {a['fits']} | {a['fmax']:.3f} | {a['over']} | "
+        L.append(f"| {name} | the {len(ABL_SUITES)} ablation suites (those run) | 30 | {a['fits']} | {a['fmax']:.3f} | {a['over']} / {a['over1']} | "
                  f"{np.nanmedian(a['cpu']):.2f} / {np.nanmax(a['cpu']):.1f} |")
     # by n, DFG alone on the d = 30 suites against v3 on the same fits
     L += ["", "By n: DFG alone on the d = 30 suites run so far, and v3 (`hybrid/results/toy__p10_sum-perm__<suite>.json`) on the same "
@@ -869,8 +891,26 @@ def coverage(q2o):
           "- n* is a seed mean over 2-3 training sets per (target, n); no confidence interval is attached to it. The one-seed ablations "
           "(Q5) are compared on the same training set as DFG alone; the null rows there give the scale of a one-seed difference.",
           "- Part 6's d-scaling DFG runs are other versions (v1, v1.1) in natural column order; they are context, not a paired comparison.",
+          "- The networks' npz files hold no timing, so CPU time is compared with v3 only, not with the networks; the compute "
+          "comparison with the networks is in FLOPs.",
           ""]
     return L
+
+
+def appendix():
+    L = ["## Appendix: n* per target on every toy suite", "",
+         "Numerical; sources as in Q2. The network variant(s) attaining nets_best in brackets.", "",
+         "| suite | target | DFG alone | v3 | v2 | lowdeg | lin | hgb | nets_best (variant) | DFG vs nets_best | DFG vs v3 |",
+         "|---|---|---|---|---|---|---|---|---|---|---|"]
+    for su in TOY:
+        D = nst(run("dfg13-perm", su)[0]); NR, nb = nets(su); ab = nets_argbest(su)
+        V3, V2, LI, HG = CL.nst("p10_sum-perm", su), CL.v2_toy(su), CL.nst("lin", su), CL.nst("hgb", su)
+        LD = nst(run("lowdeg-perm", su)[0])
+        for t in targets(su):
+            L.append(f"| {su} | {t} | {f_n(D.get(t))} | {f_n(V3.get(t))} | {f_n(V2.get(t))} | {f_n(LD.get(t))} | {f_n(LI.get(t))} | "
+                     f"{f_n(HG.get(t))} | {f_n(nb.get(t))}" + (f" ({ab[t]})" if t in ab else "") + " | "
+                     f"{f_r(CH.l2r(D[t], nb[t]) if t in D and t in nb else None)} | {f_r(CH.l2r(D[t], V3[t]) if t in D and t in V3 else None)} |")
+    return L + [""]
 
 
 # ---------------------------------------------------------------- main
@@ -893,7 +933,7 @@ def clean(o):
 def main():
     now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     LS, S, cnt = status(); L1, o1 = q1(); L2, o2 = q2(); L3, o3 = q3(); L4, o4 = q4(); L5, o5 = q5(); L6, o6 = q6()
-    LC, oc = compute(); LK, ok_ = checks(o1, o2); LV = coverage(o2)
+    LC, oc = compute(); LK, ok_ = checks(o1, o2); LV = coverage(o2); LA = appendix()
     head = ["# Part 11 results: DFG v1.3 alone", "",
             f"Generated by `compare_dfg.py` on {now} from the result files; definitions and sources are in its docstring. "
             "Re-run `python compare_dfg.py` to refresh. Every number here is computed by the script from the files named in each "
@@ -905,7 +945,7 @@ def main():
             "clearly worse) [both reach / targets compared]', mean over the targets both reach, clearly = beyond ±0.25 or only one "
             "reaches 10% error. In the summary tables: 'never, the other reaches' = the row's learner never, the reference does; "
             "'the other never' = the reverse.", ""]
-    L = head + L1 + L2 + L3 + L4 + L5 + L6 + LC + LK + LV + LS
+    L = head + L1 + L2 + L3 + L4 + L5 + L6 + LC + LK + LV + LA + LS
     open(os.path.join(HERE, "RESULTS.md"), "w").write("\n".join(L) + "\n")
     J = dict(generated_utc=now, script="part11/compare_dfg.py",
              notes=dict(nstar="training-set size at 10% test error (seed mean); 'inf' = never by n = 16384",
@@ -914,8 +954,8 @@ def main():
              status=S, status_counts=cnt, q1_dlheld7=o1, q2_suites=o2, q3_lowdeg=o3, q4_dscale=o4, q5_ablations=o5,
              q6_tabular=o6, compute=oc, checks=ok_)
     json.dump(clean(J), open(os.path.join(HERE, "RESULTS.json"), "w"), indent=1)
-    print("\n".join(L[:12] + L1[:6]))
-    print(f"... wrote RESULTS.md ({len(L)} lines) and RESULTS.json")
+    print("\n".join(head[:6]))
+    print(f"wrote RESULTS.md ({len(L)} lines) and RESULTS.json")
 
 
 if __name__ == "__main__":
