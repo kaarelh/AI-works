@@ -29,14 +29,16 @@ Figures: [`figures/fig_atlas_grid.pdf`](figures/fig_atlas_grid.pdf), [`figures/f
 - **DFG alone learns each target in the dictionary form that is cheapest to detect, and with more data moves to the
   target's exact Fourier expansion when that is small** (Numerical, §1; Heuristic, the summary). Parities are one
   character from the first n that fits them (3/3). Staircases, majorities of parities, multiplexers and small random
-  formulas are their characters; at n = 16384, 8 of the 37 models are exactly the target's Fourier expansion and
+  formulas are their characters (multiplexers and random formulas after transient block encodings of a branch or a
+  term); at n = 16384, 8 of the 37 models are exactly the target's Fourier expansion and
   nothing else (par2, par4, par5, stair5, andxor, mux6, mux11, hrf0). Symmetric targets and signed sums are their
   sum block (sym9 at 128, band11 at 1024, f7_08 at 512, h5s7 at 2048), and halfspaces are degree-1 characters plus,
   where one exists, a block.
 - **Mixtures are represented in forms the targets' definitions do not suggest** (Numerical, §1.9). The parity of two
   majorities is first two folded blocks over the union, |t_A + t_B| and |t_A − t_B| (parmaj at 128, majxor at 256;
-  sign(|t_A+t_B|² − |t_A−t_B|²) = sign(t_A t_B)); a parity, a gate or a selector partner is most often the
-  inner term of a weighted block (s ± 3 x13, s ± 3 x11x12, s ± 3 AND(¬x7,¬x8), s1 ± 3 x11) next to characters; by
+  sign(|t_A+t_B|² − |t_A−t_B|²) = sign(t_A t_B)); a parity, gate or selector partner ends up as the inner term of a
+  weighted block next to characters (at n = 16384 in 5 of the 6 mixtures without a true weighted block: s ± 3 x13,
+  s ± 3 x11x12, s ± 3 AND(¬x7,¬x8), s1 ± 3 x11, s2 ± 3 x11); by
   n = 16384 only 1 of the 7 signed-sum mixtures (f7_10) still holds its compact representation, while all 7 have test
   error 0 and 5 of them span R² ≥ 0.998.
 - **Where DFG is above 10% error, the dictionary is what is missing, not the readout** (Numerical, §2.1): in 133 of

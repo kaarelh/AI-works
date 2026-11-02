@@ -707,7 +707,7 @@ def figures(R, order, cmp_rows, cmp_per):
                 ax.plot(j, i, "o", color="tab:blue", ms=4.5)
             elif c["summary"]["span_r2"] >= 0.999:
                 ax.plot(j, i, "s", color="tab:purple", ms=4)
-            elif any((rp.get("found") or 0) > 0 or (rp.get("present") or 0) > 0 for rp in reps):
+            elif any(((rp.get("found") or 0) > 0 or (rp.get("present") or 0) > 0) and not rp.get("aux") for rp in reps):
                 ax.plot(j, i, "o", mfc="none", mec="tab:blue", ms=4.5)
             if c["variant"] == 1:
                 ax.plot(j + 0.3, i - 0.3, "x", color="tab:red", ms=3.5)

@@ -607,12 +607,17 @@ def q5():
         newly_never = [f"{su}/{t}" for su, t, v in R if v == INF]; newly_reached = [f"{su}/{t}" for su, t, v in R if v == -INF]
         moved[tag] = [(su, t, v) for su, t, v in R if abs(v) > THR]
         nrun = sum(1 for su in ABL_SUITES if rows[su].get("seeds") is not None)
-        out[tag] = dict(what=what, kw=kw, protocol_seeds=list(ps), suites=rows, pooled=P, newly_never=newly_never, newly_reached=newly_reached)
+        npart = sum(1 for su in ABL_SUITES if rows[su].get("seeds") is not None and not rows[su]["status"].startswith("complete"))
+        out[tag] = dict(what=what, kw=kw, protocol_seeds=list(ps), suites=rows, pooled=P, newly_never=newly_never, newly_reached=newly_reached,
+                        suites_run=nrun, suites_partial=npart)
         sd_txt = f_seeds(sorted(seeds)[0]) if len(seeds) == 1 else ("–" if not seeds else "mixed: " + "; ".join(f_seeds(s) for s in sorted(seeds)))
+        if seeds and any(s != tuple(ps) for s in seeds):
+            sd_txt += " (**not the protocol's**)"
+        runs_txt = f"{nrun} of {len(ABL_SUITES)}" + (f" ({npart} partial)" if npart else "")
         if not R:
             L.append(f"| {tag} | {what}: {json.dumps(kw) if kw is not None else '–'} | {sd_txt if seeds else f_seeds(ps) + ' (protocol)'} | "
-                     f"{nrun} of {len(ABL_SUITES)} | – | – | – | – | – | – | – | – |"); continue
-        L.append(f"| {tag} | {what}: `{json.dumps(kw)}` | {sd_txt} | {nrun} of {len(ABL_SUITES)} | {P['targets']} | {P['both']} | "
+                     f"{runs_txt} | – | – | – | – | – | – | – | – |"); continue
+        L.append(f"| {tag} | {what}: `{json.dumps(kw)}` | {sd_txt} | {runs_txt} | {P['targets']} | {P['both']} | "
                  f"{f_m(P['mean'])} | {f_m(P['median'])} | {P['better']} | {P['worse']} | {', '.join(newly_never) or '–'} | {', '.join(newly_reached) or '–'} |")
     # null reference: DFG alone on one seed against another seed (no change; unpaired data)
     out["_null"] = {}
@@ -646,6 +651,11 @@ def q5():
 
 
 # ---------------------------------------------------------------- Q6
+def std_load(name, ds):
+    """A standard-task result file (as compare_hybrid.load, but retried while being written)."""
+    return _read(os.path.join(CH.SH.RES, f"{name}__{ds}.json"))
+
+
 def tab_ref(k, ds):
     if k == "v3":
         return CL.v3_real(ds)
@@ -669,7 +679,7 @@ def q6():
          "mlp_best+ adds Part 9's wider ones), hgb, v3 = `hyb_portfolio3` (compare_learner.v3_real), v2, v1. Cell rule: "
          "compare_hybrid.cells. kr_vs_kp is a development set of the standard tasks; mushroom is in Part 7's held-out set.", ""]
     out = {}
-    have = {ds: CH.load("dfg13", ds) for ds in TAB}
+    have = {ds: std_load("dfg13", ds) for ds in TAB}
     if not any(have.values()):
         return L + ["DFG alone on kr_vs_kp and mushroom: not yet run.", ""], dict(status="not yet run")
     L += ["| DFG alone vs | dataset | cells | better | tie | worse | mean log2(err / ref err) |", "|---|---|---|---|---|---|---|"]
@@ -802,7 +812,7 @@ def status():
                         kw=r.get("kw") if r else None, file=f"part11/results/toy__{name}__{su}.json"))
         cnt["complete" if st.startswith("complete") else "partial" if st.startswith("partial") else "not yet run"] += 1
     for ds in TAB:
-        r = CH.load("dfg13", ds); st = "complete" if r is not None else "not yet run"
+        r = std_load("dfg13", ds); st = "complete" if r is not None else "not yet run"
         out.append(dict(run="dfg13", suite=ds, question="Q6", status=st, seeds=r["seeds"] if r else None, kw=None,
                         file=f"standard_tasks/results/dfg13__{ds}.json"))
         cnt[st] += 1
