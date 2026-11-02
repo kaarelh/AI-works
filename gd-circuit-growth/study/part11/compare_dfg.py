@@ -22,6 +22,8 @@ DEFINITIONS (those of Parts 8-10; PROTOCOL.md, "Fixed in advance")
   same seeds (Q5) an ablation run on seeds {0, 1} or {0} is compared with DFG alone's n* computed from the same seeds of
              DFG alone's own runs: identical training sets and column permutations (the fit rng is
              default_rng([fn_seed(target), seed, n, 77]) and harness.Permuted draws the permutation from it first).
+  exponent   (Q4) least-squares slope of log n* on log d (as dscale_analysis.py), for each learner over the same d: those
+             where DFG v1.3 and the networks both reach 10% error (each learner's own-d fit is in RESULTS.json too).
   cells      (Q6) compare_hybrid.cells: per (dataset, n) the seed-mean test error; better / worse when the errors differ by
              > 10% relative and by > 2 s.e. (seed spread of both, at least the binomial test-set noise).
 SOURCES
@@ -520,26 +522,32 @@ def q4():
          "loss; the only variant run at every d), harness.nn_reference on the scratch `results_d15`, `results`, `results_d60`, "
          "`results_d120` npz (seeds per d below; 40000 steps at d = 120, 20000 otherwise). Part 6 DFG: "
          + ", ".join(f"d = {d}: `discrete_learner/results/{OLD_DFG[d][0]}.json` ({OLD_DFG[d][1]})" for d in DSC)
-         + ", natural column order. Exponent: least-squares slope of log n* on log d over the d with finite n* (as "
-         "dscale_analysis.py), the d used in brackets.", "",
-         "| target | DFG v1.3 n* at d = " + " / ".join(map(str, DSC)) + " | networks n* | Part 6 DFG n* | exponent DFG v1.3 | exponent networks "
-         "| exponent Part 6 DFG | networks' exponent in dscale.json (d = 15-60) |", "|---|---|---|---|---|---|---|---|"]
+         + ", natural column order. Exponent: least-squares slope of log n* on log d (as dscale_analysis.py), fitted for every "
+         "learner on the same d: those where DFG v1.3 and the networks both have a finite n* (listed); RESULTS.json also has each "
+         "learner's exponent over its own finite d.", "",
+         "| target | DFG v1.3 n* at d = " + " / ".join(map(str, DSC)) + " | networks n* | Part 6 DFG n* | d used | exponent DFG v1.3 "
+         "| exponent networks | exponent Part 6 DFG | networks' exponent in dscale.json (d = 15-60) |", "|---|---|---|---|---|---|---|---|---|"]
     out = dict(targets=fns, status={d: ST[d][0] for d in DSC}, per_target={}, per_d={})
-    fe = lambda e: "–" if e[0] is None else f"{e[0]:.2f} ({', '.join(map(str, e[1]))})"
+    fe = lambda e: "–" if e[0] is None else f"{e[0]:.2f}"
+    fin = lambda v: v is not None and np.isfinite(v)
     for t in fns:
         a = {d: DF[d].get(t) for d in DSC}; b = {d: NN[d].get(t) for d in DSC}; c = {d: OLD[d].get(t) for d in DSC}
-        ea, eb, ec = expo(a), expo(b), expo(c)
+        cd = [d for d in DSC if fin(a[d]) and fin(b[d])]
+        ea, eb, ec = expo({d: a[d] for d in cd}), expo({d: b[d] for d in cd}), expo({d: c[d] for d in cd})
+        oa, ob, oc = expo(a), expo(b), expo(c)
         xe = X.get("exponents", {}).get(t, {}).get("nn")
         L.append(f"| {t} | " + " / ".join(f_n(a[d]) for d in DSC) + " | " + " / ".join(f_n(b[d]) for d in DSC) + " | "
-                 + " / ".join(f_n(c[d]) for d in DSC) + f" | {fe(ea)} | {fe(eb)} | {fe(ec)} | {'–' if xe is None else f'{xe:.2f}'} |")
-        out["per_target"][t] = dict(dfg13=a, nets=b, part6_dfg=c, dfg13_d30_seeds01=DF01.get(t), exponent_dfg13=ea[0], d_dfg13=ea[1],
-                                    exponent_nets=eb[0], d_nets=eb[1], exponent_part6=ec[0], d_part6=ec[1], exponent_nets_dscale_json=xe,
-                                    nets_grid={d: GRID[d].get(t) for d in DSC})
-    L += ["", "| d | targets | both reach (DFG v1.3, networks) | median DFG v1.3 vs networks | median data factor | mean | Part 6 DFG vs networks: "
+                 + " / ".join(f_n(c[d]) for d in DSC) + f" | {', '.join(map(str, cd)) or '–'} | {fe(ea)} | {fe(eb)} | {fe(ec)} | "
+                 + ("–" if xe is None else f"{xe:.2f}") + " |")
+        out["per_target"][t] = dict(dfg13=a, nets=b, part6_dfg=c, dfg13_d30_seeds01=DF01.get(t), common_d=cd, exponent_dfg13=ea[0],
+                                    exponent_nets=eb[0], exponent_part6=ec[0], own_d=dict(dfg13=oa, nets=ob, part6=oc),
+                                    exponent_nets_dscale_json=xe, nets_grid={d: GRID[d].get(t) for d in DSC})
+    L += ["", "Per d, over the targets DFG v1.3 has run at that d (Part 6 DFG on the same targets):", "",
+          "| d | targets | both reach (DFG v1.3, networks) | median DFG v1.3 vs networks | median data factor | mean | Part 6 DFG vs networks: "
               "both reach / median / mean | DFG v1.3 vs Part 6 DFG: both reach / median | DFG v1.3 max FLOPs per fit / one network run |",
           "|---|---|---|---|---|---|---|---|---|"]
     for d in DSC:
-        A = {t: v for t, v in DF[d].items() if v is not None}; B = NN[d]; C = OLD[d]
+        A = {t: v for t, v in DF[d].items() if v is not None}; B = NN[d]; C = {t: v for t, v in OLD[d].items() if t in A}
         ra, rc, rac = pstats(ratios(A, B).values()), pstats(ratios(C, B).values()), pstats(ratios(A, C).values())
         out["per_d"][d] = dict(dfg_vs_nets=ra, part6_vs_nets=rc, dfg_vs_part6=rac, max_flops_frac=FL[d],
                                nets_seeds=sorted({s for g in GRID[d].values() for s in g["seeds"]}))
