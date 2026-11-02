@@ -222,13 +222,19 @@ def net_stages(onsets, sep=1.35):
 
 
 def nglob(yh, deg, yconst, d=30, K=4, delta=0.1):
-    """Round-0 global-class detection size: the n at which |yhat_S| = s sqrt(2 ln(4 K N / delta) / n), N = C(d, |S|),
-    s^2 = 1 - yhat_0^2 (the residual after the constant); None for degrees with no round-0 global test on all rows
-    (degree > 4: degrees 5, 6 are searched on a subsample, higher degrees not at all)."""
-    if deg > 4:
-        return None
+    """Round-0 global-class detection size: the n at which the expected z-score of chi_S in DFG's first round reaches 1,
+    |yhat_S| = s sqrt(2 ln(4 K N / delta) / m), N = C(d, |S|), s^2 = 1 - yhat_0^2 (the residual after the constant),
+    m = n for degree <= 4 (all rows at d = 30); degrees 5 and 6 are searched on the first m = min(n, M_k) rows with
+    M_5 = 1374 and M_6 = 147 (the budget caps of a fit at n > 512; halved for the final fit at n <= 512), so they pass
+    only if the required m is at most M_k (inf otherwise); degree >= 7 has no global route (inf).  Noise ignored."""
+    if deg > 6:
+        return INF
     N = math.comb(d, deg); s2 = 1 - yconst ** 2
-    return 2 * math.log(4 * K * N / delta) * s2 / yh ** 2
+    need = 2 * math.log(4 * K * N / delta) * s2 / yh ** 2
+    if deg <= 4:
+        return need
+    cap = {5: 1374, 6: 147}[deg]
+    return need if need <= cap else INF
 
 
 def fmt(v):

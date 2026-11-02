@@ -78,10 +78,11 @@ def classify(rec, sp):
     # degree-1 characters that entered through the linear block (all d inputs at once) rather than one by one: those
     # not in any round's list of accepted characters (DFG logs the first 20 per round; with more the split is unknown)
     lin_round = any("linear" in e["blocks"] for e in rec["log"])
-    listed = {d_ for e in rec["log"] for d_ in e["new"]}; complete = all(e["n_new"] <= 20 for e in rec["log"])
+    listed = {d_ for e in rec["log"] for d_ in e["new"]}
+    rec["linear_uncertain"] = lin_round and any(e["n_new"] > 20 for e in rec["log"])
     for t in rec["terms"]:
         if t["kind"] == "chi" and t["deg"] == 1:
-            t["via_linear"] = bool(lin_round and t["desc"] not in listed) if complete else None
+            t["via_linear"] = bool(lin_round and t["desc"] not in listed)
         k = t["kind"]
         if k in ("const", "background"):
             t["cat"] = None; continue
@@ -240,7 +241,8 @@ def summarise(rec, sp):
         W0 = F.get((), 0.0) ** 2
         fw = round(sum(F.get(tuple(t["S"]), 0.0) ** 2 for t in chis) / max(1 - W0, 1e-12), 4)
     r2, oe = span_and_oracle(rec)
-    return dict(categories=cat, err_parts=errs, chars_by_degree={str(k): v for k, v in sorted(deg.items())},
+    return dict(categories=cat, err_parts=errs, value_sd=tot, linear_uncertain=rec["linear_uncertain"],
+                chars_by_degree={str(k): v for k, v in sorted(deg.items())},
                 n_blocks=len(blks), n_quad=sum(t["kind"] == "quad" for t in terms),
                 block_kinds=dict(folded=sum(t["fold"] for t in blks), modulated=sum(bool(t["mod"]) for t in blks),
                                  product=sum(t["product"] for t in blks),

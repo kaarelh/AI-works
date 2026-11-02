@@ -154,7 +154,7 @@ def main():
         pn = C["online"]["pairs_n"]
         na = C.get("n_axis") or {}
         L.append(f"| {fn} | {len(T['chars'])} | {ru} | {tfmt(z16m)} (seeds {', '.join(tfmt(t) for t in z16)}) | {tfmt(C['online']['tau_n'])} | "
-                 f"{pn['concordant']}/{pn['tied']}/{pn['inverted']} | {tfmt(na.get('tau'))} ({len(na.get('chars', []))} chars) | {tfmt(na.get('net_time_vs_net_n'))} |")
+                 f"{(str(pn['concordant']) + '/' + str(pn['tied']) + '/' + str(pn['inverted'])) if pn else '–'} | {tfmt(na.get('tau'))} ({len(na.get('chars', []))} chars) | {tfmt(na.get('net_time_vs_net_n'))} |")
         NUM["targets"][fn] = dict(rounds=ru, tau_z0_16384=z16, tau_net_time_dfg_n=C["online"]["tau_n"], pairs_n=pn,
                                   tau_n_axis=na.get("tau"), n_axis_chars=len(na.get("chars", [])),
                                   tau_net_time_net_n=na.get("net_time_vs_net_n"),
@@ -172,12 +172,253 @@ def main():
                                   mean_distinct=float(np.mean([e["distinct_rounds"] for _, e in v])),
                                   max_rounds=max(e["nrounds"] for _, e in v),
                                   tau_half=[e["tau_half"] for _, e in v]) for n, v in sorted(G.items())}
+    mechanism(S, rows, NUM); checks(S, rows, NUM); stage_table(S, rows, NUM)
     json.dump(A.clean(NUM), open(os.path.join(A.TAB, "order_numbers.json"), "w"), indent=1)
     return S, rows, NUM
 
 
+# ------------------------------------------------------------------ mechanism and Part 5's qualitative findings
+def stages_by(vals, sep=1.35):
+    """Group characters by an order: finite values within a factor sep join one stage; returns [(value, [chars])]."""
+    o = sorted((v, ch) for ch, v in vals.items() if v is not None and np.isfinite(v)); st = []
+    for v, ch in o:
+        if st and v <= sep * st[-1][0]:
+            st[-1][1].append(ch)
+        else:
+            st.append((v, [ch]))
+    nev = [ch for ch, v in vals.items() if v is not None and not np.isfinite(v)]
+    return st, nev
+
+
+def mechanism(S, rows, NUM):
+    M = {}
+    # 1. how each character is carried at its DFG n onset (per seed)
+    hw = Counter(h for r in rows for h in r["dfg_how"])
+    M["how_at_onset_all"] = dict(hw)
+    M["how_at_onset_by_deg"] = {}
+    for dg in sorted(set(r["deg"] for r in rows)):
+        M["how_at_onset_by_deg"][dg] = dict(Counter(h for r in rows if r["deg"] == dg for h in r["dfg_how"]))
+    # 2. DFG n onset against the round-0 global-class detection size (degree <= 4, finite both)
+    rat = []
+    for r in rows:
+        if r["nglob"] is None or r["deg"] > 4:
+            continue
+        for s in A.SEEDS:
+            v = r["dfg_n_seeds"][s]
+            if v is not None and np.isfinite(v):
+                rat.append((r["target"], r["char"], s, math.log2(v / r["nglob"]), r["dfg_how"][s]))
+    a = np.array([x[3] for x in rat])
+    M["log2_dfgn_over_nglob"] = dict(count=len(a), median=float(np.median(a)), q10=float(np.percentile(a, 10)),
+                                     q90=float(np.percentile(a, 90)), within_1=int(np.sum(np.abs(a) <= 1)),
+                                     below_minus1=int(np.sum(a < -1)), above_plus1=int(np.sum(a > 1)))
+    by = defaultdict(list)
+    for t, ch, sd, v, h in rat:
+        by[h].append(v)
+    M["log2_dfgn_over_nglob_by_how"] = {h: dict(count=len(v), median=float(np.median(v))) for h, v in by.items()}
+    M["below_minus1_examples"] = [x for x in rat if x[3] < -1][:40]
+    M["above_plus1_examples"] = [x for x in rat if x[3] > 1][:40]
+    # tau between n_glob and DFG n, per target
+    M["tau_nglob_dfg_n"] = {fn: S["targets"][fn]["cmp"].get("nglob_vs_dfg_n") for fn in A.TARGETS}
+    M["tau_nglob_net_online"] = {fn: S["targets"][fn]["cmp"].get("nglob_vs_net_online") for fn in A.TARGETS}
+    NUM["mechanism"] = M
+    return M
+
+
+def checks(S, rows, NUM):
+    C = {}
+    for fn in A.TARGETS:
+        R = {r["char"]: r for r in rows if r["target"] == fn}; T = S["targets"][fn]
+        lin = [ch for ch in R if R[ch]["deg"] == 1]; oth = [ch for ch in R if R[ch]["deg"] > 1]
+        e = dict()
+        if lin:
+            nl = max(R[ch]["net_online"] for ch in lin); no = min(R[ch]["net_online"] for ch in oth)
+            e["net_linear_first"] = bool(nl < no)
+            for s in A.SEEDS:
+                dl = max(R[ch]["dfg_n_seeds"][s] for ch in lin); do = min(R[ch]["dfg_n_seeds"][s] for ch in oth)
+                e[f"dfg_n_linear_first_s{s}"] = "strict" if dl < do else "tied" if dl == do else "no"
+                e[f"dfg_n_linear_s{s}"] = [dl, do]
+        # stages on each axis
+        e["net_stages_online"] = stages_by({ch: R[ch]["net_online"] for ch in R})
+        e["dfg_stages_n_median"] = stages_by({ch: R[ch]["dfg_n"] for ch in R}, sep=1.0)
+        e["dfg_stages_n_seeds"] = [stages_by({ch: R[ch]["dfg_n_seeds"][s] for ch in R}, sep=1.0) for s in A.SEEDS]
+        e["net_stages_n"] = stages_by({ch: R[ch]["net_n"] for ch in R if R[ch]["net_n"] is not None}, sep=1.0)
+        # endpoints at finite n: characters learned (phi >= 1/2 at the end) by networks (seed mean) and by DFG (per seed)
+        for n in (512, 2048):
+            netl = [ch for ch in R if T["net_time"][str(n)][ch]["final_mean"] >= 0.5]
+            netp = [ch for ch in R if 0.25 <= T["net_time"][str(n)][ch]["final_mean"] < 0.75]
+            dfl, dfp = [], []
+            for s in A.SEEDS:
+                D = T["dfg"][str(n)][str(s)]["rounds"]
+                dfl.append([ch for ch in R if D[ch]["phi_final_ls"] >= 0.5])
+                dfp.append([ch for ch in R if 0.25 <= D[ch]["phi_final_ls"] < 0.75])
+            e[f"end_{n}"] = dict(net_learned=len(netl), net_partial=len(netp), dfg_learned=[len(x) for x in dfl],
+                                 dfg_partial=[len(x) for x in dfp], total=len(R),
+                                 net_not=[ch for ch in R if ch not in netl][:12],
+                                 dfg_not=[[ch for ch in R if ch not in x][:12] for x in dfl],
+                                 dfg_err=[T["dfg"][str(n)][str(s)]["err"] for s in A.SEEDS])
+        C[fn] = e
+    NUM["checks"] = C
+    # bundles: pairs in one network stage (online) that DFG's n order splits, and pairs in different network stages it ties
+    B = {}
+    for fn in A.TARGETS:
+        p = S["targets"][fn]["cmp"]["online"]["pairs_n"]
+        B[fn] = dict(net_bundle_same=p["net_bundle_same"], net_bundle_split=p["net_bundle_split"], tied=p["tied"],
+                     concordant=p["concordant"], inverted=p["inverted"],
+                     inverted_pairs=p["inverted_pairs"][:30])
+    NUM["bundles"] = B
+    # within-round priority at Part 5's n (z0) and the half-round order at 512, per seed
+    P = {}
+    for fn in A.TARGETS:
+        c = S["targets"][fn]["cmp"]
+        P[fn] = {cond: dict(tau_z0=[q["tau_z0"] for q in c[cond]["per_seed"]],
+                            tau_round=[q["tau"] for q in c[cond]["per_seed"]],
+                            tau_half=[q["tau_half"] for q in c[cond]["per_seed"]],
+                            pairs_half=[(q["pairs_half"]["concordant"], q["pairs_half"]["tied"], q["pairs_half"]["inverted"]) for q in c[cond]["per_seed"]],
+                            pairs_z0=[(q["pairs_z0"]["concordant"], q["pairs_z0"]["tied"], q["pairs_z0"]["inverted"]) for q in c[cond]["per_seed"]])
+                  for cond in A.CONDS}
+    NUM["priority"] = P
+    return C
+
+
+def stage_str(st, R, big):
+    """A stage list [(value, [chars])] as text; big targets summarised by (degree, |yhat|) counts."""
+    def grp(chs):
+        if not big:
+            return ", ".join(chs)
+        c = Counter((R[ch]["deg"], round(abs(R[ch]["yhat"]), 4)) for ch in chs)
+        return ", ".join(f"{k} deg-{d}" + (f" (|yhat| {a:g})" if len({a2 for (d2, a2) in c if d2 == d}) > 1 else "")
+                         for (d, a), k in sorted(c.items()))
+    return " → ".join(f"{fnum(v, 0)}: {grp(chs)}" for v, chs in st)
+
+
+def stage_table(S, rows, NUM):
+    L = ["# Stages: the networks in time (online) against DFG on the n axis (generated by order_report.py)", "",
+         "Network stages: Part 5's rule (onset steps of the seed-mean learned fraction, online; onsets within a factor 1.35 "
+         "form one stage). DFG stages: characters grouped by the smallest grid n from which DFG's final least-squares "
+         "function carries them (learned fraction >= 1/2 for good), median of seeds 0-2, and for seed 0 alone. For rmaj9, "
+         "dlist5 and dnf3 a stage lists counts of characters by degree (and |yhat| where a degree has several).", ""]
+    big = {"rmaj9", "dlist5", "dnf3"}
+    for fn in A.TARGETS:
+        R = {r["char"]: r for r in rows if r["target"] == fn}; C = NUM["checks"][fn]
+        st_net = stages_by({ch: R[ch]["net_online"] for ch in R})
+        st_dfg = stages_by({ch: R[ch]["dfg_n"] for ch in R}, sep=1.0)
+        st_d0 = stages_by({ch: R[ch]["dfg_n_seeds"][0] for ch in R}, sep=1.0)
+        st_nn = stages_by({ch: R[ch]["net_n"] for ch in R if R[ch]["net_n"] is not None}, sep=1.0)
+        L += [f"## {fn}", "",
+              f"- networks, time (online): {stage_str(st_net[0], R, fn in big)}" + (f"; never: {len(st_net[1])}" if st_net[1] else ""),
+              f"- networks, n (fixed-n study, |S| <= 4, median seed): {stage_str(st_nn[0], R, fn in big)}" + (f"; never: {stage_str([(INF, st_nn[1])], R, fn in big)}" if st_nn[1] else ""),
+              f"- DFG, n (median seed): {stage_str(st_dfg[0], R, fn in big)}" + (f"; never: {stage_str([(INF, st_dfg[1])], R, fn in big)}" if st_dfg[1] else ""),
+              f"- DFG, n (seed 0): {stage_str(st_d0[0], R, fn in big)}" + (f"; never: {stage_str([(INF, st_d0[1])], R, fn in big)}" if st_d0[1] else ""), ""]
+    open(os.path.join(A.TAB, "order_stages.md"), "w").write("\n".join(L) + "\n")
+
+
+# ------------------------------------------------------------------ figure
+DEG_COL = {1: "#86b6ef", 2: "#5598e7", 3: "#2a78d6", 4: "#1c5cab", 5: "#0d366b"}   # ordinal blue ramp (validated)
+INK, INK2, GRID = "#0b0b0b", "#52514e", "#e4e3df"
+
+
+def dcol(deg):
+    return DEG_COL[min(deg, 5)]
+
+
+def figure(S, rows, NUM):
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from matplotlib.lines import Line2D
+    plt.rcParams.update({"font.size": 7.5, "axes.edgecolor": INK2, "axes.labelcolor": INK, "xtick.color": INK2,
+                         "ytick.color": INK2, "axes.linewidth": 0.6})
+    fig, axs = plt.subplots(3, 4, figsize=(11.0, 8.2))
+    NEV = 2 ** 15.4                                                              # the 'never' row
+    big = {"rmaj9", "dlist5", "dnf3"}
+    for k, fn in enumerate(A.TARGETS):
+        ax = axs.flat[k]; R = [r for r in rows if r["target"] == fn]
+        ax.axhspan(2 ** 15.0, 2 ** 15.8, color="#f0efec", lw=0)
+        if fn in big:                                                            # one marker per (degree, |yhat|) group
+            G = defaultdict(list)
+            for r in R:
+                G[(r["deg"], round(abs(r["yhat"]), 4))].append(r)
+            for (dg, ay), rr in sorted(G.items()):
+                xs = np.array([F(r["net_online"]) for r in rr], float); x = float(np.median(xs))
+                for key, mk, fc in (("dfg_n", "o", None), ("net_n", "s", "none")):
+                    ys = [F(r[key]) for r in rr if F(r[key]) is not None]
+                    if not ys:
+                        continue
+                    y = float(np.median([v if np.isfinite(v) else NEV for v in ys]))
+                    sz = 10 + 5 * math.sqrt(len(rr))
+                    ax.scatter([x], [y], s=sz, marker=mk, facecolors=dcol(dg) if fc is None else "none",
+                               edgecolors=dcol(dg), linewidths=1.2 if fc else 0.6, zorder=3 if fc is None else 4)
+                lo, hi = np.percentile(xs, [10, 90])
+                ax.plot([lo, hi], [y, y], color=dcol(dg), lw=0.8, alpha=0.6, zorder=2)
+        else:
+            seen = Counter()
+            for r in sorted(R, key=lambda r: r["deg"]):
+                x = F(r["net_online"])
+                for key, mk in (("dfg_n", "o"), ("net_n", "s")):
+                    y = F(r[key])
+                    if y is None:
+                        continue
+                    y = y if np.isfinite(y) else NEV
+                    j = seen[(key, round(math.log10(x), 2), y)]; seen[(key, round(math.log10(x), 2), y)] += 1
+                    yj = y * 2 ** (0.13 * ((j + 1) // 2) * (1 if j % 2 else -1))   # small vertical jitter for ties
+                    if key == "dfg_n":
+                        ax.scatter([x], [yj], s=22, marker="o", facecolors=dcol(r["deg"]), edgecolors="white",
+                                   linewidths=0.5, zorder=3)
+                    else:
+                        ax.scatter([x], [yj], s=26, marker="s", facecolors="none", edgecolors=dcol(r["deg"]),
+                                   linewidths=1.1, zorder=4)
+            lab = {"mux": ["x1x2x3x4"], "majpar": ["x1x2x3x4x5x6"], "sparsepoly": ["x4x5x6", "x2x3x4x5x6"],
+                   "andxor": ["x1x2x3x4"], "parmaj": ["x1x2x3x4x5x6"], "stair5": ["x1x2x3x4x5"]}.get(fn, [])
+            for r in R:
+                if r["char"] in lab:
+                    y = F(r["dfg_n"]); y = NEV if not np.isfinite(y) else y
+                    ax.annotate(r["char"], (F(r["net_online"]), y), xytext=(4, 5), textcoords="offset points",
+                                fontsize=6.5, color=INK2)
+        T = NUM["targets"][fn]
+        ax.set_title(f"{fn}   τ(net time, DFG n) {tfmt(T['tau_net_time_dfg_n'])}\nτ(net n, DFG n) {tfmt(T['tau_n_axis'])}"
+                     f"   τ(net time, net n) {tfmt(T['tau_net_time_net_n'])}", fontsize=7, color=INK, loc="left")
+        ax.set_xscale("log"); ax.set_yscale("log", base=2)
+        ax.set_ylim(2 ** 3.5, 2 ** 15.8); ax.set_yticks([16, 64, 256, 1024, 4096, 16384, NEV])
+        ax.set_yticklabels(["16", "64", "256", "1024", "4096", "16384", "never"])
+        ax.set_xlim(30, 4000)
+        ax.grid(True, color=GRID, lw=0.5, zorder=0); ax.set_axisbelow(True)
+        for sp in ("top", "right"):
+            ax.spines[sp].set_visible(False)
+        if k % 4 == 0:
+            ax.set_ylabel("n from which the final model\ncarries the character")
+        if k >= 7:
+            ax.set_xlabel("network onset step (online, seed mean)")
+    # summary panel: tau per target on the three axes
+    ax = axs.flat[11]
+    kinds = [("tau_net_time_dfg_n", "net time vs DFG n", "o", "#2a78d6", "#2a78d6"),
+             ("tau_n_axis", "net n vs DFG n (|S|<=4)", "s", "none", "#eb6834"),
+             ("tau_net_time_net_n", "net time vs net n", "D", "#1baf7a", "#1baf7a")]
+    for q, (key, lab, mk, fc, ec) in enumerate(kinds):
+        ys = np.arange(len(A.TARGETS))[::-1] + (q - 1) * 0.22
+        xs = [NUM["targets"][fn][key] for fn in A.TARGETS]
+        ax.scatter([x if x is not None else np.nan for x in xs], ys, marker=mk, s=18, facecolors=fc, edgecolors=ec,
+                   linewidths=1.0, label=lab, zorder=3)
+    ax.axvline(0, color=INK2, lw=0.6)
+    ax.set_yticks(np.arange(len(A.TARGETS))[::-1]); ax.set_yticklabels(A.TARGETS)
+    ax.set_xlim(-1, 1); ax.set_xlabel("Kendall tau-b"); ax.grid(True, axis="x", color=GRID, lw=0.5); ax.set_axisbelow(True)
+    for sp in ("top", "right"):
+        ax.spines[sp].set_visible(False)
+    ax.legend(loc="lower left", fontsize=6.2, frameon=False, bbox_to_anchor=(-0.02, -0.02))
+    ax.set_title("order agreement per target", fontsize=7, loc="left")
+    hs = [Line2D([], [], marker="o", ls="", markerfacecolor=DEG_COL[1], markeredgecolor="white", markersize=6, label="DFG alone (median of 3 seeds)"),
+          Line2D([], [], marker="s", ls="", markerfacecolor="none", markeredgecolor=DEG_COL[3], markersize=6, label="networks, fixed-n study (|S| <= 4)")]
+    hs += [Line2D([], [], marker="o", ls="", markerfacecolor=DEG_COL[d], markeredgecolor=DEG_COL[d], markersize=6,
+                  label=f"degree {d}" if d < 5 else "degree >= 5") for d in range(1, 6)]
+    fig.legend(handles=hs, loc="lower center", ncol=7, frameon=False, fontsize=7, bbox_to_anchor=(0.5, -0.005))
+    fig.tight_layout(rect=(0, 0.035, 1, 1))
+    for ext in ("pdf", "png"):
+        fig.savefig(os.path.join(A.FIG, f"fig_order.{ext}"), dpi=200)
+    plt.close(fig)
+
+
 if __name__ == "__main__":
     S, rows, NUM = main()
+    figure(S, rows, NUM)
     print(open(os.path.join(A.TAB, "order_targets.md")).read())
     for n, v in NUM["rounds_by_n"].items():
         print(n, {k: vv for k, vv in v.items() if k != "tau_half"})
