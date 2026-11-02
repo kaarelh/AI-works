@@ -32,7 +32,7 @@ SOURCES
   ablations  part11/results/toy__dfg13-<tag>-perm__<suite>.json;  lowdeg: part11/results/toy__lowdeg-perm__<suite>.json
   v3         hybrid/results/toy__p10_sum-perm__<suite>.json (v3 = p10_sum on toy inputs; part10/hyb_portfolio3/ASSEMBLY.md)
   v2         hybrid/results/toy__hyb_portfolio2-perm__<suite>.json, else toy__p9_sum-perm (compare_learner.v2_toy)
-  lin, hgb   hybrid/results/toy__lin__<suite>.json, toy__hgb__<suite>.json (Part 8; natural column order)
+  lin, hgb   hybrid/results/toy__lin__<suite>.json, toy__hgb__<suite>.json (natural column order, as in Parts 8-10)
   networks   compare_hybrid.toy_nstars: the networks' npz under the scratch results_<suite>[<variant suffix>] directories
              (else hybrid/results/nets_final_err.json); d-scaling: harness.nn_reference on the scratch results_d15,
              results (d = 30), results_d60, results_d120, checked against study/dscale.json
@@ -893,7 +893,7 @@ def coverage(q2o):
         L.append(f"- v2 is `p9_sum-perm` (identical to v2 on toy inputs, compare_learner.v2_toy) on: {', '.join(f'`{s}`' for s in v2p9)}.")
     nv = {su: sorted(nets(su)[0]) for su in TOY if nets(su)[0]}
     L.append("- Network variants per suite (nets_best is their per-target minimum): " + "; ".join(f"`{su}` {', '.join(v)}" for su, v in nv.items()) + ".")
-    L += ["- `lin` and `hgb` were run in the natural column order (Part 8); DFG alone, v2, v3 and lowdeg with the inputs permuted per fit.",
+    L += ["- `lin` and `hgb` were run in the natural column order (Parts 8-10); DFG alone, v2, v3 and lowdeg with the inputs permuted per fit.",
           "- The harness's own reports (`part11/results/*.md`) show the networks as 'never' on `dlheld7`, because no plain `nets` run "
           "exists there; this file uses the variants that were run.",
           "- n* is a seed mean over 2-3 training sets per (target, n); no confidence interval is attached to it. The one-seed ablations "
