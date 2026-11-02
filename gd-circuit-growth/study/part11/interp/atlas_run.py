@@ -75,7 +75,13 @@ def classify(rec, sp):
                 rep_chars.setdefault(tuple(S), c)
     tblocks = [b for r in sp["reps"] for b in r.get("blocks", [])]
     odd = sp["family"].startswith("Gaussian halfspace")                     # thr30: f odd, no Fourier table
+    # degree-1 characters that entered through the linear block (all d inputs at once) rather than one by one: those
+    # not in any round's list of accepted characters (DFG logs the first 20 per round; with more the split is unknown)
+    lin_round = any("linear" in e["blocks"] for e in rec["log"])
+    listed = {d_ for e in rec["log"] for d_ in e["new"]}; complete = all(e["n_new"] <= 20 for e in rec["log"])
     for t in rec["terms"]:
+        if t["kind"] == "chi" and t["deg"] == 1:
+            t["via_linear"] = bool(lin_round and t["desc"] not in listed) if complete else None
         k = t["kind"]
         if k in ("const", "background"):
             t["cat"] = None; continue
@@ -210,14 +216,19 @@ def summarise(rec, sp):
     classify(rec, sp)
     terms = rec["terms"]; tot = float(np.std(rec["value_te"])) or 1e-12
     cat = {}
-    for c in ("T", "R", "S"):
-        sel = [t for t in terms if t.get("cat") == c]
+    groups = dict(T=lambda t: t.get("cat") == "T", R=lambda t: t.get("cat") == "R", S=lambda t: t.get("cat") == "S",
+                  S_linear=lambda t: t.get("cat") == "S" and t.get("via_linear") is True,
+                  S_other=lambda t: t.get("cat") == "S" and t.get("via_linear") is not True)
+    for c, sel_ in groups.items():
+        sel = [t for t in terms if sel_(t)]
         cat[c] = dict(n=len(sel), share=round(float(np.std(sum((t["contrib"] for t in sel), np.zeros(len(rec["yte"]))))) / tot, 4))
     bg = [t for t in terms if t["kind"] == "background"][0]
     cat["background"] = dict(share=round(bg["share"] / tot, 4))
     keep = lambda pred: H.model_parts(rec, pred)
     errs = dict(T_only=keep(lambda t: t["kind"] == "const" or t.get("cat") == "T"),
-                no_S=keep(lambda t: t.get("cat") != "S"), no_bg=keep(lambda t: t["kind"] != "background"))
+                no_S=keep(lambda t: t.get("cat") != "S"),
+                no_S_other=keep(lambda t: not (t.get("cat") == "S" and t.get("via_linear") is not True)),
+                no_bg=keep(lambda t: t["kind"] != "background"))
     chis = [t for t in terms if t["kind"] == "chi"]; F = sp["fourier"]
     deg = {}
     for t in chis:
