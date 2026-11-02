@@ -44,7 +44,8 @@ Figures: [`figures/fig_atlas_grid.pdf`](figures/fig_atlas_grid.pdf), [`figures/f
   the 148 cells with test error > 0.1 the learned features cannot express the target (the best logistic weights on
   them, fitted on test inputs, err > 0.1); in 9 cells they can (oracle error ≤ 0.02) and only DFG's own weights fall
   short. Those 9 are threshold-like targets at n = 64–128 just after the linear block entered (maj9, thrint, thr30,
-  f7_01, dlist8, f7_10).
+  f7_01, dlist8, f7_10). At the first n with error ≤ 0.1, DFG's error is within 0.0005 of the oracle's for the median
+  target; the two largest gaps (andxor, majpar at 64) are caused by the kernel background (§2.4).
 - **Spurious terms are rare once the target is fitted, and of three kinds** (Numerical, §2.2): the irrelevant
   degree-1 characters of the linear block (share 0.40–0.78 at n = 64 in the 8 targets whose linear block entered
   there; at most 0.035 at n = 16384), products of a true block with a factor of irrelevant inputs (9 cells, 4 targets,
@@ -175,7 +176,7 @@ see what the final fit will find.
 *Numerical:* the compact representation is complete at the first fit, with error 0 (stair5 at n = 128, forced
 variant, CV 47 / 4; stair6 at 256), plus one extra Fourier character each (χ[x1,x3,x5]; χ[x2,x4,x6]); no blocks, no
 spurious terms. With more data the rest of the Fourier expansion is filled in: at 16384 stair5's model is exactly its
-16 Fourier characters (size 17), stair6's 57 of its 64 characters plus two relevant blocks. stair6 loses its
+16 Fourier characters (size 17), stair6's 57 of its 63 non-constant characters plus two relevant blocks. stair6 loses its
 degree-6 prefix character from n = 512 on (error ≤ 0.0007 throughout).
 *Heuristic:* staircases are learned as characters only: first the prefix terms, each detectable on its own residual,
 then the remaining Fourier terms as the residual shrinks.
@@ -205,7 +206,7 @@ at 256 (error 0). thrint has no single exact block; it reaches 0 at n = 1024 wit
 input in the inner term, (x2+…+x9 + 2x1) and (x2+x3−x4−…−x9 + 3x1) (R). thr30 (Gaussian weights on all 30 inputs) is
 never fitted exactly: 0.009 error at 16384, with 59 characters and weighted blocks (x4+x5−x7−… + 3x3), a ±1
 quantisation of w with its largest weight as inner literal (R). At 16384 the leading terms are the degree-1 characters
-(group share 0.72–0.87), the block (maj9 0.29, f7_01 0.29) and, for f7_01, a spectral feature on its inputs (0.28).
+(group share 0.72–0.85), the block (maj9 0.29, f7_01 0.29) and, for f7_01, a spectral feature on its inputs (0.28).
 *Heuristic:* for threshold functions DFG's dictionary is complete almost at once and what remains is to learn the
 weights; the logistic readout of 30 noisy degree-1 coefficients does that slowly, one block whose levels encode the
 threshold does it at once.
@@ -250,8 +251,8 @@ block with the third clause's literals as inner term, (−x4+x5+x6 − 3·AND(¬
 0.024) has (x6−x7+x8) (R, 0.50). The decision lists are first their degree-1 characters through the linear block
 (dlist8 from 64, error 0.11 → 0.049 at 128; f7_04 error 0.021 at 128 with 10 of 11). The character representations
 are complete later: cnf3 at 1024, f7_02 at 2048, f7_06's block-plus-characters form at 2048, f7_04 at 4096; dlist8
-holds 7 of its 8 literal characters at 16384 (error 0). Spurious terms are larger here than in any other family at the
-first fit (S share 0.09–0.36; dlist8's (x1−x2+x3−x4+x9) 0.33 at 128) and ≤ 0.10 at 16384.
+holds 7 of its 8 literal characters at 16384 (error 0). Spurious terms are larger here than in the other families at
+the first fit (S share 0.09–0.36, median 0.24; dlist8's (x1−x2+x3−x4+x9) 0.33 at 128) and ≤ 0.10 at 16384.
 *Heuristic:* formulas are learned as their low-degree characters; blocks, often weighted with an AND of two literals
 as inner term, are DFG's encoding of a whole clause or term before its characters are all detectable.
 
@@ -259,8 +260,8 @@ as inner term, are DFG's encoding of a whole clause or term before its character
 
 *Representation:* the Fourier expansion (31 non-constant characters each); both are dominated by one input
 (f̂(x5) = −0.94 for rf06, f̂(x4) = −0.81 for hrf0).
-*Numerical:* the first models are that one character (n = 32–64; rf06's χ[x5] alone has error 0.045 at 64, the 0.032
-of the best one-character model); exact fits follow at 128–256 with relevant blocks on the other inputs (hrf0 at 128,
+*Numerical:* the first models are that one character (n = 32–64; rf06's model at 64 is χ[x5] plus the background,
+error 0.045, against 0.032 for χ[x5] alone); exact fits follow at 128–256 with relevant blocks on the other inputs (hrf0 at 128,
 forced: (−x1−x3−x4−x5+x6) R 0.35, error 0) and, for rf06, spurious modulated blocks at 128–256 (S 0.16–0.17). At 16384
 hrf0's model is exactly its 31-character expansion (size 32) and rf06's has 30 of 31 characters plus one spurious
 product (S 0.03).
@@ -277,16 +278,17 @@ product (S 0.03).
   kept to 16384 (0.94, with a spectral feature 0.12).
 - f7_08 (arbitrary set, 11 inputs): the unfolded block at 512 (forced, CV 229 / 188; error 0.012, share 0.92), with
   contaminated copies (the class plus 4 irrelevant inputs; modulated by irrelevant characters) and, at 1024–4096,
-  spurious products of the true block (S 0.20–0.26 at 512–1024, 0.01 at 16384) and the block twice (§2.4).
+  spurious products of the true block (S 0.20–0.26 at 512–1024, 0.01 at 16384) and the block twice (§2.5).
 - h5s7 (arbitrary set, 13 signed inputs): constant only to 1024; at 2048 the exact split form, a product of two
   factors that partition the class with its signs, (−x1−x2+x3+x5−x7+x8+x9−x10−x11−x13) × (x4−x6−x12) (share 0.72,
-  error 0.0007); at 4096 the constant only again (error 0.368); at 8192–16384 the exact block, twice (§2.4), with
+  error 0.0007); at 4096 the constant only again (error 0.368); at 8192–16384 the exact block, twice (§2.5), with
   modulated and weighted relatives. n\*_0 = 1705 but n\*_3 = 6186.
 - f7_05, h6_00 (residue classes mod 3 of 14 and 13 inputs): the constant (plus the background) at every n; the test
   error falls to the minority rate (0.3245, 0.3430) by n = 2048 and stays there; the oracle error of their empty
   dictionary is 0.33–0.34.
-*Heuristic:* when DFG finds a symmetric target it holds the exact block from that n on, usually alone at first; the
-search, not the representation, is what varies (band11 waits to 1024, h5s7 appears and disappears, mod 3 never).
+*Heuristic:* when DFG finds a symmetric target its model is the exact block, at first alone (sym9, band11) or next
+to contaminated copies (f7_08); what varies is when the search finds it (band11 waits until 1024; h5s7 is found at
+2048, lost at 4096, found again at 8192; the mod-3 counts never).
 
 ### 1.9 Signed-sum mixtures (f7_07, f7_09, symand, f7_10, f7_00, f7_03, f7_11)
 
@@ -322,9 +324,11 @@ modulated block does.
 express the target (oracle error > 0.1) in 133; in 9 they can (oracle ≤ 0.02): maj9, thrint, thr30 and f7_01 at
 n = 64 (and thrint, thr30, f7_01 at 128), dlist8 and f7_10 at 64, all just after the linear block entered; 6 are in
 between (rf06 and dlist8 at 32, hrf0 and f7_11 at 32 and 64, where one strong character is in the model).
+At the first fit DFG's own error is within 0.0005 of the oracle error for the median target (largest gap andxor,
+0.092 against 0, and majpar, 0.067 against 0: both are the kernel background's doing, §2.4); the model with only its
+target terms has error 0 for 15 of the 35 targets.
 *Heuristic:* outside threshold functions, DFG's data cost is the cost of putting the right features in the model;
-once they are in, its least-squares-plus-logistic readout is essentially exact (at the first fit, the T-only error is
-0 for 17 of 35 targets).
+once they are in, its least-squares-plus-logistic readout is close to the best weights for them.
 
 ### 2.2 Spurious terms
 
@@ -363,11 +367,24 @@ against 0.365). Mean test error over the 222 cells: DFG's choice 0.2257, always 
 the better of the two in each cell 0.2111.
 *Heuristic:* the paired test is conservative where the folds are too small for the forced guess to be right, which
 is where the forced guess helps most; this is also where v3's stacker, which kept both variants, did better (§3).
-Below the first n at which a compact representation is complete (198 cells in 36 targets, including all cells of the
+
+*Below the structure.* Below the first n at which a compact representation is complete (198 cells in 36 targets, including all cells of the
 6 targets that never get one), 187 models are the default variant and 11 the forced; 108 are the constant alone
 (+ background), 29 contain the linear block, 78 a true character; median test error 0.31.
 
-### 2.4 Quirks
+### 2.4 The kernel background
+
+(Numerical, `tables/atlas_cells.csv`, `err_no_bg`.) The background (one Hebbian step on the final residual) is added
+after the weights are fitted, so removing it from a fitted model is exactly DFG's prediction without it for the same
+variant. Removed, the test error is lower in 85 of the 407 cells, higher in 54 and unchanged in 268. It helps most at
+n = 16–32, where the model holds little else and the target has a strong degree-1 part (maj9, thrint, thr30, majmaj5,
+symand, f7_04, f7_10, rf06: without it the error would be 0.19–0.27 higher, e.g. maj9 at 32 0.491 instead of 0.283);
+it hurts most where the residual's degree-1
+correlations are noise: the mod-3 counts at n = 16–32 (h6_00 at 16: 0.488 with it, 0.343 without), rf06 at 32 (0.157
+against 0.032), andxor at 32 (0.365 against 0.245), f7_07 at 128 (0.302 against 0.201), and at the first fit andxor
+at 64 and majpar at 64 (0.092 and 0.067 against 0).
+
+### 2.5 Quirks
 
 - *Duplicate blocks* (Numerical, `tables/atlas_quirks.json`): the same block admitted twice in one model (5 cells:
   f7_08 at 1024, 2048, 4096; h5s7 at 8192, 16384), the two copies with equal shares (0.23–0.41). *Heuristic, from
@@ -403,19 +420,22 @@ both; an out-of-fold fit when it kept neither). Its runs stopped after two conse
   exactly by a block factor or modulator), n_struct is the same for all 15 targets where both runs have one (maj9,
   sym9, f7_10 at 128; f7_00, f7_01, f7_06, f7_07, f7_09, symand at 256; thrint, f7_03, f7_08 at 512; band11 1024;
   f7_04 2048; h5s7 8192). For 4 more, alone has it after v3's run had stopped (rf06 512, majmaj5 2048, cnf3 and hrf0
-  4096). The mod-3 failures are the same: constant only.
+  4096). The mod-3 failures are the same: constant only (fd_10, the third, also in the identity sample: constant and
+  background at every n, `results/identity/dlfamdev__fd_10.json`).
 - **The Part 10 findings that carry over unchanged**: exact signed blocks on the symmetric targets (sym9, band11, f7_08,
   h5s7) at v3's n_struct; parities, small juntas and staircases as characters; halfspaces as degree-1 characters through
   the linear block; mixtures with the partner as character and as inner term of a weighted block; spurious products of
-  a strong block; mod 3 never. The DFG-alone difference is confined to which variant is kept at small n.
+  a strong block; mod 3 never. In these files the difference between DFG alone and v3's member is mostly which
+  variant is kept at small n, and in 4 cells that v3 had no final DFG fit.
 
 ## 4. What I could not check, and caveats
 
 - Seed 0 only; one training set per (target, n). The 3-seed n\* shows how much seeds matter (h5s7: n\*_0 1705, n\*_3
   6186; f7_08 448 vs 644; dlist8 71 vs 39).
-- 37 of 138 targets; dlheld2, dlfamdev and the h5t / h5s families with parity or gate are only in the identity sample.
-  The atlas has 2 of the 3 mod-3 targets (fd_10 not refitted here beyond the identity sample, where it is also
-  constant + background).
+- 37 of 138 targets. dlheld2 and dlfamdev are only in the identity sample (no atlas description), and some
+  sub-families have no atlas target: dlheld5's thresholds with a character (h5t) and arbitrary sets with a parity or
+  gate (h5s1, h5s4), the MAJ gate (fd_08), two sums under XOR (fd_06, h6_09), sym × parity with two blocks, weighted
+  blocks with a parity or AND inner term (thrsum, h6_10 is only in the identity sample).
 - The categories depend on the representations written down in `atlas_truth.py`. A model can be exact in a form not
   listed (the weighted pairs of §1.9, the folded pair of §1.5 until it was added after seeing the fits, the
   multiplexer's address blocks, the clause blocks): such terms count as R. The folded-pair, address-block, clause-block,

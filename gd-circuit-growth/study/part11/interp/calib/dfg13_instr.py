@@ -75,6 +75,7 @@ modulated blocks on one (S, s) represent any g(t + w chi_T) with integer w.
 """
 import itertools, math, numpy as np
 from harness import gd_flops
+from calib_rec import REC as _P
 
 
 # ------------------------------------------------------------------------------------------- v1.2: sum-feature blocks
@@ -583,6 +584,7 @@ class DFG:
         feats = [("chi", ())]; cols = [np.ones(n)]; have = {()}
         blocks, have_blk = [], set()                                    # v1.2: accepted sum blocks
         info = dict(rounds=0, log=[], blocks=[])
+        _P.start(fl, n, d, force, hi, scale, GD)
 
         def lsfit():
             A = np.stack(cols, 1); p = A.shape[1]
@@ -590,13 +592,17 @@ class DFG:
             w = np.linalg.solve(G, A.T @ y); fl[0] += 2 * n * p * p + p ** 3 / 3 + 4 * n * p
             return w, y - A @ w
 
+        _P.enter("ls")
         w, r = lsfit()
         for rnd in range(self.rounds):
+            _P.round_start(rnd); _P.enter("misc")
             s = math.sqrt(max(np.mean(r * r), 1e-12))
             if s < 1e-6 or (rnd > 0 and np.all(np.sign(y - r) == y)):    # exact fit, or every training sign right
                 break
+            _P.stage("fitcheck_ok", s)
             if fl[0] > 0.75 * GD:                                        # hard cap: stay within one network run
                 break
+            _P.stage("budget_ok")
             if self.noise == "label":                                   # ablation: noise taken as that of the labels
                 s = 1.0
             thr = lambda N: c * s * math.sqrt(2 * math.log(4 * self.K * max(N, 1) / self.delta) / n)
@@ -605,6 +611,7 @@ class DFG:
             top = [0.0, None, 0.0]                                       # best global candidate, passed or not
 
             def offer(S, v, t):
+                _P.offer(S, v, t, have)
                 if S not in have and abs(v) / t > top[0]:
                     top[:] = [abs(v) / t, S, v]
                 if S not in have and abs(v) > t:
@@ -613,19 +620,23 @@ class DFG:
                         cand[S] = (z, v)
 
             # ---- global characters of degree <= K on the residual
+            _P.enter("g1")
             K = self.K if rnd == 0 else self.K_later
             c1 = X.T @ r / n; fl[0] += 2 * n * d
             t = thr(d)
             for i in range(d):
                 offer((i,), c1[i], t)
+            _P.enter("g2")
             M = (X * r[:, None]).T @ X / n; fl[0] += 2 * n * d * d + n * d
             if K >= 2:
                 t = thr(math.comb(d, 2))
                 Mu = np.abs(np.triu(M, 1)); q = np.unravel_index(np.argmax(Mu), Mu.shape)
                 for i, j in list(zip(*np.where(Mu > t))) + [q]:
                     offer((int(i), int(j)), M[i, j], t)
+            _P.enter("g3")
             if K >= 3:
                 m = min(n, int(self.budget[1] * GD / (d * (2 * d * d + 2 * d))))
+                _P.sub("g3", m, n)
                 Xm, rm, tm = X[:m], r[:m], thr_m(math.comb(d, 3), max(m, 1))
                 for a in range(d - 2 if m >= 32 else 0):
                     Ma = (Xm * (rm * Xm[:, a])[:, None]).T @ Xm / m; fl[0] += 2 * m * d * d + 2 * m * d
@@ -634,8 +645,10 @@ class DFG:
                     for i, j in list(zip(*np.where(np.abs(Ma) > t))) + [q]:
                         if i > a and j > i:
                             offer((a, int(i), int(j)), Ma[i, j], t)
+            _P.enter("g4")
             if K >= 4:
                 m = min(n, int(self.budget[0] * GD / (math.comb(d, 2) * (2 * d * d + 3 * d))))
+                _P.sub("g4", m, n)
                 Xm, rm, t = X[:m], r[:m], thr_m(math.comb(d, 4), max(m, 1))
                 for a, b in (itertools.combinations(range(d), 2) if m >= 32 else []):
                     if b >= d - 2:
@@ -650,54 +663,69 @@ class DFG:
             #      ceil(k/2), floor(k/2), as one product of character tables on the first m points (m set by the budget)
             if rnd == 0 and hi:
                 for k in range(self.K + 1, self.K_hi + 1):
+                    _P.enter("g%d" % k)
                     k1, k2 = (k + 1) // 2, k // 2; N1, N2 = math.comb(d, k1), math.comb(d, k2)
                     m = min(n, int(self.budget_hi * GD / (2 * N1 * N2 + m_tab_cost(d, k1, k2))))
+                    _P.sub("g%d" % k, m, n)
                     if m < 64:
                         continue
                     T1, Z1 = _table(X[:m], d, k1); T2, Z2 = (T1, Z1) if k2 == k1 else _table(X[:m], d, k2)
                     G = (Z1 * r[:m, None]).T @ Z2 / m; fl[0] += 2 * m * N1 * N2 + m * (N1 * k1 + N2 * k2)
                     t = thr_m(math.comb(d, k), m)
+                    _P.hi_max(k, G, T1, T2, t)
                     for p, q in zip(*np.where(np.abs(G) > t)):
                         S = set(T1[p]) | set(T2[q])
                         if len(S) == k:
                             offer(tuple(sorted(S)), G[p, q], t)
             # ---- extensions of current character features by one or two inputs
+            _P.enter("ext1")
             base = [(k, abs(wi)) for (kind, k), wi in zip(feats, w) if kind == "chi" and k]
             base = [k for k, _ in sorted(base, key=lambda kv: -kv[1])][: self.max_ext_bases]
             if base:
                 m = min(n, int(self.budget[2] * GD / (len(base) * (2 * d * d + 3 * d))))
+                _P.sub("ext2", m, n)
                 Xm = X[:max(m, 1)]; t1, t2 = thr(len(base) * d), thr_m(len(base) * math.comb(d, 2), max(m, 1))
                 for S in base:
+                    _P.enter("ext1")
                     rs = r * _chi(X, S); fl[0] += n * (len(S) + 1)
                     e1 = X.T @ rs / n; fl[0] += 2 * n * d
+                    _P.ext1(e1, S, t1, have)
                     for j in np.where(np.abs(e1) > t1)[0]:
                         if j not in S:
                             offer(tuple(sorted(S + (int(j),))), e1[j], t1)
                     if m < 32:
                         continue
+                    _P.enter("ext2")
                     E2 = np.triu((Xm * rs[:m, None]).T @ Xm / m, 1); fl[0] += 2 * m * d * d + m * d
+                    _P.ext2(E2, S, t2, have)
                     for j, l in zip(*np.where(np.abs(E2) > t2)):
                         if j not in S and l not in S:
                             offer(tuple(sorted(S + (int(j), int(l)))), E2[j, l], t2)
             # ---- local: every subset of the inputs in use (Walsh transform of the residual on V)
+            _P.enter("local")
             V = sorted(set(v for kind, k in feats if kind == "chi" for v in k))
             if 2 <= len(V) <= self.local_max:
                 L = len(V); bits = (X[:, V] < 0).astype(np.int64) @ (1 << np.arange(L)); fl[0] += n * L
                 h = _fwht(np.bincount(bits, weights=r, minlength=1 << L)) / n; fl[0] += n + L * (1 << L)
                 tl = {k: thr(math.comb(L, k)) for k in range(1, L + 1)}
+                _P.local(h, tl, V, have)
                 for m in np.where(np.abs(h) > min(tl.values()))[0]:
                     if m == 0:
                         continue
                     S = tuple(V[q] for q in range(L) if m >> q & 1)
                     offer(S, h[m], tl[len(S)])
             # ---- block moves
+            _P.enter("lin")
             blk = []
             if self.blocks:
                 lin = [i for i in range(d) if (i,) not in have and (i,) not in cand]
                 if lin:
                     T1 = n * float(np.sum(c1[lin] ** 2)) / s ** 2; k = len(lin); tt = math.log(1 / self.delta)
+                    _P.lin(T1, k, tt, n >= 2 * (len(feats) + k), lin0 and rnd == 0)
                     if (T1 > k + 2 * math.sqrt(k * tt) + 2 * tt or (lin0 and rnd == 0)) and n >= 2 * (len(feats) + k):
                         blk.append(("linear", lin))                       # (else the background carries it)
+                        _P.acc("linear")
+                _P.enter("quad")
                 Ms = (M + M.T) / 2; np.fill_diagonal(Ms, 0.0)
                 for S in list(have) + list(cand):
                     if len(S) == 2:
@@ -705,11 +733,14 @@ class DFG:
                 lam, U = np.linalg.eigh(Ms); fl[0] += 10 * d ** 3
                 edge = 2 * s * math.sqrt(d / n) * (1 + math.sqrt(2 * math.log(1 / self.delta) / d))
                 qs = [q for q in np.argsort(-np.abs(lam)) if abs(lam[q]) > edge][:4] if n >= 4 * d else []
+                _P.quad(lam, edge, n >= 4 * d, qs)
                 if qs:
                     blk.append(("quad", [U[:, q].copy() for q in qs]))
+                    _P.acc("quad")
             # ---- v1.2: sum-feature blocks (S, s): additive (up to sum_add per round, the residual deflated in between),
             #      modulated by a current character chi_T (inputs of T excluded from S), and products of two accepted
             #      additive blocks.  One union bound over every (S, s) of size k, fold variant and modulator.
+            _P.enter("sum_setup")
             sum_top = [0.0, None]                                       # best additive candidate (T / threshold)
             th_top = [0.0]
             if self.sums and n >= self.sum_nmin and d >= 3:
@@ -736,6 +767,7 @@ class DFG:
                 def tS(b, vec):                             # block statistic of b on vec, in units of s2S
                     g = b.group(X); T_, lev_ = _multi_T(g[:, None], vec, b.ngroups()); fl[0] += 4.0 * n
                     return float(T_[0]) / s2S
+                _P.enter("sum_add")
                 rr, rrS, Mc, cands, mg0 = r, rS, M, [], -np.inf
                 for it in range(self.sum_add if live else 0):   # additive blocks; residuals deflated by each candidate
                     b_, T_, th_, ok = _block_search(X, rr, s2, Mc, (), tk, mc, **dict(
@@ -743,16 +775,19 @@ class DFG:
                     if b_ is None:
                         break
                     TS = tS(b_, rrS); ok = ok and TS > th_
+                    _P.bs("add%d" % it, b_, T_, th_, ok, TS)
                     cands.append(b_)
                     if it == 0 and th_ > 0:
                         sum_top[:] = [T_ / th_, b_]; mg0 = TS - th_; th_top[0] = th_
                     if ok and b_.key() not in have_blk:
                         blk.append(("sum", b_)); have_blk.add(b_.key())
+                        _P.acc("sum_add", b_)
                     if it + 1 < self.sum_add:
                         g = b_.group(X); G = b_.ngroups(); cnt = np.maximum(np.bincount(g, minlength=G), 1)
                         rr = rr - (np.bincount(g, weights=rr, minlength=G) / cnt)[g]
                         rrS = rrS - (np.bincount(g, weights=rrS, minlength=G) / cnt)[g]
                         Mc = (X * rr[:, None]).T @ X / n; fl[0] += 2 * n * d * d + 8 * n
+                _P.enter("sum_prod")
                 okb, prods = False, []                      # product candidates (margin, block)
                 if self.sum_prod and len(cands) >= 2:       # product A x B: B searched over the joint cells with A
                     a_ = cands[0]; gA, GA = a_.group(X), a_.ngroups()
@@ -760,10 +795,13 @@ class DFG:
                     exA = set(a_.S.tolist()) | (set() if a_.inner is None else {a_.inner[2], a_.inner[3]} - {-1})
                     b2, Tb, thb, ok2 = _block_search(X, r, s2, Mc, exA, tkp, mc, base=(gA, GA),
                                                      init=[(c.S, c.sg, c.fold) for c in cands[1:]], **kw)
+                    _P.bs("prod", b2, Tb, thb, ok2)
                     if ok2:
                         P = SumBlock(b2.S, b2.sg, b2.fold, (), b2.edges, other=a_); TS = tS(P, rS)
                         if TS > thb:
                             prods.append((TS - thb, P))
+                            _P.tag(P, "sum_prod")
+                _P.enter("sum_split")
                 if self.sum_prod and cands:                 # split move: a block with mixed signs may be |t_A - t_B|
                     c0 = cands[0]; pos = c0.S[c0.sg > 0].tolist(); neg = c0.S[c0.sg < 0].tolist()
                     if len(pos) >= 2 and len(neg) >= 2:
@@ -772,14 +810,18 @@ class DFG:
                         tkp = lambda k, kA=len(pos): tk(kA) + tk(k)
                         b2, Tb, thb, ok2 = _block_search(X, r, s2, Mc, set(pos), tkp, mc, base=(gA, GA),
                                                          init=[(neg, [1.0] * len(neg), c0.fold)], **kw)
+                        _P.bs("split", b2, Tb, thb, ok2)
                         if ok2:
                             P = SumBlock(b2.S, b2.sg, b2.fold, (), b2.edges, other=Ap); TS = tS(P, rS)
                             if TS > thb:
                                 prods.append((TS - thb, P))
+                                _P.tag(P, "sum_split")
                 if prods and max(v[0] for v in prods) > mg0:     # only if it beats the first additive block alone
                     P = max(prods, key=lambda v: v[0])[1]; okb = True
                     if P.key() not in have_blk:
                         blk.append(("sum", P)); have_blk.add(P.key())
+                        _P.acc("sum_prodsplit", P)
+                _P.enter("sum_cpair")
                 if self.sum_prod and live:
                     for a_, b2 in ([] if okb else itertools.combinations(cands, 2)):
                         if set(a_.S.tolist()) & set(b2.S.tolist()):
@@ -791,14 +833,19 @@ class DFG:
                         m_ = max(int(lev[0]) - 1, 1)
                         if float(Tp[0]) / s2S > _chi2_thr(m_, tkb(a_) + tkb(b2)):
                             blk.append(("sum", P)); have_blk.add(P.key())
+                            _P.acc("sum_cpair", P)
+                _P.enter("sum_mod")
                 for T in (nb if live else []):
                     ct = _chi(X, T); rt = r * ct
                     Mt = (X * rt[:, None]).T @ X / n; fl[0] += 2 * n * d * d + n * (d + len(T))
                     b_, T_, th_, ok = _block_search(X, rt, s2, Mt, set(T), tk, mc, **kw)
+                    _P.bs("mod", b_, T_, th_, ok)
                     if ok and tS(b_, rS * ct) > th_:
                         b_.mod = tuple(T)
                         if b_.key() not in have_blk:
                             blk.append(("sum", b_)); have_blk.add(b_.key())
+                            _P.acc("sum_mod", b_)
+                _P.enter("sum_prev")
                 if self.sum_prod and live:
                     add_ = [b for b in blocks if not b.mod and b.other is None]
                     for a_, b2 in itertools.combinations(add_, 2):
@@ -813,38 +860,52 @@ class DFG:
                         tp = tkb(a_) + tkb(b2)
                         if float(Tp[0]) / s2S > _chi2_thr(m_, tp):
                             blk.append(("sum", P)); have_blk.add(P.key())
+                            _P.acc("sum_prev", P)
+            _P.enter("select")
             new = sorted(cand.items(), key=lambda kv: -kv[1][0])[: self.max_new]
             if force and not new and not blk and forced[0] < 2:          # nothing passed: take the best guess
                 if (self.sum_force and sum_top[1] is not None and sum_top[0] > top[0] ** 2 and n >= self.sum_force_nmin
                         and sum_top[0] * th_top[0] / n >= self.sum_force_r2):
                     blk = [("sum", sum_top[1])]; have_blk.add(sum_top[1].key()); forced[0] += 1   # v1.2: a block
+                    _P.forced("block", sum_top[1])
                 elif top[1] is not None:
                     new = [(top[1], (top[0], top[2]))]; forced[0] += 1
+                    _P.forced("char", top[1])
             room = min(self.max_feats, n // 2) - len(feats)          # least squares with p <= n / 2
+            _P.sel(new, blk, room)
             if (not new and not blk) or room <= 0:
                 break
+            _P.enter("add")
             for S, _ in new[:room]:
                 feats.append(("chi", S)); cols.append(_chi(X, S)); have.add(S); fl[0] += n * len(S)
+                _P.feat_chi(S)
             for kind, obj in blk:
                 if kind == "linear":
                     for i in obj:
                         if (i,) not in have:
                             feats.append(("chi", (i,))); cols.append(X[:, i].copy()); have.add((i,))
+                            _P.feat("lin", (i,))
                 elif kind == "sum":
                     g = obj.group(X); G = obj.ngroups(); cnt = np.bincount(g, minlength=G); cm = _chi(X, obj.mod)
                     use = [v for v in range(G) if cnt[v] > 0 and v != int(np.argmax(cnt))]
                     if len(use) > min(self.max_feats, n // 2) - len(feats):
                         continue
                     bid = len(blocks); blocks.append(obj); info["blocks"].append(obj.desc())
+                    _P.block_added(obj, len(use))
                     for v in use:
                         feats.append(("sum", (bid, v))); cols.append((g == v) * cm)
+                        _P.feat("sum", obj)
                     fl[0] += n * (len(obj.S) + 2 * len(use))
                 else:
                     for u in obj:
                         feats.append(("quad", u)); cols.append((X @ u) ** 2 - u @ u); fl[0] += 2 * n * d
+                        _P.feat("quad")
             info["log"].append(dict(round=rnd, s=round(s, 4), new=[S for S, _ in new[:room]][:20], n_new=len(new[:room]),
                                     blocks=[k if k != "sum" else o.desc() for k, o in blk]))
+            _P.enter("ls")
             w, r = lsfit(); info["rounds"] = rnd + 1
+            _P.round_end()
+        _P.enter("logit")
         F, W = list(feats), np.array(w)
         if self.readout == "logit" and n >= 8 * len(cols):              # v1.1: refine the weights with logistic loss
             A = np.stack(cols, 1); p = A.shape[1]; v = 4.0 * W; lam = self.logit_lam
@@ -853,6 +914,7 @@ class DFG:
                 Hs = (A * (pr * (1 - pr))[:, None]).T @ A / n + lam * np.eye(p); v = v - np.linalg.solve(Hs, g)
                 fl[0] += 2 * n * p * p + p ** 3 / 3 + 8 * n * p
             W = v * (np.linalg.norm(A @ W) / max(np.linalg.norm(A @ v), 1e-12))
+        _P.enter("bg")
         bg = X.T @ r / n if self.background else np.zeros(d); fl[0] += 2 * n * d   # kernel background on the residual
         if self.readout == "coef":                                      # ablation: raw coefficients, no least squares
             W = np.array([float(np.mean(y * cl) / max(np.mean(cl * cl), 1e-12)) for cl in cols])
@@ -873,5 +935,7 @@ class DFG:
                     g, cm = cache[bid]; f += wi * (g == v) * cm
             return f + Z @ bg
 
+        _P.enter("trainerr")
         info["size"] = len(F); info["train_err"] = float(np.mean(np.where(value(X) > 0, 1, -1) != y))
+        _P.finish(info)
         return dict(predict=lambda Z: np.where(value(Z) > 0, 1.0, -1.0), flops=fl[0], info=info)

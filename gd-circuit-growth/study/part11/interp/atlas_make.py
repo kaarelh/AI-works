@@ -8,6 +8,11 @@ Writes
   tables/atlas.json             per target: spec summary and the selected cells with their model descriptions
   tables/atlas.md               per family: per target the selected cells (n just below / above n*_0, ~4 n*_0, 16384;
                                 256, 1024, 4096, 16384 where n*_0 is never) with a one-line model description
+  tables/atlas_summary.md       per family, one row per target: the model at the first n with error <= 0.1 and at 16384
+  tables/atlas_family.json      per family: the counts quoted in ATLAS.md (n*, first complete n, the two key cells,
+                                dictionary- vs readout-limited cells, cross-validation choices)
+  tables/atlas_below.csv        the cells below the first n with a complete compact representation
+  tables/atlas_quirks.json      duplicate blocks and spurious products (a true block times irrelevant inputs)
   tables/p10_compare.csv/.md    DFG alone against v3's DFG member (Part 10, part10/interp/results/toy_final/v3), per cell
   tables/identity.json/.md      refits (atlas + identity sample) against the merged evaluation files
   figures/fig_atlas_grid.pdf    test error by (target, n), with the cells where a compact representation is complete
