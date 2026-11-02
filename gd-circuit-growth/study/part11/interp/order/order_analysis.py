@@ -99,8 +99,10 @@ def net_n(fn, sup):
             continue
         ph = np.array([[float(z["coef"][-1, I[(n, s)], idx[ch]]) / yh for s in range(3)] for n in NS])   # [n, seed]
         on = [first_good(list(ph[:, s])) for s in range(3)]; om = first_good(list(ph.mean(1)))
+        o1 = [next((k for k in range(len(NS)) if ph[k, s] >= 0.5), None) for s in range(3)]
+        drop = [[NS[k] for k in range(len(NS) - 1) if ph[k, s] >= 0.5 and ph[k + 1:, s].min() < 0.4] for s in range(3)]
         out[ch] = dict(seeds=[INF if o is None else NS[o] for o in on], mean=INF if om is None else NS[om],
-                       phi=ph.round(3).tolist())
+                       first=[INF if o is None else NS[o] for o in o1], dropped_after=drop, phi=ph.round(3).tolist())
     return out
 
 
@@ -154,7 +156,10 @@ def dfg_n(fn, chars, s, key="phi_ls"):
         vals = ph[ch]
         if any(np.isnan(vals)):
             out[ch] = dict(n=None, phi=vals); continue
-        i = first_good(vals); out[ch] = dict(n=INF if i is None else NS[i], phi=[round(v, 3) for v in vals])
+        i = first_good(vals); i1 = next((k for k, v in enumerate(vals) if v >= 0.5), None)
+        drop = [NS[k] for k in range(len(vals) - 1) if vals[k] >= 0.5 and min(vals[k + 1:]) < 0.4]
+        out[ch] = dict(n=INF if i is None else NS[i], n_first=INF if i1 is None else NS[i1], dropped_after=drop,
+                       phi=[round(v, 3) for v in vals])
     return out
 
 

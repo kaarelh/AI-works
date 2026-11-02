@@ -172,7 +172,7 @@ def main():
                                   mean_distinct=float(np.mean([e["distinct_rounds"] for _, e in v])),
                                   max_rounds=max(e["nrounds"] for _, e in v),
                                   tau_half=[e["tau_half"] for _, e in v]) for n, v in sorted(G.items())}
-    mechanism(S, rows, NUM); checks(S, rows, NUM); stage_table(S, rows, NUM)
+    mechanism(S, rows, NUM); checks(S, rows, NUM); stage_table(S, rows, NUM); endpoints(S, NUM); data_cost(rows, NUM)
     json.dump(A.clean(NUM), open(os.path.join(A.TAB, "order_numbers.json"), "w"), indent=1)
     return S, rows, NUM
 
@@ -310,6 +310,53 @@ def stage_table(S, rows, NUM):
               f"- DFG, n (median seed): {stage_str(st_dfg[0], R, fn in big)}" + (f"; never: {stage_str([(INF, st_dfg[1])], R, fn in big)}" if st_dfg[1] else ""),
               f"- DFG, n (seed 0): {stage_str(st_d0[0], R, fn in big)}" + (f"; never: {stage_str([(INF, st_d0[1])], R, fn in big)}" if st_d0[1] else ""), ""]
     open(os.path.join(A.TAB, "order_stages.md"), "w").write("\n".join(L) + "\n")
+
+
+def endpoints(S, NUM):
+    """At Part 5's n: the share of a target's characters whose final learned fraction is >= 1/2 ('learned') and in
+    [0.25, 0.75) ('partial'), for the networks (step 20000 of each seed, Part 5 trajectories) and for DFG (final
+    least-squares function of the same seed); mean over the 33 target-seed cells (targets weighted equally)."""
+    E = {}
+    for n in (512, 2048, 16384):
+        rows = []
+        for fn in A.TARGETS:
+            T = S["targets"][fn]; chars = T["chars"]
+            r = json.load(open(os.path.join(A.TRAJ, f"{fn}_fixed.json")))
+            for s in A.SEEDS:
+                ph = np.array([r["nets"][f"{n}/s{s}"]["phi"][ch][-1] for ch in chars])
+                pd = np.array([T["dfg"][str(n)][str(s)]["rounds"][ch]["phi_final_ls"] for ch in chars])
+                rows.append(dict(target=fn, seed=s, net_learned=float(np.mean(ph >= 0.5)), dfg_learned=float(np.mean(pd >= 0.5)),
+                                 net_partial=float(np.mean((ph >= 0.25) & (ph < 0.75))),
+                                 dfg_partial=float(np.mean((pd >= 0.25) & (pd < 0.75)))))
+        E[n] = dict(cells=len(rows), **{k: float(np.mean([x[k] for x in rows])) for k in
+                                        ("net_learned", "dfg_learned", "net_partial", "dfg_partial")},
+                    per_target={fn: {k: float(np.mean([x[k] for x in rows if x["target"] == fn])) for k in
+                                     ("net_learned", "dfg_learned", "net_partial", "dfg_partial")} for fn in A.TARGETS})
+    NUM["endpoints"] = E
+    return E
+
+
+def data_cost(rows, NUM):
+    """Like for like on the n axis (|S| <= 4, both learners' n onset known): DFG's median n onset against the
+    networks', per character; by coefficient size (|yhat| >= 0.25 or below) and per target."""
+    out = dict(all=Counter(), big=Counter(), small=Counter(), log2=[], log2_big=[], log2_small=[], per_target={})
+    for r in rows:
+        a, b = r["dfg_n"], r["net_n"]
+        if a is None or b is None:
+            continue
+        k = "dfg_less" if a < b else "equal" if a == b else "dfg_more"
+        grp = "big" if abs(r["yhat"]) >= 0.25 - 1e-9 else "small"
+        out["all"][k] += 1; out[grp][k] += 1
+        out["per_target"].setdefault(r["target"], Counter())[k] += 1
+        if np.isfinite(a) and np.isfinite(b):
+            v = math.log2(a / b); out["log2"].append(v); out["log2_" + grp].append(v)
+    for k in ("log2", "log2_big", "log2_small"):
+        v = out[k]; out[k] = dict(count=len(v), median=float(np.median(v)) if v else None, mean=float(np.mean(v)) if v else None)
+    for k in ("all", "big", "small"):
+        out[k] = dict(out[k])
+    out["per_target"] = {t: dict(c) for t, c in out["per_target"].items()}
+    NUM["data_cost"] = out
+    return out
 
 
 # ------------------------------------------------------------------ figure
