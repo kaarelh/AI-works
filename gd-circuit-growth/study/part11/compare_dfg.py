@@ -321,7 +321,7 @@ def q2():
          "| suite | status for DFG v1.3 | DFG alone run | targets | vs nets_best | vs each network variant: min / max mean (variants) "
          "| vs v3 | vs v2 | vs lin | vs hgb | vs lowdeg | DFG never | context: v3 vs nets_best |",
          "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
-    out, pool, inc, v3cmp = {}, defaultdict(list), [], []
+    out, pool, inc, v3cmp, cworse, dnever = {}, defaultdict(list), [], [], [], []
     for su in TOY:
         r, st = run("dfg13-perm", su); D = nst(r); NR, nb = nets(su)
         V3 = CL.nst("p10_sum-perm", su)
@@ -343,10 +343,15 @@ def q2():
                 pool[k] += [(su, t, v) for t, v in s["ratios"].items()]
         if ctx:
             pool["_v3_vs_nets_best"] += [(su, t, v) for t, v in ctx["ratios"].items()]
+        ab = nets_argbest(su)
         for t in D:
             if t in V3:
                 v3cmp.append(dict(suite=su, target=t, dfg=D[t], v3=V3[t], ratio=CH.l2r(D[t], V3[t]),
                                   identical=bool(D[t] == V3[t]), v2=refs["v2"].get(t), nets_best=nb.get(t)))
+            if t in nb and CH.l2r(D[t], nb[t]) > THR:
+                cworse.append(dict(suite=su, target=t, dfg=D[t], nets_best=nb[t], variant=ab.get(t), v3=V3.get(t)))
+            if not np.isfinite(D[t]):
+                dnever.append(dict(suite=su, target=t, v3=V3.get(t), nets_best=nb.get(t), lowdeg=refs["lowdeg"].get(t)))
         out[su] = dict(status=st, v13_status=V13[su], targets=len(D), dfg_never=never, dfg=D, summary=S, v3_vs_nets_best=ctx,
                        v2_file=v2_name(su), network_variants=sorted(NR), network_seeds=net_seeds(su))
     prov = (" **Provisional**: DFG alone is not complete on " + ", ".join(f"`{s}`" for s in inc) + ".") if inc else ""
@@ -368,6 +373,17 @@ def q2():
     L += ["", f"On Part 10's pooled held-out set ({', '.join(f'`{s}`' for s in P10_HELD)}; suites with DFG alone run: {len(sd['suites'])}), "
               "against `nets_best`, on the same targets:", "", "| learner vs nets_best | suites | " + SHEAD, "|---|---|" + SSEP,
           srow("DFG alone", sd, f" {len(sd['suites'])} |"), srow("v3", sv, f" {len(sv['suites'])} |")]
+    out["dfg_clearly_worse_than_nets_best"] = cworse; out["dfg_never"] = dnever
+    L += ["", f"Targets where DFG alone is clearly worse than `nets_best` (ratio > +{THR}, or only the networks reach 10% error): "
+              f"{len(cworse)} of {len(pool['nets_best'])}." + prov, ""]
+    if cworse:
+        L += ["| suite | target | DFG alone | nets_best (variant) | DFG vs nets_best | v3 |", "|---|---|---|---|---|---|"]
+        L += [f"| {x['suite']} | {x['target']} | {f_n(x['dfg'])} | {f_n(x['nets_best'])} ({x['variant']}) | "
+              f"{f_r(CH.l2r(x['dfg'], x['nets_best']))} | {f_n(x['v3'])} |" for x in cworse]
+    L += ["", f"Targets DFG alone never brings to 10% test error by n = 16384: {len(dnever)} of "
+              f"{sum(len(o.get('dfg', {})) for o in out.values() if isinstance(o, dict))}: "
+              + (", ".join(f"{x['suite']}/{x['target']} (v3 {f_n(x['v3'])}, nets_best {f_n(x['nets_best'])}, lowdeg {f_n(x['lowdeg'])})"
+                           for x in dnever) or "none") + "."]
     # DFG alone against v3, target by target
     R = [x["ratio"] for x in v3cmp]; ident = sum(x["identical"] for x in v3cmp)
     lower = sum(1 for v in R if v < 0); higher = sum(1 for v in R if v > 0); m = lower + higher
