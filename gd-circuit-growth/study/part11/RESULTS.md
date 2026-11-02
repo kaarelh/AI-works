@@ -37,6 +37,8 @@ Numerical. DFG alone: `part11/results/toy__dfg13-perm__dlheld7.json` (complete; 
 | nets_cewd1.0 | 12 | 11 | -1.36 | -1.32 | 10 | 0 | 0 | 0 | 1 |
 | nets_best | 12 | 11 | -1.29 | -1.16 | 10 | 0 | 0 | 0 | 1 |
 
+In short: DFG alone vs nets_best -1.29 (10/0) [11/12]; vs v3 +0.21 (0/3) [11/12] (cells as in Q2). Targets DFG alone never brings to 10% error: f7_05 (reached by: no column).
+
 Context, the same summary for the references against `nets_best`:
 
 | learner vs nets_best | targets | both reach | mean log2 n* ratio | median | clearly better | clearly worse | never, the other reaches | the other never | neither |
@@ -242,7 +244,7 @@ Numerical. Ablations: `part11/results/toy__dfg13-<tag>-perm__<suite>.json` on `d
 
 | ablation | change (constructor kw, from the file) | seeds | suites run | targets | both reach | mean log2 ratio | median | ablation lower (< -0.25) | ablation higher (> +0.25) | newly never | newly reached |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| nosums | no sum blocks: `{"sums": false}` | 0, 1 | 3 of 5 (1 partial) | 33 | 32 | +0.63 | +0.00 | 2 | 12 | dlsymdev/band11 | – |
+| nosums | no sum blocks: `{"sums": false}` | 0, 1 | 3 of 5 (1 partial) | 37 | 36 | +0.76 | +0.07 | 2 | 16 | dlsymdev/band11 | – |
 | strict | stricter tests (delta): – | 0, 1 (protocol) | 0 of 5 | – | – | – | – | – | – | – | – |
 | lenient | more lenient tests (delta): – | 0, 1 (protocol) | 0 of 5 | – | – | – | – | – | – | – | – |
 | noeig | block search without eigenvector seeds: – | 0, 1 (protocol) | 0 of 5 | – | – | – | – | – | – | – | – |
@@ -264,8 +266,8 @@ The null rows compare single seeds of DFG alone with each other (different train
 | ablation | suite | run | seeds | targets | both reach | mean log2 ratio | ablation lower | ablation higher | newly never | newly reached |
 |---|---|---|---|---|---|---|---|---|---|---|
 | nosums | designed | complete | 0, 1 | 21 | 21 | +0.14 | 1 | 4 | – | – |
-| nosums | dlsymdev | complete (2 unmerged shards) | 0, 1 | 8 | 7 | +2.35 | 1 | 7 | band11 | – |
-| nosums | dlfamdev | partial: 4 of 12 targets (1 unmerged shard) | 0, 1 | 4 | 4 | +0.19 | 0 | 1 | – | – |
+| nosums | dlsymdev | complete | 0, 1 | 8 | 7 | +2.35 | 1 | 7 | band11 | – |
+| nosums | dlfamdev | partial: 8 of 12 targets (2 unmerged shards) | 0, 1 | 8 | 8 | +1.02 | 0 | 5 | – | – |
 | nosums | dlheld6 | not yet run | – | – | – | – | – | – | – | – |
 | nosums | dlheld7 | not yet run | – | – | – | – | – | – | – | – |
 | strict | designed | not yet run | – | – | – | – | – | – | – | – |
@@ -326,7 +328,7 @@ The null rows compare single seeds of DFG alone with each other (different train
 
 ### Targets moved by more than 0.25 in log2 n* (ablation vs DFG alone, same seeds)
 
-- `nosums` (14 of 33): dlsymdev/band11 (+inf), dlsymdev/ex3of8 (+3.69), dlsymdev/sym7 (+3.62), dlsymdev/ssym9 (+3.43), dlsymdev/twosym (+3.16), dlsymdev/far9 (+1.70), dlsymdev/symxpar (+1.47), designed/rand3 (+1.45), designed/parmaj (+1.00), dlsymdev/thrsum (-0.66), dlfamdev/fd_02 (+0.52), designed/sparsepoly (-0.33), designed/dnf3 (+0.28), designed/maj9 (+0.28)
+- `nosums` (18 of 37): dlsymdev/band11 (+inf), dlsymdev/ex3of8 (+3.69), dlsymdev/sym7 (+3.62), dlsymdev/ssym9 (+3.43), dlsymdev/twosym (+3.16), dlfamdev/fd_04 (+2.89), dlfamdev/fd_06 (+2.73), dlsymdev/far9 (+1.70), dlsymdev/symxpar (+1.47), designed/rand3 (+1.45), dlfamdev/fd_05 (+1.21), designed/parmaj (+1.00), dlsymdev/thrsum (-0.66), dlfamdev/fd_07 (+0.56), dlfamdev/fd_02 (+0.52), designed/sparsepoly (-0.33), designed/dnf3 (+0.28), designed/maj9 (+0.28)
 
 ## Q6. Tabular: kr_vs_kp and mushroom
 
@@ -423,7 +425,7 @@ Numerical. FLOPs: DFG's own count (multiply-add = 2) per fit, as a fraction of o
 | lowdeg-perm | dlheld6 | 30 | 396 | 0.095 (h6_09, 16384) | 0 / 0 | 0.03 / 1.5 |
 | lowdeg-perm | dlfamdev | 30 | 396 | 0.092 (fd_05, 16384) | 0 / 0 | 0.02 / 1.1 |
 | lowdeg-perm | dlheld7 | 30 | 396 | 0.091 (f7_00, 16384) | 0 / 0 | 0.03 / 1.2 |
-| dfg13-nosums-perm | the 5 ablation suites (those run) | 30 | 726 | 0.487 | 0 / 0 | 0.70 / 3.5 |
+| dfg13-nosums-perm | the 5 ablation suites (those run) | 30 | 814 | 0.487 | 0 / 0 | 0.70 / 3.6 |
 
 By n: DFG alone on the d = 30 suites run so far, and v3 (`hybrid/results/toy__p10_sum-perm__<suite>.json`) on the same (suite, target, n, seed) fits.
 
@@ -637,8 +639,8 @@ Numerical; sources as in Q2. The network variant(s) attaining nets_best in brack
 | Q4 | dfg13-perm | designed_d60 | complete | 0, 1 |
 | Q4 | dfg13-perm | designed_d120 | complete | 0, 1 |
 | Q5 | dfg13-nosums-perm | designed | complete | 0, 1 |
-| Q5 | dfg13-nosums-perm | dlsymdev | complete (2 unmerged shards) | 0, 1 |
-| Q5 | dfg13-nosums-perm | dlfamdev | partial: 4 of 12 targets (1 unmerged shard) | 0, 1 |
+| Q5 | dfg13-nosums-perm | dlsymdev | complete | 0, 1 |
+| Q5 | dfg13-nosums-perm | dlfamdev | partial: 8 of 12 targets (2 unmerged shards) | 0, 1 |
 | Q5 | dfg13-nosums-perm | dlheld6 | not yet run | – |
 | Q5 | dfg13-nosums-perm | dlheld7 | not yet run | – |
 | Q5 | dfg13-strict-perm | designed | not yet run | – |
