@@ -32,15 +32,14 @@ Figures: [`figures/fig_atlas_grid.pdf`](figures/fig_atlas_grid.pdf), [`figures/f
   formulas are their characters (multiplexers and random formulas after transient block encodings of a branch or a
   term); at n = 16384, 8 of the 37 models are exactly the target's Fourier expansion and
   nothing else (par2, par4, par5, stair5, andxor, mux6, mux11, hrf0). Symmetric targets and signed sums are their
-  sum block (sym9 at 128, band11 at 1024, f7_08 at 512, h5s7 at 2048), and halfspaces are degree-1 characters plus,
-  where one exists, a block.
+  sum block (sym9 at 128, band11 at 1024, f7_08 at 512; h5s7 at 2048 as a product of two factors that partition its
+  class), and halfspaces are degree-1 characters plus, where one exists, a block.
 - **Mixtures are represented in forms the targets' definitions do not suggest** (Numerical, §1.9). The parity of two
   majorities is first two folded blocks over the union, |t_A + t_B| and |t_A − t_B| (parmaj at 128, majxor at 256;
   sign(|t_A+t_B|² − |t_A−t_B|²) = sign(t_A t_B)); a parity, gate or selector partner ends up as the inner term of a
   weighted block next to characters (at n = 16384 in 5 of the 6 mixtures without a true weighted block: s ± 3 x13,
-  s ± 3 x11x12, s ± 3 AND(¬x7,¬x8), s1 ± 3 x11, s2 ± 3 x11); by
-  n = 16384 only 1 of the 7 signed-sum mixtures (f7_10) still holds its compact representation, while all 7 have test
-  error 0 and 5 of them span R² ≥ 0.998.
+  s ± 3 x11x12, s ± 3 AND(¬x7,¬x8), s1 ± 3 x11, s2 ± 3 x11). At n = 16384 only 1 of the 7 signed-sum mixtures (f7_10)
+  still holds its compact representation, while all 7 have test error 0 and 5 of them span R² ≥ 0.998.
 - **Where DFG is above 10% error, the dictionary is what is missing, not the readout** (Numerical, §2.1): in 133 of
   the 148 cells with test error > 0.1 the learned features cannot express the target (the best logistic weights on
   them, fitted on test inputs, err > 0.1); in 9 cells they can (oracle error ≤ 0.02) and only DFG's own weights fall
@@ -50,9 +49,8 @@ Figures: [`figures/fig_atlas_grid.pdf`](figures/fig_atlas_grid.pdf), [`figures/f
   degree-1 characters of the linear block (share 0.40–0.78 at n = 64 in the 8 targets whose linear block entered
   there; at most 0.035 at n = 16384), products of a true block with a factor of irrelevant inputs (9 cells, 4 targets,
   shares 0.07–0.41, test error ≤ 0.0083), and blocks contaminated by irrelevant inputs at the first n where a block
-  appears. At the first n with
-  test error ≤ 0.1 the spurious share is ≤ 0.1 for 22 of 35 targets (median 0.01, largest 0.36, dlist8); at 16384 for
-  36 of 37 (largest 0.21, a spurious product of sym9).
+  appears. At the first n with test error ≤ 0.1 the spurious share is ≤ 0.1 for 22 of 35 targets (median 0.01,
+  largest 0.36, dlist8); at 16384 for 36 of 37 (largest 0.21, a spurious product of sym9).
 - **The two residue classes mod 3 are never learned**: f7_05 and h6_00 are the constant (plus the kernel background)
   at every n, test error = the minority rate (0.3245, 0.3430) from n = 2048 on, as Part 10 found for v3's member.
 - **DFG's own cross-validation keeps the default variant** in 204 of the 222 cells at n ≤ 512 and chooses the forced
@@ -62,9 +60,10 @@ Figures: [`figures/fig_atlas_grid.pdf`](figures/fig_atlas_grid.pdf), [`figures/f
   the forced variant and is 0.015 above the better of the two. Below the n at which a compact representation is
   complete, 108 of 198 models are the constant alone.
 - **Against v3's DFG member** (Part 10, same targets and rows; §3): the DFG test error is identical in 141 of the 255
-  common cells, in all 15 cells at n ≥ 4096 and in 28 of 32 at n = 1024–2048; at n ≤ 64 alone stays empty where v3's
-  summarised member (usually the forced variant, kept by the stacker) held one or two true characters. Part 10's
-  exact-structure size n_struct is the same for all 15 targets where both have one.
+  common cells, in all 15 cells at n ≥ 4096 and in 28 of 32 at n = 1024–2048. At small n they differ mostly through
+  the variant: v3's stacker kept the forced member in 51 of its 110 cells at n ≤ 64, DFG alone's paired test in 7 of
+  111, and the forced member's one or two characters are often true ones (rf06 at 16: 0.032 against alone's 0.280).
+  Part 10's exact-structure size n_struct is the same for all 15 targets where both have one.
 
 ## 0. What was measured, and how
 
