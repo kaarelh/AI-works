@@ -56,8 +56,11 @@ Figures: [`figures/fig_atlas_grid.pdf`](figures/fig_atlas_grid.pdf), [`figures/f
 - **The two residue classes mod 3 are never learned**: f7_05 and h6_00 are the constant (plus the kernel background)
   at every n, test error = the minority rate (0.3245, 0.3430) from n = 2048 on, as Part 10 found for v3's member.
 - **DFG's own cross-validation keeps the default variant** in 204 of the 222 cells at n ≤ 512 and chooses the forced
-  one in 18 (Numerical, §2.3); below the n at which a compact representation is complete, 108 of 198 models are the
-  constant alone. [CV counterfactual: §2.3.]
+  one in 18 (Numerical, §2.3). Refitting the variant it did not choose on the same rows: the two differ in test error
+  in 140 cells; the forced one would have been better in 48 of the 204 default cells (par4 at 32: 0 instead of 0.488)
+  and the choice made is better in 89 of the 140. Its mean test error over the 222 cells, 0.226, equals always taking
+  the forced variant and is 0.015 above the better of the two. Below the n at which a compact representation is
+  complete, 108 of 198 models are the constant alone.
 - **Against v3's DFG member** (Part 10, same targets and rows; §3): the DFG test error is identical in 141 of the 255
   common cells, in all 15 cells at n ≥ 4096 and in 28 of 32 at n = 1024–2048; at n ≤ 64 alone stays empty where v3's
   summarised member (usually the forced variant, kept by the stacker) held one or two true characters. Part 10's
@@ -348,7 +351,19 @@ the default and the forced variant and takes the forced one only if it wins a pa
 cells (n = 16: 1, 32: 4, 64: 2, 128: 5, 256: 5, 512: 1); in these the forced model is often the target's first fit
 (par2@16, andxor@64, majpar@64, stair5@128, parmaj@128, hrf0@128, cnf3@256, f7_00@256, f7_02@256, f7_09@256,
 mux6@256, f7_08@512): 12 of 18.
-[CV counterfactual numbers: see below.]
+
+*What the other variant would have given* (`cv_counterfactual.py`: the variant not chosen, refitted on the same n rows
+exactly as DFG.fit runs the final fit; the chosen one reproduces every cell). The two variants have the same test
+error in 82 of the 222 cells and differ in 140 (n = 16: 37 of 37, 32: 36, 64: 26, 128: 23, 256: 11, 512: 7). Where the
+forced variant was chosen (18) it was better in 7, equal in 8 and worse in 3 (mean gain 0.076; par2 at 16: 0 against
+0.487; majpar at 64: 0.067 against 0.509; f7_02 at 256: 0 against 0.184). Where the default was kept (204) it was
+better in 82, equal in 74 and worse in 48; the largest misses are par4 at 32 (forced 0 against 0.488; the forced
+character is right on all 32 rows but not in the 10-fold fits on 29 rows, CV errors 17 / 18), mux6 at 128 (0.097
+against 0.366), rf06 at 16 (0.032 against 0.280), f7_00 at 128 (0.256 against 0.472) and andxor at 32 (0.155
+against 0.365). Mean test error over the 222 cells: DFG's choice 0.2257, always default 0.2319, always forced 0.2256,
+the better of the two in each cell 0.2111.
+*Heuristic:* the paired test is conservative where the folds are too small for the forced guess to be right, which
+is where the forced guess helps most; this is also where v3's stacker, which kept both variants, did better (§3).
 Below the first n at which a compact representation is complete (198 cells in 36 targets, including all cells of the
 6 targets that never get one), 187 models are the default variant and 11 the forced; 108 are the constant alone
 (+ background), 29 contain the linear block, 78 a true character; median test error 0.31.
