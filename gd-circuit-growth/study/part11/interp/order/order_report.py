@@ -42,7 +42,8 @@ def tfmt(t):
 
 
 def load():
-    return json.load(open(os.path.join(A.RES, "order_summary.json")))
+    with gzip.open(os.path.join(A.RES, "order_summary.json.gz"), "rt") as fh:
+        return json.load(fh)
 
 
 def med3(vals):
@@ -155,7 +156,9 @@ def main():
         na = C.get("n_axis") or {}
         L.append(f"| {fn} | {len(T['chars'])} | {ru} | {tfmt(z16m)} (seeds {', '.join(tfmt(t) for t in z16)}) | {tfmt(C['online']['tau_n'])} | "
                  f"{(str(pn['concordant']) + '/' + str(pn['tied']) + '/' + str(pn['inverted'])) if pn else '–'} | {tfmt(na.get('tau'))} ({len(na.get('chars', []))} chars) | {tfmt(na.get('net_time_vs_net_n'))} |")
-        NUM["targets"][fn] = dict(rounds=ru, tau_z0_16384=z16, tau_net_time_dfg_n=C["online"]["tau_n"], pairs_n=pn,
+        NUM["targets"][fn] = dict(rounds=ru, tau_z0_16384=z16, tau_net_time_dfg_n=C["online"]["tau_n"],
+                                  pairs_n=None if pn is None else dict({k: v for k, v in pn.items() if k != "inverted_pairs"},
+                                                                       inverted_pairs_first30=pn["inverted_pairs"][:30]),
                                   tau_n_axis=na.get("tau"), n_axis_chars=len(na.get("chars", [])),
                                   tau_net_time_net_n=na.get("net_time_vs_net_n"),
                                   tau_nglob_dfg_n=C.get("nglob_vs_dfg_n"), tau_nglob_net_online=C.get("nglob_vs_net_online"))
@@ -177,7 +180,7 @@ def main():
                                   mean_distinct=float(np.mean([e["distinct_rounds"] for _, e in v])),
                                   max_rounds=max(e["nrounds"] for _, e in v),
                                   tau_half=[e["tau_half"] for _, e in v]) for n, v in sorted(G.items())}
-    mechanism(S, rows, NUM); checks(S, rows, NUM); stage_table(S, rows, NUM); endpoints(S, NUM); data_cost(rows, NUM); degree_vs_size(S, rows, NUM)
+    mechanism(S, rows, NUM); checks(S, rows, NUM); stage_table(S, rows, NUM); endpoints(S, NUM); data_cost(rows, NUM); degree_vs_size(S, rows, NUM); nonmonotone(S, NUM)
     json.dump(A.clean(NUM), open(os.path.join(A.TAB, "order_numbers.json"), "w"), indent=1)
     return S, rows, NUM
 
@@ -242,11 +245,7 @@ def checks(S, rows, NUM):
                 dl = max(R[ch]["dfg_n_seeds"][s] for ch in lin); do = min(R[ch]["dfg_n_seeds"][s] for ch in oth)
                 e[f"dfg_n_linear_first_s{s}"] = "strict" if dl < do else "tied" if dl == do else "no"
                 e[f"dfg_n_linear_s{s}"] = [dl, do]
-        # stages on each axis
-        e["net_stages_online"] = stages_by({ch: R[ch]["net_online"] for ch in R})
-        e["dfg_stages_n_median"] = stages_by({ch: R[ch]["dfg_n"] for ch in R}, sep=1.0)
-        e["dfg_stages_n_seeds"] = [stages_by({ch: R[ch]["dfg_n_seeds"][s] for ch in R}, sep=1.0) for s in A.SEEDS]
-        e["net_stages_n"] = stages_by({ch: R[ch]["net_n"] for ch in R if R[ch]["net_n"] is not None}, sep=1.0)
+        # (the stages on each axis are in tables/order_stages.md)
         # endpoints at finite n: characters learned (phi >= 1/2 at the end) by networks (seed mean) and by DFG (per seed)
         for n in (512, 2048):
             netl = [ch for ch in R if T["net_time"][str(n)][ch]["final_mean"] >= 0.5]
@@ -394,6 +393,28 @@ def degree_vs_size(S, rows, NUM):
                  f"{tfmt(o['net_n_deg'])} | {tfmt(o['net_n_size'])} | {tfmt(o['dfg_n_deg_4'])} | {tfmt(o['dfg_n_size_4'])} |")
     open(os.path.join(A.TAB, "order_degree_size.md"), "w").write("\n".join(L) + "\n")
     return out
+
+
+def nonmonotone(S, NUM):
+    """Characters that a final model carries at some grid n (learned fraction >= 1/2) and drops at a larger n (< 0.4):
+    DFG (every target character, per seed) and the networks of the fixed-n study (|S| <= 4, per seed)."""
+    d_tot = d_drop = n_tot = n_drop = 0; ex = []; per = {}
+    for fn in A.TARGETS:
+        T = S["targets"][fn]; per[fn] = [0, 0, 0, 0]
+        for s in A.SEEDS:
+            for ch in T["chars"]:
+                e = T["dfg_n"][str(s)][ch]; d_tot += 1; per[fn][1] += 1
+                if T["net_n"] and ch in T["net_n"]:
+                    per[fn][3] += 1; per[fn][2] += 1 if T["net_n"][ch]["dropped_after"][s] else 0
+                if e.get("dropped_after"):
+                    d_drop += 1; per[fn][0] += 1
+                    if len(ex) < 12:
+                        ex.append((fn, s, ch, e["dropped_after"]))
+                if T["net_n"] and ch in T["net_n"]:
+                    n_tot += 1; n_drop += 1 if T["net_n"][ch]["dropped_after"][s] else 0
+    NUM["nonmonotone"] = dict(dfg_dropped=d_drop, dfg_total=d_tot, net_dropped=n_drop, net_total=n_tot, dfg_examples=ex,
+                              per_target={fn: dict(dfg_dropped=v[0], dfg_total=v[1], net_dropped=v[2], net_total=v[3]) for fn, v in per.items()})
+    return NUM["nonmonotone"]
 
 
 # ------------------------------------------------------------------ figure

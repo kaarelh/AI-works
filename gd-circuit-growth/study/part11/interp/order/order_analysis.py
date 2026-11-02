@@ -21,7 +21,7 @@ Definitions
                         'all tied') when one order puts every character at the same rank.
   inverted pair         S before S' in one order (networks: onsets more than a factor 1.35 apart, Part 5's stage
                         clustering) and strictly after it in the other.
-Writes order/results/order_summary.json, order/tables/order_*.md|csv, order/figures/fig_order.{pdf,png}.
+Writes order/results/order_summary.json.gz (read by order_report.py, which writes the tables and the figure).
 """
 import os, sys, json, gzip, math, itertools, numpy as np
 from scipy.stats import kendalltau
@@ -189,9 +189,9 @@ def tau(a, b):
     return None if not np.isfinite(t) else float(t)
 
 
-def pair_counts(chars, net, dfg, sep=1.35):
+def pair_counts(chars, net, dfg, sep=1.35, keep=0):
     """Pairs ordered by the networks (onsets > sep apart, or one never): concordant / tied in DFG / inverted; and pairs
-    in one network stage (within sep) that DFG separates."""
+    in one network stage (within sep) that DFG separates.  keep: how many inverted pairs to list (the counts are exact)."""
     conc, tied, inv, same_net_split, same_net_same, inv_list = 0, 0, 0, 0, 0, []
     for a, b in itertools.combinations(chars, 2):
         na, nb = net[a], net[b]; da, db = dfg[a], dfg[b]
@@ -210,7 +210,9 @@ def pair_counts(chars, net, dfg, sep=1.35):
         elif df == dsec:
             tied += 1
         else:
-            inv += 1; inv_list.append((first, second))
+            inv += 1
+            if len(inv_list) < keep:
+                inv_list.append((first, second))
     return dict(concordant=conc, tied=tied, inverted=inv, inverted_pairs=inv_list, net_bundle_same=same_net_same,
                 net_bundle_split=same_net_split)
 
@@ -349,7 +351,7 @@ def main():
             cmpd[cond] = dict(per_seed=per_seed,
                               tau_n=tau([netm[ch] for ch in chars], [dn[ch] if dn[ch] is not None else INF for ch in chars])
                               if all(dn[ch] is not None for ch in chars) else None,
-                              pairs_n=pair_counts(chars, netm, {ch: dn[ch] if dn[ch] is not None else INF for ch in chars})
+                              pairs_n=pair_counts(chars, netm, {ch: dn[ch] if dn[ch] is not None else INF for ch in chars}, keep=300)
                               if all(dn[ch] is not None for ch in chars) else None,
                               stages=net_stages(netm))
         # like for like on the n axis: networks' n onset (fixed-n study, |S| <= 4) against DFG's
@@ -371,7 +373,8 @@ def main():
                                           [nt["online"][ch]["mean"] for ch in chars])
         T["cmp"] = cmpd
         S["targets"][fn] = T
-    json.dump(clean(S), open(os.path.join(RES, "order_summary.json"), "w"), indent=0)
+    with gzip.open(os.path.join(RES, "order_summary.json.gz"), "wt") as fh:
+        json.dump(clean(S), fh)
     return S
 
 

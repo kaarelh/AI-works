@@ -245,7 +245,11 @@ def hand_spec(name, t):
                                        block(range(h, 2 * h), [1] * h, list(range(-h, h + 1, 2)), False)]),
                           dict(name=f"PTF sign((x1+..+x{h})(x{h + 1}+..+x{2 * h})): {h * h} degree-2 characters",
                                chars={(i, j): 1.0 for i in range(h) for j in range(h, 2 * h)}),
-                          dict(name="two spectral features: sign((u+.x)^2 - (u-.x)^2), u+- = 1_A +- 1_B", quad=True)])
+                          dict(name="two spectral features: sign((u+.x)^2 - (u-.x)^2), u+- = 1_A +- 1_B", quad=True),
+                          dict(name=f"two folded blocks |t_A + t_B|, |t_A - t_B| over all {2 * h} inputs: "
+                                    "sign(|t_A+t_B|^2 - |t_A-t_B|^2) = sign(t_A t_B)",
+                               blocks=[block(range(2 * h), [1] * (2 * h), [], True),
+                                       block(range(2 * h), [1] * h + [-1] * h, [], True)], couple=[])])
     if name == "majmaj5":
         return dict(family="majority of majorities", combine="additive (sign readout)",
                     reps=[dict(name="three additive 5-input blocks: sign(g1(t1) + g2(t2) + g3(t3)), g = sign",
@@ -254,7 +258,15 @@ def hand_spec(name, t):
         return dict(family="AND of parities", reps=[dict(name="Fourier: (x1x2 + x3x4 + x1x2x3x4 - 1)/2",
                                                          chars={(0, 1): 0.5, (2, 3): 0.5, (0, 1, 2, 3): 0.5, (): -0.5})])
     if name in ("mux6", "mux11"):
-        return dict(family="multiplexer (address + data)", reps=[dict(name="Fourier expansion", fourier=True)])
+        a = 2 if name == "mux6" else 3                                   # address bits x1..xa, data x(a+1)..
+        bl = []
+        for idx in range(2 ** a):                                         # data bit a + idx is read when the address
+            pat = [1 if (idx >> (a - 1 - q)) & 1 else -1 for q in range(a)]   # bits have these signs (np.choose index)
+            bl.append(block(range(a), pat, [a], False, mod=[a + idx]))
+        return dict(family="multiplexer (address + data)",
+                    reps=[dict(name="Fourier expansion", fourier=True),
+                          dict(name=f"{2 ** a} address blocks, each modulated by its data bit: sum_d x_d [address = a_d]",
+                               blocks=bl, couple=[])])
     if name == "cnf3":
         cl = [[(0, 1), (1, 1), (2, 1)], [(3, -1), (4, 1), (5, 1)], [(6, 1), (7, -1), (8, 1)]]
 
@@ -267,7 +279,9 @@ def hand_spec(name, t):
                 out += 1 - 2 * pr
             return out
         return dict(family="CNF (3 clauses of 3 literals)", ptf=p,
-                    reps=[dict(name="PTF sign(c1 + c2 + c3 - 2), clause characters (degree <= 3, within a clause)")])
+                    reps=[dict(name="PTF sign(c1 + c2 + c3 - 2), clause characters (degree <= 3, within a clause)"),
+                          dict(name="one additive block per clause (the clause is false iff t = -3), sign readout",
+                               blocks=[block([q for q, _ in c], [g for _, g in c], [-1, 1, 3], False) for c in cl], couple=[])])
     if name == "dlist8":
         vals = [-1, 1, 1, -1, 1, -1, -1, 1]
         rules = [([(i, 1 if i % 3 != 1 else -1)], vals[i]) for i in range(8)]
@@ -314,12 +328,22 @@ def spec(suite, name, t, d=30):
         if "dnf" in fs:
             sp["ptf"] = lambda X, nd=fs["dnf"]: dnf_ptf(nd, rel, X)
             sp["reps"].append(dict(name="PTF sign(sum of terms + t - 1), term characters"))
+            tb = [block([l[1] for l in tm[1]], [l[2] for l in tm[1]], [len(tm[1])], False) for tm in fs["dnf"][1] if len(tm[1]) >= 2]
+            sp["reps"].append(dict(name="one additive block per AND term (all its literals true: t = m), sign readout",
+                                   blocks=tb, couple=[]))
         if "dl" in fs:
             nd = fs["dl"]; rules = [([_lit(l) for l in ls], o) for ls, o in nd[1]]
             sp["ptf"] = lambda X, rules=rules, dft=nd[2]: dl_ptf(rules, dft, X)
             sp["reps"].append(dict(name="PTF sign(sum_i o_i 2^(L+1-i) [rule i] + default), rule characters (degree <= 2)"))
         if fs["family"].startswith("read-once"):
             sp["reps"].append(dict(name="Fourier expansion", fourier=True))
+            if name == "f7_06":                                          # OR(T1, T2), T1 = AND of 5 literals
+                X3 = all_inputs([5, 6, 7], d)
+                T2 = np.where(((-X3[:, 5] > 0) | (X3[:, 6] > 0)) & (X3[:, 7] > 0), 1.0, -1.0)
+                ch = {S: c for S, c in ptf_from_poly(T2, [5, 6, 7]).items() if S}
+                sp["reps"].append(dict(name="sign(T1 + T2 + 1): additive block on the AND of 5 literals (t = 5) + the "
+                                            "characters of T2 = AND(OR(-x6,x7),x8)",
+                                       blocks=[block(range(5), [-1, 1, -1, 1, -1], [5], False)], chars=ch, couple=[5, 6, 7]))
         if fs["family"].startswith("pure") and fs["blocks"][0]["accept"]:
             b = fs["blocks"][0]; m = len(b["S"])
             acc = set(b["accept"]); tv = list(range(-m, m + 1, 2))
@@ -336,6 +360,7 @@ def spec(suite, name, t, d=30):
         sp = hand_spec(name, t)
     sp.setdefault("combine", None); sp.setdefault("couple", [])
     sp["rel"] = rel; sp["k"] = len(rel); sp["desc"] = t["desc"]
+    sp["classes"] = symmetry_classes(fn, rel, d)
     # Fourier table and verification of every representation
     if len(rel) <= 22:
         X = all_inputs(rel, d)
@@ -347,21 +372,45 @@ def spec(suite, name, t, d=30):
         pv = sp["ptf"](X); assert np.all(np.sign(pv) == vals) and np.all(pv != 0), name
         sp["reps"][-1]["chars"] = ptf_from_poly(pv, rel)
         del sp["ptf"]
+    # every signed-symmetry class of size >= 3 is a block f depends on only through its signed sum (a target that is
+    # symmetric in those signed inputs is a function of their sum and of the other inputs): an AUXILIARY representation,
+    # used to recognise block terms on such classes as target terms, never counted as 'complete' (the other inputs may
+    # enter in any way)
+    have = {(tuple(b["S"]), tuple(v * b["signs"][0] for v in b["signs"])) for r in sp["reps"] for b in r.get("blocks", [])}
+    aux = []
+    for c in sp["classes"]:
+        if X is None or len(c["S"]) < 3 or any(v is None for v in c["signs"]):   # (classes found on samples only are
+            continue                                                             #  not used when f cannot be enumerated)
+        key = (tuple(c["S"]), tuple(v * c["signs"][0] for v in c["signs"]))
+        if key in have:
+            continue
+        ev = None
+        if X is not None:
+            Xf = X.copy(); Xf[:, c["S"]] = -Xf[:, c["S"]]
+            ev = bool(np.array_equal(np.concatenate([fn(Xf[i:i + 65536]) for i in range(0, len(Xf), 65536)]), vals))
+        aux.append(block(c["S"], c["signs"], [], bool(ev)))
+    if aux:
+        cov = sorted(set(rel) - {i for b in aux for i in b["S"]})
+        sp["reps"].append(dict(name="symmetry-class blocks (auxiliary: f is a function of each class's signed sum and the "
+                                    "other inputs)", blocks=aux, couple=cov, aux=True))
     for r in sp["reps"]:
         if r.get("fourier"):
             r["chars"] = dict(sp["fourier"])
-        if "chars" in r and X is not None:                                   # verify sign(sum coef chi_S) == f
+        ok = []
+        if "chars" in r and X is not None and "blocks" not in r:              # verify sign(sum coef chi_S) == f
             pv = sum(c * (np.prod(X[:, list(S)], 1) if S else 1.0) for S, c in r["chars"].items())
-            r["verified"] = bool(np.all(np.sign(pv) == vals) and np.all(pv != 0))
-        if "blocks" in r and X is not None and r.get("exact", True):
-            r["verified"] = verify_blocks(r["blocks"], sp["combine"], sp["couple"], X, vals)
-    sp["classes"] = symmetry_classes(fn, rel, d)
+            ok.append(bool(np.all(np.sign(pv) == vals) and np.all(pv != 0)))
+        if "blocks" in r and X is not None:
+            ok.append(verify_blocks(r["blocks"], sp["combine"], r.get("couple", sp["couple"]), X, vals))
+        if ok:
+            r["verified"] = all(ok)
     return sp
 
 
 def verify_blocks(blocks, combine, couple, X, vals):
-    """The block representation is exact if f is a function of the blocks' statistics (and the coupling inputs): no two
-    inputs with the same (t_1, ..., couple, modulator) values have different labels."""
+    """The block representation is exact if f is a function of the blocks' statistics (|t| for a block marked even, so
+    that a folded block suffices) and of the coupling inputs: no two inputs with the same (t_1, ..., couple, modulator)
+    values have different labels."""
     keys = []
     for b in blocks:
         t = X[:, b["S"]] @ np.asarray(b["signs"], float)
@@ -376,7 +425,7 @@ def verify_blocks(blocks, combine, couple, X, vals):
             else:
                 tau = np.prod(X[:, inn["inputs"]], 1)
             t = t + inn["a"] * tau
-        keys.append(t)
+        keys.append(np.abs(t) if b["even"] else t)                         # an even block: f depends on |t| only
         if b["mod"]:
             keys.append(np.prod(X[:, b["mod"]], 1))
     for c in couple:

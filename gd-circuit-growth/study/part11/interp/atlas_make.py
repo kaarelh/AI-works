@@ -86,13 +86,14 @@ def rep_status(c, spec):
     chars = {tuple(t["S"]): t for t in c["terms"] if t["kind"] == "chi"}
     tb = [b for r in spec["reps"] for b in r.get("blocks", [])]
     for r in spec["reps"]:
-        o = dict(name=r["name"])
+        o = dict(name=r["name"], aux=bool(r.get("aux")))
+        ok = []
         if r.get("chars"):
             C = {tuple(S): v for S, v in r["chars"] if S}
             pres = [S for S in C if S in chars]
             o.update(n=len(C), present=len(pres), sign_ok=sum(1 for S in pres if np.sign(chars[S]["w"]) == np.sign(C[S])),
                      weight=round(sum(C[S] ** 2 for S in pres) / max(sum(v * v for v in C.values()), 1e-12), 4))
-            o["complete"] = o["present"] == o["n"]
+            ok.append(o["present"] == o["n"])
         if r.get("blocks"):
             found = []
             for b in r["blocks"]:
@@ -107,11 +108,12 @@ def rep_status(c, spec):
                             if where is None or rank < {"T": 0, "R": 1, "S": 2}[where]:
                                 where = t["cat"]
                 found.append(where)
-            o.update(blocks=len(found), found=sum(f is not None for f in found), found_in=found,
-                     complete=all(f is not None for f in found))
+            o.update(blocks=len(found), found=sum(f is not None for f in found), found_in=found)
+            ok.append(all(f is not None for f in found))
         if r.get("quad"):
-            o["complete"] = sum(1 for t in c["terms"] if t.get("quad_match")) >= 2
+            ok.append(sum(1 for t in c["terms"] if t.get("quad_match")) >= 2)
             o["quad"] = True
+        o["complete"] = bool(ok) and all(ok) and not o["aux"]               # auxiliary representations never count
         out.append(o)
     return out
 
@@ -247,13 +249,16 @@ def model_line(c, spec, kmax=6):
 def rep_line(c):
     o = []
     for rp in c["summary"]["reps"]:
+        part = []
+        if "present" in rp:
+            part.append(f"{rp['present']}/{rp['n']} chars" + (f" ({rp['sign_ok']} right sign)" if rp["sign_ok"] != rp["present"] else ""))
         if "found" in rp:
             w = [f for f in rp["found_in"] if f]
-            o.append(f"{rp['found']}/{rp['blocks']} blocks" + ("" if all(f == "T" for f in w) else " (" + ",".join(f or "-" for f in rp["found_in"]) + ")"))
-        elif "present" in rp:
-            o.append(f"{rp['present']}/{rp['n']} chars" + (f" ({rp['sign_ok']} right sign)" if rp["sign_ok"] != rp["present"] else ""))
-        elif rp.get("quad"):
-            o.append("quad pair" if rp.get("complete") else "no quad pair")
+            part.append(f"{rp['found']}/{rp['blocks']} {'class ' if rp['aux'] else ''}blocks" +
+                        ("" if all(f == "T" for f in w) else " (" + ",".join(f or "-" for f in rp["found_in"]) + ")"))
+        if rp.get("quad"):
+            part.append("quad pair" if rp.get("complete") else "no quad pair")
+        o.append(" + ".join(part))
     return ", ".join(o)
 
 
