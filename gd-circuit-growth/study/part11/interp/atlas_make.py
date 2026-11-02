@@ -114,9 +114,10 @@ def fix_coupled(c, spec):
 def rep_status(c, spec):
     """Which compact representations of the target are complete in the model (recomputed from the stored terms):
     characters: present, with the sign of the representation's coefficient; blocks: a factor of some sum term
-    (additive, modulated, weighted, or one factor of a product) has the true block's set and signs (up to a global
-    flip; folded only for an even accept set), the true inner term for a weighted target and the true modulator for
-    a modulated one.  found_in: the category of the term that holds it (T; R = inside a product with a non-exact
+    (additive, modulated, or one factor of a product) has the true block's set and signs (up to a global flip; folded
+    only for an even accept set), the true inner term for a weighted target and NO inner term otherwise (u = t + a tau
+    is a different statistic), and the true modulator for a modulated target; or a product's unfolded factors partition
+    the true block.  found_in: the category of the term that holds it (T; R = inside a product with a non-exact
     relevant factor; S = inside a product with an irrelevant factor)."""
     out = []
     chars = {tuple(t["S"]): t for t in c["terms"] if t["kind"] == "chi"}
@@ -140,9 +141,9 @@ def rep_status(c, spec):
                     if t.get("partition") == j and b["inner"] is None and not b["mod"]:
                         where = t["cat"] if where is None else where
                     for q, fac in enumerate(t["factors"]):
-                        m = _fvs(fac, b)
-                        if m is not None and m["exact"] and (b["inner"] is None or m["inner_ok"]) and \
-                                (not b["mod"] or (q == 0 and t["mod"] == b["mod"])):
+                        m = _fvs(fac, b)                              # the factor's own statistic must be the true
+                        if m is not None and m["exact"] and m["inner_ok"] and \
+                                (not b["mod"] or (q == 0 and t["mod"] == b["mod"])):   # one: inner term right or absent
                             rank = {"T": 0, "R": 1, "S": 2}[t["cat"]]
                             if where is None or rank < {"T": 0, "R": 1, "S": 2}[where]:
                                 where = t["cat"]
