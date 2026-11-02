@@ -15,7 +15,7 @@ theorem exists_adapted_saturated_clone (B : LayeredBooleanCircuit d C r)
       (J : Finset (Fin N)), J.card ≤ C+1 ∧
       (∀ s i j, j ∉ J → basisCoordinates b
         (fun u => B.saturatedClone e A a (.inr (.inl (s,i,u)))) j = 0) ∧
-      (∀ (bits : Fin C → Bool) j, j ∉ J → basisCoordinates b (saturatedCloneBits e bits) j = 0) := by
+      (∀ (bits : Fin C → Bool) j, j ∉ J → basisCoordinates b (saturatedCloneBits e B.constant bits) j = 0) := by
   let S := cloneSubspace e
   let u : (Fin N → ℝ) ≃ₗ[ℝ] EuclideanSpace ℝ (Fin N) :=
     (WithLp.linearEquiv 2 ℝ (Fin N → ℝ)).symm
@@ -32,7 +32,7 @@ theorem exists_adapted_saturated_clone (B : LayeredBooleanCircuit d C r)
     rw [← hspan]
     exact Submodule.mem_map.mpr ⟨z,hz,rfl⟩
   exact ⟨b,J,hcard,fun s i => hsupport _ (B.saturatedClone_internalRow_mem e A a s i),
-    fun bits => hsupport _ (saturatedCloneBits_mem_subspace e bits)⟩
+    fun bits => hsupport _ (saturatedCloneBits_mem_subspace e B.constant bits)⟩
 
 /-- This is the deterministic containment bridge for the actual prior
 cylinder. Every hypothesis about the cylinder is a concrete coordinate or
@@ -54,7 +54,7 @@ theorem robustCoordinateCylinder_containment
     (hrows : ∀ s i j,j ∉ J → basisCoordinates b
       (fun u => B.saturatedClone e A a (.inr (.inl (s,i,u)))) j=0)
     (hideal : ∀ (bits : Fin C → Bool) j,j ∉ J →
-      basisCoordinates b (saturatedCloneBits e bits) j=0) :
+      basisCoordinates b (saturatedCloneBits e B.constant bits) j=0) :
     robustCoordinateCylinder (B.saturatedClone e A a) b J ρ σ ⊆
       robustEvent Real.tanh c ∩ marginEvent Real.tanh (1/2) B.computes := by
   classical
@@ -99,7 +99,7 @@ theorem robustCoordinateCylinder_containment
   have hE : ∀ s,matrixActionBound (E s) (digitalBulk r) :=
     freeRow_stack_matrixActionBound b J (fun s i u=>w (.inr (.inl (s,i,u))))
       (digitalBulk r) (digitalBulk_nonneg r) hfree
-  have hkill : ∀ (bits : Fin C → Bool) s i,(∑ j,E s i j*saturatedCloneBits e bits j)=0 := by
+  have hkill : ∀ (bits : Fin C → Bool) s i,(∑ j,E s i j*saturatedCloneBits e B.constant bits j)=0 := by
     intro bits s i
     exact freeRow_annihilates b J _ _ (hideal bits)
   have H : DigitalCylinderConditions B e w A a ε τ ρ ((C:ℝ)+1) (digitalBulk r) :=

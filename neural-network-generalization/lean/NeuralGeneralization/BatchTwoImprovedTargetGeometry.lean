@@ -25,7 +25,7 @@ theorem improvedCoordinateCylinder_containment
     (hrows : ∀ s i j,j ∉ J → basisCoordinates b
       (fun u => B.saturatedClone e A a (.inr (.inl (s,i,u)))) j=0)
     (hideal : ∀ (bits : Fin C → Bool) j,j ∉ J →
-      basisCoordinates b (saturatedCloneBits e bits) j=0) :
+      basisCoordinates b (saturatedCloneBits e B.constant bits) j=0) :
     sharpCoordinateCylinder (B.saturatedClone e A a) b J ρ σ ⊆
       robustEvent Real.tanh c ∩ marginEvent Real.tanh (1/2) B.computes := by
   classical
@@ -65,7 +65,7 @@ theorem improvedCoordinateCylinder_containment
       (fun q:Fin N×{j:Fin N // j∉J}=>rotateInternalRows b.repr (whiten w)
         (.inr (.inl (s,q.1,q.2.val))))‖≤sharpBulkBound r := hw.2 s
     simpa only [rotated_whiten_internal] using hh
-  have hkill : ∀ (bits : Fin C → Bool) s i,(∑ j,E s i j*saturatedCloneBits e bits j)=0 := by
+  have hkill : ∀ (bits : Fin C → Bool) s i,(∑ j,E s i j*saturatedCloneBits e B.constant bits j)=0 := by
     intro bits s i
     exact freeRow_annihilates b J _ _ (hideal bits)
   have H : ExponentialCylinderConditions B e w A a ε τ ρ ((C:ℝ)+1) (sharpBulkBound r) :=

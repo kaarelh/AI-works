@@ -5,8 +5,7 @@ import NeuralGeneralization.CylinderGeometry
 /-!
 # Saturated cloning at every integer width above Boolean width
 
-Unlike disconnected padding, every extra neuron computes the counted
-constant wire. Thus every ideal hidden coordinate is a saturated Boolean
+Unlike disconnected padding, every extra neuron copies a logical Boolean wire. Thus every ideal hidden coordinate is a saturated Boolean
 value. Input columns belonging to padding remain unused by the teacher.
 -/
 noncomputable section
@@ -20,15 +19,15 @@ def cloneInputGate (B : LayeredBooleanCircuit d C r)
     (e : ((Fin C × Fin k) ⊕ Fin p) ≃ Fin N) (i : Fin N) : DigitalGate (Fin (d+1)) :=
   match e.symm i with
   | .inl (a,_) => B.first a
-  | .inr _ => .copy 0
+  | .inr _ => B.first B.constant
 
 def cloneInternalGate (B : LayeredBooleanCircuit d C r)
     (e : ((Fin C × Fin k) ⊕ Fin p) ≃ Fin N) (s : Fin r) (i : Fin N) : DigitalGate (Fin C) :=
   match e.symm i with
   | .inl (a,_) => B.internal s a
-  | .inr _ => .copy B.constant
+  | .inr _ => B.internal s B.constant
 
-/-- Padded rows compute the constant wire; padded columns have zero teacher weight. -/
+/-- Padded rows duplicate the designated logical wire; padded columns have zero teacher weight. -/
 def saturatedClone (B : LayeredBooleanCircuit d C r)
     (e : ((Fin C × Fin k) ⊕ Fin p) ≃ Fin N) (A a : ℝ) : Weights d N r
   | Sum.inl (i,j) => A * (B.cloneInputGate e i).coeff 0 j
@@ -43,12 +42,12 @@ def saturatedClone (B : LayeredBooleanCircuit d C r)
 
 end LayeredBooleanCircuit
 
-/-- Ideal Boolean state with all padding coordinates equal to `+1`. -/
+/-- Ideal Boolean state with padding duplicating the designated logical wire. -/
 def saturatedCloneBits (e : ((Fin C × Fin k) ⊕ Fin p) ≃ Fin N)
-    (b : Fin C → Bool) : Fin N → ℝ :=
+    (padding : Fin C) (b : Fin C → Bool) : Fin N → ℝ :=
   fun i => match e.symm i with
     | .inl (a,_) => labelReal (b a)
-    | .inr _ => 1
+    | .inr _ => labelReal (b padding)
 
 /-- Logical wire value obtained by averaging its active copies. -/
 def cloneMean (e : ((Fin C × Fin k) ⊕ Fin p) ≃ Fin N)
@@ -56,19 +55,19 @@ def cloneMean (e : ((Fin C × Fin k) ⊕ Fin p) ≃ Fin N)
   (∑ j : Fin k, h (e (.inl (a,j)))) / (k : ℝ)
 
 @[simp] theorem abs_saturatedCloneBits
-    (e : ((Fin C × Fin k) ⊕ Fin p) ≃ Fin N) (b : Fin C → Bool) (i : Fin N) :
-    |saturatedCloneBits e b i| = 1 := by
+    (e : ((Fin C × Fin k) ⊕ Fin p) ≃ Fin N) (padding : Fin C) (b : Fin C → Bool) (i : Fin N) :
+    |saturatedCloneBits e padding b i| = 1 := by
   unfold saturatedCloneBits
   split <;> simp
 
 theorem saturatedCloneBits_mem_subspace
-    (e : ((Fin C × Fin k) ⊕ Fin p) ≃ Fin N) (b : Fin C → Bool) :
-    saturatedCloneBits e b ∈ cloneSubspace e := by
-  exact clonedHidden_mem_cloneSubspace (fun _ => 1) e (fun a => labelReal (b a))
+    (e : ((Fin C × Fin k) ⊕ Fin p) ≃ Fin N) (padding : Fin C) (b : Fin C → Bool) :
+    saturatedCloneBits e padding b ∈ cloneSubspace e := by
+  exact clonedHidden_mem_cloneSubspace (fun _ => labelReal (b padding)) e (fun a => labelReal (b a))
 
 @[simp] theorem cloneMean_saturatedCloneBits (hk : 0 < k)
-    (e : ((Fin C × Fin k) ⊕ Fin p) ≃ Fin N) (b : Fin C → Bool) (a : Fin C) :
-    cloneMean e (saturatedCloneBits e b) a = labelReal (b a) := by
+    (e : ((Fin C × Fin k) ⊕ Fin p) ≃ Fin N) (padding : Fin C) (b : Fin C → Bool) (a : Fin C) :
+    cloneMean e (saturatedCloneBits e padding b) a = labelReal (b a) := by
   have hkR : (k:ℝ) ≠ 0 := by exact_mod_cast hk.ne'
   simp [cloneMean, saturatedCloneBits, hkR]
 
@@ -92,9 +91,9 @@ theorem clone_group_energy_le
 coordinatewise assumption about the noisy hidden state. -/
 theorem cloneMean_error_sq (hk : 0 < k)
     (e : ((Fin C × Fin k) ⊕ Fin p) ≃ Fin N)
-    (h : Fin N → ℝ) (b : Fin C → Bool) (a : Fin C) :
+    (h : Fin N → ℝ) (padding : Fin C) (b : Fin C → Bool) (a : Fin C) :
     (cloneMean e h a-labelReal (b a))^2 ≤
-      (∑ i, (h i-saturatedCloneBits e b i)^2) / (k:ℝ) := by
+      (∑ i, (h i-saturatedCloneBits e padding b i)^2) / (k:ℝ) := by
   have hkR : (0:ℝ) < k := Nat.cast_pos.mpr hk
   have he : cloneMean e h a-labelReal (b a) =
       (∑ j : Fin k, (h (e (.inl (a,j)))-labelReal (b a))) / (k:ℝ) := by
@@ -107,7 +106,7 @@ theorem cloneMean_error_sq (hk : 0 < k)
     (fun j : Fin k => h (e (.inl (a,j)))-labelReal (b a))
   simp only [one_mul, one_pow, Finset.sum_const, Finset.card_univ,
     Fintype.card_fin, nsmul_eq_mul, mul_one] at hh
-  have hg := clone_group_energy_le e (fun i => h i-saturatedCloneBits e b i) a
+  have hg := clone_group_energy_le e (fun i => h i-saturatedCloneBits e padding b i) a
   simp only [saturatedCloneBits, Equiv.symm_apply_apply] at hg
   apply (div_le_div_iff₀ (sq_pos_of_pos hkR) hkR).mpr
   have hbound := hh.trans (mul_le_mul_of_nonneg_left hg hkR.le)

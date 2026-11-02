@@ -5,8 +5,9 @@ import Mathlib.Data.Fintype.Pi
 # A concrete layered Boolean circuit with counted constant wires
 
 The gate basis is copies, negations, and NAND. Each hidden layer has exactly
-`C` slots, one of which carries `true` for use as an ordinary internal bias
-wire. All padding/copies must be included in this width. There are `r+1`
+`C` slots. A counted bias wire must carry `true` only at a stage whose
+successor uses NAND. Copies and negations need no bias; in particular, no
+constant wire is reserved at the final stage. Padding counts toward width. There are `r+1`
 hidden Boolean stages, matching the actual tanh network.
 -/
 noncomputable section
@@ -88,8 +89,14 @@ structure LayeredBooleanCircuit (d C r : ℕ) where
   first : Fin C → DigitalGate (Fin (d+1))
   internal : Fin r → Fin C → DigitalGate (Fin C)
   output : Fin C
-  first_constant : first constant = .copy 0
-  internal_constant : ∀ s, internal s constant = .copy constant
+  /-- The designated wire is a bias only where a NAND actually consumes it.
+  The prefix equation identifies the actual preceding stage, without imposing
+  any condition on unreachable Boolean states or the final hidden stage. -/
+  bias_available : ∀ (pre post : List (Fin r)) (s : Fin r) (x : Cube d),
+    pre ++ s :: post = List.finRange r →
+    ∀ i j k, internal s i = .nand j k →
+      (pre.foldl (fun h t a => (internal t a).eval h)
+        (fun a => (first a).eval (Fin.cases true x))) constant = true
 
 namespace LayeredBooleanCircuit
 variable {d C r : ℕ}
@@ -106,24 +113,29 @@ def finalBits (B : LayeredBooleanCircuit d C r) (x : Cube d) : Fin C → Bool :=
 def computes (B : LayeredBooleanCircuit d C r) : BooleanFunction d :=
   fun x => B.finalBits x B.output
 
-@[simp] theorem firstBits_constant (B : LayeredBooleanCircuit d C r) (x : Cube d) :
-    B.firstBits x B.constant = true := by
-  simp [firstBits, B.first_constant, DigitalGate.eval]
-
-@[simp] theorem stepBits_constant (B : LayeredBooleanCircuit d C r)
-    (h : Fin C → Bool) (s : Fin r) : B.stepBits h s B.constant = h B.constant := by
-  simp [stepBits, B.internal_constant, DigitalGate.eval]
-
-theorem fold_constant (B : LayeredBooleanCircuit d C r)
-    (ss : List (Fin r)) (h : Fin C → Bool) :
-    ss.foldl B.stepBits h B.constant = h B.constant := by
-  induction ss generalizing h with
-  | nil => rfl
-  | cons s ss ih => simpa only [List.foldl_cons, ih, stepBits_constant]
-
-@[simp] theorem finalBits_constant (B : LayeredBooleanCircuit d C r) (x : Cube d) :
-    B.finalBits x B.constant = true := by
-  simp [finalBits, fold_constant]
+/-- The previous, stronger circuit convention embeds at exactly the same
+width and depth. This also preserves existing constant-wire witnesses. -/
+def ofConstantWire (constant : Fin C)
+    (first : Fin C → DigitalGate (Fin (d+1)))
+    (internal : Fin r → Fin C → DigitalGate (Fin C)) (output : Fin C)
+    (hfirst : first constant = .copy 0)
+    (hstep : ∀ s, internal s constant = .copy constant) :
+    LayeredBooleanCircuit d C r where
+  constant := constant
+  first := first
+  internal := internal
+  output := output
+  bias_available := by
+    intro pre post s x _ i j k _
+    have hfold (ss : List (Fin r)) (h : Fin C → Bool) :
+        (ss.foldl (fun b t a => (internal t a).eval b) h) constant = h constant := by
+      induction ss generalizing h with
+      | nil => rfl
+      | cons t ss ih =>
+        rw [List.foldl_cons, ih]
+        simp only [hstep, DigitalGate.eval]
+    rw [hfold, hfirst]
+    rfl
 
 /-- Direct tanh gate simulation at an arbitrary positive gain and readout
 scale. This is a concrete weight vector, not a realizability assumption. -/

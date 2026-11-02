@@ -1,8 +1,10 @@
-NNBayes statement audit and coverage extensions — 30–31 October 2026
+NNBayes statement audit and coverage extensions — 30 October–2 November 2026
 ================================================================
 Original baseline: 4ae26f467789a6aec9802f672a3c46e694cc60dd.
-Latest extension baseline: 0ea26b6b6e3ec7ae34263c4df7322734d4eee932.
-The latest extension changes Lean proofs and verification records only.
+Second extension baseline: 0ea26b6b6e3ec7ae34263c4df7322734d4eee932.
+Current extension baseline: 2a4655f43541fc58cf0182f4fcb09d3dd654af4a.
+The latest extension changes Lean proofs, formalization documentation, and
+verification records only.
 All papers and their statements are unchanged.
 Scope: the sixteen papers with main formalizations (the original five,
 the second batch of ten, and conditional nonpolynomial learning). No new
@@ -59,14 +61,45 @@ Main correspondence across the sixteen papers
    gamma constants are now covered: SubcriticalNegativeSharp proves a 3/8
    confidence-failure fraction with sample probability at least 3/4, including
    zero samples and the finite-width liminf conclusion for every gamma<0.
-   Some standalone sampling estimates remain uncovered.
+   NEW (third extension): SquaredLipschitzProcess proves the full row-dependent
+   squared-process inequality over the entire unit ball, with the actual maximum
+   row norm and Euclidean operator norm. No homogeneity of the response functions
+   is assumed. ArbitrarySquaredSampling proves the printed C*h_n*(1+C*h_n)
+   expectation and n>=A*D*log(2D) probability bound for arbitrary probability
+   spaces, measurable features with an almost-everywhere norm bound, and
+   isotropy. A is chosen before the space, dimension, law, and response.
+   OneSidedSquaredSampling permits arbitrary dependence between the sign label
+   and the feature. ParitySquaredSamplingFull proves the uniform coercivity
+   event for every degree-r Walsh polynomial at any requested failure level.
+   These standalone squared-sampling coverage gaps are now closed.
 
-5. Robust polynomial depth: polynomial conclusion matches under the formal
-   circuit convention. IMPORTANT WIDTH GAP: Lean counts a constant wire at
-   every stage, including the final stage. The paper's nonconstant width-one
-   cases can require formal width two. The literal smallest learner width is
-   not fully certified by the current theorem. Localized/distributional and
-   certificate variants are not all covered by this main endpoint.
+5. Robust polynomial depth: the circuit-width mismatch is now removed.
+   The circuit definition requires a true bias wire only when a NAND gate
+   consumes it; padding copies the designated circuit slot instead of forcing
+   an extra constant output. Both robust and improved target-cylinder proofs
+   have been rebuilt with the same counted width and resources. Width-one
+   literal/copy/negation examples are checked in RobustCircuitWidthOne.
+   NEW: RobustSpectralCertificate proves the actual suffix-product finite-noise
+   bound, exact support ratio, bounded-suffix and contractive cases.
+   RobustDiagonalCertificate proves the diagonal quadratic-form certificate
+   with literal Q_M=N*sum(max diagonal entry). RobustOutputRescaling proves
+   eventual calibrated clipped stability by positive readout rescaling for
+   every finite-cube network with nonzero clean outputs. RobustIntervalCertificate
+   proves the clipped endpoint test for input-dependent raw intervals.
+   NEW: RobustSparsePatchObstruction proves the sparse-exception prior's exact
+   consistency-posterior error lower bound for every sample, including duplicates,
+   together with its two-constant compressor and exponential target-mass form.
+   This is an abstract-prior obstruction, not a Gaussian NNBayes lower bound.
+   NEW: UnlabeledStabilityPool proves one pool event for every supported finite-KL
+   posterior, including posteriors selected using subsequent labels.
+   RobustUnlabeledMain closes the actual input-adapted Gaussian learning theorem:
+   universal polynomial labeled complexity independent of width and scale, and
+   the printed unlabeled budget 8*(D*/sigma^2+log(2/delta))/epsilon. Target mass,
+   entropy, readout truncation, the common candidate law, pointwise stability
+   charges, and confidence consequences are all proved. Both global clean-margin
+   conventions are covered. RobustSemisupervisedPool proves the shared-pool
+   protocol without an independence assumption between the two good events.
+   The localized-union theorem and other variants listed below remain open.
 
 6. Unbounded/Lipschitz activations: the main strong-prior and uniform-band
    statements match their stated existential polynomial budgets.
@@ -79,9 +112,10 @@ Main correspondence across the sixteen papers
    are retained. This is not a theorem for arbitrary unbounded activations.
 
 8. Improved original-support all-scale learning: the exponents C^6 log^13 and
-   the degree-46 polynomial conclusion are covered. IMPORTANT GAPS: the same
-   constant-wire issue affects literal small widths. The leading finite-
-   concentration factor has now been improved from 200 to the printed 16,
+   the degree-46 polynomial conclusion are covered. The constant-wire issue
+   is now fixed through the target-cylinder construction, including literal
+   small widths. The leading finite-concentration factor was improved from
+   200 to the printed 16,
    through all scale and width-growth corollaries. This is 16 times the FORMAL
    entropy resource: the paper's literal J and compression-parameter allocation
    are still not proved. The numerical-budget gap is therefore only narrowed.
@@ -104,8 +138,12 @@ Main correspondence across the sixteen papers
     BatchTwoOnlineAdverseOrder gives the explicit point-exception prior,
     per-round error >1-1/R, the actual posterior-draw expectation, and majority
     and confidence failures. It is not a Gaussian NNBayes OOD counterexample.
-    Its biased-IID first-appearance probability, the general merging extension,
-    some sampled-tail refinements, and optional ReLU formulas remain open.
+    NEW (third extension): BatchTwoOnlineBiasedRace/Order/Adverse prove the exact
+    IID first-appearance race probabilities, high-probability adverse ordering
+    for the explicit geometric input law, and actual posterior error and
+    confidence failures on each first visit. Duplicate observations are handled.
+    The general merging extension, some sampled-tail refinements, and optional
+    ReLU formulas remain open.
 
 11. Circuit converse: principal finite/permutation and IID statements match,
     with the explicit resource constants and the actual circuit syntax.
@@ -233,22 +271,37 @@ Current logs, source hashes, unchanged-paper verification, and the fresh
 conditional-package build are recorded in
 verification/coverage-gaps-2026-10-31/.
 
+Third extension verification — 2 November 2026
+----------------------------------------------
+The main library, with every new endpoint imported, builds under the same
+pinned Lean 4.32.0 and mathlib revision. CheckMain, CheckConfidence, CheckParity,
+CheckRobust, Audit, BatchTwoAudit and CheckCoverageExtensions are rerun for
+this source state. The verification record contains their results, the static
+proof-source scan, source hashes, and byte comparisons of all 561 paper/source
+files against commit 2a4655f4. The separate conditional package is unchanged
+from that commit; its prior fresh build remains recorded in the second
+extension evidence and is not presented as a new build here.
+Current evidence: verification/coverage-gaps-2026-11-02/.
+
 Remaining work is real
 ----------------------
 This is not a claim of complete paper coverage. Still open:
 * Strong-prior: arbitrary continuous nonpolynomial activation gate simulation;
-  growing-depth norm-ball appendix. The sharp packing formula is now closed.
-* Subcritical: the full row-dependent squared-Lipschitz-process statement and
-  arbitrary-distribution squared-sampling estimates with the printed resources.
-* Robust polynomial depth: the constant-wire width mismatch, and all remaining
-  localized/distributional, certificate, rescaling, general-margin, monotone-
-  score, two-margin-transport and unlabelled-pool variants.
-* Improved original support: the same width mismatch and the paper's literal
-  J/compression constants. Matching the leading 16 alone does not close J.
-* Online: biased-IID adverse-order probability, general merging and sampled-
-  tail refinements, and optional exact ReLU budgets.
+  growing-depth norm-ball appendix. The sharp packing formula is closed.
+* Robust polynomial depth: the exact localized-union posterior theorem;
+  clean-Jacobian finite-radius curvature certificate and remaining regional
+  certificate theorems; general-margin, monotone-score, two-margin-transport,
+  valid-hidden-state and hidden-noise-only variants. The global spectral and
+  diagonal certificates, readout rescaling, raw-interval conversion, sparse-
+  exception obstruction, and finite unlabeled/shared-pool results are closed.
+  The optional prescribed-countable-family pool corollary is not yet a separate
+  endpoint. Empirical interval-arithmetic artifacts are not Lean certificates.
+* Improved original support: the paper's literal J/compression constants.
+  Matching the leading 16 and the counted circuit width does not close J.
+* Online: general merging and sampled-tail refinements, and optional exact
+  ReLU budgets. Biased-IID adverse ordering is closed.
 * Neural converse: the separate strict-operator-norm-support learner.
 * Continuous depth: the varying smooth-density lower-bound construction.
-* Some optional examples/discussion (including spherical score-to-sign bounds
-  and executable prefix-code serialization) have no separate endpoint.
+* Optional spherical score-to-sign bounds and executable prefix-code
+  serialization still have no separate endpoint.
 No paper was changed or weakened to make a statement fit an existing proof.

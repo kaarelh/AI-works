@@ -28,7 +28,7 @@ structure DigitalCylinderConditions (B : LayeredBooleanCircuit d C r)
     B.saturatedClone e A a (.inr (.inl (s,i,j)))+R s i j+E s i j
   projected_bound : ∀ s,(∑ i,∑ j,R s i j^2) ≤ ρ^2*G
   free_bound : ∀ s,matrixActionBound (E s) β
-  free_kills : ∀ (b : Fin C → Bool) s i,(∑ j,E s i j*saturatedCloneBits e b j)=0
+  free_kills : ∀ (b : Fin C → Bool) s i,(∑ j,E s i j*saturatedCloneBits e B.constant b j)=0
   group_small : 2*(C:ℝ)*ε^2 ≤ (1/16:ℝ)^2
   init_bound : 3*((4/A)^2+τ^2) ≤ ε^2
   step_bound : 3*((4/A)^2+(8/A)^2*(4*ρ^2*G*(1+ε^2)+2*β^2*ε^2)+τ^2) ≤ ε^2
@@ -43,23 +43,28 @@ variable {B : LayeredBooleanCircuit d C r}
 theorem noisy_final_error (H : DigitalCylinderConditions B e w A a ε τ ρ G β)
     (hN : 0 < N) (hk : 0 < k) (hwidth : N ≤ 2*C*k)
     (x : Cube d) (η : NetworkDisturbance N r) (hη : noiseBudgetSq η ≤ τ^2) :
-    (∑ i,(noisyFinalHidden Real.tanh w x η i-saturatedCloneBits e (B.finalBits x) i)^2) ≤
+    (∑ i,(noisyFinalHidden Real.tanh w x η i-saturatedCloneBits e B.constant (B.finalBits x) i)^2) ≤
       (N:ℝ)*ε^2 := by
-  have hfold (ss : List (Fin r)) (h : Fin N → ℝ) (b : Fin C → Bool)
-      (hc : b B.constant = true)
-      (hh : (∑ i,(h i-saturatedCloneBits e b i)^2) ≤ (N:ℝ)*ε^2) :
+  have hfold (ss pre : List (Fin r))
+      (hlist : pre ++ ss = List.finRange r) (h : Fin N → ℝ)
+      (hh : (∑ i,(h i-saturatedCloneBits e B.constant
+        (pre.foldl B.stepBits (B.firstBits x)) i)^2) ≤ (N:ℝ)*ε^2) :
       (∑ i,(ss.foldl (noisyHiddenStep Real.tanh w η) h i-
-        saturatedCloneBits e (ss.foldl B.stepBits b) i)^2) ≤ (N:ℝ)*ε^2 := by
-    induction ss generalizing h b with
-    | nil => exact hh
+        saturatedCloneBits e B.constant (B.finalBits x) i)^2) ≤ (N:ℝ)*ε^2 := by
+    induction ss generalizing pre h with
+    | nil =>
+      have hp : pre = List.finRange r := by simpa using hlist
+      simpa [hp, LayeredBooleanCircuit.finalBits] using hh
     | cons s ss ih =>
-      apply ih
-      · simpa only [LayeredBooleanCircuit.stepBits_constant] using hc
-      · exact B.internal_noisy_state_error e hk hwidth w H.R H.E H.gain_pos H.decomp
-          H.projected_bound H.free_bound H.group_small H.step_bound h b hc hh s η
-          (noiseBudgetSq_hidden hN η hη s.succ) (H.free_kills b s)
-  exact hfold (List.finRange r) (noisyFirstHidden Real.tanh w x η) (B.firstBits x)
-    (B.firstBits_constant x)
+      apply ih (pre ++ [s]) (by simpa [List.append_assoc] using hlist)
+      simpa only [List.foldl_append, List.foldl_cons, List.foldl_nil] using
+        B.internal_noisy_state_error e hk hwidth w H.R H.E H.gain_pos H.decomp
+          H.projected_bound H.free_bound H.group_small H.step_bound h
+          (pre.foldl B.stepBits (B.firstBits x)) s
+          (B.bias_available pre ss s x hlist) hh η
+          (noiseBudgetSq_hidden hN η hη s.succ)
+          (H.free_kills (pre.foldl B.stepBits (B.firstBits x)) s)
+  exact hfold (List.finRange r) [] rfl (noisyFirstHidden Real.tanh w x η)
     (B.first_noisy_state_error e w H.gain_pos H.radius_nonneg H.first_error H.first_small
       H.init_bound x η (noiseBudgetSq_hidden hN η hη 0))
 
@@ -115,12 +120,12 @@ theorem noisy_margin (H : DigitalCylinderConditions B e w A a ε τ ρ G β)
   let h := noisyFinalHidden Real.tanh w x η
   have hstate := H.noisy_final_error hN hk hwidth x η hη
   have hnorm : (∑ i,h i^2) ≤ 4*(N:ℝ) := squared_norm_le_of_boolean_error h
-    (saturatedCloneBits e (B.finalBits x)) H.error_nonneg H.error_le_one
-    (fun i => (abs_saturatedCloneBits e (B.finalBits x) i).le) hstate
+    (saturatedCloneBits e B.constant (B.finalBits x)) H.error_nonneg H.error_le_one
+    (fun i => (abs_saturatedCloneBits e B.constant (B.finalBits x) i).le) hstate
   have hdiff := readout_coordinate_error_rms hN w (B.saturatedClone e A a) H.radius_nonneg
     H.readout_error h hnorm
   have hout := noiseBudgetSq_output η H.noise_nonneg hη
-  have hmean := cloneMean_error_le hk hwidth e h (B.finalBits x) (by norm_num)
+  have hmean := cloneMean_error_le hk hwidth e h B.constant (B.finalBits x) (by norm_num)
     H.group_small hstate B.output
   have hteacher : 15*a/16 ≤ labelReal (B.computes x) *
       (∑ i,B.saturatedClone e A a (.inr (.inr i))*h i) := by

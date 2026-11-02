@@ -2,7 +2,7 @@
 
 This project proves the original five main learning statements and the main statements of ten additional papers. The second batch extends the activations, priors, domains, polynomial bounds, online learning and converses. [Second-batch coverage](review/BatchTwo-coverage.md) · [Main entry point](NeuralGeneralization/BatchTwoMain.lean) · [Axiom audit](NeuralGeneralization/BatchTwoAudit.lean).
 
-The [current paper-to-Lean correspondence review](review/coverage-extension-2026-10-30.txt) records the newly proved packing, weak-limit, binary-classification and online endpoints, and the remaining gaps. In particular, the robust and improved-support circuit-width convention and the latter paper’s literal compression-budget constants are not yet fully matched.
+The [current paper-to-Lean correspondence review](review/coverage-extension-2026-10-30.txt) records the closed and remaining coverage gaps. The latest additions close the circuit-width mismatch, the full squared-sampling estimates, biased-IID adverse ordering, several finite-noise certificates, the sparse-exception obstruction, and the unlabeled/shared-pool learning results. The improved-support paper’s literal compression-budget constants and other listed variants remain open.
 
 The original five statements concern the actual finite Gaussian neural-network model. The proofs use only Lean's standard axioms
 `propext`, `Classical.choice`, and `Quot.sound`: there are no admitted proofs or
@@ -60,7 +60,7 @@ prefixes of a sample sequence or monotonicity of this learner in sample size.
 
 [RobustModel.lean](NeuralGeneralization/RobustModel.lean) defines stability of the clipped score under a ball of simultaneous hidden-activation and output perturbations. Its radius is calibrated by depth and readout energy. The Gaussian prior is restricted to this support event; **no clean-output margin on every input is imposed**. Training requires signed output strictly above `1/2`; test risk uses signed output at most `1/4`.
 
-The target is a concrete [layered Boolean circuit](NeuralGeneralization/RobustCircuit.lean) of width `C`, with its constant wire and compilation resources counted. Lean reserves one constant-true wire at every stage, while the manuscript counts a constant wire only where a gate needs one. For `C >= 2` the two conventions compute the same functions (an informal argument, not a Lean theorem); the only manuscript case not covered is learner width `N = 1` for width-one targets other than the constant `+1`. It is not an arbitrary small analog neural circuit. There exist universal constants `A > 0` and a natural-number exponent `m`, chosen before dimension, depth, target circuit, robustness calibration, and statistical parameters, giving a bound
+The target is a concrete [layered Boolean circuit](NeuralGeneralization/RobustCircuit.lean) of width `C`, with its constant wire and compilation resources counted. A true bias wire is required only when a NAND gate consumes it. Padding copies the designated circuit slot, so it does not add a compulsory constant final output. The target-cylinder proofs preserve the counted width, and width-one literal/copy/negation cases are checked in [RobustCircuitWidthOne](NeuralGeneralization/RobustCircuitWidthOne.lean). It is not an arbitrary small analog neural circuit. There exist universal constants `A > 0` and a natural-number exponent `m`, chosen before dimension, depth, target circuit, robustness calibration, and statistical parameters, giving a bound
 
 ```text
 A * (2 + d + C + r + c + 1/c + 1/epsilon + log(1/delta))^m
