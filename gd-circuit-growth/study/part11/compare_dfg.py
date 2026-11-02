@@ -313,6 +313,12 @@ def q1():
     for k, R in cols:
         s = summ(D, R); out["summary"][k] = s
         L.append(srow(k, s))
+    nev = [t for t in D if not np.isfinite(D[t])]
+    reach = {t: [k for k, R in cols if R.get(t) is not None and np.isfinite(R[t])] for t in nev}
+    out["dfg_never"] = reach
+    L += ["", f"In short: DFG alone vs nets_best {f_s(out['summary'].get('nets_best'))}; vs v3 {f_s(out['summary'].get('v3'))} "
+              "(cells as in Q2). Targets DFG alone never brings to 10% error: "
+              + (", ".join(f"{t} (reached by: {', '.join(reach[t]) or 'no column'})" for t in nev) or "none") + "."]
     L += ["", "Context, the same summary for the references against `nets_best`:", "", "| learner vs nets_best | " + SHEAD, "|---|" + SSEP]
     for k in ("v3", "v2", "lowdeg", "lin", "hgb"):
         s = summ(dict(cols)[k], nb); out["context"][k] = s
