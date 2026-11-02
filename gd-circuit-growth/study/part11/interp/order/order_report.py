@@ -169,6 +169,11 @@ def main():
             for e in T["dfg_grid"].get(str(n), []):
                 G.setdefault(n, []).append((fn, e))
     NUM["rounds_by_n"] = {n: dict(cells=len(v), one_round=sum(1 for _, e in v if e["distinct_rounds"] <= 1),
+                                  multi_round=sum(1 for _, e in v if e["distinct_rounds"] >= 2),
+                                  tau_half_multi=[e["tau_half"] for _, e in v if e["distinct_rounds"] >= 2],
+                                  tau_half_multi_mean=(float(np.mean([e["tau_half"] for _, e in v if e["distinct_rounds"] >= 2 and e["tau_half"] is not None]))
+                                                       if any(e["distinct_rounds"] >= 2 and e["tau_half"] is not None for _, e in v) else None),
+                                  tau_half_multi_positive=sum(1 for _, e in v if e["distinct_rounds"] >= 2 and e["tau_half"] is not None and e["tau_half"] > 0),
                                   mean_distinct=float(np.mean([e["distinct_rounds"] for _, e in v])),
                                   max_rounds=max(e["nrounds"] for _, e in v),
                                   tau_half=[e["tau_half"] for _, e in v]) for n, v in sorted(G.items())}
@@ -306,9 +311,9 @@ def stage_table(S, rows, NUM):
         st_nn = stages_by({ch: R[ch]["net_n"] for ch in R if R[ch]["net_n"] is not None}, sep=1.0)
         L += [f"## {fn}", "",
               f"- networks, time (online): {stage_str(st_net[0], R, fn in big)}" + (f"; never: {len(st_net[1])}" if st_net[1] else ""),
-              f"- networks, n (fixed-n study, |S| <= 4, median seed): {stage_str(st_nn[0], R, fn in big)}" + (f"; never: {stage_str([(INF, st_nn[1])], R, fn in big)}" if st_nn[1] else ""),
-              f"- DFG, n (median seed): {stage_str(st_dfg[0], R, fn in big)}" + (f"; never: {stage_str([(INF, st_dfg[1])], R, fn in big)}" if st_dfg[1] else ""),
-              f"- DFG, n (seed 0): {stage_str(st_d0[0], R, fn in big)}" + (f"; never: {stage_str([(INF, st_d0[1])], R, fn in big)}" if st_d0[1] else ""), ""]
+              f"- networks, n (fixed-n study, |S| <= 4, median seed): {stage_str(st_nn[0], R, fn in big)}" + (f" → {stage_str([(INF, st_nn[1])], R, fn in big)}" if st_nn[1] else ""),
+              f"- DFG, n (median seed): {stage_str(st_dfg[0], R, fn in big)}" + (f" → {stage_str([(INF, st_dfg[1])], R, fn in big)}" if st_dfg[1] else ""),
+              f"- DFG, n (seed 0): {stage_str(st_d0[0], R, fn in big)}" + (f" → {stage_str([(INF, st_d0[1])], R, fn in big)}" if st_d0[1] else ""), ""]
     open(os.path.join(A.TAB, "order_stages.md"), "w").write("\n".join(L) + "\n")
 
 
@@ -373,9 +378,9 @@ def figure(S, rows, NUM):
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     from matplotlib.lines import Line2D
-    plt.rcParams.update({"font.size": 7.5, "axes.edgecolor": INK2, "axes.labelcolor": INK, "xtick.color": INK2,
+    plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 7.5, "axes.edgecolor": INK2, "axes.labelcolor": INK, "xtick.color": INK2,
                          "ytick.color": INK2, "axes.linewidth": 0.6})
-    fig, axs = plt.subplots(3, 4, figsize=(11.0, 8.2))
+    fig, axs = plt.subplots(3, 4, figsize=(11.0, 8.9))
     NEV = 2 ** 15.4                                                              # the 'never' row
     big = {"rmaj9", "dlist5", "dnf3"}
     for k, fn in enumerate(A.TARGETS):
@@ -422,8 +427,8 @@ def figure(S, rows, NUM):
                     ax.annotate(r["char"], (F(r["net_online"]), y), xytext=(4, 5), textcoords="offset points",
                                 fontsize=6.5, color=INK2)
         T = NUM["targets"][fn]
-        ax.set_title(f"{fn}   τ(net time, DFG n) {tfmt(T['tau_net_time_dfg_n'])}\nτ(net n, DFG n) {tfmt(T['tau_n_axis'])}"
-                     f"   τ(net time, net n) {tfmt(T['tau_net_time_net_n'])}", fontsize=7, color=INK, loc="left")
+        ax.set_title(f"{fn}\nτ(net time, DFG n) {tfmt(T['tau_net_time_dfg_n'])}\nτ(net n, DFG n) {tfmt(T['tau_n_axis'])}",
+                     fontsize=7, color=INK, loc="left")
         ax.set_xscale("log"); ax.set_yscale("log", base=2)
         ax.set_ylim(2 ** 3.5, 2 ** 15.8); ax.set_yticks([16, 64, 256, 1024, 4096, 16384, NEV])
         ax.set_yticklabels(["16", "64", "256", "1024", "4096", "16384", "never"])
@@ -450,10 +455,10 @@ def figure(S, rows, NUM):
     ax.set_xlim(-1, 1); ax.set_xlabel("Kendall tau-b"); ax.grid(True, axis="x", color=GRID, lw=0.5); ax.set_axisbelow(True)
     for sp in ("top", "right"):
         ax.spines[sp].set_visible(False)
-    ax.legend(loc="lower left", fontsize=6.2, frameon=False, bbox_to_anchor=(-0.02, -0.02))
+    ax.legend(loc="center left", fontsize=6.2, frameon=False, bbox_to_anchor=(0.0, 0.5))
     ax.set_title("order agreement per target", fontsize=7, loc="left")
-    hs = [Line2D([], [], marker="o", ls="", markerfacecolor=DEG_COL[1], markeredgecolor="white", markersize=6, label="DFG alone (median of 3 seeds)"),
-          Line2D([], [], marker="s", ls="", markerfacecolor="none", markeredgecolor=DEG_COL[3], markersize=6, label="networks, fixed-n study (|S| <= 4)")]
+    hs = [Line2D([], [], marker="o", ls="", markerfacecolor=INK2, markeredgecolor="white", markersize=6, label="DFG alone (filled; median of 3 seeds)"),
+          Line2D([], [], marker="s", ls="", markerfacecolor="none", markeredgecolor=INK2, markersize=6, label="networks, fixed-n study (open; |S| <= 4)")]
     hs += [Line2D([], [], marker="o", ls="", markerfacecolor=DEG_COL[d], markeredgecolor=DEG_COL[d], markersize=6,
                   label=f"degree {d}" if d < 5 else "degree >= 5") for d in range(1, 6)]
     fig.legend(handles=hs, loc="lower center", ncol=7, frameon=False, fontsize=7, bbox_to_anchor=(0.5, -0.005))

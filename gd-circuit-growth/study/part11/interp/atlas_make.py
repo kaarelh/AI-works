@@ -157,6 +157,18 @@ def p10_rows():
     return rows
 
 
+def _num(v):
+    """A number from Part 10's CSV tables ('' or '–' = none, 'inf' / 'never' = never)."""
+    if v in (None, "", "–", "-"):
+        return None
+    if v in ("never",):
+        return float("inf")
+    try:
+        return float(v)
+    except ValueError:
+        return None
+
+
 def p10_struct(suite, target):
     p = os.path.join(P10, "results", "toy_final", "v3", f"{suite}__{target}__s0.json")
     return json.load(open(p)) if os.path.exists(p) else None
@@ -291,8 +303,9 @@ def term_key(t):
         return ("chi", tuple(sorted(t["S"])))
     if t["kind"] == "sum":
         facs = tuple((tuple(f["S"]), tuple(int(s * f["signs"][0]) for s in f["signs"])) for f in t["factors"])
-        inn = t.get("inner")
-        ik = None if not inn else (inn["kind"], tuple(sorted(inn["inputs"])))
+        inn = t.get("inner"); s0 = t["factors"][0]["signs"][0] if t["factors"][0]["signs"] else 1
+        # the inner coefficient relative to the block's global sign (u = t + a tau and -t - a tau are the same block)
+        ik = None if not inn else (inn["kind"], tuple(sorted(inn["inputs"])), int(inn["a"]) * int(s0))
         return ("sum", facs, bool(t["fold"]), tuple(t.get("mod") or ()), ik)
     return None
 
@@ -315,7 +328,7 @@ def p10_compare(R):
             ex10 = [x["exact"] for x in c10.get("classes", [])]
             rows.append(dict(suite=r["suite"], target=name, n=n, err_alone=c["err"], err_v3_dfg=c10.get("err_dfg"),
                              err_v3=c10["err"], v3_source=c10.get("dfg_source"), w_dfg=c10.get("w_dfg"),
-                             jaccard_top=round(len(a & b) / max(len(a | b), 1), 3),
+                             jaccard_top=round(len(a & b) / len(a | b), 3) if (a | b) else 1.0,
                              same_err=c10.get("err_dfg") == c["err"],
                              struct_alone=all(c["summary"]["p10_classes"]) if c["summary"]["p10_classes"] else None,
                              struct_v3=all(ex10) if ex10 else None, variant_alone=c["variant"]))
@@ -400,9 +413,9 @@ def family_counts(R, J):
         at = {}
         for t in L:
             r = R[t]; e = {c["n"]: c for c in r["cells"]}
-            first = next((n for n in NS if e[n]["err"] <= 0.1), None)
+            first = next((n for n in NS if n in e and e[n]["err"] <= 0.1), None)
             for key, n in (("first", first), ("16384", 16384)):
-                if n is None:
+                if n is None or n not in e:
                     continue
                 c = e[n]; cat = c["summary"]["categories"]
                 lead = next((x for x in c["terms"] if x["kind"] not in ("const", "background")), None)
@@ -429,6 +442,28 @@ def family_counts(R, J):
         o["cv_cells"] = len(cvc); o["forced_cells"] = sum(v for _, v in cvc)
         out.append(o)
     return out
+
+
+# ------------------------------------------------------------------------------------------------ quirks
+def quirks(R):
+    """(a) duplicate blocks: two sum terms with the same set, signs (up to a global flip), fold, modulator, inner term and
+    factors (DFG's block key keeps the input ORDER, so one block found twice in different orders is admitted twice);
+    (b) spurious products: a product term one factor of which is a true block and another reads only irrelevant inputs."""
+    dup, sprod = [], []
+    for name, r in R.items():
+        rel = set(r["spec"]["rel"])
+        for c in r["cells"]:
+            keys = {}
+            for t in c["terms"]:
+                if t["kind"] == "sum":
+                    k = term_key(t); keys.setdefault(k, []).append(t["share"])
+                    if t["product"] and any(m["exact"] for m in t["factor_match"]) and \
+                            any(not (set(f["S"]) & rel) for f in t["factors"]):
+                        sprod.append(dict(target=name, n=c["n"], desc=t["desc"], share=round(t["share"], 3), err=c["err"]))
+            for k, v in keys.items():
+                if len(v) > 1:
+                    dup.append(dict(target=name, n=c["n"], copies=len(v), shares=[round(x, 3) for x in v]))
+    return dup, sprod
 
 
 # ------------------------------------------------------------------------------------------------ main
@@ -496,8 +531,8 @@ def main():
                        n_rep_first=comp[0] if comp else None, n_rep_stable=stab,
                        n_struct_p10rule_alone=cmp_per.get(name, {}).get("n_struct_alone"),
                        n_struct_p10rule_v3=cmp_per.get(name, {}).get("n_struct_v3"),
-                       n_struct_v3_table=p.get("n_struct") or None, nstar3_v3=float(p["nstar3"]) if p.get("nstar3") not in (None, "") else None,
-                       nstar_s0_v3=float(p["nstar_s0"]) if p.get("nstar_s0") not in (None, "") else None,
+                       n_struct_v3_table=p.get("n_struct") or None, nstar3_v3=_num(p.get("nstar3")),
+                       nstar_s0_v3=_num(p.get("nstar_s0")),
                        n_detect_p10=p.get("n_detect") or None, selected_ns=sel,
                        forced_cells=sum(1 for c in r["cells"] if c["variant"] == 1),
                        cv_cells=sum(1 for c in r["cells"] if c["cv_errs"] is not None))
@@ -562,6 +597,8 @@ def main():
                  f"{o.get('flops_equal', '–')} | {o.get('suite_targets', '–')} |")
     open(os.path.join(TAB, "identity.md"), "w").write("\n".join(I) + "\n")
     json.dump(family_counts(R, J), open(os.path.join(TAB, "atlas_family.json"), "w"), indent=1)
+    dq, sq = quirks(R)
+    json.dump(dict(duplicate_blocks=dq, spurious_products=sq), open(os.path.join(TAB, "atlas_quirks.json"), "w"), indent=1)
     B = below_structure(R)
     write_csv(os.path.join(TAB, "atlas_below.csv"), B, list(B[0].keys()) if B else ["none"])
     figures(R, order, cmp_rows, cmp_per)
@@ -583,6 +620,8 @@ def figures(R, order, cmp_rows, cmp_per):
             reps = c["summary"]["reps"]
             if any(rp.get("complete") for rp in reps):
                 ax.plot(j, i, "o", color="tab:blue", ms=4.5)
+            elif c["summary"]["span_r2"] >= 0.999:
+                ax.plot(j, i, "s", color="tab:purple", ms=4)
             elif any((rp.get("found") or 0) > 0 or (rp.get("present") or 0) > 0 for rp in reps):
                 ax.plot(j, i, "o", mfc="none", mec="tab:blue", ms=4.5)
             if c["variant"] == 1:
@@ -598,8 +637,9 @@ def figures(R, order, cmp_rows, cmp_per):
         if y < len(names):
             ax.axhline(y - 0.5, color="tab:green", lw=0.6)
     ax.set_xlabel("training set size n"); cb = fig.colorbar(im, ax=ax, fraction=0.03, pad=0.02); cb.set_label("test error (clipped at 0.5)")
-    ax.set_title("DFG v1.3 alone, seed 0: test error; filled dot = a compact representation of the target is complete\n"
-                 "in the model, open dot = part of one; red x = forced variant chosen; orange bar = n* (10% error)", fontsize=8)
+    ax.set_title("DFG v1.3 alone, seed 0: test error (grey). Blue dot: a compact representation of the target is complete in\n"
+                 "the model; purple square: none is, but f is in the span of the model's features (span R$^2\\geq$0.999); open dot:\n"
+                 "part of a compact representation; red x: the forced variant was chosen; orange bar: n* (10% test error)", fontsize=7.5)
     fig.tight_layout(); fig.savefig(os.path.join(FIG, "fig_atlas_grid.pdf")); fig.savefig(os.path.join(FIG, "fig_atlas_grid.png"), dpi=130)
     plt.close(fig)
     if not cmp_rows:

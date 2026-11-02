@@ -2,4 +2,6 @@
 
 | suite | merged file | targets refitted | cells compared | test error equal | FLOPs equal | targets in suite |
 |---|---|---|---|---|---|---|
-| dlheld7 | yes | 5 | 49 | 49 | 49 | 12 |
+| designed | yes | 3 | 24 | 24 | 24 | 21 |
+| dlheld | not yet | 1 | 0 | – | – | – |
+| dlheld7 | yes | 12 | 132 | 132 | 132 | 12 |
