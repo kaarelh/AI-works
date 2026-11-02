@@ -33,7 +33,7 @@ n\* DFG alone: seed 0 56, 3 seeds 52; v3 (Part 10) 3 seeds 56; networks (nets_be
 
 *Representation in DFG's dictionary:* character: chi[x1,x2,x3,x4,x5] | Fourier weight by degree 0.00 0.00 0.00 0.00 1.00
 
-n\* DFG alone: seed 0 56, 3 seeds –; v3 (Part 10) 3 seeds –; networks (nets_best) 7096. First n with a compact representation complete in the model: 64 (from then on at every n: 64). Exact structure by Part 10's rule: alone –, v3 –.
+n\* DFG alone: seed 0 56, 3 seeds 56; v3 (Part 10) 3 seeds –; networks (nets_best) 7096. First n with a compact representation complete in the model: 64 (from then on at every n: 64). Exact structure by Part 10's rule: alone –, v3 –.
 
 | n | err | train | variant (CV) | size (terms) | share T / R / S (S-lin) | complete | model |
 |---|---|---|---|---|---|---|---|
@@ -61,7 +61,7 @@ n\* DFG alone: seed 0 108, 3 seeds 111; v3 (Part 10) 3 seeds 109; networks (nets
 
 *Representation in DFG's dictionary:* PTF sign(x1 + x1x2 + ... + x1..x6 + 1/2): chi[x1], chi[x1,x2], chi[x1,x2,x3], chi[x1,x2,x3,x4], chi[x1,x2,x3,x4,x5], chi[x1,x2,x3,x4,x5,x6] | Fourier weight by degree 0.12 0.15 0.27 0.15 0.12 0.10
 
-n\* DFG alone: seed 0 210, 3 seeds –; v3 (Part 10) 3 seeds –; networks (nets_best) 1495. First n with a compact representation complete in the model: 256 (from then on at every n: –). Exact structure by Part 10's rule: alone –, v3 –.
+n\* DFG alone: seed 0 210, 3 seeds 207; v3 (Part 10) 3 seeds –; networks (nets_best) 1495. First n with a compact representation complete in the model: 256 (from then on at every n: –). Exact structure by Part 10's rule: alone –, v3 –.
 
 | n | err | train | variant (CV) | size (terms) | share T / R / S (S-lin) | complete | model |
 |---|---|---|---|---|---|---|---|
@@ -76,7 +76,7 @@ n\* DFG alone: seed 0 210, 3 seeds –; v3 (Part 10) 3 seeds –; networks (nets
 
 *Representation in DFG's dictionary:* Fourier expansion: 16 characters || 4 address blocks, each modulated by its data bit: sum_d x_d [address = a_d]: chi[x3]*(-x1-x2) accept {2} ; chi[x4]*(-x1+x2) accept {2} ; chi[x5]*(x1-x2) accept {2} ; chi[x6]*(x1+x2) accept {2} | Fourier weight by degree 0.25 0.50 0.25 0.00 0.00 0.00
 
-n\* DFG alone: seed 0 213, 3 seeds –; v3 (Part 10) 3 seeds –; networks (nets_best) 358. First n with a compact representation complete in the model: 1024 (from then on at every n: 1024). Exact structure by Part 10's rule: alone –, v3 –.
+n\* DFG alone: seed 0 213, 3 seeds 197; v3 (Part 10) 3 seeds –; networks (nets_best) 358. First n with a compact representation complete in the model: 1024 (from then on at every n: 1024). Exact structure by Part 10's rule: alone –, v3 –.
 
 | n | err | train | variant (CV) | size (terms) | share T / R / S (S-lin) | complete | model |
 |---|---|---|---|---|---|---|---|
@@ -130,7 +130,7 @@ n\* DFG alone: seed 0 163, 3 seeds 186; v3 (Part 10) 3 seeds –; networks (nets
 
 *Representation in DFG's dictionary:* PTF sign(w . x), Gaussian w: 30 characters (by degree {1: 30})
 
-n\* DFG alone: seed 0 187, 3 seeds –; v3 (Part 10) 3 seeds –; networks (nets_best) 311. First n with a compact representation complete in the model: 64 (from then on at every n: 64). Exact structure by Part 10's rule: alone –, v3 –.
+n\* DFG alone: seed 0 187, 3 seeds 158; v3 (Part 10) 3 seeds –; networks (nets_best) 311. First n with a compact representation complete in the model: 64 (from then on at every n: 64). Exact structure by Part 10's rule: alone –, v3 –.
 
 | n | err | train | variant (CV) | size (terms) | share T / R / S (S-lin) | complete | model |
 |---|---|---|---|---|---|---|---|
@@ -171,7 +171,7 @@ n\* DFG alone: seed 0 57, 3 seeds 61; v3 (Part 10) 3 seeds 60; networks (nets_be
 
 *Representation in DFG's dictionary:* PTF sign(x1x2 + ... + x9x10): chi[x1,x2], chi[x3,x4], chi[x5,x6], chi[x7,x8], chi[x9,x10] | Fourier weight by degree 0.00 0.70 0.00 0.00 0.00 0.16 0.00
 
-n\* DFG alone: seed 0 182, 3 seeds –; v3 (Part 10) 3 seeds –; networks (nets_best) 4648. First n with a compact representation complete in the model: 256 (from then on at every n: 256). Exact structure by Part 10's rule: alone –, v3 –.
+n\* DFG alone: seed 0 182, 3 seeds 128; v3 (Part 10) 3 seeds –; networks (nets_best) 4648. First n with a compact representation complete in the model: 256 (from then on at every n: 256). Exact structure by Part 10's rule: alone –, v3 –.
 
 | n | err | train | variant (CV) | size (terms) | share T / R / S (S-lin) | complete | model |
 |---|---|---|---|---|---|---|---|
@@ -197,7 +197,7 @@ n\* DFG alone: seed 0 111, 3 seeds 111; v3 (Part 10) 3 seeds 110; networks (nets
 
 *Representation in DFG's dictionary:* product block (x1+..+x5) x (x6+..+x10): (x1+x2+x3+x4+x5) accept {-5,-3,-1,1,3,5} ; (x6+x7+x8+x9+x10) accept {-5,-3,-1,1,3,5} || PTF sign((x1+..+x5)(x6+..+x10)): 25 degree-2 characters: 25 characters (by degree {2: 25}) || two spectral features: sign((u+.x)^2 - (u-.x)^2), u+- = 1_A +- 1_B || two folded blocks |t_A + t_B|, |t_A - t_B| over all 10 inputs: sign(|t_A+t_B|^2 - |t_A-t_B|^2) = sign(t_A t_B): (x1+x2+x3+x4+x5+x6+x7+x8+x9+x10) accept {} [even] ; (x1+x2+x3+x4+x5-x6-x7-x8-x9-x10) accept {} [even] | Fourier weight by degree 0.00 0.49 0.00 0.22 0.00 0.22 0.00
 
-n\* DFG alone: seed 0 223, 3 seeds –; v3 (Part 10) 3 seeds –; networks (nets_best) 792. First n with a compact representation complete in the model: 256 (from then on at every n: 256). Exact structure by Part 10's rule: alone –, v3 –.
+n\* DFG alone: seed 0 223, 3 seeds 225; v3 (Part 10) 3 seeds –; networks (nets_best) 792. First n with a compact representation complete in the model: 256 (from then on at every n: 256). Exact structure by Part 10's rule: alone –, v3 –.
 
 | n | err | train | variant (CV) | size (terms) | share T / R / S (S-lin) | complete | model |
 |---|---|---|---|---|---|---|---|
@@ -210,14 +210,14 @@ n\* DFG alone: seed 0 223, 3 seeds –; v3 (Part 10) 3 seeds –; networks (nets
 
 *Representation in DFG's dictionary:* three additive 5-input blocks: sign(g1(t1) + g2(t2) + g3(t3)), g = sign: (x1+x2+x3+x4+x5) accept {1,3,5} ; (x6+x7+x8+x9+x10) accept {1,3,5} ; (x11+x12+x13+x14+x15) accept {1,3,5} | Fourier weight by degree 0.53 0.00 0.20 0.00 0.16 0.00 0.07
 
-n\* DFG alone: seed 0 348, 3 seeds –; v3 (Part 10) 3 seeds –; networks (nets_best) 2355. First n with a compact representation complete in the model: – (from then on at every n: –). Exact structure by Part 10's rule: alone 2048, v3 –.
+n\* DFG alone: seed 0 348, 3 seeds 351; v3 (Part 10) 3 seeds –; networks (nets_best) 2355. First n with a compact representation complete in the model: – (from then on at every n: –). Exact structure by Part 10's rule: alone 2048, v3 –.
 
 | n | err | train | variant (CV) | size (terms) | share T / R / S (S-lin) | complete | model |
 |---|---|---|---|---|---|---|---|
 | 256 | 0.1609 | 0.125 | default (CV errors 50 / 54) | 39 (31) | 0.49 / 0.58 / 0.23 (0.23) | 0/3 blocks | R (x1+x3+x4+x5+x6+x7+x8+x9+x10+x11+x12+x13+x14+x15) 0.47; T 15 deg-1 chars 0.39 (largest chi[x4] 0.15); S-lin 15 deg-1 chars 0.19 (largest chi[x24] 0.10) |
 | 512 | 0.0234 | 0.000 | default (CV errors 84 / 80) | 49 (34) | 0.91 / 0.69 / 0.11 (0.11) | 0/3 blocks | R chi[x7]*(x6+x8+x9+x10) 0.40; R chi[x4]*|x1+x2+x3+x5| 0.32; R chi[x12]*|x11+x13+x14+x15| 0.30; R (x1+x3+x4+x5+x6+x7+x8+x9+x10+x11+x12+x13+x14+x15) 0.10; T 15 deg-1 chars 0.79 (largest chi[x7] 0.48); S-lin 15 deg-1 chars 0.09 (largest chi[x27] 0.04) |
 | 1024 | 0.0007 | 0.000 | default (no CV, n > 512) | 209 (45) | 0.67 / 0.67 / 0.04 (0.02) | 2/3 blocks (T,-,R) | R (x11+x12+x13+x14+x15) x (x1+x2+x3+x4+x5+x6+x7+x8+x9+x10) 0.31; R chi[x6]*|x7+x8+x9+x10| 0.29; R (x6+x7+x8+x9+x10+x11+x12+x13+x14+x15) x (x1+x2+x3+x4+x5) 0.26; R (x1+x2+x3+x4+x5-x6+x11+x12+x13+x14+x15) x (x7+x8+x9+x10) 0.25; T (x1+x2+x3+x4+x5) 0.24; R chi[x8]*|-x1-x2-x3-x4-x5+x6+x7+x9+x10-x11-x12-x13-x14-x15| 0.23; +4 more blocks/quad (largest 0.18); T 15 deg-1 chars 0.48 (largest chi[x7] 0.16); T chi[x1,x2,x3,x4,x5] 0.29; T chi[x11,x12,x13,x14,x15] 0.10; T chi[x7,x8,x9] 0.01; T chi[x7,x8,x10] 0.01; T chi[x7,x9,x10] 0.01; S-lin 15 deg-1 chars 0.02 (largest chi[x20] 0.01) |
-| 16384 | 0.0000 | 0.000 | default (no CV, n > 512) | 256 (183) | 0.90 / 0.20 / 0.00 (0.00) | 1/3 blocks | R (x1+x2+x3+x4+x5+x6+x7+x8+x9+x10+x11+x12+x13+x14+x15) 0.11; R chi[x11]*|x1+x2+x3+x4+x5+x6+x7+x8+x9+x10-x12-x13-x14-x15| 0.06; R (-x1-x2-x3-x4-x5-x6-x7-x8-x9-x10+x11+x12+x13+x14+x15) 0.05; R |-x1-x2-x3-x4-x5+x6+x7+x8+x9+x10| x (x11+x12+x13+x14+x15) 0.05; R (-x1-x2-x3-x4-x5+x6+x7+x8+x9+x10+x11+x12+x13+x14+x15) 0.04; R chi[x1,x2,x3,x4,x5]*|x6+x7+x8+x9+x10-x11-x12-x13-x14-x15| 0.04; +3 more blocks/quad (largest 0.04); T 15 deg-1 chars 0.72 (largest chi[x3] 0.20); T 54 deg-3 chars 0.36 (largest chi[x6,x8,x10] 0.07); T chi[x6,x7,x8,x9,x10] 0.20; T chi[x1,x2,x3,x4,x5] 0.19; T chi[x11,x12,x13,x14,x15] 0.19; T 75 deg-7 chars 0.08 (largest chi[x3,x10,x11,x12,x13,x14,x15] 0.01); R 27 deg-7 chars 0.01 (largest chi[x6,x10,x11,x12,x13,x14,x15] 0.01) |
+| 16384 | 0.0000 | 0.000 | default (no CV, n > 512) | 256 (183) | 0.90 / 0.20 / 0.00 (0.00) | 1/3 blocks (-,-,R) | R (x1+x2+x3+x4+x5+x6+x7+x8+x9+x10+x11+x12+x13+x14+x15) 0.11; R chi[x11]*|x1+x2+x3+x4+x5+x6+x7+x8+x9+x10-x12-x13-x14-x15| 0.06; R (-x1-x2-x3-x4-x5-x6-x7-x8-x9-x10+x11+x12+x13+x14+x15) 0.05; R |-x1-x2-x3-x4-x5+x6+x7+x8+x9+x10| x (x11+x12+x13+x14+x15) 0.05; R (-x1-x2-x3-x4-x5+x6+x7+x8+x9+x10+x11+x12+x13+x14+x15) 0.04; R chi[x1,x2,x3,x4,x5]*|x6+x7+x8+x9+x10-x11-x12-x13-x14-x15| 0.04; +3 more blocks/quad (largest 0.04); T 15 deg-1 chars 0.72 (largest chi[x3] 0.20); T 54 deg-3 chars 0.36 (largest chi[x6,x8,x10] 0.07); T chi[x6,x7,x8,x9,x10] 0.20; T chi[x1,x2,x3,x4,x5] 0.19; T chi[x11,x12,x13,x14,x15] 0.19; T 75 deg-7 chars 0.08 (largest chi[x3,x10,x11,x12,x13,x14,x15] 0.01); R 27 deg-7 chars 0.01 (largest chi[x6,x10,x11,x12,x13,x14,x15] 0.01) |
 
 ### andxor (designed): AND(x1x2, x3x4)
 
@@ -236,29 +236,29 @@ n\* DFG alone: seed 0 63, 3 seeds 52; v3 (Part 10) 3 seeds 40; networks (nets_be
 
 ### cnf3 (dlheld3): (x1|x2|x3) & (~x4|x5|x6) & (x7|~x8|x9)
 
-*Representation in DFG's dictionary:* PTF sign(c1 + c2 + c3 - 2), clause characters (degree <= 3, within a clause) || one additive block per clause (the clause is false iff t = -3), sign readout: (x1+x2+x3) accept {-1,1,3} ; (-x4+x5+x6) accept {-1,1,3} ; (x7-x8+x9) accept {-1,1,3}: 21 characters (by degree {1: 9, 2: 9, 3: 3}) | Fourier weight by degree 0.33 0.35 0.15 0.03 0.02 0.00 0.00
+*Representation in DFG's dictionary:* PTF sign(c1 + c2 + c3 - 2), clause characters (degree <= 3, within a clause): 21 characters (by degree {1: 9, 2: 9, 3: 3}) || one additive block per clause (the clause is false iff t = -3), sign readout: (x1+x2+x3) accept {-1,1,3} ; (-x4+x5+x6) accept {-1,1,3} ; (x7-x8+x9) accept {-1,1,3} | Fourier weight by degree 0.33 0.35 0.15 0.03 0.02 0.00 0.00
 
-n\* DFG alone: seed 0 187, 3 seeds 189; v3 (Part 10) 3 seeds –; networks (nets_best) 361. First n with a compact representation complete in the model: – (from then on at every n: –). Exact structure by Part 10's rule: alone 4096, v3 –.
+n\* DFG alone: seed 0 187, 3 seeds 189; v3 (Part 10) 3 seeds –; networks (nets_best) 361. First n with a compact representation complete in the model: 1024 (from then on at every n: 1024). Exact structure by Part 10's rule: alone 4096, v3 –.
 
 | n | err | train | variant (CV) | size (terms) | share T / R / S (S-lin) | complete | model |
 |---|---|---|---|---|---|---|---|
-| 128 | 0.2141 | 0.031 | default (CV errors 32 / 25) | 32 (31) | 0.94 / 0.00 / 0.34 (0.33) | , 10/21 chars + 0/3 blocks | T 9 deg-1 chars 0.63 (largest chi[x6] 0.29); T chi[x4,x6] 0.38; S-lin 21 deg-1 chars 0.26 (largest chi[x27] 0.10) |
-| 256 | 0.0042 | 0.000 | forced (CV errors 35 / 14) | 48 (37) | 0.85 / 0.48 / 0.09 (0.08) | , 10/21 chars (8 right sign) + 2/3 blocks | T~ (-x4+x5+x6 -3*AND(-x2,-x1)) 0.49; R chi[x3]*(x1+x2) 0.42; T (-x7+x8-x9) 0.32; S quad[23 inputs, 0.65 on rel] 0.03; R chi[x8]*(x7+x9) 0.03; R chi[x9]*(x7-x8) 0.02; T 9 deg-1 chars 0.39 (largest chi[x8] 0.21; 2 with the wrong sign); S-lin 21 deg-1 chars 0.07 (largest chi[x12] 0.03); T chi[x4,x6] 0.06 |
-| 1024 | 0.0000 | 0.000 | default (no CV, n > 512) | 114 (46) | 0.95 / 0.11 / 0.01 (0.00) | , 21/21 chars + 2/3 blocks | T~ (x7-x8+x9 -3*AND(x4,-x6)) 0.07; R (-x4+x5+x6+x7-x8+x9 +3*AND(-x3,-x1)) 0.05; T~ (x1+x2+x3) x (x7-x8+x9 -3*AND(x4,-x6)) 0.05; R (x1+x2+x3-x4-x5+x6) 0.04; R (x4+x5) x (x1+x2+x3+x6) 0.03; R chi[x5,x6]*(-x1-x2-x3+x4) 0.03; +3 more blocks/quad (largest 0.03); T 9 deg-1 chars 0.53 (largest chi[x5] 0.19); T 10 deg-2 chars 0.53 (largest chi[x1,x2] 0.19); T 7 deg-3 chars 0.31 (largest chi[x4,x5,x6] 0.20); T 6 deg-4 chars 0.03 (largest chi[x5,x6,x7,x8] 0.02); T chi[x1,x2,x3,x4,x5,x6] 0.02; T 4 deg-5 chars 0.02 (largest chi[x4,x5,x6,x7,x8] 0.01) |
-| 16384 | 0.0000 | 0.000 | default (no CV, n > 512) | 67 (32) | 0.92 / 0.10 / 0.07 (0.00) | , 21/21 chars + 0/3 blocks | S quad[21 inputs, 0.81 on rel] 0.06; R (x1+x2+x3-x4+x5+x6+x7-x8+x9) 0.05; R (-x4+x5+x6-x9 +3*AND(-x7,x8)) 0.03; R (x4+x8) x (x1+x2+x3+x5+x6+x7+x9) 0.03; R quad[20 inputs, 0.96 on rel] 0.02; T 11 deg-2 chars 0.57 (largest chi[x7,x8] 0.20); T 9 deg-1 chars 0.54 (largest chi[x9] 0.19); T 5 deg-3 chars 0.35 (largest chi[x1,x2,x3] 0.21); T chi[x1,x2,x3,x6] 0.01; T chi[x4,x6,x7,x9] 0.01 |
+| 128 | 0.2141 | 0.031 | default (CV errors 32 / 25) | 32 (31) | 0.94 / 0.00 / 0.34 (0.33) | 10/21 chars, 0/3 blocks | T 9 deg-1 chars 0.63 (largest chi[x6] 0.29); T chi[x4,x6] 0.38; S-lin 21 deg-1 chars 0.26 (largest chi[x27] 0.10) |
+| 256 | 0.0042 | 0.000 | forced (CV errors 35 / 14) | 48 (37) | 0.85 / 0.48 / 0.09 (0.08) | 10/21 chars (8 right sign), 1/3 blocks | T~ (-x4+x5+x6 -3*AND(-x2,-x1)) 0.49; R chi[x3]*(x1+x2) 0.42; T (-x7+x8-x9) 0.32; S quad[23 inputs, 0.65 on rel] 0.03; R chi[x8]*(x7+x9) 0.03; R chi[x9]*(x7-x8) 0.02; T 9 deg-1 chars 0.39 (largest chi[x8] 0.21; 2 with the wrong sign); S-lin 21 deg-1 chars 0.07 (largest chi[x12] 0.03); T chi[x4,x6] 0.06 |
+| 1024 | 0.0000 | 0.000 | default (no CV, n > 512) | 114 (46) | 0.95 / 0.11 / 0.01 (0.00) | 21/21 chars, 1/3 blocks | T~ (x7-x8+x9 -3*AND(x4,-x6)) 0.07; R (-x4+x5+x6+x7-x8+x9 +3*AND(-x3,-x1)) 0.05; T~ (x1+x2+x3) x (x7-x8+x9 -3*AND(x4,-x6)) 0.05; R (x1+x2+x3-x4-x5+x6) 0.04; R (x4+x5) x (x1+x2+x3+x6) 0.03; R chi[x5,x6]*(-x1-x2-x3+x4) 0.03; +3 more blocks/quad (largest 0.03); T 9 deg-1 chars 0.53 (largest chi[x5] 0.19); T 10 deg-2 chars 0.53 (largest chi[x1,x2] 0.19); T 7 deg-3 chars 0.31 (largest chi[x4,x5,x6] 0.20); T 6 deg-4 chars 0.03 (largest chi[x5,x6,x7,x8] 0.02); T chi[x1,x2,x3,x4,x5,x6] 0.02; T 4 deg-5 chars 0.02 (largest chi[x4,x5,x6,x7,x8] 0.01) |
+| 16384 | 0.0000 | 0.000 | default (no CV, n > 512) | 67 (32) | 0.92 / 0.10 / 0.07 (0.00) | 21/21 chars, 0/3 blocks | S quad[21 inputs, 0.81 on rel] 0.06; R (x1+x2+x3-x4+x5+x6+x7-x8+x9) 0.05; R (-x4+x5+x6-x9 +3*AND(-x7,x8)) 0.03; R (x4+x8) x (x1+x2+x3+x5+x6+x7+x9) 0.03; R quad[20 inputs, 0.96 on rel] 0.02; T 11 deg-2 chars 0.57 (largest chi[x7,x8] 0.20); T 9 deg-1 chars 0.54 (largest chi[x9] 0.19); T 5 deg-3 chars 0.35 (largest chi[x1,x2,x3] 0.21); T chi[x1,x2,x3,x6] 0.01; T chi[x4,x6,x7,x9] 0.01 |
 
 ### f7_02 (dlheld7): OR(AND(x2,-x6,-x8), AND(x1,-x2,-x4,-x5), AND(x3,-x5,-x7))
 
-*Representation in DFG's dictionary:* PTF sign(sum of terms + t - 1), term characters || one additive block per AND term (all its literals true: t = m), sign readout: (x2-x6-x8) accept {3} ; (x1-x2-x4-x5) accept {4} ; (x3-x5-x7) accept {3}: 27 characters (by degree {1: 8, 2: 12, 3: 6, 4: 1}) | Fourier weight by degree 0.30 0.32 0.14 0.04 0.01 0.00 0.00
+*Representation in DFG's dictionary:* PTF sign(sum of terms + t - 1), term characters: 27 characters (by degree {1: 8, 2: 12, 3: 6, 4: 1}) || one additive block per AND term (all its literals true: t = m), sign readout: (x2-x6-x8) accept {3} ; (x1-x2-x4-x5) accept {4} ; (x3-x5-x7) accept {3} | Fourier weight by degree 0.30 0.32 0.14 0.04 0.01 0.00 0.00
 
-n\* DFG alone: seed 0 188, 3 seeds 190; v3 (Part 10) 3 seeds 106; networks (nets_best) 337. First n with a compact representation complete in the model: – (from then on at every n: –). Exact structure by Part 10's rule: alone –, v3 –.
+n\* DFG alone: seed 0 188, 3 seeds 190; v3 (Part 10) 3 seeds 106; networks (nets_best) 337. First n with a compact representation complete in the model: 2048 (from then on at every n: 2048). Exact structure by Part 10's rule: alone –, v3 –.
 
 | n | err | train | variant (CV) | size (terms) | share T / R / S (S-lin) | complete | model |
 |---|---|---|---|---|---|---|---|
-| 128 | 0.2229 | 0.023 | forced (CV errors 28 / 19) | 34 (33) | 0.79 / 0.00 / 0.60 (0.50) | , 9/27 chars + 0/3 blocks | T 8 deg-1 chars 0.55 (largest chi[x6] 0.27); S-lin 22 deg-1 chars 0.41 (largest chi[x30] 0.25); T chi[x2,x6] 0.35; S chi[x10,x30] 0.20; S chi[x1,x3,x13] 0.19 |
-| 256 | 0.0000 | 0.000 | forced (CV errors 26 / 16) | 43 (38) | 0.91 / 0.30 / 0.12 (0.13) | , 14/27 chars + 1/3 blocks | T (-x1+x2+x4+x5) 0.34; R chi[x5]*(x3-x7) 0.25; T 8 deg-1 chars 0.54 (largest chi[x5] 0.29); T 4 deg-2 chars 0.40 (largest chi[x6,x8] 0.21); T chi[x2,x6,x8] 0.20; T chi[x3,x5,x7] 0.11; S-lin 22 deg-1 chars 0.10 (largest chi[x30] 0.05) |
-| 1024 | 0.0000 | 0.000 | default (no CV, n > 512) | 86 (53) | 0.93 / 0.11 / 0.09 (0.03) | , 25/27 chars + 2/3 blocks | R chi[x5]*(-x1+x2+x4) 0.08; T~ (x2-x6-x8 +3*AND(-x7,-x5)) 0.08; S quad[19 inputs, 0.65 on rel] 0.06; S quad[21 inputs, 0.67 on rel] 0.04; R~ (x3-x4) x (x2-x6-x8 +3*AND(-x7,-x5)) 0.04; T~ (-x1+x2+x4+x5 -3*x7) 0.03; T 11 deg-2 chars 0.51 (largest chi[x3,x5] 0.21); T 8 deg-1 chars 0.48 (largest chi[x5] 0.25); T 6 deg-3 chars 0.39 (largest chi[x2,x6,x8] 0.25); S-lin 22 deg-1 chars 0.03 (largest chi[x21] 0.01) |
-| 16384 | 0.0000 | 0.000 | default (no CV, n > 512) | 69 (44) | 0.98 / 0.04 / 0.00 (0.00) | , 27/27 chars + 1/3 blocks | T~ (x3-x5-x7 +3*AND(x2,-x8)) 0.08; R~ (-x1+x6) x (x3-x5-x7 +3*AND(x2,-x8)) 0.03; T 13 deg-2 chars 0.55 (largest chi[x2,x6] 0.22); T 8 deg-1 chars 0.51 (largest chi[x5] 0.29); T 13 deg-3 chars 0.39 (largest chi[x3,x5,x7] 0.25); T 8 deg-4 chars 0.11 (largest chi[x1,x2,x4,x5] 0.11) |
+| 128 | 0.2229 | 0.023 | forced (CV errors 28 / 19) | 34 (33) | 0.79 / 0.00 / 0.60 (0.50) | 9/27 chars, 0/3 blocks | T 8 deg-1 chars 0.55 (largest chi[x6] 0.27); S-lin 22 deg-1 chars 0.41 (largest chi[x30] 0.25); T chi[x2,x6] 0.35; S chi[x10,x30] 0.20; S chi[x1,x3,x13] 0.19 |
+| 256 | 0.0000 | 0.000 | forced (CV errors 26 / 16) | 43 (38) | 0.91 / 0.30 / 0.12 (0.13) | 14/27 chars, 1/3 blocks | T (-x1+x2+x4+x5) 0.34; R chi[x5]*(x3-x7) 0.25; T 8 deg-1 chars 0.54 (largest chi[x5] 0.29); T 4 deg-2 chars 0.40 (largest chi[x6,x8] 0.21); T chi[x2,x6,x8] 0.20; T chi[x3,x5,x7] 0.11; S-lin 22 deg-1 chars 0.10 (largest chi[x30] 0.05) |
+| 1024 | 0.0000 | 0.000 | default (no CV, n > 512) | 86 (53) | 0.93 / 0.11 / 0.09 (0.03) | 25/27 chars, 0/3 blocks | R chi[x5]*(-x1+x2+x4) 0.08; T~ (x2-x6-x8 +3*AND(-x7,-x5)) 0.08; S quad[19 inputs, 0.65 on rel] 0.06; S quad[21 inputs, 0.67 on rel] 0.04; R~ (x3-x4) x (x2-x6-x8 +3*AND(-x7,-x5)) 0.04; T~ (-x1+x2+x4+x5 -3*x7) 0.03; T 11 deg-2 chars 0.51 (largest chi[x3,x5] 0.21); T 8 deg-1 chars 0.48 (largest chi[x5] 0.25); T 6 deg-3 chars 0.39 (largest chi[x2,x6,x8] 0.25); S-lin 22 deg-1 chars 0.03 (largest chi[x21] 0.01) |
+| 16384 | 0.0000 | 0.000 | default (no CV, n > 512) | 69 (44) | 0.98 / 0.04 / 0.00 (0.00) | 27/27 chars, 0/3 blocks | T~ (x3-x5-x7 +3*AND(x2,-x8)) 0.08; R~ (-x1+x6) x (x3-x5-x7 +3*AND(x2,-x8)) 0.03; T 13 deg-2 chars 0.55 (largest chi[x2,x6] 0.22); T 8 deg-1 chars 0.51 (largest chi[x5] 0.29); T 13 deg-3 chars 0.39 (largest chi[x3,x5,x7] 0.25); T 8 deg-4 chars 0.11 (largest chi[x1,x2,x4,x5] 0.11) |
 
 ### dlist8 (dlheld3): decision list on 8 literals
 
@@ -305,7 +305,7 @@ n\* DFG alone: seed 0 80, 3 seeds 82; v3 (Part 10) 3 seeds 44; networks (nets_be
 
 *Representation in DFG's dictionary:* Fourier expansion: 32 characters || symmetry-class blocks (auxiliary: f is a function of each class's signed sum and the other inputs): (x1+x2-x3+x4) accept {} | Fourier weight by degree 0.89 0.04 0.04 0.02 0.00
 
-n\* DFG alone: seed 0 46, 3 seeds –; v3 (Part 10) 3 seeds –; networks (nets_best) 50. First n with a compact representation complete in the model: – (from then on at every n: –). Exact structure by Part 10's rule: alone 512, v3 –.
+n\* DFG alone: seed 0 46, 3 seeds 31; v3 (Part 10) 3 seeds –; networks (nets_best) 50. First n with a compact representation complete in the model: – (from then on at every n: –). Exact structure by Part 10's rule: alone 512, v3 –.
 
 | n | err | train | variant (CV) | size (terms) | share T / R / S (S-lin) | complete | model |
 |---|---|---|---|---|---|---|---|
@@ -318,7 +318,7 @@ n\* DFG alone: seed 0 46, 3 seeds –; v3 (Part 10) 3 seeds –; networks (nets_
 
 *Representation in DFG's dictionary:* Fourier expansion: 32 characters || symmetry-class blocks (auxiliary: f is a function of each class's signed sum and the other inputs): (x1+x3-x6) accept {} | Fourier weight by degree 0.71 0.07 0.07 0.08 0.04
 
-n\* DFG alone: seed 0 75, 3 seeds –; v3 (Part 10) 3 seeds –; networks (nets_best) 133. First n with a compact representation complete in the model: 16384 (from then on at every n: 16384). Exact structure by Part 10's rule: alone 4096, v3 –.
+n\* DFG alone: seed 0 75, 3 seeds 80; v3 (Part 10) 3 seeds –; networks (nets_best) 133. First n with a compact representation complete in the model: 16384 (from then on at every n: 16384). Exact structure by Part 10's rule: alone 4096, v3 –.
 
 | n | err | train | variant (CV) | size (terms) | share T / R / S (S-lin) | complete | model |
 |---|---|---|---|---|---|---|---|
@@ -372,14 +372,14 @@ n\* DFG alone: seed 0 448, 3 seeds 644; v3 (Part 10) 3 seeds 634; networks (nets
 
 *Representation in DFG's dictionary:* block, accept set [-11, -9, -5, -1, 1, 5, 7, 13]: (-x1-x2+x3-x4+x5+x6-x7+x8+x9-x10-x11+x12-x13) accept {-11,-9,-5,-1,1,5,7,13} | Fourier weight by degree 0.01 0.01 0.00 0.01 0.02 0.04 0.02
 
-n\* DFG alone: seed 0 1705, 3 seeds 6186; v3 (Part 10) 3 seeds 6760; networks (nets_best) 7641. First n with a compact representation complete in the model: 8192 (from then on at every n: 8192). Exact structure by Part 10's rule: alone 8192, v3 8192.
+n\* DFG alone: seed 0 1705, 3 seeds 6186; v3 (Part 10) 3 seeds 6760; networks (nets_best) 7641. First n with a compact representation complete in the model: 2048 (from then on at every n: 8192). Exact structure by Part 10's rule: alone 8192, v3 8192.
 
 | n | err | train | variant (CV) | size (terms) | share T / R / S (S-lin) | complete | model |
 |---|---|---|---|---|---|---|---|
 | 1024 | 0.3765 | 0.353 | default (no CV, n > 512) | 1 (0) | 0.00 / 0.00 / 0.00 (0.00) | 0/1 blocks | background 0.17 |
-| 2048 | 0.0007 | 0.000 | default (no CV, n > 512) | 164 (42) | 0.07 / 1.00 / 0.07 (0.04) | 0/1 blocks | R (-x1-x2+x3+x5-x7+x8+x9-x10-x11-x13) x (x4-x6-x12) 0.72; R (x4-x6-x12) x |x1+x2-x3-x5+x7-x8-x9+x10+x11+x13| 0.38; R quad[24 inputs, 0.90 on rel] 0.07; S (-x1-x2+x3-x7+x8+x9-x10-x11-x13+x16-x18-x23+x24-x25 -3*AND(-x26,-x5)) 0.03; S chi[x11]*(x1+x2-x3+x7-x8-x9+x10+x13-x16+x18-x24+x25+x28) 0.03; S |x12-x14+x17-x19-x20| x (-x1-x2+x3-x7+x8+x9-x10-x11-x13+x16-x18-x23+x24-x25 -3*AND(-x26,-x5)) 0.02; +2 more blocks/quad (largest 0.02); T 13 deg-1 chars 0.04 (largest chi[x4] 0.03); S-lin 17 deg-1 chars 0.04 (largest chi[x26] 0.02); T chi[x4,x6,x12] 0.04; T chi[x7,x8] 0.02; T chi[x4,x6] 0.02; T chi[x4,x12] 0.02 |
-| 8192 | 0.0002 | 0.000 | default (no CV, n > 512) | 209 (115) | 0.50 / 0.55 / 0.05 (0.02) | 1/1 blocks | T (x1+x2-x3+x4-x5-x6+x7-x8-x9+x10+x11-x12+x13) 0.23; T (-x1-x2+x3-x4+x5+x6-x7+x8+x9-x10-x11+x12-x13) 0.23; R chi[x4]*(-x1-x2+x3+x5+x6-x7+x8+x9-x10-x11+x12-x13) 0.23; R chi[x9]*(-x1-x2+x3-x4+x5+x6-x7+x8-x10-x11+x12-x13) 0.22; R quad[24 inputs, 0.92 on rel] 0.12; R (x1+x2+x4+x7+x10+x11+x13) x (x3+x5+x6+x8+x9+x12) 0.08; +7 more blocks/quad (largest 0.07); T 13 deg-1 chars 0.08 (largest chi[x9] 0.06); T 47 deg-2 chars 0.06 (largest chi[x4,x9] 0.02); S 25 deg-2 chars 0.02 (largest chi[x12,x25] 0.01); S-lin 17 deg-1 chars 0.01 (largest chi[x19] 0.01) |
-| 16384 | 0.0005 | 0.000 | default (no CV, n > 512) | 255 (142) | 0.52 / 0.53 / 0.05 (0.03) | 1/1 blocks | R chi[x4]*(x1+x2-x3-x5-x6+x7-x8-x9+x10+x11-x12+x13) 0.25; T (x1+x2-x3+x4-x5-x6+x7-x8-x9+x10+x11-x12+x13) 0.24; T (-x1-x2+x3-x4+x5+x6-x7+x8+x9-x10-x11+x12-x13) 0.24; R (x1+x2-x3-x4-x5-x6+x7-x8-x9+x10+x11-x12+x13) 0.15; R chi[x11]*(x1+x2-x3-x5-x6+x7-x8-x9+x10-x12+x13) 0.12; R (x1+x2-x3-x5-x6+x7-x8-x9+x10-x12+x13 +3*x11) 0.12; +9 more blocks/quad (largest 0.08); T 13 deg-1 chars 0.09 (largest chi[x4] 0.06); S-lin 17 deg-1 chars 0.03 (largest chi[x27] 0.01); T 54 deg-2 chars 0.02 (largest chi[x4,x5] 0.01); S 43 deg-2 chars 0.02 (largest chi[x4,x24] 0.01) |
+| 2048 | 0.0007 | 0.000 | default (no CV, n > 512) | 164 (42) | 0.79 / 0.43 / 0.07 (0.04) | 1/1 blocks | T (-x1-x2+x3+x5-x7+x8+x9-x10-x11-x13) x (x4-x6-x12) 0.72; R (x4-x6-x12) x |x1+x2-x3-x5+x7-x8-x9+x10+x11+x13| 0.38; R quad[24 inputs, 0.90 on rel] 0.07; S (-x1-x2+x3-x7+x8+x9-x10-x11-x13+x16-x18-x23+x24-x25 -3*AND(-x26,-x5)) 0.03; S chi[x11]*(x1+x2-x3+x7-x8-x9+x10+x13-x16+x18-x24+x25+x28) 0.03; S |x12-x14+x17-x19-x20| x (-x1-x2+x3-x7+x8+x9-x10-x11-x13+x16-x18-x23+x24-x25 -3*AND(-x26,-x5)) 0.02; +2 more blocks/quad (largest 0.02); T 13 deg-1 chars 0.04 (largest chi[x4] 0.03); S-lin 17 deg-1 chars 0.04 (largest chi[x26] 0.02); T chi[x4,x6,x12] 0.04; T chi[x7,x8] 0.02; T chi[x4,x6] 0.02; T chi[x4,x12] 0.02 |
+| 8192 | 0.0002 | 0.000 | default (no CV, n > 512) | 209 (115) | 0.57 / 0.48 / 0.05 (0.02) | 1/1 blocks | T (x1+x2-x3+x4-x5-x6+x7-x8-x9+x10+x11-x12+x13) 0.23; T (-x1-x2+x3-x4+x5+x6-x7+x8+x9-x10-x11+x12-x13) 0.23; R chi[x4]*(-x1-x2+x3+x5+x6-x7+x8+x9-x10-x11+x12-x13) 0.23; R chi[x9]*(-x1-x2+x3-x4+x5+x6-x7+x8-x10-x11+x12-x13) 0.22; R quad[24 inputs, 0.92 on rel] 0.12; T (x1+x2+x4+x7+x10+x11+x13) x (x3+x5+x6+x8+x9+x12) 0.08; +7 more blocks/quad (largest 0.07); T 13 deg-1 chars 0.08 (largest chi[x9] 0.06); T 47 deg-2 chars 0.06 (largest chi[x4,x9] 0.02); S 25 deg-2 chars 0.02 (largest chi[x12,x25] 0.01); S-lin 17 deg-1 chars 0.01 (largest chi[x19] 0.01) |
+| 16384 | 0.0005 | 0.000 | default (no CV, n > 512) | 255 (142) | 0.59 / 0.45 / 0.05 (0.03) | 1/1 blocks | R chi[x4]*(x1+x2-x3-x5-x6+x7-x8-x9+x10+x11-x12+x13) 0.25; T (x1+x2-x3+x4-x5-x6+x7-x8-x9+x10+x11-x12+x13) 0.24; T (-x1-x2+x3-x4+x5+x6-x7+x8+x9-x10-x11+x12-x13) 0.24; R (x1+x2-x3-x4-x5-x6+x7-x8-x9+x10+x11-x12+x13) 0.15; R chi[x11]*(x1+x2-x3-x5-x6+x7-x8-x9+x10-x12+x13) 0.12; R (x1+x2-x3-x5-x6+x7-x8-x9+x10-x12+x13 +3*x11) 0.12; +9 more blocks/quad (largest 0.08); T 13 deg-1 chars 0.09 (largest chi[x4] 0.06); S-lin 17 deg-1 chars 0.03 (largest chi[x27] 0.01); T 54 deg-2 chars 0.02 (largest chi[x4,x5] 0.01); S 43 deg-2 chars 0.02 (largest chi[x4,x24] 0.01) |
 
 ### f7_05 (dlheld7): [((s+14)/2) mod 3 != 0], s = x1+...+x14
 
@@ -439,14 +439,14 @@ n\* DFG alone: seed 0 222, 3 seeds 222; v3 (Part 10) 3 seeds 215; networks (nets
 
 *Representation in DFG's dictionary:* block |x1+...+x6| <= 2, gated by OR(x7, x8): (x1+x2+x3+x4+x5+x6) accept {-2,0,2} [even] | coupling inputs x7, x8 | Fourier weight by degree 0.31 0.45 0.07 0.07 0.01 0.06 0.01
 
-n\* DFG alone: seed 0 173, 3 seeds 149; v3 (Part 10) 3 seeds 151; networks (nets_best) 370. First n with a compact representation complete in the model: 256 (from then on at every n: 256). Exact structure by Part 10's rule: alone 256, v3 256.
+n\* DFG alone: seed 0 173, 3 seeds 149; v3 (Part 10) 3 seeds 151; networks (nets_best) 370. First n with a compact representation complete in the model: – (from then on at every n: –). Exact structure by Part 10's rule: alone 256, v3 256.
 
 | n | err | train | variant (CV) | size (terms) | share T / R / S (S-lin) | complete | model |
 |---|---|---|---|---|---|---|---|
 | 128 | 0.1667 | 0.000 | forced (CV errors 40 / 16) | 9 (7) | 0.77 / 0.00 / 0.64 (0.00) | 0/1 blocks | S quad[28 inputs, 0.68 on rel] 0.36; S |-x8+x11-x18-x24+x29| 0.19; S quad[27 inputs, 0.29 on rel] 0.17; T chi[x7] 0.42; T chi[x8] 0.33; T chi[x7,x8] 0.26; S chi[x13,x18,x29] 0.24; background 0.14 |
-| 256 | 0.0117 | 0.000 | default (CV errors 5 / 5) | 36 (10) | 1.00 / 0.00 / 0.19 (0.00) | 1/1 blocks | T~ (x1+x2+x3+x4+x5+x6 +3*AND(-x8,-x7)) 0.83; S (x1+x2+x3+x4+x5+x6+x7+x8-x30) 0.15; S chi[x7]*|x2+x5+x6+x8-x9+x11-x14+x17+x18+x26| 0.05; S chi[x7,x8]*(x2+x3+x5+x6+x15-x30) 0.03; S quad[23 inputs, 0.72 on rel] 0.03; S chi[x8]*(x2+x3+x4+x5+x6+x18-x30) 0.02; +1 more blocks/quad (largest 0.01); T chi[x8] 0.15; T chi[x7] 0.15; T chi[x7,x8] 0.10 |
-| 512 | 0.0002 | 0.000 | default (CV errors 0 / 0) | 28 (6) | 0.70 / 0.17 / 0.45 (0.00) | 1/1 blocks | S quad[19 inputs, 0.90 on rel] 0.41; T~ (x1+x2+x3+x4+x5+x6 +3*AND(-x7,-x8)) 0.28; R~ (x1+x2+x3+x4+x5+x6 +3*AND(-x7,-x8)) x |x7+x8| 0.16; T chi[x7] 0.28; T chi[x8] 0.26; T chi[x7,x8] 0.31 |
-| 16384 | 0.0000 | 0.000 | default (no CV, n > 512) | 80 (66) | 1.00 / 0.00 / 0.00 (0.00) | 1/1 blocks | T~ (x1+x2+x3+x4+x5+x6 -3*AND(-x8,-x7)) 0.15; T~ (x1+x2+x3+x4+x5+x6 +2*AND(-x8,-x7)) 0.14; T 16 deg-2 chars 0.63 (largest chi[x7,x8] 0.33); T chi[x7] 0.34; T chi[x8] 0.33; T 26 deg-3 chars 0.17 (largest chi[x2,x5,x7] 0.04); T 20 deg-4 chars 0.15 (largest chi[x2,x3,x5,x6] 0.04) |
+| 256 | 0.0117 | 0.000 | default (CV errors 5 / 5) | 36 (10) | 1.00 / 0.00 / 0.19 (0.00) | 0/1 blocks | T~ (x1+x2+x3+x4+x5+x6 +3*AND(-x8,-x7)) 0.83; S (x1+x2+x3+x4+x5+x6+x7+x8-x30) 0.15; S chi[x7]*|x2+x5+x6+x8-x9+x11-x14+x17+x18+x26| 0.05; S chi[x7,x8]*(x2+x3+x5+x6+x15-x30) 0.03; S quad[23 inputs, 0.72 on rel] 0.03; S chi[x8]*(x2+x3+x4+x5+x6+x18-x30) 0.02; +1 more blocks/quad (largest 0.01); T chi[x8] 0.15; T chi[x7] 0.15; T chi[x7,x8] 0.10 |
+| 512 | 0.0002 | 0.000 | default (CV errors 0 / 0) | 28 (6) | 0.70 / 0.17 / 0.45 (0.00) | 0/1 blocks | S quad[19 inputs, 0.90 on rel] 0.41; T~ (x1+x2+x3+x4+x5+x6 +3*AND(-x7,-x8)) 0.28; R~ (x1+x2+x3+x4+x5+x6 +3*AND(-x7,-x8)) x |x7+x8| 0.16; T chi[x7] 0.28; T chi[x8] 0.26; T chi[x7,x8] 0.31 |
+| 16384 | 0.0000 | 0.000 | default (no CV, n > 512) | 80 (66) | 1.00 / 0.00 / 0.00 (0.00) | 0/1 blocks | T~ (x1+x2+x3+x4+x5+x6 -3*AND(-x8,-x7)) 0.15; T~ (x1+x2+x3+x4+x5+x6 +2*AND(-x8,-x7)) 0.14; T 16 deg-2 chars 0.63 (largest chi[x7,x8] 0.33); T chi[x7] 0.34; T chi[x8] 0.33; T 26 deg-3 chars 0.17 (largest chi[x2,x5,x7] 0.04); T 20 deg-4 chars 0.15 (largest chi[x2,x3,x5,x6] 0.04) |
 
 ### f7_10 (dlheld7): [u <= -1], u = s + 2*(x6), s = x1+...+x5
 
@@ -465,27 +465,27 @@ n\* DFG alone: seed 0 90, 3 seeds 84; v3 (Part 10) 3 seeds 82; networks (nets_be
 
 *Representation in DFG's dictionary:* blocks (additive (sign readout)): (x1+x2-x3-x4) accept {0} [even] ; (-x5-x6-x7+x8+x9+x10+x11) accept {-1} | Fourier weight by degree 0.02 0.25 0.03 0.34 0.06 0.04 0.14
 
-n\* DFG alone: seed 0 221, 3 seeds 211; v3 (Part 10) 3 seeds 203; networks (nets_best) 1545. First n with a compact representation complete in the model: 256 (from then on at every n: 256). Exact structure by Part 10's rule: alone 256, v3 256.
+n\* DFG alone: seed 0 221, 3 seeds 211; v3 (Part 10) 3 seeds 203; networks (nets_best) 1545. First n with a compact representation complete in the model: 256 (from then on at every n: –). Exact structure by Part 10's rule: alone 256, v3 256.
 
 | n | err | train | variant (CV) | size (terms) | share T / R / S (S-lin) | complete | model |
 |---|---|---|---|---|---|---|---|
 | 128 | 0.4719 | 0.289 | default (CV errors 46 / 40) | 1 (0) | 0.00 / 0.00 / 0.00 (0.00) | 0/2 blocks | background 0.60 |
 | 256 | 0.0000 | 0.000 | forced (CV errors 15 / 1) | 21 (3) | 1.00 / 0.00 / 0.00 (0.00) | 2/2 blocks | T (-x5-x6-x7+x8+x9+x10+x11) x |x1+x2-x3-x4| 0.80; T |x1+x2-x3-x4| 0.50; T chi[x1,x2,x3,x4] 0.18 |
 | 1024 | 0.0000 | 0.000 | default (no CV, n > 512) | 31 (7) | 1.00 / 0.00 / 0.00 (0.00) | 2/2 blocks | T (-x5-x6-x7+x8+x9+x10+x11) x |x1+x2-x3-x4| 0.52; T (x5+x6+x7-x8-x9-x10-x11) 0.19; T chi[x1,x2,x3,x4] 0.61; T 4 deg-2 chars 0.33 (largest chi[x3,x4] 0.18) |
-| 16384 | 0.0000 | 0.000 | default (no CV, n > 512) | 101 (42) | 0.98 / 0.04 / 0.00 (0.00) | 2/2 blocks | T (x5+x6+x7-x8-x9-x10-x11) 0.50; T~ (x1+x2-x3-x4 +3*AND(-x5,x11)) 0.06; R~ (x6+x7-x8-x9-x10) x (x1+x2-x3-x4 +3*AND(-x5,x11)) 0.04; T chi[x1,x2,x3,x4] 0.51; T chi[x6,x8,x9,x10] 0.01; T 26 deg-2 chars 0.43 (largest chi[x1,x2] 0.17); T 7 deg-1 chars 0.11 (largest chi[x11] 0.05); T 4 deg-3 chars 0.02 (largest chi[x6,x8,x11] 0.01) |
+| 16384 | 0.0000 | 0.000 | default (no CV, n > 512) | 101 (42) | 0.98 / 0.04 / 0.00 (0.00) | 1/2 blocks | T (x5+x6+x7-x8-x9-x10-x11) 0.50; T~ (x1+x2-x3-x4 +3*AND(-x5,x11)) 0.06; R~ (x6+x7-x8-x9-x10) x (x1+x2-x3-x4 +3*AND(-x5,x11)) 0.04; T chi[x1,x2,x3,x4] 0.51; T chi[x6,x8,x9,x10] 0.01; T 26 deg-2 chars 0.43 (largest chi[x1,x2] 0.17); T 7 deg-1 chars 0.11 (largest chi[x11] 0.05); T 4 deg-3 chars 0.02 (largest chi[x6,x8,x11] 0.01) |
 
 ### f7_03 (dlheld7): -x11 ? [((s1+6)/2) mod 4 != 2] : [|s2| > 2], s1 = x1+...+x6, s2 = x7+...+x10
 
 *Representation in DFG's dictionary:* blocks (mux): (x1+x2+x3+x4+x5+x6) accept {-6,-4,0,2,4} ; (x7+x8+x9+x10) accept {-4,4} [even] | coupling inputs x11 | Fourier weight by degree 0.41 0.12 0.17 0.09 0.04 0.09 0.06
 
-n\* DFG alone: seed 0 352, 3 seeds 352; v3 (Part 10) 3 seeds 352; networks (nets_best) 1599. First n with a compact representation complete in the model: 512 (from then on at every n: 4096). Exact structure by Part 10's rule: alone 512, v3 512.
+n\* DFG alone: seed 0 352, 3 seeds 352; v3 (Part 10) 3 seeds 352; networks (nets_best) 1599. First n with a compact representation complete in the model: 512 (from then on at every n: –). Exact structure by Part 10's rule: alone 512, v3 512.
 
 | n | err | train | variant (CV) | size (terms) | share T / R / S (S-lin) | complete | model |
 |---|---|---|---|---|---|---|---|
 | 256 | 0.1787 | 0.082 | default (CV errors 45 / 49) | 10 (3) | 0.90 / 0.00 / 0.40 (0.00) | 1/2 blocks | S (x7+x8+x9+x10-x11+x13) 0.32; T~ chi[x11]*|x7+x8+x9+x10| 0.20; T chi[x11] 0.81; background 0.23 |
 | 512 | 0.0076 | 0.000 | default (CV errors 0 / 0) | 68 (34) | 0.85 / 0.45 / 0.01 (0.01) | 2/2 blocks (T,R) | T~ (x1+x2+x3+x4+x5+x6 +3*x11) 0.48; R |x7+x8+x9+x10| x (-x1-x5 -3*x11) 0.43; R (x7+x8+x9+x10-x11) 0.30; T~ chi[x11]*(x1+x2+x3+x4+x5+x6) 0.23; T 7 deg-1 chars 0.66 (largest chi[x11] 0.65); R 4 deg-1 chars 0.10 (largest chi[x7] 0.05); S-lin 19 deg-1 chars 0.01 (largest chi[x28] 0.00) |
 | 1024 | 0.0039 | 0.000 | default (no CV, n > 512) | 100 (17) | 0.87 / 0.46 / 0.00 (0.00) | 1/2 blocks (R,-) | R (x1+x2+x3+x4+x6) x (-x5+x11 +3*x9x8) 0.30; R (x1+x2+x3+x4+x5+x6) x (x7+x8+x10-x11 +3*x9) 0.21; T chi[x11] 0.60; T 6 deg-3 chars 0.37 (largest chi[x8,x9,x11] 0.17); T 6 deg-2 chars 0.34 (largest chi[x7,x8] 0.15); T chi[x7,x8,x9,x10] 0.14; T chi[x7,x8,x9,x10,x11] 0.13 |
-| 16384 | 0.0000 | 0.000 | default (no CV, n > 512) | 110 (67) | 1.00 / 0.00 / 0.00 (0.00) | 2/2 blocks | T~ (-x1-x2-x3-x4-x5-x6 +3*x11) 0.20; T~ (x7+x8+x9+x10 -3*x11) 0.09; T~ |x7+x8+x9+x10| x (-x1-x2-x3-x4-x5-x6 +3*x11) 0.06; T 7 deg-1 chars 0.51 (largest chi[x11] 0.51); T 26 deg-3 chars 0.45 (largest chi[x8,x10,x11] 0.12); T 19 deg-4 chars 0.35 (largest chi[x7,x8,x9,x10] 0.13); T 12 deg-2 chars 0.30 (largest chi[x7,x10] 0.12) |
+| 16384 | 0.0000 | 0.000 | default (no CV, n > 512) | 110 (67) | 1.00 / 0.00 / 0.00 (0.00) | 1/2 blocks | T~ (-x1-x2-x3-x4-x5-x6 +3*x11) 0.20; T~ (x7+x8+x9+x10 -3*x11) 0.09; T~ |x7+x8+x9+x10| x (-x1-x2-x3-x4-x5-x6 +3*x11) 0.06; T 7 deg-1 chars 0.51 (largest chi[x11] 0.51); T 26 deg-3 chars 0.45 (largest chi[x8,x10,x11] 0.12); T 19 deg-4 chars 0.35 (largest chi[x7,x8,x9,x10] 0.13); T 12 deg-2 chars 0.30 (largest chi[x7,x10] 0.12) |
 
 ### f7_11 (dlheld7): -x11 ? [s1 in {-4,4}] : [|s2| <= 4], s1 = x1+x2-x3+x4, s2 = -x5-x6+x7-x8-x9+x10
 
