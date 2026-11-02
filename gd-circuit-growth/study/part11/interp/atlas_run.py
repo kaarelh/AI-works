@@ -119,8 +119,18 @@ def classify(rec, sp):
                     fm.append(dict(block=j, jaccard=1.0, exact=bool(v["signs"] and v["fold_ok"]), **v))
             allx = all(m["exact"] for m in fm)
             t["factor_match"] = fm
+            # a product whose unfolded factors partition a true block, each with the true signs up to its own global
+            # flip, is exact too: the joint cells of (t_1, t_2) determine t = +-t_1 +- t_2 (the 'split' form)
+            t["partition"] = None
+            if t["product"] and not any(f["fold"] or f["inner"] for f in t["factors"]):
+                for j, tb in enumerate(tblocks):
+                    sg = dict(zip(tb["S"], tb["signs"]))
+                    if set().union(*[set(f["S"]) for f in t["factors"]]) == set(tb["S"]) and \
+                            sum(len(f["S"]) for f in t["factors"]) == len(tb["S"]) and tb["inner"] is None and not tb["mod"] and \
+                            all(len({v * sg[i] for i, v in zip(f["S"], f["signs"])}) == 1 for f in t["factors"]):
+                        t["partition"] = j; allx = True
             t["cat"] = "S" if not inr else ("T" if allx else "R")
-            t["exact_factor"] = any(m["exact"] for m in fm)
+            t["exact_factor"] = any(m["exact"] for m in fm) or t["partition"] is not None
             t["inner_ok"] = all(m.get("inner_ok", False) for m in fm if m["exact"]) if t["exact_factor"] else None
             t["coupled"] = bool(t["exact_factor"] and (any(m.get("extra_inner") for m in fm) or
                                                        (t["mod"] and not any(tblocks[m["block"]]["mod"] == t["mod"] for m in fm if m["exact"]))))

@@ -368,9 +368,10 @@ def spec(suite, name, t, d=30):
         sp["fourier"] = fourier(fn, rel, d, vals=vals); sp["W"] = by_degree(sp["fourier"], len(rel))
     else:
         X, vals = None, None; sp["fourier"] = None; sp["W"] = None
-    if "ptf" in sp:
-        pv = sp["ptf"](X); assert np.all(np.sign(pv) == vals) and np.all(pv != 0), name
-        sp["reps"][-1]["chars"] = ptf_from_poly(pv, rel)
+    if "ptf" in sp:                                                       # the PTF rep is the first one without
+        pv = sp["ptf"](X); assert np.all(np.sign(pv) == vals) and np.all(pv != 0), name   # chars or blocks
+        rp = next(r for r in sp["reps"] if "chars" not in r and "blocks" not in r and not r.get("fourier"))
+        rp["chars"] = ptf_from_poly(pv, rel)
         del sp["ptf"]
     # every signed-symmetry class of size >= 3 is a block f depends on only through its signed sum (a target that is
     # symmetric in those signed inputs is a function of their sum and of the other inputs): an AUXILIARY representation,
