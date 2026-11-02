@@ -391,11 +391,15 @@ both; an out-of-fold fit when it kept neither). Its runs stopped after two conse
   was an out-of-fold fit because the stacker gave DFG no weight (h5s7 at 2048: alone 0.0007, v3's out-of-fold fit on
   1639 rows 0.369; h6_00 at 1024 and 2048, both near the minority rate); the fourth is majmaj5 at 1024 (0.0007 against
   0.0046). The same happens at 512 for mux11 (alone 0, v3's out-of-fold fit 0.274).
-- **At small n alone is emptier.** At n ≤ 64 alone's cross-validation keeps the default variant (empty or degree-1
-  characters), while v3's summarised member was usually the forced variant with one or two forced characters, often
-  true ones: rf06 at 16 (v3 χ[x5], 0.032; alone 0.280), f7_11 at 16 (χ[x11], 0.158 vs 0.301), andxor at 32 (both pair
+- **At small n alone is often emptier.** At n ≤ 64 alone's cross-validation mostly keeps the default variant (empty
+  or degree-1 characters; forced in 7 of its 111 cells there), while of v3's 110 cells at n ≤ 64 the stacker kept the
+  forced member in 51 (alone in 25, with the default in 26; Part 10 then summarised the forced one), only the default
+  in 23 and neither in 36 (`weights` in Part 10's files). The forced member's one or two characters are often true
+  ones: rf06 at 16 (v3 χ[x5], 0.032; alone 0.280), f7_11 at 16 (χ[x11], 0.158 vs 0.301), andxor at 32 (both pair
   characters, 0.155 vs 0.365), f7_06 at 64 (0.043 vs 0.136), mux6 at 128 (0.097 vs 0.366). The reverse also occurs
   (f7_11 at 32: alone 0.126, v3 0.299; maj9 at 64: 0.171 vs 0.285). Over the 114 differing cells alone is lower in 72.
+  This is the same effect as §2.3: the forced guess helps at small n, and the stacker kept it more often than DFG's
+  paired test does.
 - **The exact structure arrives at the same n.** By Part 10's rule (every signed-symmetry class of size ≥ 3 matched
   exactly by a block factor or modulator), n_struct is the same for all 15 targets where both runs have one (maj9,
   sym9, f7_10 at 128; f7_00, f7_01, f7_06, f7_07, f7_09, symand at 256; thrint, f7_03, f7_08 at 512; band11 1024;
