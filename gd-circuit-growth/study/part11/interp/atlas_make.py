@@ -736,15 +736,24 @@ def figures(R, order, cmp_rows, cmp_per):
     axs[0].plot([0.003, 0.6], [0.003, 0.6], "k--", lw=0.7); axs[0].set_xscale("log"); axs[0].set_yscale("log")
     axs[0].set_xlabel("v3's DFG member test error (+0.004)"); axs[0].set_ylabel("DFG alone test error (+0.004)")
     axs[0].set_title(f"same (target, n), seed 0: {len(a)} cells; identical {int(np.sum(a[:, 0] == a[:, 1]))}", fontsize=8)
-    P = [(t, v["n_struct_alone"], v["n_struct_v3"]) for t, v in cmp_per.items() if v["n_struct_alone"] or v["n_struct_v3"]]
-    big = 2 ** 15
-    for t, x, y_ in P:
-        xv, yv = (y_ or big), (x or big)
-        axs[1].scatter(xv, yv, s=12, color="tab:blue" if x and y_ else "tab:red")
-        axs[1].annotate(t, (xv, yv), fontsize=6, xytext=(2, 2), textcoords="offset points")
+    P = [(t, v["n_struct_alone"], v["n_struct_v3"], v["n_max_v3"]) for t, v in cmp_per.items() if v["n_struct_alone"] or v["n_struct_v3"]]
+    big = 2 ** 15; both = [p_ for p_ in P if p_[1] and p_[2]]; eq = sum(1 for p_ in both if p_[1] == p_[2])
+    from collections import Counter
+    cnt = Counter((x, y_) for _, x, y_, _ in both)
+    for (x, y_), k in cnt.items():
+        axs[1].scatter(y_, x, s=14 + 10 * k, color="tab:blue")
+        axs[1].annotate(", ".join(t for t, a, b, _ in both if (a, b) == (x, y_)), (y_, x), fontsize=5.5,
+                        xytext=(4, -3), textcoords="offset points")
+    red = {}
+    for t, x, y_, nm in P:
+        if not (x and y_):
+            red.setdefault((y_ or big, x or big), []).append(f"{t} (v3 to n={nm})")
+    for (xv, yv), labs in red.items():
+        axs[1].scatter(xv, yv, s=14, color="tab:red")
+        axs[1].annotate("; ".join(labs), (xv, yv), fontsize=5.5, xytext=(-118, 4), textcoords="offset points")
     axs[1].plot([16, big], [16, big], "k--", lw=0.7); axs[1].set_xscale("log", base=2); axs[1].set_yscale("log", base=2)
-    axs[1].set_xlabel("v3: first analysed n with the exact structure"); axs[1].set_ylabel("DFG alone: first n")
-    axs[1].set_title("Part 10's exact-structure rule (2^15 = never / not analysed)", fontsize=8)
+    axs[1].set_xlabel("v3's DFG member: first n with the exact structure (2^15: none)", fontsize=8); axs[1].set_ylabel("DFG alone: first n")
+    axs[1].set_title(f"Part 10's exact-structure rule: equal for {eq} of the {len(both)} targets with both", fontsize=8)
     fig.tight_layout(); fig.savefig(os.path.join(FIG, "fig_atlas_p10.pdf")); fig.savefig(os.path.join(FIG, "fig_atlas_p10.png"), dpi=130)
     plt.close(fig)
 

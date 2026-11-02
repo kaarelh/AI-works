@@ -179,6 +179,12 @@ def nets(suite):
     return _NETS[suite]
 
 
+def nets_argbest(suite):
+    """{target: the variant(s) attaining nets_best} ('all' if every variant is 'never')."""
+    NR, nb = nets(suite)
+    return {t: ("all never" if not np.isfinite(nb[t]) else "/".join(k for k in CL.NETS if k in NR and NR[k].get(t) == nb[t])) for t in nb}
+
+
 def net_seeds(suite):
     """{variant: seeds} of the networks run on a suite (read from one npz per variant directory)."""
     out = {}
@@ -445,8 +451,15 @@ def nn_full(fn, rdir):
     z = np.load(p); ns = [int(v) for v in z["ns"]]
     I = {(int(n), int(s)): j for j, (n, s) in enumerate(zip(z["net_n"], z["net_s"]))}
     sd = sorted(set(int(s) for s in z["net_s"]))
-    e = [np.mean([z["test_err"][-1, I[(n, s)]] for s in sd if (n, s) in I]) for n in ns]
+    e = [float(np.mean(np.array([z["test_err"][-1, I[(n, s)]] for s in sd if (n, s) in I], float))) for n in ns]
     return dict(nstar=TH.nstar(ns, e), lo=ns[0], hi=ns[-1], seeds=sd)
+
+
+def same_n(a, b, tol=1e-6):
+    """Equal n* up to float rounding (both 'never' counts as equal)."""
+    if not np.isfinite(a) or not np.isfinite(b):
+        return not np.isfinite(a) and not np.isfinite(b)
+    return abs(np.log2(a / b)) < tol
 
 
 def q4():
@@ -506,7 +519,7 @@ def q4():
     d01 = [abs(CH.l2r(DF01[t], DF[30][t])) for t in fns if t in DF01 and t in DF[30] and np.isfinite(DF01[t]) and np.isfinite(DF[30][t])]
     grids = "; ".join(f"d = {d}: " + ", ".join(f"{t} {g['lo']}–{g['hi']}" for t, g in GRID[d].items()) for d in DSC
                       if any(g["lo"] != TH.NS[0] or g["hi"] != TH.NS[-1] for g in GRID[d].values()))
-    full = [(d, t) for d in DSC for t, g in GRID[d].items() if t in NN[d] and not (g["nstar"] == NN[d][t] or (not np.isfinite(g["nstar"]) and not np.isfinite(NN[d][t])))]
+    full = [(d, t) for d in DSC for t, g in GRID[d].items() if t in NN[d] and not same_n(g["nstar"], NN[d][t])]
     out["checks"] = dict(nets_vs_dscale_json_max_abs_log2=max(dev) if dev else None, compared=len(dev),
                          d30_seeds01_vs_all_max_abs_log2=max(d01) if d01 else None, full_grid_differs=full)
     L += ["", "Checks (Numerical): the networks' n* here against `study/dscale.json` (d = 15, 30, 60): largest |log2 difference| "
@@ -584,6 +597,8 @@ def q5():
         if out[tag]["pooled"]["targets"]:
             mv = sorted(moved[tag], key=lambda x: -abs(x[2]) if np.isfinite(x[2]) else -1e9)
             L.append(f"- `{tag}` ({len(mv)} of {out[tag]['pooled']['targets']}): " + (", ".join(f"{su}/{t} ({f_r(v)})" for su, t, v in mv) or "none"))
+    if not any(out[tag]["pooled"]["targets"] for tag, *_ in ABL):
+        L.append("No ablation has run yet.")
     return L + [""], out
 
 
@@ -723,8 +738,8 @@ def compute():
                               paired_ratio_median=float(np.median(b["pr"])) if b["pr"] else None,
                               flops_median=float(np.median(b["f"])), flops_max=float(np.max(b["f"])))
         o = out["by_n"][n]
-        L.append(f"| {n} | {len(c)} | {o['cpu_median']:.2f} / {o['cpu_mean']:.2f} / {o['cpu_max']:.1f} | "
-                 + ("–" if not len(v) else f"{o['v3_cpu_median']:.2f} / {o['v3_cpu_mean']:.2f} / {o['v3_cpu_max']:.1f}") + " | "
+        L.append(f"| {n} | {len(c)} | {o['cpu_median']:.2f} / {o['cpu_mean']:.2f} / {o['cpu_max']:.2f} | "
+                 + ("–" if not len(v) else f"{o['v3_cpu_median']:.2f} / {o['v3_cpu_mean']:.2f} / {o['v3_cpu_max']:.2f}") + " | "
                  + ("–" if o["paired_ratio_median"] is None else f"{o['paired_ratio_median']:.2f}") + f" | {o['flops_median']:.3f} / {o['flops_max']:.3f} |")
     return L + [""], out
 
