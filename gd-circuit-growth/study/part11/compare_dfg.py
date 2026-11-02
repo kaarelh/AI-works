@@ -63,11 +63,11 @@ DL = {"dlheld": "make_dl_heldout_suite", "dlheld2": "make_dl_heldout2_suite", "d
       "dlheld6": "make_dl_heldout6_suite", "dlfamdev": "make_dl_famdev_suite", "dlheld7": "make_dl_heldout7_suite"}  # = eval_dfg.DL
 TOY = [su for su, _ in CL.TOY]                                            # the 11 suites, in Part 10's order
 P10_HELD = [su for su, role in CL.TOY if role.startswith("held out")]     # Part 10's pooled held-out set
-V13 = {"designed": "development (v1.1, v1.3)", "random": "development (v1.1)", "dlheld": "development (v1.1)",
+V13 = {"designed": "development (v1.1, v1.2, v1.3)", "random": "development (v1.1)", "dlheld": "development (v1.1)",
        "dlheld2": "held out for an earlier version only", "dlheld3": "held out for an earlier version only",
-       "dlsymdev": "development (v1.3)", "dlheld4": "exposed (v1.2 developed after it)",
-       "dlheld5": "exposed (v1.2 developed after it)", "dlheld6": "development (v1.3)", "dlfamdev": "development (v1.3)",
-       "dlheld7": "**held out** (the only suite)"}                        # PROTOCOL.md, "Held out"
+       "dlsymdev": "development (v1.2, v1.3)", "dlheld4": "exposed (v1.2 built after exposure)",
+       "dlheld5": "exposed (v1.2 built after exposure)", "dlheld6": "development (v1.3)", "dlfamdev": "development (v1.3)",
+       "dlheld7": "**held out** (the only suite)"}      # PROTOCOL.md "Held out"; v1.2's dev suites: part9/PROTOCOL.md
 ABL = [("nosums", (0, 1), "no sum blocks"), ("strict", (0, 1), "stricter tests (delta)"),
        ("lenient", (0, 1), "more lenient tests (delta)"), ("noeig", (0, 1), "block search without eigenvector seeds"),
        ("noblocks", (0, 1), "no linear or spectral block"), ("nocomp", (0, 1), "no extension or local classes"),
