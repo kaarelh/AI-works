@@ -11,6 +11,10 @@
                                                                                    admitted 64 characters (the cap) or
                                                                                    filled the room p <= n / 2
               The z-scores are DFG's statistics on the target's characters only; other characters are not replayed.
+4. stopping round (added after verification, VERIFY_ORDER.md omission 5): the replay at round R, where the fit stopped.
+              A sign-rule stop ('all-training-signs-right') breaks before testing, so a z > 1 there is expected and
+              only counted; any other stop ('nothing-passed-or-budget-or-room') with a target character at z > 1 is
+              listed as unexplained (it could only be the budget cap or the room, which the cell does not separate).
 """
 import os, sys, json, gzip, glob
 HERE = os.path.dirname(os.path.abspath(__file__)); P11 = os.path.dirname(os.path.dirname(HERE))
