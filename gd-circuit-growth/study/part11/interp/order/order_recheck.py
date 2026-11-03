@@ -143,7 +143,8 @@ def sec_2():
         say("   explicit target characters by (round, class):", dict(Counter((e[0], e[2]) for e in entries(c))))
         PL = np.array(c["phi_ls"]); ch9 = [q for q, ch in enumerate(c["chars"]) if c["deg"][q] >= 6]
         say("   characters with phi >= 1/2 after each round:", [int(np.sum(PL[k] >= 0.5)) for k in range(len(PL))], "of",
-            len(c["chars"]), "; of degree >= 6:", [int(np.sum(PL[k, ch9] >= 0.5)) for k in range(len(PL))], "of", len(ch9))
+            len(c["chars"]), "; of degree >= 6:", [int(np.sum(PL[k, ch9] >= 0.5)) for k in range(len(PL))], "of", len(ch9),
+            "; those after round 0:", [c["chars"][q] for q in ch9 if PL[1, q] >= 0.5])
     say("rmaj9 round-order tau (online seed-mean onsets) at n = 16384, per seed:",
         [r2(x) for x in [p["tau"] for p in T["rmaj9"]["cmp"]["online"]["per_seed"]]])
 
@@ -159,9 +160,11 @@ def sec_3(DM, dfg):
                 top[n] += 1
             if n == 16384:
                 z16["x1x2x3x4"].append(z["x1x2x3x4"]); z16["others"] += [v for ch, v in z.items() if ch != "x1x2x3x4"]
-    say("mux: x1x2x3x4 has the strictly highest round-0 z in", sum(top[n] for n in A.NS if n >= 64), "of 30 fits at n >= 64 and",
-        top[32], "of 3 at n = 32; at n = 16384 its z0", [r2(v) for v in z16["x1x2x3x4"]], "others",
-        r2(min(z16["others"])), "-", r2(max(z16["others"])))
+    n64 = [n for n in A.NS if n >= 64]
+    say(f"mux: x1x2x3x4 has the strictly highest round-0 z in {sum(top[n] for n in n64)} of the {3 * len(n64)} fits at n >= 64 "
+        f"(n = {n64[0]}..{n64[-1]}, {len(n64)} grid values x 3 seeds) and in {top[32]} of 3 at n = 32, {top[16]} of 3 at n = 16; per n "
+        f"{dict(sorted(top.items()))}; at n = 16384 its z0 {[r2(v) for v in z16['x1x2x3x4']]}, the others "
+        f"{r2(min(z16['others']))}-{r2(max(z16['others']))}")
     chars = T["mux"]["chars"]; on = {ch: net_on("mux", ch) for ch in chars}
     for s in A.SEEDS:
         D = T["mux"]["dfg"]["16384"][str(s)]["rounds"]; zz = {ch: -D[ch]["z0"] for ch in chars}
@@ -182,6 +185,12 @@ def sec_3(DM, dfg):
 
 
 def sec_4_2():
+    say("== sec. 4.2  data cost: the per-target examples (DFG per seed and median; networks' n onset, median of seeds)")
+    for fn, chs in (("mux", ["x1x2x3x4"]), ("majpar", ["x1x2", "x3x4", "x5x6"]), ("andxor", T["andxor"]["chars"]),
+                    ("parmaj", [c for c in T["parmaj"]["chars"] if T["parmaj"]["deg"][c] <= 4])):
+        dm = sorted(set(med_dn(fn, ch) for ch in chs)); ds = sorted(set(dn(fn, ch, s) for ch in chs for s in A.SEEDS))
+        nm = sorted(set(A.med([F(x) for x in T[fn]["net_n"][ch]["seeds"]]) for ch in chs))
+        say(f"   {fn} {chs if len(chs) < 4 else str(len(chs)) + ' characters of degree <= 4'}: DFG median {dm} (per seed {ds}); networks' median {nm}")
     say("== sec. 4.2  data cost: rmaj9's cross-block degree-3 characters")
     fn = "rmaj9"; yh = T[fn]["yhat"]; dg = T[fn]["deg"]
     cb = [ch for ch in T[fn]["chars"] if dg[ch] == 3 and abs(yh[ch]) < 0.1]
@@ -307,13 +316,27 @@ def sec_4_3():
     hw = Counter(how(fn, ch, s) for ch in T[fn]["chars"] for s in A.SEEDS)
     say(f"   how at the onset, {sum(hw.values())} character-seeds: {dict(hw)}; block-carried by onset n "
         f"{dict(Counter(int(dn(fn, ch, s)) for ch in T[fn]['chars'] for s in A.SEEDS if how(fn, ch, s) == 'block'))}")
-    yh = T[fn]["yhat"]; by = defaultdict(list)
+    yh = T[fn]["yhat"]; by = defaultdict(list); has6 = lambda c: "6" in c.split("x")
     for ch in T[fn]["chars"]:
         by[med_dn(fn, ch)].append(ch)
     for n0, chs in sorted(by.items()):
-        say(f"   median n {n0}: {len(chs)} characters; |yhat| {dict(Counter(round(abs(yh[c]), 3) for c in chs))}; containing x6: "
-            f"{sum(1 for c in chs if 'x6' in c.split('x'))}; 0.125-characters containing x6: "
-            f"{sum(1 for c in chs if 'x6' in c.split('x') and abs(yh[c]) < 0.2)}")
+        say(f"   median n {n0}: {len(chs)} characters; |yhat| {dict(Counter(round(abs(yh[c]), 3) for c in chs))}; on x1..x5 containing "
+            f"x5: {sum(1 for c in chs if not has6(c) and '5' in c.split('x'))}; containing x6: {sorted(c for c in chs if has6(c)) if len(chs) < 18 else sum(1 for c in chs if has6(c))}; "
+            f"0.125-characters with / without x6: {sum(1 for c in chs if has6(c) and abs(yh[c]) < 0.2)} / {sum(1 for c in chs if not has6(c) and abs(yh[c]) < 0.2)}")
+    say("networks' stages online, for the targets whose text quotes them (start = stage start; Part 5's stages.py chains: a new "
+        "stage when an onset exceeds 1.35 x the previous one; order_stages.md: when it exceeds 1.35 x the stage's first onset)")
+    for fn in ("stair5", "rmaj9", "dlist5", "dnf3", "rand1", "rand3", "sparsepoly", "mux", "majpar", "andxor", "parmaj"):
+        on = {ch: net_on(fn, ch) for ch in T[fn]["chars"]}; dg = T[fn]["deg"]
+        chain = A.net_stages(on)[0]
+        o = sorted((v, ch) for ch, v in on.items() if np.isfinite(v)); start = []
+        for v, ch in o:
+            if start and v <= 1.35 * start[-1][0]:
+                start[-1][1].append(ch)
+            else:
+                start.append((v, [ch]))
+        fmt = lambda g: f"{round(on[g[0]])}-{round(on[g[-1]])} ({len(g)} chars, degrees {min(dg[c] for c in g)}-{max(dg[c] for c in g)})"
+        say(f"   {fn:10s} chaining: {' | '.join(fmt(g) for g in chain)}")
+        say(f"   {'':10s} from the stage start: {' | '.join(fmt(g) for _, g in start)}")
 
 
 def sec_5_3():
