@@ -16,7 +16,10 @@ frozen dfg13.py, DFG(readout="logit")); nothing in the learner changes.  Three k
              n = 64, 256, 1024, 4096: what the final model contains (characters by degree, linear block, spectral
              features, sum blocks), the variant chosen, and what the round-0 log of the final fit admitted.
 
-usage: OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python theory_fits.py [p3] [p2] [p1]
+  p5 cells   the four parity cells at n >= 64 whose FLOP count the parity-path model of check_theory.py does not
+             reproduce: what each fit call admitted in round 0.
+
+usage: OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python theory_fits.py [p3] [p2] [p1] [p5]
 """
 import os, sys, json, gzip, math, time, numpy as np
 
@@ -190,8 +193,41 @@ def run_p1():
             json.dump(out, open(path + ".tmp", "w")); os.replace(path + ".tmp", path)
 
 
+# ------------------------------------------------------------------------------------------------ P5: odd FLOP cells
+P5_CELLS = [("par4", 30, 256, 1), ("par4", 60, 512, 1), ("par3", 30, 16384, 0), ("par3", 60, 8192, 1)]
+
+
+def run_p5():
+    """The parity cells at n >= 64 whose FLOP count the parity-path model does not reproduce: what each fit call
+    admitted in round 0 (original coordinates)."""
+    path = os.path.join(CACHE, "p5_cells.json")
+    out = json.load(open(path)) if os.path.exists(path) else {}
+    for t, d, n, s in P5_CELLS:
+        key = f"{t}__d{d}__n{n}__s{s}"
+        if key in out:
+            continue
+        T = H.targets("designed", d); fn = T[t]["fn"]; L = H.make_learner()
+        X, y = TH.train_data(fn, t, s, n, d)
+        pi = np.random.default_rng([TH.fn_seed(t), s, n, 77]).permutation(d)
+        with H.Recorder(type(L.inner)) as R:
+            o = L.fit(X, y, np.random.default_rng([TH.fn_seed(t), s, n, 77]))
+        calls = []
+        for c in R.calls:
+            lg = c["info"]["log"]
+            calls.append(dict(n=c["n"], force=c["force"], hi=c["hi"], size=int(c["info"]["size"]),
+                              rounds=int(c["info"]["rounds"]), flops=c["flops"],
+                              round0=(None if not lg else dict(new=[sorted(int(pi[i]) for i in S) for S in lg[0]["new"]],
+                                                              blocks=lg[0]["blocks"]))))
+        out[key] = dict(flops=float(o["flops"]), variant=o["info"].get("variant"), calls=calls,
+                        calls_with_linear=sum(1 for c in calls if c["round0"] and "linear" in c["round0"]["blocks"]))
+        print("p5", key, "calls with a linear block in round 0:", out[key]["calls_with_linear"], flush=True)
+        json.dump(out, open(path + ".tmp", "w")); os.replace(path + ".tmp", path)
+
+
 if __name__ == "__main__":
-    what = sys.argv[1:] or ["p2", "p1", "p3"]
+    what = sys.argv[1:] or ["p2", "p1", "p3", "p5"]
+    if "p5" in what:
+        run_p5()
     if "p2" in what:
         run_p2()
     if "p1" in what:

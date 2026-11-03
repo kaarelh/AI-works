@@ -280,3 +280,21 @@ cost of its last round.
 __P5NUM__
 
 __SUMMARY__
+
+## Reproduction and checks of the tooling
+
+- `OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python theory_fits.py` makes and caches three sets of fits in `cache/`:
+  - `p2_cells.json`: the parity cells at n = 16 and 32, with every fold fit's content;
+  - `p1_null_fits.json`: 80 fits on null labels;
+  - `p3/*.json.gz`: 330 cells, seed 0, the 10 `designed` targets that the order analysis did not fit and all 20
+    `random` targets.
+
+  Then `python check_theory.py` writes `check_theory.json`.
+- Every DFG fit is `interp/dfg_hooks.fit_toy_dfg` or its recorder, i.e. the evaluation's own fit (frozen file,
+  md5-checked; the same rows, rng, column permutation and readout). The P3 cells reuse `interp/order/order_fit.py`'s
+  replay functions (`replay_round`, `split_solves`, `columns`, `target_support`), whose decisions ORDER.md validated
+  against DFG's own (3217 admissions, 29890 non-admissions, none unexplained). For the 11 targets it fitted, the P3
+  analysis reads the order analysis' seed-0 cells.
+- The parity cells' test errors and FLOP counts are compared with the result files where they exist (`identity` in each
+  cached cell). The P1 replica of round 0 is checked against DFG's own round-0 decisions on the 80 null fits
+  (`P1.full_fits_replica`).

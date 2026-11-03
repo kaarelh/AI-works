@@ -172,12 +172,21 @@ def p1_section(fast=False):
     for d in (15, 30, 60, 120):
         res["bounds"][str(d)] = {str(k): dict(N=C(d, k), L=L_of(C(d, k)), bound_u1=bound_k(C(d, k), 1.0)) for k in range(1, 7)}
     res["bound_total_deg1to4"] = 4 * DELTA / (2 * Kc); res["bound_total_deg1to6"] = 6 * DELTA / (2 * Kc)
+    from scipy.stats import norm, chi2
+    # Heuristic: the Gaussian approximation of the per-degree level (N nearly independent N(0,1) statistics), and the
+    # chi^2_d tail at the linear block's Laurent-Massart threshold
+    res["gauss_level_u1"] = {str(d): {str(k): C(d, k) * 2 * float(norm.sf(cc * math.sqrt(2 * L_of(C(d, k))))) for k in range(1, 7)}
+                             for d in (15, 30, 60, 120)}
+    res["linear_chi2_level"] = {str(d): float(chi2.sf(d + 2 * math.sqrt(d * math.log(1 / DELTA)) + 2 * math.log(1 / DELTA), d))
+                                for d in (15, 30, 60, 120)}
     us = [0.7, 0.8, 0.9, 1.0]; xs = [0.5, 1.0, 2.0, math.log(1 / DELTA)]
     R = 60 if fast else 300
     plans = ([dict(d=30, n=n, law=law, scale=1.0, hi=False, degrees=(1, 2, 3, 4), direct=False)
               for n in (32, 128, 512, 2048) for law in ("fair", "biased", "fixed")]
              + [dict(d=15, n=n, law="fair", scale=1.0, hi=True, degrees=(1, 2, 3, 4, 5, 6), direct=True) for n in (64, 256, 1024)]
-             + [dict(d=60, n=1024, law="fair", scale=1 / 20, hi=False, degrees=(1, 2, 3, 4), direct=False)])
+             + [dict(d=60, n=410, law="fair", scale=1 / 20, hi=False, degrees=(1, 2, 3, 4), direct=False)])
+    # (the last plan is a 5-fold fit of the cross-validation at n = 512, d = 60: its degree-4 search runs on m4 = 110 of
+    #  its 410 rows, the subsampled case of P1a)
     for pl in plans:
         d, n = pl["d"], pl["n"]; rng = np.random.default_rng([31337, d, n, ["fair", "biased", "fixed"].index(pl["law"])])
         zs, T1s, qs = [], [], []
@@ -192,8 +201,10 @@ def p1_section(fast=False):
             if not zs or k not in zs[0]:
                 continue
             v = np.array([z[k] for z in zs]); N = C(d, k)
+            from scipy.stats import norm
             row["deg"][str(k)] = {f"u{u}": dict(hits=int(np.sum(v >= u)), rate=float(np.mean(v >= u)),
-                                               cp95=cp_upper(int(np.sum(v >= u)), R), bound=bound_k(N, u))
+                                               cp95=cp_upper(int(np.sum(v >= u)), R), bound=bound_k(N, u),
+                                               gauss=min(1.0, N * 2 * float(norm.sf(u * cc * math.sqrt(2 * L_of(N))))))
                                   for u in us}
             row["deg"][str(k)]["max_z"] = float(v.max())
         anyk = np.array([max(z.values()) if z else 0.0 for z in zs])
@@ -690,6 +701,11 @@ def p5_section():
                     dd[str(n)] = d; break
         res["d_star"][lab] = dd
     res["d_star_deg3_skip32_final"] = next(d for d in range(5, 5000) if m_k(3, 10 ** 9, d, 1.0) < 32)
+    # the smallest d at which the budgeted degree-k search can no longer admit even a k-parity: its subsample m_k is
+    # skipped (m_k < 32) or holds no more rows than n_thr(k, d) (P2: n (1 - ybar^2) <= n)
+    res["d_parity_unreachable"] = {f"k{k}_scale{sc}": next(d for d in range(5, 5000)
+                                                          if m_k(k, 10 ** 9, d, sc) < 32 or m_k(k, 10 ** 9, d, sc) <= n_thr(k, d))
+                                   for k in (3, 4) for sc in (1.0, 0.5)}
     for d in (15, 30, 60, 120, 1000):
         GD = TH.gd_flops(d)
         res["exhaustive"][str(d)] = {str(n): {str(k): v / GD for k, v in exhaustive_flops(n, d).items()} for n in (64, 1024, 16384)}
@@ -723,6 +739,22 @@ def p5_section():
                     bad.append(dict(d=d, t=t, n=n, seed=s, ratio=float(Fl[a, b] / pred), path="other"))
     res["check"] = dict(cells=tot, exact_parity_path=ok, exact_with_linear_block=ok_lin, other=tot - ok - ok_lin,
                         other_at_n_le_32=small, details=bad)
+    p5p = os.path.join(TF.CACHE, "p5_cells.json")
+    if os.path.exists(p5p):                                 # refits of the linear-block cells: what round 0 admitted
+        P5c = json.load(open(p5p))
+        lin_cells = [f"{b['t']}__d{b['d']}__n{b['n']}__s{b['seed']}" for b in bad if b["path"].startswith("linear")]
+        res["check"]["linear_cells_refit"] = {k: dict(calls_with_linear=v["calls_with_linear"], flops_equal=None)
+                                             for k, v in P5c.items()}
+        for k_, v in P5c.items():
+            t_, d_, n_, s_ = k_.split("__"); d_, n_, s_ = int(d_[1:]), int(n_[1:]), int(s_[1:])
+            R = rfile(dsuite(d_)); fl = R["fns"][t_]["flops"][R["ns"].index(n_)][R["seeds"].index(s_)]
+            res["check"]["linear_cells_refit"][k_]["flops_equal"] = bool(fl == v["flops"])
+        res["check"]["linear_cells_match_refits"] = sorted(lin_cells) == sorted(P5c)
+    res["max_recorded_over_GD"] = {}
+    for d in (15, 30, 60, 120):
+        R = rfile(dsuite(d)); GD = TH.gd_flops(d)
+        mx = max((np.nanmax(np.array(v["flops"])) / GD, t) for t, v in R["fns"].items())
+        res["max_recorded_over_GD"][str(d)] = dict(ratio=float(mx[0]), target=mx[1])
     for d in (15, 30, 60, 120):
         GD = TH.gd_flops(d); n = 16384
         f = round0_search(n, d, 1.0, True); tot_ = parity_path(n, d, 2, 1.0, True)
