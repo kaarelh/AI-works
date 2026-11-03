@@ -114,7 +114,8 @@ my reading of it. Shares, categories and "complete" are defined in §0.
 **Files.** Tooling: [`dfg_hooks.py`](dfg_hooks.py) (instrumented fits), [`atlas_truth.py`](atlas_truth.py) (each
 target's own representation in DFG's dictionary), [`atlas_run.py`](atlas_run.py) (the fits and their description),
 [`identity_run.py`](identity_run.py), [`identity_dscale.py`](identity_dscale.py) (identity samples), [`cv_counterfactual.py`](cv_counterfactual.py) (the variant
-DFG did not choose), [`atlas_make.py`](atlas_make.py) (tables and figures). Fits: `results/atlas/<suite>__<target>.json`
+DFG did not choose), [`atlas_make.py`](atlas_make.py) (tables and figures), [`atlas_recheck.py`](atlas_recheck.py)
+(the numbers changed after verification). Fits: `results/atlas/<suite>__<target>.json`
 (407 cells, every term of every model), `results/identity/`, `results/cv/`. Tables: [`tables/atlas_summary.md`](tables/atlas_summary.md)
 (one row per target), [`tables/atlas.md`](tables/atlas.md) (the selected n of every target, one model line each),
 [`tables/atlas_cells.csv`](tables/atlas_cells.csv) (all 407 cells), [`tables/atlas_targets.csv`](tables/atlas_targets.csv),
@@ -236,10 +237,10 @@ sum term with the true statistic (the true inner term for a weighted target and 
 modulator for a modulated target), or a product's factors partition it (for f7_03, f7_11 and symand, whose
 specifications give the blocks no modulator or gate characters, only the blocks are checked; §1.9). Also per cell:
 the test error with only the target terms (`err_T_only`) and without the spurious terms (`err_no_S`); the Fourier
-weight of the characters present;
-and what the learned feature set can express whatever DFG's weights: the held-out R² of f on its span, and the
-**oracle error**, the test error of a lightly regularised logistic fit of f on the same features (fitted on 2048 of
-the test inputs, scored on the other 2048).
+weight of the characters present; and what the learned feature set can express whatever DFG's weights: the held-out
+R² of f on its span, and the **oracle error**, the test error of a lightly regularised logistic fit of f on the same
+features (fitted on 2048 of the test inputs, scored on the other 2048; the kernel background is not among these
+features, §2.1).
 
 **Which cells.** Seed 0 on the whole grid n = 16 … 16384 for all 37 targets (407 cells; the tables pick the grid point
 just below and the first one at test error ≤ 0.1, the one nearest 4·n\*_0, and 16384; 256, 1024, 4096 and 16384 where

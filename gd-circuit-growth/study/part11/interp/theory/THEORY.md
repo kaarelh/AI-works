@@ -376,8 +376,8 @@ the observed pass rates:
 | observed pass rate | 0.0006 | 0.020 | 0.062 | 0.115 | 0.373 | 0.623 | 0.941 | 0.983 | 1.000 | 1.000 |
 | normal approximation | 0.0005 | 0.014 | 0.049 | 0.118 | 0.349 | 0.658 | 0.890 | 0.992 | 1.000 | 1.000 |
 
-So the round-0 test's transition is about one doubling wide on either side of n_glob, as the normal approximation
-says, and n_glob is its midpoint.
+So the pass rate rises from about 6% one doubling below n_glob to 94% one doubling above, with n_glob near the midpoint,
+as the normal approximation says.
 
 **First appearance in the model** (`P3.first`). n_first is the first grid n at which χ_S is an explicit feature of the
 final model; n_pred is the first grid n with m > n_glob (P3b).
@@ -387,9 +387,12 @@ final model; n_pred is the first grid n with m > n_glob (P3b).
     64-candidate cap or the room.
   - **2 never.** thr10's x2x8x10 has n_glob = 14498 and z = 0.60 at 16384. majpar's degree-6 term has n_glob = 147.0,
     just at the subsample size m₆ = 147.
-- **321 characters appear although none was predicted.** 262 come through the local class. 53 come through the round-0
-  test near its threshold; 37 of these are maj9's degree-3 characters, with n_glob = 17543 just above the grid, entering
-  at 8192–16384.
+- **321 characters appear although none was predicted.**
+  - 262 come through the local class.
+  - 53 come through the round-0 test near its threshold. 37 of these are maj9's degree-3 characters, with
+    n_glob = 17543 just above the grid, entering at 8192–16384. The other 16 are 14 small characters of dnf3, 1 of
+    thr10 and 1 degree-5 character of rand3.
+  - The rest come through ext2 (4), the global test in a later round (1) and the linear block (1).
 - **949 are neither predicted nor ever seen.** They have small coefficients or degree ≥ 7.
 - **249 characters first appear through the round-0 global test.** For them, n_first/n_glob has median 2^0.26, the same
   +0.26 doublings ORDER.md found over 151 character-seeds of the Part 5 targets.
@@ -649,13 +652,15 @@ background; at n ≤ 512 the 2F fold fits are added with their exact fold sizes 
 
 ## Reproduction and checks of the tooling
 
-- `OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python theory_fits.py` makes and caches three sets of fits in `cache/`:
+- `OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python theory_fits.py` makes and caches four sets of fits in `cache/`:
   - `p2_cells.json`: the parity cells at n = 16 and 32, with every fold fit's content;
-  - `p1_null_fits.json`: 80 fits on null labels;
+  - `p1_null_fits.json`: 110 fits on null labels (80 fair, 30 skewed);
   - `p3/*.json.gz`: 330 cells, seed 0, the 10 `designed` targets that the order analysis did not fit and all 20
-    `random` targets.
+    `random` targets;
+  - `p5_cells.json`: the 4 parity cells with a false linear block.
 
-  Then `python check_theory.py` writes `check_theory.json`.
+  Then `python check_theory.py` writes `check_theory.json` (about 7 minutes single-threaded, mostly P1's simulation);
+  `--only=P3` and similar recompute single sections.
 - Every DFG fit is `interp/dfg_hooks.fit_toy_dfg` or its recorder, i.e. the evaluation's own fit (frozen file,
   md5-checked; the same rows, rng, column permutation and readout). The P3 cells reuse `interp/order/order_fit.py`'s
   replay functions (`replay_round`, `split_solves`, `columns`, `target_support`), whose decisions ORDER.md validated

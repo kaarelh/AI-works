@@ -31,8 +31,8 @@ count and route count.
   - In the existing tables the only changed number is majpar's x1⋯x6 n_glob (147 → 513, item 9).
     `order_targets.md` and `order_degree_size.md` gain a note on dnf3's n-axis entries.
   - New numbers are in `order_numbers.json` under new keys: `net_n_resolution`, `priority_online_seed_matched`,
-    `mechanism.*_without_dnf3` and `rounds_by_n.*.nonpositive_multi`. The stopping-round counts are in
-    `order_validation.json`.
+    `onset_conventions`, `mechanism.*_without_dnf3` and `rounds_by_n.*.nonpositive_multi`. The stopping-round counts
+    are in `order_validation.json`. Route details for single fits (§4.3, §5.3) come from the cells.
   - The figure is unchanged.
 
 **Corrections (old → new; the claim or omission number of VERIFY_ORDER.md in brackets).**
@@ -69,7 +69,8 @@ count and route count.
       and 2 only.
     - In seed 1, 15 are carried by a block, 16 by ext1 or ext2, and 2 never enter (recomputed). The text now says so.
 12. §4.3 parmaj (claim 37): "the pairs and degree-4 terms come by global tests" → at the n onset (128) no test admits
-    any character. Two folded blocks carry 42 of their 45 character-seeds. Global tests take them only at larger n.
+    any character. Two folded blocks carry 42 of their 45 character-seeds. Tests, mostly global ones, take them only
+    at larger n.
 13. §4.3 dnf3 (claim 38): "0.027-characters at 512 (degrees 2–3)" → "256–2048 (one at 16384)". "0.0039-characters
     at 8192–16384 or never" → "from 1024 to never".
     - From the same evidence, checked: the networks' "about 500 characters … from 228 to 1084" → "490 … from 228 to
@@ -80,15 +81,16 @@ count and route count.
     and one stage mixes sizes (rand3).
 15. Short answer 3 and §5.3 (claim 46): "the reverse holds for DFG at degree ≤ 4" and "a large coefficient is admitted
     first whatever its degree" → a tendency on 5 of 8 targets, not a rule.
-16. §5.3 rmaj9 (claim 48): "no route but blocks, and never carried" → carried at some n in every seed and dropped
-    later, so never carried for good (except 7 degree-7 characters).
+16. §5.3 rmaj9 (claim 48): "have no route but blocks, and are never carried" → carried at some n in every seed and
+    dropped later, so never carried for good (except 7 degree-7 characters).
     - **Declined in part.** The verifier says "carried only by blocks, at n = 512–4096".
     - The cells show the local class admitting them as explicit features at n = 2048 (seed 2, 26 of 36) and 4096
       (seed 0, 36 of 36). Blocks also carry them at 8192 (seed 1, 9) and 16384 (seed 0, 7).
-17. §5.4 (claim 50): "all or nothing: a character either passes a test … or not" → "nearly all or nothing". 1134 of the
-    1497 character-seeds carried for good are carried by a block, not by a test of their own.
-18. Short answer 5 and §6 step 3 (claim 57, omission 2): the 5.3-doublings median → block-carried characters of degree
-    ≤ 4 (2.7 outside dnf3). The degree-6 to degree-9 examples have no global route.
+17. §5.4 (claim 50): "all or nothing. A character either passes a test … or it does not" → "nearly all or nothing".
+    1134 of the 1497 character-seeds carried for good are carried by a block, not by a test of their own.
+18. Short answer 5 and §6 step 3 (claim 57, omission 2): "blocks carry characters 5.3 doublings below … rmaj9's
+    x1⋯x9, parmaj's x1⋯x6, dnf3's degree-6 to degree-9 terms" → the 5.3 is quoted for block-carried characters of
+    degree ≤ 4 (2.7 outside dnf3). The named examples have no global route at all.
 19. Short answer 5 and §6 step 2 (claim 58): "an exact replay of DFG's tests" → "… of DFG's character tests (block
     tests not replayed)". "It is why … 1.3–2.4 doublings below" → a descriptive, partly definitional statement, not
     causal until the nocomp/nosums ablations are in.
@@ -210,13 +212,13 @@ count and route count.
     (`analyze_traj.first_cross`).
   - I use the onset of the seed-mean φ curve, located by that rule, and the per-seed onsets as stored.
   - `stages.py` also averages the seeds, but it takes the first checkpoint, without interpolation. Its rule gives
-    somewhat different taus:
+    somewhat different taus (`onset_conventions` in the numbers file):
     - tau(networks' time, DFG n) is +0.21 for mux (+0.09 here) and +0.83 for rmaj9 (+0.68 here);
     - tau(networks' time, networks' n) is +0.50 for majpar (+0.82 here).
   - Recomputed this way, the onsets reproduce TRAJECTORIES.md §2.2 to within about 10% for most characters (576 of
     719). Mux: linear 60–66, x_i·x4 169–176, x1x2x3 430, x1x2x3x4 452.
   - §2.2's table uses the geometric mean of the per-seed onsets instead. The two conventions differ by more than 10%
-    for 143 characters:
+    (larger over smaller > 1.1) for 143 characters (`onset_conventions`):
     - 142 of them are dnf3's (e.g. x2x7: 228 here against 178; x1x4x7: 789 against 996);
     - the other is stair5's x1x2x4 (703 against 588);
     - the largest difference is dnf3's x1⋯x9. Its per-seed onsets are 504, 3209 and 5858 (geometric mean 2115, as in
@@ -257,7 +259,7 @@ bit `eval_dfg.py`'s fit, and also records every `numpy.linalg.solve` solution.
 | networks' n order vs DFG's n order | **yes in data and rule; not in estimator precision for \|ŷ\| well below 0.1** | Same training sets, same n grid, same rule (learned fraction of the final model ≥ 1/2, for good). Differences: networks only for \|S\| ≤ 4; the network's φ is a 4096-point test-set average of its square-loss output, DFG's a cube average of its least-squares function. The test-set average cannot resolve \|ŷ\| well below 0.1 (sd of φ ≈ 0.0156/\|ŷ\|): dnf3, and partly rmaj9 and dlist5 (§7). |
 | networks' time order vs DFG's round order | **no; ranks only** | A round is a test-and-refit step on a fixed sample, not time. DFG uses one round in 86 of the 99 fits at Part 5's n. Its number of rounds shrinks as n grows, while the networks' stage order is the same at every n. |
 | networks' time order vs DFG's round-0 priority z0 | **no; an analogy** | z0 is a statistic of one round. It predicts the order in which DFG would admit characters as n grows, not a time course. |
-| networks' time order vs DFG's n order | **no; an analogy** | Both are "what appears first as the resource grows". The analogy leans on the networks' own time and n orders agreeing (tau 0.19–0.95, median 0.75). |
+| networks' time order vs DFG's n order | **no; an analogy** | Both are "what appears first as the resource grows". The analogy leans on the networks' own time and n orders agreeing (tau 0.19–0.95, median 0.75; 0.55–0.95, median 0.82, with dnf3 restricted to its resolvable characters). |
 
 ### 1.5 Checks (Numerical, [`tables/order_validation.json`](tables/order_validation.json))
 
@@ -402,7 +404,7 @@ the same training set; mean of 3 seeds ([`tables/order_targets.md`](tables/order
 - *rmaj9, dlist5, dnf3:* one marker per (degree, |ŷ|) group at the group's median, with size ∝ √(count) and a bar
   over the 10–90% range of the network onsets.
 - *dnf3:* the open squares of its |ŷ| ≤ 0.027 groups are dominated by the test-set noise of the networks' estimate
-  (§7).
+  (§7). So are its two n-axis taus in the last panel.
 - *Last panel:* the three taus per target.
 
 **Reading.** A target on which the open squares rise with x is one where the networks' n order follows their time
