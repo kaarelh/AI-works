@@ -450,15 +450,18 @@ For the later-round classes, the table gives medians over the characters that en
 | ext1 | 33 (33) | 1.7 | 2.3 | 1.32 | 3.2 | 0.86 |
 | global, rounds ≥ 1 | 37 (37) | 1.4 | 1.7 | 1.00 | 3.3 | 0.85 |
 
-- **The smaller residual is the main factor in every class.** The smaller union bound adds a factor of 1.2–1.7, i.e.
-  at most 0.8 doublings.
+- **The smaller residual is the main factor in every class.** For the composition classes the smaller union bound adds
+  a factor of 1.2–1.7, i.e. at most 0.8 doublings; the global test in later rounds has round 0's union bound.
 - **The local class** is DFG's junta completion, every subset of the inputs in use. It enters after the large terms
   are fitted, when s_j² is about 1/19 of the label variance.
 - **Degree ≥ 7.** 55 of the local class's 332 characters have degree ≥ 7, where no global test exists. Their
   L_glob is that of a hypothetical global test of their degree.
-- **Against ORDER.md.** On the Part 5 targets, ORDER.md found the composition classes entering 1.3–2.4 doublings below
-  n_glob. Here, on 41 targets, ext1 and ext2 enter 1.7 and 1.9 doublings below, the local class 3.7, and the global
-  test in later rounds 1.4.
+- **Against ORDER.md.** On the Part 5 targets ORDER.md took every character-seed admitted by each route, of degree
+  ≤ 4. It found the global route at +0.26 doublings from n_glob, and the composition classes 1.3–2.4 doublings below it
+  (ext1 1.34, ext2 2.42, local 1.74). The same statistic here (41 targets, seed 0; `P3.entry_vs_nglob_all`) is +0.26
+  for the round-0 global test, and 1.8 (ext1), 1.7 (ext2), 3.0 (local) and 1.4 (global test in later rounds) doublings
+  below n_glob. Every character that first enters through a later-round class is in the table above except 3 local
+  ones, so the table's restriction to early or unpredicted characters changes little.
 
 ## 4. P4: sum blocks — what they represent, what grouping loses, and their low-degree weight
 
