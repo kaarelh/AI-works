@@ -46,7 +46,7 @@ items 26–33 correct.
     `onset_conventions`, `mechanism.*_without_dnf3`, `mechanism.dnf3_share_by_how` and
     `rounds_by_n.*.nonpositive_multi`. The stopping-round counts are in `order_validation.json`.
   - The new [`order_recheck.py`](order_recheck.py) prints the numbers that come from single fits or single
-    characters (§1.2, §1.5, §2, §3, §4.2, §4.3, §5.3, §5.4, §7) to
+    characters (§1.2, §1.5, §2, §3, §4.2, §4.3, §5.1, §5.3, §5.4, §7) to
     [`tables/order_recheck.txt`](tables/order_recheck.txt).
   - The figure is unchanged (byte for byte, with the PDF's date fixed by `SOURCE_DATE_EPOCH`).
 
@@ -79,8 +79,8 @@ items 26–33 correct.
 8. §4.3 mux (claim 31): added "(seed 2) a forced pick (z = 0.95)" and the linear block's entries.
 9. §4.3 majpar (claim 33, omission 7): "n_glob is 147, exactly the degree-6 subsample cap" → the 147-row cap holds only
    at n > 512. At n ≤ 512 it is 73 rows, so the global route opens only above 512, and then only marginally. x1⋯x6
-   enters by blocks at 256. `nglob()` now applies the halved cap: the tables show 513 for x1⋯x6 (recomputed; no tau
-   changes).
+   enters by blocks at 256. `nglob()` now applies the halved cap: the tables show 513 for x1⋯x6, the smallest n above
+   512; on the n grid that is 1024, the verifier's value (recomputed; no tau changes).
 10. §4.3 andxor (claim 35): seed 2's product comes after x3x4, in the same round as x1x2, not after both pairs.
 11. §4.3 dlist5 (claim 36): "of higher degree and carried by a block" → "of higher degree in 25 of them".
     - **Applied, with a per-seed qualification.** The verifier's "carried by a block" holds in seeds 0 and 2. It also
