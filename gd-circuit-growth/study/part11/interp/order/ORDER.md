@@ -37,7 +37,8 @@ items 26–33 correct.
   check, plus one sentence added in the first round of corrections.
 - **Regenerated.** `order_analysis.py`, `order_report.py` and `order_validate.py` were re-run single-threaded. Their
   outputs differ from the pre-verification ones only as listed here, and a repeat run reproduces them byte for byte.
-  `order_fit.py` skips the fits that exist; called on 4 stored cells, it reproduces them exactly.
+  `order_fit.py` skips the fits that exist; called on 4 stored cells (`order_recheck.py --refit`), it reproduces them
+  exactly.
   - In the existing tables the only changed number is majpar's x1⋯x6 n_glob (147 → 513, item 9).
     `order_targets.md` and `order_degree_size.md` gain a note on dnf3's n-axis entries. `order_stages.md` now states
     its stage rule and also lists Part 5's chained stages (item 30).
@@ -880,7 +881,8 @@ least-squares function; mean over 33 target-seed cells, each target weighted equ
   - [`order_report.py`](order_report.py): tables and figure.
   - [`order_validate.py`](order_validate.py): identity and replay checks, including the stopping round.
   - [`order_recheck.py`](order_recheck.py): the numbers taken from single fits or single characters, recomputed from
-    the stored files (added after verification).
+    the stored files (added after verification). With `--refit` it also refits 4 stored cells through
+    `order_fit.analyse_cell` and compares them with the stored ones.
   - Run single-threaded, in that order (`OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1`). `order_fit.py` skips the fits
     that exist; `order_report.py` writes the PDF figure with the current date unless `SOURCE_DATE_EPOCH` is set.
 - **Verification.** [`VERIFY_ORDER.md`](VERIFY_ORDER.md) and [`VERIFY_ORDER.json`](VERIFY_ORDER.json), by an
