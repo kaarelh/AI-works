@@ -4,9 +4,10 @@ tables/order_numbers.json, recomputed from the stored files.  Written for the ve
 either in tables/order_numbers.json or tables/order_validation.json (order_report.py, order_validate.py) or printed here.
 Sections follow ORDER.md.  Reads only: results/cells/*.json.gz and results/order_summary.json.gz (order_fit.py,
 order_analysis.py), trajectories/results/*.json (Part 5), the frozen dfg13.py's constructor defaults and budget caps
-(through dfg_hooks), and the 4096 test inputs of harness.test_data (for one character).  No fits.
-Writes tables/order_recheck.txt (the same text as it prints).
-usage: OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python order_recheck.py"""
+(through dfg_hooks), and the 4096 test inputs of harness.test_data (for one character).  No fits, except with
+--refit: 4 stored cells refitted by order_fit.analyse_cell and compared with the stored ones (about 13 CPU-seconds).
+Writes tables/order_recheck.txt (the same text as it prints; the stored file was written with --refit).
+usage: OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python order_recheck.py [--refit]"""
 import os, sys, json, gzip, math, itertools, numpy as np
 from collections import Counter, defaultdict
 
@@ -399,11 +400,25 @@ def sec_7():
     say("mux n = 128 seed 0, x_i x4: phi_final", [r2(c["phi_final"][i]) for i in q], "least-squares", [r2(c["phi_ls"][-1][i]) for i in q])
 
 
+def refit():
+    """--refit: order_fit.analyse_cell on 4 stored cells (about 13 CPU-seconds), compared key by key with the stored cell
+    (all keys but cpu_seconds).  order_fit.py itself skips cells that exist, so this is how it is re-run."""
+    say("== refit  order_fit.analyse_cell on 4 stored cells, against the stored cells")
+    import order_fit as OF                                                      # noqa: E402
+    TT = OF.H.targets("designed")
+    for fn, n, s in (("andxor", 32, 1), ("mux", 64, 2), ("parmaj", 128, 0), ("stair5", 128, 1)):
+        o = json.loads(json.dumps(OF.analyse_cell(fn, s, n, TT))); c = dict(cell(fn, n, s)); c.pop("cpu_seconds", None)
+        diff = sorted(k for k in set(o) | set(c) if o.get(k) != c.get(k))
+        say(f"   {fn} n = {n} seed {s}: " + ("identical" if not diff else f"differs in {diff}"))
+
+
 def main():
     sys.path.insert(0, os.path.dirname(HERE))
     import dfg_hooks as H                                                       # noqa: E402  (sets the runner's sys.path)
     DM = H.E.load_dfg13(); dfg = DM.DFG(readout="logit")                         # md5-checked frozen dfg13.py
     sec_1_2(); sec_1_5(); sec_2(); sec_3(DM, dfg); sec_4_2(); sec_4_3(); sec_5_1(dfg); sec_5_3(); sec_5_4(); sec_7()
+    if "--refit" in sys.argv[1:]:
+        refit()
     open(os.path.join(A.TAB, "order_recheck.txt"), "w").write("\n".join(OUT) + "\n")
 
 
