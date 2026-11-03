@@ -171,7 +171,7 @@ budget each.
 | d = 30 | default fold fits with an admitted feature | forced fold fits with a test-passed feature after the forced ones |
 |---|---|---|
 | p = 0.5 | 2/900 (a degree-1 character; the linear block) | 12/900 (mostly the local class: 9 fits; linear block 2, two-input extension, degree 1) |
-| p = 0.8 | 9/900 (linear block 3, spectral 3, sum blocks 2, degree 1) | **238/900** (n = 32: 121/200; 64: 73/200; 128: 28/100; 256: 15/100; 512: 1/100) |
+| p = 0.8 | 9/900 (linear block 3, spectral 3, sum blocks 2, degree 1) | **238/900** (n = 32: 121/200; 64: 73/200; 128: 28/100; 256: 15/100; 512: 1/100): the local class in 205, sum blocks in 24, the linear block 3, spectral 4, one-input extension 2, degree 1 1 |
 
 <!-- A1 CASCADE -->
 
