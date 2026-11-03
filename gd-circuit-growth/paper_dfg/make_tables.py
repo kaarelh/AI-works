@@ -281,27 +281,30 @@ D7_COLS = [("dfg", "\\hd{DFG\\\\alone}"), ("v3", "v3"), ("lowdeg", code("lowdeg"
 
 @table
 def tab_dlheld7():
-    """dlheld7, one row per target: definition, n* of each learner (bold: the smallest in the row), and the log2 ratios
-    of DFG alone to nets_best and to v3.  Source: RESULTS.json q1_dlheld7.per_target."""
+    """dlheld7, one row per target: n* of each learner (bold: the smallest in the row) and the log2 ratios of DFG alone to
+    nets_best and to v3 (tables/tab_dlheld7.tex); the targets' definitions from study/boolfuncs.py in a full-width block
+    below it (tables/tab_dlheld7_defs.tex).  Source: RESULTS.json q1_dlheld7.per_target and .summary."""
     Q = R["q1_dlheld7"]
     vars_ = [k for k in NETS if k in Q["summary"]]
     cols = [c for c in D7_COLS if not c[0].startswith("nets_") or c[0] in vars_ + ["nets_best"]]
     nd, nc, nn = 3, 2, len([c for c in cols if c[0].startswith("nets")])
-    L = ["\\begin{tabularx}{\\linewidth}{@{}l>{\\raggedright\\arraybackslash}X" + "r" * len(cols) + "rr@{}}", "\\toprule",
-         f" & & \\multicolumn{{{nd}}}{{c}}{{discrete, inputs permuted}} & \\multicolumn{{{nc}}}{{c}}{{calibration}} & "
-         f"\\multicolumn{{{nn}}}{{c}}{{networks}} & \\multicolumn{{2}}{{c}}{{\\hd{{$\\log_2$ ratio, DFG\\\\alone to}}}}\\\\",
-         f"\\cmidrule(lr){{3-{2 + nd}}}\\cmidrule(lr){{{3 + nd}-{2 + nd + nc}}}\\cmidrule(lr){{{3 + nd + nc}-{2 + len(cols)}}}"
-         f"\\cmidrule(l){{{3 + len(cols)}-{4 + len(cols)}}}",
-         "target & definition & " + " & ".join(h for _, h in cols) + " & \\hd{\\code{nets_}\\\\\\code{best}} & v3\\\\", "\\midrule"]
+    L = [r"\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}l" + "r" * len(cols) + "rr@{}}", r"\toprule",
+         rf" & \multicolumn{{{nd}}}{{c}}{{discrete, inputs permuted}} & \multicolumn{{{nc}}}{{c}}{{calibration}} & "
+         rf"\multicolumn{{{nn}}}{{c}}{{networks}} & \multicolumn{{2}}{{c}}{{\hd{{$\log_2$ ratio of\\DFG alone to}}}}\\",
+         rf"\cmidrule(lr){{2-{1 + nd}}}\cmidrule(lr){{{2 + nd}-{1 + nd + nc}}}\cmidrule(lr){{{2 + nd + nc}-{1 + len(cols)}}}"
+         rf"\cmidrule(l){{{2 + len(cols)}-{3 + len(cols)}}}",
+         "target & " + " & ".join(h for _, h in cols) + r" & \hd{\code{nets_}\\\code{best}} & v3\\", r"\midrule"]
+    D = [r"\begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}X@{}}", r"\toprule", r"target & definition\\", r"\midrule"]
     for t, v in Q["per_target"].items():
         vals = {k: num(v.get(k)) for k, _ in cols}
         best = min((x for x in vals.values() if fin(x)), default=None)
-        cell = lambda k: ("\\textbf{" + ns(vals[k]) + "}") if (best is not None and fin(vals[k]) and vals[k] <= best * (1 + 1e-12)) else ns(vals[k])
+        cell = lambda k: (r"\textbf{" + ns(vals[k]) + "}") if (best is not None and fin(vals[k]) and vals[k] <= best * (1 + 1e-12)) else ns(vals[k])
         r1 = num(Q["summary"]["nets_best"]["ratios"][t]); r2 = num(Q["summary"]["v3"]["ratios"][t])
-        L.append(f"{tg(t)} & {{\\scriptsize {desc('dlheld7', t, short=False)}}} & " + " & ".join(cell(k) for k, _ in cols)
-                 + f" & {rt(r1)} & {rt(r2)}\\\\")
-    L += ["\\bottomrule", "\\end{tabularx}"]
-    write("tab_dlheld7", L)
+        L.append(f"{tg(t)} & " + " & ".join(cell(k) for k, _ in cols) + f" & {rt(r1)} & {rt(r2)}" + r"\\")
+        D.append(f"{tg(t)} & {desc('dlheld7', t, short=False)}" + r"\\")
+    L += [r"\bottomrule", r"\end{tabular*}"]
+    D += [r"\bottomrule", r"\end{tabularx}"]
+    write("tab_dlheld7", L); write("tab_dlheld7_defs", D)
     # derived numbers for the text
     S = Q["summary"]["nets_best"]; rr = {t: num(x) for t, x in S["ratios"].items()}
     f = [x for x in rr.values() if fin(x)]; m = sum(f) / len(f)
