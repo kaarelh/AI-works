@@ -917,8 +917,7 @@ def p5_section():
     res["d_star_exceptions_at_d120"] = [dict(fit=lab, n=n, m4_d120=m_k(4, 10 ** 9, 120, sc))
                                         for sc, lab in ((1.0, "final_n_gt_512"), (0.5, "final_n_le_512"), (1 / 20, "fold_5"),
                                                         (1 / 40, "fold_10"))
-                                        for n in NS if res["d_star"][lab][str(n)] < 120 <= 10 ** 9
-                                        and m_k(4, 10 ** 9, 120, sc) >= n]
+                                        for n in NS if res["d_star"][lab][str(n)] < 120 and m_k(4, 10 ** 9, 120, sc) >= n]
     # the fold fits at n <= 512: their row counts n - ceil((n - f) / F), and which global searches are subsampled
     # (m_k < rows) or skipped (m_k < 32)
     res["fold_subsampling"] = {}
@@ -927,11 +926,10 @@ def p5_section():
             if n > DEF["cv_n"]:
                 continue
             F = 10 if n <= 64 else 5; sc = 1 / (4 * F); rows_ = [n - math.ceil((n - f) / F) for f in range(F)]
+            st = lambda k, nf: ("skipped" if m_k(k, nf, d, sc) < 32 else "subsampled" if m_k(k, nf, d, sc) < nf else "all rows")
             res["fold_subsampling"][f"d{d}_n{n}"] = dict(F=F, rows=[min(rows_), max(rows_)],
-                                                         **{f"m{k}": m_k(k, 10 ** 9, d, sc) for k in (3, 4)},
-                                                         **{f"deg{k}": ("skipped" if m_k(k, 10 ** 9, d, sc) < 32 else
-                                                                        "subsampled" if m_k(k, 10 ** 9, d, sc) < max(rows_) else "all rows")
-                                                            for k in (3, 4)})
+                                                         **{f"m{k}_cap": m_k(k, 10 ** 9, d, sc) for k in (3, 4)},
+                                                         **{f"deg{k}": sorted(set(st(k, nf) for nf in rows_)) for k in (3, 4)})
     # the smallest d at which the budgeted degree-k search can no longer admit even a k-parity: its subsample m_k is
     # skipped (m_k < 32) or holds no more rows than n_thr(k, d) (P2: n (1 - ybar^2) <= n)
     res["d_parity_unreachable"] = {f"k{k}_scale{sc}": next(d for d in range(5, 5000)
