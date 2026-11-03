@@ -109,7 +109,7 @@ def derived(noise, tests):
             for n in ns_:
                 mp = rm * fm * ((1 + math.sqrt(d / (fm * n))) ** 2 - 1)
                 thr = 2 * s * math.sqrt(d / n) * (1 + math.sqrt(2 * math.log(1 / DELTA) / d))
-                sp[f"{d}:{p}:{n}"] = dict(minority_edge=mp, dfg_edge=thr, ratio=mp / thr)
+                sp[f"{d}:{p}:{n}"] = dict(minority_edge=mp, dfg_edge=thr, ratio=mp / thr, margin=1 + math.sqrt(2 * math.log(1 / DELTA) / d))
     out["spectral_minority_edge"] = sp
     return out
 
@@ -836,10 +836,10 @@ def tables(res):
     sme = res.get("derived", {}).get("spectral_minority_edge")
     if sme:
         T += ["## Spectral block, a heuristic: the minority rows' Marchenko-Pastur edge against DFG's edge (round 0, noise)", "",
-              "| d | P(y=1) | n | minority edge \\|r-\\| (m-/n)((1+sqrt(d/m-))^2 - 1) | DFG's edge | ratio |", "|---|---|---|---|---|---|"]
+              "| d | P(y=1) | n | minority edge \\|r-\\| (m-/n)((1+sqrt(d/m-))^2 - 1) | DFG's edge | its margin factor 1 + sqrt(2 ln(1/delta)/d) | ratio |", "|---|---|---|---|---|---|---|"]
         for k, v in sme.items():
             d, p, n = k.split(":")
-            T.append(f"| {d} | {p} | {n} | {v['minority_edge']:.3f} | {v['dfg_edge']:.3f} | {v['ratio']:.3f} |")
+            T.append(f"| {d} | {p} | {n} | {v['minority_edge']:.3f} | {v['dfg_edge']:.3f} | {v['margin']:.3f} | {v['ratio']:.3f} |")
         T.append("")
     if "A1" in res:
         A = res["A1"]
