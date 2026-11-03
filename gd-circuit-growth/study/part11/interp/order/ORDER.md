@@ -144,7 +144,9 @@ items 26–33 correct.
     against 2115). The largest ratio belongs to dnf3's x3x6x7x8x9: 1865 against 873, 2.1×.
 28. §4.3 rand1: the networks' last stage, "degrees 3–4 (434)" → "degrees 3–5 (434–607)". It holds x1x3x4x5x6
     (degree 5, 547 steps).
-29. §4.3 rand3: the networks' "mixed degree-3/4 stages" → "mixed stages of degrees 3–6, from 346 to 825 steps".
+29. §4.3 rand3: the networks' "mixed degree-3/4 stages" → "one mixed cascade of degrees 3–6, from 346 to 825
+    steps". In `order_stages.md` the stages that start at 471 and 639 steps both hold degree-5 characters, and the
+    second also the degree-6 one.
 30. §2, §4.3 and `order_stages.md`: the networks' stages in `order_stages.md` do not follow Part 5's rule, as its header
     said.
     - Each stage there is a run of onsets within 1.35× of the stage's first onset. Part 5's `stages.py` chains: an
@@ -398,9 +400,8 @@ the same training set; mean of 3 seeds ([`tables/order_targets.md`](tables/order
   | n = 512 | +0.60 | +0.40 | +0.19 | +0.64 | +0.46 | +0.56 | +0.50 | +0.61 | +0.09 | +0.56 | +0.38 |
 
   All 44 entries are positive. Per seed, 131 of the 132 are positive and one is 0.00 (mux, n = 2048, seed 2). The
-  round-order and half-round-order taus per seed and condition are in the same
-  file (`priority`: `tau_round`, `tau_half`). In one-round fits they only separate what DFG carries from what it
-  leaves out (§2).
+  round-order and half-round-order taus per seed and condition are in the same file (`priority`: `tau_round`,
+  `tau_half`). In one-round fits they only separate what DFG carries from what it leaves out (§2).
 - **What z0 is.** In round 0 the only classes are the global ones, so z0 ≈ |ŷ_S| √n / (s √(2 ln(4K·C(30,|S|)/δ))).
   This holds for |S| ≤ 4 at d = 30. Degrees 5 and 6 are searched on budget-capped subsamples (m ≤ 1374 and ≤ 147
   rows at n > 512; 687 and 73 at n ≤ 512, where the final fit has half the budget), so their z0 is smaller. Degree
@@ -497,10 +498,10 @@ The full lists are in [`tables/order_stages.md`](tables/order_stages.md). Below,
 against DFG's n stages (median seed); verdicts are Heuristic, numbers Numerical. The single-fit details are in
 `order_recheck.txt`.
 - *Network stages.* In `order_stages.md` a stage is a run of onsets within 1.35× of the stage's first onset.
-- Part 5's `stages.py` chains instead: an onset joins the stage if it is within 1.35× of the previous onset. The two
-  rules agree on sparsepoly, mux, majpar, andxor and parmaj.
-- On the other six targets chaining merges some stages (both lists are in `order_stages.md`). Below, a cascade that
-  chaining keeps whole is described as one.
+  - Part 5's `stages.py` chains instead: an onset joins the stage if it is within 1.35× of the previous onset. The
+    two rules agree on sparsepoly, mux, majpar, andxor and parmaj.
+  - On the other six targets chaining merges some stages; `order_stages.md` lists both. Below, a cascade that
+    chaining keeps whole is described as one.
 
 - **sparsepoly: agree.**
   - Networks: x1 (56) → x2x3 (299) → x1x2x3 (532) → x4x5x6 and its products (1234–1542).
@@ -603,7 +604,7 @@ against DFG's n stages (median seed); verdicts are Heuristic, numbers Numerical.
     - At n = 256 it is a single unmodulated product block such as (x1−x2−x3)×(x4+x6+2·x5).
   - By median n: 18 characters at 128 (the 16 on {x1, …, x5} that contain x5, plus x5x6 and x4x5x6), and the other
     14, all containing x6, at 256.
-  - Networks: x5 (69) → x_j·x5 for every j (155) → mixed stages of degrees 3–6, from 346 to 825 steps.
+  - Networks: x5 (69) → x_j·x5 for every j (155) → one mixed cascade of degrees 3–6, from 346 to 825 steps.
 
 ## 5. Part 5's qualitative findings, checked for DFG
 
