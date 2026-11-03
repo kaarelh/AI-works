@@ -416,8 +416,12 @@ def p2_section():
         out["n_thr"][str(d)] = {str(k): n_thr(k, d) for k in (2, 3, 4)}
     p2c = json.load(open(os.path.join(TF.CACHE, "p2_cells.json")))
     agree = dict(n_ge32=0, n_ge32_total=0, jitter_same=0, jitter_total=0, n16_fail_crit=0, n16_total=0,
-                 n16_err0=0, n16_err0_forced=0, n16_forced_holds_S=0)
-    rows_meas = {}; fail_errs = []
+                 n16_err0=0, n16_err0_forced=0, n16_forced_holds_S=0,
+                 # (verification) jitter_total counts every cell with m = n, including the n = 16 cells of par3/par4,
+                 # where degrees 3-4 are not searched and both forms are false by definition; the _searched counts
+                 # keep only the cells where the degree-k search runs on all n rows
+                 jitter_same_searched=0, jitter_total_searched=0, jitter_unsearched_m_eq_n=0)
+    rows_meas = {}; fail_errs = []; unsearched = []
     for d in (15, 30, 60, 120):
         R = rfile(dsuite(d)); T = H.targets("designed", d)
         for t, k in (("par2", 2), ("par3", 3), ("par4", 4)):
@@ -435,6 +439,11 @@ def p2_section():
                     ok = bool(ex) and srch
                     agree["jitter_total"] += int(simple is not None)
                     agree["jitter_same"] += int(simple is not None and bool(simple) == bool(ex))
+                    agree["jitter_total_searched"] += int(simple is not None and bool(srch))
+                    agree["jitter_same_searched"] += int(simple is not None and bool(srch) and bool(simple) == bool(ex))
+                    agree["jitter_unsearched_m_eq_n"] += int(simple is not None and not srch)
+                    if simple is not None and not srch:
+                        unsearched.append(f"{t}__d{d}__n{n}__s{s}")
                     err = float(E[a, b]); pred_seed[a, b] = 0.0 if ok else 0.5
                     key = f"{t}__d{d}__n{n}__s{s}"; var = p2c[key]["variant"] if key in p2c else None
                     holds = None
@@ -482,8 +491,27 @@ def p2_section():
     fz = [c for c in out["cells"] if c["default_folds_with_S"] is not None]
     out["fold_criterion_vs_default_folds"] = dict(cells=len(fz), equal=sum(1 for c in fz if c["folds_pass"] == c["default_folds_with_S"]),
                                                   fold_rows_match_cache=sum(1 for c in fz if c["fold_rows_match_cache"]))
+    out["jitter_unsearched_cells"] = dict(count=len(unsearched), all_n16=all("__n16__" in u for u in unsearched),
+                                          targets=sorted(set(u.split("__")[0] for u in unsearched)), cells=unsearched)
     out["n_thr_rise_15_to_120"] = {str(k): n_thr(k, 120) - n_thr(k, 15) for k in (2, 3, 4)}
     out["two_k_ln8"] = {str(k): 2 * k * math.log(8) for k in (2, 3, 4)}
+    # (verification) n_thr against its growth rate: n_thr = 2c^2 (k ln d - ln k! + ln(4K/delta)) + rem, with
+    # rem = 2c^2 sum_{i<k} ln(1 - i/d) = O(k^2/d) <= 0; 2k ln d alone is a growth rate, not the value
+    dd_ = (15, 30, 60, 120)
+    lead = lambda k, d: 2 * cc * cc * k * math.log(d)
+    const = {k: 2 * cc * cc * (math.log(4 * Kc / DELTA) - math.lgamma(k + 1)) for k in (2, 3, 4)}
+    rem = {(k, d): n_thr(k, d) - lead(k, d) - const[k] for k in (2, 3, 4) for d in dd_ + (1000,)}
+    below = [1 - lead(k, d) / n_thr(k, d) for k in (2, 3, 4) for d in dd_]
+    out["n_thr_decomposition"] = dict(
+        const_2c2_ln4Kdelta_minus_2c2_lnkfact={str(k): const[k] for k in (2, 3, 4)},
+        two_c2_ln4Kdelta=2 * cc * cc * math.log(4 * Kc / DELTA),
+        two_c2_k_ln_d={str(d): {str(k): lead(k, d) for k in (2, 3, 4)} for d in dd_ + (1000,)},
+        remainder={str(d): {str(k): rem[(k, d)] for k in (2, 3, 4)} for d in dd_ + (1000,)},
+        remainder_closed_form_check=max(abs(rem[(k, d)] - 2 * cc * cc * sum(math.log(1 - i / d) for i in range(k)))
+                                        for k in (2, 3, 4) for d in dd_ + (1000,)),
+        max_abs_remainder_d15_120=max(abs(rem[(k, d)]) for k in (2, 3, 4) for d in dd_),
+        two_k_ln_d_range_d15_120=[min(lead(k, d) for k in (2, 3, 4) for d in dd_), max(lead(k, d) for k in (2, 3, 4) for d in dd_)],
+        two_k_ln_d_below_n_thr_frac_d15_120=[min(below), max(below)])
     p4 = p_pass(32, 4, 30)
     out["par4_d30_n32"] = dict(p_pass=p4, p_at_least_2_of_3_fail=3 * (1 - p4) ** 2 * p4 + (1 - p4) ** 3,
                                pass_iff_abs_sum_y_le=max(v for v in range(0, 33, 2) if 32 * (1 - (v / 32) ** 2) > n_thr(4, 30)))
@@ -648,6 +676,25 @@ def p3_section():
                                median_v_ratio=float(np.median([f["v_ratio"] for f in v if f["v_ratio"]])),
                                median_log2_gain=float(np.median([math.log2(f["L_ratio"] * f["s_ratio"] * (f["v_ratio"] or 1)) for f in v])))
                       for cl, v in fac.items()}
+    # (verification) the factor table gives medians of each factor separately: their spread per character, the
+    # product of the medians (not the median gain), and the union-bound factor of the degree <= 6 characters alone
+    q_ = lambda a: [float(np.min(a)), float(np.percentile(a, 25)), float(np.median(a)), float(np.percentile(a, 75)), float(np.max(a))]
+    spread = {}
+    for cl, rv in ent.items():                                   # ent[cl]: the rows behind fac[cl], in the same order
+        v = [r["factors"] for r in rv]
+        Lr = np.array([f["L_ratio"] for f in v]); Sr = np.array([f["s_ratio"] for f in v])
+        Vr = np.array([f["v_ratio"] for f in v if f["v_ratio"]])
+        Gn = np.array([math.log2(f["L_ratio"] * f["s_ratio"] * (f["v_ratio"] or 1)) for f in v])
+        k6 = np.array([r["k"] <= 6 for r in rv])
+        pm = float(np.median(Lr) * np.median(Sr) * np.median(Vr))
+        spread[cl] = dict(min_q1_median_q3_max=dict(L_ratio=q_(Lr), s_ratio=q_(Sr), v_ratio=q_(Vr), log2_gain=q_(Gn)),
+                          product_of_medians=pm, log2_product_of_medians=math.log2(pm),
+                          deg_le6=dict(count=int(k6.sum()), L_ratio=q_(Lr[k6]) if k6.any() else None,
+                                       frac_L_ratio_gt_1p7=float(np.mean(Lr[k6] > 1.7)) if k6.any() else None,
+                                       n_L_ratio_gt_1p7=int(np.sum(Lr[k6] > 1.7))))
+    allS = np.array([f["s_ratio"] for v in fac.values() for f in v])
+    spread["all_classes"] = dict(count=int(allS.size), s_ratio_min=float(allS.min()), s_ratio_max=float(allS.max()))
+    res["factors_spread"] = spread
     # the later-than-predicted cases: test failed at the predicted n (fluctuation) or passed but capped
     late = dict(z_below_1_at_pred=0, z_above_1_at_pred=0, z_none_at_pred=0, examples=[], predicted_never_seen=[])
     for r in rows:
@@ -676,6 +723,14 @@ def p3_section():
                             observed=float(cb[sel, 1].mean()), predicted=float(cb[sel, 2].mean())))
     res["test0"]["calibration"] = cal
     res["test0"]["calibration_max_abs_diff"] = max(abs(c["observed"] - c["predicted"]) for c in cal)
+    # (verification) the agreement of n > n_glob with the round-0 decision, by distance from n_glob: the 96.9% is
+    # dominated by the pairs far from n_glob
+    lr_, ap_ = cb[:, 0], cb[:, 1].astype(int); agr_ = ((lr_ > 0).astype(int) == ap_)
+    bands_ = dict(within_1_doubling=(lr_ > -1) & (lr_ <= 1), one_to_two_doublings=((lr_ > -2) & (lr_ <= -1)) | ((lr_ > 1) & (lr_ <= 2)),
+                  at_least_2_below=lr_ <= -2, more_than_2_above=lr_ > 2, beyond_2_doublings=(lr_ <= -2) | (lr_ > 2))
+    res["test0"]["agree_by_distance"] = {nm_: dict(pairs=int(sel.sum()), agree=int(agr_[sel].sum()),
+                                                  frac=float(agr_[sel].mean()) if sel.any() else None)
+                                         for nm_, sel in bands_.items()}
     # the characters whose first explicit entry is the round-0 global test: log2(n_first / n_glob)
     g0 = [r for r in rows if r["route"] and r["route"]["how"] == "test" and r["route"]["cls"] == "global"
           and r["route"]["round"] == 0]
@@ -751,6 +806,34 @@ def p3_section():
     res["deg56_reach"] = dict(m5_scale1=m_k(5, 10 ** 9, 30, 1.0), m6_scale1=m6, m5_scale05=m_k(5, 10 ** 9, 30, 0.5),
                               m6_scale05=m_k(6, 10 ** 9, 30, 0.5),
                               abs_yhat_deg6_needed=math.sqrt(2 * cc * cc * L_of(C(30, 6)) / m6))
+    # (verification) P3a's setting at d = 30: on how many rows each fit call's round-0 global degree-k search runs
+    # (0 = skipped), for the final fit and, at n <= cv_n, the fold fits (F folds of n - ceil((n - f)/F) rows)
+    srows = lambda k, n, sc, hi: (m_k(k, n, 30, sc) if k >= 3 else n) if searched(k, n, 30, sc, hi) else 0
+    d30 = {}
+    for n in NS:
+        e_ = dict(final={str(k): srows(k, n, final_scale(n), True) for k in range(1, 7)})
+        if n <= DEF["cv_n"]:
+            F_ = 10 if n <= 64 else 5; fr = sorted(set(n - math.ceil((n - f) / F_) for f in range(F_)))
+            e_["folds"] = {str(nf): {str(k): srows(k, nf, 1 / (4 * F_), False) for k in range(1, 5)} for nf in fr}
+        d30[str(n)] = e_
+    res["d30_searched_rows"] = dict(
+        rows=d30,
+        deg12_all_rows_every_call=all(c_[str(k)] == int(nf) for n, e_ in d30.items()
+                                      for nf, c_ in [(n, e_["final"])] + list(e_.get("folds", {}).items()) for k in (1, 2)),
+        deg34_final_all_rows_from=min(int(n) for n, e_ in d30.items() if all(e_["final"][str(k)] == int(n) for k in (3, 4))),
+        deg34_final_all_rows_every_n_from_32=all(e_["final"][str(k)] == int(n) for n, e_ in d30.items() if int(n) >= 32 for k in (3, 4)),
+        deg34_skipped_n16_final=all(d30["16"]["final"][str(k)] == 0 for k in (3, 4)),
+        deg34_folds_all_rows_or_skipped=all(c_[str(k)] in (0, int(nf)) for e_ in d30.values() for nf, c_ in e_.get("folds", {}).items()
+                                            for k in (3, 4)),
+        deg34_folds_searched_from_n=min(int(n) for n, e_ in d30.items()
+                                        if e_.get("folds") and all(c_[str(k)] > 0 for c_ in e_["folds"].values() for k in (3, 4))))
+    # P3c's later-round classes at d = 30: ext1 and the local class use all rows; the global degree <= 3 search is as
+    # in round 0 (all rows from 32 rows on); ext2's row cap with the most bases (32) against every call's rows
+    calls_ = [(int(n), final_scale(int(n))) for n in d30] + [(int(nf), 1 / (4 * (10 if int(n) <= 64 else 5)))
+                                                              for n, e_ in d30.items() for nf in e_.get("folds", {})]
+    cap2 = lambda sc: int(BUD[2] * TH.gd_flops(30) * sc / (DEF["max_ext_bases"] * (2 * 30 * 30 + 3 * 30)))
+    res["d30_searched_rows"]["ext2_rows_cap_max_bases"] = {f"scale_{sc:g}": cap2(sc) for sc in sorted(set(s_ for _, s_ in calls_))}
+    res["d30_searched_rows"]["ext2_all_rows_every_call"] = all(cap2(sc) >= r_ for r_, sc in calls_)
     fo = [r for r in rows if r["route"] and r["route"]["how"] == "forced"]
     res["first"]["forced"] = dict(count=len(fo), n_first=sorted(r["n_first"] for r in fo))
     res["first"]["predicted_in_grid"] = sum(1 for r in rows if r["n_pred"] is not None)

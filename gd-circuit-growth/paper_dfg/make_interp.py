@@ -33,7 +33,8 @@ Part 1 (sections/interp.tex):
 Part 2 (sections/interp_dyn.tex): its functions follow part 1's, in their own block at the end of the file.
   fig_dyn_when          (a) DFG's round-0 decisions against n > n_glob, by band of n / n_glob (check_theory.json P3.test0);
                         (b, c) the threshold ablations strict and lenient, log2 n* ratio per target by class of target,
-                        against the moves expected if the test set n* (RESULTS.json q5_ablations; ablations/families.py)
+                        against the moves expected if the test set n* (RESULTS.json q5_ablations; ablations/families.py;
+                        the block threshold's move and n* against n_detect from ABLATIONS.md's ablations.json)
   tab_dyn_when          (a) the classes of later rounds against n_glob (check_theory.json P3); (b) the 13 sum-structured
                         atlas targets: Part 10's n_detect (corrected) against DFG alone's n_struct (atlas_targets.csv)
   fig_dyn_order         the order figure of ORDER.md re-plotted at the paper's width (order_chars.csv, order_numbers.json)
@@ -616,6 +617,17 @@ def p10_power(suite, target):
 MOD3 = [("dlheld7", "f7_05"), ("dlheld6", "h6_00"), ("dlfamdev", "fd_10")]
 
 
+def minority_rate(suite, target):
+    """The test set's minority rate (the harness's fixed 4096 test inputs; no fit)."""
+    if INTERP not in sys.path:
+        sys.path.insert(0, INTERP)
+    import dfg_hooks as H                                  # noqa: E402  loads the harness and the suite definitions
+    fn = H.targets(suite, 30)[target]["fn"]
+    _, yte = H.TH.test_data(fn, target, 30)
+    m = float(np.mean(np.asarray(yte) == 1))
+    return min(m, 1 - m)
+
+
 @item
 def tab_interp_mod3():
     """The three residue classes mod 3 of a signed count: exact low-degree weight (THEORY.md P4), DFG's test on the true
@@ -623,9 +635,9 @@ def tab_interp_mod3():
     the sample sizes are Heuristic), and DFG alone's test error (result files)."""
     TH = json.load(open(THEORY))["P4"]["targets"]
     L = ["\\begin{tabular}{@{}llrrrrrrrr@{}}", "\\toprule",
-         "& & & & & \\multicolumn{2}{c}{true block over threshold} & \\multicolumn{2}{c}{the search's seeds, $n=16384$} & DFG alone\\\\",
+         "& & & & & \\multicolumn{2}{c}{true block: test} & \\multicolumn{2}{c}{search's seeds} & DFG alone\\\\",
          "\\cmidrule(lr){6-7}\\cmidrule(lr){8-9}",
-         "target & definition & $k$ & $W_1+W_2$ & peak & first $n>1$ & at $16384$ & signal/noise & $n$ needed & error, $n=16384$\\\\",
+         "target & definition & $k$ & $W_1+W_2$ & peak & passes from & \\hd{over threshold\\\\at 16384} & \\hd{signal/noise\\\\at 16384} & \\hd{eigenvector\\\\needs $n$} & \\hd{error at\\\\16384}\\\\",
          "\\midrule"]
     out = {}
     for suite, t in MOD3:
@@ -634,12 +646,13 @@ def tab_interp_mod3():
         nd = min(n for n, c in cells.items() if c["unfold"]["ratio"] > 1)
         r16 = cells[16384]["unfold"]["ratio"]
         e = dfg_err(suite, t); e16 = float(np.mean(e[16384]))
+        assert len(set(e[16384])) == 1 and abs(e16 - minority_rate(suite, t)) < 1e-12   # a constant prediction
         dfn = p["desc"].replace("B mod 3", "B\\bmod3").replace("!=", "\\ne").replace("==", "=")
         out[t] = dict(k=p["k"], W1W2=p["W1W2"], peak=p["W_peak_degree"], nonzero=p["nonzero_nonconstant_chars"],
                       block_params=p["block_params"], detect_n=nd, ratio16384=r16, snr=p["pair_snr_n16384"],
                       n_bbp=p["n_bbp_heuristic"], n_deg1=p["n_degree1_heuristic"], err16384_seeds=e[16384], err16384_mean=e16)
         L.append(f"{tt(t)} & ${dfn}$ & {p['k']} & ${sci(p['W1W2'])}$ & {p['W_peak_degree']} & {nd} & {r16:.0f} & {p['pair_snr_n16384']:.3f} & "
-                 f"${sci(min(p['n_bbp_heuristic'], p['n_degree1_heuristic']))}$ & {e16:.3f}\\\\")
+                 f"${sci(p['n_bbp_heuristic'])}$ & {e16:.4f}\\\\")
     L += ["\\bottomrule", "\\end{tabular}"]
     assert [round(out[t]["ratio16384"]) for _, t in MOD3] == [134, 139, 155]
     write_tex("tab_interp_mod3", L)
@@ -741,6 +754,10 @@ def tab_interp_atlas_targets():
     store("tab_interp_atlas_targets", out)
 
 
+def e4(e):
+    return "0" if e == 0 else f"{e:.4f}"
+
+
 @item
 def tab_interp_spur():
     """Appendix: spurious terms by n on the 21 designed and 20 random targets, seed 0 (CALIB.md section 2.1)."""
@@ -755,7 +772,7 @@ def tab_interp_spur():
         b = A2[str(n)]; a = b["all"]
         L.append(f"{n} & {b['n_learned']} & {a['terms']} & {a['spur_terms']} ({b['count_share_all']:.3f}) & {b['spur_by_cat']['chi_lin']} & "
                  f"{b['spur_excl_lin']}/{b['terms_excl_lin']} ({b['count_share_excl_lin']:.3f}) & {a['share_mean']:.3f} & {a['share_max']:.3f} & "
-                 f"{a['err_mean']:.4f} / {a['err_noS_mean']:.4f}\\\\")
+                 f"{e4(a['err_mean'])} / {e4(a['err_noS_mean'])}\\\\")
         tot["terms"] += a["terms"]; tot["spur"] += a["spur_terms"]; tot["lin"] += b["spur_by_cat"]["chi_lin"]
         tot["other"] += b["spur_excl_lin"]; tot["other_terms"] += b["terms_excl_lin"]
     L += ["\\midrule",
@@ -777,6 +794,9 @@ def tab_interp_spur():
 #                                                 classes (factors, entry_vs_nglob, entry_vs_nglob_all)      (THEORY.md)
 #   study/part11/RESULTS.json                     q5_ablations: n* of strict / lenient and of DFG alone on the same seeds
 #   study/part11/interp/ablations/families.py     the ablation analysis' assignment of the targets to families
+#   study/part11/interp/ablations/ablations.json  ABLATIONS.md's numbers: the block threshold's move at the true
+#                                                 blocks' detection points (block_thr_shift), n* against n_detect
+#                                                 (block_gap), the paired null (nulls)
 #   study/part11/interp/tables/atlas_targets.csv  n_struct (Part 10's rule) of DFG alone and of v3's member; n*_0
 #   study/part10/interp/tables/toy_timing.csv     Part 10's n_detect, low-degree share and T / threshold at n_struct
 #   study/part10/interp/VERIFICATION.json         the corrected detection points of the gate and multiplexer mixtures
@@ -841,6 +861,11 @@ def _dchar_shift(k, delta):
     return math.log2(_dL(k, delta) / _dL(k))
 
 
+def _dabl():
+    """ABLATIONS.md's machine-readable numbers (ablations.py writes them; every number of ABLATIONS.md is in it)."""
+    return json.load(open(os.path.join(DYN_ABL, "ablations.json")))
+
+
 def _dfam():
     if DYN_ABL not in sys.path:
         sys.path.insert(0, DYN_ABL)
@@ -877,7 +902,7 @@ def dyn_class_summary(rows, ab):
     return out
 
 
-def _dbeeswarm(ys, w=0.085, h=0.05):
+def _dbeeswarm(ys, w=0.062, h=0.045):
     """Horizontal offsets that keep markers at nearly equal y apart (deterministic)."""
     order = sorted(range(len(ys)), key=lambda i: ys[i]); placed = []; off = [0.0] * len(ys)
     for i in order:
@@ -914,47 +939,61 @@ def fig_dyn_when():
     ax.grid(True, color=GRID, lw=0.4); ax.set_axisbelow(True)
     # (b), (c) strict and lenient
     ch = {ab: (_dchar_shift(4, dl), _dchar_shift(1, dl)) for ab, dl in (("strict", DYN_STRICT), ("lenient", DYN_LENIENT))}
-    bl = {ab: [_dblock_shift(k, dl) for k in range(4, 15)] for ab, dl in (("strict", DYN_STRICT), ("lenient", DYN_LENIENT))}
-    lab = {}
+    A = _dabl(); bts = A["block_thr_shift"]
+    bl = {ab: [bts[ab]["min"], bts[ab]["max"]] for ab in ("strict", "lenient")}   # ABLATIONS.md section 2
+    gap = {r["target"]: r["gap"] for r in A["block_gap"]["rows"]}                  # log2(n* / n_detect), seeds 0-1
+    far = {t for t, g in gap.items() if g >= 1}
+    assert len(far) == A["block_gap"]["gap_ge1"]
+    lab = {}; XP = [0, 1.2, 2.45]                                    # x positions of the three classes
     for ax, ab, ttl in ((axs[1], "strict", "(b) strict, δ = 10$^{-4}$ (+6.9 nats)"),
                         (axs[2], "lenient", "(c) lenient, δ = 0.9 (−2.2 nats)")):
-        lo, hi = sorted(ch[ab]); ax.add_patch(plt.Rectangle((-0.45, lo), 1.9, hi - lo, color=DYN_BAND["char"], alpha=0.16, lw=0, zorder=1))
-        lo, hi = min(bl[ab]), max(bl[ab]); ax.add_patch(plt.Rectangle((1.55, lo), 0.9, hi - lo, color=DYN_BAND["sum"], alpha=0.22, lw=0, zorder=1))
+        lo, hi = sorted(ch[ab]); ax.add_patch(plt.Rectangle((-0.45, lo), XP[1] + 0.9, hi - lo, color=DYN_BAND["char"], alpha=0.16, lw=0, zorder=1))
+        lo, hi = min(bl[ab]), max(bl[ab]); ax.add_patch(plt.Rectangle((XP[2] - 0.6, lo), 1.2, hi - lo, color=DYN_BAND["sum"], alpha=0.22, lw=0, zorder=1))
         ax.axhline(0, color=INK2, lw=0.6)
-        for x0, (c, _) in enumerate(DYN_CLS):
-            sel = [r for r in rows if r["cls"] == c and r[ab] is not None]; ys = [r[ab] for r in sel]
+        for i, (c, _) in enumerate(DYN_CLS):
+            x0 = XP[i]; sel = [r for r in rows if r["cls"] == c and r[ab] is not None]; ys = [r[ab] for r in sel]
             off = _dbeeswarm(ys)
-            ax.scatter([x0 + o for o in off], ys, s=10, color="#2a78d6" if c != "sum" else "#1a7f5a", edgecolors="white",
-                       linewidths=0.35, zorder=3)
+            ax.scatter([x0 + o for o in off], ys, s=7, color="#2a78d6" if c != "sum" else "#1a7f5a", edgecolors="white",
+                       linewidths=0.3, zorder=3)
+            rg = [(x0 + o, r[ab]) for r, o in zip(sel, off) if f"{r['suite']}/{r['target']}" in far]
+            if rg:
+                ax.scatter([a for a, _ in rg], [b for _, b in rg], s=26, facecolors="none", edgecolors=INK, linewidths=0.6,
+                           zorder=4)
             for r, o in zip(sel, off):
                 if r["target"] in DYN_LABEL[ab]:
                     ax.annotate(r["target"], (x0 + o, r[ab]), xytext=(4, -2.5), textcoords="offset points", fontsize=7,
                                 color=INK2)
                     lab.setdefault(ab, []).append([r["target"], round(r[ab], 3)])
         S = dyn_class_summary(rows, ab)
-        ax.set_xticks(range(3))
-        ax.set_xticklabels([f"{c}\n({S[c]['both']}" + ("" if S[c]["both"] == S[c]["targets"] else f" of {S[c]['targets']}") + ")"
-                            for c, _ in DYN_CLS])
-        ax.set_xlim(-0.6, 2.6); ax.set_ylim(-1.0, 1.12)
+        ax.set_xticks(XP)
+        ax.set_xticklabels([{"sum": "symmetric,\nmixture"}.get(c, c) + f"\n({S[c]['both']}" +
+                            ("" if S[c]["both"] == S[c]["targets"] else f" of {S[c]['targets']}") + ")" for c, _ in DYN_CLS])
+        ax.set_xlim(-0.62, XP[2] + 0.7); ax.set_ylim(-1.0, 1.12)
         ax.set_title(ttl, loc="left"); ax.grid(True, axis="y", color=GRID, lw=0.4); ax.set_axisbelow(True)
         if ab == "strict":
             ax.set_ylabel("log$_2$(n* ablation / n* DFG alone)")
     hs = [plt.Rectangle((0, 0), 1, 1, color=DYN_BAND["char"], alpha=0.3, lw=0),
-          plt.Rectangle((0, 0), 1, 1, color=DYN_BAND["sum"], alpha=0.4, lw=0)]
+          plt.Rectangle((0, 0), 1, 1, color=DYN_BAND["sum"], alpha=0.4, lw=0),
+          Line2D([], [], marker="o", ls="", markerfacecolor="none", markeredgecolor=INK, markeredgewidth=0.7, markersize=5.5)]
     fig.legend(hs, ["move expected if the global character test set n* (degrees 1–4)",
-                    "move expected if the sum-block test set n* (blocks of 4–14 inputs)"],
-               loc="lower left", ncol=1, frameon=False, fontsize=7, bbox_to_anchor=(0.36, -0.015))
-    fig.subplots_adjust(left=0.075, right=0.99, top=0.9, bottom=0.30)
+                    "move of the true block's threshold at its detection point (the 33 targets)",
+                    f"n* a doubling or more beyond the true block's detection point ({len(far)} targets)"],
+               loc="lower left", ncol=1, frameon=False, fontsize=7, bbox_to_anchor=(0.33, -0.02))
+    fig.subplots_adjust(left=0.075, right=0.99, top=0.9, bottom=0.36)
     save_fig(fig, "fig_dyn_when")
     store("fig_dyn_when", dict(
         source=dict(test0="study/part11/interp/theory/check_theory.json P3.test0",
                     ablations="study/part11/RESULTS.json q5_ablations (strict, lenient)",
-                    families="study/part11/interp/ablations/families.py (coarse classes)"),
+                    families="study/part11/interp/ablations/families.py (coarse classes)",
+                    ablation_analysis="study/part11/interp/ablations/ablations.json (block_thr_shift, block_gap, nulls)"),
         calibration=cal, pairs=t0["pairs"], agree=t0["agree"], agree_frac=t0["agree_frac"],
         fp=t0["fp"], fn=t0["fn"], fp_within_1=t0["fp_within_1"], fn_within_1=t0["fn_within_1"],
         calibration_max_abs_diff=t0["calibration_max_abs_diff"],
         char_shift={ab: dict(deg4=v[0], deg1=v[1]) for ab, v in ch.items()},
-        block_shift={ab: dict(k4_to_14=v) for ab, v in bl.items()},
+        block_shift={ab: dict(min=v[0], max=v[1], median=bts[ab]["median"]) for ab, v in bl.items()},
+        far_targets={t: dict(gap=gap[t], strict=next(r["strict"] for r in rows if f"{r['suite']}/{r['target']}" == t),
+                             lenient=next(r["lenient"] for r in rows if f"{r['suite']}/{r['target']}" == t)) for t in sorted(far)},
+        paired_null=A["nulls"]["paired_seed01"]["pooled"],
         by_class={ab: dyn_class_summary(rows, ab) for ab in ("strict", "lenient")}, labelled=lab,
         sum_by_family={ab: {fam: dict(both=sum(1 for r in rows if r["cls"] == "sum" and r["family"] == fam and r[ab] is not None),
                                       within_002=sum(1 for r in rows if r["cls"] == "sum" and r["family"] == fam and r[ab] is not None and abs(r[ab]) <= 0.02),
@@ -990,7 +1029,7 @@ def tab_dyn_when():
     n_struct (atlas_targets.csv; toy_timing.csv; VERIFICATION.json)."""
     P3 = json.load(open(THEORY))["P3"]; F, E, EA = P3["factors"], P3["entry_vs_nglob"], P3["entry_vs_nglob_all"]
     names = [("global_r0", "global test, round 0"), ("global_r1+", "global test, rounds $\\ge1$"), ("ext1", "extension by one input"),
-             ("ext2", "extension by two inputs"), ("local", "local class (subsets of the inputs in use)")]
+             ("ext2", "extension by two inputs"), ("local", "local (subsets of the inputs in use)")]
     A = []
     L = ["\\begin{tabular}{@{}lrrrrrr@{}}", "\\toprule",
          "\\multicolumn{7}{@{}l}{(a) Characters by the class that first admits them: 41 targets, seed 0, every grid $n$}\\\\",
@@ -1035,7 +1074,7 @@ def tab_dyn_when():
         form = b["kind"].replace("+", "/").replace("modular", "mod") + ("" if b["mixture"] == "pure" else f"; {b['mixture']}")
         nd = f"{b['n_detect']}" + ("$^\\dagger$" if b["n_detect"] != b["n_detect_p10"] else "")
         ns = "never" if b["n_struct"] is None else f"{b['n_struct']:.0f}"
-        dl = "--" if b["delay"] is None else f"${b['delay']:+.0f}$"
+        dl = "--" if b["delay"] is None else ("0" if b["delay"] == 0 else f"${b['delay']:+.0f}$")
         n0 = "never" if not math.isfinite(b["nstar0"]) else f"{b['nstar0']:.0f}"
         L.append(f"{tt(b['target'])} & {form} & {b['k']} & {b['low2']:.3f} & {nd} & {ns} & {dl} & {n0}\\\\")
     L += ["\\bottomrule", "\\end{tabular}"]
@@ -1175,29 +1214,28 @@ def tab_dyn_order():
     for n in ns:
         assert RB[n]["cells"] == 33
     def f(v):
-        return "all tied" if v is None else f"${v:+.2f}$"
-    L += ["\\begin{tabular}{@{}lrrrrrrrrr@{}}", "\\toprule",
-          "\\multicolumn{10}{@{}l}{(b) Per target: Kendall $\\tau_b$ over its Fourier characters (positive: same order)}\\\\", "\\midrule",
-          " & & \\multicolumn{5}{c}{order against order} & \\multicolumn{3}{c}{order against degree / $1/|\\hat y|$}\\\\",
-          "\\cmidrule(lr){3-7}\\cmidrule(l){8-10}",
+        return "tied" if v is None else f"${v:+.2f}$"
+    L += ["\\begin{tabular}{@{}lrrrrrrrr@{}}", "\\toprule",
+          "\\multicolumn{9}{@{}l}{(b) Per target: Kendall $\\tau_b$ over its Fourier characters (positive: same order)}\\\\", "\\midrule",
+          " & & \\multicolumn{5}{c}{order against order} & \\multicolumn{2}{c}{against degree / $1/|\\hat y|$}\\\\",
+          "\\cmidrule(lr){3-7}\\cmidrule(l){8-9}",
           "target & chars & \\hd{net time,\\\\DFG $z_0$} & \\hd{net time,\\\\DFG $n$} & \\hd{pairs\\\\c / t / i} & "
-          "\\hd{net $n$, DFG $n$\\\\($|S|\\le4$)} & \\hd{net time,\\\\net $n$} & \\hd{net time} & \\hd{DFG $n$} & \\hd{DFG $n$\\\\($|S|\\le4$)}\\\\",
+          "\\hd{net $n$, DFG $n$\\\\($|S|\\le4$)} & \\hd{net time,\\\\net $n$} & \\hd{net time} & \\hd{DFG $n$}\\\\",
           "\\midrule"]
     per = {}
     for fn in DYN_TARGETS:
         T = N["targets"][fn]; P = N["priority"][fn]["16384"]["tau_z0"]; DS = N["degree_vs_size"][fn]; pr = T["pairs_n"]
         z0 = float(np.mean(P)); nch = sum(r["target"] == fn for r in rows)
         def ds(a, b):
-            return ("tied" if DS[a] is None else f"${DS[a]:+.2f}$") + " / " + ("tied" if DS[b] is None else f"${DS[b]:+.2f}$")
+            return ("tied" if DS[a] is None else f"${DS[a]:+.2f}$") + "\\,/\\," + ("tied" if DS[b] is None else f"${DS[b]:+.2f}$")
         per[fn] = dict(chars=nch, tau_z0_16384=z0, tau_z0_seeds=P, tau_net_time_dfg_n=T["tau_net_time_dfg_n"], pairs=pr,
                        tau_n_axis=T["tau_n_axis"], n_axis_chars=T["n_axis_chars"], tau_net_time_net_n=T["tau_net_time_net_n"],
                        degree_vs_size=DS)
         L.append(f"{fn} & {nch} & ${z0:+.2f}$ & {f(T['tau_net_time_dfg_n'])} & "
-                 f"{pr['concordant']} / {pr['tied']} / {pr['inverted']} & {f(T['tau_n_axis'])} ({T['n_axis_chars']}) & "
-                 f"{f(T['tau_net_time_net_n'])} & {ds('net_time_deg', 'net_time_size')} & {ds('dfg_n_deg', 'dfg_n_size')} & "
-                 f"{ds('dfg_n_deg_4', 'dfg_n_size_4')}\\\\")
+                 f"{pr['concordant']}\\,/\\,{pr['tied']}\\,/\\,{pr['inverted']} & {f(T['tau_n_axis'])} ({T['n_axis_chars']}) & "
+                 f"{f(T['tau_net_time_net_n'])} & {ds('net_time_deg', 'net_time_size')} & {ds('dfg_n_deg', 'dfg_n_size')}\\\\")
     rz = N["net_n_resolution"]["dnf3_resolvable"]
-    L.append(f"\\quad dnf3, $|\\hat y|=0.19$ & {rz['count']} & & & & {f(rz['tau_n_axis'])} ({rz['count']}) & {f(rz['tau_net_time_net_n'])} & & & \\\\")
+    L.append(f"dnf3$^*$ & {rz['count']} & & & & {f(rz['tau_n_axis'])} ({rz['count']}) & {f(rz['tau_net_time_net_n'])} & & \\\\")
     L += ["\\bottomrule", "\\end{tabular}"]
     write_tex("tab_dyn_order", L)
     # the numbers the text quotes, recomputed from the same file

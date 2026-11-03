@@ -78,8 +78,8 @@ def fmt(v, p=2):
 
 
 def cell(s):
-    """'mean (higher/lower) [both/targets]'."""
-    return "–" if not s or not s["targets"] else f"{fmt(s['mean'])} ({s['higher']}/{s['lower']}) [{s['both']}/{s['targets']}]"
+    """'mean (lower/higher) [both/targets]': lower / higher = the run needs clearly less / more data than the reference."""
+    return "–" if not s or not s["targets"] else f"{fmt(s['mean'])} ({s['lower']}/{s['higher']}) [{s['both']}/{s['targets']}]"
 
 
 # ------------------------------------------------------------------------------------------------ the data
@@ -191,6 +191,10 @@ def block_power():
                     if first is None and best > 1:
                         first = c["n"]
                 o[lab] = dict(n_detect=first, ratios=ratios)
+            # how much the threshold itself moves (doublings of n, since T grows about linearly in n), at the default n_detect
+            c0 = next((c for c in d["cells"] if c["n"] == o["default"]["n_detect"]), d["cells"][-1])
+            m0 = max(c0["unfold"]["levels"] - 1, 1)
+            o["thr_shift"] = {lab: math.log2(chi2_thr(m0, tk + math.log(0.1 / dl)) / chi2_thr(m0, tk)) for lab, dl in DELTAS.items() if lab != "default"}
             out[f"{su}/{t}"] = o
     return out
 
@@ -255,7 +259,7 @@ def leavein():
     for f in sorted(os.listdir(D)):
         if not f.endswith(".json"):
             continue
-        r = json.load(open(os.path.join(D, f))); cfg = r["config"]; su = r["suite"]
+        r = json.load(open(os.path.join(D, f))); cfg = {"bg2": "bg", "deg46g": "deg46"}.get(r["config"], r["config"]); su = r["suite"]
         A = nst(r, [0, 1]); Cc = nst(res("dfg13-core-perm", su), [0, 1]); B = nst(BASE[su], [0, 1])
         for t in A:
             out.setdefault(cfg, {})[f"{su}/{t}"] = dict(leavein=A[t], core=Cc[t], dfg=B[t], vs_core=l2r(A[t], Cc[t]),
@@ -264,7 +268,8 @@ def leavein():
 
 
 def main():
-    J = dict(source="part11/interp/ablations/ablations.py", families={f"{su}/{t}": g for (su, t), g in FAM.FAMILY.items()})
+    J = dict(source="part11/interp/ablations/ablations.py", families={f"{su}/{t}": g for (su, t), g in FAM.FAMILY.items()},
+             classes={f"{su}/{t}": FAM.COARSE[g] for (su, t), g in FAM.FAMILY.items()})
     Lmd = []
     # ---- (a) every ablation, by family and by coarse class ----------------------------------------------------------
     A = {}
@@ -326,6 +331,8 @@ def main():
     dfg_nb = {k: l2r(b[k], nb[k]) for k in rc if nb.get(k) is not None}
     J["core"] = dict(pooled=stats(rc.values()), by_family=by_group(rc, FAM.family), by_class=by_group(rc, FAM.coarse),
                      ablation_suites=stats(v for k, v in rc.items() if k[0] in ABL_SUITES),
+                     ablation_suites_by_family=by_group({k: v for k, v in rc.items() if k[0] in ABL_SUITES}, FAM.family),
+                     ablation_suites_by_class=by_group({k: v for k, v in rc.items() if k[0] in ABL_SUITES}, FAM.coarse),
                      other_suites=stats(v for k, v in rc.items() if k[0] not in ABL_SUITES),
                      by_suite={su: stats(v for k, v in rc.items() if k[0] == su) for su in TOY},
                      vs_nets_best=dict(pooled=stats(vs_nb.values()), by_family=by_group(vs_nb, FAM.family),
@@ -335,6 +342,21 @@ def main():
                      ratios={f"{su}/{t}": v for (su, t), v in rc.items()}, nstar={f"{su}/{t}": v for (su, t), v in a.items()},
                      dfg_same_seeds={f"{su}/{t}": v for (su, t), v in b.items()},
                      nets_best={f"{su}/{t}": v for (su, t), v in nb.items()})
+    # compute: the core and DFG alone on the same fits (seeds 0, 1, every suite, every n)
+    fc, fd, cc, cd = [], [], [], []
+    for su in TOY:
+        rc_, rb_ = res("dfg13-core-perm", su), BASE[su]
+        ia, ic = [rb_["seeds"].index(s) for s in (0, 1)], [rc_["seeds"].index(s) for s in (0, 1)]
+        for t in rc_["fns"]:
+            fd += list(np.array(rb_["fns"][t]["flops"])[:, ia].ravel() / rb_["gd_flops"])
+            fc += list(np.array(rc_["fns"][t]["flops"])[:, ic].ravel() / rc_["gd_flops"])
+            cd += list(np.array(rb_["fns"][t]["cpu_seconds"])[:, ia].ravel()); cc += list(np.array(rc_["fns"][t]["cpu_seconds"])[:, ic].ravel())
+    fc, fd, cc, cd = map(np.array, (fc, fd, cc, cd))
+    J["core"]["compute"] = dict(fits=len(fc), flops_median_core=float(np.median(fc)), flops_max_core=float(fc.max()),
+                                flops_median_dfg=float(np.median(fd)), flops_max_dfg=float(fd.max()),
+                                flops_paired_ratio_median=float(np.median(fc / fd)), cpu_median_core=float(np.median(cc)),
+                                cpu_median_dfg=float(np.median(cd)), cpu_total_core=float(cc.sum()), cpu_total_dfg=float(cd.sum()),
+                                cpu_max_core=float(cc.max()), cpu_max_dfg=float(cd.max()))
     # paired null on the core's seeds, all suites where present
     have = [su for su in TOY if reperm(su) is not None]
     if have:
@@ -355,6 +377,29 @@ def main():
                          measured={lab: A[lab]["ratios"].get(key) for lab in ("strict", "lenient")},
                          nstar_dfg=A["strict"]["dfg_same_seeds"].get(key)))
     J["block_power_rows"] = rows
+    # how far DFG alone's n* (seeds 0, 1) lies beyond the true block's n_detect, for the symmetric and mixture targets it learns,
+    # and whether the strict test's n_detect still lies at or below that n*
+    gap = []
+    for x in rows:
+        nd, ndS, nst_ = x["n_detect"]["default"], x["n_detect"]["strict"], x["nstar_dfg"]
+        if x["cls"] != "sum" or nd is None or nst_ is None or not math.isfinite(nst_):
+            continue
+        gap.append(dict(target=x["target"], gap=math.log2(nst_ / nd), strict_detect_below_nstar=bool(ndS is not None and ndS <= nst_),
+                        detect_moved=bool(x["shift_detect"]["strict"]), measured_strict=x["measured"]["strict"],
+                        measured_lenient=x["measured"]["lenient"]))
+    g = [z["gap"] for z in gap]
+    moved = [z for z in gap if z["detect_moved"]]
+    ts = [BP[x["target"]]["thr_shift"] for x in rows if x["cls"] == "sum"]
+    J["block_thr_shift"] = {lab: dict(min=min(z[lab] for z in ts), max=max(z[lab] for z in ts), median=float(np.median([z[lab] for z in ts])))
+                            for lab in ("strict", "lenient")}
+    J["block_gap"] = dict(targets=len(gap), median_gap=float(np.median(g)), min_gap=float(min(g)), max_gap=float(max(g)),
+                          gap_ge1=sum(1 for v in g if v >= 1), strict_detect_below_nstar=sum(z["strict_detect_below_nstar"] for z in gap),
+                          detect_moved=[z["target"] for z in moved],
+                          detect_moved_measured={z["target"]: z["measured_strict"] for z in moved},
+                          rows=gap)
+    cls_strict = defaultdict(list)
+    for (k, v) in A["strict"]["ratios"].items():
+        cls_strict[J["classes"][k]].append(v)
     # ---- (d) the atlas's counterfactuals -------------------------------------------------------------------------------
     J["atlas_counterfactuals"] = atlas_counterfactuals()
     J["errs_by_n"] = {tag: errs_by_n(tag) for tag in ("nosmalln", "nobg", "labelnoise", "noblocks", "strict", "lenient")}
@@ -366,7 +411,7 @@ def main():
     cls_n = Counter(FAM.coarse(su, t) for (su, t) in FAM.FAMILY if su in ABL_SUITES)
     fam_n = Counter(FAM.family(su, t) for (su, t) in FAM.FAMILY if su in ABL_SUITES)
     head = "| run | seeds | pooled | " + " | ".join(f"{c} ({cls_n[c]})" for c in CLASSES) + " |"
-    Lmd += ["## By coarse class (65 targets of the five ablation suites)", "", "cells: mean (higher / lower) [both reach / targets]", "",
+    Lmd += ["## By coarse class (65 targets of the five ablation suites)", "", "cells: mean (lower / higher) [both reach / targets]; lower / higher = the run clearly needs less / more data", "",
             head, "|---|---|---|" + "---|" * len(CLASSES)]
     for tag, sd in ABL:
         x = A[tag]; Lmd.append(f"| {tag} | {','.join(map(str, sd))} | {cell(x['pooled'])} | " + " | ".join(cell(x["by_class"].get(c)) for c in CLASSES) + " |")

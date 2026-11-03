@@ -212,6 +212,65 @@ def fig_dscale():
     save(fig, "fig_dscale", out)
 
 
+# ---- fig_ablations (sections/ablations.tex) -----------------------------------------------------------------------------------
+@figure
+def fig_ablations():
+    """Per target, the log2 ratio of an ablation's n* to DFG alone's on the same seeds (65 targets of the five ablation suites),
+    one row per ablation; then the paired null (DFG alone with another column order and other folds, same training sets; post
+    hoc) and the core DFG on the same 65 targets (post hoc).  Colour = coarse class (families.py).  Ratios beyond +-3 are drawn
+    at the edge; 'never' (+inf: the run never reaches 10% error where DFG alone does) in the column on the right.  Source:
+    study/part11/interp/ablations/ablations.json (make_tables.abl_json)."""
+    J = MT.abl_json(); A = J["ablations"]; CL = J["classes"]
+    rows = [(t, MT.code(t).replace("\\code{", "").rstrip("}"), A[t]["ratios"], A[t]["seeds"]) for t, _ in MT.ABL_TAGS]
+    extra = []
+    if "paired_seed01" in J["nulls"]:
+        extra.append(("paired null", "paired null (post hoc)", J["nulls"]["paired_seed01"]["ratios"], [0, 1]))
+    core65 = {k: v for k, v in J["core"]["ratios"].items() if k.split("/")[0] in ("designed", "dlsymdev", "dlfamdev", "dlheld6", "dlheld7")}
+    extra.append(("core", "core (post hoc)", core65, [0, 1]))
+    allrows = rows + extra
+    CC = {"character": COL[0], "halfspace": COL[3], "sum": COL[2]}
+    OFF = {"character": -0.22, "halfspace": 0.0, "sum": 0.22}
+    LIM, NEVX = 3.0, 3.75
+    fig = plt.figure(figsize=(TEXTW, 4.3)); ax = fig.add_axes([0.185, 0.105, 0.665, 0.82])
+    out = dict(rows=[], lim=LIM, never_x=NEVX)
+    rng = np.random.default_rng(0)
+    ny = len(allrows)
+    for i, (key, lab, rat, sd) in enumerate(allrows):
+        y = ny - 1 - i + (-0.6 if i >= len(rows) else 0.0)
+        rec = dict(run=key, seeds=sd, y=y, points=[])
+        for k, v in sorted(rat.items()):
+            v = num(v) if not isinstance(v, float) else v
+            if v is None or (isinstance(v, float) and math.isnan(v)):
+                continue
+            c = CL[k]; yy = y + OFF[c] + rng.uniform(-0.07, 0.07)
+            if v == INF:
+                x, mk = NEVX, "x"
+            elif v == -INF:
+                x, mk = -NEVX, "x"
+            else:
+                x, mk = max(-LIM, min(LIM, v)), ("o" if abs(v) <= LIM else ">" if v > 0 else "<")
+            ax.scatter([x], [yy], s=9 if mk == "o" else 16, marker=mk, color=CC[c], edgecolors="none" if mk == "o" else None,
+                       linewidths=0.8, alpha=0.85, zorder=3)
+            rec["points"].append(dict(target=k, cls=c, ratio=v, x=x))
+        hi = sum(1 for p in rec["points"] if p["ratio"] > 0.25); lo = sum(1 for p in rec["points"] if p["ratio"] < -0.25)
+        ax.text(NEVX + 0.55, y, f"{lo} / {hi}", fontsize=6.6, va="center", ha="left", color=INK2)
+        rec.update(lower=lo, higher=hi); out["rows"].append(rec)
+    ax.axvspan(-0.25, 0.25, color="#ececec", zorder=0)
+    ax.axvline(0, color="#9a9a9a", lw=0.6, zorder=1); ax.axvline(NEVX - 0.37, color="#c4c4c4", lw=0.6, zorder=1)
+    ax.axhline(ny - len(rows) - 0.3 - 0.3, color="#c4c4c4", lw=0.6, zorder=1)
+    ys = [r["y"] for r in out["rows"]]
+    ax.set_yticks(ys); ax.set_yticklabels([lab + ("" if sd == [0, 1] or key in ("paired null", "core") else " (seed 0)") for key, lab, _, sd in allrows], fontsize=7)
+    ax.set_xticks([-3, -2, -1, 0, 1, 2, 3, NEVX]); ax.set_xticklabels(["$\\leq-3$", "$-2$", "$-1$", "0", "+1", "+2", "$\\geq$+3", "never"])
+    ax.set_xlim(-3.35, NEVX + 0.35); ax.set_ylim(min(ys) - 0.6, max(ys) + 0.6)
+    ax.grid(False); ax.set_xlabel("$\\log_2(n^*_{\\rm run}/n^*_{\\rm DFG\\ alone})$, same seeds   (negative: less data)")
+    ax.text(NEVX + 0.55, max(ys) + 0.62, "lower / higher", fontsize=6.4, va="bottom", ha="left", color=INK2, clip_on=False)
+    h = [Line2D([], [], color=CC[c], marker="o", ls="", ms=4, label=l) for c, l in
+         (("character", "character targets"), ("halfspace", "halfspaces"), ("sum", "symmetric and mixtures"))]
+    ax.legend(handles=h, loc="lower left", bbox_to_anchor=(0.0, 1.0), ncol=3, fontsize=6.8, handletextpad=0.3, columnspacing=1.2,
+              borderaxespad=0.2)
+    save(fig, "fig_ablations", out)
+
+
 if __name__ == "__main__":
     names = sys.argv[1:] or list(FIGURES)
     for nm in names:

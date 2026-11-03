@@ -28,6 +28,13 @@ CONFIGS = {   # name: (the argument(s) put back, targets)
     "bg": ({"background": True}, HALF + GAIN),
     "weighted": ({"sum_inner": True}, ["dlheld6/h6_10", "dlheld5/h5t0", "dlheld5/h5s2", "dlheld7/f7_09", "dlheld2/sym8"]),
     "eig": ({"sum_seeds": [2, 3, 2]}, ["dlheld6/h6_10", "dlheld5/h5t0", "dlheld5/h5s2", "dlheld7/f7_09", "dlheld2/sym8"]),
+    # added after reading the first leave-one-in results (the background, for the sum targets the core loses on): the same
+    # change as "bg", on other targets, in files of their own
+    "bg2": ({"background": True}, ["dlheld6/h6_10", "dlheld5/h5t0", "dlheld5/h5s2", "dlheld7/f7_09", "dlheld2/sym8"]),
+    # two parts at once, after neither alone restored h6_10 (DFG alone without either loses it: noeig, noweighted)
+    "weighted_eig": ({"sum_inner": True, "sum_seeds": [2, 3, 2]}, ["dlheld6/h6_10", "dlheld5/h5t0", "dlheld5/h5s2", "dlheld7/f7_09"]),
+    # K back to 4 on the core's gains (K also sets every test's union bound, 4 K N): the same change as "deg46", other targets
+    "deg46g": ({"K": 4, "K_hi": 6}, GAIN),
 }
 
 

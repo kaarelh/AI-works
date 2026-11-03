@@ -3,7 +3,8 @@
 Part 11, Q7 (theory support). The object is **DFG v1.3 run alone** (`dfg13-perm`): the frozen file
 `part10/hyb_portfolio3/dfg13.py` (md5 `69cabe5c50345cb24079198ed52b562f`) run as `DFG(readout="logit").fit` inside
 `discrete_learner/harness.Permuted` (`part11/eval_dfg.py`), with the constructor's defaults: K = 4, K_later = 3,
-c = 1, δ = 0.1, cv_n = 512, sum_nmin = 32, sum_force = True. Written 3 November 2026.
+c = 1, δ = 0.1, cv_n = 512, sum_nmin = 32, sum_force = True. Written 3 November 2026; corrected after independent
+verification on 3 November 2026 (see Verification).
 
 Labels: **Proved** (a proof is given; "by the code" means a direct reading of the cited lines of `dfg13.py`),
 **Numerical** (measured; every number is in [`check_theory.json`](check_theory.json), key given in parentheses),
@@ -13,39 +14,51 @@ Labels: **Proved** (a proof is given; "by the code" means a direct reading of th
 
 ## Short answer
 
-1. **P1. Under the null, round 0's tests rarely admit anything** (Proved for the character tests and the linear block).
-   Let the labels be independent of uniform inputs, with any law of the labels. In round 0 of any fit call:
+1. **P1. Under the null, round 0's character tests and linear-block test rarely admit anything** (Proved). Its
+   spectral test need not: with P(+1) = 0.85 at d = 30 and n = 128 it passes 15% of the time (46 of 300 null data
+   sets). Let the labels be independent of uniform inputs, with any law of the labels. In round 0 of any fit call:
    - the global test admits a character of degree k with probability at most 2C(d,k)·(δ/(4K·C(d,k)))^{c²}. With c = 1
-     that is δ/(2K) = 0.0125 per degree, for any d and n;
-   - the linear block's test passes with probability at most δ;
+     that is δ/(2K) = 0.0125 per degree, for any d and n. For a degree searched on all rows of the fit call, this
+     bound needs only iid rows, from any law on {−1, 1}^d (P1a′);
+   - the linear block's test on all d inputs passes with probability at most δ, so a false linear block has
+     probability at most δ + δ/(2K). This bound needs uniform rows;
    - if round 0 admits nothing, the default variant's model is the constant plus the kernel background.
 
    The proof does not cover the spectral block, the sum blocks, the forced variant, or the cross-validation's choice
    between variants. Numerically the character tests are about 10 times inside their bound (≈ 10⁻³ per degree). The
    spectral test is not safe: with skewed labels (P(+1) = 0.85) at n = 128, 7 of 30 full DFG fits end with spurious
    spectral or sum-block features.
-2. **P2. A k-parity is admitted exactly when n(1 − ȳ²) > n_thr(k, d)** (Proved; checked on every parity cell). Here
-   n_thr(k, d) = 2 ln(4K·C(d, k)/δ) ≈ 2k ln d, which is 19.5–42.0 for k = 2–4 and d = 15–120.
+2. **P2. A k-parity χ_S passes round 0's global test exactly when n(1 − ȳ²) > n_thr(k, d)** (Proved, for a degree
+   searched on all n rows and dropping a 10⁻⁹ term; checked on every parity cell). Here
+   n_thr(k, d) = 2 ln(4K·C(d, k)/δ) = 2k ln d − 2 ln k! + 2 ln(4K/δ) + O(k²/d): 2k ln d plus 8.8 (k = 2), 6.6 (k = 3)
+   or 3.8 (k = 4), less an O(k²/d) term of at most 0.9 here. It grows like 2k ln d, and it is 19.5–42.0 for k = 2–4
+   and d = 15–120. Passing is not yet admission (the 64-candidate cap and the room also apply), and the forced variant
+   can admit χ_S without passing, so whether the final model holds χ_S is the measured statement:
    - With each seed's own ȳ, this criterion predicts all 250 parity cells at n ≥ 32.
    - Together with the cross-validation's choice of the forced variant at n = 16, it reproduces all 11 measured n*
      (16–56) to within 0.2.
    - par4 at d = 30 has n* = 52 rather than 28 because 2 of its 3 seeds have |Σy| > 6 at n = 32, an event of
      probability 0.12.
    - n_thr is a floor for every target: no degree-k character passes a global test on m ≤ n_thr(k, d) rows (P2′).
+     This bounds passing a test, not admission: the forced variant's guesses (n ≤ 512) and the linear block are
+     outside it.
    - The networks' n* grows as d^1.0, d^1.9 and d^2.4 over d = 15–60: close to d^(k−1) for k = 2, 3, and below d³
      for k = 4.
    - At d = 1000 (Heuristic) the test would need only n ≈ 56, but DFG v1.3's budget skips its degree-3 and degree-4
      searches there; an exhaustive degree-4 search would cost 56 network runs.
 3. **P3. n_glob predicts the round-0 test, and later rounds make characters cheaper** (exact criterion Proved; first
    order Heuristic; checked on 41 targets, seed 0).
-   - The round-0 test admits S iff n > 2c²L·s²/v_S², with the sample's v_S and s; n_glob puts ŷ_S and 1 − ŷ₀² in their
+   - S passes the round-0 test iff n > 2c²L·s²/v_S², with the sample's v_S and s; n_glob puts ŷ_S and 1 − ŷ₀² in their
      place.
-   - Over 8681 (character, n) pairs, n > n_glob agrees with DFG's decision 96.9% of the time, and a normal approximation
-     gives the pass rate to within 0.051 in every band of n/n_glob.
+   - Over 8681 (character, n) pairs, n > n_glob agrees with DFG's decision 96.9% of the time. The figure is dominated
+     by pairs far from n_glob: within one doubling of n_glob the agreement is 76% (773 of 1012), and at least two
+     doublings away it is 99.9–100% (6624 pairs). A normal approximation gives the pass rate to within 0.051 in every
+     band of n/n_glob.
    - Characters that enter through this test do so at a median 2^0.26 × n_glob.
    - 266 of the 427 characters predicted within the grid enter earlier, mostly through later-round classes. Characters
      entering through those classes do so a median 1.4–3.7 doublings below n_glob, mainly because the residual variance
-     there is 3–19 times smaller; the smaller union bound adds a factor of at most 1.7.
+     there is a median 3–19 times smaller (1.2–59.5 per character). The smaller union bound adds a median factor of at
+     most 1.7 per class (at most 0.8 doublings); individual local-class characters gain up to 3.3 from it (degree ≤ 6).
 4. **P4. Sum blocks** (Proved).
    - With one group per value, a block represents every function of a signed sum of k inputs with at most k + 1
      parameters, where the Fourier expansion can need 2^k characters.
@@ -93,8 +106,9 @@ chosen variant on all n rows (`scale` = 0.5, `hi` = True) (lines 553–570). Bel
 
 - **Admission** (816–827): the 64 candidates with the largest z, within the room min(256, ⌊n/2⌋) − p.
 - **Linear block** (696–700): lin = the inputs whose χ_i is neither a feature nor a candidate. With c₁ = Xᵀr/n and
-  T₁ = n Σ_{i∈lin} c₁ᵢ²/s², the block is admitted iff T₁ > k + 2√(k ln(1/δ)) + 2 ln(1/δ) (k = |lin|) and
-  n ≥ 2(p + k). In round 0 that needs n ≥ 2(1 + d).
+  T₁ = n Σ_{i∈lin} c₁ᵢ²/s², the block is admitted iff T₁ > k + 2√(k ln(1/δ)) + 2 ln(1/δ) (k = |lin|),
+  n ≥ 2(p + k) and the round has room (824). In round 0 that needs n ≥ 2(1 + d). The code's `lin0` switch, which would
+  admit the block unconditionally in round 0, is off in both variants.
 - **Spectral block** (701–709): eigenvalues λ of the symmetrised residual pair matrix (zero diagonal; pairs that are
   features or candidates zeroed) with |λ| > 2s√(d/n)(1 + √(2 ln(1/δ)/d)); at most 4, and only if n ≥ 4d.
 - **Sum blocks** (715–815; n ≥ 32): statistic T = |Π r|²/s², Π the projection on the block's group indicators.
@@ -102,8 +116,9 @@ chosen variant on all n rows (`scale` = 0.5, `hi` = True) (lines 553–570). Bel
   (plus ln(2(4d + 20 C(d,2))) for weighted blocks), and only if it also passes on r projected off this round's
   accepted characters. Groups: contiguous runs of values of t(x) = Σ_{i∈S} sᵢxᵢ, each with ≥ max(3, ⌊0.005 n⌋) training
   points (`_edges`, 86–97).
-- **Stop**: a round that admits no character and no block ends the fit (824). A round does not start if s < 10⁻⁶,
-  or, from round 1 on, if every training sign is already right (596), or if the FLOP count exceeds 0.75 GD (598).
+- **Stop**: a round that admits no character and no block, or has no room (room ≤ 0), ends the fit (824). A round
+  does not start if s < 10⁻⁶, or, from round 1 on, if every training sign is already right (596), or if the FLOP count
+  exceeds 0.75 GD (598).
 - **Forced variant** (817–822). When nothing passes in a round, at most twice per fit, the forced variant adds a guess.
   If n ≥ 48 and the best sum-block candidate's T/threshold exceeds the square of the best character's z, the guess is
   that block. This needs `sum_force` = True, which is the constructor default although the docstring (line 73) says
@@ -137,13 +152,30 @@ subsample). Its threshold is c σ √(2L_k/m), where σ = s if m = n and σ = rm
 
 Hoeffding's inequality for Rademacher sums gives P(|Σ a_t ε_t| ≥ λ) ≤ 2 exp(−λ²/(2 Σ a_t²)). Take a_t = r_t and
 λ = u c σ √(2 m L_k). The exponent is λ²/(2 Σ_{t≤m} r_t²) ≥ u²c² L_k. So P(z_S ≥ u | y) ≤ 2 e^{−u²c²L_k} =
-2(δ/(4KN_k))^{u²c²}. (If r[:m] = 0, the statistic and the threshold are both 0, and the strict test |0| > 0 fails.)
+2(δ/(4KN_k))^{u²c²}. (r[:m] = 0 cannot occur: |w₀| < 1, so every r_t = y_t − w₀ is nonzero.)
 A union bound over the N_k sets of size k, then over the degrees, and the expectation over y finish the proof.
 
 The degree-5/6 search computes G[p, q] = mean_m(r χ_{T₁} χ_{T₂}) and offers it only when T₁ ∩ T₂ = ∅ (line 662). That is
 the same statistic mean_m(r χ_S) for S = T₁ ∪ T₂. A set found by several splits defines one event, so the search is
 covered. The decisions are taken in floating point; the statement is for exact arithmetic, and rounding can change a
 decision only when |v_S| is within rounding error of its threshold. □
+
+**P1a′ (Proved): on all rows, P1a needs only iid rows.** Let the rows be iid from any law on {−1, 1}^d, still
+independent of the labels: biased or dependent columns, for example the one-hot ±1 columns of the tabular sets
+kr_vs_kp and mushroom under labels drawn independently of them. Then P1a's bound holds, with u shifted by less than
+10⁻⁹, for every degree that the call searches on all of its n rows.
+
+*Proof.* Condition on y, fix a nonempty S and let μ_S = E χ_S(x), which need not be 0. The terms r_t χ_S(x_t) are
+independent and lie in [−|r_t|, |r_t|], so Hoeffding's inequality for bounded summands gives
+P(|Σ_t r_t χ_S(x_t) − μ_S Σ_t r_t| ≥ λ) ≤ 2 exp(−λ²/(2 Σ_t r_t²)), the tail used in P1a. The constant fit makes
+Σ_t r_t = Σy·10⁻⁹/(n + 10⁻⁹), so the centring moves v_S by less than 10⁻⁹/n. If the labels are not all equal,
+s² ≥ 1 − ȳ² ≥ 2/n, so thr ≥ 2c√L_k/n and the shift in z is below 10⁻⁹/(2c√L_k), which is < 10⁻⁹ at c = 1. If they
+are all equal, s is clamped at 10⁻⁶ and no character passes. □
+
+The argument fails on a subsample of the first m < n rows, where Σ_{t≤m} r_t need not vanish. It also fails for P1b,
+whose χ² domination uses independent uniform columns; with d equal columns, for instance, T₁ is d times one squared
+Rademacher sum. So for other input laws the character bound holds for the searches on all rows, but the linear-block
+bound, and with it P1c's total, is not proved.
 
 **P1b (Proved).** In round 0, P(T₁ over all d inputs exceeds d + 2√(dx) + 2x) ≤ e^{−x} for every x > 0. At
 x = ln(1/δ) this is the code's threshold, so P(the linear block's test passes with lin = all inputs) ≤ δ. In round 0,
@@ -171,9 +203,9 @@ accepted blocks. Hence P(the default variant's model has a feature besides the c
 
 | part of a fit | covered? | why |
 |---|---|---|
-| round 0: global characters, degrees 1–4, on all rows or a subsample | **yes** (P1a) | conditional on y, each χ_S is an iid fair sign sequence |
+| round 0: global characters, degrees 1–4, on all rows or a subsample | **yes** (P1a) | conditional on y, each χ_S is an iid fair sign sequence; on all rows any iid input law will do (P1a′) |
 | round 0: the degree-5/6 subsample search (final fit only) | **yes** (P1a) | the same statistic; adds 2 × δ/(2K) |
-| round 0: linear block | **yes** (P1b) | dominated by χ²_d in moment generating function |
+| round 0: linear block | **yes** (P1b) | dominated by χ²_d in moment generating function (uniform rows only) |
 | round 0: extension, local, modulated blocks, products of accepted blocks | empty | no current characters or blocks yet |
 | round 0: spectral block | **no** | its edge 2s√(d/n)(1 + √(2 ln(1/δ)/d)) is the asymptotic Wigner edge with a Gaussian correction, not a bound |
 | round 0: sum blocks (additive, product, split) | **no** | the χ² threshold is Gaussian-calibrated. Given y, the group sums Σ_{t∈v} r_t are sums over an x-dependent partition, and the groups' edges are chosen from the data. The union bound over every (S, s, fold, modulator, size) is a valid count, but only if each fixed candidate's tail is at most e^{−t}, which is not proved. |
@@ -235,7 +267,7 @@ cross-validation, d = 30.
   in 110 of the 110 fits: the 80 fair-label fits and the 30 skewed-label fits.
 - Over the fits with a cross-validation (n ≤ 512: 40 fair, 30 skewed), the forced variant was chosen once.
 
-## 2. P2: the sample size at which a k-parity is admitted
+## 2. P2: the sample size at which a k-parity passes round 0's test
 
 **P2 (Proved).** Let f = χ_S with |S| = k, labels noiseless. Take round 0 of a fit call on n rows. Then exactly
 
@@ -252,12 +284,22 @@ rows the test passes iff m (1 − w₀ȳ_m)² > n_thr (1 − 2w₀ȳ_m + w₀²)
 Since 1 − ȳ² ≤ 1, n > n_thr is necessary. The χ_S(x_t) are iid fair signs, so Σy = 2B − n with B ~ Bin(n, ½), and
 exactly P(pass) = P(|2B − n| < √(n(n − n_thr))). E[n(1 − ȳ²)] = n − 1, so to first order the test passes once
 n > n_thr + 1. Because ln C(d, k) = k ln d − ln k! + O(k²/d), n_thr = 2c²(k ln d − ln k! + ln(4K/δ)) + O(k²/d): it
-grows like 2k ln d.
+grows like 2k ln d. The value is not 2k ln d: at c = 1 the constant 2 ln(4K/δ) − 2 ln k! adds 8.8, 6.6 and 3.8 for
+k = 2, 3, 4, and the O(k²/d) term, 2 Σ_{i<k} ln(1 − i/d) ≤ 0, is at most 0.87 in size for d = 15–120. On that range
+2k ln d alone (10.8–38.3) is 9–44% below n_thr (`P2.n_thr_decomposition`).
 
-**P2′ (Proved): the same floor holds for every target.** For any labels, in any round, a class with N candidates tested
-on m rows can admit a character only if m > 2c² ln(4KN/δ). For the global degree-k class that is m > n_thr(k, d). The
-reason is Cauchy–Schwarz: |mean_m(r χ_S)| ≤ rms(r[:m]) ≤ σ, so |v_S| > cσ√(2L/m) needs c√(2L/m) < 1. A k-parity with
-ȳ = 0 attains the bound, so n_thr is exactly the parity's sample size.
+P2 is a statement about passing round 0's global test. Admission also needs χ_S among the 64 candidates with the
+largest z, and within the room min(256, ⌊n/2⌋) − 1. That is not proved, although it never binds in the observed
+cells. The forced variant can admit χ_S without passing (the 7 par2 cells at n = 16 below), and a later round could
+admit it after round 0 admitted something else. Whether the final model holds χ_S is therefore the measured statement
+checked below.
+
+**P2′ (Proved): the same floor holds for every target.** For any labels, in any round, no character passes the test
+of a class with N candidates on m ≤ 2c² ln(4KN/δ) rows. For the global degree-k class that is m ≤ n_thr(k, d). The
+reason is Cauchy–Schwarz: |mean_m(r χ_S)| ≤ rms(r[:m]) ≤ σ, so |v_S| > cσ√(2L/m) needs c√(2L/m) < 1. This bounds
+passing a test, not admission. The forced variant's guesses (n ≤ 512) need no test, and the linear block admits
+degree-1 characters by its own χ² test; both are outside this floor. A k-parity with ȳ = 0 attains the bound, so
+n_thr is exactly the parity's sample size on round 0's test.
 
 **n_thr(k, d)** (c = 1, K = 4, δ = 0.1; `P2.n_thr`):
 
@@ -273,7 +315,9 @@ From d = 15 to 120, n_thr rises by 8.4, 12.9 and 17.4, close to 2k ln 8 = 8.3, 1
 files at d = 15, 30, 60, 120, with each seed's own training set and its own ȳ.
 - **n ≥ 32: 250 of 250 cells agree.** The final model's test error is exactly 0 iff the criterion holds in the final
   fit, and 0.488–0.506 otherwise (6 cells; `P2.fail_err_n_ge32`).
-- The 10⁻⁹ term never changes a decision: 263 of 263 cells.
+- The 10⁻⁹ term never changes a decision: 247 of 247 cells where the degree is searched on all n rows
+  (`P2.agree.jitter_same_searched`). The 263 counted before verification also included the 16 cells of par3 and par4
+  at n = 16, where degrees 3–4 are not searched and both forms are false by definition (`P2.jitter_unsearched_cells`).
 - **n = 16:** the criterion fails in all 25 cells. n_thr > 16 at every d, and degrees 3–4 are not searched below
   m = 32. Seven cells still have error 0: par2 at d = 15, 30, 60, every seed. In all 7 the cross-validation chose the
   forced variant and the forced final model holds χ_S. At n = 16 the fold fits have 14–15 rows, so nothing passes (no
@@ -305,6 +349,11 @@ the exact pass probability P(pass) in place of the seeds.
 The per-seed criterion, together with the variant chosen at n = 16, reproduces all 11 measured n* to within 0.2. The
 residual differences come from the failing seeds' errors, which are near 0.5 but not exactly 0.5.
 
+The "expected" column, like the d = 1000 prediction below, sets a seed's error to exactly 0 where the test passes and
+to 0.5 where it fails. On the grid that is accurate (the failing errors are 0.488–0.506), but it ignores the forced
+variant at n ≤ 512. The forced variant decides the par2 cells at n = 16 and d ≤ 60 (the "+ forced" column), and it
+would matter at any d where its guess is χ_S.
+
 **Borderline cases.**
 - **par4, d = 30, n = 32** (n_thr = 30.59, just below the grid point). The test passes iff 32(1 − ȳ²) > 30.59, i.e.
   |Σy| ≤ 6. Seeds 0, 1, 2 have Σy = −10, −6, +12, so only seed 1 passes (errors 0.488, 0, 0.500).
@@ -323,37 +372,43 @@ residual differences come from the failing seeds' errors, which are near 0.5 but
   labels predicts exactly how many default-variant fold fits hold χ_S (`P2.fold_criterion_vs_default_folds`).
 
 **Against the networks** (Numerical for d ≤ 120; Heuristic beyond).
-- **DFG.** Its measured n* is one of a few values set by which grid interval holds n_thr ≈ 2k ln d:
+- **DFG.** Its measured n* is one of a few values set by which grid interval holds n_thr (which grows like 2k ln d):
   - 16·2^0.8 ≈ 28 or 32·2^0.8 ≈ 56, when every seed fails at one grid point and passes at the next;
   - 16, when the forced variant succeeds at n = 16;
   - 52, for par4 at d = 30, where one of three seeds passes at n = 32.
 - **Networks.** Their n* grows as d^1.04, d^1.91 and d^2.40 for k = 2, 3, 4. These are least-squares slopes of log n*
-  on log d over d = 15–60 (`DSCALE.md`, `dscale.json`). For k = 2 and 3 that is close to d^(k−1); for k = 4 it stays
+  on log d over d = 15–60 (`DSCALE.md`, `dscale.json`), fits through three points with no uncertainty quoted. For k = 2
+  and 3 that is close to d^(k−1); for k = 4 it stays
   below d³ on this range. The d = 120 networks (par2 842, par3 14029) are close to the d = 60 values extrapolated with
   these slopes (879, 12834).
 - **d = 1000** (Heuristic). The test-limited DFG prediction is n* = 55.7, 55.7, 56.8 (P(pass at n = 64) = 1.000,
-  0.9999, 0.967). The networks' power laws give 8.0·10³, 7.4·10⁵, 1.2·10⁷.
+  0.9999, 0.967). Like the "expected" column, it sets the error to 0 or 0.5 and ignores the forced variant, which could
+  lower it wherever the forced guess is χ_S. The networks' power laws give 8.0·10³, 7.4·10⁵, 1.2·10⁷.
 - **But DFG v1.3's budget does not run that test at d = 1000.** There m₃ = 17 (8 under the cross-validation's half
   budget) and m₄ = 0, both below 32, so the degree-3 and degree-4 searches are skipped. As coded, DFG v1.3 would not find
   par3 or par4 by its test at d = 1000. An exhaustive search on n = 64 rows would cost 0.11 network runs (degree 3) and
   55.9 (degree 4).
 - More generally, at n > 512 the budgeted search admits no degree-3 character from d = 630 on, and no degree-4
   character from d = 179 on; under the half budget, from 469 and 148 (`P5.d_parity_unreachable`). There m_k < 32 or
-  m_k ≤ n_thr(k, d), so P2′ excludes every target, not only parities.
+  m_k ≤ n_thr(k, d), so P2′ excludes every target, not only parities. This concerns the budgeted global search only:
+  degree-3 and degree-4 characters of other targets can still enter through ext1 or the local class (on all rows), or
+  through ext2.
 - So DFG's logarithmic sample size is bought with search compute that grows like d^k (P5), while the networks' sample
   size grows polynomially at a cost per run linear in d.
 
 ## 3. P3: general characters at round 0, and n_glob
 
-**P3a (Proved).** Take round 0 of a fit call and a set S with |S| = k searched on all n rows (at d = 30: k ≤ 4 at every
-grid n). Write ĉ_S = mean(yχ_S) and m_S = mean(χ_S). Then v_S = ĉ_S − w₀m_S and s² = 1 − 2w₀ȳ + w₀², and
+**P3a (Proved).** Take round 0 of a fit call and a set S with |S| = k searched on all n rows. At d = 30 the final fit
+searches degrees 1–2 on all rows at every grid n, and degrees 3–4 at every grid n ≥ 32; at n = 16 it skips degrees
+3–4. The fold fits search degrees 3–4 on all their rows from n = 64 (`P3.d30_searched_rows`). Write ĉ_S = mean(yχ_S)
+and m_S = mean(χ_S). Then v_S = ĉ_S − w₀m_S and s² = 1 − 2w₀ȳ + w₀², and
 
   z_S > 1  ⟺  n > 2c² L_k s² / v_S².
 
 For iid uniform rows and nonempty S, exactly E[v_S] = ŷ_S (1 − 1/(n + 10⁻⁹)). The reason: E[y_t χ_S(x_u)] = ŷ_S if
 u = t and ŷ₀ · 0 = 0 if u ≠ t, so E[w₀m_S] = ŷ_S/(n + 10⁻⁹). Likewise E[ȳ²] = ŷ₀² + (1 − ŷ₀²)/n.
 
-**P3b (first order; Heuristic as a prediction).** Replace v_S by ŷ_S and s² by 1 − ŷ₀². The round-0 test then admits S
+**P3b (first order; Heuristic as a prediction).** Replace v_S by ŷ_S and s² by 1 − ŷ₀². S then passes the round-0 test
 once n exceeds
 
   **n_glob(S) = 2c² ln(4K C(d, |S|)/δ) (1 − ŷ₀²) / ŷ_S²**,
@@ -370,7 +425,10 @@ runs on m = min(n, m_k) rows, so the condition is m > n_glob. At d = 30, m₅ = 
 
 the product of three factors: a smaller union bound (for example C(30, 4) = 27405 globally against C(|V|, 4) ≤ 495 in
 the local class, or 30 per base in ext1), a smaller residual, and the residual's coefficient on S, which stays near ŷ_S
-while S is orthogonal to the fitted features.
+while S is orthogonal to the fitted features. For a class searched on a subsample, m and rms(r[:m]) replace n and s_j.
+At d = 30 on this grid no later-round class is subsampled: ext1 and the local class use all rows; the global search
+uses all rows for degrees 1–2 and, in any call with at least 32 rows, for degree 3; and ext2's row cap (at least 2013
+rows with 32 bases) exceeds every call's rows (`P3.d30_searched_rows.ext2_all_rows_every_call`).
 
 **Data** (Numerical). The 41 targets of the `designed` (21) and `random` (20) suites, seed 0, every grid n
 (451 fits), and the 1697 non-constant characters of the targets' exact Fourier supports (`P3.targets`, `P3.chars`).
@@ -385,6 +443,9 @@ degree is searched:
 - **They agree in 8409 (96.9%).**
 - Of the 104 pairs with n > n_glob that fail, 100 lie within one doubling above n_glob.
 - Of the 168 pairs with n ≤ n_glob that pass, 139 lie within one doubling below.
+- **So the 96.9% is dominated by pairs far from n_glob** (`P3.test0.agree_by_distance`). Within one doubling of
+  n_glob (log2(n/n_glob) in (−1, 1]) the two agree in 773 of 1012 pairs (76%); between one and two doublings away, in
+  1015 of 1045 (97%); at least two doublings away, in 6621 of 6624 (99.9% below n_glob, 100% above).
 
 The disagreements are the sampling fluctuation of v_S. A normal approximation (Heuristic) treats v_S as
 N(ŷ_S, (1 − ŷ_S²)/n) against the threshold √((1 − ŷ₀²)·2L/n), and uses P2's exact probability for |ŷ_S| = 1. It predicts
@@ -438,11 +499,12 @@ characters are:
 - the round-0 test itself, 40 (35 of them one doubling early).
 
 For the later-round classes, the table gives medians over the characters that enter early or without a prediction
-(`P3.entry_vs_nglob`, `P3.factors`):
+(`P3.entry_vs_nglob`, `P3.factors`). Each column's median is taken separately:
 - "enter below n_glob" is log2(n_glob/n_first), for degree ≤ 6;
 - "class gain" is log2(n_glob/n_cls), P3c's factorization at the round of entry. It is the larger of the two, because a
   character enters at the first grid point where its class passes, usually with z > 1;
-- the three factor columns are that factorization's union-bound, residual and coefficient factors.
+- the three factor columns are that factorization's union-bound, residual and coefficient factors. The class gain and
+  these three are over all the class's characters, including the local class's 55 of degree ≥ 7.
 
 | class | characters (degree ≤ 6) | enter below n_glob (doublings) | class gain (doublings) | L_glob/L_cls | (1 − ŷ₀²)/s_j² | v_j²/ŷ_S² |
 |---|---|---|---|---|---|---|
@@ -451,10 +513,25 @@ For the later-round classes, the table gives medians over the characters that en
 | ext1 | 33 (33) | 1.7 | 2.3 | 1.32 | 3.2 | 0.86 |
 | global, rounds ≥ 1 | 37 (37) | 1.4 | 1.7 | 1.00 | 3.3 | 0.85 |
 
-- **The smaller residual is the main factor in every class.** For the composition classes the smaller union bound adds
-  a factor of 1.2–1.7, i.e. at most 0.8 doublings; the global test in later rounds has round 0's union bound.
+- **At the class medians, the smaller residual is the main factor in every class.** For the composition classes the
+  median union-bound factor is 1.2–1.7, i.e. at most 0.8 doublings at the median; the global test in later rounds has
+  round 0's union bound. Per character the union-bound factor is larger in many cases. In the local class it runs
+  1.29–3.34 over the 277 characters of degree ≤ 6 (median 1.60; 121 of them, 44%, above 1.7), and up to 4.25 with the
+  hypothetical global L of degree ≥ 7. In ext1 it runs 1.12–1.80 and in ext2 1.09–1.38 (`P3.factors_spread`).
+- **The spread per character is wide**, so the medians do not multiply. For the local class the product of the
+  medians is 1.709 × 19.20 × 0.797 = 26.2, i.e. 4.7 doublings, against a median class gain of 4.5. Per character,
+  min–max with the interquartile range in brackets (`P3.factors_spread`):
+
+  | class | L_glob/L_cls | (1 − ŷ₀²)/s_j² | v_j²/ŷ_S² | class gain (doublings) |
+  |---|---|---|---|---|
+  | local | 1.29–4.25 [1.41–1.81] | 1.5–50.0 [5.7–28.9] | 0.05–28.9 [0.55–1.21] | 0.2–10.6 [2.9–5.6] |
+  | ext2 | 1.09–1.38 [1.11–1.22] | 1.2–38.7 [2.0–7.1] | 0.68–3.67 [0.96–1.22] | 0.7–5.6 [1.7–3.0] |
+  | ext1 | 1.12–1.80 [1.22–1.46] | 1.4–23.2 [2.4–7.0] | 0.41–2.78 [0.70–1.21] | 0.6–4.3 [1.4–2.8] |
+  | global, rounds ≥ 1 | 1.00 | 1.5–59.5 [2.3–11.4] | 0.11–3.67 [0.60–1.25] | 0.3–3.9 [1.3–3.5] |
+
+  Over all four classes the residual factor runs 1.2–59.5.
 - **The local class** is DFG's junta completion, every subset of the inputs in use. It enters after the large terms
-  are fitted, when s_j² is about 1/19 of the label variance.
+  are fitted, when s_j² is a median 1/19 of the label variance.
 - **Degree ≥ 7.** 55 of the local class's 332 characters have degree ≥ 7, where no global test exists. Their
   L_glob is that of a hypothetical global test of their degree.
 - **Against ORDER.md.** On the Part 5 targets ORDER.md took every character-seed admitted by each route, of degree
@@ -475,7 +552,9 @@ except the most populous one, v_max (line 835); the constant is always a feature
 occupied in training, span{1, φ_v} contains every function of the group label. Hence, if each value of t that occurs in
 training is its own group, every function g(t) is represented exactly at every x whose t-value occurs in training. That
 takes at most k + 1 parameters (k indicators and the constant). By contrast, the Fourier expansion of g(t) can need all
-2^k characters of degree ≤ k (P4d).
+2^k characters of degree ≤ k (P4d). "Represented" means in the span of the block's features. DFG's own least-squares
+fit puts a ridge of 10⁻³·n on every feature but the constant (line 589), so its fitted block is slightly shrunk; the
+numerical check below uses plain least squares.
 
 *Proof.* For a function h of the group label, h = h(v_max)·1 + Σ_{v ≠ v_max} (h(v) − h(v_max)) φ_v holds on every
 occupied group. □
@@ -483,7 +562,8 @@ occupied group. □
 **P4b (Proved, by the code).** `_edges` scans the observed values in increasing order. It closes a group as soon as the
 running count reaches mc = max(3, ⌊0.005 n⌋) and merges a short last group into the one before. Hence every observed
 value is its own group iff every observed value has at least mc training points. A value with fewer than mc points
-always shares a group: with the next value, or with the previous one if it is the last. In the large-n limit (counts
+always shares a group with a neighbouring value: it continues a run begun by earlier values, or its run takes in the
+next value, or, as the last value, it is merged into the previous group. In the large-n limit (counts
 n·P(t = v), mc = 0.005 n) the rarest values are t = ±k, with probability 2^(−k). So every value is its own group iff
 2^(−k) ≥ 0.005, i.e. k ≤ 7; for k ≥ 8 the tails merge.
 
@@ -517,7 +597,9 @@ for k = 2–16 and ρ = 0, 1, 2 (405 cases, no exception; `P4.mod3_vanishing_rul
 k − 2ρ ≡ 2, 2, 1 (mod 3), so every a_j with j ≥ 1 is nonzero.
 
 **P4f (Proved): what the block search sees.** Every starting order and seed of `_block_search` (lines 227–361) is
-computed from statistics of one or two inputs. The greedy growth and the local search that follow score larger blocks,
+computed from statistics of one or two inputs. The one addition is the earlier candidates that the product and split
+searches pass in as extra starting points (`init`, lines 762 and 774); those blocks were themselves grown from such
+seeds. The greedy growth and the local search that follow score larger blocks,
 whose statistic sees higher degrees, but only along these starting points. The starting points are:
 - the top eigenvectors of the residual pair matrix M, and its strongest entries;
 - the degree-1 coefficients c₁, and the best single inputs;
@@ -669,16 +751,17 @@ background; at n ≤ 512 the 2F fold fits are added with their exact fold sizes 
 | claim | what | label | checked by (key in `check_theory.json`) |
 |---|---|---|---|
 | P1a | null, round 0: global test admits a degree-k character with prob. ≤ 2N(δ/(4KN))^{u²c²} (δ/(2K) at u = c = 1) | Proved | `P1.sims` (280 checks), `P1.full_fits` |
-| P1b | null, round 0: the linear block's statistic exceeds d + 2√(dx) + 2x with prob. ≤ e^{−x} (δ at the code's level) | Proved | `P1.sims[*].linear` (64 checks) |
+| P1a′ | the same bound for iid rows from any input law, for the degrees searched on all rows of the fit call | Proved | — |
+| P1b | null, round 0, uniform rows: the linear block's statistic exceeds d + 2√(dx) + 2x with prob. ≤ e^{−x} (δ at the code's level) | Proved | `P1.sims[*].linear` (64 checks) |
 | P1c | nothing admitted in round 0 ⇒ the default variant's model is the constant plus the background | Proved (code) | `P1.full_fits_replica` (110 / 110) |
 | — | spectral block, sum blocks, forced variant, the cross-validation's choice, rounds ≥ 1 | not covered | `P1.sims[*].quad`, `P1.full_fits`, `P1.nonconstant_fits`, `P1.forced_fits_replay` |
-| P2 | a k-parity passes iff n(1 − ȳ²) > n_thr(k, d); exact binomial P(pass) | Proved | `P2.agree` (250 / 250), `P2.cells`, `P2.fold_criterion_vs_default_folds` (50 / 50) |
-| P2′ | any target, any round: a class of N candidates admits nothing on m ≤ 2c² ln(4KN/δ) rows | Proved | `P5.d_parity_unreachable` (where it binds) |
+| P2 | a k-parity passes round 0's global test iff n(1 − ȳ²) > n_thr(k, d); exact binomial P(pass). Admission into the final model is measured | Proved | `P2.agree` (250 / 250; 10⁻⁹ term: 247 / 247), `P2.cells`, `P2.fold_criterion_vs_default_folds` (50 / 50), `P2.n_thr_decomposition` |
+| P2′ | any target, any round: no character passes the test of a class of N candidates on m ≤ 2c² ln(4KN/δ) rows (forced guesses and the linear block are outside this floor) | Proved | `P5.d_parity_unreachable` (where it binds) |
 | — | measured n* = the interpolation from the first passing grid point, plus the forced variant at n = 16 | Numerical | `P2.pred` |
 | — | d = 1000, and the networks' extrapolation | Heuristic | `P2.d1000`, `P2.networks` |
-| P3a | the exact round-0 criterion; E[v_S] = ŷ_S(1 − 1/(n + 10⁻⁹)) | Proved | — |
-| P3b | n_glob as the first-order detection size | Heuristic | `P3.test0` (96.9%, calibration), `P3.first`, `P3.late` |
-| P3c | later-round classes: n_glob/n_cls = union-bound × residual × coefficient factors | Proved (identity) | `P3.factors`, `P3.entry_vs_nglob`, `P3.entry_vs_nglob_all` |
+| P3a | the exact round-0 criterion; E[v_S] = ŷ_S(1 − 1/(n + 10⁻⁹)) | Proved | `P3.d30_searched_rows` (where it applies at d = 30) |
+| P3b | n_glob as the first-order detection size | Heuristic | `P3.test0` (96.9%; 76% within one doubling of n_glob; calibration), `P3.first`, `P3.late` |
+| P3c | later-round classes: n_glob/n_cls = union-bound × residual × coefficient factors | Proved (identity) | `P3.factors` (medians), `P3.factors_spread`, `P3.entry_vs_nglob`, `P3.entry_vs_nglob_all` |
 | P4a–c | block representation (≤ k + 1 parameters), grouping, what grouping loses | Proved (code) | `P4.grouping`, `P4.generic` |
 | P4d–e | Fourier coefficients of g(B); the mod-3 closed form and its bound | Proved | `P4.targets` (exact, equal to Walsh–Hadamard) |
 | P4f | E[M_ij] = f̂({i, j})(1 − 1/(n + 10⁻⁹)), E[c₁ᵢ] = f̂({i})(1 − 1/(n + 10⁻⁹)) | Proved | — |

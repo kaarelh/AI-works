@@ -24,6 +24,12 @@ Tables of sections/results.tex ("How well it does"):
   tab_tabular        kr_vs_kp and mushroom: test error per cell with verdicts, compute; summary per reference (q6_tabular)
   tab_compute        FLOPs and CPU seconds per fit, per run and by n (compute)
 
+Tables of sections/learner.tex ("What DFG is"); every value is computed from the frozen DFG v1.3 itself
+(study/part10/hyb_portfolio3/dfg13.py, md5 asserted), not from RESULTS.json:
+  tab_dictionary     DFG's candidate classes at d = 30: size N, rows tested, log term of the threshold, smallest n that
+                     can pass (checked against study/part11/interp/theory/check_theory.json)
+  tab_params         the constructor defaults as run, and the constants fixed in the code (asserted at their lines)
+
 Conventions.  n* = training-set size at 10% test error (seed mean, log-interpolated on 16..16384; 'never' if not
 reached).  'A vs B' or a ratio = log2(n*_A / n*_B), negative when A needs less data; clearly better / worse = ratio
 below -0.25 / above +0.25, or only one of the two reaches 10% error (compare_hybrid.toy_summary).  Summary cells are
@@ -847,6 +853,446 @@ def tab_compute():
          by_n={n: {k: num(v) for k, v in B[n].items()} for n in NS_},
          paired_ratio_range=[min(num(B[n]["paired_ratio_median"]) for n in NS_), max(num(B[n]["paired_ratio_median"]) for n in NS_)],
          lowdeg_max_flops=max(num(x["max_flops_frac"]) for x in lw))
+
+
+# =========================================================================================================================
+# sections/learner.tex ("What DFG is"): every value is read from the frozen DFG v1.3 itself
+# =========================================================================================================================
+def _frozen_dfg():
+    """The frozen DFG v1.3 (study/part10/hyb_portfolio3/dfg13.py, md5 asserted by part11/eval_dfg.load_dfg13), its source
+    text, its constructor defaults (read with inspect) and harness.gd_flops, the budget unit."""
+    import inspect
+    for p in (os.path.join(STUDY, "discrete_learner"), os.path.join(STUDY, "part11")):
+        if p not in sys.path:
+            sys.path.insert(0, p)
+    import eval_dfg                                              # loads part10/hyb_portfolio3/dfg13.py, md5 asserted
+    from harness import gd_flops
+    M = eval_dfg.load_dfg13()
+    src = open(eval_dfg.DFG13).read()
+    dflt = {k: v.default for k, v in inspect.signature(M.DFG.__init__).parameters.items() if k != "self"}
+    return M, src, dflt, gd_flops
+
+
+def _budget_rows(M, D, gd_flops, d, scale):
+    """Rows of the budgeted searches of one fit call with budget scale `scale` (DFG._fit: GD = gd_flops(d) * scale, line 582;
+    degree 3, line 628; degree 4, line 638; degrees 5..K_hi, line 654; two-input extensions of b bases, line 668), before
+    the min(n, .)."""
+    GD = gd_flops(d) * scale
+    m3 = int(D.budget[1] * GD / (d * (2 * d * d + 2 * d)))
+    m4 = int(D.budget[0] * GD / (math.comb(d, 2) * (2 * d * d + 3 * d)))
+    mk = {}
+    for k in range(D.K + 1, D.K_hi + 1):
+        k1, k2 = (k + 1) // 2, k // 2
+        N1, N2 = math.comb(d, k1), math.comb(d, k2)
+        mk[k] = int(D.budget_hi * GD / (2 * N1 * N2 + M.m_tab_cost(d, k1, k2)))
+    me = lambda b: int(D.budget[2] * GD / (b * (2 * d * d + 3 * d)))
+    return m3, m4, mk, me
+
+
+def _thin(v):
+    """An integer with thin-space thousands separators."""
+    return f"{int(v):,}".replace(",", "\\,")
+
+
+def _sci(v, p=1):
+    """A positive number as $a\\times10^{b}$."""
+    e = int(math.floor(math.log10(v))); m = v / 10 ** e
+    return f"${m:.{p}f}\\times10^{{{e}}}$"
+
+
+@table
+def tab_dictionary():
+    """sections/learner.tex, tab:dictionary.  DFG v1.3's candidate classes at d = 30: what each enumerates, the rows its
+    test uses, its size N (the count its union bound pays for), the log term of its threshold and the smallest n at which
+    any member can pass its own test.  Characters: L = ln(4KN/delta) (dfg13.py line 602), smallest n = 2 c^2 L (P2':
+    Cauchy-Schwarz).  Sum blocks: L_B = ln(4K C(d,k) 2^(k-1) 2 (1+mu) k_max / delta) (line 719), i.e. L with
+    N = C(d,k) 2^(k-1) 2 (1+mu) k_max; smallest n = 1 + 2 sqrt(L_B) + 2 L_B (dfg13._chi2_thr at nu = 1; the block
+    statistic is at most n by Bessel's inequality).  Linear block: its chi^2_k threshold at k = d (line 699) and its room
+    condition n >= 2(p + k) in round 0; spectral features: n >= 4d (line 707).  Every value is computed from the frozen
+    file (constructor defaults, its helpers _chi2_thr, _ln_inner, m_tab_cost, and the budget formulas of DFG._fit) with
+    harness.gd_flops; the budgeted rows and n_thr are checked against study/part11/interp/theory/check_theory.json
+    (P5.m_table, P2.n_thr)."""
+    M, src, dflt, gd_flops = _frozen_dfg()
+    D = M.DFG(readout="logit"); d = 30
+    K, c, dl, KM = D.K, D.c, D.delta, D.sum_kmax
+    L = lambda N: math.log(4 * K * max(N, 1) / dl)                       # line 602
+    nfl = lambda N: 2 * c * c * L(N)                                       # P2'
+    Nb = lambda k, nmod=1: math.comb(d, k) * 2 ** (k - 1) * 2 * nmod * KM   # line 719, as N in ln(4KN/delta)
+    tau = lambda k, nmod=1: math.log(4 * D.K * math.comb(d, k) * 2.0 ** (k - 1) * 2 * nmod * KM / D.delta)
+    bfl = lambda t: M._chi2_thr(1, t)
+    # ---- checks against THEORY.md's numbers
+    TJ = json.load(open(os.path.join(STUDY, "part11", "interp", "theory", "check_theory.json")))
+    for dd in (15, 30, 60, 120):
+        T = TJ["P5"]["m_table"][str(dd)]
+        for sc, key in ((1.0, "scale1.0"), (0.5, "scale0.5"), (0.05, "scale0.05"), (0.025, "scale0.025")):
+            m3, m4, mk, _ = _budget_rows(M, D, gd_flops, dd, sc)
+            assert (m3, m4, mk[5], mk[6]) == tuple(T[f"m{k}"][key] for k in (3, 4, 5, 6)), (dd, sc)
+    for dd, row in TJ["P2"]["n_thr"].items():
+        for k, v in row.items():
+            assert abs(nfl(math.comb(int(dd), int(k))) - v) < 1e-9, (dd, k)
+    for k in range(2, KM + 1):
+        assert abs(tau(k) - L(Nb(k))) < 1e-9
+    # ---- values at d = 30
+    m3, m4, mk, me = _budget_rows(M, D, gd_flops, d, 1.0)
+    m3h, m4h, mkh, meh = _budget_rows(M, D, gd_flops, d, 0.5)
+    B, V = D.max_ext_bases, D.local_max
+    NMAX = 16384                                                            # the grid's largest n
+    assert min(m3, m4, me(B)) > NMAX and min(m3h, m4h, meh(B)) > 512    # degrees 3, 4 and ext2 run on all rows at d = 30
+    assert mk[5] < NMAX and mk[6] < NMAX
+    rng = lambda a, b, f: f"{f(a)}--{f(b)}"
+    f2 = lambda v: f"{v:.2f}"
+    loc_N = [math.comb(v, k) for v in range(2, V + 1) for k in range(1, v + 1)]
+    lin_thr = lambda k: k + 2 * math.sqrt(k * math.log(1 / dl)) + 2 * math.log(1 / dl)   # line 699
+    cand = {1: "every $x_i$", 2: "every pair", 3: "every triple", 4: "every 4-set; round 0",
+            5: "round 0, final fit", 6: "round 0, final fit"}
+    rows_of = {1: "all", 2: "all", 3: "all", 4: "all", 5: f"first {_thin(mk[5])} ({_thin(mkh[5])})",
+               6: f"first {_thin(mk[6])} ({_thin(mkh[6])})"}
+    Lx = ["\\begin{tabular}{@{}lllrrr@{}}", "\\toprule",
+          "class & candidates & rows tested & $N$ at $d=30$ & $\\ln(4KN/\\delta)$ & \\hd{smallest $n$\\\\that can pass}\\\\",
+          "\\midrule", "\\multicolumn{6}{@{}l}{\\emph{Characters} $\\chi_S$, test \\eqref{eq:chartest}}\\\\"]
+    for k in range(1, D.K_hi + 1):
+        N = math.comb(d, k)
+        Lx.append(f"global, $k={k}$ & {cand[k]} & {rows_of[k]} & {_thin(N)} & {f2(L(N))} & {f2(nfl(N))}\\\\")
+    C2 = math.comb(d, 2)
+    Lx += [f"extension, $+1$ input & $T\\cup\\{{j\\}}$ & all & $bd\\le{_thin(B * d)}$ & {rng(L(d), L(B * d), f2)} & "
+           f"{rng(nfl(d), nfl(B * d), f2)}\\\\",
+           f"extension, $+2$ inputs & $T\\cup\\{{j,l\\}}$ & all & $b\\binom d2\\le{_thin(B * C2)}$ & {rng(L(C2), L(B * C2), f2)} & "
+           f"{rng(nfl(C2), nfl(B * C2), f2)}\\\\",
+           f"local & $S\\subseteq V$, $|V|\\le{V}$ & all & $\\binom{{|V|}}{{|S|}}\\le{_thin(max(loc_N))}$ & "
+           f"{rng(L(min(loc_N)), L(max(loc_N)), f2)} & {rng(nfl(min(loc_N)), nfl(max(loc_N)), f2)}\\\\",
+           "\\addlinespace", "\\multicolumn{6}{@{}l}{\\emph{Dense moves}}\\\\",
+           f"linear block & every remaining $x_i$ & all & \\multicolumn{{2}}{{r}}{{$\\chi^2_d$ threshold {lin_thr(d):.1f}, "
+           f"\\eqref{{eq:lintest}}}} & {2 * (1 + d)}\\\\",
+           f"spectral features & $\\le4$ eigenvectors & all & \\multicolumn{{2}}{{r}}{{edge \\eqref{{eq:spectest}}}} & {4 * d}\\\\",
+           "\\addlinespace",
+           f"\\multicolumn{{6}}{{@{{}}l}}{{\\emph{{Sum blocks}} on $k$ inputs, test \\eqref{{eq:blocktest}}, $\\mu=0$; "
+           f"searched on the first {_thin(D.sum_gcap)} rows}}\\\\"]
+    KS = [2, 3, 5, 9, 14, KM]
+    for k in KS:
+        Lx.append(f"$k={k}$ & $(S,s)$, folded or not & all & {_sci(Nb(k))} & {f2(tau(k))} & {bfl(tau(k)):.1f}\\\\")
+    w_extra = M._ln_inner(d); w_cnt = 2 * (4 * d + 20 * C2)
+    Lx += [f"weighted & $+a\\tau$, $a\\in\\{{\\pm2,\\pm3\\}}$ & all & $\\times\\,{_thin(w_cnt)}$ & $+{w_extra:.2f}$ & \\\\",
+           f"modulated & by $\\chi_P$, $\\mu\\le{D.sum_mod}$ & all & $\\times\\,(1+\\mu)$ & $\\le+{math.log(1 + D.sum_mod):.2f}$ & \\\\",
+           "product & $A\\times B$, disjoint & all & $N_AN_B$ & $L_A+L_B$ & \\\\",
+           "\\bottomrule", "\\end{tabular}"]
+    write("tab_dictionary", Lx)
+    n_glob_chars = sum(math.comb(d, k) for k in range(1, D.K_hi + 1))
+    n_blocks = sum(math.comb(d, k) * 2 ** (k - 1) * 2 for k in range(2, KM + 1))
+    note("tab_dictionary", d=d, K=K, c=c, delta=dl, k_max=KM, gd_flops_d30=gd_flops(d),
+         n_thr={dd: {k: nfl(math.comb(dd, k)) for k in range(1, 7)} for dd in (15, 30, 60, 120, 1000)},
+         L_char={k: L(math.comb(d, k)) for k in range(1, 7)},
+         rows_scale1=dict(m3=m3, m4=m4, m5=mk[5], m6=mk[6], m_ext2_b32=me(B)),
+         rows_scale05=dict(m3=m3h, m4=m4h, m5=mkh[5], m6=mkh[6], m_ext2_b32=meh(B)),
+         rows_fold=dict(F5=_budget_rows(M, D, gd_flops, d, 1 / 20)[:2], F10=_budget_rows(M, D, gd_flops, d, 1 / 40)[:2]),
+         rows_d60_d120_scale1={dd: dict(zip(("m3", "m4"), _budget_rows(M, D, gd_flops, dd, 1.0)[:2])) for dd in (60, 120)},
+         ext1_N=[d, B * d], ext2_N=[C2, B * C2], local_N=[min(loc_N), max(loc_N)],
+         linear_thr_k30=lin_thr(d), linear_min_n_round0=2 * (1 + d), spectral_min_n=4 * d,
+         tau={k: tau(k) for k in range(2, KM + 1)}, block_min_n={k: bfl(tau(k)) for k in range(2, KM + 1)},
+         block_N={k: Nb(k) for k in KS}, weighted_extra_nats=w_extra, weighted_count=w_cnt,
+         modulator_extra_nats_max=math.log(1 + D.sum_mod),
+         global_chars_deg1to6=n_glob_chars, unweighted_blocks_S_s_fold=n_blocks, three_pow_d=3 ** d,
+         par4_name_nats=L(math.comb(d, 4)), char_min_n_deg1=nfl(d), char_min_n_deg4=nfl(math.comb(d, 4)))
+
+
+PARAM_ROLES = [   # (constructor argument, what it sets); the values are read from the frozen file
+    ("Tests", None),
+    ("K", "global degree in round 0"),
+    ("K_later", "global degree, rounds $\\ge1$"),
+    ("K_hi", "top degree, round 0"),
+    ("c", "threshold multiplier"),
+    ("delta", "level $\\delta$ of every test"),
+    ("noise", "tests scaled by $s=\\mathrm{rms}(r)$"),
+    ("Rounds and classes", None),
+    ("rounds", "rounds at most"),
+    ("max_new", "characters admitted per round"),
+    ("max_feats", "features (also $\\le n/2$)"),
+    ("max_ext_bases", "characters extended"),
+    ("local_max", "largest $|V|$, local class"),
+    ("blocks", "linear and spectral moves"),
+    ("Small $n$ and budget", None),
+    ("small_n", "forced variant and its test"),
+    ("cv_n", "the test runs at $n\\le$ this"),
+    ("background", "kernel background $g\\cdot x$"),
+    ("budget", "shares: degree 4; 3; ext.\\ by 2"),
+    ("budget_hi", "share: degrees 5, 6 each"),
+    ("Readout", None),
+    ("readout", "run as \\code{logit}"),
+    ("ridge", "ridge of least squares ($\\times n$)"),
+    ("logit_lam", "L2 penalty, logistic steps"),
+    ("Sum blocks", None),
+    ("sums", "sum blocks"),
+    ("sum_nmin", "smallest $n$ for the block search"),
+    ("sum_kmax", "largest block; the $k_{\\max}$ of $N_B$"),
+    ("sum_mod", "modulators $\\mu$ at most"),
+    ("sum_add", "additive blocks per round"),
+    ("sum_gcap", "rows for the search's scores"),
+    ("sum_mc", "smallest group over $n$ (at least 3)"),
+    ("sum_prod", "product and split blocks"),
+    ("sum_seeds", "eigenvector, pair, single seeds"),
+    ("sum_inner", "weighted blocks $t+a\\tau$"),
+    ("sum_ntau", "pairs tried as inner terms"),
+    ("sum_beam", "beam width"),
+    ("sum_beam_nmax", "beam only at $n\\le$ this"),
+    ("sum_force", "forced variant may force a block"),
+    ("sum_force_nmin", "smallest $n$ for a forced block"),
+    ("sum_force_r2", "smallest $T_B/n$ of a forced block"),
+]
+
+FIXED = [   # ([(code fragment that must occur in the frozen source, its line), ...], how it is shown, what it sets)
+    ([("for _ in range(15):", 851)], "15", "logistic Newton steps"),
+    ([("n >= 8 * len(cols)", 849)], "$n\\ge8p$", "when they run"),
+    ([("v = 4.0 * W", 850)], "$4w$", "where they start"),
+    ([("fl[0] > 0.75 * GD", 598)], "0.75", "budget share that ends the rounds"),
+    ([("F = 10 if n <= 64 else 5", 553)], "10 / 5", "folds at $n\\le64$ / above"),
+    ([("b - c_ > 2 * math.sqrt(b + c_)", 567)], "$2\\sqrt{e_{10}+e_{01}}$", "margin of the paired test"),
+    ([("False, 1 / (4 * F))", 564), ("run(variants[best], X, y, True, 0.5)", 569)], "$\\frac1{4F}$, $\\frac12$",
+     "budget scale: fold fit, final fit"),
+    ([("if m >= 32 else 0", 630), ("if m < 64:", 655)], "32 / 64", "fewest rows: degrees 3, 4 / 5, 6"),
+    ([("[:4] if n >= 4 * d else []", 707)], "4; $4d$", "spectral features; smallest $n$"),
+    ([("forced[0] < 2", 817)], "2", "forced guesses per fit"),
+    ([("live = s2S > 1e-4 * s2", 734)], "$10^{-4}$", "least $\\mathrm{mean}(\\tilde r^2)/s^2$ for blocks"),
+    ([("mc = max(3, int(self.sum_mc * n))", 721)], "3", "fewest points per group"),
+    ([("for a in (2, 3, -2, -3):", 273)], "$\\pm2,\\pm3$", "weights $a$ of inner terms"),
+    ([("patience=5", 179)], "5", "growth steps without gain"),
+    ([("npool=24", 180)], "24", "pairs for inner-term extensions"),
+    ([("bcap=1024", 180)], "1024", "rows of the beam"),
+    ([("for _ in range(3 * kmax):", 376)], "$3k_{\\max}$", "refinement moves at most"),
+]
+
+
+def _pval(v):
+    if isinstance(v, bool):
+        return str(v)
+    if isinstance(v, str):
+        return "\\code{" + v + "}"
+    if isinstance(v, (tuple, list)):
+        return "(" + ", ".join(_pval(x) for x in v) + ")"
+    if isinstance(v, float):
+        return f"{v:g}"
+    return str(v)
+
+
+@table
+def tab_params():
+    """sections/learner.tex, tab:params.  The frozen DFG v1.3's constructor defaults (read with inspect from dfg13.py,
+    md5 asserted; it is run as DFG(readout="logit") with every other argument at its default), and the constants fixed
+    in its code, each asserted to occur in the frozen source at the line given."""
+    M, src, dflt, gd_flops = _frozen_dfg()
+    lines = src.split("\n")
+    shown = {k for k, r in PARAM_ROLES if r is not None}
+    assert shown == set(dflt) - {"name"}, sorted(set(dflt) ^ shown)
+    for frags, _, _ in FIXED:
+        for frag, ln in frags:
+            assert frag in lines[ln - 1], (frag, ln)
+    head = lambda t, ncol: f"\\multicolumn{{{ncol}}}{{@{{}}l}}{{\\emph{{{t}}}}}\\\\"
+
+    def panel(rows):
+        out = []
+        for k, r in rows:
+            out.append(head(k, 3) if r is None else f"\\code{{{k}}} & {_pval(dflt[k])} & {r}\\\\")
+        return out
+    cut = PARAM_ROLES.index(("Sum blocks", None))
+    left = (["\\begin{tabularx}{\\linewidth}[t]{@{}l@{\\hspace{4pt}}l@{\\hspace{5pt}}>{\\raggedright\\arraybackslash}X@{}}",
+             "\\toprule"] + panel(PARAM_ROLES[:cut]) + ["\\bottomrule", "\\end{tabularx}"])
+    right = (["\\begin{tabularx}{\\linewidth}[t]{@{}l@{\\hspace{4pt}}l@{\\hspace{5pt}}>{\\raggedright\\arraybackslash}X@{}}",
+              "\\toprule"] + panel(PARAM_ROLES[cut:]) + ["\\bottomrule", "\\end{tabularx}", "\\par\\medskip",
+              "\\begin{tabularx}{\\linewidth}[t]{@{}l@{\\hspace{5pt}}>{\\raggedright\\arraybackslash}Xr@{}}", "\\toprule",
+              head("Fixed in the code", 2) .replace("\\\\", "") + " & line\\\\"])
+    for frags, val, what in FIXED:
+        right.append(f"{val} & {what} & {', '.join(str(ln) for _, ln in frags)}\\\\")
+    right += ["\\bottomrule", "\\end{tabularx}"]
+    L = (["\\begin{minipage}[t]{0.505\\linewidth}"] + left + ["\\end{minipage}\\hfill", "\\begin{minipage}[t]{0.47\\linewidth}"]
+         + right + ["\\end{minipage}"])
+    write("tab_params", L)
+    note("tab_params", defaults={k: (list(v) if isinstance(v, tuple) else v) for k, v in dflt.items()}, run_as=dict(readout="logit"),
+         fixed={f"{ln}": frag for frags, _, _ in FIXED for frag, ln in frags})
+
+
+# =========================================================================================================================
+# sections/ablations.tex ("What its parts do", sec:ablations): RESULTS.json q5_ablations and q5b_core, and
+# study/part11/interp/ablations/ablations.json (written by ablations.py from the same result files, the paired null of
+# perm_null.py and the leave-one-in runs of leavein.py; families from families.py).
+# =========================================================================================================================
+ABJ = os.path.join(STUDY, "part11", "interp", "ablations", "ablations.json")
+ABL_TAGS = [("nosums", "no sum blocks"), ("strict", "stricter tests, $\\delta=10^{-4}$"),
+            ("lenient", "more lenient tests, $\\delta=0.9$"), ("noeig", "no eigenvector seeds in the block search"),
+            ("noblocks", "no linear or spectral block"), ("nocomp", "no extension or local classes"),
+            ("noweighted", "no weighted blocks"), ("nosmalln", "no forced variant, no cross-validation"),
+            ("nobg", "no kernel background"), ("lsread", "least-squares readout"),
+            ("K3", "global search to degree 3"), ("labelnoise", "tests scaled to the labels' noise")]   # PROTOCOL.md Q5
+ABL_FAMS = ["Parities", "Staircases", "Majorities and halfspaces", "Compositions",
+            "DNF, CNF, decision lists, read-once formulas", "Random formulas", "Symmetric and pure signed-sum targets",
+            "Signed-sum mixtures"]                                   # the atlas groups present in the five ablation suites
+FAM_HEAD = {"Parities": "parities", "Staircases": "stair-\\\\cases", "Multiplexers (address and data bits)": "multi-\\\\plexers",
+            "Majorities and halfspaces": "half-\\\\spaces", "Compositions": "compo-\\\\sitions",
+            "DNF, CNF, decision lists, read-once formulas": "formulas", "Random formulas": "random\\\\formulas",
+            "Symmetric and pure signed-sum targets": "sym-\\\\metric", "Signed-sum mixtures": "mixtures"}
+CLS_HEAD = [("character", "character\\\\targets"), ("halfspace", "halfspaces"), ("sum", "symmetric and\\\\mixtures")]
+hdn = lambda lab, n: "\\hd{" + lab + "\\\\(" + str(n) + ")}"           # a two- or three-line header with the count
+_AJ = {}
+
+
+def abl_json():
+    if not _AJ:
+        _AJ.update(json.load(open(ABJ)))
+    return _AJ
+
+
+def ab_cell(s, two=True):
+    """An ablation summary: mean over the targets both reach, (clearly lower / clearly higher) [both reach]; lower = the
+    ablation (or the core) needs less data than DFG alone on the same seeds."""
+    if not s or not s.get("targets"):
+        return "--"
+    m = "n/a" if s["mean"] is None else f"${s['mean']:+.2f}$"
+    lo = f"({s['lower']}/{s['higher']})" + (f" [{s['both']}]" if two else "")
+    return f"\\begin{{tabular}}[t]{{@{{}}c@{{}}}}{m}\\\\{{\\scriptsize {lo}}}\\end{{tabular}}"
+
+
+@table
+def tab_ablations():
+    """The 12 pre-registered ablations on the 65 targets of the five ablation suites, against DFG alone on the same seeds:
+    pooled and by coarse class (families.py), the targets newly never learned; the paired null (DFG alone with another
+    column order and other folds, same training sets; post hoc) and the unpaired seed null.  Sources: ablations.json
+    ('ablations', 'nulls'), checked against RESULTS.json q5_ablations (pooled means and counts)."""
+    J = abl_json(); A = J["ablations"]; Q5 = R["q5_ablations"]
+    cn = {c: max(A[t]["by_class"][c]["targets"] for t, _ in ABL_TAGS) for c, _ in CLS_HEAD}
+    L = ["\\begin{tabular}{@{}llc" + "c" * (2 + len(CLS_HEAD)) + "@{}}", "\\toprule",
+         "run & change & seeds & \\hd{all\\\\(65)} & \\hd{newly\\\\never} & " + " & ".join(hdn(h, cn[c]) for c, h in CLS_HEAD) + "\\\\",
+         "\\midrule"]
+    for tag, what in ABL_TAGS:
+        a = A[tag]; q = Q5[tag]["pooled"]
+        assert (a["pooled"]["targets"], a["pooled"]["lower"], a["pooled"]["higher"]) == (q["targets"], q["better"], q["worse"]), tag
+        assert abs(a["pooled"]["mean"] - num(q["mean"])) < 1e-9, tag
+        nv = ", ".join(tg(x.split("/")[1]) for x in Q5[tag]["newly_never"]) or "--"
+        L.append(f"{code(tag)} & {what} & {', '.join(map(str, a['seeds']))} & {ab_cell(a['pooled'])} & {{\\scriptsize {nv}}} & "
+                 + " & ".join(ab_cell(a["by_class"].get(c)) for c, _ in CLS_HEAD) + "\\\\")
+    N = J["nulls"]; L.append("\\midrule")
+    for key, lab, sd in (("paired_seed0", "paired null", "0"), ("paired_seed01", "paired null", "0, 1"),
+                         ("unpaired_seed1_vs_seed0", "unpaired null", "1 vs 0")):
+        if key not in N:
+            L.append(f"{lab} & {'not run' if key.startswith('paired') else ''} & {sd} & -- & -- & " + " & ".join("--" for _ in CLS_HEAD) + "\\\\"); continue
+        x = N[key]; what = ("other column order and folds, same training sets" if key.startswith("paired")
+                            else "seed 1 against seed 0: other training sets")
+        nv = ", ".join(tg(k.split("/")[1]) for k, v in x["ratios"].items() if v in ("inf", INF)) or "--"
+        L.append(f"{lab} & {what} & {sd} & {ab_cell(x['pooled'])} & {{\\scriptsize {nv}}} & " + " & ".join(ab_cell(x["by_class"].get(c)) for c, _ in CLS_HEAD) + "\\\\")
+    L += ["\\bottomrule", "\\end{tabular}"]
+    write("tab_ablations", L)
+    note("tab_ablations", pooled={t: A[t]["pooled"] for t, _ in ABL_TAGS}, by_class={t: A[t]["by_class"] for t, _ in ABL_TAGS},
+         seed_agreement={t: A[t].get("seed_agreement") for t, _ in ABL_TAGS if "seed_agreement" in A[t]},
+         per_seed={t: A[t].get("per_seed") for t, _ in ABL_TAGS if "per_seed" in A[t]},
+         nulls={k: dict(pooled=v["pooled"], by_class=v["by_class"],
+                        moved={t: r for t, r in v["ratios"].items() if r == r and abs(r) > THR},
+                        nonzero=sum(1 for r in v["ratios"].values() if r == r and abs(r) > 1e-9)) for k, v in N.items()},
+         class_sizes=cn, parity_P2=J["parity_P2"], char_shift=J["char_shift"], linear_block_thr=J["linear_block_thr"],
+         block_thr_shift=J["block_thr_shift"], block_gap={k: v for k, v in J["block_gap"].items() if k != "rows"},
+         atlas_counterfactuals={k: {kk: vv for kk, vv in v.items() if kk != "unequal"} | dict(unequal=[(x["target"], x["n"]) for x in v["unequal"]])
+                                for k, v in J["atlas_counterfactuals"].items()},
+         errs_by_n=J["errs_by_n"], moved={t: {k: r for k, r in A[t]["ratios"].items() if r == r and abs(r) > THR} for t, _ in ABL_TAGS},
+         mean_abs={t: A[t]["pooled"]["mean_abs"] for t, _ in ABL_TAGS})
+
+
+@table
+def tab_abl_family():
+    """The ablations by target family (the atlas's groups, families.py) on the 65 targets of the five ablation suites, with
+    the paired null and the core restricted to the same 65 targets.  Source: ablations.json."""
+    J = abl_json(); A = J["ablations"]; F = J["families"]
+    size = {g: sum(1 for k, v in F.items() if v == g and k.split("/")[0] in ("designed", "dlsymdev", "dlfamdev", "dlheld6", "dlheld7")) for g in ABL_FAMS}
+    cell = lambda s: ab_cell(s, two=False)
+    L = ["\\begin{tabular}{@{}l" + "c" * len(ABL_FAMS) + "@{}}", "\\toprule",
+         "run & " + " & ".join(hdn(FAM_HEAD[g], size[g]) for g in ABL_FAMS) + "\\\\", "\\midrule"]
+    for tag, _ in ABL_TAGS:
+        L.append(f"{code(tag)} & " + " & ".join(cell(A[tag]["by_family"].get(g)) for g in ABL_FAMS) + "\\\\")
+    L.append("\\midrule")
+    N = J["nulls"]
+    for key, lab in (("paired_seed01", "paired null (0, 1)"), ("paired_seed0", "paired null (0)"), ("unpaired_seed1_vs_seed0", "unpaired null")):
+        if key in N:
+            L.append(f"{lab} & " + " & ".join(cell(N[key]["by_family"].get(g)) for g in ABL_FAMS) + "\\\\")
+    L += ["\\midrule", "core (post hoc) & " + " & ".join(cell(J["core"]["ablation_suites_by_family"].get(g)) for g in ABL_FAMS) + "\\\\",
+          "\\bottomrule", "\\end{tabular}"]
+    write("tab_abl_family", L)
+    note("tab_abl_family", sizes=size, by_family={t: A[t]["by_family"] for t, _ in ABL_TAGS},
+         core_by_family_65=J["core"]["ablation_suites_by_family"])
+
+
+@table
+def tab_core():
+    """The post-hoc core DFG: (a) per suite and pooled, against DFG alone on the same seeds and against nets_best (RESULTS.json
+    q5b_core); (b) by family over all 138 targets (ablations.json 'core')."""
+    Q = R["q5b_core"]; J = abl_json()["core"]
+    c2 = lambda s: summ2(s) if s else "--"
+    L = ["\\begin{tabular}{@{}llccccc@{}}", "\\toprule",
+         "suite & status for DFG v1.3 & targets & \\hd{core vs\\\\DFG alone} & \\hd{newly\\\\never} & \\hd{core vs\\\\\\code{nets_best}} & "
+         "\\hd{DFG alone vs\\\\\\code{nets_best}}\\\\", "\\midrule"]
+    for su in TOY:
+        o = Q["suites"][su]
+        L.append(f"{code(su)} & {status(su)} & {o['vs_dfg']['targets']} & {c2(o['vs_dfg'])} & {', '.join(tg(t) for t in o['newly_never']) or '--'} & "
+                 f"{c2(o['vs_nets_best']) if o['vs_nets_best'] else 'no networks'} & {c2(o['dfg_same_seeds_vs_nets_best']) if o['dfg_same_seeds_vs_nets_best'] else '--'}\\\\")
+    P = Q["pooled"]
+    L += ["\\midrule", f"pooled & & {P['vs_dfg']['targets']} & {c2(P['vs_dfg'])} & {len(P['newly_never'])} & {c2(P['vs_nets_best'])} & "
+          f"{c2(P['dfg_same_seeds_vs_nets_best'])}\\\\", "\\bottomrule", "\\end{tabular}"]
+    write("tab_core", L)
+    # (b) by family
+    fams = ["Parities", "Staircases", "Multiplexers (address and data bits)", "Majorities and halfspaces", "Compositions",
+            "DNF, CNF, decision lists, read-once formulas", "Random formulas", "Symmetric and pure signed-sum targets", "Signed-sum mixtures"]
+    sz = {g: sum(1 for v in abl_json()["families"].values() if v == g) for g in fams}
+    cell = lambda s: ab_cell(s, two=True)
+    cnb = cell                                                   # lower = the core (or DFG alone) needs less data than nets_best
+    L = ["\\begin{tabular}{@{}l" + "c" * len(fams) + "@{}}", "\\toprule",
+         " & " + " & ".join(hdn(FAM_HEAD[g], sz[g]) for g in fams) + "\\\\", "\\midrule",
+         "core vs DFG alone & " + " & ".join(cell(J["by_family"].get(g)) for g in fams) + "\\\\",
+         "core vs \\code{nets_best} & " + " & ".join(cnb(J["vs_nets_best"]["by_family"].get(g)) for g in fams) + "\\\\",
+         "DFG alone vs \\code{nets_best} & " + " & ".join(cnb(J["dfg_same_seeds_vs_nets_best"]["by_family"].get(g)) for g in fams) + "\\\\",
+         "\\bottomrule", "\\end{tabular}"]
+    write("tab_core_family", L)
+    mv = Q["moved"]
+    note("tab_core", pooled={k: v for k, v in P.items() if k not in ("newly_never", "newly_reached", "neither")},
+         newly_never=P["newly_never"], neither=P["neither"], moved_count=len(mv),
+         moved_up=[(m["suite"], m["target"], num(m["ratio"])) for m in mv if num(m["ratio"]) > 0],
+         moved_down=[(m["suite"], m["target"], num(m["ratio"])) for m in mv if num(m["ratio"]) < 0],
+         dlheld7=Q["suites"]["dlheld7"], by_family=J["by_family"], vs_nets_best_by_family=J["vs_nets_best"]["by_family"],
+         dfg_vs_nets_best_by_family=J["dfg_same_seeds_vs_nets_best"]["by_family"], by_class=J["by_class"],
+         ablation_suites=J["ablation_suites"], other_suites=J["other_suites"], family_sizes=sz,
+         paired_null_same_seeds=J.get("paired_null_same_seeds"), compute=J.get("compute"),
+         ablation_suites_by_class=J["ablation_suites_by_class"])
+
+
+LEAVEIN = [("deg46", "\\hd{degrees\\\\4--6}"), ("comp", "\\hd{compo-\\\\sition}"), ("blocks", "\\hd{linear,\\\\spectral}"),
+           ("logit", "\\hd{logistic\\\\readout}"), ("bg", "\\hd{back-\\\\ground}"), ("weighted", "\\hd{weighted\\\\blocks}"),
+           ("eig", "\\hd{eigen.\\\\seeds}")]
+
+
+@table
+def tab_leavein():
+    """Leave one in (post hoc; leavein.py): for the core's largest losses and gains, n* (seeds 0, 1) of the core with one part
+    put back, against the core and DFG alone on the same seeds.  Source: ablations.json 'leavein' and 'core'."""
+    J = abl_json(); LI = J["leavein"]; C = J["core"]
+    tg_all = []
+    for cfg, _ in LEAVEIN:
+        for k in LI.get(cfg, {}):
+            if k not in tg_all:
+                tg_all.append(k)
+    rc = lambda k: num(C["ratios"][k])
+    loss = sorted([k for k in tg_all if rc(k) > 0], key=lambda k: -rc(k)); gain = sorted([k for k in tg_all if rc(k) <= 0], key=rc)
+    def row(k):
+        su, t = k.split("/"); d = num(C["dfg_same_seeds"][k]); c = num(C["nstar"][k])
+        cells = []
+        for cfg, _ in LEAVEIN:
+            v = LI.get(cfg, {}).get(k)
+            if v is None:
+                cells.append("")
+            else:
+                a = num(v["leavein"]); s = ns(a)
+                if fin(a) and fin(d) and abs(math.log2(a / d)) <= THR and not (fin(c) and abs(math.log2(c / d)) <= THR):
+                    s = "\\textbf{" + s + "}"
+                cells.append(s)
+        return f"{tg(t)} & {ns(d)} & {ns(c)} & {rt(rc(k))} & " + " & ".join(cells) + "\\\\"
+    L = ["\\begin{tabular}{@{}lrrr" + "r" * len(LEAVEIN) + "@{}}", "\\toprule",
+         "target & \\hd{DFG\\\\alone} & core & \\hd{core vs\\\\DFG alone} & " + " & ".join(h for _, h in LEAVEIN) + "\\\\", "\\midrule",
+         f"\\multicolumn{{{4 + len(LEAVEIN)}}}{{@{{}}l}}{{\\emph{{the core needs more data}}}}\\\\"] + [row(k) for k in loss] + [
+         f"\\multicolumn{{{4 + len(LEAVEIN)}}}{{@{{}}l}}{{\\emph{{the core needs less data}}}}\\\\"] + [row(k) for k in gain] + ["\\bottomrule", "\\end{tabular}"]
+    write("tab_leavein", L)
+    note("tab_leavein", runs={cfg: {k: {kk: num(vv) for kk, vv in v.items()} for k, v in LI.get(cfg, {}).items()} for cfg, _ in LEAVEIN},
+         losses=loss, gains=gain)
 
 
 # ---------------------------------------------------------------------------------------------------------------------------
