@@ -198,7 +198,8 @@ def main():
 
 # ------------------------------------------------------------------ mechanism and Part 5's qualitative findings
 def stages_by(vals, sep=1.35):
-    """Group characters by an order: finite values within a factor sep join one stage; returns [(value, [chars])]."""
+    """Group characters by an order: a finite value within a factor sep of the current stage's FIRST value joins that
+    stage (not Part 5's chaining, order_analysis.net_stages); returns [(first value, [chars])]."""
     o = sorted((v, ch) for ch, v in vals.items() if v is not None and np.isfinite(v)); st = []
     for v, ch in o:
         if st and v <= sep * st[-1][0]:
