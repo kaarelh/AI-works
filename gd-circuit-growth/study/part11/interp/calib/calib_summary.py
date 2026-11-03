@@ -492,6 +492,9 @@ def a2(recs):
                 ncls += 1; e_bound += fr * DELTA / (2 * K); e_gauss += fr * nom[cl]["gauss"]
     out["r0_class_searches"] = dict(searches=ncls, expected_bound=e_bound, expected_gauss=e_gauss,
                                     observed=len(out["r0_chi_test_spur"]))
+    qm = sorted(t["mass_rel"] for r in recs for t in r["terms"] if t["spur"] and t["cat"] == "quad")
+    out["spur_quad_mass_rel"] = dict(n=len(qm), values=qm,
+                                     by_n={str(n): sum(1 for r in recs if r["n"] == n for t in r["terms"] if t["spur"] and t["cat"] == "quad") for n in NS})
     # spurious characters admitted individually, all n: which classes, how many irrelevant inputs
     ct = [t for t in terms if t["cat"] == "chi_test"]
     out["chi_test_spur"] = dict(n=len(ct), by_class={c: sum(1 for t in ct if t["origin"] == c) for c in sorted(set(t["origin"] for t in ct))},
@@ -933,6 +936,8 @@ def tables(res):
         T.append(f"round-0 spurious characters admitted by their own test: {A['r0_chi_test_spur']}")
         T.append(f"round-0 class searches of the final fits and the expected number of spurious passes (bound / independent-Gaussian): {A['r0_class_searches']}")
         T.append(f"fits with a spurious term (outside the linear block) admitted after round 0: {A['later_spur_fits']}")
+        qm = A["spur_quad_mass_rel"]
+        T.append(f"spurious spectral features: {qm['n']}, by n {qm['by_n']}; share of |u|^2 on relevant inputs: " + ", ".join(f"{v:.3f}" for v in qm["values"]))
         T.append("")
         T += ["### largest spurious terms outside the linear block (sd of the term / sd of the model value)", ""]
         for t in A["top_terms"]:

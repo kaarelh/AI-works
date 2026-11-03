@@ -321,6 +321,9 @@ def tab_dlheld7():
          calib_better_ref_vs_nets_best={t: l2r(better_cal[t], T[t]["nets_best"]) for t in calib},
          rest=rest, rest_dfg_vs_nets_best=pstats(rr[t] for t in rest),
          rest_clearly_better=[t for t in rest if rr[t] is not None and rr[t] < -THR],
+         rest_clearly_better_mean=sum(rr[t] for t in rest if rr[t] is not None and rr[t] < -THR)
+         / sum(1 for t in rest if rr[t] is not None and rr[t] < -THR),
+         dfg_vs_v3_clearly_worse={t: num(x) for t, x in Q["summary"]["v3"]["ratios"].items() if fin(num(x)) and num(x) > THR},
          rest_hgb_range=[min(T[t]["hgb"] for t in rest if fin(T[t]["hgb"])), max(T[t]["hgb"] for t in rest if fin(T[t]["hgb"]))],
          rest_hgb_never=[t for t in rest if not fin(T[t]["hgb"])], rest_lin_learns=[t for t in rest if fin(T[t]["lin"])],
          dfg_vs_better_calibration_all=pstats(l2r(T[t]["dfg"], better_cal[t]) for t in T))
@@ -764,6 +767,9 @@ def tab_tabular():
 # =========================================================================================================================
 # sec:res-compute
 # =========================================================================================================================
+sec = lambda v: f"{num(v):.2f}" if num(v) < 1 else f"{num(v):.1f}"        # CPU seconds
+
+
 @table
 def tab_compute():
     """FLOPs per fit as a fraction of one network run at that d, and CPU seconds per fit: (a) per run (DFG alone on every
@@ -777,7 +783,8 @@ def tab_compute():
     keys = [f"dfg13-perm|{su}" for su in TOY] + [f"dfg13-perm|designed_d{d}" for d in (15, 60, 120)]
     for k in keys:
         x = RU[k]; su = k.split("|")[1]
-        L.append(f"{code(su)} & {x['d']} & {x['fits']} & {num(x['max_flops_frac']):.3f} ({tg(x['at'][0])}, {x['at'][1]}) & {x['over_075']} & "
+        lab = code(su) if "_d" not in su else f"{code(su.split('_d')[0])}, $d={su.split('_d')[1]}$"
+        L.append(f"{lab} & {x['d']} & {x['fits']} & {num(x['max_flops_frac']):.3f} ({tg(x['at'][0])}, {x['at'][1]}) & {x['over_075']} & "
                  f"{num(x['cpu_median']):.2f} / {num(x['cpu_max']):.1f}\\\\")
         if su == TOY[-1]:
             L.append("\\addlinespace[2pt]")
@@ -792,8 +799,8 @@ def tab_compute():
          "median & " + " & ".join(f"{num(B[n]['flops_median']):.3f}" for n in NS_) + "\\\\",
          "max & " + " & ".join(f"{num(B[n]['flops_max']):.3f}" for n in NS_) + "\\\\",
          "\\multicolumn{" + str(1 + len(NS_)) + "}{@{}l}{\\emph{CPU s per fit: median (max)}}\\\\",
-         "DFG alone & " + " & ".join(f"\\hd{{{num(B[n]['cpu_median']):.2f}\\\\{{\\scriptsize({num(B[n]['cpu_max']):.1f})}}}}" for n in NS_) + "\\\\",
-         "v3 & " + " & ".join(f"\\hd{{{num(B[n]['v3_cpu_median']):.2f}\\\\{{\\scriptsize({num(B[n]['v3_cpu_max']):.1f})}}}}" for n in NS_) + "\\\\",
+         "DFG alone & " + " & ".join(f"\\hd{{{num(B[n]['cpu_median']):.2f}\\\\{{\\scriptsize({sec(B[n]['cpu_max'])})}}}}" for n in NS_) + "\\\\",
+         "v3 & " + " & ".join(f"\\hd{{{num(B[n]['v3_cpu_median']):.2f}\\\\{{\\scriptsize({sec(B[n]['v3_cpu_max'])})}}}}" for n in NS_) + "\\\\",
          "\\begin{tabular}[b]{@{}l@{}}median of the paired\\\\ratio DFG alone / v3\\end{tabular} & "
          + " & ".join(f"{num(B[n]['paired_ratio_median']):.2f}" for n in NS_) + "\\\\",
          "\\bottomrule", "\\end{tabular}"]
