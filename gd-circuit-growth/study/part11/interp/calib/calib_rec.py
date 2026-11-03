@@ -43,8 +43,8 @@ class Rec:
     def start(self, fl, n, d, force, hi, scale, GD):
         if not self.on:
             return
-        c = dict(n=int(n), d=int(d), force=bool(force), hi=bool(hi), scale=float(scale), GD=float(GD), reg={}, nreg=[],
-                 rounds=[], origins=[("const", None, 0)], acc_kind={}, ovh=0.0)
+        c = dict(n=int(n), d=int(d), force=bool(force), hi=bool(hi), scale=float(scale), GD=float(GD), reg={},
+                 rounds=[], origins=[("const", None, 0, ())], acc_kind={}, ovh=0.0)
         self.calls.append(c); self._c, self._fl, self._rd = c, fl, None
         self._region, self._f, self._t = "init", fl[0], time.process_time()
 
@@ -90,7 +90,7 @@ class Rec:
 
     def sub(self, cl, m, n):
         """The subsample size m of a subsampled class (degrees 3-6, two-input extensions)."""
-        if self.on and self._rd is not None and self.detail:
+        if self.on and self._rd is not None:
             self._rd["sub"].setdefault(cl, []).append(int(m))
 
     def _cls(self, cl):
@@ -225,7 +225,7 @@ class Rec:
         else:
             b = rd["best"].get(S) if rd is not None else None
             o = b[1] if b is not None else "unknown"
-        self._c["origins"].append(("chi", o, rd["rnd"] if rd else -1))
+        self._c["origins"].append(("chi", o, rd["rnd"] if rd else -1, S))
         if rd is not None:
             rd["added"].append(("chi", o, S))
 
@@ -237,9 +237,10 @@ class Rec:
             o = self._c["acc_kind"].get(id(obj), "sum_unknown")
         else:
             o = "linear" if kind == "lin" else kind
-        self._c["origins"].append((kind if kind != "lin" else "chi", o, rd["rnd"] if rd else -1))
+        S = tuple(int(i) for i in obj) if kind == "lin" else None
+        self._c["origins"].append((kind if kind != "lin" else "chi", o, rd["rnd"] if rd else -1, S))
         if rd is not None:
-            rd["added"].append((kind, o, None if obj is None or kind != "lin" else tuple(int(i) for i in obj)))
+            rd["added"].append((kind, o, S))
 
     def block_added(self, obj, nuse):
         if self.on and self._rd is not None:

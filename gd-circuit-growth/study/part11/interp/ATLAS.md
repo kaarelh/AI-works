@@ -11,7 +11,7 @@ my reading of it. Shares, categories and "complete" are defined in §0.
 
 **Files.** Tooling: [`dfg_hooks.py`](dfg_hooks.py) (instrumented fits), [`atlas_truth.py`](atlas_truth.py) (each
 target's own representation in DFG's dictionary), [`atlas_run.py`](atlas_run.py) (the fits and their description),
-[`identity_run.py`](identity_run.py) (identity sample), [`cv_counterfactual.py`](cv_counterfactual.py) (the variant
+[`identity_run.py`](identity_run.py), [`identity_dscale.py`](identity_dscale.py) (identity samples), [`cv_counterfactual.py`](cv_counterfactual.py) (the variant
 DFG did not choose), [`atlas_make.py`](atlas_make.py) (tables and figures). Fits: `results/atlas/<suite>__<target>.json`
 (407 cells, every term of every model), `results/identity/`, `results/cv/`. Tables: [`tables/atlas_summary.md`](tables/atlas_summary.md)
 (one row per target), [`tables/atlas.md`](tables/atlas.md) (the selected n of every target, one model line each),
@@ -25,13 +25,14 @@ Figures: [`figures/fig_atlas_grid.pdf`](figures/fig_atlas_grid.pdf), [`figures/f
 
 - **The refits are the evaluation's fits** (Numerical, `tables/identity.md`). 517 seed-0 cells (47 targets, all 11
   suites, every n of the grid) were refitted with the internals recorded; test error and FLOP count equal the merged
-  evaluation files `part11/results/toy__dfg13-perm__<suite>.json` bit for bit in all 517.
+  evaluation files `part11/results/toy__dfg13-perm__<suite>.json` bit for bit in all 517, and in the 66 cells of a
+  6-target sample of the d = 15, 60, 120 runs (`designed_d<d>`).
 - **DFG alone learns each target in the dictionary form that is cheapest to detect, and with more data moves to the
   target's exact Fourier expansion when that is small** (Numerical, §1; Heuristic, the summary). Parities are one
   character from the first n that fits them (3/3). Staircases, majorities of parities, multiplexers and small random
   formulas are their characters (multiplexers and random formulas after transient block encodings of a branch or a
-  term); at n = 16384, 8 of the 37 models are exactly the target's Fourier expansion and
-  nothing else (par2, par4, par5, stair5, andxor, mux6, mux11, hrf0). Symmetric targets and signed sums are their
+  term); at n = 16384, 8 of the 37 models are exactly the target's Fourier expansion with nothing else but the
+  constant and the kernel background (par2, par4, par5, stair5, andxor, mux6, mux11, hrf0). Symmetric targets and signed sums are their
   sum block (sym9 at 128, band11 at 1024, f7_08 at 512; h5s7 at 2048 as a product of two factors that partition its
   class), and halfspaces are degree-1 characters plus, where one exists, a block.
 - **Mixtures are represented in forms the targets' definitions do not suggest** (Numerical, §1.9). The parity of two
@@ -130,7 +131,8 @@ the error never reaches 0.1). n\*_0 = seed-0 10% point (log-interpolated, `harne
 (Numerical, `tables/identity.md`, `tables/identity.json`.) Every refitted cell is compared with the merged evaluation
 file of its suite, seed-0 column: the atlas cells (37 targets × 11 n) and an identity sample of 10 further targets
 (`identity_run.py`: dlheld2 maj21, sym8, xmaj; dlfamdev fd_09, fd_10; random rf11; dlsymdev sym7; dlheld4 symxor;
-dlheld5 h5t0; dlheld6 h6_10), every n.
+dlheld5 h5t0; dlheld6 h6_10), every n; and for the d-scaling runs (`identity_dscale.py`) two designed targets at each
+of d = 15 (maj9, mux), 60 (majpar, stair5) and 120 (par3, mux), every n, seed 0.
 
 | suite | targets refitted (of) | cells compared | test error equal | FLOPs equal |
 |---|---|---|---|---|
@@ -145,9 +147,13 @@ dlheld5 h5t0; dlheld6 h6_10), every n.
 | dlheld6 | 2 (12) | 22 | 22 | 22 |
 | dlfamdev | 2 (12) | 22 | 22 | 22 |
 | dlheld7 | 12 (12) | 132 | 132 | 132 |
-| **all** | **47 (138)** | **517** | **517** | **517** |
+| **all 11 suites** | **47 (138)** | **517** | **517** | **517** |
+| designed_d15 | 2 (7) | 22 | 22 | 22 |
+| designed_d60 | 2 (7) | 22 | 22 | 22 |
+| designed_d120 | 2 (4) | 22 | 22 | 22 |
 
-All 11 merged files existed when the tables were made (the last, `random`, landed at about 23:33 UTC). Equal FLOP
+All 11 merged files (and the three d-scaling files) existed when the tables were made (the last of the 11, `random`,
+landed at about 23:33 UTC). Equal FLOP
 counts (to the last bit of a float sum over the fit's searches) are a strong fingerprint of the same code path; the
 comparison is of test error and FLOPs, not of the models themselves, which the evaluation does not store.
 
@@ -258,8 +264,9 @@ as inner term, are DFG's encoding of a whole clause or term before its character
 
 ### 1.7 Random formulas (rf06, hrf0)
 
-*Representation:* the Fourier expansion (31 non-constant characters each); both are dominated by one input
-(f̂(x5) = −0.94 for rf06, f̂(x4) = −0.81 for hrf0).
+*Representation:* the Fourier expansion (31 non-constant characters each); I know no shorter one (their signed-symmetry
+classes have 3–4 inputs, x1+x2−x3+x4 for rf06 and x1+x3−x6 for hrf0, with the other inputs entering arbitrarily).
+Both are dominated by one input (f̂(x5) = −0.94 for rf06, f̂(x4) = −0.81 for hrf0).
 *Numerical:* the first models are that one character (n = 32–64; rf06's model at 64 is χ[x5] plus the background,
 error 0.045, against 0.032 for χ[x5] alone); exact fits follow at 128–256 with relevant blocks on the other inputs (hrf0 at 128,
 forced: (−x1−x3−x4−x5+x6) R 0.35, error 0) and, for rf06, spurious modulated blocks at 128–256 (S 0.16–0.17). At 16384
