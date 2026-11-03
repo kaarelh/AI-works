@@ -9,6 +9,105 @@ fixed-training-set study that preceded it. Written 2 November 2026.
 Labels: **Numerical** = measured here, the source file is named; **Heuristic** = my reading of the numbers. Denominators
 are given with every count. "tau" is Kendall's tau-b over a target's Fourier characters (positive = same order).
 
+## Verification
+
+An independent agent verified this report on 3 November 2026 ([`VERIFY_ORDER.md`](VERIFY_ORDER.md),
+[`VERIFY_ORDER.json`](VERIFY_ORDER.json)). It used its own code: 12 refits through a separate code path, all 23,727
+round-0 z-scores from the raw training rows, the network onsets under four conventions, and every order, tau, pair
+count and route count.
+
+- **Confirmed: 41 of 60 claims.** These include:
+  - the identity of all 363 fits with the evaluation queue, with the 12 refits also reproducing every round log;
+  - the test replay (3217 / 13 / 29890 / 17, none unexplained);
+  - every tau-b, pair count, route count and median, endpoint share, data-cost count and non-monotone count;
+  - the round-0 priority (44 of 44 positive);
+  - mux's x1x2x3x4 (first by z0 in 30 of 30 fits; n_glob 54 against 271);
+  - the network onsets and the n_glob formula.
+- **Corrected: 19 claims, plus 9 omissions.** All are applied below, except two points declined in part (items 11
+  and 16), each with the stored evidence. Each correction was checked against the stored cells before it was
+  applied. "Recomputed" marks a number of mine; the others are the verifier's.
+- **Regenerated.** `order_analysis.py`, `order_report.py` and `order_validate.py` were re-run single-threaded.
+  - In the existing tables only majpar's x1⋯x6 n_glob changes (147 → 513, item 9).
+  - New numbers are in `order_numbers.json` under new keys: `net_n_resolution`, `priority_online_seed_matched`,
+    `mechanism.*_without_dnf3` and `rounds_by_n.*.nonpositive_multi`. The stopping-round counts are in
+    `order_validation.json`.
+  - The figure is unchanged.
+
+**Corrections (old → new; the claim or omission number of VERIFY_ORDER.md in brackets).**
+
+1. Short answer 2 (claim 17, omission 4): "never negatively" → "never negatively in the per-target summaries". Per
+   fit, the round order is negative in 3 of the 69 multi-round fits (mux at n = 64: −0.48, −0.05; rmaj9 at n = 512:
+   −0.01). §2 lists them.
+2. §1.2 (claim 7): "the seed-mean φ curve (the `stages.py` convention)" → "… located by `analyze_traj`'s
+   log-interpolated first crossing". `stages.py`'s own rule does not interpolate and gives somewhat different taus
+   (mux +0.21, reproduced).
+3. §1.2 (claim 9): "One exception … (geometric mean 2117)" → the two conventions differ by more than 10% for 143
+   characters (142 of them dnf3's). x1⋯x9's geometric mean is 2115, as in §2.2.
+4. §3 (claim 21): "Mux, the lowest" → "Mux, among the lowest". Mux is lowest online and at n = 2048; dnf3 is lower at
+   n = 16384 and 512.
+5. §1.4 (claim 24, omission 1): "like for like: yes, in data and criterion" → "yes in data and rule; not in estimator
+   precision for |ŷ| well below 0.1".
+   - Qualifications follow in Short answers 2 and 4, §4.1, §4.2, §5.3, §5.4 and §7. On dnf3's 21 resolvable
+     characters its +0.17 is +0.56 and its +0.19 is +0.87. 255 of the 349 small data-cost characters are dnf3's.
+   - The networks' 223 n-axis drops: 218 are on dnf3. 215 of those are on characters with |ŷ| ≤ 0.027 (recomputed;
+     the verifier's summary calls all 218 noise).
+6. §4.2 (claim 27): rmaj9's networks "128–4096" → "64–4096 per seed (256–4096 by median)". By median, one character
+   (x2x5x8) never enters, an estimator artefact.
+7. §4.3 stair5 (claim 30, omission 8): "the one place … where DFG builds like the networks" → one of several
+   construction-order entries at n = 128. x1x2x3x4 also enters by extension. x1 enters by the local class after a
+   higher-degree character, the reverse of the networks' order.
+8. §4.3 mux (claim 31): added "(seed 2) a forced pick (z = 0.95)" and the linear block's entries.
+9. §4.3 majpar (claim 33, omission 7): "n_glob is 147, exactly the degree-6 subsample cap" → the 147-row cap holds only
+   at n > 512. At n ≤ 512 it is 73 rows, so the global route opens only above 512, and then only marginally. x1⋯x6
+   enters by blocks at 256. `nglob()` now applies the halved cap: the tables show 513 for x1⋯x6 (recomputed; no tau
+   changes).
+10. §4.3 andxor (claim 35): seed 2's product comes after x3x4, in the same round as x1x2, not after both pairs.
+11. §4.3 dlist5 (claim 36): "of higher degree and carried by a block" → "of higher degree in 25 of them".
+    - **Declined in part.** The verifier keeps "carried by a block" for all 33. The cells show that holds in seeds 0
+      and 2 only.
+    - In seed 1, 15 are carried by a block, 16 by ext1 or ext2, and 2 never enter (recomputed). The text now says so.
+12. §4.3 parmaj (claim 37): "the pairs and degree-4 terms come by global tests" → at the n onset (128) no test admits
+    any character. Two folded blocks carry 42 of their 45 character-seeds. Global tests take them only at larger n.
+13. §4.3 dnf3 (claim 38): "0.027-characters at 512 (degrees 2–3)" → "256–2048". "0.0039-characters at 8192–16384 or
+    never" → "from 1024 to never". Recomputed while checking: the networks' range "228 to 1084" omitted two late
+    stages, 11 degree-5 characters at 1474 and 2005.
+14. Short answer 3 and §5.2 (claim 44): bundles "cut by coefficient size, not by construction" → cut by detectability.
+    That is mainly size, but also degree and the carrying block, so equal coefficients are split (sparsepoly, majpar)
+    and one stage mixes sizes (rand3).
+15. Short answer 3 and §5.3 (claim 46): "the reverse holds for DFG at degree ≤ 4" and "a large coefficient is admitted
+    first whatever its degree" → a tendency on 5 of 8 targets, not a rule.
+16. §5.3 rmaj9 (claim 48): "no route but blocks, and never carried" → carried at some n in every seed and dropped
+    later, so never carried for good (except 7 degree-7 characters).
+    - **Declined in part.** The verifier says "carried only by blocks, at n = 512–4096".
+    - The cells show the local class admitting them as explicit features at n = 2048 (seed 2, 26 of 36) and 4096
+      (seed 0, 36 of 36). Blocks also carry them at 8192 (seed 1, 9) and 16384 (seed 0, 7).
+17. §5.4 (claim 50): "all or nothing: a character either passes a test … or not" → "nearly all or nothing". 1134 of the
+    1497 character-seeds carried for good are carried by a block, not by a test of their own.
+18. Short answer 5 and §6 step 3 (claim 57, omission 2): the 5.3-doublings median → block-carried characters of degree
+    ≤ 4 (2.7 outside dnf3). The degree-6 to degree-9 examples have no global route.
+19. Short answer 5 and §6 step 2 (claim 58): "an exact replay of DFG's tests" → "… of DFG's character tests (block
+    tests not replayed)". "It is why … 1.3–2.4 doublings below" → a descriptive, partly definitional statement, not
+    causal until the nocomp/nosums ablations are in.
+20. §6 (omission 2): the route table gains an "outside dnf3" column (recomputed; block −2.72, local −0.74).
+21. §5.2 (omission 3): bundle rows added for sparsepoly (6 split / 0 kept) and mux (5 / 2).
+22. §1.5 (omission 5): the stopping round is now checked (`order_validate.py`). In the 90 fits that stop with nothing
+    passed, no target character has z > 1. All 192 stopping rounds with one are sign-rule stops.
+23. §3 (omission 6): the online row is not seed-matched. Seed-matched, the per-target values are 0.20–0.81 and all
+    33 per-seed values are positive (recomputed).
+24. §7 (omission 9): added the verifier's estimate, which it did not test, that Part 5's time-axis φ is also noisy
+    for dnf3's smallest characters.
+25. Wording from confirmed claims, and for consistency:
+    - the 17 capped rejections are one round's 64-cap (claim 3);
+    - rmaj9's seed-0 rounds at n = 512 (claim 16);
+    - stair5's networks' degree-3 onsets 341–703 (claim 29);
+    - rand3's blocks not all modulated (claim 39);
+    - mux's "3×" is the coefficient ratio (claim 40);
+    - mux's x1x2x3x4 is tied at 64 (claim 43);
+    - dnf3 is a near-tie, not a tie (claim 45);
+    - the learned and partial shares overlap (claim 49);
+    - "never" → "never for good" (§4.3 rmaj9) and "that ever enter" → "that enter for good" (Short answer 3, §5.3),
+      following item 16.
+
 ## Short answer
 
 1. **At Part 5's sample sizes DFG has almost no order (Numerical).** At n = 16384, 2048 and 512, DFG admits every

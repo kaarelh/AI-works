@@ -288,8 +288,8 @@ that character with share 0.98–1.00, at every n to 16384 (size 2: no other ter
 it the models are the constant and the background (default variant). par2 at n = 16 needs the forced variant (CV
 held-out errors 7 default / 0 forced): at n = 16 no character passes the union-bound test. par5 is found at n = 64 by
 the final fit's subsampled degree-5 search; the cross-validation folds skip that search (dfg13.py docstring), so their
-held-out errors are at chance in both variants (21 / 21 at n = 64, 117 / 114 at 256) and the cross-validation cannot
-see what the final fit will find.
+held-out errors are high and nearly equal in both variants (21 / 21 of the 64 held-out rows at n = 64, 117 / 114 of
+256 at 256) and the cross-validation cannot see what the final fit will find.
 *Heuristic:* for parities the dictionary is the target class; DFG either has the character or nothing.
 
 ### 1.2 Staircases (stair5, stair6)
