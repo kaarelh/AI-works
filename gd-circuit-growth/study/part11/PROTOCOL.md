@@ -92,3 +92,23 @@ and it does not run on images.
   (a negative logarithm in the linear block's test) and was replaced by δ = 0.9 before any run.
 - The object was chosen knowing v3's results on every suite, including `dlheld7`, where DFG is v3's toy member. The
   choice is post hoc; the code is not.
+
+## Addendum (3 November 2026, 02:30 UTC): a post-hoc "core DFG" run
+
+Written after every pre-registered run above had finished and its results had been read, so this is **post hoc**: an
+analysis of the frozen learner, not a test of a design.
+
+The single ablations change n* by less than the seed-to-seed spread for eight parts of DFG (`strict`, `lenient`,
+`noeig`, `noblocks`, `nocomp`, `noweighted`, `lsread`, `K3`), and removing the kernel background lowers it slightly
+(`nobg`, mean −0.10); only the sum blocks (`nosums`, +0.91), the small-n machinery (`nosmalln`, +0.12) and the
+residual-scaled tests (`labelnoise`, +0.14) cost data when removed. Single ablations cannot show whether the removable
+parts substitute for one another. One combined run asks whether a much smaller learner keeps DFG's results:
+
+- **`core`**: `{"readout": "ls", "sum_inner": false, "sum_seeds": [0, 3, 2], "blocks": false, "max_ext_bases": 0,
+  "local_max": 0, "K": 3, "K_hi": 3, "background": false}`, i.e. global characters of degree ≤ 3 and the signed-sum
+  blocks (unweighted, searched from pair and single-input seeds; modulated, product and split blocks, the beam and
+  forced blocks as in v1.3), union-bound tests scaled to the residual, a least-squares readout, and the small-n
+  cross-validation between the default and forced variants. The code is the frozen `dfg13.py`; only constructor
+  arguments change.
+- Run on all 11 suites (138 targets), seeds 0 and 1, the standard grid, inputs permuted; compared with DFG alone on the
+  same seeds and with the networks. Reported as post hoc wherever it is used.
