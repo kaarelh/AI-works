@@ -11,8 +11,8 @@ cross-validation counterfactual (18 of 222; 89 of 140; 0.2257 / 0.2319 / 0.2256 
 counts (85 / 54 / 268), the 8 exact Fourier models at 16384, the 133 / 9 / 6 dictionary–readout split, the
 spurious-product and duplicate-block counts, the 141 of 255 equal errors against Part 10 and the 15 equal n_struct; 22
 needed correcting. I checked every correction against the stored files (and refitted f7_11 at n = 128) and applied all
-22; none is declined, though item 9 uses the exact value instead of the verifier's approximation. Items 23–34 address
-the omissions it listed and the notes on confirmed claims. Every changed number is recomputed by
+22; none is declined, but items 5 and 9 make the verifier's replacement more exact (item 9: the exact value instead of
+an approximation). Items 23–34 address the omissions it listed and its notes on confirmed claims. Every changed number is recomputed by
 [`atlas_recheck.py`](atlas_recheck.py). Tables regenerated with `atlas_make.py`: only `tables/atlas.md` changes (rf06's
 n\*_3 is now labelled a 2-seed mean); the figures do not change.
 
@@ -27,8 +27,8 @@ Corrections applied (old → new; V*k* = the verifier's claim *k*):
 4. (V8) §0: character-group shares "exact for distinct characters, which are orthogonal" → approximate (orthogonal in
    expectation); the tables' character-group values are absolute sds, not fractions of the output sd (also in the
    docstring of `atlas_make.py`, the tables' key).
-5. (V13) §1.2 heuristic: staircases "as characters only" → "mostly as characters; relevant blocks appear at stair5
-   n = 256–2048 and stair6 n ≥ 512".
+5. (V13) §1.2 heuristic: staircases "as characters only" → "mostly as characters (relevant blocks appear at stair5
+   n = 256, 1024, 2048 and stair6 n ≥ 512)"; the verifier's "256–2048" without 512, where stair5 has no block.
 6. (V15) §1.3 heuristic: "first fits one with blocks (one modulated block per data bit, partial)" → "mux11 first fits
    partial modulated address blocks (n = 512); mux6 goes through additive and weighted relevant blocks".
 7. (V17) §1.4: the degree-1 representation "is complete from n = 64" → "complete at n = 64 (thrint loses it at 512)".
@@ -83,7 +83,8 @@ Omissions and notes on confirmed claims, now in the text:
     gate characters (§1.9).
 29. n\*_3 of rf06 is a 2-seed mean (§0, `tables/atlas.md`).
 30. majmaj5 also holds degree-7 characters from 2048 on (§1.5); sym9's degree-4 characters (item 14).
-31. More spurious blocks at the first n of a block: f7_06@128, f7_03@256, symand@128, rf06@128–256 (§2.2).
+31. More spurious blocks at the first n of a block: f7_06@128, f7_03@256, symand@128, rf06@128–256 (§2.2; f7_03's
+    share is 0.3248, so 0.32, not the verifier's 0.33).
 32. Notes on confirmed claims: par5's held-out errors are high, not "at chance" (21 of 64 at n = 64; §1.1); mux11's "17
     characters" are 17 of its 64 Fourier characters, 41 characters in all (§1.3); thr30 has one weighted block and a
     product containing it (§1.4); dlist8's halfspace form is lost at 256 and 16384, and f7_06's block form holds its
@@ -131,17 +132,18 @@ Figures: [`figures/fig_atlas_grid.pdf`](figures/fig_atlas_grid.pdf), [`figures/f
   target's exact Fourier expansion when that is small** (Numerical, §1; Heuristic, the summary). Parities are one
   character from the first n that fits them (3/3). Staircases, majorities of parities, multiplexers and small random
   formulas are mostly their characters (multiplexers and random formulas after transient block encodings of a branch
-  or a term; the staircases also hold relevant blocks at some n, stair6 at every n ≥ 512); at n = 16384, 8 of the 37 models are exactly the target's Fourier expansion with nothing else but the
-  constant and the kernel background (par2, par4, par5, stair5, andxor, mux6, mux11, hrf0). Symmetric targets and signed sums are their
-  sum block (sym9 at 128, band11 at 1024, f7_08 at 512; h5s7 at 2048 as a product of two factors that partition its
-  class), and halfspaces are degree-1 characters plus, where one exists, a block.
+  or a term; the staircases also hold relevant blocks at some n, stair6 at every n ≥ 512); at n = 16384, 8 of the 37
+  models are exactly the target's Fourier expansion with nothing else but the constant and the kernel background
+  (par2, par4, par5, stair5, andxor, mux6, mux11, hrf0). Symmetric targets and signed sums are their sum block (sym9
+  at 128, band11 at 1024, f7_08 at 512; h5s7 at 2048 as a product of two factors that partition its class), and
+  halfspaces are degree-1 characters plus, where one exists, a block.
 - **Mixtures are represented in forms the targets' definitions do not suggest** (Numerical, §1.9). The parity of two
   majorities is first two folded blocks over the union, |t_A + t_B| and |t_A − t_B| (parmaj at 128, majxor at 256;
   sign(|t_A+t_B|² − |t_A−t_B|²) = sign(t_A t_B)); a parity, gate or selector partner ends up as the inner term of a
   weighted block next to characters (at n = 16384 in 5 of the 6 mixtures without a true weighted block: s ± 3 x13,
   s ± 3 x11x12, s − 3·AND(¬x7,¬x8) and s + 2·AND(¬x7,¬x8), s1 − 3 x11 and s2 − 3 x11, s2 ± 3 x11). At n = 16384
-  only 1 of the 7 signed-sum mixtures (f7_10)
-  still holds its compact representation, while all 7 have test error 0 and 5 of them span R² ≥ 0.998.
+  only 1 of the 7 signed-sum mixtures (f7_10) still holds its compact representation, while all 7 have test error 0
+  and 5 of them span R² ≥ 0.998.
 - **Where DFG is above 10% error, the dictionary is what is missing, not the readout** (Numerical, §2.1): in 133 of
   the 148 cells with test error > 0.1 the learned features cannot express the target (the best logistic weights on
   them, fitted on test inputs, err > 0.1; these features exclude the kernel background, which in 27 of the 133 cells
@@ -154,10 +156,10 @@ Figures: [`figures/fig_atlas_grid.pdf`](figures/fig_atlas_grid.pdf), [`figures/f
 - **Spurious terms are rare at n = 16384 (1 of 37 targets has a spurious share above 0.1), less so at the first fit
   (13 of 35), and of three kinds** (Numerical, §2.2): the irrelevant degree-1 characters of the linear block (share
   0.40–0.78 at n = 64 in the 8 targets with irrelevant inputs whose linear block entered there; at most 0.035 at
-  n = 16384), products of a true block with a factor of irrelevant inputs (9 cells, 4 targets,
-  shares 0.07–0.41, test error ≤ 0.0083), and blocks contaminated by irrelevant inputs at the first n where a block
-  appears. At the first n with test error ≤ 0.1 the spurious share is ≤ 0.1 for 22 of 35 targets (median 0.01,
-  largest 0.36, dlist8); at 16384 for 36 of 37 (largest 0.21, a spurious product of sym9).
+  n = 16384), products of a true block with a factor of irrelevant inputs (9 cells, 4 targets, shares 0.07–0.41, test
+  error ≤ 0.0083), and blocks contaminated by irrelevant inputs at the first n where a block appears. At the first n
+  with test error ≤ 0.1 the spurious share is ≤ 0.1 for 22 of 35 targets (median 0.01, largest 0.36, dlist8); at
+  16384 for 36 of 37 (largest 0.21, a spurious product of sym9).
 - **The two residue classes mod 3 are never learned**: f7_05 and h6_00 are the constant (plus the kernel background)
   at every n, test error = the minority rate (0.3245, 0.3430) from n = 2048 on. Part 10 found the same failure for
   v3's member, constant + background at every n ≥ 1024; at smaller n v3's member was not constant-only (§3).
@@ -171,7 +173,7 @@ Figures: [`figures/fig_atlas_grid.pdf`](figures/fig_atlas_grid.pdf), [`figures/f
   common cells, in all 15 cells at n ≥ 4096 and in 28 of 32 at n = 1024–2048. At n ≤ 64 about half of the 80
   differing cells differ through the variant (40: v3's stacker kept the forced member, alone's paired test the
   default; the stacker kept the forced member in 51 of its 110 cells at n ≤ 64, DFG alone's paired test in 7 of 111),
-  and the forced member's few terms are often true ones (rf06 at 16: 0.032 against alone's 0.280); most of the rest
+  and the forced member's terms are often true ones (rf06 at 16: 0.032 against alone's 0.280); most of the rest
   (36) are cells where the stacker gave DFG no weight, so that Part 10 summarised an out-of-fold fit (45 of all 114
   differing cells). Part 10's exact-structure size n_struct is the same for all 15 targets where both have one.
 
@@ -231,8 +233,9 @@ the exact Fourier coefficients (Walsh transform over the same 2^k inputs) and Pa
 A compact representation is **complete** when all its characters are present, or every true block is a factor of a
 sum term with the true statistic (the true inner term for a weighted target and no inner term otherwise; the true
 modulator for a modulated target), or a product's factors partition it (for f7_03, f7_11 and symand, whose
-specifications give the blocks no modulator or gate characters, only the blocks are checked; §1.9). Also per cell: the test error with only the
-target terms (`err_T_only`) and without the spurious terms (`err_no_S`); the Fourier weight of the characters present;
+specifications give the blocks no modulator or gate characters, only the blocks are checked; §1.9). Also per cell:
+the test error with only the target terms (`err_T_only`) and without the spurious terms (`err_no_S`); the Fourier
+weight of the characters present;
 and what the learned feature set can express whatever DFG's weights: the held-out R² of f on its span, and the
 **oracle error**, the test error of a lightly regularised logistic fit of f on the same features (fitted on 2048 of
 the test inputs, scored on the other 2048).
@@ -299,9 +302,12 @@ held-out errors are high and nearly equal in both variants (21 / 21 of the 64 he
 variant, CV 47 / 4; stair6 at 256), plus one extra Fourier character each (χ[x1,x3,x5]; χ[x2,x4,x6]); no blocks, no
 spurious terms. With more data the rest of the Fourier expansion is filled in: at 16384 stair5's model is exactly its
 16 Fourier characters (size 17), stair6's 57 of its 63 non-constant characters plus two relevant blocks. stair6 loses its
-degree-6 prefix character from n = 512 on (error ≤ 0.0007 throughout).
-*Heuristic:* staircases are learned as characters only: first the prefix terms, each detectable on its own residual,
-then the remaining Fourier terms as the residual shrinks.
+degree-6 prefix character from n = 512 on (error ≤ 0.0007 throughout); stair5 loses its degree-5 prefix character at
+n = 256 only (regained at 512). After the first fit the models also hold relevant blocks: stair5 at 256 (R 0.22),
+1024 and 2048 (R ≤ 0.10), stair6 at every n ≥ 512 (R 0.21–0.29).
+*Heuristic:* staircases are learned mostly as characters (relevant blocks appear at stair5 n = 256, 1024, 2048 and
+stair6 n ≥ 512): first the prefix terms, each detectable on its own residual, then the remaining Fourier terms as the
+residual shrinks.
 
 ### 1.3 Multiplexers with address and data bits (mux6, mux11)
 
@@ -310,10 +316,13 @@ one block on the address bits per data bit, with the address's sign pattern, mod
 *Numerical:* at the first fit the models mix the two: mux6 at n = 256 (forced; error 0.002) has 10 of its 16
 characters and two relevant blocks on two address bits and one data bit, (x1+x2−x3) and (x1+x2−x6), with S-lin 0.16;
 mux11 at n = 512 (error 0) has 4 of its 8 modulated address blocks, e.g. χ[x5]·(−x1−x2+x3), next to weighted blocks
-on the address and two data bits (x1+x2+x3+x11 − 3x4) (R, 0.43) and 17 characters. From n = 1024 (mux6) and 4096
-(mux11) on, the models are the complete Fourier expansion and nothing else (n = 16384: sizes 17 and 65).
-*Heuristic:* DFG has two exact dictionaries for a multiplexer; it first fits one with blocks (one modulated block per
-data bit, partial), and with more data the characters (coefficients ±1/4 and ±1/8) all pass their tests and take
+on the address and two data bits (x1+x2+x3+x11 − 3x4) (R, 0.43) and 17 of its 64 Fourier characters (41 characters
+in all, 19 of them irrelevant degree-1 characters from the linear block, S-lin 0.02). mux6 never holds a modulated
+address block (its blocks are additive at 256 and weighted, (x1+x5 − 3·AND(¬x2,¬x3)), at 512). From n = 1024 (mux6)
+and 4096 (mux11) on, the models are the complete Fourier expansion and nothing else (n = 16384: sizes 17 and 65).
+*Heuristic:* DFG has two exact dictionaries for a multiplexer. Before the characters take over, mux11 first fits
+partial modulated address blocks (n = 512: 4 of the 8, one per data bit), while mux6 goes through additive and
+weighted relevant blocks; with more data the characters (coefficients ±1/4 and ±1/8) all pass their tests and take
 over.
 
 ### 1.4 Majorities and halfspaces (maj9, thrint, thr30, f7_01)
@@ -321,14 +330,18 @@ over.
 *Representation:* degree-1 characters with the target's weights in the sign readout; for maj9 and f7_01 (s ≤ 1 on 13
 inputs) also one block on all relevant inputs.
 *Numerical:* in all four the linear block enters at n = 64 and puts all 30 degree-1 characters in the model, so the
-degree-1 representation is complete from n = 64 and the oracle error there is ≤ 0.007; but DFG's own error at
-n = 64 is 0.17–0.20 and the 17–21 irrelevant degree-1 characters have S-lin share 0.45–0.56 (thr30 has no irrelevant
-input). The error falls when a block arrives: maj9's (x1+…+x9) at n = 128 (error 0, S-lin 0.01), f7_01's 13-input block
-at 256 (error 0). thrint has no single exact block; it reaches 0 at n = 1024 with weighted blocks that put the heavy
-input in the inner term, (x2+…+x9 + 2x1) and (x2+x3−x4−…−x9 + 3x1) (R). thr30 (Gaussian weights on all 30 inputs) is
-never fitted exactly: 0.009 error at 16384, with 59 characters and weighted blocks (x4+x5−x7−… + 3x3), a ±1
-quantisation of w with its largest weight as inner literal (R). At 16384 the leading terms are the degree-1 characters
-(group share 0.72–0.85), the block (maj9 0.29, f7_01 0.29) and, for f7_01, a spectral feature on its inputs (0.28).
+degree-1 representation is complete at n = 64 (thrint loses it at 512, with 6 of 9, and has it again from 1024) and
+the oracle error there is ≤ 0.007; but DFG's own error at n = 64 is 0.17–0.20 and the 17–21 irrelevant degree-1
+characters have S-lin share 0.45–0.56 (thr30 has no irrelevant input). The error falls when a block arrives: maj9's (x1+…+x9) at n = 128 (error 0, S-lin 0.01), f7_01's 13-input block
+at 256 (error 0). thrint has no single exact block; it reaches 0 at n = 512 with a product of the {x4…x9} and
+{x1,x2,x3} blocks, (x4+…+x9) × (x1+x2+x3) (0.27), and two modulated folded blocks, χ[x3]·|−x2+x4+…+x9| (0.24) and
+χ[x2]·|−x3+x4+…+x9| (0.22), all R; the weighted blocks that put the heavy input in the inner term,
+(x2+…+x9 + 2x1) (from 1024) and (x2+x3−x4−…−x9 + 3x1) (from 4096), come later (R). thr30 (Gaussian weights on all 30
+inputs) is never fitted exactly: 0.009 error at 16384, with 59 characters and a weighted block (x4+x5−x7−… + 3x3),
+a ±1 quantisation of w with its largest weight as inner literal (R; also a factor of a product). At 16384 the leading
+terms are the degree-1 characters (their summed contribution has 0.76–0.91 of the output's sd; the tables' unnormalised
+root-sum-square values are 0.72–0.85), the block (maj9 0.29, f7_01 0.29) and, for f7_01, a spectral feature on its
+inputs (0.28).
 *Heuristic:* for threshold functions DFG's dictionary is complete almost at once and what remains is to learn the
 weights; the logistic readout of 30 noisy degree-1 coefficients does that slowly, one block whose levels encode the
 threshold does it at once.
@@ -345,13 +358,17 @@ spectral pair (u₊·x)² − (u₋·x)², or two folded blocks |t_A + t_B|, |t_
 - parmaj, majxor: first fitted (parmaj at 128, forced, error 0; majxor at 256, error 0.0005) by the two folded
   blocks over the union, shares 0.56–0.77, and next to nothing else (parmaj: degree-1 characters of share ≤ 0.003;
   majxor: a partly spurious spectral feature, 0.09). With more data the cross-pair characters come in: parmaj has all 9 at
-  1024 (with its 6 degree-4 characters; 15 of its 16 Fourier characters at 16384), majxor all 25 at 4096; the folded
-  blocks stay at shares ≈ 0.2. The product block and the spectral pair never appear (the spectral features of majxor
-  at 256–1024 have only 0.73–0.84 of |u|² on its inputs).
+  1024 (with its 6 degree-4 characters; 15 of its 16 Fourier characters at 16384), majxor all 25 at 2048. majxor keeps
+  both folded blocks (shares 0.21–0.24 from 2048 on); parmaj keeps only |t_A + t_B| (0.17) from 1024 on, so its
+  folded-pair representation is incomplete from there. The product block never appears; the spectral pair appears
+  once, at majxor n = 512 (two spectral features with cos 0.94 and 0.91 to 1_A + 1_B and 1_A − 1_B and opposite
+  weights, shares 0.33 and 0.24, 86–90% of |u|² on its inputs; error 0.0081). At 256 and 1024 majxor's spectral
+  features carry only 0.73–0.84 of |u|² on its inputs and count as spurious (at 1024 the two have cos 0.87 with
+  1_A ± 1_B, just below the 0.9 needed for a target term).
 - majmaj5: no compact representation is complete at any n. At the first fit (n = 512, error 0.023) the model has
   4-input pieces of a majority modulated by its fifth input, χ[x7]·(x6+x8+x9+x10) (R, 0.40); at 1024–16384 one or
-  two of the three 5-blocks at a time, blocks over unions of majorities, and degree-1, 3 and 5 characters; error
-  0.0007 at 1024 and 0 from 2048, with 256 features at 16384 (DFG's cap, max_feats = 256).
+  two of the three 5-blocks at a time, blocks over unions of majorities, and degree-1, 3 and 5 characters (degree 7
+  too from 2048 on); error 0.0007 at 1024 and 0 from 2048, with 256 features at 16384 (DFG's cap, max_feats = 256).
 - andxor: the two pair characters at n = 64 (forced, error 0.092), a folded block |−x1−x2+x3+x4| at 128 (R; error 0),
   the full expansion (3 characters, size 4) from 256 on.
 *Heuristic:* compositions of parities are their characters; a parity of two majorities is first a pair of folded
@@ -367,14 +384,16 @@ AND(OR(¬x6,x7),x8)): a block on the 5 literals plus the 7 characters of the sec
 Fourier expansion.
 *Numerical:* at the first fit the models are characters of degree 1–3 plus blocks that encode a clause, a term or a
 rule: cnf3 at 256 (forced; error 0.004) has one of its three clause blocks exactly, (−x7+x8−x9), a second clause's
-block with the third clause's literals as inner term, (−x4+x5+x6 − 3·AND(¬x1,¬x2)) (T~, share 0.49), and 10 of its
-21 clause characters; f7_02 at 256
+block with two of the first clause's literals (negated) as inner term, (−x4+x5+x6 − 3·AND(¬x1,¬x2)) (T~, share
+0.49), and 10 of its 21 clause characters; f7_02 at 256
 (forced; error 0) has the block of its 4-literal term (−x1+x2+x4+x5) and 14 of 27 term characters; f7_06 at 128 (error
 0.024) has (x6−x7+x8) (R, 0.50). The decision lists are first their degree-1 characters through the linear block
 (dlist8 from 64, error 0.11 → 0.049 at 128; f7_04 error 0.021 at 128 with 10 of 11). The character representations
-are complete later: cnf3 at 1024, f7_02 at 2048, f7_06's block-plus-characters form at 2048, f7_04 at 4096; dlist8
-holds 7 of its 8 literal characters at 16384 (error 0). Spurious terms are larger here than in the other families at
-the first fit (S share 0.09–0.36, median 0.24; dlist8's (x1−x2+x3−x4+x9) 0.33 at 128) and ≤ 0.10 at 16384.
+are complete later: cnf3 at 1024, f7_02 at 2048, f7_06's block-plus-characters form at 2048 (its 5-literal block as
+a factor of a relevant product, (−x1+x2−x3+x4−x5) × (−x6+x7+2x8)), f7_04 at 4096. dlist8's halfspace representation
+is complete at 64–128 and 512–8192 but not at 256 (2 of its 8 literal characters) or 16384 (7 of 8; error 0).
+Spurious terms are larger here than in the other families at the first fit (S share 0.09–0.36, median 0.24; dlist8's
+(x1−x2+x3−x4+x9) 0.33 at 128) and ≤ 0.10 at 16384.
 *Heuristic:* formulas are learned as their low-degree characters; blocks, often weighted with an AND of two literals
 as inner term, are DFG's encoding of a whole clause or term before its characters are all detectable.
 
@@ -384,10 +403,10 @@ as inner term, are DFG's encoding of a whole clause or term before its character
 classes have 3–4 inputs, x1+x2−x3+x4 for rf06 and x1+x3−x6 for hrf0, with the other inputs entering arbitrarily).
 Both are dominated by one input (f̂(x5) = −0.94 for rf06, f̂(x4) = −0.81 for hrf0).
 *Numerical:* the first models are that one character (n = 32–64; rf06's model at 64 is χ[x5] plus the background,
-error 0.045, against 0.032 for χ[x5] alone); exact fits follow at 128–256 with relevant blocks on the other inputs (hrf0 at 128,
-forced: (−x1−x3−x4−x5+x6) R 0.35, error 0) and, for rf06, spurious modulated blocks at 128–256 (S 0.16–0.17). At 16384
-hrf0's model is exactly its 31-character expansion (size 32) and rf06's has 30 of 31 characters plus one spurious
-product (S 0.03).
+error 0.045, against 0.032 for χ[x5] alone); exact fits follow at 128–256 (hrf0 at 128; rf06 at 256, after 0.027 at
+128) with relevant blocks on the other inputs (hrf0 at 128, forced: (−x1−x3−x4−x5+x6) R 0.35, error 0) and, for rf06,
+spurious modulated blocks at 128–256 (S 0.16–0.17). At 16384 hrf0's model is exactly its 31-character expansion
+(size 32) and rf06's has 30 of 31 characters plus one spurious product (S 0.03).
 *Heuristic:* as for the other small juntas, characters by order of size, with transient block encodings of the rest.
 
 ### 1.8 Symmetric and pure signed-sum targets (sym9, band11, f7_08, h5s7; mod 3: f7_05, h6_00)
@@ -396,7 +415,8 @@ product (S 0.03).
 *Numerical:*
 - sym9 (|s| ≤ 1, 9 inputs): the folded block alone at n = 128 (share 0.98, size 4, error 0). Later a spurious product
   with a two-input factor of irrelevant inputs (0.41 at 256, 0.20 at 16384) and, at 512–2048, a spectral feature on
-  the relevant inputs (R 0.50–0.81); at 4096–16384 the block plus 36 degree-2 characters.
+  the relevant inputs (R 0.50–0.81); at 4096–16384 the block, its 36 degree-2 characters and up to 28 degree-4
+  characters (1, 17 and 28 at 4096, 8192 and 16384; plus the spurious product at 8192–16384).
 - band11 (|s| ∈ {3,5}, 11 inputs): constant only until 512, then the folded block alone at 1024 (share 0.99, size 5),
   kept to 16384 (0.94, with a spectral feature 0.12).
 - f7_08 (arbitrary set, 11 inputs): the unfolded block at 512 (forced, CV 229 / 188; error 0.012, share 0.92), with
@@ -418,26 +438,30 @@ to contaminated copies (f7_08); what varies is when the search finds it (band11 
 *Representations:* f7_07 = [−2 ≤ s ≤ 8]·x13 and f7_09 = [s ≤ 0]·x11x12: the block modulated by the parity; symand =
 [|s| ≤ 2] ∧ (x7 ∨ x8): the block plus the gate's characters; f7_10 = [s + 2x6 ≤ −1]: the weighted block; f7_00 =
 OR of a 4-input and a 7-input sum: two additive blocks; f7_03, f7_11: multiplexers between two sums, both blocks
-modulated by the selector x11.
+modulated by the selector x11. (For f7_03, f7_11 and symand, "complete" checks only that the branch or class blocks
+appear as factors of some sum term, not the modulation by x11 or the gate's characters.)
 *Numerical:*
-- The partner character comes first: χ[x13] (f7_07 from 128), χ[x11] (f7_03 from 32, f7_11 from 32), χ[x7] (symand at
-  64), χ[x6] (f7_10 from 32); the block follows one or more doublings later.
+- The partner character comes first in five of the six mixtures with a partner: χ[x13] (f7_07 from 128), χ[x11]
+  (f7_03 from 32, f7_11 from 32), χ[x7] (symand at 64), χ[x6] (f7_10 from 32); the block follows one or more doublings
+  later. Not in f7_09, the other parity mixture: its model at 128 is the constant, and χ[x11,x12] enters at 256
+  together with the modulated block χ[x11,x12]·s (f7_00 has no partner).
 - At the first fit the compact form is complete for f7_07 (256: χ[x13]·s, share 0.45, beside the weighted
   (s + 3x13)), f7_09 (256, forced: χ[x11,x12]·s, 0.72), f7_00 (256, forced: the product (s₂) × |s₁|, 0.80) and f7_03
   (512: branch 1 as χ[x11]·s₁, branch 2 as a factor of a product). It is not for f7_10 (128: error 0 with
   χ[x6]·|s| and the degree-1 characters; its exact weighted block (x1+…+x5 + 2x6) from 256 on), symand (256: the
   weighted (s + 3·AND(¬x7,¬x8)), share 0.83, error 0.012) or f7_11 (128: branch 1 |s₁| and χ[x11]·|s₁| exact; error
-  0.016 because branch 2, [|s₂| ≤ 4], is wrong only where it is selected and |s₂| = 6, 1.6% of inputs).
+  0.016 because branch 2, [|s₂| ≤ 4], is wrong almost only where it is selected and |s₂| = 6, 1.6% of inputs: 63 of
+  its 64 test errors, by a refit).
 - With more data the compact forms give way to weighted blocks with the partner as inner term and to characters: at
   16384 f7_07 holds (±s − 3x13) twice and 63 characters through x13; f7_09 (s ± 3x11x12); symand (s − 3·AND) and
-  (s + 2·AND) with 16 degree-2 characters; f7_03 (s₁ ± 3x11), (s₂ − 3x11); f7_00 and f7_11 carry their 4-input branch
+  (s + 2·AND) with 16 degree-2 characters; f7_03 (s₁ − 3x11), (s₂ − 3x11); f7_00 and f7_11 carry their 4-input branch
   as its characters (χ[x1,x2,x3,x4] 0.51 for f7_00). Only f7_10 still has its compact form at 16384. All seven have
   test error 0 there; span R² is 1.0 for f7_07, symand, f7_10 and f7_11, 0.998 for f7_09, 0.96 for f7_03 and 0.89
   for f7_00 (oracle error 0 for all).
 *Heuristic:* DFG treats a partner variable (parity, gate, selector) as a heavy input of the block rather than as a
 modulator; weighted blocks with the partner as inner literal are found easily because the partner is a strong single
-input or pair, and two of them in opposite orientations (or one plus characters) represent the target as well as the
-modulated block does.
+input or pair (though f7_09's pair enters only together with its modulated block), and two of them in opposite
+orientations (or one plus characters) represent the target as well as the modulated block does.
 
 ## 2. Across families
 
@@ -447,9 +471,13 @@ modulated block does.
 express the target (oracle error > 0.1) in 133; in 9 they can (oracle ≤ 0.02): maj9, thrint, thr30 and f7_01 at
 n = 64 (and thrint, thr30, f7_01 at 128), dlist8 and f7_10 at 64, all just after the linear block entered; 6 are in
 between (rf06 and dlist8 at 32, hrf0 and f7_11 at 32 and 64, where one strong character is in the model).
-At the first fit DFG's own error is within 0.0005 of the oracle error for the median target (largest gap andxor,
-0.092 against 0, and majpar, 0.067 against 0: both are the kernel background's doing, §2.4); the model with only its
-target terms has error 0 for 15 of the 35 targets.
+The oracle's features exclude the kernel background, so "cannot express" concerns the learned features only: in 27 of
+the 133 cells DFG's own error is more than 0.05 below the oracle's (e.g. maj9 and thr30 at 16–32, f7_10 and rf06 at
+16), because the background carries the signal there; without the background none of the 27 is.
+At the first fit DFG's own error is within 0.0005 of the oracle error for the median target. The largest gaps are
+andxor at 64 (0.092 against 0) and thrint at 256 (0.071 against 0), then majpar at 64 (0.067 against 0); andxor's and
+majpar's vanish without the kernel background (§2.4), while thrint's stays at 0.071 without it: a readout gap on a
+complete degree-1 dictionary. The model with only its target terms has error 0 for 15 of the 35 targets.
 *Heuristic:* outside threshold functions, DFG's data cost is the cost of putting the right features in the model;
 once they are in, its least-squares-plus-logistic readout is close to the best weights for them.
 
@@ -457,17 +485,23 @@ once they are in, its least-squares-plus-logistic readout is close to the best w
 
 (Numerical, `tables/atlas_family.json`, `tables/atlas_quirks.json`.)
 - *Linear block.* It entered in 83 of the 407 cells. Its irrelevant degree-1 characters carry S-lin share 0.40–0.78
-  at n = 64 in the 8 targets where it entered there (f7_09 0.78, f7_10 0.58, f7_01 0.56, thrint 0.51, majmaj5 0.50,
-  f7_04 0.48, maj9 0.45, dlist8 0.40; 15–24 characters), 0.08–0.25 at the first fit in 10 targets (largest f7_04 0.25,
-  thrint 0.22, f7_06 0.21) and at most 0.035 at n = 16384 (h5s7). It drops fastest when a block takes over the
-  residual (maj9: 0.45 at 64, 0.01 at 128).
+  at n = 64 in the 8 targets with irrelevant inputs where it entered there (f7_09 0.78, f7_10 0.58, f7_01 0.56,
+  thrint 0.51, majmaj5 0.50, f7_04 0.48, maj9 0.45, dlist8 0.40; 15–24 characters; it also entered at 64 in thr30,
+  which has no irrelevant input), 0.08–0.25 at the first fit in 10 targets (largest f7_04 0.25, thrint 0.22, f7_06
+  0.21) and at most 0.035 at n = 16384 (h5s7; an upper bound, since that cell is one of the 13 where a round accepted
+  more than the 20 characters DFG logs, so the attribution to the linear block is uncertain). It drops fastest when a
+  block takes over the residual (maj9: 0.45 at 64, 0.01 at 128).
 - *Spurious products* (a true block times a factor reading only irrelevant inputs): 9 cells in 4 targets (sym9 at
   256, 2048, 8192, 16384; f7_01 at 256; f7_08 at 1024–4096; f7_10 at 8192), shares 0.07–0.41, test error ≤ 0.0083. This
   is the quirk Part 10 found in v3's member (its verifier: 15–16 cells in 13–14 targets of the sum suites).
 - *Contaminated blocks* (a true class plus irrelevant inputs, or modulated by an irrelevant character) at the first n
   of a block: f7_08 at 512 (S 0.20), symand at 256 ((x1+…+x8 − x30) 0.15), dlist8 at 128–256, f7_04 at 256–512.
+  Other spurious blocks at the first n of a block mix part of a true class, or a relevant modulator, with irrelevant
+  inputs: f7_06 at 128 ((x1+x3+x19+x23−x26) 0.26 and a copy modulated by χ[x24], 0.14), f7_03 at 256
+  ((x7+…+x10−x11+x13) 0.32), symand at 128 (|−x8+x11−x18−x24+x29| 0.19) and rf06 at 128–256 (χ[x5]·|…| on irrelevant
+  or partly relevant inputs, 0.14 and 0.12).
 - *Totals.* At the first fit the spurious share is ≤ 0.1 for 22 of 35 targets (median 0.01; largest dlist8 0.36,
-  f7_06 0.28, f7_01 0.27); removing the spurious terms changes the test error by at most 0.036 there (dlist8: 0.049
+  f7_06 0.28, f7_01 0.27); removing the spurious terms changes the test error by at most 0.035 there (dlist8: 0.049
   → 0.085). At 16384 it is ≤ 0.1 for 36 of 37 (sym9 0.21) and removing it leaves the error unchanged.
 
 ### 2.3 DFG's own choice of variant
@@ -493,7 +527,7 @@ is where the forced guess helps most; this is also where v3's stacker, which kep
 
 *Below the structure.* Below the first n at which a compact representation is complete (198 cells in 36 targets, including all cells of the
 6 targets that never get one), 187 models are the default variant and 11 the forced; 108 are the constant alone
-(+ background), 29 contain the linear block, 78 a true character; median test error 0.31.
+(+ background), 29 contain the linear block, 87 a true character; median test error 0.31.
 
 ### 2.4 The kernel background
 
@@ -503,7 +537,8 @@ variant. Removed, the test error is lower in 85 of the 407 cells, higher in 54 a
 n = 16–32, where the model holds little else and the target has a strong degree-1 part (maj9, thrint, thr30, majmaj5,
 symand, f7_04, f7_10, rf06: without it the error would be 0.19–0.27 higher, e.g. maj9 at 32 0.491 instead of 0.283);
 it hurts most where the residual's degree-1
-correlations are noise: the mod-3 counts at n = 16–32 (h6_00 at 16: 0.488 with it, 0.343 without), rf06 at 32 (0.157
+correlations are noise: the mod-3 counts at n = 16–32 (h6_00 at 16: 0.488 with it, 0.343 without; the exception is
+f7_05 at 16, where it helps: 0.517 with it, 0.676 without), rf06 at 32 (0.157
 against 0.032), andxor at 32 (0.365 against 0.245), f7_07 at 128 (0.302 against 0.201), and at the first fit andxor
 at 64 and majpar at 64 (0.092 and 0.067 against 0).
 
@@ -513,8 +548,14 @@ at 64 and majpar at 64 (0.092 and 0.067 against 0).
   f7_08 at 1024, 2048, 4096; h5s7 at 8192, 16384), the two copies with equal shares (0.23–0.41). *Heuristic, from
   dfg13.py:* `SumBlock.key()` normalises the global sign but keeps the order of the inputs, so a block found again with
   its inputs in another order is not recognised as present.
-- *Non-monotone cells:* h5s7 is fitted at 2048 (0.0007), empty at 4096 (0.368) and fitted again from 8192; stair6
-  loses a prefix character at 512; f7_00 and f7_03 lose their compact form at large n while staying at error 0.
+- *Non-monotone cells:* h5s7 is fitted at 2048 (0.0007), empty at 4096 (0.368) and fitted again from 8192. A
+  compact representation is lost again at a larger n, with the error at or near 0, in stair5 (χ[x1…x5] missing at 256
+  only), stair6 (its degree-6 prefix character from 512 on), thrint (6 of its 9 degree-1 characters at 512), dlist8
+  (complete at 64–128 and 512–8192, not at 256 or 16384), f7_07 and f7_09 (complete only at 256), f7_03 (only at 512,
+  error 0.0076; 0.0039 at 1024 and 0 from 2048) and f7_00 (from 4096 on, at error 0). The test error rises with n
+  after the first fit in majxor (0.0005 at 256, 0.0081 at 512, 0.0037 at 1024), f7_02 (0 at 256, 0.0129 at 512),
+  f7_06 (0 at 512, 0.0044 at 1024), f7_07 (0.0056 at 256, 0.0088 at 512), f7_08 (0.0059 at 1024, 0.0083 at 2048) and
+  stair6 (0 at 256, 0.0007 at 512), and by at most 0.0013 in f7_04 and f7_11 (128 → 256) and h5s7 (8192 → 16384).
   These are single seed-0 training sets.
 
 ## 3. DFG alone against v3's DFG member (Part 10)
@@ -533,23 +574,32 @@ both; an out-of-fold fit when it kept neither). Its runs stopped after two conse
 - **At small n alone is often emptier.** At n ≤ 64 alone's cross-validation mostly keeps the default variant (empty
   or degree-1 characters; forced in 7 of its 111 cells there), while of v3's 110 cells at n ≤ 64 the stacker kept the
   forced member in 51 (alone in 25, with the default in 26; Part 10 then summarised the forced one), only the default
-  in 23 and neither in 36 (`weights` in Part 10's files). The forced member's one or two characters are often true
-  ones: rf06 at 16 (v3 χ[x5], 0.032; alone 0.280), f7_11 at 16 (χ[x11], 0.158 vs 0.301), andxor at 32 (both pair
-  characters, 0.155 vs 0.365), f7_06 at 64 (0.043 vs 0.136), mux6 at 128 (0.097 vs 0.366). The reverse also occurs
-  (f7_11 at 32: alone 0.126, v3 0.299; maj9 at 64: 0.171 vs 0.285). Over the 114 differing cells alone is lower in 72.
-  This is the same effect as §2.3: the forced guess helps at small n, and the stacker kept it more often than DFG's
-  paired test does.
+  in 23 and neither in 36 (`weights` in Part 10's files). The forced member's terms are often true ones: rf06 at 16
+  (v3 χ[x5], 0.032; alone 0.280), f7_11 at 16 (χ[x11], 0.158 vs 0.301), andxor at 32 (both pair characters, 0.155 vs
+  0.365), f7_06 at 64 (χ[x8] and the block (−x6+x7−x8), beside a spurious χ[x14,x19,x24]; 0.043 vs 0.136), mux6 at 128
+  (9 characters and a block with an irrelevant input; 0.097 vs 0.366). The reverse also occurs (f7_11 at 32: alone
+  0.126, v3 0.299; maj9 at 64: 0.171 vs 0.285, the latter an out-of-fold v3 fit on 57 rows). Over the 114 differing
+  cells alone is lower in 72, but 45 of them (36 at n ≤ 64, 6 at 128–512, 3 above 512) compare with out-of-fold fits
+  that v3's stacker gave zero weight; against a final v3 member alone is lower in 41 of 69. Of the 80 differing cells
+  at n ≤ 64, 40 differ through the variant (v3's forced member against alone's default), 36 are against out-of-fold
+  fits and 4 have the default variant in both. The 40 show the same effect as §2.3: the forced guess helps at small n,
+  and the stacker kept it more often than DFG's paired test does.
 - **The exact structure arrives at the same n.** By Part 10's rule (every signed-symmetry class of size ≥ 3 matched
   exactly by a block factor or modulator), n_struct is the same for all 15 targets where both runs have one (maj9,
   sym9, f7_10 at 128; f7_00, f7_01, f7_06, f7_07, f7_09, symand at 256; thrint, f7_03, f7_08 at 512; band11 1024;
-  f7_04 2048; h5s7 8192). For 4 more, alone has it after v3's run had stopped (rf06 512, majmaj5 2048, cnf3 and hrf0
-  4096). The mod-3 failures are the same: constant only (fd_10, the third, also in the identity sample: constant and
-  background at every n, `results/identity/dlfamdev__fd_10.json`).
+  f7_04 2048; h5s7 8192). For 3 more, alone has it after v3's run had stopped (rf06 512; cnf3 and hrf0 4096); for
+  majmaj5 alone has it at 2048, the last n of v3's run, where v3's member (also error 0) lacks the {x6…x10} class. The
+  mod-3 failures are the same from n = 1024 on: constant and background, the error falling to the minority rate
+  (fd_10, the third, also in the identity sample: constant and background at every n,
+  `results/identity/dlfamdev__fd_10.json`). At smaller n v3's member was not constant-only (h6_00: characters at
+  n ≤ 64, a character and a sum block at 256–512; f7_05: one or two characters at 16–128, out-of-fold fits), while
+  alone is the constant at every n.
 - **The Part 10 findings that carry over unchanged**: exact signed blocks on the symmetric targets (sym9, band11, f7_08,
   h5s7) at v3's n_struct; parities, small juntas and staircases as characters; halfspaces as degree-1 characters through
   the linear block; mixtures with the partner as character and as inner term of a weighted block; spurious products of
-  a strong block; mod 3 never. In these files the difference between DFG alone and v3's member is mostly which
-  variant is kept at small n, and in 4 cells that v3 had no final DFG fit.
+  a strong block; mod 3 never. In these files the differences between DFG alone and v3's member come from which
+  variant is kept at small n (64 of the 114 differing cells) and from cells where v3's stacker gave DFG no weight, so
+  that Part 10 summarised an out-of-fold fit (45, 36 of them at n ≤ 64); 5 differ with the same variant.
 
 ## 4. What I could not check, and caveats
 
@@ -558,7 +608,8 @@ both; an out-of-fold fit when it kept neither). Its runs stopped after two conse
 - 37 of 138 targets. dlheld2 and dlfamdev are only in the identity sample (no atlas description), and some
   sub-families have no atlas target: dlheld5's thresholds with a character (h5t) and arbitrary sets with a parity or
   gate (h5s1, h5s4), the MAJ gate (fd_08), two sums under XOR (fd_06, h6_09), sym × parity with two blocks, weighted
-  blocks with a parity or AND inner term (thrsum, h6_10 is only in the identity sample).
+  blocks with a parity or AND inner term (thrsum's is a parity; h6_10, only in the identity sample, has a literal
+  inner term, as f7_10 does).
 - The categories depend on the representations written down in `atlas_truth.py`. A model can be exact in a form not
   listed (the weighted pairs of §1.9, the folded pair of §1.5 until it was added after seeing the fits, the
   multiplexer's address blocks, the clause blocks): such terms count as R. The folded-pair, address-block, clause-block,
@@ -567,7 +618,10 @@ both; an out-of-fold fit when it kept neither). Its runs stopped after two conse
 - "Complete" checks the dictionary, not the weights; the oracle error and span R² are fitted on the test inputs (an
   idealised readout), so they say what the features could express, not what DFG's readout achieves.
 - Category shares are standard deviations of parts of the model's real-valued output; parts that cancel can exceed 1,
-  and S-lin uses the orthogonality approximation (it can exceed the exact S share slightly).
+  and S-lin uses the orthogonality approximation (it can exceed the exact S share slightly). Term shares and the
+  tables' character-group values are absolute sds, not fractions of the output's sd (§0).
+- The block representations are checked only for functional dependence (§0): accept sets are not checked, the check
+  is vacuous for the multiplexer address blocks, and the spectral pair is not verified.
 - The identity check compares test errors and FLOP counts, not models; the evaluation files store no models.
 - thr30 (k = 30) has no exact Fourier table; its characters are classified by the parity of their degree (it is an odd
   function), and its representation is not verified by enumeration.

@@ -3,7 +3,7 @@ verification (VERIFY_ATLAS.md / .json; the 'Verification' section of ATLAS.md li
 (results/atlas, results/cv, the merged evaluation files, Part 10's v3 structure files) and the 4096 test inputs of
 harness.test_data; no fits, except f7_11 at n = 128 with --refit (about 10 s).
 usage: OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python atlas_recheck.py [--refit]"""
-import os, sys, json, ast, math, numpy as np
+import os, sys, json, ast, math, time, numpy as np
 from collections import Counter
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 import atlas_make as M                                                 # noqa: E402
@@ -35,7 +35,13 @@ def test_inputs(t, _cache={}):
 
 def main():
     print("== suites of the 37 atlas targets:", dict(Counter(R[t]["suite"] for t in ORDER)))
-    print("== random-suite merged file: seeds", M.merged("random")["seeds"], "(n*_3 of rf06 is their mean)")
+    pr = os.path.join(H.RESULTS, "toy__dfg13-perm__random.json")
+    print("== random-suite merged file: seeds", M.merged("random")["seeds"], "(n*_3 of rf06 is their mean); written",
+          time.strftime("%H:%M:%S UTC", time.gmtime(os.path.getmtime(pr))))
+    print("== representations: verified by enumeration (chars), by functional dependence only (blocks), not at all")
+    for t in ORDER:
+        print(f"   {t:7s}", [("chars" if "chars" in r and "blocks" not in r else "blocks" if "blocks" in r else "quad")
+                             + ("" if r.get("verified") else " (unverified)") for r in R[t]["spec"]["reps"]])
 
     print("== degree-1 characters at n = 16384: sd of their summed contribution / output sd (exact) and the tables' "
           "root-sum-square of term shares (absolute, and / output sd)")
@@ -54,9 +60,12 @@ def main():
     for n in (1024, 4096):
         print(f"   {n}:", [x["desc"] for x in cell("thrint", n)["terms"] if x["kind"] == "sum" and x["inner"]])
 
-    print("== staircases: relevant blocks (R share) and completeness by n")
-    for t in ("stair5", "stair6"):
-        print(f"   {t}:", [(c["n"], round(c["summary"]["categories"]["R"]["share"], 2), complete(c)) for c in R[t]["cells"]])
+    print("== staircases: (n, relevant-block share R, complete, degrees of the missing prefix characters)")
+    for t, k in (("stair5", 5), ("stair6", 6)):
+        print(f"   {t}:", [(c["n"], round(c["summary"]["categories"]["R"]["share"], 2), complete(c),
+                            [j + 1 for j in range(k) if not any(x["kind"] == "chi" and x["S"] == list(range(j + 1)) for x in c["terms"])])
+                           for c in R[t]["cells"] if c["n"] >= 128])
+    print("== mux6 sum terms at 256 and 512:", [(n, [(x["desc"], x["cat"]) for x in cell("mux6", n)["terms"] if x["kind"] == "sum"]) for n in (256, 512)])
 
     print("== multiplexers: modulated address blocks (target terms with a modulator) by n")
     for t in ("mux6", "mux11"):
@@ -74,13 +83,20 @@ def main():
             q = [(round(x["share"], 2), x["mass_rel"], x.get("quad_match")) for x in c["terms"] if x["kind"] == "quad"]
             fb = [round(x["share"], 2) for x in c["terms"] if x["kind"] == "sum" and x["fold"] and x["cat"] == "T"]
             print(f"   {t}@{c['n']}: {M.rep_line(c)}; folded target blocks {fb}; quad {q}")
-    for x in cell("majxor", 1024)["terms"]:
-        if x["kind"] == "quad":
-            u = np.asarray(x["u"]); cs = []
-            for sg in (1, -1):
-                w = np.zeros(30); w[:5] = 1; w[5:10] = sg; cs.append(abs(u @ w) / np.linalg.norm(u) / np.linalg.norm(w))
-            print(f"   majxor@1024 quad w {x['w']:+.3f}: cos with 1_A+1_B {cs[0]:.3f}, with 1_A-1_B {cs[1]:.3f}")
+    for n in (512, 1024):
+        for x in cell("majxor", n)["terms"]:
+            if x["kind"] == "quad":
+                u = np.asarray(x["u"]); cs = []
+                for sg in (1, -1):
+                    w = np.zeros(30); w[:5] = 1; w[5:10] = sg; cs.append(abs(u @ w) / np.linalg.norm(u) / np.linalg.norm(w))
+                print(f"   majxor@{n} quad w {x['w']:+.3f} share {x['share']:.3f} mass {x['mass_rel']}: cos with 1_A+1_B "
+                      f"{cs[0]:.3f}, with 1_A-1_B {cs[1]:.3f}; error {cell('majxor', n)['err']:.4f}")
 
+    print("== thr30@16384 sum terms:", [(x["desc"][:28] + "...", x["cat"], x["product"], bool(x["mod"]))
+                                       for x in cell("thr30", 16384)["terms"] if x["kind"] == "sum"])
+    print("== f7_06@2048 sum terms:", [(x["desc"], x["cat"]) for x in cell("f7_06", 2048)["terms"] if x["kind"] == "sum"],
+          M.rep_line(cell("f7_06", 2048)))
+    print("== rf06 / hrf0 test error at 128, 256:", [(t, n, round(cell(t, n)["err"], 4)) for t in ("rf06", "hrf0") for n in (128, 256)])
     print("== cnf3@256 sum terms (clauses: x1|x2|x3, ~x4|x5|x6, x7|~x8|x9):",
           [(x["desc"], x["cat"]) for x in cell("cnf3", 256)["terms"] if x["kind"] == "sum"])
     print("== sym9 characters by degree, 4096-16384:", [(n, cell("sym9", n)["summary"]["chars_by_degree"]) for n in (4096, 8192, 16384)])
@@ -115,6 +131,15 @@ def main():
           f"{sum(cell(t, 16384)['summary']['categories']['S']['share'] > 0.1 for t in ORDER)} of {len(ORDER)}; "
           f"largest change of the error when removed: {ch[0]:.4f} ({ch[0] * 4096:.0f}/4096, {ch[1]})")
 
+    print("== spurious sum terms at the first n of a block (shares)")
+    for t, n in (("f7_06", 128), ("f7_03", 256), ("symand", 128), ("rf06", 128), ("rf06", 256)):
+        print(f"   {t}@{n}:", [(x["desc"], round(x["share"], 2)) for x in cell(t, n)["terms"] if x["kind"] == "sum" and x["cat"] == "S"])
+    lin64 = [t for t in ORDER if cell(t, 64)["summary"]["linear_block_round"] is not None]
+    print(f"== linear block in the n = 64 model: {lin64}; S-lin there:", {t: round(cell(t, 64)["S_lin"]["share"], 2) for t in lin64})
+    print("== linear_uncertain cells:", sum(c["linear_uncertain"] for t in ORDER for c in R[t]["cells"]),
+          "; h5s7@16384:", cell("h5s7", 16384)["linear_uncertain"], round(cell("h5s7", 16384)["S_lin"]["share"], 4))
+    print("== background at the mod-3 counts, n = 16-32 (err with, without):",
+          [(t, n, round(cell(t, n)["err"], 3), round(cell(t, n)["summary"]["err_parts"]["no_bg"], 3)) for t in ("f7_05", "h6_00") for n in (16, 32)])
     B = M.below_structure(R)
     print(f"== below the first complete n: {len(B)} cells, a true character in {sum(b['true_chars'] > 0 for b in B)}")
 
@@ -156,6 +181,10 @@ def main():
           "; out-of-fold by n:", dict(Counter("<=64" if r["n"] <= 64 else "128-512" if r["n"] <= 512 else ">512" for r in dif if r["oof"])))
     fin = [r for r in dif if not r["oof"]]
     print(f"   against a final v3 member: alone lower in {sum(r['a'] < r['v'] for r in fin)} of {len(fin)}")
+    for suite, t, n in (("dlheld7", "f7_06", 64), ("dlheld", "mux6", 128), ("designed", "maj9", 64)):
+        c10 = next(c for c in json.load(open(os.path.join(P10V3, f"{suite}__{t}__s0.json")))["cells"] if c["n"] == n)
+        print(f"   v3 {t}@{n}: {c10['dfg_source'][:40]}, err {c10['err_dfg']:.4f}, terms {c10['n_terms']}, blocks",
+              [x.get("desc") for x in c10["terms"] if x["kind"] == "sum"])
     s = json.load(open(os.path.join(P10V3, "dlheld__majmaj5__s0.json")))
     print("   majmaj5 in v3:", [(c["n"], c.get("err_dfg"), [x["exact"] for x in c["classes"]]) for c in s["cells"] if c["n"] >= 1024])
     for suite, t in (("dlheld7", "f7_05"), ("dlheld6", "h6_00")):

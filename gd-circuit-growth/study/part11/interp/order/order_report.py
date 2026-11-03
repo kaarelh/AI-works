@@ -475,7 +475,7 @@ def resolution(S, rows, NUM):
     sys.path.insert(0, os.path.join(A.STUDY, "discrete_learner")); sys.path.insert(1, A.STUDY)
     import harness as TH                                                        # noqa: E402  (numpy only)
     from boolfuncs import make_suite                                            # noqa: E402
-    SU = make_suite(30); R = dict(res_sd=RES_SD, n_test=N_TEST, groups={}, exact_target_phi={})
+    SU = make_suite(30); R = dict(res_sd=RES_SD, n_test=N_TEST, exact_target_phi={})
     for fn in A.TARGETS:
         T = S["targets"][fn]; nn = T["net_n"]
         if not nn:

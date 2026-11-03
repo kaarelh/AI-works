@@ -591,13 +591,13 @@ sum-block projection (16n + 8) are charged; round 1 stops on the sign rule; the 
 background; at n ≤ 512 the 2F fold fits are added with their exact fold sizes n − ⌈(n − f)/F⌉.
 - **It reproduces the recorded FLOP count to < 10⁻⁹ relative in 228 of the 275 parity cells** (par2–par4,
   d = 15–120, every n and seed).
-- **4 more match exactly once a false linear block admitted next to χ_S is added.** That happened in two fold fits each
-  of par4 at d = 30, n = 256 and at d = 60, n = 512, and in the final fits of par3 at d = 30, n = 16384 and at d = 60,
-  n = 8192. Refits of the 4 cells show the linear block in round 0 and reproduce the recorded counts bit for bit
+- **4 more match exactly once a false linear block admitted next to χ_S is added.** That happened in one fold of par4 at
+  d = 30, n = 256 and one of par4 at d = 60, n = 512 (in both variants' fits of that fold), and in the final fits of par3
+  at d = 30, n = 16384 and at d = 60, n = 8192. Refits of the 4 cells show the linear block in round 0 and reproduce the recorded counts bit for bit
   (`P5.check.linear_cells_refit`). These are P1b's false linear blocks, seen under the alternative: for k ≥ 2 the
   degree-1 coefficients have no signal.
-- **The other 43 are all at n ≤ 32.** There the fold fits (14–29 rows) do not admit χ_S, so they take other paths. At
-  n = 32, the 7 par2 cells at d ≤ 60, whose folds all pass, match exactly.
+- **The other 43 are all at n ≤ 32.** There not every fold fit (14–29 rows) admits χ_S, so some take other paths. At
+  n = 32, the 7 par2 cells at d ≤ 60 match exactly, because there every fold passes.
 - **Where the n = 16384 par2 fit spends its compute** (model = recorded to 10⁻¹⁵):
   - d = 15: 0.046 GD (degree 6: 0.030, degree 5: 0.011, degree 4: 0.004);
   - d = 30: 0.137 (degree 4: 0.072; degrees 5 and 6: 0.030 each);

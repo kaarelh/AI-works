@@ -4,7 +4,8 @@ Part 11, Q7, "order" (PROTOCOL.md, Q7: "the order in which DFG admits a target's
 which the Part 5 networks acquire them (on the Part 5 targets)"). The object is DFG v1.3 run alone (`dfg13-perm`:
 `part10/hyb_portfolio3/dfg13.py`, md5 `69cabe5c…`, `DFG(readout="logit")` inside `harness.Permuted`). The networks are
 those of Part 5 ([`../../../trajectories/TRAJECTORIES.md`](../../../trajectories/TRAJECTORIES.md)) and of the
-fixed-training-set study that preceded it. Written 2 November 2026.
+fixed-training-set study that preceded it. Written 2 November 2026; corrected after independent verification on 3
+November 2026 (see Verification).
 
 Labels: **Numerical** = measured here, the source file is named; **Heuristic** = my reading of the numbers. Denominators
 are given with every count. "tau" is Kendall's tau-b over a target's Fourier characters (positive = same order).
@@ -27,7 +28,8 @@ count and route count.
   and 16), each with the stored evidence. Each correction was checked against the stored cells before it was
   applied. "Recomputed" marks a number of mine; the others are the verifier's.
 - **Regenerated.** `order_analysis.py`, `order_report.py` and `order_validate.py` were re-run single-threaded.
-  - In the existing tables only majpar's x1⋯x6 n_glob changes (147 → 513, item 9).
+  - In the existing tables the only changed number is majpar's x1⋯x6 n_glob (147 → 513, item 9).
+    `order_targets.md` and `order_degree_size.md` gain a note on dnf3's n-axis entries.
   - New numbers are in `order_numbers.json` under new keys: `net_n_resolution`, `priority_online_seed_matched`,
     `mechanism.*_without_dnf3` and `rounds_by_n.*.nonpositive_multi`. The stopping-round counts are in
     `order_validation.json`.
@@ -40,7 +42,7 @@ count and route count.
    −0.01). §2 lists them.
 2. §1.2 (claim 7): "the seed-mean φ curve (the `stages.py` convention)" → "… located by `analyze_traj`'s
    log-interpolated first crossing". `stages.py`'s own rule does not interpolate and gives somewhat different taus
-   (mux +0.21, reproduced).
+   (e.g. mux +0.21 against +0.09). All three of the verifier's values are reproduced.
 3. §1.2 (claim 9): "One exception … (geometric mean 2117)" → the two conventions differ by more than 10% for 143
    characters (142 of them dnf3's). x1⋯x9's geometric mean is 2115, as in §2.2.
 4. §3 (claim 21): "Mux, the lowest" → "Mux, among the lowest". Mux is lowest online and at n = 2048; dnf3 is lower at
@@ -68,9 +70,11 @@ count and route count.
     - In seed 1, 15 are carried by a block, 16 by ext1 or ext2, and 2 never enter (recomputed). The text now says so.
 12. §4.3 parmaj (claim 37): "the pairs and degree-4 terms come by global tests" → at the n onset (128) no test admits
     any character. Two folded blocks carry 42 of their 45 character-seeds. Global tests take them only at larger n.
-13. §4.3 dnf3 (claim 38): "0.027-characters at 512 (degrees 2–3)" → "256–2048". "0.0039-characters at 8192–16384 or
-    never" → "from 1024 to never". Recomputed while checking: the networks' range "228 to 1084" omitted two late
-    stages, 11 degree-5 characters at 1474 and 2005.
+13. §4.3 dnf3 (claim 38): "0.027-characters at 512 (degrees 2–3)" → "256–2048 (one at 16384)". "0.0039-characters
+    at 8192–16384 or never" → "from 1024 to never".
+    - From the same evidence, checked: the networks' "about 500 characters … from 228 to 1084" → "490 … from 228 to
+      1084", then 11 degree-5 characters in two late stages (1474, 2005).
+    - Recomputed: the late 0.027-characters are of degrees 4–6 (not 4–5), at 4096–16384 or never.
 14. Short answer 3 and §5.2 (claim 44): bundles "cut by coefficient size, not by construction" → cut by detectability.
     That is mainly size, but also degree and the carrying block, so equal coefficients are split (sparsepoly, majpar)
     and one stage mixes sizes (rand3).
@@ -99,6 +103,7 @@ count and route count.
 25. Wording from confirmed claims, and for consistency:
     - the 17 capped rejections are one round's 64-cap (claim 3);
     - rmaj9's seed-0 rounds at n = 512 (claim 16);
+    - the halved degree-5/6 caps at n ≤ 512 are also given in §3 (claim 19);
     - stair5's networks' degree-3 onsets 341–703 (claim 29);
     - rand3's blocks not all modulated (claim 39);
     - mux's "3×" is the coefficient ratio (claim 40);
@@ -114,7 +119,9 @@ count and route count.
    target character it will ever carry in a single round in 32, 30 and 24 of the 33 fits (11 targets × 3 seeds), and
    then stops because every training sign is right. Its round axis is empty exactly where the networks' time axis is
    richest. DFG's order exists in two other places: inside its first round (the z-scores of its tests) and across n.
-2. **Where it exists, it agrees with the networks' order moderately, never negatively (Numerical).**
+2. **Where it exists, it agrees with the networks' order moderately, never negatively in the per-target summaries
+   (Numerical).** Per fit, the round order is negative in 3 of the 69 multi-round fits: mux at n = 64 (−0.48 and
+   −0.05) and rmaj9 at n = 512 (−0.01).
    - *Inside round 0, at n = 16384:* DFG's priority is positively rank-correlated with the networks' onset order on all
      11 targets (tau 0.22–0.81, median 0.54).
    - *On the n axis:* the smallest n from which the final model carries a character is compared with the networks'
@@ -123,42 +130,55 @@ count and route count.
    - *Like for like on n:* against the networks' own n order (same training sets, characters of degree ≤ 4), tau is
      0.17–0.67, median 0.40. The networks' time order and n order agree with each other much more closely (tau
      0.19–0.95, median 0.75).
+     - dnf3's two values (0.17 and 0.19) rest mostly on characters too small for the networks' n-axis estimate to
+       resolve (§7). On its 21 resolvable characters they are 0.56 and 0.87.
+     - With those two values, the ranges are 0.21–0.67 (median 0.45) and 0.55–0.95 (median 0.82).
    - *At small n, where DFG runs several rounds:* its round order agrees with the networks' time order at mean tau
      0.44 (n = 64 and 128). At n = 128 all 24 multi-round fits are positive.
 3. **Part 5's four qualitative findings, for DFG (Numerical; readings Heuristic):**
    - *Linear stage first:* only partly. On the n axis, DFG's linear terms come strictly first in 6, tied in 12 and
      not first in 6 of 24 target-seed cases. The networks put them first on all 8 targets that have linear terms.
-   - *Bundles:* DFG has bundles, but they are cut by coefficient size, not by construction.
+   - *Bundles:* DFG has bundles, cut by detectability. That is mainly coefficient size, but also degree (through the
+     union bound and the degree-5/6 caps) and the block that carries a character.
      - It merges whole targets whose coefficients are equal: parmaj's 16 characters all enter at n = 128.
      - It splits network bundles whose coefficients differ. For example, stair5's x1x3, x1x4, x1x5 (−0.125) arrive
        with x1x2 (0.375) in the networks, at 188–234 steps. DFG takes them at n = 512–2048, against 128 for x1x2.
-   - *Order follows construction, not coefficient size:* the reverse holds for DFG at degree ≤ 4.
+     - It also splits equal coefficients by degree. sparsepoly's six 0.25-characters enter at five different n.
+       majpar's pairs enter at 32–64 and its degree-6 term at 256.
+     - One DFG stage can also mix sizes (rand3 at n = 128).
+   - *Order follows construction, not coefficient size:* DFG tends to the reverse at degree ≤ 4 (on 5 of the 8 targets
+     whose coefficient sizes differ), but not as a rule.
      - Mux's largest term x1x2x3x4 (0.75) is the networks' last character. It is DFG's first: ranked first by
-       round-0 z in all 30 fits with n ≥ 64, and in the model from n = 64 in all 3 seeds. The networks need
-       n = 2048 for it.
+       round-0 z in all 30 fits with n ≥ 64, and in the model from n = 64 in all 3 seeds. There it is tied, by
+       median, with x2, x3 and x2x4, and in seed 2 it is a forced pick. The networks need n = 2048 for it.
      - Over the targets, the networks' time order follows degree more than coefficient size on 7 of the 8 targets
-       whose coefficient sizes differ (dnf3 is a tie). DFG's n order follows 1/|ŷ| more than degree on 5 of those 8.
+       whose coefficient sizes differ (dnf3 is a near-tie that slightly favours size). DFG's n order follows 1/|ŷ|
+       more than degree on 5 of those 8.
      - Above degree 4 the global search does not reach (except subsamples at degrees 5–6). Those characters enter
-       through sum blocks (473 of the 490 character-seeds that ever enter), the local and extension classes (14) or
-       the degree-5 subsample (3). Where they build on lower terms they come after them (majpar's degree-6 term,
+       through sum blocks (473 of the 490 character-seeds that enter for good), the local and extension classes (14)
+       or the degree-5 subsample (3). Where they build on lower terms they come after them (majpar's degree-6 term,
        stair5's x1x2x3x4x5).
    - *Stopping partway at finite n:* both stop partway, for different reasons.
      - At n = 512 the networks have learned 36% of a target's characters and hold 30% partially (learned fraction
-       between 0.25 and 0.75). DFG has learned 80% and holds 7% partially.
+       between 0.25 and 0.75). The two shares overlap: 18% are in both. DFG has learned 80% and holds 7% partially.
      - At n = 16384 the networks have learned 100%, but DFG carries only 92%, because it stops once every training
        sign is right.
 4. **DFG needs less data, like for like, for large coefficients only (Numerical).** For the 64 characters of degree
    ≤ 4 with |ŷ| ≥ 0.25, DFG's median n onset is 4× smaller than the networks' (median log2 ratio −2.0; DFG less data
    for 46, equal for 11, more for 7). For the 349 smaller ones the median ratio is 1 (less for 147, equal for 64, more
    or never for 138).
-5. **Mechanism (Heuristic, quantified by an exact replay of DFG's tests).**
+   - 255 of those 349 are dnf3's, and for most of them the network n onsets are estimator noise (§7).
+   - Without dnf3 the split is 47 / 15 / 32 of 94, and the median ratio is still 1.
+5. **Mechanism (Heuristic).** It is quantified by an exact replay of DFG's character tests; block tests are not
+   replayed. The route labels are descriptive, not causal, until the nocomp/nosums ablations are in.
    - *What DFG's order is:* detectability against the residual's noise. In round 0 a character passes once n ≥
      n_glob = 2 ln(4K·C(30,|S|)/δ)(1 − ŷ_∅²)/ŷ_S². Degree enters only through the logarithm of the union bound,
      size through 1/ŷ².
      - Characters admitted by that global test enter at n ≈ n_glob (median +0.26 doublings, 151 character-seeds).
      - Characters admitted by the composition classes (extensions, subsets of the inputs in use) enter 1.3–2.4
-       doublings below n_glob.
-     - Characters carried by sum blocks enter 5.3 doublings below it.
+       doublings below n_glob (0.7–2.4 outside dnf3).
+     - Characters of degree ≤ 4 carried by sum blocks enter 5.3 doublings below it. dnf3 supplies 445 of these 661
+       character-seeds; outside dnf3 the median is 2.7 doublings.
    - *What the networks' order is:* by Part 5's own model, set by how many inputs a new feature must coordinate (cost
      ∝ e²), and only weakly by size (∝ ρ^{-1/2}).
    - The two orders coincide when a target's large coefficients sit at low degree, and invert when they do not (mux).
@@ -186,16 +206,25 @@ count and route count.
 - **Time (Part 5).** The source is `trajectories/results/<fn>_{online,fixed}.json`, written by `analyze_traj.py`.
   - The learned fraction is φ_S(t) = c_S(t)/ŷ_S, the Fourier coefficient of E[f | x_R] on the relevant cube divided by
     the target's.
-  - Onset = the first step with φ ≥ 1/2 that stays ≥ 0.4.
-  - I use the onset of the seed-mean φ curve (the `stages.py` convention) and the per-seed onsets as stored.
-  - Recomputed this way, the onsets reproduce TRAJECTORIES.md §2.2 to within about 10% for most characters. Mux:
-    linear 60–66, x_i·x4 169–176, x1x2x3 430, x1x2x3x4 452.
-  - One exception: §2.2's table evidently uses the geometric mean of per-seed onsets. dnf3's x1⋯x9 has per-seed
-    onsets 504, 3209 and 5858 (geometric mean 2117; §2.2 gives 2115), while its seed-mean curve crosses 1/2 at 3598.
-    I use 3598.
+  - Onset = the first step with φ ≥ 1/2 that stays ≥ 0.4, log-interpolated between checkpoints
+    (`analyze_traj.first_cross`).
+  - I use the onset of the seed-mean φ curve, located by that rule, and the per-seed onsets as stored.
+  - `stages.py` also averages the seeds, but it takes the first checkpoint, without interpolation. Its rule gives
+    somewhat different taus:
+    - tau(networks' time, DFG n) is +0.21 for mux (+0.09 here) and +0.83 for rmaj9 (+0.68 here);
+    - tau(networks' time, networks' n) is +0.50 for majpar (+0.82 here).
+  - Recomputed this way, the onsets reproduce TRAJECTORIES.md §2.2 to within about 10% for most characters (576 of
+    719). Mux: linear 60–66, x_i·x4 169–176, x1x2x3 430, x1x2x3x4 452.
+  - §2.2's table uses the geometric mean of the per-seed onsets instead. The two conventions differ by more than 10%
+    for 143 characters:
+    - 142 of them are dnf3's (e.g. x2x7: 228 here against 178; x1x4x7: 789 against 996);
+    - the other is stair5's x1x2x4 (703 against 588);
+    - the largest difference is dnf3's x1⋯x9. Its per-seed onsets are 504, 3209 and 5858 (geometric mean 2115, as in
+      §2.2), while its seed-mean curve crosses 1/2 at 3598. I use 3598.
 - **Sample size (fixed-n study).** The source is `$SCR/results/fixed_adam_<fn>.npz`, written by `nn_train.py`.
   - These are the same network, optimizer and training sets, at n = 16…16384 with 3 seeds.
   - `coef` is the mean over the 4096 test inputs of f(x)·χ_S(x), recorded only for |S| ≤ 4 (`char_sets`, kmax = 4).
+    Its sampling sd on φ is about 0.0156/|ŷ_S|, too large for dnf3's small coefficients (§7).
   - Network n onset = the smallest grid n whose network at step 20000 has φ ≥ 1/2, with φ ≥ 0.4 at every larger n.
   - These networks are different runs from Part 5's trajectory networks (different minibatch draws, same setup).
 
@@ -225,7 +254,7 @@ bit `eval_dfg.py`'s fit, and also records every `numpy.linalg.solve` solution.
 
 | comparison | like for like? | why |
 |---|---|---|
-| networks' n order vs DFG's n order | **yes, in data and criterion** | Same training sets, same n grid, same rule (learned fraction of the final model ≥ 1/2, for good). Differences: networks only for \|S\| ≤ 4; the network's φ is a test-set average of its square-loss output, DFG's a cube average of its least-squares function. |
+| networks' n order vs DFG's n order | **yes in data and rule; not in estimator precision for \|ŷ\| well below 0.1** | Same training sets, same n grid, same rule (learned fraction of the final model ≥ 1/2, for good). Differences: networks only for \|S\| ≤ 4; the network's φ is a 4096-point test-set average of its square-loss output, DFG's a cube average of its least-squares function. The test-set average cannot resolve \|ŷ\| well below 0.1 (sd of φ ≈ 0.0156/\|ŷ\|): dnf3, and partly rmaj9 and dlist5 (§7). |
 | networks' time order vs DFG's round order | **no; ranks only** | A round is a test-and-refit step on a fixed sample, not time. DFG uses one round in 86 of the 99 fits at Part 5's n. Its number of rounds shrinks as n grows, while the networks' stage order is the same at every n. |
 | networks' time order vs DFG's round-0 priority z0 | **no; an analogy** | z0 is a statistic of one round. It predicts the order in which DFG would admit characters as n grows, not a time course. |
 | networks' time order vs DFG's n order | **no; an analogy** | Both are "what appears first as the resource grows". The analogy leans on the networks' own time and n orders agreeing (tau 0.19–0.95, median 0.75). |
@@ -240,8 +269,11 @@ bit `eval_dfg.py`'s fit, and also records every `numpy.linalg.solve` solution.
   - 3217 admissions by the tests have z > 1;
   - 13 admissions have z ≤ 1, all forced picks of the forced variant;
   - 29890 non-admissions have z ≤ 1;
-  - 17 non-admissions have z > 1, all in rounds that hit the 64-per-round cap or the p ≤ n/2 room;
+  - 17 non-admissions have z > 1, all in one round that hit the 64-per-round cap (dnf3, n = 16384, seed 1, round 1);
   - none is unexplained.
+- **Stopping round.** This was checked after verification, and `order_validate.py` now includes it.
+  - In the 90 fits that stop with nothing passed (or on the budget or room), no target character has z > 1.
+  - The 192 stopping rounds that do have one all end by the sign rule, which DFG applies before testing.
 - **Compute.** 17.8 CPU-minutes in all (the longest fit 13.9 s), single-threaded, one process.
 
 ## 2. At Part 5's sample sizes DFG has (almost) no round order (Numerical)
@@ -255,6 +287,10 @@ bit `eval_dfg.py`'s fit, and also records every `numpy.linalg.solve` solution.
 | mean tau(network onset online, DFG half-round order), over those fits | – | 0.77 | 0.44 | 0.44 | 0.30 | 0.25 | 0.18 | 0.15 | 0.22 | 0.12 | 0.10 |
 | of which positive | – | 2 | 9 | 24 | 11 | 8 | 2 | 3 | 4 | 1 | 1 |
 
+- **Not always positive per fit** (`rounds_by_n`, `nonpositive_multi`). The non-positive multi-round fits are:
+  - mux at n = 64, seeds 1 and 2 (−0.05 and −0.48);
+  - sparsepoly at n = 256, seed 1 (0.00);
+  - rmaj9 at n = 512, seed 0 (−0.01).
 - **The round order sits at small n.** DFG's round order is richest at n = 128. There rounds admit few features, and
   DFG's own cross-validation picks the forced variant in 15 of 33 fits (14 of the 24 multi-round ones; cells,
   `variant`). At that n the round order agrees with the networks' time order in every multi-round fit (tau
@@ -275,6 +311,8 @@ bit `eval_dfg.py`'s fit, and also records every `numpy.linalg.solve` solution.
     - Round 0: the 9 linear terms, x1x2x3, x7x8x9, and the full-sum block (x1+…+x9). The block carries the degree-9
       character x1⋯x9.
     - Rounds 1–3: modulated blocks such as chi[x7,x8,x9]·|x1+x2+x3−x4−x5−x6|, which carry degrees 3, 5 and 7.
+      Rounds 1–2 also admit four explicit characters (x4x5x6, x3x6x8, x2x4x9, x1x5x7), and round 3 also adds two
+      unmodulated sum blocks.
     - The networks: linear terms (47 steps), then a cascade at 796–1081 in which x1⋯x9 is among the first.
   - *parmaj, seed 1.*
     - Round 0: 8 of the 9 cross pairs, 4 of the 6 degree-4 terms, and x1⋯x6. The last is carried by the folded block
@@ -294,7 +332,11 @@ the same training set; mean of 3 seeds ([`tables/order_targets.md`](tables/order
 - **Always positive.** The correlation is positive on all 11 targets (median 0.54). It is about the same against the
   online networks (`priority` in the numbers file).
 - **Per condition.** At each of Part 5's conditions, network seed s is compared with DFG seed s at that n (mean of 3
-  seeds); online is compared with DFG at n = 16384:
+  seeds).
+  - Online is compared with DFG at n = 16384: each DFG seed against the online networks' seed-mean onsets, so this
+    row is not seed-matched.
+  - Seed-matched (online network seed s against DFG seed s), the online values are 0.20 (dnf3) to 0.81 (sparsepoly),
+    and all 33 per-seed values are positive (`priority_online_seed_matched`).
 
   | condition | sparsepoly | stair5 | mux | majpar | rmaj9 | andxor | dlist5 | parmaj | dnf3 | rand1 | rand3 |
   |---|---|---|---|---|---|---|---|---|---|---|---|
@@ -303,13 +345,16 @@ the same training set; mean of 3 seeds ([`tables/order_targets.md`](tables/order
   | n = 2048 | +0.62 | +0.33 | +0.10 | +0.78 | +0.49 | +0.33 | +0.48 | +0.54 | +0.19 | +0.58 | +0.56 |
   | n = 512 | +0.60 | +0.40 | +0.19 | +0.64 | +0.46 | +0.56 | +0.50 | +0.61 | +0.09 | +0.56 | +0.38 |
 
-  All 44 entries are positive. The round-order and half-round-order taus per seed and condition are in the same
+  All 44 entries are positive. Per seed, 131 of the 132 are positive and one is 0.00 (mux, n = 2048, seed 2). The
+  round-order and half-round-order taus per seed and condition are in the same
   file (`priority`: `tau_round`, `tau_half`). In one-round fits they only separate what DFG carries from what it
   leaves out (§2).
 - **What z0 is.** In round 0 the only classes are the global ones, so z0 ≈ |ŷ_S| √n / (s √(2 ln(4K·C(30,|S|)/δ))).
   This holds for |S| ≤ 4 at d = 30. Degrees 5 and 6 are searched on budget-capped subsamples (m ≤ 1374 and ≤ 147
-  rows), so their z0 is smaller. Degree ≥ 7 has z0 = 0.
-- **Mux, the lowest.** 6 of its 21 network-ordered pairs are inverted, and all 6 involve x1x2x3x4. From the cells:
+  rows at n > 512; 687 and 73 at n ≤ 512, where the final fit has half the budget), so their z0 is smaller. Degree
+  ≥ 7 has z0 = 0.
+- **Mux, among the lowest.** It is lowest online and at n = 2048; dnf3 is lower at n = 16384 and 512. 6 of mux's 21
+  network-ordered pairs are inverted, and all 6 involve x1x2x3x4. From the cells:
   - x1x2x3x4 has the highest z0 of the 8 characters in every fit at n ≥ 64 (30 fits), and in 2 of 3 at n = 32;
   - at n = 16384 its z0 is 17.1–17.5, against 6.1–8.3 for the others.
 
@@ -338,8 +383,13 @@ the same training set; mean of 3 seeds ([`tables/order_targets.md`](tables/order
 
 - **Pair totals.** Over the 10 targets other than dnf3, the network-ordered pairs are 1170 concordant, 359 tied and
   119 inverted in DFG's n order.
+- **dnf3 on the n axis** (`net_n_resolution`).
+  - Its like-for-like tau (+0.17) and its networks' time-against-n tau (+0.19) rest mostly on its 234 characters with
+    |ŷ| ≤ 0.027, which the networks' test-set estimate cannot resolve (§7).
+  - On its 21 resolvable characters (|ŷ| = 0.19) they are +0.56 and +0.87.
 - **The networks are more consistent with themselves than with DFG.** Their time order and n order agree with each
-  other (median 0.75) more than either agrees with DFG (median 0.40 on both axes).
+  other (median 0.75) more than either agrees with DFG (median 0.40 on both axes). With dnf3 restricted to its
+  resolvable characters, it is 0.82 against 0.45 like for like.
 
 ![order](figures/fig_order.png)
 
@@ -351,6 +401,8 @@ the same training set; mean of 3 seeds ([`tables/order_targets.md`](tables/order
 - *Coinciding points* are offset vertically by up to ±0.26 doublings; the grid spacing is one doubling.
 - *rmaj9, dlist5, dnf3:* one marker per (degree, |ŷ|) group at the group's median, with size ∝ √(count) and a bar
   over the 10–90% range of the network onsets.
+- *dnf3:* the open squares of its |ŷ| ≤ 0.027 groups are dominated by the test-set noise of the networks' estimate
+  (§7).
 - *Last panel:* the three taus per target.
 
 **Reading.** A target on which the open squares rise with x is one where the networks' n order follows their time
@@ -365,6 +417,12 @@ For the 413 characters of degree ≤ 4 with both n onsets defined, compared by m
 | \|ŷ\| ≥ 0.25 (64 characters) | 46 | 11 | 7 | −2.0 (64) |
 | \|ŷ\| < 0.25 (349 characters) | 147 | 64 | 138 | 0.0 (234) |
 
+- **The small row is mostly dnf3** (`net_n_resolution`).
+  - 255 of its 349 characters are dnf3's, and 234 of those have |ŷ| ≤ 0.027, where the networks' n onsets are
+    mostly noise (§7).
+  - Without dnf3 the row is 47 / 15 / 32 of 94 characters, with a median log2 ratio of 0.0 over the 93 with both
+    onsets finite.
+
 Per-target examples (medians; [`tables/order_chars.md`](tables/order_chars.md)):
 
 | target | character | DFG n | networks' n |
@@ -374,8 +432,11 @@ Per-target examples (medians; [`tables/order_chars.md`](tables/order_chars.md)):
 | andxor | all 3 characters | 64 | 512–1024 |
 | parmaj | all 15 characters of degree ≤ 4 | 128 | 512–2048 |
 
-- **Against DFG: rmaj9.** Its 27 cross-block degree-3 characters (|ŷ| = 0.0625) need 2048–16384 for DFG, against
-  128–4096 for the networks. For rmaj9, DFG needs more data for 27 of 39 characters (`data_cost.per_target`).
+- **Against DFG: rmaj9.** Its 27 cross-block degree-3 characters (|ŷ| = 0.0625) need 2048–16384 for DFG per seed
+  (4096–16384 by median), against 64–4096 for the networks per seed (256–4096 by median). For rmaj9, DFG needs more
+  data for 27 of 39 characters (`data_cost.per_target`).
+  - By median, one of them (x2x5x8) never enters the networks' n axis. That is an artefact of the test-set estimate:
+    a network equal to the target scores φ = 0.42 on it.
 
 ### 4.3 The stages, target by target
 
@@ -394,37 +455,49 @@ against DFG's n stages (median seed); verdicts are Heuristic, numbers Numerical.
 - **stair5: partly.**
   - DFG: the six 0.375-characters (x1, x1x2, x1x2x3, x1x3x5, x1x2x3x4, x1x2x3x4x5) at n = 128, then the −0.125-ones
     at 512–4096.
-  - Networks: x1 (65) → all four x1·x_j (188–234, three of them −0.125) → degree 3 (341–462) → degrees 4 and 5.
+  - Networks: x1 (65) → all four x1·x_j (188–234, three of them −0.125) → degree 3 (341–703), interleaved with
+    degrees 4 and 5 (485–768).
   - 18 pairs are inverted. In 15 of them the networks learn a −0.125 character before a 0.375 character that DFG
     learns first. The other 3 pair two −0.125 characters.
   - n_glob is 159 for x1x2 and 1427 for x1x3; the ratio, 9, equals (0.375/0.125)².
   - The staircase's top term x1x2x3x4x5 enters by extension of lower staircase terms (ext1 or ext2, rounds 1–3) at
-    n = 128 in all seeds. That is a construction order, and it is the one place on this target where DFG builds like
-    the networks.
+    n = 128 in all seeds. That is a construction order, but not the only construction-order entry at n = 128:
+    - x1x2x3x4 also enters by extension (ext2 in seed 0, ext1 in seed 2, round 1);
+    - x1 enters by the local class in round 1 of every seed, after a higher-degree character admitted by the global
+      test in round 0 (x1x2, x1x3x5 or x1x2x3);
+    - that is the reverse of the networks' order: DFG's first character at n = 128 is never x1, the networks' first.
 - **mux: disagree.**
   - Networks: linear (60–66) → x_i·x4 (169–176) → x1x2x3 (430) and x1x2x3x4 (452).
   - DFG: x1x2x3x4, x2, x3, x2x4 (64) → x1, x1x4, x3x4, x1x2x3 (128).
-  - x1x2x3x4 is admitted by the global degree-4 test, or carried by a block such as (−x1−x2−x3+x4) whose levels span
-    it.
+  - x1x2x3x4 is admitted by the global degree-4 test (seed 1), or carried by a block such as (−x1−x2−x3+x4) whose
+    levels span it (seed 0). In seed 2 it is a forced pick of the forced variant (z = 0.95).
   - The rest then enters through the local class on V = {x1, …, x4} (N = C(4, k) ≤ 6), through the same blocks, or
-    (seed 2) by the global test in round 1.
+    (seed 2) by the global test in round 1. The linear terms also enter through the linear block (x3 in seeds 1–2,
+    x1 in seed 2).
 - **majpar: agree.**
   - Networks: pairs (189–210) → x1⋯x6 (1164).
   - DFG: pairs (32–64) → x1⋯x6 (256, all 3 seeds). The degree-6 term comes through round-0 weighted blocks, or
     products with one, whose inner term is a pair parity: (x3+x4−x5−x6 + 3·x1x2) in seed 2,
     |x3+x4|×(x5+x6 + 3·x1x2) in seed 0. These are tested on the residual left after the pairs.
-  - Its n_glob is 147, exactly the degree-6 subsample cap (m = 147). That is DFG's version of "the degree-6 term
-    comes after the pairs".
+  - The n_glob formula gives 147 rows for x1⋯x6. That equals the degree-6 subsample cap, but only of a fit at
+    n > 512 (m = 147).
+  - At n ≤ 512 the final fit has half the budget and searches degree 6 on 73 rows. So the global test cannot admit
+    x1⋯x6 at any n ≤ 512.
+  - Above 512 the test opens only marginally: the expected z is 1.0, and the replayed z is 0.83–0.997 at n = 1024–16384,
+    never above 1. With the halved cap n_glob is 513, which the tables now use.
+  - So x1⋯x6 enters only through blocks, at 256, after the pairs. That is DFG's version of "the degree-6 term comes
+    after the pairs".
 - **rmaj9: agree on stage order; DFG splits the cascade by size.**
   - DFG: linear (64) → within-block degree 3 (|ŷ| 0.25; 256) → x1⋯x9 through the full-sum block (512) → cross-block
-    degree 3 (0.0625; 4096–16384). Degrees 5 and 7 never enter (median seed; seed 0 carries 7 degree-7 characters
-    from 16384).
+    degree 3 (0.0625; 4096–16384). Degrees 5 and 7 never enter for good (median seed; seed 0 carries 7 degree-7
+    characters from 16384). They are carried at some n and dropped later (§5.3).
   - Networks: linear (47) → 796: 27 cross-block degree-3 characters, 1 within-block, and x1⋯x9 → 1081: the other 2
     within-block characters, all of degrees 5 and 7.
   - Both learners get the top-degree parity early through sum features. In DFG it is the block's level indicators: a
     parity of the block's inputs is a function of their sum. In the networks, Part 5 found ReLUs of block sums.
-- **andxor: DFG ties everything at n = 64 (median).** In every seed the product x1x2x3x4 still comes after the pairs:
-  - seeds 1 and 2: in round order, through the local class (round 2, n = 32) and ext2 (round 1, n = 64);
+- **andxor: DFG ties everything at n = 64 (median).** In every seed the product x1x2x3x4 still comes after a pair:
+  - seed 1: in round order, through the local class (round 2, n = 32), after both pairs;
+  - seed 2: in round order, through ext2 (round 1, n = 64), after x3x4 but in the same round as x1x2;
   - seed 0: in n, through a block at n = 128 against the pairs at 64.
   - That is the networks' pairs → product order (200 → 298 steps), but it does not survive the median on the n axis.
 - **dlist5: partly.**
@@ -432,17 +505,28 @@ against DFG's n stages (median seed); verdicts are Heuristic, numbers Numerical.
   - DFG: x1, x2, x3 and x1x2 (|ŷ| 0.69, 0.31, 0.19, 0.31) at n = 64. x4 and x5 come at 128–512 (median 512),
     through the linear block (the χ²_d test on all remaining inputs).
   - In all 45 inverted pairs the networks' earlier character has |ŷ| = 0.0625 (8 linear, 32 pairs, 5 triples).
-    - In 33 the character DFG takes first is also a 0.0625-character, of higher degree and carried by a block.
+    - In 33 the character DFG takes first is also a 0.0625-character, of higher degree in 25 of them (the same
+      degree in 8). At its n onset it is carried by a block in seeds 0 and 2. In seed 1 it is carried by a block in
+      15 of the 33, by ext1 or ext2 in 16, and never enters in 2.
     - In 12 it is a larger one (x1x2, x1x3, x2x3, x1x2x3).
 - **parmaj: DFG ties everything at n = 128.**
-  - x1⋯x6 is carried by folded blocks |x1+…+x6| or |−x1−x2−x3+x4+x5+x6|. The pairs and degree-4 terms (all
-    |ŷ| = 0.25) come by global tests, at z only 1.17× apart (√(ln 4.4·10⁶ / ln 7.0·10⁴)).
+  - At n = 128 no test admits any character in any seed (n_new = 0 in every round).
+    - Round 0 adds a folded block, |x1+…+x6| or |−x1−x2−x3+x4+x5+x6|. Round 1 adds another (in seed 0, also the
+      linear block).
+    - These blocks carry x1⋯x6. They also carry 42 of the 45 character-seeds of the pairs and degree-4 terms at
+      their n onsets; the other 3 are global admissions at n = 1024 (seed 2).
+  - Tests take the pairs and degree-4 terms (all |ŷ| = 0.25) only at larger n. At n = 512, seed 1 (§2), 12 of the 15
+    are admitted by global tests in round 0 and the other 3 by the local class in round 1. Their global z-scores are
+    only 1.17× apart (√(ln 4.4·10⁶ / ln 7.0·10⁴)).
   - Networks: pairs (168) → x1⋯x6 (280) → degree 4 (543).
 - **dnf3: partly.**
-  - DFG ranks by size: |ŷ| = 0.19 characters (9 linear, 9 pairs, 3 triples) at 128–256. 0.027-characters at 512
-    (degrees 2–3) up to 16384 or never (degrees 4–5). 0.0039-characters at 8192–16384 or never.
-  - Networks: linear (53), then about 500 characters of degree 2–8 from 228 to 1084 steps in overlapping stages, and
-    x1⋯x9 at 3598.
+  - DFG ranks mostly by size:
+    - |ŷ| = 0.19 characters (9 linear, 9 pairs, 3 triples) at 128–256;
+    - 0.027-characters at 256–2048 (degrees 2–3; one at 16384), and at 4096–16384 or never (degrees 4–6);
+    - 0.0039-characters from 1024 to never. 33 of the 343 enter at 1024–4096 (mostly degrees 6–7, through blocks),
+      before many 0.027-characters of degree 4–5.
+  - Networks: linear (53), then 490 characters of degree 2–8 in overlapping stages from 228 to 1084 steps (stage
+    starts), two late stages of degree-5 characters (8 at 1474, 3 at 2005), and x1⋯x9 at 3598.
 - **rand1: partly.**
   - DFG: linear (64) → the 0.375-characters x3x5, x4x6, x1x4x6 (degrees 2, 2, 3) at 128 → the 0.125-characters at
     256–1024.
@@ -451,7 +535,10 @@ against DFG's n stages (median seed); verdicts are Heuristic, numbers Numerical.
   - DFG at n = 128 (from the cells): first the four characters on {x4, x5, x6} that contain x5, by tests, about one
     per round. Then sum blocks on the signed sum (−x1+x2+x3), modulated by those characters, e.g.
     chi[x5]·(x1−x2−x3−x4) and chi[x4,x5]·(x1−x2−x3−…).
-  - At its onset, 84 of rand3's 96 character-seeds are carried by such blocks.
+  - At its onset, 84 of rand3's 96 character-seeds are carried by sum blocks.
+    - At n = 128 these are mostly modulated ones like these. The fits there also have one unmodulated block in seeds
+      1 and 2.
+    - At n = 256 it is a single unmodulated product block such as (x1−x2−x3)×(x4+x6+2·x5).
   - By median n: 18 characters at 128 (the 16 on {x1, …, x5} that contain x5, plus x5x6 and x4x5x6), and the other
     14, all containing x6, at 256.
   - Networks: x5 (69) → x_j·x5 for every j (155) → mixed degree-3/4 stages.
@@ -469,7 +556,8 @@ against DFG's n stages (median seed); verdicts are Heuristic, numbers Numerical.
   - *Why linear terms come early:* the degree-1 class has the smallest union bound, N = 30. ln(4K·N/δ) is 8.5 nats,
     against 11.2, 13.4 and 15.3 for degrees 2, 3 and 4. So linear terms are first for equal coefficients.
   - *Why they are not always first:* the bound is only logarithmic. A coefficient √(15.3/8.5) = 1.34× larger at
-    degree 4 already beats a linear term. Mux's 0.75 at degree 4 beats 0.25 at degree 1 by 3×.
+    degree 4 already beats a linear term. Mux's 0.75 at degree 4 beats 0.25 at degree 1: the coefficients differ
+    3×, the z-scores 2.2× and n_glob 5× (54 against 271).
   - *Small linear terms:* they wait for the linear block or for the residual to shrink (dlist5's ±0.0625).
   - *The networks' linear stage* comes first "whatever the size of the linear coefficients" (Part 5). DFG's does not.
 
@@ -480,6 +568,8 @@ it keeps together:
 
 | target | split | kept |
 |---|---|---|
+| sparsepoly | 6 | 0 |
+| mux | 5 | 2 |
 | stair5 | 32 | 7 |
 | rmaj9 | 1294 | 790 |
 | dlist5 | 63 | 60 |
@@ -497,6 +587,12 @@ it keeps together:
   bundles are "everything one new direction of a hidden unit can carry", and they cut across coefficient size.
   The two coincide when the target's coefficients are equal within a construction step (majpar, parmaj's pairs) and
   differ when a step mixes sizes (stair5's x1·x_j, dnf3's large bundle).
+- **Detectability is not size alone (Numerical, `order_chars.md`).** It is mainly coefficient size, but also degree
+  (through the union bound and the degree-5/6 caps) and the block that carries a character.
+  - So DFG also splits equal coefficients by degree. sparsepoly's six 0.25-characters enter at 128 (x2x3, x4x5x6),
+    256, 512, 1024 and 4096. majpar's 0.5-pairs enter at 32–64 and its 0.5 degree-6 term at 256.
+  - And one DFG stage can mix sizes. rand3's stage at n = 128 has four 0.375- and fourteen 0.125-characters. It is
+    separated from the 256 stage by whether a character contains x6, not by size.
 
 ### 5.3 Order follows construction, not coefficient size
 
@@ -516,23 +612,36 @@ coefficient, comes later.
 | rand3 | +0.69 | +0.39 | +0.52 | +0.33 |
 | majpar, andxor, parmaj | +0.71, +0.82, +0.63 | all \|ŷ\| equal | +1.00, tied, tied | all \|ŷ\| equal |
 
-- **Networks.** Their time order follows degree more than coefficient size on 7 of the 8 targets whose sizes differ
-  (dnf3: 0.25 against 0.27). On mux it runs against size (−0.50). Their n order (|S| ≤ 4, same file) follows
-  degree more than size on all 8.
+- **Networks.** Their time order follows degree more than coefficient size on 7 of the 8 targets whose sizes differ.
+  dnf3 is a near-tie that slightly favours size (0.25 against 0.27). On mux the order runs against size (−0.50).
+  - Their n order (|S| ≤ 4, same file) follows degree more than size on all 8.
+  - dnf3's entries there rest on characters the n-axis estimate cannot resolve (§7). On its 21 resolvable
+    characters, which all have one size, net n against degree is +0.85.
 - **DFG.** Its n order follows 1/|ŷ| more than degree on 5 of those 8 (stair5, mux, dlist5, dnf3, rand1). It follows
   degree more on 3 (sparsepoly, rmaj9, rand3).
+  - On the |S| ≤ 4 characters (same file) it is also 5 of 8. Size wins on stair5 (0.77 against 0.27), mux (0.38
+    against 0.11), rmaj9 (0.75 against 0.68), dlist5 (0.77 against 0.37) and rand1 (0.82 against 0.46).
+  - Degree wins on sparsepoly (0.89 against 0.67), dnf3 (0.68 against 0.66) and rand3 (0.45 against 0.31).
   - *sparsepoly:* the coefficients take only two values.
-  - *rmaj9:* degrees 5 and 7 have no route but blocks, and are never carried.
-  - *rand3:* the {x4, x5, x6} characters come first, by tests, and the rest through blocks modulated by them.
+  - *rmaj9:* degrees 5 and 7 (36 characters) are carried at some n in every seed, all 108 character-seeds:
+    - at n = 512 by modulated blocks (seeds 0–1, all 36);
+    - at 2048 (seed 2) and 4096 (seed 0) mostly as explicit features admitted by the local class (26 and 36 of 36);
+    - by blocks in three more fits (9 at 4096 in seed 2, 9 at 8192 in seed 1, 7 at 16384 in seed 0).
+    - Each is dropped at a larger n. So they are never carried for good (except the 7 degree-7 characters in seed
+      0, from 16384), and they tie last.
+  - *rand3:* the {x4, x5, x6} characters come first, by tests, and the rest through sum blocks. At n = 128 those are
+    mostly blocks modulated by these characters; at 256 a product block.
 - **Mux, the clearest case.** See §3 and §4.3: DFG's first character is the networks' last.
 - **Where DFG does construct (Heuristic).** Above degree 4 its global search does not reach, except the round-0
   subsamples for degrees 5 and 6 (`how_at_onset_by_deg`):
-  - degree ≥ 5 characters, when carried, enter mostly through blocks (473 of the 490 character-seeds that ever enter);
+  - degree ≥ 5 characters, when carried, enter mostly through blocks (473 of the 490 character-seeds that enter for
+    good);
   - the rest come through the local class (11), extensions (3), and the degree-5 global subsample (3);
   - these come after the lower-degree characters they build on: majpar's degree-6 after its pairs, stair5's
     x1x2x3x4x5 by extension.
 - **So the composition rule is in DFG, but only beyond the global degree cap and in later rounds.** Within degree ≤ 4,
-  a large coefficient is admitted first whatever its degree.
+  a large coefficient tends to be admitted first whatever its degree (on 5 of the 8 targets whose sizes differ), but
+  not as a rule.
 
 ### 5.4 Stopping partway at finite n (Numerical, `endpoints`, `nonmonotone`)
 
@@ -545,11 +654,14 @@ least-squares function; mean over 33 target-seed cells, each target weighted equ
 | 2048 | 0.84 | 0.16 | 0.88 | 0.06 |
 | 16384 | 1.00 | 0.00 | 0.92 | 0.04 |
 
+- **The columns overlap.** "Learned" (φ ≥ 1/2) and "partial" (0.25 ≤ φ < 0.75) share the range 0.5 ≤ φ < 0.75. At
+  n = 512, 18% of the networks' characters are in both, so the two columns must not be added.
 - **Networks.** Part 5's "same order, different endpoints": at finite n the later stages saturate partway (30% of
   characters partial at n = 512) or never start. Example, sparsepoly at 2048: x2x3 ends at 0.78, x1x2x3 at 0.66, and
   x4x5x6 at 0.18.
-- **DFG is all or nothing.** A character either passes a test, and its least-squares coefficient is then nearly
-  ŷ_S, or it does not. On sparsepoly at 2048 DFG carries 6–7 of 7 characters.
+- **DFG is nearly all or nothing.** A character is either fitted or absent. It is fitted by its own test or, in most
+  cases, as part of a sum block: 1134 of the 1497 character-seeds carried for good are block-carried. On sparsepoly at
+  2048 DFG carries 6–7 of 7 characters.
 - **DFG stops on signs, not on estimation.** It stops as soon as every training sign is right. So its final model is
   sign-sufficient, not E[y | x_R], at every n. At n = 16384:
   - rmaj9 carries 40–47 of 76 characters, with test error 0;
@@ -557,12 +669,14 @@ least-squares function; mean over 33 target-seed cells, each target weighted equ
 - **This makes DFG's n axis non-monotone.** A character carried at one n is dropped at a larger n, where round 0
   already gets the signs right with fewer features:
   - DFG: 1139 of 2157 character-seeds, 945 of them on dnf3 and 159 on rmaj9; 35 of 396 on the other 9 targets;
-  - networks: 223 of 1239 (|S| ≤ 4), 218 of them on dnf3.
+  - networks: 223 of 1239 (|S| ≤ 4), 218 of them on dnf3. 215 of those 218 are on characters with |ŷ| ≤ 0.027,
+    whose network n-axis φ is mostly test-set noise (§7).
 
 ## 6. Mechanism: why DFG's order is what it is
 
 **Numerical, from the replay; [`tables/order_numbers.json`](tables/order_numbers.json), `mechanism`.**
-- *How each character is carried at its DFG n onset,* over 2157 character-seeds:
+- *How each character is carried at its DFG n onset,* over 2157 character-seeds. The block route is read from the
+  fits' features; only the character tests are replayed.
 
   | route | count |
   |---|---|
@@ -574,16 +688,19 @@ least-squares function; mean over 33 target-seed cells, each target weighted equ
   | forced | 11 |
   | never | 660 |
 
-- *Against n_glob,* for degree ≤ 4 with both finite (1007): the median log2(DFG n onset / n_glob) is −3.1. By route:
+- *Against n_glob,* for degree ≤ 4 with both finite (1007): the median log2(DFG n onset / n_glob) is −3.1, or −1.5
+  over the 474 outside dnf3. dnf3 supplies 445 of the 661 block-carried, 38 of the 85 local and 19 of the 151 global
+  character-seeds, so the pooled medians mostly describe dnf3. By route, with dnf3 left out in the last column
+  (`mechanism`, `*_without_dnf3`):
 
-  | route | median doublings | count |
-  |---|---|---|
-  | global | +0.26 | 151 |
-  | local | −1.74 | 85 |
-  | extension | −1.34 (ext1, 17), −2.42 (ext2, 9) | 26 |
-  | linear block | −1.68 | 73 |
-  | forced | −1.48 | 11 |
-  | sum block | −5.33 | 661 |
+  | route | median doublings | count | outside dnf3: median (count) |
+  |---|---|---|---|
+  | global | +0.26 | 151 | +0.26 (132) |
+  | local | −1.74 | 85 | −0.74 (47) |
+  | extension | −1.34 (ext1, 17), −2.42 (ext2, 9) | 26 | −0.76 (ext1, 15), −2.42 (ext2, 9) |
+  | linear block | −1.68 | 73 | −2.08 (46) |
+  | forced | −1.48 | 11 | −1.39 (9) |
+  | sum block | −5.33 | 661 | −2.72 (216) |
 
 - *tau(n_glob, DFG n onset)* is 0.40 (dnf3) to 1.00 (majpar), where defined.
 - *tau(n_glob, networks' onset)* is 0.28 (dnf3) to 0.88 (sparsepoly); mux 0.32.
@@ -601,14 +718,22 @@ least-squares function; mean over 33 target-seed cells, each target weighted equ
      falls to 0.44 once it is in;
    - *small classes open:* extensions of current characters (N = bases·d or bases·C(30,2)), every subset of the
      ≤ 12 inputs in use (N = C(|V|, k)), and sum blocks modulated by a current character (rand3, rmaj9).
-   - This is DFG's composition rule, and it is why local and extension admissions sit 1.3–2.4 doublings below n_glob.
-     It reproduces two of Part 5's findings once DFG has a foothold: junta completion and "products of learned
-     features are faster" (sparsepoly's x1x2x3, mux's pairs after x1x2x3x4).
+   - This is DFG's composition rule. Local and extension admissions sit 1.3–2.4 doublings below n_glob (0.7–2.4
+     outside dnf3).
+     - That is partly so by construction: a character admitted below its n_glob cannot have passed the round-0
+       global test in expectation, so it entered by another route.
+     - Whether these classes cause the earlier entry is for the nocomp/nosums ablations; here the reading is
+       descriptive.
+   - It matches two of Part 5's findings once DFG has a foothold: junta completion and "products of learned features
+     are faster" (sparsepoly's x1x2x3, mux's pairs after x1x2x3x4).
    - The foothold itself is chosen by size, not by construction.
 3. **Blocks carry whole families, and the stop rule truncates.**
    - A sum block's level indicators span every function of its signed sum. That includes the parity of its inputs
-     and many small high-degree characters. So blocks carry characters 5.3 doublings below their individual
-     detectability: rmaj9's x1⋯x9, parmaj's x1⋯x6, dnf3's degree-6 to degree-9 terms.
+     and many small high-degree characters.
+     - So blocks carry characters of degree ≤ 4 a median 5.3 doublings below their individual detectability (2.7
+       outside dnf3).
+     - They also carry characters that have no global route at all: rmaj9's x1⋯x9, parmaj's x1⋯x6 (it would need
+       588 rows against the 147-row cap), and dnf3's degree-6 to degree-9 terms.
    - The sign stop then cuts the sequence off as soon as the training signs are right. That is DFG's version of
      "stopping partway", and it is what leaves small characters out even at n = 16384.
 
@@ -632,12 +757,34 @@ least-squares function; mean over 33 target-seed cells, each target weighted equ
   characters, 39 of rmaj9's 76). The like-for-like n comparison is restricted to those.
 - **Different estimators of the learned fraction.**
   - The networks' n-axis φ is a 4096-point test average of the network output, with Monte Carlo noise of order
-    sd(f)/64 ≈ 0.016 on c_S, i.e. 0.06 on φ for |ŷ| = 0.25.
+    sd(f)/64 ≈ 0.016 on c_S. On φ that is about 0.0156/|ŷ_S| (`net_n_resolution`): 0.06 for |ŷ| = 0.25, 0.25 for
+    0.0625 (rmaj9, dlist5), 0.57 for 0.027 and 4.0 for 0.0039 (dnf3).
+  - *So it cannot resolve small coefficients.* A network equal to the target would score these φ:
+    - from −9.9 to +9.6 on dnf3's 0.0039-characters (45 of 108 below 0.5);
+    - from −0.52 to 2.57 on dnf3's 0.027-characters (25 of 126 below 0.5);
+    - from 0.42 to 1.54 on rmaj9's 0.0625-characters (and 0.58 to 1.41 on dlist5's). rmaj9's one network "never"
+      on the n axis, x2x5x8, is this artefact (0.42).
+    - 19 of dnf3's 0.0039-characters have network n onsets ≤ 32.
+  - *Noise-dominated as a result:*
+    - dnf3's like-for-like tau (+0.17; +0.56 on its 21 resolvable characters) and its networks' time-against-n tau
+      (+0.19; +0.87);
+    - dnf3's entries in the "net n" columns of the degree-size table (§5.3);
+    - 215 of the networks' 223 n-axis drops (§5.4);
+    - 234 of the 349 "small" data-cost characters, all dnf3's (§4.2).
   - DFG's φ is a cube average of its least-squares function with M ≥ 64 completions per pattern.
   - DFG's final predictor is the logistic refit plus the kernel background. It can distort individual coefficients
     (mux at n = 128, seed 0: φ = 0.31 for the x_i·x4 terms although the least-squares φ is 0.98). I use the
     least-squares function as "what the model holds". The final predictor's φ is in the cells (`phi_final`,
     `phi_final_test`).
+- **The networks' time axis for dnf3's smallest characters.** Part 5's φ(t) is estimated with 32 random completions
+  per pattern.
+  - The verifier estimates its noise at roughly 0.2–0.25 on φ for dnf3's 0.0039-characters near their onsets. The
+    basis is an irrelevant-input variance of about 0.015 at step 500, so sd(c_S) ≈ 0.001. Neither the verifier nor I
+    tested this.
+  - The networks' time order of those characters may therefore also be partly noise.
+- **n_glob at degrees 5–6.** It uses the n-dependent subsample cap: 1374 / 147 rows at n > 512, and 687 / 73 at
+  n ≤ 512, the halved final-fit budget. Before verification `nglob()` ignored the halving. That changed only majpar's
+  x1⋯x6 (147 → 513) and no tau.
 - **DFG has no time axis.** Its rounds are not comparable to steps in scale. Only ranks are compared, and only where
   there are several rounds: mostly n = 64–256, not Part 5's n.
 - **Online.** The online networks have no DFG counterpart; DFG at n = 16384 is used in their place.
@@ -655,7 +802,8 @@ least-squares function; mean over 33 target-seed cells, each target weighted equ
   families (cf. the Part 10 verifiers' C5 note).
 - **Labels.** The mechanism labels ("local", "block", …) name the class whose test admitted the character, or the
   block that carries it. They do not say what would have happened without that class. The protocol's ablations
-  (`nocomp`, `nosums`) answer that, and their results are not part of this analysis.
+  (`nocomp`, `nosums`) answer that, and their results are not part of this analysis. Only the character tests are
+  replayed: "block" means that χ_S is not an explicit feature and a sum block or spectral feature carries it.
 
 ## Files
 
@@ -663,8 +811,10 @@ least-squares function; mean over 33 target-seed cells, each target weighted equ
   - [`order_fit.py`](order_fit.py): instrumented fits and replay.
   - [`order_analysis.py`](order_analysis.py): orders, taus, pairs.
   - [`order_report.py`](order_report.py): tables and figure.
-  - [`order_validate.py`](order_validate.py): identity and replay checks.
+  - [`order_validate.py`](order_validate.py): identity and replay checks, including the stopping round.
   - Run single-threaded, in that order.
+- **Verification.** [`VERIFY_ORDER.md`](VERIFY_ORDER.md) and [`VERIFY_ORDER.json`](VERIFY_ORDER.json), by an
+  independent agent. The Verification section above lists what changed.
 - **Data.**
   - `results/cells/<target>__n<n>__s<seed>.json.gz`: 363 fits.
   - [`results/order_summary.json.gz`](results/order_summary.json.gz): all per-character orders.
@@ -680,4 +830,5 @@ least-squares function; mean over 33 target-seed cells, each target weighted equ
   - `trajectories/results/*.json`;
   - `$SCR/results/fixed_adam_<fn>.npz`;
   - `part11/results/toy__dfg13-perm__designed.json` (identity);
-  - `part11/interp/dfg_hooks.py` (the shared fit wrapper).
+  - `part11/interp/dfg_hooks.py` (the shared fit wrapper);
+  - `discrete_learner/harness.py` and `boolfuncs.py`, for the networks' 4096-point test set (`net_n_resolution`).
