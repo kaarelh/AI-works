@@ -110,7 +110,8 @@ Omissions and notes on confirmed claims, now in the text:
     at 16384 three small modulated blocks (shares ≤ 0.01) besides its weighted block and the product (§1.4); §2.2 says
     which relevant inputs the other spurious blocks hold and adds rf06's spurious product at 256 (0.09); §3 says that
     the 45 out-of-fold comparisons are 45 of the 114 differing cells (not of the 72 where alone is lower) and that the
-    64 cells that differ through the variant are at n ≤ 512 (40 of them at n ≤ 64).
+    64 cells that differ through the variant are at n ≤ 512 (40 of them at n ≤ 64); the two short-answer bullets on
+    mod 3 and on v3 now carry their label (Numerical).
 
 ---
 

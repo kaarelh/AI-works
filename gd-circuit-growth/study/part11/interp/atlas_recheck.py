@@ -153,7 +153,7 @@ def main():
 
     print("== spurious sum terms at the first n of a block (shares)")
     for t, n in (("f7_06", 128), ("f7_03", 256), ("symand", 128), ("rf06", 128), ("rf06", 256)):
-        print(f"   {t}@{n}:", [(x["desc"], round(x["share"], 2)) for x in cell(t, n)["terms"] if x["kind"] == "sum" and x["cat"] == "S"])
+        print(f"   {t}@{n}:", [(x["desc"], round(x["share"], 4)) for x in cell(t, n)["terms"] if x["kind"] == "sum" and x["cat"] == "S"])
     lin64 = [t for t in ORDER if cell(t, 64)["summary"]["linear_block_round"] is not None]
     print(f"== linear block in the n = 64 model: {lin64}; S-lin there:", {t: round(cell(t, 64)["S_lin"]["share"], 2) for t in lin64})
     print("== linear_uncertain cells:", sum(c["linear_uncertain"] for t in ORDER for c in R[t]["cells"]),
