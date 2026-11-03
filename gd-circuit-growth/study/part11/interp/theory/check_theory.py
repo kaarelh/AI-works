@@ -211,6 +211,8 @@ def p1_section(fast=False):
     for d in (15, 30, 60, 120):
         res["bounds"][str(d)] = {str(k): dict(N=C(d, k), L=L_of(C(d, k)), bound_u1=bound_k(C(d, k), 1.0)) for k in range(1, 7)}
     res["bound_total_deg1to4"] = 4 * DELTA / (2 * Kc); res["bound_total_deg1to6"] = 6 * DELTA / (2 * Kc)
+    # P1c: the proved part of P(final model is not the constant plus the background): degrees 1-6 plus the linear block
+    res["bound_final_model_proved_part"] = 6 * DELTA / (2 * Kc) + DELTA
     from scipy.stats import norm, chi2
     # Heuristic: the Gaussian approximation of the per-degree level (N nearly independent N(0,1) statistics), and the
     # chi^2_d tail at the linear block's Laurent-Massart threshold

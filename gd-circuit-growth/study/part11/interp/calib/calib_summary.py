@@ -130,19 +130,20 @@ def consistency(res):
             v = A["by_class_pooled"].get(f"{d}:{cl}")
             if v and draws:
                 q = sum(w[cl]["passes"] for w in runs.values()) / draws
-                out[f"{d}:{cl}"] = dict(observed=v["r0_pass"], tests=v["r0_ran"], mc_rate=q, mc_draws=draws,
+                out[f"{d}:{cl}"] = dict(observed=v["r0_pass"], tests=v["r0_ran"], mc_rate=q, mc_draws=draws, mc_passes=sum(w[cl]["passes"] for w in runs.values()),
                                         expected=q * v["r0_ran"], p_at_least=tail(v["r0_pass"], v["r0_ran"], q))
         k = sum(A["blocks"].get(f"{d}:{p}:lin:all:r0", {}).get("passed", 0) for p in (0.5, 0.8))
         N = sum(A["blocks"].get(f"{d}:{p}:lin:all:r0", {}).get("ran", 0) for p in (0.5, 0.8))
         if N and draws:
             q = sum(w["lin"]["passes"] for w in runs.values()) / draws
-            out[f"{d}:lin"] = dict(observed=k, tests=N, mc_rate=q, mc_draws=draws, expected=q * N, p_at_least=tail(k, N, q))
+            out[f"{d}:lin"] = dict(observed=k, tests=N, mc_rate=q, mc_draws=draws, mc_passes=sum(w["lin"]["passes"] for w in runs.values()),
+                                   expected=q * N, p_at_least=tail(k, N, q))
         for p in (0.5, 0.8):
             for n in NS:
                 v = A["blocks"].get(f"{d}:{p}:quad:{n}:r0"); w = mc.get(f"{d}:{p}", {}).get(str(n))
                 if v and w and w.get("quad_reps"):
                     q = w["quad_pass"] / w["quad_reps"]
-                    out[f"{d}:{p}:quad:{n}"] = dict(observed=v["passed"], tests=v["ran"], mc_rate=q, mc_draws=w["quad_reps"],
+                    out[f"{d}:{p}:quad:{n}"] = dict(observed=v["passed"], tests=v["ran"], mc_rate=q, mc_draws=w["quad_reps"], mc_passes=w["quad_pass"],
                                                     expected=q * v["ran"], p_at_least=tail(v["passed"], v["ran"], q))
     return out
 
@@ -828,9 +829,9 @@ def tables(res):
     T.append("")
     if res.get("consistency"):
         T += ["## Round-0 passes in the final fits against the null Monte Carlo: P(X >= observed), X ~ Binomial(tests, MC rate)", "",
-              "| test | observed / tests | MC rate (draws) | expected | P(X >= observed) |", "|---|---|---|---|---|"]
+              "| test | observed / tests | MC passes / draws = rate | expected | P(X >= observed) |", "|---|---|---|---|---|"]
         for k, v in res["consistency"].items():
-            T.append(f"| {k} | {v['observed']}/{v['tests']} | {v['mc_rate']:.5f} ({v['mc_draws']}) | {v['expected']:.3f} | {v['p_at_least']:.3f} |")
+            T.append(f"| {k} | {v['observed']}/{v['tests']} | {v['mc_passes']}/{v['mc_draws']} = {v['mc_rate']:.5f} | {v['expected']:.3f} | {v['p_at_least']:.3f} |")
         T.append("")
     sme = res.get("derived", {}).get("spectral_minority_edge")
     if sme:

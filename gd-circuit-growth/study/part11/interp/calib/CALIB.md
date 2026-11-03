@@ -40,9 +40,10 @@ Every count is given with its denominator; intervals are two-sided 95% Clopper�
   4 of 160 round-0 tests in the fits), not at its nominal δ = 0.1. The spectral block's edge has no proved level: on
   balanced labels it never passed (null ≤ 0.00015), but on biased labels (P(y = 1) = 0.8) near n = 4d its null pass
   rate is 5.7% at d = 30 (n = 128) and 48% at d = 60 (n = 256), falling to 0 by n = 1024 (d = 30) and 4096 (d = 60);
-  the fits agree (2 of 20 and 5 of 10). Together they make all 6 test-passed admissions among the 220 biased fits at
-  d = 30 except two degree-1 characters, and 5 of the 6 at d = 60. The sum-block tests never passed (0 of 2000 round-0
-  searches, 0 of 153 later; largest T / threshold 0.93).
+  the fits agree (2 of 20 and 5 of 10). The two block tests made 4 of the 6 test-passed admissions among the 220
+  biased fits at d = 30 (the other two are degree-1 characters) and, at d = 60, all 6 biased ones and 3 of the 5
+  balanced ones. The sum-block tests never passed (0 of 2000 round-0 searches, 0 of 153 later; largest T / threshold
+  0.93).
 - **The forced variant is not calibrated after its forced characters** (Numerical, §1.5): in its fold fits the local
   class admits the product of the two forced characters. At P(y = 1) = 0.8, 238 of 900 forced fold fits (d = 30) hold
   a test-passed feature after the forced ones (205 of them local characters); in 400 fold-sized re-runs the local test
@@ -229,11 +230,41 @@ independent N(0, 1).) Both degree-1 passes are at p = 0.8. The later rounds of t
 false feature) ran 14, 16 and 13 tests of degrees 1, 2, 3, 13 one-input and 10 two-input extension tests and 9 local
 tests, with no pass. Against the task's nominal "δ = 0.1 per class per round" every class is far below; against the
 sharper δ/(2K) = 0.0125 of P-A every rate is compatible with it, and 5 of 6 classes are compatible with the ~0.001 of
-the Gaussian approximation (degree 1: 2/440 where 0.5 is expected; ⟦MC g1⟧).
+the Gaussian approximation (degree 1: 2/440 where 0.5 is expected). A null Monte Carlo of the degree-1 and degree-2
+classes (20000 draws at each of n = 128, 1024 and p = 0.5, 0.8, computed as `_fit` computes them; `calib.json`
+`mc_big`, `consistency`) gives 0.108% and 0.068% per test at d = 30 (86 and 54 of 80000), so 2 or more degree-1 passes
+in 440 tests has probability 0.082.
 
 ### 1.4 The block tests
 
-(Numerical, `calib.json` `A1.blocks`, `mc`, `mc_big`.) ⟦BLOCKS⟧
+(Numerical, `calib.json` `A1.blocks`, `mc`, `mc_big`, `consistency`; the reading of the spectral block Heuristic.)
+Round 0 of the final fits, against a null Monte Carlo of the same round-0 statistics computed as `_fit` computes them
+(r = y − ȳ on fresh noise; 2000 draws per n at d = 30 and 1000 at d = 60, and 20000 at each of n = 128, 1024 (d = 30)
+and n = 256, 1024 (d = 60) for each p). The last column is P(X ≥ observed) for X ~ Binomial(tests, null rate).
+
+| test | runs at | round-0 passes in the final fits: p = 0.5; p = 0.8 | null pass rate | P(X ≥ obs.) |
+|---|---|---|---|---|
+| linear block, d = 30 | n ≥ 2(d + 1) | 0/180; 2/180 (n = 64, 128) | 674/80000 = 0.84% (exact χ²₃₀ tail at the threshold: 0.92%) | 0.81 |
+| linear block, d = 60 | n ≥ 2(d + 1) | 3/80 (n = 1024, 2048, 8192); 1/80 (n = 2048) | 833/80000 = 1.04% (χ²₆₀ tail: 1.05%) | 0.087 |
+| spectral block, p = 0.5 | n ≥ 4d | 0/160 (d = 30); 0/70 (d = 60) | 3/20000 at d = 30, n = 128; 2/20000 at d = 60, n = 256; 0 at every other n | – |
+| spectral block, d = 30, p = 0.8 | n ≥ 4d | 2/20 at n = 128, 0/140 at n ≥ 256 | 5.7% at n = 128 (113/2000; 1078/20000 = 5.4%), 0.4% at 256, 0.05% at 512, 0 from 1024 | 0.31 |
+| spectral block, d = 60, p = 0.8 | n ≥ 4d | 5/10 at n = 256, 0/60 at n ≥ 512 | 48% at n = 256 (483/1000; 9356/20000 = 47%), 9.0% at 512, 0.2% at 1024 (103/20000 = 0.5%), 0 from 4096 | 0.58 |
+| sum blocks (additive, product, split; all d, p) | n ≥ 32 | 0 of 2000 searches (0 of 153 in later rounds) | – | – |
+
+- **The linear block's level is the χ²_d tail at its threshold, ≈ 1%, not δ = 0.1.** The Laurent–Massart bound is
+  conservative for a Gaussian χ²_d, and n |X^T r / n|² / s² is close to χ²_d here: its null median over the threshold
+  is 0.565–0.579 at d = 30 and 0.670–0.680 at d = 60 in every run, against the χ²_d median over the threshold, 0.573
+  and 0.673. Every observed count is what that rate predicts. When it passes it adds all d inputs (§1.2).
+- **The spectral block is conservative on balanced labels and not on biased ones near n = 4d**, the smallest n at
+  which it runs. A reading (Heuristic; `calib_tables.txt`, "Spectral block, a heuristic"): the edge 2s√(d/n) is the
+  semicircle edge of a matrix with iid entries, but the pair matrix is a weighted sum of n rank-one matrices x_i x_iᵀ
+  with weights r_i. With P(y = 1) = 0.8 the 20% minority rows carry weight r ≈ −1.6 (the others +0.4); their part is
+  1.6·0.2·(W − I) for the Gram matrix W of 0.2n rows, whose Marchenko–Pastur edge puts its extreme eigenvalue near
+  1.6·0.2·((1 + √(d/(0.2n)))² − 1). This is 0.99 of DFG's edge (margin factor included) at d = 30, n = 128 and 1.08 at
+  d = 60, n = 256, where the null pass rates are 5.7% and 48%; 0.89 and 0.97 at the next n (0.4% and 9.0%); and at most
+  0.74 with balanced labels (0 passes). DFG's margin factor 1 + √(2 ln(1/δ)/d) is 1.39 at d = 30 and 1.28 at d = 60.
+- **The sum-block tests never passed on noise**: the largest T / threshold over all searches is 0.86 in round 0 and
+  0.93 in a later round (p = 0.8, d = 30, the first additive block).
 
 ### 1.5 The forced variant and the cross-validation's fold fits
 
