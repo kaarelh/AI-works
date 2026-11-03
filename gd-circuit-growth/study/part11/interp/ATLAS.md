@@ -9,12 +9,13 @@ values), ran its own Walsh transforms and oracle fits, and found the stored spec
 to the current code's. It confirmed 39 of the 61 claims it checked, among them the identity check (517 + 66 cells), the
 cross-validation counterfactual (18 of 222; 89 of 140; 0.2257 / 0.2319 / 0.2256 / 0.2111), the background-removal
 counts (85 / 54 / 268), the 8 exact Fourier models at 16384, the 133 / 9 / 6 dictionary–readout split, the
-spurious-product and duplicate-block counts, the 141 of 255 equal errors against Part 10 and the 15 equal n_struct; 22
-needed correcting. I checked every correction against the stored files (and refitted f7_11 at n = 128) and applied all
-22; none is declined, but items 5, 9 and 12 make the verifier's replacement more exact (5: one n fewer; 9: the exact
-value instead of an approximation; 12: one share rounded from the stored value), as item 31 does for one share it
-quoted. Items 23–34 address the omissions it listed and its notes on confirmed claims; item 35 lists a few precision
-edits of my own from the same re-check. Every changed or added number is recomputed from the stored files by
+spurious-product and duplicate-block counts, the 141 of 255 equal errors against Part 10 and the 15 equal n_struct,
+and it found none of the corrections of Part 10's verifier reintroduced; 22 claims needed correcting. I checked every
+correction against the stored files (and refitted f7_11 at n = 128) and applied all 22; none is declined, but items
+5, 9 and 12 make the verifier's replacement more exact (5: one n fewer; 9: the exact value instead of an
+approximation; 12: one share rounded from the stored value), as item 31 does for one share it quoted. Items 23–34
+address the omissions it listed and its notes on confirmed claims; item 35 lists a few precision edits of my own from
+the same re-check. Every changed or added number is recomputed from the stored files by
 [`atlas_recheck.py`](atlas_recheck.py) (output: [`atlas_recheck.txt`](atlas_recheck.txt), with the f7_11 refit).
 Tables regenerated with `atlas_make.py`: only `tables/atlas.md` changes (rf06's n\*_3 is now labelled a 2-seed mean);
 the figures do not change (a re-run on the final files reproduces every table byte for byte, and both figures apart
@@ -102,7 +103,8 @@ Omissions and notes on confirmed claims, now in the text:
     0.0146 above the better variant (short answer); at f7_05@16 the background helps (§2.4); h6_10's inner term is a
     literal (§4); stair5 also holds a spurious product at 1024 (S 0.03; §1.2); f7_00, which has no partner, holds a
     weighted block whose inner term takes two inputs of its other sum (short answer, §1.9); v3's h6_00 member at 64 is
-    an out-of-fold fit (§3).
+    an out-of-fold fit (§3); par4's 10-fold fits at 32 have 28–29 rows, not 29 (§2.3); that every file was refitted
+    after the late representations cannot be told from the files (§4).
 34. Two additions, recomputed from the stored files: in all 27 cells of item 25, DFG without the background is no longer
     more than 0.05 below the oracle; majxor's two spectral features at 1024 have cos 0.87 with 1_A ± 1_B, just below the
     0.9 needed for a target term (§1.5, §2.1).
@@ -538,7 +540,7 @@ error in 82 of the 222 cells and differ in 140 (n = 16: 37 of 37, 32: 36, 64: 26
 forced variant was chosen (18) it was better in 7, equal in 8 and worse in 3 (mean gain 0.076; par2 at 16: 0 against
 0.487; majpar at 64: 0.067 against 0.509; f7_02 at 256: 0 against 0.184). Where the default was kept (204) it was
 better in 82, equal in 74 and worse in 48; the largest misses are par4 at 32 (forced 0 against 0.488; the forced
-character is right on all 32 rows but not in the 10-fold fits on 29 rows, CV errors 17 / 18), mux6 at 128 (0.097
+character is right on all 32 rows but not in the 10-fold fits on 28–29 rows, CV errors 17 / 18), mux6 at 128 (0.097
 against 0.366), rf06 at 16 (0.032 against 0.280), f7_00 at 128 (0.256 against 0.472) and andxor at 32 (0.155
 against 0.365). Mean test error over the 222 cells: DFG's choice 0.2257, always default 0.2319, always forced 0.2256,
 the better of the two in each cell 0.2111.
@@ -635,7 +637,9 @@ both; an out-of-fold fit when it kept neither). Its runs stopped after two conse
   listed (the weighted pairs of §1.9, the folded pair of §1.5 until it was added after seeing the fits, the
   multiplexer's address blocks, the clause blocks): such terms count as R. The folded-pair, address-block, clause-block,
   f7_06 and auxiliary symmetry-class representations were added after the first fits had been looked at; the
-  categories of every cell were then recomputed by refitting (identical fits).
+  categories of every cell were then recomputed by refitting (identical fits). The verifier found the stored
+  specifications and categories equal to what the current code gives (37 of 37 targets, 407 of 407 cells); that every
+  file was refitted, rather than only reclassified, cannot be told from the files, and does not change the results.
 - "Complete" checks the dictionary, not the weights; the oracle error and span R² are fitted on the test inputs (an
   idealised readout), so they say what the features could express, not what DFG's readout achieves.
 - Category shares are standard deviations of parts of the model's real-valued output; parts that cancel can exceed 1,

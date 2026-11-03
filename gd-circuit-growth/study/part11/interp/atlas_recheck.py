@@ -118,10 +118,10 @@ def main():
           [(x["desc"], x["cat"]) for x in cell("cnf3", 256)["terms"] if x["kind"] == "sum"])
     print("== sym9 characters by degree, 4096-16384:", [(n, cell("sym9", n)["summary"]["chars_by_degree"]) for n in (4096, 8192, 16384)])
     print("== majmaj5 characters by degree, 2048-16384:", [(n, cell("majmaj5", n)["summary"]["chars_by_degree"]) for n in (2048, 4096, 8192, 16384)])
-    print("== weighted target blocks at 16384:")
+    print("== weighted blocks (sum terms with an inner term) at 16384:")
     for t in ("f7_07", "f7_09", "symand", "f7_03", "f7_11", "f7_00"):
         print(f"   {t}:", [x["desc"] for x in cell(t, 16384)["terms"] if x["kind"] == "sum" and x["inner"]])
-    print("   f7_00 (s1 = x1+x2-x3-x4, s2 = -x5-x6-x7+x8+x9+x10+x11), weighted block category and share:",
+    print(f"   f7_00 ({R['f7_00']['spec']['desc']}): weighted block, category and share:",
           [(x["desc"], x["cat"], round(x["share"], 3)) for x in cell("f7_00", 16384)["terms"] if x["kind"] == "sum" and x["inner"]])
 
     print("== first fit: DFG error - oracle error, largest five (err, oracle, err without background)")
@@ -163,6 +163,9 @@ def main():
     B = M.below_structure(R)
     print(f"== below the first complete n: {len(B)} cells, a true character in {sum(b['true_chars'] > 0 for b in B)}")
 
+    c = cell("par4", 32)
+    print("== par4@32: chosen variant", c["variant"], "CV held-out errors [default, forced]", c["cv_errs"],
+          "; rows of the forced fold fits:", dict(Counter(k["n"] for k in c["calls"] if k["force"] and k["n"] < 32)))
     d = json.load(open(os.path.join(HERE, "results", "cv", "forced_vs_default.json")))
     ce = np.array([x[x["chosen"]]["err"] for x in d]); de = np.array([x["default"]["err"] for x in d])
     fe = np.array([x["forced"]["err"] for x in d])
