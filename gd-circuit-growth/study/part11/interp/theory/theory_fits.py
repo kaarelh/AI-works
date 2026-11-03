@@ -13,8 +13,9 @@ frozen dfg13.py, DFG(readout="logit")); nothing in the learner changes.  Three k
   p2 cells   the parity cells (par2, par3, par4 at d = 15, 30, 60, 120) at n = 16 and 32: the variant DFG's own paired
              cross-validation chose, the held-out errors, and the characters each fold fit and the final fit hold.
   p1 null    full DFG fits on labels drawn independently of the inputs (iid fair coins), d = 30, 20 fits at each of
-             n = 64, 256, 1024, 4096: what the final model contains (characters by degree, linear block, spectral
-             features, sum blocks), the variant chosen, and what the round-0 log of the final fit admitted.
+             n = 64, 256, 1024, 4096, and 30 fits with skewed labels (iid, P(+1) = 0.85) at n = 128: what the final model
+             contains (characters by degree, linear block, spectral features, sum blocks), the variant chosen, and what
+             the round-0 log of the final fit admitted.
 
   p5 cells   the four parity cells at n >= 64 whose FLOP count the parity-path model of check_theory.py does not
              reproduce: what each fit call admitted in round 0.
@@ -154,11 +155,23 @@ def run_p2():
 P1_NS, P1_REPS, P1_D = [64, 256, 1024, 4096], 20, 30
 
 
-def p1_fit(n, rep, d=P1_D):
-    """DFG alone on labels independent of the inputs: X uniform, y iid fair coins (own rng, not the harness')."""
-    rng = np.random.default_rng([20261103, n, rep])
-    X = rng.choice(np.array([-1.0, 1.0], dtype=np.float32), size=(n, d))
-    y = rng.choice(np.array([-1.0, 1.0], dtype=np.float32), size=n)
+def p1_data(n, rep, d=P1_D, law="fair"):
+    """Null data: X uniform; y independent of X, iid fair coins (law 'fair') or iid with P(+1) = 0.85 ('biased')."""
+    if law == "fair":
+        rng = np.random.default_rng([20261103, n, rep])
+        X = rng.choice(np.array([-1.0, 1.0], dtype=np.float32), size=(n, d))
+        y = rng.choice(np.array([-1.0, 1.0], dtype=np.float32), size=n)
+    else:
+        rng = np.random.default_rng([20261103, n, rep, 85])
+        X = rng.choice(np.array([-1.0, 1.0], dtype=np.float32), size=(n, d))
+        y = np.where(rng.random(n) < 0.85, 1.0, -1.0).astype(np.float32)
+    return X, y
+
+
+def p1_fit(n, rep, d=P1_D, law="fair"):
+    """DFG alone on labels independent of the inputs (own rng, not the harness')."""
+    X, y = p1_data(n, rep, d, law)
+    rng = None
     L = H.make_learner()
     with H.Recorder(type(L.inner)) as R:
         out = L.fit(X, y, np.random.default_rng([20261103, n, rep, 77]))
@@ -166,7 +179,7 @@ def p1_fit(n, rep, d=P1_D):
     chars = [list(k) for kind, k in F if kind == "chi" and k]
     log0 = fin["info"]["log"][0] if fin["info"]["log"] else None
     folds = [c for c in R.calls[:-1]]
-    return dict(n=n, rep=rep, variant=out["info"].get("variant"), cv_errs=out["info"].get("cv_errs"),
+    return dict(n=n, rep=rep, law=law, variant=out["info"].get("variant"), cv_errs=out["info"].get("cv_errs"),
                 size=int(fin["info"]["size"]), rounds=int(fin["info"]["rounds"]),
                 chars_by_deg={str(k): sum(1 for S in chars if len(S) == k) for k in range(1, 13)},
                 n_quad=sum(1 for kind, _ in F if kind == "quad"), n_sum_feats=sum(1 for kind, _ in F if kind == "sum"),
@@ -179,15 +192,18 @@ def p1_fit(n, rep, d=P1_D):
                 n_folds=len(folds), flops=float(out["flops"]))
 
 
+P1B_NS, P1B_REPS = [128], 30                                          # skewed labels, just above the n >= 4 d gate
+
+
 def run_p1():
     path = os.path.join(CACHE, "p1_null_fits.json")
     out = json.load(open(path)) if os.path.exists(path) else {}
-    for n in P1_NS:
-        for rep in range(P1_REPS):
-            key = f"n{n}__r{rep}"
+    plan = [(n, rep, "fair") for n in P1_NS for rep in range(P1_REPS)] + [(n, rep, "biased") for n in P1B_NS for rep in range(P1B_REPS)]
+    for n, rep, law in plan:
+            key = f"n{n}__r{rep}" + ("" if law == "fair" else f"__{law}")
             if key in out:
                 continue
-            t0 = time.process_time(); out[key] = p1_fit(n, rep); out[key]["cpu_seconds"] = time.process_time() - t0
+            t0 = time.process_time(); out[key] = p1_fit(n, rep, law=law); out[key]["cpu_seconds"] = time.process_time() - t0
             o = out[key]
             print("p1", key, "variant", o["variant"], o["cv_errs"], "size", o["size"], "round0", o["round0"], flush=True)
             json.dump(out, open(path + ".tmp", "w")); os.replace(path + ".tmp", path)

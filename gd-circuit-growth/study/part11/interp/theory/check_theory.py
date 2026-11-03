@@ -404,7 +404,7 @@ def load_cell(suite, t, n):
 def p3_section():
     res = dict(targets=0, chars=0, per_target={}, test0=dict(tp=0, tn=0, fp=0, fn=0, fp_ratio=[], fn_ratio=[]),
                first=dict(), early_routes={}, late=dict(), factors={}, missing_cells=[])
-    rows = []
+    rows = []; calib = []
     for suite in ("designed", "random"):
         T = H.targets(suite)
         for t in T:
@@ -440,6 +440,15 @@ def p3_section():
                         res["test0"][key] += 1
                         if key in ("fp", "fn"):
                             res["test0"][key + "_ratio"].append(math.log2(n / ng))
+                        # Heuristic normal approximation of P(pass): v_S ~ N(yhat_S, (1 - yhat_S^2)/n), threshold at
+                        # sqrt((1 - y0^2) 2 L / n); for |yhat_S| = 1 (a parity) the exact P2 probability
+                        if abs(yS) > 0.999:
+                            ppass = p_pass(n, k, 30)
+                        else:
+                            from scipy.stats import norm
+                            ppass = float(norm.cdf((abs(yS) * math.sqrt(n) - math.sqrt((1 - y0 * y0) * 2 * L_of(C(30, k))))
+                                                   / math.sqrt(1 - yS * yS)))
+                        calib.append((math.log2(n / ng), int(ap), ppass))
                 # first explicit appearance in the final model
                 nfirst, route = None, None
                 for n in NS:
@@ -510,6 +519,28 @@ def p3_section():
                 late["examples"].append(dict(t=r["t"], nm=r["nm"], n_glob=round(r["n_glob"], 1), n_pred=r["n_pred"],
                                              n_first=r["n_first"], z_at_pred=z, cat=r["cat"]))
     res["late"] = late
+    # calibration of the round-0 decisions against the normal approximation, by log2(n / n_glob)
+    cb = np.array(calib); edges_ = [-np.inf, -2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2, np.inf]; cal = []
+    for lo, hi_ in zip(edges_[:-1], edges_[1:]):
+        sel = (cb[:, 0] > lo) & (cb[:, 0] <= hi_)
+        if sel.any():
+            cal.append(dict(lo=float(lo), hi=float(hi_), pairs=int(sel.sum()), passed=int(cb[sel, 1].sum()),
+                            observed=float(cb[sel, 1].mean()), predicted=float(cb[sel, 2].mean())))
+    res["test0"]["calibration"] = cal
+    # the characters whose first explicit entry is the round-0 global test: log2(n_first / n_glob)
+    g0 = [r for r in rows if r["route"] and r["route"]["how"] == "test" and r["route"]["cls"] == "global"
+          and r["route"]["round"] == 0]
+    lg = np.array([math.log2(r["n_first"] / r["n_glob"]) for r in g0])
+    res["first"]["global_r0"] = dict(count=len(g0), median_log2_first_over_nglob=float(np.median(lg)),
+                                     within_pm1=int(np.sum(np.abs(lg) <= 1)), in_0_1=int(np.sum((lg >= 0) & (lg <= 1))),
+                                     above_1=int(np.sum(lg > 1)), below_m1=int(np.sum(lg < -1)),
+                                     maj9_deg3_near_threshold=sum(1 for r in g0 if r["t"] == "maj9" and r["k"] == 3))
+    lb = [r for r in rows if r["route"] and r["route"]["how"] == "linear-block"]
+    res["first"]["linear_block"] = dict(count=len(lb), degrees=sorted(set(r["k"] for r in lb)),
+                                        median_log2_first_over_nglob=float(np.median([math.log2(r["n_first"] / r["n_glob"]) for r in lb])))
+    fo = [r for r in rows if r["route"] and r["route"]["how"] == "forced"]
+    res["first"]["forced"] = dict(count=len(fo), n_first=sorted(r["n_first"] for r in fo))
+    res["first"]["predicted_in_grid"] = sum(1 for r in rows if r["n_pred"] is not None)
     res["test0"]["fp_ratio_median"] = float(np.median(res["test0"]["fp_ratio"])) if res["test0"]["fp_ratio"] else None
     res["test0"]["fn_ratio_median"] = float(np.median(res["test0"]["fn_ratio"])) if res["test0"]["fn_ratio"] else None
     res["test0"]["fp_within_1"] = sum(1 for v in res["test0"]["fp_ratio"] if v <= 1.0)

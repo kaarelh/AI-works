@@ -252,7 +252,7 @@ def a2(recs):
         L = [r for r in recs if r["n"] == n]
         if not L:
             continue
-        o = dict(fits=len(L), identical=sum(r["identical"] for r in L), learned=sum(r["err"] <= 0.1 for r in L))
+        o = dict(fits=len(L), identical=sum(r["identical"] for r in L), n_learned=sum(r["err"] <= 0.1 for r in L))
         for sub, LL in (("all", L), ("learned", [r for r in L if r["err"] <= 0.1]), ("unlearned", [r for r in L if r["err"] > 0.1])):
             if not LL:
                 o[sub] = None; continue
@@ -491,7 +491,7 @@ def tables(res):
             if o is None:
                 continue
             q = o["all"]; bc = q["by_cat"]
-            T.append(f"| {n} | {q['fits']} | {o['learned']} | {q['terms']} | {q['spur_terms']} ({q['spur_terms_excl_lin']}) | {q['fits_any_spur']} ({q['fits_any_spur_excl_lin']}) | "
+            T.append(f"| {n} | {q['fits']} | {o['n_learned']} | {q['terms']} | {q['spur_terms']} ({q['spur_terms_excl_lin']}) | {q['fits_any_spur']} ({q['fits_any_spur_excl_lin']}) | "
                      f"{bc['chi_test']} / {bc['chi_lin']} / {bc['chi_forced']} / {bc['quad']} / {bc['sum']} / {bc['sum_forced']} | "
                      f"{q['share_med']:.3f} / {q['share_mean']:.3f} / {q['share_max']:.3f} | {q['share_lin_max']:.3f} / {q['share_excl_lin_max']:.3f} | "
                      f"{q['err_mean']:.4f} / {q['err_noS_mean']:.4f} | {q['noS_better']} / {q['noS_worse']} |")
@@ -500,7 +500,7 @@ def tables(res):
               "| n | fits | spurious terms (excl. lin.) | fits with any (excl. lin.) | spurious share median / max | max share: lin. / other | err with / without (mean) | removal better / worse |", "|---|---|---|---|---|---|---|---|"]
         for n in NS:
             o = A["by_n"].get(str(n))
-            if o is None or o["learned"] == 0:
+            if o is None or not o.get("learned"):
                 continue
             q = o["learned"]
             T.append(f"| {n} | {q['fits']} | {q['spur_terms']} ({q['spur_terms_excl_lin']}) | {q['fits_any_spur']} ({q['fits_any_spur_excl_lin']}) | {q['share_med']:.3f} / {q['share_max']:.3f} | "
