@@ -238,7 +238,7 @@ def p1_section(fast=False):
     if os.path.exists(path):
         F = json.load(open(path)); rows = {}
         for key, o in F.items():
-            n = o["n"]; rw = rows.setdefault(str(n), dict(fits=0, nonconstant=0, forced_chosen=0, chars=0, linear=0,
+            n = o["n"]; rw = rows.setdefault(str(n) + ("" if o.get("law", "fair") == "fair" else "_" + o["law"]), dict(fits=0, nonconstant=0, forced_chosen=0, chars=0, linear=0,
                                                            quad=0, sumblock=0, round0_admit=0, deg={}, folds_nonempty=0,
                                                            n_folds=0, folds_default_nonempty=0))
             rw["fits"] += 1; rw["nonconstant"] += int(o["size"] > 1); rw["forced_chosen"] += int(o["variant"] == 1)
@@ -258,9 +258,7 @@ def p1_section(fast=False):
         agree, rep = 0, []
         for key, o in F.items():
             n, r_ = o["n"], o["rep"]
-            rng = np.random.default_rng([20261103, n, r_])
-            X = rng.choice(np.array([-1.0, 1.0], dtype=np.float32), size=(n, TF.P1_D))
-            y = rng.choice(np.array([-1.0, 1.0], dtype=np.float32), size=n)
+            X, y = TF.p1_data(n, r_, TF.P1_D, o.get("law", "fair"))
             z = round0_z(X, y, TF.P1_D, final_scale(n), False, (1, 2, 3, 4))
             pred = sorted(k for k, v in z["z"].items() if v > 1)
             r0 = o["round0"] or dict(n_new=0, new=[], blocks=[])
@@ -271,9 +269,10 @@ def p1_section(fast=False):
                 ok_chars = pred == got
             lin_pred = (z["T1"] > TF.P1_D + 2 * math.sqrt(TF.P1_D * math.log(1 / DELTA)) + 2 * math.log(1 / DELTA)
                         and n >= 2 * (1 + TF.P1_D) and not any(k == 1 for k in pred))
-            ok_ = ok_chars and (("linear" in r0["blocks"]) == lin_pred)
+            quad_pred = z["quad_ratio"] > 1 and n >= 4 * TF.P1_D
+            ok_ = ok_chars and (("linear" in r0["blocks"]) == lin_pred) and (("quad" in r0["blocks"]) == quad_pred)
             agree += int(ok_)
-            if pred or got or o["size"] > 1:
+            if pred or got or o["size"] > 1 or quad_pred:
                 rep.append(dict(key=key, variant=o["variant"], replica_degrees_z_gt_1=pred, dfg_round0=r0,
                                 replica_max_z={str(k): round(v, 4) for k, v in z["z"].items()}, T1=round(z["T1"], 2),
                                 quad_ratio=round(z["quad_ratio"], 3)))

@@ -171,7 +171,6 @@ def p1_data(n, rep, d=P1_D, law="fair"):
 def p1_fit(n, rep, d=P1_D, law="fair"):
     """DFG alone on labels independent of the inputs (own rng, not the harness')."""
     X, y = p1_data(n, rep, d, law)
-    rng = None
     L = H.make_learner()
     with H.Recorder(type(L.inner)) as R:
         out = L.fit(X, y, np.random.default_rng([20261103, n, rep, 77]))
