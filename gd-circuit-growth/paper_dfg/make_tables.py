@@ -549,14 +549,14 @@ def tab_v3():
          f"\\multicolumn{{{c1}}}{{@{{}}l}}{{\\emph{{(a) DFG alone against v3: the result files, every seed, {by[NS_[0]]['cells']} targets}}}}\\\\",
          "v3 lower by $>0.02$ & " + " & ".join(str(by[n]["v3_lower"]) for n in NS_) + "\\\\",
          "DFG alone lower by $>0.02$ & " + " & ".join(str(by[n]["dfg_lower"]) for n in NS_) + "\\\\",
-         "mean difference & " + " & ".join(f"${sum(by[n]['diff']) / len(by[n]['diff']):+.3f}$" for n in NS_) + "\\\\",
+         "mean difference (points) & " + " & ".join(f"${100 * sum(by[n]['diff']) / len(by[n]['diff']):+.1f}$" for n in NS_) + "\\\\",
          "\\midrule",
          f"\\multicolumn{{{c1}}}{{@{{}}l}}{{\\emph{{(b) inside v3: Part 10's analysis fits of v3, seed 0}}}}\\\\",
          "fits analysed & " + " & ".join(str(in3[n]["cells"]) for n in NS_) + "\\\\",
-         "v3 lower than its DFG member & " + " & ".join(str(in3[n]["stack_lower"]) for n in NS_) + "\\\\",
-         "its DFG member lower than v3 & " + " & ".join(str(in3[n]["member_lower"]) for n in NS_) + "\\\\",
+         "v3 lower than DFG member & " + " & ".join(str(in3[n]["stack_lower"]) for n in NS_) + "\\\\",
+         "DFG member lower than v3 & " + " & ".join(str(in3[n]["member_lower"]) for n in NS_) + "\\\\",
          "DFG members' weight 0 & " + " & ".join(str(in3[n]["zero"]) for n in NS_) + "\\\\",
-         "DFG weight share: median & " + " & ".join(f"{med(in3[n]['w']):.2f}" for n in NS_) + "\\\\",
+         "median DFG weight share & " + " & ".join(f"{med(in3[n]['w']):.2f}" for n in NS_) + "\\\\",
          "\\bottomrule", "\\end{tabular}"]
     write("tab_v3_byn", L)
     big = [x for x in X if num(x["ratio"]) is not None and abs(num(x["ratio"])) > THR]

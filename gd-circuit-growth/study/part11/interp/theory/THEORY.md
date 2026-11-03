@@ -617,7 +617,8 @@ So on the grid (n ≤ 16384):
   n = 16384 (13159 rows). The fold fits' degree-4 search runs on at most 55 rows (10 folds) or 110 rows (5 folds), so it
   is subsampled at n = 64, 256 and 512 (fold sizes 57–58, 204–205, 409–410). The degree-5/6 searches never run.
 - At d = 120 the degree-4 search runs on 364 rows (182 under the cross-validation's half budget, i.e. already from
-  n = 256), the degree-3 search on 4358 rows from n = 8192, and the fold fits skip degree 4 entirely.
+  n = 256), the degree-3 search on 4358 rows from n = 8192. The fold fits skip degree 4 entirely and subsample
+  degree 3 at n = 512 (217 of 409–410 rows; `P5.fold_subsampling`).
 
 **At which d the degree-4 search becomes subsampled** (`P5.d_star`): the smallest d with m₄ < n.
 
@@ -628,7 +629,9 @@ So on the grid (n ≤ 16384):
 For n ≤ 512 the table uses the final fit under the cross-validation (`scale` 0.5). The search is skipped altogether
 (m₄ < 32) from d = 199 at n > 512, from d = 163 in the final fit at n ≤ 512, and from d = 85 and 70 in the 5- and
 10-fold fits. Degree 3 is skipped from d = 746. These use the harness's GD(d); its one exception is that the d = 120
-networks trained twice as long, which doubles every m at d = 120.
+networks trained twice as long, which doubles every m at d = 120. So d* is the smallest such d, not a threshold for
+every larger d: at d = 120 the n = 128 search runs on all its rows (m₄ = 182; `P5.d_star_exceptions_at_d120`, the
+table's only exception).
 
 **Exhaustive costs** (`P5.exhaustive`), in network runs GD(d): the degree-4 search on n = 64 rows costs 2.8·10⁻⁴ at d = 30,
 4.1·10⁻³ at 60, 0.025 at 120 and 55.9 at 1000. On n = 16384 rows it costs 0.072, 1.04 and 6.5 at d = 30, 60, 120.
@@ -641,11 +644,14 @@ background; at n ≤ 512 the 2F fold fits are added with their exact fold sizes 
   d = 15–120, every n and seed).
 - **4 more match exactly once a false linear block admitted next to χ_S is added.** That happened in one fold of par4 at
   d = 30, n = 256 and one of par4 at d = 60, n = 512 (in both variants' fits of that fold), and in the final fits of par3
-  at d = 30, n = 16384 and at d = 60, n = 8192. Refits of the 4 cells show the linear block in round 0 and reproduce the recorded counts bit for bit
-  (`P5.check.linear_cells_refit`). These are P1b's false linear blocks, seen under the alternative: for k ≥ 2 the
-  degree-1 coefficients have no signal.
-- **The other 43 are all at n ≤ 32.** There not every fold fit (14–29 rows) admits χ_S, so some take other paths. At
-  n = 32, the 7 par2 cells at d ≤ 60 match exactly, because there every fold passes.
+  at d = 30, n = 16384 and at d = 60, n = 8192. Refits of the 4 cells show the linear block in round 0 and reproduce
+  the recorded counts bit for bit (`P5.check.linear_cells_refit`). The FLOP model cannot tell apart folds of equal
+  size; the refits place the two fold blocks in fold 2 and fold 1, folds the model allows (`same_place`). These are
+  P1b's false linear blocks, seen under the alternative: for k ≥ 2 the degree-1 coefficients have no signal.
+- **The other 43 are all at n ≤ 32.** At n ≤ 32 the model is exact in exactly the cells where every fold fit and the
+  final fit admit χ_S by P2's criterion on their own rows (`P5.check.n_le_32`, 50 of 50 cells). Those are the 7 par2
+  cells at n = 32 and d ≤ 60. At n = 16 no fold fit passes. At n = 32 the fold fits (28–29 rows) do not search
+  degrees 3–4, and par2 at d = 120 has only 8 and 9 passing folds of 10.
 - **Where the n = 16384 par2 fit spends its compute** (model = recorded to 10⁻¹⁵):
   - d = 15: 0.046 GD (degree 6: 0.030, degree 5: 0.011, degree 4: 0.004);
   - d = 30: 0.137 (degree 4: 0.072; degrees 5 and 6: 0.030 each);
@@ -663,19 +669,20 @@ background; at n ≤ 512 the 2F fold fits are added with their exact fold sizes 
 | P1a | null, round 0: global test admits a degree-k character with prob. ≤ 2N(δ/(4KN))^{u²c²} (δ/(2K) at u = c = 1) | Proved | `P1.sims` (280 checks), `P1.full_fits` |
 | P1b | null, round 0: the linear block's statistic exceeds d + 2√(dx) + 2x with prob. ≤ e^{−x} (δ at the code's level) | Proved | `P1.sims[*].linear` (64 checks) |
 | P1c | nothing admitted in round 0 ⇒ the default variant's model is the constant plus the background | Proved (code) | `P1.full_fits_replica` (110 / 110) |
-| — | spectral block, sum blocks, forced variant, the cross-validation's choice, rounds ≥ 1 | not covered | `P1.sims[*].quad`, `P1.full_fits` |
-| P2 | a k-parity passes iff n(1 − ȳ²) > n_thr(k, d); exact binomial P(pass) | Proved | `P2.agree` (250 / 250), `P2.cells` |
+| — | spectral block, sum blocks, forced variant, the cross-validation's choice, rounds ≥ 1 | not covered | `P1.sims[*].quad`, `P1.full_fits`, `P1.nonconstant_fits`, `P1.forced_fits_replay` |
+| P2 | a k-parity passes iff n(1 − ȳ²) > n_thr(k, d); exact binomial P(pass) | Proved | `P2.agree` (250 / 250), `P2.cells`, `P2.fold_criterion_vs_default_folds` (50 / 50) |
+| P2′ | any target, any round: a class of N candidates admits nothing on m ≤ 2c² ln(4KN/δ) rows | Proved | `P5.d_parity_unreachable` (where it binds) |
 | — | measured n* = the interpolation from the first passing grid point, plus the forced variant at n = 16 | Numerical | `P2.pred` |
 | — | d = 1000, and the networks' extrapolation | Heuristic | `P2.d1000`, `P2.networks` |
 | P3a | the exact round-0 criterion; E[v_S] = ŷ_S(1 − 1/(n + 10⁻⁹)) | Proved | — |
-| P3b | n_glob as the first-order detection size | Heuristic | `P3.test0` (96.9%, calibration), `P3.first` |
-| P3c | later-round classes: n_glob/n_cls = union-bound × residual × coefficient factors | Proved (identity) | `P3.factors` |
+| P3b | n_glob as the first-order detection size | Heuristic | `P3.test0` (96.9%, calibration), `P3.first`, `P3.late` |
+| P3c | later-round classes: n_glob/n_cls = union-bound × residual × coefficient factors | Proved (identity) | `P3.factors`, `P3.entry_vs_nglob`, `P3.entry_vs_nglob_all` |
 | P4a–c | block representation (≤ k + 1 parameters), grouping, what grouping loses | Proved (code) | `P4.grouping`, `P4.generic` |
 | P4d–e | Fourier coefficients of g(B); the mod-3 closed form and its bound | Proved | `P4.targets` (exact, equal to Walsh–Hadamard) |
 | P4f | E[M_ij] = f̂({i, j})(1 − 1/(n + 10⁻⁹)), E[c₁ᵢ] = f̂({i})(1 − 1/(n + 10⁻⁹)) | Proved | — |
 | — | sample sizes at which the search's seeds see a mod-3 class (BBP, degree-1 ranking) | Heuristic | `P4.targets` |
-| P5a–b | FLOP formulas; each budgeted search ≤ its share of GD·`scale` | Proved (code) | `P5.check` (232 / 275 exact), `P5.max_share_used_over_share` |
-| — | budgeted row counts; where the degree-4 search is subsampled or skipped | Proved (arithmetic) | `P5.m_table`, `P5.d_star`, `P5.d_parity_unreachable` |
+| P5a–b | FLOP formulas; each budgeted search ≤ its share of GD·`scale` | Proved (code) | `P5.check` (232 / 275 exact; `n_le_32`: 50 / 50 explained), `P5.max_share_used_over_share` |
+| — | budgeted row counts; where the degree-4 search is subsampled or skipped | Proved (arithmetic) | `P5.m_table`, `P5.d_star`, `P5.d_star_exceptions_at_d120`, `P5.fold_subsampling`, `P5.d_parity_unreachable` |
 
 **Limits of these checks.**
 - P3 and the parity refits use seed 0, or the result files' seeds (2–3).
@@ -693,13 +700,22 @@ background; at n ≤ 512 the 2F fold fits are added with their exact fold sizes 
     `random` targets;
   - `p5_cells.json`: the 4 parity cells with a false linear block.
 
-  Then `python check_theory.py` writes `check_theory.json` (about 7 minutes single-threaded, mostly P1's simulation);
-  `--only=P3` and similar recompute single sections.
+  From scratch this takes about 20 minutes single-threaded; fits already in the cache are skipped, and `--cache=DIR`
+  writes to another directory. Then `python check_theory.py` writes `check_theory.json` (about 7 minutes
+  single-threaded, mostly P1's simulation); `--only=P3` and similar recompute single sections. `check_theory.py` makes
+  one DFG fit itself (the replay of the forced null fit, `P1.forced_fits_replay`); everything else it reads from the
+  cache, the result files and `dscale.json`.
+- **Rerun from scratch, 3 November** (a container restart had interrupted this analysis). All 494 cached fits
+  (4 + 50 + 110 + 330), recomputed into an empty directory, were identical to `cache/` field for field. The only
+  exceptions were CPU times and a `law` field that the 80 fair-label null fits predate, which `check_theory.py` reads
+  as "fair". A full run of `check_theory.py` then reproduced every value of the previous `check_theory.json` exactly
+  (0 differences); the keys cited above that were missing before were added by that run.
 - Every DFG fit is `interp/dfg_hooks.fit_toy_dfg` or its recorder, i.e. the evaluation's own fit (frozen file,
   md5-checked; the same rows, rng, column permutation and readout). The P3 cells reuse `interp/order/order_fit.py`'s
   replay functions (`replay_round`, `split_solves`, `columns`, `target_support`), whose decisions ORDER.md validated
   against DFG's own (3217 admissions, 29890 non-admissions, none unexplained). For the 11 targets it fitted, the P3
   analysis reads the order analysis' seed-0 cells.
 - The parity cells' test errors and FLOP counts are compared with the result files where they exist (`identity` in each
-  cached cell). The P1 replica of round 0 is checked against DFG's own round-0 decisions on the 80 null fits
-  (`P1.full_fits_replica`).
+  cached cell). The P1 replica of round 0 is checked against DFG's own round-0 decisions on the 110 null fits
+  (`P1.full_fits_replica`). The cross-validation folds rebuilt for P2 and P5 are checked against the recorded fold
+  fits' sizes (`P2.cells[*].fold_rows_match_cache`, 50 of 50).
