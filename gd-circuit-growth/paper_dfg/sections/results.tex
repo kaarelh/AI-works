@@ -1,1 +1,270 @@
-\todo{results}
+\section{How well it does}\label{sec:results}
+
+This section compares DFG v1.3, run alone, with the networks and with every other reference. It starts with the one held-out suite (\cref{sec:res-dlheld7}) and all 11 toy suites (\cref{sec:res-suites}), then compares DFG alone with the portfolio v3 that contained it (\cref{sec:res-v3}) and with the low-degree algorithm, which has its dictionary but not its search (\cref{sec:res-lowdeg}). It ends with the scaling in the input dimension (\cref{sec:res-dscale}), the two tabular datasets DFG can run on (\cref{sec:res-tabular}) and compute (\cref{sec:res-compute}).
+
+Numbers come from \repo{study/part11/RESULTS.json}, which \repo{study/part11/compare_dfg.py} computes from the result files, unless another file is named. The tables and figures are generated from it by \repo{paper_dfg/make_tables.py} and \repo{paper_dfg/make_figures.py}. Derived numbers that the text quotes and no table shows are in \repo{paper_dfg/tables/numbers.json} and in the figures' \texttt{.json} files. The rules are those of \cref{sec:protocol}. $\nstar$ is the training-set size at 10\% test error (seed mean, interpolated in $\log n$ on $n=16,32,\dots,16384$), and a comparison is the ratio $\log_2(\nstar_{\rm DFG}/\nstar_{\rm ref})$, negative when DFG needs less data. A target is \emph{clearly} better or worse when the ratio is beyond $\pm0.25$, or when only one of the two learners reaches 10\% error; means are taken over the targets both learn. DFG alone, v3, v2 and \code{lowdeg} see the input columns in a fresh random order in every fit; \code{lin} and \code{hgb} were run in the natural order.
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{The held-out suite \code{dlheld7}}\label{sec:res-dlheld7}
+
+\code{dlheld7} is the only toy suite held out for DFG v1.3. Its 12 targets were drawn in Part 10 from the blind family of signed-sum targets and fixed in commit \texttt{dc70266c}, before DFG v1.3 was designed, and DFG's development never used them (\repo{study/part11/PROTOCOL.md}). What is \emph{not} held out is the choice of the object. DFG v1.3 was chosen as this paper's subject after Part 10's results had been read, including v3's on \code{dlheld7}, where DFG v1.3 is v3's toy member. The choice is post hoc; the code is not. \Cref{tab:dlheld7} gives every target's definition and $\nstar$, and \cref{tab:dlheld7-summ} the summaries against each reference.
+
+\begin{table}[t]
+\centering{\footnotesize\setlength{\tabcolsep}{3pt}\renewcommand{\arraystretch}{1.1}
+\input{tables/tab_dlheld7.tex}\par\medskip
+{\scriptsize\input{tables/tab_dlheld7_defs.tex}}}
+\caption{The held-out toy suite \code{dlheld7} \status{Numerical}. Top: $\nstar$ per target (mean of 3 seeds, interpolated in $\log n$; ``never'': 10\% test error not reached by $n=16384$) for DFG alone, v3, \code{lowdeg}, the calibration references \code{lin} and \code{hgb}, the three network variants run on the suite and their per-target minimum \code{nets_best}. The last two columns give the $\log_2$ ratio of DFG alone's $\nstar$ to that of \code{nets_best} and of v3 (n/a: neither learns the target). Bold: the smallest $\nstar$ in the row. Bottom: the definitions. $[\cdot]$ is $+1$ when the condition holds and $-1$ otherwise; \texttt{*} multiplies $\pm1$ values; \texttt{c ? a : b} is $a$ when $c=+1$; a literal \texttt{x5} or \texttt{$-$x5} inside AND/OR or a decision list stands for $x_5=+1$ or $x_5=-1$. f7\_02, f7\_04 and f7\_06 are the family's non-symmetric controls. Source: \repo{study/part11/RESULTS.json} (\texttt{q1\_dlheld7}); definitions: \repo{study/boolfuncs.py}.}
+\label{tab:dlheld7}
+\end{table}
+
+\begin{table}[t]
+\centering{\footnotesize\setlength{\tabcolsep}{4pt}
+\input{tables/tab_dlheld7_summ.tex}}
+\caption{DFG alone against each reference on \code{dlheld7} (12 targets) \status{Numerical}. Left: the number of targets that both reach 10\% test error, the mean and median $\log_2\nstar$ ratio of DFG alone to the reference over them, the targets on which DFG alone is clearly better and clearly worse, and the targets that only the reference or only DFG alone reaches. Right, for calibration: the reference itself against \code{nets_best}, as mean (clearly better / clearly worse) [both reach] and median. Source: \repo{study/part11/RESULTS.json} (\texttt{q1\_dlheld7.summary}, \texttt{.context}).}
+\label{tab:dlheld7-summ}
+\end{table}
+
+\paragraph{Against the networks} \status{Numerical}.
+\begin{itemize}
+\item \emph{Against \code{nets_best}:} mean $\log_2\nstar$ ratio $-1.29$ over the 11 targets both learn, about $2.4\times$ less data (median $-1.16$). DFG alone is clearly better on 10 of the 12 targets and clearly worse on none. The 11 ratios have s.d.\ 0.91; if the targets are treated as independent draws from the family, the mean has a standard error of about 0.27.
+\item \emph{Against each variant:} $-1.62$ against \code{nets_wd} (clearly better on 11 of 12), $-1.38$ against \code{nets_cewd0.3} and $-1.36$ against \code{nets_cewd1.0} (10 each). No variant is clearly better than DFG alone on any target.
+\item \emph{Largest margins:} f7\_00, an OR of conditions on two signed sums: 211 against 1545 ($-2.87$); f7\_08, an arbitrary accept set of an 11-input count: 644 against 2932; f7\_03, a multiplexer between a residue class mod 4 of a 6-input count and a condition on a 4-input count: 352 against 1599; f7\_09, a threshold of a signed 10-input sum times $x_{11}x_{12}$: 222 against 883.
+\end{itemize}
+
+\paragraph{Against v3, \code{lowdeg} and the calibration references} \status{Numerical}.
+\begin{itemize}
+\item \emph{v3} needs less data than DFG alone: the mean ratio is $+0.21$ ($1.16\times$ more data for DFG alone) and the median $+0.05$. DFG alone is clearly worse on 3 targets, the three non-symmetric controls: f7\_02, a DNF (190 against 106), f7\_04, a decision list (97 against 70), and f7\_06, a read-once formula (82 against 44). It is clearly better on none. Against v2 the summary is the same ($+0.21$; 0 better, 3 worse).
+\item \emph{\code{lowdeg}:} $-1.90$ over the 10 targets both learn, clearly better on 10 and clearly worse on 1 (f7\_11: 51 against 29). \code{lowdeg} never learns f7\_08.
+\item \emph{Calibration:} \code{lin} reaches 10\% error on 4 targets and \code{hgb} on 9. DFG alone's mean is $-0.45$ against \code{lin} over those 4 and $-1.39$ against \code{hgb} over those 9. It is clearly better than \code{lin} on 9 targets and than \code{hgb} on 8, and clearly worse than \code{hgb} on 2, f7\_02 and f7\_06.
+\end{itemize}
+
+\paragraph{Five of the ten wins need no feature search} \status{Numerical}. On five targets a learner that searches no features is already clearly better than \code{nets_best}: \code{hgb} on the three controls and on the multiplexer f7\_11, and \code{lin} on the halfspace f7\_10, by $\log_2$ ratios of $-1.49$ to $-0.44$. DFG alone beats \code{nets_best} on these too ($-1.16$ to $-0.39$, mean $-0.73$). Against the better of the two calibration references, however, it is clearly worse on f7\_02 ($+0.65$) and f7\_06 ($+0.47$), tied on f7\_04 ($+0.20$) and f7\_10 ($-0.06$), and clearly better only on f7\_11 ($-0.31$). v3, which stacks DFG with LightGBM and logistic regression, is ahead of both calibration references on all five ($-0.43$ to $-0.09$).
+
+On the other seven targets neither calibration reference beats the networks. \code{hgb} needs 684--6208 samples or never reaches 10\% error, and \code{lin} learns only f7\_01. There DFG alone is clearly better than \code{nets_best} on five targets, all sum-structured (f7\_00, f7\_03, f7\_07, f7\_08, f7\_09), with a mean of $-2.11$, about $4.3\times$ less data. It ties on f7\_01 and does not learn f7\_05.
+
+\emph{Reading} \status{Heuristic}. The five calibration wins say that the networks are slow on small formulas and on this halfspace, not that DFG's search is needed there. On the controls a tree ensemble is the better learner, and v3 inherits that from its tree members. The evidence that the search earns its cost on fresh targets is the other five, the sum-structured ones, where DFG alone needs about $4\times$ less data than the best network variant and no learner without feature search comes close.
+
+\paragraph{The tie and the target no learner learns} \status{Numerical}.
+\begin{itemize}
+\item f7\_01 $=[x_1+\dots+x_{13}\le1]$ is a halfspace. DFG alone (119), \code{nets_best} (119, \code{nets_cewd1.0}), \code{lin} (111) and v3 (106) are all within the tie band of one another: a logistic regression on the raw inputs does as well.
+\item f7\_05 $=[\tfrac12(s+14)\bmod3\ne0]$, $s=x_1+\dots+x_{14}$, a residue class mod 3 of a 14-input count, is learned by none of the ten learners of \cref{tab:dlheld7} by $n=16384$ (3 seeds each). Part 10 traced the same failure in v3's DFG member to the search, not the test: a residue class mod 3 has almost no Fourier weight at degrees 1--2, where the block search starts (\repo{paper_learner/learner-paper.pdf}). \Cref{sec:interp} shows what DFG alone's models on it contain.
+\end{itemize}
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{Every suite}\label{sec:res-suites}
+
+\Cref{tab:suites} summarizes all 11 suites and \cref{tab:pooled} pools them; \cref{fig:nstar}a shows every target with network runs. The status column says what each suite was for DFG. Six were used in developing some version (\code{designed}, \code{random}, \code{dlheld}, \code{dlsymdev}, \code{dlheld6}, \code{dlfamdev}). Two were held out for an earlier version only (\code{dlheld2}, \code{dlheld3}). Two were exposed: v1.2 was built after its builder had seen them (\code{dlheld4}, \code{dlheld5}). \code{dlheld7} is held out. For DFG v1.3 every suite except \code{dlheld7} is therefore in-sample in some sense, and the protocol treats the results there as descriptions of the frozen learner, not as tests of its design.
+
+\begin{table}[t]
+\centering{\scriptsize\setlength{\tabcolsep}{2.4pt}\renewcommand{\arraystretch}{1.05}
+\input{tables/tab_suites.tex}}
+\caption{DFG alone on every toy suite \status{Numerical}. Each entry is the mean $\log_2\nstar$ ratio of DFG alone to the reference over the targets both learn; below it, the numbers of targets on which DFG alone is clearly better / clearly worse, and in brackets the number both learn. ``n/a'': the reference learns no target of the suite; ``--'': not run there. \code{nets_best} is the per-target minimum over the network variants run on the suite (2 to 5; \cref{sec:protocol}); ``single variants'' gives the smallest and largest of DFG alone's means against those variants one at a time. ``DFG never'': targets that DFG alone does not bring to 10\% error by $n=16384$. Status for DFG v1.3 (\repo{study/part11/PROTOCOL.md}): ``dev'', used in developing the versions named; $^a$held out for an earlier version of DFG only; $^b$exposed, v1.2 having been built after its builder had seen the suite. Source: \repo{study/part11/RESULTS.json} (\texttt{q2\_suites}).}
+\label{tab:suites}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_nstar.pdf}
+\caption{(a) $\nstar$ of DFG alone against \code{nets_best} for the 126 targets of the 10 toy suites with network runs \status{Numerical}. Colour and marker give the suite's status for DFG v1.3 (\cref{tab:suites}); the held-out \code{dlheld7} is drawn as large outlined squares. ``never'' (10\% error not reached by $n=16384$) is drawn at the edge. Points below the dashed line need less data than the best network variant, points below the dotted line at least $4\times$ less. \code{nets_best} is a minimum over 2 to 5 variants, depending on the suite. (b) For the 134 targets of all 11 suites that DFG alone learns (\code{dlfamdev} included), the $\log_2$ ratio of v3's and of \code{lowdeg}'s $\nstar$ to DFG alone's, against DFG alone's $\nstar$. Above 0, DFG alone needs less data; the grey band is the tie band $\pm0.25$; \code{lowdeg}'s ``never'' is drawn at the top. Source: \repo{study/part11/RESULTS.json} via \repo{paper_dfg/make_figures.py}; the plotted points are in \repo{paper_dfg/figures/fig_nstar.json}.}
+\label{fig:nstar}
+\end{figure}
+
+\begin{table}[t]
+\centering{\footnotesize\setlength{\tabcolsep}{3.5pt}
+\input{tables/tab_pooled.tex}}
+\caption{DFG alone against each reference, with the per-target ratios pooled over the suites where both were run (not a mean of suite means) \status{Numerical}. Columns as in \cref{tab:dlheld7-summ}. ``Only the reference'': DFG alone never reaches 10\% error and the reference does; ``only DFG'': the reverse. Bottom: DFG alone and v3 against \code{nets_best} on the same 77 targets of the seven suites that Part 10 pooled as its held-out set; for DFG v1.3, only \code{dlheld7} among them is held out. Source: \repo{study/part11/RESULTS.json} (\texttt{q2\_suites.\_pooled}, \texttt{.\_pooled\_p10\_heldout}).}
+\label{tab:pooled}
+\end{table}
+
+\paragraph{Pooled} \status{Numerical}.
+\begin{itemize}
+\item \emph{Against \code{nets_best}:} on the 126 targets of the 10 suites with network runs, DFG alone's mean is $-1.87$ over the 123 targets both learn, about $3.7\times$ less data (median $-1.65$). It is clearly better on 117, clearly worse on 2, and needs at least $4\times$ less data on 47 (\cref{fig:nstar}a).
+\item \emph{Against single variants:} $-2.04$ against \code{nets_wd}, the one variant run on every suite with network runs (clearly better on 119 of 126, worse on 1), and $-2.64$ against \code{nets} (square loss; 9 suites, 114 targets).
+\item \emph{Part 10's held-out set} (\code{dlheld}--\code{dlheld7}, 77 targets): DFG alone is at $-1.71$ and v3 at $-1.87$ against \code{nets_best} on the same targets.
+\end{itemize}
+
+\paragraph{By suite} \status{Numerical}. The suite means against \code{nets_best} range from $-2.49$ (\code{dlheld5}) to $-1.27$ (\code{dlheld6}); \code{dlheld7} is at $-1.29$. They are not comparable across suites, because \code{nets_best} minimizes over 2 to 5 variants depending on the suite. Against \code{nets_wd} alone the means range from $-2.72$ (\code{dlheld5}) to $-1.59$ (\code{dlheld2}). The three smallest margins against \code{nets_wd} are those of the three suites that no version of DFG was developed on: \code{dlheld2} ($-1.59$), \code{dlheld3} ($-1.60$) and \code{dlheld7} ($-1.62$). The six development suites with network runs give $-1.71$ (\code{dlheld6}) to $-2.45$ (\code{dlsymdev}), and the two exposed suites $-2.05$ and $-2.72$.
+
+\emph{Reading} \status{Heuristic}. Some selection in DFG's favour on the suites it was developed on is therefore likely. The suites also differ in kind, though. \code{designed} and \code{random} are small juntas and formulas, \code{dlsymdev} is symmetric, and \code{dlheld2}, \code{dlheld3} and the blind family mix sums, formulas and halfspaces. With 7 to 12 targets per suite, the data do not separate the two explanations. On the held-out suite the margin is about $3\times$ (against \code{nets_wd}), not the $4\times$ of the pooled numbers.
+
+\begin{table}[t]
+\centering{\footnotesize\setlength{\tabcolsep}{3pt}
+\input{tables/tab_notwins.tex}}
+\caption{Every target on which DFG alone is not clearly better than \code{nets_best} (9 of the 126 with network runs), and the one other target it never learns (\code{dlfamdev} has no network runs) \status{Numerical}. $\nstar$ as in \cref{tab:dlheld7}. In brackets, the variant attaining \code{nets_best}: \code{nets_wd}, \code{nets_cewd} or \code{nets_cewd1.0}. Random formulas are named by their size; their gates are in \repo{study/boolfuncs.py}. Source: \repo{study/part11/RESULTS.json} (\texttt{q2\_suites}, \texttt{q3\_lowdeg}) via \repo{paper_dfg/make_tables.py}.}
+\label{tab:notwins}
+\end{table}
+
+\paragraph{Where DFG alone is not better} \status{Numerical}. \Cref{tab:notwins} lists the 9 of the 126 targets with network runs on which DFG alone is not clearly better than \code{nets_best}.
+\begin{itemize}
+\item \emph{Clearly worse (2).} h3rf1, a random 9-gate formula on 7 inputs: 133 against 101 (\code{nets_wd}). And h6\_00, a residue class mod 3 of a signed 13-input count, which only the most regularized network learns (\code{nets_cewd1.0}, 12304).
+\item \emph{Ties (5).} Three threshold-like targets: thrint, a weighted threshold (186 against 190), inter2, an AND of two halfspaces (441 against 454), and f7\_01 (119 against 119). The random formula h3rf0 (108 against 96) and and3 $=\mathrm{AND}(x_1,x_2,x_3)$ (60 against 70).
+\item \emph{Learned by no learner (2).} f7\_05 and h5s1, a signed 9-input count with an arbitrary accept set, multiplied by the parity $x_{10}x_{11}$.
+\item \emph{Never learned.} DFG alone does not learn 4 of the 138 targets: these two, h6\_00 and fd\_10 (\code{dlfamdev}, a third residue class mod 3, without network runs). v3 and \code{lowdeg} do not learn them either.
+\end{itemize}
+\emph{Reading} \status{Heuristic}. On the two random formulas and and3, the networks' margin reflects DFG's slowness at small $n$ more than a strength of the networks. v3 (59, 46 and 25) needs less data than both DFG alone and the networks, and so does \code{hgb} on the two formulas (63, 60; it was not run on \code{designed}). On h3rf1 and h3rf0 even \code{lowdeg} does (31, 16). On thrint and f7\_01, \code{lin} is about as fast (137, 111). The residue classes are the search failure of \cref{sec:res-dlheld7}.
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{What the portfolio added}\label{sec:res-v3}
+
+Inside v3, DFG v1.3 ran as two members of a stack, its default and (at $n\le512$) its forced variant, next to LightGBM, ExtraTrees, $k$-nearest-neighbour votes and logistic regression. It had a share of the budget: 35\% for the out-of-fold fits and at most 50\% for the final ones. A convex stacker, fitted on the members' out-of-fold predictions (10-fold at $n\le500$), weighted the members (\repo{study/part10/hyb_portfolio3/learner.py}). Alone, DFG chooses between its two variants itself, by the paired test on its own cross-validation, and it has the whole budget (\cref{sec:learner}). Both see the same training sets in the same column order, so their results can be compared target by target. The comparison shows what the rest of the portfolio contributed on Boolean targets.
+
+\begin{table}[t]
+\centering{\footnotesize\setlength{\tabcolsep}{5pt}
+\input{tables/tab_v3.tex}}
+\caption{DFG alone against v3 on the 138 toy targets \status{Numerical}. (a) Per suite: the targets on which DFG alone's $\nstar$ is lower / higher than v3's (identical in brackets), those on which it is clearly lower / higher, and the mean $\log_2$ ratio over the targets both learn. (b) The same by v3's $\nstar$; the 4 targets that neither learns are under ``never''. Source: \repo{study/part11/RESULTS.json} (\texttt{q2\_suites.dfg\_vs\_v3}, \texttt{.dfg\_vs\_v3\_by\_v3\_nstar}).}
+\label{tab:v3}
+\end{table}
+
+\begin{table}[t]
+\centering{\footnotesize\setlength{\tabcolsep}{3.2pt}
+\input{tables/tab_v3_byn.tex}}
+\caption{DFG alone and v3 by training-set size \status{Numerical}. (a) Over the 138 toy targets, with the same seeds, training sets and column orders for both: the targets on which v3's seed-mean test error is lower than DFG alone's by more than 0.02, the reverse, and the mean difference (DFG alone minus v3). Source: \repo{study/part11/results/toy__dfg13-perm__<suite>.json} and \repo{study/hybrid/results/toy__p10_sum-perm__<suite>.json}. (b) Inside v3: Part 10's analysis refits of v3, seed 0, one per target and $n$, whose test error equals v3's evaluation cell. Each target's grid stops after two consecutive $n$ with error $\le0.005$, so there are fewer fits at large $n$. Rows: the fits in which v3's error is lower than that of its own DFG member alone by more than 0.02; the reverse; the fits in which the stacker gave the DFG members (default and forced) no weight; and the DFG members' median share of the stacking weight. Where DFG has no weight, the member's error is that of its last out-of-fold fit. Source: \repo{study/part10/interp/results/toy_final/v3/} (fields \texttt{err}, \texttt{err\_dfg}, \texttt{w\_dfg}; defined in \repo{study/part10/interp/toy_structure.py}).}
+\label{tab:v3-byn}
+\end{table}
+
+\begin{table}[t]
+\centering{\footnotesize\setlength{\tabcolsep}{2.6pt}
+\input{tables/tab_v3_targets.tex}}
+\caption{The 48 targets on which DFG alone's and v3's $\nstar$ differ by more than 0.25 in $\log_2$, sorted by the ratio of DFG alone to v3 (positive: v3 needs less data) \status{Numerical}. \code{hgb} and \code{lin} (natural column order) are shown where they were run; ``--'': not run on the suite. Source: \repo{study/part11/RESULTS.json} (\texttt{q2\_suites.dfg\_vs\_v3}; \code{hgb} and \code{lin} from the per-target ratios there, checked against \repo{study/hybrid/results/}).}
+\label{tab:v3-targets}
+\end{table}
+
+\paragraph{Where} \status{Numerical}.
+\begin{itemize}
+\item \emph{Overall} (\cref{tab:v3}a). Over the 138 targets, DFG alone's $\nstar$ equals v3's on 5, is lower on 32 and higher on 101. Beyond $\pm0.25$ it is lower on 6 and higher on 42. The mean ratio is $+0.19$, so DFG alone needs $1.14\times$ v3's data, and the median is $+0.07$. A two-sided sign test over the 133 targets with unequal $\nstar$ gives $p=1.6\times10^{-9}$. No target is learned by one and not the other.
+\item \emph{By target size} (\cref{tab:v3}b). On the 45 targets that v3 learns by $n=64$, DFG alone's mean is $+0.39$, clearly higher on 24. On the 67 that v3 learns at 64--256 it is $+0.17$ (17 clearly higher). On the 22 that need v3 more than 256 points, DFG alone is lower on average ($-0.16$ and $-0.39$).
+\item \emph{By $n$} (\cref{tab:v3-byn}a). v3's test error is lower by more than 0.02 on 63, 64 and 67 of the 138 targets at $n=16$, 32 and 64, on 38 at $n=128$, 17 at 256 and 5 at 512, and on none at $n\ge1024$. DFG alone's error is lower by that much on 2--26 targets at every $n$ up to 4096.
+\item \emph{Which targets} (\cref{tab:v3-targets}). v3 learns 39 of the 42 targets on which DFG alone is clearly worse by $n=128$. Most are small Boolean formulas: random gate formulas, DNFs and a CNF, decision lists, read-once formulas, mux6, and3 and andxor. The others are six halfspaces and majorities (dict, maj3, maj15, thr10, thrint, inter2) and four sum targets (far9, tail13, fd\_08, h5s4). The largest gaps are h6\_04 (79 against 29), h2rf1 (82 against 31), and3 (60 against 25) and dnf4x2 (235 against 112). \code{hgb} alone needs at most DFG alone's $\nstar$ on 15 of the 28 of these targets on which it was run.
+\end{itemize}
+
+\paragraph{Why} \status{Numerical, then Heuristic}. Part 10's seed-0 analysis refits of v3 record v3's error, the error of its own DFG member alone, and the stacking weights (\cref{tab:v3-byn}b). At $n=16$, 32 and 64, v3's error is lower than its own DFG member's by more than 0.02 in 57, 68 and 53 of 136--138 fits, and higher in 25, 19 and 11. The stacker gives the DFG members no weight in 52, 47 and 30 fits, and their median share of the weight is 0.22--0.30. From $n=256$ on, v3 is never worse than its DFG member by more than 0.02, and the DFG members' median share is 0.73--0.81 at $n=256$--1024.
+
+\emph{Reading} \status{Heuristic}. At small $n$ the portfolio's other members carry v3. On formulas and small thresholds, trees, nearest neighbours and logistic regression reach low error with fewer points than DFG needs before its tests admit features. The stacker can also lean on DFG's forced variant, which DFG alone keeps only when its paired test prefers it. Once DFG's features pass their tests, its members take most of the weight and the two learners agree. \Cref{sec:interp} compares DFG alone's fitted models with v3's DFG member.
+
+\paragraph{The reverse: what only the full-data fit finds} \status{Numerical, then Heuristic}. On the six targets where DFG alone needs clearly less data, DFG's fit on all $n$ points finds a structure that its fits on fewer points do not.
+\begin{itemize}
+\item \emph{par3 and rf11.} rf11 is a random formula that reduces to the 3-parity $-x_2x_3x_4$. DFG alone has test error 0 at $n=32$ in every seed, against v3's 0.47 and 0.50. In v3's seed-0 fits at $n=32$ the stacker gave DFG no weight: its out-of-fold fits, on 29 rows, had test errors 0.51 and 0.50.
+\item \emph{par5.} DFG alone has error 0 from $n=64$ on. v3's seed-mean errors at $n=64$--512 are 0.36, 0.17, 0.17 and 0.35, and it reaches 10\% only at 839. In v3's seed-0 fit at $n=64$ the DFG member alone had error 0, but it held 0.30 of the weight and v3's error was 0.076.
+\item \emph{h5s2, rf00, ssym8:} 598 against 1154, 32 against 40 and 148 against 177.
+\end{itemize}
+\emph{Reading} \status{Heuristic}. DFG's degree-3 and degree-4 searches run only on at least 32 rows, and its degree-5 and degree-6 searches only on at least 64 (\repo{study/part10/hyb_portfolio3/dfg13.py}). At $n=32$ the full fit searches degree 3 and its 10-fold out-of-fold fits do not. At small $n$, v3's DFG members also search degree 5 only on a budget-limited subsample. DFG alone uses its full-data fit whatever its folds show, whereas a stacker weights a member by its out-of-fold predictions. So a structure that only the full-data fit can find counts for little in v3. The parities are the cleanest case, but the effect is small overall: 6 of 138 targets.
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{The dictionary without the search}\label{sec:res-lowdeg}
+
+\code{lowdeg} is the thresholded low-degree algorithm of Part 6's feasibility check (\repo{study/discrete_learner/sparse_fourier.py}, unchanged), the classical way to learn with a Fourier dictionary \cite{linial1993constant}. It computes the label's empirical coefficient $\hat c_S=\mathrm{mean}(y\chi_S)$ on every character of degree $k\le4$ and keeps $S$ when $|\hat c_S|>\sqrt{2\ln(N_k/\delta)/n}$, with $N_k=\binom{d}{k}$ and $\delta=0.1$. It then adds the products of kept characters that pass the same kind of test, and predicts $\mathrm{sign}(\hat c_\emptyset+\sum_{\rm kept}\hat c_S\chi_S)$.
+
+It therefore has DFG's character dictionary up to degree 4 and the same form of union-bound test. The differences in the test are small: DFG's log term is $\ln(4KN/\delta)$ with $K=4$, about 2.8 nats more, and DFG tests the residual against the residual's s.d. \code{lowdeg} has none of the rest of DFG:
+\begin{itemize}
+\item no residual and no greedy rounds;
+\item no sum blocks, no linear or spectral blocks, no extensions, no local search and no search of degrees 5--6;
+\item no refitted readout (least squares with logistic refinement), no kernel background and no small-$n$ cross-validation.
+\end{itemize}
+\Cref{tab:lowdeg} compares it with DFG alone and with \code{nets_best}; \cref{fig:nstar}b shows it target by target.
+
+\begin{table}[t]
+\centering{\footnotesize\setlength{\tabcolsep}{3pt}
+\input{tables/tab_lowdeg.tex}}
+\caption{The low-degree algorithm \code{lowdeg} on every suite \status{Numerical}. Entries as in \cref{tab:suites}, but the ratios are those of \code{lowdeg}'s $\nstar$ to the reference's (positive: \code{lowdeg} needs more data), so ``better'' and ``worse'' are \code{lowdeg}'s. Last column: the targets that \code{lowdeg} never brings to 10\% test error by $n=16384$, with DFG alone's $\nstar$ in brackets. Source: \repo{study/part11/RESULTS.json} (\texttt{q3\_lowdeg}); \code{lowdeg}'s runs: \repo{study/part11/results/toy__lowdeg-perm__<suite>.json}.}
+\label{tab:lowdeg}
+\end{table}
+
+\paragraph{Results} \status{Numerical}.
+\begin{itemize}
+\item \emph{Against DFG alone:} pooled over the 138 targets, \code{lowdeg} needs more data. Its mean ratio is $+1.64$ over the 122 targets both learn, about $3.1\times$ more data (median $+1.35$). It is clearly worse on 112 targets and clearly better on 16.
+\item \emph{Against the networks} \code{lowdeg} is about even: $-0.16$ against \code{nets_best} over the 112 of 126 targets both learn, clearly better on 53 and clearly worse on 62.
+\item \emph{Never learned.} \code{lowdeg} never learns 16 targets: the four that DFG alone misses and 12 that DFG alone learns. Of those 12, par5 has degree 5 and is outside \code{lowdeg}'s dictionary. The other 11 are functions of a signed sum: the symmetric band11, band10 and f7\_08; five signed counts with arbitrary accept sets (h5s0, h5s3, h5s5, h5s6, h5s7); two symmetric functions times a parity (h6\_06, fd\_04); and h6\_10, a condition on $|s-3x_{13}|$ with $s=x_1+\dots+x_{12}$.
+\item \emph{Where \code{lowdeg} is faster.} All 16 such targets are learned at small $n$: DFG alone needs 22--133 points, \code{lowdeg} 16--61. They include the formulas h3rf0 (16 against 108) and h3rf1 (31 against 133), on which DFG alone is tied with or worse than the networks, and par4 (28 against 52).
+\end{itemize}
+
+\emph{Reading} \status{Heuristic}. DFG alone's margin over the networks does not come from its dictionary or its test. With the dictionary and the test but none of the search, \code{lowdeg} is at par with the networks, and DFG alone needs about $3\times$ less data than \code{lowdeg}. The margin comes from what \code{lowdeg} lacks. The sum blocks make the signed-sum targets learnable at all: a function of a $k$-input signed sum spreads its Fourier weight over many characters of several degrees, each too weak to pass its own test, while DFG tests the whole block with one $\chi^2$ statistic. The residual rounds let weaker features pass once the stronger ones are fit, and the readout is refitted on the grown features. On small formulas the comparison runs the other way. At $n\le128$, \code{lowdeg}'s slightly more lenient test, applied to every degree at once on the labels, admits characters at sizes where DFG still keeps few or none. \Cref{sec:ablations} removes DFG's parts one at a time.
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{Input dimension}\label{sec:res-dscale}
+
+The networks were trained at $d=15$ and 60 on 7 \code{designed} targets and at $d=120$ on 4 of them (maj9, mux, par2, par3). DFG v1.3 alone was run on the same targets at $d=15$, 60 and 120 with seeds 0 and 1, as Part 6's DFG v1.1 runs were, and at $d=30$ with seeds 0, 1 and 2. The networks here are \code{nets} (square loss), the only variant run at every $d$, with seeds 0 and 1 at $d\ne30$ and 0, 1 and 2 at $d=30$. They were trained for 20000 steps, except 40000 at $d=120$. One network run, and with it DFG's budget, is therefore twice as large there. \Cref{tab:dscale} gives $\nstar$ and the fitted exponents, and \cref{fig:dscale} plots them.
+
+\begin{table}[t]
+\centering{\footnotesize\setlength{\tabcolsep}{4pt}
+\input{tables/tab_dscale.tex}}
+\caption{$\nstar$ against the input dimension $d$ on the \code{designed} targets that the networks were trained on at $d=15$, 60 and 120 \status{Numerical}. DFG v1.3 alone (inputs permuted per fit) and the networks \code{nets} (square loss, the only variant run at every $d$); ``--'': not run. Seeds 0, 1 at $d\ne30$ and 0, 1, 2 at $d=30$ for both. The networks were trained for 20000 steps, 40000 at $d=120$. Their grid extends to 65536 at $d=60$ and is 64--8192 (maj9, par2), 256--32768 (mux) and 512--65536 (par3) at $d=120$; $\nstar$ on the full grid equals the 16--16384 value everywhere. Exponent: the least-squares slope of $\log\nstar$ on $\log d$ over the $d$ at which both reach 10\% error ($^\ast$: $d=15$--60 only). Bottom, per $d$: the median $\log_2$ ratio of DFG v1.3 to the networks (factor $2^{-\rm median}$), the median $\log_2$ ratio of DFG v1.3 to Part 6's DFG (v1 at $d\le30$, v1.1 at $d\ge60$, natural column order), DFG v1.3's largest FLOPs per fit on these targets, and the number of seeds. Source: \repo{study/part11/RESULTS.json} (\texttt{q4\_dscale}); DFG's runs: \repo{study/part11/results/toy__dfg13-perm__designed_d<d>.json} and \repo{study/part11/results/toy__dfg13-perm__designed.json}.}
+\label{tab:dscale}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_dscale.pdf}
+\caption{$\nstar$ against $d$ (log--log) on the \code{designed} targets with network runs at $d=15$, 60 and 120 (\cref{tab:dscale}) \status{Numerical}. Panel titles give the fitted exponent of DFG v1.3 alone and of the networks ($^\ast$: fitted on $d=15$--60). Dotted, for the $k$-parities: the union-bound line $n_{\rm thr}(k,d)=2\ln(4K\binom{d}{k}/\delta)$ with DFG's $K=4$, $\delta=0.1$ and $c=1$. On the first round's residual $r=y-\bar y$, a parity's statistic $|\mathrm{mean}(r\chi_S)|/\mathrm{sd}(r)$ is $\sqrt{1-\bar y^2}\approx1$, so DFG's test admits it once $n(1-\bar y^2)>n_{\rm thr}$. On the $n$-grid the test therefore passes at the first grid point above the line: 32 for par2 at every $d$, for par3 up to $d=60$ and for par4 up to $d=30$, and 64 for par3 at $d=120$ and for par4 at $d=60$. Refits of the stored fits show two exceptions (\repo{paper_dfg/check_parity_variant.json}, refitted test errors identical to the result files). par2 is learned at $n=16$, below the line, at $d=15$, 30 and 60, because DFG's cross-validation kept its forced variant in all 7 of those fits; at $d=120$ it did not. And par4 at $d=30$ ($n_{\rm thr}=30.6$) passed at $n=32$ in 1 of 3 seeds. Seeds: 2 at $d\ne30$, 3 at $d=30$; the $d=120$ networks were trained for 40000 steps. Source: \repo{study/part11/RESULTS.json} (\texttt{q4\_dscale}) via \repo{paper_dfg/make_figures.py}; the plotted values and $n_{\rm thr}$ are in \repo{paper_dfg/figures/fig_dscale.json}.}
+\label{fig:dscale}
+\end{figure}
+
+\paragraph{Results} \status{Numerical}.
+\begin{itemize}
+\item \emph{Exponents.} The least-squares slope of $\log\nstar$ on $\log d$ is 0.01 (stair5) to 0.50 (par4) for DFG v1.3 alone, and 0.91 (maj9) to 2.40 (par4) for the networks, fitted per target on the same $d$.
+\item \emph{The gap widens with $d$.} The median $\log_2$ ratio of DFG v1.3 to the networks is $-2.64$ at $d=15$ ($6.2\times$ less data), $-4.19$ at $d=30$ ($18.3\times$), $-4.99$ at $d=60$ ($31.7\times$) and $-5.41$ at $d=120$ ($42.5\times$, 4 targets).
+\item \emph{Parities.} DFG's $\nstar$ follows the union-bound line (\cref{fig:dscale}). $n_{\rm thr}$ grows from 19.5 to 27.9 for par2 and from 22.4 to 35.2 for par3 between $d=15$ and 120, and from 24.6 to 36.3 for par4 between $d=15$ and 60. On the grid, DFG's $\nstar$ moves by at most one grid step over the range.
+\item \emph{Same as Part 6's DFG.} On these targets DFG v1.3 gives the $\nstar$ of Part 6's DFG (v1 at $d\le30$, v1.1 at $d\ge60$): the median $\log_2$ difference is 0.00 at every $d$. The largest difference is maj9 at $d=120$, 104 against 439.
+\item \emph{Compute.} DFG's largest fit on these targets uses 0.07, 0.15, 0.18 and 0.18 of one network run at $d=15$, 30, 60 and 120.
+\end{itemize}
+
+\emph{Reading} \status{Heuristic}.
+\begin{itemize}
+\item \emph{DFG.} DFG's data cost on a $k$-parity is the union bound's, $2\ln(4K\binom{d}{k}/\delta)\approx2k\ln d$, which is logarithmic in $d$. The networks' exponents on par2 and par3 (1.03 and 1.96) are close to $k-1$, the growth that the leap-complexity analysis of SGD predicts for a $k$-parity \cite{abbe2023leap}. For par4 the fitted 2.40 ($d=15$--60) is below 3. The mechanism of DFG's advantage on these targets is thus explicit: exhaustive enumeration pays a logarithm of the dictionary size, where gradient descent pays a power of $d$.
+\item \emph{The size of the factors.} The comparison is with \code{nets}, the weakest variant at $d=30$: on \code{designed}, DFG alone is at $-2.82$ against \code{nets} and $-2.17$ against \code{nets_wd} (\cref{tab:suites}). The factors are therefore larger than they would be against the best variant. The exponents are the robust part of the result.
+\end{itemize}
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{Tabular data}\label{sec:res-tabular}
+
+DFG v1.3 needs $\pm1$ inputs and two classes. Of the study's 26 tabular datasets only two qualify, kr\_vs\_kp and mushroom. Their binary and categorical columns are one-hot encoded as $\pm1$, as in v3's DFG view (\repo{study/part11/dfg_real.py}), and DFG runs unchanged with its own budget. kr\_vs\_kp is a development set of the standard tasks, and mushroom is in Part 7's held-out set. \Cref{tab:tabular} gives the cells, verdicts and compute.
+
+\begin{table}[t]
+\centering{\footnotesize\setlength{\tabcolsep}{3.4pt}
+\input{tables/tab_tabular.tex}\par\medskip
+\setlength{\tabcolsep}{4pt}\input{tables/tab_tabular_summ.tex}}
+\caption{DFG alone on the two tabular datasets it can run on \status{Numerical}. Top: test error (\%, seed mean of 3) per cell, against the MLP references and \code{hgb} and v3. The references are \code{mlp}; \code{mlp_reg}, L2-regularized; \code{mlp_strong}, run on mushroom only; and \code{mlp_best}, the per-cell best MLP variant by test error, chosen with hindsight. A reference's entry is marked $^\ast$ where DFG alone is clearly worse than it by the cell rule (errors differing by more than 10\% relative and by more than 2 s.e.) and $^\dagger$ where DFG alone is clearly better. Right: DFG alone's FLOPs as a fraction of the standard-task budget (three MLP training runs; maximum over seeds) and its CPU seconds per fit, and v3's CPU seconds on the same cells (seed means). Bottom: per reference, the cells (better / tie / worse for DFG alone) and the mean $\log_2$ ratio of DFG alone's error to the reference's (errors floored at 0.002), per dataset and over the cells of both. Source: \repo{study/part11/RESULTS.json} (\texttt{q6\_tabular}); DFG alone's runs: \repo{study/standard_tasks/results/dfg13__kr_vs_kp.json} and \repo{study/standard_tasks/results/dfg13__mushroom.json}.}
+\label{tab:tabular}
+\end{table}
+
+\paragraph{Results} \status{Numerical}.
+\begin{itemize}
+\item \emph{Against the best MLP variant per cell:} no cell is better, 8 of 9 are ties and 1 is worse: kr\_vs\_kp at $n=100$, 14.06\% against \code{mlp_reg}'s 7.80\%. The mean $\log_2$ error ratio is $-0.278$, from cells where both errors are small and the cell rule sees no difference.
+\item \emph{Against single references:} against the baseline \code{mlp}, 3 cells are better (kr\_vs\_kp at $n=300$ and 1000, mushroom at 300), 5 are ties and 1 is worse ($n=100$ on kr\_vs\_kp), with a mean of $-0.482$. Against \code{hgb} all 9 cells are ties (mean $-0.022$).
+\item \emph{Against v3:} 8 ties and 1 worse cell (kr\_vs\_kp at $n=100$: 14.06\% against 6.88\%), with a mean of $+0.213$: $+0.515$ on kr\_vs\_kp and $-0.030$ on mushroom.
+\item \emph{Compute:} every fit uses at most 0.144 of the standard-task budget and at most 13.4 CPU seconds, 0.19--0.66 of v3's CPU time on the same cell.
+\end{itemize}
+On these two Boolean tables, then, DFG alone is level with gradient boosting and with the regularized MLPs, worse than v3 at the smallest $n$ of kr\_vs\_kp, and nowhere clearly better than the best MLP. Nine cells, with errors near 0 from $n=1000$ on, resolve little.
+
+\paragraph{Real-valued data: Part 7} \status{Numerical, then Heuristic}. On real-valued, multi-class data DFG has been run only through three adaptations of DFG v1.1, written in Part 7 \cite{discretelearners2026}. dfg\_bits uses thermometer bits and their characters, dfg\_gates ANDs of threshold literals, and dfg\_dirs thresholded directions. Each was frozen on 5 development datasets before 13 held-out ones were run (\repo{study/standard_tasks/STANDARD-TASKS.md}; tables in \repo{study/standard_tasks/RESULTS.md}).
+\begin{itemize}
+\item \emph{Tabular, held out (11 datasets, 59 cells):} their mean $\log_2$ error ratio to the baseline MLP was $+0.04$ to $+0.10$, with 6--9 cells better and 10--15 worse. Against an L2-regularized MLP at $n\le3000$ (44 cells) it was $+0.16$ to $+0.23$, with 0--4 cells better and 11 worse. On the same cells default gradient boosting had $-0.07$ against the baseline MLP and $+0.11$ against the regularized one.
+\item \emph{Images:} on MNIST and Fashion-MNIST (14 cells) they were at $+0.26$ to $+0.41$ against the baseline MLP, and worse in 7 of the 14 cells each.
+\end{itemize}
+These are adaptations of v1.1, frozen before the sum blocks (v1.2) and the weighted blocks (v1.3). Each replaced DFG's $\pm1$ dictionary with its own, and two also loosened the test constant. They are evidence about DFG's recipe, not about DFG v1.3, which has not been run on real-valued data. Part 7's reading \status{Heuristic} was that the recipe fails there because the useful features of dense real-valued signal are not in any small enumerable dictionary, and that the tests can stop growth early on many weak, correlated effects.
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{Compute}\label{sec:res-compute}
+
+\paragraph{The budget rule.} Every DFG fit has the budget of one network training run at its $d$ (\texttt{harness.gd\_flops}: $1.62\times10^{11}$ FLOPs at $d=30$; at $d=120$ the run has 40000 steps). Compute is DFG's own count of FLOPs, with a multiply-add counted as 2 (\repo{study/part10/hyb_portfolio3/dfg13.py}; \cref{sec:learner}).
+\begin{itemize}
+\item \emph{Subsampled searches.} The exhaustive searches run on the first $m$ training points, with $m$ set so that each stays within a fixed share of the budget: 15\% for degree 4, 3\% per round for degree 3 and for the two-input extensions, and 3\% each for degrees 5 and 6 in the first round. The test thresholds use $m$. A search with fewer than 32 rows (64 for degrees 5--6) is skipped.
+\item \emph{Rounds.} A round starts only while the fit has spent less than 0.75 of its budget.
+\item \emph{Cross-validation.} At $n\le512$ the final fit gets half of the budget, and the $2F$ fold fits of the cross-validation share the other half.
+\end{itemize}
+
+\begin{table}[t]
+\centering{\footnotesize\setlength{\tabcolsep}{4pt}
+\input{tables/tab_compute.tex}\par\medskip
+\setlength{\tabcolsep}{3pt}\input{tables/tab_compute_byn.tex}}
+\caption{Compute of DFG alone per fit \status{Numerical}. Top: per suite, FLOPs as a fraction of one network training run at that $d$ (DFG's own count, multiply-add $=2$; the largest fit, with its target and $n$), the number of fits above 0.75 of a run, and CPU seconds per fit (process time of the fit only). Last row: \code{lowdeg} over its 11 suites (range of the suites' medians). Bottom: by $n$, over DFG alone's 4334 fits at $d=30$ (394 per $n$), with v3's CPU seconds on the same fits and the median of the per-fit ratio. The CPU times were measured with 4 worker processes running in parallel at nice 10 on a 4-CPU machine, and v3's in Part 10 under that run's own load, so the CPU comparison is rough. Source: \repo{study/part11/RESULTS.json} (\texttt{compute}), from the \texttt{flops} and \texttt{cpu\_seconds} fields of the result files.}
+\label{tab:compute}
+\end{table}
+
+\paragraph{Results} \status{Numerical} (\cref{tab:compute}).
+\begin{itemize}
+\item \emph{FLOPs.} Over all 4730 fits (4334 at $d=30$, 396 at $d\ne30$), the largest uses 0.519 of one network run (h5s5 on \code{dlheld5} at $n=16384$), and none exceeds 0.75. The largest fit per suite uses 0.154 (\code{random}) to 0.519 (\code{dlheld5}) of a run, always at $n=16384$; at $d=15$, 60 and 120 the largest use 0.067, 0.177 and 0.179. The median fit uses less than 0.001 of a run at $n\le32$, 0.025--0.055 at $n=64$--512 and 0.149 at $n=16384$.
+\item \emph{CPU time.} The median fit takes 1.1--2.7 seconds per suite, and the longest takes 17.4 seconds (\code{dlheld3}). By $n$ the median is largest at $n=64$--512 (4.2--7.3 seconds) and falls to 1.2--2.4 seconds at $n\ge1024$.
+\item \emph{Against v3} on the same fits, the median of the per-fit CPU ratio is 0.06--0.92 at every $n$: DFG alone is faster than the portfolio it was part of.
+\item \emph{\code{lowdeg}} uses at most 0.095 of a network run per fit and a median of 0.02--0.03 seconds.
+\end{itemize}
+\emph{Reading} \status{Heuristic}. The CPU profile follows the cross-validation. At $n=64$--512 DFG fits $2F$ fold models in addition to the final one, on folds large enough for the degree-3 and degree-4 searches ($F=10$ at $n\le64$, 5 above). Above $n=512$ it fits only the final model. Each network fit spends one run by definition, and \code{nets_best} is a hindsight choice among 2 to 5 such runs per target. ``No more FLOPs'' therefore holds with a wide margin: the largest DFG fit uses about half of one network run, and the median fit at the largest $n$ about a seventh.

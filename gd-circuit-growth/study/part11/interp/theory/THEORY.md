@@ -31,7 +31,9 @@ Labels: **Proved** (a proof is given; "by the code" means a direct reading of th
      (16–56) to within 0.2.
    - par4 at d = 30 has n* = 52 rather than 28 because 2 of its 3 seeds have |Σy| > 6 at n = 32, an event of
      probability 0.12.
-   - The networks' n* grows as d^1.0, d^1.9 and d^2.4.
+   - n_thr is a floor for every target: no degree-k character passes a global test on m ≤ n_thr(k, d) rows (P2′).
+   - The networks' n* grows as d^1.0, d^1.9 and d^2.4 over d = 15–60: close to d^(k−1) for k = 2, 3, and below d³
+     for k = 4.
    - At d = 1000 (Heuristic) the test would need only n ≈ 56, but DFG v1.3's budget skips its degree-3 and degree-4
      searches there; an exhaustive degree-4 search would cost 56 network runs.
 3. **P3. n_glob predicts the round-0 test, and later rounds make characters cheaper** (exact criterion Proved; first
@@ -39,11 +41,11 @@ Labels: **Proved** (a proof is given; "by the code" means a direct reading of th
    - The round-0 test admits S iff n > 2c²L·s²/v_S², with the sample's v_S and s; n_glob puts ŷ_S and 1 − ŷ₀² in their
      place.
    - Over 8681 (character, n) pairs, n > n_glob agrees with DFG's decision 96.9% of the time, and a normal approximation
-     matches the pass rate in every band of n/n_glob.
+     gives the pass rate to within 0.051 in every band of n/n_glob.
    - Characters that enter through this test do so at a median 2^0.26 × n_glob.
-   - 266 of the 427 characters predicted within the grid enter earlier, mostly through later-round classes. These enter
-     a median 1.4–3.7 doublings below n_glob, mainly because the residual variance there is 3–19 times smaller; the
-     smaller union bound adds only a factor 1.2–1.7.
+   - 266 of the 427 characters predicted within the grid enter earlier, mostly through later-round classes. Characters
+     entering through those classes do so a median 1.4–3.7 doublings below n_glob, mainly because the residual variance
+     there is 3–19 times smaller; the smaller union bound adds a factor of at most 1.7.
 4. **P4. Sum blocks** (Proved).
    - With one group per value, a block represents every function of a signed sum of k inputs with at most k + 1
      parameters, where the Fourier expansion can need 2^k characters.
@@ -59,8 +61,8 @@ Labels: **Proved** (a proof is given; "by the code" means a direct reading of th
      each for degrees 5 and 6.
    - Degree 4 is subsampled from d = 36 at n = 16384 (from d = 75 at n = 512–1024) and skipped from d = 199.
    - An analytic FLOP model of the "parity path" reproduces the recorded FLOP counts exactly in 232 of the 275 parity
-     cells; 4 of these needed a false linear block, confirmed by refits. The other 43 are at n ≤ 32, where the fold fits
-     take other paths.
+     cells; 4 of these needed a false linear block, confirmed by refits. The other 43 are at n ≤ 32: exactly the cells
+     where some fold fit or the final fit does not admit χ_S by its test.
 
 ## 0. What the code does (the parts used below)
 
@@ -201,8 +203,8 @@ Results:
   - At d = 30 the u = 1 hits by degree are 5, 1, 4, 2 (degrees 1–4, over 3600 data sets).
 - **The bound is loose by the Gaussian Mills ratio, not by the union** (Heuristic). The Gaussian approximation
   N·2Φ̄(√(2L)) gives 1.15, 1.01, 0.93 and 0.87·10⁻³ for degrees 1–4 at d = 30, against the bound's 12.5·10⁻³. That is a
-  factor √(2π)·√(2L) ≈ 10–14, and the union over the N nearly independent statistics is nearly tight. Where counts are
-  large it matches. At u = 0.8, d = 30, n = 2048 with fair labels, the observed rates for degrees 1–4 are 0.037, 0.063,
+  factor of 10.9–14.3, close to the Mills-ratio factor √(2π)·√(2L) = 10.3–13.9 (`P1.bound_over_gauss_d30`), so the
+  union over the N nearly independent statistics is nearly tight. Where counts are large it matches. At u = 0.8, d = 30, n = 2048 with fair labels, the observed rates for degrees 1–4 are 0.037, 0.063,
   0.15, 0.22. The Gaussian approximation gives 0.030, 0.069, 0.14, 0.26, and the bound 0.26, 0.69, 1, 1
   (`P1.totals.u08_d30_n2048_fair`).
 - **Linear block: 64 of 64 checks within e^{−x}.** At x = ln(1/δ) (the code's threshold), 43 of the 4800 data sets
@@ -213,7 +215,7 @@ Results:
   46 of 300 at n = 128 (15%) and 1 of 300 at n = 512. The edge is the semicircle edge for many comparable weights r_t
   (Heuristic reading). With P(+1) = 0.85, about 0.15n rows carry r ≈ −1.7 against +0.3 for the rest. Those rows add a
   Wishart-like matrix of rank about 0.15n < d at n ≈ 4d, whose top eigenvalue is near (√(0.15n) + √d)² − 0.15n times
-  1.7/n ≈ 1.0, against the edge's 0.96.
+  1.7/n: 1.04 at n = 128, against the edge's 0.96 (`P1.quad_skew_heuristic`).
 
 *Full DFG fits on null labels* (`P1.full_fits`, `P1.full_fits_replica`). These are DFG alone with its own
 cross-validation, d = 30.
@@ -221,11 +223,14 @@ cross-validation, d = 30.
   background.**
   - One (n = 1024) holds a pair admitted by the round-0 test, z = 1.06. It is the event P1a bounds.
   - One (n = 256) is a forced-variant model that the cross-validation chose, with held-out errors 122 (default)
-    against 103 (forced). It holds its two forced characters, of degree 4 (round 0) and degree 3 (round 1).
+    against 103 (forced). It holds its two forced characters, of degree 4 (round 0) and degree 3 (round 1). A refit
+    and replay show that neither passed a test: z = 0.94 and 0.76 in the only class containing each, the global one
+    (`P1.forced_fits_replay`).
   - No linear block, spectral feature or sum block was admitted.
 - **Skewed labels (P(+1) = 0.85), 30 fits at n = 128: 7 of 30 final models hold spurious features**, all in the
-  default variant. Six hold spectral features first admitted in round 0, the uncovered test of the previous paragraph.
-  One holds a folded sum block on 7 inputs admitted in round 0, then a spectral feature and a second block in round 1.
+  default variant (`P1.nonconstant_fits`). Six hold spectral features first admitted in round 0, the uncovered test of
+  the previous paragraph. One holds a folded sum block on 7 inputs admitted in round 0, then a spectral feature and a
+  second block (on 9 inputs) in round 1, and another spectral feature in round 2.
 - **The replica agrees with DFG's own round-0 decisions** (characters by degree, the linear block, the spectral block)
   in 110 of the 110 fits: the 80 fair-label fits and the 30 skewed-label fits.
 - Over the fits with a cross-validation (n ≤ 512: 40 fair, 30 skewed), the forced variant was chosen once.
