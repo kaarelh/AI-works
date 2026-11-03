@@ -48,7 +48,7 @@ Labels: **Proved** (a proof is given; "by the code" means a direct reading of th
    - With one group per value, a block represents every function of a signed sum of k inputs with at most k + 1
      parameters, where the Fourier expansion can need 2^k characters.
    - DFG's grouping (groups of at least max(3, 0.005n) points) gives every value its own group in the large-n limit
-     iff k ≤ 7. On the mod-3 targets it costs at most 0.2% error.
+     iff k ≤ 7. On the mod-3 targets it costs 0.1–0.2% error.
    - A residue class mod 3 has W_j ≤ (16/9)·C(k, j)·3^j·4^(−k). Exactly, W₁ + W₂ is 1.6·10⁻⁶ (f7_05), 5.4·10⁻⁶ (h6_00)
      and 2.1·10⁻⁴ (fd_10). This agrees with Part 10's "W₁ = 0, W₂ ≤ 0.0002" to four decimals, although fd_10's
      W₁ + W₂ is 5% above 0.0002.
@@ -469,6 +469,8 @@ conjugate of m = 1. With (ω − 1)/2 = (√3/2) e^{5πi/6} and (1 + ω)/2 = ½ 
   a_j = −2σ · (2/3) · 3^{j/2} 2^(−k) · cos(5πj/6 + π(k − j)/3 − 2πρ/3),
 
 so |a_j| ≤ (4/3) 3^{j/2} 2^(−k) and W_j ≤ (16/9) C(k, j) 3^j 4^(−k). The low-degree weight is exponentially small in k.
+The angle is π(3j + 2k − 4ρ)/6, so the cosine vanishes iff j is odd and k ≡ 2ρ (mod 3). For f7_05, h6_00 and fd_10,
+k − 2ρ ≡ 2, 2, 1 (mod 3), so every a_j with j ≥ 1 is nonzero.
 
 **P4f (Proved): what the block search sees.** Every seed of `_block_search` (lines 227–361) is a statistic of one or two
 inputs:
@@ -480,8 +482,8 @@ inputs:
 
 In round 0, for iid rows, exactly E[M_ij] = f̂({i, j})(1 − 1/(n + 10⁻⁹)) for i ≠ j, and
 E[c₁ᵢ] = f̂({i})(1 − 1/(n + 10⁻⁹)), by the same computation as P3a. On S×S the expected pair
-matrix is a₂(1 − 1/n)(σσᵀ − I) with σ the sign vector. Its top eigenvalue is a₂(k − 1)(1 − 1/n), while each entry's
-noise has standard deviation ≈ s/√n.
+matrix is a₂(1 − 1/n)(σσᵀ − I) with σ the sign vector. Its largest eigenvalue in absolute value is |a₂|(k − 1)(1 − 1/n),
+while each entry's noise has standard deviation ≈ s/√n.
 
 **The three residue-class targets, exactly** (Numerical, exact; `P4.targets`). The W_j are computed as rationals from
 P4d. They equal the Walsh–Hadamard transform of each target's own function on all 2^k patterns, and the closed form P4e
@@ -496,8 +498,8 @@ to 4·10⁻¹⁶. B counts the signed inputs equal to +1.
 - **Against Part 10's "W₁ = 0 and W₂ ≤ 0.0002 for all three".** That is right to four decimals. Exactly, W₁ + W₂ is
   1.6·10⁻⁶ for f7_05 and 5.4·10⁻⁶ for h6_00, 128 and 37 times below 0.0002. For fd_10, W₁ = 3.8·10⁻⁵ is not
   zero, and W₁ + W₂ = 2.10·10⁻⁴ exceeds 0.0002 by 5%.
-- **Every character on S is nonzero:** all 2^k − 1 of them, by P4e, since the cosine never vanishes for these (k, ρ).
-  One block with one group per value represents each target with k + 1 parameters or fewer.
+- **Every character on S is nonzero:** all 2^k − 1 of them (P4e). One block with one group per value represents each
+  target with k + 1 parameters or fewer.
 
 **The representation, checked** (Numerical; `P4.grouping`). Give the block one group per observed value. Least squares on
 its indicators and the constant then reproduces the seed-0 training labels at n = 16384 exactly (largest residual
@@ -510,7 +512,8 @@ its indicators and the constant then reproduces the seed-0 training labels at n 
   of two for fd_10.
 - The block alone then cannot beat an error of 1/1024 (f7_05), 7/4096 (h6_00) or 1/512 (fd_10) (P4c). Its
   least-squares fit on the training rows has test error 0.0017, 0.0037 and 0.0017.
-- So grouping costs these targets about 0.2% at most. It is not why they are never learned.
+- So grouping costs these targets 0.1–0.2% in the population, and the block-only least-squares fits reach 0.17–0.37% on
+  the test inputs. That is not why they are never learned.
 
 **What the search sees** (Proved: P4f gives the expectations; Heuristic: the thresholds).
 - **Signal per entry.** The expected pair-matrix entry on S is a₂ against noise ≈ s/√n. At n = 16384 that is a
@@ -537,8 +540,9 @@ round's global search on m_k rows (m_k = n when not subsampled):
 
 So the exhaustive degree-3 search costs ≈ 2nd³ ≈ 12n·C(d, 3) FLOPs and the degree-4 search ≈ nd⁴ ≈ 24n·C(d, 4). That
 is polynomial in d of degree k: the matrix products also compute the redundant entries (lower triangles and overlapping
-sets), so each character costs 12n or 24n rather than 2n. One network run costs GD(d) = 7.88·10⁶ · (128d + 16768) FLOPs (harness: 6P·64·T + 10P·T, T = 20000 steps; 40000 at
-d = 120), which is linear in d.
+sets), so each character costs 12n or 24n rather than 2n. One network run costs GD(d) = 7.88·10⁶ · (128d + 16768)
+FLOPs (harness: 6P·64·T + 10P·T with P = 128d + 16768 parameters and T = 20000 steps, 40000 at d = 120), which is linear
+in d.
 
 **P5b (Proved, by the code): the budget rule.** m_k = min(n, ⌊share·GD/c_k⌋), where c_k is the per-row cost estimate in
 §0's table: d(2d² + 2d) for k = 3, C(d, 2)(2d² + 3d) for k = 4, and 2N₁N₂ + N₁k₁ + N₂k₂ for k = 5, 6. The shares are

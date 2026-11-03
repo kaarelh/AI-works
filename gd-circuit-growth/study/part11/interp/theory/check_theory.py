@@ -1,7 +1,8 @@
 """Part 11 theory (THEORY.md): every number quoted there is computed here and written to check_theory.json.
 
-usage: OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python check_theory.py
-Reads the frozen learner (part10/hyb_portfolio3/dfg13.py, md5-checked through eval_dfg.load_dfg13), the Part 11 result
+usage: OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python check_theory.py [--only=P1,P2,P3,P4,P5]
+(--only recomputes the named sections into the existing check_theory.json; the full run takes about 8 minutes, most of
+it P1's null simulation.)  Reads the frozen learner (part10/hyb_portfolio3/dfg13.py, md5-checked through eval_dfg.load_dfg13), the Part 11 result
 files (part11/results/toy__dfg13-perm__*.json), study/dscale.json, the order analysis' cells
 (interp/order/results/cells, seed 0) and the cached fits of theory_fits.py (theory/cache/; run theory_fits.py first).
 Sections: code (constants read from the code), P1 (null), P2 (parities), P3 (n_glob), P4 (sum blocks), P5 (compute).
@@ -515,6 +516,16 @@ def p3_section():
         if r["cat"] in ("earlier", "seen_not_predicted") and r.get("factors"):
             cl = r["route"]["cls"] + ("" if r["route"]["cls"] != "global" else "_r1+")
             fac.setdefault(cl, []).append(r["factors"])
+    ent = {}                                                    # like-for-like with ORDER.md: n_first against n_glob
+    for r in rows:
+        if r["cat"] in ("earlier", "seen_not_predicted") and r.get("factors"):
+            cl = r["route"]["cls"] + ("" if r["route"]["cls"] != "global" else "_r1+")
+            ent.setdefault(cl, []).append(r)
+    res["entry_vs_nglob"] = {cl: dict(count=len(v), deg_le6=sum(1 for r in v if r["k"] <= 6),
+                                      median_log2_nglob_over_nfirst_deg_le6=(float(np.median([math.log2(r["n_glob"] / r["n_first"])
+                                                                                               for r in v if r["k"] <= 6]))
+                                                                             if any(r["k"] <= 6 for r in v) else None))
+                             for cl, v in ent.items()}
     res["factors"] = {cl: dict(count=len(v), median_L_ratio=float(np.median([f["L_ratio"] for f in v])),
                                median_s_ratio=float(np.median([f["s_ratio"] for f in v])),
                                median_v_ratio=float(np.median([f["v_ratio"] for f in v if f["v_ratio"]])),
@@ -687,6 +698,15 @@ def p4_section():
         gen[str(k)] = dict(groups=len(lim), values=k + 1, all_singletons=bool(len(lim) == k + 1))
     res["generic"] = gen
     res["generic_max_k_all_singletons"] = max(int(k) for k, v in gen.items() if v["all_singletons"])
+    # P4e's vanishing rule: a_j (j >= 1) of sigma (1 - 2 [B = rho mod 3]) is 0 iff j is odd and k = 2 rho (mod 3);
+    # checked exactly (Krawtchouk sums, rationals) for k = 2..16, rho = 0, 1, 2, every j
+    viol, tot = 0, 0
+    for k in range(2, 17):
+        for rho in range(3):
+            a = krawtchouk_coeffs(lambda b, rho=rho: 1 - 2 * (b % 3 == rho), k)
+            for j in range(1, k + 1):
+                tot += 1; viol += int((a[j] == 0) != (j % 2 == 1 and (k - 2 * rho) % 3 == 0))
+    res["mod3_vanishing_rule"] = dict(cases=tot, violations=viol)
     return res
 
 
@@ -817,16 +837,28 @@ def p5_section():
 
 
 def main():
+    """All sections by default; --only=P4,P3 recomputes those sections into the existing check_theory.json."""
     fast = "--fast" in sys.argv
+    only = next((a.split("=", 1)[1].split(",") for a in sys.argv if a.startswith("--only=")), None)
+    path = os.path.join(HERE, "check_theory.json")
+    if only and os.path.exists(path):
+        OUT.update(json.load(open(path)))
+    run = lambda sec: only is None or sec in only
     t0 = time.time()
     OUT["code"] = code_section(); print("code", OUT["code"]["md5"], flush=True)
-    OUT["P5"] = p5_section(); print("P5 check", {k: v for k, v in OUT["P5"]["check"].items() if k != "details"}, flush=True)
-    OUT["P4"] = p4_section(); print("P4", {t: (v["W_float"], v["W1W2"]) for t, v in OUT["P4"]["targets"].items()}, flush=True)
-    OUT["P2"] = p2_section(); print("P2 agree", OUT["P2"]["agree"], flush=True)
-    OUT["P3"] = p3_section(); print("P3", OUT["P3"]["first"]["counts"], OUT["P3"]["test0"]["tp"], OUT["P3"]["test0"]["tn"],
-                                    OUT["P3"]["test0"]["fp"], OUT["P3"]["test0"]["fn"], flush=True)
-    OUT["P1"] = p1_section(fast); print("P1 violations", OUT["P1"]["violations_char"], OUT["P1"]["violations_linear"], flush=True)
-    OUT["wall_seconds"] = time.time() - t0
+    if run("P5"):
+        OUT["P5"] = p5_section(); print("P5 check", {k: v for k, v in OUT["P5"]["check"].items() if k != "details"}, flush=True)
+    if run("P4"):
+        OUT["P4"] = p4_section(); print("P4", {t: (v["W_float"], v["W1W2"]) for t, v in OUT["P4"]["targets"].items()},
+                                        OUT["P4"]["mod3_vanishing_rule"], flush=True)
+    if run("P2"):
+        OUT["P2"] = p2_section(); print("P2 agree", OUT["P2"]["agree"], flush=True)
+    if run("P3"):
+        OUT["P3"] = p3_section(); print("P3", OUT["P3"]["first"]["counts"], OUT["P3"]["test0"]["tp"], OUT["P3"]["test0"]["tn"],
+                                        OUT["P3"]["test0"]["fp"], OUT["P3"]["test0"]["fn"], flush=True)
+    if run("P1"):
+        OUT["P1"] = p1_section(fast); print("P1 violations", OUT["P1"]["violations_char"], OUT["P1"]["violations_linear"], flush=True)
+    OUT["wall_seconds" if only is None else "wall_seconds_last_partial"] = time.time() - t0
     json.dump(OUT, open(os.path.join(HERE, "check_theory.json"), "w"), indent=1, default=float)
     print("wrote check_theory.json", round(OUT["wall_seconds"]), "s")
 
