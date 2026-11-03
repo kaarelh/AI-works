@@ -6,7 +6,8 @@ object is DFG v1.3 run alone: `part10/hyb_portfolio3/dfg13.py`, md5 `69cabe5c503
 `part11/eval_dfg.load_dfg13()` (md5 checked). Written 3 November 2026. The record-writing job was killed by a container
 restart at about 01:09 UTC with A1 at d = 60 at 8 of 220 fits and B at 32 of 105 records, and the cascade check of
 §1.5 written but not yet run; they were completed from the records (keys already written are skipped, so no cell was
-fitted twice), and every table was regenerated from the complete records. Not yet checked by independent verifiers.
+fitted twice), and every table was regenerated from the complete records. Checked by an independent verifier the same
+day; its corrections are applied below, and the next section lists them.
 
 Labels: **Proved** (a proof is given), **Numerical** (measured; the source file is named), **Heuristic** (my reading).
 Every count is given with its denominator; intervals are two-sided 95% Clopper–Pearson.
@@ -25,9 +26,12 @@ Every count is given with its denominator; intervals are two-sided 95% Clopper�
 
 ## Short answer
 
-- **The instrumented copy is the frozen learner** (Numerical, §0). Every fit made with it equals a fit of the frozen
-  module on the same data, or the evaluation's result file, in test error and FLOP count: 88 of 88 A1 fits, 451 of
-  451 A2 fits, 35 of 35 B cells against the frozen module and 31 of 31 (93 of 93 records) against the result files.
+- **The instrumented copy is the frozen learner** (Numerical, §0). Every checked fit made with it equals a fit of the
+  frozen module on the same data, or the evaluation's result file, in test error and FLOP count: 88 of the 660 A1 fits
+  (seeds 0 and 1), all 451 A2 fits and all 35 B cells against the frozen module, and 31 of 31 cells (93 of 93 records)
+  against the result files. The other 572 A1 fits and the 800 cascade re-runs were not checked. They are the frozen
+  learner's by construction: deleting the copy's 64 hook calls and its recorder import leaves a syntax tree identical
+  to `dfg13.py`'s, and the hooks only read.
 - **The character tests hold their level on noise** (P-A, Proved; Numerical, §1.3, §1.6). Each round-0 class of
   characters has level ≤ δ/(2K) = 0.0125. In the final fits the classes passed in 2 of 2400 round-0 class searches at
   d = 30 and 1 of 840 at d = 60 (both label rates), against 0.07–0.11% per class in 80000-draw nulls of the degree-1
@@ -35,15 +39,21 @@ Every count is given with its denominator; intervals are two-sided 95% Clopper�
 - **On balanced labels nothing passes a test at d = 30**: 0 of 220 final fits (95% ≤ 0.017) have a test-passed
   feature. At d = 60, 5 of 110 (0.015–0.103): the linear block 3 times, a degree-2 character once, and once the product
   of the forced variant's two characters.
-- **The false admissions are the dense block tests'** (Numerical, §1.2, §1.4, §1.6). The linear block passes at the
-  exact χ²_d tail of its Laurent–Massart threshold (0.84% at d = 30, 1.04% at d = 60 in 80000-draw nulls; 2 of 360 and
-  4 of 160 round-0 tests in the fits), not at its nominal δ = 0.1. The spectral block's edge has no proved level: on
-  balanced labels it never passed (at most 3 null passes in 20000 draws), but on biased labels (P(y = 1) = 0.8) near
-  n = 4d its null pass rate is 5.7% at d = 30 (n = 128) and 48% at d = 60 (n = 256), falling to 0 by n = 1024
-  (d = 30) and 4096 (d = 60); the fits agree (2 of 20 and 5 of 10). The two block tests made 4 of the 6 test-passed
-  admissions among the 220 biased fits at d = 30 (the other two are degree-1 characters) and, at d = 60, all 6 biased
-  ones and 3 of the 5 balanced ones. The sum-block tests never passed (0 of 2000 round-0 searches, 0 of 153 later;
-  largest T / threshold 0.93).
+- **The false admissions are the dense block tests'** (Numerical, §1.2, §1.4, §1.6). The linear block passes close to
+  the χ²_d tail of its Laurent–Massart threshold (0.84% against 0.92% at d = 30, 1.04% against 1.05% at d = 60 in
+  80000-draw nulls; the statistic's exact law gives 0.89% at d = 30, slightly below the tail; 2 of 360 and 4 of 160
+  round-0 tests in the fits), about a tenth of its nominal δ = 0.1. The spectral block's edge has no proved level: on
+  balanced labels it never passed (at most 3 null passes in 20000 draws), but on biased labels near n = 4d, the
+  smallest n at which it runs, its null pass rate is far above the ≈ 1% of the other tests and grows steeply with d and
+  with the label bias: at P(y = 1) = 0.8 it is ≈ 5.4% at d = 30 (n = 128), ≈ 47% at d = 60 (n = 256) and 99% at
+  d = 120 (n = 512); at P(y = 1) = 0.9, 39% at d = 30 (n = 128) and 98% at d = 60 (n = 256). It falls with n: at
+  P(y = 1) = 0.8 to 0 by n = 1024 (d = 30) and 4096 (d = 60), but at d = 120 it is still 69% at n = 1024 and 9% at
+  2048. The fits agree where measured (2 of 20 and 5 of 10). The two block tests made 4 of the 6 test-passed admissions
+  among the 220 biased fits at d = 30 (the other two are degree-1 characters) and, at d = 60, all 6 biased ones and 3 of
+  the 5 balanced ones. The sum-block tests never passed in the final fits (0 of 2000 round-0 searches, 0 of 153 later;
+  largest T / threshold 0.93), but in the cross-validation's fold fits, which run the same round-0 search on noise, the
+  default variant admitted a sum block twice (2 of 900 default fold fits at d = 30, P(y = 1) = 0.8); no null Monte
+  Carlo of the sum-block statistic was run.
 - **The forced variant is not calibrated after its forced characters** (Numerical, §1.5): in its fold fits the local
   class admits the product of the two forced characters. At P(y = 1) = 0.8, 238 of 900 forced fold fits (d = 30) hold
   a test-passed feature after the forced ones (205 of them local characters); in 400 fold-sized re-runs the local test
