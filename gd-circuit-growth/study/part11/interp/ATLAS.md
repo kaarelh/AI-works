@@ -11,16 +11,20 @@ cross-validation counterfactual (18 of 222; 89 of 140; 0.2257 / 0.2319 / 0.2256 
 counts (85 / 54 / 268), the 8 exact Fourier models at 16384, the 133 / 9 / 6 dictionary–readout split, the
 spurious-product and duplicate-block counts, the 141 of 255 equal errors against Part 10 and the 15 equal n_struct; 22
 needed correcting. I checked every correction against the stored files (and refitted f7_11 at n = 128) and applied all
-22; none is declined, but items 5 and 9 make the verifier's replacement more exact (item 9: the exact value instead of
-an approximation). Items 23–34 address the omissions it listed and its notes on confirmed claims. Every changed
-number is recomputed from the stored files by [`atlas_recheck.py`](atlas_recheck.py) (output:
-[`atlas_recheck.txt`](atlas_recheck.txt), with the f7_11 refit). Tables regenerated with `atlas_make.py`: only
-`tables/atlas.md` changes (rf06's n\*_3 is now labelled a 2-seed mean); the figures do not change.
+22; none is declined, but items 5, 9 and 12 make the verifier's replacement more exact (5: one n fewer; 9: the exact
+value instead of an approximation; 12: one share rounded from the stored value), as item 31 does for one share it
+quoted. Items 23–34 address the omissions it listed and its notes on confirmed claims; item 35 lists a few precision
+edits of my own from the same re-check. Every changed or added number is recomputed from the stored files by
+[`atlas_recheck.py`](atlas_recheck.py) (output: [`atlas_recheck.txt`](atlas_recheck.txt), with the f7_11 refit).
+Tables regenerated with `atlas_make.py`: only `tables/atlas.md` changes (rf06's n\*_3 is now labelled a 2-seed mean);
+the figures do not change (a re-run on the final files reproduces every table byte for byte, and both figures apart
+from the PDF creation date).
 
 Corrections applied (old → new; V*k* = the verifier's claim *k*):
 
 1. (V4) Header: the 37 targets "cover every target family of the 11 suites" → come "from 9 of the 11 suites, covering
-   the main families; §4 lists the sub-families with no atlas target".
+   the main families; §4 lists the sub-families with no atlas target" (also in the comment on the target list in
+   `atlas_truth.py`).
 2. (V2) §0.1: "about 23:33 UTC" → "about 23:30 UTC" (file time 23:30:33).
 3. (V7) §0: "every representation is verified on all 2^k assignments" → character representations are; block
    representations only as "f is a function of the block statistics" (accept sets not checked; vacuous for the
@@ -44,8 +48,10 @@ Corrections applied (old → new; V*k* = the verifier's claim *k*):
 11. (V24) §1.5: "the folded blocks stay at shares ≈ 0.2" → "majxor keeps both (≈ 0.2); parmaj keeps only |t_A + t_B|
     (0.17)".
 12. (V25) §1.5: "the product block and the spectral pair never appear" → "the product block never appears; the spectral
-    pair appears once, at majxor n = 512 (shares 0.33 and 0.24, 86–90% of |u|² on its inputs); at 256 and 1024 the
-    spectral features carry 0.73–0.84 and count as spurious".
+    pair appears once, at majxor n = 512 (shares 0.33 and 0.23, with 0.895 and 0.863 of |u|² on its inputs); at 256
+    and 1024 the spectral features carry 0.73–0.84 and count as spurious". The verifier gives the shares as 0.33 / 0.24
+    and the mass as 86–90%; the stored shares are 0.3266 and 0.2347, so the second rounds to 0.23, and the mass is
+    quoted as the stored fractions (the verifier's own values).
 13. (V28) §1.6: cnf3's inner term holds "the third clause's literals" → "two of the first clause's literals (negated)".
 14. (V31) §1.8: sym9 "at 4096–16384 the block plus 36 degree-2 characters" → "the block, its 36 degree-2 characters and
     up to 28 degree-4 characters (plus the spurious product at 8192–16384)".
@@ -94,10 +100,17 @@ Omissions and notes on confirmed claims, now in the text:
 33. Further notes: the linear block also entered at 64 in thr30, which has no irrelevant input, and h5s7's S-lin 0.035
     at 16384 is an upper bound (§2.2); DFG's choice equals always-forced to 3 decimals (0.2257 against 0.2256) and is
     0.0146 above the better variant (short answer); at f7_05@16 the background helps (§2.4); h6_10's inner term is a
-    literal (§4).
+    literal (§4); stair5 also holds a spurious product at 1024 (S 0.03; §1.2); f7_00, which has no partner, holds a
+    weighted block whose inner term takes two inputs of its other sum (short answer, §1.9); v3's h6_00 member at 64 is
+    an out-of-fold fit (§3).
 34. Two additions, recomputed from the stored files: in all 27 cells of item 25, DFG without the background is no longer
     more than 0.05 below the oracle; majxor's two spectral features at 1024 have cos 0.87 with 1_A ± 1_B, just below the
     0.9 needed for a target term (§1.5, §2.1).
+35. Precision edits of my own, from the same re-check: thrint's model at 512 also holds (x1+x2+x3) (0.10), and thr30's
+    at 16384 three small modulated blocks (shares ≤ 0.01) besides its weighted block and the product (§1.4); §2.2 says
+    which relevant inputs the other spurious blocks hold and adds rf06's spurious product at 256 (0.09); §3 says that
+    the 45 out-of-fold comparisons are 45 of the 114 differing cells (not of the 72 where alone is lower) and that the
+    64 cells that differ through the variant are at n ≤ 512 (40 of them at n ≤ 64).
 
 ---
 
@@ -143,7 +156,8 @@ Figures: [`figures/fig_atlas_grid.pdf`](figures/fig_atlas_grid.pdf), [`figures/f
   majorities is first two folded blocks over the union, |t_A + t_B| and |t_A − t_B| (parmaj at 128, majxor at 256;
   sign(|t_A+t_B|² − |t_A−t_B|²) = sign(t_A t_B)); a parity, gate or selector partner ends up as the inner term of a
   weighted block next to characters (at n = 16384 in 5 of the 6 mixtures without a true weighted block: s ± 3 x13,
-  s ± 3 x11x12, s − 3·AND(¬x7,¬x8) and s + 2·AND(¬x7,¬x8), s1 − 3 x11 and s2 − 3 x11, s2 ± 3 x11). At n = 16384
+  s ± 3 x11x12, s − 3·AND(¬x7,¬x8) and s + 2·AND(¬x7,¬x8), s1 − 3 x11 and s2 − 3 x11, s2 ± 3 x11; the sixth,
+  f7_00, has no partner, and its weighted block takes two inputs of its other sum as inner term). At n = 16384
   only 1 of the 7 signed-sum mixtures (f7_10) still holds its compact representation, while all 7 have test error 0
   and 5 of them span R² ≥ 0.998.
 - **Where DFG is above 10% error, the dictionary is what is missing, not the readout** (Numerical, §2.1): in 133 of
@@ -306,7 +320,8 @@ spurious terms. With more data the rest of the Fourier expansion is filled in: a
 16 Fourier characters (size 17), stair6's 57 of its 63 non-constant characters plus two relevant blocks. stair6 loses its
 degree-6 prefix character from n = 512 on (error ≤ 0.0007 throughout); stair5 loses its degree-5 prefix character at
 n = 256 only (regained at 512). After the first fit the models also hold relevant blocks: stair5 at 256 (R 0.22),
-1024 and 2048 (R ≤ 0.10), stair6 at every n ≥ 512 (R 0.21–0.29).
+1024 and 2048 (R ≤ 0.10; at 1024 also a spurious product, (x5+x13) × (x2−x3−x4 + 3x1), S 0.03), stair6 at every
+n ≥ 512 (R 0.21–0.29).
 *Heuristic:* staircases are learned mostly as characters (relevant blocks appear at stair5 n = 256, 1024, 2048 and
 stair6 n ≥ 512): first the prefix terms, each detectable on its own residual, then the remaining Fourier terms as the
 residual shrinks.
@@ -337,10 +352,12 @@ the oracle error there is ≤ 0.007; but DFG's own error at n = 64 is 0.17–0.2
 characters have S-lin share 0.45–0.56 (thr30 has no irrelevant input). The error falls when a block arrives: maj9's (x1+…+x9) at n = 128 (error 0, S-lin 0.01), f7_01's 13-input block
 at 256 (error 0). thrint has no single exact block; it reaches 0 at n = 512 with a product of the {x4…x9} and
 {x1,x2,x3} blocks, (x4+…+x9) × (x1+x2+x3) (0.27), and two modulated folded blocks, χ[x3]·|−x2+x4+…+x9| (0.24) and
-χ[x2]·|−x3+x4+…+x9| (0.22), all R; the weighted blocks that put the heavy input in the inner term,
+χ[x2]·|−x3+x4+…+x9| (0.22), next to (x1+x2+x3) (0.10), all R; the weighted blocks that put the heavy input in the
+inner term,
 (x2+…+x9 + 2x1) (from 1024) and (x2+x3−x4−…−x9 + 3x1) (from 4096), come later (R). thr30 (Gaussian weights on all 30
 inputs) is never fitted exactly: 0.009 error at 16384, with 59 characters and a weighted block (x4+x5−x7−… + 3x3),
-a ±1 quantisation of w with its largest weight as inner literal (R; also a factor of a product). At 16384 the leading
+a ±1 quantisation of w with its largest weight as inner literal (R, 0.10; also a factor of a product, 0.03), beside
+three small modulated blocks (shares ≤ 0.01). At 16384 the leading
 terms are the degree-1 characters (their summed contribution has 0.76–0.91 of the output's sd; the tables' unnormalised
 root-sum-square values are 0.72–0.85), the block (maj9 0.29, f7_01 0.29) and, for f7_01, a spectral feature on its
 inputs (0.28).
@@ -364,7 +381,8 @@ spectral pair (u₊·x)² − (u₋·x)², or two folded blocks |t_A + t_B|, |t_
   both folded blocks (shares 0.21–0.24 from 2048 on); parmaj keeps only |t_A + t_B| (0.17) from 1024 on, so its
   folded-pair representation is incomplete from there. The product block never appears; the spectral pair appears
   once, at majxor n = 512 (two spectral features with cos 0.94 and 0.91 to 1_A + 1_B and 1_A − 1_B and opposite
-  weights, shares 0.33 and 0.24, 86–90% of |u|² on its inputs; error 0.0081). At 256 and 1024 majxor's spectral
+  weights, shares 0.33 and 0.23, with 0.895 and 0.863 of |u|² on its inputs; error 0.0081). At 256 and 1024 majxor's
+  spectral
   features carry only 0.73–0.84 of |u|² on its inputs and count as spurious (at 1024 the two have cos 0.87 with
   1_A ± 1_B, just below the 0.9 needed for a target term).
 - majmaj5: no compact representation is complete at any n. At the first fit (n = 512, error 0.023) the model has
@@ -457,7 +475,9 @@ appear as factors of some sum term, not the modulation by x11 or the gate's char
 - With more data the compact forms give way to weighted blocks with the partner as inner term and to characters: at
   16384 f7_07 holds (±s − 3x13) twice and 63 characters through x13; f7_09 (s ± 3x11x12); symand (s − 3·AND) and
   (s + 2·AND) with 16 degree-2 characters; f7_03 (s₁ − 3x11), (s₂ − 3x11); f7_00 and f7_11 carry their 4-input branch
-  as its characters (χ[x1,x2,x3,x4] 0.51 for f7_00). Only f7_10 still has its compact form at 16384. All seven have
+  as its characters (χ[x1,x2,x3,x4] 0.51 for f7_00); f7_00, which has no partner, also holds a weighted block whose
+  inner term takes two inputs of its 7-input sum, (s₁ + 3·AND(¬x5,x11)) (T, 0.06). Only f7_10 still has its compact
+  form at 16384. All seven have
   test error 0 there; span R² is 1.0 for f7_07, symand, f7_10 and f7_11, 0.998 for f7_09, 0.96 for f7_03 and 0.89
   for f7_00 (oracle error 0 for all).
 *Heuristic:* DFG treats a partner variable (parity, gate, selector) as a heavy input of the block rather than as a
@@ -498,10 +518,11 @@ once they are in, its least-squares-plus-logistic readout is close to the best w
   is the quirk Part 10 found in v3's member (its verifier: 15–16 cells in 13–14 targets of the sum suites).
 - *Contaminated blocks* (a true class plus irrelevant inputs, or modulated by an irrelevant character) at the first n
   of a block: f7_08 at 512 (S 0.20), symand at 256 ((x1+…+x8 − x30) 0.15), dlist8 at 128–256, f7_04 at 256–512.
-  Other spurious blocks at the first n of a block mix part of a true class, or a relevant modulator, with irrelevant
-  inputs: f7_06 at 128 ((x1+x3+x19+x23−x26) 0.26 and a copy modulated by χ[x24], 0.14), f7_03 at 256
-  ((x7+…+x10−x11+x13) 0.32), symand at 128 (|−x8+x11−x18−x24+x29| 0.19) and rf06 at 128–256 (χ[x5]·|…| on irrelevant
-  or partly relevant inputs, 0.14 and 0.12).
+  Other spurious blocks at the first n of a block mix relevant inputs (part or all of a true class, a gate or selector
+  input, a relevant modulator) with irrelevant ones (term shares): f7_06 at 128 ((x1+x3+x19+x23−x26) 0.26 and a copy
+  modulated by χ[x24], 0.14), f7_03 at 256 (its s₂ class with the selector and x13, (x7+…+x10−x11+x13), 0.32), symand
+  at 128 (the gate input x8 with four irrelevant inputs, |−x8+x11−x18−x24+x29|, 0.19) and rf06 at 128–256 (χ[x5]·|…|
+  on irrelevant or partly relevant inputs, 0.14 and 0.12; at 256 also a relevant block times |−x8+x15|, 0.09).
 - *Totals.* At the first fit the spurious share is ≤ 0.1 for 22 of 35 targets (median 0.01; largest dlist8 0.36,
   f7_06 0.28, f7_01 0.27); removing the spurious terms changes the test error by at most 0.035 there (dlist8: 0.049
   → 0.085). At 16384 it is ≤ 0.1 for 36 of 37 (sym9 0.21) and removing it leaves the error unchanged.
@@ -581,7 +602,7 @@ both; an out-of-fold fit when it kept neither). Its runs stopped after two conse
   0.365), f7_06 at 64 (χ[x8] and the block (−x6+x7−x8), beside a spurious χ[x14,x19,x24]; 0.043 vs 0.136), mux6 at 128
   (9 characters and a block with an irrelevant input; 0.097 vs 0.366). The reverse also occurs (f7_11 at 32: alone
   0.126, v3 0.299; maj9 at 64: 0.171 vs 0.285, the latter an out-of-fold v3 fit on 57 rows). Over the 114 differing
-  cells alone is lower in 72, but 45 of them (36 at n ≤ 64, 6 at 128–512, 3 above 512) compare with out-of-fold fits
+  cells alone is lower in 72, but 45 of the 114 (36 at n ≤ 64, 6 at 128–512, 3 above 512) compare with out-of-fold fits
   that v3's stacker gave zero weight; against a final v3 member alone is lower in 41 of 69. Of the 80 differing cells
   at n ≤ 64, 40 differ through the variant (v3's forced member against alone's default), 36 are against out-of-fold
   fits and 4 have the default variant in both. The 40 show the same effect as §2.3: the forced guess helps at small n,
@@ -593,9 +614,9 @@ both; an out-of-fold fit when it kept neither). Its runs stopped after two conse
   majmaj5 alone has it at 2048, the last n of v3's run, where v3's member (also error 0) lacks the {x6…x10} class. The
   mod-3 failures are the same from n = 1024 on: constant and background, the error falling to the minority rate
   (fd_10, the third, also in the identity sample: constant and background at every n,
-  `results/identity/dlfamdev__fd_10.json`). At smaller n v3's member was not constant-only (h6_00: characters at
-  n ≤ 64, a character and a sum block at 256–512; f7_05: one or two characters at 16–128, out-of-fold fits), while
-  alone is the constant at every n.
+  `results/identity/dlfamdev__fd_10.json`). At smaller n v3's member was not constant-only (h6_00: two characters at
+  n ≤ 32 and in the out-of-fold fit at 64, a character and a sum block at 256–512; f7_05: one or two characters at
+  16–128, all out-of-fold fits), while alone is the constant at every n.
 - **The Part 10 findings that carry over unchanged**: exact signed blocks on the symmetric targets (sym9, band11, f7_08,
   h5s7) at v3's n_struct; parities, small juntas and staircases as characters; halfspaces as degree-1 characters through
   the linear block; mixtures with the partner as character and as inner term of a weighted block; spurious products of
