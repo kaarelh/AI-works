@@ -20,7 +20,8 @@ features has a linear combination whose sign is f.  For each atlas target, spec(
 """
 import itertools, math, numpy as np
 
-ATLAS = [  # (suite, target): 37 targets, every family of the 11 suites (seed 0 fits on the full n grid)
+ATLAS = [  # (suite, target): 37 targets from 9 of the 11 suites, the main families (ATLAS.md section 4 lists the
+           # sub-families with no atlas target); seed 0 fits on the full n grid
     ("designed", "par2"), ("designed", "par4"), ("dlheld", "par5"),
     ("designed", "stair5"), ("dlheld", "stair6"),
     ("dlheld", "mux6"), ("dlheld3", "mux11"),

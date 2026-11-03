@@ -621,8 +621,9 @@ both; an out-of-fold fit when it kept neither). Its runs stopped after two conse
   h5s7) at v3's n_struct; parities, small juntas and staircases as characters; halfspaces as degree-1 characters through
   the linear block; mixtures with the partner as character and as inner term of a weighted block; spurious products of
   a strong block; mod 3 never. In these files the differences between DFG alone and v3's member come from which
-  variant is kept at small n (64 of the 114 differing cells) and from cells where v3's stacker gave DFG no weight, so
-  that Part 10 summarised an out-of-fold fit (45, 36 of them at n ≤ 64); 5 differ with the same variant.
+  variant is kept at n ≤ 512 (64 of the 114 differing cells, 40 of them at n ≤ 64) and from cells where v3's stacker
+  gave DFG no weight, so that Part 10 summarised an out-of-fold fit (45, 36 of them at n ≤ 64); 5 differ with the same
+  (default) variant.
 
 ## 4. What I could not check, and caveats
 
