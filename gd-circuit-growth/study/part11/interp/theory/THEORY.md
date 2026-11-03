@@ -11,7 +11,56 @@ Labels: **Proved** (a proof is given; "by the code" means a direct reading of th
 [`check_theory.py`](check_theory.py) computes every number and writes `check_theory.json`;
 [`theory_fits.py`](theory_fits.py) makes the DFG fits it needs (cached in `cache/`).
 
-__SHORT__
+## Short answer
+
+1. **P1. Under the null, round 0's tests rarely admit anything** (Proved for the character tests and the linear block).
+   Let the labels be independent of uniform inputs, with any law of the labels. In round 0 of any fit call:
+   - the global test admits a character of degree k with probability at most 2C(d,k)·(δ/(4K·C(d,k)))^{c²}. With c = 1
+     that is δ/(2K) = 0.0125 per degree, for any d and n;
+   - the linear block's test passes with probability at most δ;
+   - if round 0 admits nothing, the default variant's model is the constant plus the kernel background.
+
+   The proof does not cover the spectral block, the sum blocks, the forced variant, or the cross-validation's choice
+   between variants. Numerically the character tests are about 10 times inside their bound (≈ 10⁻³ per degree). The
+   spectral test is not safe: with skewed labels (P(+1) = 0.85) at n = 128, 7 of 30 full DFG fits end with spurious
+   spectral or sum-block features.
+2. **P2. A k-parity is admitted exactly when n(1 − ȳ²) > n_thr(k, d)** (Proved; checked on every parity cell). Here
+   n_thr(k, d) = 2 ln(4K·C(d, k)/δ) ≈ 2k ln d, which is 19.5–42.0 for k = 2–4 and d = 15–120.
+   - With each seed's own ȳ, this criterion predicts all 250 parity cells at n ≥ 32.
+   - Together with the cross-validation's choice of the forced variant at n = 16, it reproduces all 11 measured n*
+     (16–56) to within 0.2.
+   - par4 at d = 30 has n* = 52 rather than 28 because 2 of its 3 seeds have |Σy| > 6 at n = 32, an event of
+     probability 0.12.
+   - The networks' n* grows as d^1.0, d^1.9 and d^2.4.
+   - At d = 1000 (Heuristic) the test would need only n ≈ 56, but DFG v1.3's budget skips its degree-3 and degree-4
+     searches there; an exhaustive degree-4 search would cost 56 network runs.
+3. **P3. n_glob predicts the round-0 test, and later rounds make characters cheaper** (exact criterion Proved; first
+   order Heuristic; checked on 41 targets, seed 0).
+   - The round-0 test admits S iff n > 2c²L·s²/v_S², with the sample's v_S and s; n_glob puts ŷ_S and 1 − ŷ₀² in their
+     place.
+   - Over 8681 (character, n) pairs, n > n_glob agrees with DFG's decision 96.9% of the time, and a normal approximation
+     matches the pass rate in every band of n/n_glob.
+   - Characters that enter through this test do so at a median 2^0.26 × n_glob.
+   - 266 of the 427 characters predicted within the grid enter earlier, mostly through later-round classes. There a
+     3–19 times smaller residual variance makes them 1.7–4.5 doublings cheaper; the smaller union bound adds only a
+     factor 1.2–1.7.
+4. **P4. Sum blocks** (Proved).
+   - With one group per value, a block represents every function of a signed sum of k inputs with at most k + 1
+     parameters, where the Fourier expansion can need 2^k characters.
+   - DFG's grouping (groups of at least max(3, 0.005n) points) gives every value its own group in the large-n limit
+     iff k ≤ 7. On the mod-3 targets it costs at most 0.2% error.
+   - A residue class mod 3 has W_j ≤ (16/9)·C(k, j)·3^j·4^(−k). Exactly, W₁ + W₂ is 1.6·10⁻⁶ (f7_05), 5.4·10⁻⁶ (h6_00)
+     and 2.1·10⁻⁴ (fd_10). This agrees with Part 10's "W₁ = 0, W₂ ≤ 0.0002" to four decimals, although fd_10's
+     W₁ + W₂ is 5% above 0.0002.
+   - The search's seeds would need n ≈ 10⁵–10⁷ to see these targets (Heuristic).
+5. **P5. Compute** (Proved from the code; checked exactly).
+   - The exhaustive degree-3 and degree-4 searches cost ≈ 12n·C(d, 3) and 24n·C(d, 4) FLOPs.
+   - Each budgeted search costs at most its share of one network run: 15% for degree 4; 3% for degree 3 per round; 3%
+     each for degrees 5 and 6.
+   - Degree 4 is subsampled from d = 36 at n = 16384 (from d = 75 at n = 512–1024) and skipped from d = 199.
+   - An analytic FLOP model of the "parity path" reproduces the recorded FLOP counts exactly in 232 of the 275 parity
+     cells; 4 of these needed a false linear block, confirmed by refits. The other 43 are at n ≤ 32, where the fold fits
+     take other paths.
 
 ## 0. What the code does (the parts used below)
 
@@ -51,8 +100,8 @@ chosen variant on all n rows (`scale` = 0.5, `hi` = True) (lines 553–570). Bel
   (plus ln(2(4d + 20 C(d,2))) for weighted blocks), and only if it also passes on r projected off this round's
   accepted characters. Groups: contiguous runs of values of t(x) = Σ_{i∈S} sᵢxᵢ, each with ≥ max(3, ⌊0.005 n⌋) training
   points (`_edges`, 86–97).
-- **Stop**: a round that admits no character and no block ends the fit (824). A round ≥ 1 does not start if s < 10⁻⁶,
-  if every training sign is already right (596), or if the FLOP count exceeds 0.75 GD (598).
+- **Stop**: a round that admits no character and no block ends the fit (824). A round does not start if s < 10⁻⁶,
+  or, from round 1 on, if every training sign is already right (596), or if the FLOP count exceeds 0.75 GD (598).
 - **Forced variant** (817–822). When nothing passes in a round, at most twice per fit, the forced variant adds a guess.
   If n ≥ 48 and the best sum-block candidate's T/threshold exceeds the square of the best character's z, the guess is
   that block. This needs `sum_force` = True, which is the constructor default although the docstring (line 73) says
@@ -159,8 +208,10 @@ Results:
   (0.92% at d = 30).
 - **Spectral block (not covered): it can fail badly.** Where it applies (n ≥ 4d) its statistic exceeds the edge in 0 of
   300 at every n with fair or fixed labels, at d = 15, 30 and 60. With P(+1) = 0.85 at d = 30 it exceeds the edge in
-  46 of 300 at n = 128 (15%) and 1 of 300 at n = 512. The edge is the semicircle edge for many comparable weights r_t.
-  With skewed labels, a few large negative residuals make the pair matrix nearly low-rank at n ≈ 4d (Heuristic).
+  46 of 300 at n = 128 (15%) and 1 of 300 at n = 512. The edge is the semicircle edge for many comparable weights r_t
+  (Heuristic reading). With P(+1) = 0.85, about 0.15n rows carry r ≈ −1.7 against +0.3 for the rest. Those rows add a
+  Wishart-like matrix of rank about 0.15n < d at n ≈ 4d, whose top eigenvalue is near (√(0.15n) + √d)² − 0.15n times
+  1.7/n ≈ 1.0, against the edge's 0.96.
 
 *Full DFG fits on null labels* (`P1.full_fits`, `P1.full_fits_replica`). These are DFG alone with its own
 cross-validation, d = 30.
@@ -168,13 +219,13 @@ cross-validation, d = 30.
   background.**
   - One (n = 1024) holds a pair admitted by the round-0 test, z = 1.06. It is the event P1a bounds.
   - One (n = 256) is a forced-variant model that the cross-validation chose, with held-out errors 122 (default)
-    against 103 (forced), holding a forced degree-4 character.
+    against 103 (forced). It holds its two forced characters, of degree 4 (round 0) and degree 3 (round 1).
   - No linear block, spectral feature or sum block was admitted.
 - **Skewed labels (P(+1) = 0.85), 30 fits at n = 128: 7 of 30 final models hold spurious features**, all in the
   default variant. Six hold spectral features first admitted in round 0, the uncovered test of the previous paragraph.
   One holds a folded sum block on 7 inputs admitted in round 0, then a spectral feature and a second block in round 1.
 - **The replica agrees with DFG's own round-0 decisions** (characters by degree, the linear block, the spectral block)
-  in __REPLICA__ of the __NFULL__ fits.
+  in 110 of the 110 fits: the 80 fair-label fits and the 30 skewed-label fits.
 - Over the fits with a cross-validation (n ≤ 512: 40 fair, 30 skewed), the forced variant was chosen once.
 
 ## 2. P2: the sample size at which a k-parity is admitted
@@ -256,8 +307,10 @@ residual differences come from the failing seeds' errors, which are near 0.5 but
   ties among the forced variant's guesses, which matter at n = 16.
 
 **Against the networks** (Numerical for d ≤ 120; Heuristic beyond).
-- **DFG.** Its measured n* takes the values 16, 28 and 56, i.e. 16 or 32 × 2^0.8, depending on which grid interval holds
-  n_thr ≈ 2k ln d.
+- **DFG.** Its measured n* is one of a few values set by which grid interval holds n_thr ≈ 2k ln d:
+  - 16·2^0.8 ≈ 28 or 32·2^0.8 ≈ 56, when every seed fails at one grid point and passes at the next;
+  - 16, when the forced variant succeeds at n = 16;
+  - 52, for par4 at d = 30, where one of three seeds passes at n = 32.
 - **Networks.** Their n* grows as d^1.04, d^1.91 and d^2.40 for k = 2, 3, 4 (fitted on d = 15–60; `dscale.json`). The
   d = 120 networks (par2 842, par3 14029) are close to that fit's predictions (879, 12834).
 - **d = 1000** (Heuristic). The test-limited DFG prediction is n* = 55.7, 55.7, 56.8 (P(pass at n = 64) = 1.000,
@@ -317,7 +370,14 @@ The disagreements are the sampling fluctuation of v_S. A normal approximation (H
 N(ŷ_S, (1 − ŷ_S²)/n) against the threshold √((1 − ŷ₀²)·2L/n), and uses P2's exact probability for |ŷ_S| = 1. It predicts
 the observed pass rates:
 
-__CALIB__
+| log2(n / n_glob) | ≤ −2 | (−2, −1.5] | (−1.5, −1] | (−1, −0.5] | (−0.5, 0] | (0, 0.5] | (0.5, 1] | (1, 1.5] | (1.5, 2] | > 2 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| pairs | 5381 | 306 | 323 | 313 | 276 | 236 | 187 | 231 | 185 | 1243 |
+| observed pass rate | 0.0006 | 0.020 | 0.062 | 0.115 | 0.373 | 0.623 | 0.941 | 0.983 | 1.000 | 1.000 |
+| normal approximation | 0.0005 | 0.014 | 0.049 | 0.118 | 0.349 | 0.658 | 0.890 | 0.992 | 1.000 | 1.000 |
+
+So the round-0 test's transition is about one doubling wide on either side of n_glob, as the normal approximation
+says, and n_glob is its midpoint.
 
 **First appearance in the model** (`P3.first`). n_first is the first grid n at which χ_S is an explicit feature of the
 final model; n_pred is the first grid n with m > n_glob (P3b).
@@ -434,7 +494,7 @@ to 4·10⁻¹⁶. B counts the signed inputs equal to +1.
 | fd_10 (dlfamdev) | [B mod 3 = 0], signed | 10 | 2⁻⁹ | 2⁻⁹ | 10·2⁻¹⁸ = 3.8·10⁻⁵ | 45·2⁻¹⁸ = 1.72·10⁻⁴ | 55·2⁻¹⁸ = **2.10·10⁻⁴** | 7 | 1023 | 11 |
 
 - **Against Part 10's "W₁ = 0 and W₂ ≤ 0.0002 for all three".** That is right to four decimals. Exactly, W₁ + W₂ is
-  1.6·10⁻⁶ for f7_05 and 5.4·10⁻⁶ for h6_00, two orders of magnitude below 0.0002. For fd_10, W₁ = 3.8·10⁻⁵ is not
+  1.6·10⁻⁶ for f7_05 and 5.4·10⁻⁶ for h6_00, 128 and 37 times below 0.0002. For fd_10, W₁ = 3.8·10⁻⁵ is not
   zero, and W₁ + W₂ = 2.10·10⁻⁴ exceeds 0.0002 by 5%.
 - **Every character on S is nonzero:** all 2^k − 1 of them, by P4e, since the cosine never vanishes for these (k, ρ).
   One block with one group per value represents each target with k + 1 parameters or fewer.
@@ -544,7 +604,33 @@ background; at n ≤ 512 the 2F fold fits are added with their exact fold sizes 
 - **The budget bound P5b**, checked over d = 5–399 and the four scales: no budgeted search's charged cost exceeds its
   share (largest ratio 1 − 1.4·10⁻⁸).
 
-__SUMMARY__
+## 6. The claims at a glance
+
+| claim | what | label | checked by (key in `check_theory.json`) |
+|---|---|---|---|
+| P1a | null, round 0: global test admits a degree-k character with prob. ≤ 2N(δ/(4KN))^{u²c²} (δ/(2K) at u = c = 1) | Proved | `P1.sims` (280 checks), `P1.full_fits` |
+| P1b | null, round 0: the linear block's statistic exceeds d + 2√(dx) + 2x with prob. ≤ e^{−x} (δ at the code's level) | Proved | `P1.sims[*].linear` (64 checks) |
+| P1c | nothing admitted in round 0 ⇒ the default variant's model is the constant plus the background | Proved (code) | `P1.full_fits_replica` (110 / 110) |
+| — | spectral block, sum blocks, forced variant, the cross-validation's choice, rounds ≥ 1 | not covered | `P1.sims[*].quad`, `P1.full_fits` |
+| P2 | a k-parity passes iff n(1 − ȳ²) > n_thr(k, d); exact binomial P(pass) | Proved | `P2.agree` (250 / 250), `P2.cells` |
+| — | measured n* = the interpolation from the first passing grid point, plus the forced variant at n = 16 | Numerical | `P2.pred` |
+| — | d = 1000, and the networks' extrapolation | Heuristic | `P2.d1000`, `P2.networks` |
+| P3a | the exact round-0 criterion; E[v_S] = ŷ_S(1 − 1/(n + 10⁻⁹)) | Proved | — |
+| P3b | n_glob as the first-order detection size | Heuristic | `P3.test0` (96.9%, calibration), `P3.first` |
+| P3c | later-round classes: n_glob/n_cls = union-bound × residual × coefficient factors | Proved (identity) | `P3.factors` |
+| P4a–c | block representation (≤ k + 1 parameters), grouping, what grouping loses | Proved (code) | `P4.grouping`, `P4.generic` |
+| P4d–e | Fourier coefficients of g(B); the mod-3 closed form and its bound | Proved | `P4.targets` (exact, equal to Walsh–Hadamard) |
+| P4f | E[M_ij] = f̂({i, j})(1 − 1/(n + 10⁻⁹)), E[c₁ᵢ] = f̂({i})(1 − 1/(n + 10⁻⁹)) | Proved | — |
+| — | sample sizes at which the search's seeds see a mod-3 class (BBP, degree-1 ranking) | Heuristic | `P4.targets` |
+| P5a–b | FLOP formulas; each budgeted search ≤ its share of GD·`scale` | Proved (code) | `P5.check` (232 / 275 exact), `P5.max_share_used_over_share` |
+| — | budgeted row counts; where the degree-4 search is subsampled or skipped | Proved (arithmetic) | `P5.m_table`, `P5.d_star`, `P5.d_parity_unreachable` |
+
+**Limits of these checks.**
+- P3 and the parity refits use seed 0, or the result files' seeds (2–3).
+- The full-fit null sample is small: 110 fits, at d = 30 only.
+- The uncovered parts' false-admission rates are measured, not bounded, and only for the label laws tried.
+- The proved bounds concern round 0. After a false admission, nothing here bounds what the later rounds add.
+- Everything about d = 1000 is extrapolation.
 
 ## Reproduction and checks of the tooling
 

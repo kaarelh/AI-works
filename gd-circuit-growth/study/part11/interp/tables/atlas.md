@@ -305,7 +305,7 @@ n\* DFG alone: seed 0 80, 3 seeds 82; v3 (Part 10) 3 seeds 44; networks (nets_be
 
 *Representation in DFG's dictionary:* Fourier expansion: 32 characters || symmetry-class blocks (auxiliary: f is a function of each class's signed sum and the other inputs): (x1+x2-x3+x4) accept {} | Fourier weight by degree 0.89 0.04 0.04 0.02 0.00
 
-n\* DFG alone: seed 0 46, 3 seeds 31; v3 (Part 10) 3 seeds –; networks (nets_best) 50. First n with a compact representation complete in the model: – (from then on at every n: –). Exact structure by Part 10's rule: alone 512, v3 –.
+n\* DFG alone: seed 0 46, 2 seeds 31; v3 (Part 10) 3 seeds –; networks (nets_best) 50. First n with a compact representation complete in the model: – (from then on at every n: –). Exact structure by Part 10's rule: alone 512, v3 –.
 
 | n | err | train | variant (CV) | size (terms) | share T / R / S (S-lin) | complete | model |
 |---|---|---|---|---|---|---|---|

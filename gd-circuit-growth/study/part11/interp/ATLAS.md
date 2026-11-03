@@ -1,10 +1,108 @@
 # What DFG v1.3 alone learns: a structure atlas (Part 11, Q7)
 
+## Verification
+
+An independent agent verified this report against its tooling, stored fits, tables and Part 10's files
+([`VERIFY_ATLAS.md`](VERIFY_ATLAS.md), [`VERIFY_ATLAS.json`](VERIFY_ATLAS.json)). It recomputed every count with its own
+scripts, refitted 11 cells and 6 non-chosen variants through its own code path (all equal to the stored and merged
+values), ran its own Walsh transforms and oracle fits, and found the stored specs (37/37) and categories (407/407) equal
+to the current code's. It confirmed 39 of the 61 claims it checked, among them the identity check (517 + 66 cells), the
+cross-validation counterfactual (18 of 222; 89 of 140; 0.2257 / 0.2319 / 0.2256 / 0.2111), the background-removal
+counts (85 / 54 / 268), the 8 exact Fourier models at 16384, the 133 / 9 / 6 dictionary–readout split, the
+spurious-product and duplicate-block counts, the 141 of 255 equal errors against Part 10 and the 15 equal n_struct; 22
+needed correcting. I checked every correction against the stored files (and refitted f7_11 at n = 128) and applied all
+22; none is declined, though item 9 uses the exact value instead of the verifier's approximation. Items 23–34 address
+the omissions it listed and the notes on confirmed claims. Every changed number is recomputed by
+[`atlas_recheck.py`](atlas_recheck.py). Tables regenerated with `atlas_make.py`: only `tables/atlas.md` changes (rf06's
+n\*_3 is now labelled a 2-seed mean); the figures do not change.
+
+Corrections applied (old → new; V*k* = the verifier's claim *k*):
+1. (V4) Header: the 37 targets "cover every target family of the 11 suites" → come "from 9 of the 11 suites, covering
+   the main families; §4 lists the sub-families with no atlas target".
+2. (V2) §0.1: "about 23:33 UTC" → "about 23:30 UTC" (file time 23:30:33).
+3. (V7) §0: "every representation is verified on all 2^k assignments" → character representations are; block
+   representations only as "f is a function of the block statistics" (accept sets not checked; vacuous for the
+   multiplexer address blocks); the spectral pair is not verified.
+4. (V8) §0: character-group shares "exact for distinct characters, which are orthogonal" → approximate (orthogonal in
+   expectation); the tables' character-group values are absolute sds, not fractions of the output sd (also in the
+   docstring of `atlas_make.py`, the tables' key).
+5. (V13) §1.2 heuristic: staircases "as characters only" → "mostly as characters; relevant blocks appear at stair5
+   n = 256–2048 and stair6 n ≥ 512".
+6. (V15) §1.3 heuristic: "first fits one with blocks (one modulated block per data bit, partial)" → "mux11 first fits
+   partial modulated address blocks (n = 512); mux6 goes through additive and weighted relevant blocks".
+7. (V17) §1.4: the degree-1 representation "is complete from n = 64" → "complete at n = 64 (thrint loses it at 512)".
+8. (V18) §1.4: thrint "reaches 0 at n = 1024 with weighted blocks" → "reaches 0 at n = 512 with a product of the
+   {x4…x9} and {x1,x2,x3} blocks and two modulated folded blocks (all R); the weighted blocks come later (+2x1 from
+   1024, +3x1 from 4096)".
+9. (V20) §1.4: degree-1 characters "(group share 0.72–0.85)" → "0.76–0.91 of the output sd (0.72–0.85 as the tables'
+   unnormalised root-sum-square)". The verifier's "0.75–0.93 of the output sd" is that root-sum-square divided by the
+   output sd; the sd of the summed contribution itself (§0's group share), recomputed from the stored weights on the
+   4096 test inputs, is 0.855, 0.757, 0.906, 0.797 of the output sd (maj9, thrint, thr30, f7_01).
+10. (V23) §1.5: "majxor all 25 at 4096" → "at 2048".
+11. (V24) §1.5: "the folded blocks stay at shares ≈ 0.2" → "majxor keeps both (≈ 0.2); parmaj keeps only |t_A + t_B|
+    (0.17)".
+12. (V25) §1.5: "the product block and the spectral pair never appear" → "the product block never appears; the spectral
+    pair appears once, at majxor n = 512 (shares 0.33 and 0.24, 86–90% of |u|² on its inputs); at 256 and 1024 the
+    spectral features carry 0.73–0.84 and count as spurious".
+13. (V28) §1.6: cnf3's inner term holds "the third clause's literals" → "two of the first clause's literals (negated)".
+14. (V31) §1.8: sym9 "at 4096–16384 the block plus 36 degree-2 characters" → "the block, its 36 degree-2 characters and
+    up to 28 degree-4 characters (plus the spurious product at 8192–16384)".
+15. (V37) Short answer: symand's "s ± 3 AND(¬x7,¬x8)" → "s − 3·AND(¬x7,¬x8) and s + 2·AND(¬x7,¬x8)"; also f7_03's
+    "s1 ± 3 x11" → "s1 − 3 x11 and s2 − 3 x11", as the verifier's evidence for this claim gives it (also §1.9).
+16. (V39) Short answer, §2.1: "the two largest gaps (andxor, majpar at 64) are caused by the kernel background" → "the
+    largest gaps are andxor@64 (0.092) and thrint@256 (0.071), then majpar@64 (0.067); andxor's and majpar's vanish
+    without the background, thrint's is a readout gap".
+17. (V44) Short answer, §2.2: removing the spurious terms changes the first-fit error "by at most 0.036" → "0.035"
+    (145/4096).
+18. (V45) Short answer: "spurious terms are rare once the target is fitted" → "rare at n = 16384 (1 of 37 targets above
+    0.1); at the first fit 13 of 35 are above 0.1".
+19. (V49) Short answer, §2.3: below the structure "78 [hold] a true character" → "87".
+20. (V57) Short answer, §3: the small-n differences are "mostly through the variant", and v3 had no final DFG fit "in 4
+    cells" → about half are the variant; most of the rest are cells where v3's stacker gave DFG no weight, so Part 10
+    summarised an out-of-fold fit (45 of the 114 differing cells).
+21. (V59) §3: "for 4 more, alone has it after v3's run had stopped (rf06, majmaj5, cnf3, hrf0)" → for 3 (rf06; cnf3,
+    hrf0); majmaj5 has it at 2048, the last n of v3's run, where v3's member (same error 0) lacks one of the three
+    classes.
+22. (V60) Short answer, §3: the mod-3 failures are "the same: constant only" → like v3's member at n ≥ 1024, alone is
+    constant + background; alone is constant at every n, v3's member was not at small n.
+
+Points declined: none.
+
+Omissions and notes on confirmed claims, now in the text:
+23. f7_09, the other parity mixture, does not have its partner character first (§1.9).
+24. Non-monotone cells: stair5@256, thrint@512, dlist8@256 and @16384, f7_07 and f7_09 (complete only at 256), f7_03
+    (only at 512), and the test-error rises with n (§2.5; also §1.2, §1.6).
+25. The oracle's features exclude the kernel background: in 27 of the 133 dictionary-limited cells DFG's own error is
+    more than 0.05 below the oracle's (short answer, §2.1).
+26. §3: 45 of the 114 differing cells are against v3 out-of-fold fits; against a final v3 member alone is lower in 41 of
+    69; maj9@64 is against an out-of-fold fit; the v3 members at f7_06@64 and mux6@128 are not "one or two characters".
+27. mux6 never holds a modulated address block (§1.3, with item 6).
+28. "Complete" for f7_03, f7_11 and symand checks only the branch or class blocks, not the selector modulation or the
+    gate characters (§1.9).
+29. n\*_3 of rf06 is a 2-seed mean (§0, `tables/atlas.md`).
+30. majmaj5 also holds degree-7 characters from 2048 on (§1.5); sym9's degree-4 characters (item 14).
+31. More spurious blocks at the first n of a block: f7_06@128, f7_03@256, symand@128, rf06@128–256 (§2.2).
+32. Notes on confirmed claims: par5's held-out errors are high, not "at chance" (21 of 64 at n = 64; §1.1); mux11's "17
+    characters" are 17 of its 64 Fourier characters, 41 characters in all (§1.3); thr30 has one weighted block and a
+    product containing it (§1.4); dlist8's halfspace form is lost at 256 and 16384, and f7_06's block form holds its
+    block only inside a relevant product (§1.6); rf06's exact fit is at 256, hrf0's at 128 (§1.7); f7_11's errors at
+    128 lie almost only (63 of 64, confirmed by a refit) where branch 2 is selected and |s₂| = 6 (§1.9).
+33. Further notes: the linear block also entered at 64 in thr30, which has no irrelevant input, and h5s7's S-lin 0.035
+    at 16384 is an upper bound (§2.2); DFG's choice equals always-forced to 3 decimals (0.2257 against 0.2256) and is
+    0.0146 above the better variant (short answer); at f7_05@16 the background helps (§2.4); h6_10's inner term is a
+    literal (§4).
+34. Two additions, recomputed from the stored files: in all 27 cells of item 25, DFG without the background is no longer
+    more than 0.05 below the oracle; majxor's two spectral features at 1024 have cos 0.87 with 1_A ± 1_B, just below the
+    0.9 needed for a target term (§1.5, §2.1).
+
+## About this report
+
 Descriptive analysis of the Part 11 object, **DFG v1.3 run alone** (`part10/hyb_portfolio3/dfg13.py`, md5
 `69cabe5c50345cb24079198ed52b562f`, as `DFG(readout="logit")` inside `harness.Permuted`; PROTOCOL.md), on 37 Boolean
-toy targets that cover every target family of the 11 suites. Seed 0 throughout; one training set per (target, n).
+toy targets from 9 of the 11 suites, covering the main target families (§4 lists the sub-families with no atlas
+target). Seed 0 throughout; one training set per (target, n).
 Nothing here is an ablation or a test of a design: it says what the fitted models contain, not why DFG does well or
-badly. Not yet checked by independent verifiers.
+badly. Verified independently: see Verification above.
 
 Every number is computed from a file named next to it. **Numerical** marks what the files show; **Heuristic** marks
 my reading of it. Shares, categories and "complete" are defined in §0.

@@ -24,7 +24,8 @@ CELLS = os.path.join(HERE, "results", "cells")
 def main():
     R = json.load(open(os.path.join(P11, "results", "toy__dfg13-perm__designed.json")))
     out = dict(cells=0, identical=0, different=[], s_ok=0, s_bad=[], admit_ok=0, admit_forced=0, admit_bad=[],
-               reject_ok=0, reject_capped=0, reject_bad=[])
+               reject_ok=0, reject_capped=0, reject_bad=[], reject_capped_rounds=[], stops={}, stop_rounds_z_gt1={},
+               stop_bad=[])
     for p in sorted(glob.glob(os.path.join(CELLS, "*.json.gz"))):
         with gzip.open(p, "rt") as fh:
             c = json.load(fh)
@@ -58,9 +59,19 @@ def main():
                         out["reject_ok"] += 1
                     elif capped:
                         out["reject_capped"] += 1
+                        key = [c["target"], c["n"], c["seed"], j, rd["n_new"], "64-cap" if rd["n_new"] >= 64 else "room"]
+                        if key not in out["reject_capped_rounds"]:
+                            out["reject_capped_rounds"].append(key)
                     else:
                         out["reject_bad"].append((c["target"], c["n"], c["seed"], j, ch, z, o["best"]))
-    for k in ("different", "s_bad", "admit_bad", "reject_bad"):
+        # 4. the stopping round R
+        R_ = c["rounds_n"]; st = c["stop"]; out["stops"][st] = out["stops"].get(st, 0) + 1
+        zs = [c["replay"][ch][R_]["zbest"] for ch in c["chars"] if c["replay"][ch][R_] is not None]
+        if any(z > 1.0 for z in zs):
+            out["stop_rounds_z_gt1"][st] = out["stop_rounds_z_gt1"].get(st, 0) + 1
+            if st != "all-training-signs-right":
+                out["stop_bad"].append((c["target"], c["n"], c["seed"], R_, st, max(zs)))
+    for k in ("different", "s_bad", "admit_bad", "reject_bad", "stop_bad"):
         out[k + "_count"] = len(out[k]); out[k] = out[k][:40]
     json.dump(out, open(os.path.join(HERE, "tables", "order_validation.json"), "w"), indent=1)
     return out
@@ -69,5 +80,5 @@ def main():
 if __name__ == "__main__":
     o = main()
     print({k: v for k, v in o.items() if not isinstance(v, list)})
-    for k in ("admit_bad", "reject_bad", "different"):
+    for k in ("admit_bad", "reject_bad", "different", "stop_bad", "reject_capped_rounds"):
         print(k, o[k][:12])

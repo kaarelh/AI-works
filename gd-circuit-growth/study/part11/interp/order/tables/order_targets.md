@@ -15,3 +15,5 @@ tau = Kendall tau-b over the target's characters ('never' tied last; 'all tied' 
 | dnf3 | 511 | 1,3,3 / 2,1,2 / 1,2,1 | +0.22 (seeds +0.21, +0.22, +0.22) | +0.22 | 34171/8989/13265 | +0.17 (255 chars) | +0.19 |
 | rand1 | 15 | 2,1,1 / 1,1,1 / 1,1,1 | +0.65 (seeds +0.56, +0.68, +0.71) | +0.44 | 51/6/14 | +0.49 (14 chars) | +0.83 |
 | rand3 | 32 | 1,1,1 / 1,1,1 / 1,1,1 | +0.58 (seeds +0.58, +0.59, +0.56) | +0.24 | 107/136/35 | +0.41 (26 chars) | +0.62 |
+
+Network n onsets come from a 4096-point test-set mean of f chi_S, whose sampling sd on phi is about 0.0156/|yhat_S| (ORDER.md sec. 7). dnf3's two n-axis taus rest mostly on its characters with |yhat| <= 0.027 (sd 0.57-4.0), which that estimate cannot resolve; on its 21 characters with sd <= 0.1 (|yhat| = 0.19) they are +0.56 (net n, DFG n) and +0.87 (net time, net n).

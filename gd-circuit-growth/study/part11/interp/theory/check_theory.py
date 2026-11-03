@@ -370,6 +370,14 @@ def p2_section():
             out["pass_prob"][f"{t}_d{d}"] = {str(n): p_pass(n, k, d) for n in (16, 32, 64, 128)}
             rows_meas[(t, d)] = out["pred"][f"{t}_d{d}"]["measured"]
     out["agree"] = agree
+    out["n_thr_rise_15_to_120"] = {str(k): n_thr(k, 120) - n_thr(k, 15) for k in (2, 3, 4)}
+    out["two_k_ln8"] = {str(k): 2 * k * math.log(8) for k in (2, 3, 4)}
+    p4 = p_pass(32, 4, 30)
+    out["par4_d30_n32"] = dict(p_pass=p4, p_at_least_2_of_3_fail=3 * (1 - p4) ** 2 * p4 + (1 - p4) ** 3,
+                               pass_iff_abs_sum_y_le=max(v for v in range(0, 33, 2) if 32 * (1 - (v / 32) ** 2) > n_thr(4, 30)))
+    p3_ = p_pass(32, 3, 60)
+    out["par3_d60_n32"] = dict(p_pass=p3_, p_both_pass=p3_ ** 2,
+                               pass_iff_abs_sum_y_le=max(v for v in range(0, 33, 2) if 32 * (1 - (v / 32) ** 2) > n_thr(3, 60)))
     # d = 1000: the test-limited prediction, and what DFG v1.3's budget rule does there (Heuristic)
     d = 1000; GD = TH.gd_flops(d)
     for t, k in (("par2", 2), ("par3", 3), ("par4", 4)):
@@ -547,6 +555,11 @@ def p3_section():
     fo = [r for r in rows if r["route"] and r["route"]["how"] == "forced"]
     res["first"]["forced"] = dict(count=len(fo), n_first=sorted(r["n_first"] for r in fo))
     res["first"]["predicted_in_grid"] = sum(1 for r in rows if r["n_pred"] is not None)
+    tt_ = res["test0"]; tt_["pairs"] = tt_["tp"] + tt_["tn"] + tt_["fp"] + tt_["fn"]; tt_["agree"] = tt_["tp"] + tt_["tn"]
+    tt_["agree_frac"] = tt_["agree"] / tt_["pairs"]
+    res["first"]["earlier_global_r0_log2_first_over_pred"] = {
+        str(v): sum(1 for r in rows if r["cat"] == "earlier" and r["route"]["how"] == "test" and r["route"]["cls"] == "global"
+                    and r["route"]["round"] == 0 and int(round(math.log2(r["n_first"] / r["n_pred"]))) == v) for v in range(-6, 0)}
     res["test0"]["fp_ratio_median"] = float(np.median(res["test0"]["fp_ratio"])) if res["test0"]["fp_ratio"] else None
     res["test0"]["fn_ratio_median"] = float(np.median(res["test0"]["fn_ratio"])) if res["test0"]["fn_ratio"] else None
     res["test0"]["fp_within_1"] = sum(1 for v in res["test0"]["fp_ratio"] if v <= 1.0)
@@ -613,6 +626,7 @@ def p4_section():
         nz = sum(C(k, j) for j in range(1, k + 1) if a[j] != 0)
         # the population pair-matrix signal and the noise (Heuristic BBP estimate of when its top eigenvector finds S)
         s2 = 1 - float(a[0]) ** 2; a2 = abs(float(a[2])); a1 = abs(float(a[1]))
+        res.setdefault("times_below_part10_bound", {})[t] = 0.0002 / float(W[1] + W[2])
         res["targets"][t] = dict(desc=desc, k=k, rho=rho, a=[str(x) for x in a[:4]], a_float=[float(x) for x in a[:4]],
                                  W={str(j): str(W[j]) for j in range(4)}, W_float={str(j): float(W[j]) for j in range(4)},
                                  W1W2=float(W[1] + W[2]), W1W2_part10_bound=0.0002, W_fwht={str(j): Wfw[j] for j in range(4)},

@@ -15,3 +15,5 @@ Kendall tau-b per target of each order against the character's degree and agains
 | dnf3 | +0.25 | +0.27 | +0.22 | +0.47 | +0.24 | +0.14 | +0.68 | +0.66 |
 | rand1 | +0.89 | +0.61 | +0.43 | +0.82 | +0.93 | +0.59 | +0.46 | +0.82 |
 | rand3 | +0.69 | +0.39 | +0.52 | +0.33 | +0.70 | +0.54 | +0.45 | +0.31 |
+
+dnf3's 'net n' entries rest mostly on characters with |yhat| <= 0.027, whose network n onsets the 4096-point test-set estimate cannot resolve (sampling sd of phi 0.57-4.0; ORDER.md sec. 7). On its 21 characters with |yhat| = 0.19 (all of one size, so no size tau): net n vs degree +0.85, DFG n vs degree +0.59.

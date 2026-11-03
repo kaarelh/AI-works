@@ -1,0 +1,176 @@
+"""Part 11 structure atlas: recomputes, from the stored files, the numbers that ATLAS.md changed after its independent
+verification (VERIFY_ATLAS.md / .json; the 'Verification' section of ATLAS.md lists the changes).  Reads only files
+(results/atlas, results/cv, the merged evaluation files, Part 10's v3 structure files) and the 4096 test inputs of
+harness.test_data; no fits, except f7_11 at n = 128 with --refit (about 10 s).
+usage: OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python atlas_recheck.py [--refit]"""
+import os, sys, json, ast, math, numpy as np
+from collections import Counter
+HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
+import atlas_make as M                                                 # noqa: E402
+
+H, TH, NS = M.H, M.TH, M.NS
+R = M.load_atlas()
+ORDER = [t for _, L in M.GROUPS for t in L]
+P10V3 = os.path.join(M.P10, "results", "toy_final", "v3")
+
+
+def cell(t, n):
+    return next(c for c in R[t]["cells"] if c["n"] == n)
+
+
+def complete(c):
+    return any(rp.get("complete") for rp in c["summary"]["reps"])
+
+
+def first_fit(t):
+    return next((c["n"] for c in R[t]["cells"] if c["err"] <= 0.1), None)
+
+
+def test_inputs(t, _cache={}):
+    s = R[t]["suite"]
+    T = _cache.setdefault(s, H.targets(s))
+    Xte, yte = TH.test_data(T[t]["fn"], t, 30)
+    return np.asarray(Xte, np.float64)
+
+
+def main():
+    print("== suites of the 37 atlas targets:", dict(Counter(R[t]["suite"] for t in ORDER)))
+    print("== random-suite merged file: seeds", M.merged("random")["seeds"], "(n*_3 of rf06 is their mean)")
+
+    print("== degree-1 characters at n = 16384: sd of their summed contribution / output sd (exact) and the tables' "
+          "root-sum-square of term shares (absolute, and / output sd)")
+    for t in ("maj9", "thrint", "thr30", "f7_01"):
+        c = cell(t, 16384); X = test_inputs(t); v = np.zeros(len(X)); ss = []
+        for x in c["terms"]:
+            if x["kind"] == "chi" and x["deg"] == 1:
+                col = x["w"] * np.prod(X[:, x["S"]], 1); v += col; ss.append(float(np.std(col)))
+        rss = math.sqrt(sum(s * s for s in ss)); sd = c["summary"]["value_sd"]
+        print(f"   {t:7s} exact {np.std(v) / sd:.3f} of the output sd ({np.std(v):.3f} absolute); "
+              f"root-sum-square {rss:.3f} absolute, {rss / sd:.3f} of the output sd")
+
+    print("== thrint: test error by n, degree-1 PTF complete, sum terms at 512")
+    print("  ", [(c["n"], round(c["err"], 4), complete(c)) for c in R["thrint"]["cells"]])
+    print("  ", [(x["desc"], x["cat"], round(x["share"], 2)) for x in cell("thrint", 512)["terms"] if x["kind"] == "sum"])
+    for n in (1024, 4096):
+        print(f"   {n}:", [x["desc"] for x in cell("thrint", n)["terms"] if x["kind"] == "sum" and x["inner"]])
+
+    print("== staircases: relevant blocks (R share) and completeness by n")
+    for t in ("stair5", "stair6"):
+        print(f"   {t}:", [(c["n"], round(c["summary"]["categories"]["R"]["share"], 2), complete(c)) for c in R[t]["cells"]])
+
+    print("== multiplexers: modulated address blocks (target terms with a modulator) by n")
+    for t in ("mux6", "mux11"):
+        print(f"   {t}:", [(c["n"], sum(1 for x in c["terms"] if x["kind"] == "sum" and x["mod"] and x["cat"] == "T"))
+                           for c in R[t]["cells"]])
+    c = cell("mux11", 512); ch = [x for x in c["terms"] if x["kind"] == "chi"]
+    print(f"   mux11@512: {len(ch)} characters, {sum(1 for x in ch if x['cat'] == 'T')} of them Fourier characters, "
+          f"S-lin {c['S_lin']['n']} characters share {c['S_lin']['share']:.3f}")
+
+    print("== parmaj / majxor: cross-pair characters, folded blocks, spectral features")
+    for t in ("parmaj", "majxor"):
+        for c in R[t]["cells"]:
+            if c["n"] < 128:
+                continue
+            q = [(round(x["share"], 2), x["mass_rel"], x.get("quad_match")) for x in c["terms"] if x["kind"] == "quad"]
+            fb = [round(x["share"], 2) for x in c["terms"] if x["kind"] == "sum" and x["fold"] and x["cat"] == "T"]
+            print(f"   {t}@{c['n']}: {M.rep_line(c)}; folded target blocks {fb}; quad {q}")
+    for x in cell("majxor", 1024)["terms"]:
+        if x["kind"] == "quad":
+            u = np.asarray(x["u"]); cs = []
+            for sg in (1, -1):
+                w = np.zeros(30); w[:5] = 1; w[5:10] = sg; cs.append(abs(u @ w) / np.linalg.norm(u) / np.linalg.norm(w))
+            print(f"   majxor@1024 quad w {x['w']:+.3f}: cos with 1_A+1_B {cs[0]:.3f}, with 1_A-1_B {cs[1]:.3f}")
+
+    print("== cnf3@256 sum terms (clauses: x1|x2|x3, ~x4|x5|x6, x7|~x8|x9):",
+          [(x["desc"], x["cat"]) for x in cell("cnf3", 256)["terms"] if x["kind"] == "sum"])
+    print("== sym9 characters by degree, 4096-16384:", [(n, cell("sym9", n)["summary"]["chars_by_degree"]) for n in (4096, 8192, 16384)])
+    print("== majmaj5 characters by degree, 2048-16384:", [(n, cell("majmaj5", n)["summary"]["chars_by_degree"]) for n in (2048, 4096, 8192, 16384)])
+    print("== weighted target blocks at 16384:")
+    for t in ("f7_07", "f7_09", "symand", "f7_03", "f7_11", "f7_00"):
+        print(f"   {t}:", [x["desc"] for x in cell(t, 16384)["terms"] if x["kind"] == "sum" and x["inner"]])
+
+    print("== first fit: DFG error - oracle error, largest five (err, oracle, err without background)")
+    gaps = []
+    for t in ORDER:
+        n = first_fit(t)
+        if n is not None:
+            c = cell(t, n); s = c["summary"]
+            gaps.append((c["err"] - s["oracle_err"], t, n, c["err"], s["oracle_err"], s["err_parts"]["no_bg"]))
+    gaps.sort(reverse=True)
+    print(f"   median gap {np.median([g[0] for g in gaps]):.5f}")
+    for g in gaps[:5]:
+        print("   %.4f %s@%d err %.4f oracle %.4f no_bg %.4f" % g)
+
+    print("== cells with test error > 0.1: dictionary-limited (oracle > 0.1) where DFG's own error is > 0.05 below the oracle")
+    dic = [(t, c["n"], c["err"], c["summary"]["oracle_err"], c["summary"]["err_parts"]["no_bg"])
+           for t in ORDER for c in R[t]["cells"] if c["err"] > 0.1 and c["summary"]["oracle_err"] > 0.1]
+    below = [d for d in dic if d[2] < d[3] - 0.05]
+    print(f"   {len(below)} of {len(dic)}; without the background still > 0.05 below: "
+          f"{sum(1 for d in below if d[4] < d[3] - 0.05)}")
+
+    print("== spurious terms at the first fit")
+    S = [(cell(t, first_fit(t))["summary"]["categories"]["S"]["share"], t) for t in ORDER if first_fit(t)]
+    ch = max((abs(cell(t, first_fit(t))["summary"]["err_parts"]["no_S"] - cell(t, first_fit(t))["err"]), t) for t in ORDER if first_fit(t))
+    print(f"   S share > 0.1 in {sum(v > 0.1 for v, _ in S)} of {len(S)}; at 16384 in "
+          f"{sum(cell(t, 16384)['summary']['categories']['S']['share'] > 0.1 for t in ORDER)} of {len(ORDER)}; "
+          f"largest change of the error when removed: {ch[0]:.4f} ({ch[0] * 4096:.0f}/4096, {ch[1]})")
+
+    B = M.below_structure(R)
+    print(f"== below the first complete n: {len(B)} cells, a true character in {sum(b['true_chars'] > 0 for b in B)}")
+
+    d = json.load(open(os.path.join(HERE, "results", "cv", "forced_vs_default.json")))
+    ce = np.array([x[x["chosen"]]["err"] for x in d]); de = np.array([x["default"]["err"] for x in d])
+    fe = np.array([x["forced"]["err"] for x in d])
+    print(f"== CV means: chosen {ce.mean():.4f}, forced {fe.mean():.4f}, better of the two {np.minimum(de, fe).mean():.4f}"
+          f" (chosen - better {ce.mean() - np.minimum(de, fe).mean():.4f})")
+
+    print("== completeness by n (C = a compact representation complete) and test-error rises after the first fit")
+    for t in ORDER:
+        pat = "".join("C" if complete(c) else "." for c in R[t]["cells"])
+        if "C" in pat and "." in pat[pat.index("C"):]:
+            print(f"   {t:7s} {pat}")
+    for t in ORDER:
+        cs, f = R[t]["cells"], first_fit(t)
+        for a, b in zip(cs, cs[1:]):
+            if f is not None and a["n"] >= f and b["err"] > a["err"]:
+                print(f"   {t} {a['n']} -> {b['n']}: {a['err']:.4f} -> {b['err']:.4f}")
+
+    print("== f7_09: model size by n (the partner chi[x11,x12] and the modulated block enter together at 256)")
+    print("  ", [(c["n"], c["size"], any(x["kind"] == "chi" and x["S"] == [10, 11] for x in c["terms"])) for c in R["f7_09"]["cells"][:6]])
+
+    print("== DFG alone against v3's DFG member (Part 10)")
+    rows = []
+    for t in ORDER:
+        s = json.load(open(os.path.join(P10V3, f"{R[t]['suite']}__{t}__s0.json"))); mine = {c["n"]: c for c in R[t]["cells"]}
+        for c10 in s["cells"]:
+            n = c10["n"]
+            if n not in mine or "terms" not in c10:
+                continue
+            w = c10["weights"]; w = ast.literal_eval(w) if isinstance(w, str) else w
+            rows.append(dict(t=t, n=n, a=mine[n]["err"], v=c10.get("err_dfg"), oof=not c10["dfg_source"].startswith("final"),
+                             kf=w.get("dfg_forced", 0) > 0, var=mine[n]["variant"]))
+    dif = [r for r in rows if r["a"] != r["v"]]
+    kind = lambda r: "out-of-fold" if r["oof"] else "variant" if (r["kf"] and r["var"] == 0) else "same variant"
+    print(f"   common {len(rows)}, differing {len(dif)} (alone lower in {sum(r['a'] < r['v'] for r in dif)}):",
+          dict(Counter(kind(r) for r in dif)), "; n <= 64:", dict(Counter(kind(r) for r in dif if r["n"] <= 64)),
+          "; out-of-fold by n:", dict(Counter("<=64" if r["n"] <= 64 else "128-512" if r["n"] <= 512 else ">512" for r in dif if r["oof"])))
+    fin = [r for r in dif if not r["oof"]]
+    print(f"   against a final v3 member: alone lower in {sum(r['a'] < r['v'] for r in fin)} of {len(fin)}")
+    s = json.load(open(os.path.join(P10V3, "dlheld__majmaj5__s0.json")))
+    print("   majmaj5 in v3:", [(c["n"], c.get("err_dfg"), [x["exact"] for x in c["classes"]]) for c in s["cells"] if c["n"] >= 1024])
+    for suite, t in (("dlheld7", "f7_05"), ("dlheld6", "h6_00")):
+        s = json.load(open(os.path.join(P10V3, f"{suite}__{t}__s0.json")))
+        print(f"   {t} in v3 (non-constant terms besides the background):",
+              [(c["n"], sum(1 for x in c["terms"] if x["kind"] not in ("const", "background"))) for c in s["cells"]])
+
+    if "--refit" in sys.argv:
+        rec = H.fit_toy_dfg("dlheld7", "f7_11", 128, 0)
+        X = test_inputs("f7_11"); wrong = np.where(rec["value_te"] > 0, 1.0, -1.0) != rec["yte"]
+        s2 = -X[:, 4] - X[:, 5] + X[:, 6] - X[:, 7] - X[:, 8] + X[:, 9]
+        m = (X[:, 10] > 0) & (np.abs(s2) == 6)           # branch 2 selected (-x11 = -1) and |s2| = 6
+        print(f"== f7_11@128 refit: error {rec['err']}, {int(wrong.sum())} test errors, {int((wrong & m).sum())} of them where "
+              f"branch 2 is selected and |s2| = 6 ({int(m.sum())} such inputs, {m.mean():.4f}); identity {H.check_identity(rec)}")
+
+
+if __name__ == "__main__":
+    main()
