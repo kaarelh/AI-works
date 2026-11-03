@@ -12,9 +12,10 @@ counts (85 / 54 / 268), the 8 exact Fourier models at 16384, the 133 / 9 / 6 dic
 spurious-product and duplicate-block counts, the 141 of 255 equal errors against Part 10 and the 15 equal n_struct; 22
 needed correcting. I checked every correction against the stored files (and refitted f7_11 at n = 128) and applied all
 22; none is declined, but items 5 and 9 make the verifier's replacement more exact (item 9: the exact value instead of
-an approximation). Items 23–34 address the omissions it listed and its notes on confirmed claims. Every changed number is recomputed by
-[`atlas_recheck.py`](atlas_recheck.py). Tables regenerated with `atlas_make.py`: only `tables/atlas.md` changes (rf06's
-n\*_3 is now labelled a 2-seed mean); the figures do not change.
+an approximation). Items 23–34 address the omissions it listed and its notes on confirmed claims. Every changed
+number is recomputed from the stored files by [`atlas_recheck.py`](atlas_recheck.py) (output:
+[`atlas_recheck.txt`](atlas_recheck.txt), with the f7_11 refit). Tables regenerated with `atlas_make.py`: only
+`tables/atlas.md` changes (rf06's n\*_3 is now labelled a 2-seed mean); the figures do not change.
 
 Corrections applied (old → new; V*k* = the verifier's claim *k*):
 

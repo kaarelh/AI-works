@@ -355,7 +355,7 @@ while S is orthogonal to the fitted features.
 **Data** (Numerical). The 41 targets of the `designed` (21) and `random` (20) suites, seed 0, every grid n
 (451 fits), and the 1697 non-constant characters of the targets' exact Fourier supports (`P3.targets`, `P3.chars`).
 - 330 fits are new (`theory_fits.py`). Every one reproduces the evaluation file's test error and FLOP count exactly, and
-  its replayed residual matches DFG's own round log.
+  its replayed residual matches DFG's own round log (`P3.identity`: 330, 330 and 330 of 330).
 - 121 are the order analysis' seed-0 cells.
 - In each fit, every target character's z-score is replayed in every class at the start of every round, with DFG's own
   N, subsample and residual (`order_fit.replay_round`).
