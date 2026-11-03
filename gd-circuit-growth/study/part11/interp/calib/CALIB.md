@@ -99,7 +99,83 @@ What P-A does not cover:
 - **the forced variant** (n ≤ 512): it takes the best-scoring candidate when nothing passes, at most twice; it is
   used only if the paired cross-validation test prefers it.
 
-<!-- A1 RESULTS -->
+### 1.2 What was admitted, d = 30
+
+(Numerical, `results/noise.jsonl`, `calib.json` `A1.by_cell`; full table `calib_tables.txt`.) 20 fits per cell.
+
+| n | p = 0.5: fits with any feature | of which CV chose forced | test-passed | test error (mean) | p = 0.8: fits with a test-passed feature (what) | CV chose forced | test error (mean) | P(predict −1) |
+|---|---|---|---|---|---|---|---|---|
+| 16 | 2 | 2 | 0 | 0.500 | 0 | 0 | 0.339 | 0.234 |
+| 32 | 1 | 1 | 0 | 0.504 | 0 | 0 | 0.319 | 0.203 |
+| 64 | 1 | 1 | 0 | 0.500 | 1 (linear block, 30 characters) | 0 | 0.274 | 0.130 |
+| 128 | 0 | 0 | 0 | 0.502 | 3 (linear block 1; spectral block 2) | 0 | 0.232 | 0.060 |
+| 256 | 1 | 1 | 0 | 0.502 | 1 (a degree-1 character) | 0 | 0.206 | 0.018 |
+| 512 | 0 | 0 | 0 | 0.502 | 0 | 0 | 0.196 | 0.003 |
+| 1024–8192 | 0 | – | 0 | 0.497–0.501 | 0 | – | 0.195 | 0 |
+| 16384 | 0 | – | 0 | 0.499 | 1 (a degree-1 character) | – | 0.195 | 0 |
+| all | 5/220 | 5/120 (n ≤ 512) | **0/220** (95% ≤ 0.017) | | **6/220** (0.010–0.058) | 0/120 | | |
+
+- **Balanced labels: nothing passes a test** (0 of 220 fits, every n). The only features are the forced variant's,
+  in the 5 of 120 fits at n ≤ 512 where DFG's paired cross-validation chose it: two forced characters each (degrees
+  1–4). Their test errors (0.491–0.500) are those of the fits without features. Every fit stopped with "nothing
+  passed" (215) or after its two forced rounds.
+- **Biased labels: 6 false admissions in 220 fits, at n = 64–256 and once at 16384**: the linear block twice
+  (n = 64, 128; χ² ratio 1.10 and 1.07, i.e. T = 56.5 and 54.9 against 51.23), adding all 30 inputs (test error 0.336
+  and 0.283 against 0.195); the spectral block twice at n = 128 (eigenvalue ratio 1.011 and 1.054; in the first fit a
+  second spectral feature entered in round 1 at ratio 1.083, after the first had lowered s; test error 0.234, 0.213);
+  a degree-1 character twice (n = 256: test error 0.244; n = 16384: 0.195). In 5 of the 6 nothing further entered.
+  The cross-validation never chose the forced variant at p = 0.8 (0/120).
+- **Test error on fresh noise** (Numerical; reading Heuristic). p = 0.5: 0.497–0.504 by n (the test set has
+  P(y = −1) = 0.4895). p = 0.8: 0.339 at n = 16, falling to 0.1946 = the test set's minority rate from n = 1024 on.
+  The excess at small n is the kernel background, not admitted features (at n = 16 and 32 no fit has a feature):
+  the model is sign(w₀ + x·b) with b = X^T r / n, whose d coordinates are each ~N(0, s²/n), so a test point is
+  predicted −1 with probability ≈ Φ(−w₀√n / (s√d)) = 0.29, 0.14, 0.014 at n = 16, 64, 256 (w₀ ≈ 0.6, s ≈ 0.8),
+  against the measured 0.234, 0.130, 0.018; the error is then 0.1946 + 0.611·P(predict −1) (0.338 at n = 16 against
+  the measured 0.339). Part 6's remark that DFG is "sometimes above the constant predictor's error" at n = 16–64 fits
+  this: the Hebbian background carries no information on such data and costs up to 0.14 in error on biased labels.
+
+### 1.3 Per class, against the nominal levels
+
+(Numerical, `calib.json` `A1.by_class`, `nominal`; Gaussian reference Heuristic.) Round 0 of the final fit, d = 30,
+both p, all n where the class runs (degrees 3–4 need m ≥ 32 rows, degrees 5–6 m ≥ 64):
+
+| class | N | round-0 tests | fits with ≥ 1 pass | bound δ/(2K) (P-A) | independent-Gaussian approx. | median max-ratio, p = 0.5, n ≥ 128 | Gaussian reference |
+|---|---|---|---|---|---|---|---|
+| degree 1 | 30 | 440 | 2 (0.0006–0.016) | 0.0125 | 0.0012 | 0.52–0.60 | 0.553 |
+| degree 2 | 435 | 440 | 0 (≤ 0.008) | 0.0125 | 0.0010 | 0.63–0.68 | 0.669 |
+| degree 3 | 4060 | 400 | 0 (≤ 0.009) | 0.0125 | 0.0009 | 0.69–0.74 | 0.727 |
+| degree 4 | 27405 | 400 | 0 (≤ 0.009) | 0.0125 | 0.0009 | 0.75–0.77 | 0.762 |
+| degree 5 (m = min(n, 1374)) | 142506 | 360 | 0 (≤ 0.010) | 0.0125 | 0.0008 | 0.77–0.79 | 0.785 |
+| degree 6 (m = min(n, 147)) | 593775 | 360 | 0 (≤ 0.010) | 0.0125 | 0.0008 | 0.79–0.80 | 0.802 |
+
+(The "max-ratio" is the largest |statistic| / threshold in the class; the reference is the median of max |Z|/z over N
+independent N(0, 1).) Both degree-1 passes are at p = 0.8. The later rounds of the final fits (after a forced or a
+false feature) ran 13–16 tests of each degree 1–3, 13 one-input and 10 two-input extension tests and 9 local tests,
+with no pass. Against the task's nominal
+"δ = 0.1 per class per round" every class is far below; against the sharper δ/(2K) = 0.0125 of P-A every rate is
+compatible with it, and 5 of 6 classes are compatible with the ~0.001 of the Gaussian approximation (degree 1: 2/440
+where 0.5 is expected; a 20000-draw check is in §1.4).
+
+### 1.4 The block tests
+
+(Numerical, `calib.json` `A1.blocks`, `mc`, `mc_big`.)
+
+<!-- A1 BLOCKS -->
+
+### 1.5 The forced variant and the cross-validation's fold fits
+
+(Numerical, `calib.json` `A1.folds`.) At n ≤ 512 every fit also runs 2F fold fits (F = 10 at n ≤ 64, else 5): F of the
+default variant and F of the forced one, on (F−1)/F of the rows, without the degree-5/6 search and with 1/(4F) of the
+budget each.
+
+| d = 30 | default fold fits with an admitted feature | forced fold fits with a test-passed feature after the forced ones |
+|---|---|---|
+| p = 0.5 | 2/900 (a degree-1 character; the linear block) | 12/900 (mostly the local class: 9 fits; linear block 2, two-input extension, degree 1) |
+| p = 0.8 | 9/900 (linear block 3, spectral 3, sum blocks 2, degree 1) | **238/900** (n = 32: 121/200; 64: 73/200; 128: 28/100; 256: 15/100; 512: 1/100) |
+
+<!-- A1 CASCADE -->
+
+<!-- A1 D60 -->
 
 ## 2. (A2) Spurious features on the designed and random targets
 

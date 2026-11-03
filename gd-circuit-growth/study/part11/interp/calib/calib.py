@@ -411,6 +411,64 @@ def run_prof(seed=0, rep=0):
                   f"calls={len(calls)} top={sorted(((round(v / out['flops'], 3), k) for k, v in tot.items()), reverse=True)[:4]}", flush=True)
 
 
+# ------------------------------------------------------------------------------------------------ (A1, aside) cascades
+def _local_test(X, y, chars, delta=0.1, K=4, c=1.0, ridge=1e-3):
+    """DFG's local class, recomputed: least squares of y on {1, chi_A for A in chars} (lsfit's ridge), then every subset
+    T of V = union of the chars' inputs (2 <= |V| <= 12), T not empty and not in chars, passes if
+    |mean(r chi_T)| > c s sqrt(2 ln(4 K C(|V|, |T|) / delta) / n).  Returns (number passing, max ratio)."""
+    n, d = X.shape; cols = [np.ones(n)] + [np.prod(X[:, list(A)], 1) for A in chars]; A_ = np.stack(cols, 1); p_ = A_.shape[1]
+    G = A_.T @ A_ + ridge * n * np.diag([0.0] + [1.0] * (p_ - 1)) + 1e-9 * np.eye(p_)
+    r = y - A_ @ np.linalg.solve(G, A_.T @ y); s = math.sqrt(max(np.mean(r * r), 1e-12))
+    V = sorted(set(v for A in chars for v in A)); L = len(V)
+    if not 2 <= L <= 12:
+        return None, None
+    have = {tuple(sorted(A)) for A in chars}; npass, best = 0, 0.0
+    for m in range(1, 1 << L):
+        T = tuple(V[q] for q in range(L) if m >> q & 1)
+        if T in have:
+            continue
+        v = float(np.mean(r * np.prod(X[:, list(T)], 1)))
+        t = c * s * math.sqrt(2 * math.log(4 * K * math.comb(L, len(T)) / delta) / n)
+        npass += abs(v) > t; best = max(best, abs(v) / t)
+    return npass, best
+
+
+def run_cascade(reps=200, ns=(29, 58), ps=(0.5, 0.8), d=30):
+    """The forced variant's fold fits on noise: DFG._fit(force=True, hi=False, scale=1/40) as DFG.fit runs them (n ~ the
+    fold size at n = 32 and 64), recorded; and a control: the same local test with the forced characters replaced by
+    random characters of the same degrees.  If the forced (maximally selected) inputs cause the local passes, the
+    control's pass rate is near the nominal level."""
+    M = load_instr(); path = os.path.join(RES, "cascade.jsonl"); done = jl_keys(path)
+    for p in ps:
+        for n in ns:
+            for s in range(reps):
+                key = f"{d}:{p}:{n}:{s}"
+                if key in done:
+                    continue
+                rng = np.random.default_rng([TH.fn_seed("cascade"), int(100 * p), n, s])
+                X = rng.choice(np.array([-1.0, 1.0]), size=(n, d)); y = np.where(rng.random(n) < p, 1.0, -1.0)
+                REC.reset(True)
+                out = M.DFG(readout="logit")._fit(X, y, 1.0, True, False, 1e-3, hi=False, scale=1 / 40)
+                REC.stop(); c = REC.calls[-1]
+                forced = [rd["forced"] for rd in c["rounds"] if rd["forced"] is not None]
+                fch = [tuple(f["S"]) for f in forced if f["kind"] == "char"]
+                loc = [dict(rnd=rd["rnd"], maxz=rd["cls"].get("local", {}).get("maxz"), npass=rd["cls"].get("local", {}).get("npass"))
+                       for rd in c["rounds"] if "local" in rd["cls"]]
+                feats, _ = adm_counts(c)
+                ctl = None
+                if fch and not any(f["kind"] == "block" for f in forced):
+                    rc = np.random.default_rng([TH.fn_seed("cascade-control"), int(100 * p), n, s])
+                    R_ = [tuple(sorted(int(i) for i in rc.choice(d, size=len(A), replace=False))) for A in fch]
+                    ctl = {}
+                    for k_ in range(1, len(fch) + 1):            # after the first forced char, and after both
+                        a1, b1 = _local_test(X, y, fch[:k_]); a2, b2 = _local_test(X, y, R_[:k_])
+                        ctl[str(k_)] = dict(forced_npass=a1, forced_max=b1, random_npass=a2, random_max=b2)
+                rec = dict(key=key, d=d, p=p, n=n, seed=s, forced=forced, local=loc, feats=feats, control=ctl,
+                           size=int(out["info"]["size"]), rounds=int(out["info"]["rounds"]))
+                jl_append(path, rec)
+            print(f"cascade p={p} n={n} done", flush=True)
+
+
 if __name__ == "__main__":
     a = sys.argv[1:]; opt = {k[2:].split("=", 1)[0]: k.split("=", 1)[1] for k in a if k.startswith("--")}
     cmd = [x for x in a if not x.startswith("--")][0]
@@ -420,7 +478,7 @@ if __name__ == "__main__":
     elif cmd == "noise":
         d = int(opt.get("d", 30)); seeds = rng_(opt.get("seeds", "0-19" if d == 30 else "0-9"))
         ps = [float(v) for v in opt.get("ps", "0.5,0.8").split(",")]
-        ns = [int(v) for v in opt["ns"].split(",")] if "ns" in opt else NS
+        ns = [int(v) for v in opt["ns"].split(",")] if "ns" in opt else (NS if d == 30 else [64, 128, 256, 512, 1024, 4096, 16384])
         assert audit()["ok"]
         run_noise(d, ps, seeds, ns, frozen_seeds=set(rng_(opt.get("frozen", "0-1"))))
     elif cmd == "spur":
@@ -431,6 +489,9 @@ if __name__ == "__main__":
         assert audit()["ok"]
         for rp in rng_(opt.get("reps", "0")):
             run_prof(rep=rp)
+    elif cmd == "cascade":
+        assert audit()["ok"]
+        run_cascade()
     elif cmd == "summarize":
         import calib_summary
         calib_summary.main()
