@@ -36,7 +36,8 @@ items 26–33 correct.
 - **Found while re-checking: items 26–33.** These are numbers and descriptions that the verifier confirmed or did not
   check, plus one sentence added in the first round of corrections.
 - **Regenerated.** `order_analysis.py`, `order_report.py` and `order_validate.py` were re-run single-threaded. Their
-  outputs differ from the pre-verification ones only as listed here, and a repeat run reproduces them byte for byte.
+  outputs differ from the pre-verification ones only as listed here. A repeat run reproduces them byte for byte;
+  `results/order_summary.json.gz` matches in content, since gzip stores the time it was written.
   `order_fit.py` skips the fits that exist; called on 4 stored cells (`order_recheck.py --refit`), it reproduces them
   exactly.
   - In the existing tables the only changed number is majpar's x1⋯x6 n_glob (147 → 513, item 9).
