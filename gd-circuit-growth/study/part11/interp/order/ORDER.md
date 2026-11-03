@@ -15,25 +15,39 @@ are given with every count. "tau" is Kendall's tau-b over a target's Fourier cha
 An independent agent verified this report on 3 November 2026 ([`VERIFY_ORDER.md`](VERIFY_ORDER.md),
 [`VERIFY_ORDER.json`](VERIFY_ORDER.json)). It used its own code: 12 refits through a separate code path, all 23,727
 round-0 z-scores from the raw training rows, the network onsets under four conventions, and every order, tau, pair
-count and route count.
+count and route count. The corrections were applied on 3 November 2026. Then every script was re-run
+single-threaded and every number in the text was checked against its output. That check found further errors, which
+items 26–33 correct.
 
 - **Confirmed: 41 of 60 claims.** These include:
-  - the identity of all 363 fits with the evaluation queue, with the 12 refits also reproducing every round log;
+  - the identity of all 363 fits with the evaluation queue. The 12 refits also reproduce the rounds, the feature
+    counts, and the logged s and n_new of every round;
   - the test replay (3217 / 13 / 29890 / 17, none unexplained);
   - every tau-b, pair count, route count and median, endpoint share, data-cost count and non-monotone count;
   - the round-0 priority (44 of 44 positive);
-  - mux's x1x2x3x4 (first by z0 in 30 of 30 fits; n_glob 54 against 271);
+  - mux's x1x2x3x4: first by z0 in every fit at n ≥ 64; n_glob 54 against 271. The report and the verifier both
+    counted these fits as 30; there are 27 (item 26);
   - the network onsets and the n_glob formula.
-- **Corrected: 19 claims, plus 9 omissions.** All are applied below, except two points declined in part (items 11
-  and 16), each with the stored evidence. Each correction was checked against the stored cells before it was
-  applied. "Recomputed" marks a number of mine; the others are the verifier's.
-- **Regenerated.** `order_analysis.py`, `order_report.py` and `order_validate.py` were re-run single-threaded.
+- **Corrected: 19 claims, plus 9 omissions.** All are applied below.
+  - Two points are declined in part, each with the stored evidence (items 5 and 16).
+  - One correction is applied with a per-seed qualification (item 11).
+  - Each correction was checked against the stored cells before it was applied. "Recomputed" marks a number of mine;
+    the others are the verifier's.
+- **Found while re-checking: items 26–33.** These are numbers and descriptions that the verifier confirmed or did not
+  check, plus one sentence added in the first round of corrections.
+- **Regenerated.** `order_analysis.py`, `order_report.py` and `order_validate.py` were re-run single-threaded. Their
+  outputs differ from the pre-verification ones only as listed here, and a repeat run reproduces them byte for byte.
+  `order_fit.py` skips the fits that exist; called on 4 stored cells, it reproduces them exactly.
   - In the existing tables the only changed number is majpar's x1⋯x6 n_glob (147 → 513, item 9).
-    `order_targets.md` and `order_degree_size.md` gain a note on dnf3's n-axis entries.
+    `order_targets.md` and `order_degree_size.md` gain a note on dnf3's n-axis entries. `order_stages.md` now states
+    its stage rule and also lists Part 5's chained stages (item 30).
   - New numbers are in `order_numbers.json` under new keys: `net_n_resolution`, `priority_online_seed_matched`,
-    `onset_conventions`, `mechanism.*_without_dnf3` and `rounds_by_n.*.nonpositive_multi`. The stopping-round counts
-    are in `order_validation.json`. Route details for single fits (§4.3, §5.3) come from the cells.
-  - The figure is unchanged.
+    `onset_conventions`, `mechanism.*_without_dnf3`, `mechanism.dnf3_share_by_how` and
+    `rounds_by_n.*.nonpositive_multi`. The stopping-round counts are in `order_validation.json`.
+  - The new [`order_recheck.py`](order_recheck.py) prints the numbers that come from single fits or single
+    characters (§1.2, §1.5, §2, §3, §4.2, §4.3, §5.3, §5.4, §7) to
+    [`tables/order_recheck.txt`](tables/order_recheck.txt).
+  - The figure is unchanged (byte for byte, with the PDF's date fixed by `SOURCE_DATE_EPOCH`).
 
 **Corrections (old → new; the claim or omission number of VERIFY_ORDER.md in brackets).**
 
@@ -50,9 +64,12 @@ count and route count.
 5. §1.4 (claim 24, omission 1): "like for like: yes, in data and criterion" → "yes in data and rule; not in estimator
    precision for |ŷ| well below 0.1".
    - Qualifications follow in Short answers 2 and 4, §4.1, §4.2, §5.3, §5.4 and §7. On dnf3's 21 resolvable
-     characters its +0.17 is +0.56 and its +0.19 is +0.87. 255 of the 349 small data-cost characters are dnf3's.
-   - The networks' 223 n-axis drops: 218 are on dnf3. 215 of those are on characters with |ŷ| ≤ 0.027 (recomputed;
-     the verifier's summary calls all 218 noise).
+     characters its +0.17 is +0.56 and its +0.19 is +0.87. 255 of the 349 small data-cost characters are dnf3's, and
+     218 of the networks' 223 n-axis drops are on dnf3.
+   - **Declined in part.** The verifier counts all 218 of those drops and all 255 of those characters as
+     noise-dominated. But 3 of the 218 and 21 of the 255 are on |ŷ| = 0.19 characters. By the verifier's own
+     criterion these are resolvable: the sd of φ is 0.08, and a network equal to the target scores 0.88–1.17 on them.
+     The text therefore says 215 of the 218 and 234 of the 255 (recomputed, `net_n_resolution`).
 6. §4.2 (claim 27): rmaj9's networks "128–4096" → "64–4096 per seed (256–4096 by median)". By median, one character
    (x2x5x8) never enters, an estimator artefact.
 7. §4.3 stair5 (claim 30, omission 8): "the one place … where DFG builds like the networks" → one of several
@@ -65,16 +82,18 @@ count and route count.
    changes).
 10. §4.3 andxor (claim 35): seed 2's product comes after x3x4, in the same round as x1x2, not after both pairs.
 11. §4.3 dlist5 (claim 36): "of higher degree and carried by a block" → "of higher degree in 25 of them".
-    - **Declined in part.** The verifier keeps "carried by a block" for all 33. The cells show that holds in seeds 0
-      and 2 only.
-    - In seed 1, 15 are carried by a block, 16 by ext1 or ext2, and 2 never enter (recomputed). The text now says so.
+    - **Applied, with a per-seed qualification.** The verifier's "carried by a block" holds in seeds 0 and 2. It also
+      holds at the median onset, n = 512 for all 33: in every case a seed in which a block carries the character has
+      its onset there.
+    - In seed 1, 15 are carried by a block, 16 by ext1 or ext2, and 2 never enter (recomputed). The text gives both.
 12. §4.3 parmaj (claim 37): "the pairs and degree-4 terms come by global tests" → at the n onset (128) no test admits
     any character. Two folded blocks carry 42 of their 45 character-seeds. Tests, mostly global ones, take them only
     at larger n.
 13. §4.3 dnf3 (claim 38): "0.027-characters at 512 (degrees 2–3)" → "256–2048 (one at 16384)". "0.0039-characters
     at 8192–16384 or never" → "from 1024 to never".
-    - From the same evidence, checked: the networks' "about 500 characters … from 228 to 1084" → "490 … from 228 to
-      1084", then 11 degree-5 characters in two late stages (1474, 2005).
+    - From the same evidence, checked: the networks' "about 500 characters … from 228 to 1084" → 501 characters of
+      degree 2–8 from 228 to 2037 steps, one stage by Part 5's rule (item 30). In `order_stages.md`'s stages, 490 of
+      them are in stages that start at 228–1084, and 11 degree-5 characters form two late stages (1474, 2005).
     - Recomputed: the late 0.027-characters are of degrees 4–6 (not 4–5), at 4096–16384 or never.
 14. Short answer 3 and §5.2 (claim 44): bundles "cut by coefficient size, not by construction" → cut by detectability.
     That is mainly size, but also degree and the carrying block, so equal coefficients are split (sparsepoly, majpar)
@@ -85,7 +104,8 @@ count and route count.
     dropped later, so never carried for good (except 7 degree-7 characters).
     - **Declined in part.** The verifier says "carried only by blocks, at n = 512–4096".
     - The cells show the local class admitting them as explicit features at n = 2048 (seed 2, 26 of 36) and 4096
-      (seed 0, 36 of 36). Blocks also carry them at 8192 (seed 1, 9) and 16384 (seed 0, 7).
+      (seed 0, 36 of 36). Blocks also carry them at 8192 (seed 1, 9) and 16384 (seed 0, 7) (`order_recheck.txt`,
+      §5.3).
 17. §5.4 (claim 50): "all or nothing. A character either passes a test … or it does not" → "nearly all or nothing".
     1134 of the 1497 character-seeds carried for good are carried by a block, not by a test of their own.
 18. Short answer 5 and §6 step 3 (claim 57, omission 2): "blocks carry characters 5.3 doublings below … rmaj9's
@@ -114,6 +134,35 @@ count and route count.
     - the learned and partial shares overlap (claim 49);
     - "never" → "never for good" (§4.3 rmaj9) and "that ever enter" → "that enter for good" (Short answer 3, §5.3),
       following item 16.
+
+**Found while re-checking (old → new; recomputed, in `order_recheck.txt` unless another source is named).**
+
+26. Short answer 3 and §3 (claims 20 and 43, both confirmed): "in all 30 fits with n ≥ 64" → "in all 27". The grid
+    has 9 values of n ≥ 64 (64 … 16384), so there are 27 such fits. x1x2x3x4 has the strictly highest round-0 z in
+    all 27, and in 2 of the 3 fits at n = 32. The verifier's "30/30" repeats the report's miscount.
+27. §1.2, a sentence added with item 3: "the largest difference is dnf3's x1⋯x9" → the largest in steps (3598
+    against 2115). The largest ratio belongs to dnf3's x3x6x7x8x9: 1865 against 873, 2.1×.
+28. §4.3 rand1: the networks' last stage, "degrees 3–4 (434)" → "degrees 3–5 (434–607)". It holds x1x3x4x5x6
+    (degree 5, 547 steps).
+29. §4.3 rand3: the networks' "mixed degree-3/4 stages" → "mixed stages of degrees 3–6, from 346 to 825 steps".
+30. §2, §4.3 and `order_stages.md`: the networks' stages in `order_stages.md` do not follow Part 5's rule, as its header
+    said.
+    - Each stage there is a run of onsets within 1.35× of the stage's first onset. Part 5's `stages.py` chains: an
+      onset joins the stage if it is within 1.35× of the previous onset.
+    - The two rules agree on sparsepoly, mux, majpar, andxor and parmaj. On the other six targets chaining merges some
+      stages: for example rmaj9's into one cascade at 796–1217 steps, and dnf3's into one at 228–2037.
+    - The header of `order_stages.md` now states its rule, and the file also lists the chained stages
+      (`order_report.py`). No tau, pair count or bundle count uses these stages; those compare onsets pair by pair.
+    - §2 and §4.3 now give the chained range where they describe one cascade. rmaj9: "a cascade at 796–1081" →
+      "796–1217". dnf3: see item 13.
+31. §5.2 rand3: "separated from the 256 stage by whether a character contains x6" → its 0.125-characters are split
+    by x6: without it at 128, with it at 256. x5x6 and x4x5x6 contain x6 too, but they are 0.375-characters at 128.
+32. §4.2's table of medians, and §4.3 majpar, whose DFG stages are by median seed: majpar's pairs "32–64" → "64
+    (32–64 per seed)". By median all three pairs enter at 64.
+33. Precision:
+    - §5.3 rmaj9 at n = 512: "by modulated blocks" → "by the sum blocks of rounds 1–2"; nine of those ten blocks are
+      modulated;
+    - §4.3 parmaj at n = 128: in seed 1, round 1 also adds the full-sum block's product with |x18+x27|.
 
 ## Short answer
 
@@ -151,7 +200,7 @@ count and route count.
    - *Order follows construction, not coefficient size:* DFG tends to the reverse at degree ≤ 4 (on 5 of the 8 targets
      whose coefficient sizes differ), but not as a rule.
      - Mux's largest term x1x2x3x4 (0.75) is the networks' last character. It is DFG's first: ranked first by
-       round-0 z in all 30 fits with n ≥ 64, and in the model from n = 64 in all 3 seeds. There it is tied, by
+       round-0 z in all 27 fits with n ≥ 64, and in the model from n = 64 in all 3 seeds. There it is tied, by
        median, with x2, x3 and x2x4, and in seed 2 it is a forced pick. The networks need n = 2048 for it.
      - Over the targets, the networks' time order follows degree more than coefficient size on 7 of the 8 targets
        whose coefficient sizes differ (dnf3 is a near-tie that slightly favours size). DFG's n order follows 1/|ŷ|
@@ -221,8 +270,9 @@ count and route count.
     (larger over smaller > 1.1) for 143 characters (`onset_conventions`):
     - 142 of them are dnf3's (e.g. x2x7: 228 here against 178; x1x4x7: 789 against 996);
     - the other is stair5's x1x2x4 (703 against 588);
-    - the largest difference is dnf3's x1⋯x9. Its per-seed onsets are 504, 3209 and 5858 (geometric mean 2115, as in
-      §2.2), while its seed-mean curve crosses 1/2 at 3598. I use 3598.
+    - the largest difference in steps is dnf3's x1⋯x9. Its per-seed onsets are 504, 3209 and 5858 (geometric mean
+      2115, as in §2.2), while its seed-mean curve crosses 1/2 at 3598. I use 3598;
+    - the largest ratio is dnf3's x3x6x7x8x9: 1865 here against 873, 2.1× (`order_recheck.txt`).
 - **Sample size (fixed-n study).** The source is `$SCR/results/fixed_adam_<fn>.npz`, written by `nn_train.py`.
   - These are the same network, optimizer and training sets, at n = 16…16384 with 3 seeds.
   - `coef` is the mean over the 4096 test inputs of f(x)·χ_S(x), recorded only for |S| ≤ 4 (`char_sets`, kmax = 4).
@@ -276,7 +326,7 @@ bit `eval_dfg.py`'s fit, and also records every `numpy.linalg.solve` solution.
 - **Stopping round.** This was checked after verification, and `order_validate.py` now includes it.
   - In the 90 fits that stop with nothing passed (or on the budget or room), no target character has z > 1.
   - The 192 stopping rounds that do have one all end by the sign rule, which DFG applies before testing.
-- **Compute.** 17.8 CPU-minutes in all (the longest fit 13.9 s), single-threaded, one process.
+- **Compute.** 17.8 CPU-minutes in all (the longest fit 13.9 s), single-threaded, one process (`order_recheck.txt`).
 
 ## 2. At Part 5's sample sizes DFG has (almost) no round order (Numerical)
 
@@ -295,9 +345,9 @@ bit `eval_dfg.py`'s fit, and also records every `numpy.linalg.solve` solution.
   - rmaj9 at n = 512, seed 0 (−0.01).
 - **The round order sits at small n.** DFG's round order is richest at n = 128. There rounds admit few features, and
   DFG's own cross-validation picks the forced variant in 15 of 33 fits (14 of the 24 multi-round ones; cells,
-  `variant`). At that n the round order agrees with the networks' time order in every multi-round fit (tau
-  0.08–0.93).
-- **At Part 5's n it is gone.**
+  `variant`, counted in `order_recheck.txt`). At that n the round order agrees with the networks' time order in every
+  multi-round fit (tau 0.08–0.93).
+- **At Part 5's n it is gone** (fits and stops listed in `order_recheck.txt`).
   - n = 512: the multi-round fits are rmaj9 (3 seeds), dlist5 (2), dnf3 (2), parmaj (1) and rand1 (1).
   - n = 2048: rmaj9 seed 2 and dnf3 seeds 0 and 2.
   - n = 16384: dnf3 seed 1.
@@ -308,14 +358,14 @@ bit `eval_dfg.py`'s fit, and also records every `numpy.linalg.solve` solution.
 - **What a tau means in a one-round fit.** It only separates the characters DFG carries from those it leaves out,
   which are tied last. For example, rmaj9 at n = 16384 gives tau 0.59–0.71 because DFG omits the small degree-5 and
   degree-7 terms the networks learn last. That is a statement about the endpoint (§5.4), not about order.
-- **Two multi-round fits at n = 512** (from the cells):
+- **Two multi-round fits at n = 512** (from the cells; `order_recheck.txt`):
   - *rmaj9, seed 0.*
     - Round 0: the 9 linear terms, x1x2x3, x7x8x9, and the full-sum block (x1+…+x9). The block carries the degree-9
       character x1⋯x9.
     - Rounds 1–3: modulated blocks such as chi[x7,x8,x9]·|x1+x2+x3−x4−x5−x6|, which carry degrees 3, 5 and 7.
       Rounds 1–2 also admit four explicit characters (x4x5x6, x3x6x8, x2x4x9, x1x5x7), and round 3 also adds two
       unmodulated sum blocks.
-    - The networks: linear terms (47 steps), then a cascade at 796–1081 in which x1⋯x9 is among the first.
+    - The networks: linear terms (47 steps), then one cascade from 796 to 1217 steps, which x1⋯x9 opens (796).
   - *parmaj, seed 1.*
     - Round 0: 8 of the 9 cross pairs, 4 of the 6 degree-4 terms, and x1⋯x6. The last is carried by the folded block
       |−x1−x2−x3+x4+x5+x6|.
@@ -357,7 +407,8 @@ the same training set; mean of 3 seeds ([`tables/order_targets.md`](tables/order
   ≥ 7 has z0 = 0.
 - **Mux, among the lowest.** It is lowest online and at n = 2048; dnf3 is lower at n = 16384 and 512. 6 of mux's 21
   network-ordered pairs are inverted, and all 6 involve x1x2x3x4. From the cells:
-  - x1x2x3x4 has the highest z0 of the 8 characters in every fit at n ≥ 64 (30 fits), and in 2 of 3 at n = 32;
+  - x1x2x3x4 has the highest z0 of the 8 characters in every fit at n ≥ 64 (27 fits), and in 2 of 3 at n = 32
+    (`order_recheck.txt`);
   - at n = 16384 its z0 is 17.1–17.5, against 6.1–8.3 for the others.
 
 ## 4. On the n axis
@@ -425,25 +476,31 @@ For the 413 characters of degree ≤ 4 with both n onsets defined, compared by m
   - Without dnf3 the row is 47 / 15 / 32 of 94 characters, with a median log2 ratio of 0.0 over the 93 with both
     onsets finite.
 
-Per-target examples (medians; [`tables/order_chars.md`](tables/order_chars.md)):
+Per-target examples (medians; [`tables/order_chars.md`](tables/order_chars.md), `order_recheck.txt`):
 
 | target | character | DFG n | networks' n |
 |---|---|---|---|
 | mux | x1x2x3x4 | 64 | 2048 |
-| majpar | pairs | 32–64 | 512–1024 |
+| majpar | pairs | 64 (32–64 per seed) | 512–1024 |
 | andxor | all 3 characters | 64 | 512–1024 |
 | parmaj | all 15 characters of degree ≤ 4 | 128 | 512–2048 |
 
 - **Against DFG: rmaj9.** Its 27 cross-block degree-3 characters (|ŷ| = 0.0625) need 2048–16384 for DFG per seed
   (4096–16384 by median), against 64–4096 for the networks per seed (256–4096 by median). For rmaj9, DFG needs more
-  data for 27 of 39 characters (`data_cost.per_target`).
+  data for 27 of 39 characters (`data_cost.per_target`; the ranges are in `order_recheck.txt`).
   - By median, one of them (x2x5x8) never enters the networks' n axis. That is an artefact of the test-set estimate:
     a network equal to the target scores φ = 0.42 on it.
 
 ### 4.3 The stages, target by target
 
 The full lists are in [`tables/order_stages.md`](tables/order_stages.md). Below, networks' time stages online (steps)
-against DFG's n stages (median seed); verdicts are Heuristic, numbers Numerical.
+against DFG's n stages (median seed); verdicts are Heuristic, numbers Numerical. The single-fit details are in
+`order_recheck.txt`.
+- *Network stages.* In `order_stages.md` a stage is a run of onsets within 1.35× of the stage's first onset.
+- Part 5's `stages.py` chains instead: an onset joins the stage if it is within 1.35× of the previous onset. The two
+  rules agree on sparsepoly, mux, majpar, andxor and parmaj.
+- On the other six targets chaining merges some stages (both lists are in `order_stages.md`). Below, a cascade that
+  chaining keeps whole is described as one.
 
 - **sparsepoly: agree.**
   - Networks: x1 (56) → x2x3 (299) → x1x2x3 (532) → x4x5x6 and its products (1234–1542).
@@ -478,8 +535,8 @@ against DFG's n stages (median seed); verdicts are Heuristic, numbers Numerical.
     x1 in seed 2).
 - **majpar: agree.**
   - Networks: pairs (189–210) → x1⋯x6 (1164).
-  - DFG: pairs (32–64) → x1⋯x6 (256, all 3 seeds). The degree-6 term comes through round-0 weighted blocks, or
-    products with one, whose inner term is a pair parity: (x3+x4−x5−x6 + 3·x1x2) in seed 2,
+  - DFG: pairs (64; 32–64 per seed) → x1⋯x6 (256, all 3 seeds). The degree-6 term comes through round-0 weighted
+    blocks, or products with one, whose inner term is a pair parity: (x3+x4−x5−x6 + 3·x1x2) in seed 2,
     |x3+x4|×(x5+x6 + 3·x1x2) in seed 0. These are tested on the residual left after the pairs.
   - The n_glob formula gives 147 rows for x1⋯x6. That equals the degree-6 subsample cap, but only of a fit at
     n > 512 (m = 147).
@@ -493,8 +550,9 @@ against DFG's n stages (median seed); verdicts are Heuristic, numbers Numerical.
   - DFG: linear (64) → within-block degree 3 (|ŷ| 0.25; 256) → x1⋯x9 through the full-sum block (512) → cross-block
     degree 3 (0.0625; 4096–16384). Degrees 5 and 7 never enter for good (median seed; seed 0 carries 7 degree-7
     characters from 16384). They are carried at some n and dropped later (§5.3).
-  - Networks: linear (47) → 796: 27 cross-block degree-3 characters, 1 within-block, and x1⋯x9 → 1081: the other 2
-    within-block characters, all of degrees 5 and 7.
+  - Networks: linear (47) → one cascade from 796 to 1217 steps. Its first part (796–1012) holds the 27 cross-block
+    degree-3 characters, 1 within-block one and x1⋯x9. The second part (1081–1217) holds the other 2 within-block
+    characters and all of degrees 5 and 7. `order_stages.md` lists these two parts as stages 796 and 1081.
   - Both learners get the top-degree parity early through sum features. In DFG it is the block's level indicators: a
     parity of the block's inputs is a function of their sum. In the networks, Part 5 found ReLUs of block sums.
 - **andxor: DFG ties everything at n = 64 (median).** In every seed the product x1x2x3x4 still comes after a pair:
@@ -513,8 +571,8 @@ against DFG's n stages (median seed); verdicts are Heuristic, numbers Numerical.
     - In 12 it is a larger one (x1x2, x1x3, x2x3, x1x2x3).
 - **parmaj: DFG ties everything at n = 128.**
   - At n = 128 no test admits any character in any seed (n_new = 0 in every round).
-    - Round 0 adds a folded block, |x1+…+x6| or |−x1−x2−x3+x4+x5+x6|. Round 1 adds another (in seed 0, also the
-      linear block).
+    - Round 0 adds a folded block, |x1+…+x6| or |−x1−x2−x3+x4+x5+x6|. Round 1 adds another. In seed 0 it also adds
+      the linear block, and in seed 1 the full-sum block's product with |x18+x27|.
     - These blocks carry x1⋯x6. They also carry 42 of the 45 character-seeds of the pairs and degree-4 terms at
       their n onsets; the other 3 are global admissions at n = 1024 (seed 2).
   - Tests take the pairs and degree-4 terms (all |ŷ| = 0.25) only at larger n. At n = 512, seed 1 (§2), 12 of the 15
@@ -527,12 +585,14 @@ against DFG's n stages (median seed); verdicts are Heuristic, numbers Numerical.
     - 0.027-characters at 256–2048 (degrees 2–3; one at 16384), and at 4096–16384 or never (degrees 4–6);
     - 0.0039-characters from 1024 to never. 33 of the 343 enter at 1024–4096 (mostly degrees 6–7, through blocks),
       before many 0.027-characters of degree 4–5.
-  - Networks: linear (53), then 490 characters of degree 2–8 in overlapping stages from 228 to 1084 steps (stage
-    starts), two late stages of degree-5 characters (8 at 1474, 3 at 2005), and x1⋯x9 at 3598.
+  - Networks: linear (53), then one cascade of 501 characters of degree 2–8 from 228 to 2037 steps, and x1⋯x9 at
+    3598.
+    - `order_stages.md` splits the cascade into stages. 490 characters are in stages that start at 228–1084, and 11
+      degree-5 characters form two late stages (8 at 1474, 3 at 2005).
 - **rand1: partly.**
   - DFG: linear (64) → the 0.375-characters x3x5, x4x6, x1x4x6 (degrees 2, 2, 3) at 128 → the 0.125-characters at
     256–1024.
-  - Networks: linear (49) → all four pairs including the 0.125 ones (212) → degrees 3–4 (434).
+  - Networks: linear (49) → all four pairs including the 0.125 ones (212) → degrees 3–5 (434–607).
 - **rand3: different.**
   - DFG at n = 128 (from the cells): first the four characters on {x4, x5, x6} that contain x5, by tests, about one
     per round. Then sum blocks on the signed sum (−x1+x2+x3), modulated by those characters, e.g.
@@ -543,7 +603,7 @@ against DFG's n stages (median seed); verdicts are Heuristic, numbers Numerical.
     - At n = 256 it is a single unmodulated product block such as (x1−x2−x3)×(x4+x6+2·x5).
   - By median n: 18 characters at 128 (the 16 on {x1, …, x5} that contain x5, plus x5x6 and x4x5x6), and the other
     14, all containing x6, at 256.
-  - Networks: x5 (69) → x_j·x5 for every j (155) → mixed degree-3/4 stages.
+  - Networks: x5 (69) → x_j·x5 for every j (155) → mixed stages of degrees 3–6, from 346 to 825 steps.
 
 ## 5. Part 5's qualitative findings, checked for DFG
 
@@ -593,8 +653,9 @@ it keeps together:
   (through the union bound and the degree-5/6 caps) and the block that carries a character.
   - So DFG also splits equal coefficients by degree. sparsepoly's six 0.25-characters enter at 128 (x2x3, x4x5x6),
     256, 512, 1024 and 4096. majpar's 0.5-pairs enter at 32–64 and its 0.5 degree-6 term at 256.
-  - And one DFG stage can mix sizes. rand3's stage at n = 128 has four 0.375- and fourteen 0.125-characters. It is
-    separated from the 256 stage by whether a character contains x6, not by size.
+  - And one DFG stage can mix sizes. rand3's stage at n = 128 has four 0.375- and fourteen 0.125-characters. Its
+    0.125-characters are split from the 256 stage by x6: those without x6 are at 128, those with it at 256. The
+    0.375-characters x5x6 and x4x5x6 also contain x6, but they are at 128 (`order_recheck.txt`).
 
 ### 5.3 Order follows construction, not coefficient size
 
@@ -625,8 +686,9 @@ coefficient, comes later.
     against 0.11), rmaj9 (0.75 against 0.68), dlist5 (0.77 against 0.37) and rand1 (0.82 against 0.46).
   - Degree wins on sparsepoly (0.89 against 0.67), dnf3 (0.68 against 0.66) and rand3 (0.45 against 0.31).
   - *sparsepoly:* the coefficients take only two values.
-  - *rmaj9:* degrees 5 and 7 (36 characters) are carried at some n in every seed, all 108 character-seeds:
-    - at n = 512 by modulated blocks (seeds 0–1, all 36);
+  - *rmaj9:* degrees 5 and 7 (36 characters) are carried at some n in every seed, all 108 character-seeds
+    (`order_recheck.txt`):
+    - at n = 512 by the sum blocks of rounds 1–2, nine of whose ten are modulated (seeds 0–1, all 36);
     - at 2048 (seed 2) and 4096 (seed 0) mostly as explicit features admitted by the local class (26 and 36 of 36);
     - by blocks in three more fits (9 at 4096 in seed 2, 9 at 8192 in seed 1, 7 at 16384 in seed 0).
     - Each is dropped at a larger n. So they are never carried for good (except the 7 degree-7 characters in seed
@@ -657,7 +719,7 @@ least-squares function; mean over 33 target-seed cells, each target weighted equ
 | 16384 | 1.00 | 0.00 | 0.92 | 0.04 |
 
 - **The columns overlap.** "Learned" (φ ≥ 1/2) and "partial" (0.25 ≤ φ < 0.75) share the range 0.5 ≤ φ < 0.75. At
-  n = 512, 18% of the networks' characters are in both, so the two columns must not be added.
+  n = 512, 18% of the networks' characters are in both (`order_recheck.txt`), so the two columns must not be added.
 - **Networks.** Part 5's "same order, different endpoints": at finite n the later stages saturate partway (30% of
   characters partial at n = 512) or never start. Example, sparsepoly at 2048: x2x3 ends at 0.78, x1x2x3 at 0.66, and
   x4x5x6 at 0.18.
@@ -665,11 +727,12 @@ least-squares function; mean over 33 target-seed cells, each target weighted equ
   cases, as part of a sum block: 1134 of the 1497 character-seeds carried for good are block-carried. On sparsepoly at
   2048 DFG carries 6–7 of 7 characters.
 - **DFG stops on signs, not on estimation.** It stops as soon as every training sign is right. So its final model is
-  sign-sufficient, not E[y | x_R], at every n. At n = 16384:
+  sign-sufficient, not E[y | x_R], at every n. At n = 16384 (`order_recheck.txt`):
   - rmaj9 carries 40–47 of 76 characters, with test error 0;
   - dnf3 carries 232–497 of 511.
 - **This makes DFG's n axis non-monotone.** A character carried at one n is dropped at a larger n, where round 0
-  already gets the signs right with fewer features:
+  already gets the signs right with fewer features. For example, on rmaj9 in seed 0 four rounds carry all 76
+  characters at n = 512, and one round carries 47 at 16384 (`order_recheck.txt`). The drops:
   - DFG: 1139 of 2157 character-seeds, 945 of them on dnf3 and 159 on rmaj9; 35 of 396 on the other 9 targets;
   - networks: 223 of 1239 (|S| ≤ 4), 218 of them on dnf3. 215 of those 218 are on characters with |ŷ| ≤ 0.027,
     whose network n-axis φ is mostly test-set noise (§7).
@@ -775,7 +838,8 @@ least-squares function; mean over 33 target-seed cells, each target weighted equ
     - 234 of the 349 "small" data-cost characters, all dnf3's (§4.2).
   - DFG's φ is a cube average of its least-squares function with M ≥ 64 completions per pattern.
   - DFG's final predictor is the logistic refit plus the kernel background. It can distort individual coefficients
-    (mux at n = 128, seed 0: φ = 0.31 for the x_i·x4 terms although the least-squares φ is 0.98). I use the
+    (mux at n = 128, seed 0: φ = 0.31 for the x_i·x4 terms although the least-squares φ is 0.98;
+    `order_recheck.txt`). I use the
     least-squares function as "what the model holds". The final predictor's φ is in the cells (`phi_final`,
     `phi_final_test`).
 - **The networks' time axis for dnf3's smallest characters.** Part 5's φ(t) is estimated with 32 random completions
@@ -814,7 +878,10 @@ least-squares function; mean over 33 target-seed cells, each target weighted equ
   - [`order_analysis.py`](order_analysis.py): orders, taus, pairs.
   - [`order_report.py`](order_report.py): tables and figure.
   - [`order_validate.py`](order_validate.py): identity and replay checks, including the stopping round.
-  - Run single-threaded, in that order.
+  - [`order_recheck.py`](order_recheck.py): the numbers taken from single fits or single characters, recomputed from
+    the stored files (added after verification).
+  - Run single-threaded, in that order (`OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1`). `order_fit.py` skips the fits
+    that exist; `order_report.py` writes the PDF figure with the current date unless `SOURCE_DATE_EPOCH` is set.
 - **Verification.** [`VERIFY_ORDER.md`](VERIFY_ORDER.md) and [`VERIFY_ORDER.json`](VERIFY_ORDER.json), by an
   independent agent. The Verification section above lists what changed.
 - **Data.**
@@ -825,12 +892,17 @@ least-squares function; mean over 33 target-seed cells, each target weighted equ
   - [`tables/order_chars.md`](tables/order_chars.md) and `.csv` (per character),
   - [`tables/order_stages.md`](tables/order_stages.md),
   - [`tables/order_degree_size.md`](tables/order_degree_size.md),
-  - [`tables/order_numbers.json`](tables/order_numbers.json) (every number above, by key),
-  - [`tables/order_validation.json`](tables/order_validation.json).
+  - [`tables/order_numbers.json`](tables/order_numbers.json) (every number above, by key, except the single-fit
+    details),
+  - [`tables/order_validation.json`](tables/order_validation.json),
+  - [`tables/order_recheck.txt`](tables/order_recheck.txt) (the single-fit details, by section of this report).
 - **Figure.** [`figures/fig_order.pdf`](figures/fig_order.pdf) and `.png`.
 - **Inputs, read only.**
   - `trajectories/results/*.json`;
   - `$SCR/results/fixed_adam_<fn>.npz`;
   - `part11/results/toy__dfg13-perm__designed.json` (identity);
   - `part11/interp/dfg_hooks.py` (the shared fit wrapper);
-  - `discrete_learner/harness.py` and `boolfuncs.py`, for the networks' 4096-point test set (`net_n_resolution`).
+  - `discrete_learner/harness.py` and `boolfuncs.py`, for the networks' 4096-point test set (`net_n_resolution`,
+    `order_recheck.py`);
+  - `part10/hyb_portfolio3/dfg13.py`, through `eval_dfg.load_dfg13` (md5-checked), for its constructor defaults and
+    subsample caps (`order_recheck.py`).
