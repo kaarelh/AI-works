@@ -122,8 +122,8 @@ def cp(k, n, a=0.05):
 def rate(k, n):
     if n == 0:
         return "-"
-    lo, hi = cp(k, n)
-    return f"{k}/{n}" + (f" (95% <= {hi:.3f})" if k == 0 else f" ({lo:.3f}-{hi:.3f})")
+    lo, hi = cp(k, n); g = lambda x: f"{x:.4f}" if x < 0.01 else f"{x:.3f}"
+    return f"{k}/{n}" + (f" (95% <= {g(hi)})" if k == 0 else f" ({g(lo)}-{g(hi)})")
 
 
 # ------------------------------------------------------------------------------------------------ nominal levels
@@ -374,6 +374,16 @@ def cascade(recs):
         o = dict(fits=len(L), dfg_any_local_pass=dfg_local,
                  dfg_any_tested=sum(1 for r in L if any(not k.split(":")[1].startswith("forced") for k in r["feats"])),
                  forced_chars_only=sum(1 for r in L if r["control"] is not None))
+        # which local character: with two forced characters A, B, is it of degree |A ^ B| (the product chi_A chi_B);
+        # for disjoint A, B the only subset of V = A u B of that degree is V itself, i.e. exactly chi_A chi_B
+        withloc = [r for r in L if any(k.startswith("chi:local") for k in r["feats"])]
+        two = [r for r in withloc if sum(1 for f in r["forced"] if f["kind"] == "char") == 2]
+        sd_ = lambda r: len(set(r["forced"][0]["S"]) ^ set(r["forced"][1]["S"])) if len(r["forced"]) == 2 else None
+        nloc = sum(v for r in two for k, v in r["feats"].items() if k.startswith("chi:local"))
+        nmatch = sum(v for r in two for k, v in r["feats"].items() if k.startswith("chi:local") and int(k.split(":")[2]) == sd_(r))
+        o.update(fits_local_admitted=len(withloc), of_which_two_forced_chars=len(two), local_chars=nloc, local_chars_degree_AxorB=nmatch,
+                 disjoint_pairs=sum(1 for r in two if not set(r["forced"][0]["S"]) & set(r["forced"][1]["S"])),
+                 forced_blocks=sum(1 for r in L if any(f["kind"] == "block" for f in r["forced"])))
         for k_ in ("1", "2"):
             C = [r["control"][k_] for r in L if r["control"] is not None and k_ in r["control"] and r["control"][k_]["forced_npass"] is not None]
             Cr = [r["control"][k_] for r in L if r["control"] is not None and k_ in r["control"] and r["control"][k_]["random_npass"] is not None]
@@ -460,6 +470,16 @@ def a2(recs):
     terms.sort(key=lambda v: -v["rel_sd"])
     out["top_terms"] = terms[:30]; out["n_spur_terms_excl_lin"] = len(terms)
     out["spur_terms_excl_lin_by_cat"] = {c: sum(1 for t in terms if t["cat"] == c) for c in CATS}
+    # by round: round 0 (residual = y - mean(y), a function of the relevant inputs only) against later rounds
+    out["spur_excl_lin_by_cat_round"] = {c: dict(r0=sum(1 for r in recs for t in r["terms"] if t["spur"] and t["cat"] == c and t["rnd"] == 0),
+                                                 later=sum(1 for r in recs for t in r["terms"] if t["spur"] and t["cat"] == c and t["rnd"] > 0))
+                                         for c in CATS if c != "chi_lin"}
+    out["r0_chi_test_spur"] = [dict(cell=r["key"], S=t["S"], irr=t["irr"], origin=t["origin"], share=t["sd"] / max(r["sd_model"], 1e-300), err=r["err"])
+                               for r in recs for t in r["terms"] if t["spur"] and t["cat"] == "chi_test" and t["rnd"] == 0]
+    late = [r for r in recs if any(t["spur"] and t["cat"] != "chi_lin" and t["rnd"] > 0 for t in r["terms"])]
+    first = lambda r: min(t["rnd"] for t in r["terms"] if t["spur"] and t["cat"] != "chi_lin" and t["rnd"] > 0)
+    out["later_spur_fits"] = dict(fits=len(late), after_an_earlier_spurious_term=sum(1 for r in late if any(t["spur"] and t["rnd"] < first(r) for t in r["terms"])))
+    out["fits_with_r0_class_search"] = len(recs)
     # spurious characters admitted individually, all n: which classes, how many irrelevant inputs
     ct = [t for t in terms if t["cat"] == "chi_test"]
     out["chi_test_spur"] = dict(n=len(ct), by_class={c: sum(1 for t in ct if t["origin"] == c) for c in sorted(set(t["origin"] for t in ct))},
@@ -825,10 +845,19 @@ def tables(res):
                      f"{f(a['pass_random'], a['tests_random'], a['med_random'] or 0)} | {f(b_['pass_forced'], b_['tests_forced'], b_['med_forced'] or 0)} | "
                      f"{f(b_['pass_random'], b_['tests_random'], b_['med_random'] or 0)} |")
         T.append("")
+        T += ["| P(y=1) | n | fits that admitted a local character | of which after two forced characters A, B | local characters of degree \\|A ^ B\\| | A, B disjoint (then it is chi_A chi_B) | fits with a forced block |",
+              "|---|---|---|---|---|---|---|"]
+        for key, o in res["cascade"].items():
+            p_, n_ = key.split(":")
+            T.append(f"| {p_} | {n_} | {o['fits_local_admitted']} | {o['of_which_two_forced_chars']} | {o['local_chars_degree_AxorB']}/{o['local_chars']} | "
+                     f"{o['disjoint_pairs']}/{o['of_which_two_forced_chars']} | {o['forced_blocks']} |")
+        T.append("")
     if "A2" in res:
         A = res["A2"]
         mism = {k: v for k, v in A["relevant"].items() if not v["same"] or v["extra_dep"]}
-        T += ["## A2 relevant sets: exact vs the suites' lists", "", f"{len(A['relevant'])} targets; differ: {mism}", ""]
+        T += ["## A2 relevant sets: exact vs the suites' lists", "", f"{len(A['relevant'])} targets; differ: {mism}",
+              f"relevant-set sizes: { {k: sum(1 for v in A['relevant'].values() if len(v['exact']) == k) for k in range(1, 31) if any(len(v['exact']) == k for v in A['relevant'].values())} }",
+              f"fits identical to the result files (test error and FLOPs): {sum(o['identical'] for o in A['by_n'].values())} of {sum(o['fits'] for o in A['by_n'].values())}", ""]
         T += ["## A2 by n (designed + random, seed 0)", "",
               "| n | fits | test err <= 0.1 | admitted terms | spurious terms (excl. linear-block chars) | fits with any spurious (excl. lin.) | spurious by kind: chi_test / chi_lin / chi_forced / quad / sum / sum_forced | spurious share median / mean / max | max share: lin. chars / other | test err with / without spurious (mean) | removal better / worse |",
               "|---|---|---|---|---|---|---|---|---|---|---|"]
@@ -870,6 +899,9 @@ def tables(res):
         T.append(f"spurious individually tested chars by class per n: " + "; ".join(f"{n}: {A['by_n'][str(n)]['all']['chi_test_by_class']}" for n in NS if str(n) in A['by_n']))
         T.append(f"spurious sum blocks by kind per n: " + "; ".join(f"{n}: {A['by_n'][str(n)]['all']['sum_by_kind']}" for n in NS if str(n) in A['by_n']))
         T.append(f"spurious terms outside the linear block: {A['n_spur_terms_excl_lin']} {A['spur_terms_excl_lin_by_cat']}; chi_test: {A['chi_test_spur']}")
+        T.append(f"spurious terms outside the linear block by round (round 0 / later): {A['spur_excl_lin_by_cat_round']}")
+        T.append(f"round-0 spurious characters admitted by their own test: {A['r0_chi_test_spur']}")
+        T.append(f"fits with a spurious term (outside the linear block) admitted after round 0: {A['later_spur_fits']}")
         T.append("")
         T += ["### largest spurious terms outside the linear block (sd of the term / sd of the model value)", ""]
         for t in A["top_terms"]:
@@ -902,6 +934,34 @@ def tables(res):
             T.append(f"| {c['target']} | {c['n']} | {c['n_calls'] - 1} | {c['cv_cpu_s']:.2f} | " +
                      " | ".join(f"{100 * c['cv_cpu_by_group'][g] / max(c['cv_cpu_s'], 1e-9):.0f}% / {100 * c['cv_flops_by_group'][g] / max(sum(c['cv_flops_by_group'].values()), 1e-9):.0f}%" for g in G) + " |")
         T.append("")
+        ck = Bq.get("checks")
+        if ck:
+            T += ["## B: checks", "",
+                  f"- the deg 1-6 regions of {ck['flops_formula_calls']} _fit calls (rep-0 records) against round0_flops: {len(ck['flops_formula_bad'])} differ {ck['flops_formula_bad'][:3]}",
+                  f"- CPU of the instrumented rep-0 fit / the frozen fit of the same cell: {ck['cpu_instr_over_frozen']}",
+                  f"- CPU of the instrumented repeats, max / min per cell: {ck['cpu_rep_max_over_min']} (repeats per cell {ck['reps']})",
+                  f"- CPU here (median of the repeats) / the evaluation's recorded CPU of the same cell: {ck['cpu_prof_over_file']}",
+                  f"- regions add up to the fit's FLOP count: largest relative closure error {max(c['flops_closure'] for c in Bq['cells']):.2e} over {len(Bq['cells'])} cells; "
+                  f"equal to the frozen fit (test error and FLOPs) in {sum(1 for c in Bq['cells'] if c['equal_frozen'])} of {len(Bq['cells'])}, "
+                  f"to the result file in {sum(1 for c in Bq['cells'] if c['equal_file'])} of {sum(1 for c in Bq['cells'] if c['equal_file'] is not None)}", ""]
+        bn = Bq.get("by_n")
+        if bn:
+            G = [g for g, _ in GROUPS]
+            T += ["## B: by n, range over the 8 profiled cells (par4, maj9, mux, stair5, f7_07, f7_08, f7_05, noise): % of the fit's FLOPs / % of its CPU time", "",
+                  "| component | " + " | ".join(f"n = {n}" for n in bn) + " |", "|---|" + "---|" * len(bn)]
+            f2 = lambda x: f"{100 * x[0]:.1f}-{100 * x[1]:.1f}"
+            for g in G:
+                T.append(f"| {g} | " + " | ".join(f"{f2(v['flops'][g])} / {f2(v['cpu_share'][g])}" for v in bn.values()) + " |")
+            T.append("| CV fold fits | " + " | ".join(f"{f2(v['cv_flops'])} / {f2(v['cv_cpu'])}" for v in bn.values()) + " |")
+            T.append("| outside _fit (CPU) | " + " | ".join(f"- / {f2(v['outside_cpu'])}" for v in bn.values()) + " |")
+            T.append("| FLOPs / network run | " + " | ".join(f"{v['flops_gd'][0]:.4f}-{v['flops_gd'][1]:.4f}" for v in bn.values()) + " |")
+            T.append("| CPU s per fit (median of repeats) | " + " | ".join(f"{v['cpu'][0]:.2f}-{v['cpu'][1]:.2f}" for v in bn.values()) + " |")
+            T.append("")
+            T += ["### inside the fold fits (n <= 512): % of the fold fits' CPU / % of their FLOPs, range over the 8 cells", "",
+                  "| component | " + " | ".join(f"n = {n}" for n, v in bn.items() if "cv_inner" in v) + " |", "|---|" + "---|" * sum(1 for v in bn.values() if "cv_inner" in v)]
+            for g in G:
+                T.append(f"| {g} | " + " | ".join(f"{f2(v['cv_inner'][g]['cpu'])} / {f2(v['cv_inner'][g]['flops'])}" for v in bn.values() if "cv_inner" in v) + " |")
+            T.append("")
         T += ["## B: FLOP rate by region (all profile fits pooled)", "", "| region | GFLOP | CPU s | GFLOP/s |", "|---|---|---|---|"]
         for g, v in Bq["rate"].items():
             T.append(f"| {g} | {v['flops'] / 1e9:.1f} | {v['cpu']:.1f} | " + ("-" if v["gflops_per_s"] is None else f"{v['gflops_per_s']:.2f}") + " |")
@@ -915,7 +975,32 @@ def tables(res):
             T.append(f"- {c['target']} {c['n']}: sub {c['sub']} scale {c['final_scale']} calls {c['n_calls']} stop {c['stop']} rounds {c['rounds']} "
                      f"equal_frozen {c['equal_frozen']} equal_file {c['equal_file']} closure {c['flops_closure']:.1e} cpu_file {c['cpu_file']}")
         T.append("")
+    bc = res.get("budget_cap")
+    if bc:
+        T += ["## DFG's own budget cap (a round starts only below 0.75 of the call's budget): every recorded _fit call", ""]
+        for k, v in bc.items():
+            T.append(f"- {k}: {v['calls']} calls, stops {v['stops']}, largest share of its own budget spent {v['max_budget_share']:.4f}")
+        T.append("")
     F = res["files"]
+    FS = res.get("files_summary")
+    if FS:
+        T += ["## Result files: summary", "",
+              f"- {FS['fits']} fits in {FS['files']} files; largest fit {FS['largest']}",
+              f"- d = 30, largest fit at n <= 512: {FS['d30_max_n512']:.4f}",
+              "- d = 30, range over the suites of the median fit (FLOPs / network run) by n: " + ", ".join(f"{n}: {v[0]:.4f}-{v[1]:.4f}" for n, v in FS["d30_med_range"].items()),
+              "- d = 60 / 120, range of the largest fit by n over n >= 2048: " + ", ".join(f"{s}: {v[0]:.3f}-{v[1]:.3f}" for s, v in FS["flat_range_n2048"].items()),
+              f"- CPU: medians at n = 64-512, d >= 30: {FS['cpu_med_n64_512_dge30'][0]:.2f}-{FS['cpu_med_n64_512_dge30'][1]:.2f} s; largest fit {FS['cpu_max_all']:.1f} s; "
+              "medians at n = 1024: " + ", ".join(f"{s} {v:.2f}" for s, v in FS["cpu_med_n1024"].items()),
+              f"- d = 30 CPU medians: n = 64-512 {FS['cpu_med_d30_n64_512'][0]:.2f}-{FS['cpu_med_d30_n64_512'][1]:.2f} s, n >= 1024 {FS['cpu_med_d30_n1024_up'][0]:.2f}-{FS['cpu_med_d30_n1024_up'][1]:.2f} s; "
+              f"one network run at 50 / 32 GFLOP/s: {FS['network_cpu_s_d30']['at_50']:.2f} / {FS['network_cpu_s_d30']['at_32']:.2f} s; DFG's medians over it: "
+              f"n = 64-512 {FS['dfg_over_network_d30_n64_512'][0]:.2f}-{FS['dfg_over_network_d30_n64_512'][1]:.2f}, n >= 1024 {FS['dfg_over_network_d30_n1024_up'][0]:.2f}-{FS['dfg_over_network_d30_n1024_up'][1]:.2f}",
+              "- largest-FLOP cell per suite: " + "; ".join(f"{s}: {v['argmax_flops_cell']}" for s, v in F.items()),
+              "- largest-CPU cell per suite: " + "; ".join(f"{s}: {v['argmax_cpu_cell']}" for s, v in F.items()), ""]
+    T += ["## Result files: median FLOPs per fit / one network run, by n", "",
+          "| suite | d | " + " | ".join(str(n) for n in NS) + " |", "|---|---|" + "---|" * len(NS)]
+    for s, v in F.items():
+        T.append(f"| {s} | {v['d']} | " + " | ".join(f"{v['rows'][str(n)]['med_flops']:.4f}" for n in NS) + " |")
+    T.append("")
     T += ["## Result files: max FLOPs per fit / one network run, by n", "",
           "| suite | d | targets x seeds | " + " | ".join(str(n) for n in NS) + " | all |", "|---|---|---|" + "---|" * (len(NS) + 1)]
     for s, v in F.items():

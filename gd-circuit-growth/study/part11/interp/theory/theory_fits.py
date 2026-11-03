@@ -2,7 +2,7 @@
 
 Every fit is part11/interp/dfg_hooks.fit_toy_dfg, i.e. bit for bit the fit part11/eval_dfg.py makes for `dfg13-perm`
 (harness training rows, rng default_rng([fn_seed(target), seed, n, 77]), harness.Permuted's column order, the md5-checked
-frozen dfg13.py, DFG(readout="logit")); nothing in the learner changes.  Three kinds:
+frozen dfg13.py, DFG(readout="logit")); nothing in the learner changes.  Four kinds:
 
   p3 cells   seed 0, n = 16 ... 16384, the `designed` and `random` targets that the order analysis
              (interp/order/results/cells, seeds 0-2, 11 targets) did not fit.  Per cell, with order_fit's own replay code

@@ -105,9 +105,10 @@ chosen variant on all n rows (`scale` = 0.5, `hi` = True) (lines 553–570). Bel
 - **Forced variant** (817–822). When nothing passes in a round, at most twice per fit, the forced variant adds a guess.
   If n ≥ 48 and the best sum-block candidate's T/threshold exceeds the square of the best character's z, the guess is
   that block. This needs `sum_force` = True, which is the constructor default although the docstring (line 73) says
-  "off by default". Otherwise the guess is the best-z global character. The guess is chosen among every degree-1
-  character, and for degrees 2–4 among the passing characters and each row block's arg-max; degrees 5–6 count only if
-  they pass.
+  "off by default". Otherwise the guess is the offered character with the largest z. Since nothing passed, the offered
+  characters are every degree-1 character, the largest degree-2 entry, the largest entry of each degree-3 and degree-4
+  row block, and (from round 1 on) the local subsets whose |coefficient| exceeds the smallest local threshold.
+  Degrees 5–6 and the extension classes offer only characters that pass.
 - **Cross-validation** (566–567): forced is chosen iff b − c > 2√(b + c). Here b counts the held-out points where the
   default is wrong and forced is right, and c the reverse.
 - **Readout**: logistic refinement of the least-squares weights if n ≥ 8p (849); kernel background bg = Xᵀr/n (856).
@@ -139,8 +140,8 @@ A union bound over the N_k sets of size k, then over the degrees, and the expect
 
 The degree-5/6 search computes G[p, q] = mean_m(r χ_{T₁} χ_{T₂}) and offers it only when T₁ ∩ T₂ = ∅ (line 662). That is
 the same statistic mean_m(r χ_S) for S = T₁ ∪ T₂. A set found by several splits defines one event, so the search is
-covered. The decisions are taken in floating point; the statement is for exact arithmetic, and a rounding error
-matters only at an exact tie. □
+covered. The decisions are taken in floating point; the statement is for exact arithmetic, and rounding can change a
+decision only when |v_S| is within rounding error of its threshold. □
 
 **P1b (Proved).** In round 0, P(T₁ over all d inputs exceeds d + 2√(dx) + 2x) ≤ e^{−x} for every x > 0. At
 x = ln(1/δ) this is the code's threshold, so P(the linear block's test passes with lin = all inputs) ≤ δ. In round 0,
@@ -202,7 +203,8 @@ Results:
   N·2Φ̄(√(2L)) gives 1.15, 1.01, 0.93 and 0.87·10⁻³ for degrees 1–4 at d = 30, against the bound's 12.5·10⁻³. That is a
   factor √(2π)·√(2L) ≈ 10–14, and the union over the N nearly independent statistics is nearly tight. Where counts are
   large it matches. At u = 0.8, d = 30, n = 2048 with fair labels, the observed rates for degrees 1–4 are 0.037, 0.063,
-  0.15, 0.22. The Gaussian approximation gives 0.030, 0.069, 0.14, 0.27, and the bound 0.26, 0.69, 1, 1.
+  0.15, 0.22. The Gaussian approximation gives 0.030, 0.069, 0.14, 0.26, and the bound 0.26, 0.69, 1, 1
+  (`P1.totals.u08_d30_n2048_fair`).
 - **Linear block: 64 of 64 checks within e^{−x}.** At x = ln(1/δ) (the code's threshold), 43 of the 4800 data sets
   pass (0.9%). The bound is δ = 10%; the χ²_d level of the Laurent–Massart threshold is 0.79–1.17% for d = 15–120
   (0.92% at d = 30).
@@ -255,7 +257,7 @@ grows like 2k ln d.
 | 3 | 22.39 | 26.77 | 31.03 | 35.24 | 48.01 |
 | 4 | 24.59 | 30.59 | 36.34 | 41.99 | 59.04 |
 
-From d = 15 to 120, n_thr rises by 8.4, 12.8 and 17.4, close to 2k ln 8 = 8.3, 12.5, 16.6.
+From d = 15 to 120, n_thr rises by 8.4, 12.9 and 17.4, close to 2k ln 8 = 8.3, 12.5, 16.6 (`P2.n_thr_rise_15_to_120`).
 
 **Check against every parity cell** (Numerical; `P2.agree`, `P2.cells`). These are par2, par3 and par4 in the result
 files at d = 15, 30, 60, 120, with each seed's own training set and its own ȳ.
@@ -554,9 +556,9 @@ round's global search on m_k rows (m_k = n when not subsampled):
 
 So the exhaustive degree-3 search costs ≈ 2nd³ ≈ 12n·C(d, 3) FLOPs and the degree-4 search ≈ nd⁴ ≈ 24n·C(d, 4). That
 is polynomial in d of degree k: the matrix products also compute the redundant entries (lower triangles and overlapping
-sets), so each character costs 12n or 24n rather than 2n. One network run costs GD(d) = 7.88·10⁶ · (128d + 16768)
-FLOPs (harness: 6P·64·T + 10P·T with P = 128d + 16768 parameters and T = 20000 steps, 40000 at d = 120), which is linear
-in d.
+sets), so each character costs 12n or 24n rather than 2n. One network run costs GD(d) = 6P·64·T + 10P·T = 394·T·P
+FLOPs (`harness.gd_flops`), with P = 128d + 16768 parameters and T = 20000 steps, i.e. 7.88·10⁶·(128d + 16768); the
+d = 120 networks trained for T = 40000 steps, which doubles GD(120). It is linear in d.
 
 **P5b (Proved, by the code): the budget rule.** m_k = min(n, ⌊share·GD/c_k⌋), where c_k is the per-row cost estimate in
 §0's table: d(2d² + 2d) for k = 3, C(d, 2)(2d² + 3d) for k = 4, and 2N₁N₂ + N₁k₁ + N₂k₂ for k = 5, 6. The shares are
@@ -581,7 +583,9 @@ The fold fits (`scale` 1/20 and 1/40) get m₄ = 110 and 55 at d = 60, and 18 an
 So on the grid (n ≤ 16384):
 - At d = 15 and 30 every degree-3 and degree-4 search runs on all rows. At d = 30 the degree-5 and degree-6 searches are
   subsampled to 1374 and 147 rows, as the docstring says.
-- At d = 60 the degree-4 search is subsampled from n = 4096 (2212 rows), and the degree-5/6 searches never run.
+- At d = 60 the final fit's degree-4 search is subsampled from n = 4096 (2212 rows) and its degree-3 search at
+  n = 16384 (13159 rows). The fold fits' degree-4 search runs on at most 55 rows (10 folds) or 110 rows (5 folds), so it
+  is subsampled at n = 64, 256 and 512 (fold sizes 57–58, 204–205, 409–410). The degree-5/6 searches never run.
 - At d = 120 the degree-4 search runs on 364 rows (182 under the cross-validation's half budget, i.e. already from
   n = 256), the degree-3 search on 4358 rows from n = 8192, and the fold fits skip degree 4 entirely.
 
