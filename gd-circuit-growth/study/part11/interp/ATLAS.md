@@ -95,7 +95,7 @@ Omissions and notes on confirmed claims, now in the text:
     more than 0.05 below the oracle; majxor's two spectral features at 1024 have cos 0.87 with 1_A ± 1_B, just below the
     0.9 needed for a target term (§1.5, §2.1).
 
-## About this report
+---
 
 Descriptive analysis of the Part 11 object, **DFG v1.3 run alone** (`part10/hyb_portfolio3/dfg13.py`, md5
 `69cabe5c50345cb24079198ed52b562f`, as `DFG(readout="logit")` inside `harness.Permuted`; PROTOCOL.md), on 37 Boolean
