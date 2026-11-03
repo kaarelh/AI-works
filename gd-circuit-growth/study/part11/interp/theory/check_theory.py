@@ -147,6 +147,44 @@ def round0_z(X, y, d, scale=1.0, hi=False, degrees=(1, 2, 3, 4), direct=False):
     return out
 
 
+def replay_null_fit(n, rep, law="fair"):
+    """Refit one of theory_fits' null fits (the same data and rng) and replay the rounds of its final fit: for every
+    character a round added, its z in each class that contains it (global degree |S| on the code's rows; ext1 / ext2 of
+    a current character; local on the inputs in use), with the round's own residual.  A character added with every
+    z <= 1 was a forced guess."""
+    d = TF.P1_D; X, y = TF.p1_data(n, rep, d, law); L = H.make_learner()
+    with H.Recorder(type(L.inner)) as R:
+        out = L.fit(X, y, np.random.default_rng([20261103, n, rep, 77]))
+    fin = R.calls[-1]; pi = np.random.default_rng([20261103, n, rep, 77]).permutation(d)
+    Xl = np.asarray(X, np.float64)[:, pi]; yv = np.asarray(y, np.float64); sc = 0.5 if n <= DEF["cv_n"] else 1.0
+    chi = lambda S: np.prod(Xl[:, list(S)], axis=1) if S else np.ones(n)
+    feats, rounds = [()], []
+    for e in fin["info"]["log"]:
+        A = np.stack([chi(S) for S in feats], 1); p = A.shape[1]
+        G = A.T @ A + DEF["ridge"] * n * np.diag([0.0] + [1.0] * (p - 1)) + 1e-9 * np.eye(p)
+        r = yv - A @ np.linalg.solve(G, A.T @ yv); s = math.sqrt(max(float(np.mean(r * r)), 1e-12))
+        thr_m = lambda N, m: cc * math.sqrt(2 * L_of(N) / m) * (math.sqrt(float(np.mean(r[:m] ** 2))) if m < n else s)
+        chars = [S for S in feats if S]; V = sorted(set(i for S in chars for i in S)); Kr = Kc if e["round"] == 0 else Klat
+        added = []
+        for S in [tuple(int(i) for i in S) for S in e["new"]]:
+            k = len(S); z = {}
+            if k <= Kr and searched(k, n, d, sc, e["round"] == 0):
+                m = m_k(k, n, d, sc) if k >= 3 else n
+                z["global"] = abs(float(np.mean((r * chi(S))[:m]))) / thr_m(C(d, k), m)
+            v = abs(float(np.mean(r * chi(S))))
+            if any(set(T) < set(S) and k - len(T) == 1 for T in chars):
+                z["ext1"] = v / thr_m(len(chars) * d, n)
+            if any(set(T) < set(S) and k - len(T) == 2 for T in chars):
+                z["ext2"] = v / thr_m(len(chars) * C(d, 2), n)          # (all rows at n <= 512, d = 30)
+            if 2 <= len(V) <= DEF["local_max"] and set(S) <= set(V):
+                z["local"] = v / thr_m(C(len(V), k), n)
+            added.append(dict(S=list(S), degree=k, z=z, forced=bool(max(z.values(), default=0.0) <= 1.0)))
+        rounds.append(dict(round=e["round"], s=s, s_logged=e["s"], added=added, blocks=e["blocks"]))
+        feats += [tuple(S) for S in e["new"]]
+    return dict(n=n, rep=rep, law=law, variant=out["info"].get("variant"), cv_errs=out["info"].get("cv_errs"),
+                final_is_forced_variant=bool(fin["force"]), rounds=rounds)
+
+
 def labels(law, n, rng):
     if law == "fair":
         return rng.choice([-1.0, 1.0], size=n)
@@ -291,6 +329,9 @@ def p1_section(fast=False):
                                                 later_char_degrees={k: v for k, v in later.items() if v},
                                                 n_quad=o["n_quad"], n_sum_feats=o["n_sum_feats"], blocks=o["blocks"],
                                                 rounds_log=o["rounds_log"]))
+        # the fits whose cross-validation chose the forced variant: refit and replay what each round added
+        res["forced_fits_replay"] = {key: replay_null_fit(o["n"], o["rep"], o.get("law", "fair"))
+                                     for key, o in F.items() if o["variant"] == 1}
         # the replica of round 0 (degrees 1-4, linear and spectral statistics) on the same 80 data sets, against what
         # DFG's own final fit admitted in round 0 (test admissions only; a forced pick has z <= 1 by definition)
         agree, rep = 0, []
