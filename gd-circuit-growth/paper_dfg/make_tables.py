@@ -24,6 +24,14 @@ Tables of sections/results.tex ("How well it does"):
   tab_tabular        kr_vs_kp and mushroom: test error per cell with verdicts, compute; summary per reference (q6_tabular)
   tab_compute        FLOPs and CPU seconds per fit, per run and by n (compute)
 
+Tables of sections/ablations.tex ("What its parts do"; also read study/part11/interp/ablations/ablations.json, written by
+ablations.py there from the same result files, the paired null and the leave-one-in runs):
+  tab_ablations      the 12 ablations of Q5 on 65 targets: pooled and by class; the paired and unpaired nulls (q5_ablations)
+  tab_abl_family     the ablations by target family, with the nulls and the core on the same 65 targets
+  tab_core           the post-hoc core DFG per suite and pooled, against DFG alone and nets_best (q5b_core); writes also
+                     tab_core_family (the same by family over 138 targets)
+  tab_leavein        leave one in: the core with one part put back, on its largest losses and gains
+
 Tables of sections/learner.tex ("What DFG is"); every value is computed from the frozen DFG v1.3 itself
 (study/part10/hyb_portfolio3/dfg13.py, md5 asserted), not from RESULTS.json:
   tab_dictionary     DFG's candidate classes at d = 30: size N, rows tested, log term of the threshold, smallest n that
@@ -1156,7 +1164,8 @@ def tab_ablations():
     ('ablations', 'nulls'), checked against RESULTS.json q5_ablations (pooled means and counts)."""
     J = abl_json(); A = J["ablations"]; Q5 = R["q5_ablations"]
     cn = {c: max(A[t]["by_class"][c]["targets"] for t, _ in ABL_TAGS) for c, _ in CLS_HEAD}
-    L = ["\\begin{tabular}{@{}llc" + "c" * (2 + len(CLS_HEAD)) + "@{}}", "\\toprule",
+    L = ["\\begin{tabularx}{\\linewidth}{@{}l>{\\raggedright\\arraybackslash}Xcc>{\\raggedright\\arraybackslash}p{1.25cm}" + "c" * len(CLS_HEAD) + "@{}}",
+         "\\toprule",
          "run & change & seeds & \\hd{all\\\\(65)} & \\hd{newly\\\\never} & " + " & ".join(hdn(h, cn[c]) for c, h in CLS_HEAD) + "\\\\",
          "\\midrule"]
     for tag, what in ABL_TAGS:
@@ -1175,7 +1184,7 @@ def tab_ablations():
                             else "seed 1 against seed 0: other training sets")
         nv = ", ".join(tg(k.split("/")[1]) for k, v in x["ratios"].items() if v in ("inf", INF)) or "--"
         L.append(f"{lab} & {what} & {sd} & {ab_cell(x['pooled'])} & {{\\scriptsize {nv}}} & " + " & ".join(ab_cell(x["by_class"].get(c)) for c, _ in CLS_HEAD) + "\\\\")
-    L += ["\\bottomrule", "\\end{tabular}"]
+    L += ["\\bottomrule", "\\end{tabularx}"]
     write("tab_ablations", L)
     note("tab_ablations", pooled={t: A[t]["pooled"] for t, _ in ABL_TAGS}, by_class={t: A[t]["by_class"] for t, _ in ABL_TAGS},
          seed_agreement={t: A[t].get("seed_agreement") for t, _ in ABL_TAGS if "seed_agreement" in A[t]},
@@ -1258,7 +1267,7 @@ def tab_core():
 
 LEAVEIN = [("deg46", "\\hd{degrees\\\\4--6}"), ("comp", "\\hd{compo-\\\\sition}"), ("blocks", "\\hd{linear,\\\\spectral}"),
            ("logit", "\\hd{logistic\\\\readout}"), ("bg", "\\hd{back-\\\\ground}"), ("weighted", "\\hd{weighted\\\\blocks}"),
-           ("eig", "\\hd{eigen.\\\\seeds}")]
+           ("eig", "\\hd{eigen.\\\\seeds}"), ("weighted_eig", "\\hd{weighted\\\\+ eigen.}"), ("bg_blocks", "\\hd{backgr.\\\\+ linear}")]
 
 
 @table

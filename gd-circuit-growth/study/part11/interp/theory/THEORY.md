@@ -12,6 +12,185 @@ Labels: **Proved** (a proof is given; "by the code" means a direct reading of th
 [`check_theory.py`](check_theory.py) computes every number and writes `check_theory.json`;
 [`theory_fits.py`](theory_fits.py) makes the DFG fits it needs (cached in `cache/`).
 
+## Verification
+
+An independent agent verified this report on 3 November 2026 ([`VERIFY_THEORY.md`](VERIFY_THEORY.md),
+[`VERIFY_THEORY.json`](VERIFY_THEORY.json)). It read `dfg13.py` line by line and re-derived every proof. It
+recomputed the numbers with its own code, and it refit, through its own instrumentation, the 50 parity cells at
+n = 16 and 32, all 451 seed-0 P3 cells, the 110 null fits and the 4 linear-block parity cells. Its verdict is
+"sound". The corrections below were applied on 3 November 2026, each after checking it against the code, the stored
+data or a recomputation.
+
+- **Confirmed: 47 of 54 claims.** These include:
+  - every Proved statement, step by step against the cited lines: P1a–c, P2's round-0 criterion, P2′'s
+    Cauchy–Schwarz floor, P3a and P3c, P4a–f and P5a–b;
+  - the P1 null simulation (280 of 280 checks; 16 of 4800 data sets with some z > 1; 43 of 4800 linear blocks; the
+    spectral block's 46 of 300) and the 110 null full fits (78 of 80, 7 of 30, the replica's 110 of 110);
+  - the P2 parity cells: 250 of 250 at n ≥ 32, the forced-variant mechanism at n = 16, all 11 n*, and the borderline
+    probabilities;
+  - the P3 round-0 agreement and calibration (8681, 8409, 104, 168, every band), the first-appearance and route
+    counts, and the factor table's medians;
+  - the P4 Fourier weights (exact rationals, equal to the table) and the P5 budget tables, d* table and FLOP
+    decomposition (228 + 4 + 43);
+  - the tooling: the verifier's refits reproduce the result files' test errors and FLOP counts bit for bit, and the
+    cached replays.
+- **Corrected: 7 claims, plus 4 omissions.** They fix wording that overstated what is proved or measured, and one
+  count. No existing proof or measured value changes; P1a′ (item 9) is a new statement. All are applied (items 1–11);
+  none is declined.
+- **Also applied:** wording points that the verifier raised inside confirmed claims (item 12).
+- **Recomputed.** `check_theory.py` computes every number these items add, under new keys. Re-run with `--only=P2,P3`,
+  it changed no value that `check_theory.json` held before (see Reproduction). "Recomputed" marks a number of mine;
+  the others are the verifier's, reproduced by the script.
+
+**Corrections (old → new; the claim or omission number of VERIFY_THEORY.md in brackets).**
+
+1. Short answer, P1 (claim 10): "Under the null, round 0's tests rarely admit anything (Proved for the character tests
+   and the linear block)" → "Under the null, round 0's character tests and linear-block test rarely admit anything
+   (Proved). Its spectral test need not: with P(+1) = 0.85 at d = 30 and n = 128 it passes 15% of the time (46 of 300
+   null data sets)."
+2. Short answer, P2, and §2 (claim 14): "A k-parity is admitted exactly when n(1 − ȳ²) > n_thr(k, d)" → "A k-parity χ_S
+   passes round 0's global test exactly when n(1 − ȳ²) > n_thr(k, d)", for a degree searched on all n rows and
+   dropping the 10⁻⁹ term.
+   - Admission also needs the 64-candidate cap and the room, and the forced variant admits χ_S without the
+     criterion. So whether the final model holds χ_S is the measured statement: 250 of 250 cells at n ≥ 32 follow the
+     criterion, and at n = 16 the forced variant decides. §2 gains a paragraph that says so.
+   - §2's heading "the sample size at which a k-parity is admitted" → "… passes round 0's test". For consistency,
+     P3's "The round-0 test admits S iff" (short answer) and "The round-0 test then admits S once" (P3b) → "S passes
+     the round-0 test iff / once".
+3. Short answer, P2 (claim 15): "n_thr(k, d) = 2 ln(4K·C(d, k)/δ) ≈ 2k ln d, which is 19.5–42.0" → "n_thr(k, d) =
+   2 ln(4K·C(d, k)/δ) = 2k ln d − 2 ln k! + 2 ln(4K/δ) + O(k²/d): 2k ln d plus 8.8 (k = 2), 6.6 (k = 3) or 3.8 (k = 4),
+   less an O(k²/d) term of at most 0.9 here. It grows like 2k ln d, and it is 19.5–42.0".
+   - §2's "which grid interval holds n_thr ≈ 2k ln d" → "… holds n_thr (which grows like 2k ln d)".
+   - §2 adds that 2k ln d alone (10.8–38.3) is 9–44% below n_thr for d = 15–120. The size of the O(k²/d) term,
+     at most 0.87, is recomputed (`P2.n_thr_decomposition`).
+4. §2 (claim 17): "The 10⁻⁹ term never changes a decision: 263 of 263 cells" → "… 247 of 247 cells where the degree is
+   searched on all n rows". The 263 included 16 cells at n = 16 (par3 and par4), where degrees 3–4 are not searched
+   (`P2.agree.jitter_same_searched`, `P2.jitter_unsearched_cells`).
+5. P2′, §2 and §6 (claim 22): "a class with N candidates tested on m rows can admit a character only if
+   m > 2c² ln(4KN/δ)" and "a class of N candidates admits nothing on m ≤ 2c² ln(4KN/δ) rows" → "no character passes
+   the test of a class with N candidates on m ≤ 2c² ln(4KN/δ) rows". This bounds passing a test, not admission: the
+   forced variant's guesses (n ≤ 512) and the linear block's test are outside the floor. The short answer's P2′
+   bullet gains the same qualification.
+6. P3a (claim 26): "(at d = 30: k ≤ 4 at every grid n)" → "At d = 30 the final fit searches degrees 1–2 on all rows at
+   every grid n, and degrees 3–4 on all rows at every grid n ≥ 32; at n = 16 it skips degrees 3–4." The sentence on
+   the fold fits (degrees 3–4 on all their rows from n = 64) is recomputed (`P3.d30_searched_rows`).
+7. Short answer, P3, and §3 (claim 35): "the smaller union bound adds a factor of at most 1.7" and "For the
+   composition classes the smaller union bound adds a factor of 1.2–1.7, i.e. at most 0.8 doublings" → "a median
+   factor of at most 1.7 per class (1.2–1.7 in the composition classes; at most 0.8 doublings at the median)".
+   - Per character the factor often exceeds 1.7. In the local class it runs 1.29–3.34 at degree ≤ 6 (median
+     1.60; 121 of 277, 44%, above 1.7), and up to 4.25 with the hypothetical global L of degree ≥ 7 (the verifier's
+     4.2). In ext1 it runs 1.12–1.80, in ext2 1.09–1.38 (`P3.factors_spread`).
+   - In the same sentence, "the residual variance there is 3–19 times smaller" → "a median 3–19 times smaller
+     (1.2–59.5 per character)". §3's "The smaller residual is the main factor in every class" → "At the class medians,
+     …", and "s_j² is about 1/19" → "a median 1/19".
+8. Short answer, P3, and §3 (omission 1): "n > n_glob agrees with DFG's decision 96.9% of the time" gains "The figure
+   is dominated by pairs far from n_glob: within one doubling of n_glob the agreement is 76% (773 of 1012), and at
+   least two doublings away it is 99.9–100% (6624 pairs)." §3 adds, recomputed, 1015 of 1045 (97%) between one and
+   two doublings and 6621 of 6624 beyond (`P3.test0.agree_by_distance`).
+9. §1 and the short answer, P1 (omission 2): a new statement, P1a′ (Proved).
+   - For iid rows from any law on {−1, 1}^d, independent of the labels, P1a's bound holds (u shifted by less than
+     10⁻⁹) for every degree searched on all rows of the fit call. The reason is that round 0's residual sums to zero
+     up to the 10⁻⁹ term.
+   - It fails on subsamples and for P1b, so the linear-block bound, and with it P1c's total, still needs uniform rows.
+   - The short answer's P1 bullets, the coverage table and §6 say so.
+10. §2 (omission 3): the "expected" column and the d = 1000 prediction set the error to exactly 0 or 0.5. They ignore
+    the forced variant at n ≤ 512, which decides par2 at n = 16 and d ≤ 60 and would matter at any d where its guess is
+    χ_S. Notes are added below the n* table and in the d = 1000 bullet. No summary sentence changes: the short answer's
+    d = 1000 figure is the test's.
+11. §3 (omission 4): the factor table's medians are taken one column at a time. Its class-gain and factor columns
+    include the local class's 55 characters of degree ≥ 7, which the text now says.
+    - The product of the medians is not the median gain. For the local class it is 1.709 × 19.20 × 0.797 = 26.2
+      (4.7 doublings), against a median gain of 4.5. The verifier's 26.3 is the product of the rounded medians; 26.2
+      is recomputed from the unrounded ones.
+    - A new table gives each factor's per-character min–max and interquartile range (recomputed;
+      `P3.factors_spread`). The residual factor runs 1.2–59.5.
+12. Wording points inside confirmed claims:
+    - §0 (claim 1): the linear block also needs room (line 824); the stop rule includes room ≤ 0; and the `lin0`
+      switch is off in both variants.
+    - P1a's proof (claim 2): "(If r[:m] = 0, the statistic and the threshold are both 0, and the strict test |0| > 0
+      fails.)" → "(r[:m] = 0 cannot occur: |w₀| < 1, so every r_t = y_t − w₀ is nonzero.)"
+    - Short answer, P1 (claim 3): "the linear block's test passes with probability at most δ" → "the linear block's
+      test on all d inputs passes with probability at most δ, so a false linear block has probability at most
+      δ + δ/(2K)".
+    - §2 (claim 23): the floor from d = 630 and d = 179 on concerns the budgeted global search. Degree-3 and
+      degree-4 characters of other targets can still enter through ext1 or the local class, or through ext2.
+    - §2 (claim 25): the networks' slopes are fits through three points, with no uncertainty quoted.
+    - P3c (claim 28): for a subsampled class, m and rms(r[:m]) replace n and s_j. At d = 30 on this grid no later-round
+      class is subsampled. This is recomputed: ext2's row cap with 32 bases is at least 2013 rows, more than every
+      call's rows (`P3.d30_searched_rows`).
+    - P4a (claim 37): "represented" means in the span. DFG's own fit puts a ridge of 10⁻³·n on the indicators, so its
+      fitted block is slightly shrunk; the numerical check uses plain least squares.
+    - P4b (claim 38): "with the next value, or with the previous one if it is the last" → "it continues a run begun by
+      earlier values, or its run takes in the next value, or, as the last value, it is merged into the previous
+      group". The verifier's example is counts [2, 2, 5] with mc = 3: the second value shares the first's group.
+    - P4f (claim 45): the product and split searches also pass earlier candidates in as starting points (`init`,
+      lines 762 and 774). Those blocks were grown from the same seeds.
+    - Not acted on: the verifier's note under claim 9, that the minority-Wishart estimate ignores the majority rows.
+      That estimate is already labelled Heuristic.
+
+**Declined.** None. Before applying them I checked:
+
+- items 4, 7, 8 and 11 against `check_theory.py`'s recomputation. All of the verifier's counts reproduce: 247 of 247
+  and the 16 unsearched cells; 1.29–4.25, 3.34, 1.60, 121 of 277, 1.12–1.80, 1.09–1.38 and 1.2–59.5; 773 of 1012, and
+  99.9–100% of 6624;
+- item 3 against the closed form, 2c² Σ_{i<k} ln(1 − i/d), of the O(k²/d) term;
+- items 2, 5, 6 and 12 against the cited lines of `dfg13.py`;
+- item 9 by its proof.
+
+**For the paper.** These are the statements of this report that changed. Each is followed by where
+`paper_dfg/sections/*.tex` uses it. The drafts are being edited, so search for the quoted phrase; several places
+already follow the verifier's wording, citing VERIFY_THEORY.md, and can now cite the `check_theory.json` keys given.
+
+1. P1's headline: "round 0's tests rarely admit anything" → "round 0's character tests and linear-block test rarely
+   admit anything; its spectral test need not (15% at P(+1) = 0.85, d = 30, n = 128)". Paper: interp.tex, "What is
+   proved"; learner.tex, prop:null.
+2. P1a′ (new): the character bound holds for iid rows of any law, for the searches on all rows; not on subsamples, and
+   not P1b. Paper: learner.tex, "Other input laws" (cites the verifier) and "Throughout, the rows are iid uniform";
+   interp.tex, "labels independent of uniform inputs".
+3. P1, the linear block: "passes with probability at most δ" → "on all d inputs, at most δ; a false linear block, at
+   most δ + δ/(2K)". Paper: learner.tex, prop:null (b); interp.tex, "What is proved". Both already say δ + δ/(2K).
+4. P2: "a k-parity is admitted exactly when" → "passes round 0's global test exactly when"; admission is measured.
+   Paper: learner.tex, prop:parity and the paragraph "Passing round 0's test is not the same as being in the final
+   model"; interp_dyn.tex, "Parities: no gap".
+5. n_thr: "≈ 2k ln d" → "= 2k ln d − 2 ln k! + 2 ln(4K/δ) + O(k²/d), which grows like 2k ln d; 2k ln d alone is 9–44%
+   below it" (`P2.n_thr_decomposition`). Paper: learner.tex, "Against the networks" and the paragraph after
+   prop:parity; results.tex, "grows like 2k ln d" (consistent).
+6. The 10⁻⁹ term: "263 of 263" → "247 of 247" (`P2.agree.jitter_same_searched`). Not found in the paper sections.
+7. P2′: "can admit a character only if m > 2c² ln(4KN/δ)" → "no character passes a class's test on
+   m ≤ 2c² ln(4KN/δ) rows; forced guesses and the linear block are outside this floor". Paper: learner.tex,
+   prop:floor and the table of floors (tab:dictionary, "Smallest n that can pass").
+8. The floor at d ≥ 630 and d ≥ 179 concerns the budgeted global search; other classes can still enter such
+   characters. Paper: learner.tex, "Against the networks" (already says so for the extension and local classes; of
+   these, ext1 and the local class run on all rows, while ext2 is budgeted, a 0.03 share, and need not).
+9. P2's "expected" column and the d = 1000 prediction ignore the forced variant. Paper: learner.tex, "At d = 1000 the
+   test alone would pass…" (stated for the test, so consistent).
+10. The networks' slopes are fits through three points. Paper: learner.tex, "Against the networks", which quotes
+    other slopes from tab:dscale.
+11. P3a: "at d = 30: k ≤ 4 at every grid n" → "degrees 1–2 at every grid n, degrees 3–4 at every grid n ≥ 32"
+    (`P3.d30_searched_rows`). Paper: interp_dyn.tex, before eq:nglob ("degrees 3 and 4 from n = 32 on").
+12. P3, the 96.9%: add "76% (773 of 1012) within one doubling of n_glob; 99.9–100% at least two doublings away"
+    (`P3.test0.agree_by_distance`). Paper: learner.tex, "The round-0 decision"; interp_dyn.tex, "The decisions".
+13. P3, the union bound: "a factor of at most 1.7" → "a median factor of at most 1.7 per class (at most 0.8
+    doublings); up to 3.3 for single local-class characters (degree ≤ 6)". The residual: "3–19 times smaller" → "a
+    median 3–19 times smaller (1.2–59.5 per character)" (`P3.factors_spread`). Paper: learner.tex, "Entry through
+    later-round classes"; interp_dyn.tex, "By class".
+14. P3's factor table: medians taken per column; its class-gain and factor columns include the local class's 55
+    characters of degree ≥ 7; the product of the medians is not the median gain (local: 26.2, i.e. 4.7 doublings,
+    against 4.5); per-character ranges are in a new table (`P3.factors_spread`). Paper: interp_dyn.tex,
+    tab:dyn-when(a) and its caption.
+15. P3c: for a subsampled class m and rms(r[:m]) replace n and s_j; at d = 30 no later-round class is subsampled on
+    this grid (`P3.d30_searched_rows`). Paper: learner.tex, prop:nglob (c).
+16. P3 and P3b wording: "the round-0 test admits S iff / once" → "S passes the round-0 test iff / once". Paper:
+    interp_dyn.tex, "Characters: round 0 admits by detectability" (it already says "passes its test exactly when").
+17. §0: the linear block also needs room; the stop rule includes room ≤ 0; `lin0` is off. Paper: learner.tex, "Refit
+    and stopping" (already lists "when no room is left").
+18. P4a: "represented" means in the span; DFG's ridge shrinks its fitted block slightly. Paper: learner.tex,
+    prop:blocks (a).
+19. P4b: the grouping parenthetical. Paper: learner.tex, prop:blocks (b) proof sketch (consistent; it does not use the
+    old parenthetical).
+20. P4f: the product and split searches also start from earlier candidates. Paper: learner.tex, prop:blocks (f)
+    (already says "or is an earlier candidate grown from such a starting point").
+
 ## Short answer
 
 1. **P1. Under the null, round 0's character tests and linear-block test rarely admit anything** (Proved). Its
@@ -399,9 +578,9 @@ would matter at any d where its guess is χ_S.
 ## 3. P3: general characters at round 0, and n_glob
 
 **P3a (Proved).** Take round 0 of a fit call and a set S with |S| = k searched on all n rows. At d = 30 the final fit
-searches degrees 1–2 on all rows at every grid n, and degrees 3–4 at every grid n ≥ 32; at n = 16 it skips degrees
-3–4. The fold fits search degrees 3–4 on all their rows from n = 64 (`P3.d30_searched_rows`). Write ĉ_S = mean(yχ_S)
-and m_S = mean(χ_S). Then v_S = ĉ_S − w₀m_S and s² = 1 − 2w₀ȳ + w₀², and
+searches degrees 1–2 on all rows at every grid n, and degrees 3–4 on all rows at every grid n ≥ 32; at n = 16 it
+skips degrees 3–4. The fold fits search degrees 3–4 on all their rows from n = 64 (`P3.d30_searched_rows`). Write
+ĉ_S = mean(yχ_S) and m_S = mean(χ_S). Then v_S = ĉ_S − w₀m_S and s² = 1 − 2w₀ȳ + w₀², and
 
   z_S > 1  ⟺  n > 2c² L_k s² / v_S².
 
@@ -515,8 +694,8 @@ For the later-round classes, the table gives medians over the characters that en
 
 - **At the class medians, the smaller residual is the main factor in every class.** For the composition classes the
   median union-bound factor is 1.2–1.7, i.e. at most 0.8 doublings at the median; the global test in later rounds has
-  round 0's union bound. Per character the union-bound factor is larger in many cases. In the local class it runs
-  1.29–3.34 over the 277 characters of degree ≤ 6 (median 1.60; 121 of them, 44%, above 1.7), and up to 4.25 with the
+  round 0's union bound. Per character the union-bound factor often exceeds 1.7. In the local class it runs 1.29–3.34
+  over the 277 characters of degree ≤ 6 (median 1.60; 121 of them, 44%, above 1.7), and up to 4.25 with the
   hypothetical global L of degree ≥ 7. In ext1 it runs 1.12–1.80 and in ext2 1.09–1.38 (`P3.factors_spread`).
 - **The spread per character is wide**, so the medians do not multiply. For the local class the product of the
   medians is 1.709 × 19.20 × 0.797 = 26.2, i.e. 4.7 doublings, against a median class gain of 4.5. Per character,
@@ -796,6 +975,13 @@ background; at n ≤ 512 the 2F fold fits are added with their exact fold sizes 
   exceptions were CPU times and a `law` field that the 80 fair-label null fits predate, which `check_theory.py` reads
   as "fair". A full run of `check_theory.py` then reproduced every value of the previous `check_theory.json` exactly
   (0 differences); the keys cited above that were missing before were added by that run.
+- **After verification, 3 November.** `check_theory.py` gained the keys that the corrections cite, marked
+  "(verification)" in the code: `P2.agree.jitter_*_searched`, `P2.jitter_unsearched_cells`,
+  `P2.n_thr_decomposition`, `P3.test0.agree_by_distance`, `P3.factors_spread` and `P3.d30_searched_rows`. Then
+  `check_theory.py --only=P2,P3` was re-run single-threaded with the final script (13 s;
+  `cache/check_theory_verification.log`). Every value that `check_theory.json` held before is unchanged
+  (0 differences against a copy taken first); only these keys were added. P1, P4 and P5 were not recomputed, since no
+  line that computes them changed.
 - Every DFG fit is `interp/dfg_hooks.fit_toy_dfg` or its recorder, i.e. the evaluation's own fit (frozen file,
   md5-checked; the same rows, rng, column permutation and readout). The P3 cells reuse `interp/order/order_fit.py`'s
   replay functions (`replay_round`, `split_solves`, `columns`, `target_support`), whose decisions ORDER.md validated

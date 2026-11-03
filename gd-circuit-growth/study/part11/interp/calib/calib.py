@@ -19,11 +19,14 @@ checks fits of the copy against the frozen module and the evaluation's result fi
   cascade    (A1, aside) the forced variant's fold fits on noise (n = 29, 58: the fold sizes at n = 32, 64; P(y=1) =
              0.5, 0.8; 200 draws each), with a control: DFG's local test recomputed after random characters of the
              forced characters' degrees.
+  largest    (B, added after the independent verification) the largest-FLOP fit of the d = 30 result files (h5s5, n =
+             16384, seed 2), which prof does not cover: the frozen module, then the instrumented copy.
   summarize  tables from the records above and from the result files (FLOPs and CPU per fit, every suite, d = 15 ... 120);
              writes calib.json and calib_tables.txt (calib_summary.py).
 usage: OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python calib.py <command> [--d=30] [--seeds=0-19] [--ps=0.5,0.8] [--reps=0-2]
-records: results/noise.jsonl, results/spur.jsonl, results/prof.jsonl, results/cascade.jsonl (resumable: done keys are
-skipped).  The full set: audit; noise --d=30; noise --d=60; spur; prof --reps=0-2; cascade; summarize.
+records: results/noise.jsonl, results/spur.jsonl, results/prof.jsonl, results/cascade.jsonl, results/largest.jsonl
+(resumable: done keys are skipped).  The full set: audit; noise --d=30; noise --d=60; spur; prof --reps=0-2; cascade;
+largest; summarize.  (audit also prints audit_ast(): the copy's syntax tree without its hook statements equals dfg13.py's.)
 """
 import os, sys, json, time, math, re, difflib, hashlib, importlib.util
 import numpy as np
@@ -66,6 +69,49 @@ def audit():
     bad += [L for L in ins if not (L == "from calib_rec import REC as _P" or HOOK.match(L))]
     return dict(md5_frozen=md5, md5_ok=md5 == E.MD5, lines_frozen=len(a), lines_instr=len(b), inserted=len(ins),
                 non_hook_differences=bad, ok=(md5 == E.MD5 and not bad and len(b) - len(a) == len(ins)))
+
+
+def audit_ast():
+    """(Added after the independent verification, VERIFY_CALIB.md.)  Why every fit made with the copy is a fit of the
+    frozen learner, checked or not: delete from dfg13_instr.py's syntax tree every statement that is a call _P.<hook>(...)
+    and the recorder's import; the result must equal dfg13.py's syntax tree (ast.dump).  Also lists every function the
+    hooks' arguments call (they must not change anything DFG uses) and whether the name _P occurs anywhere else."""
+    import ast
+    ta, tb = ast.parse(open(E.DFG13).read()), ast.parse(open(INSTR).read())
+
+    def is_hook(st):
+        if isinstance(st, ast.ImportFrom) and st.module == "calib_rec":
+            return "import"
+        if (isinstance(st, ast.Expr) and isinstance(st.value, ast.Call) and isinstance(st.value.func, ast.Attribute)
+                and isinstance(st.value.func.value, ast.Name) and st.value.func.value.id == "_P"):
+            return "hook"
+        return None
+    hooks = [n for n in ast.walk(tb) if isinstance(n, ast.stmt) and is_hook(n) == "hook"]
+    arg_calls = sorted({ast.unparse(a.func) for h in hooks for a in ast.walk(h.value) if isinstance(a, ast.Call) and a is not h.value})
+    walrus = sum(1 for h in hooks for a in ast.walk(h) if isinstance(a, ast.NamedExpr))
+    p_uses = sum(1 for n in ast.walk(tb) if isinstance(n, ast.Name) and n.id == "_P")
+    removed = {"hook": 0, "import": 0}
+
+    def strip(node):
+        for field, old in ast.iter_fields(node):
+            if isinstance(old, list):
+                new = []
+                for v in old:
+                    k = is_hook(v) if isinstance(v, ast.stmt) else None
+                    if k:
+                        removed[k] += 1; continue
+                    if isinstance(v, ast.AST):
+                        strip(v)
+                    new.append(v)
+                old[:] = new
+            elif isinstance(old, ast.AST):
+                strip(old)
+    strip(tb)
+    equal = ast.dump(ta) == ast.dump(tb)
+    return dict(hook_statements=len(hooks), removed_hooks=removed["hook"], removed_imports=removed["import"],
+                hook_lines=len({h.lineno for h in hooks}), ast_equal_after_removal=equal, hook_argument_calls=arg_calls,
+                walrus_in_hooks=walrus, name_P_uses=p_uses,
+                ok=bool(equal and walrus == 0 and set(arg_calls) <= {"len"} and p_uses == len(hooks)))
 
 
 # ------------------------------------------------------------------------------------------------ fits
@@ -417,6 +463,51 @@ def run_prof(seed=0, rep=0):
                   f"calls={len(calls)} top={sorted(((round(v / out['flops'], 3), k) for k, v in tot.items()), reverse=True)[:4]}", flush=True)
 
 
+def run_largest():
+    """(Added after the independent verification, VERIFY_CALIB.md.)  The largest-FLOP fit of all the result files (d = 30
+    suites: dlheld5's h5s5 at n = 16384, seed 2, 0.519 of a network run), which `prof` does not cover (it profiles
+    seed 0): the frozen module, then the instrumented copy, exactly as run_prof does; one record in
+    results/largest.jsonl (same format as prof.jsonl, plus the final model's size)."""
+    M = load_instr(); FZ = E.load_dfg13(); path = os.path.join(RES, "largest.jsonl"); done = jl_keys(path)
+    best = None
+    for f in sorted(os.listdir(os.path.join(P11, "results"))):
+        if not (f.startswith("toy__dfg13-perm__") and f.endswith(".json")):
+            continue
+        R = json.load(open(os.path.join(P11, "results", f)))
+        if R["d"] != 30:
+            continue
+        for name, v in R["fns"].items():
+            fl = np.asarray(v["flops"], dtype=float) / R["gd_flops"]
+            a, b = np.unravel_index(int(np.nanargmax(fl)), fl.shape)
+            if best is None or fl[a, b] > best[0]:
+                best = (float(fl[a, b]), R["suite"], name, int(R["ns"][a]), int(R["seeds"][b]))
+    _, suite, name, n, seed = best
+    key = f"{suite}:{name}:{n}:{seed}"
+    if key in done:
+        return
+    T = suite_targets(suite); fn = T[name]["fn"]; Xte, yte = TH.test_data(fn, name, 30)
+    R = json.load(open(os.path.join(P11, "results", f"toy__dfg13-perm__{suite}.json")))
+    X, y = TH.train_data(fn, name, seed, n, 30); rngf = lambda: np.random.default_rng([TH.fn_seed(name), seed, n, 77])
+    o2, cpu2, _ = fit_one(FZ, X, y, rngf(), permuted=True, record=False)
+    e2 = float(np.mean(np.asarray(o2["predict"](Xte)) != yte))
+    out, cpu, calls = fit_one(M, X, y, rngf(), permuted=True, detail=False)
+    err = float(np.mean(np.asarray(out["predict"](Xte)) != yte))
+    a, b = R["ns"].index(n), R["seeds"].index(seed)
+    rec = dict(key=key, suite=suite, target=name, n=n, seed=seed, rep=0, err=err, flops=float(out["flops"]), cpu=cpu,
+               gd=float(TH.gd_flops(30)), frozen=dict(err=e2, flops=float(o2["flops"]), cpu=cpu2),
+               equal_frozen=bool(e2 == err and o2["flops"] == out["flops"]), variant=int(out["info"].get("variant", 0)),
+               rounds=int(out["info"]["rounds"]), size=int(out["info"]["size"]),
+               calls=[dict(n=c["n"], force=c["force"], hi=c["hi"], scale=c["scale"], flops=c["flops"],
+                           rounds_done=c["rounds_done"], size=c["size"], ovh=c["ovh"],
+                           reg={k: [v[0], v[1], v[2]] for k, v in c["reg"].items()},
+                           sub=[rd["sub"] for rd in c["rounds"]], stop=stop_reason(c)) for c in calls],
+               err_file=R["fns"][name]["err"][a][b], flops_file=R["fns"][name]["flops"][a][b], cpu_file=R["fns"][name]["cpu_seconds"][a][b])
+    rec["equal_file"] = bool(rec["err_file"] == err and rec["flops_file"] == out["flops"])
+    assert rec["equal_frozen"] and rec["equal_file"], key
+    jl_append(path, rec)
+    print(f"largest {key}: err={err:.4f} flops/GD={out['flops'] / rec['gd']:.4f} size={rec['size']} cpu={cpu:.2f} (frozen {cpu2:.2f})", flush=True)
+
+
 # ------------------------------------------------------------------------------------------------ (A1, aside) cascades
 def _local_test(X, y, chars, delta=0.1, K=4, c=1.0, ridge=1e-3):
     """DFG's local class, recomputed: least squares of y on {1, chi_A for A in chars} (lsfit's ridge), then every subset
@@ -480,7 +571,10 @@ if __name__ == "__main__":
     cmd = [x for x in a if not x.startswith("--")][0]
     rng_ = lambda s: list(range(int(s.split("-")[0]), int(s.split("-")[1]) + 1)) if "-" in s else [int(v) for v in s.split(",")]
     if cmd == "audit":
-        print(json.dumps(audit(), indent=1))
+        print(json.dumps(audit(), indent=1)); print(json.dumps(audit_ast(), indent=1))
+    elif cmd == "largest":
+        assert audit()["ok"] and audit_ast()["ok"]
+        run_largest()
     elif cmd == "noise":
         d = int(opt.get("d", 30)); seeds = rng_(opt.get("seeds", "0-19" if d == 30 else "0-9"))
         ps = [float(v) for v in opt.get("ps", "0.5,0.8").split(",")]

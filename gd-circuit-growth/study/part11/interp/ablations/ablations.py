@@ -259,7 +259,7 @@ def leavein():
     for f in sorted(os.listdir(D)):
         if not f.endswith(".json"):
             continue
-        r = json.load(open(os.path.join(D, f))); cfg = {"bg2": "bg", "deg46g": "deg46"}.get(r["config"], r["config"]); su = r["suite"]
+        r = json.load(open(os.path.join(D, f))); cfg = {"bg2": "bg", "deg46g": "deg46", "compg": "comp"}.get(r["config"], r["config"]); su = r["suite"]
         A = nst(r, [0, 1]); Cc = nst(res("dfg13-core-perm", su), [0, 1]); B = nst(BASE[su], [0, 1])
         for t in A:
             out.setdefault(cfg, {})[f"{su}/{t}"] = dict(leavein=A[t], core=Cc[t], dfg=B[t], vs_core=l2r(A[t], Cc[t]),

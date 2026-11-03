@@ -107,9 +107,9 @@ def derived(noise, tests):
     # Gram matrix of m- = (1 - p) n rows, has its extreme eigenvalue near |r-| (m-/n) ((1 + sqrt(d/m-))^2 - 1)
     # (Marchenko-Pastur edge); compare DFG's edge 2 s sqrt(d/n) (1 + sqrt(2 ln(1/delta) / d)), s^2 = 1 - ybar^2
     sp = {}
-    for p in (0.5, 0.8):
+    for p in (0.5, 0.8, 0.9):                       # 0.9 and d = 120: added after the verification (VERIFY_CALIB.md, omission 1)
         yb = 2 * p - 1; rm = 1 + yb; fm = 1 - p; s = math.sqrt(1 - yb * yb)
-        for d, ns_ in ((30, (128, 256, 512, 1024)), (60, (256, 512, 1024, 4096))):
+        for d, ns_ in ((30, (128, 256, 512, 1024)), (60, (256, 512, 1024, 4096)), (120, (512, 1024, 2048, 4096))):
             for n in ns_:
                 mp = rm * fm * ((1 + math.sqrt(d / (fm * n))) ** 2 - 1)
                 thr = 2 * s * math.sqrt(d / n) * (1 + math.sqrt(2 * math.log(1 / DELTA) / d))
@@ -444,6 +444,8 @@ def cascade(recs):
         o.update(fits_local_admitted=len(withloc), of_which_two_forced_chars=len(two), local_chars=nloc, local_chars_degree_AxorB=nmatch,
                  disjoint_pairs=sum(1 for r in two if not set(r["forced"][0]["S"]) & set(r["forced"][1]["S"])),
                  forced_blocks=sum(1 for r in L if any(f["kind"] == "block" for f in r["forced"])))
+        # (added after the verification) the fits whose local character did not come after two forced characters
+        o["local_not_after_two_forced_chars"] = [dict(key=r["key"], forced=r["forced"], feats=r["feats"]) for r in withloc if r not in two]
         for k_ in ("1", "2"):
             C = [r["control"][k_] for r in L if r["control"] is not None and k_ in r["control"] and r["control"][k_]["forced_npass"] is not None]
             Cr = [r["control"][k_] for r in L if r["control"] is not None and k_ in r["control"] and r["control"][k_]["random_npass"] is not None]
@@ -667,7 +669,10 @@ def b_checks(recs):
             vs_file.append(float(np.median(c)) / r0["cpu_file"])
     q = lambda v: dict(n=len(v), median=float(np.median(v)), min=float(min(v)), max=float(max(v)))
     return dict(flops_formula_calls=calls, flops_formula_bad=bad, cpu_instr_over_frozen=q(ratio), cpu_rep_max_over_min=q(spread),
-                cpu_prof_over_file=q(vs_file), reps=sorted(set(len(v) for v in by.values())))
+                cpu_prof_over_file=q(vs_file), reps=sorted(set(len(v) for v in by.values())),
+                # (added after the verification) records written before the restart by an earlier calib.py, without "rep"
+                records_without_rep=[r["key"] for r in recs if "rep" not in r],
+                records_without_rep_equal=all(r["equal_frozen"] and r.get("equal_file", True) for r in recs if "rep" not in r))
 
 
 def budget_stops(noise, spur, prof):
@@ -768,6 +773,9 @@ def files_summary(F):
     o["cpu_med_n64_512_dge30"] = [min(v["rows"][str(n)]["med_cpu"] for v in ge30.values() for n in (64, 128, 256, 512)),
                                   max(v["rows"][str(n)]["med_cpu"] for v in ge30.values() for n in (64, 128, 256, 512))]
     o["cpu_max_all"] = max(v["max_cpu"] for v in F.values())
+    # (added after the verification) the largest fit at n <= 512 for each d, against the final fit's cap 0.375 there
+    o["max_n512_by_d"] = {str(d): max(v["rows"][str(n)]["max_flops"] for v in F.values() if v["d"] == d for n in NS if n <= 512)
+                          for d in sorted(set(v["d"] for v in F.values()))}
     o["cpu_med_n1024"] = {s: v["rows"]["1024"]["med_cpu"] for s, v in F.items()}
     o["cpu_med_d30_n64_512"] = [min(v["rows"][str(n)]["med_cpu"] for v in d30.values() for n in (64, 128, 256, 512)),
                                 max(v["rows"][str(n)]["med_cpu"] for v in d30.values() for n in (64, 128, 256, 512))]
@@ -778,6 +786,334 @@ def files_summary(F):
     o["dfg_over_network_d30_n64_512"] = [o["cpu_med_d30_n64_512"][0] / (gd30 / 32e9), o["cpu_med_d30_n64_512"][1] / (gd30 / 50e9)]
     o["dfg_over_network_d30_n1024_up"] = [o["cpu_med_d30_n1024_up"][0] / (gd30 / 32e9), o["cpu_med_d30_n1024_up"][1] / (gd30 / 50e9)]
     return o
+
+
+# ------------------------------------------------------------------------------------------------ added after verification
+# Checks added after the independent verification of CALIB.md (VERIFY_CALIB.md, VERIFY_CALIB.json): each one reproduces a
+# number that the corrected CALIB.md states.  They read the same records, plus results/largest.jsonl (calib.py largest).
+def g1_exact(d, p, n):
+    """The exact null probability that the round-0 degree-1 class passes (labels iid with P(y = 1) = p, independent of
+    uniform inputs), as _fit computes it: conditionally on m = #(y = -1), r = a on the n - m rows with y = +1 and b on
+    the m others (a = 1 - w, b = -1 - w, w = (n - 2m)/(n + 1e-9), lsfit's constant), and column j's sum r . x_j is
+    a U_j + b V_j with U_j, V_j sums of n - m and m iid signs, independent over the d columns; the class passes iff some
+    |a U_j + b V_j| > z sqrt((n - m) a^2 + m b^2), z = sqrt(2 ln(4 K d / delta)).  All labels equal: s is held at
+    1e-6 > rms(r) and nothing passes."""
+    z = math.sqrt(2 * math.log(4 * K * d / DELTA)); tot = 0.0
+    ms = np.arange(n + 1); pm = stats.binom.pmf(ms, n, 1 - p)
+    for m in ms[pm > 1e-14]:
+        m = int(m)
+        if m in (0, n):
+            continue
+        w = (n - 2 * m) / (n + 1e-9); a, b = 1 - w, -1 - w; T = z * math.sqrt((n - m) * a * a + m * b * b); N = n - m
+        kv = np.arange(m + 1); pv = stats.binom.pmf(kv, m, 0.5); c = b * (2 * kv - m)
+        hi, lo = (T - c + a * N) / (2 * a), (-T - c + a * N) / (2 * a)            # |a (2 Ku - N) + c| > T, Ku ~ Bin(N, 1/2)
+        q = float(np.sum(pv * (stats.binom.sf(np.floor(hi), N, 0.5) + stats.binom.cdf(np.ceil(lo) - 1, N, 0.5))))
+        tot += pm[m] * (-math.expm1(d * math.log1p(-q)) if q < 1 else 1.0)
+    return float(tot)
+
+
+def g1_nested_sim(d, p, ns, reps, seed):
+    """One seed's round-0 degree-1 tests at the nested n of A1 (the rows at n are the first n of one sample), simulated
+    exactly in distribution from block sums: per block of rows the label count and, per column, the sums of x over the
+    y = +1 and the y = -1 rows (binomials).  Returns the number of the len(ns) tests that pass, per simulated seed."""
+    rng = np.random.default_rng([seed, int(round(100 * p)), d]); z = math.sqrt(2 * math.log(4 * K * d / DELTA))
+    sizes = np.diff(np.array([0] + list(ns))); out = np.zeros(reps, np.int64); done = 0
+    while done < reps:
+        b_ = min(20000, reps - done)
+        npos = rng.binomial(sizes[None, :], p, size=(b_, len(sizes))); nneg = sizes[None, :] - npos
+        A = 2 * rng.binomial(npos[:, :, None], 0.5, size=(b_, len(sizes), d)) - npos[:, :, None]
+        B_ = 2 * rng.binomial(nneg[:, :, None], 0.5, size=(b_, len(sizes), d)) - nneg[:, :, None]
+        P, Q = np.cumsum(A, 1).astype(np.float64), np.cumsum(B_, 1).astype(np.float64)
+        Np, Nn = np.cumsum(npos, 1).astype(np.float64), np.cumsum(nneg, 1).astype(np.float64)
+        w = (Np - Nn) / (np.array(ns, np.float64)[None, :] + 1e-9); a, b = 1 - w, -1 - w
+        ss = Np * a * a + Nn * b * b; stat = a[:, :, None] * P + b[:, :, None] * Q
+        ok = (Np > 0) & (Nn > 0)
+        out[done:done + b_] = (ok & np.any(np.abs(stat) > z * np.sqrt(ss)[:, :, None], axis=2)).sum(1); done += b_
+    return out
+
+
+def g1_check(res, reps=500000):
+    """Degree 1 at d = 30 against its exact null rates: the expected number of passes over A1's round-0 tests, P(X >= 2)
+    if the tests were independent (Poisson-binomial), and P(X >= 2) for the nested samples (seeds independent; within a
+    seed the 11 tests dependent): P(seed has k passes) from g1_nested_sim, with the seed's exact mean imposed."""
+    A = res["A1"]; d = 30; rates, tests = {}, {}
+    for p in (0.5, 0.8):
+        for n in NS:
+            v = A["by_class"].get(f"{d}:{p}:g1:{n}")
+            if v and v["r0_ran"]:
+                rates[f"{p}:{n}"] = g1_exact(d, p, n); tests[f"{p}:{n}"] = v["r0_ran"]
+    lam = sum(rates[k] * tests[k] for k in rates)
+    p0 = float(np.prod([(1 - rates[k]) ** tests[k] for k in rates])); p1 = p0 * sum(tests[k] * rates[k] / (1 - rates[k]) for k in rates)
+    out = dict(d=d, rates=rates, tests=tests, expected=lam, p_at_least_2_independent=1 - p0 - p1,
+               mc_cells_mean=float(np.mean([rates[f"{p}:{n}"] for p in (0.5, 0.8) for n in (128, 1024)])),
+               observed=A["by_class_pooled"][f"{d}:g1"]["r0_pass"], ci=A["by_class_pooled"][f"{d}:g1"]["r0_ci"])
+    if reps:
+        P0, S1, sim = 1.0, 0.0, {}
+        for p in (0.5, 0.8):
+            ns = [n for n in NS if f"{p}:{n}" in rates]; seeds = A["by_class"][f"{d}:{p}:g1:{ns[0]}"]["r0_ran"]
+            assert all(tests[f"{p}:{n}"] == seeds for n in ns)
+            x = g1_nested_sim(d, p, ns, reps, 2026); E = sum(rates[f"{p}:{n}"] for n in ns)
+            ex1 = float(np.mean(np.where(x >= 2, x - 1, 0))); ex0 = float(np.mean(np.where(x >= 2, x, 0)))
+            pi0, pi1 = 1 - E + ex1, E - ex0
+            P0 *= pi0 ** seeds; S1 += seeds * pi1 / pi0
+            sim[str(p)] = dict(reps=reps, seeds=seeds, exact_mean=E, sim_mean=float(x.mean()), sim_mean_se=float(x.std() / math.sqrt(reps)),
+                               p_seed_ge2=float(np.mean(x >= 2)))
+        out["nested"] = dict(p_at_least_2=1 - P0 - P0 * S1, sim=sim)
+    return out
+
+
+def _conv_trunc(a, b, L):
+    nfft = 1 << int(math.ceil(math.log2(len(a) + len(b) - 1)))
+    return np.maximum(np.fft.irfft(np.fft.rfft(a, nfft) * np.fft.rfft(b, nfft), nfft)[:L], 0.0)
+
+
+def lin_exact(d, p, n, h=0.002):
+    """The exact null pass probability of the round-0 linear block on all d inputs: conditionally on the labels (m =
+    #(y = -1)) T1 = sum_j (a U_j + b V_j)^2 / ((n - m) a^2 + m b^2) is a sum of d iid terms (U_j, V_j as in g1_exact);
+    the law of one term is put on a grid of step h and convolved d times, truncated at the threshold (exact for T1 <=
+    threshold, as every term is >= 0)."""
+    tt = math.log(1 / DELTA); thr = d + 2 * math.sqrt(d * tt) + 2 * tt; L = int(math.floor(thr / h)) + 1
+    ms = np.arange(n + 1); pm = stats.binom.pmf(ms, n, 1 - p); tot = wsum = 0.0
+    for m in ms[pm > 1e-11]:
+        m = int(m)
+        if m in (0, n):
+            continue
+        w = (n - 2 * m) / (n + 1e-9); a, b = 1 - w, -1 - w; N = n - m; S2 = N * a * a + m * b * b
+        pu = stats.binom.pmf(np.arange(N + 1), N, 0.5); U = 2.0 * np.arange(N + 1) - N
+        pv = stats.binom.pmf(np.arange(m + 1), m, 0.5); V = 2.0 * np.arange(m + 1) - m
+        ku, kv = pu > 1e-18, pv > 1e-18
+        Y = ((a * U[ku][:, None] + b * V[kv][None, :]) ** 2 / S2).ravel(); Pr = (pu[ku][:, None] * pv[kv][None, :]).ravel()
+        idx = np.rint(Y / h).astype(np.int64); ins = idx < L
+        f = np.bincount(idx[ins], weights=Pr[ins], minlength=L)[:L]
+        F, base, k = None, f, d                                                     # f^(*d), truncated to [0, thr]
+        while k:
+            if k & 1:
+                F = base.copy() if F is None else _conv_trunc(F, base, L)
+            k >>= 1
+            if k:
+                base = _conv_trunc(base, base, L)
+        tot += pm[m] * (1 - float(F.sum())); wsum += pm[m]
+    return tot / wsum
+
+
+def lin_check(res, nmax_exact=1024):
+    """The linear block's null rate: every null Monte Carlo draw of calib.json (mc, mc_big) pooled per d, with its 95%
+    interval, against the chi^2_d tail at the threshold and against the exact rate of each Monte Carlo cell (lin_exact
+    for n <= nmax_exact; above, a chi^2 matched to the statistic's mean d and variance 2d(1 - kappa), kappa =
+    sum r^4 / (sum r^2)^2, averaged over the labels, which is within 0.1% of the chi^2 tail there), weighted by draws."""
+    out = {}
+    tt = math.log(1 / DELTA)
+    for d in (30, 60):
+        thr = d + 2 * math.sqrt(d * tt) + 2 * tt; cells = []
+        for k, v in res.get("mc", {}).items():
+            dd, p = k.split(":")
+            if int(dd) == d:
+                cells += [(float(p), int(n), w["lin_pass"], w["reps"]) for n, w in v.items() if n.isdigit()]
+        for k, v in res.get("mc_big", {}).items():
+            dd, p, n = k.split(":")
+            if int(dd) == d:
+                cells.append((float(p), int(n), v["lin"]["passes"], v["reps"]))
+        if not cells:
+            continue
+        ex, how = {}, {}
+        for p, n, _, _ in cells:
+            if (p, n) in ex:
+                continue
+            if n <= nmax_exact:
+                ex[(p, n)] = lin_exact(d, p, n); how[(p, n)] = "exact"
+            else:
+                ms = np.arange(n + 1); pm = stats.binom.pmf(ms, n, 1 - p); t_, ws = 0.0, 0.0
+                for m in ms[pm > 1e-12]:
+                    if m in (0, n):
+                        continue
+                    w = (n - 2 * m) / (n + 1e-9); a, b = 1 - w, -1 - w
+                    kap = ((n - m) * a ** 4 + m * b ** 4) / ((n - m) * a * a + m * b * b) ** 2
+                    t_ += pm[m] * stats.chi2.sf(thr / (1 - kap), d / (1 - kap)); ws += pm[m]
+                ex[(p, n)] = t_ / ws; how[(p, n)] = "mean-variance-matched chi2"
+        k_ = sum(c[2] for c in cells); N_ = sum(c[3] for c in cells)
+        out[str(d)] = dict(passes=k_, draws=N_, rate=k_ / N_, ci=cp(k_, N_), chi2_tail=float(stats.chi2.sf(thr, d)),
+                           exact_weighted=sum(ex[(c[0], c[1])] * c[3] for c in cells) / N_,
+                           exact={f"{p}:{n}": dict(rate=v, how=how[(p, n)]) for (p, n), v in sorted(ex.items())})
+        out[str(d)]["z_mc_vs_exact"] = (out[str(d)]["rate"] - out[str(d)]["exact_weighted"]) / math.sqrt(out[str(d)]["exact_weighted"] * (1 - out[str(d)]["exact_weighted"]) / N_)
+    return out
+
+
+def mc_spectral(cells, seed=4711):
+    """A further null Monte Carlo of the round-0 spectral block, mirroring _fit more closely than mc_blocks / mc_big:
+    r = y - sum(y)/(n + 1e-9), s = sqrt(max(mean r^2, 1e-12)), the pair matrix symmetrized with its diagonal removed and
+    the degree-2 pairs that pass their own test (|M_ij| > thr(C(d, 2))) set to 0 before the eigendecomposition; passes
+    if the top |eigenvalue| exceeds 2 s sqrt(d/n) (1 + sqrt(2 ln(1/delta)/d)) (only n >= 4d).  cells: (d, p, n, draws)."""
+    out = {}
+    for d, p, n, reps in cells:
+        rng = np.random.default_rng([seed, d, int(round(100 * p)), n])
+        edge_f = 2 * math.sqrt(d / n) * (1 + math.sqrt(2 * math.log(1 / DELTA) / d)); z2 = math.sqrt(2 * math.log(4 * K * math.comb(d, 2) / DELTA))
+        passes, rat, zeroed = 0, [], 0
+        for _ in range(reps):
+            X = rng.choice([-1.0, 1.0], size=(n, d)); y = np.where(rng.random(n) < p, 1.0, -1.0)
+            r = y - y.sum() / (n + 1e-9); s = math.sqrt(max(np.mean(r * r), 1e-12))
+            M = (X * r[:, None]).T @ X / n; Ms = (M + M.T) / 2; np.fill_diagonal(Ms, 0.0)
+            big = np.abs(np.triu(M, 1)) > s * z2 / math.sqrt(n)
+            if big.any():
+                zeroed += 1; Ms[big] = 0.0; Ms[big.T] = 0.0
+            q = float(np.max(np.abs(np.linalg.eigvalsh(Ms)))) / (s * edge_f); rat.append(q); passes += q > 1
+        out[f"{d}:{p}:{n}"] = dict(d=d, p=p, n=n, reps=reps, passes=passes, rate=passes / reps, ci=cp(passes, reps),
+                                   med=float(np.median(rat)), q99=float(np.quantile(rat, 0.99)), pairs_zeroed=zeroed)
+    return out
+
+
+MC_SPECTRAL_CELLS = [(30, 0.8, 128, 100000), (60, 0.8, 256, 100000),
+                     (120, 0.8, 512, 4000), (120, 0.8, 1024, 4000), (120, 0.8, 2048, 2000), (120, 0.8, 4096, 1000), (120, 0.5, 512, 2000),
+                     (30, 0.9, 128, 20000), (30, 0.9, 256, 20000), (30, 0.9, 512, 20000), (30, 0.9, 1024, 10000),
+                     (60, 0.9, 256, 10000), (60, 0.9, 512, 10000), (60, 0.9, 1024, 5000)]
+
+
+def spectral_pooled(res):
+    """The spectral block's null rate on P(y = 1) = 0.8 labels at n = 4d's grid point (d = 30, n = 128; d = 60, n = 256):
+    every draw of mc_blocks, mc_big and mc_spectral pooled, with the binomial tail P(X >= observed) of the final fits'
+    round-0 passes at the pooled rate."""
+    out = {}
+    tail = lambda k, N, q: float(stats.binom.sf(k - 1, N, q)) if k > 0 else 1.0
+    for d, n in ((30, 128), (60, 256)):
+        parts = {}
+        w = res.get("mc", {}).get(f"{d}:0.8", {}).get(str(n))
+        if w and w.get("quad_reps"):
+            parts["mc_blocks"] = [w["quad_pass"], w["quad_reps"]]
+        v = res.get("mc_big", {}).get(f"{d}:0.8:{n}")
+        if v and v.get("quad"):
+            parts["mc_big"] = [v["quad"]["passes"], v["reps"]]
+        u = res.get("mc_spectral", {}).get(f"{d}:0.8:{n}")
+        if u:
+            parts["mc_spectral"] = [u["passes"], u["reps"]]
+        k_, N_ = sum(x[0] for x in parts.values()), sum(x[1] for x in parts.values())
+        o = dict(parts=parts, passes=k_, draws=N_, rate=k_ / N_ if N_ else None, ci=cp(k_, N_) if N_ else None)
+        fb = res.get("A1", {}).get("blocks", {}).get(f"{d}:0.8:quad:{n}:r0")
+        if fb and N_:
+            o.update(observed=fb["passed"], tests=fb["ran"], p_at_least=tail(fb["passed"], fb["ran"], k_ / N_))
+        out[f"{d}:0.8:{n}"] = o
+    return out
+
+
+def folds_paired(noise):
+    """The fold fits (n <= 512), each forced fold fit paired with the default fold fit on the same rows (DFG.fit runs both
+    variants over the same folds, and _fit is deterministic): the two run identically until the first round in which
+    nothing passes, where the default stops and the forced one forces.  So the forced fit's test-passed features minus
+    the default fit's admissions (as multisets of kind:origin:degree) are exactly those admitted after a forced one.
+    Also: which local characters are provably chi_A chi_B (two forced characters of degrees a, b, one local character of
+    degree a + b, no other character: then A, B are disjoint and the local set is A u B), and whether the others' degrees
+    are consistent with |A ^ B| for overlapping A, B; the default fold fits' sum-block admissions; and the forced fold
+    fits with no forced feature at all."""
+    from collections import Counter
+    tested = lambda F: Counter({k: v for k, v in F.items() if not k.split(":")[1].startswith("forced")})
+    out = {}
+    for (d, p) in sorted(set((r["d"], r["p"]) for r in noise)):
+        L = [r for r in noise if r["d"] == d and r["p"] == p and r["folds"]]
+        o = dict(forced_fits=0, with_tested=0, after_forced=0, before_only=0, after_by_n={}, after_kinds={}, before_only_keys=[],
+                 local_after=0, local_provable=0, local_consistent_overlap=0, sum_after=0, default_fits=0, default_any=0,
+                 default_sum=[], default_sum_rounds=[], forced_nothing_with_tested=0)
+        for r in L:
+            F = len(r["folds"]) // 2
+            assert len(r["folds"]) == 2 * F
+            for i in range(F):
+                fd, ff = r["folds"][i], r["folds"][F + i]
+                assert not fd["force"] and ff["force"] and fd["n"] == ff["n"]
+                o["default_fits"] += 1; o["forced_fits"] += 1; o["default_any"] += bool(fd["feats"])
+                if "sum" in _kinds(fd["feats"]):
+                    o["default_sum"].append(f"{r['key']}:fold{i}"); o["default_sum_rounds"].append(fd["rounds_done"])
+                T = tested(ff["feats"])
+                if not T:
+                    continue
+                o["with_tested"] += 1
+                D = T - Counter(fd["feats"])
+                if not D:
+                    o["before_only"] += 1; o["before_only_keys"].append(f"{r['key']}:fold{i}")
+                    o["forced_nothing_with_tested"] += not (_kinds(ff["feats"]) & FORCED)
+                    continue
+                o["after_forced"] += 1; o["after_by_n"][str(r["n"])] = o["after_by_n"].get(str(r["n"]), 0) + 1
+                for kd in _kinds(D):
+                    o["after_kinds"][kd] = o["after_kinds"].get(kd, 0) + 1
+                o["sum_after"] += "sum" in _kinds(D)
+                if any(k.startswith("chi:local") for k in D):
+                    o["local_after"] += 1
+                    fc = [int(k.split(":")[2]) for k, v in ff["feats"].items() if k.startswith("chi:forced") for _ in range(v)]
+                    lc = [int(k.split(":")[2]) for k, v in ff["feats"].items() if k.startswith("chi:local") for _ in range(v)]
+                    other = [k for k in ff["feats"] if k.startswith("chi:") and k.split(":")[1] not in ("forced", "local")]
+                    if len(fc) == 2 and len(lc) == 1 and not other:
+                        if lc[0] == fc[0] + fc[1]:
+                            o["local_provable"] += 1
+                        elif (lc[0] - fc[0] - fc[1]) % 2 == 0 and abs(fc[0] - fc[1]) <= lc[0] < fc[0] + fc[1]:
+                            o["local_consistent_overlap"] += 1
+        o["after_ci"] = cp(o["after_forced"], o["forced_fits"]); o["with_tested_ci"] = cp(o["with_tested"], o["forced_fits"])
+        o["after_by_n"] = dict(sorted(o["after_by_n"].items(), key=lambda kv: int(kv[0]))); o["after_kinds"] = dict(sorted(o["after_kinds"].items()))
+        out[f"{d}:{p}"] = o
+    return out
+
+
+def all_equal_labels(noise):
+    """Training sets whose labels are all equal (then r = y - w is constant and tiny, and s is held at 1e-6 > rms(r)):
+    the A1 final fits (recorded round-0 s) and the fold training sets, rebuilt from calib.noise_data and the fit rng's
+    first draw in DFG.fit (fold = rng.permutation(n) % F)."""
+    import calib as C
+    fin = [r["key"] for r in noise if r["final"]["rounds"] and r["final"]["rounds"][0]["s"] <= 1e-6]
+    fin_ybar = [r["key"] for r in noise if abs(r["ybar"]) == 1.0]
+    sets, by = 0, {}
+    for r in noise:
+        if not r["folds"]:
+            continue
+        d, p, n, s = r["d"], r["p"], r["n"], r["seed"]
+        _, y = C.noise_data(p, d, s, n); rng = np.random.default_rng([C.TH.fn_seed(C.noise_name(p, d)), s, n, 77])
+        F = 10 if n <= 64 else 5; fold = rng.permutation(n) % F
+        assert len(r["folds"]) == 2 * F and all(r["folds"][f]["n"] == int(np.sum(fold != f)) for f in range(F))
+        k = sum(1 for f in range(F) if np.all(y[fold != f] == y[fold != f][0]))
+        if k:
+            sets += k; key = f"{d}:{p}:{n}"; by[key] = by.get(key, 0) + k
+    return dict(final_fits_s_floor=fin, final_fits_all_equal=fin_ybar, fold_sets=sets, fold_fits=2 * sets, fold_sets_by_cell=by,
+                sqrt_1e_12_is_1e_6=bool(math.sqrt(1e-12) == 1e-6))
+
+
+def b_rate_sum_folds(recs):
+    """The sum-block search's FLOP rate inside the fold fits, pooled as B.rate pools the final fits (rep-0 FLOPs over the
+    median over repeats of the CPU seconds, summed over cells), and over every call and repeat (FLOPs and CPU summed)."""
+    by = {}
+    for r in recs:
+        by.setdefault(f"{r['suite']}:{r['target']}:{r['n']}", []).append(r)
+    F = C_ = 0.0
+    for key, RR in by.items():
+        r0 = [r for r in RR if r.get("rep", 0) == 0][0]
+        if len(r0["calls"]) == 1:
+            continue
+        F += sum(c["reg"].get(nm, [0, 0, 0])[0] for c in r0["calls"][:-1] for nm in SUMR)
+        C_ += float(np.median([sum(c["reg"].get(nm, [0, 0, 0])[1] for c in r["calls"][:-1] for nm in SUMR) for r in RR]))
+    Fa = sum(c["reg"].get(nm, [0, 0, 0])[0] for r in recs for c in r["calls"] for nm in SUMR)
+    Ca = sum(c["reg"].get(nm, [0, 0, 0])[1] for r in recs for c in r["calls"] for nm in SUMR)
+    return dict(folds=dict(flops=F, cpu=C_, gflops_per_s=F / C_ / 1e9), all_calls_all_reps=dict(flops=Fa, cpu=Ca, gflops_per_s=Fa / Ca / 1e9))
+
+
+def sub_sizes(noise):
+    """The rows m on which the final fits' round-0 subsampled classes ran (degrees 3-6), by d and n, from the records."""
+    out = {}
+    for r in noise:
+        if not r["final"]["rounds"]:
+            continue
+        for g, m in r["final"]["rounds"][0]["sub"].items():
+            v = out.setdefault(f"{r['d']}:{g}", {}).setdefault(str(r["n"]), [])
+            m = m if isinstance(m, list) else [m]
+            for x in m:
+                if x not in v:
+                    v.append(x)
+    return {k: dict(sorted(v.items(), key=lambda kv: int(kv[0]))) for k, v in sorted(out.items())}
+
+
+def largest_fit(recs):
+    """The largest-FLOP fit of the result files (results/largest.jsonl, calib.py largest): its FLOP shares by region, the
+    final model's size, and the readout's FLOPs against the code's counter increment, 15 (2 n p^2 + p^3/3 + 8 n p)."""
+    out = []
+    for r in recs:
+        fin = r["calls"][-1]; f, _ = _grp(fin["reg"]); n, p = fin["n"], fin["size"]
+        out.append(dict(key=r["key"], flops_gd=r["flops"] / r["gd"], size=p, rounds=r["rounds"], err=r["err"], n_calls=len(r["calls"]),
+                        equal_frozen=r["equal_frozen"], equal_file=r["equal_file"], cpu=r["cpu"],
+                        flops_share={g: v / r["flops"] for g, v in f.items()},
+                        readout_formula_share=15 * (2 * n * p * p + p ** 3 / 3 + 8 * n * p) / r["flops"]))
+    return out
 
 
 # ------------------------------------------------------------------------------------------------ printing
@@ -1163,7 +1499,138 @@ def tables(res):
     for s, v in F.items():
         T.append(f"| {s} | {v['d']} | " + " | ".join(f"{v['rows'][str(n)]['med_cpu']:.2f} ({v['rows'][str(n)]['max_cpu']:.1f})" for n in NS) + f" | {v['max_cpu']:.1f} |")
     T.append("")
+    T += tables_verification(res)
     return "\n".join(T)
+
+
+def tables_verification(res):
+    """The section of calib_tables.txt added after the independent verification (VERIFY_CALIB.md): one block per corrected
+    or added statement of CALIB.md."""
+    T = ["## Checks added after the independent verification (VERIFY_CALIB.md)", ""]
+    ax = res.get("audit_ast")
+    if ax:
+        T += ["### The instrumented copy: syntax trees (calib.audit_ast)", "",
+              f"- {ax['hook_statements']} hook statements on {ax['hook_lines']} lines and {ax['removed_imports']} recorder import removed from dfg13_instr.py: "
+              f"syntax tree equal to dfg13.py's: {ax['ast_equal_after_removal']}; functions called inside hook arguments: {ax['hook_argument_calls']}; "
+              f"walrus assignments in hooks: {ax['walrus_in_hooks']}; uses of the name _P: {ax['name_P_uses']} (= the hook calls); ok {ax['ok']}"]
+        if "A1" in res:
+            A = res["A1"]; ck = sum(v["frozen_checked"] for v in A["totals"].values()); eq = sum(v["frozen_equal"] for v in A["totals"].values())
+            nf = sum(v["fits"] for v in A["totals"].values())
+            T.append(f"- fits checked against the frozen module or a result file: A1 {eq}/{ck} of {nf} final fits (seeds 0 and 1); "
+                     f"cascade re-runs: 0 of {res.get('counts', {}).get('cascade_fits')}; A2 and B: every fit (tables above)")
+        T.append("")
+    ae = res.get("all_equal")
+    if ae:
+        T += ["### P-A's proof: the s floor (all labels equal)", "",
+              f"- math.sqrt(1e-12) == 1e-6: {ae['sqrt_1e_12_is_1e_6']} (so _fit's `s < 1e-6` exit never fires; s = max(rms r, 1e-6))",
+              f"- A1 final fits with recorded round-0 s = 1e-6: {ae['final_fits_s_floor']}; with all labels equal: {ae['final_fits_all_equal']}",
+              f"- fold training sets with all labels equal: {ae['fold_sets']} ({ae['fold_fits']} fold fits, both variants), by (d, p, n): {ae['fold_sets_by_cell']}", ""]
+    ss = res.get("sub_sizes")
+    if ss:
+        T += ["### Rows m of the final fits' round-0 subsampled classes, by n (records)", ""]
+        for k, v in ss.items():
+            T.append(f"- d:class {k}: " + ", ".join(f"{n}: {'/'.join(str(x) for x in m)}" for n, m in v.items()))
+        T.append("")
+    g1 = res.get("g1_check")
+    if g1:
+        T += ["### Degree 1 at d = 30: exact null rates (g1_exact) and P(X >= 2) over A1's round-0 tests", "",
+              "| P(y=1) | " + " | ".join(str(n) for n in NS) + " |", "|---|" + "---|" * len(NS)]
+        for p in (0.5, 0.8):
+            T.append(f"| {p} | " + " | ".join(f"{g1['rates'][f'{p}:{n}']:.6f}" for n in NS if f"{p}:{n}" in g1["rates"]) + " |")
+        T.append("")
+        T.append(f"- observed {g1['observed']} of {sum(g1['tests'].values())} tests (95% CI {g1['ci'][0]:.4f}-{g1['ci'][1]:.4f}); expected {g1['expected']:.4f}; "
+                 f"P(X >= 2) if the tests were independent {g1['p_at_least_2_independent']:.4f}; mean exact rate over the Monte Carlo's four cells "
+                 f"(n = 128, 1024; p = 0.5, 0.8) {g1['mc_cells_mean']:.6f}")
+        if "nested" in g1:
+            T.append(f"- nested samples (the 11 n of a seed share rows): P(X >= 2) = {g1['nested']['p_at_least_2']:.4f}; per p: "
+                     + "; ".join(f"p={p}: {v['reps']} simulated seeds, mean passes per seed {v['sim_mean']:.5f} (se {v['sim_mean_se']:.5f}) against exact "
+                                 f"{v['exact_mean']:.5f}, P(seed has >= 2 passes) {v['p_seed_ge2']:.6f}" for p, v in g1["nested"]["sim"].items()))
+        T.append("")
+    lc = res.get("lin_check")
+    if lc:
+        T += ["### Linear block: all null draws pooled, against the chi^2_d tail and the exact rate (lin_exact)", ""]
+        for d, v in lc.items():
+            T.append(f"- d = {d}: {v['passes']}/{v['draws']} = {v['rate']:.5f} (95% CI {v['ci'][0]:.5f}-{v['ci'][1]:.5f}); chi^2_{d} tail {v['chi2_tail']:.5f}; "
+                     f"exact rate weighted by the draws {v['exact_weighted']:.5f} (Monte Carlo - exact: {v['z_mc_vs_exact']:+.2f} standard errors)")
+            T.append("  exact by (p, n): " + ", ".join(f"{k}: {w['rate']:.5f}" + ("" if w["how"] == "exact" else " (matched chi^2)") for k, w in v["exact"].items()))
+        T.append("")
+    ms = res.get("mc_spectral")
+    if ms:
+        T += ["### Spectral block: a further null Monte Carlo mirroring _fit (mc_spectral)", "",
+              "| d | P(y=1) | n | draws | passes (95% CI) | median / q99 of eig/edge | draws with a degree-2 pair zeroed |", "|---|---|---|---|---|---|---|"]
+        for k, v in ms.items():
+            T.append(f"| {v['d']} | {v['p']} | {v['n']} | {v['reps']} | {v['passes']} = {100 * v['rate']:.2f}% ({100 * v['ci'][0]:.2f}-{100 * v['ci'][1]:.2f}%) | "
+                     f"{v['med']:.3f} / {v['q99']:.3f} | {v['pairs_zeroed']} |")
+        T.append("")
+    sp = res.get("spectral_pooled")
+    if sp and all(v["draws"] for v in sp.values()):
+        T += ["### Spectral block at P(y=1) = 0.8, n = 4d's grid point: every null draw pooled", ""]
+        for k, v in sp.items():
+            T.append(f"- {k}: {v['parts']} -> {v['passes']}/{v['draws']} = {100 * v['rate']:.2f}% (95% CI {100 * v['ci'][0]:.2f}-{100 * v['ci'][1]:.2f}%); "
+                     f"final fits {v.get('observed')}/{v.get('tests')}, P(X >= observed) at the pooled rate {v.get('p_at_least', float('nan')):.3f}")
+        T.append("")
+    fp = res.get("folds_paired")
+    if fp:
+        T += ["### Fold fits: each forced fold fit paired with the default fold fit on the same rows (folds_paired)", "",
+              "| d | P(y=1) | forced fold fits | with a test-passed feature | of which admitted after a forced one (95% CI) | by n | kinds after a forced one | before any forcing only | of these, forced nothing | local after forcing: provably chi_A chi_B / degree consistent with overlap | sum blocks after forcing | default fold fits with an admission | default fold fits with a sum block (rounds) |",
+              "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+        for k, v in fp.items():
+            d, p = k.split(":")
+            T.append(f"| {d} | {p} | {v['forced_fits']} | {v['with_tested']} | {v['after_forced']} ({v['after_ci'][0]:.3f}-{v['after_ci'][1]:.3f}) | {v['after_by_n']} | "
+                     f"{v['after_kinds']} | {v['before_only']} | {v['forced_nothing_with_tested']} | {v['local_provable']} / {v['local_consistent_overlap']} of {v['local_after']} | "
+                     f"{v['sum_after']} | {v['default_any']}/{v['default_fits']} | {v['default_sum']} ({v['default_sum_rounds']}) |")
+        T.append("")
+        for k, v in fp.items():
+            if v["before_only_keys"]:
+                T.append(f"- {k}: forced fold fits whose test-passed features all came before any forcing: {v['before_only_keys']}")
+        T.append("")
+    if "cascade" in res:
+        T += ["### Cascade re-runs: fits with a local character, and those where it did not follow two forced characters", ""]
+        tot = sum(o["fits_local_admitted"] for o in res["cascade"].values()); two = sum(o["of_which_two_forced_chars"] for o in res["cascade"].values())
+        T.append(f"- all (P(y=1), n): {two} of {tot} after two forced characters")
+        for k, o in res["cascade"].items():
+            for e in o.get("local_not_after_two_forced_chars", []):
+                T.append(f"- {k}: {e['key']} forced {e['forced']} feats {e['feats']}")
+        T.append("")
+    if "A1" in res and "derived" in res:
+        T += ["### A1 mean test error by n, 4 decimals (biased labels)", ""]
+        for key in ("30:0.8", "60:0.8"):
+            d, p = key.split(":"); BC = res["A1"]["by_cell"]
+            T.append(f"- d = {d}, P(y=1) = {p}: " + ", ".join(f"{n}: {BC[f'{d}:{p}:{n}']['err_mean']:.4f}" for n in NS if f"{d}:{p}:{n}" in BC)
+                     + f"; test minority rate {res['derived']['test_minority'][key]['p_minus']:.4f}")
+        T.append("")
+    if "A2" in res:
+        T += ["### A2: mean test error with the spurious terms removed minus with them, by n (5 decimals)", ""]
+        T.append("- " + ", ".join(f"{n}: {o['all']['err_noS_mean'] - o['all']['err_mean']:+.5f}" for n, o in res["A2"]["by_n"].items()))
+        T.append("")
+    if "B" in res:
+        rf = res["B"].get("rate_sum_folds")
+        if rf:
+            T += ["### B: the sum-block search's FLOP rate (B.rate pools the final fits only)", "",
+                  f"- final fits (B.rate): {res['B']['rate']['sum blocks']['gflops_per_s']:.3f} GFLOP/s; inside the fold fits, same pooling: "
+                  f"{rf['folds']['gflops_per_s']:.3f} GFLOP/s ({rf['folds']['flops'] / 1e9:.1f} GFLOP in {rf['folds']['cpu']:.1f} s); every call and repeat: "
+                  f"{rf['all_calls_all_reps']['gflops_per_s']:.3f} GFLOP/s", ""]
+        ck = res["B"].get("checks", {})
+        if "records_without_rep" in ck:
+            T += [f"- prof.jsonl records without the rep field (written before the restart by an earlier calib.py; read as rep 0): "
+                  f"{len(ck['records_without_rep'])} ({ck['records_without_rep'][0]} ... {ck['records_without_rep'][-1]}); all equal to the frozen module "
+                  f"and the result files: {ck['records_without_rep_equal']}", ""]
+    lg = res.get("largest")
+    if lg:
+        T += ["### B: the largest-FLOP fit of the result files (results/largest.jsonl)", ""]
+        for v in lg:
+            sh = v["flops_share"]
+            T.append(f"- {v['key']}: {v['flops_gd']:.4f} of a network run; size {v['size']} (constant included), rounds {v['rounds']}, calls {v['n_calls']}, "
+                     f"test error {v['err']:.4f}; equal to the frozen module {v['equal_frozen']} and the result file {v['equal_file']}; CPU {v['cpu']:.2f} s")
+            T.append("  % of its FLOPs: " + ", ".join(f"{g} {100 * x:.1f}" for g, x in sh.items() if x > 0.0005)
+                     + f"; readout by the counter's formula 15 (2np^2 + p^3/3 + 8np): {100 * v['readout_formula_share']:.1f}")
+        T.append("")
+    FS = res.get("files_summary", {})
+    if "max_n512_by_d" in FS:
+        T += ["### Result files: the largest fit at n <= 512, by d (the final fit's cap there is 0.375 of a network run)", "",
+              "- " + ", ".join(f"d = {d}: {v:.4f}" for d, v in FS["max_n512_by_d"].items()),
+              "- d = 30, median fit by n, range over the suites: " + ", ".join(f"{n}: {v[0]:.3f}-{v[1]:.3f}" for n, v in FS["d30_med_range"].items()), ""]
+    return T
 
 
 def main():
@@ -1197,6 +1664,22 @@ def main():
     res["counts"] = dict(noise_fits=len(noise), spur_fits=len(spur), prof_records=len(prof),
                          noise_by_d={str(d): sum(1 for r in noise if r["d"] == d) for d in (30, 60)},
                          prof_cells=len(set((r["suite"], r["target"], r["n"]) for r in prof)), cascade_fits=len(casc))
+    # ---- added after the independent verification (VERIFY_CALIB.md); CALIB_NOMC=1 skips the Monte Carlo parts
+    nomc = bool(os.environ.get("CALIB_NOMC"))
+    res["audit_ast"] = C.audit_ast()
+    if noise:
+        res["all_equal"] = all_equal_labels(noise); res["sub_sizes"] = sub_sizes(noise); res["folds_paired"] = folds_paired(noise)
+        res["g1_check"] = g1_check(res, reps=0 if nomc else 500000)
+    if not nomc:
+        res["lin_check"] = lin_check(res)
+        res["mc_spectral"] = mc_spectral(MC_SPECTRAL_CELLS)
+    res["spectral_pooled"] = spectral_pooled(res)
+    if prof:
+        res["B"]["rate_sum_folds"] = b_rate_sum_folds(prof)
+    big = load("largest.jsonl")
+    if big:
+        res["largest"] = largest_fit(big)
+    res["counts"]["largest_records"] = len(big)
     json.dump(res, open(os.path.join(HERE, "calib.json"), "w"), indent=1, default=float)
     txt = tables(res); open(os.path.join(HERE, "calib_tables.txt"), "w").write(txt + "\n")
     print(txt)

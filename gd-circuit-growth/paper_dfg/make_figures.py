@@ -15,6 +15,10 @@ Figures of sections/results.tex ("How well it does"):
                alone and the networks (nets, square loss, the variant run at every d), with the fitted exponents; for the
                parities, the union-bound line n_thr(k, d) = 2 ln(4 K C(d, k) / delta), K = 4, delta = 0.1 (c = 1): the
                training-set size above which DFG's test admits a k-parity whose residual correlation is 1 (RESULTS.json q4)
+
+Figures of sections/ablations.tex ("What its parts do"):
+  fig_ablations  per target, log2(n*_run / n*_DFG alone) on the same seeds for the 12 ablations, the paired null and
+               the post-hoc core on the 65 targets of the ablation suites, coloured by class (ablations.json)
 """
 import os, sys, json, math
 import numpy as np

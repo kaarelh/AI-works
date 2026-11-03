@@ -33,17 +33,18 @@ feature (`results/refits.json`). The pre-registered results are `part11/results/
   one pure 4-parity, par4 (+3.01). The unpaired seed-vs-seed null of RESULTS.md moves 23 of 65 and overstates the noise
   of a paired comparison about tenfold.
 - **The test or the search** (§2). For parities the test sets the cost exactly: THEORY.md's P2 with δ moved predicts the
-  measured n\* change under both settings to within 0.02 (par3 strict +0.98 against +1.00; par4 strict +0.20 against
+  measured n\* change under both settings to within 0.03 (par3 strict +0.98 against +1.00; par4 strict +0.20 against
   +0.21, lenient −0.79 against −0.79; par2 0, decided by the forced variant at n = 16). For other character targets a
   stricter test delays the first fit by about one grid step in 8 of 25 (as the +0.54 to +0.86 doublings of n_glob
-  predict), but the lenient test is not its mirror: it raises n\* on 8 of 25, through the small-n variant choice. For the
+  predict), but the lenient test is not its mirror: it raises n\* on 8 of 25, through the linear block's lower threshold
+  (33.8 against 51.2 on 30 inputs) and the small-n variant choice. For the
   33 symmetric and mixture targets both settings leave n\* in place (means +0.04 and +0.05; 7 and 5 moved): where n\*
   lies a doubling or more beyond the n at which the true block would pass its test (7 targets), strict moves n\* by at
   most 0.05, although it moves the block threshold by +0.20 to +0.30 doublings; the search, not the test, is binding.
   Halfspaces gain from a stricter test (−0.23): fewer partial characters and a later linear block let the exact block in.
 - **Without the degree-4 search, par4 is found only when the block search stumbles on its 4 inputs** (Numerical, refits;
   §3): the folded block |±x1±x2±x3±x4| passes at 9 to 71 times its threshold at n = 512, 2048 and 4096 (seed 0) and is
-  never proposed at 256, 1024, 8192 or 16384. On the other degree-4 targets (mux, andxor) blocks and composition give
+  not found at 256, 1024, 8192 or 16384. On the other degree-4 targets (mux, andxor) blocks and composition give
   the same errors at every n. K also enters every test's union bound, so `K3` is also 0.29 nats more lenient everywhere.
 - **The small-n machinery and the background are the atlas's counterfactuals, run** (Numerical, §4): `nosmalln`'s errors
   equal the atlas's always-default refits in 126 of 126 cells; `nobg`'s equal the fitted models without their
@@ -53,8 +54,17 @@ feature (`results/refits.json`). The pre-registered results are `part11/results/
   biased labels (round 0's residual variance is 1 − ȳ²): with tests scaled to the labels, rand3 stops after its first
   character at n = 128 (error 0.317 against 0.049) and far9 admits nothing (0.181 against 0.006). Formulas +0.33,
   mixtures +0.15, halfspaces −0.17.
-- **The core DFG (post hoc) keeps DFG's results except where a removed part has no substitute** (§6; to be completed
-  below).
+- **The core DFG (post hoc) keeps DFG alone's results on these suites at a tenth of its FLOPs, and loses exactly where a
+  removed part has no substitute** (§6). Over the 138 targets: +0.07 against DFG alone on the same seeds (28 lower, 26
+  higher; par5 lost), −1.74 against nets_best (111 better / 9 worse) where DFG alone is at −1.88 (117 / 5); on the
+  held-out dlheld7 −0.03 against DFG alone and −1.30 against nets_best. Leave-one-in runs attribute the losses: the
+  degree-4 to 6 searches for parities with no lower-degree footprint (par4, rf17, poly4, par5; composition does not
+  substitute), the linear block for dense halfspaces (thr30, thr20, maj15, maj21), weighted blocks and eigenvector seeds
+  together for h6_10 and f7_09, the background for sym8 (through the cross-validation). The gains (12 small formulas
+  learned at n = 16–64) come mostly from dropping the background (5 of the 12 fully, 3 in part), from dropping the
+  linear block (and3; with the background, h4rf1) and from K = 3 without the degree-4 to 6 searches (h5rf0); two
+  (h3rf0, dlist8) sit near 10% error over
+  several doublings, where no single part decides.
 
 ## 0. What was compared, and how
 
@@ -90,7 +100,10 @@ counts f7_01 and fd_01 (thresholds of an unsigned sum, as the atlas counts f7_01
 
 **Refits** (`refit.py`). A refit is the evaluation's fit of that cell, made with `calib/dfg13_instr.py` (the frozen file
 with read-only recorder calls added; CALIB.md §0), so that every feature carries the class that admitted it and its
-round. All 31 refits quoted here reproduce their run's result file exactly in test error and FLOP count (asserted).
+round. All 36 refits in `results/refits.json` reproduce their run's result file exactly in test error and FLOP count
+(36 of 36; asserted). In 4 cells (K3 par4 at 512, core thr30 at 512, core h6_10 at 256, DFG alone mux at 256) the same
+fit made through `dfg_hooks.fit_toy_dfg` (`eval_dfg.make_learner` on the md5-checked frozen module) gives the same test
+error, FLOP count and terms with the same shares (`results/refit_crosscheck.json`).
 
 ## 1. Which parts carry the results
 
@@ -130,9 +143,9 @@ a single seed.
 
 **What moved** (beyond ±0.25):
 - `nosums` (33): all 25 symmetric and mixture targets that move, and rand3 +1.45, parmaj +1.00, h6_05 +0.73, fd_07 +0.56,
-  dnf3 +0.28, maj9 +0.28, sparsepoly −0.33, thrsum −0.66. The character targets that need blocks are those the atlas
-  found encoded by blocks before their characters are all detectable: parmaj's two folded blocks (ATLAS.md §1.5),
-  clause and term blocks of formulas (§1.6), maj9's 9-input block (§1.4).
+  dnf3 +0.28, maj9 +0.28, sparsepoly −0.33, thrsum −0.66. The character targets that move are of the kinds the atlas
+  found encoded in part by blocks before their characters are all detectable: parmaj itself (two folded blocks,
+  ATLAS.md §1.5), formulas (the blocks of a clause or term, §1.6) and maj9 itself (its 9-input block, §1.4).
 - `nosmalln` (10, all higher): majpar +0.97, mux +0.96, f7_02 +0.94, rand2 +0.90, par2 +0.79, dlist5 +0.39, sparsepoly
   +0.35, h6_03 +0.32, fd_04 +1.00, sym7 +1.00 (§4).
 - `nobg` (10): f7_11 −2.17, h6_05 −1.41, fd_02 −0.94, fd_11 −0.90, rand0 −0.89, dict −0.64, andxor −0.38; higher fd_04
@@ -142,7 +155,7 @@ a single seed.
 - `nocomp` (4): thrsum −0.66, andxor −0.61, f7_02 +0.46, fd_00 +0.35; the paired null moves andxor (−0.69) and thrsum
   (−0.66) too.
 - `noeig` and `noweighted` (1 each): h6_10, +1.08 and +0.94, the target v1.3's weighted blocks were designed for
-  (PROTOCOL.md; paper Table 1).
+  (paper, Table 1).
 - `lsread` (3): h6_05 −0.58, sparsepoly +0.32, h6_04 −0.31. `K3` (3): par4 +3.01, rand1 −1.06, f7_01 −0.32 (§3).
 
 *Heuristic.* On the 65 targets of the ablation suites, DFG's results come from the sum blocks, with the residual scaling
@@ -225,14 +238,15 @@ block's m: approximate). At the default n_detect the threshold moves by +0.20 to
 - On the 7 targets whose n\* (seeds 0, 1) lies a doubling or more beyond n_detect (band11 2.60 doublings, f7_08 1.80,
   h6_01 1.75, h6_02 1.70, h6_06 1.63, f7_03 1.46, h6_08 1.19), strict changes n\* by at most 0.05 in absolute value
   (lenient: h6_08 −0.56, h6_01 −0.24, the rest within 0.02).
-- On the other 23 learned targets n\* lies below n_detect (median −0.20 doublings over the 30): their 10% point is
-  reached at the first grid point where the block passes or earlier, through characters (fd_08 51 against n_detect
-  512, as Part 10 found for gates and linear parts) or the forced variant's block (sym7 at n = 64, below the test).
-  There the grid cannot separate test and search: the strict threshold leaves n_detect on the same grid point for all
-  but 5 of them.
+- On the other 23 learned targets n\* lies less than a doubling beyond n_detect, and for 18 of them at or below it
+  (median over the 30: −0.20 doublings). Their 10% point is reached at the first grid point where the block passes or
+  earlier, through characters (fd_08: n\* 51 against n_detect 512, as Part 10 found for gates and linear parts) or the
+  forced variant's block (sym7 at n = 64, below the test). There the grid cannot separate test and search: the strict
+  threshold leaves n_detect on the same grid point for all but 5 of them.
 - The sum-target movements under `strict` (f7_09 +0.56, h6_09 −0.53, fd_11 +0.46, fd_08 +0.43, h6_07 +0.33, fd_05
   −0.30, f7_10 +0.26) are, but for h6_07, on targets whose true block's n_detect does not move; fd_08, fd_11 and f7_10
-  reach 10% error through characters before their block (n\* 51, 109, 88).
+  reach 10% error through characters before their block (n\* 51, 109, 88). h6_07 is also one of the 3 targets the
+  paired null moves (+0.40).
 
 *Heuristic.* Part 10 read the data cost of a block as set by the search (TOY_INTERP.md: the true block passes at n = 128
 for 43 of 54 targets, the exact structure appears a median of one doubling later). The δ-ablations agree: where n\*
@@ -323,7 +337,7 @@ variance.) THEORY.md P3c: the composition classes and later-round global tests a
 Numerical: +0.14 (5 lower / 15 higher) [62/65]; character +0.23 (2/9), halfspaces −0.17 (2/0), symmetric and mixtures
 +0.14 (1/6). By family: formulas +0.33 (1/6) [11], the staircase +0.70, random formulas +0.19, mixtures +0.15 (1/5),
 compositions +0.11, symmetric +0.10, parities 0. By n: the mean error rises by 0.024 at n = 128 (18 cells higher, 2
-lower) and 0.013 at 256 (11 / 0), and by at most 0.003 elsewhere. Moved: fd_11 +1.42, f7_02 +1.00, h6_07 +0.98, far9
+lower) and 0.013 at 256 (11 / 0), and by at most 0.004 in absolute value elsewhere. Moved: fd_11 +1.42, f7_02 +1.00, h6_07 +0.98, far9
 +0.94, rand3 +0.81, majpar +0.80, fd_00 +0.71, stair5 +0.70, fd_07 +0.67, f7_06 +0.62, f7_10 +0.57, f7_04 +0.44,
 f7_11 +0.40, thrsum +0.39, h6_03 +0.32; lower h6_08 −0.91, and3 −0.86, h6_04 −0.59, f7_01 −0.32, sparsepoly −0.27.
 
@@ -342,3 +356,102 @@ round 0 (ORDER.md: at n = 512, 2048 and 16384 DFG admits every target character 
 30 and 32 of 33 fits of the Part 5 targets); it is larger for formulas and
 staircases, whose later characters ride on the first ones, and for targets with biased labels. Halfspaces gain (and3,
 f7_01), as under `strict`: a stricter round-0 test keeps partial characters out.
+
+## 6. The core DFG (post hoc)
+
+**What it is.** PROTOCOL.md's addendum (written after every pre-registered result had been read) defines `core` =
+`{"readout": "ls", "sum_inner": false, "sum_seeds": [0, 3, 2], "blocks": false, "max_ext_bases": 0, "local_max": 0,
+"K": 3, "K_hi": 3, "background": false}`: global characters of degree ≤ 3; unweighted signed-sum blocks searched from
+pairs and single inputs (with modulated, product, split, beam and forced blocks); union-bound tests scaled to the
+residual; least squares; the small-n cross-validation. Removed: the linear and spectral blocks, the extension and
+local classes, the degree-4 to 6 searches, the weighted blocks, the eigenvector seeds, the logistic refinement, the
+kernel background; and with K = 3 every test is 0.29 nats more lenient. Seeds 0 and 1, all 11 suites (138 targets),
+the standard grid. Its definition used the ablations' results on all five ablation suites, dlheld7 included: no suite
+is held out for it.
+
+**Against DFG alone** (Numerical; RESULTS.md Q5b, `ablations.json` `core`). Same seeds and training sets. Pooled over
+138 targets: +0.07, median −0.01, 28 lower / 26 higher, 133 both reach; newly never: par5; neither: h5s1, h6_00,
+fd_10, f7_05. Per suite from −0.20 (dlheld4) to +0.46 (dlheld2); dlheld7 −0.03 (2 lower / 2 higher) [11/12]. On the 65
+targets of the ablation suites +0.02 (16 / 12) [62]; on the other 73, +0.12 (12 / 14) [71] plus par5. By family (138):
+parities +2.01 [3 of 4; par5 never], halfspaces +0.32 (3 / 7) [13], multiplexers +0.21 (0 / 1) [2], compositions +0.17
+(4 / 2) [13], symmetric +0.06 (0 / 2) [22 of 25], mixtures −0.04 (7 / 5) [28 of 29], random formulas −0.07 (10 / 5)
+[35], formulas −0.08 (4 / 2) [15], staircases −0.06 [2]. The core moves 54 of 138 targets beyond ±0.25; the paired null
+on the same seeds and the same 138 targets moves 8 (5 lower, 3 higher; mean |ratio| 0.040; mean −0.01 over 134; RESULTS.md
+Q5b): designed/andxor −0.69, dlheld/majpar5 −0.30, dlheld2/sym8 +0.69, dlheld2/h2rf1 −0.27, dlheld3/mixmaj +0.51,
+dlsymdev/thrsum −0.66, dlheld5/h5t1 −0.26, dlheld6/h6_07 +0.40. On seed 0 alone it moves 8 as well.
+
+**Against the networks** (Numerical; RESULTS.md Q5b). nets_best as in Q2. The core: −1.74 over the 122 of 126 targets
+both reach (111 better, 9 worse); DFG alone on the same seeds: −1.88 (117 / 5) [123]; DFG alone on all its seeds −1.87
+(117 / 2). On dlheld7: core −1.30 (9 / 1) [11/12], DFG alone (seeds 0, 1) −1.27 (10 / 1). The core is clearly worse
+than nets_best on par4, par5, rf17, thr30, thr20, h6_10, thrint, f7_01 and h6_00; DFG alone (seeds 0, 1) on thrint,
+f7_01, h6_00, h3rf0 and h3rf1, on the last two of which the core is better than the networks. By family the core's
+largest loss against the networks is on parities (−1.97 against DFG alone's −4.73) and halfspaces (−0.15 against
+−0.49).
+
+**Compute** (Numerical; the result files, 3036 fits of seeds 0, 1). The core's FLOPs per fit are a median 0.094 of DFG
+alone's on the same fit; its largest fit uses 0.150 of one network run (DFG alone 0.500); CPU time 2302 s against 9058
+s in all (median 0.30 s against 2.01 s per fit; both measured with four workers on four CPUs, so rough).
+
+**Leave one in** (post hoc; `leavein.py`, `results/leavein/`, `ablations.json` `leavein`). The core with one part put
+back, as the evaluation runs it (seeds 0 and 1, every n), on the targets where the core moved most (chosen after
+reading its results); n\* of DFG alone on the same seeds in brackets.
+- *Degree-4/5 parities with no lower-degree footprint*: par4 (48), rf17 (49; its gates compute a 4-parity), poly4
+  (161; the term x7x8x9x10) and par5 (56) are 3124, 3550, 3127 and never in the core. With the degree-4 to 6 searches
+  back (K = 4, K_hi = 6): 48, 49, 151, 56. With the extension and local classes back: 3124, 3550, 3127, never. In the
+  core par4 is learned at n = 512 and from 2048 on in seed 0, from 4096 in seed 1: the block search's luck (§3). par5
+  is learned only at n = 16384 in seed 0; refit: a product block whose factors, (x1−x2−x4+x5) and a 10-input block
+  holding x3 and nine irrelevant inputs, together cover the five inputs passes in round 0 at 6.66 times its threshold,
+  and the exact block (x1+x2−x3+x4+x5) follows in round 1 (error 0); at n = 512 the round-0 searches' best candidates
+  stand at 0.34–0.37 of their thresholds and the model is the constant (error 0.506).
+- *Dense halfspaces*: thr30 (158 → core 623), thr20 (134 → 455), maj15 (122 → 206), maj21 (109 → 174), maj9 (84 → 110),
+  f7_01 (156 → 195), thr10 (128 → 154). Linear and spectral blocks back: 192, 140, 122, 109, 84, 132, 128. Background
+  back: 223, 249, 174, 136, 94, 161, 123. Logistic readout back: 483, 414, 207, 174, 110, 195, 136. Refit of thr30 at
+  n = 512 (seed 0): the core's model holds the 5 degree-1 characters that pass their own tests, a 12-input signed block
+  and a modulated 23-input block, error 0.108; DFG alone's the same 5 characters, the linear block's other 25 and
+  modulated blocks, error 0.034 (0.188 without the linear block's characters).
+- *Mixtures*: h6_10 (215 → 649) and f7_09 (222 → 355): weighted blocks back 494 and 355, eigenvector seeds back 649 and
+  355, both back 207 and 234. Refit of h6_10 at n = 256 (seed 0): DFG alone's model is the weighted folded block
+  |x1 + … + x12 + 3·x13| (share 0.96; error 0.017); the core's the two pair characters χ[x1, x13], χ[x3, x13] (0.329).
+  h5t0 (112 → 185): background 146, weighted 185, eigenvector seeds 185, both 187. h5s2 (367 → 678; one grid step
+  later on both seeds): background 713, weighted 678, eigenvector seeds 678, both 678.
+- *sym8* (54 → 100): background back 54; linear block, weighted blocks, eigenvector seeds 100. Refit at n = 64 (seed 0):
+  DFG alone keeps the forced variant (held-out errors 23 / 11), the forced block |x1 + … + x8|, error 0; the core keeps
+  the default (16 / 12), the constant, error 0.281. sym8 is also one of the 8 targets the paired null moves (+0.69):
+  its n\* hinges on that one cross-validation choice at n = 64.
+- *Gains* (DFG alone → core): h3rf1 135 → 31, h3rf0 120 → 30, h4rf1 103 → 29, and3 78 → 37, f7_11 63 → 30, rf06 31 → 16,
+  fd_02 58 → 31, dlist8 55 → 30, h5rf0 293 → 164, fd_11 109 → 61, rand0 27 → 16, rand1 105 → 63. Background back: 52,
+  32, 59, 44, 54, 27, 42, 31, 166, 125, 26, 102. Linear block back: 31, 30, 29, 78, 30, 16, 31, 30, 164, 68, 16, 68.
+  Logistic readout back: no gain removed. K = 4 (with the degree-4 to 6 searches) back: h5rf0 292, rand1 88, the others
+  unchanged. Composition back (h3rf0, h3rf1, dlist8, h4rf1, h5rf0, fd_02): 30, 31, 30, 29, 186, 31. Background and linear
+  block back together (the same six): 32, 52, 31, 104, 166, 42. So the background removes the gain on rand0, rand1, rf06,
+  f7_11 and fd_11 and part of it on h3rf1, h4rf1 and fd_02; with the linear block, all of h4rf1's; the linear block alone
+  and3's; K = 4 h5rf0's. On h3rf0 and dlist8 nothing tried removes the gain: in both learners the test error sits near
+  10% for several doublings (h3rf0 0.071–0.124 in the core and 0.074–0.198 in DFG alone at n = 32–256; dlist8
+  0.010–0.111), where small differences move the 10% point by one or two doublings.
+
+*Heuristic.* On these suites a learner with characters of degree ≤ 3, unweighted signed-sum blocks, residual-scaled
+tests, least squares and the small-n cross-validation keeps DFG alone's results against the networks, on the held-out
+suite too, at a tenth of its FLOPs. What it gives up is what the removed parts are for: the degree-4 to 6 searches find
+parities with no lower-degree footprint, the linear block dense halfspaces, the weighted blocks with eigenvector seeds
+sums with a heavy inner term. The single ablations could not show this, because the ablation suites hold one target of
+the first kind (par4) and no halfspace on more than 13 inputs. The background and the linear block cost data at small n on formulas,
+which is what the core gains. A target mix richer in high-degree parities or dense halfspaces would make the core worse
+than DFG alone.
+
+## 7. What could not be checked, and caveats
+
+- One or two seeds per ablation; n\* is a seed mean on a doubling grid, so a single training set's single grid step
+  moves a 2-seed n\* by about 0.5 and a 1-seed n\* by about 1. The paired null calibrates this for column order and
+  folds, not for the training sets.
+- The paired null exists for seeds 0 and 1 only, on all 11 suites (RESULTS.md Q5b; `ablations.json` `nulls` for the
+  65 ablation-suite targets, `core.paired_null_same_seeds` for all 138). It perturbs column order and folds, nothing
+  else; it does not measure the effect of another training set.
+- Families, the paired null, the leave-one-in runs, the refits and the core itself are post hoc. The leave-one-in
+  targets were chosen after reading the core's results, and the two-part runs (weighted blocks with eigenvector seeds;
+  background with the linear block) after reading the one-part runs.
+- The n_detect shifts of §2 rescale Part 10's stored statistics; the modulated entries use the unmodulated block's
+  number of groups (approximate). n_detect is computed on seed 0's rows, n\* from seeds 0 and 1.
+- Mechanisms are read from single refits (seed 0 or 1, one n); they show what happened in that cell, not that it is the
+  only route.
+- Not independently verified.
+

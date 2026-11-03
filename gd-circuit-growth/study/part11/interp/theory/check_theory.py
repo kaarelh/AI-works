@@ -6,6 +6,8 @@ it P1's null simulation.)  Reads the frozen learner (part10/hyb_portfolio3/dfg13
 files (part11/results/toy__dfg13-perm__*.json), study/dscale.json, the order analysis' cells
 (interp/order/results/cells, seed 0) and the cached fits of theory_fits.py (theory/cache/; run theory_fits.py first).
 Sections: code (constants read from the code), P1 (null), P2 (parities), P3 (n_glob), P4 (sum blocks), P5 (compute).
+Blocks marked "(verification)" were added after the independent verification (VERIFY_THEORY.md) to compute the
+numbers that THEORY.md's corrections cite; they add keys and change no earlier value.
 """
 import os, sys, json, gzip, math, time, inspect, itertools
 from fractions import Fraction

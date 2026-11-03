@@ -35,6 +35,11 @@ CONFIGS = {   # name: (the argument(s) put back, targets)
     "weighted_eig": ({"sum_inner": True, "sum_seeds": [2, 3, 2]}, ["dlheld6/h6_10", "dlheld5/h5t0", "dlheld5/h5s2", "dlheld7/f7_09"]),
     # K back to 4 on the core's gains (K also sets every test's union bound, 4 K N): the same change as "deg46", other targets
     "deg46g": ({"K": 4, "K_hi": 6}, GAIN),
+    # the gains no single part explained: composition back, and the background and the linear / spectral blocks together
+    "compg": ({"max_ext_bases": 32, "local_max": 12}, ["dlheld3/h3rf0", "dlheld3/h3rf1", "dlheld3/dlist8", "dlheld4/h4rf1",
+                                                       "dlheld5/h5rf0", "dlfamdev/fd_02"]),
+    "bg_blocks": ({"background": True, "blocks": True}, ["dlheld3/h3rf0", "dlheld3/h3rf1", "dlheld3/dlist8", "dlheld4/h4rf1",
+                                                         "dlheld5/h5rf0", "dlfamdev/fd_02"]),
 }
 
 
