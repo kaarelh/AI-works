@@ -179,17 +179,18 @@ Figures: [`figures/fig_atlas_grid.pdf`](figures/fig_atlas_grid.pdf), [`figures/f
   error ≤ 0.0083), and blocks contaminated by irrelevant inputs at the first n where a block appears. At the first n
   with test error ≤ 0.1 the spurious share is ≤ 0.1 for 22 of 35 targets (median 0.01, largest 0.36, dlist8); at
   16384 for 36 of 37 (largest 0.21, a spurious product of sym9).
-- **The two residue classes mod 3 are never learned** (Numerical, §1.8, §3): f7_05 and h6_00 are the constant (plus the kernel background)
-  at every n, test error = the minority rate (0.3245, 0.3430) from n = 2048 on. Part 10 found the same failure for
-  v3's member, constant + background at every n ≥ 1024; at smaller n v3's member was not constant-only (§3).
+- **The two residue classes mod 3 are never learned** (Numerical, §1.8, §3): f7_05 and h6_00 are the constant (plus
+  the kernel background) at every n, test error = the minority rate (0.3245, 0.3430) from n = 2048 on. Part 10 found
+  the same failure for v3's member, constant + background at every n ≥ 1024; at smaller n v3's member was not
+  constant-only (§3).
 - **DFG's own cross-validation keeps the default variant** in 204 of the 222 cells at n ≤ 512 and chooses the forced
   one in 18 (Numerical, §2.3). Refitting the variant it did not choose on the same rows: the two differ in test error
   in 140 cells; the forced one would have been better in 48 of the 204 default cells (par4 at 32: 0 instead of 0.488)
   and the choice made is better in 89 of the 140. Its mean test error over the 222 cells, 0.2257, equals that of
   always taking the forced variant to 3 decimals (0.2256) and is 0.0146 above the better of the two in each cell
   (0.2111). Below the n at which a compact representation is complete, 108 of 198 models are the constant alone.
-- **Against v3's DFG member** (Numerical; Part 10, same targets and rows; §3): the DFG test error is identical in 141 of the 255
-  common cells, in all 15 cells at n ≥ 4096 and in 28 of 32 at n = 1024–2048. At n ≤ 64 about half of the 80
+- **Against v3's DFG member** (Numerical; Part 10, same targets and rows; §3): the DFG test error is identical in 141
+  of the 255 common cells, in all 15 cells at n ≥ 4096 and in 28 of 32 at n = 1024–2048. At n ≤ 64 about half of the 80
   differing cells differ through the variant (40: v3's stacker kept the forced member, alone's paired test the
   default; the stacker kept the forced member in 51 of its 110 cells at n ≤ 64, DFG alone's paired test in 7 of 111),
   and the forced member's terms are often true ones (rf06 at 16: 0.032 against alone's 0.280); most of the rest
