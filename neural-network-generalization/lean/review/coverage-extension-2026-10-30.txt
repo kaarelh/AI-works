@@ -2,7 +2,8 @@ NNBayes statement audit and coverage extensions — 30 October–2 November 2026
 ================================================================
 Original baseline: 4ae26f467789a6aec9802f672a3c46e694cc60dd.
 Second extension baseline: 0ea26b6b6e3ec7ae34263c4df7322734d4eee932.
-Current extension baseline: 2a4655f43541fc58cf0182f4fcb09d3dd654af4a.
+Third extension baseline: 2a4655f43541fc58cf0182f4fcb09d3dd654af4a.
+Localized-union extension baseline: 08d0836f4ebb878fcb7ee810e5fd3e8cca1c8cbe.
 The latest extension changes Lean proofs, formalization documentation, and
 verification records only.
 All papers and their statements are unchanged.
@@ -109,7 +110,33 @@ Main correspondence across the sixteen papers
    stability specialization. RobustNeighborhoodRadius constructs the exact
    worst readout-direction disturbance and proves the necessary center-radius
    upper bound. The associated ellipsoidal-family counting bound is still open.
-   The localized-union theorem and other variants listed below remain open.
+   Other variants listed below remain open.
+
+   NEW (localized-union extension): RobustLocalizedPolynomial proves the exact
+   raw-Gaussian union-conditioned learner's rho+epsilon test-margin guarantee,
+   with universal polynomial labeled complexity and validation complexity
+   O((log M+log(1/delta))/epsilon^2). One event is chosen before all eligible
+   widths and scales. RobustLocalizedConditioning proves equality with the
+   two-stage learner: union support first, then the unchanged strict training
+   margins at every input. The family contains the empty set; no individual
+   assigned component is assumed to contain the target cylinder.
+   FiniteUnionEntropy proves the manuscript's actual conditional-KL chain
+   identity and log M bound, including zero-mass cells. The main learning
+   proof instead discards cells of posterior mass below epsilon/(12M), derives
+   their raw mass from the union, and reuses the proved Gaussian truncation and
+   pointwise compressor. This is an alternative proof of the unchanged paper
+   theorem. It uses an additive Hoeffding event; the resulting polynomial
+   sample conclusion matches the theorem, not the sharper intermediate
+   relative-Chernoff allocation displayed in its proof.
+   The same-input corollary and independent finite-valued pilot extension are
+   closed. The latter includes any fixed finite unlabeled pilot sample and
+   incurs no union bound over pilot outcomes. LocalizedFamilyCounting derives
+   M <= (2^d+1)^h and log M <= h(d+1)log 2 from Mathlib's VC/shattering definition.
+   LocalizedCubeBalls represents every real-radius Euclidean ball with a cube
+   center, allows unused ball slots, and proves the exact [2^d(d+2)]^k count
+   and k[d log 2+log(d+2)] logarithmic bound for the exception family. For k>0
+   this family contains the empty exception set. The upper-orthant and general
+   ellipsoidal-cylinder VC bounds still require separate geometric proofs.
 
 6. Unbounded/Lipschitz activations: the main strong-prior and uniform-band
    statements match their stated existential polynomial budgets.
@@ -314,19 +341,31 @@ build and the same seven compiler/axiom checks are rerun. Source hashes,
 logs, static scanning and paper-integrity evidence are recorded separately
 in verification/coverage-continuation-2026-11-02/.
 
+Localized-union verification — 2 November 2026
+-----------------------------------------------
+The localized union, same-input, pilot, entropy and finite-family endpoints
+are root-imported and added to CheckCoverageExtensions. The complete main
+build and all seven existing compiler/axiom checks are rerun. Evidence is in
+verification/coverage-localized-union-2026-11-02/, including exact new-source
+hashes and byte comparisons of the unchanged paper files. The separate
+conditional package is unchanged and is not claimed to have been rebuilt.
+
 Remaining work is real
 ----------------------
 This is not a claim of complete paper coverage. Still open:
 * Strong-prior: arbitrary continuous nonpolynomial activation gate simulation;
   growing-depth norm-ball appendix. The sharp packing formula is closed.
-* Robust polynomial depth: the exact localized-union posterior theorem;
-  clean-Jacobian finite-radius curvature certificate and ellipsoidal-family
-  counting; general-margin, monotone-score, two-margin-transport,
+* Robust polynomial depth: clean-Jacobian finite-radius curvature certificate;
+  upper-orthant and ellipsoidal-family VC counting; general-margin,
+  monotone-score, two-margin-transport,
   valid-hidden-state and hidden-noise-only variants. The global spectral and
   diagonal certificates, readout rescaling, raw-interval conversion, sparse-
   exception obstruction, finite unlabeled/shared-pool and prescribed-countable-
   family pool results, and the confident-neighborhood transfer/radius bound
-  are closed. Empirical interval-arithmetic artifacts are not Lean certificates.
+  are closed. The exact localized-union theorem, same-input corollary,
+  independent finite-valued pilot extension, general finite-domain VC counting,
+  and cube-centered Euclidean-ball exception counting are also closed.
+  Empirical interval-arithmetic artifacts are not Lean certificates.
 * Improved original support: the paper's literal J/compression constants.
   Matching the leading 16 and the counted circuit width does not close J.
 * Online: instantiations for the other merging supports and optional exact

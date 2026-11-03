@@ -2,7 +2,7 @@
 
 This project proves the original five main learning statements and the main statements of ten additional papers. The second batch extends the activations, priors, domains, polynomial bounds, online learning and converses. [Second-batch coverage](review/BatchTwo-coverage.md) · [Main entry point](NeuralGeneralization/BatchTwoMain.lean) · [Axiom audit](NeuralGeneralization/BatchTwoAudit.lean).
 
-The [current paper-to-Lean correspondence review](review/coverage-extension-2026-10-30.txt) records the closed and remaining coverage gaps. The latest additions close the circuit-width mismatch, the full squared-sampling estimates, biased-IID adverse ordering, several finite-noise certificates, the sparse-exception obstruction, and the unlabeled/shared-pool learning results. The improved-support paper’s literal compression-budget constants and other listed variants remain open.
+The [current paper-to-Lean correspondence review](review/coverage-extension-2026-10-30.txt) records the closed and remaining coverage gaps. The latest additions close the circuit-width mismatch, the full squared-sampling estimates, biased-IID adverse ordering, several finite-noise certificates, the sparse-exception obstruction, and the unlabeled/shared-pool learning results, and the exact localized-union posterior theorem. The improved-support paper’s literal compression-budget constants and other listed variants remain open.
 
 The original five statements concern the actual finite Gaussian neural-network model. The proofs use only Lean's standard axioms
 `propext`, `Classical.choice`, and `Quot.sound`: there are no admitted proofs or
@@ -160,3 +160,24 @@ handled explicitly. They do not concern arbitrary adversarial query orders.
 
 The [coverage review](review/coverage-extension-2026-10-30.txt) continues to list
 the unresolved claims; this is not complete coverage of every appendix.
+
+## Localized-union coverage: 2 November 2026
+
+[RobustLocalizedPolynomial](NeuralGeneralization/RobustLocalizedPolynomial.lean)
+proves the paper's exact union-conditioned Gaussian guarantee: risk at most
+rho + epsilon, universal polynomial labeled complexity, logarithmic-family
+validation complexity, and one event for every eligible width and scale.
+It also proves the same-input corollary. The strict training-margin likelihood
+is unchanged, including at exceptional inputs. [RobustLocalizedConditioning](NeuralGeneralization/RobustLocalizedConditioning.lean)
+checks equality with the two-stage prior-then-likelihood conditioning.
+
+[FiniteUnionEntropy](NeuralGeneralization/FiniteUnionEntropy.lean) proves the
+exact component KL identity and log M overhead. The learning proof uses an
+alternative small-component cutoff and the actual Gaussian compressor; it
+never assumes each exception component contains a target cylinder.
+[RobustLocalizedPilot](NeuralGeneralization/RobustLocalizedPilot.lean) handles
+independent finite-valued pilot selection. [LocalizedFamilyCounting](NeuralGeneralization/LocalizedFamilyCounting.lean)
+and [LocalizedCubeBalls](NeuralGeneralization/LocalizedCubeBalls.lean) prove the
+VC-family bound and the exact cube-centered Euclidean-ball description bound.
+The geometric upper-orthant/ellipsoid VC estimates and other remaining
+extensions are listed in the coverage review. No paper was edited.
