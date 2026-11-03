@@ -272,12 +272,12 @@ From d = 15 to 120, n_thr rises by 8.4, 12.9 and 17.4, close to 2k ln 8 = 8.3, 1
 **Check against every parity cell** (Numerical; `P2.agree`, `P2.cells`). These are par2, par3 and par4 in the result
 files at d = 15, 30, 60, 120, with each seed's own training set and its own ȳ.
 - **n ≥ 32: 250 of 250 cells agree.** The final model's test error is exactly 0 iff the criterion holds in the final
-  fit, and about 0.5 otherwise.
+  fit, and 0.488–0.506 otherwise (6 cells; `P2.fail_err_n_ge32`).
 - The 10⁻⁹ term never changes a decision: 263 of 263 cells.
 - **n = 16:** the criterion fails in all 25 cells. n_thr > 16 at every d, and degrees 3–4 are not searched below
   m = 32. Seven cells still have error 0: par2 at d = 15, 30, 60, every seed. In all 7 the cross-validation chose the
-  forced variant and the forced final model holds χ_S. At n = 16 the fold fits have 14–15 rows, so nothing passes and the
-  forced variant guesses the best-z character. That guess is χ_S in 9–10 of the 10 forced fold fits at d ≤ 60, and the
+  forced variant and the forced final model holds χ_S. At n = 16 the fold fits have 14–15 rows, so nothing passes (no
+  fold fit passes in any of the 25 cells; `P2.cells[*].folds_pass`) and the forced variant guesses the best-z character. That guess is χ_S in 9–10 of the 10 forced fold fits at d ≤ 60, and the
   paired test picks forced (held-out errors default/forced 15/2, 7/0, 7/0, 7/0, 9/0, 10/0, 10/0). At d = 120, with
   C(120, 2) = 7140 pairs against 14 rows, the guess is χ_S in only 6 and 7 of 10 fold fits. The default is kept
   (7/5 and 3/3), and the error is 0.49 and 0.50.
@@ -308,8 +308,8 @@ residual differences come from the failing seeds' errors, which are near 0.5 but
 - **par4, d = 30, n = 32** (n_thr = 30.59, just below the grid point). The test passes iff 32(1 − ȳ²) > 30.59, i.e.
   |Σy| ≤ 6. Seeds 0, 1, 2 have Σy = −10, −6, +12, so only seed 1 passes (errors 0.488, 0, 0.500).
   - The cross-validation cannot rescue the other two. The 10 fold fits have 28–29 rows, below 32, so no fold searches
-    degree 3 or 4, and neither variant can hold χ_S in any fold. The held-out errors are 17/18, 12/15, 16/16, and the
-    default is kept.
+    degree 3 or 4, and no fold fit of either variant holds χ_S (`P2.cells[*].any_fold_with_S`). The held-out errors are
+    17/18, 12/15, 16/16, and the default is kept.
   - Exactly, P(pass at n = 32) = 0.785. So P(at least 2 of 3 seeds fail) = 0.12: the measured n* = 52 is an unlucky
     draw from the exact distribution, whose expected-error n* is 33.6.
 - **par3, d = 60, n = 32** (n_thr = 31.03). The test passes iff |Σy| ≤ 4, P = 0.62. Both seeds pass (Σy = 0, −4), so the
