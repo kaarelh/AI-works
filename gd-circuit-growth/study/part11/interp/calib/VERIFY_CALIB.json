@@ -1,0 +1,167 @@
+{
+ "verdict": "Mostly confirmed, with 12 corrections (11 to numbers, wording or scope; 1 to the P-A proof) and 1 important omission. The instrumented copy is the frozen learner (byte-identical rebuild; its AST equals dfg13.py's once the 65 hook statements are removed). Every headline count of A1, A2 and B reproduces from the raw records with my own code. 17 independent refits of the frozen module (8 A1, 7 A2, 2 B; own data generation) equal the records or result files bit for bit. P-A and P-A' hold, though P-A's proof mishandles the s clipping. The round-0 FLOP formula is exact on all 825 recorded _fit calls. Corrections: (1) 'every fit was checked' (572 A1 and 800 cascade fits were not); (2) the 'sum-block tests never passed' holds only for the final fits; two default fold fits on noise admitted sum blocks in round 0; (3) 238 forced fold fits hold a test-passed feature but only 229 after a forced one (also 12->10, 14->12, 150->143); (4) the linear block's null rate is close to, not 'exactly', the chi^2_d tail (0.845% vs 0.921% at d = 30); (5) the spectral rates quoted come from the small samples: about 5.3% and 47%, not 5.7% and 48%; (6) P(>= 2 degree-1 passes in 440) = 0.053, not 0.082, and all 6 classes are compatible with the Gaussian approximation; (7) removing the spurious terms changes the mean error by up to 0.0002, not 0.0001, from n = 128 on; (8) the largest fit (0.519) spends 37% on the readout, not 41-47%; (9) the 0.75 GFLOP/s sum-block rate is the final fits' rate (0.27 inside the fold fits); (10) m6 = 73, not min(n, 147), at n = 128-512; (11) one of the 221 cascade local admissions did not come after two forced characters. Omission: the spectral block's biased-label null pass rate grows steeply with d and with label bias (d = 120, p = 0.8: 99% at n = 512 and 67% at n = 1024; d = 30, p = 0.9: 39% at n = 128), which the report's 'falling to 0 by n = 1024/4096' leaves out.",
+ "claims": [
+  {
+   "claim": "S0: dfg13_instr.py is dfg13.py (md5 69cabe5c...) with 64 lines added and none changed; rebuilding it with make_instr.py gives the same file byte for byte (md5 be56ce50...); the hooks only read.",
+   "status": "confirmed",
+   "evidence": "I rebuilt it with a scratch copy of make_instr.py, redirecting only the output path: md5 be56ce50963f2f7fc513ab82616cbcc7, byte-identical by cmp. diff dfg13.py dfg13_instr.py shows 64 added lines, 0 removed or changed, all of them _P.<hook>(...) or the recorder import. AST check: deleting the 65 _P.* expression statements (on 64 lines; one line holds two) and the import gives an AST identical to dfg13.py's, so no insertion changes block structure. The hook arguments call only len(). calib_rec.Rec only reads fl[0], the process clock and its arguments, and writes only to its own dicts and lists."
+  },
+  {
+   "claim": "S0/short answer: every fit made with the copy equals a fit of the frozen module or the result file: 88/88 A1, 451/451 A2 and 35/35 B fits against the frozen module, and 31/31 cells (93/93 records) against the result files.",
+   "status": "corrected",
+   "evidence": "The stored flags give these counts, and recomputing equality from the stored err and flops values gives the same. My 8 refits of A1 cells with the frozen module (own data and test-set generation; model read from the fit's closure) equal the records bit for bit in test error, FLOPs, CV variant, cv_errs and admitted features. Seven of them are cells the report never checked: 30:0.8:64:7, 30:0.8:16384:18, 30:0.5:256:13, 60:0.5:512:5, 60:0.8:256:5, 30:0.5:4096:11 and 60:0.5:8192:4.",
+   "correction": "'Every fit made with the copy was checked' is too broad. 572 of the 660 A1 fits (seeds >= 2) and all 800 cascade fits have no frozen-module or result-file check. It should read 'every checked fit (88 of the 660 A1 fits, all A2 and B fits)'. That the copy is the frozen learner for every fit follows from the AST equivalence and the read-only hooks, not from the checks."
+  },
+  {
+   "claim": "P-A (Proved): on labels independent of iid uniform inputs, in round 0 of any _fit call each global character class of degree k (1-4; 5-6 in the subsample search) passes with probability <= delta/(2K) = 0.0125; the six classes together <= 0.075.",
+   "status": "corrected",
+   "evidence": "The statement holds; I checked it line by line against dfg13.py. lsfit's ridge is zero on the constant, so r = y - sum(y)/(n + 1e-9). thr() uses self.K = 4 in every round. The degree-3 loop over a < d-2 and the degree-4 loop over pairs with b < d-2 together cover all C(d,3) and C(d,4) subsets. The degree-5/6 G entries over disjoint (T1, T2) equal mean(r chi_{T1 u T2}). thr_m reduces to c rms(r_1..m) sqrt(2L/m). Hoeffding plus the union bound give 2N exp(-L) = delta/(2K). The bound also covers fold fits (fold rows chosen by an rng independent of X and y) and both CV variants (round 0 is identical in both). Proof gap: s = sqrt(max(mean r^2, 1e-12)) is never below 1e-6, because sqrt(1e-12) evaluates to exactly 1e-06, so the step '(if s < 1e-6 the loop stops before any test)' is vacuous. When all labels are equal, the m = n tests run with s = 1e-6 > rms(r), and the claimed 'iff |sum r chi| > c sqrt(2L sum r^2)' fails. Two A1 final fits are such cases (30:0.8:16:14 and :19, recorded round-0 s = 1e-06; nothing passed).",
+   "correction": "The statement stands. The proof should say: the m = n tests use s = max(rms(r), 1e-6) >= rms(r), so their pass event is contained in the event with s = rms(r), and the m < n tests use rms(r_1..m) exactly. The bound then follows in all cases, including all-equal labels."
+  },
+  {
+   "claim": "P-A' (Proved): if y depends only on inputs R, in round 0 P(some chi_S with S not inside R passes) <= (N_irr/N) delta/(2K) per class.",
+   "status": "confirmed",
+   "evidence": "Checked each step: r is a function of the R-columns; for j in S outside R, conditioning on y and on every other column leaves column j iid uniform, so the sum is a weighted Rademacher sum with weights of total square sum(r^2); the thresholds depend on r only. Like P-A, it needs iid uniform rows, which the A2 data satisfy (harness.train_data), and holds in learner coordinates under Permuted."
+  },
+  {
+   "claim": "A1, d = 30, p = 0.5: 0 of 220 final fits have a test-passed feature (95% <= 0.017). 5 of 220 have features, all from the forced variant (CV chose it in 5 of 120), two forced characters each, degrees 1-4, test error 0.491-0.500. 215 fits stopped in round 0.",
+   "status": "confirmed",
+   "evidence": "Recomputed from noise.jsonl: 0/220 (CP upper 0.0166). The CV-forced fits are n=16 s=5, n=16 s=17, n=32 s=5, n=64 s=3 and n=256 s=13, with errors 0.4907-0.5002. Stop counts: 215 'nothing' after 0 rounds; 4 'nothing' and 1 'fit' after 2 rounds. The refit of 30:0.5:256:13 reproduces it (forced characters of degree 4 and 3)."
+  },
+  {
+   "claim": "A1, d = 30, p = 0.8: 6 of 220 (0.010-0.058). Linear block at n = 64 and 128 (T/thr 1.10, 1.07; errors 0.336, 0.283). Spectral block twice at n = 128 (ratios 1.011, 1.054; a second feature in round 1 at 1.083; errors 0.234, 0.213). Degree-1 characters at n = 256 (0.244) and 16384 (0.195). CV never chose the forced variant (0/120).",
+   "status": "confirmed",
+   "evidence": "Recomputed from the records: ratios 1.1034, 1.0723, 1.0114, 1.0540, 1.0833. The refits of 30:0.8:128:0, 30:0.8:64:7 and 30:0.8:16384:18 reproduce them (2 spectral features; 30 linear-block characters; chi{5})."
+  },
+  {
+   "claim": "A1, d = 60: 5 of 110 balanced fits (linear block 3, degree-2 1, the local product of the two forced characters 1) and 6 of 110 biased (spectral block 5 at n = 256 with 1-3 features each, linear block 1). CV chose the forced variant in 2 of 60 balanced and 0 of 60 biased fits. At n = 512, seed 5, a degree-7 local character is the product of the forced characters.",
+   "status": "confirmed",
+   "evidence": "Recomputed from the records, CIs included (0.015-0.103 and 0.020-0.115). The refit of 60:0.5:512:5 gives forced characters {14,22,29,45} and {26,32,50}, then the local character {14,22,26,29,32,45,50}, which is exactly their product, with error 0.494141. Linear-block ratios: 1.01, 1.109, 1.040 and 1.029."
+  },
+  {
+   "claim": "S1.3 per class: round-0 tests 440/440/400/400/360/360 with 2/0/0/0/0/0 passes at d = 30; 220/220/200/200 with 0/1/0/0 at d = 60; the later-round test counts; the median max-ratios and the Gaussian reference.",
+   "status": "corrected",
+   "evidence": "All counts, later-round tallies (14/16/13 and 13/10/9 at d = 30; 17/21/21 and 10/10/6 at d = 60), median max-ratio ranges and nominal values recompute exactly. I also recomputed round-0 g1/g2/linear/spectral statistics from regenerated data for 46 records; they agree with the recorded values to 1e-5. The one exception is 60:0.5:256:9, where DFG zeroes the passing degree-2 pair before the eigendecomposition.",
+   "correction": "The table header 'degree 6 (m = min(n, 147))' is wrong for n = 128-512. There the final fit has half the budget and the records show m6 = 73. (Degree 5's m = min(n, 687) equals n there, so its header is right.)"
+  },
+  {
+   "claim": "S1.3: '5 of 6 classes are compatible with the ~0.001 of the Gaussian approximation (degree 1: 2/440 where 0.5 is expected)'; the MC gives 0.108% per degree-1 test, so 2 or more passes in 440 tests has probability 0.082.",
+   "status": "corrected",
+   "evidence": "I computed the degree-1 class's null pass probability exactly for every (p, n): a binomial convolution conditional on the labels, validated against simulation at lower thresholds within 1 SE. It is 0 at n = 16, 0.00004-0.00045 at n = 32, 0.0002-0.0008 at n = 64 and about 0.00113 for large n. The average over the report's four MC cells is 0.094%, consistent with its 0.108%.",
+   "correction": "With the per-(p, n) rates, the expected number of degree-1 passes in the 440 tests is 0.37 and P(X >= 2) = 0.053, not 0.082; the pooled rate overstates the small-n cells. Degree 1 is also compatible: its 95% CI (0.0006-0.016) contains 0.0012, so all 6 classes are compatible."
+  },
+  {
+   "claim": "Linear block: null pass rate 0.84% (d = 30) and 1.04% (d = 60) in 80000-draw nulls; observed 2/360 and 4/160; short answer: it 'passes at the exact chi^2_d tail of its Laurent-Massart threshold'.",
+   "status": "corrected",
+   "evidence": "The MC numbers and binomial p-values (0.81, 0.087) recompute. My own null MC, which mirrors _fit (constant fit with the 1e-9 term, inputs already passing excluded, room rule n >= 2(1+k)), gives 239/28000 = 0.85% at d = 30 and 0.95% at d = 60. The exact tails are 0.921% and 1.051%.",
+   "correction": "At d = 30 the rate is not exactly the chi^2_30 tail. Pooling 108000 draws gives 0.845% (95% CI 0.79-0.90%), which excludes 0.921%. The statistic is a sum of squared Rademacher sums, whose tail is lighter than chi^2_d. Say 'close to the chi^2_d tail (0.84% against 0.92% at d = 30; 1.04% against 1.05% at d = 60), about 1/10 of delta'."
+  },
+  {
+   "claim": "Spectral block on biased labels near n = 4d: null pass rate 5.7% at d = 30, n = 128 and 48% at d = 60, n = 256, falling to 0 by n = 1024 (d = 30) and 4096 (d = 60); the fits agree (2/20, 5/10); on balanced labels at most 3 passes in 20000.",
+   "status": "corrected",
+   "evidence": "Fit counts and the balanced-label numbers are confirmed. The 5.7% and 48% are the 2000-draw and 1000-draw estimates; the report's own 20000-draw estimates are 5.39% and 46.8%. My independent MC gives 5.0% (500/10000) and 45.6% (1825/4000); pooled, 5.3% and 46.7%. The Marchenko-Pastur ratios (0.99, 1.08, 0.89, 0.97, <= 0.74) recompute.",
+   "correction": "Quote about 5.3% (d = 30, n = 128) and 47% (d = 60, n = 256). 'Not conservative' is relative to the ~1% of the linear block or the 1.25% per-class level. Against the delta = 0.1 in its own margin factor it fails only at d = 60, and the 'falling to 0' holds only for the two (d, p) settings measured (see omissions)."
+  },
+  {
+   "claim": "Short answer and S1.4: the sum-block tests never passed (0 of 2000 round-0 searches, 0 of 153 later; largest T/threshold 0.86 and 0.93).",
+   "status": "corrected",
+   "evidence": "Confirmed for the 660 final fits. The 2000 round-0 searches are 600 add0, 600 add1, 600 prod and 200 split; the 153 later ones include 45 mod. The maxima are 0.863 (30:0.8:64:19, add0) and 0.927 (30:0.8:128:19, round 1, add0).",
+   "correction": "Restrict the statement to the final fits. In the fold fits, which run the same round-0 search on noise, the default variant admitted sum blocks in round 0 twice (d = 30, p = 0.8: n = 64 seed 17 fold 7, and n = 128 seed 19 fold 4; no forcing in the default variant). Forced fold fits admitted test-passed sum blocks in 24 (d = 30) and 7 (d = 60) fits."
+  },
+  {
+   "claim": "S1.5: forced fold fits holding 'a test-passed feature after the forced ones': d = 30, 12/900 (p = 0.5) and 238/900 (p = 0.8; 205 local); d = 60, 14/450 and 150/450. The short answer adds that the local class admits chi_A chi_B in these fold fits.",
+   "status": "corrected",
+   "evidence": "The counts of forced fold fits with any test-passed feature, the by-n split (121/73/28/15/1), the kinds, the forced-kind counts (900/813 characters, 11/179 blocks) and the default fold fits (2/900, 9/900, 2/450, 8/450) all recompute. Each forced fold fit can be paired with the default fold fit on the same rows (DFG.fit runs both variants over the same folds). 185 of the 205 local characters (d = 30, p = 0.8) are provably chi_A chi_B from the records: their degree equals the sum of the two forced degrees and no other character is present. The other 20 have degrees consistent with |A xor B| for overlapping A and B.",
+   "correction": "'After the forced ones' is false wherever the test-passed feature entered in round 0, before any forcing; the paired default fold fit made the same admission there. That is 9 fits at d = 30, p = 0.8 (linear block 3, spectral 3, sum blocks 2, degree-1 1; 2 of them forced nothing), 2 at p = 0.5, and 2 and 7 at d = 60. After a forced feature: 229/900 (about 0.227-0.284), 10/900, 12/450 and 143/450. The 205 local admissions are all after forcing."
+  },
+  {
+   "claim": "Cascade re-run (S1.5 table): after the second forced character the local test passes in 244 of 334 fits at p = 0.8, against 0 of 334 after random characters of the same degrees. Every local character DFG admitted came after two forced characters A, B and has degree |A xor B| (4/4, 2/2, 116/116, 98/98); where A, B are disjoint it is chi_A chi_B (4/4, 2/2, 114/116, 76/98). 4 of the 731 second forced characters came from the local class.",
+   "status": "corrected",
+   "evidence": "The table recomputes from cascade.jsonl. DFG local passes: 4, 2, 116, 99 of 200. After the first forced character: 0/166, 0/189, 0/147, 0/133. After the second: 4/200, 2/197, 146/199, 98/135 (medians 0.51, 0.61, 1.17, 1.16) against random 1/200, 1/197, 0/199, 0/135. Disjoint pairs and the 64 forced blocks at p = 0.8, n = 58 recompute. calib._local_test matches DFG's local class (same ridge, same V, the subsets not in the model, thr(C(|V|,|T|))).",
+   "correction": "At p = 0.8, n = 58, DFG admitted a local character in 99 fits, not 98. Fit 30:0.8:58:34 forced one character and one sum block, and its degree-4 local character followed a test-passed degree-1 character. 'Every local character came after two forced characters' therefore holds in 220 of 221 fits."
+  },
+  {
+   "claim": "Test error on fresh noise: d = 30, balanced 0.497-0.504 by n (test P(y=-1) = 0.4895); biased 0.339 at n = 16 falling to 0.1946 from n = 1024. The excess is the kernel background; err = a + q(1-2a) reproduces the mean error within 0.001 at every n. Phi predictions 0.29, 0.14, 0.014 (w0 = 0.6, s = 0.8) and 0.224, 0.124, 0.012 (each fit's ybar), against measured 0.234, 0.130, 0.018.",
+   "status": "confirmed",
+   "evidence": "I generated the test sets myself (minority rates 0.4895, 0.1946, 0.4995, 0.2002). The largest gap |a + q(1-2a) - err| at d = 30, p = 0.8 is 0.0008. All Phi values recompute. The identity holds for any predictor that ignores the test labels. The attribution to the background follows from the code: 214 of the 220 biased fits have no feature, so their decision value is exactly w0 + x.bg (the logit refit leaves a lone constant unchanged). Minor: at d = 60 the mean error at n = 2048 is 0.2003; the minority rate 0.2002 is reached from n = 4096."
+  },
+  {
+   "claim": "A2, S2.0: the relevant sets are computed exactly and equal the suites' lists for all 41 targets (sizes 1-10).",
+   "status": "confirmed",
+   "evidence": "By reading boolfuncs.py, every designed and random target reads only x[:, :10] (explicit indices < 10; _random_formula with k <= 8). My own exhaustive enumeration of the first 10 inputs reproduces all 41 recorded sets, and flipping inputs 10-29 on random points never changes f."
+  },
+  {
+   "claim": "A2: 4499 admitted terms in 451 fits; 1047 read an irrelevant input (0.233), 961 of them linear-block characters; the others 86 of 3364 (0.026); the S2.1 table by n.",
+   "status": "confirmed",
+   "evidence": "Recomputed from spur.jsonl: 1135 linear-block characters, 961 of them spurious; 3364 = 4499 - 1135. Every column of the S2.1 table recomputes (counts, count shares, fits with another spurious term, mean/max share, the upper bound without the linear block, fits above 0.1, errors)."
+  },
+  {
+   "claim": "A2: the spurious terms' share of the model output is at most 0.086 from n = 2048 on (at most 0.86 at n = 64), with median 0 at every n.",
+   "status": "confirmed",
+   "evidence": "Maxima recompute: 0.086, 0.067, 0.055 and 0.060 for n = 2048-16384; median 0 everywhere. I refitted 7 cells independently (own data, own relevant sets, own term decomposition from the model's closure and Permuted's pi). Each equals the result file in error and FLOPs and reproduces the term count, spurious count, share and error without the spurious terms exactly: rf02@128 0.0632, rf04@4096 0.0099, rand0@2048 0.0857, rand1@64 0.8629, rand3@128 0.3711, par3@16384 0.0065, rand2@1024 0.1330."
+  },
+  {
+   "claim": "A2: removing the spurious terms lowers the mean test error at n = 16-64 (by 0.006, 0.002, 0.020) and changes it by <= 0.0001 from n = 128 on.",
+   "status": "corrected",
+   "evidence": "n = 16-64 confirmed (-0.0059, -0.0019, -0.0200; better/worse counts 1/0, 2/0, 10/1), as are the better/worse counts from n = 128 on (4/4, 1/2, 1/0, then 0/0).",
+   "correction": "The unrounded mean changes are +0.00018 (n = 128), +0.00011 (256), -0.00015 (512) and 0 from 1024 on. So the change is at most 0.0002, not 0.0001; the table's 4-decimal rounding hides this."
+  },
+  {
+   "claim": "A2, S2.2: the linear block enters 10/8/7/4/3/2/2/2/2 fits by n, with share at most 0.80 at n = 64 and at most 0.031 from 2048. 7 of 3029 individually tested characters are spurious: 2 in round 0 wholly on irrelevant inputs (rf02, rf04) against 29.8 by P-A' and 2.2 Gaussian over 2460 searches; 5 in rand2's round 1 containing input 8. There are 20 spectral features, 52 sum blocks (21 modulated, 6 additive, 25 products), 14 spurious terms at n >= 2048 of which 11 are products, 6 forced characters plus 1 forced block, and 7 of 23 later-round fits had an earlier spurious term.",
+   "status": "confirmed",
+   "evidence": "Every item recomputes from spur.jsonl. The expected numbers are 29.77 and 2.23. All round-0 passing characters were admitted in all 451 fits (passes equal admissions), so '2 occurred' is exactly the number of class searches with an irrelevant pass."
+  },
+  {
+   "claim": "B, S3.1 (Proved by reading the counter): at d = 30 degrees 1-4 cost 768,390 FLOPs per row and degrees 1-3 53,970; the 3% and 15% shares bind only at m = 87,307 and 29,627. Degrees 5 and 6 cost 4.871e9 and 4.850e9 FLOPs, 0.030 of a network run each at n >= 1374. Round-0 search: 0.0571, 0.079 and 0.137 of a run at n = 1024, 4096 and 16384; 0.0147 and 0.0284 at n = 64 and 512.",
+   "status": "confirmed",
+   "evidence": "I re-derived each counter increment from the dfg13.py lines (c1 2nd; M 2nd^2+nd; 28 a-iterations of 2md^2+2md; 378 (a,b) pairs of 2md^2+3md; 2mN1N2 + m(N1k1+N2k2)). My own formula, independent of calib_summary.round0_flops, matches the recorded g1-g6 regions of all 825 recorded _fit calls (all three repeats) with 0 mismatches. Region closure error is <= 2.1e-16. gd_flops(30) = 162,391,040,000."
+  },
+  {
+   "claim": "B, S3.2: the FLOP shares by component at n = 64, 512, 4096 and 16384 (range over 8 cells), and the three largest cells (0.431, 0.471, 0.323 of a run; readout 46.9%, 42.9%, 41.4%; degree 4, least squares, sum blocks, extensions and degrees 5-6 as listed).",
+   "status": "confirmed",
+   "evidence": "Every entry of the S3.2 table and the per-component shares of h5s5, fd_08 and thr10 recompute from prof.jsonl. The final sizes are 256, 256 and 208 features."
+  },
+  {
+   "claim": "Short answer: 'The largest fits (0.32-0.52 of a network run, n = 16384) are those with many features, where the logistic readout is 41-47% of the FLOPs.'",
+   "status": "corrected",
+   "evidence": "The 41-47% comes from the three profiled seed-0 cells (0.32-0.47). The largest fit overall (dlheld5 h5s5, seed 2, 0.519) was not profiled. I refitted it with the frozen module: FLOPs equal the file's, 250 features, 7 rounds. By the code's readout formula, 15 steps of 2np^2 + p^3/3 + 8np, which gives 46.9% for the profiled seed-0 cell as recorded, its readout is 37.1% of the FLOPs.",
+   "correction": "Say 'in the three profiled largest cells (0.32-0.47) the readout is 41-47%; in the largest fit, 0.519, it is 37%'."
+  },
+  {
+   "claim": "B, S3.3: CPU follows the sum-block search, which 'runs at 0.75 GFLOP/s (all profile fits pooled)', against 16.5-17.6 for the character searches of degrees 3-5 and the extensions, 7.8 for degree 6, 32 and 33 for least squares and the readout, and 0.97 for the fold fits as a whole. Inside the fold fits at n = 64 it takes 94-95% of the CPU for 42-46% of the FLOPs. The CPU-share table.",
+   "status": "corrected",
+   "evidence": "Reproduced exactly with the report's method (rep-0 FLOPs over median-over-repeats CPU, summed over cells): 17.55, 16.73, 16.64 and 16.52; 7.75; 32.4 and 33.0; 0.75; 0.97. The CPU-share table and the fold-internal shares (94.2-94.7% for 41.6-46.0%; deg 4 3.9-4.4% for 45.6-50.0%; at n = 512 85.1-93.2% for 13.7-29.0%) also recompute.",
+   "correction": "The per-region rates pool only the final fits' regions, not 'all profile fits'. Inside the fold fits, which hold most of the sum-block CPU at n <= 512, the sum-block search runs at 0.27 GFLOP/s with the same pooling (0.39 over all calls and repeats). This strengthens the conclusion, but the scope should be stated."
+  },
+  {
+   "claim": "B, S3.0: CPU repeats vary by up to 2.6x (max/min median 1.44, range 1.06-2.56); instrumented over frozen median 1.00 (0.50-2.52); against the evaluation's CPU 0.44-1.40x (median 0.78).",
+   "status": "confirmed",
+   "evidence": "Recomputed from prof.jsonl (35 cells, 3 repeats each; 31 cells with a result file)."
+  },
+  {
+   "claim": "B, S3.4: no fit of the 4730 in the 14 result files uses more than 0.519 of a network run (h5s5, n = 16384, seed 2); at d = 30 every fit at n <= 512 stays below 0.096; the max/median FLOP tables and the CPU median (max) table; d = 60 and 120 flatter (m4 = 2212 and 364; degree 5/6 m = 47 and 3).",
+   "status": "confirmed",
+   "evidence": "Recomputed from the 14 toy__dfg13-perm__*.json files: 4730 fits, maximum 0.5193 at (dlheld5, h5s5, 16384, seed 2), d = 30 and n <= 512 maximum 0.0955 (dlheld3); every table entry matches. Minor: 'the median fit at d = 30 is the same in every suite' overstates n = 16384, where the medians range from 0.138 to 0.182."
+  },
+  {
+   "claim": "B: DFG's own budget cap never binds: no stop in any of the 6786 recorded _fit calls (A1 660 + 5400, A2 451, B 35 + 240); the largest spend is 0.471 of the budget (fd_08, final) and 0.313 for a fold fit; in the result files it cannot have bound on a final fit.",
+   "status": "confirmed",
+   "evidence": "6786 calls; stop reasons 5916 'nothing', 868 'fit', 1 'rounds', 1 'room', none 'budget'. No call ends above 0.75 of its own budget (gd_flops(d) x scale), so the cap cannot have fired; the maxima are 0.4711 (B final, fd_08) and 0.3127 (A1 fold, 60:0.8:512:8). The result-file argument holds for every d. Its figure 'at n <= 512 the whole fit stays below 0.096' is d = 30 only: d = 60 reaches 0.136, still under the 0.375 cap."
+  },
+  {
+   "claim": "S3.4: the slowest fits are at n = 64-512 (suite medians 2.2-9.2 s at d >= 30, largest 17.4 s) because of the fold fits' sum-block searches; the median drops to 0.66-3.0 s at n = 1024; the Part 6 GFLOP/s comparison (0.43-2.45 and 0.13-0.87 of a network's CPU time).",
+   "status": "confirmed",
+   "evidence": "The numbers recompute from the result files. The causal reading is supported by the profile (fold fits 79-91% of the CPU at n = 64 without par4, 94-95% of that in the sum-block search) on 7 cells. The Part 6 quotes ('near the constant predictor's error (DFG sometimes above it)'; networks at 32-50 GFLOP/s) are in DISCRETE-LEARNER.md as cited."
+  }
+ ],
+ "omissions": [
+  "The spectral block's false-admission rate on biased residuals grows steeply with d and with label bias, and the report measures only d in {30, 60} and p in {0.5, 0.8}. My null MC (mirroring _fit's round 0) gives, at d = 120 with P(y=1) = 0.8, 397/400 passes (99%) at n = 512 (the first grid n >= 4d) and 202/300 (67%) at n = 1024; at d = 30 with P(y=1) = 0.9, 39% at n = 128 and 11% at n = 256 (0/300 at d = 120, p = 0.5). The report's own Marchenko-Pastur heuristic predicts this: at n = 4d the minority edge is fixed, while DFG's margin factor 1 + sqrt(2 ln 10/d) shrinks with d. 'Falling to 0 by n = 1024 (d = 30) and 4096 (d = 60)' does not carry over to the designed_d120 suite or to strongly biased targets (e.g. and3, P(y=1) = 1/8). The 15 spurious spectral features at n = 128-256 in A2 are plausibly this effect; the report does not connect them.",
+  "The sum-block test is not shown to be calibrated on noise. It passed in round 0 in 2 default fold fits (d = 30, p = 0.8), and the report's 'never passed' summary omits the fold fits.",
+  "The empirical identity check covers 88 of the 660 A1 fits and none of the 800 cascade fits. The equivalence argument (AST plus read-only hooks) should be stated as the reason the uncovered fits are trustworthy.",
+  "P-A's proof does not handle the s floor (s = max(rms r, 1e-6); the 's < 1e-6' break can never fire). The all-labels-equal case actually occurs: in 2 A1 final fits, and in 24 fold training sets (48 fold fits, both variants) at p = 0.8 with n = 16 and 32.",
+  "The fold-fit records keep neither the round of each admission nor the characters' sets. So 'after the forced ones' and 'chi_A chi_B' can be checked for the evaluation's own fold fits only indirectly (by pairing with the default fold fits, and by degree sums: 185 of 205 provable). Keeping per-round 'added' in the fold records would settle it.",
+  "The linear block's statistic, a sum of squared Rademacher sums, has a lighter tail than chi^2_d. That is why its d = 30 null rate is about 8% below the chi^2_30 tail; the report does not say why.",
+  "Provenance: the first 32 B records (written before the restart) lack the 'rep' field that the current calib.py writes, so an earlier calib.py wrote them. Their FLOPs equal the repeats' and my formula, so nothing depends on it, but the report does not mention it.",
+  "S1.3's Gaussian reference for degrees 5-6 uses N = C(30,k) independent statistics, although at m = 73-147 rows these N >> m statistics are strongly dependent. It is labelled heuristic, but the comparison of median max-ratios against it says little for those classes."
+ ]
+}

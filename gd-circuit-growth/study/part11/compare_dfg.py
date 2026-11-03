@@ -1,6 +1,7 @@
 """Part 11 tables: DFG v1.3 ALONE (`dfg13-perm`, PROTOCOL.md) against the study's networks, v3, v2, lin, hgb and the
 low-degree algorithm on the 11 toy suites (Q1 held out, Q2 every suite, Q3 lowdeg), its scaling with the input dimension
-(Q4), its ablations (Q5), kr_vs_kp and mushroom (Q6), and its compute.  Writes RESULTS.md and RESULTS.json next to this
+(Q4), its ablations (Q5), the post-hoc 'core DFG' run (Q5b; PROTOCOL.md addendum of 3 November), kr_vs_kp and mushroom
+(Q6), and its compute.  Writes RESULTS.md and RESULTS.json next to this
 file.  Every number is computed from result files with compare_hybrid.py's definitions and compare_learner.py's choice
 of reference files; none is typed by hand.  Runs still in progress are handled: a missing file is reported as 'not yet
 run', a suite whose shards (__partNN) are not merged yet as 'partial'.  Re-run when the queue is done.
@@ -30,6 +31,10 @@ SOURCES
   DFG alone  part11/results/toy__dfg13-perm__<suite>.json (eval_dfg.py: DFG(readout="logit").fit of
              part10/hyb_portfolio3/dfg13.py inside harness.Permuted); d-scaling: toy__dfg13-perm__designed_d<d>.json
   ablations  part11/results/toy__dfg13-<tag>-perm__<suite>.json;  lowdeg: part11/results/toy__lowdeg-perm__<suite>.json
+  core (Q5b) part11/results/toy__dfg13-core-perm__<suite>.json: post hoc (PROTOCOL.md addendum), seeds 0 and 1, all 11 suites
+  paired null (post hoc, context for Q5 and Q5b) part11/interp/ablations/results/toy__dfg13-reperm__<suite>.json: DFG alone
+             on the same training sets with another fit rng, default_rng([fn_seed(t), seed, n, 77, 1]), i.e. another
+             column order and other cross-validation folds (interp/ablations/perm_null.py); seeds 0 and 1
   v3         hybrid/results/toy__p10_sum-perm__<suite>.json (v3 = p10_sum on toy inputs; part10/hyb_portfolio3/ASSEMBLY.md)
   v2         hybrid/results/toy__hyb_portfolio2-perm__<suite>.json, else toy__p9_sum-perm (compare_learner.v2_toy)
   lin, hgb   hybrid/results/toy__lin__<suite>.json, toy__hgb__<suite>.json (natural column order, as in Parts 8-10)
@@ -77,6 +82,12 @@ ABL = [("nosums", (0, 1), "no sum blocks"), ("strict", (0, 1), "stricter tests (
        ("nobg", (0,), "no kernel background"), ("lsread", (0,), "least-squares readout"),
        ("K3", (0,), "global search to degree 3 only"), ("labelnoise", (0,), "tests scaled to the labels' noise")]  # PROTOCOL.md Q5
 ABL_SUITES = ["designed", "dlsymdev", "dlfamdev", "dlheld6", "dlheld7"]
+CORE = "dfg13-core-perm"                                                  # Q5b, post hoc (PROTOCOL.md addendum, 3 November)
+CORE_WHAT = ("global characters of degree <= 3, signed-sum blocks (unweighted, pair and single-input seeds), residual-scaled "
+             "union-bound tests, least-squares readout, small-n cross-validation; no linear or spectral block, no extension "
+             "or local classes, no degree-4-6 search, no weighted blocks, no eigenvector seeds, no logistic refinement, no "
+             "kernel background")
+REPERM = os.path.join(HERE, "interp", "ablations", "results")              # the paired null (post hoc): perm_null.py
 DSC = (15, 30, 60, 120)
 OLD_DFG = {15: ("dfg-c1.0__designed_d15", "v1"), 30: ("dfg-c1.0__designed", "v1"), 60: ("dfg-v1.1__designed_d60", "v1.1"),
            120: ("dfg-v1.1__designed_d120", "v1.1")}
@@ -653,7 +664,102 @@ def q5():
             L.append(f"- `{tag}` ({len(mv)} of {out[tag]['pooled']['targets']}): " + (", ".join(f"{su}/{t} ({f_r(v)})" for su, t, v in mv) or "none"))
     if not any(out[tag]["pooled"]["targets"] for tag, *_ in ABL):
         L.append("No ablation has run yet.")
+    L += ["", "A paired null (post hoc: DFG alone on the same training sets with another column order and other folds) is in Q5b."]
     return L + [""], out
+
+
+# ---------------------------------------------------------------- Q5b (post hoc): the core DFG, and the paired null
+def reperm(suite):
+    """The paired null on a suite (interp/ablations/perm_null.py), or None if not (yet) run."""
+    return _read(os.path.join(REPERM, f"toy__dfg13-reperm__{suite}.json"))
+
+
+def _moved_rows(R, A_of, B_of, nb_of, lab_a, lab_b):
+    """Markdown rows of the targets moved by more than THR (infinite ratios first, then by |ratio|)."""
+    mv = [(su, t, v) for su, t, v in R if not np.isnan(v) and abs(v) > THR]
+    mv.sort(key=lambda x: (-1e9 if x[2] == INF else (1e9 if x[2] == -INF else -abs(x[2]))))
+    rows = []
+    for su, t, v in mv:
+        nb = nb_of(su).get(t)
+        rows.append(f"| {su} | {t} | {f_n(B_of(su).get(t))} | {f_n(A_of(su).get(t))} | {f_r(v)} | {f_n(nb)} | "
+                    f"{f_r(CH.l2r(A_of(su)[t], nb) if nb is not None else None)} | {f_r(CH.l2r(B_of(su)[t], nb) if nb is not None else None)} |")
+    return mv, rows
+
+
+def q5b():
+    L = ["## Q5b. Post hoc: the core DFG", "",
+         "**Post hoc** (PROTOCOL.md, addendum of 3 November 2026, written after every pre-registered result above had been read). "
+         f"Numerical. `{CORE}`: `part11/results/toy__{CORE}__<suite>.json` on all 11 suites, the frozen `dfg13.py` with constructor "
+         f"arguments (read from the files below): {CORE_WHAT}. Paired with DFG alone as in Q5: ratio = log2(n*_core / n*_DFG alone), DFG "
+         "alone's n* computed from the same seeds of its own runs (identical training sets, column permutations and folds). 'lower' = "
+         "the core needs less data; 'newly never' = the core never reaches 10% error where DFG alone does (same seeds); 'newly reached' "
+         "= the reverse. Against the networks: nets_best as in Q2 (the networks' own seeds, 2-3).", ""]
+    out = dict(name=CORE, what=CORE_WHAT, kw=None, post_hoc=True, suites={})
+    base = {su: run("dfg13-perm", su)[0] for su in TOY}
+    L += ["### Per suite", "",
+          "| suite | status for DFG v1.3 | core run | seeds | core vs DFG alone (same seeds) | median | newly never | newly reached | "
+          "core vs nets_best | DFG alone (same seeds) vs nets_best | DFG alone (all seeds) vs nets_best |",
+          "|---|---|---|---|---|---|---|---|---|---|---|"]
+    R, RN, RD, RDA, A_, B_ = [], [], [], [], {}, {}
+    for su in TOY:
+        rc, st = run(CORE, su)
+        if rc is None:
+            out["suites"][su] = dict(status=st)
+            L.append(f"| {su} | {V13[su]} | {st} | – | – | – | – | – | – | – | – |"); continue
+        out["kw"] = rc.get("kw", out["kw"]); sd = rc["seeds"]
+        A = nst(rc); B = nst(base[su], seeds=sd); s = summ(A, B); A_[su], B_[su] = A, B
+        NR, nb = nets(su)
+        sn, sb, sa = summ(A, nb), summ(B, nb), summ(nst(base[su]), nb)
+        nn_ = [t for t, v in s["ratios"].items() if v == INF]; nr_ = [t for t, v in s["ratios"].items() if v == -INF]
+        out["suites"][su] = dict(status=st, seeds=sd, core=A, dfg_same_seeds=B, vs_dfg=s, newly_never=nn_, newly_reached=nr_,
+                                 vs_nets_best=sn, dfg_same_seeds_vs_nets_best=sb, dfg_vs_nets_best=sa)
+        R += [(su, t, v) for t, v in s["ratios"].items()]
+        if sn:
+            RN += list(sn["ratios"].values()); RD += list(sb["ratios"].values()); RDA += list(sa["ratios"].values())
+        L.append(f"| {su} | {V13[su]} | {st} | {f_seeds(sd)} | {f_s(s)} | {f_m(s['median'])} | {', '.join(nn_) or '–'} | {', '.join(nr_) or '–'} | "
+                 f"{f_s(sn) if sn else 'no networks run'} | {f_s(sb) if sb else '–'} | {f_s(sa) if sa else '–'} |")
+    nsu = sum(1 for su in TOY if su in A_); nsn = sum(1 for su in TOY if su in A_ and nets(su)[1])
+    P, PN, PD, PDA = pstats(v for *_, v in R), pstats(RN), pstats(RD), pstats(RDA)
+    out["pooled"] = dict(vs_dfg=P, vs_nets_best=PN, dfg_same_seeds_vs_nets_best=PD, dfg_vs_nets_best=PDA, suites=nsu, suites_with_nets=nsn,
+                         newly_never=[f"{su}/{t}" for su, t, v in R if v == INF], newly_reached=[f"{su}/{t}" for su, t, v in R if v == -INF],
+                         neither=[f"{su}/{t}" for su, t, v in R if np.isnan(v)])
+    L += ["", "### Pooled (per-target ratios pooled over the suites)", "", "| comparison | suites | " + SHEAD, "|---|---|" + SSEP,
+          srow("core vs DFG alone (same seeds)", P, f" {nsu} |"), srow("core vs nets_best", PN, f" {nsn} |"),
+          srow("DFG alone (same seeds as the core) vs nets_best", PD, f" {nsn} |"), srow("DFG alone (all its seeds) vs nets_best", PDA, f" {nsn} |"), "",
+          f"In the first row 'clearly better' = the core needs less data than DFG alone. Newly never: {', '.join(out['pooled']['newly_never']) or 'none'}; "
+          f"newly reached: {', '.join(out['pooled']['newly_reached']) or 'none'}; neither reaches 10% error: {', '.join(out['pooled']['neither']) or 'none'}.", ""]
+    nb_of = lambda su: nets(su)[1]
+    mv, rows = _moved_rows(R, lambda su: A_[su], lambda su: B_[su], nb_of, "core", "DFG alone")
+    out["moved"] = [dict(suite=su, target=t, ratio=v, core=A_[su][t], dfg_same_seeds=B_[su][t], nets_best=nb_of(su).get(t)) for su, t, v in mv]
+    L += [f"### Targets moved by more than {THR} in log2 n* (core vs DFG alone, same seeds): {len(mv)} of {P['targets']}", "",
+          "| suite | target | DFG alone (same seeds) | core | core vs DFG alone | nets_best | core vs nets_best | DFG alone (same seeds) vs nets_best |",
+          "|---|---|---|---|---|---|---|---|"] + rows + [""]
+    # the paired null (post hoc): DFG alone on the same training sets, another column order and other folds
+    L += ["### Context: the paired null (post hoc)", "",
+          "Numerical, post hoc. DFG alone refitted on the same training sets and test sets with another fit rng, "
+          "`default_rng([fn_seed(t), seed, n, 77, 1])` instead of `[..., 77]`, so another column order and other cross-validation "
+          "folds and nothing else (`part11/interp/ablations/perm_null.py`; files `part11/interp/ablations/results/toy__dfg13-reperm__<suite>.json`). "
+          "Ratio = log2(n*_reperm / n*_DFG alone) on the same seeds. It measures how far n* moves under an arbitrary perturbation of DFG's "
+          "path with the training sets held fixed, the paired counterpart of Q5's unpaired seed-vs-seed null.", "",
+          "| null | seeds | suites run | " + SHEAD, "|---|---|---|" + SSEP]
+    out["paired_null"] = {}
+    for seeds in ((0,), (0, 1)):
+        Rn, per = [], {}
+        for su in TOY:
+            rp = reperm(su)
+            if rp is None or not all(s_ in rp["seeds"] for s_ in seeds) or set(rp["fns"]) != set(targets(su)):
+                continue
+            A = nst(rp, seeds=list(seeds)); B = nst(base[su], seeds=list(seeds)); s = summ(A, B)
+            per[su] = s; Rn += [(su, t, v) for t, v in s["ratios"].items()]
+        Pn = pstats(v for *_, v in Rn)
+        key = "seed" + "".join(map(str, seeds))
+        out["paired_null"][key] = dict(seeds=list(seeds), suites=sorted(per), per_suite=per, pooled=Pn,
+                                       moved=[dict(suite=su, target=t, ratio=v) for su, t, v in Rn if not np.isnan(v) and abs(v) > THR])
+        L.append(srow("DFG alone, other column order and folds, vs DFG alone", Pn, f" {f_seeds(seeds)} | {len(per)} of {len(TOY)} ({', '.join(per) or 'none yet'}) |"))
+    L += ["", "'clearly better' = the re-permuted fit needs less data. Moved by more than 0.25: "
+          + "; ".join(f"seeds {f_seeds(v['seeds'])}: " + (", ".join(f"{m['suite']}/{m['target']} ({f_r(m['ratio'])})" for m in v["moved"]) or "none")
+                      for v in out["paired_null"].values()) + ".", ""]
+    return L, out
 
 
 # ---------------------------------------------------------------- Q6
@@ -755,8 +861,9 @@ def compute():
          "|---|---|---|---|---|---|---|"]
     out = dict(runs={}, by_n={})
     jobs = [("dfg13-perm", su) for su in TOY] + [("dfg13-perm", f"designed_d{d}") for d in DSC if d != 30] + \
-           [("lowdeg-perm", su) for su in TOY] + [(f"dfg13-{tag}-perm", su) for tag, *_ in ABL for su in ABL_SUITES]
-    agg = defaultdict(lambda: dict(fits=0, fmax=0.0, over=0, over1=0, cpu=[]))
+           [("lowdeg-perm", su) for su in TOY] + [(f"dfg13-{tag}-perm", su) for tag, *_ in ABL for su in ABL_SUITES] + \
+           [(CORE, su) for su in TOY]
+    agg = defaultdict(lambda: dict(fits=0, fmax=0.0, over=0, over1=0, cpu=[], suites=set()))
     for name, su in jobs:
         r, st = run(name, su)
         if r is None:
@@ -770,10 +877,13 @@ def compute():
                                             cpu_median=float(np.nanmedian(C)), cpu_max=float(np.nanmax(C)))
         if name.startswith("dfg13-") and name != "dfg13-perm":
             a = agg[name]; a["fits"] += fits; a["fmax"] = max(a["fmax"], fm); a["over"] += over; a["over1"] += over1; a["cpu"] += list(C)
+            a["suites"].add(su)
             continue
         L.append(f"| {name} | {su} | {r['d']} | {fits} | {fm:.3f} ({tt}, {nn_}) | {over} / {over1} | {np.nanmedian(C):.2f} / {np.nanmax(C):.1f} |")
     for name, a in agg.items():
-        L.append(f"| {name} | the {len(ABL_SUITES)} ablation suites (those run) | 30 | {a['fits']} | {a['fmax']:.3f} | {a['over']} / {a['over1']} | "
+        where = (f"the {len(ABL_SUITES)} ablation suites (those run)" if a["suites"] <= set(ABL_SUITES)
+                 else f"{len(a['suites'])} of the {len(TOY)} toy suites (post hoc)")
+        L.append(f"| {name} | {where} | 30 | {a['fits']} | {a['fmax']:.3f} | {a['over']} / {a['over1']} | "
                  f"{np.nanmedian(a['cpu']):.2f} / {np.nanmax(a['cpu']):.1f} |")
     # by n, DFG alone on the d = 30 suites against v3 on the same fits
     L += ["", "By n: DFG alone on the d = 30 suites run so far, and v3 (`hybrid/results/toy__p10_sum-perm__<suite>.json`) on the same "
@@ -810,7 +920,8 @@ def compute():
 def status():
     rows = [("dfg13-perm", su, "Q1, Q2") for su in TOY] + [("lowdeg-perm", su, "Q3") for su in TOY] + \
            [("dfg13-perm", f"designed_d{d}", "Q4") for d in DSC if d != 30] + \
-           [(f"dfg13-{tag}-perm", su, "Q5") for tag, *_ in ABL for su in ABL_SUITES]
+           [(f"dfg13-{tag}-perm", su, "Q5") for tag, *_ in ABL for su in ABL_SUITES] + \
+           [(CORE, su, "Q5b (post hoc)") for su in TOY]
     out, cnt = [], defaultdict(int)
     for name, su, q in rows:
         r, st = run(name, su)
@@ -956,7 +1067,7 @@ def clean(o):
 
 def main():
     now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    LS, S, cnt = status(); L1, o1 = q1(); L2, o2 = q2(); L3, o3 = q3(); L4, o4 = q4(); L5, o5 = q5(); L6, o6 = q6()
+    LS, S, cnt = status(); L1, o1 = q1(); L2, o2 = q2(); L3, o3 = q3(); L4, o4 = q4(); L5, o5 = q5(); L5b, o5b = q5b(); L6, o6 = q6()
     LC, oc = compute(); LK, ok_ = checks(o1, o2); LV = coverage(o2); LA = appendix()
     head = ["# Part 11 results: DFG v1.3 alone", "",
             f"Generated by `compare_dfg.py` on {now} from the result files; definitions and sources are in its docstring. "
@@ -969,13 +1080,13 @@ def main():
             "clearly worse) [both reach / targets compared]', mean over the targets both reach, clearly = beyond ±0.25 or only one "
             "reaches 10% error. In the summary tables: 'never, the other reaches' = the row's learner never, the reference does; "
             "'the other never' = the reverse.", ""]
-    L = head + L1 + L2 + L3 + L4 + L5 + L6 + LC + LK + LV + LA + LS
+    L = head + L1 + L2 + L3 + L4 + L5 + L5b + L6 + LC + LK + LV + LA + LS
     open(os.path.join(HERE, "RESULTS.md"), "w").write("\n".join(L) + "\n")
     J = dict(generated_utc=now, script="part11/compare_dfg.py",
              notes=dict(nstar="training-set size at 10% test error (seed mean); 'inf' = never by n = 16384",
                         ratio="log2(n*_A / n*_B); '+inf' only B reaches 10% error, '-inf' only A, null neither",
                         summary="compare_hybrid.toy_summary + both (both reach), neither, median, per-target ratios"),
-             status=S, status_counts=cnt, q1_dlheld7=o1, q2_suites=o2, q3_lowdeg=o3, q4_dscale=o4, q5_ablations=o5,
+             status=S, status_counts=cnt, q1_dlheld7=o1, q2_suites=o2, q3_lowdeg=o3, q4_dscale=o4, q5_ablations=o5, q5b_core=o5b,
              q6_tabular=o6, compute=oc, checks=ok_)
     json.dump(clean(J), open(os.path.join(HERE, "RESULTS.json"), "w"), indent=1)
     print("\n".join(head[:6]))
