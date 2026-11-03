@@ -528,7 +528,42 @@ def resolution(S, rows, NUM):
             ts.append(A.tau([F(T["net_time"]["online"][ch]["seeds"][s]) for ch in chars], [-D[ch]["z0"] for ch in chars]))
         P[fn] = dict(per_seed=ts, mean=float(np.mean(ts)))
     NUM["priority_online_seed_matched"] = P
+    onset_conventions(S, NUM)
     return R
+
+
+def onset_conventions(S, NUM):
+    """The networks' onset conventions (VERIFY_ORDER.md claims 7 and 9).  Here: analyze_traj.first_cross of the seed-mean
+    phi curve (log-interpolated).  stages.py: the same seed-mean curve, first checkpoint with phi >= 1/2 staying >= 0.4,
+    no interpolation; the taus it changes.  TRAJECTORIES.md sec. 2.2: the geometric mean of the per-seed onsets; the
+    characters for which it and the seed-mean onset differ by more than 10% (larger / smaller > 1.1)."""
+    out = dict(per_target={}, differ_10pct={}, differ_10pct_count=0, within_10pct_count=0)
+    for fn in A.TARGETS:
+        T = S["targets"][fn]; chars = T["chars"]
+        r = json.load(open(os.path.join(A.TRAJ, f"{fn}_online.json"))); steps = np.array(r["steps"], float)
+        B = {}
+        for ch in chars:
+            ph = np.array([r["nets"][f"online/s{s}"]["phi"][ch] for s in A.SEEDS]).mean(0)
+            hit = [i for i in range(len(steps)) if ph[i] >= 0.5 and np.all(ph[i:] >= 0.4)]
+            B[ch] = float(steps[hit[0]]) if hit else INF
+        dn = {ch: med3([T["dfg_n"][str(s)][ch]["n"] for s in A.SEEDS]) for ch in chars}
+        e = dict(tau_net_time_dfg_n_stages_rule=A.tau([B[c] for c in chars], [dn[c] for c in chars]))
+        if T["net_n"]:
+            c4 = [c for c in chars if c in T["net_n"]]; netn = {c: med3(T["net_n"][c]["seeds"]) for c in c4}
+            e["tau_net_time_net_n_stages_rule"] = A.tau([B[c] for c in c4], [netn[c] for c in c4])
+        out["per_target"][fn] = e
+        dif = {}
+        for ch in chars:
+            a = F(T["net_time"]["online"][ch]["mean"]); sd = [F(x) for x in T["net_time"]["online"][ch]["seeds"]]
+            g = math.exp(float(np.mean(np.log(sd)))) if all(np.isfinite(sd)) else INF
+            if np.isfinite(a) and np.isfinite(g) and max(a, g) / min(a, g) > 1.1:
+                dif[ch] = dict(seed_mean=a, geo_mean_seeds=g, seeds=sd)
+            else:
+                out["within_10pct_count"] += 1
+        if dif:
+            out["differ_10pct"][fn] = dif; out["differ_10pct_count"] += len(dif)
+    NUM["onset_conventions"] = out
+    return out
 
 
 # ------------------------------------------------------------------ figure

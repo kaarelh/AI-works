@@ -41,9 +41,9 @@ Labels: **Proved** (a proof is given; "by the code" means a direct reading of th
    - Over 8681 (character, n) pairs, n > n_glob agrees with DFG's decision 96.9% of the time, and a normal approximation
      matches the pass rate in every band of n/n_glob.
    - Characters that enter through this test do so at a median 2^0.26 × n_glob.
-   - 266 of the 427 characters predicted within the grid enter earlier, mostly through later-round classes. There a
-     3–19 times smaller residual variance makes them 1.7–4.5 doublings cheaper; the smaller union bound adds only a
-     factor 1.2–1.7.
+   - 266 of the 427 characters predicted within the grid enter earlier, mostly through later-round classes. These enter
+     a median 1.4–3.7 doublings below n_glob, mainly because the residual variance there is 3–19 times smaller; the
+     smaller union bound adds only a factor 1.2–1.7.
 4. **P4. Sum blocks** (Proved).
    - With one group per value, a block represents every function of a signed sum of k inputs with at most k + 1
      parameters, where the Fourier expansion can need 2^k characters.
@@ -407,19 +407,29 @@ characters are:
 - the forced variant, 12, at n = 16–128;
 - the round-0 test itself, 40 (35 of them one doubling early).
 
-For the later-round classes, P3c's factorization at the round of entry gives (median over the characters):
+For the later-round classes, the table gives medians over the characters that enter early or without a prediction
+(`P3.entry_vs_nglob`, `P3.factors`):
+- "enter below n_glob" is log2(n_glob/n_first), for degree ≤ 6;
+- "class gain" is log2(n_glob/n_cls), P3c's factorization at the round of entry. It is the larger of the two, because a
+  character enters at the first grid point where its class passes, usually with z > 1;
+- the three factor columns are that factorization's union-bound, residual and coefficient factors.
 
-| class | characters | gain below n_glob (doublings) | union-bound factor L_glob/L_cls | residual factor (1 − ŷ₀²)/s_j² | coefficient factor v_j²/ŷ_S² |
-|---|---|---|---|---|---|
-| local | 332 | 4.5 | 1.71 | 19.2 | 0.80 |
-| ext2 | 19 | 2.6 | 1.20 | 5.0 | 1.06 |
-| ext1 | 33 | 2.3 | 1.32 | 3.2 | 0.86 |
-| global, rounds ≥ 1 | 37 | 1.7 | 1.00 | 3.3 | 0.85 |
+| class | characters (degree ≤ 6) | enter below n_glob (doublings) | class gain (doublings) | L_glob/L_cls | (1 − ŷ₀²)/s_j² | v_j²/ŷ_S² |
+|---|---|---|---|---|---|---|
+| local | 332 (277) | 3.7 | 4.5 | 1.71 | 19.2 | 0.80 |
+| ext2 | 19 (19) | 1.9 | 2.6 | 1.20 | 5.0 | 1.06 |
+| ext1 | 33 (33) | 1.7 | 2.3 | 1.32 | 3.2 | 0.86 |
+| global, rounds ≥ 1 | 37 (37) | 1.4 | 1.7 | 1.00 | 3.3 | 0.85 |
 
-The smaller residual is the main factor in every class. The smaller union bound adds a factor of 1.2–1.7, i.e. at most
-0.8 doublings. The local class is DFG's junta completion, every subset of the inputs in use; it enters after the large
-terms are fitted, when s_j² is about 1/19 of the label variance. This is ORDER.md's "composition classes enter 1.3–2.4
-doublings below n_glob", quantified.
+- **The smaller residual is the main factor in every class.** The smaller union bound adds a factor of 1.2–1.7, i.e.
+  at most 0.8 doublings.
+- **The local class** is DFG's junta completion, every subset of the inputs in use. It enters after the large terms
+  are fitted, when s_j² is about 1/19 of the label variance.
+- **Degree ≥ 7.** 55 of the local class's 332 characters have degree ≥ 7, where no global test exists. Their
+  L_glob is that of a hypothetical global test of their degree.
+- **Against ORDER.md.** On the Part 5 targets, ORDER.md found the composition classes entering 1.3–2.4 doublings below
+  n_glob. Here, on 41 targets, ext1 and ext2 enter 1.7 and 1.9 doublings below, the local class 3.7, and the global
+  test in later rounds 1.4.
 
 ## 4. P4: sum blocks — what they represent, what grouping loses, and their low-degree weight
 
@@ -469,7 +479,8 @@ conjugate of m = 1. With (ω − 1)/2 = (√3/2) e^{5πi/6} and (1 + ω)/2 = ½ 
   a_j = −2σ · (2/3) · 3^{j/2} 2^(−k) · cos(5πj/6 + π(k − j)/3 − 2πρ/3),
 
 so |a_j| ≤ (4/3) 3^{j/2} 2^(−k) and W_j ≤ (16/9) C(k, j) 3^j 4^(−k). The low-degree weight is exponentially small in k.
-The angle is π(3j + 2k − 4ρ)/6, so the cosine vanishes iff j is odd and k ≡ 2ρ (mod 3). For f7_05, h6_00 and fd_10,
+The angle is π(3j + 2k − 4ρ)/6, so the cosine vanishes iff j is odd and k ≡ 2ρ (mod 3). This rule was checked exactly
+for k = 2–16 and ρ = 0, 1, 2 (405 cases, no exception; `P4.mod3_vanishing_rule`). For f7_05, h6_00 and fd_10,
 k − 2ρ ≡ 2, 2, 1 (mod 3), so every a_j with j ≥ 1 is nonzero.
 
 **P4f (Proved): what the block search sees.** Every seed of `_block_search` (lines 227–361) is a statistic of one or two

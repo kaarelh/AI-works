@@ -435,6 +435,12 @@ def p3_section():
             if len(cells) < len(NS):
                 continue
             res["targets"] += 1
+            idn = res.setdefault("identity", dict(new_cells=0, err_equal=0, flops_equal=0, s_check=0, order_cells=0))
+            for o in cells.values():
+                if suite == "designed" and t in TF.ORDER_TARGETS:
+                    idn["order_cells"] += 1; continue
+                idn["new_cells"] += 1; idn["err_equal"] += int(bool(o["identity"].get("err_equal")))
+                idn["flops_equal"] += int(bool(o["identity"].get("flops_equal"))); idn["s_check"] += int(all(o["s_check"]))
             for nm, S, yS in chars:
                 k = len(S); res["chars"] += 1
                 ng = n_glob(yS, y0, k) if k <= 6 else float("inf")
