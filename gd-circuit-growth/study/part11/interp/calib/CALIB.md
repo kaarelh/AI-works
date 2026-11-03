@@ -98,3 +98,49 @@ What P-A does not cover:
   must also pass on the residual projected off the round's new characters;
 - **the forced variant** (n ≤ 512): it takes the best-scoring candidate when nothing passes, at most twice; it is
   used only if the paired cross-validation test prefers it.
+
+<!-- A1 RESULTS -->
+
+## 2. (A2) Spurious features on the designed and random targets
+
+### 2.0 Fits and definitions
+
+- The 21 designed and 20 random targets at d = 30, seed 0, every n of the grid (16 … 16384): 451 fits, each exactly
+  as `eval_dfg.py` makes it (`harness.train_data` / `test_data`, fit rng `default_rng([fn_seed(t), 0, n, 77])`, the
+  column permutation that `Permuted` draws from it, `DFG(readout="logit")`). The permutation is undone through the
+  `pi` that `Permuted` stores in its prediction function: learner column j is original input pi[j].
+- **Relevant set**: the inputs the target depends on, computed exactly. Every designed and random target reads only
+  x[:, :k] with k ≤ 10 (`boolfuncs.py`: explicit indices below 10; `_random_formula(rng, k, ·)` reads x[:, :k],
+  k ≤ 8), so enumerating all 2¹² assignments of the first 12 inputs (the others +1) decides, for each of them,
+  whether flipping it ever changes f; flipping each input 12–29 was also checked on 20000 random points (never).
+  The exact sets equal the suites' `relevant` lists for all 41 targets (Numerical, `calib.json` `A2.relevant`).
+- **Terms**: the final model as terms in original coordinates (as `part10/interp/hooks.dfg_terms` and
+  `dfg_hooks.model_terms`): each character χ_S; each sum block with all its level indicators as one term (support =
+  its set, modulator, inner term and product factors); each spectral feature (u·x)² − |u|²; the kernel background is
+  not an admitted feature and is left out. A term is **spurious** if it reads an irrelevant input; a spectral feature
+  if less than 90% of |u|² lies on relevant inputs (the atlas's rule; its support, |u_i| > 0.1 max|u|, is recorded
+  too).
+- **Kinds**: `chi_test` (a character admitted by its own test: global degree k, extension, local), `chi_lin` (a
+  degree-1 character that entered with the linear block, which adds every input not yet in the model), `chi_forced`
+  (the forced variant's best guess), `quad`, `sum` (by the code path that accepted it), `sum_forced`.
+- **Share** of a term: the standard deviation of its contribution w·φ(x) over the 4096 test inputs; the spurious
+  share of a fit is the sd of the summed contribution of its spurious terms over the sd of the model's output
+  (background included). Also the test error of the model with the spurious terms' contributions removed.
+
+<!-- A2 RESULTS -->
+
+## 3. (B) Where the compute goes
+
+### 3.0 Fits
+
+- par4, maj9, mux, stair5 (designed), f7_07 (a modulated signed-sum target, `[−2 ≤ s ≤ 8]·x13`), f7_08 (a symmetric
+  target, `[s ∈ {−11, −9, −3, 1, 9, 11}]`), f7_05 (mod 3, never learned) and pure noise (p = 0.5), at n = 64, 512, 4096
+  and 16384, seed 0, as the evaluation fits them; and the seed-0 n = 16384 fit of the target with the largest FLOP
+  count in three suites (h5s5 of dlheld5, fd_08 of dlfamdev, thr10 of designed).
+- Each cell: one fit of the frozen module, then the instrumented fit (test error and FLOPs equal to the frozen fit's
+  and to the result file's in every cell), then two more instrumented repeats for the CPU time. CPU seconds are
+  process time on a 4-core machine shared with 4 evaluation workers; single fits of the same cell vary by up to
+  2.5× (frozen against instrumented: median ratio 1.00, range 0.50–2.52 over 32 cells), so CPU figures are medians
+  of the three instrumented repeats. FLOPs are DFG's own counter (multiply-add = 2), deterministic.
+
+<!-- B RESULTS -->
