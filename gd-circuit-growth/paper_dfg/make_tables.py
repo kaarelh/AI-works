@@ -526,13 +526,13 @@ def tab_v3():
     # own final DFG member alone, or its last out-of-fold DFG fit where the stacker gave DFG no weight; w_dfg = the DFG
     # members' share of the stack weight; each target's grid stops after two consecutive n with err <= 0.005)
     import glob
-    st = defaultdict(lambda: dict(cells=0, stack_lower=0, member_lower=0, zero=0, w=[]))
+    in3 = defaultdict(lambda: dict(cells=0, stack_lower=0, member_lower=0, zero=0, w=[]))
     P10 = sorted(glob.glob(os.path.join(STUDY, "part10", "interp", "results", "toy_final", "v3", "*__s0.json")))
     cells10 = {}
     for f in P10:
         r = json.load(open(f))
         for c in r["cells"]:
-            g = st[c["n"]]; g["cells"] += 1; g["w"].append(c["w_dfg"])
+            g = in3[c["n"]]; g["cells"] += 1; g["w"].append(c["w_dfg"])
             g["stack_lower"] += c["err"] < c["err_dfg"] - 0.02; g["member_lower"] += c["err_dfg"] < c["err"] - 0.02
             g["zero"] += c["w_dfg"] == 0
             cells10[(r["suite"], r["target"], c["n"])] = dict(err=c["err"], err_dfg=c["err_dfg"], w_dfg=c["w_dfg"],
@@ -546,11 +546,11 @@ def tab_v3():
          "mean difference & " + " & ".join(f"${sum(by[n]['diff']) / len(by[n]['diff']):+.3f}$" for n in NS_) + "\\\\",
          "\\midrule",
          f"\\multicolumn{{{c1}}}{{@{{}}l}}{{\\emph{{(b) inside v3: Part 10's analysis fits of v3, seed 0}}}}\\\\",
-         "fits analysed & " + " & ".join(str(st[n]["cells"]) for n in NS_) + "\\\\",
-         "v3 lower than its DFG member & " + " & ".join(str(st[n]["stack_lower"]) for n in NS_) + "\\\\",
-         "its DFG member lower than v3 & " + " & ".join(str(st[n]["member_lower"]) for n in NS_) + "\\\\",
-         "DFG members' weight 0 & " + " & ".join(str(st[n]["zero"]) for n in NS_) + "\\\\",
-         "DFG weight share: median & " + " & ".join(f"{med(st[n]['w']):.2f}" for n in NS_) + "\\\\",
+         "fits analysed & " + " & ".join(str(in3[n]["cells"]) for n in NS_) + "\\\\",
+         "v3 lower than its DFG member & " + " & ".join(str(in3[n]["stack_lower"]) for n in NS_) + "\\\\",
+         "its DFG member lower than v3 & " + " & ".join(str(in3[n]["member_lower"]) for n in NS_) + "\\\\",
+         "DFG members' weight 0 & " + " & ".join(str(in3[n]["zero"]) for n in NS_) + "\\\\",
+         "DFG weight share: median & " + " & ".join(f"{med(in3[n]['w']):.2f}" for n in NS_) + "\\\\",
          "\\bottomrule", "\\end{tabular}"]
     write("tab_v3_byn", L)
     big = [x for x in X if num(x["ratio"]) is not None and abs(num(x["ratio"])) > THR]
@@ -570,8 +570,8 @@ def tab_v3():
          by_n={n: dict(cells=by[n]["cells"], v3_lower=by[n]["v3_lower"], dfg_lower=by[n]["dfg_lower"],
                        mean_diff=sum(by[n]["diff"]) / len(by[n]["diff"])) for n in NS_},
          by_n_seeds=seeds,
-         inside_v3_by_n={n: dict(cells=st[n]["cells"], stack_lower=st[n]["stack_lower"], member_lower=st[n]["member_lower"],
-                                 zero=st[n]["zero"], median_share=med(st[n]["w"])) for n in NS_ if st[n]["cells"]},
+         inside_v3_by_n={n: dict(cells=in3[n]["cells"], stack_lower=in3[n]["stack_lower"], member_lower=in3[n]["member_lower"],
+                                 zero=in3[n]["zero"], median_share=med(in3[n]["w"])) for n in NS_ if in3[n]["cells"]},
          inside_v3_files=len(P10),
          inside_v3_clearly_lower_targets={f"{x['suite']}/{x['target']}": {n: cells10.get((x["suite"], x["target"], n))
                                                                          for n in (16, 32, 64, 128, 256, 512)}
