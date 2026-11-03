@@ -5,15 +5,99 @@ linear block's chi^2 statistic and the spectral block's top eigenvalue over its 
 
 usage: OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python calib_summary.py
 """
-import os, json, math, glob
+import os, sys, json, math, glob
 import numpy as np
 from scipy import stats
 
 HERE = os.path.dirname(os.path.abspath(__file__)); P11 = os.path.dirname(os.path.dirname(HERE)); RES = os.path.join(HERE, "results")
+STUDY = os.path.dirname(P11)
 NS = [2 ** k for k in range(4, 15)]
 DELTA, K = 0.1, 4
 CLS = ["g1", "g2", "g3", "g4", "g5", "g6", "ext1", "ext2", "local"]
 SUMK = ["add0", "add1", "prod", "split", "mod"]
+
+
+def gd_flops(d):
+    """harness.gd_flops (one network run), imported from the toy harness."""
+    if os.path.join(STUDY, "discrete_learner") not in sys.path:
+        sys.path.insert(0, os.path.join(STUDY, "discrete_learner"))
+    import harness
+    return float(harness.gd_flops(d))
+
+
+# ------------------------------------------------------------------------------------------------ round-0 search cost
+def round0_flops(d, n, scale=1.0, hi=True, budget=(0.15, 0.03, 0.03), budget_hi=0.03):
+    """The FLOP-counter increments of one search round of DFG._fit's global character search, read off dfg13.py
+    (multiply-add = 2): degree 1 c1 = X^T r / n (2nd); degree 2 the pair matrix M (2nd^2 + nd); degree 3 the d - 2
+    matrices Ma on m3 rows (2 m d^2 + 2 m d each, skipped if m3 < 32); degree 4 the C(d-2, 2) matrices Mab on m4 rows
+    (b < d - 2; 2 m d^2 + 3 m d each, skipped if m4 < 32); degrees 5 and 6 (round 0 with hi only) one product of
+    character tables on m rows, 2 m N1 N2 + m (N1 k1 + N2 k2), skipped if m < 64.  The m's are min(n, budget share *
+    gd_flops(d) * scale / cost per row).  Degrees 1-3 run in every round (K_later = 3), degrees 4-6 in round 0 only."""
+    GD = gd_flops(d) * scale; out, m_ = {}, {}
+    out["g1"] = 2.0 * n * d; out["g2"] = 2.0 * n * d * d + n * d
+    m3 = min(n, int(budget[1] * GD / (d * (2 * d * d + 2 * d)))); m_["g3"] = m3
+    out["g3"] = (d - 2) * (2.0 * m3 * d * d + 2.0 * m3 * d) if m3 >= 32 else 0.0
+    m4 = min(n, int(budget[0] * GD / (math.comb(d, 2) * (2 * d * d + 3 * d)))); m_["g4"] = m4
+    out["g4"] = math.comb(d - 2, 2) * (2.0 * m4 * d * d + 3.0 * m4 * d) if m4 >= 32 else 0.0
+    for k in (5, 6):
+        k1, k2 = (k + 1) // 2, k // 2; N1, N2 = math.comb(d, k1), math.comb(d, k2)
+        per = 2 * N1 * N2 + (N1 * k1 + N2 * k2)
+        m = min(n, int(budget_hi * GD / per)); m_[f"g{k}"] = m
+        out[f"g{k}"] = float(m * per) if (hi and m >= 64) else 0.0
+    return out, m_
+
+
+def derived(noise, tests):
+    """Numbers CALIB.md derives rather than measures: the network-run unit, the linear block's threshold and its exact
+    chi^2 tail, the subsample sizes and FLOPs of the round-0 search (from round0_flops), the round-0 search as a share
+    of one network run, the sum-block union bound, the test sets' label rates, and the kernel background's predicted
+    P(predict -1) with the error identity err = a + q (1 - 2a) on biased noise (a = test minority rate, q = P(predict
+    -1); exact when the predictions are independent of the test labels)."""
+    out = {"gd": {str(d): gd_flops(d) for d in (15, 30, 60, 120)}}
+    tt = math.log(1 / DELTA)
+    out["lin"] = {}
+    for d in (30, 60):
+        thr = d + 2 * math.sqrt(d * tt) + 2 * tt
+        out["lin"][str(d)] = dict(thr=thr, chi2_tail=float(stats.chi2.sf(thr, d)), lm_level=math.exp(-tt))
+    out["sum_union"] = dict(additive_bound=DELTA / (4 * K), sizes=list(range(2, 25)),
+                            sum_over_sizes=23 * DELTA / (4 * K * 24))
+    # the round-0 search: subsample sizes by d and budget scale, per-row cost of degrees 1-4 at d = 30, shares of GD
+    sub = {}
+    for d in (15, 30, 60, 120):
+        for sc in (1.0, 0.5):
+            _, m_ = round0_flops(d, 10 ** 9, sc); sub[f"{d}:{sc}"] = m_
+    out["subsample_m"] = sub
+    f30, _ = round0_flops(30, 16384)
+    out["per_row_deg1_4_d30"] = sum(f30[g] for g in ("g1", "g2", "g3", "g4")) / 16384
+    out["per_row_by_deg_d30"] = {g: f30[g] / 16384 for g in ("g1", "g2", "g3", "g4")}
+    out["deg56_flops_d30"] = {g: f30[g] for g in ("g5", "g6")}
+    out["deg56_share_d30"] = {g: f30[g] / gd_flops(30) for g in ("g5", "g6")}
+    out["round0_share_d30"] = {}
+    for n in (64, 512, 1024, 4096, 16384):
+        for sc in ((0.5,) if n <= 512 else (1.0,)):
+            f, m_ = round0_flops(30, n, sc)
+            out["round0_share_d30"][str(n)] = dict(scale=sc, share=sum(f.values()) / gd_flops(30), m=m_,
+                                                   by_deg={g: v / gd_flops(30) for g, v in f.items()})
+    out["deg4_binds_at_d30"] = round0_flops(30, 10 ** 9)[1]["g4"]
+    # test sets' label rates (the noise test sets of calib.noise_test)
+    out["test_minority"] = {k: v for k, v in tests.items()}
+    # kernel background on biased noise (d = 30, p = 0.8): plug-in w0 = 0.6, s = 0.8, and the per-fit average with the
+    # fit's own mean label (fits with no admitted feature only); and the error identity at the measured q
+    a = tests["30:0.8"]["p_minus"]
+    kb = {}
+    for n in NS:
+        L = [r for r in noise if r["d"] == 30 and r["p"] == 0.8 and r["n"] == n]
+        if not L:
+            continue
+        plug = float(stats.norm.cdf(-0.6 * math.sqrt(n) / (0.8 * math.sqrt(30))))
+        L0 = [r for r in L if not r["final"]["feats"]]
+        per = [float(stats.norm.cdf(-abs(r["ybar"]) * math.sqrt(n) / (math.sqrt(max(1 - r["ybar"] ** 2, 1e-12)) * math.sqrt(30))))
+               for r in L0]
+        q = float(np.mean([r["frac_neg"] for r in L])); e = float(np.mean([r["err"] for r in L]))
+        kb[str(n)] = dict(plugin=plug, per_fit=float(np.mean(per)) if per else None, fits_no_feature=len(L0), q=q,
+                          err=e, err_identity=a + q * (1 - 2 * a), ybar_mean=float(np.mean([r["ybar"] for r in L])))
+    out["background_p08"] = dict(a=a, slope=1 - 2 * a, by_n=kb)
+    return out
 
 
 def load(name):
