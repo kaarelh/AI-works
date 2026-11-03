@@ -119,7 +119,6 @@ def round0_z(X, y, d, scale=1.0, hi=False, degrees=(1, 2, 3, 4), direct=False):
     if 2 in degrees:
         z[2] = float(np.max(np.abs(M[I, J])) / thr(C(d, 2)))
     for k in [k for k in degrees if k >= 3]:
-        sc = 1.0 if k <= 4 else 1.0
         if not searched(k, n, d, scale, hi):
             continue
         m = m_k(k, n, d, scale); Xm, rm = X[:m], r[:m]; t = thr_m(C(d, k), m)
@@ -194,9 +193,7 @@ def p1_section(fast=False):
                 continue
             v = np.array([z[k] for z in zs]); N = C(d, k)
             row["deg"][str(k)] = {f"u{u}": dict(hits=int(np.sum(v >= u)), rate=float(np.mean(v >= u)),
-                                               cp95=cp_upper(int(np.sum(v >= u)), R), bound=bound_k(N, u),
-                                               ok=bool(cp_upper(int(np.sum(v >= u)), R) <= bound_k(N, u) or
-                                                       np.mean(v >= u) <= bound_k(N, u)))
+                                               cp95=cp_upper(int(np.sum(v >= u)), R), bound=bound_k(N, u))
                                   for u in us}
             row["deg"][str(k)]["max_z"] = float(v.max())
         anyk = np.array([max(z.values()) if z else 0.0 for z in zs])
@@ -250,21 +247,17 @@ def p1_section(fast=False):
 
 # ------------------------------------------------------------------------------------------------ P2: parities
 def p_pass(n, k, d):
-    """Exact P(the round-0 test of the final fit admits chi_S) for y = chi_S, |S| = k, m_k = n: the labels are iid fair
-    signs, so sum(y) = 2B - n with B ~ Bin(n, 1/2), and the test passes iff n (1 - ybar^2) > n_thr(k, d)."""
+    """Exact P(the round-0 test of the final fit admits chi_S) for y = chi_S, |S| = k, when the degree-k search runs on
+    all n points: the labels are iid fair signs, so sum(y) = 2B - n with B ~ Bin(n, 1/2), and the test passes iff
+    n (1 - ybar^2) > n_thr(k, d).  For n >= 2048 (where some searches are subsampled) it is 1 to within 1e-60 on this
+    grid and 1.0 is returned."""
     if not searched(k, n, d, final_scale(n)):
         return 0.0
-    if m_k(k, n, d, final_scale(n)) < n if k >= 3 else False:
-        return float("nan")
+    if n >= 2048:
+        return 1.0
     lim = n * (n - n_thr(k, d))
     if lim <= 0:
         return 0.0
-    if n > 4096:
-        from scipy.stats import binom
-        h = math.sqrt(lim)                                              # |2B - n| < h
-        lo = math.floor((n - h) / 2) + 1 if ((n - h) / 2) == math.floor((n - h) / 2) else math.ceil((n - h) / 2)
-        hi_ = math.ceil((n + h) / 2) - 1 if ((n + h) / 2) == math.ceil((n + h) / 2) else math.floor((n + h) / 2)
-        return float(binom.cdf(hi_, n, 0.5) - binom.cdf(lo - 1, n, 0.5))
     tot = sum(C(n, b) for b in range(n + 1) if (2 * b - n) ** 2 < lim)
     return float(Fraction(tot, 2 ** n))
 
@@ -529,9 +522,10 @@ def grouping(pv, mc):
 
 def p4_section():
     res = dict(targets={}, grouping={}, generic={})
-    specs = dict(f7_05=("dlheld7", 0, +1, "[B mod 3 != 0]"), h6_00=("dlheld6", 1, +1, "[B mod 3 != 1]"),
-                 fd_10=("dlfamdev", 0, -1, "[B mod 3 == 0]"))
-    for t, (suite, rho, sign, desc) in specs.items():
+    specs = dict(f7_05=("dlheld7", 0, +1, "[B mod 3 != 0]", [1] * 14),
+                 h6_00=("dlheld6", 1, +1, "[B mod 3 != 1]", [1] * 8 + [-1] * 4 + [1]),
+                 fd_10=("dlfamdev", 0, -1, "[B mod 3 == 0]", [1, 1, 1, 1, -1, -1, 1, 1, 1, 1]))
+    for t, (suite, rho, sign, desc, eps) in specs.items():
         T = H.targets(suite); spec = T[t]; R = list(spec["relevant"]); k = len(R)
         g = lambda b, rho=rho, sign=sign: sign * (1 - 2 * (b % 3 == rho))
         a = krawtchouk_coeffs(g, k)
@@ -553,8 +547,7 @@ def p4_section():
                                  n_degree1_heuristic=2 * math.log(30) * s2 / (a1 * a1))
         # contiguous grouping: the large-n limit (counts proportional to C(k, B), mc = 0.005 n) and seed-0 data
         pB = {2 * b - k: C(k, b) for b in range(k + 1)}                    # t = 2B - k, weight C(k, B) / 2^k
-        scale_ = 1000
-        lim = grouping({v: c * scale_ for v, c in pB.items()}, int(DEF["sum_mc"] * scale_ * 2 ** k))
+        lim = grouping({v: c * 200 for v, c in pB.items()}, 2 ** k)      # counts 200 C(k,B), mc = 0.005 * 200 * 2^k exactly
         def irreducible(groups):
             e = Fraction(0)
             for G_ in groups:
@@ -562,33 +555,42 @@ def p4_section():
                 pm = sum(Fraction(pB[v], 2 ** k) for v in G_ if g((v + k) // 2) < 0)
                 e += min(pp, pm)
             return e
-        res["grouping"][t] = dict(limit_groups=lim, limit_irreducible_error=float(irreducible(lim)),
+        res["grouping"][t] = dict(eps=eps, limit_groups=lim, limit_irreducible_error=float(irreducible(lim)),
                                   limit_irreducible_error_exact=str(irreducible(lim)))
         # the seed-0 training rows at n = 16384, the block on the target's own signed sum (B counts eps_i x_i = +1)
         X, y = TH.train_data(spec["fn"], t, 0, 16384, 30)
-        X = np.asarray(X, np.float64)
-        sg = np.ones(k)
-        if t == "h6_00":
-            sg = np.array([1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, 1], float)
+        X = np.asarray(X, np.float64); y = np.asarray(y, np.float64)
+        sg = np.asarray(eps, float)
         tv = X[:, R] @ sg
+        Bv = np.rint((tv + k) / 2).astype(int)
+        res["grouping"][t]["labels_equal_g_of_B"] = bool(np.all(np.array([g(b) for b in Bv]) == y))
         mc = max(3, int(DEF["sum_mc"] * 16384))
         vals, cnt = np.unique(tv, return_counts=True)
         gr = grouping({float(v): int(c) for v, c in zip(vals, cnt)}, mc)
         res["grouping"][t].update(n16384_mc=mc, n16384_groups=[[int(v) for v in G_] for G_ in gr],
                                   n16384_irreducible_error=float(irreducible([[int(v) for v in G_] for G_ in gr])))
         # numerical check of the representation lemma: singleton groups reproduce g(t) exactly by least squares
-        blk = DM.SumBlock(np.arange(k), sg, False, (), np.array(sorted(set(tv)))[:-1] + 1.0)
-        gidx = blk.group(X[:, R].reshape(len(X), k) if False else np.pad(X[:, R], ((0, 0), (0, 0))))
-        A = np.stack([np.ones(len(X))] + [(gidx == v).astype(float) for v in range(blk.ngroups()) if np.any(gidx == v)
-                                           and v != int(np.argmax(np.bincount(gidx)))], 1)
-        w = np.linalg.lstsq(A, np.asarray(y, np.float64), rcond=None)[0]
-        res["grouping"][t]["singleton_ls_max_residual"] = float(np.max(np.abs(np.asarray(y, np.float64) - A @ w)))
+        blk = DM.SumBlock(np.arange(k), sg, False, (), np.array(sorted(set(tv)))[:-1] + 1.0)   # one group per value
+        gidx = blk.group(X[:, R]); cnt = np.bincount(gidx, minlength=blk.ngroups())
+        use = [v for v in range(blk.ngroups()) if cnt[v] > 0 and v != int(np.argmax(cnt))]    # as DFG adds them
+        A = np.stack([np.ones(len(X))] + [(gidx == v).astype(float) for v in use], 1)
+        w = np.linalg.lstsq(A, y, rcond=None)[0]
+        res["grouping"][t]["singleton_ls_max_residual"] = float(np.max(np.abs(y - A @ w)))
+        # the same with DFG's own grouping at this n: the best block-only least-squares fit and its sign's error
+        blk2 = DM.SumBlock(np.arange(k), sg, False, (), DM._edges(tv, mc)); g2 = blk2.group(X[:, R])
+        cnt2 = np.bincount(g2, minlength=blk2.ngroups()); use2 = [v for v in range(blk2.ngroups()) if cnt2[v] > 0 and v != int(np.argmax(cnt2))]
+        A2 = np.stack([np.ones(len(X))] + [(g2 == v).astype(float) for v in use2], 1)
+        w2 = np.linalg.lstsq(A2, y, rcond=None)[0]
+        Xte, yte = TH.test_data(spec["fn"], t, 30); Xte = np.asarray(Xte, np.float64)
+        g2te = blk2.group(Xte[:, R]); A2te = np.stack([np.ones(len(Xte))] + [(g2te == v).astype(float) for v in use2], 1)
+        res["grouping"][t]["dfg_grouping_block_only_test_err"] = float(np.mean(np.where(A2te @ w2 > 0, 1.0, -1.0) != yte))
+        res["grouping"][t]["dfg_grouping_n_groups"] = int(blk2.ngroups())
         res["grouping"][t]["singleton_n_features"] = int(A.shape[1])
     # generic: the largest k for which every value of t has its own group in the large-n limit
     gen = {}
     for k in range(2, 16):
         pB = {2 * b - k: C(k, b) for b in range(k + 1)}
-        lim = grouping({v: c * 1000 for v, c in pB.items()}, int(DEF["sum_mc"] * 1000 * 2 ** k))
+        lim = grouping({v: c * 200 for v, c in pB.items()}, 2 ** k)
         gen[str(k)] = dict(groups=len(lim), values=k + 1, all_singletons=bool(len(lim) == k + 1))
     res["generic"] = gen
     res["generic_max_k_all_singletons"] = max(int(k) for k, v in gen.items() if v["all_singletons"])

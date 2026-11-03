@@ -91,7 +91,10 @@ What P-A does not cover:
   Gaussian χ²_k at level δ = 0.1; the exact χ²₃₀ tail at that threshold (51.23) is 0.0092;
 - **the spectral block**: the top |eigenvalue| of the residual pair matrix (diagonal removed) against the Wigner
   edge 2s√(d/n)·(1 + √(2 ln(1/δ)/d)), for n ≥ 4d; no level is proved for it;
-- **the sum-block tests**: a χ²_m approximation for the projection onto a block's level indicators, with a union
-  bound over every (S, s) of size k, both folds, the modulators and the sizes (nominal δ/(4K) per class);
+- **the sum-block tests**: T = |projection of r onto a block's level indicators|² / s² against Laurent–Massart's
+  χ²_m bound at exp(−t_k), t_k = ln(4K·C(d,k)·2^{k−1}·2·n_mod·24/δ). If each T were exactly χ²_m, the union bound over
+  every (S, s) of every size k ≤ 24, both folds and the n_mod modulators would give ≤ δ/(4K) = 0.00625 for all
+  additive blocks together (weighted blocks have their own, smaller share); the block is searched on the residual and
+  must also pass on the residual projected off the round's new characters;
 - **the forced variant** (n ≤ 512): it takes the best-scoring candidate when nothing passes, at most twice; it is
   used only if the paired cross-validation test prefers it.
