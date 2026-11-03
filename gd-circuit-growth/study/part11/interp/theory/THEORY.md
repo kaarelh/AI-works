@@ -132,7 +132,50 @@ accepted blocks. Hence P(the default variant's model has a feature besides the c
 So P(the final model is not the constant plus the background) ≤ 3δ/4 + δ = 0.175, plus P(spectral) + P(sum) +
 P(n ≤ 512 and the forced variant is chosen). The first two terms are proved; the rest are measured below.
 
-__P1NUM__
+**Numerical checks.**
+
+*The proved part* (`P1.sims`, `P1.totals`). I replicated round 0's global tests, the linear statistic and the spectral
+statistic exactly as the code computes them; the replica is checked against DFG below. The design has 16 configurations
+× 300 null data sets = 4800:
+- d = 30, n ∈ {32, 128, 512, 2048}, three label laws: iid fair; iid with P(+1) = 0.85; and one fixed vector (the first
+  third +1);
+- d = 15, n ∈ {64, 256, 1024}, degrees 1–6, all on all rows;
+- d = 60, a 5-fold fit of the cross-validation at n = 512: 410 rows, `scale` = 1/20, degree 4 on its first m₄ = 110
+  rows, the subsampled case.
+
+Results:
+- **Characters: 280 of 280 checks hold.** Each check is one configuration, degree and level u ∈ {0.7, 0.8, 0.9, 1}; in
+  every one the observed frequency of max z ≥ u is at most the bound.
+  - At u = 1 no degree-configuration exceeds 2 of 300.
+  - 16 of the 4800 data sets have some degree with z > 1.
+  - At d = 30 the u = 1 hits by degree are 6, 1, 4, 3 (degrees 1–4, over 3600 data sets).
+- **The bound is loose by the Gaussian Mills ratio, not by the union** (Heuristic). The Gaussian approximation
+  N·2Φ̄(√(2L)) gives 1.15, 1.01, 0.93 and 0.87·10⁻³ for degrees 1–4 at d = 30, against the bound's 12.5·10⁻³. That is a
+  factor √(2π)·√(2L) ≈ 10–14, and the union over the N nearly independent statistics is nearly tight. Where counts are
+  large it matches. At u = 0.8, d = 30, n = 2048 with fair labels, the observed rates for degrees 1–4 are 0.037, 0.063,
+  0.15, 0.22. The Gaussian approximation gives 0.030, 0.069, 0.14, 0.27, and the bound 0.26, 0.69, 1, 1.
+- **Linear block: 64 of 64 checks within e^{−x}.** At x = ln(1/δ) (the code's threshold), 43 of the 4800 data sets
+  pass (0.9%). The bound is δ = 10%; the χ²_d level of the Laurent–Massart threshold is 0.79–1.17% for d = 15–120
+  (0.92% at d = 30).
+- **Spectral block (not covered): it can fail badly.** Where it applies (n ≥ 4d) its statistic exceeds the edge in 0 of
+  300 at every n with fair or fixed labels, at d = 15, 30 and 60. With P(+1) = 0.85 at d = 30 it exceeds the edge in
+  46 of 300 at n = 128 (15%) and 1 of 300 at n = 512. The edge is the semicircle edge for many comparable weights r_t.
+  With skewed labels, a few large negative residuals make the pair matrix nearly low-rank at n ≈ 4d (Heuristic).
+
+*Full DFG fits on null labels* (`P1.full_fits`, `P1.full_fits_replica`). These are DFG alone with its own
+cross-validation, d = 30.
+- **Fair labels, 20 fits at each of n = 64, 256, 1024, 4096: 78 of 80 final models are the constant plus the
+  background.**
+  - One (n = 1024) holds a pair admitted by the round-0 test, z = 1.06. It is the event P1a bounds.
+  - One (n = 256) is a forced-variant model that the cross-validation chose, with held-out errors 122 (default)
+    against 103 (forced), holding a forced degree-4 character.
+  - No linear block, spectral feature or sum block was admitted.
+- **Skewed labels (P(+1) = 0.85), 30 fits at n = 128: 7 of 30 final models hold spurious features**, all in the
+  default variant. Six hold spectral features first admitted in round 0, the uncovered test of the previous paragraph.
+  One holds a folded sum block on 7 inputs admitted in round 0, then a spectral feature and a second block in round 1.
+- **The replica agrees with DFG's own round-0 decisions** (characters by degree, the linear block, the spectral block)
+  in __REPLICA__ of the __NFULL__ fits.
+- Over the fits with a cross-validation (n ≤ 512: 40 fair, 30 skewed), the forced variant was chosen once.
 
 ## 2. P2: the sample size at which a k-parity is admitted
 

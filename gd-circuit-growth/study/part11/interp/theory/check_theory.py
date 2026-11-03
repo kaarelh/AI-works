@@ -229,6 +229,13 @@ def p1_section(fast=False):
     res["n_checks_linear"] = sum(len(xs) for r in res["sims"])
     tot = dict(reps=sum(r["reps"] for r in res["sims"]),
                any_u1=sum(r["any_degree_u1"]["hits"] for r in res["sims"]))
+    tot["max_hits_u1_per_degree_config"] = max(w["u1.0"]["hits"] for r in res["sims"] for w in r["deg"].values())
+    tot["linear_hits_ln10"] = sum(r["linear"][f"x{math.log(1 / DELTA):.3f}"]["hits"] for r in res["sims"])
+    tot["linear_hits_ln10_d30"] = sum(r["linear"][f"x{math.log(1 / DELTA):.3f}"]["hits"] for r in res["sims"] if r["d"] == 30)
+    tot["reps_d30"] = sum(r["reps"] for r in res["sims"] if r["d"] == 30)
+    tot["u08_d30_n2048_fair"] = {k: dict(rate=w["u0.8"]["rate"], bound=w["u0.8"]["bound"], gauss=w["u0.8"]["gauss"])
+                                 for r in res["sims"] if (r["d"], r["n"], r["law"]) == (30, 2048, "fair") for k, w in r["deg"].items()}
+    tot["u1_hits_by_degree_d30"] = {k: sum(r["deg"][k]["u1.0"]["hits"] for r in res["sims"] if r["d"] == 30) for k in ("1", "2", "3", "4")}
     res["totals"] = tot
     # quad (spectral) block under the null: uncovered by the proof; rate where it applies (n >= 4 d)
     res["quad_summary"] = [dict(d=r["d"], n=r["n"], law=r["law"], hits=r["quad"]["hits"], reps=r["reps"])

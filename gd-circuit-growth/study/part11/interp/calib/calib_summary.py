@@ -237,6 +237,27 @@ def a1(recs):
     return out
 
 
+def cascade(recs):
+    """The forced fold-fit check: DFG's own local-class passes after its forced characters, and the same local test
+    (recomputed) after the forced characters and after random characters of the same degrees."""
+    out = {}
+    for (p, n) in sorted(set((r["p"], r["n"]) for r in recs)):
+        L = [r for r in recs if r["p"] == p and r["n"] == n]
+        dfg_local = sum(1 for r in L if any((x["npass"] or 0) > 0 for x in r["local"]))
+        o = dict(fits=len(L), dfg_any_local_pass=dfg_local,
+                 dfg_any_tested=sum(1 for r in L if any(not k.split(":")[1].startswith("forced") for k in r["feats"])),
+                 forced_chars_only=sum(1 for r in L if r["control"] is not None))
+        for k_ in ("1", "2"):
+            C = [r["control"][k_] for r in L if r["control"] is not None and k_ in r["control"] and r["control"][k_]["forced_npass"] is not None]
+            Cr = [r["control"][k_] for r in L if r["control"] is not None and k_ in r["control"] and r["control"][k_]["random_npass"] is not None]
+            o[f"after{k_}"] = dict(tests_forced=len(C), pass_forced=sum(1 for c in C if c["forced_npass"] > 0),
+                                   med_forced=float(np.median([c["forced_max"] for c in C])) if C else None,
+                                   tests_random=len(Cr), pass_random=sum(1 for c in Cr if c["random_npass"] > 0),
+                                   med_random=float(np.median([c["random_max"] for c in Cr])) if Cr else None)
+        out[f"{p}:{n}"] = o
+    return out
+
+
 # ------------------------------------------------------------------------------------------------ (A2)
 CATS = ["chi_test", "chi_lin", "chi_forced", "quad", "sum", "sum_forced"]
 
@@ -479,6 +500,17 @@ def tables(res):
         for e in A["examples"]:
             T.append(f"- {e['key']} err {e['err']:.3f} variant {e['variant']} rounds {e['rounds']} feats {e['feats']} tests {e['tests']}")
         T.append("")
+    if "cascade" in res:
+        T += ["## Forced fold fits on noise: local-class passes after forced characters, and the random-character control", "",
+              "| P(y=1) | n | fits | DFG: a local pass | after 1st forced char: forced-V pass (median ratio) | random-V pass (median) | after 2nd: forced-V | random-V |",
+              "|---|---|---|---|---|---|---|---|"]
+        for key, o in res["cascade"].items():
+            p_, n_ = key.split(":"); a, b_ = o["after1"], o["after2"]
+            f = lambda k, n, m: "-" if n == 0 else f"{k}/{n} ({m:.2f})"
+            T.append(f"| {p_} | {n_} | {o['fits']} | {o['dfg_any_local_pass']} | {f(a['pass_forced'], a['tests_forced'], a['med_forced'] or 0)} | "
+                     f"{f(a['pass_random'], a['tests_random'], a['med_random'] or 0)} | {f(b_['pass_forced'], b_['tests_forced'], b_['med_forced'] or 0)} | "
+                     f"{f(b_['pass_random'], b_['tests_random'], b_['med_random'] or 0)} |")
+        T.append("")
     if "A2" in res:
         A = res["A2"]
         mism = {k: v for k, v in A["relevant"].items() if not v["same"] or v["extra_dep"]}
@@ -578,6 +610,9 @@ def main():
         f"{d}:{p}:{n}": mc_big(d, p, n, 20000) for d, ns_ in ((30, (128, 1024)), (60, (256, 1024))) for p in (0.5, 0.8) for n in ns_}
     if noise:
         res["A1"] = a1(noise)
+    casc = load("cascade.jsonl")
+    if casc:
+        res["cascade"] = cascade(casc)
     if spur:
         res["A2"] = a2(spur)
     if prof:
