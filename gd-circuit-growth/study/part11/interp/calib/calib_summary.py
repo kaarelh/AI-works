@@ -842,6 +842,21 @@ def tables(res):
                      f"{q['share_med']:.3f} / {q['share_mean']:.3f} / {q['share_max']:.3f} | {q['share_lin_max']:.3f} / {q['share_excl_lin_max']:.3f} | "
                      f"{q['err_mean']:.4f} / {q['err_noS_mean']:.4f} | {q['noS_better']} / {q['noS_worse']} |")
         T.append("")
+        T += ["### A2 by n: admitted terms by kind (spurious in brackets), and the count share of terms that read an irrelevant input", "",
+              "| n | " + " | ".join(CATS) + " | share of all terms | share without the linear block's characters | fits with linear-block characters | fits with spurious share > 0.1 | same without the linear block's characters (lower / upper bound) | upper bound, max |",
+              "|---|" + "---|" * (len(CATS) + 6)]
+        for n in NS:
+            o = A["by_n"].get(str(n))
+            if o is None:
+                continue
+            T.append(f"| {n} | " + " | ".join(f"{o['terms_by_cat'][c]} ({o['spur_by_cat'][c]})" for c in CATS) +
+                     f" | {o['count_share_all']:.3f} | {o['spur_excl_lin']}/{o['terms_excl_lin']} = {o['count_share_excl_lin']:.3f} | {o['fits_with_lin']} | "
+                     f"{o['fits_share_gt_0.1']} | {o['fits_share_excl_lin_gt_0.1'][0]} / {o['fits_share_excl_lin_gt_0.1'][1]} | {o['share_excl_lin_ub_max']:.3f} |")
+        tt = {c: sum(A["by_n"][str(n)]["terms_by_cat"][c] for n in NS if str(n) in A["by_n"]) for c in CATS}
+        ts = {c: sum(A["by_n"][str(n)]["spur_by_cat"][c] for n in NS if str(n) in A["by_n"]) for c in CATS}
+        T.append(f"| all | " + " | ".join(f"{tt[c]} ({ts[c]})" for c in CATS) + f" | {sum(ts.values()) / max(sum(tt.values()), 1):.3f} | "
+                 f"{sum(v for c, v in ts.items() if c != 'chi_lin')}/{sum(v for c, v in tt.items() if c != 'chi_lin')} | | | | |")
+        T.append("")
         T += ["### A2 by n, cells with test error <= 0.1 only", "",
               "| n | fits | spurious terms (excl. lin.) | fits with any (excl. lin.) | spurious share median / max | max share: lin. / other | err with / without (mean) | removal better / worse |", "|---|---|---|---|---|---|---|---|"]
         for n in NS:
