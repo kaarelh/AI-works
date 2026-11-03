@@ -1,6 +1,6 @@
 \section{Names used in this paper}\label{app:names}
 
-\Cref{tab:names} lists the names of learners, parts of DFG, references, sets, targets and metrics that the paper uses. DFG v1.3 is \repo{study/part10/hyb_portfolio3/dfg13.py}, every toy target is defined in \repo{study/boolfuncs.py}, and the blind family in \repo{study/part9/heldout6/FAMILY.md}.
+\Cref{tab:names,tab:names-b} list the names of learners, parts of DFG, references, sets, targets and metrics that the paper uses. DFG v1.3 is \repo{study/part10/hyb_portfolio3/dfg13.py}, every toy target is defined in \repo{study/boolfuncs.py}, and the blind family in \repo{study/part9/heldout6/FAMILY.md}.
 
 \begin{table}[p]
 \centering\scriptsize\setlength{\tabcolsep}{4pt}\renewcommand{\arraystretch}{1.0}
@@ -16,6 +16,10 @@ v1, v2, v3 & the portfolios of Parts 8, 9, 10, which stack DFG v1.1, v1.2, v1.3 
 \code{p9_sum}, \code{p10_sum} & the Part 9 and Part 10 toy builders' candidates: v2's and v3's code on toy inputs\\
 \code{lowdeg} & the thresholded low-degree algorithm (\cref{sec:refs})\\
 ablation tags & DFG alone with one constructor argument changed (\cref{sec:ablations}): \code{nosums}, \code{strict}, \code{lenient}, \code{noeig}, \code{noblocks}, \code{nocomp}, \code{noweighted}, \code{nosmalln}, \code{nobg}, \code{lsread}, \code{K3}, \code{labelnoise}\\
+core DFG, \code{dfg13-core-perm} & post hoc: DFG alone with nine parts removed by constructor arguments, keeping global characters of degree $\le3$, unweighted signed-sum blocks, residual-scaled tests, least squares and the small-$n$ cross-validation (\cref{sec:core})\\
+leave one in & post hoc: the core with one removed part (or two) put back, on the targets where the core moved most (\cref{tab:leavein})\\
+paired null, \code{dfg13-reperm} & post hoc: DFG alone refitted on the same training and test sets with another fit stream, so with another column order and other folds and nothing else; what an ablation is compared with (\cref{sec:ablations})\\
+unpaired null & the protocol's null: DFG alone's seed 1 (or 2) against its seed 0, so other training sets\\
 Part 7's adaptations & \code{dfg_bits}, \code{dfg_dirs}, \code{dfg_gates}: DFG adapted to real-valued data (context for Q6)\\
 \addlinespace
 \multicolumn{2}{l}{\emph{DFG's search} (\cref{sec:learner})}\\
@@ -34,7 +38,18 @@ block search & how blocks are proposed: from the residual's degree-1 and pair st
 forced variant & at $n\le512$, takes the best candidate if none passes; chosen by a paired cross-validation test\\
 kernel background & one Hebbian step on the final residual, $\sum_ig_ix_i$ with $g_i=\frac1n\sum_tr_tx_{t,i}$, added to the output\\
 readout & least squares on the admitted features, refined by 15 logistic Newton steps when $n\ge8p$\\
-\addlinespace
+\bottomrule
+\end{tabularx}
+\caption{Names used in this paper, 1 of 2: learners and DFG's search.}
+\label{tab:names}
+\end{table}
+
+\begin{table}[p]
+\centering\scriptsize\setlength{\tabcolsep}{4pt}\renewcommand{\arraystretch}{1.0}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{3.45cm}>{\raggedright\arraybackslash}X}
+\toprule
+name & meaning\\
+\midrule
 \multicolumn{2}{l}{\emph{References} (\cref{sec:refs})}\\
 \code{nets}, \code{nets_wd} & the toy networks with square loss, without and with weight decay 0.1\\
 \code{nets_cewd}, \code{nets_cewd0.3}, \code{nets_cewd1.0} & the toy networks with logistic loss and weight decay 0.1, 0.3, 1.0\\
@@ -49,6 +64,8 @@ Q4 targets & the \code{designed} targets at $d=15$, 60 and 120: 7, 7 and 4 of th
 the blind family & the random generator of \code{dlheld6}, \code{dlfamdev} and \code{dlheld7}, written blind to the sum-block design\\
 sum-structured target & one of the 54 targets of \code{dlsymdev}, \code{dlheld4}--\code{dlheld7}, \code{dlfamdev} that is not one of their 14 controls\\
 accept set & the values of a sum on which a target, or a function of the sum in it, is $+1$\\
+ablation suites & \code{designed}, \code{dlsymdev}, \code{dlfamdev}, \code{dlheld6}, \code{dlheld7}: the 65 targets of Q5\\
+target classes & post hoc, by hand: character targets, halfspaces, symmetric and mixture targets (\cref{sec:ablations})\\
 kr\_vs\_kp, mushroom & the two PMLB datasets with only binary or categorical columns and two classes\\
 target names & f7\_, h6\_, fd\_, h5: \code{dlheld7}, \code{dlheld6}, \code{dlfamdev}, \code{dlheld5}; rf, rand, hrf, h$k$rf: random formulas; others: par$k$ ($k$-bit parity), maj$k$, thr$k$ (halfspace), stair$k$, mux, dnf, cnf, dlist, sym, \dots\\
 statuses & development, exposed, held out for v1.1 only, held out: a set's status for DFG v1.3 (\cref{tab:status})\\
@@ -60,6 +77,7 @@ clearly better, worse & the ratio is below $-0.25$ (above $+0.25$), or only $A$ 
 suite mean; pooled & the mean ratio over the targets both learn; per-target ratios pooled over suites\\
 cell; better, tie, worse & a (dataset, $n$) pair on tabular data; the verdicts of the cell rule\\
 budget & one toy network run in FLOPs ($1.62\times10^{11}$ at $d=30$); for real data, three training runs of \code{mlp}\\
+$n_{\rm thr}(k,d)$ & $2\ln(4K\binom dk/\delta)$: a $k$-parity passes round 0's test exactly when $n(1-\bar y^2)>n_{\rm thr}$ (\cref{prop:parity})\\
 $n_{\rm glob}$ & $2\ln(4K\binom d{|S|}/\delta)(1-\hat f(\emptyset)^2)/\hat f(S)^2$, the $n$ at which $\chi_S$ passes round 0's global test in expectation\\
 $n_{\rm detect}$ & the first $n$ at which DFG's test would admit the target's true block if proposed (\cref{sec:interp})\\
 $n_{\rm struct}$ & the first analysed $n$ at which DFG's model holds the target's exact signed blocks (\cref{sec:interp})\\
@@ -70,8 +88,8 @@ builder & an agent that designed a component on development data and froze it (P
 Part $k$ & the $k$-th part of the study: Parts 1--5 in \cite{gdcircuit2026}, 6--9 in \cite{discretelearners2026}, 10 in \cite{portfoliolearner2026}; 11 is this paper\\
 \bottomrule
 \end{tabularx}
-\caption{Names used in this paper.}
-\label{tab:names}
+\caption{Names used in this paper, 2 of 2: references, sets and targets, metrics and other names.}
+\label{tab:names-b}
 \end{table}
 
 \clearpage

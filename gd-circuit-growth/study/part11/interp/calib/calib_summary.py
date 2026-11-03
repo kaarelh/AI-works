@@ -3,7 +3,16 @@ result files (part11/results/toy__dfg13-perm__<suite>.json); writes calib.json a
 tables CALIB.md quotes).  Also a null Monte Carlo of DFG's two dense block statistics on pure noise in round 0 (the
 linear block's chi^2 statistic and the spectral block's top eigenvalue over its edge), computed as dfg13.py does.
 
-usage: OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python calib_summary.py
+Added after the independent verification (VERIFY_CALIB.md), each reproducing a number the corrected CALIB.md states
+(calib.json keys audit_ast, all_equal, sub_sizes, folds_paired, g1_check, lin_check, mc_spectral, spectral_pooled,
+largest, B.rate_sum_folds, files_summary.max_n512_by_d; the last section of calib_tables.txt): the syntax-tree audit,
+the all-equal-label training sets, the subsample sizes, the fold-fit pairing, the exact degree-1 null rate (with the
+nested samples), the exact linear-block null rate, a further spectral-block Monte Carlo (d = 30, 60, 120; P(y = 1) =
+0.5, 0.8, 0.9), the sum-block rate inside the fold fits, and the largest fit of the result files (results/largest.jsonl,
+calib.py largest).  Every value written before these additions is unchanged.  CALIB_NOMC=1 skips the Monte Carlo
+parts (and the exact linear-block computation).
+
+usage: OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python calib_summary.py      (about 5 minutes, single-threaded)
 """
 import os, sys, json, math, glob
 import numpy as np

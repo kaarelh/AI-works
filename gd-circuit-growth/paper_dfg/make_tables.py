@@ -32,6 +32,12 @@ ablations.py there from the same result files, the paired null and the leave-one
                      tab_core_family (the same by family over 138 targets)
   tab_leavein        leave one in: the core with one part put back, on its largest losses and gains
 
+Tables of the frame (sections/intro.tex, app_results.tex, app_provenance.tex):
+  tab_headline       the introduction's results at a glance: dlheld7, pooled, input dimension, lowdeg, tabular, the core
+                     (q1, q2, q3, q4, q6, q5b; the core's FLOPs from ablations.json)
+  tab_targets        appendix: every toy target's n* for every learner, with the core; three parts (_a, _b, _c) by suite
+  tab_verif          appendix: the independent verifications of the analyses, counted from their VERIFY_*.json records
+
 Tables of sections/learner.tex ("What DFG is"); every value is computed from the frozen DFG v1.3 itself
 (study/part10/hyb_portfolio3/dfg13.py, md5 asserted), not from RESULTS.json:
   tab_dictionary     DFG's candidate classes at d = 30: size N, rows tested, log term of the threshold, smallest n that
@@ -1302,6 +1308,194 @@ def tab_leavein():
     write("tab_leavein", L)
     note("tab_leavein", runs={cfg: {k: {kk: num(vv) for kk, vv in v.items()} for k, v in LI.get(cfg, {}).items()} for cfg, _ in LEAVEIN},
          losses=loss, gains=gain)
+
+
+# =========================================================================================================================
+# sections/intro.tex (tab:headline), sections/app_results.tex (app:further-targets) and sections/app_provenance.tex
+# (tab:verif): the paper's frame.  Every number is read from RESULTS.json, ablations.json or the verifiers' JSON files.
+# =========================================================================================================================
+CONTROLS7 = ["f7_02", "f7_04", "f7_06"]                         # dlheld7's non-symmetric controls (boolfuncs; tab:dlheld7)
+
+
+def _f2(v):
+    return f"${v:+.2f}$"
+
+
+@table
+def tab_headline():
+    """The introduction's results at a glance: the held-out dlheld7, the pooled in-sample suites, the input dimension, the
+    dictionary without the search (lowdeg), tabular data and the post-hoc core.  Sources: RESULTS.json q1_dlheld7,
+    q2_suites, q3_lowdeg, q4_dscale, q6_tabular, q5b_core; ablations.json core.compute (the core's FLOPs)."""
+    Q1, Q2, Q3, Q4, Q6, Q5b = (R[k] for k in ("q1_dlheld7", "q2_suites", "q3_lowdeg", "q4_dscale", "q6_tabular", "q5b_core"))
+    T7 = toy()["dlheld7"]
+    # (1) dlheld7 against nets_best
+    S = Q1["summary"]["nets_best"]; rr = {t: num(x) for t, x in S["ratios"].items()}
+    f = [x for x in rr.values() if fin(x)]; m = sum(f) / len(f)
+    sd = math.sqrt(sum((x - m) ** 2 for x in f) / (len(f) - 1)); se = sd / math.sqrt(len(f))
+    assert abs(m - num(S["mean"])) < 1e-12 and len(f) == S["both"]
+    wins = [t for t, x in rr.items() if x is not None and x < -THR]
+    calib = [t for t in T7 if any(l2r(T7[t][k], T7[t]["nets_best"]) < -THR for k in ("lin", "hgb"))]
+    v3s = Q1["summary"]["v3"]; v3w = sorted(t for t, x in v3s["ratios"].items() if fin(num(x)) and num(x) > THR)
+    assert v3w == CONTROLS7, v3w                                  # DFG alone is clearly worse than v3 on the controls only
+    never_all = [t for t, v in Q1["per_target"].items() if all(num(x) == INF for x in v.values())]
+    nv = len(Q2["dlheld7"]["network_variants"])
+    row1 = [f"held out: \\code{{dlheld7}}, {S['targets']} targets (\\cref{{sec:res-dlheld7}})",
+            f"\\code{{nets_best}}: best of {nv} variants (hindsight)",
+            f"mean $\\log_2\\nstar$ ratio {_f2(m)} over the {S['both']} targets both learn (${2 ** -m:.1f}\\times$ less data; "
+            f"median {_f2(num(S['median']))}; s.d.\\ {sd:.2f}, s.e.\\ {se:.2f}); clearly better on "
+            f"{S['better']} of {S['targets']}, worse on {S['worse']}",
+            f"one family; on {len([t for t in wins if t in calib])} of the {len(wins)} wins \\code{{lin}} or \\code{{hgb}} also beats "
+            f"\\code{{nets_best}}; v3 needs less data ({_f2(num(v3s['mean']))}; clearly on the {len(v3w)} controls); no learner learns "
+            f"{', '.join(tg(t) for t in never_all)}"]
+    # (2) pooled over the suites with network runs
+    P = Q2["_pooled"]["nets_best"]
+    nvs = [len(Q2[su]["network_variants"]) for su in P["suites"]]
+    wd = {su: num(Q2[su]["summary"]["nets_wd"]["mean"]) for su in P["suites"] if Q2[su]["summary"].get("nets_wd")}
+    small = sorted(wd, key=lambda su: -wd[su])[:3]
+    held = [su for su in TOY if Q2[su]["v13_status"].replace("**", "").startswith("held out")]
+    assert sorted(small) == sorted(held), (small, held)             # the 3 smallest margins are the suites held out for some version
+    row2 = [f"pooled: {P['targets']} targets of {len(P['suites'])} suites (\\cref{{sec:res-suites}})",
+            f"\\code{{nets_best}}: best of {min(nvs)} to {max(nvs)} variants",
+            f"{_f2(num(P['mean']))} over {P['both']} (${2 ** -num(P['mean']):.1f}\\times$); clearly better on {P['better']}, "
+            f"worse on {P['worse']}",
+            "in-sample (\\cref{tab:status}); against \\code{nets_wd} the margin is smallest on the three suites held out for "
+            "some version (" + ", ".join(code(su) for su in sorted(small, key=TOY.index)) + ")"]
+    # (3) input dimension
+    PT = Q4["per_target"]; ex_d = {t: PT[t]["exponent_dfg13"] for t in PT}; ex_n = {t: PT[t]["exponent_nets"] for t in PT}
+    par = ["par2", "par3", "par4"]; ds = sorted(Q4["per_d"], key=int)
+    fac = {d: 2 ** -Q4["per_d"][d]["dfg_vs_nets"]["median"] for d in ds}
+    nt = {d: Q4["per_d"][d]["dfg_vs_nets"]["targets"] for d in ds}
+    row3 = [f"input dimension: $d={','.join(d for d in ds if d != '30')}$, {max(nt.values())} targets (\\cref{{sec:res-dscale}})",
+            "\\code{nets}, run at every $d$",
+            f"exponent of $\\nstar$ in $d$ {min(ex_d.values()):.2f}--{max(ex_d.values()):.2f} (parities of degree 2, 3, 4: "
+            + ", ".join(f"{ex_d[t]:.2f}" for t in par) + f"), networks {min(ex_n.values()):.2f}--{max(ex_n.values()):.2f} ("
+            + ", ".join(f"{ex_n[t]:.2f}" for t in par) + f"); median factor ${fac[ds[0]]:.1f}\\times$ at $d={ds[0]}$, "
+            f"${fac[ds[-1]]:.1f}\\times$ at $d={ds[-1]}$",
+            f"{', '.join(str(nt[d]) for d in ds if d != '30')} development targets; {len(Q4['per_d'][ds[0]]['nets_seeds'])} seeds at "
+            "$d\\ne30$; the weakest variant; 3 or 4 points per slope"]
+    # (4) the dictionary without the search
+    L3 = Q3["_pooled"]["vs_dfg"]; N3 = Q3["_pooled"]["vs_nets_best"]
+    fast = [(su, t, T["lowdeg"], T["dfg"]) for su in TOY for t, T in toy()[su].items()    # lowdeg clearly faster
+            if fin(T["lowdeg"]) and fin(T["dfg"]) and math.log2(T["lowdeg"] / T["dfg"]) < -THR]
+    assert len(fast) == L3["better"], (len(fast), L3["better"])
+    rng = (min(x[3] for x in fast), max(x[3] for x in fast))
+    row4 = [f"no search: \\code{{lowdeg}}, {L3['targets']} targets (\\cref{{sec:res-lowdeg}})",
+            "DFG alone; \\code{nets_best}",
+            f"\\code{{lowdeg}} against DFG alone {_f2(num(L3['mean']))} over {L3['both']} (${2 ** num(L3['mean']):.1f}\\times$ more data; "
+            f"worse on {L3['worse']}, better on {L3['better']}, never on {L3['learner_never']} that DFG learns); against "
+            f"\\code{{nets_best}} {_f2(num(N3['mean']))} ({N3['better']} better, {N3['worse']} worse)",
+            f"in-sample; Part 6's check, unchanged; faster only where DFG alone needs $\\le{rng[1]:.0f}$ points"]
+    # (5) tabular
+    def both(k):
+        cells = [c for ds_ in ("kr_vs_kp", "mushroom") if Q6[ds_]["summary"].get(k) for c in Q6[ds_]["summary"][k]["per_cell"]]
+        v = [c["v"] for c in cells]
+        return len(cells), f"{v.count('better')}/{v.count('tie')}/{v.count('worse')}"
+    nc, mb = both("mlp_best"); _, hg = both("hgb"); _, v3c = both("v3")
+    row5 = [f"tabular: 2 datasets, {nc} cells (\\cref{{sec:res-tabular}})",
+            "\\code{mlp_best} (hindsight); \\code{hgb}; v3",
+            f"cells better / tie / worse: {mb} against \\code{{mlp_best}}, {hg} against \\code{{hgb}}, {v3c} against v3",
+            "kr\\_vs\\_kp and mushroom, the only 2 of 26 datasets with $\\pm1$-codable inputs and two classes; no real-valued data"]
+    # (6) the core (post hoc)
+    C = Q5b["pooled"]; c7 = Q5b["suites"]["dlheld7"]; cc = abl_json()["core"].get("compute", {})
+    row6 = [f"post hoc: the core, {C['vs_dfg']['targets']} targets (\\cref{{sec:core}})", "DFG alone, same seeds; \\code{nets_best}",
+            f"against DFG alone {_f2(num(C['vs_dfg']['mean']))} over {C['vs_dfg']['both']} ({C['vs_dfg']['better']} lower, "
+            f"{C['vs_dfg']['worse']} higher; loses {', '.join(tg(x.split('/')[1]) for x in C['newly_never'])}); against "
+            f"\\code{{nets_best}} {_f2(num(C['vs_nets_best']['mean']))} ({C['vs_nets_best']['better']}/{C['vs_nets_best']['worse']}), "
+            f"DFG alone {_f2(num(C['dfg_same_seeds_vs_nets_best']['mean']))} ({C['dfg_same_seeds_vs_nets_best']['better']}/"
+            f"{C['dfg_same_seeds_vs_nets_best']['worse']}); \\code{{dlheld7}} {_f2(num(c7['vs_nets_best']['mean']))}; median FLOPs "
+            f"{cc['flops_paired_ratio_median']:.3f} of DFG's",
+            f"seeds {', '.join(str(s) for s in c7['seeds'])}; defined after every result had been read: nothing is held out for it"]
+    L = ["\\begin{tabularx}{\\linewidth}{@{}>{\\raggedright\\arraybackslash}p{2.2cm}>{\\raggedright\\arraybackslash}p{2.0cm}"
+         ">{\\raggedright\\arraybackslash}X>{\\raggedright\\arraybackslash}p{4.0cm}@{}}", "\\toprule",
+         "evaluation & reference & DFG v1.3 alone & limits\\\\", "\\midrule"]
+    for i, r in enumerate((row1, row2, row3, row4, row5, row6)):
+        if i:
+            L.append("\\addlinespace")
+        L.append(" & ".join(r) + "\\\\")
+    L += ["\\bottomrule", "\\end{tabularx}"]
+    write("tab_headline", L)
+    note("tab_headline", dlheld7=dict(mean=m, sd=sd, se=se, factor=2 ** -m, wins=wins, calibration_wins=calib,
+                                      v3_clearly_worse=v3w, never=never_all), pooled_variants=[min(nvs), max(nvs)],
+         nets_wd_smallest=small, dscale_exponents=dict(dfg=ex_d, nets=ex_n), dscale_factor=fac,
+         lowdeg_faster_dfg_range=rng, tabular=dict(mlp_best=mb, hgb=hg, v3=v3c, cells=nc),
+         core_flops_ratio=cc.get("flops_paired_ratio_median"))
+
+
+VLAB = {"nets": "nets", "nets_wd": "wd", "nets_cewd": "cewd", "nets_cewd0.3": "cewd0.3", "nets_cewd1.0": "cewd1.0"}
+TARGET_PARTS = [("a", ["designed", "random"]), ("b", ["dlheld", "dlheld2", "dlheld3", "dlsymdev", "dlheld4"]),
+                ("c", ["dlheld5", "dlheld6", "dlfamdev", "dlheld7"])]
+
+
+@table
+def tab_targets():
+    """Appendix: every toy target, n* of DFG alone, v3, lowdeg, lin, hgb and nets_best (with the variant attaining it), the
+    log2 ratios of DFG alone to nets_best and to v3, and the post-hoc core (seeds 0, 1) with its ratio to DFG alone on the
+    same seeds.  Three tables (tab_targets_a, _b, _c), split by suite.  Sources: toy() (RESULTS.json q2_suites, q3_lowdeg)
+    and RESULTS.json q5b_core."""
+    T = toy(); C = R["q5b_core"]["suites"]
+    cols = ("target & \\hd{DFG\\\\alone} & v3 & \\code{lowdeg} & \\code{lin} & \\code{hgb} & \\code{nets_best} (variant) & "
+            "\\hd{DFG alone vs\\\\\\code{nets_best}} & \\hd{DFG alone\\\\vs v3} & \\hd{core\\\\(seeds 0, 1)} & "
+            "\\hd{core vs DFG alone\\\\(seeds 0, 1)}\\\\")
+    rows_all = 0; chk = []
+    for part, suites in TARGET_PARTS:
+        L = ["\\begin{tabular*}{\\linewidth}{@{\\extracolsep{\\fill}}lrrrrrlrrrr@{}}", "\\toprule", cols]
+        for su in suites:
+            o = R["q2_suites"][su]
+            L += ["\\midrule", f"\\multicolumn{{11}}{{@{{}}l}}{{\\code{{{su}}}: {o['targets']} targets; "
+                  f"{R['q2_suites'][su]['v13_status'].replace('**', '')}; networks: "
+                  f"{', '.join(code(k) for k in o['network_variants']) or 'none run'}}}\\\\"]
+            cs = C[su]
+            for t, v in T[su].items():
+                bv = best_variant(su, t)
+                nb = "--" if v.get("nets_best") is None else ns(v["nets_best"]) + (f" ({', '.join(VLAB[k] for k in bv)})" if bv else "")
+                r1 = rt(l2r(v["dfg"], v["nets_best"])) if v.get("nets_best") is not None else "--"
+                r2 = rt(l2r(v["dfg"], v["v3"]))
+                core, dss = num(cs["core"][t]), num(cs["dfg_same_seeds"][t])
+                rc = num(cs["vs_dfg"]["ratios"][t]); chk.append((su, t, rc, l2r(core, dss)))
+                L.append(f"{tg(t)} & {ns(v['dfg'])} & {ns(v.get('v3'))} & {ns(v.get('lowdeg'))} & {ns(v.get('lin'))} & "
+                         f"{ns(v.get('hgb'))} & {nb} & {r1} & {r2} & {ns(core)} & {rt(rc)}\\\\")
+                rows_all += 1
+        L += ["\\bottomrule", "\\end{tabular*}"]
+        write(f"tab_targets_{part}", L)
+    for su, t, a, b in chk:                                         # the core's ratio as stored equals the one recomputed
+        assert (a is None and isinstance(b, float) and math.isnan(b)) or a == b or (fin(a) and fin(b) and abs(a - b) < 1e-9), (su, t, a, b)
+    assert rows_all == sum(R["q2_suites"][su]["targets"] for su in TOY)
+    note("tab_targets", rows=rows_all, parts={p: s for p, s in TARGET_PARTS})
+
+
+VERIF = [("atlas", "interp/VERIFY_ATLAS.json", "ATLAS.md", "VERIFY\\_ATLAS", "what the models contain: 37 targets, 407 fits"),
+         ("order", "interp/order/VERIFY_ORDER.json", "order/ORDER.md", "VERIFY\\_ORDER", "the order of acquisition, against the Part 5 networks"),
+         ("theory", "interp/theory/VERIFY_THEORY.json", "theory/THEORY.md", "VERIFY\\_THEORY", "the exact statements P1--P5 and their checks"),
+         ("calib", "interp/calib/VERIFY_CALIB.json", "calib/CALIB.md", "VERIFY\\_CALIB", "false admissions; where the compute goes"),
+         ("ablations", "interp/ablations/VERIFY_ABLATIONS.json", "ablations/ABLATIONS.md", "VERIFY\\_ABLATIONS", "the ablations and the core DFG")]
+
+
+@table
+def tab_verif():
+    """Appendix (provenance): the independent verifications of the Part 11 analyses, counted from the verifiers' own JSON
+    records (claims checked, confirmed, corrected; omissions listed).  A report whose verification record does not exist yet
+    is listed as not verified when the table was made, so that rerunning this function after a verification fills its row."""
+    L = ["\\begin{tabularx}{\\linewidth}{@{}ll>{\\raggedright\\arraybackslash}Xcccc@{}}", "\\toprule",
+         "report & verification & what it covers & \\hd{claims\\\\checked} & confirmed & corrected & \\hd{omissions\\\\listed}\\\\",
+         "\\midrule"]
+    counts = {}
+    for key, path, rep, ver, what in VERIF:
+        p = os.path.join(STUDY, "part11", path)
+        lab = f"\\texttt{{{rep.split('/')[-1].replace('_', chr(92) + '_')}}}"
+        if not os.path.exists(p):
+            L.append(f"{lab} & -- & {what} & \\multicolumn{{4}}{{c}}{{not verified when this table was made}}\\\\")
+            counts[key] = None; continue
+        J = json.load(open(p)); cl = J.get("claims", [])
+        st = [str(c.get("status", "")).lower() for c in cl]
+        conf = sum(1 for x in st if x.startswith("confirmed")); corr = sum(1 for x in st if x.startswith("corrected"))
+        other = len(st) - conf - corr
+        counts[key] = dict(claims=len(cl), confirmed=conf, corrected=corr, other=other, omissions=len(J.get("omissions", [])),
+                           verdict=str(J.get("verdict", ""))[:200])
+        L.append(f"{lab} & \\texttt{{{ver}}} & {what} & {len(cl)} & {conf} & {corr}" + (f" (+{other} other)" if other else "")
+                 + f" & {len(J.get('omissions', []))}\\\\")
+    L += ["\\bottomrule", "\\end{tabularx}"]
+    write("tab_verif", L)
+    note("tab_verif", counts=counts)
 
 
 # ---------------------------------------------------------------------------------------------------------------------------
