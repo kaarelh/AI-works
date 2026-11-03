@@ -85,6 +85,32 @@ def mc_blocks(d, p, ns, reps, seed=123):
     return res
 
 
+def mc_big(d, p, n, reps, seed=321):
+    """A larger null sample of the cheap round-0 statistics at one n: the degree-1 and degree-2 character classes (their
+    largest |v| sqrt(n) / s over the threshold sqrt(2 ln(4 K N / delta))), the linear block and the spectral block."""
+    rng = np.random.default_rng([seed, d, int(100 * p), n]); tt = math.log(1 / DELTA)
+    thr_lin = d + 2 * math.sqrt(d * tt) + 2 * tt
+    z1, z2 = math.sqrt(2 * math.log(4 * K * d / DELTA)), math.sqrt(2 * math.log(4 * K * math.comb(d, 2) / DELTA))
+    edge_f = 2 * math.sqrt(d / n) * (1 + math.sqrt(2 * math.log(1 / DELTA) / d)); iu = np.triu_indices(d, 1)
+    g1, g2, lin, quad = [], [], [], []
+    for _ in range(reps):
+        X = rng.choice([-1.0, 1.0], size=(n, d)); y = np.where(rng.random(n) < p, 1.0, -1.0)
+        r = y - y.mean(); s = math.sqrt(max(np.mean(r * r), 1e-12))
+        if s < 1e-6:
+            continue
+        c1 = X.T @ r / n; M = (X * r[:, None]).T @ X / n
+        g1.append(float(np.max(np.abs(c1))) * math.sqrt(n) / s / z1); g2.append(float(np.max(np.abs(M[iu]))) * math.sqrt(n) / s / z2)
+        lin.append(n * float(np.sum(c1 ** 2)) / s ** 2 / thr_lin)
+        if n >= 4 * d:
+            Ms = (M + M.T) / 2; np.fill_diagonal(Ms, 0.0); quad.append(float(np.max(np.abs(np.linalg.eigvalsh(Ms)))) / (s * edge_f))
+    out = dict(reps=len(g1))
+    for nm, v in (("g1", g1), ("g2", g2), ("lin", lin), ("quad", quad)):
+        v = np.array(v)
+        out[nm] = None if not len(v) else dict(passes=int(np.sum(v > 1)), med=float(np.median(v)), q99=float(np.quantile(v, 0.99)),
+                                              max=float(v.max()))
+    return out
+
+
 # ------------------------------------------------------------------------------------------------ (A1)
 def _kinds(feats):
     """Admission kinds present in a fit: chi_<class>, chi_forced, linear (the linear block's characters), quad, sum,
@@ -390,6 +416,13 @@ def tables(res):
             T.append(f"| {d} | {p} | {n} | {w['reps']} | {rate(w['lin_pass'], w['reps'])} | {w['lin_med']:.3f} | {qs} | {qm} |")
         T.append(f"| {d} | {p} | chi^2_{d} tail at the threshold {v['thr_lin']:.2f}: {v['lin_chi2_tail']:.4f} | | | | | |")
     T.append("")
+    T += ["## Null Monte Carlo, 20000 draws: round-0 degree-1 and degree-2 classes, linear and spectral blocks", "",
+          "| d | P(y=1) | n | draws | deg-1 passes (median / q99 / max ratio) | deg-2 passes | linear passes | spectral passes |", "|---|---|---|---|---|---|---|---|"]
+    for key, v in res.get("mc_big", {}).items():
+        d, p, n = key.split(":")
+        f = lambda w: "-" if w is None else f"{rate(w['passes'], v['reps'])} ({w['med']:.3f} / {w['q99']:.3f} / {w['max']:.3f})"
+        T.append(f"| {d} | {p} | {n} | {v['reps']} | {f(v['g1'])} | {f(v['g2'])} | {f(v['lin'])} | {f(v['quad'])} |")
+    T.append("")
     if "A1" in res:
         A = res["A1"]
         for (d, p) in sorted(set((v["d"], v["p"]) for v in A["by_cell"].values())):
@@ -531,6 +564,8 @@ def main():
     res["mc"] = {} if os.environ.get("CALIB_NOMC") else {
         f"{d}:{p}": mc_blocks(d, p, [64, 128, 256, 512, 1024, 4096, 16384] if d == 30 else [64, 256, 512, 1024, 4096],
                               2000 if d == 30 else 1000) for d in (30, 60) for p in (0.5, 0.8)}
+    res["mc_big"] = {} if os.environ.get("CALIB_NOMC") else {
+        f"{d}:{p}:{n}": mc_big(d, p, n, 20000) for d, ns_ in ((30, (128, 1024)), (60, (256, 1024))) for p in (0.5, 0.8) for n in ns_}
     if noise:
         res["A1"] = a1(noise)
     if spur:
