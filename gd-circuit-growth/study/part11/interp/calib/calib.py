@@ -356,11 +356,15 @@ def run_spur(suites=("designed", "random"), seed=0, fns=None, ns=None, path=None
 PROF = [("designed", "par4"), ("designed", "maj9"), ("designed", "mux"), ("designed", "stair5"), ("dlheld7", "f7_07"),
         ("dlheld7", "f7_08"), ("dlheld7", "f7_05"), ("noise", "p50")]
 PROF_NS = [64, 512, 4096, 16384]
+# the cells with the largest FLOP counts in the result files (seed 0 at n = 16384 of the suite's max-FLOP target)
+PROF_MAX = [("dlheld5", "h5s5"), ("dlfamdev", "fd_08"), ("designed", "thr10")]
 
 
-def run_prof(seed=0):
+def run_prof(seed=0, rep=0):
+    """rep > 0: a repeat of the instrumented fit only (CPU time is noisy on the shared machine; the tables use the
+    median over repeats), still checked against the result file."""
     M = load_instr(); FZ = E.load_dfg13(); path = os.path.join(RES, "prof.jsonl"); done = jl_keys(path)
-    for suite, name in PROF:
+    for suite, name in PROF + PROF_MAX:
         if suite == "noise":
             p, d = 0.5, 30; Xte, yte = noise_test(p, d); R = None
             data = lambda n: noise_data(p, d, seed, n); rngf = lambda n: np.random.default_rng([TH.fn_seed(noise_name(p, d)), seed, n, 77])
@@ -370,18 +374,23 @@ def run_prof(seed=0):
             R = json.load(open(os.path.join(P11, "results", f"toy__dfg13-perm__{suite}.json")))
             data = lambda n, fn=fn, name=name: TH.train_data(fn, name, seed, n, 30)
             rngf = lambda n, name=name: np.random.default_rng([TH.fn_seed(name), seed, n, 77]); perm = True
-        for n in PROF_NS:
-            key = f"{suite}:{name}:{n}:{seed}"
+        for n in (PROF_NS if (suite, name) in PROF else [16384]):
+            key = f"{suite}:{name}:{n}:{seed}" + (f":rep{rep}" if rep else "")
             if key in done:
                 continue
             X, y = data(n)
-            o2, cpu2, _ = fit_one(FZ, X, y, rngf(n), permuted=perm, record=False)          # the frozen module first
-            e2 = float(np.mean(np.asarray(o2["predict"](Xte)) != yte))
+            if rep == 0:
+                o2, cpu2, _ = fit_one(FZ, X, y, rngf(n), permuted=perm, record=False)      # the frozen module first
+                e2 = float(np.mean(np.asarray(o2["predict"](Xte)) != yte))
             out, cpu, calls = fit_one(M, X, y, rngf(n), permuted=perm, detail=False)
+            if rep:
+                o2, cpu2, e2 = out, float("nan"), None
             err = float(np.mean(np.asarray(out["predict"](Xte)) != yte))
-            rec = dict(key=key, suite=suite, target=name, n=n, seed=seed, err=err, flops=float(out["flops"]), cpu=cpu,
+            if rep:
+                e2 = err
+            rec = dict(key=key, suite=suite, target=name, n=n, seed=seed, rep=rep, err=err, flops=float(out["flops"]), cpu=cpu,
                        gd=float(TH.gd_flops(30)), frozen=dict(err=e2, flops=float(o2["flops"]), cpu=cpu2),
-                       equal_frozen=bool(e2 == err and o2["flops"] == out["flops"]),
+                       equal_frozen=bool(e2 == err and o2["flops"] == out["flops"]) if rep == 0 else None,
                        variant=int(out["info"].get("variant", 0)), rounds=int(out["info"]["rounds"]),
                        calls=[dict(n=c["n"], force=c["force"], hi=c["hi"], scale=c["scale"], flops=c["flops"],
                                    rounds_done=c["rounds_done"], size=c["size"], ovh=c["ovh"],
@@ -392,7 +401,7 @@ def run_prof(seed=0):
                 rec.update(err_file=R["fns"][name]["err"][a][b], flops_file=R["fns"][name]["flops"][a][b],
                            cpu_file=R["fns"][name]["cpu_seconds"][a][b])
                 rec["equal_file"] = bool(rec["err_file"] == err and rec["flops_file"] == out["flops"])
-            assert rec["equal_frozen"] and rec.get("equal_file", True), key
+            assert (rep or rec["equal_frozen"]) and rec.get("equal_file", True), key
             jl_append(path, rec)
             tot = {}
             for c in calls:
@@ -420,7 +429,8 @@ if __name__ == "__main__":
                  ns=[int(v) for v in opt["ns"].split(",")] if "ns" in opt else None, path=opt.get("out"))
     elif cmd == "prof":
         assert audit()["ok"]
-        run_prof()
+        for rp in rng_(opt.get("reps", "0")):
+            run_prof(rep=rp)
     elif cmd == "summarize":
         import calib_summary
         calib_summary.main()
