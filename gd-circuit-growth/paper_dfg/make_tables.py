@@ -100,11 +100,16 @@ def summ1(s):
     return "--" if not s else f"{mean_s(s['mean'])} ({s['better']}/{s['worse']})"
 
 
+def top2(a, b):
+    """A two-line table cell, top-aligned with its row: a above, b (scriptsize) below."""
+    return "\\begin{tabular}[t]{@{}c@{}}" + a + "\\\\{\\scriptsize " + b + "}\\end{tabular}"
+
+
 def summ2(s):
     """Two-line summary cell: mean on top, '(better/worse) [both reach]' below."""
     if not s:
         return "--"
-    return f"\\hd{{{mean_s(s['mean'])}\\\\{{\\scriptsize({s['better']}/{s['worse']}) [{s['both']}]}}}}"
+    return f"\\begin{{tabular}}[t]{{@{{}}c@{{}}}}{mean_s(s['mean'])}\\\\{{\\scriptsize({s['better']}/{s['worse']}) [{s['both']}]}}\\end{{tabular}}"
 
 
 def l2r(a, b):
@@ -155,8 +160,8 @@ def seed_mean(r, t):
 
 # ---- the suites' status for DFG v1.3 (study/part11/PROTOCOL.md "Held out", as RESULTS.json q2_suites v13_status) --------
 STATUS = {"development (v1.1, v1.2, v1.3)": "development", "development (v1.1)": "development",
-          "held out for an earlier version only": "held out for v1.1 only", "development (v1.2, v1.3)": "development",
-          "exposed (v1.2 built after exposure)": "exposed to v1.2", "development (v1.3)": "development",
+          "held out for an earlier version only": "\\begin{tabular}[t]{@{}l@{}}held out for\\\\v1.1 only\\end{tabular}", "development (v1.2, v1.3)": "development",
+          "exposed (v1.2 built after exposure)": "\\begin{tabular}[t]{@{}l@{}}exposed\\\\to v1.2\\end{tabular}", "development (v1.3)": "development",
           "**held out** (the only suite)": "\\textbf{held out}"}           # the labels of sections/protocol.tex, tab:status
 
 
@@ -377,7 +382,7 @@ def tab_suites():
         mm = [(num(S[k]["mean"]), k) for k in NETS if S.get(k) and fin(num(S[k]["mean"]))]
         if mm:
             lo, hi = min(mm), max(mm); rng_all[su] = dict(min=lo, max=hi, variants=[k for _, k in mm])
-            rng = f"\\hd{{${lo[0]:+.2f}$ / ${hi[0]:+.2f}$\\\\{{\\scriptsize({len(mm)} variants)}}}}"
+            rng = f"\\begin{{tabular}}[t]{{@{{}}c@{{}}}}${lo[0]:+.2f}$ / ${hi[0]:+.2f}$\\\\{{\\scriptsize({len(mm)} variants)}}\\end{{tabular}}"
         else:
             rng = "--"
         L.append(f"{code(su)} & {status(su)} & {o['targets']} & {o['dfg_never']} & {summ2(S.get('nets_best'))} & {rng} & "
@@ -823,8 +828,8 @@ def tab_compute():
          "median & " + " & ".join(f"{num(B[n]['flops_median']):.3f}" for n in NS_) + "\\\\",
          "max & " + " & ".join(f"{num(B[n]['flops_max']):.3f}" for n in NS_) + "\\\\",
          "\\multicolumn{" + str(1 + len(NS_)) + "}{@{}l}{\\emph{CPU s per fit: median (max)}}\\\\",
-         "DFG alone & " + " & ".join(f"\\hd{{{num(B[n]['cpu_median']):.2f}\\\\{{\\scriptsize({sec(B[n]['cpu_max'])})}}}}" for n in NS_) + "\\\\",
-         "v3 & " + " & ".join(f"\\hd{{{num(B[n]['v3_cpu_median']):.2f}\\\\{{\\scriptsize({sec(B[n]['v3_cpu_max'])})}}}}" for n in NS_) + "\\\\",
+         "DFG alone & " + " & ".join(top2(f"{num(B[n]['cpu_median']):.2f}", f"({sec(B[n]['cpu_max'])})") for n in NS_) + "\\\\",
+         "v3 & " + " & ".join(top2(f"{num(B[n]['v3_cpu_median']):.2f}", f"({sec(B[n]['v3_cpu_max'])})") for n in NS_) + "\\\\",
          "\\begin{tabular}[b]{@{}l@{}}median of the paired\\\\ratio DFG alone / v3\\end{tabular} & "
          + " & ".join(f"{num(B[n]['paired_ratio_median']):.2f}" for n in NS_) + "\\\\",
          "\\bottomrule", "\\end{tabular}"]

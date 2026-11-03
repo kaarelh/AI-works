@@ -4,9 +4,9 @@ Part 11, Q7 (PROTOCOL.md): "false admissions: DFG on labels independent of the i
 object is DFG v1.3 run alone: `part10/hyb_portfolio3/dfg13.py`, md5 `69cabe5c50345cb24079198ed52b562f`, as
 `DFG(readout="logit").fit` (its own cross-validation at n ≤ 512, kernel background and budget), loaded by
 `part11/eval_dfg.load_dfg13()` (md5 checked). Written 3 November 2026. The record-writing job was killed by a container
-restart at about 01:09 UTC with A1 at d = 60 (8 of 220 fits), B (32 of 105 records) and the cascade check (0 of 800)
-unfinished; they were resumed from the records (keys already written are skipped, so no cell was fitted twice), and
-every table was regenerated from the complete records. Not yet checked by independent verifiers.
+restart at about 01:09 UTC with A1 at d = 60 at 8 of 220 fits and B at 32 of 105 records, and the cascade check of
+§1.5 written but not yet run; they were completed from the records (keys already written are skipped, so no cell was
+fitted twice), and every table was regenerated from the complete records. Not yet checked by independent verifiers.
 
 Labels: **Proved** (a proof is given), **Numerical** (measured; the source file is named), **Heuristic** (my reading).
 Every count is given with its denominator; intervals are two-sided 95% Clopper–Pearson.
@@ -216,7 +216,7 @@ per cell.
 (Numerical, `calib.json` `A1.by_class`, `A1.by_class_pooled`, `nominal`; Gaussian reference Heuristic.) Round 0 of
 the final fit, d = 30, both p, all n where the class runs (degrees 3–4 need m ≥ 32 rows, degrees 5–6 m ≥ 64):
 
-| class | N | round-0 tests | fits with ≥ 1 pass | bound δ/(2K) (P-A) | independent-Gaussian approx. | median max-ratio, p = 0.5, n ≥ 128 | Gaussian reference |
+| class | N | round-0 tests | fits with ≥ 1 pass | bound δ/(2K) (P-A) | independent-Gaussian approx. | median max-ratio, p = 0.5: range over n ≥ 128 | Gaussian reference |
 |---|---|---|---|---|---|---|---|
 | degree 1 | 30 | 440 | 2 (0.0006–0.016) | 0.0125 | 0.0012 | 0.524–0.603 | 0.553 |
 | degree 2 | 435 | 440 | 0 (≤ 0.0083) | 0.0125 | 0.0010 | 0.633–0.681 | 0.669 |
@@ -259,8 +259,8 @@ and n = 256, 1024 (d = 60) for each p). The last column is P(X ≥ observed) for
   which it runs. A reading (Heuristic; `calib_tables.txt`, "Spectral block, a heuristic"): the edge 2s√(d/n) is the
   semicircle edge of a matrix with iid entries, but the pair matrix is a weighted sum of n rank-one matrices x_i x_iᵀ
   with weights r_i. With P(y = 1) = 0.8 the 20% minority rows carry weight r ≈ −1.6 (the others +0.4); their part is
-  1.6·0.2·(W − I) for the Gram matrix W of 0.2n rows, whose Marchenko–Pastur edge puts its extreme eigenvalue near
-  1.6·0.2·((1 + √(d/(0.2n)))² − 1). This is 0.99 of DFG's edge (margin factor included) at d = 30, n = 128 and 1.08 at
+  −1.6·0.2·(W − I) for the Gram matrix W of those 0.2n rows (W has unit diagonal), whose Marchenko–Pastur edge puts its
+  most negative eigenvalue near −1.6·0.2·((1 + √(d/(0.2n)))² − 1). This is 0.99 of DFG's edge (margin factor included) at d = 30, n = 128 and 1.08 at
   d = 60, n = 256, where the null pass rates are 5.7% and 48%; 0.89 and 0.97 at the next n (0.4% and 9.0%); and at most
   0.74 with balanced labels (0 passes). DFG's margin factor 1 + √(2 ln(1/δ)/d) is 1.39 at d = 30 and 1.28 at d = 60.
 - **The sum-block tests never passed on noise**: the largest T / threshold over all searches is 0.86 in round 0 and
@@ -274,7 +274,7 @@ without the degree-5/6 search and with 1/(4F) of the budget each.
 
 | d = 30 | default fold fits with an admitted feature | forced fold fits with a test-passed feature after the forced ones |
 |---|---|---|
-| p = 0.5 | 2/900 (a degree-1 character; the linear block) | 12/900 (0.007–0.023): the local class in 9 fits; linear block 2, two-input extension 1, degree 1 1 |
+| p = 0.5 | 2/900 (a degree-1 character; the linear block) | 12/900 (0.0069–0.023): the local class in 9 fits; linear block 2, two-input extension 1, degree 1 1 |
 | p = 0.8 | 9/900 (linear block 3, spectral 3, sum blocks 2, degree 1) | **238/900** (0.236–0.295; n = 32: 121/200; 64: 73/200; 128: 28/100; 256: 15/100; 512: 1/100): the local class in 205, sum blocks in 24, the linear block 3, spectral 4, one-input extension 2, degree 1 1 |
 
 The forced fold fits forced a character in 900 of 900 (p = 0.5) and 813 of 900 (p = 0.8), a sum block in 11 and 179.
@@ -285,27 +285,65 @@ character, DFG's local test recomputed twice: on V = the inputs of the forced ch
 random characters of the same degrees (least squares on the constant and those characters, then every subset of V not
 in the model against `thr(C(|V|, |T|))`, as `_fit` does):
 
-| P(y=1) | n | DFG: fits with a local pass | after the 1st forced character: forced V / random V | after the 2nd: forced V (median max-ratio) | random V (median) |
-|---|---|---|---|---|---|
-| 0.5 | 29 | 4/200 | 0/166 / 0/166 | 4/200 (0.51) | 1/200 (0.49) |
-| 0.5 | 58 | 2/200 | 0/189 / 0/189 | 2/197 (0.61) | 1/197 (0.64) |
-| 0.8 | 29 | 116/200 | 0/147 / 0/147 | **146/199** (1.17) | **0/199** (0.48) |
-| 0.8 | 58 | 99/200 | 0/133 / 0/133 | **98/135** (1.16) | **0/135** (0.61) |
+| P(y=1) | n | DFG: fits with a local pass | after the 1st forced character: forced V | random V | after the 2nd: forced V (median max-ratio) | random V (median) |
+|---|---|---|---|---|---|---|
+| 0.5 | 29 | 4/200 | 0/166 | 0/166 | 4/200 (0.51) | 1/200 (0.49) |
+| 0.5 | 58 | 2/200 | 0/189 | 0/189 | 2/197 (0.61) | 1/197 (0.64) |
+| 0.8 | 29 | 116/200 | 0/147 | 0/147 | **146/199** (1.17) | **0/199** (0.48) |
+| 0.8 | 58 | 99/200 | 0/133 | 0/133 | **98/135** (1.16) | **0/135** (0.61) |
 
 - Every local character DFG admitted in these fits came after two forced characters A, B and has degree |A Δ B|
   (4/4, 2/2, 116/116, 98/98); where A and B are disjoint (4/4, 2/2, 114/116, 76/98 of those fits) the only subset of
   V = A ∪ B of that degree is V itself, so the admitted character is exactly χ_A χ_B. (At n = 58 and p = 0.8, 64 of
   the 200 fits forced a sum block instead of one or both characters.)
 - So at p = 0.8 the local test passes after selected characters (244 of 334) and not after random ones of the same
-  degrees (0 of 334): the excess comes from the selection. A reading (Heuristic): with P(y = 1) = 0.8 the residual's large entries are the minority rows (r ≈ −1.6 against +0.4),
-  and the character that best correlates with it is one that is nearly constant on those rows; so is the second, and
-  then so is their product, which least squares on {1, χ_A, χ_B} leaves in the residual and which the local class tests
+  degrees (0 of 334): the excess comes from the selection. A reading (Heuristic): with P(y = 1) = 0.8 the residual's
+  large entries are the minority rows (r ≈ −1.6 against +0.4), and the character that best correlates with it is one
+  that is nearly constant on those rows; so is the second, and then so is their product, which least squares on {1, χ_A, χ_B} leaves in the residual and which the local class tests
   with N = 1 (threshold z = √(2 ln 160) = 3.19 when A, B are disjoint). With balanced labels a character aligned with
   the residual is aligned with y, and the product of two such characters with y² = 1, the constant.
 - The paired test protects the final fit: at p = 0.8 the cross-validation chose the forced variant in 0 of 120 fits.
-  ⟦D60 forced⟧
+  At d = 60 the forced fold fits held a test-passed feature after the forced ones in 14 of 450 (p = 0.5; 12 of them
+  local characters) and 150 of 450 (p = 0.8; 132 local), and in one final fit, where the paired test had chosen the
+  forced variant, the local class admitted the product of the two forced characters (§1.6).
 
-⟦D60 SECTION⟧
+### 1.6 d = 60 (the smaller check)
+
+(Numerical, `results/noise.jsonl`, `calib.json` `A1.by_cell`, `A1.totals`, `A1.by_class_pooled`, `A1.folds_total`;
+full tables `calib_tables.txt`.) 10 fits per (p, n), 220 in all; the frozen module was refitted for seeds 0 and 1 of
+every cell (44 of 44 equal).
+
+| n | p = 0.5: fits with a test-passed feature (what) | CV chose forced | test error | p = 0.8: fits with a test-passed feature (what) | P(predict −1) | test error |
+|---|---|---|---|---|---|---|
+| 16–128 | 0 | 1/40 (n = 64) | 0.497–0.503 | 0 | 0.384 → 0.153 | 0.432 → 0.292 |
+| 256 | 1 (a degree-2 character) | 0/10 | 0.500 | **5** (the spectral block, 1–3 features each) | 0.078 | 0.247 |
+| 512 | 1 (a degree-7 local character: the two forced ones' product) | 1/10 | 0.502 | 0 | 0.016 | 0.209 |
+| 1024 | 1 (linear block, 60 characters) | – | 0.496 | 0 | 0.002 | 0.201 |
+| 2048 | 1 (linear block) | – | 0.496 | 1 (linear block) | 0 | 0.200 |
+| 4096 | 0 | – | 0.497 | 0 | 0 | 0.200 |
+| 8192 | 1 (linear block) | – | 0.497 | 0 | 0 | 0.200 |
+| 16384 | 0 | – | 0.497 | 0 | 0 | 0.200 |
+| all | **5/110** (0.015–0.103) | 2/60 | | **6/110** (0.020–0.115); CV chose forced 0/60 | | |
+
+- **The character classes** (degrees 1–4; the degree-5/6 search does not run at d = 60, its budgeted m being at most 47
+  and 2 rows) passed in round 0 in 1 of 840 class searches: 0/220 of degree 1, 1/220 of degree 2 (n = 256, p = 0.5), 0/200 of
+  degrees 3 and 4. The 80000-draw nulls give 0.096% and 0.072% per test for degrees 1 and 2 (P(X ≥ 1) = 0.147 for the
+  degree-2 pass). Later rounds ran 17, 21 and 21 tests of degrees 1–3, 10 one-input and 10 two-input extension tests
+  and 6 local tests; the one pass is the local character below.
+- **The block tests**: the linear block passed 4 times in 160 round-0 tests (ratios 1.01, 1.11, 1.04 at p = 0.5 and
+  1.03 at p = 0.8), as its 1.04% null rate predicts (§1.4); the spectral block in 5 of the 10 biased fits at n = 256,
+  the first n with n ≥ 4d, where its null rate is 48% (§1.4); 6 of the 12 later-round spectral tests at p = 0.8 passed
+  too, all in those 5 fits (1–3 spectral features per fit).
+- **The forced variant's product in a final fit**: at n = 512, p = 0.5, seed 5, the paired test chose the forced
+  variant; its two forced characters (degrees 4 and 3) were followed in the next round by a local character of degree
+  7, i.e. their product (§1.5), with test error 0.494.
+- **Test error**: balanced 0.496–0.503 by n (the test set has P(y = −1) = 0.4995); biased 0.432 at n = 16, falling to
+  the minority rate 0.2002 from n = 2048 on. The kernel background's excess is larger than at d = 30 (P(predict −1)
+  0.384 at n = 16 against 0.234), as Φ(−w₀√n/(s√d)) predicts.
+- **Fold fits**: the default variant's fold fits admitted something in 2 of 450 (p = 0.5) and 8 of 450 (p = 0.8; 7 of
+  them spectral features); the forced variant's held a test-passed feature after the forced ones in 14 of 450
+  (0.017–0.052; 12 local characters) and 150 of 450 (0.290–0.379; 132 local, 9 spectral, 7 sum blocks, 2 two-input
+  extensions, 1 linear block).
 
 ## 2. (A2) Spurious features on the designed and random targets
 
@@ -368,8 +406,8 @@ in the model against `thr(C(|V|, |T|))`, as `_fit` does):
 (Numerical, `calib.json` `A2.top_terms`, `A2.spur_excl_lin_by_cat_round`, `A2.r0_chi_test_spur`, `A2.r0_class_searches`;
 the term lists in `calib_tables.txt`.)
 - **The linear block's characters: 961 of the 1047** spurious terms. The block tests the whole degree-1 vector at once
-  and then adds every input not yet in the model, so a target with any degree-1 weight brings in its 20–29
-  irrelevant inputs. It entered in 10 fits at n = 64, 8 at 128, 7 at 256, 4 at 512, 3 at 1024 and 2 at each n from
+  and then adds every input not yet in the model, so whenever it passes, the target's 20–29 irrelevant inputs come
+  in with its relevant ones. It entered in 10 fits at n = 64, 8 at 128, 7 at 256, 4 at 512, 3 at 1024 and 2 at each n from
   2048 on. Its share is at most 0.80 at n = 64 (rand1; and3 0.715, maj3 0.536, rmaj9 0.501, thr10 0.459, maj9 0.442,
   dlist5 0.441, rf15 0.441, rf08 0.425, rf13 0.001) and at most 0.031 from n = 2048 on. Once it entered on a target
   with no degree-1 weight at all: par3 at n = 16384, in round 0 next to the parity character, at ratio 1.04 (share
@@ -382,7 +420,7 @@ the term lists in `calib_tables.txt`.)
   a spurious term is in the model, its residual correlates with characters on its irrelevant inputs. In 7 of the 23
   fits with a spurious term (other than the linear block's) admitted after round 0, an earlier round had admitted a
   spurious term.
-- **Spectral features: 20** (1 in round 0, 19 later; 15 of them at n = 128–256), with 15–59% of |u|² on relevant
+- **Spectral features: 20** (1 in round 0, 19 later; 15 of them at n = 128–256), with 7–59% of |u|² on relevant
   inputs (dnf3 at 16384: 89%), shares ≤ 0.17 (rf00 at 128) and ≤ 0.033 from n = 512 on.
 - **Sum blocks: 52** (19 in round 0, 33 later): 21 modulated blocks at n = 128–1024 whose sum or modulator includes
   irrelevant inputs (largest share 0.244, rand3 at 128; test error 0.049), 6 additive blocks at 256–1024, and 25
@@ -512,9 +550,9 @@ same 8 cells:
 - No fit uses more than 0.519 of a network run (dlheld5's h5s5 at n = 16384, seed 2); at d = 30 every fit at
   n ≤ 512 stays below 0.096. Every largest-FLOP cell is at n = 16384.
 - DFG's own cap (a round starts only while a `_fit` call has spent ≤ 0.75 of its budget, `gd_flops(d)` × scale) never
-  binds where it was recorded: no stop by it in any of the 5715 recorded `_fit` calls (A1: ⟦A1 calls⟧ final and fold
-  fits; A2: 451 final fits; B: 275), and the largest share of its own budget any of them spent is 0.471 (fd_08, a final
-  fit) and 0.312 for a fold fit (`calib.json` `budget_cap`). For the result files' fits at n > 512 (one `_fit` call
+  binds where it was recorded: no stop by it in any of the 6786 recorded `_fit` calls (A1: 660 final and 5400 fold
+  fits; A2: 451 final fits; B: 35 final and 240 fold fits), and the largest share of its own budget any of them spent is
+  0.471 (fd_08, a final fit) and 0.313 for a fold fit (`calib.json` `budget_cap`). For the result files' fits at n > 512 (one `_fit` call
   each, ≤ 0.519 of a network run) it cannot bind; at n ≤ 512 the final fit's budget is 0.5 of a network run and every
   fit stays below 0.096 in all, while the fold fits' calls are not in the result files.
 - The *median* fit at d = 30 is the same in every suite: 0.025–0.026 at n = 64, 0.079–0.085 at n = 4096, 0.138–0.182
