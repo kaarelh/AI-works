@@ -182,6 +182,13 @@ def sec_3(DM, dfg):
         say(f"subsample caps at {lab}: degree 5 {caps[0]}, degree 6 {caps[1]} rows; degree 3 {c3}, degree 4 {c4} rows")
     say(f"DFG constants: K {dfg.K}, K_later {dfg.K_later}, K_hi {dfg.K_hi}, c {dfg.c}, delta {dfg.delta}, cv_n {dfg.cv_n}, "
         f"local_max {dfg.local_max}")
+    need = lambda fn, ch: (2 * math.log(4 * dfg.K * math.comb(d, T[fn]["deg"][ch]) / dfg.delta) * (1 - T[fn]["yconst"] ** 2)
+                           / T[fn]["yhat"][ch] ** 2)
+    say("rows the round-0 global test needs, before the subsample caps (sec. 4.3 majpar, sec. 6 step 3):",
+        {f"{fn} {ch}": round(need(fn, ch), 1) for fn, ch in (("majpar", "x1x2x3x4x5x6"), ("parmaj", "x1x2x3x4x5x6"),
+                                                              ("sparsepoly", "x1x2x3x4x5x6"), ("sparsepoly", "x2x3x4x5x6"))},
+        "; n_glob in the tables:", {f"{fn} {ch}": r2(F(T[fn]["nglob"][ch]), 1) for fn, ch in (("majpar", "x1x2x3x4x5x6"),
+                                                                                          ("parmaj", "x1x2x3x4x5x6"))})
 
 
 def sec_4_2():
