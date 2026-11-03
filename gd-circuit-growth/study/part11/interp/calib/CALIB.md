@@ -26,22 +26,31 @@ Every count is given with its denominator; intervals are two-sided 95% Clopper�
 ## Short answer
 
 - **The instrumented copy is the frozen learner** (Numerical, §0). Every fit made with it equals a fit of the frozen
-  module on the same data, or the evaluation's result file, in test error and FLOP count: ⟦A1 frozen⟧ A1 fits, 451 of
+  module on the same data, or the evaluation's result file, in test error and FLOP count: 88 of 88 A1 fits, 451 of
   451 A2 fits, 35 of 35 B cells against the frozen module and 31 of 31 (93 of 93 records) against the result files.
-- **On balanced labels independent of the inputs, nothing passes a test** at d = 30: 0 of 220 final fits (95% ≤ 0.017)
-  have a test-passed feature; ⟦D60 short⟧. The round-0 character classes have level ≤ δ/(2K) = 0.0125 each
-  (P-A, Proved); pooled over both label rates at d = 30 they fired in 2 of 2400 class searches (both degree 1, at
-  P(y = 1) = 0.8), against ≈ 0.001 per class from an independent-Gaussian approximation.
-- **On biased labels (P(y = 1) = 0.8) the two dense block tests fire at small n** (Numerical, §1.2, §1.4): 6 of 220
-  final fits at d = 30 (0.010–0.058) admitted something: the linear block twice (n = 64, 128), the spectral block twice
-  (n = 128) and a degree-1 character twice. ⟦MC short⟧
+- **The character tests hold their level on noise** (P-A, Proved; Numerical, §1.3, §1.6). Each round-0 class of
+  characters has level ≤ δ/(2K) = 0.0125. In the final fits the classes passed in 2 of 2400 round-0 class searches at
+  d = 30 and 1 of 840 at d = 60 (both label rates), against 0.07–0.11% per class in 80000-draw nulls of the degree-1
+  and degree-2 classes, and ≈ 0.1% per class from an independent-Gaussian approximation.
+- **On balanced labels nothing passes a test at d = 30**: 0 of 220 final fits (95% ≤ 0.017) have a test-passed
+  feature. At d = 60, 5 of 110 (0.015–0.103): the linear block 3 times, a degree-2 character once, and once the product
+  of the forced variant's two characters.
+- **The false admissions are the dense block tests'** (Numerical, §1.2, §1.4, §1.6). The linear block passes at the
+  exact χ²_d tail of its Laurent–Massart threshold (0.84% at d = 30, 1.04% at d = 60 in 80000-draw nulls; 2 of 360 and
+  4 of 160 round-0 tests in the fits), not at its nominal δ = 0.1. The spectral block's edge has no proved level: on
+  balanced labels it never passed (null ≤ 0.00015), but on biased labels (P(y = 1) = 0.8) near n = 4d its null pass
+  rate is 5.7% at d = 30 (n = 128) and 48% at d = 60 (n = 256), falling to 0 by n = 1024 (d = 30) and 4096 (d = 60);
+  the fits agree (2 of 20 and 5 of 10). Together they make all 6 test-passed admissions among the 220 biased fits at
+  d = 30 except two degree-1 characters, and 5 of the 6 at d = 60. The sum-block tests never passed (0 of 2000 round-0
+  searches, 0 of 153 later; largest T / threshold 0.93).
 - **The forced variant is not calibrated after its forced characters** (Numerical, §1.5): in its fold fits the local
   class admits the product of the two forced characters. At P(y = 1) = 0.8, 238 of 900 forced fold fits (d = 30) hold
   a test-passed feature after the forced ones (205 of them local characters); in 400 fold-sized re-runs the local test
   after the second forced character passes in 244 of 334, and after two random characters of the same degrees in 0
   of 334. Every admitted local character has degree |A Δ B| for forced A, B, and where A and B are disjoint (190 of
-  214) it is χ_A χ_B. The cross-validation never chose the forced variant at P(y = 1) = 0.8 (0 of 120) and chose it in 5
-  of 120 balanced fits (two forced characters each, test error 0.491–0.500).
+  214) it is χ_A χ_B. The cross-validation never chose the forced variant at P(y = 1) = 0.8 (0 of 120 at d = 30, 0 of 60
+  at d = 60) and chose it in 5 of 120 balanced fits at d = 30 (two forced characters each, test error 0.491–0.500) and 2
+  of 60 at d = 60, one of which then admitted the product.
 - **Test error on fresh noise** (Numerical, §1.2): balanced labels 0.497–0.504 by n (the test set has P(y = −1) =
   0.4895); biased labels 0.339 at n = 16, falling to the test minority rate 0.1946 from n = 1024 on. The excess is the
   kernel background's random direction, not admitted features: err = a + q(1 − 2a) (a = 0.1946, q = P(predict −1))
@@ -66,7 +75,7 @@ Every count is given with its denominator; intervals are two-sided 95% Clopper�
   17.4 s), where the FLOP count is smallest.
 - **Every suite** (Numerical, §3.4): no fit of the 4730 in the result files uses more than 0.519 of a network run
   (h5s5, n = 16384, seed 2); at d = 30 every fit at n ≤ 512 stays below 0.096. DFG's own cap (a round starts only below
-  0.75 of the call's budget) stopped none of the 5715 recorded `_fit` calls; the largest spent 0.471 of its budget.
+  0.75 of the call's budget) stopped none of the 6786 recorded `_fit` calls; the largest spent 0.471 of its budget.
 
 ## 0. What was measured, and how
 
@@ -77,7 +86,7 @@ Every count is given with its denominator; intervals are two-sided 95% Clopper�
   - against the evaluation's merged result files (A2: all 451 seed-0 cells of the designed and random suites; B:
     every profiled cell of a suite, in each of its three records);
   - against a fit of the frozen module on the same data in the same process (B: every profiled cell; A1: seeds 0 and
-    1 of every (d, p, n), ⟦A1 frozen⟧ fits).
+    1 of every (d, p, n), 88 fits).
   All checks are equal.
 
 **Regions** (B). `DFG._fit` is cut into consecutive regions by `REC.enter(name)`; the FLOP-counter increments and

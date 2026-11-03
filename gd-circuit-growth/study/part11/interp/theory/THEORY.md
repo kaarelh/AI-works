@@ -527,8 +527,9 @@ whose statistic sees higher degrees, but only along these starting points. The s
 
 In round 0, for iid rows, exactly E[M_ij] = f̂({i, j})(1 − 1/(n + 10⁻⁹)) for i ≠ j, and
 E[c₁ᵢ] = f̂({i})(1 − 1/(n + 10⁻⁹)), by the same computation as P3a. On S×S the expected pair
-matrix is a₂(1 − 1/n)(σσᵀ − I) with σ the sign vector. Its largest eigenvalue in absolute value is |a₂|(k − 1)(1 − 1/n),
-while each entry's noise has standard deviation ≈ s/√n.
+matrix is a₂(1 − 1/n)(σσᵀ − I) with σ the sign vector. Its largest eigenvalue in absolute value is |a₂|(k − 1)(1 − 1/n).
+Off S×S each entry has, given y, mean 0 and standard deviation exactly s/√n (when s² = mean r²): its x_i x_j is then a
+fair sign independent of y.
 
 **The three residue-class targets, exactly** (Numerical, exact; `P4.targets`). The W_j are computed as rationals from
 P4d. They equal the Walsh–Hadamard transform of each target's own function on all 2^k patterns, and the closed form P4e
