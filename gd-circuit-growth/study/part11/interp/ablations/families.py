@@ -16,6 +16,10 @@ Assignment rules (from the definitions): a threshold of an unweighted or weighte
 halfspace (f7_01 = [s <= 1] and fd_01 = [s >= 0] on unsigned sums, as the atlas puts f7_01); an even or arbitrary accept
 set of a signed sum is symmetric / pure signed-sum; a sum combined with anything else is a mixture; the blind family's
 non-symmetric controls (read-once formula, DNF, decision list) and Part 1-10's DNF, CNF and decision lists are formulas.
+One exception, found by the independent verification (VERIFY_ABLATIONS.md, omission 1): f7_10 = [x1+...+x5 + 2 x6 <= -1]
+is a threshold of a weighted sum, so a halfspace by the first rule, but it is counted as a mixture, where the atlas
+puts it (ATLAS.md 1.9: the blind family writes it as s + 2 tau with a literal inner term).  ablations.json
+'verification.f7_10_as_halfspace' gives every class mean with f7_10 counted as a halfspace instead.
 """
 GROUPS = ["Parities", "Staircases", "Multiplexers (address and data bits)", "Majorities and halfspaces", "Compositions",
           "DNF, CNF, decision lists, read-once formulas", "Random formulas", "Symmetric and pure signed-sum targets",

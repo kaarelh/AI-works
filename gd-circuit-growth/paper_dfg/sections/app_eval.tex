@@ -1,0 +1,104 @@
+\clearpage
+\section{The evaluation in full}\label{app:eval}
+
+This appendix gives the parts of the evaluation that \cref{sec:protocol} summarizes: the suites (\cref{app:suites}), the references (\cref{app:refs}), and the protocol's questions with the status of every set (\cref{app:questions}).
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{The suites}\label{app:suites}
+
+The 11 toy suites (\cref{sec:tasks}) are:
+\begin{itemize}
+\item \code{designed} (21), the study's original targets (Parts 1--5): a dictator, AND and majority of 3 inputs, \code{maj9}, a halfspace with Gaussian weights on 10 inputs, parities of 2--4 inputs, a staircase, compositions of parities and majorities, a multiplexer, a DNF, a decision list, a sparse polynomial threshold and four random 6-gate formulas.
+\item \code{random} (20): random fan-in-2 AND/OR/XOR formulas with 3--8 gates, written in Part 3. Each formula's number $k$ of inputs was drawn from 4--8, and a formula was kept if $|\E f|\le0.5$ and it depended on at least $k-1$ of its inputs; all 20 kept formulas have $k=4$ or 5 (\code{boolfuncs.make_random_suite}).
+\item \code{dlheld}, \code{dlheld2}, \code{dlheld3} (12, 7, 10): dense halfspaces and majorities, compositions of majorities, a 5-bit parity, the 6- and 11-multiplexers, a staircase, an intersection of two halfspaces, a DNF and a CNF, a decision list, an integer-weight threshold, symmetric functions such as $[|x_1+\dots+x_9|\le1]$, parities mixed with gates, and random formulas.
+\item \code{dlsymdev} (8) and \code{dlheld4} (12): symmetric and signed-sum targets with threshold, band, tail and exact-count accept sets, some combined with a parity, a gate or a second sum; \code{dlheld4} adds 3 non-symmetric controls.
+\item \code{dlheld5} (12), drawn from a random family: 8 functions of a signed sum of 5--13 inputs with a random accept set, two of them combined with a gate; 2 thresholds of a signed sum plus twice a parity; and 2 random formulas as controls.
+\item \code{dlheld6}, \code{dlfamdev}, \code{dlheld7} (12 each): three draws, with seeds 52817, 61616 and 70707, from the blind family.
+\end{itemize}
+
+\emph{The blind family} is a random generator of signed-sum targets. An agent that had not seen DFG's sum-block design wrote it in Part 9, from the pre-registered one-line description of a held-out suite, before drawing from it (\repo{study/part9/heldout6/FAMILY.md}). Each draw has 12 slots.
+\begin{itemize}
+\item \emph{Nine structured slots}, built from functions $g(s)$ of a signed sum $s=\sum_i\epsilon_ix_i$ of 4--14 inputs: $g(s)$ alone (3 slots); $g(s)$ times a parity (2); $g(s)$ with a gate, that is an AND or OR with one or two literals, a majority with two literals, or a multiplexer between two sums (2); and composite sums (2), either $A(s+a\tau)$ with an inner term $a\tau$, $a\in\{2,3\}$, $\tau$ a literal, a 2-parity or an AND of two literals, or two sums joined by XOR, AND or OR.
+\item \emph{Three non-symmetric controls}: a read-once formula, a DNF and a decision list.
+\end{itemize}
+Each $g$ has an accept set drawn uniformly from five types: a threshold, a centred band, an interval, a residue class mod 3 or 4, and an arbitrary set. $A$ is a threshold or a band. Targets have 5--14 relevant inputs, and the only rejection rule is $P(f=+1)\in[0.25,0.75]$.
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{The references}\label{app:refs}
+
+\paragraph{Where each network variant was run.} The five variants of \cref{sec:refs} were run as follows:
+\begin{itemize}
+\item \code{nets}: square loss. It was run on every suite except \code{dlheld7} and \code{dlfamdev}, and it is the only variant run at $d\ne30$.
+\item \code{nets_wd}: square loss with decoupled weight decay 0.1 \cite{loshchilov2019adamw}; every suite except \code{dlfamdev}.
+\item \code{nets_cewd}: logistic loss with weight decay 0.1; \code{dlheld3}--\code{dlheld6} and \code{dlsymdev}.
+\item \code{nets_cewd0.3}, \code{nets_cewd1.0}: logistic loss with weight decay 0.3 and 1.0; \code{dlheld6} and \code{dlheld7}.
+\end{itemize}
+\code{nets_best}, the per-target variant with the smallest $\nstar$, is a minimum over 2 variants on \code{designed}, \code{random}, \code{dlheld} and \code{dlheld2}, over 3 on \code{dlheld3}--\code{dlheld5} and \code{dlsymdev}, over 5 on \code{dlheld6}, and over the 3 that Part 10 pre-registered on \code{dlheld7}: a hindsight choice that favours the networks.
+
+\paragraph{The no-search baselines.} \code{lin} is L2-regularized logistic regression on the raw inputs, its penalty chosen by 5-fold cross-validation (2-fold when a class has fewer than 5 training points) over 10 values. \code{hgb} is scikit-learn's histogram gradient boosting at default settings \cite{pedregosa2011sklearn} (both in \repo{study/hybrid/refs.py}). Neither searches an explicit feature dictionary: \code{lin} searches no features at all, and \code{hgb} only through greedy splits on single inputs. So they show which targets need no dictionary search. Both were run in Parts 8--10, with the columns in their natural order. \code{hgb} has no runs on \code{designed}, \code{dlsymdev} and \code{dlfamdev}, and \code{lin} none on \code{dlfamdev}.
+
+\paragraph{The low-degree algorithm, step by step.} \code{lowdeg} (\repo{study/discrete_learner/sparse_fourier.py}) is Part 6's first feasibility check, run unchanged with the inputs permuted per fit. It is the low-degree algorithm \cite{linial1993constant} with a significance threshold:
+\begin{enumerate}
+\item compute the empirical Fourier coefficients of the labels, $\hat c_S=\frac1n\sum_ty_t\chi_S(x_t)$, for every $S$ with $|S|\le4$;
+\item keep $S$ if $|\hat c_S|>\sqrt{2\ln(\binom d{|S|}/\delta)/n}$ with $\delta=0.1$, a union bound over the characters of that degree;
+\item compose: the products $\chi_{S_1}\chi_{S_2}=\chi_{S_1\triangle S_2}$ of two kept characters, where they have degree above 4, are tested in the same way, with the number of such candidates in place of $\binom d{|S|}$, and this is repeated, at most 4 times, while something new is kept;
+\item predict $\mathrm{sign}\bigl(\hat c_\emptyset+\sum_{S\text{ kept}}\hat c_S\chi_S\bigr)$.
+\end{enumerate}
+It shares DFG's global characters up to degree 4 and the form of its test, and nothing else. It tests the labels, not a residual, so its noise scale is 1 in place of $s$, and its union bound has no factor $4K$. It has no greedy rounds, extension or local classes, sum blocks or block moves, and no refitted readout, kernel background or small-$n$ variant. Its FLOPs are counted in the same way as DFG's.
+
+\paragraph{Portfolios that contain DFG.} v3 (\code{hyb_portfolio3}, Part 10 \cite{portfoliolearner2026}) is the stacked portfolio whose Boolean member is DFG v1.3. DFG's default and forced variants are two of its members, next to LightGBM, ExtraTrees, nearest-neighbour votes and logistic regression on the raw columns. A convex stacker combines them, and DFG has a share of the budget. v2 (\code{hyb_portfolio2}, Part 9) and v1 (\code{hyb_portfolio}, Part 8) are the earlier portfolios, with DFG v1.2 and v1.1 \cite{discretelearners2026}.
+On toy inputs v3's results are those of \code{p10_sum}, which is v3's code there (checked identical when v3 was assembled). v2's are its own or, on \code{designed} and \code{dlsymdev}, those of \code{p9_sum}, the same code on toy inputs. Both ran on every toy suite, with the inputs permuted per fit. DFG alone against v3 measures what the rest of the portfolio adds on Boolean inputs. v1 is a reference on tabular data only. DFG v1.3, the file \repo{study/part10/hyb_portfolio3/dfg13.py}, is identical to \repo{study/part10/p10_sum/dfg13.py}.
+
+\paragraph{Earlier versions of DFG.} Part 6 ran DFG v1 at $d=15$ and 30, and v1.1 at $d=60$ and 120, on the Q4 targets in the natural column order (\repo{study/discrete_learner/results/}). They are context for Q4, not a paired comparison. On real-valued data the record is Part 7's three adaptations of DFG, frozen there \cite{discretelearners2026}: Boolean-bit characters (\code{dfg_bits}), thresholded data-derived directions (\code{dfg_dirs}) and threshold and AND gates (\code{dfg_gates}). Their results on kr\_vs\_kp and mushroom are context for Q6. Part 6 built DFG with enumeration and union-bound tests in place of the networks' noisy search and with at most one network run of FLOPs per fit, and on a blind 7-target suite it needed less data than the networks on every target \cite{discretelearners2026}. Part 7 adapted DFG to real-valued standard tasks, where it was about level with a plain MLP on tabular data, behind a regularized one, and clearly behind on images at large $n$. Parts 8 and 9 stacked it with classical learners (v1, v2), whose toy wins came from DFG, and gave it signed-sum blocks (v1.2) \cite{discretelearners2026}. Part 10 added weighted blocks, forced blocks and a beam search (v1.3) and built v3, which on the held-out \code{dlheld7} needed clearly less data than the best network variant on 10 of 12 targets and more on none, and whose analysis placed DFG's data cost on signed-sum targets in its search rather than its test \cite{portfoliolearner2026}.
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{The protocol's questions and runs, and the status of every set}\label{app:questions}
+
+\paragraph{What the protocol fixed.} The protocol (\repo{study/part11/PROTOCOL.md}; commits and times in \cref{app:runs}) fixed:
+\begin{itemize}
+\item the object and how it is run;
+\item seven questions, each with its runs, suites and seeds;
+\item that grids, seeds, test sets, $\nstar$, the verdict rule and the suite means are those of Parts 8--10, and that the results of the networks, \code{lin}, \code{hgb}, v1, v2 and v3 are the existing files, with nothing re-run for them;
+\item that a run that crashes may get harness-level fixes only (paths, sharding, resumption), never a change to the learner, and that the crash is reported;
+\item what is held out.
+\end{itemize}
+
+\paragraph{Questions and runs.} The protocol fixed seven questions.
+\begin{itemize}
+\item \emph{Q1, held out.} On \code{dlheld7}: DFG alone against \code{nets_best}, each network variant, \code{lin}, \code{hgb}, v3 and v2, target by target and as suite means with clearly better and clearly worse counts.
+\item \emph{Q2, every suite.} The same on all 11 toy suites (138 targets), each with its status, and DFG alone against v3: does the rest of the portfolio add anything on Boolean targets?
+\item \emph{Q3, the dictionary without the search} (the protocol's title; \code{lowdeg} has DFG's characters of degree $\le4$ and the form of its test, and nothing else). \code{lowdeg} on all 11 suites.
+\item \emph{Q4, input dimension.} DFG alone at $d=15$, 60 and 120 on the 7, 7 and 4 targets above: $\nstar$ against $d$, against the networks.
+\item \emph{Q5, what the parts do.} 12 ablations, each DFG alone with one setting changed (one or two constructor arguments), on \code{designed}, \code{dlsymdev}, \code{dlfamdev}, \code{dlheld6} and \code{dlheld7} (65 targets). Six run on seeds 0 and 1 and six on seed 0. Each is compared with DFG alone on the same seeds, so on the same training sets and column permutations (\cref{sec:ablations}).
+\item \emph{Q6, tabular.} DFG alone on kr\_vs\_kp and mushroom, on the standard learning curves with 3 seeds, against the MLP references, \code{hgb} and v3; v2 and v1 are also shown.
+\item \emph{Q7, what it learns.} Descriptive analyses, on seed 0 unless stated and checked by independent verifiers (\cref{sec:interp}): what DFG's fitted models contain across target families, against each target's own representation in DFG's dictionary; when a target's structure first appears in the model, against when its test would admit it; the order in which DFG admits a target's characters, against the order in which the Part 5 networks acquire them; false admissions on labels independent of the inputs; and where the compute goes.
+\end{itemize}
+\Cref{sec:results} reports Q1--Q4 and Q6, \cref{sec:ablations} Q5, and \cref{sec:interp} Q7.
+
+\begin{table}[tbp]
+\centering\footnotesize\setlength{\tabcolsep}{3.5pt}\renewcommand{\arraystretch}{1.12}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{2.15cm}>{\raggedright\arraybackslash}p{1.05cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{1.95cm}>{\raggedright\arraybackslash}p{2.45cm}}
+\toprule
+set & size & origin, and its use in developing DFG & status for DFG v1.3 & references run\\
+\midrule
+\code{designed} & 21 & Parts 1--5. Development for DFG v1 and v1.1 (Part 6 chose DFG's settings on its test error), and for v1.2 and v1.3 (the Part 9 and Part 10 development evaluations) & development & \code{nets}, \code{nets_wd}\\
+\code{random} & 20 & Part 3. A development check for DFG v1 and v1.1 in Part 6, run and read with intermediate versions & development & \code{nets}, \code{nets_wd} (2 seeds)\\
+\code{dlheld} & 12 & Part 6, held out for DFG v1; its degree-5/6 search was added knowing \code{par5} was in the suite. DFG v1.1 was made after DFG v1's run on it & development & \code{nets}, \code{nets_wd}\\
+\code{dlheld2} & 7 & Part 6, written after v1.1 was committed: blind for v1.1 & held out for v1.1 only & \code{nets}, \code{nets_wd}\\
+\code{dlheld3} & 10 & Part 8, held out for the portfolio v1 (with DFG v1.1). v1's failure on \code{sym9} motivated v1.2's sum blocks; pre-registered as a Part 9 regression check but not run then & held out for v1.1 only & \code{nets}, \code{nets_wd}, \code{nets_cewd}\\
+\code{dlsymdev} & 8 & Part 9. Development for v1.2 and v1.3 & development & \code{nets}, \code{nets_wd}, \code{nets_cewd}\\
+\code{dlheld4} & 12 & Part 9, meant to be held out for v1.2; its builder saw the suite's source & exposed to v1.2 & \code{nets}, \code{nets_wd}, \code{nets_cewd}\\
+\code{dlheld5} & 12 & Part 9, drawn after v1.2 was frozen, from a family specified after reading v1.2's design & exposed to v1.2 & \code{nets}, \code{nets_wd}, \code{nets_cewd}\\
+\code{dlheld6} & 12 & Part 9, the blind family's first draw; held out for v1.2. Development for v1.3, whose weighted blocks were designed after v2's failure on h6\_10 & development & all five variants\\
+\code{dlfamdev} & 12 & Part 10, a development draw from the blind family. Development for v1.3 & development & none\\
+\code{dlheld7} & 12 & Part 10, a draw from the blind family fixed in a commit (\texttt{dc70266c}) before v1.3 was designed; never used in its development & \textbf{held out} & \code{nets_wd}, \code{nets_cewd0.3}, \code{nets_cewd1.0}\\
+\addlinespace
+\code{designed} at $d=15,60,120$ & 7, 7, 4 & Networks trained in Part 3. Part 6 ran DFG v1 at $d=15$ and v1.1 at $d=60$ and 120 & development & \code{nets} (2 seeds)\\
+\addlinespace
+kr\_vs\_kp & 3196 rows & Part 7, a development set of the standard tasks; the Part 10 toy builder's tabular check & development & \code{mlp}, \code{mlp_reg}\\
+mushroom & 8124 rows & Part 7, held out there. Never used to develop DFG; v1--v3 ran DFG on it, and their results were read before Part 11 & seen through v1--v3 & \code{mlp}, \code{mlp_reg}, \code{mlp_strong}, \code{mlp_strong1}, \code{mlp_plus} ($n\le3000$)\\
+\bottomrule
+\end{tabularx}
+\caption{Every set and its status for DFG v1.3. Sources: \repo{study/part11/PROTOCOL.md} (``Held out'') and the protocols and records of Parts 6, 8, 9 and 10. ``Development'': used in developing some version of DFG. ``Exposed'': the Part 9 sum-block design and the suite were not independent. ``Held out for v1.1 only'': held out for DFG v1.1 (inside the portfolio v1 for \code{dlheld3}), and seen since. ``References run'': the network variants run on the suite, over which \code{nets_best} is the per-target minimum, or the MLP variants on the dataset. Networks have 3 seeds except where stated. \code{lin} and \code{hgb} are listed in \cref{sec:refs}; v3, v2 and \code{lowdeg} ran on every toy suite.}
+\label{tab:status}
+\end{table}

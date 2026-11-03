@@ -4,7 +4,8 @@ Reads the evaluation's result files (part11/results/toy__dfg13-perm__<suite>.jso
 toy__dfg13-core-perm__<suite>.json), the paired null of this folder (results/toy__dfg13-reperm__<suite>.json,
 perm_null.py), the atlas's counterfactual records (../results/cv/forced_vs_default.json, ../tables/atlas_cells.csv),
 the networks' n* (RESULTS.json, q2_suites) and the refits of refit.py (results/refits.json, if present); writes
-ablations.json and tables/*.md.  Every number in ABLATIONS.md is printed by this script or by refit.py.
+ablations.json and tables/*.md.  Every number in ABLATIONS.md is printed by this script or by refit.py (and, for the
+refits added when the independent verification was applied, lenient_first_fits.py; results/refits_verif.json).
 usage: python ablations.py
 
 Definitions (those of compare_dfg.py): n* = training-set size at 10% seed-mean test error (harness.nstar, log-interpolated
@@ -122,10 +123,12 @@ def chi2_thr(m, t):
 
 def parity_prediction():
     """P2 under the three deltas: per seed and n, the default variant's final fit holds chi_S iff n (1 - ybar^2) > n_thr
-    (degrees 3-4 are searched on all rows from n = 32 at d = 30; P5); the predicted error is 0 where it passes and DFG
-    alone's own measured error where DFG alone fails (about 0.5); at n = 16 nothing passes for any of the three deltas
-    (n_thr > 16), so the cell is the forced-or-default choice of the cross-validation, which does not depend on delta:
-    DFG alone's measured error is used there (P2's '+ forced' column)."""
+    (degrees 3-4 are searched on all rows from n = 32 at d = 30; P5); the predicted error is 0 where the test passes and
+    max(DFG alone's measured error, 0.45) where it fails (DFG alone's own error is 0 in some cells where the stricter test
+    fails, so the floor stands for the ~0.5 error of a model without the parity); at n = 16 nothing passes for any of the
+    three deltas (n_thr > 16), so the cell is the forced-or-default choice of the cross-validation: DFG alone's measured
+    error is used there (P2's '+ forced' column).  delta can change that choice (par4, seed 1, lenient: 0.498 against
+    0.515), but every n = 16 cell stays near 0.5 (0 for par2), so n* does not move."""
     T = TH.suite_targets("designed", 30)[0]; r = BASE["designed"]; ns = r["ns"]
     out = {}
     for t, k in (("par2", 2), ("par3", 3), ("par4", 4)):
@@ -267,6 +270,61 @@ def leavein():
     return out
 
 
+def _moved(v):
+    return v == INF or v == -INF or (math.isfinite(v) and abs(v) > THR)
+
+
+def verification_checks(J, A):
+    """Numbers added when the independent verification (VERIFY_ABLATIONS.md) was applied: denominators that keep apart
+    the targets a run never learns, the movers' families, the like-for-like null ratio, the targets just beyond n_detect,
+    the core's clearly-higher targets against the leave-one-in runs, the core's gains, and the class means with f7_10
+    counted as a halfspace (it is one by families.py's rule; the atlas, and this analysis, count it as a mixture)."""
+    fam = lambda k: FAM.SHORT[J["families"][k]]
+    out = {}
+    out["higher_finite"] = {tag: sum(1 for v in A[tag]["ratios"].values() if math.isfinite(v) and v > THR) for tag in A}
+    r, a, b = A["nosums"]["ratios"], A["nosums"]["nstar"], A["nosums"]["dfg_same_seeds"]
+    sym = [k for k in r if fam(k) == "symmetric"]
+    kept = [k for k in sym if math.isfinite(a[k]) and math.isfinite(b[k])]
+    out["nosums_symmetric"] = dict(targets=len(sym), dfg_learns=sum(math.isfinite(b[k]) for k in sym), kept=kept,
+                                   kept_higher=sum(r[k] > THR for k in kept), lost=[k for k in sym if r[k] == INF])
+    out["movers"] = {tag: {k: dict(ratio=v, family=fam(k), cls=J["classes"][k]) for k, v in A[tag]["ratios"].items() if _moved(v)}
+                     for tag in ("nosums", "nosmalln", "labelnoise")}
+    N = J["nulls"]; u = N["unpaired_seed1_vs_seed0"]["pooled"]
+    out["null_ratio"] = {k: dict(moved=u["higher"] + u["lower"], moved_null=N[k]["pooled"]["higher"] + N[k]["pooled"]["lower"],
+                                 mean_abs=u["mean_abs"], mean_abs_null=N[k]["pooled"]["mean_abs"],
+                                 factor_mean_abs=u["mean_abs"] / N[k]["pooled"]["mean_abs"])
+                         for k in ("paired_seed0", "paired_seed01")}
+    out["mean_abs"] = {tag: dict(seeds=A[tag]["seeds"], mean_abs=A[tag]["pooled"]["mean_abs"]) for tag in A}
+    G = J["block_gap"]["rows"]
+    out["block_gap_split"] = dict(at_or_below=sorted(z["target"] for z in G if z["gap"] <= 1e-12),
+                                  just_beyond={z["target"]: z["gap"] for z in G if 1e-12 < z["gap"] < 1},
+                                  beyond_1={z["target"]: z["gap"] for z in G if z["gap"] >= 1})
+    # the core's clearly-higher targets: does putting one part (or one pair) back return n* to within 0.25 of DFG alone's?
+    C, L = J["core"], J["leavein"]
+    hi = [k for k, v in C["ratios"].items() if v == INF or (math.isfinite(v) and v > THR)]
+    lo = sorted([k for k, v in C["ratios"].items() if v == -INF or (math.isfinite(v) and v < -THR)], key=lambda k: C["ratios"][k])
+    rows = {}
+    for k in hi:
+        o = {cfg: x[k] for cfg, x in L.items() if k in x}
+        full = [cfg for cfg, x in o.items() if math.isfinite(x["vs_dfg"]) and abs(x["vs_dfg"]) <= THR]
+        part = [cfg for cfg, x in o.items() if cfg not in full and math.isfinite(x["vs_core"]) and x["vs_core"] < -THR]
+        rows[k] = dict(ratio=C["ratios"][k], family=fam(k), tested=sorted(o), restored=full, in_part=part,
+                       outcome="not tested" if not o else "restored" if full else "in part" if part else "none")
+    out["core_higher"] = dict(targets=len(hi), by_outcome={x: sorted(k for k, v in rows.items() if v["outcome"] == x)
+                                                           for x in ("restored", "in part", "none", "not tested")}, rows=rows)
+    gain_run = sorted({k for cfg in ("blocks", "logit", "bg", "deg46g") for k in L.get(cfg, {}) if C["ratios"][k] < 0},
+                      key=lambda k: C["ratios"][k])
+    out["core_gains"] = dict(lower=len(lo), run={k: dict(ratio=C["ratios"][k], family=fam(k), core=C["nstar"][k],
+                                                         dfg=C["dfg_same_seeds"][k], rank=lo.index(k) + 1) for k in gain_run},
+                             largest_not_run={k: C["ratios"][k] for k in lo[:len(gain_run) + 1] if k not in gain_run})
+    # f7_10 = [x1+...+x5 + 2 x6 <= -1] counted as a halfspace instead of a mixture
+    alt = lambda k: "halfspace" if k == "dlheld7/f7_10" else J["classes"][k]
+    out["f7_10_as_halfspace"] = {tag: {c: stats(v for k, v in A[tag]["ratios"].items() if alt(k) == c) for c in ("halfspace", "sum")}
+                                 for tag in A}
+    out["f7_10_as_halfspace"]["core"] = {c: stats(v for k, v in C["ratios"].items() if alt(k) == c) for c in ("halfspace", "sum")}
+    return out
+
+
 def main():
     J = dict(source="part11/interp/ablations/ablations.py", families={f"{su}/{t}": g for (su, t), g in FAM.FAMILY.items()},
              classes={f"{su}/{t}": FAM.COARSE[g] for (su, t), g in FAM.FAMILY.items()})
@@ -405,6 +463,8 @@ def main():
     J["errs_by_n"] = {tag: errs_by_n(tag) for tag in ("nosmalln", "nobg", "labelnoise", "noblocks", "strict", "lenient")}
     # ---- (f) leave one in ----------------------------------------------------------------------------------------------
     J["leavein"] = leavein()
+    # ---- added when the independent verification was applied (VERIFY_ABLATIONS.md) -------------------------------------
+    J["verification"] = verification_checks(J, A)
     json.dump(J, open(os.path.join(HERE, "ablations.json"), "w"), indent=1, default=lambda v: None,
               allow_nan=True)
     # ---- printout ----------------------------------------------------------------------------------------------------
@@ -457,6 +517,21 @@ def main():
     for cfg, o in J["leavein"].items():
         for k, v in o.items():
             print(f"   +{cfg:9s} {k:18s} core {v['core']:8.0f} leavein {v['leavein']:8.0f} dfg {v['dfg']:8.0f}  vs core {fmt(v['vs_core'])} vs dfg {fmt(v['vs_dfg'])} (core vs dfg {fmt(v['core_vs_dfg'])})")
+    V = J["verification"]
+    print("\n(v) added when the verification was applied:")
+    print("   clearly higher, without the newly-never targets:", V["higher_finite"])
+    print("   nosums on the symmetric group:", V["nosums_symmetric"])
+    for tag, o in V["movers"].items():
+        print(f"   {tag} movers by family:", {k: (round(x['ratio'], 2), x["family"]) for k, x in o.items()})
+    print("   unpaired null (seed 1 vs 0) against the paired nulls:", V["null_ratio"])
+    print("   mean |ratio|:", {t: (x["seeds"], round(x["mean_abs"], 3)) for t, x in V["mean_abs"].items()})
+    print("   n* against n_detect: just beyond (0 < gap < 1):", {k: round(v, 2) for k, v in V["block_gap_split"]["just_beyond"].items()},
+          "at or below:", len(V["block_gap_split"]["at_or_below"]))
+    print("   the core's clearly-higher targets by leave-one-in outcome:", {x: len(v) for x, v in V["core_higher"]["by_outcome"].items()},
+          V["core_higher"]["by_outcome"])
+    print("   the core's gains that were run:", {k: (round(x["ratio"], 2), x["family"], round(x["core"]), x["rank"]) for k, x in V["core_gains"]["run"].items()},
+          "larger, not run:", V["core_gains"]["largest_not_run"])
+    print("   f7_10 counted as a halfspace:", {t: {c: cell(s) for c, s in x.items()} for t, x in V["f7_10_as_halfspace"].items()})
 
 
 if __name__ == "__main__":

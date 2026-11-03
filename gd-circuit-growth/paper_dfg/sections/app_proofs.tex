@@ -1,0 +1,112 @@
+\clearpage
+\section{The six statements: proofs and checks}\label{app:proofs}
+
+This appendix gives the proofs of the statements of \cref{sec:guarantees}, what they do not cover, and their numerical checks, computed by \repo{study/part11/interp/theory/check_theory.py} and stored in \repo{study/part11/interp/theory/check_theory.json} under the keys given. ``By the code'' means a direct reading of the cited lines of the frozen file. Throughout, the rows are iid uniform on $\cube$, as on the toy suites; the column permutation of \code{harness.Permuted} preserves this.
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{Round 0 under the null (P1)}\label{app:proof-null}
+
+\begin{proof}[Proof of \cref{prop:null}]
+(a) Condition on $y$. Round 0's fit is on the constant alone, so $r=y-w_0$ with $w_0=\sum_ty_t/(n+10^{-9})$, and $r$, $s$ and $\sigma_m$ are functions of $y$. For a fixed nonempty $S$ the signs $\varepsilon_t=\chi_S(x_t)$ are iid uniform and independent of $y$. The statistic is $\frac1m\sum_{t\le m}r_t\varepsilon_t$ and its threshold $c\sigma\sqrt{2L_k/m}$, where $\sigma^2\ge\frac1m\sum_{t\le m}r_t^2$: $\sigma=\sigma_m$ if $m<n$, and $\sigma=s\ge\mathrm{rms}(r)$ if $m=n$. Hoeffding's inequality \cite{hoeffding1963probability}, $\Pr(|\sum_ta_t\varepsilon_t|\ge\lambda)\le2\exp(-\lambda^2/(2\sum_ta_t^2))$, with $a_t=r_t$ and $\lambda=uc\sigma\sqrt{2mL_k}$, gives $\Pr(z_S\ge u\mid y)\le2e^{-u^2c^2L_k}$. A union bound over the $\binom dk$ sets and the expectation over $y$ finish the proof. The degree-5/6 search offers $\frac1m\sum_tr_t\chi_{T_1}(x_t)\chi_{T_2}(x_t)$ only for disjoint $T_1,T_2$ (line 662). That is the same statistic for $S=T_1\cup T_2$, and a set reached by several splits is one event.
+
+(b) Condition on $y$ and let $a=r/|r|$. Since $ns^2\ge|r|^2$, $T_{\rm lin}\le\sum_iZ_i^2$ with $Z_i=\sum_ta_tx_{t,i}$. The $Z_i$ are independent Rademacher sums with $\sum_ta_t^2=1$. For $0\le\lambda<\frac12$ and $\xi\sim N(0,1)$, $\E e^{\lambda Z_i^2}=\E_\xi\prod_t\cosh(\sqrt{2\lambda}\,\xi a_t)\le\E_\xi e^{\lambda\xi^2}=(1-2\lambda)^{-1/2}$. Hence $\ln\E e^{\lambda(\sum_iZ_i^2-d)}\le d\lambda^2/(1-2\lambda)$. This bound on the log-Laplace transform is all that the Chernoff argument in the proof of Lemma~1 of \cite{laurent2000adaptive} uses, and that argument gives the tail. At the code's $x=\ln(1/\delta)$ the bound is $\delta$. The block's inputs are all $d$ unless a degree-1 character passed, which (a) bounds by $\delta/(2K)$.
+
+(c) By the code, a round that admits nothing ends the fit (line 824). In round 0 there are no current characters or blocks, so the extension, local and modulated classes and the products of admitted blocks are empty. Add (a) over degrees 1--6 and (b); the $\delta/(2K)$ term of (b) is (a)'s degree 1.
+\end{proof}
+
+\paragraph{Not covered.} The statements are for exact arithmetic; rounding matters only within rounding error of a threshold. Several parts of a fit are not covered.
+\begin{itemize}
+\item The spectral test: its edge \eqref{eq:spectest} is the asymptotic semicircle edge with a Gaussian correction, not a bound.
+\item The sum-block tests: \cref{eq:blocktest} is calibrated for Gaussian noise, but the groups are a data-dependent partition of the rows. The union bound counts every candidate, but the tail of a fixed candidate is not proved to be at most $e^{-L_B}$.
+\item The forced variant, which adds features by design.
+\item The cross-validation's choice between the variants: a $z$-test at 2 on dependent held-out errors.
+\item Rounds $\ge1$: they run only after an admission, and their residual then depends on the rows.
+\end{itemize}
+\emph{Other input laws} \status{Proved}. The verifier of THEORY.md adds that (a) does not need uniform rows for the searches on all $n$ rows. Round 0's residual sums to zero, up to the $10^{-9}$ term, so $\sum_tr_t\chi_S(x_t)=\sum_tr_t(\chi_S(x_t)-\mu_S)$ with $\mu_S=\E\chi_S$: a sum of independent centred terms of range $2|r_t|$, to which Hoeffding's bound applies unchanged for iid rows from any law (\repo{study/part11/interp/theory/VERIFY_THEORY.md}). This covers the character tests on the dependent one-hot columns of the tabular data (\cref{sec:res-tabular}). It does not cover subsampled searches, whose rows' residuals need not sum to zero, or (b).
+
+\paragraph{Checks} \status{Numerical}.
+\begin{itemize}
+\item \emph{The character tests.} 16 null configurations of round 0 were simulated, 300 data sets each: at $d=30$ with $n=32$--2048 and three label laws, at $d=15$ with degrees 1--6, and at $d=60$ in a fold fit whose degree-4 search is subsampled. All 280 checks of (a), at levels $u=0.7$--1, held (\texttt{P1.sims}). The bound is loose by about the Gaussian Mills ratio \status{Heuristic}: at $d=30$ the Gaussian approximation gives 0.87--$1.15\times10^{-3}$ per degree, against the bound's $12.5\times10^{-3}$ (\texttt{P1.bound\_over\_gauss\_d30}).
+\item \emph{The linear block.} 43 of the 4800 null data sets passed it (0.9\%), against the bound $\delta=10\%$; the $\chi^2_d$ tail at the threshold is 0.92\% at $d=30$ (\texttt{P1.linear\_chi2\_level}).
+\item \emph{Full fits on null labels} ($d=30$). With fair labels, 78 of 80 final models are the constant plus the background (\texttt{P1.full\_fits}). One holds a pair at $z=1.06$, the event (a) bounds; the other is a forced-variant model chosen by the cross-validation. With $\Pr(y=1)=0.85$ at $n=128$, 7 of 30 hold spurious spectral or sum-block features (\texttt{P1.nonconstant\_fits}).
+\item \emph{The spectral test on biased labels.} Near $n=4d$ its null pass rate grows with $d$. For $\Pr(y=1)=0.8$ it is about 5\%, 47\% and 99\% at $d=30$, 60 and 120 (\repo{study/part11/interp/calib/CALIB.md} with the corrections of \repo{study/part11/interp/calib/VERIFY_CALIB.md}).
+\end{itemize}
+\Cref{sec:interp-calib} reports DFG's false admissions in full.
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{The sample size of a parity, and the floors (P2, \texorpdfstring{P2$'$}{P2'})}\label{app:proof-parity}
+
+\begin{proof}[Proof of \cref{prop:parity}]
+$y\chi_S=\chi_S^2=1$ and $y^2=1$ give the two means. With $w_0=\bar y$, $z_S>1$ reads $1-\bar y^2>c\sqrt{1-\bar y^2}\sqrt{2L_k/n}$. Divide by $\sqrt{1-\bar y^2}$ and square; if $\bar y^2=1$, both sides of the equivalence fail. Finally, $\ln\binom dk=k\ln d-\ln k!+O(k^2/d)$.
+\end{proof}
+Passing round 0's test is not the same as being in the final model. Admission also needs a place among the round's 64 largest $z$ and room for the feature, which is not proved but never bound in the parity cells. The forced variant can admit $\chi_S$ without passing, and a later round could admit it after another admission. Whether the final model holds $\chi_S$ is therefore the measured statement below. The constant $2c^2\ln(4K/\delta)-2c^2\ln k!$ is not small: $n_{\rm thr}$ is $2k\ln d$ plus 8.8, 6.6 and 3.8 for $k=2$, 3 and 4, less an $O(k^2/d)$ term of at most 0.9 here, so it grows like $2k\ln d$, while $2k\ln d$ alone is 9--44\% below it for $d=15$--120 (\texttt{P2.n\_thr\_decomposition}).
+
+\begin{proof}[Proof of \cref{prop:floor}]
+By Cauchy--Schwarz, $|\frac1m\sum_{t\le m}r_t\chi_S(x_t)|\le\sigma_m\le\sigma$, so $z_S>1$ needs $c\sqrt{2\ln(4KN/\delta)/m}<1$. For a block, $\sum_vn_v\bar\rho_v^{\,2}\le\sum_t\rho_t^2\le ns^2$: a projection does not increase the norm, $|\rho_t|=|r_t|$, and $s^2\ge\mathrm{mean}(r^2)$. So $T_B\le n$. The same holds for $\tilde r$ in its own units, for products, and for the deflated residual of the second additive search.
+\end{proof}
+The character half is THEORY.md's P2$'$; the block half is added here. Both bound passing a test, not admission: the forced variant's guesses ($n\le512$) and the linear block's test lie outside these floors. A $k$-parity with $\bar y=0$ attains the character floor, so $n_{\rm thr}(k,d)$ is exactly the sample size at which a balanced $k$-parity passes round 0's test. The last column of \cref{tab:dictionary} gives the floors at $d=30$.
+
+\paragraph{Checks} \status{Numerical}.
+\begin{itemize}
+\item \emph{Every parity cell with $n\ge32$.} \Cref{prop:parity}'s criterion, with each training set's own $\bar y$, predicts the outcome in all 250 parity cells with $n\ge32$: par2 and par3 at $d=15$--120 and par4 at $d=15$--60, every seed (\texttt{P2.agree}). The test error is 0 where the criterion holds, and 0.488--0.506 elsewhere.
+\item \emph{$n=16$.} There $n_{\rm thr}>16$ at every $d$, and nothing passes. The 7 error-free par2 cells at $d\le60$ come from the forced variant, chosen by the cross-validation. With that, the criterion reproduces all 11 measured $\nstar$ (16--56) to within 0.2 (\texttt{P2.pred}).
+\item \emph{par4 at $d=30$.} Its $\nstar$ is 52, not 28, because 2 of its 3 seeds have $|\sum_ty_t|>6$ at $n=32$, where $n_{\rm thr}=30.59$. Under \cref{prop:parity}'s exact law that event has probability 0.12.
+\end{itemize}
+
+\paragraph{The parity rule on the grid} \status{Numerical}. On the first round's residual $r=y-\bar y$, a parity's statistic $|\mathrm{mean}(r\chi_S)|/\mathrm{sd}(r)$ is $\sqrt{1-\bar y^2}\approx1$, so DFG's test admits it once $n(1-\bar y^2)>n_{\rm thr}$. On the $n$-grid the test therefore passes, when $\bar y$ is near 0, at the first grid point above the line: 32 for par2 at every $d$, for par3 up to $d=60$ and for par4 up to $d=30$, and 64 for par3 at $d=120$ and for par4 at $d=60$. Refits of the stored fits (\repo{paper_dfg/check_parity_variant.json}, refitted test errors identical to the result files) show where this simple rule misses. par2 is learned at $n=16$, below the line, at $d=15$, 30 and 60, because DFG's cross-validation kept its forced variant in all 7 of those fits; at $d=120$ it did not. And par4 at $d=30$ passed at $n=32$ only in seed 1, the one seed in which $32(1-\bar y^2)$ exceeds $n_{\rm thr}=30.6$ (28.9, 30.9 and 27.5 in seeds 0, 1 and 2), as the exact criterion predicts.
+
+\paragraph{Against the networks} \status{Numerical, and Proved by the code; Heuristic where marked}. $n_{\rm thr}$, which grows like $2k\ln d$, is 19.5--42.0 for $k=2$--4 and $d=15$--120 (\texttt{P2.n\_thr}). DFG's $\nstar$ on the parities moves by at most one grid step over that range (\cref{fig:dscale}). The networks' $\nstar$ grows as $d^{1.03}$, $d^{1.96}$ and $d^{2.40}$ for $k=2$, 3 and 4, about $d^{k-1}$ for $k\le3$ (least-squares slopes through 3--4 values of $d$, par4's on $d=15$--60 only; \cref{tab:dscale}). DFG pays in compute instead: an exhaustive degree-$k$ search costs about $n\binom dk$ FLOPs times a constant (\cref{prop:compute}). Under DFG's fixed budget, at $n>512$, the global search can pass no degree-3 character from $d=630$ on and no degree-4 character from $d=179$ on, because there $m_k<32$ or $m_k\le n_{\rm thr}$ (\cref{prop:floor}; \texttt{P5.d\_parity\_unreachable}). Characters of other targets can still enter through the one-input extensions and the local class, which run on all rows, or through the budgeted two-input extensions. \status{Heuristic} At $d=1000$, $n_{\rm thr}$ is 36.4, 48.0 and 59.0 for $k=2$--4, so the test alone would pass these parities from the grid point $n=64$ on (for $k=4$ in 97\% of training sets) and give $\nstar\approx56$--57 on the grid, leaving the forced variant aside. DFG v1.3 skips its degree-3 and degree-4 searches there ($m_3=17$, $m_4=0$), and an exhaustive degree-4 search on 64 rows would cost 55.9 network runs (\texttt{P2.d1000}, \texttt{P5.exhaustive}).
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{When a character passes in round 0 (P3)}\label{app:proof-nglob}
+
+\begin{proof}[Proof of \cref{prop:nglob}]
+(a) is the algebra of \cref{prop:parity} with $\hat c_S$ in place of 1. For the expectation, $\E[w_0\bar\chi_S]=\frac1{n(n+10^{-9})}\sum_{t,u}\E[y_t\chi_S(x_u)]$. Its terms with $u=t$ are $\hat f(S)$, and those with $u\ne t$ vanish because $\E\chi_S=0$. (c) is the same algebra in round $j$.
+\end{proof}
+
+\paragraph{Checks} \status{Numerical}. The checks use the 41 targets of \code{designed} and \code{random}, seed 0, at every $n$ of the grid.
+\begin{itemize}
+\item \emph{The round-0 decision.} Over 8681 (character, $n$) pairs, $n>n_{\rm glob}$ agrees with DFG's round-0 decision in 8409 (96.9\%; \texttt{P3.test0}). The agreement comes mostly from pairs far from $n_{\rm glob}$: within one doubling of it, the two agree in 773 of 1012 pairs (76\%), and more than two doublings away in 99.9--100\% (\texttt{P3.test0.agree\_by\_distance}). The pass rate is 6\% and 12\% at 1--1.5 and 0.5--1 doublings below $n_{\rm glob}$, and 94\% and 98\% at 0.5--1 and 1--1.5 doublings above (\texttt{P3.test0.calibration}).
+\item \emph{Entry through the round-0 test.} The 249 characters that first enter through it do so at a median $2^{0.26}\,n_{\rm glob}$ (\texttt{P3.first}).
+\item \emph{Entry through later-round classes.} Characters that enter through the local, extension or later global classes do so a median 1.4--3.7 doublings below $n_{\rm glob}$, by class (\texttt{P3.entry\_vs\_nglob}). In \cref{prop:nglob}(c)'s factorization the residual factor is the largest at the class medians: they are 3.2--19, and per character the factor ranges from 1.2 to 59.5. The union-bound factor has class medians 1.2--1.7 in the composition classes and 1.0 for the later global test, but single local-class characters of degree $\le6$ gain up to 3.3 from it (\texttt{P3.factors}, \texttt{P3.factors\_spread}).
+\end{itemize}
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{Sum blocks (P4)}\label{app:proof-blocks}
+
+\begin{proof}[Proof sketch of \cref{prop:blocks}]
+(a) A function $\eta$ of the group equals $\eta(v_{\max})+\sum_{v\ne v_{\max}}(\eta(v)-\eta(v_{\max}))[\text{group}=v]$ on every occupied group.
+
+(b) By the code (\code{_edges}): scanning the values upward, a group closes once it holds $\max(3,\lfloor0.005n\rfloor)$ points, and a short last group is merged into the one before it. The rarest values, $t=\pm k$, have probability $2^{-k}$, which is at least 0.005 iff $k\le7$.
+
+(c) Any combination of the block's features and the constant is constant on each group.
+
+(d) Inputs outside $S$ are independent of $f$. On $S$, substitute $z_i=s_ix_i$; by symmetry the coefficient depends only on $|T|$, and $\mathcal K_j(\beta)=\sum_{z:\,\#\{z_i=1\}=\beta}z_1\cdots z_j$.
+
+(e) Write $[\beta\equiv\kappa]=\frac13\sum_{m=0}^2\omega^{m(\beta-\kappa)}$ with $\omega=e^{2\pi i/3}$. Since $\beta=\sum_{i\in S}(1+z_i)/2$ with independent $z_i$,
+\[
+\E\bigl[\omega^{m\beta}z_1\cdots z_j\bigr]=\Bigl(\frac{\omega^m-1}2\Bigr)^j\Bigl(\frac{1+\omega^m}2\Bigr)^{k-j},
+\]
+which vanishes at $m=0$ for $j\ge1$; the terms $m=1$ and $m=2$ are complex conjugates. Moreover $|\omega-1|/2=\sqrt3/2$ and $|1+\omega|/2=\frac12$, so $|a_j|\le2\cdot\frac23\cdot3^{j/2}2^{-k}$.
+
+(f) The starting points are the eigenvectors and the strongest entries of $M^\circ$; the coefficients $c_{1,i}$ and single inputs; inner terms on $M^\circ$'s strongest pair; at $n\le128$, a beam started from two-input blocks; and, in the product and split searches, the round's earlier candidates. A two-input block's groups are functions of $x_i+sx_j$, and these span $\{1,x_i+sx_j,x_ix_j\}$. The expectations follow as in \cref{prop:nglob}(a).
+\end{proof}
+
+\paragraph{What this says about the residue classes} \status{Numerical; Heuristic where marked}. Take the three residue-class targets f7\_05, h6\_00 and fd\_10, on $k=14$, 13 and 10 inputs, which DFG alone never learns (\cref{sec:res-suites}).
+\begin{itemize}
+\item \emph{Fourier weight.} Every one of the $2^k-1$ characters on $S$ is nonzero, while $W_1+W_2=1.6\times10^{-6}$, $5.4\times10^{-6}$ and $2.1\times10^{-4}$. These are exact rationals (\texttt{P4.targets}).
+\item \emph{The representation is not what fails.} One block with one group per value represents each target with at most $k+1$ weights, and least squares on such a block reproduces seed 0's training labels at $n=16384$ exactly. DFG's own grouping merges the rarest values, which costs 0.1--0.2\% error (\texttt{P4.grouping}). Part 10 found the true block passing the test from $n=128$ \cite{portfoliolearner2026}.
+\item \emph{The search is} (\cref{sec:interp-fail}). By (f), its starting points see these targets only through $a_1$ and $a_2$. \status{Heuristic}: by the BBP threshold for a rank-one perturbation of a random matrix \cite{baik2005phase,benaychgeorges2011eigenvalues}, the eigenvector seed needs $n\approx s^2d/(a_2^2(k-1)^2)$: $1.1\times10^7$, $3.1\times10^6$ and $8.6\times10^4$ rows for the three targets, far above the grid's 16384.
+\end{itemize}
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{Compute (P5)}\label{app:proof-compute}
+
+In \cref{prop:compute}(a), the matrix products also compute redundant entries, so one character costs $12n$ or $24n$ FLOPs, not $2n$. In (b), the per-row cost estimate $c_{\rm row}$ is $d(2d^2+2d)$ for degree 3; $\binom d2(2d^2+3d)$ for degree 4; $b(2d^2+3d)$ for the two-input extensions of $b$ bases; and $2N_1N_2+N_1k_1+N_2k_2$ for degrees 5 and 6.
+
+\paragraph{Checks} \status{Numerical}.
+\begin{itemize}
+\item \emph{An analytic FLOP model} of the ``parity path'' (round 0 admits $\chi_S$ alone, round 1 stops on the sign rule) reproduces the recorded FLOP count to $10^{-9}$ in 228 of the 275 parity cells. It reproduces 4 more once a false linear block is added, which refits confirm; the other 43 cells are at $n\le32$ (\texttt{P5.check}).
+\item \emph{The budget bound.} Over $d=5$--399 and the four budget scales, no budgeted search's charged cost exceeds its share; the largest ratio is $1-1.4\times10^{-8}$ (\texttt{P5.max\_share\_used\_over\_share}).
+\item \emph{Against one network run.} $\mathrm{GD}(d)$ is linear in $d$, while an exhaustive degree-4 search on 16384 rows costs 0.072, 1.04 and 6.5 network runs at $d=30$, 60 and 120 (\texttt{P5.exhaustive}). The budget's subsampling is what keeps DFG inside one run.
+\end{itemize}

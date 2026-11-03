@@ -1,9 +1,10 @@
 """Part 11, Q5 analysis: a PAIRED null for the ablations (post hoc; ABLATIONS.md section 0).
 
-The ablations are paired with DFG alone: the same training sets, the same column permutation and the same
-cross-validation folds (all drawn from the fit rng default_rng([fn_seed(t), seed, n, 77])), so an ablation that changes
-nothing gives exactly DFG alone's n*.  What a change does is then its own effect plus whatever an arbitrary perturbation
-of DFG's path does.  This run measures the second part: DFG alone (the frozen dfg13.py, eval_dfg.make_learner('dfg13',
+The ablations are paired with DFG alone: the same training sets (harness.train_data, default_rng([fn_seed(t), seed])),
+the same column permutation and the same cross-validation folds (both drawn from the fit rng default_rng([fn_seed(t),
+seed, n, 77])), so an ablation that changes nothing gives exactly DFG alone's n*.  A change with no systematic effect
+still perturbs DFG's path once it alters any decision; what a change does is then its own effect plus whatever such a
+perturbation does.  This run measures the second part: DFG alone (the frozen dfg13.py, eval_dfg.make_learner('dfg13',
 {}), DFG(readout="logit") inside harness.Permuted, md5 checked), on the SAME training sets (harness.train_data, seed s,
 first n rows) and the same test sets, but with a different fit rng, default_rng([fn_seed(t), seed, n, 77, 1]), so a
 different column order and different cross-validation folds.  Nothing in the learner changes; the column order is

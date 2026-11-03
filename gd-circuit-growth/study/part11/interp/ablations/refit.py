@@ -15,7 +15,8 @@ carries the class or block move that admitted it and its round.  Every refit is 
                 coordinates (x1 ... x30), degree, share (sd of its contribution on the 4096 test inputs)
          parts: test error of the model restricted to groups of terms (no blocks, no characters, no background, ...)
 usage: OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python refit.py <run> <suite> <target> <n> [<n> ...] [--seed=0] [--save]
-       (--save appends the refits to results/refits.json, keyed run:suite:target:n:seed)
+       (--save appends the refits to results/refits.json, keyed run:suite:target:n:seed; with --out=<file>, to
+       results/<file>: refits_verif.json holds those made when the independent verification was applied)
 """
 import os, sys, json
 import numpy as np
@@ -103,11 +104,11 @@ def show(o, top=14):
         print(f"   round {rd['rnd']}: s={rd['s']} added={adm} acc={rd['acc']} forced={rd['forced']}")
 
 
-def save(recs):
-    old = json.load(open(OUT)) if os.path.exists(OUT) else {}
+def save(recs, out=OUT):
+    old = json.load(open(out)) if os.path.exists(out) else {}
     for o in recs:
         old[f"{o['run']}:{o['suite']}:{o['target']}:{o['n']}:{o['seed']}"] = o
-    json.dump(old, open(OUT, "w"), default=lambda v: None if v is None else (float(v) if isinstance(v, np.floating) else int(v) if isinstance(v, np.integer) else str(v)))
+    json.dump(old, open(out, "w"), default=lambda v: None if v is None else (float(v) if isinstance(v, np.floating) else int(v) if isinstance(v, np.integer) else str(v)))
 
 
 if __name__ == "__main__":
@@ -117,5 +118,5 @@ if __name__ == "__main__":
     recs = []
     for n in ns:
         o = refit(suite, target, n, int(opt.get("seed", 0)), run); show(o, int(opt.get("top", 14))); recs.append(o)
-    if opt.get("save"):
-        save(recs)
+    if opt.get("save"):                                             # --out=<file>: into results/<file> instead
+        save(recs, os.path.join(HERE, "results", opt["out"]) if "out" in opt else OUT)

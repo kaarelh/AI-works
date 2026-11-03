@@ -18,7 +18,9 @@ OUT = os.path.join(HERE, "results", "leavein"); os.makedirs(OUT, exist_ok=True)
 CORE = {"readout": "ls", "sum_inner": False, "sum_seeds": [0, 3, 2], "blocks": False, "max_ext_bases": 0, "local_max": 0,
         "K": 3, "K_hi": 3, "background": False}                       # = the core's kw in its result files (checked below)
 GAIN = ["dlheld3/h3rf0", "dlheld3/h3rf1", "dlheld4/h4rf1", "designed/and3", "dlheld7/f7_11", "random/rf06", "dlheld3/dlist8",
-        "dlfamdev/fd_02", "dlfamdev/fd_11", "dlheld5/h5rf0", "designed/rand0", "designed/rand1"]      # the core's 12 largest gains
+        "dlfamdev/fd_02", "dlfamdev/fd_11", "dlheld5/h5rf0", "designed/rand0", "designed/rand1"]
+# the core's gains: 12 of its 13 largest.  (This comment said "the 12 largest"; hrf0, -0.75, the 11th largest, is not in
+# the list and rand1, the 13th, is.  Noticed when the independent verification was applied; hrf0 was not run.)
 HALF = ["dlheld/thr30", "dlheld2/thr20", "dlheld/maj15", "dlheld2/maj21", "designed/maj9", "designed/thr10", "dlheld7/f7_01"]
 CONFIGS = {   # name: (the argument(s) put back, targets)
     "deg46": ({"K": 4, "K_hi": 6}, ["designed/par4", "random/rf17", "dlheld3/poly4", "dlheld/par5"]),

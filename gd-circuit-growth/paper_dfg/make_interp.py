@@ -480,9 +480,13 @@ def pct(x, d=2):
 # verifier computed with its own Monte Carlo and its pairing of fold fits; each is checked to occur in that file's text.
 VCALIB = {
     # claim 10: the spectral block's null pass rate on P(y=1) = 0.8 labels at n = 4d, pooled over the report's and the
-    # verifier's own Monte Carlo (the report's 5.7% and 48% were its 2000- and 1000-draw estimates)
+    # verifier's own Monte Carlo (the report's 5.7% and 48% were its 2000- and 1000-draw estimates).  Superseded for the
+    # paper: CALIB.md's correction 6 recomputed these rates with 100000 new draws per cell (calib.json spectral_pooled,
+    # mc_spectral: 5.38% of 122000 draws, 46.6% of 121000), and tab_interp_calib reads those; the verifier's values are
+    # kept here only to check that the two agree to within their Monte Carlo error.
     "spectral_pooled": dict(d30=0.053, d60=0.467, claim=10, text=["5.3% and 46.7%"]),
-    # omission 1: the same rate at larger d or stronger label bias (the report measured d = 30, 60 and P(y=1) = 0.5, 0.8)
+    # omission 1: the same rate at larger d or stronger label bias (the report measured d = 30, 60 and P(y=1) = 0.5, 0.8);
+    # likewise superseded by calib.json mc_spectral (d = 120: 3976 of 4000; P(y=1) = 0.9: 7763 of 20000)
     "spectral_more": dict(d120_p08_n512=[397, 400], d30_p09_n128=0.39, omission=0, text=["397/400", "39% at n = 128"]),
     # claim 12: forced fold fits with a test-passed feature *after* a forced one (the report's 238/900 counted 9 fits
     # whose admission came in round 0, before any forcing)
@@ -537,14 +541,28 @@ def tab_interp_calib():
                 sum=ff["128_biased"]["sumblock"])
     lin_tail = {d: K["derived"]["lin"][str(d)]["chi2_tail"] for d in (30, 60)}
     g = TH["P1"]["bound_over_gauss_d30"]
-    fa, sp, sm = VCALIB["forced_after"], VCALIB["spectral_pooled"], VCALIB["spectral_more"]
+    fa = VCALIB["forced_after"]
+    # the spectral block's null pass rates on biased labels at n = 4d: CALIB.md's pooled Monte Carlo (its correction 6),
+    # checked against the verifier's earlier estimates
+    SP, MS = K["spectral_pooled"], K["mc_spectral"]
+    sp = dict(d30=SP["30:0.8:128"]["rate"], d60=SP["60:0.8:256"]["rate"], d30_draws=SP["30:0.8:128"]["draws"],
+              d60_draws=SP["60:0.8:256"]["draws"])
+    sm = dict(d120_p08_n512=[MS["120:0.8:512"]["passes"], MS["120:0.8:512"]["reps"]],
+              d30_p09_n128=MS["30:0.9:128"]["rate"], d30_p09_n128_draws=MS["30:0.9:128"]["reps"])
+    th_ = lambda v: f"{int(v):,}".replace(",", "\\,")               # thousands with a thin space, as in the text
+    v_sp, v_sm = VCALIB["spectral_pooled"], VCALIB["spectral_more"]
+    assert abs(sp["d30"] - v_sp["d30"]) < 0.002 and abs(sp["d60"] - v_sp["d60"]) < 0.002
+    assert abs(sm["d120_p08_n512"][0] / sm["d120_p08_n512"][1] - v_sm["d120_p08_n512"][0] / v_sm["d120_p08_n512"][1]) < 0.01
+    assert abs(sm["d30_p09_n128"] - v_sm["d30_p09_n128"]) < 0.01
     N = dict(char_r0=dict(ran=ran, passed=passed, mc_rate_d30={"1": cons["30:g1"]["mc_rate"], "2": cons["30:g2"]["mc_rate"]},
                           mc_rate_d60={"1": cons["60:g1"]["mc_rate"], "2": cons["60:g2"]["mc_rate"]},
                           gauss_d30={k: v["gauss"] for k, v in g.items()}, bound_over_gauss_d30={k: v["ratio"] for k, v in g.items()},
                           bound=K["derived"]["PA_level"]["per_class"], p_at_least_2_deg1=VCALIB["deg1_p_at_least_2"]["p"]),
              linear=dict(r0=lin_r0, mc_rate={30: cons["30:lin"]["mc_rate"], 60: cons["60:lin"]["mc_rate"]}, chi2_tail=lin_tail),
              spectral=dict(balanced_max=qb, biased_d30_n128_fits=[q30["observed"], q30["tests"]], biased_d60_n256_fits=[q60["observed"], q60["tests"]],
-                           pooled_null=dict(d30=sp["d30"], d60=sp["d60"]), d120_p08_n512=sm["d120_p08_n512"], d30_p09_n128=sm["d30_p09_n128"]),
+                           pooled_null=dict(d30=sp["d30"], d60=sp["d60"], d30_draws=sp["d30_draws"], d60_draws=sp["d60_draws"]),
+                           d120_p08_n512=sm["d120_p08_n512"], d30_p09_n128=sm["d30_p09_n128"],
+                           d30_p09_n128_draws=sm["d30_p09_n128_draws"], source="calib.json spectral_pooled, mc_spectral"),
              sums=dict(sums, default_fold_fits_round0=VCALIB["sum_default_folds"]["fits"]),
              forced=dict(fold_fits_with_tested_after_forced=fa["d30_p08"], local_after_forced=after_f, local_after_random=after_r,
                          cv_chose_forced_biased=cvb),
@@ -571,9 +589,10 @@ def tab_interp_calib():
          f"& {pct(cons['30:lin']['mc_rate'])} ($d=30$) and {pct(cons['60:lin']['mc_rate'])} ($d=60$), close to the $\\chi^2_d$ tail at its threshold "
          f"({pct(lin_tail[30])}, {pct(lin_tail[60])}) "
          f"& {lin_r0[30][1]} of {lin_r0[30][0]} round-0 tests at $d=30$, {lin_r0[60][1]} of {lin_r0[60][0]} at $d=60$; each adds all $d$ inputs\\\\",
-         f"spectral block & nothing & balanced labels: at most {qb[30][0]} in {qb[30][1]} draws. $P(y{{=}}1)=0.8$, at $n=4d$, the smallest $n$ at which it "
-         f"runs: {pct(sp['d30'], 1)} ($d=30$), {pct(sp['d60'], 0)} ($d=60$), {pct(sm['d120_p08_n512'][0] / sm['d120_p08_n512'][1], 0)} ($d=120$); "
-         f"$P(y{{=}}1)=0.9$: {pct(sm['d30_p09_n128'], 0)} ($d=30$) "
+         f"spectral block & nothing & balanced labels: at most {qb[30][0]} in {th_(qb[30][1])} draws. $P(y{{=}}1)=0.8$, at $n=4d$, the smallest $n$ at which it "
+         f"runs: {pct(sp['d30'], 1)} of {th_(sp['d30_draws'])} draws ($d=30$), {pct(sp['d60'], 0)} of {th_(sp['d60_draws'])} ($d=60$), "
+         f"{pct(sm['d120_p08_n512'][0] / sm['d120_p08_n512'][1], 0)} of {th_(sm['d120_p08_n512'][1])} ($d=120$); "
+         f"$P(y{{=}}1)=0.9$: {pct(sm['d30_p09_n128'], 0)} of {th_(sm['d30_p09_n128_draws'])} ($d=30$) "
          f"& biased labels: {q30['observed']} of {q30['tests']} fits ($d=30$, $n=128$), {q60['observed']} of {q60['tests']} ($d=60$, $n=256$); "
          f"at $P(y{{=}}1)=0.85$, $n=128$: {skew['spectral']} of {skew['fits']} fits; balanced: none\\\\",
          f"sum blocks & nothing & -- & none in the final fits (largest statistic {sums['max_ratio']:.2f} of its threshold); "
@@ -763,7 +782,7 @@ def tab_interp_spur():
     """Appendix: spurious terms by n on the 21 designed and 20 random targets, seed 0 (CALIB.md section 2.1)."""
     A2 = json.load(open(CALIB))["A2"]["by_n"]
     L = ["\\begin{tabular}{@{}rrrrrrrrr@{}}", "\\toprule",
-         "& & & \\multicolumn{3}{c}{terms reading an irrelevant input} & \\multicolumn{2}{c}{spurious share of the output} & test error\\\\",
+         "& & & \\multicolumn{3}{c}{terms reading an irrelevant input} & \\multicolumn{2}{c}{\\hd{spurious share\\\\of the output}} & test error\\\\",
          "\\cmidrule(lr){4-6}\\cmidrule(lr){7-8}",
          "$n$ & \\hd{fits with\\\\error $\\le0.1$} & \\hd{admitted\\\\terms} & all (share) & \\hd{linear-block\\\\characters} & "
          "\\hd{others (share of\\\\the other terms)} & mean & max & \\hd{with / without\\\\them (mean)}\\\\", "\\midrule"]
@@ -812,7 +831,7 @@ DYN_K, DYN_DELTA, DYN_C, DYN_D = 4, 0.1, 1.0, 30          # DFG v1.3's defaults:
 DYN_STRICT, DYN_LENIENT = 1e-4, 0.9                        # the ablations' delta (PROTOCOL.md, Q5)
 DYN_SUITES = ["designed", "dlsymdev", "dlfamdev", "dlheld6", "dlheld7"]      # the five ablation suites
 DYN_CLS = [("character", "character"), ("halfspace", "halfspace"), ("sum", "sum")]   # families.py's coarse classes
-DYN_DEGCOL = {1: "#86b6ef", 2: "#5598e7", 3: "#2a78d6", 4: "#1c5cab", 5: "#0d366b"}   # order_report.py's degree ramp
+DYN_DEGCOL = {1: "#9ecae1", 2: "#5d9fd1", 3: "#2b73b4", 4: "#0f4a8a", 5: "#081f4d"}   # degree ramp, CIELAB L* 79/63/47/31/13
 DYN_BAND = {"char": "#eb6834", "sum": "#1baf7a"}
 DYN_LABEL = {"strict": ("par3", "stair5", "f7_02"), "lenient": ("par4", "andxor", "sym7")}   # points named in the figure
 # Part 10's verifier recomputed the detection points of the gate and multiplexer mixtures with the modulated statistic
@@ -941,9 +960,28 @@ def fig_dyn_when():
     ch = {ab: (_dchar_shift(4, dl), _dchar_shift(1, dl)) for ab, dl in (("strict", DYN_STRICT), ("lenient", DYN_LENIENT))}
     A = _dabl(); bts = A["block_thr_shift"]
     bl = {ab: [bts[ab]["min"], bts[ab]["max"]] for ab in ("strict", "lenient")}   # ABLATIONS.md section 2
-    gap = {r["target"]: r["gap"] for r in A["block_gap"]["rows"]}                  # log2(n* / n_detect), seeds 0-1
+    gap_u = {r["target"]: r["gap"] for r in A["block_gap"]["rows"]}   # log2(n* / n_detect), seeds 0-1, analysis's n_detect
+    far_u = {t for t, g in gap_u.items() if g >= 1}
+    assert len(far_u) == A["block_gap"]["gap_ge1"]
+    # The ablation analysis (ablations.py block_power) uses Part 10's uncorrected round-0 detection points.  Part 10's
+    # verifier corrected those of the gate and multiplexer mixtures (the modulated block tested on a residual already
+    # fitted on its modulator, as DFG tests it; dyn_ndetect), as tab_dyn_when uses them.  The rings use the corrected points.
+    NDT = dyn_ndetect()
+    ndc = {f"{su}/{t}": int(v["n_detect"]) for (su, t), v in NDT.items()}
+    ndu = {f"{su}/{t}": int(v["n_detect_p10"]) for (su, t), v in NDT.items()}
+    bpr = {r["target"]: r for r in A["block_power_rows"]}
+    gap = {}
+    for t, g in gap_u.items():
+        nd0 = bpr[t]["n_detect"]["default"]
+        assert nd0 == ndu[t], (t, nd0, ndu[t])                   # the analysis's point is Part 10's uncorrected one
+        assert abs(math.log2(bpr[t]["nstar_dfg"] / nd0) - g) < 1e-9
+        gap[t] = math.log2(bpr[t]["nstar_dfg"] / ndc[t])
     far = {t for t, g in gap.items() if g >= 1}
-    assert len(far) == A["block_gap"]["gap_ge1"]
+    gap_split = dict(corrected=dict(beyond_1=sorted(far), at_or_below=sorted(t for t, g in gap.items() if g <= 1e-12),
+                                    targets=len(gap)),
+                     uncorrected=dict(beyond_1=sorted(far_u), at_or_below=sorted(t for t, g in gap_u.items() if g <= 1e-12),
+                                      targets=len(gap_u)),
+                     corrected_points={t: [ndu[t], ndc[t]] for t in gap if ndu[t] != ndc[t]})
     lab = {}; XP = [0, 1.2, 2.45]                                    # x positions of the three classes
     for ax, ab, ttl in ((axs[1], "strict", "(b) strict, δ = 10$^{-4}$ (+6.9 nats)"),
                         (axs[2], "lenient", "(c) lenient, δ = 0.9 (−2.2 nats)")):
@@ -991,9 +1029,20 @@ def fig_dyn_when():
         calibration_max_abs_diff=t0["calibration_max_abs_diff"],
         char_shift={ab: dict(deg4=v[0], deg1=v[1]) for ab, v in ch.items()},
         block_shift={ab: dict(min=v[0], max=v[1], median=bts[ab]["median"]) for ab, v in bl.items()},
-        far_targets={t: dict(gap=gap[t], strict=next(r["strict"] for r in rows if f"{r['suite']}/{r['target']}" == t),
-                             lenient=next(r["lenient"] for r in rows if f"{r['suite']}/{r['target']}" == t)) for t in sorted(far)},
+        far_targets={t: dict(gap=gap[t], gap_uncorrected=gap_u[t],
+                             strict=next(r["strict"] for r in rows if f"{r['suite']}/{r['target']}" == t),
+                             lenient=next(r["lenient"] for r in rows if f"{r['suite']}/{r['target']}" == t)) for t in sorted(far | far_u)},
+        far_rings=sorted(far), gap_split=gap_split,
+        # n* (seeds 0, 1) against the corrected n_detect for every one of the 30 symmetric and mixture targets both runs learn
+        gap_corrected=gap, n_detect_corrected={t: ndc[t] for t in gap},
         paired_null=A["nulls"]["paired_seed01"]["pooled"],
+        # the one-seed paired null and the unpaired null, and their like-for-like ratio (ablations.py 'verification',
+        # added when ABLATIONS.md's independent verification was applied); the 16 first fits of the character targets
+        # that lenient slows (ablations/lenient_first_fits.py)
+        paired_null_seed0=A["nulls"]["paired_seed0"]["pooled"], unpaired_seed1_vs_seed0=A["nulls"]["unpaired_seed1_vs_seed0"]["pooled"],
+        null_ratio=A["verification"]["null_ratio"],
+        lenient_first_fits={k: v for k, v in json.load(open(os.path.join(DYN_ABL, "results", "lenient_first_fits.json"))).items()
+                            if k != "rows"},
         by_class={ab: dyn_class_summary(rows, ab) for ab in ("strict", "lenient")}, labelled=lab,
         sum_by_family={ab: {fam: dict(both=sum(1 for r in rows if r["cls"] == "sum" and r["family"] == fam and r[ab] is not None),
                                       within_002=sum(1 for r in rows if r["cls"] == "sum" and r["family"] == fam and r[ab] is not None and abs(r[ab]) <= 0.02),
@@ -1035,8 +1084,8 @@ def tab_dyn_when():
          "\\multicolumn{7}{@{}l}{(a) Characters by the class that first admits them: 41 targets, seed 0, every grid $n$}\\\\",
          "\\midrule",
          "class & characters & \\hd{below $n_{\\rm glob}$\\\\(doublings)} & \\hd{class gain\\\\(doublings)} & "
-         "\\hd{union bound\\\\$L_{\\rm glob}/L_{\\rm cls}$} & \\hd{residual\\\\$(1-\\hat y_\\emptyset^2)/s_j^2$} & "
-         "\\hd{coefficient\\\\$v_{S,j}^2/\\hat y_S^2$}\\\\", "\\midrule"]
+         "\\hd{union bound\\\\$L_{\\rm glob}/L_{\\rm cls}$} & \\hd{residual\\\\$(1-\\hat f(\\emptyset)^2)/s_j^2$} & "
+         "\\hd{coefficient\\\\$v_{S,j}^2/\\hat f(S)^2$}\\\\", "\\midrule"]
     for key, lab in names:
         if key == "global_r0":
             g = EA["global_r0"]
@@ -1145,7 +1194,7 @@ def fig_dyn_order():
                         ax.scatter([x], [yj], s=13, marker="o", facecolors=c, edgecolors="white", linewidths=0.4, zorder=3)
                     else:
                         ax.scatter([x], [yj], s=15, marker="s", facecolors="none", edgecolors=c, linewidths=0.9, zorder=4)
-            lab = {"mux": ("x1x2x3x4", "x1x2x3x4", (3, -9), "left"), "majpar": ("x1x2x3x4x5x6", "x1⋯x6", (-2, 5), "right")}
+            lab = {"mux": ("x1x2x3x4", r"$x_1x_2x_3x_4$", (3, -9), "left"), "majpar": ("x1x2x3x4x5x6", r"$x_1\cdots x_6$", (-2, 5), "right")}
             for r in R:
                 if fn in lab and r["char"] == lab[fn][0]:
                     y = _dnum(r["dfg_n_onset_median"]); y = NEV if not math.isfinite(y) else y
@@ -1157,6 +1206,9 @@ def fig_dyn_order():
         ax.set_yticklabels(["16", "64", "256", "1024", "4096", "16384", "never"] if k % 4 == 0 else [])
         ax.yaxis.set_minor_locator(matplotlib.ticker.NullLocator())
         ax.set_xlim(30, 4000); ax.grid(True, color=GRID, lw=0.4, zorder=0); ax.set_axisbelow(True)
+        ax.xaxis.set_major_locator(matplotlib.ticker.FixedLocator([100, 1000]))     # plain tick values instead of 10^k
+        ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{v:g}"))
+        ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
         for sp in ("top", "right"):
             ax.spines[sp].set_visible(False)
         if k % 4 == 0:
@@ -1217,7 +1269,7 @@ def tab_dyn_order():
         return "tied" if v is None else f"${v:+.2f}$"
     L += ["\\begin{tabular}{@{}lrrrrrrrr@{}}", "\\toprule",
           "\\multicolumn{9}{@{}l}{(b) Per target: Kendall $\\tau_b$ over its Fourier characters (positive: same order)}\\\\", "\\midrule",
-          " & & \\multicolumn{5}{c}{order against order} & \\multicolumn{2}{c}{against degree / $1/|\\hat y|$}\\\\",
+          " & & \\multicolumn{5}{c}{order against order} & \\multicolumn{2}{c}{against degree / $1/|\\hat f(S)|$}\\\\",
           "\\cmidrule(lr){3-7}\\cmidrule(l){8-9}",
           "target & chars & \\hd{net time,\\\\DFG $z_0$} & \\hd{net time,\\\\DFG $n$} & \\hd{pairs\\\\c / t / i} & "
           "\\hd{net $n$, DFG $n$\\\\($|S|\\le4$)} & \\hd{net time,\\\\net $n$} & \\hd{net time} & \\hd{DFG $n$}\\\\",

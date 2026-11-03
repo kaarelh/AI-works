@@ -203,6 +203,7 @@ def tex_desc(s):
     s = s.replace("~", "\x00")
     s = re.sub(r"sum_\(i<=(\d+)\) s_i x_i", "\x01\\1\x01", s)
     s = s.replace("_", "\\_").replace("&", "\\&").replace("<=", "$\\le$").replace(">=", "$\\ge$").replace("->", "$\\to$")
+    s = s.replace("!=", "$\\ne$").replace("==", "$=$")
     s = s.replace("{", "\\{").replace("}", "\\}").replace("|", "$|$")
     s = re.sub(r"(?<=[0-9a-z)])-(?=[0-9x(])", lambda m: "\\allowbreak{}-", s)
     s = re.sub(r"\+(?=x)", lambda m: "+\\allowbreak{}", s)
@@ -314,7 +315,7 @@ def tab_dlheld7():
     cols = [c for c in D7_COLS if not c[0].startswith("nets_") or c[0] in vars_ + ["nets_best"]]
     nd, nc, nn = 3, 2, len([c for c in cols if c[0].startswith("nets")])
     L = [r"\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}l" + "r" * len(cols) + "rr@{}}", r"\toprule",
-         rf" & \multicolumn{{{nd}}}{{c}}{{discrete, inputs permuted}} & \multicolumn{{{nc}}}{{c}}{{calibration}} & "
+         rf" & \multicolumn{{{nd}}}{{c}}{{\hd{{discrete,\\inputs permuted}}}} & \multicolumn{{{nc}}}{{c}}{{\hd{{no-search\\baselines}}}} & "
          rf"\multicolumn{{{nn}}}{{c}}{{networks}} & \multicolumn{{2}}{{c}}{{\hd{{$\log_2$ ratio of\\DFG alone to}}}}\\",
          rf"\cmidrule(lr){{2-{1 + nd}}}\cmidrule(lr){{{2 + nd}-{1 + nd + nc}}}\cmidrule(lr){{{2 + nd + nc}-{1 + len(cols)}}}"
          rf"\cmidrule(l){{{2 + len(cols)}-{3 + len(cols)}}}",
@@ -492,7 +493,10 @@ def tab_notwins():
             v = T[su][t]; bv = best_variant(su, t)
             nb = "--" if v.get("nets_best") is None else ns(v["nets_best"]) + (f" ({', '.join(vlab[k] for k in bv)})" if bv else "")
             r = rt(l2r(v["dfg"], v["nets_best"])) if v.get("nets_best") is not None else "--"
-            L.append(f"{code(su)} & {tg(t)} & {{\\scriptsize {desc(su, t)}}} & {ns(v['dfg'])} & {nb} & {r} & {ns(v.get('v3'))} & "
+            dd = desc(su, t).replace(" = ", "~=~")                   # no break around '=' or after a sum's first term
+            dd = re.sub(r"(~=~x\d+)(\+|\\allowbreak\{\})\\allowbreak\{\}", lambda m: m.group(1) + ("+" if m.group(2) == "+" else ""), dd)
+            dd = re.sub(r"(~=~x\d+)\+\\allowbreak\{\}", r"\1+", dd)
+            L.append(f"{code(su)} & {tg(t)} & {{\\scriptsize {dd}}} & {ns(v['dfg'])} & {nb} & {r} & {ns(v.get('v3'))} & "
                      f"{ns(v.get('lowdeg'))} & {ns(v.get('lin'))} & {ns(v.get('hgb'))}\\\\")
     L += ["\\bottomrule", "\\end{tabularx}"]
     write("tab_notwins", L)
@@ -514,8 +518,11 @@ def tab_v3():
     Q = R["q2_suites"]; X = Q["dfg_vs_v3"]["per_target"]
     L = ["\\begin{tabular}{@{}lcccc@{}}", "\\toprule",
          "\\multicolumn{5}{@{}l}{\\emph{(a) per suite}}\\\\",
-         "suite & targets & \\hd{DFG alone lower / higher\\\\(identical)} & \\hd{clearly lower / higher\\\\($|\\log_2$ ratio$|>0.25$)} & "
+         "suite & targets & \\hd{DFG alone lower / higher\\\\(equal; neither learns)} & \\hd{clearly lower / higher\\\\($|\\log_2$ ratio$|>0.25$)} & "
          "\\hd{mean $\\log_2$ ratio\\\\(both reach)}\\\\", "\\midrule"]
+    # 'identical' in RESULTS.json counts equal n* and also the targets that neither learner learns (never = never)
+    eq_ = lambda x: x["identical"] and fin(num(x["dfg"]))
+    nei_ = lambda x: x["identical"] and not fin(num(x["dfg"]))
     for su in TOY:
         Y = [x for x in X if x["suite"] == su]
         if not Y:
@@ -523,9 +530,11 @@ def tab_v3():
         p = pstats(num(x["ratio"]) if num(x["ratio"]) is not None else math.nan for x in Y)
         lo = sum(1 for x in Y if num(x["ratio"]) is not None and num(x["ratio"]) < 0)
         hi = sum(1 for x in Y if num(x["ratio"]) is not None and num(x["ratio"]) > 0)
-        L.append(f"{code(su)} & {len(Y)} & {lo} / {hi} ({sum(x['identical'] for x in Y)}) & {p['better']} / {p['worse']} & {mean_s(p['mean'])}\\\\")
+        L.append(f"{code(su)} & {len(Y)} & {lo} / {hi} ({sum(map(eq_, Y))}; {sum(map(nei_, Y))}) & {p['better']} / {p['worse']} & {mean_s(p['mean'])}\\\\")
     S = Q["dfg_vs_v3"]; st = S["stats"]
-    L += ["\\midrule", f"all & {S['targets']} & {S['lower']} / {S['higher']} ({S['identical']}) & {st['better']} / {st['worse']} & "
+    n_eq, n_nei = sum(map(eq_, X)), sum(map(nei_, X))
+    assert n_eq + n_nei == S["identical"] and n_nei == st["neither"]
+    L += ["\\midrule", f"all & {S['targets']} & {S['lower']} / {S['higher']} ({n_eq}; {n_nei}) & {st['better']} / {st['worse']} & "
           f"{mean_s(st['mean'])}\\\\"]
     L += ["\\midrule", "\\multicolumn{5}{@{}l}{\\emph{(b) by v3's $\\nstar$}}\\\\",
           "v3's $\\nstar$ & targets & \\hd{DFG alone lower / higher} & \\hd{clearly lower / higher} & \\hd{mean (median)}\\\\", "\\midrule"]
@@ -557,17 +566,28 @@ def tab_v3():
     # own final DFG member alone, or its last out-of-fold DFG fit where the stacker gave DFG no weight; w_dfg = the DFG
     # members' share of the stack weight; each target's grid stops after two consecutive n with err <= 0.005)
     import glob
-    in3 = defaultdict(lambda: dict(cells=0, stack_lower=0, member_lower=0, zero=0, w=[]))
+    in3 = defaultdict(lambda: dict(cells=0, stack_lower=0, member_lower=0, zero=0, w=[], final=0, stack_lower_final=0,
+                                   member_lower_final=0, oof_rows=[], large=[]))
     P10 = sorted(glob.glob(os.path.join(STUDY, "part10", "interp", "results", "toy_final", "v3", "*__s0.json")))
     cells10 = {}
     for f in P10:
         r = json.load(open(f))
         for c in r["cells"]:
             g = in3[c["n"]]; g["cells"] += 1; g["w"].append(c["w_dfg"])
-            g["stack_lower"] += c["err"] < c["err_dfg"] - 0.02; g["member_lower"] += c["err_dfg"] < c["err"] - 0.02
+            sl, ml = c["err"] < c["err_dfg"] - 0.02, c["err_dfg"] < c["err"] - 0.02
+            g["stack_lower"] += sl; g["member_lower"] += ml
             g["zero"] += c["w_dfg"] == 0
+            src = c.get("dfg_source")
+            if src == "final":                              # v3 kept a DFG member: err_dfg is that final member alone
+                g["final"] += 1; g["stack_lower_final"] += sl; g["member_lower_final"] += ml
+            else:                                           # no weight: err_dfg is the last out-of-fold DFG fit
+                mm = re.match(r"out-of-fold fit on (\d+) rows", src or "")
+                assert mm and c["w_dfg"] == 0, src
+                g["oof_rows"].append(int(mm.group(1)))
+            if c["n"] >= 4096:
+                g["large"].append([r["suite"], r["target"], round(c["err"], 4), round(c["err_dfg"], 4), c["w_dfg"]])
             cells10[(r["suite"], r["target"], c["n"])] = dict(err=c["err"], err_dfg=c["err_dfg"], w_dfg=c["w_dfg"],
-                                                              final=c.get("dfg_source") == "final")
+                                                              final=src == "final")
     med = lambda v: sorted(v)[len(v) // 2] if len(v) % 2 else 0.5 * (sorted(v)[len(v) // 2 - 1] + sorted(v)[len(v) // 2])
     c1 = 1 + len(NS_)
     L = ["\\begin{tabular}{@{}l" + "r" * len(NS_) + "@{}}", "\\toprule", "$n$ & " + " & ".join(str(n) for n in NS_) + "\\\\", "\\midrule",
@@ -582,7 +602,13 @@ def tab_v3():
          "DFG member lower than v3 & " + " & ".join(str(in3[n]["member_lower"]) for n in NS_) + "\\\\",
          "DFG members' weight 0 & " + " & ".join(str(in3[n]["zero"]) for n in NS_) + "\\\\",
          "median DFG weight share & " + " & ".join(f"{med(in3[n]['w']):.2f}" for n in NS_) + "\\\\",
+         "fits with a final DFG member & " + " & ".join(str(in3[n]["final"]) for n in NS_) + "\\\\",
+         "\\quad v3 lower than that member & " + " & ".join(str(in3[n]["stack_lower_final"]) for n in NS_) + "\\\\",
+         "\\quad that member lower than v3 & " + " & ".join(str(in3[n]["member_lower_final"]) for n in NS_) + "\\\\",
          "\\bottomrule", "\\end{tabular}"]
+    for n in NS_:
+        g = in3[n]
+        assert g["final"] + g["zero"] == g["cells"] and len(g["oof_rows"]) == g["zero"], n
     write("tab_v3_byn", L)
     big = [x for x in X if num(x["ratio"]) is not None and abs(num(x["ratio"])) > THR]
     pos = [x for x in big if num(x["ratio"]) > 0]
@@ -590,6 +616,8 @@ def tab_v3():
     cal = lambda x: min(T[x["suite"]][x["target"]].get("lin", INF) or INF, T[x["suite"]][x["target"]].get("hgb", INF) or INF)
     hgb_run = [x for x in pos if T[x["suite"]][x["target"]].get("hgb") is not None]
     note("tab_v3", stats=st, identical=S["identical"], lower=S["lower"], higher=S["higher"], sign_test_p=S["sign_test_p"],
+         equal=[(x["suite"], x["target"], num(x["dfg"])) for x in X if eq_(x)],
+         neither=[(x["suite"], x["target"]) for x in X if nei_(x)],
          factor_mean=2 ** num(st["mean"]), clearly_higher=len(pos), clearly_lower=len(big) - len(pos),
          clearly_higher_v3_le64=sum(1 for x in pos if num(x["v3"]) <= 64),
          clearly_higher_v3_le128=sum(1 for x in pos if num(x["v3"]) <= 128),
@@ -602,7 +630,12 @@ def tab_v3():
                        mean_diff=sum(by[n]["diff"]) / len(by[n]["diff"])) for n in NS_},
          by_n_seeds=seeds,
          inside_v3_by_n={n: dict(cells=in3[n]["cells"], stack_lower=in3[n]["stack_lower"], member_lower=in3[n]["member_lower"],
-                                 zero=in3[n]["zero"], median_share=med(in3[n]["w"])) for n in NS_ if in3[n]["cells"]},
+                                 zero=in3[n]["zero"], median_share=med(in3[n]["w"]), final=in3[n]["final"],
+                                 stack_lower_final=in3[n]["stack_lower_final"], member_lower_final=in3[n]["member_lower_final"],
+                                 oof_rows=[min(in3[n]["oof_rows"]), max(in3[n]["oof_rows"])] if in3[n]["oof_rows"] else None)
+                         for n in NS_ if in3[n]["cells"]},
+         # the fits left at n >= 4096 (suite, target, v3's error, its DFG member's error, the DFG members' weight share)
+         inside_v3_large_n={n: in3[n]["large"] for n in NS_ if n >= 4096},
          inside_v3_files=len(P10),
          inside_v3_clearly_lower_targets={f"{x['suite']}/{x['target']}": {n: cells10.get((x["suite"], x["target"], n))
                                                                          for n in (16, 32, 64, 128, 256, 512)}
@@ -698,6 +731,13 @@ def tab_lowdeg():
          never_dfg_reaches=[f"{su}/{t}" for su, t in never if fin(T[su][t]["dfg"])],
          lowdeg_clearly_lower=[(su, t, lo, d) for su, t, lo, d in lower],
          lowdeg_clearly_lower_count=len(lower))
+    # lowdeg on the 54 sum-structured targets (their list: Part 10's study/part10/interp/tables/toy_timing.csv)
+    import csv
+    S54 = [(r["suite"], r["target"]) for r in csv.DictReader(open(os.path.join(STUDY, "part10", "interp", "tables", "toy_timing.csv")))]
+    assert len(S54) == 54
+    nv54 = [f"{su}/{t}" for su, t in S54 if not fin(T[su][t]["lowdeg"])]
+    note("tab_lowdeg", sum_structured=dict(targets=len(S54), lowdeg_learns=len(S54) - len(nv54), lowdeg_never=nv54,
+                                           dfg_never_too=[x for x in nv54 if not fin(T[x.split("/")[0]][x.split("/")[1]]["dfg"])]))
 
 
 # =========================================================================================================================
@@ -719,7 +759,7 @@ def tab_dscale():
         if len(p["common_d"]) < 4:
             ex += "$^\\ast$"
         L.append(f"{t} & " + " & ".join(ns(p["dfg13"].get(d)) for d in D) + " & " + " & ".join(ns(p["nets"].get(d)) for d in D) + f" & {ex}\\\\")
-    L += ["\\midrule", " & \\multicolumn{4}{c}{\\hd{DFG v1.3 against the networks:\\\\median $\\log_2$ ratio (factor)}} & "
+    L += ["\\midrule", " & \\multicolumn{4}{c}{\\hd{DFG v1.3 against\\\\the networks: median\\\\$\\log_2$ ratio (factor)}} & "
           "\\multicolumn{2}{c}{\\hd{DFG v1.3 against\\\\Part 6's DFG: median}} & \\multicolumn{2}{c}{\\hd{max FLOPs per fit /\\\\one network run}} & "
           "\\hd{seeds\\\\(DFG; nets)}\\\\", "\\midrule"]
     seeds = {st["suite"]: st["seeds"] for st in R["status"] if st["run"] == "dfg13-perm"}
@@ -732,6 +772,15 @@ def tab_dscale():
     L += ["\\bottomrule", "\\end{tabular}"]
     write("tab_dscale", L)
     E = {t: (Q["per_target"][t]["exponent_dfg13"], Q["per_target"][t]["exponent_nets"]) for t in Q["targets"]}
+    # DFG v1.3 against Part 6's DFG cell by cell (target, d): log2 ratio of the n*, and the cells beyond the tie band
+    p6 = [(t, d, num(Q["per_target"][t]["dfg13"][d]), num(Q["per_target"][t]["part6_dfg"][d]))
+          for t in Q["targets"] for d in D if num(Q["per_target"][t]["dfg13"].get(d)) is not None
+          and num(Q["per_target"][t]["part6_dfg"].get(d)) is not None]
+    p6 = [(t, d, a, b, l2r(a, b)) for t, d, a, b in p6]
+    note("tab_dscale", dfg_vs_part6_cells=len(p6),
+         dfg_vs_part6_beyond_tie=[(t, int(d), round(a), round(b), r) for t, d, a, b, r in p6 if abs(r) > THR],
+         dfg_vs_part6_median_range=[min(num(Q["per_d"][d]["dfg_vs_part6"]["median"]) for d in D),
+                                    max(num(Q["per_d"][d]["dfg_vs_part6"]["median"]) for d in D)])
     note("tab_dscale", exponents=E, dfg_exp_range=[min(e[0] for e in E.values()), max(e[0] for e in E.values())],
          nets_exp_range=[min(e[1] for e in E.values()), max(e[1] for e in E.values())],
          per_d={d: dict(median=num(Q["per_d"][d]["dfg_vs_nets"]["median"]), factor=2 ** -num(Q["per_d"][d]["dfg_vs_nets"]["median"]),
@@ -783,7 +832,7 @@ def tab_tabular():
     L += ["\\bottomrule", "\\end{tabular}"]
     write("tab_tabular", L)
     REFS = [("mlp", code("mlp")), ("mlp_reg", code("mlp_reg")), ("mlp_strong", code("mlp_strong")), ("mlp_best", code("mlp_best")),
-            ("mlp_best+", code("mlp_best+")), ("hgb", code("hgb")), ("v3", "v3"), ("v2", "v2"), ("v1", "v1")]
+            ("hgb", code("hgb")), ("v3", "v3"), ("v2", "v2"), ("v1", "v1")]     # mlp_best+ equals mlp_best here: not shown
     L = ["\\begin{tabular}{@{}lcccccc@{}}", "\\toprule",
          " & \\multicolumn{2}{c}{kr\\_vs\\_kp} & \\multicolumn{2}{c}{mushroom} & \\multicolumn{2}{c}{both}\\\\",
          "\\cmidrule(lr){2-3}\\cmidrule(lr){4-5}\\cmidrule(l){6-7}",
@@ -957,6 +1006,9 @@ def tab_dictionary():
     f2 = lambda v: f"{v:.2f}"
     loc_N = [math.comb(v, k) for v in range(2, V + 1) for k in range(1, v + 1)]
     lin_thr = lambda k: k + 2 * math.sqrt(k * math.log(1 / dl)) + 2 * math.log(1 / dl)   # line 699
+    lin_thr_d = lambda k, de: k + 2 * math.sqrt(k * math.log(1 / de)) + 2 * math.log(1 / de)   # the same at another delta
+    spec_f = lambda dd, de: 1 + math.sqrt(2 * math.log(1 / de) / dd)                      # line 706: the edge's margin factor
+    assert abs(lin_thr_d(d, dl) - lin_thr(d)) < 1e-12
     cand = {1: "every $x_i$", 2: "every pair", 3: "every triple", 4: "every 4-set; round 0",
             5: "round 0, final fit", 6: "round 0, final fit"}
     rows_of = {1: "all", 2: "all", 3: "all", 4: "all", 5: f"first {_thin(mk[5])} ({_thin(mkh[5])})",
@@ -985,8 +1037,10 @@ def tab_dictionary():
     for k in KS:
         Lx.append(f"$k={k}$ & $(S,s)$, folded or not & all & {_sci(Nb(k))} & {f2(tau(k))} & {bfl(tau(k)):.1f}\\\\")
     w_extra = M._ln_inner(d); w_cnt = 2 * (4 * d + 20 * C2)
+    # the factor 1 + mu enters tk for every block searched in a round with mu current characters as modulators (line 719:
+    # nmod = 1 + len(nb)), so it is a round-level factor; only the weighted factor belongs to one kind of block
     Lx += [f"weighted & $+a\\tau$, $a\\in\\{{\\pm2,\\pm3\\}}$ & all & $\\times\\,{_thin(w_cnt)}$ & $+{w_extra:.2f}$ & \\\\",
-           f"modulated & by $\\chi_P$, $\\mu\\le{D.sum_mod}$ & all & $\\times\\,(1+\\mu)$ & $\\le+{math.log(1 + D.sum_mod):.2f}$ & \\\\",
+           f"every block of a round & $\\mu\\le{D.sum_mod}$ modulators $\\chi_P$ & all & $\\times\\,(1+\\mu)$ & $\\le+{math.log(1 + D.sum_mod):.2f}$ & \\\\",
            "product & $A\\times B$, disjoint & all & $N_AN_B$ & $L_A+L_B$ & \\\\",
            "\\bottomrule", "\\end{tabular}"]
     write("tab_dictionary", Lx)
@@ -1005,7 +1059,16 @@ def tab_dictionary():
          block_N={k: Nb(k) for k in KS}, weighted_extra_nats=w_extra, weighted_count=w_cnt,
          modulator_extra_nats_max=math.log(1 + D.sum_mod),
          global_chars_deg1to6=n_glob_chars, unweighted_blocks_S_s_fold=n_blocks, three_pow_d=3 ** d,
-         par4_name_nats=L(math.comb(d, 4)), char_min_n_deg1=nfl(d), char_min_n_deg4=nfl(math.comb(d, 4)))
+         par4_name_nats=L(math.comb(d, 4)), par4_name_nats_bare=math.log(math.comb(d, 4)),
+         char_min_n_deg1=nfl(d), char_min_n_deg4=nfl(math.comb(d, 4)),
+         # the linear block's room condition n >= 2 (p + k) in round 0 (p = 1) with k remaining inputs
+         linear_min_n_round0_by_k={k: 2 * (1 + k) for k in (30, 29, 20)},
+         # how the two delta-ablations move the dense tests at d = 30: the linear block's chi^2 threshold (on the scale of
+         # T_lin, proportional to n) and the spectral edge's factor 1 + sqrt(2 ln(1/delta) / d) (on the eigenvalue scale; the
+         # n at which a fixed eigenvalue clears the edge scales as its square)
+         delta_moves=dict(linear_thr={str(dd): lin_thr_d(d, dd) / lin_thr_d(d, dl) for dd in (0.9, 1e-4)},
+                          spectral_factor={str(dd): spec_f(d, dd) / spec_f(d, dl) for dd in (0.9, 1e-4)},
+                          spectral_factor_sq={str(dd): (spec_f(d, dd) / spec_f(d, dl)) ** 2 for dd in (0.9, 1e-4)}))
 
 
 PARAM_ROLES = [   # (constructor argument, what it sets); the values are read from the frozen file
@@ -1019,7 +1082,7 @@ PARAM_ROLES = [   # (constructor argument, what it sets); the values are read fr
     ("Rounds and classes", None),
     ("rounds", "rounds at most"),
     ("max_new", "characters admitted per round"),
-    ("max_feats", "features (also $\\le n/2$)"),
+    ("max_feats", "room for characters and blocks (also $\\le n/2$)"),
     ("max_ext_bases", "characters extended"),
     ("local_max", "largest $|V|$, local class"),
     ("blocks", "linear and spectral moves"),
@@ -1323,11 +1386,14 @@ def _f2(v):
 
 @table
 def tab_headline():
-    """The introduction's results at a glance: the held-out dlheld7, the pooled in-sample suites, the input dimension, the
+    """The introduction's results at a glance: the held-out dlheld7, the pooled suites (in-sample except dlheld7; the in-sample
+    part also on its own), the input dimension, the
     dictionary without the search (lowdeg), tabular data and the post-hoc core.  Sources: RESULTS.json q1_dlheld7,
     q2_suites, q3_lowdeg, q4_dscale, q6_tabular, q5b_core; ablations.json core.compute (the core's FLOPs)."""
     Q1, Q2, Q3, Q4, Q6, Q5b = (R[k] for k in ("q1_dlheld7", "q2_suites", "q3_lowdeg", "q4_dscale", "q6_tabular", "q5b_core"))
     T7 = toy()["dlheld7"]
+    # the d from which the budgeted global search can pass no degree-4 character at n > 512 (P5.d_parity_unreachable)
+    UNREACH = json.load(open(os.path.join(STUDY, "part11", "interp", "theory", "check_theory.json")))["P5"]["d_parity_unreachable"]
     # (1) dlheld7 against nets_best
     S = Q1["summary"]["nets_best"]; rr = {t: num(x) for t, x in S["ratios"].items()}
     f = [x for x in rr.values() if fin(x)]; m = sum(f) / len(f)
@@ -1344,9 +1410,9 @@ def tab_headline():
             f"mean $\\log_2\\nstar$ ratio {_f2(m)} over the {S['both']} targets both learn (${2 ** -m:.1f}\\times$ less data; "
             f"median {_f2(num(S['median']))}; s.d.\\ {sd:.2f}, s.e.\\ {se:.2f}); clearly better on "
             f"{S['better']} of {S['targets']}, worse on {S['worse']}",
-            f"one family; on {len([t for t in wins if t in calib])} of the {len(wins)} wins \\code{{lin}} or \\code{{hgb}} also beats "
-            f"\\code{{nets_best}}; v3 needs less data ({_f2(num(v3s['mean']))}; clearly on the {len(v3w)} controls); no learner learns "
-            f"{', '.join(tg(t) for t in never_all)}"]
+            f"one family; on {len([t for t in wins if t in calib])} of the {len(wins)} wins logistic regression (\\code{{lin}}) or "
+            f"gradient boosting (\\code{{hgb}}) also beats \\code{{nets_best}}; v3 needs less data ({_f2(num(v3s['mean']))}; clearly on "
+            f"the {len(v3w)} non-symmetric controls); no learner learns {', '.join(tg(t) for t in never_all)}, a residue class mod 3"]
     # (2) pooled over the suites with network runs
     P = Q2["_pooled"]["nets_best"]
     nvs = [len(Q2[su]["network_variants"]) for su in P["suites"]]
@@ -1354,12 +1420,17 @@ def tab_headline():
     small = sorted(wd, key=lambda su: -wd[su])[:3]
     held = [su for su in TOY if Q2[su]["v13_status"].replace("**", "").startswith("held out")]
     assert sorted(small) == sorted(held), (small, held)             # the 3 smallest margins are the suites held out for some version
+    # the pool includes the held-out dlheld7; its in-sample part is every other suite with network runs
+    ins_su = [su for su in P["suites"] if su != "dlheld7"]
+    PI = pstats(num(x) for su in ins_su for x in Q2[su]["summary"]["nets_best"]["ratios"].values())
+    assert PI["targets"] + Q2["dlheld7"]["targets"] == P["targets"]
     row2 = [f"pooled: {P['targets']} targets of {len(P['suites'])} suites (\\cref{{sec:res-suites}})",
             f"\\code{{nets_best}}: best of {min(nvs)} to {max(nvs)} variants",
             f"{_f2(num(P['mean']))} over {P['both']} (${2 ** -num(P['mean']):.1f}\\times$); clearly better on {P['better']}, "
             f"worse on {P['worse']}",
-            "in-sample (\\cref{tab:status}); against \\code{nets_wd} the margin is smallest on the three suites held out for "
-            "some version (" + ", ".join(code(su) for su in sorted(small, key=TOY.index)) + ")"]
+            f"in-sample (\\cref{{tab:status}}) except \\code{{dlheld7}}'s {Q2['dlheld7']['targets']}; the {PI['targets']} in-sample targets "
+            f"alone: {_f2(PI['mean'])} over {PI['both']}; against \\code{{nets_wd}} (square loss, weight decay) the margin is smallest "
+            "on the three suites held out for some version (" + ", ".join(code(su) for su in sorted(small, key=TOY.index)) + ")"]
     # (3) input dimension
     PT = Q4["per_target"]; ex_d = {t: PT[t]["exponent_dfg13"] for t in PT}; ex_n = {t: PT[t]["exponent_nets"] for t in PT}
     par = ["par2", "par3", "par4"]; ds = sorted(Q4["per_d"], key=int)
@@ -1372,19 +1443,21 @@ def tab_headline():
             + ", ".join(f"{ex_n[t]:.2f}" for t in par) + f"); median factor ${fac[ds[0]]:.1f}\\times$ at $d={ds[0]}$, "
             f"${fac[ds[-1]]:.1f}\\times$ at $d={ds[-1]}$",
             f"{', '.join(str(nt[d]) for d in ds if d != '30')} development targets; {len(Q4['per_d'][ds[0]]['nets_seeds'])} seeds at "
-            "$d\\ne30$; the weakest variant; 3 or 4 points per slope"]
+            "$d\\ne30$; \\code{nets} is the plain square-loss network, the only variant run at every $d$; 3 or 4 points per slope; "
+            f"enumeration costs of order $n\\binom dk$ FLOPs, so within one run no global degree-4 character can pass from "
+            f"$d={UNREACH['k4_scale1.0']}$ on ($n>512$)"]
     # (4) the dictionary without the search
     L3 = Q3["_pooled"]["vs_dfg"]; N3 = Q3["_pooled"]["vs_nets_best"]
     fast = [(su, t, T["lowdeg"], T["dfg"]) for su in TOY for t, T in toy()[su].items()    # lowdeg clearly faster
             if fin(T["lowdeg"]) and fin(T["dfg"]) and math.log2(T["lowdeg"] / T["dfg"]) < -THR]
     assert len(fast) == L3["better"], (len(fast), L3["better"])
     rng = (min(x[3] for x in fast), max(x[3] for x in fast))
-    row4 = [f"no search: \\code{{lowdeg}}, {L3['targets']} targets (\\cref{{sec:res-lowdeg}})",
+    row4 = [f"characters and test only: \\code{{lowdeg}}, {L3['targets']} targets (\\cref{{sec:res-lowdeg}})",
             "DFG alone; \\code{nets_best}",
             f"\\code{{lowdeg}} against DFG alone {_f2(num(L3['mean']))} over {L3['both']} (${2 ** num(L3['mean']):.1f}\\times$ more data; "
-            f"worse on {L3['worse']}, better on {L3['better']}, never on {L3['learner_never']} that DFG learns); against "
-            f"\\code{{nets_best}} {_f2(num(N3['mean']))} ({N3['better']} better, {N3['worse']} worse)",
-            f"in-sample; Part 6's check, unchanged; faster only where DFG alone needs $\\le{rng[1]:.0f}$ points"]
+            f"worse on {L3['worse']}, better on {L3['better']}; \\code{{lowdeg}} never reaches 10\\% on {L3['learner_never']} targets "
+            f"DFG learns); against \\code{{nets_best}} {_f2(num(N3['mean']))} ({N3['better']} better, {N3['worse']} worse)",
+            f"in-sample; Part 6's feasibility check, run unchanged; faster only where DFG alone needs $\\le{rng[1]:.0f}$ points"]
     # (5) tabular
     def both(k):
         cells = [c for ds_ in ("kr_vs_kp", "mushroom") if Q6[ds_]["summary"].get(k) for c in Q6[ds_]["summary"][k]["per_cell"]]
@@ -1393,20 +1466,26 @@ def tab_headline():
     nc, mb = both("mlp_best"); _, hg = both("hgb"); _, v3c = both("v3")
     row5 = [f"tabular: 2 datasets, {nc} cells (\\cref{{sec:res-tabular}})",
             "\\code{mlp_best} (hindsight); \\code{hgb}; v3",
-            f"cells better / tie / worse: {mb} against \\code{{mlp_best}}, {hg} against \\code{{hgb}}, {v3c} against v3",
+            f"cells, i.e.\\ (dataset, $n$) pairs, better / tie / worse: {mb} against \\code{{mlp_best}}, {hg} against \\code{{hgb}}, "
+            f"{v3c} against v3",
             "kr\\_vs\\_kp and mushroom, the only 2 of 26 datasets with $\\pm1$-codable inputs and two classes; no real-valued data"]
     # (6) the core (post hoc)
     C = Q5b["pooled"]; c7 = Q5b["suites"]["dlheld7"]; cc = abl_json()["core"].get("compute", {})
     row6 = [f"post hoc: the core, {C['vs_dfg']['targets']} targets (\\cref{{sec:core}})", "DFG alone, same seeds; \\code{nets_best}",
             f"against DFG alone {_f2(num(C['vs_dfg']['mean']))} over {C['vs_dfg']['both']} ({C['vs_dfg']['better']} lower, "
             f"{C['vs_dfg']['worse']} higher; loses {', '.join(tg(x.split('/')[1]) for x in C['newly_never'])}); against "
-            f"\\code{{nets_best}} {_f2(num(C['vs_nets_best']['mean']))} ({C['vs_nets_best']['better']}/{C['vs_nets_best']['worse']}), "
-            f"DFG alone {_f2(num(C['dfg_same_seeds_vs_nets_best']['mean']))} ({C['dfg_same_seeds_vs_nets_best']['better']}/"
-            f"{C['dfg_same_seeds_vs_nets_best']['worse']}); \\code{{dlheld7}} {_f2(num(c7['vs_nets_best']['mean']))}; median FLOPs "
-            f"{cc['flops_paired_ratio_median']:.3f} of DFG's",
+            f"\\code{{nets_best}}, on the {C['vs_nets_best']['targets']} targets with network runs, "
+            f"{_f2(num(C['vs_nets_best']['mean']))} over {C['vs_nets_best']['both']} (clearly better/worse on "
+            f"{C['vs_nets_best']['better']}/{C['vs_nets_best']['worse']}), "
+            f"DFG alone {_f2(num(C['dfg_same_seeds_vs_nets_best']['mean']))} over {C['dfg_same_seeds_vs_nets_best']['both']} "
+            f"({C['dfg_same_seeds_vs_nets_best']['better']}/"
+            f"{C['dfg_same_seeds_vs_nets_best']['worse']}); \\code{{dlheld7}} {_f2(num(c7['vs_nets_best']['mean']))}, DFG alone "
+            f"{_f2(num(c7['dfg_same_seeds_vs_nets_best']['mean']))} (DFG alone on seeds {', '.join(str(s) for s in c7['seeds'])} only, hence "
+            f"{_f2(num(C['dfg_same_seeds_vs_nets_best']['mean']))} and {_f2(num(c7['dfg_same_seeds_vs_nets_best']['mean']))} rather than "
+            f"the 3-seed {_f2(num(P['mean']))} and {_f2(m)}); median FLOPs {cc['flops_paired_ratio_median']:.3f} of DFG's",
             f"seeds {', '.join(str(s) for s in c7['seeds'])}; defined after every result had been read: nothing is held out for it"]
-    L = ["\\begin{tabularx}{\\linewidth}{@{}>{\\raggedright\\arraybackslash}p{2.2cm}>{\\raggedright\\arraybackslash}p{2.0cm}"
-         ">{\\raggedright\\arraybackslash}X>{\\raggedright\\arraybackslash}p{4.0cm}@{}}", "\\toprule",
+    L = ["\\begin{tabularx}{\\linewidth}{@{}>{\\raggedright\\arraybackslash}p{2.0cm}>{\\raggedright\\arraybackslash}p{1.9cm}"
+         ">{\\raggedright\\arraybackslash}X>{\\raggedright\\arraybackslash}p{4.5cm}@{}}", "\\toprule",
          "evaluation & reference & DFG v1.3 alone & limits\\\\", "\\midrule"]
     for i, r in enumerate((row1, row2, row3, row4, row5, row6)):
         if i:
@@ -1416,6 +1495,7 @@ def tab_headline():
     write("tab_headline", L)
     note("tab_headline", dlheld7=dict(mean=m, sd=sd, se=se, factor=2 ** -m, wins=wins, calibration_wins=calib,
                                       v3_clearly_worse=v3w, never=never_all), pooled_variants=[min(nvs), max(nvs)],
+         pooled_in_sample=dict(suites=ins_su, **PI),
          nets_wd_smallest=small, dscale_exponents=dict(dfg=ex_d, nets=ex_n), dscale_factor=fac,
          lowdeg_faster_dfg_range=rng, tabular=dict(mlp_best=mb, hgb=hg, v3=v3c, cells=nc),
          core_flops_ratio=cc.get("flops_paired_ratio_median"))
@@ -1429,13 +1509,13 @@ TARGET_PARTS = [("a", ["designed", "random"]), ("b", ["dlheld", "dlheld2", "dlhe
 @table
 def tab_targets():
     """Appendix: every toy target, n* of DFG alone, v3, lowdeg, lin, hgb and nets_best (with the variant attaining it), the
-    log2 ratios of DFG alone to nets_best and to v3, and the post-hoc core (seeds 0, 1) with its ratio to DFG alone on the
-    same seeds.  Three tables (tab_targets_a, _b, _c), split by suite.  Sources: toy() (RESULTS.json q2_suites, q3_lowdeg)
+    log2 ratios of DFG alone to nets_best and to v3, and the post-hoc core and DFG alone on seeds 0, 1 with the ratio of
+    the two.  Three tables (tab_targets_a, _b, _c), split by suite.  Sources: toy() (RESULTS.json q2_suites, q3_lowdeg)
     and RESULTS.json q5b_core."""
     T = toy(); C = R["q5b_core"]["suites"]
     cols = ("target & \\hd{DFG\\\\alone} & v3 & \\code{lowdeg} & \\code{lin} & \\code{hgb} & \\code{nets_best} (variant) & "
-            "\\hd{DFG alone vs\\\\\\code{nets_best}} & \\hd{DFG alone\\\\vs v3} & \\hd{core\\\\(seeds 0, 1)} & "
-            "\\hd{core vs DFG alone\\\\(seeds 0, 1)}\\\\")
+            "\\hd{DFG alone vs\\\\\\code{nets_best}} & \\hd{DFG alone\\\\vs v3} & \\hd{core / DFG\\\\alone (seeds 0, 1)} & "
+            "\\hd{core vs\\\\DFG alone}\\\\")
     rows_all = 0; chk = []
     for part, suites in TARGET_PARTS:
         L = ["\\begin{tabular*}{\\linewidth}{@{\\extracolsep{\\fill}}lrrrrrlrrrr@{}}", "\\toprule", cols]
@@ -1453,7 +1533,7 @@ def tab_targets():
                 core, dss = num(cs["core"][t]), num(cs["dfg_same_seeds"][t])
                 rc = num(cs["vs_dfg"]["ratios"][t]); chk.append((su, t, rc, l2r(core, dss)))
                 L.append(f"{tg(t)} & {ns(v['dfg'])} & {ns(v.get('v3'))} & {ns(v.get('lowdeg'))} & {ns(v.get('lin'))} & "
-                         f"{ns(v.get('hgb'))} & {nb} & {r1} & {r2} & {ns(core)} & {rt(rc)}\\\\")
+                         f"{ns(v.get('hgb'))} & {nb} & {r1} & {r2} & {ns(core)} / {ns(dss)} & {rt(rc)}\\\\")
                 rows_all += 1
         L += ["\\bottomrule", "\\end{tabular*}"]
         write(f"tab_targets_{part}", L)
@@ -1489,9 +1569,14 @@ def tab_verif():
         st = [str(c.get("status", "")).lower() for c in cl]
         conf = sum(1 for x in st if x.startswith("confirmed")); corr = sum(1 for x in st if x.startswith("corrected"))
         other = len(st) - conf - corr
-        counts[key] = dict(claims=len(cl), confirmed=conf, corrected=corr, other=other, omissions=len(J.get("omissions", [])),
-                           verdict=str(J.get("verdict", ""))[:200])
-        L.append(f"{lab} & \\texttt{{{ver}}} & {what} & {len(cl)} & {conf} & {corr}" + (f" (+{other} other)" if other else "")
+        oth = defaultdict(int)                                       # the other verdicts by name (e.g. 'unsupported')
+        for x in st:
+            if not x.startswith(("confirmed", "corrected")):
+                oth[x.split()[0] if x.split() else "other"] += 1
+        counts[key] = dict(claims=len(cl), confirmed=conf, corrected=corr, other=other, other_by_status=dict(oth),
+                           omissions=len(J.get("omissions", [])), verdict=str(J.get("verdict", ""))[:200])
+        L.append(f"{lab} & \\texttt{{{ver}}} & {what} & {len(cl)} & {conf} & {corr}"
+                 + (" (+" + ", ".join(f"{v} {k}" for k, v in sorted(oth.items())) + ")" if other else "")
                  + f" & {len(J.get('omissions', []))}\\\\")
     L += ["\\bottomrule", "\\end{tabularx}"]
     write("tab_verif", L)
