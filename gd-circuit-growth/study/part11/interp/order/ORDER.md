@@ -567,8 +567,8 @@ against DFG's n stages (median seed); verdicts are Heuristic, numbers Numerical.
     through the linear block (the χ²_d test on all remaining inputs).
   - In all 45 inverted pairs the networks' earlier character has |ŷ| = 0.0625 (8 linear, 32 pairs, 5 triples).
     - In 33 the character DFG takes first is also a 0.0625-character, of higher degree in 25 of them (the same
-      degree in 8). At its n onset it is carried by a block in seeds 0 and 2. In seed 1 it is carried by a block in
-      15 of the 33, by ext1 or ext2 in 16, and never enters in 2.
+      degree in 8). Its median onset is n = 512 in all 33. At its own n onset it is carried by a block in seeds 0
+      and 2. In seed 1 it is carried by a block in 15 of the 33, by ext1 or ext2 in 16, and never enters in 2.
     - In 12 it is a larger one (x1x2, x1x3, x2x3, x1x2x3).
 - **parmaj: DFG ties everything at n = 128.**
   - At n = 128 no test admits any character in any seed (n_new = 0 in every round).
