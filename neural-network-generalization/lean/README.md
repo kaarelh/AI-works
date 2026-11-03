@@ -139,3 +139,24 @@ it reuses external package objects and records their hashes. Add
 `--fresh-dependencies` to rebuild those packages from source too. See the
 [procedure](review/verification/rebuild-procedure.txt) for the trust boundary
 and generated evidence.
+
+## Coverage continuation: 2 November 2026
+
+[RobustCountablePools](NeuralGeneralization/RobustCountablePools.lean) proves the
+prescribed countable-family unlabeled-pool guarantee with one common labeled
+event and exact per-learner unlabeled budgets.
+[RobustInputNeighborhood](NeuralGeneralization/RobustInputNeighborhood.lean) and
+[RobustNeighborhoodRadius](NeuralGeneralization/RobustNeighborhoodRadius.lean)
+prove the real-input neighborhood transfer and its exact readout-noise limit.
+
+[BatchTwoOnlineFiniteLossCover](NeuralGeneralization/BatchTwoOnlineFiniteLossCover.lean)
+proves the general finite-loss online comparison.
+[BatchTwoOnlineMergingSampledIID](NeuralGeneralization/BatchTwoOnlineMergingSampledIID.lean)
+closes the actual sampled-mistake expectation and sharp tail for the existing
+merging-supported ReLU Gaussian learner under permutation and infinite uniform
+IID inputs, using the original polynomial-depth budget. These statements use
+actual posterior parameter draws, with repeated queries and infinite horizons
+handled explicitly. They do not concern arbitrary adversarial query orders.
+
+The [coverage review](review/coverage-extension-2026-10-30.txt) continues to list
+the unresolved claims; this is not complete coverage of every appendix.
