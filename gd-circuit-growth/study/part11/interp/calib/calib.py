@@ -478,7 +478,7 @@ if __name__ == "__main__":
     elif cmd == "noise":
         d = int(opt.get("d", 30)); seeds = rng_(opt.get("seeds", "0-19" if d == 30 else "0-9"))
         ps = [float(v) for v in opt.get("ps", "0.5,0.8").split(",")]
-        ns = [int(v) for v in opt["ns"].split(",")] if "ns" in opt else (NS if d == 30 else [64, 128, 256, 512, 1024, 4096, 16384])
+        ns = [int(v) for v in opt["ns"].split(",")] if "ns" in opt else NS
         assert audit()["ok"]
         run_noise(d, ps, seeds, ns, frozen_seeds=set(rng_(opt.get("frozen", "0-1"))))
     elif cmd == "spur":
