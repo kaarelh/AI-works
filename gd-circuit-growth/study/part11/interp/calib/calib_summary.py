@@ -97,6 +97,52 @@ def derived(noise, tests):
         kb[str(n)] = dict(plugin=plug, per_fit=float(np.mean(per)) if per else None, fits_no_feature=len(L0), q=q,
                           err=e, err_identity=a + q * (1 - 2 * a), ybar_mean=float(np.mean([r["ybar"] for r in L])))
     out["background_p08"] = dict(a=a, slope=1 - 2 * a, by_n=kb)
+    # spectral block, a heuristic edge: with P(y = 1) = p the residual is r- = -1 - ybar on the minority rows (fraction
+    # 1 - p) and r+ = 1 - ybar on the others; the minority part of the pair matrix, r- (m-/n) (W - I) with W the
+    # Gram matrix of m- = (1 - p) n rows, has its extreme eigenvalue near |r-| (m-/n) ((1 + sqrt(d/m-))^2 - 1)
+    # (Marchenko-Pastur edge); compare DFG's edge 2 s sqrt(d/n) (1 + sqrt(2 ln(1/delta) / d)), s^2 = 1 - ybar^2
+    sp = {}
+    for p in (0.5, 0.8):
+        yb = 2 * p - 1; rm = 1 + yb; fm = 1 - p; s = math.sqrt(1 - yb * yb)
+        for d, ns_ in ((30, (128, 256, 512, 1024)), (60, (256, 512, 1024, 4096))):
+            for n in ns_:
+                mp = rm * fm * ((1 + math.sqrt(d / (fm * n))) ** 2 - 1)
+                thr = 2 * s * math.sqrt(d / n) * (1 + math.sqrt(2 * math.log(1 / DELTA) / d))
+                sp[f"{d}:{p}:{n}"] = dict(minority_edge=mp, dfg_edge=thr, ratio=mp / thr)
+    out["spectral_minority_edge"] = sp
+    return out
+
+
+def consistency(res):
+    """Observed round-0 passes in the final fits (A1) against the null Monte Carlo rates: P(X >= observed) for X ~
+    Binomial(number of tests, MC rate).  Degree-1 / degree-2 classes and the linear block: rates pooled over the
+    20000-draw runs at that d; the spectral block: the 2000- / 1000-draw rate at that (d, p, n)."""
+    A, mb, mc = res.get("A1"), res.get("mc_big", {}), res.get("mc", {})
+    if not A or not mb:
+        return {}
+    tail = lambda k, N, q: float(stats.binom.sf(k - 1, N, q)) if k > 0 else 1.0
+    out = {}
+    for d in (30, 60):
+        runs = {k: w for k, w in mb.items() if k.startswith(f"{d}:")}
+        draws = sum(w["reps"] for w in runs.values())
+        for cl in ("g1", "g2"):
+            v = A["by_class_pooled"].get(f"{d}:{cl}")
+            if v and draws:
+                q = sum(w[cl]["passes"] for w in runs.values()) / draws
+                out[f"{d}:{cl}"] = dict(observed=v["r0_pass"], tests=v["r0_ran"], mc_rate=q, mc_draws=draws,
+                                        expected=q * v["r0_ran"], p_at_least=tail(v["r0_pass"], v["r0_ran"], q))
+        k = sum(A["blocks"].get(f"{d}:{p}:lin:all:r0", {}).get("passed", 0) for p in (0.5, 0.8))
+        N = sum(A["blocks"].get(f"{d}:{p}:lin:all:r0", {}).get("ran", 0) for p in (0.5, 0.8))
+        if N and draws:
+            q = sum(w["lin"]["passes"] for w in runs.values()) / draws
+            out[f"{d}:lin"] = dict(observed=k, tests=N, mc_rate=q, mc_draws=draws, expected=q * N, p_at_least=tail(k, N, q))
+        for p in (0.5, 0.8):
+            for n in NS:
+                v = A["blocks"].get(f"{d}:{p}:quad:{n}:r0"); w = mc.get(f"{d}:{p}", {}).get(str(n))
+                if v and w and w.get("quad_reps"):
+                    q = w["quad_pass"] / w["quad_reps"]
+                    out[f"{d}:{p}:quad:{n}"] = dict(observed=v["passed"], tests=v["ran"], mc_rate=q, mc_draws=w["quad_reps"],
+                                                    expected=q * v["ran"], p_at_least=tail(v["passed"], v["ran"], q))
     return out
 
 
@@ -779,6 +825,20 @@ def tables(res):
         f = lambda w: "-" if w is None else f"{rate(w['passes'], v['reps'])} ({w['med']:.3f} / {w['q99']:.3f} / {w['max']:.3f})"
         T.append(f"| {d} | {p} | {n} | {v['reps']} | {f(v['g1'])} | {f(v['g2'])} | {f(v['lin'])} | {f(v['quad'])} |")
     T.append("")
+    if res.get("consistency"):
+        T += ["## Round-0 passes in the final fits against the null Monte Carlo: P(X >= observed), X ~ Binomial(tests, MC rate)", "",
+              "| test | observed / tests | MC rate (draws) | expected | P(X >= observed) |", "|---|---|---|---|---|"]
+        for k, v in res["consistency"].items():
+            T.append(f"| {k} | {v['observed']}/{v['tests']} | {v['mc_rate']:.5f} ({v['mc_draws']}) | {v['expected']:.3f} | {v['p_at_least']:.3f} |")
+        T.append("")
+    sme = res.get("derived", {}).get("spectral_minority_edge")
+    if sme:
+        T += ["## Spectral block, a heuristic: the minority rows' Marchenko-Pastur edge against DFG's edge (round 0, noise)", "",
+              "| d | P(y=1) | n | minority edge \\|r-\\| (m-/n)((1+sqrt(d/m-))^2 - 1) | DFG's edge | ratio |", "|---|---|---|---|---|---|"]
+        for k, v in sme.items():
+            d, p, n = k.split(":")
+            T.append(f"| {d} | {p} | {n} | {v['minority_edge']:.3f} | {v['dfg_edge']:.3f} | {v['ratio']:.3f} |")
+        T.append("")
     if "A1" in res:
         A = res["A1"]
         for (d, p) in sorted(set((v["d"], v["p"]) for v in A["by_cell"].values())):
@@ -1079,6 +1139,7 @@ def main():
         f"{d}:{p}:{n}": mc_big(d, p, n, 20000) for d, ns_ in ((30, (128, 1024)), (60, (256, 1024))) for p in (0.5, 0.8) for n in ns_}
     if noise:
         res["A1"] = a1(noise)
+        res["consistency"] = consistency(res)
     casc = load("cascade.jsonl")
     if casc:
         res["cascade"] = cascade(casc)
