@@ -655,12 +655,17 @@ def p3_section():
                      for r in a1 if r["t"] == "parmaj" and r["k"] == 4])
     # the characters seen although none was predicted, whose first entry is the round-0 global test (near the threshold)
     snp = [r for r in g0 if r["cat"] == "seen_not_predicted"]; br = {}
+    rows_at = lambda r: r["n_first"] if r["k"] <= 4 else m_k(r["k"], r["n_first"], 30, final_scale(r["n_first"]))
     for r in snp:
-        b_ = br.setdefault(f"{r['suite']}/{r['t']}:deg{r['k']}", dict(count=0, n_glob=[], n_first=[]))
+        b_ = br.setdefault(f"{r['suite']}/{r['t']}:deg{r['k']}", dict(count=0, n_glob=[], n_first=[], ratio=[]))
         b_["count"] += 1; b_["n_glob"].append(r["n_glob"]); b_["n_first"].append(r["n_first"])
+        b_["ratio"].append(rows_at(r) / r["n_glob"])
     res["first"]["seen_not_predicted_global_r0"] = dict(
-        count=len(snp), by_target_degree={kk: dict(count=v["count"], n_glob_min=min(v["n_glob"]), n_glob_max=max(v["n_glob"]),
-                                                   n_first=sorted(set(v["n_first"]))) for kk, v in sorted(br.items())})
+        count=len(snp), rows_over_nglob_min=min(rows_at(r) / r["n_glob"] for r in snp),
+        rows_over_nglob_max=max(rows_at(r) / r["n_glob"] for r in snp),
+        by_target_degree={kk: dict(count=v["count"], n_glob_min=min(v["n_glob"]), n_glob_max=max(v["n_glob"]),
+                                   n_first=sorted(set(v["n_first"])), rows_over_nglob=[min(v["ratio"]), max(v["ratio"])])
+                          for kk, v in sorted(br.items())})
     # the characters neither predicted within the grid nor ever seen: degree >= 7 (no global test), or a degree <= 6
     # character whose n_glob lies beyond what the grid (k <= 4) or the subsample m_k (k = 5, 6) reaches
     nn_ = [r for r in rows if r["cat"] == "never_predicted_never_seen"]
@@ -912,12 +917,13 @@ def p5_section():
                     dd[str(n)] = d; break
         res["d_star"][lab] = dd
     res["d_star_deg3_skip32_final"] = next(d for d in range(5, 5000) if m_k(3, 10 ** 9, d, 1.0) < 32)
-    # GD(120) is doubled (the d = 120 networks trained 40000 steps), so m_k is not monotone in d there: the (n, fit)
-    # entries of d_star below 120 whose degree-4 search is nevertheless not subsampled at d = 120
-    res["d_star_exceptions_at_d120"] = [dict(fit=lab, n=n, m4_d120=m_k(4, 10 ** 9, 120, sc))
-                                        for sc, lab in ((1.0, "final_n_gt_512"), (0.5, "final_n_le_512"), (1 / 20, "fold_5"),
-                                                        (1 / 40, "fold_10"))
-                                        for n in NS if res["d_star"][lab][str(n)] < 120 and m_k(4, 10 ** 9, 120, sc) >= n]
+    # GD(120) is doubled (the d = 120 networks trained 40000 steps), so m_k is not monotone in d there: the entries of
+    # THEORY.md's d* table (final fit; scale 0.5 for n <= 512, 1 above) with d* < 120 whose degree-4 search is
+    # nevertheless not subsampled at d = 120
+    res["d_star_exceptions_at_d120"] = [dict(n=n, d_star=res["d_star"][lab][str(n)], m4_d120=m_k(4, 10 ** 9, 120, sc))
+                                        for n in NS for sc, lab in [(final_scale(n), "final_n_le_512" if n <= DEF["cv_n"]
+                                                                     else "final_n_gt_512")]
+                                        if res["d_star"][lab][str(n)] < 120 and m_k(4, 10 ** 9, 120, sc) >= n]
     # the fold fits at n <= 512: their row counts n - ceil((n - f) / F), and which global searches are subsampled
     # (m_k < rows) or skipped (m_k < 32)
     res["fold_subsampling"] = {}
@@ -1000,10 +1006,12 @@ def p5_section():
             where = [("final" if (n_ > DEF["cv_n"] or i == 2 * F_) else f"variant{i // F_}_fold{i % F_}")
                      for i, c in enumerate(v["calls"]) if c["round0"] and "linear" in c["round0"]["blocks"]]
             model = next((b.get("linear_in") for b in bad if f"{b['t']}__d{b['d']}__n{b['n']}__s{b['seed']}" == k_), None)
+            # the model matches every fold of the same size (their FLOPs are equal); the refit names the fold, which
+            # must be one of them, in both variants' fits
             res["check"]["linear_cells_refit"][k_].update(
                 refit_linear_in=where, model_linear_in=model,
                 same_place=(False if not model else (where == ["final"]) if model == ["final"] else
-                            (len(model) == 1 and sorted(where) == sorted(f"variant{q}_fold{model[0]}" for q in (0, 1)))))
+                            any(sorted(where) == sorted(f"variant{q}_fold{f}" for q in (0, 1)) for f in model if f != "final")))
         res["check"]["linear_cells_match_refits"] = sorted(lin_cells) == sorted(P5c)
     res["max_recorded_over_GD"] = {}
     for d in (15, 30, 60, 120):

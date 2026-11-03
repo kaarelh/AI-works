@@ -157,9 +157,10 @@ What P-A does not cover:
   every (S, s) of every size k = 2 … 24, both folds and the n_mod modulators would give 23δ/(4K·24) = 0.0060 ≤ δ/(4K)
   for all additive blocks together (weighted blocks have their own, half as large share); the block is searched on
   the residual and must also pass on the residual projected off the round's new characters;
-- **the forced variant** (n ≤ 512): when nothing passes it takes the best-scoring global character (or, at n ≥ 48,
-  the best sum block if its T / threshold exceeds the square of the best character's ratio), at most twice; it is
-  used only if the paired cross-validation test prefers it.
+- **the forced variant** (n ≤ 512): when nothing passes it takes the best-scoring candidate character (in the re-run
+  of §1.5 a global one, except 4 of the 734 second forced characters, which came from the local class), or, at
+  n ≥ 48, the best sum block if its T / threshold exceeds the square of the best character's ratio; at most twice. It
+  is used only if the paired cross-validation test prefers it.
 
 ### 1.2 What was admitted, d = 30
 
