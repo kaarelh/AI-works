@@ -1,1 +1,166 @@
-\todo{ablations}
+\section{What its parts do}\label{sec:ablations}
+
+DFG v1.3 has many parts (\cref{sec:learner}, \cref{tab:params}). This section asks which of them carry its results. It reports the protocol's 12 ablations (Q5), each DFG alone with one constructor argument changed, and then a post-hoc \emph{core} DFG with nine parts removed at once (\cref{sec:core}). Every run uses the frozen file; only constructor arguments change.
+
+\paragraph{How the runs are compared.} An ablation runs on DFG alone's training sets, column permutations and cross-validation folds, which all come from the fit's random stream. Its $\nstar$ is compared with DFG alone's $\nstar$ computed from the same seeds of DFG alone's own runs. Six ablations (and the core) ran on seeds 0 and 1, six on seed 0 only (\cref{sec:part11}). The ratio is $\log_2(\nstar_{\rm run}/\nstar_{\rm DFG\ alone})$, negative when the run needs less data. A target moves \emph{lower} or \emph{higher} when the ratio is beyond $\mp0.25$; means are over the targets both reach. The five ablation suites hold 65 targets (\code{designed}, \code{dlsymdev}, \code{dlfamdev}, \code{dlheld6}, \code{dlheld7}); only \code{dlheld7} is held out.
+
+\paragraph{Two nulls.} The protocol's null compares DFG alone's seed 1 with its seed 0. Those are different training sets, so it overstates the noise of a paired comparison: it moves 23 of the 65 targets beyond $\pm0.25$. A paired comparison needs a paired null, which was added post hoc: DFG alone refitted on the same training and test sets with another fit stream, so with another column order and other folds and nothing else (\repo{study/part11/interp/ablations/perm_null.py}). The column order is irrelevant to the targets and to the tests (\cref{prop:parity}), but it can matter through tie-breaking, the block search's orders and the folds. A change that leaves DFG's decisions alone therefore still perturbs its path, and the paired null measures by how much.
+
+\paragraph{Families.} Each target is assigned by hand, from its definition, to one of the nine groups of \cref{sec:interp-atlas} and to three classes (post hoc; \repo{study/part11/interp/ablations/families.py}). \emph{Character targets} are parities, staircases, multiplexers, compositions of parities and majorities and thresholds of a few characters, DNFs, CNFs, decision lists, read-once and random formulas: 71 of the 138 targets, 25 of the 65. \emph{Halfspaces} are majorities and thresholds of a weighted sum, with the dictator, $\mathrm{AND}(x_1,x_2,x_3)$ and an AND of two halfspaces (13 and 7). \emph{Symmetric and mixture targets} are functions of one signed sum, alone or with a parity, a gate, a second sum or an inner term (54 and 33). This class differs from the 54 sum-structured targets of \cref{sec:tasks} by two targets each way: it includes sym8 and sym9, and it counts f7\_01 and fd\_01, thresholds of an unsigned sum, as halfspaces.
+
+\paragraph{Sources.} The summaries are in \repo{study/part11/RESULTS.json} (\texttt{q5\_ablations}, \texttt{q5b\_core}), written by \repo{study/part11/compare_dfg.py}. The groupings, the nulls, the predictions of \cref{sec:abl-test} and the leave-one-in runs of \cref{sec:core} are in \repo{study/part11/interp/ablations/ablations.json}, written by \repo{study/part11/interp/ablations/ablations.py}; the analysis is \repo{study/part11/interp/ablations/ABLATIONS.md}. Models are read from refits of single cells (\repo{study/part11/interp/ablations/refit.py}). A refit uses the instrumented copy of \cref{sec:interp-calib}, so that every feature carries the class that admitted it, and every refit quoted here reproduces its run's result file exactly in test error and FLOP count (\repo{study/part11/interp/ablations/results/refits.json}). The analysis has not been checked by an independent verifier.
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{Twelve single changes}\label{sec:abl-single}
+
+\begin{table}[t]
+\centering{\footnotesize\setlength{\tabcolsep}{2.4pt}\renewcommand{\arraystretch}{1.05}
+\input{tables/tab_ablations.tex}}
+\caption{The 12 ablations of Q5 on the 65 targets of the five ablation suites, against DFG alone on the same seeds and training sets \status{Numerical}. Each cell gives the mean $\log_2$ ratio of the run's $\nstar$ to DFG alone's over the targets both learn; below it, the targets on which the run needs clearly less / clearly more data (beyond $\mp0.25$, or only one reaches 10\% error), and in brackets the number both learn. ``Newly never'': targets the run never brings to 10\% error by $n=16384$ while DFG alone does. Class sizes in the header (\cref{sec:ablations}, ``Families''). The three targets that DFG alone never learns (fd\_10, h6\_00, f7\_05) are in no mean. Bottom: the paired null (post hoc), DFG alone refitted on the same training sets with another column order and other cross-validation folds, and the protocol's unpaired null. Sources: \repo{study/part11/RESULTS.json} (\texttt{q5\_ablations}; the pooled column is checked against it) and \repo{study/part11/interp/ablations/ablations.json} via \repo{paper_dfg/make_tables.py}.}
+\label{tab:ablations}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_ablations.pdf}
+\caption{Every target of the five ablation suites, one row per run: the $\log_2$ ratio of the run's $\nstar$ to DFG alone's on the same seeds \status{Numerical}. Colour gives the target's class; the grey band is the tie band $\pm0.25$. Ratios beyond $\pm3$ are drawn at the edge (triangles), and ``never'' (the run never reaches 10\% error where DFG alone does) in the right-hand column. Right: the numbers of targets clearly lower / clearly higher. Bottom: the paired null on seeds 0 and 1 (post hoc) and the core DFG of \cref{sec:core} on the same 65 targets (post hoc). Source: \repo{study/part11/interp/ablations/ablations.json} via \repo{paper_dfg/make_figures.py}; the plotted points are in \repo{paper_dfg/figures/fig_ablations.json}.}
+\label{fig:ablations}
+\end{figure}
+
+\begin{table}[t]
+\centering{\footnotesize\setlength{\tabcolsep}{3pt}\renewcommand{\arraystretch}{1.05}
+\input{tables/tab_abl_family.tex}}
+\caption{The ablations by target family (the groups of \cref{sec:interp-atlas}; group sizes in the header) on the 65 targets of the five ablation suites \status{Numerical; families post hoc}. Each cell: mean $\log_2$ ratio over the targets both learn, and the targets clearly lower / clearly higher. The symmetric group holds the three targets no learner learns, so its means are over 9 targets (6 under \code{nosums}). Bottom: the paired and unpaired nulls, and the core DFG on the same 65 targets (post hoc). Source: \repo{study/part11/interp/ablations/ablations.json}.}
+\label{tab:abl-family}
+\end{table}
+
+\Cref{tab:ablations,tab:abl-family} and \cref{fig:ablations} give the results.
+
+\paragraph{The paired null} \status{Numerical; post hoc}. On seed 0 the re-permuted fits move 1 of the 65 targets beyond $\pm0.25$ (dlist5, $+0.39$), and 10 of the 65 ratios are not zero; the mean $|\text{ratio}|$ is 0.012. On seeds 0 and 1 they move 3 (andxor $-0.69$, thrsum $-0.66$, h6\_07 $+0.40$), with mean $|\text{ratio}|$ 0.038. The unpaired null moves 23 to 31 targets, depending on the pair of seeds.
+
+\paragraph{What carries the results} \status{Numerical}.
+\begin{itemize}
+\item \emph{Sum blocks.} Without them (\code{nosums}) the mean ratio is $+0.91$ over the 59 targets both learn, with 31 clearly higher and 2 lower, and DFG no longer learns band11, h6\_01 and f7\_08. The cost falls on the symmetric targets ($+2.78$, 9 of the 9 that DFG alone learns move, 3 of them to ``never'') and the mixtures ($+1.54$, 16 of 21 higher). Character targets lose little ($+0.16$): rand3, parmaj, h6\_05, fd\_07 and dnf3, which the atlas found encoded by blocks before their characters are all detectable (\cref{sec:interp-atlas}). The two seeds agree: 27 targets move up on both and none in opposite directions.
+\item \emph{Tests scaled to the residual} (\code{labelnoise}, $+0.14$; 15 higher, 5 lower) and \emph{the small-$n$ machinery} (\code{nosmalln}, $+0.12$; 10 higher, none lower) come next, mostly on character targets (\cref{sec:abl-smalln,sec:abl-label}).
+\end{itemize}
+
+\paragraph{What moves both ways} \status{Numerical}. The two test levels, the kernel background and the linear and spectral blocks move 10 to 23 targets each, in both directions, with means between $-0.10$ and $+0.07$. Halfspaces gain from \code{strict} ($-0.23$), \code{noblocks} ($-0.19$) and \code{labelnoise} ($-0.17$): every change that keeps features out at small $n$ helps them on these suites (\cref{sec:abl-test}). For \code{strict} and \code{lenient}, most movements are one grid step on one seed: 24 and 22 targets move on one seed only, 5 and 4 on both.
+
+\paragraph{What can be removed} \status{Numerical}. Five parts stay within the paired null, or close to it, on these 65 targets:
+\begin{itemize}
+\item the eigenvector seeds of the block search (\code{noeig}): 1 target moves, h6\_10 ($+1.08$);
+\item the extension and local classes (\code{nocomp}): 4 move, among them andxor and thrsum, which the paired null also moves by as much;
+\item the weighted blocks (\code{noweighted}): 1 moves, h6\_10 again ($+0.94$), the target they were designed after (\cref{tab:status});
+\item the logistic refinement (\code{lsread}): 3 move, by at most 0.58;
+\item the search of degrees 4--6 (\code{K3}): 3 move, of which only par4 by much ($+3.01$; \cref{sec:abl-k3}).
+\end{itemize}
+Their mean $|\text{ratio}|$ is 0.020--0.075, against 0.012 and 0.038 for the paired null on one and two seeds.
+
+\emph{Reading} \status{Heuristic}. On these suites DFG's results come from the sum blocks, with the residual scaling of the tests and the forced variant as smaller contributors. Five parts can each be removed without a change larger than an arbitrary perturbation of the path produces. Two qualifications apply. The suites contain few targets that need those parts: one pure 4-parity, no dense halfspace on more than 13 inputs, no degree-5 parity. And the parts are removed one at a time, so they may substitute for one another. \Cref{sec:core} removes them together.
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{The test or the search}\label{sec:abl-test}
+
+\code{strict} ($\delta=10^{-4}$) and \code{lenient} ($\delta=0.9$) move the log term of every test by $+6.91$ and $-2.20$ nats. If a target's data cost is set by a test, its $\nstar$ should move by a predictable amount; if it is set by the search, it should not move.
+
+\paragraph{Parities: the test, exactly} \status{Numerical}. By \cref{prop:parity}, a $k$-parity passes round 0's test exactly when $n(1-\bar y^2)>n_{\rm thr}(k,d)$, and $n_{\rm thr}$ moves by $+13.8$ and $-4.4$ rows with $\delta$: at $d=30$ from 22.3, 26.8 and 30.6 ($k=2,3,4$) to 36.1, 40.6 and 44.4 under \code{strict} and to 17.9, 22.4 and 26.2 under \code{lenient}. Applied seed by seed to each training set's own $\bar y$, it predicts the measured change of $\nstar$ to within 0.02:
+\begin{itemize}
+\item par3: \code{strict} $+0.98$ predicted, $+1.00$ measured; both seeds now pass at $n=64$ instead of 32. \code{lenient}: 0 and 0.
+\item par4: \code{strict} $+0.20$ and $+0.21$, both seeds at 64; \code{lenient} $-0.79$ and $-0.79$, both seeds at 32 (with $\delta=0.1$, seed 0 passed at 64 and seed 1 at 32).
+\item par2: 0 and 0. It is learned at $n=16$ by the forced variant, below every $n_{\rm thr}$ here, and the cross-validation's choice does not depend on $\delta$.
+\end{itemize}
+
+\paragraph{Other character targets: one grid step, when the test binds} \status{Numerical}. By \cref{prop:nglob}(b), $n_{\rm glob}$ is proportional to the log term. \code{strict} therefore multiplies it by 1.81, 1.62, 1.52 and 1.45 for degrees 1--4 ($+0.86$ to $+0.54$ doublings), and \code{lenient} by 0.74--0.86 ($-0.43$ to $-0.22$). On the 25 character targets:
+\begin{itemize}
+\item \code{strict} raises $\nstar$ on 8: par3 $+1.00$, stair5 $+0.83$, rand3 $+0.72$, rand2 $+0.71$, majpar $+0.70$, sparsepoly $+0.65$, h6\_03 $+0.54$, h6\_05 $+0.30$. In the result files their first fit moves one grid step. For example, stair5 has test error 0 at $n=128$ on both seeds with $\delta=0.1$, and 0.31 and 0.18 with $\delta=10^{-4}$.
+\item \code{lenient} is not the mirror image. It lowers $\nstar$ on 2 (par4, rand2) and raises it on 8: andxor $+0.87$, majpar $+0.75$, fd\_00 $+0.62$, mux $+0.59$, fd\_07 $+0.53$, dlist5, h6\_05, f7\_02. The class mean is $+0.12$.
+\end{itemize}
+The asymmetry comes from the small-$n$ machinery and from the test most sensitive to $\delta$, the linear block's. On 30 inputs its threshold (\cref{eq:lintest}) is 51.2 at $\delta=0.1$, 33.8 at $0.9$ and 81.7 at $10^{-4}$. Refits show both effects.
+\begin{itemize}
+\item \emph{majpar at $n=64$} (seed 0). With $\delta=0.1$ nothing passes in round 0, the forced variant adds $\chi_{\{1,2\}}$ and then $\chi_{\{3,4\}}$, and $\chi_{\{5,6\}}$ passes its own test in round 2: error 0.067. With $\delta=0.9$, $\chi_{\{1,2\}}$ passes in round 0 and the linear block enters with 30 degree-1 characters, none of them in majpar's Fourier support; then nothing passes: error 0.341. With $\delta=10^{-4}$ the forced pairs are the same, but $\chi_{\{5,6\}}$ fails its test: error 0.269.
+\item \emph{f7\_02 at $n=128$} (a DNF of three terms, seed 1). With $\delta=0.1$ the linear block enters and the default variant is kept: error 0.202. With $\delta=10^{-4}$ nothing passes, the forced variant guesses the blocks $(x_2-x_6-x_8)$ and $(-x_3+x_5+x_7)$, which are two of the DNF's terms, the third term's block then passes its test, and the cross-validation keeps the forced variant: error 0.
+\end{itemize}
+
+\paragraph{Halfspaces: a stricter test helps} \status{Numerical}. \code{strict} lowers $\nstar$ on 4 of the 7 (and3 $-0.61$, f7\_01 $-0.57$, maj3 $-0.45$, fd\_01 $-0.40$). A refit of f7\_01 $=[x_1+\dots+x_{13}\le1]$ at $n=128$ (seed 1) shows why. With $\delta=0.1$, $\chi_{\{7\}}$ passes its own test in round 0 and the linear block enters: error 0.091. With $\delta=10^{-4}$ no character passes on its own, and the exact block $(x_1+\dots+x_{13})$ is admitted next to the linear block: error 0. A block must also pass on the residual projected off the round's passing characters (\cref{sec:round}), so a degree-1 character that passes first takes part of the block's signal.
+
+\paragraph{Symmetric and mixture targets: the search} \status{Numerical}. Part 10 applied DFG's block test to each sum-structured target's true block, as if proposed in round 0, on the seed-0 training rows at every $n$ \cite{portfoliolearner2026}. The statistic does not depend on $\delta$, so the first $n$ at which the true block would pass, $n_{\rm detect}$, follows for each $\delta$ by recomputing the threshold of \cref{eq:blocktest}. (Modulated statistics were stored as ratios only; their thresholds are rescaled with the unmodulated block's $\nu$, an approximation.) At the default $n_{\rm detect}$, \code{strict} moves the threshold by $+0.20$ to $+0.30$ doublings of $n$ (median $+0.26$) on the 33 targets, and \code{lenient} by $-0.07$ to $-0.11$.
+\begin{itemize}
+\item $\nstar$ stays in place: the class means are $+0.04$ (\code{strict}; 5 higher, 2 lower) and $+0.05$ (\code{lenient}; 4 and 1) over 30 learned targets. On \code{dlsymdev} \code{strict} moves no target by more than 0.02.
+\item Under \code{strict}, $n_{\rm detect}$ moves one grid step later for 8 of the 33 targets. Two of them are never learned. Of the other 6, $\nstar$ moves beyond 0.25 for one (h6\_07, $+0.33$) and by $-0.11$ to $+0.02$ for the rest.
+\item For 7 targets $\nstar$ (seeds 0 and 1) lies a doubling or more beyond $n_{\rm detect}$: band11 (2.6 doublings), f7\_08, h6\_01, h6\_02, h6\_06, f7\_03 and h6\_08 (1.2). On these \code{strict} changes $\nstar$ by at most 0.05.
+\item On the other 23 learned targets, $\nstar$ lies at or below $n_{\rm detect}$. They reach 10\% error through characters before the true block passes (fd\_08: $\nstar=51$, $n_{\rm detect}=512$) or through the forced variant's block (sym7 at $n=64$), or within the grid step in which the block first passes. There the grid cannot separate the test from the search.
+\end{itemize}
+
+\emph{Reading} \status{Heuristic}. Part 10 read the data cost of a block as set by the search, not the test: the true block passes at $n=128$ for 43 of 54 targets, and the exact structure appears a median of one doubling later \cite{portfoliolearner2026}. The $\delta$-ablations agree. Where $\nstar$ lies beyond $n_{\rm detect}$, a test a quarter-doubling stricter changes nothing, because once the search proposes the block, the block passes by a wide margin (9 to 71 times its threshold for par4 in \cref{sec:abl-k3}). For character targets the round-0 test is binding when the first fit comes from it: exactly for the parities, within a grid step for staircases and small formulas. Where the first fit is the forced variant's, $\delta$ acts through the linear block and the cross-validation instead, and its sign is not predictable from the test alone.
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{Degree 4 without the degree-4 search}\label{sec:abl-k3}
+
+\code{K3} sets $K=K_{\rm hi}=3$: the global search stops at degree 3, and the degree-5/6 search is off. $K$ also enters every class's union bound through $\ln(4KN/\delta)$ (\cref{eq:chartest}), so every test becomes 0.29 nats more lenient. On the 65 targets \code{K3} moves 3 (\cref{tab:ablations}).
+
+\paragraph{par4} \status{Numerical; refits, seed 0}. Under \code{K3}, par4's test error is 0.49--0.50 at $n\le256$, 0 at 512, 0.50 at 1024, 0 at 2048 and 4096, and 0.49--0.50 at 8192 and 16384. In the three fitted cells the model is a folded block on the parity's four inputs, admitted in round 0 by an additive block search: $|{-x_1}-x_2-x_3-x_4|$ at 512, $|x_1-x_2+x_3+x_4|$ at 2048 and $|x_1-x_2-x_3+x_4|$ at 4096, at 9.0, 34.5 and 70.9 times its threshold. A $k$-parity is a function of any signed sum of its $k$ inputs, so one folded block represents it exactly (\cref{prop:blocks}). In the four empty cells the round-0 block searches' best candidates stand at 0.13--0.45 of their thresholds, and the model is the constant and the background. With the degree-4 search, $\chi_{\{1,2,3,4\}}$ passes its round-0 test from $n=64$ on (\cref{prop:parity}).
+
+\paragraph{mux and andxor} \status{Numerical; refits, seed 0}. These two targets have degree-4 coefficients of 0.75 and 0.5. Their test error under \code{K3} equals DFG alone's at every $n$, but the models differ.
+\begin{itemize}
+\item mux at $n=256$: DFG alone's largest term is $\chi_{\{1,2,3,4\}}$ (share 0.51), admitted by the degree-4 test in round 0. \code{K3} holds no degree-4 character; it has the blocks $(-x_1-x_2-x_3+x_4)$ and $(x_1+x_2+x_3+3x_4)$, and $\chi_{\{1,2,3\}}$ from the two-input extension of $\chi_{\{1\}}$.
+\item andxor at $n=256$: DFG alone holds its exact expansion $\chi_{\{1,2\}}$, $\chi_{\{3,4\}}$, $\chi_{\{1,2,3,4\}}$. \code{K3} holds the two pair characters and the weighted block $(x_1+x_2-3x_3x_4)$.
+\end{itemize}
+
+\paragraph{rand1, $-1.06$} \status{Numerical; refit, seed 0, $n=64$}. With $K=4$, round 0 admits the linear block (30 degree-1 characters, one of them relevant), and the forced variant then guesses $\chi_{\{4,12,17\}}$: error 0.412. With $K=3$, $\chi_{\{1\}}$ passes its own, slightly more lenient test, so the linear block does not enter. The forced guess is then $\chi_{\{1,4,6\}}$, the local class adds $\chi_{\{4,6\}}$, and a block $(x_3-x_5)$ follows: error 0. This difference comes from $K$ in the union bound, not from the degree-4 search.
+
+\emph{Reading} \status{Heuristic}. The degree-4 search is redundant where a target's degree-4 characters share their inputs with lower-degree structure: blocks on those inputs, and the extension and local classes, reach them. It is indispensable for a degree-4 parity with no lower-degree footprint. The block test would admit the exact block from small $n$ on, but the block search starts from degree-1 and degree-2 statistics (\cref{prop:blocks}), which are zero for such a parity, so it finds the four inputs only by chance. The ablation suites contain one such target. \Cref{sec:core} adds three more.
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{The small-\texorpdfstring{$n$}{n} machinery and the background}\label{sec:abl-smalln}
+
+The atlas computed two counterfactuals on its 37 targets (\cref{sec:interp-atlas}): the variant DFG's cross-validation did not choose, refitted on the same rows, and each fitted model without its kernel background. \code{nosmalln} and \code{nobg} run them as learners, and on the 21 targets the ablation suites share with the atlas the two agree.
+
+\paragraph{No forced variant, no cross-validation} \status{Numerical}. \code{nosmalln} fits the default variant on all $n$ rows. At $d=30$ it can differ from the atlas's ``always default'' refit only in the degree-5/6 subsample sizes (\cref{prop:compute}). Its seed-0 test error equals that refit's in all 126 cells with $n\le512$. Over the 65 targets, the mean test error rises by 0.012, 0.007, 0.022, 0.009 and 0.004 at $n=16$, 32, 64, 128 and 256, and by nothing from 512 on. $\nstar$ rises on 10 targets and falls on none (mean $+0.12$). Since \code{nosmalln} is the default variant, every cell where DFG alone does better is one where DFG alone kept the forced variant. The first fits lost this way are par2 and rand2 at $n=16$, majpar at 32 and 64, mux and sym7 at 64, fd\_04 at 128 and f7\_02 at 256. Each comes back one grid step later. Over the atlas's 222 cells, DFG's choice has mean test error 0.2257, always taking the default 0.2319, always taking the forced variant 0.2256, and the better of the two in each cell 0.2111 (\cref{sec:interp-atlas}).
+
+\paragraph{No kernel background} \status{Numerical}. The background is added after the weights are fitted. A fitted model without it therefore gives exactly DFG's prediction without it for the same variant. The ablation can differ from that only where the cross-validation chooses another variant, because the fold fits lose their background too. \code{nobg}'s seed-0 error equals the atlas's model-without-background error in 224 of 231 cells. The other 7 are all at $n\le128$, so in each of them the choice changed. One is refitted: f7\_11 at $n=16$. DFG alone keeps the default variant there (held-out errors 6 and 3), the constant plus the background, with test error 0.301. Without the background, the default variant's held-out errors rise to 13, the forced variant is kept, and its model $\chi_{\{11\}}$, $\chi_{\{8\}}$ has error 0.077. Over the 65 targets the mean error rises by 0.015 and 0.016 at $n=16$ and 32, and falls by 0.009, 0.002, 0.003 and 0.002 at 64, 128, 256 and 512. $\nstar$ falls on 7 targets and rises on 3 (mean $-0.10$); f7\_11 falls most ($-2.17$).
+
+\emph{Reading} \status{Heuristic}. With nothing else in the model, at $n=16$--32, the background is a Hebbian classifier, and it helps targets with a strong degree-1 part. From $n=64$ on it adds the noise of 30 residual correlations to a model that already fits. Through the cross-validation it also makes the default variant look better than it is, so the forced variant's right guesses are kept less often. Most $\nstar$ lie at 64--512, so the background costs data on balance on these suites.
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{Tests scaled to the residual}\label{sec:abl-label}
+
+\code{labelnoise} replaces $s$ by 1 in every threshold, so the tests are scaled to the labels' noise instead of the residual's. (The subsampled searches keep their subsample's root mean square, and a block's second test, on the projected residual, keeps that residual's variance.) In round 0 the residual is $y-\bar y$, with variance $1-\bar y^2$, and after the first features fit it shrinks. By \cref{prop:nglob}(c), characters admitted after round 0 enter 1.4--3.7 doublings below $n_{\rm glob}$ (class medians), mainly because the residual variance there is 3.2--19.2 times smaller (class medians; \cref{sec:interp-when}).
+
+\paragraph{Results} \status{Numerical}. The mean ratio is $+0.14$ (15 higher, 5 lower). By family: formulas $+0.33$ (6 of 11 higher), the staircase $+0.70$, random formulas $+0.19$, mixtures $+0.15$ (5 of 21), compositions $+0.11$, symmetric targets $+0.10$, parities 0, halfspaces $-0.17$ (\cref{tab:abl-family}). The mean test error rises by 0.024 at $n=128$ (18 targets higher by more than 0.02, 2 lower) and by 0.013 at 256, and by at most 0.003 elsewhere. Two refits at $n=128$ (seed 0) show the two ways the scaling matters.
+\begin{itemize}
+\item \emph{Later rounds}, rand3. DFG alone admits $\chi_{\{5,6\}}$ in round 0 ($s=1.00$), $\chi_{\{4,5,6\}}$ by the one-input extension in round 1 ($s=0.84$), two local characters in round 2 ($s=0.77$) and modulated blocks in rounds 3 and 4: error 0.049. With $s=1$ the first round is the same, but nothing passes in round 1, and the fit stops: error 0.317.
+\item \emph{Biased labels}, far9 $=[|x_1+\dots+x_9|\ge5]$, whose round-0 residual has $s=0.71$. DFG alone admits the folded block $|x_1+\dots+x_9|$ and a spectral feature in round 0: error 0.006. With $s=1$ the thresholds are 1.4 times higher, nothing passes, and the model is the constant and the background: error 0.181.
+\end{itemize}
+
+\emph{Reading} \status{Heuristic}. The residual scaling is what makes the growth greedy in the sense of DFG's design: each round's tests are calibrated to the noise left after the previous round, so weaker features pass once stronger ones are in. Its cost on these targets is modest, because the features that bring most targets below 10\% error enter in round 0 (\cref{sec:interp-order}). It is larger for formulas and staircases, whose later characters build on the first ones, and for targets with biased labels.
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{A core DFG (post hoc)}\label{sec:core}
+
+\emph{Everything in this subsection is post hoc.} The protocol's addendum (\repo{study/part11/PROTOCOL.md}) was written after every pre-registered result had been read, to ask whether the parts that are removable one at a time can be removed together. The \code{core} run keeps the global characters of degree at most 3; the unweighted signed-sum blocks, searched from pairs and single inputs, with their modulated, product, split, beam and forced moves; the union-bound tests scaled to the residual; least squares; and the small-$n$ cross-validation. It removes nine parts: the linear and spectral blocks, the extension and local classes, the degree-4 to degree-6 searches, the weighted blocks, the eigenvector seeds, the logistic refinement and the kernel background. Through $K=3$, every test is also 0.29 nats more lenient. The code is the frozen file, with constructor arguments \texttt{\{"readout": "ls", "sum\_inner": false, "sum\_seeds": [0, 3, 2], "blocks": false, "max\_ext\_bases": 0, "local\_max": 0, "K": 3, "K\_hi": 3, "background": false\}}. It ran on all 11 suites, with seeds 0 and 1 and the standard grid.
+
+\begin{table}[t]
+\centering{\footnotesize\setlength{\tabcolsep}{3pt}\renewcommand{\arraystretch}{1.05}
+\input{tables/tab_core.tex}\par\medskip
+\input{tables/tab_core_family.tex}}
+\caption{The core DFG (post hoc). Top: per suite and pooled, the core against DFG alone on the same seeds (0 and 1) and training sets, and the core and DFG alone (same seeds) against \code{nets_best} \status{Numerical}. Cells as in \cref{tab:suites}: mean $\log_2$ ratio over the targets both learn, below it the targets clearly lower / clearly higher (here: lower = the first-named learner needs clearly less data) and in brackets the number both learn. ``Newly never'': learned by DFG alone on these seeds but never by the core. Bottom: the same by target family over all 138 targets (group sizes in the header; families post hoc). Sources: \repo{study/part11/RESULTS.json} (\texttt{q5b\_core}) and \repo{study/part11/interp/ablations/ablations.json} (\texttt{core}).}
+\label{tab:core}
+\end{table}
+
+\paragraph{Against DFG alone} \status{Numerical; post hoc}. Over the 138 targets the core's mean ratio is $+0.07$ (median $-0.01$) over the 133 both learn (\cref{tab:core}). It needs clearly less data on 28 targets and clearly more on 26, and it loses par5. Its suite means range from $-0.20$ (\code{dlheld4}) to $+0.46$ (\code{dlheld2}). On the held-out \code{dlheld7} the mean is $-0.03$, with 2 targets lower and 2 higher. The core moves 54 of the 138 targets beyond $\pm0.25$, where the paired null moves 3 of 65. Its differences are therefore real, but they cancel on average. By family, the core loses on parities ($+2.01$ over the 3 it still learns, and par5) and halfspaces ($+0.32$; 7 higher, 3 lower), and it is level elsewhere ($-0.08$ to $+0.21$).
+
+\paragraph{Against the networks} \status{Numerical; post hoc}. The core's mean against \code{nets_best} is $-1.74$ over the 122 of 126 targets both learn, clearly better on 111 and clearly worse on 9. DFG alone on the same seeds is at $-1.88$, clearly better on 117 and worse on 5. On \code{dlheld7} the core is at $-1.30$ (9 better, 1 worse) and DFG alone at $-1.27$ (10 and 1). The core is clearly worse than \code{nets_best} on par4, par5, rf17, thr30, thr20, h6\_10, thrint, f7\_01 and h6\_00. DFG alone (same seeds) is clearly worse on thrint, f7\_01, h6\_00, h3rf0 and h3rf1; the core is better than the networks on the last two.
+
+\paragraph{Compute} \status{Numerical; post hoc}. On the same 3036 fits, the core's median FLOP count is 0.094 of DFG alone's (paired). Its largest fit uses 0.150 of one network run, against DFG alone's 0.500. Its total CPU time is 2302 s against DFG alone's 9058 s, with median 0.30 s against 2.01 s per fit. Both ran four workers on four CPUs, so CPU times are rough.
+
+\begin{table}[t]
+\centering{\footnotesize\setlength{\tabcolsep}{3.2pt}\renewcommand{\arraystretch}{1.02}
+\input{tables/tab_leavein.tex}}
+\caption{Leave one in (post hoc). For the core's largest losses and gains, $\nstar$ (seeds 0 and 1) of DFG alone, of the core, and of the core with one part put back: the degree-4 to degree-6 searches ($K=4$, $K_{\rm hi}=6$), the extension and local classes, the linear and spectral blocks, the logistic readout, the kernel background, the weighted blocks, the eigenvector seeds. Empty: not run (the targets for each part were chosen after reading the core's results). Bold: putting this one part back returns $\nstar$ to within 0.25 of DFG alone's. Same training sets, column orders and folds throughout. Source: \repo{study/part11/interp/ablations/leavein.py}, results in \repo{study/part11/interp/ablations/results/leavein/}, summarized in \repo{study/part11/interp/ablations/ablations.json} (\texttt{leavein}).}
+\label{tab:leavein}
+\end{table}
+
+\paragraph{Where the core loses, and which part it misses} \status{Numerical; post hoc; refits and leave-one-in runs, \cref{tab:leavein}}.
+\todo{core losses and gains: leave-one-in runs still being filled in}
+
+\emph{Reading} \status{Heuristic}. \todo{core reading}
