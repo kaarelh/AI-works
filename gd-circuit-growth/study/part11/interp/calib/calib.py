@@ -13,11 +13,17 @@ checks fits of the copy against the frozen module and the evaluation's result fi
   spur       (A2) designed and random suites, seed 0, every grid n, exactly as eval_dfg.py (harness data, fit rng,
              Permuted); the final model's terms in original coordinates against each target's exact relevant set.
   prof       (B) where FLOPs and CPU time go: par4, maj9, mux, stair5 (designed), f7_07, f7_08, f7_05 (dlheld7) and
-             pure noise (p = 0.5) at n = 64, 512, 4096, 16384, seed 0; regions of DFG._fit by FLOP-counter differencing.
+             pure noise (p = 0.5) at n = 64, 512, 4096, 16384, seed 0, and the seed-0 n = 16384 fit of the largest-FLOP
+             target of dlheld5, dlfamdev and designed (h5s5, fd_08, thr10); regions of DFG._fit by FLOP-counter
+             differencing.  --reps=0-2: rep 0 also fits the frozen module; reps 1, 2 repeat the instrumented fit (CPU).
+  cascade    (A1, aside) the forced variant's fold fits on noise (n = 29, 58: the fold sizes at n = 32, 64; P(y=1) =
+             0.5, 0.8; 200 draws each), with a control: DFG's local test recomputed after random characters of the
+             forced characters' degrees.
   summarize  tables from the records above and from the result files (FLOPs and CPU per fit, every suite, d = 15 ... 120);
-             writes calib.json.
-usage: OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python calib.py <command> [--d=30] [--seeds=0-19] [--ps=0.5,0.8]
-records: results/noise.jsonl, results/spur.jsonl, results/prof.jsonl (resumable: done keys are skipped).
+             writes calib.json and calib_tables.txt (calib_summary.py).
+usage: OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python calib.py <command> [--d=30] [--seeds=0-19] [--ps=0.5,0.8] [--reps=0-2]
+records: results/noise.jsonl, results/spur.jsonl, results/prof.jsonl, results/cascade.jsonl (resumable: done keys are
+skipped).  The full set: audit; noise --d=30; noise --d=60; spur; prof --reps=0-2; cascade; summarize.
 """
 import os, sys, json, time, math, re, difflib, hashlib, importlib.util
 import numpy as np

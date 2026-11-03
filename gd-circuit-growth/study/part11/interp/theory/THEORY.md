@@ -249,6 +249,11 @@ exactly P(pass) = P(|2B − n| < √(n(n − n_thr))). E[n(1 − ȳ²)] = n − 
 n > n_thr + 1. Because ln C(d, k) = k ln d − ln k! + O(k²/d), n_thr = 2c²(k ln d − ln k! + ln(4K/δ)) + O(k²/d): it
 grows like 2k ln d.
 
+**P2′ (Proved): the same floor holds for every target.** For any labels, in any round, a class with N candidates tested
+on m rows can admit a character only if m > 2c² ln(4KN/δ). For the global degree-k class that is m > n_thr(k, d). The
+reason is Cauchy–Schwarz: |mean_m(r χ_S)| ≤ rms(r[:m]) ≤ σ, so |v_S| > cσ√(2L/m) needs c√(2L/m) < 1. A k-parity with
+ȳ = 0 attains the bound, so n_thr is exactly the parity's sample size.
+
 **n_thr(k, d)** (c = 1, K = 4, δ = 0.1; `P2.n_thr`):
 
 | k | d = 15 | 30 | 60 | 120 | 1000 |
@@ -321,8 +326,9 @@ residual differences come from the failing seeds' errors, which are near 0.5 but
   budget) and m₄ = 0, both below 32, so the degree-3 and degree-4 searches are skipped. As coded, DFG v1.3 would not find
   par3 or par4 by its test at d = 1000. An exhaustive search on n = 64 rows would cost 0.11 network runs (degree 3) and
   55.9 (degree 4).
-- More generally, at n > 512 the budgeted search can no longer admit even a k-parity beyond d = 630 (k = 3) and
-  d = 179 (k = 4); under the half budget, beyond 469 and 148 (`P5.d_parity_unreachable`).
+- More generally, at n > 512 the budgeted search admits no degree-3 character from d = 630 on, and no degree-4
+  character from d = 179 on; under the half budget, from 469 and 148 (`P5.d_parity_unreachable`). There m_k < 32 or
+  m_k ≤ n_thr(k, d), so P2′ excludes every target, not only parities.
 - So DFG's logarithmic sample size is bought with search compute that grows like d^k (P5), while the networks' sample
   size grows polynomially at a cost per run linear in d.
 
@@ -488,8 +494,9 @@ The angle is π(3j + 2k − 4ρ)/6, so the cosine vanishes iff j is odd and k �
 for k = 2–16 and ρ = 0, 1, 2 (405 cases, no exception; `P4.mod3_vanishing_rule`). For f7_05, h6_00 and fd_10,
 k − 2ρ ≡ 2, 2, 1 (mod 3), so every a_j with j ≥ 1 is nonzero.
 
-**P4f (Proved): what the block search sees.** Every seed of `_block_search` (lines 227–361) is a statistic of one or two
-inputs:
+**P4f (Proved): what the block search sees.** Every starting order and seed of `_block_search` (lines 227–361) is
+computed from statistics of one or two inputs. The greedy growth and the local search that follow score larger blocks,
+whose statistic sees higher degrees, but only along these starting points. The starting points are:
 - the top eigenvectors of the residual pair matrix M, and its strongest entries;
 - the degree-1 coefficients c₁, and the best single inputs;
 - the inner terms on M's strongest pair;
@@ -538,8 +545,9 @@ its indicators and the constant then reproduces the seed-0 training labels at n 
 - **Eigenvector seed.** By the BBP threshold for a rank-one perturbation of a Wigner matrix (the top eigenvector is
   informative iff |a₂|(k − 1) > s√(d/n)), it needs n ≈ s²d/(a₂²(k − 1)²) = 1.1·10⁷, 3.1·10⁶ and 8.6·10⁴.
 - **Degree-1 ranking.** Ranking S's inputs first needs n ≳ 2 ln d · s²/a₁² = 4.1·10⁸, 1.0·10⁸ and 1.6·10⁶.
-- All of these are far above the grid's 16384, while Part 10 found the true block passing its test from n = 128.
-  Quantitatively, this is Part 10's reading that "the search, not the test" sets these targets' cost.
+- All of these are far above the grid's 16384, while Part 10 found the true block passing its test from n = 128
+  (unfolded; `part10/interp/TOY_INTERP.md`). This puts numbers on Part 10's reading that the search, not the test,
+  limits these targets. (There the eigenvector prefixes covered 0.50–0.57 of S, against |S|/30 = 0.33–0.47 by chance.)
 
 ## 5. P5: compute
 
@@ -566,7 +574,8 @@ d = 120 networks trained for T = 40000 steps, which doubles GD(120). It is linea
 extensions. A search with m < 32 (degrees 3, 4) or m < 64 (degrees 5, 6) is skipped. The true per-row costs
 (d − 2)(2d² + 2d) and C(d − 2, 2)(2d² + 3d) are at most the estimates, and for degrees 5–6 they are equal. So **each
 budgeted search costs at most its share of GD·`scale`**. The shares of the 2F + 1 calls add up to one run
-(0.5 + 2F · 1/(4F) = 1). The other parts (least squares, sum blocks, Newton steps) are not budgeted: they are only
+(0.5 + 2F · 1/(4F) = 1). The other parts (the degree-1 and degree-2 searches, ext1, the local class, the spectral
+eigendecomposition, the sum blocks, least squares, the Newton steps and the background) are not budgeted: they are only
 stopped by the round cap of 0.75 GD·`scale`, which is checked at the start of each round, so a fit can exceed it by the
 cost of its last round.
 

@@ -61,10 +61,10 @@ def save(fig, name, data, tight=False):
 
 # ---- fig_nstar --------------------------------------------------------------------------------------------------------------
 GROUPS = [   # (key, suites, legend label, marker, face, edge, size, z): the suites' status for DFG v1.3 (PROTOCOL.md "Held out")
-    ("dev", ["designed", "random", "dlheld", "dlsymdev", "dlheld6"], "development of some version\nof DFG", "o", "white", "#8a8a8a", 18, 2),
-    ("earlier", ["dlheld2", "dlheld3"], "held out for an earlier\nversion only", "o", COL[0], "white", 22, 3),
+    ("dev", ["designed", "random", "dlheld", "dlsymdev", "dlheld6"], "development", "o", "white", "#8a8a8a", 18, 2),
+    ("earlier", ["dlheld2", "dlheld3"], "held out for an earlier version", "o", COL[0], "white", 22, 3),
     ("exposed", ["dlheld4", "dlheld5"], "v1.2 built after exposure", "D", COL[3], INK2, 20, 4),
-    ("held", ["dlheld7"], "held out for v1.3", "s", COL[7], INK, 38, 5),
+    ("held", ["dlheld7"], "held out for v1.3 (dlheld7)", "s", COL[7], INK, 38, 5),
 ]
 
 
@@ -83,15 +83,15 @@ def nstar_points():
 @figure
 def fig_nstar():
     P = nstar_points()
-    fig = plt.figure(figsize=(TEXTW, 3.75))
-    ax = fig.add_axes([0.075, 0.30, 0.40, 0.66]); bx = fig.add_axes([0.585, 0.30, 0.40, 0.66])
+    fig = plt.figure(figsize=(TEXTW, 4.05))
+    ax = fig.add_axes([0.085, 0.265, 0.385, 0.665]); bx = fig.add_axes([0.605, 0.265, 0.385, 0.665])
     # (a) DFG alone against nets_best
     lo, hi, NEV = 10, 4.6e4, 2.8e4
     pos = lambda v: NEV if not math.isfinite(v) else v
     g = np.array([lo, hi])
     ax.plot(g, g, color=INK2, lw=0.9, ls="--", zorder=1); ax.plot(g, g / 4, color="#9a9a9a", lw=0.8, ls=":", zorder=1)
-    ax.text(1.2e4, 1.2e4 * 0.70, "equal data", fontsize=6.3, color=INK2, ha="right", va="top", rotation=45, rotation_mode="anchor")
-    ax.text(1.2e4, 1.2e4 / 4 * 0.70, "4$\\times$ less data", fontsize=6.3, color=INK2, ha="right", va="top", rotation=45, rotation_mode="anchor")
+    ax.text(1.7e4, 1.7e4 * 0.70, "equal data", fontsize=6.3, color=INK2, ha="right", va="top", rotation=45, rotation_mode="anchor")
+    ax.text(1.7e4, 1.7e4 / 4 * 0.70, "4$\\times$ less data", fontsize=6.3, color=INK2, ha="right", va="top", rotation=45, rotation_mode="anchor")
     ax.axhline(NEV, color="#c4c4c4", lw=0.6, zorder=0); ax.axvline(NEV, color="#c4c4c4", lw=0.6, zorder=0)
     ax.text(lo * 1.12, NEV * 0.86, "never", fontsize=6.3, color=INK2, va="top", ha="left")
     ax.text(NEV * 0.86, lo * 1.12, "never", fontsize=6.3, color=INK2, va="bottom", ha="right", rotation=90)
@@ -109,42 +109,43 @@ def fig_nstar():
         p = lab[(su, t)]
         ax.annotate(txt, (pos(p["nets_best"]), pos(p["dfg"])), xytext=(dx, dy), textcoords="offset points", fontsize=6.3, color=INK,
                     ha=ha, va="center", arrowprops=dict(arrowstyle="-", color=INK2, lw=0.5, shrinkA=0, shrinkB=3))
-    note("dlheld6", "h6_00", "h6_00", -12, -12)
-    note("dlheld3", "h3rf1", "h3rf1", 8, 14, ha="left")
-    note("dlheld7", "f7_01", "f7_01", -16, 10)
-    note("dlheld", "par5", "par5", -10, 10)
+    note("dlheld6", "h6_00", "h6_00", -50, -40)
+    note("dlheld3", "h3rf1", "h3rf1", -6, 22)
+    note("dlheld7", "f7_01", "f7_01", -18, 10)
+    note("dlheld", "par5", "par5", 4, -14, ha="left")
     nev2 = sorted(p["target"] for p in P if p["nets_best"] is not None and not math.isfinite(p["dfg"]) and not math.isfinite(p["nets_best"]))
-    ax.annotate(", ".join(nev2) + ":\nno learner", (NEV, NEV), xytext=(-8, -20), textcoords="offset points", fontsize=6.3, color=INK,
+    ax.annotate(", ".join(nev2) + ": no learner", (NEV, NEV), xytext=(-46, -15), textcoords="offset points", fontsize=6.3, color=INK,
                 ha="right", va="center", arrowprops=dict(arrowstyle="-", color=INK2, lw=0.5, shrinkA=0, shrinkB=3))
     ax.set_xscale("log"); ax.set_yscale("log"); ax.set_xlim(lo, hi); ax.set_ylim(lo, hi)
     ax.set_xlabel(r"$n^*$ of nets_best (best network variant per target)")
     ax.set_ylabel(r"$n^*$ of DFG alone (inputs permuted per fit)")
     ax.set_title("(a) DFG alone against the networks", loc="left")
-    fig.legend(handles=handles, loc="upper left", bbox_to_anchor=(0.03, 0.17), ncol=2, handletextpad=0.3, columnspacing=1.0,
-               labelspacing=0.5, fontsize=6.5, title="suites by status for DFG v1.3 (targets plotted)", title_fontsize=6.5,
-               alignment="left")
+    ax.legend(handles=handles, loc="upper left", bbox_to_anchor=(-0.2, -0.15), ncol=2, handletextpad=0.3, columnspacing=0.8,
+              labelspacing=0.45, fontsize=6.4, title="suites by status for DFG v1.3 (targets plotted)", title_fontsize=6.4,
+              alignment="left")
     # (b) v3 and lowdeg relative to DFG alone
     TOP = 7.6
     bx.axhspan(-0.25, 0.25, color="#efefef", lw=0, zorder=0); bx.axhline(0, color=INK2, lw=0.8, zorder=1)
     bx.axhline(TOP, color="#c4c4c4", lw=0.6, zorder=0)
     Qb = [p for p in P if fin(p["dfg"])]
     pts = {}
-    for k, mk, fc, ec, s, z, name in (("lowdeg", "^", "white", COL[1], 16, 2, "lowdeg (Fourier coefficients of\ndegree ≤ 4, thresholded)"),
-                                      ("v3", "o", COL[0], "white", 15, 3, "v3 (DFG v1.3 stacked with trees,\nkNN and logistic regression)")):
+    for k, mk, fc, ec, s, z, name in (("lowdeg", "^", "white", COL[1], 16, 2, "lowdeg (the dictionary and test without the search)"),
+                                      ("v3", "o", COL[0], "white", 15, 3, "v3 (DFG v1.3 inside the Part 10 portfolio)")):
         Y = [(p["dfg"], MT.l2r(p[k], p["dfg"])) for p in Qb if p.get(k) is not None]
         pts[k] = [dict(suite=p["suite"], target=p["target"], dfg=p["dfg"], other=p[k], ratio=MT.l2r(p[k], p["dfg"])) for p in Qb]
         x = np.array([a for a, _ in Y]); y = np.array([TOP if b == INF else b for _, b in Y])
         bx.scatter(x, y, s=s, marker=mk, facecolor=fc, edgecolor=ec, linewidth=0.7 if fc == "white" else 0.3, zorder=z, label=name)
     bx.text(13, TOP - 0.18, "lowdeg never", fontsize=6.3, color=INK2, va="top", ha="left")
-    bx.text(1.5e4, 0.33, "within ±0.25", fontsize=6.0, color=INK2, va="bottom", ha="right")
+    bx.text(7.5e3, 0.33, "within ±0.25", fontsize=6.0, color=INK2, va="bottom", ha="right")
     p5 = [q for q in pts["v3"] if q["target"] == "par5"][0]
-    bx.annotate("par5: v3 839, DFG alone 56", (p5["dfg"], p5["ratio"]), xytext=(10, 4), textcoords="offset points", fontsize=6.3,
-                color=INK, ha="left", va="center", arrowprops=dict(arrowstyle="-", color=INK2, lw=0.5, shrinkA=0, shrinkB=3))
+    bx.annotate("par5 (v3)", (p5["dfg"], p5["ratio"]), xytext=(-6, 16), textcoords="offset points", fontsize=6.3,
+                color=INK, ha="right", va="center", arrowprops=dict(arrowstyle="-", color=INK2, lw=0.5, shrinkA=0, shrinkB=3))
     bx.set_xscale("log"); bx.set_xlim(12, 1.1e4); bx.set_ylim(-4.6, TOP + 0.5)
     bx.set_xlabel(r"$n^*$ of DFG alone")
-    bx.set_ylabel(r"$\log_2(n^*_{\rm other}\,/\,n^*_{\rm DFG\ alone})$  (> 0: DFG alone needs less)")
+    bx.set_ylabel(r"$\log_2(n^*_{\rm other}\,/\,n^*_{\rm DFG\ alone})$")
+    bx.text(1.05e4, TOP - 1.0, "above 0: DFG alone\nneeds less data", fontsize=6.3, color=INK2, va="top", ha="right")
     bx.set_title("(b) v3 and lowdeg against DFG alone", loc="left")
-    bx.legend(loc="upper left", bbox_to_anchor=(-0.02, -0.17), ncol=2, handletextpad=0.3, columnspacing=1.2, fontsize=6.5)
+    bx.legend(loc="upper left", bbox_to_anchor=(-0.02, -0.15), ncol=1, handletextpad=0.3, fontsize=6.4, labelspacing=0.45)
     data = dict(source="study/part11/RESULTS.json via make_tables.toy()", counts_panel_a=counts,
                 panel_a=[{k: p[k] for k in ("suite", "target", "group", "dfg", "nets_best")} for p in P if p["group"] != "nonets"],
                 panel_b=pts, never_both=nev2,
@@ -194,6 +195,7 @@ def fig_dscale():
         ax.set_xticks(D); ax.set_xticklabels([str(d) for d in D]); ax.xaxis.set_minor_locator(matplotlib.ticker.NullLocator())
         ax.set_yticks([16, 64, 256, 1024, 4096, 16384]); ax.set_yticklabels(["16", "64", "256", "1024", "4096", "16384"])
         ax.yaxis.set_minor_locator(matplotlib.ticker.FixedLocator([32, 128, 512, 2048, 8192]))
+        ax.yaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
         ax.grid(True, which="minor", color=GRID, lw=0.3)
     for ax in axs[1]:
         ax.set_xlabel("input dimension $d$")
@@ -203,8 +205,8 @@ def fig_dscale():
     h = [Line2D([], [], color=COL[0], marker="o", ls="-", mfc=COL[0], mec="white", label="DFG v1.3 alone"),
          Line2D([], [], color=COL[1], marker="s", ls="--", mfc=COL[1], mec="white", label="networks (nets,\nsquare loss)"),
          Line2D([], [], color="#7a7a7a", ls=":", lw=0.9, label="parities: union-bound\nline $n_{\\rm thr}(k,d)$")]
-    lg.legend(handles=h, loc="center left", bbox_to_anchor=(-0.05, 0.62), fontsize=6.6, handlelength=2.4, labelspacing=0.9)
-    lg.text(-0.02, 0.12, "panel title: target: fitted\nexponent DFG vs networks\n(* fitted on d = 15–60)", fontsize=6.3,
+    lg.legend(handles=h, loc="upper left", bbox_to_anchor=(-0.06, 1.02), fontsize=6.5, handlelength=2.4, labelspacing=0.8)
+    lg.text(0.0, 0.02, "panel titles: target: fitted\nexponent of DFG vs of\nthe networks (*: fitted\non d = 15–60)", fontsize=6.3,
             color=INK2, transform=lg.transAxes, va="bottom", ha="left")
     fig.tight_layout(h_pad=0.6, w_pad=0.4)
     save(fig, "fig_dscale", out)

@@ -20,7 +20,9 @@ frozen dfg13.py, DFG(readout="logit")); nothing in the learner changes.  Four ki
   p5 cells   the four parity cells at n >= 64 whose FLOP count the parity-path model of check_theory.py does not
              reproduce: what each fit call admitted in round 0.
 
-usage: OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python theory_fits.py [p3] [p2] [p1] [p5]
+usage: OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python theory_fits.py [p3] [p2] [p1] [p5] [--cache=DIR]
+(fits already in the cache are skipped; --cache=DIR writes to DIR instead of theory/cache/.  All four sets from scratch
+take about 20 minutes single-threaded.)
 """
 import os, sys, json, gzip, math, time, numpy as np
 
@@ -240,7 +242,10 @@ def run_p5():
 
 
 if __name__ == "__main__":
-    what = sys.argv[1:] or ["p2", "p1", "p3", "p5"]
+    cdir = next((a.split("=", 1)[1] for a in sys.argv[1:] if a.startswith("--cache=")), None)
+    if cdir:                                    # e.g. an empty directory: recompute every fit instead of reusing cache/
+        CACHE = os.path.abspath(cdir); os.makedirs(CACHE, exist_ok=True)
+    what = [a for a in sys.argv[1:] if not a.startswith("--")] or ["p2", "p1", "p3", "p5"]
     if "p5" in what:
         run_p5()
     if "p2" in what:

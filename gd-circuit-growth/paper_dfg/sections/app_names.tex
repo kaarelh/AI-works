@@ -9,60 +9,65 @@
 name & meaning\\
 \midrule
 \multicolumn{2}{l}{\emph{Learners}}\\
-DFG; v1, v1.1, v1.2, v1.3 & discrete feature growth (\cref{sec:learner}): v1 and v1.1 (Part 6), v1.2 with sum blocks (Part 9), v1.3 with weighted blocks, forced blocks and a beam search (Part 10)\\
+DFG; v1, v1.1, v1.2, v1.3 & discrete feature growth (\cref{sec:learner}): v1, v1.1 (Part 6), v1.2 (Part 9), v1.3 (Part 10)\\
 DFG alone, \code{dfg13-perm} & this paper's object: the frozen DFG v1.3 run by itself, inputs permuted per fit (\cref{sec:part11})\\
-v1, v2, v3; \code{dfg}, \code{dfg_forced} & the portfolios of Parts 8, 9, 10 (\code{hyb_portfolio}, \code{hyb_portfolio2}, \code{hyb_portfolio3}); they stack DFG v1.1, v1.2, v1.3, as the two members \code{dfg} and \code{dfg_forced}, with classical learners\\
+v1, v2, v3 & the portfolios of Parts 8, 9, 10, which stack DFG v1.1, v1.2, v1.3 with classical learners\\
+\code{dfg}, \code{dfg_forced} & DFG's default and forced variants as two members of a portfolio\\
 \code{p9_sum}, \code{p10_sum} & the Part 9 and Part 10 toy builders' candidates: v2's and v3's code on toy inputs\\
-\code{lowdeg} & the thresholded low-degree algorithm: DFG's degree-$\le4$ characters without its search (\cref{sec:refs})\\
+\code{lowdeg} & the thresholded low-degree algorithm (\cref{sec:refs})\\
 ablation tags & DFG alone with one constructor argument changed (\cref{sec:ablations}): \code{nosums}, \code{strict}, \code{lenient}, \code{noeig}, \code{noblocks}, \code{nocomp}, \code{noweighted}, \code{nosmalln}, \code{nobg}, \code{lsread}, \code{K3}, \code{labelnoise}\\
-\code{dfg_bits}, \code{dfg_dirs}, \code{dfg_gates} & Part 7's three adaptations of DFG to real-valued data: bit characters, data-derived directions, threshold gates\\
+Part 7's adaptations & \code{dfg_bits}, \code{dfg_dirs}, \code{dfg_gates}: DFG adapted to real-valued data (context for Q6)\\
 \addlinespace
 \multicolumn{2}{l}{\emph{DFG's search} (\cref{sec:learner})}\\
 character $\chi_S$; degree & $\chi_S(x)=\prod_{i\in S}x_i$; $|S|$\\
-residual $r$; $s$ & $r=y-{}$the least-squares fit on the current features; $s=\mathrm{rms}(r)$\\
+residual $r$; $s$ & $r=y-\hat y$, with $\hat y$ the least-squares fit on the current features; $s=\mathrm{rms}(r)$\\
 round & a pass that searches every class on $r$, admits what passes its test and refits; at most 8\\
-class; union bound $N$ & candidates enumerated and tested together; their number $N$ enters the threshold as $\ln(4KN/\delta)$, with $K=4$, $\delta=0.1$\\
-global, extension, local class & every character of one degree $\le K$ on all $d$ inputs (5--6 on a subsample); $S\cup\{j\}$ and $S\cup\{j,l\}$ for admitted $S$; every subset of the $\le12$ inputs in use\\
+class; union bound $N$ & candidates tested together; their number $N$ enters the threshold as $\ln(4KN/\delta)$; $K=4$, $\delta=0.1$\\
+global, extension, local & every character of one degree $\le K$ on all $d$ inputs (degrees 5--6 on a subsample); $S\cup\{j\}$ and $S\cup\{j,l\}$ for admitted $S$; every subset of the $\le12$ inputs in use\\
 linear block & all remaining degree-1 characters at once, admitted by a $\chi^2$ test on their coefficients\\
-spectral feature & $(u\cdot x)^2-|u|^2$ for an eigenvector $u$ of the residual pair matrix $\frac1n\sum_tr_tx_tx_t^\top$ (diagonal removed) above its noise edge\\
-sum block; statistic $t$ & signs $s_i\in\{\pm1\}$ on a subset $S$, and $t=\sum_{i\in S}s_ix_i$; the block's features are indicators of groups of values of $t$\\
-folded, modulated, product block & $|t|$ in place of $t$; the indicators times an admitted character $\chi_T$; the joint cells of two blocks on disjoint supports\\
-split, weighted block & a mixed-sign block as the product of its $+$ and $-$ parts; $u=t+a\tau$, $a\in\{\pm2,\pm3\}$, $\tau$ a literal, a 2-parity or an AND of two literals\\
+spectral feature & $(u\cdot x)^2-|u|^2$, $u$ an eigenvector of the residual pair matrix whose eigenvalue clears the noise edge\\
+sum block; statistic $t$ & signs $s_i$ on a subset $S$, $t=\sum_{i\in S}s_ix_i$; its features indicate groups of values of $t$\\
+folded, modulated block & $|t|$ in place of $t$; the block's indicators times an admitted character $\chi_T$\\
+product, split block & the joint cells of two disjoint blocks; a mixed-sign block taken as the product of its $+$ and $-$ parts\\
+weighted block & $u=t+a\tau$ in place of $t$, with $a\in\{\pm2,\pm3\}$ and $\tau$ a literal, a 2-parity or an AND of two literals\\
 block search & how blocks are proposed: from the residual's degree-1 and pair statistics\\
-forced variant & at $n\le512$, takes the best candidate when nothing passes; kept only if it wins a paired cross-validation test\\
+forced variant & at $n\le512$, takes the best candidate if none passes; chosen by a paired cross-validation test\\
 kernel background & one Hebbian step on the final residual, $\sum_ig_ix_i$ with $g_i=\frac1n\sum_tr_tx_{t,i}$, added to the output\\
 readout & least squares on the admitted features, refined by 15 logistic Newton steps when $n\ge8p$\\
 \addlinespace
 \multicolumn{2}{l}{\emph{References} (\cref{sec:refs})}\\
-\code{nets}, \code{nets_wd}, \code{nets_cewd}, \code{nets_cewd0.3}, \code{nets_cewd1.0} & the toy networks: square loss; square loss with weight decay 0.1; logistic loss with weight decay 0.1, 0.3, 1.0\\
+\code{nets}, \code{nets_wd} & the toy networks with square loss, without and with weight decay 0.1\\
+\code{nets_cewd}, \code{nets_cewd0.3}, \code{nets_cewd1.0} & the toy networks with logistic loss and weight decay 0.1, 0.3, 1.0\\
 \code{nets_best} & per target, the network variant with the smallest $\nstar$ among those run on its suite (hindsight)\\
-\code{lin}, \code{hgb} & calibration references: cross-validated logistic regression on the inputs; default histogram gradient boosting\\
+\code{lin}, \code{hgb} & cross-validated logistic regression on the inputs; default histogram gradient boosting\\
 \code{mlp}, \code{mlp_reg}, \code{mlp_strong} & the baseline MLP (256-256); the same with an L2 penalty; an ensemble of three regularized MLPs\\
-\code{mlp_best}, \code{mlp_best+} & per cell, the best of the MLP variants run there (hindsight); \code{mlp_best+} adds Part 9's wider ensembles\\
+\code{mlp_best}, \code{mlp_best+} & per cell, the best MLP variant run there (hindsight); \code{mlp_best+} adds Part 9's wider ones\\
 \addlinespace
-\multicolumn{2}{l}{\emph{Sets and targets} (\cref{sec:tasks,tab:status})}\\
-\code{designed}, \code{random}, \code{dlheld}--\code{dlheld7}, \code{dlsymdev}, \code{dlfamdev} & the 11 toy suites, at $d=30$ (\code{dlheld} is the first held-out suite); \code{designed} at $d=15,60,120$: the 7, 7 and 4 targets of Q4\\
+\multicolumn{2}{l}{\emph{Sets and targets} (\cref{sec:tasks})}\\
+the 11 toy suites & \code{designed}, \code{random}, \code{dlheld}, \code{dlheld2}--\code{dlheld7}, \code{dlsymdev}, \code{dlfamdev}, at $d=30$ (\cref{tab:status})\\
+Q4 targets & the \code{designed} targets at $d=15$, 60 and 120: 7, 7 and 4 of them\\
 the blind family & the random generator of \code{dlheld6}, \code{dlfamdev} and \code{dlheld7}, written blind to the sum-block design\\
-sum-structured target & one of the 54 targets of \code{dlsymdev}, \code{dlheld4}--\code{dlheld7} and \code{dlfamdev} other than their 14 non-symmetric controls\\
+sum-structured target & one of the 54 targets of \code{dlsymdev}, \code{dlheld4}--\code{dlheld7}, \code{dlfamdev} that is not one of their 14 controls\\
 accept set & the values of a sum on which a target, or a function of the sum in it, is $+1$\\
 kr\_vs\_kp, mushroom & the two PMLB datasets with only binary or categorical columns and two classes\\
-target names & f7\_, h6\_, fd\_: \code{dlheld7}, \code{dlheld6}, \code{dlfamdev}; h5s, h5t, h5rf: \code{dlheld5}; rf, rand, hrf, h2rf--h4rf: random formulas. Others are descriptive: par$k$ ($k$-bit parity), maj$k$, thr$k$ (halfspace), stair$k$, mux, dnf, cnf, dlist, sym, band, tail, \dots\\
-development, exposed, held out & the statuses of a set for DFG v1.3 (\cref{tab:status})\\
+target names & f7\_, h6\_, fd\_, h5: \code{dlheld7}, \code{dlheld6}, \code{dlfamdev}, \code{dlheld5}; rf, rand, hrf, h$k$rf: random formulas; others: par$k$ ($k$-bit parity), maj$k$, thr$k$ (halfspace), stair$k$, mux, dnf, cnf, dlist, sym, \dots\\
+statuses & development, exposed, held out for v1.1 only, held out: a set's status for DFG v1.3 (\cref{tab:status})\\
 \addlinespace
 \multicolumn{2}{l}{\emph{Metrics} (\cref{sec:metrics})}\\
 $\nstar$ & the training-set size at which the seed-mean test error reaches 10\%\\
-$\log_2$ ratio; clearly better, worse & $\log_2(\nstar_A/\nstar_B)$; below $-0.25$, above $+0.25$, or only one of the two learners reaches 10\% error\\
+$\log_2$ ratio & $\log_2(\nstar_A/\nstar_B)$, negative when $A$ needs less data\\
+clearly better, worse & the ratio is below $-0.25$ (above $+0.25$), or only $A$ (only $B$) reaches 10\% error\\
 suite mean; pooled & the mean ratio over the targets both learn; per-target ratios pooled over suites\\
 cell; better, tie, worse & a (dataset, $n$) pair on tabular data; the verdicts of the cell rule\\
 budget & one toy network run in FLOPs ($1.62\times10^{11}$ at $d=30$); for real data, three training runs of \code{mlp}\\
-$n_{\rm glob}$ & where a character passes round 0's global test in expectation: $2\ln\bigl(4K\binom d{|S|}/\delta\bigr)\bigl(1-\hat f(\emptyset)^2\bigr)/\hat f(S)^2$ (\cref{sec:interp})\\
-$n_{\rm detect}$ & the first $n$ at which DFG's own test would admit the target's true block if the search proposed it (\cref{sec:interp})\\
+$n_{\rm glob}$ & $2\ln(4K\binom d{|S|}/\delta)(1-\hat f(\emptyset)^2)/\hat f(S)^2$, the $n$ at which $\chi_S$ passes round 0's global test in expectation\\
+$n_{\rm detect}$ & the first $n$ at which DFG's test would admit the target's true block if proposed (\cref{sec:interp})\\
 $n_{\rm struct}$ & the first analysed $n$ at which DFG's model holds the target's exact signed blocks (\cref{sec:interp})\\
 \addlinespace
 \multicolumn{2}{l}{\emph{Other}}\\
 Q1--Q7 & the questions fixed by the Part 11 protocol (\cref{sec:part11})\\
 builder & an agent that designed a component on development data and froze it (Parts 8--10)\\
-Part $k$ & the $k$-th part of the study: Parts 1--5 are reported in \cite{gdcircuit2026}, 6--9 in \cite{discretelearners2026}, 10 in \cite{portfoliolearner2026}; 11 is this paper\\
+Part $k$ & the $k$-th part of the study: Parts 1--5 in \cite{gdcircuit2026}, 6--9 in \cite{discretelearners2026}, 10 in \cite{portfoliolearner2026}; 11 is this paper\\
 \bottomrule
 \end{tabularx}
 \caption{Names used in this paper.}

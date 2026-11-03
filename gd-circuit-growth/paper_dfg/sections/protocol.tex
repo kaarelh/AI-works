@@ -25,12 +25,7 @@ The \emph{sum-structured targets} are the 54 targets of \code{dlsymdev}, \code{d
 
 \paragraph{Input dimension.} Q4 uses the \code{designed} targets on which the networks were trained at other input dimensions in Part 3: \code{maj9}, \code{majpar}, \code{mux}, \code{par2}, \code{par3}, \code{par4} and \code{stair5} at $d=15$ and $d=60$, and \code{maj9}, \code{mux}, \code{par2} and \code{par3} at $d=120$ (7, 7 and 4 targets). Each is the same function of the first inputs as at $d=30$, and its data are drawn in the same way.
 
-\paragraph{Tabular data.} DFG is a learner for $\pm1$ inputs and two classes. Of the study's 26 PMLB datasets \cite{olson2017pmlb}, two have only binary or categorical columns and two classes, and DFG runs on these two only:
-\begin{itemize}
-\item kr\_vs\_kp: 3196 rows, 35 binary columns and 1 categorical;
-\item mushroom: 8124 rows, 16 categorical columns and 6 binary.
-\end{itemize}
-Binary columns become $\pm1$, and categorical ones a one-hot code over the values seen in training, written as $\pm1$. This is v3's view of such data (\repo{study/part11/dfg_real.py}), with 38 inputs on kr\_vs\_kp and up to 112 on mushroom. Each dataset has a fixed test set, a random 25\% of its rows (799 and 2031 rows). For each of 3 seeds the remaining pool (2397 and 6093 rows) is permuted, and the training set of size $n$ is its first $n$ rows. The grid is $n\in\{100,300,1000,3000\}$ up to the pool size, plus the whole pool. DFG runs neither on images nor on real-valued columns.
+\paragraph{Tabular data.} DFG is a learner for $\pm1$ inputs and two classes. Of the study's 26 PMLB datasets \cite{olson2017pmlb}, two have only binary or categorical columns and two classes, and DFG runs on these two only: kr\_vs\_kp (3196 rows; 35 binary columns and 1 categorical) and mushroom (8124 rows; 16 categorical columns and 6 binary). Binary columns become $\pm1$, and categorical ones a one-hot code over the values seen in training, written as $\pm1$. This is v3's view of such data (\repo{study/part11/dfg_real.py}). It gives 38 inputs on kr\_vs\_kp, and 87--112 on mushroom, depending on the values in the training set. Each dataset has a fixed test set, a random 25\% of its rows (799 and 2031 rows). For each of 3 seeds the remaining pool (2397 and 6093 rows) is permuted, and the training set of size $n$ is its first $n$ rows. The grid is $n\in\{100,300,1000,3000\}$ up to the pool size, plus the whole pool. DFG runs neither on images nor on real-valued columns.
 
 \subsection{References}\label{sec:refs}
 
@@ -52,20 +47,10 @@ Binary columns become $\pm1$, and categorical ones a one-hot code over the value
 \item compose: the products $\chi_{S_1}\chi_{S_2}=\chi_{S_1\triangle S_2}$ of two kept characters that have degree above 4 are tested in the same way, with the number of such candidates in place of $\binom d{|S|}$, and this is repeated, at most 4 times, while something new is kept;
 \item predict $\mathrm{sign}\bigl(\hat c_\emptyset+\sum_{S\text{ kept}}\hat c_S\chi_S\bigr)$.
 \end{enumerate}
-It shares DFG's global characters up to degree 4 and the form of its test. It has none of the rest:
-\begin{itemize}
-\item no residual: it tests the labels, with noise scale 1 in place of $s$, and its union bound has no factor $4K$;
-\item no greedy rounds, extension or local classes, sum blocks or block moves;
-\item no refitted readout, kernel background or small-$n$ variant.
-\end{itemize}
-Its FLOPs are counted in the same way as DFG's.
+It shares DFG's global characters up to degree 4 and the form of its test, and nothing else. It tests the labels, not a residual, so its noise scale is 1 in place of $s$, and its union bound has no factor $4K$. It has no greedy rounds, extension or local classes, sum blocks or block moves, and no refitted readout, kernel background or small-$n$ variant. Its FLOPs are counted in the same way as DFG's.
 
 \paragraph{Portfolios that contain DFG.} v3 (\code{hyb_portfolio3}, Part 10 \cite{portfoliolearner2026}) is the stacked portfolio whose Boolean member is DFG v1.3. DFG's default and forced variants are two of its members, next to LightGBM, ExtraTrees, nearest-neighbour votes and logistic regression on the raw columns. A convex stacker combines them, and DFG has a share of the budget. v2 (\code{hyb_portfolio2}, Part 9) and v1 (\code{hyb_portfolio}, Part 8) are the earlier portfolios, with DFG v1.2 and v1.1 \cite{discretelearners2026}.
-\begin{itemize}
-\item On toy inputs v3's results are those of \code{p10_sum}, which is v3's code there (checked identical when v3 was assembled). v2's are its own or, on \code{designed} and \code{dlsymdev}, those of \code{p9_sum}, the same code on toy inputs. Both ran on every toy suite with the inputs permuted per fit.
-\item DFG alone against v3 measures what the rest of the portfolio adds on Boolean inputs.
-\item v1 is a reference on tabular data only.
-\end{itemize}
+On toy inputs v3's results are those of \code{p10_sum}, which is v3's code there (checked identical when v3 was assembled). v2's are its own or, on \code{designed} and \code{dlsymdev}, those of \code{p9_sum}, the same code on toy inputs. Both ran on every toy suite, with the inputs permuted per fit. DFG alone against v3 measures what the rest of the portfolio adds on Boolean inputs. v1 is a reference on tabular data only.
 
 \paragraph{Earlier versions of DFG.} Part 6 ran DFG v1 at $d=15$ and 30, and v1.1 at $d=60$ and 120, on the Q4 targets in the natural column order (\repo{study/discrete_learner/results/}). They are context for Q4, not a paired comparison. On real-valued data the record is Part 7's three adaptations of DFG, frozen there \cite{discretelearners2026}: Boolean-bit characters (\code{dfg_bits}), thresholded data-derived directions (\code{dfg_dirs}) and threshold and AND gates (\code{dfg_gates}). Their results on kr\_vs\_kp and mushroom are context for Q6.
 

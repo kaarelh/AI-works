@@ -479,7 +479,19 @@ def a2(recs):
     late = [r for r in recs if any(t["spur"] and t["cat"] != "chi_lin" and t["rnd"] > 0 for t in r["terms"])]
     first = lambda r: min(t["rnd"] for t in r["terms"] if t["spur"] and t["cat"] != "chi_lin" and t["rnd"] > 0)
     out["later_spur_fits"] = dict(fits=len(late), after_an_earlier_spurious_term=sum(1 for r in late if any(t["spur"] and t["rnd"] < first(r) for t in r["terms"])))
-    out["fits_with_r0_class_search"] = len(recs)
+    # round 0 of the final fits: class searches run, and the expected number of fits in which a character reading an
+    # irrelevant input passes, under P-A's bound ((N_irr / N) delta / (2K) per class) and the independent-Gaussian
+    # approximation ((N_irr / N) times 1 - (1 - 2 Phi(-z))^N per class); N_irr = C(d, k) - C(|relevant|, k)
+    nom = nominal(30); ncls, e_bound, e_gauss = 0, 0.0, 0.0
+    for r in recs:
+        if not r["final"]["rounds"]:
+            continue
+        for cl in r["final"]["rounds"][0]["cls"]:
+            if cl in ("g1", "g2", "g3", "g4", "g5", "g6"):
+                k = int(cl[1]); fr = 1 - math.comb(len(r["rel"]), k) / math.comb(30, k)
+                ncls += 1; e_bound += fr * DELTA / (2 * K); e_gauss += fr * nom[cl]["gauss"]
+    out["r0_class_searches"] = dict(searches=ncls, expected_bound=e_bound, expected_gauss=e_gauss,
+                                    observed=len(out["r0_chi_test_spur"]))
     # spurious characters admitted individually, all n: which classes, how many irrelevant inputs
     ct = [t for t in terms if t["cat"] == "chi_test"]
     out["chi_test_spur"] = dict(n=len(ct), by_class={c: sum(1 for t in ct if t["origin"] == c) for c in sorted(set(t["origin"] for t in ct))},
@@ -635,10 +647,21 @@ def b_by_n(Bq):
                  outside_cpu=rng_([c["outside_cpu_s"] / c["cpu_med"] for c in C]),
                  flops={g: rng_([c["flops_share"][g] for c in C]) for g in G},
                  cpu_share={g: rng_([c["cpu_s"][g] / c["cpu_med"] for c in C]) for g in G})
+        tf = lambda c: max(sum(c["cv_flops_by_group"].values()), 1e-9)
         if all(c["n_calls"] > 1 for c in C):
-            tf = lambda c: max(sum(c["cv_flops_by_group"].values()), 1e-9)
             o["cv_inner"] = {g: dict(cpu=rng_([c["cv_cpu_by_group"][g] / max(c["cv_cpu_s"], 1e-9) for c in C]),
                                      flops=rng_([c["cv_flops_by_group"][g] / tf(c) for c in C])) for g in G}
+        # the same without par4: its parity passes in round 0 (of the final and of every fold fit), the round's
+        # character then explains the residual and no block search runs
+        C7 = [c for c in C if c["target"] != "par4"]
+        o["no_par4"] = dict(cells=len(C7), cpu=rng_([c["cpu_med"] for c in C7]), cv_cpu=rng_([c["cv_cpu_s"] / c["cpu_med"] for c in C7]),
+                            sum_cpu=rng_([c["cpu_s"]["sum blocks"] / c["cpu_med"] for c in C7]),
+                            sum_flops=rng_([c["flops_share"]["sum blocks"] for c in C7]))
+        if all(c["n_calls"] > 1 for c in C7):
+            o["no_par4"]["cv_inner_sum"] = dict(cpu=rng_([c["cv_cpu_by_group"]["sum blocks"] / max(c["cv_cpu_s"], 1e-9) for c in C7]),
+                                                flops=rng_([c["cv_flops_by_group"]["sum blocks"] / tf(c) for c in C7]))
+            o["no_par4"]["cv_inner_deg4"] = dict(cpu=rng_([c["cv_cpu_by_group"]["deg 4"] / max(c["cv_cpu_s"], 1e-9) for c in C7]),
+                                                 flops=rng_([c["cv_flops_by_group"]["deg 4"] / tf(c) for c in C7]))
         out[str(n)] = o
     return out
 
@@ -796,6 +819,13 @@ def tables(res):
                         s_ += f" [{w['passed']}/{w['ran']}]"
                     row.append(s_)
                 T.append("| " + " | ".join(row) + " |")
+            pooled = []
+            for nm in ["lin", "quad"] + [f"sum_{k}" for k in SUMK]:
+                for rtag in ("r0", "later"):
+                    v = A["blocks"].get(f"{d}:{p}:{nm}:all:{rtag}")
+                    if v is not None:
+                        pooled.append(f"{nm} {rtag} {rate(v['passed'], v['ran'])} (max ratio {v['max']:.3f})")
+            T.append("pooled over n: " + "; ".join(pooled))
             T.append("")
             c = A["cascade"][f"{d}:{p}"]
             T.append(f"cascade d={d} p={p}: {c}")
@@ -901,6 +931,7 @@ def tables(res):
         T.append(f"spurious terms outside the linear block: {A['n_spur_terms_excl_lin']} {A['spur_terms_excl_lin_by_cat']}; chi_test: {A['chi_test_spur']}")
         T.append(f"spurious terms outside the linear block by round (round 0 / later): {A['spur_excl_lin_by_cat_round']}")
         T.append(f"round-0 spurious characters admitted by their own test: {A['r0_chi_test_spur']}")
+        T.append(f"round-0 class searches of the final fits and the expected number of spurious passes (bound / independent-Gaussian): {A['r0_class_searches']}")
         T.append(f"fits with a spurious term (outside the linear block) admitted after round 0: {A['later_spur_fits']}")
         T.append("")
         T += ["### largest spurious terms outside the linear block (sd of the term / sd of the model value)", ""]
@@ -956,6 +987,17 @@ def tables(res):
             T.append("| outside _fit (CPU) | " + " | ".join(f"- / {f2(v['outside_cpu'])}" for v in bn.values()) + " |")
             T.append("| FLOPs / network run | " + " | ".join(f"{v['flops_gd'][0]:.4f}-{v['flops_gd'][1]:.4f}" for v in bn.values()) + " |")
             T.append("| CPU s per fit (median of repeats) | " + " | ".join(f"{v['cpu'][0]:.2f}-{v['cpu'][1]:.2f}" for v in bn.values()) + " |")
+            T.append("")
+            T += ["### the same without par4 (7 cells): % of the fit's CPU in the fold fits and in the final fit's sum-block search; % of FLOPs in the latter; "
+                  "inside the fold fits: % of their CPU / FLOPs in the sum-block search and in degree 4", ""]
+            for n, v in bn.items():
+                w = v["no_par4"]
+                s_ = (f"- n = {n}: CPU s per fit {w['cpu'][0]:.2f}-{w['cpu'][1]:.2f}; fold fits {f2(w['cv_cpu'])}% of CPU; final fit's sum blocks {f2(w['sum_cpu'])}% of CPU, "
+                      f"{f2(w['sum_flops'])}% of FLOPs")
+                if "cv_inner_sum" in w:
+                    s_ += (f"; inside the fold fits, sum blocks {f2(w['cv_inner_sum']['cpu'])}% of CPU / {f2(w['cv_inner_sum']['flops'])}% of FLOPs, "
+                           f"degree 4 {f2(w['cv_inner_deg4']['cpu'])}% / {f2(w['cv_inner_deg4']['flops'])}%")
+                T.append(s_)
             T.append("")
             T += ["### inside the fold fits (n <= 512): % of the fold fits' CPU / % of their FLOPs, range over the 8 cells", "",
                   "| component | " + " | ".join(f"n = {n}" for n, v in bn.items() if "cv_inner" in v) + " |", "|---|" + "---|" * sum(1 for v in bn.values() if "cv_inner" in v)]
@@ -1026,7 +1068,7 @@ def main():
     res = dict(audit=C.audit(), nominal={str(d): nominal(d) for d in (30, 60)})
     res["derived"] = derived(noise, tests)
     res["mc"] = {} if os.environ.get("CALIB_NOMC") else {
-        f"{d}:{p}": mc_blocks(d, p, [64, 128, 256, 512, 1024, 4096, 16384] if d == 30 else [64, 256, 512, 1024, 4096],
+        f"{d}:{p}": mc_blocks(d, p, [64, 128, 256, 512, 1024, 4096, 16384] if d == 30 else [128, 256, 512, 1024, 4096, 16384],
                               2000 if d == 30 else 1000) for d in (30, 60) for p in (0.5, 0.8)}
     res["mc_big"] = {} if os.environ.get("CALIB_NOMC") else {
         f"{d}:{p}:{n}": mc_big(d, p, n, 20000) for d, ns_ in ((30, (128, 1024)), (60, (256, 1024))) for p in (0.5, 0.8) for n in ns_}
