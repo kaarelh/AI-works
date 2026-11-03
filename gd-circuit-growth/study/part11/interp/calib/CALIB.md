@@ -38,7 +38,7 @@ Every count is given with its denominator; intervals are two-sided 95% Clopper�
 - **The false admissions are the dense block tests'** (Numerical, §1.2, §1.4, §1.6). The linear block passes at the
   exact χ²_d tail of its Laurent–Massart threshold (0.84% at d = 30, 1.04% at d = 60 in 80000-draw nulls; 2 of 360 and
   4 of 160 round-0 tests in the fits), not at its nominal δ = 0.1. The spectral block's edge has no proved level: on
-  balanced labels it never passed (null ≤ 0.00015), but on biased labels (P(y = 1) = 0.8) near n = 4d its null pass
+  balanced labels it never passed (at most 3 null passes in 20000 draws), but on biased labels (P(y = 1) = 0.8) near n = 4d its null pass
   rate is 5.7% at d = 30 (n = 128) and 48% at d = 60 (n = 256), falling to 0 by n = 1024 (d = 30) and 4096 (d = 60);
   the fits agree (2 of 20 and 5 of 10). The two block tests made 4 of the 6 test-passed admissions among the 220
   biased fits at d = 30 (the other two are degree-1 characters) and, at d = 60, all 6 biased ones and 3 of the 5
@@ -168,7 +168,7 @@ What P-A does not cover:
   for all additive blocks together (weighted blocks have their own, half as large share); the block is searched on
   the residual and must also pass on the residual projected off the round's new characters;
 - **the forced variant** (n ≤ 512): when nothing passes it takes the best-scoring candidate character (in the re-run
-  of §1.5 a global one, except 4 of the 734 second forced characters, which came from the local class), or, at
+  of §1.5 a global one, except 4 of the 731 second forced characters, which came from the local class), or, at
   n ≥ 48, the best sum block if its T / threshold exceeds the square of the best character's ratio; at most twice. It
   is used only if the paired cross-validation test prefers it.
 
@@ -194,7 +194,7 @@ per cell.
   1–4). Their test errors (0.491–0.500) are those of the fits without features. 215 fits stopped in round 0 with
   nothing passed, the other 5 after their two forced rounds.
 - **Biased labels: 6 false admissions in 220 fits, at n = 64–256 and once at 16384**: the linear block twice
-  (n = 64, 128; χ² ratio 1.10 and 1.07, i.e. T = 56.5 and 54.9 against 51.23), adding all 30 inputs (test error 0.336
+  (n = 64, 128; T at 1.10 and 1.07 times its threshold 51.23), adding all 30 inputs (test error 0.336
   and 0.283 against 0.195); the spectral block twice at n = 128 (eigenvalue ratio 1.011 and 1.054; in the first fit a
   second spectral feature entered in round 1 at ratio 1.083, after the first had lowered s; test error 0.234, 0.213);
   a degree-1 character twice (n = 256: test error 0.244; n = 16384: 0.195). In 5 of the 6 nothing further entered.
@@ -493,7 +493,8 @@ the fit's FLOPs, range over the 8 profiled cells at each n (par4, maj9, mux, sta
 - **The largest fits are the ones with many features**: the three largest-FLOP cells (n = 16384) cost 0.431 (h5s5),
   0.471 (fd_08) and 0.323 (thr10) of a network run, of which the logistic readout is 46.9%, 42.9% and 41.4% (15 Newton
   steps at 2np² + p³/3 + 8np each, p features), degree 4 16.7%, 15.3%, 22.3%, least squares 7.6%, 9.6%, 4.4%, the sum
-  blocks 6.1%, 6.1%, 4.6%, extensions 2.4%, 6.4%, 3.7%, and degrees 5 and 6 together 13.9%, 12.7%, 18.5%.
+  blocks 6.1%, 6.1%, 4.6%, extensions 2.4%, 6.4%, 3.7%, and degrees 5 and 6 7.0% and 6.9%, 6.4% and 6.3%, 9.3% and
+  9.2%.
 
 ### 3.3 CPU time by component
 

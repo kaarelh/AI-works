@@ -80,6 +80,10 @@ def derived(noise, tests):
             out["round0_share_d30"][str(n)] = dict(scale=sc, share=sum(f.values()) / gd_flops(30), m=m_,
                                                    by_deg={g: v / gd_flops(30) for g, v in f.items()})
     out["deg4_binds_at_d30"] = round0_flops(30, 10 ** 9)[1]["g4"]
+    out["deg3_loops_d30"], out["deg4_pairs_d30"] = 30 - 2, math.comb(30 - 2, 2)
+    out["per_row_deg1_3_d30"] = sum(f30[g] for g in ("g1", "g2", "g3")) / 16384
+    out["PA_level"] = dict(per_class=DELTA / (2 * K), six_classes=6 * DELTA / (2 * K))
+    out["local_z_N1"] = math.sqrt(2 * math.log(4 * K * 1 / DELTA))
     # test sets' label rates (the noise test sets of calib.noise_test)
     out["test_minority"] = {k: v for k, v in tests.items()}
     # kernel background on biased noise (d = 30, p = 0.8): plug-in w0 = 0.6, s = 0.8, and the per-fit average with the
@@ -429,6 +433,14 @@ def cascade(recs):
         sd_ = lambda r: len(set(r["forced"][0]["S"]) ^ set(r["forced"][1]["S"])) if len(r["forced"]) == 2 else None
         nloc = sum(v for r in two for k, v in r["feats"].items() if k.startswith("chi:local"))
         nmatch = sum(v for r in two for k, v in r["feats"].items() if k.startswith("chi:local") and int(k.split(":")[2]) == sd_(r))
+        cls1, cls2 = {}, {}
+        for r in L:
+            ch = [f for f in r["forced"] if f["kind"] == "char"]
+            if len(ch) >= 1:
+                cls1[ch[0]["cls"]] = cls1.get(ch[0]["cls"], 0) + 1
+            if len(ch) >= 2:
+                cls2[ch[1]["cls"]] = cls2.get(ch[1]["cls"], 0) + 1
+        o.update(forced_char_class_1st=cls1, forced_char_class_2nd=cls2)
         o.update(fits_local_admitted=len(withloc), of_which_two_forced_chars=len(two), local_chars=nloc, local_chars_degree_AxorB=nmatch,
                  disjoint_pairs=sum(1 for r in two if not set(r["forced"][0]["S"]) & set(r["forced"][1]["S"])),
                  forced_blocks=sum(1 for r in L if any(f["kind"] == "block" for f in r["forced"])))
@@ -517,6 +529,7 @@ def a2(recs):
                                   origin=t["origin"], S=t["S"], irr=t["irr"], desc=t.get("desc"), mass_rel=t.get("mass_rel")))
     terms.sort(key=lambda v: -v["rel_sd"])
     out["top_terms"] = terms[:30]; out["n_spur_terms_excl_lin"] = len(terms)
+    out["spur_terms_excl_lin_n2048"] = sorted([t for t in terms if int(t["cell"].split(":")[2]) >= 2048], key=lambda t: (t["cell"], -t["rel_sd"]))
     out["spur_terms_excl_lin_by_cat"] = {c: sum(1 for t in terms if t["cat"] == c) for c in CATS}
     # by round: round 0 (residual = y - mean(y), a function of the relevant inputs only) against later rounds
     out["spur_excl_lin_by_cat_round"] = {c: dict(r0=sum(1 for r in recs for t in r["terms"] if t["spur"] and t["cat"] == c and t["rnd"] == 0),
@@ -787,7 +800,10 @@ def tables(res):
         T.append("budgeted subsample sizes m (min with n not applied) by d and budget scale: " +
                  "; ".join(f"d={k.split(':')[0]} scale {k.split(':')[1]}: {v}" for k, v in D["subsample_m"].items()))
         T.append(f"d = 30, degrees 1-4 on all rows: {D['per_row_deg1_4_d30']:.1f} FLOPs per row ({ {g: round(v, 1) for g, v in D['per_row_by_deg_d30'].items()} }); "
-                 f"the degree-4 budget binds only at m = {D['deg4_binds_at_d30']}")
+                 f"degrees 1-3 (every round): {D['per_row_deg1_3_d30']:.1f} per row; the degree-3 loop runs {D['deg3_loops_d30']} times, the degree-4 loop over "
+                 f"{D['deg4_pairs_d30']} pairs; the degree-4 budget binds only at m = {D['deg4_binds_at_d30']}")
+        T.append(f"P-A: delta/(2K) = {D['PA_level']['per_class']:.4f} per class, {D['PA_level']['six_classes']:.3f} for the six classes; "
+                 f"local class with N = 1: z = sqrt(2 ln(4K/delta)) = {D['local_z_N1']:.3f}")
         T.append(f"d = 30, degree 5 and 6 subsample searches (scale 1): {D['deg56_flops_d30']['g5']:.4e} and {D['deg56_flops_d30']['g6']:.4e} FLOPs = "
                  f"{D['deg56_share_d30']['g5']:.4f} and {D['deg56_share_d30']['g6']:.4f} of one network run")
         T.append("d = 30, the round-0 global search as a share of one network run (final fit; scale 0.5 at n <= 512): " +
@@ -953,6 +969,20 @@ def tables(res):
             T.append(f"| {p_} | {n_} | {o['fits_local_admitted']} | {o['of_which_two_forced_chars']} | {o['local_chars_degree_AxorB']}/{o['local_chars']} | "
                      f"{o['disjoint_pairs']}/{o['of_which_two_forced_chars']} | {o['forced_blocks']} |")
         T.append("")
+        for p_ in sorted(set(k.split(":")[0] for k in res["cascade"])):
+            V = [o for k, o in res["cascade"].items() if k.split(":")[0] == p_]
+            T.append(f"P(y=1) = {p_}, pooled over n: after the 2nd forced character forced-V passes {sum(o['after2']['pass_forced'] for o in V)}/"
+                     f"{sum(o['after2']['tests_forced'] for o in V)}, random-V {sum(o['after2']['pass_random'] for o in V)}/{sum(o['after2']['tests_random'] for o in V)}; "
+                     f"fits with a local admission after two forced characters {sum(o['of_which_two_forced_chars'] for o in V)}, of which A, B disjoint "
+                     f"{sum(o['disjoint_pairs'] for o in V)}")
+        c1, c2 = {}, {}
+        for o in res["cascade"].values():
+            for k, v in o["forced_char_class_1st"].items():
+                c1[k] = c1.get(k, 0) + v
+            for k, v in o["forced_char_class_2nd"].items():
+                c2[k] = c2.get(k, 0) + v
+        T.append(f"class of the forced characters, all re-runs: 1st {dict(sorted(c1.items()))} ({sum(c1.values())}); 2nd {dict(sorted(c2.items()))} ({sum(c2.values())})")
+        T.append("")
     if "A2" in res:
         A = res["A2"]
         mism = {k: v for k, v in A["relevant"].items() if not v["same"] or v["extra_dep"]}
@@ -984,7 +1014,7 @@ def tables(res):
                      f"{o['fits_share_gt_0.1']} | {o['fits_share_excl_lin_gt_0.1'][0]} / {o['fits_share_excl_lin_gt_0.1'][1]} | {o['share_excl_lin_ub_max']:.3f} |")
         tt = {c: sum(A["by_n"][str(n)]["terms_by_cat"][c] for n in NS if str(n) in A["by_n"]) for c in CATS}
         ts = {c: sum(A["by_n"][str(n)]["spur_by_cat"][c] for n in NS if str(n) in A["by_n"]) for c in CATS}
-        T.append(f"| all | " + " | ".join(f"{tt[c]} ({ts[c]})" for c in CATS) + f" | {sum(ts.values()) / max(sum(tt.values()), 1):.3f} | "
+        T.append(f"| all | " + " | ".join(f"{tt[c]} ({ts[c]})" for c in CATS) + f" | {sum(ts.values())}/{sum(tt.values())} = {sum(ts.values()) / max(sum(tt.values()), 1):.3f} | "
                  f"{sum(v for c, v in ts.items() if c != 'chi_lin')}/{sum(v for c, v in tt.items() if c != 'chi_lin')} | | | | |")
         T.append("")
         T += ["### A2 by n, cells with test error <= 0.1 only", "",
@@ -1006,6 +1036,11 @@ def tables(res):
         T.append(f"fits with a spurious term (outside the linear block) admitted after round 0: {A['later_spur_fits']}")
         qm = A["spur_quad_mass_rel"]
         T.append(f"spurious spectral features: {qm['n']}, by n {qm['by_n']}; share of |u|^2 on relevant inputs: " + ", ".join(f"{v:.3f}" for v in qm["values"]))
+        T.append("")
+        T += ["### every spurious term outside the linear block at n >= 2048 (sd of the term / sd of the model value)", ""]
+        for t in A["spur_terms_excl_lin_n2048"]:
+            T.append(f"- {t['cell']} err {t['err']:.4f}: {t['cat']} ({t['origin']}) S={t['S']} irr={t['irr']} rel_sd={t['rel_sd']:.3f} {t['desc'] or ''}"
+                     + (f" mass_rel={t['mass_rel']:.2f}" if t.get('mass_rel') is not None else ""))
         T.append("")
         T += ["### largest spurious terms outside the linear block (sd of the term / sd of the model value)", ""]
         for t in A["top_terms"]:
@@ -1095,6 +1130,7 @@ def tables(res):
         T += ["## DFG's own budget cap (a round starts only below 0.75 of the call's budget): every recorded _fit call", ""]
         for k, v in bc.items():
             T.append(f"- {k}: {v['calls']} calls, stops {v['stops']}, largest share of its own budget spent {v['max_budget_share']:.4f}")
+        T.append(f"- all: {sum(v['calls'] for v in bc.values())} calls, stopped by the cap: {sum(v['stops'].get('budget', 0) for v in bc.values())}")
         T.append("")
     F = res["files"]
     FS = res.get("files_summary")
