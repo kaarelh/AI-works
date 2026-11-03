@@ -103,7 +103,9 @@ def main():
          "network at step 20000 has learned fraction >= 1/2 (for good over larger n), median of 3 seeds (|S| <= 4 only); "
          "DFG n = the same for DFG's final least-squares function (per seed s0/s1/s2, and how chi_S was carried at that "
          "n: its admission class, 'linear-block', 'forced', or 'block' when only a sum block carried it); n_glob = the "
-         "round-0 global-class detection size 2 ln(4 K C(30,|S|)/delta)(1 - yhat_0^2)/yhat_S^2 (degree <= 4).", ""]
+         "round-0 global-class detection size 2 ln(4 K C(30,|S|)/delta)(1 - yhat_0^2)/yhat_S^2 (degree <= 4; degrees 5-6 "
+         "only where the subsample cap admits it: 1374 / 147 rows at n > 512, 687 / 73 at n <= 512, so majpar's x1..x6 "
+         "opens only above n = 512 and shows 513; 'never' otherwise and for degree >= 7).", ""]
     big = {"rmaj9", "dlist5", "dnf3"}
     for fn in A.TARGETS:
         R = [r for r in rows if r["target"] == fn]
@@ -162,6 +164,12 @@ def main():
                                   tau_n_axis=na.get("tau"), n_axis_chars=len(na.get("chars", [])),
                                   tau_net_time_net_n=na.get("net_time_vs_net_n"),
                                   tau_nglob_dfg_n=C.get("nglob_vs_dfg_n"), tau_nglob_net_online=C.get("nglob_vs_net_online"))
+    rv = resolvable_taus(S, "dnf3")
+    L += ["", f"Network n onsets come from a 4096-point test-set mean of f chi_S, whose sampling sd on phi is about "
+              f"0.0156/|yhat_S| (ORDER.md sec. 7). dnf3's two n-axis taus rest mostly on its characters with |yhat| <= 0.027 "
+              f"(sd 0.57-4.0), which that estimate cannot resolve; on its {len(rv['chars'])} characters with sd <= "
+              f"{RES_SD} (|yhat| = 0.19) they are {tfmt(rv['tau_n_axis'])} (net n, DFG n) and {tfmt(rv['tau_net_time_net_n'])} "
+              f"(net time, net n)."]
     open(os.path.join(A.TAB, "order_targets.md"), "w").write("\n".join(L) + "\n")
 
     # ------------------------------------------------------------------ rounds used across the grid; round orders at small n
@@ -179,8 +187,11 @@ def main():
                                   tau_half_multi_positive=sum(1 for _, e in v if e["distinct_rounds"] >= 2 and e["tau_half"] is not None and e["tau_half"] > 0),
                                   mean_distinct=float(np.mean([e["distinct_rounds"] for _, e in v])),
                                   max_rounds=max(e["nrounds"] for _, e in v),
-                                  tau_half=[e["tau_half"] for _, e in v]) for n, v in sorted(G.items())}
+                                  tau_half=[e["tau_half"] for _, e in v],
+                                  nonpositive_multi=[(fn, e["seed"], e["tau_half"]) for fn, e in v if e["distinct_rounds"] >= 2
+                                                     and e["tau_half"] is not None and e["tau_half"] <= 0]) for n, v in sorted(G.items())}
     mechanism(S, rows, NUM); checks(S, rows, NUM); stage_table(S, rows, NUM); endpoints(S, NUM); data_cost(rows, NUM); degree_vs_size(S, rows, NUM); nonmonotone(S, NUM)
+    resolution(S, rows, NUM)
     json.dump(A.clean(NUM), open(os.path.join(A.TAB, "order_numbers.json"), "w"), indent=1)
     return S, rows, NUM
 
@@ -219,10 +230,19 @@ def mechanism(S, rows, NUM):
     M["log2_dfgn_over_nglob"] = dict(count=len(a), median=float(np.median(a)), q10=float(np.percentile(a, 10)),
                                      q90=float(np.percentile(a, 90)), within_1=int(np.sum(np.abs(a) <= 1)),
                                      below_minus1=int(np.sum(a < -1)), above_plus1=int(np.sum(a > 1)))
-    by = defaultdict(list)
+    by = defaultdict(list); by_x = defaultdict(list); dnf3_share = Counter()
     for t, ch, sd, v, h in rat:
         by[h].append(v)
+        if t == "dnf3":
+            dnf3_share[h] += 1
+        else:
+            by_x[h].append(v)
     M["log2_dfgn_over_nglob_by_how"] = {h: dict(count=len(v), median=float(np.median(v))) for h, v in by.items()}
+    # the pooled medians are dominated by dnf3 (added after verification): the same without dnf3, and dnf3's share
+    ax = [x[3] for x in rat if x[0] != "dnf3"]
+    M["log2_dfgn_over_nglob_without_dnf3"] = dict(count=len(ax), median=float(np.median(ax)))
+    M["log2_dfgn_over_nglob_by_how_without_dnf3"] = {h: dict(count=len(v), median=float(np.median(v))) for h, v in by_x.items()}
+    M["dnf3_share_by_how"] = dict(dnf3_share)
     M["below_minus1_examples"] = [x for x in rat if x[3] < -1][:40]
     M["above_plus1_examples"] = [x for x in rat if x[3] > 1][:40]
     # tau between n_glob and DFG n, per target
@@ -391,6 +411,11 @@ def degree_vs_size(S, rows, NUM):
         o = out[fn]
         L.append(f"| {fn} | {tfmt(o['net_time_deg'])} | {tfmt(o['net_time_size'])} | {tfmt(o['dfg_n_deg'])} | {tfmt(o['dfg_n_size'])} | "
                  f"{tfmt(o['net_n_deg'])} | {tfmt(o['net_n_size'])} | {tfmt(o['dfg_n_deg_4'])} | {tfmt(o['dfg_n_size_4'])} |")
+    rv = resolvable_taus(S, "dnf3")
+    L += ["", f"dnf3's 'net n' entries rest mostly on characters with |yhat| <= 0.027, whose network n onsets the 4096-point "
+              f"test-set estimate cannot resolve (sampling sd of phi 0.57-4.0; ORDER.md sec. 7). On its {len(rv['chars'])} "
+              f"characters with |yhat| = 0.19 (all of one size, so no size tau): net n vs degree {tfmt(rv['net_n_deg'])}, "
+              f"DFG n vs degree {tfmt(rv['dfg_n_deg'])}."]
     open(os.path.join(A.TAB, "order_degree_size.md"), "w").write("\n".join(L) + "\n")
     return out
 
@@ -415,6 +440,95 @@ def nonmonotone(S, NUM):
     NUM["nonmonotone"] = dict(dfg_dropped=d_drop, dfg_total=d_tot, net_dropped=n_drop, net_total=n_tot, dfg_examples=ex,
                               per_target={fn: dict(dfg_dropped=v[0], dfg_total=v[1], net_dropped=v[2], net_total=v[3]) for fn, v in per.items()})
     return NUM["nonmonotone"]
+
+
+# ------------------------------------------------------------------ added after verification (VERIFY_ORDER.md)
+RES_SD = 0.1                     # a character is 'resolvable' on the networks' n axis if the sampling sd of phi <= this
+N_TEST = 4096                    # test inputs behind the fixed-n study's coef (nn_train.make_test = harness.test_data)
+
+
+def phi_sd(yh):
+    """Sampling sd of the networks' n-axis learned fraction for a network equal to the target: coef = mean over the
+    N_TEST test inputs of y chi_S, Var(y chi_S) = 1 - yhat_S^2, so sd(phi) = sqrt((1 - yhat^2) / N_TEST) / |yhat|."""
+    return math.sqrt((1 - yh * yh) / N_TEST) / abs(yh)
+
+
+def resolvable_taus(S, fn):
+    """The n-axis taus of one target restricted to its |S| <= 4 characters with phi_sd <= RES_SD."""
+    T = S["targets"][fn]; nn = T["net_n"]
+    c4 = [ch for ch in T["chars"] if nn and ch in nn and phi_sd(T["yhat"][ch]) <= RES_SD]
+    netn = {ch: med3(nn[ch]["seeds"]) for ch in c4}
+    dn = {ch: med3([T["dfg_n"][str(s)][ch]["n"] for s in A.SEEDS]) for ch in c4}
+    on = {ch: F(T["net_time"]["online"][ch]["mean"]) for ch in c4}
+    return dict(chars=c4, tau_n_axis=A.tau([netn[c] for c in c4], [dn[c] for c in c4]),
+                tau_net_time_net_n=A.tau([on[c] for c in c4], [netn[c] for c in c4]),
+                net_n_deg=A.tau([T["deg"][c] for c in c4], [netn[c] for c in c4]),
+                dfg_n_deg=A.tau([T["deg"][c] for c in c4], [dn[c] for c in c4]))
+
+
+def resolution(S, rows, NUM):
+    """How well the networks' n-axis estimator resolves each character (VERIFY_ORDER.md, omission 1), and the numbers
+    that depend on it: per target and |yhat|, the sampling sd of phi and the phi that a network EQUAL to the target
+    scores on the 4096 test inputs; dnf3's n-axis taus on its resolvable characters and the cross-target summaries with
+    them; the data-cost 'small' row without dnf3; the networks' n-axis drops on dnf3 by |yhat|.  Also (omission 6) the
+    round-0 priority taus against the online networks seed by seed (online seed s vs DFG at n = 16384, seed s)."""
+    sys.path.insert(0, os.path.join(A.STUDY, "discrete_learner")); sys.path.insert(1, A.STUDY)
+    import harness as TH                                                        # noqa: E402  (numpy only)
+    from boolfuncs import make_suite                                            # noqa: E402
+    SU = make_suite(30); R = dict(res_sd=RES_SD, n_test=N_TEST, groups={}, exact_target_phi={})
+    for fn in A.TARGETS:
+        T = S["targets"][fn]; nn = T["net_n"]
+        if not nn:
+            continue
+        Xte, yte = TH.test_data(SU[fn]["fn"], fn, 30); Xte = Xte.astype(np.float64); yte = yte.astype(np.float64)
+        G = defaultdict(list)
+        for ch in nn:
+            idx = [int(p) - 1 for p in ch.split("x")[1:]]
+            G[round(abs(T["yhat"][ch]), 4)].append(float(np.mean(yte * np.prod(Xte[:, idx], 1))) / T["yhat"][ch])
+        R["exact_target_phi"][fn] = {str(a): dict(chars=len(v), sd=phi_sd(a), min=min(v), max=max(v),
+                                                  below_half=sum(1 for x in v if x < 0.5), above_1_5=sum(1 for x in v if x > 1.5))
+                                     for a, v in sorted(G.items())}
+    # dnf3 restricted to its resolvable characters, and the cross-target summaries with it
+    rv = resolvable_taus(S, "dnf3"); R["dnf3_resolvable"] = dict(rv, count=len(rv["chars"]))
+    tl = [NUM["targets"][fn]["tau_n_axis"] for fn in A.TARGETS]; ts = [NUM["targets"][fn]["tau_net_time_net_n"] for fn in A.TARGETS]
+    k = A.TARGETS.index("dnf3"); tl[k], ts[k] = rv["tau_n_axis"], rv["tau_net_time_net_n"]
+    tl = [v for v in tl if v is not None]; ts = [v for v in ts if v is not None]
+    R["with_dnf3_resolvable"] = dict(tau_n_axis=dict(min=min(tl), max=max(tl), median=float(np.median(tl)), count=len(tl)),
+                                     tau_net_time_net_n=dict(min=min(ts), max=max(ts), median=float(np.median(ts)), count=len(ts)))
+    # data cost: the 'small' row (|yhat| < 0.25) without dnf3
+    sm = Counter(); lg = []; comp = Counter()
+    for r in rows:
+        a, b = r["dfg_n"], r["net_n"]
+        if a is None or b is None or abs(r["yhat"]) >= 0.25 - 1e-9:
+            continue
+        comp[r["target"]] += 1
+        if r["target"] == "dnf3":
+            continue
+        sm["dfg_less" if a < b else "equal" if a == b else "dfg_more"] += 1
+        if np.isfinite(a) and np.isfinite(b):
+            lg.append(math.log2(a / b))
+    R["data_cost_small_without_dnf3"] = dict(dict(sm), count=sum(sm.values()), log2_count=len(lg),
+                                             log2_median=float(np.median(lg)) if lg else None)
+    R["data_cost_small_by_target"] = dict(comp)
+    # the networks' n-axis drops on dnf3, by |yhat|; dnf3's 0.0039-characters with a network n onset <= 32 (median seed)
+    T = S["targets"]["dnf3"]; dr = Counter(); early = 0
+    for ch, e in T["net_n"].items():
+        a = round(abs(T["yhat"][ch]), 4)
+        dr[str(a)] += sum(1 for s in A.SEEDS if e["dropped_after"][s])
+        if a < 0.01 and med3(e["seeds"]) <= 32:
+            early += 1
+    R["dnf3_net_drops_by_yhat"] = dict(dr); R["dnf3_smallest_net_n_le_32"] = early
+    NUM["net_n_resolution"] = R
+    # omission 6: the round-0 priority against the online networks, seed-matched
+    P = {}
+    for fn in A.TARGETS:
+        T = S["targets"][fn]; chars = T["chars"]; ts = []
+        for s in A.SEEDS:
+            D = T["dfg"]["16384"][str(s)]["rounds"]
+            ts.append(A.tau([F(T["net_time"]["online"][ch]["seeds"][s]) for ch in chars], [-D[ch]["z0"] for ch in chars]))
+        P[fn] = dict(per_seed=ts, mean=float(np.mean(ts)))
+    NUM["priority_online_seed_matched"] = P
+    return R
 
 
 # ------------------------------------------------------------------ figure

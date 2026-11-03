@@ -148,7 +148,7 @@ Results:
   every one the observed frequency of max z ≥ u is at most the bound.
   - At u = 1 no degree-configuration exceeds 2 of 300.
   - 16 of the 4800 data sets have some degree with z > 1.
-  - At d = 30 the u = 1 hits by degree are 6, 1, 4, 3 (degrees 1–4, over 3600 data sets).
+  - At d = 30 the u = 1 hits by degree are 5, 1, 4, 2 (degrees 1–4, over 3600 data sets).
 - **The bound is loose by the Gaussian Mills ratio, not by the union** (Heuristic). The Gaussian approximation
   N·2Φ̄(√(2L)) gives 1.15, 1.01, 0.93 and 0.87·10⁻³ for degrees 1–4 at d = 30, against the bound's 12.5·10⁻³. That is a
   factor √(2π)·√(2L) ≈ 10–14, and the union over the N nearly independent statistics is nearly tight. Where counts are
@@ -196,7 +196,80 @@ exactly P(pass) = P(|2B − n| < √(n(n − n_thr))). E[n(1 − ȳ²)] = n − 
 n > n_thr + 1. Because ln C(d, k) = k ln d − ln k! + O(k²/d), n_thr = 2c²(k ln d − ln k! + ln(4K/δ)) + O(k²/d): it
 grows like 2k ln d.
 
-__P2NUM__
+**n_thr(k, d)** (c = 1, K = 4, δ = 0.1; `P2.n_thr`):
+
+| k | d = 15 | 30 | 60 | 120 | 1000 |
+|---|---|---|---|---|---|
+| 2 | 19.46 | 22.30 | 25.11 | 27.90 | 36.39 |
+| 3 | 22.39 | 26.77 | 31.03 | 35.24 | 48.01 |
+| 4 | 24.59 | 30.59 | 36.34 | 41.99 | 59.04 |
+
+From d = 15 to 120, n_thr rises by 8.4, 12.8 and 17.4, close to 2k ln 8 = 8.3, 12.5, 16.6.
+
+**Check against every parity cell** (Numerical; `P2.agree`, `P2.cells`). These are par2, par3 and par4 in the result
+files at d = 15, 30, 60, 120, with each seed's own training set and its own ȳ.
+- **n ≥ 32: 250 of 250 cells agree.** The final model's test error is exactly 0 iff the criterion holds in the final
+  fit, and about 0.5 otherwise.
+- The 10⁻⁹ term never changes a decision: 263 of 263 cells.
+- **n = 16:** the criterion fails in all 25 cells. n_thr > 16 at every d, and degrees 3–4 are not searched below
+  m = 32. Seven cells still have error 0: par2 at d = 15, 30, 60, every seed. In all 7 the cross-validation chose the
+  forced variant and the forced final model holds χ_S. At n = 16 the fold fits have 14–15 rows, so nothing passes and the
+  forced variant guesses the best-z character. That guess is χ_S in 9–10 of the 10 forced fold fits at d ≤ 60, and the
+  paired test picks forced (held-out errors default/forced 15/2, 7/0, 7/0, 7/0, 9/0, 10/0, 10/0). At d = 120, with
+  C(120, 2) = 7140 pairs against 14 rows, the guess is χ_S in only 6 and 7 of 10 fold fits. The default is kept
+  (7/5 and 3/3), and the error is 0.49 and 0.50.
+
+**Predicted and measured n*** (`P2.pred`, `P2.networks`). n* is the harness's log-interpolated 10% point of the seed-mean
+error on the grid 16, 32, 64, …. The "per-seed" prediction sets each seed's error to 0 where the criterion holds and to
+0.5 elsewhere; the "+ forced" column adds the variant DFG's cross-validation chose at n = 16; the "expected" column uses
+the exact pass probability P(pass) in place of the seeds.
+
+| target | d | n_thr | first grid n > n_thr | per-seed | + forced | expected | measured | networks |
+|---|---|---|---|---|---|---|---|---|
+| par2 | 15 | 19.46 | 32 | 27.9 | 16.0 | 27.9 | 16.0 | 100 |
+| par3 | 15 | 22.39 | 32 | 27.9 | 27.9 | 27.9 | 27.9 | 241 |
+| par4 | 15 | 24.59 | 32 | 27.9 | 27.9 | 28.0 | 27.8 | 508 |
+| par2 | 30 | 22.30 | 32 | 27.9 | 16.0 | 27.9 | 16.0 | 200 |
+| par3 | 30 | 26.77 | 32 | 27.9 | 27.9 | 28.2 | 27.9 | 843 |
+| par4 | 30 | 30.59 | 32 | 52.0 | 52.0 | 33.6 | 51.9 | 2728 |
+| par2 | 60 | 25.11 | 32 | 27.9 | 16.0 | 28.0 | 16.0 | 427 |
+| par3 | 60 | 31.03 | 32 | 27.9 | 27.9 | 44.3 | 27.8 | 3410 |
+| par4 | 60 | 36.34 | 64 | 55.7 | 55.7 | 55.7 | 55.8 | 14255 |
+| par2 | 120 | 27.90 | 32 | 27.9 | 27.9 | 28.7 | 27.8 | 842 |
+| par3 | 120 | 35.24 | 64 | 55.7 | 55.7 | 55.7 | 55.8 | 14029 |
+
+The per-seed criterion, together with the variant chosen at n = 16, reproduces all 11 measured n* to within 0.2. The
+residual differences come from the failing seeds' errors, which are near 0.5 but not exactly 0.5.
+
+**Borderline cases.**
+- **par4, d = 30, n = 32** (n_thr = 30.59, just below the grid point). The test passes iff 32(1 − ȳ²) > 30.59, i.e.
+  |Σy| ≤ 6. Seeds 0, 1, 2 have Σy = −10, −6, +12, so only seed 1 passes (errors 0.488, 0, 0.500).
+  - The cross-validation cannot rescue the other two. The 10 fold fits have 28–29 rows, below 32, so no fold searches
+    degree 3 or 4, and neither variant can hold χ_S in any fold. The held-out errors are 17/18, 12/15, 16/16, and the
+    default is kept.
+  - Exactly, P(pass at n = 32) = 0.785. So P(at least 2 of 3 seeds fail) = 0.12: the measured n* = 52 is an unlucky
+    draw from the exact distribution, whose expected-error n* is 33.6.
+- **par3, d = 60, n = 32** (n_thr = 31.03). The test passes iff |Σy| ≤ 4, P = 0.62. Both seeds pass (Σy = 0, −4), so the
+  measured n* is 27.8 where the expectation gives 44.3.
+- **par3 at d = 120 and par4 at d = 60** fail at n = 32 for every ȳ (n_thr > 32) and pass at 64.
+- **The permutation** does not affect the test: v_S and s do not depend on the order of the columns. It only decides
+  ties among the forced variant's guesses, which matter at n = 16.
+
+**Against the networks** (Numerical for d ≤ 120; Heuristic beyond).
+- **DFG.** Its measured n* takes the values 16, 28 and 56, i.e. 16 or 32 × 2^0.8, depending on which grid interval holds
+  n_thr ≈ 2k ln d.
+- **Networks.** Their n* grows as d^1.04, d^1.91 and d^2.40 for k = 2, 3, 4 (fitted on d = 15–60; `dscale.json`). The
+  d = 120 networks (par2 842, par3 14029) are close to that fit's predictions (879, 12834).
+- **d = 1000** (Heuristic). The test-limited DFG prediction is n* = 55.7, 55.7, 56.8 (P(pass at n = 64) = 1.000,
+  0.9999, 0.967). The networks' power laws give 8.0·10³, 7.4·10⁵, 1.2·10⁷.
+- **But DFG v1.3's budget does not run that test at d = 1000.** There m₃ = 17 (8 under the cross-validation's half
+  budget) and m₄ = 0, both below 32, so the degree-3 and degree-4 searches are skipped. As coded, DFG v1.3 would not find
+  par3 or par4 by its test at d = 1000. An exhaustive search on n = 64 rows would cost 0.11 network runs (degree 3) and
+  55.9 (degree 4).
+- More generally, at n > 512 the budgeted search can no longer admit even a k-parity beyond d = 630 (k = 3) and
+  d = 179 (k = 4); under the half budget, beyond 469 and 148 (`P5.d_parity_unreachable`).
+- So DFG's logarithmic sample size is bought with search compute that grows like d^k (P5), while the networks' sample
+  size grows polynomially at a cost per run linear in d.
 
 ## 3. P3: general characters at round 0, and n_glob
 
@@ -226,7 +299,67 @@ the product of three factors: a smaller union bound (for example C(30, 4) = 2740
 the local class, or 30 per base in ext1), a smaller residual, and the residual's coefficient on S, which stays near ŷ_S
 while S is orthogonal to the fitted features.
 
-__P3NUM__
+**Data** (Numerical). The 41 targets of the `designed` (21) and `random` (20) suites, seed 0, every grid n
+(451 fits), and the 1697 non-constant characters of the targets' exact Fourier supports (`P3.targets`, `P3.chars`).
+- 330 fits are new (`theory_fits.py`). Every one reproduces the evaluation file's test error and FLOP count exactly, and
+  its replayed residual matches DFG's own round log.
+- 121 are the order analysis' seed-0 cells.
+- In each fit, every target character's z-score is replayed in every class at the start of every round, with DFG's own
+  N, subsample and residual (`order_fit.replay_round`).
+
+**The round-0 decision against n > n_glob** (`P3.test0`), over the 8681 (character, n) pairs with |S| ≤ 4 where the
+degree is searched:
+- **They agree in 8409 (96.9%).**
+- Of the 104 pairs with n > n_glob that fail, 100 lie within one doubling above n_glob.
+- Of the 168 pairs with n ≤ n_glob that pass, 139 lie within one doubling below.
+
+The disagreements are the sampling fluctuation of v_S. A normal approximation (Heuristic) treats v_S as
+N(ŷ_S, (1 − ŷ_S²)/n) against the threshold √((1 − ŷ₀²)·2L/n), and uses P2's exact probability for |ŷ_S| = 1. It predicts
+the observed pass rates:
+
+__CALIB__
+
+**First appearance in the model** (`P3.first`). n_first is the first grid n at which χ_S is an explicit feature of the
+final model; n_pred is the first grid n with m > n_glob (P3b).
+- **427 characters are predicted within the grid** (16 ≤ n_pred ≤ 16384).
+  - **105 appear at n_pred**, and **266 earlier**.
+  - **54 one doubling later.** All 54 failed the round-0 test at n_pred with z < 1, a fluctuation; none was cut by the
+    64-candidate cap or the room.
+  - **2 never.** thr10's x2x8x10 has n_glob = 14498 and z = 0.60 at 16384. majpar's degree-6 term has n_glob = 147.0,
+    just at the subsample size m₆ = 147.
+- **321 characters appear although none was predicted.** 262 come through the local class. 53 come through the round-0
+  test near its threshold; 37 of these are maj9's degree-3 characters, with n_glob = 17543 just above the grid, entering
+  at 8192–16384.
+- **949 are neither predicted nor ever seen.** They have small coefficients or degree ≥ 7.
+- **249 characters first appear through the round-0 global test.** For them, n_first/n_glob has median 2^0.26, the same
+  +0.26 doublings ORDER.md found over 151 character-seeds of the Part 5 targets.
+  - 179 lie within one doubling of n_glob.
+  - 54 lie one grid step later. There the first grid point lay just above n_glob, where P(pass) ≈ ½: for example
+    parmaj's degree-4 characters at n = 512 = 1.05 n_glob.
+  - 16 lie earlier.
+
+**What makes a character cheaper than n_glob** (`P3.early_routes`, `P3.factors`). The routes of the 266 early
+characters are:
+- the local class, 70;
+- the linear block, 60 (46 of them in round 0; all degree 1, median log2(n_first/n_glob) = −1.8);
+- ext1, 33, and ext2, 15;
+- the global test in a later round, 36;
+- the forced variant, 12, at n = 16–128;
+- the round-0 test itself, 40 (35 of them one doubling early).
+
+For the later-round classes, P3c's factorization at the round of entry gives (median over the characters):
+
+| class | characters | gain below n_glob (doublings) | union-bound factor L_glob/L_cls | residual factor (1 − ŷ₀²)/s_j² | coefficient factor v_j²/ŷ_S² |
+|---|---|---|---|---|---|
+| local | 332 | 4.5 | 1.71 | 19.2 | 0.80 |
+| ext2 | 19 | 2.6 | 1.20 | 5.0 | 1.06 |
+| ext1 | 33 | 2.3 | 1.32 | 3.2 | 0.86 |
+| global, rounds ≥ 1 | 37 | 1.7 | 1.00 | 3.3 | 0.85 |
+
+The smaller residual is the main factor in every class. The smaller union bound adds a factor of 1.2–1.7, i.e. at most
+0.8 doublings. The local class is DFG's junta completion, every subset of the inputs in use; it enters after the large
+terms are fitted, when s_j² is about 1/19 of the label variance. This is ORDER.md's "composition classes enter 1.3–2.4
+doublings below n_glob", quantified.
 
 ## 4. P4: sum blocks — what they represent, what grouping loses, and their low-degree weight
 
@@ -290,7 +423,44 @@ E[c₁ᵢ] = f̂({i})(1 − 1/(n + 10⁻⁹)), by the same computation as P3a. O
 matrix is a₂(1 − 1/n)(σσᵀ − I) with σ the sign vector. Its top eigenvalue is a₂(k − 1)(1 − 1/n), while each entry's
 noise has standard deviation ≈ s/√n.
 
-__P4NUM__
+**The three residue-class targets, exactly** (Numerical, exact; `P4.targets`). The W_j are computed as rationals from
+P4d. They equal the Walsh–Hadamard transform of each target's own function on all 2^k patterns, and the closed form P4e
+to 4·10⁻¹⁶. B counts the signed inputs equal to +1.
+
+| target | definition | k | a₁ | a₂ | W₁ | W₂ | W₁ + W₂ | weight peaks at degree | nonzero characters | block parameters |
+|---|---|---|---|---|---|---|---|---|---|---|
+| f7_05 (dlheld7) | [B mod 3 ≠ 0] | 14 | 2⁻¹³ | −2⁻¹³ | 14·2⁻²⁶ = 2.1·10⁻⁷ | 91·2⁻²⁶ = 1.36·10⁻⁶ | 105·2⁻²⁶ = **1.56·10⁻⁶** | 11 | 16383 | 15 |
+| h6_00 (dlheld6) | [B mod 3 ≠ 1], signed | 13 | −2⁻¹² | 2⁻¹² | 13·2⁻²⁴ = 7.7·10⁻⁷ | 78·2⁻²⁴ = 4.65·10⁻⁶ | 91·2⁻²⁴ = **5.42·10⁻⁶** | 9 | 8191 | 14 |
+| fd_10 (dlfamdev) | [B mod 3 = 0], signed | 10 | 2⁻⁹ | 2⁻⁹ | 10·2⁻¹⁸ = 3.8·10⁻⁵ | 45·2⁻¹⁸ = 1.72·10⁻⁴ | 55·2⁻¹⁸ = **2.10·10⁻⁴** | 7 | 1023 | 11 |
+
+- **Against Part 10's "W₁ = 0 and W₂ ≤ 0.0002 for all three".** That is right to four decimals. Exactly, W₁ + W₂ is
+  1.6·10⁻⁶ for f7_05 and 5.4·10⁻⁶ for h6_00, two orders of magnitude below 0.0002. For fd_10, W₁ = 3.8·10⁻⁵ is not
+  zero, and W₁ + W₂ = 2.10·10⁻⁴ exceeds 0.0002 by 5%.
+- **Every character on S is nonzero:** all 2^k − 1 of them, by P4e, since the cosine never vanishes for these (k, ρ).
+  One block with one group per value represents each target with k + 1 parameters or fewer.
+
+**The representation, checked** (Numerical; `P4.grouping`). Give the block one group per observed value. Least squares on
+its indicators and the constant then reproduces the seed-0 training labels at n = 16384 exactly (largest residual
+2.6·10⁻¹⁴), with 15, 13 and 11 parameters. h6_00 has 13 rather than 14 because its value t = −13 was not drawn.
+
+**What grouping loses** (Numerical; `P4.grouping`, `P4.generic`).
+- In the large-n limit (mc = 0.005n), every value of t is its own group iff k ≤ 7 (checked for k = 2–15).
+- For the three targets, the limit groups and the groups DFG forms on seed 0's 16384 rows (mc = 81) coincide. The rarest
+  values at each end are merged: into runs of three for f7_05 and h6_00 (B ∈ {0, 1, 2} and {k − 2, k − 1, k}), and runs
+  of two for fd_10.
+- The block alone then cannot beat an error of 1/1024 (f7_05), 7/4096 (h6_00) or 1/512 (fd_10) (P4c). Its
+  least-squares fit on the training rows has test error 0.0017, 0.0037 and 0.0017.
+- So grouping costs these targets about 0.2% at most. It is not why they are never learned.
+
+**What the search sees** (Proved: P4f gives the expectations; Heuristic: the thresholds).
+- **Signal per entry.** The expected pair-matrix entry on S is a₂ against noise ≈ s/√n. At n = 16384 that is a
+  signal-to-noise ratio of 0.017 (f7_05), 0.033 (h6_00) and 0.27 (fd_10); the degree-1 coefficients give the same
+  values, since |a₁| = |a₂|.
+- **Eigenvector seed.** By the BBP threshold for a rank-one perturbation of a Wigner matrix (the top eigenvector is
+  informative iff |a₂|(k − 1) > s√(d/n)), it needs n ≈ s²d/(a₂²(k − 1)²) = 1.1·10⁷, 3.1·10⁶ and 8.6·10⁴.
+- **Degree-1 ranking.** Ranking S's inputs first needs n ≳ 2 ln d · s²/a₁² = 4.1·10⁸, 1.0·10⁸ and 1.6·10⁶.
+- All of these are far above the grid's 16384, while Part 10 found the true block passing its test from n = 128.
+  Quantitatively, this is Part 10's reading that "the search, not the test" sets these targets' cost.
 
 ## 5. P5: compute
 
@@ -320,7 +490,59 @@ budgeted search costs at most its share of GD·`scale`**. The shares of the 2F +
 stopped by the round cap of 0.75 GD·`scale`, which is checked at the start of each round, so a fit can exceed it by the
 cost of its last round.
 
-__P5NUM__
+**The budgeted row counts** (Proved arithmetic from the code; `P5.m_table`). Large n, `scale` 1 / 0.5:
+
+| d | m₃ | m₄ | m₅ | m₆ |
+|---|---|---|---|---|
+| 15 | 613589 / 306794 | 424996 / 212498 | 45486 / 22743 | 10599 / 5299 |
+| 30 | 87307 / 43653 | 29627 / 14813 | 1374 / 687 | 147 / 73 |
+| 60 | 13159 / 6579 | 2212 / 1106 | 47 / 23 (skipped) | 2 / 1 (skipped) |
+| 120 | 4358 / 2179 | 364 / 182 | 3 / 1 (skipped) | 0 (skipped) |
+
+The fold fits (`scale` 1/20 and 1/40) get m₄ = 110 and 55 at d = 60, and 18 and 9 at d = 120, where degree 4 is skipped.
+So on the grid (n ≤ 16384):
+- At d = 15 and 30 every degree-3 and degree-4 search runs on all rows. At d = 30 the degree-5 and degree-6 searches are
+  subsampled to 1374 and 147 rows, as the docstring says.
+- At d = 60 the degree-4 search is subsampled from n = 4096 (2212 rows), and the degree-5/6 searches never run.
+- At d = 120 the degree-4 search runs on 364 rows (182 under the cross-validation's half budget, i.e. already from
+  n = 256), the degree-3 search on 4358 rows from n = 8192, and the fold fits skip degree 4 entirely.
+
+**At which d the degree-4 search becomes subsampled** (`P5.d_star`): the smallest d with m₄ < n.
+
+| n | 32 | 64 | 128 | 256 | 512 | 1024 | 2048 | 4096 | 8192 | 16384 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| d | 163 | 133 | 110 | 90 | 75 | 75 | 62 | 51 | 43 | 36 |
+
+For n ≤ 512 the table uses the final fit under the cross-validation (`scale` 0.5). The search is skipped altogether
+(m₄ < 32) from d = 199 at n > 512, from d = 163 in the final fit at n ≤ 512, and from d = 85 and 70 in the 5- and
+10-fold fits. Degree 3 is skipped from d = 746. These use the harness's GD(d); its one exception is that the d = 120
+networks trained twice as long, which doubles every m at d = 120.
+
+**Exhaustive costs** (`P5.exhaustive`), in network runs GD(d): the degree-4 search on n = 64 rows costs 2.8·10⁻⁴ at d = 30,
+4.1·10⁻³ at 60, 0.025 at 120 and 55.9 at 1000. On n = 16384 rows it costs 0.072, 1.04 and 6.5 at d = 30, 60, 120.
+
+**Check against the result files** (Numerical; `P5.check`, `P5.decomposition`). I wrote down the FLOPs of the "parity
+path" from the code. This is the path where round 0 admits χ_S alone; the blocks' eigendecomposition (10d³) and the
+sum-block projection (16n + 8) are charged; round 1 stops on the sign rule; the readout takes 15 Newton steps and the
+background; at n ≤ 512 the 2F fold fits are added with their exact fold sizes n − ⌈(n − f)/F⌉.
+- **It reproduces the recorded FLOP count to < 10⁻⁹ relative in 228 of the 275 parity cells** (par2–par4,
+  d = 15–120, every n and seed).
+- **4 more match exactly once a false linear block admitted next to χ_S is added.** That happened in two fold fits each
+  of par4 at d = 30, n = 256 and at d = 60, n = 512, and in the final fits of par3 at d = 30, n = 16384 and at d = 60,
+  n = 8192. Refits of the 4 cells show the linear block in round 0 and reproduce the recorded counts bit for bit
+  (`P5.check.linear_cells_refit`). These are P1b's false linear blocks, seen under the alternative: for k ≥ 2 the
+  degree-1 coefficients have no signal.
+- **The other 43 are all at n ≤ 32.** There the fold fits (14–29 rows) do not admit χ_S, so they take other paths. At
+  n = 32, the 7 par2 cells at d ≤ 60, whose folds all pass, match exactly.
+- **Where the n = 16384 par2 fit spends its compute** (model = recorded to 10⁻¹⁵):
+  - d = 15: 0.046 GD (degree 6: 0.030, degree 5: 0.011, degree 4: 0.004);
+  - d = 30: 0.137 (degree 4: 0.072; degrees 5 and 6: 0.030 each);
+  - d = 60: 0.170 (degree 4 on 2212 rows: 0.140; degree 3: 0.029);
+  - d = 120: 0.175 (degree 4 on 364 rows: 0.145; degree 3 on 4358 rows: 0.029).
+- **The largest recorded fit** in each suite costs 0.067 GD (d = 15, maj9), 0.37 (d = 30, thr10), 0.18 (d = 60, maj9)
+  and 0.18 (d = 120, maj9).
+- **The budget bound P5b**, checked over d = 5–399 and the four scales: no budgeted search's charged cost exceeds its
+  share (largest ratio 1 − 1.4·10⁻⁸).
 
 __SUMMARY__
 

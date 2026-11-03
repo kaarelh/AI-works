@@ -5,8 +5,10 @@ Inputs (read only)
   networks, time axis   study/trajectories/results/<fn>_{online,fixed}.json (Part 5, analyze_traj.py): per network
                         (condition online / 16384 / 2048 / 512, seeds 0-2) and target character S the learned fraction
                         phi_S(t) = c_S(t) / yhat_S at 65 checkpoints and its onset (first step with phi >= 1/2 for good).
-                        Here: per-seed onsets as stored; the seed-mean onset = first_cross of the seed-mean phi curve
-                        (the convention of trajectories/stages.py, threshold 1/2, staying >= 0.4 after).
+                        Here: per-seed onsets as stored; the seed-mean onset = analyze_traj.first_cross of the seed-mean
+                        phi curve (threshold 1/2, staying >= 0.4 after, log-interpolated between checkpoints).
+                        trajectories/stages.py also averages the seeds but takes the first checkpoint, without
+                        interpolation; TRAJECTORIES.md sec. 2.2 uses the geometric mean of the per-seed onsets.
   networks, n axis      the fixed-training-set study (study/nn_train.py, results in $SCR/results/fixed_adam_<fn>.npz):
                         the same network and training sets at n = 16..16384, seeds 0-2; coef = mean over the 4096 test
                         inputs of f(x) chi_S(x) for |S| <= 4 (nn_train.char_sets, kmax = 4); phi_S(n) at step 20000.
@@ -228,20 +230,31 @@ def net_stages(onsets, sep=1.35):
     return [[ch for _, ch in g] for g in st], [ch for ch, v in onsets.items() if not np.isfinite(v)]
 
 
-def nglob(yh, deg, yconst, d=30, K=4, delta=0.1):
+def nglob(yh, deg, yconst, d=30, K=4, delta=0.1, cv_n=512):
     """Round-0 global-class detection size: the n at which the expected z-score of chi_S in DFG's first round reaches 1,
     |yhat_S| = s sqrt(2 ln(4 K N / delta) / m), N = C(d, |S|), s^2 = 1 - yhat_0^2 (the residual after the constant),
-    m = n for degree <= 4 (all rows at d = 30); degrees 5 and 6 are searched on the first m = min(n, M_k) rows with
-    M_5 = 1374 and M_6 = 147 (the budget caps of a fit at n > 512; halved for the final fit at n <= 512), so they pass
-    only if the required m is at most M_k (inf otherwise); degree >= 7 has no global route (inf).  Noise ignored."""
+    m = n for degree <= 4 (all rows at d = 30); degrees 5 and 6 are searched on the first m = min(n, M_k(n)) rows with
+    M_5 = 1374 and M_6 = 147 at n > cv_n = 512 (the budget caps of the fit) and M_5 = 687, M_6 = 73 at n <= 512 (the
+    final fit after cross-validation has half the budget).  So n_glob = the required m when the cap at that n admits
+    it; if only the n > 512 cap admits it, the smallest n > 512, i.e. cv_n + 1 (only majpar's x1..x6: required m 147,
+    caps 73 / 147); inf if neither does.  Degree >= 7 has no global route (inf).  (Degrees 3-4 need m >= 32 and
+    5-6 m >= 64; no character here needs fewer rows, so those floors change nothing.)  Noise ignored.
+    Before the verification of ORDER.md this function ignored the halved cap (majpar's x1..x6 then had n_glob 147)."""
     if deg > 6:
         return INF
     N = math.comb(d, deg); s2 = 1 - yconst ** 2
     need = 2 * math.log(4 * K * N / delta) * s2 / yh ** 2
     if deg <= 4:
+        return max(need, 32.0) if deg >= 3 else need
+    cap_small, cap_large = {5: (687, 1374), 6: (73, 147)}[deg]
+    need = max(need, 64.0)
+    if need <= cv_n and need <= cap_small:
         return need
-    cap = {5: 1374, 6: 147}[deg]
-    return need if need <= cap else INF
+    if need > cv_n and need <= cap_large:
+        return need
+    if need <= cap_large:
+        return float(cv_n + 1)
+    return INF
 
 
 def fmt(v):
