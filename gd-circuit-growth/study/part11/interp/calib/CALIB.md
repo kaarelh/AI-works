@@ -38,12 +38,12 @@ Every count is given with its denominator; intervals are two-sided 95% Clopper�
 - **The false admissions are the dense block tests'** (Numerical, §1.2, §1.4, §1.6). The linear block passes at the
   exact χ²_d tail of its Laurent–Massart threshold (0.84% at d = 30, 1.04% at d = 60 in 80000-draw nulls; 2 of 360 and
   4 of 160 round-0 tests in the fits), not at its nominal δ = 0.1. The spectral block's edge has no proved level: on
-  balanced labels it never passed (at most 3 null passes in 20000 draws), but on biased labels (P(y = 1) = 0.8) near n = 4d its null pass
-  rate is 5.7% at d = 30 (n = 128) and 48% at d = 60 (n = 256), falling to 0 by n = 1024 (d = 30) and 4096 (d = 60);
-  the fits agree (2 of 20 and 5 of 10). The two block tests made 4 of the 6 test-passed admissions among the 220
-  biased fits at d = 30 (the other two are degree-1 characters) and, at d = 60, all 6 biased ones and 3 of the 5
-  balanced ones. The sum-block tests never passed (0 of 2000 round-0 searches, 0 of 153 later; largest T / threshold
-  0.93).
+  balanced labels it never passed (at most 3 null passes in 20000 draws), but on biased labels (P(y = 1) = 0.8) near
+  n = 4d its null pass rate is 5.7% at d = 30 (n = 128) and 48% at d = 60 (n = 256), falling to 0 by n = 1024
+  (d = 30) and 4096 (d = 60); the fits agree (2 of 20 and 5 of 10). The two block tests made 4 of the 6 test-passed
+  admissions among the 220 biased fits at d = 30 (the other two are degree-1 characters) and, at d = 60, all 6 biased
+  ones and 3 of the 5 balanced ones. The sum-block tests never passed (0 of 2000 round-0 searches, 0 of 153 later;
+  largest T / threshold 0.93).
 - **The forced variant is not calibrated after its forced characters** (Numerical, §1.5): in its fold fits the local
   class admits the product of the two forced characters. At P(y = 1) = 0.8, 238 of 900 forced fold fits (d = 30) hold
   a test-passed feature after the forced ones (205 of them local characters); in 400 fold-sized re-runs the local test
@@ -259,10 +259,11 @@ and n = 256, 1024 (d = 60) for each p). The last column is P(X ≥ observed) for
   which it runs. A reading (Heuristic; `calib_tables.txt`, "Spectral block, a heuristic"): the edge 2s√(d/n) is the
   semicircle edge of a matrix with iid entries, but the pair matrix is a weighted sum of n rank-one matrices x_i x_iᵀ
   with weights r_i. With P(y = 1) = 0.8 the 20% minority rows carry weight r ≈ −1.6 (the others +0.4); their part is
-  −1.6·0.2·(W − I) for the Gram matrix W of those 0.2n rows (W has unit diagonal), whose Marchenko–Pastur edge puts its
-  most negative eigenvalue near −1.6·0.2·((1 + √(d/(0.2n)))² − 1). This is 0.99 of DFG's edge (margin factor included) at d = 30, n = 128 and 1.08 at
-  d = 60, n = 256, where the null pass rates are 5.7% and 48%; 0.89 and 0.97 at the next n (0.4% and 9.0%); and at most
-  0.74 with balanced labels (0 passes). DFG's margin factor 1 + √(2 ln(1/δ)/d) is 1.39 at d = 30 and 1.28 at d = 60.
+  −1.6·0.2·(W − I) for the Gram matrix W of those 0.2n rows (W has unit diagonal), whose Marchenko–Pastur edge puts
+  its most negative eigenvalue near −1.6·0.2·((1 + √(d/(0.2n)))² − 1). This is 0.99 of DFG's edge (margin factor
+  included) at d = 30, n = 128 and 1.08 at d = 60, n = 256, where the null pass rates are 5.7% and 48%; 0.89 and 0.97
+  at the next n (0.4% and 9.0%); and at most 0.74 with balanced labels (0 passes). DFG's margin factor 1 + √(2
+  ln(1/δ)/d) is 1.39 at d = 30 and 1.28 at d = 60.
 - **The sum-block tests never passed on noise**: the largest T / threshold over all searches is 0.86 in round 0 and
   0.93 in a later round (p = 0.8, d = 30, the first additive block).
 
@@ -299,9 +300,10 @@ in the model against `thr(C(|V|, |T|))`, as `_fit` does):
 - So at p = 0.8 the local test passes after selected characters (244 of 334) and not after random ones of the same
   degrees (0 of 334): the excess comes from the selection. A reading (Heuristic): with P(y = 1) = 0.8 the residual's
   large entries are the minority rows (r ≈ −1.6 against +0.4), and the character that best correlates with it is one
-  that is nearly constant on those rows; so is the second, and then so is their product, which least squares on {1, χ_A, χ_B} leaves in the residual and which the local class tests
-  with N = 1 (threshold z = √(2 ln 160) = 3.19 when A, B are disjoint). With balanced labels a character aligned with
-  the residual is aligned with y, and the product of two such characters with y² = 1, the constant.
+  that is nearly constant on those rows; so is the second, and then so is their product, which least squares on {1,
+  χ_A, χ_B} leaves in the residual and which the local class tests with N = 1 (threshold z = √(2 ln 160) = 3.19 when
+  A, B are disjoint). With balanced labels a character aligned with the residual is aligned with y, and the product of
+  two such characters with y² = 1, the constant.
 - The paired test protects the final fit: at p = 0.8 the cross-validation chose the forced variant in 0 of 120 fits.
   At d = 60 the forced fold fits held a test-passed feature after the forced ones in 14 of 450 (p = 0.5; 12 of them
   local characters) and 150 of 450 (p = 0.8; 132 local), and in one final fit, where the paired test had chosen the
@@ -325,11 +327,11 @@ every cell (44 of 44 equal).
 | 16384 | 0 | – | 0.497 | 0 | 0 | 0.200 |
 | all | **5/110** (0.015–0.103) | 2/60 | | **6/110** (0.020–0.115); CV chose forced 0/60 | | |
 
-- **The character classes** (degrees 1–4; the degree-5/6 search does not run at d = 60, its budgeted m being at most 47
-  and 2 rows) passed in round 0 in 1 of 840 class searches: 0/220 of degree 1, 1/220 of degree 2 (n = 256, p = 0.5), 0/200 of
-  degrees 3 and 4. The 80000-draw nulls give 0.096% and 0.072% per test for degrees 1 and 2 (P(X ≥ 1) = 0.147 for the
-  degree-2 pass). Later rounds ran 17, 21 and 21 tests of degrees 1–3, 10 one-input and 10 two-input extension tests
-  and 6 local tests; the one pass is the local character below.
+- **The character classes** (degrees 1–4; the degree-5/6 search does not run at d = 60, its budgeted m being at most
+  47 and 2 rows) passed in round 0 in 1 of 840 class searches: 0/220 of degree 1, 1/220 of degree 2 (n = 256, p =
+  0.5), 0/200 of degrees 3 and 4. The 80000-draw nulls give 0.096% and 0.072% per test for degrees 1 and 2 (P(X ≥ 1) =
+  0.147 for the degree-2 pass). Later rounds ran 17, 21 and 21 tests of degrees 1–3, 10 one-input and 10 two-input
+  extension tests and 6 local tests; the one pass is the local character below.
 - **The block tests**: the linear block passed 4 times in 160 round-0 tests (ratios 1.01, 1.11, 1.04 at p = 0.5 and
   1.03 at p = 0.8), as its 1.04% null rate predicts (§1.4); the spectral block in 5 of the 10 biased fits at n = 256,
   the first n with n ≥ 4d, where its null rate is 48% (§1.4); 6 of the 12 later-round spectral tests at p = 0.8 passed
@@ -406,12 +408,12 @@ every cell (44 of 44 equal).
 (Numerical, `calib.json` `A2.top_terms`, `A2.spur_excl_lin_by_cat_round`, `A2.r0_chi_test_spur`, `A2.r0_class_searches`;
 the term lists in `calib_tables.txt`.)
 - **The linear block's characters: 961 of the 1047** spurious terms. The block tests the whole degree-1 vector at once
-  and then adds every input not yet in the model, so whenever it passes, the target's 20–29 irrelevant inputs come
-  in with its relevant ones. It entered in 10 fits at n = 64, 8 at 128, 7 at 256, 4 at 512, 3 at 1024 and 2 at each n from
-  2048 on. Its share is at most 0.80 at n = 64 (rand1; and3 0.715, maj3 0.536, rmaj9 0.501, thr10 0.459, maj9 0.442,
-  dlist5 0.441, rf15 0.441, rf08 0.425, rf13 0.001) and at most 0.031 from n = 2048 on. Once it entered on a target
-  with no degree-1 weight at all: par3 at n = 16384, in round 0 next to the parity character, at ratio 1.04 (share
-  0.0065), an event of the kind §1.4 measures on noise.
+  and then adds every input not yet in the model, so whenever it passes, the target's 20–29 irrelevant inputs come in
+  with its relevant ones. It entered in 10 fits at n = 64, 8 at 128, 7 at 256, 4 at 512, 3 at 1024 and 2 at each n
+  from 2048 on. Its share is at most 0.80 at n = 64 (rand1; and3 0.715, maj3 0.536, rmaj9 0.501, thr10 0.459, maj9
+  0.442, dlist5 0.441, rf15 0.441, rf08 0.425, rf13 0.001) and at most 0.031 from n = 2048 on. Once it entered on a
+  target with no degree-1 weight at all: par3 at n = 16384, in round 0 next to the parity character, at ratio 1.04
+  (share 0.0065), an event of the kind §1.4 measures on noise.
 - **Characters admitted by their own test: 7 of the 3029.** Two in round 0, each wholly on irrelevant inputs: rf02 at
   n = 128 (χ{x22, x28}, share 0.063) and rf04 at n = 4096 (χ{x15, x21, x28}, share 0.010). P-A′ bounds this event per
   fit and class: over the 2460 round-0 class searches of these fits the expected number is ≤ 29.8 by the bound and
@@ -553,9 +555,10 @@ same 8 cells:
 - DFG's own cap (a round starts only while a `_fit` call has spent ≤ 0.75 of its budget, `gd_flops(d)` × scale) never
   binds where it was recorded: no stop by it in any of the 6786 recorded `_fit` calls (A1: 660 final and 5400 fold
   fits; A2: 451 final fits; B: 35 final and 240 fold fits), and the largest share of its own budget any of them spent is
-  0.471 (fd_08, a final fit) and 0.313 for a fold fit (`calib.json` `budget_cap`). For the result files' fits at n > 512 (one `_fit` call
-  each, ≤ 0.519 of a network run) it cannot bind; at n ≤ 512 the final fit's budget is 0.5 of a network run and every
-  fit stays below 0.096 in all, while the fold fits' calls are not in the result files.
+  0.471 (fd_08, a final fit) and 0.313 for a fold fit (`calib.json` `budget_cap`). In the result files it cannot have
+  bound on a final fit: at n > 512 that is the fit's only call (≤ 0.519 of a network run against a cap of 0.75), and at
+  n ≤ 512 the whole fit stays below 0.096 against the final fit's cap of 0.375; the fold fits' calls are not recorded
+  there.
 - The *median* fit at d = 30 is the same in every suite: 0.025–0.026 at n = 64, 0.079–0.085 at n = 4096, 0.138–0.182
   at n = 16384 (`calib_tables.txt`, median table), i.e. the fixed-share searches of §3.1; the largest fits are the
   targets with many features (§3.2).

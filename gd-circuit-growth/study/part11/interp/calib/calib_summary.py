@@ -1130,7 +1130,8 @@ def tables(res):
         T += ["## DFG's own budget cap (a round starts only below 0.75 of the call's budget): every recorded _fit call", ""]
         for k, v in bc.items():
             T.append(f"- {k}: {v['calls']} calls, stops {v['stops']}, largest share of its own budget spent {v['max_budget_share']:.4f}")
-        T.append(f"- all: {sum(v['calls'] for v in bc.values())} calls, stopped by the cap: {sum(v['stops'].get('budget', 0) for v in bc.values())}")
+        T.append(f"- all: {sum(v['calls'] for v in bc.values())} calls, stopped by the cap: {sum(v['stops'].get('budget', 0) for v in bc.values())}; "
+                 f"the cap as a share of one network run: {0.75:.3f} for a fit at n > 512 (scale 1), {0.75 * 0.5:.3f} for the final fit at n <= 512 (scale 0.5)")
         T.append("")
     F = res["files"]
     FS = res.get("files_summary")
