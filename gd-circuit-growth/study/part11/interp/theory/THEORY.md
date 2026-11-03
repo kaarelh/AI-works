@@ -6,7 +6,7 @@ Part 11, Q7 (theory support). The object is **DFG v1.3 run alone** (`dfg13-perm`
 c = 1, δ = 0.1, cv_n = 512, sum_nmin = 32, sum_force = True. Written 3 November 2026.
 
 Labels: **Proved** (a proof is given; "by the code" means a direct reading of the cited lines of `dfg13.py`),
-**Numerical** (measured; every number is in [`check_theory.json`](check_theory.json), key given in brackets),
+**Numerical** (measured; every number is in [`check_theory.json`](check_theory.json), key given in parentheses),
 **Heuristic** (a reading or an extrapolation, not a measurement). Files:
 [`check_theory.py`](check_theory.py) computes every number and writes `check_theory.json`;
 [`theory_fits.py`](theory_fits.py) makes the DFG fits it needs (cached in `cache/`).
@@ -204,9 +204,9 @@ Results:
 - **The bound is loose by the Gaussian Mills ratio, not by the union** (Heuristic). The Gaussian approximation
   N·2Φ̄(√(2L)) gives 1.15, 1.01, 0.93 and 0.87·10⁻³ for degrees 1–4 at d = 30, against the bound's 12.5·10⁻³. That is a
   factor of 10.9–14.3, close to the Mills-ratio factor √(2π)·√(2L) = 10.3–13.9 (`P1.bound_over_gauss_d30`), so the
-  union over the N nearly independent statistics is nearly tight. Where counts are large it matches. At u = 0.8, d = 30, n = 2048 with fair labels, the observed rates for degrees 1–4 are 0.037, 0.063,
-  0.15, 0.22. The Gaussian approximation gives 0.030, 0.069, 0.14, 0.26, and the bound 0.26, 0.69, 1, 1
-  (`P1.totals.u08_d30_n2048_fair`).
+  union over the N nearly independent statistics is nearly tight. Where counts are large it matches. At u = 0.8,
+  d = 30, n = 2048 with fair labels, the observed rates for degrees 1–4 are 0.037, 0.063, 0.15, 0.22. The Gaussian
+  approximation gives 0.030, 0.069, 0.14, 0.26, and the bound 0.26, 0.69, 1, 1 (`P1.totals.u08_d30_n2048_fair`).
 - **Linear block: 64 of 64 checks within e^{−x}.** At x = ln(1/δ) (the code's threshold), 43 of the 4800 data sets
   pass (0.9%). The bound is δ = 10%; the χ²_d level of the Laurent–Massart threshold is 0.79–1.17% for d = 15–120
   (0.92% at d = 30).
@@ -277,8 +277,9 @@ files at d = 15, 30, 60, 120, with each seed's own training set and its own ȳ.
 - **n = 16:** the criterion fails in all 25 cells. n_thr > 16 at every d, and degrees 3–4 are not searched below
   m = 32. Seven cells still have error 0: par2 at d = 15, 30, 60, every seed. In all 7 the cross-validation chose the
   forced variant and the forced final model holds χ_S. At n = 16 the fold fits have 14–15 rows, so nothing passes (no
-  fold fit passes in any of the 25 cells; `P2.cells[*].folds_pass`) and the forced variant guesses the best-z character. That guess is χ_S in 9–10 of the 10 forced fold fits at d ≤ 60, and the
-  paired test picks forced (held-out errors default/forced 15/2, 7/0, 7/0, 7/0, 9/0, 10/0, 10/0). At d = 120, with
+  fold fit passes in any of the 25 cells; `P2.cells[*].folds_pass`) and the forced variant guesses the best-z
+  character. That guess is χ_S in 9–10 of the 10 forced fold fits at d ≤ 60, and the paired test picks forced
+  (held-out errors default/forced 15/2, 7/0, 7/0, 7/0, 9/0, 10/0, 10/0). At d = 120, with
   C(120, 2) = 7140 pairs against 14 rows, the guess is χ_S in only 6 and 7 of 10 fold fits. The default is kept
   (7/5 and 3/3), and the error is 0.49 and 0.50.
 
@@ -405,7 +406,7 @@ final model; n_pred is the first grid n with m > n_glob (P3b).
   - **54 one doubling later.** All 54 failed the round-0 test at n_pred with z < 1 (at most 0.994), a fluctuation;
     none was cut by the 64-candidate cap or the room (`P3.late`).
   - **2 never.** thr10's x2x8x10 has n_glob = 14498 and z = 0.60 at 16384. majpar's degree-6 term has n_glob = 147.0,
-    just at the subsample size m₆ = 147.
+    just at the subsample size m₆ = 147, and z = 0.83 from n = 1024 on.
 - **321 characters appear although none was predicted.**
   - 262 come through the local class.
   - 53 come through the round-0 test below their n_glob, on 0.23–0.93 × n_glob rows

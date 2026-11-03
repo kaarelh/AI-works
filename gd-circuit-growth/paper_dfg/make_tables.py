@@ -154,10 +154,10 @@ def seed_mean(r, t):
 
 
 # ---- the suites' status for DFG v1.3 (study/part11/PROTOCOL.md "Held out", as RESULTS.json q2_suites v13_status) --------
-STATUS = {"development (v1.1, v1.2, v1.3)": "dev (v1.1--1.3)", "development (v1.1)": "dev (v1.1)",
-          "held out for an earlier version only": "held out earlier$^a$", "development (v1.2, v1.3)": "dev (v1.2, 1.3)",
-          "exposed (v1.2 built after exposure)": "exposed$^b$", "development (v1.3)": "dev (v1.3)",
-          "**held out** (the only suite)": "\\textbf{held out}"}
+STATUS = {"development (v1.1, v1.2, v1.3)": "development", "development (v1.1)": "development",
+          "held out for an earlier version only": "held out for v1.1 only", "development (v1.2, v1.3)": "development",
+          "exposed (v1.2 built after exposure)": "exposed to v1.2", "development (v1.3)": "development",
+          "**held out** (the only suite)": "\\textbf{held out}"}           # the labels of sections/protocol.tex, tab:status
 
 
 def status(su):

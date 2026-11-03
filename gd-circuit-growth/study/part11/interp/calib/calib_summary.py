@@ -58,7 +58,8 @@ def derived(noise, tests):
     out["lin"] = {}
     for d in (30, 60):
         thr = d + 2 * math.sqrt(d * tt) + 2 * tt
-        out["lin"][str(d)] = dict(thr=thr, chi2_tail=float(stats.chi2.sf(thr, d)), lm_level=math.exp(-tt))
+        out["lin"][str(d)] = dict(thr=thr, chi2_tail=float(stats.chi2.sf(thr, d)), lm_level=math.exp(-tt),
+                                  chi2_median_ratio=float(stats.chi2.median(d)) / thr)
     out["sum_union"] = dict(additive_bound=DELTA / (4 * K), sizes=list(range(2, 25)),
                             sum_over_sizes=23 * DELTA / (4 * K * 24))
     # the round-0 search: subsample sizes by d and budget scale, per-row cost of degrees 1-4 at d = 30, shares of GD
@@ -779,7 +780,7 @@ def tables(res):
         T.append("one network run gd_flops(d): " + ", ".join(f"d={d}: {v:.4e}" for d, v in D["gd"].items()))
         for d, v in D["lin"].items():
             T.append(f"linear block, d = {d}: threshold k + 2 sqrt(k t) + 2t = {v['thr']:.3f} (t = ln 10), Laurent-Massart level {v['lm_level']:.2f}, "
-                     f"exact chi^2_{d} tail at it {v['chi2_tail']:.5f}")
+                     f"exact chi^2_{d} tail at it {v['chi2_tail']:.5f}, chi^2_{d} median / threshold {v['chi2_median_ratio']:.3f}")
         su = D["sum_union"]
         T.append(f"sum blocks, additive, if T were exactly chi^2_m: union bound sum over sizes 2..24 of delta/(4K*24) = {su['sum_over_sizes']:.5f} <= delta/(4K) = {su['additive_bound']:.5f}")
         T.append("budgeted subsample sizes m (min with n not applied) by d and budget scale: " +
