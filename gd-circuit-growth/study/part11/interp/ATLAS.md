@@ -353,14 +353,12 @@ characters have S-lin share 0.45–0.56 (thr30 has no irrelevant input). The err
 at 256 (error 0). thrint has no single exact block; it reaches 0 at n = 512 with a product of the {x4…x9} and
 {x1,x2,x3} blocks, (x4+…+x9) × (x1+x2+x3) (0.27), and two modulated folded blocks, χ[x3]·|−x2+x4+…+x9| (0.24) and
 χ[x2]·|−x3+x4+…+x9| (0.22), next to (x1+x2+x3) (0.10), all R; the weighted blocks that put the heavy input in the
-inner term,
-(x2+…+x9 + 2x1) (from 1024) and (x2+x3−x4−…−x9 + 3x1) (from 4096), come later (R). thr30 (Gaussian weights on all 30
-inputs) is never fitted exactly: 0.009 error at 16384, with 59 characters and a weighted block (x4+x5−x7−… + 3x3),
-a ±1 quantisation of w with its largest weight as inner literal (R, 0.10; also a factor of a product, 0.03), beside
-three small modulated blocks (shares ≤ 0.01). At 16384 the leading
-terms are the degree-1 characters (their summed contribution has 0.76–0.91 of the output's sd; the tables' unnormalised
-root-sum-square values are 0.72–0.85), the block (maj9 0.29, f7_01 0.29) and, for f7_01, a spectral feature on its
-inputs (0.28).
+inner term, (x2+…+x9 + 2x1) (from 1024) and (x2+x3−x4−…−x9 + 3x1) (from 4096), come later (R). thr30 (Gaussian
+weights on all 30 inputs) is never fitted exactly: 0.009 error at 16384, with 59 characters and a weighted block
+(x4+x5−x7−… + 3x3), a ±1 quantisation of w with its largest weight as inner literal (R, 0.10; also a factor of a
+product, 0.03), beside three small modulated blocks (shares ≤ 0.01). At 16384 the leading terms are the degree-1
+characters (their summed contribution has 0.76–0.91 of the output's sd; the tables' unnormalised root-sum-square
+values are 0.72–0.85), the block (maj9 0.29, f7_01 0.29) and, for f7_01, a spectral feature on its inputs (0.28).
 *Heuristic:* for threshold functions DFG's dictionary is complete almost at once and what remains is to learn the
 weights; the logistic readout of 30 noisy degree-1 coefficients does that slowly, one block whose levels encode the
 threshold does it at once.
