@@ -346,6 +346,16 @@ def sec_4_3():
         say(f"   {'':10s} from the stage start: {' | '.join(fmt(g) for _, g in start)}")
 
 
+def sec_5_1(dfg):
+    say("== sec. 5.1  the union bound by degree (round 0, global class, d = 30)")
+    ln = {k: math.log(4 * dfg.K * math.comb(30, k) / dfg.delta) for k in range(1, 7)}
+    say("ln(4 K C(30,k) / delta), k = 1..6:", {k: round(v, 2) for k, v in ln.items()}, f"; sqrt(ln_4 / ln_1) = {math.sqrt(ln[4] / ln[1]):.3f}")
+    ng = T["mux"]["nglob"]
+    say(f"mux: coefficient ratio {0.75 / 0.25:.1f}; z-score ratio (0.75 / sqrt(ln_4)) / (0.25 / sqrt(ln_1)) = "
+        f"{(0.75 / math.sqrt(ln[4])) / (0.25 / math.sqrt(ln[1])):.2f}; n_glob x1x2x3x4 {ng['x1x2x3x4']:.1f}, x1 {ng['x1']:.1f}, ratio "
+        f"{ng['x1'] / ng['x1x2x3x4']:.2f}")
+
+
 def sec_5_3():
     say("== sec. 5.3  rmaj9's degree-5 and degree-7 characters (36): carried (phi_ls >= 1/2) per fit, and how")
     fn = "rmaj9"
@@ -393,7 +403,7 @@ def main():
     sys.path.insert(0, os.path.dirname(HERE))
     import dfg_hooks as H                                                       # noqa: E402  (sets the runner's sys.path)
     DM = H.E.load_dfg13(); dfg = DM.DFG(readout="logit")                         # md5-checked frozen dfg13.py
-    sec_1_2(); sec_1_5(); sec_2(); sec_3(DM, dfg); sec_4_2(); sec_4_3(); sec_5_3(); sec_5_4(); sec_7()
+    sec_1_2(); sec_1_5(); sec_2(); sec_3(DM, dfg); sec_4_2(); sec_4_3(); sec_5_1(dfg); sec_5_3(); sec_5_4(); sec_7()
     open(os.path.join(A.TAB, "order_recheck.txt"), "w").write("\n".join(OUT) + "\n")
 
 
