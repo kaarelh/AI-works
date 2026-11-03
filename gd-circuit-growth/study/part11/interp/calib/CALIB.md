@@ -197,9 +197,9 @@ per cell.
   0.014 at n = 16, 64, 256; with each fit's own ȳ (fits without features) 0.224, 0.124, 0.012; measured 0.234, 0.130,
   0.018. Since the predictions do not depend on the test labels, the error is a + q(1 − 2a) = 0.1946 + 0.6108 q
   (q = P(predict −1)), which gives 0.3378, 0.2741, 0.2055 at n = 16, 64, 256 against the measured 0.3386, 0.2738,
-  0.2056 (within 0.001 at every n). Part 6's remark that DFG is "sometimes above the constant predictor's error" at
-  n = 16–64 (`discrete_learner/DISCRETE-LEARNER.md`) fits this: on such data the Hebbian background carries no
-  information and costs up to 0.144 in error on biased labels.
+  0.2056 (within 0.001 at every n). Part 6's remark that at n = 16–64 "both learners are near the constant predictor's
+  error (DFG sometimes above it)" (`discrete_learner/DISCRETE-LEARNER.md`) fits this: on such data the Hebbian
+  background carries no information and costs up to 0.144 in error on biased labels.
 
 ### 1.3 Per class, against the nominal levels
 

@@ -147,7 +147,12 @@ Inside v3, DFG v1.3 ran as two members of a stack, its default and (at $n\le512$
 \item \emph{par5.} DFG alone has error 0 from $n=64$ on. v3's seed-mean errors at $n=64$--512 are 0.36, 0.17, 0.17 and 0.35, and it reaches 10\% only at 839. In v3's seed-0 fit at $n=64$ the DFG member alone had error 0, but it held 0.30 of the weight and v3's error was 0.076.
 \item \emph{h5s2, rf00, ssym8:} 598 against 1154, 32 against 40 and 148 against 177.
 \end{itemize}
-\emph{Reading} \status{Heuristic}. DFG's degree-3 and degree-4 searches run only on at least 32 rows, and its degree-5 and degree-6 searches only on at least 64 (\repo{study/part10/hyb_portfolio3/dfg13.py}). At $n=32$ the full fit searches degree 3 and its 10-fold out-of-fold fits do not. At small $n$, v3's DFG members also search degree 5 only on a budget-limited subsample. DFG alone uses its full-data fit whatever its folds show, whereas a stacker weights a member by its out-of-fold predictions. So a structure that only the full-data fit can find counts for little in v3. The parities are the cleanest case, but the effect is small overall: 6 of 138 targets.
+\emph{Reading} \status{Heuristic}. Two rules of the frozen code (\repo{study/part10/hyb_portfolio3/dfg13.py}) make the difference.
+\begin{itemize}
+\item \emph{Minimum rows.} DFG's degree-3 and degree-4 searches run only on at least 32 rows, and its degree-5 and degree-6 searches only on at least 64. At $n=32$ the full fit therefore searches degree 3, while v3's 10-fold out-of-fold fits, on 28--29 rows, do not.
+\item \emph{Budget share.} At $n\le512$ each of v3's out-of-fold DFG fits gets 1.75\% or 3.5\% of the budget. At $d=30$ this leaves 24 or 48 rows for the degree-5 search, fewer than the 64 it needs, so those fits skip it. v3's final DFG fits and DFG alone's have 343--687 rows for it.
+\end{itemize}
+DFG alone uses its full-data fit whatever its folds show, whereas a stacker weights a member by its out-of-fold predictions. So a structure that only the full-data fit can find counts for little in v3. The parities are the cleanest case, and the effect is small overall: 6 of 138 targets. (The subsample sizes are computed from the code by \repo{paper_dfg/make_tables.py} and recorded in \repo{paper_dfg/tables/numbers.json}.)
 
 % ------------------------------------------------------------------------------------------------------------------
 \subsection{The dictionary without the search}\label{sec:res-lowdeg}

@@ -582,7 +582,28 @@ def tab_v3():
          inside_v3_clearly_lower_targets={f"{x['suite']}/{x['target']}": {n: cells10.get((x["suite"], x["target"], n))
                                                                          for n in (16, 32, 64, 128, 256, 512)}
                                           for x in big if num(x["ratio"]) < 0},
-         alone_err_clearly_lower_targets={f"{x['suite']}/{x['target']}": _errs(x["suite"], x["target"]) for x in big if num(x["ratio"]) < 0})
+         alone_err_clearly_lower_targets={f"{x['suite']}/{x['target']}": _errs(x["suite"], x["target"]) for x in big if num(x["ratio"]) < 0},
+         degree5_rows=_deg5_rows())
+
+
+def _deg5_rows():
+    """Rows the frozen DFG v1.3 gives its degree-5 search at d = 30 (dfg13.py: m = budget_hi * GD * share /
+    (2 N1 N2 + m_tab_cost), skipped if m < 64), for v3's DFG fits (part10/hyb_portfolio3/learner.py: the out-of-fold fits share
+    dfg_share[0] = 0.35 of the budget over the folds and the variants; 10 folds at n <= K_small_n = 500, else 5; both variants
+    at n <= 512; the final fits share dfg_share[1] = 0.5 over the variants kept) and for DFG alone (final fit: half the
+    budget at n <= 512)."""
+    src = open(os.path.join(STUDY, "part10", "hyb_portfolio3", "learner.py")).read()
+    assert "K=5, K_small=10, K_small_n=500" in src and "dfg_share=(0.35, 0.5)" in src
+    for p in (os.path.join(STUDY, "discrete_learner"), os.path.join(STUDY, "part11")):
+        if p not in sys.path:
+            sys.path.insert(0, p)
+    import eval_dfg                                              # loads part10/hyb_portfolio3/dfg13.py, md5 asserted
+    from harness import gd_flops
+    M = eval_dfg.load_dfg13(); D = M.DFG(); d = 30; k = 5; k1, k2 = (k + 1) // 2, k // 2
+    rows = lambda share: int(D.budget_hi * gd_flops(d) * share / (2 * math.comb(d, k1) * math.comb(d, k2) + M.m_tab_cost(d, k1, k2)))
+    return dict(v3_oof_n_le_500=rows(0.35 / 10 / 2), v3_oof_n_501_512=rows(0.35 / 5 / 2), v3_final_both_kept=rows(0.5 / 2),
+                v3_final_one_kept=rows(0.5), alone_final_n_le_512=rows(0.5), alone_n_gt_512=rows(1.0), minimum=64,
+                shares=dict(v3_oof_n_le_500=0.35 / 10 / 2, v3_oof_n_501_512=0.35 / 5 / 2))
 
 
 def _errs(su, t):

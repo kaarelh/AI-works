@@ -315,16 +315,21 @@ residual differences come from the failing seeds' errors, which are near 0.5 but
 - **par3, d = 60, n = 32** (n_thr = 31.03). The test passes iff |Σy| ≤ 4, P = 0.62. Both seeds pass (Σy = 0, −4), so the
   measured n* is 27.8 where the expectation gives 44.3.
 - **par3 at d = 120 and par4 at d = 60** fail at n = 32 for every ȳ (n_thr > 32) and pass at 64.
-- **The permutation** does not affect the test: v_S and s do not depend on the order of the columns. It only decides
-  ties among the forced variant's guesses, which matter at n = 16.
+- **The permutation** does not affect the test: v_S and s do not depend on the order of the columns. In these cells it
+  can matter only through tie-breaking, for example among the forced variant's guesses at n = 16.
+- **The folds** were rebuilt from the harness rng (the column permutation first, then `rng.permutation(n) % F`). The
+  rebuilt fold sizes equal the recorded fold fits' in all 50 cached cells. In all 50, P2's criterion on each fold's own
+  labels predicts exactly how many default-variant fold fits hold χ_S (`P2.fold_criterion_vs_default_folds`).
 
 **Against the networks** (Numerical for d ≤ 120; Heuristic beyond).
 - **DFG.** Its measured n* is one of a few values set by which grid interval holds n_thr ≈ 2k ln d:
   - 16·2^0.8 ≈ 28 or 32·2^0.8 ≈ 56, when every seed fails at one grid point and passes at the next;
   - 16, when the forced variant succeeds at n = 16;
   - 52, for par4 at d = 30, where one of three seeds passes at n = 32.
-- **Networks.** Their n* grows as d^1.04, d^1.91 and d^2.40 for k = 2, 3, 4 (fitted on d = 15–60; `dscale.json`). The
-  d = 120 networks (par2 842, par3 14029) are close to that fit's predictions (879, 12834).
+- **Networks.** Their n* grows as d^1.04, d^1.91 and d^2.40 for k = 2, 3, 4. These are least-squares slopes of log n*
+  on log d over d = 15–60 (`DSCALE.md`, `dscale.json`). For k = 2 and 3 that is close to d^(k−1); for k = 4 it stays
+  below d³ on this range. The d = 120 networks (par2 842, par3 14029) are close to the d = 60 values extrapolated with
+  these slopes (879, 12834).
 - **d = 1000** (Heuristic). The test-limited DFG prediction is n* = 55.7, 55.7, 56.8 (P(pass at n = 64) = 1.000,
   0.9999, 0.967). The networks' power laws give 8.0·10³, 7.4·10⁵, 1.2·10⁷.
 - **But DFG v1.3's budget does not run that test at d = 1000.** There m₃ = 17 (8 under the cross-validation's half
@@ -354,7 +359,8 @@ once n exceeds
 
 the quantity ORDER.md uses. Degree enters only through the logarithm and size through 1/ŷ_S². For |S| = 5, 6 the test
 runs on m = min(n, m_k) rows, so the condition is m > n_glob. At d = 30, m₅ = 1374 and m₆ = 147 at `scale` 1 (687 and
-73 at 0.5), so a degree-6 character is reachable only if n_glob < 147, i.e. |ŷ_S| ≳ 0.5.
+73 at 0.5), so a degree-6 character is reachable only if n_glob < 147, i.e. |ŷ_S| > 0.50 when ŷ₀ = 0
+(`P3.deg56_reach`).
 
 **P3c (Proved: the later-round classes).** In round j the same algebra gives z > 1 ⟺ n > n_cls :=
 2c² ln(4K N_cls/δ) s_j²/v_{S,j}², with the class's own N and the round's residual. So
@@ -381,7 +387,7 @@ degree is searched:
 
 The disagreements are the sampling fluctuation of v_S. A normal approximation (Heuristic) treats v_S as
 N(ŷ_S, (1 − ŷ_S²)/n) against the threshold √((1 − ŷ₀²)·2L/n), and uses P2's exact probability for |ŷ_S| = 1. It predicts
-the observed pass rates:
+the observed pass rates to within 0.051 in every band (`P3.test0.calibration`):
 
 | log2(n / n_glob) | ≤ −2 | (−2, −1.5] | (−1.5, −1] | (−1, −0.5] | (−0.5, 0] | (0, 0.5] | (0.5, 1] | (1, 1.5] | (1.5, 2] | > 2 |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -396,28 +402,35 @@ as the normal approximation says.
 final model; n_pred is the first grid n with m > n_glob (P3b).
 - **427 characters are predicted within the grid** (16 ≤ n_pred ≤ 16384).
   - **105 appear at n_pred**, and **266 earlier**.
-  - **54 one doubling later.** All 54 failed the round-0 test at n_pred with z < 1, a fluctuation; none was cut by the
-    64-candidate cap or the room.
+  - **54 one doubling later.** All 54 failed the round-0 test at n_pred with z < 1 (at most 0.994), a fluctuation;
+    none was cut by the 64-candidate cap or the room (`P3.late`).
   - **2 never.** thr10's x2x8x10 has n_glob = 14498 and z = 0.60 at 16384. majpar's degree-6 term has n_glob = 147.0,
     just at the subsample size m₆ = 147.
 - **321 characters appear although none was predicted.**
   - 262 come through the local class.
-  - 53 come through the round-0 test near its threshold. 37 of these are maj9's degree-3 characters, with
-    n_glob = 17543 just above the grid, entering at 8192–16384. The other 16 are 14 small characters of dnf3, 1 of
-    thr10 and 1 degree-5 character of rand3.
+  - 53 come through the round-0 test below their n_glob, on 0.23–0.93 × n_glob rows
+    (`P3.first.seen_not_predicted_global_r0`). 37 of these are maj9's degree-3 characters, with n_glob = 17543 just
+    above the grid, entering at 8192–16384. The other 16 are 14 small characters of dnf3 (n_glob = 26000–36000,
+    entering at 8192–16384), 1 of thr10 (n_glob = 21658, at 16384) and 1 degree-5 character of rand3 (n_glob = 2169,
+    against its subsample of 1374 rows at n = 2048).
   - The rest come through ext2 (4), the global test in a later round (1) and the linear block (1).
-- **949 are neither predicted nor ever seen.** They have small coefficients or degree ≥ 7.
+- **949 are neither predicted nor ever seen.** 168 have degree ≥ 7, where no global test exists. The other 781 have
+  n_glob beyond the grid (degree ≤ 4) or beyond the degree-5/6 subsample, by a factor of at least 1.07, and
+  |ŷ_S| ≤ 0.25 (`P3.first.never_predicted_never_seen`).
 - **249 characters first appear through the round-0 global test.** For them, n_first/n_glob has median 2^0.26, the same
   +0.26 doublings ORDER.md found over 151 character-seeds of the Part 5 targets.
   - 179 lie within one doubling of n_glob.
-  - 54 lie one grid step later. There the first grid point lay just above n_glob, where P(pass) ≈ ½: for example
-    parmaj's degree-4 characters at n = 512 = 1.05 n_glob.
-  - 16 lie earlier.
+  - 54 lie more than one doubling after n_glob: exactly one grid step after n_pred, and they are the 54 "later"
+    characters above. There the first grid point lay just above n_glob (1.01–1.59 × n_glob, median 1.16), where the
+    pass rate is 0.62–0.94 (table above). For example, parmaj's six degree-4 characters failed at n = 512 = 1.05 n_glob
+    with z = 0.78–0.99 (`P3.first.global_r0.above_1_detail`).
+  - 16 lie more than one doubling before n_glob.
 
 **What makes a character cheaper than n_glob** (`P3.early_routes`, `P3.factors`). The routes of the 266 early
 characters are:
 - the local class, 70;
-- the linear block, 60 (46 of them in round 0; all degree 1, median log2(n_first/n_glob) = −1.8);
+- the linear block, 60 (46 of them in round 0; all degree 1, median log2(n_first/n_glob) = −1.8;
+  `P3.first.linear_block.earlier`);
 - ext1, 33, and ext2, 15;
 - the global test in a later round, 36;
 - the forced variant, 12, at n = 16–128;
