@@ -253,11 +253,14 @@ def p1_section(fast=False):
             z = round0_z(X, y, TF.P1_D, final_scale(n), False, (1, 2, 3, 4))
             pred = sorted(k for k, v in z["z"].items() if v > 1)
             r0 = o["round0"] or dict(n_new=0, new=[], blocks=[])
-            got = sorted(set(len(S) for S in r0["new"])) if (r0["n_new"] and o["variant"] == 0) else []
-            if o["variant"] == 1 and r0["n_new"]:
-                got = []                                        # the forced pick (checked: z <= 1 below)
-            ok_ = (pred == got) and (("linear" in r0["blocks"]) == (z["T1"] > TF.P1_D + 2 * math.sqrt(TF.P1_D * math.log(1 / DELTA))
-                                                                  + 2 * math.log(1 / DELTA) and n >= 2 * (1 + TF.P1_D)))
+            got = sorted(set(len(S) for S in r0["new"]))
+            if o["variant"] == 1 and not pred:
+                ok_chars = r0["n_new"] <= 1                         # nothing passed: at most the one forced pick
+            else:
+                ok_chars = pred == got
+            lin_pred = (z["T1"] > TF.P1_D + 2 * math.sqrt(TF.P1_D * math.log(1 / DELTA)) + 2 * math.log(1 / DELTA)
+                        and n >= 2 * (1 + TF.P1_D) and not any(k == 1 for k in pred))
+            ok_ = ok_chars and (("linear" in r0["blocks"]) == lin_pred)
             agree += int(ok_)
             if pred or got or o["size"] > 1:
                 rep.append(dict(key=key, variant=o["variant"], replica_degrees_z_gt_1=pred, dfg_round0=r0,
@@ -418,7 +421,7 @@ def p3_section():
                 # round-0 global test, replayed, against n > n_glob (degrees <= 4)
                 z0 = {}
                 for n, o in cells.items():
-                    j = o["chars"].index(nm); rp = o["replay"][nm][0]
+                    rp = o["replay"][nm][0]
                     z0[n] = (rp.get("global", {}) or {}).get("z") if rp else None
                     if k <= 4 and searched(k, n, 30, final_scale(n)) and z0[n] is not None:
                         pp, ap = n > ng, z0[n] > 1.0
@@ -456,6 +459,9 @@ def p3_section():
             c_ = "same" if dl == 0 else ("earlier" if dl < 0 else "later")
         r["cat"] = c_; cat[c_] = cat.get(c_, 0) + 1
     res["first"]["counts"] = cat
+    for r in rows:
+        pt = res["per_target"].setdefault(f"{r['suite']}/{r['t']}", {})
+        pt[r["cat"]] = pt.get(r["cat"], 0) + 1
     pr = [r for r in rows if r["n_pred"] is not None and r["n_first"] is not None]
     res["first"]["log2_first_over_pred"] = {str(v): sum(1 for r in pr if int(round(math.log2(r["n_first"] / r["n_pred"]))) == v)
                                             for v in sorted(set(int(round(math.log2(r["n_first"] / r["n_pred"]))) for r in pr))}
@@ -531,13 +537,15 @@ def fwht_weights(fn, R, d=30):
     return {int(j): float(np.sum(h[deg == j] ** 2)) for j in range(r + 1)}, h, deg
 
 
-def grouping(pv, mc):
-    """DFG's contiguous groups (dfg13._edges) for exact per-value counts pv (dict value -> count), min group size mc."""
-    vals = sorted(pv); t = np.concatenate([np.full(int(pv[v]), float(v)) for v in vals])
+def grouping(pv, mc, all_vals=None):
+    """DFG's contiguous groups (dfg13._edges) for exact per-value counts pv (dict value -> count), min group size mc.
+    all_vals: also place these values (e.g. every possible t, seen in training or not), as searchsorted does at test time."""
+    vals = sorted(pv); t = np.concatenate([np.full(int(pv[v]), float(v)) for v in vals if pv[v] > 0])
     E = DM._edges(t, mc)
-    g = {v: int(np.searchsorted(E, v)) for v in vals}
+    vv = sorted(set(vals) | set(all_vals or []))
+    g = {v: int(np.searchsorted(E, v)) for v in vv}
     groups = {}
-    for v in vals:
+    for v in vv:
         groups.setdefault(g[v], []).append(v)
     return [groups[q] for q in sorted(groups)]
 
@@ -588,7 +596,8 @@ def p4_section():
         res["grouping"][t]["labels_equal_g_of_B"] = bool(np.all(np.array([g(b) for b in Bv]) == y))
         mc = max(3, int(DEF["sum_mc"] * 16384))
         vals, cnt = np.unique(tv, return_counts=True)
-        gr = grouping({float(v): int(c) for v, c in zip(vals, cnt)}, mc)
+        gr = grouping({int(v): int(c) for v, c in zip(vals, cnt)}, mc, all_vals=list(range(-k, k + 1, 2)))
+        res["grouping"][t]["n16384_unseen_values"] = sorted(set(range(-k, k + 1, 2)) - set(int(v) for v in vals))
         res["grouping"][t].update(n16384_mc=mc, n16384_groups=[[int(v) for v in G_] for G_ in gr],
                                   n16384_irreducible_error=float(irreducible([[int(v) for v in G_] for G_ in gr])))
         # numerical check of the representation lemma: singleton groups reproduce g(t) exactly by least squares

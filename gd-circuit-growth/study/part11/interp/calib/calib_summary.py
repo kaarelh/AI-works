@@ -445,6 +445,16 @@ def tables(res):
                 zz = "-" if v["r0_med"] is None else f"{v['r0_med']:.3f} / {v['r0_q95']:.3f} / {v['r0_max']:.3f}"
                 T.append(f"| {cl} | {v['r0_ran']} | {rate(v['r0_pass'], v['r0_ran']) if v['r0_ran'] else '-'} | {zz} | {v['later_ran']} | {v['later_pass']} |")
             T.append("")
+            T += [f"### round-0 max-ratio by n (median; fits with >= 1 pass / tests): d = {d}, P(y = 1) = {p}", "",
+                  "| n | " + " | ".join(CLS[:6]) + " |", "|---|" + "---|" * 6]
+            for n in NS:
+                row = []
+                for cl in CLS[:6]:
+                    v = A["by_class"].get(f"{d}:{p}:{cl}:{n}")
+                    row.append("-" if (v is None or v["r0_med"] is None) else f"{v['r0_med']:.3f} ({v['r0_pass']}/{v['r0_ran']})")
+                T.append(f"| {n} | " + " | ".join(row) + " |")
+            T.append("reference (independent Gaussian, median of max ratio): " + ", ".join(f"{k} {v['med_ratio']:.3f}" for k, v in nom[str(d)].items()))
+            T.append("")
             T += [f"### block tests by n: d = {d}, P(y = 1) = {p} (round 0; later rounds in brackets: passed/ran)", "",
                   "| n | linear block | spectral block | sum add0 | sum add1 | sum prod | sum split | sum mod |", "|---|---|---|---|---|---|---|---|"]
             for n in NS:

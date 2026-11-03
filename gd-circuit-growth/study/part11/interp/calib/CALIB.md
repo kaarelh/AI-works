@@ -143,4 +143,20 @@ What P-A does not cover:
   2.5× (frozen against instrumented: median ratio 1.00, range 0.50–2.52 over 32 cells), so CPU figures are medians
   of the three instrumented repeats. FLOPs are DFG's own counter (multiply-add = 2), deterministic.
 
+### 3.1 FLOPs: the fixed-share searches set the count
+
+**The round-0 global search, d = 30 (Proved, by reading the counter increments of `_fit`; Numerical check: equal to
+the recorded deg 1–6 regions in all 16 profiled cells with n ≥ 4096, `results/prof.jsonl`).** With the whole budget
+(n > 512, scale 1) round 0 adds exactly
+- degrees 1–4 on all n rows: 2d + (2d² + d) + 28·(2d² + 2d) + 378·(2d² + 3d) = 768 390 FLOPs per row (the degree-4
+  loop visits the 378 pairs (a, b) with b < d − 2; at d = 30 its budget share of 15% would bind only at m = 29 627 > 16384);
+- degree 5 on m₅ = 1374 rows and degree 6 on m₆ = 147 rows: 4.871·10⁹ and 4.850·10⁹ FLOPs, 3.0% of one network run
+  (1.624·10¹¹ at d = 30) each, whatever n.
+
+So before anything else a fit costs 0.079 of a network run at n = 4096 and 0.137 at n = 16384, on any target; at
+n ≤ 512 the final fit gets half the budget (m₅ = 687, m₆ = 73) and the 2F fold fits (hi = False: no degree 5–6) the
+other half.
+
+<!-- B TABLE FLOPS -->
+
 <!-- B RESULTS -->
