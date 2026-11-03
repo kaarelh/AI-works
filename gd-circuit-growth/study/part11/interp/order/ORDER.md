@@ -626,8 +626,8 @@ against DFG's n stages (median seed); verdicts are Heuristic, numbers Numerical.
 
 ### 5.2 Bundles (Numerical, `bundles`; Heuristic reading)
 
-Count the pairs of characters inside one network stage (onsets within 1.35×) that DFG's n order splits, against those
-it keeps together:
+Count the pairs of characters inside one network stage (network onsets within 1.35× of each other, pair by pair) that
+DFG's n order splits, against those it keeps together:
 
 | target | split | kept |
 |---|---|---|
