@@ -13,7 +13,7 @@ Notes by Claude, prompted by Kaarel Hänni. Research note, 23 October 2026; not 
 
 **Paper:** [`paper/gd-circuit-growth-paper.pdf`](paper/gd-circuit-growth-paper.pdf) (LaTeX sources in [`paper/`](paper/)) writes up Parts 1–5.
 
-**Working branch:** `claude/nifty-mccarthy-j0lw2a` holds the full working state. Two paths stay on it and are not published to `main`: `paper/test_fragment.tex`, a build helper, and `study/hybrid/orchestration/`, the job queues of Part 8. The LaTeX build output in `paper_learner/` (`main.pdf`, `main.log`, `main.out`, `main.bbl`, `main.blg`) also stays on the working branch; `learner-paper.pdf` is the published copy.
+**Working branch:** `claude/nifty-mccarthy-j0lw2a` holds the full working state. Two paths stay on it and are not published to `main`: `paper/test_fragment.tex`, a build helper, and `study/hybrid/orchestration/`, the job queues of Part 8. The LaTeX build output in `paper_learner/` (`main.pdf`, `main.log`, `main.out`, `main.bbl`, `main.blg`) also stays on the working branch; `learner-paper.pdf` is the published copy. Likewise in `paper_dfg/`, where the build output is not committed at all (`paper_dfg/.gitignore`) and `dfg-paper.pdf` is the published copy.
 - The `study/models/scratch_*` folders are published, because they hold the calibration logs that the model write-ups cite.
 
 Raw network outputs live in a session scratch directory and are in neither branch. The scripts regenerate them.
@@ -31,6 +31,10 @@ Raw network outputs live in a session scratch directory and are in neither branc
 [Part 10](#part-10-the-best-learner-so-far-what-it-learns-and-a-paper-about-it-2728-october-2026) improves the portfolio under a new pre-registration, picks the best learner so far (v3) by a fixed rule, analyses what it learns, and writes it up. On fresh held-out data v3 cannot be told apart from v2 by the pre-registered verdict rules. On a toy suite drawn from the blind family it needs clearly less data than the best network variant on 10 of 12 targets and more on none (2.8× less, geometric mean), as v2 did. On two fresh QuickDraw sets it has 12.8% and 12.6% error at n = 60000: clearly better than a three-MLP ensemble at all six cells, but within 10% of a CPU-matched wider ensemble and of v2, which the rule calls ties. The analysis of the fitted models finds that on signed-sum targets DFG's search, not its significance test, sets its data cost, and that the image members recover the pixel grid from pixel correlations.
 
 **Paper (Part 10):** [`paper_learner/learner-paper.pdf`](paper_learner/learner-paper.pdf): what v3 is, how it compares with the baselines, and what it learns (LaTeX sources and generator scripts in [`paper_learner/`](paper_learner/); build `latexmk -pdf main.tex`).
+
+[Part 11](#part-11-dfg-alone-one-learner-rather-than-an-ensemble-23-november-2026) studies one learner instead of a portfolio: DFG v1.3, v3's Boolean member, frozen and run alone under a new pre-registration. DFG is forward stepwise least squares over an explicit Boolean dictionary (Fourier characters, and indicators of the values of signed sums of inputs), with a union-bound entry rule for each class. On the held-out `dlheld7` it needs clearly less data than the best network variant on 10 of 12 targets and more data on none (2.4× less, geometric mean). Its n* grows as $d^{0.01}$ to $d^{0.50}$, the networks' as $d^{0.91}$ to $d^{2.40}$; the price is enumeration compute. The low-degree algorithm shares DFG's characters and test but nothing else, and needs 3.1× more data. On parities a proved criterion predicts every fit. On signed-sum targets, wherever the grid can tell, the block search, not the test, sets the data cost. A post-hoc "core DFG" with nine parts removed matches DFG on average at a tenth of its FLOPs.
+
+**Paper (Part 11):** [`paper_dfg/dfg-paper.pdf`](paper_dfg/dfg-paper.pdf): what DFG is, how it compares with the baselines, what its parts do and what it learns (LaTeX sources and generator scripts in [`paper_dfg/`](paper_dfg/); build `latexmk -pdf main.tex`).
 
 [Part 4](#part-4-does-compositional-structure-beyond-leap-matter-24-october-2026) tests whether compositional structure beyond leap complexity matters. [Part 5](#part-5-what-the-network-computes-while-it-learns-2425-october-2026) characterizes the sequence of functions a network computes while it learns, and gives models that reproduce it on held-out targets.
 
@@ -1066,6 +1070,60 @@ Paper: [`paper_learner/learner-paper.pdf`](paper_learner/learner-paper.pdf). Pro
 - On QuickDraw and MNIST the 4-pixel pooling sets are patches of the true grid. At n = 10000 on `qd_dev`, 42% of the 5-pixel bars are exact lattice lines and 96% stay within one pixel of their axis. `cgbt` has the lowest out-of-fold error of all members in every analysed fit.
 
 **Reading** (Heuristic). v3 is a portfolio: on Boolean targets a test-gated, greedy relative of the low-degree algorithm whose cost is set by where its search looks, and on images boosting on a data-derived bank of local features. Part 10's additions help on development suites and give consistent but sub-threshold image gains on the held-out sets.
+
+## Part 11: DFG alone, one learner rather than an ensemble (2–3 November 2026)
+
+Paper: [`paper_dfg/dfg-paper.pdf`](paper_dfg/dfg-paper.pdf) (claims checks of the paper against the records: `paper_dfg/CLAIMS_CHECK.json`). Protocol: [`study/part11/PROTOCOL.md`](study/part11/PROTOCOL.md), committed before any run (`aca1f3c8`), with a post-hoc addendum for the core DFG written before that run. Pre-registered comparisons: [`study/part11/RESULTS.md`](study/part11/RESULTS.md) (from `compare_dfg.py`; runners `eval_dfg.py` and `dfg_real.py`). Analyses, each with an independent verification report (`VERIFY_*.md`): [`study/part11/interp/`](study/part11/interp/) (`ATLAS.md`, `order/ORDER.md`, `theory/THEORY.md`, `calib/CALIB.md`, `ablations/ABLATIONS.md`).
+
+**Question.** Suggest a discrete method that is "one thing" rather than an ensemble, as a specific object worth studying, and write a paper about it like Part 10's.
+
+**The object.** DFG v1.3, v3's Boolean member, run alone and unchanged (`study/part10/hyb_portfolio3/dfg13.py`, md5 `69cabe5c`), with the input columns permuted for each fit. It was chosen after Part 10's results had been read. It is forward stepwise least squares over an explicit Boolean dictionary. The dictionary holds Fourier characters $\chi_S$ and indicators of the values of signed sums $\sum_{i\in S}s_ix_i$, plus folded, modulated, product and weighted variants of these. Each round admits every candidate whose correlation with the residual exceeds $s\sqrt{2\ln(4KN/\delta)/n}$ for its class of $N$ candidates. In learning-theory terms, it is an Occam learner made greedy by a residual. Around the loop sit:
+- a multi-start search for signed-sum blocks;
+- at $n\le512$, a forced guess, chosen or rejected by paired cross-validation;
+- a logistic refinement of the readout;
+- a one-step Hebbian background.
+
+It takes ±1 inputs and two classes, so it runs on the 11 Boolean suites, on 2 of the 26 tabular datasets, and on no images.
+
+**Answer** (Numerical):
+- *`dlheld7`* is the only suite held out for v1.3. Against the per-target best of three network variants, the mean log2 n* ratio is −1.29 over the 11 targets both learn (s.e. 0.27, i.e. 2.4× less data), with 10 targets clearly better and 0 worse. On 5 of the 10 wins logistic regression or boosting also beats the networks. On the other five, all sum-structured, DFG needs about 4.3× less data, and neither no-search baseline comes close.
+- *Every suite* (in-sample except `dlheld7`): −1.87 over the 123 of 126 targets with network runs that both learn (3.7×), clearly better on 117 and worse on 2. Over the 134 targets both learn, v3 needs 1.14× less data than DFG alone, mostly on small formulas and thresholds that it learns by n = 128.
+- *Input dimension.* The comparison uses 7 targets at d = 15–60, 4 of them also at d = 120. DFG's n* grows as $d^{0.01}$ to $d^{0.50}$, the networks' as $d^{0.91}$ to $d^{2.40}$. The price is compute: exhaustive degree-k enumeration costs of order $n\binom dk$ FLOPs. Within one network run's budget, DFG's global search can pass no degree-4 character from d = 179 on (Proved, by the code).
+- *The low-degree algorithm* (`lowdeg`) has DFG's characters of degree ≤ 4 and its test, and nothing else: no residual rounds, no blocks, no refitted readout. It needs 3.1× more data than DFG (+1.64; worse on 112 targets, better on 16) and is level with the networks (−0.16).
+- *Tabular.* kr_vs_kp and mushroom are the only datasets with ±1-codable inputs, 9 cells in all. DFG is level with gradient boosting in every cell. It is level with the regularized MLPs and v3 except at the smallest n of kr_vs_kp, where they are clearly better.
+- *Ablations.* Each of the 12 runs changes one setting, on 65 targets, compared against a paired null whose mean |log2 ratio| is 0.012 at one seed.
+  - Removing the sum blocks costs most: +0.91, with 3 targets lost.
+  - The residual-scaled tests (+0.14 when replaced by label-scaled ones) and the small-n machinery (+0.12) cost a little.
+  - The kernel background hurts slightly: removing it gives −0.10.
+  - The other eight changes leave the mean within the seed-to-seed spread, though single targets move further. They are δ = 1e-4 or 0.9, no eigenvector seeds, no linear or spectral blocks, no extension or local classes, no weighted blocks, a least-squares readout, and K = 3.
+- *Core DFG* (post hoc). It keeps the characters of degree ≤ 3, the unweighted signed-sum blocks without the eigenvector seeds, the residual-scaled tests, a least-squares readout and the small-n cross-validation.
+  - Its mean log2 n* ratio to DFG is +0.07 over the 133 targets both learn, at a median 0.094 of DFG's FLOPs.
+  - It moves 54 of 138 targets beyond the tie band (28 lower, 26 higher), where the paired null moves 8, and it loses par5.
+  - Against the networks its mean log2 ratio is −1.74 over 122 targets (111 clearly better, 9 worse).
+
+**What it learns** (Numerical, seed 0 unless stated, independently verified; readings Heuristic):
+- *Models.* DFG's models are explicit lists of named features, often the target's exact structure:
+  - a parity is its single character;
+  - a symmetric target is one exact signed-sum block;
+  - a parity of two majorities is first the folded blocks $|t_A+t_B|$ and $|t_A-t_B|$, since $\mathrm{sign}(|t_A+t_B|^2-|t_A-t_B|^2)=\mathrm{sign}(t_At_B)$;
+  - formulas and multiplexers are their characters, after transient blocks.
+
+  Where DFG errs, features are missing, not weights: in 133 of the 148 analysed cells with test error above 0.1, no weights on the learned features fit the target.
+- *Two regimes.*
+  - On parities of degree 2–4, the test sets the data cost. In round 0, $\chi_S$ passes iff $n(1-\bar y^2)>2\ln(4K\binom dk/\delta)$ (Proved). This predicts all 250 fits with n ≥ 32, and moving δ moves n* by the predicted amount, within 0.03.
+  - On signed-sum targets, wherever the grid can tell (6 targets), the evidence points to the search. Their true block would pass its test a doubling or more before it enters the model, and a stricter test moves n* by at most 0.05.
+  - The residue classes mod 3 have $1.6\cdot10^{-6}$ to $2.1\cdot10^{-4}$ of their Fourier weight at degrees 1–2, where the block search starts. They are never found, although their block would pass the test from n = 128.
+- *Order.* Inside round 0, DFG's test statistics are positively rank-correlated with the Part 5 networks' order on all 11 targets (median Kendall τ 0.54). The orders invert where a large coefficient sits at high degree: the multiplexer's largest term is DFG's first character (by round-0 z-score) and the networks' last. DFG tends to admit characters in order of detectability, $n_{\rm glob}\propto\ln(4K\binom d{|S|}/\delta)/\hat f(S)^2$. The networks acquire them in order of construction: lower degree first, products after their factors.
+- *False admissions.* On labels independent of the inputs, the character tests sit about ten times inside their Hoeffding bound. None of the 220 balanced-noise final models at d = 30 holds a feature that passed a test. The spectral block has no proved level, and on skewed labels it passes often: in 5.4% of null draws at d = 30 and 99% at d = 120 (n = 4d, P(y = 1) = 0.8).
+
+**Reading** (Heuristic). DFG replaces the networks' noisy feature search with enumeration. Its sample cost therefore grows like $k\ln d$ where theirs grows like $d^{k-1}$, and it pays in FLOPs. Its failures are failures of the block search. The core DFG is the cleaner object to study next. Every test in it is a union bound over an explicit class. Its open question is when a search seeded by degree-1 and degree-2 residual statistics proposes a signed-sum block.
+
+**Limits.**
+- Only `dlheld7`, 12 targets of one family, is held out.
+- The object was chosen after v3's results had been read, and the core is post hoc.
+- The domain is Boolean.
+- The ±0.25 per-target band is smaller than the single-seed spread: two training seeds differ by a mean |log2 ratio| of 0.339.
+- AI-written; not reviewed by a human.
 
 ## Files
 
