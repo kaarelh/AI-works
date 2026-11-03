@@ -708,7 +708,8 @@ background; at n ≤ 512 the 2F fold fits are added with their exact fold sizes 
   one DFG fit itself (the replay of the forced null fit, `P1.forced_fits_replay`); everything else it reads from the
   cache, the result files and `dscale.json`.
 - **Rerun from scratch, 3 November** (a container restart had interrupted this analysis). All 494 cached fits
-  (4 + 50 + 110 + 330), recomputed into an empty directory, were identical to `cache/` field for field. The only
+  (4 + 50 + 110 + 330), recomputed into an empty directory, were identical to `cache/` field for field
+  (`cache/theory_fits_rerun.log`; the last full run of `check_theory.py` is `cache/check_theory.log`). The only
   exceptions were CPU times and a `law` field that the 80 fair-label null fits predate, which `check_theory.py` reads
   as "fair". A full run of `check_theory.py` then reproduced every value of the previous `check_theory.json` exactly
   (0 differences); the keys cited above that were missing before were added by that run.
