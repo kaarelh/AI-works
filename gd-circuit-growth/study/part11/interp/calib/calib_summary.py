@@ -893,6 +893,12 @@ def tables(res):
             c = A["cascade"][f"{d}:{p}"]
             T.append(f"cascade d={d} p={p}: {c}")
             T.append("")
+        for rtag in ("r0", "later"):
+            V = [v for k, v in A["blocks"].items() if k.split(":")[2].startswith("sum_") and k.split(":")[3] == "all" and k.split(":")[4] == rtag]
+            if V:
+                T.append(f"sum-block tests, all (d, P(y = 1)) pooled, {rtag}: {sum(v['passed'] for v in V)} passed of {sum(v['ran'] for v in V)}, "
+                         f"largest T / threshold {max(v['max'] for v in V):.3f}")
+        T.append("")
         T += ["### A1 totals per (d, P(y = 1)): final fits", "",
               "| d | P(y=1) | fits | with any feature | with a test-passed feature (95% CI) | CV ran | CV chose forced | rounds (fits) | test error range of the n means | frozen = instr |",
               "|---|---|---|---|---|---|---|---|---|---|"]
