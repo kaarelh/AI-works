@@ -1,9 +1,10 @@
 """Part 11 structure atlas: recomputes, from the stored files, the numbers that ATLAS.md changed after its independent
 verification (VERIFY_ATLAS.md / .json; the 'Verification' section of ATLAS.md lists the changes).  Reads only files
-(results/atlas, results/cv, the merged evaluation files, Part 10's v3 structure files) and the 4096 test inputs of
-harness.test_data; no fits, except f7_11 at n = 128 with --refit (about 10 s).
+(results/atlas, results/cv, the merged evaluation files, Part 10's v3 structure files, the draw log of
+part9/heldout6/suite.py) and the 4096 test inputs of harness.test_data; no fits, except f7_11 at n = 128 with --refit
+(about 10 s).  Output: atlas_recheck.txt.
 usage: OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python atlas_recheck.py [--refit]"""
-import os, sys, json, ast, math, time, numpy as np
+import os, sys, json, ast, math, time, importlib.util, numpy as np
 from collections import Counter
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 import atlas_make as M                                                 # noqa: E402
@@ -57,15 +58,23 @@ def main():
     print("== thrint: test error by n, degree-1 PTF complete, sum terms at 512")
     print("  ", [(c["n"], round(c["err"], 4), complete(c)) for c in R["thrint"]["cells"]])
     print("  ", [(x["desc"], x["cat"], round(x["share"], 2)) for x in cell("thrint", 512)["terms"] if x["kind"] == "sum"])
-    for n in (1024, 4096):
-        print(f"   {n}:", [x["desc"] for x in cell("thrint", n)["terms"] if x["kind"] == "sum" and x["inner"]])
+    print("   512:", M.rep_line(cell("thrint", 512)))
+    print("   weighted blocks (sum terms with an inner term) by n:")
+    for c in R["thrint"]["cells"]:
+        if c["n"] >= 512:
+            print(f"   {c['n']}:", [x["desc"] for x in c["terms"] if x["kind"] == "sum" and x["inner"]])
 
     print("== staircases: (n, relevant-block share R, complete, degrees of the missing prefix characters)")
     for t, k in (("stair5", 5), ("stair6", 6)):
         print(f"   {t}:", [(c["n"], round(c["summary"]["categories"]["R"]["share"], 2), complete(c),
                             [j + 1 for j in range(k) if not any(x["kind"] == "chi" and x["S"] == list(range(j + 1)) for x in c["terms"])])
                            for c in R[t]["cells"] if c["n"] >= 128])
+    for n in (256, 512, 1024, 2048):
+        print(f"   stair5@{n} sum terms (desc, category, share):",
+              [(x["desc"], x["cat"], round(x["share"], 3)) for x in cell("stair5", n)["terms"] if x["kind"] == "sum"],
+              "; S share", cell("stair5", n)["summary"]["categories"]["S"]["share"])
     print("== mux6 sum terms at 256 and 512:", [(n, [(x["desc"], x["cat"]) for x in cell("mux6", n)["terms"] if x["kind"] == "sum"]) for n in (256, 512)])
+    print("   mux6, n with any sum term:", [c["n"] for c in R["mux6"]["cells"] if any(x["kind"] == "sum" for x in c["terms"])])
 
     print("== multiplexers: modulated address blocks (target terms with a modulator) by n")
     for t in ("mux6", "mux11"):
@@ -83,20 +92,28 @@ def main():
             q = [(round(x["share"], 2), x["mass_rel"], x.get("quad_match")) for x in c["terms"] if x["kind"] == "quad"]
             fb = [round(x["share"], 2) for x in c["terms"] if x["kind"] == "sum" and x["fold"] and x["cat"] == "T"]
             print(f"   {t}@{c['n']}: {M.rep_line(c)}; folded target blocks {fb}; quad {q}")
+    print("   parmaj's folded target blocks from 1024 on:",
+          sorted({x["desc"] for c in R["parmaj"]["cells"] if c["n"] >= 1024 for x in c["terms"]
+                  if x["kind"] == "sum" and x["fold"] and x["cat"] == "T"}))
     for n in (512, 1024):
         for x in cell("majxor", n)["terms"]:
             if x["kind"] == "quad":
                 u = np.asarray(x["u"]); cs = []
                 for sg in (1, -1):
                     w = np.zeros(30); w[:5] = 1; w[5:10] = sg; cs.append(abs(u @ w) / np.linalg.norm(u) / np.linalg.norm(w))
-                print(f"   majxor@{n} quad w {x['w']:+.3f} share {x['share']:.3f} mass {x['mass_rel']}: cos with 1_A+1_B "
+                print(f"   majxor@{n} quad w {x['w']:+.3f} share {x['share']:.4f} mass {x['mass_rel']}: cos with 1_A+1_B "
                       f"{cs[0]:.3f}, with 1_A-1_B {cs[1]:.3f}; error {cell('majxor', n)['err']:.4f}")
 
-    print("== thr30@16384 sum terms:", [(x["desc"][:28] + "...", x["cat"], x["product"], bool(x["mod"]))
-                                       for x in cell("thr30", 16384)["terms"] if x["kind"] == "sum"])
+    print("== thr30@16384 sum terms (start of desc, category, share, product, modulated):",
+          [(x["desc"][:28] + "...", x["cat"], round(x["share"], 3), x["product"], bool(x["mod"]))
+           for x in cell("thr30", 16384)["terms"] if x["kind"] == "sum"])
     print("== f7_06@2048 sum terms:", [(x["desc"], x["cat"]) for x in cell("f7_06", 2048)["terms"] if x["kind"] == "sum"],
           M.rep_line(cell("f7_06", 2048)))
     print("== rf06 / hrf0 test error at 128, 256:", [(t, n, round(cell(t, n)["err"], 4)) for t in ("rf06", "hrf0") for n in (128, 256)])
+    print("   rf06 S share (fraction of the output sd) at 128, 256:",
+          [cell("rf06", n)["summary"]["categories"]["S"]["share"] for n in (128, 256)])
+    print("== dlist8: compact representation and error by n:", [(c["n"], M.rep_line(c), round(c["err"], 4)) for c in R["dlist8"]["cells"]])
+    print("== f7_03: test error by n:", [(c["n"], round(c["err"], 4)) for c in R["f7_03"]["cells"]])
     print("== cnf3@256 sum terms (clauses: x1|x2|x3, ~x4|x5|x6, x7|~x8|x9):",
           [(x["desc"], x["cat"]) for x in cell("cnf3", 256)["terms"] if x["kind"] == "sum"])
     print("== sym9 characters by degree, 4096-16384:", [(n, cell("sym9", n)["summary"]["chars_by_degree"]) for n in (4096, 8192, 16384)])
@@ -104,6 +121,8 @@ def main():
     print("== weighted target blocks at 16384:")
     for t in ("f7_07", "f7_09", "symand", "f7_03", "f7_11", "f7_00"):
         print(f"   {t}:", [x["desc"] for x in cell(t, 16384)["terms"] if x["kind"] == "sum" and x["inner"]])
+    print("   f7_00 (s1 = x1+x2-x3-x4, s2 = -x5-x6-x7+x8+x9+x10+x11), weighted block category and share:",
+          [(x["desc"], x["cat"], round(x["share"], 3)) for x in cell("f7_00", 16384)["terms"] if x["kind"] == "sum" and x["inner"]])
 
     print("== first fit: DFG error - oracle error, largest five (err, oracle, err without background)")
     gaps = []
@@ -123,6 +142,7 @@ def main():
     below = [d for d in dic if d[2] < d[3] - 0.05]
     print(f"   {len(below)} of {len(dic)}; without the background still > 0.05 below: "
           f"{sum(1 for d in below if d[4] < d[3] - 0.05)}")
+    print("   the cells:", [f"{d[0]}@{d[1]}" for d in below])
 
     print("== spurious terms at the first fit")
     S = [(cell(t, first_fit(t))["summary"]["categories"]["S"]["share"], t) for t in ORDER if first_fit(t)]
@@ -160,8 +180,9 @@ def main():
             if f is not None and a["n"] >= f and b["err"] > a["err"]:
                 print(f"   {t} {a['n']} -> {b['n']}: {a['err']:.4f} -> {b['err']:.4f}")
 
-    print("== f7_09: model size by n (the partner chi[x11,x12] and the modulated block enter together at 256)")
-    print("  ", [(c["n"], c["size"], any(x["kind"] == "chi" and x["S"] == [10, 11] for x in c["terms"])) for c in R["f7_09"]["cells"][:6]])
+    print("== f7_09: (n, model size, chi[x11,x12] present, block modulated by chi[x11,x12] present)")
+    print("  ", [(c["n"], c["size"], any(x["kind"] == "chi" and x["S"] == [10, 11] for x in c["terms"]),
+                 any(x["kind"] == "sum" and x["mod"] == [10, 11] for x in c["terms"])) for c in R["f7_09"]["cells"][:6]])
 
     print("== DFG alone against v3's DFG member (Part 10)")
     rows = []
@@ -181,16 +202,26 @@ def main():
           "; out-of-fold by n:", dict(Counter("<=64" if r["n"] <= 64 else "128-512" if r["n"] <= 512 else ">512" for r in dif if r["oof"])))
     fin = [r for r in dif if not r["oof"]]
     print(f"   against a final v3 member: alone lower in {sum(r['a'] < r['v'] for r in fin)} of {len(fin)}")
+    print("   'variant' cells by n:", dict(sorted(Counter(r["n"] for r in dif if kind(r) == "variant").items())),
+          "; 'same variant' cells (alone's variant, v3 kept forced):",
+          [(r["t"], r["n"], "forced" if r["var"] else "default", r["kf"]) for r in dif if kind(r) == "same variant"])
     for suite, t, n in (("dlheld7", "f7_06", 64), ("dlheld", "mux6", 128), ("designed", "maj9", 64)):
         c10 = next(c for c in json.load(open(os.path.join(P10V3, f"{suite}__{t}__s0.json")))["cells"] if c["n"] == n)
         print(f"   v3 {t}@{n}: {c10['dfg_source'][:40]}, err {c10['err_dfg']:.4f}, terms {c10['n_terms']}, blocks",
-              [x.get("desc") for x in c10["terms"] if x["kind"] == "sum"])
+              [x.get("desc") for x in c10["terms"] if x["kind"] == "sum"], ", characters (top terms)",
+              [H.chi_desc(x["S"]) for x in c10["terms"] if x["kind"] == "chi" and x["S"]])
     s = json.load(open(os.path.join(P10V3, "dlheld__majmaj5__s0.json")))
-    print("   majmaj5 in v3:", [(c["n"], c.get("err_dfg"), [x["exact"] for x in c["classes"]]) for c in s["cells"] if c["n"] >= 1024])
+    print("   majmaj5 in v3 (n, err, [(class, matched exactly)]):",
+          [(c["n"], c.get("err_dfg"), [("x%d..x%d" % (x["S"][0] + 1, x["S"][-1] + 1), x["exact"]) for x in c["classes"]])
+           for c in s["cells"] if c["n"] >= 1024])
     for suite, t in (("dlheld7", "f7_05"), ("dlheld6", "h6_00")):
         s = json.load(open(os.path.join(P10V3, f"{suite}__{t}__s0.json")))
-        print(f"   {t} in v3 (non-constant terms besides the background):",
-              [(c["n"], sum(1 for x in c["terms"] if x["kind"] not in ("const", "background"))) for c in s["cells"]])
+        print(f"   {t} in v3 (n, final or out-of-fold, kinds of the non-constant terms besides the background):",
+              [(c["n"], "final" if c["dfg_source"].startswith("final") else "oof",
+                [x["kind"] for x in c["terms"] if x["kind"] not in ("const", "background")]) for c in s["cells"]])
+    sp6 = importlib.util.spec_from_file_location("heldout6_suite", os.path.join(H.STUDY, "part9", "heldout6", "suite.py"))
+    S6 = importlib.util.module_from_spec(sp6); sp6.loader.exec_module(S6)
+    print("== h6_10 (identity sample only):", next(d["form"] for d in S6.heldout6_draw_log() if d["name"] == "h6_10"))
 
     if "--refit" in sys.argv:
         rec = H.fit_toy_dfg("dlheld7", "f7_11", 128, 0)
