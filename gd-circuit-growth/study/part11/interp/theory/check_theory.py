@@ -242,6 +242,28 @@ def p1_section(fast=False):
             rw["folds_nonempty"] += o["folds_nonempty"]; rw["n_folds"] += o["n_folds"]
             rw["folds_default_nonempty"] += o["folds_default_nonempty"]
         res["full_fits"] = rows
+        # the replica of round 0 (degrees 1-4, linear and spectral statistics) on the same 80 data sets, against what
+        # DFG's own final fit admitted in round 0 (test admissions only; a forced pick has z <= 1 by definition)
+        agree, rep = 0, []
+        for key, o in F.items():
+            n, r_ = o["n"], o["rep"]
+            rng = np.random.default_rng([20261103, n, r_])
+            X = rng.choice(np.array([-1.0, 1.0], dtype=np.float32), size=(n, TF.P1_D))
+            y = rng.choice(np.array([-1.0, 1.0], dtype=np.float32), size=n)
+            z = round0_z(X, y, TF.P1_D, final_scale(n), False, (1, 2, 3, 4))
+            pred = sorted(k for k, v in z["z"].items() if v > 1)
+            r0 = o["round0"] or dict(n_new=0, new=[], blocks=[])
+            got = sorted(set(len(S) for S in r0["new"])) if (r0["n_new"] and o["variant"] == 0) else []
+            if o["variant"] == 1 and r0["n_new"]:
+                got = []                                        # the forced pick (checked: z <= 1 below)
+            ok_ = (pred == got) and (("linear" in r0["blocks"]) == (z["T1"] > TF.P1_D + 2 * math.sqrt(TF.P1_D * math.log(1 / DELTA))
+                                                                  + 2 * math.log(1 / DELTA) and n >= 2 * (1 + TF.P1_D)))
+            agree += int(ok_)
+            if pred or got or o["size"] > 1:
+                rep.append(dict(key=key, variant=o["variant"], replica_degrees_z_gt_1=pred, dfg_round0=r0,
+                                replica_max_z={str(k): round(v, 4) for k, v in z["z"].items()}, T1=round(z["T1"], 2),
+                                quad_ratio=round(z["quad_ratio"], 3)))
+        res["full_fits_replica"] = dict(fits=len(F), agree=agree, cases=rep)
     return res
 
 
