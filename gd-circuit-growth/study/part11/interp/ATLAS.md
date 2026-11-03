@@ -128,7 +128,7 @@ my reading of it. Shares, categories and "complete" are defined in §0.
 target's own representation in DFG's dictionary), [`atlas_run.py`](atlas_run.py) (the fits and their description),
 [`identity_run.py`](identity_run.py), [`identity_dscale.py`](identity_dscale.py) (identity samples), [`cv_counterfactual.py`](cv_counterfactual.py) (the variant
 DFG did not choose), [`atlas_make.py`](atlas_make.py) (tables and figures), [`atlas_recheck.py`](atlas_recheck.py)
-(the numbers changed after verification). Fits: `results/atlas/<suite>__<target>.json`
+(the numbers changed or added after verification). Fits: `results/atlas/<suite>__<target>.json`
 (407 cells, every term of every model), `results/identity/`, `results/cv/`. Tables: [`tables/atlas_summary.md`](tables/atlas_summary.md)
 (one row per target), [`tables/atlas.md`](tables/atlas.md) (the selected n of every target, one model line each),
 [`tables/atlas_cells.csv`](tables/atlas_cells.csv) (all 407 cells), [`tables/atlas_targets.csv`](tables/atlas_targets.csv),
@@ -176,7 +176,7 @@ Figures: [`figures/fig_atlas_grid.pdf`](figures/fig_atlas_grid.pdf), [`figures/f
   error ≤ 0.0083), and blocks contaminated by irrelevant inputs at the first n where a block appears. At the first n
   with test error ≤ 0.1 the spurious share is ≤ 0.1 for 22 of 35 targets (median 0.01, largest 0.36, dlist8); at
   16384 for 36 of 37 (largest 0.21, a spurious product of sym9).
-- **The two residue classes mod 3 are never learned**: f7_05 and h6_00 are the constant (plus the kernel background)
+- **The two residue classes mod 3 are never learned** (Numerical, §1.8, §3): f7_05 and h6_00 are the constant (plus the kernel background)
   at every n, test error = the minority rate (0.3245, 0.3430) from n = 2048 on. Part 10 found the same failure for
   v3's member, constant + background at every n ≥ 1024; at smaller n v3's member was not constant-only (§3).
 - **DFG's own cross-validation keeps the default variant** in 204 of the 222 cells at n ≤ 512 and chooses the forced
@@ -185,7 +185,7 @@ Figures: [`figures/fig_atlas_grid.pdf`](figures/fig_atlas_grid.pdf), [`figures/f
   and the choice made is better in 89 of the 140. Its mean test error over the 222 cells, 0.2257, equals that of
   always taking the forced variant to 3 decimals (0.2256) and is 0.0146 above the better of the two in each cell
   (0.2111). Below the n at which a compact representation is complete, 108 of 198 models are the constant alone.
-- **Against v3's DFG member** (Part 10, same targets and rows; §3): the DFG test error is identical in 141 of the 255
+- **Against v3's DFG member** (Numerical; Part 10, same targets and rows; §3): the DFG test error is identical in 141 of the 255
   common cells, in all 15 cells at n ≥ 4096 and in 28 of 32 at n = 1024–2048. At n ≤ 64 about half of the 80
   differing cells differ through the variant (40: v3's stacker kept the forced member, alone's paired test the
   default; the stacker kept the forced member in 51 of its 110 cells at n ≤ 64, DFG alone's paired test in 7 of 111),
@@ -380,9 +380,8 @@ spectral pair (u₊·x)² − (u₋·x)², or two folded blocks |t_A + t_B|, |t_
   folded-pair representation is incomplete from there. The product block never appears; the spectral pair appears
   once, at majxor n = 512 (two spectral features with cos 0.94 and 0.91 to 1_A + 1_B and 1_A − 1_B and opposite
   weights, shares 0.33 and 0.23, with 0.895 and 0.863 of |u|² on its inputs; error 0.0081). At 256 and 1024 majxor's
-  spectral
-  features carry only 0.73–0.84 of |u|² on its inputs and count as spurious (at 1024 the two have cos 0.87 with
-  1_A ± 1_B, just below the 0.9 needed for a target term).
+  spectral features carry only 0.73–0.84 of |u|² on its inputs and count as spurious (at 1024 the two have cos 0.87
+  with 1_A ± 1_B, just below the 0.9 needed for a target term).
 - majmaj5: no compact representation is complete at any n. At the first fit (n = 512, error 0.023) the model has
   4-input pieces of a majority modulated by its fifth input, χ[x7]·(x6+x8+x9+x10) (R, 0.40); at 1024–16384 one or
   two of the three 5-blocks at a time, blocks over unions of majorities, and degree-1, 3 and 5 characters (degree 7
@@ -475,9 +474,8 @@ appear as factors of some sum term, not the modulation by x11 or the gate's char
   (s + 2·AND) with 16 degree-2 characters; f7_03 (s₁ − 3x11), (s₂ − 3x11); f7_00 and f7_11 carry their 4-input branch
   as its characters (χ[x1,x2,x3,x4] 0.51 for f7_00); f7_00, which has no partner, also holds a weighted block whose
   inner term takes two inputs of its 7-input sum, (s₁ + 3·AND(¬x5,x11)) (T, 0.06). Only f7_10 still has its compact
-  form at 16384. All seven have
-  test error 0 there; span R² is 1.0 for f7_07, symand, f7_10 and f7_11, 0.998 for f7_09, 0.96 for f7_03 and 0.89
-  for f7_00 (oracle error 0 for all).
+  form at 16384. All seven have test error 0 there; span R² is 1.0 for f7_07, symand, f7_10 and f7_11, 0.998 for
+  f7_09, 0.96 for f7_03 and 0.89 for f7_00 (oracle error 0 for all).
 *Heuristic:* DFG treats a partner variable (parity, gate, selector) as a heavy input of the block rather than as a
 modulator; weighted blocks with the partner as inner literal are found easily because the partner is a strong single
 input or pair (though f7_09's pair enters only together with its modulated block), and two of them in opposite
