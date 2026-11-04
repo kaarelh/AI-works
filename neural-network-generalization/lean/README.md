@@ -181,3 +181,23 @@ and [LocalizedCubeBalls](NeuralGeneralization/LocalizedCubeBalls.lean) prove the
 VC-family bound and the exact cube-centered Euclidean-ball description bound.
 The geometric upper-orthant/ellipsoid VC estimates and other remaining
 extensions are listed in the coverage review. No paper was edited.
+
+
+## Two-margin coverage: 3 November 2026
+
+[TwoMarginMain](NeuralGeneralization/TwoMarginMain.lean) proves the paper's
+numerical two-margin replacement theorem, with the original universal
+polynomial envelope, all-width/all-scale sample event, actual Gaussian
+posterior, optional global clean-margin restriction, and confidence bound.
+[TwoMarginLocalizedPolynomial](NeuralGeneralization/TwoMarginLocalizedPolynomial.lean)
+proves its localized union and same-input counterparts; independent pilot
+selection and exact two-stage conditioning are also formalized.
+
+[MarginBandScore](NeuralGeneralization/MarginBandScore.lean) and
+[MarginBandSupport](NeuralGeneralization/MarginBandSupport.lean) prove the exact
+margin-band formula, contraction through clipping, the support inclusions,
+endpoint interval certificate, and the manuscript's strict-weakening examples.
+The arbitrary monotone-transform learning theorem, full-gap minimality and
+general-margin extension remain listed in the coverage review. Papers are
+unchanged. Verification is recorded in
+[the two-margin evidence](review/verification/coverage-two-margin-2026-11-03/record.json).
