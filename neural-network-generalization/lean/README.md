@@ -201,3 +201,24 @@ The arbitrary monotone-transform learning theorem, full-gap minimality and
 general-margin extension remain listed in the coverage review. Papers are
 unchanged. Verification is recorded in
 [the two-margin evidence](review/verification/coverage-two-margin-2026-11-03/record.json).
+
+
+## Monotone-score coverage: 3 November 2026
+
+[MonotoneScorePolynomial](NeuralGeneralization/MonotoneScorePolynomial.lean)
+proves the arbitrary monotone-score-transform theorem with one universal
+polynomial, chosen before the transform, and explicit inverse-gap dependence.
+The actual Gaussian posterior, strict training margin, test margin, optional
+global separation and all-width/all-scale confidence guarantee are retained.
+[MonotoneScoreLocalizedPolynomial](NeuralGeneralization/MonotoneScoreLocalizedPolynomial.lean)
+closes the localized union and same-input variants, with exact conditioning
+and independent-pilot extensions in their corresponding modules.
+
+[MarginBandMinimality](NeuralGeneralization/MarginBandMinimality.lean) proves
+the paper's full-gap minimality identity and contraction. The
+[margin-band specialization](NeuralGeneralization/MarginBandTransformCorollaries.lean)
+has exactly the original compression resources and finite-class budget.
+[RobustTargetNoisyMargin](NeuralGeneralization/RobustTargetNoisyMargin.lean)
+exposes the stronger cylinder property that supplies the unchanged target mass.
+No paper was edited; other coverage gaps remain in the review. See the
+[verification record](review/verification/coverage-score-transforms-2026-11-03/record.json).

@@ -154,6 +154,22 @@ theorem noisy_margin (H : DigitalCylinderConditions B e w A a ε τ ρ G β)
     simp only [hb,labelReal_false,labelReal_true,neg_one_mul,one_mul] at hteacher ⊢ <;>
     linarith
 
+/-- The literal calibrated perturbation ball has a strict signed margin
+above one throughout the digital cylinder. This stronger conclusion supports
+score transforms whose permitted oscillation is smaller than 1/16. -/
+theorem calibrated_noisy_margin (H : DigitalCylinderConditions B e w A a ε τ ρ G β)
+    (hN : 0 < N) (hk : 0 < k) (hwidth : N ≤ 2*C*k)
+    {c : ℝ} (hc : 0 < c) (hcal : 2*c ≤ τ*a)
+    (x : Cube d) (η : NetworkDisturbance N r)
+    (hη : noiseBudgetSq η ≤ (robustRadius c w)^2) :
+    1 < labelReal (B.computes x)*noisyNetworkOutput Real.tanh w x η := by
+  have henergy := readoutEnergy_lower_of_sum hN w (B.saturatedClone e A a)
+    H.radius_nonneg H.readout_radius (B.saturatedClone_sum_readout e hk A a) H.readout_error
+  have hr := robustRadius_le_of_readoutEnergy w H.readout_nonneg H.noise_nonneg henergy hcal
+  have hr0 := (robustRadius_pos hc w).le
+  exact H.noisy_margin hN hk hwidth x η
+    (hη.trans ((sq_le_sq₀ hr0 H.noise_nonneg).mpr hr))
+
 /-- Concrete cylinder containment once deterministic coordinate bounds are
 instantiated. The original all-input clean margin also holds. -/
 theorem robust_and_target (H : DigitalCylinderConditions B e w A a ε τ ρ G β)
