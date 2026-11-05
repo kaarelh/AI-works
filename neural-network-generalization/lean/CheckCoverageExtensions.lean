@@ -5,6 +5,28 @@ import Lean.Elab.Command
 open Lean Elab Command in
 run_cmd do
   let targets : Array Name := #[
+    `NeuralGeneralization.GeneralTwoMargin.good_of_transport_and_rounding,
+    `NeuralGeneralization.GeneralTwoMargin.Parameters.good_of_raw_close,
+    `NeuralGeneralization.GeneralTwoMargin.Parameters.good_of_noisy_comparison,
+    `NeuralGeneralization.GeneralTwoMargin.measurable_atInput,
+    `NeuralGeneralization.GeneralTwoMargin.measurable_support,
+    `NeuralGeneralization.GeneralTwoMargin.uniformNoisyMargin_subset,
+    `NeuralGeneralization.GeneralTwoMargin.target_mass,
+    `NeuralGeneralization.GeneralTwoMargin.rounded_path_good,
+    `NeuralGeneralization.GeneralTwoMargin.pointwise_compression,
+    `NeuralGeneralization.GeneralTwoMargin.posterior_target_mass,
+    `NeuralGeneralization.GeneralTwoMargin.posterior_probability,
+    `NeuralGeneralization.GeneralTwoMargin.posterior_entropy,
+    `NeuralGeneralization.GeneralTwoMargin.posterior_eq_two_stage,
+    `NeuralGeneralization.GeneralTwoMargin.risk_on_common_event,
+    `NeuralGeneralization.GeneralTwoMargin.learning,
+    `NeuralGeneralization.GeneralTwoMargin.polynomial,
+    `NeuralGeneralization.GeneralTwoMargin.of_clipped_variation,
+    `NeuralGeneralization.GeneralTwoMargin.clipped_support_subset,
+    `NeuralGeneralization.GeneralTwoMargin.original_support,
+    `NeuralGeneralization.GeneralTwoMargin.test_redundant_of_global_margin,
+    `NeuralGeneralization.GeneralTwoMargin.residual_gap_polynomial,
+
     `NeuralGeneralization.ConcreteModel.DigitalCylinderConditions.noisy_margin_lower,
     `NeuralGeneralization.ConcreteModel.DigitalCylinderConditions.calibrated_noisy_margin_lower,
     `NeuralGeneralization.GeneralMargin.uniform_noisy_margin_target_mass,
