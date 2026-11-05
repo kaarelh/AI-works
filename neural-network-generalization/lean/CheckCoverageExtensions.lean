@@ -5,6 +5,23 @@ import Lean.Elab.Command
 open Lean Elab Command in
 run_cmd do
   let targets : Array Name := #[
+    `NeuralGeneralization.JacobianCertificate.blockProduct_above,
+    `NeuralGeneralization.JacobianCertificate.blockProduct_diagonal,
+    `NeuralGeneralization.JacobianCertificate.blockProduct_below,
+    `NeuralGeneralization.JacobianCertificate.transport_block_decomposition,
+    `NeuralGeneralization.JacobianCertificate.blockNormMatrix_above,
+    `NeuralGeneralization.JacobianCertificate.blockNormMatrix_diagonal,
+    `NeuralGeneralization.JacobianCertificate.blockNormMatrix_below,
+    `NeuralGeneralization.JacobianCertificate.transport_norm_le_matrix,
+    `NeuralGeneralization.JacobianCertificate.transport_norm_le_blockNormMatrix,
+    `NeuralGeneralization.JacobianCertificate.factorProduct_above,
+    `NeuralGeneralization.JacobianCertificate.factorProduct_diagonal,
+    `NeuralGeneralization.JacobianCertificate.factorProduct_below,
+    `NeuralGeneralization.JacobianCertificate.blockProduct_norm_le_factorProduct,
+    `NeuralGeneralization.JacobianCertificate.transport_norm_le_factorMatrix,
+    `NeuralGeneralization.JacobianCertificate.jacobianNorm_le_blockNormMatrix,
+    `NeuralGeneralization.JacobianCertificate.jacobianNorm_le_factorMatrix,
+
     `NeuralGeneralization.TanhDifferential.abs_tanhSecond_le_one,
     `NeuralGeneralization.TanhDifferential.quadratic_remainder,
     `NeuralGeneralization.JacobianCertificate.quadratic_no_escape,

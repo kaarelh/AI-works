@@ -98,3 +98,5 @@ import NeuralGeneralization.JacobianStackBounds
 import NeuralGeneralization.JacobianNetworkExpansion
 import NeuralGeneralization.JacobianFiniteRadius
 import NeuralGeneralization.JacobianCleanDerivative
+import NeuralGeneralization.JacobianBlockProducts
+import NeuralGeneralization.JacobianBlockNorm
