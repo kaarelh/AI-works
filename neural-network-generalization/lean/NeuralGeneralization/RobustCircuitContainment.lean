@@ -111,12 +111,11 @@ variable {B : LayeredBooleanCircuit d C r}
   {e : ((Fin C × Fin k) ⊕ Fin p) ≃ Fin N} {w : Weights d N r}
   {A a ε τ ρ G β : ℝ}
 
-/-- Every allowed perturbation retains a strict signed raw margin greater
-than one, uniformly over all inputs. -/
-theorem noisy_margin (H : DigitalCylinderConditions B e w A a ε τ ρ G β)
+/-- Quantitative signed raw margin, before choosing the training threshold. -/
+theorem noisy_margin_lower (H : DigitalCylinderConditions B e w A a ε τ ρ G β)
     (hN : 0 < N) (hk : 0 < k) (hwidth : N ≤ 2*C*k)
     (x : Cube d) (η : NetworkDisturbance N r) (hη : noiseBudgetSq η ≤ τ^2) :
-    1 < labelReal (B.computes x)*noisyNetworkOutput Real.tanh w x η := by
+    15*a/16-2*ρ-τ ≤ labelReal (B.computes x)*noisyNetworkOutput Real.tanh w x η := by
   let h := noisyFinalHidden Real.tanh w x η
   have hstate := H.noisy_final_error hN hk hwidth x η hη
   have hnorm : (∑ i,h i^2) ≤ 4*(N:ℝ) := squared_norm_le_of_boolean_error h
@@ -149,10 +148,30 @@ theorem noisy_margin (H : DigitalCylinderConditions B e w A a ε τ ρ G β)
     rw [heq]
     linarith
   have he' := abs_le.mp he
-  have hm := H.output_margin
   cases hb : B.computes x <;>
     simp only [hb,labelReal_false,labelReal_true,neg_one_mul,one_mul] at hteacher ⊢ <;>
     linarith
+
+/-- The original strict margin follows from the quantitative bound. -/
+theorem noisy_margin (H : DigitalCylinderConditions B e w A a ε τ ρ G β)
+    (hN : 0 < N) (hk : 0 < k) (hwidth : N ≤ 2*C*k)
+    (x : Cube d) (η : NetworkDisturbance N r) (hη : noiseBudgetSq η ≤ τ^2) :
+    1 < labelReal (B.computes x)*noisyNetworkOutput Real.tanh w x η :=
+  H.output_margin.trans_le (H.noisy_margin_lower hN hk hwidth x η hη)
+
+/-- The full quantitative margin at the actual calibrated noise radius. -/
+theorem calibrated_noisy_margin_lower (H : DigitalCylinderConditions B e w A a ε τ ρ G β)
+    (hN : 0 < N) (hk : 0 < k) (hwidth : N ≤ 2*C*k)
+    {c : ℝ} (hc : 0 < c) (hcal : 2*c ≤ τ*a)
+    (x : Cube d) (η : NetworkDisturbance N r)
+    (hη : noiseBudgetSq η ≤ (robustRadius c w)^2) :
+    15*a/16-2*ρ-τ ≤ labelReal (B.computes x)*noisyNetworkOutput Real.tanh w x η := by
+  have henergy := readoutEnergy_lower_of_sum hN w (B.saturatedClone e A a)
+    H.radius_nonneg H.readout_radius (B.saturatedClone_sum_readout e hk A a) H.readout_error
+  have hr := robustRadius_le_of_readoutEnergy w H.readout_nonneg H.noise_nonneg henergy hcal
+  have hr0 := (robustRadius_pos hc w).le
+  exact H.noisy_margin_lower hN hk hwidth x η
+    (hη.trans ((sq_le_sq₀ hr0 H.noise_nonneg).mpr hr))
 
 /-- The literal calibrated perturbation ball has a strict signed margin
 above one throughout the digital cylinder. This stronger conclusion supports
