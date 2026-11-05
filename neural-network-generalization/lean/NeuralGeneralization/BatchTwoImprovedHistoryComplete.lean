@@ -44,6 +44,7 @@ theorem exists_sharp_actual_terminal_histories
           (Prod.fst : OriginalHistory d N r r → Weights d N r),
         (∀ᵐ z ∂H.joint,HistoryAligned (by omega : r+0≤r)
           (t/Real.sqrt (N:ℝ)) Real.tanh x z.1 z.2) ∧
+        (∀ᵐ z ∂H.joint,validHiddenPath z.1.2) ∧
         (∫⁻ z,liveOriginalCost (m:=m) (k:=0) le_rfl Real.tanh x z ∂H.joint)≤
           ENNReal.ofReal (4*(4*K+2*((d:ℝ)+1))/B₀^2)+
             r • ENNReal.ofReal (sharpLayerError K δ BH BG q m) := by
@@ -76,6 +77,7 @@ theorem exists_sharp_actual_terminal_histories
           (Prod.fst : OriginalHistory d N r run.terminal.1 → Weights d N r),
         (∀ᵐ z ∂H.joint,HistoryAligned (by omega : run.terminal.1+0≤r)
           σ Real.tanh x z.1 z.2) ∧
+        (∀ᵐ z ∂H.joint,validHiddenPath z.1.2) ∧
         (∫⁻ z,liveOriginalCost hs Real.tanh x z ∂H.joint)≤
           ENNReal.ofReal (4*(4*K+2*((d:ℝ)+1))/B₀^2)+
             r • ENNReal.ofReal (sharpLayerError K δ BH BG q m) := by
@@ -83,7 +85,9 @@ theorem exists_sharp_actual_terminal_histories
     exact run.exists_actual_terminal_history hm hK ht ht1 hBH hBG hδ.le x Q
       (ENNReal.ofReal (K/σ^2)) hcap (by omega) (by simpa using hi)
       (initialHistory m σ B₀ tanh_lipschitzWith.continuous x Q)
-      (initialHistory_ae_aligned hd hn hσ B₀ tanh_lipschitzWith.continuous x Q) _
+      (initialHistory_ae_aligned hd hn hσ B₀ tanh_lipschitzWith.continuous x Q)
+      (initialHistory_ae_valid σ B₀ tanh_lipschitzWith.continuous
+        (fun z => (Real.abs_tanh_lt_one z).le) x Q) _
       (initialHistory_live_cost_le hd hn hσ hK hscale Q hQ
         tanh_lipschitzWith.continuous (fun z => (Real.abs_tanh_lt_one z).le) B₀ hB₀ x)
   have hstage := run.terminal_stage

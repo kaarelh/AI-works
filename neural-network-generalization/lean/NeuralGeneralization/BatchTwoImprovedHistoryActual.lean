@@ -30,12 +30,14 @@ theorem SharpSelectedRun.exists_actual_terminal_history
     (hΓ : futureEntropy Γ.law (futurePrior N k) ≤ base+s • ENNReal.ofReal (Real.log (Fintype.card Msg)))
     (H : CanonicalHistoryComparison Q Γ.law (Prod.fst : OriginalHistory d N R s → Weights d N R))
     (halign : ∀ᵐ z ∂H.joint,HistoryAligned hs (t/Real.sqrt (N:ℝ)) Real.tanh x z.1 z.2)
+    (hvalid : ∀ᵐ z ∂H.joint,validHiddenPath z.1.2)
     (initialBudget : ℝ≥0∞)
     (hcost : (∫⁻ z,liveOriginalCost (by omega : s ≤ R) Real.tanh x z ∂H.joint) ≤ initialBudget) :
     ∃ H' : CanonicalHistoryComparison Q P.terminal.2.law
         (Prod.fst : OriginalHistory d N R P.terminal.1 → Weights d N R),
       (∀ᵐ z ∂H'.joint,HistoryAligned (by have he:=P.terminal_stage; omega : P.terminal.1+0 ≤ R)
         (t/Real.sqrt (N:ℝ)) Real.tanh x z.1 z.2) ∧
+      (∀ᵐ z ∂H'.joint,validHiddenPath z.1.2) ∧
       (∫⁻ z,liveOriginalCost (by have he:=P.terminal_stage; omega : P.terminal.1 ≤ R)
         Real.tanh x z ∂H'.joint) ≤ initialBudget+k • ENNReal.ofReal (sharpLayerError K δ BH BG q m) := by
   let Good := fun s k (Γ : CanonicalStateLaw d N m s k) =>
@@ -65,7 +67,8 @@ theorem SharpSelectedRun.exists_actual_terminal_history
       _  ≤  (base+s • ENNReal.ofReal (Real.log (Fintype.card Msg)))+
           ENNReal.ofReal (Real.log (Fintype.card Msg)) := add_le_add hg le_rfl
       _ = _ := by rw [add_nsmul,one_nsmul]; ac_rfl
-  obtain ⟨_,H',ha,hc⟩ := SharpSelectedRun.exists_terminal_history hσ x Q Good
-    (ENNReal.ofReal (sharpLayerError K δ BH BG q m)) step P hs hΓ H halign initialBudget hcost
-  exact ⟨H',ha,hc⟩
+  obtain ⟨_,H',ha,hv,hc⟩ := SharpSelectedRun.exists_terminal_history hσ
+    (fun z => (Real.abs_tanh_lt_one z).le) x Q Good
+    (ENNReal.ofReal (sharpLayerError K δ BH BG q m)) step P hs hΓ H halign hvalid initialBudget hcost
+  exact ⟨H',ha,hv,hc⟩
 end NeuralGeneralization.BatchTwoImprovedInduction

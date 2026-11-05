@@ -70,6 +70,7 @@ theorem rawPathCompression_of_resource_terminal_histories
     (hhistory : ∀ x : Cube p.dimension, ∃ P : CanonicalHistoryComparison Q Γ
         (Prod.fst : OriginalHistory p.dimension N r r → Weights p.dimension N r),
       (∀ᵐ z ∂P.joint,HistoryAligned (by omega : r+0 ≤ r) σ φ x z.1 z.2) ∧
+      (∀ᵐ z ∂P.joint,validHiddenPath z.1.2) ∧
       (∫⁻ z,liveOriginalCost (m:=p.bankSize) (k:=0) le_rfl φ x z ∂P.joint) ≤
         ENNReal.ofReal (1/(p.inverseLayerError : ℝ)) +
           r • ENNReal.ofReal (10/(p.inverseLayerError : ℝ)))
@@ -104,12 +105,13 @@ theorem rawPathCompression_of_resource_terminal_histories
   have hhist : ∀ x : Cube p.dimension, ∃ P : CanonicalHistoryComparison Q Γ
         (Prod.fst : OriginalHistory p.dimension N r r → Weights p.dimension N r),
       (∀ᵐ z ∂P.joint,HistoryAligned (by omega : r+0 ≤ r) σ φ x z.1 z.2) ∧
+      (∀ᵐ z ∂P.joint,validHiddenPath z.1.2) ∧
       (∫⁻ z,liveOriginalCost (m:=p.bankSize) (k:=0) le_rfl φ x z ∂P.joint) ≤
         ENNReal.ofReal (10*(p.depth : ℝ)/p.inverseLayerError) ∧
       P.joint.real {z | z.2.1.1 ≠ true} ≤ 2*(p.depth : ℝ)/p.inverseLayerFailure := by
     intro x
-    obtain ⟨P,ha,hc⟩ := hhistory x
-    refine ⟨P,ha,hc.trans (terminal_history_cost_allocation p hdepth hE),?_⟩
+    obtain ⟨P,ha,hv,hc⟩ := hhistory x
+    refine ⟨P,ha,hv,hc.trans (terminal_history_cost_allocation p hdepth hE),?_⟩
     have hs : MeasurableSet {z : TerminalState p.dimension N p.bankSize r | z.1.1 ≠ true} :=
       (measurableSet_eq_fun (by fun_prop) measurable_const).compl
     have hm := map_measureReal_apply (μ:=P.joint) measurable_snd hs

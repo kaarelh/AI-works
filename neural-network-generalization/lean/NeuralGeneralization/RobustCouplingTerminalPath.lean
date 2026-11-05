@@ -56,6 +56,22 @@ def terminalHistoryRawCoupling [NeZero N] {Q : Measure (Weights d N r)}
     rw [Measure.map_map measurable_snd (by fun_prop)] at he
     exact he.trans (terminalCoupling Γ t B K).right
 
+
+/-- Final readout sampling and projection retain every stored hidden state. -/
+theorem terminalHistoryRawCoupling_valid [NeZero N]
+    {Q : Measure (Weights d N r)} {Γ : Measure (TerminalState d N m r)} [IsProbabilityMeasure Γ]
+    (P : CanonicalHistoryComparison Q Γ (Prod.fst : OriginalHistory d N r r → Weights d N r))
+    (t B K : ℝ) (hvalid : ∀ᵐ z ∂P.joint,validHiddenPath z.1.2) :
+    ∀ᵐ z ∂(terminalHistoryRawCoupling P t B K).joint,validHiddenPath z.2.2 := by
+  change ∀ᵐ z ∂(terminalHistoryJoint P t B K).map
+    (fun z => (z.1.1.1,z.2,z.1.1.2)),validHiddenPath z.2.2
+  apply (ae_map_iff (by fun_prop)
+    ((measurableSet_validHiddenPath N r).preimage (by fun_prop))).mpr
+  change ∀ᵐ z ∂terminalHistoryJoint P t B K,validHiddenPath z.1.1.2
+  apply ae_of_ae_map (μ := terminalHistoryJoint P t B K) (f := Prod.fst)
+    (p := fun z : OriginalHistory d N r r × TerminalState d N m r => validHiddenPath z.1.2) measurable_fst.aemeasurable
+  rwa [terminalHistoryJoint_old]
+
 theorem terminalOriginalOutput_aligned {σ : ℝ} (hσ : 0 < σ) (hN : 0 < N)
     (φ : ℝ → ℝ) (x : Cube d) (history : OriginalHistory d N r r)
     (state : TerminalState d N m r)
@@ -243,6 +259,7 @@ theorem rawPathCompression_of_terminal_histories [NeZero N] (hm : 0 < m)
     (hhistory : ∀ x : Cube d, ∃ P : CanonicalHistoryComparison Q Γ
         (Prod.fst : OriginalHistory d N r r → Weights d N r),
       (∀ᵐ z ∂P.joint,HistoryAligned (by omega : r+0 ≤ r) σ φ x z.1 z.2) ∧
+      (∀ᵐ z ∂P.joint,validHiddenPath z.1.2) ∧
       (∫⁻ z,liveOriginalCost (m:=m) (k:=0) le_rfl φ x z ∂P.joint) ≤ ENNReal.ofReal E ∧
       P.joint.real {z | z.2.1.1 ≠ true} ≤ abort)
     (hthreshold : K/B+η ≤ radius/8)
@@ -255,8 +272,9 @@ theorem rawPathCompression_of_terminal_histories [NeZero N] (hm : 0 < m)
   constructor
   · exact terminalCandidateLaw_bounded Γ hB hW hBW hm hbounded
   · intro x
-    obtain ⟨P,ha,hc,hab⟩ := hhistory x
+    obtain ⟨P,ha,hv,hc,hab⟩ := hhistory x
     exact ⟨terminalHistoryRawCoupling P (σ*Real.sqrt (N : ℝ)) B K,
+      terminalHistoryRawCoupling_valid P _ B K hv,
       (terminalHistoryRawCoupling_cost_le hσ hφ x P hr hE ha hc hab hthreshold henergy hsample).trans hfailure⟩
 
 end NeuralGeneralization.RobustCompressionInduction

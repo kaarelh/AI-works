@@ -1,4 +1,5 @@
 import NeuralGeneralization.RobustCouplingFiniteGrid
+import NeuralGeneralization.ValidHiddenPath
 
 /-!
 # Explicit raw-path interface for the large-width compressor
@@ -48,14 +49,29 @@ def RawPathCoupling.ofFields {Ω : Type*} [MeasurableSpace Ω] {d N m r : ℕ}
     exact hright
 
 /-- Quantitative raw compression, with a common compact-network marginal for
-all inputs. The only error assumption is on the explicit additive noise cost. -/
+all inputs. The comparison records both the explicit additive noise cost
+and the proved activation-box invariant of the complete virtual path. -/
 structure RawPathCompression {d N m r : ℕ} (φ : ℝ → ℝ)
     (Q : Measure (Weights d N r)) (Γ : Measure (Weights d m r))
     (B radius failure : ℝ) : Prop where
   bounded : ∀ᵐ v ∂Γ, boundedWeights B v
-  comparison : ∀ x : Cube d, ∃ π : RawPathCoupling Q Γ,
+  validComparison : ∀ x : Cube d, ∃ π : RawPathCoupling Q Γ,
+    (∀ᵐ z ∂π.joint,validHiddenPath z.2.2) ∧
     π.joint.real {p | (radius / 2)^2 <
       reconstructionPathCost φ p.1 p.2.1 x p.2.2} ≤ failure
+
+
+/-- The original raw-path interface follows from the stronger recorded
+activation-box invariant. Existing unrestricted-support applications retain
+the same statement. -/
+theorem RawPathCompression.comparison {d N m r : ℕ} {φ : ℝ → ℝ}
+    {Q : Measure (Weights d N r)} {Γ : Measure (Weights d m r)} {B radius failure : ℝ}
+    (hraw : RawPathCompression φ Q Γ B radius failure) :
+    ∀ x : Cube d,∃ π : RawPathCoupling Q Γ,
+      π.joint.real {p | (radius/2)^2 < reconstructionPathCost φ p.1 p.2.1 x p.2.2} ≤ failure := by
+  intro x
+  obtain ⟨π,_,hπ⟩ := hraw.validComparison x
+  exact ⟨π,hπ⟩
 
 def RawPathCoupling.rounded {d N m M r : ℕ}
     {Q : Measure (Weights d N r)} {Γ : Measure (Weights d m r)}

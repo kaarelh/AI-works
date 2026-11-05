@@ -60,6 +60,7 @@ theorem exists_actual_terminal_histories {r : ℕ}
       ∀ x : Cube p.dimension, ∃ H : CanonicalHistoryComparison Q Γ.law
           (Prod.fst : OriginalHistory p.dimension N r r → Weights p.dimension N r),
         (∀ᵐ z ∂H.joint,HistoryAligned (by omega : r+0≤r) σ Real.tanh x z.1 z.2) ∧
+        (∀ᵐ z ∂H.joint,validHiddenPath z.1.2) ∧
         (∫⁻ z,liveOriginalCost (m:=p.bankSize) (k:=0) le_rfl Real.tanh x z ∂H.joint) ≤
           ENNReal.ofReal (1/(p.inverseLayerError : ℝ))+
             r • ENNReal.ofReal (10/(p.inverseLayerError : ℝ)) := by
@@ -77,15 +78,18 @@ theorem exists_actual_terminal_histories {r : ℕ}
           (Prod.fst : OriginalHistory p.dimension N r run.terminal.1 → Weights p.dimension N r),
         (∀ᵐ z ∂H.joint,HistoryAligned (by omega : run.terminal.1+0≤r)
           σ Real.tanh x z.1 z.2) ∧
+        (∀ᵐ z ∂H.joint,validHiddenPath z.1.2) ∧
         (∫⁻ z,liveOriginalCost hs
           Real.tanh x z ∂H.joint) ≤ ENNReal.ofReal (1/(p.inverseLayerError : ℝ))+
             r • ENNReal.ofReal (10/(p.inverseLayerError : ℝ)) := by
     intro hs x
-    refine run.exists_terminal_history hσ.ne' x Q (ResourceInvariant p σ)
+    refine run.exists_terminal_history hσ.ne' (fun z => (Real.abs_tanh_lt_one z).le) x Q (ResourceInvariant p σ)
       (ENNReal.ofReal (10/(p.inverseLayerError : ℝ))) ?_ (by omega) hinitial
       (initialHistory p.bankSize σ (Real.sqrt p.firstSquaredBound)
         tanh_lipschitzWith.continuous x Q)
       (initialHistory_ae_aligned hd hn hσ _ tanh_lipschitzWith.continuous x Q)
+      (initialHistory_ae_valid σ _ tanh_lipschitzWith.continuous
+        (fun z => (Real.abs_tanh_lt_one z).le) x Q)
       (ENNReal.ofReal (1/(p.inverseLayerError : ℝ))) ?_
     · intro s k Γ S hs hΓ
       refine ⟨resourceLayerComparison p (σ*Real.sqrt (N : ℝ)) Γ S x,?_,

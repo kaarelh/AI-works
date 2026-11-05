@@ -1,6 +1,7 @@
 import NeuralGeneralization.RobustCompressionInductionSelectedRun
 import NeuralGeneralization.RobustCompressionInductionAlignment
 import NeuralGeneralization.RobustCouplingActualCost
+import NeuralGeneralization.ValidHiddenHistory
 
 /-! # Retaining the original network throughout the actual selected run
 
@@ -22,7 +23,7 @@ theorem SelectedRun.exists_terminal_history [NeZero N]
     [hFin : MeasurableSpace (Finset QI)] [hFinS : MeasurableSingletonClass (Finset QI)]
     [hMsg : MeasurableSpace Msg] [hMsgS : MeasurableSingletonClass Msg]
     {φ : ℝ → ℝ} {hφ : Continuous φ} {a t T BH BG δ η σ : ℝ}
-    (hσ : σ≠0) (x : Cube d) (Q : Measure (Weights d N R))
+    (hσ : σ≠0) (hφbound : ∀ z,|φ z|≤1) (x : Cube d) (Q : Measure (Weights d N R))
     (Good : ∀ s k, CanonicalStateLaw d N m s k → Prop)
     (localBudget : ℝ≥0∞)
     (step : ∀ s k (Γ : CanonicalStateLaw d N m s (k+1))
@@ -39,6 +40,7 @@ theorem SelectedRun.exists_terminal_history [NeZero N]
     (H : CanonicalHistoryComparison Q Γ.law
       (Prod.fst : OriginalHistory d N R s → Weights d N R))
     (halign : ∀ᵐ z ∂H.joint,HistoryAligned hs σ φ x z.1 z.2)
+    (hvalid : ∀ᵐ z ∂H.joint,validHiddenPath z.1.2)
     (initialBudget : ℝ≥0∞)
     (hcost : (∫⁻ z,liveOriginalCost (by omega : s≤R) φ x z ∂H.joint)≤ initialBudget) :
     Good P.terminal.1 0 P.terminal.2 ∧
@@ -46,11 +48,12 @@ theorem SelectedRun.exists_terminal_history [NeZero N]
         (Prod.fst : OriginalHistory d N R P.terminal.1 → Weights d N R),
       (∀ᵐ z ∂H'.joint,HistoryAligned (by have ht:=P.terminal_stage; omega : P.terminal.1+0≤R)
         σ φ x z.1 z.2) ∧
+      (∀ᵐ z ∂H'.joint,validHiddenPath z.1.2) ∧
       (∫⁻ z,liveOriginalCost (by have ht:=P.terminal_stage; omega : P.terminal.1≤R)
         φ x z ∂H'.joint)≤ initialBudget+k • localBudget := by
   induction P generalizing initialBudget with
   | nil s Γ =>
-    refine ⟨hg,H,halign,?_⟩
+    refine ⟨hg,H,halign,hvalid,?_⟩
     convert hcost using 1 <;> simp only [SelectedRun.terminal,zero_nsmul,add_zero]
     rfl
   | @cons s k Γ S tail ih =>
@@ -61,12 +64,14 @@ theorem SelectedRun.exists_terminal_history [NeZero N]
     have ha' : ∀ᵐ z ∂H'.joint,
         HistoryAligned (by omega : (s+1)+k≤R) σ φ x z.1 z.2 :=
       advanceHistory_ae_aligned hs σ hφ x H C halign hfuture
+    have hv' : ∀ᵐ z ∂H'.joint,validHiddenPath z.1.2 :=
+      advanceHistory_ae_valid hφ hφbound x H C hvalid
     have hc' : (∫⁻ z,liveOriginalCost (by omega : s+1≤R) φ x z ∂H'.joint)≤
         initialBudget+localBudget :=
       advanceOriginalHistory_cost_le hs hσ hφ x H C halign hlive hcost hlocal
-    obtain ⟨hg'',H'',ha'',hc''⟩ := ih (by omega) hg' H' ha'
+    obtain ⟨hg'',H'',ha'',hv'',hc''⟩ := ih (by omega) hg' H' ha' hv'
       (initialBudget+localBudget) hc'
-    refine ⟨hg'',H'',ha'',hc''.trans_eq ?_⟩
+    refine ⟨hg'',H'',ha'',hv'',hc''.trans_eq ?_⟩
     rw [add_nsmul,one_nsmul]
     ac_rfl
 

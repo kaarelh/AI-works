@@ -69,12 +69,13 @@ theorem sharp_large_width_raw (p : RobustCompressionInput) {N r : ℕ}
   have hc : ∀ x : Cube p.dimension,∃ H : CanonicalHistoryComparison Q Γ.law
       (Prod.fst : OriginalHistory p.dimension N r r → Weights p.dimension N r),
       (∀ᵐ z ∂H.joint,HistoryAligned (by omega : r+0≤r) σ Real.tanh x z.1 z.2) ∧
+      (∀ᵐ z ∂H.joint,validHiddenPath z.1.2) ∧
       (∫⁻ z,liveOriginalCost (m:=bankSize p) (k:=0) le_rfl Real.tanh x z ∂H.joint)≤
         ENNReal.ofReal ((1+14*(r:ℝ))/(inverseError p:ℝ)) ∧
       H.joint.real {z | z.2.1.1≠true}≤2*(r:ℝ)/(BatchTwoImprovedResources.inverseFailure p:ℝ) := by
     intro x
-    obtain ⟨H,hal,hcost⟩ := hhistory x
-    refine ⟨H,hal,?_,?_⟩
+    obtain ⟨H,hal,hvalid,hcost⟩ := hhistory x
+    refine ⟨H,hal,hvalid,?_,?_⟩
     · apply hcost.trans
       rw [first_cost_allocation]
       calc

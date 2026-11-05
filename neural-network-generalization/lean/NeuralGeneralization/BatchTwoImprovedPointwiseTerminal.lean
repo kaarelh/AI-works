@@ -162,6 +162,7 @@ theorem pointwise_rawPathCompression_of_terminal_histories [NeZero N] (hm : 0 < 
     (hhistory : ∀ x : Cube d, ∃ P : CanonicalHistoryComparison Q Γ
         (Prod.fst : OriginalHistory d N r r → Weights d N r),
       (∀ᵐ z ∂P.joint,HistoryAligned (by omega : r+0 ≤ r) σ φ x z.1 z.2) ∧
+      (∀ᵐ z ∂P.joint,validHiddenPath z.1.2) ∧
       (∫⁻ z,liveOriginalCost (m:=m) (k:=0) le_rfl φ x z ∂P.joint) ≤ ENNReal.ofReal E ∧
       P.joint.real {z | z.2.1.1 ≠ true} ≤ abort)
     (hthreshold : K/B+η ≤ radius/8)
@@ -174,8 +175,9 @@ theorem pointwise_rawPathCompression_of_terminal_histories [NeZero N] (hm : 0 < 
   constructor
   · exact terminalCandidateLaw_bounded Γ hB hW hBW hm hbounded
   · intro x
-    obtain ⟨P,ha,hc,hab⟩ := hhistory x
+    obtain ⟨P,ha,hv,hc,hab⟩ := hhistory x
     exact ⟨terminalHistoryRawCoupling P (σ*Real.sqrt (N : ℝ)) B K,
+      terminalHistoryRawCoupling_valid P _ B K hv,
       (pointwise_terminalHistoryRawCoupling_cost_le hσ hφ x P hr hE ha hc hab hthreshold henergy (hsample x)).trans hfailure⟩
 
 end NeuralGeneralization.BatchTwoImprovedInduction
