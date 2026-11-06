@@ -1,5 +1,7 @@
 # Verification record
 
+**Author-order revision, 6 November 2026.** The author declarations, alphabetical-order footnotes, and PDF author metadata were updated without changing the document bodies. [Current hashes and clean rebuild checks](../../../verification/author-order-2026-11-06.md) supersede the earlier manuscript hashes below; the dated mathematical reviews remain records of their original snapshots.
+
 This package is conventionally checked mathematics, not a Lean formalization.
 
 - [Assembled mean-shift theorem audit](finite-width-boolean-mean-shift-assembled-audit.md): fresh independent check of the final new Section 3 and its scope.

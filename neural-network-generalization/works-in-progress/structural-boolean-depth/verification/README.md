@@ -1,5 +1,7 @@
 # Verification record
 
+**Author-order revision, 6 November 2026.** The author declarations, alphabetical-order footnotes, and PDF author metadata were updated without changing the document bodies. [Current hashes and clean rebuild checks](../../../verification/author-order-2026-11-06.md) supersede the earlier manuscript hashes below; the dated mathematical reviews remain records of their original snapshots.
+
 The final source includes four structural upper bounds: early narrow
 cuts, low treewidth, planar/fixed-excluded-minor circuit graphs, and
 formulas of bounded Horton–Strahler rank.

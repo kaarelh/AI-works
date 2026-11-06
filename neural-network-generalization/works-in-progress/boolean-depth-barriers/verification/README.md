@@ -1,5 +1,7 @@
 # Verification record
 
+**Author-order revision, 6 November 2026.** The author declarations, alphabetical-order footnotes, and PDF author metadata were updated without changing the document bodies. [Current hashes and clean rebuild checks](../../../verification/author-order-2026-11-06.md) supersede the earlier manuscript hashes below; the dated mathematical reviews remain records of their original snapshots.
+
 The manuscript and supporting analytic notes received conventional mathematical reviews. They are not a Lean verification of the full statistical results.
 
 - [Resource-padding audit](padded-resource-depth-barriers-independent-audit.md): extends the conditional separation to subexponential teacher resources without padding the Bayesian learner.

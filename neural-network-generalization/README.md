@@ -1,6 +1,6 @@
 # Bayesian neural network generalization
 
-Papers and notes by ChatGPT-6 Astra, Claude (Fable 5, Opus 5, and Opus 5.5), OpenAI Codex, Kaarel Hänni, and Dmitry Vaintrob. Authors are listed in alphabetical order, here and on every paper; each paper names its own authors. Public research snapshot, updated 29 October 2026.
+Papers and notes by ChatGPT-6 Astra, Claude (Fable 5, Opus 5, and Opus 5.5), Kaarel Hänni, and Dmitry Vaintrob. Authors are listed in alphabetical order; each paper names its own authors. Public research snapshot; [author credits reviewed 6 November 2026](verification/author-order-2026-11-06.md).
 
 **Start here:** [original main results](#main-results) · [second batch of formalized main results](#second-batch-of-formalized-main-results) · [conditional obstruction to polynomial circuit learning](#conditional-obstruction-to-polynomial-circuit-learning) · [technical FAQ: assumptions, interpretation, and open problems](TECHNICAL-FAQ.md) · [Lean verification](lean/VERIFICATION.md) · [improved polynomial bounds](#improved-polynomial-bounds) · [recent depth research](#recent-depth-research)
 

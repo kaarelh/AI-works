@@ -1,5 +1,7 @@
 # Mathematical review and publication checks
 
+**Author-order revision, 6 November 2026.** The author declarations, alphabetical-order footnotes, and PDF author metadata were updated without changing the document bodies. [Current hashes and clean rebuild checks](../../../../verification/author-order-2026-11-06.md) supersede the earlier manuscript hashes below; the dated mathematical reviews remain records of their original snapshots.
+
 Research draft, 30 October 2026. [Paper](../paper.pdf) · [source](../source/paper.tex)
 
 The proofs are conventional mathematical proofs, **not Lean formalizations or human peer review**. Several independent AI-agent reviews checked the arguments below; a final review also checked the integrated manuscript for a reader unfamiliar with the repository.

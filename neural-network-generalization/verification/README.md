@@ -1,5 +1,9 @@
 # Collection verification
 
+## Author-order review, 6 November 2026
+
+The [author-order publication record](author-order-2026-11-06.md) covers 13 canonical manuscripts and five named-author companions. Their authors now follow the established alphabetical convention and footnote, with consistent PDF metadata and catalog credits. All 18 clean rebuilds reproduce the published text. Source comparison confirms the mathematical document bodies and Lean sources are unchanged. The [folder policy](../AGENTS.md) records this convention for future papers.
+
 ## Further depth improvement, 29 October 2026
 
 [Further depth improvement: bounded-density and factor coding, 29 October 2026](factored-depth-2026-10-29.md) records the conventional C⁵L¹² all-scale theorem, its independent checks, and the unchanged quartic bound.

@@ -1,5 +1,7 @@
 # Verification record
 
+**Author-order revision, 6 November 2026.** The author declarations, alphabetical-order footnotes, and PDF author metadata were updated without changing the document bodies. [Current hashes and clean rebuild checks](../../../verification/author-order-2026-11-06.md) supersede the earlier manuscript hashes below; the dated mathematical reviews remain records of their original snapshots.
+
 This package contains conventionally checked mathematical proofs, not a Lean formalization.
 
 The [independent full-assembly audit](local-group-wasserstein-full-assembly-audit.md) reviewed the complete standalone source. It passed every proof and displayed constant, requesting one explicit architecture clarification: the bands must form an ordered exhaustive partition of the physical layers preceding the readout. That clarification and the harmless sign conventions `C_0>0`, `K>=0` were added, and the auditor approved the corrected source hash recorded in its final entry.

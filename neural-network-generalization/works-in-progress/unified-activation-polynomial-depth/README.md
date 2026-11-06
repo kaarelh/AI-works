@@ -45,6 +45,6 @@ This permits general bounded-weight neural teachers, even when their hidden valu
 
 **Status:** conventional proof with independent AI-agent mathematical reviews; **not Lean formalized** and not human peer reviewed. The earlier formalizations do not automatically certify this extension. The result is kept among supporting research papers, with the original two formalized batches unchanged.
 
-Run `bash build.sh` to rebuild the PDF. Authors: OpenAI Codex, Kaarel Hänni, and Dmitry Vaintrob. The paper acknowledges the earlier population arguments and their contributors.
+Run `bash build.sh` to rebuild the PDF. Authors: ChatGPT-6 Astra, Kaarel Hänni, and Dmitry Vaintrob (alphabetical order). The paper acknowledges the earlier population arguments and their contributors.
 
 The PDF was reviewed and rebuilt from the included source on 29 October 2026. The [review record](../../verification/remaining-papers-2026-10-29.md) describes exposition changes, mathematical corrections, and the limits of the checks. Existing formalization claims retain their stated scope.

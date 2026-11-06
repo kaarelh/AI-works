@@ -1,5 +1,7 @@
 # Verification and scope
 
+**Author-order revision, 6 November 2026.** The author declarations, alphabetical-order footnotes, and PDF author metadata were updated without changing the document bodies. [Current hashes and clean rebuild checks](../../../../verification/author-order-2026-11-06.md) supersede the earlier manuscript hashes below; the dated mathematical reviews remain records of their original snapshots.
+
 30 October 2026. [Paper](../paper.pdf) · [source](../source/paper.tex)
 
 These are conventional proofs with independent AI-agent mathematical reviews, **not Lean formalizations or human peer review**. The earlier formalized Gaussian width limits do not automatically certify the new consequences.

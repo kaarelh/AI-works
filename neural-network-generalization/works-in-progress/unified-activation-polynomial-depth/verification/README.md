@@ -1,5 +1,7 @@
 # Verification and scope
 
+**Author-order revision, 6 November 2026.** The author declarations, alphabetical-order footnotes, and PDF author metadata were updated without changing the document bodies. [Current hashes and clean rebuild checks](../../../verification/author-order-2026-11-06.md) supersede the earlier manuscript hashes below; the dated mathematical reviews remain records of their original snapshots.
+
 The main theorem is a conventional mathematical proof, not a new Lean theorem. Earlier formalizations of tanh and ReLU/GELU results do not certify a changed activation class or prior support automatically.
 
 The manuscript was checked by separate AI-agent reviews:

@@ -1,5 +1,7 @@
 # Verification and exact scope
 
+**Author-order revision, 6 November 2026.** The author declarations, alphabetical-order footnotes, and PDF author metadata were updated without changing the document bodies. [Current hashes and clean rebuild checks](../../../../verification/author-order-2026-11-06.md) supersede the earlier manuscript hashes below; the dated mathematical reviews remain records of their original snapshots.
+
 5 November 2026. [Paper](../paper.pdf) · [Source](../source/paper.tex)
 
 Conventional mathematical proofs, independently checked by collaborating AI agents and the integrating agent. **Not Lean formalized or human peer reviewed.**

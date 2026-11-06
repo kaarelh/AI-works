@@ -1,5 +1,7 @@
 # Verification record
 
+**Author-order revision, 6 November 2026.** The author declarations, alphabetical-order footnotes, and PDF author metadata were updated without changing the document bodies. [Current hashes and clean rebuild checks](../../../verification/author-order-2026-11-06.md) supersede the earlier manuscript hashes below; the dated mathematical reviews remain records of their original snapshots.
+
 The [independent end-to-end audit](independent-audit.md) checks the two-anchor baseline, determinant separation for every opposite-label pair, prototype compression, finite function counting, and fixed-architecture cold-prior theorem.
 
 The curated manuscript incorporates the audit's scope corrections: it identifies the actual authors, explicitly restricts the hidden-pair calculation to layers after the first activation, links the circuit consequence to the companion paper, and removes an unproved finite-scale extension from the final discussion. It also includes an elementary rank-two derivation of the Schatten inequality used in the baseline proof.

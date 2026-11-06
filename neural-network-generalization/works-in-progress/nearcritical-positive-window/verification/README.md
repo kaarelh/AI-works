@@ -1,5 +1,7 @@
 # Verification record
 
+**Author-order revision, 6 November 2026.** The author declarations, alphabetical-order footnotes, and PDF author metadata were updated without changing the document bodies. [Current hashes and clean rebuild checks](../../../verification/author-order-2026-11-06.md) supersede the earlier manuscript hashes below; the dated mathematical reviews remain records of their original snapshots.
+
 The [six-page source](../source/nearcritical-positive-window.tex) is byte-identical to the final audited scratch manuscript, SHA256 `3983ca89775173e5abb80ce0c94876495ac3317188e1118c929bdc8bdb5d8ca1`.
 
 - [Scalar baseline comparison audit](supercritical-scalar-baseline-logarithmic-gap-canonical-audit.md): existence of the supercritical boundary value and the rigorous logarithmic deficit; no posterior consequence.
