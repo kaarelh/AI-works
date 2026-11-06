@@ -21,3 +21,7 @@ For the perturbed strong-prior construction, the initial lowest-energy functions
 The original paper has conventional proofs and independent AI-agent reviews. The added majority note has been checked in this pass. These results are **not Lean formalized**. Run `bash build.sh` to rebuild the PDF. Generated `build/` files are not published.
 
 The [31 October research continuation](verification/isotropic-ood-continuation.txt) records the remaining superpolynomial question and an exact fractional-energy certificate. This certificate rules out an integer-energy shortcut; it is not a mistake lower bound. Run `python3 verification/check_fractional_energy.py` to check it using only rational arithmetic.
+
+## Further isotropic results
+
+The [selector–comparator counterexample](../isotropic-exponential/) proves exponential mistakes under the **unchanged** isotropic strong prior. It uses a different target with a linear-depth, weight-two scalar implementation; its explicit width qualification is `N=1<C_L=2`. The [companion upper bounds](../isotropic-subexponential/) show that scalar AND instead has at most `exp(O(d^(2/3) log(d+2)))` cumulative posterior error on every order, and cover specified fixed shallow widths and simple targets. These results do not change the earlier paper's statements or its verification scope.

@@ -1,0 +1,404 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools,booktabs,hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\sgn}{\operatorname{sign}}
+\newcommand{\E}{\mathbb E}\newcommand{\Pp}{\mathbb P}
+\title{Exponentially many online mistakes for an isotropic\protect\\ strong-prior Bayesian tanh network}
+\author{Dmitry Vaintrob \and Kaarel H\"anni \and ChatGPT-6 Astra}
+\date{November 2026}
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue,
+ pdftitle={Exponentially many online mistakes for an isotropic strong-prior Bayesian tanh network},
+ pdfauthor={Dmitry Vaintrob; Kaarel Hanni; ChatGPT-6 Astra}}
+\begin{document}\maketitle
+\begin{abstract}
+We give a fixed input order on which exact Bayesian prediction with an
+isotropic Gaussian tanh-network prior makes exponentially many mistakes
+in the strong-prior limit. The prior is conditioned on an absolute output
+margin at every Boolean input and then on exact training labels. The learner
+has one neuron per hidden layer. On $d=2k+1$ input bits, a comparator with a
+selector bit forces $2^k-k-1$ mistakes after only $O(k)$ calibration examples.
+All these mistakes occur with arbitrarily high probability at every
+sufficiently small positive prior scale.
+The result covers posterior sampling, posterior-label majority and a
+strict $2/3$ confidence criterion. The target has a $\Theta(k)$-gate Boolean
+circuit and, at depth $2k+2$, a width-one tanh implementation with weights
+bounded by two. Under the convention that teacher complexity $C_L$ bounds
+both width and individual weights, this implementation has $C_L=2$ while
+the learner width is $N=1$. Thus the result does not settle the separate
+question requiring $N\ge C_L$, or a fixed-depth counterexample with
+polynomial bounded-weight teacher complexity. A separate appendix proves
+an all-width analogue when the activation is the identity.
+\end{abstract}
+
+\section{Model and result}
+
+A consistent Bayesian learner need not make few mistakes when inputs arrive
+in an unfavorable order. We establish this phenomenon for an unchanged
+isotropic Gaussian neural prior, using its full posterior rather than a
+choice among maximum-probability classifiers.
+
+The input domain is $\{-1,1\}^d$. There is a constant input coordinate,
+no separate internal biases, one neuron in each of $L-1$ hidden layers,
+and a linear readout. For $L\ge2$, define the score recursively by
+\[
+ \begin{aligned}
+ h_1(x)&=\tanh\!\left(a_0+\sum_{j=1}^d a_jx_j\right),\\
+ h_{j+1}(x)&=\tanh(r_jh_j(x))\quad(1\le j\le L-2),\\
+ z_\theta(x)&=b h_{L-1}(x).
+\end{aligned}
+\]
+Thus the list of internal scalar weights is empty when $L=2$.
+Independently,
+\[
+ a_j\sim N(0,\sigma^2/d),\qquad r_j,b\sim N(0,\sigma^2).
+\]
+The prior is conditioned on $|z_\theta(x)|>1/2$ for every input.
+After each prediction, the true label is revealed, and the posterior is
+conditioned on its exact sign. The strong-prior limit sends $\sigma$ to zero
+at fixed $d,L$ and width. The variances of the first-layer coordinates are
+exactly equal; no anisotropic perturbation is used.
+
+Let $p_t$ be the posterior probability of the correct label before round
+$t$. Posterior sampling makes a mistake with probability $1-p_t$.
+Posterior-label majority is wrong when $p_t<1/2$, and the strict $2/3$
+confidence criterion fails when $p_t\le2/3$.
+
+\begin{theorem}[Exponential online mistakes]\label{thm:main}
+Fix $k\ge3$, put $d=2k+1$, and take any fixed scalar depth $L\ge2$.
+Write an input as $(x,y,z)$ with $x,y\in\{-1,1\}^k$ and $z\in\{-1,1\}$,
+and set
+\[
+ X=\sum_{i=0}^{k-1}2^i\frac{x_i+1}{2},\qquad
+ Y=\sum_{i=0}^{k-1}2^i\frac{y_i+1}{2}.
+\]
+Consider the target
+\[
+ f(x,y,z)=+1\quad\Longleftrightarrow\quad z=-1\text{ and }X\ge Y.
+\]
+There is a fixed permutation of the input cube, beginning with at most
+$4k+3$ calibration inputs, and a specified set of
+\[
+ T_k=2^k-k-1\ \ge\ 2^{k-1}
+\]
+subsequent rounds on which the correct-label posterior probability tends
+to zero as $\sigma\downarrow0$.
+
+Consequently, for every $\eta\in(0,1)$, all sufficiently small positive
+$\sigma$ have the following properties on this one fixed permutation:
+\begin{enumerate}
+\item Fresh posterior sampling makes at least $T_k$ mistakes with
+      probability at least $1-\eta$.
+\item Posterior-label majority makes at least $T_k$ mistakes.
+\item The strict $2/3$ confidence criterion fails on at least $T_k$ rounds.
+\end{enumerate}
+The minimum Boolean circuit size of the target is $\Theta(k)$ for a
+fixed complete gate basis of fan-in at most two.
+\end{theorem}
+
+The input order depends only on $k$, not on the sampled predictions or on
+$\sigma$. The quantifier ``sufficiently small'' may depend on $k,L,\eta$;
+we do not give an explicit bound on how small $\sigma$ must be.
+
+\begin{corollary}[A bounded-weight, linear-depth teacher]\label{cor:teacher}
+At depth $L=2k+2$, the target in Theorem~\ref{thm:main} has a width-one
+implementation with all weights of absolute value at most two and a
+strict global output margin greater than $1/2$. Its Gaussian quadratic
+energy is less than $(40k+11)/3$.
+
+If $C_L(f)$ is the least positive integer bounding both the teacher's
+hidden width and the absolute value of every weight, then $C_L(f)=2$ at
+this depth. The learner in the theorem has $N=1$. In particular this is
+not a counterexample with $N\ge C_L(f)$.
+\end{corollary}
+
+The width qualification is substantive. At $L=2$ the proof still gives
+exponentially many mistakes, but the displayed shallow implementation has
+exponentially large weights. Increasing the scalar depth gives bounded
+weights without changing the function ordering used by the proof. It does
+not provide a theorem for a wider learner.
+
+\section{The exact minimum after calibration}
+
+For an affine threshold function $g$, define its full-cube unit-margin cost
+\[
+ Q(g)=\min\left\{\|A\|_2^2:
+       g(\xi) A\mathbin{\cdot}(1,\xi)\ge1
+       \text{ for every }\xi\in\{-1,1\}^d\right\}.
+\]
+The minimum exists and its coefficient vector is unique, by coercivity
+and strict convexity. We calculate the minimum over all functions
+consistent with a particular history. The calculation first uses only
+convex training inequalities; its optimizer then turns out to satisfy the
+absolute margin on the entire cube.
+
+Here are the calibration examples, all with selector $z=-1$.
+\begin{enumerate}
+\item Take diagonal inputs $x=y$ equal to the all-plus vector, each of
+its $k$ one-coordinate flips, and the negatives of these vectors.
+All these labels are positive.
+\item For each $i$, use two negative examples with
+$x_i=-1,y_i=+1$, with $x_j=+1,y_j=-1$ for $j<i$, and with the upper equal
+bits $x_j=y_j$ all plus in one example and all minus in the other.
+Their highest differing bit is $i$, so $X<Y$.
+\end{enumerate}
+Repeated examples in this description are retained only once. There are
+at most $4k+2$ calibration inputs.
+
+For an integer $t\in\{0,\ldots,2^k-1\}$, let $q_t$ be the input with
+$z=+1$, $Y=0$ and $X=t$. Its target label is negative.
+
+\begin{lemma}[Unique minimum after a negative query]\label{lem:minimum}
+After the calibration and the negative query $q_t$, where $t\ge k$,
+the unique minimum-norm affine unit-margin vector fitting these labels is
+\[
+ A_t(x,y,z)=-t-(t+1)z+\sum_{i=0}^{k-1}2^i(x_i-y_i).
+ \tag{1}\label{eq:At}
+\]
+It also fits every $q_j$ for $j\le t$ and has absolute value at least one
+on every cube input. Thus it is also the unique minimum among all
+full-cube unit-margin classifiers fitting the calibration and
+$q_k,q_{k+1},\ldots,q_t$.
+\end{lemma}
+\begin{proof}
+Write any affine score as
+\[
+ A(x,y,z)=b+cz+\sum_i a_i x_i+\sum_i h_i y_i,
+\]
+and put
+\[
+ u=b-c,\quad v=b+c,\quad
+ w_i=\frac{a_i-h_i}{2},\quad s_i=a_i+h_i,\quad U=u-1.
+\]
+Its squared coefficient norm is
+\[
+ \|A\|_2^2=\frac{u^2+v^2}{2}
+                  +2\sum_i w_i^2+\frac12\sum_i s_i^2.       \tag{2}
+\]
+The paired positive diagonal examples give
+\[
+ U\ge0,\qquad
+ \left|\sum_j s_j\right|\le U,\qquad
+ \left|\sum_j s_j-2s_i\right|\le U.
+\]
+Therefore $|s_i|\le U$ for every $i$, and
+\[
+ \sum_i|s_i|\le kU.                                      \tag{3}
+\]
+Average the two negative carry inequalities at coordinate $i$. The upper
+$s_j$ terms cancel, leaving
+\[
+ u-2w_i+2\sum_{j<i}w_j\le-1.
+\]
+Induction gives
+\[
+ w_i\ge\sum_{j<i}w_j+\frac{u+1}{2}
+       \ge2^i\left(1+\frac U2\right).                    \tag{4}
+\]
+At $q_t$, the main-coordinate part of the score is
+\[
+ 2\sum_{i:\,\mathrm{bit}_i(t)=1}w_i
+       -\sum_{i:\,\mathrm{bit}_i(t)=0}s_i.
+\]
+The negative unit-margin constraint, (3), and (4) imply
+\[
+ v\le-1-2\sum_{\mathrm{bit}_i(t)=1}w_i
+             +\sum_{\mathrm{bit}_i(t)=0}s_i
+   \le -(2t+1)+(k-t)U
+   \le -(2t+1),                                         \tag{5}
+\]
+where the last inequality uses $t\ge k$. Equations (2)--(5) yield
+\[
+ \|A\|_2^2\ge
+      \frac{1+(2t+1)^2}{2}+2\sum_{i=0}^{k-1}4^i=:Q_t.    \tag{6}
+\]
+Equality requires $u=1$, $s_i=0$, $w_i=2^i$ and $v=-(2t+1)$,
+which is exactly (1).
+
+Conversely, (1) has score $1+2(X-Y)$ on the $z=-1$ branch and
+$-(2t+1)+2(X-Y)$ on the $z=+1$ branch. It fits all calibration labels,
+and its score at $q_j$ is $2j-2t-1\le-1$ whenever $j\le t$.
+Both branch scores are odd integers at every cube input. Its full-cube
+absolute margin is therefore at least one, and it attains (6).
+\end{proof}
+
+\section{From affine cost to the Bayesian posterior}
+
+\begin{lemma}[Scalar tanh networks preserve the affine cost ordering]
+\label{lem:energy}
+At every fixed depth $L\ge2$, the minimum Gaussian quadratic energy of a
+full-margin function $g$ is a strictly increasing function of $Q(g)$.
+After any fixed realizable history whose minimum-$Q$ consistent function
+is unique, the strong-prior posterior concentrates on that function.
+\end{lemma}
+\begin{proof}
+The Gaussian quadratic energy is
+\[
+ \kappa(\theta)=d\|a\|_2^2+\sum_j r_j^2+b^2.
+\]
+A nonzero scalar tanh chain is strictly monotone and odd, up to an overall
+sign. Sign changes of its weights can be absorbed into the first affine
+vector without changing the energy. We may therefore take all downstream
+weights positive. If the smallest signed first preactivation is $\rho>0$,
+the optimal first-layer energy is $dQ(g)\rho^2$.
+
+Let $F(\rho;r,b)$ be the positive scalar output of this chain at first
+preactivation $\rho$. The energy infimum over the strict margin event is
+\[
+ E_L(Q)=\min\left\{dQ\rho^2+\sum_jr_j^2+b^2:
+       \rho,r_j,b\ge0,\quad F(\rho;r,b)\ge\tfrac12\right\}. \tag{7}
+\]
+Coercivity gives a minimizer, and its $\rho$ and downstream weights are
+positive because its output is nonzero. If $Q_2>Q_1$, evaluate the
+$Q_1$ objective at a minimizer for $Q_2$ to obtain
+\[
+ E_L(Q_2)\ge E_L(Q_1)+d(Q_2-Q_1)\rho^2>E_L(Q_1).
+\]
+Strict and weak output margins have the same energy infimum: slightly
+increasing the readout turns a weak-margin parameter into a strict-margin
+one while approaching its energy.
+
+For each function cell
+\[
+ U_g=\{\theta:g(x)z_\theta(x)>1/2\text{ at every input}\},
+\]
+the finite-dimensional Gaussian small-noise upper and lower bounds give
+\[
+ \lim_{\sigma\downarrow0}\sigma^2\log\Pp_\sigma(U_g)
+       =-E_L(Q(g))/2.                                    \tag{8}
+\]
+The lower bound follows from a ball inside the open cell; the upper bound
+uses its closure and coercivity. The matching energy infima just noted
+make the two bounds agree. There are finitely many Boolean functions.
+Exact label conditioning keeps a function cell whole or deletes it, so
+(8) and strict energy separation imply the stated posterior concentration.
+The prior's global-margin normalization cancels from these posterior ratios.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:main}]
+Present the calibration inputs and then $q_k$. Next present
+$q_{k+1},q_{k+2},\ldots,q_{2^k-1}$, and finally all remaining inputs in
+any fixed order. At the history ending in $q_t$, Lemma~\ref{lem:minimum}
+gives the unique minimum-cost classifier $\sgn A_t$.
+Its score at $q_{t+1}$ is $+1$, although the target label is negative.
+Lemma~\ref{lem:energy} therefore makes the correct-label posterior
+probability tend to zero on every one of these $T_k$ rounds.
+
+For fixed $k,L$, there are only finitely many specified rounds.
+Choose a common sufficiently small $\sigma$ so that the correct-label
+probability at each is less than both $\eta/T_k$ and $1/3$.
+A union bound gives probability at least $1-\eta$ that posterior sampling
+is wrong on every specified round. The same probabilities make posterior
+majority wrong and the strict $2/3$ criterion fail on all of them.
+
+The target has a linear-size Boolean circuit. In $0/1$ notation,
+comparison of the lowest $i+1$ bits obeys the recursion
+\[
+ G_{-1}=1,\qquad
+ G_i=(X_i\wedge\neg Y_i)\ \vee\
+           ((X_i\leftrightarrow Y_i)\wedge G_{i-1}).
+\]
+Each step uses a constant number of bounded-fan-in gates; conjoining
+$G_{k-1}$ with the test $z=-1$ uses only a constant further number.
+Replacing these gates by NAND gates changes size by a constant factor.
+Conversely, all $2k+1$ input bits are essential. For $x_i$, fix $Y=2^i$
+and all other $X$ bits to zero; for $y_i$, fix $X=0$ and all other $Y$
+bits to zero. Take $z=-1$ in both cases. The selector is essential at
+$X=Y$. A fan-in-two circuit with $s$ gates and $d$ essential inputs has
+at least $s+d-1$ edges in the connected ancestry of its output and at
+most $2s$ edges entering gates. Hence $s\ge d-1=2k$, proving the
+matching order lower bound.
+\end{proof}
+
+\section{Bounded weights and the width qualification}
+
+\begin{proof}[Proof of Corollary~\ref{cor:teacher}]
+Use $A_{2^k-1}$ from (1), divided by $2^k$, as the first preactivation.
+Every first-layer coefficient has absolute value at most one, and the
+smallest absolute preactivation is $2^{-k}$. Apply the first tanh and
+then $2k$ further hidden tanh layers with scalar weight two, followed by
+readout weight one. This gives depth $2k+2$.
+
+For $0\le h\le1/2$, concavity and $\tanh(1)>3/4$ give
+$\tanh(2h)\ge(3/2)h$. Also $\tanh(2^{-k})\ge(3/4)2^{-k}$.
+If the smallest positive activation had not crossed $1/2$ after those
+$2k$ amplification layers, it would be at least
+\[
+ \frac34\,2^{-k}(3/2)^{2k}
+     =\frac34(9/8)^k>\frac12,
+\]
+a contradiction. Once above $1/2$ it stays above $1/2$ under
+$h\mapsto\tanh(2h)$. Oddness handles negative scores. This proves the
+strict margin and the weight bound two, hence $C_L(f)\le2$. Moreover,
+\[
+ Q_{2^k-1}=\frac83 4^k-2^{k+1}+\frac13,
+\]
+so the scaled first vector has squared norm less than $8/3$. Its
+Gaussian energy is therefore bounded by
+\[
+ d\|a\|_2^2+2k\cdot 2^2+1
+   <\frac83(2k+1)+8k+1=\frac{40k+11}{3}.
+\]
+Thus the exponential mistake count occurs despite a linear-energy
+neural implementation.
+
+For completeness, $C_L(f)=1$ is impossible. With one neuron in each
+layer and all weights bounded by one, the entire downstream scalar chain
+is $1$-Lipschitz and vanishes at zero. A strict final margin above $1/2$
+therefore forces the first affine margin to be some $\rho>1/2$.
+Absorb any overall sign into the first vector and divide it by $\rho$.
+The diagonal and carry inequalities in the proof of
+Lemma~\ref{lem:minimum} then give normalized
+$w_{k-1}\ge2^{k-1}$. In the original first vector,
+$w_{k-1}>2^{k-2}>1$ for $k\ge3$, contradicting the bound one on both
+corresponding coefficients. Thus $C_L(f)=2$.
+\end{proof}
+
+This lower bound concerns a learner that can represent the target with
+the same hidden width as the teacher, and with only a constant bound on
+the teacher weights. Nevertheless, the condition $N\ge C_L(f)$ used by
+some width-uniform learning theorems is stronger and fails here. Adding a
+second learner neuron enlarges its function class and can change the
+minimum-energy ordering. The present proof gives no reduction from that
+wider posterior to the scalar posterior.
+
+\section{Why this does not contradict iid learning bounds}
+
+All Boolean functions represented by a scalar tanh chain, including constants, are affine
+threshold functions on the input cube. The number $H_d$ of such Boolean
+functions satisfies the hyperplane-arrangement bound
+\[
+ H_d\le2\sum_{j=0}^{d}\binom{2^d-1}{j},\qquad \log H_d=O(d^2).
+\]
+For any input distribution, a union bound implies that after
+\[
+ m\ge\frac{\log H_d+\log(1/\delta)}{\varepsilon}
+\]
+iid noiseless examples, every consistent classifier has test error at most
+$\varepsilon$, with probability at least $1-\delta$.
+This controls posterior-sampled test error at every positive prior scale;
+constant-factor changes in $\varepsilon$ also control posterior majority
+and the strict confidence criterion. No property of the prior masses is
+needed for this finite-class argument.
+
+Thus the exhibited learner has polynomial iid sample complexity in input
+dimension but exponential total mistakes on the specified order. Its
+posterior repeatedly selects a unique cheapest extension of the observed
+labels, and the next query reveals where that extension is wrong. The
+counterexample relies neither on arbitrary tie-breaking nor on varying
+the prior during learning.
+
+\appendix
+\input{selector-linear}
+
+\paragraph{Verification status.}
+The proofs in this note have undergone independent mathematical checks
+by collaborating AI agents. They have not been formalized in Lean.
+The exact affine calculation is the central step; the probability
+statements follow from finite-dimensional Gaussian concentration.
+\end{document}

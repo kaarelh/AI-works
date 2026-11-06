@@ -1,0 +1,80 @@
+\subsection{A finite description of the symmetrized Taylor polynomial}
+Fix the multiplicities $m_1,\ldots,m_r$ of the column groups. For row $j$ and group $g$, record the power sums
+\[
+ P_{g,j,\ell}=\sum_{i\in G_g} A_{ji}^{\ell},\qquad 1\le\ell\le q.
+\]
+Together with the $n$ readout weights, these are $nqr+n$ real descriptors. Their number is linear in $r$ when $n,q$ are fixed.
+
+We verify that they determine every moment used in the Taylor approximation. For one group, write its scalar entries as $a_1,\ldots,a_m$ and suppose the queried sign vector has $k$ positive coordinates in that group. A uniform permutation is equivalent to choosing a uniform $k$-subset, with indicators $\xi_i$. Put $V=\sum_i a_i\xi_i$ and $P_\ell=\sum_i a_i^\ell$. For $h\le q$,
+\begin{equation}\label{eq:subset-moment}
+ \E V^h=\sum_{\pi\in\mathcal P([h])}
+ \frac{(k)_{|\pi|}}{(m)_{|\pi|}}
+ \sum_{\substack{i_B\in[m]\ (B\in\pi)\\\text{all distinct}}}
+       \prod_{B\in\pi}a_{i_B}^{|B|}.
+\end{equation}
+Here $(t)_v$ is a falling factorial, and terms with $|\pi|>m$ are zero. The formula partitions ordered index tuples according to their coincidence pattern. Each coefficient $(k)_v/(m)_v$ lies in $[0,1]$.
+
+If a partition has block sizes $s_1,\ldots,s_v$, its distinct-index sum is a polynomial in $P_1,\ldots,P_h$. Explicitly, inclusion--exclusion on coincidence patterns gives
+\begin{equation}\label{eq:distinct-powers}
+ \sum_{i_1,\ldots,i_v\text{ distinct}}\prod_{t=1}^v a_{i_t}^{s_t}
+ =\sum_{\tau\in\mathcal P([v])}
+   \left[\prod_{C\in\tau}(-1)^{|C|-1}(|C|-1)!\right]
+   \prod_{C\in\tau}P_{\sum_{t\in C}s_t}.
+\end{equation}
+This is the usual partition-lattice inclusion--exclusion; it also follows inductively by subtracting all nontrivial coincidence patterns from the unrestricted product of power sums. Thus~\eqref{eq:subset-moment} has degree at most $h$ in the descriptors, and its coefficient magnitudes and number of terms are bounded by constants depending only on $h$.
+
+The group's centered preactivation is
+\[
+ U_g=2\left(V-\frac{k}{m}P_1\right).
+\]
+Its moments through order $q$ are likewise polynomials of degree at most their order, with coefficients uniformly bounded in $m,k$. Different groups are permuted independently. Expanding the moments of $U=\sum_gU_g$ therefore gives polynomials of degree at most $h$ in all group descriptors, with at most $C_q r^q$ terms and coefficients bounded by $C_q$, for $h\le q$. The mean is
+\[
+ \mu_j=\sum_g\left(\frac{2k_g}{m_g}-1\right)P_{g,j,1}.
+\]
+Consequently the function
+\begin{equation}\label{eq:descriptor-predictor}
+ T(y)=\sum_{j=1}^n b_j
+       \sum_{h=0}^q\frac{\tanh^{(h)}(\mu_j)}{h!}\E U_j^h
+\end{equation}
+is completely determined by the group sizes, these descriptors, and the number $k_g$ of positive signs in each queried group. It is not required to be a neural network: its role is to encode the Boolean function, which is already determined by its uniformly separated sign.
+
+\subsection{Uniform quantization of the descriptors}
+Let $A_* =\sqrt{E_0}$ and
+\[
+ H=p\max\{1,A_*\}^q.
+\]
+Every power-sum descriptor has absolute value at most $H$, and every readout weight has absolute value at most $B$. Quantize all of them on a common grid with mesh $\eta\le1$. We give the elementary uniform continuity estimate needed for this step, including its dependence on the growing dimension $p$.
+
+For fixed $n,q$, the displayed moment polynomials have degree at most $q$, at most $C_qp^q$ monomials, and coefficients bounded by $C_q$. On the descriptor box of radius $H+1$, changing each coordinate by at most $\eta$ changes any such polynomial by at most
+\[
+ C_q p^q (H+1)^q\eta.
+\]
+This follows by telescoping the factors of each monomial; the constants absorb its degree and number of terms. The mean $\mu_j$ changes by at most $p\eta$. Every derivative of tanh of any fixed order is bounded on the real line: inductively it is a polynomial in tanh, using $(\tanh)'=1-\tanh^2$. Applying the mean value theorem to the coefficients $\tanh^{(h)}(\mu_j)$ and then changing the readout weights therefore gives
+\begin{equation}\label{eq:descriptor-lipschitz}
+ |T(y)-\widetilde T(y)|
+ \le C_{n,q}(1+B)p^{q+1}(H+1)^q\eta
+\end{equation}
+for every full-cube input $y$, with one constant independent of all group sizes and sign counts. This deliberately loose bound also controls the magnitudes of the moment polynomials appearing when the readout is changed.
+
+Choose
+\[
+ \eta=\min\left\{1,
+ [16C_{n,q}(1+B)p^{q+1}(H+1)^q]^{-1}\right\}.
+\]
+The output perturbation is at most $1/16$. If the Taylor approximation has signed margin at least $3/8$, its quantized version retains margin at least $5/16$ and exactly the same Boolean function.
+
+There are at most
+\[
+ M=3+\left\lceil\frac{2\max\{H,B\}}{\eta}\right\rceil
+\]
+grid values per descriptor. Since $E_0=nK/d$, $B=\sqrt{K/n}$ and $p=d+1$, for fixed $n,q$ this obeys
+\[
+ \log M=O_{n,q}(\log(d+K+2)).
+\]
+One can put every group consecutively by an input permutation. The group sizes have at most $p^r$ possibilities, and the quantized descriptors have at most $M^{nqr+n}$ possibilities. Choose one grouping and one quantized description deterministically for each function orbit. A shared description would define the same canonical Boolean function by~\eqref{eq:descriptor-predictor}; hence two distinct orbits cannot share it. The number of exact signed-augmented-coordinate symmetry orbits below energy $K$ is therefore at most
+\[
+ J_{n,q}(d,K)\le
+ \sum_{r=1}^{\min\{p,\lceil R_{n,q}\rceil\}}
+      p^r M^{nqr+n},
+\]
+where the group count $R_{n,q}$ comes from the energy packing estimate. This count permits invalid descriptor lists and repeated encodings, both of which only overcount.

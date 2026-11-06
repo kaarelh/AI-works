@@ -1,0 +1,110 @@
+\section{Every fixed width at one hidden layer}\label{sec:fixed-width}
+The affine reduction above does not extend to several hidden neurons. Nevertheless, exact input-permutation symmetry combined with a higher-order approximation gives a subexponential result at every fixed hidden width. In this section there is one hidden layer of width $n$, and
+\[
+ z(y)=b^\top\tanh(Ay),\qquad y\in\{-1,1\}^{p},\quad p=d+1.
+\]
+The original cube is the section $y_0=1$. The canonical Gaussian energy and variances are
+\[
+ \mathcal E_n(A,b)=\frac dn\|A\|_F^2+n\|b\|^2,
+ \quad A_{ji}\sim N(0,n\sigma^2/d),
+ \quad b_j\sim N(0,\sigma^2/n).
+\]
+As before, condition first on absolute output margin greater than $1/2$ everywhere and then on exact training labels. Write $E_n(g)$ for the energy infimum of a function event.
+
+\begin{theorem}[Fixed-width shallow networks]\label{thm:fixed-width}
+Fix $n\ge1$. Suppose the target has a depth-two, width-one implementation in which every weight has absolute value at most one and the signed output margin is greater than $1/2$ everywhere. At learner width $n$, the strong-prior posterior has, on every nonanticipating input sequence,
+\begin{equation}\label{eq:fixed-width-budget}
+ \sum_tq_t\le
+ \exp\!\left(O_n\!\left(d^{\frac n{n+2}}\log^4(d+2)\right)\right).
+\end{equation}
+The constant may depend on the fixed learner width $n$. The same bound, plus one, holds for all sufficiently small positive scales. Expected posterior-sampling mistakes, majority mistakes, confidence failures, and high-probability sampled mistakes obey the consequences of Theorem~\ref{thm:main}.
+
+More generally, for fixed $n$ and fixed integer $q\ge1$, a target energy bound $E_n(f)\le K$ gives a strong-prior budget with logarithm at most
+\begin{equation}\label{eq:general-width-budget}
+ O_{n,q}\!\left(
+ \left[1+\left(\frac{K^2}{d}+K^{1+1/(q+1)}\right)^{\frac n{n+2}}\right]
+ \log(d+K+2)\right).
+\end{equation}
+For the targets of the first assertion, whose energy is $K=O(d)$,
+each fixed $\epsilon>0$ and a sufficiently large fixed Taylor order give
+the alternative exponent
+\[
+ O_{n,\epsilon}(d^{n/(n+2)+\epsilon}\log(d+2)).
+\]
+\end{theorem}
+
+The fixed-width hypothesis matters. This is not a bound uniform over widths that grow with $d$. For widths $n=2$ and $n=3$, the exponents of $d$ in~\eqref{eq:fixed-width-budget} are respectively $1/2$ and $3/5$, up to the displayed logarithms. For $n=1$, the scalar argument already gives the sharper logarithmic factor in Corollary~\ref{cor:one}.
+
+\subsection{Close input columns force an exact Boolean symmetry}
+Every function with $E_n(g)\le K$ has a weak-margin representative of that energy. Indeed, the energy is coercive and its weak-margin cell is closed; increasing the readout slightly shows that weak and strict infima agree. Define
+\[
+ B=\sqrt{K/n},\qquad E_0=nK/d.
+\]
+The representative satisfies $\|b\|\le B$ and $\sum_i\|A_i\|^2\le E_0$, where $A_i$ denotes its $i$th column. The map $s\mapsto b^\top\tanh(s)$ is $B$-Lipschitz.
+
+Choose a radius $\rho\le1/(8B)$, select a maximal $\rho$-separated subset of the columns, and assign every column to a center within distance $\rho$. Thus each group lies in a radius-$\rho$ ball. Swapping two coordinates from the same group changes the preactivation by at most $4\rho$ and the output by at most $4B\rho\le1/2$. Two opposite labels with absolute margin at least $1/2$ would require an output difference at least one. Hence the Boolean function is invariant under this swap, and therefore under every permutation within each group.
+
+Let there be $r$ groups. The centers are original columns, so their squared norms sum to at most $E_0$. At least $r/2$ lie in the radius-$\sqrt{2E_0/r}$ ball. Packing radius-$\rho/2$ balls about these centers gives
+\[
+ \frac r2\le\left(1+\frac{2\sqrt{2E_0/r}}{\rho}\right)^n.
+\]
+If $r>2^{n+1}$, subtracting one from the $n$th root of the left side loses at most a factor two. Rearranging, and including the complementary case, gives
+\begin{equation}\label{eq:column-group-count}
+ r\le C_n\left[1+(E_0\rho^{-2})^{n/(n+2)}\right].
+\end{equation}
+
+\input{upper-moment-remainder.tex}
+\input{upper-moment-descriptors.tex}
+
+\subsection{Orbit count, Gaussian posterior, and the growing Taylor order}
+The radius above and~\eqref{eq:column-group-count} imply
+\[
+ r\le C_{n,q}\left[1+
+ \left(\frac{K^2}{d}+K^{1+1/(q+1)}\right)^{n/(n+2)}\right].
+\]
+Here $p/d\le2$ has been absorbed into the constant. The finite descriptor count therefore gives
+\[
+ \log J_{n,q}(d,K)
+ \le O_{n,q}\left(
+ \left[1+\left(\frac{K^2}{d}+K^{1+1/(q+1)}\right)^{n/(n+2)}\right]
+ \log(d+K+2)\right).
+\]
+Every exact signed-augmented-coordinate orbit has at most $2^pp!$ functions, and all its functions have equal Gaussian mass at every positive scale. The proof is the same parameter isometry used in the scalar case, applied simultaneously to the first-layer columns. Gaussian small-noise rates give a posterior tail at most $\beta$ outside $E_n(g)\le E_n(f)$ after every target-consistent history. Lemma~\ref{lem:blocks} consequently yields
+\[
+ \sum_tq_t\le J_{n,q}(d,K)[1+\log(2^pp!)]+\beta2^d.
+\]
+The polynomial orbit-size factor is absorbed in~\eqref{eq:general-width-budget}; the tail vanishes in a strong-prior limit. This proves the fixed-$q$ assertion with all posterior prediction criteria.
+
+For clarity we now track the constants needed when the Taylor order grows. The number of partitions of a set of size $q$ is at most $q^q$, and every factorial occurring in~\eqref{eq:distinct-powers} is at most $q!$. Expanding~\eqref{eq:subset-moment}, the centering binomial, and the sum over independent groups therefore bounds the relevant coefficients and the constants in~\eqref{eq:descriptor-lipschitz} by
+\[
+ \exp(O(q\log(q+1)))
+\]
+apart from a factor depending on the fixed $n$. One way to see that combining groups does not produce an extra exponential in $q^2$ is to expand the $h$ ordered factors directly: there are at most $r^h$ assignments of their group indices, and the product of their groupwise partition counts and factorial bounds is at most $\exp(O(h\log(h+1)))$, since the group degrees sum to $h\le q$. The tanh derivative bound in Lemma~\ref{lem:perm-moments} has the same factorial size.
+
+Such a target, with every weight bounded by one, is an augmented signed majority with affine optimum $a_*$ satisfying $\|a_*\|^2\le p$. Set $a=a_*/\sqrt d$ and $b_*=1/[2\tanh(1/\sqrt d)]$. Since $\tanh(t)\ge t/2$ for $0\le t\le1$, its weak-margin scalar energy is
+\[
+ d\|a\|^2+b_*^2\le p+d=2d+1.
+\]
+Cloning it $n$ times with readouts $b_*/n$ preserves $\mathcal E_n$ exactly. Thus we may take $K=2d+1$, so $E_0=O_n(1)$ and $B=O_n(\sqrt p)$.
+
+Choose $q=\lceil\log(p+1)\rceil$ and $s=q+1$. The explicit radius gives
+\[
+ \rho^{-2}
+ =\max\{64B^2,\,256s p(8\sqrt n B)^{2/s}\}
+ =O_n(p\log(p+1)).
+\]
+Consequently
+\[
+ r=O_n\!\left((p\log(p+1))^{n/(n+2)}\right).
+\]
+Since $H=p\max\{1,\sqrt{E_0}\}^q$, we have $\log(H+1)=O_n(\log(p+1))$. The explicit quantization mesh and the coefficient bounds just established give
+\[
+ \log M=O_n(\log^2(p+1)).
+\]
+There are $nqr+n=O_n(r\log(p+1))$ descriptors and at most $p^r$ group-size lists. Hence
+\[
+ \log J_{n,q}(d,2d+1)
+ =O_n\!\left(p^{n/(n+2)}
+                \log^{3+n/(n+2)}(p+1)\right).
+\]
+This implies the slightly simpler bound~\eqref{eq:fixed-width-budget}, completing the theorem. No growing-order approximation is needed for the separately stated fixed-$q$ conclusion.

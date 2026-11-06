@@ -1,0 +1,104 @@
+Exact-isotropic scalar NNBayes orbit upper bound — conventional proof review
+==========================================================================
+Source: orbit-paper.tex
+Source SHA256 at review: 1e5047da0d3ce1cccc9fd5013800de4a62a1fc8a60c3a9a46147624da324a1a1
+Build: two pdflatex passes; final pass clean, seven pages.
+Not Lean formalized.
+
+The current source has two orbit-count proofs: a primary packing argument,
+and a slightly weaker rounding argument with the same exp(O(K^(1/3)logK))
+asymptotic. These were independently derived by orbit_bound and isotropic_upper.
+
+Independent agent audits received:
+- isotropic_upper: scalar-depth energy reduction, interior attainment,
+  strict monotonicity, weak/strict closure, exact augmented Gaussian symmetry,
+  bounded-weight C1 characterization, and packing count all PASS.
+- isotropic_lower: scalar-depth energy reduction, Gaussian closure/rate,
+  C1 corollary, AND formula, packing count, and shrinking-block lemma all PASS.
+
+Specific correctness checks
+---------------------------
+1. Full-cube affine margin minimizer is unique; zero coefficients correspond
+   exactly to inessential coordinates. Every nonzero absolute coefficient is
+   >=1, and unequal positive magnitudes are >=1 apart. Signed-coordinate
+   swapping plus averaging is the crucial strict convexity argument.
+2. Thus r distinct magnitudes force Q>=r^3/3, and support size s<=Q.
+3. With a fixed multiplicity list, weighted coefficient vectors live in an
+   r-ball of radius sqrt(K). Distinct canonical functions have a vertex with
+   opposite labels; both have margin one there, so vectors are 2/sqrt(K)
+   separated. Volume packing gives at most (1+K)^r vectors per list.
+4. There are <=ceil(K)^r multiplicity lists and <=(2(d+1))^ceil(K) functions
+   per signed-augmented-coordinate orbit. This is an upper count of actual
+   function orbits, not merely energies or parameter descriptions.
+5. Equal orbit masses hold at every positive scale by an exact Gaussian
+   symmetry. Equal energy between different orbits is never assumed to imply
+   equal mass or prefactors.
+6. In each shrinking uniform block, the sum of elimination fractions is at
+   most 1+log(initial size), even with arbitrary changing block weights.
+   This is a pathwise statement permitting adaptive queries.
+7. A single small-scale tail ratio to target mass controls the posterior
+   outside Q<=Qtarget uniformly over all histories. Exact consistency makes
+   repeated queries error-free, so its total contribution is beta 2^d.
+8. The posterior-sampling high-probability claim uses a predictable
+   compensator bound, so it does not require independent error indicators
+   for adaptive queries.
+9. Scalar hidden depth preserves the affine sign class, exact odd symmetry,
+   and strictly increasing energy ranking in Q. The small-scale threshold
+   may depend on depth. No finite-scale depth-uniform claim is made.
+10. The C1 bound requires existence of a bounded-weight strict-margin scalar
+    implementation. At sufficiently large depth that premise can be empty;
+    the paper says so. AND's N=1 bound is not presented as satisfying the
+    bounded-weight admissible-width convention.
+
+Result and limits
+-----------------
+General scalar target Q<=K: exp(O(K^(1/3)log(K+1)))(1+Klog(d+2)).
+C=N=1 target: exp(O(d^(1/3)log(d+2))).
+AND at scalar width: exp(O(d^(2/3)log(d+2))).
+These rule out exp(Omega(d)) mistakes in the stated narrow cases. They do
+not prove polynomial mistakes, rule out all superpolynomial mistakes,
+or answer the question for wider networks.
+
+Addendum: fixed shallow width, including growing Taylor order
+------------------------------------------------------------
+The manuscript now has 13 pages and includes upper-moment-section.tex,
+upper-moment-remainder.tex, and upper-moment-descriptors.tex. Current hashes
+are in orbit-source-sha256.txt; the earlier single-source hash above is
+superseded by that manifest.
+
+Independent isotropic_upper final integrated audit: PASS. That agent
+independently derived the near-column symmetry, permutation-moment, Taylor
+remainder, and center-energy packing argument. orbit_bound independently
+audited those arguments and supplied the power-sum descriptor count and
+uniform quantization proof. isotropic_upper audited that descriptor proof,
+including the growing-order coefficient accounting: PASS.
+
+Additional checked points:
+- Canonical width-n energy is (d/n)||A||_F²+n||b||², agreeing with the
+  repository's original strong-prior Gaussian normalization.
+- Close column swaps alter output by <1, while opposite signs with the
+  global margin require a difference >=1. The resulting Boolean symmetry
+  is exact; the subsequent Taylor approximation only counts functions.
+- Sampling-without-replacement moments obey the stated subgaussian bound.
+  The elementary-symmetric-polynomial inequality and bounded-variable mgf
+  bound are used on centered group entries.
+- Raw moments are polynomials in the within-group row power sums. The exact
+  partition and distinct-index inclusion-exclusion formulas have no hidden
+  dependence on unencoded column ordering.
+- Quantized descriptors need not be valid network moments. They only define
+  a sign-preserving finite encoding, which is enough to count exact
+  Gaussian function-symmetry orbits.
+- Partition counts, factorial coefficients, and tanh derivative bounds
+  contribute exp(O(q log(q+1))) constants. Combining groups preserves this
+  dependence since their moment degrees sum to <=q. Thus q=ceil(log p)
+  legitimately gives log grid size O_n(log² p) and the final log⁴ factor.
+- The theorem explicitly requires teacher width one and every weight <=1
+  in absolute value. An earlier phrase 'bounded-weight' was tightened to
+  avoid accidentally including the large-weight comparator construction.
+- The final fixed-width rate is exp(O_n(d^(n/(n+2))log⁴(d+2))) for all fixed n.
+  The constants depend on n; no uniform claim for widths growing with d is
+  made. A separate fixed-q theorem avoids growing-order constants entirely.
+
+Current scalar results are unchanged: Q-budget exponent1/3, C1 exponent1/3,
+AND exponent2/3, with their stated logarithms and scalar-depth qualification.
+Final two-pass build has no unresolved references, warnings, or overfull boxes.

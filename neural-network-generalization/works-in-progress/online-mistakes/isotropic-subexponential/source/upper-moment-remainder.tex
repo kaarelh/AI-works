@@ -1,0 +1,86 @@
+% Independent lemma for fixed-width orbit compression.
+\begin{lemma}[Permutation moments and Taylor approximation]\label{lem:perm-moments}
+Let $A\in\mathbb R^{n\times p}$ have its columns partitioned into groups,
+with every group contained in a Euclidean ball of radius $\rho$.
+For a fixed $y\in\{-1,1\}^p$, independently permute its coordinates
+within each group to obtain $Y$. Write $S=AY$, $\mu=\mathbb ES$, and
+$U=S-\mu$. Then, for every row $j$, every real $t$, and every integer $s\ge1$,
+\begin{align}
+ \mathbb E e^{tU_j}&\le \exp(8p\rho^2t^2),\label{eq:perm-mgf}\\
+ \mathbb E|U_j|^s&\le(8\sqrt{s}\sqrt p\,\rho)^s.\label{eq:perm-moment}
+\end{align}
+Consequently, if $\|b\|_2\le B$ and $q\ge1$ is an integer, the function
+\[
+ P(y)=\sum_{j=1}^n b_j
+       \sum_{a=0}^{q}\frac{\tanh^{(a)}(\mu_j)}{a!}
+                         \mathbb E U_j^a
+\]
+satisfies
+\begin{equation}\label{eq:perm-taylor}
+ \left|\mathbb E\bigl[b^T\tanh(AY)\bigr]-P(y)\right|
+ \le \sqrt n B\bigl(16\sqrt{q+1}\sqrt p\,\rho\bigr)^{q+1}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Within a group of size $m$, center the scalar entries in row $j$ as
+$z_1,\ldots,z_m$, so $\sum_i z_i=0$. Their range has length at most
+$2\rho$, since the original group lies in a radius-$\rho$ ball.
+The centered contribution to $U_j$ is twice the sum of a uniformly
+selected $k$-subset of these entries, where $k$ is the number of positive
+coordinates of $y$ in the group. Its moment generating function is
+\[
+ \frac{e_k(e^{2tz_1},\ldots,e^{2tz_m})}{\binom mk}
+ \le\left(\frac1m\sum_{i=1}^m e^{2tz_i}\right)^k.
+\]
+Here $e_k$ is the elementary symmetric polynomial. The inequality follows
+by repeatedly averaging two of its nonnegative arguments while preserving
+their sum: the coefficient of their product is nonnegative, so this
+operation cannot decrease $e_k$, and its maximum at a fixed sum occurs
+when all arguments are equal. The cases $k=0,m$ cause no difficulty.
+
+A uniform draw $Z$ from the centered entries has mean zero and lies in an
+interval of length at most $2\rho$. The elementary bounded-variable
+Hoeffding lemma gives $\mathbb E e^{2tZ}\le\exp(2\rho^2t^2)$; even the
+looser range bound $4\rho$ gives $\exp(8\rho^2t^2)$, which we use here.
+Thus the group contribution has moment generating function at most
+$\exp(8m\rho^2t^2)$. Independence across groups proves
+\eqref{eq:perm-mgf}.
+
+Chernoff's argument gives
+$\mathbb P(|U_j|>u)\le2\exp(-u^2/(32p\rho^2))$.
+For an integer $\ell\ge1$, integration yields
+\[
+ \mathbb E|U_j|^{2\ell}\le2(32p\rho^2)^\ell\ell!
+ \le2(32\ell p\rho^2)^\ell.
+\]
+Take $\ell=\lceil s/2\rceil\le s$ and use monotonicity of $L^r$ norms.
+The resulting bound is at most $(8\sqrt s\sqrt p\rho)^s$, proving
+\eqref{eq:perm-moment}.
+
+For completeness, $|\tanh^{(s)}(u)|\le2^s s!$ for all $u\in\mathbb R$:
+write the $s$th derivative as $P_s(\tanh u)$, start from $P_0(v)=v$,
+and use $P_{s+1}(v)=(1-v^2)P_s'(v)$. Its coefficient $\ell^1$ norm
+is at most $2^s s!$ by induction, since $\deg P_s=s+1$.
+Taylor's theorem therefore bounds the order-$q$ remainder by
+$2^{q+1}|U_j|^{q+1}$. Apply \eqref{eq:perm-moment}, sum with
+weights $|b_j|$, and use $\|b\|_1\le\sqrt n B$ to obtain
+\eqref{eq:perm-taylor}.
+\end{proof}
+
+\paragraph{Choice of radius.}
+Set $s=q+1$ and
+\[
+ \rho=\min\left\{\frac1{8B},\;
+      \frac{(8\sqrt n B)^{-1/s}}{16\sqrt{s}\sqrt p}\right\}.
+\]
+Then swaps within a group change the original output by at most
+$4B\rho\le1/2$, giving exact Boolean invariance under all such swaps.
+The Taylor error in \eqref{eq:perm-taylor} is at most $1/8$.
+If the original output has signed margin at least $1/2$ on the full cube,
+then the permutation average has the same margin, and the approximating
+function $P$ has signed margin at least $3/8$ on every input.
+Moreover
+\[
+ \rho^{-2}\le C_{n,q}\left(B^2+pB^{2/(q+1)}\right),
+\]
+where $C_{n,q}$ is a constant depending only on the two fixed integers.

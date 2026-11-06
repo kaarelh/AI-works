@@ -1,0 +1,262 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsthm,mathtools,geometry,hyperref,microtype}
+\geometry{margin=1in}
+\setlength{\emergencystretch}{1em}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\newcommand{\sgn}{\operatorname{sign}}
+\title{Subexponential online mistake bounds for narrow isotropic Bayesian tanh networks}
+\author{Dmitry Vaintrob \and Kaarel H\"anni \and ChatGPT-6 Astra}
+\date{November 2026}
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue,
+ pdftitle={Subexponential online mistake bounds for narrow isotropic Bayesian tanh networks},
+ pdfauthor={Dmitry Vaintrob; Kaarel Hanni; ChatGPT-6 Astra}}
+\begin{document}
+\maketitle
+\begin{abstract}
+We study Bayesian prediction by a scalar tanh network on the Boolean cube, with independent Gaussian weights, equal variances among the first-layer coordinates, an absolute output margin at every input, and exact conditioning on revealed labels. In the strong-prior limit, the total number of mistakes under an arbitrary nonanticipating input sequence is controlled by the number of exact Gaussian symmetry orbits below the target's minimum affine margin cost. If that cost is $K$, we prove an upper bound $\exp(O(K^{1/3}\log(K+1)))[1+K\log(d+2)]$ on cumulative posterior error probabilities. It applies to posterior sampling, posterior majority, and a fixed confidence criterion, at every fixed scalar depth. For one-neuron targets with all weights bounded by one this is $\exp(O(d^{1/3}\log d))$; for the AND of all $d$ inputs it is $\exp(O(d^{2/3}\log d))$. Thus neither target class admits $\exp(\Omega(d))$ expected sampled mistakes, or that many majority or confidence failures, in this scalar architecture with the exact isotropic prior. A second argument covers every fixed learner width $n$ at one hidden layer, for depth-two targets with a width-one implementation whose weights are at most one in absolute value. Its budget is $\exp(O_n(d^{n/(n+2)}\log^4(d+2)))$. These bounds are not polynomial or uniform in growing learner width. The proof uses coefficient separation, low-dimensional packing, and exact equality of function masses within symmetry orbits; it does not assume integer minimum energies or uniformity across a whole energy level.
+\end{abstract}
+
+\section{The learner and the question}
+A polynomial sample bound for independent training examples does not itself bound all the mistakes made when examples arrive in an arbitrary order. The latter question is especially delicate when a strong prior successively favors different minimum-energy functions. A large number of nearly tied but distinct energies can matter, and equal energy alone does not imply equal Bayesian mass.
+
+We examine this question for an exact isotropic Gaussian prior in the scalar architecture. Our conclusion is an upper bound: the target classes specified below cannot incur exponentially many expected sampled mistakes, majority errors, or confidence failures as a function of input dimension. A polynomial upper bound, or a superpolynomial lower bound below our upper bound, remains open for these target classes. Section~\ref{sec:fixed-width} separately extends the result to every fixed hidden width at depth two, by encoding higher moments of networks averaged over exact input symmetries.
+
+Fix an input dimension $d\ge1$ and a depth $L\ge2$. There are $L-1$ hidden tanh neurons, one at each hidden layer, no separate internal biases, and one linear output. Write
+\begin{align}
+ h_1(x)&=\tanh(a\cdot(1,x)),\\
+ h_j(x)&=\tanh(v_jh_{j-1}(x))\quad(2\le j\le L-1),\\
+ z(x)&=b h_{L-1}(x),\qquad x\in X=\{-1,1\}^d.
+\end{align}
+For $L=2$ the internal weights $v_j$ are absent. Independently sample
+\[
+ a_i\sim N(0,\sigma^2/d)\quad(0\le i\le d),\qquad
+ v_j,b\sim N(0,\sigma^2).
+\]
+Before training, condition on the global event $|z(x)|>1/2$ for every $x\in X$. After each revealed label, condition on agreement with that label. All conditioning events considered below have positive probability because a strict-margin target implementation exists. The \emph{strong-prior limit} sends $\sigma$ to zero at fixed $d,L$, after conditioning on each history.
+
+The target $f:X\to\{-1,1\}$ is fixed. At round $t$, choose $x_t$ before the fresh posterior draw, make a prediction, and then reveal $f(x_t)$. The query may depend on all past queries, labels, and predictions. Let
+\[
+ q_t=\Pp\{\sgn z(x_t)\ne f(x_t)\mid\text{revealed history}\}.
+\]
+Posterior sampling draws a fresh classifier each round. Posterior majority chooses the more probable label, with any fixed tie convention. A strict-$2/3$ confidence failure means that the correct label has probability at most $2/3$. These are different prediction criteria, but the same bound on $\sum_tq_t$ controls all three.
+
+Every represented Boolean function is an affine threshold function. Its full-cube affine margin cost is
+\begin{equation}\label{eq:Q}
+ Q(g)=\min\left\{\|a\|_2^2:
+ g(x)a\cdot(1,x)\ge1\text{ for every }x\in X\right\}.
+\end{equation}
+The minimum exists and is unique. It is at least one: averaging the squared scores of a unit-margin representative over the cube gives $\|a\|^2\ge1$.
+
+\section{Main bound}
+Fix $K\ge Q(f)$ and define
+\begin{align}
+ p&=d+1,& B&=\lceil K\rceil,&
+ R&=\min\{p,\lfloor(3K)^{1/3}\rfloor\},\\
+ J&=\sum_{r=1}^R[B(1+K)]^r,&
+ T&=J[1+B\log(2p)].&&\label{eq:budget}
+\end{align}
+All logarithms are natural.
+
+\begin{theorem}\label{thm:main}
+For every $\beta>0$ there is $\sigma_0>0$ such that, for every $0<\sigma<\sigma_0$ and every nonanticipating input process,
+\begin{equation}\label{eq:main}
+ \sum_{t\ge1}q_t\le T+\beta2^d
+\end{equation}
+pathwise. This single scale threshold works for all histories, input orders, and time horizons. Consequently, with $A=T+\beta2^d$,
+\begin{enumerate}
+\item the expected total posterior-sampling mistakes are at most $A$;
+\item the total posterior-majority mistakes are at most $2A$;
+\item the total strict-$2/3$ confidence failures are at most $3A$;
+\item for every $\delta\in(0,1)$, posterior-sampling mistakes $M$ satisfy
+\[
+ \Pp\{M>(e-1)A+\log(1/\delta)\}\le\delta.
+\]
+\end{enumerate}
+The same conclusions with $\beta=0$ hold for every simultaneous subsequential strong-prior limit of the posteriors at all realizable label histories. In particular,
+\begin{equation}\label{eq:asymptotic}
+ T\le \exp\bigl(O(K^{1/3}\log(K+1))\bigr)
+       [1+K\log(d+2)].
+\end{equation}
+The constants in this last inequality are absolute. Depth affects the required scale $\sigma_0$, not this budget.
+\end{theorem}
+
+The theorem does not assert that the posterior limit is unique. There are finitely many partial label assignments, so every sequence of positive scales has a subsequence along which all their posteriors converge simultaneously. The stated bound applies to each resulting prediction system.
+
+\begin{corollary}[Bounded-weight scalar targets]\label{cor:one}
+Suppose $f$ has a scalar implementation at the specified depth with every weight of absolute value at most one and signed output margin greater than $1/2$ on the full cube. Then $Q(f)\le d+1$, and the strong-prior bounds in Theorem~\ref{thm:main} are
+\[
+ \exp\bigl(O(d^{1/3}\log(d+2))\bigr).
+\]
+For sufficiently small positive scale the same bound, plus one, follows by choosing $\beta=2^{-d}$.
+\end{corollary}
+
+This includes odd majority at $L=2$, with implementation $z(x)=\tanh(\sum_i x_i)$ and teacher width one. At large scalar depth the bounded-weight premise may be impossible because repeated tanh contraction reduces the output; the corollary is conditional on the stated implementation, rather than an assertion that such targets exist at every scalar depth.
+
+\begin{corollary}[AND]\label{cor:and}
+Let $f(x)=+1$ exactly when every input coordinate is $+1$. Then
+\[
+ Q(f)=d+(d-1)^2=d^2-d+1.
+\]
+At every fixed scalar depth, the exact isotropic strong-prior learner has cumulative posterior error at most
+\[
+ \exp\bigl(O(d^{2/3}\log(d+2))\bigr)
+\]
+on every nonanticipating input sequence, with the corresponding sampling, majority, and confidence consequences. This rules out $\exp(\Omega(d))$ expected sampled mistakes, majority errors, or confidence failures for this scalar AND learner. It does not assert that scalar width meets a separate bounded-weight teacher-width condition for AND.
+\end{corollary}
+
+\section{Neural energy and affine margin cost}
+The Gaussian energy is
+\[
+ \mathcal E(a,v,b)=d\|a\|^2+\sum_{j=2}^{L-1}v_j^2+b^2.
+\]
+Let $U_g$ be the event $g(x)z(x)>1/2$ for every cube input. Absorb all scalar signs into $a$, using oddness of tanh, so that $v_j,b>0$ without changing energy. For $u>0$, let $H_v(u)$ be the output of the hidden scalar chain at first-layer preactivation $u$. It is positive and strictly increasing in $u$.
+
+\begin{lemma}\label{lem:energy}
+The infimum energy of $U_g$ is
+\begin{equation}\label{eq:phi}
+ E_L(g)=\Phi_{d,L}(Q(g)),\qquad
+ \Phi_{d,L}(Q)=\min_{u>0,\,v_j>0}
+ \left\{dQu^2+\sum_{j=2}^{L-1}v_j^2+
+              \frac{1}{4H_v(u)^2}\right\}.
+\end{equation}
+The minimum is attained and $\Phi_{d,L}$ is strictly increasing on $Q\ge1$. For $L=2$, this specializes to
+\[
+ \Phi_{d,2}(Q)=\min_{u>0}\{dQu^2+\tfrac14\coth^2u\}.
+\]
+Moreover,
+\begin{equation}\label{eq:rate}
+ \lim_{\sigma\downarrow0}\sigma^2\log\Pp_\sigma(U_g)
+ =-E_L(g)/2.
+\end{equation}
+\end{lemma}
+\begin{proof}
+An affine representative with minimum signed preactivation $u$ has squared norm at least $u^2Q(g)$. Conversely, scale the optimizer in~\eqref{eq:Q} by $u$ and choose $b=1/(2H_v(u))$ to achieve weak output margin; increasing $b$ slightly achieves strict margin. This proves the infimum formula.
+
+On a bounded objective sublevel, $u$, every $v_j$, and $b=1/(2H_v(u))$ are bounded above. No $u$ or $v_j$ can approach zero on that sublevel: continuity of the finite hidden chain would then send $H_v(u)$ to zero, contradicting the bound on $b$. Thus a minimizing sequence has an interior convergent subsequence, and the minimum is attained. At a minimizer for $Q_2>Q_1$, the difference between the two objective values is $d(Q_2-Q_1)u^2>0$. Evaluating the $Q_1$ minimum at the same point proves strict monotonicity.
+
+Finally, the Gaussian density has exponent $-\mathcal E/(2\sigma^2)$. The standard finite-dimensional Gaussian small-noise upper bound for a closed set and lower bound for an open set give~\eqref{eq:rate}. Their energy infima agree here: the closure of $U_g$ is exactly its weak-margin version, since multiplying its readout by $1+\epsilon$ approaches every weak-margin parameter from within $U_g$.
+\end{proof}
+
+Let $\mathcal A=\{g:Q(g)\le Q(f)\}$. Finiteness of the represented Boolean class and strict monotonicity imply
+\begin{equation}\label{eq:tail}
+ \frac{\Pp_\sigma(U_{\mathcal A^c})}{\Pp_\sigma(U_f)}\longrightarrow0.
+\end{equation}
+After any history consistent with $f$, the posterior denominator is at least the raw mass of $U_f$. Thus, at one sufficiently small scale, posterior mass outside $\mathcal A$ is at most $\beta$ uniformly over all histories. Global-margin normalization cancels in this ratio.
+
+\section{Coefficient separation and a small orbit count}
+Extend $g$ to the homogeneous odd threshold function on $\{-1,1\}^p$ given by
+\[
+ F(y)=y_0g(y_1/y_0,\ldots,y_d/y_0).
+\]
+Its unit-margin constraints are exactly the original affine constraints and their antipodes.
+
+\begin{lemma}[Separated optimal magnitudes]\label{lem:separation}
+In the unique minimum-norm unit-margin representative of $F$, each nonzero absolute coefficient is at least one, and any two distinct nonzero absolute coefficients differ by at least one. If their distinct values are $\lambda_1<\cdots<\lambda_r$, with multiplicities $n_j$, then
+\[
+ \lambda_j\ge j,\qquad
+ Q(g)=\sum_jn_j\lambda_j^2\ge r^3/3,
+ \qquad \sum_jn_j\le Q(g).
+\]
+\end{lemma}
+\begin{proof}
+An inessential coordinate can be removed by averaging the two constraints differing only in that coordinate. Its optimal coefficient is therefore zero. An essential coordinate has a cube edge with oppositely labeled endpoints. Their unit-margin constraints force the corresponding coefficient to have absolute value at least one.
+
+Orient two nonzero coefficients positively by coordinate sign flips. If their distinct values differ by less than one, swapping their input coordinates changes every score by less than two. Opposite labels with unit margin would require a score difference at least two, so the function is invariant under that swap. The swapped coefficient vector is another feasible representative. Averaging the two strictly decreases squared norm, contradicting optimality. This proves separation. Now $\lambda_j\ge j$, and
+$\sum_{j=1}^rj^2\ge r^3/3$ proves the remaining assertions.
+\end{proof}
+
+A symmetry orbit means an orbit of functions under signed permutations of the $p$ augmented coordinates. This is larger than ordinary input permutation symmetry, because the augmented constant coordinate can be exchanged with an input coordinate.
+
+\begin{proposition}[Orbit count by packing]\label{prop:orbits}
+The functions of cost $Q(g)\le K$ occupy at most $J$ symmetry orbits, with $J$ from~\eqref{eq:budget}. Each such orbit has at most $(2p)^B$ functions.
+\end{proposition}
+\begin{proof}
+Orient the unique minimum representative positively and sort its distinct coefficient magnitudes. By Lemma~\ref{lem:separation}, it has some $r\le R$ groups, with positive multiplicities $n_1,\ldots,n_r\le B$ and support size $s=\sum_jn_j\le K$. Fix this multiplicity list. Its function orbits have canonical representatives with positive magnitudes $\lambda_1<\cdots<\lambda_r$, each repeated according to the list, and the remaining coordinates zero. Distinct orbits give distinct canonical Boolean functions.
+
+Associate to a canonical representative the vector
+\[
+ u=(\sqrt{n_1}\lambda_1,\ldots,\sqrt{n_r}\lambda_r)\in\R^r,
+ \qquad \|u\|\le\sqrt K.
+\]
+For two distinct canonical functions there is an augmented cube point where their labels differ. If $c_j$ is the sum of its input signs in group $j$, then $|c_j|\le n_j$, and the two unit-margin scores differ by at least two. For the two vectors $u,u'$,
+\[
+ 2\le\left|\sum_j\frac{c_j}{\sqrt{n_j}}(u_j-u'_j)\right|
+ \le\sqrt{s}\,\|u-u'\|\le\sqrt K\,\|u-u'\|.
+\]
+These vectors are therefore $2/\sqrt K$ separated in the radius-$\sqrt K$ ball. Disjoint open balls of radius $1/\sqrt K$ about them fit into the radius-$(\sqrt K+1/\sqrt K)$ ball. Comparing volumes bounds their number by $(1+K)^r$.
+
+There are at most $B^r$ multiplicity lists of length $r$. Sum the product $B^r(1+K)^r$ over $1\le r\le R$ to obtain $J$. Finally a coefficient multiset with support $s$ has at most $(2p)^s$ signed placements in $p$ positions. Since $s\le B$, this bounds each orbit size.
+\end{proof}
+
+An alternative elementary count avoids volume comparison. Round every optimal magnitude to a multiple of $1/(4B)$. The worst score perturbation is at most $s/(8B)\le1/8$, so all signs are preserved. There are at most $\lceil4B^{3/2}\rceil$ rounded magnitudes and $B$ possible multiplicities per group. The rounded list determines the function orbit, giving the slightly weaker count $\sum_{r\le R}[B\lceil4B^{3/2}\rceil]^r$ with the same asymptotic exponent. Neither count assumes integer minimum energies or enumerates the active constraints of the margin quadratic program.
+
+\section{Exact Gaussian symmetry and online elimination}
+Let $S$ be a signed permutation matrix on $\R^p$. For each $x\in X$, write
+\[
+ S^\top(1,x)=\epsilon_S(x)(1,\tau_S(x)),\qquad
+ \epsilon_S(x)\in\{-1,1\}.
+\]
+The map $\tau_S$ is a cube bijection: $S$ permutes antipodal pairs of augmented cube vertices. Oddness of every hidden layer gives
+\[
+ z_{Sa,v,b}(x)=\epsilon_S(x)z_{a,v,b}(\tau_S(x)).
+\]
+The transformation $a\mapsto Sa$ preserves the raw isotropic Gaussian law and the global absolute-margin event. It maps whole function events bijectively to their transformed events. Consequently all functions in one symmetry orbit have exactly equal prior mass at every positive scale. After exact label conditioning, surviving members of that orbit remain equiprobable. No assumption is made about the relative masses of different orbits, even at equal energy.
+
+\begin{lemma}[Shrinking uniform blocks]\label{lem:blocks}
+Partition a finite hypothesis class into fixed blocks. Suppose a consistent prediction distribution is uniform inside the surviving portion of each block. Its weights on different blocks may change arbitrarily with the history. A block of initial size $m$ contributes at most $1+\log m$ to the sum of posterior error probabilities on any input sequence.
+\end{lemma}
+\begin{proof}
+If the block has $n>0$ survivors and the revealed label eliminates $a$ of them, its error contribution is at most $a/n$. If $a<n$, then
+\[
+ \frac an\le\log n-\log(n-a).
+\]
+These terms telescope until the block is exhausted or the sequence ends. Its final exhausting deletion contributes at most one. The estimate is pathwise and does not depend on the block's varying total posterior mass.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:main}]
+By~\eqref{eq:tail}, choose a scale threshold so that the posterior outside $\mathcal A$ has mass at most $\beta$ after every history. The class $\mathcal A$ is a union of at most $J$ exact Gaussian symmetry orbits, each of size at most $(2p)^B$. Lemma~\ref{lem:blocks} bounds their combined cumulative contribution by $T$. Hypotheses outside $\mathcal A$ contribute at most $\beta$ per first appearance. They contribute zero on repeats because all surviving functions agree with the previously revealed label. There are at most $2^d$ first appearances, proving~\eqref{eq:main}.
+
+For sampled mistake indicators $X_t$, conditional on the past and current query,
+\[
+ \E[e^{X_t}\mid\text{past},x_t]
+ =1+(e-1)q_t\le e^{(e-1)q_t}.
+\]
+The resulting exponential supermartingale gives the stated tail at each finite horizon, hence for total mistakes by monotone convergence. Tonelli's theorem gives the expected-mistake bound. A majority mistake requires $q_t\ge1/2$, while a strict-$2/3$ confidence failure requires $q_t\ge1/3$.
+
+In a simultaneous posterior limit at all realizable histories, the outside mass is zero and equality among surviving orbit members persists. Apply the same pathwise block argument with $\beta=0$. Finally $J\le R[B(1+K)]^R$, $R=O(K^{1/3})$, and $B(1+K)=O((K+1)^2)$, proving~\eqref{eq:asymptotic}.
+\end{proof}
+
+\input{upper-moment-section.tex}
+
+\section{Target costs and limitations}
+\begin{proof}[Proof of Corollary~\ref{cor:one}]
+With all scalar weights bounded by one, the absolute final output is no larger than $|\tanh(a\cdot(1,x))|$. Thus every initial affine score has absolute value greater than $u=\operatorname{arctanh}(1/2)>1/2$. Extend to the augmented homogeneous function and delete inessential coordinates by averaging signed-margin constraints. Each remaining coefficient has magnitude greater than $u$, from an edge with opposite labels, and at most one.
+
+After orienting coefficients positively, any two differ by less than $1-u<u$. Swapping their coordinates changes any score by less than $2u$, and so cannot change a label. The Boolean function on its active augmented coordinates is therefore symmetric, monotone, and odd. It is unweighted majority on an odd number $s$ of coordinates: symmetry and monotonicity make it a cardinality threshold, and oddness places the threshold at the midpoint and excludes even $s$. Unit coefficients give margin one, and essentiality gives the reverse lower bound, so $Q(f)=s\le p$.
+\end{proof}
+
+\begin{proof}[Proof of Corollary~\ref{cor:and}]
+By permutation symmetry and uniqueness, the minimizing input coefficients of AND are all equal, say $t$. Let the bias be $c$. Comparing the all-positive input with an input having exactly one negative coordinate gives $t\ge1$. The latter input imposes $c\le-1-(d-2)t$, while the former imposes $c\ge1-dt$.
+
+For $d\ge2$, the minimum permitted absolute bias at a fixed $t\ge1$ is $1+(d-2)t$. Hence
+\[
+ Q(f)\ge dt^2+[1+(d-2)t]^2\ge d+(d-1)^2.
+\]
+Equality is attained by $t=1,c=1-d$. For $d=1$ the target is a dictator and has cost one, agreeing with the formula. Substitute this cost into Theorem~\ref{thm:main}.
+\end{proof}
+
+These results concern the actual posterior with exact coordinate-variance symmetry. Breaking that symmetry can split a large equal-mass family into distinct energy levels; the present proof then no longer applies. The orbit-count estimates proved here are subexponential but not polynomial. Exact symmetry alone has not supplied a polynomial mistake bound.
+
+The architectural restrictions remain substantive. The scalar theorem allows arbitrary fixed depth; the wider-network theorem allows every fixed width but only one hidden layer and a specified simple target class. Multiple hidden layers and widths growing with dimension introduce additional issues. An arbitrary-width polynomial upper bound, or a bounded-resource exponential counterexample in that regime, remains unresolved by this paper.
+
+\paragraph{Verification status.} The results have conventional proofs. They are not Lean formalized. The quantitative orbit count strengthens an earlier research argument based on active-constraint enumeration; all ingredients needed for the present proof are included above.
+\end{document}

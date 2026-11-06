@@ -1,0 +1,117 @@
+\section{An all-width consequence for linear activations}
+\label{sec:linear}
+
+The width qualification can be removed if the activation is changed to
+$\phi(s)=s$. This is a separate result for a deep linear network; it is not
+an extension to a wider tanh network. We retain the Boolean domain, the
+full-cube output-margin restriction, exact label conditioning, and the
+usual layer-scaled independent Gaussian prior.
+
+Let all $L-1$ hidden layers have any common width $N\ge1$. Write
+\[
+ z_\theta(\xi)=vW^{L-1}\cdots W^1(1,\xi)
+              =A_\theta\mathbin{\cdot}(1,\xi),
+\]
+where $W^1\in\mathbb R^{N\times(d+1)}$, the intermediate matrices are
+$N\times N$, and $v\in\mathbb R^{1\times N}$. Independently, the entries
+have variances
+\[
+ \operatorname{Var}(W^1_{ij})=\frac Nd\sigma^2,\qquad
+ \operatorname{Var}(W^j_{i\ell})=\sigma^2\quad(2\le j<L),\qquad
+ \operatorname{Var}(v_i)=\frac1N\sigma^2.
+\]
+The quadratic energy is
+\[
+ \kappa_N(\theta)=\frac dN\|W^1\|_F^2+
+       \sum_{j=2}^{L-1}\|W^j\|_F^2+N\|v\|_2^2.
+\]
+For $N=1$ this agrees with the scalar prior used in the main theorem.
+
+\begin{proposition}[Exponential mistakes at every sufficient width for
+linear activations]\label{prop:linear-all-width}
+For the target and fixed input permutation in
+Theorem~\ref{thm:main}, the same $T_k=2^k-k-1$ forced rounds occur in the
+strong-prior limit of this deep linear learner, at every fixed
+$L\ge2$ and every fixed width $N\ge1$. All three conclusions of that
+theorem hold at every sufficiently small positive scale; the scale
+threshold may depend on $N$ as well as $k,L,\eta$.
+
+At depth $L=k+2$, the target has a strict-margin linear-network
+implementation with width one and coefficient bound two. Its
+bounded-width-and-weight complexity for linear activation is exactly
+$C_L^{\mathrm{lin}}(f)=2$. Hence the lower bound holds, in particular,
+for every learner width $N\ge C_L^{\mathrm{lin}}(f)$, with no upper bound
+on $N$.
+\end{proposition}
+\begin{proof}
+For any desired effective affine vector $A$, the exact minimum energy
+of its matrix factorizations is
+\begin{equation}\label{eq:linear-factor-energy}
+ \min_{\theta:A_\theta=A}\kappa_N(\theta)
+       =L\bigl(d\|A\|_2^2\bigr)^{1/L}.
+\end{equation}
+To prove the lower bound, denote the $L$ factors by $M_1=W^1$,
+$M_j=W^j$ for $2\le j<L$, and $M_L=v$, and put
+$c_1=d/N$, $c_L=N$, and $c_j=1$ for the intermediate layers. Matrix norm
+submultiplicativity and arithmetic--geometric mean give
+\[
+ \kappa_N=\sum_{j=1}^L c_j\|M_j\|_F^2
+ \ge L\left(\prod_{j=1}^L c_j\|M_j\|_F^2\right)^{1/L}
+ \ge L\bigl(d\|A\|_2^2\bigr)^{1/L}.
+\]
+Equality is attained by balanced rank-one factors. For $A\ne0$, choose
+one unit vector $e\in\mathbb R^N$ and set
+\[
+ W^1=s_1e\frac{A}{\|A\|_2},\qquad
+ W^j=s_j ee^\top\ (2\le j<L),\qquad v=s_Le^\top,
+\]
+where
+\[
+ r=(d\|A\|_2^2)^{1/(2L)},\qquad s_j=r/\sqrt{c_j}.
+\]
+Their product is $A$, since
+$\prod_j s_j=r^L/\sqrt d=\|A\|_2$, and each energy summand is $r^2$.
+For $A=0$, zero factors give equality as well.
+
+The least squared norm of an affine vector with signed output margin
+at least $1/2$ for a threshold function $g$ is $Q(g)/4$.
+Equation~\eqref{eq:linear-factor-energy} therefore yields the exact
+function energy infimum
+\[
+ E_{N,L}^{\mathrm{lin}}(g)
+       =L\bigl(dQ(g)/4\bigr)^{1/L}.
+\]
+This expression is strictly increasing in $Q(g)$ and independent of
+$N$. Strict and weak margins have the same infimum by slightly
+increasing the final readout. The Gaussian small-noise argument from
+Lemma~\ref{lem:energy} applies to these finite-dimensional matrix
+parameters: the strict function cell is open, its closure is the
+weak-margin cell, and the energy is coercive. Thus the posterior
+concentrates on the unique minimum-$Q$ consistent function after each
+specified history. Lemma~\ref{lem:minimum} and the same finite-round
+union bound prove the claimed mistake statements at every fixed width.
+No interchange of the width and small-scale limits is needed.
+
+For the teacher, divide $A_{2^k-1}$ by $2^k$ in the first layer, use
+$k$ further hidden scalar layers of weight two, and use readout weight
+one. There are $k+1$ hidden layers, so $L=k+2$, and the final output is
+exactly $A_{2^k-1}$, with absolute margin at least one. All weights are
+bounded by two. Zero-padding to width two proves
+$C_L^{\mathrm{lin}}(f)\le2$.
+
+If this complexity were one, the product of the scalar downstream
+weights would have absolute value at most one. A strict output margin
+above $1/2$ would then force a first affine margin $\rho>1/2$.
+Normalize that affine vector by $\rho$ and apply the diagonal and carry
+inequalities of Lemma~\ref{lem:minimum}. They force its original
+$w_{k-1}$ to exceed $2^{k-2}>1$, contradicting the coefficient bound
+one. Hence $C_L^{\mathrm{lin}}(f)=2$.
+\end{proof}
+
+This linear-activation result gives a polynomial-iid versus
+exponential-online separation even at arbitrarily large learner widths:
+the represented Boolean functions are still exactly the affine
+threshold functions, so the iid argument in the preceding section is
+unchanged. For tanh, additional neurons introduce nonlinear classifiers,
+and the factorization identity above no longer applies. The result
+with tanh and $N\ge C_L(f)$ therefore remains open.
