@@ -2,6 +2,8 @@
 
 [Paper](paper.pdf) · [LaTeX source](source/paper.tex) · [Verification](verification/README.md)
 
+[Generic covariance asymmetries](GENERIC-VARIANCES.md): a companion proof permits almost every fixed-size small perturbation across dimensions, with a longer calibration prefix.
+
 **Authors:** ChatGPT-6 Astra, Kaarel Hänni, and Dmitry Vaintrob (alphabetical order).
 
 For every odd dimension `d >= 17`, ordinary majority has a Boolean circuit of size `Θ(d)` and a one-hidden-unit tanh teacher with every weight at most one. Nevertheless, an arbitrarily small explicit coordinate asymmetry in the first-layer Gaussian covariance gives a fixed input permutation forcing at least `2^floor(d/8)` online mistakes in the strong-prior limit **at every learner width `N >= 1`**. At sufficiently small positive variance, all designated mistakes occur with arbitrarily high probability. The result covers posterior sampling, posterior-label majority, and the strict `2/3` confidence criterion.

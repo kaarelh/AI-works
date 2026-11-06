@@ -21,6 +21,8 @@ The first-layer variances are unequal. **This is not a resolution for the exactl
 
 Final PDF: 15 pages, SHA-256 `bfc57e65a638f5f589ce18bbe08ac69aae7623322a6de1d56c0a7306ad5cf394`. Final source: SHA-256 `c95fda1b984ef3153b1ec95f41e209855da5ca7f5b8c5c89f89ba68e8cc8a9f1`. Two independent reviews check that source snapshot, including the rigidity constants, posterior argument, calibration, uniform scale, IID comparison, and exponent corollary. A clean isolated three-pass build has matching extracted PDF text and no LaTeX warnings or unresolved references.
 
+A separately checked [generality companion](../works-in-progress/online-mistakes/anisotropic-allwidth/GENERIC-VARIANCES.md) replaces the dyadic profile by generic bounded coordinate asymmetry. Sorting coordinates into consecutive blocks gives an elementary uniform outsider gap whenever the largest precision is less than twice the smallest. It uses a full block-constant calibration of `2^q` inputs and the same `9^((q+1)/2)` projection-fiber queries. Independent continuous precision perturbations in a fixed interval `[1,1+η]`, `0<η<1`, satisfy the required distinct subset sums almost surely, simultaneously over the countable family of dimensions. The primary agent and an independent agent checked the support characterization, interval-width inequality, every-width energy comparison, exact count, genericity, and scaling/IID corollaries. This Markdown companion is outside the unchanged PDF and is not Lean formalized.
+
 ## Two explicitly restricted nonlinear variants
 
 [Paper and source](../works-in-progress/online-mistakes/wide-nonlinear-variants/) · [independent reviews and build record](../works-in-progress/online-mistakes/wide-nonlinear-variants/verification/)
