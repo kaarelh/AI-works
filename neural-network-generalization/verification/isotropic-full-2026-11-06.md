@@ -2,7 +2,25 @@
 
 Date: 6 November 2026.
 
-This update adds three independently reviewed manuscripts. These are conventional mathematical proofs, not Lean formalizations. The first two prove online lower bounds under different, explicitly stated assumptions; neither proves the unchanged isotropic tanh result.
+This research session adds six independently reviewed manuscripts. These are conventional mathematical proofs, not Lean formalizations. The online lower bounds have different, explicitly stated assumptions; none proves the unchanged isotropic result for ordinary tanh with the initial global margin restriction.
+
+## Bounded threshold residual: every width and short calibration
+
+[Paper and package](../works-in-progress/online-mistakes/isotropic-residual-threshold/) · [Detailed verification](../works-in-progress/online-mistakes/isotropic-residual-threshold/verification/README.md)
+
+For the fixed bounded activation sign(t)+c tanh(t), with any fixed 0<c<=1, the unchanged isotropic Gaussian prior makes exponentially many online mistakes after linear calibration at every width in the strong-prior limit. The target has Boolean circuit size Theta(k) and a width-one teacher with unit-bounded weights. The theorem covers the actual posterior, including mixtures. It also gives direct gamma>1 limits and one sufficiently small positive mean-field prefactor that works at every width. The same learner has polynomial IID sample complexity.
+
+The proof first establishes the exact all-width energy profile for sign(t)+t by KKT averaging and Cauchy--Schwarz. A tangent dual proves the bounded version, including all nonlinear competitors. A convex-hull certificate puts every nonthreshold function above energy 1/4, while every threshold function has strictly smaller optimal energy. A product-box Gaussian estimate handles the activation's discontinuity and the growing parameter dimension without interchanging limits. Two independent final-source reviews and a root review checked the statements, proofs, and quantifiers. The jump at zero is a substantive assumption; ordinary tanh is not covered.
+
+## Arbitrarily small jumps added to tanh
+
+[Paper and package](../works-in-progress/online-mistakes/isotropic-small-jump-tanh/) · [Detailed verification](../works-in-progress/online-mistakes/isotropic-small-jump-tanh/verification/README.md)
+
+For every fixed epsilon>0, the bounded activation tanh(t)+epsilon sign(t), uniformly epsilon-close to tanh, gives an unchanged-prior isotropic counterexample at every width. The target has Boolean circuit size Theta(k) and a unit-bounded teacher of width ceil(1/epsilon). Dimension must be sufficiently large depending on epsilon. Initial calibration takes O(k^2) examples, and each of the exponentially many designated queries has O(k) accompanying examples.
+
+The proof establishes an exact scalar energy minimum from an active affine KKT certificate with second-moment matrix at most 2I. An explicit pairwise-independent selector calibration supplies that certificate. A compact relaxation on neuron distributions, including possible jump values at zero, yields a strictly positive correct-query energy gap uniform over every width, even before the next calibration block is complete. A separate layer-cake/Hoeffding compression lemma for bounded monotone activations proves polynomial IID learning without assuming that all low-energy functions are thresholds. Independent reviews checked these components and the assembled final source; the root reviewed the dual, compactness, probability comparison, and compression proofs as well.
+
+The theorem retains a fixed nonzero jump. It proves neither a counterexample for ordinary tanh nor stability under continuous smoothing. Its covariance condition is a verified certificate of the chosen histories, not a restriction added to the neural prior.
 
 ## Threshold activation with the unchanged prior
 
@@ -30,8 +48,20 @@ For even parity degree r at least four, the exact all-width minimum of the uncha
 
 This is an exact energy and representation-width result. It makes no exponential online-mistake, sample-complexity, or approximate-energy claim.
 
+## Mean-field tanh with training-only margins
+
+[Paper and package](../works-in-progress/online-mistakes/meanfield-without-global-support/) · [Detailed verification](../works-in-progress/online-mistakes/meanfield-without-global-support/verification/README.md)
+
+For ordinary shallow tanh at fixed positive mean-field prefactor, omit the initial absolute-margin restriction at unobserved inputs and condition only on strict training margins. This changed learner has a polynomial total-mistake bound at every sufficiently large width, uniformly over arbitrary input orders, including adaptive orders. At fixed teacher weight bound and prefactor, the count is O(d^4+C^4). The result covers actual posterior confidence failures and posterior sampling, as well as test-output thresholds strictly below the training margin.
+
+The proof uses a finite-dimensional Cramer large-deviation theorem for the complete output vector, identifies the unique relative-entropy projection onto the training constraints, and charges every limiting bad prediction to a definite increase in relative entropy. A Gaussian mixture around the bounded teacher supplies an explicit polynomial budget. Independent reviews checked concentration, entropy identities and constants, the teacher certificate, finite-history uniformity, and adaptive sampling. The width threshold is unquantified. This is the joint scaling sigma_N=tau/sqrt(N) at fixed tau, not a bound uniform in a subsequent cold limit; the nonconvex global-margin support would invalidate the projection argument.
+
+## Research records for the unresolved continuous-activation case
+
+The [research notes](../works-in-progress/online-mistakes/isotropic-research-notes/) preserve independently checked obstructions to several proof strategies. In particular, a reduction to successive minimum-norm affine separators cannot give the desired canonical shallow counterexample with a polynomial bounded teacher. These are statements about specific proof mechanisms, not a general online upper bound for NNbayes.
+
 ## Publication checks
 
-Each package records source and PDF hashes, an isolated three-pass rebuild with matching extracted PDF text, resolved references, representative-page visual inspection, and the alphabetical author order with its explanatory footnote. The catalog and collection links were updated without changing the existing main-result classifications. The collection inventory/link/checksum verifier passes for all 79 manuscripts. No pre-existing paper source or Lean source was changed by this update.
+Each package records source and PDF hashes, an isolated three-pass rebuild with matching extracted PDF text, resolved references, representative-page visual inspection, and the alphabetical author order with its explanatory footnote. The catalog and collection links were updated without changing the existing main-result classifications. The collection inventory/link/checksum verifier passes for all 82 manuscripts. No pre-existing paper source or Lean source was changed by this update.
 
 The unrelated growing-depth norm-ball formalization published concurrently on main was retained when updating this checkout. The collection checksum manifest includes those files as well.

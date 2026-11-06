@@ -1,0 +1,203 @@
+\section{An exact energy reduction under a covariance certificate}
+
+Consider a nonempty linearly separable labeled set, and put
+$z_i=y_i\bar x_i$. Let $a$ be its minimum-norm affine unit-margin
+separator and $Q=\|a\|^2$. Suppose there are probabilities $\rho_i$ on
+active constraints such that
+\begin{equation}\label{eq:certificate}
+ z_i\cdot a=1\quad(\rho_i>0),\qquad
+ \sum_i\rho_i z_i=a/Q,\qquad
+ C:=\sum_i\rho_i z_i z_i^T\preceq2I.
+\end{equation}
+The first two conditions are the usual normalized optimality
+certificate. The covariance condition is an additional assumption;
+it will be verified explicitly for the histories used below.
+It also implies $Ca=a/Q$.
+
+Write $b_j=Nv_j$. The energy and output are
+\begin{equation}\label{eq:energy}
+ E_N=\frac1N\sum_j(d\|u_j\|^2+b_j^2),\qquad
+ F(x)=\frac1N\sum_j b_j\phi_\epsilon(u_j\cdot\bar x).
+\end{equation}
+
+\begin{theorem}[Exact energy and equality]\label{thm:exact}
+Assume \eqref{eq:certificate} and
+$d\ge4\max\{1,\epsilon^{-6}\}$. At every hidden width $N\ge1$, the
+minimum energy over networks satisfying the training margins
+$y_iF(x_i)\ge1/2$ is
+\begin{equation}\label{eq:profile}
+ J_d(Q)=\min_{r\ge0}
+ \left\{dQr^2+\frac1{4(\epsilon+\tanh r)^2}\right\}.
+\end{equation}
+The unique minimizing radius is positive and satisfies
+\begin{equation}\label{eq:stationarity}
+ 4dQr(\epsilon+\tanh r)^3=\operatorname{sech}^2r.
+\end{equation}
+The profile is strictly increasing in $Q$ and is below
+$1/(4\epsilon^2)$. It is attained by identical neurons
+\[
+ u_j=ra,\qquad b_j=\frac1{2(\epsilon+\tanh r)}.
+\]
+At equality every neuron has this form or has both signs reversed.
+Consequently the entire output function is unique. The same assertions
+hold for arbitrary probability distributions over neurons in place of
+the uniform distribution on $N$ neurons.
+\end{theorem}
+
+\begin{proof}
+Put $h=\epsilon+\tanh r$. The scalar objective has derivative
+$2dQr-\operatorname{sech}^2r/(2h^3)$, which is strictly increasing
+from a negative value to a positive value. This proves the existence
+and uniqueness of the positive optimum and \eqref{eq:stationarity}.
+Define
+\[
+ \beta=\operatorname{sech}^2r,\qquad
+ \alpha=\epsilon+\tanh r-r\beta,\qquad
+ \lambda=h^{-2},\qquad K=\lambda^2/4,\qquad M=1+\epsilon.
+\]
+Then $0<\alpha\le M$, $0<\beta\le1$,
+$h=\alpha+\beta r$, and $K\le1/(4\epsilon^4)$.
+The inequality $\alpha\ge\epsilon$ follows by differentiating
+$\tanh r-r\operatorname{sech}^2r$, whose derivative is nonnegative.
+Stationarity gives $dQr=K\beta h$, so
+\begin{equation}\label{eq:quadratic-floor}
+ dQ t^2-K(\alpha+\beta t)^2\ge
+ dQr^2-Kh^2=:\zeta=-\frac{\alpha}{4h^3}<0
+ \quad(t\ge0).
+\end{equation}
+Indeed its leading coefficient is
+$dQ-K\beta^2=K\alpha\beta/r>0$ and its minimum is at $t=r$.
+
+For a neuron $u$, decompose $u=ta+w$ with $w\perp a$, and regard
+$s=z_i\cdot u$ as a random variable under $\rho$.
+The active identities imply
+\[
+ \E_\rho s=t,\qquad
+ \operatorname{Var}_\rho(s)=w^TCw\le2\|w\|^2.
+\]
+Since $\sup_s|\tanh''s|<1$, Taylor's theorem gives
+\[
+ |\E_\rho\tanh s-\tanh t|
+ \le\tfrac12\operatorname{Var}_\rho(s)\le\|w\|^2.
+\]
+For $S(u)=\E_\rho\phi_\epsilon(s)$, the threshold part has
+absolute average at most $\epsilon$. Concavity of tanh on the
+positive half-line therefore yields
+\begin{equation}\label{eq:atom-average}
+ |S(u)|\le\epsilon+|\tanh t|+\|w\|^2
+       \le\alpha+\beta|t|+\|w\|^2.
+\end{equation}
+Also $|S(u)|\le M$.
+
+For any readout $b$, complete the square:
+\begin{equation}\label{eq:square}
+ d\|u\|^2+b^2-\lambda bS(u)
+ \ge d\|u\|^2-KS(u)^2.
+\end{equation}
+If $\|u\|^2\ge KM^2/d$, the right side is nonnegative and hence
+strictly greater than $\zeta$. Otherwise set $q=\|w\|^2$ and
+$R_0=\sqrt K M/\sqrt d$. Then $q\le R_0^2$ and
+$|t|\le R_0/\sqrt Q$. By \eqref{eq:atom-average}, the right side of
+\eqref{eq:square} is at least
+\begin{equation}\label{eq:orthogonal-cost}
+ \bigl[dQt^2-K(\alpha+\beta|t|)^2\bigr]
+ +q\bigl[d-2K(\alpha+\beta|t|)-Kq\bigr].
+\end{equation}
+Any unit-margin constraint gives $Q\ge1/(d+1)$, so $dQ\ge1/2$.
+Consequently
+\[
+ 2K(\alpha+\beta|t|)\le2KM(1+\sqrt{2K}).
+\]
+If $0<\epsilon\le1$, this is at most
+$\epsilon^{-4}(1+1/(\sqrt2\epsilon^2))\le2\epsilon^{-6}\le d/2$.
+If $\epsilon\ge1$, use $M\le2\epsilon$ to bound it by
+$\epsilon^{-3}(1+1/(\sqrt2\epsilon^2))\le2\le d/2$.
+Similarly,
+\[
+ Kq\le K^2M^2/d\le
+ \begin{cases}
+ 1/(4d\epsilon^8)\le d/64,&0<\epsilon\le1,\\
+ 1/(4d\epsilon^6)\le d/64,&\epsilon\ge1.
+ \end{cases}
+\]
+Thus the second bracket in \eqref{eq:orthogonal-cost} is at least
+$31d/64>0$. Equations \eqref{eq:quadratic-floor}--\eqref{eq:orthogonal-cost}
+prove the atomwise floor $\zeta$ for every $u,b$.
+
+Averaging over neurons and using the signed training margins gives
+\[
+ E_N\ge\lambda\E_j[b_jS(u_j)]+\zeta
+      \ge\lambda/2+\zeta
+      =dQr^2+\frac1{4h^2}.
+\]
+The cloned construction attains equality: every signed training
+preactivation is at least $r$, and active ones equal $r$.
+The same proof integrates over any neuron probability law with finite
+energy.
+
+Equality forces $w=0$, $|t|=r$, and equality in square completion.
+Thus $u=\pm ra$ and $b=\pm1/(2h)$ with matching signs.
+Oddness of the activation makes all such atoms have the same output.
+Finally, the negative derivative at zero puts the optimum below
+$1/(4\epsilon^2)$. For $Q_1>Q_0$, evaluation at the positive
+minimizer $r_1$ for $Q_1$ gives
+$J_d(Q_1)-J_d(Q_0)\ge d(Q_1-Q_0)r_1^2>0$.
+\end{proof}
+
+\section{A positive energy gap uniform over hidden width}
+
+The next lemma addresses a subtlety of the online order: only the first
+new label of a block has been revealed when its error is counted.
+That intermediate history need not have the covariance certificate.
+
+\begin{lemma}[Uniform gap to a different label]\label{lem:uniform-gap}
+Suppose a history satisfies Theorem~\ref{thm:exact}, its affine
+minimizer $a$ has nonzero scores on the entire cube, and its scalar
+output predicts the wrong label at a query $x_0$. If some globally
+margin-realizable function fits the history and the correct query
+label, there exists $e_1>J_d(Q)$ such that every network fitting those
+constraints and global margins has energy at least $e_1$, at every
+width.
+\end{lemma}
+
+\begin{proof}
+We use a closed relaxation that includes all finite-width networks and
+all limits of their neuron distributions. A relaxed neuron is
+$(u,b,H)$, where $H\in[-1,1]^X$ and
+\[
+ H(x)=\sgn(u\cdot\bar x)\quad\text{whenever }u\cdot\bar x\ne0.
+\]
+This is a closed subset of a finite-dimensional Euclidean space.
+Its output is the continuous function of the relaxed coordinates
+\[
+ b\bigl[\tanh(u\cdot\bar x)+\epsilon H(x)\bigr].
+\]
+At zero preactivation the relaxation permits any jump value in
+$[-\epsilon,\epsilon]$. The proof of Theorem~\ref{thm:exact} still
+applies: its only use of the jump term in \eqref{eq:atom-average} was
+the bound on its absolute average by $\epsilon$.
+
+Consider all probability measures on relaxed neurons satisfying the
+closed training margins and the correct signed query margin at least
+$1/2$. We may omit global constraints at other inputs, which only
+enlarges this class. It is nonempty by hypothesis. The infimum of
+mean energy $\E[d\|u\|^2+b^2]$ is attained. To see this, take a
+minimizing sequence with a common finite energy bound. The second
+moments make it tight, while the $H$ coordinates lie in a compact set.
+A weakly convergent subsequence is supported on the same closed
+relaxed-neuron space. The energy is lower semicontinuous. Each output
+constraint passes to the limit: its integrand has magnitude at most
+$M|b|$, and the second-moment bound makes these integrands uniformly
+integrable. Truncating $b$ gives bounded continuous test functions,
+which proves the required convergence of means.
+
+Theorem~\ref{thm:exact} puts the attained energy at least $J_d(Q)$.
+If equality held, its atomwise equality proof would force almost every
+neuron to have $u=\pm ra$ and the matching readout. These rows have no
+zero preactivation anywhere on the cube. All their jump values are
+therefore forced, and every neuron has the same scalar output, which
+is wrong at $x_0$. This contradicts the correct query margin. The
+attained energy is consequently some $e_1>J_d(Q)$. Every finite-width
+network is a uniform empirical measure in this relaxation, proving the
+width-uniform claim.
+\end{proof}

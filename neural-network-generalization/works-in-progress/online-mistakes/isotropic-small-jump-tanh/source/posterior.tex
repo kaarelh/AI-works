@@ -1,0 +1,84 @@
+\section{From the energy gap to the actual posterior}
+
+We record the Gaussian estimate used for both online and IID learning.
+It also handles the activation's discontinuity.
+
+\begin{lemma}[A product-box comparison]\label{lem:box}
+Suppose a fixed history has a cloned single-neuron witness with energy
+$e_0$, global weak output margins, and nonzero preactivation at every
+cube input. Suppose every network in a competing event has energy at
+least $e_1>e_0$, at every width. Then there exist $\Delta>0$ and
+$C\ge0$, independent of $N,\sigma$, such that the competing posterior
+mass is at most
+\begin{equation}\label{eq:posterior-bound}
+ \exp[-\Delta/(2\sigma^2)+CN]
+\end{equation}
+whenever $(d+2)N\sigma^2<e_1$. The posterior conditions on the history
+and the global output margin.
+\end{lemma}
+
+\begin{proof}
+Put $b_j=Nv_j$ and use row coordinates
+$\theta_j=(\sqrt d\,u_j,b_j)\in\R^p$, where $p=d+2$.
+These are independent centered Gaussians with covariance $s^2I_p$,
+where $s^2=N\sigma^2$, and
+$E_N=N^{-1}\sum_j\|\theta_j\|^2$.
+Slightly amplify the witness readout, keeping its energy below $e_1$
+and making every output margin strict. Its preactivations stay away
+from zero on the finite cube. A sufficiently small fixed open coordinate
+box $B$ about this row therefore consists entirely of neurons with the
+same strict full-cube margin function, and satisfies
+\[
+ V:=\operatorname{Vol}(B)>0,\qquad
+ R_B:=\sup_{\theta\in B}\|\theta\|^2<e_1.
+\]
+If every row lies in $B$, their average has those same margins. The
+posterior denominator is consequently at least
+\[
+ \left[V(2\pi s^2)^{-p/2}e^{-R_B/(2s^2)}\right]^N.
+\]
+For the numerator, $NE_N/s^2$ is chi-square with $Np$ degrees of
+freedom. The exponential-moment bound, valid when $e_1>ps^2$, gives
+\[
+ \log\Pp(E_N\ge e_1)
+ \le-\frac{Ne_1}{2s^2}
+     +\frac{Np}{2}\left[1+\log\frac{e_1}{ps^2}\right].
+\]
+The logarithmic $s^2$ terms cancel upon division by the denominator.
+The log ratio is at most
+\[
+ -\frac{e_1-R_B}{2\sigma^2}
+ +N\left\{\frac p2\left[1+\log\frac{2\pi e_1}{p}\right]-\log V\right\}.
+\]
+Take $\Delta=e_1-R_B>0$ and replace the expression in braces by its
+maximum with zero.
+\end{proof}
+
+At every completed selector stage, the affine certificate in
+Lemma~\ref{lem:selector-certificate} satisfies
+Theorem~\ref{thm:exact}, and its affine scores are nonzero on the full
+cube. Its scalar output has the wrong sign at the next designated
+query. The target is a globally realizable correct competitor, so
+Lemma~\ref{lem:uniform-gap} supplies an energy gap uniform in $N$.
+Lemma~\ref{lem:box} applies to the event that the next label is predicted
+correctly. This step does not require the incomplete next history to
+have a covariance certificate.
+
+For each fixed $N$, \eqref{eq:posterior-bound} tends to zero as
+$\sigma\downarrow0$. Under \eqref{eq:scaling} it becomes
+\[
+ \exp[-\Delta N^\gamma/(2\tau^2)+CN],
+\]
+which tends to zero for every fixed $\gamma>1$, $\tau>0$.
+The tail condition also holds eventually. For $\gamma\ge1$, every
+$N\ge1$ satisfies both the tail condition and a desired competing-mass
+bound $\delta/T_k$ if
+\[
+ \tau^2<\frac{e_1}{d+2},\qquad
+ \frac{\Delta}{2\tau^2}-C\ge\log(T_k/\delta).
+\]
+Take common constants over the finite list of designated histories.
+A union bound proves the simultaneous sampling statement in
+Theorem~\ref{thm:main}. The same probability estimates imply its
+posterior-majority and confidence statements. No sampling independence
+is needed for this union bound.

@@ -1,0 +1,115 @@
+\section{A fixed input order with exponentially many affine mistakes}
+
+We give the complete affine construction used by the network theorem.
+Keep the target $f_k$ from Theorem~\ref{thm:main}, and abbreviate the two
+encoded integers by $X$ and $Y$. The calibration examples all have
+selector $z=-1$.
+\begin{enumerate}
+\item Take diagonal inputs $x=y$ equal to the all-positive vector,
+each of its $k$ one-coordinate flips, and the negatives of these vectors.
+Every label is positive.
+\item For each $i\in\{0,\ldots,k-1\}$, take two negative examples with
+$x_i=-1,y_i=+1$ and $x_j=+1,y_j=-1$ for $j<i$. For $j>i$, set the equal
+bits $x_j=y_j$ all positive in one example and all negative in the other.
+Their highest differing bit is $i$, so $X<Y$.
+\end{enumerate}
+Remove duplicate examples. The resulting calibration has at most $4k+2$
+inputs. Let $q_t$ denote the input $z=+1$, $Y=0$, $X=t$; its target label
+is negative for every $0\le t\le2^k-1$.
+
+\begin{lemma}\label{lem:selector}
+For $k\le t\le2^k-1$, the unique minimum-norm affine unit-margin
+coefficient vector fitting the calibration and the negative example
+$q_t$ is the vector of the affine score
+\begin{equation}\label{eq:selector-score}
+ a_t\cdot\bar x=-t-(t+1)z+\sum_{i=0}^{k-1}2^i(x_i-y_i).
+\end{equation}
+It fits all earlier $q_j$ with $j\le t$, and its absolute score is at
+least one on the entire cube. Its squared norm is
+\begin{equation}\label{eq:Qt}
+ Q_t=t^2+(t+1)^2+2\sum_{i=0}^{k-1}4^i.
+\end{equation}
+For $t<2^k-1$, it predicts $q_{t+1}$ positively, and adding the correct
+negative label raises the convex affine minimum by
+\begin{equation}\label{eq:Qgap}
+ Q_{t+1}-Q_t=4(t+1)>0.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Write an arbitrary affine score as
+\[
+ b+cz+\sum_i a_i x_i+\sum_i h_i y_i,
+\]
+and set
+\[
+ u=b-c,\quad v=b+c,\quad
+ w_i=(a_i-h_i)/2,\quad s_i=a_i+h_i,\quad U=u-1.
+\]
+The squared coefficient norm is
+\begin{equation}\label{eq:affine-norm}
+ \frac{u^2+v^2}{2}+2\sum_iw_i^2+\frac12\sum_i s_i^2.
+\end{equation}
+The paired positive diagonal constraints give
+\[
+ U\ge0,\qquad \left|\sum_j s_j\right|\le U,\qquad
+ \left|\sum_j s_j-2s_i\right|\le U.
+\]
+Subtracting the expressions inside the last two absolute values shows
+$|s_i|\le U$, hence $\sum_i|s_i|\le kU$.
+Average the two negative carry constraints at coordinate $i$. The upper
+equal-bit terms cancel and leave
+\[
+ u-2w_i+2\sum_{j<i}w_j\le-1.
+\]
+Induction yields
+\begin{equation}\label{eq:binary-lower}
+ w_i\ge\sum_{j<i}w_j+\frac{u+1}{2}
+       \ge2^i(1+U/2).
+\end{equation}
+At $q_t$, the non-selector part of the input contribution is
+$2\sum_{\operatorname{bit}_i(t)=1}w_i-
+\sum_{\operatorname{bit}_i(t)=0}s_i$. Its negative unit-margin constraint
+therefore implies
+\[
+ v\le-1-2\sum_{\operatorname{bit}_i(t)=1}w_i
+            +\sum_{\operatorname{bit}_i(t)=0}s_i
+   \le-(2t+1)+(k-t)U\le-(2t+1),
+\]
+since $t\ge k$. Combining this with $u\ge1$ and
+\eqref{eq:binary-lower} in \eqref{eq:affine-norm} gives
+\[
+ \|a\|^2\ge\frac{1+(2t+1)^2}{2}+2\sum_i4^i=Q_t.
+\]
+Equality requires $u=1$, $s_i=0$, $w_i=2^i$ and $v=-(2t+1)$,
+which is exactly \eqref{eq:selector-score}.
+
+Conversely the displayed score equals $1+2(X-Y)$ on $z=-1$, and
+$-(2t+1)+2(X-Y)$ on $z=+1$. It fits every calibration label, and its score
+at $q_j$ is $2j-2t-1\le-1$ for $j\le t$. Both branch scores are odd
+integers on the full cube, so the absolute margin is at least one.
+At $q_{t+1}$ the score is $+1$. Applying the same minimum calculation
+to the augmented history gives $Q_{t+1}$, and subtraction gives
+\eqref{eq:Qgap}.
+\end{proof}
+
+The input permutation starts with the calibration, then $q_k$, then
+$q_{k+1},\ldots,q_{2^k-1}$, and finally every remaining input in
+lexicographic order. These blocks are disjoint. Its calibration prefix
+has length at most $4k+3$, and there are
+$T_k=2^k-k-1\ge2^{k-1}$ designated queries. Just before each one, the
+wrong affine witness has the exact convex margin minimum for all data
+seen so far.
+
+The target has a linear-size Boolean circuit. With $0/1$ bit notation,
+comparison of the lowest $i+1$ bits obeys
+\[
+ G_{-1}=1,\qquad
+ G_i=(X_i\wedge\neg Y_i)\ \vee\
+       ((X_i\leftrightarrow Y_i)\wedge G_{i-1}).
+\]
+Each step uses a constant number of bounded-fan-in gates; conjoin the
+last result with $z=-1$. Every input bit is essential: for $x_i$ use
+$Y=2^i$ and all other $X$ bits zero; for $y_i$ use $X=0$ and all other
+$Y$ bits zero; for $z$ take $X=Y$. A fan-in-two circuit with $d$ essential
+inputs has at least $d-1$ gates, by counting edges in the connected
+ancestry of its output. This proves the matching $\Theta(k)$ bound.

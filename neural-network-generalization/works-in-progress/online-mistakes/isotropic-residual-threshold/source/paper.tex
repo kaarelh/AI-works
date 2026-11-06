@@ -1,0 +1,520 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,amsmath,amssymb,amsthm,mathtools}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Exponential online mistakes at every width for isotropic threshold networks with a residual},pdfauthor={ChatGPT-6 Astra; Kaarel Hanni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\newcommand{\sgn}{\operatorname{sign}}
+\newcommand{\phiR}{\phi}
+\title{Exponential online mistakes at every width for\protect\\isotropic threshold networks with a residual}
+\author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{6 November 2026}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We construct a Bayesian neural-network learner that has polynomial IID
+sample complexity but makes exponentially many mistakes on a fixed
+input order, at every hidden width in its strong-prior limit.
+The activations are the fixed discontinuous functions
+$\sgn(t)+\tanh(t)$ and $\sgn(t)+t$: a threshold neuron with a bounded
+or linear residual. The bounded version also works with an arbitrarily
+small fixed positive coefficient on its tanh residual.
+The network has one hidden layer, the full Boolean input cube, a constant
+input coordinate, and the standard independent Gaussian weight prior
+with equal variances across all first-layer coordinates. The prior is
+conditioned on global output margin greater than $1/2$ and exact labels.
+For a target of Boolean circuit size $\Theta(k)$, a calibration prefix of
+$O(k)$ examples is followed by $2^k-k-1$ designated mistakes. The target
+itself has a width-one teacher with every weight bounded by one.
+An exact all-competitor inequality reduces the minimum Gaussian energy,
+at every width, to a strictly increasing function of the affine margin
+norm. A separate convex-hull argument gives an energy gap to all
+nonthreshold functions, yielding polynomial IID sample complexity.
+We also prove direct width-dependent variance statements: every fixed
+exponent $\gamma>1$ works at all sufficiently large widths, and a
+sufficiently small mean-field prefactor works uniformly at every width.
+The proof uses the activation's jump at zero; no conclusion
+for ordinary tanh, ReLU, or hardtanh is claimed.
+\end{abstract}
+
+\section{The learner and the separation}
+
+We study two fixed activations, with $\sgn(0)=0$:
+\[
+ \phi_{\rm lin}(t)=\sgn(t)+t,\qquad
+ \phi_{\rm bnd}(t)=\sgn(t)+\tanh(t).
+\]
+Both are odd and have a jump at zero. The second is bounded in absolute
+value by two. Each is a threshold activation with a residual, rather
+than a continuous approximation to a threshold. In the model below,
+$\phi$ may be either one.
+For $x\in X=\{-1,1\}^d$, write $\bar x=(1,x)$.
+A width-$N$ learner has output
+\begin{equation}\label{eq:model}
+ F_{u,v}(x)=\sum_{j=1}^N v_j\phi(u_j\cdot\bar x),
+ \qquad
+ u_{ji}\sim N(0,N\sigma^2/d),\quad
+ v_j\sim N(0,\sigma^2/N),
+\end{equation}
+with all weights independent. The bias is the coefficient of the
+constant input and has the same variance as every other first-layer
+coordinate. There is no coordinate-dependent covariance or extra
+readout regularization factor.
+
+For a Boolean function $g$ let
+\[
+ U_g=\{(u,v):g(x)F_{u,v}(x)>1/2\text{ for every }x\in X\}.
+\]
+The posterior first conditions on the union of these full-cube
+strict-margin cells and then retains exactly the cells consistent with
+the observed labels. A prediction's error probability is the posterior
+mass of functions assigning the wrong label. This is the error
+probability of a fresh posterior sample. Posterior-label majority is
+wrong when that mass exceeds $1/2$; the stronger convention requiring
+correct-label probability greater than $2/3$ is also considered.
+
+The strong-prior limit at a fixed width means $\sigma\downarrow0$.
+For direct width-dependent statements we use
+\begin{equation}\label{eq:scaling}
+ \sigma_N^2=\tau^2N^{-\gamma},\qquad
+ \operatorname{Var}(u_{ji})=\tau^2N^{1-\gamma}/d,
+ \quad \operatorname{Var}(v_j)=\tau^2N^{-\gamma-1}.
+\end{equation}
+Here $\tau>0$ and $\gamma\ge1$ are fixed.
+
+\begin{theorem}\label{thm:main}
+For every $k\ge3$, put $d=2k+1$ and write inputs as $(x,y,z)$, where
+$x,y\in\{-1,1\}^k$ and $z\in\{-1,1\}$. Define
+\[
+ X_x=\sum_{i=0}^{k-1}2^i\frac{x_i+1}{2},\qquad
+ Y_y=\sum_{i=0}^{k-1}2^i\frac{y_i+1}{2},\qquad
+ f_k(x,y,z)=+1\ \Longleftrightarrow\ z=-1\text{ and }X_x\ge Y_y.
+\]
+There is one fixed permutation of the input cube, depending only on $k$,
+with the following properties for either activation.
+\begin{enumerate}
+\item The target has a Boolean circuit of size $\Theta(k)$ and a
+width-one teacher for the activation $\phi$, with every weight at most
+one in absolute value and signed output at least one everywhere.
+\item After at most $4k+3$ calibration examples, there are
+$T_k=2^k-k-1\ge2^{k-1}$ designated rounds. At every fixed width
+$N\ge1$, the posterior wrong-label probability at each of these rounds
+tends to one as $\sigma\downarrow0$.
+\item For every fixed $\gamma>1$ and $\tau>0$ in
+\eqref{eq:scaling}, the same wrong-label probabilities tend to one as
+$N\to\infty$.
+\item For every $\eta\in(0,1)$ there is $\tau_0(k,\eta)>0$ such that,
+for every $0<\tau\le\tau_0$, every $\gamma\ge1$, and every $N\ge1$,
+posterior sampling makes all $T_k$ designated mistakes with probability
+at least $1-\eta$. The bound also makes each designated posterior
+majority wrong, and violates the $2/3$ correctness criterion, when
+$\eta$ is chosen sufficiently small.
+\item For the same prior and target, the realizable IID sample complexity
+is $O((d^2+\log(1/\beta))/\varepsilon)$ for correct-label posterior
+probability greater than $2/3$ outside a set of input mass at most
+$\varepsilon$, with sample confidence at least $1-\beta$.
+This holds at each fixed width for sufficiently small $\sigma$, and
+under the direct width limits specified above.
+\end{enumerate}
+No choice among tied predictors is used. Every network that would make
+the correct next prediction is included in the energy comparison.
+\end{theorem}
+
+The discontinuity distinguishes this example from ordinary tanh or ReLU.
+The theorem keeps the Gaussian prior and its usual layer normalizations
+unchanged, but changes the activation. The small-prefactor assertion is
+not a claim about the unit-prefactor case $\gamma=1,\tau=1$.
+
+\section{An exact minimum over every hidden width}
+
+We first prove the simpler statement for $\phi=\phi_{\rm lin}$.
+Set $b_j=Nv_j$. The Gaussian rate energy and output become
+\begin{equation}\label{eq:energy}
+ E_N=\frac dN\sum_j\|u_j\|^2+\frac1N\sum_jb_j^2,
+ \qquad F(x)=\frac1N\sum_jb_j\phi(u_j\cdot\bar x).
+\end{equation}
+Consider any finite linearly separable labeled set, and put
+$z_i=y_i\bar x_i$. Let $a_*$ minimize $\|a\|^2$ under
+$z_i\cdot a\ge1$, and write $Q=\|a_*\|^2>0$.
+The minimizer is unique. The normal-cone condition for this Euclidean
+projection gives active constraints and nonnegative multipliers with
+\[
+ a_*=\sum_i\mu_i z_i,\qquad
+ \mu_i>0\Longrightarrow z_i\cdot a_*=1,\qquad
+ \sum_i\mu_i=Q.
+\]
+The last identity follows by taking the inner product with $a_*$.
+Put $\rho_i=\mu_i/Q$.
+
+\begin{theorem}[Exact all-width affine reduction]\label{thm:energy}
+At every $N\ge1$, the minimum of \eqref{eq:energy} over all networks
+satisfying $y_iF(x_i)\ge1/2$ is
+\begin{equation}\label{eq:profile}
+ \Psi_d(Q)=\min_{r\ge0}\left\{dQr^2+\frac1{4(1+r)^2}\right\}.
+\end{equation}
+Its unique minimizing radius is strictly positive and obeys
+\[
+ 4dQr(1+r)^3=1.
+\]
+The minimum is attained by cloning
+$u_j=r a_*$ and $b_j=1/[2(1+r)]$.
+The function $\Psi_d(Q)$ is strictly increasing in $Q>0$ and is always
+strictly less than $1/4$.
+\end{theorem}
+\begin{proof}
+Define the active-data average
+\[
+ S(u)=\sum_i\rho_i\phi(z_i\cdot u)
+     =\sum_i\rho_i\sgn(z_i\cdot u)+a_*\cdot u/Q.
+\]
+Since the sign average has absolute value at most one,
+\[
+ |S(u)|\le1+\|u\|/\sqrt Q.
+\]
+Let $\E_j$ mean uniform averaging over the $N$ neurons and set
+$r^2=\E_j\|u_j\|^2/Q$. Oddness of $\phi$ and the training margins give
+\begin{align*}
+ \frac12
+ &\le\E_j[b_jS(u_j)]\\
+ &\le\sqrt{\E_jb_j^2}\,
+       \sqrt{\E_j(1+\|u_j\|/\sqrt Q)^2}
+ \le\sqrt{\E_jb_j^2}\,(1+r).
+\end{align*}
+The last step uses $\E_j\|u_j\|\le\sqrt{\E_j\|u_j\|^2}$.
+Therefore $E_N\ge dQr^2+1/[4(1+r)^2]$.
+The displayed clones attain this bound: every active signed
+preactivation is $r>0$, and every other one is at least $r$.
+
+The scalar objective has derivative $2dQr-1/[2(1+r)^3]$ and strictly
+positive second derivative. Its derivative at zero is negative, so its
+unique minimum is at $r>0$ and below its value $1/4$ at zero.
+For $Q_1>Q_0$, evaluating the profile for $Q_0$ at the positive minimizer
+$r_1$ for $Q_1$ gives
+\[
+ \Psi_d(Q_1)-\Psi_d(Q_0)\ge d(Q_1-Q_0)r_1^2>0.
+\]
+\end{proof}
+
+The theorem is an inequality over all neurons and all nonlinear output
+functions. It does not restrict competitors to cloned networks.
+For a threshold truth table $g$, apply it to the complete labeled cube:
+if $Q(g)$ is the minimum affine unit-margin squared norm, then the
+strict-margin cell has energy infimum $\Psi_d(Q(g))$.
+A small common readout amplification makes the cloned margins strict.
+
+\begin{lemma}[The nonthreshold gap for the linear residual]
+\label{lem:nonthreshold}
+If a Boolean function $g$ is not an affine threshold function, then every
+network satisfying $g(x)F(x)\ge1/2$ on the full cube has $E_N\ge1/4$.
+\end{lemma}
+\begin{proof}
+Put $z_x=g(x)\bar x$. Since these finitely many vectors do not admit a
+strict separating linear functional, the origin belongs to their convex
+hull. Indeed otherwise strict separation of the origin from that compact
+convex hull would give an affine threshold representation of $g$.
+Choose probabilities $\rho_x$ with $\sum_x\rho_x z_x=0$. Then
+\[
+ S(u):=\sum_x\rho_x\phi(z_x\cdot u)
+      =\sum_x\rho_x\sgn(z_x\cdot u),\qquad |S(u)|\le1.
+\]
+Averaging the margins gives
+$1/2\le\E_j[b_jS(u_j)]\le\E_j|b_j|\le\sqrt{\E_jb_j^2}$.
+The readout part of the energy alone is therefore at least $1/4$.
+\end{proof}
+
+\section{The same exact reduction with a bounded residual}
+
+The bounded activation gives the same online separation without an
+unbounded output from a hidden neuron. We prove a slightly more general
+statement for
+\[
+ \phi_c(t)=\sgn(t)+c\tanh(t),\qquad 0<c\le1.
+\]
+The coefficient $c$ is fixed across input dimensions and learner widths.
+
+\begin{theorem}[A bounded threshold residual]\label{thm:bounded}
+For any nonempty linearly separable labeled subset of the Boolean cube,
+let $a_*,Q$ be its affine unit-margin minimizer and squared norm as above.
+At every width, the minimum training-margin energy for $\phi_c$ is
+\begin{equation}\label{eq:bounded-profile}
+ \Xi_{d,c}(Q)=\min_{r\ge0}
+       \left\{dQr^2+\frac1{4(1+c\tanh r)^2}\right\}.
+\end{equation}
+The unique minimizing radius is positive and satisfies
+\begin{equation}\label{eq:bounded-stationary}
+ 4dQr(1+c\tanh r)^3=c\operatorname{sech}^2r.
+\end{equation}
+Cloning $u_j=r a_*$ and $b_j=1/[2(1+c\tanh r)]$ attains the minimum.
+The profile is strictly increasing in $Q$ and is strictly below $1/4$.
+Every globally nonthreshold Boolean output still has energy at least
+$1/4$.
+\end{theorem}
+\begin{proof}
+Every signed augmented input has norm $\sqrt{d+1}$. The unit-margin
+constraint at any training point implies $Q\ge1/(d+1)$, so $dQ\ge1/2$.
+The scalar objective in~\eqref{eq:bounded-profile} has negative derivative
+at zero and strictly increasing derivative: its negative derivative
+term is proportional to
+$c\operatorname{sech}^2r/(1+c\tanh r)^3$, which decreases strictly.
+Thus its minimizer is unique and positive and satisfies
+\eqref{eq:bounded-stationary}. In particular
+$r\le c/(4dQ)\le1/2$.
+
+Write
+\[
+ h=1+c\tanh r,\quad
+ \alpha=1+c(\tanh r-r\operatorname{sech}^2r),\quad
+ \beta=c\operatorname{sech}^2r,\quad
+ \lambda=h^{-2},\quad K=\lambda^2/4.
+\]
+Then $h=\alpha+\beta r$, $\alpha\ge1$, $0<\beta\le1$, and $K\le1/4$.
+For any score $s\in[-\sqrt2,\sqrt2]$,
+\begin{equation}\label{eq:bounded-tangent}
+ -\alpha+\beta s\le\phi_c(s)\le\alpha+\beta s.
+\end{equation}
+For $s>0$, the upper inequality is the concave tangent bound for tanh
+at $r$. For $s<0$, $\phi_c(s)\le-1$, whereas
+$\alpha+\beta s\ge1-\sqrt2>-1$. At zero it is immediate. Oddness gives
+the lower inequality. The fact $\alpha\ge1$ follows from
+$\tanh r-r\operatorname{sech}^2r\ge0$, whose derivative is
+$2r\operatorname{sech}^2r\tanh r\ge0$.
+
+Use the active KKT probabilities $\rho_i$ and put
+$S(u)=\sum_i\rho_i\phi_c(z_i\cdot u)$.
+For any atom and any readout $b$, completing the square gives
+\[
+ d\|u\|^2+b^2-\lambda bS(u)
+ \ge d\|u\|^2-KS(u)^2.
+\]
+If $\|u\|\le1/\sqrt d$, every score has magnitude at most $\sqrt2$.
+Equation~\eqref{eq:bounded-tangent} and the KKT mean give
+\[
+ |S(u)|\le\alpha+\beta\|u\|/\sqrt Q.
+\]
+Writing $t=\|u\|/\sqrt Q$, the atomwise lower bound is therefore at least
+\[
+ \min_{t\ge0}\{dQt^2-K(\alpha+\beta t)^2\}
+ =dQr^2-Kh^2=:\zeta.
+\]
+Indeed $dQ-K\beta^2\ge1/4>0$, and stationarity says
+$dQr=K\beta h$, making $t=r$ its unique minimum. It also gives
+$\zeta=-\alpha/(4h^3)<0$.
+If $\|u\|\ge1/\sqrt d$, boundedness gives instead
+\[
+ d\|u\|^2-KS(u)^2\ge1-4K\ge0>\zeta.
+\]
+Thus the same floor $\zeta$ holds for every atom. Averaging and using
+the training margins yields
+\[
+ E_N\ge\lambda/2+\zeta
+       =dQr^2+\frac1{4h^2}.
+\]
+The proposed clones attain equality on the active constraints and satisfy
+all others by monotonicity of $\phi_c$ on positive scores. Strict
+monotonicity in $Q$ follows by evaluating the profile at the positive
+minimizer for the larger $Q$, as in Theorem~\ref{thm:energy}. Its value is
+below $1/4$ because its derivative at zero is negative.
+
+For the final assertion, choose the zero-mean convex-hull probabilities
+for a nonthreshold function as in Lemma~\ref{lem:nonthreshold}.
+The tangent estimate~\eqref{eq:bounded-tangent} at $r=0$ has
+$\alpha=1,\beta=c$. Thus $|S(u)|\le1$ on $\|u\|\le1/\sqrt d$.
+On the remaining atoms $|S(u)|\le1+c\le2$. With square-completion
+coefficient one,
+\[
+ d\|u\|^2+b^2-bS(u)\ge d\|u\|^2-S(u)^2/4\ge-1/4
+\]
+in both regions; in the large-atom region the right side is actually
+nonnegative. Averaging and using $\E_j b_jS(u_j)\ge1/2$ proves
+$E_N\ge1/4$.
+\end{proof}
+
+From now on write $J_d(Q)$ for $\Psi_d(Q)$ with the linear residual,
+or $\Xi_{d,1}(Q)$ with the bounded residual. Both profiles are strictly
+increasing and below $1/4$, and both have explicit cloned minimizers.
+The same arguments also cover every fixed $0<c\le1$ in the bounded
+case, with $J_d=\Xi_{d,c}$.
+
+\input{selector.tex}
+
+\section{The posterior comparison, including growing width}
+
+The following estimate handles the discontinuity by using a neighborhood
+whose preactivations stay away from zero.
+
+\begin{lemma}[A product-box Gaussian comparison]\label{lem:box}
+Suppose a fixed finite history has a cloned single-neuron witness of
+energy $e_0$ with a full-cube nonzero affine preactivation at every input,
+and whose output has the desired global weak margin and history labels.
+Suppose every network in a competing event has energy at least $e_1>e_0$,
+at every width. Then there are constants $\delta>0$ and $C\ge0$,
+independent of $N$ and $\sigma$, such that the competing posterior mass
+is at most
+\begin{equation}\label{eq:posterior-bound}
+ \exp\left[-\frac{\delta}{2\sigma^2}+CN\right]
+\end{equation}
+whenever $(d+2)N\sigma^2<e_1$.
+The posterior is conditioned on the history and global margin.
+\end{lemma}
+\begin{proof}
+In physical neuron coordinates
+\[
+ \theta_j=(\sqrt d\,u_j,b_j)\in\R^q,\qquad q=d+2,
+\]
+the rows are independent centered Gaussians with covariance
+$s^2I_q$, where $s^2=N\sigma^2$, and
+$E_N=N^{-1}\sum_j\|\theta_j\|^2$.
+Amplify the witness's readout slightly, so every margin is strict and its
+energy remains below $e_1$. Its preactivations are nonzero on the finite
+cube. Consequently there is a fixed open coordinate box
+$B\subset\R^q$ of volume $V>0$ about this amplified neuron such that
+every neuron in $B$ has the same strict full-cube sign function and
+individual signed output greater than $1/2$, and
+\[
+ R_B:=\sup_{\theta\in B}\|\theta\|^2<e_1.
+\]
+This uses continuity only within a region of fixed nonzero preactivation
+signs. If every neuron lies in $B$, their average satisfies the same
+strict margins and history. Thus the posterior denominator is at least
+\[
+ \left[V(2\pi s^2)^{-q/2}e^{-R_B/(2s^2)}\right]^N.
+\]
+For the numerator, $NE_N/s^2$ is chi-square with $Nq$ degrees of freedom.
+The exponential-moment bound, valid for $e_1>qs^2$, gives
+\[
+ \log\Pp(E_N\ge e_1)
+ \le-\frac{Ne_1}{2s^2}
+       +\frac{Nq}{2}\left[1+\log\frac{e_1}{qs^2}\right].
+\]
+Dividing by the denominator cancels all logarithmic $s^2$ terms. With
+$\delta=e_1-R_B>0$, the logarithm of the ratio is at most
+\[
+ -\frac{\delta}{2\sigma^2}
+ +N\left\{\frac q2\left[1+\log\frac{2\pi e_1}{q}\right]-\log V\right\}.
+\]
+Replace the expression in braces by its maximum with zero to obtain
+\eqref{eq:posterior-bound}.
+\end{proof}
+
+Before the designated query $q_{t+1}$ in Lemma~\ref{lem:selector}, the
+cloned witness has energy $e_0=J_d(Q_t)$, has no zero affine score on
+the cube, and predicts that query positively. Every network making the
+correct negative prediction there belongs to a global-margin cell and
+therefore satisfies the enlarged training set with margins at least
+$1/2$. Theorems~\ref{thm:energy} and~\ref{thm:bounded} bound its energy by
+$e_1=J_d(Q_{t+1})>e_0$. Lemma~\ref{lem:box} applies directly.
+There is no appeal to continuity of the activation at zero or to a
+compactness argument across its jumps.
+
+For each fixed $N$, \eqref{eq:posterior-bound} tends to zero as
+$\sigma\downarrow0$. Under \eqref{eq:scaling}, it is
+\[
+ \exp[-\delta N^\gamma/(2\tau^2)+CN].
+\]
+For every fixed $\gamma>1$ and $\tau>0$ this tends to zero; the tail
+condition in Lemma~\ref{lem:box} also holds eventually.
+For $\gamma\ge1$ and sufficiently small $\tau$, both the tail condition
+and any desired bound on the competing probability hold at \emph{every}
+$N\ge1$: require
+\[
+ \tau^2<\frac{e_1}{d+2},\qquad
+ \frac{\delta}{2\tau^2}-C\ge\log(T_k/\eta).
+\]
+Taking common constants over the finite list of designated histories
+and using the union bound proves all online assertions of
+Theorem~\ref{thm:main}. Independence between posterior samples at different
+rounds is unnecessary.
+
+\section{A width-one teacher and polynomial IID learning}
+
+The final affine witness $a_{2^k-1}$ represents the target on the entire
+cube: on $z=-1$ its score is $1+2(X-Y)$, and on $z=+1$ it is always
+negative. Multiply all its affine coefficients by a sufficiently small
+positive number so that every one has magnitude at most one, and use
+readout weight one. All preactivations remain nonzero and retain their
+signs. Both activations have $|\phi(t)|>1$ for $t\ne0$, so the resulting
+width-one teacher has signed output greater than one. The linear Boolean circuit
+and its matching lower bound were given with the selector construction.
+
+\begin{theorem}[IID guarantee for the same prior]\label{thm:iid}
+Fix any affine threshold target $f$ on $\{-1,1\}^d$, any input
+distribution $\mathcal D$, and $\varepsilon,\beta\in(0,1)$. If
+\[
+ m\ge\frac4\varepsilon
+       \bigl[(d+1)^2\log2+\log(1/\beta)\bigr],
+\]
+then with probability at least $1-\beta$ over $m$ IID examples labeled
+by $f$, the posterior correct-label probability exceeds $2/3$ outside a
+set of $\mathcal D$-mass at most $\varepsilon$ in each of these regimes:
+\begin{enumerate}
+\item at every fixed width, for all sufficiently small $\sigma>0$;
+\item under \eqref{eq:scaling}, at every sufficiently large width for
+any fixed $\gamma>1$ and $\tau>0$;
+\item at every width and every $\gamma\ge1$ in \eqref{eq:scaling},
+when $\tau>0$ is sufficiently small.
+\end{enumerate}
+The variance and width thresholds can be chosen independently of the
+training sample and $\mathcal D$.
+\end{theorem}
+\begin{proof}
+The full target has a cloned witness of energy
+$e_f=J_d(Q(f))<1/4$, with nonzero full-cube affine scores.
+Lemma~\ref{lem:nonthreshold} and Theorem~\ref{thm:bounded} put every
+nonthreshold output cell in the
+event $E_N\ge1/4$. The full-target witness is consistent with every
+sample labeled by $f$. Lemma~\ref{lem:box}, with $e_1=1/4$, therefore
+bounds the total posterior mass of all nonthreshold functions uniformly
+over every such history. This bound tends to zero in the first two
+regimes and can be made at most $\varepsilon/12$ uniformly in the third.
+No count of nonthreshold functions is needed.
+
+Let $\mathcal H_d$ be the threshold truth tables on the cube. The
+$2^d$ hyperplanes in the $(d+1)$-dimensional coefficient space give
+\[
+ |\mathcal H_d|\le\sum_{j=0}^{d+1}\binom{2^d}{j}
+ \le(2^d+1)^{d+1}\le2^{(d+1)^2}.
+\]
+A consistency union bound shows that, with probability at least $1-\beta$,
+every sample-consistent threshold function has population error at most
+$\varepsilon/4$. On this sample event, posterior mean population error
+is at most $\varepsilon/4+\varepsilon/12=\varepsilon/3$ once the
+nonthreshold mass is small enough. An input with correct-label posterior
+probability at most $2/3$ has wrong-label probability at least $1/3$.
+Markov's inequality bounds the mass of those inputs by $\varepsilon$.
+\end{proof}
+
+\section{What the activation contributes}
+
+The threshold component supplies a signed output of magnitude one even
+when its incoming weights are arbitrarily small. Either residual
+then makes a small positive incoming scale strictly preferable to zero:
+its energy optimum is below $1/4$ and depends strictly on the affine
+margin norm. This creates an energy order at every width while keeping
+a width-one bounded teacher for every affine threshold target.
+
+The elementary linear-residual calculation also works for every fixed
+$\sgn(t)+ct$ with $c>0$, replacing $1+r$ by $1+cr$ in its profile.
+For the bounded family, Theorem~\ref{thm:bounded} already permits every
+fixed $0<c\le1$. Its uniform distance from pure sign is at most $c$.
+The residual may therefore be arbitrarily small, but its coefficient is
+fixed across widths and dimensions. At $c=0$ the strict energy order
+disappears, so that limiting case needs a different argument.
+
+This example uses an unchanged Gaussian prior and actual posterior
+conditioning, not a favorable choice of a minimum-energy predictor.
+Its activation is discontinuous. Replacing the jump by a fixed continuous
+transition is a substantive mathematical change, and the present proof
+does not justify that replacement. The question for ordinary tanh,
+ReLU, or hardtanh under this same prior remains separate.
+
+\end{document}

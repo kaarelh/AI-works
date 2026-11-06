@@ -1,0 +1,425 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,amsmath,amssymb,amsthm,mathtools}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Polynomial total mistake bounds for mean-field Bayesian tanh networks},pdfauthor={ChatGPT-6 Astra; Kaarel Hanni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\newcommand{\KL}{\operatorname{KL}}
+\title{Polynomial total mistake bounds for\protect\\mean-field Bayesian tanh networks}
+\author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{6 November 2026}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We study shallow Bayesian tanh networks with independent Gaussian weights
+at mean-field scaling. Training conditions on a signed output margin
+greater than $1/2$ at each observed input. The initial prior has no output
+restriction at unobserved inputs. If a Boolean target on $d$ bits has a
+width-$C$ teacher with bounded weights and margin greater than $1/2$,
+then, at every sufficiently large learner width, the total number of
+online confidence mistakes is $O(d^4+C^4)$, with the weight bound and
+positive prior prefactor fixed. The input order may be arbitrary or
+adaptive. A confidence mistake means that the posterior assigns at most
+a fixed probability, such as $2/3$, to the correct sign; any fixed test
+margin below $1/2$ is also allowed. Fresh posterior sampling satisfies
+corresponding expected and high-probability total error bounds.
+The proof identifies the large-width posterior with successive
+relative-entropy projections and shows that each bad prediction consumes
+a fixed amount of a bounded entropy budget. We give an explicit Gaussian
+mixture certificate for that budget. The width threshold is not
+quantified, and the result is not uniform as the prior prefactor tends to
+zero. The absence of an initial global output-margin restriction is
+essential to the convex projection argument.
+\end{abstract}
+
+\section{Model and result}
+
+A small target can admit a polynomial IID sample bound without admitting
+a polynomial bound on total mistakes along an arbitrary input sequence.
+Here we prove the stronger online conclusion for a Bayesian neural-network
+model that requires a positive output margin on observed examples, but
+imposes no margin restriction at unobserved inputs before learning starts.
+
+Fix $d\ge1$, let $X=\{-1,1\}^d$, and write $D=d+1$, $M=2^d$, and
+$\bar x=(1,x)\in\R^D$. Fix $\tau>0$. At hidden width $N$, sample
+independently
+\begin{equation}\label{eq:prior}
+ u_j\sim\mathcal N(0,\tau^2 I_D/d),\qquad
+ a_j\sim\mathcal N(0,\tau^2),\qquad 1\le j\le N,
+\end{equation}
+and define
+\begin{equation}\label{eq:network}
+ F_N(x)=\frac1N\sum_{j=1}^N a_j\tanh(u_j\cdot\bar x).
+\end{equation}
+The physical readout weights $v_j=a_j/N$ have variance $\tau^2/N^2$.
+These are the canonical shallow mean-field variances. Equivalently, in
+the normalization with first-layer variance $N\sigma_N^2/d$ and readout
+variance $\sigma_N^2/N$, they correspond to $\sigma_N=\tau/\sqrt N$.
+We take $N\to\infty$ at fixed $\tau$, not a cold limit at fixed width.
+
+Let $f:X\to\{-1,1\}$ be the target. A history is a subset $S\subseteq X$
+whose labels have been revealed. The posterior is precisely the prior
+conditioned on
+\begin{equation}\label{eq:training}
+ f(x)F_N(x)>1/2\qquad(x\in S).
+\end{equation}
+There is \emph{no initial conditioning} on the outputs elsewhere. For a
+test-margin threshold $0\le h<1/2$, define
+\[
+ p_{N,S,h}(x)=\Pp\{f(x)F_N(x)>h\mid \eqref{eq:training}\}.
+\]
+Fix $0<\theta<1$. An online confidence mistake means
+$p_{N,S,h}(x)\le\theta$. Examples are $h=0$, which tests the sign, and
+$h=1/4$, which requires a smaller margin than training. We may take
+$\theta=2/3$ in either case.
+
+After a prediction, the true label is revealed and the input joins $S$.
+The next input may be chosen adaptively. Repeated observed inputs cause
+no confidence or sampling errors: their posterior signed output is
+already greater than $1/2$. Let $\rho_0$ denote the one-neuron law in
+\eqref{eq:prior}, and use $\KL(P\|Q)$ for relative entropy with natural
+logarithms.
+
+\begin{theorem}[Total online mistakes]\label{thm:main}
+Suppose a probability law $\rho_T$ on $(u,a)\in\R^D\times\R$ satisfies
+\begin{equation}\label{eq:certificate}
+ \KL(\rho_T\|\rho_0)\le K_T<\infty,
+ \qquad
+ f(x)\E_{\rho_T}[a\tanh(u\cdot\bar x)]>1/2\quad(x\in X).
+\end{equation}
+Set $c_0=(\log2)/2$ and
+\begin{equation}\label{eq:Rh}
+ R_h=\frac{16\tau^2 K_T(K_T+c_0)}{(1/2-h)^2}.
+\end{equation}
+For each fixed $0<\theta<1$ and $0\le h<1/2$, there exists $N_0$ such
+that every $N\ge N_0$ gives at most $\lfloor R_h\rfloor$ total
+confidence mistakes. The same $N_0$ works for every input order,
+including adaptive choices of the next input.
+
+If predictions use the sign of a fresh posterior sample at each round,
+then for every $\eta>0$ there exists $N_1$ such that every $N\ge N_1$
+satisfies
+\begin{align}
+ \E[\text{total sign errors}]&\le R_0+\eta,\label{eq:expectation}\\
+ \Pp\{\text{total sign errors}\le\lfloor R_0\rfloor\}
+ &\ge1-\eta.\label{eq:hp}
+\end{align}
+These statements are uniform over adaptive input orders as well.
+\end{theorem}
+
+The width thresholds may depend on the target and all fixed parameters,
+and need not be polynomial. The conclusion concerns every sufficiently
+large width, rather than every width capable of representing the teacher.
+The confidence threshold affects the width threshold but does not affect
+the displayed mistake bound.
+
+\begin{corollary}[A bounded teacher gives a polynomial bound]\label{cor:teacher}
+Suppose
+\[
+ F_T(x)=\sum_{i=1}^C v_i\tanh(u_i\cdot\bar x),\qquad
+ f(x)F_T(x)>1/2\quad(x\in X),
+\]
+where $C\ge1$ and all coordinates of $u_i$ and all $v_i$ have absolute
+value at most $B>0$. Put
+\begin{equation}\label{eq:sq}
+ s=\min\left\{\frac{\tau}{\sqrt d},\frac1{8CB\sqrt D}\right\},
+ \qquad q=\frac{ds^2}{\tau^2}\in(0,1],
+\end{equation}
+and
+\begin{equation}\label{eq:KT}
+ K_T=\frac{dDB^2+4C^2B^2}{2\tau^2}
+       +\frac D2(q-1-\log q).
+\end{equation}
+Then Theorem~\ref{thm:main} applies with this value of $K_T$. At fixed
+$B,\tau,h$, the total confidence mistake bound is $O(d^4+C^4)$.
+The same polynomial controls the expected and high-probability sampling
+bounds for the sign convention.
+\end{corollary}
+
+The result is not uniform as $\tau\to0$. Even \eqref{eq:KT} has an
+inverse-$\tau^2$ contribution. The theorem does not supply a total
+mistake bound for a subsequent zero-temperature limit.
+
+\section{The large-width posterior is an entropy projection}
+
+For one neuron, define its full output vector and its feature vector by
+\[
+ Z(u,a)=\big(a\tanh(u\cdot\bar x)\big)_{x\in X}\in\R^M,
+ \qquad h(u)=\big(\tanh(u\cdot\bar x)\big)_{x\in X}.
+\]
+The network output vector is the empirical average of $N$ independent
+copies of $Z$. We prove its conditioning limit directly in this
+finite-dimensional space.
+
+\begin{lemma}[A smooth strictly convex rate function]\label{lem:rate}
+Let
+\[
+ \Lambda(\xi)=\log\E_{\rho_0}e^{\xi\cdot Z},\qquad
+ I(z)=\sup_{\xi\in\R^M}\{\xi\cdot z-\Lambda(\xi)\}.
+\]
+The function $\Lambda$ is finite and smooth everywhere, has positive
+definite Hessian everywhere, and satisfies
+\begin{equation}\label{eq:Lambda}
+ \frac{\tau^2}{2}\xi^TG\xi\le\Lambda(\xi)
+ \le\frac{\tau^2M}{2}\|\xi\|_2^2,
+ \qquad G=\E_u[h(u)h(u)^T]\succ0.
+\end{equation}
+For every $z$, the supremum defining $I(z)$ has a unique maximizer
+$\xi_z$, with $\nabla\Lambda(\xi_z)=z$. The function $I$ is finite,
+smooth, strictly convex, and coercive, with $\nabla I(z)=\xi_z$ and
+$I(z)\ge\|z\|_2^2/(2\tau^2M)$.
+\end{lemma}
+
+\begin{proof}
+Integrating out the independent Gaussian $a$ gives
+\[
+ \Lambda(\xi)=\log\E_u\exp\left\{
+       \frac{\tau^2}{2}(\xi\cdot h(u))^2\right\}.
+\]
+Since each component of $h(u)$ lies in $[-1,1]$, this is at most
+$\tau^2\|\xi\|_1^2/2$. Jensen gives the lower bound in
+\eqref{eq:Lambda}. Boundedness also permits differentiation locally to
+all orders under the integral.
+
+The feature vectors $h(u)$ span $\R^M$. Indeed, choose a linear score
+taking distinct values on the $M$ inputs. A nonzero constant tanh feature
+and $M-1$ tanh features with thresholds between consecutive scores and
+steepness tending to infinity converge to an invertible matrix of
+constant and step-function columns. At some finite steepness that matrix
+is already invertible. Since the Gaussian $u$ law has positive density
+everywhere and $h$ is continuous, $\E_u(\xi\cdot h(u))^2>0$ for every
+nonzero $\xi$. Thus $G\succ0$.
+
+The law of $Z$ has full linear span and is symmetric under $a\mapsto-a$,
+so it is not supported on an affine hyperplane. Its strictly positive
+exponential tilts have the same property. Their covariance matrices,
+which are the Hessians of $\Lambda$, are positive definite. The lower
+quadratic bound makes $\xi\cdot z-\Lambda(\xi)$ tend to minus infinity
+as $\|\xi\|\to\infty$. Its unique maximizer therefore exists and solves
+$\nabla\Lambda(\xi_z)=z$. The inverse function theorem gives
+\[
+ \nabla I(z)=\xi_z,\qquad
+ \nabla^2I(z)=\big(\nabla^2\Lambda(\xi_z)\big)^{-1}\succ0.
+\]
+Taking the Legendre transform of the upper quadratic bound proves the
+asserted lower bound on $I$.
+\end{proof}
+
+For a history $S$, let
+\begin{equation}\label{eq:CS}
+ C_S=\{z\in\R^M:f(x)z_x\ge1/2\text{ for }x\in S\}.
+\end{equation}
+The teacher certificate gives a strictly feasible point. The continuous
+coercive rate $I$ therefore has a unique minimizer $z_S$ on this closed
+convex set.
+
+\begin{lemma}[Conditional concentration]\label{lem:conditioning}
+For each history $S$, the posterior full output vector converges in
+probability to $z_S$ as $N\to\infty$. The posterior complement of any
+fixed neighborhood of $z_S$ has probability decaying exponentially in $N$.
+\end{lemma}
+
+\begin{proof}
+Cram\'er's theorem applies to the empirical averages of $Z$, since their
+cumulant is finite everywhere \cite[Theorem~2.2.30]{dembozeitouni}.
+Its good rate function is $I$. The infimum of $I$ over the strict version
+of $C_S$ equals $I(z_S)$: mix $z_S$ with the strict teacher mean and let
+the mixture weight tend to zero. Coercivity and uniqueness give a
+positive rate gap on the part of $C_S$ outside any fixed open
+neighborhood of $z_S$. The large-deviation lower bound on the open
+conditioning event and upper bound on that closed complement prove the
+claim. In particular these conditioning events have positive probability
+for sufficiently large $N$.
+\end{proof}
+
+Define the one-neuron exponential tilt
+\begin{equation}\label{eq:tilt}
+ \frac{d\rho_z}{d\rho_0}
+   =\exp\{\xi_z\cdot Z-\Lambda(\xi_z)\}.
+\end{equation}
+Then $\E_{\rho_z}Z=z$ and $\KL(\rho_z\|\rho_0)=I(z)$. For any law
+$\rho$ with mean $z$ and finite relative entropy, the density identity
+gives
+\begin{equation}\label{eq:KLidentity}
+ \KL(\rho\|\rho_0)=\KL(\rho\|\rho_z)+I(z).
+\end{equation}
+Finite entropy makes the required moments integrable, as
+\eqref{eq:moment} below also proves. Thus $\rho_z$ is the unique
+minimum-entropy law of mean $z$, and $\rho_S:=\rho_{z_S}$ is the unique
+entropy projection onto the training constraints. This is the usual
+relative-entropy, or Sanov, interpretation of the variational problem.
+The actual posterior convergence has already been proved directly by
+the finite-dimensional Cram\'er argument.
+
+\section{A bounded potential pays for every bad prediction}
+
+The same teacher law is feasible at every target-consistent history, so
+\begin{equation}\label{eq:budget}
+ 0\le I(z_S)\le K_T.
+\end{equation}
+For the empty history, $z_\varnothing=0$ and $I(z_\varnothing)=0$.
+
+\begin{lemma}[Projection increment]\label{lem:projection}
+If $S'$ extends $S$ by one correct training example, then
+\begin{equation}\label{eq:increment}
+ I(z_{S'})-I(z_S)\ge\KL(\rho_{S'}\|\rho_S).
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Since $z_{S'}\in C_S$, first-order optimality for the convex minimization
+at $z_S$ gives $\xi_{z_S}\cdot(z_{S'}-z_S)\ge0$. The tilt identity gives
+\[
+ \KL(\rho_{S'}\|\rho_S)
+  =I(z_{S'})-I(z_S)-\xi_{z_S}\cdot(z_{S'}-z_S),
+\]
+which proves the claim.
+\end{proof}
+
+For any $\rho$ with $\KL(\rho\|\rho_0)\le K_T$, the entropy inequality
+and $\E_{\rho_0}e^{a^2/(4\tau^2)}=\sqrt2$ imply
+\begin{equation}\label{eq:moment}
+ \E_\rho a^2\le4\tau^2(K_T+c_0),\qquad c_0=\tfrac12\log2.
+\end{equation}
+Applying the entropy inequality to truncations of $a^2$ and passing to
+the limit also proves moment finiteness. The observable
+$H_x=a\tanh(u\cdot\bar x)$ satisfies $H_x^2\le a^2$.
+
+For probability measures $P,Q$ and an observable $H$ with finite second
+moments, Cauchy--Schwarz gives
+\begin{align}
+ |\E_PH-\E_QH|^2
+ &\le2(\E_PH^2+\E_QH^2)
+       \int(\sqrt{dP}-\sqrt{dQ})^2\notag\\
+ &\le2(\E_PH^2+\E_QH^2)\KL(P\|Q).
+ \label{eq:hellinger}
+\end{align}
+The first line factors the density difference into the sum and difference
+of square roots. The second uses squared Hellinger distance at most
+relative entropy, with squared Hellinger distance normalized as the
+displayed integral.
+
+If the next query $x$ has limiting signed output $f(x)(z_S)_x\le h$,
+the new training constraint forces $f(x)(z_{S'})_x\ge1/2$. Taking
+$P=\rho_{S'}$, $Q=\rho_S$, and $H=f(x)H_x$ in
+\eqref{eq:hellinger}, and using \eqref{eq:budget}--\eqref{eq:moment},
+gives
+\begin{equation}\label{eq:payment}
+ \KL(\rho_{S'}\|\rho_S)
+ \ge\frac{(1/2-h)^2}{16\tau^2(K_T+c_0)}.
+\end{equation}
+Each such round increases the potential by this amount. Its total budget
+is $K_T$, so at most $R_h$ rounds have $f(x)(z_S)_x\le h$, along every
+input order. In particular,
+\[
+ R_0=64\tau^2K_T(K_T+c_0),\qquad
+ R_{1/4}=256\tau^2K_T(K_T+c_0).
+\]
+
+\section{From the limiting predictor to the actual posterior}
+
+There are finitely many target-consistent histories: after removing
+repeats, each is a subset of the finite domain. For every pair $(S,x)$
+with $f(x)(z_S)_x>h$, conditional concentration gives
+$p_{N,S,h}(x)\to1$. A common sufficiently large width makes all these
+probabilities greater than $\theta$. Every actual confidence mistake
+must then be among the limiting bad rounds counted by \eqref{eq:Rh}.
+This proves the first part of Theorem~\ref{thm:main}, uniformly over
+input orders.
+
+For posterior sampling take $h=0$ and choose the common width so each
+limiting-good pair has wrong-sign probability at most $\eta/M$. At bad
+pairs use the bound one. Every order has at most $\lfloor R_0\rfloor$
+bad rounds and at most $M$ other distinct rounds. Linearity of expectation
+gives \eqref{eq:expectation}. A union bound shows that with probability
+at least $1-\eta$ no good round makes an error, giving \eqref{eq:hp}.
+For adaptive input choices the bounds apply conditionally on the past,
+because the next posterior draw is fresh. Repeated observed inputs have
+zero error probability. This completes the proof of the theorem.
+
+\section{An explicit polynomial entropy certificate}
+
+To prove Corollary~\ref{cor:teacher}, let $s,q$ be as in \eqref{eq:sq}.
+For each teacher neuron $i$, take the independent Gaussian component
+\[
+ u\sim\mathcal N(u_i,s^2I_D),\qquad
+ a\sim\mathcal N(2Cv_i,\tau^2),
+\]
+and let $\rho_T$ be their uniform mixture. Its mean output is
+\[
+ \E_{\rho_T}H_x
+   =2\sum_i v_i\E_\zeta\tanh((u_i+\zeta)\cdot\bar x),
+ \qquad\zeta\sim\mathcal N(0,s^2I_D).
+\]
+Since tanh is $1$-Lipschitz and $\|\bar x\|=\sqrt D$,
+\[
+ |\E_{\rho_T}H_x-2F_T(x)|
+ \le2\sum_i|v_i|\E|\zeta\cdot\bar x|
+ \le2CBs\sqrt D\le1/4.
+\]
+The signed mean is therefore strictly greater than $3/4$ on the entire
+cube. The Gaussian entropy formula bounds each component's entropy by
+\[
+ \frac{d\|u_i\|^2+(2Cv_i)^2}{2\tau^2}
+   +\frac D2(q-1-\log q)
+ \le\frac{dDB^2+4C^2B^2}{2\tau^2}
+   +\frac D2(q-1-\log q).
+\]
+Convexity of relative entropy under mixing gives the same bound for
+$\rho_T$. No $\log C$ mixture penalty is needed.
+
+At fixed $B,\tau$, the first term is $O(d^2+C^2)$, while
+\[
+ q-1-\log q\le-\log q
+ =\max\left\{0,\log\frac{64C^2B^2D\tau^2}{d}\right\}
+ =O(1+\log C).
+\]
+Because $d(1+\log C)=O(d^2+C^2)$, the certificate satisfies
+$K_T=O(d^2+C^2)$ and $R_h=O(d^4+C^4)$ at fixed $B,\tau,h$.
+All constants are displayed in \eqref{eq:Rh}--\eqref{eq:KT}.
+
+\section{Scope and the role of the support restriction}
+
+Training defines nested convex constraints on the full mean output
+vector. A prediction below the test margin forces a nonzero movement
+before the next training margin can be met. Relative entropy pays for
+that movement from a bounded budget. This property does not require an
+IID input distribution.
+
+If the initial prior is instead restricted to networks with
+$|F_N(x)|>1/2$ at every input, the limiting feasible set becomes a union
+of margin orthants. It is generally nonconvex: averaging two valid
+outputs can create zeros at unobserved inputs. The first-order inequality
+in Lemma~\ref{lem:projection} need not hold in that model. We make no
+claim here about total mistakes for that globally restricted learner.
+
+Two other distinctions matter. Training uses a fixed positive margin.
+For sign-only training at zero margin, the origin lies in the closure of
+every feasible set, so this rate minimizer no longer encodes the labels.
+Also, the confidence guarantee tests a margin strictly smaller than the
+training margin. The difference $1/2-h$ pays for each error in
+\eqref{eq:payment}.
+
+The abstract proof extends to bounded activations whose ridge feature
+vectors span the finite input set, provided a finite-entropy strict
+teacher law exists. A Lipschitz bound also permits the Gaussian mixture
+certificate, with modified constants. This does not establish the same
+theorem for ReLU: an unbounded activation makes a neuron output a product
+of unbounded Gaussian quantities, and the global cumulant and
+entropy-to-second-moment estimates require a different argument.
+
+\begin{thebibliography}{9}
+\bibitem{dembozeitouni}
+Amir Dembo and Ofer Zeitouni.
+\emph{Large Deviations Techniques and Applications}, second edition.
+Springer, 1998.
+\end{thebibliography}
+\end{document}

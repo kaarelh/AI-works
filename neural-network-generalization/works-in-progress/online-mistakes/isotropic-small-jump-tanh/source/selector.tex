@@ -1,0 +1,236 @@
+\section{A selector family with short covariance certificates}
+\label{sec:selector}
+
+Fix $k\ge8$, put $M=2^k$ and $d=2k+2$, and use Boolean inputs
+$\xi=(x,y,z,s)\in\{-1,1\}^{2k+2}$.  The two $k$-bit blocks encode
+\[
+ X=\sum_{i=0}^{k-1}2^i\frac{x_i+1}{2},\qquad
+ Y=\sum_{i=0}^{k-1}2^i\frac{y_i+1}{2}.
+\]
+For $0\le t\le M-1$, define the homogeneous affine scores
+\begin{equation}\label{eq:selector-score}
+ A_t(\xi)=-ts-(t+1)z+\sum_{i=0}^{k-1}2^i(x_i-y_i),
+ \qquad
+ Q_t=\|A_t\|_2^2=\frac{2(M^2-1)}3+2t^2+2t+1.
+\end{equation}
+Here $\|A_t\|_2$ denotes the Euclidean norm of its coefficient vector.
+Every score is an odd integer on the full cube. On $s=1,z=-1$ it is
+$1+2(X-Y)$, and on $s=z=1$ it is $2(X-Y)-2t-1$.
+The target is
+\begin{equation}\label{eq:selector-target}
+ f(\xi)=\operatorname{sign} A_{M-1}(\xi).
+\end{equation}
+It is odd. On $s=1$, it is positive exactly when $z=-1$ and $X\ge Y$.
+
+\subsection{Small pairwise-independent free-bit sets}
+
+For $r\ge1$, let $\ell=\lceil\log_2(r+1)\rceil$ and choose $r$ distinct
+nonzero vectors $v_1,\ldots,v_r\in\mathbb F_2^\ell$; the first $r$
+nonzero binary vectors in their usual integer order will do. Let
+\[
+ \mathcal P_r=
+ \left\{\bigl(-(-1)^{v_j\cdot\omega}\bigr)_{j=1}^r:
+                  \omega\in\mathbb F_2^\ell\right\}.
+\]
+Use the uniform seed law, and let $\mathcal P_0$ consist of the single
+empty assignment. The chosen vectors span $\mathbb F_2^\ell$, so the
+seed map is injective. Thus
+\begin{equation}\label{eq:pi-size}
+ n_0:=|\mathcal P_0|=1,\qquad
+ n_r:=|\mathcal P_r|=2^{\lceil\log_2(r+1)\rceil}\le2r
+ \quad(r\ge1).
+\end{equation}
+Each free bit has mean zero, and distinct free bits have product mean
+zero, because $v_i$, $v_j$, and $v_i+v_j$ are nonzero. The all-minus
+assignment belongs to $\mathcal P_r$, from the zero seed. Consequently
+these sets reproduce every first and second moment of independent
+uniform free bits, while using only $O(r)$ points.
+
+Define the following groups, all on $s=1$.
+\begin{enumerate}
+\item The positive diagonal group $\mathcal D$ has $z=-1$, $x=y$,
+      with the $k$ equal bits ranging over $\mathcal P_k$.
+\item For each $i=0,\ldots,k-1$, the negative carry group
+      $\mathcal C_i$ has $z=-1$,
+      \[
+      x_j=1,\ y_j=-1\ (j<i),\qquad x_i=-1,\ y_i=1,
+      \]
+      and its $k-1-i$ upper equal pairs range over
+      $\mathcal P_{k-1-i}$. Thus $X-Y=-1$.
+\item For $k\le t\le M-1$, let $b_i=\operatorname{bit}_i(t)$.
+      The negative query group $\mathcal G_t$ has $z=1$,
+      \[
+       (x_i,y_i)=(1,-1)\quad\text{if }b_i=1,
+      \]
+      and its remaining equal pairs range over
+      $\mathcal P_{k-\operatorname{popcount}(t)}$. Hence $X-Y=t$.
+      The point $q_t$ with $X=t,Y=0,z=s=1$ belongs to this group.
+\end{enumerate}
+All stated labels agree with the target. With every labeled point
+$(\xi,y)$ also include its antipode $(-\xi,-y)$. Let $H_t$ be the history
+containing the paired groups $\mathcal D$, all $\mathcal C_i$, and
+$\mathcal G_k,\ldots,\mathcal G_t$.
+
+\begin{lemma}[Affine minimum and covariance certificate]
+\label{lem:selector-certificate}
+For every $k\ge8$ and $k\le t\le M-1$, the unique minimum-norm affine
+unit-margin vector fitting $H_t$ is $(0,A_t)$, where the first coordinate
+is the coefficient of the appended constant. It has squared norm $Q_t$
+and absolute unit margin on the whole cube. It admits an active KKT
+probability distribution whose signed augmented inputs $Z$ satisfy
+\[
+ \mathbb E Z=(0,A_t)/Q_t,\qquad
+ Z\cdot(0,A_t)=1,\qquad
+ \mathbb E ZZ^{\mathsf T}\preceq2I.
+\]
+\end{lemma}
+
+\begin{proof}
+Write
+\[
+ T=t+\tfrac12,\qquad B=\frac{M^2-1}{3},\qquad
+ Q=Q_t=2B+2T^2+\tfrac12,
+\]
+and set
+\[
+ c_i=2^i+Tb_i,\qquad
+ S_i=\sum_{j=i}^{k-1}2^{j-i}c_j,\qquad S_k=0,
+ \qquad \mu_i=c_i+S_{i+1}.
+\]
+These positive numbers obey
+\[
+ S_i=\sum_{r=i}^{k-1}\mu_r,\qquad
+ S_0=B+Tt=\frac{Q-T-1/2}{2}.
+\]
+Give $\mathcal D$ total KKT weight $P=S_0+1/2$, each $\mathcal C_i$
+total weight $\mu_i$, and $\mathcal G_t$ total weight $T$. Within each
+group distribute the weight according to its uniform free-bit law.
+These weights sum to $Q$. Every point in their support has signed
+$A_t$-margin one.
+
+For the moment calculations use orthonormal coordinates
+\[
+ d_i'=\frac{x_i-y_i}{\sqrt2},\qquad
+ h_i'=\frac{x_i+y_i}{\sqrt2},\qquad
+ u=\frac{s-z}{\sqrt2},\qquad v=\frac{s+z}{\sqrt2}.
+\]
+The coefficient vector of $A_t$ has components
+\[
+ (\sqrt2\,2^i)_i,\quad (0)_i,\quad 1/\sqrt2,\quad-\sqrt2 T.
+\]
+The signed KKT weighted mean of the points has these same components:
+\[
+ \sqrt2(\mu_i-S_{i+1}-Tb_i)=\sqrt2\,2^i,\qquad
+ \sqrt2(P-S_0)=1/\sqrt2,\qquad -\sqrt2 T.
+\]
+The free-bit means vanish. This proves stationarity for the homogeneous
+coefficient vector. Split every point's weight equally between it and
+its labeled antipode. In the augmented coordinates this cancels the
+constant-coordinate mean and leaves the other signed means unchanged.
+Hence $(0,A_t)$ has a positive active KKT certificate and is the unique
+minimum of the strictly convex squared norm. It fits all earlier
+$\mathcal G_j$ because its score there is $2j-2t-1\le-1$.
+
+It remains to bound the unsigned covariance $C=\mathbb E\xi\xi^{\mathsf T}$
+of the normalized weights. Pairwise independence of the free equal
+bits makes the $h'$ block diagonal with entries at most two; it also
+makes all its cross terms with the other coordinates zero. Put
+$\delta=T/Q$. The remaining block, in the order $(d',u,v)$, is
+\begin{equation}\label{eq:selector-cov-block}
+ C_0=\begin{pmatrix}
+       K & h_u & h_v\\
+       h_u^{\mathsf T}&2(1-\delta)&0\\
+       h_v^{\mathsf T}&0&2\delta
+     \end{pmatrix},
+\end{equation}
+where
+\begin{align*}
+ h_u&=-2c/Q,&h_v&=2\delta b,\\
+ K_{ii}&=2S_i/Q+2\delta b_i,&
+ K_{ij}&=-\frac2Q\bigl[2^j+Tb_j(1-b_i)\bigr]\quad(i<j).
+\end{align*}
+Only first and second free-bit moments enter these formulas.
+
+Since $T<M$, $Q\ge M^2/2$, and $S_i\le2^{-i}S_0<Q/2^{i+1}$,
+\[
+ \delta\le2/M,\qquad \|K\|_{\mathrm{op}}\le1+6k/M.
+\]
+For the latter estimate, each diagonal entry is at most $1+4/M$ and
+each off-diagonal absolute value is at most $6/M$; apply Gershgorin.
+Furthermore, $\sum_i c_i^2\le2B+2T^2k$, $B/Q\le1/2$, and $T\ge k$
+give
+\[
+ \frac{\|h_u\|^2}{2\delta}\le\frac2k+\frac{8k}{M},\qquad
+ \frac{\|h_v\|^2}{2(1-\delta)}\le\frac{16k}{M^2}.
+\]
+The Schur complement of the last two coordinates in $2I-C_0$ is
+\[
+ 2I-K-\frac{h_uh_u^{\mathsf T}}{2\delta}
+       -\frac{h_vh_v^{\mathsf T}}{2(1-\delta)}.
+\]
+It is positive definite because
+\begin{equation}\label{eq:selector-schur-bound}
+ 1+\frac2k+\frac{14k}{2^k}+\frac{16k}{4^k}<2
+ \qquad(k\ge8).
+\end{equation}
+At $k=8$ the three positive terms after one sum to less than $0.69$,
+and each decreases thereafter. Thus $C\preceq2I$. Pairing the augmented
+inputs makes their covariance $\operatorname{diag}(1,C)$, completing
+the certificate.
+\end{proof}
+
+\subsection{The fixed order and the bounded teacher}
+
+Start the input permutation with $H_k$, in any fixed order. At stage
+$t=k+1,\ldots,M-1$, present $q_t$ first, then its antipode, then the
+remaining points of $\mathcal G_t$ and their antipodes in a fixed order.
+At the end of the stage the history is $H_t$. Different groups are
+distinguished by selector face, value of $X-Y$, or highest differing bit,
+and the
+antipodes have $s=-1$, so there are no repeated inputs. Append all
+remaining cube points in any fixed order.
+
+From \eqref{eq:pi-size}, the initial calibration has at most
+\begin{equation}\label{eq:calibration-count}
+ 2\left(n_k+\sum_{r=0}^{k-1}n_r+
+               n_{k-\operatorname{popcount}(k)}\right)
+ \le2k^2+6k+2
+\end{equation}
+points. Each subsequent stage contains at most $4k$ inputs, including
+its designated first query.
+
+Before $q_t$, Lemma~\ref{lem:selector-certificate} gives the affine
+minimizer $A_{t-1}$. Its score at $q_t$ is $+1$, whereas the target label
+is negative. The exact profile and unique-function conclusion of
+Theorem~\ref{thm:exact}, together with the posterior comparison below,
+therefore give a cold-posterior mistake on every designated
+first query, provided
+\[
+ d=2k+2\ge4\max\{1,\epsilon^{-6}\}.
+\]
+There are
+\begin{equation}\label{eq:forced-error-count}
+ M-k-1=2^k-k-1\ge2^{k-1}
+\end{equation}
+such queries. The unique minimizing function at the preceding history
+handles all competitors, including functions that would assign the
+same label to $q_t$ and its as-yet-unrevealed antipode. The posterior
+argument thus does not assume that the learner's function is odd.
+
+The target has Boolean circuit size $\Theta(k)$. A comparison circuit
+computes $X\ge Y$ with $O(k)$ bounded-fan-in gates, followed by the
+selector conjunction. Its odd extension on $s=-1$ is computed by
+negating the original inputs conditionally on $s$ and multiplying the
+output sign by $s$, again using $O(k)$ gates. Conversely, all $2k$ main
+bits are essential, which gives the matching bounded-fan-in lower bound.
+
+Finally set $C_\epsilon=\lceil1/\epsilon\rceil$. The vector $A_{M-1}/M$
+has every coefficient of magnitude at most one, and has nonzero score
+at every input. Use $C_\epsilon$ identical hidden neurons with this
+incoming vector, zero appended-input bias, and readout weights one.
+Their signed output on the target is strictly greater than
+$C_\epsilon\epsilon\ge1$. This is a teacher of the same depth, width
+$C_\epsilon$ independent of $k$, and individual weights at most one.
+In particular the online result applies at every learner width above
+this bounded teacher complexity, as well as at every other positive
+width covered by the exact-profile theorem.

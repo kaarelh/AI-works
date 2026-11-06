@@ -1,0 +1,161 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,amsmath,amssymb,amsthm,mathtools}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Exponential online mistakes after an arbitrarily small jump is added to tanh},pdfauthor={ChatGPT-6 Astra; Kaarel Hanni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\newcommand{\sgn}{\operatorname{sign}}
+\title{Exponential online mistakes after an arbitrarily\protect\\small jump is added to tanh}
+\author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{6 November 2026}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+For every fixed $\epsilon>0$, consider the bounded activation
+$\phi_\epsilon(t)=\tanh(t)+\epsilon\sgn(t)$. Its uniform distance from
+tanh is $\epsilon$, but it has a jump at zero. We construct a shallow
+Bayesian neural-network learner with the standard coordinate-isotropic
+Gaussian prior that makes exponentially many online mistakes, at every
+hidden width in its strong-prior limit. The target has a Boolean circuit
+of size $\Theta(k)$ and a teacher of width $\lceil1/\epsilon\rceil$
+whose weights are bounded by one. A fixed input permutation begins with
+$O(k^2)$ calibration examples and has $2^k-k-1$ designated errors, with
+$O(k)$ intervening examples per error. The prior is conditioned on
+absolute output margin greater than $1/2$ on the entire Boolean cube,
+and then on exact training labels. The proof gives an exact Gaussian
+energy minimum from an affine margin certificate, controls every
+nonlinear competitor, and obtains a width-uniform energy gap using a
+compact relaxation over neuron distributions. Direct width-dependent
+prior limits are also covered. For the same learner, a separate energy
+compression argument gives IID sample complexity
+$O_\epsilon((d^3+\log(1/\beta))/\eta)$ for test confidence greater than
+$2/3$ outside input mass $\eta$.
+The result uses a fixed nonzero jump; it does not settle the question for
+ordinary tanh or any continuous approximation to this activation.
+\end{abstract}
+
+\section{The model and main result}
+
+We study an activation arbitrarily close to tanh in the uniform norm
+and prove an all-width online lower bound for it. The activation is
+\[
+ \phi_\epsilon(t)=\tanh(t)+\epsilon\sgn(t),\qquad
+ \epsilon>0,\qquad \sgn(0)=0.
+\]
+The coefficient $\epsilon$ is fixed across input dimensions and learner
+widths. The activation is odd, increasing, and bounded by
+$M=1+\epsilon$ in absolute value. Its distance from ordinary tanh in
+the uniform norm is exactly $\epsilon$.
+
+For $x\in\{-1,1\}^d$, put $\bar x=(1,x)$. A width-$N$ learner has one
+hidden layer and output
+\begin{equation}\label{eq:model}
+ F(x)=\sum_{j=1}^N v_j\phi_\epsilon(u_j\cdot\bar x),\qquad
+ u_{ji}\sim\mathcal N(0,N\sigma^2/d),\qquad
+ v_j\sim\mathcal N(0,\sigma^2/N),
+\end{equation}
+with all Gaussian coordinates independent. The coefficient of the
+constant input has the same variance as the other incoming weights.
+There is no anisotropy or additional readout penalty.
+
+The initial prior is conditioned on $|F(x)|>1/2$ at every cube input.
+After labels are revealed, it is further conditioned on
+$f(x)F(x)>1/2$ at those inputs. A fresh posterior sample makes an error
+when it assigns the wrong sign. We also consider posterior-label
+majority and the convention requiring correct-label posterior
+probability greater than $2/3$.
+
+At fixed $N$, the strong-prior limit is $\sigma\downarrow0$.
+For direct width limits, set
+\begin{equation}\label{eq:scaling}
+ \sigma_N^2=\tau^2N^{-\gamma},\qquad
+ \operatorname{Var}(u_{ji})=\tau^2N^{1-\gamma}/d,
+ \qquad \operatorname{Var}(v_j)=\tau^2N^{-\gamma-1},
+\end{equation}
+where $\tau>0$ and $\gamma\ge1$ are fixed.
+
+\begin{theorem}\label{thm:main}
+Fix $\epsilon>0$. Let $k\ge8$, $d=2k+2$, and assume
+$d\ge4\max\{1,\epsilon^{-6}\}$. Write the inputs as
+$(x,y,z,s)$ with $x,y\in\{-1,1\}^k$ and $z,s\in\{-1,1\}$.
+Put $A=2^k$ and define
+\begin{equation}\label{eq:target}
+ f_k(x,y,z,s)=\sgn\left(
+ -(A-1)s-Az+\sum_{i=0}^{k-1}2^i(x_i-y_i)\right).
+\end{equation}
+There is a fixed permutation of the full input cube, depending only on
+$k$, with these properties.
+\begin{enumerate}
+\item The target has Boolean circuit size $\Theta(k)$ and a teacher of
+hidden width $\lceil1/\epsilon\rceil$, with all weights bounded by one
+and signed output greater than one everywhere.
+\item A calibration prefix of at most $2k^2+6k+2$ examples is followed
+by $T_k=2^k-k-1\ge2^{k-1}$ designated queries. There are at most $4k$
+examples in each query block, including its designated first query.
+At every fixed width $N\ge1$, the posterior wrong-label probability
+at each designated query tends to one as $\sigma\downarrow0$.
+\item For every fixed $\gamma>1$ and $\tau>0$ in
+\eqref{eq:scaling}, those same wrong-label probabilities tend to one
+as $N\to\infty$.
+\item For every $\delta\in(0,1)$ there exists
+$\tau_0(k,\epsilon,\delta)>0$ such that, for all
+$0<\tau\le\tau_0$, all $\gamma\ge1$, and all $N\ge1$, posterior
+sampling makes every designated mistake with probability at least
+$1-\delta$. Each designated posterior majority is also wrong when
+$\delta$ is sufficiently small, and the $2/3$ correctness criterion
+fails there.
+\item In the same cold and direct-width regimes, the learner has IID
+sample complexity $O_\epsilon((d^3+\log(1/\beta))/\eta)$ for
+correct-label posterior confidence greater than $2/3$ outside a set of
+input mass at most $\eta$, with sample confidence at least $1-\beta$.
+The precise variance and width quantifiers are given in
+Theorem~\ref{thm:iid}.
+\end{enumerate}
+The comparison includes every nonlinear network at every width; no
+choice among tied minimum-energy predictors is made.
+\end{theorem}
+
+The teacher-width bound is independent of $k$ at fixed activation.
+The dimension restriction grows as $\epsilon$ decreases. Neither this
+restriction nor the prior limits can be interchanged with
+$\epsilon\downarrow0$ to obtain a theorem for ordinary tanh.
+
+\input{dual.tex}
+\input{selector.tex}
+\input{posterior.tex}
+\input{compression.tex}
+
+\section{What the small jump changes}
+
+For the histories in the construction, the jump supplies a signed
+activation of size $\epsilon$ even at arbitrarily small nonzero
+preactivation. The tanh component then makes a positive incoming scale
+strictly preferable to zero. The resulting energy is a strictly
+increasing function of the affine margin norm, despite remaining below
+$1/(4\epsilon^2)$. The covariance certificate prevents a nonlinear
+mixture of neurons from improving that energy.
+
+The online error count does not come from computational limitations or
+a favorable selection of one tied predictor. A positive energy gap
+separates the actual wrong scalar output from every network that would
+give the correct next label, uniformly over hidden width. The same
+prior nevertheless gives polynomial IID sample complexity. The fixed
+input order, together with exact global-margin conditioning, is what
+distinguishes the two learning guarantees.
+
+This is a theorem about a discontinuous activation uniformly close to
+tanh. It is not a theorem about tanh itself, and it does not establish
+stability under replacing the jump by a continuous transition. The
+corresponding all-width question for ordinary tanh, ReLU, and hardtanh
+under the same prior remains separate.
+
+\end{document}
