@@ -1,0 +1,227 @@
+\section{A nonlinear activation at every layer, uniformly close to identity}
+\label{sec:near}
+
+This model has the appended constant coordinate $(1,\xi)$ and uses the
+same activation $\phi$ in all $L-1$ hidden layers. Set $d=2k+1$,
+$p=d+1$, $m=L-1$, and $Q_*=Q_M$ from \eqref{eq:Qt}.
+
+\begin{theorem}[All widths for near-identity activations]\label{thm:near}
+Fix $k\ge3$ and $L\ge2$. Choose
+\begin{equation}\label{eq:epsilon}
+ 0<\epsilon\le
+       \frac1{128m p^{3/2}Q_*^{3/2}},\qquad \alpha=1-\epsilon.
+\end{equation}
+Suppose $\phi(0)=0$, $\phi$ is $1$-Lipschitz, and
+\begin{equation}\label{eq:close-id}
+ |\phi(s)-s|\le\epsilon|s|\qquad(s\in\R).
+\end{equation}
+For the target and fixed input order of Section~\ref{sec:selector}, at
+every fixed learner width $N\ge1$, the correct-label posterior
+probability on each of the $T_k$ designated rounds tends to zero as
+$\sigma\downarrow0$ under \eqref{eq:prior}. Consequently, at every
+sufficiently small positive scale, posterior majority makes all $T_k$
+mistakes, the strict $2/3$ confidence criterion fails on all $T_k$ rounds,
+and posterior sampling makes all $T_k$ mistakes with probability at
+least $1-\eta$, for any prescribed $\eta>0$.
+
+At every depth $L\ge k+2$, the target has $C_L(f)=2$ for this activation.
+Thus the lower bound applies to every $N\ge C_L(f)$ with no upper width
+bound. The activation condition is independent of $N$; the positive
+scale threshold may depend on $N,k,L,\phi,\eta$.
+\end{theorem}
+
+Two examples are
+\[
+ \phi(s)=\begin{cases}s,&s\ge0,\\(1-\epsilon)s,&s<0,\end{cases}
+ \qquad\text{and}\qquad
+ \phi(s)=(1-\epsilon)s+\epsilon\tanh s.
+\]
+Both are nonlinear for $\epsilon>0$. The second is smooth,
+odd, and has derivative between $1-\epsilon$ and one. Our sufficient upper bound on $\epsilon$ in \eqref{eq:epsilon} is of
+order $8^{-k}/[(L-1)k^{3/2}]$.
+The theorem therefore does not give a growing-target lower bound for
+one fixed standard nonlinear activation.
+
+\begin{lemma}[Linearization on a quadratic-energy ball]
+\label{lem:linearize}
+Replace every hidden activation in $\theta$ by the identity, obtaining
+an affine output $A_\theta\cdot(1,\xi)$. Under the theorem's hypotheses,
+\begin{equation}\label{eq:linear-error}
+ \max_\xi|Z_\theta(\xi)-A_\theta\cdot(1,\xi)|
+ \le\epsilon m\sqrt{p/d}\left(\frac{\kappa_{d,N}(\theta)}L\right)^{L/2}.
+\end{equation}
+Also
+\begin{equation}\label{eq:linear-energy}
+ \kappa_{d,N}(\theta)\ge
+       L\bigl(d\norm{A_\theta}_2^2\bigr)^{1/L}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Since $\phi$ is $1$-Lipschitz and fixes zero, it does not increase
+Euclidean vector norm. Telescope through the $m$ activation locations,
+replacing one at a time. The replacement error is at most $\epsilon$
+times the incoming vector norm, and every remaining map has Lipschitz
+constant at most its matrix Frobenius norm. Each summand is therefore
+bounded by $\epsilon\sqrt p$ times the product of all $L$ matrix norms,
+including the readout. The coefficients in the energy are
+$d/N,1,\ldots,1,N$, whose product is $d$. Weighted
+arithmetic--geometric mean gives
+\[
+ \prod_{j=1}^L\norm{M_j}_F
+ \le d^{-1/2}\left(\frac{\kappa_{d,N}(\theta)}L\right)^{L/2},
+ \qquad (M_1,\ldots,M_L)=(W^1,\ldots,W^{L-1},v).
+\]
+This proves \eqref{eq:linear-error}. Submultiplicativity also bounds
+$\norm{A_\theta}_2$ by this product, proving \eqref{eq:linear-energy}.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:near}]
+Fix a history through $q_t$, $k\le t<M$. First construct a cheap
+consistent predictor with the wrong sign at $q_{t+1}$. Embed a scalar
+path in one neuron of each hidden layer, with positive downstream
+weights, whose identity-activation product vector is $P A_t$, where
+\[
+ P=\frac1{2\alpha^m}.
+\]
+Condition \eqref{eq:close-id} implies that $\phi$ preserves every
+nonzero sign and $|\phi(s)|\ge\alpha|s|$. The resulting nonlinear output
+has sign $A_t$ and magnitude at least
+$\alpha^m P|A_t(\xi)|\ge1/2$ on the full cube. Its training signs are
+correct and its next-query sign is positive.
+
+Balance the $L$ factors against their Gaussian energy coefficients.
+Explicitly, let $c_1=d/N$, $c_L=N$, and all other $c_j=1$.
+Take a first row in the direction $A_t/\sqrt{Q_t}$ and choose positive
+factor norms
+\[
+ s_j=r/\sqrt{c_j},\qquad
+ r=(dP^2Q_t)^{1/(2L)}.
+\]
+Their product is $P\sqrt{Q_t}$, and each energy term is $r^2$.
+The constructed weak-margin parameter therefore has energy
+\begin{equation}\label{eq:Ut}
+ U_t=L\left(\frac{dQ_t}{4\alpha^{2m}}\right)^{1/L}.
+\end{equation}
+Slightly increasing the readout gives an open strict-margin region of
+consistent wrong predictors, with energies arbitrarily close to $U_t$.
+
+We next show that every consistent weak-margin predictor with the
+correct, negative sign at $q_{t+1}$ has energy strictly greater than
+$U_t$. Suppose instead that one has energy at most $U_t$.
+Lemma~\ref{lem:linearize} bounds its linearization error by
+\begin{equation}\label{eq:delta}
+ \delta=\frac{\epsilon m\sqrt{pQ_t}}{2\alpha^m}
+             \le\frac1{128pQ_*}.
+\end{equation}
+Indeed, Bernoulli's inequality gives
+$\alpha^m\ge1-m\epsilon\ge127/128>1/2$, and
+$Q_t\le Q_*$. Put $r_0=1/2-\delta>0$.
+The affine vector $B=A_\theta/r_0$ satisfies every observed unit-margin
+constraint and $B(q_{t+1})\le-1$. By \eqref{eq:affine-gap} and
+\eqref{eq:linear-energy},
+\begin{equation}\label{eq:correct-lower}
+ \kappa_{d,N}(\theta)\ge
+    L\bigl(d r_0^2(Q_t+4/p)\bigr)^{1/L}.
+\end{equation}
+This exceeds \eqref{eq:Ut}. To check the strict inequality, set
+$h=4/(pQ_t)$; here $0<h\le1/2$. Then
+\[
+ (1-2\delta)^2(1+h)
+ \ge1+h-6\delta
+ \ge1+\frac4{pQ_*}-\frac6{128pQ_*}
+ >1+\frac1{16pQ_*}.
+\]
+On the other hand, $\epsilon\le1/2$ and $m\epsilon\le1/128$ give
+\[
+ \alpha^{-2m}\le\exp(4m\epsilon)\le1+8m\epsilon
+             \le1+\frac1{16pQ_*}.
+\]
+The last inequality uses $pQ_*\ge1$ in \eqref{eq:epsilon}.
+Thus $(1-2\delta)^2(Q_t+4/p)>Q_t\alpha^{-2m}$, contradicting
+\eqref{eq:correct-lower} and $\kappa_{d,N}\le U_t$.
+
+The weak-margin set fitting the history and correctly labeling the
+next query is closed. At each fixed width its quadratic energy is
+coercive, so its infimum is attained if the set is nonempty.
+The preceding strict exclusion therefore gives an energy gap above
+$U_t$. Lemma~\ref{lem:gaussian} shows that the correct-label posterior
+probability tends to zero. The finite-round argument following that
+lemma gives all three prediction conclusions.
+
+For the teacher, at depth $k+2$ use $A_M/2^k$ as the first affine vector,
+then $k$ scalar hidden weights equal to two, and readout one.
+Every first coefficient is at most one in magnitude. Add hidden scalar
+weights one if $L>k+2$. The output has the sign of $A_M$, which is $f$,
+and magnitude at least $\alpha^{L-1}|A_M(\xi)|>1/2$.
+Every coefficient is at most two. Zero padding is valid because
+$\phi(0)=0$, hence $C_L(f)\le2$.
+
+If $C_L(f)=1$, all layers would be scalar and all coefficients at most
+one. The downstream scalar map would be $1$-Lipschitz and vanish at zero.
+Its sign, up to one overall reversal, would be the first affine sign.
+A strict output margin would force a first affine margin $\rho>1/2$.
+Normalize that vector by $\rho$ and use the carry inequalities in
+Lemma~\ref{lem:selector}. Its original top-bit antisymmetric coefficient
+would exceed $2^{k-2}>1$, contradicting the coefficient bound one.
+Thus $C_L(f)=2$.
+\end{proof}
+
+\begin{corollary}[A larger perturbation with exponentially many errors]
+\label{cor:near-half}
+Retain the architecture, target, and fixed input permutation of
+Theorem~\ref{thm:near}, but count only the rounds
+$q_{2^{k-1}},\ldots,q_M$. All three posterior mistake conclusions hold
+on these $2^{k-1}$ rounds under the weaker sufficient condition
+\begin{equation}\label{eq:epsilon-half}
+ 0<\epsilon\le
+ \frac{2^{k+1}}{128(L-1)\sqrt{d+1}\,Q_*^{3/2}}.
+\end{equation}
+The teacher still has $C_L(f)=2$ for every $L\ge k+2$, and the
+activation condition remains independent of learner width. The upper
+bound on $\epsilon$ is of order $4^{-k}/[(L-1)\sqrt{k}]$.
+\end{corollary}
+\begin{proof}
+Put $t_0=2^{k-1}-1$ and $a=4(t_0+1)=2^{k+1}$. For a history through
+$q_t$, with $t_0\le t<M$, adding the correct negative label at
+$q_{t+1}$ gives the next selector history. Its minimum affine
+squared norm is exactly $Q_{t+1}$ by Lemma~\ref{lem:selector}.
+Consequently the additional squared-norm cost is
+\[
+ \Delta_t=Q_{t+1}-Q_t=4(t+1)\ge a.
+\]
+This improves the coarse bound $4/p$ used in the theorem's proof.
+
+The same scalar candidate has energy $U_t$ from \eqref{eq:Ut}.
+Since $a\le Q_*$, condition \eqref{eq:epsilon-half} gives
+$m\epsilon\le1/128$ and $\alpha^m>1/2$ as before. A parameter of
+energy at most $U_t$ has linearization error at most
+\begin{equation}\label{eq:delta-half}
+ \delta=\frac{\epsilon m\sqrt{pQ_t}}{2\alpha^m}
+       \le\frac{a}{128Q_*}.
+\end{equation}
+If it correctly labels the next query, dividing its affine
+linearization by $1/2-\delta$ gives a vector of squared norm at least
+$Q_{t+1}=Q_t+\Delta_t$. Set $h=\Delta_t/Q_t$.
+Here $0<h<1/2$: indeed $k\ge3$, $t\ge t_0\ge3$, and
+\[
+ Q_t-8(t+1)\ge35+2t(t-3)>0.
+\]
+Thus
+\[
+ (1-2\delta)^2(1+h)
+ \ge1+h-6\delta
+ \ge1+\frac{a}{Q_*}-\frac{6a}{128Q_*}
+ >1+\frac{a}{2Q_*},
+\]
+whereas
+\[
+ \alpha^{-2m}\le1+8m\epsilon
+ \le1+\frac{a}{16\sqrt p\,Q_*^{3/2}}
+ \le1+\frac{a}{16Q_*}.
+\]
+The linearization energy bound therefore excludes every correct
+next-query parameter from the energy ball at $U_t$. The same closed-set
+energy gap and Gaussian argument prove the posterior conclusions.
+Finally $\alpha^{L-1}>1/2$ gives the identical bounded teacher, and
+the exclusion of $C_L=1$ is unchanged.
+\end{proof}

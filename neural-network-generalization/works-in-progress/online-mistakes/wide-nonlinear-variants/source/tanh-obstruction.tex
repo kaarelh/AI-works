@@ -1,0 +1,136 @@
+\section{A two-feature tanh obstruction to lifting the scalar argument}
+\label{sec:tanh}
+
+We now return to tanh in \emph{every} hidden layer, an appended constant
+input, and the prior \eqref{eq:prior}. The following is an energy
+comparison, not a statement about the predictions of the wider posterior.
+It shows why the scalar affine minimum cannot simply be inserted as
+the minimum energy of the wider architecture.
+
+\begin{proposition}[A cheap classifier consistent with the entire suffix]
+\label{prop:tanh-shortcut}
+Let $k\ge128$, $d=2k+1$, and $L=d+1=2k+2$.
+For every width $N\ge2$, the Boolean function
+\[
+ g(x,y,z)=+1\quad\Longleftrightarrow\quad z=-1\text{ and }x_0=y_0
+\]
+has a strict-global-margin tanh implementation with every coefficient
+bounded by two and
+\[
+ \kappa_{d,N}\le L+89+12\log d<2L.
+\]
+It fits every calibration example and every negative query $q_t$ from
+Section~\ref{sec:selector}.
+In contrast, every scalar tanh implementation of $\sgn A_t$, for
+$k\le t\le M$, with weak global output margin $1/2$ has energy at least
+$2L$.
+\end{proposition}
+\begin{proof}
+Every positive calibration point is diagonal. At every negative carry
+point, $x_0\ne y_0$: either bit zero is the highest differing bit, or
+it is one of the lower carry bits. Every $q_t$ has $z=+1$.
+Thus $g$ fits the entire stated sequence.
+
+Put
+\[
+ \lambda=(82d)^{-1/2},\qquad
+ s=x_0-y_0+\frac72+\frac52z,\qquad
+ r=\frac{\tanh(4\lambda)}{\tanh(2\lambda)}
+   =\frac2{1+\tanh^2(2\lambda)}.
+\]
+Consider the two-feature combination
+\[
+ F(s)=\tanh(2\lambda s)-r\tanh(\lambda s).
+\]
+Writing $a=\tanh(\lambda s)$ and $b=\tanh(2\lambda)$, the double-angle
+identity gives
+\begin{equation}\label{eq:tanh-two}
+ F(s)=\frac{2a(b^2-a^2)}{(1+a^2)(1+b^2)}.
+\end{equation}
+It is odd, positive for $0<s<2$, and negative for $s>2$.
+The possible $s$ values are $-1,1,3$ for $z=-1$ and $4,6,8$ for
+$z=+1$. Exactly $s=1$ has the positive target label, so $\sgn F=g$.
+
+For $N\ge2$, put $n=\lfloor N/2\rfloor$. Use $n$ copies of each
+first-layer feature and zero in any remaining neuron. In each of the
+$N$ second-layer neurons, assign coefficients $1/n$ to the first
+feature group and $-r/n$ to the second. Every second-layer activation
+is then $\tanh(F(s))$.
+The squared affine coefficient norm of $s$ is $41/2$.
+The first-layer energy is at most $82d\lambda^2=1$.
+Since $N/n\le3$ and $r\le2$, the second-layer energy is at most
+$(N/n)(1+r^2)\le15$.
+A later layer with all entries $a/N$ maps a common activation $h$ to
+$\tanh(ah)$ and has Frobenius energy $a^2$. A readout with all entries
+$1/N$ has weighted energy one and returns that common activation.
+
+We need a margin estimate to choose the remaining layers.
+For $d\ge7$, $8\lambda<1/2$. On $[0,1/2]$ we have
+$\tanh'(u)>1/2$ and $\tanh u\ge u/2$.
+For $s=1$, these imply $a\ge\lambda/2$,
+$b-a\ge\lambda/2$, and $b+a\ge3\lambda/2$.
+Equation~\eqref{eq:tanh-two}, with denominator at most four, gives
+$F(1)\ge3\lambda^3/16$. For $s\in\{3,4,6,8\}$, use
+$a\ge3\lambda/2$, $a-b\ge\lambda/2$, and $a+b\ge5\lambda/2$
+to get $|F(s)|\ge15\lambda^3/16$. Oddness handles $s=-1$.
+Every second-layer activation therefore has absolute value at least
+\[
+ h_0=\tanh(3\lambda^3/16)\ge3\lambda^3/32.
+\]
+
+Any $J\le d$ subsequent gain-one tanh layers retain at least $h_0/2$.
+Indeed, $\tanh u\ge u-u^3/3$ for $u\ge0$. Iterating from $h_0$,
+all virtual values are at most $h_0$, so the total loss is at most
+$Jh_0^3/3<h_0/2$, using $h_0\le3\lambda^3/16$ and $J\le d$. Monotonicity transfers this bound to larger actual
+activation magnitudes. For $0<h\le1/2$, concavity and
+$\tanh1>3/4$ give $\tanh(2h)>(3/2)h$.
+Once $h\ge1/2$, one more gain-two layer makes it strictly greater than
+$1/2$ and subsequent such layers preserve that property. Hence
+\[
+ m=\left\lceil\log_{3/2}\!\left[\frac{32}3(82d)^{3/2}\right]
+       \right\rceil+1
+\]
+final gain-two layers suffice after any preceding gain-one layers.
+For $d\ge257$, elementary logarithm estimates give
+$m\le25+4\log d<d-2=L-3$, so the available depth suffices.
+Use gain one in the other $L-3-m$ layers. The total energy is at most
+\[
+ 1+15+(L-3-m)+4m+1
+ =L+14+3m\le L+89+12\log d<2L.
+\]
+All physical weights are bounded by two.
+
+For the scalar lower bound, absorb the scalar downstream signs into the
+first affine vector, using oddness of tanh. Let $\rho>0$ be the least
+absolute first preactivation. Dividing its affine vector by $\rho$
+gives a unit-margin representation of $\sgn A_t$. Its squared norm is
+at least $Q_t$, since this sign function fits the history in
+Lemma~\ref{lem:selector}. Since $|\tanh u|\le|u|$, the product of
+$\rho$ and all remaining scalar weight magnitudes must be at least
+$1/2$. Weighted arithmetic--geometric mean yields
+\[
+ \kappa_{d,1}\ge L(dQ_t/4)^{1/L}.
+\]
+But $Q_t\ge(2/3)(4^k-1)$ and
+$d(1-4^{-k})>24$ for the present $k$, so
+$dQ_t/4\ge4^{k+1}=2^L$. The lower bound is at least $2L$.
+\end{proof}
+
+The target comparator itself still has a bounded-weight tanh teacher:
+start with $A_M/2^k$, apply tanh, then use $2k$ further scalar hidden
+weights two and readout one. The smallest first activation is at least
+$(3/4)2^{-k}$. Until it exceeds $1/2$, each following layer multiplies
+it by more than $3/2$; after $2k$ layers the resulting lower estimate is
+$(3/4)(9/8)^k>1/2$. All coefficients are at most two. The carry
+inequalities exclude complexity one exactly as in the near-identity
+teacher argument. Thus $C_L(f)=2$ at this depth.
+
+Equal replication of a scalar tanh chain to any width preserves its
+energy: duplicate the first row, divide every subsequent scalar
+connection and readout by the width, and use the coefficients in
+\eqref{eq:energy}. Proposition~\ref{prop:tanh-shortcut} therefore shows
+that these replicated scalar implementations are not minimizers in the
+larger architecture. It does \emph{not} lower-bound every wider
+implementation of $\sgn A_t$, and does not identify the wider posterior's
+prediction. Some different wider implementation of a wrong function
+could still have lower energy than the displayed competitor.

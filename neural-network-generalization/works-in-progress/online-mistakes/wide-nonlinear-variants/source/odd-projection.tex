@@ -1,0 +1,183 @@
+\section{Fixed standard activations with one nonlinear layer}
+\label{sec:mixed-activation}
+
+An exact extension is available for several standard nonlinear
+activations if only the first hidden layer is nonlinear and the input
+has no constant coordinate. These are explicit changes to the learner:
+the result below does not concern a network with a nonlinear activation
+at every hidden layer, and does not allow free first-layer biases.
+
+Let $x\in\{-1,1\}^p$, let $N\ge2$, and write
+\[
+ Z_\theta(x)=vW^{L-1}\cdots W^2\phi(W^1x),\qquad L\ge2.
+\]
+The entries of $W^1$, $W^2,\ldots,W^{L-1}$, and $v$ have independent
+centered Gaussian laws with variances $(N/p)\sigma^2$, $\sigma^2$,
+and $\sigma^2/N$, respectively. Their quadratic energy is
+\[
+ \kappa_N(\theta)=\frac pN\|W^1\|_F^2+
+ \sum_{j=2}^{L-1}\|W^j\|_F^2+N\|v\|_2^2.
+\]
+Condition on $|Z_\theta(x)|>1/2$ at every Boolean input,
+and then on the observed labels.
+
+Assume that $\phi$ is continuous and
+\begin{equation}\label{eq:mixed-odd}
+ \phi(t)-\phi(-t)=ct\quad(t\in\mathbb R),\qquad c>0,
+\end{equation}
+and assume in addition that either $t\phi(t)>0$ for $t\ne0$, or
+$\phi$ is nondecreasing. GELU, SiLU, ReLU, and softplus satisfy these
+conditions with $c=1$: here GELU is $t\Phi(t)$ with $\Phi$ the
+standard normal distribution function, SiLU is $t/(1+e^{-t})$, ReLU is
+$\max\{t,0\}$, and softplus is $\log(1+e^t)$. The first two preserve
+the sign of nonzero inputs; the latter two are nondecreasing. A leaky ReLU with negative slope
+$\alpha\in(0,1]$ satisfies them with $c=1+\alpha$.
+
+\begin{lemma}[Exact energy for a paired history]
+\label{lem:mixed-energy}
+Let $H\subset\{-1,1\}^p\times\{-1,1\}$ be a nonempty history closed
+under replacing $(x,y)$ by $(-x,-y)$. Assume the homogeneous linear margin constraints
+are feasible. Let $A_*$ be the unique minimum-Euclidean-norm vector
+satisfying $yA_*\cdot x\ge1/2$ on $H$. Suppose also that
+$|A_*\cdot x|\ge1/2$ on the full cube. Then the minimum energy among
+parameters with weak full-cube margin $1/2$ that fit $H$ is
+\[
+ E_*=L\left(\frac{4p\|A_*\|_2^2}{c^2}\right)^{1/L}.
+\]
+Every minimizing parameter represents $\operatorname{sign}(A_*\cdot x)$.
+The actual conditioned Gaussian posterior therefore concentrates on
+this sign function as $\sigma\downarrow0$, at each fixed $N,L$.
+\end{lemma}
+\begin{proof}
+Put $b=vW^{L-1}\cdots W^2$. Equation~\eqref{eq:mixed-odd} gives
+\[
+ \frac{Z_\theta(x)-Z_\theta(-x)}2=A\cdot x,
+ \qquad A=\frac c2 bW^1.
+\]
+The paired training constraints imply $yA\cdot x\ge1/2$, hence
+$\|A\|_2\ge\|A_*\|_2$. Frobenius submultiplicativity and
+arithmetic--geometric mean give
+\begin{align*}
+ \kappa_N(\theta)
+ &\ge L\left(p\|W^1\|_F^2
+       \prod_{j=2}^{L-1}\|W^j\|_F^2\|v\|_2^2\right)^{1/L}\\
+ &\ge L\left(p\|W^1\|_F^2\|b\|_2^2\right)^{1/L}
+ \ge L\left(4p\|A\|_2^2/c^2\right)^{1/L}\ge E_*.
+\end{align*}
+
+For attainment, let $u=A_*/\|A_*\|_2$ and put
+\[
+ e_1=(1,-1,0,\ldots,0)/\sqrt2.
+\]
+Choose unit vectors $e_2,\ldots,e_{L-1}\in\mathbb R^N$ and set
+\[
+ r=\left(4p\|A_*\|_2^2/c^2\right)^{1/(2L)},\qquad
+ s_1=r\sqrt{N/p},\quad s_j=r\ (2\le j<L),\quad
+ s_L=r/\sqrt N.
+\]
+Take $W^1=s_1e_1u^\top$, $W^j=s_je_je_{j-1}^\top$, and
+$v=s_Le_{L-1}^\top$, with the evident interpretation when $L=2$.
+The opposite first-layer pair cancels the even part of $\phi$, so
+\[
+ Z_\theta(x)=\frac c2\left(\prod_{j=1}^Ls_j\right)u\cdot x
+             =A_*\cdot x.
+\]
+Each energy summand equals $r^2$, proving attainment.
+
+At any energy minimizer all the preceding inequalities are equalities.
+Thus $A=A_*$, and equality in
+$\|bW^1\|_2\le\|b\|_2\|W^1\|_F$ forces
+$W^1=\lambda b^\top u^\top$ for some $\lambda>0$. Consequently
+\[
+ Z_\theta(x)=F(u\cdot x),\qquad
+ F(s)=\sum_i b_i\phi(\lambda b_is).
+\]
+If $t\phi(t)>0$ for $t\ne0$, each nonzero summand has the sign of
+$s$, which proves the sign claim. If $\phi$ is nondecreasing, then
+$F$ is nondecreasing, including when some $b_i$ are negative.
+At least one training constraint for $A_*$ is active, since otherwise
+$A_*$ could be scaled down. Its antipodal pair yields
+\[
+ F\left(\frac1{2\|A_*\|_2}\right)\ge\frac12,\qquad
+ F\left(-\frac1{2\|A_*\|_2}\right)\le-\frac12.
+\]
+Every cube projection has absolute value at least
+$1/(2\|A_*\|_2)$, so monotonicity again proves the sign claim.
+
+There are finitely many Boolean sign functions, their weak-margin
+parameter cells are closed, and the energy is coercive. All minimizers
+have the same sign function, so every other consistent sign cell has a
+strictly larger energy infimum. Increasing the readout in the attained
+linear construction by a factor tending to one makes all margins
+strict without changing the limiting energy. Lemma~\ref{lem:gaussian} now proves the posterior claim, including
+any mixture of tied minimizers.
+\end{proof}
+
+\begin{theorem}[All widths for one nonlinear layer]\label{thm:mixed}
+For every $k\ge3$, there is a Boolean target on $p=2k+2$ inputs,
+computable by an $O(k)$-size bounded-fan-in Boolean circuit, and a fixed
+sequence of distinct inputs forcing at least
+$2^k-k-1\ge2^{k-1}$ mistakes in the strong-prior limit of the preceding
+learner, at every fixed $N\ge2$ and $L\ge2$.
+For each of the listed activations, the target's bounded-width-and-weight
+complexity is exactly two at every depth $L\ge k+2$.
+Thus the lower bound holds at every width at least that complexity.
+For every $\eta>0$, all sufficiently small positive $\sigma$ make
+posterior sampling wrong on every designated round with probability at
+least $1-\eta$; posterior majority is wrong and the strict $2/3$
+confidence criterion fails on all those rounds. The threshold may depend
+on $N,k,L,\phi,\eta$; the input order does not depend on $N$ or $\sigma$.
+\end{theorem}
+\begin{proof}
+Write $M=2^k-1$, add a variable Boolean coordinate $s$ to the selector
+construction of Section~\ref{sec:selector}, and use the homogeneous target
+\[
+ F(s,x,y,z)=\operatorname{sign}\left(
+   -Ms-(M+1)z+\sum_{i=0}^{k-1}2^i(x_i-y_i)\right).
+\]
+Equivalently, $F(s,x,y,z)=s f(sx,sy,sz)$ for the target in
+\eqref{eq:target}. Coordinatewise multiplication by $s$ and the final
+sign reversal cost only $O(k)$ Boolean gates.
+The restriction $s=1$ is the comparator $f$, so the circuit size
+is in fact $\Theta(k)$. Lift every history
+point from Section~\ref{sec:selector} to $s=1$ and immediately follow it by its antipode, with the
+opposite label. Lemma~\ref{lem:selector} gives, after the
+paired history through query $t$, the unique unit-margin optimum
+\[
+ \widehat A_t=-ts-(t+1)z+\sum_i2^i(x_i-y_i).
+\]
+Its scores are odd nonzero integers on the full cube. Apply
+Lemma~\ref{lem:mixed-energy} with $A_*=\widehat A_t/2$. The first point of each
+next query pair, for $t=k,\ldots,M-1$, receives the incorrect positive
+sign with posterior probability tending to one. The antipodal points
+need not be counted. They are distinct and preserve a paired history
+before each counted query. A finite-round union bound gives the
+positive-scale sampled-prediction statement.
+
+At depth $L=k+2$, take first-layer rows $\pm\widehat A_M/2^k$. In the first
+linear hidden layer use the first row $(2/c,-2/c)$ and a zero second
+row. Each of the remaining $k-1$ linear hidden layers multiplies the
+first coordinate by two and keeps the second zero. Use readout
+$(1,0)$. The resulting output is exactly $\widehat A_M$, with absolute margin at
+least one. All coefficients are at most two for the listed activations,
+and the width is two. Additional identity layers allow every
+$L\ge k+2$.
+
+Complexity one would give scalar layers with all coefficients bounded
+by one. The odd projection, normalized from margin $1/2$ to unit
+margin, would then have every coefficient bounded by $c\le2$.
+Restricting its paired unit-margin constraints to $s=1$, the carry
+inequalities in Lemma~\ref{lem:selector} instead force its highest-bit
+coefficient difference divided by two to be at least
+$2^{k-1}>2$. This contradiction proves that the complexity is exactly
+two.
+\end{proof}
+
+Free first-layer biases remain a substantive obstacle. For example,
+when $\beta\ge0$,
+\[
+ \operatorname{ReLU}(\beta+t)-\operatorname{ReLU}(\beta-t)
+ =t+\operatorname{clip}(t,-\beta,\beta),
+\]
+so the odd projection is nonlinear. Additional nonlinear hidden layers
+also destroy the linear odd-projection identity used above.

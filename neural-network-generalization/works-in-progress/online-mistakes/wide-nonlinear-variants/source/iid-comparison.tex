@@ -1,0 +1,100 @@
+\subsection{Polynomial iid learning for the same nonlinear prior}
+\label{sec:near-iid}
+
+For the near-identity family, the exponential online lower bound is
+accompanied by a polynomial iid upper bound for exactly the same prior,
+activation, target, and width. This does not require a new restriction
+on the learner's parameter support.
+
+\begin{corollary}[An iid/online separation at every width]
+\label{cor:iid}
+Fix the hypotheses of Theorem~\ref{thm:near} or the larger perturbation
+allowed by Corollary~\ref{cor:near-half}, including $k,L,\phi$, and
+any finite width $N\ge1$. Let $\mu$ be any distribution on the input
+cube. For $\varepsilon,\eta\in(0,1)$, suppose
+\begin{equation}\label{eq:iid-sample}
+ n\ge\frac6\varepsilon
+       \left([1+d(d+1)]\log2+\log(1/\eta)\right).
+\end{equation}
+For every sufficiently small positive $\sigma$, with probability at least
+$1-\eta$ over $n$ iid inputs labeled by $f$, the posterior gives the
+correct label probability strictly greater than $2/3$ on a set of
+$\mu$-measure at least $1-\varepsilon$. Its posterior-majority test
+error and its mean test error under fresh posterior sampling are also
+at most $\varepsilon$.
+
+The bound on $n$ does not depend on learner width or depth. The
+sufficiently-small-$\sigma$ threshold may depend on $k,L,N,\phi$ and
+$\varepsilon$, but can be chosen independently of $\mu$, $n$, and the
+particular target-consistent history. The activation remains a
+size- and depth-dependent near-identity family.
+\end{corollary}
+\begin{proof}
+Let $\mathcal H_d$ be the class of affine-threshold sign functions on
+the cube, and set
+\[
+ U_*=L\left(\frac{dQ_*}{4\alpha^{2(L-1)}}\right)^{1/L}.
+\]
+Every weak-global-margin parameter with energy at most $U_*$ has an
+affine sign function. Indeed, the linearization bound
+\eqref{eq:linear-error} and the calculation \eqref{eq:delta}, now with
+$t=M$, bound the error by
+$1/[128(d+1)Q_*]<1/2$. Under the larger perturbation in
+Corollary~\ref{cor:near-half}, the same calculation as
+\eqref{eq:delta-half}, with $t=M$, instead bounds it by
+$2^{k+1}/(128Q_*)\le1/128<1/2$. In either case its affine linearization
+has the same sign as its nonlinear output everywhere.
+
+The union $B$ of weak-margin cells of nonaffine Boolean functions is
+closed, since the input domain is finite. It contains no point of
+energy at most $U_*$. Coercivity implies $\inf_B\kappa_{d,N}>U_*$
+unless $B$ is empty. On the other hand, the scalar-path construction
+with $A_M$ gives the strict full-target cell
+\[
+ U_f=\{\theta:f(\xi)Z_\theta(\xi)>1/2\text{ for every }\xi\}
+\]
+energy infimum at most $U_*$. The Gaussian bounds used in
+Lemma~\ref{lem:gaussian} show that
+\[
+ R_\sigma:=\frac{\Pp_\sigma(B)}{\Pp_\sigma(U_f)}\longrightarrow0.
+\]
+For every history $H$ labeled by $f$, its conditioning event $E_H$
+contains $U_f$, while its nonaffine part is contained in $B$. Thus
+\begin{equation}\label{eq:uniform-affine}
+ \Pi_\sigma(\mathcal H_d^c\mid H)
+ \le\frac{\Pp_\sigma(B)}{\Pp_\sigma(U_f)}=R_\sigma.
+\end{equation}
+This is one bound for all such histories, without a union bound over
+histories or any dependence on the sampling distribution.
+
+A hyperplane-arrangement count gives
+\[
+ |\mathcal H_d|\le2\sum_{j=0}^{d}\binom{2^d-1}{j}
+                 \le2^{1+d(d+1)}.
+\]
+For any $\rho>0$, a fixed classifier with $\mu$-error greater than
+$\rho$ remains consistent with $n$ iid labels with probability at most
+$e^{-n\rho}$. A union bound implies that, with probability at least
+$1-\eta$, every consistent affine classifier has test error at most
+$\rho$, provided
+\[
+ n\ge\frac{[1+d(d+1)]\log2+\log(1/\eta)}\rho.
+\]
+Choose $\rho=\varepsilon/6$ and choose $\sigma$ small enough that
+$R_\sigma\le\varepsilon/6$. On this sample event, the mean posterior
+error at a fresh input is at most
+$\rho+R_\sigma\le\varepsilon/3$.
+Write $q(\xi)$ for the posterior probability of the wrong label.
+Posterior-majority errors are contained in $\{q\ge1/2\}$, and failures
+of strict $2/3$ confidence are exactly $\{q\ge1/3\}$.
+Markov's inequality bounds their $\mu$-measures by
+$2\varepsilon/3$ and $\varepsilon$, respectively, proving the result.
+\end{proof}
+
+Thus the same nonlinear learner has an
+$O((d^2+\log(1/\eta))/\varepsilon)$ iid sample guarantee and at least
+$2^k-k-1$ designated online errors, or $2^{k-1}$ under the larger
+perturbation allowance, with $d=2k+1$, at every fixed width.
+For fixed $k,L,N$, one sufficiently small positive scale satisfies both
+claims. The contrast is between different ways of choosing examples;
+it does not require changing the prior during learning.

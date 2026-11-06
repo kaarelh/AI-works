@@ -1,0 +1,1023 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,amsmath,amssymb,amsthm,mathtools}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Exponential online mistakes at every width after arbitrarily small Gaussian anisotropy},pdfauthor={ChatGPT-6 Astra; Kaarel Hanni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\newcommand{\sgn}{\operatorname{sign}}
+\newcommand{\ess}{\operatorname{ess}}
+\newcommand{\wt}{\operatorname{wt}}
+\title{Exponential online mistakes at every width\protect\\after arbitrarily small Gaussian anisotropy}
+\author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{6 November 2026}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We prove an exponential online-mistake lower bound for a Bayesian tanh
+network at every hidden width. The target is ordinary majority on $d$ odd
+input bits: it has a linear-size Boolean circuit and a width-one teacher
+with every weight at most one. The learner uses one hidden layer, a
+constant input coordinate, a linear readout, global absolute output
+margin greater than $1/2$, and exact training labels.
+The first-layer Gaussian variances have an arbitrarily small, explicitly
+specified coordinate asymmetry. One fixed input permutation forces at least
+$2^{\lfloor d/8\rfloor}$ mistakes in the strong-prior limit, and forces all
+of them with arbitrarily high probability at sufficiently small positive
+variance. The covariance perturbation and input order are independent of
+the learner width. The proof bounds the energy of every nonlinear network
+using its essential input coordinates; it does not restrict the posterior
+to scalar subnetworks or choose an unfavorable classifier from a tie.
+For $d=9q$ with odd $q$, a second construction uses only $2q$ calibration
+examples and forces $9^{(q+1)/2}$ mistakes, with an explicit
+inverse-polynomial upper bound on the anisotropy amplitude.
+The same priors also have width-independent polynomial IID
+sample complexity for this target. Neither construction establishes
+the same lower bound for the exactly isotropic Gaussian prior: at exact
+isotropy, the relevant candidate tier has equal masses and only a
+logarithmic cumulative sampling-error bound before it is exhausted.
+\end{abstract}
+
+\section{Model and result}
+
+An earlier width-one anisotropic construction appears
+in~\cite{and-gaussian}. The essential-coordinate bound below permits a
+comparison with every wide nonlinear competitor. It also yields a
+linear-calibration construction and a polynomial IID guarantee for
+the same prior and target.
+
+Fix an odd input dimension $d\ge17$ and a hidden width $N\ge1$.
+Inputs lie in $\{-1,1\}^d$. Write $\bar x=(1,x_1,\ldots,x_d)$ and consider
+the standard one-hidden-layer tanh network
+\begin{equation}\label{eq:network}
+ z_{W,v}(x)=\sum_{a=1}^N v_a\tanh\!\left(\sum_{i=0}^d W_{ai}\bar x_i\right).
+\end{equation}
+There are no biases other than the constant input coordinate.
+Choose a number $\delta\in(0,1)$ and set
+\begin{equation}\label{eq:lambda}
+ \lambda_0=1,\qquad \lambda_i=1+\delta 2^{-i}\quad(1\le i\le d).
+\end{equation}
+Independently, let
+\begin{equation}\label{eq:prior}
+ W_{ai}\sim N\!\left(0,\frac{N\sigma^2}{d\lambda_i}\right),
+ \qquad v_a\sim N\!\left(0,\frac{\sigma^2}{N}\right).
+\end{equation}
+Its density is proportional to $\exp[-\kappa_{N,\lambda}/(2\sigma^2)]$,
+where
+\begin{equation}\label{eq:energy}
+ \kappa_{N,\lambda}(W,v)
+ =\frac dN\sum_{i=0}^d\lambda_i\|W_{:,i}\|_2^2+N\|v\|_2^2.
+\end{equation}
+The parameter $\sigma$ is a common prior scale. Multiplying every variance
+in~\eqref{eq:prior} by the same positive width-dependent factor merely
+reparametrizes this scale at a fixed width.
+
+Before observing labels, condition the prior on
+\begin{equation}\label{eq:global-margin}
+ |z_{W,v}(x)|>\frac12\qquad\text{for every }x\in\{-1,1\}^d.
+\end{equation}
+After each prediction, reveal the true label and condition the posterior
+on its exact sign. The strong-prior limit is $\sigma\downarrow0$ at fixed
+$d,N,\delta$. No width limit is taken in the proof.
+
+For any desired $\eta>0$, choosing $0<\delta<\min\{1,\eta\}$ gives
+$1\le\lambda_i\le1+\eta$ for every coordinate, uniformly in $d$ and $N$.
+The activation remains standard tanh. The model change is precisely the
+small coordinate dependence in~\eqref{eq:prior}; it is not the exactly
+isotropic first-layer law.
+
+\begin{theorem}\label{thm:main}
+Let $d\ge17$ be odd, put $k=\lfloor d/8\rfloor$ and $q=2k-1$, and use
+the target
+\[
+ f(x)=\sgn\!\left(\sum_{i=1}^d x_i\right).
+\]
+There is a fixed permutation of the input cube, depending only on $d$,
+with a designated set of $T$ rounds such that
+\begin{equation}\label{eq:mistake-count}
+ T\ge\frac{\binom d k}{\binom{2k-1}k}\ge2^k.
+\end{equation}
+For every $N\ge1$ and every $\delta\in(0,1)$, the posterior probability
+of the correct label on each designated round tends to zero as
+$\sigma\downarrow0$ under~\eqref{eq:prior}--\eqref{eq:global-margin}.
+
+Consequently, for every $\alpha\in(0,1)$ and every fixed $N,\delta$,
+all sufficiently small positive $\sigma$ have the following properties
+on that one fixed permutation:
+\begin{enumerate}
+\item Fresh posterior sampling makes all $T$ designated mistakes with
+probability at least $1-\alpha$.
+\item Posterior-label majority is wrong on all $T$ designated rounds.
+\item The strict $2/3$ confidence requirement fails on all $T$
+designated rounds.
+\end{enumerate}
+The target has bounded-weight teacher complexity $C_2(f)=1$ and Boolean
+circuit size $\Theta(d)$ for a fixed bounded-fan-in complete gate basis.
+Thus every learner width $N\ge1$ satisfies $N\ge C_2(f)$.
+\end{theorem}
+
+The variance threshold may depend on $N,d,\delta,\alpha$.
+The theorem does not assert a positive threshold for this $\sigma$
+uniform over all widths. Proposition~\ref{prop:uniform-scale} gives
+a width-uniform threshold in the mean-field scale $t=\sqrt N\sigma$.
+The covariance coefficients and input permutation themselves are the
+same for every width. The calibration prefix contains all inputs in two
+extreme Hamming regions; no short-calibration claim is made.
+
+\section{An energy bound for every nonlinear classifier}
+
+A coordinate $i\in\{1,\ldots,d\}$ is \emph{essential} to a Boolean
+function $g$ if some pair of inputs differing only in coordinate $i$
+receives opposite labels. Let $\ess(g)$ be its set of essential input
+coordinates. A function depends only on this set: changing any other
+coordinate never changes its value.
+
+Define
+\begin{equation}\label{eq:phi}
+ \Phi_d(Q)=\min_{u>0}\left\{dQu^2+\frac14\coth^2u\right\},
+ \qquad Q>0.
+\end{equation}
+For a represented function $g$, let $E_{N,\lambda}(g)$ be the infimum
+of~\eqref{eq:energy} over parameters with
+$g(x)z_{W,v}(x)>1/2$ at every cube input.
+
+\begin{lemma}[Pair contraction]\label{lem:pair}
+For real $c,t$,
+\[
+ \frac{|\tanh(c+t)-\tanh(c-t)|}{2}\le\tanh|t|.
+\]
+The function $s\mapsto\tanh^2\sqrt{s}$ is concave on $[0,\infty)$.
+Consequently, for $w\in\R^N$,
+\begin{equation}\label{eq:jensen}
+ \sum_{a=1}^N\tanh^2|w_a|
+ \le N\tanh^2\!\left(\frac{\|w\|_2}{\sqrt N}\right).
+\end{equation}
+\end{lemma}
+\begin{proof}
+The identity
+\[
+ \tanh(c+t)-\tanh(c-t)
+ =\frac{\sinh(2t)}{\cosh(c+t)\cosh(c-t)}
+\]
+and
+$\cosh(c+t)\cosh(c-t)=(\cosh(2c)+\cosh(2t))/2$
+show that the absolute difference is largest at $c=0$.
+For concavity, put $t=\sqrt{s}>0$. The derivative in $s$ is
+$\tanh(t)\operatorname{sech}^2(t)/t$; its derivative in $t$ has the sign of
+\[
+ t(1-3\tanh^2t)-\tanh t<0.
+\]
+Indeed, $\tanh t\ge t\operatorname{sech}^2t$, because
+$\sinh(2t)\ge2t$, and substitution bounds the displayed expression
+by $-2t\tanh^2t<0$. Continuity handles $s=0$.
+Jensen's inequality gives~\eqref{eq:jensen}.
+\end{proof}
+
+\begin{lemma}[Weighted essential coordinates]\label{lem:essential}
+For every nonconstant represented Boolean function $g$ and every width
+$N\ge1$,
+\begin{equation}\label{eq:essential-lower}
+ E_{N,\lambda}(g)\ge
+ \Phi_d\!\left(\sum_{i\in\ess(g)}\lambda_i\right).
+\end{equation}
+If $S\subseteq\{1,\ldots,d\}$ has odd cardinality and
+$h_S(x)=\sgn(\sum_{i\in S}x_i)$, then equality holds:
+\begin{equation}\label{eq:majority-energy}
+ E_{N,\lambda}(h_S)=\Phi_d\!\left(\sum_{i\in S}\lambda_i\right).
+\end{equation}
+The function $\Phi_d$ is strictly increasing.
+\end{lemma}
+\begin{proof}
+It suffices to work with weak signed margins at least $1/2$.
+The weak and strict infima agree: multiply the readout of a weakly
+feasible network by $1+\rho$ and let $\rho\downarrow0$.
+
+Fix weakly feasible parameters and put $C=\sqrt N\|v\|_2$.
+For each essential $i$, choose adjacent inputs $x,x'$ with opposite
+labels. Their output difference has magnitude at least one. Writing
+the hidden preactivations as $c_a\pm W_{ai}$, applying
+Lemma~\ref{lem:pair}, and using Cauchy--Schwarz gives
+\begin{align*}
+ \frac12
+ &\le\frac{|z(x)-z(x')|}{2}\\
+ &\le\|v\|_2\left(\sum_{a=1}^N\tanh^2|W_{ai}|\right)^{1/2}
+ \le C\tanh\!\left(\frac{\|W_{:,i}\|_2}{\sqrt N}\right).
+\end{align*}
+In particular $C>1/2$. Set $u=\operatorname{arctanh}(1/(2C))>0$.
+Every essential column satisfies $\|W_{:,i}\|_2^2/N\ge u^2$.
+The bias and other columns contribute nonnegative energy, so
+\[
+ \kappa_{N,\lambda}(W,v)
+ \ge d\left(\sum_{i\in\ess(g)}\lambda_i\right)u^2+C^2
+ =d\left(\sum_{i\in\ess(g)}\lambda_i\right)u^2+\frac14\coth^2u.
+\]
+Minimizing proves~\eqref{eq:essential-lower}.
+
+For odd $|S|$, set every row of $W$ equal to $u$ on coordinates in
+$S$ and zero elsewhere, and set every $v_a=\coth(u)/(2N)$.
+The output is
+\[
+ z(x)=\frac12\coth(u)\tanh\!\left(u\sum_{i\in S}x_i\right).
+\]
+The integer sum has absolute value at least one, so the network has
+majority sign and weak margin at least $1/2$. Its energy is exactly
+the objective in~\eqref{eq:phi} with $Q=\sum_{i\in S}\lambda_i$.
+Readout scaling and the lower bound prove~\eqref{eq:majority-energy}.
+
+For $Q>0$, the objective in~\eqref{eq:phi} tends to infinity at both
+endpoints $u\downarrow0$ and $u\to\infty$, and therefore has a
+minimizer $u_Q>0$. If $Q_2>Q_1$, then
+\[
+ \Phi_d(Q_2)
+ \ge\Phi_d(Q_1)+d(Q_2-Q_1)u_{Q_2}^2>\Phi_d(Q_1).
+\]
+\end{proof}
+
+The lower bound applies to every wide nonlinear network. In particular,
+it supplies a comparison with functions outside the majority family,
+which cannot be obtained by examining scalar candidate subnetworks alone.
+
+\section{Calibration and an exact minimum-energy tier}
+
+Write $\wt(x)=|\{i:x_i=+1\}|$ and put $q=2k-1$.
+Reveal every input satisfying $\wt(x)\le k-1$ with label $-1$,
+and every input satisfying $\wt(x)\ge d-k+1$ with label $+1$.
+Use any fixed order within this prefix. All its labels agree with
+the full majority target because $k<d/2$.
+
+\begin{lemma}[Two-sided calibration]\label{lem:calibration}
+Every Boolean function consistent with the calibration prefix has at
+least $q$ essential input coordinates. If it has exactly $q$, then it
+is $h_S$ for its essential support $S$, with $|S|=q$.
+Every such majority $h_S$ is consistent with the prefix.
+\end{lemma}
+\begin{proof}
+Suppose a consistent function depends on a support of size
+$r\le2k-2$. Choose an assignment on that support with $t$ positive
+coordinates, where
+\[
+ \max\{0,r-k+1\}\le t\le\min\{r,k-1\}.
+\]
+This interval is nonempty. Setting all outside coordinates negative
+gives a negative calibration input, while setting all of them positive
+gives a positive calibration input, since $t+d-r\ge d-k+1$.
+The two inputs agree on the support, a contradiction.
+
+If $r=q=2k-1$, any support assignment with at most $k-1$ positives
+extends to a negative calibration input by setting outside bits
+negative. Any assignment with at least $k$ positives extends to a
+positive calibration input by setting outside bits positive, because
+$k+d-q=d-k+1$. These cases exhaust the support cube and force
+majority. Conversely, a $q$-coordinate majority is negative when
+the full input has at most $k-1$ positives, and positive when the
+full input has at most $k-1$ negatives.
+\end{proof}
+
+\begin{proposition}[Uniform separation of all competitors]\label{prop:tier}
+At every width $N$, all functions $h_S$ with $|S|=q$ have pairwise
+distinct energies, and each is strictly cheaper than every other
+initially consistent Boolean function. After any further labels,
+while at least one of these candidates survives, the unique
+minimum-energy consistent function is the surviving $h_S$ with
+smallest $\sum_{i\in S}2^{-i}$.
+\end{proposition}
+\begin{proof}
+By Lemma~\ref{lem:essential}, the candidate energy is exactly
+\[
+ \Phi_d(Q_S),\qquad
+ Q_S=\sum_{i\in S}\lambda_i=q+\delta\sum_{i\in S}2^{-i}.
+\]
+Finite binary subset sums are distinct. For example, at the smallest
+index belonging to exactly one of two subsets, its contribution
+$2^{-i}$ is larger than the sum of all later contributions through
+index $d$. Strict monotonicity of $\Phi_d$ therefore separates the
+candidate energies. Also
+\begin{equation}\label{eq:gap}
+ Q_S<q+\delta<q+1.
+\end{equation}
+Every outsider has at least $q+1$ essential coordinates by
+Lemma~\ref{lem:calibration}, and every $\lambda_i\ge1$.
+Its energy is at least $\Phi_d(q+1)$, strictly above every candidate
+energy by~\eqref{eq:gap}. The same comparison holds after further
+conditioning whenever a candidate remains.
+\end{proof}
+
+Both the separation from outsiders and the ordering within the candidate
+family are independent of $N$. The ordering within the family is also
+independent of the positive value of $\delta$.
+
+\section{The input order and posterior mistakes}
+
+After calibration, repeat the following deterministic procedure while
+some candidate remains. Let $S$ be the surviving $q$-set with smallest
+$\sum_{i\in S}2^{-i}$. Choose its lexicographically first $k$-element
+subset $A$ and query $x^A$, the vector positive exactly on $A$.
+Its true majority label is negative because $k<d/2$.
+The selected candidate satisfies $h_S(x^A)=+1$.
+
+This query is new: any previously queried negative input would have
+eliminated a candidate that predicted positively there. It is outside
+the calibration prefix because it has weight exactly $k$.
+It eliminates exactly those candidate supports containing $A$.
+Indeed, a majority on $2k-1$ coordinates predicts positively at a
+weight-$k$ input precisely when all its $k$ positive coordinates lie
+in that support.
+
+There are initially $\binom d{2k-1}$ candidates. Each query eliminates
+at most $\binom{d-k}{k-1}$ of them, so exhausting the candidate class
+requires at least
+\[
+ T\ge\frac{\binom d{2k-1}}{\binom{d-k}{k-1}}
+ =\frac{\binom d k}{\binom{2k-1}k}
+ \ge\frac{(d/k)^k}{4^k}\ge2^k.
+\]
+Here $\binom d k\ge(d/k)^k$, $\binom{2k-1}k\le4^k$, and $d\ge8k$.
+The entire sequence is computable before the run. It depends only on
+the candidate supports and the fixed negative labels, not on posterior
+samples. Complete it to a permutation by revealing all remaining cube
+inputs in a fixed order with their majority labels.
+
+\begin{lemma}[Gaussian concentration on a unique minimum]\label{lem:rate}
+At a fixed finite width and after any fixed feasible label history,
+if a unique consistent Boolean function has the least value of
+$E_{N,\lambda}$, then its posterior probability tends to one as
+$\sigma\downarrow0$.
+\end{lemma}
+\begin{proof}
+For a represented Boolean function $g$, write
+\[
+ U_g=\{(W,v):g(x)z_{W,v}(x)>1/2\text{ for every }x\}.
+\]
+This is open. Its energy infimum agrees with that over its closed
+weak-margin set, by readout scaling. The latter set is nonempty and
+the positive definite quadratic energy is coercive, so the weak
+infimum is attained. In the finite-dimensional Gaussian parameter
+space,
+\begin{equation}\label{eq:ldp}
+ \lim_{\sigma\downarrow0}\sigma^2\log\Pp_\sigma(U_g)
+ =-\frac12 E_{N,\lambda}(g).
+\end{equation}
+For an elementary lower bound, take a small ball contained in $U_g$
+whose maximum energy is arbitrarily close to its infimum; Gaussian
+normalizing powers of $\sigma$ disappear after multiplication by
+$\sigma^2$. For the upper bound, write the energy as
+$(1-\varepsilon)\kappa+\varepsilon\kappa$, bound the first part below
+by $(1-\varepsilon)E_{N,\lambda}(g)$, and integrate the second Gaussian
+factor over the entire parameter space. The resulting constant
+$\varepsilon^{-P/2}$, where $P$ is the parameter dimension, also
+disappears at the logarithmic scale. Then let $\varepsilon\downarrow0$.
+
+There are finitely many Boolean functions on the cube.
+The globally margin-conditioned posterior after a label history is
+the prior restricted to the union of the compatible events $U_g$.
+A unique minimum energy has a positive gap from all other represented
+compatible functions. Equation~\eqref{eq:ldp} makes the ratio of each
+other event's probability to that of the minimum tend to zero.
+\end{proof}
+
+By Proposition~\ref{prop:tier}, every designated query is predicted
+positively by the unique minimum-energy consistent function, while its
+true label is negative. Lemma~\ref{lem:rate} proves the claimed
+correct-label probability limit. For fixed $N,\delta$ there are only
+finitely many designated rounds, so one sufficiently small positive
+variance makes the correct-label probability smaller than
+$\min\{\alpha/T,1/3\}$ on each. A union bound shows that all designated
+posterior samples are wrong with probability at least $1-\alpha$.
+The majority and confidence conclusions follow from the same bound.
+
+\paragraph{Target resources.}
+The width-one teacher $z(x)=\tanh(\sum_i x_i)$ has every weight at
+most one, and its signed margin is at least $\tanh(1)>1/2$ because
+$d$ is odd. Thus $C_2(f)=1$. For a linear-size Boolean circuit,
+convert the input bits to zero-one form and count them with carry-save
+adders. Each constant-size full adder replaces three equally weighted
+bits by two, decreasing the number of stored bits by one. At most
+$O(d)$ such adders leave two $O(\log d)$-bit numbers; their final
+addition and comparison with $d/2$ use $O(\log d)$ further gates.
+This gives an $O(d)$-gate circuit. Every input is essential to majority,
+so bounded fan-in gives an $\Omega(d)$ gate lower bound. This completes
+the proof of Theorem~\ref{thm:main}.
+
+\section{A linear calibration prefix}
+
+The preceding result permits every fixed $\delta\in(0,1)$, but its
+calibration is large. A compactness argument gives a shorter prefix
+when the perturbation is sufficiently small for each dimension.
+The quantitative bound below is explicit; we first give the shorter
+compactness argument explaining why a width-independent gap exists.
+
+\begin{theorem}[Linear calibration]\label{thm:short}
+Let $q\ge3$ be odd and $d=9q$. For every
+\begin{equation}\label{eq:explicit-delta}
+ 0<\delta\le\frac{1}{80000q^3},
+\end{equation}
+the model
+\eqref{eq:network}--\eqref{eq:global-margin}, with the same full-majority
+target, has a fixed input permutation beginning with exactly $2q$
+calibration inputs and followed by exactly
+\begin{equation}\label{eq:short-count}
+ T=9^{(q+1)/2}=\exp(\Omega(d))
+\end{equation}
+designated mistake rounds. For every width $N\ge1$, the correct-label
+posterior probability on each designated round tends to zero as
+$\sigma\downarrow0$. All finite-positive-variance conclusions of
+Theorem~\ref{thm:main} follow as well.
+
+The chosen $\delta$ and input permutation are independent of $N$.
+The perturbation can consequently be arbitrarily small. Its explicit
+upper bound depends on $d$; no positive dimension-uniform amplitude
+is asserted in this linear-calibration theorem.
+\end{theorem}
+
+\subsection{A uniform gap above the majority minimum}
+
+The following relaxation is used only to prove an energy gap uniform
+over all widths. It does not replace the finite-width Gaussian posterior.
+For a probability measure $\nu$ on $\R^{d+1}\times\R$, write its
+variables as $(a,b)$ and define
+\begin{equation}\label{eq:measure-model}
+ z_\nu(x)=\int b\tanh(a\cdot\bar x)\,d\nu(a,b),\qquad
+ I(\nu)=\int(d\|a\|_2^2+b^2)\,d\nu(a,b).
+\end{equation}
+Every width-$N$ network is included: take
+$\nu=N^{-1}\sum_{j=1}^N\delta_{(W_{j,:},Nv_j)}$.
+Then $z_\nu=z_{W,v}$ and $I(\nu)=\kappa_{N,\boldsymbol 1}(W,v)$.
+
+\begin{lemma}[Compactness and equality]\label{lem:compact-gap}
+For fixed $d$ and odd $q\le d$, there is $\Delta=\Delta(d,q)>0$
+such that every globally weak-margin classifier represented
+by~\eqref{eq:measure-model} and having at least $q$ essential input
+coordinates either is a signed majority on exactly $q$ coordinates
+or has energy at least $\Phi_d(q)+\Delta$.
+\end{lemma}
+\begin{proof}
+First, energy sublevels are sequentially compact for the weak topology
+of probability measures. The second-moment bound gives tightness, and
+the integral of the nonnegative continuous quadratic energy is lower
+semicontinuous. For each fixed cube input, $z_\nu(x)$ is continuous
+along an energy-bounded weakly convergent sequence. Indeed,
+$|b\tanh(a\cdot\bar x)|\le|b|$ and
+\[
+ \int |b|\mathbf1_{\{|b|>R\}}\,d\nu\le\frac{I(\nu)}R.
+\]
+Truncating the $b$ coordinate gives bounded continuous integrands and
+the displayed uniform tail bound removes the truncation. Consequently,
+for any fixed Boolean function, its minimum weak-margin energy over
+measures is attained whenever its feasible set contains a measure of
+finite energy. This uses only tightness of probability measures on a
+finite-dimensional Euclidean space and the finite number of margin
+constraints.
+
+The essential-coordinate proof of Lemma~\ref{lem:essential} applies
+with integrals in place of empirical averages. If the essential support
+has size $r$, it gives $I(\nu)\ge\Phi_d(r)$. We examine equality for
+$r=q$ at $I(\nu)=\Phi_d(q)$.
+
+Put $C=(\int b^2\,d\nu)^{1/2}$ and
+$u=\operatorname{arctanh}(1/(2C))>0$. Equality in the summed energy
+bound forces $\int a_j^2\,d\nu=u^2$ for every essential $j$, and
+all unused coordinates, including $a_0$, to vanish almost surely.
+For each essential $j$, fix an adjacent pair with opposite labels.
+All inequalities in the pair-contraction, Jensen, and Cauchy--Schwarz
+chain must be equalities; otherwise its column-norm bound is strict
+and the total energy exceeds $\Phi_d(q)$.
+
+Strict concavity in Lemma~\ref{lem:pair} gives $|a_j|=u$ almost surely.
+Equality in the scalar pair contraction forces the center of the two
+preactivations to be zero, because $u>0$.
+Equality in Cauchy--Schwarz then gives, for a sign
+$\gamma_j\in\{-1,1\}$ fixed by the orientation of the chosen pair,
+\[
+ b=\gamma_j C\sgn(a_j)\quad\text{almost surely}.
+\]
+Thus $|b|=C$ and $a_j=(u/C)\gamma_j b$ for every essential $j$.
+Intersecting these finitely many full-measure events yields
+\[
+ z_\nu(x)
+ =C\tanh\!\left(u\sum_{j\in S}\gamma_jx_j\right).
+\]
+Its Boolean sign is a signed $q$-coordinate majority. This proves
+that no other function with exactly $q$ essential coordinates can
+attain energy $\Phi_d(q)$.
+
+There are finitely many Boolean functions on the cube. Attainment
+therefore gives a common positive gap to all finite-energy,
+non-majority functions with exactly $q$ essential coordinates.
+Functions with more than $q$ essential coordinates have the positive
+gap $\Phi_d(q+1)-\Phi_d(q)$. The minimum of these finitely many
+positive gaps is a suitable $\Delta$. Functions with no finite-energy
+representation need not be included in the minimum.
+\end{proof}
+
+\subsection{Block calibration and elimination}
+
+Partition the $d=9q$ coordinates into $q$ blocks $B_1,\ldots,B_q$
+of size nine, with block indices read cyclically. Put $m=(q-1)/2$.
+For each $j$, use two block-constant calibration inputs. In the
+positive one, the positive blocks are
+$\{j,j+1,\ldots,j+m\}$; in the negative one, remove block $j$ from
+this set. The inputs in each pair differ only on block $B_j$, and
+the other $q-1$ blocks are balanced. The resulting $2q$ inputs are
+distinct and have the indicated full-majority labels.
+
+A consistent Boolean function must have an essential coordinate in
+every block, since otherwise it would give equal labels to that
+block's two calibration inputs. In particular it has at least $q$
+essential coordinates. A signed majority on exactly $q$ coordinates
+must use one coordinate per block. Its sign on block $j$ must be
+positive: a negative coefficient would make the output score
+decrease when that block changes from the negative calibration
+input to the positive one, contradicting the prescribed labels.
+Conversely, every positive majority with one coordinate in each
+block fits the calibration. Let $\mathcal C$ be these $9^q$ candidates.
+
+Choose $\Delta$ from Lemma~\ref{lem:compact-gap}. If $u_q>0$ minimizes
+\eqref{eq:phi} at $Q=q$, then
+\[
+ \Phi_d(q+\delta)\le\Phi_d(q)+d\delta u_q^2.
+\]
+For the qualitative argument, choose
+$0<\delta<\min\{1,\Delta/(2du_q^2)\}$.
+Appendix~\ref{sec:quantitative} supplies
+$\Delta_q=1/(10000q^3)$ and $du_q^2\le4$, which justify every
+$\delta$ in~\eqref{eq:explicit-delta}: candidate energies are then
+strictly below $\Phi_d(q)+\Delta_q/2$, while outsiders have energy
+at least $\Phi_d(q)+\Delta_q$. For the explicit conclusion, take
+$\Delta=\Delta_q$ in the following comparison.
+Every candidate has exact anisotropic energy
+$\Phi_d(q+\delta\sum_{i\in S}2^{-i})<\Phi_d(q+\delta)$.
+Every initially consistent outsider has isotropic energy at least
+$\Phi_d(q)+\Delta$, and its anisotropic energy is no smaller because
+$\lambda_i\ge1$. Thus every candidate is cheaper than every outsider,
+uniformly over all finite widths. Distinct binary subset sums give
+a unique cheapest surviving candidate at every stage.
+
+Put $\ell=(q+1)/2$ and fix the first $\ell$ blocks. If $S$ is
+the current cheapest surviving support, query the input positive only
+at its chosen coordinates in those fixed blocks:
+\[
+ A=S\cap(B_1\cup\cdots\cup B_\ell),\qquad x=x^A.
+\]
+The query has $\ell$ positive coordinates, so its full-majority target
+label is negative, while the selected candidate predicts positively.
+A candidate $h_{S'}$ is positive there exactly when $S'$ contains
+all $\ell$ coordinates of $A$: it needs at least $\ell$ positive
+coordinates to win its $q$-coordinate majority, and the query has
+only $\ell$ positives in total.
+
+Thus each query deletes precisely one complete projection fiber,
+consisting of the $9^{q-\ell}$ supports with that choice of one
+coordinate in each of the fixed $\ell$ blocks. There are $9^\ell$
+such fibers. Each selected candidate belongs to a surviving fiber,
+so the procedure visits every fiber once and takes exactly
+$T=9^\ell$ forced queries. This proves~\eqref{eq:short-count}.
+No query repeats, and these queries lie outside the calibration
+prefix: their weight is $\ell$, whereas calibration weights are
+$9(q-1)/2$ and $9(q+1)/2$.
+
+The procedure uses only the fixed candidate order and previous target
+labels, so it defines one fixed input sequence, completed arbitrarily
+to a permutation. The Gaussian concentration and finite-variance
+arguments from Lemma~\ref{lem:rate} apply at every fixed width without
+change. This proves Theorem~\ref{thm:short}.
+
+\section{A common mean-field scale at every width}
+
+The preceding theorems use the scale $\sigma$ in~\eqref{eq:prior}.
+There is also a natural parametrization with a single positive scale
+that works uniformly over all widths. Put $t=\sqrt N\sigma$, so that
+\begin{equation}\label{eq:meanfield-prior}
+ W_{ai}\sim N\!\left(0,\frac{t^2}{d\lambda_i}\right),\qquad
+ v_a\sim N\!\left(0,\frac{t^2}{N^2}\right).
+\end{equation}
+This is the same family of priors with a width-dependent change of
+scale variable.
+
+\begin{proposition}[Uniform small mean-field scale]\label{prop:uniform-scale}
+Fix either construction above, including its allowed positive
+anisotropy and its designated $T$ rounds. For every $\alpha\in(0,1)$
+there is $t_0>0$, independent of $N$, such that for every $N\ge1$
+and every $0<t<t_0$, the posterior under~\eqref{eq:meanfield-prior}
+makes all $T$ designated sampling mistakes with probability at least
+$1-\alpha$. The posterior-majority and confidence conclusions are
+uniform in $N$ as well.
+\end{proposition}
+\begin{proof}
+At a designated round, let $h_S$ be the unique minimum-energy
+consistent function and let $E=\Phi_d(Q_S)$. The proofs above give a
+number $g>0$, independent of $N$, such that every consistent function
+predicting the next label correctly has energy at least $E+g$.
+For the large-prefix construction this follows from the finitely
+many explicit candidate gaps and the outsider bound $\Phi_d(q+1)$.
+For the short-prefix construction use the uniform outsider gap from
+Lemma~\ref{lem:compact-gap} and the same explicit candidate gaps.
+
+Write $a_a=W_{a,:}$ and $b_a=Nv_a$. Under~\eqref{eq:meanfield-prior},
+the pairs $(a_a,b_a)$ are IID Gaussian, with coordinate variances
+$t^2/(d\lambda_i)$ and $t^2$. Let
+\[
+ J(a,b)=d\sum_{i=0}^d\lambda_i a_i^2+b^2,\qquad P=d+2.
+\]
+Then $\kappa_{N,\lambda}=N^{-1}\sum_aJ(a_a,b_a)$ and
+$J(a_a,b_a)/t^2$ is chi-squared with $P$ degrees of freedom.
+
+A cloned majority minimizer is a single pair $(a,b)$ of cost $E$.
+Slightly enlarge its readout and take a sufficiently small open ball
+$B$ about the resulting pair. Every pair in $B$ has the same strict
+signed margins as $h_S$, and $\sup_B J\le E+g/4$.
+If all $N$ pairs lie in $B$, their averaged output has those strict
+margins and fits the current history. Its prior probability is
+$p_t^N$, where Gaussian density integration gives
+\[
+ p_t\ge c_B t^{-P}\exp\!\left(-\frac{E+g/4}{2t^2}\right)
+\]
+for a positive constant $c_B$ independent of $N,t$.
+
+Set $\zeta=g/[4(E+g+1)]\in(0,1)$. The chi-squared moment-generating
+function gives
+\[
+ \Pp_t\{\kappa_{N,\lambda}\ge E+g\}
+ \le\left[\zeta^{-P/2}
+       \exp\!\left(-\frac{(1-\zeta)(E+g)}{2t^2}\right)\right]^N.
+\]
+The numerator of the posterior correct-label probability is bounded
+by this tail; its denominator is at least $p_t^N$. Since
+$\zeta(E+g)\le g/4$, their ratio is at most
+\[
+ \left[c_B^{-1}\zeta^{-P/2}t^P
+              \exp\!\left(-\frac{g}{4t^2}\right)\right]^N
+ =r(t)^N.
+\]
+Here $r(t)\to0$ as $t\downarrow0$. Once $r(t)<1$, this bound is at
+most $r(t)$ for every $N\ge1$. There are finitely many designated
+rounds, so choose a common $t_0$ making every bound smaller than
+$\min\{\alpha/T,1/3\}$. A union bound finishes the proof.
+\end{proof}
+
+\section{Polynomial IID learning for the same prior}
+
+The online lower bounds do not arise from a lack of polynomial IID
+sample guarantees for this target. The following bound is independent
+of the learner width and applies to both constructions.
+
+\begin{theorem}[IID upper bound]\label{thm:iid}
+Let $d$ be odd, $0<\delta<1$, and use the majority target and prior
+\eqref{eq:lambda}--\eqref{eq:global-margin}. Define
+\[
+ K=5d+1,\qquad
+ m=\left\lceil32K\bigl((d+1)\log2+1\bigr)\right\rceil,
+ \qquad B_d=m\bigl((d+1)^2+1\bigr)\log2.
+\]
+For every width $N\ge1$, every input distribution $\mu$, and every
+$\rho,\beta\in(0,1)$, if
+\begin{equation}\label{eq:iid-n}
+ n\ge\frac6\rho\left(B_d+\log\frac1\beta\right),
+\end{equation}
+then, at all sufficiently small positive prior scales, with probability
+at least $1-\beta$ over $n$ IID labeled examples, the $\mu$-mass of
+inputs whose posterior correct-label probability is at most $2/3$
+is at most $\rho$.
+The sample bound is $O((d^4+\log(1/\beta))/\rho)$.
+For fixed $N,d,\delta,\rho$, the sufficiently-small-scale threshold
+can be chosen uniformly over all target-consistent histories and
+sample sizes. In the mean-field parametrization~\eqref{eq:meanfield-prior},
+one sufficiently small positive $t$ works uniformly over all widths
+as well.
+\end{theorem}
+\begin{proof}
+We first give an energy-bounded realization of the target. Put
+$a=d^{-1/2}$, give every hidden row coefficient $a$ on every input
+coordinate and zero bias, and give every readout coefficient
+$1/(N\tanh a)$. Its output is
+\[
+ z(x)=\frac{\tanh(a\sum_i x_i)}{\tanh a},
+\]
+which has signed margin at least one. Its energy is
+\[
+ K_0=\sum_{i=1}^d\lambda_i+\coth^2a<d+1+4d=K,
+\]
+using $\sum_i\lambda_i<d+1$ and $\tanh a\ge a/2$ for $0<a\le1$.
+
+Next, every width-$N$ network with energy at most $K$ satisfies
+$\sum_a|v_a|\le\sqrt N\|v\|_2\le\sqrt K$.
+If $U$ is uniform on $(-1,1)$, then
+\[
+ \tanh t=\E\,\sgn\bigl(t-\operatorname{arctanh}U\bigr).
+\]
+Choose neuron $a$ with probability $|v_a|/\sqrt K$, draw $U$, and
+output the signed affine threshold
+\[
+ h(x)=\sgn(v_a)\sgn\bigl(W_{a,:}\cdot\bar x-
+                     \operatorname{arctanh}U\bigr).
+\]
+Use the zero function with the remaining probability. Then
+$h(x)\in\{-1,0,1\}$ and $\E h(x)=z(x)/\sqrt K$.
+For $m$ independent voters, Hoeffding's inequality and a union bound
+over the cube give
+\[
+ \Pp\!\left\{\max_x\left|
+       \frac{\sqrt K}{m}\sum_{j=1}^m h_j(x)-z(x)\right|\ge\frac14\right\}
+ \le2^{d+1}e^{-m/(32K)}<1.
+\]
+Thus a globally weak-margin network of energy at most $K$ has the
+same sign as some sum of $m$ such voters. Almost surely each nonzero
+voter is a strict affine threshold on the finite cube, and its negative
+is again a strict affine threshold. The approximating sum has no zeros
+because the network's absolute margin is at least $1/2$.
+
+There are at most
+\[
+ H_d\le2\sum_{j=0}^d\binom{2^d-1}j\le2^{(d+1)^2}
+\]
+strict affine threshold functions on the cube, by the central
+hyperplane arrangement bound in coefficient dimension $d+1$.
+Allowing the zero voter, the class $\mathcal H_K$ of all resulting
+sign functions has size at most
+$(H_d+1)^m\le e^{B_d}$. Every globally margin-separated
+energy-$K$ function belongs to this one finite class, uniformly over
+all learner widths.
+
+The posterior mass of parameters with energy greater than $K$ tends
+to zero uniformly over target-consistent histories. To see this, let
+$U_f$ be the target's strict global-margin event. It contains an open
+ball of energy strictly below $K$, by the witness above.
+Every target-consistent posterior conditioning event contains $U_f$,
+so, using probabilities under the unconditioned Gaussian prior,
+\[
+ \Pp_\sigma\{\kappa>K\mid\text{global margin and history}\}
+ \le\frac{\Pp_\sigma\{\kappa>K\}}{\Pp_\sigma(U_f)}.
+\]
+The Gaussian tail in the numerator has rate at least $K/2$ and the
+denominator has a strictly smaller rate, by the open ball. Hence the
+ratio tends to zero at each fixed width. It is independent of the
+history and sample size. Choose the scale small enough to make it
+at most $\rho/6$. In the mean-field parametrization, use the
+product-ball and chi-squared estimate from
+Proposition~\ref{prop:uniform-scale} with $E=K_0$ and $g=K-K_0$;
+the strict target witness supplies the denominator ball. This makes
+the same tail bound uniform over every width, in addition to every
+history.
+
+For a fixed $g\in\mathcal H_K$ of $\mu$-error greater than $\rho/6$,
+the probability that it fits $n$ IID examples is at most
+$e^{-n\rho/6}$. A union bound and~\eqref{eq:iid-n} show that, with
+probability at least $1-\beta$, every consistent function in
+$\mathcal H_K$ has error at most $\rho/6$. On this event, the
+posterior-averaged test error is at most $\rho/6+\rho/6=\rho/3$.
+At any input whose correct-label probability is at most $2/3$, the
+posterior wrong-label probability is at least $1/3$. Integrating
+therefore bounds the mass of such inputs by $\rho$.
+\end{proof}
+
+\begin{corollary}[Fixed exponents above one]\label{cor:gamma}
+Fix either online construction, including its permitted anisotropy.
+Consider the independent-Gaussian prior
+\begin{equation}\label{eq:gamma-prior}
+ \operatorname{Var}(W_{ai})=\frac{\tau^2N^{1-\gamma}}{d\lambda_i},
+ \qquad
+ \operatorname{Var}(v_a)=\tau^2N^{-\gamma-1},
+\end{equation}
+with the same margin and exact-label conditioning.
+\begin{enumerate}
+\item For every fixed $\gamma>1$, the unit-prefactor choice $\tau=1$
+has all the online conclusions at every sufficiently large width.
+The polynomial IID bound in Theorem~\ref{thm:iid} holds there as well.
+\item For every prescribed online failure tolerance and IID accuracy
+parameters, one sufficiently small positive $\tau$ makes both
+conclusions hold for every $N\ge1$ and every $\gamma\ge1$
+simultaneously.
+\end{enumerate}
+The covariance asymmetry remains present. No conclusion here covers
+$\gamma=1$ with unit prefactor $\tau=1$.
+\end{corollary}
+\begin{proof}
+The mean-field scale is $t_N=\tau N^{(1-\gamma)/2}$.
+For fixed $\gamma>1$ and $\tau=1$, it tends to zero as $N\to\infty$.
+For $\gamma\ge1$ and $N\ge1$, it is at most $\tau$.
+Apply the width-uniform thresholds in
+Proposition~\ref{prop:uniform-scale} and Theorem~\ref{thm:iid}.
+\end{proof}
+
+\section{What exact isotropy changes}
+
+The strict energy ordering inside the majority tier is necessary for
+this proof. It cannot be inferred by choosing one preferred minimizer
+when the covariance is exactly isotropic.
+
+\begin{proposition}[The isotropic tier]\label{prop:isotropic}
+Set $\delta=0$ and keep the same two-sided calibration.
+At every width, the minimum-energy consistent functions are exactly
+the $q$-coordinate majorities. The strong-prior posterior is uniform
+over whichever of them remain consistent. Under any continuation,
+its expected number of sampling mistakes before this tier is exhausted
+is at most
+\[
+ 1+\log\binom d q.
+\]
+This bounds only this tier, not the entire later learning process.
+\end{proposition}
+\begin{proof}
+Lemmas~\ref{lem:essential} and~\ref{lem:calibration} give the common
+candidate energy $\Phi_d(q)$ and outsider lower bound $\Phi_d(q+1)$.
+Coordinate permutations preserve the isotropic Gaussian law and the
+global-margin event, and act transitively on $q$-coordinate majorities.
+Thus their prior function probabilities are exactly equal at every
+positive variance, including all parameter-volume factors.
+Conditioning on exact labels preserves equal masses among the survivors.
+The outsider energy gap implies that the cold posterior is uniform
+on those survivors.
+
+If a query eliminates a fraction $p<1$ of a surviving class of size
+$m$, its sampling-error probability is $p$ and the decrease in its
+logarithmic size is $-\log(1-p)\ge p$. Summing gives at most
+$\log\binom d q$ before the final exhaustion, which costs at most
+one additional expected mistake. The same conditional argument applies
+to an adaptive continuation that does not observe the current posterior
+sample before choosing its query.
+\end{proof}
+
+An arbitrarily small positive $\delta$ splits the candidate energies
+and yields exponentially many certain cold-limit mistakes. At
+$\delta=0$, the equal-mass mixture has the logarithmic bound above.
+The limits of zero covariance asymmetry and zero prior scale therefore
+need not commute. The theorem establishes the all-width lower bound
+for the stated perturbed covariance and leaves the corresponding
+exactly isotropic question open.
+
+\appendix
+\section{An explicit rigidity gap}\label{sec:quantitative}
+
+We prove the numerical bound used in Theorem~\ref{thm:short}.
+This argument applies both to finite networks and to the probability
+measures in~\eqref{eq:measure-model}.
+
+\begin{lemma}[Quantitative rigidity]\label{lem:quantitative}
+Let $q\ge3$ be odd, $d=9q$, and
+$\Delta_q=1/(10000q^3)$. If a globally weak-margin Boolean function
+has exactly $q$ essential input coordinates and a representation
+of isotropic energy at most $\Phi_d(q)+\Delta_q$, it is a signed
+majority on those coordinates. Every function with more than $q$
+essential input coordinates has energy at least
+$\Phi_d(q)+27/64$.
+\end{lemma}
+\begin{proof}
+Write the representation as in~\eqref{eq:measure-model}, and let $S$
+be its essential support of size $q$. Put
+\[
+ K=I(\nu),\quad C=(\E_\nu b^2)^{1/2},\quad
+ u=\operatorname{arctanh}(1/(2C)),\quad t_0=\tanh u=\frac1{2C},
+ \quad e=K-\Phi_d(q).
+\]
+For each essential $j$, take an oppositely labeled adjacent pair,
+ordered by coordinate $x_j=+1$ and $-1$. Let $s_j(a)$ be the
+half-difference of its two hidden tanh outputs and let
+$\varepsilon_j\in\{-1,1\}$ be its label orientation. Then
+\[
+ |s_j(a)|\le\tanh|a_j|,\qquad
+ \sgn(s_j(a))=\sgn(a_j),\qquad
+ \varepsilon_j\E_\nu[bs_j]\ge\frac12.
+\]
+With $r_j^2=\E_\nu a_j^2$, the essential-coordinate argument gives
+$r_j^2\ge u^2$ and the nonnegative decomposition
+\begin{align*}
+ e={}&d\sum_{j\in S}(r_j^2-u^2)
+       +d\E_\nu\sum_{i\notin S}a_i^2\\
+    &+\bigl[dqu^2+C^2-\Phi_d(q)\bigr].
+\end{align*}
+The outside sum includes the bias coordinate. In particular,
+\begin{equation}\label{eq:excess-columns}
+ r_j^2-u^2\le e/d,\qquad
+ \E_\nu\sum_{i\notin S}a_i^2\le e/d.
+\end{equation}
+Using the test value $u_*=1/\sqrt{6q}$ and
+$\coth t\le1/t+t$ for $0<t\le1$ gives $\Phi_d(q)\le3q+1$.
+Thus $e\le\Delta_q<1$ implies $K\le4q$, and
+\begin{equation}\label{eq:u-range}
+ C\le2\sqrt q,\qquad
+ \frac1{4\sqrt q}\le u\le\frac2{3\sqrt q}<\frac12.
+\end{equation}
+The lower bound uses $u\ge1/(2C)$, and the upper one uses $dqu^2\le K$.
+
+Put $h(s)=\tanh^2\sqrt s$. Besides $0<h'(s)\le1$, we have
+\begin{equation}\label{eq:h-curvature}
+ -h''(s)\ge\frac15\qquad(0\le s\le1).
+\end{equation}
+Indeed, writing $t=\sqrt s$ and $T=\tanh t$ gives
+\[
+ -h''(s)
+ =\frac{\operatorname{sech}^2t\,[T-t+3tT^2]}{2t^3}
+ \ge\operatorname{sech}^2t\,\frac{T^2}{t^2}.
+\]
+For $0<t\le1$, concavity of tanh and
+$3/4<\tanh1<4/5$ imply that the last expression is greater than
+$(9/25)(9/16)=81/400>1/5$; the endpoint follows by continuity.
+
+For $u\le1/2$, define the tangent deficit
+\[
+ D_u(s)=h(u^2)+h'(u^2)(s-u^2)-h(s).
+\]
+For every real $a$,
+\begin{equation}\label{eq:deficit}
+ D_u(a^2)\ge\frac{u^2}{10}(|a|-u)^2.
+\end{equation}
+If $a^2\le1$,~\eqref{eq:h-curvature} gives
+$D_u(a^2)\ge(a^2-u^2)^2/10$, which implies the claim.
+If $a^2\ge1$, convexity of $D_u$ and~\eqref{eq:h-curvature} give
+$D_u(1)\ge9/160$ and $D'_u(1)\ge3/20$.
+Therefore $D_u(a^2)\ge(9/160)a^2$, which is stronger than
+\eqref{eq:deficit} because $u^2\le1/4$.
+
+Cauchy--Schwarz gives $\E s_j^2\ge t_0^2$, and
+$\E h(a_j^2)\ge\E s_j^2$. Using~\eqref{eq:excess-columns} and
+$h'\le1$ yields $\E D_u(a_j^2)\le e/d$, hence
+\begin{equation}\label{eq:column-magnitude}
+ \E(|a_j|-u)^2\le\frac{10e}{du^2}.
+\end{equation}
+Set $v=b/C$, so $\E v^2=1$. The oriented margin inequality gives
+\begin{align}
+ \|s_j-\varepsilon_jt_0v\|_{L^2(\nu)}^2
+ &\le\E s_j^2-t_0^2\le h(r_j^2)-h(u^2)\le e/d,
+ \label{eq:cs-stability}\\
+ \|s_j-\tanh(a_j)\|_{L^2(\nu)}^2
+ &\le\E[h(a_j^2)-s_j^2]\le e/d.
+ \label{eq:pair-stability}
+\end{align}
+The second line uses the common signs and pointwise magnitude ordering
+of $s_j$ and $\tanh(a_j)$.
+
+Insert successively $u\sgn(a_j)$, $t_0\sgn(a_j)$,
+$\tanh(a_j)$, and $s_j$, and use $u/t_0\le2$.
+Equations~\eqref{eq:column-magnitude}--\eqref{eq:pair-stability} give
+\begin{align*}
+ \|a_j-\varepsilon_juv\|_{L^2(\nu)}
+ &\le3\sqrt{\frac{10e}{du^2}}+4\sqrt{\frac ed}
+ \le12\sqrt{\frac e{du^2}}\le16\sqrt e.
+\end{align*}
+Here~\eqref{eq:u-range} gives $du^2\ge9/16$.
+The outside coordinates have $L^2$ contribution at most
+$\sqrt{(d+1)e/d}\le2\sqrt e$ at every augmented cube input.
+Consequently,
+\[
+ \left\|a\cdot\bar x-uv\sum_{j\in S}\varepsilon_jx_j\right\|_{L^2(\nu)}
+ \le(16q+2)\sqrt e\le18q\sqrt e.
+\]
+By the Lipschitz property of tanh and Cauchy--Schwarz, the output
+is uniformly within $36q^{3/2}\sqrt e$ of
+\[
+ F\!\left(\sum_{j\in S}\varepsilon_jx_j\right),\qquad
+ F(t)=C\E\bigl[v\tanh(uvt)\bigr].
+\]
+For every nonzero $t$, the function $F(t)$ has the sign of $t$,
+since its integrand has that sign whenever $v\ne0$ and $\E v^2=1$.
+The signed sums are nonzero because $q$ is odd. If $e\le\Delta_q$,
+the uniform approximation error is at most $36/100<1/2$.
+A weakly margin-separated output cannot have the opposite sign
+at any input. This proves the first assertion.
+
+For the second assertion, Lemma~\ref{lem:essential} gives the lower
+bound $\Phi_d(q+1)$. At its minimizer $u_{q+1}$,
+\[
+ \Phi_d(q+1)-\Phi_d(q)\ge d u_{q+1}^2,
+ \qquad u_{q+1}^2\ge\frac1{4\Phi_d(q+1)}.
+\]
+The test value $u^2=1/(2\sqrt{d(q+1)})$ and the same coth bound give
+$\Phi_d(q+1)\le\sqrt{d(q+1)}+1\le4(q+1)$.
+Thus the gap is at least $9q/[16(q+1)]\ge27/64$.
+\end{proof}
+
+Finally, $du_q^2\le\Phi_d(q)/q\le4$ gives
+\[
+ \Phi_d(q+s)\le\Phi_d(q)+4s\qquad(s\ge0).
+\]
+Under~\eqref{eq:explicit-delta}, every candidate in the linear-prefix
+construction has energy strictly below
+$\Phi_d(q)+4\delta\le\Phi_d(q)+\Delta_q/2$.
+Every outsider has energy at least $\Phi_d(q)+\Delta_q$, by
+Lemma~\ref{lem:quantitative}; increasing coordinate weights cannot
+reduce that energy. This completes the explicit quantitative
+justification of Theorem~\ref{thm:short}.
+
+\paragraph{Verification scope.}
+The arguments are conventional mathematical proofs. They have undergone
+independent AI-agent mathematical reviews and are not Lean formalized. The source, reproducible build, and local audit records are
+included with this manuscript.
+
+\begin{thebibliography}{1}
+\bibitem{and-gaussian}
+ChatGPT-6 Astra, Claude (Anthropic), Kaarel H\"anni, and Dmitry Vaintrob.
+\emph{Online learning of AND under Gaussian neural-network priors}.
+Research manuscript, 30 October 2026.
+\href{../and-gaussian/paper.pdf}{Companion manuscript}, section on
+an arbitrarily small anisotropy and its width-one majority corollary.
+\end{thebibliography}
+
+\end{document}

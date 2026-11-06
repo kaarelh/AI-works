@@ -1,0 +1,116 @@
+% Standalone insertion; requires amsmath, amsthm and a proposition environment.
+\section{An exact finite-width tanh certificate}
+\label{sec:finite}
+
+The following calculation identifies a concrete obstruction to extending a
+width-one online-mistake proof merely by replicating its neurons. It does
+not establish the prediction of the unrestricted wider-network posterior:
+a different wider implementation of a wrong function could still have
+smaller energy.
+
+Use $d=7$ input bits $(x_0,x_1,x_2,y_0,y_1,y_2,z)$, seven tanh hidden
+layers of common width $N$, and a linear readout. There is one appended
+constant input and no other biases. The Gaussian quadratic energy is
+\[
+ \kappa_N=\frac7N\|W^1\|_F^2+
+       \sum_{\ell=2}^{7}\|W^\ell\|_F^2+N\|v\|_2^2.
+\]
+Put $X=\sum_{i=0}^2 2^i(x_i+1)/2$, $Y=\sum_{i=0}^2 2^i(y_i+1)/2$ and
+\[
+ f(x,y,z)=+1\ \Longleftrightarrow\ z=-1\text{ and }X\ge Y.
+\]
+After the calibration in Section~\ref{sec:selector} and queries
+$X=3,4,5,6$, $Y=0$, $z=+1$, the affine minimum is the sign function
+\[
+ g_6=\operatorname{sign}\!\left(-6-7z+
+                       \sum_{i=0}^2 2^i(x_i-y_i)\right).
+\]
+Its minimum squared affine coefficient norm at unit global margin is
+$Q(g_6)=42+36+49=127$. In particular, it wrongly labels the next query
+$(X,Y,z)=(7,0,+1)$ positive.
+
+\begin{proposition}
+For every integer $N\ge64$, the target $f$ has a width-$N$ implementation
+with all weights of absolute value less than three, global output margin
+greater than $1/2$, and
+\[
+ \kappa_N<15.7.
+\]
+Every width-one chain computing $g_6$ with global output margin at least
+$1/2$ has energy at least
+\[
+ 8(7\cdot127/4)^{1/8}>15.7.
+\]
+Equal replication of that scalar chain to width $N$ preserves its energy.
+Thus no equally replicated scalar minimizer for this history minimizes
+energy among all width-$N$ networks.
+\end{proposition}
+\begin{proof}
+Let $n=\lfloor N/64+1/2\rfloor$ and $p=n/N$. For $N\ge64$,
+\[
+ 1/95\le p\le1/48.
+\]
+Indeed, when $n=1$ we have $64\le N\le95$; when $n\ge2$, the inequalities
+$64n-32\le N\le64n+31$ imply the displayed bounds.
+
+Write
+\[
+ U=1+\sum_{i=0}^2 2^i(x_i-y_i),\quad
+ \alpha=\frac{55}{100},\quad b=\frac{17}{100},\quad
+ r=\frac{147}{1000},\quad s=\frac{675}{1000}.
+\]
+The first $n$ neurons of layer one compute $a=\tanh(\alpha U)$;
+the remaining $N-n$ compute $c=\tanh(b(z+1))$. Every neuron of layer two
+computes the same value $h_2=\tanh(ra-sc)$, using weights $r/n$ and
+$-s/(N-n)$ on the two groups. The next five layers are equal replicas
+with respective effective scalar weights
+\[
+ (w_3,w_4,w_5,w_6,w_7)
+   =\frac1{1000}(1361,1365,1373,1389,1419).
+\]
+Each physical weight in layer $j$ is $w_j/N$. The readout has $N$ equal
+weights $(3/2)/N$.
+
+When $z=-1$, $c=0$ and $|U|\ge1$, so the second-layer preactivation
+has the sign of $U$ and absolute value at least $r\tanh\alpha$.
+When $z=+1$, it is at most $r-s\tanh(2b)<0$.
+Consequently the network has the target's sign everywhere, and the
+minimum second-layer preactivation magnitude is at least
+\[
+ m=\min\{r P(\alpha),\ sP(2b)-r\},\qquad P(u)=u-u^3/3.
+\]
+Here $\tanh u\ge P(u)$ for $u\ge0$: the difference vanishes at zero
+and has derivative $u^2-\tanh^2u\ge0$.
+Starting with $\underline h_2=P(m)$ and recursively setting
+$\underline h_j=P(w_j\underline h_{j-1})$ gives positive rational
+lower bounds on the hidden magnitudes. Exact rational arithmetic gives
+\[
+ \frac32\underline h_7>\frac12
+ \qquad\text{(numerically, }0.5033684798\ldots\text{)}.
+\]
+The accompanying script \texttt{verification/check\_finite\_certificate.py}
+verifies this inequality without floating-point arithmetic.
+
+Since the squared affine coefficient norm of $U$ is $43$, the energy is
+exactly
+\[
+ E(p)=7\bigl(43p\alpha^2+2(1-p)b^2\bigr)
+       +\frac{r^2}{p}+\frac{s^2}{1-p}
+       +\sum_{j=3}^7w_j^2+\frac94.
+\]
+This is convex in $p$. Exact rational evaluation at the two endpoints
+shows
+\[
+ E(1/95)<15.666,\qquad E(1/48)<15.590,
+\]
+so $E(p)<15.7$ on the entire interval. The largest physical weight in
+this implementation is $4\alpha=2.2$.
+
+For the scalar lower bound, let $\rho$ be its least absolute first-layer
+preactivation. Its first coefficient vector has squared norm at least
+$127\rho^2$. Since $|\tanh u|\le|u|$, the product of $\rho$ and the
+absolute values of its remaining seven weights is at least $1/2$.
+Applying arithmetic--geometric mean to the eight energy terms yields
+$\kappa_1\ge8(7\cdot127/4)^{1/8}$. The strict comparison with $15.7$
+is the rational inequality $(157/80)^8<889/4$.
+\end{proof}

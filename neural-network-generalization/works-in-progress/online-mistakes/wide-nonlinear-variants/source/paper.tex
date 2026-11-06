@@ -1,0 +1,165 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,microtype,amsmath,amssymb,amsthm,mathtools,booktabs,hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue,
+ pdftitle={Online mistake lower bounds at arbitrary width: two nonlinear variants and a tanh obstruction},
+ pdfauthor={ChatGPT-6 Astra; Kaarel Hanni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\sgn}{\operatorname{sign}}
+\newcommand{\R}{\mathbb R}
+\newcommand{\Pp}{\mathbb P}
+\newcommand{\norm}[1]{\left\lVert #1\right\rVert}
+\title{Online mistake lower bounds at arbitrary width:\\two nonlinear variants and a tanh obstruction}
+\author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{November 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+Can a Bayesian neural network make exponentially many online mistakes
+on a simple Boolean target even when its width is arbitrarily large?
+We prove that it can in two precisely specified nonlinear models.
+First, the construction works with a nonlinear activation in every hidden
+layer, provided that activation is sufficiently close to the identity.
+The required closeness depends on the input dimension and depth but not
+on width; examples include leaky ReLU with slope approaching one and a
+smooth residual-tanh activation. Second, fixed standard activations---
+including GELU, SiLU, ReLU, and softplus---give an exact all-width result
+when only the first hidden layer is nonlinear and there are no biases.
+Both models use independent Gaussian weights, a global output-margin
+restriction, and exact label conditioning. A target of linear Boolean
+circuit size forces exponentially many mistakes in the strong-prior
+limit. At linear depth it has a teacher of width and coefficient bound
+two, and the results cover every learner width above that complexity.
+They concern the full posterior, including mixtures of energy minimizers.
+The same near-identity learner has a polynomial iid sample bound,
+independent of learner width and depth, so its online lower bound gives
+a genuine separation between the two protocols.
+We also construct cheap two-feature tanh competitors that invalidate a
+direct lift of a scalar minimum-energy calculation. The corresponding
+all-high-width question for a fixed standard activation at every hidden
+layer, with a constant input coordinate, remains open.
+\end{abstract}
+
+\section{The learning question and the two results}
+
+A bound on test error after independent training examples need not bound
+the total number of errors on an unfavorable input order. Here the inputs
+form a fixed sequence of distinct Boolean points. Before each label is
+revealed, the learner predicts from the posterior given all earlier labels.
+We ask whether a small Boolean circuit can force exponentially many errors
+under this protocol, including when the learner is much wider than a
+bounded-weight teacher.
+
+The difficulty is to control the entire posterior. At small Gaussian
+variance, minimum quadratic energy governs function probabilities. A
+scalar network may have a unique cheapest extension of the observations,
+but additional neurons can create cheaper nonlinear extensions. Thus a
+scalar lower bound does not automatically survive an increase in width.
+
+We prove two all-width variants, whose restrictions are explicit:
+\begin{enumerate}
+\item Every hidden layer can be nonlinear if its activation is a suitably
+small perturbation of the identity. The perturbation bound is uniform in
+learner width, but tends to zero as the target grows
+(Theorem~\ref{thm:near}).
+\item A fixed GELU, SiLU, ReLU, leaky-ReLU, or softplus activation suffices
+if it occurs only in the first hidden layer, subsequent hidden layers
+are linear, and the input has no appended constant coordinate
+(Theorem~\ref{thm:mixed}).
+\end{enumerate}
+Neither theorem proves the result for one fixed standard activation in
+every hidden layer of a network with a constant input coordinate.
+Appendix~\ref{sec:tanh} gives a rigorous obstruction to one approach to
+that remaining question; Appendix~\ref{sec:finite} gives an exact
+finite-dimensional certificate of the same issue.
+
+\subsection{Prior, conditioning, and prediction}
+
+Depth $L$ counts all weight layers, including the linear readout, so
+there are $L-1$ hidden layers. Their common learner width is $N$.
+On an input cube of dimension $D$, the first matrix has $N$ rows;
+its number of columns is $D+1$ when a constant coordinate is appended,
+and $D$ otherwise. All Gaussian coordinates are independent, with
+\begin{equation}\label{eq:prior}
+ \operatorname{Var}(W^1_{ij})=\frac ND\sigma^2,\qquad
+ \operatorname{Var}(W^j_{i\ell})=\sigma^2\ (2\le j<L),\qquad
+ \operatorname{Var}(v_i)=\frac{\sigma^2}{N}.
+\end{equation}
+There are no other biases. The Gaussian density is proportional to
+$\exp[-\kappa_{D,N}(\theta)/(2\sigma^2)]$, where
+\begin{equation}\label{eq:energy}
+ \kappa_{D,N}(\theta)=\frac DN\norm{W^1}_F^2+
+       \sum_{j=2}^{L-1}\norm{W^j}_F^2+N\norm v_2^2.
+\end{equation}
+For $L=2$ the intermediate sum is empty.
+
+Write $Z_\theta(\xi)$ for the real output. The prior is first conditioned
+on $|Z_\theta(\xi)|>1/2$ at \emph{every} input, then on the exact observed
+labels. Thus, for a history $H$ with target $f$, the posterior is the
+Gaussian law conditioned on
+\[
+ |Z_\theta(\xi)|>1/2\quad\hbox{for all }\xi,\qquad
+ f(\xi)Z_\theta(\xi)>1/2\quad\hbox{for }\xi\in H.
+\]
+Let $p_t$ be the posterior probability of the correct sign on round $t$.
+Fresh posterior sampling makes a mistake with probability $1-p_t$;
+posterior-label majority is wrong if $p_t<1/2$; the strict $2/3$
+confidence criterion fails if $p_t\le2/3$.
+
+The strong-prior limit means $\sigma\downarrow0$ at each fixed input
+dimension, depth, and width. In our all-width statements, every finite
+$N$ is allowed, with no upper bound, but the sufficiently-small-$\sigma$
+threshold may depend on $N$. No width limit is exchanged with this limit.
+
+For a specified architecture and depth, let $C_L(f)$ be the least
+positive integer bounding both the hidden width of a strict-margin
+teacher implementing $f$ and the absolute value of every teacher
+coefficient. Our constructed targets have $C_L=2$ at every depth
+$L\ge k+2$. Their bounded-fan-in Boolean circuit size is $\Theta(k)$.
+Thus the exponential mistake count below is exponential in Boolean
+circuit size, although the neural teacher depth grows with $k$.
+
+\input{selector}
+\input{near-identity}
+\input{iid-comparison}
+\input{odd-projection}
+
+\section{What remains open}
+
+The two theorems remove the upper bound on learner width, but do so in
+different restricted models. The first retains a nonlinear activation
+at every hidden layer and a constant input coordinate; its activation
+becomes increasingly close to linear as the target grows. The second
+uses a fixed standard activation, but removes biases and makes every
+subsequent hidden layer linear. In both cases an explicit identity or
+energy gap controls all low-energy competitors, which is what permits
+a conclusion about the actual posterior rather than a selected minimizer.
+
+For fixed tanh, ReLU, GELU, or a fixed-slope leaky ReLU at every hidden
+layer, with an appended constant input, we have not proved or disproved
+an exponential online mistake lower bound at every sufficiently large
+width. In particular, the tanh constructions in the appendices do not
+prove that a wider learner makes few mistakes. They prove that certain
+scalar implementations cease to be energy minimizers after widening;
+other wider implementations of wrong functions might still be cheaper.
+
+These questions concern cumulative errors on a prescribed order.
+The near-identity family has the polynomial iid upper bound in
+Corollary~\ref{cor:iid}; no iid sample-complexity lower bound is asserted.
+
+\appendix
+\input{tanh-obstruction}
+\input{finite-certificate}
+
+\paragraph{Verification status.}
+The main arguments and the tanh constructions have conventional proofs
+and independent AI-agent mathematical checks. The finite certificate in
+Appendix~\ref{sec:finite} uses exact rational arithmetic. These results
+are not Lean formalized. The accompanying verification folder identifies
+the checked source snapshot and the scope of the reviews.
+\end{document}
