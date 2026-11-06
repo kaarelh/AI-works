@@ -1,0 +1,252 @@
+\section{From energy separation to the actual posterior}
+\label{post:section}
+
+We now control the posterior at a prescribed width-dependent variance,
+rather than first sending the variance to zero separately at each width.
+The correction $A_N$ may tend to infinity arbitrarily slowly.
+Throughout this section $d\ge1$ is fixed, $D=d+1$, and
+\[
+ \sigma_N^2=\tau^2N^{-\gamma},\qquad
+ \gamma\ge1,\quad \tau>0,\quad A_N\longrightarrow\infty.
+\]
+All constants in the estimates may depend on the fixed dimension, the
+fixed finite training histories, $\gamma$, and $\tau$, but not on $N$.
+
+\begin{proposition}[A direct posterior comparison]
+\label{thm:direct}
+Let $\mathcal S$ be a fixed finite labeled history. Suppose its affine
+unit-margin problem has minimum-norm solution $a_0$, with
+$Q_0=\|a_0\|^2>0$, and
+\[
+ |a_0\cdot\bar x|\ge1\qquad\text{for every }x\in\{-1,1\}^d.
+\]
+Let $(x_*,y_*)$ be a further labeled point such that
+$y_*a_0\cdot\bar x_*<0$. Suppose the affine unit-margin problem for
+$\mathcal S\cup\{(x_*,y_*)\}$ is feasible, with squared minimum norm
+$Q_1>Q_0$.
+Under the prior~\eqref{eq:prior}, conditioned on the global absolute
+output margin greater than $1/2$ and on the exact labels in $\mathcal S$,
+the posterior probability of label $y_*$ at $x_*$ tends to zero as
+$N\to\infty$.
+The conclusion holds simultaneously for any fixed finite collection of
+such histories and next points.
+\end{proposition}
+\begin{proof}
+Write $A=A_N$ and $\sigma=\sigma_N$. At every sufficiently large width,
+Theorem~\ref{thm:scalar} applies to both affine problems, because their
+required penalties are fixed and $A_N\to\infty$. Put
+\[
+ E_0=\Phi_A(Q_0),\qquad E_1=\Phi_A(Q_1),\qquad
+ \Delta=Q_1-Q_0>0.
+\]
+The old problem has a cloned scalar witness of energy $E_0$, with the
+same full-cube sign function as $a_0$. Every network fitting the old
+history and the additional correct label, with output margins at least
+$1/2$ there, has energy at least $E_1$. The latter assertion includes
+all nonlinear output functions.
+
+Let $r_A(Q)$ minimize the scalar profile~\eqref{eq:profile}. Its
+stationarity equation is
+\[
+ A=4dQ\,r_A(Q)\frac{\tanh^3r_A(Q)}{\operatorname{sech}^2r_A(Q)}.
+\]
+The right side increases strictly with its radius. At
+$r=(\log A)/4$ it is at most $dQr e^{2r}$, which is smaller than $A$
+for all sufficiently large $A$. Thus $r_A(Q_1)\ge(\log A)/4$ eventually.
+Evaluating the profile for $Q_0$ at the minimizer for $Q_1$ gives
+\begin{equation}\label{post:gap}
+ E_1-E_0\ge d\Delta\,r_A(Q_1)^2
+ \ge c(\log A)^2,
+ \qquad c=d\Delta/16>0.
+\end{equation}
+Also, for $i=0,1$,
+\begin{equation}\label{post:baseline}
+ E_i=A/4+O((\log A)^2),
+\end{equation}
+because the readout contribution is at least $A/4$, and the cloned
+choice $r=(\log A)/2$ gives the matching upper estimate.
+
+\paragraph{A strict-margin ball.}
+Use the normalized readout variables $b_j=Nv_j$ and whiten the energy by
+\[
+ U_j=\sqrt{d/N}\,u_j,\qquad
+ B_j=\sqrt{A/N}\,b_j.
+\]
+There are $P=N(d+2)$ coordinates, each independently distributed as
+$N(0,\sigma^2)$, and their squared Euclidean norm is $E_A$.
+Set
+\[
+ G=\frac c2(\log A)^2,\qquad
+ \varepsilon_N=\frac{G}{16E_0}.
+\]
+Amplify the scalar witness's readout by $1+\varepsilon_N$.
+For large $N$, $\varepsilon_N<1$, its center energy is at most
+$E_0+3G/16<E_0+G/4$, and its signed output on every cube input is at
+least $(1+\varepsilon_N)/2$. Its global margin slack is therefore
+$\varepsilon_N/2$, where
+\[
+ \varepsilon_N=\Theta((\log A)^2/A).
+\]
+In whitened coordinates the output is
+\[
+ F(x)=\frac1{\sqrt{AN}}\sum_{j=1}^N
+ B_j\tanh\!\left(\sqrt{N/d}\,U_j\cdot\bar x\right).
+\]
+Since $|\tanh|\le1$ and $|\tanh'|\le1$,
+\[
+ \|\nabla F(x)\|
+ \le A^{-1/2}+\sqrt{D/(Ad)}\,\|B\|.
+\]
+On the radius-one ball about the amplified center, this is bounded by a
+fixed constant, uniformly over all cube inputs: the center energy is
+$O(A)$. Consequently the Euclidean ball of radius
+\[
+ r_N=A^{-2}
+\]
+lies inside the same strict global-margin sign cell for every sufficiently
+large $N$. Indeed its output perturbations are $O(A^{-2})$, whereas the
+available slack is of order $(\log A)^2/A$. Its maximum energy is at most
+$E_0+G/2$, because the additional energy is bounded by
+$2\sqrt{E_{\rm center}}r_N+r_N^2=O(A^{-3/2})=o(G)$.
+
+The cube of side $2r_N/\sqrt P$ centered at this witness is contained in
+the ball. Integrating the minimum Gaussian density on the cube gives
+\begin{align}
+ \log\Pp(\text{witness cell})
+ &\ge-\frac{E_0+G/2}{2\sigma^2}
+       +P\log2-2P\log A-\frac P2\log(2\pi P\sigma^2)\nonumber\\
+ &\ge-\frac{E_0+G/2}{2\sigma^2}-C_1N(1+\log A).
+ \label{post:lower-mass}
+\end{align}
+The last bound uses
+$P\sigma^2=(d+2)\tau^2N^{1-\gamma}\le(d+2)\tau^2$.
+Keeping this factor together is essential when $A_N$ diverges slowly.
+
+\paragraph{All correct-label competitors.}
+Their prior event is contained in $\{E_A\ge E_1\}$. Since
+$E_A/\sigma^2$ has the chi-square distribution with $P$ degrees of freedom,
+the exponential-moment bound gives, whenever $E_1>P\sigma^2$,
+\begin{align}
+ \log\Pp(\text{correct-label event})
+ &\le-\frac{E_1}{2\sigma^2}
+       +\frac P2\left[1+\log\frac{E_1}{P\sigma^2}\right]\nonumber\\
+ &\le-\frac{E_1}{2\sigma^2}
+       +C_2N[1+\log A+(\gamma-1)\log N].
+ \label{post:upper-mass}
+\end{align}
+The condition holds eventually by~\eqref{post:baseline} and $A_N\to\infty$.
+The posterior denominator contains the witness cell. Since
+$E_1-E_0\ge2G$, dividing~\eqref{post:upper-mass} by
+\eqref{post:lower-mass} yields
+\begin{align}
+ \log\Pp(y_*\text{ at }x_*\mid\mathcal S,\text{ global margin})
+ &\le-\frac{3G}{4\sigma^2}
+       +C_3N[1+\log A+(\gamma-1)\log N]\nonumber\\
+ &=-c' N^\gamma(\log A_N)^2
+       +C_3N[1+\log A_N+(\gamma-1)\log N]
+ \label{post:ratio}
+\end{align}
+for a fixed $c'>0$.
+At $\gamma=1$, the negative term dominates because $\log A_N\to\infty$.
+At $\gamma>1$, it also dominates $N\log N$, since
+$N^{\gamma-1}(\log A_N)^2/\log N\to\infty$.
+This proves the asserted convergence. A finite collection of histories
+allows a common width threshold.
+\end{proof}
+
+\section{Polynomial IID learning under the same prior}
+\label{post:iid-section}
+
+The preceding lower bound concerns an adversarial input order. The same
+prior has a polynomial realizable IID guarantee for every affine threshold
+target, including the target used in the online construction.
+
+\begin{lemma}[A gap for nonthreshold output functions]
+\label{post:nonthreshold-energy}
+Let $M=2^d$. If a Boolean function $g$ is not an affine threshold function,
+then every width-$N$ tanh network with
+$g(x)F(x)\ge1/2$ at all cube inputs has
+\[
+ E_A\ge\frac{A M^2}{4(M-1)^2}.
+\]
+\end{lemma}
+\begin{proof}
+Let $\E_j$ denote uniform averaging over neurons and put
+$C=\E_j|b_j|$. For every input $x$, the margin constraint gives
+\[
+ \E_j\left[|b_j|\{1-\operatorname{sign}(b_j)g(x)
+                  \tanh(u_j\cdot\bar x)\}\right]\le C-1/2.
+\]
+Assign either sign when $b_j=0$. For each neuron there is some input at
+which $\operatorname{sign}(b_j)g(x)u_j\cdot\bar x\le0$; otherwise that
+oriented affine score would represent $g$ strictly on the whole cube.
+Thus at least one of its bracketed deficits is at least one, and every
+deficit is nonnegative. Summing the displayed inequalities over all
+$M$ inputs gives $C\le M(C-1/2)$, hence
+$C\ge M/[2(M-1)]$. Finally
+$E_A\ge A\E_j b_j^2\ge AC^2$.
+\end{proof}
+
+\begin{theorem}[IID sample complexity]
+\label{thm:iid}
+Fix an affine threshold target $f:\{-1,1\}^d\to\{-1,1\}$,
+any input distribution $\mathcal D$, and $\epsilon,\beta\in(0,1)$.
+If
+\[
+ m\ge\frac4\epsilon\bigl[(d+1)^2\log2+\log(1/\beta)\bigr],
+\]
+then, with probability at least $1-\beta$ over $m$ IID examples labeled
+by $f$, the posterior under~\eqref{eq:prior} assigns probability greater
+than $2/3$ to the correct label on a set of $\mathcal D$-probability at
+least $1-\epsilon$, at every sufficiently large width.
+In particular posterior-label majority has population error at most
+$\epsilon$. The width threshold may depend on $f,d,\epsilon,\gamma,\tau$
+and the sequence $A_N$, but can be chosen independently of the training
+sample and $\mathcal D$.
+\end{theorem}
+\begin{proof}
+Choose a full-cube affine unit-margin implementation of $f$ with squared
+norm $Q_f<\infty$. Cloning it with scalar radius $(\log A)/2$ gives
+energy $A/4+O((\log A)^2)$. The same small readout amplification and
+radius-$A^{-2}$ whitened ball used above give a strict full-target cell
+whose prior mass is at least
+\[
+ \exp\left[-\frac{A/4+O((\log A)^2)}{2\sigma_N^2}
+            -C N(1+\log A)\right].
+\]
+This cell is consistent with every sample labeled by $f$.
+By Lemma~\ref{post:nonthreshold-energy}, the union of all nonthreshold
+output cells has energy at least
+\[
+ \frac{AM^2}{4(M-1)^2}\ge\frac A4+\frac A{2M}.
+\]
+Since $(\log A)^2=o(A)$, applying the same chi-square bound and comparing
+with the full-target cell shows that the posterior mass of all
+nonthreshold functions is at most a quantity $B_N\to0$, uniformly over
+every target-consistent history. Explicitly, for large $N$ one may take
+\[
+ B_N=\min\left\{1,
+ \exp\left[-\frac{A_N}{8M\sigma_N^2}
+       +C' N\{1+\log A_N+(\gamma-1)\log N\}\right]\right\}.
+\]
+The exponent tends to minus infinity for every diverging $A_N$ and
+$\gamma\ge1$.
+
+Let $\mathcal H_d$ be the affine threshold functions on the cube.
+The $2^d$ input hyperplanes in coefficient space give the standard region
+bound
+\[
+ |\mathcal H_d|\le\sum_{j=0}^{d+1}\binom{2^d}{j}
+ \le(2^d+1)^{d+1}\le2^{(d+1)^2}.
+\]
+A realizable consistency union bound therefore shows that, except with
+probability at most $|\mathcal H_d|e^{-m\epsilon/4}\le\beta$, every
+threshold function consistent with the sample has population error at
+most $\epsilon/4$.
+On this sample event, the posterior mean population error is at most
+$\epsilon/4+B_N$. Once $B_N\le\epsilon/12$, it is at most $\epsilon/3$.
+At an input where the posterior probability of the correct label is at
+most $2/3$, the posterior wrong-label probability is at least $1/3$.
+Markov's inequality thus bounds the probability of these inputs by
+$\epsilon$. This also bounds majority error, and proves the theorem.
+\end{proof}

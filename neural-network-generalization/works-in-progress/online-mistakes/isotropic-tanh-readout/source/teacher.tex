@@ -1,0 +1,170 @@
+\section{Bounded-weight shallow teachers from Fourier coefficients}
+\label{sec:teacher}
+
+The target used above has a small teacher at the same shallow depth as
+ the learner.  We prove this using a general construction that may also be
+ useful for other targets.  All networks in this section have one tanh
+ hidden layer, one constant input coordinate, and a linear readout.
+
+For $S\subseteq\{1,\ldots,d\}$, write
+$\chi_S(x)=\prod_{i\in S}x_i$.  A Boolean function has the Fourier expansion
+\[
+ f(x)=\sum_{S\subseteq\{1,\ldots,d\}}\widehat f(S)\chi_S(x),
+ \qquad
+ \mathcal A(f)=\sum_S|\widehat f(S)|.
+\]
+The Fourier coefficients here use the uniform measure on the Boolean
+cube; the learning theorem does not require a uniform input distribution.
+
+\begin{theorem}[A bounded-weight shallow teacher]\label{thm:fourier-teacher}
+Every $f:\{-1,+1\}^d\to\{-1,+1\}$ has a one-hidden-layer tanh
+implementation that uniformly approximates $f$ within $1/4$, has every
+weight of absolute value at most $1$, and has hidden width at most
+\begin{equation}\label{eq:teacher-width}
+ \left\lceil
+ 288\mathcal A(f)^2(2d+1)(d+2)\log 2
+ \right\rceil.
+\end{equation}
+In particular, its signed output is greater than $3/4$ at every input.
+\end{theorem}
+
+\begin{lemma}[Parity correlation of bounded tanh features]
+\label{lem:parity-feature}
+For $r\ge0$, let $b_r=0$ when $r$ is odd and $b_r=1$ when $r$ is even.
+For independent uniform signs $s_1,\ldots,s_r$, define
+\[
+ c_r=\mathbb E_s\left[
+    \left(\prod_{i=1}^r s_i\right)
+    \tanh\left(\sum_{i=1}^r s_i+b_r\right)
+ \right].
+\]
+Then
+\begin{equation}\label{eq:parity-correlation}
+ |c_r|\ge\frac{1}{3\sqrt{2r+1}}.
+\end{equation}
+The empty product and sum give $c_0=\tanh 1$.
+\end{lemma}
+\begin{proof}
+Put $m=\lfloor r/2\rfloor$ and
+$\beta_m=\binom{2m}{m}/4^m$.  The highest-degree Fourier coefficient of
+$\operatorname{sign}(\sum_i s_i+b_r)$ is $(-1)^m\beta_m$.
+For $r\ge1$, this follows by splitting the binomial sum at
+$\lfloor r/2\rfloor$ and using
+\[
+ \sum_{j=0}^{q}(-1)^j\binom rj
+   =(-1)^q\binom{r-1}{q};
+\]
+the case $r=0$ is immediate.
+
+Every possible value of $T=\sum_i s_i+b_r$ is an odd integer, and each
+individual value has probability at most $\beta_m$.  For even $r$ this
+is the central-binomial bound.  For odd $r=2m+1$, the largest probability
+is $\frac{2m+1}{2m+2}\beta_m$.  Since
+$|\operatorname{sign}(t)-\tanh t|\le2e^{-2|t|}$ for $t\ne0$,
+\begin{align*}
+ \left|c_r-(-1)^m\beta_m\right|
+ &\le\mathbb E\left|
+     \operatorname{sign}(T)-\tanh T\right|\\
+ &\le4\beta_m\sum_{j\ge0}e^{-2(2j+1)}
+   =\frac{4e^{-2}}{1-e^{-4}}\beta_m
+   <\frac{7}{12}\beta_m.
+\end{align*}
+The last inequality follows from $e^2>7$ and
+$4e^{-2}/(1-e^{-4})=4e^2/(e^4-1)<7/12$.
+Thus $|c_r|>\frac{5}{12}\beta_m>\frac13\beta_m$.
+
+Finally, $\beta_m\ge1/\sqrt{4m+1}$.  This follows by induction from
+$\beta_0=1$ and
+$\beta_{m+1}/\beta_m=(2m+1)/(2m+2)$: after squaring, the induction step is
+\[
+ (2m+1)^2(4m+5)\ge4(m+1)^2(4m+1),
+\]
+whose left-hand side exceeds the right-hand side by $1$.
+Since $4m+1\le2r+1$, the claimed bound follows.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:fourier-teacher}]
+For a subset $S$ of cardinality $r$ and a sign vector $s$ indexed by $S$,
+let
+\[
+ h_{S,s}(x)=\tanh\left(\sum_{i\in S}s_i x_i+b_r\right).
+\]
+Every affine coefficient belongs to $\{0,-1,+1\}$, including the
+coefficient of the constant input.  Changing variables from $s_i$ to
+$s_i x_i$ gives the exact identity
+\begin{equation}\label{eq:parity-mixture}
+ \mathbb E_s\left[
+   \left(\prod_{i\in S}s_i\right)h_{S,s}(x)
+ \right]=c_r\chi_S(x).
+\end{equation}
+Consequently, the Fourier expansion expresses $f$ as
+\[
+ f(x)=B\mathbb E[H(x)],
+ \qquad
+ B=\sum_S\frac{|\widehat f(S)|}{|c_{|S|}|}
+   \le3\mathcal A(f)\sqrt{2d+1},
+\]
+where $H$ is a signed feature of the form $h_{S,s}$ and $|H(x)|\le1$.
+Explicitly, choose $S$ with probability proportional to
+$|\widehat f(S)|/|c_{|S|}|$, choose $s$ uniformly, and multiply
+$h_{S,s}$ by the signs prescribed by
+$\widehat f(S)/c_{|S|}$ and $\prod_{i\in S}s_i$.
+The empty subset uses the constant feature $\tanh1$ and needs no separate
+construction.
+
+Take
+\[
+ n=\left\lceil32B^2\log(4\cdot2^d)\right\rceil
+\]
+independent features $H_1,\ldots,H_n$.  Hoeffding's inequality and a union
+bound over the cube give
+\[
+ \mathbb P\left\{
+  \max_x\left|\frac Bn\sum_{j=1}^nH_j(x)-f(x)\right|\ge\frac14
+ \right\}
+ \le2\cdot2^d\exp\left(-\frac{n}{32B^2}\right)
+ \le\frac12.
+\]
+A choice of features therefore achieves uniform error strictly below
+$1/4$.  Put each feature's sign in its readout coefficient, whose
+magnitude is $B/n$.  Because $\mathcal A(f)\ge1$ and $|c_r|\le1$, we have
+$B\ge1$ and $n\ge B$; hence every readout weight also has magnitude at
+most $1$.  Finally,
+$B^2\le9\mathcal A(f)^2(2d+1)$ and
+$\log(4\cdot2^d)=(d+2)\log2$ give~\eqref{eq:teacher-width}.
+\end{proof}
+
+\begin{corollary}[A shallow teacher for the selector target]
+\label{cor:selector-teacher}
+For the target $f_k$ on $d=2k+1$ inputs, equal to $+1$ precisely when
+$z=-1$ and $X\ge Y$, there is a one-hidden-layer tanh teacher with all
+weights bounded by $1$, global signed output greater than $3/4$, and
+width at most
+\begin{equation}\label{eq:selector-teacher-width}
+ W_k=\left\lceil
+ 288(k+2)^2(4k+3)(2k+3)\log2
+ \right\rceil=O(k^4).
+\end{equation}
+In the convention that $C_2$ bounds both hidden width and individual
+weight magnitudes, $C_2(f_k)\le W_k$.
+\end{corollary}
+\begin{proof}
+Let $x_i,y_i$ be the two integers' Boolean bits, with $i=0$ the least
+significant position, and put $E_i=(1+x_i y_i)/2$.  The comparison sign
+$G$, equal to $+1$ when $X\ge Y$ and $-1$ otherwise, satisfies
+\[
+ G(x,y)=\prod_{i=0}^{k-1}E_i
+   +\sum_{i=0}^{k-1}\frac{x_i-y_i}{2}
+       \prod_{j=i+1}^{k-1}E_j.
+\]
+The first term handles equality; otherwise the highest differing bit
+contributes the comparison sign and all other summands vanish.
+Each $E_i$ and $(x_i-y_i)/2$ has Fourier $\ell^1$ norm $1$.
+Submultiplicativity and the triangle inequality therefore give
+$\mathcal A(G)\le k+1$.  The selector target is
+\[
+ f_k(x,y,z)=\frac{1-z}{2}G(x,y)-\frac{1+z}{2},
+\]
+so $\mathcal A(f_k)\le k+2$.  Apply
+Theorem~\ref{thm:fourier-teacher} with $d=2k+1$.
+\end{proof}

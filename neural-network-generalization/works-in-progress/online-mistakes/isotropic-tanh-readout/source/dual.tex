@@ -1,0 +1,154 @@
+\section{Exact scalar optimality at every width}
+
+Write $b_j=Nv_j$ and temporarily fix a readout penalty $A>0$.
+The Gaussian rate energy is
+\begin{equation}\label{eq:energy}
+ E_A=\frac dN\sum_{j=1}^N\|u_j\|^2+\frac AN\sum_{j=1}^Nb_j^2,
+ \qquad F(x)=\frac1N\sum_jb_j\tanh(u_j\cdot\bar x).
+\end{equation}
+The next theorem concerns arbitrary finite linearly separable training
+sets. Its lower bound does not assume that the network's output sign
+function is an affine threshold.
+
+Let $z_i=y_i\bar x_i\in\R^D$ be the signed data vectors and let $a_*$
+minimize $\|a\|^2$ subject to $z_i\cdot a\ge1$. Put $Q=\|a_*\|^2>0$.
+The minimizer is unique. Its KKT conditions give a set $I$ of active
+constraints and positive coefficients $\mu_i$ such that
+\begin{equation}\label{eq:kkt}
+ a_*=\sum_{i\in I}\mu_i z_i,\qquad
+ z_i\cdot a_*=1\ (i\in I),\qquad \sum_{i\in I}\mu_i=Q.
+\end{equation}
+Set $\rho_i=\mu_i/Q$ and
+$p=\min\{1/2,\min_{i\in I}\rho_i\}>0$.
+Define
+\begin{equation}\label{eq:profile}
+ \Phi_A(Q)=\min_{r>0}\left\{dQr^2+\frac{A}{4\tanh^2r}\right\}.
+\end{equation}
+Its unique minimizer $r=r_A(Q)$ satisfies
+\begin{equation}\label{eq:stationary}
+ A=\frac{4dQr\tanh^3r}{\operatorname{sech}^2r}.
+\end{equation}
+The right side is strictly increasing from zero to infinity.
+In particular $r_A(Q)$ increases with $A$ and decreases with $Q$.
+For $Q_1>Q_0$, evaluation at $r_A(Q_1)$ gives
+\begin{equation}\label{eq:profile-gap}
+ \Phi_A(Q_1)-\Phi_A(Q_0)
+ \ge d(Q_1-Q_0)r_A(Q_1)^2>0.
+\end{equation}
+
+\begin{theorem}[An exact all-width minimum]\label{thm:scalar}
+If
+\begin{equation}\label{eq:A-threshold}
+ A\ge \frac{256dQ\log(16/p)}{p^2},
+\end{equation}
+then, for every $N\ge1$, the minimum of \eqref{eq:energy} over all
+width-$N$ tanh networks satisfying the training output margins
+$y_iF(x_i)\ge1/2$ equals $\Phi_A(Q)$. It is attained by cloning the
+single neuron
+\[
+ u_j=r_A(Q)a_*,\qquad b_j=\frac1{2\tanh r_A(Q)}.
+\]
+The infimum with strict training margins is the same.
+\end{theorem}
+\begin{proof}
+The displayed clone satisfies every training margin and has energy
+$\Phi_A(Q)$. We prove a matching lower bound for every network.
+Write $r=r_A(Q)$, and set
+\[
+ \lambda=\frac A{\tanh^2r},\qquad K=\frac{\lambda^2}{4A},\qquad
+ S(u)=\sum_{i\in I}\rho_i\tanh(z_i\cdot u).
+\]
+For any scalar $b$, completing the square gives
+\begin{equation}\label{eq:atom-dual}
+ d\|u\|^2+Ab^2-\lambda bS(u)
+ \ge d\|u\|^2-KS(u)^2.
+\end{equation}
+Oddness permits replacing $u$ by $-u$ when necessary, so we may suppose
+$S(u)\ge0$ when bounding the right side.
+
+If every active score $z_i\cdot u$ is nonnegative, concavity of tanh on
+$[0,\infty)$, \eqref{eq:kkt}, and Cauchy--Schwarz imply
+\begin{equation}\label{eq:good-atom}
+ S(u)\le\tanh\!\left(\sum_i\rho_i z_i\cdot u\right)
+ =\tanh(a_*\cdot u/Q)
+ \le\tanh(\|u\|/\sqrt Q).
+\end{equation}
+Thus \eqref{eq:atom-dual} is at least
+\begin{equation}\label{eq:dual-floor}
+ \min_{s\ge0}\{dQs^2-K\tanh^2s\}
+ =dQr^2-K\tanh^2r=:\zeta.
+\end{equation}
+To check the equality, $h(v)=\tanh^2\sqrt v$ is strictly concave for
+$v>0$. Put $s=\sqrt v$. Then $h'(v)=\tanh(s)\operatorname{sech}^2(s)/s$.
+The logarithmic derivative of this expression with respect to $s$ is
+\[
+ \frac1{\sinh s\cosh s}-2\tanh s-\frac1s<0.
+\]
+Here $\sinh s\cosh s>s$ for $s>0$.
+Consequently the objective in \eqref{eq:dual-floor} is strictly convex
+as a function of $s^2$, and \eqref{eq:stationary} makes $s=r$ stationary.
+
+If instead one active score is negative, that term contributes at most
+zero while all others contribute at most their weights. Hence
+$S(u)\le1-p$, and \eqref{eq:atom-dual} is at least $-K(1-p)^2$.
+This is at least $\zeta$ provided
+\begin{equation}\label{eq:saturation-conditions}
+ \tanh^2r\ge1-p,\qquad Ap/8\ge dQr^2.
+\end{equation}
+Indeed $\tanh^2r-(1-p)^2\ge p(1-p)\ge p/2$ and $K\ge A/4$.
+
+We verify \eqref{eq:saturation-conditions} from \eqref{eq:A-threshold}.
+Put $r_0=\log(16/p)$. Since
+$\sinh^3r/\cosh r\le e^{2r}/4$, the right side of
+\eqref{eq:stationary} at $r_0$ is at most
+$256dQ\log(16/p)/p^2$. Thus $r\ge r_0$.
+Then $\operatorname{sech}^2r\le4e^{-2r}\le p^2/64\le p$.
+Also $\tanh r\ge1/2$, so \eqref{eq:stationary} gives
+\[
+ \frac{Ap}{8dQr^2}
+ =\frac{p\tanh^3r}{2r\operatorname{sech}^2r}
+ \ge\frac{pe^{2r}}{64r}
+ \ge\frac4{p\log(16/p)}>1.
+\]
+The middle inequality uses that $e^{2r}/r$ increases for $r\ge r_0$;
+the last uses $p\log(16/p)\le\tfrac12\log32<4$.
+
+We have proved the same atomwise lower bound $\zeta$ in both cases.
+Average \eqref{eq:atom-dual} over the neurons. The training constraints
+imply $N^{-1}\sum_j b_jS(u_j)\ge1/2$. Therefore
+\[
+ E_A\ge\lambda/2+\zeta
+ =dQr^2+\frac A{4\tanh^2r}=\Phi_A(Q).
+\]
+Finally, an arbitrarily small readout amplification makes the cloned
+training margins strict and approaches the same energy.
+\end{proof}
+
+\begin{corollary}[A common Boolean-data threshold]\label{cor:uniform-A}
+Suppose $z_i\in\{-1,1\}^D$ and $Q\le Q_{\max}$, where $Q_{\max}\ge1$.
+For every such training set, Theorem~\ref{thm:scalar} holds whenever
+\begin{equation}\label{eq:A-uniform}
+ A\ge A_0:=1024dQ_{\max}^3D^{2D}
+                  \log(32Q_{\max}D^D).
+\end{equation}
+This bound is independent of the number of training examples and of $N$.
+\end{corollary}
+\begin{proof}
+Choose a KKT certificate with minimal positive support. Its active
+vectors are linearly independent: otherwise a linear dependence lets
+one vary the nonnegative coefficients until one vanishes, preserving
+their conic combination. Thus the support size is $r\le D$.
+Its Gram matrix $G$ is an integer positive-definite matrix with diagonal
+$D$, and $G\mu=\mathbf1$. Hadamard's inequality gives
+$1\le\det G\le D^r\le D^D$. Cramer's rule and positivity imply
+$\mu_i\ge1/\det G\ge D^{-D}$, since each numerator is a positive
+integer. Hence $\rho_i\ge1/(Q_{\max}D^D)$.
+The common value $p_0=1/(2Q_{\max}D^D)$ is a valid smaller bound for $p$.
+Substituting it and $Q_{\max}$ into \eqref{eq:A-threshold} gives
+\eqref{eq:A-uniform}.
+\end{proof}
+
+For $D=O(k)$ and $Q_{\max}=\exp(O(k))$, this sufficient penalty is
+$\exp(O(k\log k))$. The theorem nevertheless allows any divergent
+sequence $A_N$: it eventually exceeds the fixed threshold associated
+with each fixed target. A slow choice can make the required width large.

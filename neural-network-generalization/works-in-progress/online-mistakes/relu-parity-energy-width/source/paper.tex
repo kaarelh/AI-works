@@ -1,0 +1,337 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,amsmath,amssymb,amsthm,mathtools}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Minimum Gaussian energy for parity requires exponential ReLU width},pdfauthor={ChatGPT-6 Astra; Kaarel Hanni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\relu}{\mathrm{ReLU}}
+\newcommand{\chiS}{\chi}
+\title{Minimum Gaussian energy for parity requires\protect\\exponential ReLU width}
+\author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{6 November 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+A Boolean function may have a small neural-network implementation while
+its minimum-energy implementation requires much greater width.
+We prove an exact example for parity and one-hidden-layer ReLU networks
+with a constant input coordinate and independent isotropic Gaussian
+weights in each layer. For an even parity of degree $r\ge4$, the smallest
+Gaussian rate energy compatible with output margin $1/2$ is attained
+if and only if the hidden width is at least $2^{r-1}$. Nevertheless the
+same parity has a bounded-weight shallow teacher of width $O(r^2)$ and
+a Boolean circuit of size $O(r)$.
+The proof first determines the sharp correlation of a single ReLU neuron
+with parity, then characterizes every equality case by its Fourier
+coefficients. The result concerns exact energy minimization. It is not
+an exponential sample-complexity or online-mistake lower bound.
+\end{abstract}
+
+\section{The question and the result}
+
+For a Gaussian prior on network weights, the leading small-noise
+probability of a prescribed function is determined by the least
+quadratic weight energy that implements it. The width needed to
+\emph{implement} a function need not be the width needed to minimize
+that energy. This distinction matters when comparing strong-prior
+Bayesian learners at different widths: adding neurons can change the
+leading function probabilities even when the target was already
+realizable.
+
+We give an exact separation for parity. Let $d\ge r\ge2$, let $r$ be even,
+and write
+\[
+ X=\{-1,1\}^d,\qquad \chi(x)=\prod_{i=1}^r x_i.
+\]
+The learner has one hidden layer and a linear readout:
+\begin{equation}\label{eq:model}
+ z(x)=\sum_{j=1}^N v_j\relu(b_j+w_j\cdot x),
+ \qquad \relu(t)=\max\{t,0\}.
+\end{equation}
+The bias $b_j$ is the weight of an appended constant input coordinate.
+For the independent Gaussian prior
+\[
+ (b_j,w_{j1},\ldots,w_{jd})_i\sim N(0,N\sigma^2/d),
+ \qquad v_j\sim N(0,\sigma^2/N),
+\]
+the density is proportional to $\exp[-K_N/(2\sigma^2)]$, where
+\begin{equation}\label{eq:energy}
+ K_N=\frac dN\sum_{j=1}^N(b_j^2+\|w_j\|_2^2)
+       +N\sum_{j=1}^Nv_j^2.
+\end{equation}
+All first-layer coordinates, including the constant coordinate, have
+the same variance. Impose the full-cube margin constraints
+\begin{equation}\label{eq:margin}
+ \chi(x)z(x)\ge\frac12\qquad(x\in X).
+\end{equation}
+Set
+\begin{equation}\label{eq:rho}
+ \rho_r=\frac{\binom{r-2}{(r-2)/2}}{2^{r-1}\sqrt r},
+ \qquad E_* =\frac{\sqrt d}{\rho_r}.
+\end{equation}
+
+\begin{theorem}\label{thm:main}
+Every width and every network satisfying \eqref{eq:margin} obey
+$K_N\ge E_*$. If $r\ge4$, equality is attainable exactly at the widths
+\[
+ N\ge2^{r-1}.
+\]
+For $r=2$, equality is attainable exactly when $N\ge4$.
+At any smaller width where \eqref{eq:margin} is feasible, its minimum
+energy is strictly greater than $E_*$.
+
+The target has a bounded-fan-in Boolean circuit of size $O(r)$ and a
+one-hidden-layer ReLU teacher of width $O(r^2)$, every weight at most
+one in absolute value, and output margin one.
+\end{theorem}
+
+The strict-margin cell $\chi(x)z(x)>1/2$ has the same energy infimum as
+\eqref{eq:margin}: multiply the readout by $1+\varepsilon$ and let
+$\varepsilon\downarrow0$. Thus the theorem also identifies the width
+at which that cell reaches its optimal leading Gaussian small-noise
+rate. The claim is about attaining the \emph{exact} minimum. It gives no
+positive lower bound, uniform in $r$, on the approximation gap below
+the width threshold.
+
+Prior work establishes $\Theta(r)$ variation-norm complexity for parity
+and shows that multidirectional ReLU representations improve on ridge
+representations~\cite{ardeshir}. Our proof uses the augmented Euclidean
+norm, which charges the bias, and determines the sharp single-neuron
+constant and the exact support size needed for equality.
+
+\section{A sharp single-neuron inequality}
+
+For $T\subseteq[d]$, put $\chi_T(x)=\prod_{i\in T}x_i$ and
+$\widehat h(T)=\E[\chi_T(x)h(x)]$, with expectation uniform on the cube.
+
+\begin{lemma}[Top Fourier coefficient of a monotone function]
+\label{lem:monotone}
+If $h:\{-1,1\}^m\to[0,1]$ is coordinatewise nondecreasing and $m\ge1$,
+then
+\[
+ \left|\E\!\left[\left(\prod_{i=1}^m x_i\right)h(x)\right]\right|
+ \le\frac{\binom{m-1}{\lfloor(m-1)/2\rfloor}}{2^m}.
+\]
+\end{lemma}
+\begin{proof}
+Average $h$ over coordinate permutations. The objective is unchanged,
+and the resulting value $h_j$ at inputs with $j$ positive coordinates
+is nondecreasing in $j$: a uniform $j$-subset can be coupled with a
+uniform $(j+1)$-subset by adding a uniformly chosen absent coordinate.
+Every sequence $0\le h_0\le\cdots\le h_m\le1$ is a convex combination
+of the two constant sequences and the threshold sequences
+$\mathbf1\{j\ge t\}$. For a threshold, the alternating sum is
+\[
+ \sum_{j=t}^m(-1)^j\binom mj=(-1)^t\binom{m-1}{t-1}
+ \qquad(1\le t\le m).
+\]
+The largest absolute value is the central binomial coefficient in the
+statement. The constant sequences have zero top coefficient.
+\end{proof}
+
+\begin{lemma}[Sharp parity correlation]\label{lem:correlation}
+For even $r\ge2$ and every $(b,w)\in\R^{d+1}$,
+\begin{equation}\label{eq:correlation}
+ \left|\E[\chi(x)\relu(b+w\cdot x)]\right|
+ \le \frac{\binom{r-2}{(r-2)/2}}{2^{r-1}}
+       \min_{i\le r}|w_i|
+ \le\rho_r\sqrt{b^2+\|w\|_2^2}.
+\end{equation}
+For unit augmented norm, equality in the last bound holds exactly at
+\[
+ b=0,\qquad w_i=s_i/\sqrt r\ (i\le r),\qquad
+ w_i=0\ (i>r),\qquad s_i\in\{-1,1\}.
+\]
+\end{lemma}
+\begin{proof}
+Input sign changes make the relevant $w_i$ nonnegative and change at
+most the sign of the correlation. Choose one of their smallest values,
+$a=w_j$. Condition on the irrelevant inputs. Since the derivative of
+ReLU is the positive-half-line indicator almost everywhere,
+\begin{align*}
+ \E[\chi\relu(b+w\cdot x)]
+ =\frac12\int_{-a}^a
+ \E\left[\left(\prod_{i\le r,\ i\ne j}x_i\right)
+ \mathbf1\left\{b+t+\sum_{i\ne j}w_ix_i>0\right\}\right]dt.
+\end{align*}
+The inner function is monotone in the remaining $r-1$ relevant bits.
+Lemma~\ref{lem:monotone} bounds its top coefficient by
+$\binom{r-2}{(r-2)/2}/2^{r-1}$, proving the first inequality.
+Next,
+\[
+ \min_{i\le r}|w_i|\le
+ \frac{\|(w_1,\ldots,w_r)\|_2}{\sqrt r}
+ \le\frac{\sqrt{b^2+\|w\|_2^2}}{\sqrt r}.
+\]
+Equality forces the stated directions. They attain equality: at equal
+weights and bias zero, the inner threshold in the integral is the same
+central Hamming threshold for almost every $t\in(-a,a)$. Its top
+coefficient has constant sign and maximal magnitude.
+\end{proof}
+
+For completeness, an odd parity of degree $r\ge3$ has sharp constant
+$\rho_{r+1}$ when the bias is charged in the augmented norm. Indeed
+$\relu(t)=(t+|t|)/2$, the affine part has zero parity correlation, and
+randomizing the sign of the bias converts the absolute-value
+correlation into an even $(r+1)$-variable parity correlation. Equality
+is attained when the bias and all relevant weights have magnitude
+$1/\sqrt{r+1}$. We will only need the even case below.
+
+\section{Energy equality determines the output and all neuron directions}
+
+The margins imply $\E[\chi z]\ge1/2$. Apply
+Lemma~\ref{lem:correlation} separately to each neuron and then AM--GM:
+\begin{align}\label{eq:lower}
+ \frac12&\le\E[\chi z]
+ \le\rho_r\sum_j|v_j|\sqrt{b_j^2+\|w_j\|_2^2},\\
+ K_N&\ge2\sqrt d\sum_j|v_j|\sqrt{b_j^2+\|w_j\|_2^2}
+ \ge\frac{\sqrt d}{\rho_r}.\nonumber
+\end{align}
+This proves the universal lower bound.
+
+If equality holds, every nonzero neuron attains the sharp correlation
+bound, with its readout sign making that correlation positive. A neuron
+that contributes zero must have all parameters zero. Also
+$\E[\chi z]=1/2$ and the pointwise margins force
+\begin{equation}\label{eq:exact-output}
+ z(x)=\chi(x)/2\qquad(x\in X).
+\end{equation}
+Write
+\[
+ h_s(x)=\relu\left(\frac1{\sqrt r}\sum_{i=1}^rs_ix_i\right),
+ \qquad \kappa_r=\widehat h_{\boldsymbol1}([r]),\qquad
+ |\kappa_r|=\rho_r.
+\]
+Merging proportional neurons, every equality case has the form
+\begin{equation}\label{eq:measure}
+ z(x)=\operatorname{sign}(\kappa_r)V_*
+       \sum_s p_s\chi(s)h_s(x),
+ \qquad p_s\ge0,\quad\sum_sp_s=1,\quad
+ V_* =\frac1{2\rho_r}.
+\end{equation}
+Each orientation with $p_s>0$ requires at least one nonzero neuron.
+
+\section{Fourier coefficients force exponentially many orientations}
+
+The equality-case networks ignore the other $d-r$ inputs. Throughout
+this section, Fourier coefficients and orientation characters are indexed
+by subsets of the $r$ relevant coordinates.
+
+\begin{lemma}\label{lem:ridge}
+Let $h=h_{\boldsymbol1}$. Its constant coefficient is positive, every
+even-degree coefficient is nonzero, and its odd-degree coefficients
+vanish except at degree one.
+More explicitly, if $|T|=2t\ge2$, $n=r-2$, and $m=2t-2$, then
+\begin{equation}\label{eq:equator}
+ \widehat h(T)=
+ \frac1{2\sqrt r}\frac{\binom n{n/2}}{2^n}
+ (-1)^{m/2}\frac{\binom{n/2}{m/2}}{\binom nm}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+The identity $h(x)-h(-x)=\sum_i x_i/\sqrt r$ gives the odd-degree
+claims, including $\widehat h(\{i\})=1/(2\sqrt r)$.
+For $i,j\in T$, average first over these two coordinates. The remaining
+sum $R=\sum_{\ell\ne i,j}x_\ell$ is even, and direct evaluation gives
+\[
+ \E_{x_i,x_j}[x_ix_jh(x)]
+ =\frac1{2\sqrt r}\mathbf1\{R=0\}.
+\]
+On a balanced $n$-bit input,
+$\prod_{\ell=1}^n(1+u x_\ell)=(1-u^2)^{n/2}$.
+Comparing coefficients and using permutation symmetry shows that the
+conditional mean of any degree-$m$ character on that equator is
+$(-1)^{m/2}\binom{n/2}{m/2}/\binom nm$. Multiplying by its probability
+$2^{-n}\binom n{n/2}$ proves \eqref{eq:equator}.
+\end{proof}
+
+Taking Fourier coefficients in \eqref{eq:measure},
+\begin{equation}\label{eq:fourier-output}
+ \widehat z(T)=\operatorname{sign}(\kappa_r)V_*\widehat h(T)
+      \E_p[\chi_{[r]\mathbin\triangle T}(s)].
+\end{equation}
+For every even $T\ne[r]$, the ridge coefficient is nonzero while
+\eqref{eq:exact-output} makes the left side zero. Hence
+\[
+ \E_p\chi_U=0\qquad\text{for every nonempty even }U\subseteq[r].
+\]
+The antipodal symmetrization of $p$ has these even Fourier moments and
+zero odd Fourier moments. Fourier inversion makes it uniform, so
+\begin{equation}\label{eq:pair-mass}
+ p_s+p_{-s}=2^{1-r}\qquad(s\in\{-1,1\}^r).
+\end{equation}
+Every antipodal pair therefore needs a nonzero neuron. This proves
+$N\ge2^{r-1}$.
+
+For $r=2$, the nonzero degree-one ridge coefficients in
+\eqref{eq:fourier-output} additionally force both singleton moments of
+$p$ to vanish. All its nonconstant Fourier moments vanish, so $p$ is
+uniform on all four orientations. Thus $N\ge4$ in that case.
+
+\section{Matching networks and a small bounded-weight teacher}
+
+For even $r\ge4$, let $p$ be uniform on $s_1=+1$. Its only nonzero
+Fourier moments are those of $\varnothing$ and $\{1\}$. The empty
+moment gives the desired parity coefficient in
+\eqref{eq:fourier-output}. The moment $\{1\}$ would give a coefficient
+at $T=[r]\setminus\{1\}$; its degree is odd and at least three, so the
+ridge coefficient vanishes. Therefore \eqref{eq:measure} is exactly
+$\chi/2$ and uses $2^{r-1}$ atoms. For $r=2$, use all four orientations
+uniformly.
+
+Write the nonzero atom coefficients as $c_s$. At any width $N$ at least
+their number, set
+\[
+ (b_s,w_s)=t_s(0,s/\sqrt r,0,\ldots,0),\qquad
+ v_s=c_s/t_s,\qquad t_s^2=\frac{N|c_s|}{\sqrt d}.
+\]
+Positive homogeneity preserves the output, and the two quadratic costs
+of each neuron agree. Thus the total energy is
+$2\sqrt d\sum_s|c_s|=E_*$. Zero neurons fill any additional width.
+
+At a smaller feasible width the closed margin problem attains its
+minimum, because the constraints are closed and $K_N$ is coercive.
+The equality characterization excludes $E_*$, so the minimum is
+strictly larger. This completes the energy and width assertions.
+
+Finally, parity has a small bounded-weight teacher. Let
+$S(x)=\sum_{i=1}^r x_i$ and linearly interpolate the alternating values
+$\pm1$ at $S=-r,-r+2,\ldots,r$. The resulting one-variable spline has
+$O(r)$ hinges, initial slope of magnitude one, slope jumps of magnitude
+at most two, and constant term $O(r)$. Its hinge expansion gives a
+shallow ReLU representation of parity. Each affine form has input
+coefficients at most one and bias at most $r$. Divide it by the largest
+absolute coefficient and replicate the resulting readout coefficient
+into $O(r)$ copies, each of magnitude at most one. The constant and
+linear terms take $O(r)$ further neurons. All incoming and outgoing
+weights are then bounded by one, the total width is $O(r^2)$, and the
+output is exactly $\chi$, with margin one. An ordinary XOR chain gives
+the $O(r)$ Boolean circuit.
+
+\section{Interpretation}
+
+The theorem exhibits an exact difference between realizability width
+and minimum-energy width under an unchanged isotropic Gaussian prior.
+It does not show that a Bayesian learner needs exponential width to
+learn parity, nor that an approximation to the optimal energy requires
+exponential width. In particular, no online input sequence or mistake
+lower bound is asserted. The result identifies a concrete reason why
+an energy calculation for a narrow network need not determine the
+strong-prior posterior at larger widths.
+
+\begin{thebibliography}{9}
+\bibitem{ardeshir}
+Navid Ardeshir, Daniel Hsu, and Clayton Sanford.
+Intrinsic dimensionality and generalization properties of the
+$\mathcal R$-norm inductive bias.
+\emph{Proceedings of the 36th Conference on Learning Theory},
+PMLR 195, 2023.
+\url{https://proceedings.mlr.press/v195/ardeshir23a.html}.
+\end{thebibliography}
+\end{document}

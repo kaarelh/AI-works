@@ -1,0 +1,588 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,amsmath,amssymb,amsthm,mathtools}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Exponential online mistakes for isotropic Bayesian threshold networks at all sufficiently large widths},pdfauthor={ChatGPT-6 Astra; Kaarel Hanni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\newcommand{\sgn}{\operatorname{sign}}
+\newcommand{\cH}{\mathcal H}
+\title{Exponential online mistakes for isotropic Bayesian\protect\\threshold networks at all sufficiently large widths}
+\author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{6 November 2026}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+For the fixed discontinuous sign activation, we construct an exactly
+isotropic Gaussian Bayesian network with exponentially many online
+mistakes at every sufficiently large hidden width.
+The model retains one hidden layer, a constant input coordinate, the full
+Boolean cube, global output margin greater than $1/2$, and exact labels.
+For each $k\ge2$ the target has a Boolean circuit of size $\Theta(k)$ and
+a width-one teacher with every weight at most one, while one fixed input
+permutation forces $2^k-2$ designated mistakes after an exponential
+calibration prefix. The result holds under every fixed strong-prior
+exponent $\gamma>1$, with any fixed positive variance prefactor, at all
+sufficiently large widths. It also holds for $\gamma=1$ with a sufficiently
+small fixed prefactor. A finite-width Gaussian-tail inequality controls
+every nonlinear competitor and reduces the posterior to strictly ordered
+threshold-function cone probabilities. An explicit positive-helper
+calibration and radial integration produce that order without changing
+the isotropic covariance. The same target and prior have polynomial IID
+sample complexity. The cold-posterior width bound is
+$\operatorname{poly}(k)2^k$; the direct fixed-$\gamma$ theorem has an
+additional width requirement stated explicitly. This does not establish
+the corresponding result for ordinary tanh, ReLU, GELU, or every width
+above the teacher width.
+\end{abstract}
+
+\section{Model and theorem}
+
+Let $X=\{-1,1\}^d$, write $\bar x=(1,x)$, and use the fixed activation
+$\sgn(t)=1$ for $t>0$ and $-1$ for $t<0$. Its value at zero may be fixed
+arbitrarily: no Gaussian first-layer score is zero on the finite cube
+with positive probability. The learner has one hidden layer,
+\begin{equation}\label{eq:network}
+ F_{W,v}(x)=\sum_{a=1}^N v_a\sgn(W_a\cdot\bar x),
+ \qquad
+ W_{ai}\sim N(0,N\sigma^2/d),\quad
+ v_a\sim N(0,\sigma^2/N),
+\end{equation}
+with all variables independent, including the bias coordinate $i=0$.
+There is no coordinate-dependent covariance. For a Boolean function $g$
+let
+\begin{equation}\label{eq:cell}
+ U_g=\{g(x)F_{W,v}(x)>1/2\text{ for every }x\in X\}.
+\end{equation}
+The posterior conditions the prior on the union of these strict
+global-margin cells and on the exact observed labels. Thus it is a
+posterior over Boolean functions on the whole cube, not a restriction
+to threshold subnetworks.
+
+By a posterior error probability at an input we mean the posterior mass
+of functions assigning the wrong label. Posterior-label majority makes
+a deterministic mistake whenever this probability exceeds $1/2$.
+The stronger threshold $2/3$ will also be covered. A fresh posterior
+function sampled for prediction errs with that posterior probability.
+
+For a fixed $\gamma\ge1$ and $\tau>0$, the strong-prior scaling is
+\begin{equation}\label{eq:gamma}
+ \sigma_N^2=\tau^2N^{-\gamma},\qquad
+ \operatorname{Var}(W_{ai})=\frac{\tau^2N^{1-\gamma}}d,
+ \qquad \operatorname{Var}(v_a)=\tau^2N^{-\gamma-1}.
+\end{equation}
+The unit-prefactor version sets $\tau=1$.
+
+\begin{theorem}\label{thm:main}
+For every $k\ge2$, let $d=167k+1617$. There is an explicitly specified
+threshold function $f_k:X\to\{-1,1\}$ and a fixed permutation of $X$
+with the following properties.
+\begin{enumerate}
+\item The target has a bounded-fan-in Boolean circuit of size
+$\Theta(d)=\Theta(k)$ and a width-one sign-network teacher with every
+weight at most one in absolute value and output margin one.
+\item The permutation begins with $2^{d-1}+2$ calibration examples,
+followed by $2^k-2$ distinct designated inputs whose true labels are
+negative. For every fixed $\gamma>1$, $\tau>0$, and $\eta>0$, there is
+$N_0$ such that at every $N\ge N_0$ under \eqref{eq:gamma}, the posterior
+error probability at every designated round exceeds $1-\eta$.
+\item Consequently posterior-label majority makes all $2^k-2$
+designated mistakes, including under the strict $2/3$ criterion, at all
+sufficiently large widths. The probability that posterior sampling makes
+all these mistakes can also be made greater than $1-\eta$ by increasing
+the same width threshold.
+\item The conclusion also holds at $\gamma=1$ for every sufficiently
+small fixed $\tau>0$. It is not asserted at $\gamma=1,\tau=1$.
+\end{enumerate}
+The target, input order, and first-layer isotropy do not depend on $N$,
+$\gamma$, or $\tau$. The threshold $N_0$ may depend on $k$, $\gamma$,
+$\tau$, and the required error allowance.
+\end{theorem}
+
+This answers an all-sufficiently-large-width question for a classical
+discontinuous activation. It leaves the exactly isotropic tanh question
+open. The small-anisotropy tanh result of~\cite{anisotropic} preserves
+ordinary tanh but changes the covariance; the present result preserves
+the covariance and changes the activation. The exponential calibration
+prefix and the large width threshold are substantive features of the
+construction, not efficient-data or practical-width guarantees.
+
+\section{A finite-width posterior bound}
+
+Let $\cH_d$ be the affine threshold functions on $X$ and let
+$\pi(g)$ be the probability that one isotropic Gaussian hidden neuron
+has truth table $g$. Set $\pi(g)=0$ for $g\notin\cH_d$.
+For $g\in\cH_d$, its strict representation cone is nonempty and open,
+so $\pi(g)>0$. Gaussian symmetry gives $\pi(-g)=\pi(g)$.
+Positive rescaling of every first-layer coefficient does not change
+the hidden truth table, so these probabilities are independent of the
+common Gaussian variance and of $N$.
+
+Write $Q(a)=\Pp(Z>a)$ for a standard Gaussian $Z$. Set
+\begin{equation}\label{eq:tailconstants}
+ T=2^d,\quad c_d=1-(1-2/T)^2,\quad p_g=2\pi(g),\quad
+ q_\sigma=Q(1/(2\sigma)),\quad
+ \delta_{N,\sigma}=e^{-c_d/(8N\sigma^2)}.
+\end{equation}
+
+\begin{lemma}[All Boolean competitors]\label{lem:posterior}
+For every Boolean $g$, every $N\ge1$, and every $\sigma>0$,
+\begin{equation}\label{eq:massbounds}
+ q_\sigma p_g^N\ \le\ \Pp(U_g)\ \le\
+ q_\sigma[p_g+(1-p_g)\delta_{N,\sigma}]^N.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Condition on the hidden truth tables $h_1,\ldots,h_N$. Let $t$ count
+those not equal to either $g$ or $-g$, and put
+\[
+ m_a=\frac1T\sum_{x\in X}g(x)h_a(x).
+\]
+Aligned columns have $|m_a|=1$. Every other column both agrees and
+disagrees with $g$, hence $|m_a|\le1-2/T$. Thus
+$\|m\|^2\le N-c_dt$. If $U_g$ occurs, averaging its strict inequalities
+gives $v\cdot m>1/2$. This scalar Gaussian has variance
+$\sigma^2\|m\|^2/N$, so
+\[
+ \Pp(U_g\mid h_1,\ldots,h_N)
+ \le Q\!\left(\frac1{2\sigma\sqrt{1-c_dt/N}}\right)
+ \le q_\sigma e^{-c_dt/(8N\sigma^2)}.
+\]
+For the last inequality use $(1-r)^{-1}-1\ge r$ and
+$Q(b)/Q(a)\le e^{-(b^2-a^2)/2}$ for $b\ge a\ge0$.
+The latter follows by shifting the Gaussian-tail integral by $b-a$.
+If all columns are aligned, $U_g$ is exactly one scalar tail of
+probability $q_\sigma$. Alignment occurs independently with probability
+$p_g$ per neuron. Restricting to $t=0$ proves the lower bound; averaging
+the upper bound over its binomial distribution proves the upper bound.
+\end{proof}
+
+\begin{corollary}[Cold posterior]\label{cor:cold}
+At each fixed width $N$, after any exact-label history consistent with
+some threshold function, the posterior as $\sigma\downarrow0$ gives
+mass proportional to $\pi(g)^N$ on the consistent threshold functions
+and zero mass on the other Boolean functions.
+\end{corollary}
+\begin{proof}
+Divide \eqref{eq:massbounds} by $q_\sigma$ and let $\sigma\downarrow0$.
+There are finitely many Boolean functions and at least one positive
+limiting mass. The common factor $2^N$ cancels on normalization.
+\end{proof}
+
+\begin{proposition}[Direct strong-prior limit]\label{prop:gamma}
+Fix any finite collection of exact-label histories. If each has a unique
+largest-$\pi$ consistent threshold function, then under
+\eqref{eq:gamma}, for every fixed $\gamma>1$ and $\tau>0$, the posterior
+mass of that function tends to one as $N\to\infty$, simultaneously
+at all the histories. The same holds for $\gamma=1$ and all sufficiently
+small fixed $\tau>0$.
+\end{proposition}
+\begin{proof}
+For $\gamma>1$,
+\[
+ \delta_N=\exp[-c_dN^{\gamma-1}/(8\tau^2)],\qquad
+ N\delta_N\longrightarrow0.
+\]
+For every threshold function, \eqref{eq:massbounds} gives
+$\Pp(U_g)/(q_{\sigma_N}p_g^N)\to1$.
+For a nonthreshold function it gives
+$\Pp(U_g)\le q_{\sigma_N}\delta_N^N$.
+Dividing by the lower bound for the largest consistent threshold
+function proves the claim after summing the finitely many other cells.
+
+For $\gamma=1$, $\delta_N=\delta_\tau=e^{-c_d/(8\tau^2)}$ is constant.
+At one history let $p_*$ be the largest aligned probability and $p_2$
+the largest among the other consistent threshold functions, taking
+$p_2=0$ if none exist. Include the nonthreshold competitors by the same
+zero value. Choosing
+\[
+ \delta_\tau<\frac{p_*-p_2}{1-p_2}
+\]
+makes every competing upper-bound base in \eqref{eq:massbounds}
+strictly smaller than the lower-bound base $p_*$. The finite collection
+of histories permits one common positive upper bound on $\tau$.
+\end{proof}
+
+\section{An explicit full-cube calibration}
+
+The next construction supplies strictly ordered Gaussian cone
+probabilities. No parameter is observed or conditioned directly:
+calibration consists only of exact labels of one threshold function.
+
+\subsection{Four registers and positive helper pairs}
+
+Fix $k\ge2$, $p\ge6$, and $L=p+k+2$. Consider four logical $L$-bit
+registers $A,B,C,D$, with levels $0,\ldots,L-1$. The actual main inputs
+are the $k$ bits of $A$ at levels $p,\ldots,p+k-1$.
+Every other logical bit is represented by a pair of actual helper inputs.
+There are
+\begin{equation}\label{eq:dimensions}
+ P=4L-k\text{ pairs},\qquad H=2P=8L-2k\text{ helpers}.
+\end{equation}
+The signed logical coefficient is $+2^j$ at level $j$ in $A,B$ and
+$-2^j$ in $C,D$. Denote the signed coefficient for helper pair $l$ by
+$r_l^*$. The canonical main coefficients are $w_i^*=2^{p+i}$, and put
+\begin{align}\label{eq:canonical}
+ R_*&=(2^k-1)2^p,&
+ S_*&=\sum_l|r_l^*|=4(2^L-1)-R_*,\\
+ H_*&=R_*+S_*+1=2^{L+2}-3,& u_*&=1/4.\nonumber
+\end{align}
+The two actual helper coefficients of pair $l$ are
+$H_*+r_l^*/2$ and $H_*-r_l^*/2$.
+Let $f_0(x,y)$ be the sign of this affine score on the entire cube of
+main and helper inputs.
+
+All scores are nonzero: each pair contributes either $\pm2H_*$ or
+$\pm r_l^*$, so the nonbias score is integral. If the total helper-bit
+sum $m=\sum y_l$ is nonzero, $|m|\ge2$, and the label is $\sgn(m)$,
+because $H_*m$ dominates the other terms. If every pair is individually
+balanced, its inputs are $(s,-s)$ and its contribution is $r_l^*s$.
+On this subcube the truth table is exactly
+\begin{equation}\label{eq:addition}
+ A+B\ge C+D,
+\end{equation}
+where register values are interpreted in $0/1$ notation. Equality is
+positive because $u_*>0$.
+
+Now consider \emph{any} strict affine representation of the full truth
+table $f_0$. Write its main coefficients as $w_i$, helper coefficients
+as $h_l$, and bias as $u$. Every assertion below applies to this whole
+representation cone.
+
+\subsection{Arithmetic rigidity}
+
+\begin{lemma}\label{lem:pinning}
+Let $a=w_0$ and $R=\sum_iw_i$. Then $a>0$, all $w_i>0$, and every binary
+subset sum $A_j=\sum_i\operatorname{bit}_i(j)w_i$, $0\le j\le2^k-1$,
+satisfies
+\begin{equation}\label{eq:binary}
+ \left|A_j/a-j\right|<\epsilon,
+ \qquad \epsilon=12\,2^{k-p}.
+\end{equation}
+Every within-pair coefficient difference has absolute value at most
+$10R$, and $|u|\le4LR$.
+\end{lemma}
+\begin{proof}
+On the individually pair-balanced subcube, use $a_j,b_j,c_j,d_j$ for
+the positive register coefficients, writing negative signs for $C,D$.
+They are strictly positive because every logical coordinate in
+\eqref{eq:addition} is essential and has its indicated monotonicity.
+In particular $w_i=a_{p+i}$. After switching to $0/1$ coordinates and
+dividing the score by two, it is
+\[
+ \beta+\sum_j a_jA_j+\sum_j b_jB_j-\sum_jc_jC_j-\sum_jd_jD_j,
+ \quad
+ \beta=\frac{u-\sum a_j-\sum b_j+\sum c_j+\sum d_j}{2}.
+\]
+The all-zero input and the inputs $C=1$ or $D=1$ imply
+$0<\beta<\min(c_0,d_0)$. Put $u_0=\max(c_0,d_0)$.
+Compare the equality $A=2^j,C=2^j$ first with $D=0$ and then with $D=1$.
+The same comparison works with $B$ in place of $A$, giving
+\begin{equation}\label{eq:copies}
+ -\beta<a_j-c_j<d_0-\beta,
+ \qquad -\beta<b_j-c_j<d_0-\beta.
+\end{equation}
+Similarly $a_j-d_j,b_j-d_j\in(-\beta,c_0-\beta)$.
+All coefficients at a given level differ from $a_j$ by less than $u_0$,
+and $|b_j-a_j|<d_0$.
+For $j<L-1$ compare $A=B=2^j,C=2^{j+1}$ first with $D=0$ and then
+with $D=1$. These labels imply
+\begin{equation}\label{eq:recurrence}
+ \beta-d_0<c_{j+1}-a_j-b_j<\beta,
+ \qquad |a_{j+1}-2a_j|<3u_0.
+\end{equation}
+
+For $j\ge1$, compare $A=2^j-1$ with $C=2^j$ and with $C=2^j-1$.
+The first label is negative and the second positive, so
+$c_j>\beta+\sum_{i<j}a_i>\sum_{i<j}c_i$.
+The same argument gives $d_j>\sum_{i<j}d_i$. Hence
+\[
+ a:=a_p>(2^{p-1}-1)u_0\ge2^{p-2}u_0.
+\]
+Iterating \eqref{eq:recurrence} now gives
+$|a_{p+i}-2^ia|<3u_0(2^i-1)$.
+The sum of the $k$ coordinate errors is less than $3u_02^k$, which
+proves \eqref{eq:binary}.
+
+For the coarse coefficient bounds, $u_0<a/16$ since $p\ge6$.
+Above level $p$, $a_j<(19/16)2^{j-p}a$, while
+$R>(13/16)(2^k-1)a$. Thus even at $j=L-1=p+k+1$,
+$a_j/R<(38/13)2^k/(2^k-1)\le76/13<6$.
+The other register coefficients differ from $a_j$ by less than $u_0$.
+Below level $p$, $c_j<c_p<a+u_0$ and
+$a_j<c_j+u_0<a+2u_0$; all other coefficients there are less than $2R$.
+Thus $10R$ bounds every register coefficient and every absolute
+within-pair difference. Finally \eqref{eq:copies} and its counterpart
+for $b_j-d_j$ give
+\[
+ |u|=\left|2\beta+\sum_j(a_j-c_j)+\sum_j(b_j-d_j)\right|
+ <(2L+2)u_0\le4LR.
+\]
+\end{proof}
+
+\subsection{All helpers are positive and have bounded deviations}
+
+\begin{lemma}\label{lem:helpers}
+Every helper coefficient satisfies $h_l>R$. Write
+\[
+ H_0=H^{-1}\sum_lh_l,\qquad \delta_l=h_l-H_0,\qquad\sum_l\delta_l=0.
+\]
+Then $|\delta_l|\le30LR$ for every $l$.
+\end{lemma}
+\begin{proof}
+Let $s_l$ be the mean of the two coefficients in helper pair $l$.
+Fix two distinct pairs $i,j$, set pair $i$ both positive and pair $j$
+both negative, and set every main input positive. Balance all other
+pairs individually, choosing first all their canonical logical
+contributions positive and then all negative. Both assignments have
+total helper-bit sum zero. Their remaining canonical absolute sum is
+at least
+\[
+ S_*-2\,2^{L-1}=3\,2^L-R_*-4>R_*+1/4,
+\]
+so the two labels are respectively positive and negative.
+Arithmetic rigidity fixes the signs of the actual pair differences.
+If $S_{ij}$ is the sum of their absolute values outside pairs $i,j$,
+these two strict inequalities give
+\[
+ |2(s_i-s_j)+u+R|<S_{ij}\le S:=\sum_l|h_{l,+}-h_{l,-}|\le40LR.
+\]
+Thus $|s_i-s_j|\le(22L+1)R$. Averaging over $j$ and adding half a
+within-pair difference gives $|h_l-H_0|\le30LR$.
+
+To prove the stronger positivity statement, fix one actual helper
+coordinate $t$. Balance its pair with that coordinate negative, and
+balance every other pair so that its canonical logical contribution is
+negative. The total canonical helper contribution is at most
+$-S_*+2\,2^{L-1}<-R_*-1/4$. Thus the example with all main inputs
+positive has negative label. Flip only helper coordinate $t$ to positive
+and put every main input negative. Its total helper-bit sum is now $+2$,
+so its label is positive. In any fitting representation, the difference
+of the second score and the first is $2h_t-2R>0$. Hence $h_t>R$.
+\end{proof}
+
+\begin{lemma}[Exact common-mode ray]\label{lem:ray}
+Let $\theta=(w,\delta,u)$ with $\sum\delta_l=0$. The full strict
+representation cone of $f_0$ consists exactly of
+\begin{equation}\label{eq:ray}
+ \theta\in\Omega_0,\qquad H_0>A(\theta),
+\end{equation}
+where $\Omega_0$ is an open homogeneous cone independent of $H_0$ and
+\begin{equation}\label{eq:raybounds}
+ R\le A(\theta)\le BR,\qquad
+ F_0:=\sum_iw_i^2+\sum_l\delta_l^2+u^2/2\le B^2R^2,
+ \qquad B=200L^2.
+\end{equation}
+The binary approximation \eqref{eq:binary} holds on $\Omega_0$.
+\end{lemma}
+\begin{proof}
+Define $\Omega_0$ by the labels on \emph{all} inputs with total
+helper-bit sum zero, including assignments whose individual pairs are
+not balanced. Those constraints do not involve $H_0$. On an input with
+$m=\sum y_l\ne0$, the prescribed label is $\sgn(m)$; its constraint is
+$H_0>-(u+w\cdot x+\delta\cdot y)/m$. Therefore \eqref{eq:ray} holds with
+\[
+ A(\theta)=\max_{x,y:\,m\ne0}
+       -\frac{u+w\cdot x+\delta\cdot y}{m}.
+\]
+This is a finite maximum, so every $\theta\in\Omega_0$ has a nonempty
+ray. All pinning and deviation bounds used only total-sum-zero examples
+and hold on $\Omega_0$. The helper positivity conclusion holds at every
+point above the ray threshold, hence
+$A\ge R-\min_l\delta_l\ge R$.
+Conversely $|m|\ge2$, $H\le8L$, and the preceding bounds imply
+\[
+ A\le(4L+1+240L^2)R/2\le125L^2R.
+\]
+Finally $\sum_iw_i^2\le R^2$, and
+$F_0\le[1+7200L^3+8L^2]R^2\le(200L^2)^2R^2$.
+\end{proof}
+
+\input{volume.tex}
+
+\section{Completing the construction and the width statements}
+
+\subsection{An explicit precision choice}
+
+Set $p=20k+200$ and $L=21k+202$. There are $k+H$ base inputs and one
+selector, so $d=k+H+1=167k+1617$. The constants in the volume argument
+satisfy
+\[
+ C_1\le7H^2B^2,\qquad T_0\le14HB^2,\qquad C_2\le784H^4B^4.
+\]
+Consequently its logarithmic-slope bound satisfies
+\begin{equation}\label{eq:slopeexplicit}
+ \ell\ge\frac1{1568H^4B^4\,2^k}
+ >2^{-54}L^{-12}2^{-k}.
+\end{equation}
+The required inequalities $\epsilon<1/8$ and $\epsilon<\ell/32$ hold:
+the latter follows from $p>2k+63+12\log_2 L$.
+Indeed $L\le223k$, so $\log_2L<8+\log_2k\le k+7$,
+and $p=20k+200>14k+147$.
+
+\subsection{The target and the fixed permutation}
+
+Use the canonical main/helper coefficients from \eqref{eq:canonical}
+and the branch bias $u_*=1/4$ on selector $z=-1$. Put
+$H_\Sigma=\sum_lh_l$ and $a=2^p$. On the branch $z=+1$ choose
+\[
+ v_*=-H_\Sigma-R_*+a.
+\]
+The two branch biases are implemented by the ordinary constant and
+selector coefficients $b=(u_*+v_*)/2$ and $c=(v_*-u_*)/2$.
+On the all-positive helper face, the all-positive main input has score
+$a>0$ and every other main input has score at most $-a<0$.
+Every off-face input is negative by the helper bound. Thus the full
+target is $f_0$ on the first branch and the AND of all main/helper bits
+on the second branch. It is exactly the last finite cutoff function
+in the volume construction.
+
+Take the fixed input permutation to be: all $z=-1$ inputs in
+lexicographic order; then the two face endpoints $q_0,q_M$ where
+$M=2^k-1$; then $q_1,\ldots,q_{M-1}$; then all remaining inputs in
+lexicographic order. These blocks are disjoint. The first endpoint is
+negative, the last positive, and every designated middle input is
+negative. After $q_1,\ldots,q_j$ have been observed, the consistent
+threshold functions are exactly the cutoff functions indexed
+$j,j+1,\ldots,M-1$. The first has strictly largest cone probability and
+predicts $q_{j+1}$ positively. There are exactly $M-1=2^k-2$ such rounds.
+
+Proposition~\ref{prop:gamma} proves the posterior statement of
+Theorem~\ref{thm:main}. For posterior sampling, apply that statement with
+per-round error allowance $\eta/(M-1)$ and use the union bound; no
+independence between predictions is required.
+
+\subsection{Teacher and Boolean circuit complexity}
+
+The canonical full threshold representation has no zero score on the
+cube. Multiply all its first-layer coefficients, including the bias,
+by a sufficiently small positive scalar so that their absolute values
+are at most one. The hidden sign function is unchanged. Give the single
+hidden neuron output weight one. This is the claimed width-one,
+weight-one teacher, with global output margin one.
+
+For completeness the target also has a linear-size Boolean circuit;
+the bounded teacher is not the only complexity guarantee. Count the
+$H=O(L)$ helper bits using carry-save addition. Grouping three bits of
+one weight into a full adder reduces the number of live bits by one,
+so $O(H)$ constant-size full adders suffice, followed by an
+$O(\log H)$ ripple addition. The common coefficient
+$H_*=2^{L+2}-3$ multiplies that count by a shift and two subtractions,
+using $O(L+\log H)$ gates. After conversion of signs to $0/1$ bits,
+the remaining dyadic terms contain at most a constant number of source
+bits per level: at most eight from the four helper-pair registers and
+the main bits that replace one of those pairs. Sum positive and negative
+terms separately with carry-save addition and subtract the results.
+This requires $O(L)$ gates and $O(L)$-bit arithmetic. Include the fixed
+bias and compare the sign. This computes $f_0$ in $O(L)$ gates. A linear
+size AND and a selector multiplexer compute the other branch and the
+full target. Conversely every main/helper input is essential through
+the AND branch. A bounded-fan-in circuit depending on $d-1$ distinct
+inputs needs $\Omega(d)$ gates. Since $L=\Theta(d)=\Theta(k)$, the circuit
+size is $\Theta(d)$.
+
+\subsection{What the width bound means}
+
+The quantitative adjacent cone ratio from the volume argument gives a
+cold-posterior threshold of $\operatorname{poly}(k)2^k$ for any fixed
+confidence. A logarithmic confidence factor suffices. This means that
+at every width above that threshold, taking the scalar scale $\sigma$
+sufficiently small produces the designated mistakes.
+
+Under a prescribed $\gamma>1$ and $\tau>0$, one must additionally make
+\[
+ N\exp[-c_dN^{\gamma-1}/(8\tau^2)]
+\]
+sufficiently small relative to the finite cone probabilities, as well
+as suppress the nonthreshold mass in \eqref{eq:massbounds}.
+These are explicit sufficient inequalities, and hold eventually for
+every fixed $\gamma>1$. Since $c_d$ is of order $2^{-d}$, the resulting
+fixed-$\gamma$ width threshold need not be
+$\operatorname{poly}(k)2^k$. No lower bound at every width $N\ge1$ or at
+every width above the width-one teacher is claimed.
+
+\section{Polynomial IID sample complexity for the same prior}
+
+The lower bound is specific to adversarial ordering. The same actual
+posterior has a polynomial realizable IID guarantee for this target.
+
+\begin{theorem}\label{thm:iid}
+Fix any distribution $D$ on $X$, a threshold target $f$, and numbers
+$\varepsilon,\beta\in(0,1)$. If
+\begin{equation}\label{eq:samples}
+ m\ge\frac4\varepsilon\bigl[(d+1)^2\log2+\log(1/\beta)\bigr],
+\end{equation}
+then, with probability at least $1-\beta$ over $m$ IID labeled examples,
+posterior-label majority under \eqref{eq:gamma} has $D$-error at most
+$\varepsilon$ at every sufficiently large width, for any fixed
+$\gamma>1$ and $\tau>0$. The width threshold can be chosen independently
+of the training sample and $D$. The assertion also holds at $\gamma=1$
+for every sufficiently small fixed $\tau>0$.
+\end{theorem}
+\begin{proof}
+The $T=2^d$ input points give $T$ hyperplanes in the $(d+1)$-dimensional
+coefficient space. The usual hyperplane-region recurrence, obtained by
+adding one hyperplane at a time, bounds their number of cells by
+$\sum_{j=0}^{d+1}\binom Tj\le(T+1)^{d+1}\le(2T)^{d+1}$.
+Every strict threshold truth table is one such cell. Hence
+$\log|\cH_d|\le(d+1)^2\log2$.
+A union bound shows that the probability any consistent threshold
+function has $D$-error greater than $\varepsilon/4$ is at most
+$|\cH_d|e^{-m\varepsilon/4}\le\beta$.
+
+The target is always consistent. Lemma~\ref{lem:posterior} bounds the
+posterior mass of all nonthreshold functions, uniformly over every
+target-consistent history, by
+\begin{equation}\label{eq:nonthreshold}
+ B_N=\min\left\{1,\ 2^T\left(\frac{\delta_N}{p_f}\right)^N\right\}.
+\end{equation}
+For fixed $\gamma>1$, $B_N\to0$. For $\gamma=1$, choosing
+$\delta_\tau<p_f$ also gives $B_N\to0$.
+On the high-probability sample event, the posterior mean of population
+error is at most $\varepsilon/4+B_N$. The population error of posterior
+label majority is at most twice that mean, because a wrong majority
+puts at least half the posterior mass on the wrong label. Once
+$B_N\le\varepsilon/4$, the asserted bound follows.
+\end{proof}
+
+For the explicit target, $d=\Theta(k)$, so the IID sample bound is
+$O((k^2+\log(1/\beta))/\varepsilon)$, while the adversarial order forces
+$2^k-2$ mistakes. One sufficiently small fixed prefactor at $\gamma=1$
+can satisfy both the online and IID conclusions by taking the minimum
+of their positive bounds. The theorem concerns sample complexity;
+the necessary learner width and posterior computation are not claimed
+to be polynomial.
+
+\section{Scope}
+
+All labels used above are labels of one explicit affine threshold
+function on the full input cube. The calibration does not pin parameters
+inside a surviving truth-table cell: it eliminates incompatible cells,
+and the remaining cells have different Gaussian solid angles. The
+posterior comparison includes every Boolean output obtainable by the
+wide sign network, including outputs that are not thresholds.
+No unfavorable choice from an isotropic tie is made.
+
+The activation is discontinuous sign. The result therefore does not
+transfer to standard tanh by approximation: an exponentially narrow
+threshold cone and an unbounded width limit would require new uniform
+control. The exactly isotropic all-width lower-bound questions for
+ordinary tanh, ReLU, and GELU remain outside this theorem.
+
+\begin{thebibliography}{9}
+\bibitem{anisotropic}
+ChatGPT-6 Astra, Kaarel H\"anni, and Dmitry Vaintrob.
+\emph{Exponential online mistakes at every width after arbitrarily small
+Gaussian anisotropy}. 2026.
+\href{../anisotropic-allwidth/paper.pdf}{Companion manuscript}.
+\end{thebibliography}
+\end{document}

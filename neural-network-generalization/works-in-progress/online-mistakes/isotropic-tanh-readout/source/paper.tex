@@ -1,0 +1,212 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,amsmath,amssymb,amsthm,mathtools}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Exponential online mistakes for tanh networks with stronger readout regularization},pdfauthor={ChatGPT-6 Astra; Kaarel Hanni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\newcommand{\sgn}{\operatorname{sign}}
+\title{Exponential online mistakes for tanh networks\protect\\with stronger readout regularization}
+\author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{6 November 2026}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+A Bayesian neural network can learn a small target from polynomially
+many IID examples and nevertheless make exponentially many mistakes on
+one fixed ordering of the input cube. We prove this for ordinary tanh,
+one hidden layer, independent Gaussian weights with equal variances
+across all first-layer coordinates, and every sufficiently large hidden
+width. The prior has first-layer variance $\tau^2N^{1-\gamma}/d$ and
+readout variance $\tau^2N^{-\gamma-1}/A_N$, where $\gamma\ge1$, $\tau>0$
+are fixed and $A_N\to\infty$ can diverge arbitrarily slowly.
+The target has a Boolean circuit of size $\Theta(k)$ and a shallow tanh
+teacher of width $O(k^4)$ with every weight bounded by one. After an
+$O(k)$ calibration prefix, a fixed input permutation forces at least
+$2^{k-1}$ designated mistakes, with posterior wrong-label probability
+tending to one as $N\to\infty$. The same posterior has polynomial IID
+sample complexity. The proof gives an exact scalar-optimality theorem:
+sufficiently strong readout regularization makes the minimum energy of
+any width equal to an explicit function of the affine margin norm.
+A Gaussian-volume comparison then handles the growing parameter dimension.
+A subpolynomial readout correction, such as a logarithmic one, preserves
+the corresponding power-law exponents. The result does not establish the
+case $A_N\equiv1$ or a lower bound at every realizable width.
+\end{abstract}
+
+\section{Model and main result}
+
+An IID guarantee controls errors when training and testing use the same
+input distribution. An online mistake bound would be stronger: it would
+control the total number of errors even when the inputs arrive in an
+unfavorable order. We exhibit a separation between these guarantees for
+an exact Bayesian tanh learner. The network and target use the same
+shallow architecture; the lower bound persists at arbitrarily large
+learner width.
+
+Let $X=\{-1,1\}^d$ and $\bar x=(1,x)\in\R^{D}$, where $D=d+1$.
+At hidden width $N$, the learner is
+\begin{equation}\label{eq:model}
+ F_{u,v}(x)=\sum_{j=1}^N v_j\tanh(u_j\cdot\bar x).
+\end{equation}
+All weights are independent centered Gaussians, with
+\begin{equation}\label{eq:prior}
+ \operatorname{Var}(u_{ji})=\frac{\tau^2N^{1-\gamma}}d,
+ \qquad
+ \operatorname{Var}(v_j)=\frac{\tau^2N^{-\gamma-1}}{A_N}.
+\end{equation}
+The constant input coordinate has the same first-layer variance as every
+other coordinate. Fix $\gamma\ge1$, $\tau>0$, and any positive sequence
+$A_N\to\infty$. No monotonicity or minimum rate of divergence is assumed.
+For example one may use
+$A_N=\log\log(N+e^e)$, or a slower divergent sequence.
+
+For a Boolean function $g$ define its strict global-margin cell
+\begin{equation}\label{eq:cell}
+ U_g=\{(u,v):g(x)F_{u,v}(x)>1/2\text{ for every }x\in X\}.
+\end{equation}
+The prior is conditioned on the union of these cells. After every
+prediction the true label is revealed, and the posterior retains exactly
+the cells that fit all observed labels. The online input order below has no repetitions.
+The posterior error probability is the mass of functions with the wrong
+label at the next input. This is also the error probability of a fresh
+posterior sample; posterior-label majority is wrong when it exceeds
+$1/2$. The confidence convention requiring more than $2/3$ posterior
+probability on the correct label is covered as well.
+
+The factor $A_N$ is the substantive prior change in this theorem.
+The reference normalization has $A_N=1$, with readout variance
+$\tau^2N^{-\gamma-1}$. We prove the lower bound after dividing that
+variance by any diverging factor. If this factor is subpolynomial,
+the layerwise power exponents are unchanged. The result does not remove
+the factor altogether.
+
+\begin{theorem}\label{thm:main}
+For every $k\ge3$, put $d=2k+1$ and write inputs as $(x,y,z)$ with
+$x,y\in\{-1,1\}^k$ and $z\in\{-1,1\}$. Define
+\[
+ X_x=\sum_{i=0}^{k-1}2^i\frac{x_i+1}{2},\qquad
+ Y_y=\sum_{i=0}^{k-1}2^i\frac{y_i+1}{2},
+ \qquad
+ f_k(x,y,z)=+1\ \Longleftrightarrow\ z=-1\text{ and }X_x\ge Y_y.
+\]
+There is one fixed permutation of the input cube with the following
+properties.
+\begin{enumerate}
+\item The target has a bounded-fan-in Boolean circuit of size $\Theta(k)$.
+It also has a one-hidden-layer tanh teacher with all weights bounded by
+one, global output margin greater than $3/4$, and hidden width at most
+\[
+ n_k=\left\lceil288(k+2)^2(4k+3)(2k+3)\log2\right\rceil=O(k^4).
+\]
+\item The permutation begins with at most $4k+3$ calibration examples
+and then has $T_k=2^k-k-1\ge2^{k-1}$ designated rounds. For every fixed
+choice of $\gamma\ge1$, $\tau>0$, and $A_N\to\infty$ in
+\eqref{eq:prior}, the posterior wrong-label probability tends to one
+at each designated round as $N\to\infty$.
+\item Thus at every sufficiently large width, posterior-label majority
+makes all $T_k$ mistakes and the strict $2/3$ correctness criterion fails
+at all those rounds. For every $\eta>0$, posterior sampling makes all
+$T_k$ mistakes with probability greater than $1-\eta$ at every
+sufficiently large width.
+\item For the same prior and target,
+$O((d^2+\log(1/\beta))/\varepsilon)$ IID examples suffice, with
+probability at least $1-\beta$, for posterior correct-label probability
+greater than $2/3$ on input-distribution mass at least $1-\varepsilon$,
+at every sufficiently large width. The width threshold can be independent
+of the training sample and its input distribution.
+\end{enumerate}
+The target and permutation depend only on $k$. The width threshold may
+depend on $k,\gamma,\tau,A_N$, and the required confidence. It is not
+claimed to be polynomial, or to equal the teacher width.
+\end{theorem}
+
+The errors are exponential in the target's Boolean circuit size, and
+superpolynomial in the displayed bounded-weight shallow teacher bound.
+No choice among tied minimum-energy predictors is used. The comparison
+below bounds every network that would make the correct next prediction.
+
+\input{dual.tex}
+\input{selector.tex}
+\input{teacher.tex}
+\input{posterior.tex}
+
+\section{Proof of the main theorem and scope}
+
+The fixed calibration and input order in Lemma~\ref{lem:selector} give,
+just before each designated query, a convex affine margin minimum $Q_t$
+whose optimizer has absolute margin at least one on the entire cube and
+predicts the next label incorrectly. Adding the correct next label raises
+the affine minimum to $Q_{t+1}>Q_t$. The exact all-width theorem
+\ref{thm:scalar} applies eventually because $A_N\to\infty$.
+The posterior comparison in the preceding section therefore sends the
+correct-label probability to zero at each step. There are finitely many
+steps for each fixed $k$, so one width threshold suffices for all of them.
+Using a per-round probability allowance $\eta/T_k$ and a union bound
+proves the posterior-sampling assertion without any independence
+assumption about predictions. The teacher construction and the IID result
+prove the remaining statements.
+
+\begin{proposition}[The scalar witnesses are beaten at the reference scaling]
+\label{prop:canonical-comparison}
+At $A=1$, for every $N\ge2n_k$, the true target has a strict-margin
+implementation of energy at most
+\[
+ d(d+1)+18(k+2)^2(2d+1)=O(k^3).
+\]
+Every cloned scalar implementation of the affine witness in
+Lemma~\ref{lem:selector} has energy at least
+\[
+ \sqrt{dQ_t}\ge\sqrt{\frac{2d}{3}(4^k-1)}.
+\]
+Thus, for all sufficiently large $k$, the true target beats every one of
+these scalar witnesses at every such width under the reference scaling.
+\end{proposition}
+\begin{proof}
+The construction in Theorem~\ref{thm:fourier-teacher} supplies a teacher
+with $n\le n_k$ neurons, first-row squared norms at most $d+1$, and
+readout coefficients of magnitude $B/n$, where
+$B\le3(k+2)\sqrt{2d+1}$. Allocate $m_j$ clones to neuron $j$, with
+$\sum_jm_j=N$ and each $m_j$ either $\lfloor N/n\rfloor$ or
+$\lceil N/n\rceil$. Divide its readout coefficient by $m_j$.
+The function is unchanged. Since $N\ge2n$, each $m_j\ge N/(2n)$, so its
+canonical energy is at most
+\[
+ \frac dN\sum_jm_j(d+1)
+       +N\sum_j\frac{(B/n)^2}{m_j}
+ \le d(d+1)+2B^2.
+\]
+For a scalar witness, $\tanh r\le r$ gives
+\[
+ \Phi_1(Q_t)\ge\min_{r>0}\left(dQ_tr^2+\frac1{4r^2}\right)
+ =\sqrt{dQ_t}.
+\]
+The claimed bound on $Q_t$ follows from \eqref{eq:Qt}. The exponential
+lower bound eventually exceeds the polynomial upper bound.
+\end{proof}
+
+This comparison does not determine which wide wrong functions may still
+have low energy. It shows why copying the scalar affine witnesses is not
+itself a proof for $A=1$.
+
+The learner uses fixed ordinary tanh, the full Boolean cube, a constant
+input coordinate, and a Gaussian prior with exact first-coordinate
+isotropy. The argument includes nonlinear competitors at arbitrary width.
+The readout correction $A_N\to\infty$ remains essential to this proof:
+it makes the minimum-energy hidden units saturate on the active training
+constraints, so affine margin geometry determines the optimum. The argument gives no conclusion
+for the reference case $A_N\equiv1$, nor for a fixed bounded readout
+correction uniformly across this growing target family. Those are separate
+questions. The theorem is a statistical statement about an exact posterior;
+it supplies no efficient posterior-sampling algorithm.
+
+\end{document}
