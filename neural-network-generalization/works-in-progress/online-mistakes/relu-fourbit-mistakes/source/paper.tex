@@ -1,0 +1,337 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools,booktabs,microtype}
+\usepackage[hidelinks]{hyperref}
+\usepackage{enumitem}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\relu}{\operatorname{ReLU}}
+\newcommand{\sgn}{\operatorname{sgn}}
+\newcommand{\R}{\mathbb R}
+\newcommand{\X}{\mathcal X}
+\newcommand{\V}{\mathcal V}
+\newcommand{\E}{\mathbb E}
+\newcommand{\1}{\mathbf 1}
+\title{Fifteen Strict Posterior Mistakes on the Four-Dimensional Cube\\[3pt]
+\large An exact finite example for isotropic ReLU networks}
+\author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{7 November 2026}
+\hypersetup{pdftitle={Fifteen Strict Posterior Mistakes on the Four-Dimensional Cube},pdfauthor={ChatGPT-6 Astra; Kaarel Hanni; Dmitry Vaintrob}}
+\begin{document}
+\maketitle
+\begin{abstract}
+We give an exact finite example in which a Gaussian Bayesian one-hidden-layer ReLU network is asymptotically wrong at every query after the first on a fixed ordering of the sixteen vertices of the four-dimensional cube. The Gaussian prior is isotropic in the specified canonical coordinates. It is first conditioned on a margin greater than $1/2$ at every cube vertex, and then conditioned on the observed labels. For every fixed learner width $N\ge16$, the expected number of posterior-sampling mistakes tends to $15.5$ as the prior scale tends to zero. The target has a sixteen-neuron teacher whose canonical parameters lie in $[-1,1]$ and whose margin is $21/40$.
+
+The proof reduces Gaussian cell energies to a ReLU variation norm. Exact rational certificates cover all $65{,}536$ Boolean functions, modulo $222$ cube-isometry classes, and establish fifteen strict sequential gaps. We also determine the target's exact norm, $(5\sqrt{30}+4\sqrt2)/6$, and certify that all sixteen one-point label corruptions are cheaper. The verification uses integer and algebraic arithmetic; floating optimization only generates candidate certificates. This is a result at input dimension four, not an asymptotic exponential lower bound as dimension or teacher size grows.
+\end{abstract}
+
+\section{Model and finite theorem}
+Let $\X=\{-1,1\}^4$, let $\bar x=(1,x)\in\R^5$, and write $\relu(t)=\max(t,0)$. At width $N$, use canonical parameters
+\[
+\theta=((\xi_j,\eta_j))_{j=1}^N\in(\R^5\times\R)^N,
+\qquad
+F_\theta(x)=\frac12\sum_{j=1}^N\eta_j\relu(\xi_j\cdot\bar x).
+\tag{1}\label{eq:canonical}
+\]
+All $6N$ coordinates of $\theta$ are independent $\mathcal N(0,\sigma^2)$ variables. Thus the prior density is proportional to $\exp(-\|\theta\|_2^2/(2\sigma^2))$.
+Equivalently, in the effective coordinates
+\[
+a_j=\sqrt{N/4}\,\xi_j,\qquad v_j=\eta_j/\sqrt N,
+\]
+positive homogeneity gives $F_\theta(x)=\sum_jv_j\relu(a_j\cdot\bar x)$ and
+\[
+\|\theta\|_2^2=\frac4N\sum_j\|a_j\|_2^2+N\sum_jv_j^2.
+\tag{2}\label{eq:energy}
+\]
+These equations specify the normalization throughout the paper.
+
+First condition the prior on the global event
+\[
+\Omega_N=\{\theta: |F_\theta(x)|>1/2\text{ for every }x\in\X\}.
+\]
+At round $t$, after the exact labels at the preceding query points have been supplied, condition further on
+$\sgn F_\theta(x_s)=g(x_s)$ for $s<t$. A posterior-sampling predictor draws from this posterior and predicts the sign at $x_t$. All query points and their order below are fixed in advance.
+
+Define
+\[
+g(x)=x_1x_2h(x_3,x_4),\qquad
+h(t_1,t_2)=\begin{cases}1&(t_1,t_2)=(1,1),\\-1&\text{otherwise}.\end{cases}
+\tag{3}\label{eq:target}
+\]
+Index cube vertices lexicographically with $-1$ preceding $+1$; equivalently, the index of $x$ is $\sum_{i=1}^4 2^{4-i}(x_i+1)/2$.
+
+\begin{theorem}[Finite posterior failure]\label{thm:main}
+Use the target in \eqref{eq:target} and query the cube in the order
+\[
+(15,14,13,11,10,9,7,6,3,5,2,8,12,4,1,0).
+\tag{4}\label{eq:order}
+\]
+For every fixed width $N\ge16$:
+\begin{enumerate}[label=(\roman*),itemsep=2pt]
+\item The first posterior-sampling error probability is exactly $1/2$ for every $\sigma>0$.
+\item At each of the remaining fifteen queries, the posterior error probability tends to one as $\sigma\downarrow0$.
+\item Consequently, if $M_{N,\sigma}$ is the number of sampled-label mistakes,
+\[
+\lim_{\sigma\downarrow0}\E M_{N,\sigma}=\frac{31}{2}.
+\]
+\end{enumerate}
+The target is realized by a width-sixteen network of the form \eqref{eq:canonical} whose every canonical parameter lies in $[-1,1]$ and whose output is exactly $21g/40$ on the cube.
+\end{theorem}
+
+The small-prior threshold in this theorem may depend on $N$. We do not assert one threshold uniform over all widths. For sufficiently small $\sigma$ at each fixed width, posterior majority prediction is also wrong at each of the fifteen later queries. No conclusion about growing dimension follows from the finite example alone.
+
+\section{Variation norm and Gaussian cell energies}
+Identify an output function with its vector in $\R^{16}$. Define the compact signed atom set
+\[
+\mathcal A=\left\{\pm(\relu(u\cdot\bar x))_{x\in\X}:\|u\|_2=1\right\}
+\]
+and let $\V$ be the gauge of $\operatorname{conv}(\mathcal A)$. This is a norm: the signed atom hull is symmetric, and point indicators lie in its span. Indeed,
+\[
+\relu\!\left(\sum_{i=1}^4z_ix_i-3\right)=\1_{\{x=z\}}
+\qquad(z\in\X).
+\]
+Equivalently,
+\[
+\V(f)=\inf\left\{\sum_j|c_j|\|u_j\|_2:
+f(x)=\sum_jc_j\relu(u_j\cdot\bar x)\right\}.
+\]
+For a Boolean labeling $y\in\{-1,1\}^{\X}$, put
+\[
+V_y=\min\{\V(f): y(x)f(x)\ge1/2\text{ for all }x\in\X\}.
+\tag{5}\label{eq:cellnorm}
+\]
+The minimum exists because $\V$ is a norm in a finite-dimensional space and the feasible set is nonempty and closed.
+
+\begin{lemma}[Sixteen atoms suffice]\label{lem:width}
+Every nonzero output vector has a variation-minimizing representation using at most sixteen signed atoms. Consequently, for every $N\ge16$ and every Boolean labeling $y$,
+\[
+\inf\{\|\theta\|_2^2:y(x)F_\theta(x)\ge1/2\ \forall x\}=4V_y.
+\tag{6}\label{eq:cellenergy}
+\]
+The same infimum results if every margin inequality is strict.
+\end{lemma}
+\begin{proof}
+For $f\ne0$, the point $f/\V(f)$ lies on the boundary of the full-dimensional compact convex body $\operatorname{conv}(\mathcal A)$. A supporting hyperplane contains a face of affine dimension at most fifteen. Expressing the point as a convex combination of atoms, the supporting equality forces every atom with positive coefficient into this face. Carath\'eodory's theorem within the face gives at most sixteen atoms.
+
+In effective coordinates, each neuron satisfies
+\[
+\frac4N\|a_j\|_2^2+Nv_j^2\ge4|v_j|\|a_j\|_2.
+\]
+Thus every representation has energy at least $4\V(f)$. Conversely, for $f=\sum_{j=1}^m c_j\relu(u_j\cdot\bar x)$ with $m\le16$ and $\|u_j\|_2=1$, choose
+\[
+a_j=r_ju_j,\quad v_j=c_j/r_j,\quad r_j^2=N|c_j|/2.
+\]
+The resulting energy is $4\sum_j|c_j|=4\V(f)$. Zero neurons fill any additional width. Applying this to an optimizer of \eqref{eq:cellnorm} proves \eqref{eq:cellenergy}. Finally, multiplying all readouts by $1+\varepsilon$ makes every feasible signed margin strict, with energy converging to the original value as $\varepsilon\downarrow0$.
+\end{proof}
+
+\begin{lemma}[Actual posterior comparison]\label{lem:laplace}
+Fix $N\ge16$ and a label history. Let $\mathcal C$ be the finite set of Boolean completions consistent with that history, and let $\mathcal C^+$ be those also predicting the next target label correctly. If
+\[
+\min_{y\in\mathcal C^+}V_y>\min_{y\in\mathcal C}V_y,
+\tag{7}\label{eq:gap}
+\]
+then the next posterior error probability tends to one as $\sigma\downarrow0$.
+\end{lemma}
+\begin{proof}
+For each Boolean function $y$, its strict margin cell is open and nonempty. Lemma~\ref{lem:width} identifies its squared-norm infimum as $4V_y$. The elementary finite-dimensional Gaussian Laplace principle gives
+\[
+\lim_{\sigma\downarrow0}\sigma^2\log\Pr_\sigma(\theta\text{ is in the strict margin cell of }y)=-2V_y.
+\]
+For completeness, the upper bound follows by splitting the Gaussian integral into a bounded ball and its tail and using the squared-norm infimum. For the lower bound, take an interior ball around a strict-margin point whose squared norm is arbitrarily close to the infimum. The strict and closed cell infima agree by Lemma~\ref{lem:width}. Taking finite unions replaces $V_y$ by the minimum over the union. Therefore the ratio of the correct-completion mass to the current-completion mass tends to zero under \eqref{eq:gap}. This argument compares the actual Gaussian integrals; it makes no assertion about prefactors within an energy tie.
+\end{proof}
+
+\section{Exact target norm and bounded teacher}
+For $v=(v_0,v_1,v_2)$, let $\mathcal O(v)$ be its distinct coordinate permutations and define
+\[
+\Phi_v(x)=\frac{1}{4|\mathcal O(v)|}
+\sum_{\epsilon\in\{-1,1\}^2}\ \sum_{w\in\mathcal O(v)}
+\epsilon_1\epsilon_2\relu(\epsilon_1x_1+\epsilon_2x_2+w_0+w_1x_3+w_2x_4).
+\tag{8}\label{eq:families}
+\]
+Put $s=\sqrt{15}/6$, $\Phi_A=\Phi_{(2/3,2/3,2/3)}$, and $\Phi_B=\Phi_{(-2s,s,s)}$.
+
+\begin{proposition}[Exact norm]\label{prop:target}
+The target satisfies
+\[
+V_g=\frac{5\sqrt{30}+4\sqrt2}{6}.
+\tag{9}\label{eq:exactnorm}
+\]
+Among all Boolean functions on the cube, its cube-isometry/output-sign class is the unique class attaining the maximum $V_y$. This class contains forty-eight functions.
+\end{proposition}
+\begin{proof}
+After extracting the factor $x_1x_2$, the two families have the following profiles:
+\[
+\begin{array}{c|cc}
+& (x_3,x_4)=(1,1)&(x_3,x_4)\ne(1,1)\\\hline
+\Phi_A&0&1/3\\
+\Phi_B&1/2&(1-s)/3.
+\end{array}
+\]
+They follow directly by taking the second signed difference of the ReLU function. Hence
+\[
+\Phi_B-(5/2-s)\Phi_A=g/2.
+\tag{10}\label{eq:primal}
+\]
+There are four $A$ atoms and twelve $B$ atoms. Their total variation cost is
+\[
+(5/2-s)\sqrt{10/3}+\sqrt{9/2}
+=\frac{5\sqrt{30}+4\sqrt2}{6}.
+\]
+
+For the matching lower bound, define $\lambda(x)=x_1x_2c(x_3,x_4)$, where
+\[
+c(1,1)=\frac{\sqrt2}{3}+\frac{\sqrt{30}}6,
+\qquad c(t)=-\frac{\sqrt{30}}{12}\quad(t\ne(1,1)).
+\tag{11}\label{eq:dual}
+\]
+The signs of $\lambda$ match $g$. The exact activation-cone certificate in Section~\ref{sec:verification} proves
+\[
+\left|\sum_x\lambda(x)\relu(u\cdot\bar x)\right|\le\|u\|_2
+\quad\text{for every }u\in\R^5.
+\tag{12}\label{eq:dualfeasible}
+\]
+Thus every feasible output for $g$ has variation at least
+$\frac12\sum_x|\lambda(x)|=(5\sqrt{30}+4\sqrt2)/6$, proving equality.
+
+For the maximum assertion, the all-function interval certificates of Section~\ref{sec:verification} show that every other isometry class has an upper bound less than $5507/1000$, whereas the value in \eqref{eq:exactnorm} is greater than $5507/1000$. The orbit computation gives the class size forty-eight.
+\end{proof}
+
+\begin{proposition}[Canonical unit-bounded teacher]\label{prop:teacher}
+A network with sixteen neurons in \eqref{eq:canonical} has all canonical coordinates in $[-1,1]$ and output exactly $21g/40$.
+\end{proposition}
+\begin{proof}
+Write the sixteen terms in \eqref{eq:primal} as $c\relu(a\cdot\bar x)$. For an $A$ term,
+\[
+a=(2/3,\epsilon_1,\epsilon_2,2/3,2/3),\qquad
+c=\epsilon_1\epsilon_2(-5/8+\sqrt{15}/24).
+\]
+Set $\xi=a$ and $\eta=21c/10$. For a $B$ term, $a$ has logical entries $\epsilon_1,\epsilon_2$, augmented control entries a permutation of $(-2s,s,s)$, and $c=\epsilon_1\epsilon_2/12$. Set $\xi=a/2$ and $\eta=21c/5$.
+In \eqref{eq:canonical}, each resulting term is $21/20$ times its term in \eqref{eq:primal}. The output is therefore $21g/40$. The incoming coordinates are bounded by one. The $A$ readout magnitude is $21/16-7\sqrt{15}/80<1$, and the $B$ readout magnitude is $7/20$. These are exact bounds in the canonical coordinates carrying the isotropic prior.
+\end{proof}
+
+\section{Strict sequential gaps}\label{sec:sequence}
+For a history $H_t$ before query $t$, let $U_t$ be a certified upper bound for the cheapest current completion, and let $L_t^+$ be a certified lower bound for the cheapest completion predicting $g(x_t)$ correctly. Table~\ref{tab:gaps} gives outward-rounded rational bounds obtained by checking all Boolean completions. The stored certificates use exact fractions, not the displayed decimals.
+
+\begin{table}[ht]
+\centering
+\caption{Strict comparisons for the fifteen later queries. Indices refer to the target in \eqref{eq:target}. Every displayed upper bound is rounded upward and every lower bound downward.}\label{tab:gaps}
+\begin{tabular}{rrrr}
+\toprule
+Round $t$&Cube index&Current upper $U_t$&Correct-completion lower $L_t^+$\\\midrule
+2 & 14 & 0.500000 & 0.707106 \\
+3 & 13 & 0.707109 & 0.965925 \\
+4 & 11 & 0.965927 & 1.207106 \\
+5 & 10 & 1.207107 & 1.665797 \\
+6 & 9 & 1.665800 & 1.999999 \\
+7 & 7 & 2.000001 & 2.136804 \\
+8 & 6 & 2.136809 & 2.414213 \\
+9 & 3 & 2.414215 & 2.831125 \\
+10 & 5 & 2.831131 & 2.861432 \\
+11 & 2 & 2.861434 & 3.741657 \\
+12 & 8 & 3.741661 & 3.831894 \\
+13 & 12 & 3.831902 & 3.846843 \\
+14 & 4 & 3.846854 & 4.168965 \\
+15 & 1 & 4.168975 & 4.780065 \\
+16 & 0 & 4.780078 & 5.507163 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Every exact gap $L_t^+-U_t$ is positive; the smallest exceeds $0.01494$. This is a comparison against every completion predicting the next label correctly. It does not assume uniqueness of a minimizer or equality of posterior weights within an isometry orbit.
+
+\begin{proof}[Proof of Theorem~\ref{thm:main}]
+The integer verification described in Section~\ref{sec:verification} establishes all fifteen comparisons in Table~\ref{tab:gaps}. Lemma~\ref{lem:laplace} therefore gives error probability tending to one at all fifteen later queries, at every fixed $N\ge16$. Before any labels have been observed, the transformation $\eta_j\mapsto-\eta_j$ preserves the isotropic Gaussian prior and the global margin event and reverses every prediction. The first prediction is therefore exactly balanced. Summing the sixteen error probabilities gives the limit $15.5$. Proposition~\ref{prop:teacher} supplies the claimed teacher.
+\end{proof}
+
+\begin{proposition}[All one-point corruptions are cheaper]\label{prop:stars}
+If $g^{(x)}$ is obtained from $g$ by changing its label only at $x$, then $V_{g^{(x)}}<V_g$ for every $x\in\X$.
+\end{proposition}
+\begin{proof}
+The sixteen corruptions fall into three verified isometry classes, represented by changing the labels at indices $0$, $1$, and $3$. Rational full-cube ReLU representations give, respectively,
+\[
+V_{g^{(0)}}\le\frac{15933555}{3333314},\quad
+V_{g^{(1)}}\le\frac{47869567}{9999940},\quad
+V_{g^{(3)}}\le\frac{32548469}{9999942}.
+\]
+Each bound is less than $4.787$, hence less than \eqref{eq:exactnorm}. The certificate checks the actual ReLU outputs and their margins on all sixteen points. Cube isometries preserve incoming Euclidean norms, and output negation preserves variation, so the three representatives cover all sixteen cases.
+\end{proof}
+
+Proposition~\ref{prop:stars} is additional finite geometry. On its own it would not establish fifteen posterior mistakes: many equal-energy rivals could share posterior mass. The sequential comparisons in Table~\ref{tab:gaps} are what prove Theorem~\ref{thm:main}.
+
+\section{Exact certificate methodology}\label{sec:verification}
+The verification bundle accompanies this paper in the directory \path{verification/}. It contains the cube and cone data, all rational certificates, and two checkers separate from the optimizer. The checkers do not call an optimizer.
+
+\subsection{Completeness of the activation cones}
+Let $X$ be the $16\times5$ matrix with rows $\bar x$. For each strict affine sign pattern $D\in\{0,1\}^{16}$, define
+\[
+A_D=\operatorname{diag}(2D-1)X,
+\qquad C_D=\{u:A_Du\ge0\}.
+\]
+There are exactly $1{,}882$ realizable patterns. To certify completeness, the checker reconstructs the action of the $384$ signed coordinate permutations and output negation on all $65{,}536$ Boolean tables. This produces $222$ orbits. Every orbit representative is supplied with one of the following exact rational witnesses:
+\begin{itemize}[itemsep=2pt]
+\item a vector $u$ satisfying $\operatorname{diag}(y)Xu\ge\1$; or
+\item a vector $q\ge0$ with $\sum_iq_i=1$ and $X^T\operatorname{diag}(y)q=0$.
+\end{itemize}
+The second witness rules out strict separation by Farkas' alternative. The union of the fifteen feasible orbits equals the stored set of $1{,}882$ patterns. Every incoming vector, including one on activation boundaries, lies in some $C_D$: perturb it by a generic vector and take a sufficiently small positive perturbation.
+
+Within a cone, ReLU outputs are $DXu$. Introducing positive and negative readout vectors for every cone gives the exact finite convex formulation
+\[
+\begin{aligned}
+\min\quad&\sum_D(\|u_D\|_2+\|v_D\|_2)\\
+\text{subject to}\quad&A_Du_D\ge0,\quad A_Dv_D\ge0,\\
+&y\odot\sum_DD X(u_D-v_D)\ge\tfrac12\1.
+\end{aligned}
+\tag{13}\label{eq:socp}
+\]
+Here $D$ also denotes its diagonal matrix. Merging vectors of the same readout sign within a cone can only decrease their total Euclidean norm, so \eqref{eq:socp} is equivalent to \eqref{eq:cellnorm}.
+
+\subsection{Lower certificates}
+The all-class certificates store nonnegative integer vectors $\alpha$ and $q_D^+,q_D^-$ and a positive integer $R$. For each of the $1{,}882$ cones, the checker verifies
+\[
+\left\|\pm X^TD\operatorname{diag}(y)\alpha+A_D^Tq_D^\pm\right\|_2^2\le R^2.
+\tag{14}\label{eq:integerdual}
+\]
+All operations in this inequality are integer operations. For $u\in C_D$, nonnegativity of $q_D^\pm$ implies
+\[
+\big(\pm X^TD\operatorname{diag}(y)\alpha\big)\cdot u
+\le\left\|\pm X^TD\operatorname{diag}(y)\alpha+A_D^Tq_D^\pm\right\|_2\|u\|_2.
+\]
+Therefore $\lambda=\operatorname{diag}(y)\alpha/R$ is an atomic dual functional and
+\[
+V_y\ge\frac{\sum_i\alpha_i}{2R}.
+\tag{15}\label{eq:lower}
+\]
+The inequalities do not require exact stationarity of the numerical solution used to propose the integers.
+
+For the exact target dual \eqref{eq:dual}, the separate checker uses the field $\mathbb Q(\sqrt{15})$ after extracting a factor $\sqrt2$. It verifies the nonnegative cone-polar multipliers and the squared residual norm at all $3{,}764$ signed cones. Every required sign reduces to an exact comparison of rational numbers and their squares.
+
+\subsection{Upper certificates and exhaustive sequence check}
+A primal certificate stores integer incoming vectors $W_j$, signs $\epsilon_j\in\{-1,1\}$, and a positive integer denominator $H$. The checker evaluates
+\[
+f(x)=\sum_j\epsilon_j\relu(W_j\cdot\bar x/H)
+\]
+at all cube vertices and checks every signed margin exactly. It bounds the variation by
+\[
+\V(f)\le\frac1H\sum_j\left\lceil\sqrt{\sum_k W_{jk}^2}\right\rceil.
+\tag{16}\label{eq:upper}
+\]
+Thus each of the $222$ classes receives a rigorous rational interval. Exact isometries transfer the intervals to all $65{,}536$ Boolean functions.
+
+For each history in \eqref{eq:order}, after an explicitly verified cube isometry to the canonical truth-table representative, the checker enumerates the consistent Boolean tables, takes the smallest available upper bound over all current completions, and takes the smallest available lower bound over correct-label completions. It compares these two fractions exactly. This verifies every competitor, including non-isometric functions with equal norms. The exact teacher, target representation, and three one-point primal witnesses are checked separately from their stored coefficients.
+
+\subsection{Reproduction and scope}
+With Python, NumPy, and SymPy installed, run from the verification directory:
+\begin{verbatim}
+python verify_d4_foundations.py
+python verify_d4_interval_certificates.py
+\end{verbatim}
+The first command verifies cone completeness, the exact target norm, the canonical unit-bounded teacher, and all sixteen cheaper one-point corruptions. The second verifies all class intervals and all fifteen sequential gaps. Floating-point optimization was used to generate candidate certificates, but these two verification commands do not use it. This is an exact-arithmetic computer-assisted proof, not a proof formalized in a proof assistant.
+
+The result establishes a complete finite example for ordinary ReLU and the actual conditioned Gaussian posterior. It does not establish a scalable family of examples, an exponential lower bound in teacher size, or a prior-scale threshold uniform over all widths. Tensorizing the target changes both teacher complexity and the competing network class; no tensorization conclusion is claimed here.
+\end{document}

@@ -1,0 +1,503 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,amsmath,amssymb,amsthm,mathtools}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Exact Gaussian energy and posterior identification of AND for ReLU networks},pdfauthor={ChatGPT-6 Astra; Kaarel Hanni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\newcommand{\relu}{\operatorname{ReLU}}
+\newcommand{\norm}[1]{\lVert #1\rVert}
+\title{Exact Gaussian energy and posterior identification\protect\\of AND for ReLU networks}
+\author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{7 November 2026}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We determine the exact minimum Euclidean variation norm of a shallow
+ReLU score that represents AND on the full Boolean cube with signed
+output margin at least $1/2$. For odd $q\ge3$ the value is
+$(2q-1)/(2\sqrt{q+1})$; we give a separate closed formula for even $q$
+and the two small dimensions. The corresponding minimum under the
+isotropic Gaussian weight energy defined here is attained at every width
+at least $1+\binom q2$ for $q\ge3$. A weighted two-design supplies this
+polynomial width bound. Equality in an explicit dual certificate also
+identifies every globally margin-valid energy minimizer after only the
+positive all-plus input and its $q$ negative neighbors: all have the
+AND sign function. Consequently, at each such fixed width, the actual
+globally conditioned Gaussian posterior concentrates on AND in the
+strong-prior limit after these $q+1$ labels. The target has a shallow
+teacher of width $q+1$ with all weights at most one. These results do
+not bound the number of online mistakes on arbitrary input orders.
+\end{abstract}
+
+\section{Model and results}
+
+The global output-margin condition makes minimum-energy prediction a
+problem over all unobserved Boolean labels as well as the observed
+ones. A formula for the energy of a target alone therefore does not
+identify the posterior after a training sample. We give both an exact
+energy formula for AND and a sample on which every globally admissible
+energy minimizer has the target's full sign function. The latter
+statement concerns the whole posterior, including tied parameter
+minimizers. It is not a mistake bound for arbitrary input orders.
+
+For $q\ge1$, let $f_q:\{-1,1\}^q\to\{-1,1\}$ be positive only at
+$x^0=(1,\ldots,1)$. Write $\bar x=(1,x)$ and consider
+\begin{equation}\label{eq:network}
+ F_{W,v}(x)=\sum_{j=1}^N v_j\relu(W_j\bar x),
+ \qquad \relu(t)=\max\{t,0\}.
+\end{equation}
+The constant input is the only source of bias. There is one hidden
+ReLU layer and a linear readout. The independent Gaussian weights are
+\begin{equation}\label{eq:prior}
+ W_{ji}\sim N(0,N\sigma^2/q),\qquad
+ v_j\sim N(0,\sigma^2/N).
+\end{equation}
+Their density is proportional to $\exp[-K_N/(2\sigma^2)]$, where
+\begin{equation}\label{eq:energy}
+ K_N(W,v)=\frac qN\norm W_F^2+N\norm v_2^2.
+\end{equation}
+Before observing labels, condition on
+\begin{equation}\label{eq:global}
+ |F_{W,v}(x)|>\frac12\quad\text{for every }x\in\{-1,1\}^q.
+\end{equation}
+Then condition on exact observed signs. All strong-prior limits below
+mean $\sigma\downarrow0$ at a fixed finite $q,N$.
+
+For a real-valued function $F$ on the cube, define its Euclidean ReLU
+variation norm by
+\[
+ \norm F_{\mathcal V}
+ =\inf\left\{\sum_j |c_j|\norm{u_j}_2:
+ F(x)=\sum_j c_j\relu(u_j\bar x)\text{ on the cube}\right\},
+\]
+where the infimum ranges over finite representations. Let
+\[
+ V_q=\inf\left\{\norm F_{\mathcal V}:
+ f_q(x)F(x)\ge\frac12\text{ on the cube}\right\}.
+\]
+
+\begin{theorem}[Exact norm and Gaussian energy]\label{thm:energy}
+The exact values are
+\begin{equation}\label{eq:values}
+ V_q=
+ \begin{cases}
+  1/\sqrt2,&q=1,\\[2pt]
+  (\sqrt2+\sqrt6)/4,&q=2,\\[2pt]
+  (2q-1)/(2\sqrt{q+1}),&q\ge3\text{ odd},\\[2pt]
+  \dfrac{2q^2+\sqrt{q(q-2)}}{2\sqrt{q(q+1)(q+2)}},
+    &q\ge4\text{ even}.
+ \end{cases}
+\end{equation}
+Put $N_q=2$ for $q\le2$, and $N_q=1+\binom q2$ for $q\ge3$.
+For every integer $N\ge N_q$, the minimum of \eqref{eq:energy} subject
+to $f_q(x)F_{W,v}(x)\ge1/2$ on the full cube is exactly
+\[
+ 2\sqrt q\,V_q.
+\]
+The strict-margin infimum has the same value. The norm lower bound
+holds for every width; the stated width threshold is sufficient and
+is not asserted necessary.
+\end{theorem}
+
+For $1\le i\le q$, let $x^i=x^0-2e_i$. Call the $q+1$ examples
+$(x^0,+1),(x^1,-1),\ldots,(x^q,-1)$ the \emph{star sample}.
+
+\begin{theorem}[Identification from the star sample]\label{thm:posterior}
+Fix $N\ge N_q$. Every minimum-energy network satisfying the star
+sample and the global weak absolute-margin condition has the full
+sign function $f_q$. Under \eqref{eq:prior}--\eqref{eq:global}, after
+conditioning on the star sample,
+\[
+ \Pp_\sigma\bigl(\operatorname{sign}F_{W,v}=f_q
+       \text{ on the full cube}\mid\text{star sample}\bigr)
+       \longrightarrow1.
+\]
+The probability remains at least this large after any further
+target-consistent labels. In particular, at fixed $q,N$, the expected
+number of subsequent sampling mistakes tends to zero on any
+continuation without repetitions.
+\end{theorem}
+
+\begin{proposition}[A bounded teacher]\label{prop:teacher}
+For $q\ge3$, $f_q$ has a depth-two teacher of width $q+1$ with every
+individual weight at most one and strict global output margin
+$q/[2(q-1)]>1/2$. For $q=1,2$, width two suffices with the same weight
+bound. Thus the width thresholds in Theorems~\ref{thm:energy}
+and~\ref{thm:posterior} are above these explicit bounded teacher
+widths. A bounded-fan-in Boolean circuit for $f_q$ uses $q-1$ AND
+gates when $q\ge2$.
+\end{proposition}
+
+\section{A dual certificate for all ReLU atoms}
+
+We first treat $q\ge3$. Define
+\begin{equation}\label{eq:parameters}
+ \begin{gathered}
+ n=q+1,\qquad k=\lceil n/2\rceil,\qquad \delta=2k-n\in\{0,1\},\\
+ R=\sqrt{(q-1)^2-\delta^2},\qquad
+ \varepsilon=\frac{q-1-R}{n},\qquad A=q-1-\varepsilon,\\
+ D=2\sqrt{\frac{k(n-k)}n}=\sqrt{n-\frac{\delta^2}n}.
+ \end{gathered}
+\end{equation}
+Here $R>0$, $A>0$, and $0\le\varepsilon<1$.
+For a score $H$, put
+\begin{equation}\label{eq:dual}
+ T_A(H)=A H(x^0)-\sum_{i=1}^q H(x^i).
+\end{equation}
+
+\begin{lemma}[Atom bound and equality]\label{lem:atom}
+For every $u=(b,w)\in\R^{q+1}$,
+\begin{equation}\label{eq:atom}
+ |T_A(\relu(u\bar x))|\le D\norm u_2.
+\end{equation}
+Among unit atom vectors, positive equality holds only at
+\begin{equation}\label{eq:positive}
+ H_+(x)=\frac1D\relu\!\left(-(1+\varepsilon)
+                  +(1-\varepsilon)\sum_i x_i\right).
+\end{equation}
+Negative equality atoms all vanish at $x^0$ and have the form
+\begin{equation}\label{eq:negative}
+ H_S^{(j)}(x)=\relu\!\left(\frac2D
+    \left[\frac jn\left(1+\sum_i x_i\right)
+                    -\sum_{i\in S}x_i\right]\right),
+ \quad |S|=j,
+\end{equation}
+where $j$ maximizes $j(n-j)$ among $0\le j\le q$.
+Thus $j=k$ for odd $q$; for even $q$, either $j=q/2$ or $j=q/2+1$.
+\end{lemma}
+\begin{proof}
+Write $s=b+\sum_iw_i$. If $s<0$, then $T_A\le0$. If $s\ge0$,
+using $\relu(t)\ge t$ gives
+\[
+ T_A\le (A-q+2)s-2b
+       =(-1-\varepsilon)b+(1-\varepsilon)\sum_iw_i.
+\]
+The coefficient vector $u_+$ in this last expression satisfies
+\[
+ \norm{u_+}_2^2
+ =n-2(q-1)\varepsilon+n\varepsilon^2
+ =n-\delta^2/n=D^2.
+\]
+Cauchy--Schwarz proves the positive bound.
+
+For the negative bound, expand a sum of ReLUs as a maximum over
+subsets $S\subseteq[q]$, and write $j=|S|$. Let
+$e=(1,\ldots,1)\in\R^n$, and let $a_S\in\R^n$ be the indicator of
+the selected input positions, zero at the constant position.
+On the halfspace $s\le0$, the linear coefficient in $-T_A$ is
+$je-2a_S$, whose inner product with $e$ is $j(q-1)\ge0$.
+On $s\ge0$, the coefficient is $(j-A)e-2a_S$, and
+\[
+ \langle(j-A)e-2a_S,e\rangle
+   =j(q-1)-An\le q(q-1)-An=-R<0.
+\]
+In either case, the component along $e$ contributes a nonpositive
+inner product with the allowed atom vector. The perpendicular
+projection of the coefficient is
+\[
+ -2(a_S-je/n),
+ \qquad
+ \norm{-2(a_S-je/n)}_2^2
+     =\frac{4j(n-j)}n\le D^2.
+\]
+This proves the negative bound on every activation cone.
+
+Positive equality forces equality in Cauchy--Schwarz, hence the
+unit vector $u_+/D$. Its center preactivation is $R/D$, and its
+neighbor preactivations are $[R-2(1-\varepsilon)]/D\ge0$.
+The last inequality follows directly for $q=3,4$; for $q\ge5$ use
+$R\ge q-2\ge3$. Thus it is indeed an equality atom.
+
+For negative equality, the projection norm forces $j(n-j)$ to be
+maximal. Such $j$ is nonzero, so both halfspace coefficients have
+a strictly adverse component along $e$. Equality therefore requires
+$s=0$, followed by equality in the perpendicular Cauchy--Schwarz
+step. This gives exactly \eqref{eq:negative}. Conversely these
+vectors have unit norm, vanish at $x^0$, and attain $-D$.
+\end{proof}
+
+Any score fitting the star margins satisfies
+\begin{equation}\label{eq:lower}
+ T_A(F)\ge\frac{A+q}{2},\qquad
+ \norm F_{\mathcal V}\ge\frac{A+q}{2D}.
+\end{equation}
+This is a bound on every nonlinear competitor, not only a symmetric
+or width-one representation.
+
+\section{A full-cube witness with polynomially many atoms}
+
+We use the negative atoms \eqref{eq:negative} with the upper size
+$j=k=\lceil n/2\rceil$. Choose a distribution on these $k$-subsets
+whose first and pair moments are
+\begin{equation}\label{eq:moments}
+ \Pp(i\in S)=\frac kq,\qquad
+ \Pp(i,j\in S)=\frac{k(k-1)}{q(q-1)}\quad(i\ne j).
+\end{equation}
+The uniform distribution is one choice. Put $H_-=\E_S H_S^{(k)}$.
+
+\begin{lemma}[The negative atom average]\label{lem:negative-average}
+At every cube point other than $x^0$,
+\[
+ H_-(x)\ge D/q.
+\]
+Equality holds at each one-coordinate neighbor of $x^0$.
+\end{lemma}
+\begin{proof}
+Suppose $h\ge1$ coordinates of $x$ are negative. Let $J$ count
+how many of those positions belong to $S$, and put $Z=nJ-kh$.
+Then
+\[
+ H_-(x)=\frac4{nD}\E Z_+.
+\]
+The random variable $Z$ is the sum of $h$ population entries,
+each equal to $n-k$ at a selected coordinate and $-k$ otherwise.
+Consequently $-kh\le Z\le(n-k)h$, so pointwise
+\[
+ Z^2\le h[(n-k)Z_++kZ_-]=h[nZ_+-kZ].
+\]
+The moments \eqref{eq:moments} give $\E Z=kh/q$ and
+\begin{equation}\label{eq:moment-identity}
+ \frac{\E Z^2}{nh}+\frac kn\E Z
+ =\frac{k(n-k)}q
+    +\frac{(h-1)k(2k-n)}{q(q-1)}
+ \ge\frac{k(n-k)}q.
+\end{equation}
+For completeness, a population entry $Y_i=n1_{i\in S}-k$ has
+\[
+ \E Y_i^2=\frac{k[n^2-(q+2)k]}q,\qquad
+ \E Y_iY_j=\frac{k[(q+3)k-n^2]}{q(q-1)}\quad(i\ne j),
+\]
+which yield \eqref{eq:moment-identity} by expanding the square of
+the sum. Taking expectations in the pointwise bound proves
+$\E Z_+\ge k(n-k)/q$. Since $D^2=4k(n-k)/n$, the claimed lower
+bound follows. At $h=1$, the direct two-value calculation is an
+equality.
+\end{proof}
+
+Set
+\begin{equation}\label{eq:witness}
+ \alpha=\frac D{2R},\qquad
+ \beta=\frac qD\left(1-\frac{1-\varepsilon}R\right),\qquad
+ F=\alpha H_+-\beta H_-.
+\end{equation}
+Both coefficients are positive. At the center, $H_-=0$ and
+$H_+=R/D$, so $F(x^0)=1/2$. At any other point, $H_+$ is no larger
+than its neighbor value. Lemma~\ref{lem:negative-average} therefore
+gives
+\[
+ F(x)\le\frac\alpha D[R-2(1-\varepsilon)]-\frac{\beta D}q
+       =-\frac12.
+\]
+The variation cost matches \eqref{eq:lower}:
+\begin{equation}\label{eq:cost}
+ \alpha+\beta=\frac{A+q}{2D}.
+\end{equation}
+One way to verify the identity is to use
+$D^2-2q(1-\varepsilon)=-(1+\varepsilon)R$.
+Substituting \eqref{eq:parameters} into \eqref{eq:cost} gives the
+odd and even formulas in \eqref{eq:values}.
+
+\begin{lemma}[Quadratic support size]\label{lem:design}
+A distribution satisfying \eqref{eq:moments} can be supported on at
+most $\binom q2$ subsets. Hence \eqref{eq:witness} can use at most
+$1+\binom q2$ ReLU atoms.
+\end{lemma}
+\begin{proof}
+Let $M=\binom q2$, and assign to each $k$-subset its pair-indicator
+vector $v_S=(1_{i,j\in S})_{i<j}\in\R^M$. Every such vector lies in
+the affine hyperplane $\sum_{i<j}(v_S)_{ij}=\binom k2$, of dimension
+at most $M-1$. The uniform pair-moment vector is in their convex
+hull, so Carath\'eodory's theorem represents it using at most $M$
+vectors. Equivalently, start with the uniform distribution and
+successively eliminate an affine dependence whenever its support
+exceeds $M$.
+
+Matching pair moments also matches first moments because $k\ge2$
+and
+\[
+ \sum_{j\ne i}1_{i,j\in S}=(k-1)1_{i\in S}.
+\]
+This proves \eqref{eq:moments} with the claimed support.
+\end{proof}
+
+\begin{remark}[Hadamard improvement]
+When $q$ is odd and a Hadamard matrix of order $q+1$ exists, normalize
+its first row and column to be positive. Its $q$ remaining rows have
+zero sum. Their negative input positions form $k=(q+1)/2$ subsets;
+column orthogonality gives \eqref{eq:moments}. Thus $q$ negative
+atoms and one positive atom suffice, reducing the width threshold
+to $q+1$. No general Hadamard existence assumption is used in the
+quadratic width bound.
+\end{remark}
+
+\section{Small dimensions}
+
+For $q=2$, use $A=2/\sqrt3$ and $D=\sqrt{8/3}$ in
+\eqref{eq:dual}. The negative halfspace-projection argument still
+applies: the perpendicular norm is at most $D$, and
+$j(q-1)-A(q+1)=j-2\sqrt3<0$ for $j\le2$.
+For the positive bound, convexity gives
+\[
+ H(x^1)+H(x^2)\ge2\relu(b).
+\]
+When the center preactivation is nonnegative,
+\[
+ T_A(H)\le A(b+w_1+w_2)-2\relu(b)
+          \le A(w_1+w_2)\le D\norm{(b,w)}_2,
+\]
+because $0<A<2$. A negative center preactivation gives $T_A\le0$.
+Equality on the positive side holds only at
+$H_+(x)=\relu(x_1+x_2)/\sqrt2$. Negative equality atoms vanish at
+the center, by the same strict halfspace argument.
+
+The two-atom witness
+\[
+ F(x)=\frac14\bigl[\relu(x_1+x_2)-\relu(2-x_1-x_2)\bigr]
+\]
+has outputs $1/2,-1/2,-1$ on the three Hamming layers. Its cost is
+$(\sqrt2+\sqrt6)/4$, equal to the dual lower bound $(A+2)/(2D)$.
+
+For $q=1$, the atom difference $H(1)-H(-1)$ is at most
+$\sqrt2\norm{(b,w)}_2$ in absolute value. If both preactivations
+are nonnegative, use $|b|\ge|w|$ to bound $2|w|$; if exactly one is
+nonnegative, use Cauchy--Schwarz on $b\pm w$; if neither is
+nonnegative, the difference vanishes. The two required margins
+have difference at least one. The matching witness is
+\[
+ F(x)=\frac14\bigl[\relu(1+x)-\relu(1-x)\bigr]=x/2
+ \quad\text{on }\{-1,1\}.
+\]
+Its variation cost is $1/\sqrt2$.
+
+\section{Gaussian energy and posterior identification}
+
+\begin{proof}[Proof of Theorem~\ref{thm:energy}]
+The preceding dual bounds and witnesses prove all norm formulas.
+For each neuron, arithmetic--geometric mean gives
+\[
+ \frac qN\norm{W_j}_2^2+Nv_j^2
+       \ge2\sqrt q\,|v_j|\norm{W_j}_2.
+\]
+Summing proves the Gaussian lower bound. Conversely, for a unit
+atom with coefficient $c\ne0$, choose a positive row scale $t$
+with $t^2=N|c|/\sqrt q$, and use readout coefficient $c/t$.
+Positive homogeneity preserves the atom's contribution, and its
+energy is exactly $2\sqrt q\,|c|$. Apply this to the witnesses and
+pad unused neurons by zeros. Lemma~\ref{lem:design} and the
+two-atom small-dimensional witnesses give the stated thresholds.
+Finally, readout amplification by factors tending down to one
+proves equality of strict and weak infima.
+\end{proof}
+
+\begin{lemma}[Sign rigidity after the star sample]\label{lem:rigidity}
+For $N\ge N_q$, every minimum-energy network fitting the star
+sample and global weak absolute margins has sign function $f_q$.
+\end{lemma}
+\begin{proof}
+For $q\ge3$, the full-cube witness and the star dual show that the
+minimum energy is $2\sqrt q\,V_q$. Equality must hold throughout
+\[
+ K_N\ge2\sqrt q\sum_j|v_j|\norm{W_j}_2
+       \ge\frac{2\sqrt q}D T_A(F)
+       \ge2\sqrt q\,V_q.
+\]
+Every nonzero atom therefore attains dual equality, with its
+coefficient sign agreeing with its dual sign. By
+Lemma~\ref{lem:atom}, the score has the form
+\[
+ F=\alpha' H_+-\sum_S\beta_S H_S,
+ \qquad \alpha',\beta_S\ge0,
+\]
+where each negative atom is nonnegative and vanishes at $x^0$.
+Equality in the star-margin bound forces all star margins to equal
+$1/2$, in particular $F(x^0)=1/2$. Thus $\alpha'=D/(2R)$.
+At every other point, the strictly smaller value of $H_+$ gives
+\[
+ F(x)\le\alpha'H_+(x)<\alpha'H_+(x^0)=1/2.
+\]
+Global weak absolute margin forces $F(x)\le-1/2$.
+
+For $q=2$, use the positive and negative equality cases from the
+small-dimensional argument. The positive equality atom is zero
+at every noncenter cube point, so the same conclusion holds.
+For $q=1$, the star sample is the full domain.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:posterior}]
+Let $\mathcal E$ be the event of strict global absolute margin
+and the star labels. Its energy infimum is $E_*=2\sqrt q\,V_q$,
+by the witnesses and readout amplification. Let $\mathcal B$ be
+the closed set satisfying global weak absolute margins and the
+star labels but assigning a positive label to some other cube
+point. This is a finite union of closed sign cells. If nonempty,
+it attains an energy minimum by coercivity. Lemma~\ref{lem:rigidity}
+implies
+\[
+ \inf_{\mathcal B}K_N>E_*.
+\]
+
+For completeness, this strict energy gap controls the actual
+finite-dimensional Gaussian posterior. Choose a strict feasible
+point of energy below $\inf_{\mathcal B}K_N$, and a sufficiently
+small ball around it contained in $\mathcal E$. Integration of
+the Gaussian density over this ball gives a lower bound on
+$\Pp_\sigma(\mathcal E)$ with a smaller exponential rate than the
+Gaussian upper bound for the closed set $\mathcal B$. Thus
+\[
+ \Pp_\sigma(\mathcal B\mid\mathcal E)\longrightarrow0.
+\]
+The statement is trivial if $\mathcal B$ is empty. This proves
+concentration on the full AND function without selecting any
+particular parameter minimizer.
+
+Additional target-consistent labels preserve the entire AND
+function cell and can only remove other cells. Its posterior
+probability therefore cannot decrease. A continuation without
+repetitions has at most $2^q-q-1$ remaining inputs, so its expected
+number of sampling mistakes is at most this number times the
+post-star probability of a non-AND function, which tends to zero.
+\end{proof}
+
+\section{Teacher and scope}
+
+\begin{proof}[Proof of Proposition~\ref{prop:teacher}]
+For $q\ge3$, use $q$ identical hidden neurons
+\[
+ \relu\!\left(\frac{\sum_i x_i-(q-1)}{q-1}\right),
+\]
+each with readout coefficient one. Each is $1/(q-1)$ at the
+center and zero elsewhere. Add a constant neuron $\relu(1)$
+with readout coefficient $-q/[2(q-1)]$. The output is exactly
+$q/[2(q-1)]$ at the center and its negative elsewhere. All
+individual weights have magnitude at most one.
+
+For $q=2$, the width-two score
+\[
+ \frac12\relu(x_1+x_2)-\relu\!\left(1-\frac{x_1+x_2}{2}\right)
+\]
+has outputs $1,-1,-2$ on the three Hamming layers and all weights
+at most one. For $q=1$, use
+$[\relu(1+x)-\relu(1-x)]/2=x$ on the cube.
+The circuit statement is the usual binary AND tree.
+\end{proof}
+
+The norm values are intrinsic to ordinary ReLU and the isotropic
+Gaussian energy defined here. Their noninteger form does not by
+itself supply an ordering of exponentially many competing
+functions. Nor does the displayed construction prove an additive
+norm formula for multiple gadgets: an AND of disjoint AND blocks
+is simply one AND. The posterior theorem applies once the star
+labels have been observed. It leaves open how many mistakes can
+occur before then on an arbitrary permutation of the cube.
+
+\end{document}

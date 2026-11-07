@@ -22,3 +22,5 @@ The proofs use closed global output margins when discussing energy minimizers. T
 These are research records, not a separate paper or a new main result. They have independent AI-agent mathematical checks and have not been formalized in Lean. The shallow and fixed-depth notes were independently checked by two agents; the full tanh/hardtanh embedding extension was independently checked by a separate agent who reviewed its construction and constants. No numerical experiment is used as a proof.
 
 The [verification record](VERIFICATION.md) identifies the reviewed files and the exact-arithmetic check.
+
+The [7 November continuous-activation record](continuous-activations-2026-11-07/) gives two precise obstructions to transferring the successful triangle-based construction directly to sine and tanh. It links the positive all-large-width triangle and monotone-activation papers. These method-specific obstructions do not settle the ordinary-activation online question.

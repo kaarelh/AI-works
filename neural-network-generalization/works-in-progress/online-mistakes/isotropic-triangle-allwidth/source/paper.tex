@@ -1,0 +1,827 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,amsmath,amssymb,amsthm,mathtools}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Exponential online mistakes for isotropic Bayesian triangle-wave networks},pdfauthor={ChatGPT-6 Astra; Kaarel Hanni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}
+\newcommand{\F}{\mathbb F}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\newcommand{\one}{\mathbf 1}
+\newcommand{\sgn}{\operatorname{sign}}
+\newcommand{\cV}{\mathcal V}
+\newcommand{\eps}{\varepsilon}
+\title{Exponential online mistakes for isotropic Bayesian\protect\\triangle-wave networks}
+\author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{7 November 2026}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We give a fixed continuous, bounded, $1$-Lipschitz activation for which
+an isotropic Gaussian prior on network weights makes
+superpolynomially many online mistakes on a fixed input permutation.
+The activation is the period-four triangle wave. For every $m\ge5$,
+the target has $d=\Theta(m^6)$ Boolean inputs, a bounded-fan-in Boolean
+circuit of size $\Theta(d)$, and an explicit one-hidden-layer teacher
+of width $2m-1$ with every weight at most one and output margin one.
+At every sufficiently large learner width, taking the Gaussian variance
+to zero at that fixed width makes the actual posterior probability of
+the correct label tend to zero at each of $2^{m-4}$ designated rounds.
+The learner conditions on absolute output margin greater than $1/2$
+on the full Boolean cube before conditioning on exact labels.
+The proof identifies an exact weighted Fourier variation norm,
+excludes competing sign functions outside an explicitly defined parity
+family by a quantitative margin argument, and strictly orders the
+remaining alternatives, each wrong on one logical input class, using
+distinct square roots. Integer neuron allocations transfer the order to every
+sufficiently large finite width, and Gaussian energy separation controls
+the posterior mixture. The mistake bound is exponential in the displayed
+teacher width and is $\exp(\Omega(d^{1/6}))$ in input dimension and
+Boolean-circuit size. Calibration occupies $15/16$ of the cube, and the
+sufficient width is not claimed to be polynomial. The theorem does not
+establish the corresponding statement for tanh, ReLU, GELU, or hardtanh.
+\end{abstract}
+
+\section{Model, target, and theorem}
+
+Let $\phi$ be the odd triangle wave of period four, defined by
+\[
+ \phi(t)=t\quad(-1\le t\le1),\qquad
+ \phi(t+2)=-\phi(t).
+\]
+Thus $\phi$ is continuous, $1$-Lipschitz, bounded by one, and vanishes
+at zero. The same activation is used at every value of the construction
+parameter. On $X=\{-1,1\}^d$, write $\bar x=(1,x)$ and use one hidden
+layer,
+\begin{equation}\label{eq:model}
+ F_{W,v}(x)=\sum_{a=1}^N v_a\phi(W_a\cdot\bar x),\qquad
+ W_{ai}\sim N(0,N\sigma^2/d),\quad
+ v_a\sim N(0,\sigma^2/N),
+\end{equation}
+independently, including the bias coordinate $i=0$. There is no
+coordinate-dependent covariance. Equivalently, the whitened coordinates
+$\xi=\sqrt{d/N}\,W$ and $\eta=\sqrt N\,v$ are independent centered
+Gaussians with common variance $\sigma^2$. The Gaussian energy is
+\begin{equation}\label{eq:energy}
+ K_N(W,v)=\frac dN\|W\|_F^2+N\|v\|_2^2.
+\end{equation}
+Before observing labels the learner conditions on
+\begin{equation}\label{eq:globalmargin}
+ \mathcal M=\{|F_{W,v}(x)|>1/2\text{ for every }x\in X\}.
+\end{equation}
+It subsequently conditions on exact noiseless training signs. All
+posterior statements below refer to this actual conditional measure,
+not to a selected minimum-energy network.
+The bounded-weight teacher complexity $C_2(f)$ is the least integer
+$C\ge1$ for which a width-$C$ network in the same unnormalized predictor
+form as \eqref{eq:model}, with all incoming and readout weights at most
+$C$ in absolute value, implements $f$ with margin greater than $1/2$.
+
+Fix $m\ge5$, and set
+\begin{equation}\label{eq:dimensions}
+ q_i=2m+2i-1,\quad r_i=2q_i\quad(1\le i\le m),\quad
+ D=\sum_i r_i=6m^2,\quad
+ c=10^6(D+1)^3+1,\quad d=c+D.
+\end{equation}
+Partition the coordinates into a common core $C$ of odd size $c$ and
+blocks $B_i$ of even size $r_i$. For a set $A$, write
+$\chi_A(x)=\prod_{j\in A}x_j$. Define $z(x)\in G:=\F_2^m$ by
+\[
+ (-1)^{z_i(x)}=\chi_{B_i}(x).
+\]
+Our target is
+\begin{equation}\label{eq:target}
+ f_m(x)=\chi_C(x)\bigl(2\one_{\{z(x)=0\}}-1\bigr).
+\end{equation}
+
+\begin{theorem}\label{thm:main}
+For every $m\ge5$, the target \eqref{eq:target} and a fixed permutation
+of the full cube have the following properties.
+\begin{enumerate}
+\item The target has a bounded-fan-in Boolean circuit of size
+$\Theta(d)$ and an explicit one-hidden-layer triangle-wave teacher of
+width $2m-1$, with all incoming and readout weights bounded by one and
+absolute output margin at least one.
+In particular, $C_2(f_m)\le2m-1$.
+\item The permutation has a calibration prefix of length
+$15\cdot2^{d-4}$, followed by $2^{m-4}$ designated, nonrepeated inputs.
+There is $N_0(m)$ such that for every fixed $N\ge N_0(m)$ and every
+designated round,
+\begin{equation}\label{eq:posteriorlimit}
+ \lim_{\sigma\downarrow0}
+ \Pp_{N,\sigma}\bigl(F(x)f_m(x)>0\mid\mathcal M,
+       \text{all preceding exact labels}\bigr)=0.
+\end{equation}
+The permutation is independent of $N$ and $\sigma$.
+\item At each such fixed width, posterior-label majority makes all
+$2^{m-4}$ designated mistakes for all sufficiently small $\sigma$;
+the posterior wrong-label probability also exceeds $2/3$ there.
+The probability that posterior sampling makes every designated mistake
+tends to one.
+\end{enumerate}
+The number of designated mistakes is exponential in the displayed
+teacher width, and is $\exp(\Omega(d^{1/6}))$. The theorem asserts no
+variance threshold uniform in width and no polynomial bound on $N_0(m)$.
+\end{theorem}
+
+\begin{corollary}\label{cor:width}
+For the explicit unit-bounded teacher widths $w_m=2m-1$, the construction
+forces $2^{(w_m-7)/2}$ designated mistakes, at every sufficiently large
+learner width in the fixed-width strong-prior limit. Its input dimension
+and bounded-fan-in Boolean-circuit size are $\Theta(w_m^6)$.
+\end{corollary}
+
+The calibration and width qualifications are substantive. The result
+rules out an arbitrary-order polynomial mistake bound in the target's
+Boolean-circuit size, but does not give $2^{\Omega(d)}$ mistakes or a
+short calibration prefix. All proofs are conventional mathematical
+proofs; no formal verification is claimed.
+
+\section{An exact weighted Fourier norm}
+
+For a cube function $F$, let $\widehat F(A)=\E F(X)\chi_A(X)$.
+For $s\in G$, set
+\[
+ A_s=C\cup\bigcup_{i:s_i=1}B_i,\qquad
+ a_s=\sqrt{|A_s|}=\sqrt{c+\sum_i r_i s_i}.
+\]
+The code projection is the orthogonal projection onto these characters:
+\begin{equation}\label{eq:projection}
+ PF(x)=\sum_{s\in G}\widehat F(A_s)\chi_{A_s}(x)
+      =\chi_C(x)\,\bar F(z(x)).
+\end{equation}
+Equivalently,
+$\bar F(z)=\E[\chi_C(X)F(X)\mid z(X)=z]$.
+Define
+\[
+ Q(F)=\sum_{s\in G}a_s|\widehat F(A_s)|,
+ \qquad
+ \|F\|_{\cV}=\inf\left\{\sum_a|v_a|\|\theta_a\|_2:
+          F=\sum_a v_a\phi(\theta_a\cdot\bar x)\right\},
+\]
+where representations are finite and equality is on the cube. This
+variation cost is finite on every cube function: each odd-support
+Fourier character is a pure atom with bias zero, each even-support
+character is a pure atom with bias one, and the constant uses
+$\phi(1)=1$. Homogeneity and the triangle inequality follow by scaling
+and concatenating representations, while
+$\|F\|_\infty\le\sqrt{d+1}\|F\|_{\cV}$ proves positivity. Thus it is
+a norm.
+
+\begin{theorem}[Atomic norm and quantitative rounding]\label{thm:atomic}
+More generally, let $c\ge1000$ be odd, let the disjoint blocks have even
+sizes at least four and total size $D$, and assume
+$c\ge100(D+1)^2$. For every biased triangle-wave ridge
+$h_\theta(x)=\phi(\theta\cdot\bar x)$,
+\begin{equation}\label{eq:atomic}
+ Q(h_\theta)\le\|\theta\|_2.
+\end{equation}
+Nonzero equality occurs exactly at the minimal pure-character atoms:
+zero bias, weights $\pm1$ on the core and on a union of whole blocks,
+and zero weights elsewhere. Consequently,
+\begin{equation}\label{eq:exactnorm}
+ \left\|\sum_{s\in G} b_s\chi_{A_s}\right\|_{\cV}
+       =\sum_{s\in G}a_s|b_s|.
+\end{equation}
+Moreover, with $\kappa=1/200$, every atom has a number $e_\theta\ge0$
+such that
+\begin{equation}\label{eq:rounding}
+ \|\theta\|_2-Q(h_\theta)\ge\kappa e_\theta,
+\end{equation}
+and the following two bounds hold:
+\begin{align}
+ |h_\theta(x)-h_\theta(x')|
+   &\le e_\theta\|x-x'\|_2
+   &&\text{if }(\chi_C,z)(x)=(\chi_C,z)(x'),\label{eq:fiberlip}\\
+ |\E_{X_C}h_\theta(X_C,u)|
+   &\le\sqrt{D+1}\,e_\theta
+   &&\text{for every fixed physical block assignment }u.
+   \label{eq:coremean}
+\end{align}
+\end{theorem}
+
+The exactness and the quantitative statement are both needed. An
+approximate norm identity need not preserve the small strict energy
+differences used later. A proof, including constants, is given in
+Appendix~\ref{app:atomic}.
+
+For odd $|A|$, the pure atom is especially simple:
+\begin{equation}\label{eq:pureparity}
+ \phi\!\left(\sum_{i\in A}x_i\right)
+       =(-1)^{(|A|-1)/2}\chi_A(x).
+\end{equation}
+Thus all witnesses in \eqref{eq:exactnorm} use ordinary bias-free
+triangle-wave neurons with incoming weights zero or one, with a sign
+absorbed into the readout.
+
+\section{Global margin excludes non-code sign completions}
+
+The projection $P$ alone does not preserve global absolute margin.
+The next lemma is the step which prevents fractional projected
+completions from invalidating the argument.
+
+\begin{lemma}[A margin-aware gap]\label{lem:offcode}
+Under the assumptions of Theorem~\ref{thm:atomic}, suppose
+$|F(x)|\ge1/2$ everywhere. If its sign is not of the form
+\begin{equation}\label{eq:codesign}
+ \sgn F(x)=\chi_C(x)g(z(x)),\qquad g:G\to\{-1,1\},
+\end{equation}
+then
+\begin{equation}\label{eq:offcodegap}
+ \|F\|_{\cV}\ge Q(F)+\frac{\kappa}{2\sqrt{D+1}}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+For any representation $F=\sum_a v_a h_{\theta_a}$, put
+$V=\sum_a|v_a|\|\theta_a\|_2$ and
+$B=\sum_a|v_a|e_{\theta_a}$. The Fourier triangle inequality and
+\eqref{eq:rounding} give
+\begin{equation}\label{eq:VQgap}
+ V-Q(F)\ge\sum_a|v_a|\bigl(\|\theta_a\|_2-Q(h_{\theta_a})\bigr)
+       \ge\kappa B.
+\end{equation}
+Each fiber of $(\chi_C,z)$ is connected by moves which flip two
+coordinates within one block, with the core regarded as a block.
+If the sign is nonconstant on a fiber, some such edge has opposite
+endpoint signs. The margin gives an output difference at least one,
+whereas \eqref{eq:fiberlip} bounds it by $2\sqrt2 B$. Hence
+$B\ge1/(2\sqrt2)$.
+
+Otherwise the sign is constant on every fiber. Failure of
+\eqref{eq:codesign} means that at some logical control value both core
+parity classes have the same sign. Fix physical block coordinates with
+that control value. Every core assignment then has that sign and
+margin, so $|\E_{X_C}F|\ge1/2$. Equation~\eqref{eq:coremean} gives
+$B\ge1/(2\sqrt{D+1})$. Since $D\ge4$, this latter lower bound suffices
+in either case. Take the infimum over representations in
+\eqref{eq:VQgap}.
+\end{proof}
+
+Let $M=2^m$, and define the affine free set
+\begin{equation}\label{eq:freecoset}
+ H=\{z:z_1=z_2=z_3=z_4=0\},\qquad
+ U=e_1+H,\qquad L=H\cup U.
+\end{equation}
+In particular $|U|=M/16$ and $0\notin U$. The calibration reveals
+the target on every physical input with $z(x)\notin U$. It has
+exactly $15\cdot2^{d-4}$ inputs.
+
+\begin{lemma}[The flat calibration bound]\label{lem:flat}
+Every real $f:G\to\R$ with
+$f(0)\ge1/2$ and $f(z)\le-1/2$ for
+$z\notin\{0\}\cup U$ satisfies
+\begin{equation}\label{eq:flatlower}
+ \sum_s|\widehat f(s)|\ge L_0:=\frac32-\frac4M.
+\end{equation}
+For every $v\in U$, the star score
+\begin{equation}\label{eq:starscore}
+ f_v=-\frac12+\one_{\{0\}}+\one_{\{v\}}
+\end{equation}
+attains equality and has global margin $1/2$.
+\end{lemma}
+\begin{proof}
+Consider
+\[
+ \mathcal D(f)=\left(1-\frac4M\right)f(0)
+  -\frac4M\sum_{z\in H\setminus\{0\}}f(z)
+  -\frac2M\sum_{z\notin L}f(z).
+\]
+Its Fourier multipliers are $-1$ at zero, $+1$ on
+$L^\perp\setminus\{0\}$, $3/4$ on
+$H^\perp\setminus L^\perp$, and $+1$ outside $H^\perp$.
+Thus $\mathcal D(f)\le\sum_s|\widehat f(s)|$. The training inequalities
+give $\mathcal D(f)\ge3/2-4/M$. Finally,
+\[
+ \widehat f_v(0)=-\frac12+\frac2M,
+ \qquad
+ \widehat f_v(s)=\frac{1+(-1)^{s\cdot v}}M\quad(s\ne0),
+\]
+whose absolute sum is $L_0$.
+\end{proof}
+
+\begin{proposition}[Reduction after calibration]\label{prop:codereduction}
+After the calibration, and after any subsequent labels for which at
+least one star remains consistent, every minimum-variation sign
+completion is of the form \eqref{eq:codesign}. Every non-code sign
+completion has variation cost strictly larger than every star cost.
+\end{proposition}
+\begin{proof}
+For every training-consistent $F$, its projection \eqref{eq:projection}
+satisfies the latent calibration margins, because these were imposed on
+complete physical fibers. Lemma~\ref{lem:flat} gives
+\[
+ Q(F)\ge\sqrt c\,L_0.
+\]
+A non-code sign completion therefore costs at least
+\begin{equation}\label{eq:noncodebarrier}
+ B_{\rm nc}:=\sqrt c\,L_0+\frac{\kappa}{2\sqrt{D+1}}.
+\end{equation}
+By \eqref{eq:exactnorm}, every star has cost at most
+\begin{equation}\label{eq:starupper}
+ \sqrt{c+D}\,L_0
+   \le\sqrt c\,L_0+\frac{3D}{4\sqrt c}
+   <B_{\rm nc},
+\end{equation}
+where the strict inequality follows from \eqref{eq:dimensions} and
+$\kappa=1/200$. Later labels retain the initial lower bound and a
+remaining star upper witness. If a sign completion is odd and
+code-invariant, its projection $PF$ has the same signs and global
+margin, and \eqref{eq:exactnorm} gives a code score of no larger cost.
+Thus the remaining optimization is the finite weighted Fourier margin
+problem.
+\end{proof}
+
+\section{The strictly ordered latent completions}
+
+Write $w(s)=a_s$ and
+\[
+ B_w(f)=\sum_s w(s)|\widehat f(s)|,
+ \qquad
+ \widehat w(v)=\frac1M\sum_s w(s)(-1)^{s\cdot v}.
+\]
+The weights satisfy $w(s)\ge w(0)=\sqrt c$.
+
+\begin{lemma}[Signs and distinctness of the weight transform]\label{lem:weights}
+Every nonconstant Walsh coefficient $\widehat w(v)$ is strictly
+negative, and all $M$ values $\widehat w(v)$ are distinct.
+\end{lemma}
+\begin{proof}
+The integral representation
+\[
+ \sqrt x=\frac1{2\sqrt\pi}\int_0^\infty(1-e^{-xt})t^{-3/2}\,dt
+\]
+gives, for $v\ne0$,
+\[
+ \widehat w(v)=-\frac1{2\sqrt\pi M}
+ \int_0^\infty e^{-ct}
+ \prod_{i:v_i=1}(1-e^{-r_i t})
+ \prod_{i:v_i=0}(1+e^{-r_i t})\,t^{-3/2}\,dt<0.
+\]
+The integral is convergent at zero because $v\ne0$.
+
+For distinctness, all distinct integers in $[c,c+D]$ have different
+squarefree parts. Indeed, if $n=qu^2<n'=qv^2$ have the same squarefree
+part, then
+$n'-n\ge q(2u+1)>2\sqrt c>D$, a contradiction. Square roots of
+distinct squarefree integers are rationally linearly independent.
+Consequently the distinct values $\sqrt n$, $c\le n\le c+D$, are
+rationally linearly independent.
+
+The coefficients of $M\widehat w(v)$ as a linear combination of these
+square roots are the coefficients of
+\[
+ P_v(t)=\prod_{i:v_i=1}(1-t^{r_i})
+         \prod_{i:v_i=0}(1+t^{r_i}).
+\]
+The odd integers $q_i$ lie strictly between $2m$ and $4m$, so none
+divides another. The cyclotomic polynomial $\Phi_{q_i}$ divides
+$1-t^{2q_j}$ exactly when $i=j$, and never divides
+$1+t^{2q_j}$: a root of odd order cannot have a power equal to $-1$.
+Thus $\Phi_{q_i}$ divides $P_v$ exactly when $v_i=1$. All the
+polynomials $P_v$ are distinct, proving the claim.
+\end{proof}
+
+\begin{lemma}[Subgroup classification costs]\label{lem:subgroup}
+If a proper subgroup $J\le G$ has codimension at least two, the unique
+minimum-$B_w$ real score with margin $1/2$ and positive set exactly $J$
+is $f_J=\one_J-1/2$. In particular, writing $C_0$ for the singleton
+cost and $C_v$ for the cost of $\{0,v\}$,
+\begin{align}
+ C_0&=\frac12\sqrt c+\widehat w(0)-\frac{2\sqrt c}M,\label{eq:singletoncost}\\
+ C_v&=\frac12\sqrt c+\widehat w(0)+\widehat w(v)-\frac{4\sqrt c}M.
+ \label{eq:starcost}
+\end{align}
+All $C_v$ are distinct and each is strictly smaller than $C_0$.
+\end{lemma}
+\begin{proof}
+A norm-dual function has Fourier multipliers $+w(s)$ on
+$J^\perp\setminus\{0\}$, $-w(0)$ at zero, and zero elsewhere. In
+physical coordinates it is
+\[
+ \lambda_J(x)=\sum_{s\in J^\perp}w(s)(-1)^{s\cdot x}-2w(0).
+\]
+On $J$ it is at least $(|J^\perp|-2)w(0)>0$. For $x\notin J$,
+Fourier inversion gives
+\[
+ \sum_{s\in J^\perp}w(s)(-1)^{s\cdot x}
+   =\frac M{|J|}\sum_{h\in J}\widehat w(x+h)<0,
+\]
+so $\lambda_J(x)<0$. Its normalized pairing with a feasible score is
+therefore minimized exactly when all signed margins equal $1/2$.
+That score also saturates the Fourier dual inequality, proving
+optimality and uniqueness. Direct evaluation gives
+\eqref{eq:singletoncost}--\eqref{eq:starcost}. The final claims follow
+from Lemma~\ref{lem:weights}, since
+$C_0-C_v=2\sqrt c/M-\widehat w(v)>0$.
+\end{proof}
+
+\begin{lemma}[Non-subgroup gap]\label{lem:nonsubgroup}
+Suppose a globally margin-$1/2$ score $f$ has a positive set $A$
+containing zero, and let $\delta=|A|/M<1/3$. If $A$ is not a subgroup,
+then
+\[
+ \sum_s|\widehat f(s)|\ge\frac{2-\delta}{1+2\delta}.
+\]
+For every calibration-consistent positive set this lower bound is at
+least $61/38$.
+\end{lemma}
+\begin{proof}
+Put $B=\sum_s|\widehat f(s)|$ and $a=\widehat f(0)$. Since
+$|f(x)|\le B$,
+$a\le\delta B-(1-\delta)/2$. Choose $u,v\in A$ with $u+v\notin A$.
+Every nonconstant character takes the value $+2$ or $-2$ in
+$\chi(0)+\chi(u)+\chi(v)-\chi(u+v)$, while the constant character
+gives $+2$. Hence
+\[
+ 2\le f(0)+f(u)+f(v)-f(u+v)
+   \le2a+2(B-|a|).
+\]
+If $a<0$, combining these inequalities gives
+$(1+2\delta)B\ge2-\delta$. If $a\ge0$, the mean bound gives
+$B\ge(1-\delta)/(2\delta)$, which is at least the claimed bound
+because $\delta<1/3$. Calibration allows positives only in
+$\{0\}\cup U$, so $\delta\le1/16+1/M\le3/32$, giving $61/38$.
+\end{proof}
+
+Thus every non-subgroup code completion has variation cost at least
+\begin{equation}\label{eq:nonsubgroupbarrier}
+ B_{\rm ns}:=\frac{61}{38}\sqrt c
+    >\frac32\sqrt{c+D},
+\end{equation}
+which is larger than every star cost. A subgroup contained in
+$\{0\}\cup U$ has at most two elements: two distinct elements of $U$
+would sum to a nonzero element of $H$, which is forbidden. The only
+possible subgroup positive sets are therefore the singleton and the
+stars. These statements remain true when some points of $U$ have
+subsequently been labeled negative.
+
+\section{A fixed sequence and strict variation gaps}
+
+Order the points of $U$ uniquely by
+\[
+ C_{v_1}<C_{v_2}<\cdots<C_{v_K},\qquad K=|U|=2^{m-4}.
+\]
+First present every calibration input in any fixed order. Next, for
+$j=1,\ldots,K$, present one fixed physical representative $x_j$ with
+$z(x_j)=v_j$ and $\chi_C(x_j)=+1$. These inputs were absent from the
+calibration, are distinct, and all have true label $-1$. Complete the
+sequence to a permutation of the remaining cube points in any fixed
+order.
+
+Before round $j$, the star at $v_j$ is consistent with every preceding
+label and predicts $+1$ at $x_j$. Any odd code completion consistent
+with the history has positive set contained in
+$\{0\}\cup\{v_j,\ldots,v_K\}$. By the preceding results, among all
+globally margin-valid completions the cheapest sign function is uniquely
+the star at $v_j$. More quantitatively, there is $\Delta_j>0$ such that
+every history-consistent score predicting the correct label at $x_j$
+satisfies
+\begin{equation}\label{eq:variationgap}
+ \|F\|_{\cV}\ge C_{v_j}+\Delta_j.
+\end{equation}
+Explicitly, one may take
+\[
+ \Delta_j=\min\bigl(\{B_{\rm nc},B_{\rm ns},C_0\}
+                  \cup\{C_{v_\ell}:j<\ell\le K\}\bigr)-C_{v_j}>0.
+\]
+No quantitative lower bound on these algebraic differences is needed.
+
+Only the initial calibration uses complete fibers. Later individual
+queries eliminate the corresponding code stars. The initial flat
+lower bound continues to hold, and every remaining star remains a
+global upper witness, so Proposition~\ref{prop:codereduction} still
+excludes all non-code signs at every designated round.
+
+\section{Every sufficiently large finite width and the posterior}
+
+\begin{lemma}[Canonical energy and integer allocation]\label{lem:allocation}
+For every width and every network,
+\begin{equation}\label{eq:energylower}
+ K_N(W,v)\ge2\sqrt d\sum_a |v_a|\|W_a\|_2
+            \ge2\sqrt d\,\|F_{W,v}\|_{\cV}.
+\end{equation}
+For every fixed star score $\chi_C f_v$, there are networks at all
+sufficiently large integer widths whose outputs equal that score and
+whose energies converge to $2\sqrt d\,C_v$.
+\end{lemma}
+\begin{proof}
+The lower bound is the arithmetic--geometric mean inequality applied
+to each neuron's two energy terms. Write the exact pure-atom expansion
+of the star as $\sum_s b_s\phi(u_s\cdot\bar x)$, absorbing phases into
+$b_s$, with $\|u_s\|_2=a_s$. Define
+\[
+ p_s=\frac{|b_s|}{\sqrt d\,a_s}\quad(b_s\ne0),\qquad
+ P_*:=\sum_s p_s\le\frac{3/2}{\sqrt{dc}}<1.
+\]
+At width $N$, take $n_s=\lceil Np_s\rceil$ replicas of atom $u_s$,
+each with readout $b_s/n_s$, and set all other neurons to zero.
+For all sufficiently large $N$, $\sum_s n_s\le N$. The score is
+unchanged, and its energy is
+\[
+ \sum_s\left[d\frac{n_s}{N}a_s^2
+                 +\frac{b_s^2}{n_s/N}\right]
+ \longrightarrow2\sqrt d\sum_s|b_s|a_s=2\sqrt d\,C_v.
+\]
+This convergence is along all sufficiently large integer widths, not
+only a subsequence.
+\end{proof}
+
+There are finitely many designated rounds. Equations
+\eqref{eq:variationgap} and \eqref{eq:energylower}, together with
+Lemma~\ref{lem:allocation}, therefore give $N_0(m)$ such that for
+every $N\ge N_0(m)$ and every round $j$ there is a wrong-label star
+witness with energy strictly smaller than the energy infimum of all
+correct-label completions. Slightly multiplying its readout weights
+by a factor greater than one creates strict global margins and
+preserves this strict energy gap.
+Enlarge $N_0(m)$ to at least $2m-1$; the padded target teacher then
+keeps every posterior along the full permutation well-defined.
+
+\begin{lemma}[Finite-dimensional Gaussian separation]\label{lem:laplace}
+Fix a width $N$ and a history. Suppose the correct-label event within
+the strict global-margin posterior has energy at least $b$, while a
+wrong-label, history-consistent strict-margin parameter vector has
+energy strictly below $b$. Then the posterior correct-label
+probability tends to zero as $\sigma\downarrow0$.
+\end{lemma}
+\begin{proof}
+Continuity and finiteness of the input cube give an open parameter
+ball around the wrong witness contained in the denominator event.
+Shrink it so its energy is at most $a<b$. In whitened coordinates
+the Gaussian density is proportional to
+$\sigma^{-p}\exp(-K_N/(2\sigma^2))$, with fixed finite
+$p=N(d+2)$. The ball probability is at least a positive constant times
+$\sigma^{-p}e^{-a/(2\sigma^2)}$.
+
+Choose $\eta\in(0,1)$ with $(1-\eta)b>a$. A Gaussian exponential
+moment bounds the raw probability of $K_N\ge b$ by
+$\eta^{-p/2}e^{-(1-\eta)b/(2\sigma^2)}$. The ratio tends to zero.
+The normalizing constant for the pre-data conditioning on
+$\mathcal M$ cancels in this ratio. The argument controls the entire
+posterior event and makes no choice among tied parameter minima.
+\end{proof}
+
+Apply Lemma~\ref{lem:laplace} at each designated history to obtain
+\eqref{eq:posteriorlimit}. A union bound over the finitely many rounds
+gives the posterior-sampling claim, without any independence
+requirement on the prediction draws. Taking the minimum of the
+finitely many small-variance thresholds gives the majority and
+$2/3$ conclusions.
+
+\section{Teacher complexity and interpretation}
+
+The target has the explicit score
+\begin{equation}\label{eq:teacher}
+ T_m(x)=\chi_C(x)\left[\sum_{i=1}^m\chi_{B_i}(x)-(m-1)\right].
+\end{equation}
+The bracket is $+1$ when every block parity is positive, and is at
+most $-1$ otherwise. Thus its sign is \eqref{eq:target} and its
+absolute output is at least one. Expand \eqref{eq:teacher} as the
+$m$ characters $\chi_{C\cup B_i}$ and $m-1$ copies of
+$-\chi_C$. Each support has odd size. By \eqref{eq:pureparity}, this
+is a width-$2m-1$ teacher with incoming weights zero or one, zero
+biases, and readouts $\pm1$.
+
+A Boolean circuit computes each block parity and the core parity,
+tests whether all block parities are positive, and combines with the
+core parity. With fan-in two this uses $O(d)$ gates. Every input is
+relevant, so any fan-in-two circuit has at least $d-1$ gates; the
+Boolean-circuit complexity is $\Theta(d)$. The displayed teacher has
+$O(md)=O(m^7)$ scalar parameters, all bounded by one. Hence every
+usual bounded same-depth teacher-size convention is polynomial in
+$m$, while the mistake count is $2^{m-4}$.
+
+Because $D=6m^2$ and $c=10^6(D+1)^3+1$, one has $d=\Theta(m^6)$.
+The lower bound is therefore stretched exponential in input dimension
+and Boolean-circuit size, and exponential in the explicit teacher
+width. The construction uses a less customary periodic activation;
+continuity alone is insufficient for a polynomial arbitrary-order
+mistake theorem, but the corresponding questions for the usual
+monotone activations remain distinct. The proof uses the strong-prior
+limit at each fixed eligible width. It makes no assertion about a
+fixed positive variance, a width-uniform small-variance threshold,
+or the canonical width-first mean-field limit.
+
+\appendix
+\section{Proof of the atomic theorem}\label{app:atomic}
+
+We give all quantitative ingredients of Theorem~\ref{thm:atomic}.
+The absolutely convergent Fourier series of the triangle wave is
+\begin{equation}\label{eq:triangleseries}
+ \phi(t)=\sum_{n\ge1\ {\rm odd}}\alpha_n
+      (-1)^{(n-1)/2}\sin(n\pi t/2),
+ \qquad \alpha_n=\frac8{\pi^2n^2},\quad\sum_n\alpha_n=1.
+\end{equation}
+Adding an even integer to any incoming weight, including the bias,
+changes the ridge only by a global sign on the cube. Reduce each
+parameter modulo two into $[-1,1]$, decreasing its norm and preserving
+all absolute Fourier coefficients. We first work with this reduced
+vector, of norm $r$. If $r=0$, the ridge is zero and all assertions
+are immediate with $e_\theta=0$; henceforth suppose $r>0$.
+
+\subsection{Projection bounds and low norms}
+
+For a harmonic and an odd-size support $A$, its absolute Fourier
+coefficient is
+\[
+ |\cos(n\pi b/2)|
+ \prod_{i\in A}|\sin(n\pi w_i/2)|
+ \prod_{i\notin A}|\cos(n\pi w_i/2)|.
+\]
+For block $B_j$, put
+$p_j=\prod_{i\in B_j}|\sin(n\pi w_i/2)|$ and
+$q_j=\prod_{i\in B_j}|\cos(n\pi w_i/2)|$.
+H\"older gives $p_j+q_j\le1$ for block size at least two.
+Consequently, with
+$\mathcal L=\sum_s|\widehat h_\theta(A_s)|$, one has
+\begin{equation}\label{eq:Lfirstharmonic}
+ \mathcal L\le1,\qquad
+ \mathcal L\le1-\alpha_1(1-P),
+\end{equation}
+where $P$ is the first-harmonic product
+\[
+ P=|\cos(\pi b/2)|\prod_{i\in C}|\sin(\pi w_i/2)|
+                         \prod_j(p_j+q_j).
+\]
+
+For $0\le u\le1$, the triangle series gives
+\[
+ \sum_n\alpha_n\sin^2(n\pi u/2)=u,\qquad
+ \sum_n\alpha_n\sin^2(n\pi u/2)\cos^2(n\pi u/2)
+                  =\tfrac12\min(u,1-u).
+\]
+It follows that
+\[
+ \sum_n\alpha_n\sin^4(n\pi u/2)
+    =u-\tfrac12\min(u,1-u)\le\tfrac12(u+u^2).
+\]
+H\"older on the $c$ core factors and $c\ge4$ therefore imply,
+with $t=r/\sqrt c$,
+\[
+ \mathcal L\le\frac1c\sum_{i\in C}\sum_n\alpha_n
+              |\sin(n\pi w_i/2)|^c\le\frac{t+t^2}{2}.
+\]
+Thus for $r\le.9\sqrt c$,
+\begin{equation}\label{eq:lownormgap}
+ Q(h_\theta)\le.95\sqrt{1.01}\,r<.955r,
+\end{equation}
+since $D/c\le.01$.
+
+\subsection{Localization near a pure atom}
+
+Suppose $r>.9\sqrt c$ and $P>.86$. For a first-harmonic block write
+$a=\max(p_j,q_j)$ and $b'=\min(p_j,q_j)$. Because its size is at
+least four, generalized H\"older gives
+$\sqrt a+\sqrt{b'}\le1$. Since $a+b'>.86$, it follows that
+$a>.85$ and
+\[
+ b'\le(1-\sqrt a)^2\le.273(1-a)^2,
+ \qquad -\log a\le1.05[-\log(a+b')].
+\]
+For the last elementary inequality, put $u=1-a\le.15$, use
+$\log(1+.273u^2/a)\le.273u^2/a$ and
+$-\log a\ge u+u^2/2$.
+
+Choose the nearest integer vector $u$: bias even, core coordinates
+odd, and every coordinate of a block odd when its sine product
+dominates or even when its cosine product dominates. Reduced
+parameters and the strict localization imply that this is a minimal
+pure atom: its coordinates are zero or $\pm1$ as specified in the
+theorem. Put $\delta=\theta-u$ and $\rho=\|\delta\|_2$. The dominant
+products are products of $\cos(\pi\delta_i/2)$. Since
+$\cos(\pi s/2)\le e^{-\pi^2s^2/8}$ for $|s|\le1$,
+\[
+ \rho^2\le\frac8{\pi^2}\,1.05(-\log P)<.1296,
+ \qquad \rho<.36.
+\]
+If $\rho_j$ is the perturbation norm on one block, its nondominant
+product is at most $(\pi^4/256)\rho_j^4$. Every dominant product is
+at least $.85$. Therefore
+\[
+ \log P\le-\frac{\pi^2}{8}\rho^2
+          +\frac{\pi^4}{256\cdot.85}\rho^4
+          \le-1.17\rho^2.
+\]
+For $\rho\le.36$ this implies $1-P\ge\rho^2$. Since
+$\alpha_1>.8$, \eqref{eq:Lfirstharmonic} yields
+\begin{equation}\label{eq:localquadratic}
+ \mathcal L\le1-.8\rho^2.
+\end{equation}
+
+Let the pure ridge be $\eta\chi_{A_T}$, let $a=\sqrt{|A_T|}$, and
+put $a_{\max}=\sqrt{c+D}$ and
+$\Delta=a_{\max}-a\le D/(2\sqrt c)\le.05$.
+The $1$-Lipschitz property gives
+$|\widehat h_\theta(A_T)|\ge1-\E|\delta\cdot\bar X|\ge1-\rho$.
+Hence
+\[
+ Q(h_\theta)\le a\mathcal L+
+       \Delta(\mathcal L-|\widehat h_\theta(A_T)|)
+       \le a-.8a\rho^2+\Delta\rho.
+\]
+Using $r\ge a-\rho$, we obtain
+\begin{equation}\label{eq:quadraticdeficit}
+ r-Q(h_\theta)\ge .8a\rho^2-(1+\Delta)\rho.
+\end{equation}
+
+\subsection{A strict projection gap for an absolute linear form}
+
+For an affine linear form $Z=\delta_0+\sum_i\delta_iX_i$ and
+$\rho=\|\delta\|_2$, we claim
+\begin{equation}\label{eq:absolutelemma}
+ \sum_{\emptyset\ne S\subseteq[m]}
+       \left|\widehat{|Z|}\!\left(\bigcup_{j\in S}B_j\right)\right|
+       \le\E|Z|-\gamma\rho,
+ \qquad
+ \gamma=\frac2\pi\left(1-e^{-1/2}-\frac1{16}\right)>.21.
+\end{equation}
+Use
+$|z|=(2/\pi)\int_0^\infty(1-\cos(tz))t^{-2}\,dt$.
+At frequency $t$, put
+$p_j=\prod_{i\in B_j}|\sin(t\delta_i)|$ and
+$q_j=\prod_{i\in B_j}|\cos(t\delta_i)|$.
+The absolute sum of nonempty block-character coefficients of the
+cosine is bounded by
+\[
+ N_t=r_t\left[\prod_j(p_j+q_j)-\prod_jq_j\right],
+\]
+where $r_t$ is the absolute product of the bias cosine and cosine
+factors outside the blocks. Since $p_j+q_j\le1$,
+\[
+ N_t\le1-|\cos(t\delta_0)\prod_i\cos(t\delta_i)|
+ \le D_t:=1-\cos(t\delta_0)\prod_i\cos(t\delta_i).
+\]
+For $t\rho\le1$, all cosine factors are positive. The inequality
+$\cos s\le e^{-s^2/2}$ gives
+$D_t\ge(1-e^{-1/2})t^2\rho^2$. By AM--GM and block sizes at least
+four,
+\[
+ N_t\le\sum_jp_j\le t^4\rho^4/16\le t^2\rho^2/16.
+\]
+Integrating the nonnegative difference $D_t-N_t$ over
+$0\le t\le1/\rho$ proves \eqref{eq:absolutelemma}.
+
+\subsection{Completing the norm and quantitative estimates}
+
+If $\rho\le1.5/\sqrt c$, then
+$\max_x|\delta\cdot\bar x|\le1.5\sqrt{(c+D+1)/c}<1.51<2$.
+At an odd lattice peak the exact triangle identity is therefore
+\[
+ h_\theta(x)=\eta\chi_{A_T}(x)(1-|\delta\cdot\bar x|).
+\]
+Multiplication by $\chi_{A_T}$ permutes the block characters, and
+\eqref{eq:absolutelemma} gives
+\[
+ Q(h_\theta)\le a[1-\E|Z|]+a_{\max}[\E|Z|-\gamma\rho]
+    \le a-(\gamma a_{\max}-\Delta)\rho.
+\]
+Consequently,
+\begin{equation}\label{eq:smallrho}
+ r-Q(h_\theta)\ge(\gamma a_{\max}-\Delta-1)\rho\ge.15\rho.
+\end{equation}
+If instead $\rho\ge1.5/\sqrt c$, then
+\eqref{eq:quadraticdeficit} gives the same lower bound $.15\rho$.
+
+If $r>.9\sqrt c$ but $P\le.86$, then
+\[
+ \frac{r-Q(h_\theta)}r
+ \ge1-\frac{[1-.14(8/\pi^2)]\sqrt{1.01}}{.9}>.010.
+\]
+Together with \eqref{eq:lownormgap}, this proves the atomic inequality
+and gives strictness except at pure atoms. The pure atoms attain
+equality directly, establishing \eqref{eq:exactnorm} and all equality
+cases. Undoing the modulo-two reduction can only increase the norm.
+
+For quantitative rounding, set $e_\theta=r$ in the two far cases
+and $e_\theta=\rho$ in the localized case. The preceding estimates
+imply \eqref{eq:rounding} with $\kappa=1/200$. In a far case the atom
+is $r$-Lipschitz, and at fixed physical controls its affine argument
+has square mean at most $(D+1)r^2$ over the core. This proves
+\eqref{eq:fiberlip}--\eqref{eq:coremean} there.
+
+In a localized case, periodicity gives the global identity
+\[
+ \phi((u+\delta)\cdot\bar x)
+    =\eta\chi_{A_T}(x)\psi(\delta\cdot\bar x),
+ \qquad \psi(t)=\phi(1+t).
+\]
+The function $\psi$ is even and $1$-Lipschitz. On a fixed
+$(\chi_C,z)$ fiber the character is constant, proving
+\eqref{eq:fiberlip}. Pairing either value of any one core coordinate
+in the core average gives
+\[
+ |\E_{X_C}\phi((u+\delta)\cdot\bar X)|
+       \le\min_{i\in C}|\delta_i|
+       \le\rho/\sqrt c\le\sqrt{D+1}\,e_\theta,
+\]
+which proves \eqref{eq:coremean} and completes the theorem.
+
+\end{document}
