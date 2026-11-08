@@ -12,7 +12,7 @@ The construction has input dimension `d = Θ(m log² m)`, teacher width `C = O(m
 
 The paper includes the complete argument: the sharp global affine single-parity theorem, polynomial support stability, a sharp weighted norm for a transversal code, optimized competing scores, physical calibration and rounding, and the finite-width Gaussian posterior comparison. The analytic proof includes the periodic-response, lattice-localization, residual central-limit, and equal-bulk bias estimates. The positive curvature certificate uses exact rational arithmetic; its source is included under `verification/`.
 
-The results received independent AI-agent mathematical audits, including an integrated theorem/proof correspondence review. They have **not** been formalized in Lean. 
+The improved main theorem and its finite-scale prediction consequences are **Lean verified**, using the actual Gaussian posterior and only Lean's standard axioms. Independent reviews checked the correspondence between the paper and the formal statements. [Main Lean theorem](../../../lean/NeuralGeneralization/OnlineLowerTanhMain.lean) · [Exact statement and axiom checks](../../../lean/CheckOnlineLowerTanh.lean) · [Verification scope](verification/README.md). The verification covers the main result and all ingredients required by its proof; it does not separately certify every stronger standalone appendix assertion.
 
 Run `bash build.sh` to rebuild the PDF with pdfLaTeX. Run `python verification/certify_curvature.py` to repeat the rational curvature certificate.
 

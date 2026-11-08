@@ -1,4 +1,6 @@
-# Ordinary-tanh support ingredients: exact Lean coverage
+# Ordinary-tanh support ingredients: earlier partial coverage
+
+**Superseded for current coverage.** The [complete main proof](OnlineLowerTanh-main-correspondence.md) now proves the improved ordinary-tanh online theorem, including the sharp global parity and affine support ingredients. The text below records the earlier partial package; its statements about remaining work describe that earlier stage. `CheckOnlineLowerTanh.lean` now checks the complete main theorem.
 
 Checked with Lean 4.32.0 and the repository's pinned mathlib revision on 2026-11-08.
 

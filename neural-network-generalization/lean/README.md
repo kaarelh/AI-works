@@ -35,11 +35,24 @@ This is a lower bound on cumulative mistakes along a fixed nonrepeating input or
 
 The exact parameters are `R=2^1024`, `m=6k+4`, `d=(8k+4)(2R+4)`, teacher width `C=3(m+1)(d+1)`, sufficient learner width `N₀=2^(m+d+1)`, and `2^(k−1)` designated mistakes. The teacher has margin at least one and coefficients bounded by `C`. The target has a NAND circuit with at most `17d+5` gates. At every fixed `N≥N₀`, correct-label confidence tends to zero on every designated round; at sufficiently small positive scale the same posterior gives all designated sampling errors with arbitrarily high probability, majority errors, and `>2/3` confidence failures.
 
-The softplus extension is not included in this formalization. The improved ordinary-tanh lower bound has a conventional proof and [some checked support ingredients](review/OnlineLowerTanh-support-status.md), not a formalized main theorem.
+The softplus extension is not included in this formalization. The ordinary-tanh theorem has its own complete proof, described below.
 
 ```sh
 lake build NeuralGeneralization.OnlineLowerReluMain
 lake env lean CheckOnlineLowerRelu.lean
+```
+
+## Adversarial online lower bound for ordinary tanh
+
+The [ordinary-tanh paper](../works-in-progress/online-mistakes/isotropic-tanh-allwidth/paper.pdf) has a complete formalization of its improved main theorem. [`OnlineLowerTanhMain.lean`](NeuralGeneralization/OnlineLowerTanhMain.lean) proves `tanh_concrete_main : TanhConcreteMainStatement`, the logarithmic-rail resource statement, and `tanh_square_root_log_loss_lower_bound : TanhSquareRootLogLossStatement`. [`CheckOnlineLowerTanh.lean`](CheckOnlineLowerTanh.lean) checks these exact types and their transitive axioms. [Paper-to-Lean correspondence](review/OnlineLowerTanh-main-correspondence.md) · [Independent global analytic review](review/OnlineLowerTanh-global-independent-audit.md).
+
+The bound is `exp(Ω(√C/log(C+2)))` designated mistakes for a displayed bounded-weight shallow tanh teacher of width `C`. One fixed full-cube input permutation works at every sufficiently large fixed learner width, then as the Gaussian scale tends to zero. The prior has the initial strict margin on the entire cube, and training conditions on the observed signs and margins. Its Gaussian law includes every nonlinear competitor and posterior mixture. Normalizers are proved positive. The exact construction uses `m=6k+6`, rails `R=2⌈K log²(m+2)⌉`, increment `H=2⌈m log(m+2)⌉`, and `2^(k−1)` designated rounds; its dimension is `Θ(k log² k)` and teacher width is `O(k² log² k)`.
+
+The proof discharges the sharp global tanh parity inequality, affine support bounds, physical code localization, scalar cost ordering, calibration and finite-width realization, and the Gaussian posterior comparison. The analytic ingredients are proved, rather than supplied as hypotheses. All main endpoints use only `propext`, `Classical.choice`, and `Quot.sound`. The sufficient degree and width thresholds are existential. The [verification record](../works-in-progress/online-mistakes/isotropic-tanh-allwidth/verification/README.md) distinguishes main-theorem coverage from additional standalone appendix assertions.
+
+```sh
+lake build NeuralGeneralization.OnlineLowerTanhMain
+lake env lean CheckOnlineLowerTanh.lean
 ```
 
 ## Model and quantifiers

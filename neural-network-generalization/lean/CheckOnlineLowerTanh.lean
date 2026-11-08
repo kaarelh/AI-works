@@ -1,8 +1,16 @@
-import NeuralGeneralization.OnlineLowerTanhMoments
+import NeuralGeneralization.OnlineLowerTanhMain
 
-#print axioms NeuralGeneralization.OnlineLowerTanh.midpoint_gap_mul_of_sq
-#print axioms NeuralGeneralization.OnlineLowerTanh.finite_support_stability
-#print axioms NeuralGeneralization.OnlineLowerTanh.parityCorrelation_bias_transfer
-#print axioms NeuralGeneralization.OnlineLowerTanh.intrinsic_bound_biasTransfer
-#print axioms NeuralGeneralization.OnlineLowerTanh.affine_secondMoment
-#print axioms NeuralGeneralization.OnlineLowerTanh.affine_fourthMoment_le
+open NeuralGeneralization NeuralGeneralization.OnlineLower
+open NeuralGeneralization.OnlineLowerTanh
+open scoped Topology
+
+example : TanhConcreteMainStatement := tanh_concrete_main
+example : TanhPathLogarithmicRailStatement := tanh_path_logarithmic_rail_main
+example : TanhSquareRootLogLossStatement := tanh_square_root_log_loss_lower_bound
+
+#print axioms tanh_concrete_main
+#print axioms tanh_path_logarithmic_rail_main
+#print axioms tanh_square_root_log_loss_lower_bound
+#print axioms TanhConcreteProtocol.finite_scale
+#print axioms eventual_intrinsicParityBound
+#print axioms posteriorAt_eq_globalConditioned
