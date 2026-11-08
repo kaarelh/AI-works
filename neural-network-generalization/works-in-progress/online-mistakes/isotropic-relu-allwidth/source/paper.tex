@@ -1,0 +1,930 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,amsmath,amssymb,amsthm,mathtools,booktabs}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue]{hyperref}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}\newcommand{\E}{\mathbb E}\newcommand{\Prb}{\mathbb P}
+\newcommand{\relu}{\operatorname{ReLU}}\newcommand{\Var}{\operatorname{Var}}
+\newcommand{\supp}{\operatorname{supp}}\newcommand{\dist}{\operatorname{dist}}
+\newcommand{\one}{\mathbf1}\newcommand{\F}{\mathbb F}
+\DeclareMathOperator{\spanop}{span}
+\title{Superpolynomial online mistakes for isotropic\protect\\ Bayesian ReLU networks}
+\author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{November 2026}
+\hypersetup{pdftitle={Superpolynomial online mistakes for isotropic Bayesian ReLU networks},pdfauthor={ChatGPT-6 Astra; Kaarel Hanni; Dmitry Vaintrob}}
+\begin{document}\maketitle
+\begin{abstract}
+We construct a fixed order of distinct Boolean inputs on which exact
+Bayesian prediction with an ordinary one-hidden-layer ReLU network makes
+superpolynomially many mistakes in the strong-prior limit. The weights
+have independent Gaussian coordinates, with identical variances within
+each layer. Before observing labels, the prior is conditioned on an
+absolute output margin at every input; training then requires exact fit.
+The construction works at every sufficiently large finite hidden width.
+For a parameter $m$, the input dimension is $O(m^{11})$, the target has an
+$O(m^{11})$-gate Boolean circuit and a shallow ReLU teacher of width
+$O(m^{12})$ whose coefficients are bounded by that width, while $2^{\lfloor(m-1)/2\rfloor}$ designated
+predictions have correct-label posterior probability tending to zero.
+Thus the lower bound is stretched exponential in these explicit teacher
+resources. The width threshold and the calibration prefix are large, and
+the input order is deliberately unrepresentative of the uniform input
+distribution. The theorem concerns cumulative online mistakes, not iid
+sample complexity.
+
+The proof determines an exact weighted Fourier norm for ReLU functions
+on an unequal-rail parity code, proves a polynomial stability estimate,
+and uses a weighted calibration argument to exclude all off-code
+competitors. A Bernstein representation of the sharp ReLU parity cost
+orders exponentially many competing completions strictly. The resulting
+energy gaps apply to the full Gaussian posterior, including all
+parameterizations of each function.
+\end{abstract}
+
+\section{Model and main result}
+
+A target can have a small circuit and still be learned poorly along an
+unfavorable sequence of inputs. The issue for a Bayesian neural network
+is whether its actual posterior can repeatedly prefer a wrong completion,
+even when the learner is arbitrarily wider than a small teacher. We prove
+that this can occur with ordinary ReLU activation and isotropic Gaussian
+coordinates. No rule for selecting among tied minimum-energy classifiers
+is used.
+
+The input space is $X=\{-1,1\}^d$. Write $\bar x=(1,x)$ and consider
+\begin{equation}\label{eq:network}
+ F_\theta(x)=\sum_{j=1}^N v_j\relu(u_j\cdot\bar x),
+ \qquad \relu(t)=\max(t,0),\quad u_j\in\R^{d+1}.
+\end{equation}
+The first coordinate of $u_j$ is the weight of the constant input. There
+are no additional biases. Independently,
+\begin{equation}\label{eq:prior}
+ (u_j)_i\sim\mathcal N(0,N\sigma^2/d),\qquad
+ v_j\sim\mathcal N(0,\sigma^2/N).
+\end{equation}
+Its density is proportional to $\exp[-K_N(\theta)/(2\sigma^2)]$, where
+\begin{equation}\label{eq:energy}
+ K_N(\theta)=\frac dN\sum_j\|u_j\|_2^2+N\sum_jv_j^2.
+\end{equation}
+The prior is first conditioned on $|F_\theta(x)|>1/2$ at every $x\in X$.
+After each prediction it is conditioned on the exact revealed label.
+Thus a history $H\subseteq X$ with target $f:X\to\{-1,1\}$ conditions
+the Gaussian law on
+\begin{equation}\label{eq:posterior-cell}
+ |F_\theta(x)|>1/2\quad(x\in X),\qquad
+ f(x)F_\theta(x)>1/2\quad(x\in H).
+\end{equation}
+The strong-prior limit is $\sigma\downarrow0$ at each fixed $d,N$.
+
+The conclusion also holds for any two fixed positive layer variances
+$\alpha\sigma^2$ and $\beta\sigma^2$ in place of \eqref{eq:prior}.
+Positive homogeneity gives the lower bound
+$2V(F)/\sqrt{\alpha\beta}$, where $V$ is the variation norm defined below.
+Balancing any finite representation of cost $B$ attains energy
+$2B/\sqrt{\alpha\beta}$. The constructed minimizers attain this bound
+at the widths used below, so their strict energy order is unchanged.
+In particular, writing $t=\sqrt N\,\sigma$ turns \eqref{eq:prior} exactly into first-layer variance $t^2/d$ and readout variance $t^2/N^2$. At each fixed width the limits $t\downarrow0$ and $\sigma\downarrow0$ are the same.
+
+\begin{theorem}[A fixed sequence with many confident errors]\label{thm:main}
+For every integer $m\ge32$, set
+\[
+ R=2^{60}m^{10},\quad \delta_i=2(2m+2i-1)\ (1\le i\le m),
+ \quad n_{\max}=mR+6m^2,
+\]
+\[
+ d=2mR+6m^2,\qquad N_0=2^{m+n_{\max}+1}.
+\]
+There are a Boolean target $f_m$ on $d$ bits, a fixed permutation of its
+input cube, and
+\[
+ T_m=2^{m-\lfloor m/2\rfloor-1}=2^{\lfloor(m-1)/2\rfloor}
+\]
+designated rounds such that, for every finite $N\ge N_0$, the posterior
+probability of the correct label at each designated round tends to zero
+as $\sigma\downarrow0$.
+
+The target has a bounded-fan-in Boolean circuit with $O(d)$ gates and a
+one-hidden-layer ReLU implementation of width at most
+\[
+ C_m=(m+1)(n_{\max}+1)=O(m^{12}),
+\]
+output margin one, and every coefficient bounded by $C_m$. The same input
+permutation works for every $N\ge N_0$.
+
+For every $\eta>0$ and fixed such $m,N$, all sufficiently small positive
+$\sigma$ therefore have these properties:
+\begin{enumerate}
+\item Fresh posterior sampling makes at least $T_m$ mistakes with
+probability at least $1-\eta$.
+\item Posterior-label majority makes a mistake at every designated round.
+\item A prediction rule requiring correct-label posterior probability
+strictly greater than $2/3$ fails at every designated round.
+\end{enumerate}
+\end{theorem}
+
+The width threshold is an explicit sufficient bound, not a sharp one.
+The theorem proves superpolynomial cumulative mistakes in the displayed
+teacher resources; it does not assert $\exp(\Omega(C_m))$ mistakes or cover
+every width merely exceeding $C_m$. Its calibration prefix reveals all
+inputs outside a small union of logical fibers. This is compatible with
+good iid learning guarantees.
+
+\section{Variation norm and parity codes}
+
+All Fourier coefficients and $L^2$ norms use the uniform physical cube.
+For $A\subseteq[d]$, write $\chi_A(x)=\prod_{i\in A}x_i$ and
+$\widehat F(A)=\E[\chi_A F]$. Define
+\[
+ V(F)=\inf\left\{\sum_j|c_j|\|a_j\|_2:
+ F(x)=\sum_jc_j\relu(a_j\cdot\bar x)\text{ on }X\right\}.
+\]
+The same arguments apply to the cost of a specified finite
+representation, without taking this infimum. The arithmetic--geometric
+mean inequality gives
+\begin{equation}\label{eq:energy-variation}
+ K_N(\theta)\ge2\sqrt d\sum_j|v_j|\|u_j\|_2\ge2\sqrt d\,V(F_\theta).
+\end{equation}
+Conversely any finite representation can be balanced neuron by neuron
+so that its energy equals twice $\sqrt d$ times its variation cost.
+Unused neurons may be set to zero.
+
+Partition the physical coordinates into disjoint pairs of rails
+$(B_i^0,B_i^1)$, with positive even sizes $r_i^0,r_i^1$. Set
+\[
+ A_s=\bigcup_{i=1}^mB_i^{s_i},\quad n_s=|A_s|\quad(s\in\F_2^m),
+ \qquad b(x)=\chi_{A_0}(x).
+\]
+The logical coordinate $z\in G=\F_2^m$ is determined by
+\[
+ (-1)^{z_i}=\chi_{B_i^0\cup B_i^1}(x).
+\]
+Then $\chi_{A_s}(x)=b(x)(-1)^{s\cdot z}$. The logical coordinates are
+uniform, and the physical base character $b$ is independent of them.
+The code space $\mathcal C$ is the span of the $\chi_{A_s}$. Its orthogonal
+projection is
+\begin{equation}\label{eq:code-projection}
+ P_{\mathcal C}F(x)=b(x)g(z(x)),\qquad
+ g(z)=\E[b(x)F(x)\mid z(x)=z].
+\end{equation}
+Let $\mathcal D$ be the span of all Fourier characters with support
+contained in at least one $A_s$.
+
+For positive even $n$, define
+\begin{equation}\label{eq:parity-cost}
+ \kappa_n=\frac{\binom{n-2}{(n-2)/2}}{2^{n-1}},\qquad
+ a(n)=\frac{\sqrt n}{\kappa_n}.
+\end{equation}
+The alternating binomial identity
+\[
+ 2^{-n}\sum_{k=0}^n(-1)^k\binom nk\max(n-2k,0)
+ =(-1)^{n/2+1}\kappa_n
+\]
+shows that a balanced unit ridge on $n$ coordinates attains absolute
+parity correlation $\kappa_n/\sqrt n$. Signed averaging over its input-coordinate flips
+represents $\chi_A$ with variation cost $a(|A|)$, using at most
+$2^{|A|}$ neurons.
+
+\begin{theorem}[Exact unequal-rail norm and stability]\label{thm:rail}
+Suppose $m\ge2$, $R$ is a positive even integer, and all rail sizes are
+even and lie in $[R,R+\Delta]$, where $\Delta\ge2$ is an even integer and
+\begin{equation}\label{eq:large-R}
+ R\ge2^{40}m^6(\Delta+1)^4.
+\end{equation}
+For every affine ReLU atom $h_u(x)=\relu(u\cdot\bar x)$,
+\begin{equation}\label{eq:atom-norm}
+ Q(h_u):=\sum_s a(n_s)|\widehat h_u(A_s)|\le\|u\|_2.
+\end{equation}
+Nonzero equality requires zero bias, exactly one nonzero whole rail per
+pair, and equal absolute weights on all selected coordinates.
+Consequently
+\begin{equation}\label{eq:exact-code-norm}
+ V\left(\sum_sc_s\chi_{A_s}\right)=\sum_sa(n_s)|c_s|.
+\end{equation}
+Moreover
+\begin{equation}\label{eq:atom-stability}
+ \|h_u-P_{\mathcal D}h_u\|_2^2
+ \le2^{16}R^3\|u\|_2\bigl(\|u\|_2-Q(h_u)\bigr).
+\end{equation}
+\end{theorem}
+
+A complete proof is given in Appendix~\ref{app:rail}. Two features matter
+in the main argument: the inequality is exact despite unequal rail
+sizes, and its stability constant is polynomial in $R$, with degree
+independent of $m$.
+
+For a finite representation with variation cost $B$, weighted
+Cauchy--Schwarz gives the following consequence. If a code dual $\lambda$
+has Fourier coefficients satisfying $|\widehat\lambda_s|\le a(n_s)$ and
+$D=B-\langle\lambda,F\rangle$, then
+\begin{equation}\label{eq:network-stability}
+ \|F-P_{\mathcal D}F\|_2^2\le2^{16}R^3 B D.
+\end{equation}
+Indeed the weighted sum of the atomic deficits in
+\eqref{eq:atom-norm} is at most $D$. This also holds with $B=V(F)$ by
+approximation.
+
+\section{Strictly ordered parity costs}
+
+Use the rail sizes in Theorem~\ref{thm:main}:
+$r_i^0=R$ and $r_i^1=R+\delta_i$. Thus
+\[
+ n_s=n_0+\sum_i\delta_is_i,\qquad n_0=mR,\qquad
+ w_s=a(n_s),\qquad
+ \widehat w(v)=2^{-m}\sum_s(-1)^{s\cdot v}w_s.
+\]
+The parameter choice satisfies \eqref{eq:large-R}, with
+$\Delta=8m-2$.
+
+\begin{lemma}[Walsh signs, distinctness, and a tail bound]\label{lem:Walsh}
+Every nonconstant $\widehat w(v)$ is strictly negative, and all the
+$2^m$ values $\widehat w(v)$ are pairwise distinct. If $|v|\ge q\ge2$, then
+\begin{equation}\label{eq:Walsh-tail}
+ |\widehat w(v)|\le\frac{31}{mR}\left(\frac{4m}{R}\right)^q.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Appendix~\ref{app:Bernstein} proves the exact representation
+\begin{equation}\label{eq:Bernstein}
+ a(r)=\sqrt{2\pi}(r-3/4)
+ -2\sqrt{2\pi}\int_0^\infty e^{-rt/2}h(t)\,dt,
+ \qquad h(t)>0,\quad h(t)\le3.
+\end{equation}
+For $v\ne0$, its Walsh transform is
+\begin{align*}
+ \widehat w(v)={}&-\one_{v=e_j}\frac{\sqrt{2\pi}\delta_j}{2}\\
+ &-\frac{2\sqrt{2\pi}}{2^m}\int_0^\infty e^{-n_0t/2}h(t)
+ \prod_{i:v_i=1}(1-e^{-\delta_it/2})
+ \prod_{i:v_i=0}(1+e^{-\delta_it/2})\,dt.
+\end{align*}
+The integral is strictly positive. For $k=|v|\ge2$, use
+$1-e^{-x}\le x$, $1+e^{-x}\le2$ and $h\le3$ to obtain
+\[
+ |\widehat w(v)|\le\frac{12\sqrt{2\pi}}{n_0}
+ k!\left(\frac{\delta_{\max}}{2n_0}\right)^k
+ \le\frac{31}{mR}\left(\frac{4m}{R}\right)^k.
+\]
+This implies \eqref{eq:Walsh-tail}.
+
+For distinctness, put $q_i=2m+2i-1$, so $\delta_i=2q_i$. Every degree
+$n_s$ lies in an interval of length $6m^2$ starting at $n_0>(6m^2)^2$.
+Distinct integers in that interval have distinct squarefree parts:
+two integers $au^2<av^2$ with the same squarefree part differ by more
+than $2\sqrt{n_0}$. Since $a(n)$ is a nonzero rational multiple of
+$\sqrt n$ at even integers, its values at the distinct degrees in this
+interval are linearly independent over $\mathbb Q$.
+
+The coefficients in the Walsh sum, grouped by degree, are the
+coefficients of
+\[
+ P_v(t)=\prod_{i:v_i=1}(1-t^{2q_i})
+        \prod_{i:v_i=0}(1+t^{2q_i}).
+\]
+The cyclotomic polynomial $\Phi_{q_i}$ divides $P_v$ exactly when $v_i=1$.
+Indeed the odd integers $q_i\in(2m,4m)$ divide none of the other $q_j$,
+and an odd-order root of unity has no power equal to $-1$.
+Thus different $v$ give different polynomials. The preceding rational
+independence makes the corresponding Walsh sums different.
+\end{proof}
+
+\section{Calibration that forces a single exceptional fiber}
+
+Put $M=2^m$, $q=\lfloor m/2\rfloor$, and choose the affine set
+\begin{equation}\label{eq:U}
+ U=\{z\in G:z_1=\cdots=z_q=1,\quad \sum_i z_i=1\pmod2\}.
+\end{equation}
+It has size $K=2^{m-q-1}$ and is a coset $v_0+H$, where $H$ has
+codimension $q+1$. Let $J=H+\spanop(v_0)$ and
+$E=H^\perp\setminus J^\perp$. Then $|E|=2^q$, and every character in $E$
+equals $-1$ throughout $U$.
+
+The target logical label is
+\[
+ t(z)=\begin{cases}+1,&z=0,\\-1,&z\ne0,\end{cases}
+ \qquad f(x)=b(x)t(z(x)).
+\]
+Initially reveal every physical input whose logical coordinate lies
+outside $U$. Subsequently whole fibers of $U$ will be revealed in a
+specified order. Let $U_{\rm live}\subseteq U$ be the nonempty set of
+fibers not yet revealed. All known labels on a removed fiber are the
+negative logical label. Write $\mathcal K=\{x:z(x)\notin U\}$ for the fixed calibration region. Extra revealed fibers impose additional constraints but are not included in averages with subscript $\mathrm{cal}$.
+
+For $v\in U$, define the star score
+\[
+ g_v(z)=-\tfrac12+\one_{z=0}+\one_{z=v},\qquad
+ F_v(x)=b(x)g_v(z(x)).
+\]
+It agrees with the target on every fiber except $v$, and has absolute
+margin $1/2$ everywhere. Its code coefficients have negative sign at
+$s=0$, are nonnegative elsewhere, and vanish on $E$.
+
+Define the code dual through its logical Fourier coefficients:
+\begin{equation}\label{eq:dual}
+ \widehat\lambda_s=w_s-2w_0\one_{s=0}-p_E\one_{s\in E},
+ \qquad p_E=\frac{2w_0}{|E|}.
+\end{equation}
+Its physical version is $b(x)\lambda(z(x))$. Since $w_s\ge w_0$,
+$|\widehat\lambda_s|\le w_s$, so it is a unit variation-norm dual.
+Fourier inversion gives
+\begin{equation}\label{eq:dual-values}
+ \lambda(z)=M\widehat w(z)-2w_0-2w_0\one_H(z)+2w_0\one_U(z).
+\end{equation}
+In particular $\lambda(v)=M\widehat w(v)$ on $U$, while on the fixed calibration region
+its sign agrees with $t$ and its magnitude is at least $2w_0$.
+
+The stars saturate the dual and have exact costs
+\begin{equation}\label{eq:star-costs}
+ V(F_v)=C_v=C_*+\widehat w(v),\qquad
+ C_*=\frac1M\sum_sw_s+\frac{w_0}{2}-\frac{4w_0}{M}.
+\end{equation}
+By Lemma~\ref{lem:Walsh}, these costs are all distinct.
+
+\subsection{A linear rounding estimate}
+
+Consider any finite ReLU score $F$ with absolute margin at least $1/2$
+on the full cube and correct margins on all known fibers. Let $B$ be its
+variation cost, or its variation norm. We only need consider
+$B\le\max_v C_v$, since the remaining stars are competitors. Write its
+code projection as $bg$, and set
+\[
+ p_v=g(v)+\tfrac12\quad(v\in U),\qquad
+ D=B-\langle b\lambda,F\rangle,
+\]
+\[
+ S=\E_{\rm cal}\bigl[|\lambda(z)|(fF-\tfrac12)\bigr].
+\]
+The expectation with subscript ``cal'' is the original normalized
+physical expectation with the indicator of $\mathcal K$. Both $D$ and
+$S$ are nonnegative. A direct decomposition gives
+\begin{equation}\label{eq:decomposition}
+ B=C_*+D+S+\sum_{v\in U}\widehat w(v)p_v.
+\end{equation}
+
+\begin{lemma}[Physical variance control]\label{lem:variance}
+For these scores,
+\begin{equation}\label{eq:variance}
+ L:=\|F-P_{\mathcal C}F\|_2^2
+ \le C_{\rm phys}(D+S),\qquad C_{\rm phys}=2^{24}m^2R^4.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Let $Z$ be the parity of all physical coordinates. If a proper Fourier
+subset lies inside a transversal, its complement lies outside every
+transversal. Therefore, for $A\in\mathcal D\cap\mathcal C^\perp$,
+\begin{equation}\label{eq:half-observability}
+ \langle A,ZA\rangle=0,\qquad
+ \|A\|_2^2=2\E[\one_{Z=+1}A^2].
+\end{equation}
+The halfcube $Z=+1$ is entirely known because $U$ has odd logical parity.
+
+On a fiber in the fixed calibration region put $e=fF-1/2\ge0$. The signed conditional expectation
+\eqref{eq:code-projection} gives
+\[
+ \E_{\rm cal}|F-P_{\mathcal C}F|\le2\E_{\rm cal}e
+ \le S/w_0.
+\]
+A variation-cost-$B$ representation satisfies
+$\|F\|_\infty\le\sqrt{d+1}B$, and $P_{\mathcal C}$ is an
+$L^\infty$ contraction. Hence
+\[
+ \E[\one_{Z=+1}(F-P_{\mathcal C}F)^2]
+ \le4\sqrt{d+1}B\E_{\rm cal}e.
+\]
+Write $E_0=F-P_{\mathcal D}F$ and
+$A=P_{\mathcal D}F-P_{\mathcal C}F$. From
+\eqref{eq:network-stability},
+$\|E_0\|_2^2\le2^{16}R^3BD$. Applying
+\eqref{eq:half-observability} and $(u-v)^2\le2u^2+2v^2$ gives
+\[
+ \|A\|_2^2\le16\sqrt{d+1}B\E_{\rm cal}e+4\|E_0\|_2^2.
+\]
+The two residuals are orthogonal. Consequently
+\[
+ L\le B\left[\frac{8\sqrt{d+1}}{w_0}S+5\cdot2^{16}R^3D\right].
+\]
+The recurrence for $a(n)$ gives $n\le a(n)\le3n$. Thus we may use
+$B\le5m(R+\Delta)\le10mR$, $w_0\ge mR$, and $d+1\le4mR$.
+These bounds imply the looser displayed constant $C_{\rm phys}$.
+\end{proof}
+
+\begin{lemma}[Rounding to a live star]\label{lem:rounding}
+For some $v\in U_{\rm live}$,
+\begin{equation}\label{eq:rounding}
+ \|p-e_v\|_1\le B_{\rm round}(D+S),\qquad
+ B_{\rm round}=2^{31}2^{3m}m^2R^4.
+\end{equation}
+Here $e_v$ is the point mass at $v$, indexed by all of $U$.
+\end{lemma}
+
+\begin{proof}
+Put $d_z=g(z)-(-1/2+\one_{z=0})$ outside $U$. Calibration and
+\eqref{eq:dual-values} imply
+\[
+ \sum_{z\notin U}|d_z|\le\frac{MS}{2w_0}.
+\]
+The Fourier norm inequality and dual slack give
+\[
+ \sum_{s\in E}|\widehat g(s)|\le D/p_E,
+ \qquad 2w_s(-\widehat g(s))_+\le D\quad(s\notin E\cup\{0\}).
+\]
+Set $\eta=M(D+S)/p_E$. Because all characters in $E$ equal $-1$ on $U$,
+\[
+ \left|\sum_{v\in U}p_v-1\right|\le\eta.
+\]
+For any nontrivial character of $H$, choose two extensions to $G$ having
+opposite signs on $v_0$. They differ by an element of $E$ and both lie
+outside $H^\perp$. Applying the negative-coefficient inequality to these
+two extensions bounds the absolute value of the unnormalized Fourier
+transform of $p$ by $1+\eta$. The zero frequency obeys the same bound.
+Parseval on the affine cube $U$ gives
+\begin{equation}\label{eq:p-l2}
+ \sum_{v\in U}p_v^2\le(1+\eta)^2.
+\end{equation}
+
+Every value of the signed physical score $bF$ has absolute value at least
+$1/2$. Its conditional mean on a fiber $v$ is $p_v-1/2$. Therefore
+\[
+ V_{\rm frac}:=\sum_{0<p_v<1}p_v(1-p_v)\le ML.
+\]
+Suppose first $\eta\le1$. Then
+$\sum p_v^2-\sum p_v\le4\eta$, so
+\[
+ \sum_{p_v\notin[0,1]}(p_v^2-p_v)\le4\eta+V_{\rm frac}.
+\]
+Round every coordinate to its nearest $b_v\in\{0,1\}$. The distance is
+at most $p_v^2-p_v$ outside $[0,1]$ and at most $2p_v(1-p_v)$ inside.
+Consequently
+\[
+ \|p-b\|_1\le4\eta+3V_{\rm frac},\qquad
+ \left|\sum b_v-1\right|\le5\eta+3V_{\rm frac}.
+\]
+If the last bound is less than one, the integer $\sum b_v$ is one.
+A revealed whole fiber has $p_v\le0$, so this point mass is live.
+Otherwise $\eta+V_{\rm frac}\ge1/5$; for any live $v$,
+\[
+ \|p-e_v\|_1\le\sqrt K\|p\|_2+1
+ \le2\sqrt K+1
+ \le(10\sqrt K+5)(\eta+V_{\rm frac}).
+\]
+For $\eta>1$, the same conclusion follows immediately from
+\eqref{eq:p-l2}. Thus in all cases
+\[
+ \dist_1(p,\{e_v:v\in U_{\rm live}\})
+ \le(10\sqrt K+5)M\left(\frac1{p_E}+C_{\rm phys}\right)(D+S).
+\]
+Using $K\le2^m$, $|E|=2^q$, $w_0\ge mR$ and
+Lemma~\ref{lem:variance} bounds this constant by $B_{\rm round}$.
+\end{proof}
+
+\begin{proposition}[Every minimum-cost completion is the cheapest star]
+\label{prop:classification}
+At every stage with $U_{\rm live}\ne\varnothing$, the unique
+minimum-variation-cost score consistent with all known whole fibers and
+the closed full-cube margins is $F_v$, where $v$ is the cheapest live
+fiber in the order \eqref{eq:star-costs}.
+\end{proposition}
+
+\begin{proof}
+Let $W=\max_{v\in U}|\widehat w(v)|$. For a score no more expensive than
+a live star, choose the live vertex furnished by
+Lemma~\ref{lem:rounding}. Equations \eqref{eq:decomposition} and
+\eqref{eq:rounding} imply
+\[
+ B\ge C_v+(1-WB_{\rm round})(D+S).
+\]
+The parameter choice makes $WB_{\rm round}<1/2$. Explicitly,
+Lemma~\ref{lem:Walsh} and the displayed rounding constant give
+\[
+ \log_2(WB_{\rm round})
+ \le216+3m+31\log_2m-q(58+9\log_2m)<-1
+ \quad(m\ge32).
+\]
+For the last inequality use $q\ge(m-1)/2$; both resulting coefficients
+are already negative with substantial slack at $m=32$.
+
+A cheapest star attains equality at its cost. Any other minimizer must
+therefore have $D=S=0$. Lemma~\ref{lem:variance} then gives $L=0$, and
+Lemma~\ref{lem:rounding} gives $p=e_v$. Calibration slack zero fixes all
+remaining code values, so the physical score is exactly $F_v$. The star
+costs are distinct, proving uniqueness.
+\end{proof}
+
+\section{Finite width, the input sequence, and the posterior}
+
+Each star has an exact minimum-variation representation obtained by
+summing signed parity projections. Its number of neurons is at most
+\[
+ \sum_{s\in G}2^{n_s}\le2^{m+n_{\max}}<N_0.
+\]
+At every $N\ge N_0$ it can therefore be zero-padded and balanced to attain
+energy $2\sqrt d\,C_v$. Conversely
+\eqref{eq:energy-variation} and Proposition~\ref{prop:classification}
+show that every minimum-energy completion has precisely the cheapest
+live star score.
+
+Order all of $U$ by increasing $C_v$. The input permutation first lists
+all physical inputs outside $U$. Then it lists the complete physical
+fibers in this cost order, with any fixed order inside each fiber.
+Designate the first input in each such fiber. Just before this input is
+queried, the entire preceding fibers and all fibers outside $U$ have been
+revealed. The unique minimum-energy score is therefore the star that is
+positive on this next fiber. The target is negative there. Multiplication
+by the base character preserves this disagreement.
+
+For completeness, the passage to the actual posterior uses only a
+finite-dimensional small-noise argument. At a designated round, replace
+all strict constraints by their closed versions. The feasible set is
+closed and the quadratic energy is coercive, so minima exist. Requiring
+the correct sign at the designated point excludes every energy minimizer.
+It therefore raises the minimum energy by a strictly positive amount.
+The strict feasible set has the same infimum as its closed version:
+scale the readout of a minimizing star by $1+\varepsilon$ and let
+$\varepsilon\downarrow0$.
+
+An open ball around a strictly feasible scaled star supplies a denominator
+whose logarithmic Gaussian rate is arbitrarily close to the minimum.
+The closed correct-prediction set has a strictly larger rate. Integrating
+the Gaussian density, or applying its elementary finite-dimensional
+Laplace principle, shows that its conditional probability tends to zero.
+This argument sums all parameterizations, including non-minimizing ones;
+it does not make a tie-breaking assumption.
+
+There are finitely many designated rounds for fixed $m$. Choose the prior
+scale small enough that their correct-label probabilities sum to less
+than $\eta$. A union bound then proves the posterior-sampling claim, and
+probabilities below $1/2$ and $2/3$ prove the other two claims.
+
+It remains to verify the teacher resources. Compute each rail parity,
+then the $m$ logical parities and their AND; multiplying by the base
+parity gives $f$. This uses $O(d)$ bounded-fan-in Boolean gates. For a
+shallow ReLU teacher use the score
+\begin{equation}\label{eq:teacher}
+ F_{\rm teacher}(x)=\sum_{i=1}^m\chi_{A_{e_i}}(x)
+                   -(m-1)\chi_{A_0}(x)
+ =b(x)\left(\sum_i(-1)^{z_i}-(m-1)\right).
+\end{equation}
+It has margin one and the target sign. Parity on $r$ bits is a
+piecewise-linear function of their sum on the $r+1$ attainable values.
+Linear interpolation represents it by at most $r+1$ affine ReLU neurons,
+with incoming coordinate weights one, biases bounded by $r$, and readout
+coefficients bounded by two. The constant term is a neuron on the
+constant input. Applying this to the $m+1$ parities in
+\eqref{eq:teacher} gives width at most $C_m$ and every coefficient at most
+$C_m$. This completes the proof of Theorem~\ref{thm:main}.
+
+\appendix
+\section{Proof of the exact unequal-rail norm}\label{app:rail}
+
+\subsection{Two elementary analytic tools}
+
+\begin{lemma}[Minimum-coordinate parity bound]\label{lem:mincoord}
+For even $n\ge2$ and any affine ReLU ridge on $n$ Boolean coordinates,
+\[
+ |\widehat h([n])|\le\kappa_n\min_i|w_i|.
+\]
+\end{lemma}
+\begin{proof}
+A coordinatewise nondecreasing $a:\{-1,1\}^k\to[0,1]$ has top Fourier
+coefficient at most
+$2^{-k}\binom{k-1}{\lfloor(k-1)/2\rfloor}$ in absolute value.
+To see this, average over coordinate permutations and express the resulting
+nondecreasing sequence on Hamming levels as a convex combination of level
+thresholds and a constant. The alternating binomial sum of a threshold
+starting at level $j$ is
+$(-1)^{k-j}\binom{k-1}{j-1}$.
+
+Input flips make all incoming weights nonnegative. Integrate out a chosen
+coordinate $i$. The difference
+$[\relu(t+w_i)-\relu(t-w_i)]/(2w_i)$ lies in $[0,1]$ and is nondecreasing
+in the other coordinates. Apply the preceding bound with $k=n-1$.
+A zero weight gives a zero coefficient directly.
+\end{proof}
+
+The affine part of ReLU has no even Fourier coefficient of degree at least
+two. The identity
+\[
+ |z|=\frac2\pi\int_0^\infty\frac{1-\cos(tz)}{t^2}\,dt
+\]
+therefore gives, up to its fixed degree sign, the coefficient integral
+\begin{equation}\label{eq:Fourier-integral}
+ \widehat h(A)=\frac{(-1)^{|A|/2+1}}\pi
+ \int_0^\infty\cos(bt)
+ \prod_{j\in A}\sin(w_jt)\prod_{j\notin A}\cos(w_jt)\,\frac{dt}{t^2}.
+\end{equation}
+For the even block supports under consideration these integrals are
+absolutely convergent.
+
+\begin{lemma}[Block balancing]\label{lem:balancing}
+For any nonnegative weighted sum of absolute coefficients on nonempty
+unions of disjoint even blocks, the supremum of its ratio to the augmented
+incoming Euclidean norm is unchanged by restricting to zero bias and
+nonnegative weights constant within each block.
+\end{lemma}
+\begin{proof}
+Take absolute values in \eqref{eq:Fourier-integral}, discard bias and
+irrelevant-coordinate cosine factors, and flip signs of incoming weights.
+Call the resulting nonnegative integral $G(w)/\pi$. For block-constant
+weights it equals the coefficient sum exactly, because every sine and
+cosine exponent is even.
+
+For a block of size $r$, generalized H\"older, on the disjoint union of
+coefficient-index copies of the integration measure, gives
+\[
+ G(w)\le\prod_{j\text{ in block}}
+ G(w\text{ with this whole block replaced by }w_j)^{1/r}.
+\]
+Iterate over blocks. If $V$ replaces each block by an independent uniformly
+sampled coordinate magnitude from that block, the result is
+$G(w)/\pi\le\exp(\E\log Q(h_V))$. If $M_*$ is the restricted supremum,
+this is at most
+$M_*\exp(\E\log\|V\|)\le M_*\sqrt{\E\|V\|^2}=M_*\|w\|$.
+Bias and irrelevant weights only increase the original norm.
+\end{proof}
+
+\subsection{Localization of a possible violating balanced atom}
+
+By Lemma~\ref{lem:balancing}, first consider balanced nonnegative rails.
+Within each pair call their magnitudes $a_i\ge b_i\ge0$, exchanging rail
+names if necessary. Normalize the physical norm to one. Put $n=mR$ and
+\[
+ \alpha=\frac{a(m(R+\Delta))}{a(mR)}\le1+2\Delta/R.
+\]
+The bound follows from
+$a(n+2)/a(n)=\sqrt{n(n+2)}/(n-1)$, which makes
+$a(n)/(n-1)$ decreasing along even integers. Reducing every even
+sine/cosine exponent to $R$ increases the nonnegative integrands. Hence
+$Q_r\le\alpha Q_R$.
+
+Clarkson's elementary inequality gives, for even $R$,
+\[
+ \sin^R(at)\cos^R(bt)+\cos^R(at)\sin^R(bt)
+ \le\tfrac12\{\sin^R((a+b)t)+\sin^R((a-b)t)\}.
+\]
+Multiply over rail pairs, integrate, and apply
+Lemma~\ref{lem:mincoord}. With independent symmetric signs $\varepsilon_i$,
+\begin{equation}\label{eq:min-localization}
+ Q_R\le\sqrt n\,\E\min_i(a_i+\varepsilon_i b_i).
+\end{equation}
+Suppose $Q_r\ge1$, and put $h=(\alpha\sqrt n)^{-1}$ and
+$K_0=3m\Delta/R$. The expectation in \eqref{eq:min-localization} is at
+least $h$ and at most every $a_i$. Since $R\sum_i a_i^2\le1$,
+\[
+ h\le a_i\le h(1+K_0).
+\]
+For $i\ne j$, concavity of the minimum gives
+\[
+ \E\min_k(a_k+\varepsilon_kb_k)
+ \le\frac{a_i+a_j-\max(|a_i-a_j|,b_i)}2,
+\]
+so $b_i\le2hK_0$.
+
+Let $A$ be the selected transversal, $D_0=|A|$, and let $a$ be the
+weighted mean of the selected rail magnitudes. Write the selected weights
+as $a+\delta_j$, with $\sum_A\delta_j=0$, and denote the unused weights
+by $u$. Set $\tau^2=\|\delta\|^2+\|u\|^2$. The preceding bounds imply
+\begin{equation}\label{eq:tau-localization}
+ \tau/a\le10m^{3/2}\Delta/\sqrt R.
+\end{equation}
+
+\subsection{A uniform cusp near a selected parity}
+
+We first record a useful gap. Let $U=\sum_i c_i\sum_{j\in B_i}Y_j$ be a
+sum of independent even blocks, each of size at least four and with a
+constant coefficient inside a block. For every offset $b$,
+\begin{equation}\label{eq:outside-gap}
+ \sum_{\varnothing\ne I}\left|
+ \widehat{|b+U|}\Bigl(\bigcup_{i\in I}B_i\Bigr)\right|
+ \le\tfrac12\E|U|.
+\end{equation}
+Indeed \eqref{eq:Fourier-integral} bounds the coefficients by those at
+$b=0$. Condition each block parity to be $(-1)^{|B_i|/2}$. The projected
+value on this fiber equals the mean of $|U|$ minus the sum of the absolute
+nonconstant block coefficients. This conditional distribution keeps the
+mean zero and the variance unchanged. Its fourth moment is at most four
+times the square of its variance: for a size-four block this follows by
+direct expansion, and for larger blocks all fourth moments are unchanged.
+Independence preserves the bound. H\"older therefore gives
+$\E_{\rm fiber}|U|\ge\frac12\sqrt{\E U^2}\ge\frac12\E|U|$, proving
+\eqref{eq:outside-gap}.
+
+Write $S_0=\sum_{j\in A}X_j$ and $T=\delta\cdot X+u\cdot Y$. Away from
+$S_0=0$,
+\[
+ \relu(aS_0+T)=\relu(aS_0)+\one_{S_0>0}T+\mathcal R,
+ \qquad |\mathcal R|\le|T|\one_{|T|\ge2a}.
+\]
+At $S_0=0$ add the exact term $\relu(T)$. If $\tau\le a$, the Rademacher
+subgaussian bound implies
+\begin{equation}\label{eq:remainder}
+ \E|\mathcal R|\le3\tau e^{-a^2/\tau^2}.
+\end{equation}
+Let $p_0=\Prb(S_0=0)$ and $\epsilon_0=(-1)^{D_0/2+1}$. The selected
+coefficient satisfies
+\[
+ \epsilon_0\widehat h(A)=\kappa_{D_0}a
+ -\frac{p_0}2\E[|T|\mid S_0=0]
+ +\epsilon_0\widehat{\mathcal R}(A).
+\]
+The regular linear term vanishes because $\sum_A\delta_j=0$. On the
+balanced slice the selected parity is $-\epsilon_0$.
+Every other transversal coefficient comes only from the equator term
+and the remainder. Apply \eqref{eq:outside-gap} to the unused blocks,
+conditionally on the selected coordinates. Since
+$\E|b+U|\ge\E|U|$, summing those coefficients and using
+$a_{\max}/a(D_0)\le\alpha\le3/2$ gives
+\begin{equation}\label{eq:cusp}
+ Q_r\le\sqrt{D_0}a-\frac{a(D_0)p_0}{8}
+ \E[|T|\mid S_0=0]+2^m a_{\max}\E|\mathcal R|.
+\end{equation}
+The selected coefficient keeps its sign in this neighborhood; this also
+follows directly from $\tau/a\ll1$ and
+$p_0/(2\kappa_{D_0})=(D_0-1)/D_0$.
+
+For a zero-sum vector $\delta$ on a balanced slice,
+\[
+ \E[(\delta\cdot X)^2\mid S_0=0]=\frac{D_0}{D_0-1}\|\delta\|^2,
+\]
+\[
+ \E[(\delta\cdot X)^4\mid S_0=0]
+ =\frac{3D_0(D_0-2)}{(D_0-1)(D_0-3)}\|\delta\|^4
+ -\frac{2D_0^2}{(D_0-1)(D_0-3)}\sum_j\delta_j^4
+ \le12\|\delta\|^4.
+\]
+These identities follow by expanding and using the two- and four-point
+moments of the uniform balanced slice. Adding the independent outside
+sum gives conditional second moment at least $\tau^2$ and fourth moment
+at most $12\tau^4$. Thus
+\[
+ \E[|T|\mid S_0=0]\ge\tau/\sqrt{12},\qquad
+ p_0\ge1/\sqrt{2D_0}.
+\]
+The cusp loss in \eqref{eq:cusp} is at least
+$a(D_0)\tau/(8\sqrt{24D_0})$. In contrast, the remainder term is at most
+$3\cdot2^m a_{\max}\tau e^{-a^2/\tau^2}$.
+By \eqref{eq:tau-localization} and \eqref{eq:large-R},
+\[
+ \frac{a^2}{\tau^2}\ge\frac{R}{100m^3\Delta^2}
+ >\log(72\cdot2^m\sqrt{24D_0}).
+\]
+For an explicit check, $D_0\le2mR$ bounds the logarithm by
+$7+2m+\frac12\log R\le2\sqrt R$, whereas the left side is at least
+$(2^{20}/100)\sqrt R$. Thus if $\tau>0$,
+\[
+ Q_r<\sqrt{D_0}a\le\sqrt{D_0a^2+\tau^2}=1,
+\]
+a contradiction. The case $\tau=0$ is precisely a balanced selected
+parity and attains equality.
+
+For arbitrary incoming weights, equality in block balancing forces every
+independently sampled balanced vector to have this form. A partially
+zero rail, two nonzero opposite rails, or unequal selected coordinate
+magnitudes would produce a positive-probability strict sample. Thus the
+same equality classification holds before balancing, and bias and
+irrelevant weights must vanish. This proves \eqref{eq:atom-norm}; signed
+parity averaging gives \eqref{eq:exact-code-norm}.
+
+\subsection{Polynomial squared-distance stability}
+
+Let $\mathcal A$ be the union of balanced selected-transversal parameter
+rays, including zero and all input sign choices. For balanced physical
+vectors $v$, the preceding localization and cusp proof gives
+\begin{equation}\label{eq:balanced-stability}
+ \dist(v,\mathcal A)^2\le100R\|v\|(\|v\|-Q(h_v)).
+\end{equation}
+Here are the constants. Normalize $\|v\|=1$ and put
+$\varepsilon=1-Q(h_v)$. If $\varepsilon\ge\Delta/(100R)$, use the zero
+ray. Otherwise replace $\alpha$ above by
+$\alpha/(1-\varepsilon)\le1+3\Delta/R$ and $K_0$ by $4m\Delta/R$.
+Then $\tau/a\le20m^{3/2}\Delta/\sqrt R$. The same cusp comparison,
+with the denominator $100$ replaced by $400$, gives
+$Q(h_v)\le\sqrt{D_0}a$, hence
+$\dist(v,\mathcal A)^2\le\tau^2\le2\varepsilon$.
+
+We now transfer this bound before block balancing without an exponentially
+small sampling probability. Assume nonnegative relevant weights and
+independently sample one coordinate magnitude $U_i^j$ from each rail;
+let $V$ repeat this value throughout the rail. Put
+$a_i=\max(U_i^0,U_i^1)$, $b_i=\min(U_i^0,U_i^1)$, and
+$\bar a=m^{-1}\sum_i a_i$. The squared scalar distance to selecting one
+rail of common magnitude is
+\[
+ d_0(U)^2=\sum_i b_i^2+\sum_i(a_i-\bar a)^2.
+\]
+Write $\eta=\E d_0(U)^2$ and $r_{\max}=\max r_i^j\le2R$.
+For independent rail samples $X,Y$ with $A=\E X^2\ge B=\E Y^2$
+and $A+B>0$ (the zero case is immediate),
+\[
+ \E\min(X^2,Y^2)
+ \ge\frac{\E X^2Y^2}{r_{\max}(A+B)}
+ \ge\frac{B}{2r_{\max}}.
+\]
+Choose deterministically in every pair the rail of larger second moment.
+Call its sample $Z_i$ and the discarded sample $T_i$. Then
+$\E\sum T_i^2\le2r_{\max}\eta$ and $|Z_i-a_i|\le T_i$.
+If $P$ projects off the constant vector in $\R^m$, independence of the
+$Z_i$ gives
+\[
+ \min_\lambda\E\sum_i(Z_i-\lambda)^2
+ \le\frac{m}{m-1}\E\|PZ\|^2
+ \le(4+8r_{\max})\eta.
+\]
+Adding discarded rails and restoring physical rail-size weights yields
+\begin{equation}\label{eq:sampling-rounding}
+ \dist(w,\mathcal A)^2\le24r_{\max}\E\dist(V,\mathcal A)^2.
+\end{equation}
+
+Normalize the original augmented vector to one and again put
+$\varepsilon=1-Q(h_u)$. For $\varepsilon<1/2$, the block-balancing
+geometric-mean inequality and $\E\|V\|^2\le1$ imply
+\[
+ \E\log\frac{\|V\|}{Q(h_V)}\le-\log(1-\varepsilon)\le2\varepsilon,
+ \qquad
+ \E\left[1-\frac{Q(h_V)}{\|V\|}\right]\le2\varepsilon.
+\]
+Also $\|V\|^2\le r_{\max}$ pointwise. Equations
+\eqref{eq:balanced-stability} and \eqref{eq:sampling-rounding} therefore
+give
+\[
+ \dist(w,\mathcal A)^2\le48(100R)r_{\max}^2\varepsilon.
+\]
+The bias and irrelevant squared norm are at most $2\varepsilon$, since
+$Q(h_u)$ is bounded by the relevant norm. Altogether
+\[
+ \dist(u,\mathcal A)^2\le2^{16}R^3\varepsilon.
+\]
+For $\varepsilon\ge1/2$, the zero ray suffices. Homogeneity proves the
+corresponding statement at arbitrary norm. Finally ReLU is
+$1$-Lipschitz and $\E[\bar x\bar x^\top]=I$, so parameter squared
+distance bounds function squared $L^2$ distance. Every face atom lies in
+$\mathcal D$, proving \eqref{eq:atom-stability}.
+
+\section{An exact Bernstein representation}\label{app:Bernstein}
+
+The gamma-function identity for \eqref{eq:parity-cost} is
+\[
+ a(r)=2\sqrt{\pi r}\frac{\Gamma(r/2)}{\Gamma((r-1)/2)}
+     =2\sqrt{2\pi}\,A(r/2),\qquad
+ A(z)=\sqrt z\frac{\Gamma(z)}{\Gamma(z-1/2)}.
+\]
+Define
+\[
+ k(t)=\sqrt{\frac{t}{1-e^{-t}}},\qquad
+ B(t)=\frac1\pi\int_0^1\frac{k(tu)}{\sqrt{u(1-u)}}\,du,
+ \qquad h(t)=\tfrac12B'(t)-B''(t).
+\]
+The limits at zero are $k(0)=B(0)=1$ and $B'(0)=1/8$.
+For $t>0$, let
+\[
+ D(t)=\frac1t-\frac1{e^t-1}.
+\]
+Then $0<D(t)<1/2$ and
+$D'(t)=-1/t^2+1/[4\sinh^2(t/2)]<0$. Since
+\[
+ k'/k=D/2,\qquad k''/k=D^2/4+D'/2<D/8,
+\]
+we have $B'>0$ and $B''<B'/4$. In particular $h>0$.
+
+Write $\mathcal L$ for the Laplace transform and
+$b_0(t)=(1-e^{-t})^{-1/2}=t^{-1/2}k(t)$. The beta integral and convolution
+give
+\[
+ \frac{\Gamma(z)}{\Gamma(z+1/2)}=\frac1{\sqrt\pi}\mathcal L[b_0](z),
+ \qquad
+ B=\frac1\pi(b_0*t^{-1/2}),\qquad
+ z\mathcal L[B](z)=1+\mathcal L[B'](z).
+\]
+Therefore integration by parts yields
+\begin{align*}
+ A(z)&=(z-1/2)z\mathcal L[B](z)\\
+ &=z-3/8+\mathcal L[B''-B'/2](z)
+ =z-3/8-\int_0^\infty e^{-zt}h(t)\,dt.
+\end{align*}
+All functions and derivatives have at most polynomial growth, so these
+integrals converge for $z>0$. At $z=1/2$, $A$ extends continuously to zero.
+Consequently
+\[
+ A(x+1/2)=x+\int_0^\infty e^{-t/2}(1-e^{-xt})h(t)\,dt
+ \quad(x\ge0),
+\]
+which is the claimed strict Bernstein representation.
+
+For the crude bound $h\le3$, use
+$k(t)\le\sqrt{1+t}$ and $D(t)\le\min(1/2,1/t)$. For $0<t\le1$,
+\[
+ |D'(t)|=\frac{2(\cosh t-1)-t^2}{4t^2\sinh^2(t/2)}
+ \le2(\cosh1-1)-1<1;
+\]
+the numerator's power series starts at degree four and the denominator
+is at least $t^4$. For $t\ge1$, $|D'(t)|\le t^{-2}$.
+The displayed derivative identities then give $k'\le1$ and
+$|k''|\le2$ on the whole positive line. Hence $B'\le1$,
+$|B''|\le2$, and $0<h\le5/2<3$. This proves
+\eqref{eq:Bernstein} with all bounds used above.
+
+\end{document}
