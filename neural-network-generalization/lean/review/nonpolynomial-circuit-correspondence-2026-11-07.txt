@@ -1,0 +1,67 @@
+Strong-prior circuit-simulation correspondence, 7 November 2026
+
+Unchanged paper: main-results/strong-prior-generalization/source/circuits.tex,
+Proposition "Simulation of a fixed Boolean gate basis" and the following remark.
+
+Namespace: NeuralGeneralization.NonpolynomialInterpolation.
+
+Hypotheses and quantifiers
+- Nonpolynomial phi means there is no Polynomial Real whose evaluation agrees
+  with phi everywhere. Continuous phi is the only regularity hypothesis.
+- finite_dot_interpolation applies to an arbitrary finite type of distinct
+  vectors. The feature dictionary has exactly as many indices as nodes and
+  works for every assignment of real values. Its scalar slopes and shifts
+  are selected from a basis of actual affine activation features.
+- paper_circuit_simulation quantifies over phi and a fan-in bound q, then
+  chooses one positive integer a before d,C,D,L and the circuit. It covers
+  all q-ary Boolean gates, hence any fixed finite basis of fan-in at most q
+  after ignoring unused arguments. Increasing arity by an ignored input is
+  proved in padArity_evaluate and padArity_computes, covering q=0 as well.
+- The circuit has C actual gate vertices. Its source edges may refer to
+  augmented inputs or to any gate of strictly smaller certified level.
+  Arbitrary sharing and skipped levels are allowed. D bounds gate depth.
+  The output can also be a direct input. C>=1 is the paper's assumption.
+
+Exact network and resource correspondence
+- Depth r+2 is the established network's input matrix, r internal matrices,
+  and linear readout. The paper endpoint uses r=L-2, with L>=2 and D+1<=L.
+- Width is exactly a*C, which implies the requested upper bound. Padding is
+  disconnected and preserves outputs even when phi(0) is nonzero.
+- Every weight is bounded by a, independently of all circuit parameters.
+  The only bias input is the established inputVector coordinate x0=1.
+  Internal shifts use one counted neuron with output phi(beta) != 0.
+- The networkOutput is exactly labelReal(circuit.computes x) for every input.
+  Thus the existing strict margin >1/2 is satisfied; no limiting or approximate
+  gate execution is substituted for the paper's equality.
+- Each carried signal has its own block of activation features. The compiler
+  only sums over a fixed number of gate arguments in any weight. weightValue
+  enumerates the finite set of all possible coefficients, proving a uniform
+  bound without any dependence on fan-out or number of layers.
+- The layer expansion uses one carrier per input occurrence, one per gate,
+  and one for a possible input readout: Cq+C+1. This is absorbed in a*C using
+  C>=1. Recomputing completed DAG gates preserves their exact values by
+  evaluate_agree; layered_computes proves the full conversion.
+
+Endpoints
+- paper_circuit_simulation: full exact circuit-to-network proposition.
+- paper_complexity_bound: C_L(f)<=a*C for the existing isComplexity relation.
+- every_function_finite_complexity: a minimum bounded-weight implementation
+  exists for every Boolean function and every depth r+2. A truth-table gate
+  is used only here, where finiteness rather than a fixed-basis size bound is
+  needed. This includes d=0.
+
+Analytic proof dependencies
+- exists_nonzero_moment uses Lagrange polynomials, not an assumed invertible
+  feature matrix. The continuous function is smoothed by normalized compact
+  bumps. smooth_relation proves the relation survives convolution exactly.
+- The derivative in the scale parameter isolates a fixed nonzero moment.
+  All smooth approximants have the same degree bound. powerSpan_closed and
+  smooth_tendsto transfer that bound to the original activation, contradicting
+  its nonpolynomiality. There is no assumed universal-approximation theorem.
+- No claims of efficient numerical construction or evaluation of arbitrary
+  continuous activations are made, as in the paper's final qualification.
+
+The ten modules and fifty named endpoints are integrated into the root build
+and coverage-extension axiom gate. The full verification record is in
+verification/coverage-nonpolynomial-circuit-2026-11-07/.
+Other papers' remaining gaps are listed in coverage-extension-2026-10-30.txt.
