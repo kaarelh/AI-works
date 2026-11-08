@@ -25,7 +25,8 @@ Bayesian prediction with an ordinary one-hidden-layer ReLU network makes
 superpolynomially many mistakes in the strong-prior limit. The weights
 have independent Gaussian coordinates, with identical variances within
 each layer. Before observing labels, the prior is conditioned on an
-absolute output margin at every input; training then requires exact fit.
+absolute output margin at every input; training then conditions on the
+output sign agreeing with every revealed Boolean label.
 The construction works at every sufficiently large finite hidden width.
 For a parameter $m$, the input dimension and the target's Boolean circuit
 size are $O(m)$. A shallow ReLU teacher has width $O(m^2)$ and
@@ -77,13 +78,16 @@ Its density is proportional to $\exp[-K_N(\theta)/(2\sigma^2)]$, where
  K_N(\theta)=\frac dN\sum_j\|u_j\|_2^2+N\sum_jv_j^2.
 \end{equation}
 The prior is first conditioned on $|F_\theta(x)|>1/2$ at every $x\in X$.
-After each prediction it is conditioned on the exact revealed label.
+After each prediction it is conditioned on the output sign agreeing with
+the revealed Boolean label.
 Thus a history $H\subseteq X$ with target $f:X\to\{-1,1\}$ conditions
 the Gaussian law on
 \begin{equation}\label{eq:posterior-cell}
  |F_\theta(x)|>1/2\quad(x\in X),\qquad
  f(x)F_\theta(x)>1/2\quad(x\in H).
 \end{equation}
+Thus training conditions on signs with the stated margin, without fixing
+the real-valued outputs to the label values.
 The strong-prior limit is $\sigma\downarrow0$ at each fixed $d,N$.
 
 For the ReLU model, the conclusion also holds for any two fixed positive layer variances
@@ -924,7 +928,7 @@ The conclusion also holds for a smooth activation. Let
  \phi(t)=\log(1+e^t).
 \]
 Replace ReLU by $\phi$ in \eqref{eq:network}, leaving the Gaussian prior,
-pre-data full-cube margin conditioning, and exact-label likelihood
+pre-data full-cube margin conditioning, and sign-label likelihood
 unchanged. In particular the quadratic energy remains \eqref{eq:energy}.
 
 \begin{theorem}[Softplus at every sufficiently large width]
