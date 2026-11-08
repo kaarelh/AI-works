@@ -1,0 +1,588 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,amsmath,amssymb,amsthm,mathtools,booktabs}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{openproblem}[theorem]{Open atomic proposition}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}
+\newcommand{\F}{\mathbb F}\newcommand{\one}{\mathbf 1}
+\newcommand{\sech}{\operatorname{sech}}
+\newcommand{\Var}{\operatorname{Var}}
+\title{Superpolynomial online mistakes for isotropic Bayesian tanh networks}
+\author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{November 2026}
+\hypersetup{pdftitle={Superpolynomial online mistakes for isotropic Bayesian tanh networks},pdfauthor={ChatGPT-6 Astra; Kaarel Hanni; Dmitry Vaintrob}}
+\begin{document}\maketitle
+\begin{abstract}
+We construct small Boolean targets and fixed nonrepeating input
+sequences on which exact Bayesian learning with an ordinary tanh
+network makes superpolynomially many online mistakes. The network has
+one hidden layer, a linear readout, and independent Gaussian weights
+whose covariance is isotropic within each layer. The prior is
+conditioned from the start on an absolute output margin at every
+Boolean input, and training requires exact fit of all revealed labels.
+At every sufficiently large fixed learner width, the posterior
+probability of the correct label tends to zero on each designated
+round as the Gaussian scale tends to zero.
+
+The targets have one-hidden-layer tanh teachers of width $C$, margin
+one, and coefficients bounded by $C$. The construction forces
+$\exp(\Omega(C^{1/8}))$ designated mistakes. Its calibration prefix
+and sufficient learner width can be large. This is an adversarial-order
+result, rather than an iid sample-complexity lower bound.
+
+The proof first determines the exact optimal affine neuron for a
+single sufficiently high odd parity. A quantitative support estimate
+and Fourier localization extend the sharp norm to a transversal code.
+The optimized scalar costs have positive inverse-degree curvature;
+their cheapest feasible scores therefore include a fixed negative
+overshoot. An explicit dual classifies every minimum, a cycle code
+orders superpolynomially many competing costs, and integer neuron
+replication transfers their gaps to the full Gaussian posterior.
+\end{abstract}
+
+\section{Model and result}
+
+A small circuit may be easy to learn from independent samples while
+remaining difficult along an adversarial order of inputs. We study
+that distinction for exact Bayesian prediction with the standard
+activation $\tanh$. The theorem concerns the posterior distribution,
+including all tied or nearly tied parameter realizations.
+
+On $X=\{-1,1\}^d$, append the constant input and write $\bar x=(1,x)$.
+Consider a one-hidden-layer network
+\[
+ F(x)=\sum_{j=1}^N v_j\tanh(u_j\cdot\bar x),\qquad
+ (u_j)_i\sim\mathcal N(0,N\sigma^2/d),\qquad
+ v_j\sim\mathcal N(0,\sigma^2/N),
+\]
+with independent coordinates. The prior is first conditioned on
+$|F(x)|>1/2$ for every input; training then conditions on the exact
+observed labels. The strong-prior limit is $\sigma\downarrow0$ at each
+fixed width $N$. Equivalently, at that fixed width set
+$t=\sqrt N\,\sigma$: the variances become $t^2/d$ in the incoming
+layer and $t^2/N^2$ in the readout. Thus this is the usual strong-prior
+limit, with isotropy within each layer preserved. Its quadratic energy is
+\[
+ K_N=\frac dN\sum_j\|u_j\|_2^2+N\sum_jv_j^2.
+\]
+For a function on the finite cube, define the tanh variation cost
+\begin{equation}\label{eq:variation}
+ V(F)=\inf\left\{\sum_j|c_j|\|a_j\|_2:
+ F(x)=\sum_jc_j\tanh(a_j\cdot\bar x)\text{ for all }x\right\}.
+\end{equation}
+The infimum is over finite representations and includes the incoming
+bias coordinate in the norm. The arithmetic--geometric mean inequality
+always gives
+\begin{equation}\label{eq:energy}
+ K_N\ge2\sqrt d\sum_j|v_j|\|u_j\|_2\ge2\sqrt d\,V(F).
+\end{equation}
+Unlike a homogeneous activation, tanh does not permit arbitrary
+rescaling of an incoming vector while preserving the neuron output up
+to a scalar. Equality in \eqref{eq:energy} at a specified finite width
+therefore requires a separate argument.
+
+\begin{theorem}[Adversarial online mistakes]\label{thm:main-online}
+For every sufficiently large integer $k$, put
+$m=3k(k+5)/2+3$. There are a dimension $d_m=\Theta(m^3)$,
+a Boolean target $f_m$ on the full cube, and a fixed nonrepeating
+input sequence with $T_m=\exp(\Omega(\sqrt m))$ designated rounds
+such that the following hold.
+The target has a one-hidden-layer tanh score of margin one and width
+$C_m=O(m^4)$, with every coefficient bounded by $C_m$. It also
+has a bounded-fan-in Boolean circuit with $O(d_m)=O(m^3)$ gates.
+There is a finite $N_0(m)$ such that, at every fixed $N\ge N_0(m)$,
+the posterior probability of the correct label tends to zero at each
+designated round as $\sigma\downarrow0$.
+Consequently the sequence forces $\exp(\Omega(C_m^{1/8}))$
+posterior-majority mistakes in the strong-prior limit, and the same
+number of expected mistakes under posterior sampling.
+\end{theorem}
+
+\begin{corollary}[Finite Gaussian scales]\label{cor:finite-scale}
+Fix a construction, any $N\ge N_0(m)$, and $\eta>0$. For every
+sufficiently small positive $\sigma$, posterior-majority prediction
+is wrong at all $T_m$ designated rounds, and the correct-label
+posterior probability is below $1/3$ at every such round.
+Under fresh posterior sampling, all $T_m$ designated predictions are
+wrong simultaneously with probability at least $1-\eta$.
+The input sequence can be extended to a permutation of the full cube.
+\end{corollary}
+\begin{proof}
+There are finitely many designated rounds. Choose $\sigma$ so that
+the correct-label probability at each is below
+$\min(1/3,\eta/T_m)$. Majority and the confidence-threshold conclusion
+follow, while a union bound proves the sampling statement. Append
+all inputs not yet revealed to extend the sequence without repetition.
+\end{proof}
+
+The order of limits is part of the statement: first choose any
+sufficiently large finite learner width, then send the Gaussian scale
+to zero. No distribution-shift or typical-order claim is assumed.
+The input sequence has a potentially large calibration prefix and
+is independent of the learner width and Gaussian scale. The sufficiently
+large parity-degree threshold and the width threshold are existential;
+this proof does not give practical numerical values for them. The
+arguments in this manuscript have not been formalized in Lean.
+
+All Fourier coefficients use the uniform input law. For a set $A$,
+write $\chi_A(x)=\prod_{i\in A}x_i$ and
+$\widehat F(A)=\E[\chi_A F]$. A sharp inequality of the form
+\[
+ |\widehat{\tanh(u\cdot\bar x)}(A)|\le L_A\|u\|_2
+\]
+gives the lower bound $V(\chi_A)\ge L_A^{-1}$. Signed averaging over
+input flips gives a matching parity representation whenever a neuron
+attains the sharp correlation ratio. Controlling a sum of several
+parity coefficients is stronger and is needed for the online construction.
+
+\section{Balanced odd-parity atoms}
+
+Let $n=2r+1$ be odd and let $X_1,\ldots,X_n$ be independent uniform signs.
+Put $S=\sum_iX_i$, $\chi=\prod_iX_i$, and
+\[
+ q_n(a)=(-1)^r\E[\chi\tanh(aS)],\qquad
+ \kappa_n=2^{1-n}\binom{n-1}{(n-1)/2}.
+\]
+The constant $\kappa_n$ is the absolute top Fourier coefficient of
+majority on $n$ bits. The balanced representation cost is
+\begin{equation}\label{eq:balanced-cost}
+ w_n=\inf_{a>0}\frac{a\sqrt n}{q_n(a)}.
+\end{equation}
+The positivity needed in this definition follows from the next formula.
+
+\begin{lemma}[A positive diagonal series]\label{lem:positive-series}
+For every odd $n\ge1$ and $a>0$, with $c_\ell=(\ell+1/2)\pi$,
+\begin{equation}\label{eq:positive-series}
+ q_n(a)=2n!a^n\sum_{\ell\ge0}
+ \prod_{j=0}^{(n-1)/2}\bigl(c_\ell^2+(2j+1)^2a^2\bigr)^{-1}>0.
+\end{equation}
+\end{lemma}
+\begin{proof}
+The sine transform of tanh is
+\[
+ \tanh t=\int_0^\infty\frac{\sin(t\omega)}{\sinh(\pi\omega/2)}\,d\omega.
+\]
+Averaging the parity character gives
+\[
+ q_n(a)=\int_0^\infty
+ \frac{\sin^n(a\omega)}{\sinh(\pi\omega/2)}\,d\omega.
+\]
+Expand $1/\sinh(\pi\omega/2)=2\sum_{\ell\ge0}e^{-c_\ell\omega}$.
+Absolute integrability of $|\sin(a\omega)|^n/\sinh(\pi\omega/2)$
+justifies the exchange. Repeated integration by parts gives
+\[
+ \int_0^\infty e^{-c\omega}\sin^n(a\omega)\,d\omega
+ =\frac{n!a^n}{\prod_{j=0}^{(n-1)/2}(c^2+(2j+1)^2a^2)}.
+\]
+This proves the formula and positivity.
+\end{proof}
+
+\begin{theorem}[Unique balanced gain and full local optimality]
+\label{thm:local}
+For every odd $n\ge5$, the ratio $q_n(a)/a$ has a unique global maximum
+at a gain $a_n\in(1,2)$. Moreover
+\[
+ J_n(b,u)=\frac{(-1)^{(n-1)/2}\E[\chi\tanh(b+u\cdot X)]}
+                   {\sqrt{b^2+\|u\|_2^2}}
+\]
+has a strict local maximum at $(b,u)=(0,a_n\one)$. Its Hessian there is
+negative definite. The absolute Fourier-correlation ratio equals $J_n$
+in a neighborhood of that point.
+\end{theorem}
+
+\begin{proof}
+For any odd function $h$, pairing opposite Hamming levels yields
+\begin{equation}\label{eq:central-sum}
+ (-1)^r\E[\chi h(aS)]
+ =2^{1-n}\sum_{j=0}^r(-1)^j\binom n{r-j}h(a(2j+1)).
+\end{equation}
+Let $p(t)=-\tanh''t=2\tanh t\,\sech^2t$. It is positive and strictly
+decreasing for $t\ge1$. Consequently
+\begin{equation}\label{eq:Dnegative}
+ D_n(a):=(-1)^r\E[\chi\tanh''(aS)]<0
+ \qquad(a\ge1)
+\end{equation}
+for every odd $n\ge1$: the positive terms in the corresponding
+alternating sum strictly decrease.
+
+The same argument proves $q_n''(a)<0$ on $a\ge1$. The extra factor in
+its terms is $(2j+1)^2$. For $t'=t+2a$, $t\ge a\ge1$,
+\[
+ \frac{p(t')}{p(t)}
+ \le e^{-4a}\frac{(1+e^{-2a})^3}{1-e^{-2a}}.
+\]
+The ratio of the squared integer factors is at most nine. Since $e^2>7$,
+\[
+ 9e^{-4a}\frac{(1+e^{-2a})^3}{1-e^{-2a}}
+ <\frac9{49}\frac{(8/7)^3}{6/7}<1.
+\]
+The binomial factors decrease as well, giving the claimed strict sign.
+
+For $0<a\le1$, every summand of $q_n(a)/a$ in
+\eqref{eq:positive-series} has positive derivative. Its logarithmic
+derivative multiplied by $a$ is
+\[
+ -2+2\sum_{j=0}^r
+       \frac{c_\ell^2}{c_\ell^2+(2j+1)^2a^2}.
+\]
+Using $n\ge5$ and $c_\ell^2\ge\pi^2/4>12/5$, the sum is greater than
+\[
+ \frac{12}{17}+\frac{12}{57}+\frac{12}{137}
+ =\frac{44428}{44251}>1.
+\]
+The differentiated series is locally uniformly convergent on $a>0$,
+so $(q_n(a)/a)'>0$ throughout $(0,1]$.
+
+Put $H_n(a)=a q_n'(a)-q_n(a)$. Its derivative is $a q_n''(a)<0$
+for $a\ge1$. Define
+\[
+ g(t)=t\sech^2t+1-\tanh t,
+ \qquad g'(t)=-2t\sech^2t\tanh t<0.
+\]
+Subtracting the majority coefficient in \eqref{eq:central-sum}, and
+using alternating-sum bounds, gives
+\[
+ H_n(1)\ge-\kappa_n+B_0[g(1)-g(3)],\qquad
+ H_n(2)\le-\kappa_n+B_0g(2),
+\]
+where $B_0=2^{1-n}\binom nr$ and $B_0/\kappa_n=2n/(n+1)$.
+The elementary bounds $7<e^2<37/5$ imply
+\[
+ g(1)>\frac{290}{441},\quad g(3)<\frac{14}{343},\quad
+ g(1)-g(3)>\frac35,\quad g(2)<\frac{10}{49}<\frac12.
+\]
+As $5/3\le B_0/\kappa_n<2$, we obtain $H_n(1)>0$ and $H_n(2)<0$.
+Strict decrease proves the unique global maximizing gain.
+
+To check the affine Hessian, write $R=a_n\sqrt n$ and $q=q_n(a_n)>0$.
+Permutation symmetry splits weight directions into $\operatorname{span}(\one)$
+and its orthogonal complement. Bias--weight mixed derivatives vanish
+under $X\mapsto-X$. The bias eigenvalue of $J_n$ is
+\[
+ \frac{D_n(a_n)}R-\frac q{R^3}<0.
+\]
+For a unit difference direction $(e_i-e_j)/\sqrt2$, conditioning on
+$X_i=-X_j$ shows that the numerator's second derivative is
+$D_{n-2}(a_n)$. Thus the common eigenvalue on $\one^\perp$ is
+\[
+ \frac{D_{n-2}(a_n)}R-\frac q{R^3}<0.
+\]
+Along the balanced line, at the stationary gain,
+\[
+ \frac{d^2}{da^2}\frac{q_n(a)}{a\sqrt n}\bigg|_{a=a_n}
+ =\frac{q_n''(a_n)}{a_n\sqrt n}<0.
+\]
+Rescaling this direction to unit length preserves its sign. The gradient
+vanishes by the stationary condition and symmetries. All Hessian
+blocks are therefore negative definite.
+\end{proof}
+
+\begin{corollary}[A local weighted-code inequality]\label{cor:local-code}
+Partition physical coordinates into $m$ disjoint pairs of rails
+$(B_i^0,B_i^1)$, where $m$ is odd and each rail has odd size at least three.
+For $s\in\F_2^m$ put $A_s=\bigcup_i B_i^{s_i}$ and $n_s=|A_s|$, and
+assume $n_s\ge5$. Define
+\[
+ Q(b,u)=\frac{\sum_s w_{n_s}
+      |\E[\chi_{A_s}\tanh(b+u\cdot X)]|}
+                  {\sqrt{b^2+\|u\|_2^2}}.
+\]
+At every point with $b=0$, incoming weights $a_{n_s}$ on one selected
+transversal $A_s$, and zero weights elsewhere, $Q$ has value one and a
+strict local maximum. Input flips give the corresponding signed points.
+\end{corollary}
+\begin{proof}
+The selected parity coefficient has the negative-definite quadratic
+expansion in Theorem~\ref{thm:local}. Every inactive coordinate has the
+same numerator second derivative as the bias, and mixed inactive
+coordinates vanish by independence. Hence their normalized eigenvalue
+is also $D_n/R-q/R^3<0$.
+
+Each other transversal contains at least three inactive coordinates.
+Repeated finite differences factor its coefficient by the product of
+those incoming weights, so its absolute coefficient is
+$O(\|(\Delta b,\Delta u)\|^3)$ near the selected point. The finite sum
+of these terms does not change the quadratic part. The selected weight
+$w_n$ makes its value exactly one. We use this second-order expansion;
+the absolute-value objective need not be twice differentiable throughout
+a neighborhood.
+\end{proof}
+
+Corollary~\ref{cor:local-code} does not assert $Q\le1$ globally. A
+violating neuron could be far from every selected balanced atom.
+
+\section{The sharp global bound for three-bit parity}
+
+For three bits the global problem admits an exact algebraic solution.
+Write
+\[
+ C_3(u)=\E[X_1X_2X_3\tanh(u\cdot X)],\qquad
+ q_3(a)=\frac{2\tanh^3a}{1+3\tanh^2a}.
+\]
+
+\begin{theorem}[Global three-bit parity gain]\label{thm:three}
+There is a unique maximizer $a_3>0$ of $q_3(a)/a$. Put
+\[
+ L_3=\frac{q_3(a_3)}{\sqrt3\,a_3}.
+\]
+Every affine tanh neuron, including neurons with additional irrelevant
+input coordinates, satisfies
+\[
+ |\widehat{\tanh(u\cdot\bar X)}(\{1,2,3\})|
+ \le L_3\|u\|_2.
+\]
+Nonzero equality requires zero bias, zero irrelevant weights, and equal
+absolute relevant weights $a_3$. Consequently the variation cost of
+three-bit parity is exactly $L_3^{-1}$.
+\end{theorem}
+
+\begin{proof}
+First assume positive relevant weights $a,b,c$ and no bias. Let
+$t_1=\tanh a,t_2=\tanh b,t_3=\tanh c$ and $s_i=t_i^2$. Direct use of
+the addition formula gives
+\[
+ |C_3(a,b,c)|=\frac{2t_1t_2t_3\prod_i(1-s_i)}P,
+\]
+where
+\[
+ P=1-2\sum_{i<j}s_is_j+\sum_{i<j}s_i^2s_j^2
+        -2s_1s_2s_3\sum_i s_i+8s_1s_2s_3.
+\]
+The denominator obeys the identity
+\[
+ P-\prod_i(1-s_i)\left(1+\sum_i s_i\right)
+ =\frac12\sum_{\rm cyc}(s_i-s_j)^2(1-s_k)^2\ge0.
+\]
+Thus, by the arithmetic--geometric mean inequality,
+\begin{equation}\label{eq:holder3}
+ |C_3(a,b,c)|
+ \le\frac{2t_1t_2t_3}{1+s_1+s_2+s_3}
+ \le\prod_{i=1}^3\left(\frac{2t_i^3}{1+3t_i^2}\right)^{1/3}
+ =\prod_i q_3(u_i)^{1/3}.
+\end{equation}
+Equality with positive weights requires all three equal. Input flips
+handle negative weights, and a zero relevant weight makes the
+coefficient zero. Applying $q_3(a)\le a\sup_t q_3(t)/t$ and then
+geometric mean at most quadratic mean proves the sharp bias-free bound.
+
+For uniqueness of the scalar gain, set $t=\tanh a$. The sign of
+$(q_3(a)/a)'$ is the sign of
+\[
+ H(t)=3\operatorname{arctanh}(t)(1-t^4)-t(1+3t^2).
+\]
+Here $H(0)=0$, $H'(0)=2$, $H(1^-)=-4$, and
+\[
+ H'(t)=2-6t^2-12t^3\operatorname{arctanh}t,\qquad H''(t)<0
+ \quad(0<t<1).
+\]
+Strict concavity gives exactly one zero in $(0,1)$, proving uniqueness.
+
+We record the bias argument generally. For any odd activation and odd
+$n$, its top parity coefficient satisfies
+\begin{equation}\label{eq:bias-identity}
+ C_n(B;u)=\frac12\left[
+ C_n(0;u_1,\ldots,u_{n-1},u_n+B)
+ +C_n(0;u_1,\ldots,u_{n-1},u_n-B)\right].
+\end{equation}
+Indeed, averaging the first $n-1$ coordinates with their parity gives
+an odd function of the remaining scalar offset. If the bias-free gain
+is at most $L\|u\|$, triangle inequality and root mean square yield
+\[
+ |C_n(B;u)|\le\frac L2\left[
+ \sqrt{A+(u_n+B)^2}+\sqrt{A+(u_n-B)^2}\right]
+ \le L\sqrt{A+u_n^2+B^2},
+\]
+where $A=\sum_{i<n}u_i^2$. For a nonzero coefficient, $u_n\ne0$,
+so equality in root mean square forces $B=0$. Conditioning on irrelevant
+coordinates and applying the same argument puts their squared norm
+into the bias second moment. A nonzero irrelevant weight makes the
+effective bias nonzero with positive probability and prevents equality.
+
+Finally, signed averaging over the eight input flips projects a balanced
+maximizing neuron to $q_3(a_3)\chi_{\{1,2,3\}}$, up to its fixed sign.
+This gives a finite representation of parity with cost
+$\sqrt3a_3/q_3(a_3)$, matching the lower bound from the sharp gain.
+\end{proof}
+
+Numerically $a_3\approx0.9655523$ and $L_3^{-1}\approx5.3674918$.
+The numerical values are not used in the proof. The eventual
+high-degree global theorem below uses a different argument; it does
+not require a higher-degree version of \eqref{eq:holder3}.
+
+\section{Positive curvature of the balanced parity cost}
+
+\begin{theorem}[Optimized cost expansion]\label{thm:curvature}
+Along odd integers $n\to\infty$, the balanced costs satisfy
+\begin{equation}\label{eq:cost-asymptotic}
+ w_n=An+B+\frac Cn+O(n^{-2}),\qquad C>0.
+\end{equation}
+They admit a holomorphic interpolation on
+$\{\Re z>0,\ |z|>z_0\}$ with this uniform expansion. In particular,
+\[
+ w''(n)=\frac{2C}{n^3}+O(n^{-4}).
+\]
+Numerically $A\approx2.24178537487$, $B\approx-1.52970827506$, and
+$C\approx0.59356404999$.
+\end{theorem}
+
+\begin{proof}
+Write $J_j=j(j+1)$ and
+\[
+ R_j(z)=\prod_{\ell=0}^{j-1}\frac{z-(2\ell+1)}{z+(2\ell+3)},
+ \qquad f_j(a)=\frac1{1+e^{2a(2j+1)}}.
+\]
+Pairing Hamming levels in \eqref{eq:central-sum} gives the exact identity
+\begin{equation}\label{eq:Finterpolation}
+ q_n(a)=\kappa_n F(n,a),\qquad
+ F(z,a)=1-\frac{4z}{z+1}\sum_{j\ge0}(-1)^jR_j(z)f_j(a).
+\end{equation}
+At odd $n$, $R_j(n)=0$ for $j>(n-1)/2$. In the right half-plane each
+factor of $R_j$ has modulus at most one, since
+\[
+ |z+(2\ell+3)|^2-|z-(2\ell+1)|^2
+ =8(\ell+1)(\Re z+1)>0.
+\]
+The series is therefore locally normally convergent for $\Re a>0$.
+Its large-$z$ expansion is
+\[
+ F(z,a)=F_0(a)+F_1(a)/z+F_2(a)/z^2+O(|z|^{-3}),
+\]
+where
+\begin{align*}
+ F_0&=1-4\sum_{j\ge0}(-1)^jf_j,\\
+ F_1&=4\sum_{j\ge0}(-1)^j(1+2J_j)f_j,\\
+ F_2&=-4\sum_{j\ge0}(-1)^j(1+4J_j+2J_j^2)f_j.
+\end{align*}
+For completeness, expand
+\[
+ R_j(z)=1-2J_j/z+(2J_j+2J_j^2)/z^2+O_j(|z|^{-3}).
+\]
+To sum the remainder uniformly, split at $j=\eta|z|$ for a sufficiently
+small fixed $\eta$. Below the cutoff, the logarithmic Taylor remainder
+is a polynomial in $j$ times $|z|^{-3}e^{O(j^2/|z|)}$; its exponential
+is absorbed by $f_j$'s $e^{-4\Re(a)j}$ decay. Above the cutoff,
+$|R_j|\le1$ makes the tail exponentially small. This argument holds
+uniformly near the real interval $[1.237,1.238]$, including any fixed
+number of $a$-derivatives.
+
+The gamma-ratio interpolation of $\kappa_n$ has uniform expansion
+\[
+ \kappa_z=\sqrt{\frac2{\pi z}}
+ \left(1+\frac1{4z}+\frac1{32z^2}+O(|z|^{-3})\right)
+ \qquad(|\arg z|\le\pi/2).
+\]
+Set $D_1=F_1+F_0/4$ and $D_2=F_2+F_1/4+F_0/32$. Then
+\[
+ \frac{a\sqrt z}{\kappa_z F(z,a)}
+ =A(a)z+B(a)+C_{\rm raw}(a)/z+O(|z|^{-2}),
+\]
+with
+\[
+ A(a)=\sqrt{\pi/2}\,\frac a{F_0},\qquad
+ B(a)=-A(a)D_1/F_0,
+\]
+\[
+ C_{\rm raw}(a)=A(a)\left[(D_1/F_0)^2-D_2/F_0\right].
+\]
+Let $a_0$ be the zero in $[1.237,1.238]$ of $aF_0'-F_0$.
+The exact certificate below proves $F_0''<0$ there, so $A''(a_0)>0$.
+The analytic implicit-function theorem gives a critical branch $a(z)$
+near $a_0$ for all sufficiently large $z$ in the right half-plane.
+For real odd $n$, Theorem~\ref{thm:local}'s uniqueness identifies it with
+$a_n$. Substitution gives
+\begin{equation}\label{eq:Cformula}
+ A=A(a_0),\quad B=B(a_0),\quad
+ C=C_{\rm raw}(a_0)-\frac{B'(a_0)^2}{2A''(a_0)}.
+\end{equation}
+This proves the claimed analytic remainder. Cauchy's estimate on a
+radius-$n/2$ disk gives the second-derivative expansion.
+
+Here are reproducible exact bounds for the sign in
+\eqref{eq:Cformula}. At $a_0$, using $F_0'=F_0/a_0$,
+\begin{equation}\label{eq:intervalC}
+ \frac C{\sqrt{\pi/2}}
+ =\frac{aD_1^2}{F_0^3}-\frac{aD_2}{F_0^2}
+  +\frac{(D_1-aD_1')^2}{2aF_0''F_0^2}.
+\end{equation}
+The companion script \texttt{verification/certify\_curvature.py} uses
+only rational arithmetic in its assertions. It encloses exponentials
+by their Taylor sums through degree 256 and a geometric bound on the
+remaining positive terms. It sums the six series
+$F_0,F_1,F_2,F_0',F_0'',F_1'$ through $j=9$. On
+$[1237/1000,619/500]$, each omitted tail is bounded by
+\[
+ 192\cdot11^6 e^{-2(1237/1000)21}<10^{-14}.
+\]
+Indeed, every polynomial factor is bounded by $16(j+1)^6$, with the
+common factor four, and a geometric ratio at most
+$64e^{-4(1237/1000)}<64/100$; the sum of this geometric series is less
+than three. Outward interval rounding uses denominator $10^{45}$.
+The resulting rational enclosures prove opposite signs of
+$aF_0'-F_0$ at the endpoints, $F_0''<0$ throughout the interval, and
+\[
+ 0.4616< C/\sqrt{\pi/2}<0.4842.
+\]
+Thus $C>0$. Floating-point formatting is used only to display the
+certificate's already proved interval endpoints.
+\end{proof}
+
+\input{source/code-atom.tex}
+
+\input{source/overshoot-section.tex}
+
+\input{source/cycle-ordering.tex}
+
+\section{Completion of the online theorem}
+
+The cycle construction of Section~\ref{sec:cycles} uses even rails and
+one shared carrier. Its supports have odd degrees $n_s=\Theta(m^3)$.
+The sharp global code-atom theorem applies to every affine neuron,
+and its support bound is polynomial in these parameters.
+Appendix~\ref{app:physical} therefore classifies every minimum-cost
+completion after every calibrated history. The compulsory prefix
+factors make the remaining Fourier costs small enough to absorb all
+polynomial stability and rounding constants. The strict ordering in
+Theorem~\ref{thm:cycle-order} supplies
+$\exp(\Omega(\sqrt m))$ designated rounds.
+Appendix~\ref{app:posterior} proves the conclusion for the actual
+Gaussian posterior at all sufficiently large fixed widths.
+
+It remains to verify the teacher resources. The target is the sign of
+\[
+ b(x)\left(\sum_{i=1}^m(-1)^{z_i(x)}-(m-1)\right)
+ =\sum_{i=1}^m\chi_{A_{e_i}}(x)-(m-1)\chi_{A_0}(x),
+\]
+a score of margin one. Each parity has degree $O(m^3)$.
+On the attainable values of the coordinate sum, parity is represented
+by an alternating sum of threshold steps. Replace each step at a
+midpoint by a tanh transition of gain $O(\log(mn_{\max}))$.
+Each attainable value is at distance at least one from every midpoint,
+so the uniform error can be made less than $1/(8m)$ per parity using
+$O(n_{\max})$ neurons. The combined score has margin greater than
+$1/2$; doubling its readout gives margin one. Its width is
+$O(mn_{\max})=O(m^4)$, and incoming weights, biases, and readouts
+are bounded by that width after increasing its fixed constant.
+For the Boolean circuit, compute each rail parity and the base parity
+once. Forming the logical bits uses only $O(\ell)$ further XOR gates,
+since every cycle column has at most two nonzero entries. An AND of
+the $m$ logical zero tests and a final sign multiplication then give
+the target. The total bounded-fan-in gate count is $O(d_m)$.
+This proves Theorem~\ref{thm:main-online}.
+
+\appendix
+\input{source/conditional-physical.tex}
+\input{source/conditional-posterior.tex}
+\input{source/periodic-appendix.tex}
+\input{source/localization-appendix.tex}
+\input{source/residual-clt.tex}
+\input{source/equal-bulk-bias.tex}
+\input{source/single-parity-appendix.tex}
+\input{source/code-localization.tex}
+\end{document}

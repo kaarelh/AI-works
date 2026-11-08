@@ -1,0 +1,214 @@
+\section{A path code with exponentially many ordered costs}
+\label{sec:path-code}
+
+Use $r$ path coordinates together with two distinguished logical
+coordinates. Thus the logical group is
+$G=\mathbb F_2^{r+2}$. Let $a_j$ be the following $\ell=2r+1$
+columns in this group: the two distinguished unit vectors, all $r$
+path unit vectors, and the $r-1$ sums of consecutive path unit vectors.
+Their respective rail-size increments are
+\[
+ \delta_1=2Ar,\quad \delta_2=4Ar,\quad
+ \delta_{\rm loop}=4,\quad\delta_{\rm edge}=2,
+\]
+where $A=2^{20}$ is fixed. Choose a sufficiently large fixed even
+integer $K$, and set
+\[
+ R=KA^2r,\quad n_0=\ell R+1,\quad
+ S=6r-2,\quad D_\delta=6Ar+S.
+\]
+Each short rail has size $R$ and each long rail size $R+\delta_j$.
+The retained transversal indexed by $s\in G$ chooses its long rail
+in pair $j$ exactly when $a_j\cdot s=1$. Including the shared carrier,
+its odd degree is
+\begin{equation}\label{eq:path-degree}
+ n_s=n_0+2Ars_1+4Ars_2+4|s_{\rm path}|
+                  +2|Ds_{\rm path}|,
+\end{equation}
+where $D$ is the adjacent-difference map on the path. In particular
+$R\ge6\max_j\delta_j$, and all degrees are $\Theta(r^2)$.
+
+\subsection{Positive higher-order coefficients and one dominant pair}
+
+For odd integer arguments, the hardtanh cost has the analytic extension
+\[
+ w(z)=\sqrt{\pi z}\frac{\Gamma((z+1)/2)}{\Gamma(z/2)}
+ =\sqrt{\frac\pi2}\left(z-\frac14+\frac1{32z}+O(|z|^{-2})\right).
+\]
+Put $c=\sqrt{\pi/2}/32$. The remainder is holomorphic and uniformly
+$O(|z|^{-2})$ in a sufficiently far right half-plane. Cauchy's
+estimate on a circle of radius $a(1-1/k)$ proves, for all
+$2\le k\le\ell$ and $a\ge n_0$, once $K$ is large enough,
+\begin{equation}\label{eq:path-derivative}
+ \frac{ck!}{2a^{k+1}}\le(-1)^kw^{(k)}(a)
+                  \le\frac{3ck!}{2a^{k+1}}.
+\end{equation}
+Indeed the relative remainder bound is $O(k^2/a)$, uniformly in
+these indices, and $n_0\ge KA^2\ell^2/3$.
+
+First regard the $\ell$ long-rail choices as independent bits $t_j$.
+If $\widetilde W(T)$ is the Walsh coefficient of
+$w(n_0+\sum_j\delta_jt_j)$, the finite-difference formula gives
+\begin{equation}\label{eq:path-independent-bounds}
+ \frac{ck!\prod_{j\in T}\delta_j}
+      {2^{k+1}(n_0+D_\delta)^{k+1}}
+ \le\widetilde W(T)\le
+ \frac{3ck!\prod_{j\in T}\delta_j}{2^{k+1}n_0^{k+1}}
+ \qquad(k=|T|\ge2).
+\end{equation}
+All singleton coefficients are negative because $w$ is increasing.
+Restriction to the linear code pushes these coefficients forward:
+\begin{equation}\label{eq:path-pushforward}
+ W(v)=\sum_{T:\,\sum_{j\in T}a_j=v}\widetilde W(T).
+\end{equation}
+Only zero and the individual column directions can receive a
+constant or singleton contribution. Every other nonzero $W(v)$ is
+strictly positive.
+
+Let $u=e_1+e_2$ in the distinguished coordinates. It is not a column,
+and $W(u)\ge\widetilde W(\{1,2\})>0$. The total of the other
+positive coefficients obeys
+\begin{equation}\label{eq:path-dominance}
+ \sum_{v\ne0,u}\max(W(v),0)\le\eta W(u),\qquad \eta<10^{-3},
+\end{equation}
+by increasing the fixed $K$ if necessary. To see this quantitatively,
+the other independent degree-two products sum to at most
+$6ArS+S^2/2$, whereas the distinguished product is $8A^2r^2$.
+Their ratio in \eqref{eq:path-independent-bounds} is at most
+$3(6ArS+S^2/2)(1+D_\delta/n_0)^3/(8A^2r^2)=O(A^{-1})$.
+For $k\ge3$, use
+$k!\sum_{|T|=k}\prod_{j\in T}\delta_j\le D_\delta^k$ and sum
+the resulting geometric series. Relative to the distinguished pair
+this contributes $O(D_\delta^3/(n_0\delta_1\delta_2))
+=O((KAr)^{-1})$. Pushforward cannot increase the total positive mass
+outside zero and $u$, so these bounds prove the claim.
+
+\subsection{Many distinct effective costs}
+
+For a path vector $v\in\mathbb F_2^r$, identify $(1,1,v)\in G$ and
+write
+\[
+ \nu_v=W(1,1,v)-W(0,0,v).
+\]
+Averaging the distinguished bits gives the exact formula
+\begin{equation}\label{eq:path-effective}
+ \nu_v=-\frac12\left[\widehat w_{n_0+\delta_1}(v)
+                         +\widehat w_{n_0+\delta_2}(v)\right],
+\end{equation}
+where $\widehat w_a(v)$ is the path Walsh coefficient of
+$w(a+4|s|+2|Ds|)$. If $|v|\ge q\ge5$, every set of path columns
+whose sum is $v$ has at least $h=\lceil q/2\rceil$ members.
+Applying \eqref{eq:path-independent-bounds} just to the path columns
+therefore proves
+\begin{equation}\label{eq:path-tail}
+ 0<-\nu_v\le\frac{3c}{n_0}
+                  \left(\frac{S}{2n_0}\right)^h.
+\end{equation}
+The geometric-series factor is absorbed using $S/(2n_0)<1/2$.
+Strict positivity follows because the path loop columns span the path
+space. This argument uses finite differences only; it does not assume
+an unproved positive Laplace representation for $w$.
+
+Define the signed degree-count polynomial
+\[
+ P_v(X)=\sum_{s\in\mathbb F_2^r}(-1)^{s\cdot v}
+                              X^{2|s|+|Ds|}.
+\]
+At least $2^{r/2}$ of these polynomials are distinct. Here is an
+explicit transfer-matrix certificate. For $e\in(0,1)$ set
+$a=2e/(1+e^2)$ and
+\[
+ Z_v(a,e)=\sum_{y\in\mathbb F_2^{r-1}}e^{|y|}a^{|v+By|},
+\]
+where $B$ maps a set of path edges to its odd-degree vertex set.
+The Fourier expansion of $\exp[-t(4|s|+2|Ds|)]$, with
+$e=\tanh t$ and $a=\tanh2t$, is a common positive factor times
+$Z_v(a,e)$. It is also $2^{-r}P_v(e^{-2t})$.
+Let
+\[
+ M_0=\begin{pmatrix}1&ae\\a&e\end{pmatrix},\quad
+ M_1=\begin{pmatrix}a&e\\1&ae\end{pmatrix},\quad
+ c_0=\binom1a,\quad c_1=\binom a1.
+\]
+Directly summing the successive edge variables gives
+\[
+ \binom{Z_v}{Z_{v+e_1}}=M_{v_1}\cdots M_{v_{r-1}}c_{v_r}.
+\]
+At $e=1/2$, $a=4/5$, the first matrix sends a component ratio $x$ to
+$f(x)=(x+2/5)/((4/5)x+1/2)$, and the second sends it to $1/f(x)$.
+The interval $I=[4/5,5/4]$ is invariant under both maps, and
+$f(I)=[20/19,11/10]\subset(1,\infty)$, whereas its reciprocal lies
+below one. Both maps are injective. The resulting ratio therefore
+recovers $v_1$, then $v_2$, and so forth, and the terminal ratios
+$4/5$ and $5/4$ recover $v_r$. Thus all $2^r$ ordered pairs
+$(Z_v,Z_{v+e_1})$ are distinct. If there were fewer than $2^{r/2}$
+scalar values, there would be fewer than $2^r$ ordered pairs.
+Distinct scalar values imply distinct $P_v$.
+
+Distinct $P_v$ give distinct effective costs $\nu_v$ in
+\eqref{eq:path-effective}. Indeed the two degree intervals, shifted
+by $\delta_1$ and $\delta_2$, are disjoint because
+$\delta_2-\delta_1=2Ar>S$. All degrees in both intervals lie in an
+interval of length $D_\delta<2\sqrt{n_0}$ when $K$ is large.
+Two distinct integers of the same squarefree part differ by more than
+twice the square root of the smaller. Hence these distinct degrees
+have distinct squarefree parts. Since $w(n)$ is a nonzero rational
+multiple of $\sqrt n$ at every odd integer $n$, independence of
+squarefree radicals forces every coefficient in a cost difference to
+vanish. The disjoint upper branch then forces $P_v=P_{v'}$.
+
+\subsection{An affine live set and quantitative tails}
+
+Set $q=\lceil r/64\rceil$. For all sufficiently large $r$,
+\[
+ \sum_{j<q}\binom rj\le2^{r/8},\qquad \binom rq\le2^{r/8}.
+\]
+Start with one representative of each distinct polynomial, and discard
+representatives of weight below $q$. Assign to each remaining vector
+a $q$-subset of its support, and its two colors
+\[
+ \sum_{i=1}^r v_i\pmod2,\qquad
+ \sum_{i\ \mathrm{odd}}v_i\pmod2.
+\]
+Pigeonholing over at most $4\binom rq$ choices gives an affine fiber
+of size at least $2^{3r/8-3}$ in distinct-cost representatives. In
+particular it contains at least $2^{r/3}$ for large $r$. Let $U$ be
+this affine fiber, with its distinguished coordinates fixed to $(1,1)$.
+All its path vectors have weight at least $q$. Put
+$U'=U\cup(U+u)$. Every path loop or edge column changes at least
+one of the two colors, and every distinguished loop changes exactly
+one distinguished bit. Thus
+\[
+ U'\cap(U'+a_j)=\varnothing\quad\text{for every physical column }a_j.
+\]
+Also $0,u\notin U'$ and $u+a_j\notin U'$ for large $r$, since
+vectors in $U'$ have at least $q>2$ path ones. Retain one representative
+of each desired distinct effective cost as a live candidate, and
+initially reveal the other fibers in $U'$ if necessary. The extra
+initial observations only impose the additional nonpositive-sign
+constraints already allowed in the rounding argument.
+
+Finally \eqref{eq:path-tail} is $\exp[-\Omega(r\log r)]$, whereas
+all geometric, norm-stability, and Fourier-rounding constants are
+$\exp[O(r)]\operatorname{poly}(r)$. It therefore satisfies their
+strict absorption inequalities for all sufficiently large $r$.
+All parameters $A,K$ are fixed before taking this limit.
+
+\subsection{Teacher resources}
+
+The logical target is the sign of
+$\sum_{i=1}^{r+2}\chi_{A_{e_i}}-(r+1)\chi_{A_0}$ and has margin one.
+An odd parity of degree $n$ has an exact hardtanh spline representation
+using at most $n+1$ neurons: transitions centered at the successive
+midpoints of its attainable coordinate sums, and one constant neuron.
+Incoming weights have magnitude one, biases at most $n$, and
+readouts at most two. The teacher above therefore has width at most
+\[
+ C_r=(r+3)(n_0+1)+6Ar+8r-4=\Theta(r^3),
+\]
+since the sum of path basis-vector degree increments is $8r-4$.
+Its readout weights are at most $2(r+1)$ and all coefficients are
+bounded by $C_r$. The physical input dimension is
+$d_r=1+2\ell R+D_\delta=\Theta(r^2)$.
+The at least $2^{r/3}$ designated mistakes are consequently
+$\exp(\Omega(C_r^{1/3}))$.

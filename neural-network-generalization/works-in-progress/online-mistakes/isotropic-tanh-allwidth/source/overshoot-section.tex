@@ -1,0 +1,207 @@
+\section{An exact repair of the logical score optimization}
+\label{sec:repair}
+
+The output magnitudes are free optimization variables even when all
+labels are fixed. For the scalar weights below, the cheapest competitors
+use a negative overshoot on one fixed logical coset. We first identify
+that optimizer in a finite-dimensional weighted Fourier problem, then
+establish the scalar estimates used by the neural construction.
+
+For a score $g$ on $G=\mathbb F_2^m$, write
+$B_w(g)=\sum_s w_s|\widehat g(s)|$ with normalized Walsh coefficients.
+The sharp atomic theorem identifies this weighted norm with the
+variation cost on the retained physical code by signed input-flip
+averaging of its equality atoms.
+
+\subsection{A reduction to nonnegative Fourier coefficients}
+
+Let $G=\F_2^m$, $M=|G|$, and let $w_s\ge w_0>0$. Continue to write
+$B_w(g)=\sum_s w_s|\widehat g(s)|$ and
+$W(x)=M^{-1}\sum_s w_s(-1)^{s\cdot x}$.
+
+\begin{lemma}[The point-positive margin problem]\label{lem:positive-coeff}
+Suppose $M\ge4$. Among scores satisfying $g(0)\ge1/2$ and
+$g(x)\le-1/2$ for every $x\ne0$, there is a minimum-cost score with
+$g(0)=1/2$, $\widehat g(0)<0$, and $\widehat g(s)\ge0$ for $s\ne0$.
+If $w_s>w_0$ for every $s\ne0$, every optimizer has these properties.
+\end{lemma}
+\begin{proof}
+First impose $c_s=\widehat g(s)\ge0$ for $s\ne0$ and
+$c_0=1/2-\sum_{s\ne0}c_s$. The margin constraints become
+\[
+ \sum_{s:s\cdot x=1}c_s\ge\frac12\quad(x\ne0),
+\]
+and their sum implies $\sum_{s\ne0}c_s\ge1-1/M$, hence $c_0<0$.
+The resulting objective is
+$-w_0/2+\sum_{s\ne0}(w_0+w_s)c_s$.
+This is a feasible, attained finite linear program. Its dual has
+variables $a_x\ge0$ and constraints
+\[
+ \sum_{x:s\cdot x=1}a_x\le w_0+w_s,
+\]
+with objective $\frac12\sum_{x\ne0}a_x-w_0/2$.
+For an optimal dual, define a function $\lambda$ by
+\[
+ \lambda(0)=M\left(\frac12\sum_{x\ne0}a_x-w_0\right),\qquad
+ \lambda(x)=-Ma_x/2\quad(x\ne0).
+\]
+Then $\widehat\lambda(0)=-w_0$ and
+\[
+ \widehat\lambda(s)=-w_0+\sum_{x:s\cdot x=1}a_x\in[-w_0,w_s].
+\]
+Consequently $|\widehat\lambda(s)|\le w_s$. The restricted optimum
+is at least $(3/2-2/M)w_0>w_0/2$, so $\lambda(0)>0$.
+Thus $\lambda$ is also a dual certificate for the unrestricted
+margin problem and has the same value. Equality forces $g(0)=1/2$
+and $c_0\le0$. Under strict $w_s>w_0$, it also excludes negative
+$c_s$ for $s\ne0$; the summed constraints then give $c_0<0$.
+\end{proof}
+
+If the prescribed positive set is a subgroup $J\le G$, averaging over
+translations by $J$ deletes all Fourier coefficients outside $J^\perp$.
+It strictly decreases the norm whenever any such coefficient is nonzero.
+Thus every optimizer is $J$-invariant, and the problem reduces to the
+point-positive problem on $G/J$ with weights restricted to $J^\perp$.
+
+\subsection{A dominant Walsh coefficient selects a unique overshoot}
+
+\begin{theorem}[Exact subgroup-positive optimizer]\label{thm:dominant}
+Let $J\le G$, let $u\notin J$, and set $H=\langle J,u\rangle$,
+$j=|J|$, and $L=M/(2j)\ge2$. Assume $w_s>w_0>0$ for $s\ne0$.
+On $G/J$ put
+\[
+ A_x=\sum_{a\in J}W(x+a),\qquad t=\frac{2jw_0}{M},\qquad
+ h_x=A_x-t,\qquad h=h_u>0.
+\]
+For every nonzero coset $c\in G/H$, choose $x\in c$ and put
+\[
+ \kappa_c=\max(0,A_x,A_{x+u}),\qquad
+ r_c=\frac{\kappa_c}{h},\qquad R_* =\sum_{c\ne0}r_c.
+\]
+These definitions do not depend on the representatives. If
+\begin{equation}\label{eq:dominant-conditions}
+ R_*<1,\qquad w_0>(1+R_*)(h+t),
+\end{equation}
+then the unique minimum of $B_w(g)$ over the full-margin sign cell
+positive exactly on $J$ is
+\begin{equation}\label{eq:overshoot-score}
+ g_J(x)=-\tfrac12+\one_{x\in J}-\one_{x\in u+J}.
+\end{equation}
+Its cost is
+\begin{equation}\label{eq:overshoot-cost}
+ C_J=\frac{w_0}{2}+A_0-A_u.
+\end{equation}
+\end{theorem}
+\begin{proof}
+Work on $G/J$. By Lemma~\ref{lem:positive-coeff}, every optimizer
+has value $1/2$ at the origin and nonnegative nonconstant Fourier
+coefficients. It can therefore be written uniquely as
+\[
+ g=-\tfrac12+\one_0-\sum_{x\ne0}\nu_x\one_x,\qquad \nu_x\ge0.
+\]
+Nonnegativity of its nonconstant coefficients is exactly
+\begin{equation}\label{eq:overshoot-primal}
+ \sum_{x\ne0}\nu_x(-1)^{s\cdot x}\le1
+ \quad(s\in J^\perp,\ s\ne0).
+\end{equation}
+Substitution in the objective gives the equivalent maximization
+\[
+ C_J=\frac{w_0}{2}+A_0-t
+       -\max_{\nu}\sum_{x\ne0}\nu_xh_x.
+\]
+We certify that the unique maximizer is $\nu_u=1$.
+
+Define a probability law on $H^\perp$ by
+\[
+ P(s)=\frac1L\left[1+\sum_{c\ne0}r_c(-1)^{s\cdot x_c}\right].
+\]
+It is strictly positive because $R_*<1$, and character orthogonality
+shows that it sums to one. Write $p=P(0)=(1+R_*)/L$ and condition on
+$s\ne0$ to obtain $Q$. The second condition in
+\eqref{eq:dominant-conditions} implies $p<1$. For $x\notin H$,
+\[
+ \E_Q(-1)^{s\cdot x}
+ =\frac{r_{[x]}-p}{1-p}
+ \ge\frac{A_x}{h}-\frac p{1-p}
+ >\frac{A_x-t}{h}.
+\]
+The strict last inequality is equivalent to
+$w_0>(1+R_*)(h+t)$, using $t=w_0/L$.
+For $x=u$ modulo $J$, the character is identically one and $h_x/h=1$.
+Averaging \eqref{eq:overshoot-primal} against $Q$ now gives
+\[
+ \sum_{x\ne0}\nu_xh_x
+ \le h\E_Q\sum_{x\ne0}\nu_x(-1)^{s\cdot x}\le h.
+\]
+Equality requires $\nu_x=0$ outside $u+J$; the remaining constraint
+forces $\nu_u\le1$. The feasible choice $\nu_u=1$ attains equality,
+proving uniqueness and both displayed formulas.
+\end{proof}
+
+\subsection{Polynomial-size parameters for the balanced tanh weights}
+
+The analytic remainder in Theorem~\ref{thm:curvature} controls all
+Walsh degrees at once, with a polynomial loss rather than a loss
+exponential in the degree.
+
+\begin{lemma}[Uniform high-order Walsh signs]\label{lem:uniform-walsh}
+Suppose $w(z)=Az+B+C/z+E(z)$ is holomorphic on
+$\{\Re z>0,\ |z|>z_*\}$, where $C>0$ and $|E(z)|\le K/|z|^2$.
+Let $\delta_i>0$, $D=\sum_i\delta_i$, and
+$n_s=n_0+\sum_i\delta_i s_i$. Assume
+$n_0/m>z_*$ and $n_0\ge8Km^2/C$. For every support $T$ of size
+$2\le k\le m$, its Walsh coefficient obeys
+\begin{equation}\label{eq:uniform-walsh}
+ \frac{C k!\prod_{i\in T}\delta_i}{2^{k+1}(n_0+D)^{k+1}}
+ \le W(T)\le
+ \frac{3C k!\prod_{i\in T}\delta_i}{2^{k+1}n_0^{k+1}}.
+\end{equation}
+In particular, all these coefficients are strictly positive.
+\end{lemma}
+\begin{proof}
+For real $a\ge n_0$, apply Cauchy's estimate on the circle of radius
+$a(1-1/k)$. Every point on that circle has modulus at least $a/k$,
+and $(1-1/k)^{-k}\le4$. Therefore
+\[
+ |E^{(k)}(a)|\le\frac{4K k! k^2}{a^{k+2}},
+\]
+so
+\[
+ \frac{Ck!}{2a^{k+1}}\le(-1)^kw^{(k)}(a)
+ \le\frac{3Ck!}{2a^{k+1}}.
+\]
+A Walsh coefficient is $2^{-k}$ times an average of signed $k$-fold
+forward differences. Integrating their derivatives over intervals of
+length $\delta_i$ proves \eqref{eq:uniform-walsh}.
+\end{proof}
+
+\begin{lemma}[A dominant pair of increments]\label{lem:dominant-increments}
+Suppose the full rail-index cube has $\ell$ coordinates and the scalar
+weights satisfy Lemma~\ref{lem:uniform-walsh}, with positive linear
+coefficient $A>0$ in the scalar expansion. Let the two distinguished
+increments belong to $[H,2H]$, and put
+$S=\sum_{j\ge3}\delta_j$. If $S=o(H)$ and $H=o(n_0)$, then, with
+$u=e_1+e_2$,
+\begin{equation}\label{eq:dominance-sum}
+ \frac{\sum_{|T|\ge2,\ T\ne u}W(T)}{W(u)}
+ =O(S/H+H/n_0).
+\end{equation}
+All singleton coefficients are negative for sufficiently large $n_0$.
+\end{lemma}
+\begin{proof}
+The other degree-two increment products sum to $O(HS+S^2)$,
+while the distinguished product is at least $H^2$.
+Equation~\eqref{eq:uniform-walsh} therefore bounds their ratio by
+$O(S/H)$. Write $D=\sum_j\delta_j=O(H)$. For higher degrees use
+$k!\sum_{|T|=k}\prod_{j\in T}\delta_j\le D^k$ in the upper bound
+and sum the geometric series. Dividing by the lower bound for $W(u)$
+gives $O(D^3/(n_0H^2))=O(H/n_0)$.
+Finally $w'(a)=A+O(a^{-2})>0$, so the first-difference formula gives
+negative singleton coefficients.
+\end{proof}
+
+The cycle construction uses two independent distinguished columns, so
+restriction of the full rail-index cube to its column code preserves
+this dominance. The common dual in Appendix~\ref{app:physical} then
+certifies every feasible minimum simultaneously, including physical
+competitors outside the logical code.

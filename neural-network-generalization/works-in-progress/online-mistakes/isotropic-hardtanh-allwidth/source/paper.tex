@@ -1,0 +1,178 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,amsmath,amssymb,amsthm,mathtools}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}\newcommand{\F}{\mathbb F}
+\newcommand{\one}{\mathbf1}\newcommand{\relu}{\operatorname{ReLU}}
+\newcommand{\clip}{\operatorname{clip}}\newcommand{\dist}{\operatorname{dist}}
+\title{Superpolynomial online mistakes for isotropic Bayesian hardtanh networks}
+\author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{November 2026}
+\hypersetup{pdftitle={Superpolynomial online mistakes for isotropic Bayesian hardtanh networks},pdfauthor={ChatGPT-6 Astra; Kaarel Hanni; Dmitry Vaintrob}}
+\begin{document}\maketitle
+\begin{abstract}
+We construct small Boolean targets and fixed nonrepeating input
+sequences on which exact Bayesian learning with a one-hidden-layer
+hardtanh network makes superpolynomially many online mistakes.
+The weight prior is independent Gaussian and isotropic within each
+layer. It is conditioned from the start on an absolute output margin
+at every Boolean input, and training conditions on exact labels.
+At every sufficiently large fixed learner width, the correct-label
+posterior probability tends to zero on each designated round as the
+Gaussian scale tends to zero.
+
+The targets have same-depth hardtanh teachers of width $C$, margin one,
+and coefficients bounded by $C$, while the construction forces
+$\exp(\Omega(C^{1/3}))$ designated mistakes. The polynomial exponent
+is a convenient bound, not an optimization claim. The calibration
+prefix and sufficient learner width are large.
+
+The proof gives an exact unequal-rail parity norm for hardtanh neurons
+and polynomial stability into an odd Fourier subspace. A shared carrier
+bit converts hardtanh coefficients into even-degree ReLU coefficients.
+Cauchy--Schwarz and a monotone finite-difference estimate then
+control all affine neurons. The resulting parity costs
+have positive inverse-degree curvature, so the cheapest competing
+scores use a fixed negative overshoot. An explicit dual identifies
+these scores, square-root independence orders their costs, and integer
+neuron replication transfers the strict cost gaps to the actual
+Gaussian posterior. 
+\end{abstract}
+
+\section{Model and result}
+
+Write $\clip(t)=\max(-1,\min(1,t))$. On the full Boolean cube
+$X=\{-1,1\}^d$, append a constant input $\bar x=(1,x)$ and use
+\[
+ F_\theta(x)=\sum_{j=1}^N v_j\clip(u_j\cdot\bar x),\qquad
+ (u_j)_i\sim\mathcal N(0,N\sigma^2/d),\qquad
+ v_j\sim\mathcal N(0,\sigma^2/N),
+\]
+with all coordinates independent. The prior is first conditioned on
+$|F_\theta(x)|>1/2$ at every input. Each revealed example then conditions
+on its exact sign label. The strong-prior limit means
+$\sigma\downarrow0$ after fixing $N$; no joint width--scale limit is
+used. Up to the common factor $1/(2\sigma^2)$, the Gaussian energy is
+\begin{equation}\label{eq:energy}
+ K_N(\theta)=\frac dN\sum_j\|u_j\|_2^2+N\sum_jv_j^2.
+\end{equation}
+
+\begin{theorem}\label{thm:main}
+For all sufficiently large integers $m$, there exist a dimension
+$d_m=\Theta(m^2)$, a Boolean function $f_m$ on the full cube, and
+a fixed nonrepeating input sequence with $T_m=\exp(\Omega(m))$
+designated rounds, with the following properties.
+The target has a one-hidden-layer hardtanh score of margin one and
+width $C_m=O(m^3)$, all of whose coefficients are bounded by $C_m$.
+There is a finite $N_0(m)$ such that, for every fixed $N\ge N_0(m)$,
+at every designated round the posterior probability of the correct
+label tends to zero as $\sigma\downarrow0$.
+Consequently the same sequence forces
+$\exp(\Omega(C_m^{1/3}))$ mistakes for posterior-majority prediction
+in this limit, and that many expected mistakes under posterior sampling.
+\end{theorem}
+
+This is an adversarial-order result. It does not contradict iid
+sample-complexity guarantees for small targets. The full-cube margin
+restriction and the order of limits are part of the theorem, as are the
+large calibration prefix and the potentially very large width threshold.
+The proof concerns the full Bayesian posterior, rather than a chosen
+minimum-energy representative.
+
+\section{The parity code and its scalar costs}
+
+Take $\ell$ pairs of disjoint rails $B_j^0,B_j^1$ of even sizes,
+nonzero columns $a_j\in\mathbb F_2^m$ spanning the logical space,
+and one additional physical carrier coordinate $x_\star$.
+For $s\in\mathbb F_2^m$ put
+\[
+ A_s=\{\star\}\cup\bigcup_{j=1}^{\ell}B_j^{a_j\cdot s},
+ \qquad n_s=|A_s|.
+\]
+All $n_s$ are odd. Let $b=x_\star\prod_j\chi_{B_j^0}$, define
+$(-1)^{\zeta_j}=\chi_{B_j^0\cup B_j^1}$, and put
+$z=\sum_j a_j\zeta_j$. Then $z$ is uniform on $G=\mathbb F_2^m$ and
+$\chi_{A_s}=b(-1)^{s\cdot z}$.
+The full independent-rail code is the special case $\ell=m$, $a_j=e_j$;
+the construction below retains a path subcode of a larger rail family.
+The target is
+\begin{equation}\label{eq:target}
+ f(x)=b(x)\begin{cases}+1,&z(x)=0,\\-1,&z(x)\ne0.\end{cases}
+\end{equation}
+
+For odd $n$ define
+\begin{equation}\label{eq:parity-cost}
+ \kappa_n=2^{1-n}\binom{n-1}{(n-1)/2},\qquad w(n)=\frac{\sqrt n}{\kappa_n}.
+\end{equation}
+A hardtanh neuron with unit weights on $n$ coordinates is majority
+on those coordinates. Its top parity coefficient has absolute value
+$\kappa_n$, so signed averaging over input flips represents parity
+with variation cost $w(n)$. For $F=\sum_jc_j\clip(a_j\cdot\bar x)$,
+the representation cost is $\sum_j|c_j|\|a_j\|_2$; its infimum is
+the hardtanh variation norm $V(F)$. Arithmetic--geometric mean gives
+\begin{equation}\label{eq:variation-energy}
+ K_N\ge2\sqrt d\sum_j|v_j|\|u_j\|_2\ge2\sqrt d\,V(F_\theta).
+\end{equation}
+
+For a logical score $g(z)=\sum_s\widehat g(s)(-1)^{s\cdot z}$,
+write
+\[
+ B_w(g)=\sum_s w(n_s)|\widehat g(s)|,\qquad
+ W(v)=2^{-m}\sum_s(-1)^{s\cdot v}w(n_s).
+\]
+The atomic theorem in the next section shows that $V(bg)=B_w(g)$.
+The following scalar facts identify and order the competing scores.
+
+\subsection{Positive curvature and a dominant pair}
+
+The gamma-ratio identity and its right-half-plane expansion give
+\begin{equation}\label{eq:cost-expansion}
+ w(z)=\sqrt{\pi z}\,\frac{\Gamma((z+1)/2)}{\Gamma(z/2)}
+ =\sqrt{\frac\pi2}\left(z-\frac14+\frac1{32z}+O(|z|^{-2})\right).
+\end{equation}
+The remainder is holomorphic and uniform after restricting to a far
+right half-plane. If $C=\sqrt{\pi/2}/32$, Cauchy's estimate on the
+circle of radius $a(1-1/k)$ gives
+\[
+ \frac{Ck!}{2a^{k+1}}\le(-1)^k w^{(k)}(a)
+ \le\frac{3Ck!}{2a^{k+1}}
+\]
+for $2\le k\le\ell$ and $a\ge n_0\gg\ell^2$. On the full
+independent-index cube, if
+$n_s=n_0+\sum_i\delta_i s_i$ and $D_\delta=\sum_i\delta_i$, then
+\begin{equation}\label{eq:walsh-bounds}
+ \frac{Ck!\prod_{i\in T}\delta_i}{2^{k+1}(n_0+D_\delta)^{k+1}}
+ \le W(T)\le
+ \frac{3Ck!\prod_{i\in T}\delta_i}{2^{k+1}n_0^{k+1}}
+ \qquad(|T|=k\ge2).
+\end{equation}
+The degree-one coefficients are negative, since $w'>0$.
+
+The same estimates apply before pushing the independent rail indices
+through the column map. In particular, higher-order coefficients are
+positive on the independent-index cube; their sums give coefficients
+of the retained column code. The only possibly negative contributions
+come from individual columns. Section~\ref{sec:path-code} uses this
+observation to build and order the negative-overshoot competitors.
+
+\input{source/global-atom.tex}
+\input{source/retained-code.tex}
+\input{source/path-code.tex}
+\input{source/online-geometry.tex}
+
+\section{Conclusion of the theorem}
+
+The path construction has $m=r+2$ logical coordinates,
+$d_m=\Theta(m^2)$ physical coordinates, and a margin-one teacher of
+width $C_m=\Theta(m^3)$ with coefficients bounded by $C_m$.
+The affine live set contains at least $2^{r/3}=\exp(\Omega(m))$
+distinct-cost representatives. The preceding posterior argument
+therefore gives $\exp(\Omega(C_m^{1/3}))$ designated mistakes at
+every sufficiently large fixed learner width. This completes
+Theorem~\ref{thm:main}.
+
+\end{document}

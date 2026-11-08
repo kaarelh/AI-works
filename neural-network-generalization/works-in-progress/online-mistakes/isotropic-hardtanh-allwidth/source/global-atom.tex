@@ -1,0 +1,227 @@
+\section{An exact unequal-rail hardtanh norm}
+\label{sec:atomic}
+
+In this section consider the full family of transversals, indexed by
+$s\in\mathbb F_2^{\ell}$ independently, before retaining the column
+subcode. Write $m=\ell$ temporarily. Let $\mathcal C$ be the span of the code characters $\chi_{A_s}$.
+Let $\mathcal D_{\rm odd}$ be the span of all odd-degree characters
+whose supports are contained in some $A_s$.
+The odd-degree restriction is essential: a complete rail transversal
+without the carrier has even degree and would otherwise defeat the
+observability argument used later.
+
+\begin{theorem}[Sharp atom bound and support stability]
+\label{thm:atomic}
+Suppose $m\ge2$, all rail sizes are even and lie in $[R,R+\Delta]$,
+$\Delta\ge2$ is even, and $R\ge6\Delta$.
+Every affine hardtanh atom $\phi_u(x)=\clip(u\cdot\bar x)$ satisfies
+\[
+ Q(\phi_u):=\sum_s w(n_s)|\widehat\phi_u(A_s)|\le\|u\|_2.
+\]
+Nonzero equality requires zero bias, zero irrelevant and unused-rail
+weights, and magnitude one on the carrier and every coordinate of a
+single selected transversal. Moreover
+\begin{equation}\label{eq:atomic-stability}
+ \|\phi_u-P_{\mathcal D_{\rm odd}}\phi_u\|_2^2
+ \le2^8R^2\|u\|_2\bigl(\|u\|_2-Q(\phi_u)\bigr).
+\end{equation}
+Consequently $V(bg)=B_w(g)$ for every code score.
+\end{theorem}
+
+\subsection{Positive Fourier integrals and block balancing}
+
+Allow an auxiliary threshold $v>0$ and write
+$\clip_v(t)=\relu(t+v)-\relu(t-v)-v$.
+A code coefficient of $\clip_v$ is twice the ReLU coefficient obtained
+by adjoining a Boolean sign $\xi$ of weight $v$ and including it in
+the support. Every augmented support has even degree. The even-degree
+ReLU Fourier integral, up to its fixed degree sign, is
+\begin{equation}\label{eq:relu-integral}
+ \frac1\pi\int_0^\infty\cos(bt)
+   \prod_{j\in A}\sin(u_jt)
+   \prod_{j\notin A}\cos(u_jt)\,\frac{dt}{t^2}.
+\end{equation}
+Discard the absolute bias and irrelevant cosine factors, flip signs
+of incoming weights, and take absolute values inside this integral.
+Call the resulting weighted expression $H(u_0,\mathrm{rails};v)$,
+where $u_0\ge0$ is the physical carrier magnitude. It bounds $Q$
+and is homogeneous of degree one jointly in its arguments. The
+auxiliary weight is excluded from the physical incoming norm.
+
+H\"older on each even rail, applied to the disjoint union of
+coefficient-index copies of the integration measure, bounds $H$ by
+the geometric mean of its values on vectors obtained by choosing one
+coordinate magnitude uniformly in each rail and repeating it throughout
+that rail. The carrier and auxiliary weights stay fixed. This statement
+concerns the positive absolute-integral expression, not an equality
+between signed coefficients. Sampling preserves the expected squared
+physical norm. Thus a norm bound for these balanced potentials
+transfers to arbitrary coordinates by Jensen's inequality.
+
+For balanced rails name their amplitudes $a_i\ge b_i\ge0$, with
+respective sizes $p_i,q_i$, and put $D=\sum_i p_i$, $n=D+1$.
+Let $J(c)$ be the weighted ReLU coefficient sum with two unpaired
+shared coordinates, both of magnitude $c$, and the actual rail weights.
+Every sine and cosine exponent in its integral is even, so the integral
+has no sign cancellation. Cauchy--Schwarz on the two shared factors
+in $H$ gives
+\begin{equation}\label{eq:shared-cauchy}
+ H(u_0,\mathrm{rails};v)\le2\sqrt{J(u_0)J(v)}.
+\end{equation}
+
+\subsection{A randomized minimum for unequal rails}
+
+Write $\kappa_D^{\rm R}=2^{1-D}\binom{D-2}{(D-2)/2}$ for even $D$.
+Consider a zero-bias ReLU ridge with selected rail coordinates $X_i$,
+opposite coordinates $Y_i$, and any additional unpaired even block.
+Let $c_s$ be its absolute coefficient on the transversal choosing $Y_i$
+when $s_i=1$, together with the unpaired block.
+Put $T_\varepsilon=\min_i(a_i+\varepsilon_i b_i)$.
+
+\begin{lemma}[Unpaired shared block]\label{lem:random-min}
+If the unpaired block consists of two coordinates of weight $c$, then
+\[
+ \sum_s c_s\le\kappa_{D+2}^{\rm R}\E\min(c,T_\varepsilon).
+\]
+If $q_i\ge p_i$, the coefficient mass using the opposite rail in
+pair $i$ is at most
+$\kappa_{D-p_i+q_i+2}^{\rm R}b_i\le\kappa_{D+2}^{\rm R}b_i$.
+\end{lemma}
+\begin{proof}
+The fixed signs of the even-block integrals express the unweighted
+sum as a top selected-parity coefficient after conditioning
+\[
+ \chi_{Y_i}=\eta_i\chi_{X_i},\qquad
+ \eta_i=(-1)^{(q_i-p_i)/2},
+\]
+for every pair. To generate each conditional law, choose independent
+uniform signs $\varepsilon_i$, set a distinguished opposite coordinate
+$Y_{i,1}=\varepsilon_iX_{i,1}$, and condition the remaining opposite
+coordinates on
+$\chi_{Y_{i,\rm rest}}=\eta_i\varepsilon_i\chi_{X_{i,\rm rest}}$.
+The distinguished selected coordinate now has nonnegative coefficient
+$a_i+\varepsilon_i b_i$. The conditional laws do not depend on any
+of these distinguished selected coordinates.
+
+The normalized finite derivative of ReLU in a distinguished coordinate
+is a nondecreasing function into $[0,1]$. It remains nondecreasing in
+all other selected coordinates under these conditional laws: changing
+an ordinary selected bit increases its direct contribution by $2a_j$
+and reverses one opposite parity condition. Couple the two uniform
+parity classes by flipping one fixed remaining opposite bit, changing
+the total argument by $2a_j-2b_jY_{j,k}\ge0$.
+An unpaired shared bit simply increases the argument by $2c$.
+
+A nondecreasing function on $k$ Boolean coordinates with values in
+$[0,1]$ has top Fourier coefficient at most
+$2^{-k}\binom{k-1}{\lfloor(k-1)/2\rfloor}$ in absolute value.
+Indeed average over permutations and express the resulting increasing
+Hamming-level sequence as a convex combination of level thresholds;
+their alternating binomial sums give this bound.
+Apply it after taking a finite derivative in any distinguished selected
+bit or in either shared bit. At fixed $\varepsilon$ the top coefficient
+is at most $\kappa_{D+2}^{\rm R}\min(c,T_\varepsilon)$. Averaging
+proves the first assertion.
+
+For the marginal assertion, discard the cosine factor of the unused
+selected rail $X_i$ in the positive integral. Treat $Y_i$ as an unpaired
+selected block, and take its distinguished derivative of coefficient
+$b_i$. The same argument gives
+$\kappa_{D-p_i+q_i+2}^{\rm R}b_i$. Finally
+$\kappa_{r+2}^{\rm R}/\kappa_r^{\rm R}=(r-1)/r<1$.
+\end{proof}
+
+\subsection{The exact norm bound}
+
+The hardtanh cost $w(n)$ is increasing and its odd forward slopes are
+at most three. Indeed
+\[
+ \frac{w(n+2)}{w(n)}=(1+1/n)\sqrt{1+2/n}\le(1+1/n)^2.
+\]
+The elementary central-binomial bound $w(n)\le2n$ therefore gives
+$w(n+2)-w(n)\le4+2/n\le6$.
+For completeness, the bound follows by induction from
+$\kappa_{2r+1}\ge1/(2\sqrt r)$ for $r\ge1$, using the recurrence
+$\kappa_{2r+3}/\kappa_{2r+1}=(2r+1)/(2r+2)$; $n=1$ is immediate.
+
+Set $t=\E T_\varepsilon$ and $E_a=\sum_i(a_i-t)$. Monotonicity and
+the slope bound imply, even when some opposite rails are shorter,
+\[
+ w(n_s)\le w(n)+3\sum_{i:q_i>p_i}(q_i-p_i)s_i.
+\]
+Lemma~\ref{lem:random-min} consequently yields
+\[
+ J(c)\le\frac{\sqrt n}{2}\E\min(c,T_\varepsilon)
+       +3\kappa_{D+2}^{\rm R}\Delta\sum_i b_i.
+\]
+Cauchy--Schwarz, arithmetic--geometric mean, and concavity of the
+minimum give
+\[
+ H\le J(u_0)+J(v)
+ \le\frac{\sqrt n}{2}[\min(u_0,t)+t]
+       +6\kappa_{D+2}^{\rm R}\Delta\sum_i b_i.
+\]
+For every $u_0,t\ge0$,
+\[
+ \frac n2[\min(u_0,t)+t]\le Dt+u_0.
+\]
+If $u_0\ge t$ this is immediate; otherwise the difference equals
+$(D-1)(t-u_0)/2$. Also, for $i\ne j$,
+\[
+ t\le\frac{a_i+a_j-\max(|a_i-a_j|,b_i)}2,
+\]
+so summing over ordered pairs gives $\sum_i b_i\le2E_a$.
+The recurrence shows $\kappa_n\sqrt n\le1$ for odd $n$; thus
+$\kappa_{D+2}^{\rm R}\sqrt n\le1/2$. Combining these facts and
+$R\ge6\Delta$ gives the stronger linear bound
+\begin{equation}\label{eq:projection-bound}
+ H\le\frac{Dt+u_0+6\Delta E_a}{\sqrt n}
+ \le L:=\frac{\sum_i p_i a_i+u_0}{\sqrt n}
+ \le\|u_{\rm physical}\|_2.
+\end{equation}
+The quantity $L$ is the projection onto the unit balanced ray on the
+selected rails and physical carrier. If $u_*$ is that projection,
+\begin{equation}\label{eq:balanced-distance}
+ \|u-u_*\|_2^2=\|u\|_2^2-L^2
+ \le2\|u\|_2(\|u\|_2-H).
+\end{equation}
+Block balancing and Jensen now prove the global atom inequality.
+Equality forces zero unused weights and a common magnitude $a$ on
+all selected physical coordinates and the carrier. Equality in the
+shared-factor Cauchy inequality requires $\sin^2(at)$ proportional
+to $\sin^2(vt)$ on an interval, hence $a=v$. At the standard threshold
+$v=1$ the selected magnitudes are one. Bias and irrelevant weights
+vanish because they only increase the full incoming norm.
+
+\subsection{Polynomial stability into the odd downward space}
+
+It suffices to control discarded support weights, rather than to force
+all retained coordinates to be equal. By joint homogeneity, rescale the auxiliary threshold along with the
+physical parameters to normalize the original relevant physical norm
+to one. Let $V$ be its balanced rail sample. If
+independent rail samples $X,Y$ have second moments $A\ge B$, then
+\[
+ \E\min(X^2,Y^2)\ge\frac{AB}{r_{\max}(A+B)}
+                    \ge\frac B{2r_{\max}}.
+\]
+Choose deterministically the rail with larger second moment in each
+pair. Its discarded physical squared norm is at most
+$8R\E d_{\rm face}(V)^2$, since $R\le r_i^j\le2R$.
+For $\epsilon=1-H(u)<1/2$, H\"older and $\E\|V\|^2=1$ imply
+\[
+ \E\left[1-\frac{H(V)}{\|V\|}\right]
+ \le-\log H(u)\le2\epsilon,
+ \qquad \|V\|^2\le r_{\max}\le2R.
+\]
+Using \eqref{eq:balanced-distance} bounds the discarded squared norm
+by $64R^2\epsilon$. For $\epsilon\ge1/2$, use the trivial bound.
+Bias and irrelevant squared norm are at most
+$2\|u\|(\|u\|-Q(\phi_u))$, by the discarded-norm comparison.
+Strip them and the chosen unused rails. The resulting zero-bias
+hardtanh atom is odd and depends on one selected support, so lies in
+$\mathcal D_{\rm odd}$. Hardtanh is one-Lipschitz and the augmented
+Boolean coordinates have identity covariance. Parameter squared
+distance therefore bounds the output $L^2$ residual, proving
+\eqref{eq:atomic-stability} with the stated safe constant.
+The exact variation norm follows from the atom inequality and the
+finite parity-orbit representations.

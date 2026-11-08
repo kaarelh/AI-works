@@ -1,0 +1,206 @@
+% Standalone proof module.  The only analytic inputs are the sharp intrinsic
+% single-parity theorem and the separately proved orientation-localization lemma.
+% Written 2026-11-08; no balance-stability theorem is assumed.
+
+\section{Exact tanh code norm from support stability and high-order absorption}
+
+Write $h_\theta(x)=\tanh(b+u\cdot x)$ and
+$r=\|\theta\|_2=(b^2+\|u\|_2^2)^{1/2}$, with uniform Boolean input.
+For an odd set $A$ of cardinality $n$, let $c_A(\theta)=\widehat h_\theta(A)$.
+The global single-parity theorem (Theorem~\ref{thm:global-single-parity}) supplies the positive number $w_n$ such that
+\begin{equation}\label{eq:absorb-intrinsic}
+ w_n\left|\mathbb E\chi_A(X)\tanh(u_A\cdot X)\right|
+ \leq \|u_A\|_2.
+\end{equation}
+This holds for every sufficiently large odd $n$, with equality at the balanced
+optimal-gain atom.  Its scalar estimates also give $w_n\leq C_w n$ for an
+absolute constant $C_w$.  The argument below requires no quantitative
+stability of the balanced gain or of the selected coordinates.
+
+\begin{lemma}[Global support stability]\label{lem:absorb-support}
+Assume \eqref{eq:absorb-intrinsic} for an odd support $A$.  Set
+\[
+ v_A=b^2+\|u_{A^c}\|_2^2,
+ \qquad \Delta_A=r-w_n|c_A(\theta)|,
+ \qquad S_n=\max\{2,96\sqrt6\,w_n^2\}.
+\]
+Then $\Delta_A\geq0$ and
+\begin{equation}\label{eq:absorb-support}
+ v_A\leq S_n r\Delta_A.
+\end{equation}
+Consequently the squared $L^2$ distance from $h_\theta$ to the space of odd
+functions depending only on $x_A$ is at most $S_n r\Delta_A$.
+\end{lemma}
+\begin{proof}
+Fix any selected coordinate of weight $a$, put $U=\|u_A\|_2^2$, and condition
+on the outside coordinates, writing $B=b+u_{A^c}\cdot X_{A^c}$.  Oddness of
+$n$ and of tanh gives the exact identity
+\[
+ c_A(B;u_A)=\tfrac12\bigl[c_A(0;u_A+B e_i)
+                                  +c_A(0;u_A-B e_i)\bigr].
+\]
+Applying \eqref{eq:absorb-intrinsic} and averaging yields
+\[
+ w_n|c_A(\theta)|\leq
+ \mathbb E\frac{\sqrt{U+B^2+2aB}+\sqrt{U+B^2-2aB}}2
+ \leq\mathbb E\sqrt{U+B^2}\leq r.
+\]
+For $x\geq |t|$, concavity with its quadratic remainder gives
+\[
+ \sqrt{x}-\frac{\sqrt{x+t}+\sqrt{x-t}}2
+ \geq\frac{t^2}{8x^{3/2}}.
+\]
+For example, divide by $\sqrt x$ and use
+$1-\tfrac12(\sqrt{1+z}+\sqrt{1-z})\geq z^2/8$ on $[-1,1]$.
+Thus
+\begin{equation}\label{eq:absorb-jensen-gap}
+ \Delta_A\geq\frac{a^2}{2}\,
+       \mathbb E\frac{B^2}{(U+B^2)^{3/2}}.
+\end{equation}
+Here $\mathbb EB^2=v_A$ and $\mathbb EB^4\leq3v_A^2$.  If $v_A>0$, then
+\[
+ \mathbb E[B^2\mathbf1_{B^2\leq6v_A}]\geq v_A/2,
+ \qquad U+6v_A\leq6r^2,
+\]
+so \eqref{eq:absorb-jensen-gap} implies
+$\Delta_A\geq a^2v_A/(24\sqrt6\,r^3)$.
+The cases $r=0$ or $v_A=0$ are immediate.
+If $w_n|c_A|<r/2$, the bound $v_A\leq r^2\leq2r\Delta_A$ suffices.
+Otherwise the one-coordinate finite-difference formula and the
+one-Lipschitz property of tanh give
+$|a|\geq|c_A|\geq r/(2w_n)$, and hence
+$v_A\leq96\sqrt6\,w_n^2r\Delta_A$.
+Finally $h_A(x)=\tanh(u_A\cdot x_A)$ is odd and depends only on $A$, while
+\[
+ \|h_\theta-h_A\|_{L^2}^2
+ \leq\mathbb E(b+u_{A^c}\cdot X_{A^c})^2=v_A.
+\]
+\end{proof}
+
+There are $p\geq2$ pairs of disjoint even rails, each of size in
+$[R,R+\Delta]$, where $R\geq4$ is even and $\Delta\leq R$.
+There is also one shared carrier coordinate.  A transversal support consists
+of the carrier and one entire rail from each pair.  Let $\mathcal C$ be any
+nonempty retained family of such supports, and put
+\[
+ D=pR,\qquad W=\max_{A\in\mathcal C}w_{|A|},\qquad
+ Q(\theta)=\sum_{A\in\mathcal C}w_{|A|}|c_A(\theta)|,
+ \qquad S=\max\{2,96\sqrt6\,W^2\}.
+\]
+Every support has odd size between $D+1$ and $2D+1$, so $W=O(D)$ and
+$S=O(D^2)$.  Let $\mathcal D_{\rm odd}$ be the linear span of Walsh
+characters indexed by odd subsets of retained supports.
+
+Theorem~\ref{thm:code-orientation-localization} supplies exactly
+the following quantitative orientation bound.  There are absolute $K_0,C_0$ such that,
+for every prescribed $L>0$, all sufficiently large $p$ and all
+$R\geq K_0p^2$ satisfy: whenever $Q(\theta)\geq r/2$ and $r>0$, there is
+$A\in\mathcal C$ for which
+\begin{equation}\label{eq:absorb-orientation}
+ r\leq C_0\sqrt D,
+ \qquad E_A:=\sum_{B\in\mathcal C\setminus\{A\}}
+                  w_{|B|}|c_B(\theta)|\leq D^{-L}r.
+\end{equation}
+The sufficiently-large-$p$ threshold is uniform in $R$, the retained
+family, the ambient dimension, and the atom.  A lower bound on $r/\sqrt D$
+also follows from that lemma but is not needed here.
+
+\begin{lemma}[Local vanishing of other orientations]\label{lem:absorb-local}
+For any retained $A$, put $\tau=\|u_{A^c}\|_2$ and $\rho=R^{-2}$.
+If $\tau\leq\rho$, then
+\begin{equation}\label{eq:absorb-local}
+ E_A\leq A_{p,R}\tau^2,
+ \qquad
+ A_{p,R}=2^pW(4\sqrt R/\pi)^R\rho^{R-2}.
+\end{equation}
+Uniformly for $R\geq K_0p^2$, as $p\to\infty$,
+\begin{equation}\label{eq:absorb-local-small}
+ A_{p,R}\leq\frac1{2S C_0\sqrt D}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+For real $t$ the disk $|z-t|\leq\pi/4$ lies in a strip on which
+$|\tanh z|\leq1$.  Cauchy's estimate therefore gives
+$\sup_{t\in\mathbb R}|\tanh^{(k)}t|\leq k!(4/\pi)^k$.
+Any other transversal $B$ includes an entire rail disjoint from $A$.
+Choose $R$ of those coordinates.  Repeated centered finite differences and
+AM--GM give
+\[
+ |c_B(\theta)|\leq R!(4/\pi)^R\prod_{j\text{ chosen}}|u_j|
+ \leq(4\sqrt R\,\tau/\pi)^R.
+\]
+Summing over at most $2^p$ supports and using $\tau^R\leq\rho^{R-2}\tau^2$
+proves \eqref{eq:absorb-local}.  Its coefficient equals
+\[
+ A_{p,R}=2^pW R^4(4/\pi)^R R^{-3R/2}.
+\]
+Since $p\leq\sqrt{R/K_0}$ and $D=pR\leq R^{3/2}/\sqrt{K_0}$,
+this is smaller than every prescribed inverse power of $D$, uniformly in
+$R\geq K_0p^2$.  This proves \eqref{eq:absorb-local-small} because
+$S=O(D^2)$.
+\end{proof}
+
+\begin{theorem}[Exact weighted code norm and polynomial support stability]
+\label{thm:absorb-code}
+For all sufficiently large $p$, uniformly for even $R\geq K_0p^2$,
+$\Delta\leq R$, every retained family, every ambient cube, and every affine
+tanh atom,
+\begin{equation}\label{eq:absorb-code-norm}
+ Q(\theta)\leq r,
+\end{equation}
+and
+\begin{equation}\label{eq:absorb-code-stability}
+ \|\Pi_{\mathcal D_{\rm odd}^{\perp}}h_\theta\|_{L^2}^2
+ \leq 2S r\bigl(r-Q(\theta)\bigr).
+\end{equation}
+The norm bound is sharp: every balanced optimal-gain atom on one retained
+support attains equality.  A nonzero equality atom has zero bias and zero
+weights outside a single retained support; the intrinsic equality theorem
+then identifies its selected weights as a balanced optimal-gain atom.
+\end{theorem}
+\begin{proof}
+The zero atom is immediate.  If $Q<r/2$, the norm assertion is immediate,
+and $|\tanh t|\leq|t|$ gives
+$\|h_\theta\|_2^2\leq r^2\leq2r(r-Q)$, proving the stated stability bound.
+Otherwise choose $A$ from \eqref{eq:absorb-orientation} with $L=8$ and put
+$\Delta_A=r-w_{|A|}|c_A|\geq0$.  The exact identity is
+\[
+ r-Q=\Delta_A-E_A.
+\]
+We claim $E_A\leq\Delta_A/2$.  This is immediate if
+$\Delta_A\geq2E_A$.  In the remaining case, support stability and
+\eqref{eq:absorb-orientation} imply
+\[
+ v_A\leq S r\Delta_A<2S rE_A
+ \leq2S C_0^2 D^{-7}=O(D^{-5}).
+\]
+For sufficiently large $p$ this is at most $D^{-4}\leq R^{-4}=\rho^2$,
+uniformly in $R$.  Thus $\tau^2\leq v_A\leq\rho^2$, and
+\eqref{eq:absorb-local-small} together with $r\leq C_0\sqrt D$ yields
+\[
+ E_A\leq\frac{\tau^2}{2S C_0\sqrt D}
+ \leq\frac{v_A}{2Sr}\leq\frac{\Delta_A}{2}.
+\]
+This establishes the claim in all cases, and hence
+$r-Q\geq\Delta_A/2\geq0$.  Moreover the selected bias-free atom lies in
+$\mathcal D_{\rm odd}$, so
+\[
+ \|\Pi_{\mathcal D_{\rm odd}^{\perp}}h_\theta\|_2^2
+ \leq v_A\leq S r\Delta_A\leq2S r(r-Q).
+\]
+If equality holds in the norm bound, then $\Delta_A=0$ and $v_A=0$.
+Conversely a balanced optimal-gain atom on $A$ has its sharp single-parity
+coefficient, and every other transversal coefficient vanishes because that
+transversal contains coordinates outside $A$.  This proves sharpness and
+the equality assertions.
+\end{proof}
+
+\subsection{Resource consequence}
+The constant in \eqref{eq:absorb-code-stability} is $2S=O(D^2)$, with an
+absolute implied constant.  Thus the already chosen cycle construction
+with $p=\Theta(m)$, $R=K m^2$ for sufficiently large fixed $K$, and
+$\Delta=2m^2$ satisfies this theorem for all sufficiently large $m$.
+No unknown exponent from a balanced-parameter stability theorem is present.
+The odd downward space is essential: the full downward space would also
+contain the even character obtained by deleting the carrier from an entire
+transversal, which is not covered by the calibration observability lemma.

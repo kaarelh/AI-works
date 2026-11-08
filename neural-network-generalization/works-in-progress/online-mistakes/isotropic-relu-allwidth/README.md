@@ -23,7 +23,7 @@ The target is a parity multiplied by an AND of block parities. The input order f
 
 The proof determines an exact weighted Fourier variation norm for ReLU, proves a quantitative stability estimate for every affine neuron, and uses the global output margin to round nearly optimal networks to a single candidate function. A parity-conditioning argument proves the sharp neuron bound even with constant-sized blocks. A transfer-matrix argument distinguishes exponentially many weight enumerators of a code built from a path. A sparse-polynomial argument handles the few degree collisions with the same squarefree part and distinguishes the corresponding candidate energies. Their ordering then controls the actual Gaussian posterior. For softplus, a representation as an average of shifted ReLUs preserves the lower bounds, and increasingly wide softplus networks approach the strict ReLU witnesses at the required energy. There is no assumption about selecting a particular minimizer or breaking ties.
 
-The paper is standalone and uses conventional proofs with independent mathematical reviews. It is **not Lean formalized**. Ordinary tanh remains open in the same unchanged-prior, all-large-width setting.
+The paper is standalone and uses conventional proofs with independent mathematical reviews. It is **not Lean formalized**. The [ordinary-tanh companion](../isotropic-tanh-allwidth/README.md) proves an exp(Ω(C^(1/8))) lower bound under the same unchanged-prior, all-large-width conventions.
 
 Run `bash build.sh` to rebuild the PDF with a standard LaTeX installation.
 
