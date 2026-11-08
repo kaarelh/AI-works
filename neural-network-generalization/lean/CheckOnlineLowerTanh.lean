@@ -1,0 +1,8 @@
+import NeuralGeneralization.OnlineLowerTanhMoments
+
+#print axioms NeuralGeneralization.OnlineLowerTanh.midpoint_gap_mul_of_sq
+#print axioms NeuralGeneralization.OnlineLowerTanh.finite_support_stability
+#print axioms NeuralGeneralization.OnlineLowerTanh.parityCorrelation_bias_transfer
+#print axioms NeuralGeneralization.OnlineLowerTanh.intrinsic_bound_biasTransfer
+#print axioms NeuralGeneralization.OnlineLowerTanh.affine_secondMoment
+#print axioms NeuralGeneralization.OnlineLowerTanh.affine_fourthMoment_le

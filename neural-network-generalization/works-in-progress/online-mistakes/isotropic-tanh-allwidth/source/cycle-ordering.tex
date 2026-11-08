@@ -1,10 +1,11 @@
-\section{Cycle blocks give superpolynomially many distinct costs}
+\section{A triangular path gives exponentially many distinct costs}
 \label{sec:cycles}
 
-We now construct the linear map selecting the physical rails so that
-there are superpolynomially many strictly ordered competing costs. The construction below uses only the
-analytic expansion already proved in Theorem~\ref{thm:curvature}. It
-avoids any algebraic-independence claim about tanh values.
+We construct a column code with $\exp(\Omega(m))$ pointwise ordered
+scalar enumerators on $m$ logical coordinates. All path increments
+belong to $\{2,4,6\}$. The argument uses the analytic cost expansion
+and an exact triangular transfer matrix, and requires no arithmetic
+independence assumption about optimized tanh values.
 
 \begin{lemma}[A positive inverse Laplace kernel near zero]
 \label{lem:laplace-kernel}
@@ -21,196 +22,287 @@ exponential growth such that, for sufficiently large real $n$,
 Moreover $\rho(t)\ge C/2$ for all sufficiently small positive $t$.
 \end{lemma}
 \begin{proof}
-For a vertical line $\Re z=c$ lying in the half-plane, define
+For an admissible vertical line $\Re z=c$, put
 \[
  r(t)=\frac1{2\pi}\int_{\mathbb R}E(c+iy)e^{(c+iy)t}\,dy.
 \]
-The integral converges absolutely. Closing rectangles shows that its
-value is independent of $c$ for $t>0$. Fubini's theorem followed by
-Cauchy's integral formula gives
+The integral is absolutely convergent. Closing rectangles proves
+independence of $c$ for $t>0$. Fubini followed by Cauchy's formula gives
 $E(z)=\int_0^\infty e^{-zt}r(t)\,dt$ for $\Re z>c$.
-The same integral and the conjugation symmetry show that $r$ is real,
-continuous, and
+Conjugation symmetry makes $r$ real, and
 \[
  |r(t)|\le\frac{K e^{ct}}{2c}.
 \]
-For small $t$, choose $c=1/t$ to obtain $|r(t)|\le eKt/2$.
-Thus $\rho=C+r$ has the required positivity near zero. Keeping any
-fixed admissible $c$ proves the exponential-growth bound.
+For small $t$ choose $c=1/t$, obtaining $|r(t)|\le eKt/2$.
+Thus $\rho=C+r$ is positive near zero. A fixed admissible $c$ gives
+the claimed exponential-growth bound and continuity follows by
+dominated convergence.
 \end{proof}
 
 The interpolation in Theorem~\ref{thm:curvature} satisfies this lemma
-by restricting to a sufficiently far-right half-plane.
+after restricting to a sufficiently far-right half-plane.
 
-\subsection{A family of pointwise ordered cycle enumerators}
+\subsection{An exactly triangular path transfer}
 
-For $t>0$ put $a=\tanh(2t)$, $e=\tanh t$, and
+Take a path on $V=2k+1$ vertices, where $k\ge2$. Give every loop
+increment four, and give its successive edges increments
+$6,2,6,2,\ldots,6,2$. For $t>0$ put
 \[
- M_0=\begin{pmatrix}1&ae\\a&e\end{pmatrix},\qquad
- J=\begin{pmatrix}0&1\\1&0\end{pmatrix},\qquad M_1=JM_0.
+ a=\tanh(2t),\qquad e_j=\tanh(\delta_jt/2),\qquad
+ M(a,e)=\begin{pmatrix}1&ae\\a&e\end{pmatrix},\qquad
+ J=\begin{pmatrix}0&1\\1&0\end{pmatrix}.
 \]
-These matrices enumerate a cycle with loop weight $a$ and edge weight
-$e$. At a vertex, the selected loop bit is its prescribed syndrome
-plus the two adjacent edge bits, modulo two. Hence a cycle of length
-$L$ with zero syndrome has enumerator $\operatorname{tr}(M_0^L)$,
-while one with a single designated nonzero syndrome has enumerator
-$\operatorname{tr}(JM_0^L)$.
-
-The two eigenvalues satisfy $\lambda_+>\lambda_->0$. Write
-$x=\lambda_-/\lambda_+$ and
-$c=a(1+e)/(\lambda_+-\lambda_-)$. Then the two enumerators are
+If $B$ is the path incidence matrix, the syndrome enumerator is
 \[
- Z_0(L)=\lambda_+^L(1+x^L),\qquad
- Z_1(L)=\lambda_+^L c(1-x^L).
+ Z_v(t)=\sum_{y\in\mathbb F_2^{2k}}
+             \left(\prod_{j=1}^{2k}e_j^{y_j}\right)a^{|v+By|}.
 \]
-There is a useful uniform bound
-\begin{equation}\label{eq:cycle-ratio}
- 0<x\le3-2\sqrt2<1/3.
+With $c_0=(1,a)^T$ and $c_1=(a,1)^T$, successive edge summation gives
+\begin{equation}\label{eq:path-transfer-pair}
+ \binom{Z_v}{Z_{v+e_1}}
+ =J^{v_1}M(a,e_1)\cdots J^{v_{2k}}M(a,e_{2k})c_{v_{2k+1}}.
 \end{equation}
-Indeed,
-\[
- \frac{\det M_0}{(\operatorname{tr}M_0)^2}
- =\frac{e(1-e)^2}{(1+e^2)^2}\le\frac18;
-\]
-after multiplication by the positive denominator, the last inequality
-is $(e^2-4e+1)^2\ge0$.
+The first coordinate here is the scalar enumerator whose order is
+needed below.
 
-Take $k$ disjoint cycles of lengths $L_i=i+2$, and write
-$V=\sum_iL_i=k(k+5)/2$. For a subset $S$ of cycles, place a single
-nonzero syndrome at a designated vertex in every cycle in $S$.
-Restrict to $|S|=r=\lfloor k/2\rfloor$. The total enumerator is
+Let
 \[
- Z_S=\lambda_+^V c^r
-       \prod_{i\in S}(1-x^{L_i})
-       \prod_{i\notin S}(1+x^{L_i}).
+ \mathsf H=\begin{pmatrix}1&1\\1&-1\end{pmatrix},\qquad
+ \mathsf D=\begin{pmatrix}1&0\\0&-1\end{pmatrix}.
 \]
-These functions are strictly ordered for every $t>0$ in the same
-lexicographic order. To prove this, set
-$R_i(x)=2\operatorname{atanh}(x^{L_i})$. By
-\eqref{eq:cycle-ratio},
-\[
- \sum_{j>i}R_j(x)
- \le R_i(x)\frac{x}{(1-x)(1-x^2)}<\frac14R_i(x).
-\]
-If $i$ is the first differing index and $i\in S\setminus T$,
-it follows that $Z_S(t)<Z_T(t)$ for every positive $t$.
-
-\subsection{Embedding the enumerators into parity costs}
-
-Add $P=2V+1$ independent prefix coordinates and two distinguished
-coordinates. The logical dimension is $m=V+P+2=3V+3$.
-The physical rail pairs are indexed by the following nonzero columns
-$a_j\in\F_2^m$: one loop column $e_i$ for every logical coordinate,
-and one edge column $e_i+e_{i+1}$ for every edge of each cycle.
-There are $\ell=4V+3$ rail pairs, an odd number. The columns span the
-logical space. Give the distinguished loops a common even increment
-$H=2m^2$, the other loops increment four, and the cycle edges
-increment two. Choose a common even baseline rail size
-$R=K m^2$ for a sufficiently large fixed even integer $K$ and add one shared physical carrier coordinate. For a logical Fourier index $s$, the selected
-transversal has odd degree
-\[
- n_s=n_0+\sum_j\delta_j(a_j\cdot s),\qquad n_0=\ell R+1=\Theta(m^3),
-\]
-where $a_j\cdot s$ is interpreted as zero or one. Put
-$W(v)=2^{-m}\sum_s(-1)^{s\cdot v}w(n_s)$ and let $u$ be the sum
-of the two distinguished coordinate vectors.
-
-For each $S$ with $|S|=r$, let $v_S$ have both distinguished bits and
-all prefix bits equal to one, and cycle syndrome $S$. Neither $v_S$
-nor $v_S+u$ is zero or a column $a_j$, so the affine part $An+B$
-has zero Fourier coefficient there. Factoring the Laplace integrand
-from Lemma~\ref{lem:laplace-kernel} gives
-\begin{equation}\label{eq:cycle-cost}
- \nu_S:=W(v_S)-W(v_S+u)
- =-\int_0^\infty e^{-(n_0+H)t}\rho(t)
-       A_{\rm prefix}(t)A_{\rm cycle}(t)Z_S(t)\,dt.
+Thus $\mathsf H^{-1}=\mathsf H/2$ and
+$\mathsf HJ\mathsf H^{-1}=\mathsf D$. Direct calculation gives
+\begin{equation}\label{eq:path-hadamard}
+ \mathsf HM(a,e)\mathsf H^{-1}
+ =\alpha\begin{pmatrix}1&x\\yx&y\end{pmatrix},\qquad
+ \alpha=\frac{(1+a)(1+e)}2,\quad
+ x=\frac{1-e}{1+e},\quad y=\frac{1-a}{1+a}.
 \end{equation}
-The two distinguished Fourier factors give exactly
-$[(1-e^{-Ht})/2]^2-[(1+e^{-Ht})/2]^2=-e^{-Ht}$.
-Every other displayed factor is positive. The prefix factor is
-$[(1-e^{-4t})/2]^P$. The cycle factor collects the common factors
-$(1+e^{-\delta_jt})/2$ of its loops and edges; the remaining loop and
-edge weights are precisely $a=\tanh(2t)$ and $e=\tanh t$ above.
+Here $y=e^{-4t}$ and $x=e^{-\delta_jt}$.
 
-\begin{theorem}[Strictly ordered balanced-tanh rectangle costs]
-\label{thm:cycle-order}
-For all sufficiently large $k$, the costs $\nu_S$ in
-\eqref{eq:cycle-cost}, with $|S|=\lfloor k/2\rfloor$, are negative
-and pairwise distinct in a fixed strict order. There are
-$\exp(\Omega(k))=\exp(\Omega(\sqrt m))$ such costs, with polynomial
-rail sizes and input dimension.
-\end{theorem}
+Fix every even-position syndrome bit to one. Write $x=e^{-2t}$.
+The two steps of each block, with their positive factors $\alpha$
+temporarily omitted, multiply to
+\begin{equation}\label{eq:path-triangular}
+ \begin{pmatrix}1&x^3\\x^5&x^2\end{pmatrix}
+ \mathsf D
+ \begin{pmatrix}1&x\\x^3&x^2\end{pmatrix}
+ =\begin{pmatrix}1-x^6&x(1-x^4)\\0&-x^4(1-x^2)\end{pmatrix}.
+\end{equation}
+Consequently, if the preceding odd-position bit is $\eta_i$, the
+complete block equals a common positive scalar $L(t)$ times
+\[
+ T_i(t)=\begin{pmatrix}1&b(t)\\0&\epsilon_i r(t)\end{pmatrix},
+ \qquad \epsilon_i=(-1)^{\eta_i+1},
+\]
+where
+\begin{equation}\label{eq:path-ratio}
+ b(t)=\frac{x(1+x^2)}{1+x^2+x^4}>0,\qquad
+ r(t)=\frac{x^4}{1+x^2+x^4}\in(0,1/3),
+\end{equation}
+and
+\[
+ L(t)=\alpha_6(t)\alpha_2(t)(1-x^6)>0.
+\]
+The continuous limits at zero are $b(0)=2/3$, $r(0)=1/3$, and
+$L(t)=3t+O(t^2)$.
+
+Fix the terminal syndrome bit to zero. Let the $k$ odd-position bits
+$\eta_1,\ldots,\eta_k$ vary subject to one prescribed total parity.
+Put
+\[
+ d_0=1,\qquad
+ d_j=\prod_{i=k-j+1}^k\epsilon_i\quad(1\le j\le k-1),\qquad
+ E=\prod_{i=1}^k\epsilon_i.
+\]
+The sign $E$ is common to the entire family, while
+$(d_1,\ldots,d_{k-1})$ ranges freely over $\{-1,1\}^{k-1}$.
+Multiplying the triangular matrices, then using
+$\mathsf Hc_0=(1+a,1-a)^T$ and returning to the original first
+coordinate in \eqref{eq:path-transfer-pair}, gives the exact scalar
+formula
+\begin{equation}\label{eq:path-scalar-digits}
+ Z_\eta(t)=\frac{L(t)^k}{2}
+ \left[(1+a)+(1-a)b(t)\sum_{j=0}^{k-1}d_jr(t)^j
+                     +(1-a)E r(t)^k\right].
+\end{equation}
+The fixed total parity is what makes the final boundary term common.
+
+\begin{lemma}[Pointwise strict scalar order]
+\label{lem:path-pointwise-order}
+The $2^{k-1}$ scalar enumerators in
+\eqref{eq:path-scalar-digits} have the same strict lexicographic order
+for every $t>0$. For one fixed $t_0>0$ and an absolute $C_1$, every
+distinct pair satisfies
+\begin{equation}\label{eq:path-pointwise-gap}
+ |Z_\eta(t)-Z_{\eta'}(t)|\ge e^{-C_1k}t^k
+ \qquad(0<t\le t_0).
+\end{equation}
+\end{lemma}
 \begin{proof}
-The sign of $Z_S-Z_T$ is fixed for every $t>0$. On
-$t\in[1/n_0,2/n_0]$, the Laplace kernel is at least $C/2$ for large
-$k$. Elementary small-$t$ bounds give
+If $j\ge1$ is the first differing digit and $d_j=1$, $d'_j=-1$,
+then $0<r\le1/3$ implies
 \[
- a\ge t,\quad e\ge t/2,\quad c\ge a\ge t,\quad
- x\ge t/8,\quad \lambda_+\ge1.
+ \sum_l(d_l-d'_l)r^l
+ \ge2r^j-2\sum_{l>j}r^l\ge r^j>0.
 \]
-The prefix factor is at least $t^P$, and the cycle normalization is
-bounded below by a positive absolute constant, since its logarithm is
-$O(mt)$. Also $\prod_i(1-x^{L_i})$ is bounded below by a positive
-constant. The lexicographic logarithmic separation is at least
-$x^{L_k}$; consequently, uniformly over distinct $S,T$,
-\[
- |Z_S(t)-Z_T(t)|\ge c_1 t^r(t/8)^{L_k}.
-\]
-The positive contribution from this interval to the difference of
-costs is therefore at least
-\begin{equation}\label{eq:cycle-gap}
- c_2 C\,8^{-L_k} n_0^{-(P+r+L_k+1)}
- =\exp(-O(m\log m)).
-\end{equation}
-Here $e^{-(n_0+H)t}$ is bounded below, since $H/n_0\to0$.
-
-Choose a fixed $t_0>0$ such that $\rho\ge C/2$ on $(0,t_0]$.
-Every Fourier coefficient of
-$\exp[-t\sum_j\delta_j(a_j\cdot s)]$ is nonnegative and at most
-one: expanding each factor gives nonnegative Fourier coefficients
-whose sum is one. Thus the entire coefficient difference in the
-integrand is at most two in absolute value. The exponential-growth
-bound on $\rho$ shows that its potentially adverse contribution from
-$t\ge t_0$ is $\exp(-\Omega(n_0))$. Since $n_0=\Theta(m^3)$,
-this is smaller than \eqref{eq:cycle-gap}. The pointwise order is
-therefore preserved by the integral, with its overall minus sign.
-The same argument without taking a difference proves $\nu_S<0$.
-Finally $\binom{k}{\lfloor k/2\rfloor}=\exp(\Omega(k))$.
+All factors multiplying this sum in \eqref{eq:path-scalar-digits}
+are positive. This proves the fixed pointwise order. On a sufficiently
+small fixed interval, $b$, $1-a$, and $r$ are bounded below by positive
+absolute constants and $L(t)\ge ct$. Since $j\le k-1$, these bounds
+give \eqref{eq:path-pointwise-gap}.
 \end{proof}
 
-\subsection{Compatibility with the neural calibration argument}
+\subsection{Embedding into rectangle costs}
 
-The logical optimizer proof is unchanged for this column map. To see
-its dominant-Walsh hypothesis, first expand the scalar weights on the
-full $\ell$-bit rail-index cube, before restricting indices to
-$(a_j\cdot s)_j$. Logical Fourier coefficients are sums of the full
-coefficients over the corresponding column-map fibers. The two large
-independent loop increments create the dominant positive coefficient
-at $u$. The sum of all other positive contributions is
-$O(m/H+H/n_0)=o(1)$ times this coefficient, by the proof of
-\eqref{eq:dominance-sum}. Possible affine contributions occur only
-at columns and are negative. Neither distinguished pair $u$ nor any
-candidate is a column.
+Add $P=2V+1=4k+3$ independent prefix coordinates and two distinguished
+coordinates. The logical dimension is
+\[
+ m=V+P+2=6k+6.
+\]
+Use one effective loop column for every logical coordinate and all
+$V-1=2k$ path-edge columns. The number of effective columns is
+$\ell=m+V-1=8k+6$. Put
+\[
+ H=2\lceil m\log(m+2)\rceil,\qquad
+ R=2\lceil K\log^2(m+2)\rceil,
+\]
+where $K$ is a sufficiently large fixed constant. Give the distinguished
+loops effective increment $H$, every other loop increment four, and
+the path edges alternating increments six and two. Realize each
+distinguished loop by $g=\lceil H/R\rceil$ repeated physical columns,
+whose positive even increments sum to $H$ and individually are at
+most $R$. Thus the physical pair count is
+\[
+ p=\ell-2+2g=\Theta(m),\qquad
+ n_0=pR+1=\Theta(m\log^2m).
+\]
+The shared carrier and common baseline $R$ give
+\[
+ n_s=n_0+H(s_1+s_2)
+       +\sum_{j\text{ other}}\delta_j(a_j\cdot s),
+ \qquad n_0=pR+1.
+\]
+The bits in this degree formula are interpreted as zero or one.
+Splitting a distinguished column into repeated copies does not change
+its displayed effective degree contribution. Every physical increment
+is at most $R$, so the exact atom theorem applies for large enough
+$K$. Also $H/n_0=O(1/\log m)$.
 
-Let $U$ be the affine coset fixing both distinguished bits and all
-prefix bits to one, all nondesignated cycle bits to zero, and the
-parity of the $k$ designated bits to $r$ modulo two. Initially reveal
-all other fibers of $U$ except those with exactly $r$ designated bits
-set. The same Laplace argument gives $W(v+u)>W(v)\ge0$ throughout
-this affine envelope, uniformly also when the number of set designated
-bits is not $r$.
+Let $u=e_1+e_2$. Each candidate $v_\eta$ has both distinguished bits
+and every prefix bit one. Its path syndrome has even-position bits
+one, terminal bit zero, and odd-position bits $\eta$ of the prescribed
+total parity. Put
+\[
+ W(v)=2^{-m}\sum_s(-1)^{s\cdot v}w(n_s),\qquad
+ \nu_\eta=W(v_\eta)-W(v_\eta+u).
+\]
+Neither candidate nor its translate by $u$ is zero or a column, so the
+affine part $An+B$ has no coefficient there. Factoring the Laplace
+integrand gives
+\begin{equation}\label{eq:cycle-cost}
+ \nu_\eta=-\int_0^\infty e^{-(n_0+H)t}\rho(t)
+       A_{\rm prefix}(t)A_{\rm path}(t)Z_\eta(t)\,dt.
+\end{equation}
+Here $A_{\rm prefix}=[(1-e^{-4t})/2]^P$, and $A_{\rm path}$ is the
+product of the common positive Fourier factors
+$(1+e^{-\delta_jt})/2$ for path loops and edges. The two distinguished
+factors give exactly
+\[
+ [(1-e^{-Ht})/2]^2-[(1+e^{-Ht})/2]^2=-e^{-Ht}.
+\]
 
-Every physical column moves a point out of $U\cup(U+u)\cup\{u\}$.
-A designated loop changes the prescribed parity; every other loop or
-cycle edge changes a fixed coordinate. The large fixed prefix separates
-$u$ from the two live cosets, and no column equals $u$. Thus this is an
-independent set in the Cayley graph generated by the columns.
-Appendix~\ref{app:physical} proves observability for exactly this
-condition. The $P$ compulsory prefix factors give more than enough
-Fourier decay to absorb $2^m$ times any polynomial stability constants.
+\begin{theorem}[Exponentially many ordered tanh rectangle costs]
+\label{thm:cycle-order}
+Assume $H\le C_2n_0$ for a fixed constant $C_2$ and
+\begin{equation}\label{eq:path-baseline-growth}
+ \frac{n_0}{m\log n_0}\longrightarrow\infty.
+\end{equation}
+For all sufficiently large $k$, all $2^{k-1}$ costs in
+\eqref{eq:cycle-cost} are negative and pairwise distinct in a fixed
+strict order. Thus there are $\exp(\Omega(m))$ competing cost levels.
+\end{theorem}
+\begin{proof}
+The sign of $Z_\eta-Z_{\eta'}$ is fixed at every positive time.
+On $t\in[1/n_0,2/n_0]$, the kernel satisfies $\rho\ge C/2$,
+$A_{\rm prefix}\ge t^P$, and $A_{\rm path}$ is bounded below by a
+positive absolute constant. The last assertion follows because its
+logarithm is $O(mt)$ and all path increments are at most six.
+Also $e^{-(n_0+H)t}$ is bounded below. Hence the positive near-zero
+contribution to a cost difference has magnitude at least
+\begin{equation}\label{eq:cycle-gap}
+ e^{-C_3k}n_0^{-(P+k+1)}=\exp[-O(m\log n_0)].
+\end{equation}
 
-The construction supplies distinct scalar costs and the required logical
-geometry with polynomial resources. The sharp atomic theorem and
-its polynomial stability bound therefore combine with
-Appendices~\ref{app:physical} and~\ref{app:posterior} to give the
-online posterior result.
+Choose fixed $t_0>0$ with $\rho\ge C/2$ on $(0,t_0]$.
+Every Fourier coefficient of
+$\exp[-t\sum_j\delta_j(a_j\cdot s)]$ is nonnegative and at most
+one, because its factor expansion has nonnegative coefficients with
+total sum one. Thus a difference of two complete coefficient
+integrands is at most two in absolute value after the common
+$e^{-n_0t}$ factor is removed. The exponential-growth bound on
+$\rho$ bounds the adverse tail $t\ge t_0$ by
+$\exp[-\Omega(n_0)]$. By \eqref{eq:path-baseline-growth}, this is
+smaller than \eqref{eq:cycle-gap}. The integral therefore preserves
+the fixed scalar order, with its overall negative sign.
+
+The same argument without subtraction proves every $\nu_\eta<0$:
+for a direct uniform lower bound, the all-loop term in $Z_\eta$ is
+$a^{|v_{\rm path}|}\ge t^{2k+1}$ on the small interval.
+The same lower bound with the two positive distinguished factors
+proves $W(v_\eta)>0$. Consequently
+$W(v_\eta+u)>W(v_\eta)\ge0$ throughout the affine family.
+\end{proof}
+
+\subsection{Calibration and resource compatibility}
+
+The family of all candidates is itself an affine coset $U$: both
+distinguished bits and all prefix bits are fixed to one, even path
+bits are fixed to one, the terminal path bit is fixed to zero, and
+the free odd path bits have one prescribed total parity. A loop at
+a fixed bit moves outside $U$; a loop at a free bit changes its
+prescribed parity. Every path edge changes a fixed even-position
+bit, including the final edge. Thus $U\cup(U+u)\cup\{u\}$ is
+independent in the Cayley graph of all physical columns. The prefix
+separates $u$ from the two cosets, and no column equals $u$.
+Repeated distinguished columns preserve this property.
+
+The common-dual and physical-rounding arguments therefore apply
+unchanged once their dominant-Walsh inequalities hold. The $P$
+compulsory prefix factors give the uniform tail estimate
+\[
+ |\nu_v|\le O(2^P P!/n_0^{P+1})+\exp[-\Omega(n_0)],
+ \qquad v\in U.
+\]
+When $n_0/m\to\infty$, this absorbs $2^m$ times every fixed
+polynomial stability and rounding factor under
+\eqref{eq:path-baseline-growth}.
+
+For the displayed parameter choice, the effective increment cube has
+$q=\ell=O(m)$ coordinates, total ordinary increment $S=O(m)$, and
+total increment $D_\delta=2H+S=O(m\log m)=o(n_0)$. In particular
+$q\log(n_0+D_\delta)=o(n_0)$. The inverse-Laplace Walsh estimates
+therefore apply, with relative off-pair mass
+\[
+ O(S/H+H/n_0)=O(1/\log m).
+\]
+Higher-order coefficients push forward as sums under the column map;
+negative singleton contributions occur only at individual columns.
+Neither $u$ nor a live candidate is a column, so the common-dual
+dominance and sign hypotheses hold for all large $m$.
+
+The physical input dimension is
+\[
+ d_m=1+2pR+2H+S=\Theta(m\log^2m).
+\]
+Every target parity has degree $O(m\log^2m)$. The same threshold-step
+tanh teacher consequently has width
+$C_m=O(m^2\log^2m)$, coefficients bounded by that displayed width,
+and uniform margin one. The designated mistake count is
+\[
+ T_m=2^{k-1}=2^{m/6-2}
+ =\exp\!\left(\Omega\!\left(\frac{\sqrt{C_m}}{\log C_m}\right)\right).
+\]
+The target's bounded-fan-in Boolean circuit has $O(d_m)$ gates;
+repeated columns merely contribute additional rail parities to the
+same two distinguished logical bits.

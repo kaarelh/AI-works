@@ -34,7 +34,7 @@ round as the Gaussian scale tends to zero.
 
 The targets have one-hidden-layer tanh teachers of width $C$, margin
 one, and coefficients bounded by $C$. The construction forces
-$\exp(\Omega(C^{1/8}))$ designated mistakes. Its calibration prefix
+$\exp(\Omega(\sqrt C/\log C))$ designated mistakes. Its calibration prefix
 and sufficient learner width can be large. This is an adversarial-order
 result, rather than an iid sample-complexity lower bound.
 
@@ -43,8 +43,8 @@ single sufficiently high odd parity. A quantitative support estimate
 and Fourier localization extend the sharp norm to a transversal code.
 The optimized scalar costs have positive inverse-degree curvature;
 their cheapest feasible scores therefore include a fixed negative
-overshoot. An explicit dual classifies every minimum, a cycle code
-orders superpolynomially many competing costs, and integer neuron
+overshoot. An explicit dual classifies every minimum, a triangular path
+transfer orders exponentially many competing costs, and integer neuron
 replication transfers their gaps to the full Gaussian posterior.
 \end{abstract}
 
@@ -92,17 +92,17 @@ therefore requires a separate argument.
 
 \begin{theorem}[Adversarial online mistakes]\label{thm:main-online}
 For every sufficiently large integer $k$, put
-$m=3k(k+5)/2+3$. There are a dimension $d_m=\Theta(m^3)$,
+$m=6k+6$. There are a dimension $d_m=\Theta(m(\log m)^2)$,
 a Boolean target $f_m$ on the full cube, and a fixed nonrepeating
-input sequence with $T_m=\exp(\Omega(\sqrt m))$ designated rounds
+input sequence with $T_m=2^{k-1}=\exp(\Omega(m))$ designated rounds
 such that the following hold.
 The target has a one-hidden-layer tanh score of margin one and width
-$C_m=O(m^4)$, with every coefficient bounded by $C_m$. It also
-has a bounded-fan-in Boolean circuit with $O(d_m)=O(m^3)$ gates.
+$C_m=O(m^2(\log m)^2)$, with every coefficient bounded by $C_m$. It also
+has a bounded-fan-in Boolean circuit with $O(d_m)$ gates.
 There is a finite $N_0(m)$ such that, at every fixed $N\ge N_0(m)$,
 the posterior probability of the correct label tends to zero at each
 designated round as $\sigma\downarrow0$.
-Consequently the sequence forces $\exp(\Omega(C_m^{1/8}))$
+Consequently the sequence forces $\exp(\Omega(\sqrt{C_m}/\log C_m))$
 posterior-majority mistakes in the strong-prior limit, and the same
 number of expected mistakes under posterior sampling.
 \end{theorem}
@@ -543,8 +543,9 @@ certificate's already proved interval endpoints.
 
 \section{Completion of the online theorem}
 
-The cycle construction of Section~\ref{sec:cycles} uses even rails and
-one shared carrier. Its supports have odd degrees $n_s=\Theta(m^3)$.
+The path construction of Section~\ref{sec:cycles} uses even rails and
+one shared carrier. Its supports have odd degrees
+$n_s=\Theta(m(\log m)^2)$.
 The sharp global code-atom theorem applies to every affine neuron,
 and its support bound is polynomial in these parameters.
 Appendix~\ref{app:physical} therefore classifies every minimum-cost
@@ -552,7 +553,7 @@ completion after every calibrated history. The compulsory prefix
 factors make the remaining Fourier costs small enough to absorb all
 polynomial stability and rounding constants. The strict ordering in
 Theorem~\ref{thm:cycle-order} supplies
-$\exp(\Omega(\sqrt m))$ designated rounds.
+$2^{k-1}=\exp(\Omega(m))$ designated rounds.
 Appendix~\ref{app:posterior} proves the conclusion for the actual
 Gaussian posterior at all sufficiently large fixed widths.
 
@@ -561,7 +562,7 @@ It remains to verify the teacher resources. The target is the sign of
  b(x)\left(\sum_{i=1}^m(-1)^{z_i(x)}-(m-1)\right)
  =\sum_{i=1}^m\chi_{A_{e_i}}(x)-(m-1)\chi_{A_0}(x),
 \]
-a score of margin one. Each parity has degree $O(m^3)$.
+a score of margin one. Each parity has degree $O(m(\log m)^2)$.
 On the attainable values of the coordinate sum, parity is represented
 by an alternating sum of threshold steps. Replace each step at a
 midpoint by a tanh transition of gain $O(\log(mn_{\max}))$.
@@ -569,11 +570,12 @@ Each attainable value is at distance at least one from every midpoint,
 so the uniform error can be made less than $1/(8m)$ per parity using
 $O(n_{\max})$ neurons. The combined score has margin greater than
 $1/2$; doubling its readout gives margin one. Its width is
-$O(mn_{\max})=O(m^4)$, and incoming weights, biases, and readouts
+$O(mn_{\max})=O(m^2(\log m)^2)$, and incoming weights, biases, and readouts
 are bounded by that width after increasing its fixed constant.
 For the Boolean circuit, compute each rail parity and the base parity
 once. Forming the logical bits uses only $O(\ell)$ further XOR gates,
-since every cycle column has at most two nonzero entries. An AND of
+since every path column, including a repeated distinguished column,
+has at most two nonzero entries. An AND of
 the $m$ logical zero tests and a final sign multiplication then give
 the target. The total bounded-fan-in gate count is $O(d_m)$.
 This proves Theorem~\ref{thm:main-online}.

@@ -27,6 +27,21 @@ complexity at most `32*(d+1)^2` at every depth.
 [`subcriticalSmallNetworkLowerBound`](NeuralGeneralization/SubcriticalCircuitCorollary.lean) combines this construction with the exponential posterior lower bound.
 The construction uses a simpler polynomial bound than the appendix's optimized logarithmic weights.
 
+## Adversarial online lower bound for ordinary ReLU
+
+The [ReLU online-mistake paper](../works-in-progress/online-mistakes/isotropic-relu-allwidth/paper.pdf) also has a complete formalization. [`OnlineLowerReluMain.lean`](NeuralGeneralization/OnlineLowerReluMain.lean) proves the exact [`ReLUConcreteMainStatement`](NeuralGeneralization/OnlineLowerReluConcreteStatement.lean), then its `exp(Ω(√C))` resource corollary. [`CheckOnlineLowerRelu.lean`](CheckOnlineLowerRelu.lean) checks the exact theorem types and dependency axioms. [Paper-to-Lean correspondence](review/OnlineLowerRelu-main-correspondence.md) · [Analytic correspondence](review/OnlineLowerRelu-analytic-correspondence.md).
+
+This is a lower bound on cumulative mistakes along a fixed nonrepeating input order, with a large calibration history. It uses the actual independent Gaussian prior, the initial strict margin at every Boolean input, and subsequent conditioning on Boolean labels. The permutation is fixed before width and scale; the prior scale tends to zero at each fixed width above the explicit threshold. The formalization includes all nonlinear competitors and posterior mixtures. It assumes no energy gap, neuron norm bound, or posterior-concentration theorem: these are proved in its dependency chain.
+
+The exact parameters are `R=2^1024`, `m=6k+4`, `d=(8k+4)(2R+4)`, teacher width `C=3(m+1)(d+1)`, sufficient learner width `N₀=2^(m+d+1)`, and `2^(k−1)` designated mistakes. The teacher has margin at least one and coefficients bounded by `C`. The target has a NAND circuit with at most `17d+5` gates. At every fixed `N≥N₀`, correct-label confidence tends to zero on every designated round; at sufficiently small positive scale the same posterior gives all designated sampling errors with arbitrarily high probability, majority errors, and `>2/3` confidence failures.
+
+The softplus extension is not included in this formalization. The improved ordinary-tanh lower bound has a conventional proof and [some checked support ingredients](review/OnlineLowerTanh-support-status.md), not a formalized main theorem.
+
+```sh
+lake build NeuralGeneralization.OnlineLowerReluMain
+lake env lean CheckOnlineLowerRelu.lean
+```
+
 ## Model and quantifiers
 
 For the first four theorems, [Network.lean](NeuralGeneralization/Network.lean) defines the concrete network,
