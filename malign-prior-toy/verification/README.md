@@ -80,4 +80,24 @@ A third referee checked only the searching theorem and its surroundings, with pe
 
 Hänni then restated the claim the note examines: where predictions are actually used in a critical way in some universe, a lot of what happens is takeover through the prediction channel. He also separated two questions, how far one consequentialist reaches and whether most uses at which a breakout is possible end in one. In response the note gained a definition of critical use by a call rule, a population form of the hypothesis, a theorem on critical uses (reach of one seeker, self-reproduction, share of the uses) and a proposition on the honest twin; the remark on handover rules under which only some worlds hand over was absorbed into them. The abstract, Section 1, Section 7 and the README were reorganised around the two questions.
 
-This material is checked in round 4 ([`referee-4.md`](referee-4.md)); see below.
+## Round 4
+
+A fourth referee checked this material with pencil and paper ([`referee-4.md`](referee-4.md)).
+
+**Verdict.** No inequality in a numbered statement was wrong: the theorem on critical uses holds with its constants, also when contexts are comparable, and the proposition on the honest twin is correct. The problems were in the conclusions drawn from them. All findings were accepted.
+
+| Finding | Resolution |
+|---|---|
+| **B1.** The proposition compared masses, but a use receives a sample that is normalised by the programs which print the block; a calling program need not print anything after its context. So "seekers hold the majority only if …" did not follow. A corrected bound is available and needs no closure assumption. | The proposition now states the referee's bound: the twin is in the posterior with 2^(h−a) times the seeker's mass, so the predictor returns the seeker's block with probability at most 1/(1+2^(a−h)·φ), φ being the share of users that go on to print the block. The closure assumption is confined to part (c). The text says that the bound says nothing where φ is small. |
+| **B2.** "About its own prior weight, however rare critical uses are" was false when uses are rarer than the seeker is long: the reach is at most H, and the theorem itself forces κ < 2^(a+1)·H. | Replaced everywhere by: more than 2^(−a−1) times the average of κ, at most H; of the order of the seeker's weight where users are most of what prints their contexts; once uses are rarer than the seeker is long, its programs outweigh the users at their contexts. The text also says that the average needs no search and that the search buys the share at every use. |
+| **B3.** "Critical uses about as rare as the twin is long" was not the proved condition. | Now "rarer than the seeker is long", with the twin's bound stated separately. |
+| **B4, B5.** The upper bound is for one seeker and one search; masses add; "covers all seekers at once" was unproved; the concentrating seeker was outside it; the bound against "genuine users" was a bound against the seeker's own twin, a user by assumption. | A paragraph lists these limits; "genuine users" is no longer used for the comparison; the closure assumption is called a modelling decision, with the remark that under a test the seeker's own programs are uses too. |
+| **B6, B7, B8.** "Can hold the majority where it chooses to"; "outweigh by the factor"; the proposition did not state "if closed". | Reworded as a sufficient condition with its own length a_W; "have at least … times the mass"; "if the rule is closed under search". |
+| **B9.** Definitions: one context per calling program; "minimal programs for first hits" undefined; bounds; H > 0 and a defined predictor; the population form does not exclude the world's own continuation. | Added to the two definitions and the text after them. |
+| **C, D.** Summaries that dropped the assumption or read as a full reduction of the second question; six stale passages. | The abstract, Sections 1 and 7 and the README were rewritten; the stale passages were fixed. |
+
+## After round 4: seekers that are not written down
+
+Hänni then pointed out that the analysis treated consequentialists as needing to be specified, with a goal written into the program, while they might arise in simple worlds whose output a simple rule reads off. The theorems do not assume a goal slot, but the estimates of lengths and the honest-twin bound did. A paragraph "Seekers that are not written down" now states the reach for any program with the right output (a one-line lemma), the condition under which such a program outweighs the users of the uses it aims at, why the honest-twin bound does not apply to it, and that a time bound does exclude it. The abstract, Section 1, Section 7 and the README state the answer by regime.
+
+This last revision (the restated proposition, the new paragraph and the rewritten summaries) has not been read by a referee. The restated proposition follows the derivation in section B1 of `referee-4.md`.

@@ -62,8 +62,9 @@ the same convention applies to the other time bounds introduced below.
 \end{definition}
 
 Standard universal machines have this property, with $\gamma(t)=O(t\log t)$ or $O(t^2)$ depending on the tape
-model. The theorems that use universality are \cref{thm:twin,thm:quine,thm:search,thm:capture,thm:machine}; the
-others hold for any machine.
+model. The results that use universality are
+\cref{thm:twin,thm:quine,thm:search,thm:critical,prop:honest,thm:capture,thm:machine}; the others hold for any
+machine.
 
 \begin{lemma}[Transfer]\label{lem:transfer}
 Let $V$ have prefix word $v$ and overhead $\gamma$. If $\gamma(T'(k))\le T(k)$ for all $k\le|x|$, then
@@ -106,9 +107,9 @@ actually \emph{used}, and in H\"anni's second formulation only \emph{some} progr
 next definition lets the worlds that use the prediction be any recognisable set of programs.
 
 \begin{definition}[Critical use]\label{def:call}
-A \emph{call rule} is a set $\mathcal C$ of pairs $(p,x_p)$ of strings that can be enumerated, such that the
-\emph{calling programs} $p$ form a prefix-free set and $U$, on every input beginning with $p$, prints $x_p$
-having read no more than $p$. A world that begins with a calling program $p$ \emph{makes a critical use of the
+A \emph{call rule} is a set $\mathcal C$ of pairs $(p,x_p)$ of strings that can be enumerated, one pair for
+each \emph{calling program} $p$, such that the calling programs form a prefix-free set and $U$, on every input
+beginning with $p$, prints $x_p$ having read no more than $p$. A world that begins with a calling program $p$ \emph{makes a critical use of the
 predictor at the context $x_p$}: it receives a block from the predictor, computed from $x_p$, and runs it. Let
 \[
 C(x)=\sum_{p:\,x_p=x}2^{-|p|},\qquad H_{\mathcal C}=\sum_{p}2^{-|p|},\qquad \kappa(x)=\frac{C(x)}{M_U(x)}
@@ -118,9 +119,11 @@ critical use at all, and the share of the posterior at $x$, without resource bou
 one there.
 \end{definition}
 
-A test $G$ is the special case in which the calling programs are all the minimal programs for first hits:
-then $C(x)=M_U(x)$ and $\kappa(x)=1$ at first hits, and $H_{\mathcal C}$ is the probability that a transcript
-passes the test. In general a call rule singles out, among the programs that print $x$, those in which the
+A test $G$, taken without resource bounds, is the special case in which the calling programs are the strings
+$p$ such that $U$ prints a first hit on every input beginning with $p$ and has read exactly $p$ when the hit
+is complete: then $C(x)=M_U(x)$ and $\kappa(x)=1$ at first hits, and $H_{\mathcal C}$ is the probability that a
+transcript passes the test. H\"anni's second suggestion fits a test only if every program with the given
+output calls the predictor. In general a call rule singles out, among the programs that print $x$, those in which the
 prediction is actually used; the world is the broader computation around the call. The predictor sees only $x$.
 
 \begin{definition}[Self-reproducing continuation]\label{def:sr}
@@ -138,13 +141,15 @@ A program for $xy$ with $y\in\SR_m(x)$ is a hypothesis that predicts the context
 recreates the situation with itself in the world's place. This is our reading of ``quining oneself out''.
 
 \begin{definition}[Malign prior hypotheses for the toy]\label{def:mph}
-\emph{Critical-use form at level $\theta$.} Fix a call rule (or a test) and, for each context $x$, a set
-$A(x)\subseteq\B^m$ of blocks that count as a takeover there. Let a world be drawn from the prior conditioned
-on making a critical use, let $X$ be the context of the use and $Y$ the block the sampling predictor returns.
+\emph{Critical-use form at level $\theta$.} Fix a call rule (or a test) with $H_{\mathcal C}>0$ and, for
+each context $x$, a set $A(x)\subseteq\B^m$ of blocks that count as a takeover there. Let a world be drawn from
+the prior conditioned on making a critical use, let $X$ be the context of the use and $Y$ the block the
+sampling predictor returns, which we assume to be defined at every context.
 The hypothesis is that $\Pr[Y\in A(X)]\ge\theta$. With $A(x)=\SR_m(x)$ it says that a share $\theta$ of the
 critical uses end with the world running a program that got itself run through the prediction.
 
-\emph{Forms for one world.} Let a world make a critical use at $x$ with own continuation $d$.
+\emph{Forms for one world.} Let a world make a critical use at $x$ with own continuation $d$, defined as in
+\cref{def:world}.
 \begin{itemize}[leftmargin=1.4em,itemsep=1pt,topsep=2pt]
 \item \emph{Majority form:} $\pi_m(d\mid x)<\tfrac12$.
 \item \emph{Payload form at level $\theta$,} for a set $A\subseteq\B^m$ with $d\notin A$: $\pi_m(A\mid x)\ge\theta$.
@@ -154,7 +159,9 @@ critical uses end with the world running a program that got itself run through t
 
 The critical-use form is the claim of the argument as stated in \cref{sec:question}: among the predictions
 that are actually used in a critical way, a lot end in a takeover through the prediction channel. It is a
-statement about the population of uses, and \cref{thm:critical} bounds it. The forms for one world say how
+statement about the population of uses, and \cref{thm:critical} bounds it from below. It does not exclude
+worlds whose own continuation lies in $A(X)$; where the users are themselves such programs it holds for that
+reason (\cref{thm:calibration}). The forms for one world say how
 much of the posterior at that world's context is off its own continuation and where it sits. Once $U$, $T$,
 $L$, $m$ and the world together with the context of its use are fixed, with $T,L<\infty$, these are statements
 about finitely many dyadic rationals and can be decided by running the predictor and, for $\SR_m(x)$, by

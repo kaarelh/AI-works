@@ -25,13 +25,16 @@ which the context handed to the predictor is read off at one location of one big
 Read in the toy, the claim splits into two questions that should be kept apart. \emph{Reach:} how far does
 one program get that looks for critical uses, predicts well up to them, and then supplies a continuation of
 its choice? \emph{Fate of the uses:} what share of the critical uses end in a takeover? The first has a clean
-answer: each such program is the source of the continuation that is run in worlds of total prior probability
-about its own prior weight, however rare critical uses are. That does not answer the second, which is the one
-the claim is about. For it the toy gives a lower bound, the sum of the reaches divided by the base rate of
-critical uses, and an upper bound for programs that find their uses by search: the same search followed by
-simply \emph{being} the user that was found is itself a way of making a critical use, so such seekers
-outweigh genuine users at a context only by a constant that compares the lengths of two programs on the
-machine in use (\cref{thm:critical,prop:honest}).
+answer without resource bounds: for each continuation there is such a program whose continuation is handed
+over in worlds of total prior probability more than half its own weight times the average share of the users
+among the programs that print their contexts. That does not answer the second, which is the one the claim is
+about. For it the toy gives a lower bound, by adding up seekers, and an upper bound on the part of one seeker
+that finds its uses by search: the same search followed by continuing as the user that was found is an honest
+hypothesis with a mass that differs from the seeker's by a factor comparing the lengths of the two programs
+(\cref{thm:critical,prop:honest}). That bound does not cover a seeker whose search and whose goal are not
+written in its text, such as a simple world whose inhabitants choose to do this; for such a program the toy
+has the reach statement, with the length of the world in place of the length of an explicit seeker, and a
+time bound as the only obstacle.
 
 \paragraph{Results.} Unless said otherwise, statements are for a fixed monotone machine $U$ and the mixture
 $\xi$ of its programs of length at most $L$ that keep to a time schedule $T$ (\cref{def:mixture}).
@@ -73,16 +76,22 @@ predictor, with prior probability $H$, and let $\kappa(x)$ be the share of the p
 by the worlds that make a use there. Without resource bounds, a seeker of length $a$ with a continuation of
 its choice has share more than $2^{-a-1}\kappa(x)/H$ at every use and is the source of the continuation run in
 worlds of total prior probability more than $2^{-a-1}$ times the average of $\kappa$ over uses. A
-self-reproducing seeker outweighs the worlds that make the use, with programs that fit into a block, by more
-than $2^{-c'}/H$ at every context. If a program that performs the search and then behaves as the user it found
-counts as making a critical use, a seeker of length $a$ has at most $2^{h-a}$ times the mass of the worlds
-making the use at any context, where $h$ is the length of that honest twin, and $H>2^{-h-1}$.
+self-reproducing seeker has at least $2^{-c'}/H$ times the mass of the worlds that make the use with programs
+short enough for the block, at every context, where $c'$ is its own length plus two bits. The honest twin of a
+seeker, which makes the same search and then continues as the user it found, has $2^{h-a}$ times the seeker's
+mass at every use, $h$ being its length; so where the users go on to print the block themselves, the predictor
+returns that seeker's block with probability at most $1/(1+2^{a-h})$. If the twin counts as making a critical
+use, then $H>2^{-h-1}$. Any program of length $a$ whose output puts mass $C(x)/(2H_{\mathcal W})$ on the uses of
+a class $\mathcal W$ of total mass $H_{\mathcal W}$ has at least $2^{-a}/(2H_{\mathcal W})$ times the mass of
+the worlds that make those uses.
 \item \emph{Time bounds} (\cref{sec:time}). The floor remains if the schedule has room for the wrapper.
 Hypotheses that must first simulate at length, the searching one among them, are excluded once their start-up
 exceeds the schedule; whether the base rate can be collected within a tight schedule is open. If the world itself is too slow for the schedule, no bound on the mass off the truth
 remains.
-\item \emph{Feedback} (\cref{thm:feedback,thm:contrarian}). The statements on obedient and contrarian worlds
-in the abstract.
+\item \emph{Feedback} (\cref{thm:feedback,thm:contrarian}). If the world does what is predicted, a sampled
+self-fulfilling deviation removes the default hypotheses for good, and a time-bounded predictor confines such
+a world to futures that are cheap to compute. A world that does the opposite of what is predicted leaves a
+length-$L$ predictor that returns the more probable bit without any hypothesis after at most $L+1$ rounds.
 \end{enumerate}
 \Cref{sec:computation} computes the mixture of a small machine exactly and shows two cases in which a shorter
 program explains the context and continues differently, and the effect of a tight schedule.
@@ -105,14 +114,17 @@ informal versions may exist. Every proof here is short.
 
 \paragraph{What the toy does not settle.} The floor and the searcher's share are constants of the machine,
 and nothing here estimates them for a machine one would call natural. The original argument rests on the
-claim that agents arise in short programs and choose to do this, and that such programs are \emph{shorter}
-than the honest explanation. For an arbitrary world on a universal machine and a continuation chosen in
-advance, the programs we exhibit are wrappers, searchers and readers with a flag; they contain an explanation
-of the context and are longer than it by their constants. Programs shorter than the honest explanation that
-have the effect do occur in particular worlds (a copy at a simpler place, \cref{thm:capture}) and on
-particular machines (\cref{sec:computation}); that they occur on natural machines for worlds like ours is the
-claim the toy leaves where it was. When only some of the worlds that print a context use the answer, the results are in terms of the share
-$\kappa$ of those that do, which the toy does not bound. The
+claim that agents arise in short programs and choose to do this, with no goal written into the program. The
+toy says what follows if such a program of length $a$ exists: it outweighs the worlds that make the uses it
+aims at once these are together rarer than $2^{-a-1}$, the bounds for seekers that are written down do not
+apply to it, and a tight time bound excludes it (\cref{sec:critical}). Whether one exists on a natural
+machine, and how short it is, the toy cannot say. The programs it can exhibit for an arbitrary world, wrappers,
+searchers and readers with a flag, contain an explanation of the context and are longer than it by their
+constants; programs shorter than the honest explanation that have the effect are exhibited only in particular
+worlds (a copy at a simpler place, \cref{thm:capture}) and on particular machines (\cref{sec:computation}). When only some of the worlds that print a context use the answer, the results are in terms of the share
+$\kappa$ of those that do, which the toy does not bound from below; and the upper bound on a searching seeker
+needs the users to go on printing after the use. Whether a simulated use should count as a use is a modelling
+decision that the toy leaves open. The
 regime in which the world is more expensive than the predictor, the usual one for a predictor inside a world,
 is left open (\cref{sec:time}). The computation covers prediction only: the dynamics of worlds that run
 predicted continuations (\cref{sec:lineage}) are stated as theorems and were not simulated.
