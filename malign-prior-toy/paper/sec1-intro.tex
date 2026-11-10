@@ -5,7 +5,8 @@ $2^{-\text{length}}$. Christiano~\cite{christiano} argued that this prior is \em
 some short programs simulate worlds whose inhabitants want to influence whoever uses the prior; they can
 output accurate predictions to gain posterior weight and then, at a moment that matters, output something
 that serves them. The argument is informal at two places. It needs a claim about which programs are short
-on a ``natural'' machine, and it needs a notion of what the prediction is used for.
+on a ``natural'' machine, and it needs a notion of what the prediction is used for. (We could not open the
+two posts while writing; our account of the argument is from memory and from summaries by others.)
 
 This note asks what remains when both places are filled in by a toy. The toy follows two suggestions of
 Kaarel H\"anni. In the first, a computable world (a cellular automaton, say) contains a sensor, a large
@@ -18,57 +19,71 @@ get a decent share. \Cref{sec:toy} gives the definitions. The first suggestion b
 which the context handed to the predictor is read off at one location of one big world
 (\cref{sec:capture,sec:feedback}).
 
-\paragraph{Results.} All statements are for a fixed monotone machine $U$ and the mixture $\xi$ of its
-programs of length at most $L$ that keep to a time schedule $T$ (\cref{def:mixture}).
+\paragraph{Results.} Unless said otherwise, statements are for a fixed monotone machine $U$ and the mixture
+$\xi$ of its programs of length at most $L$ that keep to a time schedule $T$ (\cref{def:mixture}).
 \begin{enumerate}[leftmargin=1.6em,itemsep=2pt,topsep=3pt]
-\item \emph{Calibration} (\cref{thm:calibration}). If the world is drawn from the same bounded prior, then
-given the context the predictor's sampled continuation and the world's own continuation are independent
-with the same law. On this population the predictor hands over a self-reproducing continuation exactly as
-often as worlds continue with one by themselves. Malignity can therefore only be defined relative to a world,
-or a population of worlds, that differs from the prior.
+\item \emph{Calibration} (\cref{thm:calibration}). If the world is drawn from the same bounded prior and goes
+on to print the next block within the bounds, then given the context the predictor's sampled continuation and
+the world's own continuation are independent with the same law. On this population the predictor hands over
+a self-reproducing continuation exactly as often as worlds continue with one by themselves.
 \item \emph{Floor} (\cref{thm:twin,thm:quine}). For every computable test $G$ that recognises the handover
-point there is a constant $c$ such that, at every context where $G$ first fires, programs that emit their own
-code as the continuation have posterior mass at least $2^{-c}$ times a slack factor that is $1$ without
-resource bounds. The construction wraps every explanation of the context; the hypothesis that enumerates all
-worlds and waits for a handover is the same program (\cref{rem:searcher}).
+point and every payload there is a constant $c$ such that, at every context where $G$ first fires, the payload
+has posterior mass at least $2^{-c}$ times a slack factor that is $1$ without resource bounds. Programs that
+emit their own code as the continuation have mass at least $2^{-c}$ times the share of the posterior on
+explanations that fit, together with the wrapper, into one block.
+\item \emph{Searching} (\cref{thm:search}). Let $H$ be the prior probability that a world hands over. For a
+world drawn from the prior conditioned on handing over, the expected posterior share of any family of
+programs with a common prefix of length $a$ is at most $2^{-a}/H$ (without resource bounds), and a hypothesis
+that searches the space of programs for a handover attains this. The search has a start-up of about $1/H$
+world simulations.
 \item \emph{Budget} (\cref{thm:budget}). Along a world that has a program of length $\ell$ within the bounds,
-the posterior mass off the true next $m$ bits, summed over all cut points, is at most $m\ell\ln 2$. A
-handover at a position that is not cheap to recognise is safe up to $m\ell\ln2/N$ on average over $N$ positions.
+the posterior mass off the true next $m$ bits, summed over all cut points, is at most $m\ell\ln 2$; the
+majority can be off the truth at no more than $m\ell$ cut points.
 \item \emph{Capture} (\cref{thm:capture}). The odds of a continuation $y$ against the true one $d$ are
-$\xi(xy)/\xi(xd)$. In a world with many readable locations, a copy of the sensor's data at a location with a
-shorter code beats the sensor by the difference of the code lengths, for all but a small fraction of sensor
-locations; the gain is capped by the cost of the description ``the other place that shows the same data''.
+$\xi(xy)/\xi(xd)$. In a world with many readable locations, among $N$ places where a sensor with the given
+record could sit and whose records continue differently, a copy of the record at a location with a short
+code beats all but a few by a factor of order $N$ times the share of the context's explanations that go
+through the copy's reader; under a generous
+schedule the gain is capped by the cost of the description ``the other place that shows the same data''. A
+hypothesis that simulates the world can read the moment of the handover off a cell of its simulation at the
+cost of naming the cell.
 \item \emph{Machine dependence} (\cref{thm:machine}). For every test and payload there is a universal machine,
-differing from $U$ by a $(k{+}1)$-bit prefix, on which the payload has posterior at least $1-2^{-k}$ at every
-context where the test fires, and another on which a given computable world is predicted with probability at
-least $1-2^{-k}$ everywhere.
-\item \emph{Time bounds} (\cref{sec:time}). The floor needs only the time of the explanation it wraps.
-Hypotheses that must first simulate another world are excluded once their start-up exceeds the schedule. If
-the world itself is too slow for the schedule, no bound on the mass off the truth remains.
+whose description lengths exceed those of $U$ by at most $k+1$ bits, on which the payload has posterior at
+least $1/(1+2^{-k})$ at every context where the test fires, and another on which a given computable world is
+predicted with at least that probability at every nonempty context.
+\item \emph{Time bounds} (\cref{sec:time}). The floor remains if the schedule has room for the wrapper.
+Hypotheses that must first simulate at length, the searcher among them, are excluded once their start-up
+exceeds the schedule. If the world itself is too slow for the schedule, no bound on the mass off the truth
+remains.
 \item \emph{Feedback} (\cref{thm:feedback,thm:contrarian}). The statements on obedient and contrarian worlds
 in the abstract.
 \end{enumerate}
-\Cref{sec:computation} computes the mixture of a small machine exactly and shows a floor, a capture and
-the effect of a tight schedule. \Cref{sec:answers} answers the original questions one by one.
+\Cref{sec:computation} computes the mixture of a small machine exactly and shows two cases in which a shorter
+program explains the context and continues differently, and the effect of a tight schedule.
+\Cref{sec:answers} answers the original questions one by one.
 
 \paragraph{What is new and what is not.} The wrapper construction is Hutter's proof that the universal
-semimeasure gives a deviation at step $n$ probability at least $2^{-K(n)-O(1)}$~\cite[eq.~(17)]{hutter07},
-and it is the construction behind the theorem of Cohen, Hutter, Bengio and Russell that a fixed fraction of a
-Bayesian imitator's posterior follows any given policy after an unprecedented event~\cite{cohen25}; a
-resource-bounded class is used the same way in~\cite{cohen20}. The budget is Solomonoff's bound in its
+semimeasure gives a deviation at step $n$ probability at least $2^{-K(n)-O(1)}$~\cite[eq.~(17)]{hutter07}. It
+is also the construction behind the theorem of Cohen, Hutter, Bengio and Russell~\cite{cohen25} that, after an
+event without precedent, a share of a Bayesian imitator's posterior that does not shrink with the amount of
+training data is on models that from then on pursue a given goal; a resource-bounded class is used the same
+way in~\cite{cohen20}, to show that a pessimistic agent defers. The budget is Solomonoff's bound in its
 deterministic form~\cite{solomonoff78,hutter07}. The machine-dependence statement is the prediction analogue
 of the dogmatic prior of Leike and Hutter~\cite{leike15}. The contrarian world is Putnam's
 diagonalisation~\cite{putnam63,legg06}. Same-world copies of a predictor's data are discussed informally
 in~\cite[\S2.5]{hubinger23}, and self-fulfilling predictions in~\cite{armstrong17,oesterheld23,hubinger23}. We
-have not found the single-world statement with description lengths, the calibration statement, the
-self-reproducing form of the floor, or the resource-bounded bookkeeping elsewhere; a search of forum posts
-could only be done through search-engine summaries, so earlier informal versions may exist. Every proof here
-is short.
+have not found the single-world statement with description lengths, the calibration statement, the statement
+that searching gains exactly the base rate, the self-reproducing form of the floor, or the resource-bounded
+bookkeeping elsewhere; forum posts could be consulted only through search-engine summaries, so earlier
+informal versions may exist. Every proof here is short.
 
-\paragraph{What the toy does not settle.} The floor is a constant of the machine, and nothing here estimates it
-for a machine one would call natural. The original argument rests on the claim that agents arise in short
-programs and choose to do this; in the toy their formal counterpart is the wrapper, and whether a different,
-cheaper counterpart exists on natural machines is exactly the constant we do not know. The regime in which the
-world is more expensive than the predictor, the usual one for a predictor inside a world, is left open
-(\cref{sec:time}). The computation covers prediction only. The dynamics of worlds that run predicted
-continuations (\cref{sec:lineage}) are stated as theorems and were not simulated.
+\paragraph{What the toy does not settle.} The floor and the searcher's share are constants of the machine,
+and nothing here estimates them for a machine one would call natural. The original argument rests on the
+claim that agents arise in short programs and choose to do this, and that such programs are \emph{shorter}
+than the honest explanation. In the toy we can exhibit only programs that contain an explanation of the
+context, wrappers and searchers, which are longer than what they wrap; whether something shorter exists on
+natural machines is the claim the toy leaves where it was. In the main definition a handover can be read off
+the data; \cref{rem:callers} names the quantities that matter when it cannot, but does not bound them. The
+regime in which the world is more expensive than the predictor, the usual one for a predictor inside a world,
+is left open (\cref{sec:time}). The computation covers prediction only: the dynamics of worlds that run
+predicted continuations (\cref{sec:lineage}) are stated as theorems and were not simulated.

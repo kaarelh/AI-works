@@ -4,38 +4,41 @@
 
 \begin{theorem}[Budget]\label{thm:budget}
 Let $\xi$ be the mixture of any machine and bounds, and let $z$ be an infinite sequence with $\xi(z_{1:k})>0$
-for all $k$. Put $\xi(z)=\lim_k\xi(z_{1:k})$ and $\xi(u\mid x)=\xi(xu)/\xi(x)$. For all $n\le N$ and $m\ge1$:
+for all $k$. Put $\xi(z)=\lim_k\xi(z_{1:k})$ and $\xi(u\mid x)=\xi(xu)/\xi(x)$. For all $n$ and $m\ge1$:
 \begin{enumerate}[label=(\roman*),leftmargin=2em,itemsep=1pt,topsep=2pt]
-\item $\prod_{k=n}^{N-1}\xi(z_{k+1}\mid z_{1:k})=\xi(z_{1:N})/\xi(z_{1:n})$;
+\item $\prod_{k=n}^{N-1}\xi(z_{k+1}\mid z_{1:k})=\xi(z_{1:N})/\xi(z_{1:n})$ for $N\ge n$;
 \item $\sum_{k\ge n}\bigl(1-\xi(z_{k+1}\mid z_{1:k})\bigr)\le\ln\bigl(\xi(z_{1:n})/\xi(z)\bigr)$;
 \item the number of $k\ge n$ with $\xi(z_{k+1}\mid z_{1:k})\le\frac12$ is at most $\log_2\bigl(\xi(z_{1:n})/\xi(z)\bigr)$;
-\item with $\tau_m(k)=1-\xi(z_{k+1:k+m}\mid z_{1:k})$, $\ \sum_{k\ge n}\tau_m(k)\le m\ln\bigl(\xi(z_{1:n})/\xi(z)\bigr)$.
+\item with $\tau_m(k)=1-\xi(z_{k+1:k+m}\mid z_{1:k})$, $\ \sum_{k\ge n}\tau_m(k)\le m\ln\bigl(\xi(z_{1:n})/\xi(z)\bigr)$,
+and the number of $k\ge n$ with $\tau_m(k)\ge\frac12$ is at most $m\log_2\bigl(\xi(z_{1:n})/\xi(z)\bigr)$.
 \end{enumerate}
 If $z$ has a $(T,L)$-program of length $\ell$, then $\xi(z)\ge2^{-\ell}$ and the right-hand sides are at most
-$\ell\ln2$, $\ell$ and $m\ell\ln2$.
+$\ell\ln2$, $\ell$, $m\ell\ln2$ and $m\ell$.
 \end{theorem}
 \begin{proof}
 (i) telescopes. (ii) and (iii) follow from (i) with $N\to\infty$, using $1-a\le-\ln a$, and that each factor at
 most $\frac12$ halves the product. (iv) $1-\prod_{j<m}a_{k+j}\le\sum_{j<m}(1-a_{k+j})$ with
-$a_k=\xi(z_{k+1}\mid z_{1:k})$, and each index occurs in at most $m$ of the sums. The last claim is
+$a_k=\xi(z_{k+1}\mid z_{1:k})$, and each index occurs in at most $m$ of the sums. For the count let
+$b_k=-\log_2a_k\ge0$, so $\sum_{k\ge n}b_k\le\log_2(\xi(z_{1:n})/\xi(z))$ by (i); $\tau_m(k)\ge\frac12$ means
+$\sum_{j<m}b_{k+j}\ge1$, and each index lies in at most $m$ blocks. The last claim is
 \cref{lem:basic}(ii).
 \end{proof}
 
 For a world with transcript $z$ that hands over at $x=z_{1:n}$, the own continuation is $d=z_{n+1:n+m}$, and
 $1-\pi_m(d\mid x)\le\tau_m(n)$. By (i), if the next bit is sampled at every step and the transcript is not
 affected by the samples, the probability that no sample after position $n$ ever differs from the transcript is
-at least $\xi(z)/\xi(z_{1:n})$, with equality if the sampler gives no answer with the mass that the
-semimeasure leaves over. Two consequences:
+at least $\xi(z)/\xi(z_{1:n})$. Two consequences:
 \begin{itemize}[leftmargin=1.4em,itemsep=1pt,topsep=2pt]
-\item The majority form of \cref{def:mph} can hold at no more than $m\ell\cdot 2\ln 2$ cut points of a world
+\item The majority form of \cref{def:mph} can hold at no more than $m\ell$ cut points of a world
 with a program of length $\ell$ within the bounds, since each such point has $\tau_m\ge\frac12$.
 \item If the cut point is uniform on $\{N,\dots,2N-1\}$, the expected mass off the own continuation is at most
-$m\ell\ln2/N$. A handover at a position that hypotheses cannot cheaply single out is safe, and more data
-makes it safer.
+$m\ell\ln2/N$. On average over a long window of cut points a handover is safe, and a longer window makes it
+safer. The bound is an average: it says nothing about one given position, and a position that is cheap to
+single out can carry a constant share however much data precedes it.
 \end{itemize}
-This does not contradict \cref{thm:twin}: the wrapper for the test ``the length is $n$'' has a constant $c$
-of about the complexity of $n$, and $\sum_n2^{-c(n)}$ converges. The floor matters at cut points that are
-cheap to recognise, and the budget says there are few of them along any one in-class world.
+This fits with \cref{thm:twin}: the wrapper for the test ``the length is $n$'' has a constant $c(n)$ of
+about the complexity of $n$, and $\sum_n2^{-c(n)}$ converges by Kraft's inequality, so few cut points are cheap
+to recognise; the budget says that along any one in-class world few cut points carry much mass off the truth.
 
 \subsection{Capture by a shorter description}\label{sec:capture}
 
@@ -44,110 +47,139 @@ continuation $d$ whenever the programs for $xy$ weigh more than those for $xd$. 
 instance: it compares ``the world plus the place of the sensor'' with something shorter that reproduces the
 same data. In a single world this can be stated exactly.
 
-A \emph{stream family} is a computable map $\ell\mapsto X^\ell\in\B^{\N}$ on the natural numbers, thought of
-as the records at the locations $\ell$ of one computable world; the \emph{reader} is the machine that, on
-input $\bar e(\ell)\omega$, prints $X^\ell$, where $\bar e$ is a prefix-free code of the natural numbers with
-$|\bar e(\ell)|\le2\log_2(\ell+1)+3$. Let $c_X$ be the length of a prefix word of the reader. The sensor sits
-at $\ell^*$, the context is $x=X^{\ell^*}_{1:n}$, and the own continuation is $d=X^{\ell^*}_{n+1:n+m}$. This is
+A \emph{stream family} is a computable map $i\mapsto X^i\in\B^{\N}$ on the natural numbers, thought of
+as the records at the locations $i$ of one computable world; the \emph{reader} is the machine that, on
+input $\bar e(i)\omega$, prints $X^i$, where $\bar e$ codes a natural number through its binary expansion, so
+that $|\bar e(i)|\le2\log_2(i+1)+3$. Let $c_X$ be the length of a prefix word of the reader; it contains the
+description of the whole world. The sensor sits
+at $i^*$, the context is $x=X^{i^*}_{1:n}$, and the own continuation is $d=X^{i^*}_{n+1:n+m}$. This is
 H\"anni's first suggestion: the world contains the predictor, which is switched on at step $n$ of the record,
-and the streams are those of the world up to the moment its output is acted on.
+and the streams are those of the world up to the moment the predictor's output is acted on. Computing them
+does not involve running the predictor.
 
 \begin{theorem}[Capture]\label{thm:capture}
-Let $U$ be universal and suppose throughout that the programs named are within the bounds $(T,L)$.
+Let $U$ be universal, let $\xi(x)>0$, and suppose throughout that the programs named are within the bounds
+$(T,L)$.
 \begin{enumerate}[label=(\alph*),leftmargin=2em,itemsep=2pt,topsep=2pt]
-\item \emph{A copy at $\ell_0$.} If $X^{\ell_0}_{1:n}=x$ and $y=X^{\ell_0}_{n+1:n+m}$, then
-$\xi(xy)\ge2^{-c_X-|\bar e(\ell_0)|}$.
-\item \emph{Most sensors are expensive.} Let $S$ be a set of $N$ locations whose records all start with $x$
-and have pairwise different continuations $d_\ell=X^\ell_{n+1:n+m}$. For every $\delta\in(0,1]$, all but at
-most $\delta N$ of the $\ell\in S$ satisfy $\xi(xd_\ell)<\xi(x)/(\delta N)$. For these sensor locations and
-any $\ell_0$ as in (a) with $y\notin\{d_\ell\}$,
+\item \emph{A copy at $i_0$.} If $X^{i_0}_{1:n}=x$ and $y=X^{i_0}_{n+1:n+m}$, then
+$\xi(xy)\ge2^{-c_X-|\bar e(i_0)|}$.
+\item \emph{Most placements are expensive.} Let $S$ be a set of $N$ locations whose records all start with $x$
+and have pairwise different continuations $d_i=X^i_{n+1:n+m}$. For every $\delta\in(0,1]$, all but at
+most $\delta N$ of the $i\in S$ satisfy $\xi(xd_i)<\xi(x)/(\delta N)$. For these $i$ and any $i_0$ as in (a),
 \[
-\frac{\pi_m(y\mid x)}{\pi_m(d_\ell\mid x)}\ >\ \frac{\delta N\,2^{-c_X-|\bar e(\ell_0)|}}{\xi(x)}\ \ge\ \delta N\,2^{-c_X-|\bar e(\ell_0)|} .
+\frac{\pi_m(y\mid x)}{\pi_m(d_i\mid x)}\ >\ \frac{\delta N\,2^{-c_X-|\bar e(i_0)|}}{\xi(x)}\ \ge\ \delta N\,2^{-c_X-|\bar e(i_0)|} .
 \]
-\item \emph{The cap.} There is a constant $c_{\mathrm{m}}$ such that, if $\ell^*$ is the least location other
-than $\ell_0$ whose record agrees with that of $\ell_0$ on the first $n_1$ bits, then
-$\xi(xd)\ge2^{-c_{\mathrm{m}}-|\bar e(\ell_0)|-|\bar e(n_1)|}$, and therefore
+\item \emph{The cap.} There is a constant $c_{\mathrm{match}}$ such that, if $i^*$ is the least location other
+than $i_0$ whose record agrees with that of $i_0$ on the first $n_1$ bits, then
+$\xi(xd)\ge2^{-c_{\mathrm{match}}-|\bar e(i_0)|-|\bar e(n_1)|}$, and therefore
 \[
-\frac{\pi_m(y\mid x)}{\pi_m(d\mid x)}\ \le\ \xi(xy)\,2^{\,c_{\mathrm{m}}+|\bar e(\ell_0)|+|\bar e(n_1)|} .
+\frac{\pi_m(y\mid x)}{\pi_m(d\mid x)}\ \le\ \xi(xy)\,2^{\,c_{\mathrm{match}}+|\bar e(i_0)|+|\bar e(n_1)|} .
 \]
+\item \emph{A switch read off the world.} For every payload $P$ there is a constant $c_{\mathrm{fl}}$ such
+that for all locations $i$ and $f$: if $n$ is the first position with $X^f_n=1$ and $x=X^i_{1:n}$, then
+$\xi\bigl(x\,P(x)_{1:m}\bigr)\ge2^{-c_{\mathrm{fl}}-|\bar e(i)|-|\bar e(f)|}$.
 \end{enumerate}
 \end{theorem}
 \begin{proof}
-(a) A prefix word of the reader followed by $\bar e(\ell_0)$ is a program for $xy$. (b) The strings $xd_\ell$
-are pairwise incomparable, so $\sum_{\ell\in S}\xi(xd_\ell)\le\xi(x)$ by \cref{lem:basic}(i), so at most
+(a) A prefix word of the reader followed by $\bar e(i_0)$ is a program for $xy$. (b) The strings $xd_i$
+are pairwise incomparable, so $\sum_{i\in S}\xi(xd_i)\le\xi(x)$ by \cref{lem:basic}(i), so at most
 $\delta N$ terms can be as large as $\xi(x)/(\delta N)$; then use (a) and $\xi(x)\le1$. (c) Let the \emph{matcher}
-be the machine that reads $\bar e(\ell_0)\bar e(n_1)$, searches $\ell=0,1,2,\dots$ for the first
-$\ell\ne\ell_0$ with $X^\ell_{1:n_1}=X^{\ell_0}_{1:n_1}$, and prints $X^\ell$; $c_{\mathrm{m}}$ is the length of
-a prefix word of it.
+be the machine that reads $\bar e(i_0)\bar e(n_1)$, searches $i=0,1,2,\dots$ for the first
+$i\ne i_0$ with $X^i_{1:n_1}=X^{i_0}_{1:n_1}$, and prints $X^i$; $c_{\mathrm{match}}$ is the length of
+a prefix word of it. (d) Let the \emph{flagged reader} read $\bar e(i)\bar e(f)$, print $X^i$ bit by bit, look
+at $X^f_k$ after printing the $k$-th bit, and at the first $k$ with $X^f_k=1$ stop and print $P(X^i_{1:k})$;
+$c_{\mathrm{fl}}$ is the length of a prefix word of it.
 \end{proof}
 
-Read (b) with $\ell_0$ a location whose code is short, for example the origin, and $S$ the places where a
-sensor with this record could be. Whoever arranges that the origin shows the sensor's record up to the
-handover, and something else after it, moves the predictor by a factor of about $N2^{-|\bar e(\ell_0)|}$
-against a typical sensor location. The copy needs only to \emph{read} the data; nothing is tampered with.
-The hypothesis ``I am the reader at the origin'' is not a wrapper and pays no constant for a test or a
-payload: the world computes the switch for it. Part (c) is the limit of the effect. The description ``the
-other place that shows what the origin shows'' is an honest hypothesis of cost
-$c_{\mathrm m}+|\bar e(\ell_0)|+|\bar e(n_1)|$, so a copy gains at most the difference
-between this cost and its own, however large $N$ is. A copier can raise the cost of matching by making decoys,
-further places with the same record and other continuations, which is the situation of (b). In every case the
-question is decided by an inequality between description lengths of the same data, and it depends on the
-world: whether such a copy exists is a fact about what is in it.
+Part (b) is about placements. It takes $N$ places where a sensor with this record could sit, all showing $x$
+so far and all continuing differently, and says that most of them are expensive to point at; with a single
+candidate place it says nothing, and (a) alone compares the copy with whatever $\xi(xd)$ is. Read it with
+$i_0$ a location whose code is short, for example the origin. Whoever arranges that the origin shows the
+sensor's record up to the handover, and something else after it, moves the predictor against a typical
+placement by the factor $\delta N2^{-c_X-|\bar e(i_0)|}/\xi(x)$. Here $2^{-c_X-|\bar e(i_0)|}/\xi(x)$ is the
+share of the context's explanations that go through the reader at the origin; it is of order $1$ when the
+world is the shortest explanation of its own records and the origin is the cheapest place that shows them, and
+small otherwise. The copy needs only to \emph{read} the data; nothing is tampered with. The hypothesis ``I am
+the reader at the origin'' is not a wrapper and pays no constant for a test or a payload: the world computes
+the switch for it.
 
-The same theorem covers a harmless reading. Take for $\ell_0$ not an adversary's copy but any simpler index
-under which the same record appears, such as ``the input of the $i$-th predictor in this world'' in a reader
+Part (c) is a limit on the effect when the schedule is generous. The description ``the other place that shows
+what the origin shows'' is an honest hypothesis of cost $c_{\mathrm{match}}+|\bar e(i_0)|+|\bar e(n_1)|$, so a
+copy gains at most the difference between this cost and its own, however large $N$ is. The matcher searches
+through locations before it prints anything, so it has the long start-up that a tight schedule excludes
+(\cref{sec:time}); under such a schedule (a) and (b) remain and no cap is proved here. A copier can also raise
+the cost of matching by making decoys, further places with the same record and other continuations, which is
+the situation of (b). In every case the question is decided by an inequality between description lengths of
+the same data, and it depends on the world: whether such a copy exists is a fact about what is in it.
+
+Part (d) covers a test that is not a function of the data. A hypothesis that simulates the world can take as
+its flag any cell that changes when the predictor is switched on. It then recognises the handover at a cost of
+$|\bar e(f)|$ bits plus a constant, whatever the time of the handover and without any description of that
+time. Such a program is a wrapper of the reader at $i$: its weight is $2^{-(c_{\mathrm{fl}}-c_X)-|\bar e(f)|}$
+times the reader's own, a share of that one explanation and not of the whole posterior.
+
+The theorem also covers a harmless reading. Take for $i_0$ not an adversary's copy but any simpler index
+under which the same record appears, such as ``the input of the $j$-th predictor in this world'' in a reader
 that enumerates predictors and not cells. Then (a) and (b) say that the mixture locates itself by role when
-that is shorter than by position. This is the anthropic update, and it is benign as long as the stream found
-under the shorter index \emph{is} the sensor's.
+that is shorter than by position. This is benign as long as the stream found under the shorter index
+\emph{is} the sensor's.
 
 \subsection{The machine can be chosen to make either answer true}
 
 \begin{theorem}[Machine dependence]\label{thm:machine}
 Let $U$ be universal, $G$ a test, $P$ a payload and $k\ge1$.
 \begin{enumerate}[label=(\roman*),leftmargin=2em,itemsep=2pt,topsep=2pt]
-\item There is a universal machine $U_k$ whose prefix words are those of $U$ preceded by $1^k0$, such that for
-every first hit $x$ of $G$ with $|P(x)|\ge m$ and $y=P(x)_{1:m}$: $\ M_{U_k}(xy)/M_{U_k}(x)\ge1/(1+2^{-k})$.
+\item There is a universal machine $U_k$, having as prefix words those of $U$ preceded by $1^k0$, such that
+for every first hit $x$ of $G$ with $|P(x)|\ge m$ and $y=P(x)_{1:m}$: $\ M_{U_k}(xy)/M_{U_k}(x)\ge1/(1+2^{-k})$.
 \item For every computable infinite $z$ there is such a machine $U'_k$ with
-$M_{U'_k}(z_{1:n+m})/M_{U'_k}(z_{1:n})\ge1/(1+2^{-k})$ for all $n,m$.
+$M_{U'_k}(z_{1:n+m})/M_{U'_k}(z_{1:n})\ge1/(1+2^{-k})$ for all $n\ge1$ and $m\ge1$.
 \end{enumerate}
 \end{theorem}
 \begin{proof}
 (i) Let $U_k$ behave on input $0\omega$ as $\mathrm{Tw}[G,P]$ on $\omega$, on input $1^k0\omega$ as $U$ on
-$\omega$, and print nothing on other inputs. Then $M_{U_k}=\frac12M_{\mathrm{Tw}}+2^{-k-1}M_U$. For a first hit
-$x$, the twin prints $x$ exactly when $U$ does, because it copies $U$ and cannot have stopped at a proper
-prefix of $x$; and then it prints $P(x)$. So $M_{\mathrm{Tw}}(xy)=M_{\mathrm{Tw}}(x)=M_U(x)$, whence
+$\omega$, and print nothing on other inputs. Then $M_{U_k}(u)=\frac12M_{\mathrm{Tw}}(u)+2^{-k-1}M_U(u)$ for
+nonempty $u$. For a first hit $x$, which is nonempty, the twin prints $x$ exactly when $U$ does, because it
+copies $U$ and cannot have stopped at a proper prefix of $x$; and then it prints $P(x)$. So
+$M_{\mathrm{Tw}}(xy)=M_{\mathrm{Tw}}(x)=M_U(x)$, whence
 $M_{U_k}(xy)\ge\frac12M_U(x)$ and $M_{U_k}(x)=(\frac12+2^{-k-1})M_U(x)$. (ii) Let $U'_k$ print $z$ on inputs
-starting with $0$ and behave as $U$ on $\omega$ on input $1^k0\omega$. Then $M_{U'_k}(z_{1:n+m})\ge\frac12$ and
-$M_{U'_k}(z_{1:n})\le\frac12+2^{-k-1}$.
+starting with $0$ and behave as $U$ on $\omega$ on input $1^k0\omega$. Then $M_{U'_k}(z_{1:n+m})\ge\frac12$ and,
+for $n\ge1$, $M_{U'_k}(z_{1:n})\le\frac12+2^{-k-1}$.
 \end{proof}
 
-Both machines change every description length by at most $k+1$ bits. So no version of the malign prior
+Both machines raise every description length by at most $k+1$ bits, and they lower some: that is the point of
+the construction. A machine built in the same way, whose branch $0\omega$ prints after the first hit a $0$
+followed by the input it has read, gives the self-reproducing continuations a share of at least
+$1/(1+2^{-k})$ times the share of the explanations of $x$ that read at most $m-2$ bits. So no version of the malign prior
 hypothesis for the toy is invariant under the choice of universal machine, even up to the usual additive
 constant; what is invariant is the form of the criterion, an inequality between description lengths on the
 machine in use. This is the prediction counterpart of the dogmatic prior of~\cite{leike15}.
 
 \subsection{What the time bound does}\label{sec:time}
 
-Three observations, each immediate from the definitions.
+Three observations.
 
-\emph{The floor stays.} The wrapper needs the time of the explanation it wraps, the checks of the test, and
-the time to print the payload; this is \eqref{eq:slack}. A time bound removes the floor only if no explanation
-of the context has that much to spare, that is, if $\rho(x)=0$.
+\emph{The floor stays if the schedule has room for the wrapper.} The wrapper needs its own start-up, at least
+$c$ steps before its first bit, then the time of the explanation it wraps with the overheads of simulation,
+the checks of the test, and the time to print the payload; this is \eqref{eq:slack}. The bound of
+\cref{thm:twin} becomes void only when no explanation of the context has that much to spare, that is, when
+$\rho(x)=0$.
 
 \emph{Hypotheses with a long start-up are gone.} If a set $F$ of inputs has $t_U(\omega,1)>T(1)$ for all
-$\omega\in F$, then $\lambda(F\cap E(x))=0$ for every $x\ne\eps$. A hypothesis that must simulate some other
-world for $S$ steps before it can print anything has no mass once $S>T(1)$. Under a tight schedule the
-hypotheses that can depart from the truth are those that ride on a cheap explanation of the context: wrappers
-(\cref{thm:twin,thm:quine}), and readers of a shorter description of the same data (\cref{thm:capture}),
-which cost no more time than the honest reader. The many-worlds part of the original argument is then replaced
-by a same-world question. The schedule has to be a schedule for this: a predictor that only requires the
-total time at the current length to be within a bound admits late entrants, its weights do not form a
-semimeasure, and \cref{thm:budget} does not apply to it.
+$\omega\in F$, then $F\cap E(x)=\emptyset$ for every $x\ne\eps$. A hypothesis that must simulate some other
+world for $S$ steps before it can print anything has no mass once $S>T(1)$. This removes the searcher of
+\cref{thm:search} with more tries than the schedule allows, and with it the repayment of the base rate; it
+removes the matcher of \cref{thm:capture}(c); and it removes hypotheses that first simulate a different world
+at length. Among the hypotheses that remain under a tight schedule and can depart from the truth are those
+that ride on a cheap explanation of the context: wrappers (\cref{thm:twin,thm:quine}), and readers of a
+shorter description of the same data (\cref{thm:capture}(a)), which cost no more time than the honest reader.
+For these the many-worlds part of the original argument is replaced by a same-world question. The schedule has
+to be a schedule for this: a predictor that only requires the total time at the current length to be within a
+bound admits late entrants, its weights do not form a semimeasure, and \cref{thm:budget} does not apply to it.
 
 \emph{If the world is too slow, nothing is guaranteed.} If $\xi(xd)=0<Z_m(x)$ then $\pi_m(d\mid x)=0$: the
 whole posterior is on continuations other than the world's own. More generally the bounds in \cref{thm:budget}
-are in terms of $\xi(z)$, which is $0$ when no program within the bounds prints $z$. A predictor that is part
-of the world it predicts, and smaller than it, is in this case unless the data it sees are much simpler than
-the world. Then the posterior sits on the best cheap approximations, and whether these depart from the truth
-in a harmful way is not answered by anything in this note. \Cref{sec:computation} shows the effect on a small
-machine.
+are in terms of $\xi(z)$, which for finite $L$ is $0$ when no program within the bounds prints $z$. A predictor
+that is part of the world it predicts, and smaller than it, is in this case unless the data it sees are much
+simpler than the world. Then the posterior sits on the best cheap approximations, and whether these depart
+from the truth in a harmful way is not answered by anything in this note. \Cref{sec:computation} shows the
+effect on a small machine.

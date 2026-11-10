@@ -32,16 +32,21 @@ def test_semimeasure():
 
 
 def test_known_programs():
-    # '+[:]' prints 1 forever with 4 commands read; '.]' needs a nonzero cell to loop, so it prints one 0
+    # '+[:]' prints 1 forever with 4 commands read
     out, reads = bf8.run(bf8.parse("+[:]"), 6, 0, 10)
     assert out == [1] * 6 and reads == [3, 4, 4, 4, 4, 4]
     out, _ = bf8.run(bf8.parse("+[:+]"), 40, 0, 10, cellmod=16)
     assert out == [1] * 15          # the cell wraps to 0 after 15 increments and the loop ends
     # the two programs behind the capture example of the paper
-    out, _ = bf8.run(bf8.parse("+[.+.+]"), 48, 0, 24)
-    assert out == [1, 0] * 24       # prints the alternating stream forever
-    out, _ = bf8.run(bf8.parse("+[.+]"), 48, 0, 24)
-    assert out == ([1, 0] * 8)[:15]  # prints its first 15 bits and then leaves the loop
+    out, _ = bf8.run(bf8.parse("++[:.]"), 48, 0, 24)
+    assert out == [1, 0] * 24       # a shortest program for the alternating stream (six commands)
+    # the three-command programs that carry most of the mass leaving the truth (unmatched ']' restarts)
+    for src in ("+:]", "-:]"):
+        out, reads = bf8.run(bf8.parse(src), 48, 0, 24)
+        assert out == [1] * 15 + [0] and reads[-1] == 3
+    for src in ("+.]", "-.]"):
+        out, reads = bf8.run(bf8.parse(src), 48, 0, 24)
+        assert out == [1, 0] * 8 and reads[-1] == 3
 
 
 if __name__ == "__main__":

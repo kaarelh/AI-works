@@ -111,3 +111,15 @@ def load_mixture(path):
             ln, bits, hx, _ = line.split()
             mass[bits] = Fraction(float.fromhex(hx))
     return mass
+
+
+def load_masses(path, keys):
+    """Like load_mixture, but reads the file as a stream and keeps only the strings in `keys`."""
+    keys = set(keys)
+    mass = {k: Fraction(0) for k in keys}
+    with open(path) as f:
+        for line in f:
+            ln, bits, hx, _ = line.split()
+            if bits in keys:
+                mass[bits] = Fraction(float.fromhex(hx))
+    return mass

@@ -30,4 +30,16 @@ for name, tex in [("ones", r"$1^{48}$"), ("zeros", r"$0^{48}$"), ("alternating",
                                                      v["count_truth_at_most_half"], v["log2_inverse_mass"]))
 b += [r"\bottomrule", r"\end{tabular}"]
 open(os.path.join(HERE, "..", "paper", "table-budget.tex"), "w").write("\n".join(b) + "\n")
-print(open(os.path.join(HERE, "..", "paper", "table-profiles.tex")).read())
+
+# shares at the two headline positions as the bound on the number of commands grows
+t = [r"\begin{tabular}{rrrrrr}", r"\toprule",
+     r" & \multicolumn{4}{c}{bit 17 of $(10)^{24}$} & bit 16 of $1^{48}$ \\",
+     r"commands & true & other & none & true, normalised & other \\", r"\midrule"]
+for row in r["length_dependence"]:
+    if row["LC"] < 7:
+        continue
+    a, o = row["alt_bit17"], row["ones_bit16"]
+    t.append("%d & %.3f & %.3f & %.3f & %.3f & %.3f \\\\" % (row["LC"], a["true"], a["other"], a["none"], a["true_normalised"], o["other"]))
+t += [r"\bottomrule", r"\end{tabular}"]
+open(os.path.join(HERE, "..", "paper", "table-length.tex"), "w").write("\n".join(t) + "\n")
+print(open(os.path.join(HERE, "..", "paper", "table-length.tex")).read())

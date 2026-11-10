@@ -118,10 +118,56 @@ def exclusion_example(tmp):
     return out
 
 
+def run_enum(LCv, T1, tmp):
+    exe = os.path.join(CODE, "bf8enum")
+    f = os.path.join(tmp, "e_%d_%d.txt" % (LCv, T1))
+    subprocess.run([exe, str(LCv), str(N), "0", str(T1), str(CELLMOD), f], check=True, capture_output=True)
+    return f
+
+
+def length_dependence(tmp, lcs=(4, 5, 6, 7, 8, 9, 10, 11)):
+    """How the two headline shares move with the bound on the number of commands (T(k) = 24k)."""
+    alt, ones = STREAMS["alternating"], STREAMS["ones"]
+    keys = [alt[:16], alt[:17], alt[:16] + "0", alt, ones[:15], ones[:16], ones[:15] + "0", ones]
+    rows = []
+    for LCv in lcs:
+        f = run_enum(LCv, 24, tmp)
+        m = bf8.load_masses(f, keys)
+        os.remove(f)
+        row = {"LC": LCv, "mass_alt_48": str(m[alt]), "mass_ones_48": str(m[ones]),
+               "programs_alt_48_if_minimal": float(m[alt] * 8 ** LCv), "programs_ones_48_if_minimal": float(m[ones] * 8 ** LCv)}
+        if m[alt[:16]] > 0:
+            t, o = m[alt[:17]] / m[alt[:16]], m[alt[:16] + "0"] / m[alt[:16]]
+            row["alt_bit17"] = {"true": float(t), "other": float(o), "none": float(1 - t - o),
+                                "true_normalised": float(t / (t + o)) if t + o > 0 else None,
+                                "mass_true": float(m[alt[:17]]), "mass_other": float(m[alt[:16] + "0"])}
+        if m[ones[:15]] > 0:
+            t, o = m[ones[:16]] / m[ones[:15]], m[ones[:15] + "0"] / m[ones[:15]]
+            row["ones_bit16"] = {"true": float(t), "other": float(o), "none": float(1 - t - o)}
+        rows.append(row)
+    return rows
+
+
+def attribution():
+    """Which three-command programs carry the mass that leaves the truth at the two headline positions."""
+    import itertools
+    out = {}
+    for name, target in [("ones: 1^15 then 0", "1" * 15 + "0"), ("alternating: first 16 bits", "10" * 8)]:
+        progs = []
+        for cmds in itertools.product(range(8), repeat=3):
+            o, _ = bf8.run(cmds, len(target), 0, 24, CELLMOD)
+            if "".join(map(str, o)) == target:
+                progs.append("".join(bf8.SYMS[c] for c in cmds))
+        out[name] = {"target": target, "three_command_programs": progs, "their_mass": str(Fraction(len(progs), 512))}
+    return out
+
+
 def main():
     res = {"machine": "BF8", "LC": LC, "N": N, "cellmod": CELLMOD, "T0": 0, "schedules": {}}
     with tempfile.TemporaryDirectory() as tmp:
         res["exclusion_example"] = exclusion_example(tmp)
+        res["attribution"] = attribution()
+        res["length_dependence"] = length_dependence(tmp)
         for T1 in SCHEDULES:
             m = enumerate_mixture(T1, tmp)
             entry = {"streams": {}}
@@ -129,6 +175,9 @@ def main():
                 entry["streams"][name] = {"z": z, "profile": profile(m, z), "budget": budget_checks(m, z)}
             if T1 == SCHEDULES[0]:
                 entry["prior_average_disagreement"] = prior_average_disagreement(m)
+                for a in res["attribution"].values():
+                    a["total_mass_of_target_at_LC_%d" % LC] = str(m.get(a["target"], Fraction(0)))
+                    a["share_of_three_command_programs"] = float(Fraction(a["their_mass"]) / m[a["target"]])
             res["schedules"][str(T1)] = entry
             del m
     with open(os.path.join(HERE, "results", "profiles.json"), "w") as f:
@@ -146,7 +195,8 @@ def plot(res):
     for name, style in [("ones", "-"), ("alternating", "--"), ("zeros", ":")]:
         p = res["schedules"][main_T]["streams"][name]["profile"]
         ax.plot([r["k"] for r in p], [1 - r["truth"] for r in p], style, color="black", label=name, lw=1.3)
-    ax.set_yscale("log"); ax.set_ylim(1e-6, 1.5); ax.set_xlabel("position k")
+    ax.set_yscale("symlog", linthresh=1e-7); ax.set_ylim(-2e-8, 1.5); ax.set_xlabel("position k")
+    ax.set_yticks([0, 1e-6, 1e-4, 1e-2, 1]); ax.set_yticklabels(["0", "$10^{-6}$", "$10^{-4}$", "$10^{-2}$", "1"])
     ax.set_ylabel("posterior mass not on the true bit"); ax.set_title("three streams, schedule $T(k)=24k$", fontsize=10)
     ax.legend(frameon=False, fontsize=8)
     ax = axes[1]
