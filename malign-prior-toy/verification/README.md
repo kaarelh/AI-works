@@ -4,6 +4,7 @@ The note was checked by AI referees, not by humans. Each referee was a fresh age
 
 * [`referee-1.md`](referee-1.md): first round, on the draft committed as "toy formulation, theorems and exact small-machine computation (draft)".
 * [`referee-2.md`](referee-2.md): second round, on the revision described below.
+* [`referee-3.md`](referee-3.md): third round, on the searching theorem only.
 
 ## Round 1
 
@@ -58,4 +59,21 @@ Theorem numbers in `referee-1.md` are those of the draft it reviewed. From the s
 | **E.** The claim "by no shorter one" for the all-ones stream rested on a three-command run not in the results file; the script's docstring said "about a minute". | The results file now has the three-command row, the text says what the runs show ("no program of three commands prints even its first 16 bits", "no program of five commands prints all of its first 48 bits"), and the docstring says eight minutes. |
 | **F.** Notation clashes (S, τ, H), "exactly when" for a sufficient condition, "all but 2^m", "within the bounds" in Section 2, the assumptions behind the stream family and the flag, the two reasons given for BF8, "for all n", the convention for infinite time bounds. | The searching machine is called R, the try length t₀, the base rates H_G and H_C; the other points were fixed in the places named. The letters a, k and N are still used for more than one thing, each time locally. |
 
-The new part (c) of the searching theorem was written after the second report and has not been seen by a referee.
+The new part (c) of the searching theorem was written after the second report; it was checked in round 3.
+
+## Round 3
+
+A third referee checked only the searching theorem and its surroundings, with pencil and paper ([`referee-3.md`](referee-3.md)).
+
+**Verdict.** Parts (a), (b) and (c) are correct as stated, constants included, and so are the three items of the remark on handover rules under which only some worlds hand over. The proof of (b) left two points of the machine unspecified. Two sentences in the discussion were wrong as written, and the summaries were loose in a few places. All findings were accepted.
+
+| Finding | Resolution |
+|---|---|
+| **B1.** The test "the transcript begins with w" is as rare as its description is long only for w from a prefix-free set of markers; for w = 0^n it is not rare at all. | The example is now stated for a fixed prefix-free set of markers, with the two counter-cases named. The bullet also states the referee's shorter bound: a test with a description of d bits has base rate at least 2^(−d−O(1)), because the machine that prints the first element of the test hands over. |
+| **B2.** "Where first hits can be generated directly, as for a fixed prefix or a fixed length, no search is needed" is right for a fixed prefix only; a generator whose probabilities are not proportional to the prior weights attains just the average. | Section 3.4 now says this; Section 4.4 and the README say "where there is only one handover point or handover points can be generated in proportion to their prior weight". |
+| **B3.** In the proof of (b), "reads a further bit only when" must be a rule that makes the machine read, and the interval of the bits read must be half-open. | The proof now gives the rule in the referee's form, with the argument that the machine reads exactly the least number of bits that puts the interval inside the program's interval. |
+| **B4.** "Larger by the factor 2^(j−1)": than a twin of the same prefix length, not than the twin of the floor theorem. | The paragraph now states the share exactly and names the comparison; the choice of j is fixed once. |
+| **C1 to C6.** Abstract: no "without resource bounds", "the wrapper's share", "gets more"; the letter c reused for a different constant in the abstract, Section 1 and README; Section 7's constants one and two bits too small and "does not depend on how rare handovers are"; "the share of explanations that fit". | The abstract's bullet was rewritten along the referee's wording; the constant is called c′ and described; Section 7 gives the constants in full and says the share depends on the rarity only through the bits that name j; "a share of the explanations that fit into a block" everywhere. |
+| **D.** The code of a number used before its definition; part (c) has content only where explanations fit (fewer than 2^(m−2) contexts); the try-search's gain is relative to worlds that complete a handover within one try, and every try must end before the first bit is due; "the proofs above give". | A sentence defines the code where it is first used; the caveat on (c) is stated after the theorem; the bullet on the search by tries says both things; the remark now reads "one checks the following as above". |
+
+After round 3 no part of the mathematics is unreviewed. The summaries were corrected after each round and the final wording of the abstract, Section 1, Section 7 and the README was not re-read by a referee after the last corrections.
