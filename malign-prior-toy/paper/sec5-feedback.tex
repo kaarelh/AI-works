@@ -1,0 +1,69 @@
+\section{Feedback: when the prediction changes what is predicted}\label{sec:feedback}
+
+So far the block that follows the context was fixed before the prediction was used. In H\"anni's first
+suggestion the actions guided by the prediction can show up in the sensor. We model one round of this by a
+\emph{response map} $R\colon\B^m\to\B^m$: the predictor is given the context $x$ and returns $Y$; the world
+acts on $Y$; the next $m$ bits of the record are $R(Y)$. The earlier sections are the case of constant $R$.
+Let $\Fix(R)=\{y:R(y)=y\}$, the self-fulfilling predictions.
+
+\begin{theorem}[One round with feedback]\label{thm:feedback}
+Let $Y\sim\pi_m(\cdot\mid x)$ and let the record continue with $R(Y)$.
+\begin{enumerate}[label=(\alph*),leftmargin=2em,itemsep=2pt,topsep=2pt]
+\item The prediction comes true with probability $\pi_m(\Fix(R)\mid x)$.
+\item \emph{Lock-in.} If $Y=y\in\Fix(R)$, then for every $d\ne y$ and every later context $x'\sqsupseteq xy$,
+$E(x')\cap E(xd)=\emptyset$: the programs that predicted $d$ have posterior weight $0$ from then on, and the
+posterior is the prior restricted to $E(xy)$. If $d$ is itself a fixed point, the block the world would have
+shown had the predictor said $d$, this happens with probability $\pi_m(\Fix(R)\setminus\{d\}\mid x)$.
+\item \emph{Obedient world.} Suppose $R$ is the identity in every round, so that the record after $x$ is
+$Y_1Y_2\cdots$ with $Y_{i+1}\sim\pi_m(\cdot\mid xY_1\cdots Y_i)$. Then for every $u\in\B^{jm}$ the record
+continues with $u$ with probability $\prod_{i\le j}\pi_m(u_i\mid xu_{<i})\ge\xi(xu)/\xi(x)$, where $u_i$ is the
+$i$-th block of $u$; and every finite part of the realised record has a $(T,L)$-program.
+\item \emph{A default that is too expensive is abandoned.} In (c), if $\xi(xd)=0$ for a block $d$, the record
+continues with $d$ with probability $0$.
+\end{enumerate}
+\end{theorem}
+\begin{proof}
+(a) is the definition. (b) $x'$ extends $xy$, which is incomparable with $xd$; use \cref{lem:basic}(i). (c) The
+product formula is the definition of the process, and each factor is at least $\xi(xu_{\le i})/\xi(xu_{<i})$.
+A realised prefix has positive probability, hence positive $\xi$, hence a program by \cref{lem:basic}(iii) and
+its proof. (d) $\pi_m(d\mid x)=0$.
+\end{proof}
+
+Three remarks. First, with feedback the mass off the default is no longer a mass of errors. In the setting of
+\cref{thm:budget} a deviating sample is contradicted by the next data and its programs lose their weight; here
+a deviating sample that is a fixed point is confirmed, and it is the default that loses its weight, for good.
+The probability of this in one round is still a posterior mass, so the floors and caps of
+\cref{sec:floor,sec:limits} apply to it unchanged: it is at least $2^{-c}\rho$ for a payload that is a fixed
+point and that a wrapper can print, and it is small where \cref{thm:budget} makes the mass off the default
+small. Feedback changes what a deviation \emph{does}, not how likely it is.
+
+Second, (c) and (d) are the precise form of the ``dark room''. An obedient world driven by this predictor
+does not seek darkness. It follows a sample from the predictor's own bounded prior conditioned on the past.
+That sample stays on the default future with probability at least $\xi(xd_1d_2\cdots)/\xi(x)$, which is
+close to $1$ when the default is cheap and much data has been seen. But if the default future needs more time
+than the schedule allows, it has probability $0$ and the world is moved, at the first round, onto a future
+that some program of length at most $L$ prints on schedule: constant, periodic, or otherwise cheap. The pull
+is toward what is cheap to compute, and its strength is set by the time bound.
+
+Third, whether a prediction can fulfil itself is a matter of timing in the world. If the bits being predicted
+are fixed before the action can reach the sensor, $R$ is constant and nothing is self-fulfilling. The
+counterfactual oracle of~\cite{armstrong17} enforces this by design; \cite{oesterheld23,hubinger23} treat
+predictors that are scored on outcomes they influence.
+
+\begin{theorem}[Contrarian world]\label{thm:contrarian}
+Let the predictor return the more probable next bit, $b(x)=1$ if $\xi(x1)>\xi(x0)$ and $b(x)=0$ otherwise, and
+let the record satisfy $x_{k+1}=1-b(x_{1:k})$ for all $k\ge n$. Then $\xi(x_{1:n+j})\le2^{-j}\xi(x_{1:n})$ for
+all $j$, and if $L<\infty$ then $\xi(x_{1:n+j})=0$ for all $j>L$.
+\end{theorem}
+\begin{proof}
+The bit $1-b(x)$ has $\xi(x(1-b(x)))\le\xi(xb(x))$, and the two sum to at most $\xi(x)$, so
+$\xi(x(1-b(x)))\le\xi(x)/2$. If $\xi(x_{1:n+j})>0$ then $2^{-L}\le\xi(x_{1:n+j})\le2^{-j}$ by
+\cref{lem:basic}(iii), so $j\le L$.
+\end{proof}
+
+With finite bounds this world is computable, and its description is that of the predictor plus a constant; it
+is not printed on schedule by any program of length at most $L$, because it contains the predictor, which runs
+all of them. This is Putnam's diagonal argument~\cite{putnam63,legg06} placed inside the world; see
+also~\cite{wyeth25} for the unbounded mixture with its own outputs in the sequence. After at most $L$ rounds
+the predictor has no hypothesis left and its output is whatever its implementation does with an empty
+posterior. A world that contains a bounded predictor and reacts against it is outside every guarantee above.

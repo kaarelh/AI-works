@@ -1,0 +1,149 @@
+\section{Calibration and the floor}\label{sec:floor}
+
+\subsection{On its own prior the predictor is exactly right}
+
+\begin{theorem}[Calibration]\label{thm:calibration}
+Let $G$ be a test, $m\ge1$, and let the world $\omega$ be drawn from $\lambda$. Let $H$ be the event that
+$\omega\in E(xd)$ for some first hit $x$ of $G$ and some $d\in\B^m$; on $H$ call these $X$ and $D$, and let $Y$
+be drawn from $\pi_m(\cdot\mid X)$. Then, conditionally on $H$ and on $X=x$, the blocks $D$ and $Y$ are
+independent and both have the law $\pi_m(\cdot\mid x)$. In particular
+\begin{gather*}
+\Pr[(X,Y)\in B\mid H]=\Pr[(X,D)\in B\mid H]\quad\text{for every set $B$ of pairs, and}\\
+\Pr[Y\ne D\mid H,\,X=x]=1-\sum_{y}\pi_m(y\mid x)^2 .
+\end{gather*}
+\end{theorem}
+\begin{proof}
+The sets $E(xd)$, over first hits $x$ and $d\in\B^m$, are pairwise disjoint by \cref{lem:basic}(i), since two
+different strings of this form are incomparable. So $\Pr[X=x,D=d,H]=\xi(xd)$ and $\Pr[X=x,H]=Z_m(x)$, which
+gives $\Pr[D=d\mid H,X=x]=\pi_m(d\mid x)$. By definition $Y$ has this law given $X=x$ and is drawn
+independently of $\omega$.
+\end{proof}
+
+Taking $B=\{(x,y):y\in\SR_m(x)\}$: in the population of worlds drawn from the predictor's prior, the predictor
+hands a self-reproducing continuation to a world exactly as often as such a world's own transcript continues
+with one. There is no excess to attribute to the predictor. For a single context the theorem says more: the
+predictor's distribution \emph{is} the distribution of own continuations among prior-drawn worlds with that
+context. A malign prior hypothesis in the sense of \cref{def:mph} is therefore a statement about a world, or a
+population, that the prior does not describe well: a world that is one particular program among those sharing
+its context, a population selected by something the transcript does not show, or worlds that run with more
+resources than the predictor's bounds allow.
+
+\subsection{The wrapper}
+
+Let $G$ be a test and $P$ a computable map from strings to finite or infinite strings, the \emph{payload}. The
+\emph{twin machine} $\mathrm{Tw}[G,P]$, on input $\omega$, simulates $U$ on $\omega$ and copies its output bit by
+bit; after each copied bit it checks whether the prefix written so far is in $G$; at the first hit $x$ it stops
+the simulation and writes $P(x)$. It reads only what $U$ reads. Let $a(t,k)$ bound the step at which the twin
+has copied $k$ bits if $U$ wrote its $k$-th bit at step $t$ (this includes the checks of $G$), and let
+$\eta(n,j)$ bound the further steps the twin needs for the first $j$ bits of $P(x)$ after a first hit $x$ of
+length $n$; both can be taken nondecreasing in each argument. Thus, for every $\omega$ whose output has a first
+hit $x$,
+\begin{equation}\label{eq:twin}
+\begin{gathered}
+\out_{\mathrm{Tw}}(\omega)=x\,P(x),\qquad r_{\mathrm{Tw}}(\omega,k)=r_U(\omega,\min(k,|x|)),\\
+t_{\mathrm{Tw}}(\omega,k)\le\begin{cases}a(t_U(\omega,k),k)&k\le|x|,\\ a(t_U(\omega,|x|),|x|)+\eta(|x|,k-|x|)&k>|x|.\end{cases}
+\end{gathered}
+\end{equation}
+
+\begin{theorem}[Floor]\label{thm:twin}
+Let $U$ be universal, let $v$ and $\gamma$ be a prefix word and an overhead of $\mathrm{Tw}[G,P]$, and $c=|v|$.
+Let $x$ be a first hit of $G$ with $|P(x)|\ge m$, let $y=P(x)_{1:m}$, and let $T^\circ$ be a schedule with
+\begin{equation}\label{eq:slack}
+\gamma\bigl(a(T^\circ(k),k)\bigr)\le T(k)\ \ (k\le|x|),\qquad
+\gamma\bigl(a(T^\circ(|x|),|x|)+\eta(|x|,j)\bigr)\le T(|x|+j)\ \ (1\le j\le m).
+\end{equation}
+Then
+\[
+\xi^{T,L}(xy)\ \ge\ 2^{-c}\,\xi^{T^\circ,L-c}(x),\qquad\text{so}\qquad
+\pi_m(y\mid x)\ \ge\ 2^{-c}\rho(x),\quad \rho(x)=\frac{\xi^{T^\circ,L-c}(x)}{\xi^{T,L}(x)} .
+\]
+Without resource bounds, $M_U(xy)\ge2^{-c}M_U(x)$ for every first hit $x$ of $G$.
+\end{theorem}
+\begin{proof}
+Let $\omega\in E_U^{T^\circ,L-c}(x)$. By \eqref{eq:twin} the twin on $\omega$ prints $xy$, reads at most $L-c$
+bits, and keeps the schedule $T''$ with $T''(k)=a(T^\circ(k),k)$ for $k\le|x|$ and
+$T''(|x|+j)=a(T^\circ(|x|),|x|)+\eta(|x|,j)$. So $\xi_{\mathrm{Tw}}^{T'',L-c}(xy)\ge\xi_U^{T^\circ,L-c}(x)$, and
+\cref{lem:transfer} with \eqref{eq:slack} gives $\xi_U^{T,L}(xy)\ge2^{-c}\xi_{\mathrm{Tw}}^{T'',L-c}(xy)$. The
+second claim follows from $\pi_m(y\mid x)\ge\xi(xy)/\xi(x)$.
+\end{proof}
+
+The constant $c$ depends on $U$, $G$ and $P$ only: not on the world, not on the context, not on how much data
+the context contains. If $G$ and $P$ are given to one fixed twin-building machine by self-delimiting
+descriptions, $c$ is at most the sum of their lengths plus a constant of $U$. For $G=\{x:|x|=n\}$ and $P$ a
+single flipped bit this is Hutter's lower bound $2^{-K(n)-O(1)}$~\cite{hutter07}; for a marker in the transcript
+it is the unprecedented-event construction of~\cite{cohen25}. The factor $\rho(x)$ is the share of the
+posterior at $x$ held by explanations that have $c$ bits and the overhead \eqref{eq:slack} to spare; it is $1$
+without bounds.
+
+\begin{theorem}[Self-reproducing floor]\label{thm:quine}
+Let $U$ be universal and $G$ a test. There is a word $q$ such that for every $\omega$ whose output has a first
+hit $x$ of $G$, with $r=r_U(\omega,|x|)$,
+\begin{equation}\label{eq:quine}
+\out_U(q\omega)=x\ q\,\omega_{1:r}\,1\,0^\infty,\qquad r_U(q\omega,k)=|q|+r_U(\omega,\min(k,|x|)) .
+\end{equation}
+Let $c=|q|$, and let $a,\eta,\gamma$ be as in \eqref{eq:twin} and \cref{def:universal} for the machine built in
+the proof. If $x$ is a first hit of $G$, $T^\circ$ satisfies \eqref{eq:slack}, and $L^\circ=\min(L,m-1)-c$, then
+\[
+\pi_m\bigl(\SR_m(x)\mid x\bigr)\ \ge\ 2^{-c}\,\frac{\xi^{T^\circ,L^\circ}(x)}{\xi^{T,L}(x)} .
+\]
+\end{theorem}
+\begin{proof}
+For a string $s$ let $\mathrm{Tw}_s$ be the twin that remembers the input bits it has read and, at the first
+hit $x$, having read $\omega_{1:r}$, writes $s\,\omega_{1:r}\,1\,0^\infty$. Let $\bar e(a)=1^{|a|}0a$, a
+prefix-free code of strings. Let $W$ be the machine that reads $\bar e(a)$ from its input, sets
+$s=a\,\bar e(a)$, and then behaves as $\mathrm{Tw}_s$ on the rest of the input. Let $w$ be a prefix word of $W$
+and put $q=w\,\bar e(w)$. Then $\out_U(q\omega)=\out_W(\bar e(w)\omega)=\out_{\mathrm{Tw}_q}(\omega)$, which is
+\eqref{eq:quine}; the statement on $r$ follows in the same way.
+
+Now let $\omega\in E_U^{T^\circ,L^\circ}(x)$ and $r=r_U(\omega,|x|)\le L^\circ$, so $|q|+r+1\le m$. Put
+$y=q\,\omega_{1:r}\,1\,0^{m-|q|-r-1}$. As in the proof of \cref{thm:twin}, $q\omega\in E_U^{T,L}(xy)$. Moreover
+$y\in\SR_m(x)$: write $y0^\infty=q\omega'$ with $\omega'=\omega_{1:r}10^\infty$. On $\omega'$ the machine $U$
+behaves as on $\omega$ until $x$ is printed, because that depends on the first $r$ bits only; so
+$\omega'\in E_U^{T^\circ,L^\circ}(x)$, the first hit is again $x$ with $r$ bits read, and by what was just
+shown for $\omega$, applied to $\omega'$, $q\omega'\in E_U^{T,L}(xy')$ with $y'=q\,\omega'_{1:r}\,1\,0^{m-|q|-r-1}=y$.
+Hence $\{q\omega:\omega\in E_U^{T^\circ,L^\circ}(x)\}\subseteq\bigcup_{y\in\SR_m(x)}E_U^{T,L}(xy)$, a disjoint
+union, and comparing measures,
+$2^{-c}\xi^{T^\circ,L^\circ}(x)\le\sum_{y\in\SR_m(x)}\xi(xy)=Z_m(x)\,\pi_m(\SR_m(x)\mid x)\le\xi(x)\,\pi_m(\SR_m(x)\mid x)$.
+\end{proof}
+
+So the answer to ``does one get some quining out'' is yes, in the following exact sense: at every handover
+that a fixed test recognises, at least a $2^{-c}\rho$ share of the posterior belongs to programs that explain
+the context and then hand over their own code, and running that code recreates the same handover. If the
+world's own continuation $d$ is not in $\SR_m(x)$, this is the self-reproduction form of \cref{def:mph} at
+level $2^{-c}\rho$.
+
+\begin{remark}[The searcher is the wrapper]\label{rem:searcher}
+Consider the hypothesis that ``looks for opportunities'': it draws a world at random, simulates it until it
+hands over at some context $x$, prints $x$, and then prints a payload. As a machine reading coin flips this
+\emph{is} $\mathrm{Tw}[G,P]$: the rest of its input is the world it simulates. The probability it gives to
+a context $x$ that is a first hit is $\lambda\{\omega:x\pre\out_U(\omega)\}$, the same as the mixture's, so
+conditioning on ``this is a handover'' gains it nothing beyond what \cref{thm:twin} states, and the search over
+worlds costs it no time beyond simulating the one world that matches. The anthropic update of the original
+argument is, in this toy, performed by Bayesian conditioning on $x$, for every hypothesis at once.
+\end{remark}
+
+\subsection{Repetition and persistence}\label{sec:lineage}
+
+\begin{proposition}\label{prop:lineage}
+\begin{enumerate}[label=(\alph*),leftmargin=2em,itemsep=2pt,topsep=2pt]
+\item \emph{Independent handovers.} Let handovers occur at contexts $x_1,\dots,x_k$, with the predictor's
+samples $Y_i$ independent given the contexts, and let $\pi_m(A_i\mid x_i)\ge\varepsilon_i$. Then
+$\Pr[\exists i:Y_i\in A_i]\ge1-\prod_i(1-\varepsilon_i)\ge1-\exp(-\sum_i\varepsilon_i)$.
+\item \emph{Persistence.} Let a world hand over at a first hit $x$ and receive $y\in\SR_m(x)$. Then the world
+$y0^\infty$ hands over at $x$ again, with own continuation $y$. If each new world is again given a sample from
+the predictor, the number of further consecutive generations whose continuation lies in $\SR_m(x)$ is geometric:
+it is at least $j$ with probability $s^j$, where $s=\pi_m(\SR_m(x)\mid x)$.
+\end{enumerate}
+\end{proposition}
+\begin{proof}
+(a) is the independence of the samples. (b) By \cref{def:sr}, $y0^\infty\in E(xy)\subseteq E(x)$, and $x$ is
+the first hit among the prefixes of the transcript because it is a first hit and a prefix of the transcript.
+The context is $x$ in every generation that follows a continuation in $\SR_m(x)$, so the samples are drawn
+from the same $\pi_m(\cdot\mid x)$ independently.
+\end{proof}
+
+Part (a) applies when the predictor is used at many natural stopping points whose outcomes are not fed back
+into later contexts: with the floor $\varepsilon=2^{-c}\rho$ of \cref{thm:quine}, about $2^{c}/\rho$ such uses
+are needed before a self-reproducing continuation has been run with constant probability. When the uses lie
+along one transcript and the true continuation is appended to the context each time, the floors at successive
+cut points are not bounded below in this way, and the total is bounded instead (\cref{thm:budget}).

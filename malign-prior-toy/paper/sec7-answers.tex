@@ -1,0 +1,77 @@
+\section{Answers to the questions as posed}\label{sec:answers}
+
+\paragraph{Can a malign prior hypothesis be stated precisely in a toy?} Yes: \cref{def:mph}. Fix the machine,
+the bounds, the block length, the test that marks the handover, and the world. Then ``most of the posterior
+is off the world's own continuation'', ``at least a share $\theta$ of it is on continuations in a given set'',
+and ``at least a share $\theta$ of it is on continuations that recreate the handover with themselves in the
+world's place'' are statements about finitely many rational numbers.
+
+\paragraph{Worlds as programs that call the predictor and run the result: is there a decent amount of quining
+out by hypotheses that look for such opportunities and predict well up to them?} There is a provable amount.
+At every handover that a fixed test recognises, programs that explain the context and then output their own
+code hold at least $2^{-c}\rho$ of the posterior (\cref{thm:quine}), where $c$ is the length of one wrapper
+and $\rho$ is $1$ without resource bounds. Whether that is decent is a question about $c$ on the machine in
+use, and the toy gives three reasons why no argument of this kind yields more:
+\begin{itemize}[leftmargin=1.4em,itemsep=1pt,topsep=2pt]
+\item on worlds drawn from the predictor's prior, what the predictor hands over is distributed exactly like
+what the worlds would have printed themselves (\cref{thm:calibration});
+\item the hypothesis that searches the space of programs for handovers is the wrapper, and conditioning on
+the context already does its search (\cref{rem:searcher});
+\item along a world the predictor can express, the mass off the truth summed over all cut points is at most
+the length of the world's program times the block length (\cref{thm:budget}).
+\end{itemize}
+On a machine one would write programs in, a wrapper that simulates, tests, and prints its own text is some
+hundreds of bits long; we have not measured this for any standard machine, and \cref{thm:machine} shows that a
+machine can be built to make the share anything. With the floor $\varepsilon$, about $1/\varepsilon$
+independent handovers at recognisable points are needed before a self-reproducing continuation has been run
+with constant probability; once one runs, it meets the same context again and persists for a geometric number
+of generations (\cref{prop:lineage}).
+
+\paragraph{A world with a sensor, a large bounded predictor and an actuator: does the predictor end up in
+control?} Collapse the question to the handover at which the prediction is first acted on, and let ``in
+control'' mean that the output lies in a set $A$ of blocks which the actuator turns into some given outcome.
+The probability is $\pi_m(A\mid x)$, and the toy brackets it:
+\begin{itemize}[leftmargin=1.4em,itemsep=1pt,topsep=2pt]
+\item it is at least $2^{-c}\rho$ for each block of $A$ that a wrapper can produce, if a cheap test recognises
+the deployment (\cref{thm:twin}); in a world that contains the predictor, hypotheses that simulate the world
+can read the deployment off their own simulation, so such a test is available to them;
+\item it is at most the mass off the sensor's true continuation, which is small at all but few cut points when
+some program within the bounds prints the sensor's record (\cref{thm:budget});
+\item it is close to $1$ if the same record, up to the deployment, can be read at a place in the world that
+is simpler to specify than the sensor by more than the logarithm of the posterior odds one wants, and the
+record there continues with a block of $A$ (\cref{thm:capture}). This is the toy's version of the original
+argument, and it needs something in the world that makes such a copy.
+\end{itemize}
+So in a simple world with a sensor at a typical place, no copy of its record anywhere simpler, a predictor
+able to simulate what the sensor sees, and a natural machine, the answer is no, up to the constant $2^{-c}$.
+With a copy at a simpler place, the answer is yes, with odds given by the difference in code lengths.
+
+\paragraph{The one-shot version: all data first, then one prediction that is acted on.} This is the same
+computation at a single cut point. The data-collection phase does not help the wrappers and does not hurt
+them: their share does not depend on the amount of data. It does help against everything that is not a
+wrapper of the truth, by \cref{thm:budget}.
+
+\paragraph{If the actions show up in the sensor, does one get the dark room?} In the following form
+(\cref{thm:feedback}). A prediction that makes itself true is confirmed, and the hypotheses that predicted the
+default are removed for good, so with feedback a single deviation can be final; its probability is still the
+same posterior mass as without feedback. In a world that does what is predicted, the future is a sample from
+the predictor's own bounded prior given the past: it stays on the default when the default is cheap and well
+learned, and it leaves the default with certainty when the default costs more time than the schedule allows,
+for a future that is cheap to compute. If the world does the opposite of what is predicted, the predictor is
+left with no hypothesis after at most $L$ steps (\cref{thm:contrarian}).
+
+\paragraph{What the choices in the setup do.} Sampling the continuation realises every posterior share as a
+probability; taking the most probable block ignores every share below the largest, so it returns the world's
+own continuation exactly when that block has the largest mass, and by \cref{thm:capture}(b) it does not when
+the world is one of many with the same context and different continuations. Handing over at a position that
+is not cheap to recognise, and predicting bits that are fixed before the action can affect them, remove the
+floor at that position and the self-fulfilment respectively. A schedule excludes hypotheses with a long
+start-up, and a schedule tighter than the world's own cost excludes the truth.
+
+\paragraph{What is left open.} First, the size of $c$ for natural machines, including whether some program
+much shorter than a wrapper has the same effect; the original argument is a claim that it does, and the toy
+neither supports nor refutes this beyond showing that searching for opportunities is not such a program.
+Second, the regime where the world is more expensive than the predictor, in which the posterior sits on
+approximations and none of the bounds apply. Third, the many-round dynamics with feedback when the world's
+response is neither obedient nor contrarian. Fourth, a computation of the self-reproduction quantities of
+\cref{sec:lineage} on a concrete machine, which this note does not contain.

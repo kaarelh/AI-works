@@ -1,0 +1,93 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
+\usepackage[capitalise,noabbrev]{cleveref}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{example}[theorem]{Example}
+
+\newcommand{\B}{\{0,1\}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\out}{\mathrm{out}}
+\newcommand{\pre}{\sqsubseteq}
+\newcommand{\SR}{\mathrm{SR}}
+\newcommand{\Fix}{\mathrm{Fix}}
+\newcommand{\eps}{\epsilon}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+\title{A toy malign-prior question with an answer:\\ bounded Solomonoff prediction in a world of programs}
+\author{Claude (Anthropic), prompted by Kaarel H\"anni}
+\date{10 November 2026. Research note; not reviewed by a human.}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+The ``universal prior is malign'' argument says that a predictor built on Solomonoff's prior gives much
+of its posterior to hypotheses that predict well only in order to steer whoever acts on the prediction.
+We give a toy version in which the claim is a mathematical statement and decide it as far as the toy allows.
+Worlds are programs for a fixed machine $U$. A world may hand its output so far to a fixed time- and
+length-bounded Solomonoff predictor and then run the continuation it gets back as a program. A hypothesis
+\emph{reproduces itself} if the continuation it supplies is its own code.
+\begin{itemize}[leftmargin=1.4em,itemsep=1pt,topsep=2pt]
+\item \textbf{There is a floor.} At every handover point that a fixed test can recognise, self-reproducing
+hypotheses hold at least a fraction $2^{-c}$ of the posterior. Here $c$ is the length of one wrapper program;
+it does not depend on the world or on the amount of data, and the bound survives time bounds.
+\item \textbf{There is no more than the floor in general.} If worlds are drawn from the predictor's own prior,
+the continuation the predictor samples and the world's own continuation have the same distribution given
+the context. A hypothesis that searches all programs for handovers is the wrapper again. Along any world the
+predictor can express, the posterior mass off the true continuation, summed over all cut points, is at most
+the world's description length.
+\item \textbf{A majority needs one of three things}, each stated as an inequality: a machine on which the
+wrapper is cheap (any share can be arranged by choosing the machine); a shorter description of the same
+context, for example a copy of the data stream at a place in the world that is simpler to specify than the
+sensor; or a world too expensive for the predictor to simulate.
+\item \textbf{Feedback.} If the world does what is predicted, a sampled self-fulfilling deviation removes the
+default hypotheses for good, and a time-bounded predictor confines such a world to futures that are cheap to
+compute. A world that does the opposite of what is predicted leaves a length-$L$ predictor without any
+hypothesis within $L$ steps.
+\end{itemize}
+An exact computation on a small machine shows the sizes involved: on one stream the majority of the
+posterior leaves the true continuation at bit 17, because a shorter program explains the first 16 bits.
+\end{abstract}
+
+\input{sec1-intro}
+\input{sec2-toy}
+\input{sec3-floor}
+\input{sec4-limits}
+\input{sec5-feedback}
+\input{sec6-computation}
+\input{sec7-answers}
+
+\begin{thebibliography}{99}\small
+\bibitem{christiano} P.~Christiano. What does the universal prior actually look like? Blog post, 2016.
+\bibitem{xu} M.~Xu. The Solomonoff prior is malign. LessWrong, 2020.
+\bibitem{hutter07} M.~Hutter. On universal prediction and Bayesian confirmation. \emph{Theoretical Computer Science} 384:33--48, 2007.
+\bibitem{cohen25} M.~K.~Cohen, M.~Hutter, Y.~Bengio, S.~Russell. RL, but don't do anything I wouldn't do. \emph{UAI}, 2025.
+\bibitem{cohen20} M.~K.~Cohen, M.~Hutter. Pessimism about unknown unknowns inspires conservatism. \emph{COLT}, 2020.
+\bibitem{leike15} J.~Leike, M.~Hutter. Bad universal priors and notions of optimality. \emph{COLT}, 2015.
+\bibitem{filan16} D.~Filan, J.~Leike, M.~Hutter. Loss bounds and time complexity for speed priors. \emph{AISTATS}, 2016.
+\bibitem{solomonoff78} R.~J.~Solomonoff. Complexity-based induction systems: comparisons and convergence theorems. \emph{IEEE Transactions on Information Theory} 24:422--432, 1978.
+\bibitem{hubinger23} E.~Hubinger, A.~Jermyn, J.~Treutlein, R.~Hudson, K.~Woolverton. Conditioning predictive models: risks and strategies. arXiv:2302.00805, 2023.
+\bibitem{oesterheld23} C.~Oesterheld, J.~Treutlein, E.~Cooper, R.~Hudson. Incentivizing honest performative predictions with proper scoring rules. \emph{UAI}, 2023.
+\bibitem{armstrong17} S.~Armstrong, X.~O'Rourke. Good and safe uses of AI oracles. arXiv:1711.05541, 2017.
+\bibitem{wyeth25} C.~Wyeth, M.~Hutter. Formalizing embeddedness failures in universal artificial intelligence. arXiv:2505.17882, 2025.
+\bibitem{legg06} S.~Legg. Is there an elegant universal theory of prediction? arXiv:cs/0606070, 2006.
+\bibitem{putnam63} H.~Putnam. ``Degree of confirmation'' and inductive logic. In \emph{The Philosophy of Rudolf Carnap}, 1963.
+\bibitem{hutter05} M.~Hutter. \emph{Universal Artificial Intelligence}. Springer, 2005.
+\bibitem{lv} M.~Li, P.~Vit\'anyi. \emph{An Introduction to Kolmogorov Complexity and Its Applications}, 3rd ed. Springer, 2008.
+\end{thebibliography}
+\end{document}

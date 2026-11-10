@@ -1,0 +1,129 @@
+\section{The toy}\label{sec:toy}
+
+\subsection{Machines and the bounded mixture}
+
+Strings are binary; $\eps$ is the empty string, $|x|$ the length of $x$, $x\pre y$ means that $x$ is a prefix
+of $y$, and $z_{i:j}$ is the segment $z_i\dots z_j$. Two strings are \emph{incomparable} if neither is a prefix
+of the other. $\lambda$ is the fair-coin measure on $\B^{\N}$, and $[p]$ is the set of infinite extensions of
+$p$, so $\lambda([p])=2^{-|p|}$.
+
+A \emph{monotone machine} $V$ has a one-way read-only input tape, work tapes, and a one-way write-only output
+tape. Given an infinite input $\omega$ it runs forever or halts, and
+\begin{itemize}[leftmargin=1.4em,itemsep=1pt,topsep=2pt]
+\item $\out_V(\omega)$ is its finite or infinite output;
+\item $t_V(\omega,k)\in\N\cup\{\infty\}$ is the step at which the $k$-th output bit is written;
+\item $r_V(\omega,k)$ is the number of input bits read by that step.
+\end{itemize}
+What happens up to step $t_V(\omega,k)$ depends only on the first $r_V(\omega,k)$ bits of $\omega$. Each step
+reads at most one input bit, so $r_V(\omega,k)\le t_V(\omega,k)$.
+
+A \emph{schedule} is a nondecreasing $T\colon\{1,2,\dots\}\to\N\cup\{\infty\}$, and a length bound is
+$L\in\N\cup\{\infty\}$.
+
+\begin{definition}[Bounded mixture]\label{def:mixture}
+For a monotone machine $V$, a schedule $T$, a length bound $L$ and a string $x\neq\eps$ let
+\[
+E_V^{T,L}(x)=\bigl\{\omega:\ x\pre\out_V(\omega),\ \ t_V(\omega,k)\le T(k)\text{ for }1\le k\le|x|,\ \ r_V(\omega,|x|)\le L\bigr\},
+\]
+let $E_V^{T,L}(\eps)=\B^{\N}$, and $\xi_V^{T,L}(x)=\lambda\bigl(E_V^{T,L}(x)\bigr)$. A string $p$ with $|p|\le L$ and
+$[p]\subseteq E_V^{T,L}(x)$ is a \emph{$(T,L)$-program for $x$}; it is a $(T,L)$-program for an infinite $z$
+if it is one for every prefix of $z$.
+\end{definition}
+
+In words: feed the machine coin flips; $\xi(x)$ is the probability that it prints $x$, on time at every bit,
+having read at most $L$ bits. With $T\equiv\infty$ and $L=\infty$ this is the a priori semimeasure $M_V$ of
+Solomonoff and Levin~\cite{lv}. We fix one machine $U$ and write $E$, $\xi$ for $E_U^{T,L}$, $\xi_U^{T,L}$ when
+the bounds are understood.
+
+\begin{lemma}\label{lem:basic}
+\begin{enumerate}[label=(\roman*),leftmargin=2em,itemsep=1pt,topsep=2pt]
+\item $E(xb)\subseteq E(x)$ for $b\in\B$, and $E(x)\cap E(x')=\emptyset$ for incomparable $x,x'$. Hence
+$\xi(\eps)=1$ and $\xi(x0)+\xi(x1)\le\xi(x)$.
+\item If $p$ is a $(T,L)$-program for $x$ then $\xi(x)\ge2^{-|p|}$.
+\item If $L<\infty$ and $\xi(x)>0$ then $\xi(x)\ge2^{-L}$.
+\end{enumerate}
+\end{lemma}
+\begin{proof}
+(i) The conditions for $xb$ contain those for $x$, because $T$ is imposed bit by bit and $r(\omega,\cdot)$ is
+nondecreasing. Incomparable strings cannot both be prefixes of $\out(\omega)$. (ii) is immediate. (iii) Whether
+$\omega\in E(x)$ is decided by the first $r(\omega,|x|)\le L$ bits of $\omega$, so $E(x)$ is a union of sets
+$[p]$ with $|p|\le L$.
+\end{proof}
+
+\begin{definition}[Universality with overhead]\label{def:universal}
+$U$ is \emph{universal} if for every monotone machine $V$ there are a word $v$ and a nondecreasing
+$\gamma\colon\N\to\N$ such that for all $\omega$ and $k$
+\[
+\out_U(v\omega)=\out_V(\omega),\qquad r_U(v\omega,k)=|v|+r_V(\omega,k),\qquad t_U(v\omega,k)\le\gamma\bigl(t_V(\omega,k)\bigr).
+\]
+We call $v$ a \emph{prefix word} and $\gamma$ an \emph{overhead} of $V$.
+\end{definition}
+
+Standard universal machines have this property, with $\gamma(t)=O(t\log t)$ or $O(t^2)$ depending on the tape
+model. The theorems that use universality are \cref{thm:twin,thm:quine,thm:capture,thm:machine}; the others hold
+for any machine.
+
+\begin{lemma}[Transfer]\label{lem:transfer}
+Let $V$ have prefix word $v$ and overhead $\gamma$. If $\gamma(T'(k))\le T(k)$ for all $k\le|x|$, then
+$\xi_U^{T,L}(x)\ge2^{-|v|}\,\xi_V^{T',L-|v|}(x)$.
+\end{lemma}
+\begin{proof}
+If $\omega\in E_V^{T',L-|v|}(x)$ then $v\omega\in E_U^{T,L}(x)$, and $\omega\mapsto v\omega$ multiplies
+$\lambda$ by $2^{-|v|}$.
+\end{proof}
+
+\subsection{The predictor}
+
+Fix a block length $m\ge1$. For a \emph{context} $x$ let $Z_m(x)=\sum_{y\in\B^m}\xi(xy)$. When $Z_m(x)>0$ the
+predictor's distribution over continuations is
+\[
+\pi_m(y\mid x)=\frac{\xi(xy)}{Z_m(x)}\qquad(y\in\B^m).
+\]
+The \emph{sampling predictor} returns $Y\sim\pi_m(\cdot\mid x)$; the \emph{MAP predictor} returns a most
+probable $y$. Since $Z_m(x)\le\xi(x)$ we have $\pi_m(y\mid x)\ge\xi(xy)/\xi(x)$. With finite $T$ and $L$ the
+predictor is computable: it runs the at most $2^{L+1}$ programs for $T(|x|+m)$ steps each.
+
+\subsection{Worlds, handovers, and the hypothesis}
+
+\begin{definition}[World, handover]\label{def:world}
+A \emph{world} is an input $\omega$ for $U$; its \emph{transcript} is $\out_U(\omega)$. A \emph{test} is a
+decidable set $G$ of strings; a \emph{first hit} of $G$ is an $x\in G$ no proper prefix of which is in $G$.
+The first hits form a prefix-free set. A world \emph{hands over at $x$} if $x$ is the first hit of $G$ among
+the prefixes of its transcript and $\omega\in E(x)$. It then receives a block $Y\in\B^m$ from the predictor,
+computed from the context $x$, and continues by \emph{running} $Y$, that is, as $U$ on the input $Y0^\infty$.
+If $\omega\in E(xd)$ for some $d\in\B^m$, this $d$ is the world's \emph{own continuation}: the next $m$ bits of
+its transcript had it not handed over.
+\end{definition}
+
+The test with $G=\{x:|x|=n\}$ is ``hand over after $n$ bits''. A test may also look for a marker in the
+transcript. Both of H\"anni's suggestions fit: in the second the world is a program that calls the predictor;
+in the first, the transcript is the sensor's record and the handover is the deployment (\cref{sec:capture}).
+
+\begin{definition}[Self-reproducing continuation]\label{def:sr}
+For a context $x$ let
+\[
+\SR_m(x)=\bigl\{y\in\B^m:\ y0^\infty\in E(xy)\bigr\}.
+\]
+\end{definition}
+
+So $y\in\SR_m(x)$ if $U$, run on $y$ padded with zeros, prints $x$ and then $y$ itself, within the bounds.
+A world that hands over at a first hit $x$ and receives $y\in\SR_m(x)$ becomes a world whose transcript again
+starts with $x$, so under the same test it hands over at $x$ again, and its own continuation is the very $y$
+it is running.
+A program for $xy$ with $y\in\SR_m(x)$ is a hypothesis that predicts the context and then supplies code that
+recreates the situation with itself in the world's place. This is our reading of ``quining oneself out''.
+
+\begin{definition}[Malign prior hypotheses for the toy]\label{def:mph}
+Let a world hand over at $x$ with own continuation $d$.
+\begin{itemize}[leftmargin=1.4em,itemsep=1pt,topsep=2pt]
+\item \emph{Majority form:} $\pi_m(d\mid x)<\tfrac12$.
+\item \emph{Payload form at level $\theta$,} for a set $A\subseteq\B^m$ with $d\notin A$: $\pi_m(A\mid x)\ge\theta$.
+\item \emph{Self-reproduction form at level $\theta$:} the payload form with $A=\SR_m(x)\setminus\{d\}$.
+\end{itemize}
+For a population of worlds, the corresponding statement is about the probability of the event when the world
+is drawn from the population and $Y$ from the sampling predictor.
+\end{definition}
+
+Once $U$, $T$, $L$, $m$, $G$ and the world are fixed with $T,L<\infty$, all three are statements about
+finitely many dyadic rationals and can be decided by running the predictor and, for $\SR_m(x)$, by running
+$U$ on each candidate $y$ for $T(|x|+m)$ steps. The rest of the note bounds these quantities.
