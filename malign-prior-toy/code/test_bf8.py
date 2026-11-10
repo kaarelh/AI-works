@@ -37,9 +37,9 @@ def test_known_programs():
     assert out == [1] * 6 and reads == [3, 4, 4, 4, 4, 4]
     out, _ = bf8.run(bf8.parse("+[:+]"), 40, 0, 10, cellmod=16)
     assert out == [1] * 15          # the cell wraps to 0 after 15 increments and the loop ends
-    # the two programs behind the capture example of the paper
+    # a shortest program for the alternating stream, and the short programs of the paper's Section 6
     out, _ = bf8.run(bf8.parse("++[:.]"), 48, 0, 24)
-    assert out == [1, 0] * 24       # a shortest program for the alternating stream (six commands)
+    assert out == [1, 0] * 24       # six commands
     # the three-command programs that carry most of the mass leaving the truth (unmatched ']' restarts)
     for src in ("+:]", "-:]"):
         out, reads = bf8.run(bf8.parse(src), 48, 0, 24)

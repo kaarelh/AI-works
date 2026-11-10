@@ -8,7 +8,7 @@ and checks the budget inequalities of the paper.  It also computes, for a world 
 from the prior, the probability that a sampled next-bit prediction differs from the
 world's own next bit, as a function of the position.
 
-Run:  python3 run_profiles.py        (compiles ../code/bf8enum.c if needed; about a minute)
+Run:  python3 run_profiles.py        (compiles ../code/bf8enum.c if needed; about eight minutes)
 Writes results/profiles.json and results/profiles.pdf.
 """
 import json
@@ -125,7 +125,7 @@ def run_enum(LCv, T1, tmp):
     return f
 
 
-def length_dependence(tmp, lcs=(4, 5, 6, 7, 8, 9, 10, 11)):
+def length_dependence(tmp, lcs=(3, 4, 5, 6, 7, 8, 9, 10, 11)):
     """How the two headline shares move with the bound on the number of commands (T(k) = 24k)."""
     alt, ones = STREAMS["alternating"], STREAMS["ones"]
     keys = [alt[:16], alt[:17], alt[:16] + "0", alt, ones[:15], ones[:16], ones[:15] + "0", ones]

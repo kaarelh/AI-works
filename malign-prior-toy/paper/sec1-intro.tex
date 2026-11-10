@@ -31,29 +31,31 @@ point and every payload there is a constant $c$ such that, at every context wher
 has posterior mass at least $2^{-c}$ times a slack factor that is $1$ without resource bounds. Programs that
 emit their own code as the continuation have mass at least $2^{-c}$ times the share of the posterior on
 explanations that fit, together with the wrapper, into one block.
-\item \emph{Searching} (\cref{thm:search}). Let $H$ be the prior probability that a world hands over. For a
-world drawn from the prior conditioned on handing over, the expected posterior share of any family of
-programs with a common prefix of length $a$ is at most $2^{-a}/H$ (without resource bounds), and a hypothesis
-that searches the space of programs for a handover attains this. The search has a start-up of about $1/H$
-world simulations.
+\item \emph{Searching} (\cref{thm:search}). Let $H$ be the prior probability that a world hands over. Without
+resource bounds, a hypothesis that enumerates the programs that hand over and spreads its mass over them in
+proportion to their prior weight has, at every first hit of the test, a share larger than a wrapper of the
+same length by a factor of more than $1/(2H)$; no family of programs with a common prefix of length $a$ has
+more than $2^{-a}/H$ at every first hit. If the hypothesis then prints its own code, it has at least
+$2^{-c}/H$ times the share of explanations that fit into a block. It prints nothing until its enumeration has
+found the program it follows.
 \item \emph{Budget} (\cref{thm:budget}). Along a world that has a program of length $\ell$ within the bounds,
 the posterior mass off the true next $m$ bits, summed over all cut points, is at most $m\ell\ln 2$; the
 majority can be off the truth at no more than $m\ell$ cut points.
 \item \emph{Capture} (\cref{thm:capture}). The odds of a continuation $y$ against the true one $d$ are
 $\xi(xy)/\xi(xd)$. In a world with many readable locations, among $N$ places where a sensor with the given
 record could sit and whose records continue differently, a copy of the record at a location with a short
-code beats all but a few by a factor of order $N$ times the share of the context's explanations that go
-through the copy's reader; under a generous
-schedule the gain is capped by the cost of the description ``the other place that shows the same data''. A
-hypothesis that simulates the world can read the moment of the handover off a cell of its simulation at the
-cost of naming the cell.
+code beats all but a fraction $\delta$ of them by a factor $\delta N$ times the share of the context's
+explanations that go through the copy's reader. If only one other place shows the record and the schedule is
+generous, the gain is instead capped by the cost of the description ``the other place that shows the same
+data''. A hypothesis that simulates the world, within the bounds, can read the moment of the handover off a
+cell of its simulation at the cost of naming the cell.
 \item \emph{Machine dependence} (\cref{thm:machine}). For every test and payload there is a universal machine,
 whose description lengths exceed those of $U$ by at most $k+1$ bits, on which the payload has posterior at
 least $1/(1+2^{-k})$ at every context where the test fires, and another on which a given computable world is
 predicted with at least that probability at every nonempty context.
 \item \emph{Time bounds} (\cref{sec:time}). The floor remains if the schedule has room for the wrapper.
-Hypotheses that must first simulate at length, the searcher among them, are excluded once their start-up
-exceeds the schedule. If the world itself is too slow for the schedule, no bound on the mass off the truth
+Hypotheses that must first simulate at length, the searching one among them, are excluded once their start-up
+exceeds the schedule; whether the base rate can be collected within a tight schedule is open. If the world itself is too slow for the schedule, no bound on the mass off the truth
 remains.
 \item \emph{Feedback} (\cref{thm:feedback,thm:contrarian}). The statements on obedient and contrarian worlds
 in the abstract.
@@ -73,16 +75,19 @@ of the dogmatic prior of Leike and Hutter~\cite{leike15}. The contrarian world i
 diagonalisation~\cite{putnam63,legg06}. Same-world copies of a predictor's data are discussed informally
 in~\cite[\S2.5]{hubinger23}, and self-fulfilling predictions in~\cite{armstrong17,oesterheld23,hubinger23}. We
 have not found the single-world statement with description lengths, the calibration statement, the statement
-that searching gains exactly the base rate, the self-reproducing form of the floor, or the resource-bounded
-bookkeeping elsewhere; forum posts could be consulted only through search-engine summaries, so earlier
+that searching gains the base rate and no more, the self-reproducing form of the floor, or the
+resource-bounded bookkeeping elsewhere; forum posts could be consulted only through search-engine summaries, so earlier
 informal versions may exist. Every proof here is short.
 
 \paragraph{What the toy does not settle.} The floor and the searcher's share are constants of the machine,
 and nothing here estimates them for a machine one would call natural. The original argument rests on the
 claim that agents arise in short programs and choose to do this, and that such programs are \emph{shorter}
-than the honest explanation. In the toy we can exhibit only programs that contain an explanation of the
-context, wrappers and searchers, which are longer than what they wrap; whether something shorter exists on
-natural machines is the claim the toy leaves where it was. In the main definition a handover can be read off
+than the honest explanation. For an arbitrary world on a universal machine and a continuation chosen in
+advance, the programs we exhibit are wrappers, searchers and readers with a flag; they contain an explanation
+of the context and are longer than it by their constants. Programs shorter than the honest explanation that
+have the effect do occur in particular worlds (a copy at a simpler place, \cref{thm:capture}) and on
+particular machines (\cref{sec:computation}); that they occur on natural machines for worlds like ours is the
+claim the toy leaves where it was. In the main definition a handover can be read off
 the data; \cref{rem:callers} names the quantities that matter when it cannot, but does not bound them. The
 regime in which the world is more expensive than the predictor, the usual one for a predictor inside a world,
 is left open (\cref{sec:time}). The computation covers prediction only: the dynamics of worlds that run

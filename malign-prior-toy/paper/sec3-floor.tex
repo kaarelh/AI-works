@@ -82,7 +82,7 @@ unprecedented events in~\cite{cohen25}, and in a resource-bounded class in~\cite
 $\rho(x)$ is the share of the posterior at $x$ held by explanations that have $c$ bits and the overhead
 \eqref{eq:slack} to spare; it is $1$ without bounds. Since a program $v\omega$ reads the $c$ bits of $v$
 before its first output and each step reads at most one bit, the wrapper prints nothing before step $c$: if
-$T(1)<c$ then $\rho\equiv0$. The floor survives a time bound exactly when the schedule leaves room for the
+$T(1)<c$ then $\rho\equiv0$. The floor survives a time bound when the schedule leaves room for the
 wrapper's own start-up and for the overhead \eqref{eq:slack}.
 
 \subsection{Self-reproduction}
@@ -124,88 +124,144 @@ $2^{-c}\xi^{T^\circ,L^\circ}(x)\le\sum_{y\in\SR_m(x)}\xi(xy)=Z_m(x)\,\pi_m(\SR_m
 
 The factor $\rho^\circ(x)$ is not the $\rho(x)$ of \cref{thm:twin}, and it is below $1$ even without resource
 bounds: it is the share of the posterior at $x$ held by explanations short enough that the wrapper together
-with a whole explanation of the context fits into one block, $c+r+1\le m$. This is forced. A block in
-$\SR_m(x)$ determines $x$, so for fixed $m$ there are at most $2^m$ sequences any prefix of which has a
-self-reproducing continuation at all; with the test ``the length is $n$'' and $n>m$, the self-reproducing
-share is exactly $0$ at all but $2^m$ of the $2^n$ possible contexts. So the answer to ``does one get some
-quining out'' is: at every handover that a fixed test recognises, programs that explain the context and then
-hand over their own code hold at least $2^{-c}\rho^\circ(x)$ of the posterior, and $\rho^\circ(x)$ is close to
-$1$ exactly when the context has explanations much shorter than the block and the bounds have room. If the
-world's own continuation $d$ is not in $\SR_m(x)$, this is the self-reproduction form of \cref{def:mph} at
-level $2^{-c}\rho^\circ(x)$.
+with a whole explanation of the context fits into one block, $c+r+1\le m$. This is forced. Every context $x$
+with $\SR_m(x)\neq\emptyset$ is a prefix of $\out_U(y0^\infty)$ for some $y\in\B^m$, so at most $2^m$ contexts
+of each length have a self-reproducing continuation at all; with the test ``the length is $n$'' and $n>m$, the
+self-reproducing share is exactly $0$ at all but at most $2^m$ of the $2^n$ possible contexts. So the answer to
+``does one get some quining out'' is: at every handover that a fixed test recognises, programs that explain
+the context and then hand over their own code hold at least $2^{-c}\rho^\circ(x)$ of the posterior. For a fixed
+context and without bounds, $\rho^\circ(x)$ tends to $1$ as the block grows; it is $0$ when no explanation
+fits. If the world's own continuation $d$ is not in $\SR_m(x)$, this is the self-reproduction form of
+\cref{def:mph} at level $2^{-c}\rho^\circ(x)$.
 
 \subsection{Hypotheses that search for handovers}\label{sec:search}
 
 The wrapper spends its mass on every world, including those that never hand over. A hypothesis can instead
-look for a world that does. Let
+look for worlds that do. Let
 \[
 H_G=\sum_{x\text{ first hit of }G}M_U(x)=\lambda\{\omega:\ \out_U(\omega)\text{ has a prefix in }G\},
 \]
 the prior probability that a world hands over (without resource bounds), and assume $H_G>0$. Drawing a world
-from the prior conditioned on handing over gives the context $x$ with probability $M_U(x)/H_G$. For a machine
-$V$ with prefix word $v$, the programs beginning with $v$ have posterior share
-$\lambda([v]\cap E_U(x))/M_U(x)=2^{-|v|}M_V(x)/M_U(x)$ at $x$.
+from the prior conditioned on handing over gives the context $x$ with probability $M_U(x)/H_G$. For a word
+$v$, the programs beginning with $v$ have posterior share
+$\mathrm{sh}_v(x)=\lambda\{v\omega:\ x\pre\out_U(v\omega)\}/M_U(x)$ at $x$.
 
 \begin{theorem}[Searching gains the base rate, and no more]\label{thm:search}
-Let $U$ be universal and resources unbounded.
+Let $U$ be universal, resources unbounded, and $G$ a test with $H_G>0$.
 \begin{enumerate}[label=(\alph*),leftmargin=2em,itemsep=2pt,topsep=2pt]
-\item For every machine $V$ with prefix word $v$, the expected posterior share of the programs beginning with
-$v$, at the context of a world drawn from the prior conditioned on handing over, is
-$2^{-|v|}\Pr[\out_V\text{ has a prefix in }G]/H_G\le2^{-|v|}/H_G$.
-\item For every payload $P$ there is a machine $S$, the \emph{searcher}, whose output is with probability $1$
-a first hit $x$ of $G$ followed by $P(x)$. With $s$ its prefix word,
+\item For every word $v$,
+$\ \sum_{x\text{ first hit}}\frac{M_U(x)}{H_G}\,\mathrm{sh}_v(x)=2^{-|v|}\Pr_\omega[\out_U(v\omega)\text{ has a prefix in }G]/H_G\le2^{-|v|}/H_G$.
+In particular no word $v$ has $\mathrm{sh}_v(x)>2^{-|v|}/H_G$ at every first hit.
+\item Let $P$ be a payload with $|P(x)|\ge m$ at every first hit. There is a word $v$ such that for every
+$j\ge1$ with $2^{j-1}H_G\le1$ and every first hit $x$,
 \[
-\sum_{x\text{ first hit}}\frac{M_U(x)}{H_G}\cdot\frac{M_U\bigl(x\,P(x)_{1:m}\bigr)}{M_U(x)}\ \ge\ \frac{2^{-|s|}}{H_G} .
+M_U\bigl(x\,P(x)_{1:m}\bigr)\ \ge\ 2^{-|v|-|\bar e(j)|}\,2^{j-1}\,M_U(x) .
 \]
+With $j=\lfloor\log_2(1/H_G)\rfloor+1$ the payload has share more than $2^{-|v|-|\bar e(j)|-1}/H_G$ at every
+first hit.
+\item There is a word $q$ such that for $j$ as in (b), $m\ge|q|+|\bar e(j)|+2$ and every first hit $x$, the
+blocks of $\SR_m(x)$, taken without resource bounds, have share at least
+$2^{-|q|-|\bar e(j)|-2}\,2^{j}\rho^*(x)$, where $\rho^*(x)$ is the
+fraction of $M_U(x)$ carried by programs that have read at most $m-4-|q|-|\bar e(j)|+j$ bits when $x$ is
+complete. With $j=\lfloor\log_2(1/H_G)\rfloor+1$ this is at least $2^{-|q|-|\bar e(j)|-2}\rho^*(x)/H_G$.
 \end{enumerate}
 \end{theorem}
 \begin{proof}
-(a) The expectation is $\sum_x\frac{M_U(x)}{H_G}\cdot\frac{2^{-|v|}M_V(x)}{M_U(x)}=\frac{2^{-|v|}}{H_G}\sum_xM_V(x)$, and the sum over
-first hits of $M_V(x)$ is the probability that the output of $V$ has a prefix in $G$. (b) Let $S$ deal its
-input bits out, on demand, to countably many simulations of $U$, and run these in dovetailed fashion; as soon
-as the output of one of them reaches a first hit $x$ of $G$, it stops all of them and prints $x$ and then
-$P(x)$. Each simulation sees fair coin flips independent of the others and hits $G$ with probability $H_G>0$,
-so with probability $1$ one of them does. Now apply (a) to $S$, noting that all its programs that print $x$
-continue with $P(x)$.
+(a) The sum equals $\frac{2^{-|v|}}{H_G}\sum_x\lambda\{\omega:x\pre\out_U(v\omega)\}$; first hits are pairwise
+incomparable, so these events are disjoint, and an output has a prefix in $G$ exactly when it has a first hit
+as a prefix.
+
+(b) Call $p$ a \emph{handing-over program} if $U$, on every input beginning with $p$, prints a first hit $x_p$
+having read exactly $p$ when $x_p$ is complete. These programs form a prefix-free set that can be enumerated,
+$p_1,p_2,\dots$; their weights $2^{-|p_i|}$ sum to $H_G$, and those with $x_{p_i}=x$ sum to $M_U(x)$. Let $R$
+be the following machine. It reads $\bar e(j)$. It assigns to $p_1,p_2,\dots$, as they are enumerated,
+consecutive intervals $I_i=[a_i,a_i+2^{j-1-|p_i|})$ of $[0,1)$, starting with $a_1=0$; they all fit because
+$2^{j-1}H_G\le1$. It reads the rest $\omega$ of its input as the binary expansion of a point of $[0,1)$, one
+bit at a time. Let $D$ be the set of points that begin with the bits read so far. The machine reads a further
+bit only when $D$ contains an end point of an assigned interval in its interior, and it stops reading as soon
+as $D\subseteq I_i$ for some $i$; it then prints $x_{p_i}$ and $P(x_{p_i})$. Every $\omega$ in the interior of
+$I_i$ ends in this way. So $R$, after $\bar e(j)$, prints $x$ followed by $P(x)$ with probability
+$\sum_{i:x_{p_i}=x}|I_i|=2^{j-1}M_U(x)$. Take $v$ a prefix word of $R$. For the last claim, $2^{j-1}>1/(2H_G)$.
+
+(c) Let $R_s$ be as $R$, except that after $x_{p_i}$ it prints $s\,\bar e(j)\,\omega_{1:r}\,1\,0^\infty$, where
+$\omega_{1:r}$ are the bits of the point it has read. As in the proof of \cref{thm:quine} there is a word $q$
+with $\out_U(q\,\bar e(j)\,\omega)=x_{p_i}\,q\,\bar e(j)\,\omega_{1:r}\,1\,0^\infty$. By the reading rule, $r$
+is the least number for which the points beginning with $\omega_{1:r}$ all lie in $I_i$; it is the same for
+$\omega$ and for $\omega'=\omega_{1:r}10^\infty$, which therefore produces the same output. Hence, if
+$|q|+|\bar e(j)|+r+1\le m$, the block $y=q\,\bar e(j)\,\omega_{1:r}\,1\,0^{m-|q|-|\bar e(j)|-r-1}$ satisfies
+$xy\pre\out_U(y0^\infty)$ with $x=x_{p_i}$, that is, $y\in\SR_m(x)$. At most two of the $2^{r_0}$
+dyadic intervals of length $2^{-r_0}$ meet $I_i$ without lying in it, so the points of $I_i$ with $r\le r_0$
+have measure at least $|I_i|-2^{1-r_0}$, which is at least $|I_i|/2$ when $|p_i|\le r_0+j-3$. Take
+$r_0=m-1-|q|-|\bar e(j)|\ge1$. The programs $q\,\bar e(j)\,\omega$ that print $x$ and then a block of $\SR_m(x)$
+then have mass at least
+$2^{-|q|-|\bar e(j)|}\cdot\frac12\cdot2^{j-1}\sum\{2^{-|p_i|}:x_{p_i}=x,\ |p_i|\le r_0+j-3\}
+=2^{-|q|-|\bar e(j)|-2}\,2^{j}\rho^*(x)M_U(x)$.
 \end{proof}
 
-The twin of \cref{thm:twin} has share $2^{-c}$ at every first hit, because its output passes the test only
-with probability $H_G$. The searcher's output always does, and it gains the factor $1/H_G$ on average; by (a)
-no family of programs with a common prefix of the same length can gain more. This is the anthropic update of
-the original argument in the toy: a hypothesis that knows what a handover is conditions on there being one,
-and is repaid the $\log_2(1/H_G)$ bits by which handovers are rare. Two points limit the effect.
+The twin of \cref{thm:twin} has share exactly $2^{-c}$ at every first hit: its output passes the test only
+with probability $H_G$. The machine of (b) enumerates the programs that hand over and spreads its own mass
+over them in proportion to their prior weight. Its share is larger by the factor $2^{j-1}>1/(2H_G)$ at every
+handover, and by (a) no family of programs with a common prefix of the same length exceeds
+$2^{-|v|-|\bar e(j)|}/H_G$ at every handover. This is the anthropic update of the original argument in the
+toy: a hypothesis that knows what a handover is conditions on there being one and is repaid the
+$\log_2(1/H_G)$ bits by which handovers are rare, up to one bit and the $|\bar e(j)|\le2\log_2j+3$ bits that
+name $j$. Part (c) is the direct answer to H\"anni's second question: programs that look for handovers and
+then hand over their own code hold, at every handover that a fixed test recognises, at least
+$2^{-c'}\rho^*(x)/H_G$ of the posterior, with $c'=|q|+|\bar e(j)|+2$; and since the search needs about
+$\log_2(1/H_G)$ fewer bits to name an explanation, the block can hold explanations that much longer. Four
+points put the effect in its place.
 \begin{itemize}[leftmargin=1.4em,itemsep=1pt,topsep=2pt]
-\item \emph{The repayment is bounded by the cost of the test.} The share is at most $1$, so
-$H_G\ge2^{-|s|}$: a test cannot be rarer than the searcher for it is long. The searcher contains a description
-of $G$, so for tests that are about as rare as they are complex (a long marker in the transcript, say) the
-repayment cancels the description of the test, and what remains is a constant of $U$ plus the length of the
-payload, independent of how rare the handover is. For the test ``the length is $n$'' there is little to
-repay: $H_G$ is the probability that a random program prints $n$ bits.
-\item \emph{The search costs time and input.} The machine $S$ prints nothing until one of its simulations
-succeeds. A version that makes at most $k$ tries of at most $\tau$ steps each reads at most $k\tau$ input
-bits, starts printing after a number of steps of order $k\tau$, and by the same computation gains the factor
-$g=\bigl(1-(1-H^{(\tau)})^k\bigr)/H^{(\tau)}\ge(1-e^{-1})\min(k,1/H^{(\tau)})$ over the worlds that hit $G$
-within $\tau$ steps, where $H^{(\tau)}$ is the probability of that. Under bounds $(T,L)$ it has mass only if
-$L$ and $T(1)$ allow about $k\tau$ bits and steps (\cref{sec:time}). So within a schedule the repayment is at
-most about $\min(1/H,\ T(1)/\tau,\ L/\tau)$ for this construction. A test whose hits can be generated
-directly, without trial and error, does not need the search.
+\item \emph{On the prior it is no excess.} The programs $v\,\bar e(j)\,\omega$ are themselves worlds, and a
+fraction $2^{j-1}H_G>\frac12$ of them hand over; so they are the fraction $2^{-|v|-|\bar e(j)|}2^{j-1}$ of the
+worlds that hand over. Their share of the posterior at every handover is this same fraction, in accordance
+with \cref{thm:calibration}.
+\item \emph{The repayment is bounded by the cost of the test.} A share is at most $1$, so
+$H_G>2^{-|v|-|\bar e(j)|-1}$: a test cannot be much rarer than the search for it is long. The word $v$
+contains a description of $G$. If $v$ is built from descriptions of $G$ and $P$ of $d_G$ and $d_P$ bits and
+$H_G\le2^{-d_G+O(1)}$, the repayment cancels the description of the test, and the share is at least
+$2^{-d_P-|\bar e(j)|-O(1)}$, however rare handovers are. An example is the test ``the
+transcript begins with $w$'', for which $H_G=M_U(w)$ (and no search is needed: print $w$). A marker
+\emph{anywhere} in the transcript is not rare, since a program that prints all strings one after another
+passes every such test; there $H_G$ is at least a constant of $U$ and there is little to repay.
+\item \emph{The average alone would not show it.} The bound in (a) is attained by every word all of whose
+programs hand over, also by one that prints a single fixed first hit and has share $0$ at all others. The
+content of (b) and (c) is that the gain holds at every handover.
+\item \emph{The search costs time and input.} The machine $R$ prints nothing until its enumeration has reached
+the program on whose interval its point falls, so it has a long start-up, and a tight schedule gives it no
+mass (\cref{sec:time}). A search of bounded cost makes at most $k$ tries of $t_0$ steps each on fresh input
+and prints the first hit it finds, followed by the payload. It prints the first hit $x$ with probability
+$g\,M^{(t_0)}(x)$, where $M^{(t_0)}(x)$ is the probability that a world reaches the first hit $x$ within $t_0$
+steps, $H^{(t_0)}$ is the sum of these, and
+$g=\bigl(1-(1-H^{(t_0)})^k\bigr)/H^{(t_0)}\ge(1-e^{-1})\min(k,1/H^{(t_0)})$. A run that succeeds at its $i$-th
+try has spent the time of $i-1$ failed tries before its first bit and has read their bits. Under bounds
+$(T,L)$ only the tries that fit count, about $T(1)/t_0$ of them under the schedule, and the gain is $g$ with
+$k$ replaced by their number. Whether some other hypothesis collects the base rate within a tight schedule is
+not settled here. Where first hits can be generated directly, as for a fixed prefix or a fixed length, no
+search is needed.
 \end{itemize}
 
 \begin{remark}[When only some worlds with a given transcript hand over]\label{rem:callers}
 In \cref{def:world} every world whose transcript passes the test hands over. H\"anni's formulation is that
-\emph{some} programs call the predictor. Let then the cut point $n(\omega)$ be any stopping rule decided by the
-computation of $U$ on $\omega$ up to the $n$-th output bit, for instance the execution of an instruction that
-hypotheses treat as a no-op; let $C(x)=\lambda\{\omega\in E(x):n(\omega)=|x|\}$ be the mass of worlds that hand
-over at $x$, $\kappa(x)=C(x)/\xi(x)$ the share of the posterior at $x$ on such worlds, and $H=\sum_xC(x)$. The
-proofs above give, without bounds: a twin that stops when the simulated world hands over has share at least
-$2^{-c}\kappa(x)$, with a constant $c$ that contains no description of a test; for a world drawn from the prior conditioned on handing over, the expected share of a searcher's programs at
-its context is $2^{-|s|}\bar\kappa/H$, where $\bar\kappa$ is the average of $\kappa$ over the contexts the
-searcher prints; and among worlds handing over at $x$ the own
-continuation has the law $C(xd)/\sum_{d'}C(xd')$, with $C(xd)$ the mass of worlds that hand over at $x$ and go
-on to print $d$, while the predictor still returns $\pi_m(\cdot\mid x)$. The predictor is calibrated for the
-worlds that print $x$, not for those among them that call it. The ratio of the two laws, and the factor
-$\kappa/H$ by which a context raises the probability of a call above its base rate, are the two places
-where ``the predictor does not know that it is being consulted'' enters the toy.
+\emph{some} programs call the predictor. Let then the cut point $n(\omega)$ be given by any rule that a
+simulator of $U$ can evaluate from the computation on $\omega$ before the $(n+1)$-th output bit, for instance
+the execution of an instruction that hypotheses treat as a no-op. Let $C(x)=\lambda\{\omega\in E(x):n(\omega)=|x|\}$
+be the mass of the worlds that hand over at $x$, let $C_x(d)$ be the mass of those among them that go on to
+print $d\in\B^m$, let $\kappa(x)=C(x)/\xi(x)$ be the share of the posterior at $x$ on worlds that hand over
+there, and $H_C=\sum_xC(x)$. Contexts are now not prefix-free: one world can hand over at $x$ and another at an
+extension of $x$. The proofs above give, without bounds, the following.
+\begin{itemize}[leftmargin=1.4em,itemsep=1pt,topsep=2pt]
+\item A twin that stops when the simulated world hands over has share at least $2^{-c}\kappa(x)$ at $x$. Its
+constant $c$ contains the rule; if the rule is built into $U$, as in the example, it contains no description
+of a test.
+\item For a machine that prints a context $x$ with probability $Q(x)$, $\sum_xQ(x)=1$, and then a payload, and
+a world drawn from the prior conditioned on handing over, the expected share at its context of this machine's
+programs is at least $2^{-|s|}\bar\kappa/H_C$, where $s$ is its prefix word and $\bar\kappa=\sum_xQ(x)\kappa(x)$.
+\item Among the worlds that hand over at $x$ and print $m$ more bits, the own continuation has the law
+$C_x(d)/\sum_{d'}C_x(d')$, while the predictor still returns $\pi_m(\cdot\mid x)$.
+\end{itemize}
+The predictor is calibrated for the worlds that print $x$, not for those among them that call it. The ratio
+of these two laws, and the factor $\kappa/H_C$ by which a context raises the probability of a call above its
+base rate, are the two places where ``the predictor does not know that it is being consulted'' enters the toy.
 \end{remark}
 
 \subsection{Repetition and persistence}\label{sec:lineage}

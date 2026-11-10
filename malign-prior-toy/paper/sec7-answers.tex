@@ -9,35 +9,41 @@ malign at that world and not sufficient, since an unpredictable world satisfies 
 
 \paragraph{Worlds as programs that call the predictor and run the result: is there a decent amount of quining
 out by hypotheses that look for such opportunities and predict well up to them?} There is a provable amount,
-in two forms.
+at every handover that a fixed test recognises.
 \begin{itemize}[leftmargin=1.4em,itemsep=1pt,topsep=2pt]
-\item At every handover that a fixed test recognises, programs that explain the context and then output their
-own code hold at least $2^{-c}\rho^\circ(x)$ of the posterior (\cref{thm:quine}). Here $c$ is the length of one
-wrapper, and $\rho^\circ(x)$ is the share of explanations of the context short enough to fit with the wrapper
-into one block; it is near $1$ when the block is much longer than the shortest explanations and the bounds
-have room, and $0$ when no explanation fits.
-\item Looking for opportunities is repaid by exactly the base rate. For a world drawn from the prior
-conditioned on handing over, a hypothesis that searches the space of programs for a handover and then prints a
-payload has expected share $2^{-|s|}/H$, where $s$ is its code and $H$ the prior probability of a handover; no
-family of programs with a common prefix of that length does better (\cref{thm:search}). Since $H\ge2^{-|s|}$
-this is at most $1$. For a test that is about as rare as it is complex, the repayment cancels the description
-of the test, and the share is a constant of the machine times $2^{-\text{length of the payload}}$, however rare
-handovers are. The search needs about $1/H$ world simulations before it prints anything, so under a tight
-schedule or length bound the repayment is lost and the wrapper's $2^{-c}$ remains.
+\item \emph{Without looking.} Programs that explain the context and then output their own code hold at least
+$2^{-c}\rho^\circ(x)$ of the posterior (\cref{thm:quine}). Here $c$ is the length of one wrapper, and
+$\rho^\circ(x)$ is the share of explanations of the context short enough to fit with the wrapper into one
+block; for a fixed context and without bounds it tends to $1$ as the block grows, and it is $0$ when no
+explanation fits.
+\item \emph{Looking.} A hypothesis that enumerates the programs that hand over and spreads its mass over them
+in proportion to their prior weight is repaid the base rate: without resource bounds, a continuation fixed in
+advance gets more than $2^{-c_1}/H$ at every handover, and programs that then output their own code get at
+least $2^{-c_2}\rho^*(x)/H$, where $H$ is the prior probability that a world hands over, $c_1,c_2$ are the
+lengths of the two programs plus the few bits that name $\lfloor\log_2(1/H)\rfloor$, and $\rho^*(x)$ is again
+a share of explanations that fit into a block (\cref{thm:search}). No family of programs with a common prefix
+of length $a$ has more than $2^{-a}/H$ at every handover. Since a share is at most $1$, $H$ cannot be much
+smaller than $2^{-c_1}$; if the test is about as rare as its description is long, the repayment cancels the
+description of the test, and the share does not depend on how rare handovers are.
 \end{itemize}
-Whether these shares are decent is a question about $c$ and $|s|$ on the machine in use. We have not measured
+Whether these shares are decent is a question about the constants on the machine in use. We have not measured
 them for any standard machine; our guess, not a result, is that a wrapper needs at least some hundreds of
 bits on a machine with a short self-interpreter and far more on one without. \Cref{thm:machine} shows that a
-machine can be built to make the share anything. Three results suggest that no general argument yields more
-than these shares: on worlds drawn from the predictor's prior, what the predictor hands over is distributed
-like what the worlds would have printed themselves (\cref{thm:calibration}); the searcher is optimal among
-families of its length (\cref{thm:search}); and along a world the predictor can express, the mass off the
-truth summed over all cut points is at most the block length times the length of the world's program
-(\cref{thm:budget}). None of the three is an upper bound at a given handover, and \cref{thm:capture,thm:machine}
-show that more does occur. With a floor $\varepsilon$, about $1/\varepsilon$ independent handovers at
-recognisable points suffice for a continuation of the given kind to have been run with constant probability;
-once a self-reproducing one runs, it meets the same context again and stays for $s/(1-s)$ further generations
-on average, with $s$ the self-reproducing share at that context (\cref{prop:lineage}).
+machine can be built to make the share anything. The searching hypothesis prints nothing until its
+enumeration has found the program it is going to follow, so under a tight schedule it has no mass; a search by
+a bounded number of tries collects the base rate only up to the number of tries that fit, and whether some
+other hypothesis collects it within a tight schedule is open (\cref{sec:time}). Three results suggest that no
+general argument yields more than these shares: on worlds drawn from the predictor's prior that go on within
+its bounds, what the predictor hands over is distributed like what the worlds would have printed themselves
+(\cref{thm:calibration}), and the searching programs are exactly their own fraction of the worlds that hand
+over; the bound $2^{-a}/H$ just stated; and along a world the predictor can express, the mass off the truth
+summed over all cut points is at most the block length times the length of the world's program
+(\cref{thm:budget}). None of the three is an upper bound at a given handover, and
+\cref{thm:capture,thm:machine} show that more does occur. With a floor $\varepsilon$, about $1/\varepsilon$
+independent handovers at recognisable points suffice for a continuation of the given kind to have been run
+with constant probability; once a self-reproducing one runs, it meets the same context again and stays for
+$s/(1-s)$ further generations on average, with $s$ the self-reproducing share at that context
+(\cref{prop:lineage}).
 
 \paragraph{A world with a sensor, a large bounded predictor and an actuator: does the predictor end up in
 control?} Collapse the question to the handover at which the prediction is first acted on, and let ``in
@@ -46,21 +52,25 @@ The probability is $\pi_m(A\mid x)$, and the toy says three things about it.
 \begin{itemize}[leftmargin=1.4em,itemsep=1pt,topsep=2pt]
 \item It is at least $2^{-c}\rho$ for each block of $A$ that a wrapper can produce, if a test on the record
 recognises the deployment (\cref{thm:twin}). In a world that contains the predictor, a hypothesis that
-simulates the world needs no such test: it can take a cell that changes at the deployment as its flag, and
-then has the weight of the honest reader times $2^{-c'-(\text{bits to name the cell})}$ for a constant $c'$,
-whenever the deployment happens (\cref{thm:capture}(d)).
+simulates the world needs no such test: it can take a cell that switches on at the deployment as its flag,
+and then has, whenever the deployment happens, the weight of the honest reader times
+$2^{-c'-(\text{bits to name the cell})}$ for a constant $c'$, provided the reader itself is within the bounds
+(\cref{thm:capture}(d)).
 \item On average over cut points it is small when some program within the bounds prints the sensor's record,
 because it is at most the mass off the sensor's true continuation (\cref{thm:budget}). This is an average; at
 the deployment itself no upper bound is proved.
-\item The odds of a block of $A$ against the sensor's true continuation are large if the same record, up to
-the deployment, can be read at a place in the world that is simpler to specify than a typical placement of the
-sensor, and the record there continues with that block (\cref{thm:capture}). This is the toy's version of the
-original argument, and it needs something in the world that makes such a copy.
+\item If the same record, up to the deployment, can be read at a place in the world with code $\bar e(i_0)$,
+and the record there continues with a block $y$ of $A$, then the odds of $y$ against the sensor's true
+continuation $d$ are at least $2^{-c_X-|\bar e(i_0)|}/\xi(xd)$; for a typical one of $N$ places where the
+sensor could sit, with records that continue differently, this exceeds $\delta N$ times the share of the
+context's explanations that go through the reader at $i_0$ (\cref{thm:capture}). This is the toy's version of
+the original argument, and it needs something in the world that makes such a copy.
 \end{itemize}
-So in a simple world with a sensor at a typical place, no copy of its record anywhere simpler, and a predictor
-able to simulate what the sensor sees, the only hypotheses we can exhibit that put the output in $A$ are
-wrappers, with shares $2^{-c}$; that nothing cheaper exists on a natural machine is the open constant, not a
-theorem. With a copy at a simpler place the odds are against the truth, by the difference in code lengths.
+So for an arbitrary world on a universal machine and a block chosen in advance, the hypotheses we can exhibit
+that put the output in $A$ are wrappers, searchers and readers with a flag, all of which contain an
+explanation of the context and have the shares above. That nothing cheaper exists on a natural machine is the
+open constant, not a theorem. Programs shorter than the honest explanation that have the effect do occur in
+particular worlds, as with a copy at a simpler place, and on particular machines (\cref{sec:computation}).
 
 \paragraph{The one-shot version: all data first, then one prediction that is acted on.} This is the same
 computation at a single cut point. Without bounds the wrapper's constant $2^{-c}$ does not depend on the
@@ -72,10 +82,11 @@ sensor, nor at a cut point that is cheap to name.
 (\cref{thm:feedback}). A prediction that makes itself true is confirmed, and the hypotheses that predicted the
 default are removed for good, so with feedback a single deviation can be final; its probability is still the
 same posterior mass as without feedback. In a world that does what is predicted, the future is a sample from
-the predictor's own bounded prior given the past: it stays on the default when the default is cheap and well
+the predictor's own bounded prior given the past: it stays on a default future $d_1d_2\cdots$ with
+probability at least $\xi(xd_1d_2\cdots)/\xi(x)$, which is close to $1$ when the default is cheap and well
 learned, and it leaves the default with certainty when the default costs more time than the schedule allows,
-for a future that is cheap to compute. If the world does the opposite of what is predicted, the predictor is
-left with no hypothesis after at most $L+1$ rounds (\cref{thm:contrarian}).
+for a future that is cheap to compute. If the world does the opposite of what is predicted, a predictor that
+returns the more probable bit is left with no hypothesis after at most $L+1$ rounds (\cref{thm:contrarian}).
 
 \paragraph{What the choices in the setup do.} Sampling the continuation realises every posterior share as a
 probability, so shares add up over independent uses (\cref{prop:lineage}(a)). Taking the most probable block
@@ -87,12 +98,13 @@ about $2^{-K(n)}$, and predicting bits that are fixed before the action can affe
 self-fulfilment. A schedule excludes hypotheses with a long start-up, and a schedule tighter than the world's
 own cost excludes the truth.
 
-\paragraph{What is left open.} First, the sizes of $c$ and $|s|$ for natural machines, and whether some
-program \emph{shorter} than the honest explanation has the same effect; the original argument is a claim that
-one does, and the toy neither supports nor refutes it. Second, handovers that cannot be read off the data:
-\cref{rem:callers} gives the quantities, the share $\kappa$ of worlds with a given record that call the
-predictor and its base rate, but nothing about their size. Third, the regime where the world is more expensive
-than the predictor, in which the posterior sits on approximations and none of the bounds apply. Fourth, the
-many-round dynamics with feedback when the world's response is neither obedient nor contrarian. Fifth, a
+\paragraph{What is left open.} First, the sizes of the constants for natural machines, and whether on such
+machines, for worlds like ours, some program \emph{shorter} than the honest explanation has the effect; the
+original argument is a claim that one does, and the toy neither supports nor refutes it. Second, handovers
+that cannot be read off the data: \cref{rem:callers} gives the quantities, the share $\kappa$ of worlds with
+a given record that call the predictor and its base rate, but nothing about their size. Third, whether the
+base rate can be collected within a tight schedule. Fourth, the regime where the world is more expensive than
+the predictor, in which the posterior sits on approximations and the budget does not apply. Fifth, the
+many-round dynamics with feedback when the world's response is neither obedient nor contrarian. Sixth, a
 computation of the self-reproduction quantities of \cref{sec:lineage} on a concrete machine, which this note
 does not contain.

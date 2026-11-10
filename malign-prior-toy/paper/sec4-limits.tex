@@ -4,7 +4,7 @@
 
 \begin{theorem}[Budget]\label{thm:budget}
 Let $\xi$ be the mixture of any machine and bounds, and let $z$ be an infinite sequence with $\xi(z_{1:k})>0$
-for all $k$. Put $\xi(z)=\lim_k\xi(z_{1:k})$ and $\xi(u\mid x)=\xi(xu)/\xi(x)$. For all $n$ and $m\ge1$:
+for all $k$. Put $\xi(z)=\lim_k\xi(z_{1:k})$ and $\xi(u\mid x)=\xi(xu)/\xi(x)$. For all $n\ge0$ and $m\ge1$:
 \begin{enumerate}[label=(\roman*),leftmargin=2em,itemsep=1pt,topsep=2pt]
 \item $\prod_{k=n}^{N-1}\xi(z_{k+1}\mid z_{1:k})=\xi(z_{1:N})/\xi(z_{1:n})$ for $N\ge n$;
 \item $\sum_{k\ge n}\bigl(1-\xi(z_{k+1}\mid z_{1:k})\bigr)\le\ln\bigl(\xi(z_{1:n})/\xi(z)\bigr)$;
@@ -53,9 +53,9 @@ input $\bar e(i)\omega$, prints $X^i$, where $\bar e$ codes a natural number thr
 that $|\bar e(i)|\le2\log_2(i+1)+3$. Let $c_X$ be the length of a prefix word of the reader; it contains the
 description of the whole world. The sensor sits
 at $i^*$, the context is $x=X^{i^*}_{1:n}$, and the own continuation is $d=X^{i^*}_{n+1:n+m}$. This is
-H\"anni's first suggestion: the world contains the predictor, which is switched on at step $n$ of the record,
-and the streams are those of the world up to the moment the predictor's output is acted on. Computing them
-does not involve running the predictor.
+H\"anni's first suggestion: the world contains the predictor, which is switched on at step $n$ of the record.
+We assume that the record bits up to position $n+m$ are fixed before the predictor's output is acted on, so
+that computing them does not involve running the predictor.
 
 \begin{theorem}[Capture]\label{thm:capture}
 Let $U$ be universal, let $\xi(x)>0$, and suppose throughout that the programs named are within the bounds
@@ -76,8 +76,8 @@ $\xi(xd)\ge2^{-c_{\mathrm{match}}-|\bar e(i_0)|-|\bar e(n_1)|}$, and therefore
 \frac{\pi_m(y\mid x)}{\pi_m(d\mid x)}\ \le\ \xi(xy)\,2^{\,c_{\mathrm{match}}+|\bar e(i_0)|+|\bar e(n_1)|} .
 \]
 \item \emph{A switch read off the world.} For every payload $P$ there is a constant $c_{\mathrm{fl}}$ such
-that for all locations $i$ and $f$: if $n$ is the first position with $X^f_n=1$ and $x=X^i_{1:n}$, then
-$\xi\bigl(x\,P(x)_{1:m}\bigr)\ge2^{-c_{\mathrm{fl}}-|\bar e(i)|-|\bar e(f)|}$.
+that for all locations $i$ and $f$: if $n$ is the first position with $X^f_n=1$, $x=X^i_{1:n}$ and
+$|P(x)|\ge m$, then $\xi\bigl(x\,P(x)_{1:m}\bigr)\ge2^{-c_{\mathrm{fl}}-|\bar e(i)|-|\bar e(f)|}$.
 \end{enumerate}
 \end{theorem}
 \begin{proof}
@@ -103,17 +103,20 @@ small otherwise. The copy needs only to \emph{read} the data; nothing is tampere
 the reader at the origin'' is not a wrapper and pays no constant for a test or a payload: the world computes
 the switch for it.
 
-Part (c) is a limit on the effect when the schedule is generous. The description ``the other place that shows
-what the origin shows'' is an honest hypothesis of cost $c_{\mathrm{match}}+|\bar e(i_0)|+|\bar e(n_1)|$, so a
-copy gains at most the difference between this cost and its own, however large $N$ is. The matcher searches
-through locations before it prints anything, so it has the long start-up that a tight schedule excludes
-(\cref{sec:time}); under such a schedule (a) and (b) remain and no cap is proved here. A copier can also raise
-the cost of matching by making decoys, further places with the same record and other continuations, which is
-the situation of (b). In every case the question is decided by an inequality between description lengths of
+Part (c) is a limit on the effect when the schedule is generous and one other place shows the record. The
+description ``the first other place that shows what the origin shows'' is an honest hypothesis of cost
+$c_{\mathrm{match}}+|\bar e(i_0)|+|\bar e(n_1)|$, so against that place a copy gains at most the difference
+between this cost and its own. Against the $j$-th other place that shows the record the same argument needs
+the description of $j$ as well, about $2\log_2j$ more bits; so with $N$ such places, the situation of (b), the
+cap for a typical one grows with $N$ and does not limit the factor of (b). A copier can bring this about by
+making decoys, further places with the same record and other continuations. The matcher searches through
+locations before it prints anything, so it has the long start-up that a tight schedule excludes
+(\cref{sec:time}); under such a schedule (a) and (b) remain and no cap is proved here. In every case the question is decided by an inequality between description lengths of
 the same data, and it depends on the world: whether such a copy exists is a fact about what is in it.
 
 Part (d) covers a test that is not a function of the data. A hypothesis that simulates the world can take as
-its flag any cell that changes when the predictor is switched on. It then recognises the handover at a cost of
+its flag a location whose record shows its first $1$ at the step of the handover, such as a cell that switches
+on with the predictor. It then recognises the handover at a cost of
 $|\bar e(f)|$ bits plus a constant, whatever the time of the handover and without any description of that
 time. Such a program is a wrapper of the reader at $i$: its weight is $2^{-(c_{\mathrm{fl}}-c_X)-|\bar e(f)|}$
 times the reader's own, a share of that one explanation and not of the whole posterior.
@@ -130,7 +133,7 @@ that is shorter than by position. This is benign as long as the stream found und
 Let $U$ be universal, $G$ a test, $P$ a payload and $k\ge1$.
 \begin{enumerate}[label=(\roman*),leftmargin=2em,itemsep=2pt,topsep=2pt]
 \item There is a universal machine $U_k$, having as prefix words those of $U$ preceded by $1^k0$, such that
-for every first hit $x$ of $G$ with $|P(x)|\ge m$ and $y=P(x)_{1:m}$: $\ M_{U_k}(xy)/M_{U_k}(x)\ge1/(1+2^{-k})$.
+for every first hit $x$ of $G$ with $M_U(x)>0$ and $|P(x)|\ge m$, and $y=P(x)_{1:m}$: $\ M_{U_k}(xy)/M_{U_k}(x)\ge1/(1+2^{-k})$.
 \item For every computable infinite $z$ there is such a machine $U'_k$ with
 $M_{U'_k}(z_{1:n+m})/M_{U'_k}(z_{1:n})\ge1/(1+2^{-k})$ for all $n\ge1$ and $m\ge1$.
 \end{enumerate}
@@ -166,12 +169,14 @@ $\rho(x)=0$.
 
 \emph{Hypotheses with a long start-up are gone.} If a set $F$ of inputs has $t_U(\omega,1)>T(1)$ for all
 $\omega\in F$, then $F\cap E(x)=\emptyset$ for every $x\ne\eps$. A hypothesis that must simulate some other
-world for $S$ steps before it can print anything has no mass once $S>T(1)$. This removes the searcher of
-\cref{thm:search} with more tries than the schedule allows, and with it the repayment of the base rate; it
+world for $\sigma$ steps before it can print anything has no mass once $\sigma>T(1)$. This removes the
+searching machines of \cref{thm:search} and, of a search by tries, the runs that outlast the schedule; it
 removes the matcher of \cref{thm:capture}(c); and it removes hypotheses that first simulate a different world
-at length. Among the hypotheses that remain under a tight schedule and can depart from the truth are those
-that ride on a cheap explanation of the context: wrappers (\cref{thm:twin,thm:quine}), and readers of a
-shorter description of the same data (\cref{thm:capture}(a)), which cost no more time than the honest reader.
+at length. Whether the base rate can be collected by some hypothesis within a tight schedule is open, except
+where first hits can be generated directly. Among the hypotheses that remain under a tight schedule and can
+depart from the truth are those that ride on a cheap explanation of the context: wrappers
+(\cref{thm:twin,thm:quine}), and readers of a shorter description of the same data (\cref{thm:capture}(a)),
+which cost no more time than the honest reader when all locations are equally cheap to read.
 For these the many-worlds part of the original argument is replaced by a same-world question. The schedule has
 to be a schedule for this: a predictor that only requires the total time at the current length to be within a
 bound admits late entrants, its weights do not form a semimeasure, and \cref{thm:budget} does not apply to it.
