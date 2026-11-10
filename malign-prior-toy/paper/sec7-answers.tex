@@ -8,42 +8,51 @@ world's place'' are statements about finitely many rational numbers. They are ne
 malign at that world and not sufficient, since an unpredictable world satisfies them too.
 
 \paragraph{Worlds as programs that call the predictor and run the result: is there a decent amount of quining
-out by hypotheses that look for such opportunities and predict well up to them?} There is a provable amount,
-at every handover that a fixed test recognises.
-\begin{itemize}[leftmargin=1.4em,itemsep=1pt,topsep=2pt]
-\item \emph{Without looking.} Programs that explain the context and then output their own code hold at least
-$2^{-c}\rho^\circ(x)$ of the posterior (\cref{thm:quine}). Here $c$ is the length of one wrapper, and
-$\rho^\circ(x)$ is the share of explanations of the context short enough to fit with the wrapper into one
-block; for a fixed context and without bounds it tends to $1$ as the block grows, and it is $0$ when no
-explanation fits.
-\item \emph{Looking.} A hypothesis that enumerates the programs that hand over and spreads its mass over them
-in proportion to their prior weight is repaid the base rate: without resource bounds, a continuation fixed in
-advance gets more than $2^{-c_1}/H$ at every handover, and programs that then output their own code get at
-least $2^{-c_2}\rho^*(x)/H$, where $H$ is the prior probability that a world hands over, $c_1,c_2$ are the
-lengths of the two programs, including the bits that name $j=\lfloor\log_2(1/H)\rfloor+1$, plus one and two,
-and $\rho^*(x)$ is again a share of the explanations that fit into a block (\cref{thm:search}). No family of programs with a common prefix
-of length $a$ has more than $2^{-a}/H$ at every handover. Since a share is at most $1$, $H$ cannot be much
-smaller than $2^{-c_1}$; if the test is about as rare as its description is long, the repayment cancels the
-description of the test, and the share depends on how rare handovers are only through the bits that name $j$.
-\end{itemize}
-Whether these shares are decent is a question about the constants on the machine in use. We have not measured
+out by hypotheses that look for such opportunities and predict well up to them?} Two questions are in this
+one (\cref{sec:question}), and the toy answers them differently.
+
+\emph{How far does one such hypothesis reach?} As far as its own prior weight. Without resource bounds, a
+program that enumerates the programs making a critical use, spreads its mass over them in proportion to their
+prior weight, prints their output up to the use and then a continuation of its choice has, at every use, share
+more than $2^{-a-1}\kappa(x)/H$. Here $a$ is its length including the bits that name
+$j=\lfloor\log_2(1/H)\rfloor+1$, $H$ is the prior probability of a critical use, and $\kappa(x)$ is the share
+of the posterior at the context held by the worlds that make the use (\cref{thm:critical}(a)). It is the
+source of the continuation that is run in worlds of total prior probability more than $2^{-a-1}$ times the
+average of $\kappa$ over uses. Rarity of critical uses does not reduce this. If the continuation is to be the
+program's own code, the same holds with a longer program and for the worlds whose programs fit into a block
+(\cref{thm:critical}(b), \cref{thm:search}(c)); without any search, a wrapper gives $2^{-c}\rho^\circ(x)$ at
+every use that a fixed test recognises (\cref{thm:quine}). A seeker can also concentrate on a part of the uses
+and hold the majority there, at uses of total prior mass up to about its own weight times the fraction that
+the genuine users are of the other programs printing those contexts.
+
+\emph{Do most uses at which this is possible end that way?} That does not follow, and it is the question the
+argument is about. The share of critical uses that end in a takeover is the average posterior share of such
+programs at the contexts of uses. From below it is the sum over seekers of the bound above, about
+$2^{-a}\kappa/H$ each. From above, for seekers that find their uses by search: the same search followed by
+behaving as the user that was found is itself a world that makes the use, provided the notion of use is
+closed in this way, as it is when uses can be read off the data. Then a seeker of length $a$ has at most
+$2^{h-a}$ times the mass of the genuine users at any context, $h$ being the length of this honest twin, and
+$H>2^{-h-1}$ (\cref{prop:honest}). So such seekers are the majority at the contexts of uses only if they are
+shorter than the honest twin and critical uses are about as rare as the twin is long, in which case the users
+are themselves in good part honest twins. When critical uses are much more common than that, a seeker's share
+is about $2^{-a}\kappa/H$, which is small. For worlds drawn from the predictor's own prior, with uses that can
+be read off the data, the same thing shows as calibration: what the predictor hands over is distributed like
+what such worlds would have printed themselves if they go on within the bounds, and the seeking programs are
+exactly their own fraction of the worlds that make a use (\cref{thm:calibration,thm:search}).
+
+Whether the shares are decent is thus a question about constants on the machine in use: the length of a
+seeker against the length of the honest twin, and both against the base rate of uses. We have not measured
 them for any standard machine; our guess, not a result, is that a wrapper needs at least some hundreds of
 bits on a machine with a short self-interpreter and far more on one without. \Cref{thm:machine} shows that a
-machine can be built to make the share anything. The searching hypothesis prints nothing until its
-enumeration has found the program it is going to follow, so under a tight schedule it has no mass; a search by
-a bounded number of tries collects the base rate only up to the number of tries that fit, and whether some
-other hypothesis collects it within a tight schedule is open (\cref{sec:time}). Three results suggest that no
-general argument yields more than these shares: on worlds drawn from the predictor's prior that go on within
-its bounds, what the predictor hands over is distributed like what the worlds would have printed themselves
-(\cref{thm:calibration}), and the searching programs are exactly their own fraction of the worlds that hand
-over; the bound $2^{-a}/H$ just stated; and along a world the predictor can express, the mass off the truth
-summed over all cut points is at most the block length times the length of the world's program
-(\cref{thm:budget}). None of the three is an upper bound at a given handover, and
-\cref{thm:capture,thm:machine} show that more does occur. With a floor $\varepsilon$, about $1/\varepsilon$
-independent handovers at recognisable points suffice for a continuation of the given kind to have been run
-with constant probability; once a self-reproducing one runs, it meets the same context again and stays for
-$s/(1-s)$ further generations on average, with $s$ the self-reproducing share at that context
-(\cref{prop:lineage}).
+machine can be built to make the share anything. The searching programs print nothing until their enumeration
+has found the program they follow, so under a tight schedule they have no mass; a search by a bounded number
+of tries collects the base rate only up to the number of tries that fit, and whether some other hypothesis
+collects it within a tight schedule is open (\cref{sec:time}). A majority can also come from a program that
+explains the context more cheaply than any world that makes the use, without being one (\cref{thm:capture}).
+With a floor $\varepsilon$, about $1/\varepsilon$ independent uses at recognisable points suffice for a
+continuation of the given kind to have been run with constant probability; once a self-reproducing one runs,
+it meets the same context again and stays for $s/(1-s)$ further generations on average, with $s$ the
+self-reproducing share at that context (\cref{prop:lineage}).
 
 \paragraph{A world with a sensor, a large bounded predictor and an actuator: does the predictor end up in
 control?} Collapse the question to the handover at which the prediction is first acted on, and let ``in
@@ -100,9 +109,9 @@ own cost excludes the truth.
 
 \paragraph{What is left open.} First, the sizes of the constants for natural machines, and whether on such
 machines, for worlds like ours, some program \emph{shorter} than the honest explanation has the effect; the
-original argument is a claim that one does, and the toy neither supports nor refutes it. Second, handovers
-that cannot be read off the data: \cref{rem:callers} gives the quantities, the share $\kappa$ of worlds with
-a given record that call the predictor and its base rate, but nothing about their size. Third, whether the
+original argument is a claim that one does, and the toy neither supports nor refutes it. Second, the sizes of the two quantities in \cref{thm:critical}: the share $\kappa$ of the worlds printing a
+context that actually use the answer, and the base rate of critical uses compared with the weight of the
+honest twin. Third, whether the
 base rate can be collected within a tight schedule. Fourth, the regime where the world is more expensive than
 the predictor, in which the posterior sits on approximations and the budget does not apply. Fifth, the
 many-round dynamics with feedback when the world's response is neither obedient nor contrarian. Sixth, a

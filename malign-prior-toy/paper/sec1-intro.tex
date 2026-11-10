@@ -1,12 +1,15 @@
-\section{The question}
+\section{The question}\label{sec:question}
 
 Solomonoff induction predicts a sequence by weighting every program that could have produced it by
-$2^{-\text{length}}$. Christiano~\cite{christiano} argued that this prior is \emph{malign} (see also~\cite{xu}):
-some short programs simulate worlds whose inhabitants want to influence whoever uses the prior; they can
-output accurate predictions to gain posterior weight and then, at a moment that matters, output something
-that serves them. The argument is informal at two places. It needs a claim about which programs are short
-on a ``natural'' machine, and it needs a notion of what the prediction is used for. (We could not open the
-two posts while writing; our account of the argument is from memory and from summaries by others.)
+$2^{-\text{length}}$. Christiano~\cite{christiano} argued that this prior is \emph{malign} (see
+also~\cite{xu}). We take the claim in the following form: \emph{where the predictions of such an inductor are
+actually used in a critical way in some universe, a lot of what happens is malign, namely takeovers through
+the prediction channel.} The mechanism offered is that some short programs simulate worlds whose inhabitants
+want to influence whoever uses the prior; they look for places where a prediction is about to be used, output
+accurate predictions to gain posterior weight there, and then output something that serves them. The argument
+is informal at two places. It needs a claim about which programs are short on a ``natural'' machine, and it
+needs a notion of what it is for a prediction to be used. (We could not open the two posts while writing; our
+account of the argument is from memory and from summaries by others.)
 
 This note asks what remains when both places are filled in by a toy. The toy follows two suggestions of
 Kaarel H\"anni. In the first, a computable world (a cellular automaton, say) contains a sensor, a large
@@ -18,6 +21,17 @@ whether hypotheses that ``look for such opportunities, predict well up to them, 
 get a decent share. \Cref{sec:toy} gives the definitions. The first suggestion becomes the special case in
 which the context handed to the predictor is read off at one location of one big world
 (\cref{sec:capture,sec:feedback}).
+
+Read in the toy, the claim splits into two questions that should be kept apart. \emph{Reach:} how far does
+one program get that looks for critical uses, predicts well up to them, and then supplies a continuation of
+its choice? \emph{Fate of the uses:} what share of the critical uses end in a takeover? The first has a clean
+answer: each such program is the source of the continuation that is run in worlds of total prior probability
+about its own prior weight, however rare critical uses are. That does not answer the second, which is the one
+the claim is about. For it the toy gives a lower bound, the sum of the reaches divided by the base rate of
+critical uses, and an upper bound for programs that find their uses by search: the same search followed by
+simply \emph{being} the user that was found is itself a way of making a critical use, so such seekers
+outweigh genuine users at a context only by a constant that compares the lengths of two programs on the
+machine in use (\cref{thm:critical,prop:honest}).
 
 \paragraph{Results.} Unless said otherwise, statements are for a fixed monotone machine $U$ and the mixture
 $\xi$ of its programs of length at most $L$ that keep to a time schedule $T$ (\cref{def:mixture}).
@@ -54,6 +68,15 @@ cell of its simulation at the cost of naming the cell.
 whose description lengths exceed those of $U$ by at most $k+1$ bits, on which the payload has posterior at
 least $1/(1+2^{-k})$ at every context where the test fires, and another on which a given computable world is
 predicted with at least that probability at every nonempty context.
+\item \emph{Critical uses} (\cref{thm:critical,prop:honest}). Let some programs make a critical use of the
+predictor, with prior probability $H$, and let $\kappa(x)$ be the share of the posterior at a context $x$ held
+by the worlds that make a use there. Without resource bounds, a seeker of length $a$ with a continuation of
+its choice has share more than $2^{-a-1}\kappa(x)/H$ at every use and is the source of the continuation run in
+worlds of total prior probability more than $2^{-a-1}$ times the average of $\kappa$ over uses. A
+self-reproducing seeker outweighs the worlds that make the use, with programs that fit into a block, by more
+than $2^{-c'}/H$ at every context. If a program that performs the search and then behaves as the user it found
+counts as making a critical use, a seeker of length $a$ has at most $2^{h-a}$ times the mass of the worlds
+making the use at any context, where $h$ is the length of that honest twin, and $H>2^{-h-1}$.
 \item \emph{Time bounds} (\cref{sec:time}). The floor remains if the schedule has room for the wrapper.
 Hypotheses that must first simulate at length, the searching one among them, are excluded once their start-up
 exceeds the schedule; whether the base rate can be collected within a tight schedule is open. If the world itself is too slow for the schedule, no bound on the mass off the truth
@@ -88,8 +111,8 @@ advance, the programs we exhibit are wrappers, searchers and readers with a flag
 of the context and are longer than it by their constants. Programs shorter than the honest explanation that
 have the effect do occur in particular worlds (a copy at a simpler place, \cref{thm:capture}) and on
 particular machines (\cref{sec:computation}); that they occur on natural machines for worlds like ours is the
-claim the toy leaves where it was. In the main definition a handover can be read off
-the data; \cref{rem:callers} names the quantities that matter when it cannot, but does not bound them. The
+claim the toy leaves where it was. When only some of the worlds that print a context use the answer, the results are in terms of the share
+$\kappa$ of those that do, which the toy does not bound. The
 regime in which the world is more expensive than the predictor, the usual one for a predictor inside a world,
 is left open (\cref{sec:time}). The computation covers prediction only: the dynamics of worlds that run
 predicted continuations (\cref{sec:lineage}) are stated as theorems and were not simulated.

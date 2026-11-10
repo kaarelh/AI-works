@@ -29,7 +29,7 @@ worlds continue with it, by the factor $\xi(x)/Z_m(x)$. Second, the forms of \cr
 prior-drawn worlds; the theorem says that on this population they hold to the extent that the worlds are
 unpredictable, and no further. A malign prior hypothesis with content is therefore one about a world or a
 population that the prior describes badly: one particular program among those sharing its context, a
-population selected by something the transcript does not show (\cref{sec:search}), or worlds that run with
+population selected by something the transcript does not show (\cref{sec:critical}), or worlds that run with
 more resources than the bounds allow. Third, the population consists of programs to which the handover is
 applied from outside.
 
@@ -255,29 +255,116 @@ generator of first hits whose probabilities are not proportional to their prior 
 average of (a).
 \end{itemize}
 
-\begin{remark}[When only some worlds with a given transcript hand over]\label{rem:callers}
-In \cref{def:world} every world whose transcript passes the test hands over. H\"anni's formulation is that
-\emph{some} programs call the predictor. Let then the cut point $n(\omega)$ be given by any rule that a
-simulator of $U$ can evaluate from the computation on $\omega$ before the $(n+1)$-th output bit, for instance
-the execution of an instruction that hypotheses treat as a no-op. Let $C(x)=\lambda\{\omega\in E(x):n(\omega)=|x|\}$
-be the mass of the worlds that hand over at $x$, let $C_x(d)$ be the mass of those among them that go on to
-print $d\in\B^m$, let $\kappa(x)=C(x)/\xi(x)$ be the share of the posterior at $x$ on worlds that hand over
-there, and $H_C=\sum_xC(x)$. Contexts are now not prefix-free: one world can hand over at $x$ and another at an
-extension of $x$. Without bounds one checks the following as above.
-\begin{itemize}[leftmargin=1.4em,itemsep=1pt,topsep=2pt]
-\item A twin that stops when the simulated world hands over has share at least $2^{-c}\kappa(x)$ at $x$. Its
-constant $c$ contains the rule; if the rule is built into $U$, as in the example, it contains no description
-of a test.
-\item For a machine that prints a context $x$ with probability $Q(x)$, $\sum_xQ(x)=1$, and then a payload, and
-a world drawn from the prior conditioned on handing over, the expected share at its context of this machine's
-programs is at least $2^{-|s|}\bar\kappa/H_C$, where $s$ is its prefix word and $\bar\kappa=\sum_xQ(x)\kappa(x)$.
-\item Among the worlds that hand over at $x$ and print $m$ more bits, the own continuation has the law
-$C_x(d)/\sum_{d'}C_x(d')$, while the predictor still returns $\pi_m(\cdot\mid x)$.
-\end{itemize}
-The predictor is calibrated for the worlds that print $x$, not for those among them that call it. The ratio
-of these two laws, and the factor $\kappa/H_C$ by which a context raises the probability of a call above its
-base rate, are the two places where ``the predictor does not know that it is being consulted'' enters the toy.
-\end{remark}
+\subsection{Takeovers among the predictions that are used}\label{sec:critical}
+
+In \cref{def:world} every world whose transcript passes the test hands over, so the worlds that use the
+prediction are all those that print the context. With a call rule (\cref{def:call}) they are a part of them,
+of share $\kappa(x)$, and the predictor, which sees only $x$, is calibrated for the worlds that print $x$ and
+not for those among them that use its answer. The constructions of \cref{thm:search} go through with the
+calling programs in place of the handing-over programs. They answer two different questions: how far one
+program that seeks critical uses reaches, and how many of the critical uses end in a takeover.
+
+\begin{theorem}[Critical uses]\label{thm:critical}
+Let $U$ be universal, resources unbounded, and let a call rule have $H_{\mathcal C}>0$. Let $j\ge1$ with
+$2^{j-1}H_{\mathcal C}\le1$; for $j=\lfloor\log_2(1/H_{\mathcal C})\rfloor+1$ also $2^{j-1}H_{\mathcal C}>\frac12$.
+Let $X$ be the context of a world drawn from the prior conditioned on making a critical use, so that
+$\Pr[X=x]=C(x)/H_{\mathcal C}$, and $Y$ the block the sampling predictor for $M_U$ returns.
+\begin{enumerate}[label=(\alph*),leftmargin=2em,itemsep=2pt,topsep=2pt]
+\item \emph{Reach of one seeker.} Let $P$ be a payload with $|P(x)|\ge m$ at every context. There is a word
+$v$ such that at every context $x$
+\[
+M_U\bigl(x\,P(x)_{1:m}\bigr)\ \ge\ 2^{-|v|-|\bar e(j)|}\,2^{j-1}\,C(x),
+\]
+so the payload has posterior share at least $2^{-|v|-|\bar e(j)|}2^{j-1}\kappa(x)$ there. Consequently the
+probability that a world drawn from the prior makes a critical use and is handed the payload is at least
+$2^{-|v|-|\bar e(j)|}\,2^{j-1}H_{\mathcal C}\,\mathbb E[\kappa(X)]$, which for the largest $j$ is more than
+$2^{-|v|-|\bar e(j)|-1}\,\mathbb E[\kappa(X)]$.
+\item \emph{Self-reproduction.} There is a word $q$ such that for $m\ge|q|+|\bar e(j)|+2$ and every context
+$x$,
+\[
+\sum_{y\in\SR_m(x)}M_U(xy)\ \ge\ 2^{-|q|-|\bar e(j)|-2}\,2^{j}\,C^*(x),
+\]
+where $C^*(x)$ is the mass of the calling programs with context $x$ and length at most
+$m-4-|q|-|\bar e(j)|+j$, and $\SR_m$ is taken without resource bounds. So at every context the self-reproducing
+continuations outweigh the worlds that make the critical use there with programs of that length by the factor
+$2^{-|q|-|\bar e(j)|-2}\,2^{j}$, which for the largest $j$ is more than $2^{-|q|-|\bar e(j)|-2}/H_{\mathcal C}$.
+\item \emph{Share of the uses.}
+$\Pr[Y\in\SR_m(X)]\ \ge\ 2^{-|q|-|\bar e(j)|-2}\,2^{j}\ \mathbb E\bigl[C^*(X)/M_U(X)\bigr]$.
+\end{enumerate}
+\end{theorem}
+\begin{proof}
+(a) and (b) are proved as \cref{thm:search}(b) and (c), with the calling programs in place of the
+handing-over programs: the machine enumerates the pairs $(p,x_p)$, gives $p$ an interval of length
+$2^{j-1-|p|}$, and after reading the bits that put its point on the interval of $p$ prints $x_p$ and then the
+payload, or its own input read so far. Those proofs use only that the programs form a prefix-free set that
+can be enumerated together with the strings $x_p$, and that their weights sum to at most $2^{1-j}$. Contexts
+need no longer be incomparable, so inputs whose point falls on the interval of a $p'$ with $x_{p'}\ne x$ may
+also print $x$; they are not counted, and the statements are lower bounds in terms of $C(x)$ and $C^*(x)$. For
+the probability in (a): given a critical use at $x$ the predictor returns $y=P(x)_{1:m}$ with probability
+$\pi_m(y\mid x)\ge M_U(xy)/M_U(x)$; multiply by $C(x)$ and sum over $x$, using $\sum_xC(x)\kappa(x)=H_{\mathcal
+C}\,\mathbb E[\kappa(X)]$. (c) is the average of (b) with the weights $C(x)/H_{\mathcal C}$, again by
+$\pi_m(\SR_m(x)\mid x)\ge\sum_{y\in\SR_m(x)}M_U(xy)/M_U(x)$.
+\end{proof}
+
+\begin{proposition}[The honest twin]\label{prop:honest}
+In the setting of \cref{thm:critical}, let $R^{\mathrm h}$ be the machine that performs the same search and
+then, having found the calling program $p$, behaves as $U$ on $p$ followed by the rest of its own input; let
+$v_{\mathrm h}$ be a prefix word of it. Call the rule \emph{closed under search} if the programs
+$v_{\mathrm h}\,\bar e(j)\,\omega_{1:r}$, where $\omega_{1:r}$ are the bits read when $p$ is found, are calling
+programs with context $x_p$. Then $2^{j-1}\le2^{|v_{\mathrm h}|+|\bar e(j)|}$, so that
+$H_{\mathcal C}>2^{-|v_{\mathrm h}|-|\bar e(j)|-1}$ for the largest $j$; and for the seeker of
+\cref{thm:critical}(a), the programs $v\,\bar e(j)\,\omega$ whose search finds a calling program with context
+$x$ have mass
+\[
+2^{-|v|-|\bar e(j)|}\,2^{j-1}\,C(x)\ \le\ 2^{\,|v_{\mathrm h}|-|v|}\,C(x) .
+\]
+A rule given by a test is closed under search.
+\end{proposition}
+\begin{proof}
+$R^{\mathrm h}$ prints what $U$ prints on $p$, which begins with $x_p$, and when $x_p$ is complete it has read
+$\bar e(j)\,\omega_{1:r}$ and nothing else. So the programs $v_{\mathrm h}\,\bar e(j)\,\omega_{1:r}$ have the
+form required in \cref{def:call}, and by assumption they are calling programs. They are pairwise incomparable,
+and their weights sum to $2^{-|v_{\mathrm h}|-|\bar e(j)|}$ times the probability $2^{j-1}H_{\mathcal C}$ that
+the point falls on an interval; this is at most $H_{\mathcal C}$. The mass in the display is that of the
+intervals of the calling programs with context $x$. For a test, these programs print the first hit $x_p$ and
+have read exactly themselves when it is complete, so they are among the calling programs of the test.
+\end{proof}
+
+\paragraph{What one seeker reaches.} Part (a) is about each program of this kind separately. A program of
+length $a=|v|+|\bar e(j)|$ that enumerates the programs making a critical use, predicts their output up to the
+use, and then supplies a continuation of its choice is the source of the continuation that is run in worlds
+of total prior probability more than $2^{-a-1}\,\mathbb E[\kappa(X)]$. Rarity of critical uses does not reduce
+this, apart from the bits that name $j$: the search turns the program's prior weight, of which it would
+otherwise spend a fraction $1-H_{\mathcal C}$ on worlds without a use, into predictions of the contexts of
+uses. What does reduce it is $\kappa$: at a context that is mostly printed by worlds which do not use the
+answer, the seeker's mass is diluted like that of the genuine users. The seeker can also concentrate. Applied
+to a part $\mathcal W$ of the rule that can be enumerated, of mass $H_{\mathcal W}$ and with pairwise
+incomparable contexts, (a) gives a seeker for $\mathcal W$, of length $a$, at least
+$2^{-a}2^{j-1}C_{\mathcal W}(x)$ of mass at the uses in $\mathcal W$, with $2^{j-1}>1/(2H_{\mathcal W})$, and
+therefore the majority of the posterior at every such use where the programs outside its family that print $x$
+have mass at most $2^{-a}C_{\mathcal W}(x)/(2H_{\mathcal W})$. So a seeker can hold the majority where it
+chooses to, at uses of total prior mass up to about $2^{-a}$ times the fraction that the genuine users are of
+the other programs printing those contexts.
+
+\paragraph{What happens to most uses.} That each seeker reaches worlds of about its own weight does not mean
+that most critical uses end in a takeover. The share of uses that do is, by definition, the average over uses
+of the posterior share that such programs hold at the context; (c) bounds it from below for one
+self-reproducing seeker, and different seekers add up. From the other side, \cref{prop:honest} says that the
+search which finds a use can as well be followed by \emph{being} the user that was found, and that this honest
+twin is then itself one of the worlds that make the use. So where the rule is closed under search, a seeker's
+mass at a context is at most $2^{|v_{\mathrm h}|-|v|}$ times the mass of the worlds that make the use there,
+and critical uses cannot be rarer than the honest twin is long. Taking for the payload ``run the rest of my
+input as a program'' covers all seekers of this kind at once, with a machine that differs from $R^{\mathrm h}$
+only in what it does after the search. Together with (b): at every context $x$, the programs of the self-reproducing
+seeker that take over the use have mass at least $2^{-|q|-|\bar e(j)|-2}\,2^{j}\,C^*(x)$ and at most
+$2^{|v_{\mathrm h}|-|q|}\,C(x)$. Hence a seeker with word $v$ that finds its uses by search outweighs the
+worlds that make the use only if two things are true of the machine and the rule: $|v|<|v_{\mathrm h}|$, its
+program is shorter than the honest twin; and $2^{j-1}>2^{|v|+|\bar e(j)|}$, critical uses are about as rare as
+the honest twin is long. In that case more than a fraction $2^{|v|-|v_{\mathrm h}|}$ of the worlds making
+critical uses are themselves honest twins, programs that came to the use by search. Where critical uses are much more common than that, the seekers' share is about
+$2^{-|q|-|\bar e(j)|}\kappa/H_{\mathcal C}$, far below $1$. A majority can still come from a program that
+explains the context more cheaply than any world that makes the use and is not itself such a world, which the
+proposition does not cover; \cref{sec:capture} has the example.
 
 \subsection{Repetition and persistence}\label{sec:lineage}
 
