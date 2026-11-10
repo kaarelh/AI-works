@@ -13,6 +13,7 @@ This repository holds several independent projects, one top-level folder each.
 | `gd-circuit-growth/` | `claude/nifty-mccarthy-j0lw2a` |
 | `circuit-output-fraction/` | `claude/circuit-output-fraction-xixj34` |
 | `compression-generalization/` | `claude/friendly-wright-x6ajj5` |
+| `ultranatural/` | `claude/eager-lamport-lo512k` |
 
 ## Working branches
 
