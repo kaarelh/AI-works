@@ -1,3 +1,5 @@
+import NeuralGeneralization.PriorMassFiniteComplexity
+import NeuralGeneralization.BatchTwoImprovedPaperCompression
 import NeuralGeneralization.RobustLocalizedPilot
 import NeuralGeneralization.RobustLocalizedConditioning
 import NeuralGeneralization.FiniteUnionEntropy
