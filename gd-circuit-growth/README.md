@@ -13,7 +13,12 @@ Notes by Claude, prompted by Kaarel Hänni. Research note, 23 October 2026; not 
 
 **Paper:** [`paper/gd-circuit-growth-paper.pdf`](paper/gd-circuit-growth-paper.pdf) (LaTeX sources in [`paper/`](paper/)) writes up Parts 1–5.
 
-**Working branch:** `claude/nifty-mccarthy-j0lw2a` holds the full working state. Two paths stay on it and are not published to `main`: `paper/test_fragment.tex`, a build helper, and `study/hybrid/orchestration/`, the job queues of Part 8. The LaTeX build output in `paper_learner/` (`main.pdf`, `main.log`, `main.out`, `main.bbl`, `main.blg`) also stays on the working branch; `learner-paper.pdf` is the published copy. Likewise in `paper_dfg/`, where the build output is not committed at all (`paper_dfg/.gitignore`) and `dfg-paper.pdf` is the published copy.
+**Working branch:** `claude/nifty-mccarthy-j0lw2a` holds the full working state. Three paths stay on it and are not published to `main`:
+- `paper/test_fragment.tex`, a build helper;
+- `study/hybrid/orchestration/`, the job queues of Part 8. The Part 8 audit reports cite its `run_jobs.py` as `scratchpad/hybrid/run_jobs.py`.
+- `study/part11/interp/ablations/logs/`, the run logs and completion markers of Part 11's post-hoc runs. Their results are in the committed result files.
+
+The LaTeX build output in `paper_learner/` (`main.pdf`, `main.log`, `main.out`, `main.bbl`, `main.blg`) also stays on the working branch; `learner-paper.pdf` is the published copy. In `paper_dfg/` the build output is not committed at all (`paper_dfg/.gitignore`); `dfg-paper.pdf` is the published copy.
 - The `study/models/scratch_*` folders are published, because they hold the calibration logs that the model write-ups cite.
 
 Raw network outputs live in a session scratch directory and are in neither branch. The scripts regenerate them.

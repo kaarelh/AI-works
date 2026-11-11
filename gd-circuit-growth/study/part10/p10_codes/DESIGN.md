@@ -194,4 +194,4 @@ ran). The learner was not changed after the freeze; the fixed dev evaluation sta
 (scratchpad `p10_codes/run_dev_eval.sh`).
 
 Files: `learner.py`, `__init__.py`, `learner.md5`, `DESIGN.md`, `test_perm.py`. Development scripts and logs are in the
-scratchpad folder `p10_codes/` (working-branch material).
+scratchpad folder `p10_codes/` (session scratch directory; in neither branch).
