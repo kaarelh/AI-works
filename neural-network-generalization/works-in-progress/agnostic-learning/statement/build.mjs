@@ -33,7 +33,7 @@ await tab.evaluate(() => document.fonts.ready);
 await tab.pdf({
   path: join(here, 'tempered-learner.pdf'),
   format: 'A4',
-  margin: { top: '22mm', bottom: '22mm', left: '22mm', right: '22mm' },
+  margin: { top: '18mm', bottom: '18mm', left: '19mm', right: '19mm' },
   printBackground: true,
 });
 await browser.close();
