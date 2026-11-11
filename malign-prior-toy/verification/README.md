@@ -88,7 +88,7 @@ A fourth referee checked this material with pencil and paper ([`referee-4.md`](r
 
 | Finding | Resolution |
 |---|---|
-| **B1.** The proposition compared masses, but a use receives a sample that is normalised by the programs which print the block; a calling program need not print anything after its context. So "seekers hold the majority only if …" did not follow. A corrected bound is available and needs no closure assumption. | The proposition now states the referee's bound: the twin is in the posterior with 2^(h−a) times the seeker's mass, so the predictor returns the seeker's block with probability at most 1/(1+2^(a−h)·φ), φ being the share of users that go on to print the block. The closure assumption is confined to part (c). The text says that the bound says nothing where φ is small. |
+| **B1.** The proposition compared masses, but a use receives a sample that is normalised by the programs which print the block; a calling program need not print anything after its context. So "seekers hold the majority only if …" did not follow. A corrected bound is available and needs no closure assumption. | The proposition now states the referee's bound: the twin is in the posterior with 2^(a−h) times the seeker's mass, so the seeker's programs supply what the predictor returns with probability at most 1/(1+2^(a−h)·φ), φ being the share of users that go on to print the block. The closure assumption is confined to part (c). The text says that the bound says nothing where φ is small. |
 | **B2.** "About its own prior weight, however rare critical uses are" was false when uses are rarer than the seeker is long: the reach is at most H, and the theorem itself forces κ < 2^(a+1)·H. | Replaced everywhere by: more than 2^(−a−1) times the average of κ, at most H; of the order of the seeker's weight where users are most of what prints their contexts; once uses are rarer than the seeker is long, its programs outweigh the users at their contexts. The text also says that the average needs no search and that the search buys the share at every use. |
 | **B3.** "Critical uses about as rare as the twin is long" was not the proved condition. | Now "rarer than the seeker is long", with the twin's bound stated separately. |
 | **B4, B5.** The upper bound is for one seeker and one search; masses add; "covers all seekers at once" was unproved; the concentrating seeker was outside it; the bound against "genuine users" was a bound against the seeker's own twin, a user by assumption. | A paragraph lists these limits; "genuine users" is no longer used for the comparison; the closure assumption is called a modelling decision, with the remark that under a test the seeker's own programs are uses too. |
@@ -100,4 +100,23 @@ A fourth referee checked this material with pencil and paper ([`referee-4.md`](r
 
 Hänni then pointed out that the analysis treated consequentialists as needing to be specified, with a goal written into the program, while they might arise in simple worlds whose output a simple rule reads off. The theorems do not assume a goal slot, but the estimates of lengths and the honest-twin bound did. A paragraph "Seekers that are not written down" now states the reach for any program with the right output (a one-line lemma), the condition under which such a program outweighs the users of the uses it aims at, why the honest-twin bound does not apply to it, and that a time bound does exclude it. The abstract, Section 1, Section 7 and the README state the answer by regime.
 
-This last revision (the restated proposition, the new paragraph and the rewritten summaries) has not been read by a referee. The restated proposition follows the derivation in section B1 of `referee-4.md`.
+This revision was checked in round 5.
+
+## Round 5
+
+A fifth referee made a narrow final check of that revision, with pencil and paper ([`referee-5.md`](referee-5.md)).
+
+**Verdict.** Every inequality of the restated proposition is correct, and so are its proof and the one-line lemma on programs that are not written down. Two sentences were wrong as written, and the paragraphs that state the note's answer claimed more than is proved. All findings were accepted.
+
+| Finding | Resolution |
+|---|---|
+| **A1.** "The twin is in the posterior with 2^(h−a) times the seeker's mass" had the exponent inverted, in Section 3.5, the abstract, Section 1, Section 7, the README and this log. The bound that follows it was the correct one. | Corrected to 2^(a−h) in all six places. |
+| **A2.** "More than a fraction 2^(a−h) of the worlds making uses are twins" is false in general and under a test. | Replaced by what part (c) of the proposition says. |
+| **A3.** The regime paragraphs: "takeover is not the fate of most uses" ignored that seekers' masses add; "mostly taken over" needs the other programs printing those contexts to be lighter; "with a tight time bound they are not" was proved only as "those programs have no mass". | Both paragraphs (Section 7 and README) were rewritten along the referee's wording. |
+| **A4.** The bound is on the programs that supply the sample, not on the block. | The proposition, Section 3.5 and the summaries now say "that seeker's programs supply what the predictor returns with probability at most …", and the proposition states the reading. |
+| **A5.** "Only time stands against it": a wrapper around the whole program is an honest counterpart, which limits the program's part to 1/(1+2^(−c)); this never excludes a majority. | Stated in Section 3.5 and Section 7; "the only obstacle" became "the only thing shown to exclude it". |
+| **A6.** "A class of uses in rich worlds therefore has small total mass" does not follow from each use being light. | Now: each such use is light; that the class is rarer than the program is heavy is part of the premise. |
+| **A7.** The abstract's "such programs print nothing for a long time" is true of the example only; a predictor that charges for time in bits is not defined in the note. | The abstract and the bullet now speak of the example; the clause on charging for time was removed. |
+| **A8, A9.** A sufficient condition worded as necessary; "rarer than the seeker is long" one bit off; a hypothesis of part (b) missing from the "only if" sentence; C(x) for C_W(x); the regime needs a rule that does not count the program's own outputs as uses, and a world that reads further input. | Fixed in the places named; the two conditions are stated in the paragraph on programs that are not written down. |
+
+The corrections of round 5 were made along the replacements proposed in the report and have not been re-read by a referee.
