@@ -55,6 +55,7 @@ C and E were first refereed through the logic and computation lenses only. After
 | C | 1 | minor fixes | 3 | [C-revision-check-1.md](C-revision-check-1.md) |
 | C | 2 | minor fixes | 3 | [C-revision-check-2.md](C-revision-check-2.md) |
 | C | 3 | minor fixes; resolved by the lead editor | 3 | [C-revision-check-3.md](C-revision-check-3.md) |
+| C | after the scope report | minor fixes; resolved by the lead editor | 3 | [C-scope-revision-check.md](C-scope-revision-check.md) |
 | E | 1 | minor fixes | 5 | [E-revision-check-1.md](E-revision-check-1.md) |
 | E | 2 | minor fixes | 7 | [E-revision-check-2.md](E-revision-check-2.md) |
 | E | 3 | minor fixes; resolved by the lead editor | 5 | [E-revision-check-3.md](E-revision-check-3.md) |
