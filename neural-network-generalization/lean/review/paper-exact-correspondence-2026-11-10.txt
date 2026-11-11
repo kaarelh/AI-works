@@ -1,0 +1,76 @@
+Literal continuous-depth memorizer and ceiling correspondence
+10 November 2026
+
+Scope: works-in-progress/continuous-depth-lower-bound, unchanged.
+The namespace below is NeuralGeneralization.BatchTwoContinuousDepthPaper.
+The existing convention Weights d N r has L=r+2 total linear layers.
+
+1. source/memorization.tex, exact bounded-label memorization lemma.
+   exact_bounded_label_memorization proves the literal width
+     M = ceil(max(4,n,3*d*n*R^2)), R=max(2,delta^-1*log(16*n)),
+   for every n>=1, d>=1, L>=3 and N>=M. Labels have absolute value
+   at most 7/8, and a unit projection places the sample in [-1,1]
+   with pairwise separation at least delta. The theorem permits the
+   slightly weaker assumption sum u_i^2<=1. The constructed actual
+   dense weights interpolate exactly, have global output bound one,
+   and energy at most K=2+(L+14)*T^(1/(L-1)), T=4*M*n.
+
+   StepPartition proves a nonnegative partition of unity for ordered
+   tanh steps. StepInterpolation proves the sample map is within 1/8
+   of the identity and constructs its inverse with norm at most 8/7.
+   StepNetwork builds the actual shallow weights and padding. ChannelAnalysis
+   proves the needed artanh derivative, concavity and squared bound.
+   NormalizedChannel proves the actual finite composition inverse preserves
+   [-1,1]. VariableChannel and ChannelSemantics identify dense-network
+   output and energy with that composition. TentSchedule, TentRadii and
+   PaperSchedule prove the explicit depth budget. PaperMemorizer handles
+   arbitrary sample order and nonmultiple cloning widths. No inverse,
+   network simulation, energy estimate or global bound is an assumption.
+
+   The proof uses a tent-ratio estimate k+8 rather than the proof's k+7;
+   a sharper initial energy bound pays for this. The final stated K, M,
+   T and depth range are unchanged.
+
+2. source/memorization.tex, displayed product-bound.
+   energyBudget_product proves ((K+1)/L)^L <= exp(17)*T^(3/2)
+   for L>=3 and T>=1. energyBudget_output_lipschitz proves the
+   corresponding Euclidean output Lipschitz constant
+     Lambda=exp(17/2)/sqrt(d)*T^(3/4).
+   It includes the augmented constant input coordinate correctly: output
+   differences use only the actual d input coordinates.
+
+3. source/posterior.tex, lem:strong-ceiling.
+   posterior_lipschitz_ceiling_tendsto_zero applies to the actual Gaussian
+   posterior, any exact witness with the stated energy budget, and any
+   positive fitting tolerance. It builds on the already proved energy-tail
+   conclusion and proves that the posterior mass of outputs failing the
+   literal Lambda bound tends to zero as sigma decreases to zero.
+
+4. paper.tex, cor:exact and the quantitative part inherited by cor:smooth.
+   memorizerWidth_two identifies the literal M_n. sampleResource is the
+   literal T_n=4*M_n*n. separated_minimizer_paper_ceiling proves every
+   minimum-energy exact interpolant is Lambda_n-Lipschitz.
+   fixed_full_exact_event and smooth_full_exact_event combine that bound
+   with the existing one-half error and confidence failure conclusions,
+   on one measurable sample event of probability at least 49/50, for all
+   N>=M_n. fixed_full_exact_and_iterated and smooth_full_exact_and_iterated
+   also establish existence of actual iterated posterior limits and the
+   same conclusions for every such limit, supported on exact minimizers.
+   full_exact_individual_error specializes to each minimizing network;
+   full_exact_confidence_two_thirds records the paper's 2/3 threshold.
+   The proved confidence conclusion already holds at the stronger 1/2
+   threshold. Sample size, teacher, distribution, training/test tolerances,
+   width and probability quantifiers are those of the original theorems.
+
+Remaining continuous-depth gap:
+source/posterior.tex, lem:finite-ceiling, including the explicit width
+threshold and its polynomial bound. Existing alternative proofs establish
+the finite-power lower-bound conclusions, but not this quantitative
+approximation statement. It remains explicitly open. Other-paper gaps
+remain in coverage-extension-2026-10-30.txt. No paper or abstract is edited.
+
+Verification: verification/coverage-paper-exact-2026-11-10/.
+Root build: 5403 jobs. Seven gates passed. 17444 proved project declarations
+and 933 extension endpoints audited, including all 113 new named theorems.
+Only propext, Classical.choice and Quot.sound occur transitively. All 631
+checked paper/source files match parent 15e92f5a byte for byte.
