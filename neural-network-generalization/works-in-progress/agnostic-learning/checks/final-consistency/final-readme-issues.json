@@ -1,0 +1,506 @@
+[
+ {
+  "severity": "major",
+  "file": "/workspace/ai-works/neural-network-generalization/README.md",
+  "location": "Earlier treatments and works in progress table, agnostic-learning row (line 147)",
+  "quote": "At depth at least three, conditioning tightly on each training output, as the clean-label likelihood scaling and hard tube conditioning do, memorizes label noise at large learner width: on the noisy Boolean cube with about $2^d$ samples the test error exceeds the zero network's by about $0.48$.",
+  "description": "This attributes noise memorization and the 0.48 excess to hard tube conditioning. Note A §0.1 says that TUBE_rho does not fail by memorizing noise. On the fair noisy cube TUBE has no 0.48 excess: with rho<=1 the tube is empty, and under the fallback convention (U2) the output is the Bayes-optimal zero function; with rho>1 the strong-prior posterior collapses to zero (A Table 6.1). TUBE's failure is shown on non-centred labels (excess eta_0^2), at every depth L>=2, every width and every tolerance, already at a fixed input dimension (Props 6.6 and 6.6a). The second-round scope referee raised the same point (verification/A-scope.md, N1), and the agnostic README's own intro item 1 states it correctly. Also, 0.48 is a lower bound (beta(1)-o(1)), shown with d=log2 n.",
+  "suggested_fix": "At depth at least three, the clean-label likelihood scaling, and every likelihood variance $c\\sigma^2$ with $c$ up to about $n^{1-1/H}$, memorizes label noise at large learner width: on the noisy Boolean cube in dimension $d=\\log_2n$ with about $2^d$ samples the test error exceeds the zero network's by at least about $0.48$. Hard tube conditioning also fails, for a different reason: on labels that are not centred its tube is empty or centred at the labels' midrange, at every depth, width and tolerance, already in a fixed input dimension.",
+  "id": "R1"
+ },
+ {
+  "severity": "major",
+  "file": "/workspace/ai-works/neural-network-generalization/README.md",
+  "location": "Label-noise research, agnostic-learning paragraph (line 224)",
+  "quote": "At depth at least three, the clean-label likelihood scaling and hard tube conditioning fit the noise at large learner width and fail every polynomial sample bound that is uniform over input dimensions.",
+  "description": "Same misattribution as in the row. TUBE does not fit the noise, and its failure is not tied to depth >=3, to large width or to a growing dimension (A §0.1, Props 6.6–6.6a, A-scope N1).",
+  "suggested_fix": "At depth at least three, the clean-label likelihood scaling fits the noise at large learner width and fails every polynomial sample bound that is uniform over input dimensions. Hard tube conditioning fails for a different reason, at every depth, width and tolerance and already in a fixed input dimension: on labels that are not centred, its tube is empty or centred at the labels' midrange.",
+  "id": "R2"
+ },
+ {
+  "severity": "major",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "Introduction, item 7 (line 21)",
+  "quote": "At depth two, where memorization is expensive, close conditioning still fails the polynomial sample bound, but with an excess that is only polylogarithmically small (§8).",
+  "description": "depth-two.md Corollary 5.2 proves only a lower bound, gamma(lambda)(18dc+1)^{-2}(1-o(1)) for 0<c<=poly(d). This bound is a constant when c<=nu/log2 n, and beta(lambda)-o(1) when c log n->0. So for the closest conditioning the proved excess is a constant, not polylogarithmically small. At c=1 only the lower bound is polylogarithmically small; whether the excess itself tends to 0 is open (depth-two §0; README §8: 'the lower bound tends to 0, and the known upper bound does not'). The sentence presents an unproved upper bound as a result and contradicts the constant-excess regime.",
+  "suggested_fix": "At depth two, where memorization is expensive, close conditioning still fails the polynomial sample bound for every $c\\le\\mathrm{polylog}(n)$: the proved excess is at least of order $(dc+1)^{-2}$, a constant when $c\\le\\nu/\\log_2n$ but only polylogarithmically small at $c=1$, where whether the excess itself tends to $0$ is open (§8).",
+  "id": "R3"
+ },
+ {
+  "severity": "major",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "§9, 'What holds' (line 168)",
+  "quote": "The tempered learner of §4 competes with every depth-$L$ network of width $m$ and weight bound $B$, at every learner width, with a sample size polynomial in $d$, $m$, $B$, $1/\\varepsilon$ and $\\log(1/\\delta)$, and, for clipped predictions, the same holds at the repository's finite prior scale",
+  "description": "B Theorem 6.3 (theta<1/H) covers only clipped predictions. The posterior mean of z_w (the brief's BMA) and its clip are proved only for theta<1/L (B Theorem 6.4) and are open on [1/L,1/H) (B §0, 'Which posterior mean'; README §11 item 5). Only the finite-scale half of the sentence says 'for clipped predictions', and the bullet ends 'provided ... theta<1/H'. A reader therefore concludes that every predictor works for theta<1/H in the strong-prior limit. Also, 'every learner width' should be N>=m.",
+  "suggested_fix": "For clipped predictions, the tempered learner of §4 competes with every depth-$L$ network of width $m$ and weight bound $B$, at every learner width $N\\ge m$, with a sample size polynomial in $d$, $m$, $B$, $1/\\varepsilon$ and $\\log(1/\\delta)$, and the same holds at the repository's finite prior scale for $\\theta<\\theta_{L,\\gamma}$, which equals $1/H$ when $\\gamma\\ge2-1/H$ (§7). Unclipped predictions, including the posterior mean of $z_w$, are proved only for $\\theta<1/L$, in the strong-prior limit. End the bullet with: '... with $\\theta<1/H$ (clipped predictions)'.",
+  "id": "R4"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "Introduction, item 1 (line 15)",
+  "quote": "their test error exceeds that of the zero network by about $0.48$, a constant",
+  "description": "Theorem 4.4 and Corollary 4.5 give a lower bound, 1+beta(lambda)-o(1); near-minimizers can be worse than the memorizer (A Remark 4.8). In the same item, 'with energy of order $(dn)^{1/H}=o(n)$' drops the first-layer term d^2 log^2 d of Lemma 2.1.",
+  "suggested_fix": "their test error exceeds that of the zero network by at least about $0.48$ ($\\beta(1)-o(1)$), a constant; and write 'with energy of order $d^2\\log^2d+(dn)^{1/H}=o(n)$'.",
+  "id": "R5"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "Introduction, item 2 (line 16)",
+  "quote": "In the conjecture's form: test loss is at most the least test loss over depth-$L$ networks whose width and weights are at most $n^{\\alpha}$, plus $\\tilde O(n^{-\\beta})$, for every $\\alpha<1/(4H)$ (§4).",
+  "description": "B Corollary 8.1 gives a decaying bound for every alpha<1/(4H) only when H>=2; at H=1 only for alpha<1/8. Its error term is O_L((d^2+sqrt(d log n)+sqrt(log 1/delta)) n^{-beta}), which carries a poly(d) factor, not just O~(n^{-beta}). verification/A-scope.md N5 flagged this, and A §5.4 notes the term is not uniform over d<=n^alpha when alpha>=1/(6H+4). The corollary also holds only at learner widths N>=n^alpha and for clipped predictions.",
+  "suggested_fix": "In the conjecture's form, for depth $L\\ge3$: at every learner width $N\\ge n^\\alpha$ the clipped test loss is at most the least test loss over depth-$L$ networks whose width and weights are at most $n^{\\alpha}$, plus $O_L\\bigl((d^2+\\sqrt{d\\log n}+\\sqrt{\\log(1/\\delta)})\\,n^{-\\beta}\\bigr)$, for every $\\alpha<1/(4H)$; at depth two the bound decays only for $\\alpha<1/8$ (§4).",
+  "id": "R6"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "Introduction, item 3 (line 17)",
+  "quote": "For $\\theta>1/H$ the learner memorizes again, so the critical tempering is $c\\approx n^{1-1/H}$, up to polylogarithmic factors.",
+  "description": "B Theorem 7.4 assumes H>=2. Its failure is on the noisy cube with d=log2 n, at widths N>=N_0(n)>n. Sharpness holds only in the worst case over laws; at depth two the picture is different (depth-two.md).",
+  "suggested_fix": "At depth $L\\ge3$ and for $\\theta>1/H$ the learner memorizes again (on the noisy cube with $d=\\log_2n$, at learner widths above a polynomial in $n$), so in the worst case over laws the critical tempering is $c\\approx n^{1-1/H}$, up to polylogarithmic factors.",
+  "id": "R7"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "Introduction, item 4 (line 18)",
+  "quote": "Against width-one competitors with weights up to $n^\\alpha$, some tempering works if and only if $\\alpha<1/(2H)$",
+  "description": "B Corollary 9.3 assumes H>=2 and defines 'works' for the clipped predictors, uniformly over laws and dimensions. It decides alpha<1/(2H) (some c(n) works) and alpha>1/(2H) (none works), not alpha=1/(2H), so 'if and only if' overclaims at the boundary. The item's heading, 'The competitors' weights must be bounded', also holds only for SP_c and for uniformity over laws; for a fixed law no weight bound is needed (B Remark 9.4).",
+  "suggested_fix": "For depth $L\\ge3$, clipped predictions and uniformity over laws: against width-one competitors with weights up to $n^\\alpha$, some tempering works if $\\alpha<1/(2H)$ and none works if $\\alpha>1/(2H)$",
+  "id": "R8"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "Introduction, item 5 (line 19)",
+  "quote": "With a hot clipped likelihood ($\\eta\\le1/8$) and the finite-scale prior $\\mu_{N,\\gamma}$, the progressive mixture of the posterior means (an average over sample prefixes) satisfies the oracle inequality",
+  "description": "Theorem C.2 needs gamma>=1; for gamma<1 the complexity term is N times a polynomial (Remark C.4.2). The posterior means are those of the clipped outputs. The item's later claim 'the excess is at least 1/2' is proved for the clipped predictors (Theorem C.5(c)).",
+  "suggested_fix": "With a hot clipped likelihood ($\\eta\\le1/8$) and the finite-scale prior $\\mu_{N,\\gamma}$, $\\gamma\\ge1$, the progressive mixture of the posterior means of the clipped outputs (an average over sample prefixes) satisfies the oracle inequality ...; later in the item: '... the excess of the clipped predictors is at least $1/2$ once ...'.",
+  "id": "R9"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "Introduction, item 6 (line 20); also §2 table, finite-scale row ('the $n^\\alpha$ classes are not treated')",
+  "quote": "Unclipped predictions and the conjecture's form of item 2 are not treated at finite scale (§7).",
+  "description": "E Remark 2.8 does discuss competitors of width and weights n^alpha: in its Case I the bound tends to 0 only for alpha<1/(8H), which is a limit of its proof. The accurate statement is that the conjecture's form is not proved at finite scale.",
+  "suggested_fix": "Unclipped predictions are not treated at finite scale, and the conjecture's form of item 2 is not proved there: E's Remark 2.8 notes that its bound reaches competitors of width and weights $n^\\alpha$ only for $\\alpha<1/(8H)$, a limit of its proof (§7).",
+  "id": "R10"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "Introduction, item 7 (line 21); also §3, 'Large learner widths only' (line 85: 'and at learner width $n^\\alpha$ with $\\alpha<1/4$ the same learner works (§8)')",
+  "quote": "Tight conditioning at learner width $n^\\alpha$, $\\alpha<1/4$, works",
+  "description": "small-learner-width.md proves this only for SP_1 (c=1) and for clipped predictions, with d<=n^alpha, against competitors of width and weights <=n^alpha (Corollary 3(i), Theorem 4), at one width tied to n. It is not (P_L). In §3 'the same learner' refers to SP_c with cK_mem=o(n), which is broader than what is proved.",
+  "suggested_fix": "At learner width $\\lceil n^\\alpha\\rceil$, $\\alpha<1/4$, and input dimension $d\\le n^\\alpha$, the clipped predictions of SP$_1$ are within $O(n^{2\\alpha-1/2})$ of the best network with width and weights at most $n^\\alpha$; make the same change in §3.",
+  "id": "R11"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "Introduction, item 7 (line 21)",
+  "quote": "Conditioning on a sup-norm tolerance above a known residual bound, or on the aggregate training error, also avoids memorization, at the price of an oracle hyperparameter.",
+  "description": "The sup-norm version (red-team Proposition 4.1) assumes |y-g(x)|<=rho_0 almost surely, which excludes binary noisy labels. It bounds the risk by rho^2+eps, not by L_D(g)+eps, so it is not an oracle inequality; §8 says so, the introduction does not.",
+  "suggested_fix": "Append: '; the sup-norm version assumes $|y-g(x)|\\le\\rho_0$ almost surely and bounds the risk by $\\rho^2+\\varepsilon$, not by $L_D(g)+\\varepsilon$.'",
+  "id": "R12"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "Paragraph after the introduction list (line 23)",
+  "quote": "To compete with the best small network, the learner must condition *less* on each training output, by a factor that grows polynomially with $n$",
+  "description": "Necessity is shown only within SP_c at depth >=3 and large learner width, for guarantees uniform over input dimensions (B §1, Theorem 7.4). §8 shows that SP_1 at small width and conditioning on the aggregate training error also compete.",
+  "suggested_fix": "Within SP$_c$ at depth $L\\ge3$ and large learner width, a guarantee uniform over input dimensions requires conditioning *less* on each training output, by a factor that grows polynomially with $n$",
+  "id": "R13"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "Quoted conjecture (line 9)",
+  "quote": "The loss is squared error, and the Bayesian learner should condition to be close to the given outputs on the training inputs.",
+  "description": "The user's statement (brief §1) also says 'We may pick whichever version of Bayesian learning is best'. The README's reading depends on this clause (§3: 'The conjecture lets us choose the Bayesian learner'), but the quote omits it.",
+  "suggested_fix": "The loss is squared error, and the Bayesian learner should condition to be close to the given outputs on the training inputs. We may pick whichever version of Bayesian learning is best.",
+  "id": "R14"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "§2 table, row 1 (line 55); also §8, first sentence ('The failure of §3 concerns SP$_c$ with $c\\ll n^{1-1/H}$ at large learner widths')",
+  "quote": "| SP$_c$, depth $L\\ge3$, $c=1$ or $c\\ll n^{1-1/H}$ |",
+  "description": "A Theorem 4.4 and Corollary 4.5 need c(d^2 log^2(d+1)+(dn)^{1/H})=o(n), that is, c=o(n^{1-1/H} d^{-1/H}). B §7.5 certifies failure only below c≍n^{1-1/H}(log n)^{-2/H}; the window up to n^{1-1/H}(log n)^{2/H} is open. For example, c=n^{1-1/H}/log log n satisfies c<<n^{1-1/H} but is not covered.",
+  "suggested_fix": "| SP$_c$, depth $L\\ge3$, $c=1$ or $c=o(n^{1-1/H}d^{-1/H})$ (that is, $c\\ll n^{1-1/H}$ up to a polylogarithmic factor) |, and use the same range in §8.",
+  "id": "R15"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "§2 table, TUBE row (line 56)",
+  "quote": "| TUBE$_\\rho$ (hard tolerance), any tolerance schedule | close |",
+  "description": "For rho>1, TUBE conditions loosely and does not fail by fitting noise (A §5.4; verification/A-scope.md N1). README §3 itself says 'tight or loose'.",
+  "suggested_fix": "| TUBE$_\\rho$ (hard tolerance), any tolerance schedule | close ($\\rho\\le1$) or loose ($\\rho>1$) |",
+  "id": "R16"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "§2 table, weight-bound row (line 59)",
+  "quote": "| SP$_c$ against competitors with width and weights $\\le n^\\alpha$ | tempered | **holds** for $\\alpha<1/(4H)$; no $c(n)$ works for $\\alpha>L/(2H(2L-1))$ |",
+  "description": "Corollary 9.3 assumes H>=2, and at H=1 Corollary 8.1 decays only for alpha<1/8. Both concern clipped predictions. The negative half also uses a two-point law in dimension 1 at every learner width (Corollary 9.3, Case 2). That contradicts the table preamble, 'All failures are shown on laws that change with $n$, with input dimension growing like $\\log_2n$ and learner widths above a polynomial in $n$, unless the table says otherwise.'",
+  "suggested_fix": "| SP$_c$, $H\\ge2$, against competitors with width and weights $\\le n^\\alpha$ | tempered | **holds** for clipped predictions when $\\alpha<1/(4H)$; no $c(n)$ works for $\\alpha>L/(2H(2L-1))$ (noisy cube with $d=\\log_2n$ at widths above a polynomial in $n$, or a two-point law in dimension $1$ at every width) |",
+  "id": "R17"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "§2 table, FIX row (line 60)",
+  "quote": "**holds** in expectation, and for a variant with probability $1-\\delta$, when $n\\gtrsim A_LN^\\gamma/(\\eta\\varepsilon)$",
+  "description": "Theorem C.2 needs gamma>=1, while the same cell's failure is stated for every gamma>0. Theorem C.6 holds with probability 1-2delta.",
+  "suggested_fix": "**holds** for $\\gamma\\ge1$ in expectation, and for a variant with probability $1-2\\delta$, when $n\\gtrsim A_LN^\\gamma/(\\eta\\varepsilon)$",
+  "id": "R18"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "§3, Theorem A citation (line 69)",
+  "quote": "**Theorem A** ([A, Theorem 4.4 and Proposition 5.1](research-notes/A-tight-conditioning-fails.md)).",
+  "description": "The asymptotic statement (n/2^d->lambda, probability 1-e^{-2^{d/2}}, every width above a polynomial in n) is Corollary 4.5. The widths O(n log^4 n) come from Corollary 4.5a.",
+  "suggested_fix": "**Theorem A** ([A, Theorem 4.4, Corollaries 4.5 and 4.5a, and Proposition 5.1](research-notes/A-tight-conditioning-fails.md)).",
+  "id": "R19"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "§3, 'Why this refutes (P_L)' (line 79)",
+  "quote": "So no polynomial sample bound holds, for every reading of \"the $\\sigma\\to0$ learner\".",
+  "description": "The progressive-mixture predictor is not covered (A §5.1 and §10 item 7; README §11 item 8 lists it as open). A's first-round referees flagged this same phrase as broader than what is proved (A-first-version-logic.md issue 2; A-first-version-scope.md S5).",
+  "suggested_fix": "So no polynomial sample bound holds for a Gibbs draw, the Gibbs risk, the posterior means (clipped or not) or any near-minimizer, hence the MAP estimate and every $\\sigma\\to0$ weak limit ([A, Proposition 5.1 and Remark 5.1a]); the progressive-mixture predictor is not covered.",
+  "id": "R20"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "§3, 'Why this refutes (P_L)' (line 79)",
+  "quote": "and it decays like $1/\\lambda$ for $n\\gg2^d$: it is a double-descent peak located at exponential sample size.",
+  "description": "A §5.3 item 1: the excess is Omega(1) only in the window n=Theta(2^d). For n=o(2^d), 'Nothing is claimed about the learner's performance'; its values at unseen atoms are not controlled. The upper bound O(2^d/n) (Proposition 5.2) needs n>>d 2^d and carries a factor 1/delta'. Calling it a 'peak' asserts a small excess on both sides, and the n<<2^d side is not proved.",
+  "suggested_fix": "The certified excess is $\\Omega(1)$ only in the window $n\\asymp2^d$; for $n\\gg d2^d$ it is $O(2^d/n)$ at every width (Proposition 5.2), and for $n=o(2^d)$ nothing is claimed.",
+  "id": "R21"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "§3, 'The input dimension must grow' (line 84)",
+  "quote": "the excess of near-minimizers with slack $t$ is at most $(8M/\\delta'+4ct)/n$ with $M=2^d$",
+  "description": "delta' is never defined in the README, and the probability of Proposition 5.2(c) is omitted.",
+  "suggested_fix": "with probability at least $1-\\delta'-Me^{-n/(8M)}$, where $M=2^d$ and $\\delta'\\in(0,1)$, every near-minimizer with slack $t$, at every width and depth, has excess at most $(8M/\\delta'+4ct)/n$",
+  "id": "R22"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "§3, 'Near-atomic inputs' (line 86)",
+  "quote": "the proof's Lipschitz transfer provably cannot reach them ([A, Proposition 7.4](research-notes/A-tight-conditioning-fails.md))",
+  "description": "A §0.1 and §10 say that Remark 7.5's reading of Proposition 7.4 'is an interpretation, not a theorem'; A-logic.md issue 11 flagged the same overclaim in A. Proposition 7.4 only bounds the test mass within the transfer radius.",
+  "suggested_fix": "Proposition 7.4 bounds the test mass within the proof's transfer radius by $K\\,2^{3.05d-(L/(2H))d^2}$ for density ratio $K$, which A reads (Remark 7.5, an interpretation rather than a theorem) as saying that the proof's Lipschitz transfer cannot reach them ([A, Proposition 7.4 and Remark 7.5](research-notes/A-tight-conditioning-fails.md))",
+  "id": "R23"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "§3, Variants (lines 90–91)",
+  "quote": "Sampling without replacement, at learner widths $N\\ge N_0$: the excess is at least $(n/2^d)(1-o(1))$, and at $n=2^d$ the test error tends to $2$ (Proposition 6.1).",
+  "description": "Sampling without replacement lies outside (P_L), which assumes i.i.d. data (A §0.2 item 6 and §6.2); the README presents these variants without saying so. A related sentence on line 91, 'Sampling without replacement with $\\rho$ below the noise amplitude makes every posterior draw interpolate the noise (Proposition 6.5).', omits the proposition's actual conclusion: excess at least (n/M)(b-rho)^2 at widths N>=N_0(d,n,rho/2).",
+  "suggested_fix": "Append '(this sampling scheme lies outside (P$_L$), which assumes i.i.d. data)'. In line 91, write: '... every posterior draw and the posterior mean have excess at least $(n/2^d)(b-\\rho)^2$ at widths $N\\ge N_0(d,n,\\rho/2)$, where $b$ is the noise amplitude (Proposition 6.5).'",
+  "id": "R24"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "§9 (line 169); also lines 150, 189, 201",
+  "quote": "(Claim A′ in §3)",
+  "description": "The README uses the label 'Claim A′' in four places, but §3 never names the continuous-input variant that way.",
+  "suggested_fix": "In §3 write '**Continuous inputs and deterministic labels (Claim A′, Theorem 7.2).**'",
+  "id": "R25"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "§4, Proof idea (line 106)",
+  "quote": "The repository's width-independent energy cover gives the same conclusion only for $\\theta<1/(4(L-1))$.",
+  "description": "At L=2 the cover route gives theta<1/2 (B Theorem 6.2 and §11). E-revision-check-3 corrected this same sentence in E.",
+  "suggested_fix": "The repository's width-independent energy cover gives the same conclusion only for $\\theta<1/(4(L-1))$ when $L\\ge3$, and for $\\theta<1/2$ at depth two ([B, Theorem 6.2]).",
+  "id": "R26"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "§4, 'The conjecture's form' (line 110)",
+  "quote": "the tempered learner's test loss is at most the least test loss over depth-$L$ networks with width and weights at most $n^\\alpha$",
+  "description": "Corollary 8.1 concerns only clipped predictions; the posterior mean of z_w is not part of it (B, paragraph after Corollary 8.1).",
+  "suggested_fix": "the clipped test loss of the tempered learner (every near-minimizer after clipping and, as $\\sigma\\to0$, the clipped Gibbs risk and the posterior mean of the clipped outputs) is at most the least test loss over depth-$L$ networks with width and weights at most $n^\\alpha$",
+  "id": "R27"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "§4, 'The constants are poor' (line 112)",
+  "quote": "At $L=3$, $d=10$, $m=B=1$, $\\varepsilon=0.1$, the proved bound needs about $10^{14}$ samples.",
+  "description": "The figure is computed at delta=0.05 and theta=1/4, and it depends strongly on theta (B, text after Theorem 6.3; B-computation.md M4). The closed-form n_0 is about 10^29.2.",
+  "suggested_fix": "At $L=3$, $d=10$, $m=B=1$, $\\varepsilon=0.1$, $\\delta=0.05$ and $\\theta=1/4$, the displayed bound first drops below $\\varepsilon$ at about $10^{14}$ samples (the closed-form $n_0$ is about $10^{29}$).",
+  "id": "R28"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "§5, first paragraph (line 116)",
+  "quote": "The Gaussian prior forces a bound on their weights as well, at a level tied to the tempering.",
+  "description": "The weight bound is shown to be needed only for SP_c and only for guarantees uniform over laws. For a fixed law no weight bound is needed, and other learners are not addressed (B §9, Remark 9.4).",
+  "suggested_fix": "For SP$_c$, a guarantee uniform over laws forces a bound on their weights as well, at a level tied to the tempering; for a fixed law no weight bound is needed (end of this section).",
+  "id": "R29"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "§5, 'A steep two-point law' (line 118)",
+  "quote": "A width-one network fits the law exactly, with weights about $(n/c)^{1/2}$ and energy at most $3.25(n/c+1)$.",
+  "description": "B Proposition 9.1(c) needs n/c>=2L, and its weight bound is at most 1.5(n/c+1)^{1/2}. The next sentence, 'So the learner's reach in competitor energy is about $n/c$', holds only in the worst case over laws: B §9 shows that some competitors of higher energy are matched, and energies between eps n^theta and 3.25(n^theta+1) are not decided.",
+  "suggested_fix": "When $n/c\\ge2L$, a width-one network fits the law exactly, with weights at most $1.5(n/c+1)^{1/2}$ and energy at most $3.25(n/c+1)$. So, in the worst case over laws, the learner's reach in competitor energy is about $n/c$ ...",
+  "id": "R30"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "§5, Corollary 9.3 paragraph (line 120)",
+  "quote": "call a choice of $c(n)$ *working* for a competitor class if the polynomial sample bound of §1 holds against it",
+  "description": "B Corollary 9.3 defines 'works' for the clipped predictors, and its positive half (alpha<1/(2H)) is proved only for them.",
+  "suggested_fix": "call a choice of $c(n)$ *working* for a competitor class if the polynomial sample bound of §1 holds against it for the clipped predictions",
+  "id": "R31"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "§6, Theorem C, first bullet (line 133)",
+  "quote": "satisfies $\\mathbb E_S L_D(\\bar f_n)\\le\\int L_D(\\operatorname{clip}z_w)\\,Q(dw)+\\mathrm{KL}(Q\\Vert\\mu)/(\\eta(n+1))$ for every $Q$.",
+  "description": "Theorem C.1 requires the comparison measure Q to be chosen independently of the sample (C §C.1.4 and Remark 1 after Theorem C.1).",
+  "suggested_fix": "... for every probability measure $Q$ that does not depend on the sample.",
+  "id": "R32"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "§6, third bullet and closing paragraph (lines 135, 137)",
+  "quote": "the posterior means $\\bar f_n$ and $\\hat f_n$ tend to $0$ uniformly on $X$",
+  "description": "The symbols \\hat f_n (line 135) and \\hat f_t (line 137) are never defined in the README.",
+  "suggested_fix": "In the first bullet, define the progressive mixture $\\bar f_n=\\frac1{n+1}\\sum_{t=0}^n\\hat f_t$, where $\\hat f_t=\\int\\operatorname{clip}z_w\\,d\\Pi_t$ is the posterior mean of the clipped outputs after $t$ samples.",
+  "id": "R33"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "§6, second bullet (line 134)",
+  "quote": "this gives the conjecture's \\\"$+o(1)$\\\" form in expectation",
+  "description": "These are stray backslash escapes around the quotation marks; every other quotation in the file uses plain double quotes.",
+  "suggested_fix": "this gives the conjecture's \"$+o(1)$\" form in expectation",
+  "id": "R34"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "§7, first paragraph (line 141)",
+  "quote": "The results of §§3–5 take the strong-prior limit $\\sigma\\to0$ after the sample and the learner width are fixed.",
+  "description": "The TUBE failure in §3 (A Proposition 6.6a) holds at every prior scale with no limit taken, as §3 itself says.",
+  "suggested_fix": "The results of §§3–5 on SP$_c$ take the strong-prior limit $\\sigma\\to0$ after the sample and the learner width are fixed (the TUBE failure of §3 holds at every prior scale).",
+  "id": "R35"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "§8, first paragraph (line 154)",
+  "quote": "and TUBE$_\\rho$ with a tolerance that does not depend on how well a small network fits.",
+  "description": "On the laws of Propositions 6.6 and 6.6a every competitor's sup-norm residual is rho_0>=1, so a tolerance matched to it still fails (A Remark 6.6b). A matched tolerance helps only on near-realizable laws.",
+  "suggested_fix": "and TUBE$_\\rho$, which fails at every tolerance on laws with non-centred $\\pm1$ labels, including tolerances matched to the competitor's sup-norm residual (A Remark 6.6b).",
+  "id": "R36"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "§8, 'Conditioning on the aggregate fit' (line 160)",
+  "quote": "When $\\tau$ exceeds the competitor's training error, which holds with probability at least $1-\\delta$ if $\\tau\\ge L_D(g)+(U+1)^2\\sqrt{\\ln(1/\\delta)/(2n)}$, then at every learner width $N\\ge m$",
+  "description": "red-team Remark 6.2(a) gives the bound only on G_delta ∩ {L̂_S(g)<tau}, where G_delta has probability >=1-delta. Remark 6.2(b) therefore holds with probability >=1-2delta, not whenever tau exceeds the training error.",
+  "suggested_fix": "With probability at least $1-2\\delta$, if $\\tau\\ge L_D(g)+(U+1)^2\\sqrt{\\ln(1/\\delta)/(2n)}$, then at every learner width $N\\ge m$",
+  "id": "R37"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "§8, 'Depth two' (line 162)",
+  "quote": "refereed in two rounds and re-refereed twice in its final form",
+  "description": "The verification index lists rounds 3 and 4 as reviews of a 'final candidate' and a 'final candidate after revision', followed by a 'check of the last revision'. The header of depth-two.md says the changes made after the second re-refereeing round (§0.6) were not refereed again, and some of its remarks are marked as not refereed.",
+  "suggested_fix": "refereed in two rounds and re-refereed twice as a final candidate; its last revision was checked but not refereed again",
+  "id": "R38"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "§9, 'What fails' (line 169)",
+  "quote": "A learner that fits each output tightly memorizes this residual and pays for it at test time.",
+  "description": "This is proved only on laws whose input dimension grows like log2 n and whose inputs are near-atomic at the learner's resolution, at depth >=3 and large learner width. Bounded-density laws are open, the cube family is consistent at fixed d, and SP_1 at small width works.",
+  "suggested_fix": "On the laws of §3 (input dimension growing like $\\log_2n$, inputs near-atomic at the learner's resolution), a learner of large width that fits each output tightly memorizes this residual and pays for it at test time.",
+  "id": "R39"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "§10, Interpolation (line 177)",
+  "quote": "Theorem A is a tempered-to-catastrophic overfitting result in the taxonomy of Mallinar et al. (NeurIPS 2022), at the scale $n\\asymp|X|$ where atoms repeat.",
+  "description": "literature.md G14(b) calls this 'a tempered profile along a joint scaling' (a bounded, non-vanishing excess). It also notes that the taxonomy concerns n->infinity at a fixed distribution, which Theorem A is not. No result here supports 'catastrophic'.",
+  "suggested_fix": "Along the joint scaling $n\\asymp|X|$, where atoms repeat, Theorem A gives a tempered profile (a bounded, non-vanishing excess) in the sense of Mallinar et al. (NeurIPS 2022), whose taxonomy concerns $n\\to\\infty$ at a fixed law.",
+  "id": "R40"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "§10, Tempered posteriors in classification (line 174)",
+  "quote": "and weights growing with the sample size, below $m/\\log m$, are agnostically consistent.",
+  "description": "m is undefined here, and elsewhere in the README m is the competitor's width. In literature.md B11, m is their sample size and the consistent window is 1<<lambda<<m/log m.",
+  "suggested_fix": "and weights $\\lambda$ with $1\\ll\\lambda\\ll m/\\log m$, where $m$ is their sample size (our $n$), are agnostically consistent.",
+  "id": "R41"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "§11, item 1 (line 184)",
+  "quote": "The proof's Lipschitz transfer provably cannot reach them ([A, Proposition 7.4 and §10](research-notes/A-tight-conditioning-fails.md)).",
+  "description": "A §10 itself says that Remark 7.5's reading of Proposition 7.4 is an interpretation, not a theorem.",
+  "suggested_fix": "Proposition 7.4, as interpreted in A's Remark 7.5 (an interpretation, not a theorem), shows that the proof's Lipschitz transfer cannot reach them ([A, Proposition 7.4, Remark 7.5 and §10](research-notes/A-tight-conditioning-fails.md)).",
+  "id": "R42"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "§12, research-notes paragraph (line 196)",
+  "quote": "Each has its own proofs, numerical checks and referee record.",
+  "description": "This is not true of problem-brief.md, nor of literature.md, which 'was not refereed as a whole'. red-team.md has a status table and a finalization record, not a referee record of its own.",
+  "suggested_fix": "Each proof note has its own proofs, numerical checks and referee record; the brief and the literature survey were not refereed, and red-team.md says which of its parts were (status table at its top).",
+  "id": "R43"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "§12, Checks (line 212)",
+  "quote": "the scripts and outputs cited by the notes (one folder per note) and by the referee reports (one folder per report, named after it)",
+  "description": "red-team.md and literature.md share the single folder red-team-and-literature/. The folders are named verify-<report> and revision-check-<note>-<k>, not after the reports. red-team-finalization-check-1.md used a script but has no folder.",
+  "suggested_fix": "the scripts and outputs cited by the notes (one folder per proof note; red-team.md and literature.md share `red-team-and-literature/`) and by the referee reports and checks (`verify-<report>` and `revision-check-<note>-<k>`; the script of the first red-team finalization check is not published)",
+  "id": "R44"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "§12, Working files (line 214)",
+  "quote": "**Working files** ([`working/`](working/README.md)): the orchestration scripts and path tools used to produce the notes. This folder stays on the working branch and is not published to `main`.",
+  "description": "working/ is not published to main, so this link will be broken on main. The working branch is also not named.",
+  "suggested_fix": "**Working files** (`working/`, on the working branch `<branch name>` only, so not linked here): the orchestration scripts and path tools used to produce the notes.",
+  "id": "R45"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/README.md",
+  "location": "Header, line 3",
+  "quote": "Each proof note was refereed by independent AI agents through separate lenses (logic, computation and scope)",
+  "description": "The verification index (red-team table) shows that small-learner-width.md was refereed through the logic and computation lenses only, with no scope review. verification/C-scope.md issue 14 already asked that this line match the record.",
+  "suggested_fix": "Each proof note was refereed by independent AI agents through separate lenses (logic and computation for every note; scope for A, B, C, E and depth-two.md, not for small-learner-width.md)",
+  "id": "R46"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/verification/README.md",
+  "location": "Proof notes table, E computation row (line 39)",
+  "quote": "| | | computation | minor fixes | 10 minor | [E-computation.md](E-computation.md) |",
+  "description": "E-computation.md lists two errors (E1, E2) and ten imprecisions (I-1 to I-10), 12 points in all, and E §9 answers all 12. The other counts in the index match their reports.",
+  "suggested_fix": "| | | computation | minor fixes | 12 minor (2 errors, 10 imprecisions) | [E-computation.md](E-computation.md) |",
+  "id": "R47"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/verification/README.md",
+  "location": "How the results were checked (line 17)",
+  "quote": "Section and result numbers are stable across revisions; revisions only added items.",
+  "description": "A's revision 1 moved the first version's §5.2 (Discussion) to §5.3 (A header).",
+  "suggested_fix": "Result numbers are stable across revisions and revisions only added items, except that A's revision 1 moved its §5.2 (Discussion) to §5.3.",
+  "id": "R48"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/verification/README.md",
+  "location": "Proof notes, gloss before the table (line 21)",
+  "quote": "Verdicts: *minor fixes* means no step of a proof was found wrong.",
+  "description": "B-logic.md has the verdict 'minor fixes' but reports 'genuine errors in side statements' (issue 1: Proposition 9.1(c) is false for theta>1/H). E-computation.md, also 'minor fixes', found a wrong justification inside the proof of Proposition 4.4 (E2).",
+  "suggested_fix": "Verdicts: *minor fixes* means that no theorem was found false; some reports with this verdict found false side statements (B-logic.md, issue 1) or a wrong justification of a correct bound (E-computation.md, E2).",
+  "id": "R49"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/verification/README.md",
+  "location": "How the results were checked (line 13)",
+  "quote": "Up to three revise-and-check rounds were run, and the lead editor resolved the points left by the last check.",
+  "description": "The Revision checks table shows that C and E each had a fourth check, after their scope reports.",
+  "suggested_fix": "Up to three revise-and-check rounds were run, and one more for C and E after their scope reports; the lead editor resolved the points left by the last check.",
+  "id": "R50"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/verification/README.md",
+  "location": "Paragraph after the proof-notes table (line 43)",
+  "quote": "The report on E found no error in E",
+  "description": "E-scope.md found E's theorems correct, but its issues 7 and 11 corrected misstatements in E's text: a requirement of the proof stated as a necessity, and the claim that the identity of Lemma 1.1(b) fails for non-Gaussian laws. E's header says the report 'raised five minor points'.",
+  "suggested_fix": "The report on E found no error in E's theorems and raised five minor points on E's text",
+  "id": "R51"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/verification/README.md",
+  "location": "How the results were checked (line 7)",
+  "quote": "Each research note in [`../research-notes/`](../research-notes/) was written by one AI agent from the [problem brief](../research-notes/problem-brief.md). Independent AI agents then refereed it, each through one lens:",
+  "description": "research-notes/ also contains the brief itself, literature.md (not refereed) and red-team.md (refereed only in parts). small-learner-width.md and depth-two.md are repairs of red-team sections, not notes written from the brief.",
+  "suggested_fix": "Each proof note (A, B, C, E, small-learner-width.md, depth-two.md) was written by an AI agent from the problem brief or as a repair of a red-team result, and independent AI agents then refereed it, each through one lens; the brief and the literature survey were not refereed, and red-team.md only in the parts listed below:",
+  "id": "R52"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/verification/README.md",
+  "location": "How the results were checked (line 15)",
+  "quote": "Those propositions were refereed separately, repaired where a referee found a substantive problem, and refereed again.",
+  "description": "Proposition 4.1 and Remark 6.2 were not refereed again. They were restated in their referees' corrected form and checked in the finalization checks; only Proposition 6.1 and §5 were repaired and refereed again.",
+  "suggested_fix": "Those propositions were refereed separately; the two that needed repair were refereed again as small-learner-width.md and depth-two.md, and the other two were restated in their referees' corrected form and checked in the finalization checks.",
+  "id": "R53"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/works-in-progress/agnostic-learning/verification/README.md",
+  "location": "How the results were checked (line 17)",
+  "quote": "The checks of a revision, and the last two referee rounds of the depth-two note, read intermediate texts that are not published",
+  "description": "The scope reports on C and E also read unpublished texts: the notes as they stood before the scope revision, and a README draft.",
+  "suggested_fix": "The checks of a revision, the last two referee rounds of the depth-two note, and the scope reports on C and E read intermediate texts that are not published",
+  "id": "R54"
+ },
+ {
+  "severity": "minor",
+  "file": "/workspace/ai-works/neural-network-generalization/README.md",
+  "location": "Earlier treatments and works in progress table, agnostic-learning row (line 147)",
+  "quote": "against competitors of bounded width and weights; $\\theta>1/H$ fails.",
+  "description": "The failure for theta>1/H needs H>=2 and holds only in the worst case over laws (noisy cube with d=log2 n, at large learner widths). The same row also opens with 'the strong-prior learner's squared test error', but the question concerns any Bayesian learner, and the note also treats the finite-scale and fixed-temperature learners.",
+  "suggested_fix": "against competitors of bounded width and weights; for $H\\ge2$, $\\theta>1/H$ fails on the noisy cube with $d=\\log_2n$ at large learner widths. Also write 'Asks whether, with nothing assumed about the labels, a Bayesian network learner's squared test error ...'.",
+  "id": "R55"
+ },
+ {
+  "severity": "minor",
+  "file": "works-in-progress/agnostic-learning/README.md (the main README of the folder)",
+  "location": "§8, paragraph 'Depth two'",
+  "quote": "refereed in two rounds and re-refereed twice in its final form",
+  "description": "This is the wording that verification/depth-two-revision-check.md point 4 called loose: the two re-refereeing rounds read two different intermediate texts (verification/README.md), and the last changes were not refereed again (depth-two.md header).",
+  "suggested_fix": "\"refereed in two rounds and re-refereed twice during finalization\"",
+  "id": "X-readme-X3"
+ }
+]

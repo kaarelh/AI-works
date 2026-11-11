@@ -1,0 +1,62 @@
+# Resolutions: final README check (final-readme-issues.json)
+
+*Published record: the editor's log of the final README edit pass. The issue ids refer to [`../checks/final-consistency/final-readme-issues.json`](../checks/final-consistency/final-readme-issues.json) and [`final-readme-check.md`](final-readme-check.md).*
+
+Files edited: `NNG/works-in-progress/agnostic-learning/README.md`, `NNG/works-in-progress/agnostic-learning/verification/README.md`, and in `NNG/README.md` only the agnostic-learning row and the agnostic-learning paragraph under "Label-noise research". No research note was edited by this pass. Every claim was checked against the cited note before writing. "Weakened" means the README now claims only what is proved (a missing hypothesis or scope added).
+
+- R1: fixed. NNG row: TUBE taken out of the memorization claim and given its own sentence (empty tube, or tube centred at the midrange rather than the mean; fails with non-centred labels at every depth, width and tolerance, fixed dimension; A §0.1, Props 6.6–6.6a); c up to about n^{1-1/H} added; "at least about 0.48" and "large d" (Thm 4.4/Cor 4.5 are lower bounds).
+- R2: fixed. Label-noise paragraph: same separation of TUBE as in R1.
+- R3: fixed. Intro item 7: states the proved lower bound (dc+1)^{-2} (depth-two Cor 5.2), constant for c=O(1/log n), polylogarithmically small at c=1, whether the excess tends to 0 open; wrote O(1/log n) instead of the undefined ν/log₂n.
+- R4: weakened. §9 "What holds" restricted to clipped predictions at widths N≥m (B Thm 6.3); added that unclipped predictions, incl. the posterior mean of z_w, are proved only for θ<1/L in the strong-prior limit (B Thm 6.4, §0 "Which posterior mean").
+- R5: weakened. Intro item 1: "by at least about 0.48" (A Remark 4.8); energy restored to d²log²d+(dn)^{1/H} (A Lemma 2.1); β(1) not named because β is defined only in §3.
+- R6: weakened. Intro item 2: depth L≥3, widths N≥n^α, clipped loss, error term O_L((d²+√(d log n)+√log(1/δ))n^{-β}), and α<1/8 at depth two (B Cor 8.1).
+- R7: weakened. Intro item 3: depth L≥3, noisy cube with d=log₂n, widths above a polynomial in n, worst case over laws (B Thm 7.4, §0 table).
+- R8: weakened. Intro item 4: L≥3, clipped predictions, uniformity over laws; "if α<1/(2H)" and "none if α>1/(2H)" instead of "iff" (B Cor 9.3); added "For a fixed law no weight bound is needed" for the heading's scope (B Remark 9.4).
+- R9: weakened. Intro item 5: γ≥1 (C Thm C.2; Remark C.4.2 for γ<1), posterior means of the clipped outputs, and the 1/2 bound stated for the clipped predictors (C Thm C.5(c)); "tends to 1" kept for all predictors (C.5(e)).
+- R10: fixed. Intro item 6 and §2 finite-scale row: "not treated" changed to "not proved"; intro cites E Remark 2.8 (its Case I bound, H≥2 and γ≥2, reaches the n^α classes only for α<1/(8H)); table "where" column now lists Remark 2.8.
+- R11: weakened. Intro item 7 and §3 "Large learner widths only": c=1, clipped predictions, width ⌈n^α⌉, d≤n^α, competitors of width and weights ≤n^α, excess O(n^{2α-1/2}) (small-learner-width Cor 3(i), Thm 4); intro says "clean-label learner (c=1)" since SP_1 is defined only in §1; §3 "Nothing is proved" became "No failure is proved".
+- R12: weakened. Intro item 7: the sup-norm version assumes |y−g(x)|≤ρ₀ a.s. and bounds the risk by ρ²+ε, not L_D(g)+ε (red-team Prop 4.1(b) and its limits).
+- R13: weakened. Paragraph after the list: necessity stated for the Gaussian-likelihood learners of items 1–3 at L≥3, large width, uniformity over input dimensions (B Cor 9.3 Case 1, Thm 7.4; A); sentence split ("SP_c" avoided as undefined in the intro).
+- R14: fixed. Quote now ends with "We may pick whichever version of Bayesian learning is best." (brief §1).
+- R15: weakened. §2 row 1 and §8 first sentence: c=o(n^{1-1/H}d^{-1/H}) (A Cor 4.5, (4.4)); the suggested paraphrase in parentheses dropped.
+- R16: fixed. §2 TUBE row: "close (ρ≤1) or loose (ρ>1)" (A §0.1, §5.4).
+- R17: weakened. §2 weight-bound row: H≥2, clipped predictions, and the negative half's laws (noisy cube, or a two-point law in dimension 1 at every learner width; B Cor 9.3 Cases 1–2).
+- R18: fixed. §2 FIX row: "for γ≥1" and probability 1−2δ (C Thms C.2, C.6).
+- R19: fixed. Theorem A citation now Theorem 4.4, Corollaries 4.5 and 4.5a, and Proposition 5.1.
+- R20: weakened. §3: lists the readings refuted (Gibbs draw, Gibbs risk, posterior means, near-minimizers, hence MAP and weak limits; A Prop 5.1, Remark 5.1a) and says the progressive mixture is not covered.
+- R21: weakened. §3: "double-descent peak" and "decays like 1/λ" replaced by: Ω(1) proved only for n≍2^d; O(2^d/n) for n≫d2^d (A Prop 5.2); nothing claimed for n=o(2^d) (A §5.3 item 1).
+- R22: fixed. §3: probability 1−δ'−Me^{-n/(8M)}, δ'∈(0,1), every width and depth (A Prop 5.2(c)).
+- R23: weakened. §3 "Near-atomic inputs": states the bound of Prop 7.4 and that Remark 7.5's reading is an interpretation, not a theorem (A §0.1, §10).
+- R24: fixed. §3 Variants: without-replacement sampling lies outside (P_L) (A §0.2 item 6, Table 6.1); Prop 6.5 now stated by its conclusion, excess ≥(n/2^d)(b−ρ)² at widths N≥N₀(d,n,ρ/2).
+- R25: fixed. §3 bullet now reads "(Claim A′, Theorem 7.2)".
+- R26: fixed. §4: cover route gives θ<1/(4(L−1)) for L≥3 and θ<1/2 at depth two (B §0 table, Thm 6.2).
+- R27: weakened. §4 "The conjecture's form": "clipped test loss (for the predictors of Theorem B)" (B Cor 8.1 and the paragraph after it); shorter than the suggested parenthesis.
+- R28: fixed. §4: δ=0.05, θ=1/4, "displayed bound first drops below ε at about 10^14", closed-form n₀ about 10^29 (B text after Thm 6.3).
+- R29: weakened. §5 opening: for SP_c and uniformity over laws; for a fixed law no weight bound is needed (B §9 Discussion, Remark 9.4).
+- R30: weakened. §5: n/c≥2L, weights ≤1.5(n/c+1)^{1/2}, and "in the worst case over laws" for the reach (B Prop 9.1(c), §9 Discussion).
+- R31: weakened. §5: "working" defined for the clipped predictions (B Cor 9.3).
+- R32: weakened. §6: Q a probability measure not depending on the sample (C Thm C.1(b), §C.1.4).
+- R33: fixed. §6 first bullet defines f̄_n=(1/(n+1))Σ f̂_t with f̂_t the posterior mean of the clipped outputs after t samples (C §C.1.3).
+- R34: fixed. Stray backslashes removed around "$+o(1)$".
+- R35: fixed. §7: "The results of §§3–5 on SP_c take the strong-prior limit ... (the TUBE failure of §3 holds at every prior scale)" (A Prop 6.6a).
+- R36: fixed. §8 opening: TUBE fails at every tolerance on non-centred ±1 laws, including tolerances matched to the competitor's sup-norm residual (A Remark 6.6b: every competitor has ρ₀≥1 there).
+- R37: fixed. §8 aggregate fit: "If τ≥L_D(g)+(U+1)²√(ln(1/δ)/(2n)), then with probability at least 1−2δ ..." (red-team Remark 6.2(b)).
+- R38: fixed. §8 depth two: "re-refereed twice during finalization; its last revision was checked but not refereed again" (depth-two header; verification table; depth-two-revision-check.md point 4). Same edit as X-readme-X3.
+- R39: weakened. §9 "What fails": "On the laws of §3, a learner of large width that fits each output tightly ..."; the laws' conditions are not repeated because the next bullet states them.
+- R40: weakened. §10 Interpolation: "catastrophic" removed; the taxonomy's fixed-law setting stated; claim reduced to "not benign" along n≍|X| (constant lower bound). The suggested "tempered profile (a bounded ... excess)" was not used: boundedness is shown only for clipped predictions; literature.md G14(b) supports the rest.
+- R41: fixed. §10: "weights λ with 1≪λ≪n/log n, for sample size n" (literature.md B11, their m is our n); avoids reusing m.
+- R42: weakened. §11 item 1: "Proposition 7.4, as interpreted in A's Remark 7.5 (an interpretation, not a theorem), shows ..." (A §10 item 3); citation adds Remark 7.5.
+- R43: fixed. §12: "Each proof note has its own proofs, numerical checks and referee record; the brief and the literature survey were not refereed, and red-team.md only in part (see its row)."
+- R44: fixed. §12 Checks: one folder per proof note, red-team.md and literature.md share red-team-and-literature/, one folder per report (examples verify-B-scope/, revision-check-B-1/), the first red-team finalization check's script not published (checked: every other report has a folder). The same exception added to the verification index's sentence on script folders.
+- R45: fixed. As the lead instructed, the link is kept and the sentence is true on both branches: "This folder is on the working branch `claude/nngen-agnostic-2026-11-11` only; it is not published to `main`."
+- R46: fixed. Header: "(logic and computation, and scope for every proof note except small-learner-width.md)".
+- R47: fixed. Verification index, E computation row: "12 minor (2 errors, 10 imprecisions)" (E-computation §5; E §9 answers all 12; other counts re-checked and correct).
+- R48: fixed. Verification index: "Section and result numbers are stable ..., except that A's revision 1 moved its §5.2 (Discussion) to §5.3" (heading diffs of every reviewed version against the final notes show no other move).
+- R49: fixed. Verification index gloss: "minor fixes means that no theorem was found false; some reports with this verdict found false side statements (B-logic.md, issue 1) or a wrong justification of a correct bound (E-computation.md, E2)".
+- R50: fixed. Verification index: "and one more for C and E after their scope reports".
+- R51: fixed. Verification index: "The report on E found E's theorems correct and raised five minor points on its text" (E header, E §9).
+- R52: fixed. Verification index: proof notes listed, written from the brief or as repairs of red-team results; the brief and the literature survey not refereed, red-team.md only in the listed parts.
+- R53: fixed. Verification index: the two repaired results were refereed again as small-learner-width.md and depth-two.md; Prop 4.1 and Remark 6.2 were restated in their referees' corrected form and checked in the finalization checks.
+- R54: fixed. Verification index: published versions are those the referees read, except the texts read by the C and E scope reports and by the last two depth-two rounds (C-scope read 694 lines; C now has 719); the README §12 "Verification" line now says the index lists which reviewed texts are not published.
+- R55: weakened. NNG row: "for H≥2, θ>1/H fails on the noisy cube with d=log₂n at large learner widths"; "a Bayesian network learner's squared test error" in place of "the strong-prior learner's".
+- X-readme-X3: fixed. Same edit as R38 ("re-refereed twice during finalization").
