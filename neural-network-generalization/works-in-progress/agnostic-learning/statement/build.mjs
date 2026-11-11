@@ -17,7 +17,7 @@ const render = (tex, displayMode) =>
   katex.renderToString(tex, { displayMode, throwOnError: true, strict: 'error', output: 'html' });
 
 let html = src.replace(/\\\[([\s\S]+?)\\\]/g, (_, tex) => render(tex.trim(), true));
-html = html.replace(/\\\(([\s\S]+?)\\\)/g, (_, tex) => render(tex.trim(), false));
+html = html.replace(/\\\(([\s\S]+?)\\\)/g, (_, tex) => `<span class="nw">${render(tex.trim(), false)}</span>`);
 
 const css = pathToFileURL(join(here, 'node_modules/katex/dist/katex.min.css')).href;
 html = html.replace('<!--KATEX-CSS-->', `<link rel="stylesheet" href="${css}">`);
