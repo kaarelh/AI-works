@@ -36,3 +36,15 @@ were preserved before taking this baseline. Those new papers are outside
 this sixteen-paper coverage task. The conditional package is unchanged;
 its earlier fresh-build evidence is linked in record.json. All 17
 changed or added Lean source files have recorded hashes.
+
+Note added 10 November 2026 (statement-fidelity audit by Claude Opus 5.5):
+BatchTwoAudit.txt keeps only the first line of each multi-line
+`#print axioms` message, so 86 of its lines stop at "[propext,". The other
+logs in this folder keep the continuation lines. All the truncated
+endpoints have complete lists (propext, Classical.choice, Quot.sound) in
+../batch-two-2026-10-23/final-source-check.log, for the proof versions of
+that date. For the current proofs, Audit.txt in this folder records that
+Audit.lean found only these three axioms for every project theorem in the
+imported library. The extension gate (CheckCoverageExtensions) does not
+name these endpoints. A re-run that keeps the continuation lines would make
+BatchTwoAudit.txt self-contained.

@@ -6,12 +6,12 @@
 
 Ordinary one-hidden-layer ReLU and softplus networks under the unchanged isotropic Gaussian strong prior can make superpolynomially many online mistakes on one fixed, nonrepeating input order, at every sufficiently large learner width.
 
-The mistake lower bound is **exp(Ω(√C))** in the displayed teacher width `C`. For every sufficiently large integer `k`, put `m = 6k+4` and `p = 8k+4`. The construction has
+The mistake lower bound is **exp(Ω(√C))** in the displayed teacher width `C`. For every sufficiently large integer `k`, put `m = 6k+4` and `ℓ = 8k+4` (the paper's `ℓ`, Lean's `pairDim`). The construction has
 
 - `d = Θ(m)` Boolean inputs and a bounded-fan-in Boolean circuit of size `O(d)`;
 - a same-depth ReLU teacher of width `C = Θ(m²)`, margin at least one, and weights bounded by that width;
 - `2^(k−1)` designated rounds at which the actual posterior probability of the correct label tends to zero;
-- an explicit sufficient learner-width threshold `N₀ = 2^(m+d+1)`, where `d = p(2R+4)` and `R = 2^1024`.
+- an explicit sufficient learner-width threshold `N₀ = 2^(m+d+1)`, where `d = ℓ(2R+4)` and `R = 2^1024`.
 
 For standard softplus, `φ(t) = log(1+exp(t))`, the same target and input order give the same square-root lower bound. The softplus teacher has comparable width and bounded coefficients. Its sufficient learner-width threshold is existential; the explicit `N₀` above is the ReLU threshold.
 

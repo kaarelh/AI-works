@@ -50,6 +50,8 @@ The bound is `exp(Ω(√C/log(C+2)))` designated mistakes for a displayed bounde
 
 The proof discharges the sharp global tanh parity inequality, affine support bounds, physical code localization, scalar cost ordering, calibration and finite-width realization, and the Gaussian posterior comparison. The analytic ingredients are proved, rather than supplied as hypotheses. All main endpoints use only `propext`, `Classical.choice`, and `Quot.sound`. The sufficient degree and width thresholds are existential. The [verification record](../works-in-progress/online-mistakes/isotropic-tanh-allwidth/verification/README.md) distinguishes main-theorem coverage from additional standalone appendix assertions.
 
+Some docstrings in the statement files are out of date. `OnlineLowerStatements.lean` and `OnlineLowerTanhConcreteStatement.lean` describe the tanh propositions as unproved targets. These files are hash-recorded in the tanh audit records, so they are left unchanged. `TanhConcreteMainStatement`, `TanhPathLogarithmicRailStatement` and `TanhSquareRootLogLossStatement` are proved by `tanh_concrete_main`, `tanh_path_logarithmic_rail_main` and `tanh_square_root_log_loss_lower_bound`. No declaration states the three earlier targets. `TanhSixthRootLogLossStatement` asserts a weaker rate, which follows immediately from `TanhSquareRootLogLossStatement`. `TanhEighthRootStatement` and `TanhLogarithmicRailStatement` fix different dimension exponents and are not derived. (Noted 10 November 2026.)
+
 ```sh
 lake build NeuralGeneralization.OnlineLowerTanhMain
 lake env lean CheckOnlineLowerTanh.lean
@@ -68,8 +70,12 @@ posterior probability is **strictly greater than 2/3**; equality counts as
 failure. The mean-field and subcritical statements use this criterion directly.
 The strong-prior and gamma > 1 statements bound posterior average error; their
 confidence versions, obtained by applying them at accuracy `epsilon/3`, are
-closed theorems in [CheckConfidence.lean](CheckConfidence.lean). Prediction is not
-defined by the sign of the posterior mean.
+closed theorems in [CheckConfidence.lean](CheckConfidence.lean). For the gamma > 1
+paper this formalizes the confidence remark after its Theorem 4.3. The strong-prior
+paper states no `>2/3` guarantee, so its confidence version is a Lean-side
+corollary. The file's comments describe both as manuscript statements, but the
+file is hash-recorded and is left unchanged. (Noted 10 November 2026.)
+Prediction is not defined by the sign of the posterior mean.
 
 The strong-prior result fixes width before taking the variance small. Its
 variance threshold may depend on width, but precedes the input law, sample

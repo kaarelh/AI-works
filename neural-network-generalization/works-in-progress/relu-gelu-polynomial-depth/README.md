@@ -25,7 +25,7 @@ The source and PDF have undergone independent AI-agent mathematical review. Thei
 
 To rebuild, run `./build.sh` from this directory.
 
-The [publication record](verification/publication-build.json) records isolated rebuilding and exact source/PDF hashes.
+The [publication record](verification/publication-build.json) records an isolated rebuild and exact source/PDF hashes for the 22 October snapshot. That snapshot predates the corrected manuscript, and the record's "no Lean verification" scope line predates the formalization. For the current files, use the collection's `SHA256SUMS`; for Lean status, see the section below.
 
 ## Lean verification
 

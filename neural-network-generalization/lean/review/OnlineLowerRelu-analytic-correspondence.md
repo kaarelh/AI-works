@@ -64,7 +64,7 @@ The square-mean stability proof does not divide by a coefficient, ray gain, norm
 
 Direct Lean 4.32 checks produced the corresponding `.olean` files for the final atom and stability modules. `CheckOnlineLowerReluAnalysis.lean` prints axioms for the analytic chain and the four full-rail endpoints. Every checked endpoint reports only Lean's standard `propext`, `Classical.choice`, and `Quot.sound`; there is no `sorryAx` or additional mathematical axiom.
 
-The audit output is recorded at `/workspace/nnbayes-improve-lean-2026-11-08/foundation-axiom-audit.log`.
+The audit output was recorded at `/workspace/nnbayes-improve-lean-2026-11-08/foundation-axiom-audit.log`, outside this repository, and was not copied here. The in-repository main-gate output [OnlineLowerRelu-axioms.txt](OnlineLowerRelu-axioms.txt) covers, transitively, the analytic lemmas that the main theorem uses. (Noted 10 November 2026.)
 
 ## Scope still composed elsewhere
 
