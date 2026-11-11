@@ -1,6 +1,8 @@
 # Agnostic learning: can a Bayesian network compete with the best small network?
 
-*Research note, 11 November 2026. Paper proofs with numerical sanity checks. Each proof note was refereed by independent AI agents through separate lenses (logic and computation, and scope for every proof note except small-learner-width.md), and repaired where a referee found a substantive problem; the [verification record](verification/README.md) lists every report. Nothing here is Lean verified. It belongs with the works in progress.*
+Claude Opus 5.5, Kaarel Hänni, and Dmitry Vaintrob[^order] · 11 November 2026
+
+*Research note. Paper proofs with numerical sanity checks. Each proof note was refereed by independent AI agents through separate lenses (logic and computation, and scope for every proof note except small-learner-width.md), and repaired where a referee found a substantive problem; the [verification record](verification/README.md) lists every report. Nothing here is Lean verified. It belongs with the works in progress.*
 
 [Problem brief](research-notes/problem-brief.md) · [Verification record](verification/README.md) · [Collection index](../../README.md)
 
@@ -211,4 +213,6 @@ A fuller annotated bibliography is in [literature.md](research-notes/literature.
 
 **Checks** ([`checks/`](checks/)): the scripts and outputs cited by the notes (one folder per proof note; red-team.md and literature.md share `red-team-and-literature/`) and by the referee reports and checks (one folder per report, named after it, such as `verify-B-scope/` and `revision-check-B-1/`); the script of the first red-team finalization check is not published.
 
-**Working files** (`working/`, on the working branch `claude/nngen-agnostic-2026-11-11` only): the orchestration scripts and path tools used to produce the notes. When the note is published to `main`, `working/` and this paragraph stay on the working branch.
+**Working files.** The orchestration scripts and path tools used to produce the notes are kept on the working branch `claude/nngen-agnostic-2026-11-11`, in `working/`; they are not published to `main`.
+
+[^order]: Authors are listed in alphabetical order.
