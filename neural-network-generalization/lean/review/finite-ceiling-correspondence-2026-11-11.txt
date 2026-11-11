@@ -1,0 +1,77 @@
+Literal finite-scale approximation ceiling correspondence
+11 November 2026
+
+Paper: works-in-progress/continuous-depth-lower-bound/source/posterior.tex,
+lem:finite-ceiling and its final polynomial-width assertion. The paper is
+unchanged. All names below are in NeuralGeneralization.BatchTwoContinuousDepthPaper.
+
+The paper's total depth L is r+2 in the existing Weights d N r convention.
+The endpoint assumes r>=1, hence exactly L>=3; d>=1, T>=1, zeta>0,
+0<beta<1, 0<h<rho, positive sigma and sigma^2<=N^(-(1+zeta)).
+The sample is an arbitrary finite sequence in the Euclidean unit ball.
+For every width J>=M it assumes an exact interpolant of energy at most
+K=2+(L+14)*T^(1/(L-1)), exactly as the lemma does. It extracts the witness
+at the learner's actual N. The preceding exact bounded-label memorizer
+already establishes this premise for the separated samples used by the paper.
+
+Definitions in FiniteGaussian and FiniteParameters:
+  firstNoiseSquared d = 2*(d+1)*log(2)+4*log(8),
+  internalNoiseSquared L = 16*log(9)+8*log(8*L),
+  noiseRadius d L = sqrt(max(firstNoiseSquared d,internalNoiseSquared L)),
+  approximationAmplification L K = ((K+2)/(L-1))^((L-1)/2),
+  approximationRadius L K h = min(1,1/(4*sqrt(L*(K+1))),
+                                     h/(sqrt(2)*L*A)),
+  approximationWidth d M L K h zeta beta =
+    ceil(max(M,2,(b/eta)^(2/zeta),2*log(2/beta))).
+These are the literal manuscript formulas, not larger substitutes.
+
+finite_scale_approximation_ceiling proves the claimed conclusion for the
+actual tolerance-conditioned Gaussian posterior. It produces a closed
+parameter event G of posterior mass at least 1-beta. For every w in G,
+there is an actual U at the same depth and width with energy <=K+1,
+Euclidean output Lipschitz constant <=exp(17/2)/sqrt(d)*T^(3/4), and
+|z_w(x)-z_U(x)|<=h for every x in the Euclidean unit ball. The representative
+residualRepresentative sigma w is explicitly constructed and continuous.
+Thus neither measurability nor existence of the approximating network is
+left as an assumption. The positive training-mass lower bound also proves
+that the posterior is a genuine probability measure.
+
+Proof coverage:
+- FiniteGaussian proves the exact 1/8 boundary and 1/(4L) internal block
+  tails, using the actual independent Gaussian marginals and quarter-nets.
+- FiniteBulkGeometry and FiniteBulkMass construct the actual closed convex
+  symmetric body and prove mass >=1/2.
+- FiniteNormalized proves normalizedOutput_eq_output for the existing model.
+  FiniteLayerNorms proves that the normalized layer squared norms sum to
+  the literal weighted energy after whitening.
+- FiniteTelescoping, FiniteStability and FinitePerturbation prove the L-term
+  product estimate and the displayed uniform perturbation formula. At eta
+  its numerator is <=K+2 and its output bound is <=h.
+- FiniteTrainingMass proves the exact shifted-body denominator
+  (1/2)*exp(-K/(2*sigma^2)).
+- FiniteConcentration, FiniteProjection and FiniteCeiling construct the
+  representative and prove the actual prior and posterior comparisons.
+  A tunable transport inequality already proved in the project replaces
+  the cited Gaussian isoperimetry argument. Choosing theta=1/(2*(K+1))
+  retains an additive energy gap. The small-noise margin implied by the
+  literal width threshold yields posterior bad mass <=2*exp(-N/2)<=beta.
+  No sharper isoperimetric assertion is assumed or claimed as proved.
+
+Polynomial width assertion:
+approximationAmplification_square proves the exact A^2<=exp(19)*T bound.
+approximationWidth_polynomial proves, with q=ceil(1/zeta),
+  width <= 3*c^q*S^(6*q),
+  c=216*(289+2*exp(19)),
+  S=d+M+L+T+1/h+log(1/beta)+2.
+The coefficient and degree depend only on zeta. This establishes the stated
+polynomial dependence in every listed resource without altering the width.
+
+Together with the exact memorizer/ceiling and smooth-density batches, this
+closes all currently identified continuous-depth gaps. It does not certify
+complete coverage of the other papers. No paper, abstract or theorem is edited.
+
+Verification: verification/coverage-finite-ceiling-2026-11-11/.
+Full root build: 5419 jobs. All seven gates passed. 17687 proved project
+declarations and 1045 extension endpoints audited, including 112 new named
+theorems. Only propext, Classical.choice and Quot.sound occur transitively.
+All 631 checked paper/source files are byte-identical to parent d90579ed.

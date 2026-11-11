@@ -18,10 +18,10 @@ Many networks (all n x seeds) are trained in parallel with vmap.  Results go to
 import os, sys, json, time, itertools, argparse
 import numpy as np
 import jax, jax.numpy as jnp
-from boolfuncs import make_suite, make_random_suite, make_poly_suite
+from boolfuncs import make_suite, make_random_suite, make_poly_suite, make_dl_heldout_suite, make_dl_heldout2_suite, make_dl_heldout3_suite, make_dl_symdev_suite, make_dl_heldout4_suite, make_dl_heldout5_suite, make_dl_heldout6_suite, make_dl_famdev_suite, make_dl_heldout7_suite
 
 D, N, B, N_TEST, BASE = int(os.environ.get("DIM", 30)), int(os.environ.get("WIDTH", 128)), 64, 4096, 64
-SUITE = {"random": make_random_suite, "poly": make_poly_suite}.get(os.environ.get("SUITE"), make_suite)(D)
+SUITE = {"random": make_random_suite, "poly": make_poly_suite, "dlheld": make_dl_heldout_suite, "dlheld2": make_dl_heldout2_suite, "dlheld3": make_dl_heldout3_suite, "dlsymdev": make_dl_symdev_suite, "dlheld4": make_dl_heldout4_suite, "dlheld5": make_dl_heldout5_suite, "dlheld6": make_dl_heldout6_suite, "dlfamdev": make_dl_famdev_suite, "dlheld7": make_dl_heldout7_suite}.get(os.environ.get("SUITE"), make_suite)(D)
 
 # ---------------------------------------------------------------- data
 
@@ -64,7 +64,11 @@ def forward(p, x):
     h2 = jax.nn.relu(h1 @ p["W2"].T + p["b2"])
     return h2 @ p["a"], h1, h2
 
+LOSS, WD = "sq", 0.0     # Part 8 reference variants (--loss logistic, --wd lam: decoupled weight decay, p -= lr mult lam p)
+
 def loss_fn(p, x, y):
+    if LOSS == "logistic":
+        return jnp.mean(jax.nn.softplus(-y * forward(p, x)[0]))
     return 0.5 * jnp.mean((forward(p, x)[0] - y) ** 2)
 
 MULT = {"adam": dict(W1=1.0, b1=1.0, W2=BASE / N, b2=BASE / N, a=BASE / N),
@@ -82,7 +86,7 @@ def make_step(opt, lr):
         m = {k: 0.9 * m[k] + 0.1 * g[k] for k in p}
         v = {k: 0.999 * v[k] + 0.001 * g[k] ** 2 for k in p}
         c1, c2 = 1 - 0.9 ** t, 1 - 0.999 ** t
-        p = {k: p[k] - lr * mult[k] * (m[k] / c1) / (jnp.sqrt(v[k] / c2) + 1e-8) for k in p}
+        p = {k: p[k] - lr * mult[k] * ((m[k] / c1) / (jnp.sqrt(v[k] / c2) + 1e-8) + WD * p[k]) for k in p}
         return (p, m, v, t)
     return step
 
@@ -125,7 +129,7 @@ def run_fixed(name, opt, lr, ns, seeds, steps_max, out_dir, save_params=True):
     Xte, yte = make_test(name)
     rel = SUITE[name]["relevant"]; sets = char_sets(rel)
     chi = jnp.array(char_matrix(Xte, sets))
-    irr = [i for i in range(D) if i not in rel][:5]
+    irr = [i for i in range(D) if i not in rel][:5] or [D - 1]   # no irrelevant input: the metric is then not meaningful
     Xflip = jnp.array(np.stack([Xte[:1024] * np.where(np.arange(D) == i, -1.0, 1.0).astype(np.float32) for i in irr]))
     # one network per (n, seed)
     net_n = jnp.array(np.repeat(ns, S)); net_s = jnp.array(np.tile(np.arange(S), len(ns)))
@@ -192,7 +196,7 @@ def run_online(name, opt, lr, seeds, steps_max, out_dir, chunk_steps=500):
     t0 = time.time()
     S = len(seeds); Xte, yte = make_test(name)
     rel = SUITE[name]["relevant"]; sets = char_sets(rel); chi = jnp.array(char_matrix(Xte, sets))
-    irr = [i for i in range(D) if i not in rel][:5]
+    irr = [i for i in range(D) if i not in rel][:5] or [D - 1]   # no irrelevant input: the metric is then not meaningful
     Xflip = jnp.array(np.stack([Xte[:1024] * np.where(np.arange(D) == i, -1.0, 1.0).astype(np.float32) for i in irr]))
     keys = jax.vmap(lambda i: jax.random.PRNGKey(i))(jnp.array([1000 * s + 7 for s in seeds]))
     p0 = jax.vmap(init_params)(keys); zeros = jax.tree_util.tree_map(jnp.zeros_like, p0)
@@ -243,7 +247,8 @@ if __name__ == "__main__":
     ap.add_argument("--ns", default="16,32,64,128,256,512,1024,2048,4096,8192,16384")
     ap.add_argument("--seeds", default="0,1,2"); ap.add_argument("--steps", type=int, default=20000)
     ap.add_argument("--out", default="results")
-    a = ap.parse_args()
+    ap.add_argument("--loss", default="sq"); ap.add_argument("--wd", type=float, default=0.0)
+    a = ap.parse_args(); LOSS, WD = a.loss, a.wd
     fns = list(SUITE) if a.fns == "all" else a.fns.split(",")
     seeds = [int(s) for s in a.seeds.split(",")]
     for fn in fns:
