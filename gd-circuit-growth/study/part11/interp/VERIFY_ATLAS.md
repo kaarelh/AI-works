@@ -1,0 +1,265 @@
+# Verification of ATLAS.md (Part 11, Q7: what DFG v1.3 alone learns)
+
+Independent verification of `part11/interp/ATLAS.md` and its tooling and outputs (`dfg_hooks.py`, `atlas_truth.py`, `atlas_run.py`, `atlas_make.py`, `identity_run.py`, `identity_dscale.py`, `cv_counterfactual.py`; `tables/*`, `results/atlas/`, `results/identity/`, `results/cv/`). Nothing in the analysis files was edited and nothing was committed. The same content is in `VERIFY_ATLAS.json`.
+
+## Verdict
+
+Mostly reproducible. The identity check (517 + 66 cells), the CV counterfactual (18/222, 89 of 140, 0.2257/0.2319/0.2256/0.2111), the background-removal counts (85/54/268), the 8-of-37 exact Fourier models at 16384, the 133/9/6 dictionary-readout split, the spurious-product and duplicate-block counts, the 141-of-255 comparison with Part 10, and the 15 equal n_struct all reproduce from the stored files. I also re-derived them through my own code: refits outside dfg_hooks, my own Walsh transforms and an independent oracle fit. atlas_truth's representations match boolfuncs.py and part9/heldout6/suite.py for every target I checked. The stored specs and categories equal the current code's output in all 407 cells. 22 of the 61 claims checked need correcting; grouped, the main ones are: (1) majxor's spectral pair is present at n = 512, which the tooling itself marks complete, contradicting 'never appear'. (2) The second-largest first-fit gap is thrint@256 (0.071). Removing the background does not close it (still 0.071), so 'the two largest gaps are the background's doing' is wrong. (3) thrint reaches error 0 at n = 512, not 1024, and not with weighted blocks. (4) majxor holds all 25 cross-pair characters from 2048, not 4096. parmaj keeps only one folded block from 1024. (5) cnf3's inner term reads the first clause's literals, not the third clause's. (6) Below the structure, 87 cells hold a true character, not 78. (7) The removal gap is 0.035, not 0.036. (8) In section 3, 45 of the 114 differing cells are against v3 out-of-fold fits (not 4), so 'mostly through the variant' overstates. majmaj5's n_struct is not 'after v3's run had stopped'. v3's member was not constant-only for the mod-3 targets at small n. (9) The header's 'cover every target family' contradicts section 4. (10) 'Every representation is verified' is overstated: the check is vacuous for the multiplexer address blocks, absent for the spectral pair, and never checks accept sets. (11) Two heuristics are contradicted by the data: staircases as 'characters only', and multiplexer 'modulated block per data bit' (mux11 only). (12) Character-group shares are unnormalised although section 0 defines group shares as normalised. (13) The short answer's 's ± 3 AND' for symand is in fact -3 and +2. (14) The time stamp for the last merged file is 23:30, not about 23:33. The report also omits a few things. The partner character does not come first for f7_09. The non-monotone lists leave out stair5@256, dlist8, f7_07/f7_09 and several error reversals. The oracle excludes the background: in 27 'dictionary' cells DFG's own error is more than 0.05 below the oracle's. n*_3 for rf06 uses 2 seeds. Part 10's corrections (heuristic mechanism labels, the modulated statistic, the band/interval double count) are not reintroduced.
+
+## Method
+
+- Read dfg13.py (docstring and fit/_fit/_block_search/SumBlock.key), harness.Permuted/evaluate/nstar, eval_dfg.py, PROTOCOL.md and the seven tooling scripts.
+- Recomputed every count from the stored files (results/atlas, results/identity, results/cv, part11/results merged files, part10/interp/results/toy_final/v3) with my own scripts, not atlas_make.
+- Independent refits through my own path (md5-checked dfg13, harness.train_data/test_data, Permuted's rng draw, DFG.fit or DFG._fit), single-threaded (OMP/OPENBLAS = 1), one process at a time: f7_08@1024, h5s7@8192, majxor@512, f7_11@128, par5@64, maj9@64, thrint@256, f7_03@256, mux6@128, mux6@256, andxor@64; non-chosen variants par4@32, majpar@64, mux6@128, rf06@16, par2@16, f7_02@256; the 10 forced fold fits of par4@32. Every error (and the FLOPs where compared) equals the stored and merged values. The stored terms, the category shares (mux6@256), and the oracle error and span R^2 (5 cells) reproduce.
+- Independent Walsh transforms of all 36 enumerable targets (the 8 exact Fourier models at 16384; Fourier counts 16/63/31/255/...).
+- Consistency: stored specs equal atlas_truth.spec() (37/37); stored categories equal atlas_run.classify() (407/407 cells); atlas_family.json equals a fresh in-memory atlas_make.family_counts(); symmetry classes equal Part 10's.
+- Part 10 corrections (VERIFICATION.json) checked for reintroduction: mechanism labels are kept as heuristics; no n_detect or modulated-statistic claims (deferred in section 4); no by-kind counts (no band/interval double count); f7_05's 0.3245 is to 4 decimals; spurious-product counts cite the verifier's 15-16/13-14.
+
+## Claims
+
+Status: **confirmed** = the number, its denominator and the wording reproduce; **corrected** = the right number or wording is given; **unsupported** = cannot be supported from the files (none found).
+
+**1. [confirmed]** §0.1/Short answer: 517 seed-0 refits (47 targets, all 11 suites, every n) equal the merged evaluation files in test error and FLOPs bit for bit; also all 66 cells of the d = 15/60/120 sample.
+- Evidence: v_identity.py compares results/atlas/*.json and results/identity/*.json directly with part11/results/toy__dfg13-perm__<suite>.json (seed index 0): 517/517 err and 517/517 FLOPs equal; designed_d15/d60/d120 22/22 each. Per-suite counts and 'targets refitted (of)' in the table all match (47 of 138; 2 of 7/7/4). My own refit path (my_refit.py, not dfg_hooks) reproduces err and FLOPs exactly for f7_08@1024 and h5s7@8192, and err for 15 more cells.
+
+**2. [corrected]** §0.1: 'the last of the 11, random, landed at about 23:33 UTC'.
+- Evidence: toy__dfg13-perm__random.json mtime 23:30:33 UTC; commit 572c44a5 'DFG alone on random (all 11 toy suites done)' at 23:30:46. Tables were written at 23:58, after all 14 merged files.
+- Correction: about 23:30 UTC (immaterial to the result).
+
+**3. [confirmed]** Header: dfg13.py md5 69cabe5c50345cb24079198ed52b562f, run as DFG(readout='logit') inside harness.Permuted; seed 0, one training set per (target, n).
+- Evidence: md5sum of part10/hyb_portfolio3/dfg13.py; eval_dfg.make_learner; dfg_hooks.fit_toy_dfg reproduces TH.evaluate's train_data/test_data/rng/Permuted draw (my independent path gives identical fits).
+
+**4. [corrected]** Header: the 37 targets 'cover every target family of the 11 suites'.
+- Evidence: The 37 come from 9 suites (designed 7, dlheld 8, dlheld3 5, dlheld7 12, random 1, dlsymdev 1, dlheld4 1, dlheld5 1, dlheld6 1); none from dlheld2 or dlfamdev. §4 itself lists uncovered sub-families (h5t thresholds, h5s1/h5s4, the MAJ gate fd_08, two sums under XOR fd_06/h6_09, ...).
+- Correction: '37 targets from 9 of the 11 suites, covering the main families; §4 lists the sub-families with no atlas target'.
+
+**5. [confirmed]** §0: fit procedure (fresh md5-checked module, DFG._fit wrapped, 10 folds at n <= 64 else 5 per variant, final fit = predictor, asserts that the recorded model reproduces the prediction and saw X[:, pi]).
+- Evidence: Code of dfg_hooks.py and dfg13.DFG.fit; my independent refits through DFG.fit reproduce every checked cell.
+
+**6. [confirmed]** §0/§4: atlas_truth's representations derive from boolfuncs.py / part9/heldout6/suite.py (including the representations added after the first fits: folded pair, address blocks, clause/term blocks, f7_06, auxiliary symmetry classes).
+- Evidence: Checked against the definitions: mux6/mux11 pattern-to-data-bit mapping equals np.choose's index (x1 most significant); parmaj/majxor folded pair over the union, and (a+b)^2-(a-b)^2 = 4ab so sign(|tA+tB|^2-|tA-tB|^2) = sign(tA tB) (tA, tB odd); cnf3 clause signs; f7_02 DNF term blocks; f7_06 T1 = AND(-x1,x2,-x3,x4,-x5), T2 = AND(OR(-x6,x7),x8); dlist8 rules/default; thrint w; thr30 w = default_rng(4242).standard_normal(30); stair5/6; andxor; majmaj5; sym9/band11/symand; accept sets of all 12 f7 targets, h6_00 and h5s7 (mod-3/mod-4 sets recomputed by hand). v_spec.py: stored spec equals current atlas_truth.spec() for all 37; v_classify.py: stored categories equal current atlas_run.classify() in all 407 cells (0 differences); symmetry classes equal Part 10's stored classes for all 37.
+
+**7. [corrected]** §0: 'Every representation is verified on all 2^k assignments of the k relevant inputs'.
+- Evidence: Character PTFs and Fourier expansions are verified (sign(sum) = f, no zeros). Block representations are only checked by verify_blocks, which tests that f is a function of the block statistics, modulators and coupling inputs. It never checks the accept sets. For the multiplexer address-block representation it is vacuous: the 4 (8) address blocks on the same inputs, plus their modulators, determine every relevant input. The spectral-pair representation has no check (verified = None).
+- Correction: 'Character representations are verified on all 2^k inputs; block representations are checked only as "f is a function of the block statistics" (vacuous for the multiplexer address blocks; accept sets not checked); the spectral pair is not verified'.
+
+**8. [corrected]** §0: character-group shares as 'the square root of the sum of squared shares, exact for distinct characters, which are orthogonal'.
+- Evidence: Distinct characters are orthogonal in expectation, not on the 4096 test inputs (§4 itself calls S-lin an approximation). In the tables (atlas_make.model_line) these group values are not divided by the model output's sd, unlike the category shares and S-lin.
+- Correction: 'approximate (orthogonal in expectation); character-group values in the tables are absolute sds, not fractions of the output sd'.
+
+**9. [confirmed]** §4: the late-added representations were followed by recomputing the categories of every cell by refitting (identical fits).
+- Evidence: The content checks out: stored specs and categories equal what the current code produces (above). The order of the files' timestamps is consistent: every target with a late-added representation was written at or after 23:15. Whether every file was actually refitted cannot be told from the files, and it does not affect the results.
+
+**10. [confirmed]** §1.1/Short answer: parities are one character from the first fit (par2 16, par4/par5 64), share 0.98-1.00, size 2, nothing else; before it constant + background (default).
+- Evidence: Term shares 0.980-0.999 in all 31 such cells; size 2; earlier cells size 1, variant 0.
+
+**11. [confirmed]** §1.1: par2@16 forced (CV 7/0); par5 found at 64 by the final fit's degree-5 search; folds skip it; CV 21/21 at 64, 117/114 at 256.
+- Evidence: My refit of par5@64: round 0 accepts the 5-input character; in round 0 only the hi=True degree-5/6 search can propose degree 5 (K = 4, no current features); fold fits run with hi=False. Note: 21/64 = 0.33 is somewhat below chance, so 'at chance' is loose.
+
+**12. [confirmed]** §1.2: stair5 complete at 128 (forced, CV 47/4), stair6 at 256, each plus one extra character (chi[x1,x3,x5]; chi[x2,x4,x6]), no blocks, no spurious terms; at 16384 stair5 = its 16 Fourier characters (size 17), stair6 57 of 63 + two relevant blocks; stair6 loses its degree-6 prefix from 512 (error <= 0.0007).
+- Evidence: v_par_stair.py; v_fourier16k.py (independent Walsh transform: stair5 16, stair6 63 non-constant characters).
+
+**13. [corrected]** §1.2 Heuristic: 'staircases are learned as characters only'.
+- Evidence: stair5 has 3 relevant blocks at 256 (R 0.22) and 2 at 1024 and at 2048 (one spurious product at 1024). At 256 it also loses chi[x1..x5]. stair6 has relevant blocks at every n >= 512 (R share 0.21-0.29), including the two at 16384 that §1.2 itself reports.
+- Correction: 'mostly as characters; relevant blocks appear at stair5 n = 256-2048 and stair6 n >= 512'.
+
+**14. [confirmed]** §1.3: mux6@256 (forced, 0.002) 10 of 16 characters, blocks (x1+x2-x3), (x1+x2-x6), S-lin 0.16; mux11@512 4 of 8 modulated address blocks (e.g. chi[x5]*(-x1-x2+x3)), (x1+x2+x3+x11-3x4) R 0.43, '17 characters'; complete Fourier expansion only from 1024 / 4096 (sizes 17, 65).
+- Evidence: v_terms.py. Wording: '17 characters' means 17 of the 64 Fourier characters. The model holds 41 characters, including 19 irrelevant degree-1 characters from the linear block (S-lin 0.022).
+
+**15. [corrected]** §1.3 Heuristic: DFG 'first fits one with blocks (one modulated block per data bit, partial)'.
+- Evidence: True only for mux11 at n = 512, the only cell with modulated address blocks. mux6 never has one: its blocks are additive (x1+x2-x3), (x1+x2-x6) at 256 and a weighted (x1+x5-3*AND(-x3,-x2)) at 512.
+- Correction: 'mux11 first fits partial modulated address blocks (n = 512); mux6 goes through additive and weighted relevant blocks'.
+
+**16. [confirmed]** §1.4: in maj9, thrint, thr30, f7_01 the linear block enters at n = 64 with all 30 degree-1 characters; oracle <= 0.007; DFG error 0.17-0.20; 17-21 irrelevant characters with S-lin 0.45-0.56; maj9 block at 128 (error 0, S-lin 0.01); f7_01 block at 256 (error 0).
+- Evidence: v_maj.py (thr30's linear block in round 1; error 0.166 rounds to 0.17).
+
+**17. [corrected]** §1.4: 'the degree-1 representation is complete from n = 64'.
+- Evidence: It is complete at n = 64 in all four, but thrint's PTF is incomplete at 512 (6 of 9) and complete again from 1024.
+- Correction: 'complete at n = 64 (thrint loses it at 512)'.
+
+**18. [corrected]** §1.4: 'thrint ... reaches 0 at n = 1024 with weighted blocks (x2+...+x9 + 2x1) and (x2+x3-x4-...-x9 + 3x1) (R)'.
+- Evidence: thrint's error is 0 first at n = 512 (0.0000). At 512 the model has no weighted block: (x4+...+x9) x (x1+x2+x3) 0.27, chi[x3]*|-x2+x4+...+x9| 0.24, chi[x2]*|-x3+x4+...+x9| 0.22 and (x1+x2+x3) 0.10, all R. The +2x1 block is present from 1024, the +3x1 block from 4096.
+- Correction: 'thrint reaches 0 at n = 512 with a product of the {x4..x9} and {x1,x2,x3} blocks and two modulated folded blocks (all R); the weighted blocks (x2+...+x9 + 2x1) (from 1024) and (x2+x3-x4-...-x9 + 3x1) (from 4096) come later'.
+
+**19. [confirmed]** §1.4: thr30 at 16384 error 0.009, 59 characters, weighted block = a +-1 quantisation of w with its largest weight as inner literal.
+- Evidence: The block's 16 inputs all have sign(w_i) under one global sign; the inner term is -3*x3 with sign(w3), and x3 has the largest |w| (-3.29). It is one weighted block plus a product that contains it, not 'weighted blocks'.
+
+**20. [corrected]** §1.4: at 16384 the leading terms are the degree-1 characters (group share 0.72-0.85), the block (maj9 0.29, f7_01 0.29) and f7_01's spectral feature (0.28).
+- Evidence: Block 0.287/0.294 and quad 0.279 are confirmed. 0.72-0.85 is the unnormalised sqrt of the summed squared term shares (maj9 0.850, thrint 0.718, thr30 0.818, f7_01 0.738). As a fraction of the output sd, which is §0's definition of a group share, it is 0.75-0.93.
+- Correction: 'degree-1 group sd 0.72-0.85 (0.75-0.93 of the output sd)'.
+
+**21. [confirmed]** §1.5: majpar/majpar5 complete at the first fit (64 forced 0.067; 256, 0.011); at 16384 the same characters (0.40-0.55) plus one relevant weighted or product block.
+- Evidence: v_terms.py.
+
+**22. [confirmed]** §1.5: parmaj@128 (forced, 0) and majxor@256 (0.0005) are two folded blocks over the union, shares 0.56-0.77; parmaj's degree-1 characters <= 0.003; majxor's partly spurious spectral feature 0.09.
+- Evidence: Shares 0.773/0.686 and 0.643/0.556; the largest parmaj character is 0.003; majxor quad 0.093 with 0.73 of |u|^2 on the relevant inputs.
+
+**23. [corrected]** §1.5: 'parmaj has all 9 at 1024 (with its 6 degree-4 characters; 15 of its 16 Fourier characters at 16384), majxor all 25 at 4096'.
+- Evidence: parmaj: 9/9 at 1024, 15/16 Fourier characters at 1024 and at 16384 (confirmed). majxor: 25/25 already at 2048 (and 4096 onward).
+- Correction: 'majxor all 25 at 2048'.
+
+**24. [corrected]** §1.5: 'the folded blocks stay at shares ~0.2'.
+- Evidence: majxor keeps both folded blocks from 2048 (0.21-0.24). parmaj keeps only |x1+...+x6| (0.17) from n = 1024; its folded-pair representation is incomplete from 1024 on.
+- Correction: 'majxor keeps both folded blocks (~0.2); parmaj keeps only |tA+tB| (0.17)'.
+
+**25. [corrected]** §1.5: 'The product block and the spectral pair never appear (the spectral features of majxor at 256-1024 have only 0.73-0.84 of |u|^2 on its inputs)'.
+- Evidence: The product block never appears (confirmed). The spectral pair does appear: in my refit of majxor@512 two quad features have cos 0.943 with 1_A+1_B and 0.912 with 1_A-1_B. Their weights have opposite signs (+0.232, -0.176), i.e. the form sign((u+.x)^2-(u-.x)^2). Shares are 0.33/0.24, with 0.895/0.863 of |u|^2 on x1..x10. The tooling classifies both as T and marks the spectral-pair representation complete at 512 (atlas_cells.csv: 'quad pair'). Error is 0.0081 at 512.
+- Correction: 'The product block never appears; the spectral pair appears once, at majxor n = 512 (shares 0.33 and 0.24, 86-90% of |u|^2 on its inputs); at 256 and 1024 the spectral features carry 0.73-0.84 and count as spurious'.
+
+**26. [confirmed]** §1.5: majmaj5 never complete; first fit 512 (0.023) with chi[x7]*(x6+x8+x9+x10) R 0.40; 1024-16384 one or two 5-blocks at a time, union blocks, degree-1, 3, 5 characters; 0.0007 at 1024, 0 from 2048; 256 features at 16384 (cap).
+- Evidence: Detail: degree-7 characters are also present from 2048 on. Size 256 = max_feats including the constant.
+
+**27. [confirmed]** §1.5: andxor: two pair characters at 64 (forced, 0.092), folded |-x1-x2+x3+x4| at 128 (R, 0), full 3-character expansion (size 4) from 256.
+- Evidence: v_terms.py.
+
+**28. [corrected]** §1.6: cnf3@256 (forced, 0.004) has clause block (-x7+x8-x9) exactly, (-x4+x5+x6 - 3*AND(-x1,-x2)) (T~, 0.49) 'with the third clause's literals as inner term', and 10 of 21 clause characters.
+- Evidence: Everything reproduces except the description of the inner term. x1, x2 are literals of the first clause (x1|x2|x3). The third clause (x7|~x8|x9) is the exact block (-x7+x8-x9).
+- Correction: 'a second clause's block with two of the first clause's literals (negated) as inner term'.
+
+**29. [confirmed]** §1.6: f7_02@256 (forced, 0) has (-x1+x2+x4+x5) and 14 of 27 term characters; f7_06@128 (0.024) has (x6-x7+x8) R 0.50; dlist8 0.11 -> 0.049 at 128; f7_04 0.021 at 128 with 10 of 11; characters complete for cnf3 at 1024, f7_02 2048, f7_06's block+characters 2048, f7_04 4096; dlist8 7 of 8 at 16384; first-fit S share 0.09-0.36 (median 0.24), <= 0.10 at 16384.
+- Evidence: Selective framing: dlist8's PTF is complete at 64-128 and 512-8192 and lost at 256 (2 of 8) and at 16384. f7_06's block form is complete only because the T1 block is a factor of a relevant non-target product, (-x1+x2-x3+x4-x5) x (-x6+x7+2x8).
+
+**30. [confirmed]** §1.7: rf06 / hrf0: 31 non-constant Fourier characters each; classes x1+x2-x3+x4 and x1+x3-x6; fhat(x5) = -0.94, fhat(x4) = -0.81; first models one character; rf06@64 0.045 vs 0.032 for chi[x5] alone; hrf0@128 forced (-x1-x3-x4-x5+x6) R 0.35, 0; rf06 spurious modulated blocks 0.16-0.17 at 128-256; 16384: hrf0 exactly 31 (size 32), rf06 30 of 31 + spurious product 0.03.
+- Evidence: Own Walsh transform; v_terms.py. ('exact fits follow at 128-256' means hrf0 at 128 and rf06 at 256; rf06@128 still has error 0.027.)
+
+**31. [corrected]** §1.8: sym9 folded block alone at 128 (0.98, size 4, 0); spurious product 0.41 (256), 0.20 (16384); spectral feature R 0.50-0.81 at 512-2048; 'at 4096-16384 the block plus 36 degree-2 characters'.
+- Evidence: All confirmed except the last clause. The models also hold 1, 17 and 28 degree-4 characters at 4096, 8192 and 16384, and the spurious product at 8192-16384.
+- Correction: 'at 4096-16384 the block, its 36 degree-2 characters and up to 28 degree-4 characters (plus the spurious product at 8192-16384)'.
+
+**32. [confirmed]** §1.8: band11 constant to 512, folded block alone at 1024 (0.99, size 5), kept to 16384 (0.94, quad 0.12); f7_08 unfolded block at 512 (forced, CV 229/188, 0.012, 0.92) with contaminated copies, spurious products (S 0.20-0.26 at 512-1024, 0.01 at 16384), block twice; h5s7 constant to 1024, split form at 2048 (0.72, 0.0007), constant at 4096 (0.368), exact block twice at 8192-16384; n*_0 1705, n*_3 6186.
+- Evidence: v_terms.py. The h5s7@2048 factors (-x1-x2+x3+x5-x7+x8+x9-x10-x11-x13) x (x4-x6-x12) partition the class with its signs, each up to its own flip. n* recomputed with harness.nstar.
+
+**33. [confirmed]** §1.8/Short answer: f7_05 and h6_00 are constant + background at every n; error = minority rate (0.3245, 0.3430) from n = 2048; oracle of the empty dictionary 0.33-0.34.
+- Evidence: Size 1 in all 22 cells. Test-set minority rates computed directly are 0.324463 and 0.343018 (4-decimal rounding, so Part 10's 0.325 error is not reintroduced). Oracle 0.3286/0.3398.
+
+**34. [confirmed]** §1.9: 'The partner character comes first: chi[x13] (f7_07 from 128), chi[x11] (f7_03, f7_11 from 32), chi[x7] (symand at 64), chi[x6] (f7_10 from 32)'.
+- Evidence: True for the five targets listed. It does not hold for the other parity mixture, f7_09: its model at 128 is the constant only, and the partner chi[x11,x12] enters at 256 together with the modulated block. f7_00 has no partner. See omissions.
+
+**35. [confirmed]** §1.9: compact form complete at the first fit for f7_07 (256), f7_09 (256, forced, 0.72), f7_00 (256, forced, product 0.80), f7_03 (512); not for f7_10 (128), symand (256, weighted 0.83, 0.012), f7_11 (128).
+- Evidence: Matches rep_status. For the mux targets 'complete' only requires both branch blocks to appear as factors of some sum term (the spec gives them no modulator), not 'both blocks modulated by x11' as the §1.9 representation line says. f7_03@512's span R^2 is 1.0, so no wrong conclusion follows.
+
+**36. [confirmed]** §1.9: f7_11@128 error 0.016 'because branch 2, [|s2| <= 4], is wrong only where it is selected and |s2| = 6, 1.6% of inputs'.
+- Evidence: My refit: 63 of its 64 test errors are at x11 = +1 and |s2| = 6. There are 64 such test points (1/64 = 1.56%); one error lies elsewhere. 'only' is very nearly exact.
+
+**37. [corrected]** §1.9/Short answer: at 16384 weighted blocks with the partner as inner term in 5 of the 6 mixtures without a true weighted block ('s +-3 x13, s +-3 x11x12, s +-3 AND(-x7,-x8), s1 +-3 x11, s2 +-3 x11'); only f7_10 still complete; all 7 error 0; span R^2 1.0/1.0/1.0/1.0, 0.998, 0.96, 0.89; oracle 0.
+- Evidence: Confirmed: f7_07 (+-s - 3x13), f7_09 (s +- 3x11x12), f7_03 (-s1 + 3x11, i.e. s1 - 3x11, and s2 - 3x11), f7_11 (s2 +- 3x11); only f7_10 complete; R^2 and oracle values; all errors 0. symand's two blocks are s - 3*AND(-x7,-x8) and s + 2*AND(-x7,-x8), not +-3 (§1.9 has this right). The sixth target, f7_00, has no partner. Its weighted block (x1+x2-x3-x4 + 3*AND(-x5,x11)) takes two inputs of the other sum.
+- Correction: '... s - 3*AND(-x7,-x8) and s + 2*AND(-x7,-x8) ...'.
+
+**38. [confirmed]** §2.1/Short answer: of the 148 cells with error > 0.1, 133 have oracle > 0.1, 9 have oracle <= 0.02 (maj9, thrint, thr30, f7_01 at 64; thrint, thr30, f7_01 at 128; dlist8, f7_10 at 64), 6 in between (rf06, dlist8 at 32; hrf0, f7_11 at 32 and 64).
+- Evidence: v_limits.py. My own logistic fit on the test halves reproduces the stored oracle error and span R^2 exactly for maj9@64, thrint@256, f7_03@256, mux6@128 and andxor@64. Caveat: the oracle's features exclude the kernel background. In 27 of the 133 'dictionary' cells DFG's own error is more than 0.05 below the oracle error (e.g. maj9@32 0.283 vs 0.494).
+
+**39. [corrected]** §2.1/Short answer: first-fit error within 0.0005 of the oracle for the median target; 'the two largest gaps (andxor, majpar at 64) are caused by the kernel background'.
+- Evidence: The median gap is 0.00049 (= 2/4096) — confirmed. Ranking of gaps: andxor@64 0.092, thrint@256 0.071 (oracle 0), majpar@64 0.067, thr30@256 0.050, dlist8@128 0.047. Removing the background takes andxor and majpar to 0. thrint stays at 0.071, so its gap is the readout of a complete degree-1 dictionary, not the background.
+- Correction: 'the largest gaps are andxor@64 (0.092) and thrint@256 (0.071), then majpar@64 (0.067); andxor's and majpar's vanish without the background, thrint's is a readout gap'.
+
+**40. [confirmed]** §2.1: the model with only its target terms has error 0 for 15 of the 35 targets at the first fit.
+- Evidence: par2, par4, par5, stair5, stair6, maj9, f7_01, majpar, majpar5, parmaj, majxor, andxor, sym9, band11, f7_00.
+
+**41. [confirmed]** §2.2/Short answer: the linear block entered in 83 of 407 cells; S-lin 0.40-0.78 at n = 64 'in the 8 targets where it entered there' (f7_09 0.78, f7_10 0.58, f7_01 0.56, thrint 0.51, majmaj5 0.50, f7_04 0.48, maj9 0.45, dlist8 0.40; 15-24 characters); 0.08-0.25 at the first fit in 10 targets (f7_04 0.25, thrint 0.22, f7_06 0.21); at most 0.035 at 16384 (h5s7); maj9 0.45 -> 0.01.
+- Evidence: v_spur.py: all values reproduce. The linear block entered at 64 in 9 targets; the ninth, thr30, has no irrelevant input (S-lin 0). h5s7@16384 is one of 13 'linear_uncertain' cells, so 0.035 is an upper bound.
+
+**42. [confirmed]** §2.2/Short answer: spurious products of a true block and irrelevant inputs: 9 cells, 4 targets (sym9 256/2048/8192/16384, f7_01 256, f7_08 1024-4096, f7_10 8192), shares 0.07-0.41, error <= 0.0083; Part 10's verifier: 15-16 cells in 13-14 targets.
+- Evidence: tables/atlas_quirks.json and my own scan; Part 10 VERIFICATION.json C2 (verify-numbers 16 cells/14 targets; strict 15/13).
+
+**43. [confirmed]** §2.2: contaminated blocks at the first n of a block: f7_08@512 (S 0.20), symand@256 ((x1+...+x8-x30) 0.15), dlist8 128-256, f7_04 256-512.
+- Evidence: The listed cells are right (0.20 is f7_08's total S share). The list is incomplete: f7_06@128 has (x1+x3+x19+x23-x26) 0.26 and a modulated copy 0.14; f7_03@256 (x7+...+x10-x11+x13) 0.33; symand@128 |-x8+x11-x18-x24+x29| 0.19; rf06@128-256.
+
+**44. [corrected]** §2.2/Short answer: at the first fit the S share is <= 0.1 for 22 of 35 targets (median 0.01; dlist8 0.36, f7_06 0.28, f7_01 0.27); 'removing the spurious terms changes the test error by at most 0.036 (dlist8: 0.049 -> 0.085)'; at 16384 <= 0.1 for 36 of 37 (sym9 0.21), error unchanged.
+- Evidence: 22/35, median 0.0052, the three largest, 36/37 and the unchanged errors are confirmed. The largest change is dlist8 0.0493 -> 0.0847, i.e. 145/4096 = 0.0354.
+- Correction: 'by at most 0.035'.
+
+**45. [corrected]** Short answer: 'Spurious terms are rare once the target is fitted'.
+- Evidence: At the first fit 13 of 35 targets have an S share above 0.1 (up to 0.36). At 16384 it is 1 of 37.
+- Correction: 'rare at n = 16384 (1 of 37 targets above 0.1); at the first fit 13 of 35 targets are above 0.1'.
+
+**46. [confirmed]** §2.3/Short answer: CV keeps default in 204 of 222 cells, forced in 18 (n = 16: 1, 32: 4, 64: 2, 128: 5, 256: 5, 512: 1); 12 of 18 forced cells are first fits.
+- Evidence: v_cv.py on results/cv/forced_vs_default.json, cross-checked with the atlas cells (variant, cv_errs, chosen error).
+
+**47. [confirmed]** §2.3/Short answer: counterfactual: variants differ in 140 cells (37/36/26/23/11/7 by n), equal in 82; forced chosen better 7/equal 8/worse 3 (mean gain 0.076; par2@16 0 vs 0.487; majpar@64 0.067 vs 0.509; f7_02@256 0 vs 0.184); default chosen better 82/equal 74/worse 48; misses par4@32 0 vs 0.488, mux6@128 0.097 vs 0.366, rf06@16 0.032 vs 0.280, f7_00@128 0.256 vs 0.472, andxor@32 0.155 vs 0.365; the choice better in 89 of 140; means 0.2257 / 0.2319 / 0.2256 / 0.2111.
+- Evidence: Recomputed from the file. My own refits of the non-chosen variant give par4@32 forced 0, majpar@64 default 0.5085, mux6@128 forced 0.0974, rf06@16 forced 0.0322, par2@16 default 0.4871 and f7_02@256 default 0.1836. '0.226 equals always forced' is equal to 3 decimals (0.2257 vs 0.2256); 0.015 is 0.0146.
+
+**48. [confirmed]** §2.3: par4@32 'the forced character is right on all 32 rows but not in the 10-fold fits on 29 rows, CV errors 17/18'.
+- Evidence: Forced final fit: train error 0, test error 0. In my replication of the 10 forced fold fits (28-29 rows each), every fold forces a pair character, never the parity.
+
+**49. [corrected]** §2.3/Short answer: below the first complete n: 198 cells in 36 targets (6 never complete), 187 default / 11 forced, 108 constant alone, 29 with the linear block, '78 a true character', median error 0.31.
+- Evidence: All confirmed except the true-character count. atlas_below.csv and my own recount give 87 cells with a true character (59 without the linear block, 28 with it). No definition I tried gives 78.
+- Correction: '87 a true character'.
+
+**50. [confirmed]** §2.4: the background is added after the weights, so removing it equals DFG without it for the same variant; removal lowers the error in 85, raises it in 54, leaves 268 unchanged; it helps most at 16-32 (maj9, thrint, thr30, majmaj5, symand, f7_04, f7_10, rf06: 0.19-0.27; maj9@32 0.491 vs 0.283); it hurts at the mod-3 counts at 16-32 (h6_00@16 0.488 vs 0.343), rf06@32 (0.157 vs 0.032), andxor@32 (0.365 vs 0.245), f7_07@128 (0.302 vs 0.201), andxor/majpar@64 (0.092/0.067 vs 0).
+- Evidence: v_bg.py; dfg13._fit computes bg = X.T r / n after the readout, so the removal statement is exact. Exception to 'the mod-3 counts at 16-32': at f7_05@16 the background helps (0.517 with it, 0.676 without).
+
+**51. [confirmed]** §2.5: duplicate blocks in 5 cells (f7_08 1024/2048/4096, h5s7 8192/16384), equal shares 0.23-0.41; cause: SumBlock.key() keeps the input order.
+- Evidence: My refit of f7_08@1024 shows the two copies of (x1+...+x11) with learner orders (24,19,15,...) and (21,24,12,...); key() differs only in order. h5s7@8192: the copies are global sign flips of each other with different orders. dfg13.py: have_blk compares key(), which uses the unsorted S and normalises signs by the first input in that order.
+
+**52. [confirmed]** §2.5: non-monotone cells: h5s7 (2048 fitted, 4096 empty, 8192 again); stair6 loses a prefix at 512; f7_00 and f7_03 lose their compact form at large n at error 0.
+- Evidence: The listed items reproduce. The list is incomplete; see omissions.
+
+**53. [confirmed]** §3/Short answer: 255 common cells; identical DFG error in 141 (4/37, 10/37, 16/36, 20/36, 28/35, 20/27, 16/18, 12/14, all 15 at n >= 4096; 28 of 32 at 1024-2048).
+- Evidence: v_p10.py, read directly from part10/interp/results/toy_final/v3/*.json (err_dfg).
+
+**54. [confirmed]** §3: the 4 differing cells above 512 are h5s7@2048 (alone 0.0007, v3 out-of-fold on 1639 rows 0.369), h6_00@1024 and @2048 (out-of-fold), majmaj5@1024 (0.0007 vs 0.0046); mux11@512 alone 0 vs v3 out-of-fold 0.274.
+- Evidence: dfg_source and err_dfg in Part 10's files.
+
+**55. [confirmed]** §3/Short answer: at n <= 64 alone takes forced in 7 of 111 cells; of v3's 110, the stacker kept forced in 51 (alone 25, with default 26), only default in 23, neither in 36.
+- Evidence: Part 10 'weights' fields.
+
+**56. [confirmed]** §3: examples rf06@16 (v3 chi[x5] 0.032 vs 0.280), f7_11@16 (0.158 vs 0.301), andxor@32 (0.155 vs 0.365), f7_06@64 (0.043 vs 0.136), mux6@128 (0.097 vs 0.366); reverse f7_11@32 (0.126 vs 0.299), maj9@64 (0.171 vs 0.285); alone lower in 72 of the 114 differing cells.
+- Evidence: The numbers are right, with three qualifications. maj9@64's v3 value is an out-of-fold fit on 57 rows (no final DFG fit). The 'forced member's one or two characters' description does not fit f7_06@64 (chi[x8], a block (-x6+x7-x8) and a spurious chi[x14,x19,x24]) or mux6@128 (several characters and a block with an irrelevant input). Of the 114 differing cells, 45 are against out-of-fold fits; in the 69 with a final v3 member, alone is lower in 41.
+
+**57. [corrected]** §3/Short answer: 'At small n they differ mostly through the variant'; 'In these files the difference between DFG alone and v3's member is mostly which variant is kept at small n, and in 4 cells that v3 had no final DFG fit'.
+- Evidence: Of the 114 differing cells, 64 are cells where v3's summarised member was forced and alone's was default. In 45 the stacker gave DFG zero weight, so Part 10 summarised an out-of-fold fit: 36 at n <= 64, 6 at 128-512, 3 above 512. 5 have the same variant with a different fit. At n <= 64: 40 of 80 through the variant, 36 out-of-fold.
+- Correction: 'about half the small-n differences are the variant (v3 kept the forced member); most of the rest are cells where v3's stacker gave DFG no weight, so its summary is an out-of-fold fit (45 of the 114 differing cells, not 4)'.
+
+**58. [confirmed]** §3/Short answer: n_struct (Part 10's rule) is the same for all 15 targets where both have one (maj9, sym9, f7_10 128; f7_00, f7_01, f7_06, f7_07, f7_09, symand 256; thrint, f7_03, f7_08 512; band11 1024; f7_04 2048; h5s7 8192).
+- Evidence: v_p10b.py; the atlas's symmetry classes are identical to Part 10's stored classes.
+
+**59. [corrected]** §3: 'For 4 more, alone has it after v3's run had stopped (rf06 512, majmaj5 2048, cnf3 and hrf0 4096)'.
+- Evidence: True for rf06 (v3 to 256), cnf3 and hrf0 (v3 to 512). majmaj5's v3 run includes n = 2048 (err_dfg 0.0, the same as alone), and there v3's member lacks the {x6..x10} class. That is a real difference at equal error, not a stopped run.
+- Correction: 'For 3 more (rf06 512; cnf3, hrf0 4096) alone has it after v3's run had stopped; for majmaj5 alone has it at 2048, the last n of v3's run, where v3's member (same error 0) lacks one of the three classes'.
+
+**60. [corrected]** §3/Short answer: mod-3 failures 'the same: constant only'; '... from n = 2048 on, as Part 10 found for v3's member'.
+- Evidence: The minority-rate failure is the same. v3's member was not constant-only at every n. h6_00 held a character and a sum block at n = 256 and 512 and two characters at n <= 32 (out-of-fold at 64). f7_05 held 1-2 characters at 16-128 (out-of-fold fits). Part 10's verifier states 'constant + background at every n >= 1024 (fd_10 from 128, f7_05 from 256)'. fd_10 alone is constant + background at every n (confirmed).
+- Correction: 'Like v3's member at n >= 1024, DFG alone is constant + background; alone is constant at every n, v3's member was not at small n'.
+
+**61. [confirmed]** §4 caveats (seed 0; 37 of 138; dlheld2/dlfamdev only in the identity sample; late-added representations; 'complete' checks the dictionary; oracle and R^2 fitted on test inputs; identity compares errors and FLOPs only; thr30 not enumerated).
+- Evidence: Two additions. n*_3 for rf06 is a 2-seed mean (the random suite has seeds 0 and 1). In the list of missing sub-families, h6_10's inner term is a literal, not a parity or AND (thrsum's is a parity).
+
+## Omissions and selective reporting
+
+- Section 1.9 / heuristic: f7_09, the other parity mixture, contradicts 'the partner character comes first'. Its n = 128 model is the constant, and chi[x11,x12] enters together with chi[x11,x12]*s at 256.
+- Section 2.5 'non-monotone cells' is selective. stair5 loses chi[x1..x5] and its completeness at 256, regained at 512. dlist8's halfspace PTF is complete at 64-128 and 512-8192 but not at 256 (2 of 8) or 16384. f7_07 and f7_09 are complete only at 256 (section 1.9 covers this, section 2.5 does not). Test error rises with n in several cells: majxor 0.0005 (256) -> 0.0081 (512) -> 0.0037 (1024); f7_02 0 (256) -> 0.0129 (512); f7_06 0 (512) -> 0.0044 (1024); f7_07 0.0056 -> 0.0088 (512); f7_08 0.0059 -> 0.0083 (2048).
+- Section 2.1: the oracle's feature set excludes the kernel background. In 27 of the 133 'dictionary-limited' cells, DFG's own error is more than 0.05 below the oracle's (e.g. maj9@16/32, thr30@16/32, f7_10@16, rf06@16), because the background carries the signal there. The 'dictionary' label is about the learned features only.
+- Section 3: 45 of the 114 differing alone-vs-v3 cells compare against out-of-fold fits that v3's stacker gave zero weight. Neither the '72 of 114' summary nor the 'mostly the variant' reading separates them; with a final v3 member, alone is lower in 41 of 69.
+- Section 1.3 / heuristic: mux6 never holds a modulated address block. The 'one modulated block per data bit' encoding is seen only in mux11 at n = 512.
+- Section 1.9: for the multiplexers of two sums (f7_03, f7_11) and for symand, 'complete' checks only that the branch block(s) appear as factors of some sum term. It checks neither the selector modulation nor the gate characters that section 1.9's representation lines name.
+- Section 0: n*_3 for rf06 (random suite) averages 2 seeds, not 3.
+- Section 1.5: majmaj5's models from 2048 on also hold degree-7 characters (not only degrees 1, 3, 5). Section 1.8: sym9 at 8192-16384 holds 17-28 degree-4 characters next to its 36 degree-2 characters.
+- Section 2.2: the contaminated-block examples omit f7_06@128 (0.26 and 0.14), f7_03@256 (0.33), symand@128 (0.19) and rf06@128-256.
+
+## Scripts (scratchpad)
+
+- `/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/verify_atlas/va.py`
+- `/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/verify_atlas/v_identity.py`
+- `/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/verify_atlas/v_spec.py`
+- `/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/verify_atlas/v_classify.py`
+- `/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/verify_atlas/v_overview.py`
+- `/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/verify_atlas/v_terms.py`
+- `/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/verify_atlas/v_fourier16k.py`
+- `/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/verify_atlas/v_par_stair.py`
+- `/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/verify_atlas/v_maj.py`
+- `/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/verify_atlas/v_limits.py`
+- `/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/verify_atlas/v_spur.py`
+- `/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/verify_atlas/v_cv.py`
+- `/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/verify_atlas/v_below.py`
+- `/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/verify_atlas/v_bg.py`
+- `/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/verify_atlas/v_p10.py`
+- `/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/verify_atlas/v_p10b.py`
+- `/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/verify_atlas/v_p10c.py`
+- `/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/verify_atlas/v_defs.py`
+- `/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/verify_atlas/my_refit.py`
+- `/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/verify_atlas/run_refits1.py`
+- `/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/verify_atlas/run_refits2.py`
+- `/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/verify_atlas/run_refits3.py`
+- `/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/verify_atlas/run_oracle.py`
+- `/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/verify_atlas/run_par4cv.py`
+- `/tmp/claude-0/-home-user-AI-works/addd33f6-5c52-5bee-997e-3f98d4e90609/scratchpad/verify_atlas/run_shares.py`

@@ -1,0 +1,103 @@
+\section{Interpretability: further detail}\label{app:interp-detail}
+
+This appendix holds the detail behind \cref{sec:interp}: the forms of DFG's models (\cref{app:interp-forms}), the timing of the mixtures (\cref{app:interp-mixtures}), the late targets (\cref{app:interp-late}), the models below the discovery size and on the other suites, with the caveats (\cref{app:interp-below}), and on images the long edges, the bars used, the prototype pairs (\cref{app:interp-img-more}), the map examples (\cref{app:interp-maps-ex}) and the per-class comparison with v2 (\cref{app:interp-v2}). Where v1.3's additions act is in \cref{app:further-v2v3}.
+
+\subsection{What DFG's model looks like when it has the structure}\label{app:interp-forms}
+
+\paragraph{The forms} \status{Numerical}. The leading terms at each target's largest analysed $n$ take a few recurring forms.
+\begin{itemize}
+\item \emph{Pure symmetric targets.} One block on the class with its signs, folded ($|t|$) for an accept set symmetric under $t\to-t$ and unfolded otherwise. Examples: band11, $|x_1+\dots+x_{11}|$ with share 0.97; h6\_01, $(-x_1+x_2-x_3+x_4+x_5+x_6-x_7-x_8-x_9)$ with share 0.91. One exception: h5s6, with the asymmetric set $\{-9,-5,-1,1,5\}$, gets a folded block. In 11 of the 22 pure targets found, a spectral feature whose support contains the block's inputs (and 9--17 others) sits next to the block.
+\item \emph{Thresholds.} Degree-1 characters carry as much as the block. On f7\_01 the 13-input block has share 0.26, next to $\chi_{\{4\}}$ and $\chi_{\{1\}}$ at 0.19 each.
+\item \emph{A parity times a symmetric function.} The parity enters first as a character and then modulates a block: fd\_04 is $\chi_{\{7,8,9\}}\cdot|x_1+\dots+x_6|$, share 1.06.
+\item \emph{Gates and multiplexer selectors.} They enter as characters and, in v3, as the heavy inner literal of a weighted block: $(x_1-x_2-\dots-x_6+3x_{11})$ on h6\_07 (share 0.40, from $n=1024$), $(x_1+\dots+x_6+3x_{11})$ on f7\_03 (0.24).
+\item \emph{Two sums.} A product block over the joint cells, as on twosym ($|x_1+\dots+x_5|\times|x_6+\dots+x_{10}|$, share 0.72), or a block over the union with one side's signs flipped.
+\item \emph{A quirk.} In 15 cells (13 targets) the true block appears inside a product with a factor on two irrelevant inputs (shares 0.13--0.40), for example $|x_1+\dots+x_7|\times|x_{15}-x_{16}|$ on sym7 at $n=128$ (share 0.40). The test error there is at or near 0. The product test scores the whole joint partition, not its increment over the stronger factor, so a strong block carries any second factor through the test (confirmed in the code).
+\end{itemize}
+
+\paragraph{Weighted targets: is the inner term right?} \status{Numerical}. Six targets are weighted sums $u=s+a\tau$.
+\begin{itemize}
+\item \emph{h6\_10} $=[|s-3x_{13}|>1]$, $s=x_1+\dots+x_{12}$. At $n=256$ the weight is right and the relative sign wrong (\cref{app:further-v2v3}); the DFG error, 0.017, falls entirely in the four cells $(t,x_{13})=(\pm8,\mp1)$ and $(\pm10,\mp1)$, 68 of 4096 test points.
+\item \emph{f7\_10} $=[s+2x_6\le-1]$: a block modulated by $\chi_{\{6\}}$ at $n=128$, the exact $(x_1+\dots+x_5+2x_6)$ at 256.
+\item \emph{h5t0}: a product with $|x_8+x_9|$ at 256, the exact weighted block at 512.
+\item \emph{thrsum and h5t1} are fitted through a product with a factor on the parity's two inputs. In h5t1 the weight is 3 where the truth has 2.
+\item \emph{sumpar} has a degree-3 inner term, outside v1.3's class. Characters carry it: DFG error 0 at $n=256$, 0.013 at 512. Both classes are matched in one model only at 2048.
+\end{itemize}
+A product with $|x_j\pm x_l|$ represents every function of $(s,x_jx_l)$, so the product forms are exact representations, though not the weighted ones. The five targets other than sumpar are fitted to DFG error 0 at their largest analysed $n$.
+
+\subsection{The 29 mixtures}\label{app:interp-mixtures}
+
+\paragraph{Timing} \status{Numerical}. For targets with a parity, gate, selector or second block, the round-0 test on the true block is a cruder proxy for what DFG does.
+\begin{itemize}
+\item \emph{A corrected detection test.} The analysis script tested a modulated block on a residual that was neither centred nor fitted on the modulator, and so it counted the modulator character's own signal as block signal. DFG tests modulated blocks on a residual already fitted on $\chi_M$. A verifier recomputed the statistic that way. For pure parity mixtures nothing changes. For seven gate and multiplexer targets the detection point moves later: fd\_11 and h5s4 from 128 to 256, f7\_03 from 128 to 512, f7\_11 from 128 to 1024, h6\_07 from 256 to 512, and majsym and fd\_08, whose modulated statistic never passes, to the points where their plain block passes (512 and 2048).
+\item \emph{With the corrected points}, 39 of the 54 targets are detectable at $n=128$ (43 in the analysis file), and the median delay over the 49 found is 0 doublings (1 in the analysis file). Spearman's $\rho$ between delay and low-degree share is $-0.54$ over all 54 ($-0.44$ with the uncorrected points).
+\item \emph{Where the proxy fails.} fd\_08 is found at $n=1024$, before its plain block passes the round-0 test at 2048: in DFG's own run the gate's characters are fitted first. For the weighted targets detection uses the weighted block but $n_{\rm struct}$ the unit-weight class, so h5t1 counts as two doublings late only because of the definitions.
+\item \emph{Search orders.} For 8 of the 49 targets found, the search's spectral and degree-1 orders never reach the block on the plain residual: the 7 parity mixtures fd\_02, fd\_04, symxor, h5s1, h6\_06, f7\_09, symxpar, and the multiplexer h6\_07. On 22 targets the block is found before those orders list its inputs, presumably through greedy growth, local refinement or, at $n\le128$, the beam (not measured). The reach measure covers only the eigenvector and degree-1 orders.
+\end{itemize}
+
+\subsection{Late targets}\label{app:interp-late}
+
+\paragraph{The targets} \status{Numerical}. The pure targets found late ($n_{\rm struct}\ge1024$, two or more doublings after detection), and h5s1, are consistent with the same mechanism in weaker form. (h6\_08 and sumpar are also late, for representational reasons; sumpar's inner term is outside v1.3's class.) Each is one seed, so the coincidences below are suggestive, not established.
+\begin{itemize}
+\item \emph{band11} $=[|x_1+\dots+x_{11}|\in\{3,5\}]$ ($W_1=0$, $W_2=0.047$): detectable at 128, found at 1024, the first $n$ at which the top eigenvector order lists all 11 inputs among its first 16. At $n=512$ one sign flip drops the statistic from 5.4 to 0.61 of the threshold, and pairs inside $S$ are at noise level (0.27).
+\item \emph{h5s7}, an arbitrary set of a 13-input signed count ($W_1+W_2=0.015$): detectable at 128, found at 8192, when the eigenvector order covers 0.92 of $S$. At $n=2048$ the true block is 18.6 times the threshold, but only 12\% of candidates with three mixed errors pass.
+\item \emph{h5s1}, a signed 9-input count times the parity $x_{10}x_{11}$: 92\% of its variance is on the single degree-11 character $x_1\cdots x_{11}$. The plain block carries no signal. The modulated block passes from $n=128$, but DFG takes modulators only from characters already in its model, and $\chi_{\{10,11\}}$ has coefficient $-0.031$. So the bottleneck is detecting the modulator. It is found at $n=16384$ on seed 0 (whose own 10\% error point is at $n\approx14000$), and the 3-seed $\nstar$ is ``never''.
+\item \emph{h5s2, h5s3} (arbitrary sets; $W_1+W_2=0.007$ and $0.03$): found at 1024 and 2048.
+\end{itemize}
+
+\subsection{Below the discovery size, the other suites, and caveats}\label{app:interp-below}
+
+\paragraph{Below the discovery size} \status{Numerical}. 216 analysed cells of the 49 found targets lie below $n_{\rm struct}$.
+\begin{itemize}
+\item \emph{Contents.} The summarised model is the forced variant in 177 cells and the default in 39. The default variant is empty (constant and kernel background) in 26 of its 39 cells; the others hold characters of degree 1--5, true or spurious. The forced variant holds 1--2 forced characters of degree 1--4 (up to 7 from the subsampled high-degree search). They are spurious, outside the relevant inputs, in 152 of the 177 cells, and 87 cells also hold a true character such as a parity partner, a gate literal or a threshold's input. Partial blocks appear in 21 cells, 14 of them one doubling before $n_{\rm struct}$. In 83 of the 216 cells the summary is an out-of-fold fit, because the stacker gave DFG no weight.
+\item \emph{Error.} The DFG member's median test error is 0.41 below $n_{\rm struct}$ (the portfolio's 0.37) and 0 from $n_{\rm struct}$ on.
+\item \emph{Stacking weight.} The two DFG members' median share of the stacking weight is 0.21 below $n_{\rm struct}$ (mean 0.33) and 0.89 from $n_{\rm struct}$ on (mean 0.87). DFG has nonzero weight in 62\% of the cells below. By $\log_2(n/n_{\rm struct})$ the median share is 0.03 at $-3$, 0.21 at $-2$, 0.44 at $-1$, 0.87 at 0 and 0.92 at $+1$. Below $n_{\rm struct}$ the total weight is small (median 0.35, against 1.52 from $n_{\rm struct}$ on; all weights are 0 in 17 cells).
+\end{itemize}
+Weight shares multiply log-probabilities and are not contributions to the prediction. What they show is that the stacker's trust in DFG changes abruptly, within one or two doublings of $n_{\rm struct}$, and that below that point the DFG members get a modest share (median 0.21) of a total weight that is itself small (median 0.35, against 1.52), so their spurious characters have little absolute weight \status{Heuristic}.
+
+\paragraph{The other suites} \status{Numerical}. On the 70 targets of \code{designed}, \code{random} and \code{dlheld}--\code{dlheld3}, every model reaches test error $\le0.005$ at its largest analysed $n$. These runs, too, reproduce the evaluation's seed-0 errors at every cell (\cref{app:interp-workflow}), and their $n_{\rm struct}$ is seed 0. Parities are their own characters, and small juntas their full Fourier expansions. Majorities and symmetric targets get one block (maj9, maj15, maj21 and sym9 at $n_{\rm struct}=128$, sym8 at 64). Halfspaces with unequal weights are carried by degree-1 characters (thr10: 209 of them at $n=4096$). Formulas are carried mostly by characters of degree 1--4: the characters present in the model cover a per-suite median of 0.77--0.88 of the target's non-constant Fourier weight, and at least 90\% on 23 of the 67 targets with an exact Fourier table (presence only; coefficients not compared). 25 of the 70 models have a sum block among their three leading terms, 9 of them weighted. Outside the sum-structured suites the model is thus what Part 6's DFG learned, a sparse set of low-degree characters plus the linear block for halfspaces \cite{discretelearners2026}, with sum blocks where a target has a symmetric class of five or more inputs \status{Heuristic}.
+
+\paragraph{Caveats.}
+\begin{itemize}
+\item The summarised model depends on the stacker. When both DFG variants are kept, only the forced one is seen; when neither is kept, the summary is the last out-of-fold DFG fit, on fewer rows.
+\item Every structure measurement in \cref{sec:interp-toy} and here is seed 0; $\nstar$ values marked 3-seed are means over seeds 0--2. $n_{\rm struct}$, $n_{\rm detect}$ and the model contents can differ on other seeds.
+\item The symmetry classes are found from 4096 random inputs. Several controls have small classes, which is why controls are excluded from every summary of sum-structured targets.
+\item The structure runs store only the 10 leading terms per cell, while $n_{\rm struct}$ uses all terms; on 8 v3 cells the matching term is beyond the stored ten.
+\item The exact-structure match accepts a modulator $\chi_M$, which carries no signs, for a signed class. It changes no $n_{\rm struct}$ reported here.
+\end{itemize}
+
+\subsection{Images: long edges, the bars used, and the prototype pairs}\label{app:interp-img-more}
+
+\paragraph{Long edges in the pooling-set graphs} \status{Numerical}.
+\begin{itemize}
+\item \emph{Variants collapse when a few edges are long.} \code{qd_a}'s $k=9$ union graph is about as local as \code{qd_dev}'s (0.989 and 0.994 of the other members within two steps), but it has 10 edges longer than 5 steps, and its $R^2$ is 0.24 against 0.86. A verifier removed the edges longer than 5 steps (an oracle ablation that uses the true grid). $R^2$ then rose to 0.96--0.99 on every QuickDraw and MNIST graph, and to 0.95 on Fashion-MNIST's $k=9$ union graph.
+\item \emph{Not always.} MNIST's $k=4$ graph has 23 edges longer than 5 steps and still scores 0.92.
+\end{itemize}
+
+\paragraph{Which bars are used} \status{Numerical}.
+\begin{itemize}
+\item \emph{Straightness.} On QuickDraw the bars weighted by their gain are straighter than the average bar at $L=4$ (0.32 exact lines against 0.24 at \code{qd_dev}, $n=10000$), but not at $L=2$ (0.43 against 0.42). Straightness correlates with how often the bar's centre is inked ($+0.48$ for $L=4$), and the ink-frequency mix of the used bars alone predicts 0.30 of the 0.32. On MNIST a preference remains after that correction ($L=2$: 0.36 weighted, 0.20 for all bars, 0.27 predicted from ink frequency).
+\item \emph{Orientation.} On QuickDraw the gain splits over the four orientations as the bars do. On MNIST horizontal bars carry 0.40 of the bar gain at both lengths, against 0.27 and 0.26 of the bars. But several of MNIST's top bars lie in margins that are rarely inked; the top $L=2$ bar (4 pixels), centred at row 1, column 18, has pixels inked in 0--7.5\% of training images. So they look more like detectors of a digit's extent than of strokes.
+\end{itemize}
+These gain-weighted statistics rest on a few bars of one fit.
+
+\paragraph{\code{ggbt}'s prototype pairs} \status{Numerical}. The 300 pairs carry 0.38--0.41 of \code{ggbt}'s gain (0.30 on \code{qd_a}), and almost all are split on, but the top 10 carry 0.29 (\code{qd_dev}), 0.50 (Fashion-MNIST) and 0.36 (MNIST) of the pair gain. In several of the class pairs with the most gain one drawn pair carries most of it (grapes--soccer ball 0.85, motorbike--frying pan 0.85, shirt--sneaker 0.89, MNIST 0--1 0.90), but not in all (trouser--boot 0.59, MNIST 1--2 0.69). Per drawn pair, relative to the average pair, on Fashion-MNIST the most gain goes to contrasts of very different silhouettes (trouser--boot 5.8$\times$, shirt--sneaker 4.9$\times$), and similar classes get almost none (T-shirt--dress 0.01, sandal--boot 0.02, T-shirt--shirt 0.04). Elsewhere there is no such pattern: \code{qd_dev}'s top class pair is grapes--soccer ball (5.3$\times$), two round shapes and its third most confused pair. MNIST's pairs (1--2 4.0$\times$, 0--1 3.5$\times$) are from \code{ggbt}'s out-of-fold fit, which has stacker weight 0. Over class pairs, gain per pair correlates with \code{ggbt}'s own confusion between the two classes at $-0.59$ on Fashion-MNIST and at $-0.34$ to $+0.07$ elsewhere. Which class pairs win depends on which drawings happened to be drawn: on \code{qd_dev} the top one changes between $n=3000$ and 10000. \emph{Reading} \status{Heuristic}: a projection on $x_{\rm trouser}-x_{\rm boot}$ is a coarse template that separates two groups of silhouettes, which the trees refine with local features.
+
+\subsection{Images: examples from the evidence maps}\label{app:interp-maps-ex}
+
+\paragraph{Examples} (\cref{fig:interp-img-contrib}). The shares are \code{cgbt} / \code{ggbt}, as parts of the class's net evidence; the descriptions are \status{Heuristic}, and the regions were named after looking at the maps.
+\begin{itemize}
+\item \emph{MNIST.} 0: the hole carries 0.46 / 0.41 of the evidence, less than half, on 3\% of the image and 99\% on blank pixels. 1: strips beside the stroke (0.46 / 0.32), which \code{cgbt} draws as bars parallel to it. 7: a `/' band of blank pixels left of the stem (0.30 / 0.23). 3: the open left side (0.32 / 0.23). 4: the open top (0.28 / 0.25). 8: the central crossing, on ink (0.26 / 0.30).
+\item \emph{\code{qd_dev}.} Motorbike: the blank gap between the wheels at the bottom centre (0.20 / 0.16 on 2.6\% of the image, where the class's mean ink is 0.04 and the other classes' 0.28). Ocean: for \code{ggbt} the horizon line (0.40 on 11\% of the image). For \code{cgbt}, the horizon's ends (0.17) and a diagonal band of mostly blank pixels from the left edge to the bottom centre (0.26 on 8\% of the image, 84\% on blank pixels), where ocean has little ink (0.13, against 0.26 for the other nine classes) and soccer ball, campfire, grapes and washing machine have the most (0.37, 0.33, 0.30, 0.29). Campfire: the base of the fire, on ink (0.36 / 0.32). Soccer ball: \code{cgbt} follows the upper-left arc as a chain of diagonal bars (0.18 against 0.12). Foot: the blank middle (0.22 / 0.17).
+\item \emph{Fashion-MNIST} (not in the figure). Trouser: the gap between the legs (0.26 / 0.31). Boot: a blank strip left of the shaft (0.41 / 0.25; the class's mean ink there is 0.001, the others' 0.34). Sandal and sneaker: a blank upper-left region (0.39 / 0.30 and 0.36 / 0.26).
+\end{itemize}
+
+\subsection{Images: v3 against v2 by class}\label{app:interp-v2}
+
+\paragraph{v3 against v2 at \code{qd_dev}, $n=10000$: per class} \status{Numerical}. The two fits share a bit-identical \code{ggbt} (\cref{sec:interp-img-members}).
+\begin{itemize}
+\item \emph{Per class, v2 $\to$ v3.} Campfire 0.200 $\to$ 0.158, grapes 0.280 $\to$ 0.243, matches 0.269 $\to$ 0.247, motorbike 0.110 $\to$ 0.095, soccer ball 0.082 $\to$ 0.075, washing machine 0.060 $\to$ 0.055, paper clip 0.138 $\to$ 0.134, ocean 0.087 $\to$ 0.084, frying pan 0.121 $\to$ 0.119, foot 0.120 $\to$ 0.120.
+\item \emph{Where \code{cgbt} beats \code{ggbt}.} The largest gains are mostly on the classes where \code{cgbt} alone beats \code{ggbt} alone most: campfire (0.155 against 0.201), matches (0.254 against 0.288), grapes (0.229 against 0.262). But the match is not one for one. Frying pan has the fourth-largest \code{cgbt} advantage (0.026) and almost no gain (0.002), and the rank correlation over the ten classes is about 0.79. Foot is the only class where \code{cgbt} alone is worse (0.123 against 0.121). No measurement ties the per-class gains to particular bars.
+\item \emph{Other sets.} On Fashion-MNIST, v2's cell has 0.1259 and v3 0.1238, but the two runs' \code{ggbt} differ (162 against 242 rounds; out-of-fold 0.1321 against 0.1271), and \code{cgbt}'s weight share there is 0.10. So the difference cannot be attributed to \code{cgbt}. On \code{qd_a} v2's and v3's cells give 0.1509 and 0.1422, and \code{ggbt} stops at 206 rounds with the same out-of-fold error in both. On MNIST v2's image path gives 0.0299 (Part 9's evaluation) against v3's 0.0255 here.
+\item \emph{Cost.} \code{cgbt} takes 302 of the 530 CPU seconds of v3's evaluation fit at \code{qd_dev}, $n=10000$.
+\end{itemize}
+On Fashion-MNIST, where the bars are rarely lines and the evidence is mostly the silhouette's outline, the two boosters are about equal, and the stack gains nothing measurable from \code{cgbt} \status{Heuristic}.

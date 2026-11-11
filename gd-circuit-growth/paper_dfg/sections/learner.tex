@@ -1,0 +1,205 @@
+\section{What DFG is}\label{sec:learner}
+
+This section describes the paper's object: DFG v1.3 as frozen in \repo{study/part10/hyb_portfolio3/dfg13.py}, run alone as \code{DFG(readout="logit").fit} with every other constructor argument at its default (\cref{sec:part11}). Parameter values below are those defaults. \Cref{app:learner-full} gives every step with the frozen file's line numbers, and \cref{tab:params} lists the constants.
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{In one paragraph}\label{sec:oneline}
+
+DFG, \emph{discrete feature growth}, is one greedy loop over an explicit dictionary of Boolean features. Starting from the constant, each round fits the $\pm1$ labels by least squares on the features it has, takes the residual $r=y-\hat y$ and its root mean square $s$, enumerates Fourier characters $\chi_S(x)=\prod_{i\in S}x_i$ class by class, and searches for signed sums $\sum_{i\in S}s_ix_i$, whose value indicators are candidates too. A candidate is admitted only if its correlation with $r$ passes a union bound over its whole class, $s\sqrt{2\ln(4KN/\delta)/n}$ for a class of $N$ candidates, with $4K/\delta=160$. DFG refits and repeats until a round admits nothing or the fit has every training label's sign right, and predicts with the sign of the readout, refined by a few logistic Newton steps, plus one Hebbian step on the final residual, $g\cdot x$ with $g=X^\top r/n$. The fitted model is an explicit list of named features with real weights. For example, with seed 0, DFG's model of par4 $=x_1x_2x_3x_4$ at $n=64$ is the constant and $\chi_{\{1,2,3,4\}}$. Its model of sym9 $=[\,|x_1+\dots+x_9|\le1\,]$ at $n=128$ is the constant and one folded block (a block that uses $|t|$ in place of its signed sum $t$): three indicators of the value of $|x_1+\dots+x_9|$. Both have test error 0 (\repo{study/part11/interp/tables/atlas.md}; \cref{sec:interp}).
+
+It is one thing in a specific sense: one residual loop, one admission principle (a tail-bound threshold for each explicit class, computed with four statistics) and one linear readout. Around it sit a multi-start search for signed-sum blocks, a forced guess at $n\le512$ chosen by cross-validation, a logistic refinement and a Hebbian background. \Cref{fig:loop} gives the loop in outline; \cref{sec:ablations} shows which of the parts can be removed, and \cref{sec:core} runs, post hoc, a core without most of them.
+
+\begin{figure}[t]
+\centering
+\fbox{\begin{minipage}{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}\small
+\textbf{fit}$(X,y)$, with $n$ rows and $d$ inputs. If $n>512$, return \textbf{grow}$(X,y;\,\text{default},1)$. Otherwise run \textbf{grow} for both variants, default and forced, on each of $F$ cross-validation folds ($F=10$ at $n\le64$, else 5), with budget scale $1/(4F)$ each. Let $e_{10}$ ($e_{01}$) count the held-out points where only the default (only the forced) variant errs. Return \textbf{grow}$(X,y;\,\text{forced},\frac12)$ if $e_{10}-e_{01}>2\sqrt{e_{10}+e_{01}}$, else \textbf{grow}$(X,y;\,\text{default},\frac12)$.
+
+\smallskip
+\textbf{grow}$(X,y;\,\text{variant},\text{scale})$. Start with the features $\Phi=\{1\}$. In rounds $0,1,\dots,7$:
+\begin{enumerate}[leftmargin=2.2em,label=\arabic*.,itemsep=1pt,topsep=2pt]
+\item fit the weights $w$ by least squares on $\Phi$ (with a small ridge); $r=y-\Phi w$, $s=\mathrm{rms}(r)$;
+\item stop if 0.75 of the budget is spent, or, from round 1 on, if $\mathrm{sign}(\Phi w)=y$ on every training row;
+\item characters: in each class $\mathcal C$ (global, extension, local; \cref{tab:dictionary}), find the $\chi_S$ with $|\mathrm{mean}(r\chi_S)|>s\sqrt{2\ln(4K|\mathcal C|/\delta)/n}$;
+\item dense moves: the linear block (every remaining $x_i$, by one $\chi^2$ test), and spectral features $(u\cdot x)^2-1$ for the eigenvectors $u$ of the residual pair matrix above its noise edge;
+\item sum blocks: search for a signed subset $(S,s)$ on $r$; keep it if the projection of $r$ on its group indicators passes a $\chi^2$ test with a union bound over every $(S,s)$ of its size, both on $r$ and on $r$ projected off this round's characters; likewise modulated and weighted blocks and products (some products on the projected residual only);
+\item if nothing passed: stop (default variant), or add the best candidate anyway (forced variant, at most twice per fit);
+\item add what passed to $\Phi$: characters and block indicators only within the room $\min(256,\lfloor n/2\rfloor)-|\Phi|$, the linear block and spectral features without a room check.
+\end{enumerate}
+\textbf{Readout.} If $n\ge8|\Phi|$, refine $w$ by 15 Newton steps of logistic regression. Predict $\mathrm{sign}\bigl(\Phi(x)w+g\cdot x\bigr)$, with $g=X^\top r/n$ on the final residual.
+\end{minipage}}
+\caption{One call of DFG v1.3, in outline (\repo{study/part10/hyb_portfolio3/dfg13.py}: \code{DFG.fit}, lines 548--571; \code{DFG._fit}, lines 580--877). Here $K=4$ and $\delta=0.1$. \Cref{sec:round,sec:smalln} describe the steps and \cref{app:learner-full} gives every one exactly.}
+\label{fig:loop}
+\end{figure}
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{The hypothesis class}\label{sec:hypothesis}
+
+DFG predicts $\mathrm{sign}\,h(x)$, and $-1$ where $h(x)=0$, with
+\begin{equation}\label{eq:dfgclass}
+\begin{split}
+h(x)={}&\sum_{S\in\mathcal S}w_S\,\chi_S(x)+\sum_{i\in\mathcal L}w_i\,x_i+\sum_{B\in\mathcal B}\sum_{v\in\mathcal V_B}w_{B,v}\,\chi_{P_B}(x)\,\bigl[t_B(x)\in G_{B,v}\bigr]\\
+&+\sum_{u\in\mathcal U}w_u\bigl((u\cdot x)^2-1\bigr)+g\cdot x .
+\end{split}
+\end{equation}
+The five sums are the five parts of the dictionary. $\mathcal S$ holds the constant and every character admitted by its own test or forced; the global classes reach degree 6, and the extension and local classes, which grow from the characters already present, reach higher degrees. $\mathcal L$ is a set of inputs whose degree-1 characters were admitted together, by one test on all of them (the \emph{linear block}). A \emph{sum block} $B$ has inputs $S_B$, signs $s_i\in\{\pm1\}$, and the integer statistic $t_B(x)=\sum_{i\in S_B}s_ix_i+a_B\,\tau_B(x)$, or its absolute value if the block is \emph{folded}; a \emph{weighted} block (v1.3) has $a_B\in\{\pm2,\pm3\}$ and an inner term $\tau_B$ (a literal, a 2-parity or an AND of two literals) on inputs outside $S_B$. Its features indicate the groups $G_{B,v}$, contiguous runs of the values of $t_B$ that occur in training with at least $\max(3,\lfloor0.005\,n\rfloor)$ points each, all but the most populous ($\mathcal V_B$). A \emph{modulated} block multiplies them by a character $\chi_{P_B}$ already in the model, and a \emph{product} block uses the joint cells of two blocks with disjoint inputs. A function of a signed sum of $k$ inputs costs at most $k+1$ weights (\cref{prop:blocks}), where its Fourier expansion can need all $2^k$ characters on $S_B$. Each \emph{spectral feature} $(u\cdot x)^2-1=2\sum_{i<j}u_iu_jx_ix_j$, for a unit eigenvector $u$ of the residual pair matrix, is a fixed combination of degree-2 characters. The \emph{kernel background} $g=\frac1n\sum_tr_tx_t$ is one Hebbian step over all $d$ inputs on the final least-squares residual, computed, not fitted. The weights $w$ are fitted on the $p$ admitted features by least squares and then, when $n\ge8p$, by logistic Newton steps; characters and block indicators are admitted only within $\min(256,\lfloor n/2\rfloor)$ features, but the linear block and the spectral features are not checked against that room, so $p$ can exceed it (\cref{app:learner-dict,app:learner-smalln}).
+
+\begin{table}[t]
+\centering{\footnotesize\setlength{\tabcolsep}{4pt}
+\input{tables/tab_dictionary.tex}}
+\caption{DFG's dictionary at $d=30$ \status{Proved, by the code}. Each row is a class: a set of candidates enumerated together and tested with one union bound. ``Rows tested'': a budgeted search runs on the first $m$ rows (\cref{sec:smalln}); at $d=30$ that is every row of the grid except for degrees 5 and 6 (in brackets: in the final fit at $n\le512$). For the extensions, $b\le32$ is the number of current characters extended; for the local class, $V$ is the set of inputs of the current characters. $N$ is the count the union bound pays for, and $\ln(4KN/\delta)$ the log term of the threshold, with $K=4$ and $\delta=0.1$. ``Smallest $n$ that can pass'': for characters and blocks, no member can pass its test on fewer rows, for any labels (\cref{prop:floor}); for the dense moves, a condition of the code. \Cref{app:learner-dict} explains every entry. Source: \repo{study/part10/hyb_portfolio3/dfg13.py} via \repo{paper_dfg/make_tables.py} (\texttt{tab\_dictionary}; values in \repo{paper_dfg/tables/numbers.json}).}
+\label{tab:dictionary}
+\end{table}
+
+\paragraph{The dictionary.} \Cref{tab:dictionary} lists the classes. The dictionary is explicit and finite: at $d=30$ the global classes hold $\sum_{1\le k\le6}\binom{30}k=768\,211$ characters, and the unweighted blocks $(S,s,\text{fold})$ on 2 to 24 inputs number $2.0\times10^{14}$, close to $3^{30}=2.1\times10^{14}$, the number of signed subsets of 30 inputs. A class's size $N$ enters its test only through the log term $\ln(4KN/\delta)$. The extension and local classes are built from the characters already present, so they are small and their thresholds are low: features on inputs already in use are cheaper to admit, the discrete counterpart of the composition effect that Parts 1--5 saw in the networks \cite{gdcircuit2026}. A block on $k$ inputs pays $\ln\binom dk+k\ln2+\ln\bigl(4K(1+\mu)k_{\max}/\delta\bigr)$, only $k\ln2+\ln(24(1+\mu))$ more than a character of degree $k$, although the block class of size $k$ is $2^k$ times larger.
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{One round}\label{sec:round}
+
+A round computes the residual $r$ and its root mean square $s$, runs the character tests, the dense moves and the sum blocks on $r$, and refits; each step uses only statistics of the current residual on the training rows (every step in \cref{app:learner-round}).
+
+\paragraph{The character test.} A candidate $S$ of a class of $N$ candidates, tested on the first $m$ rows ($m=n$ unless the class is subsampled), passes if
+\begin{equation}\label{eq:chartest}
+z_S=\frac{|v_S|}{c\,\sigma_m\sqrt{2L_N/m}}>1,\qquad v_S=\frac1m\sum_{t\le m}r_t\,\chi_S(x_t),\qquad L_N=\ln\frac{4KN}{\delta},
+\end{equation}
+with $\sigma_m=\mathrm{rms}(r_1,\dots,r_m)$ (so $\sigma_n=s$), $c=1$, $\delta=0.1$ and $K=4$. Since the standard error of $v_S$ is about $\sigma_m/\sqrt m$, the test asks for $c\sqrt{2L_N}$ standard errors: a Bonferroni threshold over the class. The classes are the \emph{global} ones, every $\chi_S$ of one degree $k$ ($N=\binom dk$; $k\le4$ in round 0, $k\le3$ after, and degrees 5 and 6 in round 0 of the final fit on a budgeted number of rows), the \emph{extensions} $T\cup\{j\}$ and $T\cup\{j,l\}$ of the up to 32 current characters $\chi_T$ with the largest weights, and the \emph{local} class, every subset of the 2 to 12 inputs that the current characters use. A round admits up to 64 passing candidates, those with the largest $z_S$, within the room of $\min(256,\lfloor n/2\rfloor)$ features.
+
+\paragraph{Dense moves.} Two moves catch signal spread over many small coefficients, none of which would pass a test of its own. The \emph{linear block} admits at once all $k$ inputs whose degree-1 character is neither a feature nor a candidate, if
+\begin{equation}\label{eq:lintest}
+T_{\rm lin}=\frac n{s^2}\sum_{i\in\mathrm{lin}}c_{1,i}^2>k+2\sqrt{k\ln(1/\delta)}+2\ln(1/\delta)\quad\text{and}\quad n\ge2(p+k),
+\end{equation}
+with $c_1=X^\top r/n$: Laurent and Massart's tail bound for $\chi^2_k$ at level $\delta$ \cite{laurent2000adaptive}. It carries halfspaces and majorities. The \emph{spectral features} take up to four eigenvectors of the residual pair matrix, at $n\ge4d$, whose eigenvalues clear the semicircle edge of a $d\times d$ Wigner matrix with entries of size $s/\sqrt n$, times a margin factor:
+\begin{equation}\label{eq:spectest}
+|\lambda|>2s\sqrt{d/n}\,\Bigl(1+\sqrt{2\ln(1/\delta)/d}\Bigr).
+\end{equation}
+
+\paragraph{The sum-block test.} Take a block $B$ with occupied groups $v$, each of $n_v$ training points, and a vector $\rho$: the residual $r$, or $r\chi_P$ for a block modulated by $\chi_P$. The block passes if the squared norm of the projection of $\rho$ on its group indicators clears a $\chi^2$ bound,
+\begin{equation}\label{eq:blocktest}
+T_B(\rho)=\frac1{s^2}\sum_vn_v\,\bar\rho_v^{\,2}=\frac{|\Pi_B\rho|^2}{s^2}\;>\;\nu+2\sqrt{\nu L_B}+2L_B,
+\end{equation}
+\[
+L_B=\ln\frac{4KN_B}\delta,\qquad N_B=\tbinom dk\,2^{k-1}\cdot2\cdot(1+\mu)\cdot k_{\max},
+\]
+where $\bar\rho_v$ is the mean of $\rho$ over group $v$, $\nu=\max(\text{occupied groups}-1,1)$, $k=|S_B|$, $\mu\le4$ is the number of current characters used as modulators, and $k_{\max}=24$; $N_B$ counts the supports, the sign patterns up to a global sign, the two fold variants, the modulators and the 24 sizes. With Gaussian noise a fixed candidate would pass with probability at most $e^{-L_B}$ \cite{laurent2000adaptive}, so the union over all of them would be at most $\delta/(4K)$, whichever candidates the search visits. That calibration is Gaussian; it is not proved for DFG's residuals, whose groups depend on the data (\cref{sec:guarantees}). A block must also pass on the residual projected off this round's passing characters, and weighted blocks and products pay for their extra choices in $L_B$.
+
+\paragraph{The block search.} In short, a multi-start local search over signed subsets, scored on the residual alone. It starts from prefixes of the inputs ordered by the top eigenvectors of the residual pair matrix (for a function of $t=\sum_{i\in S}s_ix_i$ that matrix is about $a_2(ss^\top-I)$ on $S$, so its top eigenvector gives both the support and the signs), from prefixes ordered by the degree-1 coefficients, and from greedy growth out of the strongest pairs and single inputs, plus a beam at $n\le128$ and v1.3's weighted candidates. The best three candidates are refined by single add, remove and flip moves, and the winner is tested once on all rows. Because \cref{eq:blocktest} takes a union over every $(S,s)$ of the winner's size, the selection is paid for, if the Gaussian calibration holds. Every starting point is a statistic of one or two inputs (\cref{prop:blocks}(f)), which is where the residue classes fail (\cref{sec:interp-fail}). A round also searches products and modulated blocks (\cref{app:learner-search}).
+
+\paragraph{Stopping and readout.} DFG stops when a round admits nothing (in the default variant), when no room is left, from round 1 on when every training label's sign is right, when 0.75 of the call's budget is spent, or after 8 rounds. The least-squares weights are then refined by 15 logistic Newton steps if $n\ge8p$, and the prediction adds the kernel background (\cref{app:learner-stop}).
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{Small samples and compute}\label{sec:smalln}
+
+\paragraph{The forced variant and its cross-validation.} With few points the union bound passes nothing: at $d=30$ no character can pass its round-0 test below $n=17$, the degree-1 floor $2c^2\ln(4Kd/\delta)=16.95$, and no degree-4 character below $n=31$ (\cref{tab:dictionary}). In a round where nothing passes, the forced variant adds the best block or character anyway, at most twice per fit; a forced guess passes no test. At $n\le\code{cv_n}=512$, \code{DFG.fit} chooses between the default and the forced variant by cross-validation (\cref{fig:loop}): the forced variant is chosen if $e_{10}-e_{01}>2\sqrt{e_{10}+e_{01}}$, McNemar's test for paired errors \cite{mcnemar1947note}, one-sided at two standard errors, with $e_{10}$ the held-out points where only the default errs and $e_{01}$ the reverse. The fold fits' FLOPs count toward the fit. No level is proved for this choice, because the folds' held-out errors are dependent.
+
+\paragraph{The kernel background.} With no feature but the constant, the predictor $\mathrm{sign}(w_0+g\cdot x)$ is the centred Hebbian classifier, one step on all $d$ inputs, the counterpart of the networks' near-kernel component; once the features fit the labels, $r\approx0$ and $g\approx0$. The background has no fitted parameter.
+
+\paragraph{The budget.} The unit is one training run of a toy network at the same $d$, $1.62\times10^{11}$ FLOPs at $d=30$ (\cref{sec:metrics}). The exhaustive searches (degree 3 and 4, degrees 5 and 6 in round 0 of the final fit, and the two-input extensions) are subsampled to fixed shares of it, and no round starts after 0.75 of it is spent. At $n\le512$ the final fit gets one half and the fold fits share the other (\cref{app:learner-budget}).
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{Simple guarantees}\label{sec:guarantees}
+
+Six statements about DFG are made here, P1--P5 and P2$'$ of \repo{study/part11/interp/theory/THEORY.md}, restated for the code as it is; all are proved except \cref{prop:nglob}(b), a first-order heuristic. They concern round 0, single tests, the block dictionary and the code's arithmetic; none bounds the test error of a fitted model. Proofs, what each does not cover, and the numerical checks are in \cref{app:proofs}. The rows are iid uniform on $\cube$, and $L_k=\ln(4K\binom dk/\delta)$ is the log term of the global degree-$k$ class.
+
+\begin{proposition}[Round 0's character and linear tests under the null; P1]\label{prop:null}
+\status{Proved}. Let the labels be independent of the rows, with any joint law. In round 0 of any fit call (a final or a fold fit, either variant, any budget scale) the following hold.
+\begin{enumerate}[label=(\alph*)]
+\item For each degree $k$ the call searches, and every $u>0$,
+\[
+\Pr\Bigl(\max_{|S|=k}z_S\ge u\Bigr)\le2\tbinom dk\Bigl(\frac\delta{4K\binom dk}\Bigr)^{u^2c^2}.
+\]
+At $u=c=1$ this is $\delta/(2K)=0.0125$ per degree, for every $d$ and $n$.
+\item The linear block's statistic over all $d$ inputs satisfies $\Pr(T_{\rm lin}>d+2\sqrt{dx}+2x)\le e^{-x}$ for every $x>0$. Hence a linear block is admitted with probability at most $\delta+\delta/(2K)$.
+\item If round 0 admits nothing, the default variant's model is the constant plus the kernel background. The default variant's model therefore holds a feature other than the constant with probability at most $3\delta/4+\delta=0.175$, plus the probabilities that round 0 admits a spectral feature or a sum block.
+\end{enumerate}
+\end{proposition}
+\Cref{prop:null} does not cover the spectral test, the sum-block tests (calibrated for Gaussian noise, with data-dependent groups), the forced variant, the cross-validation's choice or rounds $\ge1$; its part (a) also holds for iid rows from any law when the search uses all rows (\cref{app:proof-null}). All 280 simulated checks of (a) held, and the bound is about ten times loose (\cref{sec:interp-calib}).
+
+\begin{proposition}[The sample size of a parity; P2]\label{prop:parity}
+\status{Proved}. Let $y=\chi_S(x)$ with $|S|=k$. Take round 0 of a fit call on $n$ rows in which the degree-$k$ search runs on all of them: $k\le2$ always, and $k=3,4$ when $m_k=n\ge32$. Then $\mathrm{mean}(r\chi_S)=1-w_0\bar y$ and $\mathrm{mean}(r^2)=1-2w_0\bar y+w_0^2$. With $w_0=\bar y$ (dropping the $10^{-9}$), $\chi_S$ passes its test if and only if
+\begin{equation}\label{eq:nthr}
+n\,(1-\bar y^2)>n_{\rm thr}(k,d)=2c^2\ln\bigl(4K\tbinom dk/\delta\bigr)=2c^2\bigl(k\ln d-\ln k!+\ln(4K/\delta)\bigr)+O(k^2/d).
+\end{equation}
+Since $\sum_ty_t$ is a sum of $n$ independent fair signs, exactly $\Pr(\text{pass})=\Pr\bigl(|\sum_ty_t|<\sqrt{n(n-n_{\rm thr})}\bigr)$.
+\end{proposition}
+Passing round 0's test is not the same as being in the final model: admission also needs a place among the round's 64 largest $z$ and room for the feature (not proved, but never binding in the parity cells), and the forced variant can admit $\chi_S$ without passing. Whether the final model holds $\chi_S$ is therefore measured: the criterion, with each training set's own $\bar y$, predicts the outcome in all 250 parity cells with $n\ge32$ (\cref{app:proof-parity}).
+
+\begin{proposition}[A floor for every target; P2$'$]\label{prop:floor}
+\status{Proved}. For any labels, in any round, no character passes the test of a class of $N$ characters tested on $m$ rows unless $m>2c^2\ln(4KN/\delta)$. No block passes its test unless $n>\nu+2\sqrt{\nu L_B}+2L_B\ge1+2\sqrt{L_B}+2L_B$.
+\end{proposition}
+Both halves bound passing a test, not admission: the forced variant's guesses and the linear block's test lie outside these floors. A balanced $k$-parity attains the character floor, and the last column of \cref{tab:dictionary} gives the floors at $d=30$.
+
+\begin{proposition}[When a character passes in round 0; P3]\label{prop:nglob}
+(a) \status{Proved}. In round 0, for a set $S$ searched on all $n$ rows, $v_S=\hat c_S-w_0\bar\chi_S$ with $\hat c_S=\mathrm{mean}(y\chi_S)$ and $\bar\chi_S=\mathrm{mean}(\chi_S)$, and $s^2=1-2w_0\bar y+w_0^2$. Moreover $z_S>1$ iff $n>2c^2L_{|S|}\,s^2/v_S^2$. For iid uniform rows and nonempty $S$, $\E v_S=\hat f(S)\,\bigl(1-1/(n+10^{-9})\bigr)$.
+
+(b) \status{Heuristic}. Replacing $v_S$ by $\hat f(S)$ and $s^2$ by $1-\hat f(\emptyset)^2$, $S$ passes the round-0 test once
+\begin{equation}\label{eq:nglob}
+n>n_{\rm glob}(S)=2c^2\ln\bigl(4K\tbinom d{|S|}/\delta\bigr)\,\frac{1-\hat f(\emptyset)^2}{\hat f(S)^2}.
+\end{equation}
+
+(c) \status{Proved}. In round $j$, $S$ passes the test of a class of $N_{\rm cls}$ candidates tested on all rows iff $n>n_{\rm cls}=2c^2\ln(4KN_{\rm cls}/\delta)\,s_j^2/v_{S,j}^2$ (on a subsample, $m$ and $\sigma_m$ replace $n$ and $s_j$). Hence
+\[
+\frac{n_{\rm glob}}{n_{\rm cls}}=\frac{L_{|S|}}{\ln(4KN_{\rm cls}/\delta)}\cdot\frac{1-\hat f(\emptyset)^2}{s_j^2}\cdot\frac{v_{S,j}^2}{\hat f(S)^2}:
+\]
+a smaller union bound, a smaller residual, and the residual's coefficient on $S$.
+\end{proposition}
+\Cref{sec:interp-when,sec:interp-order} use $n_{\rm glob}$ for when, and in what order, DFG admits a target's characters.
+
+\begin{proposition}[Sum blocks; P4]\label{prop:blocks}
+\status{Proved}. Let $f(x)=\psi(\beta(x))$, a function of $\beta=\#\{i\in S:s_ix_i=1\}=(t+k)/2$, where $t=\sum_{i\in S}s_ix_i$ is a signed sum of $k$ inputs.
+\begin{enumerate}[label=(\alph*)]
+\item If every value of $t$ that occurs in training is its own group, the span of the block's indicators and the constant contains $f$ exactly at every $x$ whose value of $t$ occurs in training, with at most $k+1$ weights. (DFG's small ridge shrinks the fitted weights slightly.)
+\item Every value is its own group iff every value occurs at least $\max(3,\lfloor0.005n\rfloor)$ times. In the large-$n$ limit this holds iff $k\le7$.
+\item A sign readout that uses one block is constant on its groups. It therefore errs on at least $\sum_{\rm groups}\min\bigl(\Pr(f=1,\text{group}),\Pr(f=-1,\text{group})\bigr)$ of the inputs.
+\item $\hat f(T)=0$ unless $T\subseteq S$, and $\hat f(T)=(\prod_{i\in T}s_i)\,a_{|T|}$ with $a_j=2^{-k}\sum_\beta\psi(\beta)\mathcal K_j(\beta)$, where $\mathcal K_j(\beta)=\sum_l(-1)^{j-l}\binom jl\binom{k-j}{\beta-l}$. The Fourier weight at degree $j$ is $W_j=\binom kja_j^2$.
+\item For a residue class, $\psi(\beta)=\pm(1-2[\beta\equiv\kappa\bmod3])$, and $j\ge1$: $|a_j|\le\frac43\,3^{j/2}\,2^{-k}$, so $W_j\le\frac{16}9\binom kj3^j4^{-k}$.
+\item Every starting point of the block search is computed from statistics of one or two inputs, or is an earlier candidate grown from such a starting point. In round 0, $\E M_{ij}=\hat f(\{i,j\})\bigl(1-1/(n+10^{-9})\bigr)$ for $i\ne j$ (the off-diagonal entries of $M^\circ$ in the first additive search), and $\E c_{1,i}=\hat f(\{i\})\bigl(1-1/(n+10^{-9})\bigr)$.
+\end{enumerate}
+\end{proposition}
+Here $M=\frac1n\sum_tr_tx_tx_t^\top$ is the residual pair matrix and $M^\circ$ the search's own copy of it (\cref{app:learner-search}); \cref{sec:interp-fail} applies (d)--(f) to the residue classes mod 3.
+
+\begin{proposition}[Compute; P5]\label{prop:compute}
+\status{Proved, by the code}. (a) The global searches of a round are charged, with a multiply-add counting 2 (lines 617--658), $2nd$ FLOPs for degree 1, $2nd^2+nd$ for degree 2, $(d-2)(2m_3d^2+2m_3d)$ for degree 3, $\binom{d-2}2(2m_4d^2+3m_4d)$ for degree 4, and $m_k(2N_1N_2+N_1k_1+N_2k_2)$ for degrees $k=5,6$, with $N_i=\binom d{k_i}$, $k_1=\lceil k/2\rceil$ and $k_2=\lfloor k/2\rfloor$. The exhaustive degree-3 and degree-4 searches therefore cost about $2nd^3\approx12n\binom d3$ and $nd^4\approx24n\binom d4$.
+
+(b) Each budgeted search runs on $m=\min(n,\lfloor\text{share}\cdot\mathrm{GD}\cdot\text{scale}/c_{\rm row}\rfloor)$ rows, where $c_{\rm row}$, the code's per-row cost estimate, is at least the charged per-row cost, so each budgeted search costs at most its share of the call's budget. The shares of the $2F+1$ calls at $n\le512$ add up to one run, $\frac12+2F\cdot\frac1{4F}=1$. The unbudgeted parts are bounded only by the round cap, up to the cost of the last round.
+\end{proposition}
+An exhaustive degree-4 search on 16384 rows costs 0.072, 1.04 and 6.5 network runs at $d=30$, 60 and 120, so the budget's subsampling is what keeps DFG inside one run (\cref{app:proof-compute}).
+
+\paragraph{What these statements do not give.} None of them bounds the test error of a fitted model. \Cref{prop:null} covers round 0 only. \Cref{prop:parity} is for noiseless parities, and \cref{prop:nglob}(b) is first order. \Cref{prop:blocks} says what a block can represent and what the search's starting points see, not when the search succeeds. \Cref{prop:compute} counts FLOPs, not CPU time (\cref{sec:res-compute}).
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{How DFG relates to familiar learners}\label{sec:relates}
+
+\status{Heuristic}, except where a statement restates the code or \cref{sec:guarantees}.
+\begin{itemize}
+\item \emph{Forward stepwise regression and orthogonal matching pursuit.} DFG's loop is forward selection with a joint least-squares refit, as in orthogonal matching pursuit \cite{pati1993orthogonal}, unlike matching pursuit \cite{mallat1993matching}. It differs in three ways: its dictionary is enumerated class by class, never stored; a round admits every passing candidate, up to 64; and its entry rule is a significance test, not ``take the best''. If $\chi_S$ is orthogonal on the sample to the current features, $z_S>1$ iff the reduction $nv_S^2$ of the residual sum of squares, in units of $s^2$, exceeds $2c^2\ln(4KN/\delta)$; with $c=1$ this is the per-variable penalty $2\ln p$ of the risk inflation criterion \cite{foster1994risk} and the universal threshold $\sqrt{2\ln p}$ of wavelet shrinkage \cite{donoho1994ideal}, with $p=4KN/\delta$: a Bonferroni rule within each class.
+\item \emph{The low-degree algorithm and sparse Fourier learning.} The low-degree algorithm \cite{linial1993constant} estimates every Fourier coefficient up to degree $k$ and predicts with the sign of the truncated expansion; \code{lowdeg} is its thresholded version. DFG is a greedy, budgeted, residual-based version of it: it estimates coefficients of the residual, not of the labels, refits the weights instead of using the raw estimates, adds classes that grow from what it has, and adds a second dictionary, the signed-sum blocks. Kushilevitz and Mansour \cite{kushilevitz1993learning}, building on Goldreich and Levin \cite{goldreich1989hardcore}, find every large Fourier coefficient of any degree in time polynomial in $d$, but they need membership queries; with random examples only, DFG enumerates each class, at order $n\binom dk$ FLOPs for degree $k$, and reaches characters above degree 6 only through the extensions, the local class and the blocks.
+\item \emph{Statistical queries.} Each character test is a correlational statistical query \cite{bshouty2002using,kearns1998sq}, $\E[r\chi_S]$, asked of the residual instead of the label, and the union bound is the tolerance budget for all $N$ queries of a class, answered from the same $n$ rows: that is why the sample cost is logarithmic in $N$ (\cref{prop:parity}). For parities, statistical-query learners need a number of queries, or an inverse tolerance, polynomial in the number of candidate parities \cite{blum1994weakly}; DFG pays the query count in compute and only its logarithm in samples. Analyses of gradient training on sparse parities find costs polynomial in $d$, with an exponent that grows with $k$ \cite{barak2022hidden,abbe2023leap}.
+\item \emph{Occam's razor and minimum description length.} The log term $\ln(4KN/\delta)$ is, up to the constant $\ln(4K/\delta)$, the number of nats needed to name one candidate in its class, so the character test reads: the residual sum of squares it removes, over $2s^2$ (the Gaussian code length it saves), exceeds $c^2\ln(4KN/\delta)$. That is a two-part code in the sense of minimum description length \cite{rissanen1978modeling}, without the usual $\frac12\ln n$ for the coefficient, and the parity criterion $n>2c^2\ln(4K\binom dk/\delta)$ is the matching Occam sample size \cite{blumer1987occam}, logarithmic in the size of the class (\cref{app:learner-dict}).
+\item \emph{Boosting.} Like gradient boosting \cite{friedman2001greedy}, and L2 boosting in particular \cite{buhlmann2003boosting}, DFG fits the residual stagewise with base learners from a dictionary. Unlike boosting it has no shrinkage and no early stopping: a candidate enters only if it passes its test, and every weight is refitted jointly after each round. Its base learners are fixed Boolean features, not fitted trees, and its loop is short (\cref{sec:interp-order}).
+\item \emph{Gradient-trained networks.} Part 6 designed DFG from what Parts 1--5 had seen the study's networks do \cite{gdcircuit2026,discretelearners2026}: they grow features greedily, cheapest first; a feature's cost is set by its correlation with the residual against the noise of the competing directions; features on inputs already in use are cheaper; a near-kernel linear component is present from the start; and on every plateau the network computes the sign of a least-squares fit on the features grown so far. DFG keeps this picture and replaces the search: enumeration and explicit tests take the place of noisy gradient steps in weight space (\cref{sec:interp-order} compares the orders), a trade of samples for FLOPs (\cref{sec:res-dscale}).
+\end{itemize}
+
+% ------------------------------------------------------------------------------------------------------------------
+\subsection{What is discrete}\label{sec:whatdiscrete}
+
+\begin{table}[t]
+\centering\footnotesize\renewcommand{\arraystretch}{1.15}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{4.1cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{3.0cm}}
+\toprule
+object & how it is chosen & continuous?\\
+\midrule
+characters $\chi_S$ & enumeration in classes; the union-bound test \eqref{eq:chartest} & no\\
+sum blocks: $(S,s)$, fold, inner term $a\tau$, modulator, product partner & the block search (eigenvector, pair and single-input seeds, greedy growth, beam, single moves); the $\chi^2$ test \eqref{eq:blocktest} & no\\
+a block's groups & contiguous runs of observed values with at least $\max(3,\lfloor0.005n\rfloor)$ points & no\\
+the linear block's inputs & one $\chi^2$ test \eqref{eq:lintest} & no\\
+the variant (default or forced) & the paired test on held-out errors & no\\
+the settings $K$, $c$, $\delta$, budget shares, \dots & constructor defaults, fixed across all data sets (\cref{tab:params}) & no\\
+spectral directions $u$ & top eigenvectors of the residual pair matrix & borderline: real directions, computed in closed form\\
+the kernel background $g$ & one Hebbian step, $g=X^\top r/n$ & yes, computed in closed form\\
+readout weights $w$ & least squares with a small ridge, then 15 Newton steps of logistic regression & yes: a linear readout\\
+\bottomrule
+\end{tabularx}
+\caption{What DFG v1.3 chooses discretely and what it fits continuously \status{Proved, by the code}. Source: \repo{study/part10/hyb_portfolio3/dfg13.py} (\cref{sec:hypothesis,sec:round,sec:smalln}; the constants as in \cref{tab:params}).}
+\label{tab:discrete}
+\end{table}
+
+\Cref{tab:discrete} lists what DFG fits. Every feature but the spectral ones comes from a finite dictionary, enumerated or proposed by a combinatorial search and admitted by a test with an explicit threshold (or, in the forced variant, as the best-scoring candidate), so a fitted model can be printed as a list of named features. Only the readout is fitted continuously; no feature is fitted by gradient descent, and the readout's 15 Newton steps are the only iterative continuous optimization in a fit. The spectral directions are the borderline case: real vectors computed in closed form, each feature a fixed combination of degree-2 characters (the post-hoc core, which has none, is level with DFG on average; \cref{sec:core}).

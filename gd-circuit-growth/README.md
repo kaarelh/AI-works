@@ -13,10 +13,33 @@ Notes by Claude, prompted by Kaarel Hänni. Research note, 23 October 2026; not 
 
 **Paper:** [`paper/gd-circuit-growth-paper.pdf`](paper/gd-circuit-growth-paper.pdf) (LaTeX sources in [`paper/`](paper/)) writes up Parts 1–5.
 
-**Working branch:** `claude/nifty-mccarthy-j0lw2a` holds the full working state. One path stays on it and is not published to `main`: `paper/test_fragment.tex`, a build helper.
+**Working branch:** `claude/nifty-mccarthy-j0lw2a` holds the full working state. Three paths stay on it and are not published to `main`:
+- `paper/test_fragment.tex`, a build helper;
+- `study/hybrid/orchestration/`, the job queues of Part 8. The Part 8 audit reports cite its `run_jobs.py` as `scratchpad/hybrid/run_jobs.py`.
+- `study/part11/interp/ablations/logs/`, the run logs and completion markers of Part 11's post-hoc runs. Their results are in the committed result files.
+
+The LaTeX build output in `paper_learner/` (`main.pdf`, `main.log`, `main.out`, `main.bbl`, `main.blg`) also stays on the working branch; `learner-paper.pdf` is the published copy. In `paper_dfg/` the build output is not committed at all (`paper_dfg/.gitignore`); `dfg-paper.pdf` is the published copy.
 - The `study/models/scratch_*` folders are published, because they hold the calibration logs that the model write-ups cite.
 
 Raw network outputs live in a session scratch directory and are in neither branch. The scripts regenerate them.
+
+[Part 6](#part-6-a-discrete-learner-that-needs-less-data-than-gradient-descent-25-october-2026) builds a discrete learner from this picture. On nearly every target it needs less data than the study's networks: 3.1× less at the median on a blind held-out suite. It uses at most about half of one network run's FLOPs per fit, and is comparable to or faster than them in CPU time.
+
+[Part 7](#part-7-dfg-on-standard-ml-tasks-against-mlps-2526-october-2026) tests DFG on 18 standard classification tasks against MLPs. It is clearly behind on images at large n, and behind a properly regularized MLP and gradient boosting on tabular data.
+
+[Part 8](#part-8-a-discrete-portfolio-against-gradient-descent-trained-networks-on-toy-and-real-tasks-26-october-2026) asks for one discrete method that beats gradient-descent-trained networks on both. A pre-registered portfolio (DFG plus boosted trees, ExtraTrees, kNN votes and logistic regression, stacked) does so on the toy suites (9 of 10 fresh targets) and on held-out tabular data on average (lower mean error on 8 of 10 fresh datasets; not significant). On images its error is lower than every MLP's up to n = 3000 (one cell resolved), but a regularized MLP ensemble beats it at n ≥ 30000. The toy wins come from DFG's character search, the real-task wins from the classical stack.
+
+[Part 9](#part-9-sum-features-and-permutation-invariant-image-members-2627-october-2026) continues in the two directions where Part 8 lost. Features that are functions of signed sums of inputs remove the loss on symmetric targets: on a held-out suite written blind to the design, 10 of 12 targets need clearly less data than the best pre-registered network variant and none more; with two network variants added after the audits, 2 need more. With a pixel-permutation-invariant image member, the portfolio beats a strong MLP ensemble on two fresh QuickDraw sets at n ≥ 10000 (3 of 6 cells clearly better, none worse). But the image gain is carried by locality recovered from pixel correlations: an MLP given the same pooled sums matches it at n = 60000, so does a CPU-matched ensemble of wider MLPs, and a small CNN that sees the pixel layout, run on one set, is clearly better at n = 10000 (level at n = 1000).
+
+**Paper (Parts 6–9):** [`paper_discrete/discrete-learners-paper.pdf`](paper_discrete/discrete-learners-paper.pdf) (LaTeX sources, figure and table scripts in [`paper_discrete/`](paper_discrete/); build `main.tex`).
+
+[Part 10](#part-10-the-best-learner-so-far-what-it-learns-and-a-paper-about-it-2728-october-2026) improves the portfolio under a new pre-registration, picks the best learner so far (v3) by a fixed rule, analyses what it learns, and writes it up. On fresh held-out data v3 cannot be told apart from v2 by the pre-registered verdict rules. On a toy suite drawn from the blind family it needs clearly less data than the best network variant on 10 of 12 targets and more on none (2.8× less, geometric mean), as v2 did. On two fresh QuickDraw sets it has 12.8% and 12.6% error at n = 60000: clearly better than a three-MLP ensemble at all six cells, but within 10% of a CPU-matched wider ensemble and of v2, which the rule calls ties. The analysis of the fitted models finds that on signed-sum targets DFG's search, not its significance test, sets its data cost, and that the image members recover the pixel grid from pixel correlations.
+
+**Paper (Part 10):** [`paper_learner/learner-paper.pdf`](paper_learner/learner-paper.pdf): what v3 is, how it compares with the baselines, and what it learns (LaTeX sources and generator scripts in [`paper_learner/`](paper_learner/); build `latexmk -pdf main.tex`).
+
+[Part 11](#part-11-dfg-alone-one-learner-rather-than-an-ensemble-23-november-2026) studies one learner instead of a portfolio: DFG v1.3, v3's Boolean member, frozen and run alone under a new pre-registration. DFG is forward stepwise least squares over an explicit Boolean dictionary (Fourier characters, and indicators of the values of signed sums of inputs), with a union-bound entry rule for each class. On the held-out `dlheld7` it needs clearly less data than the best network variant on 10 of 12 targets and more data on none (2.4× less, geometric mean). Its n* grows as $d^{0.01}$ to $d^{0.50}$, the networks' as $d^{0.91}$ to $d^{2.40}$; the price is enumeration compute. The low-degree algorithm shares DFG's characters and test but nothing else, and needs 3.1× more data. On parities a proved criterion predicts every fit. On signed-sum targets, wherever the grid can tell, the block search, not the test, sets the data cost. A post-hoc "core DFG" with nine parts removed matches DFG on average at a tenth of its FLOPs.
+
+**Paper (Part 11):** [`paper_dfg/dfg-paper.pdf`](paper_dfg/dfg-paper.pdf): what DFG is, how it compares with the baselines, what its parts do and what it learns (LaTeX sources and generator scripts in [`paper_dfg/`](paper_dfg/); build `latexmk -pdf main.tex`).
 
 [Part 4](#part-4-does-compositional-structure-beyond-leap-matter-24-october-2026) tests whether compositional structure beyond leap complexity matters. [Part 5](#part-5-what-the-network-computes-while-it-learns-2425-october-2026) characterizes the sequence of functions a network computes while it learns, and gives models that reproduce it on held-out targets.
 
@@ -786,6 +809,326 @@ Full write-up: [`study/trajectories/TRAJECTORIES.md`](study/trajectories/TRAJECT
 - *Finite $n$:* the race against memorisation decides where it stops.
 
 This is the composition finding of Part 4, seen in time rather than in samples.
+
+## Part 6: a discrete learner that needs less data than gradient descent (25 October 2026)
+
+Full write-up: [`study/discrete_learner/DISCRETE-LEARNER.md`](study/discrete_learner/DISCRETE-LEARNER.md). All tables:
+[`study/discrete_learner/RESULTS.md`](study/discrete_learner/RESULTS.md).
+
+**Question.** Use the picture of Parts 1–5 to build a more discrete learner that, with similar compute and data, does at
+least as well as gradient descent on the toy problems where gradient descent does well.
+
+**Proposal: discrete feature growth (DFG)** (Heuristic design, Numerical results). It keeps the strategy Parts 1–5
+attribute to the networks, and replaces their search.
+
+The strategy, as in the networks:
+- Grow features greedily, in order of detectability against the noise of the *residual*.
+- Make terms on inputs already in use cheaper, through smaller candidate classes for extensions and local subsets
+  (Part 4's composition effect).
+- Fit a linear background.
+- Read out with the sign of a fit on the grown features (Part 5's truncated Fourier expansion).
+
+The search, unlike the networks: exhaustive enumeration of Fourier characters, admitted by union-bound tests. It is run
+on subsamples sized so that a fit stays within a fixed share of one network run's FLOPs. Dense targets have two block
+moves: a χ² test on the whole linear part, and the spiked top eigen-directions of the residual pair matrix.
+
+**Results** against the study's networks (same training sets and test set):
+
+- **Blind tests.**
+  - *Final version* (v1.1, on 7 held-out targets written after it was committed): smaller n* on all 7. The median is
+    3.1× less data, at most 0.26 of one network run's FLOPs per fit.
+  - *Frozen first version, with its degree-5/6 search removed* (on 12 earlier held-out targets): smaller n* on 11 of
+    12, median 2.7×. It never learns par5. The frozen version did have that search, and with it wins on all 12, but the
+    search was added knowing par5 was in the suite.
+- **Development suites.** On 21 designed targets and 20 random formulas: clearly smaller n* on 40 of 41 (median 5–6×),
+  and a tie on and3. The factor grows with input dimension on the sparse targets, to a median 32–46× at d = 60 and 120
+  (in-sample targets, mostly sparse). For maj9 it stays at 1.5–2.7×. For par3 the networks
+  need 843 / 3410 / ~14000 samples at d = 30 / 60 / 120; DFG needs 28 / 28 / 56 (inputs permuted per fit).
+- **Where it is worse.** Per (target, n) cell, DFG is worse than the networks by more than 0.02 in 0–10% of cells.
+  Most are at n = 16–64, where both are near the constant predictor's error and DFG is sometimes above it. The
+  persistent exception is MAJ5 ⊕ MAJ5 at n = 64–256.
+- **Audits.** Five independent audits checked the comparison: data and leakage, compute accounting, reproduction, and
+  two of the write-up. They found no test-data leakage and an exact data match, and the FLOP counter agrees with an
+  independent count. They also found real problems, all fixed or disclosed in the write-up:
+  - the degree-5/6 search was added knowing par5 was in held-out suite 1;
+  - the random suite was used during development, and the small-n rules were tuned on the designed suite's test error,
+    so neither is out-of-sample;
+  - a compute-budget bug at d = 120;
+  - a tie-break bias toward low-index inputs;
+  - a seed-lucky mux n*;
+  - several overclaims in drafts.
+- **Ablations** (3 seeds each). Each ingredient taken from the networks is worth 1.1–3× on one class of targets:
+  - the readout fitted to the residual, on dense targets;
+  - residual-scaled thresholds and the composition classes, on staged targets;
+  - the linear block, on majorities.
+
+  No single-ingredient ablation comes near the networks except dropping degree 4 (par4 is then never learned). So by
+  elimination the bulk of the gap is plausibly carried by exhaustive search over the Fourier dictionary, though that
+  was not ablated directly.
+
+**What this says about gradient descent** (Heuristic; consistent with these results, not tested by them). Its extra data
+cost on these targets would be the price of searching in weight space:
+- *Gradient descent:* Part 3's heuristic law has it paying about d^{k−1} samples for a k-parity (measured: d^{1.9} for
+  k = 3, d^{2.4} for k = 4).
+- *Exhaustive search:* it pays for search in FLOPs and only about 2k ln d in samples, and that fits inside gradient
+  descent's own FLOP budget at d = 30.
+- *The confound:* search and hypothesis class are not separated here. DFG's dictionary is the class the targets were
+  built from, in effect a greedy, budgeted low-degree algorithm. The networks are generic and run one untuned
+  configuration.
+
+**Limits.**
+- DFG was designed knowing the targets are Boolean functions of uniform ±1 inputs, mostly sparse in the Fourier basis.
+  So the result shows that such a specialised learner fits within gradient descent's FLOP budget and needs less data.
+  It says nothing about learners in general.
+- Its compute grows as d^K, so high-degree features are found only from subsamples.
+- It was compared with one untuned network configuration. Earlier parts found up to about 2× changes in the networks'
+  n* from width or optimizer, which is comparable to DFG's smallest blind wins (1.3–1.9×).
+
+## Part 7: DFG on standard ML tasks, against MLPs (25–26 October 2026)
+
+Full write-up: [`study/standard_tasks/STANDARD-TASKS.md`](study/standard_tasks/STANDARD-TASKS.md). Tables:
+[`study/standard_tasks/RESULTS.md`](study/standard_tasks/RESULTS.md).
+
+**Question.** How well does DFG do on standard tasks where MLPs are reasonable, compared with MLPs?
+
+**Setup** (Numerical):
+- *Tasks:* 18 classification tasks — MNIST, Fashion-MNIST and 16 PMLB tabular datasets, 5 for development and 13 held
+  out.
+- *Protocol:* learning curves from n = 100 to the full training set, 3 seeds (seed 0 only for DFG on images at
+  n ≥ 30000).
+- *Baseline:* a reasonably tuned 256-256 MLP.
+- *DFG:* three independent adaptations to real-valued, multi-class data, built on the dev sets only and then frozen:
+  - Boolean-bit characters;
+  - threshold/AND gates;
+  - thresholded data-derived directions.
+- *Compute rule:* each DFG fit uses at most one MLP training run's FLOPs, with a few reported overruns.
+
+**Answer: not very well, beyond the toy problems.**
+- **Tabular, against the baseline MLP:** about on par, with 3–7% higher error on average.
+- **Tabular, against an L2-regularized MLP** (n ≤ 3000; added after an independent audit found the baseline
+  under-regularized at small n): 12–17% higher error. Of 23 small-n wins over the baseline, 5 survive: dfg_bits on dna
+  (n = 300), ring (n = 100, 300) and waveform (n = 100), and dfg_gates on waveform (n = 100). Only the dna win also
+  clearly beats every other reference.
+- **Tabular at full n:** clearly behind on tasks with many classes or interacting features — letter 2.1–3.5×,
+  pendigits 1.6–2.0×, connect_4 1.25–1.4×.
+- **Gradient boosting** has 8–12% lower error than the three adaptations on average.
+- **Images:** behind from n ≈ 3000 (MNIST) and n ≈ 10000 (Fashion-MNIST). At n = 60000, MNIST is 5.5–7.2% error against
+  the MLP's 2.5%, and Fashion-MNIST is 14–16% against 11%, closer to logistic regression than to the MLP.
+
+**Reading** (Heuristic). DFG's advantage in Part 6 came from enumerating a small dictionary that contains the target's
+features and paying only about ln N in samples. On real data that premise fails:
+- *Images:* the useful features are directions spread over many correlated inputs, a continuous family that no
+  enumerable dictionary covers. An MLP's gradient step updates hundreds of such directions in parallel, so in that
+  family local search, not enumeration, is the efficient search.
+- *Dense signal:* on dev data, union-bound tests designed to block false features on sparse targets stalled growth on
+  dense real-world signal. Where DFG loses most on held-out data, though, it ran at or near its FLOP budget: the
+  dictionary and the budget bind, not the tests.
+
+## Part 8: a discrete portfolio against gradient-descent-trained networks on toy and real tasks (26 October 2026)
+
+Full write-up: [`study/hybrid/HYBRID.md`](study/hybrid/HYBRID.md). Tables: [`study/hybrid/RESULTS.md`](study/hybrid/RESULTS.md)
+and [`study/hybrid/ABLATIONS.md`](study/hybrid/ABLATIONS.md) (post hoc). Protocol: [`study/hybrid/PROTOCOL.md`](study/hybrid/PROTOCOL.md).
+
+**Question.** Is there a discrete method that beats gradient-descent-trained networks both on the toy Boolean suites of
+Parts 1–6 (n*, the data needed for 10% test error) and on Part 7's standard tasks (test error against MLPs)?
+
+**Setup** (Numerical):
+- *Pre-registration.* A protocol was written first. Two held-out sets were fixed before any design: a fresh toy suite
+  (`dlheld3`, 10 targets) and 10 fresh PMLB datasets (HELDOUT2).
+- *Designs.* Three designs were built independently on dev data only, then frozen. A fixed dev rule picked the primary,
+  `hyb_portfolio`: Part 6's character search (DFG), LightGBM, ExtraTrees, kNN votes and logistic regression, stacked on
+  out-of-fold predictions.
+- *Budgets:* one network run per toy fit; three MLP runs per real fit.
+- *Audits and stronger references.* Four code audits ran while the primary's held-out jobs were running; the auditors
+  were told not to read held-out results of the Part 8 learners and report that they did not. By the time the changes
+  below were decided, the orchestrating session had seen part of the primary's held-out results (error curves of 7
+  tabular datasets in the job logs, the MNIST curve, a few tabular cells, 4 of the 20 `random` targets) and `hgb`'s
+  held-out toy results. Each change strengthens a reference, removes a bias in the learner's favour or narrows the
+  claim; no learner was changed:
+  - the toy runs were redone with permuted inputs;
+  - the toy references gained weight-decayed networks (all five suites) and logistic-loss, weight-decayed networks
+    (fresh suite only);
+  - a strong MLP was added (quantile inputs, AdamW, dropout, ensemble of 3; twice the budget), set from the audit's
+    recommendation and smoke-tested on dev data only. It was run on the fresh datasets, the images and the Part 7
+    tabular set up to n = 10000;
+  - the headline was restricted to the two fresh sets.
+
+**Answer: partly.**
+- **Toy.** On the fresh suite it needs less data than the per-target best network variant on 9 of 10 targets (mean
+  log2 n* ratio −1.41, about 2.7×; −1.55 against the single logistic-loss, weight-decayed configuration). The loss is
+  sym9 (|x1 + … + x9| ≤ 1): 1229 samples against 350. On the other four suites it is clearly better on 57 of 60 targets
+  and tied on 3. Against the regularized networks the suite-mean margins shrink by 0.5–0.7 in log2; the shrink is
+  spread over every kind of target, largest on poly4, thrint and sym9 (1.2–1.9). The parity-type margins remain the
+  largest (par3or −3.54, poly4 −3.95 against the per-target best network).
+- **Tabular.** On the 10 fresh datasets its mean error is lower than the hindsight-best MLP's on 8 of 10 (sign test
+  p = 0.11, not significant): mean log2 error ratio −0.17, 10 better and 2 worse of 53 cells. Against the strong MLP
+  ensemble alone the ratio is −0.28, and against one network of that recipe −0.32, again on 8 of 10 datasets. It loses
+  on texture (higher error at every n, no cell resolved) and on krkopt (resolved at n ≥ 10000). On the 11 Part 7
+  tabular datasets, whose references the designers had seen, it is −0.11 against the hindsight-best MLP and lower on 8
+  of 11 (p = 0.23); its mean error is higher there on nursery, pendigits and connect_4.
+- **Images** (MNIST and Fashion-MNIST; no fresh image set, and the designers had seen the references). Its seed-mean
+  error is below every MLP's up to n = 3000, but only MNIST n = 3000 resolves as better. It is about equal at
+  n = 10000. At n = 30000–60000 (one seed) the strong MLP, a 3-network ensemble at twice the budget, wins in all four
+  cells: 1.43% against 1.98% on MNIST and 9.7% against 10.7% on Fashion-MNIST at 60000. Against a single network of
+  that recipe only MNIST n = 30000 resolves.
+- **Compute.** Its largest fit uses about three quarters of the FLOP budget: 0.75 of a network run on the toy suites by
+  its own count (a measurement, not a bound), and ≈ 0.74 (range 0.58–0.90) on images after the compute audit's
+  correction. It costs far more CPU time on images, and up to 350× an MLP's prediction FLOPs per query (kNN).
+
+**Reading** (Heuristic). This is an AutoML-style portfolio that dispatches by input type, not one discrete mechanism.
+- *Toy:* the post-hoc ablations put the large margins on DFG's exhaustive character search. Without it the design
+  fails on the parity-like targets (par3or 7531 samples, poly4 never learned), and its mean on the fresh suite becomes
+  +0.17 against the best network. It still wins clearly on 6 of 10 fresh targets, with the trees carrying cnf3 and
+  mux11.
+- *Real data:* the wins come from the classical stack. No single member matches it, and DFG runs on 1 of 23 held-out
+  datasets. This restates the known strength of trees and stacking over plain MLPs on medium-sized tabular data.
+- *Images:* with enough data, a well-regularized MLP's learned directions beat prototype memory and trees.
+
+"Discrete" means no continuous feature parameters. Boosting is still functional gradient descent, and DFG's spectral
+features use continuous eigenvector directions. The fair wording is "beats gradient-descent-trained networks", not
+"beats gradient descent".
+
+## Part 9: sum features and permutation-invariant image members (26–27 October 2026)
+
+Full write-up: [`study/part9/PART9.md`](study/part9/PART9.md). Tables: [`study/part9/RESULTS.md`](study/part9/RESULTS.md).
+Protocol and amendments: [`study/part9/PROTOCOL.md`](study/part9/PROTOCOL.md). Audits: [`study/part9/audit/`](study/part9/audit/).
+
+**Question.** Continue in the two directions where Part 8's portfolio (v1) lost: symmetric functions (sym9: 1229
+samples against the networks' 350) and images at large n.
+
+**Setup** (Numerical):
+- *Pre-registration.* Held-out sets fixed before any design: a toy suite (`dlheld4`) and two fresh 10-class QuickDraw
+  sets (`qd_a`, `qd_b`; 60000 training images each, pixel columns permuted).
+- *Designs*, built independently on development data and frozen:
+  - DFG v1.2 adds *sum features*: indicators of the value of a signed sum Σ_{i∈S} s_i x_i, s_i = ±1, admitted by a χ²
+    test with a union bound over every subset, sign pattern and size up to 24;
+  - two pixel-permutation-invariant image members. The pre-registered rule picked `p9_gates`: nearest neighbours and
+    boosted trees on subset sums over the 4, 9 and 16 pixels most correlated with each pixel, plus prototype-pair
+    projections.
+- v2 (`hyb_portfolio2`) = v1 with both, frozen before any held-out run (one recorded crash fix afterwards).
+- *Audits and amendments.* Four audits ran on code and process (02:13–03:01 UTC on 27 October); the auditors opened no
+  held-out result file (the protocol audit quotes the one p9_sum `dlheld5` log line the orchestrator had seen). During and just after the audits (02:40 and 03:03 UTC) the orchestrator saw v2's `qd_a` / `qd_b`
+  test errors at n = 100, 300 and 1000 in progress logs, and nothing at n ≥ 3000. The amendments below were fixed
+  before any v2 toy result or Q2 image cell was read (PROTOCOL.md, Amendments 3 and 4). For compute, `mlp_xl` was
+  later cut to n = 60000 (at the weight decay `mlp_wide` chose there) and `cnn` to `qd_a` at n = 1000 and 10000, at
+  07:05 UTC, after the held-out results had been read.
+  - The protocol audit found that `dlheld4` and a later suite `dlheld5` were both exposed to the sum-feature design. A
+    sixth suite, `dlheld6`, was written by an agent blind to the design, from the pre-registered one-line description,
+    and Q1 is answered on it.
+  - The fairness and discreteness audits led to stronger references (512- and 1024-wide MLP ensembles; two more weight
+    decays for the toy networks) and post-hoc controls (an MLP given v2's pooled sums; a CNN on unpermuted pixels).
+
+**Answer: yes to both pre-registered questions, with a large qualification on images.**
+- **Q1, toy (blind suite `dlheld6`).** v2 needs clearly less data than the per-target best network on 10 of 12 targets
+  and more on none: mean log2 n* ratio −1.45 against the pre-registered variants, about 2.7×. On the 9 sum-structured
+  targets v2 is at −1.53, v1 at +0.63. With two more network weight decays (added after the fairness audit) the mean is
+  −1.25, with 2 targets worse. On h6_00, a residue class mod 3 of a 13-input count, the most regularized network
+  reaches n* = 12304 and is the only learner that learns it; v2 does not find it although it is a function of one
+  signed sum. On h6_10 v2 needs 702 samples against 451. Q1's criteria still hold. The two exposed suites agree (−2.40
+  on `dlheld5`, −1.68 on `dlheld4`).
+- **Q2, images (`qd_a`, `qd_b`, n ≥ 10000).** v2's mean log2 error ratio is −0.18 against the strong MLP ensemble and
+  the pre-registered `mlp_best` (3 cells better, 3 tied, none worse), and v1's is +0.01. Against the strengthened
+  references it is −0.11 (2 better, 4 tied, none worse), and v2 has the lowest error of every reference at 13 of 14
+  cells (the post-hoc controls below aside). At n = 60000 v2 has 12.0% and 14.9% error, against 12.9% and 15.2% for the
+  512-wide ensemble and 12.5% and 14.8% for the CPU-matched 1024-wide ensemble: all four are ties, and the 14.8% on
+  `qd_b` is the one cell where a reference is lower than v2.
+- **What carries the image result** (controls and post-hoc ablation):
+  - the pooling sets recover the pixel grid from correlations (on the permuted dev set, 98% of the members of each
+    4-pixel set lie within one grid step);
+  - an MLP given the same pooled sums matches v2 at n = 60000 (12.3% and 14.7%), and is level with it at 5 of the 6
+    cells where it ran;
+  - the winning member is gradient-boosted trees, whose gain over Part 8's tree member splits about evenly between the
+    pooled sums and longer boosting;
+  - a small CNN that sees the pixel layout (one network, run on `qd_a` at two sizes) is better still at n = 10000
+    (12.0%, where v2 has 15.0%) and level at n = 1000 (21.0% against 22.6%, a tie by the cell rule).
+- **Compute.** v2's FLOPs stay within the budget (largest image fit 0.62 of three MLP runs by its own count, ≈ 0.72
+  after the compute audit's correction; toy ≤ 0.82 of one network run). A v2 image fit at n = 60000 takes 20–30 minutes
+  of process CPU time (1757 s on `qd_a`, 1178 s on `qd_b`), against 2–3.5 minutes of wall time for the strong MLP
+  ensemble (205 s and 130 s) and 20–23 minutes for the CPU-matched one (1207 s and 1359 s). Its prediction costs about
+  500× an MLP's per query.
+
+**Reading** (Heuristic). Sum features close the symmetric-function gap because they put "a function of one signed sum"
+into the dictionary, which a union bound searches for a few dozen nats; gradient descent has to find the sum's
+direction from a weak degree-2 statistic. The image result is about representation more than about discreteness:
+locality recovered from data, which a gradient-trained network can use as well.
+
+## Part 10: the best learner so far, what it learns, and a paper about it (27–28 October 2026)
+
+Paper: [`paper_learner/learner-paper.pdf`](paper_learner/learner-paper.pdf). Protocol and recorded decisions: [`study/part10/PROTOCOL.md`](study/part10/PROTOCOL.md). Pre-registered rules applied: [`study/part10/RESULTS.md`](study/part10/RESULTS.md); every reference: [`study/part10/LEARNER_RESULTS.md`](study/part10/LEARNER_RESULTS.md). The learner: [`study/part10/hyb_portfolio3/`](study/part10/hyb_portfolio3/). Interpretability: [`study/part10/interp/`](study/part10/interp/) (`TOY_INTERP.md`, `IMAGE_INTERP.md`, `VERIFICATION.json`).
+
+**Question.** Build a better discrete learner in about two hours of design work; choose the best learner so far; find out what structure it learns; write a paper about it.
+
+**Setup** (Numerical):
+- *Pre-registration* (commit `dc70266c`, before any design work): held-out sets `dlheld7` (a fresh draw from the blind `dlheld6` family), `qd_c` and `qd_d` (10-class QuickDraw, permuted pixels); a development draw `dlfamdev`; the budgets; three builders on development data; an integration rule and a best-learner rule.
+- *Builders and integration.* The rule adopted DFG v1.3 (weighted sum blocks $t+a\tau$, a wider block search; mean log2 n* ratio −0.066 against v2 on the development suites) and the bar booster `cgbt` (LightGBM on pooled sums plus sums along short lines recovered from pixel correlations; −0.078 against v2 over 8 development cells, `qd_a` n = 60000 error 0.1082 at 1453 CPU s).
+- *v3* (`hyb_portfolio3`) = v2 with both, assembled, checked identical to its sources, and frozen (md5 `b045fafe`) before any held-out result of a Part 10 learner was read.
+
+**Answer** (Numerical):
+- *Best-learner rule.* v3 against v2: −0.125 on the held-out images (n ≥ 10000), −0.004 on `dlheld7`, so v3 is the subject of the paper.
+- *`dlheld7`.* Against the per-target best of three pre-registered network variants: mean log2 n* ratio −1.50 over the 11 targets both learn (s.e. about 0.24), 10 clearly better, 0 worse; a residue class mod 3 of 14 inputs is learned by no learner. On 5 of the 10 wins default boosting or logistic regression also beats the networks. Against v2: −0.004, no target moves.
+- *`qd_c`, `qd_d`.* 12.76% and 12.64% error at n = 60000 (v2 13.63% and 13.99%; the CPU-matched 1024-wide MLP ensemble 14.12% and 13.83%). Clearly better than the strong MLP ensemble at 6 of 6 cells and than the MLP given v2's pooled sums at both cells where it ran; ties with v2 at all six cells (lower at each) and with `mlp_xl`. A small CNN that sees the pixel layout has lower error at all three cells where both ran, clearly at one.
+- *Elsewhere.* On the development toy suites v3 is clearly better than the best network on 121 of 126 targets. On 24 of 26 tabular datasets v3 runs v1's code, so the tabular result is Part 8's.
+
+**What it learns** (Numerical, seed 0, independently verified; mechanism readings Heuristic):
+- DFG's model comes to hold the target's exact signed block on 49 of 54 signed-sum targets (median n = 256).
+- On the 25 functions of one signed sum, the test would admit the true block at n = 128 every time; the further data needed grows as the target's variance at Fourier degrees 1–2 shrinks (Spearman −0.86). The mod-3 targets have almost none there ($W_1+W_2\le0.0002$) and their block is never proposed, although at n = 16384 it would pass the test at 134–155× the threshold.
+- On QuickDraw and MNIST the 4-pixel pooling sets are patches of the true grid. At n = 10000 on `qd_dev`, 42% of the 5-pixel bars are exact lattice lines and 96% stay within one pixel of their axis. `cgbt` has the lowest out-of-fold error of all members in every analysed fit.
+
+**Reading** (Heuristic). v3 is a portfolio: on Boolean targets a test-gated, greedy relative of the low-degree algorithm whose cost is set by where its search looks, and on images boosting on a data-derived bank of local features. Part 10's additions help on development suites and give consistent but sub-threshold image gains on the held-out sets.
+
+## Part 11: DFG alone, one learner rather than an ensemble (2–3 November 2026)
+
+Paper: [`paper_dfg/dfg-paper.pdf`](paper_dfg/dfg-paper.pdf) (claims checks of the paper against the records: `paper_dfg/CLAIMS_CHECK.json`). Protocol: [`study/part11/PROTOCOL.md`](study/part11/PROTOCOL.md), committed before any run (`aca1f3c8`), with a post-hoc addendum for the core DFG written before that run. Pre-registered comparisons: [`study/part11/RESULTS.md`](study/part11/RESULTS.md) (from `compare_dfg.py`; runners `eval_dfg.py` and `dfg_real.py`). Analyses, each with an independent verification report (`VERIFY_*.md`): [`study/part11/interp/`](study/part11/interp/) (`ATLAS.md`, `order/ORDER.md`, `theory/THEORY.md`, `calib/CALIB.md`, `ablations/ABLATIONS.md`).
+
+**Question.** Suggest a discrete method that is "one thing" rather than an ensemble, as a specific object worth studying, and write a paper about it like Part 10's.
+
+**The object.** DFG v1.3, v3's Boolean member, run alone and unchanged (`study/part10/hyb_portfolio3/dfg13.py`, md5 `69cabe5c`), with the input columns permuted for each fit. It was chosen after Part 10's results had been read. It is forward stepwise least squares over an explicit Boolean dictionary. The dictionary holds Fourier characters $\chi_S$ and indicators of the values of signed sums $\sum_{i\in S}s_ix_i$, plus folded, modulated, product and weighted variants of these. Each round admits every candidate whose correlation with the residual exceeds $s\sqrt{2\ln(4KN/\delta)/n}$ for its class of $N$ candidates. In learning-theory terms, it is an Occam learner made greedy by a residual. Around the loop sit:
+- a multi-start search for signed-sum blocks;
+- at $n\le512$, a forced guess, chosen or rejected by paired cross-validation;
+- a logistic refinement of the readout;
+- a one-step Hebbian background.
+
+It takes ±1 inputs and two classes, so it runs on the 11 Boolean suites, on 2 of the 26 tabular datasets, and on no images.
+
+**Answer** (Numerical):
+- *`dlheld7`* is the only suite held out for v1.3. Against the per-target best of three network variants, the mean log2 n* ratio is −1.29 over the 11 targets both learn (s.e. 0.27, i.e. 2.4× less data), with 10 targets clearly better and 0 worse. On 5 of the 10 wins logistic regression or boosting also beats the networks. On the other five, all sum-structured, DFG needs about 4.3× less data, and neither no-search baseline comes close.
+- *Every suite* (in-sample except `dlheld7`): −1.87 over the 123 of 126 targets with network runs that both learn (3.7×), clearly better on 117 and worse on 2. Over the 134 targets both learn, v3 needs 1.14× less data than DFG alone, mostly on small formulas and thresholds that it learns by n = 128.
+- *Input dimension.* The comparison uses 7 targets at d = 15–60, 4 of them also at d = 120. DFG's n* grows as $d^{0.01}$ to $d^{0.50}$, the networks' as $d^{0.91}$ to $d^{2.40}$. The price is compute: exhaustive degree-k enumeration costs of order $n\binom dk$ FLOPs. Within one network run's budget, DFG's global search can pass no degree-4 character from d = 179 on (Proved, by the code).
+- *The low-degree algorithm* (`lowdeg`) has DFG's characters of degree ≤ 4 and its test, and nothing else: no residual rounds, no blocks, no refitted readout. It needs 3.1× more data than DFG (+1.64; worse on 112 targets, better on 16) and is level with the networks (−0.16).
+- *Tabular.* kr_vs_kp and mushroom are the only datasets with ±1-codable inputs, 9 cells in all. DFG is level with gradient boosting in every cell. It is level with the regularized MLPs and v3 except at the smallest n of kr_vs_kp, where they are clearly better.
+- *Ablations.* Each of the 12 runs changes one setting, on 65 targets, compared against a paired null whose mean |log2 ratio| is 0.012 at one seed.
+  - Removing the sum blocks costs most: +0.91, with 3 targets lost.
+  - The residual-scaled tests (+0.14 when replaced by label-scaled ones) and the small-n machinery (+0.12) cost a little.
+  - The kernel background hurts slightly: removing it gives −0.10.
+  - The other eight changes leave the mean within the seed-to-seed spread, though single targets move further. They are δ = 1e-4 or 0.9, no eigenvector seeds, no linear or spectral blocks, no extension or local classes, no weighted blocks, a least-squares readout, and K = 3.
+- *Core DFG* (post hoc). It keeps the characters of degree ≤ 3, the unweighted signed-sum blocks without the eigenvector seeds, the residual-scaled tests, a least-squares readout and the small-n cross-validation.
+  - Its mean log2 n* ratio to DFG is +0.07 over the 133 targets both learn, at a median 0.094 of DFG's FLOPs.
+  - It moves 54 of 138 targets beyond the tie band (28 lower, 26 higher), where the paired null moves 8, and it loses par5.
+  - Against the networks its mean log2 ratio is −1.74 over 122 targets (111 clearly better, 9 worse).
+
+**What it learns** (Numerical, seed 0 unless stated, independently verified; readings Heuristic):
+- *Models.* DFG's models are explicit lists of named features, often the target's exact structure:
+  - a parity is its single character;
+  - a symmetric target is one exact signed-sum block;
+  - a parity of two majorities is first the folded blocks $|t_A+t_B|$ and $|t_A-t_B|$, since $\mathrm{sign}(|t_A+t_B|^2-|t_A-t_B|^2)=\mathrm{sign}(t_At_B)$;
+  - formulas and multiplexers are their characters, after transient blocks.
+
+  Where DFG errs, features are missing, not weights: in 133 of the 148 analysed cells with test error above 0.1, no weights on the learned features fit the target.
+- *Two regimes.*
+  - On parities of degree 2–4, the test sets the data cost. In round 0, $\chi_S$ passes iff $n(1-\bar y^2)>2\ln(4K\binom dk/\delta)$ (Proved). This predicts all 250 fits with n ≥ 32, and moving δ moves n* by the predicted amount, within 0.03.
+  - On signed-sum targets, wherever the grid can tell (6 targets), the evidence points to the search. Their true block would pass its test a doubling or more before it enters the model, and a stricter test moves n* by at most 0.05.
+  - The residue classes mod 3 have $1.6\cdot10^{-6}$ to $2.1\cdot10^{-4}$ of their Fourier weight at degrees 1–2, where the block search starts. They are never found, although their block would pass the test from n = 128.
+- *Order.* Inside round 0, DFG's test statistics are positively rank-correlated with the Part 5 networks' order on all 11 targets (median Kendall τ 0.54). The orders invert where a large coefficient sits at high degree: the multiplexer's largest term is DFG's first character (by round-0 z-score) and the networks' last. DFG tends to admit characters in order of detectability, $n_{\rm glob}\propto\ln(4K\binom d{|S|}/\delta)/\hat f(S)^2$. The networks acquire them in order of construction: lower degree first, products after their factors.
+- *False admissions.* On labels independent of the inputs, the character tests sit about ten times inside their Hoeffding bound. None of the 220 balanced-noise final models at d = 30 holds a feature that passed a test. The spectral block has no proved level, and on skewed labels it passes often: in 5.4% of null draws at d = 30 and 99% at d = 120 (n = 4d, P(y = 1) = 0.8).
+
+**Reading** (Heuristic). DFG replaces the networks' noisy feature search with enumeration. Its sample cost therefore grows like $k\ln d$ where theirs grows like $d^{k-1}$, and it pays in FLOPs. Its failures are failures of the block search. The core DFG is the cleaner object to study next. Every test in it is a union bound over an explicit class. Its open question is when a search seeded by degree-1 and degree-2 residual statistics proposes a signed-sum block.
+
+**Limits.**
+- Only `dlheld7`, 12 targets of one family, is held out.
+- The object was chosen after v3's results had been read, and the core is post hoc.
+- The domain is Boolean.
+- The ±0.25 per-target band is smaller than the single-seed spread: two training seeds differ by a mean |log2 ratio| of 0.339.
+- AI-written; not reviewed by a human.
 
 ## Files
 

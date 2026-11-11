@@ -1,0 +1,1188 @@
+"""Part 11 theory (THEORY.md): every number quoted there is computed here and written to check_theory.json.
+
+usage: OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python check_theory.py [--only=P1,P2,P3,P4,P5]
+(--only recomputes the named sections into the existing check_theory.json; the full run takes about 7 minutes, most of
+it P1's null simulation.)  Reads the frozen learner (part10/hyb_portfolio3/dfg13.py, md5-checked through eval_dfg.load_dfg13), the Part 11 result
+files (part11/results/toy__dfg13-perm__*.json), study/dscale.json, the order analysis' cells
+(interp/order/results/cells, seed 0) and the cached fits of theory_fits.py (theory/cache/; run theory_fits.py first).
+Sections: code (constants read from the code), P1 (null), P2 (parities), P3 (n_glob), P4 (sum blocks), P5 (compute).
+Blocks marked "(verification)" were added after the independent verification (VERIFY_THEORY.md) to compute the
+numbers that THEORY.md's corrections cite; they add keys and change no earlier value.
+"""
+import os, sys, json, gzip, math, time, inspect, itertools
+from fractions import Fraction
+import numpy as np
+
+HERE = os.path.dirname(os.path.abspath(__file__)); INTERP = os.path.dirname(HERE); P11 = os.path.dirname(INTERP)
+STUDY = os.path.dirname(P11)
+sys.path.insert(0, HERE)
+import theory_fits as TF                                               # noqa: E402  (dfg_hooks, order_fit, cache paths)
+H, OF, TH = TF.H, TF.OF, TF.TH
+DM = H.E.load_dfg13()                                                  # the frozen module (md5 checked)
+C = math.comb
+NS = TH.NS
+RES = os.path.join(P11, "results")
+OUT = {}
+
+
+def rfile(suite):
+    return json.load(open(os.path.join(RES, f"toy__dfg13-perm__{suite}.json")))
+
+
+def dsuite(d):
+    return "designed" if d == 30 else f"designed_d{d}"
+
+
+# ------------------------------------------------------------------------------------------------ code facts
+def defaults():
+    sig = inspect.signature(DM.DFG.__init__)
+    return {k: (v.default if not isinstance(v.default, tuple) else list(v.default)) for k, v in sig.parameters.items()
+            if k != "self"}
+
+
+DEF = defaults()
+Kc, Klat, cc, DELTA = DEF["K"], DEF["K_later"], DEF["c"], DEF["delta"]
+BUD, BUDHI = tuple(DEF["budget"]), DEF["budget_hi"]
+
+
+def L_of(N):
+    """The log term of thr(N) = c s sqrt(2 L / n):  L = ln(4 K N / delta), K = self.K = 4 in every round."""
+    return math.log(4 * Kc * max(N, 1) / DELTA)
+
+
+def n_thr(k, d, c=cc):
+    return 2 * c * c * L_of(C(d, k))
+
+
+def m_k(k, n, d, scale):
+    """The subsample size of the round's global degree-k search, as DFG._fit computes it (lines 628, 638, 654)."""
+    GD = TH.gd_flops(d) * scale
+    if k == 3:
+        return min(n, int(BUD[1] * GD / (d * (2 * d * d + 2 * d))))
+    if k == 4:
+        return min(n, int(BUD[0] * GD / (C(d, 2) * (2 * d * d + 3 * d))))
+    k1, k2 = (k + 1) // 2, k // 2; N1, N2 = C(d, k1), C(d, k2)
+    return min(n, int(BUDHI * GD / (2 * N1 * N2 + DM.m_tab_cost(d, k1, k2))))
+
+
+def searched(k, n, d, scale, hi=True):
+    if k <= 2:
+        return True
+    if k <= 4:
+        return m_k(k, n, d, scale) >= 32
+    if k <= 6:
+        return hi and m_k(k, n, d, scale) >= 64
+    return False
+
+
+def final_scale(n):
+    return 1.0 if n > DEF["cv_n"] else 0.5
+
+
+def code_section():
+    md5 = __import__("hashlib").md5(open(H.E.DFG13, "rb").read()).hexdigest()
+    gd = {str(d): TH.gd_flops(d) for d in (15, 30, 60, 120, 1000)}
+    doc = DM.__doc__
+    return dict(md5=md5, defaults={k: DEF[k] for k in ("K", "K_later", "c", "delta", "rounds", "max_new", "max_feats",
+                                                         "max_ext_bases", "local_max", "budget", "small_n", "cv_n",
+                                                         "K_hi", "budget_hi", "sum_nmin", "sum_mc", "sum_kmax",
+                                                         "sum_force", "sum_force_nmin", "readout", "ridge")},
+                gd_flops=gd,
+                docstring_says_sum_force_off=("sum_force=True, off by default" in doc),
+                per_class_level_c1=DELTA / (2 * Kc))
+
+
+# ------------------------------------------------------------------------------------------------ P1: the null
+def _pairs(d):
+    I, J = np.triu_indices(d, 1)
+    return I, J
+
+
+def round0_z(X, y, d, scale=1.0, hi=False, degrees=(1, 2, 3, 4), direct=False):
+    """Round 0 of DFG._fit on (X, y), replicated: r = y - w0 (w0 = sum y / (n + 1e-9), the ridge-free constant fit),
+    s = rms(r); for each searched degree k the largest z = |mean_m(r chi_S)| / thr over the C(d, k) characters (m = the
+    code's subsample, thr = thr(N) or thr_m(N, m)); the linear block's statistic T1 = n |c1|^2 / s^2; the spectral
+    block's top |eigenvalue| of the off-diagonal residual pair matrix over its edge.  direct=True enumerates character
+    tables (small d, degrees up to 6); else degrees 3, 4 come from products of pair columns."""
+    n = len(y); X = np.asarray(X, np.float64); y = np.asarray(y, np.float64)
+    w0 = y.sum() / (n + 1e-9); r = y - w0; s = math.sqrt(max(float(np.mean(r * r)), 1e-12))
+    out = dict(s=s)
+    if s < 1e-6:
+        return out
+    thr = lambda N: cc * s * math.sqrt(2 * L_of(N) / n)
+
+    def thr_m(N, m):
+        return thr(N) * math.sqrt(n / m) * (math.sqrt(np.mean(r[:m] ** 2)) / s if m < n else 1.0)
+    c1 = X.T @ r / n
+    z = {}
+    if 1 in degrees:
+        z[1] = float(np.max(np.abs(c1)) / thr(d))
+    M = (X * r[:, None]).T @ X / n
+    I, J = _pairs(d)
+    if 2 in degrees:
+        z[2] = float(np.max(np.abs(M[I, J])) / thr(C(d, 2)))
+    for k in [k for k in degrees if k >= 3]:
+        if not searched(k, n, d, scale, hi):
+            continue
+        m = m_k(k, n, d, scale); Xm, rm = X[:m], r[:m]; t = thr_m(C(d, k), m)
+        if direct:
+            cols = list(itertools.combinations(range(d), k)); Z = np.ones((m, len(cols)))
+            for q in range(k):
+                Z *= Xm[:, [S[q] for S in cols]]
+            z[k] = float(np.max(np.abs(rm @ Z / m)) / t)
+        elif k == 3:
+            P = Xm[:, I] * Xm[:, J]; G = P.T @ (Xm * rm[:, None]) / m
+            ok = (np.arange(d)[None, :] != I[:, None]) & (np.arange(d)[None, :] != J[:, None])
+            z[3] = float(np.max(np.abs(G[ok])) / t)
+        elif k == 4:
+            P = Xm[:, I] * Xm[:, J]; G = (P * rm[:, None]).T @ P / m
+            ok = ((I[:, None] != I[None, :]) & (I[:, None] != J[None, :]) & (J[:, None] != I[None, :])
+                  & (J[:, None] != J[None, :]))
+            z[4] = float(np.max(np.abs(G[ok])) / t)
+    out["z"] = z
+    tt = math.log(1 / DELTA)
+    out["T1"] = float(n * np.sum(c1 ** 2) / s ** 2)
+    Ms = (M + M.T) / 2; np.fill_diagonal(Ms, 0.0)
+    lam = np.linalg.eigvalsh(Ms)
+    edge = 2 * s * math.sqrt(d / n) * (1 + math.sqrt(2 * math.log(1 / DELTA) / d))
+    out["quad_ratio"] = float(np.max(np.abs(lam)) / edge)
+    return out
+
+
+def replay_null_fit(n, rep, law="fair"):
+    """Refit one of theory_fits' null fits (the same data and rng) and replay the rounds of its final fit: for every
+    character a round added, its z in each class that contains it (global degree |S| on the code's rows; ext1 / ext2 of
+    a current character; local on the inputs in use), with the round's own residual.  A character added with every
+    z <= 1 was a forced guess."""
+    d = TF.P1_D; X, y = TF.p1_data(n, rep, d, law); L = H.make_learner()
+    with H.Recorder(type(L.inner)) as R:
+        out = L.fit(X, y, np.random.default_rng([20261103, n, rep, 77]))
+    fin = R.calls[-1]; pi = np.random.default_rng([20261103, n, rep, 77]).permutation(d)
+    Xl = np.asarray(X, np.float64)[:, pi]; yv = np.asarray(y, np.float64); sc = 0.5 if n <= DEF["cv_n"] else 1.0
+    chi = lambda S: np.prod(Xl[:, list(S)], axis=1) if S else np.ones(n)
+    feats, rounds = [()], []
+    for e in fin["info"]["log"]:
+        A = np.stack([chi(S) for S in feats], 1); p = A.shape[1]
+        G = A.T @ A + DEF["ridge"] * n * np.diag([0.0] + [1.0] * (p - 1)) + 1e-9 * np.eye(p)
+        r = yv - A @ np.linalg.solve(G, A.T @ yv); s = math.sqrt(max(float(np.mean(r * r)), 1e-12))
+        thr_m = lambda N, m: cc * math.sqrt(2 * L_of(N) / m) * (math.sqrt(float(np.mean(r[:m] ** 2))) if m < n else s)
+        chars = [S for S in feats if S]; V = sorted(set(i for S in chars for i in S)); Kr = Kc if e["round"] == 0 else Klat
+        added = []
+        for S in [tuple(int(i) for i in S) for S in e["new"]]:
+            k = len(S); z = {}
+            if k <= Kr and searched(k, n, d, sc, e["round"] == 0):
+                m = m_k(k, n, d, sc) if k >= 3 else n
+                z["global"] = abs(float(np.mean((r * chi(S))[:m]))) / thr_m(C(d, k), m)
+            v = abs(float(np.mean(r * chi(S))))
+            if any(set(T) < set(S) and k - len(T) == 1 for T in chars):
+                z["ext1"] = v / thr_m(len(chars) * d, n)
+            if any(set(T) < set(S) and k - len(T) == 2 for T in chars):
+                z["ext2"] = v / thr_m(len(chars) * C(d, 2), n)          # (all rows at n <= 512, d = 30)
+            if 2 <= len(V) <= DEF["local_max"] and set(S) <= set(V):
+                z["local"] = v / thr_m(C(len(V), k), n)
+            added.append(dict(S=list(S), degree=k, z=z, forced=bool(max(z.values(), default=0.0) <= 1.0)))
+        rounds.append(dict(round=e["round"], s=s, s_logged=e["s"], added=added, blocks=e["blocks"]))
+        feats += [tuple(S) for S in e["new"]]
+    return dict(n=n, rep=rep, law=law, variant=out["info"].get("variant"), cv_errs=out["info"].get("cv_errs"),
+                final_is_forced_variant=bool(fin["force"]), rounds=rounds)
+
+
+def labels(law, n, rng):
+    if law == "fair":
+        return rng.choice([-1.0, 1.0], size=n)
+    if law == "biased":
+        return np.where(rng.random(n) < 0.85, 1.0, -1.0)
+    if law == "fixed":                                                   # one fixed vector, the same in every replicate
+        return np.where(np.arange(n) < -(-n // 3), 1.0, -1.0)
+    raise ValueError(law)
+
+
+def cp_upper(k, R, a=0.05):
+    """One-sided 95% Clopper-Pearson upper limit for a binomial proportion k / R."""
+    from scipy.stats import beta
+    return 1.0 if k >= R else float(beta.ppf(1 - a, k + 1, R - k))
+
+
+def bound_k(N, u, c=cc):
+    """The Hoeffding union bound for one degree: P(max_S z_S >= u) <= 2 N (delta / (4 K N))^(u^2 c^2)."""
+    return min(1.0, 2 * N * (DELTA / (4 * Kc * N)) ** (u * u * c * c))
+
+
+def p1_section(fast=False):
+    res = dict(bounds={}, sims=[], linear=[], quad=[])
+    for d in (15, 30, 60, 120):
+        res["bounds"][str(d)] = {str(k): dict(N=C(d, k), L=L_of(C(d, k)), bound_u1=bound_k(C(d, k), 1.0)) for k in range(1, 7)}
+    res["bound_total_deg1to4"] = 4 * DELTA / (2 * Kc); res["bound_total_deg1to6"] = 6 * DELTA / (2 * Kc)
+    # P1c: the proved part of P(final model is not the constant plus the background): degrees 1-6 plus the linear block
+    res["bound_final_model_proved_part"] = 6 * DELTA / (2 * Kc) + DELTA
+    from scipy.stats import norm, chi2
+    # Heuristic: the Gaussian approximation of the per-degree level (N nearly independent N(0,1) statistics), and the
+    # chi^2_d tail at the linear block's Laurent-Massart threshold
+    res["gauss_level_u1"] = {str(d): {str(k): C(d, k) * 2 * float(norm.sf(cc * math.sqrt(2 * L_of(C(d, k))))) for k in range(1, 7)}
+                             for d in (15, 30, 60, 120)}
+    res["linear_chi2_level"] = {str(d): float(chi2.sf(d + 2 * math.sqrt(d * math.log(1 / DELTA)) + 2 * math.log(1 / DELTA), d))
+                                for d in (15, 30, 60, 120)}
+    # Heuristic: the bound exceeds the Gaussian approximation by about the Mills-ratio factor sqrt(2 pi) sqrt(2 L)
+    res["bound_over_gauss_d30"] = {str(k): dict(bound=DELTA / (2 * Kc), gauss=res["gauss_level_u1"]["30"][str(k)],
+                                               ratio=DELTA / (2 * Kc) / res["gauss_level_u1"]["30"][str(k)],
+                                               sqrt2pi_sqrt2L=math.sqrt(2 * math.pi) * math.sqrt(2 * L_of(C(30, k))))
+                                   for k in range(1, 5)}
+    # Heuristic reading of the spectral block's failure with skewed labels (d = 30, n = 128, P(+1) = 0.85): the
+    # minority rows (r = -1 - ybar) form a Wishart-like part of rank ~ 0.15 n < d; its top eigenvalue after the diagonal
+    # is removed is ~ ((sqrt(0.15 n) + sqrt(d))^2 - 0.15 n) |r_minus| / n, against the code's edge
+    d_, n_, p_ = 30, 128, 0.85; yb = 2 * p_ - 1; s_ = math.sqrt(1 - yb * yb); nm_ = (1 - p_) * n_
+    res["quad_skew_heuristic"] = dict(d=d_, n=n_, p_plus=p_, ybar=yb, r_plus=1 - yb, r_minus=-1 - yb, s=s_,
+                                      minority_rows=nm_,
+                                      edge=2 * s_ * math.sqrt(d_ / n_) * (1 + math.sqrt(2 * math.log(1 / DELTA) / d_)),
+                                      wishart_top=((math.sqrt(nm_) + math.sqrt(d_)) ** 2 - nm_) * (1 + yb) / n_)
+    us = [0.7, 0.8, 0.9, 1.0]; xs = [0.5, 1.0, 2.0, math.log(1 / DELTA)]
+    R = 60 if fast else 300
+    plans = ([dict(d=30, n=n, law=law, scale=1.0, hi=False, degrees=(1, 2, 3, 4), direct=False)
+              for n in (32, 128, 512, 2048) for law in ("fair", "biased", "fixed")]
+             + [dict(d=15, n=n, law="fair", scale=1.0, hi=True, degrees=(1, 2, 3, 4, 5, 6), direct=True) for n in (64, 256, 1024)]
+             + [dict(d=60, n=410, law="fair", scale=1 / 20, hi=False, degrees=(1, 2, 3, 4), direct=False)])
+    # (the last plan is a 5-fold fit of the cross-validation at n = 512, d = 60: its degree-4 search runs on m4 = 110 of
+    #  its 410 rows, the subsampled case of P1a)
+    for pl in plans:
+        d, n = pl["d"], pl["n"]; rng = np.random.default_rng([31337, d, n, ["fair", "biased", "fixed"].index(pl["law"])])
+        zs, T1s, qs = [], [], []
+        t0 = time.process_time()
+        for rep in range(R):
+            X = rng.choice([-1.0, 1.0], size=(n, d)); y = labels(pl["law"], n, rng)
+            o = round0_z(X, y, d, pl["scale"], pl["hi"], pl["degrees"], pl["direct"])
+            zs.append(o.get("z", {})); T1s.append(o.get("T1", 0.0)); qs.append(o.get("quad_ratio", 0.0))
+        row = dict(d=d, n=n, law=pl["law"], scale=pl["scale"], reps=R, cpu=round(time.process_time() - t0, 1),
+                   m={str(k): (m_k(k, n, d, pl["scale"]) if k >= 3 else n) for k in pl["degrees"]}, deg={})
+        for k in pl["degrees"]:
+            if not zs or k not in zs[0]:
+                continue
+            v = np.array([z[k] for z in zs]); N = C(d, k)
+            from scipy.stats import norm
+            row["deg"][str(k)] = {f"u{u}": dict(hits=int(np.sum(v >= u)), rate=float(np.mean(v >= u)),
+                                               cp95=cp_upper(int(np.sum(v >= u)), R), bound=bound_k(N, u),
+                                               gauss=min(1.0, N * 2 * float(norm.sf(u * cc * math.sqrt(2 * L_of(N))))))
+                                  for u in us}
+            row["deg"][str(k)]["max_z"] = float(v.max())
+        anyk = np.array([max(z.values()) if z else 0.0 for z in zs])
+        row["any_degree_u1"] = dict(hits=int(np.sum(anyk > 1)), bound=len(row["deg"]) * DELTA / (2 * Kc))
+        T1 = np.array(T1s)
+        row["linear"] = {f"x{x:.3f}": dict(thr=d + 2 * math.sqrt(d * x) + 2 * x, hits=int(np.sum(T1 > d + 2 * math.sqrt(d * x) + 2 * x)),
+                                           rate=float(np.mean(T1 > d + 2 * math.sqrt(d * x) + 2 * x)), bound=math.exp(-x))
+                         for x in xs}
+        row["linear_admissible_n"] = bool(n >= 2 * (1 + d))
+        q = np.array(qs); row["quad"] = dict(applies=bool(n >= 4 * d), hits=int(np.sum(q > 1)), rate=float(np.mean(q > 1)),
+                                            max_ratio=float(q.max()))
+        res["sims"].append(row)
+        print(f"P1 sim d={d} n={n} {pl['law']}: " + ", ".join(f"k{k} z>=1 {row['deg'][k]['u1.0']['hits']}/{R} "
+                                                            f"z>=.8 {row['deg'][k]['u0.8']['hits']}"
+                                                            for k in row["deg"]) +
+              f" | linear(x=ln10) {row['linear'][f'x{math.log(10):.3f}']['hits']} | quad {row['quad']['hits']} | {row['cpu']}s", flush=True)
+    viol = [(r["d"], r["n"], r["law"], k, u) for r in res["sims"] for k, v in r["deg"].items() for u, w in v.items()
+            if isinstance(w, dict) and w["rate"] > w["bound"]]
+    lviol = [(r["d"], r["n"], r["law"], x) for r in res["sims"] for x, w in r["linear"].items() if w["rate"] > w["bound"]]
+    res["violations_char"] = viol; res["violations_linear"] = lviol
+    res["n_checks_char"] = sum(len(us) for r in res["sims"] for k in r["deg"])
+    res["n_checks_linear"] = sum(len(xs) for r in res["sims"])
+    tot = dict(reps=sum(r["reps"] for r in res["sims"]),
+               any_u1=sum(r["any_degree_u1"]["hits"] for r in res["sims"]))
+    tot["max_hits_u1_per_degree_config"] = max(w["u1.0"]["hits"] for r in res["sims"] for w in r["deg"].values())
+    tot["linear_hits_ln10"] = sum(r["linear"][f"x{math.log(1 / DELTA):.3f}"]["hits"] for r in res["sims"])
+    tot["linear_hits_ln10_d30"] = sum(r["linear"][f"x{math.log(1 / DELTA):.3f}"]["hits"] for r in res["sims"] if r["d"] == 30)
+    tot["reps_d30"] = sum(r["reps"] for r in res["sims"] if r["d"] == 30)
+    tot["u08_d30_n2048_fair"] = {k: dict(rate=w["u0.8"]["rate"], bound=w["u0.8"]["bound"], gauss=w["u0.8"]["gauss"])
+                                 for r in res["sims"] if (r["d"], r["n"], r["law"]) == (30, 2048, "fair") for k, w in r["deg"].items()}
+    tot["u1_hits_by_degree_d30"] = {k: sum(r["deg"][k]["u1.0"]["hits"] for r in res["sims"] if r["d"] == 30) for k in ("1", "2", "3", "4")}
+    res["totals"] = tot
+    # quad (spectral) block under the null: uncovered by the proof; rate where it applies (n >= 4 d)
+    res["quad_summary"] = [dict(d=r["d"], n=r["n"], law=r["law"], hits=r["quad"]["hits"], reps=r["reps"])
+                           for r in res["sims"] if r["quad"]["applies"]]
+    # full DFG fits on null labels (theory_fits.run_p1)
+    path = os.path.join(TF.CACHE, "p1_null_fits.json")
+    if os.path.exists(path):
+        F = json.load(open(path)); rows = {}
+        for key, o in F.items():
+            n = o["n"]; rw = rows.setdefault(str(n) + ("" if o.get("law", "fair") == "fair" else "_" + o["law"]), dict(fits=0, nonconstant=0, forced_chosen=0, chars=0, linear=0,
+                                                           quad=0, sumblock=0, round0_admit=0, deg={}, folds_nonempty=0,
+                                                           n_folds=0, folds_default_nonempty=0))
+            rw["fits"] += 1; rw["nonconstant"] += int(o["size"] > 1); rw["forced_chosen"] += int(o["variant"] == 1)
+            nch = sum(o["chars_by_deg"].values()); rw["chars"] += int(nch > 0)
+            for k, v in o["chars_by_deg"].items():
+                if v:
+                    rw["deg"][k] = rw["deg"].get(k, 0) + 1
+            r0 = o["round0"] or dict(n_new=0, blocks=[])
+            rw["linear"] += int("linear" in r0["blocks"]); rw["quad"] += int(o["n_quad"] > 0)
+            rw["sumblock"] += int(o["n_sum_feats"] > 0)
+            rw["round0_admit"] += int(r0["n_new"] > 0 or len(r0["blocks"]) > 0)
+            rw["folds_nonempty"] += o["folds_nonempty"]; rw["n_folds"] += o["n_folds"]
+            rw["folds_default_nonempty"] += o["folds_default_nonempty"]
+        res["full_fits"] = rows
+        # every null fit whose final model is more than the constant plus the background, with what it holds
+        res["nonconstant_fits"] = []
+        for key, o in F.items():
+            if o["size"] <= 1:
+                continue
+            r0 = o["round0"] or dict(n_new=0, new=[], blocks=[])
+            r0deg = sorted(len(S) for S in r0["new"])
+            later = dict(o["chars_by_deg"])                           # characters admitted after round 0, by degree
+            for k in r0deg:
+                later[str(k)] -= 1
+            res["nonconstant_fits"].append(dict(key=key, n=o["n"], law=o.get("law", "fair"), variant=o["variant"],
+                                                cv_errs=o["cv_errs"], size=o["size"],
+                                                chars_by_deg={k: v for k, v in o["chars_by_deg"].items() if v},
+                                                round0_char_degrees=r0deg,
+                                                later_char_degrees={k: v for k, v in later.items() if v},
+                                                n_quad=o["n_quad"], n_sum_feats=o["n_sum_feats"], blocks=o["blocks"],
+                                                rounds_log=o["rounds_log"]))
+        # the fits whose cross-validation chose the forced variant: refit and replay what each round added
+        res["forced_fits_replay"] = {key: replay_null_fit(o["n"], o["rep"], o.get("law", "fair"))
+                                     for key, o in F.items() if o["variant"] == 1}
+        # the replica of round 0 (degrees 1-4, linear and spectral statistics) on the same 80 data sets, against what
+        # DFG's own final fit admitted in round 0 (test admissions only; a forced pick has z <= 1 by definition)
+        agree, rep = 0, []
+        for key, o in F.items():
+            n, r_ = o["n"], o["rep"]
+            X, y = TF.p1_data(n, r_, TF.P1_D, o.get("law", "fair"))
+            z = round0_z(X, y, TF.P1_D, final_scale(n), False, (1, 2, 3, 4))
+            pred = sorted(k for k, v in z["z"].items() if v > 1)
+            r0 = o["round0"] or dict(n_new=0, new=[], blocks=[])
+            got = sorted(set(len(S) for S in r0["new"]))
+            if o["variant"] == 1 and not pred:
+                ok_chars = r0["n_new"] <= 1                         # nothing passed: at most the one forced pick
+            else:
+                ok_chars = pred == got
+            lin_pred = (z["T1"] > TF.P1_D + 2 * math.sqrt(TF.P1_D * math.log(1 / DELTA)) + 2 * math.log(1 / DELTA)
+                        and n >= 2 * (1 + TF.P1_D) and not any(k == 1 for k in pred))
+            quad_pred = z["quad_ratio"] > 1 and n >= 4 * TF.P1_D
+            ok_ = ok_chars and (("linear" in r0["blocks"]) == lin_pred) and (("quad" in r0["blocks"]) == quad_pred)
+            agree += int(ok_)
+            if pred or got or o["size"] > 1 or quad_pred:
+                rep.append(dict(key=key, variant=o["variant"], replica_degrees_z_gt_1=pred, dfg_round0=r0,
+                                replica_max_z={str(k): round(v, 4) for k, v in z["z"].items()}, T1=round(z["T1"], 2),
+                                quad_ratio=round(z["quad_ratio"], 3)))
+        res["full_fits_replica"] = dict(fits=len(F), agree=agree, cases=rep)
+    return res
+
+
+# ------------------------------------------------------------------------------------------------ P2: parities
+def p_pass(n, k, d):
+    """Exact P(the round-0 test of the final fit admits chi_S) for y = chi_S, |S| = k, when the degree-k search runs on
+    all n points: the labels are iid fair signs, so sum(y) = 2B - n with B ~ Bin(n, 1/2), and the test passes iff
+    n (1 - ybar^2) > n_thr(k, d).  For n >= 2048 (where some searches are subsampled) it is 1 to within 1e-60 on this
+    grid and 1.0 is returned."""
+    if not searched(k, n, d, final_scale(n)):
+        return 0.0
+    if n >= 2048:
+        return 1.0
+    lim = n * (n - n_thr(k, d))
+    if lim <= 0:
+        return 0.0
+    tot = sum(C(n, b) for b in range(n + 1) if (2 * b - n) ** 2 < lim)
+    return float(Fraction(tot, 2 ** n))
+
+
+def crit_exact(y, k, d, n, m=None):
+    """The exact round-0 criterion for y = chi_S, with the 1e-9 term of the constant fit and the subsample m."""
+    y = np.asarray(y, np.float64); w0 = y.sum() / (n + 1e-9); m = n if m is None else m
+    ym = y[:m].mean()
+    lhs = m * (1 - w0 * ym) ** 2; rhs = n_thr(k, d) * (1 - 2 * w0 * ym + w0 * w0)
+    return lhs > rhs, lhs - rhs
+
+
+def fold_assignment(t, seed, n, d):
+    """The folds of DFG.fit's small-n cross-validation, rebuilt from the harness rng: harness.Permuted draws the column
+    permutation from default_rng([fn_seed(t), seed, n, 77]) first, then DFG.fit draws fold = rng.permutation(n) % F."""
+    rng = np.random.default_rng([TH.fn_seed(t), seed, n, 77]); rng.permutation(d)
+    F = 10 if n <= 64 else 5
+    return rng.permutation(n) % F, F
+
+
+def fold_criteria(y, t, seed, n, d, k):
+    """For a k-parity cell at n <= cv_n: each fold fit's row count and whether its round-0 test admits chi_S (P2's
+    criterion on the fold's own training labels; degrees 3-4 need the fold's m_k >= 32)."""
+    fold, F = fold_assignment(t, seed, n, d); out = []
+    for f in range(F):
+        yf = np.asarray(y, np.float64)[fold != f]; nf = len(yf); sc = 1 / (4 * F)
+        srch = searched(k, nf, d, sc)
+        ok = bool(srch and crit_exact(yf, k, d, nf, m_k(k, nf, d, sc) if k >= 3 else nf)[0])
+        out.append(dict(rows=nf, searched=bool(srch), passes=ok))
+    return out
+
+
+def nstar(errs):
+    return TH.nstar(NS, errs)
+
+
+def p2_section():
+    out = dict(n_thr={}, cells=[], pred={}, pass_prob={}, d1000={}, networks={})
+    for d in (15, 30, 60, 120, 1000):
+        out["n_thr"][str(d)] = {str(k): n_thr(k, d) for k in (2, 3, 4)}
+    p2c = json.load(open(os.path.join(TF.CACHE, "p2_cells.json")))
+    agree = dict(n_ge32=0, n_ge32_total=0, jitter_same=0, jitter_total=0, n16_fail_crit=0, n16_total=0,
+                 n16_err0=0, n16_err0_forced=0, n16_forced_holds_S=0,
+                 # (verification) jitter_total counts every cell with m = n, including the n = 16 cells of par3/par4,
+                 # where degrees 3-4 are not searched and both forms are false by definition; the _searched counts
+                 # keep only the cells where the degree-k search runs on all n rows
+                 jitter_same_searched=0, jitter_total_searched=0, jitter_unsearched_m_eq_n=0)
+    rows_meas = {}; fail_errs = []; unsearched = []
+    for d in (15, 30, 60, 120):
+        R = rfile(dsuite(d)); T = H.targets("designed", d)
+        for t, k in (("par2", 2), ("par3", 3), ("par4", 4)):
+            if t not in R["fns"]:
+                continue
+            E = np.array(R["fns"][t]["err"]); fn = T[t]["fn"]
+            pred_seed = np.zeros_like(E); predC = np.zeros_like(E)
+            for a, n in enumerate(R["ns"]):
+                sc = final_scale(n)
+                for b, s in enumerate(R["seeds"]):
+                    X, y = TH.train_data(fn, t, s, n, d); y = y.astype(np.float64)
+                    srch = searched(k, n, d, sc); m = m_k(k, n, d, sc) if k >= 3 else n
+                    simple = srch and n * (1 - (y.mean()) ** 2) > n_thr(k, d) if m == n else None
+                    ex, margin = crit_exact(y, k, d, n, m) if srch else (False, None)
+                    ok = bool(ex) and srch
+                    agree["jitter_total"] += int(simple is not None)
+                    agree["jitter_same"] += int(simple is not None and bool(simple) == bool(ex))
+                    agree["jitter_total_searched"] += int(simple is not None and bool(srch))
+                    agree["jitter_same_searched"] += int(simple is not None and bool(srch) and bool(simple) == bool(ex))
+                    agree["jitter_unsearched_m_eq_n"] += int(simple is not None and not srch)
+                    if simple is not None and not srch:
+                        unsearched.append(f"{t}__d{d}__n{n}__s{s}")
+                    err = float(E[a, b]); pred_seed[a, b] = 0.0 if ok else 0.5
+                    key = f"{t}__d{d}__n{n}__s{s}"; var = p2c[key]["variant"] if key in p2c else None
+                    holds = None
+                    if key in p2c:
+                        holds = p2c[key]["true_S"] in p2c[key]["calls"][-1]["chars"]
+                    predC[a, b] = 0.0 if (ok or holds) else 0.5
+                    if n >= 32:
+                        agree["n_ge32_total"] += 1; agree["n_ge32"] += int((err == 0.0) == ok)
+                        if not ok:
+                            fail_errs.append(err)
+                    if n == 16:
+                        agree["n16_total"] += 1; agree["n16_fail_crit"] += int(not ok)
+                        agree["n16_err0"] += int(err == 0.0); agree["n16_err0_forced"] += int(err == 0.0 and var == 1)
+                        agree["n16_forced_holds_S"] += int(err == 0.0 and bool(holds))
+                    if n <= 64:
+                        fc = fold_criteria(y, t, s, n, d, k)
+                        calls_ = p2c[key]["calls"] if key in p2c else None
+                        out["cells"].append(dict(d=d, t=t, n=n, seed=s, sum_y=int(y.sum()), crit=n * (1 - y.mean() ** 2),
+                                                 fold_rows=[min(c["rows"] for c in fc), max(c["rows"] for c in fc)],
+                                                 folds_pass=sum(c["passes"] for c in fc), n_folds=len(fc),
+                                                 fold_rows_match_cache=(None if calls_ is None else
+                                                                        [c["n"] for c in calls_[:-1]] == [c["rows"] for c in fc] * 2),
+                                                 default_folds_with_S=(None if calls_ is None else
+                                                                       sum(1 for c in calls_[:len(fc)] if p2c[key]["true_S"] in c["chars"])),
+                                                 any_fold_with_S=(None if calls_ is None else
+                                                                  sum(1 for c in calls_[:-1] if p2c[key]["true_S"] in c["chars"])),
+                                                 n_thr=n_thr(k, d), searched=srch, m=m, passes=ok,
+                                                 margin=(None if margin is None else float(margin)), err=err,
+                                                 variant=var, cv_errs=(p2c[key]["cv_errs"] if key in p2c else None),
+                                                 final_holds_S=holds,
+                                                 forced_folds_with_S=(sum(1 for c in p2c[key]["calls"][:-1]
+                                                                          if c["force"] and p2c[key]["true_S"] in c["chars"])
+                                                                      if key in p2c else None)))
+            expect = [0.5 * (1 - p_pass(n, k, d)) for n in R["ns"]]
+            out["pred"][f"{t}_d{d}"] = dict(measured=nstar(np.nanmean(E, 1)), per_seed_test=nstar(pred_seed.mean(1)),
+                                            per_seed_test_or_forced=nstar(predC.mean(1)), expected_binomial=nstar(expect),
+                                            first_pass_grid=next(n for n in R["ns"] if n > n_thr(k, d) and searched(k, n, d, final_scale(n))),
+                                            seeds=R["seeds"], mean_err_16_32_64=[float(np.nanmean(E[i])) for i in range(3)])
+            out["pass_prob"][f"{t}_d{d}"] = {str(n): p_pass(n, k, d) for n in (16, 32, 64, 128)}
+            rows_meas[(t, d)] = out["pred"][f"{t}_d{d}"]["measured"]
+    out["agree"] = agree
+    out["fail_err_n_ge32"] = dict(count=len(fail_errs), min=min(fail_errs), max=max(fail_errs))
+    # at n <= 64 (the cached cells): does the default variant's fold fit hold chi_S exactly when P2's criterion holds
+    # on that fold's own rows?
+    fz = [c for c in out["cells"] if c["default_folds_with_S"] is not None]
+    out["fold_criterion_vs_default_folds"] = dict(cells=len(fz), equal=sum(1 for c in fz if c["folds_pass"] == c["default_folds_with_S"]),
+                                                  fold_rows_match_cache=sum(1 for c in fz if c["fold_rows_match_cache"]))
+    out["jitter_unsearched_cells"] = dict(count=len(unsearched), all_n16=all("__n16__" in u for u in unsearched),
+                                          targets=sorted(set(u.split("__")[0] for u in unsearched)), cells=unsearched)
+    out["n_thr_rise_15_to_120"] = {str(k): n_thr(k, 120) - n_thr(k, 15) for k in (2, 3, 4)}
+    out["two_k_ln8"] = {str(k): 2 * k * math.log(8) for k in (2, 3, 4)}
+    # (verification) n_thr against its growth rate: n_thr = 2c^2 (k ln d - ln k! + ln(4K/delta)) + rem, with
+    # rem = 2c^2 sum_{i<k} ln(1 - i/d) = O(k^2/d) <= 0; 2k ln d alone is a growth rate, not the value
+    dd_ = (15, 30, 60, 120)
+    lead = lambda k, d: 2 * cc * cc * k * math.log(d)
+    const = {k: 2 * cc * cc * (math.log(4 * Kc / DELTA) - math.lgamma(k + 1)) for k in (2, 3, 4)}
+    rem = {(k, d): n_thr(k, d) - lead(k, d) - const[k] for k in (2, 3, 4) for d in dd_ + (1000,)}
+    below = [1 - lead(k, d) / n_thr(k, d) for k in (2, 3, 4) for d in dd_]
+    out["n_thr_decomposition"] = dict(
+        const_2c2_ln4Kdelta_minus_2c2_lnkfact={str(k): const[k] for k in (2, 3, 4)},
+        two_c2_ln4Kdelta=2 * cc * cc * math.log(4 * Kc / DELTA),
+        two_c2_k_ln_d={str(d): {str(k): lead(k, d) for k in (2, 3, 4)} for d in dd_ + (1000,)},
+        remainder={str(d): {str(k): rem[(k, d)] for k in (2, 3, 4)} for d in dd_ + (1000,)},
+        remainder_closed_form_check=max(abs(rem[(k, d)] - 2 * cc * cc * sum(math.log(1 - i / d) for i in range(k)))
+                                        for k in (2, 3, 4) for d in dd_ + (1000,)),
+        max_abs_remainder_d15_120=max(abs(rem[(k, d)]) for k in (2, 3, 4) for d in dd_),
+        two_k_ln_d_range_d15_120=[min(lead(k, d) for k in (2, 3, 4) for d in dd_), max(lead(k, d) for k in (2, 3, 4) for d in dd_)],
+        two_k_ln_d_below_n_thr_frac_d15_120=[min(below), max(below)])
+    p4 = p_pass(32, 4, 30)
+    out["par4_d30_n32"] = dict(p_pass=p4, p_at_least_2_of_3_fail=3 * (1 - p4) ** 2 * p4 + (1 - p4) ** 3,
+                               pass_iff_abs_sum_y_le=max(v for v in range(0, 33, 2) if 32 * (1 - (v / 32) ** 2) > n_thr(4, 30)))
+    p3_ = p_pass(32, 3, 60)
+    out["par3_d60_n32"] = dict(p_pass=p3_, p_both_pass=p3_ ** 2,
+                               pass_iff_abs_sum_y_le=max(v for v in range(0, 33, 2) if 32 * (1 - (v / 32) ** 2) > n_thr(3, 60)))
+    # d = 1000: the test-limited prediction, and what DFG v1.3's budget rule does there (Heuristic)
+    d = 1000; GD = TH.gd_flops(d)
+    for t, k in (("par2", 2), ("par3", 3), ("par4", 4)):
+        pp = {n: (0.0 if n <= n_thr(k, d) else float(Fraction(sum(C(n, b) for b in range(n + 1) if (2 * b - n) ** 2 < n * (n - n_thr(k, d))), 2 ** n)))
+              for n in NS[:5]}
+        e = [0.5 * (1 - pp.get(n, 1.0)) if n in pp else 0.0 for n in NS]
+        out["d1000"][t] = dict(n_thr=n_thr(k, d), pass_prob={str(n): pp[n] for n in pp}, nstar_test_limited=nstar(e))
+    out["d1000"]["budget"] = {f"m{k}_scale{sc}": m_k(k, 16384, d, sc) for k in (3, 4, 5) for sc in (1.0, 0.5)}
+    out["d1000"]["exhaustive_flops_n64_over_GD"] = {str(k): fk / GD for k, fk in exhaustive_flops(64, d).items()}
+    out["d1000"]["GD"] = GD
+    # networks: dscale.json (d = 15, 30, 60) and the d = 120 reference in the d = 120 result file
+    ds = json.load(open(os.path.join(STUDY, "dscale.json")))
+    R120 = rfile("designed_d120")
+    for t in ("par2", "par3", "par4"):
+        nn = {dd: ds["rows"][dd][t]["nn"] for dd in ("15", "30", "60")}
+        if t in R120["fns"]:
+            nn["120"] = TH.nstar(NS, np.nanmean(np.array(R120["fns"][t]["nn_err"]), 1))
+        a = ds["exponents"][t]["nn"]
+        out["networks"][t] = dict(nstar=nn, exponent_15_60=a, pred120_from_60=nn["60"] * 2 ** a,
+                                  extrap1000=nn["60"] * (1000 / 60) ** a,
+                                  dfg_measured={str(dd): rows_meas.get((t, dd)) for dd in (15, 30, 60, 120)})
+    return out
+
+
+# ------------------------------------------------------------------------------------------------ P3: n_glob
+def n_glob(yS, y0, k, d=30):
+    return 2 * cc * cc * L_of(C(d, k)) * (1 - y0 * y0) / (yS * yS)
+
+
+def load_cell(suite, t, n):
+    if suite == "designed" and t in TF.ORDER_TARGETS:
+        p = os.path.join(TF.ORDER_CELLS, f"{t}__n{n}__s0.json.gz")
+    else:
+        p = TF.p3_path(suite, t, n)
+    return json.load(gzip.open(p, "rt")) if os.path.exists(p) else None
+
+
+def p3_section():
+    res = dict(targets=0, chars=0, per_target={}, test0=dict(tp=0, tn=0, fp=0, fn=0, fp_ratio=[], fn_ratio=[]),
+               first=dict(), early_routes={}, late=dict(), factors={}, missing_cells=[])
+    rows = []; calib = []
+    for suite in ("designed", "random"):
+        T = H.targets(suite)
+        for t in T:
+            sup, _ = OF.target_support(T[t]["fn"], list(T[t]["relevant"]), 30)
+            y0 = next((c for nm, S, c in sup if not S), 0.0)
+            chars = [(nm, S, c) for nm, S, c in sup if S]
+            cells = {}
+            for n in NS:
+                o = load_cell(suite, t, n)
+                if o is None:
+                    res["missing_cells"].append(f"{suite}/{t}/{n}"); continue
+                cells[n] = o
+            if len(cells) < len(NS):
+                continue
+            res["targets"] += 1
+            idn = res.setdefault("identity", dict(new_cells=0, err_equal=0, flops_equal=0, s_check=0, order_cells=0))
+            for o in cells.values():
+                if suite == "designed" and t in TF.ORDER_TARGETS:
+                    idn["order_cells"] += 1; continue
+                idn["new_cells"] += 1; idn["err_equal"] += int(bool(o["identity"].get("err_equal")))
+                idn["flops_equal"] += int(bool(o["identity"].get("flops_equal"))); idn["s_check"] += int(all(o["s_check"]))
+            for nm, S, yS in chars:
+                k = len(S); res["chars"] += 1
+                ng = n_glob(yS, y0, k) if k <= 6 else float("inf")
+                # predicted first grid n of a round-0 global admission (first order): m(n) > n_glob, degree searched
+                npred = None
+                for n in NS:
+                    sc = final_scale(n); m = n if k <= 4 else (m_k(k, n, 30, sc) if k <= 6 else 0)
+                    if k <= 6 and searched(k, n, 30, sc) and m > ng:
+                        npred = n; break
+                # round-0 global test, replayed, against n > n_glob (degrees <= 4)
+                z0 = {}
+                for n, o in cells.items():
+                    rp = o["replay"][nm][0]
+                    z0[n] = (rp.get("global", {}) or {}).get("z") if rp else None
+                    if k <= 4 and searched(k, n, 30, final_scale(n)) and z0[n] is not None:
+                        pp, ap = n > ng, z0[n] > 1.0
+                        key = "tp" if (pp and ap) else "tn" if (not pp and not ap) else "fp" if pp else "fn"
+                        res["test0"][key] += 1
+                        if key in ("fp", "fn"):
+                            res["test0"][key + "_ratio"].append(math.log2(n / ng))
+                        # Heuristic normal approximation of P(pass): v_S ~ N(yhat_S, (1 - yhat_S^2)/n), threshold at
+                        # sqrt((1 - y0^2) 2 L / n); for |yhat_S| = 1 (a parity) the exact P2 probability
+                        if abs(yS) > 0.999:
+                            ppass = p_pass(n, k, 30)
+                        else:
+                            from scipy.stats import norm
+                            ppass = float(norm.cdf((abs(yS) * math.sqrt(n) - math.sqrt((1 - y0 * y0) * 2 * L_of(C(30, k))))
+                                                   / math.sqrt(1 - yS * yS)))
+                        calib.append((math.log2(n / ng), int(ap), ppass))
+                # first explicit appearance in the final model
+                nfirst, route = None, None
+                for n in NS:
+                    ex = cells[n]["explicit"].get(nm)
+                    if ex:
+                        nfirst = n; route = ex; break
+                row = dict(suite=suite, t=t, nm=nm, k=k, yhat=yS, y0=y0, n_glob=ng, n_pred=npred, n_first=nfirst,
+                           route=route, z0=z0)
+                if nfirst is not None and route and route["how"] == "test" and route["cls"] in ("ext1", "ext2", "local", "global") \
+                        and not (route["cls"] == "global" and route["round"] == 0):
+                    o = cells[nfirst]; j = route["round"]; rp = o["replay"][nm][j]; cl = rp[route["cls"]]
+                    sj = o["s_replay"][j]; vj = rp["v"]
+                    row["factors"] = dict(N_glob=C(30, k), N_cls=cl["N"], L_ratio=L_of(C(30, k)) / L_of(cl["N"]),
+                                          s_ratio=(1 - y0 * y0) / (sj * sj), v_ratio=(vj * vj) / (yS * yS) if vj else None,
+                                          z_cls=cl["z"], z_glob0=z0.get(nfirst))
+                rows.append(row)
+    # agreement of the first appearance with the predicted grid n
+    cat = {}
+    for r in rows:
+        if r["n_pred"] is None and r["n_first"] is None:
+            c_ = "never_predicted_never_seen"
+        elif r["n_pred"] is None:
+            c_ = "seen_not_predicted"
+        elif r["n_first"] is None:
+            c_ = "predicted_never_seen"
+        else:
+            dl = int(round(math.log2(r["n_first"] / r["n_pred"])))
+            c_ = "same" if dl == 0 else ("earlier" if dl < 0 else "later")
+        r["cat"] = c_; cat[c_] = cat.get(c_, 0) + 1
+    res["first"]["counts"] = cat
+    for r in rows:
+        pt = res["per_target"].setdefault(f"{r['suite']}/{r['t']}", {})
+        pt[r["cat"]] = pt.get(r["cat"], 0) + 1
+    pr = [r for r in rows if r["n_pred"] is not None and r["n_first"] is not None]
+    res["first"]["log2_first_over_pred"] = {str(v): sum(1 for r in pr if int(round(math.log2(r["n_first"] / r["n_pred"]))) == v)
+                                            for v in sorted(set(int(round(math.log2(r["n_first"] / r["n_pred"]))) for r in pr))}
+    res["first"]["log2_first_over_nglob_median_global0"] = float(np.median(
+        [math.log2(r["n_first"] / r["n_glob"]) for r in pr if r["route"]["cls"] == "global" and r["route"]["round"] == 0
+         and r["route"]["how"] == "test"])) if pr else None
+    # routes of the characters that appear earlier than predicted, or appear without a prediction
+    routes = {}
+    for r in rows:
+        if r["cat"] in ("earlier", "seen_not_predicted"):
+            ro = r["route"]; key = f"{ro['how']}:{ro['cls']}:{'r0' if ro['round'] == 0 else 'r1+'}"
+            routes.setdefault(r["cat"], {}); routes[r["cat"]][key] = routes[r["cat"]].get(key, 0) + 1
+    res["early_routes"] = routes
+    # factors for the later-round classes that made a character cheaper than n_glob
+    fac = {}
+    for r in rows:
+        if r["cat"] in ("earlier", "seen_not_predicted") and r.get("factors"):
+            cl = r["route"]["cls"] + ("" if r["route"]["cls"] != "global" else "_r1+")
+            fac.setdefault(cl, []).append(r["factors"])
+    ent = {}                                                    # like-for-like with ORDER.md: n_first against n_glob
+    for r in rows:
+        if r["cat"] in ("earlier", "seen_not_predicted") and r.get("factors"):
+            cl = r["route"]["cls"] + ("" if r["route"]["cls"] != "global" else "_r1+")
+            ent.setdefault(cl, []).append(r)
+    res["entry_vs_nglob"] = {cl: dict(count=len(v), deg_le6=sum(1 for r in v if r["k"] <= 6),
+                                      median_log2_nglob_over_nfirst_deg_le6=(float(np.median([math.log2(r["n_glob"] / r["n_first"])
+                                                                                               for r in v if r["k"] <= 6]))
+                                                                             if any(r["k"] <= 6 for r in v) else None))
+                             for cl, v in ent.items()}
+    res["factors"] = {cl: dict(count=len(v), median_L_ratio=float(np.median([f["L_ratio"] for f in v])),
+                               median_s_ratio=float(np.median([f["s_ratio"] for f in v])),
+                               median_v_ratio=float(np.median([f["v_ratio"] for f in v if f["v_ratio"]])),
+                               median_log2_gain=float(np.median([math.log2(f["L_ratio"] * f["s_ratio"] * (f["v_ratio"] or 1)) for f in v])))
+                      for cl, v in fac.items()}
+    # (verification) the factor table gives medians of each factor separately: their spread per character, the
+    # product of the medians (not the median gain), and the union-bound factor of the degree <= 6 characters alone
+    q_ = lambda a: [float(np.min(a)), float(np.percentile(a, 25)), float(np.median(a)), float(np.percentile(a, 75)), float(np.max(a))]
+    spread = {}
+    for cl, rv in ent.items():                                   # ent[cl]: the rows behind fac[cl], in the same order
+        v = [r["factors"] for r in rv]
+        Lr = np.array([f["L_ratio"] for f in v]); Sr = np.array([f["s_ratio"] for f in v])
+        Vr = np.array([f["v_ratio"] for f in v if f["v_ratio"]])
+        Gn = np.array([math.log2(f["L_ratio"] * f["s_ratio"] * (f["v_ratio"] or 1)) for f in v])
+        k6 = np.array([r["k"] <= 6 for r in rv])
+        pm = float(np.median(Lr) * np.median(Sr) * np.median(Vr))
+        spread[cl] = dict(min_q1_median_q3_max=dict(L_ratio=q_(Lr), s_ratio=q_(Sr), v_ratio=q_(Vr), log2_gain=q_(Gn)),
+                          product_of_medians=pm, log2_product_of_medians=math.log2(pm),
+                          deg_le6=dict(count=int(k6.sum()), L_ratio=q_(Lr[k6]) if k6.any() else None,
+                                       frac_L_ratio_gt_1p7=float(np.mean(Lr[k6] > 1.7)) if k6.any() else None,
+                                       n_L_ratio_gt_1p7=int(np.sum(Lr[k6] > 1.7))))
+    allS = np.array([f["s_ratio"] for v in fac.values() for f in v])
+    spread["all_classes"] = dict(count=int(allS.size), s_ratio_min=float(allS.min()), s_ratio_max=float(allS.max()))
+    res["factors_spread"] = spread
+    # the later-than-predicted cases: test failed at the predicted n (fluctuation) or passed but capped
+    late = dict(z_below_1_at_pred=0, z_above_1_at_pred=0, z_none_at_pred=0, examples=[], predicted_never_seen=[])
+    for r in rows:
+        if r["cat"] in ("later", "predicted_never_seen"):
+            z = r["z0"].get(r["n_pred"])
+            if z is not None and z > 1:
+                late["z_above_1_at_pred"] += 1
+            else:
+                late["z_below_1_at_pred"] += 1
+            late["z_none_at_pred"] += int(z is None)
+            if r["cat"] == "predicted_never_seen":
+                late["predicted_never_seen"].append(dict(t=r["t"], nm=r["nm"], k=r["k"], n_glob=r["n_glob"], n_pred=r["n_pred"],
+                                                         z_at_pred=z, z_at_16384=r["z0"].get(16384),
+                                                         m_k_at_pred=(m_k(r["k"], r["n_pred"], 30, final_scale(r["n_pred"]))
+                                                                      if r["k"] >= 3 else r["n_pred"])))
+            if len(late["examples"]) < 40:
+                late["examples"].append(dict(t=r["t"], nm=r["nm"], n_glob=round(r["n_glob"], 1), n_pred=r["n_pred"],
+                                             n_first=r["n_first"], z_at_pred=z, cat=r["cat"]))
+    res["late"] = late
+    # calibration of the round-0 decisions against the normal approximation, by log2(n / n_glob)
+    cb = np.array(calib); edges_ = [-np.inf, -2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2, np.inf]; cal = []
+    for lo, hi_ in zip(edges_[:-1], edges_[1:]):
+        sel = (cb[:, 0] > lo) & (cb[:, 0] <= hi_)
+        if sel.any():
+            cal.append(dict(lo=float(lo), hi=float(hi_), pairs=int(sel.sum()), passed=int(cb[sel, 1].sum()),
+                            observed=float(cb[sel, 1].mean()), predicted=float(cb[sel, 2].mean())))
+    res["test0"]["calibration"] = cal
+    res["test0"]["calibration_max_abs_diff"] = max(abs(c["observed"] - c["predicted"]) for c in cal)
+    # (verification) the agreement of n > n_glob with the round-0 decision, by distance from n_glob: the 96.9% is
+    # dominated by the pairs far from n_glob
+    lr_, ap_ = cb[:, 0], cb[:, 1].astype(int); agr_ = ((lr_ > 0).astype(int) == ap_)
+    bands_ = dict(within_1_doubling=(lr_ > -1) & (lr_ <= 1), one_to_two_doublings=((lr_ > -2) & (lr_ <= -1)) | ((lr_ > 1) & (lr_ <= 2)),
+                  at_least_2_below=lr_ <= -2, more_than_2_above=lr_ > 2, beyond_2_doublings=(lr_ <= -2) | (lr_ > 2))
+    res["test0"]["agree_by_distance"] = {nm_: dict(pairs=int(sel.sum()), agree=int(agr_[sel].sum()),
+                                                  frac=float(agr_[sel].mean()) if sel.any() else None)
+                                         for nm_, sel in bands_.items()}
+    # the characters whose first explicit entry is the round-0 global test: log2(n_first / n_glob)
+    g0 = [r for r in rows if r["route"] and r["route"]["how"] == "test" and r["route"]["cls"] == "global"
+          and r["route"]["round"] == 0]
+    lg = np.array([math.log2(r["n_first"] / r["n_glob"]) for r in g0])
+    res["first"]["global_r0"] = dict(count=len(g0), median_log2_first_over_nglob=float(np.median(lg)),
+                                     within_pm1=int(np.sum(np.abs(lg) <= 1)), in_0_1=int(np.sum((lg >= 0) & (lg <= 1))),
+                                     above_1=int(np.sum(lg > 1)), below_m1=int(np.sum(lg < -1)),
+                                     maj9_deg3_near_threshold=sum(1 for r in g0 if r["t"] == "maj9" and r["k"] == 3))
+    # those more than one doubling after n_glob: how far n_pred (the first grid n above n_glob) lay above n_glob, and
+    # whether they entered exactly one grid step after n_pred
+    a1 = [r for r in g0 if math.log2(r["n_first"] / r["n_glob"]) > 1]
+    pr_ = [r["n_pred"] / r["n_glob"] for r in a1 if r["n_pred"]]
+    res["first"]["global_r0"]["above_1_detail"] = dict(
+        count=len(a1), with_pred=len(pr_), n_first_over_n_pred=sorted(set(r["n_first"] / r["n_pred"] for r in a1 if r["n_pred"])),
+        n_pred_over_nglob_min=min(pr_), n_pred_over_nglob_median=float(np.median(pr_)), n_pred_over_nglob_max=max(pr_),
+        z_at_pred_max=max(r["z0"].get(r["n_pred"]) or 0.0 for r in a1),
+        by_target={t_: sum(1 for r in a1 if r["t"] == t_) for t_ in sorted(set(r["t"] for r in a1))},
+        parmaj_deg4=[dict(nm=r["nm"], n_glob=r["n_glob"], n_pred=r["n_pred"], n_first=r["n_first"],
+                          n_pred_over_nglob=r["n_pred"] / r["n_glob"], z_at_pred=r["z0"].get(r["n_pred"]))
+                     for r in a1 if r["t"] == "parmaj" and r["k"] == 4])
+    # the characters seen although none was predicted, whose first entry is the round-0 global test (near the threshold)
+    snp = [r for r in g0 if r["cat"] == "seen_not_predicted"]; br = {}
+    rows_at = lambda r: r["n_first"] if r["k"] <= 4 else m_k(r["k"], r["n_first"], 30, final_scale(r["n_first"]))
+    for r in snp:
+        b_ = br.setdefault(f"{r['suite']}/{r['t']}:deg{r['k']}", dict(count=0, n_glob=[], n_first=[], ratio=[]))
+        b_["count"] += 1; b_["n_glob"].append(r["n_glob"]); b_["n_first"].append(r["n_first"])
+        b_["ratio"].append(rows_at(r) / r["n_glob"])
+    res["first"]["seen_not_predicted_global_r0"] = dict(
+        count=len(snp), rows_over_nglob_min=min(rows_at(r) / r["n_glob"] for r in snp),
+        rows_over_nglob_max=max(rows_at(r) / r["n_glob"] for r in snp),
+        by_target_degree={kk: dict(count=v["count"], n_glob_min=min(v["n_glob"]), n_glob_max=max(v["n_glob"]),
+                                   n_first=sorted(set(v["n_first"])), rows_over_nglob=[min(v["ratio"]), max(v["ratio"])])
+                          for kk, v in sorted(br.items())})
+    # the characters neither predicted within the grid nor ever seen: degree >= 7 (no global test), or a degree <= 6
+    # character whose n_glob lies beyond what the grid (k <= 4) or the subsample m_k (k = 5, 6) reaches
+    nn_ = [r for r in rows if r["cat"] == "never_predicted_never_seen"]
+    reach = lambda r: (16384 if r["k"] <= 4 else m_k(r["k"], 16384, 30, 1.0))
+    res["first"]["never_predicted_never_seen"] = dict(
+        count=len(nn_), deg_ge7=sum(1 for r in nn_ if r["k"] >= 7), deg_le6=sum(1 for r in nn_ if r["k"] <= 6),
+        deg_le6_all_beyond_reach=all(r["n_glob"] >= reach(r) for r in nn_ if r["k"] <= 6),
+        deg_le6_min_nglob_over_reach=min((r["n_glob"] / reach(r) for r in nn_ if r["k"] <= 6), default=None),
+        deg_le6_max_abs_yhat=max((abs(r["yhat"]) for r in nn_ if r["k"] <= 6), default=None),
+        deg_le6_by_degree={str(k): sum(1 for r in nn_ if r["k"] == k) for k in range(1, 7)})
+    lb = [r for r in rows if r["route"] and r["route"]["how"] == "linear-block"]
+    lbe = [r for r in lb if r["cat"] == "earlier"]
+    res["first"]["linear_block"] = dict(count=len(lb), degrees=sorted(set(r["k"] for r in lb)),
+                                        median_log2_first_over_nglob=float(np.median([math.log2(r["n_first"] / r["n_glob"]) for r in lb])),
+                                        earlier=dict(count=len(lbe), round0=sum(1 for r in lbe if r["route"]["round"] == 0),
+                                                     degrees=sorted(set(r["k"] for r in lbe)),
+                                                     median_log2_first_over_nglob=float(np.median([math.log2(r["n_first"] / r["n_glob"])
+                                                                                                   for r in lbe]))))
+    # like-for-like with ORDER.md (which takes every character admitted by a route, degree <= 4): the median of
+    # log2(n_first / n_glob) over ALL characters whose first entry is a test of that class, whatever their category
+    allc = {}
+    for r in rows:
+        ro = r["route"]
+        if ro and ro["how"] == "test":
+            cl = ro["cls"] + ("" if ro["cls"] != "global" else ("_r0" if ro["round"] == 0 else "_r1+"))
+            allc.setdefault(cl, []).append(r)
+    res["entry_vs_nglob_all"] = {cl: dict(count=len(v), deg_le4=sum(1 for r in v if r["k"] <= 4),
+                                          median_log2_first_over_nglob_deg_le4=(float(np.median([math.log2(r["n_first"] / r["n_glob"])
+                                                                                                 for r in v if r["k"] <= 4]))
+                                                                                if any(r["k"] <= 4 for r in v) else None),
+                                          deg_le6=sum(1 for r in v if r["k"] <= 6),
+                                          median_log2_first_over_nglob_deg_le6=(float(np.median([math.log2(r["n_first"] / r["n_glob"])
+                                                                                                 for r in v if r["k"] <= 6]))
+                                                                                if any(r["k"] <= 6 for r in v) else None),
+                                          by_cat={c_: sum(1 for r in v if r["cat"] == c_) for c_ in sorted(set(r["cat"] for r in v))})
+                                 for cl, v in sorted(allc.items())}
+    # P3b: the subsample sizes of the degree-5/6 searches at d = 30, and the |yhat_S| a degree-6 character needs
+    # (yhat_0 = 0) to have n_glob below m_6
+    m6 = m_k(6, 10 ** 9, 30, 1.0)
+    res["deg56_reach"] = dict(m5_scale1=m_k(5, 10 ** 9, 30, 1.0), m6_scale1=m6, m5_scale05=m_k(5, 10 ** 9, 30, 0.5),
+                              m6_scale05=m_k(6, 10 ** 9, 30, 0.5),
+                              abs_yhat_deg6_needed=math.sqrt(2 * cc * cc * L_of(C(30, 6)) / m6))
+    # (verification) P3a's setting at d = 30: on how many rows each fit call's round-0 global degree-k search runs
+    # (0 = skipped), for the final fit and, at n <= cv_n, the fold fits (F folds of n - ceil((n - f)/F) rows)
+    srows = lambda k, n, sc, hi: (m_k(k, n, 30, sc) if k >= 3 else n) if searched(k, n, 30, sc, hi) else 0
+    d30 = {}
+    for n in NS:
+        e_ = dict(final={str(k): srows(k, n, final_scale(n), True) for k in range(1, 7)})
+        if n <= DEF["cv_n"]:
+            F_ = 10 if n <= 64 else 5; fr = sorted(set(n - math.ceil((n - f) / F_) for f in range(F_)))
+            e_["folds"] = {str(nf): {str(k): srows(k, nf, 1 / (4 * F_), False) for k in range(1, 5)} for nf in fr}
+        d30[str(n)] = e_
+    res["d30_searched_rows"] = dict(
+        rows=d30,
+        deg12_all_rows_every_call=all(c_[str(k)] == int(nf) for n, e_ in d30.items()
+                                      for nf, c_ in [(n, e_["final"])] + list(e_.get("folds", {}).items()) for k in (1, 2)),
+        deg34_final_all_rows_from=min(int(n) for n, e_ in d30.items() if all(e_["final"][str(k)] == int(n) for k in (3, 4))),
+        deg34_final_all_rows_every_n_from_32=all(e_["final"][str(k)] == int(n) for n, e_ in d30.items() if int(n) >= 32 for k in (3, 4)),
+        deg34_skipped_n16_final=all(d30["16"]["final"][str(k)] == 0 for k in (3, 4)),
+        deg34_folds_all_rows_or_skipped=all(c_[str(k)] in (0, int(nf)) for e_ in d30.values() for nf, c_ in e_.get("folds", {}).items()
+                                            for k in (3, 4)),
+        deg34_folds_searched_from_n=min(int(n) for n, e_ in d30.items()
+                                        if e_.get("folds") and all(c_[str(k)] > 0 for c_ in e_["folds"].values() for k in (3, 4))))
+    # P3c's later-round classes at d = 30: ext1 and the local class use all rows; the global degree <= 3 search is as
+    # in round 0 (all rows from 32 rows on); ext2's row cap with the most bases (32) against every call's rows
+    calls_ = [(int(n), final_scale(int(n))) for n in d30] + [(int(nf), 1 / (4 * (10 if int(n) <= 64 else 5)))
+                                                              for n, e_ in d30.items() for nf in e_.get("folds", {})]
+    cap2 = lambda sc: int(BUD[2] * TH.gd_flops(30) * sc / (DEF["max_ext_bases"] * (2 * 30 * 30 + 3 * 30)))
+    res["d30_searched_rows"]["ext2_rows_cap_max_bases"] = {f"scale_{sc:g}": cap2(sc) for sc in sorted(set(s_ for _, s_ in calls_))}
+    res["d30_searched_rows"]["ext2_all_rows_every_call"] = all(cap2(sc) >= r_ for r_, sc in calls_)
+    fo = [r for r in rows if r["route"] and r["route"]["how"] == "forced"]
+    res["first"]["forced"] = dict(count=len(fo), n_first=sorted(r["n_first"] for r in fo))
+    res["first"]["predicted_in_grid"] = sum(1 for r in rows if r["n_pred"] is not None)
+    tt_ = res["test0"]; tt_["pairs"] = tt_["tp"] + tt_["tn"] + tt_["fp"] + tt_["fn"]; tt_["agree"] = tt_["tp"] + tt_["tn"]
+    tt_["agree_frac"] = tt_["agree"] / tt_["pairs"]
+    res["first"]["earlier_global_r0_log2_first_over_pred"] = {
+        str(v): sum(1 for r in rows if r["cat"] == "earlier" and r["route"]["how"] == "test" and r["route"]["cls"] == "global"
+                    and r["route"]["round"] == 0 and int(round(math.log2(r["n_first"] / r["n_pred"]))) == v) for v in range(-6, 0)}
+    res["test0"]["fp_ratio_median"] = float(np.median(res["test0"]["fp_ratio"])) if res["test0"]["fp_ratio"] else None
+    res["test0"]["fn_ratio_median"] = float(np.median(res["test0"]["fn_ratio"])) if res["test0"]["fn_ratio"] else None
+    res["test0"]["fp_within_1"] = sum(1 for v in res["test0"]["fp_ratio"] if v <= 1.0)
+    res["test0"]["fn_within_1"] = sum(1 for v in res["test0"]["fn_ratio"] if v >= -1.0)
+    res["test0"]["fp_ratio"] = [round(v, 3) for v in res["test0"]["fp_ratio"]]
+    res["test0"]["fn_ratio"] = [round(v, 3) for v in res["test0"]["fn_ratio"]]
+    res["rows"] = [dict((k, v) for k, v in r.items() if k != "z0") for r in rows]
+    return res
+
+
+# ------------------------------------------------------------------------------------------------ P4: sum blocks
+def krawtchouk_coeffs(g, k):
+    """Exact a_j = E[g(B) z_1 ... z_j] (B = #{i : z_i = +1}, z uniform on {-1,1}^k) as Fractions, j = 0..k."""
+    a = []
+    for j in range(k + 1):
+        tot = 0
+        for b in range(k + 1):
+            Kj = sum((-1) ** (j - l) * C(j, l) * C(k - j, b - l) for l in range(max(0, b - (k - j)), min(j, b) + 1))
+            tot += g(b) * Kj
+        a.append(Fraction(tot, 2 ** k))
+    return a
+
+
+def mod3_closed_form(k, rho, sign, j):
+    """a_j (j >= 1) of g(B) = sign * (1 - 2 [B = rho mod 3]):  -2 sign (2/3) 3^(j/2) 2^-k cos(5 pi j/6 + pi (k-j)/3 - 2 pi rho/3)."""
+    return -2 * sign * (2 / 3) * 3 ** (j / 2) * 2.0 ** (-k) * math.cos(5 * math.pi * j / 6 + math.pi * (k - j) / 3 - 2 * math.pi * rho / 3)
+
+
+def fwht_weights(fn, R, d=30):
+    """Exact Fourier coefficients of f on its relevant inputs R (all 2^|R| patterns, Walsh-Hadamard), weights by degree."""
+    r = len(R); pats = ((np.arange(2 ** r)[:, None] >> np.arange(r)) & 1) * -2.0 + 1.0     # bit 1 -> -1
+    X = np.ones((2 ** r, d)); X[:, R] = pats
+    y = np.asarray(fn(X), np.float64)
+    h = DM._fwht(y) / 2 ** r                                           # h[mask] = E[f chi_{mask}] (bit q <-> input R[q])
+    deg = np.array([bin(m).count("1") for m in range(2 ** r)])
+    return {int(j): float(np.sum(h[deg == j] ** 2)) for j in range(r + 1)}, h, deg
+
+
+def grouping(pv, mc, all_vals=None):
+    """DFG's contiguous groups (dfg13._edges) for exact per-value counts pv (dict value -> count), min group size mc.
+    all_vals: also place these values (e.g. every possible t, seen in training or not), as searchsorted does at test time."""
+    vals = sorted(pv); t = np.concatenate([np.full(int(pv[v]), float(v)) for v in vals if pv[v] > 0])
+    E = DM._edges(t, mc)
+    vv = sorted(set(vals) | set(all_vals or []))
+    g = {v: int(np.searchsorted(E, v)) for v in vv}
+    groups = {}
+    for v in vv:
+        groups.setdefault(g[v], []).append(v)
+    return [groups[q] for q in sorted(groups)]
+
+
+def p4_section():
+    res = dict(targets={}, grouping={}, generic={})
+    specs = dict(f7_05=("dlheld7", 0, +1, "[B mod 3 != 0]", [1] * 14),
+                 h6_00=("dlheld6", 1, +1, "[B mod 3 != 1]", [1] * 8 + [-1] * 4 + [1]),
+                 fd_10=("dlfamdev", 0, -1, "[B mod 3 == 0]", [1, 1, 1, 1, -1, -1, 1, 1, 1, 1]))
+    for t, (suite, rho, sign, desc, eps) in specs.items():
+        T = H.targets(suite); spec = T[t]; R = list(spec["relevant"]); k = len(R)
+        g = lambda b, rho=rho, sign=sign: sign * (1 - 2 * (b % 3 == rho))
+        a = krawtchouk_coeffs(g, k)
+        W = [C(k, j) * a[j] * a[j] for j in range(k + 1)]
+        Wfw, h, deg = fwht_weights(spec["fn"], R)
+        cf = [mod3_closed_form(k, rho, sign, j) for j in range(1, k + 1)]
+        nz = sum(C(k, j) for j in range(1, k + 1) if a[j] != 0)
+        # the population pair-matrix signal and the noise (Heuristic BBP estimate of when its top eigenvector finds S)
+        s2 = 1 - float(a[0]) ** 2; a2 = abs(float(a[2])); a1 = abs(float(a[1]))
+        res.setdefault("times_below_part10_bound", {})[t] = 0.0002 / float(W[1] + W[2])
+        res["targets"][t] = dict(desc=desc, k=k, rho=rho, a=[str(x) for x in a[:4]], a_float=[float(x) for x in a[:4]],
+                                 W={str(j): str(W[j]) for j in range(4)}, W_float={str(j): float(W[j]) for j in range(4)},
+                                 W1W2=float(W[1] + W[2]), W1W2_part10_bound=0.0002, W_fwht={str(j): Wfw[j] for j in range(4)},
+                                 exact_equals_fwht=all(abs(float(W[j]) - Wfw[j]) < 1e-15 for j in range(k + 1)),
+                                 closed_form_max_abs_err=max(abs(float(a[j]) - cf[j - 1]) for j in range(1, k + 1)),
+                                 nonzero_nonconstant_chars=nz, block_params=k + 1,
+                                 W_peak_degree=int(max(range(k + 1), key=lambda j: W[j])),
+                                 pair_snr_n16384=a2 * math.sqrt(16384) / math.sqrt(s2), single_snr_n16384=a1 * math.sqrt(16384) / math.sqrt(s2),
+                                 n_bbp_heuristic=s2 * 30 / (a2 * a2 * (k - 1) ** 2),
+                                 n_degree1_heuristic=2 * math.log(30) * s2 / (a1 * a1))
+        # contiguous grouping: the large-n limit (counts proportional to C(k, B), mc = 0.005 n) and seed-0 data
+        pB = {2 * b - k: C(k, b) for b in range(k + 1)}                    # t = 2B - k, weight C(k, B) / 2^k
+        lim = grouping({v: c * 200 for v, c in pB.items()}, 2 ** k)      # counts 200 C(k,B), mc = 0.005 * 200 * 2^k exactly
+        def irreducible(groups):
+            e = Fraction(0)
+            for G_ in groups:
+                pp = sum(Fraction(pB[v], 2 ** k) for v in G_ if g((v + k) // 2) > 0)
+                pm = sum(Fraction(pB[v], 2 ** k) for v in G_ if g((v + k) // 2) < 0)
+                e += min(pp, pm)
+            return e
+        res["grouping"][t] = dict(eps=eps, limit_groups=lim, limit_irreducible_error=float(irreducible(lim)),
+                                  limit_irreducible_error_exact=str(irreducible(lim)))
+        # the seed-0 training rows at n = 16384, the block on the target's own signed sum (B counts eps_i x_i = +1)
+        X, y = TH.train_data(spec["fn"], t, 0, 16384, 30)
+        X = np.asarray(X, np.float64); y = np.asarray(y, np.float64)
+        sg = np.asarray(eps, float)
+        tv = X[:, R] @ sg
+        Bv = np.rint((tv + k) / 2).astype(int)
+        res["grouping"][t]["labels_equal_g_of_B"] = bool(np.all(np.array([g(b) for b in Bv]) == y))
+        mc = max(3, int(DEF["sum_mc"] * 16384))
+        vals, cnt = np.unique(tv, return_counts=True)
+        gr = grouping({int(v): int(c) for v, c in zip(vals, cnt)}, mc, all_vals=list(range(-k, k + 1, 2)))
+        res["grouping"][t]["n16384_unseen_values"] = sorted(set(range(-k, k + 1, 2)) - set(int(v) for v in vals))
+        res["grouping"][t].update(n16384_mc=mc, n16384_groups=[[int(v) for v in G_] for G_ in gr],
+                                  n16384_irreducible_error=float(irreducible([[int(v) for v in G_] for G_ in gr])))
+        # numerical check of the representation lemma: singleton groups reproduce g(t) exactly by least squares
+        blk = DM.SumBlock(np.arange(k), sg, False, (), np.array(sorted(set(tv)))[:-1] + 1.0)   # one group per value
+        gidx = blk.group(X[:, R]); cnt = np.bincount(gidx, minlength=blk.ngroups())
+        use = [v for v in range(blk.ngroups()) if cnt[v] > 0 and v != int(np.argmax(cnt))]    # as DFG adds them
+        A = np.stack([np.ones(len(X))] + [(gidx == v).astype(float) for v in use], 1)
+        w = np.linalg.lstsq(A, y, rcond=None)[0]
+        res["grouping"][t]["singleton_ls_max_residual"] = float(np.max(np.abs(y - A @ w)))
+        # the same with DFG's own grouping at this n: the best block-only least-squares fit and its sign's error
+        blk2 = DM.SumBlock(np.arange(k), sg, False, (), DM._edges(tv, mc)); g2 = blk2.group(X[:, R])
+        cnt2 = np.bincount(g2, minlength=blk2.ngroups()); use2 = [v for v in range(blk2.ngroups()) if cnt2[v] > 0 and v != int(np.argmax(cnt2))]
+        A2 = np.stack([np.ones(len(X))] + [(g2 == v).astype(float) for v in use2], 1)
+        w2 = np.linalg.lstsq(A2, y, rcond=None)[0]
+        Xte, yte = TH.test_data(spec["fn"], t, 30); Xte = np.asarray(Xte, np.float64)
+        g2te = blk2.group(Xte[:, R]); A2te = np.stack([np.ones(len(Xte))] + [(g2te == v).astype(float) for v in use2], 1)
+        res["grouping"][t]["dfg_grouping_block_only_test_err"] = float(np.mean(np.where(A2te @ w2 > 0, 1.0, -1.0) != yte))
+        res["grouping"][t]["dfg_grouping_n_groups"] = int(blk2.ngroups())
+        res["grouping"][t]["singleton_n_features"] = int(A.shape[1])
+    # generic: the largest k for which every value of t has its own group in the large-n limit
+    gen = {}
+    for k in range(2, 16):
+        pB = {2 * b - k: C(k, b) for b in range(k + 1)}
+        lim = grouping({v: c * 200 for v, c in pB.items()}, 2 ** k)
+        gen[str(k)] = dict(groups=len(lim), values=k + 1, all_singletons=bool(len(lim) == k + 1))
+    res["generic"] = gen
+    res["generic_max_k_all_singletons"] = max(int(k) for k, v in gen.items() if v["all_singletons"])
+    # P4e's vanishing rule: a_j (j >= 1) of sigma (1 - 2 [B = rho mod 3]) is 0 iff j is odd and k = 2 rho (mod 3);
+    # checked exactly (Krawtchouk sums, rationals) for k = 2..16, rho = 0, 1, 2, every j
+    viol, tot = 0, 0
+    for k in range(2, 17):
+        for rho in range(3):
+            a = krawtchouk_coeffs(lambda b, rho=rho: 1 - 2 * (b % 3 == rho), k)
+            for j in range(1, k + 1):
+                tot += 1; viol += int((a[j] == 0) != (j % 2 == 1 and (k - 2 * rho) % 3 == 0))
+    res["mod3_vanishing_rule"] = dict(cases=tot, violations=viol)
+    return res
+
+
+# ------------------------------------------------------------------------------------------------ P5: compute
+def exhaustive_flops(n, d):
+    """FLOPs DFG's counter charges for the global degree-k search when it runs on all n points (m = n)."""
+    k5 = (C(d, 3), C(d, 2)); k6 = (C(d, 3), C(d, 3))
+    return {1: 2 * n * d, 2: 2 * n * d * d + n * d, 3: (d - 2) * (2 * n * d * d + 2 * n * d),
+            4: C(d - 2, 2) * (2 * n * d * d + 3 * n * d),
+            5: 2 * n * k5[0] * k5[1] + n * (k5[0] * 3 + k5[1] * 2), 6: 2 * n * k6[0] * k6[1] + n * (k6[0] * 3 + k6[1] * 3)}
+
+
+def round0_search(n, d, scale, hi):
+    f = {1: 2 * n * d, 2: 2 * n * d * d + n * d}
+    m3 = m_k(3, n, d, scale); f[3] = (d - 2) * (2 * m3 * d * d + 2 * m3 * d) if m3 >= 32 else 0.0
+    m4 = m_k(4, n, d, scale); f[4] = C(d - 2, 2) * (2 * m4 * d * d + 3 * m4 * d) if m4 >= 32 else 0.0
+    for k in (5, 6):
+        k1, k2 = (k + 1) // 2, k // 2; N1, N2 = C(d, k1), C(d, k2); m = m_k(k, n, d, scale)
+        f[k] = (2 * m * N1 * N2 + m * (N1 * k1 + N2 * k2)) if (hi and m >= 64) else 0.0
+    return f
+
+
+def parity_path(n, d, k, scale, hi, linear=False):
+    """FLOPs of one DFG._fit call whose round 0 admits chi_S alone (|S| = k; with linear=True also the linear block,
+    d more features) and whose round 1 stops on the sign rule."""
+    f = 2 * n + 1 / 3 + 4 * n
+    f += sum(round0_search(n, d, scale, hi).values())
+    f += 10 * d ** 3
+    if n >= DEF["sum_nmin"]:
+        f += 2 * n * 4 + 4 * n * 2 + 8
+    f += n * k
+    p = 2 + (d if linear else 0)
+    f += 2 * n * p * p + p ** 3 / 3 + 4 * n * p
+    if n >= 8 * p:
+        f += 15 * (2 * n * p * p + p ** 3 / 3 + 8 * n * p)
+    f += 2 * n * d
+    return f
+
+
+def fit_total(n, d, k, lin_fold=None, lin_final=False):
+    if n > DEF["cv_n"]:
+        return parity_path(n, d, k, 1.0, True, lin_final)
+    F = 10 if n <= 64 else 5
+    folds = [n - math.ceil((n - f) / F) for f in range(F)]
+    tot = 0.0
+    for f, nf in enumerate(folds):
+        tot += 2 * parity_path(nf, d, k, 1 / (4 * F), False, linear=(lin_fold == f))
+    return tot + parity_path(n, d, k, 0.5, True, lin_final)
+
+
+def p5_section():
+    res = dict(m_table={}, d_star={}, exhaustive={}, check={}, decomposition={})
+    for d in (15, 30, 60, 120):
+        res["m_table"][str(d)] = {f"m{k}": {f"scale{sc}": m_k(k, 10 ** 9, d, sc) for sc in (1.0, 0.5, 1 / 20, 1 / 40)}
+                                  for k in (3, 4, 5, 6)}
+    # the smallest d at which the degree-4 search is subsampled (m_4 < n) or skipped (m_4 < 32)
+    for sc, lab in ((1.0, "final_n_gt_512"), (0.5, "final_n_le_512"), (1 / 20, "fold_5"), (1 / 40, "fold_10")):
+        dd = {}
+        for n in NS + ["skip32"]:
+            for d in range(5, 3001):
+                m = m_k(4, 10 ** 9, d, sc)
+                if (n == "skip32" and m < 32) or (n != "skip32" and m < n):
+                    dd[str(n)] = d; break
+        res["d_star"][lab] = dd
+    res["d_star_deg3_skip32_final"] = next(d for d in range(5, 5000) if m_k(3, 10 ** 9, d, 1.0) < 32)
+    # GD(120) is doubled (the d = 120 networks trained 40000 steps), so m_k is not monotone in d there: the entries of
+    # THEORY.md's d* table (final fit; scale 0.5 for n <= 512, 1 above) with d* < 120 whose degree-4 search is
+    # nevertheless not subsampled at d = 120
+    res["d_star_exceptions_at_d120"] = [dict(n=n, d_star=res["d_star"][lab][str(n)], m4_d120=m_k(4, 10 ** 9, 120, sc))
+                                        for n in NS for sc, lab in [(final_scale(n), "final_n_le_512" if n <= DEF["cv_n"]
+                                                                     else "final_n_gt_512")]
+                                        if res["d_star"][lab][str(n)] < 120 and m_k(4, 10 ** 9, 120, sc) >= n]
+    # the fold fits at n <= 512: their row counts n - ceil((n - f) / F), and which global searches are subsampled
+    # (m_k < rows) or skipped (m_k < 32)
+    res["fold_subsampling"] = {}
+    for d in (15, 30, 60, 120):
+        for n in NS:
+            if n > DEF["cv_n"]:
+                continue
+            F = 10 if n <= 64 else 5; sc = 1 / (4 * F); rows_ = [n - math.ceil((n - f) / F) for f in range(F)]
+            st = lambda k, nf: ("skipped" if m_k(k, nf, d, sc) < 32 else "subsampled" if m_k(k, nf, d, sc) < nf else "all rows")
+            res["fold_subsampling"][f"d{d}_n{n}"] = dict(F=F, rows=[min(rows_), max(rows_)],
+                                                         **{f"m{k}_cap": m_k(k, 10 ** 9, d, sc) for k in (3, 4)},
+                                                         **{f"deg{k}": sorted(set(st(k, nf) for nf in rows_)) for k in (3, 4)})
+    # the smallest d at which the budgeted degree-k search can no longer admit even a k-parity: its subsample m_k is
+    # skipped (m_k < 32) or holds no more rows than n_thr(k, d) (P2: n (1 - ybar^2) <= n)
+    res["d_parity_unreachable"] = {f"k{k}_scale{sc}": next(d for d in range(5, 5000)
+                                                          if m_k(k, 10 ** 9, d, sc) < 32 or m_k(k, 10 ** 9, d, sc) <= n_thr(k, d))
+                                   for k in (3, 4) for sc in (1.0, 0.5)}
+    for d in (15, 30, 60, 120, 1000):
+        GD = TH.gd_flops(d)
+        res["exhaustive"][str(d)] = {str(n): {str(k): v / GD for k, v in exhaustive_flops(n, d).items()} for n in (64, 1024, 16384)}
+    # bound: the actual degree-k search cost never exceeds its share (the per-point estimate is >= the true per-point cost)
+    worst = 0.0
+    for d in range(5, 400):
+        for sc in (1.0, 0.5, 1 / 20, 1 / 40):
+            GD = TH.gd_flops(d) * sc
+            f = round0_search(10 ** 9, d, sc, True)
+            worst = max(worst, f[3] / (BUD[1] * GD), f[4] / (BUD[0] * GD), f[5] / (BUDHI * GD), f[6] / (BUDHI * GD))
+    res["max_share_used_over_share"] = worst
+    # the parity-path FLOP model against the result files
+    tot = ok = ok_lin = 0; bad = []; small = 0; le32 = []
+    for d in (15, 30, 60, 120):
+        R = rfile(dsuite(d)); T = H.targets("designed", d)
+        for t, k in (("par2", 2), ("par3", 3), ("par4", 4)):
+            if t not in R["fns"]:
+                continue
+            Fl = np.array(R["fns"][t]["flops"])
+            for a, n in enumerate(R["ns"]):
+                pred = fit_total(n, d, k)
+                for b, s in enumerate(R["seeds"]):
+                    tot += 1; rel = abs(Fl[a, b] - pred) / Fl[a, b]; exact = rel < 1e-9
+                    if n <= 32:                                 # every fold fit and the final fit on P2's criterion
+                        _, y_ = TH.train_data(T[t]["fn"], t, s, n, d)
+                        fc = fold_criteria(y_, t, s, n, d, k)
+                        fin_ok = bool(searched(k, n, d, 0.5) and crit_exact(np.asarray(y_, np.float64), k, d, n,
+                                                                            m_k(k, n, d, 0.5) if k >= 3 else n)[0])
+                        le32.append(dict(d=d, t=t, n=n, seed=s, exact=bool(exact), folds_pass=sum(c["passes"] for c in fc),
+                                         n_folds=len(fc), fold_rows=[min(c["rows"] for c in fc), max(c["rows"] for c in fc)],
+                                         final_passes=fin_ok))
+                    if exact:
+                        ok += 1; continue
+                    alts = [("final", fit_total(n, d, k, lin_final=True))] + ([(f, fit_total(n, d, k, lin_fold=f))
+                                                                              for f in range(10 if n <= 64 else 5)]
+                                                                             if n <= DEF["cv_n"] else [])
+                    hit = [w for w, v in alts if abs(Fl[a, b] - v) / Fl[a, b] < 1e-9]
+                    if hit:
+                        ok_lin += 1; bad.append(dict(d=d, t=t, n=n, seed=s, path="linear block admitted with chi_S",
+                                                     linear_in=hit)); continue
+                    small += int(n <= 32)
+                    bad.append(dict(d=d, t=t, n=n, seed=s, ratio=float(Fl[a, b] / pred), path="other"))
+    res["check"] = dict(cells=tot, exact_parity_path=ok, exact_with_linear_block=ok_lin, other=tot - ok - ok_lin,
+                        other_at_n_le_32=small, details=bad)
+    # at n <= 32 the model is exact iff every fold fit and the final fit admit chi_S by the test (P2's criterion)
+    allp = lambda c: c["folds_pass"] == c["n_folds"] and c["final_passes"]
+    res["check"]["n_le_32"] = dict(cells=len(le32), exact=sum(c["exact"] for c in le32),
+                                   exact_iff_every_fit_passes=all(c["exact"] == allp(c) for c in le32),
+                                   exact_cells=[f"{c['t']}__d{c['d']}__n{c['n']}__s{c['seed']}" for c in le32 if c["exact"]],
+                                   cells_detail=le32)
+    p5p = os.path.join(TF.CACHE, "p5_cells.json")
+    if os.path.exists(p5p):                                 # refits of the linear-block cells: what round 0 admitted
+        P5c = json.load(open(p5p))
+        lin_cells = [f"{b['t']}__d{b['d']}__n{b['n']}__s{b['seed']}" for b in bad if b["path"].startswith("linear")]
+        res["check"]["linear_cells_refit"] = {k: dict(calls_with_linear=v["calls_with_linear"], flops_equal=None)
+                                             for k, v in P5c.items()}
+        for k_, v in P5c.items():
+            t_, d_, n_, s_ = k_.split("__"); d_, n_, s_ = int(d_[1:]), int(n_[1:]), int(s_[1:])
+            R = rfile(dsuite(d_)); fl = R["fns"][t_]["flops"][R["ns"].index(n_)][R["seeds"].index(s_)]
+            res["check"]["linear_cells_refit"][k_]["flops_equal"] = bool(fl == v["flops"])
+            # which fit calls admitted the linear block in round 0: (variant, fold) for the 2F fold fits, or "final"
+            F_ = 10 if n_ <= 64 else 5
+            where = [("final" if (n_ > DEF["cv_n"] or i == 2 * F_) else f"variant{i // F_}_fold{i % F_}")
+                     for i, c in enumerate(v["calls"]) if c["round0"] and "linear" in c["round0"]["blocks"]]
+            model = next((b.get("linear_in") for b in bad if f"{b['t']}__d{b['d']}__n{b['n']}__s{b['seed']}" == k_), None)
+            # the model matches every fold of the same size (their FLOPs are equal); the refit names the fold, which
+            # must be one of them, in both variants' fits
+            res["check"]["linear_cells_refit"][k_].update(
+                refit_linear_in=where, model_linear_in=model,
+                same_place=(False if not model else (where == ["final"]) if model == ["final"] else
+                            any(sorted(where) == sorted(f"variant{q}_fold{f}" for q in (0, 1)) for f in model if f != "final")))
+        res["check"]["linear_cells_match_refits"] = sorted(lin_cells) == sorted(P5c)
+    res["max_recorded_over_GD"] = {}
+    for d in (15, 30, 60, 120):
+        R = rfile(dsuite(d)); GD = TH.gd_flops(d)
+        mx = max((np.nanmax(np.array(v["flops"])) / GD, t) for t, v in R["fns"].items())
+        res["max_recorded_over_GD"][str(d)] = dict(ratio=float(mx[0]), target=mx[1])
+    for d in (15, 30, 60, 120):
+        GD = TH.gd_flops(d); n = 16384
+        f = round0_search(n, d, 1.0, True); tot_ = parity_path(n, d, 2, 1.0, True)
+        R = rfile(dsuite(d)); rec = R["fns"]["par2"]["flops"][R["ns"].index(n)][0]
+        res["decomposition"][str(d)] = dict(total_over_GD=tot_ / GD, recorded_over_GD=rec / GD,
+                                            **{f"deg{k}_over_GD": f[k] / GD for k in f},
+                                            m3=m_k(3, n, d, 1.0), m4=m_k(4, n, d, 1.0), m5=m_k(5, n, d, 1.0), m6=m_k(6, n, d, 1.0))
+    return res
+
+
+def main():
+    """All sections by default; --only=P4,P3 recomputes those sections into the existing check_theory.json."""
+    fast = "--fast" in sys.argv
+    only = next((a.split("=", 1)[1].split(",") for a in sys.argv if a.startswith("--only=")), None)
+    path = os.path.join(HERE, "check_theory.json")
+    if only and os.path.exists(path):
+        OUT.update(json.load(open(path)))
+    run = lambda sec: only is None or sec in only
+    t0 = time.time()
+    OUT["code"] = code_section(); print("code", OUT["code"]["md5"], flush=True)
+    if run("P5"):
+        OUT["P5"] = p5_section(); print("P5 check", {k: v for k, v in OUT["P5"]["check"].items() if k != "details"}, flush=True)
+    if run("P4"):
+        OUT["P4"] = p4_section(); print("P4", {t: (v["W_float"], v["W1W2"]) for t, v in OUT["P4"]["targets"].items()},
+                                        OUT["P4"]["mod3_vanishing_rule"], flush=True)
+    if run("P2"):
+        OUT["P2"] = p2_section(); print("P2 agree", OUT["P2"]["agree"], flush=True)
+    if run("P3"):
+        OUT["P3"] = p3_section(); print("P3", OUT["P3"]["first"]["counts"], OUT["P3"]["test0"]["tp"], OUT["P3"]["test0"]["tn"],
+                                        OUT["P3"]["test0"]["fp"], OUT["P3"]["test0"]["fn"], flush=True)
+    if run("P1"):
+        OUT["P1"] = p1_section(fast); print("P1 violations", OUT["P1"]["violations_char"], OUT["P1"]["violations_linear"], flush=True)
+    wall = time.time() - t0
+    OUT["wall_seconds" if only is None else "wall_seconds_last_partial"] = wall
+    json.dump(OUT, open(os.path.join(HERE, "check_theory.json"), "w"), indent=1, default=float)
+    print("wrote check_theory.json", round(wall), "s")
+
+
+if __name__ == "__main__":
+    main()

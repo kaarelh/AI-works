@@ -1,0 +1,58 @@
+\section{Introduction}\label{sec:intro}
+
+\paragraph{The question.} Can a learner without continuous feature parameters do at least as well as gradient-descent-trained networks, with the same training data and no more FLOPs? This paper reports the latest learner of a ten-part study, whose Parts 6--10 have asked this question, and what that learner does.
+
+\paragraph{The learner.} v3 is a stacked portfolio: a convex stacker combines the class probabilities of several members, and the input type decides which members run (\cref{sec:learner}). On Boolean inputs the member that matters is DFG (discrete feature growth). It enumerates Fourier characters and indicators of signed sums of inputs, admits each only when its correlation with the current residual passes a union-bound test over its whole class, and reads the admitted features out linearly. On images the main members are gradient-boosted trees over a fixed bank of pixel subset sums, whose pixel sets are chosen from pixel correlations without reading the layout; v3's new member, the \emph{bar booster} \code{cgbt}, adds sums along short lines recovered from those correlations. In familiar terms, DFG is a greedy, test-gated version of the low-degree algorithm, close to forward stepwise regression, and v3's image side is boosting on a fixed, data-derived feature bank (\cref{sec:relates}). No member fits a feature direction by gradient descent (\cref{sec:whatdiscrete}). \Cref{app:names} lists every name used in this paper.
+
+\paragraph{Part 10.} Part 10 was pre-registered (\cref{sec:discipline}). Three builders working on development data proposed components; a fixed rule adopted two of them, a wider sum-feature search for DFG and the bar booster; and a second fixed rule chose v3 over its predecessor v2 as the subject of this paper. v3 was frozen before any of its held-out results were read.
+
+\paragraph{What was found.} \Cref{tab:headline} gives the held-out results. By the pre-registered verdict rules, v3 cannot be told apart from v2 on any held-out set. What Part 10 adds shows only as consistently small image gains (v3's error is lower than v2's in all 14 seed-paired held-out fits, a description made after the results were in, but by less than the 10\% threshold at every cell) and on development suites. On the toy suite v3's margin over the networks is v2's; on images v3 is clearly better than the control \code{mlp_pool}, which v2 only ties.
+
+\begin{table}[t]
+\centering\footnotesize\renewcommand{\arraystretch}{1.15}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{2.0cm}>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{1.95cm}>{\raggedright\arraybackslash}p{3.2cm}}
+\toprule
+held-out set & reference & v3's result & v3 against v2 & limits\\
+\midrule
+\code{dlheld7}: 12 Boolean targets, $d=30$ (\cref{sec:res-dlheld7}) & \code{nets_best}, the per-target best of three pre-registered network variants (hindsight) & mean $\log_2\nstar$ ratio $-1.50$ over the 11 targets both learn (about $2.8\times$ less data; per-target s.d.\ 0.80, s.e.\ of the mean 0.24); clearly better on 10, worse on 0; wins from $-0.53$ (f7\_10) to $-2.93$ (f7\_00) & mean $-0.004$; no target differs clearly & one target generator; on 5 of the 10 wins \code{hgb} or \code{lin} also beats \code{nets_best}; the verdict is a fixed $\pm0.25$ threshold with no noise term\\
+\addlinespace
+\code{qd_c}, \code{qd_d}: 10-class QuickDraw, permuted pixels (\cref{sec:res-img-heldout}) & \code{mlp_xl}, three 1024-wide MLPs, CPU-matched, 9.2 budgets ($n=60000$); \code{mlp_strong} at every $n$ & 12.76\% and 12.64\% error at $n=60000$, 9.6\% and 8.6\% below \code{mlp_xl} (two ties); clearly better than \code{mlp_strong} at 6 of 6 cells & six ties, lower at all six (mean $\log_2$ ratio $-0.10$) & one seed at $n=60000$ (binomial s.e.\ about 0.34 points); a CNN that sees the layout (seed 0) has lower error at all three cells where both ran, clearly at one\\
+\addlinespace
+HELDOUT2: 10 tabular datasets (\cref{sec:res-tabular}) & \code{mlp_best}, the per-cell best Part 7--8 MLP (hindsight) & mean $\log_2$ error ratio $-0.168$; lower mean error on 8 of 10 datasets (sign test $p=0.11$) & the same code & v3 runs v1's stack there, unchanged since Part 8; DFG runs on none of these datasets\\
+\bottomrule
+\end{tabularx}
+\caption{Held-out results at a glance \status{Numerical}. A cell is a (set, $n$) pair; ``clearly better'' and ``tie'' are the pre-registered verdicts of \cref{sec:metrics}. The per-target s.d.\ and the s.e.\ of the mean on \code{dlheld7} treat the 11 targets as independent draws from the generator. Source: \repo{study/part10/LEARNER_RESULTS.json}.}
+\label{tab:headline}
+\end{table}
+
+\begin{itemize}
+\item \textbf{The other data} \status{Numerical} (\cref{sec:res-toy-all,sec:res-tabular}). On the nine other toy suites with network results, all development data for v3, its suite means against the per-suite best network range from $-1.50$ to $-2.44$, and a network is clearly better on one target only (h6\_00, a residue class mod 3). On 24 of the 26 tabular datasets v3 runs v1's code.
+\item \textbf{What DFG learns} \status{Numerical} (seed 0; \cref{sec:interp-toy}). On 49 of 54 targets built from signed sums, DFG's model comes to hold the target's exact signed blocks. On the 25 functions of one signed sum the test would admit the true block at $n=128$ every time, and the further data needed to find it grows as the target's share of variance at Fourier degrees 1--2 shrinks (Spearman $\rho=-0.86$; \cref{fig:interp-toy-timing}). The three residue classes mod 3 have almost none ($W_1+W_2\le0.0002$); the search never proposes their block, although at $n=16384$ it would pass the test at 134--155 times the threshold.
+\item \textbf{What the image members encode} \status{Numerical} (\cref{sec:interp-img}). On QuickDraw and MNIST the pooling sets are local neighbourhoods of the true pixel grid; on Fashion-MNIST some include the mirror pixel. The bar booster has the lowest out-of-fold error of all members in every analysed fit, and holds most of the boosters' stacking weight in the analysed QuickDraw and MNIST fits.
+\end{itemize}
+
+\paragraph{Scope.}
+\begin{itemize}
+\item \emph{What is held out.} For v3 as a whole only \code{dlheld7}, \code{qd_c} and \code{qd_d} (\cref{tab:status}). \code{dlheld7}'s targets are fresh, but v3's toy builder had seen two other draws from the same generator (\cref{sec:tasks}); the image sets come from one source, with one seed at $n=60000$. The earlier held-out sets measure v3 but do not test it. On tabular data the held-out claim is about v1's code path, which v3 runs there.
+\item \emph{The references} are standard-recipe networks without augmentation or architecture search, not tuned per target (\cref{sec:refs}); the per-target and per-cell minima over their variants are hindsight choices that favour them. The CNN is context, not a reference.
+\item \emph{``Discrete''} means that no member fits a feature direction by gradient descent (\cref{sec:whatdiscrete}). Boosting is functional gradient descent over trees, so the comparison is ``with gradient-descent-trained networks'', not ``with gradient descent''.
+\end{itemize}
+Claims are labelled \status{Numerical} (measured here, with the source file named) or \status{Heuristic} (a reading or a back-of-envelope argument, not tested here). There are no theorems in this paper.
+
+\paragraph{Background: Parts 1--9.} From Part 6 on, each part froze its learners before running them on the held-out data that it reports as its main evidence.
+\begin{itemize}
+\item \emph{Parts 1--5} \cite{gdcircuit2026} found that rich-regime networks on Boolean targets grow features greedily and pay in samples: for a $k$-bit parity on $d$ inputs their $\nstar$, the training-set size at 10\% test error, grows like $d^{1.0}$, $d^{1.9}$ and $d^{2.4}$ for $k=2,3,4$, close to the leap and correlational-SQ rate $d^{k-1}$ \cite{abbe2022msp,abbe2023leap} for $k\le3$, somewhat below it for $k=4$, and far from the $\approx k\log d$ of an Occam learner.
+\item \emph{Part 6} built DFG \cite{discretelearners2026}, which on a blind 7-target suite needed less data than the networks on every target (median factor 3.1), with at most 0.26 of one network run's FLOPs per fit.
+\item \emph{Part 7} took DFG to standard tasks, where it was about level with a plain MLP on tabular data, behind a regularized one, and clearly behind on images at large $n$.
+\item \emph{Part 8} stacked DFG with LightGBM, ExtraTrees, nearest-neighbour votes and logistic regression (v1), which needed clearly less data than the best network variant on 9 of 10 fresh toy targets and had lower mean error than the hindsight-best MLP on 8 of 10 fresh tabular datasets ($p=0.11$), but was behind a regularized MLP ensemble on images at $n\ge30000$.
+\item \emph{Part 9} added sum blocks to DFG and permutation-invariant image members (v2), which needed clearly less data than the best network variant on 10 of 12 targets of a suite written blind to that design and more on none; on two fresh QuickDraw sets it beat a strong MLP ensemble at $n\ge10000$, but a CPU-matched ensemble of wider MLPs and an MLP given v2's pooled features tied it at $n=60000$, and a small CNN that sees the pixel layout was clearly better at $n=10000$.
+\end{itemize}
+
+\paragraph{Contributions.}
+\begin{enumerate}
+\item What v3 is, how it relates to familiar learners and what in it is discrete (\cref{sec:learner}), and how it was built and evaluated (\cref{sec:protocol}).
+\item A held-out test of v3 on a fresh toy suite and two fresh image sets against the pre-registered references (\cref{sec:res-dlheld7,sec:res-img-heldout}).
+\item A comparison with every reference run on the study's other sets (MNIST excepted), with each set's status for v3 (\cref{sec:res-toy-all,sec:res-tabular,sec:res-img-dev}; in-sample detail in \cref{app:further}).
+\item A descriptive, independently verified account of what v3's fitted members contain (\cref{sec:interp}; per-target detail in \cref{app:interp-detail}).
+\item What kind of learner v3 turned out to be, why it works where it does, and its limits (\cref{sec:discussion}); how Part 10 was run (\cref{app:provenance}).
+\end{enumerate}
