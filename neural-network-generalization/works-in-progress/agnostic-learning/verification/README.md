@@ -84,7 +84,8 @@ The red-team note ([red-team.md](../research-notes/red-team.md)) is the first ad
 | | | logic and computation | minor fixes | [depth-two-referee-logic-computation-1.md](depth-two-referee-logic-computation-1.md) |
 | | 4, final candidate after revision | scope | minor fixes | [depth-two-referee-scope-2.md](depth-two-referee-scope-2.md) |
 | | | logic and computation | minor fixes | [depth-two-referee-logic-computation-2.md](depth-two-referee-logic-computation-2.md) |
-<!-- PENDING: depth-two final check; red-team finalization checks -->
+| | check of the last revision | | minor fixes; resolved by the lead editor | [depth-two-revision-check.md](depth-two-revision-check.md) |
+<!-- PENDING: red-team finalization checks -->
 
 The major issues were these.
 
