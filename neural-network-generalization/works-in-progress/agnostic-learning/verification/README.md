@@ -59,6 +59,7 @@ C and E were first refereed through the logic and computation lenses only. After
 | E | 1 | minor fixes | 5 | [E-revision-check-1.md](E-revision-check-1.md) |
 | E | 2 | minor fixes | 7 | [E-revision-check-2.md](E-revision-check-2.md) |
 | E | 3 | minor fixes; resolved by the lead editor | 5 | [E-revision-check-3.md](E-revision-check-3.md) |
+| E | after the scope report | minor fixes; resolved by the lead editor | 3 | [E-scope-revision-check.md](E-scope-revision-check.md) |
 
 Each note's final section lists every referee issue and every revision-check point, with its resolution (fixed, weakened or rebutted) and where in the text it was handled.
 
@@ -86,7 +87,8 @@ The red-team note ([red-team.md](../research-notes/red-team.md)) is the first ad
 | | 4, final candidate after revision | scope | minor fixes | [depth-two-referee-scope-2.md](depth-two-referee-scope-2.md) |
 | | | logic and computation | minor fixes | [depth-two-referee-logic-computation-2.md](depth-two-referee-logic-computation-2.md) |
 | | check of the last revision | | minor fixes; resolved by the lead editor | [depth-two-revision-check.md](depth-two-revision-check.md) |
-<!-- PENDING: red-team finalization checks -->
+| The finalized red-team note (status header, pointers, referee fixes to Proposition 4.1 and Remark 6.2) | check of the finalization 1 | | minor fixes | [red-team-finalization-check-1.md](red-team-finalization-check-1.md) |
+| | check of the finalization 2 | | minor fixes; resolved by the lead editor | [red-team-finalization-check-2.md](red-team-finalization-check-2.md) |
 
 The major issues were these.
 
