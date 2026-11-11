@@ -50,6 +50,8 @@ statement mismatch was found.
 
 ## Robust-prior polynomial-depth result: matches with a width convention qualification
 
+*Note added 11 November 2026: this qualification no longer applies. Since the coverage extension verified on 2 November 2026, `LayeredBooleanCircuit` requires its designated constant wire to be true only where a NAND gate consumes it, and width-one cases are checked in `RobustCircuitWidthOne` ([coverage extension](../coverage-extension-2026-10-30.txt), item 5). Line references below are to the 23 October snapshot.*
+
 The manuscript's principal theorem is in
 `main-results/robust-polynomial-depth/source/robustness-theory.tex:88–105`.
 The formal proposition is `RobustStatements.lean:32–52`, closed by

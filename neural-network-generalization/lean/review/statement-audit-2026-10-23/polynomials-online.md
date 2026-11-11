@@ -26,6 +26,8 @@ The universal multiplier in the degree-46 endpoint is chosen before dimension, w
 
 ### Reserved constant-wire qualification
 
+*Note added 11 November 2026: this qualification no longer applies. Since the coverage extension verified on 2 November 2026, `LayeredBooleanCircuit` requires its designated constant wire to be true only where a NAND gate consumes it, and width-one cases are checked in `RobustCircuitWidthOne` ([coverage extension](../coverage-extension-2026-10-30.txt), item 5). Line references below are to the 23 October snapshot.*
+
 The manuscript's circuit definition at `learning-theorem.tex:79–85` allows NAND, copies and negations, says that constants required by internal gates count toward `C`, and has a final output wire. The actual Lean structure in `RobustCircuit.lean:86–93` additionally has a field `constant : Fin C`, forces that slot to copy the constant input at the first stage, and forces it to copy itself thereafter. At `C=1`, that slot is also the only possible output, so only the constant positive function is represented. A circuit that just copies `x_1` through every stage is a concrete counterexample to literal equality of the two width-one target classes.
 
 One may state the formal theorem using the compiled width with a reserved constant wire. Adding a constant wire gives a width-at-most-`C+1` representation of any circuit under the broader convention, and at most doubles positive width, so it preserves the polynomial complexity rate. It does **not** by itself certify the exact learner-width range `N >= C` in the broader convention. The source comparison does not claim a formal same-width compilation theorem for every circuit in that broader class.

@@ -64,7 +64,7 @@ This is the completed full-parity exponential theorem. The stronger fixed-depth 
 
 The learner conditions on signed training output above $1/2$ and controls posterior test-margin error at $1/4$, hence sign error and confidence failure. The main theorem needs no all-input clean-output margin; the manuscript also treats an optional extra conditioning variant, outside the original main-result-5 Lean statement and now covered by the second batch. The comparator is a layered Boolean circuit with constant wires and compilation overhead counted; this is not an unconditional polynomial-depth theorem for every small analog neural circuit.
 
-For the Lean-verified width threshold, the circuit reserves a counted constant-`+1` wire at every stage. A width-one target other than constant `+1` under the paper's prose convention needs formal width two; its learner-width-one case is outside certification. This also applies to the improved original-support result below. The [statement audit](lean/review/statement-audit-2026-10-23/README.md) checks these conventions across all fifteen main papers.
+For the Lean-verified width threshold, the formal circuit counts a constant wire only where a NAND gate consumes it, matching the paper's prose convention. Width-one literal, copy, negation and first-stage-gate circuits are therefore certified at learner width one ([RobustCircuitWidthOne](lean/NeuralGeneralization/RobustCircuitWidthOne.lean)). This also applies to the improved original-support result below. Until 2 November 2026 the formal circuit reserved a constant wire at every stage, so those width-one cases needed formal width two; the [coverage extension](lean/review/coverage-extension-2026-10-30.txt) (item 5) records the change. The [statement audit](lean/review/statement-audit-2026-10-23/README.md) of 23 October checks the other model conventions across all fifteen main papers; its width-one qualification predates the change.
 
 A [new supporting paper](works-in-progress/improved-polynomials/original-support-all-scales/paper.pdf) sharpens the sufficient bound to $O(C^6\log^{13}(2+C))$ at fixed remaining parameters under this **same restriction**, for every $\gamma\ge1$ and every $N\ge C$. It also improves the conservative joint polynomial envelope to degree 46. These sharper exponents are Lean verified in the second batch; its separate printed numerical allocation is outside the checked scope.
 
@@ -74,7 +74,7 @@ The [experiments](works-in-progress/depth-experiments/) include genuine trained-
 
 These ten papers were previously unformalized. Their main learning statements now have Lean proofs, with the original models and quantifier orders. [Coverage, exact theorem names and exclusions](lean/review/BatchTwo-coverage.md) · [Lean entry point](lean/NeuralGeneralization/BatchTwoMain.lean) · [Verification record](lean/VERIFICATION.md). Verification applies to the listed statements; some ancillary claims and numerical allocations remain outside its scope.
 
-The [fresh statement audit](lean/review/statement-audit-2026-10-23/README.md) records the circuit-width qualifications and the ReLU/GELU paper's corrected constant-wire convention, separately from the successful Lean kernel checks.
+The [fresh statement audit](lean/review/statement-audit-2026-10-23/README.md) records the robust circuits' earlier width-one qualification (since removed; see above) and the ReLU/GELU paper's corrected constant-wire convention, separately from the successful Lean kernel checks.
 
 | Paper | Main result |
 |---|---|
