@@ -207,7 +207,7 @@ A fuller annotated bibliography is in [literature.md](research-notes/literature.
 | [red-team.md](research-notes/red-team.md) | the first adversarial pass over the draft claims; its refereed propositions are cited in §8, and its other parts are superseded by the notes above or unrefereed (status table at its top) |
 | [literature.md](research-notes/literature.md) | annotated bibliography (§10) |
 
-**Verification** ([`verification/`](verification/README.md)): every referee report and every check of a revision, with an index of verdicts.
+**Verification** ([`verification/`](verification/README.md)): every referee report and every check of a revision, the earlier versions of the notes that the referees reviewed, and an index of verdicts.
 
 **Checks** ([`checks/`](checks/)): the scripts and outputs cited by the notes (one folder per note) and by the referee reports (one folder per report, named after it).
 
