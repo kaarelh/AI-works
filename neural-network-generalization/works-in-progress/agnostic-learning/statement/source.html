@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The tempered-likelihood learner: definition and agnostic guarantee</title>
+<!--KATEX-CSS-->
+<style>
+  body { font-family: "Latin Modern Roman", "Computer Modern Serif", "Times New Roman", serif; font-size: 10.5pt; line-height: 1.42; color: #111; max-width: 100%; margin: 0; }
+  h1 { font-size: 15.5pt; text-align: center; margin: 0 0 6pt 0; line-height: 1.25; }
+  .byline { text-align: center; margin: 0 0 2pt 0; }
+  .date { text-align: center; margin: 0 0 12pt 0; color: #333; }
+  .abstract { margin: 0 6% 12pt 6%; font-size: 9.8pt; }
+  h2 { font-size: 12pt; margin: 14pt 0 5pt 0; }
+  p { margin: 5pt 0; text-align: justify; }
+  .env { margin: 8pt 0; padding: 7pt 10pt; border-left: 2.5pt solid #444; background: #f6f6f6; break-inside: avoid; }
+  .env-title { font-weight: bold; }
+  ol, ul { margin: 4pt 0 4pt 0; padding-left: 20pt; }
+  li { margin: 2pt 0; }
+  .katex { font-size: 1.05em; }
+  .katex-display { margin: 6pt 0; overflow: visible; }
+  .small { font-size: 9.3pt; }
+  .footnote { font-size: 8.8pt; border-top: 0.5pt solid #999; margin-top: 14pt; padding-top: 4pt; }
+  sup.fn { font-size: 7pt; }
+  code { font-family: "DejaVu Sans Mono", monospace; font-size: 8.6pt; }
+</style>
+</head>
+<body>
+
+<h1>The tempered-likelihood learner:<br>definition and agnostic guarantee</h1>
+<div class="byline">Claude Opus 5.5, Kaarel Hänni, and Dmitry Vaintrob<sup class="fn">*</sup></div>
+<div class="date">11 November 2026</div>
+
+<div class="abstract">
+This is a self-contained statement of the main positive result of the agnostic-learning note: the learner, the setting, and the guarantee, with no proofs. The results are Theorem 6.3, Corollary 8.1 and parts of Sections 6–9 of <code>research-notes/B-tempered-likelihood.md</code> in <code>neural-network-generalization/works-in-progress/agnostic-learning/</code>. The proofs there are paper proofs with numerical checks, refereed by independent AI agents; they are not Lean-verified.
+</div>
+
+<h2>1. Setting</h2>
+
+<p><b>Data.</b> Fix \(d\ge1\) and a nonempty compact set \(X\subseteq[-1,1]^d\). A <i>data law</i> \(D\) is any Borel probability measure on \(X\times[-1,1]\). Nothing else is assumed: the labels may be noisy, or any deterministic or random function of the input. The sample \(S=((x_i,y_i))_{i=1}^n\) consists of \(n\) independent draws from \(D\). For \(f:X\to\mathbb R\), the test loss and the training loss are
+\[
+L_D(f)=\mathbb E_{(x,y)\sim D}\,(f(x)-y)^2,\qquad \hat L_S(f)=\frac1n\sum_{i=1}^n\bigl(f(x_i)-y_i\bigr)^2,
+\]
+and \(\operatorname{clip}(u)=\max\{-1,\min\{1,u\}\}\) truncates a real number to the label range.</p>
+
+<p><b>Networks.</b> The depth is \(L=H+1\ge2\), with \(H\) hidden layers, and the width is \(N\). A parameter is \(w=(W^1,\dots,W^H,v)\), with \(W^1\in\mathbb R^{N\times(d+1)}\), \(W^\ell\in\mathbb R^{N\times N}\) for \(2\le\ell\le H\), and \(v\in\mathbb R^N\). With \(\bar x=(1,x)\) and \(\tanh\) applied entrywise, the network computes
+\[
+h^0(x)=\bar x,\qquad h^\ell(x)=\tanh\bigl(W^\ell h^{\ell-1}(x)\bigr)\ \ (1\le\ell\le H),\qquad z_w(x)=v^{\top}h^H(x).
+\]
+There are no biases other than the constant coordinate of \(\bar x\). The <i>energy</i> of \(w\) is
+\[
+\kappa_N(w)=\frac dN\,\lVert W^1\rVert_F^2+\sum_{\ell=2}^{H}\lVert W^\ell\rVert_F^2+N\,\lVert v\rVert_2^2 .
+\]</p>
+
+<div class="env"><span class="env-title">Definition (the tempered-likelihood learner).</span>
+Fix the depth \(L\), a learner width \(N\), a scale \(\sigma>0\) and an exponent \(\theta\in(0,1/H)\) (any \(\theta\in(0,1)\) when \(H=1\)), and put \(c=n^{1-\theta}\).
+<ul>
+<li><i>Prior.</i> \(\mu_\sigma(dw)\propto e^{-\kappa_N(w)/(2\sigma^2)}\,dw\): independent centred Gaussian weights with variances \(N\sigma^2/d\) (first layer), \(\sigma^2\) (internal layers) and \(\sigma^2/N\) (readout).</li>
+<li><i>Likelihood.</i> \(y_i\mid x_i,w\sim\mathcal N\bigl(z_w(x_i),\,c\,\sigma^2\bigr)\): Gaussian observation noise whose variance is the prior scale \(\sigma^2\) times the tempering factor \(c\).</li>
+<li><i>Posterior.</i>
+\[
+\Pi_\sigma(dw)\ \propto\ e^{-F_{c,S}(w)/(2\sigma^2)}\,dw,\qquad F_{c,S}(w)=\kappa_N(w)+\frac1c\sum_{i=1}^n\bigl(z_w(x_i)-y_i\bigr)^2=\kappa_N(w)+n^{\theta}\,\hat L_S(z_w).
+\]</li>
+<li><i>Strong-prior limit.</i> The sample size \(n\), the sample \(S\) and the width \(N\) are fixed first; then \(\sigma\downarrow0\).</li>
+</ul>
+The learner's only choices are the depth and the exponent \(\theta\); neither depends on the data law. With \(c=1\) this is the clean-label learner of the repository; the tempering \(c=n^{1-\theta}\) raises its likelihood to the power \(n^{\theta-1}\), so the learner is a power posterior whose temperature depends on \(n\), not one Bayesian model updated as data arrive.
+</div>
+
+<p><b>Predictions.</b> As \(\sigma\downarrow0\) the posterior concentrates on the <i>near-minimizers</i>
+\[
+\mathcal N_1=\bigl\{w:\ F_{c,S}(w)\le \min F_{c,S}+1\bigr\}
+\]
+(the minimum exists), that is, on near-minimizers of the energy-penalized least-squares objective \(\hat L_S(z_w)+n^{-\theta}\kappa_N(w)\). The guarantee covers three ways of predicting, all with outputs clipped to \([-1,1]\):</p>
+<ol>
+<li>a near-minimizer: \(\operatorname{clip}z_w\) for any \(w\in\mathcal N_1\);</li>
+<li>a posterior draw, through the Gibbs risk \(\mathcal G_\sigma=\mathbb E_{w\sim\Pi_\sigma}L_D(\operatorname{clip}z_w)\), the expected test loss of a single draw;</li>
+<li>the posterior mean of the clipped outputs, \(\bar f_\sigma(x)=\mathbb E_{w\sim\Pi_\sigma}\operatorname{clip}z_w(x)\).</li>
+</ol>
+<p>The likelihood uses the unclipped output \(z_w\); clipping is applied only when predicting. Since every label lies in \([-1,1]\), clipping never increases a squared error.</p>
+
+<p><b>Competitors.</b> A competitor is any network \(g=z_{w^g}\) of the same architecture, with depth \(L\), width \(m\) and all weights in \([-B,B]\), \(B>0\). Put
+\[
+E_*=d(d+1)B^2+2(L-1)\,m^2B^2,\qquad U=mB,\qquad D_n=\sqrt{2(d+1)\ln(n+1)}+\frac{H-1}2 .
+\]
+Here \(E_*\) bounds the energy of copies of \(g\) at every width \(N\ge m\), and \(U\ge\sup_x|g(x)|\).</p>
+
+<h2>2. The guarantee</h2>
+
+<div class="env"><span class="env-title">Theorem 1 (agnostic oracle inequality at every learner width).</span>
+Let \(L=H+1\ge2\), \(\theta\in(0,1/H)\) (any \(\theta\in(0,1)\) when \(H=1\)) and \(c=n^{1-\theta}\). Let \(X\), the data law \(D\), the competitor \(g\) (width \(m\), weights in \([-B,B]\)) and \(\delta\in(0,1)\) be arbitrary, and put
+\[
+\mathrm{Exc}_n=(E_*+1)\,n^{-\theta}+8\Bigl(\frac2H\Bigr)^{H/2}D_n\,n^{-(1-\theta H)/2}+\bigl(4+(U+1)^2\bigr)\sqrt{\frac{\ln(2/\delta)}{2n}} .
+\]
+There is an event of probability at least \(1-\delta\) over the sample, the same for every learner width and every \(\sigma\), on which, for <b>every</b> learner width \(N\ge m\):
+<ol type="a">
+<li>every near-minimizer \(w\in\mathcal N_1\) has \(L_D(\operatorname{clip}z_w)\le L_D(g)+\mathrm{Exc}_n\);</li>
+<li>\(\Pi_\sigma\bigl\{w:\ L_D(\operatorname{clip}z_w)\gt L_D(g)+\mathrm{Exc}_n\bigr\}\to0\) as \(\sigma\downarrow0\);</li>
+<li>\(\limsup_{\sigma\downarrow0}\ \mathbb E_{w\sim\Pi_\sigma}L_D(\operatorname{clip}z_w)\le L_D(g)+\mathrm{Exc}_n\);</li>
+<li>\(\limsup_{\sigma\downarrow0}\ L_D(\bar f_\sigma)\le L_D(g)+\mathrm{Exc}_n\).</li>
+</ol>
+Moreover \(\mathrm{Exc}_n\le\varepsilon\) whenever
+\[
+n\ \ge\ n_0:=\max\Bigl\{\Bigl(\frac{3(E_*+1)}\varepsilon\Bigr)^{\frac1\theta},\ \Bigl(\frac{48(2/H)^{H/2}}\varepsilon\sqrt{\frac{4(d+1)}{1-\theta H}}\Bigr)^{\frac4{1-\theta H}},\ \Bigl(\frac{24(2/H)^{H/2}(H-1)}\varepsilon\Bigr)^{\frac2{1-\theta H}},\ \frac{9\bigl(4+(U+1)^2\bigr)^2\ln(2/\delta)}{2\varepsilon^2}\Bigr\},
+\]
+where the third entry is omitted when \(H=1\). So the sample size is polynomial in \(d\), \(m\), \(B\), \(1/\varepsilon\) and \(\log(1/\delta)\) at fixed \(L\) and \(\theta\).
+</div>
+
+<p>In words: whatever the data law, after \(n\) samples the tempered posterior, at every width at least the competitor's, predicts (after clipping) at least as well as any fixed small network of the same architecture, up to an error \(\mathrm{Exc}_n\to0\) that does not depend on the learner width. For example, \(\theta=1/(H+2)\) gives \(\mathrm{Exc}_n\le\bigl[E_*+1+8(2/H)^{H/2}D_n\bigr]n^{-1/(H+2)}+\bigl(4+(U+1)^2\bigr)\sqrt{\ln(2/\delta)/(2n)}=\tilde O\bigl(\mathrm{poly}(d,m,B)\,n^{-1/(H+2)}\bigr)\). The constants are poor: at \(L=3\), \(d=10\), \(m=B=1\), \(\varepsilon=0.1\), \(\delta=0.05\) and \(\theta=1/4\), \(\mathrm{Exc}_n\) first drops below \(\varepsilon\) at \(n\approx10^{14.1}\).</p>
+
+<h2>3. Against all networks of polynomial size</h2>
+
+<div class="env"><span class="env-title">Corollary 2 (competing with width and weights up to \(n^\alpha\)).</span>
+Fix \(L=H+1\ge2\) and \(\alpha\in\bigl(0,\frac1{4H}\bigr)\). Put \(\theta=\frac{1+8\alpha}{H+2}\in(0,\frac1H)\) and \(c=n^{1-\theta}\). Let \(\mathcal G^{(\alpha)}_n\) be the networks of the architecture above with depth \(L\), width at most \(\lfloor n^\alpha\rfloor\) and all weights in \([-n^\alpha,n^\alpha]\), and put
+\[
+\beta=\frac{1-4\alpha H}{H+2}\ \ (H\ge2),\qquad \beta=\min\Bigl\{\frac{1-4\alpha}3,\ \frac12-4\alpha\Bigr\}\ \ (H=1),
+\]
+\[
+\Xi_n=d(d+1)+2L+8\Bigl(\frac2H\Bigr)^{H/2}\Bigl(\sqrt{2(d+1)\ln(n+1)}+\frac{H-1}2\Bigr)+4\sqrt{2\ln(2/\delta)} .
+\]
+Then for every \(d\), every compact \(X\subseteq[-1,1]^d\), every data law \(D\) on \(X\times[-1,1]\), every \(n\ge1\) and every \(\delta\in(0,1)\), with probability at least \(1-\delta\), simultaneously for all learner widths \(N\ge n^\alpha\),
+\[
+\limsup_{\sigma\downarrow0}\ \mathbb E_{w\sim\Pi_\sigma}L_D(\operatorname{clip}z_w)\ \le\ \min_{f\in\mathcal G^{(\alpha)}_n}L_D(f)+\Xi_n\,n^{-\beta},
+\]
+and the same bound holds for every near-minimizer and for the posterior mean \(\bar f_\sigma\). When \(H=1\), \(\beta>0\) only for \(\alpha\lt1/8\).
+</div>
+
+<p>For \(H\ge2\) this is the conjecture's form: the clipped test loss is at most the least test loss over depth-\(L\) networks whose width and weights are at most \(n^\alpha\), plus \(O_L\bigl((d^2+\sqrt{d\log n}+\sqrt{\log(1/\delta)})\,n^{-\beta}\bigr)\), for every \(\alpha\lt1/(4H)\); at depth \(3\) one may take \(\alpha=1/16\), \(\beta=1/8\).</p>
+
+<p><b>One tempering for all class sizes</b> <span class="small">(a direct consequence of Theorem 1, by the arithmetic of the proof of Corollary 2; it is not stated or refereed separately in the note).</span> Let \(H\ge2\) and fix any \(\theta\in(0,1/H)\), without reference to \(\alpha\). Applying Theorem 1 to a best network of \(\mathcal G^{(\alpha)}_n\), and using \(E_*+1\le(d(d+1)+2L)\,n^{4\alpha}\) and \(4+(U+1)^2\le8n^{4\alpha}\), gives, with probability at least \(1-\delta\) and at all learner widths \(N\ge n^\alpha\),
+\[
+\text{excess over }\min_{f\in\mathcal G^{(\alpha)}_n}L_D(f)\ \le\ (d(d+1)+2L)\,n^{-(\theta-4\alpha)}+8\Bigl(\frac2H\Bigr)^{H/2}D_n\,n^{-(1-\theta H)/2}+4\sqrt{2\ln(2/\delta)}\;n^{-(1/2-4\alpha)},
+\]
+which tends to \(0\) polynomially for every \(\alpha\lt\theta/4\). So a single fixed \(\theta\) close to \(1/H\) covers all \(\alpha\) up to nearly \(1/(4H)\), at a slower rate than the tuned choice of Corollary 2.</p>
+
+<h2>4. What else is known (scope)</h2>
+<ul>
+<li><b>Unclipped predictions</b> (note, Theorem 6.4). The same conclusions hold for \(z_w\), the Gibbs risk \(\mathbb E_{\Pi_\sigma}L_D(z_w)\), the ordinary posterior mean \(\bar z_\sigma=\mathbb E_{\Pi_\sigma}z_w\) and its clip, provided \(\theta\in(0,1/L)\), with a larger error term. For \(\theta\in[1/L,1/H)\) the unclipped predictors are open.</li>
+<li><b>Sharpness</b> (note, Theorem 7.4). For \(H\ge2\) and \(\theta\gt1/H\) the learner memorizes label noise: with inputs uniform on \(\{-1,1\}^d\), fair random labels and \(n=2^d\) samples, with probability tending to \(1\) and at learner widths above a polynomial in \(n\), every near-minimizer and every posterior predictor has test loss at least \(1+1/e-o(1)\), while the zero network has test loss \(1\), the Bayes risk. The exponent \(1/H\) is therefore sharp in the worst case over data laws; the counterexample needs the input dimension \(d=\log_2n\) to grow, and at a fixed \(d\) nothing is shown.</li>
+<li><b>Competitor weights</b> (note, Section 9). Bounded competitor weights are needed for a guarantee uniform over laws: for \(H\ge2\), against width-and-weight classes of size \(n^\alpha\), no choice of \(c(n)\) works once \(\alpha\gt L/(2H(2L-1))\). For a fixed data law no weight bound is needed: the clipped test loss comes within any \(\varepsilon\) of the Bayes risk, with a sample size and a learner-width threshold that depend on the law.</li>
+<li><b>Competitors with biases</b> (note, Remark 8.2). A depth-\(L\) tanh network with biases, width \(m\), and weights and biases in \([-B,B]\) equals a network of the architecture above with width \(m+1\) and weights in \([-B',B']\), \(B'=\max\{B,1\}/\tanh1\); Theorem 1 applies to it with these values.</li>
+<li><b>The prior scale.</b> The theorem is stated in the strong-prior limit \(\sigma\downarrow0\). At the repository's finite prior scale \(\sigma^2=N^{-\gamma}\), \(\gamma\ge1\), with no limit taken, the analogue holds for the posterior-averaged clipped test loss and the posterior mean of the clipped outputs when \(\theta\lt\theta_{L,\gamma}\), which equals \(1/H\) when \(L=2\) or \(\gamma\ge2-1/H\) and is smaller otherwise; at \(\gamma=1\) the proof relies on an imported mean-field cover (<code>E-finite-prior-scale.md</code>, Theorem 2.7).</li>
+<li><b>Close conditioning.</b> Without tempering (\(c=1\), or any \(c\) up to about \(n^{1-1/H}\)), the same learner fails at depth \(L\ge3\): on the noisy-cube laws above with \(n\approx2^d\), at large learner widths, its test loss exceeds the zero network's by at least about \(0.48\) (<code>A-tight-conditioning-fails.md</code>, Theorem 4.4).</li>
+</ul>
+
+<p class="small"><b>Idea of the proof.</b> As \(\sigma\downarrow0\) the posterior concentrates on near-minimizers of \(F_{c,S}\). Comparing with a copy of the competitor bounds their training loss by \(\hat L_S(g)+(E_*+1)\,n^{-\theta}\), and comparing with the zero network bounds their energy by \(n^\theta+1\). A Rademacher bound for tanh networks of bounded energy that holds at every width (from a path-norm argument) then controls the gap between training and test loss of the clipped outputs; at energy \(K\approx n^{\theta}\) it is of order \(K^{H/2}D_n/\sqrt n\), which vanishes exactly when \(\theta\lt1/H\).</p>
+
+<div class="footnote"><sup>*</sup>Authors are listed in alphabetical order.</div>
+
+</body>
+</html>
