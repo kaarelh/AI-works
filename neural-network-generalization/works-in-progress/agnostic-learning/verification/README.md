@@ -33,12 +33,14 @@ Verdicts: *minor fixes* means no step of a proof was found wrong. "Major for rep
 | | | scope | minor fixes | 10 minor | [B-scope.md](B-scope.md) |
 | C: fixed-temperature Bayes | first version ([C-first-version.md](C-first-version.md)) | logic | minor fixes | 10 minor | [C-logic.md](C-logic.md) |
 | | | computation | minor fixes | 7 minor | [C-computation.md](C-computation.md) |
+| | final text, after three revision checks | scope | minor fixes | 14 minor (7 on the README draft, 1 on the brief) | [C-scope.md](C-scope.md) |
 | E: finite prior scale | first version ([E-first-version.md](E-first-version.md)) | logic | minor fixes | 10 minor | [E-logic.md](E-logic.md) |
 | | | computation | minor fixes | 10 minor | [E-computation.md](E-computation.md) |
+| | final text, after three revision checks | scope | major flaw in the README draft's summary of E; minor fixes in E | 1 major for reporting, 10 minor; 7 of the 11 concern the README draft | [E-scope.md](E-scope.md) |
 
 The three scope issues on the first version of A were that it did not say the conjecture is existential in the learner (another learner, in B, satisfies it), that its counterexample needs the input dimension to grow with $n$, and that its continuous-input variant is near-atomic at the learner's resolution. Revision 1 restates the scope accordingly and adds Proposition 5.2 (fixed input dimension) and Proposition 7.4 (how near-atomic the law must be).
 
-C and E were refereed through the logic and computation lenses only. Their scope was checked in the revision checks below and in the adversarial check of the main README.
+C and E were first refereed through the logic and computation lenses only. After their revision checks, a scope referee reviewed each final text together with the README draft's summary of it. The report on E found no error in E, but found that the README draft claimed for the finite prior scale the whole strong-prior picture (unclipped predictors, the conjecture's form with competitors of size $n^\alpha$, the threshold $1/H$ at every $\gamma$), which E does not prove; the README was corrected before publication. The notes' answers to both reports are in their final sections.
 
 ## Revision checks
 

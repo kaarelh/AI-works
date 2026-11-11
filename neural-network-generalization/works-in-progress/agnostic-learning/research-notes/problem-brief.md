@@ -6,7 +6,7 @@
 
 * *Claim A needs the input dimension to grow with n (d = log2 n). On the cube example at a fixed input dimension, the same learner is consistent ([A-tight-conditioning-fails.md](A-tight-conditioning-fails.md), Proposition 5.2).*
 * *Claim B holds for every θ < 1/H with clipped predictions and every θ < 1/L unclipped, not only below the energy-cover threshold 1/(4(L−1)). For H ≥ 2 it fails above 1/H. The competitor's weights must be polynomially bounded with a small exponent ([B-tempered-likelihood.md](B-tempered-likelihood.md)).*
-* *Claim C is proved for clipped predictions only; for some priors the unclipped versions fail ([C-fixed-temperature-bayes.md](C-fixed-temperature-bayes.md)).*
+* *Claim C is proved for clipped predictions only. For the network prior of Claim C the unclipped predictors are open; for some two-point priors the general inequality fails for them ([C-fixed-temperature-bayes.md](C-fixed-temperature-bayes.md), Theorem C.1 and Remark 3 after it).*
 
 ## 1. The user's conjecture (verbatim intent)
 
