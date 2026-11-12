@@ -1,0 +1,86 @@
+Exact finite-variance ReLU online correspondence
+12 November 2026
+
+Scope: works-in-progress/online-mistakes/upper/source/paper.tex,
+"An extension to ReLU", displayed K_R,r_R,B_R,T_R,v_R and the subsequent
+all-width finite-variance claims (lines 412–432 at baseline f053abb8).
+This completes that existing formalized paper's imported ReLU claim.
+It does not assert complete coverage of the separately cited ReLU paper.
+Neither manuscript nor any abstract is changed.
+
+Literal model and endpoints
+---------------------------
+relu_finite_variance_online_product takes an actual width-C, depth L=r+2
+ReLU teacher w with signed margin >1/2 everywhere on the Boolean cube.
+P_* is the product of actual Frobenius norms, including the readout.
+For every N>=C and every gamma>=2 it gives NetworkOnlineBounds for the
+original powerPrior with energy-coordinate variance N^(-gamma), at
+  h = ceil((4(d+1)/d)(T_R/L)^L a_H^2) log(2^d+1).
+relu_shallow_finite_variance_online_product proves the same endpoint for
+one hidden layer (r=0,L=2) for every gamma>=1, including equality.
+No small-variance limit, modified support, or unknown structural premise
+appears in either endpoint. The global absolute-margin convention and
+posterior are those of the existing actual network model.
+
+Exact center and perturbation
+-----------------------------
+The readout is doubled, the teacher is zero-padded to any N>=C, and its
+layers are positively rescaled without changing its function. Each
+weighted layer energy is K_R/L and the total is exactly
+  K_R = L (4 d P_*^2)^(1/L).
+Whitening proves each normalized layer norm equals sqrt(K_R/L).
+The output of this concrete center has signed margin >1 everywhere.
+The perturbation proof propagates each layer's individual Frobenius
+error, then applies Cauchy–Schwarz to their sum. It gives exactly
+  sqrt(2L) rho (sqrt(K_R/L)+1)^(L-1)
+for combined Euclidean energy-coordinate displacement <=rho<=1.
+Thus the literal r_R makes output error <=1/4 and preserves strict margin
+>1/2. All these statements concern actual network evaluations.
+
+Gaussian mass and tail
+----------------------
+An explicit coordinate box of halfwidth r_R/sqrt(parameter count) lies
+inside the perturbation ball. Integrating the actual product Gaussian
+density gives target raw mass >=exp(-B_R/sigma^2), with exactly
+  B_R = (sqrt(K_R)+r_R)^2/2
+        + S_R log(3 max(1,sqrt(S_R)/r_R)), S_R=d+L.
+The proof uses parameter_count*sigma^2<=S_R, with no dimensional factor
+lost in the exponent. The Gaussian square MGF yields
+  Pr[energy>=T] <= exp(parameter_count log(2)/2-T/(4 sigma^2)).
+At the literal T_R=4(B_R+(S_R/2)log2+log m), m=2^d, and sigma^2<=1,
+the energy tail is <=target_mass/m. The actual disjoint margin events
+transfer this to excluded function mass for the all-width energy class.
+The exact capacity count v_R was proved in the preceding product batch.
+
+The parameter count is N(d+2)+r N^2. Its variance product is <=d+L
+for all N>=1 when gamma>=2; for r=0, gamma>=1 suffices. These inequalities
+are formalized, rather than retained as hypotheses of the final endpoints.
+
+Online and polynomial conclusions
+---------------------------------
+NetworkOnlineBounds includes actual uniform permutations and the entire
+infinite uniform-IID stream, expected posterior errors, expected fresh
+posterior-sampled mistakes, and both logarithmic-confidence tails.
+The threshold constants are chosen before either input experiment.
+
+For individually C-bounded teacher weights, the proved product inequality
+P_*^2<=(d+1)C^(4L-2) is used to construct a natural polynomial capacity.
+relu_finite_variance_polynomial quantifies this polynomial before d,C,N,
+the teacher, and gamma. relu_finite_variance_budget_polynomial gives one
+polynomial envelope in d,C,log(1/delta) for both expectation and confidence
+thresholds. Thus the informal fixed-depth polynomial assertion is also
+covered, not just the displayed exact-capacity formula.
+
+Remaining scope
+---------------
+The online paper's other tanh merging-support instantiations and the
+original-support paper's literal J allocation remain open. No full-paper
+coverage claim is made for these outstanding pieces.
+
+Verification
+------------
+Recorded after the complete build, all seven gates, the source/axiom audit,
+and independent hashes confirming that every checked paper file is unchanged.
+Root build: 5466 jobs; all seven gates pass. 18058 proved project
+declarations and 1236 extension endpoints checked, including 83 new
+endpoints. Only standard axioms; all 631 paper/source files unchanged.
