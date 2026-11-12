@@ -1,0 +1,75 @@
+Uniform spherical score-to-sign correspondence
+12 November 2026
+
+Scope: side-results/continuous-domains/source/paper.tex, eq:sphere and the
+following real-score sign-confidence paragraph (lines 761–778 at baseline
+1a180b6a61acb6d1c0f6976219d4e5a1cfd1d9a0). No paper is modified.
+
+Literal distribution and teacher
+--------------------------------
+uniformSphere d is the law of G/||G|| for d independent standard real
+Gaussian coordinates. Zero is assigned direction zero; it has zero mass
+when d>0. uniformSphere_on_sphere proves unit-sphere support, and
+uniformSphere_euclidean identifies this law with normalized stdGaussian.
+uniformSphere_orthogonal_invariant proves invariance under every Euclidean
+linear isometry. This is the normalized-isotropic-Gaussian construction of
+uniform spherical probability; no finite discretization or restricted band
+is substituted. No equality to mathlib's unnormalized Haar-to-sphere measure
+is asserted or needed by the learning statements.
+
+scoreTeacher has one hidden tanh unit, first input weight one, zero bias,
+and readout one. scoreTeacher_bounded and scoreTeacher_output prove the
+literal B=C=1, L=2 representation on every real input. inputBall is a
+nonempty compact unit ball in the manuscript's coordinate type, and the
+whole spherical probability law is supported there.
+
+Anti-concentration
+------------------
+spherical_tanh_anticoncentration and its real-measure endpoint prove
+D{|tanh(x_1)|<=tau} <= 3 sqrt(d) tau. Dimensions use d=n+1; the theorem
+holds for all d>=1 and all tau>0, hence includes the paper's d>=2 and
+0<tau<=1/2 without extra hypotheses. The proof differs from the printed
+density calculation: tanh bounds reduce the event to a Gaussian cone;
+conditioning on the other coordinates, a scalar Gaussian small-ball bound
+and the actual Gaussian radial moment give the same literal constant 3.
+For tau>=1/3 the probability-one bound suffices. Neither a spherical
+anti-concentration premise nor an unproved Gaussian-density assertion is
+used.
+
+Actual learner and budget
+-------------------------
+spherical_score_learning_finite_scale covers every fixed scalar coordinate
+law and gamma>=1, including gamma=1. spherical_score_learning_strong_prior
+chooses its positive scale threshold after dimension, width and epsilon,
+but before delta and sample size. Both use the literal independent-weight
+prior and BatchTwoContinuous.posterior, conditioning solely on observed
+real scores tanh(x_1), with rho=epsilon/(12 sqrt(d)). They prove that with
+sample probability >=1-delta, the sphere measure of inputs at which the
+posterior's correct-sign probability is <=2/3 is <=epsilon. All widths
+N>=1 are allowed. There is no binary-label likelihood replacement or
+additional global-margin conditioning.
+
+The regression theorem is used at accuracy epsilon/2 and output tolerance
+tau=epsilon/(6 sqrt(d)). The proved score-to-sign inclusion adds at most
+epsilon/2 by the spherical estimate. The explicit common sample budget is
+  (12/epsilon) [ A 30^m (1+d+1/epsilon)^(2m)
+                 + 13(1+d+1/epsilon) + log(1/delta) ].
+A>0 and m are chosen before d,N,epsilon,delta; they may depend on the fixed
+coordinate law and (for finite scale) gamma. This is literally polynomial
+in dimension and inverse accuracy and logarithmic in confidence, with no
+N dependence. sphere_finite_budget and sphere_strong_budget dominate the
+respective regression budgets. The main theorem's full posterior is used;
+its finite-measure property follows from actual conditioning.
+
+Coverage limits
+---------------
+This closes the optional sphere bound and its actual learning corollary.
+It does not resolve the original-support paper's sharp J allocation, or
+the online paper's other merging supports and optional exact ReLU budgets.
+The older paper statement that some work is not Lean verified is preserved
+as requested; this review records the new formal coverage separately.
+
+Verification results are recorded in verification/coverage-sphere-2026-11-12/.
+Root build: 5440 jobs; all seven gates pass. 17812 proved project
+declarations and 1111 extension endpoints checked, including 41 new
+endpoints. Only standard axioms; all 631 paper/source files unchanged.
