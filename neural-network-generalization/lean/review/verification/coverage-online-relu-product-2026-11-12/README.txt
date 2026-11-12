@@ -1,0 +1,22 @@
+Verification of exact strong-prior ReLU online product budgets
+12 November 2026
+
+Eleven new modules close the online paper's exact strong-prior ReLU
+product-norm extension and its actual all-width energy-sublevel count.
+See ../../online-relu-product-correspondence-2026-11-12.txt for the literal product norm,
+teacher, Gaussian posterior, exact capacity and quantifier correspondence.
+
+Root build: 5451 jobs. All seven compiler/axiom gates pass.
+17895 proved project declarations and 1153 extension endpoints are
+checked, including all 42 new named endpoints. Only propext,
+Classical.choice and Quot.sound occur transitively. The comment/string-aware
+source scan covers 2694 Lean files and finds no
+placeholders or bypass tokens. Complete gate logs are retained, including
+multiline axiom reports. Builds are incremental, not fresh external-package
+rebuilds. All thirteen changed/new Lean source hashes are recorded.
+
+All 631 checked paper/source files are byte-identical to
+baseline 9ec91ed96abaea6b7a206fbd6703c7bccf06a203; no paper or abstract is edited.
+The unchanged conditional package's earlier fresh-build evidence is linked
+in record.json. Other papers still have coverage gaps; this is not a claim
+of full coverage of the sixteen-paper collection.

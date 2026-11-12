@@ -1,0 +1,76 @@
+Exact ReLU product-norm online correspondence
+12 November 2026
+
+Scope: works-in-progress/online-mistakes/upper/source/paper.tex,
+subsection "An extension to ReLU", lines 390–432 at baseline
+9ec91ed9. This develops an existing formalized paper's imported claim;
+it is not a claim of full formal coverage of the separately cited ReLU
+learning paper. Neither manuscript is changed.
+
+Actual model and teacher
+------------------------
+The endpoint relu_strong_prior_online_product takes an actual depth L=r+2,
+width-C teacher w with signed margin >1/2 on the entire Boolean cube.
+P_* is physicalProduct, proved to be the product of its actual layer
+Frobenius norms including the scalar linear readout. It needs no separate
+bounded-weight or capacity premise. All learner widths N>=C are covered.
+The prior is the original smallPrior with first/internal/readout variances
+N sigma^2/d, sigma^2, sigma^2/N. Its induced function masses use the original
+all-input absolute-margin conditioning. There is no added merging or
+internal-noise support condition.
+
+Exact geometry and capacity
+---------------------------
+rescaleReluLayers_output proves the actual real output is multiplied by
+the product of positive layer factors. exists_balancing_factors constructs
+factors of product one equalizing the weighted layer energies.
+exists_balanced_relu_weights attains exactly L(d P_*^2)^(1/L), and
+exists_enlarged_balanced_relu_weights does so at every N>=C. Padding
+preserves the physical Frobenius product exactly; no divisibility or
+integer-cloning loss is hidden in the budget.
+
+Variable-width row peeling has factor two at every hidden layer. Combining
+it with the proved bounded-difference input MGF gives the exact factor
+  a_H = 1+sqrt(2 H log 2), H=L-1.
+The optimized shattering bound is 4(d+1)P^2 a_H^2, followed by the literal
+Sauer count (2^d+1)^ceil(4(d+1)P^2 a_H^2). The homogeneous normalization
+preserves ReLU, including zero layers. It does not use the larger class of
+all neuron-dependent Lipschitz activations to claim this sharper capacity.
+
+The actual low-energy class consists of representable functions whose
+energy infimum is no larger than the target's. Positive slack K_*/L supplies
+actual strict-margin witnesses; attainment of the infimum is not assumed.
+Their product is at most sqrt(e) P_*, giving exactly
+  v_* = ceil(4 e (d+1) P_*^2 a_H^2), h=v_* log(2^d+1).
+The Gaussian-rate theorem makes the relative excluded raw mass <=2^(-d)
+for every sufficiently small positive sigma at each fixed N. The threshold
+is selected once before the entire input order and posterior draws.
+
+Online conclusion
+-----------------
+NetworkOnlineBounds contains the established RandomOrderBounds and
+InfiniteIIDBounds for the actual induced posterior. Thus the endpoint
+includes expected cumulative posterior error, expected sampled mistakes,
+and the separate logarithmic-confidence tails for the uniform permutation
+and the whole infinite uniform-IID stream, at the exact h and beta=2^(-d).
+The finite expectation budget is
+  2+2(h+1) harmonicSum(2^d-1),
+which yields the stated O(v_* d^2) using the existing harmonic/log bounds.
+physical_relu_bounded_teacher_product proves the literal
+P_*^2 <= (d+1) C^(4L-2) when individual teacher weights are bounded by C.
+
+Remaining finite-variance part
+------------------------------
+relu_energyFunctions_card_le and its exponential version prove exactly
+  v_R(K)=ceil((4(d+1)/d)(K/L)^L a_H^2)
+for the actual union of energy-K margin functions over all learner widths.
+This closes that capacity ingredient. The explicit finite-variance
+r_R,B_R,T_R mass/tail formulas, gamma>=2 all-depth endpoint and gamma>=1
+one-hidden-layer refinement are not yet assembled. They remain genuine
+coverage gaps, along with the tanh balanced/signed merging supports and
+the other paper's literal J allocation.
+
+Verification: verification/coverage-online-relu-product-2026-11-12/.
+Root build: 5451 jobs; all seven gates pass. 17895 proved project
+declarations and 1153 extension endpoints checked, including 42 new
+endpoints. Only standard axioms; all 631 paper/source files unchanged.
