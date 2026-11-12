@@ -1,0 +1,103 @@
+Signed-tanh population-merging online correspondence
+12 November 2026
+
+Scope and paper statements
+--------------------------
+The already-formalized online paper, works-in-progress/online-mistakes/upper/
+source/paper.tex, lines 435-488 at baseline 7158b8fb, imports two distinct
+tanh population restrictions. This batch instantiates the signed, arbitrary-
+population restriction from improved-polynomials/neuron-merging-naturality/
+source/paper.tex, equations (projection), (population-condition), and
+(rms-condition). It does not claim full coverage of that separately cited
+paper, or the different balanced-partition prior. No paper or abstract changes.
+
+Actual model
+------------
+HiddenSigns assigns one Boolean sign to every hidden neuron. Its coordinate
+transformation conjugates each internal weight matrix and transforms the
+first/readout weights as required. The actual tanh network output, weighted
+energy, readout energy and entire product Gaussian law are invariant.
+The literal signed projections R_s have entries sigma_i P_ij sigma_j.
+signedMergedWeights_first/internal/readout prove that the implemented merge
+is R_1 W_1, R_s W_s R_(s-1), and R_H v. The support is a finite union over
+actual partitions and signs, hence closed and Borel. The theorem
+mem_signedPartitionSupport_iff_manuscript proves exact equivalence to
+  (max_s q_s-1) (max_x |z_w(x)|)^2 <= 4 E_v,
+  max_x |clip(z_w(x))-clip(z_merged(x))| <= 1/16.
+No partition, low-energy witness or target mass is assumed in the posterior.
+The optional robustness condition is the existing literal finite-disturbance
+support: all hidden and output disturbances of squared normalized norm at
+most c^2/(1+(r+1)E_v), with clipped error <=1/16. It may be included or omitted;
+the all-input strict margin >1/2 may also independently be included or omitted.
+Training always uses signed margin >1/2, and testing uses margin <=1/4.
+
+All-width target mass
+---------------------
+For every actual layered NAND/copy/negation Boolean circuit B of width C>0,
+input dimension d>0 and r+1 hidden stages, and every N>=C, the proof constructs
+a saturated clone with k=floor(N/C) active copies and an extra constant-wire
+group. A single subspace of dimension <=C+1 contains all center rows and
+all hidden states. Population averaging fixes this center and every hidden
+state. An explicit rotated Gaussian cylinder constrains that subspace and
+bounds the independent remaining Gaussian operators. Its radius is the
+minimum of the proved saturation radius and the generic merging radius.
+The raw signed margin is >1, while raw and merged outputs are each within
+1/4 of the center; hence their clipped outputs agree. Coordinate readout
+bounds prove the literal population budget, including the extra group.
+The same cylinder satisfies optional robustness. Its Gaussian mass is
+at least exp(-D/sigma^2), for the explicitly defined tanhMergeTargetCost D.
+No positive-mass assumption remains. Constant wires count in circuit width.
+
+Gaussian truncations and fixed finite class
+-------------------------------------------
+smallPrior has first/internal/readout variances N*sigma^2/d, sigma^2,
+and sigma^2/N. Thus sigma=t/sqrt(N) is exactly the paper's raw variances
+(t^2/d,t^2/N,t^2/N^2), with 0<t<=1 equivalent to N*sigma^2<=1.
+The final results quantify every positive sigma satisfying this inequality.
+The sign union costs 2^((r+1)N). The proven signed exceptional tail includes
+that factor, together with the complete finite partition union, before any
+witness is selected. After dividing by the target mass and using
+N*sigma^2<=1, both posterior tail thresholds are independent of N and sigma.
+The actual unsigned population representation uses a*tanh(u/a), with
+population scales a=sqrt(k/N). Input/scale Lipschitz estimates, including
+the zero-scale extension, prove a fixed finite grid with clipped error
+<=3/32. Sign conjugation transfers the same cover to signed populations.
+At every nonempty history, the actual posterior is covered except for
+mass <=epsilon/2, with one class fixed before inputs are sampled.
+
+Polynomial and online conclusions
+---------------------------------
+tanh_grid_entropy_polynomial proves log cardinality <=10^28 C^2 S^9, with
+  S = 10^10 +4100(c+1)+4 log C+d+r-log(epsilon/4).
+This is polynomial jointly in dimension, depth, C, c+c^-1 and log(1/epsilon),
+and quadratic in C up to logarithms at fixed remaining parameters.
+For epsilon=2/2^d, the online capacity uses
+  S_online = 10^10+4100(c+1)+4 log C+2d+r+2.
+The constants are deliberately loose; the online paragraph specifies growth
+and prior support, rather than a literal numerical constant for this import.
+
+The expected total tested-margin error under the actual posterior is at most
+  2+2(capacity+1)(1+d).
+Logarithmic-confidence bounds hold for the actual uniform permutation and
+for fresh posterior parameter draws, and for the entire infinite uniform-IID
+query stream with fresh draws at every query. Repeated inputs have zero risk
+by the actual training-margin conditioning. The sampled endpoints use the
+query-then-draw probability experiment, not a surrogate process. The separate
+finite-sample learning theorem has one input event simultaneous over all
+N>=C, all permitted sigma, and both optional conditioning choices.
+
+Remaining scope
+---------------
+The balanced/common-count population model has a different count budget
+and needs its own target-cylinder construction. It remains open. The original
+support paper's literal J/compression allocation also remains open.
+
+Verification
+------------
+The complete root build, all seven gates, transitive axiom scan, forbidden-
+token scan and paper byte-integrity record are recorded in the adjacent
+verification directory. A passing local module build alone is not counted
+as full verification.
+Root build: 5492 jobs; all seven gates pass. 18324 proved project
+declarations and 1382 extension endpoints checked, including 146 new
+endpoints. Only standard axioms; all 631 paper/source files unchanged.
