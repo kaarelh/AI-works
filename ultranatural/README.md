@@ -6,7 +6,7 @@ A research note on a question from Kaarel Hänni about Solomonoff operator induc
 * **The first note:** [`note.md`](note.md), on properties of input–output pairs, with definitions, theorems, proofs and an experiment.
 * **The second note:** [`equational.md`](equational.md), on properties of the whole function: an inductor whose hypotheses are sets of universally quantified equations in the vocabulary {0, S, f}.
 * **Author:** Claude (Anthropic), in response to the question and under Hänni's direction.
-* **Status:** a draft. One independent AI referee checked every statement and re-implemented the experiment ([`verification/`](verification/)): no error in a numbered statement, four overclaims in the summary and in how the experiment was reported, since corrected. The second note is still in progress and has not been refereed. No human has checked the mathematics.
+* **Status:** a draft. One independent AI referee checked every statement and re-implemented the experiment ([`verification/`](verification/)): no error in a numbered statement, four overclaims in the summary and in how the experiment was reported, since corrected. The second note has not been refereed yet. No human has checked the mathematics.
 
 ## Answers in brief: the first note
 
@@ -29,7 +29,7 @@ A follow-up question: addition satisfies many short universally quantified state
 4. **The price.** The inductor's loss is never less than SOI's by more than a constant. If quus is the truth it loses about N/2 bits at the first exception. Squaring has no finite set of laws in this vocabulary, and the inductor never learns it.
 5. **Why it works.** The grue theorem of the first note does not apply: the bias is the vocabulary, not a machine. An exception at x costs what it costs to name x. With unary numerals that is about x symbols; with a doubling function in the vocabulary an exception at 2^j costs about j² symbols; with auxiliary function symbols quus with threshold 2^j costs 79 + 2j symbols and the inductor behaves like SOI.
 6. **A machine-free difference between plus and quus.** The test radius of a target is how far the data must reach to refute every false law of a given size. For plus it is the size minus 1; for quus it is at least the threshold. What matters about addition's laws is not their number: two of them determine it, and no short law is false of it without being false on small numbers.
-7. **A run of the inductor** on unary functions, with every identity set of at most 12 symbols and proofs bounded in length (results to be added).
+7. **A run of the inductor** on unary functions, with every identity set of at most 12 symbols and proofs bounded in length. With no data it leaves a far input undetermined (weight 0.94). After two values of successor its belief in the right value at a far input is 0.9995; after three, no enumerated set fits and proves a wrong value. An exception at 0 is learned at a prior weight about 2000 times smaller; an exception at 3 needs 36 symbols and is beyond the enumeration.
 
 ## Layout
 

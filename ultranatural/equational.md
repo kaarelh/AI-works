@@ -2,7 +2,7 @@
 
 *Induction over laws stated in a fixed vocabulary, and how strongly it pins down addition*
 
-A second research note by Claude (Anthropic), following [`note.md`](note.md), in response to a question from Kaarel Hänni. Draft, in progress: Section 6.2, the discussion and the open questions are still to be added, and nothing in this note has been refereed yet.
+A second research note by Claude (Anthropic), following [`note.md`](note.md), in response to a question from Kaarel Hänni. Draft. Not yet refereed.
 
 ## The question
 
@@ -19,7 +19,7 @@ This note studies the simplest inductor of that kind. Its hypotheses are finite 
 5. **The price.** The inductor's loss is never less than SOI's by more than a constant, and when quus is true it pays about half a bit per unit of N at the first exception (Proposition 7). Some simple functions have no finite set of identities at all, squaring for one (Proposition 6). On those the inductor memorises the data and declines to predict.
 6. **Why it works: big numbers are expensive to name.** The grue theorem of `note.md` does not apply, because the inductor has no reference machine: its bias is the vocabulary. An exception at x costs what it costs to single x out in the vocabulary. With unary numerals that is about x symbols. Add a doubling function to the vocabulary, and plus with one value changed at (2^j, 0) costs j² + 10j + 33 symbols (Proposition 9). Allow auxiliary function symbols, and quus with threshold 2^j costs 79 + 2j symbols (Proposition 8): the inductor then behaves like SOI.
 7. **A machine-free way to tell plus from quus.** The *test radius* of g at size m is how far the data must reach before they refute every false identity with sides of at most m symbols. For plus it is m − 1: every short false law fails on small numbers. For quus with threshold N it is at least N + 1 for every m ≥ 3: laws such as f(x, 0) = x look true until N. The inductor pins a target at every input as soon as the data cover its test radius (Theorem 2). So what matters about addition's laws is not how many there are. It is that two of them determine addition, and that nothing short is false of it without being false early.
-8. **A run of the inductor.** For a unary f, every identity set of at most 12 symbols was enumerated, with proofs bounded in length (Section 6.2, to be added).
+8. **A run of the inductor.** For a unary f, every identity set of at most 12 symbols was enumerated, with proofs bounded in length (Section 6.2). Before any data the inductor leaves a far input undetermined with weight 0.94. After two values of successor its belief in the right value at a far input is 0.9995, and in a wrong value 2·10⁻⁴. After three values no enumerated set fits and proves a wrong value. An exception at 0 is learned, at a prior weight about 2000 times smaller than successor's; an exception at 3 needs 36 symbols and is beyond the enumeration.
 
 So there is something there, and it is provable. It is a choice of prior and not a theorem about induction in general: it believes that the truth is governed by laws in the given vocabulary, and it is confident in proportion to how hard exceptions are to state in that vocabulary.
 
@@ -223,3 +223,87 @@ So the strong pinning of Section 3 is what induction over laws gives when large 
 * **Fast-growing targets have fast-growing test radius**, 2^(m−2) + 1 for doubling and doubly exponential for squaring, because a short term can reach a large number by nesting f. For these Theorem 2 needs much more data per symbol.
 * The bound on the search matters for the last rows of each table only through what counts as false; for plus and successor the values agree with the proof.
 
+### 6.2 The inductor on unary functions
+
+For unary f a ground term is a word over {S, f} applied to 0, and an identity set generates a congruence on words: the least equivalence that is closed under writing any word in front and contains every instance of the identities. [`code/eq_unary.c`](code/eq_unary.c) enumerates every identity set of at most 12 symbols and computes this congruence on the words of at most L letters.
+
+* **What is enumerated.** 200,093 sets, up to renaming of variables, swapping of sides and reordering; each carries the number of strings that encode it, and the total weight was checked against a direct recurrence.
+* **What "proves" means here.** A proof all of whose terms have at most L symbols above the leaf. Proofs found are valid. A set counted as consistent may be inconsistent by a longer proof. So this is the inductor with bounded proofs, which is the only kind that can be run.
+* **How much the bound matters.** The number of sets found inconsistent is 85,458 with L = 14, 85,628 with L = 16 and 85,677 with L = 18. The sets that slip through a small bound are, as far as we have seen, of one kind: an identity such as x = S(f(S(S(S(x))))) forces S to be a bijection and f to be its inverse applied four times, and with f(0) = 1̲ this identifies 0̲ and 5̲, but only by a proof through long terms.
+* **Recheck.** [`code/eq_unary_recheck.py`](code/eq_unary_recheck.py) takes every set that fits a target at 0, 1, 2 with L = 18 and proves a wrong value at some x ≤ 7, and tests it again with L = 22.
+
+The numbers below are for L = 18 ([`results/eq_unary_analysis_cap12_L18.out`](results/eq_unary_analysis_cap12_L18.out)); the recheck is in [`results/eq_unary_recheck_cap12_L18_to_L22.out`](results/eq_unary_recheck_cap12_L18_to_L22.out).
+
+**Successor**, after its values at 0, …, n − 1. Beliefs are for the far input x = 7.
+
+| n | weight of the fitting sets | right value | a wrong value | undetermined | smallest fitting set that proves a wrong value |
+|---|---|---|---|---|---|
+| 0 | 0.208 | 0.003 | 0.053 | 0.944 | f(x) = 0 (3 symbols) |
+| 1 | 1.6·10⁻³ | 0.386 | 0.411 | 0.203 | f(x) = 1̲ (4 symbols) |
+| 2 | 6.2·10⁻⁴ | 0.99945 | 1.8·10⁻⁴ | 3.7·10⁻⁴ | f(0) = 1̲, f(S(x)) = 2̲ (10 symbols) |
+| 3 | 6.2·10⁻⁴ | 1.00000 | 0 | below 10⁻⁵ | none of at most 12 symbols |
+
+**Other targets**, after their values at 0, 1, 2, again at x = 7.
+
+| target | smallest fitting set for all values | weight of the fitting sets | right | wrong | undetermined |
+|---|---|---|---|---|---|
+| identity | f(x) = x (3) | 3.9·10⁻³ | 0.99999 | 6·10⁻⁷, all of it gone in the recheck | 10⁻⁵ |
+| constant 1 | f(x) = 1̲ (4) | 6.6·10⁻⁴ | 1.000 | 0 | 0 |
+| x + 2 | f(x) = S(S(x)) (5) | 1.0·10⁻⁴ | 1.000 | 0 | 0 |
+| predecessor | f(0) = 0, f(S(x)) = x (7) | 1.4·10⁻⁵ | 0.982 | 0.010 | 0.008 |
+| [x > 0] | f(0) = 0, f(S(x)) = 1̲ (8) | 3.0·10⁻⁶ | 0.841 | 0 | 0.159 |
+| successor, but 0 at 0 | f(0) = 0, f(S(x)) = S(S(x)) (9) | 3.3·10⁻⁷ | 1.000 | 0 | 0 |
+| double | f(0) = 0, f(S(x)) = S(S(f(x))) (10) | 5.5·10⁻⁸ | 1.000 | 0 | 0 |
+| min(x+1, 2) | f(0) = 1̲, f(S(x)) = 2̲ (10) | 2.2·10⁻⁷ | 0.500 | 0 | 0.500 |
+| parity | none of at most 12 symbols (its recursion has 14) | 0 | | | |
+| successor, but 0 at 3 | none of at most 12 symbols (a set as in Section 4 has 36) | 6.2·10⁻⁴, all on successor | | | |
+| square | none (Proposition 6) | 0 | | | |
+
+What the run shows:
+
+* **The inductor abstains before it knows.** With no data, 94% of the weight is on sets that prove nothing about f(7).
+* **Two or three values suffice for the short targets, and what is left over is real competition.** After two values of successor, the wrong beliefs come from sets such as f(0) = 1̲, f(S(x)) = 2̲, which is true of min(x+1, 2). It has a side of 3 symbols, more than n = 2, as Corollary 4 requires. After three values, no set of at most 12 symbols fits successor and proves a wrong value anywhere on 0, …, 7. The same holds for the other targets in the table except predecessor, where the set f(f(x)) = 0, f(S(S(x))) = 1̲, true of the function 0, 0, 1, 1, 1, …, fits the first three values; it is gone after the fourth.
+* **Exceptions at small inputs are learned, at their price.** "Successor, but 0 at 0" is fitted by a set of 9 symbols. After three values the weight of its fitting sets is about 2000 times smaller than for successor.
+* **An exception at a larger input is beyond reach.** Having seen successor at 0, 1, 2, the inductor is certain, within the enumerated sets, that f(3) = 4. If the value is 0, no set of at most 12 symbols fits. The set that does has 36 symbols.
+* **The bound produces artefacts, and they vanish as it grows.** For successor at n = 3 the wrong-value belief at x = 7 is 1.2·10⁻⁵ with L = 14, 2·10⁻⁶ with L = 16 and 0 with L = 18; each time the sets responsible were inconsistent by longer proofs.
+
+This is an illustration on a small scale: unary f, sets of at most 12 symbols, bounded proofs. It does not test Theorem 3 at large n, where the content of the theorem lies.
+
+## 7. What to make of it
+
+**What the inductor believes.** That the function is governed by laws that can be stated in the given vocabulary, with nothing behind them: no hidden machinery (auxiliary symbols) and no case distinctions beyond what the constructors 0 and S provide. Under that belief a deviation of addition at a large number is not a simple hypothesis, because the vocabulary has no short way to say where it happens.
+
+**How the many laws of addition enter.** Less directly than one might hope.
+
+* *Their number matters little.* Any identity that is true of the target can be added to a fitting set, so a target with many short laws has more fitting sets and a larger share of the prior. But this does not single out addition: degenerate functions such as the projection (x, y) ↦ x satisfy far more short identities ([`results/identities_L9.out`](results/identities_L9.out)). And it plays no part in the theorems above.
+* *Two of them determine addition.* This is what makes its law complexity small.
+* *None of the short false ones is false late.* This is the linear test radius, and it is what makes the pinning strong: after the data reach n, the only laws still in play that are false of addition are longer than n. Quus is the opposite case. With threshold N, the false law f(x, 0) = x survives all data below N.
+
+**Relation to isolation.** `note.md` called f isolated if no function close to it is as simple, and found that under Kolmogorov complexity the margin of isolation is capped by the price of a small guard. Under law complexity the margin grows with the region of agreement: every g ≠ plus that agrees with plus on [0, n)² has C_E(g) ≥ n + 3, against C_E(plus) ≤ 12. In this sense addition is isolated among law-governed functions at every scale, with a margin proportional to the scale.
+
+**Is the vocabulary principled?** Partly.
+
+* *For.* The natural numbers are the structure generated by 0 and S, and the laws of addition are stated over it. Identities are exactly the laws that survive passing to substructures, products and homomorphic images (Birkhoff), which is one way of saying that they make no case distinctions. An auxiliary symbol with no data of its own is hidden machinery, and Proposition 8 shows that admitting it is what readmits grue.
+* *Against.* The strong pinning depends on large numbers being expensive to name (Proposition 9), and we do name large numbers cheaply. A learner that already knows doubling, or multiplication, has a vocabulary in which exceptions at their values are cheap. One response is to let the vocabulary grow only by functions that have themselves been learned from data; then exceptions are cheap exactly at numbers that some known law-governed function singles out.
+* *The cost is real.* Squaring is not learnable in the bare vocabulary, and a truth with a genuine exception is learned late and at a high price.
+
+**What is and is not shown.** The theorems are about data that contain a full initial square (or segment), and about addition, successor and other targets with linear test radius. For sparse data, and for fast-growing targets such as doubling, Theorem 2 gives much less, and we do not know the truth (Section 8).
+
+## 8. Open questions
+
+1. **Sparse data.** If the data are a random half of the pairs below n, exceptions at the small missing pairs are cheap. Is an exception at a far input still expensive? Lemma 1 no longer forces every short false identity out, since ground identities about missing pairs survive.
+2. **Fast-growing targets.** For doubling the test radius is 2^(m−2) + 1 at size m, so Theorem 2 only excludes deviating sets whose sides have about log₂ n symbols or fewer. The sets we know that fit doubling on [0, n) and prove a wrong value list about n ground identities and have about n² symbols. Is there one with far fewer?
+3. **The true cost of quus_N and of point patches**, between N + 3 and 2N³, and between max(a,b) + 3 and about max(a,b)².
+4. **Which functions have finite law complexity?** Is multiplication determined by finitely many identities in {0, S, f}? Is there a simple criterion?
+5. **A growing vocabulary.** Learn plus, add it to the vocabulary with its laws as background, then learn times as f(x,0) = 0, f(x,S(y)) = plus(f(x,y), x). What are the right statements about pinning when the background symbols were themselves learned?
+6. **Noise and partial laws.** A hypothesis here must prove every datum. A version that tolerates a wrong datum would have to say what an exception costs, which is the question again.
+7. **Exact computation.** Consistency is undecidable, and the bounded version of Section 6 counts some inconsistent sets as consistent. For unary f the sets are string-rewriting systems, and completion procedures might decide most small cases exactly.
+
+## 9. Related work
+
+* **Goodman's entrenchment.** Goodman's own answer to grue was that "green" is entrenched in our vocabulary and "grue" is not. The equational inductor is an instance: the vocabulary is fixed in advance, and Propositions 8 and 9 measure how the conclusions change with it.
+* **Equational logic and universal algebra.** Birkhoff's completeness theorem and his characterisation of the classes defined by identities.
+* **Recursion equations.** The Herbrand–Gödel–Kleene definition of the computable functions by systems of equations with auxiliary function letters (Kleene, *Introduction to Metamathematics*, 1952) is the extended inductor's hypothesis language.
+* **Inductive synthesis of functional programs and inductive logic programming** learn recursive definitions from examples, usually with search strategies and language biases of the same kind; we have not surveyed that literature for results like Theorem 3.
+* **Solomonoff axiom induction** ([`../solomonoff-axiom-induction/`](../solomonoff-axiom-induction/)): priors over axiom systems with three-valued predictions. The present inductor restricts the axioms to identities listed explicitly in a fixed small vocabulary.
+* **Self-testing and identity testing.** That an identity true at all zero–one assignments is true everywhere, for terms that denote linear forms, is the simplest case of testing a polynomial identity at few points.
