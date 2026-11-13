@@ -55,7 +55,7 @@ Nothing in this folder is confined to the working branch `claude/eager-lamport-l
 
 ## Reproducing
 
-Python 3 with NumPy, and gcc with OpenMP. From `code/`:
+**First note.** Python 3 with NumPy, and gcc with OpenMP. From `code/`:
 
 ```bash
 python3 enumerate_pr.py 11 ../results/pr11.npz
@@ -70,3 +70,39 @@ python3 analyze.py ../results/pr11.npz ../results/nearest11.npy 0
 ```
 
 The enumeration takes about three minutes and 2 GB of memory; with 10 in place of 11 it takes under a minute. The analysis is seeded and reproduces `results/analyze_pr11.out`.
+
+**Second note.** Python 3 with NumPy, and gcc. From `code/`; the first three take seconds:
+
+```bash
+python3 test_radius.py > ../results/test_radius.out
+```
+
+```bash
+python3 theories.py > ../results/theories.out
+```
+
+```bash
+python3 prior_tail.py > ../results/prior_tail.out
+```
+
+The inductor on unary functions: compile, enumerate all identity sets of at most 12 symbols with proof bound 18 (about 25 minutes; bound 14 takes one minute and 16 five), analyse, and recheck the deviating sets with bound 22.
+
+```bash
+gcc -O2 -o eq_unary eq_unary.c -lm
+```
+
+```bash
+./eq_unary 12 18 dump > all18.txt
+```
+
+```bash
+grep -v "^D " all18.txt > ../results/eq_unary_cap12_L18.txt
+```
+
+```bash
+python3 eq_unary_analyze.py ../results/eq_unary_cap12_L18.txt > ../results/eq_unary_analysis_cap12_L18.out
+```
+
+```bash
+python3 eq_unary_recheck.py all18.txt 22 > ../results/eq_unary_recheck_cap12_L18_to_L22.out
+```
