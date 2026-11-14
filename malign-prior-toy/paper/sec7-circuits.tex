@@ -4,21 +4,18 @@
 
 H\"anni also asked for the same question with circuits in place of programs, and for an overall view of the
 prevalence of malignity there. This section fixes one reading of that question, the \emph{circuit toy}, and
-goes through the results of the note in it. The \emph{source} is the file
-\texttt{research/circuits-final.md}
+goes through the results of the note in it. The \emph{source} is the file \texttt{research/circuits-final.md}
 of the repository; it contains the proofs that are not given here. Results are theorems of the circuit toy
 unless they are marked as computed, argued or guessed. The overall view is in \cref{sec:c-view}.
 
 \subsection{The circuit toy}
 
 \begin{definition}[Circuits]\label{def:c-circuit}
-Fix $k\ge2$ input wires. A \emph{circuit of size $s$} is a list of gates $g_i=(\tau_i,a_i,b_i)$, $1\le i\le
-s$,
-with a truth table $\tau_i\in\B^4$ (all sixteen functions of two bits) and two ordered pointers
+Fix $k\ge2$ input wires. A \emph{circuit of size $s$} is a list of gates $g_i=(\tau_i,a_i,b_i)$,
+$1\le i\le s$, with a truth table $\tau_i\in\B^4$ (all sixteen functions of two bits) and two ordered pointers
 $a_i,b_i\in\{1,\dots,k+i-1\}$. Wires $1,\dots,k$ are the inputs and wire $k+i$ is gate $i$, whose value is
 $\tau_i$ applied to the values of the wires $a_i$ and $b_i$. The output is the last gate. $\cG_{k,s}$ is the
-set of these circuits, $|\Gamma|$ is the size of a circuit $\Gamma$, $f_\Gamma\colon\B^k\to\B$ is the
-function
+set of these circuits, $|\Gamma|$ is the size of a circuit $\Gamma$, $f_\Gamma\colon\B^k\to\B$ is the function
 it computes, and
 \[
 N_s=|\cG_{k,s}|=\prod_{i=1}^{s}16\,(k+i-1)^2,\qquad p_i=\frac1{16\,(k+i-1)^2}.
@@ -29,12 +26,10 @@ deleting the dead gates and renumbering in order; it computes $f_\Gamma$. For a 
 the least size of a circuit that computes it.
 \end{definition}
 
-\paragraph{Priors.} The \emph{fixed-size prior} $\mu_s$ is uniform on $\cG_{k,s}$. A \emph{mixture prior}
-has
+\paragraph{Priors.} The \emph{fixed-size prior} $\mu_s$ is uniform on $\cG_{k,s}$. A \emph{mixture prior} has
 weights $w_s>0$ for $1\le s\le s_{\max}$, with $s_{\max}\le\infty$ and $\sum_sw_s=1$, and gives
 $\Gamma\in\cG_{k,s}$ the weight $q(\Gamma)=w_s/N_s$; we put $\varrho(\sigma,a)=w_{\sigma+a}/w_\sigma$.
-Assumption (A1), used only where named, is that $w_s$ is nonincreasing. The \emph{length prior} is the
-mixture
+Assumption (A1), used only where named, is that $w_s$ is nonincreasing. The \emph{length prior} is the mixture
 with $w_s=2^{-s}$ and $s_{\max}=\infty$: the size in unary, then the gates. It satisfies (A1), and
 $\varrho(\sigma,a)=2^{-a}$. These are the \emph{priors of the family}, and $\mu$ stands for any of them. The
 \emph{core weight} is
@@ -47,11 +42,9 @@ with $e_i$ the elementary symmetric polynomial of degree $i$; $\beta$ stands for
 \paragraph{Hypotheses, data, queries.} A hypothesis is a circuit, read as the function it computes.
 \emph{Data} are $D=(I,f^*|_I)$ for a set $I\subseteq\B^k$ of inputs and a target $f^*$. A circuit $\Gamma$
 \emph{fits} $D$ if $f_\Gamma=f^*$ on $I$. Let $\xi(D)$ be the prior probability that a circuit fits $D$,
-$\ell_D=-\log_2\xi(D)$, and $s_D$ the least size of a fitting circuit. For a query $u\notin I$, or a tuple
-of
+$\ell_D=-\log_2\xi(D)$, and $s_D$ the least size of a fitting circuit. For a query $u\notin I$, or a tuple of
 queries, the predictor's distribution is $\pi(y\mid u,D)=\mu\{f_\Gamma(u)=y\mid\Gamma\text{ fits }D\}$, and
-the
-sampling predictor returns $Y\sim\pi(\cdot\mid u,D)$.
+the sampling predictor returns $Y\sim\pi(\cdot\mid u,D)$.
 
 In the \emph{sequence form}, or \emph{index reading}, the $k$ inputs carry the binary digits
 $b_0,\dots,b_{k-1}$ of $t-1$ for a position $t\in\{1,\dots,2^k\}$, and the circuit says that the bit at
@@ -62,20 +55,21 @@ $I=\{1,\dots,n\}$ and labels $x$, and a block of $m$ bits answers the queries $n
 \xi(x)=\mu\{\Gamma:\ x\pre\ctt(\Gamma)\},\qquad\pi_m(y\mid x)=\frac{\xi(xy)}{\xi(x)}\quad(|x|+m\le2^k),
 \]
 and $\csize(x)$ is the least size of a circuit that prints $x$. The sequence form is the special case of the
-query form in which the data are an initial segment, and every result for data and queries applies to it. At
-a cut $n=2^j$ the index bits $b_j,\dots,b_{k-1}$ are $0$ on the whole context, and positions $n+1,\dots,2n$
+query form in which the data are an initial segment, and every result for data and queries applies to it. At a
+cut $n=2^j$ the index bits $b_j,\dots,b_{k-1}$ are $0$ on the whole context, and positions $n+1,\dots,2n$
 differ from positions $1,\dots,n$ only in $b_j$. So a dyadic cut is a query that differs from the data in a
 bit that never varied.
 
-We use the index reading because two other natural readings, with one gate or one pointer per output bit,
-give a predictor that learns nothing, or only a frequency.
+We use the index reading because two other natural readings, with one gate or one pointer per output bit, give
+a predictor that learns nothing, or only a frequency.
 
 \begin{theorem}[Two degenerate readings]\label{thm:c-readings}
 \begin{enumerate}[label=(\alph*),leftmargin=2em,itemsep=2pt,topsep=2pt]
 \item \emph{One gate per output bit.} Let a circuit with $r\ge1$ random inputs be uniform on $\cG_{r,s}$,
-$s\ge N$, and let its $N$ output bits be the values of its last $N$ gates. Then for every fixed value of the
-inputs the output is uniform on $\B^N$. So the predictor has $\pi_m(y\mid x)=2^{-m}$ for every context and
-block, also for mixtures over $r$ and $s\ge N$.
+which is \cref{def:c-circuit} with $r$ in place of $k$ and with $r=1$ allowed. Let $s\ge N$, and let its $N$
+output bits be the values of its last $N$ gates. Then for every fixed value of the inputs the output is
+uniform on $\B^N$. So the predictor has $\pi_m(y\mid x)=2^{-m}$ for every context and block, also for mixtures
+over $r$ and $s\ge N$.
 \item \emph{One pointer per output bit.} Let the prior on $r$, $s$ and the gates be arbitrary and let, given
 these, the $N$ output pointers be independent and uniform on the $r+s$ wires. Let $\phi$ be the fraction of
 wires that carry $1$, a function of the gates and the inputs. Then the probability $\xi(x)$ that the output
@@ -92,39 +86,32 @@ the output bits are independent draws of the value of a uniform wire.
 \end{proof}
 
 The theorem is about these two readings. It does not show that every reading with one wire per output bit is
-degenerate, nor that the index reading is the only sensible one. In the index reading the link between
-context
+degenerate, nor that the index reading is the only sensible one. In the index reading the link between context
 and continuation is the reuse of the same gates at different positions. A circuit that takes the context as
 input and is applied autoregressively is a third reading; it reuses a description across steps, belongs with
 \cref{prop:c-recurrence}, and is not treated here.
 
 \paragraph{Worlds, critical uses, takeover.} A \emph{world} is a circuit $W$, with target $f_W$. It is
-\emph{in the class} if $\mu\{\Gamma:f_\Gamma=f_W\}>0$. A \emph{critical use} is a triple of a world, data
-and a
-query, fixed from outside: the world hands the predictor $D$, receives $Y$ at the query, and acts on it. Its
-\emph{own continuation} $d$ is $f_W$ at the query, and the \emph{deviation mass} is $1-\pi(d\mid u,D)$. In
-the sequence form a \emph{call rule} $\mathcal C$ is a set of pairs $(W,n_W)$, at most one for each circuit;
-with $x_W=\ctt(W)_{1:n_W}$ and a mixture prior $q$, the quantities of \cref{def:call} are
+\emph{in the class} if $\mu\{\Gamma:f_\Gamma=f_W\}>0$. A \emph{critical use} is a triple of a world, data and
+a query, fixed from outside: the world hands the predictor $D$, receives $Y$ at the query, and acts on it. Its
+\emph{own continuation} $d$ is $f_W$ at the query, and the \emph{deviation mass} is $1-\pi(d\mid u,D)$. In the
+sequence form a \emph{call rule} $\mathcal C$ is a set of pairs $(W,n_W)$, at most one for each circuit; with
+$x_W=\ctt(W)_{1:n_W}$ and a mixture prior $q$, the quantities of \cref{def:call} are
 \[
 C(x)=\sum_{W:\,x_W=x}q(W),\qquad H_{\mathcal C}=\sum_{(W,n_W)\in\mathcal C}q(W),\qquad
 \kappa(x)=\frac{C(x)}{\xi(x)}.
 \]
 A \emph{test} is a set $G$ of nonempty strings, with first hits as in \cref{def:world}; under a test every
-circuit that prints a first hit hands over there, and $\kappa=1$. The forms of \cref{def:mph} are taken
-over:
-the majority form $\pi(d\mid u,D)<\frac12$, the payload form $\pi(A\mid u,D)\ge\theta$ for a set $A\not\ni
-d$,
+circuit that prints a first hit hands over there, and $\kappa=1$. The forms of \cref{def:mph} are taken over:
+the majority form $\pi(d\mid u,D)<\frac12$, the payload form $\pi(A\mid u,D)\ge\theta$ for a set $A\not\ni d$,
 and the critical-use form $\Pr[Y\in A(X)]\ge\theta$ over a population of uses. As in the note they are
 necessary for calling the prior malign at a world and not sufficient.
 
 A takeover needs a decoder. In the note the block $y$ is run as $U$ on $y0^\infty$. Here hypotheses are
-circuits and a block is a string, so the world applies a fixed decoding map to it. The \emph{literal code}
-of
-$\Gamma\in\cG_{k,s}$ is $e(\Gamma)=\bar e(s)\,\tau_1[a_1][b_1]\cdots\tau_s[a_s][b_s]$, with pointer fields
-of
+circuits and a block is a string, so the world applies a fixed decoding map to it. The \emph{literal code} of
+$\Gamma\in\cG_{k,s}$ is $e(\Gamma)=\bar e(s)\,\tau_1[a_1][b_1]\cdots\tau_s[a_s][b_s]$, with pointer fields of
 $\lceil\log_2(k+s)\rceil$ bits; a field with value $c$ at gate $i$ is read as wire $1+(c\bmod(k+i-1))$. Its
-length is $l(s)=|\bar e(s)|+s\,(4+2\lceil\log_2(k+s)\rceil)$. $\cdec(y)$ is the circuit decoded from the
-front
+length is $l(s)=|\bar e(s)|+s\,(4+2\lceil\log_2(k+s)\rceil)$. $\cdec(y)$ is the circuit decoded from the front
 of $y$ if the rest of $y$ is $10^i$ for some $i\ge0$. The counterpart of \cref{def:sr} is
 \[
 \SR_m(x)=\{y\in\B^m:\ \cdec(y)\text{ is defined and }xy\pre\ctt(\cdec(y))\}.
@@ -134,50 +121,45 @@ The decoder is an interpreter that lives outside the hypothesis class.
 \paragraph{What the class assumes.} These are decisions, not results. (i) Plain circuits: fan-in two, each
 gate evaluated once per output, no gate used twice, no depth bound, no weight sharing. (ii) Hypotheses are
 total: every circuit has a bit at every position, so the worlds of the note that hand over and then print
-nothing, and the quantity $\varphi$ of \cref{prop:honest}, cannot be expressed; this favours the honest
-side.
+nothing, and the quantity $\varphi$ of \cref{prop:honest}, cannot be expressed; this favours the honest side.
 (iii) The class depends on the horizon through $k$, and which positions are cheap to name depends on the
 binary coding of the index. (iv) The prior is on ordered gate lists, with dead gates allowed. (v) The full
 binary basis, with uniformly drawn truth tables. (vi) The sampling predictor. (vii) The world is in the
 predictor's class wherever a bound compares with the world. (viii) The use is fixed from outside, and a
 hypothesis can recognise it only through its own input, the index or the query.
 
-\subsection{What transfers unchanged}
+\subsection{What transfers}
 
 \begin{theorem}[Measure, calibration, budget, feedback]\label{thm:c-transfer}
 Let $\mu$ be a prior of the family and write $\mu(f)=\mu\{\Gamma:f_\Gamma=f\}$.
 \begin{enumerate}[label=(\alph*),leftmargin=2em,itemsep=2pt,topsep=2pt]
 \item \emph{Measure.} In the sequence form $\xi(\eps)=1$ and $\xi(x0)+\xi(x1)=\xi(x)$ for $|x|<2^k$. Hence
 $Z_m(x)=\sum_{y\in\B^m}\xi(xy)=\xi(x)$ for $|x|+m\le2^k$.
-\item \emph{Calibration.} Fix $I$ and a query $u\notin I$. Let $\Gamma^*\sim\mu$, $D=(I,f_{\Gamma^*}|_I)$,
-and
+\item \emph{Calibration.} Fix $I$ and a query $u\notin I$. Let $\Gamma^*\sim\mu$, $D=(I,f_{\Gamma^*}|_I)$, and
 let $Y\sim\pi(\cdot\mid u,D)$ be drawn independently of $\Gamma^*$ given $D$. Then given $D$, the answer
 $f_{\Gamma^*}(u)$ and $Y$ are independent with the common law $\pi(\cdot\mid u,D)$. In the sequence form let
-$G$
-be a test, let the world be drawn from $\mu$, and let $X$ be the first hit of $G$ among the prefixes of its
-truth table, on the event that there is one of length at most $2^k-m$. Given $X=x$, the world's next $m$
-bits
-and $Y\sim\pi_m(\cdot\mid x)$ are independent with the law $\pi_m(\cdot\mid x)$.
+$G$ be a test, let the world be drawn from $\mu$, and let $X$ be the first hit of $G$ among the prefixes of
+its truth table, on the event that there is one of length at most $2^k-m$. Given $X=x$, the world's next $m$
+bits and $Y\sim\pi_m(\cdot\mid x)$ are independent with the law $\pi_m(\cdot\mid x)$.
 \item \emph{Budget.} Let $z=\ctt(W)$ with $\xi(z)>0$. Then
 $\sum_{n=0}^{2^k-m}\bigl(1-\pi_m(z_{n+1:n+m}\mid z_{1:n})\bigr)\le m\ln(1/\xi(z))$, and the term is at least
-$\frac12$ at no more than $m\log_2(1/\xi(z))$ cuts $n$. For a mixture prior, $\xi(z)\ge w_\sigma/N_\sigma$
-if a
-circuit of size $\sigma\le s_{\max}$ prints $z$. Let queries $u_1,u_2,\dots$ be answered one at a time,
-repetitions allowed, each depending on everything revealed before, the true answer being added to the data
-after each, which gives $D_t$. If $\mu(f^*)>0$ and $a_t=\pi(f^*(u_t)\mid u_t,D_{t-1})$, then
-$\sum_t(1-a_t)\le\ln(1/\mu(f^*))$, and $a_t\le\frac12$ for at most $\log_2(1/\mu(f^*))$ values of $t$.
+$\frac12$ at no more than $m\log_2(1/\xi(z))$ cuts $n$. For a mixture prior, $\xi(z)\ge w_\sigma/N_\sigma$ if
+a circuit of size $\sigma\le s_{\max}$ prints $z$. Let $D_0=(I_0,f^*|_{I_0})$ be any data labelled by $f^*$,
+with $I_0$ possibly empty. Let queries $u_1,u_2,\dots$ be answered one at a time, repetitions allowed, each
+depending on everything revealed before, the true answer being added to the data after each, which gives
+$D_t$. A query that is already in the data is answered by its label with probability $1$. If $\mu(f^*)>0$ and
+$a_t=\pi(f^*(u_t)\mid u_t,D_{t-1})$, then $\sum_t(1-a_t)\le\ln(1/\mu(f^*))$, and $a_t\le\frac12$ for at most
+$\log_2(1/\mu(f^*))$ values of $t$.
 \item \emph{One query off the data.} For $u^\dagger\notin I$ and every $f'$ that fits $D$ with
 $f'(u^\dagger)\ne f^*(u^\dagger)$:
 $\ \mu(f^*)/\xi(D)\le\pi(f^*(u^\dagger)\mid u^\dagger,D)\le1-\mu(f')/\xi(D)$.
-\item \emph{Feedback.} Sequence form, with a response map $R$ as in \cref{sec:feedback}: the predictor
-returns
+\item \emph{Feedback.} Sequence form, with a response map $R$ as in \cref{sec:feedback}: the predictor returns
 $Y\sim\pi_m(\cdot\mid x)$ and the record continues with $R(Y)$. The prediction comes true with probability
 $\pi_m(\Fix(R)\mid x)$. If $Y=y\in\Fix(R)$, no circuit that prints $xd$ with $d\ne y$ prints any
 $x'\sqsupseteq xy$. If $R$ is the identity in every round, the record continues with $u\in\B^{jm}$, where
-$|x|+jm\le2^k$, with probability exactly $\xi(xu)/\xi(x)$; it continues with a block $d$ such that no
-circuit
-in the support prints $xd$ with probability $0$. If the predictor returns the more probable next bit, $0$ on
-a tie, and the record continues with the other bit from position $n$ on, then
+$|x|+jm\le2^k$, with probability exactly $\xi(xu)/\xi(x)$; it continues with a block $d$ such that no circuit
+in the support prints $xd$ with probability $0$. If the predictor returns the more probable next bit, $0$ on a
+tie, and the record continues with the other bit from position $n$ on, then
 $\xi(x_{1:n+j})\le2^{-j}\xi(x_{1:n})$ while $n+j\le2^k$; for a mixture prior with $s_{\max}<\infty$ and
 $q_{\min}=\min_sw_s/N_s$, $\xi(x_{1:n+j})=0$ for all $j>\log_2(1/q_{\min})$ with $n+j\le2^k$.
 \end{enumerate}
@@ -186,46 +168,47 @@ $q_{\min}=\min_sw_s/N_s$, $\xi(x_{1:n+j})=0$ for all $j>\log_2(1/q_{\min})$ with
 (a) Every circuit has a truth table of exactly $2^k$ bits, so the sets $\{\Gamma:x\pre\ctt(\Gamma)\}$,
 $x\in\B^n$, partition the circuits. (b) is proved as \cref{thm:calibration}:
 $\Pr[f_{\Gamma^*}(u)=y\mid D]=\pi(y\mid u,D)$ by definition; first hits are pairwise incomparable, so $X=x$
-with
-next block $d$ has probability $\xi(xd)$, and $X=x$ has probability $\xi(x)$ by (a). (c) is the proof of
+with next block $d$ has probability $\xi(xd)$, and $X=x$ has probability $\xi(x)$ by (a). (c) is the proof of
 \cref{thm:budget}(iv), which uses only that the conditional probabilities of the true bits multiply to
-$\xi(z)$; and $\xi(z)$ is at least the weight of one circuit that prints $z$. For queries,
-$a_t=\xi(D_t)/\xi(D_{t-1})$ telescopes, and every circuit computing $f^*$ fits every $D_t$. (d) The circuits
-computing $f^*$, respectively $f'$, are among those fitting $D$. (e) The proofs of
-\cref{thm:feedback,thm:contrarian} use only (a) and that a positive value of $\xi$ is at least the weight of
-one circuit; by (a) the product in \cref{thm:feedback}(c) telescopes to an equality.
+$\xi(z)$; and $\xi(z)$ is at least the weight of one circuit that prints $z$. For queries, the product of the
+$a_t=\xi(D_t)/\xi(D_{t-1})$ telescopes to $\xi(D_t)/\xi(D_0)\ge\mu(f^*)$, because every circuit computing
+$f^*$ fits every $D_t$ and $\xi(D_0)\le1$. (d) The circuits computing $f^*$, respectively $f'$, are among
+those fitting $D$. (e) The proofs of \cref{thm:feedback,thm:contrarian} use only (a) and that a positive value
+of $\xi$ is at least the weight of one circuit; by (a) the product in \cref{thm:feedback}(c) telescopes to an
+equality.
 \end{proof}
 
-By (a) the first qualification of \cref{thm:calibration} disappears: no world prints fewer than $m$ further
-bits. The hypotheses of (b) remain. The world is drawn from the predictor's own prior, and the use is read
-off
-the data, by a test or by a query chosen from the data alone. With a call rule that selects users by
-something
-the data do not show, calibration does not apply. The factor $m$ in the first budget and its absence in the
-second belong to two protocols: overlapping blocks at every cut, and answers revealed whole. Parts (b) and
-(c)
-do not bound the deviation at one query that something singled out. A use is such a point, and (d) is what
-is
-proved about it. In (e) the ``dark room'' of \cref{sec:feedback} becomes: an obedient world follows a sample
-from the circuit prior conditioned on the past, and is moved off any default that no circuit in the support
-prints. For a world outside the class nothing is guaranteed. The hardest function of $k$ inputs needs about
-$2^k/k$ gates~\cite{frandsen05}, and fewer than $2N_s$ functions have circuits with at most $s$ gates, so
-for
-arbitrary sequences of length $2^k$ this is the generic case unless the size bound is exponential in $k$.
+By (a) the first qualification of \cref{thm:calibration} disappears inside the horizon: no world prints fewer
+than $m$ further bits after a first hit of length at most $2^k-m$. A world whose first hit is longer is left
+out of the event, so one qualification remains at the end of the horizon. The hypotheses of (b) remain. The
+world is drawn from the predictor's own prior, and the use is read off the data, by a test or by a query
+chosen from the data alone. With a call rule that selects users by something the data do not show, calibration
+does not apply. The factor $m$ in the first budget and its absence in the second belong to two protocols:
+overlapping blocks at every cut, and answers revealed whole. Parts (b) and (c) do not bound the deviation at
+one query that something singled out. A use is such a point, and (d) is what is proved about it. In (e) the
+``dark room'' of \cref{sec:feedback} becomes: an obedient world follows a sample from the circuit prior
+conditioned on the past, and is moved off any default that no circuit in the support prints. The contrarian
+statement in (e) is weaker than \cref{thm:contrarian}. The posterior becomes empty only for a mixture prior
+with $s_{\max}<\infty$ and a horizon with $2^k-n>\log_2(1/q_{\min})$. Under the length prior every function of
+the $k$ inputs has positive mass, so the posterior is never empty and only the halving remains. The budget in
+(c) is relative to the horizon as well: the count $m\log_2(1/\xi(z))$ says something only while it is below
+the number $2^k$ of cuts. For a world outside the class nothing is guaranteed. The hardest function of $k$
+inputs needs about $2^k/k$ gates~\cite{frandsen05}, and fewer than $2N_s$ functions have circuits with at most
+$s$ gates, so for arbitrary sequences of length $2^k$ this is the generic case unless the size bound is
+exponential in $k$.
 
 \subsection{The core law and the price of an active gate}
 
 \begin{theorem}[Core law; price of an active gate]\label{thm:c-core}
 \begin{enumerate}[label=(\alph*),leftmargin=2em,itemsep=2pt,topsep=2pt]
-\item For a reduced circuit $\chi$ of size $a$ and $s\ge a$: $\
-\mu_s\{\Gamma:\ccore(\Gamma)=\chi\}=\beta_s(a)$,
-and for a mixture prior $q\{\Gamma:\ccore(\Gamma)=\chi\}=\beta_q(a)$. So under every prior of the family the
-mass
-of a core depends only on its size, the posterior on cores is $\beta(|\chi|)\mathbf 1[\chi\text{ fits }D]$
-normalised, and every prediction is a function of the core. Consequently, for $a=\csize(f)\le s$,
+\item For a reduced circuit $\chi$ of size $a$ and $s\ge a$:
+$\ \mu_s\{\Gamma:\ccore(\Gamma)=\chi\}=\beta_s(a)$, and for a mixture prior
+$q\{\Gamma:\ccore(\Gamma)=\chi\}=\beta_q(a)$. So under every prior of the family the mass of a core depends
+only on its size, the posterior on cores is $\beta(|\chi|)\mathbf 1[\chi\text{ fits }D]$ normalised, and every
+prediction is a function of the core. Consequently, for $a=\csize(f)\le s$, and with $q$ the length prior in
+the second inequality,
 \[
-\mu_s\{\Gamma:f_\Gamma=f\}\ \ge\ \beta_s(a)\ \ge\ \frac{p_s}{N_{a-1}},\qquad\text{and under the length
-prior}\quad
+\mu_s\{\Gamma:f_\Gamma=f\}\ \ge\ \beta_s(a)\ \ge\ \frac{p_s}{N_{a-1}},\qquad
 q\{\Gamma:f_\Gamma=f\}\ \ge\ \frac{2^{-a}}{N_a}.
 \]
 \item For $1\le a\le s-1$,
@@ -239,47 +222,45 @@ $\beta(a)\le\frac1{16k^2}\,(16(k-1))^{-(a-1)}/(a-1)!$ for $a\ge1$.
 \end{enumerate}
 \end{theorem}
 \begin{proof}
-(a) A circuit $\Gamma\in\cG_{k,s}$ with core $\chi$ is determined by the set $J\subseteq\{1,\dots,s\}$ of
-its
-active positions, with $|J|=a$ and $s\in J$, and by its dead gates: the active gate at the $j$-th position
-of
-$J$ has the truth table of the $j$-th gate of $\chi$ and its pointers, renumbered. Conversely, for every
-such
+(a) A circuit $\Gamma\in\cG_{k,s}$ with core $\chi$ is determined by the set $J\subseteq\{1,\dots,s\}$ of its
+active positions, with $|J|=a$ and $s\in J$, and by its dead gates: the active gate at the $j$-th position of
+$J$ has the truth table of the $j$-th gate of $\chi$ and its pointers, renumbered. Conversely, for every such
 $J$ and every choice of the gates at the positions $i\notin J$, of which there are $1/p_i$ at position $i$,
 the resulting list is a circuit whose active set is exactly $J$: the gates at $J$ read only inputs and gates
-at
-$J$, all of them are ancestors of gate $s$ because $\chi$ is reduced, and no gate outside $J$ is read by a
-gate in $J$. So the number of circuits with core $\chi$ is
-$\sum_J\prod_{i\notin J}p_i^{-1}=N_s\sum_J\prod_{i\in J}p_i=N_s\,p_s\,e_{a-1}(p_1,\dots,p_{s-1})$. For a
-mixture,
-sum over $s$ with the weights $w_s$. For the inequalities: a minimum circuit for $f$ is reduced;
+at $J$, all of them are ancestors of gate $s$ because $\chi$ is reduced, and no gate outside $J$ is read by a
+gate in $J$. So the number of circuits with core $\chi$ is $\sum_J\prod_{i\notin
+J}p_i^{-1}=N_s\sum_J\prod_{i\in J}p_i=N_s\,p_s\,e_{a-1}(p_1,\dots,p_{s-1})$. For a mixture, sum over $s$ with
+the weights $w_s$. For the inequalities: a minimum circuit for $f$ is reduced;
 $e_{a-1}(p_1,\dots,p_{s-1})\ge p_1\cdots p_{a-1}=1/N_{a-1}$; and the term $s=a$ of $\beta_q(a)$ is
 $2^{-a}/N_a$ for the length prior.
 
 (b) Write $e_i=e_i(p_1,\dots,p_{s-1})$, so that the ratio is $e_a/e_{a-1}$. Counting pairs of an $(a-1)$-set
-$J$
-and an index $i\notin J$ gives $a\,e_a=\sum_{|J|=a-1}\prod_{i\in J}p_i\cdot\sum_{i\notin J}p_i$. The $p_i$
+$J$ and an index $i\notin J$ gives $a\,e_a=\sum_{|J|=a-1}\prod_{i\in J}p_i\cdot\sum_{i\notin J}p_i$. The $p_i$
 decrease, so $\sum_{i\notin J}p_i\ge\sum_{i=a}^{s-1}p_i\ge\frac1{16}\int_{k+a-1}^{k+s-1}x^{-2}dx$, which is
-the
-lower bound; and $\sum_{i\notin J}p_i\le
-e_1=\frac1{16}\sum_{j=k}^{k+s-2}j^{-2}\le\frac1{16}\int_{k-1}^\infty
-x^{-2}dx$, which gives the upper bounds. $\frac1{k+a-1}-\frac1{k+s-1}\ge\frac1{2(k+a-1)}$ exactly when
-$s\ge2a+k-1$. For a mixture apply the upper bound to each $s\ge a+1$ and sum with the weights $w_s$. Finally
-$\beta_s(1)=p_s\le p_1=1/(16k^2)$, also after mixing, and the ratio bound is applied $a-1$ times.
+the lower bound; and $\sum_{i\notin J}p_i\le
+e_1=\frac1{16}\sum_{j=k}^{k+s-2}j^{-2}\le\frac1{16}\int_{k-1}^\infty x^{-2}dx$, which gives the upper bounds.
+$\frac1{k+a-1}-\frac1{k+s-1}\ge\frac1{2(k+a-1)}$ exactly when $s\ge2a+k-1$. For a mixture apply the upper
+bound to each $s\ge a+1$ and sum with the weights $w_s$. Finally $\beta_s(1)=p_s\le p_1=1/(16k^2)$, also after
+mixing, and the ratio bound is applied $a-1$ times.
 \end{proof}
 
-So every prior of the family is a prior on cores, and a function with a small circuit keeps mass at least
-$\beta(\csize(f))$ however large the nominal size. One more active gate costs at least $\log_2(16a(k-1))$
-bits
-under every prior of the family, and at most $\log_2(32a(k+a-1))$ bits under $\mu_s$ with slack
-$s\ge2a+k-1$. Under the length prior no upper bound of that kind is proved, and the computed price is
-higher:
-$13.00$ bits at $k=20$, $a=1$ and $14.12$ at $a=8$, against the lower bounds $8.25$ and $11.25$. The theorem
-does not give the mass of a function, because the number of cores per function is not controlled: $1/N_s$ is
-a lower bound on a mass and not an estimate. Under $\mu_s$ the active part of a typical circuit has of order
-$\sqrt{k+s}$ gates. This follows from a limit law of Janson for random recursive directed acyclic graphs, as
-stated in~\cite{burghart26}; the identification of a uniform gate list with that model is ours. So ``a
-circuit of size $s$ does $s$ operations'' is true of the list and not of the computation.
+So every prior of the family is a prior on cores, and a function with a small circuit has mass at least
+$\beta(\csize(f))$. Under $\mu_s$ this bound is $p_s$ times a factor that stays between two positive constants
+as $s$ grows, so it falls like $s^{-2}$ with the nominal size, where the weight $1/N_s$ of one list falls
+faster than exponentially. Under the length prior the bound involves no nominal size. One more active gate
+costs at least $\log_2(16a(k-1))$ bits under every prior of the family, and at most $\log_2(32a(k+a-1))$ bits
+under $\mu_s$ with slack $s\ge2a+k-1$. Under the length prior no upper bound of that kind is proved, and the
+computed price is higher: $13.00$ bits at $k=20$, $a=1$ and $14.12$ at $a=8$, against the lower bounds $8.25$
+and $11.25$. The theorem does not give the mass of a function, because the number of cores per function is not
+controlled: $1/N_s$ is a lower bound on a mass and not an estimate. Under $\mu_s$ the active part of a typical
+circuit is small. The pointers of a uniform gate list form a random recursive directed acyclic graph on $k+s$
+vertices in which the first $k$ vertices send no arrows, and the active gates are the vertices above $k$ that
+can be reached from the last one. In the model in which every vertex sends two arrows the number of vertices
+reachable from the last one is of order $\sqrt{k+s}$, by a limit law of Janson as stated in~\cite{burghart26};
+the identification of a uniform gate list with that model is ours. So for fixed $k$ and large $s$ the active
+part has of order $\sqrt s$ gates. While $s$ is small against $k^2$ it is much smaller: in a simulation the
+mean number of active gates was about $3$ at $k=s=1000$. So ``a circuit of size $s$ does $s$ operations'' is
+true of the list and not of the computation.
 
 \subsection{Triggers and the floor}
 
@@ -293,68 +274,62 @@ Over the full binary basis, on the index bits $b_0,\dots,b_{k-1}$ of $t-1$:
 $1,\dots,n$ and $1$ afterwards, is computed with $k-1-z(n)$ gates; with $0$ gates it is the index wire
 $b_{k-1}$. So at the $2^{g+1}-1$ multiples $n$ of $2^{k-1-g}$ below $2^k$ the test needs at most $g$ gates.
 \item \emph{Dyadic cut.} If $n=2^j$ and $m\le2^j$, the index wire $b_j$ is $0$ on positions $1,\dots,n$ and
-$1$
-on positions $n+1,\dots,n+m$: the test costs no gate.
+$1$ on positions $n+1,\dots,n+m$: the test costs no gate.
 \item \emph{Payload.} Every Boolean function of $j\ge2$ variables has a circuit of at most $2^j-3$ gates.
 Hence for every block $y\in\B^m$ with $n+m\le2^k$ there is a circuit $P_{n,y}$ on the index with
 $P_{n,y}(n+i)=y_i$ for $1\le i\le m$ and at most $\max(1,2^{\lceil\log_2m\rceil}-3)\le\max(1,2m-5)$ gates.
-\item \emph{Selector.} $\cmux(c;u,v)=(c\wedge v)\vee(\neg c\wedge u)$ is three gates. A constant payload
-needs
+\item \emph{Selector.} $\cmux(c;u,v)=(c\wedge v)\vee(\neg c\wedge u)$ is three gates. A constant payload needs
 one gate: $u\vee c$ for the value $1$ and $u\wedge\neg c$ for the value $0$.
 \end{enumerate}
 \end{lemma}
 \begin{proof}
-(a) Let $c_i$ be the digits of $n$ and $G_i=[\,(b_i\dots b_0)\ge(c_i\dots c_0)\,]$. $G_0$ is $b_0$ if
-$c_0=1$
+(a) Let $c_i$ be the digits of $n$ and $G_i=[\,(b_i\dots b_0)\ge(c_i\dots c_0)\,]$. $G_0$ is $b_0$ if $c_0=1$
 and the constant $1$ if $c_0=0$, and $G_i=b_i\wedge G_{i-1}$ if $c_i=1$, $G_i=b_i\vee G_{i-1}$ if $c_i=0$.
-With
-$j=z(n)$: $G_i$ is the constant $1$ for $i<j$, $G_j=b_j$ is an index wire, and each step $i=j+1,\dots,k-1$
-adds one gate. (b) Positions $1,\dots,2^j$ have $t-1<2^j$, and positions $2^j+1,\dots,2^{j+1}$ have $b_j=1$.
-(c) A function of two variables is one gate, and $f=\cmux(x_j;f_0,f_1)$ gives $M(j)\le2M(j-1)+3$ for the
-largest size $M(j)$ needed, so $M(j)+3\le2^{j-2}(M(2)+3)=2^j$. For the block let $j=\lceil\log_2m\rceil$.
-The
-$m\le2^j$ numbers $t-1\in\{n,\dots,n+m-1\}$ are distinct modulo $2^j$, so a function of the low $j$ index
-bits
-has the required values; for $j\le1$ one gate suffices. (d) By inspection.
+With $j=z(n)$: $G_i$ is the constant $1$ for $i<j$, $G_j=b_j$ is an index wire, and each step
+$i=j+1,\dots,k-1$ adds one gate. (b) Positions $1,\dots,2^j$ have $t-1<2^j$, and positions
+$2^j+1,\dots,2^{j+1}$ have $b_j=1$. (c) A function of two variables is one gate, and $f=\cmux(x_j;f_0,f_1)$
+gives $M(j)\le2M(j-1)+3$ for the largest size $M(j)$ needed, so $M(j)+3\le2^{j-2}(M(2)+3)=2^j$. For the block
+let $j=\lceil\log_2m\rceil$. The $m\le2^j$ numbers $t-1\in\{n,\dots,n+m-1\}$ are distinct modulo $2^j$, so a
+function of the low $j$ index bits has the required values; for $j\le1$ one gate suffices. (d) By inspection.
 \end{proof}
 
-The count in (a) is exact (source, Lemma~7(a)). A test on the data is dearer in the index reading, because
-each position is computed from scratch: to make a one-bit payload depend on $w$ earlier bits of the stream
-of
-an explanation $E$ of $\sigma$ gates through a test of $g_\phi$ gates, the source uses $w$ shifted copies of
-$E$ and at most $w(\sigma+2k)+g_\phi+k+1$ further gates (Lemma~7(f) there). That nothing essentially cheaper
-exists is not proved.
+The count in (a) is exact for the function $[\,t-1\ge n\,]$ (source, Lemma~7(a)). A wrapper needs less: any
+wire that is $0$ on the context and $1$ on the block will do, as in (b). For a one-bit block the conjunction
+of the index bits that are $1$ in $n$ is such a test, because an index with all the ones of $n$ is at least
+$n$; it has one gate fewer than $n$ has ones. In the index reading the construction known for a test on the
+data is dearer, because each position is computed from scratch. To make a one-bit payload depend on $w$
+earlier bits of the stream of an explanation $E$ of $\sigma$ gates through a test of $g_\phi$ gates, the
+source computes the function by $E$ followed by at most $w(\sigma+2k)+g_\phi+k+1$ gates, among them $w$
+shifted copies of $E$ (Lemma~7(f) there). That nothing essentially cheaper exists is not proved.
 
 \begin{theorem}[Floor for a triggered payload]\label{thm:c-floor}
-Let $\vartheta$ be a circuit of $g\ge0$ gates on the inputs that is $0$ on $I$ (for $g=0$, an input wire),
-and
+Let $\vartheta$ be a circuit of $g\ge0$ gates on the inputs that is $0$ on $I$ (for $g=0$, an input wire), and
 $P$ a circuit of $|P|$ gates on the inputs. For $E\in\cG_{k,\sigma}$ let $\mathrm{Tw}[E]$ be $E$ followed by
-the gates of $\vartheta$, the gates of $P$, and $\cmux(\vartheta;E,P)$. It has $\sigma+a$ gates,
-$a=g+|P|+3$,
+the gates of $\vartheta$, the gates of $P$, and $\cmux(\vartheta;E,P)$. It has $\sigma+a$ gates, $a=g+|P|+3$,
 fits $D$ exactly when $E$ does, and equals $P$ wherever $\vartheta=1$. For a constant payload take $a=g+1$.
 \begin{enumerate}[label=(\alph*),leftmargin=2em,itemsep=2pt,topsep=2pt]
-\item \emph{Mixture prior.} $\ q\{\Gamma:\ \Gamma\text{ fits }D,\ f_\Gamma=P\text{ on }\{\vartheta=1\}\}\
-\ge\
-\sum_{\sigma\le s_{\max}-a}w_{\sigma+a}\,(N_\sigma/N_{\sigma+a})\,\mu_\sigma\{\Gamma\text{ fits }D\}$. If a
-share
-$\rho_{\sigma_0}$ of the posterior is on circuits of size at most $\sigma_0\le s_{\max}-a$, the posterior
-share
-of the payload on $\{\vartheta=1\}$ is at least
+\item \emph{Mixture prior.}
+\[
+q\{\Gamma:\ \Gamma\text{ fits }D,\ f_\Gamma=P\text{ on }\{\vartheta=1\}\}
+\ \ge\ \sum_{\sigma\le s_{\max}-a}w_{\sigma+a}\,\frac{N_\sigma}{N_{\sigma+a}}\,
+\mu_\sigma\{\Gamma\text{ fits }D\}.
+\]
+If a share $\rho_{\sigma_0}$ of the posterior is on circuits of size at most $\sigma_0\le s_{\max}-a$, the
+posterior share of the payload on $\{\vartheta=1\}$ is at least
 $\rho_{\sigma_0}\cdot\min_{\sigma\le\sigma_0}\varrho(\sigma,a)\cdot\bigl(16\,(k+\sigma_0+a-1)^2\bigr)^{-a}$.
-\item \emph{Length prior.} For $\epsilon\in(0,1)$ and $s_0=\lceil\ell_D+\log_2(1/\epsilon)\rceil$ the share
-is
+\item \emph{Length prior.} For $\epsilon\in(0,1)$ and $s_0=\lceil\ell_D+\log_2(1/\epsilon)\rceil$ the share is
 at least $(1-\epsilon)\bigl(32\,(k+s_0+a-1)^2\bigr)^{-a}$, and $\ell_D\le s_D+\log_2N_{s_D}$.
-\item \emph{Critical uses.} For a call rule and blocks $y_x$ with wrappers of $a_x$ gates, $\Pr[Y=y_X]$ is
-at
-least the expectation over uses of the bound in (a). If the calling circuits with context $x$ have size at
-most $s_{\max}-a_x$, the wrappers around them alone have share at least
-$\min_\sigma\bigl[\varrho(\sigma,a_x)N_\sigma/N_{\sigma+a_x}\bigr]\cdot\kappa(x)$ at $x$.
-\item \emph{A never-varied bit.} Let the prior be the length prior, let an input coordinate $v$ be $0$ on
-all
+\item \emph{Critical uses.} Sequence form, mixture prior. For a call rule and blocks $y_x$, let the wrapper at
+the context $x$ have a trigger that is $0$ on positions $1,\dots,|x|$ and $1$ on the block, the payload $y_x$,
+and $a_x$ gates. Then $\Pr[Y=y_X]$ is at least the expectation over uses of the bound on the posterior share
+in (a), taken at the context $X$ of the use. If the calling circuits with context $x$ have size at most
+$s_{\max}-a_x$, the wrappers around them alone have share at least
+$\min_\sigma\bigl[\varrho(\sigma,a_x)N_\sigma/N_{\sigma+a_x}\bigr]\cdot\kappa(x)$ at $x$, the minimum being
+over the sizes $\sigma$ of these calling circuits.
+\item \emph{A never-varied bit.} Let the prior be the length prior, let an input coordinate $v$ be $0$ on all
 of $I$ and $1$ at the query $u^\dagger$, and $s_0=\lceil\ell_D\rceil+1$. Then
 $\pi(y\mid u^\dagger,D)\ge1/(32(k+s_0)^2+2)$ for each $y\in\B$, and for each $y$ the fitting circuits that
-answer $y$ at every input with $u_v=1$ have posterior share at least $1/(32(k+s_0)^2)$. In the sequence
-form,
+answer $y$ at every input with $u_v=1$ have posterior share at least $1/(32(k+s_0)^2)$. In the sequence form,
 at a cut $n=2^j$ with $0\le j<k$, each value of the next bit has share at least $1/(32(k+s_0)^2+2)$ and each
 of the two constant continuations of any length $m\le2^j$ has share at least $1/(32(k+s_0)^2)$, where
 $s_0=\lceil-\log_2\xi(x)\rceil+1\le\csize(x)+\log_2N_{\csize(x)}+2$.
@@ -366,50 +341,65 @@ list of the first $\sigma$ gates. It maps fitting circuits to fitting circuits w
 $\{\vartheta=1\}$. So the fraction of $\cG_{k,\sigma+a}$ with these properties is at least
 $(N_\sigma/N_{\sigma+a})\mu_\sigma\{\Gamma\text{ fits }D\}$; multiply by $w_{\sigma+a}$ and sum. For
 $\sigma\le\sigma_0$, $N_{\sigma+a}/N_\sigma\le(16(k+\sigma_0+a-1)^2)^a$. (b) The length prior gives the
-circuits
-larger than $s_0$ the mass $2^{-s_0}$, so their posterior mass is at most $2^{\ell_D-s_0}\le\epsilon$; and
-$\varrho=2^{-a}$. One fitting circuit of size $s_D$ has weight $2^{-s_D}/N_{s_D}$. (c) Average (a) over the
-contexts; for the second claim restrict the injection to calling circuits. (d) The posterior mass of the
-circuits larger than $s_0$ is at most $\frac12$. For $\Gamma\in\cG_{k,s}$ let $\Gamma^\oplus$ and
-$\Gamma^{\oplus\prime}$ be $\Gamma$ with one more gate, the exclusive or of gate $s$ and $v$ in the two
-pointer
-orders. Both compute $f_\Gamma(u)\oplus u_v$, fit $D$ exactly when $\Gamma$ does, and flip the answer at
-$u^\dagger$. They are two distinct circuits that determine $\Gamma$, and their weights sum to
-$q(\Gamma)\,p_{s+1}$. Let $\eta=p_{s_0+1}=1/(16(k+s_0)^2)$ and $\bar y=1-y$. Summing over the fitting
-$\Gamma$ of
-size at most $s_0$ with answer $y$ gives $\pi(\bar y)\ge\eta\,(\pi(y)-\frac12)=\eta\,(\frac12-\pi(\bar y))$,
-so
-$\pi(\bar y)\ge\eta/(2(1+\eta))$. For the second claim append instead the gate of
-\cref{lem:c-trigger}(d) for the constant $y$, in both pointer orders, and sum over all fitting $\Gamma$ of
-size at most $s_0$: the share is at least $\eta/2$. The sequence form follows from \cref{lem:c-trigger}(b).
+circuits larger than $s_0$ the mass $2^{-s_0}$, so their posterior mass is at most
+$2^{\ell_D-s_0}\le\epsilon$; and $\varrho=2^{-a}$. One fitting circuit of size $s_D$ has weight
+$2^{-s_D}/N_{s_D}$. (c) Average (a) over the contexts; for the second claim restrict the injection to calling
+circuits. (d) The posterior mass of the circuits larger than $s_0$ is at most $\frac12$. For
+$\Gamma\in\cG_{k,s}$ let $\Gamma^\oplus$ and $\Gamma^{\oplus\prime}$ be $\Gamma$ with one more gate, the
+exclusive or of gate $s$ and $v$ in the two pointer orders. Both compute $f_\Gamma(u)\oplus u_v$, fit $D$
+exactly when $\Gamma$ does, and flip the answer at $u^\dagger$. They are two distinct circuits that determine
+$\Gamma$, and their weights sum to $q(\Gamma)\,p_{s+1}$. Let $\eta=p_{s_0+1}=1/(16(k+s_0)^2)$ and
+$\bar y=1-y$. Summing over the fitting $\Gamma$ of size at most $s_0$ with answer $y$ gives
+$\pi(\bar y)\ge\eta\,(\pi(y)-\frac12)=\eta\,(\frac12-\pi(\bar y))$, so $\pi(\bar y)\ge\eta/(2(1+\eta))$. For
+the second claim append instead the gate of \cref{lem:c-trigger}(d) for the constant $y$, in both pointer
+orders, and sum over all fitting $\Gamma$ of size at most $s_0$: the share is at least $\eta/2$. The sequence
+form follows from \cref{lem:c-trigger}(b).
 \end{proof}
 
-Three differences from \cref{thm:twin}. First, the cost is not a constant. A gate appended to an explanation
-of $\sigma$ gates costs at most $4+2\log_2(k+\sigma+a-1)+\log_2(1/\varrho)$ bits, which grows with the
-logarithm of the size of the explanation, though not with the amount of data beyond that. Second, the test
-is
-paid in gates. The counterpart of the $K(n)$ of the note is $k-1-z(n)$ gates; like $K(n)$ it is small at a
-few positions, and it is zero at every dyadic cut with a block no longer than the context. Third, a test on
+Three differences from \cref{thm:twin}. First, the cost is not a constant. A wrapper of $a$ gates appended to
+an explanation of $\sigma$ gates costs at most $a\,(4+2\log_2(k+\sigma+a-1))+\log_2(1/\varrho(\sigma,a))$
+bits, and $\log_2(1/\varrho(\sigma,a))=a$ under the length prior. The cost of a gate grows with the logarithm
+of the size of the explanation, though not with the amount of data beyond that. Second, the test is paid in
+gates. The counterpart of the $K(n)$ of the note is the number of gates of a test that is $0$ on the context
+and $1$ on the block. It is at most $k-1-z(n)$, at most one fewer than the number of ones of $n$ for a one-bit
+block, and zero at every dyadic cut with a block no longer than the context. Like $K(n)$ it is small at a few
+positions. Its least value is not determined here, except at $n=2^k-1$, where the test is the conjunction of
+all index bits and needs $k-1$ gates by \cref{thm:c-refund}(a). Third, in the construction used here a test on
 the data costs copies of the explanation; a hypothesis that received the context as input would pay for the
-test alone. In numbers, for $k=20$ and explanations of $1000$ gates an appended gate costs about $24.0$
-bits.
-A one-bit deviation costs about $24$ bits at a dyadic cut and at most $480$ bits at the positions hardest to
-name; a block of $64$ arbitrary bits adds at most $64$ gates for payload and selector, about $1540$ bits. In
-the program toy the same wrappers cost $K(n)+O(1)$ and $K(n)+64+O(1)$ bits. In (d), for $k=20$ and
-$s_D=1000$, $s_0\approx22\,326$ and the bound is $2^{-33.9}$.
+test alone. In numbers, for $k=20$ and explanations of $1000$ gates an appended gate costs about $24.0$ bits,
+and $25.0$ under the length prior, which adds one bit for the size. Under the length prior a one-bit deviation
+then costs about $25$ bits at a dyadic cut and about $500$ bits at the positions hardest to name, where the
+test of \cref{lem:c-trigger}(a) has $19$ gates; a block of $64$ arbitrary bits adds at most $64$ gates for
+payload and selector, about $1600$ bits. These are costs of one wrapper against one explanation. In the
+program toy the same wrappers cost $K(n)+O(1)$ and $K(n)+64+O(1)$ bits. In (d), for $k=20$ and $s_D=1000$,
+$s_0\approx22\,326$ and the bound is $2^{-33.9}$.
 
-Parts (a) to (c) are floors for one construction and not estimates of the deviation mass: in exact small
-cases ($k=3$, $s=4,5$) the floor is at most $2\cdot10^{-8}$ where the posterior probability of the flipped
-bit is between $0.06$ and $0.95$ (computed by a referee of the source). Relative to its own prior mass the
-family of wrappers around the users is repaid the factor $1/H_{\mathcal C}$, as the seeker of
-\cref{thm:critical}(a) is. The difference is that its prior mass is at most
-$(N_\sigma/N_{\sigma+a})H_{\mathcal
-C}$ by construction, where the weight $2^{-a}$ of the program seeker does not depend on $H_{\mathcal C}$.
-Part
-(d) is the strongest statement proved about a critical use. It is two-sided: at a use marked by a bit that
-never varied, the share of the world's own answer is never polynomially close to $0$ or to $1$ under the
-length prior. It does not say whether the true share falls like a power of the size or stays constant. A
-given answer at one such query and a given answer on the whole set $\{u_v=1\}$ cost the same single gate.
+Parts (a) to (c) are floors for one construction and not estimates of the deviation mass. Under $\mu_s$ the
+same injection gives a floor: among the fitting circuits of size $s$, the wrapped ones have share at least the
+number of fitting circuits of size $s-a$ divided by the number of size $s$. In exact small cases ($k=3$,
+$s=4,5$, the world $b_0\wedge b_1$, cuts $3$ to $7$) this floor is at most $2\cdot10^{-8}$ for wrappers of
+three gates, where the posterior probability of the flipped bit is between $0.057$ and $0.95$. At the dyadic
+cut $n=4$, where one gate suffices, the floor is $0.0017$ at $s=4$ against a probability of $0.065$. These
+numbers are computed; the first comparison is due to a referee of the source.
+
+The family of wrappers of $a$ gates around the users has prior mass
+\[
+\sum_W\varrho(\sigma_W,a)\,\frac{N_{\sigma_W}}{N_{\sigma_W+a}}\,q(W),
+\]
+the sum being over the calling circuits $W$, of sizes $\sigma_W$, because the wrapper around $W$ has
+$\sigma_W+a$ gates. If all users have one size, its share at $x$ is its prior mass times
+$\kappa(x)/H_{\mathcal C}$: relative to its own prior mass the family is repaid the factor $1/H_{\mathcal C}$,
+as the seeker of \cref{thm:critical}(a) is. The difference is that its prior mass is at most
+$\max_\sigma[\varrho(\sigma,a)N_\sigma/N_{\sigma+a}]\,H_{\mathcal C}$ by construction, which under (A1) is at
+most $(N_\sigma/N_{\sigma+a})H_{\mathcal C}$ with $\sigma$ the least size of a user, where the weight $2^{-a}$
+of the program seeker does not depend on $H_{\mathcal C}$.
+
+Part (d) is the strongest statement proved about a critical use. It is two-sided: at a use marked by a bit
+that never varied, the share of each answer, and so of the world's own, lies between $1/(32(k+s_0)^2+2)$ and
+one minus that under the length prior. Since $s_0\le s_D+\log_2N_{s_D}+2$, the distance from $0$ and from $1$
+is at least an inverse polynomial in $k$ and in the size $s_D$ of the smallest fitting circuit. Part (d) does
+not say whether the true share falls like a power of the size or stays constant. A given answer at one such
+query and a given answer on the whole set $\{u_v=1\}$ cost the same single gate.
 
 \subsection{Minimum-size circuits}
 
@@ -426,218 +416,204 @@ earlier wire (an input or an earlier gate) or with the negation of one.
 coordinates that are not frozen, every minimum-size fitting circuit answers $f^*(u)$ at $u^\dagger$; under
 $\mu_{s_D}$ the deviation mass at $u^\dagger$ is $0$ if the world's own answer is $f^*(u)$ and $1$ if it is
 not.
-\item \emph{Dyadic cuts.} If $|x|=2^j$ and $\csize(x)\ge2$, every minimum-size circuit that prints $x$ has
-the
+\item \emph{Dyadic cuts.} If $|x|=2^j$ and $\csize(x)\ge2$, every minimum-size circuit that prints $x$ has the
 truth table $x\,x\,x\cdots$. Under $\mu_s$ at $s=\csize(x)$ the predictor continues $x$ periodically with
 probability $1$, and a world whose own continuation is not the periodic one has deviation mass $1$ at that
 cut.
 \item \emph{Last-gate dichotomy.} For any circuit $\Gamma$ with last gate $\tau(a,b)$ let
-$\psi_\Gamma(u)\in\B^2$
-be the values of the wires $a,b$ at $u$. Call $u^\dagger$ \emph{novel for $\Gamma$} if
+$\psi_\Gamma(u)\in\B^2$ be the values of the wires $a,b$ at $u$. Call $u^\dagger$ \emph{novel for $\Gamma$} if
 $\psi_\Gamma(u^\dagger)\notin\psi_\Gamma(I)$. Flipping the entry of $\tau$ at $\psi_\Gamma(u^\dagger)$ is a
 weight-preserving involution of the fitting circuits for which $u^\dagger$ is novel, and it flips the answer
 at $u^\dagger$. So, with $\nu$ the posterior probability of novelty, each answer at $u^\dagger$ has share at
 least $\nu/2$.
 \item \emph{AND family.} Let $f^*=x_1\wedge\dots\wedge x_k$ and $I$ the $k+1$ inputs with at most one $0$.
-Then
-$s_D=k-1$, every minimum-size fitting circuit is a formula in which each input is read once, and at every
+Then $s_D=k-1$, every minimum-size fitting circuit is a formula in which each input is read once, and at every
 input with exactly two $0$s exactly half of the minimum-size fitting circuits answer $1$, which is not the
 target's answer. Under $\mu_{k-1}$ the deviation mass there is exactly $\frac12$.
 \end{enumerate}
-For $s_D=1$ the conclusions of (b) and (c) hold unless the labels on $I$ are constant or agree on $I$ with
-an
+For $s_D=1$ the conclusions of (b) and (c) hold unless the labels on $I$ are constant or agree on $I$ with an
 input or its negation.
 \end{theorem}
 \begin{proof}
-(a) A circuit that is not reduced is larger than its core. Let gate $g$ be constant $\gamma$ on $I$. If $g$
-is
-the output, a single constant gate fits and $s_D=1$. Otherwise replace every reader $\tau(g,b)$, $b\ne g$,
-by
+(a) A circuit that is not reduced is larger than its core. Let gate $g$ be constant $\gamma$ on $I$. If $g$ is
+the output, a single constant gate fits and $s_D=1$. Otherwise replace every reader $\tau(g,b)$, $b\ne g$, by
 a gate with both pointers on $b$ and the table $\tau'(c,\cdot)=\tau(\gamma,c)$, likewise $\tau(b,g)$, and
-every reader $\tau(g,g)$ by a constant gate. The new gates have the same values on $I$, nothing reads $g$,
-and
-deleting $g$ gives a fitting circuit with $s_D-1$ gates. Let gate $g$ agree on $I$ with the earlier wire
-$w$.
-If $g$ is not the output, redirect to $w$ all pointers on $g$ and delete $g$. If $g$ is the output and $w$
-is
+every reader $\tau(g,g)$ by a constant gate. The new gates have the same values on $I$, nothing reads $g$, and
+deleting $g$ gives a fitting circuit with $s_D-1$ gates. Let gate $g$ agree on $I$ with the earlier wire $w$.
+If $g$ is not the output, redirect to $w$ all pointers on $g$ and delete $g$. If $g$ is the output and $w$ is
 a gate, the gates up to $w$ fit; if $w$ is an input, one gate fits. If $g$ agrees with $\neg w$, do the same
 with the tables of the readers composed with a negation of that argument, respectively with the table of $w$
 negated. Every case contradicts minimality or $s_D\ge2$. (b) A gate $\tau(v,b)$ with $v$ frozen at $\gamma$
-equals $\tau(\gamma,b)$ on $I$, which as a function of the value of $b$ is constant, or $b$, or $\neg b$,
-and
+equals $\tau(\gamma,b)$ on $I$, which as a function of the value of $b$ is constant, or $b$, or $\neg b$, and
 constant also if $b$ is frozen; this contradicts (a). A circuit with no pointer to a frozen input computes a
-function of the other coordinates, and under $\mu_{s_D}$ the posterior is uniform on the minimum-size
-fitting
+function of the other coordinates, and under $\mu_{s_D}$ the posterior is uniform on the minimum-size fitting
 circuits. (c) is (b) with $I$ the positions $1,\dots,2^j$ and the frozen coordinates $b_j,\dots,b_{k-1}$: a
 function of $b_0,\dots,b_{j-1}$ has a truth table of period $2^j$. For $s_D=1$ apply the case distinction of
 (b) to the single gate. (d) The flipped entry is used at no $u\in I$, so the circuit still fits; size and
 weight are unchanged; novelty does not depend on $\tau$; the output at $u^\dagger$ is the flipped entry.
 \end{proof}
 
-These are the two ways in which a predictor confined to minimum-size circuits generalises. It ignores
-whatever
-never varied: there is no deviation through a never-varied input, and total deviation when the world itself
-changes with it, which at a dyadic cut means every world whose continuation is not the periodic one. At a
-new
-combination of inputs that did vary it can be split evenly, with no smaller circuit and no consequentialist
-involved. An unexercised truth-table entry is a trigger that costs no gate, and it is not aimed: every
-circuit
-that deviates through it has a sibling that does not. The theorem does not cover circuits one gate above the
-minimum, where the shares are positive (\cref{tab:circuits-query}). The exception for $s_D=1$ is real: for
-the
-target $x_1$ with a frozen coordinate, $4$ of the $14$ fitting one-gate circuits deviate at each query with
-the frozen bit set (computed). The theorem uses the full basis.
+Two things are proved here about how a predictor confined to minimum-size circuits generalises. It ignores
+whatever never varied: there is no deviation through a never-varied input, and total deviation when the world
+itself changes with it, which at a dyadic cut means every world whose continuation is not the periodic one. At
+a new combination of inputs that did vary it can be split evenly, with no smaller circuit and no
+consequentialist involved. An unexercised truth-table entry is a trigger that costs no gate, and it is
+symmetric: every circuit that deviates through it has a sibling that does not. The theorem does not cover
+circuits one gate above the minimum, where the shares are positive (\cref{tab:circuits-query}). The exception
+for $s_D=1$ is real. Let the target be $x_1$ and the data all inputs with one coordinate $v$ frozen at $0$.
+The fitting one-gate circuits are the $4$ with both pointers on $x_1$, the $2(k-2)$ projections with the other
+pointer on an input that varies, and the $8$ with the other pointer on $v$, whose two entries for $v=1$ are
+free. So $4$ of the $2k+8$ fitting one-gate circuits deviate at each query with $v=1$; for $k=3$ these are $4$
+of $14$ (also computed). The theorem uses the full basis.
 
 \subsection{A ceiling for separable triggers}
 
 \begin{theorem}[Ceiling for separable triggers]\label{thm:c-ceiling}
 Single-bit answers. Let $\Theta$ be a set of \emph{triggers}: reduced circuits of $g\ge1$ gates that read
-inputs only and are $0$ on $I$ (for $g=0$, a set of input coordinates that are $0$ on $I$). A \emph{mux} is
-a
+inputs only and are $0$ on $I$ (for $g=0$, a set of input coordinates that are $0$ on $I$). A \emph{mux} is a
 last gate with pointers on a gate $h$ and on a wire $r$, of a type $\varsigma(h,r)$ such that
-$\varsigma(\cdot,0)$ is the identity or the negation and $\varsigma(\cdot,1)\ne\varsigma(\cdot,0)$; there
-are
-$6$ such types and $2$ pointer orders. A reduced circuit is \emph{separably triggered by $\Theta$} if its
-last
-gate is a mux of $h$ and $r$, the set $A_h$ of gates that are $h$ or ancestors of $h$ is disjoint from the
-set
+$\varsigma(\cdot,0)$ is the identity or the negation and $\varsigma(\cdot,1)\ne\varsigma(\cdot,0)$; there are
+$6$ such types and $2$ pointer orders. A reduced circuit is \emph{separably triggered by $\Theta$} if its last
+gate is a mux of $h$ and $r$, the set $A_h$ of gates that are $h$ or ancestors of $h$ is disjoint from the set
 $A_r$ of gates that are $r$ or ancestors of $r$, and the circuit induced on $A_r$ is in $\Theta$ (for $g=0$:
-$r\in\Theta$). Its \emph{honest restriction} is the circuit induced on $A_h$, with the table of $h$ negated
-if
+$r\in\Theta$). Its \emph{honest restriction} is the circuit induced on $A_h$, with the table of $h$ negated if
 $\varsigma(\cdot,0)$ is the negation.
 \begin{enumerate}[label=(\alph*),leftmargin=2em,itemsep=2pt,topsep=2pt]
 \item The honest restriction of a fitting separably triggered core of size $a$ is a fitting core of size
 $a-g-1$; hence $a\ge s_D+g+1$.
 \item At most $12\binom{a-1}{g}|\Theta|$ separably triggered cores of size $a$ have the same honest
 restriction.
-\item For every prior $\mu$ of the family and every $a'\ge s_D$,
-\begin{gather*}
-\frac{\mu\{\text{core separably triggered by }\Theta,\ \text{size }a'+g+1\mid D\}}{\mu\{\text{core of size
-}a'\mid D\}}
-\ \le\ 12\binom{a'+g}{g}|\Theta|\,\frac{\beta(a'+g+1)}{\beta(a')}\ \le\
-\frac{12\,|\Theta|}{g!\;a'\,\bigl(16(k-1)\bigr)^{g+1}},\\
-\text{and therefore}\qquad\mu\{\text{core separably triggered by }\Theta\mid D\}\ \le\
-\frac{12\,|\Theta|}{g!\;s_D\,\bigl(16(k-1)\bigr)^{g+1}}.
-\end{gather*}
+\item Let $\mathcal T_a$ be the set of circuits whose core is separably triggered by $\Theta$ and has size
+$a$, and $\mathcal R_a$ the set of circuits whose core has size $a$. For every prior $\mu$ of the family and
+every $a'\ge s_D$,
+\[
+\frac{\mu(\mathcal T_{a'+g+1}\mid D)}{\mu(\mathcal R_{a'}\mid D)}
+\ \le\ 12\binom{a'+g}{g}|\Theta|\,\frac{\beta(a'+g+1)}{\beta(a')}
+\ \le\ \frac{12\,|\Theta|}{g!\;a'\,\bigl(16(k-1)\bigr)^{g+1}},
+\]
+and therefore
+\[
+\mu\Bigl(\,\bigcup_a\mathcal T_a\Bigm|D\Bigr)\ \le\ \frac{12\,|\Theta|}{g!\;s_D\,\bigl(16(k-1)\bigr)^{g+1}}.
+\]
 \end{enumerate}
 \end{theorem}
 \begin{proof}
 (a) The circuit is reduced, so every gate except the last lies in $A_h\cup A_r$. $A_h$ is closed under
-predecessors, all its gates are ancestors of $h$ or $h$ itself, and $h$ has the largest index in $A_h$; so
-the
+predecessors, all its gates are ancestors of $h$ or $h$ itself, and $h$ has the largest index in $A_h$; so the
 induced circuit is reduced with $a-1-g$ gates. On $I$ the trigger is $0$, so the last gate equals $h$ or
 $\neg h$ there, and the restriction fits. (b) The core is determined by its honest restriction together with
-the positions of $A_r$ among the first $a-1$ gates, the circuit on $A_r$, the type of the mux and its
-pointer
+the positions of $A_r$ among the first $a-1$ gates, the circuit on $A_r$, the type of the mux and its pointer
 order. (c) By (a), (b) and \cref{thm:c-core}(a) the numerator is at most
 $12\binom{a'+g}{g}|\Theta|\beta(a'+g+1)$ times the number of fitting cores of size $a'$, and the denominator
-is
-$\beta(a')$ times that number. \Cref{thm:c-core}(b), applied $g+1$ times, gives
+is $\beta(a')$ times that number. \Cref{thm:c-core}(b), applied $g+1$ times, gives
 $\beta(a'+g+1)/\beta(a')\le\prod_{j=a'}^{a'+g}\frac1{16j(k-1)}$, and
-$\binom{a'+g}{g}\prod_{j=a'}^{a'+g}\frac1j=\frac1{g!\,a'}$. Sum over $a'\ge s_D$.
+$\binom{a'+g}{g}\prod_{j=a'}^{a'+g}\frac1j=\frac1{g!\,a'}$. By (a), $\mathcal T_a$ contains no fitting circuit
+unless $a=a'+g+1$ with $a'\ge s_D$; sum over $a'\ge s_D$, using $1/a'\le1/s_D$ and
+$\sum_{a'}\mu(\mathcal R_{a'}\mid D)\le1$.
 \end{proof}
 
-So a triggered circuit in which the trigger is a separate, input-only part feeding a selector at the output
-is
-outweighed by the circuit obtained by cutting the trigger off, with an explicit multiplicity factor. The
-bound
-is on one syntactic class. It says nothing about the following.
+So a triggered circuit in which the trigger is a separate, input-only part feeding a selector at the output is
+outweighed by the circuit obtained by cutting the trigger off, with an explicit multiplicity factor. For
+triggers that are $1$ on $I$ the same holds, with the same proof, when the roles of $\varsigma(\cdot,0)$ and
+$\varsigma(\cdot,1)$ are exchanged. The bound is on one syntactic class. It says nothing about the following.
 \begin{enumerate}[label=(\roman*),leftmargin=2em,itemsep=0pt,topsep=2pt]
 \item \emph{Entangled triggers:} the trigger enters below the output, as in $x_1\wedge(x_2\wedge\neg v)$,
 where the frozen bit $v$ is absorbed into an inner gate.
 \item \emph{Triggers that share gates with the honest part} ($A_h\cap A_r\ne\emptyset$), including a switch
-read
-off a wire of the world (\cref{thm:c-capture}(c)).
+read off a wire of the world (\cref{thm:c-capture}(c)).
 \item \emph{Implicit triggers,} which cost no gate: an unexercised truth-table entry
 (\cref{thm:c-minimum}(d)).
-\item \emph{Circuits with no smaller honest restriction:} the part that would be removed also does the
-honest
+\item \emph{Circuits with no smaller honest restriction:} the part that would be removed also does the honest
 work (\cref{sec:c-minimal}).
 \item \emph{The sum over many triggers.} For $k=20$ and $s_D=1000$ the bound is $2^{-14.6}$ for the single
-trigger ``a given never-varied input''. Summed over all input-only triggers with $g$ gates it is
-$8\cdot10^{-4}$, $0.0096$, $0.082$, $0.57$ for $g=1,2,3,4$, and it exceeds $1$ at $g=5$.
+trigger ``a given input that is $0$ on the data''. Let $R_g$ be the number of reduced circuits with $g$ gates,
+so that $|\Theta|\le R_g$. Every circuit has one core, so \cref{thm:c-core}(a) gives
+$\sum_{b\le a}R_b\,N_a\,\beta_a(b)=N_a$ for every $a$, which determines the $R_g$. Summed over all triggers
+with $g$ gates the bound is then about $10^{-3}$ for each $g\le5$ ($8.3\cdot10^{-4}$ at $g=1$,
+$1.2\cdot10^{-3}$ at $g=5$). Summed over all $g\le19$, which covers the position test of
+\cref{lem:c-trigger}(a) at every cut, it is at most $0.14$. It exceeds $1$ from $g=28$ on for a single $g$,
+and from $g=25$ on for the sum over all triggers of at most $g$ gates. The bound falls like $1/s_D$. The
+source gives larger figures at this place, $0.0096$, $0.082$, $0.57$ for $g=2,3,4$ and more than $1$ at $g=5$;
+they count all gate lists of $g$ gates where the theorem counts reduced circuits.
 \end{enumerate}
-In the smallest case, the target $x_1\wedge x_2$ with a frozen third input, the separably triggered cores
-carry
-$16$ of the $48$ circuits that are off the target at the query $111$ for $s=2$, and $28.5$ per cent of that
-mass for $s=3$ (computed by a referee of the source). A second bound is at the level of descriptions, with
-dead gates included, and sums over all triggers and payloads of its class. The following is proved in the
-file
+In the smallest case, the target $x_1\wedge x_2$ with a third input frozen at $0$, the separably triggered
+cores carry $16$ of the $48$ circuits that are off the target at the query $111$ for $s=2$, where the frozen
+input is the only possible trigger. For $s=3$ they carry $8512$ of $29\,824$, which is $28.5$ per cent; $8128$
+of these are triggered by the frozen input and the others by a one-gate trigger (computed by a referee of the
+source and counted again for this section). A second bound is at the level of descriptions, with dead gates
+included, and sums over all triggers and payloads of its class. The following is proved in the file
 \texttt{research/circuits-final.md} of the repository (Proposition~13 there); we state it without proof.
 
 \begin{proposition}[Small self-contained gadgets around a large explanation]\label{prop:c-gadget}
-Mixture prior with (A1). Let $E\in\cG_{k,\sigma}$. A \emph{gadget over $E$} with $a$ gates is a list
-$\gamma$
+Mixture prior with (A1). Let $E\in\cG_{k,\sigma}$. A \emph{gadget over $E$} with $a$ gates is a list $\gamma$
 of gates whose pointers go to input wires, to gates of $E$, or to earlier gates of the gadget. A circuit in
-$\cG_{k,\sigma+a}$ \emph{realises} $(E,\gamma)$ if its gates split into $\sigma$ positions carrying the
-gates of
-$E$ in order and $a$ positions carrying those of $\gamma$ in order, with the pointers translated. A gadget
-is
-\emph{self-contained} if its gates point only to input wires, to the output wire of $E$, and to earlier
-gates
-of the gadget.
+$\cG_{k,\sigma+a}$ \emph{realises} $(E,\gamma)$ if its gates split into $\sigma$ positions carrying the gates
+of $E$ in order and $a$ positions carrying those of $\gamma$ in order, with the pointers translated. A gadget
+is \emph{self-contained} if its gates point only to input wires, to the output wire of $E$, and to earlier
+gates of the gadget.
 \begin{enumerate}[label=(\alph*),leftmargin=2em,itemsep=2pt,topsep=2pt]
 \item $q(\text{realisations of
 }(E,\gamma))\le\binom{\sigma+a}{a}\varrho(\sigma,a)\,(N_\sigma/N_{\sigma+a})\,q(E)
 \le\frac1{a!}\bigl(\frac{\sigma+a}{16(k+\sigma)^2}\bigr)^aq(E)$.
 \item If $k+\sigma\ge4(k+A)^2$, the set $\mathrm{Wr}_A(E)$ of circuits that realise $(E,\gamma)$ for some
 self-contained $\gamma$ with at most $A$ gates has
-$q(\mathrm{Wr}_A(E))\le\sum_{a=1}^{A}\frac{2^{-a}}{a!}\,q(E)<0.65\,q(E)$. Hence, for data $D$, the circuits
-in
+$q(\mathrm{Wr}_A(E))\le\sum_{a=1}^{A}\frac{2^{-a}}{a!}\,q(E)<0.65\,q(E)$. Hence, for data $D$, the circuits in
 $\bigcup_E\mathrm{Wr}_A(E)$ over the fitting $E$ with $k+|E|\ge4(k+A)^2$ have posterior share at most $0.65$
 times the share of those $E$.
 \end{enumerate}
 \end{proposition}
 
-The hypothesis is strong: for $k=20$ it needs $\sigma\ge1744$ for $A=1$ and $\sigma\ge15\,856$ for $A=43$,
-which covers blocks of up to $16$ bits at the worst position. Compare \cref{prop:honest}. There one seeker
-is
-bounded by its twin and seekers add. Here the comparison is with the explanation itself, and the bound is on
-a
-class. The restriction is free of the trigger and need not be true: both bounds compare wrappers with what
-they wrap and say nothing about how the mass of the explanations divides between the world's continuation
-and
-others. Neither bound contains the rarity or the stakes of the uses.
+The hypothesis is strong: for $k=20$ it needs $\sigma\ge1744$ for $A=1$ and $\sigma\ge12\,080$ for $A=35$,
+which covers blocks of up to $16$ bits at the worst position ($19$ gates for the test, $13$ for the payload
+and $3$ for the selector). The constant is not small either: the bound is $0.65$ times a share that may be
+close to $1$. Compare \cref{prop:honest}. There one seeker is bounded by its twin and seekers add. Here the
+comparison is with the explanation itself, and the bound is on a class. The restriction is free of the trigger
+and need not be true: both bounds compare wrappers with what they wrap and say nothing about how the mass of
+the explanations divides between the world's continuation and others. Neither bound contains the rarity or the
+stakes of the uses.
 
-\subsection{No refund for search; computation is paid for in description}
+\subsection{No refund for a single description; computation is paid for in description}
 
-In the program toy a seeker is a word $v$. Its programs $v\omega$ share the cost $|v|$, the rest of the
-input
+In the program toy a seeker is a word $v$. Its programs $v\omega$ share the cost $|v|$, the rest of the input
 selects the target, and the search refunds the $\log_2(1/H_G)$ bits by which uses are rare
-(\cref{thm:search}(b)). The counterpart of $v$ is a \emph{seeded circuit}: a circuit $S$ with $k+r$ inputs,
-the
-last $r$ of which are fair random bits, the seed $\omega\in\B^r$. It lies in $\cG_{k+r,s}$ and has weight
-$q(S)=w_{r,s}/N^{(k+r)}_s$, where $N^{(k+r)}_s$ is $N_s$ with $k+r$ in place of $k$, $\sum_{r,s}w_{r,s}=1$
-and
-$w_s=w_{0,s}$. Assumption (A2) is that $w_{r,s}\le w_s$. Part (i) of the following is proved in the file
+(\cref{thm:search}(b)). One counterpart of $v$ is a \emph{seeded circuit}: a circuit $S$ with $k+r$ inputs,
+the last $r$ of which are fair random bits, the seed $\omega\in\B^r$. It lies in $\cG_{k+r,s}$, and $S_\omega$
+is the function of the first $k$ inputs that it computes when the seed is $\omega$.
+
+In this subsection only, the mixture prior is extended to seeded formats. There are weights $w_{r,s}\ge0$ with
+$\sum_{r,s}w_{r,s}=1$, a seeded circuit $S\in\cG_{k+r,s}$ has weight $q(S)=w_{r,s}/N^{(k+r)}_s$, where
+$N^{(k+r)}_s$ is $N_s$ with $k+r$ in place of $k$, and $w_s$ stands for $w_{0,s}$, so that $\sum_sw_s\le1$. As
+before $w_s>0$ exactly for $1\le s\le s_{\max}$, and (A1) refers to the $w_s$. The mixture is
+\[
+\xi(x)=\sum_{r,s}\ \sum_{S\in\cG_{k+r,s}}q(S)\,\Pr_\omega\bigl[\,x\pre\ctt(S_\omega)\,\bigr],
+\]
+and $\pi_m(y\mid x)=\xi(xy)/\xi(x)$. Assumption (A2) is that $w_{r,s}\le w_s$ for all $r$ and $s$: a seeded
+format gets no more weight than the unseeded format of the same size. The results of the other subsections are
+for the prior on unseeded circuits with $\sum_sw_s=1$. Parts (c) to (f) below remain true with the mixture
+over unseeded circuits alone in place of $\xi$: in their proofs $\xi$ cancels or enters through a lower bound
+by the weight of one unseeded circuit. Part (i) of the following is proved in the file
 \texttt{research/circuits-final.md} of the repository (Proposition~16 there); we state it without proof.
 
 \begin{theorem}[Seeds, instances, universal circuits]\label{thm:c-refund}
 \begin{enumerate}[label=(\alph*),leftmargin=2em,itemsep=2pt,topsep=2pt]
-\item \emph{Reading.} A circuit with $s$ gates depends on at most $s+1$ of its inputs, and at most $2s$
-inputs
-are pointed to by any gate.
-\item \emph{Hardwiring.} For every seeded circuit $S\in\cG_{k+r,s}$ and every seed $\omega$ there is a
-circuit
-$S_\omega\in\cG_{k,s}$, with the same number of gates, such that $S_\omega(t)=S(t,\omega)$ for all $t$. As a
-description it depends on $\omega$ only through the seed bits that some gate points to.
-\item \emph{The average gain is at most the base rate.} Let $G$ be a test with
+\item \emph{Reading.} A circuit with $s$ gates depends on at most $s+1$ of its inputs, and at most $2s$ of its
+inputs are pointed to at all.
+\item \emph{Hardwiring.} For every seeded circuit $S\in\cG_{k+r,s}$ and every seed $\omega$ the function
+$S_\omega$ is computed by a circuit in $\cG_{k,s}$, with the same number of gates, which we also call
+$S_\omega$. As a description it depends on $\omega$ only through the seed bits that some gate points to.
+\item \emph{The average share is at most the prior mass over the base rate.} Let $G$ be a test with
 $H_G=\sum_{x\text{ first hit}}\xi(x)>0$, and $\mathcal F$ a set of circuits with share
 $\mathrm{sh}_{\mathcal F}(x)=q\{\Gamma\in\mathcal F:x\pre\ctt(\Gamma)\}/\xi(x)$. Then
 $\sum_x\frac{\xi(x)}{H_G}\mathrm{sh}_{\mathcal F}(x)\le q(\mathcal F)/H_G$. One unseeded circuit has a
-positive
-share at no more than one first hit.
+positive share at no more than one first hit.
 \item \emph{One seeded description, $N$ targets.} Let $S$ have $s\le s_{\max}$ gates, let $x_1,\dots,x_N$ be
 pairwise incomparable nonempty strings and $\varpi_i=\Pr_\omega[x_i\pre\ctt(S_\omega)]>0$. Then
-$\sum_i\varpi_i\le1$, $N\le2^{\min(r,s+1)}$, and $\csize(x_i)\le s$ for every $i$. Under (A2) the share of
-$S$
+$\sum_i\varpi_i\le1$, $N\le2^{\min(r,s+1)}$, and $\csize(x_i)\le s$ for every $i$. Under (A2) the share of $S$
 at $x_i$ satisfies $q(S)\varpi_i/\xi(x_i)\le\varpi_i\,N_s/N^{(k+r)}_s\le\varpi_i$. So its shares sum to at
-most
-$1$ over the targets, the least is at most $1/N$, and it holds more than half of the posterior at no more
+most $1$ over the targets, the least is at most $1/N$, and it holds more than half of the posterior at no more
 than one of them.
 \item \emph{All instances of one template.} Let $\mathcal F_S=\{S_\omega\}_\omega\subseteq\cG_{k,s}$. Then
-$|\mathcal F_S|\le2^{\min(r,2s)}$. If $W_i$ is a circuit of size at most $\sigma\le s$ that prints $x_i$,
-then
+$|\mathcal F_S|\le2^{\min(r,2s)}$. If $W_i$ is a circuit of size at most $\sigma\le s$ that prints $x_i$, then
 under (A1)
 \[
 \sum_{i=1}^N\frac{q\{\Gamma\in\mathcal F_S:\ x_i\pre\ctt(\Gamma)\}}{q(W_i)}\ \le\
@@ -645,27 +621,24 @@ under (A1)
 2^{\,2\sigma-(s-\sigma)(2+2\log_2(k+\sigma))},
 \]
 which is at most $1$ as soon as $s-\sigma\ge\sigma/(1+\log_2(k+\sigma))$.
-\item \emph{One description against the users' descriptions.} Let $(W_i,x_i)$, $i\le N$, be uses with
-pairwise
+\item \emph{One description against the users' descriptions.} Let $(W_i,x_i)$, $i\le N$, be uses with pairwise
 incomparable contexts and worlds of size at most $\sigma$, and assume (A1) and (A2). If a seeded circuit $S$
-with $s$ gates outweighs the user at every one of them, $q(S)\varpi_i>q(W_i)$ for all $i$, then $s$ is
-smaller
-than the size of every $W_i$, $\ w_s/N_s>N\,w_\sigma/N_\sigma$, and $\csize(x_i)\le s$ for all $i$. If every
-$W_i$ is a smallest circuit for its own context, then $\sum_iq(S)\varpi_i/q(W_i)\le1$ for every seeded $S$.
+with $s\le s_{\max}$ gates outweighs the user at every one of them, $q(S)\varpi_i>q(W_i)$ for all $i$, then
+$s$ is smaller than the size of every $W_i$, $\ w_s/N_s>N\,w_\sigma/N_\sigma$, and $\csize(x_i)\le s$ for all
+$i$. If every $W_i$ is a smallest circuit for its own context, then $\sum_iq(S)\varpi_i/q(W_i)\le1$ for every
+seeded $S$.
 \item \emph{Computation is paid for in description.} A circuit in $\cG_{k,s}$ has weight
-$w_s/N_s\le w_s(16k^2)^{-s}$ under a mixture prior, whatever it computes. Under every prior of the family
-the
-circuits that share a core of $a$ gates have total mass
-$\beta(a)\le\frac1{16k^2}(16(k-1))^{-(a-1)}/(a-1)!$, and a core outweighs another core only if it has fewer
-gates. If some wire of $\Gamma$ computes a function $\phi$ on a set of inputs, $\Gamma$ has at least as many
-gates as the smallest circuit that computes $\phi$ on that set. Every circuit, seeded or not, of which some
-instance prints $u$ has at least $\csize(u)$ gates.
+$w_s/N_s\le w_s(16k^2)^{-s}$ under a mixture prior, whatever it computes. Under every prior of the family the
+circuits that share a core of $a$ gates have total mass $\beta(a)\le\frac1{16k^2}(16(k-1))^{-(a-1)}/(a-1)!$,
+and a core outweighs another core only if it has fewer gates. If some wire of $\Gamma$ computes a function
+$\phi$ on a set of inputs, $\Gamma$ has at least as many gates as the smallest circuit that computes $\phi$ on
+that set. Every circuit, seeded or not, of which some instance prints $u$ has at least $\csize(u)$ gates.
 \item \emph{Reach, whatever is inside.} If $S$ is any seeded circuit with
-$\Pr_\omega[x\,y_x\pre\ctt(S_\omega)]\ge Q(x)$, then $\pi_m(y_x\mid x)\ge q(S)Q(x)/\xi(x)$.
+$\Pr_\omega[x\,y_x\pre\ctt(S_\omega)]\ge Q(x)$, then $\pi_m(y_x\mid x)\ge q(S)Q(x)/\xi(x)$. Under (A2) the
+same holds with the mixture over unseeded circuits alone in place of $\xi$.
 \item \emph{Universal circuits.} Call a seeded circuit with $s$ gates \emph{universal for size $\sigma$} if
 every $W\in\cG_{k,\sigma}$ equals one of its instances as a function. There is one with at most
-$\sigma\,(12(k+\sigma)-3)$ gates. Every one has $s>(\sigma+1)/2$ whenever $\sigma+3\le2^k$. For
-$\sigma\ge68$
+$\sigma\,(12(k+\sigma)-3)$ gates. Every one has $s>(\sigma+1)/2$ whenever $\sigma+3\le2^k$. For $\sigma\ge68$
 let $j(\sigma)\ge4$ be the largest integer with $17\cdot2^j\le\sigma j$; if $k\ge j(\sigma)$, then
 $s\ge2^{j(\sigma)}-1>\sigma(\log_2\sigma-2)/34-1$, and in particular $s>\sigma$ for every $\sigma\ge2^{33}$.
 \end{enumerate}
@@ -676,121 +649,125 @@ other than the output is pointed to by a gate of the cone; so at most $c+1$ poin
 through the gates in order. If $a_i$ points to a seed bit with value $c$, replace $\tau_i$ by
 $\tau_i'(u,v)=\tau_i(c,v)$ and let $a_i$ point to wire $1$; likewise for $b_i$; renumber the other pointers.
 Every gate computes the same value as before. (c) First hits are pairwise incomparable, so the events are
-disjoint. (d) The events are disjoint. Two seeds that agree on the seed bits the output depends on give the
-same function, by (a) there are at most $s+1$ such bits, and incomparable strings need different functions.
-The sizes are bounded by (b). Take $\omega_i$ with $x_i\pre\ctt(S_{\omega_i})$. The unseeded circuit
-$S_{\omega_i}$ prints $x_i$, so $\xi(x_i)\ge w_s/N_s$, while $q(S)\le w_s/N^{(k+r)}_s$ by (A2). (e) By (b)
-the
-description $S_\omega$ depends on at most $\min(r,2s)$ seed bits. Each member has weight $w_s/N_s$, the sets
-in
-the numerators are disjoint, $q(W_i)\ge w_\sigma/N_\sigma$ and $w_s\le w_\sigma$ by (A1), and
-$N_s/N_\sigma\ge(16(k+\sigma)^2)^{s-\sigma}$. (f) For each $i$, $w_s/N_s\ge q(S)\ge q(S)\varpi_i>q(W_i)$,
-the
+disjoint; and a circuit has one truth table, which has at most one first hit among its prefixes. (d) The
+events are disjoint. Two seeds that agree on the seed bits the output depends on give the same function, by
+(a) there are at most $s+1$ such bits, and incomparable strings need different functions. The sizes are
+bounded by (b). Take $\omega_i$ with $x_i\pre\ctt(S_{\omega_i})$. The unseeded circuit $S_{\omega_i}$ prints
+$x_i$, so $\xi(x_i)\ge w_s/N_s$, while $q(S)\le w_s/N^{(k+r)}_s$ by (A2). (e) By (b) the description
+$S_\omega$ depends on at most $\min(r,2s)$ seed bits. Each member has weight $w_s/N_s$, the sets in the
+numerators are disjoint, $q(W_i)\ge w_\sigma/N_\sigma$ and $w_s\le w_\sigma$ by (A1), and
+$N_s/N_\sigma\ge(16(k+\sigma)^2)^{s-\sigma}$. (f) For each $i$, $w_s/N_s\ge q(S)\ge q(S)\varpi_i>q(W_i)$, the
 first step by (A2), and the weight is nonincreasing in the size by (A1); so $s$ is below the size of $W_i$.
-Summing, $q(S)\ge q(S)\sum_i\varpi_i>\sum_iq(W_i)\ge N\,w_\sigma/N_\sigma$. The sizes are bounded by (d).
-For
+Summing, $q(S)\ge q(S)\sum_i\varpi_i>\sum_iq(W_i)\ge N\,w_\sigma/N_\sigma$. The sizes are bounded by (d). For
 the last claim, $s\ge\csize(x_i)=|W_i|$ whenever $\varpi_i>0$, so $q(S)\le q(W_i)$ and the sum is at most
 $\sum_i\varpi_i\le1$. (g) $N_s\ge(16k^2)^s$; \cref{thm:c-core}; the cone of that wire is a circuit computing
-$\phi$; and (b). (h) is the definition of $\xi$.
+$\phi$, or the wire is an input, which one gate copies; and (b). (h) The pairs $(S,\omega)$ with
+$x\,y_x\pre\ctt(S_\omega)$ contribute at least $q(S)Q(x)$ to $\xi(x\,y_x)$. For the unseeded mixture, if
+$Q(x)>0$ then some instance of $S$ prints $x\,y_x$; by (A2) it has weight $w_s/N_s\ge q(S)\ge q(S)Q(x)$.
 \end{proof}
 
-\paragraph{What is excluded and what is not.} The average gain of any family is at most the base rate, as
-for
-programs (c). Fixing a seed is free, so a seeded description is outweighed at every target by its own
-hardwired instance (d). Part (d) bounds the share of the seeded description, not of its payload: the
-instance
+\paragraph{What is excluded and what is not.} The average share of any family is at most its prior mass over
+the base rate, so its gain relative to its prior mass is at most $1/H_G$ on average, as for programs (c).
+Under (A2) fixing a seed is free, so a seeded description is outweighed at every target by its own hardwired
+instance (d). Part (d) bounds the share of the seeded description, not of its payload: the instance
 $S_{\omega_i}$ is itself a hypothesis that prints $x_i$ and the same continuation, with weight at least
-$q(S)$.
-One description outweighs a user's description only if it has fewer gates than that user (f). A description
-that can become any world of size $\sigma$ has more than $(\sigma+1)/2$ gates, and more than $\sigma$ for
-large
-$\sigma$, and all instances of a template sufficiently larger than $\sigma$ weigh together less than one
-honest description (e), (i). Valiant's universal circuits have size $O(\sigma\log\sigma)$, within a constant
-factor of the information-theoretic lower bound, as stated in~\cite{bera08}; the constant $1/34$ in (i) is
-poor. Each of these statements is about one description, or about the instances of one template. None is the
-negation of \cref{thm:search}(b) for arbitrary sets of circuits. No construction is known whose share at
-every
+$q(S)$. So (d) limits what one description earns by being shared among many targets. It does not lower the
+probability that the block is returned. Under (A1) and (A2) one description outweighs a user's description
+only if it has fewer gates than that user (f). A description that can become any world of size $\sigma$ has
+more than $(\sigma+1)/2$ gates when $\sigma+3\le2^k$, and more than $\sigma$ when $\sigma\ge2^{33}$ and
+$k\ge j(\sigma)$ (i). Under (A1) all instances of a template with at least
+$\sigma\,(1+1/(1+\log_2(k+\sigma)))$ gates weigh together at most one description of $\sigma$ gates (e).
+
+The assumptions matter. Without (A2) nothing prevents a format from giving a seeded circuit more weight than
+its instance, so ``a seed gains nothing'' is a statement about how the format weighs seeds. Without (A1) a
+larger description can outweigh a smaller one. Some condition on $k$ is needed in (i): a table of $2^k$ seed
+bits read through a tree of $2^k-1$ selectors has $3(2^k-1)$ gates and is universal for every size, and this
+is fewer than $(\sigma+1)/2$ gates once $\sigma\ge6\cdot2^k$. Valiant's universal circuits have size
+$O(\sigma\log\sigma)$, within a constant factor of the information-theoretic lower bound, as stated
+in~\cite{bera08}; the constant $1/34$ in (i) is poor.
+
+Part (i) concerns a template that can become every world of $\sigma$ gates. A seeker needs to become only the
+users, and for a structured class of users (i) says nothing. The seeded circuit is also not the only
+counterpart of the word $v$. The circuits that begin with a fixed gate list $V\in\cG_{k,s}$ are another: there
+are $N_{s+j}/N_s$ of them with $s+j$ gates, so under a mixture prior their mass is $\sum_{j\ge0}w_{s+j}/N_s$,
+which is $2q(V)$ under the length prior, as $2^{-|v|}$ is the mass of the programs beginning with $v$. Gates
+read only earlier wires, so $V$ cannot interpret what follows it. Of the theorem only (c) and (g) apply to
+this family.
+
+Each statement of the theorem is about one description, or about the instances of one template. None is the
+negation of \cref{thm:search}(b) for arbitrary sets of circuits. No construction is known whose share at every
 use of a class grows as the class gets rarer, and none is excluded. The refund exists in form: fixing $c_0$
 seed bits of a universal circuit costs no gate and multiplies the seed probability of every world consistent
-with them by $2^{c_0}$. By (d) it buys nothing, because the instance was already the heavier hypothesis.
+with them by $2^{c_0}$. By (d) it buys nothing under (A2), because the instance was already the heavier
+hypothesis.
 
 \paragraph{Simple worlds with long histories.} In \cref{sec:critical} a word $p$ may describe a simple world
 with a cheap readout whose inhabitants work out which uses are worth having. Its weight $2^{-|p|}$ does not
-depend on its running time, the honest twin does not apply, and only a time bound excludes it. Part (h) is
-the
-same reach statement for circuits. For plain circuits the sense in which computation must be paid for in
-description is exactly (g): per description every gate costs more than four bits, per core every active gate
-costs at least $\log_2(16a(k-1))$ bits, and a circuit has at least the circuit complexity of every function
-its wires compute. This is the definition of the class at work, assumption (i), and no argument about
-agents.
-It is the extreme form of a prior that penalises computation. For a string $x$ read as a truth table,
-circuit
-size and the time-bounded complexity $\mathrm{KT}$, which adds description length and running time per bit,
-are polynomially related: $\mathrm{SIZE}(x)=O(\mathrm{KT}(x)\log\mathrm{KT}(x))$ and
-$\mathrm{KT}(x)=O(\mathrm{SIZE}^2(x)+\log|x|)$~\cite{allender02}. A speed prior weighs a program $p$ that
-takes
-$t$ steps by $2^{-|p|}/t$~\cite{filan16,schmidhuber00}. So the circuit toy is far harsher on computation
-than a
-speed prior. Part (g) does not show that the behaviour ``predict the context, then deviate as inhabitants
-would choose'' is expensive. It bounds circuits, not behaviours. If the decision is ``deviate where this
-flag
-is set'', it costs one gate, whoever would have chosen it. A literal simulation is expensive only if it has
-no
-shortcut as a circuit, which is an assumption.
+depend on its running time, the honest twin does not apply, and a time bound is the only thing shown to
+exclude it. Part (h) is the same reach statement for circuits. For plain circuits the sense in which
+computation must be paid for in description is exactly (g): per description every gate costs more than four
+bits, per core every active gate costs at least $\log_2(16a(k-1))$ bits, and a circuit has at least the
+circuit complexity of every function its wires compute. This is the definition of the class at work,
+assumption (i), and no argument about agents. It is the extreme form of a prior that penalises computation.
+For a string $x$ read as a truth table, circuit size and the time-bounded complexity $\mathrm{KT}$, which adds
+description length and running time per bit, are polynomially related:
+$\mathrm{SIZE}(x)=O(\mathrm{KT}(x)\log\mathrm{KT}(x))$ and
+$\mathrm{KT}(x)=O(\mathrm{SIZE}^2(x)+\log|x|)$~\cite{allender02}. The speed prior $S_{Kt}$ of~\cite{filan16}
+weighs a program $p$ that takes $t$ steps by $2^{-|p|}/t$. Schmidhuber's speed prior~\cite{schmidhuber00} is a
+sum over the phases of a search and, as stated in~\cite[Proposition~3]{filan16}, weighs $p$ by $2^{-2|p|}/t$
+up to a constant factor. We argue from this, without a theorem, that the circuit toy is far harsher on
+computation than a speed prior: there a computation of $t$ steps costs about $\log_2t$ bits, and here every
+gate that is evaluated costs more than four. Part (g) does not show that the behaviour ``predict the context,
+then deviate as inhabitants would choose'' is expensive. It bounds circuits, not behaviours. If the decision
+is ``deviate where this flag is set'', it costs one gate, whoever would have chosen it. A literal simulation
+is expensive only if it has no shortcut as a circuit, which is an assumption.
 
 \subsection{Capture, self-reproduction, encoding, stakes}
 
 The following two propositions are proved in the file \texttt{research/circuits-final.md} of the repository
-(Theorems~17 and~18 there, in part; part (d) of the first is computed); we state them without proof.
+(Theorems~17 and~18 there, in part); we state them without proof. Part (d) of the first is computed with
+\texttt{code/circuit\_count.py}.
 
 \begin{proposition}[Capture]\label{thm:c-capture}
-Sequence form. Let $W\in\cG_{k,\sigma}$ be the world, $x$ its context of length $n$ and $d$ its own
-continuation. The odds between two continuations are $\pi_m(y\mid x)/\pi_m(d\mid x)=\xi(xy)/\xi(xd)$.
+Sequence form, with $n+m\le2^k$. Let $W\in\cG_{k,\sigma}$ be the world, $x$ its context of length $n$ and $d$
+its own continuation. The weights in (a) and (c) are those of a mixture prior. The odds between two
+continuations are $\pi_m(y\mid x)/\pi_m(d\mid x)=\xi(xy)/\xi(xd)$.
 \begin{enumerate}[label=(\alph*),leftmargin=2em,itemsep=2pt,topsep=2pt]
 \item \emph{A cheaper computation of the same data.} If a circuit $V$ in the support with $\sigma_V$ gates
 prints $xy$, for instance the cone of a wire of $W$ whose stream begins with $xy$, then
 $\xi(xy)\ge w_{\sigma_V}/N_{\sigma_V}$. Core against core, under every prior of the family: a core of $a_V$
-gates
-outweighs a core of $a_W>a_V$ gates by at least the factor $\prod_{j=a_V}^{a_W-1}16j(k-1)$.
-\item \emph{Most placements are expensive.} If $N$ streams begin with $x$ and continue with pairwise
-different
+gates outweighs a core of $a_W>a_V$ gates by at least the factor $\prod_{j=a_V}^{a_W-1}16j(k-1)$.
+\item \emph{Most placements are expensive.} If $N$ streams begin with $x$ and continue with pairwise different
 blocks $d_i$, then for every $\delta\in(0,1]$ all but at most $\delta N$ of them have
 $\xi(xd_i)<\xi(x)/(\delta N)$.
 \item \emph{A switch read off the world.} If $W$ has a wire that is $0$ on positions $1,\dots,n$ and $1$ on
 positions $n+1,\dots,n+m$, then for every payload circuit $P$ on the index,
-$\xi\bigl(x\,P(n+1)\cdots P(n+m)\bigr)\ge w_{\sigma+|P|+3}/N_{\sigma+|P|+3}$. The position of the use costs
-nothing.
+$\xi\bigl(x\,P(n+1)\cdots P(n+m)\bigr)\ge w_{\sigma+|P|+3}/N_{\sigma+|P|+3}$ if $\sigma+|P|+3\le s_{\max}$.
+The position of the use costs nothing.
 \item \emph{No smaller circuit is needed} (computed). For $k=4$ and the world $b_0\wedge b_1$, a one-gate
 circuit, at the context $000$ the true next bit has share $\frac1{38}$ under $\mu_1$ ($2$ of $76$ fitting
 circuits) and $0.027$ to $0.028$ under $\mu_2,\mu_3,\mu_4$. In the family of \cref{thm:c-minimum}(e) with
 $k=4$, a quarter of the $4608$ minimum-size fitting circuits answer $1$ at each input with three $0$s; for a
-world computed by one of them the share of its own answer there is $\frac14$ under $\mu_3$, and no fitting
-circuit has fewer than three gates.
+world computed by one of those that answer $1$ there, the share of its own answer is $\frac14$ under $\mu_3$,
+and no fitting circuit has fewer than three gates.
 \end{enumerate}
 \end{proposition}
 
 \begin{proposition}[Self-reproduction]\label{thm:c-self}
 \begin{enumerate}[label=(\alph*),leftmargin=2em,itemsep=2pt,topsep=2pt]
-\item \emph{One gate per output bit.} If the block a hypothesis supplies consists of the values of $m$ of
-its
+\item \emph{One gate per output bit.} If the block a hypothesis supplies consists of the values of $m$ of its
 gates at one evaluation, and the code spends at least $4$ bits per gate, its code has at least $4m$ bits: a
-block of $m$ bits holds the code of a circuit with at most $m/4$ gates, and no circuit supplies its own
-code.
+block of $m$ bits holds the code of a circuit with at most $m/4$ gates, and no circuit supplies its own code.
 \item \emph{Index reading, necessary conditions.} For each $n$, at most $2^m$ contexts $x\in\B^n$ have
 $\SR_m(x)\ne\emptyset$. If $y\in\SR_m(x)$, then $\cdec(y)$ has $s'\ge\csize(x)$ gates and
-$m\ge l(s')+1>\csize(x)\,(4+2\lceil\log_2(k+\csize(x))\rceil)$. So $\pi_m(\SR_m(x)\mid x)=0$ at every
-context
+$m\ge l(s')+1>\csize(x)\,(4+2\lceil\log_2(k+\csize(x))\rceil)$. So $\pi_m(\SR_m(x)\mid x)=0$ at every context
 whose smallest circuit has a literal code of $m$ bits or more.
 \item \emph{A circuit can supply a smaller circuit.} For every circuit $\Gamma'$ with $l(|\Gamma'|)<m$ and
-every explanation $E$ of $x$, the wrapper of \cref{thm:c-floor} with the payload $e(\Gamma')10^{*}$ prints
-$x$
+every explanation $E$ of $x$, the wrapper of \cref{thm:c-floor} with the payload $e(\Gamma')10^{*}$ prints $x$
 and then a block that decodes to $\Gamma'$, at the price of $g+\max(1,2^{\lceil\log_2m\rceil}-3)+3$ gates.
-\item \emph{The encoding decides.} Let each member of a finite set emit a string in $\B^N$, and let $e$ be
-an
-injective code of the members; a member is a \emph{quine for $e$} if it emits its own code. There are at
-most
-$2^N$ quines. If $e$ is a prefix code and the prior is $2^{-|e|}$, every quine has weight exactly $2^{-N}$.
-If
+\item \emph{The encoding decides.} Let each member of a finite set emit a string in $\B^N$, and let $e$ be an
+injective code of the members; a member is a \emph{quine for $e$} if it emits its own code. There are at most
+$2^N$ quines. If $e$ is a prefix code and the prior is $2^{-|e|}$, every quine has weight exactly $2^{-N}$. If
 every string of $\B^N$ is emitted by some member, there is a prefix code under which the quines have total
 weight at least $1-2^{-N}$.
 \end{enumerate}
@@ -798,88 +775,106 @@ weight at least $1-2^{-N}$.
 
 Capture survives as ``a cheaper computation of the same data'': the place with a short code of
 \cref{thm:capture} becomes a wire with a small cone, and a switch that the world itself computes makes the
-position of the use free. The harmless reading survives as well. \Cref{thm:c-capture}(d) shows that a
-majority
-off the truth needs no smaller circuit: it arises from the multiplicity of descriptions among circuits of
-the
-same and larger size. A smaller circuit is sufficient when the world's description is most of what prints
-its
-data, a hypothesis that is not known to hold. Self-reproduction is defined only relative to a decoder.
-Whether
-$\SR_m(x)\ne\emptyset$ for some context under the literal code is not proved; the condition in
-\cref{thm:c-self}(b) is harsher than the $c+r+1\le m$ of \cref{thm:quine} by the pointer width.
+position of the use free. The harmless reading survives as well. \Cref{thm:c-capture}(d) shows that a majority
+off the truth needs no smaller circuit: it arises from the multiplicity of descriptions among circuits of the
+same and larger size. A smaller circuit is sufficient when the world's description is most of what prints its
+data, a hypothesis that is not known to hold. Self-reproduction is defined only relative to a decoder. The
+condition in \cref{thm:c-self}(b) is necessary. It is the counterpart of ``a program for $x$ fits into the
+block'', where the $c+r+1\le m$ of \cref{thm:quine} is sufficient. No sufficient condition is proved here.
 
-\paragraph{Encoding and basis.} As for universal machines (\cref{thm:machine}), an encoding or a basis can
-be
-built to make either answer true (source, Theorem~19). The prior $\frac12(\text{image of }q\text{ under }
-E\mapsto\mathrm{Tw}[E])+2^{-j-1}q$, for a wrapper with the position test at $n$ and a block $y$, lengthens
-every
-code by at most $j+1$ bits and has $\pi_m(y\mid x)\ge1/(1+2^{-j})$ at every context of length $n$ with
-$\xi(x)>0$. One added gate type of fan-in $k+1$ that computes the payload gives a one-gate wrapper of weight
-$\varrho(\sigma,1)\frac1{17}(k+\sigma)^{-(k+1)}$ times that of the explanation, whatever $m$ is. Between the
-full binary basis and $\{\wedge,\vee,\neg\}$ sizes change by a factor of at most $4$, so weights are raised
-to
-a power, and ratios of weights are not preserved even up to a constant factor. No bounded basis makes most
-payloads cheap: for gates of fan-in at most $d$ from a basis $B$, all but a fraction $2^{-j}$ of the blocks
-$y\in\B^m$ need a gadget of $a$ gates over $E$ with $a\log_2(|B|(k+\sigma+a)^d)\ge m-j$. Results that use
-the
-full basis with uniform truth tables and fail or weaken otherwise are \cref{thm:c-readings}(a),
-\cref{thm:c-minimum} and the free hardwiring of \cref{thm:c-refund}(b).
+The source leaves open whether $\SR_m(x)\ne\emptyset$ for some context under the literal code. A one-gate
+example settles this. It is not in the source; a referee of this section found it by hand, and we verify it
+here. Let $k=21$, $n=1019$, $m=18$ and $x=(01)^{509}0$, and let $\Gamma'$ be the one-gate circuit
+$b_0\oplus b_{10}$, with its pointers on the wires $1$ and $11$. A pointer field has $\lceil\log_222\rceil=5$
+bits and $l(1)=17$. Let
+\[
+y=101\ \,0110\ \,10101\ \,01010\ \,1 .
+\]
+Its parts are $\bar e(1)=101$; the table $0110$ of $\oplus$; the field with value $21$, read as wire
+$1+(21\bmod21)=1$; the field with value $10$, read as wire $11$; and the end mark. Both fields are
+palindromes, so the order of the bits in a field plays no role. Hence $\cdec(y)=\Gamma'$. The bit at position
+$t$ is $b_0\oplus b_{10}$ of $t-1$. For $t-1\le1023$ it is $b_0$, which gives $x$ on positions $1$ to $1019$
+and $10101$ on the next five. For $t-1=1024,\dots,1036$ it is $1-b_0$, which gives $1010101010101$. These $18$
+bits are $y$. So $xy\pre\ctt(\cdec(y))$ and $y\in\SR_{18}(x)$, with equality $m=l(1)+1$ in
+\cref{thm:c-self}(b). The share is not negligible here. A one-gate circuit prints $x$ exactly if it computes
+$b_0$ on the positions $1$ to $1019$, where $b_0,\dots,b_9$ vary and $b_{10},\dots,b_{20}$ are $0$. There are
+$4+2\cdot9+8\cdot11=110$ such circuits, counted as for the exception of \cref{thm:c-minimum}, and two of them
+print $xy$: the gate $\oplus$ on the wires $1$ and $11$ in its two pointer orders. So under $\mu_1$ the block
+$y$ has share $\frac1{55}$ at $x$. Whether $\SR_m(x)\ne\emptyset$ at a context whose smallest circuit is large
+is not proved, and no bound on $\pi_m(\SR_m(x)\mid x)$ is proved where it is not zero.
+
+\paragraph{Encoding and basis.} As for universal machines (\cref{thm:machine}), an encoding or a basis can be
+built to make either answer true (source, Theorem~19). The prior
+$\frac12(\text{image of }q\text{ under } E\mapsto\mathrm{Tw}[E])+2^{-j-1}q$, for a wrapper with the position
+test at $n$ and a block $y$, lengthens every code by at most $j+1$ bits and has
+$\pi_m(y\mid x)\ge1/(1+2^{-j})$ at every context of length $n$ with $\xi(x)>0$. Add one gate type of fan-in
+$k+1$ that computes the payload, and let the $17$ gate types be equally likely and all pointers uniform. Then
+there is a one-gate wrapper of weight $\varrho(\sigma,1)\frac1{17}(k+\sigma)^{-(k+1)}$ times that of the
+explanation, whatever $m$ is. Between the full binary basis and $\{\wedge,\vee,\neg\}$ sizes change by a
+factor of at most $4$, so weights are raised to a power, and ratios of weights are not preserved even up to a
+constant factor. No bounded basis makes most payloads cheap: for gates of fan-in at most $d$ from a basis $B$,
+all but a fraction $2^{-j}$ of the blocks $y\in\B^m$ need a gadget of $a$ gates over $E$ with
+$a\log_2(|B|(k+\sigma+a)^d)\ge m-j$. Results that use the full basis with uniform truth tables and fail or
+weaken otherwise are \cref{thm:c-readings}(a), \cref{thm:c-minimum} and the free hardwiring of
+\cref{thm:c-refund}(b).
 
 \paragraph{Concentration on high-stake uses.} \Cref{sec:stakes} asks whether seekers that concentrate on the
 uses where most is at stake win there. In the program toy a seeker for a rare class is repaid for the rarity
-and can compute the stakes by simulation at no cost in bits. For circuits the source proves the following
-(Theorem~20 there). Let $\mathcal K$ be a set of queries, for instance the high-stake ones. If the inputs of
-the data are $n$ independent draws from a distribution under which $\mathcal K$ has probability $\rho$, and
-$\mu(f^*)>0$, the expected deviation mass at a further draw conditioned on $\mathcal K$ is at most
-$\varepsilon_n/\rho$ with $\varepsilon_n=(\ln(1/\mu(f^*))+\ln n+1)/n$; this is void for
-$\rho\le\varepsilon_n$.
-The data contain no element of $\mathcal K$ with probability at least $(1-\rho)^n$. On that event, if
-$\mathcal K$ is recognised by a circuit of $g$ gates on the inputs, the circuits that give a chosen answer
-on
-all of $\mathcal K$ have posterior share at least $(1-\epsilon)(32(k+s_0+g)^2)^{-(g+1)}$ under the length
-prior, whatever $n$ (\cref{thm:c-floor}(b)), and the cores separably triggered on $\mathcal K$ have share at
-most the bound of \cref{thm:c-ceiling}(c). Neither bound contains $\rho$ or the stakes. A set of uses with
-no
+and can compute the stakes by simulation at no cost in bits beyond the description of its aim
+(\cref{prop:aim-cost}). For circuits the source proves the following (Theorem~20 there). Let $\mathcal K$ be a
+set of queries, for instance the high-stake ones. If the inputs of the data are $n$ independent draws from a
+distribution under which $\mathcal K$ has probability $\rho$, and $\mu(f^*)>0$, the expected deviation mass at
+a further draw conditioned on $\mathcal K$ is at most $\varepsilon_n/\rho$ with
+$\varepsilon_n=(\ln(1/\mu(f^*))+\ln n+1)/n$; this is void for $\rho\le\varepsilon_n$. The data contain no
+element of $\mathcal K$ with probability $(1-\rho)^n$. On that event, if $\mathcal K$ is recognised by a
+circuit of $g$ gates on the inputs, the circuits that give a chosen answer on all of $\mathcal K$ have
+posterior share at least $(1-\epsilon)(32(k+s_0+g)^2)^{-(g+1)}$ under the length prior, for every
+$\epsilon\in(0,1)$ and $s_0=\lceil\ell_D+\log_2(1/\epsilon)\rceil$ (\cref{thm:c-floor}(b)). Here
+$\ell_D\le\log_2(1/\mu(f^*))$, because the circuits that compute $f^*$ fit $D$, so this floor does not fall as
+$n$ grows. On the same event the cores separably triggered by a set $\Theta$ of reduced circuits of $g$ gates
+that recognise $\mathcal K$ have share at most $12|\Theta|/(g!\,s_D(16(k-1))^{g+1})$
+(\cref{thm:c-ceiling}(c)). Neither of these two bounds contains $\rho$ or the stakes. A set of uses with no
 common feature is dear: for all but a fraction $\delta$ of the $N$-element subsets of a set $M$ of inputs
 outside $I$, every fitting circuit that differs from $f^*$ on $M$ exactly on that subset has more than $s$
-gates, for every $s$ with $2(16(k+s-1)^2)^s\le\delta\binom{|M|}{N}$. So a hypothesis can single out
-high-stake
+gates, for every $s$ with $2(16(k+s-1)^2)^s\le\delta\binom{|M|}{N}$. So a hypothesis can single out high-stake
 uses to the extent that ``high stake, and unlike the data'' is computable from its input by few gates. The
 matching lower bound on the price holds for separable triggers only, so ``exactly to the extent'' is argued.
 The deviations of \cref{thm:c-minimum} are distributed by novelty, not by stakes; they reach high-stake
-queries more often than others if those are the novel ones, which is often what makes a use critical.
+queries more often than others if those are the novel ones. Whether novelty is what makes a use critical is
+not a question about the toy.
 
-\subsection{Recurrence and weight sharing: the axis back to programs}
+\subsection{Recurrence: the axis back to programs}
 
 Everything above rests on assumption (i): one gate of description is one operation per output. The following
 is proved in the file \texttt{research/circuits-final.md} of the repository (Proposition~21 there); we state
-it without proof.
+it without proof. Part (a) is given in the form that the proof there establishes. The source words it as
+``$\xi^T_{\mathrm{rec}}$ is a bounded mixture in the sense of \cref{def:mixture}'', which is true only with
+time counted in applications of the cell and without the normalisation $\xi(\eps)=1$.
 
 \begin{proposition}[Recurrence: the description paid once]\label{prop:c-recurrence}
-Fix a state width $w\ge2$ and a program region of $L\le w-2$ bits. A \emph{cell} is a map
-$F\colon\B^w\to\B^w$
-given by a circuit with $w$ inputs, $s$ gates and $w$ output pointers. State bit $1$ is an emit flag, bit
-$2$
+Fix a state width $w\ge2$ and a program region of $L\le w-2$ bits. A \emph{cell} is a map $F\colon\B^w\to\B^w$
+given by a circuit with $w$ inputs, $s$ gates and $w$ output pointers. State bit $1$ is an emit flag, bit $2$
 an emit value, bits $3,\dots,L+2$ the program region, the rest a work region. A run starts at
-$h_0=(0,0,p,0\cdots0)$ with $p\in\B^L$ uniform, $h_{i+1}=F(h_i)$, and at every step $i\ge1$ at which the
-flag of
-$h_i$ is $1$ the value bit is appended to the output; $t(F,p,n)$ is the step at which the $n$-th bit
-appears.
-With weights $q_{\mathrm{rec}}(F)$ that depend on $F$ only and sum to at most $1$, and a schedule $T$, let
+$h_0=(0,0,p,0\cdots0)$ with $p\in\B^L$ uniform, $h_{i+1}=F(h_i)$, and at every step $i\ge1$ at which the flag
+of $h_i$ is $1$ the value bit is appended to the output; $t(F,p,n)$ is the step at which the $n$-th bit
+appears. With weights $q_{\mathrm{rec}}(F)$ that depend on $F$ only and sum to at most $1$, and a schedule
+$T$, let
 \[
-\xi^T_{\mathrm{rec}}(x)=\sum_Fq_{\mathrm{rec}}(F)\Pr_p\bigl[x\pre\out(F,p),\ t(F,p,i)\le T(i)\text{ for
-}i\le|x|\bigr].
+\xi^T_{\mathrm{rec}}(x)=\sum_Fq_{\mathrm{rec}}(F)\,
+\Pr_p\bigl[x\pre\out(F,p),\ t(F,p,i)\le T(i)\text{ for }i\le|x|\bigr].
 \]
 \begin{enumerate}[label=(\alph*),leftmargin=2em,itemsep=2pt,topsep=2pt]
-\item $\xi^T_{\mathrm{rec}}$ is a bounded mixture in the sense of \cref{def:mixture}. \Cref{lem:basic},
-\cref{thm:calibration} (with its event $H_m$, since a run may stop emitting) and \cref{thm:budget} hold for
-it, with $\ell=\log_2(1/q_{\mathrm{rec}}(F))+L$ for a world $(F,p)$.
-\item A cell of $s$ gates performs $s\,T(n)$ gate evaluations before its $n$-th bit and has the same weight
-for every schedule.
+\item With time counted in applications of the cell, the sets of pairs $(F,p)$ that print $x$ on schedule are
+nested along prefixes and disjoint for incomparable strings. So $\xi^T_{\mathrm{rec}}(\eps)\le1$ and
+$\xi^T_{\mathrm{rec}}(x0)+\xi^T_{\mathrm{rec}}(x1)\le\xi^T_{\mathrm{rec}}(x)$, and a world $(F,p)$ that prints
+$x$ on schedule gives $\xi^T_{\mathrm{rec}}(x)\ge2^{-\ell}$ with $\ell=\log_2(1/q_{\mathrm{rec}}(F))+L$.
+\Cref{thm:calibration} (with its event $H_m$, since a run may stop emitting, and for worlds drawn with
+probability proportional to $q_{\mathrm{rec}}(F)2^{-L}$) and \cref{thm:budget} hold for $\xi^T_{\mathrm{rec}}$
+with this $\ell$.
+\item A cell of $s$ gates performs $s\,t(F,p,n)$ gate evaluations up to its $n$-th bit, which is at most
+$s\,T(n)$ on schedule, and it has the same weight for every schedule.
 \item \emph{Bounded machines are contained.} Let $M$ be a deterministic machine whose configurations are the
-strings of $\B^w$, with the same conventions, and $\xi^T_M(x)$ the probability over $p$ that it prints $x$
-on
+strings of $\B^w$, with the same conventions, and $\xi^T_M(x)$ the probability over $p$ that it prints $x$ on
 schedule. Then its step function is computed by a cell $F_M$ with at most $w(2^w-3)$ gates, and
 $\xi^T_{\mathrm{rec}}(x)\ge q_{\mathrm{rec}}(F_M)\,\xi^T_M(x)$ for every $x$ and every schedule $T$.
 \item \emph{Plain circuits are the case of a counter and one step per bit.} For every $\Gamma\in\cG_{k,s}$
@@ -887,94 +882,116 @@ there is a cell with $w=k+2$, $L=0$ and at most $s+2k$ gates that prints $\ctt(\
 \end{enumerate}
 \end{proposition}
 
-The factor in (c) does not depend on $T$, $x$ or the program. It does depend on the space bound: with $w$
-output pointers every cell has weight at most $(w+s)^{-w}$, and the cell of (c) has a very small weight. No
-universal cell of size linear in $w$ is constructed. The rest of this subsection is argued and not proved.
-Take for $M$ the universal machine of the note confined to $w$ bits of state. The constructions of the note
-then return as shares of the part of the posterior that runs through a universal cell, in this order as the
-steps allowed grow. First come the wrapper at a cost independent of the explanation and capture by a shorter
-program, as soon as the schedule covers the honest explanation with the simulation overhead. Then comes
-self-reproduction, when the block is longer than a description and the program region is state. Then comes
-the refund for search, in proportion to the number of tries that fit before the first bit is due. Last come
-the seekers that are not written down, when the first deadline exceeds their start-up. The gaps are these:
-no
-universal cell of moderate size is constructed; the twin, the quine and the searching machine of
-\cref{sec:floor} were not checked again under a space bound; and the format above charges $w\log_2(w+s)$
-bits
-for the output pointers of every cell, so in that format description still pays for space. A published
-statement on the same axis is a preprint~\cite{musat26}, whose proofs we did not check: as stated there, for
-fixed-precision looped networks under a parameter-count prior the induced prior on outputs is the universal
-prior up to a logarithmic factor in the exponent, with a constant-cost bound from below only. Informal
-versions are in~\cite{hubinger19}, as hypotheses: description length favours a learned searcher, a time
-penalty disfavours it, and statefulness weakens the time penalty.
+The factor in (c) does not depend on $T$, $x$ or the program. It does depend on the space bound. There are
+$N^{(w)}_s(w+s)^w$ cells with $s$ gates, where $N^{(w)}_s$ is $N_s$ with $w$ in place of $k$. In the format
+that weighs them equally every cell has weight at most $(w+s)^{-w}$, and the cell of (c), with up to
+$w(2^w-3)$ gates, has a very small weight. No universal cell of size linear in $w$ is constructed. The rest of
+this subsection is argued and not proved. Take for $M$ the universal machine of the note confined to $w$ bits
+of state. The constructions of the note then return as shares of the part of the posterior that runs through a
+universal cell, in this order as the steps allowed grow. First come the wrapper at a cost independent of the
+explanation and capture by a shorter program, as soon as the schedule covers the honest explanation with the
+simulation overhead. Then comes self-reproduction, when the block is longer than a description and the program
+region is state. Then comes the refund for search, in proportion to the number of tries that fit before the
+first bit is due. Last come the seekers that are not written down, when the first deadline exceeds their
+start-up. The gaps are these: no universal cell of moderate size is constructed; the twin, the quine and the
+searching machine of \cref{sec:floor} were not checked again under a space bound; and the format with equal
+weights charges $w\log_2(w+s)$ bits for the output pointers of every cell, so in that format description still
+pays for space. A published statement on the same axis is a preprint~\cite{musat26}, whose proofs we did not
+check: as stated there, for fixed-precision looped networks under a parameter-count prior the induced prior on
+outputs is the universal prior up to a logarithmic factor in the exponent, with a constant-cost bound from
+below only. Informal versions are in~\cite{hubinger19}, as hypotheses: description length favours a learned
+searcher, a time penalty disfavours it, and statefulness weakens the time penalty.
 
 \subsection{Small cases, computed}
 
-All numbers in this subsection are computed: they are exact counts of circuits in the model of
-\cref{def:c-circuit} (\texttt{code/circuit\_count.py}, \texttt{experiments/results/circuits.json}).
-\Cref{tab:circuits-query} is in the query form. The data are all inputs with one further input $v$ frozen at
-$0$, and the query has $v=1$ and all other inputs $1$. \Cref{tab:circuits-seq} is in the sequence form.
+All numbers in this subsection are computed. They are exact counts of circuits in the model of
+\cref{def:c-circuit} under the fixed-size prior $\mu_s$. The code is \texttt{code/circuit\_count.py}, and the
+results are in the file \texttt{experiments/results/circuits.json}. No computation is for the length prior,
+the prior of \cref{thm:c-floor}(d). \Cref{tab:circuits-query} is in the query form. The data are all inputs
+with the last input $v$ frozen at $0$, labelled by the target; $v$ is $x_3$ for $k=3$ and $x_4$ for $k=4$. The
+query has $v=1$ and all other inputs $1$. In the last row the data are those of $x_1\wedge x_2$ and the world
+is $(x_1\wedge x_2)\oplus v$. \Cref{tab:circuits-seq} is in the sequence form.
 
 \begin{table}[ht]\centering\small
 \input{table-circuits-query}
-\caption{Query form, computed. Deviation mass under $\mu_s$ at the query with the frozen input $v$ set to
-$1$
-and all other inputs $1$, for sizes $s$ from the least size $s_D$ of a fitting circuit to $s_D+4$. The data
-are
-all inputs with $v=0$.}\label{tab:circuits-query}
+\caption{Query form, computed. Deviation mass under $\mu_s$ at the query with the frozen input $v$ set to $1$
+and all other inputs $1$, for sizes $s$ from the least size $s_D$ of a fitting circuit to $s_D+4$; for $k=4$
+the count stops at $s=4$. The data are all inputs with $v=0$.}\label{tab:circuits-query}
 \end{table}
 
 \begin{table}[ht]\centering\small
 \input{table-circuits-seq}
-\caption{Sequence form with $k=4$, computed. Posterior mass off the world's own next bit under $\mu_s$ at
-the
-cut $n$, for $s=2,3,4$.}\label{tab:circuits-seq}
+\caption{Sequence form with $k=4$, computed. Posterior mass off the world's own next bit under $\mu_s$ at the
+cut $n$, for $s=2,3,4$. The least size of a circuit that prints the context is $2$ in the second row and $1$
+in the others. At $s=1$ the values are $1$ in the first row, $0$ in the third and fourth, $0.270$ in the fifth
+and $0.320$ in the sixth (results file).}\label{tab:circuits-seq}
 \end{table}
 
-The deviation at a query that differs from the data in a never-varied bit is $0$ at the least size outside
-the
-exception of \cref{thm:c-minimum}. It is between $2$ and $32$ per cent in every case computed with slack, or
-in
-the exception, when the world ignores the bit; the largest value, $0.32$, is the constant world at $s=1$,
-$n=8$. It is $0.81$ to $1$ when the world depends on the bit. With slack it grows for the targets that
-depend
-on two or more inputs and falls for the one-input target and for the constant. One given triggered variant
-of
-$x_1\wedge x_2$ (the target $\oplus\,v$, $\vee\,v$, $\wedge\,\neg v$) has share $0.0255$, $0.0310$, $0.1013$
-at
-$s=5$. In the AND family of \cref{thm:c-minimum}(e) the deviation mass at inputs with two $0$s is exactly
-$\frac12$ at the least size for $k=3,4$, and $0.468$, $0.446$, $0.429$ for $s=3,4,5$ at $k=3$; only
-$\frac14$
-($k=3$) and $\frac18$ ($k=4$) of the minimum circuits compute the target everywhere.
+Take first the worlds that ignore the never-varied bit. At a query that differs from the data in that bit the
+deviation is $0$ at the least size outside the exception of \cref{thm:c-minimum}. In the exception it is $27$
+to $32$ per cent at the least size; the largest value, $0.32$, is the constant world at $s=1$, $n=8$. With
+slack, that is for $s$ above the least size, it is between $1.9$ and $29$ per cent in every case computed. The
+smallest value is $\frac1{53}$, for $b_0\wedge b_1$ at $n=4$ and $s=2$, and the largest is $0.289$, for the
+constant world at $n=8$ and $s=2$. With slack it grows for the worlds that depend on two or more inputs and
+falls for the one-input world and for the constant.
+
+When the world depends on the bit, the deviation is $1$ at the least size and $0.81$ to $0.98$ with slack, and
+it falls as $s$ grows. These rows are not a second measurement. The last row of \cref{tab:circuits-query} is
+one minus its first row, and the first row of \cref{tab:circuits-seq} is one minus its fourth, because the
+data are the same and the answers opposite. The lower end $0.81$ is where the computation stopped. For the
+other data sets of the two tables the same complement, which is the deviation for a world whose answer changes
+with the bit, lies between $0.68$ and $1$. All of these are ranges over the cases computed, with at most four
+inputs and at most four gates more than the data need. They are not bounds.
+
+In every case of the two tables the query differs from one of the data points in a single input, the
+never-varied one. For a world that ignores this input, a fitting circuit that deviates at the query therefore
+has a pointer to it in its core: without one it would repeat at the query the answer it gives at that data
+point, which is the world's. So the tables give, for $\mu_s$ and small sizes, exact values of the quantity
+that \cref{thm:c-floor}(d) bounds from below for the length prior, the share of an answer at a query that
+differs from the data in a never-varied bit. Among the circuits of size $5$ that fit the data of
+$x_1\wedge x_2$, those that compute exactly the function $(x_1\wedge x_2)\oplus v$, $(x_1\wedge x_2)\vee v$,
+$(x_1\wedge x_2)\wedge\neg v$ on all eight inputs have share $0.0255$, $0.0310$, $0.1013$. The second function
+agrees with the target at the query. The first and the third deviate there and carry $13.5$ and $53.4$ per
+cent of the deviating mass at $s=5$. In the AND family of \cref{thm:c-minimum}(e) the deviation mass at inputs
+with two $0$s is exactly $\frac12$ at the least size for $k=3,4$, and $0.468$, $0.446$, $0.429$ for $s=3,4,5$
+at $k=3$; only $\frac14$ ($k=3$) and $\frac18$ ($k=4$) of the minimum circuits compute the target everywhere.
+
+Some numbers in other subsections are marked as computed and are not in the results file: the two prices of a
+gate after \cref{thm:c-core}, the comparison of the floor with exact values after \cref{thm:c-floor}, the
+counts of separably triggered cores after \cref{thm:c-ceiling}, the first example of \cref{thm:c-capture}(d),
+and the simulation of the active part. They were computed again for this section, with
+\texttt{code/circuit\_count.py} where counts by function suffice and otherwise with scripts that are not in
+the repository. Where the referee reports of round 6, in the folder \texttt{verification} of the repository,
+give the same quantities from their own counts, the values agree.
+
+The source differs from this section in a few numbers, and the values here are the corrected ones. The source
+has $0.036$ where \cref{tab:circuits-seq} has $0.035$, a lower end of $2$ per cent where the smallest value
+with slack is $1.9$, the sums over triggers quoted after \cref{thm:c-ceiling}, the threshold $A=43$ where
+$A=35$ suffices after \cref{prop:c-gadget}, and prices in bits after \cref{thm:c-floor} without the bit per
+gate that the length prior adds for the size.
 
 \subsection{The minimal-circuit question}\label{sec:c-minimal}
 
 Hubinger et al.~\cite{hubinger19} state ``the following speculative conjecture: neither a minimal-depth nor
-minimal-size boolean circuit that solves a problem can be a mesa-optimizer'', and give as its source a post
-of
-Christiano~\cite{christiano18}, which we could not open. A later post of Hubinger~\cite{hubinger19b}, which
-we
-could not open either, argues against the conjecture, from memory; we attribute no claim to it. Let
+minimal-size boolean circuit that solves a problem can be a mesa-optimizer'', and give as its source a post of
+Christiano~\cite{christiano18}, which we could not open. A later post of Hubinger is titled ``Are minimal
+circuits deceptive?''~\cite{hubinger19b}. We could not open it either and attribute no claim to it. Let
 $\mathcal M(D)$ be the set of minimum-size circuits that fit $D$. The circuit toy settles three things.
-\emph{Excision, in the strongest form proved:} a minimum circuit has no gate that is constant on the data,
-no
-gate that repeats or negates an earlier wire on the data, and no pointer to an input that never varied
-(\cref{thm:c-minimum}(a), (b)). So it carries no wire that is silent on the data and no separate trigger;
-away
-from the minimum, \cref{thm:c-ceiling} is the quantitative version. \emph{Where excision fails:} a minimum
-circuit can still deviate at a new input through truth-table entries that the data never exercised
-(\cref{thm:c-minimum}(d), (e)). Such deviations cost no gate and come in pairs, one circuit deviating and
-one
-not. \emph{Disagreement with the intended extension is easy:} by \cref{thm:c-minimum}(c) all of
-$\mathcal M(D)$ continues a context of length $2^j$ periodically, whatever the world does next.
+\emph{Excision, in the strongest form proved:} a minimum circuit for data that need at least two gates has no
+gate that is constant on the data, no gate that repeats or negates an earlier wire on the data, and no pointer
+to an input that never varied (\cref{thm:c-minimum}(a), (b)). So it carries no wire that is silent on the data
+and no separate trigger; away from the minimum, \cref{thm:c-ceiling} is the quantitative version. \emph{Where
+excision fails:} a minimum circuit can still deviate at a new input through truth-table entries that the data
+never exercised (\cref{thm:c-minimum}(d), (e)). Such deviations cost no gate and come in pairs, one circuit
+deviating and one not. \emph{Disagreement with the intended extension is easy:} by \cref{thm:c-minimum}(c) all
+of $\mathcal M(D)$ continues a context of length $2^j$ periodically, whatever the world does next.
 
 \emph{Open problem.} Find, or exclude, a sequence of data sets $D_n=(I_n,\cdot)$ with $s_{D_n}\to\infty$,
 queries $u_n^\dagger\notin I_n$ and answers $y_n$ such that
 \begin{enumerate}[label=\arabic*.,leftmargin=2em,itemsep=0pt,topsep=2pt]
 \item at least a fraction $\frac12+\delta$ of $\mathcal M(D_n)$ answers $y_n$ at $u_n^\dagger$, for a fixed
 $\delta>0$;
-\item $y_n$ is not the majority answer of $\mathcal M(D_n^+)$ for a larger data set $D_n^+\supset D_n$ of
-the
+\item $y_n$ is not the majority answer of $\mathcal M(D_n^+)$ for a larger data set $D_n^+\supset D_n$ of the
 same kind that contains $u_n^\dagger$;
 \item the answer at $u_n^\dagger$ is produced by wires that compute a search, $\argmax_zV(z,u)$, for an
 objective $V$ that the data do not determine.
@@ -982,99 +999,125 @@ objective $V$ that the data do not determine.
 Conditions 1 and 2 alone are met by \cref{thm:c-minimum}(c) and say only that the smallest extension of the
 data need not be the target. The content is in condition 3 and in whether the deviation is aimed. By
 \cref{thm:c-minimum}(a) such a search would have to be at work on the data: all its gates vary on $I_n$ and
-none repeats another. Condition 3 has no formulation that could be checked for a given circuit, so this is
-not
+none repeats another. Condition 3 has no formulation that could be checked for a given circuit, so this is not
 a conjecture with a predicted answer. The nearest formal work we found is on detection, not on priors. Among
 polynomial-size circuits a rare deviation planted in an obfuscated circuit cannot be detected efficiently
-under cryptographic assumptions~\cite[Theorem~5.5]{christiano24}, and an undetectable backdoor can be
-planted
-by running a signature verification in parallel to the original
-classifier~\cite[Theorems~2.1 and~5.4]{goldwasser22}. We found no formal treatment of the malign-prior
-argument for circuits or networks.
+under cryptographic assumptions~\cite[Theorem~5.5]{christiano24}, and a backdoor that cannot be detected from
+black-box queries can be planted by running a signature verification in parallel to the original
+classifier~\cite[Theorems~2.1 and~5.4]{goldwasser22}. A prior over circuits sees the description and not only
+the queries. As a circuit, a verification that reads inputs only and switches the output is a separate trigger
+of the kind that \cref{thm:c-ceiling} bounds when the payload is a constant or the negation. We found no
+formal treatment of the malign-prior argument for circuits or networks.
 
 \subsection{Overall view}\label{sec:c-view}
 
-``Malign'' is used in two senses that must be kept apart. In the weak sense the block returned at a use is
-not
+``Malign'' is used in two senses that must be kept apart. In the weak sense the block returned at a use is not
 the world's own continuation: a deviation. In the strict sense it was supplied by a hypothesis that predicts
 well up to the use in order to supply it: an aimed deviation. Only the weak sense is defined in the circuit
 toy; ``aimed'' is formal for separate triggers only. The distinctions of the note apply. \Cref{thm:c-refund}
 bounds one seeded description or the instances of one template, and \cref{thm:c-ceiling,prop:c-gadget} bound
-two syntactic classes. Nothing bounds all the hypotheses that deviate at a use, and masses of different
-hypotheses add. Every share is a posterior mass: the sampling predictor returns a block with that
-probability,
-and a predictor that returns the most probable block returns a deviation only where its mass exceeds one
-half.
-\Cref{thm:c-floor} gives the reach of one kind of hypothesis at a use. The share of uses that end with a
-given
-kind of block is the average over uses of the posterior mass of that kind, and it is bounded from above only
-for the classes just named.
+two syntactic classes. The deviating mass at a use is at most $1-\mu(f^*)/\xi(D)$ by \cref{thm:c-transfer}(d),
+and under the length prior at most $1-1/(32(k+s_0)^2+2)$ at a use marked by a never-varied bit, by
+\cref{thm:c-floor}(d). Nothing else bounds all the hypotheses that deviate at a use, and no bound much below
+$1$ can hold for every world: by \cref{thm:c-minimum}(b) the deviating mass is $1$ under $\mu_{s_D}$ when the
+world changes with a bit that never varied. Masses of different hypotheses add. Every share is a posterior
+mass: the sampling predictor returns a block with that probability, and a predictor that returns the most
+probable block returns a deviation only where its mass exceeds one half. \Cref{thm:c-floor} gives the reach of
+one kind of hypothesis at a use. The share of uses that end with a given kind of block is the average over
+uses of the posterior mass of that kind, and it is bounded from above only for the classes just named.
 
-\paragraph{Proved,} for plain circuits, the priors of the family, the sampling predictor, and a world in the
-class where a bound compares with it.
+\paragraph{Proved,} for plain circuits, the sampling predictor, and a world in the class where a bound
+compares with it. Each item names its prior.
 \begin{enumerate}[label=\arabic*.,leftmargin=2em,itemsep=0pt,topsep=2pt]
-\item On worlds drawn from the predictor's own prior with uses read off the data there is no excess of
-anything, and along one world in the class the majority is off the truth at boundedly many cut points
-(\cref{thm:c-transfer}). One use off the data is covered by neither statement.
-\item The engine of the program toy is not available to a single description. A description pays for every
-active gate, gains nothing from a seed, and outweighs a user's description only if it has fewer gates. If it
-can become any world of $\sigma$ gates it has more than $(\sigma+1)/2$ gates, and more than $\sigma$ for
-$\sigma\ge2^{33}$, under the conditions on $k$ of \cref{thm:c-refund}(i) (\cref{thm:c-core,thm:c-refund}).
-\item Reach of one triggered hypothesis: a chosen answer at a use has a floor whose price is the gates that
-recognise the use plus the payload. At a use marked by a never-varied bit each answer has at least a
-polynomial share under the length prior (\cref{thm:c-floor}).
-\item Fate of uses, from above: three syntactic classes are capped, namely separate triggers, self-contained
-gadgets around large explanations, and the instances of one seeded template. There is no cap on the total
-deviating mass at a use, and none on triggers entangled with the honest computation.
-\item Deviation in the weak sense is not rare at uses that are off the data. For minimum-size circuits it is
-zero through never-varied inputs and total against a world that changes with them; it is exactly one half in
-one family; and in computed cases, which are not a theorem, there is a majority off the truth with no
-smaller
+\item Under every prior of the family: on worlds drawn from the predictor's own prior with uses read off the
+data there is no excess of anything, and along one world in the class the majority is off the truth at
+boundedly many cut points (\cref{thm:c-transfer}). One use off the data is covered by neither statement.
+\item The engine of the program toy is not available to a single description. Under every prior of the family
+a description pays for every active gate. Under a mixture prior with (A2) a seeded description is outweighed
+at each of its targets by its own hardwired instance. The instance prints the same continuation, so this
+limits the seeded description and not what is returned. With (A1) and (A2) a description outweighs a user's
+description only if it has fewer gates. If it can become any world of $\sigma$ gates it has more than
+$(\sigma+1)/2$ gates when $\sigma+3\le2^k$, and more than $\sigma$ when $\sigma\ge2^{33}$ and $k\ge j(\sigma)$
+(\cref{thm:c-core,thm:c-refund}). The statements on seeds are for mixture priors.
+\item Reach of one triggered hypothesis, under a mixture prior: a hypothesis that fits the data and gives a
+chosen answer at a use exists at the price of the gates that recognise the use plus the payload. That it
+cannot be had for less is proved for separate triggers only. At a use marked by a never-varied bit each answer
+has share at least $1/(32(k+s_0)^2+2)$ under the length prior, where $s_0\le s_D+\log_2N_{s_D}+2$
+(\cref{thm:c-floor}).
+\item Fate of uses, from above. Three syntactic classes are capped, by bounds of different strength. Under
+every prior of the family, separate triggers for single-bit answers have a share proportional to the number of
+triggers and to $1/s_D$ (\cref{thm:c-ceiling}). Under a mixture prior with (A1), self-contained gadgets around
+much larger explanations have at most $0.65$ times the share of the explanations they wrap
+(\cref{prop:c-gadget}), and the instances of one seeded template that is sufficiently larger than the worlds
+it imitates weigh at most one description of such a world (\cref{thm:c-refund}(e)). There is no cap on
+triggers entangled with the honest computation, and none on the deviating mass at a use beyond
+\cref{thm:c-transfer}(d) and \cref{thm:c-floor}(d).
+\item Deviation in the weak sense can be large at a use that is new in a feature that never varied in the
+data, or in a combination of values that never occurred. Under $\mu_{s_D}$ with $s_D\ge2$, that is for a
+predictor confined to minimum-size circuits, it is zero through never-varied inputs for a world that ignores
+them and total against a world that changes with them. In one family it is exactly one half at a new
+combination. In computed cases, which are not a theorem, there is a majority off the truth with no smaller
 circuit (\cref{thm:c-minimum}, \cref{thm:c-capture}(d)).
 \item Self-reproduction has share zero unless the block exceeds the literal code of a circuit for the whole
-context, and the choice of decoder decides the rest (\cref{thm:c-self}).
-\item With a description that is reused across steps, the class contains every bounded machine at a factor
-that does not depend on the schedule (\cref{prop:c-recurrence}).
+context. A one-gate example shows that the share can be positive. The choice of decoder decides the rest
+(\cref{thm:c-self} and the example after it).
+\item When one circuit is iterated as the cell of a recurrence, the class contains every machine with bounded
+state at a factor that does not depend on the schedule. The cell constructed has up to $w(2^w-3)$ gates for
+$w$ bits of state, so the factor shown is very small (\cref{prop:c-recurrence}).
 \end{enumerate}
 
 \paragraph{Argued.} For plain circuits weighed by size, the mechanism of the original argument, a light
-hypothesis that does heavy work and is repaid for the rarity of its targets, is removed by the choice of the
-class, in the same way that a schedule with a short first deadline removes it in the note. This does not
-show
-that the prior is benign. The gap in the argument is that results 2 and 4 are about single descriptions and
-syntactic classes, and the cost of deciding as a seeker would is the circuit complexity of the decision,
-which
-may be small. What remains at a use is, in the order of what is established: unaimed underdetermination
-among
-the circuits that fit the data (\cref{thm:c-minimum} and the computed cases); cheap triggers priced by their
-gates (\cref{thm:c-floor,thm:c-ceiling}); and capture by a cheaper computation of the same data
-(\cref{thm:c-capture}). None of them needs a goal. Stakes change this only through the gates needed to
-recognise a high-stake use. As computation is decoupled from description, by recurrence, weight sharing or
-autoregressive use, the effects of the program toy and its open questions return, the constant-cost wrapper
-and capture first and the unwritten seekers last (\cref{prop:c-recurrence} and the argument after it).
+hypothesis that does heavy work and is repaid for the rarity of its targets, is removed for any one
+description by the choice of the class. This is like the note, where a schedule with a short first deadline
+gives the searching programs of \cref{thm:search} no mass. In both toys one construction is excluded, and it
+is open whether other hypotheses collect the base rate. This does not show that the prior is benign. The gap
+in the argument is that results 2 and 4 are about single descriptions and syntactic classes, and the cost of
+deciding as a seeker would is the circuit complexity of the decision, which may be small. What remains at a
+use is, in the order of what is established: underdetermination among the circuits that fit the data, which
+the toy cannot divide into aimed and unaimed (\cref{thm:c-minimum} and the computed cases); cheap triggers
+priced by their gates (\cref{thm:c-floor,thm:c-ceiling}); and capture by a cheaper computation of the same
+data (\cref{thm:c-capture}). The first two overlap: in the computed cases with a world that ignores the
+never-varied bit, every deviating circuit reads that bit. None of the three needs a goal. Stakes change this
+only through the gates needed to recognise a high-stake use. As computation is decoupled from description, the
+effects of the program toy and its open questions return, the constant-cost wrapper and capture first and the
+unwritten seekers last. This is argued for recurrence (\cref{prop:c-recurrence} and the argument after it);
+weight sharing and autoregressive use are not treated.
 
-\paragraph{Guessed.} In the plain toy, takeover in the strict sense is a small part of the deviating mass at
-a use. No ceiling supports this beyond the three classes of result 4. The two derivations behind the source
-guessed differently by many orders of magnitude at cheap triggers, ``astronomically small'' against ``of the
-order of the trigger prices'', which for a never-varied bit is between $2^{-34}$ and several per cent, and
-their referees endorse neither. Deviation in the weak sense is common at uses that are off the data: of
-constant order when the world ignores the novel feature, which is conjectured from five sizes at $k=3$ and
-not
-proved, and close to one when the world depends on it. The route by which plain circuits could be malign in
-the strict sense is the entangled one of \cref{sec:c-minimal}: the smallest or typical circuit for a rich
-task
-is a general solver whose behaviour off the data is not fixed by the data. The toy gives no evidence either
-way. For trained networks, one forward pass sits toward the circuit end of the axis of
-\cref{prop:c-recurrence} and recurrent or autoregressive use toward the program end. Reading training as
-posterior sampling under a parameter prior rests on empirical correlations~\cite{mingard20}, and nothing we
-cite relates the parameter-function map of a network to the uniform prior on gate lists. The informal
-statement of the argument for trained predictors locates the risk in a learned general search over
-hypotheses~\cite[\S2.5]{hubinger23}; that is the entangled route, and the size prior does not price it out
-as
-it does the literal simulation.
+\paragraph{Guessed.} In the plain toy, takeover in the strict sense is a small part of the deviating mass at a
+use when the data are large. No result supports this beyond the three classes of result 4. The one count that
+bears on it goes the other way at the smallest sizes: the separably triggered cores, the only circuits for
+which ``aimed'' is formal, carry a third and $28.5$ per cent of the deviating mass in the case counted after
+\cref{thm:c-ceiling}. For a fixed number of inputs the bound of \cref{thm:c-ceiling} falls like $1/s_D$, so
+these cores become a small part of the deviating mass if that mass stays of constant order, which is the
+conjecture below. For other triggers there is neither a bound nor a count. The two derivations behind the
+source guessed differently by many orders of magnitude at cheap triggers, ``astronomically small'' against
+``of the order of the trigger prices'', which for a never-varied bit is between $2^{-34}$ and several per
+cent, and their referees endorse neither. Deviation in the weak sense, at a use that is new in a feature the
+data never varied, is some $c$ when the world ignores the feature and $1-c$ when its answer changes with it.
+That $c$ stays of constant order for large data is conjectured from five sizes at $k=3$ and not proved; $c$ is
+between $0.02$ and $0.32$ in the cases computed. One route by which plain circuits could be malign in the
+strict sense is the entangled one of \cref{sec:c-minimal}: the smallest or typical circuit for a rich task is
+a general solver whose behaviour off the data is not fixed by the data. The toy gives no evidence either way.
+The other routes are the classes that the ceilings do not reach, listed after \cref{thm:c-ceiling}, and sets
+of circuits, for which a refund is not excluded. For trained networks, one forward pass sits toward the
+circuit end of the axis of \cref{prop:c-recurrence} and recurrent or autoregressive use toward the program
+end. Reading training as posterior sampling under a parameter prior rests on empirical
+correlations~\cite{mingard20}, and nothing we cite relates the parameter-function map of a network to the
+uniform prior on gate lists. The informal statement of the argument for trained predictors locates the risk in
+a learned general search over hypotheses~\cite[\S2.5]{hubinger23}; that is the entangled route. The size prior
+prices a search gate by gate, as it does a simulation (\cref{thm:c-refund}(g)). Whether a smaller circuit
+without the search fits the same data is the open problem of \cref{sec:c-minimal}.
 
-In one sentence, as an argument: for plain circuits the seeker mechanism is priced out, deviation at uses
-that
-are off the data is not, and whether any of that deviation should be called malign depends on a definition
-of
-``aimed'' that this material does not supply.
+\paragraph{Open.} Whether some set of circuits has, at every use of a class, a share that grows as the class
+gets rarer. An upper bound to match the floor of \cref{thm:c-floor}: on the share, at a use, of a block chosen
+in advance, beyond the three classes of result 4, and on the deviating mass when the world ignores what is new
+at the use. The size of the deviation at a never-varied bit for large data, between the polynomial floor and a
+constant. A world outside the class, which is the generic case for arbitrary sequences. Self-reproduction at
+contexts whose smallest circuit is large. The minimal-circuit question of \cref{sec:c-minimal}. The recurrent
+version of the toy: a universal cell of moderate size, and the constructions of \cref{sec:floor} under a space
+bound.
+
+In one sentence, as an argument: for plain circuits the seeker mechanism is priced out for any one
+description, and for sets of circuits nothing is shown either way; deviation at uses that are new in something
+the data never varied is not priced out; and whether any of that deviation should be called malign depends on
+a definition of ``aimed'' that this material does not supply.
