@@ -220,7 +220,7 @@ if s_t(c_t) ≤ ε, stop and output h|_{S_t}; otherwise S_{t+1} := S_t ∩ {x : 
 
 **Lower bounds.**
 
-* *Theorem 5.4*: there is K > 0 such that for every d there are a class of VC dimension d and distributions μ, μ′ such that for every n ≥ 2d and every learner some f ∈ C has E[rej_μ + err_μ′] ≥ K·√(d/n). (C: functions that are 1 on exactly d integers; μ uniform on [8n]; μ′ uniform on [k], k = √(8dn).) The lower bound holds with unboundedly many unlabelled test examples.
+* *Theorem 5.4*: there is K > 0 such that for every d ≥ 1 and n ≥ 2d there are a class C of VC dimension d and distributions μ, μ′ such that for every learner some f ∈ C has E[rej_μ + err_μ′] ≥ K·√(d/n). (C: functions that are 1 on exactly d integers; μ uniform on [8n]; μ′ uniform on [k], k = √(8dn). As the theorem is printed the distributions are quantified before n; in the proof they depend on n, and the authors remark on it.) The lower bound holds with unboundedly many unlabelled test examples.
 * *Theorem 5.5* (transductive): E[rej_z + err_x̃] ≥ K·√(d/min{m, n}) with n training and m test examples. So Θ̃(√(d/n)) is the rate, against Θ̃(d/n) when μ′ = μ.
 * *One cannot learn where μ and μ′ overlap* (Appendix G): if μ and μ′ were known, S* = {x : μ′(x) ≤ μ(x)/ε} would have rej_μ(S*) < ε and err_μ′(h|_{S*}) ≤ err_μ(h)/ε. But "one cannot even distinguish the case where P = Q from the case where P and Q have disjoint supports with fewer than Ω(√|X|) examples". Rejectron avoids estimating the density ratio: it only detects differences that members of C can express.
 
