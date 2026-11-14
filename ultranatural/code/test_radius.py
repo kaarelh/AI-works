@@ -6,7 +6,8 @@ below r. So data g on [0, r)^k refutes the identity. tau_g(m) is the largest rea
 false identities whose sides have at most m symbols.
 
 Identities use at most 3 variables (2 for unary f) with values searched in 0..R0; an identity
-with no refuting assignment in that range is counted as true.
+with no refuting assignment in that range is counted as true. Arithmetic is in 64-bit integers,
+except for squaring, where exact integers are used.
 
 Usage: python3 test_radius.py
 """
@@ -19,10 +20,12 @@ from eqlib import show_id
 BIG = 10 ** 9
 
 
-def build(arity, nvars, maxsize, g, R0):
-    """Terms by increasing size, with value and radius arrays over the assignment grid."""
-    grid = np.array(list(itertools.product(range(R0 + 1), repeat=nvars)), dtype=np.int64)
-    zero = np.zeros(len(grid), dtype=np.int64)
+def build(arity, nvars, maxsize, g, R0, exact=False):
+    """Terms by increasing size, with value and radius arrays over the assignment grid.
+    With exact=True the arrays hold Python integers (needed where values exceed 64 bits)."""
+    dt = object if exact else np.int64
+    grid = np.array(list(itertools.product(range(R0 + 1), repeat=nvars)), dtype=dt)
+    zero = np.zeros(len(grid), dtype=dt)
     by = {1: [(("v", i), grid[:, i], zero) for i in range(nvars)] + [(("0",), zero, zero)]}
     for s in range(2, maxsize + 1):
         cur = [(("S", t), v + 1, r) for t, v, r in by[s - 1]]
@@ -39,8 +42,9 @@ def build(arity, nvars, maxsize, g, R0):
     return by
 
 
-def tau(arity, nvars, maxsize, g, R0):
-    by = build(arity, nvars, maxsize, g, R0)
+def tau(arity, nvars, maxsize, g, R0, exact=False):
+    by = build(arity, nvars, maxsize, g, R0, exact)
+    BIG = 10 ** 400 if exact else 10 ** 9
     terms, sizes, vals, rads = [], [], [], []
     for s in range(1, maxsize + 1):
         for t, v, r in by[s]:
@@ -50,8 +54,8 @@ def tau(arity, nvars, maxsize, g, R0):
             rads.append(r)
     sizes = np.array(sizes)
     Vm = np.stack(vals)
-    Rm = np.minimum(np.stack(rads), BIG - 1)
-    best = np.zeros(maxsize + 1, dtype=np.int64)       # tau by max side size
+    Rm = np.stack(rads) if exact else np.minimum(np.stack(rads), BIG - 1)
+    best = [0] * (maxsize + 1)                         # tau by max side size
     nfalse = np.zeros(maxsize + 1, dtype=np.int64)
     example = {}
     for i in range(len(terms)):
@@ -66,7 +70,7 @@ def tau(arity, nvars, maxsize, g, R0):
                 nfalse[m] += sel.sum()
                 j = np.where(sel, mn, -1).argmax()
                 if mn[j] > best[m]:
-                    best[m] = mn[j]
+                    best[m] = int(mn[j])
                     example[m] = (terms[i], terms[i + j])
     out = []
     run, ex = 0, None
@@ -107,8 +111,8 @@ if __name__ == "__main__":
         print(f"== {title}: tau_g(m) for sides of at most m symbols, variables searched in 0..{R0} ==")
         print(f"{'target':30s} " + " ".join(f"m={m:<3d}" for m in range(2, M + 1)) + "  false identities, example of largest reach")
         for name, g in funcs.items():
-            res = tau(arity, nvars, M, g, R0)
-            cells = " ".join((f"{r[2]:5d}" if r[2] < BIG - 1 else " >1e9") for r in res[1:])
+            res = tau(arity, nvars, M, g, R0, exact=(name == "square"))   # squaring overflows 64 bits
+            cells = " ".join(f"{r[2]:5d}" for r in res[1:])
             ex = res[-1][3]
             print(f"{name:30s} {cells}  {res[-1][1]:9d}  {show_id(ex) if ex else '-'}")
         print()

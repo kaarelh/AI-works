@@ -9,9 +9,11 @@
        u(x) = v(0):   p u w ~ p v
        u(0) = v(0):   p u   ~ p v
    The program closes these within the strings of length <= L. So an equation counts as proved
-   only if it has a derivation through terms of at most L symbols below the leaf (sound, not
-   complete), and T counts as consistent if no two numerals of length <= L are identified
-   within that bound.
+   essentially only if it has a derivation through terms of at most L symbols above the leaf
+   (sound, not complete), and T counts as consistent if no two numerals of length <= L are
+   identified within that bound. One departure from this description: for the second and third
+   kind, when p v is too long to be represented, the instances p u w are still identified with
+   each other (they are all equal to p v). These unions are valid consequences.
 
    Every identity set of total size <= CAP is enumerated (as a multiset of identities up to
    renaming of variables and swapping of sides; each carries the number of strings that encode
@@ -173,6 +175,8 @@ static int cmp(const void *a, const void *b) { return ((const Id *)a)->size - ((
 
 int main(int argc, char **argv) {
     CAP = atoi(argv[1]); L = atoi(argv[2]); N = (1 << (L + 1)) - 1;
+    if (L > 30) { fprintf(stderr, "L must be at most 30\n"); return 1; }
+    if (CAP > 2 * MAXDEPTH + 1) { fprintf(stderr, "CAP too large for MAXDEPTH\n"); return 1; }
     count_only = argc > 3 && !strcmp(argv[3], "count");   /* only add up the prior weights */
     dump = argc > 3 && !strcmp(argv[3], "dump");          /* also list the sets that determine f at 0, 1, 2 */
     if (argc > 3 && !strcmp(argv[3], "check")) {          /* check identity sets given on stdin, one per line */
@@ -202,6 +206,7 @@ int main(int argc, char **argv) {
                 for (int type = 0; type < 4; type++) {
                     if (type != 2 && !le) continue;         /* unordered except u(x) = v(0) */
                     int mult = type == 0 ? (eq ? 2 : 4) : type == 1 ? (eq ? 2 : 4) : type == 2 ? 4 : (eq ? 1 : 2);
+                    if (nids >= MAXID) { fprintf(stderr, "too many identities: raise MAXID\n"); return 1; }
                     ids[nids++] = (Id){type, lu, ub, lv, vb, s, mult, eq && (type == 0 || type == 3)};
                     check += mult;
                 }

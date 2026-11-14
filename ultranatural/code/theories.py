@@ -93,12 +93,12 @@ if __name__ == "__main__":
           {"f": lambda a, b: int(a == b)}, range(7), R)
     check("double (unary)", [(F(Z), Z), (F(S(x)), S(S(F(x))))], {"f": lambda a: 2 * a}, range(7), R, arity=1)
 
-    print("\n== quus_N (x + y if x, y < N, else 5), no auxiliary symbols: lower bound N + 2 ==")
+    print("\n== quus_N (x + y if x, y < N, else 5), no auxiliary symbols: lower bound N + 3 ==")
     for N in (3, 4, 5, 6, 8):
         q = lambda a, b, N=N: a + b if a < N and b < N else 5
         check(f"quus_{N}", quus_theory(N), {"f": q}, range(N + 3), range(N + 4))
 
-    print("\n== plus with the value at (a, b) changed to 0, no auxiliary symbols: lower bound max(a, b) + 2 ==")
+    print("\n== plus with the value at (a, b) changed to 0, no auxiliary symbols: lower bound max(a, b) + 3 ==")
     for a, b in ((1, 1), (2, 3), (4, 2), (5, 5), (8, 3)):
         g = lambda p, q, a=a, b=b: 0 if (p, q) == (a, b) else p + q
         check(f"plus, but 0 at ({a},{b})", patch_theory(a, b, 0), {"f": g}, range(max(a, b) + 4), range(max(a, b) + 5))
