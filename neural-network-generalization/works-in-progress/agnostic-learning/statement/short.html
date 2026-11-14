@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The tempered-likelihood learner: main result</title>
+<!--KATEX-CSS-->
+<style>
+  body { font-family: "KaTeX_Main", "Latin Modern Roman", "Times New Roman", serif; font-size: 10pt; line-height: 1.36; color: #111; margin: 0; }
+  h1 { font-size: 15pt; text-align: center; margin: 0 0 6pt 0; line-height: 1.25; font-weight: bold; }
+  .byline { text-align: center; margin: 0 0 2pt 0; }
+  .date { text-align: center; margin: 0 0 10pt 0; color: #333; }
+  p { margin: 5pt 0; text-align: justify; }
+  .env { margin: 8pt 0; padding: 7pt 10pt; border-left: 2.5pt solid #444; background: #f6f6f6; break-inside: avoid; }
+  .env-title { font-weight: bold; }
+  ol, ul { margin: 4pt 0; padding-left: 20pt; }
+  li { margin: 3pt 0; text-align: justify; }
+  .katex { font-size: 1.04em; }
+  .katex-display { margin: 6pt 0; overflow: visible; }
+  .nw { white-space: nowrap; }
+  .small { font-size: 9pt; }
+  .footnote { font-size: 8.5pt; border-top: 0.5pt solid #999; margin-top: 10pt; padding-top: 3pt; }
+  sup.fn { font-size: 7pt; }
+  code { font-family: "DejaVu Sans Mono", monospace; font-size: 8pt; }
+</style>
+</head>
+<body>
+
+<h1>The tempered-likelihood learner: main result</h1>
+<div class="byline">Claude Opus 5.5, Kaarel Hänni, and Dmitry Vaintrob<sup class="fn">*</sup></div>
+<div class="date">14 November 2026</div>
+
+<p><b>Data.</b> Fix \(d\ge1\), a compact set \(X\subseteq[-1,1]^d\) and any probability distribution \(D\) on \(X\times[-1,1]\): the labels may be noisy or an arbitrary function of the input, but they lie in \([-1,1]\). The learner sees \(n\) independent samples \(S=((x_i,y_i))_{i=1}^n\) from \(D\). The test loss of \(f:X\to\mathbb R\) is \(L_D(f)=\mathbb E_{(x,y)\sim D}\,(f(x)-y)^2\).</p>
+
+<p><b>Networks.</b> A network of depth \(L\ge2\) and width \(N\) has parameters
+\[
+w=(W^1,W^2,\dots,W^{L-1},v)\in\mathbb R^{N\times(d+1)}\times\bigl(\mathbb R^{N\times N}\bigr)^{L-2}\times\mathbb R^N
+\]
+and computes
+\[
+z_w(x)=v^{\top}\tanh\bigl(W^{L-1}\cdots\tanh\bigl(W^1(1,x)\bigr)\cdots\bigr),
+\]
+with \(\tanh\) applied entrywise; biases enter only through the constant input coordinate. Predictions are clipped to the label range, \(\operatorname{clip}(u)=\max\{-1,\min\{1,u\}\}\).</p>
+
+<p><b>The learner.</b> Fix an exponent \(\theta\in(0,1)\), a width \(N\) and a scale \(\sigma>0\). The prior makes all weights independent centred Gaussians, with variance \(N\sigma^2/d\) in \(W^1\), \(\sigma^2\) in \(W^2,\dots,W^{L-1}\) and \(\sigma^2/N\) in \(v\). The likelihood is
+\[
+y_i\mid x_i,w\ \sim\ \mathrm N\bigl(z_w(x_i),\,n^{1-\theta}\sigma^2\bigr),
+\]
+Gaussian noise whose variance is tempered by the factor \(n^{1-\theta}\). Let \(\Pi_\sigma\) be the posterior given \(S\), and take \(\sigma\downarrow0\) with \(n\), \(S\) and \(N\) fixed. The learner's test loss is that of a clipped posterior draw, \(\mathbb E_{w\sim\Pi_\sigma}L_D(\operatorname{clip}z_w)\).</p>
+
+<div class="env"><span class="env-title">Theorem.</span>
+Fix the depth \(L\ge2\). Below, \(\mathrm{poly}(\dots)\) is a fixed polynomial in the quantities listed; nothing else enters it. For every \(d\), \(X\), \(D\), \(n\ge1\) and \(\delta\in(0,1)\):
+<ol type="a">
+<li><i>Against one network.</i> Take \(\theta=1/(L+1)\). For every network \(g\) of depth \(L\), width \(m\) and weights in \([-B,B]\), with probability at least \(1-\delta\) over \(S\), at every learner width \(N\ge m\),
+\[
+\limsup_{\sigma\downarrow0}\ \mathbb E_{w\sim\Pi_\sigma}L_D(\operatorname{clip}z_w)\ \le\ L_D(g)+\mathrm{poly}\bigl(L,d,m,B,\log(1/\delta)\bigr)\cdot\sqrt{\log(n+1)}\cdot n^{-\frac1{L+1}}.
+\]</li>
+<li><i>Against all networks of size \(n^\alpha\).</i> Let \(L\ge3\) and \(0\lt\alpha\lt\frac1{4(L-1)}\), and take \(\theta=\frac{1+8\alpha}{L+1}\). With probability at least \(1-\delta\) over \(S\), at every learner width \(N\ge n^\alpha\),
+\[
+\limsup_{\sigma\downarrow0}\ \mathbb E_{w\sim\Pi_\sigma}L_D(\operatorname{clip}z_w)\ \le\ \min_f L_D(f)+\mathrm{poly}\bigl(L,d,\log(1/\delta)\bigr)\cdot\sqrt{\log(n+1)}\cdot n^{-\frac{1-4\alpha(L-1)}{L+1}},
+\]
+where \(f\) ranges over the networks of depth \(L\) with width at most \(n^\alpha\) and weights in \([-n^\alpha,n^\alpha]\).</li>
+</ol>
+Both bounds also hold for the posterior mean of the clipped outputs, \(x\mapsto\mathbb E_{w\sim\Pi_\sigma}\operatorname{clip}z_w(x)\).
+</div>
+
+<p class="small"><b>Source and status.</b> Parts (a) and (b) are Theorem 6.3 and Corollary 8.1 of <code>research-notes/B-tempered-likelihood.md</code>, with the error terms bounded by explicit polynomials as in Corollary 3 of <code>statement/tempered-learner.pdf</code>; both files are in <code>neural-network-generalization/works-in-progress/agnostic-learning/</code>. The proofs in B are paper proofs refereed by independent AI agents, not Lean-verified. The polynomial bounds were checked by independent AI agents but not refereed.</p>
+
+<p class="small"><b>Limits.</b> Any \(\theta\in(0,\frac1{L-1})\) works in (a), with rate \(n^{-\min\{\theta,\,(1-\theta(L-1))/2\}}\) in place of \(n^{-1/(L+1)}\). For \(L\ge3\) the range is sharp in the worst case: with \(\theta\gt\frac1{L-1}\) the learner can memorize label noise (B, Theorem 7.4), and without tempering (variance \(\sigma^2\) instead of \(n^{1-\theta}\sigma^2\)) it can do worse than the zero network on pure-noise labels (A, Theorem 4.4). Bounded competitor weights are needed: for \(L\ge3\) and \(\alpha\gt\frac{L}{2(L-1)(2L-1)}\), no tempering gives a bound like (b) that is polynomial, uniform over \(D\) and \(d\), and valid at every learner width \(N\ge n^\alpha\) (B, Corollary 9.3).</p>
+
+<div class="footnote"><sup>*</sup>Authors are listed in alphabetical order.</div>
+
+</body>
+</html>
