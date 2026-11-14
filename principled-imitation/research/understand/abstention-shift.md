@@ -326,4 +326,168 @@ Conformal methods output a set Ĉ(x) ⊆ Y. The set Y itself is an abstention; a
 
 [my reading.] Conformal prediction is the only tool in this digest that needs no realizability assumption, and that is also why it cannot survive shift: its "class" is everything. It gives a guarantee under shift exactly when the shift is brought back to exchangeability, by a known likelihood ratio, by a small known family of ratios, or by drawing the calibration inputs from the deployment distribution itself. The last is what random audits do (`notes.md` Observation A; `repo.md` X3–X4): a uniformly random subset of a batch of deployment inputs is exchangeable with the rest of the batch.
 
-@@PART3@@
+---
+
+## 7. Does any of this work for a universal (Solomonoff-type) class?
+
+### 7.1 Not as stated, and why
+
+Every theorem in §§3–5 is about a fixed class with a finite dimension. For the class of all total computable functions:
+
+* the VC dimension is infinite, so no uniform convergence, and the PQ and MMA bounds are void;
+* the star number and the Littlestone dimension are infinite, so the never-wrong bounds are void;
+* worse, the version space after any data D contains, for every unlabelled x and every label, a consistent function with that label at x (a patch). So the disagreement region is everything unlabelled, and by the optimality of CSS (§3.3) **a learner that is never wrong for every computable target never answers an unlabelled input**. [my own derivation; it is the lead's Theorem D(c).]
+
+The theorems are rescued in three ways, which the literature has in the forms below.
+
+1. *A complexity budget.* Fix k and work in H_k. This is a finite class, so every result for finite classes applies; soundness then holds for targets with K(f) ≤ k and for no others.
+2. *A prior.* Replace |H| by 1/w(target) and log |H| by ln(1/w(target)). The Bayes-mixture results of §7.3 are of this kind. Soundness needs a lower bound on w(target).
+3. *Non-uniform statements*: for each target there is a sample size after which the guarantee holds, not known in advance (§8.5 has examples for generation).
+
+In all three the assumption "the target is simple enough" does the work that "f ∈ C" does in the fixed-class theorems. It can be refuted by data (the version space becomes empty, or the posterior weight of everything in the budget collapses), and it cannot be confirmed.
+
+### 7.2 The class H_k: VC dimension about k, star number about 2^k
+
+[my own derivation; elementary counting with the conventions of `ultranatural/note.md` §1.]
+
+* |H_k| ≤ 2^k, so VC(H_k) ≤ k and every star set has at most 2^k − 1 points.
+* H_k contains every function that is an arbitrary bit pattern on the first m strings and 0 elsewhere, for m ≤ k − 2 log k − c. So VC(H_k) ≥ k − 2 log k − c.
+* H_k contains the zero function and the indicator of each single string x with K(x) ≤ k − c, and there are at least 2^(k − 2 log k − c) such strings. These form a star set centred at the zero function. So the star number of H_k, and with it the eluder dimension, is at least 2^(k − 2 log k − c). The same holds around any f with K(f) ≤ k − j, with 2^(j − 2 log j − c) single-point patches.
+
+Consequences, one per model:
+
+| guarantee | cost in H_k | from |
+|---|---|---|
+| error ε on the training law, no abstention | about (k·ln 2 + ln(1/δ))/ε examples | Occam's razor (`repo.md` B1) |
+| never wrong, adversarial order (KWIK) | at most 2^k − 1 abstentions; at least 2^(k − 2 log k − c), even when the target is the zero function | enumeration (§3.1); eluder ≥ star (§3.2) |
+| never wrong, i.i.d. (CSS) | rejected mass at most ((ln 2)·2^k + ln(1/δ))/m; for μ uniform on N = 2^(k − 2 log k − c) strings and target zero, at least (1 − 1/N)^m in expectation | EYW10 Theorem 8; the singleton example of §3.3 |
+| at most j mistakes, label after every round | at most (j+1)·2^(k/(j+1)) abstentions; with j = k, at most 2(k+1) | SZB10 (§4.1) |
+| at most an ε fraction wrong on an arbitrary test batch (Rejectron over H_k) | error ≤ ε on every batch; false rejection rate at most (1/n)·(2k/ε + log(1/δ)); balanced at about √(2k/n) | GKKM20 Theorem A.2, with |C|^(T+1) ≤ 2^(2k/ε) in place of Sauer's lemma in their Lemmas E.1 and B.3 |
+| cost α per abstention on an arbitrary test batch (MMA over H_k) | expected loss at most α·TV(μ, μ′) + O(k/n) | KK21b Lemma 2; a consistent g errs on a fresh n-sample at rate above ε with probability at most 2^k·2^(−εn) |
+
+So for a universal class with a budget, the two soundness notions separate exponentially: **per-input soundness costs about 2^k, batch-rate soundness costs about k/ε².** The cost of the first is set by the budget k, not by K(f): a learner that is sound for all of H_k abstains 2^(k − 2 log k − c) times even on the simplest target. Both need unbounded computation plus a halting oracle, or time bounds, to search H_k.
+
+The threshold rule of `repo.md` X2 and the novelty rule of `notes.md` Observation B are the enumeration algorithm for a budget; the table says their exponent cannot be improved for the never-wrong standard, and that the standard, not the rule, is what is expensive.
+
+### 7.3 Bayes mixtures that know what they know
+
+**Lattimore, Hutter and Sunehag (2013)** [read in source: LHS13]. Sequence prediction: a countable class 𝓜 of measures on infinite sequences over a countable alphabet, prior w, Bayes mixture ξ, true measure μ* ∈ 𝓜 (their μ). h_t and d_t are the squared Hellinger distance and the KL divergence between the predictive distributions of μ* and ξ at time t; c_t = Σ_ν w_ν(ω_{<t})·KL(ν‖ξ) at time t is the posterior-expected information gain, computable without knowing μ*.
+
+* *Known* (Theorems 1–2): E Σ_t h_t ≤ E Σ_t d_t ≤ ln(1/w_{μ*}); with probability 1 − δ, Σ_t h_t ≤ ln(1/w_{μ*}) + 2·ln(1/δ).
+* *New concentration* (Theorem 3, Proposition 4): with probability 1 − δ, Σ_t d_t ≤ e·ln(6/δ)·(ln(2/δ) + ln(1/w_{μ*})), and this is nearly tight.
+* *Confidence bounds* (Theorem 8). Let 𝓜_t be the set of ν whose posterior weight has been at least δ·w_{μ*} at all times up to t, d̂_t = c_t/(w_{μ*}·δ) and ĥ_t = sup_{ν ∈ 𝓜_t} (w_ν/w_{μ*})·h_t(ν, ξ). Then Pr[∀t: d_t ≤ d̂_t] ≥ 1 − δ and Pr[∀t: h_t ≤ ĥ_t] ≥ 1 − δ.
+* *They are not vacuous* (Theorems 5, 9, 10). If the prior has finite entropy Ent(w): E Σ_t c_t ≤ Ent(w)/w_{μ*}; E Σ_t d̂_t ≤ Ent(w)/(δ·w_{μ*}²); E Σ_t ĥ_t ≤ (2/w_{μ*})·(ln(1/w_{μ*}) + ln(1/δ) + Ent(w)); with probability 1 − δ, Σ_t ĥ_t ≤ (2/w_{μ*})·(2·ln(1/w_{μ*}) + 5·ln(1/δ) + 3·Ent(w)). For K models with uniform prior: Σ ĥ_t is of order K·(ln K + ln(1/δ)) and E Σ c_t ≤ 6 ln²K + 14 ln K + 8 (Theorem 6).
+* *KWIK* (Theorem 12): for |𝓜| = K, the rule "output ξ's prediction if ĥ_t ≤ ε, else ⊥" fails with probability at most δ and outputs ⊥ at most O((K/ε)·ln(K/δ)) times; in total variation with accuracy ε_1, O((K/ε_1²)·ln(K/δ)), matching the k-meteorologists bound. (In their version the next symbol is observed every round.)
+* *What they say about the countable case* (§6): the bound "is a worst-case bound that is only achieved when at each time-step only one model differs from ξ"; ĥ_t depends on w_{μ*}, "which is also typically unknown. Either choose a conservatively small w and pay the (1/w)·ln(1/w) price, or decrease w with t at some slow rate".
+
+**The same certificate for samplers with chosen inputs, at every input** [my own derivation, after LHS13 Theorem 8]. Let H be a countable class of samplers with prior w, P ∈ H, data D_t = ((x_i, y_i))_{i ≤ t} with each x_i chosen by any rule from D_{i−1} and independent randomness and y_i ~ P(·|x_i) fresh. Let w_t be the posterior, M_t(·|x) the predictive, and for every x ∈ X
+
+    c_t(x) = Σ_ν w_t(ν)·KL(ν(·|x) ‖ M_t(·|x)),      s_t(x) = Σ_ν w_t(ν)·TV(ν(·|x), M_t(·|x)).
+
+Then with probability at least 1 − δ, simultaneously for all t and **all x ∈ X**,
+
+    KL(P(·|x) ‖ M_t(·|x)) ≤ c_t(x)/(δ·w(P))   and   TV(P(·|x), M_t(·|x)) ≤ s_t(x)/(δ·w(P)).
+
+*Proof.* Z_t = M(D_t)/P(D_t) is a non-negative supermartingale under P with Z_0 = 1, for every input rule. By Ville's inequality Pr[∃t: Z_t ≥ 1/δ] ≤ δ. Off that event w_t(P) = w(P)/Z_t > δ·w(P) for all t, and c_t(x) ≥ w_t(P)·KL(P(·|x) ‖ M_t(·|x)) because every term of the sum is non-negative; likewise for s_t. The event does not involve x. ∎
+
+So "answer with M_t(·|x) when s_t(x) ≤ ε·δ·w_0, abstain otherwise" is, with probability 1 − δ, ε-accurate in total variation at every answered input, under any shift whatever, for every target with w(P) ≥ w_0. Three remarks.
+
+* *Price on the training distribution* [my own derivation for the first claim]. Under the mixture, Σ_t c_t(x_t) over the training rounds has expectation equal to the mutual information between the hypothesis and the data, at most Ent(w), for any input rule; and Pr_P ≤ Pr_w/w(P). So E_P Σ_t c_t(x_t) ≤ Ent(w)/w(P), as in LHS13 Theorem 5, and the expected number of training rounds at which the KL certificate c_t(x_t)/(δ·w_0) exceeds ε is at most Ent(w)/(ε·δ·w_0·w(P)): about 4^K. LHS13's Hellinger certificate ĥ_t does better in the sequence setting, about (1/w)·(ln(1/w) + Ent(w)), that is 2^K up to polynomial factors; I did not re-derive it for chosen inputs.
+* *Price off it* [rough]. At an input x that a set Q separates from the inputs seen, guards keep relative posterior weight about 2^(−K(Q)−c) (`repo.md` D1), so s_t(x) is at least about 2^(−sep(x; A)−c) when the predictive is confident. The rule therefore abstains unless sep(x; A) exceeds about log(1/w_0) + log(1/(εδ)): it answers only inputs that no test simpler than the budget separates from the data.
+* *The universal prior has infinite entropy* [my own derivation]. For w(ν) = 2^(−K(ν)), Ent(w) = Σ_ν 2^(−K(ν))·K(ν) = ∞: the class contains, say, the constant samplers ν_n, 2^(−K(n)) dominates the computable distribution p(n) ∝ 1/(n·log² n), which has infinite entropy, and −t·log t is increasing near 0. So LHS13's bounds with Ent(w) are void for the plain universal prior. A steeper prior, w(ν) ∝ 2^(−λK(ν)) with λ > 1 or 2^(−K(ν))/K(ν)², has finite entropy. This is a second reason, besides the model–randomness split of this repository's Paper 2, to prefer a steeper prior, and it resembles the summability condition in the lead's Theorem B.
+
+**Why 1/w and not ln(1/w).** Cohen, Hutter and Nanda remark: "Error bounds in Bayesian prediction and MAP prediction tend to be Θ(log(w(truth)⁻¹)) and Θ(w(truth)⁻¹) respectively, so theoretically, our case resembles the MAP one" [read in source: CHN22 §6]. A mixture pays ln(1/w) in *loss* without knowing where it pays; a rule that must *certify* each answer has to wait for every alternative that is still as plausible as the truth might be, and there can be 1/w of them, each wrong at a different place. That is the star set again.
+
+**Hypotheses that abstain** [from memory, not checked]. In the "specialists" (sleeping experts) setting of Freund, Schapire, Singer and Warmuth (STOC 1997), experts may abstain on some rounds, and the mixture's regret against each specialist, counted on the rounds where that specialist is awake, is at most ln(1/w(specialist)). A universal class of partial predictors therefore has, for each member, a loss bound restricted to that member's own domain. I mention it because programs that do not halt on some inputs are such specialists; I did not look for a published treatment of that.
+
+### 7.4 The prior-averaged guarantee is free, at every input
+
+[my own derivation; standard Bayes.] Suppose the target is drawn from the prior w, data D are gathered by any rule that depends on the target only through the labels seen, and a test input x is chosen by any rule from D and independent randomness. Then, given D and x, the label f(x) (or the law P(·|x)) is distributed according to the posterior. Hence:
+
+* for deterministic targets, "answer argmax_y M_D(y|x) when it exceeds 1 − c, else abstain" errs on an answered input with conditional probability at most c, at every x, however far from the data;
+* for samplers, the pair (x, a draw from M_D(·|x)) has exactly the joint law of (x, a draw from P(·|x)); and E[TV(P(·|x), M_D(·|x)) | D, x] = s_D(x).
+
+The posterior is calibrated out of distribution on average over the prior. What fails out of distribution is the statement for one fixed target: Pr_f(E) ≤ Pr_w(E)/w(f) is the only general conversion, and it turns c into c/w(f). This is where the 2^K comes from in every certificate above, and it is the same fact as the grue theorem of `ultranatural/note.md`: the prior-averaged statement is about the reference machine as much as about the target.
+
+### 7.5 The link with separation complexity, and when the exponential disappears
+
+* **The disagreement region of a budget class is a separation-complexity ball** [my own derivation from `ultranatural/note.md` §1 and Theorem 1]. For f ⊇ D with inputs A: every x ∉ A with K(f) + sep(x; A | f) + c ≤ k is in DIS(VS_k(D)) (the patch of f at x is in H_k), and every x in DIS(VS_k(D)) has sep(x; A | f) ≤ k + c (a consistent g differing from f at x gives the separating set {g ≠ f}). So the never-wrong rule over H_k abstains exactly on the inputs that a test of complexity about k separates from the data, up to K(f) + O(1) bits. A star set is a set of single-point patches; the star number of H_k counts the guards available within the budget.
+* **Separated classes have no star sets of small measure** [my own derivation]. If every two members of the class differ on μ-mass at least δ (the δ-isolated functions of `note.md` §5), then B(f, r) = {f} for r < δ and the disagreement coefficient is at most 1/δ. After about (k·ln 2 + ln(1/η))/δ samples the version space within budget k is {f} with probability 1 − η (`note.md` Theorem 9), and from then on the never-wrong rule answers *every* input, out of distribution included. In the terms of this literature, patch-free induction is perfect selective classification over a δ-packing. The assumption that the target is in the packing is then the whole content, and its failure is silent.
+* **Classes in which exceptions are expensive to state.** The equational inductor of `ultranatural/equational.md` makes a single-point exception cost at least the cost of naming the point (README, item 5). That limits the single-point patches available within a budget, which is what a small star number means. I have not computed a star number there.
+* **Richer observations** (§3.4).
+
+---
+
+## 8. From deterministic labels to samplers
+
+### 8.1 What changes
+
+1. *No refutation by one example.* A version space becomes a confidence set: the hypotheses whose likelihood, or posterior weight, is within a factor of the best. That the truth stays in it is Ville's inequality (CHN22 Theorem 2; LHS13 Theorem 8; `repo.md` X5; the lead's Theorem E).
+2. *What an answer is.* Either a predicted distribution, accurate to ε in total variation, Hellinger distance or KL (this is already KWIK's definition with noisy observations, §3.1), or a sample.
+3. *What "not silently wrong" can mean for a sample.* (i) The output law is ε-close to P(·|x). (ii) Domination: the output sub-distribution is pointwise at most P(·|x), so no event is more likely than under P. (iii) Validity: the output lies in a set R_x of acceptable answers.
+4. *Rates.* Deterministic elimination gives 1/n; distinguishing distributions at distance ε takes 1/ε² observations per pair.
+5. *Noise is not the right model of a sampler.* If the human's randomness is treated as label noise around a deterministic f*, the agnostic lower bounds apply with η equal to that randomness: error plus rejection at least √(η/8) under shift (§5.1), rejection about θ·R(f*) even in distribution (§4.2), no finite abstention bound below l mistakes (§4.1). The class must contain the sampler itself.
+
+### 8.2 KWIK for distributions
+
+Coins, dice, noisy linear functions and the k-meteorologists problem (§3.1) are KWIK problems with stochastic observations; LHS13 (§7.3) extends them to arbitrary finite and countable classes of sequence measures, and the proposition of §7.3 to samplers with chosen inputs. In all of them the abstention count is polynomial in the number of hypotheses, or in 1/w, and in 1/ε.
+
+### 8.3 Cohen, Hutter and Nanda (2022): a conservative imitator
+
+[read in source: CHN22 §§3–6.] Histories of (query flag, action, observation) triples; an arbitrary stochastic environment that never resets; a demonstrator policy π^d in a countable class Π with prior w. Π may be all computable policies with w ∝ 2^(−length) (their Example 1).
+
+* *The imitator.* Update the posterior only on actions chosen by the demonstrator. Let Π^α be the set of policies whose posterior weight is at least α times the total posterior weight of the policies at least as probable. Take action a with probability min_{π′ ∈ Π^α} π′(a | history); with the remaining probability θ_q, query: the demonstrator acts.
+* **Theorem 2**: Pr[∀t: π^d ∈ Π^α] ≥ 1 − α/w(π^d). Call this event E.
+* **Theorem 1** (queries): E Σ_t θ_q(h_{<t})³ ≤ |A|·α⁻³·(24·w(π^d)⁻¹ + 12).
+* **Theorem 3** (convergence): for α < w(π^d), E[Σ_t (Σ_a |π^i_α(0, a | h_{<t}) − π^d(1, a | h_{<t})|)³ | E] ≤ |A|·α⁻³·(24·w(π^d)⁻¹ + 12)/(1 − α·w(π^d)⁻¹).
+* **Theorem 4** (if environment and demonstrator do not depend on who chose the actions): the KL divergence from the imitator's law of the first t actions and observations to the demonstrator's, both conditioned on E, is at most α⁻¹·|A|^(1/3)·(24·w(π^d)⁻¹ + 12)^(1/3)·t^(2/3)/(1 − α/w(π^d))² − log(1 − α/w(π^d)). It grows like t^(2/3), so KL/t → 0.
+* **Theorem 5** ("preserving unlikeliness"): for an event B on the first t steps, with s_α = |A|·α⁻³·(24·w(π^d)⁻¹ + 12),
+
+      Pr_imitator(B ∩ E) ≤ t²·s_α / [ log( t²·s_α / (27·Pr_demonstrator(B)) ) − 3·log log( 1 + t^(2/3)·s_α^(1/3) / (3·Pr_demonstrator(B)^(1/3)) ) ]³.
+
+  As the demonstrator's probability of B tends to 0, the bound tends to 0 "at least polylogarithmically".
+* *Their own assessment*: with α set below w(π^d) the bounds are "effectively quartic in w(π^d)⁻¹"; "setting α well requires estimating w(π^d), something we cannot offer general guidance on"; realizability is required; pre-training on N demonstrator steps may raise the posterior weight of the truth.
+
+How this relates to the lead's Theorem E [my reading]: Theorem E is this imitator with the demonstrator removed at deployment, so that a query becomes an abstention. Per step, the imitator's own actions are dominated by the demonstrator's on E; CHN22 lose this over a run because queried steps add up to a factor (1 + θ_q) each, which is why their Theorem 5 is polylogarithmic. With abstention instead of querying, domination of non-abstaining transcripts is exact on E. Their top set is defined with cumulative weights, not with a ratio to the largest weight; the Ville bound is the same. The in-distribution abstention rate inherits their Theorem 1: Σ θ_q ≤ T^(2/3)·(Σ θ_q³)^(1/3), so the average rate over T steps is at most (|A|·α⁻³·(24/w + 12)/T)^(1/3), small only for T beyond about |A|/(α³·w·ε³).
+
+### 8.4 Regression with noise under arbitrary shift
+
+Kalai and Kanade's Theorem 4 (§5.3) is the one result I found that has stochastic labels, arbitrary test inputs and abstention: it predicts the conditional mean in a linear class, with expected loss α·TV(μ, μ′) + κ·log n/√n. Their Lemmas 1–2 are stated for any loss and any confidence set containing the truth, and their remark is that the "information theoretic results generalize to more general regression in a straightforward fashion".
+
+### 8.5 Generative models: validity, breadth, and unavoidable errors
+
+**Validity from positive examples alone.**
+
+* *Kleinberg and Mullainathan (2024)* [read in source: KM24 §2, §7]. A countable list of candidate languages (sets of strings, all infinite), accessible through membership queries; an adversary enumerates all strings of one of them, K. An algorithm *generates in the limit* if from some time on every output is an unseen member of K. **(2.1)** There is one algorithm that generates in the limit for every countable collection and every enumeration, although identification in the limit is impossible for such collections (Gold, Angluin). **(2.2)** For a finite collection 𝒞 there is a number t(𝒞) such that after any t(𝒞) distinct examples the algorithm can output infinitely many unseen members of K. **(7.1)** With prompts: if every prompt has arbitrarily long continuations in every candidate language, the algorithm eventually completes every prompt correctly, including prompts it has never seen an example for.
+* *Li, Raman and Tewari (2024)* [read in source: LRT24 §§2–3, §5]. Hypotheses h ∈ {0,1}^X with infinite support. The *closure* ⟨x_1, …, x_n⟩_H is the intersection of the supports of all hypotheses whose support contains x_1, …, x_n: "the set of positive examples common to all hypothesis in the version space". The *closure dimension* C(H) is the largest d for which some d distinct points have a non-empty version space and a finite closure. **Theorem 3.3**: H is uniformly generatable (a number d* of distinct examples, the same for all h and all streams, after which every output is a new valid example) if and only if C(H) < ∞, and the optimal d* is Θ(C(H)). **Theorem 3.5, Corollary 3.6**: H is non-uniformly generatable (d* may depend on h) if and only if it is an increasing union of classes of finite closure dimension; every countable class is. Generatability and learnability are incomparable (Theorem 4.1). Prompted versions (Theorems 5.1–5.2, Corollary 5.3) hold with the prompted closure dimension; there the generator must be right for a prompt only after enough examples *with that prompt*.
+* *Charikar and Pabbaraju (2024)* [read in source: arXiv abstract of CP24]: non-uniform generation for every countable collection; with membership queries only it is impossible even for two languages; a negative result for "exhaustive" generation.
+* *Kalavasis, Mehrotra and Velegkas (2025)* [read in source: KMV24 abstract]: with random samples from the target language, generation that is both consistent and has *breadth* is impossible "for a large class of language models … for most collections of candidate languages"; it becomes possible for every countable collection when negative examples are also given.
+
+What this is, in the terms of §3 [my reading]. Generating from the closure is the generative form of CSS: output only what every hypothesis still consistent would accept. Validity then needs no identification of the target. The price is breadth: the generator covers only the part of the target's support that the data force. And the guarantees do not cross a shift: the time after which outputs are valid is when all wrong hypotheses *earlier in the enumeration than the truth* have been refuted by the data shown, and a wrong simpler hypothesis that differs from the truth only on a kind of input that is never shown is never refuted. KM24's (7.1) handles unseen prompts only because the enumeration eventually shows everything.
+
+**Validity with a verifier** [read in source: HKKT18 abstract, §1, Theorems 2–3]. Hanneke, Kalai, Kamath and Tzamos: samples from p, a class 𝒬 of generators, and an oracle that says whether a given output is invalid. Goal: q̂ with loss at most ε_1 above the best fully valid q ∈ 𝒬 and invalid mass at most ε_2. *Improper* learning succeeds with Θ((M²/ε_1²)·log |𝒬|) samples and Θ(M/ε_1) rounds of Θ((M/(ε_1·ε_2))·log |𝒬|) oracle queries (Theorem 3; M bounds the loss); *proper* learning needs 2^Ω(d) queries already for uniform distributions on boxes in {0,1}^d (Theorem 2). With a verifier, validity costs log of the class size.
+
+**A calibrated generator errs at the missing-mass rate.**
+
+* *Kalai and Vempala (2024)* [read in source: KV24 abstract, §1, Corollary 1]. Documents carry "factoids" whose truth cannot be inferred from the training data. For every learning algorithm, with probability 1 − δ, (rate of generating false factoids) ≥ (fraction of training facts seen exactly once) − (miscalibration) − 3e^(−s)/δ − √(6·ln(6/δ)/n), where e^(−s) bounds the ratio of true facts to possible false ones.
+* *Kalai, Nachum, Vempala and Zhang (2025)* [read in source: KNVZ25 §3, Theorems 1–2]. For prompts c with valid responses V_c and erroneous ones E_c: err ≥ 2·err_iiv − max_c |V_c|/min_c |E_c| − δ, where err_iiv is the error of the "is it valid?" classifier obtained by thresholding the model's probabilities and δ is a calibration term. In an "arbitrary facts" model in which the correct response may also be "I don't know": err ≥ (fraction of prompts seen once without abstention) − 2/min_c |E_c| − (35 + 6 ln N)/√N − δ. "Language models which do not err must not be calibrated."
+
+For imitation [my reading]: wherever the human's answers encode facts that cannot be inferred from the other pairs, an imitator that matches the human's distribution on the training inputs must invent such facts on new inputs at about the rate at which new inputs occur. It can avoid this only by abstaining where the human would answer, that is, by not being a copy there. This is the generative face of "K(P) bits must come from somewhere".
+
+### 8.6 Conformal methods for generators
+
+[read in source: arXiv abstracts only.] Quach et al. (2024) calibrate a stopping rule for sampling candidate answers so that the sampled set contains an acceptable answer with high probability. Mohri and Hashimoto (2024) make an answer progressively less specific until, with the calibrated probability, it is correct. Yadkori et al. (2024) calibrate an abstention rule to bound the hallucination rate. All inherit §6: exchangeable calibration data and a judge of correctness.
+
+### 8.7 A statement I did not find, and a sketch of it
+
+I found no theorem of PQ or MMA type for conditional samplers. Kalai–Kanade's Lemma 1 gives the deterministic half at once.
+
+[my own derivation; the rate in the last step is a sketch that I have not checked in detail.] Let H be a finite class of samplers containing P, |H| = N. Let ℓ(g, h)(x) = TV(g(·|x), h(·|x)). From training data D on inputs drawn i.i.d. from μ, form V = {ν ∈ H : ν(D) ≥ (δ/N)·Σ_{ν′} ν′(D)}; then P ∈ V with probability at least 1 − δ (Ville). Let h be any member of V or the mixture. Given a test batch x ∈ Xⁿ, choose the abstention set A* minimizing max_{g ∈ V} [ (α/n)·|A| + (1/n)·Σ_{i ∉ A} ℓ(g, h)(x_i) ]. Then by KK21b Lemma 1, for every batch x and every z ∈ Xⁿ,
+
+    (α/n)·|A*| + (1/n)·Σ_{i ∉ A*} TV(P(·|x_i), h(·|x_i)) ≤ (α/n)·|{i : x_i ≠ z_i}| + max_{g ∈ V} (1/n)·Σ_i TV(g(·|z_i), h(·|z_i)).
+
+With z a fresh sample from μⁿ, the last term should be Õ(√((ln N + ln(1/δ))/n)): members of a likelihood-ratio confidence set are within squared Hellinger distance O((ln N + ln(1/δ))/n) of P on average over μ, and for a finite class this transfers to a fresh sample. So: on an arbitrary deployment batch, (average total-variation error on the answered inputs) + α·(abstained fraction) ≤ α·(fraction of the batch that is not training-like) + Õ(√(ln N / n)); with Lemma 2, the first term can be replaced by α·D_B(μ‖μ′) at the price of a factor B on the second. For H = samplers of complexity at most k, ln N ≤ k·ln 2.
+
+The abstention rule is a search for one plausible sampler that disagrees with h on much of the batch; it tolerates guards that fire on a small fraction of the batch and rejects the region of any guard that fires on a large one.
+
+@@PART4@@
