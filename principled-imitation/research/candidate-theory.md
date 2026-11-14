@@ -127,3 +127,14 @@ Stateful humans (episodes); K for a person; stochastic versions of R4–R6 and A
 ## 12. Errors found in version 1
 
 Version 1 used "KL(⊗P_j ‖ R) ≥ Σ_j KL(P_j ‖ R_j) for a product first argument". False: P₁ = δ_b, P₂ = Bern(1/2), R = (1 − ε)·δ_a ⊗ Bern(0.01) + ε·δ_b ⊗ Bern(1/2). So freezing the per-call mixture during a run of the human system and summing per-call divergences is not bounded by the regret; Theorem A (one hypothesis per run) and Theorem R1 (one asked call per run) avoid this.
+
+## 13. Additions after version 2 (lead, unchecked)
+
+**V1 (validation certificate; no assumption on the human or on how the imitator was made) [P].** Freeze any answerer A. Repeat m times: run Π with A, choose a call J uniformly from {1..L}, and if the run has a J-th call put its input to the human; record A's answer y^A used in the run and the human's answer y^P.
+(a) *Deterministic human and deterministic A.* Let ρ := (1/L)·E[number of calls of a run of A at which A's answer differs from the human's]. The recorded mismatches are m independent Bernoulli(ρ) variables. If none occurs, ρ ≤ ln(1/δ)/m with confidence 1 − δ; in general the usual binomial bound. Then E[unfaithful calls per run] = Lρ, the run is entirely faithful with probability ≥ 1 − Lρ, and with tolerance of m_f faults the failure is ≤ δ_f + Lρ/(m_f + 1).
+(b) *In general.* For a countable family of tests B ⊆ X × Y with weights π: with confidence 1 − δ, simultaneously for all B, the difference between the frequencies of B among A's answers and among the human's answers to A's own inputs is within √(2 ln(2/(π(B)δ))/m) of its empirical value.
+So in a closed system the quality of an imitator on its own deployment distribution can be measured; the learning theorems say when the measurement will come out well, and the certificate does not depend on them. The lower bound N2 says that m questions cannot certify a rate below about 1/m.
+
+**V2 (what imitation amplifies) [reading of N2 and R3].** With a worst-case guarantee over a class closed under patches, the number of human answers must exceed (number of critical call types in a run)/ε. Imitation therefore multiplies human work across many runs of a rehearsed computation, not within one run whose critical steps outnumber the answers. Low stakes in the sense of R3 is the only exception; a sufficient condition to examine: bounded damage (any single call sets a progress measure back by at most D calls' worth of faithful work, and there is slack), which tolerates a fault rate of about slack/(D + 1).
+
+**V3 (what remains a bet).** Rare situations (per-call frequency below about 1/n) are never sampled; what the imitator does there is fixed by the prior. The mixture is wrong there with probability about 2^(−sep); a prior restricted to isolated hypotheses (patch-free induction, `ultranatural/note.md`, Theorem 9) bets on the simplest continuation and is exact if the human is isolated. No data decide between these.
