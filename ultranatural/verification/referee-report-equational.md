@@ -335,6 +335,8 @@ Consequences:
 
 **s8. README.** The "Reproducing" section has no command for `holes_check.py`. Item 2 repeats the sentence of S1.
 
+**s9. Proposition 10 writes its identities with the variable z.** The unary vocabulary of Section 1 has x and y only (which is why the alphabet has 6 symbols and the weight is 6^(−(size+1))). *Fix:* write x for z. Nothing else changes.
+
 ### 6.3 Errata to my first report
 
 **e1. m1, last sentence: "6^5·ε(n) ≤ 2^(12.9 − 1.585n)" is false from n = 132 on** (exact check in `eq2_prior.out`): 1.585 is larger than log₂ 3 = 1.58496, and the margin 0.0049 in the constant is used up at n = 131.6. The response's "above about 125" is right in substance. The note's 2^(13 − 1.58·n) holds for every n: 6^5·(48/49) = 2^(12.895) and log₂ 3 > 1.58.
@@ -383,3 +385,13 @@ Monus is not covered by this argument.
 | `eq2_unary_strict.c` | the revised `eq_unary.c` with the over-length unions removed |
 | `eq2_reruns.out` | regeneration of every saved output from the revised code; the strict program against the saved tables; the guards |
 | `eq2_run_all.sh` | the commands |
+
+### 6.7 Postscript: the changes made in response
+
+While this section was being finished, the note was revised again (commit `ultranatural: apply the referee's second pass to the equational note`). I read that commit's changes to `equational.md`, `README.md`, `code/eq_unary.c` and `response-equational.md` against the findings above. This was a reading of the diff, not a third pass.
+
+* Proposition 4b, its proof and its three consequences are stated as in 6.1. The sentence that gave Proposition 4a a bound was removed, and the comparison of 4a with 4b (two symbols; n ≥ 3600·(h + 1)) is right. One loose end: "its bound" in that comparison now refers to 7^13·ε(m), which the text no longer states; name it there.
+* The remark on max and min after Theorem 3 states 6.5 correctly.
+* s1 to s8 are applied as proposed: the induction on partial sums, the test radius of doubling, the clause after Proposition 7, the two sentences of Section 6.2, "only polylogarithmically", the header comment, the README command. s9 was added after that commit and is not applied.
+* The change to `eq_unary.c` is in a comment only; the binary in `code/` has the same checksum as before, so `eq2_reruns.out` still describes it.
+
