@@ -119,3 +119,51 @@ In the class of all programs such a P′ exists for every decidable Q and costs 
 Every member of this class has weight at least 1/(2N) under the prior of the proof, so K ≤ log₂(L/(4γ) + 2): the humans of the theorem are simple. By Theorem R1, rehearsal reaches failure probability γ on this class with L·K ln 2/γ questions. So the factor L/γ is forced, and the two bounds differ by the factor 16·K ln 2. [The proof workers are deriving the version in which the factor K is forced as well.]
 
 Read as a statement about work: to obtain one run of L critical calls with a guarantee that covers every member of a class closed under such exceptions, more than L/(16γ) answers of the human are needed, and the human system itself needs L. Imitation with a worst-case guarantee therefore does not save human work within one run all of whose calls are critical. It saves work across runs: after the L·K ln 2/γ questions, every further run of the same closed system costs nothing. And it saves work within a run exactly to the extent that the human system tolerates faults (Theorem R3).
+
+## 8. The property idea (draft by the lead; to be merged with the checked proofs)
+
+The researcher's proposal: the answers so far had many properties (they were grammatical, they were correct solutions, they were helpful); a good imitator keeps them. His own objection: at a new input some property that held so far must break, so "keep all properties" is not a definition. This section says what survives.
+
+### 8.1 All properties at once
+
+If the run of the imitator is within total variation ε of the run of the human system, then every property of runs, simple or not, has a probability within ε of its probability in the human system. Theorems R1 and R2 give this at the price K, the description length of the human, and under A2. Preserving every property with small error is the same thing as closeness in total variation; it is not a weaker or different goal.
+
+### 8.2 One property at a time: a different price, and no assumption
+
+A *test* is a set B of pairs (question, answer). Take a countable family of tests with weights π(B) of total at most 1; with π(B) = 2^(−K(B)) these are the simple properties. Theorem V1(b) says that the frequencies of all tests can be compared between an imitator and the human on the imitator's own inputs, with error √(2 ln(2/(π(B)δ))/m) after m questions. The price of a property is its own complexity, the complexity of the human does not enter, and nothing is assumed about the human. For a human who is not deterministic this is also all that can be checked: each input is seen once, so P(·|x) is not observable at any single x, and only frequencies of tests can be estimated.
+
+The conflict between properties disappears in this form. The tests "x is not of the new kind Q, or y = 0" and "x is not in Q, or y = 1" both held on all data and contradict each other on Q. But neither is asked to hold at every input: each is asked to hold with the frequency with which it holds for the human, on inputs drawn as the deployment draws them. Both frequencies are those of the human on Q, and one imitator, the human, matches all tests at once.
+
+### 8.3 An imitator built from tests alone
+
+**Theorem Pr5 (matching all tests on any sequence).** Let Y be finite. In round t the imitator fixes a rule a_t: X → Y, then a question x_t arrives, then the human's answer y_t; both may depend in any way on the past and on a_t. For a test B let g_t(B) = 1[(x_t, a_t(x_t)) ∈ B] − 1[(x_t, y_t) ∈ B] and S_n(B) = Σ_{t≤n} g_t(B). Fix η > 0 and let a_t(x) be an answer y that minimises
+
+  Σ_B π(B)·sinh(η·S_{t−1}(B))·1[(x, y) ∈ B].
+
+Then for every n and every test B,
+
+  |S_n(B)| ≤ ln(2/π(B))/η + n·η/2,
+
+which is √n·(ln(2/π(B)) + 1/2) for η = 1/√n.
+
+*Proof.* Let Φ_t = Σ_B π(B)·cosh(η·S_t(B)), so Φ₀ ≤ 1. Since g_t(B) ∈ {−1, 0, 1}, cosh(η(S + g)) = cosh(ηS)·cosh(ηg) + sinh(ηS)·sinh(ηg) ≤ cosh(η)·cosh(ηS) + sinh(η)·sinh(ηS)·g. Summing over B, Φ_t ≤ cosh(η)·Φ_{t−1} + sinh(η)·Σ_B π(B)·sinh(η S_{t−1}(B))·g_t(B). The last sum is the minimised quantity at (x_t, a_t(x_t)) minus the same quantity at (x_t, y_t), so it is at most 0. Hence Φ_n ≤ cosh(η)^n ≤ e^(nη²/2), and π(B)·e^(η|S_n(B)|)/2 ≤ Φ_n. ∎
+
+The rule produces, at each question, an answer with the properties that the human's answers have had more often than its own. The argument is the one behind Blackwell's approachability theorem and behind forecasting that passes countably many checking rules (to be cited exactly after the literature check). No randomness is used and nothing is assumed about the human: not A1, not A2.
+
+**Corollary (rehearsal with the property imitator).** Run rehearsal with the rule a_t in place of the mixture, and deploy, for each run, the rule of a uniformly chosen round. Then for every test B the expected number of calls of a deployed run whose answer lies in B differs from the expected number of those calls at which the human's answer would lie in B by at most L·(ln(2/π(B)) + 1/2)/√n.
+
+*Proof.* In round t the asked call is a uniformly chosen call of the run of a_t, so the conditional expectation of g_t(B) is 1/L times the difference in question for the rule a_t. Sum over t and use |E S_n(B)| ≤ √n·(ln(2/π(B)) + 1/2). ∎
+
+So if "y is a correct solution of x" is a test of the family, the deployed imitator's answers on its own inputs are correct solutions as often as the human's answers to those inputs would be, up to the error term; and for a bad kind of answer that the human never gives, the imitator gives it at most (ln(2/π(B)) + 1/2)/√n of the time per call.
+
+### 8.4 What this does not give
+
+* **Only the tests of the family, and only as far as n reaches.** A property of complexity k is matched to within about k/√n. Being the answers of this particular human is a property of complexity about K.
+* **Single calls, not runs.** The rule of one round is a deterministic function; its deviations within a run are not independent. In the toy problem of Section 11 with a human who errs with probability 0.1 at each call, the imitator's answers are exact at the human's rate (0.90 against 0.90), and the root of the tree is exact with probability 0.62 against 0.48 for the human system (`results/toy_property.out`).
+* **A fresh rule for each run.** The guarantee is an average over the rounds. A single rule kept for good may over-produce a test that another round's rule under-produces.
+* **The rate.** The error is of order 1/√n per test where the mixture, when A2 holds, reaches K/n per call.
+* **Outside the closed system** nothing, as for every other protocol (Theorem N1).
+
+### 8.5 The mixture does not give the per-property price
+
+[To be completed from the checked proofs: on data that abide by a decidable property R, the posterior expectation of the inverse of the probability a hypothesis gave to abiding so far is at most 2^(K(R)+c) (a bound in hindsight); but the mixture's probability of violating R at the next input drawn from the same distribution is not bounded in terms of K(R): in a class whose weights favour memorisers (the table of the data, a fixed bad answer elsewhere) it stays near 1 for all n up to about K divided by the number of bits per pair.]
