@@ -20,6 +20,7 @@ This FAQ explains what the current results say, which assumptions matter, where 
 - **Other weight priors and activations:** [28. Non-Gaussian weight priors](#28-do-independent-non-gaussian-weight-priors-give-the-same-results) · [29. Other activations](#29-what-about-relu-sigmoid-gelu-or-other-activations)
 - **Online learning and distribution shift:** [30. Total mistakes](#30-can-we-bound-the-total-number-of-mistakes-during-online-learning) · [31. Mistakes and circuit size](#31-does-making-few-mistakes-imply-that-the-target-has-a-small-circuit) · [32. Out-of-distribution learning](#32-why-expect-occam-learning-to-transfer-out-of-distribution)
 - **Label noise, likelihoods, and singular learning theory:** [33. Label noise](#33-do-the-good-generalization-results-survive-a-small-amount-of-label-noise) · [34. SLT likelihoods](#34-do-the-polynomial-bounds-survive-the-likelihood-based-setup-used-in-singular-learning-theory) · [35. Comparison with SLT bounds](#35-does-singular-learning-theory-already-give-comparable-generalization-bounds) · [36. A finite-sample variational bound](#36-what-does-a-finite-sample-variational-bound-give-for-the-standard-fan-in-gaussian-prior) · [37. Prior scaling and prior-mass bounds](#37-can-prior-scaling-force-direct-prior-mass-bounds-to-depend-on-width-or-target-complexity)
+- **Approximation and arbitrary bounded noise:** [41. Competing with the best small network](#41-can-nnbayes-compete-with-the-best-small-network-without-a-realizable-target)
 - **Status and outlook:** [38. Resolved and open problems](#38-which-original-open-problems-have-been-resolved-and-which-remain) · [39. Before explaining practical deep learning](#39-what-other-questions-matter-before-interpreting-this-as-an-explanation-of-practical-deep-learning) · [40. Formal verification](#40-how-much-of-this-is-formally-verified)
 
 ## 1. What is the basic model, and what does “a circuit prior” mean here?
@@ -120,7 +121,7 @@ Depth is substantive in this extension: [Question 19](#19-is-exponential-depth-d
 
 For a finite input cube and nonzero clean outputs, sufficiently large readout amplification can eventually enforce the robustness condition of [Question 15](#15-what-robustness-condition-gives-polynomial-depth-dependence), which requires clipped outputs to survive small internal disturbances. This does not show that the **raw trained network** satisfies the condition, or that the required amplification has polynomial cost. The robust Boolean-circuit construction behind that question's theorem instead supplies a controlled implementation and a controlled neighborhood of prior mass around it.
 
-**Open:** an equally general theory for real-valued regression with noisy observations, or for multiclass outputs. The continuous-domain regression theorem uses clean observations; its nonzero training tolerance is not a theorem about corrupted labels. Binary label noise is discussed in [Question 33](#33-do-the-good-generalization-results-survive-a-small-amount-of-label-noise).
+**Noisy real-valued regression has agnostic guarantees under suitable likelihoods.** [Question 41](#41-can-nnbayes-compete-with-the-best-small-network-without-a-realizable-target) gives squared-loss comparisons with the best bounded-weight teacher for arbitrary bounded-label distributions, including noise. This uses tempered Gaussian likelihoods or a prior over architectures; it is a different statement from the continuous-domain theorem's clean-label interpolation guarantee. Multiclass outputs remain less developed. Binary label noise with exact interpolation is discussed in [Question 33](#33-do-the-good-generalization-results-survive-a-small-amount-of-label-noise).
 
 <a id="4-can-we-drop-the-requirement-of-a-margin-on-every-input-before-training"></a>
 
@@ -1410,6 +1411,8 @@ says that, conditional on a mistake by the simplest survivor, a uniformly sample
 
 ## 33. Do the good generalization results survive a small amount of label noise?
 
+For arbitrary bounded noise when training errors are allowed, see the agnostic regression results in [Question 41](#41-can-nnbayes-compete-with-the-best-small-network-without-a-realizable-target). The answer below concerns the separate requirement of exactly fitting every corrupted binary label.
+
 **Yes in the strong-prior limit, for distinct uniformly sampled inputs and a noise rate small enough relative to the target resources.** The [noisy-interpolation theorem](works-in-progress/noisy-interpolation/README.md) bounds clean error for tanh networks that exactly fit every training label, including flipped labels. Its noise tolerance is inverse-polynomial in dimension, depth, and the teacher's output bound, with large unoptimized constants. The proof has independent AI-agent mathematical reviews and is not Lean verified.
 
 The learner is the original model of [Question 1](#1-what-is-the-basic-model-and-what-does-a-circuit-prior-mean-here): a Gaussian prior on tanh-network weights, conditioned on output margin $`|z_w(x)|>1/2`$ at every Boolean input $x$ and then exactly on the training labels. The theorem takes the **strong-prior limit**: the prior variance $\sigma^2$ tends to zero at each fixed learner width $N$ ([Question 8](#8-what-is-known-for-the-one-parameter-family-of-prior-scalings)). Without noise, that limit needs only polynomially many samples at fixed depth.
@@ -1680,3 +1683,32 @@ The [verification record](lean/VERIFICATION.md) gives the theorem-type gates, in
 The [29 October standalone-writing review](verification/standalone-writing-2026-10-29.md) and [remaining-paper review](verification/remaining-papers-2026-10-29.md) improved explanations and corrected specified informal conventions without changing Lean sources or extending formal coverage. Older dated audits describe their own snapshots; each package's current verification overview gives its present status.
 
 Readers should start with the main theorem and conventions in the relevant paper, then use this FAQ to identify the limitations and possible extensions. The [collection index](README.md) distinguishes main results, side results, and work in progress.
+
+
+## 41. Can NNBayes compete with the best small network without a realizable target?
+
+**Yes, with an additive estimation penalty and an appropriate likelihood.** The [agnostic oracle paper](works-in-progress/agnostic-oracle-improvements/paper.pdf) considers arbitrary iid distributions of real inputs and labels in `[-1,1]`. No small network has to describe the full data-generating process. A teacher is simply a comparison network that may approximate it well.
+
+Write $R(g)$ for population squared loss, $C$ for teacher hidden width, $L$ for depth including the readout, and $B$ for a weight bound. The results distinguish two learners.
+
+**Dense independent Gaussian weights.** With the specified tempered Gaussian likelihood and the prior scale tending to zero separately at each fixed learner width, the remainder improves from approximately $n^{-1/(L+1)}$ to $n^{-1/(L-1)}$ for $L\ge3$. With one hidden layer it is approximately $n^{-1/2}$. These rates hold at fixed teacher resources and dimension, up to logarithms; the leading complexity term charges an implementation energy of order $d^2B^2+LC^2B^2$. One high-probability sample event controls every learner width $N\ge C$. The elementary proof covers clipped predictions; the smooth-loss appendix also covers ordinary raw-output posterior means with its stronger calibration. The trick is to keep the negative learner-energy penalty in the teacher comparison and absorb the statistical deviation into it. The sample exponent still deteriorates with depth.
+
+**Finite Gaussian priors also have a result.** With prior scale $\sigma^2=N^{-\gamma}$ and likelihood variance $n\lambda_n N^{-\gamma}$, the improved bound holds for clipped posterior predictions at every $\gamma\ge2$, uniformly over learner widths. With one hidden layer it holds at every $\gamma\ge1$, including mean field. There is no prior-strength limit here. The improved deep finite-scale rate for $1\le\gamma<2$ remains open; the earlier note has weaker positive results in that range.
+
+**An explicit prior over architectures.** Choose a hidden width and depth from a proper prior, then continuous weights, using either Cauchy coordinates or independent Gaussian coordinates conditional on a random scale. Use a fixed Gaussian likelihood centered on clipped outputs and predict with the final posterior mean. At fixed activation, the paper proves an expected-risk bound of the form
+
+$$
+\mathbb E_S R(\widehat f_S)
+\le R(\mathrm{clip}(g))+
+O\!\left(\frac{P[\log(n+1)+L\log((d+C)(B+1))]+\log(CL)}{n+1}\right),
+$$
+
+where $P=C(d+1)+(L-2)C^2+C$ is the teacher parameter count. The exact constants and activation dependence are in the paper. The bound is independent of the largest available width and depth, provided the teacher is admitted. The prior can also allow all finite architectures.
+
+At fixed depth and dimension, this allows comparison with width $n^\alpha$ for every $\alpha<1/2$, with any polynomially growing weight cap. With one hidden layer, the parameter count is linear in width, so every $\alpha<1$ works. Holding dimension and activation fixed, the joint width/depth penalty is roughly $(CdL+C^2L^2)/n$, up to logarithms. Tanh, ReLU, GELU and softplus all qualify. This polynomial depth dependence comes from a different prior that explicitly favors small architectures; it does not settle the corresponding question for dense Gaussian weights.
+
+**Prediction and probability conventions matter.** The fast architectural-prior theorem concerns the final posterior **mean in expectation over the sample**. It does not give the same guarantee for a posterior draw or a fast high-probability bound. The statistical principle is closely related to [Høgsgaard, Rebeschini and Wegel's exponential-weights aggregation theorem](https://arxiv.org/abs/2607.02247); the paper supplies a continuous-prior proof and the neural-network application. Neither route forces exact fitting of every noisy label: overly tight conditioning can memorize noise and fail the comparison.
+
+**Why not compare by width alone?** Even a width-one network can separate two arbitrarily close inputs if its weights are large enough. For any fixed proper prior on continuous predictors and a bounded squared-loss likelihood, such a pair can have very little prior mass on accurate predictors at the needed scale. The paper proves that a uniform width-only guarantee fails for this reason. The architectural bound needs only logarithmic dependence on weight magnitude, but does not eliminate it.
+
+The earlier [tempered-likelihood study](works-in-progress/agnostic-learning/) and the stronger results above have conventional proofs and independent mathematical review records. The stronger results are **not Lean verified**.

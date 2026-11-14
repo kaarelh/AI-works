@@ -1,0 +1,424 @@
+\section{A sharper oracle inequality for a Gaussian weight prior}
+\label{sec:gaussian-oracle}
+
+This section concerns a fully connected network with $H\geq1$ hidden
+layers, all of width $N$, and a scalar linear readout.  Its total depth,
+counting the readout, is $L=H+1$.  The activation in every hidden layer is
+$\tanh$.  Writing $\bar x=(1,x)\in\mathbb R^{d+1}$, the network is
+\[
+ h^1(x)=\tanh(W^1\bar x),\qquad
+ h^\ell(x)=\tanh(W^\ell h^{\ell-1}(x))\quad(2\leq\ell\leq H),
+ \qquad z_w(x)=v^\top h^H(x).
+\]
+The activation is applied coordinatewise.  There are no internal biases;
+the constant input coordinate supplies the first-layer biases.  Define
+the weighted quadratic energy
+\begin{equation}
+ Q_N(w)=\frac dN\|W^1\|_F^2+
+       \sum_{\ell=2}^H\|W^\ell\|_F^2+N\|v\|_2^2.
+ \label{eq:gaussian-energy}
+\end{equation}
+Here and below $d\geq1$.  Inputs may have any distribution on
+$\mathbb R^d$; the labels satisfy $|Y|\leq1$.  No bound on the input norm
+is needed for the argument in this section.
+
+Let $S=((X_i,Y_i))_{i=1}^n$ consist of independent samples from a law $D$.
+For a predictor $g$, write
+\[
+ R(g)=\mathbb E_D(g(X)-Y)^2,\qquad
+ \widehat R_S(g)=\frac1n\sum_{i=1}^n(g(X_i)-Y_i)^2,
+ \qquad \operatorname{clip}(t)=\max\{-1,\min\{1,t\}\}.
+\]
+For positive $\sigma$ and $\lambda$, give the weights independent
+centered Gaussian priors with variances
+\begin{equation}
+ \operatorname{Var}(W^1_{jk})=\frac{N\sigma^2}{d},\qquad
+ \operatorname{Var}(W^\ell_{jk})=\sigma^2\ (2\leq\ell\leq H),\qquad
+ \operatorname{Var}(v_j)=\frac{\sigma^2}{N}.
+ \label{eq:gaussian-prior-variances}
+\end{equation}
+Use a Gaussian likelihood with mean $z_w(X_i)$ and variance
+$n\lambda\sigma^2$ for each observation.  The posterior is therefore
+\begin{equation}
+ \Pi_{\sigma,N,S}(dw)=\frac1{Z_{\sigma,N,S}}
+  \exp\left[-\frac{Q_N(w)+\lambda^{-1}\widehat R_S(z_w)}{2\sigma^2}\right]dw.
+ \label{eq:gaussian-posterior}
+\end{equation}
+The likelihood uses the raw real-valued network output; it does not
+require exact interpolation.  The limit $\sigma\downarrow0$ is taken
+with $n,S,N$, and $\lambda$ fixed.  Its limiting optimization problem is
+\begin{equation}
+ \operatorname*{minimize}_w
+ \bigl\{\widehat R_S(z_w)+\lambda Q_N(w)\bigr\}.
+ \label{eq:gaussian-objective}
+\end{equation}
+
+\subsection{Teacher implementations and a width-independent capacity bound}
+
+\begin{lemma}[Cloning a teacher]
+\label{lem:gaussian-cloning}
+Suppose that $g$ is a network of the preceding architecture, hidden
+width $m$, and depth $H+1$, with every weight of absolute value at most
+$B$.  At every width $N\geq m$ it has an exact implementation with
+\begin{equation}
+ Q_N\leq E:=d(d+1)B^2+2H m^2B^2.
+ \label{eq:gaussian-teacher-energy}
+\end{equation}
+Moreover, $|g(x)|\leq U:=mB$ for every $x$.
+\end{lemma}
+\begin{proof}
+Partition the $N$ neurons in each hidden layer into $m$ groups, of sizes
+$k_j\in\{\lfloor N/m\rfloor,\lceil N/m\rceil\}$.  Copy a teacher
+first-layer row onto every neuron in its group.  Replace a teacher
+internal weight $A^\ell_{ji}$ by $A^\ell_{ji}/k_i$ on every corresponding
+edge, and its readout weight $u_j$ by $u_j/k_j$ on each copy.  Every copy
+has exactly the teacher activation, so the function is unchanged.
+The first-layer energy is at most $d(d+1)B^2$.  Since $k_j/k_i\leq2$,
+each internal layer costs at most $2m^2B^2$.  Since
+$k_j\geq N/(2m)$, the readout costs at most $2m^2B^2$.  There are
+$H-1$ internal layers and one readout.  Finally, $|\tanh|\leq1$ gives
+$|g|\leq\sum_j|u_j|\leq mB$.
+\end{proof}
+
+Put
+\begin{equation}
+ D_n=\sqrt{2(d+1)\log(n+1)}+\frac{H-1}{2},\qquad
+ \mathcal Z_K=\bigcup_{N\geq1}\{z_w:Q_N(w)\leq K\}.
+ \label{eq:gaussian-Dn}
+\end{equation}
+The union over all learner widths is essential: the following event
+controls every width at once.
+
+\begin{lemma}[Capacity of an energy ball]
+\label{lem:gaussian-capacity}
+For every set of $n$ inputs and every $K>0$, the empirical Rademacher
+complexity satisfies
+\begin{equation}
+ \widehat{\mathfrak R}_S(\mathcal Z_K)
+ \leq \left(\frac KH\right)^{H/2}\frac{D_n}{\sqrt n}.
+ \label{eq:gaussian-rademacher}
+\end{equation}
+Consequently, with probability at least $1-\eta$, simultaneously for all
+widths and all $w$ with $Q_N(w)\leq K$,
+\begin{equation}
+ R(\operatorname{clip}z_w)
+ \leq\widehat R_S(\operatorname{clip}z_w)
+ +8\left(\frac KH\right)^{H/2}\frac{D_n}{\sqrt n}
+ +4\sqrt{\frac{\log(1/\eta)}{2n}}.
+ \label{eq:gaussian-fixed-energy-deviation}
+\end{equation}
+\end{lemma}
+\begin{proof}
+For a bounded set $A\subset\mathbb R^n$, write
+$\operatorname{Rad}(A)=n^{-1}\mathbb E_\epsilon
+\sup_{a\in A}\sum_i\epsilon_i a_i$.
+Its value is unchanged by taking a closed convex hull; it scales
+linearly under positive scalar multiplication.  We use the standard
+Rademacher contraction inequality, Massart's finite-class bound, and
+the Sauer--Shelah bound for halfspaces.
+
+For $t\in[0,1]$, let $\operatorname{clip}_t(u)=\max\{-t,\min\{t,u\}\}$,
+and let $\operatorname{Clip}(A)$ contain the vectors
+$(\operatorname{clip}_t(a_i))_{i=1}^n$ for $a\in A$ and a single common
+$t\in[0,1]$.  The identity
+$\operatorname{clip}_t(u)=(|u+t|-|u-t|)/2$, contraction, and symmetry of
+the Rademacher signs imply
+\begin{equation}
+ \operatorname{Rad}(\operatorname{Clip}(A))
+ \leq\operatorname{Rad}(A)+\frac1{2\sqrt n}.
+ \label{eq:gaussian-variable-clip}
+\end{equation}
+Indeed, split the supremum between the two absolute-value expressions
+and contract each.  The two additional terms sum to
+$\mathbb E|\sum_i\epsilon_i|/(2n)\leq1/(2\sqrt n)$.
+
+We also need a positive mixture identity.  For $s>0$ and $|u|\leq1$,
+\begin{equation}
+ \frac{\tanh(su)}s=
+ \int_0^1\operatorname{clip}_t(u)\,
+       2s\tanh(st)\operatorname{sech}^2(st)\,dt
+ +\operatorname{sech}^2(s)\operatorname{clip}_1(u).
+ \label{eq:gaussian-tanh-mixture}
+\end{equation}
+All weights are nonnegative and have total mass one.  To verify the
+identity for $u\geq0$, integrate by parts with
+$\psi(t)=\tanh^2(st)$: the right side is
+$u-\int_0^u\tanh^2(st)dt=\tanh(su)/s$.  Oddness gives the other half.
+
+On the fixed sample inputs, let $\mathcal F_1$ be the closed convex hull
+of the vectors $(\tanh(a\cdot\bar X_i))_{i=1}^n$, with
+$a\in\mathbb R^{d+1}$.  Recursively set
+$\mathcal F_\ell=\overline{\operatorname{conv}}
+\operatorname{Clip}(\mathcal F_{\ell-1})$.  These sets are symmetric,
+convex, contain zero, and lie in $[-1,1]^n$.
+Define $\rho^1=\boldsymbol1_N$ and
+$\rho^\ell=|W^\ell|\rho^{\ell-1}$, with entrywise absolute values.
+Induction using \eqref{eq:gaussian-tanh-mixture} shows that the sample
+vector of hidden neuron $j$ at layer $\ell$ belongs to
+$\rho^\ell_j\mathcal F_\ell$.  A zero value of $\rho^\ell_j$ forces the
+neuron to vanish.  For a positive value, divide the preactivation by
+$\rho^\ell_j$; it is a convex signed combination of the previous
+normalized neurons, hence belongs to $\mathcal F_{\ell-1}$.  The mixture
+identity completes the induction.
+
+It follows that the output sample vector belongs to
+$P(w)\mathcal F_H$, where
+$P(w)=|v|^\top|W^H|\cdots|W^2|\boldsymbol1_N$ (with no matrix factors
+when $H=1$).  Cauchy--Schwarz and the Frobenius bound on operator norm give
+\[
+ P(w)\leq\sqrt N\|v\|_2\prod_{\ell=2}^H\|W^\ell\|_F
+ \leq\left(\frac{Q_N(w)}H\right)^{H/2}.
+\]
+The last inequality is AM--GM over the $H$ energy terms after the first
+layer.  The first-layer energy is not needed for this capacity estimate.
+By \eqref{eq:gaussian-variable-clip},
+$\operatorname{Rad}(\mathcal F_H)\leq
+\operatorname{Rad}(\mathcal F_1)+(H-1)/(2\sqrt n)$.
+
+Finally, if a scalar random variable $T$ has distribution function
+$(1+\tanh t)/2$, then $\tanh u=\mathbb E\operatorname{sign}(u-T)$.
+Thus $\mathcal F_1$ lies in the convex hull of the affine-halfspace
+dichotomies of the sample inputs.  There are at most $(n+1)^{d+1}$ such
+dichotomies by Sauer--Shelah.  Massart's bound gives
+$\operatorname{Rad}(\mathcal F_1)
+\leq\sqrt{2(d+1)\log(n+1)/n}$, proving
+\eqref{eq:gaussian-rademacher}.
+
+The clipped squared loss is bounded by $4$ and is $4$-Lipschitz in the
+raw prediction.  Symmetrization and contraction bound its expected
+uniform deviation by eight times
+\eqref{eq:gaussian-rademacher}.  Changing one observation changes that
+supremum by at most $4/n$, so bounded-difference concentration gives
+\eqref{eq:gaussian-fixed-energy-deviation}.
+The suprema are measurable: for each width the relevant loss is
+continuous in the parameters, and rational parameter vectors in the
+open energy ellipsoid are dense in the closed ellipsoid.  Taking the
+union over the countably many widths gives a countable determining
+class.
+\end{proof}
+
+\subsection{Absorbing capacity into the energy penalty}
+
+An estimate based only on the largest possible energy of a minimizer
+loses useful information.  In the proof below, the capacity cost of
+the selected network is paid by that same network's energy penalty.
+
+\begin{theorem}[Gaussian oracle inequality, at least two hidden layers]
+\label{thm:gaussian-absorption}
+Suppose $H\geq2$, $0<\delta<1$, and $n\geq1$.  Set
+\begin{align}
+ a_n&=8(2/H)^{H/2}\frac{D_n}{\sqrt n},&
+ \lambda&=a_n^{2/H}
+       =\frac2H\left(\frac{8D_n}{\sqrt n}\right)^{2/H},
+       \label{eq:gaussian-calibration}\\
+ J&=\max\{0,\lceil\log_2(1/\lambda)\rceil\},&
+ b_n&=4\sqrt{\frac{\log(2(J+1)/\delta)}{2n}},&
+ e_n&=8H^{-H/2}\frac{D_n}{\sqrt n}.
+ \label{eq:gaussian-residuals}
+\end{align}
+Fix a teacher $g$ as in Lemma~\ref{lem:gaussian-cloning}, independently
+of the observed sample.  With probability at least $1-\delta$,
+simultaneously for every learner width $N\geq m$, every global
+minimizer $w$ of \eqref{eq:gaussian-objective} satisfies
+\begin{equation}
+ R(\operatorname{clip}z_w)
+ \leq R(g)+\lambda E+e_n+b_n+h_g,
+ \label{eq:gaussian-oracle}
+\end{equation}
+where one may use either of the following teacher concentration bounds,
+chosen in advance (each choice gives its own event of probability at
+least $1-\delta$):
+\begin{align}
+ h_g&=(U+1)^2\sqrt{\frac{\log(2/\delta)}{2n}},
+       \label{eq:gaussian-teacher-hoeffding}\\
+ h_g&=(U+1)\sqrt{\frac{2R(g)\log(2/\delta)}n}
+       +\frac{2(U+1)^2\log(2/\delta)}{3n}.
+       \label{eq:gaussian-teacher-bernstein}
+\end{align}
+On that same event, for each fixed $N\geq m$, the right side of
+\eqref{eq:gaussian-oracle} also bounds
+\[
+ \limsup_{\sigma\downarrow0}
+   \mathbb E_{w\sim\Pi_{\sigma,N,S}}R(\operatorname{clip}z_w)
+ \quad\hbox{and}\quad
+ \limsup_{\sigma\downarrow0}
+   R\left(\mathbb E_{w\sim\Pi_{\sigma,N,S}}\operatorname{clip}z_w\right).
+\]
+The event is common to all widths.  The limit in $\sigma$ is pointwise
+in the learner width, with no width-uniform convergence rate asserted.
+\end{theorem}
+\begin{proof}
+The zero network has empirical risk at most one.  Consequently every
+global minimizer has energy $q=Q_N(w)\leq1/\lambda$.
+Apply Lemma~\ref{lem:gaussian-capacity} at thresholds
+$K_j=2^j$, $j=0,\ldots,J$, each with failure probability
+$\delta/[2(J+1)]$.  On the resulting event, common to every width,
+networks with $q\leq1$ have deviation at most $e_n+b_n$.  For $q>1$,
+the least dyadic threshold containing $q$ is less than $2q$, so their
+deviation is at most $a_n q^{H/2}+b_n$.  In particular, for every
+$q\leq1/\lambda$,
+\[
+ R(\operatorname{clip}z_w)
+ \leq\widehat R_S(\operatorname{clip}z_w)
+       +a_nq^{H/2}+e_n+b_n.
+\]
+Since $H/2\geq1$ and $\lambda^{H/2}=a_n$,
+\[
+ a_nq^{H/2}\leq a_n\lambda^{1-H/2}q=\lambda q.
+\]
+Clipping cannot increase squared loss against labels in $[-1,1]$.
+Comparison of the minimizing objective with the cloned teacher gives
+\[
+ R(\operatorname{clip}z_w)
+ \leq\widehat R_S(z_w)+\lambda Q_N(w)+e_n+b_n
+ \leq\widehat R_S(g)+\lambda E+e_n+b_n.
+\]
+Hoeffding's inequality gives
+\eqref{eq:gaussian-teacher-hoeffding} with failure probability at most
+$\delta/2$.  For \eqref{eq:gaussian-teacher-bernstein}, put
+$Z=(g(X)-Y)^2$.  Then $0\leq Z\leq(U+1)^2$ and
+$\operatorname{Var}(Z)\leq(U+1)^2R(g)$; Bernstein's inequality gives
+the stated bound.  Union-bounding with the capacity event proves
+\eqref{eq:gaussian-oracle}.
+
+For completeness, at fixed $N,S$ the function
+$F(w)=Q_N(w)+\lambda^{-1}\widehat R_S(z_w)$ is continuous and coercive,
+so its minimizer set is nonempty and compact.  Write $f_* =\min F$.
+For each $\varepsilon>0$, a positive-volume neighborhood of a minimizer
+has $F\leq f_*+\varepsilon/2$.  If $\beta=(2\sigma^2)^{-1}$ and
+$\beta>\beta_0>0$, then
+\[
+ \int_{\{F\geq f_*+\varepsilon\}}e^{-\beta F}dw
+ \leq e^{-(\beta-\beta_0)(f_*+\varepsilon)}
+       \int e^{-\beta_0F}dw.
+\]
+The final integral is finite because $F\geq Q_N$.  Dividing by the
+normalizer lower bound from that neighborhood shows that the posterior
+mass of $\{F\geq f_*+\varepsilon\}$ tends to zero.  Coercivity and
+continuity then show that the posterior expectation of any bounded
+continuous function has upper limit at most its maximum on the
+minimizer set.  Apply this to $R(\operatorname{clip}z_w)\in[0,4]$;
+its continuity follows by dominated convergence.  Jensen's inequality
+gives the assertion for the mean of clipped outputs.
+\end{proof}
+
+The leading teacher-dependent term is explicitly
+\begin{equation}
+ \lambda E=
+ \left[\frac{2d(d+1)B^2}{H}+4m^2B^2\right]
+ \left(\frac{8D_n}{\sqrt n}\right)^{2/H}.
+ \label{eq:gaussian-leading-term}
+\end{equation}
+Thus, at fixed depth and for a fixed teacher, the excess risk is
+$\widetilde O(n^{-1/H})=\widetilde O(n^{-1/(L-1)})$.
+For two hidden layers it is $\widetilde O(n^{-1/2})$.
+The likelihood variance is $n\lambda\sigma^2$ with the exact
+$\lambda$ in \eqref{eq:gaussian-calibration}; it is not a sample-independent
+constant.  In particular, up to logarithms this calibration lies at the
+power $\lambda\asymp n^{-1/H}$.
+
+\begin{theorem}[One hidden layer]
+\label{thm:gaussian-one-hidden}
+Suppose $H=1$, and put
+\[
+ a_n=8\sqrt2\,D_n/\sqrt n,\qquad e_n=8D_n/\sqrt n.
+\]
+For any $\lambda>0$, define $J,b_n$ by
+\eqref{eq:gaussian-residuals}.  With the same assumptions and posterior
+interpretation as Theorem~\ref{thm:gaussian-absorption}, the bound is
+\begin{equation}
+ R(\operatorname{clip}z_w)
+ \leq R(g)+\lambda E+\frac{a_n^2}{4\lambda}+e_n+b_n+h_g.
+ \label{eq:gaussian-one-hidden-oracle}
+\end{equation}
+In particular, $\lambda=a_n$ gives an excess of order
+$(E+1)D_n/\sqrt n$ plus the concentration terms.  If a deterministic
+energy cap $E_0\geq E$ is known, choosing
+\begin{equation}
+ \lambda=\frac{a_n}{2\sqrt{E_0+1}}
+ \label{eq:gaussian-one-hidden-calibration}
+\end{equation}
+replaces the two energy terms in
+\eqref{eq:gaussian-one-hidden-oracle} by at most
+$a_n\sqrt{E_0+1}$.
+\end{theorem}
+\begin{proof}
+The same dyadic argument gives deviation at most
+$a_n\sqrt q+e_n+b_n$.  After comparing penalized empirical risks, use
+\[
+ \sup_{q\geq0}\{a_n\sqrt q-\lambda q\}=\frac{a_n^2}{4\lambda}.
+\]
+The teacher concentration and posterior-limit arguments are unchanged.
+For the stated calibration,
+$\lambda E+a_n^2/(4\lambda)
+=a_n[E/(2\sqrt{E_0+1})+\sqrt{E_0+1}/2]
+\leq a_n\sqrt{E_0+1}$.
+\end{proof}
+
+\subsection{Comparison with an expanding class of teachers}
+
+\begin{corollary}[Growing teacher width and weight bound]
+\label{cor:gaussian-growing-teachers}
+Fix $H,d$ and $0<\delta<1$.  Let $\mathcal G_n$ be the class of networks
+with $H$ hidden layers, width at most $\lfloor n^\alpha\rfloor$, and
+every weight bounded in absolute value by $n^\alpha$.
+
+If $H\geq2$, use \eqref{eq:gaussian-calibration}.  For every
+$0\leq\alpha<1/(4H)$, with probability at least $1-\delta$,
+simultaneously for all learner widths $N\geq\lfloor n^\alpha\rfloor$,
+\begin{equation}
+ \limsup_{\sigma\downarrow0}
+  \mathbb E_{\Pi_{\sigma,N,S}}R(\operatorname{clip}z_w)
+ \leq\min_{g\in\mathcal G_n}R(g)
+       +\widetilde O_{H,d,\delta}(n^{-(1/H-4\alpha)}).
+ \label{eq:gaussian-growing-deep}
+\end{equation}
+If $H=1$, use \eqref{eq:gaussian-one-hidden-calibration} with
+$E_0=[d(d+1)+2]n^{4\alpha}$.  For every
+$0\leq\alpha<1/4$, the corresponding bound is
+\begin{equation}
+ \limsup_{\sigma\downarrow0}
+  \mathbb E_{\Pi_{\sigma,N,S}}R(\operatorname{clip}z_w)
+ \leq\min_{g\in\mathcal G_n}R(g)
+       +\widetilde O_{d,\delta}(n^{-(1/2-2\alpha)}).
+ \label{eq:gaussian-growing-shallow}
+\end{equation}
+Both assertions also hold for the risk of the posterior mean of clipped
+outputs.  The notation $\widetilde O$ suppresses logarithms in $n$;
+the preceding theorems give explicit finite-sample constants.
+\end{corollary}
+\begin{proof}
+Narrower teachers embed by zero padding, since $\tanh(0)=0$.
+The parameter set defining $\mathcal G_n$ is compact and its population
+risk is continuous, so it has a deterministic population-risk minimizer
+$g_n$.  The zero network is an available comparator, hence $R(g_n)\leq1$.
+Lemma~\ref{lem:gaussian-cloning} gives
+\[
+ E\leq[d(d+1)+2H]n^{4\alpha},\qquad U\leq n^{2\alpha}.
+\]
+The Bernstein term \eqref{eq:gaussian-teacher-bernstein} is therefore
+$O_\delta(n^{2\alpha-1/2}+n^{4\alpha-1})$.
+For $H\geq2$, \eqref{eq:gaussian-leading-term} has order
+$\widetilde O_{H,d}(n^{4\alpha-1/H})$, which dominates the preceding
+concentration powers.  For $H=1$, the energy-calibrated bound in
+Theorem~\ref{thm:gaussian-one-hidden} has order
+$\widetilde O_d(n^{2\alpha-1/2})$.  The dyadic concentration terms are
+at most logarithmic factors times $n^{-1/2}$ in both cases.
+\end{proof}
+
+\paragraph{What the exponent does and does not establish.}
+The argument is independent of learner width and allows arbitrary
+label noise and arbitrary approximation error.  It still uses a weight
+bound, or another bound on the teacher's energy, as well as its width.
+It does not give a bound in teacher width alone for arbitrary
+real-valued networks.  It also does not make the dependence on depth
+polynomial: the leading sample requirement from
+\eqref{eq:gaussian-leading-term} raises the teacher-energy and accuracy
+factors to the power $H$.
+
+The distinction between clipping before and after posterior averaging
+is substantive.  The bounded-loss argument above controls
+$\mathbb E_\Pi R(\operatorname{clip}z_w)$ and
+$R(\mathbb E_\Pi\operatorname{clip}z_w)$.  By itself it does not control
+$R(\mathbb E_\Pi z_w)$ or
+$R(\operatorname{clip}(\mathbb E_\Pi z_w))$.

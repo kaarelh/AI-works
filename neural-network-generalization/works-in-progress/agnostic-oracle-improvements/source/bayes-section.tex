@@ -1,0 +1,405 @@
+% Standalone sections for inclusion in the combined research paper.
+% Requires amsmath, amssymb, amsthm and theorem/lemma/corollary environments.
+% Bibliography key: hrw.
+
+\section{A sharp oracle bound for the final Bayesian posterior mean}
+\label{sec:alt-final-mean}
+
+A different choice of prior and likelihood gives a substantially faster
+approximation guarantee.  The predictor in this section is ordinary
+Bayesian model averaging after all observations have been supplied.  It
+uses neither a randomly selected training prefix nor an average of the
+posteriors at successive times.  The guarantee is in expectation over the
+training sample.
+
+The underlying exponential-weights result is closely related to the
+recent theorem of H\o gsgaard, Rebeschini and Wegel
+\cite{hrw}, who prove optimal expected aggregation
+rates for a finite dictionary.  We give a self-contained arbitrary-prior
+version, with a conservative temperature constant, so that it applies
+directly to continuous neural-network parameter distributions.  The
+point of the application below is the explicit neural-network prior and
+its dependence on teacher width, depth and weight magnitude.
+
+Let $\pi$ be a probability measure on a measurable parameter space
+$\Theta$, and let $(h,x)\mapsto f_h(x)$ be jointly measurable with values
+in $[-1,1]$.  Let $D$ be any probability law of $(X,Y)$ with
+$Y\in[-1,1]$.  For any bounded measurable predictor $f$, write
+$R(f)=\mathbb E_D(f(X)-Y)^2$, and abbreviate $R(h)=R(f_h)$.
+Define
+\[
+ R(h)=\mathbb E_D(f_h(X)-Y)^2,
+ \qquad
+ \widehat R_S(h)=\frac1n\sum_{i=1}^n(f_h(X_i)-Y_i)^2.
+\]
+For $n$ independent observations $S\sim D^n$, define
+\begin{equation}
+ p_S(dh)=
+ \frac{\exp\{-\eta n\widehat R_S(h)\}\pi(dh)}
+ {\int\exp\{-\eta n\widehat R_S(u)\}\pi(du)},
+ \qquad
+ \widehat f_S(x)=\int f_h(x)p_S(dh).
+ \label{eq:alt-gibbs}
+\end{equation}
+For $n=0$, the posterior is understood to be $\pi$.
+
+\begin{theorem}[Final posterior mean; arbitrary prior]
+\label{thm:alt-final-mean}
+Suppose $0<\eta\le \frac14\log(5/4)$.  For every integer $n\ge0$,
+\begin{equation}
+ \mathbb E_{S\sim D^n}R(\widehat f_S)
+ \le
+ \inf_Q\left\{
+     \int R(h)Q(dh)
+       +\frac{\mathrm{KL}(Q\Vert\pi)}{\eta(n+1)}
+       \right\}.
+ \label{eq:alt-final-oracle}
+\end{equation}
+The infimum is over probability measures $Q$ independent of $S$; they
+may depend on $D$.  In particular, $\eta=1/20$ is admissible.
+\end{theorem}
+
+The leading coefficient of the comparison risk in
+\eqref{eq:alt-final-oracle} is one.  The theorem allows arbitrary
+misspecification and arbitrary dependence of the label on the input.
+It concerns the posterior \emph{mean}; the same conclusion is not
+asserted for a random posterior draw.  It is also an expectation bound,
+not a high-probability bound.
+
+\begin{lemma}[Deleting one observation]
+\label{lem:alt-delete-one}
+Let $q$ be any probability law on $[-1,1]$, let $y\in[-1,1]$, and set
+\[
+ p(da)=\frac{e^{-\eta(a-y)^2}q(da)}
+                   {\int e^{-\eta(u-y)^2}q(du)}.
+\]
+If $4(e^{4\eta}-1)\le1$, then
+\begin{equation}
+ \left(\int a\,q(da)-y\right)^2
+       \le\int(a-y)^2p(da).
+ \label{eq:alt-delete-one}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Write $\ell(a)=(a-y)^2\in[0,4]$, and interpolate from $p$ back to $q$ by
+\[
+ q_t(da)=\frac{e^{t\eta\ell(a)}p(da)}
+                    {\int e^{t\eta\ell(u)}p(du)},
+ \qquad 0\le t\le1.
+\]
+Thus $q_0=p$, $q_1=q$, and boundedness permits differentiation under the
+integral:
+\[
+ \int\ell\,dq-\int\ell\,dp
+       =\eta\int_0^1\operatorname{Var}_{q_t}(\ell)\,dt.
+\]
+The function $a\mapsto(a-y)^2$ is $4$-Lipschitz on $[-1,1]$.
+The independent-pair formula for variance gives
+$\operatorname{Var}_{q_t}(\ell)\le16\operatorname{Var}_{q_t}(a)$.
+Furthermore,
+\[
+ \frac{dq_t}{dq}\le e^{4\eta(1-t)}.
+\]
+If probability measures $\nu,\mu$ satisfy $\nu\le K\mu$, then
+$\operatorname{Var}_\nu(a)\le K\operatorname{Var}_\mu(a)$: use
+$\operatorname{Var}_\nu(a)=\inf_b\int(a-b)^2d\nu$ and choose
+$b=\int a\,d\mu$.  Consequently,
+\[
+ \int\ell\,dq-\int\ell\,dp
+ \le16\eta\int_0^1e^{4\eta(1-t)}dt\,
+                   \operatorname{Var}_{q}(a)
+ =4(e^{4\eta}-1)\operatorname{Var}_{q}(a).
+\]
+Finally,
+$(\int a\,dq-y)^2=\int\ell\,dq-\operatorname{Var}_q(a)$.
+The assumed bound on $\eta$ proves the claim.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:alt-final-mean}]
+Use $n+1$ independent observations, with full posterior $p$ and posterior
+$q_i$ obtained by deleting observation $i$.  Conditional on all these
+observations, the image of $p$ under $h\mapsto f_h(X_i)$ is the
+exponential tilt in Lemma~\ref{lem:alt-delete-one} of the corresponding
+image of $q_i$.  Hence, pointwise in the sample,
+\[
+ \frac1{n+1}\sum_{i=1}^{n+1}
+     \biggl(\int f_h(X_i)q_i(dh)-Y_i\biggr)^2
+ \le \int\widehat R_{S_{n+1}}(h)p(dh).
+\]
+The Gibbs variational principle gives, for every fixed comparison
+measure $Q$ with finite relative entropy,
+\[
+ \int\widehat R_{S_{n+1}}\,dp
+ \le \int\widehat R_{S_{n+1}}\,dQ
+       +\frac{\mathrm{KL}(Q\Vert\pi)}{\eta(n+1)}.
+\]
+On taking expectations, each summand on the first display becomes
+$\mathbb E_{S\sim D^n}R(\widehat f_S)$: $q_i$ uses $n$ independent
+observations and is independent of observation $i$.  The fixed
+comparison measure satisfies
+$\mathbb E\int\widehat R_{S_{n+1}}dQ=\int R\,dQ$.
+This proves the bound for every $Q$, and therefore for its infimum.
+For the convenient constant, $e^{1/5}\le(1-1/5)^{-1}=5/4$, so
+$\eta=1/20$ satisfies the hypothesis.
+\end{proof}
+
+\section{A continuous architecture prior with teacher-dependent rates}
+\label{sec:alt-architecture}
+
+We now specify a Bayesian neural-network learner for which the oracle
+penalty depends on the teacher's parameters, not the largest architecture
+available to the learner.  This is a prior on network architecture and
+weights.  It differs from a fixed-width prior that independently draws
+all weights from one Gaussian law.
+
+\subsection{Network class and prior}
+
+Inputs lie in any Borel subset $\mathcal X\subseteq[-1,1]^d$, where
+$d\ge1$.  Fix a globally Lipschitz activation $\varphi$, and choose
+$a\ge\max\{1,\operatorname{Lip}(\varphi)\}$ and
+$b=|\varphi(0)|$.  No condition $\varphi(0)=0$ is needed.
+A depth-$L$, width-$m$ network, with $L\ge2$ and $m\ge1$, has
+$L-1$ hidden layers of width $m$ and a linear readout:
+\[
+ h^0(x)=(1,x),\qquad h^\ell(x)=\varphi(W^\ell h^{\ell-1}(x)),
+ \quad 1\le\ell<L,\qquad z_w(x)=v^{\mathsf T}h^{L-1}(x).
+\]
+The activation is applied coordinatewise.  The input augmentation
+provides first-layer biases; there are no other biases.  The parameter
+count is
+\begin{equation}
+ P_{L,m}=m(d+1)+(L-2)m^2+m.
+ \label{eq:alt-parameter-count}
+\end{equation}
+Its bounded prediction is $f_w(x)=\operatorname{clip}(z_w(x))$, where
+$\operatorname{clip}(u)=\max\{-1,\min\{1,u\}\}$.
+
+Let $N\in\mathbb N\cup\{\infty\}$ be the maximum allowed width, and
+$L_{\max}\in\{2,3,\ldots\}\cup\{\infty\}$ the maximum allowed depth.  On
+allowed pairs $(L,m)$ put prior mass proportional to
+\begin{equation}
+ \omega_{L,m}=\frac1{L(L-1)m(m+1)},
+ \qquad 2\le L\le L_{\max},\quad 1\le m\le N.
+ \label{eq:alt-architecture-weight}
+\end{equation}
+These weights sum to one when $N=L_{\max}=\infty$.  Conditioning on finite
+architecture limits only increases the probability of each allowed
+pair.  Given $(L,m)$, draw its $P_{L,m}$ weights independently from the
+standard Cauchy law, with density $u\mapsto1/[\pi(1+u^2)]$.
+Call the resulting proper prior $\pi_{N,L_{\max}}$.
+The parameter space is the disjoint union of the allowed architecture
+spaces.  In particular, varying $L$ selects networks of genuinely
+different depths; it does not require embedding a shallower tanh
+network into one fixed depth-$L_{\max}$ architecture.
+
+The learner uses the likelihood
+\begin{equation}
+ \prod_{i=1}^n\exp\left\{-\frac1{20}
+                  (f_w(X_i)-Y_i)^2\right\}
+ \label{eq:alt-clipped-likelihood}
+\end{equation}
+and predicts with the final posterior mean of $f_w$.
+This is the usual Gaussian likelihood for a clipped network mean and
+observation variance $10$, up to factors independent of $w$.
+The theorem below imposes no Gaussian assumption on the actual labels.
+In particular it permits arbitrary label noise.  The learner does not
+require exact interpolation of the observed labels.
+
+\begin{theorem}[Agnostic neural-network oracle bound]
+\label{thm:alt-nn-oracle}
+Let $D$ be any probability law on $\mathcal X\times[-1,1]$, and let
+$\widehat f_{n,N,L_{\max}}$ be the preceding posterior-mean predictor.  Let
+$g=z_{w_*}$ be any network of depth $2\le L\le L_{\max}$ and width
+$1\le m\le N$, all of whose weights have absolute value at most
+$B\ge1$.  Put
+\[
+ D_{d,m}=\max\{d+1,m\},\qquad
+ A=1+b+aD_{d,m}(B+1),\qquad K=L A^L,
+\]
+and let $P=P_{L,m}$ as in \eqref{eq:alt-parameter-count}.  For every
+$0<\rho\le1$ and $n\ge0$,
+\begin{align}
+ \mathbb E R(\widehat f_{n,N,L_{\max}})
+ &\le R(\operatorname{clip}g)+4\rho \\
+ &\quad+\frac{20}{n+1}\left[
+  \log\bigl(L(L-1)m(m+1)\bigr)
+  +P\log\left(\frac{\pi[1+(B+1)^2]K}{2\rho}\right)
+                              \right].
+ \label{eq:alt-nn-bound}
+\end{align}
+The same inequality holds with $R(g)$ in place of
+$R(\operatorname{clip}g)$.  Its right side is independent of $N$ and
+$L_{\max}$ apart from the requirement that they admit the competitor.
+\end{theorem}
+
+The theorem holds for every choice of architecture limits, including
+no finite limits at all.  Because it is an expectation bound, it does
+not assert a common high-probability sample event for all choices of
+these limits.  Taking the infimum in \eqref{eq:alt-nn-bound} permits a
+different competitor at every sample size.
+
+\begin{lemma}[Parameter perturbations]
+\label{lem:alt-perturb}
+In the setting of Theorem~\ref{thm:alt-nn-oracle}, if
+$\|w-w_*\|_\infty\le r\le1$, then
+\[
+ \sup_{x\in\mathcal X}|z_w(x)-z_{w_*}(x)|\le K r.
+\]
+\end{lemma}
+
+\begin{proof}
+Both parameter vectors have coordinates bounded by $B+1$.
+Let $M_\ell$ bound the maximum coordinate magnitude in hidden layer
+$\ell$ of either network, and let $\delta_\ell$ bound their coordinatewise
+difference, uniformly in $x$.  Since $M_0\le1$, the activation bound
+$|\varphi(u)|\le b+a|u|$ gives $M_\ell\le A^\ell$ by induction.
+The perturbation recurrence is
+\[
+ \delta_\ell\le aD_{d,m}r A^{\ell-1}
+                    +aD_{d,m}(B+1)\delta_{\ell-1},
+ \qquad \delta_0=0.
+\]
+Both $aD_{d,m}$ and $aD_{d,m}(B+1)$ are at most $A$, so induction gives
+$\delta_\ell\le \ell r A^\ell$.
+For the readout, use $D_{d,m}\le A$ and $D_{d,m}(B+1)\le A$ to obtain
+\[
+ |z_w-z_{w_*}|
+ \le D_{d,m}r A^{L-1}+D_{d,m}(B+1)(L-1)r A^{L-1}
+ \le LrA^L.
+\]
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:alt-nn-oracle}]
+Choose a comparison measure supported on architecture $(L,m)$, uniform
+on the parameter cube
+$\{w:\|w-w_*\|_\infty\le r\}$ with $r=\rho/K\le1$.
+Lemma~\ref{lem:alt-perturb} and the fact that clipping is nonexpansive
+show $\|f_w-\operatorname{clip}g\|_\infty\le\rho$ throughout this cube.
+Squared loss is $4$-Lipschitz in its prediction on $[-1,1]$, hence
+\[
+ \int R(f_w)Q(dw)\le R(\operatorname{clip}g)+4\rho.
+\]
+On the cube, each Cauchy coordinate density is at least
+$1/\{\pi[1+(B+1)^2]\}$.  The uniform density there is $(2r)^{-P}$.
+Moreover, the architecture has prior mass at least $\omega_{L,m}$.
+Therefore
+\[
+ \mathrm{KL}(Q\Vert\pi_{N,L_{\max}})
+ \le \log\frac1{\omega_{L,m}}
+       +P\log\left(\frac{\pi[1+(B+1)^2]}{2r}\right).
+\]
+Apply Theorem~\ref{thm:alt-final-mean} with $\eta=1/20$ and substitute
+$r=\rho/K$.  Finally, clipping cannot increase squared error against a
+label in $[-1,1]$, so $R(\operatorname{clip}g)\le R(g)$.
+\end{proof}
+
+\subsection{The same rate with conditionally Gaussian weights}
+
+The logarithmic cost of the teacher's weight magnitude does not require
+Cauchy coordinates.  There is also a Gaussian scale-mixture version of
+the prior.  After selecting $(L,m)$ with the same architecture law,
+choose an integer $j\ge0$ with probability $1/[(j+1)(j+2)]$, and then
+draw the weights independently from $N(0,4^j)$.  The prior is proper,
+and its coordinates are independent conditional on the architecture
+and scale.
+
+\begin{corollary}[Gaussian scale mixture]
+\label{cor:alt-gaussian-mixture}
+Use this Gaussian scale-mixture prior with the likelihood and predictor
+of \eqref{eq:alt-clipped-likelihood}.  For the competitor in
+Theorem~\ref{thm:alt-nn-oracle}, let
+$j_B=\lceil\log_2 B\rceil$.  Then
+\begin{align}
+ \mathbb E R(\widehat f_{n,N,L_{\max}})
+ &\le R(\operatorname{clip}g)+4\rho\\
+ &\quad+\frac{20}{n+1}\left[
+   \log(1/\omega_{L,m})
+   +\log\bigl((j_B+1)(j_B+2)\bigr)
+   +P\log\left(\frac{B\sqrt{2\pi}e^2K}{\rho}\right)
+                           \right].
+ \label{eq:alt-gaussian-mixture}
+\end{align}
+\end{corollary}
+
+\begin{proof}
+The comparison measure selects architecture $(L,m)$, selects scale
+$j_B$, and uses the same uniform parameter cube of radius $r=\rho/K$.
+Put $s=2^{j_B}$, so $B\le s\le2B$.
+Every coordinate in the cube satisfies $|w_i|\le B+1\le2s$; its
+$N(0,s^2)$ density is therefore at least
+$e^{-2}/(s\sqrt{2\pi})$.  The coordinate contribution to relative
+entropy is at most
+\[
+ P\log\left(\frac{s\sqrt{2\pi}e^2}{2r}\right)
+ \le P\log\left(\frac{B\sqrt{2\pi}e^2}{r}\right).
+\]
+Adding the architecture and scale selection costs gives the bracket
+in \eqref{eq:alt-gaussian-mixture}.  The risk comparison and final
+posterior-mean theorem apply as before.
+\end{proof}
+
+The additional scale cost is only
+$O(1+\log(1+\log B))$.  Both prior choices consequently have the
+same polynomial width--depth rates described next.  A single fixed
+Gaussian scale would instead charge order $PB^2$ for translating the
+comparison cube; the scale mixture makes this cost logarithmic in $B$.
+
+\subsection{Rates, activations, and what changes in the learner}
+
+Setting $\rho=1/(n+1)$ in \eqref{eq:alt-nn-bound} yields a comparison
+penalty of order
+\begin{equation}
+ \frac{1}{n+1}\left\{
+ 1+\log(Lm)
+ +P_{L,m}\left[
+   \log(n+1)+\log(B+1)+\log L
+      +L\log A
+                  \right]\right\}.
+ \label{eq:alt-rate-summary}
+\end{equation}
+Here $A=1+b+a\max\{d+1,m\}(B+1)$, as above, and the hidden
+constant is numerical.  Thus the cost is approximately one
+bit per parameter per required precision bit, together with the
+architecture description.  The dependence on the weight bound is
+logarithmic.  No bound on $B$ must be selected in advance by the learner.
+
+For fixed activation, input dimension and depth, competitors of width
+$m\le n^\alpha$ and weights bounded by $n^\beta$, where $\beta$ is any
+fixed nonnegative constant, have excess expected risk
+$O(n^{2\alpha-1}\log n)$.  Every $\alpha<1/2$ is therefore admissible.
+For a single hidden layer ($L=2$),
+$P_{2,m}=m(d+2)$, and this improves to
+$O(n^{\alpha-1}\log n)$: every $\alpha<1$ is admissible.
+If the depth also varies, the displayed bound has polynomial, rather
+than exponential, depth dependence.  Suppressing logarithms and holding
+$d$, $B$ and the activation fixed, it is
+$\widetilde O((mdL+m^2L^2)/(n+1))$.
+These statements are approximation guarantees: the target distribution
+need not be representable by any network.
+
+The activation assumption includes tanh and ReLU with $a=1,b=0$;
+GELU, $\varphi(u)=u\Phi(u)$, with $a=2,b=0$; and softplus with
+$a=1,b=\log2$.  In particular, the proof neither relies on bounded
+hidden activations nor requires $\varphi(0)=0$.  The Gaussian derivative
+bound $|\Phi(u)+u\phi(u)|\le1+(2\pi e)^{-1/2}<2$ verifies the stated
+GELU constant.  Internal biases can be added by augmenting each layer
+with a constant coordinate and changing the parameter count and
+$D_{d,m}$ accordingly.
+
+The price of this improved bound is a change of prior and prediction
+convention, not an unproved property of the original dense Gaussian
+prior.  A draw from $\pi_{N,L_{\max}}$ first selects the \emph{active}
+architecture and then draws its weights.  At a fixed depth and maximum width it
+can equivalently be regarded as a structural sparsity prior, with exact
+zero connections outside the selected subnetwork.  It is not a product
+law on all the weights of a dense width-$N$ network.  Its preference for
+small architectures is explicit.  The guarantee therefore does not
+resolve whether an unrestricted dense Gaussian prior has a comparable
+polynomial-depth approximation theorem.
+
+Finally, the loss in the likelihood is computed from the clipped
+network output, and the predictor averages those clipped outputs.
+Replacing either with an unrestricted real output is a different
+learner.  Boundedness is used in Lemma~\ref{lem:alt-delete-one}; no such
+replacement follows from that lemma.
