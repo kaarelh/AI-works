@@ -1,5 +1,7 @@
 # Independent audit of the assembled ordinary-tanh main theorem
 
+**Coverage update (2026-11-14):** This dated review records the original main-theorem verification. The [full-paper inventory](OnlineLowerTanh-full-paper-coverage.md) records the subsequent formalization of independent appendix results and is the current source for coverage status.
+
 **Pass — the improved main online theorem is proved with its intended actual-model statement and no extra mathematical hypotheses.** Independent exact-type gates, main-source elaboration, and transitive axiom checks passed on 2026-11-08 with Lean 4.32.0.
 
 This independent review first checked the target definitions against the manuscript before the proof was complete, then inspected the assembled proof interfaces and independently checked the completed endpoints after the coherent build. The Lean root is `neural-network-generalization/lean`. No proof sources were edited for this audit.

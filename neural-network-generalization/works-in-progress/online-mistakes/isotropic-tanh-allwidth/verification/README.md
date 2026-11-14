@@ -19,7 +19,7 @@ The calibration prefix can be large. The sufficient construction-index and learn
 
 The formal proof includes the global single-parity estimate for every real incoming vector; affine support bounds with arbitrary bias and irrelevant coordinates; physical code localization; actual optimized tanh costs and their strict path ordering; calibration and rounding for arbitrary real network outputs; bounded teacher and circuit constructions; integer neuron allocation at every sufficiently large width; and the Gaussian posterior comparison. Intermediate certificates are instantiated with proved constructions before the main theorem is exported.
 
-The proof need not follow the manuscript line by line. In particular, the formal scalar proof uses high-order derivative bounds and mixed differences of the actual optimized cost in place of the paper's inverse-Laplace presentation. The main theorem and its resources are unchanged. Verification of that theorem does **not** mean every stronger standalone appendix equality or uniqueness claim has a separately exported Lean statement; the unused first-derivative residual CLT is likewise outside that separate-statement claim.
+The proof need not follow the manuscript line by line. In particular, the formal scalar proof uses high-order derivative bounds and mixed differences of the actual optimized cost in place of the paper's inverse-Laplace presentation. The main theorem and its resources are unchanged. The [full-paper coverage inventory](../../../../lean/review/OnlineLowerTanh-full-paper-coverage.md) records every numbered manuscript result and the additional formalizations. These include equality and uniqueness theorems, the independent three-bit theorem, all fixed derivative orders and compact-family uniformity in the residual approximation, generic optimization and inverse-Laplace results, and sharper finite constants. All 32 numbered mathematical results now have checked coverage. Illustrative decimal approximations and intermediate identities bypassed by the Lean proofs are explicitly excluded; the inventory describes those limits.
 
 ## Reproduction
 
@@ -30,6 +30,8 @@ lake build NeuralGeneralization.OnlineLowerTanhMain
 lake env lean CheckOnlineLowerTanh.lean
 ```
 
-The check file assigns each proof to its exact public proposition and prints its transitive axioms. The [main correspondence record](../../../../lean/review/OnlineLowerTanh-main-correspondence.md) records the checked build and source closure.
+For the complete extension, build `NeuralGeneralization.OnlineLowerFullPaperCoverage` and run `lake env lean CheckOnlineLowerCoverage.lean`. A [serial reproduction script](../../../../lean/verify_online_lower_coverage.py) builds the project modules in dependency order to limit peak memory.
+
+The check files assign the main proofs to their exact public propositions and audit transitive axioms. The [main correspondence record](../../../../lean/review/OnlineLowerTanh-main-correspondence.md) records the checked build and source closure.
 
 From this paper's folder, `bash build.sh` rebuilds the PDF and reruns the [exact rational curvature certificate](certify_curvature.py). That independent certificate remains useful for the conventional proof; the Lean proof does not trust an external numerical computation. The [build record](build-record.json) records the source and PDF hashes and the PDF checks.

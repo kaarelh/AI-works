@@ -1,5 +1,7 @@
 # Independent audit of the global ordinary-tanh analytic chain
 
+**Coverage update (2026-11-14):** This dated review records the original main-theorem verification. The [full-paper inventory](OnlineLowerTanh-full-paper-coverage.md) records the subsequent formalization of independent appendix results and is the current source for coverage status.
+
 Audit date: 2026-11-08. Repository: `/workspace/nnbayes-next-repo`, Lean project: `neural-network-generalization/lean`.
 
 **Conclusion:** no substantive hypothesis, vacuity, circularity, or definition mismatch was found in the reviewed global single-parity chain or its physical-code/network interface. Both independent Lean probes passed, including exact assignments to the intrinsic and three main endpoint statements. Every inspected declaration reports only `propext`, `Classical.choice`, and `Quot.sound`.

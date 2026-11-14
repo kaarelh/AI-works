@@ -1,5 +1,7 @@
 # Ordinary tanh: main-theorem correspondence and verification
 
+**Coverage update (2026-11-14):** This dated review records the original main-theorem verification. The [full-paper inventory](OnlineLowerTanh-full-paper-coverage.md) records the subsequent formalization of independent appendix results and is the current source for coverage status.
+
 Checked on 2026-11-08 with Lean 4.32.0 and the repository's pinned mathlib revision. This record concerns [Superpolynomial online mistakes for isotropic Bayesian tanh networks](../../works-in-progress/online-mistakes/isotropic-tanh-allwidth/paper.pdf), including the improved `exp(Ω(√C/log C))` exponent.
 
 ## Public endpoints
