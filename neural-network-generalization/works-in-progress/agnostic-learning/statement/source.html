@@ -44,7 +44,7 @@ L_D(f)=\mathbb E_{(x,y)\sim D}\,(f(x)-y)^2,\qquad \hat L_S(f)=\frac1n\sum_{i=1}^
 \]
 and \(\operatorname{clip}(u)=\max\{-1,\min\{1,u\}\}\) truncates a real number to the label range.</p>
 
-<p><b>Networks.</b> The depth is \(L=H+1\ge2\), with \(H\) hidden layers, and the width is \(N\). A parameter is \(w=(W^1,\dots,W^H,v)\), with <span class="nw">\(W^1\in\mathbb R^{N\times(d+1)}\)</span>, <span class="nw">\(W^\ell\in\mathbb R^{N\times N}\)</span> for \(2\le\ell\le H\), and <span class="nw">\(v\in\mathbb R^N\)</span>. With \(\bar x=(1,x)\) and \(\tanh\) applied entrywise, the network computes
+<p><b>Networks.</b> The depth is \(L=H+1\ge2\), with \(H\) hidden layers, and the width is \(N\). A parameter consists of matrices <span class="nw">\(W^1\in\mathbb R^{N\times(d+1)}\)</span> and <span class="nw">\(W^\ell\in\mathbb R^{N\times N}\)</span> for \(2\le\ell\le H\), and a vector <span class="nw">\(v\in\mathbb R^N\)</span>; we write \(w=(W^1,\dots,W^H,v)\). With \(\bar x=(1,x)\) and \(\tanh\) applied entrywise, the network computes
 \[
 h^0(x)=\bar x,\qquad h^\ell(x)=\tanh\bigl(W^\ell h^{\ell-1}(x)\bigr)\ \ (1\le\ell\le H),\qquad z_w(x)=v^{\top}h^H(x).
 \]
@@ -83,7 +83,7 @@ is within \(n^{-\theta}\) of its minimum. The guarantee covers three ways of pre
 </ol>
 <p>The likelihood uses the unclipped output \(z_w\); clipping is applied only when predicting. Since every label lies in \([-1,1]\), clipping never increases a squared error.</p>
 
-<p><b>Competitors.</b> A competitor is any network \(g=z_{w^g}\) of the same architecture, with depth \(L\), width \(m\) and all weights in \([-B,B]\), \(B>0\), and we put
+<p><b>Competitors.</b> A competitor is any network \(g=z_{w^g}\) of the same architecture, with depth \(L\), width \(m\ge1\) and all weights in \([-B,B]\), \(B>0\), and we put
 \[
 E_*=d(d+1)B^2+2(L-1)\,m^2B^2,\qquad U=mB,\qquad \Gamma_n=\sqrt{2(d+1)\ln(n+1)}+\frac{H-1}2
 \]
@@ -136,7 +136,7 @@ Then for every \(d\), every compact \(X\subseteq[-1,1]^d\), every data law \(D\)
 and the same bound holds for every near-minimizer and for the posterior mean of the clipped outputs \(\bar f_\sigma\); the ordinary posterior mean \(\mathbb E_{\Pi_\sigma}z_w\) is not covered. When \(H=1\), \(\beta>0\) only for \(\alpha\lt1/8\).
 </div>
 
-<p>For \(H\ge2\) this has the form of the motivating conjecture (test loss at most the least test loss over networks of size \(\mathrm{poly}(n)\), plus a vanishing term), restricted to small exponents and bounded weights: the clipped test loss is at most the least test loss over depth-\(L\) networks of the architecture above (tanh, no biases beyond the constant input) whose width and weights are at most \(n^\alpha\), plus \(O_L\bigl((d^2+\sqrt{d\log n}+\sqrt{\log(1/\delta)})\,n^{-\beta}\bigr)\), for every \(\alpha\lt1/(4H)\); at depth \(3\) one may take \(\alpha=1/16\), \(\beta=1/8\). It does not cover all polynomial sizes: the weights must be bounded as well as the width, and Section 5 reports (B, Corollary 9.3) that, once \(\alpha\gt L/(2H(2L-1))\), no tempering \(c(n)\) gives a polynomial sample bound for the clipped predictions that is uniform over laws and input dimensions and holds at every learner width \(N\ge n^\alpha\).</p>
+<p>For \(H\ge2\) this has the form of the motivating conjecture (test loss at most the least test loss over networks of size \(\mathrm{poly}(n)\), plus a vanishing term), restricted to small exponents and bounded weights: for every \(\alpha\lt1/(4H)\), the clipped test loss is at most the least test loss over depth-\(L\) networks of the architecture above (tanh, no biases beyond the constant input) whose width and weights are at most \(n^\alpha\), plus \(O_L\bigl((d^2+\sqrt{d\log n}+\sqrt{\log(1/\delta)})\,n^{-\beta}\bigr)\); at depth \(3\) one may take \(\alpha=1/16\), \(\beta=1/8\). It does not cover all polynomial sizes: the weights must be bounded as well as the width, and Section 5 reports (B, Corollary 9.3) that, once \(\alpha\gt L/(2H(2L-1))\), no tempering \(c(n)\) gives a polynomial sample bound for the clipped predictions that is uniform over laws and input dimensions and holds at every learner width \(N\ge n^\alpha\).</p>
 
 <p><b>One tempering for a range of class sizes</b> <span class="small">(derived here from Theorem 1, by the arithmetic of the proof of B's Corollary 8.1; not stated or refereed in the notes).</span> Let \(H\ge2\) and fix any \(\theta\in(0,1/H)\), without reference to \(\alpha\). For \(\alpha\in(0,\theta/4)\), apply Theorem 1 with \(m=\lfloor n^\alpha\rfloor\) and \(B=n^\alpha\) to a minimizer \(g\) of \(L_D\) over \(\mathcal G^{(\alpha)}_n\); it exists because the parameter set is compact once narrower networks are padded with zeros, and it depends only on \(D\), \(n\) and \(\alpha\), not on the sample. Since \(E_*+1\le(d(d+1)+2L)\,n^{4\alpha}\) and \(4+(U+1)^2\le8n^{4\alpha}\), there is an event of probability at least \(1-\delta\), which depends on \(\alpha\), on which statements (a)–(d) of Theorem 1 hold at every learner width \(N\ge n^\alpha\), with \(L_D(g)\) replaced by \(\min_{f\in\mathcal G^{(\alpha)}_n}L_D(f)\) and \(\mathrm{Exc}_n\) replaced by
 \[
@@ -148,20 +148,20 @@ This is \(\tilde O\bigl(n^{-\min\{\theta-4\alpha,\,(1-\theta H)/2\}}\bigr)\), si
 <h2>4. The error terms in polynomial form</h2>
 
 <div class="env"><span class="env-title">Corollary 3 (derived here; not refereed).</span>
-Let \(L=H+1\ge2\), \(d\ge1\), \(m\ge1\), \(n\ge1\) and \(\delta\in(0,1)\).
+Let \(L=H+1\ge2\), \(d\ge1\), \(n\ge1\) and \(\delta\in(0,1)\).
 <ol type="i">
 <li>In Theorem 1, for every \(\theta\in(0,1/H)\), with \(r=\min\{\theta,\,(1-\theta H)/2\}\),
 \[
-\mathrm{Exc}_n\ \le\ 8\,L\,(B+1)^2(d+m+1)^2\sqrt{\ln(2/\delta)}\;\cdot\;\sqrt{\ln(n+1)}\;n^{-r}.
+\mathrm{Exc}_n\ \le\ 8L(B+1)^2(d+m+1)^2\cdot\sqrt{\ln(2/\delta)}\cdot\sqrt{\ln(n+1)}\cdot n^{-r}.
 \]</li>
 <li>In Corollary 2,
 \[
-\Xi_n\ \le\ 8\,L\,(d+1)^2\sqrt{\ln(2/\delta)}\;\cdot\;\sqrt{\ln(n+1)} .
+\Xi_n\ \le\ 8L(d+1)^2\cdot\sqrt{\ln(2/\delta)}\cdot\sqrt{\ln(n+1)} .
 \]</li>
 </ol>
 </div>
 
-<p>In the form “polynomial times a function of \(n\)”: for each competitor \(g\) as in Theorem 1, with probability at least \(1-\delta\), statements (a)–(d) of Theorem 1 for the learner with \(\theta=1/(H+2)\), for which \(r=1/(H+2)\), hold at every learner width \(N\ge m\) with \(\mathrm{Exc}_n\) replaced by
+<p>Substituting (i), with \(\theta=1/(H+2)\) and so \(r=1/(H+2)\), into Theorem 1, and (ii) into Corollary 2, puts both error terms in the form “polynomial times \(\sqrt{\ln(2/\delta)}\) times a function of \(n\)”. For each competitor \(g\) as in Theorem 1, with probability at least \(1-\delta\), statements (a)–(d) of Theorem 1 for the learner with \(\theta=1/(H+2)\) hold at every learner width \(N\ge m\) with \(\mathrm{Exc}_n\) replaced by
 \[
 \mathrm{poly}(L,d,m,B)\cdot\sqrt{\ln(2/\delta)}\cdot\sqrt{\ln(n+1)}\cdot n^{-1/(H+2)};
 \]
@@ -173,7 +173,7 @@ Here
 \[
 \mathrm{poly}(L,d,m,B)=8L(B+1)^2(d+m+1)^2,\qquad \mathrm{poly}(L,d)=8L(d+1)^2,
 \]
-of degree \(1\) in \(L\) and \(2\) in each of \(d\), \(m\) and \(B\), and of degree \(1\) in \(L\) and \(2\) in \(d\), respectively. The second prefactor does not depend on \(\alpha\): the competitors' size \(n^\alpha\) enters the error term only through the exponent \(\beta\), although the learner's \(\theta\) and its range of widths \(N\ge n^\alpha\) do depend on \(\alpha\).</p>
+of degree \(1\) in \(L\) and \(2\) in each of \(d\), \(m\) and \(B\), and of degree \(1\) in \(L\) and \(2\) in \(d\), respectively. The polynomial \(\mathrm{poly}(L,d)\) does not depend on \(\alpha\): the competitors' size \(n^\alpha\) enters the error term only through the exponent \(\beta\), although the learner's \(\theta\) and its range of widths \(N\ge n^\alpha\) do depend on \(\alpha\).</p>
 
 <p class="small"><b>Proof of Corollary 3.</b> Put \(a=\sqrt{\ln(n+1)}\) and \(b=\sqrt{\ln(2/\delta)}\). Since \(n\ge1\) and \(\delta\lt1\), \(a,b\ge\sqrt{\ln2}\), so \(1\le ab/\ln2\) and \(a,b\le ab/\sqrt{\ln2}\). Also \((2/H)^{H/2}\le\sqrt2\) for every \(H\ge1\), since the left side decreases in \(H\).</p>
 <p class="small">(i) Put \(Q=(B+1)(d+m+1)\); then \(Q\ge3\), since \(d,m\ge1\). Hence
@@ -194,15 +194,15 @@ Using \(Q\ge3\) and \(L\ge2\), the four terms are at most \(2.89\), \(3.21\), \(
 \]
 and using \(\sqrt{d+1}\le(d+1)^2/2^{3/2}\), \((d+1)^2\ge4\) and \(L\ge2\), the five terms are at most \(0.73\), \(0.73\), \(3.40\), \(2.05\) and \(0.85\) times \(L(d+1)^2ab\), a total below \(8\). \(\square\)</p>
 
-<p class="small">The constants are not optimized. The smallest valid constants are at least \(2/\ln2\approx2.885\) in (i) (let \(L,m,B\to\infty\) with \(d=n=1\) and \(\delta\to1\)) and \((6+20\sqrt{2\ln2})/(8\ln2)\approx5.329\) in (ii) (take \(d=n=1\), \(L=2\) and \(\delta\to1\)); a numerical search over the parameters found no larger ratios.</p>
+<p class="small">The constants are not optimized. The smallest valid constants are at least \(2/\ln2\approx2.885\) in (i) (let \(L,m,B\to\infty\) with \(d=n=1\) and \(\delta\to1\)) and \((6+20\sqrt{2\ln2})/(8\ln2)\approx5.329\) in (ii) (take \(d=n=1\), \(L=2\) and \(\delta\to1\)); a numerical search over wide ranges of all the parameters found no point at which the left side of (i) or (ii), divided by its right side with the factor \(8\) removed, exceeds these values.</p>
 
 <h2>5. What else is known (scope)</h2>
 <ul>
 <li><b>Unclipped predictions</b> (B, Theorem 6.4). The same conclusions hold for \(z_w\), for the expected test loss \(\mathbb E_{\Pi_\sigma}L_D(z_w)\) of a posterior draw, and for the ordinary posterior mean \(\bar z_\sigma=\mathbb E_{\Pi_\sigma}z_w\) and its clip, provided \(\theta\in(0,1/L)\), with a larger error term. For \(\theta\in[1/L,1/H)\) the unclipped predictors are open.</li>
 <li><b>Sharpness</b> (B, Theorem 7.4). For \(H\ge2\) and <span class="nw">\(\theta\gt1/H\)</span>, the learner memorizes label noise. Take inputs uniform on \(\{-1,1\}^d\), fair random labels independent of the input, and \(n=2^d\) samples; the zero network has test loss \(1\), the Bayes risk. With probability at least \(1-e^{-n^{1/3}/2}\), at every learner width \(N\ge N_0(n)\), where \(N_0(n)=\lceil2(d+1)^3n^{1+\theta}\ln2\rceil+1\), every near-minimizer has test loss at least \(1+1/e-o(1)\), clipped or not, and so do the limits inferior as \(\sigma\downarrow0\) of the expected test loss of a posterior draw (clipped or not) and of the test losses of the posterior means \(\bar f_\sigma\), \(\bar z_\sigma\) and \(\operatorname{clip}\bar z_\sigma\). The exponent \(1/H\) is therefore sharp in the worst case over data laws. The bound is asymptotic (for \(H=2\) and \(\theta=0.55\) it is \(0\) at \(d=50\), \(100\) and \(200\)), the counterexample needs the input dimension \(d=\log_2n\) to grow, and at a fixed \(d\), or at learner widths below \(N_0(n)\), nothing is shown.</li>
 <li><b>Competitor weights</b> (B, Section 9). For this learner, with any tempering \(c(n)\) in place of \(n^{1-\theta}\), bounded competitor weights are needed for a guarantee uniform over laws. For \(H\ge2\) and the classes \(\mathcal G^{(\alpha)}_n\), once \(\alpha\gt L/(2H(2L-1))\) no \(c(n)\) gives a polynomial sample bound for the clipped predictions that is uniform over laws and input dimensions and holds at every learner width \(N\ge n^\alpha\); the failing laws change with \(n\) (the noisy cube in dimension \(\log_2n\) at large learner widths, or a two-point law in dimension \(1\) with inputs \(\pm\delta_0\to0\)). For a fixed data law and \(\theta\in(0,1/H)\) no weight bound is needed: by the universal approximation theorem, with probability at least \(1-\delta\), the clipped test loss comes within any \(\varepsilon>0\) of the Bayes risk once \(n\) and the learner width exceed thresholds that depend on the law (B, Remark 9.4).</li>
-<li><b>Other competitors</b> (B, Remark 8.2). A depth-\(L\) tanh network with biases, width \(m\), and weights and biases in \([-B,B]\) equals a network of the architecture above with width \(m+1\) and weights in \([-B',B']\), \(B'=\max\{B,1\}/\tanh1\); Theorem 1 applies to it with these values. Competitors of smaller depth or with other activations (such as ReLU) are not covered.</li>
-<li><b>The prior scale.</b> Everything above is stated in the strong-prior limit \(\sigma\downarrow0\). At the finite prior scale \(\sigma^2=N^{-\gamma}\), \(\gamma\ge1\), with no limit taken, the analogue of Theorem 1(c),(d) holds when <span class="nw">\(\theta\lt\theta_{L,\gamma}\)</span> (E, Theorem 2.7): for competitors with \(B\ge1\) and \(n\) above a polynomial in \(d,m,B,1/\varepsilon,\log(1/\delta)\) (not the explicit \(n_0\) above), with probability at least \(1-\delta\) and at every width \(N\ge m\), the expected clipped test loss of a posterior draw and the test loss of the posterior mean of the clipped outputs are at most \(L_D(g)+\varepsilon\). Here
+<li><b>Other competitors</b> (B, Remark 8.2). A depth-\(L\) tanh network with biases, width \(m\), and weights and biases in \([-B,B]\) equals a network of the architecture above with width \(m+1\) and weights in \([-B',B']\), where \(B'=\max\{B,1\}/\tanh1\); Theorem 1 applies to it with these values. Competitors of smaller depth or with other activations (such as ReLU) are not covered.</li>
+<li><b>The prior scale.</b> Everything above is in the strong-prior limit \(\sigma\downarrow0\). At the finite prior scale \(\sigma^2=N^{-\gamma}\), \(\gamma\ge1\), with no limit taken, the analogue of Theorem 1(c),(d) holds when <span class="nw">\(\theta\lt\theta_{L,\gamma}\)</span> (E, Theorem&nbsp;2.7): for competitors with \(B\ge1\) and \(n\) above a polynomial in \(d,m,B,1/\varepsilon,\log(1/\delta)\) (not the explicit \(n_0\) above), with probability at least \(1-\delta\) and at every width \(N\ge m\), the expected clipped test loss of a posterior draw and the test loss of the posterior mean of the clipped outputs are at most \(L_D(g)+\varepsilon\). Here
 \[
 \theta_{L,\gamma}=\begin{cases}1/H & \text{if } L=2 \text{ or } \gamma\ge2-1/H,\\[2pt] \max\Bigl\{\dfrac{\gamma-1}{\gamma H-1},\ \dfrac{\gamma-1}{H(H-1)(2-\gamma)}\Bigr\} & \text{if } 1\lt\gamma\lt2-1/H,\\[2pt] 1/\bigl(4+16(L-2)\,3^{L-2}\bigr) & \text{if } \gamma=1 \text{ and } L\ge3;\end{cases}
 \]
@@ -210,7 +210,9 @@ the proof of the last case relies on an imported mean-field cover. E states no a
 <li><b>Close conditioning</b> (A, Theorem 4.4 and Corollary 4.5). With no or weak tempering, that is \(c=1\) or any \(c\) with \(c\,\bigl(d^2\log^2(d+1)+(dn)^{1/H}\bigr)=o(n)\), the learner fails at depth \(L\ge3\). On the noisy cube above with \(n/2^d\to1\), with probability at least \(1-e^{-2^{d/2}}\) and at learner widths above a polynomial in \(n\), every near-minimizer, a posterior draw (with posterior probability tending to \(1\) as \(\sigma\downarrow0\)) and the posterior means in the limit, clipped or not, have test loss at least \(1+\beta(1)-o(1)\) as \(d\to\infty\), where \(\beta(1)\approx0.4848\), against \(1\) for the zero network. At finite \(d\) the certified excess is smaller (about \(0.25\) at \(H=2\), \(d=20\), for \(c=1\) and \(n=2^d\) with probability \(0.99\); A, Table 4.1).</li>
 </ul>
 
-<p class="small"><b>Idea of the proof.</b> As \(\sigma\downarrow0\) the posterior concentrates on near-minimizers of \(F_{c,S}\). Comparing with a low-energy width-\(N\) copy of the competitor bounds their training loss by \(\hat L_S(g)+(E_*+1)\,n^{-\theta}\), and comparing with the zero network bounds their energy by \(n^\theta+1\). A Rademacher bound for tanh networks of bounded energy, valid at every width, then controls the gap between the training and test loss of the clipped outputs. It is a path-norm bound on the last \(H\) layers, with the first layer charged through the VC dimension \(d+1\) of halfspaces rather than through its energy, which is why \(H\) and not \(L\) appears: at energy \(K\approx n^{\theta}\) the gap is of order \(K^{H/2}\Gamma_n/\sqrt n\), which vanishes exactly when \(\theta\lt1/H\). Finally, Hoeffding's inequality for the fixed competitor gives \(\hat L_S(g)\le L_D(g)+(U+1)^2\sqrt{\ln(2/\delta)/(2n)}\); a union bound over the two events, each of probability at least \(1-\delta/2\), and Jensen's inequality for the posterior mean give Theorem 1.</p>
+<h2>6. Idea of the proof of Theorem 1</h2>
+
+<p class="small">As \(\sigma\downarrow0\) the posterior concentrates on near-minimizers of \(F_{c,S}\). Comparing with a low-energy width-\(N\) copy of the competitor bounds their training loss by \(\hat L_S(g)+(E_*+1)\,n^{-\theta}\), and comparing with the zero network bounds their energy by \(n^\theta+1\). A Rademacher bound for tanh networks of bounded energy, valid at every width, then controls the gap between the training and test loss of the clipped outputs. It is a path-norm bound on the last \(H\) layers, with the first layer charged through the VC dimension \(d+1\) of halfspaces rather than through its energy, which is why \(H\) and not \(L\) appears: at energy \(K\approx n^{\theta}\) the gap is of order \(K^{H/2}\Gamma_n/\sqrt n\), which vanishes exactly when \(\theta\lt1/H\). Finally, Hoeffding's inequality for the fixed competitor gives \(\hat L_S(g)\le L_D(g)+(U+1)^2\sqrt{\ln(2/\delta)/(2n)}\); a union bound over the two events, each of probability at least \(1-\delta/2\), and Jensen's inequality for the posterior mean give Theorem 1.</p>
 
 <div class="footnote"><sup>*</sup>Authors are listed in alphabetical order.</div>
 
