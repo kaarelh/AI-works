@@ -558,3 +558,17 @@ Correct but not included: CB11 of `circuits-B.md` (a floor under $\mu_s$ conditi
 5. **Whether learning is posterior sampling.** Every statement is about a Bayesian posterior over circuits.
 6. **The premise of the original argument.** Whether hypotheses of modest description exist whose inhabitants seek critical uses is not evaluated here either. For plain circuits such a hypothesis is excluded as a short description with a long computation, and is not excluded as a small circuit that happens to compute what they would choose. For circuits with shared weights it returns exactly as in the note, time bound included.
 
+---
+
+## Errata after the sixth referee round (14 November 2026)
+
+The reports `verification/referee-6-circuits-proofs-a.md`, `referee-6-circuits-proofs-b.md`, `referee-6-circuits-claims.md` and `referee-6-computation.md` checked Section 7 of the paper, and the computation, against this file. They found no numbered statement wrong. The following points of this file are corrected in the paper and are recorded here without changing the text above.
+
+* **Theorem 12, item 5** (and `circuits-verify-model.md`): the sums of the ceiling over all input-only triggers with g gates count gate lists where reduced circuits should be counted. With reduced circuits the sums are about 10^-3 for each g up to 5, at most 0.14 for all triggers of at most 19 gates together, and above 1 only from about 25 gates on. The theorem is stronger than that item says.
+* **Computation 22:** the entry for b0 AND b1 at n = 8, s = 3 is 242/6819 = 0.035, not 0.036. "Between 2 and 32 per cent with slack" is wrong: with slack the range is 1.9 to 29 per cent (the smallest value is 1/53), and 27 to 32 per cent occurs at the least size in the exception of Theorem 10. "0 at the least size" and "grows with slack" hold for worlds that ignore the never-varied bit; where the world depends on it the deviation is 1 at the least size and falls with slack.
+* **Section 1.2:** the normalisation sum_s w_s = 1 conflicts with w_s := omega(0, s) once seeded formats carry weight; every statement is a ratio, and the paper states the extended prior.
+* **Theorem 18 and open item 5.1(3):** existence of a self-reproducing block under the literal code is settled by a one-gate example found by the referee (k = 21, the circuit b_0 XOR b_10, context of length 1019, block of 18 bits). The open item narrows to contexts whose smallest circuit is large.
+* **Theorem 19(d), proof:** the padding step fails for the empty gadget; the count still holds.
+* **Section 3.1:** "only a time bound excludes it" should read "a time bound is the only thing shown to exclude it". The prices in bits (24, 480, 1540) omit the bit per gate that the length prior adds for the size. In the remark on Proposition 13, A = 43 should be A = 35, with sigma at least 12080. In the remark on Lemma 7, k − 1 − nu_2(n) is an upper bound on the price of the test. "4 of the 14" is for k = 3.
+* **Proposition 21(a):** "is a bounded mixture" should say that it is a mixture to which `lem:basic`, calibration and the budget apply.
+* **Plain answer 3 and the dropped claims of Section 5.2:** the phrases "no refund for the rarity of uses" and "no simple world with a long history" are among the claims this file lists as dropped. What is proved is about one description and the instances of one template.

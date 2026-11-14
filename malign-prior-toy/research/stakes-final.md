@@ -1611,3 +1611,18 @@ hold for every input and not only almost every input; Theorem 15(4); and the las
 | Proposition 25 | A24, B28 | A24(4) wrong | item 5 replaces it |
 | Propositions 26 to 28 | A25, A26 | correct | unchanged |
 | Proposition 29 | A28 | half proved by the proofs referee | proof checked and included |
+
+---
+
+## Errata after the sixth referee round (14 November 2026)
+
+The two reports `verification/referee-6-stakes-proofs.md` and `verification/referee-6-stakes-claims.md` checked Section 3.7 of the paper against this file. They found no numbered statement wrong. The following points of this file are corrected in the paper and are recorded here without changing the text above.
+
+* **Plain answer 3** says that the outcome at the main context of Proposition 23 "is decided by two constants of the machine". Proposition 23(5) proves only a necessary condition: the attacker has the majority there only if its word is more than one bit shorter than that of the honest program. Where that holds nothing is decided, since only a lower bound on the rest is proved.
+* **Proposition 23** shows the failure of (W1) only. For the seeker of the example (W1) fails for every n, possibly at uses that carry a small share of the class; for most uses, (W2) and (W3), the example gives necessary comparisons of two constants. Item 5 can drop "disjoint from the users and from the programs of Ho". The paper's Example states this.
+* **Section 3.2, under Lemma 2,** calls the lineage a case of nesting through an attack block. Every generation of a lineage has the same context, so that is not the reason additivity fails there.
+* **Proposition 16, item 4,** reads as a characterisation; items 2 and 3 prove one direction each, under different conditions on the total.
+* **Proposition 18:** the proof needs a rational beta_0; replace beta_0 by a smaller rational first.
+* **Proposition 19** is vacuous for the empty context; read "nonempty context".
+* **Section 5.1,** "each can be given either sign by the choice of universal machine", follows from the construction in the proof of `thm:machine` and not from its statement.
+* The four items listed in "Provenance" as not seen by a referee and used in the paper (the proof of Theorem 15 through maximal dyadic intervals; Theorem 10(B1) with a following rest; B > (2^n − 1)·xi(z) in Proposition 13; item 6 of Proposition 23) were checked in `referee-6-stakes-proofs.md` and hold.
