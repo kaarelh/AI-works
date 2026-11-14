@@ -136,7 +136,7 @@ When the missing pairs are few, a little more can be said about the false identi
 
 *Proof.* Let s = t be an identity of T that is false of addition and has no such ground subterm. Under addition its sides denote different linear forms, so the assignments at which they agree lie in a proper affine subspace H. For an occurrence f(r₁, r₂) in s or t and a missing pair p, the assignments at which the two arguments take the values p form an affine subspace. It is proper: otherwise both arguments would have constant forms, so would be ground (a variable that occurs in a term has a positive coefficient in its form), with values p. The two sides contain at most m − 1 occurrences of f, so these subspaces and H number at most K = (m − 1)·h + 1. The grid {0, …, K}^v of assignments is not covered by K proper affine subspaces: each lies in the zero set of a nonzero polynomial of degree at most 1, and the product of these, a nonzero polynomial of degree at most K, cannot vanish on a grid with K + 1 values in each coordinate. So some assignment with values at most K refutes the identity under addition, with no application of f at a missing pair. At that assignment every argument of f has value at most K·(m − 2) < n, so every application of f is at a pair in the data, and D refutes the identity, against Lemma 1. For the count in (1): a ground term with value a has at least a symbols S and one 0. ∎
 
-Compared with Proposition 4b this gains two symbols (sides up to a + b + 2 in place of a + b), at the price of the hypothesis on n, which makes it weak in practice: its bound says something only for n ≥ 3600·(h + 1). Its interest is the description (1) of what a surviving false identity must look like. The hypothesis on n is not sharp, but some such hypothesis is needed; the referee's examples are in [`verification/eq2_holes.out`](verification/eq2_holes.out). A brute-force check of (1) for sides of at most 6 symbols is in [`code/holes_check.py`](code/holes_check.py).
+Compared with Proposition 4b this gains two symbols (sides up to a + b + 2 in place of a + b), at the price of the hypothesis on n, which makes it weak in practice: the resulting bound 7^13·ε(m) on a wrong belief is below 1 only for m ≥ 60, that is for n ≥ 3600·(h + 1). Its interest is the description (1) of what a surviving false identity must look like. The hypothesis on n is not sharp, but some such hypothesis is needed; the referee's examples are in [`verification/eq2_holes.out`](verification/eq2_holes.out). A brute-force check of (1) for sides of at most 6 symbols is in [`code/holes_check.py`](code/holes_check.py).
 
 **What is not bounded.** Theorem 2 and its corollaries bound the belief in wrong values. The rest of the belief is split between the right value and "undetermined", and nothing above controls the split. Short sides do not force a fitting set to determine everything: the referee's report gives, for each n ≥ 4, a set of about 2n² symbols with sides of at most n + 1 symbols that is true of addition, proves the whole square below n and leaves f(n−1, n) undetermined. Whether every fitting set of far fewer symbols determines all sums is open. In the runs of Section 6 the belief in the right value does go to 1.
 
@@ -224,18 +224,18 @@ Lemma 1 and Theorem 2 hold with a background symbol such as d, read as doubling 
 **Proposition 10 (a fast-growing target names large numbers itself; due to the referee).** Let f be unary and n = 2^j. Let Q_j be the set
 
     f(0) = 0,
-    f(fⁱ(S(f(z)))) = S(S(f((S∘f)ⁱ(f(z)))))     for i = 0, …, j−1,
+    f(fⁱ(S(f(x)))) = S(S(f((S∘f)ⁱ(f(x)))))     for i = 0, …, j−1,
     f(fʲ(1̲)) = 0,
 
 where (S∘f)ⁱ means i applications of "f, then S". It has 1.5j² + 8.5j + 7 symbols. It is consistent, it proves f(p̲) = 2p for every p < n, and it proves f(n̲) = 0. So Q_j fits doubling on [0, n) and proves a wrong value at n.
 
-*Proof.* Under doubling, fⁱ(S(f(z))) has the value p = 2ⁱ·(2z + 1) and (S∘f)ⁱ(f(z)) has the value p − 1, so the identity for i says f(p) = 2 + f(p − 1). It is true of doubling.
+*Proof.* Under doubling, fⁱ(S(f(x))) has the value p = 2ⁱ·(2x + 1) and (S∘f)ⁱ(f(x)) has the value p − 1, so the identity for i says f(p) = 2 + f(p − 1). It is true of doubling.
 
-*Q_j proves doubling below n,* by induction on p < n. For p = 0 use the first identity. Otherwise p = 2ⁱ·(2z + 1) with i < j. In the instance of the identity for i at z, evaluating the argument on the left applies f only at z and at 2ᵗ·(2z + 1) for t < i, and the right side applies f only at numbers up to p − 1. All of these are below p, so by induction both sides evaluate, and the instance gives f(p̲) = 2p.
+*Q_j proves doubling below n,* by induction on p < n. For p = 0 use the first identity. Otherwise p = 2ⁱ·(2u + 1) with i < j. In the instance of the identity for i at x = u, evaluating the argument on the left applies f only at u and at 2ᵗ·(2u + 1) for t < i, and the right side applies f only at numbers up to p − 1. All of these are below p, so by induction both sides evaluate, and the instance gives f(p̲) = 2p.
 
 *Q_j proves f(n̲) = 0.* The term fʲ(1̲) applies f at 1, 2, …, 2^(j−1), all below n, so it equals the numeral of n, and the last identity applies.
 
-*Q_j is consistent:* the function x ↦ 2·(x mod n) is a standard model. Let r = z mod n. Modulo 2n, i applications of this function to 2r + 1 give 2ⁱ·(2r + 1), and the right-hand term (S∘f)ⁱ(f(z)) is 2ⁱ·(2r + 1) − 1. So the left side is 2P with P = 2ⁱ·(2r + 1) mod n, and P ≠ 0 because i < j. The right side is 2 + 2·(P − 1). The last identity holds because the function sends 2^(j−1) to n and n to 0.
+*Q_j is consistent:* the function x ↦ 2·(x mod n) is a standard model. Let r = x mod n. Modulo 2n, i applications of this function to 2r + 1 give 2ⁱ·(2r + 1), and the right-hand term (S∘f)ⁱ(f(x)) is 2ⁱ·(2r + 1) − 1. So the left side is 2P with P = 2ⁱ·(2r + 1) mod n, and P ≠ 0 because i < j. The right side is 2 + 2·(P − 1). The last identity holds because the function sends 2^(j−1) to n and n to 0.
 
 *Size.* 3 for the first identity, 3i + 9 for the identity for i, and j + 4 for the last. Checked by machine for j ≤ 7 in [`verification/eq_doubling_patch.out`](verification/eq_doubling_patch.out), and independently by us for j ≤ 6. ∎
 
