@@ -1,41 +1,45 @@
-# Agnostic oracle bounds for Bayesian neural networks
+# Sharper agnostic bounds for dense Gaussian Bayesian neural networks
 
 **[Paper (PDF)](paper.pdf) · [Complete source](source/paper.tex) · [Verification and limitations](verification/README.md)**
 
 Authors: ChatGPT-6 Astra, Claude Opus 5.5, Kaarel Hänni, Dmitry Vaintrob. Authors are listed in alphabetical order.
 
-Can Bayesian prediction compete with the best small neural network even when no network exactly describes the data? These results give coefficient-one squared-loss comparisons for arbitrary distributions of bounded labels, including noise and model misspecification. They strengthen the positive result in the [tempered-likelihood research note](../agnostic-learning/).
+Can a dense Gaussian Bayesian network compete with a small network that only approximates the data? These results give coefficient-one squared-loss comparisons for arbitrary distributions of bounded labels, including noise and model misspecification. They strengthen the positive result in the [tempered-likelihood research note](../agnostic-learning/).
 
-## Two different guarantees
+Every learner has a specified dense architecture and independent centered Gaussian weight coordinates. Teacher cloning is a comparison construction in the proof; every coordinate of the learner remains random under its prior.
 
-| Learner | Guarantee | Scope |
+## Results
+
+| Prior regime | Prediction convention | Rate at fixed teacher resources and dimension |
 |---|---|---|
-| Dense independent Gaussian tanh weights; calibrated likelihood; prior scale tending to zero at each fixed learner width | At fixed teacher, dimension and depth, excess bound of order `n^(-1/(L-1))` for `L≥3`, or `n^(-1/2)` for one hidden layer, up to logarithms | High probability, on one event for every learner width `N≥m`. Covers posterior-averaged risk and posterior means. Raw-output predictions use the smooth-loss appendix's calibration. |
-| Same dense Gaussian family at finite scale `σ²=N^(-γ)` | The improved rates for clipped predictions, with an additional explicit complexity factor | All `γ≥2` at every width; with one hidden layer, all `γ≥1`. No prior-strength limit. Likelihood variance scales as `nλ N^(-γ)`. |
-| Prior explicitly mixing over network sizes and continuous weights; fixed Gaussian likelihood centered on clipped outputs | Expected final-posterior-mean risk at most the best clipped teacher risk plus approximately `P [log n + L log(max(d,m)(B+1))] / n` | Any globally Lipschitz activation, including tanh, ReLU and GELU; arbitrary larger maximum width/depth, or no limits. This changes the prior and is an expectation guarantee. |
+| Strong-prior limit, any fixed depth `L≥3` | Posterior-averaged clipped risk and mean of clipped outputs | Approximately `n^(-1/(L-1))`, improving `n^(-1/(L+1))` |
+| Strong-prior limit, any fixed depth `L≥3`, smooth-loss calibration | Raw posterior-averaged risk and ordinary raw-output posterior mean | Same exponent, with additional logarithms |
+| Strong-prior limit, one hidden layer | Clipped or raw predictions, with the appropriate calibration | Approximately `n^(-1/2)` |
+| Finite prior scale `σ²=N^(-γ)`, every `γ≥2`, depth `L≥3` | Clipped posterior-averaged risk and mean of clipped outputs | Approximately `n^(-1/(L-1))`; no prior-strength limit |
+| Finite prior scale, every `γ≥1`, one hidden layer | Clipped posterior predictions | Approximately `n^(-1/2)`; includes mean field |
 
-Here `L` counts the linear readout, `m` is teacher hidden width, `B` bounds its weights, and
+All rates suppress logarithmic factors. Each theorem gives a high-probability bound on one sample event for every learner width `N≥m`. Here `m` is teacher hidden width, `L` counts the linear readout, and `B` bounds teacher weights. An exact teacher implementation at each eligible width has energy at most
 
 ```text
-P = m(d+1) + (L-2)m² + m.
+E = d(d+1)B² + 2(L-1)m²B².
 ```
 
-The architectural prior can use independent Cauchy weights or conditionally independent Gaussian weights with a prior over their scale. It has no finite parameter grid. At fixed dimension, its joint width/depth penalty is approximately `m²L²/n`, up to logarithms; one hidden layer instead has a penalty linear in `m`. It puts the preference for small architectures into the prior explicitly, so this is not a proof of the same rate for dense Gaussian weights.
+The leading teacher penalty is `λ_n E`. For `L≥3`, the improved calibration has `λ_n` of order `n^(-1/(L-1))`, up to dimension factors and logarithms. For example, depth three improves from a quarter-power to a square-root rate.
 
-For fixed depth and dimension, the architectural learner can compete with teachers of width `n^α` for every `α<1/2`, allowing any polynomially growing weight bound. With one hidden layer, every `α<1` works. The improved dense Gaussian result, including its finite-scale version for `γ≥2`, allows both width and weight cap `n^α` for `α<1/[4(L-1)]` at `L≥3`, with faster decay than the earlier proof; for one hidden layer in the strong-prior limit the improved range is `α<1/4` with the stated teacher-class calibration.
+At fixed dimension and depth `L≥3`, both teacher width and weight cap can grow as `n^α` for every `α<1/[4(L-1)]`, with a faster remainder than in the earlier proof. This also holds in the new finite-scale theorem for `γ≥2`. With one hidden layer, the strong-prior result's teacher-class calibration improves the growing-width-and-weight range to `α<1/4`; the finite-scale theorem is stated with its separate calibration.
 
-## What changed in the proof?
+## Why the proof improves
 
-The Gaussian argument keeps the learner's negative energy penalty when comparing its empirical loss with the teacher's. A uniform statistical deviation can be absorbed by that penalty. Discarding it earlier led to the slower `n^(-1/(L+1))` rate. A standard smooth-loss theorem extends the argument to the ordinary posterior mean of raw outputs, with extra logarithms.
+The statistical comparison retains the negative learner-energy penalty. A uniform deviation bound can be absorbed by that penalty. Discarding it led to the earlier `n^(-1/(L+1))` rate. A standard smooth-loss theorem extends the argument to the ordinary posterior mean of raw outputs.
 
-For the architectural prior, Bayesian averaging reduces squared loss by the posterior prediction variance. A leave-one-out argument uses that reduction to obtain a sharp expected-risk oracle inequality for the **final** posterior mean. The underlying finite-dictionary aggregation result is due to [Høgsgaard, Rebeschini and Wegel (2026)](https://arxiv.org/abs/2607.02247); the paper supplies a continuous-prior proof and quantitative neural-network application. This statistical phenomenon is not claimed as new.
+At finite prior scale, an entropy inequality turns Gaussian relative entropy into an energy bound. Combining it with a global statistical inequality and an explicit Gaussian perturbation of a cloned teacher gives the oracle bound directly for the finite posterior.
 
-## Audit and qualifications
+## Scope and audit
 
-The supplied Opus 5.5 positive theorem checks out under its conventions. Its zero-prior-scale limit is taken separately at each fixed width, its main predictions are clipped, and it charges teacher weight magnitude. The referenced `statement/tempered-learner.pdf` was absent from the repository snapshot; the compressed statement was checked directly against its supporting proof and the supplied PDF.
+The supplied Opus 5.5 positive theorem checks out under its conventions. Its strong-prior limit is taken separately at each fixed width; no width-uniform prior-strength threshold is claimed. The referenced `statement/tempered-learner.pdf` was absent from the repository snapshot, so the compressed statement was checked directly against its supporting proof and the supplied PDF.
 
-Neither result requires close fitting of every noisy label. Such interpolation can fail for the original Gaussian learner. A width-only comparison with arbitrarily large teacher weights also fails uniformly for the fixed proper priors considered here: two inputs can be arbitrarily close while a steep width-one teacher assigns opposite labels. The paper proves this obstruction.
+The likelihood is calibrated rather than required to fit every noisy label exactly. The new finite-scale result uses likelihood variance `nλ_n N^(-γ)`. Arbitrarily tight conditioning can memorize noise. Teacher weight magnitude is still counted; the paper proves a width-one obstruction using two nearby inputs and the strong-prior energy budget.
 
-These are conventional mathematical proofs with independent AI-agent checks, **not Lean formalizations or external peer review**. The fast architectural-prior guarantee is in expectation, not a fast high-probability guarantee or a guarantee for posterior draws. Its polynomial-depth dependence does not settle the dense Gaussian prior's depth question.
+The sample exponent still deteriorates with depth. A favorable bound based only on teacher parameter count for dense Gaussian Bayesian learning remains open. The improved deep finite-scale rate for `1≤γ<2`, and raw-output finite-scale predictions, also remain open here.
 
-Run `./build.sh` to rebuild the PDF using TeX Live.
+These are conventional mathematical proofs with independent AI-agent reviews, **not Lean formalizations or external peer review**. Run `./build.sh` to rebuild the PDF using TeX Live.

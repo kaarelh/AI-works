@@ -1,59 +1,66 @@
-# Standalone fresh-reader review
+# Standalone review of the dense Gaussian manuscript
 
-Reviewed `paper.tex`, `gaussian-section.tex`, `bayes-section.tex`, `discussion.tex`, and the subsequently supplied `smooth-section.tex` as a standalone manuscript on 14 November 2026. This review checks the mathematical reasoning and the relationship between the claims; it is not a Lean verification, an external literature audit, or a check of the prior research note. The manuscript was not edited by this reviewer.
+Reviewed `paper.tex`, `gaussian-section.tex`, `finite-section.tex`, `discussion.tex`, and `smooth-section.tex` on 14 November 2026, including the revised introduction and nearby-input obstruction. This report concerns the current manuscript's dense Gaussian learners. It replaces the earlier review of a broader draft.
 
-## Overall assessment
+This is an independent mathematical reading, not a Lean verification or external peer review. The manuscript was not edited by this reviewer.
 
-I found no mathematical blocker in the elementary Gaussian theorem, the continuous-prior final-posterior-mean theorem, or their neural-network applications. The smooth-loss appendix also has a sound absorption argument and sound teacher-energy tuning, conditional on the cited smooth-loss inequality with its stated constant. The improvement is obtained from an actual inequality, not from assuming that the desired statistical conclusion already holds.
+## Assessment
 
-The manuscript correctly distinguishes two different improvements. Retaining the selected learner's energy penalty improves the fixed-depth strong-prior Gaussian sample exponent to `1/(L−1)`. The expected parameter-count rate comes from a different architecture prior and a bounded prediction convention. The latter is not a theorem about the original dense product-Gaussian prior. Its expectation guarantee is also not a replacement for the Gaussian theorem's common high-probability event.
+I found no mathematical blocker in the current positive theorems or the nearby-input obstruction. The stated improvements follow from proved statistical and variational inequalities; they do not assume the desired learning conclusion. Every reviewed learner uses independent Gaussian coordinates in a fixed dense architecture. The cloned teacher is only a comparison point or comparison measure in the proof.
 
-## Gaussian proof checks
+The main improvement is substantive but limited: for total depth `L = H+1 ≥ 3`, retaining the learner's energy penalty gives a fixed-teacher remainder of order `O-tilde(n^(-1/H))`. One hidden layer has a square-root rate. The finite-scale theorem also obtains these fixed-teacher exponents, with additional complexity terms. None of the results establishes a teacher-parameter-count rate with favorable dependence on arbitrary depth.
 
-- The teacher cloning construction preserves the represented function at every integer width `N ≥ m`. The ratios of clone group sizes and the readout normalization give the displayed energy bound, including when `N` is not a multiple of `m`.
-- The variable-threshold clipping argument is valid with the stated additive `1/(2 sqrt(n))` term. The positive mixture representation of `tanh(su)/s` has total mass one. These two facts support the recursive convex-hull argument for arbitrary hidden-layer weights.
-- The capacity proof correctly uses the `H` energy terms after the first layer, and therefore has the exponent `H/2`, not `(H+1)/2`. Ignoring the first-layer energy here is legitimate because the halfspace bound controls that layer without a norm constraint.
-- The halfspace comparison is valid for arbitrary real input values. No bounded-input assumption is used in this section. Countability across widths and continuity in finite-dimensional parameters give the stated measurability convention.
-- The dyadic peeling event covers every learner width at once. On the optimizer's energy range `q ≤ 1/λ`, the calibration `λ^(H/2) = a_n` genuinely gives `a_n q^(H/2) ≤ λq` when `H ≥ 2`.
-- Coercivity yields global minimizers at each finite width. The bounded-risk Laplace argument proves a pointwise-in-width limit. It does not assert, and the theorem correctly does not claim, a uniform convergence rate in `σ` over all widths.
-- The one-hidden-layer calculation uses the correct maximization `sup_q [a sqrt(q) − λq] = a²/(4λ)`. Its optional energy-cap tuning has the stated teacher dependence.
-- The growing-teacher corollary is valid. It chooses a deterministic population-risk minimizer over a compact class, so no sample-dependent teacher or unproved simultaneous-in-teacher concentration is introduced. The Bernstein term has the required powers. The thresholds `α < 1/(4H)` for `H ≥ 2` and `α < 1/4` for `H = 1` follow.
+## Strong-prior theorem
 
-The initially ambiguous choice between the Hoeffding and Bernstein teacher concentration terms was reported and has been clarified in the current source: each preselected choice gives its own event. One cannot automatically use their minimum on the same `1−δ` event at the original failure allocations.
+- The teacher cloning construction preserves the function at every integer width `N ≥ m`, including widths that are not multiples of `m`. The bounds on clone-group ratios and readout weights give the displayed energy cap.
+- The variable-threshold clipping inequality has the stated `1/(2 sqrt(n))` remainder. The positive mixture representation of `tanh(su)/s` has total mass one. Together they justify the recursive convex-hull capacity argument.
+- The capacity estimate uses the `H` energy terms after the first layer, hence the exponent `H/2`. Omitting the first-layer energy in this estimate is legitimate because the halfspace comparison controls that layer without a norm restriction.
+- The halfspace argument permits arbitrary real inputs. Its use in the strong-prior section does not require the bounded-input assumption needed later for the finite-scale perturbation calculation.
+- The dyadic event is common to all learner widths. The optimizer satisfies `q ≤ 1/λ`, and `λ^(H/2) = a_n` gives `a_n q^(H/2) ≤ λq` for `H ≥ 2`. Thus the improved exponent comes from a valid absorption step.
+- The two teacher concentration formulas are now clearly alternative choices with their own events. Their minimum is not silently asserted at the original confidence level.
+- Coercivity gives compact nonempty minimizer sets at each finite width. The Laplace argument proves the stated posterior-risk upper limits pointwise in width; it does not prove a width-uniform rate of convergence in the prior scale.
+- For one hidden layer, `sup_q [a sqrt(q) − λq] = a²/(4λ)` gives the stated bound and the optional teacher-energy tuning.
+- The growing-teacher corollary correctly chooses a deterministic population-risk minimizer in a compact class. It does not require simultaneous concentration over all teachers. Its Bernstein powers yield the stated thresholds `α < 1/(4H)` for `H ≥ 2` and `α < 1/4` for the energy-tuned one-hidden-layer result.
 
-## Final posterior mean and architecture prior
+## Finite-scale theorem
 
-- The delete-one-observation lemma is valid. The variance comparison follows from the independent-pair formula and the density bound along the exponential interpolation. Its condition is exactly `4(exp(4η)−1) ≤ 1`.
-- The leave-one-out argument uses `n+1` observations to bound the expected risk of the posterior mean trained on `n` observations. This correctly explains the `n+1` denominator; it is not an off-by-one error.
-- The Gibbs variational comparison legitimately drops the nonnegative posterior KL term. The comparator distribution is fixed independently of the sample, but may depend on the data law. The result applies to an arbitrary prior, including continuous parameter laws.
-- The proof relies on the posterior mean's reduction in squared loss. It does not establish the same fast guarantee for a random posterior draw or a fast high-probability oracle inequality. These limits are stated accurately.
-- The architecture masses normalize, and truncation only increases the mass of every allowed architecture. The perturbation estimate `K = L A^L` is valid for a globally Lipschitz activation even when its value at zero is nonzero. Taking a logarithm of this sensitivity is what produces polynomial depth dependence in the KL bound.
-- Both the Cauchy neighborhood mass calculation and the Gaussian scale-mixture variant give the stated penalties. The fixed-depth rates and the special linear-in-width parameter count for one hidden layer follow.
-- A mixture over actual depths is not an embedding into a fixed deepest tanh architecture. The manuscript explicitly makes that distinction.
+The finite-scale section controls the actual posterior with prior scale `σ² = N^(−γ)`; it does not use a limit in either prior scale or learner width.
 
-## Raw-output appendix
+- The all-energy deviation lemma is valid. Dyadic peeling treats energies up to `8/λ`; above that threshold, the clipped loss bound of four makes the energy penalty sufficient. The calibration `λ^p ≥ 2^(4p−2) A_n` has the correct constant.
+- Under the prior, `N^γ Q_N` is chi-square with `P_N = N(d+2)+(H−1)N²` degrees of freedom. The exponential moment and entropy variational inequality give the stated lower bound on KL.
+- Combining that lower bound with posterior variational optimality gives the displayed comparison for empirical risk plus `λQ_N/2`. The signs and factors of two are correct.
+- The dimension ratio satisfies `P_N/N^γ ≤ d+H+1` for `γ ≥ 2`. When `H = 1`, the quadratic parameter-count term disappears, and the same argument works for every `γ ≥ 1`.
+- The Gaussian comparison measure has mean at an exact teacher clone and covariance equal to `r²` times the original dense Gaussian covariance. Its KL is correctly bounded by a teacher-energy translation term plus `P_N log(1/r)`.
+- The clone's internal operator norms and scaled readout norm are bounded independently of learner width. Independence of each layer's Gaussian perturbation from earlier activations justifies the recursive second-moment bound.
+- The resulting perturbation estimate is uniformly pointwise in the input. It does not assert that a single random draw is uniformly close over all inputs; the weaker statement is exactly what the empirical-risk comparison needs.
+- The radius `ρ = λ/[4(U+1)]`, `r = ρ/K_g` gives comparison empirical risk at most the teacher's empirical risk plus `λ`.
+- The event is simultaneous in both all eligible widths and all claimed real exponents `γ`: its two constituent concentration events depend on neither parameter.
+- At one hidden layer, the estimate `A_n sqrt(2k) ≤ λk/2 + A_n²/λ` is correct. It gives the stated finite-scale square-root rate for a fixed teacher throughout `γ ≥ 1`.
 
-The following checks include the late-added one-hidden-layer tuning.
+The finite one-hidden-layer default calibration is a fixed-teacher statement. It should not be confused with the separately energy-tuned growing-teacher result for the strong-prior learner. The current manuscript does not make that conflation.
 
-- The deterministic output bound `|z_w| ≤ sqrt(Q_N(w))` is valid because the last hidden layer has bounded tanh activations. It gives the required square-loss range on each energy ball, despite unbounded raw predictions over the full parameter space.
-- The energy-ball class is symmetric under readout sign reversal, so the absolute-supremum Rademacher convention in the cited theorem agrees with the convention in the elementary capacity lemma.
-- The shell estimate and all four absorption terms are correct. The deep calibration leaves enough of the energy penalty to pay the deviations. Its residual `q_n/λ_n` is no slower than `n^(−1/H)` for `H ≥ 2`.
-- For `H = 1`, the shell terms split into `C_0(a_n + 2 sqrt(2q_n)) sqrt(k)` and `C_0(a_n² + 8q_n) k`. The stated calibration and Young inequality give the displayed remainder.
-- The energy-cap tuning is valid. Writing `x = sqrt(V_n/(E_0+1))` and `λ_n = max{x,v_n}`, one has `λ_n ≤ x+v_n` and `V_n/λ_n ≤ V_n/x`. Thus `λ_n E + V_n/λ_n ≤ 2 sqrt(V_n(E_0+1)) + v_n E`. The resulting rate is `O-tilde(sqrt((E_0+1)/n) + E_0/n)`. With `E_0 = O(n^(4α))` and population-optimal teacher risk at most one, all terms vanish for `0 ≤ α < 1/4`, with leading power `n^(2α−1/2)`.
+## Raw-output smooth-loss appendix
 
-Two refinements were sent to the authoring agent:
+- The appendix now explicitly identifies its different calibration of `λ`. Its raw-risk result is not attributed automatically to the main theorem's exact calibration.
+- The bound `|z_w| ≤ sqrt(Q_N(w))` follows from bounded final-layer tanh activations. Therefore squared loss is bounded on each energy ball, although the full raw-output class is unbounded.
+- Readout sign symmetry makes the absolute-supremum Rademacher convention in the cited theorem agree with the convention of the elementary capacity lemma.
+- The shell inequality and all absorption constants check out. For `H ≥ 2`, the residual `q_n/λ_n` is no slower than `n^(−1/H)`.
+- The weighted Laplace estimate is now explicit. Its Gaussian integral and exponential tail separation justify passing from compact minimizer sets to posterior averages of unbounded raw risk.
+- Jensen's inequality then supports the ordinary raw posterior mean; the other clipping conventions follow by clipping's squared-loss contraction.
+- The external smooth-loss result is used with its relevant assumptions, not with an assumed Bernstein condition on teacher excess loss. The project audit independently checked that the cited full-length SST Theorem 1 supplies a numerical constant below `10^5`.
 
-1. The appendix uses a new, more conservative calibration of `λ`. Its opening should identify the same model and likelihood family **with the appendix's calibration**, rather than imply that the main theorem's exact calibration automatically controls raw risk.
-2. The unbounded-risk posterior limit needs a weighted Laplace estimate. The argument is valid, but the reference to such an estimate already being displayed in the main section is inaccurate. For `F = Q_N + λ^(−1) Rhat` and `β > β_0`, explicitly write
-   `∫_{F ≥ f_*+ε} (1+Q_N)e^(−βF) ≤ e^(−(β−β_0)(f_*+ε)) ∫(1+Q_N)e^(−β_0F)`.
-   The last integral is finite, and division by the same positive-neighborhood normalizer bound proves the required tail decay. This makes the uniform-integrability step self-contained.
+The late-added one-hidden-layer teacher-energy tuning is also valid. Put `x = sqrt(V_n/(E_0+1))` and `λ_n = max{x,v_n}`. Then `λ_n ≤ x+v_n` and `V_n/λ_n ≤ V_n/x`, which give
 
-The appendix states that `C_0 = 10^5` suffices in the external smooth-loss theorem. I did not independently inspect that external source during this standalone review. That numerical constant should be retained only if checked against the cited theorem/proof; alternatively, an unspecified sufficiently large universal `C_0` preserves every rate and all schedules stated in terms of `C_0`.
+`λ_n E + V_n/λ_n ≤ 2 sqrt(V_n(E_0+1)) + v_n E.`
 
-## Presentation and scope
+Its contribution is `O-tilde(sqrt((E_0+1)/n) + E_0/n)`. For population-optimal teachers with width and weight magnitude at most `n^α`, the energy cap is `O(n^(4α))`, and all terms vanish for `0 ≤ α < 1/4`, with leading power `n^(2α−1/2)`.
 
-The nearby-input obstruction is valid, including its uniformity over samples. It is appropriately restricted to the stated fixed-prior Bayesian rule; it is not an impossibility theorem for every learning algorithm. Clipping the constructed teacher, if needed, preserves its exact fit on the two support points.
+## Nearby-input obstruction and scope
 
-The initial abstract's wording “inputs are continuous” was potentially misleading because atomic input distributions are allowed; the authoring agent reports replacing this with a continuous-domain formulation. “At least the teacher width” is more precise than “above the teacher width.” A pointer from the main section's clipping caveat to the raw-output appendix would help readers find the stronger prediction-convention result.
+The new nearby-input proposition is valid for this same strong-prior learner. At input dimension one, the factors of learner width cancel in the product of layer Frobenius norms. Thus the optimizer's energy budget gives input Lipschitz constant at most `(Lλ)^(−L/2)`. The two-point risk identity then gives the lower bound `1 − 2r(Lλ)^(−L/2)`.
 
-The author order was left unchanged. The statements that the work is not Lean-formalized, not externally peer reviewed, and does not supply an efficient learning algorithm accurately limit the scope of the claims.
+The proposition correctly passes the clipped prediction-difference bound to posterior averages by concentration on the compact minimizer set. The lower-limit formulation is appropriate; no existence of a unique limiting posterior or predictor is needed. The width-one teacher construction exactly fits both atoms with a first weight growing as `1/r`. This establishes the stated failure of a distribution-uniform width-only remainder for unbounded-weight teachers of this learner.
+
+The revised wrapper accurately separates the strong-prior limit, the finite-scale theorem, and the different prediction conventions. The finite deep theorem requires `γ ≥ 2`; extending the improved result to `1 ≤ γ < 2` remains open here. Raw posterior means at finite scale are also left open. No computational guarantee or formal verification is claimed.
+
+The discussion's schematic strong-prior display now explicitly uses `limsup`, and the obstruction uses `liminf`. No substantive review issue remains outstanding. Author order was left unchanged.
