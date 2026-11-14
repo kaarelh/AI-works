@@ -2,6 +2,8 @@
 
 Independent adversarial pass by Claude (Anthropic), 2026-11-13. Scope: every numbered statement, the bullets of Section 1, the "Relation to the papers" paragraph, the naming table and every quantitative claim (Task A); the code, independent re-implementations and every number against `results/` (Task B). Nothing outside `verification/` was edited. My scripts and outputs are the files `verification/eq_*`.
 
+Sections 0 to 5 are the report on the first complete draft. Section 6 is a second pass on the revised note; it contains errata to this report (6.3: one wrong constant in m1 and one wrong sentence in m8).
+
 ## 0. Verdict
 
 * **No fatal error.** Lemma 1, Theorems 2 and 3, Corollary 4, Propositions 5, 6, 8(1) and 9 are correct as stated; I checked every line and found no off-by-one error.
@@ -206,7 +208,7 @@ These equal `results/test_radius.out`. Part 2 recomputes **every** row of both t
 
 * The literature references (Birkhoff, Kleene's section numbers, Goodman) were not looked up. Paper 1's Proposition 8.1 was read in the repository and says what the note uses.
 * No bounded run can show that a set counted as consistent is consistent. What can be said is in m9.
-* A full enumeration at L = 20 (about 1.8 hours on one core) was not finished when this report was written. L20STATUS The recheck at L = 22 in m9 covers only sets that already determine f(0), f(1), f(2) at L = 18.
+* The full enumeration at L = 20 (about 1.8 hours on one core) was not completed. The recheck at L = 22 in m9 covers only sets that already determine f(0), f(1), f(2) at L = 18.
 * The remark "as far as we have seen, of one kind" was checked only on the dumps (w16).
 
 ## 4. Additions
@@ -267,3 +269,117 @@ Nothing in the note bounds from below the belief in the **right** sum at a far i
 | `eq_remarks.py`, `.out` | three small examples used in this report (w3, m10, 4.5) |
 | `eq_slip.py`, `.out` | the sets that change status between L = 14 and L = 18 |
 | `eq_run_all.sh` | the commands that produced these outputs |
+
+## 6. Second pass
+
+On the revision of 2026-11-14 (commit `ultranatural: revise the equational note after the referee report`). I re-read the whole note once and then checked the eight items asked for. New scripts and outputs are the files `verification/eq2_*`. Nothing outside `verification/` was edited.
+
+### 6.0 Verdict
+
+* **No fatal error.** Proposition 4a, Proposition 10, the corrected Proposition 7(3), the closed forms in Corollary 4, Proposition 5(4) and Proposition 8(2) are correct as stated, and their proofs are correct.
+* **One major finding (S1).** What the text says about missing pairs is not what Proposition 4a delivers: its bound says nothing below n = 7200. The sentences are nevertheless true, by a simpler argument, which I give as Proposition 4b.
+* **Minor.** Two sentences of Section 6.2 are inaccurate (one of them inherited from my first report); three small gaps and three nits; two attributions ran ahead of what I had computed (now computed).
+* **One constant of my first report was wrong**, and the note was right to reject it (6.3, e1).
+* **All outputs regenerate byte for byte** from the revised code (`eq2_reruns.out`).
+
+### 6.1 Major
+
+**S1. Missing pairs: Proposition 4a is correct, but too weak to carry the sentences that cite it.**
+
+*Where.* "Answers in brief" 3 ("A few missing pairs do not matter unless they are small (Proposition 4a)"); Section 3, "It survives a few missing pairs" before the proposition and "So the pinning survives missing pairs" after it; Section 7, first bullet of "What is and is not shown"; README, item 2.
+
+*What is wrong.* Proposition 4a assumes n ≥ m²·(h + 1). So it protects sides of at most √(n/(h+1)) symbols, and its bound is 7^13·ε(m) for such m (`eq2_prior.out`):
+* The bound is below 1 only for m ≥ 60, that is for n ≥ 3600·(h + 1): **n ≥ 7200 with a single missing pair.**
+* At n = 200 with one missing pair it allows m = 10 and gives 2^(27.5). Corollary 4 without the missing pair gives 2^(−71).
+* At n = 10,000 with one missing pair it gives 2^(−5); Corollary 4 gives about 2^(−4800).
+* The strength is about 0.485·√(n/(h+1)) bits. It is no longer linear in n.
+
+So "do not matter" and "survives" are not supported by Proposition 4a for n below 7200, and above that only with a far weaker bound than Corollary 4's.
+
+*Fix.* The sentences are true, and more is true. Add:
+
+> **Proposition 4b.** Let D be data from addition that contain x + y for every pair with x, y ≤ m − 2 and x + y ≤ m − 1. Then D refutes every identity with sides of at most m symbols that is false of addition. So every set that fits D and has all sides of at most m symbols has addition as a standard model, and Bel(y | D, x) ≤ 7^13·ε(m) for every wrong y.
+>
+> *Proof.* As in Theorem 3, the identity is false at an assignment of zeros and ones. There the value of a term is at most its number of S and variable symbols, hence at most its size. An occurrence f(r₁, r₂) in a side of at most m symbols has |r₁| + |r₂| ≤ m − 1 and |r₁|, |r₂| ≤ m − 2. So f is applied only at pairs (a, b) with a, b ≤ m − 2 and a + b ≤ m − 1. D has them all, so both sides have D-values, and these differ. ∎
+
+Consequences:
+* **Half the square is enough.** Corollary 4(1) holds as stated when D contains only the pairs of [0, n)² with x + y ≤ n (take m = n + 1).
+* **Missing pairs, any number of them.** Let M be the least a + b over the missing pairs. Then Corollary 4's bound holds with ε(min(n + 1, M)). Missing pairs with a + b > n do not matter at all. A missing pair with a + b = M ≤ n costs at most the sides between M and n + 1 symbols.
+* **What Proposition 4a adds to this:** two symbols (sides up to a + b + 2 in place of a + b) for few missing pairs and n ≥ m²(h + 1), and the structural statement (1).
+* **Suggested wording for the summary:** "Missing pairs (a, b) with a + b > n do not matter, and a missing pair with a smaller sum only limits the sides to a + b symbols (Proposition 4b)."
+* **Open question 1** (sparse data) can then start from 4b: what matters is the least a + b among the unseen pairs, and for a random half of the pairs it is small.
+
+*Check.* With data on the triangle only, every false identity with sides of at most m symbols is refuted at an assignment of zeros and ones, for m = 3, …, 8: at m = 8 that is 165,322,362 false identities and 34 data pairs (`eq2_holes.out`, Part 2).
+
+*On the hypothesis n ≥ m²(h + 1) of Proposition 4a(1)* (`eq2_holes.out`, Parts 3 to 5; none of this is an error in the note):
+* **Some condition on n is needed.** With (1,1) missing, m = 5 and n = 6, the identity f(x, f(x,x)) = f(S(x), S(x)) is false, is not refuted, and names no missing pair by a ground term.
+* **In the cases checked it is far from sharp.** With one missing pair, (1) holds from n = 7 for m = 5 and from n = 8 for m = 6; the hypothesis asks for 50 and 72.
+* **Some growth with h is needed.** With (1,1), (4,4), (6,6), …, (2h, 2h) missing, the same identity is not refuted as long as n ≤ 4h + 2.
+* **For missing pairs confined to [0, A]², (1) holds for n > (A + 2)(m − 2), whatever their number.** At an assignment with all values in {A + 1, A + 2}, a non-ground argument of f exceeds A, so f is applied at no missing pair outside ground terms; one of these assignments refutes the identity (a nonzero affine form does not vanish on a grid with two values per coordinate); and all arguments are at most (A + 2)(m − 2). Checked with the whole square [0, A]² missing (A = 1, 2).
+
+### 6.2 Minor
+
+**s1. Section 6.2, "How much the bound matters": "The successor rows below agree between L = 16 and L = 18 to the digits shown."** Not the row n = 3: with L = 16 it reads 0.99999 and 2·10⁻⁶, with L = 18 it reads 1.00000 and 0, as the last bullet of the same section says. The sentence comes from m8 of my first report, which was wrong on this point. *Fix:* "The rows n = 0, 1, 2 agree …; the row n = 3 changes as described below."
+
+**s2. Section 6.2, "Two or three values suffice": "The same holds for the other targets that have a fitting set of at most 12 symbols, except predecessor."** Within the bound L = 18 it does not hold for identity: three sets fit and prove a wrong value (share 9·10⁻⁷). They are inconsistent at L = 22, as the table says. *Fix:* add "(for identity, after the recheck)".
+
+**s3. After Proposition 10, "the test radius 2^(m−2) + 1 of doubling" is used for m ≈ log₂ n, but the note has it only as a computed value for m ≤ 8.** *Fix (one line):* under doubling a term denotes c₀ + c₁·x with natural coefficients, so a false identity is false at an assignment of zeros and ones; there a term of s symbols has value at most 2^(s−1); an argument of f has at most m − 1 symbols, so f is applied at numbers up to 2^(m−2). The bound is attained by x = f^(m−1)(x).
+
+**s4. Corollary 4, "T = 4z + zT + zT², which at z = 1/5 gives T = 2" presumes that the series converges at 1/5.** *Fix:* let P_N be the sum of T_s·5^(−s) over s ≤ N. A term of at most N symbols is a leaf, S of a term, or f of two terms, all of at most N − 1 symbols, so P_N ≤ 4/5 + P_(N−1)/5 + P_(N−1)²/5, and P_(N−1) ≤ 2 gives P_N ≤ 2. (Checked for N < 400.)
+
+**s5. After Proposition 7: "If quus_N is the truth, the equational inductor gives the first exception belief at most 2^(36.5 − 0.485·N)".** Only once the square below N has been seen; the summary says so, this paragraph does not. *Fix:* add the clause.
+
+**s6. "Answers in brief" 6, last bullet: "So doubling is pinned only about as strongly as in SOI."** What is shown is between about 1.58·log₂ n and 3.9·log₂² n bits. *Fix:* "only polylogarithmically".
+
+**s7. `code/eq_unary.c`, header comment.** The departure it describes also occurs for u(x) = v(y) when p·u is too long: then the instances p·v·w′ are identified with each other. The comment names one of the two cases.
+
+**s8. README.** The "Reproducing" section has no command for `holes_check.py`. Item 2 repeats the sentence of S1.
+
+### 6.3 Errata to my first report
+
+**e1. m1, last sentence: "6^5·ε(n) ≤ 2^(12.9 − 1.585n)" is false from n = 132 on** (exact check in `eq2_prior.out`): 1.585 is larger than log₂ 3 = 1.58496, and the margin 0.0049 in the constant is used up at n = 131.6. The response's "above about 125" is right in substance. The note's 2^(13 − 1.58·n) holds for every n: 6^5·(48/49) = 2^(12.895) and log₂ 3 > 1.58.
+
+**e2. m8, "the successor rows agree to the digits printed between L = 16 and L = 18":** wrong for the row n = 3 (s1).
+
+**e3. Section 3.2(a), "two search ranges each":** for the unary table the second range had been run only to m = 7, and squaring at m = 7, 8 was printed as ">1e9". Now run to m = 8 with exact values (`eq2_test_radius.out`): the two ranges give the same table, and squaring gives 2³² + 1 and 2⁶⁴ + 1, as in the revised `results/test_radius.out`.
+
+**e4. m10, "identical tables":** the first pass covered L = 10, 12 and 14. Now also L = 16 and 18: `eq2_unary_strict.c` is the revised `eq_unary.c` with the over-length unions removed, and its tables at (12, 14), (12, 16) and (12, 18) are identical to the saved ones, header included (`eq2_reruns.out`).
+
+**e5. Section 3.4.** The placeholder is replaced: the enumeration at L = 20 was not completed. A partial comparison made while it ran is not part of the record, because its output was lost with the run; `eq_partial_L20.py` is the script, without an output file.
+
+### 6.4 Verdicts for the eight items
+
+| item | verdict | detail |
+|---|---|---|
+| 1. Proposition 4a | **correct; but see S1** | Each probe holds. *Occurrences:* a term of s symbols has at most (s − 1)/2 occurrences of f, so two sides have at most 2⌊(m − 1)/2⌋ ≤ m − 1. *K:* one subspace per occurrence and missing pair, plus H. *Grid:* a proper affine subspace, empty ones included, lies in the zero set of a nonzero polynomial of degree at most 1; the product has degree at most K and cannot vanish on a grid with K + 1 values per coordinate. *K(m − 2) < n:* ((m − 1)h + 1)(m − 2) < m²(h + 1). *Positive coefficient:* under addition the coefficient of a variable is its number of occurrences. *Count:* a ground term of value a has exactly a symbols S and at least one 0, so f(r₁, r₂) has at least a + b + 3 symbols. *Item 2 and ε(m):* right, since the two laws of addition fit D. *The script* tests non-refutation on the grid of the proof, which is a little more than (1) asks, and tests it correctly. My re-implementation gives its five lines exactly (3024/153, 46048/301, 46048/904, 46048/0, 600596/2205) and no exception in 24 further cases, among them m = 6 with two missing pairs (three sets), m = 5 with three (two sets) and m = 7 with one (four sets, 10,189,235 false identities each). Every naming side has at least a + b + 3 symbols. |
+| 2. Proposition 10 | **correct** | Statement, the four parts of the proof and the size, re-derived from the text for j = 0, …, 10 (`eq2_props.out`): the readings under doubling, the induction (f is applied only below p, and at p − 1 on the right), fʲ(1̲) = n̲, and the model 2·(x mod n) with the bookkeeping modulo 2n. `eq_unary … check` finds Q₁, Q₂, Q₃ consistent with the profiles of 2·(x mod n). *Bounds:* "at least 6^(−(1.5j² + 8.5j + 8))" is right. "Between about 1.58·log₂ n − 28 and about 3.9·log₂² n + 22·log₂ n + 21": right; the exact ends are 1.585·(j + 1) − 28.4 and 3.877j² + 21.97j + 20.68. One gap: s3. |
+| 3. Proposition 7(3) | **correct** | The added hypothesis is the right one and the proof says where it is used. Paragraph after it: s5. |
+| 4. Corollary 4, proof | **correct** | ε(m) ≤ 2q(q − q_m)/(a(1 − q²)²): right (q + q_m ≤ 2q and 1 − q_m² ≥ 1 − q²). T = 2 at z = 1/5: right (s4 for rigour). 2q/(7(1 − q²)²)·2·(5/7)² = 1.284466 ≤ 1.2845. The inequality with 1.2845·(5/7)^n holds from n = 836 exactly and fails at 835. Successor: (48/49)·3^(−n) is right, and so is 2^(13 − 1.58·n). **Your objection to my 2^(12.9 − 1.585·n) is confirmed** (e1). |
+| 5. Propositions 5(4), 8(2) | **correct** | 5(4): the set as described, for n = 1, …, 12: sizes 16, n² + 3n, n + 4, 2n + 6, 2n + 10; true of the changed function; all values derived. 8(2): with c(0, u, v) = v and c(S(b), u, v) = u, the equation σ(x, y) = c(t(x, y), σ(x, S(y)), y) holds for "least witness at or above y, else 0", and unfolding from σ(x, 0) ends at the least witness; with the two arguments exchanged it fails, so the orientation is the right one for this convention. |
+| 6. Other revised text | **correct, except s1, s2, s6 and the sentences of S1** | Tightness examples: right (false exactly at x ≥ 1; f applied at (1, m − 2), and at m − 1). "What is not bounded": right, and it states my set correctly. After Proposition 9: right (value at most 2^(s−1), so a side of more than log₂ n symbols). Section 6.2: 476,610; 114,635 / 114,465 / 114,416; 0.3529 of 0.3810; "terms of 15 letters"; 3.6·10⁻⁶: all right. "Answers in brief": right, except the last sentence of item 3 (S1) and s6. Sections 7 and 8: right; the first bullet of "What is and is not shown" needs Proposition 4b to be true at realistic n. |
+| 7. Attributions | **accurate, with three remarks** | Accurate: the reduction for undecidability, the tightness examples, the set of about 2n² symbols, the correction to Proposition 8(2), Proposition 10, the recheck of 2,498 sets, the standard-model check of 216 sets, 3.6·10⁻⁶, "15 letters", "mostly of one kind". Ahead of what I had run, and now true: "every entry with two search ranges and with exact integers" (e3) and "identical tables for sets of at most 12 symbols" (e4). Inherited from an error of mine: s1. |
+| 8. Code and outputs | **confirmed** | `test_radius.py`: exact integers for squaring only; the output is regenerated byte for byte and differs from the first version only in the row "square". `eq_unary.c`: the three guards are right (L ≤ 30 for `root[32]` and the base-32 key; CAP ≤ 17 for at most 8 identities; the count of identities) and they fire as intended; the tables for L = 14, 16, 18, the three analyses and the recheck regenerate byte for byte; the binary in `code/` equals a fresh compile. `theories.py`: two header strings. `prior_tail.out`, `holes_check.out`: regenerated byte for byte. Nothing else changed in `results/`. Nits: s7, s8. |
+
+### 6.5 An addition: max and min have linear test radius (part of the new open question 2)
+
+For max and for min, τ(m) ≤ 2m − 2 for every m. So Theorem 2 pins them linearly, at about half the rate of addition: with their values on [0, n)², every fitting set with sides of at most ⌊n/2⌋ + 1 symbols has the target as a standard model.
+
+* **Max.** A term denotes max(C, cⱼ + xⱼ over the variables that occur), where cⱼ is the largest number of S above an occurrence of xⱼ and C the largest number of S above any leaf. Two terms denote the same function exactly when they agree at the all-zero assignment (which gives C) and at the assignments with one variable equal to B and the rest 0, for a B larger than every C (which gives cⱼ, or shows that xⱼ does not occur). B = m will do.
+* **Min.** A term denotes min(c₀, cⱼ + xⱼ), with least numbers of S (c₀ over the leaves 0). The assignments with all variables equal to B, and with one variable 0 and the rest B, decide equality in the same way.
+* **Reach.** At these assignments an argument of f, which has at most m − 2 symbols, has value at most (m − 3) + m. So f is applied at numbers up to 2m − 3.
+* **Check** (`eq2_maxmin.out`): for m = 3, …, 7 every identity that is false on {0, …, m+2}³ is refuted at an assignment with values in {0, m}, with f applied at numbers up to 2m − 3 (about 10 million false identities at m = 7 for each target). The reaches computed in Section 6.1 are smaller (m − 1 and 2m − 4); the bound is not tight.
+
+Monus is not covered by this argument.
+
+### 6.6 Files of the second pass
+
+| file | contents |
+|---|---|
+| `eq2_holes.py`, `.out` | Proposition 4a re-implemented and extended (29 cases); Proposition 4b on the triangle up to m = 8; what happens for small n; missing pairs in [0, A]²; the family that needs n > 4h + 2 |
+| `eq2_prior.py`, `.out` | the closed forms of Corollary 4, the two bounds for successor, where Proposition 4a(2) starts to say something, the bounds after Proposition 10 |
+| `eq2_props.py`, `.out` | Proposition 10 for j ≤ 10 step by step, the search equation of Proposition 8(2), the set of Proposition 5(4) |
+| `eq2_test_radius.py`, `.out` | the unary table of Section 6.1 to m = 8 with two search ranges and exact integers |
+| `eq2_maxmin.py`, `.out` | the test radius of max and min (6.5) |
+| `eq2_unary_strict.c` | the revised `eq_unary.c` with the over-length unions removed |
+| `eq2_reruns.out` | regeneration of every saved output from the revised code; the strict program against the saved tables; the guards |
+| `eq2_run_all.sh` | the commands |

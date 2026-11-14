@@ -6,7 +6,7 @@ A research note on a question from Kaarel Hänni about Solomonoff operator induc
 * **The first note:** [`note.md`](note.md), on properties of input–output pairs, with definitions, theorems, proofs and an experiment.
 * **The second note:** [`equational.md`](equational.md), on properties of the whole function: an inductor whose hypotheses are sets of universally quantified equations in the vocabulary {0, S, f}.
 * **Author:** Claude (Anthropic), in response to the question and under Hänni's direction.
-* **Status:** a draft. One independent AI referee checked every statement and re-implemented the experiment ([`verification/`](verification/)): no error in a numbered statement, four overclaims in the summary and in how the experiment was reported, since corrected. The second note was checked by one independent AI referee in the same way (no error in the main theorems; one proposition corrected, two counts in the computations corrected, and a new result on doubling added by the referee); a second pass on the changes is pending. No human has checked the mathematics.
+* **Status:** a draft. One independent AI referee checked every statement and re-implemented the experiment ([`verification/`](verification/)): no error in a numbered statement, four overclaims in the summary and in how the experiment was reported, since corrected. The second note was checked by one independent AI referee in the same way, in two passes (no error in the main theorems; one proposition corrected, two counts in the computations corrected, and three results added by the referee: doubling is pinned only polylogarithmically, the pairs of the data that matter, and max and min). No human has checked the mathematics.
 
 ## Answers in brief: the first note
 
@@ -24,7 +24,7 @@ A research note on a question from Kaarel Hänni about Solomonoff operator induc
 A follow-up question: addition satisfies many short universally quantified statements; can properties of the whole function pin down plus over quus? The second note studies the *equational inductor*. A hypothesis is a finite set of identities in the vocabulary {0, S, f}, with no auxiliary symbols; it fits the data if it is consistent and proves every datum; the belief in a label is the posterior weight of the fitting sets that prove it.
 
 1. **Laws must be true so far.** A fitting set contains no identity that the data refute, that is, none with an instance that the data can evaluate and that comes out false.
-2. **Addition is pinned at every input, linearly in the side of the data square.** If the data contain x + y for all x, y < n, every fitting set whose identities have sides of at most n + 1 symbols is true of addition. A wrong sum anywhere needs an identity longer than n, and the belief in any wrong sum is at most 2^(36.5 − 0.485·n), which says something from n = 76 on. SOI keeps at least about 2^(−K(n)) for a wrong sum just outside the square. The same holds for successor. A few missing pairs do not matter unless they are small.
+2. **Addition is pinned at every input, linearly in the side of the data square.** If the data contain x + y for all x, y < n, every fitting set whose identities have sides of at most n + 1 symbols is true of addition. A wrong sum anywhere needs an identity longer than n, and the belief in any wrong sum is at most 2^(36.5 − 0.485·n), which says something from n = 76 on. SOI keeps at least about 2^(−K(n)) for a wrong sum just outside the square. The same holds for successor, and max and min are pinned linearly too. Half the square is enough, and a missing pair (a, b) matters only if a + b is small.
 3. **What exceptions cost.** Quus with threshold N needs a set of at least N + 3 symbols (at most about 2N³), against 12 for plus. In SOI the difference is about log N bits.
 4. **The price.** The inductor's loss is never less than SOI's by more than a constant. If quus is the truth it loses at least about N/2 bits at the first exception. Squaring has no finite set of laws in this vocabulary, and the inductor's loss on it grows without bound.
 5. **Why it works, and where it stops.** The grue theorem of the first note does not apply: the bias is the vocabulary, not a machine. An exception at x costs at least what it costs to name x. With unary numerals that is x symbols. With a doubling function in the vocabulary an exception at 2^j has a set of about j² symbols. With auxiliary function symbols quus with threshold 2^j has one of 79 + 2j symbols, and the inductor behaves much like SOI. And a fast-growing target names large numbers itself: doubling is pinned only polylogarithmically (a result of the referee).
@@ -51,7 +51,7 @@ A follow-up question: addition satisfies many short universally quantified state
 | `code/eq_unary.c`, `code/eq_unary_analyze.py`, `code/eq_unary_recheck.py`, `results/eq_unary_*` | The equational inductor for unary functions with bounded proofs: enumeration of all identity sets up to a size, posterior beliefs, and a recheck with a larger bound. |
 | `verification/referee-report.md`, `verification/response.md` | The referee's report on the first draft of the first note, and what was changed in response. |
 | `verification/referee-report-equational.md`, `verification/response-equational.md` | The same for the second note. |
-| `verification/eq_*` | The referee's independent programs and outputs for the second note: a brute-force inductor, test radii, the identity sets, the prior weights, and the sets for doubling. |
+| `verification/eq_*`, `verification/eq2_*` | The referee's independent programs and outputs for the second note, first and second pass: a brute-force inductor, test radii, the identity sets, the prior weights, the sets for doubling, missing pairs, max and min, and regeneration of every saved output. |
 | `verification/independent_*`, `verification/extra_checks.*`, `verification/run_all.sh` | The referee's own enumeration (syntactic, no pruning, to 11 nodes), its comparison with the saved results, and its checks of how the reported numbers depend on the size limit and the seed. |
 | `results/*.npz`, `results/*.npy`, `code/nearest` | *(not in git)* The enumeration tables and the compiled helper. Regenerate them as below. |
 
@@ -87,6 +87,10 @@ python3 theories.py > ../results/theories.out
 
 ```bash
 python3 prior_tail.py > ../results/prior_tail.out
+```
+
+```bash
+python3 holes_check.py > ../results/holes_check.out
 ```
 
 The inductor on unary functions: compile, enumerate all identity sets of at most 12 symbols with proof bound 18 (about 25 minutes; bound 14 takes one minute and 16 five), analyse, and recheck the deviating sets with bound 22.

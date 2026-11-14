@@ -13,7 +13,8 @@
    (sound, not complete), and T counts as consistent if no two numerals of length <= L are
    identified within that bound. One departure from this description: for the second and third
    kind, when p v is too long to be represented, the instances p u w are still identified with
-   each other (they are all equal to p v). These unions are valid consequences.
+   each other (they are all equal to p v); and for the second kind, when p u is too long, the
+   instances p v w' are identified with each other. These unions are valid consequences.
 
    Every identity set of total size <= CAP is enumerated (as a multiset of identities up to
    renaming of variables and swapping of sides; each carries the number of strings that encode

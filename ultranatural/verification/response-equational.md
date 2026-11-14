@@ -49,4 +49,19 @@ A second pass by the same referee, on Proposition 4a, on Proposition 10 as writt
 
 ## Second pass
 
-Pending.
+The second pass (Section 6 of the report) is on the revised note. It found no fatal error; Proposition 4a, Proposition 10 as written up, the corrected Proposition 7(3), the closed forms of Corollary 4, and Propositions 5(4) and 8(2) are confirmed, and every saved output regenerates byte for byte. It confirmed our rejection of the first report's constant for successor (its e1). Changes made:
+
+| finding | change |
+|---|---|
+| S1 (major). Proposition 4a is correct but too weak to support the sentences that cited it: its bound says nothing below n = 7200. The sentences are true by a simpler argument. | The referee's Proposition 4b (the pairs that matter) is now the main statement, with its consequences: half the square is enough, and a missing pair matters only through its sum a + b. Proposition 4a is kept for its description of the surviving false identities, with a plain statement of how weak its bound is. The summary, Section 7, open question 1 and the README were reworded. |
+| s1. The successor row n = 3 does change between L = 16 and L = 18. | Sentence corrected. |
+| s2. For identity the statement holds only after the recheck. | Said so. |
+| s3. The test radius of doubling was used beyond where it had been computed. | One-line proof added after Proposition 10. |
+| s4. T = 2 at z = 1/5 presumed convergence. | Replaced by the induction on partial sums. |
+| s5. The paragraph after Proposition 7 lacked "once the square below N has been seen". | Added. |
+| s6. "About as strongly as in SOI". | "Only polylogarithmically". |
+| s7. The header comment of `eq_unary.c` named one of two cases. | Both named. |
+| s8. No command for `holes_check.py` in the README. | Added. |
+| 6.5. Max and min have linear test radius. | Added as a remark after Theorem 3, credited, and open question 2 updated (monus and multiplication remain). |
+
+The note has not been refereed after these last changes.
