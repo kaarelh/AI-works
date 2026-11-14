@@ -182,4 +182,148 @@ So a class is learnable with zero mistakes on adversarial sequences if and only 
 2. a distribution over test inputs with respect to which the rate is measured, and access to it through unlabelled test inputs (§5);
 3. a class with small star and threshold dimensions (§3.2).
 
-@@PART2@@
+---
+
+## 5. Arbitrary test inputs: PQ learning and what followed
+
+### 5.1 Goldwasser, Kalai, Kalai and Montasser (2020)
+
+All of this subsection is [read in source: GKKM20], with their P, Q written μ, μ′. Binary labels; C has VC dimension d; realizable: the same f ∈ C labels training and test inputs ("covariate shift").
+
+**Why both abstention and unlabelled test inputs.** "Given any classifier h, an adversary or test distribution Q may concentrate on or near an error", so without abstention nothing holds; and no selective classifier chosen without seeing the test inputs can cope with an adversary who "can simply repeat any single erroneous example they can find". "Learning such classes is impossible without unlabeled examples", even for intervals on the line.
+
+**Definition 1.1 (PQ learning).** A learner L takes n labelled training examples and n unlabelled test examples and outputs a selective classifier h|_S (predict h on S, reject off S). L (ε, δ, n)-PQ-learns C if for all distributions μ, μ′ over X and all f ∈ C,
+
+    Pr_{x ~ μⁿ, x̃ ~ μ′ⁿ}[ rej_μ(S) + err_μ′(h|_S) ≤ ε ] ≥ 1 − δ,
+
+where rej_D(S) = Pr_D[x ∉ S] and err_D(h|_S) = Pr_D[h(x) ≠ f(x) and x ∈ S]. The error is measured on the *test* law and the rejection rate on the *training* law, because the test rejection rate "cannot be bound absolutely".
+
+**The transductive (white-box) model.** The learner chooses h from the training sample. A "true" test set z ~ μⁿ is drawn. An adversary who knows x, z, f, h and the learner's code replaces any number of the z_i to form an arbitrary x̃ ∈ Xⁿ. The learner then chooses S from x, f(x) and x̃. Performance is the empirical test error err_x̃ and the false rejection rate rej_z.
+
+**The algorithm Rejectron** (their Figure 2). h := ERM(x, y); S_1 := X. For t = 1, 2, …: choose c_t ∈ C maximizing
+
+    s_t(c) := (fraction of test inputs in S_t on which c differs from h) − Λ·(fraction of training inputs on which c differs from h),   Λ = n + 1;
+
+if s_t(c_t) ≤ ε, stop and output h|_{S_t}; otherwise S_{t+1} := S_t ∩ {x : c_t(x) = h(x)}. In words: look for a classifier that fits the training data as well as h does and disagrees with h on more than an ε fraction of the test inputs still answered; reject the region where it disagrees; repeat. There are at most ⌊1/ε⌋ rounds, each one call to an empirical risk minimizer (Lemma 5.1).
+
+**Theorems.**
+
+* *Error, with certainty* (Theorem A.2, eq. 12): for every n, ε, f ∈ C and *all* x, x̃ ∈ Xⁿ, err_x̃(h|_S) ≤ ε. The proof is one line: f itself is a candidate c with zero training disagreement, so the loop cannot stop while h|_S errs on more than εn test inputs.
+* *False rejections* (Theorem A.2, eq. 13): with probability at least 1 − δ over x, z ~ μⁿ, for all x̃ ∈ Xⁿ simultaneously, rej_z(S) ≤ (1/n)·((2d/ε)·log 2n + log(1/δ)).
+* *Balanced, transductive* (Theorem 5.3): with ε* = √((2d/n)·log 2n) + (1/n)·log(1/δ), Pr_{x,z ~ μⁿ}[∀ x̃ ∈ Xⁿ: err_x̃(h|_S) ≤ ε* and rej_z(S) ≤ ε*] ≥ 1 − δ.
+* *Balanced, distributional* (Theorem 5.2): with ε* = √(8d·ln 2n / n) + 8·ln(16/δ)/n, Pr[err_μ′ ≤ 2ε* and rej_μ ≤ ε*] ≥ 1 − δ.
+* *Trade-off* (Theorem A.5): for ε ≥ √(8d·ln 2n / n) + 8·ln(8/δ)/n, err_μ′ ≤ 2ε with probability 1 − δ; and for every ε ≥ 0, rej_μ ≤ (2/n)·((2d/ε)·log 2n + log(2/δ)) with probability 1 − δ, for all x̃. So error × rejection is about d/n.
+* *Rejection on the test law* (Lemma 4.1): rej_μ′(S) ≤ rej_μ(S) + TV(μ, μ′); and for every Λ ≥ 0, Pr_{x ~ μ′}[x ∉ S and μ′(x) ≤ Λ·μ(x)] ≤ Λ·rej_μ(S). Test inputs in the region where μ′ ≤ Λμ are rarely rejected; elsewhere nothing is promised.
+* *Several test laws at once* (Claim 4.2): a PQ learner run on the mixture of μ, μ′_1, …, μ′_k guarantees rej_μ + err_μ + Σ_i err_{μ′_i} ≤ ε, given a learner for ε/(k+1).
+* *Unsupervised variant* (URejectron, Theorem 5.6): S is computed from the unlabelled training and test inputs alone, with the same bounds, for all f ∈ C at once; it needs an empirical risk minimizer for the class of disagreement sets of pairs in C.
+* *Injected training examples*: the bounds are unchanged if an adversary adds correctly labelled examples to the training set.
+
+**Lower bounds.**
+
+* *Theorem 5.4*: there is K > 0 such that for every d there are a class of VC dimension d and distributions μ, μ′ such that for every n ≥ 2d and every learner some f ∈ C has E[rej_μ + err_μ′] ≥ K·√(d/n). (C: functions that are 1 on exactly d integers; μ uniform on [8n]; μ′ uniform on [k], k = √(8dn).) The lower bound holds with unboundedly many unlabelled test examples.
+* *Theorem 5.5* (transductive): E[rej_z + err_x̃] ≥ K·√(d/min{m, n}) with n training and m test examples. So Θ̃(√(d/n)) is the rate, against Θ̃(d/n) when μ′ = μ.
+* *One cannot learn where μ and μ′ overlap* (Appendix G): if μ and μ′ were known, S* = {x : μ′(x) ≤ μ(x)/ε} would have rej_μ(S*) < ε and err_μ′(h|_{S*}) ≤ err_μ(h)/ε. But "one cannot even distinguish the case where P = Q from the case where P and Q have disjoint supports with fewer than Ω(√|X|) examples". Rejectron avoids estimating the density ratio: it only detects differences that members of C can express.
+
+**Beyond realizability.**
+
+* *Massart noise* (rate η(x) ≤ η < 1/2, Corollary C.4): Rejectron is a PQ learner given an additional Õ(d·n²/(δ²(1 − 2η)²)) examples from μ.
+* *Semi-agnostic* (Lemma D.1, Theorem D.2). Assume some f ∈ C has error at most η on the training law and at most η̃ on the test law, η and η̃ known. Lower bound: there is a class of VC dimension 1 such that for every learner and all η, η̃ ≤ 1/2, E[err_μ̃ + rej_μ] ≥ max{√(η/8), η̃}. Upper bound: Rejectron with Λ* = (8η + ε*²)^(−1/2) has err_μ̃ ≤ 2·√(2η) + 2η̃ + 4ε* and rej_μ ≤ 4·√(2η) + 4ε*, with ε* = 4·√((d·ln 2n + ln(48/δ))/n). A fraction η of unexplained training labels costs √η, not η.
+
+### 5.2 Kalai and Kanade, "Efficient learning with arbitrary covariate shift"
+
+[read in source: KK21a.] Definition 1 restates PQ learning with separate conditions err_μ′(h; f) ≤ ε and rej_μ(h) ≤ ε. *Reliable learning* (Kalai, Kanade and Mansour 2012) is agnostic learning with one-sided error: a positive reliable learner outputs h with false-positive rate at most ε and false-negative rate at most opt₊ + ε, where opt₊ is the least false-negative rate among members of C with no false positives.
+
+* **Theorem 1**: if C is reliably learnable then C is PQ-learnable (the "Slice-and-Dice" algorithm). **Theorem 2**: if C is PQ-learnable then C is reliably learnable. Running times and sample sizes are polynomially related.
+* The paper is about computation: "ignoring computation, the number of examples required for learning in all these models was known to be polynomially related to d". Parities are PQ-learnable (Lemma 2); PQ-learning conjunctions would give PAC learning of DNF formulas (Lemma 3 with Theorem 2). So PQ learning sits between PAC and agnostic learning.
+* A warning used in §9: rejecting what a distinguisher in C can tell apart from the training inputs is not enough. For homogeneous half-planes with μ on {u, −u} and μ′ on {u, −u, v, −v}, no half-plane separates ±v from ±u, yet ±v must be rejected.
+
+### 5.3 Kalai and Kanade, "Towards optimally abstaining from prediction with OOD test examples"
+
+[read in source: KK21b.] An abstention costs α; a prediction ŷ costs ℓ(y, ŷ) (Chow's model). The learner has n labelled training examples x̄ and n unlabelled test examples x, fits h, and chooses abstention probabilities a ∈ [0,1]ⁿ. Its loss on the test set is ℓ_x(f, h, a) = (1/n)·Σ_i [a_i·α + (1 − a_i)·ℓ(f(x_i), h(x_i))].
+
+**The principle (MMA, "min-max abstention").** Let V be the version space. Choose a to minimize the worst-case test loss, min_a max_{g ∈ V} ℓ_x(g, h, a). "A key insight is that [this] has no unknowns, so MMA will achieve a max … as low as if it knew P, Q and even f."
+
+**Two lemmas that hold for any output space, any loss ℓ ≥ 0, any family F, any V ⊆ F containing f, and any h.** Write L_x(V, h, A) = max_{g ∈ V} ℓ_x(g, h, A) for an abstention set A ⊆ [n], and L_z(V, h) for the same with no abstentions.
+
+* **Lemma 1 (adversarial).** For all z, x ∈ Xⁿ and every minimizer A* of L_x(V, h, ·): ℓ_x(f, h, A*) ≤ (α/n)·|{i : x_i ≠ z_i}| + L_z(V, h). [I checked the proof; it is two lines: compare A* with the set of changed indices, and use f ∈ V.]
+* **Lemma 2 (covariate shift).** For all distributions μ, μ′: E_{x ~ μ′ⁿ}[ℓ_x(f, h, A*)] ≤ min_{k ≥ 1} { α·D_k(μ‖μ′) + k·E_{z ~ μⁿ}[L_z(V, h)] } ≤ α·TV(μ, μ′) + E_{z ~ μⁿ}[L_z(V, h)], where D_k(μ‖μ′) = Σ_x max(μ′(x) − k·μ(x), 0), so D_1 is the total variation distance and D_k = 0 when μ′ ≤ k·μ.
+
+The second term, E_z L_z(V, h), is the ordinary quantity "worst consistent hypothesis on a fresh sample from the training law"; the first is the price of the part of the test law that the training law does not cover.
+
+**Theorems for classification** (0–1 loss, VC dimension d, h an empirical risk minimizer, â computed in polynomial time with an ERM oracle).
+
+* **Theorem 1**: E_{x̄ ~ μⁿ, x ~ μ′ⁿ}[ℓ_x(f, h, â)] ≤ α·TV(μ, μ′) + 2d·log(3n)/n.
+* **Theorem 2** (future test examples): the same with min_{k ≥ 1}{α·D_k(μ‖μ′) + 2dk·log(3n)/n}. To decide on a new test input, run MMA on the test set with that input substituted for one element (Appendix B).
+* **Theorem 3** (adversarial): with probability at least 1 − δ over x̄, z ~ μⁿ, for all x ∈ Xⁿ: ℓ_x(f, h, â) ≤ (α/n)·|{i : x_i ≠ z_i}| + (2d·log 2n + log(1/δ))/n.
+* **Theorem 4** (linear regression, noisy labels with E[y|x] = w·x, squared loss against the conditional mean): E[ℓ_x(f, h, â)] ≤ α·TV(μ, μ′) + κ·log n/√n.
+* **Lemma 8**: the classification bounds are in expectation for a reason: with X = {1, 2}, μ on {1} and μ′ uniform, every algorithm has loss at least α·TV + α/√n with constant probability.
+* **Against PQ learning** (Appendix C): the PQ bound implies loss ≤ α·TV + Õ(√(d/n)); MMA improves the second term to Õ(d/n), and implies E[err_μ′ + rej_μ] ≤ Õ(√(d/n)). The √(d/n) of PQ learning comes from the region where μ is about √(d/n)·μ′, where PQ learning must either reject or err; a cost model does not have to decide.
+
+**Why this works where "abstain on the disagreement region" does not** [my reading]. The never-wrong rule controls max over g ∈ V *at each test input*, which costs the star number. MMA and Rejectron control, for each g ∈ V, its *average* disagreement with h *over the test set*, which is a uniform-convergence quantity and costs only the VC dimension. The average over the test set is why the test inputs must be known in advance.
+
+### 5.4 The online version: Goel, Hanneke, Moran and Shetty (2023)
+
+[read in source: GHMS23.] An i.i.d. stream from μ with target f ∈ F; before each round an adversary may replace the input by an arbitrary one ("clean-label injection"; the label is still f's). The learner predicts or abstains, then sees the label. Error = (number of wrong predictions on any round) + (number of abstentions on non-injected rounds). Abstaining on injected rounds is free.
+
+* The disagreement-based learner has no misclassifications and, for thresholds, at most 2·log T abstentions on i.i.d. rounds (Proposition 4.1); for general classes it is governed by the star number (§3.3) and is useless for, say, unions of two intervals.
+* **Theorem 5.1** (μ known): for VC dimension d, an algorithm based on the probability that k fresh points are shattered by the version space has E[misclassifications] ≤ d²·log T and E[abstentions on i.i.d. rounds] ≤ 6d.
+* **Theorems 6.1, 6.7** (μ unknown): for VC dimension 1, E[misclassifications] ≤ 2·√(T log T) and E[abstentions] ≤ √(T log T); for axis-aligned rectangles in R^p, O(√(pT log T)) each.
+* Open (their §7): general VC classes with unknown μ. The label is revealed after every round in this model; the authors mention the variant without labels on abstention rounds as a direction.
+
+### 5.5 Abstaining on the whole test distribution
+
+[read in source: arXiv abstracts of KSV24 and GSSV24 only.] In *testable learning with distribution shift* (TDS; Klivans, Stavropoulos and Vasilyan 2024) the learner gets labelled samples from the training law and unlabelled samples from the test law and runs a test: if the test accepts, the classifier has low test error; if the two input laws are equal, the test accepts. Efficient algorithms are given for half-spaces, intersections of half-spaces and decision trees under Gaussian or uniform training inputs. Goel, Shetty, Stavropoulos and Vasilyan (2024) note that earlier TDS algorithms "end up abstaining entirely even in the presence of a tiny amount of distribution shift", give tolerant versions, and give efficient PQ learners for the same classes.
+
+### 5.6 Asking for help instead of abstaining
+
+Abstract-level reading only, unless stated.
+
+* Plaut, Zhu and Russell (2024) [read in source: PZR24 abstract and theorem statements]: online learning where each round's payoff is the chance of avoiding catastrophe and the agent may query a mentor. "In general, any algorithm either queries the mentor at a linear rate or is nearly guaranteed to cause catastrophe." If the mentor's policy class has finite VC dimension and inputs are σ-smooth, or has finite Littlestone dimension, and nearby inputs have nearby payoffs (Lipschitz constant L), regret tends to 0 with a number of queries of order T^((4n+1)/(4n+2)) (n the input dimension).
+* Cohen and Hutter (2020) [read in source: CH20 abstract]: a Bayesian reinforcement learner over a countable class of world-models that maximizes the worst case over the models with enough posterior weight, and defers to a mentor with a probability that tends to 0; with probability 1 − δ it causes no "unprecedented event".
+* Kosoy (2019) [read in source: Kos19 abstract]: a regret bound for reinforcement learning with traps when the agent may delegate actions to an advisor; finitely many hypotheses, states and actions.
+* Sekhari, Sridharan, Sun and Wu (2023) [read in source: arXiv abstract of SSSW23]: imitation learning with selective queries to a noisy expert; the regret is bounded by that of an online regression oracle and "the query complexity additionally depends on the eluder dimension of the model class", with a matching lower bound.
+* Hanneke and Yang (2021), "Toward a general theory of online selective sampling: trading off mistakes and queries" [listed in GHMS23's references; not read].
+* Cohen, Hutter and Nanda (2022) is treated in §8.3.
+
+---
+
+## 6. Conformal prediction and shift
+
+Conformal methods output a set Ĉ(x) ⊆ Y. The set Y itself is an abstention; a small set is a confident answer. The labels may be stochastic and Y arbitrary, and nothing is assumed about the conditional law of Y given X: in the terms of this digest, the hypothesis class is "all samplers".
+
+### 6.1 Exchangeable data
+
+[read in source: TBCR19 §1; BCRT21 Theorem 1, citing Papadopoulos et al. 2002.] If (X_i, Y_i), i ≤ n + 1, are exchangeable, the (split) conformal set built from any score function satisfies Pr[Y_{n+1} ∈ Ĉ_n(X_{n+1})] ≥ 1 − α, for every distribution. The probability is over the calibration data and the test point: coverage is *marginal*.
+
+### 6.2 Covariate shift with a known likelihood ratio
+
+[read in source: TBCR19 §2, Corollary 1.] Training pairs i.i.d. from μ × P(·|x); one test pair from μ′ × P(·|x), with μ′ absolutely continuous with respect to μ and w = dμ′/dμ known up to a constant. Weight the calibration scores: p_i^w(x) = w(X_i)/(Σ_j w(X_j) + w(x)) for i ≤ n, and p_{n+1}^w(x) = w(x)/(Σ_j w(X_j) + w(x)) on the value +∞; let Ĉ_n(x) be the set of y whose score is at most the (1 − α)-quantile of this weighted distribution. Then Pr[Y_{n+1} ∈ Ĉ_n(X_{n+1})] ≥ 1 − α.
+
+* *It abstains by itself* [my own derivation from the definition]. If p_{n+1}^w(x) > α, that is w(x) > (α/(1 − α))·Σ_j w(X_j), the quantile is +∞ and Ĉ_n(x) = Y. So the method returns the trivial set at inputs whose likelihood ratio exceeds about αn times its average, and in particular wherever μ has no mass.
+* *Estimated ratio* [read in source: LC21 Proposition 1]. With an estimate ŵ in place of w, coverage is at least 1 − α − Δ_w, where Δ_w = (1/2)·E_{X ~ μ}|ŵ(X) − w(X)|; with ŵ = w the guarantee holds "without any further assumption", the interval being the whole line where ŵ = ∞. Tibshirani et al. propose estimating w with a classifier that distinguishes unlabelled training from unlabelled test inputs. In general the ratio cannot be estimated from samples (§5.1, Appendix G of GKKM20).
+
+### 6.3 The limits: conditional coverage, and all bounded shifts
+
+[read in source: BCRT21.]
+
+* **Proposition 1** (rephrased from Vovk 2012 and Lei–Wasserman 2014): if a method has distribution-free conditional coverage, Pr[Y_{n+1} ∈ Ĉ_n(X_{n+1}) | X_{n+1} = x] ≥ 1 − α for all distributions and almost all x, then for every distribution E[leb(Ĉ_n(x))] = ∞ at almost every x that is not an atom of the input law.
+* **Approximate conditional coverage.** Ĉ_n satisfies (1 − α, δ)-CC if Pr[Y_{n+1} ∈ Ĉ_n(X_{n+1}) | X_{n+1} ∈ 𝒳] ≥ 1 − α for all distributions and all sets 𝒳 with input-law mass at least δ. **Lemma 1**: marginal coverage at level 1 − αδ implies (1 − α, δ)-CC. **Theorem 2**: this is essentially the only way: if Ĉ_n satisfies (1 − α, δ)-CC then for every distribution whose input law has no atoms,
+
+      E[leb(Ĉ_n(X_{n+1}))] ≥ inf_{c ∈ [0,1]} ((1 − α)/(1 − cα))·L_P(1 − cαδ),
+
+  where L_P(1 − β) is the least expected length of a set with marginal coverage 1 − β under the true distribution.
+* **This is a statement about covariate shift** [my own derivation]. For an input law μ without atoms, (1 − α, δ)-CC is equivalent to coverage at least 1 − α under every test input law μ′ with dμ′/dμ ≤ 1/δ. (One direction: conditioning on a set of mass ≥ δ is such a shift. The other: miscoverage under μ′ is linear in the density q = dμ′/dμ; over the convex set {0 ≤ q ≤ 1/δ, ∫q dμ = 1} a linear functional is maximized at an extreme point, and for atomless μ the extreme points are (1/δ)·1_A with μ(A) = δ.) So Theorem 2 says: a model-free method that keeps its coverage under every shift with density ratio at most B = 1/δ can do no better than run at miscoverage α/B. The factor B in the lead's Theorem C and in `notes.md` Observation D cannot be removed without assuming something about the class of samplers.
+* **Restricting the sets** (Theorems 3–4): coverage conditional on every set of mass ≥ δ in a class 𝒳 of sets is achievable for any 𝒳, but if the VC dimension of 𝒳 is at least 2n + 2 the lower bound of Theorem 2 applies again (for the exchangeable form of the property).
+
+### 6.4 What can be had without the likelihood ratio
+
+* **A finite-dimensional family of shifts** [read in source: GCC23 Theorem 2, Corollary 1]. Conditional coverage is equivalent to E[f(X_{n+1})·(1{Y_{n+1} ∈ Ĉ} − (1 − α))] = 0 for all measurable f; relax "all f" to a class F. For F = {Φ(·)ᵀβ : β ∈ R^d}, a quantile regression over F on the scores gives, for every non-negative f ∈ F, coverage at least 1 − α when the test input is drawn from the law tilted by f; and if the scores are continuous the two-sided error is at most (d/(n+1))·E[max_i |f(X_i)|]. With F spanned by the indicators of finitely many groups 𝒢 this is coverage in every group, exact up to |𝒢|/((n+1)·Pr(G)). So: exact robustness to an unknown shift, provided its density ratio lies in a known d-dimensional family.
+* **A ball of distributions** [read in source: CGAD24 Theorem 1, Corollaries 2.1–2.3]. If the test law of the scores is within f-divergence ρ of the training law, a quantile at a level raised according to (f, ρ) restores coverage; for total variation, if 2·TV ≤ ρ, the level 1 − α + ρ/2 gives coverage at least 1 − α − 1/n. The radius must be known or assumed.
+* **Unknown, arbitrary shift** [read in source: BCRT23 Theorem 2, Lemma 1]. Without any correction, coverage is at least 1 − α − Σ_i w̃_i·d_TV(R(Z), R(Z^i)), where Z^i swaps the test point with the i-th calibration point, R is the vector of scores and w̃_i are normalized weights; for independent points the gap is at most 2·Σ_i w̃_i·d_TV(Z_i, Z_{n+1}). Coverage is lost silently, in proportion to the distance.
+* **Arbitrary sequences, with the label after every round** [read in source: GC21 Lemma 4.1, Proposition 4.1]. Adaptive conformal inference updates the working level by α_{t+1} = α_t + γ·(α − err_t), where err_t indicates miscoverage at time t. For *every* sequence, with probability one, |(1/T)·Σ_{t ≤ T} err_t − α| ≤ (max{α_1, 1 − α_1} + γ)/(Tγ). This is a statement about a long-run frequency, obtained by alternating over- and under-coverage; it identifies no round as safe; and it needs every label.
+
+### 6.5 Summary for this problem
+
+[my reading.] Conformal prediction is the only tool in this digest that needs no realizability assumption, and that is also why it cannot survive shift: its "class" is everything. It gives a guarantee under shift exactly when the shift is brought back to exchangeability, by a known likelihood ratio, by a small known family of ratios, or by drawing the calibration inputs from the deployment distribution itself. The last is what random audits do (`notes.md` Observation A; `repo.md` X3–X4): a uniformly random subset of a batch of deployment inputs is exchangeable with the rest of the batch.
+
+@@PART3@@
