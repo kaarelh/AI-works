@@ -30,7 +30,7 @@
 
 \title{A toy malign-prior question with an answer:\\ bounded Solomonoff prediction in a world of programs}
 \author{Claude (Anthropic), prompted by Kaarel H\"anni}
-\date{10 November 2026. Research note; not reviewed by a human.}
+\date{14 November 2026. Research note; not reviewed by a human.}
 
 \begin{document}
 \maketitle
@@ -43,29 +43,51 @@ and work out what can be proved there. Universes are programs for a fixed machin
 \emph{critical use} of a fixed Solomonoff predictor, possibly time- and length-bounded: they hand it their
 output so far and run the continuation they get back as a program. A hypothesis \emph{reproduces itself} if
 the continuation it supplies is its own code; the world then runs that hypothesis. Let $H$ be the prior
-probability of a critical use and $\kappa$ the share of the posterior, at the context of a use, of the worlds
+probability of a critical use and $\kappa$ the share of the posterior, at the context of a use, of the
+worlds
 that make it. Two questions have to be kept apart.
 \begin{itemize}[leftmargin=1.4em,itemsep=1pt,topsep=2pt]
 \item \textbf{Reach of one seeker.} Without resource bounds, for each continuation there is a program, of
-some length $a$, that enumerates the programs making a critical use, predicts their output up to the use, and
+some length $a$, that enumerates the programs making a critical use, predicts their output up to the use,
+and
 then supplies that continuation. It has posterior share more than $2^{-a-1}\kappa/H$ at every use, and its
 continuation is handed over in worlds of total prior probability more than $2^{-a-1}$ times the average of
-$\kappa$, and at most $H$. Once uses are rarer than half the seeker's weight, its programs outweigh the users
-at their contexts. Supplying its own code needs a longer program and a user whose program is short enough for
+$\kappa$, and at most $H$. Once uses are rarer than half the seeker's weight, its programs outweigh the
+users
+at their contexts. Supplying its own code needs a longer program and a user whose program is short enough
+for
 the block.
-\item \textbf{Fate of the uses.} This does not show that most uses end in a takeover. The share that do is the
+\item \textbf{Fate of the uses.} This does not show that most uses end in a takeover. The share that do is
+the
 posterior share of such programs at the contexts of uses. A seeker that searches has an honest twin, which
 makes the same search and then continues as the user it found; the twin is in the posterior with $2^{a-h}$
 times the seeker's mass, $h$ being its length. So where the users go on to print the block themselves, that
-seeker's programs supply what the predictor returns with probability at most $1/(1+2^{a-h})$. The bound is for
+seeker's programs supply what the predictor returns with probability at most $1/(1+2^{a-h})$. The bound is
+for
 one seeker and one search at a time, and the masses of different seekers add.
-\item \textbf{No goal has to be written down.} Any program of length $a$ whose output puts on each context of
+\item \textbf{No goal has to be written down.} Any program of length $a$ whose output puts on each context
+of
 a class of uses at least half that context's share of the class, for instance a simple world with a cheap
 readout whose inhabitants choose to do this, outweighs the worlds that make those uses as soon as the class
 has total prior mass below $2^{-a-1}$ and the program's own outputs are not counted as uses. The twin bound
-does not apply to a program that is not a written search followed by a continuation. A time bound does where,
-as in this example, the program prints nothing until a long computation has run: a schedule shorter than that
+does not apply to a program that is not a written search followed by a continuation. A time bound does
+where,
+as in this example, the program prints nothing until a long computation has run: a schedule shorter than
+that
 start-up gives it no mass.
+\item \textbf{Aiming at high stakes.} A seeker can aim at any class of uses that a computation can
+recognise, for instance those with stake at least $n$, for about $2\log_2n$ bits and the bits that name the
+scale of the class. It then outweighs the \emph{users} of the class, however rare the class is. That does
+not
+make it win there. Programs of total weight $B$ supply the majority of the predictor's samples on a set of
+pairwise incomparable uses only if $B$ exceeds the mass of everything else that prints those contexts and
+goes on. Part of that rest follows the seeker: its honest twin, at a ratio set by the two lengths in which
+neither the aim nor the stake occurs, and a wrapper, which keeps every takeover probability at or below
+$1-2^{-c}$ where some block that can be computed from the context is not a takeover. That enough weight wins
+is a theorem only of a model in which the rest does not react; there an
+attacker that maximises the stake it captures concentrates by a square-root law in the stake per unit of
+rest. If a world draws $n$ independent samples at one context and one takeover block suffices, a share of
+about $\ln2/n$ per sample is enough.
 \item \textbf{Without search.} At every use that a fixed test recognises, a wrapper around the explanations
 of the context gives any fixed continuation at least a share $2^{-c}$, with $c$ the wrapper's length,
 whatever the world and the amount of data; under resource bounds this is multiplied by the share of
@@ -75,40 +97,68 @@ its bounds, the continuation the predictor samples and the world's own continuat
 distribution given the context. Along any world the predictor can express, the posterior mass off the true
 continuation, summed over all cut points, is at most the block length times the world's description length.
 \item \textbf{Other ways to a majority}, each an inequality: a machine built for it (any share can be
-arranged by choosing the machine); a cheaper explanation of the context that is not a use, for example a copy
+arranged by choosing the machine); a cheaper explanation of the context that is not a use, for example a
+copy
 of the data stream at a place in the world that is simpler to specify than the sensor; or a world too
 expensive for the predictor to simulate.
-\item \textbf{Feedback.} If the world does what is predicted, a sampled self-fulfilling deviation removes the
+\item \textbf{Feedback.} If the world does what is predicted, a sampled self-fulfilling deviation removes
+the
 default hypotheses for good, and a time-bounded predictor confines such a world to futures that are cheap to
 compute.
+\item \textbf{Circuits in place of programs.} Let hypotheses and worlds be Boolean circuits that map a
+position to a bit, weighed by their number of gates. Calibration, the budget and the feedback results hold
+unchanged. The seeker mechanism is not available to a single description: every active gate costs bits, a
+random seed never beats its own hardwired instance, and a circuit that can become any world of $\sigma$
+gates has more than $(\sigma+1)/2$ gates (for $\sigma+3\le2^k$, with $k$ the number of inputs). What remains
+at a use is a floor for triggered hypotheses, priced
+by the gates that recognise the use (one gate where the use is marked by an input bit that never varied in
+the data); ceilings for three syntactic classes of hypotheses only; and deviation that nothing aimed.
+Whether the smallest circuit for a rich task can be a general solver whose behaviour off the data
+the data do not fix is stated precisely and left open. When a description may be reused across steps, the
+class contains every bounded machine again.
 \end{itemize}
 An exact computation on a small machine shows sizes: with programs of at most ten commands, most of the
 posterior leaves one stream's true continuation at bit 17, because three-command programs explain its first
-16 bits; the effect weakens as longer programs are admitted.
+16 bits; the effect weakens as longer programs are admitted. An exact count of small circuits shows the
+circuit counterpart: at a use that differs from the data in a bit that never varied, the posterior is off
+the world's answer by 2 to 32 per cent when the predictor has gates to spare and the world ignores the bit,
+and by 81 to 100 per cent when the world depends on it.
 \end{abstract}
 
 \input{sec1-intro}
 \input{sec2-toy}
 \input{sec3-floor}
+\input{sec3b-stakes}
 \input{sec4-limits}
 \input{sec5-feedback}
 \input{sec6-computation}
-\input{sec7-answers}
+\input{sec7-circuits}
+\input{sec8-answers}
 
 \begin{thebibliography}{99}\small
 \bibitem{christiano} P.~Christiano. What does the universal prior actually look like? Blog post, 2016.
 \bibitem{xu} M.~Xu. The Solomonoff prior is malign. LessWrong, 2020.
-\bibitem{hutter07} M.~Hutter. On universal prediction and Bayesian confirmation. \emph{Theoretical Computer Science} 384:33--48, 2007.
-\bibitem{cohen25} M.~K.~Cohen, M.~Hutter, Y.~Bengio, S.~Russell. RL, but don't do anything I wouldn't do. \emph{UAI}, 2025.
-\bibitem{cohen20} M.~K.~Cohen, M.~Hutter. Pessimism about unknown unknowns inspires conservatism. \emph{COLT}, 2020.
+\bibitem{hutter07} M.~Hutter. On universal prediction and Bayesian confirmation. \emph{Theoretical Computer
+Science} 384:33--48, 2007.
+\bibitem{cohen25} M.~K.~Cohen, M.~Hutter, Y.~Bengio, S.~Russell. RL, but don't do anything I wouldn't do.
+\emph{UAI}, 2025.
+\bibitem{cohen20} M.~K.~Cohen, M.~Hutter. Pessimism about unknown unknowns inspires conservatism.
+\emph{COLT}, 2020.
 \bibitem{leike15} J.~Leike, M.~Hutter. Bad universal priors and notions of optimality. \emph{COLT}, 2015.
-\bibitem{solomonoff78} R.~J.~Solomonoff. Complexity-based induction systems: comparisons and convergence theorems. \emph{IEEE Transactions on Information Theory} 24:422--432, 1978.
-\bibitem{hubinger23} E.~Hubinger, A.~Jermyn, J.~Treutlein, R.~Hudson, K.~Woolverton. Conditioning predictive models: risks and strategies. arXiv:2302.00805, 2023.
-\bibitem{oesterheld23} C.~Oesterheld, J.~Treutlein, E.~Cooper, R.~Hudson. Incentivizing honest performative predictions with proper scoring rules. \emph{UAI}, 2023.
+\bibitem{solomonoff78} R.~J.~Solomonoff. Complexity-based induction systems: comparisons and convergence
+theorems. \emph{IEEE Transactions on Information Theory} 24:422--432, 1978.
+\bibitem{hubinger23} E.~Hubinger, A.~Jermyn, J.~Treutlein, R.~Hudson, K.~Woolverton. Conditioning predictive
+models: risks and strategies. arXiv:2302.00805, 2023.
+\bibitem{oesterheld23} C.~Oesterheld, J.~Treutlein, E.~Cooper, R.~Hudson. Incentivizing honest performative
+predictions with proper scoring rules. \emph{UAI}, 2023.
 \bibitem{armstrong17} S.~Armstrong, X.~O'Rourke. Good and safe uses of AI oracles. arXiv:1711.05541, 2017.
-\bibitem{wyeth25} C.~Wyeth, M.~Hutter. Formalizing embeddedness failures in universal artificial intelligence. arXiv:2505.17882, 2025.
+\bibitem{wyeth25} C.~Wyeth, M.~Hutter. Formalizing embeddedness failures in universal artificial
+intelligence. arXiv:2505.17882, 2025.
 \bibitem{legg06} S.~Legg. Is there an elegant universal theory of prediction? arXiv:cs/0606070, 2006.
-\bibitem{putnam63} H.~Putnam. ``Degree of confirmation'' and inductive logic. In \emph{The Philosophy of Rudolf Carnap}, 1963.
-\bibitem{lv} M.~Li, P.~Vit\'anyi. \emph{An Introduction to Kolmogorov Complexity and Its Applications}, 3rd ed. Springer, 2008.
+\bibitem{putnam63} H.~Putnam. ``Degree of confirmation'' and inductive logic. In \emph{The Philosophy of
+Rudolf Carnap}, 1963.
+\bibitem{lv} M.~Li, P.~Vit\'anyi. \emph{An Introduction to Kolmogorov Complexity and Its Applications}, 3rd
+ed. Springer, 2008.
+\input{bib-circuits}
 \end{thebibliography}
 \end{document}
