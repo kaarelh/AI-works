@@ -14,6 +14,43 @@ example : OnlineLowerSoftplus.SoftplusConcreteMainStatement := OnlineLowerSoftpl
 example : OnlineLower.WidthExponentLowerBound OnlineLowerSoftplus.softplus (1/2) :=
   OnlineLowerSoftplus.softplus_width_square_root_lower_bound
 
+-- Literal numerical normalizations and the paper's coordinate-product equation.
+open MeasureTheory Set
+open scoped BigOperators
+example : OnlineLowerRelu.fourierAbsConstant = Real.pi :=
+  OnlineLowerRelu.fourierAbsConstant_eq_pi
+example (z : ℝ) : |z| = (2 / Real.pi) *
+    ∫ t : ℝ in Ioi 0, (1 - Real.cos (t * z)) / t ^ 2 :=
+  OnlineLowerRelu.abs_eq_cosine_integral_pi z
+example {d : ℕ} (S : Finset (Fin d)) (hS : 2 ≤ S.card) (heven : Even S.card)
+    (b : ℝ) (u : Fin d → ℝ) :
+    let kernel : ℝ → ℝ := fun t => Real.cos (b * t) *
+      (∏ i ∈ S, Real.sin (u i * t)) *
+      (∏ i ∈ Finset.univ \ S, Real.cos (u i * t)) / t ^ 2
+    IntegrableOn kernel (Ioi 0) ∧
+    walshCoefficients (fun x => max (OnlineLowerRelu.cubeAffine b u x) 0) S =
+      (-1 : ℝ) ^ (S.card / 2 + 1) / Real.pi * ∫ t : ℝ in Ioi 0, kernel t :=
+  OnlineLowerRelu.relu_walsh_integral_paper S hS heven b u
+
+section TanhCostExpansionGate
+open OnlineLowerTanh
+example : ∃ T K : ℝ, 2 ≤ T ∧ 0 < K ∧ 0 < optimizedCostCurvature ∧
+    ∀ r : ℕ, T < (2 * r + 1 : ℕ) →
+      |balancedCost r - (optimizedCostSlope * (2 * r + 1 : ℕ) +
+        optimizedCostIntercept + optimizedCostCurvature / (2 * r + 1 : ℕ))| ≤
+          K / (2 * r + 1 : ℕ) ^ 2 := balanced_cost_expansion_paper
+example : ∃ T K : ℝ, 2 ≤ T ∧ 0 < K ∧ ∀ u : ℝ, 3 * T < u →
+    |iteratedDeriv 2 (optimizedRealCost actualGainBranch) u -
+      2 * optimizedCostCurvature / u ^ 3| ≤ 24 * K / u ^ 4 := by
+  obtain ⟨T, K, hT, hK, _, _, _, _, _, hd⟩ := optimized_cost_expansion_paper
+  exact ⟨T, K, hT, hK, hd⟩
+end TanhCostExpansionGate
+
+#print axioms OnlineLowerTanh.optimized_cost_expansion_paper
+#print axioms OnlineLowerTanh.balanced_cost_expansion_paper
+#print axioms OnlineLowerRelu.fourierAbsConstant_eq_pi
+#print axioms OnlineLowerRelu.relu_walsh_integral_paper
+
 #print axioms OnlineLower.relu_concrete_main
 #print axioms OnlineLower.tanh_concrete_main
 #print axioms OnlineLowerSoftplus.softplus_concrete_main
@@ -33,6 +70,7 @@ run_cmd do
     `NeuralGeneralization.OnlineLowerReluCoverageRepresentation,
     `NeuralGeneralization.OnlineLowerReluCoverageStability,
     `NeuralGeneralization.OnlineLowerReluCoverageVariation,
+    `NeuralGeneralization.OnlineLowerReluFourierNormalization,
     `NeuralGeneralization.OnlineLowerReluLayerVariance,
     `NeuralGeneralization.OnlineLowerReluLayerVarianceMain,
     `NeuralGeneralization.OnlineLowerSoftplusAtom,
@@ -68,6 +106,7 @@ run_cmd do
     `NeuralGeneralization.OnlineLowerTanhCodeQuantitativeLocalization,
     `NeuralGeneralization.OnlineLowerTanhCodeQuantitativePaper,
     `NeuralGeneralization.OnlineLowerTanhCodeVanishingSharp,
+    `NeuralGeneralization.OnlineLowerTanhCostExpansionPaper,
     `NeuralGeneralization.OnlineLowerTanhCoverageVariation,
     `NeuralGeneralization.OnlineLowerTanhDominantPairAsymptotics,
     `NeuralGeneralization.OnlineLowerTanhEqualBulkEquality,
@@ -169,6 +208,22 @@ run_cmd do
   ]
   let moduleSet : NameSet := modules.foldl (fun s n => s.insert n) {}
   let allowed : Array Name := #[`propext, `Classical.choice, `Quot.sound]
+  -- A printed axiom list alone would not reject a new axiom in a main theorem.
+  let mainEndpoints : Array Name := #[
+    `NeuralGeneralization.OnlineLower.relu_concrete_main,
+    `NeuralGeneralization.OnlineLower.relu_width_square_root_lower_bound,
+    `NeuralGeneralization.OnlineLower.tanh_concrete_main,
+    `NeuralGeneralization.OnlineLower.tanh_square_root_log_loss_lower_bound,
+    `NeuralGeneralization.OnlineLowerSoftplus.softplus_concrete_main,
+    `NeuralGeneralization.OnlineLowerSoftplus.softplus_width_square_root_lower_bound,
+    `NeuralGeneralization.OnlineLowerRelu.relu_arbitrary_layer_variance_main
+  ]
+  for endpoint in mainEndpoints do
+    unless env.contains endpoint do
+      throwError "Missing main endpoint {endpoint}"
+    for ax in (← Lean.collectAxioms endpoint) do
+      unless allowed.contains ax do
+        throwError "Unexpected axiom {ax} in main endpoint {endpoint}"
   let mut checked := 0
   let mut theorems := 0
   let mut seen : Array Name := #[]

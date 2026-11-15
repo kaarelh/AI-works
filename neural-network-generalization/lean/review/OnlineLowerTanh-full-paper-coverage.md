@@ -12,7 +12,7 @@ Source: [paper and appendices](../../works-in-progress/online-mistakes/isotropic
 | 4 | Unique balanced gain and full local optimum, every odd n≥5 | Covered | `balancedGain_finite_unique_max`, `balancedGain_finite_global_strict_max`, `signedAffineParityRatio_strict_local_maximum`, and `absoluteAffineParityRatio_strict_local_maximum` quantify a full affine neighborhood, not merely radial or pairwise slices. `signedAffineParityRatio_hessian_negative_definite` proves negativity of the actual Fréchet Hessian in every nonzero direction. |
 | 5 | Local weighted-code inequality, including small odd rails | Covered | `odd_rail_local_weighted_code_paper` uses actual optimized weights and every physical disjoint odd-rail family in the statement. It proves value one and a strict full ambient local maximum at every selected orientation and every input-sign flip. The proof combines a quadratic selected-support gap with cubic competing coefficients; it does not assume the absolute objective is C². |
 | 6 | Global three-bit parity gain and exact variation cost | Covered, except illustrative decimal values | `ThreeBitSharp` + `ThreeBitVariation`: unrestricted affine inequality, iff equality, actual finite-representation infimum and attainment. |
-| 7 | Optimized cost expansion | Covered analytically | Existing holomorphic interpolation and derivative bounds; displayed decimal A,B,C approximations are not interval-certified. |
+| 7 | Optimized cost expansion | Covered by one unconditional endpoint | `optimized_cost_expansion_paper` assembles holomorphic interpolation on the right half-plane outside one disk, the uniform quadratic remainder, literal odd-degree cost values, positive A and C, and the explicit second-derivative error `24 K / n^4`. `balanced_cost_expansion_paper` gives the real odd-degree expansion directly. No branch or analytic certificate is a caller hypothesis. Displayed decimal A,B,C approximations and the narrow numerical curvature enclosure are not interval-certified; positivity is proved with exact broader bounds. |
 | 8 | Global support stability with 96√6 | Covered | `intrinsicParityBound_physical_support_paper` gives the exact constant for arbitrary affine neurons. Its parameter bound, together with the checked tanh Lipschitz projection estimate, gives the stated L²-distance consequence. |
 | 9 | Local orientation vanishing | Covered, including uniform eventual smallness | `ambient_tanh_local_offmass_paper` proves the exact finite coefficient with D=pR on arbitrary ambient cubes. `retainedCarrier_local_paper_coefficient_eventually_small` takes W to be the actual maximum retained cost and gives the stated smallness uniformly over R≥K₀ log²(p+2), for every fixed K₀>0. |
 | 10 | Exact code norm, 2S stability and equality | Covered in arbitrary ambient dimension | `retainedCarrier_code_arbitrary_ambient_paper_with_equality` uses actual optimized costs, exact `S=max(2,96√6 W²)`, actual odd-face projection, and all ambient weights and bias. Equality forces a retained balanced atom; `ambient_balanced_code_attainment` supplies every retained equality ray. |
@@ -46,7 +46,7 @@ The generic subgroup averaging/invariance claim before #12 is separately proved 
 
 A statement may be proved by a different argument from the manuscript, or follow from an explicitly identified stronger theorem. This inventory does not treat a sufficient weaker lemma as proof of the paper’s stronger assertion. Intermediate structures are acceptable only when the exported result discharges their mathematical fields with proved constructions.
 
-Illustrative decimal approximations to the three-bit gain and asymptotic coefficients are not interval-certified. The alternative proof of restoring curvature does not formalize the manuscript’s intermediate Jacobi elliptic-function identities. Those identities are not assumptions of the checked result. Thus coverage of the numbered mathematical results does not mean a separate Lean proof of every displayed identity or numerical approximation.
+Illustrative decimal approximations to the three-bit gain and asymptotic coefficients, and the narrow auxiliary numerical curvature enclosure, are not interval-certified. The required strict positivity of the reciprocal-degree coefficient is proved with broader exact bounds. The alternative proof of restoring curvature does not formalize the manuscript’s intermediate Jacobi elliptic-function identities. Those identities are not assumptions of the checked result. Thus coverage of the numbered mathematical results does not mean a separate Lean proof of every displayed identity or numerical approximation.
 
 The paper’s phrase “Equality holds” in the phase-defect discussion was clarified to “The extremal equality |H|=F₀(a) holds”; equality in an auxiliary lower estimate is a different claim. This is a wording clarification, not a change to the main theorem, the learning protocol, or its quantifier order.
 
@@ -55,3 +55,15 @@ The paper’s phrase “Equality holds” in the phase-defect discussion was cla
 Run `python3 verify_online_lower_coverage.py` from the Lean folder to build the project dependency closure serially and run the exact-statement and axiom gate. The script reuses valid Lake artifacts. [`--plan`](../verify_online_lower_coverage.py) prints the dependency order without building.
 
 The scoped [verification record](OnlineLowerCoverage-verification.json) records the combined check, and the [source manifest](OnlineLowerCoverage-source-manifest.json) identifies the checked project sources.
+
+
+## November 15 statement assembly
+
+`OnlineLowerTanhCostExpansionPaper` puts all clauses of the optimized-cost
+expansion into one unconditional theorem, using the already constructed actual
+analytic branch. It selects one threshold and one error constant for the
+uniform complex expansion, exact balanced-cost identification, and ordinary
+real second derivative. The accompanying real-valued theorem states the
+quadratic remainder directly for the actual odd-degree balanced costs. This
+adds a direct correspondence endpoint without changing the manuscript or
+replacing the pre-existing analytic proof.

@@ -40,8 +40,39 @@ The high-order coefficient and dominant-pair statements allow changing dimension
 
 ## Limits of the review
 
-The result inventories are authoritative about the precise statement coverage and exclusions. Illustrative numerical approximations and every intermediate identity in an alternative manuscript proof are not automatically covered by a theorem with the same conclusion. In particular, the ReLU proof uses a positive Fourier-integral normalizer which cancels in comparisons; its separate numerical evaluation as `π` is not formalized. The restoring-curvature proof does not formalize the manuscript’s Jacobi identities.
+The result inventories are authoritative about the precise statement coverage and exclusions. Illustrative numerical approximations and every intermediate identity in an alternative manuscript proof are not automatically covered by a theorem with the same conclusion. The November 15 follow-up closes the formerly excluded ReLU Fourier-integral normalization: `fourierAbsConstant_eq_pi` evaluates it as `π`, and `relu_walsh_integral_paper` exports the literal half-line equation and its absolute convergence. The restoring-curvature proof still does not separately formalize the manuscript’s Jacobi identities; its exact Bernstein certificate proves the stated restoring-curvature conclusion without assuming those identities.
 
-No contradiction in either main learning theorem was found. A phrase in the tanh phase-defect discussion was clarified to distinguish equality at the global maximum from equality in an auxiliary inequality. The main statements, protocols, resources and Lean propositions were preserved.
+No contradiction in either main learning theorem was found. The earlier November 14 revision clarified a phrase in the tanh phase-defect discussion to distinguish equality at the global maximum from equality in an auxiliary inequality. The November 15 follow-up changes no paper files. The main statements, protocols, resources and Lean propositions were preserved.
 
 The combined import check also caught independently duplicated tanh variation-norm definitions. The three-bit and retained-code results now share the same definition of the finite-representation infimum. The definitions were mathematically identical; the consolidation changes no theorem statement. The complete 4,336-job dependency build and the audit of all 16,183 declarations in the 143 added modules passed after this integration fix.
+
+
+## November 15 normalization follow-up
+
+All 658 entries in the previous proof-source manifest matched at the start of
+this follow-up, and neither manuscript directory changed after the prior
+numbered-result audit commit `9da5020d`. The scope remains the two new ordinary
+online lower-bound papers, with sixteen ReLU/softplus and thirty-two tanh
+numbered results. The agnostic paper has no corresponding formalization and is
+outside this scope.
+
+The new proof establishes absolute integrability of
+`(s,t) ↦ exp(-s) (1-cos(ts))/t²` on `(0,∞) × ℝ`. Integrating in `t` first gives
+the original normalizer times `integral_0^infinity s exp(-s) ds`, hence the
+normalizer itself. Integrating in `s` first gives `1/(1+t²)` away from the single
+null point `t=0`, hence `π`. All integrations, null-set arguments and changes of
+order are checked in Lean. Evenness gives the exact positive-half-line formulas.
+The literal paper endpoint includes the degree sign and the active/complement
+coordinate products; it does not suppress the absolute-convergence clause.
+
+The regression gate now also rejects unexpected transitive axioms in seven
+main learning/resource endpoints, rather than only printing their axiom lists.
+The new module is included in the exhaustive coverage-module axiom audit.
+
+
+The tanh follow-up also adds `optimized_cost_expansion_paper` and
+`balanced_cost_expansion_paper`. They assemble the existing analytic results
+into unconditional statements with one threshold and one error constant,
+including the explicit `24 K / n^4` second-derivative error. The paper's narrow
+auxiliary numerical curvature enclosure is not separately certified; strict
+positivity of the actual coefficient is proved using broader exact bounds.
