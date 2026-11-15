@@ -45,3 +45,13 @@ The researcher who posed the problem, and readers like him: mathematically train
 * Hedge once, in the place where the uncertainty is; state checked facts flatly.
 * Tables for comparisons; no decoration.
 * Each numbered statement carries its status in the note: proved here, standard (with source), or open.
+
+## Addendum (15 Nov): how the note is assembled
+
+* **Labels.** Statements keep letter labels, the same in the note, in the proof files and in the reports: R (rehearsal: R1, R2, R3, R3a, R4, R5, R6), V (validation: V1), N (limits: N1 … N5), A and B (recorded runs), S (shift: S1 … S3), Ab (abstention: Ab1 … Ab3), Pr (properties: Pr1 … Pr5). New statements get the next free number of their letter, announced in the finaliser's summary.
+* **Three kinds of file per part.**
+  1. `proofs/KEY.md`: the full proofs, checked and corrected. Self-contained, numbered, line-by-line checkable. Published with the note.
+  2. `research/verify/KEY-check.md` and `research/verify/KEY-attack.md`: the two verification reports.
+  3. `research/sections/KEY.md`: the text of this part as it will stand in the note. The note states every result with its hypotheses and final constants. A proof of up to about fifteen lines is given in full; a longer one is given as a sketch of the idea in a few sentences, followed by "Proof: `proofs/KEY.md`, Theorem x.y." After each main statement: what it does not say, in one or two sentences. Length of a part: 800 to 2000 words unless the outline needs more.
+* **Parts and the sections they supply.** rehearsal-core: Sections 1 to 3 (revising the lead's draft in `note.md`). lower-bounds: Section 4 and the lower bounds of Section 6. hellinger-runs: the subsection "whole runs" of Section 3 and Section 5.2 (recorded runs). one-mind: Section 5.1. shift-abstain: Sections 6 and 7. property-batch: Sections 8.1, 8.2, 8.5 and the batch estimator. property-online: Sections 8.3 and 8.4. assumptions: Sections 9 and 10 and the caveats on A1 to A3 for Section 1.
+* **Results already established that later parts should use and not redo** (unchecked until the verification reports exist): `research/prove/lower-bounds.md` (N1 with randomised protocols; N2 with n ≥ L/(4δ) − L; the factor K holds in VC dimension, and in bits a targeted-question protocol needs only about 2.7·K·L/(ε·log(L/ε)) questions; N3 in the exact form n ≥ 2ηN; S2; N5; lower bounds for a stochastic human); `research/prove-b/hellinger-runs.md` (subadditivity of H² with constant 4, and 2.9641; R2 in general with E TV ≤ 2√(LK ln 2/n); Theorem A; the per-call mixture fails in Theorem A; Theorem B for λ > 1 and its failure at λ = 1).
