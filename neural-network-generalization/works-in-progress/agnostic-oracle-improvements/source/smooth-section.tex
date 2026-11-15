@@ -1,0 +1,293 @@
+\section{The same sample exponent without clipping}
+\label{sec:raw-gaussian-oracle}
+
+The Gaussian-prior model and likelihood family in Section~\ref{sec:gaussian-oracle}, with the calibration below, also admit
+an oracle inequality for its \emph{raw} real-valued predictions.  This
+covers both posterior-averaged risk and the ordinary posterior mean
+$\int z_w\,d\Pi_{\sigma,N,S}$, with no clipping in either the likelihood
+or the predictor.  The improvement uses a standard uniform bound for
+smooth losses.  It has the same sample exponent as the elementary
+clipped argument, at the cost of additional logarithms.
+
+We retain the architecture, energy $Q_N$, prior, likelihood, and risks
+from Section~\ref{sec:gaussian-oracle}.  There are $H$ hidden layers and
+one linear readout.  All labels lie in $[-1,1]$, and the joint law of
+inputs and labels is otherwise arbitrary.  A teacher $g$ of width $m$
+and weights bounded by $B$ has clones of energy at most
+$E=d(d+1)B^2+2Hm^2B^2$ at every learner width $N\geq m$, and satisfies
+$|g|\leq U=mB$.
+
+\subsection{The smooth-loss inequality}
+
+We use the following form of Theorem~1 of
+Srebro, Sridharan, and Tewari~\cite[Theorem~1, p.~4 of the full-length version]{sst}.  If a nonnegative loss is
+$s$-smooth in its real-valued prediction and is bounded by $b$ on a
+function class $\mathcal F$, then, with probability at least $1-\eta$,
+simultaneously for $f\in\mathcal F$,
+\begin{align}
+ R(f)-\widehat R_S(f)
+ &\leq C_0\biggl[
+  \sqrt{\widehat R_S(f)}
+    \left(\sqrt{s}\log^{3/2}(n)\mathfrak R_n(\mathcal F)
+           +\sqrt{\frac{b\log(1/\eta)}n}\right)
+ \notag\\[-2pt]
+ &\hspace{37mm}
+  +s\log^3(n)\mathfrak R_n(\mathcal F)^2
+  +\frac{b\log(1/\eta)}n\biggr].
+ \label{eq:raw-sst}
+\end{align}
+Here $\mathfrak R_n$ is the worst-case Rademacher complexity and $C_0$ is
+universal; $C_0=10^5$ is sufficient.  This result assumes neither a convex
+hypothesis class nor a realizable data law.  In particular, it does not
+assume a Bernstein condition on excess loss relative to the teacher.
+
+The raw square loss is nonnegative and $2$-smooth.  On $\mathcal Z_K$
+from~\eqref{eq:gaussian-Dn}, its range is bounded by
+$(\sqrt K+1)^2$, since $|z_w|\leq\sqrt{Q_N(w)}$.
+The class $\mathcal Z_K$ is symmetric under readout sign reversal, so
+its Rademacher complexity with an absolute value inside the supremum,
+as used in~\cite{sst}, equals the convention used in
+Lemma~\ref{lem:gaussian-capacity}.
+
+\subsection{The theorem for two or more hidden layers}
+
+For $n\geq2$, $0<\delta<1$, and $H\geq2$, define
+\begin{gather}
+ p=H/2,\qquad J_n=\lceil\log_2 n\rceil,\qquad
+ t_n=\log\frac{2(J_n+1)}\delta,\qquad q_n=t_n/n,\notag\\
+ A_n=\frac{\sqrt2\,D_n\log^{3/2}(2n)}{H^p\sqrt n},\qquad
+ a_n=2^p A_n,\notag\\
+ r_n=C_0\bigl(A_n+2\sqrt{q_n}+A_n^2+4q_n\bigr).
+ \label{eq:raw-constants}
+\end{gather}
+For a fixed teacher $g$, put
+\begin{equation}
+ b_n(g,\delta)
+  =(U+1)\sqrt{\frac{2R(g)\log(2/\delta)}n}
+     +\frac{2(U+1)^2\log(2/\delta)}{3n}.
+ \label{eq:raw-teacher-concentration}
+\end{equation}
+The slightly conservative coefficient $2/3$ makes this a direct
+consequence of the usual Bernstein tail inequality.
+
+\begin{theorem}[A raw-output oracle inequality at every learner width]
+\label{thm:raw-gaussian-oracle}
+Let $H\geq2$, and suppose the likelihood parameter $\lambda$ satisfies
+\begin{equation}
+ \frac1n\leq\lambda\leq1,\qquad
+ \lambda^p\geq8C_0a_n,\qquad \lambda\geq32C_0q_n.
+ \label{eq:raw-calibration}
+\end{equation}
+For every fixed teacher $g$ as above, with probability at least
+$1-\delta$ over the sample, simultaneously for every $N\geq m$,
+\begin{equation}
+ \limsup_{\sigma\downarrow0}
+   \int R(z_w)\,\Pi_{\sigma,N,S}(dw)
+ \leq R(g)+\lambda E+r_n+\frac{8C_0^2q_n}{\lambda}
+                 +b_n(g,\delta).
+ \label{eq:raw-oracle}
+\end{equation}
+The same right-hand side bounds the limiting risk of the ordinary
+posterior mean $\int z_w\,d\Pi_{\sigma,N,S}$.  It also bounds the limiting
+risk after clipping that mean, and the limiting risk of the posterior
+mean of clipped outputs.
+
+An explicit choice is
+\begin{equation}
+ \lambda_n=\max\bigl\{(8C_0a_n)^{1/p},\ 32C_0q_n\bigr\},
+ \label{eq:raw-explicit-schedule}
+\end{equation}
+for all sufficiently large $n$ that $\lambda_n\leq1$.  At fixed
+$d,H,\delta$, this gives an excess-risk bound of order
+$\widetilde O(n^{-1/H})$ for every fixed teacher.  More explicitly,
+\[
+ \lambda_n
+  =O_H\!\left[
+      \left(\frac{D_n^2\log^3(2n)}n\right)^{1/H}
+      +\frac{\log(\log(2n)/\delta)}n\right].
+\]
+The tilde suppresses logarithms; it does not suppress a learner-width
+factor.  There is no dependence on $N$ in the displayed bound.
+\end{theorem}
+
+\begin{proof}
+Apply~\eqref{eq:raw-sst} to each deterministic energy class
+$\mathcal Z_{2^j}$, $0\leq j\leq J_n$, using failure probability
+$\delta/[2(J_n+1)]$.  A union bound gives one event of probability at
+least $1-\delta/2$ for all these classes and all learner widths.
+
+Let $w$ minimize $\widehat R_S(z_w)+\lambda Q_N(w)$.  Comparing with
+the zero network gives
+\begin{equation}
+ \widehat R_S(z_w)+\lambda Q_N(w)
+   \leq\widehat R_S(0)\leq1.
+ \label{eq:raw-training-budget}
+\end{equation}
+Write $k=Q_N(w)$.  If $k\leq1$, the event for $\mathcal Z_1$ implies
+$R(z_w)-\widehat R_S(z_w)\leq r_n$.
+If $k>1$, choose $j$ with $2^{j-1}<k\leq2^j$.  This is possible because
+$k\leq1/\lambda\leq n$.  The shell radius $K=2^j$ satisfies $K\leq2k$.
+The loss bound obeys $(\sqrt K+1)^2\leq4K\leq8k$.
+Substituting Lemma~\ref{lem:gaussian-capacity} and
+$\widehat R_S(z_w)\leq1$ into~\eqref{eq:raw-sst} yields
+\begin{equation}
+ R(z_w)-\widehat R_S(z_w)
+ \leq C_0\left[a_n k^p+a_n^2 k^{2p}
+                    +2\sqrt2\sqrt{kq_n}+8kq_n\right].
+ \label{eq:raw-shell-bound}
+\end{equation}
+Since $p\geq1$, $k\leq1/\lambda$, and
+$\lambda^p\geq8C_0a_n$, the first two terms satisfy
+\[
+ C_0a_n k^p\leq\frac{\lambda k}8,
+ \qquad
+ C_0a_n^2 k^{2p}\leq\frac{\lambda k}{64C_0}
+                     \leq\frac{\lambda k}{64}.
+\]
+The remaining terms obey
+\[
+ 8C_0kq_n\leq\frac{\lambda k}4,
+ \qquad
+ 2\sqrt2 C_0\sqrt{kq_n}
+  \leq\frac{\lambda k}4+\frac{8C_0^2q_n}{\lambda}.
+\]
+Consequently both the $k\leq1$ and $k>1$ cases imply
+\begin{equation}
+ R(z_w)\leq\widehat R_S(z_w)+\lambda Q_N(w)
+                      +r_n+\frac{8C_0^2q_n}{\lambda}.
+ \label{eq:raw-absorbed-deviation}
+\end{equation}
+
+Compare the penalized empirical objective with the exact teacher clone:
+\[
+ \widehat R_S(z_w)+\lambda Q_N(w)
+       \leq\widehat R_S(g)+\lambda E.
+\]
+The teacher's loss lies in $[0,(U+1)^2]$ and has variance at most
+$(U+1)^2R(g)$.  Bernstein's inequality therefore gives
+$\widehat R_S(g)\leq R(g)+b_n(g,\delta)$ with probability at least
+$1-\delta/2$.  Intersecting the two events proves the right-hand side
+of~\eqref{eq:raw-oracle} for every global minimizer, at every width
+$N\geq m$.
+
+For completeness, the passage to the posterior also holds for raw
+risk.  At fixed $n,N,S$, the objective is continuous and coercive.
+Its minimizer set is compact, and its near-minimum sublevel sets shrink
+to that set.  The risk $w\mapsto R(z_w)$ is continuous on every compact
+parameter set by dominated convergence, using
+$|z_w|\leq\sqrt{Q_N(w)}$.  Moreover,
+\[
+ R(z_w)\leq2Q_N(w)+2.
+\]
+To make the required tail control explicit, write
+$F(w)=Q_N(w)+\lambda^{-1}\widehat R_S(z_w)$ and
+$F_* = \min_w F(w)$.  For every $\eta>0$,
+\begin{equation}
+ \lim_{\sigma\downarrow0}
+ \int (1+Q_N(w))\,
+       \mathbf 1_{\{F(w)>F_*+\eta\}}\,
+       \Pi_{\sigma,N,S}(dw)=0.
+ \label{eq:raw-weighted-laplace-tail}
+\end{equation}
+Indeed, a fixed ball around a minimizer lower-bounds the normalizer by
+its volume times $\exp[-(F_*+\eta/4)/(2\sigma^2)]$.
+Put $\rho=\eta/[4(F_*+\eta)]$.  On the indicated tail,
+$F\geq(1-\rho)(F_*+\eta)+\rho Q_N
+      =F_*+3\eta/4+\rho Q_N$.
+The remaining integral is a quadratic Gaussian integral of $1+Q_N$,
+which grows or decays at most polynomially in $\sigma$ and is dominated
+by the factor $\exp[-\eta/(4\sigma^2)]$ after division by the
+normalizer.  This proves~\eqref{eq:raw-weighted-laplace-tail}.
+Consequently the limiting posterior average of the risk is at most its
+maximum over the minimizer set, which proves~\eqref{eq:raw-oracle}.  Jensen's inequality and Tonelli's
+theorem give the conclusion for the ordinary posterior mean.  Clipping
+can only decrease squared loss for labels in $[-1,1]$; applying the same
+facts gives the other prediction conventions.
+
+Finally,~\eqref{eq:raw-explicit-schedule} satisfies
+$\lambda_n\geq1/n$ and the other lower bounds in
+\eqref{eq:raw-calibration}.  Its leading power is $n^{-1/H}$.
+The terms $r_n$ have powers at least $n^{-1/2}$, up to logarithms, and
+$q_n/\lambda_n$ has power at least $n^{-1+1/H}$.  Both are no slower than
+$n^{-1/H}$ when $H\geq2$.
+\end{proof}
+
+The teacher in this theorem may be selected using the data law and
+$n$, but must be fixed before the sample is drawn.  In particular, it
+may minimize the population risk over a specified compact class of
+bounded-weight teachers.  Such a class contains the zero network, so
+its minimizer has risk at most one.  This interpretation gives a sharp
+oracle inequality with leading coefficient one, rather than a
+realizability guarantee.  The event is simultaneous over learner widths;
+no simultaneity over all teachers is needed for this interpretation.
+
+\subsection{One hidden layer}
+
+The same smooth-loss argument gives the rate $\widetilde O(n^{-1/2})$
+for raw predictions when $H=1$.  Define $p=1/2$ and the quantities
+$A_n,a_n,q_n,r_n$ by~\eqref{eq:raw-constants}.  The following explicit
+version records the different absorption step.
+
+\begin{theorem}[Raw predictions with one hidden layer]
+\label{thm:raw-gaussian-one-hidden}
+Let $H=1$ and suppose
+\[
+ 1/n\leq\lambda\leq1,
+ \qquad \lambda\geq2C_0(a_n^2+8q_n).
+\]
+For every fixed teacher $g$, with probability at least $1-\delta$,
+simultaneously for every $N\geq m$,
+\begin{align}
+ \limsup_{\sigma\downarrow0}\int R(z_w)\,\Pi_{\sigma,N,S}(dw)
+ \leq R(g)+\lambda E+r_n
+       +\frac{C_0^2(a_n+2\sqrt{2q_n})^2}{2\lambda}
+       +b_n(g,\delta).
+ \label{eq:raw-one-hidden-oracle}
+\end{align}
+The ordinary posterior mean and the clipped prediction conventions
+satisfy the same bound.  For example,
+\[
+ \lambda_n=32C_0(a_n+\sqrt{q_n}+a_n^2+q_n)
+\]
+satisfies the lower bounds and gives the rate
+$\widetilde O(n^{-1/2})$ for a fixed teacher, whenever $n$ is sufficiently
+large that $\lambda_n\leq1$.
+\end{theorem}
+\begin{proof}
+The same simultaneous shell event yields~\eqref{eq:raw-shell-bound}.
+For $p=1/2$, its right-hand side is
+\[
+ C_0(a_n+2\sqrt{2q_n})\sqrt k+C_0(a_n^2+8q_n)k.
+\]
+The second term is at most $\lambda k/2$.  Young's inequality bounds
+the first by
+\[
+ \frac{\lambda k}2+
+       \frac{C_0^2(a_n+2\sqrt{2q_n})^2}{2\lambda}.
+\]
+The rest is the teacher comparison, scalar concentration, and Laplace
+argument from the preceding proof.  For the stated schedule,
+$a_n=\widetilde O(n^{-1/2})$ and
+$q_n=\widetilde O(n^{-1})$, giving the claimed rate.
+\end{proof}
+
+If a teacher-energy upper bound $E_0\geq E$ is specified in advance,
+there is a useful tuning that improves the teacher dependence.  Put
+\begin{gather*}
+ V_n=\frac{C_0^2(a_n+2\sqrt{2q_n})^2}{2},\qquad
+ v_n=\max\{2C_0(a_n^2+8q_n),\,1/n\},\\
+ \lambda_n=\max\left\{\sqrt{\frac{V_n}{E_0+1}},\,v_n\right\}.
+\end{gather*}
+Whenever $\lambda_n\leq1$, Theorem~\ref{thm:raw-gaussian-one-hidden}
+applies, and
+\[
+ \lambda_n E+\frac{V_n}{\lambda_n}
+   \leq2\sqrt{V_n(E_0+1)}+v_nE.
+\]
+At fixed input dimension, this contribution is
+$\widetilde O(\sqrt{(E_0+1)/n}+E_0/n)$.
+For example, for population-optimal teachers whose width and weights
+are both at most $n^\alpha$, one may take $E_0=O_d(n^{4\alpha})$.
+The teacher risk is then at most one, and all terms in
+\eqref{eq:raw-one-hidden-oracle} tend to zero for every $\alpha<1/4$,
+with leading power $n^{2\alpha-1/2}$.

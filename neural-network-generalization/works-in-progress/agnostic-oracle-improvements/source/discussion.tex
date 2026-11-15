@@ -1,0 +1,58 @@
+\section{Interpretation and remaining questions}
+
+\subsection{Approximation rather than exact realization}
+The comparison network need not describe the entire data-generating process. It may simply be a useful approximation. At a fixed depth $L\ge3$, the strong-prior theorem gives
+\[
+ \limsup_{\sigma\downarrow0}R(\widehat f_{\sigma,S})\le R(g)+\widetilde O\!\left(E_g n^{-1/(L-1)}+n^{-1/2}\right),
+\]
+with the teacher-dependent concentration terms and dimension factors stated explicitly in the theorem. Here $E_g$ is an upper bound on a teacher implementation's weighted quadratic energy. The corresponding finite-scale bound has an additional explicit logarithmic teacher-complexity term. Increasing teacher width can reduce approximation error while increasing this estimation penalty. A population-optimal teacher in a specified compact class may be chosen before the sample; no exact target representation is assumed.
+
+All the positive results use independent Gaussian weights in a fixed dense learner architecture. Cloning is a comparison construction in the proof, not a restriction on the random learner's weights. The posterior still integrates over every weight coordinate of that architecture.
+
+\subsection{Why the likelihood does not require interpolation}
+With arbitrary label noise, fitting every observation closely is a different objective from predicting its conditional mean. In the strong-prior result, the likelihood variance is $n\lambda_n\sigma^2$. Although this tends to zero as $\sigma\downarrow0$, the prior simultaneously strengthens; the posterior selects minimizers of empirical squared loss plus $\lambda_n Q_N$, rather than exact interpolants. The regularization term is essential to the proof.
+
+For the finite-scale theorem the likelihood variance is $n\lambda_n N^{-\gamma}$. Its width dependence is part of the learner's specification. Thus this result does not contradict failures for a likelihood temperature held fixed while a width-dependent prior collapses toward zero outputs. Neither theorem assumes that the actual noise is Gaussian or has the likelihood's variance.
+
+Earlier counterexamples~\cite{opus} show that, at depth at least three and sufficiently large learner width, the untempered strong-prior objective can memorize independent label noise and have population error bounded away from that of the zero predictor. The positive results here do not turn exact noisy interpolation into a generally valid agnostic learning rule.
+
+\subsection{Why teacher weight magnitude is counted}
+A width-one network can separate arbitrarily close inputs if its weights are sufficiently large. The energy budget of the strong-prior learner prevents a distribution-uniform width-only comparison with such teachers.
+
+\begin{proposition}[Nearby inputs and the strong-prior energy budget]
+\label{prop:nearby-inputs}
+Fix $d=1$, total depth $L\ge2$, sample size $n$, and $\lambda>0$. Let $D_r$ assign probability $1/2$ to each of $(-r,-1)$ and $(r,1)$. For every sample from $D_r$ and every learner width, each global minimizer of
+\[
+ \widehat R_S(z_w)+\lambda Q_N(w)
+\]
+has clipped risk at least
+\[
+ 1-2r(L\lambda)^{-L/2}.
+\]
+The same lower bound holds for the liminf of posterior-averaged clipped risk and the liminf of the risk of the mean of clipped outputs as $\sigma\downarrow0$, separately at each fixed width. Nevertheless a width-one depth-$L$ tanh teacher has zero risk under $D_r$ if its weights may grow as $r\downarrow0$.
+\end{proposition}
+\begin{proof}
+Comparison with the zero network gives $Q_N(w)\le1/\lambda$ for every global minimizer. Let $a_1=N^{-1}\|W^1\|_F^2$, $a_\ell=\|W^\ell\|_F^2$ for the internal layers, and $a_L=N\|v\|_2^2$. Since tanh is $1$-Lipschitz, the input Lipschitz constant of the real output is at most
+\[
+ \|v\|_2\prod_{\ell=1}^{L-1}\|W^\ell\|_F
+ =\prod_{\ell=1}^L\sqrt{a_\ell}
+ \le (Q_N(w)/L)^{L/2}
+ \le (L\lambda)^{-L/2}.
+\]
+Using the whole first matrix also bounds the linear map acting on differences of augmented inputs. Clipping cannot increase this constant. For any predictor $f$, direct expansion gives
+\[
+ R_{D_r}(f)=1+\tfrac12\bigl(f(-r)^2+f(r)^2\bigr)+f(-r)-f(r)
+ \ge1-|f(r)-f(-r)|.
+\]
+This proves the claim for minimizers. Their clipped prediction differences are uniformly bounded by $2r(L\lambda)^{-L/2}$. Concentration on their compact minimizer set and bounded continuity pass this difference bound to posterior averages in the limit. Applying the same expansion to the posterior mean gives its asserted risk bound.
+
+For the teacher, set the first scalar weight to $1/r$, the constant-input weight to zero, and all remaining hidden weights to one. If $T$ is tanh composed $L-1$ times, readout weight $1/T(1)$ gives outputs exactly $-1$ and $1$. Its first weight grows like $1/r$.
+\end{proof}
+
+Thus a vanishing additive bound uniform over all input laws and all unbounded-weight width-one teachers is impossible for this learner. Bounding the input norm does not resolve the issue: the inputs in the proposition already lie in $[-1,1]$ for $r\le1$.
+
+\subsection{What remains open}
+The improved exponents do not establish a near-parameter-count approximation bound for dense Gaussian Bayesian learning. Nor do they give favorable polynomial dependence on arbitrary teacher depth. At finite prior scale, the improved deep result covers $\gamma\ge2$; extending its rate to the remaining interval $1\le\gamma<2$, and covering ordinary raw posterior means at finite scale, remain open in this paper. The preceding study~\cite{opus} has weaker finite-scale positive results in parts of that range.
+
+\paragraph{Verification and provenance.}
+The positive theorem in the preceding tempered-likelihood note was checked against its complete supporting proof~\cite{opus}; no error was found under its stated conventions. The stronger results here have independent AI-agent mathematical reviews and reproducible source builds. They have not been formalized in Lean and have not undergone external peer review. The supporting audit records distinguish this scope from the collection's formally verified results.

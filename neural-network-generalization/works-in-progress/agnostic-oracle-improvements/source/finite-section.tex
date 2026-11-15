@@ -1,0 +1,337 @@
+\section{A finite-scale Gaussian result with no prior-strength limit}
+\label{sec:finite-gaussian-oracle}
+
+A related oracle inequality holds for an actual finite-scale posterior,
+without sending a prior parameter to zero.  The proof below applies to
+all learner widths at once when the prior variances decay sufficiently
+quickly with width.  It controls clipped posterior draws and the mean
+of clipped outputs.  Its likelihood still uses the raw real-valued
+network output.
+
+Use the network architecture, energy $Q_N$, and risks from
+Section~\ref{sec:gaussian-oracle}.  In this section inputs lie in
+$[-1,1]^d$ and labels lie in $[-1,1]$; their joint law is otherwise
+arbitrary.  For $\gamma\geq2$---and also for $\gamma\geq1$ in the
+one-hidden-layer result below---let the prior $\mu_{N,\gamma}$ have
+independent centered Gaussian coordinates with variances
+\begin{gather}
+ \operatorname{Var}(W^1_{jk})=\frac{N^{1-\gamma}}d,\qquad
+ \operatorname{Var}(v_j)=N^{-\gamma-1},\notag\\
+ \operatorname{Var}(W^\ell_{jk})=N^{-\gamma}\quad(2\leq\ell\leq H).
+ \label{eq:finite-prior}
+\end{gather}
+Thus this is the Gaussian family of~\eqref{eq:gaussian-prior-variances}
+with $\sigma^2=N^{-\gamma}$.  For $\lambda>0$, use a Gaussian likelihood
+with variance $n\lambda N^{-\gamma}$ and mean $z_w(X_i)$.  The posterior
+is
+\begin{equation}
+ \Pi_{N,\gamma,S}(dw)
+   =\frac{\exp[-\beta_N\widehat R_S(z_w)]}{Z_{N,\gamma,S}}
+          \mu_{N,\gamma}(dw),
+ \qquad \beta_N=\frac{N^\gamma}{2\lambda}.
+ \label{eq:finite-posterior}
+\end{equation}
+All statements below concern this probability measure at its specified
+finite width and scale.
+
+\subsection{An explicit finite-scale oracle inequality}
+
+Let $g$ be a teacher of hidden width $m$, with weights bounded by
+$B\geq1$.  Define
+\begin{gather}
+ E=d(d+1)B^2+2Hm^2B^2,\qquad U=mB,\notag\\
+ D_0=d+H+1,\qquad A_g=\sqrt2mB,\notag\\
+ K_g=1+A_g\left(\sqrt2 A_g^{H-1}
+                       +\sum_{j=0}^{H-2}A_g^j\right).
+ \label{eq:finite-teacher-constants}
+\end{gather}
+The sum is empty if $H=1$.  In particular, $K_g\geq1$ and
+$\log K_g=O(H\log(2+mB))$.
+For $H\geq2$, put
+\begin{gather}
+ p=H/2,\qquad
+ A_n=\frac{8D_n}{H^p\sqrt n},\qquad
+ J_\lambda=\left\lceil\log_2\frac8\lambda\right\rceil,
+ \notag\\
+ t_\lambda=\log\frac{2(J_\lambda+1)}\delta,
+ \qquad
+ r_{n,\lambda}=A_n+4\sqrt{\frac{t_\lambda}{2n}}.
+ \label{eq:finite-statistical-constants}
+\end{gather}
+For the scalar teacher concentration term, write
+\begin{equation}
+ b_n(g,\delta)
+   =(U+1)\sqrt{\frac{2R(g)\log(2/\delta)}n}
+       +\frac{2(U+1)^2\log(2/\delta)}{3n}.
+ \label{eq:finite-teacher-deviation}
+\end{equation}
+
+\begin{theorem}[A finite-scale oracle inequality, uniform over widths]
+\label{thm:finite-gaussian-oracle}
+Let $H\geq2$, $n\geq2$, $0<\delta<1$, and suppose
+\begin{equation}
+ \frac1n\leq\lambda\leq1,
+ \qquad \lambda^p\geq2^{4p-2}A_n.
+ \label{eq:finite-calibration}
+\end{equation}
+For every fixed teacher $g$, with probability at least $1-\delta$,
+simultaneously for every $N\geq m$ and every $\gamma\geq2$,
+\begin{align}
+ \int R(\operatorname{clip}z_w)\,\Pi_{N,\gamma,S}(dw)
+ &\leq R(g)+b_n(g,\delta)+r_{n,\lambda}\notag\\
+ &\quad+\lambda\left[
+ E+1+D_0\log2
+       +2D_0\log\frac{4K_g(U+1)}\lambda\right].
+ \label{eq:finite-oracle}
+\end{align}
+The same right-hand side bounds the risk of the posterior mean of
+clipped outputs,
+\[
+ x\longmapsto\int\operatorname{clip}(z_w(x))\,
+\Pi_{N,\gamma,S}(dw).
+\]
+
+For example, take
+\begin{equation}
+ \lambda_n=\max\left\{\frac1n,
+                 \bigl(2^{4p-2}A_n\bigr)^{1/p}\right\},
+ \label{eq:finite-schedule}
+\end{equation}
+for sufficiently large $n$ that $\lambda_n\leq1$.  At fixed
+$d,H,\delta$ and teacher, the excess in~\eqref{eq:finite-oracle} is
+$\widetilde O(n^{-1/H})$.  The bound has no learner-width factor and
+requires no limit in either $N$ or the prior scale.
+\end{theorem}
+
+\subsection{A deviation inequality valid at every energy}
+
+The first step strengthens the deviation bound used for the
+strong-prior minimizers: here it must hold over the full parameter
+space because the finite-scale posterior has unbounded support.
+
+\begin{lemma}[Global clipped deviation]
+\label{lem:finite-global-deviation}
+Under~\eqref{eq:finite-calibration}, with probability at least
+$1-\delta/2$, simultaneously for every network at every width,
+\begin{equation}
+ R(\operatorname{clip}z_w)
+     \leq\widehat R_S(z_w)+\frac\lambda2 Q_N(w)+r_{n,\lambda}.
+ \label{eq:finite-global-deviation}
+\end{equation}
+\end{lemma}
+\begin{proof}
+Apply~\eqref{eq:gaussian-fixed-energy-deviation} to the deterministic
+classes $\mathcal Z_{2^j}$, $0\leq j\leq J_\lambda$, with individual
+failure probability $\delta/[2(J_\lambda+1)]$.
+On the intersection event, write $k=Q_N(w)$.  For $k\leq1$, the
+unit-energy class gives the claim, since clipping cannot increase
+empirical square loss.  For $1<k\leq8/\lambda$, the appropriate shell
+has radius at most $2k$, so its capacity term is at most
+\[
+ A_n2^p k^p
+ \leq A_n2^p(8/\lambda)^{p-1}k
+ \leq\frac\lambda2 k,
+\]
+where the last inequality is exactly
+$\lambda^p\geq2^{4p-2}A_n$.
+Finally, for $k>8/\lambda$, the clipped population loss is at most
+four and the empirical loss is nonnegative; therefore
+\[
+ R(\operatorname{clip}z_w)-\widehat R_S(z_w)
+   \leq4<\frac\lambda2 k.
+\]
+This also covers arbitrarily large energies.
+\end{proof}
+
+\subsection{The posterior's variational comparison}
+
+There are
+\[
+ P_N=N(d+2)+(H-1)N^2
+\]
+parameters.  Under the Gaussian prior, $N^\gamma Q_N$ has a
+chi-square distribution with $P_N$ degrees of freedom.  Thus
+\[
+ \log\int\exp\left(\frac{N^\gamma Q_N}4\right)d\mu_{N,\gamma}
+       =\frac{P_N}2\log2.
+\]
+The entropy variational inequality implies, for every comparison
+measure $Q$,
+\begin{equation}
+ \operatorname{KL}(Q\Vert\mu_{N,\gamma})
+   \geq\frac{N^\gamma}4\int Q_N\,dQ-\frac{P_N}2\log2.
+ \label{eq:finite-kl-energy}
+\end{equation}
+The posterior~\eqref{eq:finite-posterior} minimizes
+\[
+ Q\longmapsto\int\widehat R_S(z_w)\,dQ
+                   +2\lambda N^{-\gamma}
+                          \operatorname{KL}(Q\Vert\mu_{N,\gamma}).
+\]
+Combining its variational optimality with~\eqref{eq:finite-kl-energy}
+gives, for every comparison measure $Q$ of finite relative entropy,
+\begin{align}
+ &\int\left[\widehat R_S(z_w)+\frac\lambda2 Q_N(w)\right]
+                          \Pi_{N,\gamma,S}(dw)\notag\\
+ &\hspace{8mm}\leq
+      \int\widehat R_S(z_w)\,Q(dw)
+       +2\lambda N^{-\gamma}\operatorname{KL}(Q\Vert\mu_{N,\gamma})
+       +\lambda\frac{P_N}{N^\gamma}\log2.
+ \label{eq:finite-variational-comparison}
+\end{align}
+All quantities are finite for the Gaussian comparison measure used
+below.  They are also finite for the posterior: its density relative
+to the prior is bounded, and the prior has finite energy moments.
+For $\gamma\geq2$ and $N\geq1$,
+\begin{equation}
+ \frac{P_N}{N^\gamma}\leq d+2+H-1=D_0.
+ \label{eq:finite-dimension-ratio}
+\end{equation}
+For $H\geq2$, this is the point at which the condition
+$\gamma\geq2$ enters.  When $H=1$, the quadratic term in $P_N$ is
+absent: $P_N/N^\gamma\leq d+2=D_0$ already holds for every
+$\gamma\geq1$.
+
+\subsection{A Gaussian comparison measure near the teacher}
+
+Let $w_*$ be the exact teacher clone from
+Lemma~\ref{lem:gaussian-cloning}.  Denote the prior covariance by
+$\Sigma_N$.  For $0<r\leq1$, define
+\[
+ Q_r=\mathcal N(w_*,r^2\Sigma_N).
+\]
+The elementary Gaussian relative-entropy formula gives
+\begin{equation}
+ \operatorname{KL}(Q_r\Vert\mu_{N,\gamma})
+  =\frac{N^\gamma Q_N(w_*)}2
+       +\frac{P_N}2\bigl(r^2-1-\log r^2\bigr)
+  \leq\frac{N^\gamma E}2+P_N\log(1/r).
+ \label{eq:finite-comparison-kl}
+\end{equation}
+
+We now bound the comparison measure's prediction error.  The clone's
+internal matrices have operator norm at most $A_g=\sqrt2mB$, and
+$\sqrt N\|v_*\|_2\leq A_g$.  For the internal matrices, identify each
+group of clones with its normalized indicator vector.  The induced
+matrix has entries $T_{ji}\sqrt{k_j/k_i}$, whose Frobenius norm is at
+most $\sqrt2\,\|T\|_F\leq\sqrt2mB$; the readout bound follows directly
+from the cloning construction.
+For fixed $x\in[-1,1]^d$, put
+\[
+ e_\ell(x)
+   =\left(\frac1N\mathbb E_{Q_r}
+        \|h^\ell(x)-h_*^\ell(x)\|_2^2\right)^{1/2}.
+\]
+The activation is $1$-Lipschitz.  In the first layer,
+\begin{equation}
+ e_1(x)
+  \leq rN^{(1-\gamma)/2}\frac{\|(1,x)\|_2}{\sqrt d}
+  \leq\sqrt2\,r.
+ \label{eq:finite-first-perturbation}
+\end{equation}
+For later hidden layers, use
+\[
+ W^\ell h^{\ell-1}-W_*^\ell h_*^{\ell-1}
+   =W_*^\ell(h^{\ell-1}-h_*^{\ell-1})
+                   +(W^\ell-W_*^\ell)h^{\ell-1}.
+\]
+The noise matrix in the second term is independent of
+$h^{\ell-1}$, and $\|h^{\ell-1}\|_2^2\leq N$.  Hence Minkowski's
+inequality and its Gaussian second moment give
+\begin{equation}
+ e_\ell(x)
+   \leq A_g e_{\ell-1}(x)+rN^{(1-\gamma)/2}
+   \leq A_g e_{\ell-1}(x)+r.
+ \label{eq:finite-hidden-perturbation}
+\end{equation}
+Readout noise is likewise independent of the last hidden layer and
+has prediction variance at most $r^2N^{-\gamma}$.  Consequently
+\begin{align}
+ \left(\mathbb E_{Q_r}|z_w(x)-g(x)|^2\right)^{1/2}
+ &\leq A_g e_H(x)+rN^{-\gamma/2}\notag\\
+ &\leq r\left[1+A_g\left(\sqrt2 A_g^{H-1}
+                       +\sum_{j=0}^{H-2}A_g^j\right)\right]
+   =rK_g.
+ \label{eq:finite-output-perturbation}
+\end{align}
+This is a uniform \emph{pointwise second-moment} bound.  It does not
+assert that one draw is uniformly close to the teacher over all inputs;
+that stronger assertion is unnecessary here.
+
+Choose
+\begin{equation}
+ \rho=\frac\lambda{4(U+1)},\qquad r=\frac\rho{K_g}.
+ \label{eq:finite-comparison-radius}
+\end{equation}
+These satisfy $0<r\leq1$.  Minkowski's inequality in the product of
+$Q_r$ and the empirical input measure gives
+\begin{align}
+ \int\widehat R_S(z_w)\,Q_r(dw)
+ &\leq\widehat R_S(g)+2\rho\sqrt{\widehat R_S(g)}+\rho^2
+ \notag\\
+ &\leq\widehat R_S(g)+2\rho(U+1)+\rho^2
+ \leq\widehat R_S(g)+\lambda.
+ \label{eq:finite-comparison-risk}
+\end{align}
+
+\begin{proof}[Proof of Theorem~\ref{thm:finite-gaussian-oracle}]
+Integrate the global deviation inequality
+\eqref{eq:finite-global-deviation} against the posterior, and then
+apply~\eqref{eq:finite-variational-comparison} with $Q=Q_r$.
+Equations~\eqref{eq:finite-dimension-ratio},
+\eqref{eq:finite-comparison-kl}, and
+\eqref{eq:finite-comparison-risk} imply
+\begin{align*}
+ \int R(\operatorname{clip}z_w)\,\Pi_{N,\gamma,S}(dw)
+ &\leq\widehat R_S(g)+r_{n,\lambda}\\
+ &\quad+\lambda\left[E+1+D_0\log2
+               +2D_0\log\frac{4K_g(U+1)}\lambda\right].
+\end{align*}
+For the fixed teacher, Bernstein's inequality gives
+$\widehat R_S(g)\leq R(g)+b_n(g,\delta)$ except on an event of
+probability $\delta/2$.  Intersecting this event with the global
+deviation event proves~\eqref{eq:finite-oracle}.  Neither event depends
+on $N$ or $\gamma$, so the conclusion is simultaneous over all the
+claimed widths and scales.  Jensen's inequality proves the claim for
+the mean of clipped outputs.  The rate follows from
+\eqref{eq:finite-schedule}; $\log(1/\lambda_n)$ adds a logarithm,
+without changing its power of $n$.
+\end{proof}
+
+\subsection{One hidden layer and the limits of this argument}
+
+At $H=1$, the finite-scale result holds for \emph{every}
+$\gamma\geq1$, including the mean-field scale $\gamma=1$, with rate
+$\widetilde O(n^{-1/2})$.  Its guarantee is simultaneous over all
+$N\geq m$ and all these $\gamma$.  The wider range follows because
+$P_N=(d+2)N$, so $P_N/N^\gamma\leq d+2$ for $\gamma\geq1$.
+The Gaussian perturbation estimates also hold throughout this range:
+$N^{(1-\gamma)/2}\leq1$ and $N^{-\gamma/2}\leq1$ are their only
+scale-dependent requirements.  In
+\eqref{eq:finite-statistical-constants} take $p=1/2$ and replace the
+residual by
+\[
+ r_{n,\lambda}=A_n+\frac{A_n^2}{\lambda}
+                        +4\sqrt{\frac{t_\lambda}{2n}}.
+\]
+There is no condition $\lambda^p\geq2^{4p-2}A_n$ in this case.
+The needed shell estimate is simply
+\[
+ A_n\sqrt{2k}\leq\frac\lambda2 k+\frac{A_n^2}{\lambda}.
+\]
+The unit-energy and high-energy cases are unchanged, and all subsequent
+steps of the proof hold verbatim.  Choosing
+$\lambda_n=\max\{A_n,1/n\}$, for sufficiently large $n$ that
+$\lambda_n\leq1$, gives the stated rate for a fixed teacher.
+
+The finite-scale theorem proves a statement about clipped draws and
+means of clipped outputs.  It makes no claim about the raw posterior
+mean at finite scale.  For two or more hidden layers, this proof does not cover the entire
+range $\gamma\geq1$: when $\gamma<2$, the quadratic parameter-count
+term makes $P_N/N^\gamma$ grow with the learner width.  Removing that
+term requires additional control in function space.  With one hidden
+layer, that quadratic term is absent, and the theorem already covers
+every $\gamma\geq1$.  The raw-output results
+of Section~\ref{sec:raw-gaussian-oracle} instead concern the
+strong-prior limit at each fixed width and therefore do not need
+$\gamma\geq2$.

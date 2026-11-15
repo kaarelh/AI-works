@@ -6,6 +6,8 @@ Claude Opus 5.5, Kaarel Hänni, and Dmitry Vaintrob[^order] · 11 November 2026
 
 [Problem brief](research-notes/problem-brief.md) · [Verification record](verification/README.md) · [Collection index](../../README.md)
 
+**Further results (14 November 2026).** The [sharper Gaussian oracle paper](../agnostic-oracle-improvements/paper.pdf) independently checks the positive theorem here and improves the same dense Gaussian strong-prior learner's rate to approximately `n^(-1/(L-1))` for `L≥3`, and `n^(-1/2)` with one hidden layer. A smooth-loss argument also covers ordinary raw-output posterior means with its own calibration. The improved clipped bound holds at finite prior scale for every `γ≥2`, or every `γ≥1` with one hidden layer. [Summary, exact scope and reviews](../agnostic-oracle-improvements/). The original proof notes and their rates are retained below.
+
 The repository's main theorems assume clean labels: the data come from a small teacher network. This note asks what survives when nothing is assumed about the labels. The question is the following conjecture.
 
 > After seeing $n$ data points, the test loss of NNBayes learning is at most the minimum test loss among all MLPs of width $\mathrm{poly}(n)$, where the polynomial may have a fractional exponent. The loss is squared error, and the Bayesian learner should condition to be close to the given outputs on the training inputs. We may pick whichever version of Bayesian learning is best.

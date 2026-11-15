@@ -1,5 +1,7 @@
 # ReLU main theorem: statement correspondence audit
 
+**Coverage update (2026-11-14):** This dated review records the original main-theorem verification. The [full-paper inventory](OnlineLowerRelu-full-paper-coverage.md) records the subsequent formalization of independent appendix results and is the current source for coverage status.
+
 **Semantic review: PASS (2026-11-08).** The unconditional theorem
 [`relu_concrete_main`](../NeuralGeneralization/OnlineLowerReluMain.lean)
 proves the full ReLU main theorem in the
