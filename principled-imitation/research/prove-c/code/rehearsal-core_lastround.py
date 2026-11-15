@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""The 'hedger' example: the last round of Protocol R is worse than a uniformly
-random round by a factor of order L (KL form of Theorem R1).  Exact forward
-recursion over the posterior states; no sampling.
+"""Proposition 6.2 of rehearsal-core.md.  The 'hedger' example: the last round of
+Protocol R is worse than a uniformly random round by a factor of order L (KL form of
+Theorem R1).  Exact forward recursion over the posterior states; no sampling.
 
 Inputs c (clock), r (routing), b (trap); answers are bits; L calls, no STOP.
 z = 0 (prob 1-p): all calls at c.   z = 1 (prob p): call 1 at r; calls 2..L at b
@@ -62,9 +62,15 @@ if __name__ == "__main__":
     for Lc in (5, 10, 20, 40):
         run(Lc, 4000, 1 / 3, math.log(2) - 8 * Lc, -80.0 * Lc)
     run(20, 20000, 1 / 3, math.log(2) - 8 * 20, -80.0 * 20)
-    print("-- proved lower bound on the ratio for these parameters: (0.567 - L/(3n)) * 0.2020 * (L-1) --")
+    print("-- lower bound proved in Proposition 6.2 for these parameters: "
+          "E Lambda(M^(n+1)) >= (1 - a - a ln(3 + 2 phi)/8) * p * (2/3) * (L-1) * ln(1/phi) --")
     for Lc in (5, 10, 20, 40):
-        print(f"L={Lc}, n=4000: {(0.567 - Lc / 12000) * 0.2020 * (Lc - 1):.3f}")
+        n, a = 4000, 1 / 3
+        ln_eta, ln_phi = math.log(2) - 8 * Lc, -80.0 * Lc
+        lnK = lse(0.0, ln_eta, ln_eta + ln_phi) - (ln_eta + ln_phi)          # K ln 2
+        low = (1 - a - a * math.log(3 + 2 * math.exp(ln_phi)) / 8) * (a * Lc / n) * (2 / 3) * (Lc - 1) * (-ln_phi)
+        print(f"L={Lc}, n={n}: proved E Lambda(M^(n+1)) >= {low:.5g};  proved ratio to L K ln2/n >= {low / (Lc * lnK / n):.3f}"
+              f" = {low / (Lc * lnK / n) / (Lc - 1):.4f} (L-1)")
     print("-- other parameters (not covered by the proof): a = 1 --")
     for Lc in (5, 10, 20, 40):
         run(Lc, 4000, 1.0, math.log(2) - 8 * Lc, -80.0 * Lc)
