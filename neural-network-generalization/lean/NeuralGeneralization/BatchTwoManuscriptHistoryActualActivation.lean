@@ -53,7 +53,7 @@ theorem SharpSelectedRun.exists_actual_terminal_history_activation_exp {φ : ℝ
         Good (s+1) k (sharpSelectedNext hφ.continuous hq t BH BG δ η Γ S) ∧
         (∀ᵐ z ∂C.joint,z.2.2=(splitFuture N k z.1.2).2) ∧
         (∀ᵐ z ∂C.joint,z.2.1.1=true → z.1.1.1=true) ∧
-        (∫⁻ z,liveLocalCost (t/Real.sqrt (N:ℝ)) φ x z ∂C.joint) ≤ 
+        (∫⁻ z,liveLocalCost (t/Real.sqrt (N:ℝ)) φ x z ∂C.joint) ≤
           ENNReal.ofReal (manuscriptLayerError K δ BH BG q m) := by
     intro s k Γ S hs hg
     refine ⟨sharpComparison hφ.continuous hq t BH BG δ η Γ S x,?_,

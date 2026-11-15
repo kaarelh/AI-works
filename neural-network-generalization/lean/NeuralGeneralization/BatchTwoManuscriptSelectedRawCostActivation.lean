@@ -78,7 +78,7 @@ theorem actual_selected_sharp_raw_cost_activation_exp {φ : ℝ → ℝ} (hφ : 
     have herr := SharpBankData.measurable_squaredError data hφ.continuous t BH BG
     have herr' := ENNReal.measurable_ofReal.comp (herr.comp hdecode)
     dsimp only [F]
-    exact Measurable.ite hbad measurable_const herr' 
+    exact Measurable.ite hbad measurable_const herr'
   have he (θ : A × Y) := fullSampledLayerCoupling_cost Samp
     (augmentedCurrentRows κ) obs (measurable_selectedHObservation b hb J hJ t x) ρ p
     (selectedHQueryKernel_parameterMap κ b hb J hJ t x) θ
