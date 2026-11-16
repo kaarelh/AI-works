@@ -18,10 +18,11 @@ Part C   Proposition 3.7 (rare-points class): the chain of inequalities, the exa
 Part D   Proposition 3.10 (Protocol R on the block class): the failure given the data by brute
          force over the runs, the bound 2L/N, and the exact failure at n = 4mN.
 Part E   Proposition 4.6 (S2 with time bounds that grow with the round): exact failure on toy
-         machines against the bound.
+         machines against the bound, and the two steps of its proof.
 Part F   Proposition 5.6: (a) the key step on random scaffolds whose inputs depend on the answers;
          (b) tolerance of the sequential-majority scaffold by brute force over replacement rules.
-Part G   Proposition 5.7: the counterexample, in exact rational arithmetic.
+Part G   Proposition 5.7: the counterexample, in exact rational arithmetic, and the steps of the
+         lower bound 1/(8 sqrt(2n)) on the excess failure that the second round added to its proof.
 Part H   Proposition 7.2 and the sentences of the note that the second check questioned:
          arithmetic.
 Part I   Remark 1.11 (a protocol without coins) on random instances.
@@ -30,10 +31,8 @@ Part J   Theorem 4.1(3): the protocol with n questions, and what "2aN questions 
 import itertools
 import math
 import random
-import time
 from fractions import Fraction as Fr
 
-T0 = time.time()
 LN2 = math.log(2)
 
 
@@ -890,6 +889,32 @@ def part_g():
         rs.append(e * n / LN2 / math.sqrt(n))
     assert max(rs) - min(rs) < 0.01
     print(f"  theta = 1/(2 sqrt n): ratio to ln 2/n divided by sqrt n = {rs[0]:.3f}, {rs[1]:.3f}, {rs[2]:.3f} at n = 100, 400, 1600 (unbounded ratio)")
+    # the lower bound added to the proof in the second round:
+    #   E[w_t] >= E[min(w_t, 1 - w_t)] = (1 - TV)/2 >= (1 - theta sqrt(8 (t-1)))/2,
+    # so the excess is at least theta (1 - theta sqrt(8 n)), which is theta/2 for theta = 1/(4 sqrt(2 n))
+    for theta in (Fr(1, 20), Fr(1, 8), Fr(1, 4)):
+        pm = Fr(1, 2) - theta
+        r = (Fr(1, 2) + theta) / pm
+        assert 2 * float(theta) * math.log(float(r)) <= 16 * float(theta) ** 2 + 1e-15      # kl(theta) <= 16 theta^2
+        dist = [Fr(1)]
+        for sres in range(0, 31):
+            Ew = sum(pr / (1 + r ** (sres - 2 * k)) for k, pr in enumerate(dist))
+            Emin = sum(pr * min(1 / (1 + r ** (sres - 2 * k)), 1 - 1 / (1 + r ** (sres - 2 * k))) for k, pr in enumerate(dist))
+            # exact total variation between the laws of the number of ones under P_+ and P_-
+            tv = sum(abs(math.comb(sres, k) * (pm ** k * (1 - pm) ** (sres - k) - (1 - pm) ** k * pm ** (sres - k)))
+                     for k in range(sres + 1)) / 2
+            assert Emin == (1 - tv) / 2 and Ew >= Emin
+            assert float(tv) <= float(theta) * math.sqrt(8 * sres) + 1e-12
+            dist = [(dist[k] * (1 - pm) if k <= sres else 0) + (dist[k - 1] * pm if k >= 1 else 0) for k in range(sres + 2)]
+    worst = 1e9
+    for n in (1, 2, 5, 20, 100, 400, 1600, 6400):
+        theta = 1 / (4 * math.sqrt(2 * n))
+        e = excess_float(theta, n)
+        assert e >= theta / 2 - 1e-12
+        worst = min(worst, e * n / LN2 / math.sqrt(n))
+    assert worst > 0.127
+    print(f"  E[w_t] >= E[min(w_t, 1-w_t)] = (1 - TV)/2 exactly for theta = 1/20, 1/8, 1/4 and t <= 31, and TV <= theta sqrt(8(t-1));")
+    print(f"  theta = 1/(4 sqrt(2n)): excess >= theta/2 for n = 1 ... 6400; least ratio to ln 2/n divided by sqrt n: {worst:.3f} (the bound: 0.127)")
 
 
 # ------------------------------------------------------------------------------------------------
@@ -1009,4 +1034,4 @@ if __name__ == "__main__":
     for part in (part_a, part_a2, part_b, part_c, part_d, part_e, part_f, part_g, part_h, part_i, part_j):
         part()
         print()
-    print(f"all checks passed  [{time.time() - T0:.0f} s]")
+    print("all checks passed")          # running time: about 30 s

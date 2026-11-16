@@ -4,17 +4,18 @@ Written from the statements of proofs/assumptions.md and of verification/assumpt
 No code is shared with the other scripts of this part (proofs/code/assumptions_*.py) or with
 the script of the second check (verification/code/assumptions_second_checks.py).
 Everything is exact (closed forms, exact enumeration, exact dynamic programming) except
-block 9, which contains one seeded simulation, and block 10, a seeded random test of an identity.
+block 9, which contains one seeded simulation beside an exact value, and the seeded random
+instances on which blocks 5 (part (iii)), 7 and 10 test an inequality or an identity exactly.
 
   block 1   Section 9.1 of the note: every number of the budget table and of the sentences after it
   block 2   Theorem N8 and "What survives": the constants (findings N3, N11a)
   block 3   Proposition 6.4 (additive work): the bound against the protocol that asks distinct inputs
   block 4   Example 3.3a: exact values for several choices of the masks and of the seed
-  block 5   Remark 3.2a: the normalising constant and the numbers of (i) and (ii)
+  block 5   Remark 3.2a: the normalising constant, the numbers of (i) and (ii), a test of (iii)
   block 6   Corollary 1.12, the example after it: the error as a function of n, without sampling (finding N7)
   block 7   The price of I1 (finding N5): when no member is closer than the unpatched one
   block 8   Examples 2.3 and 3.3 (the numbers of the caveats) and Proposition 2.5(d)
-  block 9   Remark 6.6: a chain and batches, exact for one strategy and simulated for another
+  block 9   Remark 6.6: a chain and batches, one strategy computed exactly and simulated
   block 10  Proposition 1.9a on random episodic scaffolds
   block 11  Example 3.2b: the last mixture on a chain
 
@@ -282,55 +283,58 @@ def block5():
 # ---------------------------------------------------------------------------------------------
 def block6():
     print("== block 6: the example after Corollary 1.12, without sampling")
-    print("  one call per run at one input; the human of round t answers 1 with probability 0.5 + 0.0002 t;")
+    print("  one call per run at one input; the human of round t answers 1 with probability p0 + 0.0002 t;")
     print("  class: Bernoulli(q), q = 0.05, 0.10, ..., 0.95, equal weights; T uniform on 1..n;")
-    print("  E|M^(T)(1) - P_1(1)| and E|M^(T)(1) - P_T(1)|:")
+    print("  E|M^(T)(1) - P_1(1)| and E|M^(T)(1) - P_T(1)|, by dynamic programming over the number of ones:")
     grid = [0.05 * i for i in range(1, 20)]
     lq = [math.log(q) for q in grid]
     l1q = [math.log(1 - q) for q in grid]
-    p0, gam = 0.5, 2e-4
+    gam = 2e-4
     nmax = 2600
-    want = (10, 30, 100, 200, 250, 300, 350, 400, 600, 1000, 2000, 2600)
-    # law of the number of ones among the answers of rounds 1..T-1 (Poisson binomial), by dynamic programming
-    law = [1.0]
-    acc1 = accT = 0.0
-    out = {}
-    every = {}
-    for T in range(1, nmax + 1):
-        k = T - 1
-        e1 = eT = 0.0
-        for ones, pr in enumerate(law):
-            if pr < 1e-18:
-                continue
-            ll = [ones * a + (k - ones) * b for a, b in zip(lq, l1q)]
-            mx = max(ll)
-            wts = [math.exp(v - mx) for v in ll]
-            mix = sum(w * q for w, q in zip(wts, grid)) / sum(wts)
-            e1 += pr * abs(mix - (p0 + gam))
-            eT += pr * abs(mix - (p0 + gam * T))
-        acc1 += e1
-        accT += eT
-        every[T] = (acc1 / T, accT / T)
-        if T in want:
-            out[T] = (acc1 / T, accT / T)
-        pt = p0 + gam * T
-        new = [0.0] * (len(law) + 1)
-        for ones, pr in enumerate(law):
-            new[ones] += pr * (1 - pt)
-            new[ones + 1] += pr * pt
-        law = new
-    for n in want:
-        print(f"    n = {n:5d}: to the human of round 1: {out[n][0]:.4f};  to the human of round T: {out[n][1]:.4f}")
-    b1 = min(every, key=lambda n: every[n][0])
-    bT = min(every, key=lambda n: every[n][1])
-    print(f"  over all n from 1 to {nmax}: the first column is smallest at n = {b1} ({every[b1][0]:.4f}),"
-          f" the second at n = {bT} ({every[bT][1]:.4f});")
-    inc1 = all(every[n + 1][0] >= every[n][0] for n in range(b1, nmax))
-    incT = all(every[n + 1][1] >= every[n][1] for n in range(bT, nmax))
-    print(f"  from there on both columns increase with n up to {nmax}: {inc1 and incT}")
+    want = (1, 2, 5, 10, 30, 100, 200, 300, 400, 600, 1000, 2000, 2600)
+    for p0 in (0.5, 0.37):
+        # law of the number of ones among the answers of rounds 1..T-1 (Poisson binomial)
+        law = [1.0]
+        acc1 = accT = 0.0
+        every = {}
+        for T in range(1, nmax + 1):
+            k = T - 1
+            e1 = eT = 0.0
+            for ones, pr in enumerate(law):
+                if pr < 1e-18:
+                    continue
+                ll = [ones * a + (k - ones) * b for a, b in zip(lq, l1q)]
+                mx = max(ll)
+                wts = [math.exp(v - mx) for v in ll]
+                mix = sum(w * q for w, q in zip(wts, grid)) / sum(wts)
+                e1 += pr * abs(mix - (p0 + gam))
+                eT += pr * abs(mix - (p0 + gam * T))
+            acc1 += e1
+            accT += eT
+            every[T] = (acc1 / T, accT / T)
+            pt = p0 + gam * T
+            new = [0.0] * (len(law) + 1)
+            for ones, pr in enumerate(law):
+                new[ones] += pr * (1 - pt)
+                new[ones + 1] += pr * pt
+            law = new
+        print(f"  p0 = {p0}:")
+        for n in want:
+            print(f"    n = {n:5d}: to the human of round 1: {every[n][0]:.4f};  to the human of round T: {every[n][1]:.4f}")
+        lo = 10
+        b1 = min(range(lo, nmax + 1), key=lambda n: every[n][0])
+        bT = min(range(lo, nmax + 1), key=lambda n: every[n][1])
+        inc = all(every[n + 1][0] >= every[n][0] for n in range(b1, nmax)) and \
+            all(every[n + 1][1] >= every[n][1] for n in range(bT, nmax))
+        dec = all(every[n + 1][0] <= every[n][0] for n in range(lo, b1))
+        print(f"    among n >= {lo}: the first column is smallest at n = {b1} ({every[b1][0]:.4f}), the second at n = {bT}"
+              f" ({every[bT][1]:.4f}); the first column decreases from n = {lo} to there: {dec};"
+              f" both increase from there to n = {nmax}: {inc}")
+    print("  (for p0 = 0.5 the mean of the prior is the human's first parameter, so the values at n < 10 are small;")
+    print("   with p0 = 0.37 this accident is absent: the values at n < 10 are about 0.13, the error of the prior,")
+    print("   and at n = 2600 the error is larger than without any question)")
     K0 = math.log2(19)
-    s, eta = 2, None
-    print(f"  Corollary 1.12 for this drift (gamma_t = gamma t): the part K0 ln2/n + gamma (n+1)(1+ln(s/eta))/2 of the bound")
+    print("  Corollary 1.12 for this drift (gamma_t = gamma t): the part K0 ln2/n + gamma (n+1)(1+ln(s/eta))/2 of the bound")
     for eta in (0.1, 0.01):
         nstar = math.sqrt(2 * K0 * LN2 / (gam * (1 + math.log(2 / eta))))
         print(f"    eta = {eta}: smallest at n* = {nstar:.0f}, and increasing afterwards")

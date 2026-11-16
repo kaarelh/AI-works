@@ -641,7 +641,7 @@ def part8():
     EN3 = F(0)                 # sum over rounds of E n_{B3}(a_t)
     maxN3 = 0
     lengths = set()
-    print("     n   states   max_B |E S_n - (n/L) E Delta_n|   max_B |E Delta_n|   bound (a), least   max N_n(B3)   (L/n) E N_n(B3)   L(K+2)/n   wrong protocol: max_B |E S'_n - (n/L) E Delta_n|")
+    print("     n   states   max_B |E S_n - (n/L) E Delta_n|   max_B |E Delta_n|   least bound (a)   max N_n(B3)   (L/n) E N_n(B3)   L(K+2)/n   wrong protocol: max_B |E S'_n - (n/L) E Delta_n|")
     for t in range(1, 13):
         new = {}
         for st, pr in law.items():
@@ -682,6 +682,7 @@ def part8():
         maxN3 = max(maxN3, max(st[3][0] for st in law))
         assert all(st[3][2] in (0, 1) for st in law)               # the history of B3 is pure (+)
         gap = max(abs(ES[k] - ED[k] / L8) for k in range(d))
+        assert gap == 0                                             # Theorem 6.2(a), exactly, in every round
         gapw = max(abs(ES_wrong[k] - ED[k] / L8) for k in range(d))
         if t in (1, 2, 3, 4, 6, 8, 10, 12):
             delta = [float(ED[k]) / t for k in range(d)]

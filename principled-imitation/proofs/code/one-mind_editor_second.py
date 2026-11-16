@@ -11,6 +11,7 @@ Parts
       at most 1), E[S] <= delta*W, E[Pi_2(A)] <= delta, Pr[a member of A beats P] <= delta,
       the event of (b), the inequality of Step 4 at every data state, the inequality of Step 5
       on every path, and Remark 3.9 in the same way with the prior's own weights.
+      Controls with halved thresholds; and a sharper exact test of (a) on two coins (binomial sums).
   T2  Proposition 3.5(a) for a rehearsal driven by posterior draws (exact, by dynamic programming
       over the data): the sum of E[w_t(P) KL(Q_P || Q_M^(t))], the chain rule, the per-round
       inequality, the supermartingale 1/w_t(P) and the maximal inequality.
@@ -22,9 +23,9 @@ Parts
   T5  Definition 4.1, Proposition 4.6, Corollary 4.4 and Remark 4.5 by brute force over all
       top-level inputs; Proposition 4.3(b) after any at most n questions (exact dynamic programme).
   T6  Proposition 5.7 by enumeration of every data path of a rehearsal driven by posterior draws.
-  T7  Small facts used in the decisions on the note's text (findings N1, N7, N10) and arithmetic.
+  T7  Small facts used in the decisions on the note's text (findings N1, N7, N10, N12) and arithmetic.
 
-Run:  python3 one-mind_editor_second.py > one-mind_editor_second.out     (about two minutes)
+Run:  python3 one-mind_editor_second.py > one-mind_editor_second.out     (about one minute)
 """
 import itertools
 import math
@@ -1053,6 +1054,17 @@ def T7():
         exp_first = 0
         print("    N10: Example 5.2, L = M = %d, equal weights: with the order g_1, ..., g_M, f the expected number of unfaithful rounds is %.0f = L^2; with f first in the order it is %d"
               % (L, exp_last, exp_first))
+    # N12 and the paragraph after Theorem 3.8: in the class of Proposition 3.5(b) the member selected with the
+    # weights squared is P as soon as N_z >= n >= K.  log2 of (w(s)^2) <= -2 N_z log2|F'_z|, |F'_z| = R 2^(4R-1);
+    # log2 of (w(P)^2 P(D_n)) >= -2K - n log2 R  (each of the n answers has probability 1/R or 1/2 under P)
+    ok = True
+    for R in (2, 3, 10, 1000, 10 ** 6):
+        for K in range(1, 40):
+            for n in (K, K + 1, 5 * K, 100 * K):
+                for Nz in (n, n + 1, 10 * n * n):
+                    ok &= 2 * Nz * (math.log2(R) + 4 * R - 1) > 2 * K + n * math.log2(R)
+    check(ok, "N12: the squared-weight selection in the class of Proposition 3.5")
+    print("    N12: in the class of Proposition 3.5(b), log2 of the squared weight of a member of F' is below that of w(P)^2 P(D_n) for R = 2..10^6, K = 1..39, N_z >= n >= K: %s" % ok)
     # the R2 constant of the table in Section 6, and the number quoted in Section 7.6
     nq, L, K = 8192, 4, 10
     old = 2 * math.sqrt(nq * L * K * LN2)
