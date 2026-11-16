@@ -62,4 +62,10 @@ References of this section that are not in the list of `research/sections/relate
 
 Already in that list: Abernethy, Bartlett and Hazan (2011); Blackwell (1956); Gupta, Jung, Noarov, Pai and Roth (2022); Sandroni, Smorodinsky and Vohra (2003); Vovk, Takemura and Shafer (2005).
 
-Labels: Pr5 and Pr6 as fixed in `research/outline.md`, Addendum 3; no new label. Symbols used beyond the fixed list: γ (a number of calls per run), r (an exponent in the lower bound), p and A (parameters of the class of tables), G, c_t, S_n, V_n, g_t, d_B, Δ_n (defined where used).
+Labels: Pr5 and Pr6 as fixed in `research/outline.md`, Addendum 3; no new label. All pointers (Lemma, Theorem, Proposition, Example with a number) are to `proofs/property-online.md`. Symbols used beyond the fixed list: γ (a number of calls per run), r (an exponent in the lower bound), p and A (parameters of the class of tables), β and η (strength of the tilt, rate), G, c_t, S_n, V_n, g_t, d_B, Δ_n (defined where used).
+
+Checking status of what the text uses (details: `proofs/property-online.md`, Section 11.2). Checked by both verifiers: Pr5 (Theorem 3.3), Corollary 3.4, Propositions 3.5 and 3.6, Theorem 2.1, Example 2.3, Pr6 (Theorems 6.2 and 6.3), Examples 6.5 and 7.1, Propositions 7.3, 4.2 (in the restricted form both asked for), 4.4, 8.1 and 8.2, Theorem 7.6. Written by the editor after the verification and seen by no verifier: Example 2.5 (the extension of Example 2.3 to every tie-breaking; proof and exhaustive search), Proposition 3.9 (found and computed by the adversary; proof by the editor), Proposition 6.7 (the standard two-point argument, written out). Theorem R2 and Theorem R1 are quoted from other parts.
+
+Length: about 1200 words of prose (about 1560 tokens when formulas are counted); the limit set for this part was 1100.
+
+For the lead: `research/sections/toy.md` calls the rule of its last paragraph "the rule of Theorem Pr5". With the new labels this is the rule with one rate (Theorem 2.1 of the proof file), not Rule NH. Under Rule NH the same experiment gives an exact root in 57% of the runs at n = 8000 (`proofs/code/property-online_rehearsal.out`). The last paragraph of `research/sections/related-work.md` on Pr5 should be brought in line with the attribution paragraph above.

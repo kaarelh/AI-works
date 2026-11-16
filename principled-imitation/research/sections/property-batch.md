@@ -26,6 +26,8 @@ The researcher's conflict is thereby confined, not removed: two tests that held 
 * *The coin.* One call at a uniform input among u; the human is a function f: X → {0, 1}, the imitator a fair coin. For all but a fraction δ of the functions, |Q_coin(B) − Q_f(B)| ≤ √((Λ(B) + ln(2/δ))/(2u)) for every test, yet the coin differs from f with probability 1/2 at every call.
 * *The same question twice.* The scaffold puts one uniform input to the answerer twice; the human is a fair coin at each call, the imitator a function g. For most g every per-call test has the human's frequency, to the same error, while "the two answers agree" has probability 1 against 1/2.
 
+For N recorded runs there are thus two prices: √(K/N) for all properties at once (H1), and √(Λ(B)/N) for each test. Neither guarantee contains the other.
+
 ### 8.2a The batch estimator
 
 Let K(ν) := log₂(1/w(ν)). The likelihood of a run under ν is the product of ν(y_j | x_j) over its calls. For ν ≠ ν′ let A_νν′ be the set of runs more likely under ν than under ν′, and r(ν) := √((K(ν) ln 2 + ln(2/δ))/(2N)). From N recorded runs, the estimate ν̂ minimises
@@ -36,11 +38,11 @@ Let K(ν) := log₂(1/w(ν)). The likelihood of a run under ν is the product of
 
   TV(Q_ν̂, Q) ≤ 3·TV(Q_ν, Q) + √((2K(ν) ln 2 + 2 ln(2/δ))/N).
 
-*Idea.* TV(Q_ν, Q_ν′) = Q_ν(A_νν′) − Q_ν′(A_νν′), and Q̂ must be close to Q only on the sets involving the best ν, so the union bound runs over single weights. Proof: `proofs/property-batch.md`, Theorem 3.6. The estimate is the modified minimum-distance estimate of Mahalanabis and Štefankovič (2008), with weights; it attains the factor 3, which is optimal for rules that return a member and whose number of runs does not grow with the space of runs (Bousquet, Kane and Moran 2019, Theorem 19).
+*Idea.* TV(Q_ν, Q_ν′) = Q_ν(A_νν′) − Q_ν′(A_νν′), and Q̂ must be close to Q only on the sets involving the best ν. Proof: `proofs/property-batch.md`, Theorem 3.6. The estimate is the modified minimum-distance estimate of Mahalanabis and Štefankovič (2008), with weights; it attains the factor 3, which is optimal for rules that return a member and whose number of runs does not grow with the space of runs (Bousquet, Kane and Moran 2019, Theorem 19).
 
 *To compute it* one needs a list of the hypotheses above a weight threshold (up to about e^(2N)); exact comparison of two likelihoods on a recorded run (possible for time-bounded programs, not for lower semicomputable ones); and the numbers Q_ν(A_νν′), hence a closed system or simulated runs (Theorem 3.10).
 
-*Not said.* For a human with memory inside a run the bound can be empty: one who repeats a fair bit is at distance at least √2 − 1 from every sampler, and 3·(√2 − 1) > 1. And the human must carry out N whole runs: by Pr3, 3835 (δ = 0.05) to keep, with frequency 0.99, one 50-bit property that never failed.
+*Not said.* For a human with memory inside a run the bound can be empty: one who repeats a fair bit is at distance at least √2 − 1 from every sampler, and 3·(√2 − 1) > 1. And the human must carry out N whole runs.
 
 ### 8.5 The mixture need not give the per-property price
 
@@ -50,7 +52,7 @@ Let R be a set of pairs that the human never violates.
 
 **Pr2(b), a fresh input** (proved here; Theorem 4.5). Let R now be "the answer is not b". Take u ≥ 5 inputs, a human f with answers in {0, 1} and weight 2^(−K), K ≥ 2, and all memorisers (a table on some inputs, the answer b elsewhere) with weights proportional to (4u)^(−size). After n questions at distinct inputs the mixture answers b at a fresh uniform input with probability ((u − n)/u)·(2u/(2u + 1))/(1 + (4u + 2)^n/(2^K − 1)), and with probability above 0.51 after any n ≤ min{u/4, (K − 2)/log₂(4u + 2)} questions. Closing the class under conditioning multiplies the value by 1 − 1/C_R. This level is the prior probability that a memoriser violates R off its table, here 1.
 
-**What holds** (proved here; Theorem 4.7, Proposition 4.9). Under A2, with questions drawn independently from the law of the fresh input, with probability 1 − δ, for all n, the mixture violates R there with probability at most (K ln 2 + ln(1/δ))/n. Under rehearsal a deployed run has at most L·K ln 2/n violating calls in expectation. So the mixture pays K.
+**What holds** (proved here; Theorem 4.7, Proposition 4.9). Under A2, with questions drawn independently from the law of the fresh input, with probability 1 − δ, for all n, the mixture violates R there with probability at most (K ln 2 + ln(1/δ))/n. Under rehearsal a deployed run has at most L·K ln 2/n violating calls in expectation.
 
 **Pr2(c), the machine** (proved here; Theorem 4.11). For every universal machine U, c ≥ 5 and d ≥ 3 there is a universal machine, at most c bits from U, on which this R has a 6-bit program and C_R does not depend on c, while for every human with answers in {0, 1} on u = 2^d inputs the mixture violates R at a fresh input with probability above 0.51 after any n ≤ min{u/4, (c − 5)/(d + 2)} questions. So no bound in the price of R and C_R holds on all universal machines: a fact about the prior. *Open:* such a bound for one fixed machine, with a constant of that machine.
 
@@ -68,7 +70,7 @@ So with one answer per input, or with long strings as answers, test frequencies 
 
 **Placement and labels.** The part supplies Sections 8.1, 8.2 and 8.5, a subsection on the batch estimator, here numbered 8.2a (it belongs between 8.2 and the online imitator of 8.3), and a subsection 8.6 for Pr7, which the outline's title of Section 8 announces last ("what can be certified for a stochastic human"). The opening paragraph of Section 8 is the lead's, shortened. No label was invented: Pr1 to Pr4 and Pr7 are used as the outline and Addendum 3 assign them. Numbers such as "Theorem 6.1" in the text are those of `proofs/property-batch.md`; the text says so once, at the end of the proof of Pr3.
 
-**Length.** Sections 8.1 to 8.6 have about 1300 words (1303 by a count of the alphabetic tokens of two or more letters, headings included; 1772 whitespace-separated tokens with the opening paragraph, the difference being symbols of formulas and labels). The limit is 1300 words.
+**Length.** Sections 8.1 to 8.6 have about 1300 words (1303 by a count of the alphabetic tokens of two or more letters, headings included, names of functions such as ln and TV excluded; 1768 whitespace-separated tokens with the opening paragraph, the difference being symbols of formulas and labels). The limit is 1300 words. To stay inside it, several proved statements appear only in the list below.
 
 **What changed against the draft in `note.md`.**
 1. 8.1: the price names the horizon and the three theorems; the caveat on additive error is added.
@@ -84,6 +86,8 @@ So with one answer per input, or with long strings as answers, test frequencies 
 * "A violation level v lasts only while the mixture loses log₂(1/(1 − v)) bits per pair to the human, and this is attained." (Theorem 4.7(f), Proposition 4.8.)
 * "On every machine whose class contains the fair coin with weight 2^(−k_c), a human with binary answers has V ≤ ½ + (k_c ln 2 + ln(1/δ))/(2n)." (4.13, item 5.)
 * "Neither price can be lowered in general." (Lemma 2.8 for tests; `proofs/lower-bounds.md`, Theorems 6.1 and 6.3, for total variation.)
+* The budget in numbers, with δ = 0.05: "3835 runs before one 50-bit property that never failed is kept with frequency 0.99; 30 677 runs for a two-sided tolerance of 0.05 on one such test; 1.4·10⁸ runs for total variation 0.1 at K = 10⁶ bits." (Corollary 2.6(iii), Corollary 2.6(ii), Corollary 3.7(d); the paragraph after the table of Section 5.1 of the proof file.)
+* "The union bound runs over single weights, which is why the constant is 2K where the candidate theory had 4K." (Remark after Theorem 3.6.)
 
 **For other sections.**
 * Section 3.3, V1(b) (rehearsal-core): the two recorded frequencies are counts divided by the number m of all rounds, a round whose run has fewer than J calls counting as zero for both; divided by the number of non-empty rounds they estimate Δ(B)·L/E[len] instead (proof file, after Theorem 6.1). The human's frequency alone is certified to half the stated tolerance, √(ln(2/(π(B)δ))/(2m)), and a test that the human's answers never met in m probes has human frequency at most ln(2/(π(B)δ))/m (Theorem 6.1(b)). V1 assumes A1 for the probes; "nothing is assumed about the human" is not exact. The sentence of 3.3 on single answers at inputs that never repeat is correct as it stands; Pr7 is its precise form.
