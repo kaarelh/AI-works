@@ -169,5 +169,13 @@ if __name__ == "__main__":
             for n in (100, 400, 1600, 6400):
                 print(f"{h:5d} {L:4d} {n:6d}   {calls[:n].sum():16.2f}        {runs[:n].sum():16.2f}        "
                       f"{runs[:n].mean():12.4f}")
-            print(f"{'':>17}   bound L K ln 2 = {L * K_BITS * np.log(2):8.1f}   bound 2 L K ln 2 = "
-                  f"{2 * L * K_BITS * np.log(2):8.1f}")
+            kln2 = K_BITS * np.log(2)
+            if driver == "rehearsal":
+                print(f"{'':>17}   Theorem R1: both sums are at most L K ln 2 = {L * kln2:.1f}")
+            elif driver == "one-mind":
+                print(f"{'':>17}   Theorem R4: the sum of Pr[run unfaithful] is at most "
+                      f"(2 L^2/(L+1)) K ln 2 = {2 * L * L / (L + 1) * kln2:.1f}")
+            else:
+                heavier = int((PRIOR > 2.0 ** (-K_BITS) * (1 + 1e-9)).sum())
+                print(f"{'':>17}   Proposition R6(a): the sum of Pr[run unfaithful] is at most "
+                      f"L times the number of hypotheses heavier than f = {L} x {heavier} = {L * heavier}")
