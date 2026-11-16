@@ -2,7 +2,7 @@
 
 Role: adversary. Target: the proof file `research/prove-b/hellinger-runs.md` (579 lines; labels L4, R2, A, B) and its scripts. The target file was not changed. This report was written after, and independently of, the line-by-line check `research/verify/hellinger-runs-check.md`; where the two overlap this is said.
 
-**Status of this file: in progress.** Sections are added as the work proceeds; the verdict list at the end is final only when this line has been removed.
+**Status of this file: complete.** It was written by an adversary whose run was cut off before it removed the status line. The resumed run (16 November 2026) found every section present, including the verdict list. It spot-checked the file as follows. (i) It rederived by hand the proof of Lemma X (finding M1): both cases of the one-step inequality for U(x) = (γ/2)((m − x)₊)²; the identities U(x) − (1 − (1+η)x²) = (1 − (1+η)x)²/η for m = 1 and U(x) − (1 − x²) = (1 − mx)²/(m² − 1) for m > 1; and the optimisation giving v = σ + √(σ² + 2σ). (ii) It rederived the step of M2(c) that bounds Σ ρ ln(ρ/u) by −ln u_max when ρ ∝ u^λ and λ ≥ 1. (iii) It checked that the saved outputs `hellinger-runs_attack_events.out`, `_l4.out` and `_recorded.out` contain the numbers quoted in Sections 3 and 5. All three checks passed, and nothing was changed except this line.
 
 Contents: (1) result in brief; (2) what was done; (3) findings by severity, each with its evidence; (4) hidden assumptions; (5) attacks that failed; (6) citations checked; (7) the researcher's seven tests; (8) what is not new; (9) verdicts, statement by statement.
 
