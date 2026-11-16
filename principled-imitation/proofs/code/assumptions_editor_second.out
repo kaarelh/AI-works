@@ -1,0 +1,145 @@
+== block 1: Section 9.1 of the note
+  largest K with K ln 2/(theta delta) <= n, theta = delta = 0.1:
+    a working life of 1e5 hours, an hour per answer                        n = 100000   K = 1443 bits
+    50 years, a year per answer                                            n = 50       K = 0.7213 bits
+    1e6 people for 2000 hours, an hour per answer                          n = 2e+09    K = 2.885e+07 bits
+    1e4 people for one year, a year per answer (proof file, Section 6.2)   n = 10000    K = 144.3 bits
+    20 sequential batches (proof file, Section 6.4)                        n = 20       K = 0.2885 bits
+  K = 1e9: n = K ln 2/(theta delta) = 6.931e+10 answers; at an hour per answer: 3.466e+07 years of 2000 hours, 7.907e+06 calendar years
+  not deterministic: n = K ln 2/(2 theta^2 delta^2) = 3.466e+12 for K = 1e9
+  certificate at confidence 0.95: ln 20/(theta delta) = 299.57, so 300 answers; at a year per answer 300 human-years, more than one working life of 50 years
+  the formulas: failure <= delta0 + beta/(k+1) with k+1 >= theta L;
+    K = 30, n = 2080: deterministic excess K ln2/(theta n) = 0.1000
+    K = 1000, n = 69315: deterministic excess K ln2/(theta n) = 0.1000
+    K = 30, n = K ln2/(2 theta^2 delta^2) = 1.04e+05: excess sqrt(K ln2/(2n))/theta = 0.1000
+    K = 1000, n = K ln2/(2 theta^2 delta^2) = 3.466e+06: excess sqrt(K ln2/(2n))/theta = 0.1000
+
+== block 2: Theorem N8 and the sentence of 'What survives' on N2b
+  N8 (Theorem 6.1(3)): p = 1-(1-1/N)^g against g/N for g distinct cells, N = g/(2 delta):
+    grid of g <= 59 and six values of delta: the stated bound never exceeds the derived one (largest ratio 0.9990); with distinct cells p is larger, so the bound holds for both readings
+  N8, sufficiency: ceil(L K ln2/((k+1) delta)) <= 2 g K ln2/delta + 1 with L = g(2k+1):
+    holds on the grid: True
+    g = 5, delta = 0.05: n >= 1.1074 K; ratio of the sufficient to the necessary number <= 125.2
+    g = 10, delta = 0.01: n >= 12.5477 K; ratio of the sufficient to the necessary number <= 110.5
+  'What survives': for delta <= 1/20 and N = L/(2 delta) >= 10,
+  (1-10 delta) K L/(8 delta log2(L/(2 delta))) >= K L/(16 delta log2(L/delta)):
+    smallest ratio of the two sides over L in 1..199, 1e3, 1e6 and 500 values of delta in (0, 1/20]: 1.0430 (>= 1 needed)
+
+== block 3: Proposition 6.4 (additive work)
+  class: all functions [K] -> {0,1}; L calls at independent uniform inputs; good run: at most m wrong answers.
+  protocol D_a: ask a distinct inputs, answer them correctly and every other call by a fair coin;
+  then the number of wrong answers is Bin(L, (K-a)/(2K)) for every member.
+     K     L    m  delta | bound K(1-2m/L-2delta) | least a with failure <= delta | failure at a = ceil(bound)-1
+     20    20    2   0.10 |                   12.0 |                            18 | 0.7939
+    200   100   10   0.10 |                  120.0 |                           172 | 0.9943
+    200   100   10   0.01 |                  156.0 |                           181 | 0.5784
+    400  1000  100   0.05 |                  280.0 |                           332 | 1.0000
+     83    50    5   0.10 |                   49.8 |                            73 | 0.9594
+   1000    10    1   0.10 |                  600.0 |                           891 | 0.6242
+  (every row: the least number of questions of D_a is at least the bound, as the proposition requires
+   of every protocol; with one question fewer than the bound the failure of D_a exceeds delta)
+  theta = delta = 0.1: the factor 1 - 2 theta - 2 delta = 0.6; 50 answers serve K <= 50/0.6 = 83.3 bits
+  exhaustive, K = 4, L = 3, m = 0: for each set S of asked inputs, the largest probability of a good run
+  that a deployed answerer can have on average over the 16 functions, against 1 - [L(K-|S|)/(2K) - m]/(L - m):
+    |S| = 0: average probability of a good run 0.2188;  the proof's cap 0.5000
+    |S| = 1: average probability of a good run 0.3320;  the proof's cap 0.6250
+    |S| = 2: average probability of a good run 0.4922;  the proof's cap 0.7500
+    |S| = 3: average probability of a good run 0.7109;  the proof's cap 0.8750
+    |S| = 4: average probability of a good run 1.0000;  the proof's cap 1.0000
+
+== block 4: Example 3.3a (rehearsal inputs from a generator with a seed of 3 bits)
+  floor (1/2)/(2^k+1) = 1/18 = 0.05556; R1 would give K ln2/n = 0.0693, 0.0069, 0.0007 for n = 10, 100, 1000
+  masks [1, 2, 4, 8, 16, 32, 3, 5]: pairwise intersections all 16;
+    seed index in [0]: generator 0.10050, 0.06006, 0.05601
+    seed index in [1, 2, 6, 7]: generator 0.10093, 0.06010, 0.05601
+    seed index in [3, 4, 5]: generator 0.10132, 0.06014, 0.05601
+    fresh inputs: 0.06106, 0.00611, 0.00061
+  masks [1, 2, 4, 8, 16, 32, 3, 12]: pairwise intersections all 16;
+    seed index in [0, 1, 2, 3, 6, 7]: generator 0.10091, 0.06010, 0.05601
+    seed index in [4, 5]: generator 0.10132, 0.06014, 0.05601
+    fresh inputs: 0.06106, 0.00612, 0.00061
+  masks [1, 2, 3, 4, 5, 6, 7, 8]: pairwise intersections all 16;
+    seed index in [0, 1, 2, 3, 4, 5, 6]: generator 0.10027, 0.06003, 0.05600
+    seed index in [7]: generator 0.10142, 0.06015, 0.05601
+    fresh inputs: 0.06119, 0.00613, 0.00061
+  masks [3, 5, 9, 17, 33, 6, 10, 63]: pairwise intersections all 16;
+    seed index in [0]: generator 0.10050, 0.06006, 0.05601
+    seed index in [1, 2, 5, 6]: generator 0.10093, 0.06010, 0.05601
+    seed index in [3, 4, 7]: generator 0.10131, 0.06014, 0.05601
+    fresh inputs: 0.06106, 0.00611, 0.00061
+
+== block 5: Remark 3.2a
+  (i) N = 1024: the weights (2N)^(-|A|) sum to (1+1/(2N))^N = 1.648520; with the constant
+      c = (1 - 2^-K)/(1+1/(2N))^N the class has total weight 1 (the member A = X, which equals f, counted twice
+      with weight c (2N)^-N = 2^-11265, negligible)
+      K = 100: s = 8: 0.9993; s = 9: 0.6654; s = 10: 0.0009704; s = 11: 4.741e-07
+        below 1e-4 from s = 11 on
+      K = 1000: s = 81: 0.9995; s = 90: 0.9985; s = 91: 0.3234; s = 92: 0.0002333; s = 93: 1.139e-07; s = 100: 7.509e-31; s = 101: 3.665e-34
+        below 1e-4 from s = 93 on
+  (ii) log2 C(2^20, 1000) = 11469.9; Pr[1000 uniform inputs are distinct] = 0.6209; K ln2/n at K = 11500: 7.97
+  (iii) 200 random small protocols: largest value of E[w(nu_D) nu_D(D)/P(D)] - max_D c(D) = -6.182e-02 (<= 0 needed)
+
+== block 6: the example after Corollary 1.12, without sampling
+  one call per run at one input; the human of round t answers 1 with probability 0.5 + 0.0002 t;
+  class: Bernoulli(q), q = 0.05, 0.10, ..., 0.95, equal weights; T uniform on 1..n;
+  E|M^(T)(1) - P_1(1)| and E|M^(T)(1) - P_T(1)|:
+    n =    10: to the human of round 1: 0.1121;  to the human of round T: 0.1122
+    n =    30: to the human of round 1: 0.0932;  to the human of round T: 0.0935
+    n =   100: to the human of round 1: 0.0631;  to the human of round T: 0.0633
+    n =   200: to the human of round 1: 0.0490;  to the human of round T: 0.0492
+    n =   250: to the human of round 1: 0.0456;  to the human of round T: 0.0458
+    n =   300: to the human of round 1: 0.0436;  to the human of round T: 0.0438
+    n =   350: to the human of round 1: 0.0424;  to the human of round T: 0.0426
+    n =   400: to the human of round 1: 0.0419;  to the human of round T: 0.0422
+    n =   600: to the human of round 1: 0.0446;  to the human of round T: 0.0450
+    n =  1000: to the human of round 1: 0.0587;  to the human of round T: 0.0590
+    n =  2000: to the human of round 1: 0.1043;  to the human of round T: 0.1045
+    n =  2600: to the human of round 1: 0.1331;  to the human of round T: 0.1337
+  over all n from 1 to 2600: the first column is smallest at n = 1 (0.0002), the second at n = 1 (0.0002);
+  from there on both columns increase with n up to 2600: False
+  Corollary 1.12 for this drift (gamma_t = gamma t): the part K0 ln2/n + gamma (n+1)(1+ln(s/eta))/2 of the bound
+    eta = 0.1: smallest at n* = 86, and increasing afterwards
+    eta = 0.01: smallest at n* = 68, and increasing afterwards
+
+== block 7: the price of I1 (Proposition 7.5(a)) for a patched isolated member
+  X = [12]; a run is L = 2 calls at independent uniform inputs; D(g, g') = Pr[the two runs differ];
+  random classes whose members are pairwise at distance 0 or >= delta; the human is a member h0 patched on a set Q.
+  20000 random cases: a member closer than h0 occurred in 12001 cases (all with eps > delta/2);
+  cases with eps <= delta/2 and a closer member: 0 (the triangle inequality for D excludes them)
+
+== block 8: the numbers of the caveats and of tests 2 and 5
+  Example 2.3: Pr[nu1 is never refuted] = 0.556481; refuted with probability 0.443519;
+    afterwards the imitator is nu2, whose run differs from the human system's with probability 1/2; in the limit the run differs with probability 0.2218
+    after n = 20 rounds: refuted with probability 0.442454
+    after n = 100 rounds: refuted with probability 0.443519
+  Example 3.3 (k = 3, L = 4): expected unfaithful calls of the run of M^(T)
+    n = 100: seeded index 0.3506 (floor (L-1)/(2^k+1) = 0.3333); fresh index 0.0228; R1 bound L ln2/n = 0.0277
+    n = 1000: seeded index 0.3351 (floor (L-1)/(2^k+1) = 0.3333); fresh index 0.0023; R1 bound L ln2/n = 0.0028
+  Proposition 2.5(d): the exact imitator of a human who gives a second answer with probability e
+    e = 0.0: mismatch rate 0.000000; no mismatch in 300 rounds with probability 1
+    e = 0.001: mismatch rate 0.001998; no mismatch in 300 rounds with probability 0.5488
+    e = 0.01: mismatch rate 0.019800; no mismatch in 300 rounds with probability 0.00248
+    e = 0.1: mismatch rate 0.180000; no mismatch in 300 rounds with probability 1.394e-26
+
+== block 9: Remark 6.6 (a chain needs as many batches as it has links)
+  strings of l bits; batches of b questions fixed before the answers of the batch; s batches.
+  strategy G: every batch asks the known list (which reveals the next string) and b-1 lists
+  'known list + a guess of the next string + a guess of the one after', guesses never repeated.
+  A batch reveals two strings instead of one exactly if one of its guesses of the next string is right;
+  Pr[some batch among s does] against the bound s b/(2^l - s b):
+    l = 4, b = 3, s = 2: exact 0.2344; simulated 0.2364; bound 0.6000
+    l = 5, b = 4, s = 3: exact 0.2557; simulated 0.2562; bound 0.6000
+    l = 6, b = 4, s = 6: exact 0.2503; simulated 0.2493; bound 0.6000
+    l = 8, b = 8, s = 8: exact 0.1989; simulated 0.1981; bound 0.3333
+
+== block 10: Proposition 1.9a on random episodic scaffolds (binary answers, exact enumeration)
+  300 scaffolds of depth 3 to 6 with 2 to 4 episodes, kernels arbitrary functions of the history:
+    largest |H2(Q_S, Q_T) - H2(Q_S&T, Q_S|T)| over all pairs of sets: 1.11e-16
+    largest sqrt(H2(Q_C, Q_P)) - sum_i sqrt(H2(Q_C, Q_C[i<-P])): 0.000e+00 (<= 0 claimed)
+    largest H2(Q_C, Q_P) - (L_e/2) sum_i KL_i: -5.327e-02 (<= 0 claimed); for two episodes, largest H2 - sum_i KL_i: -5.327e-02 (<= 0 claimed)
+
+== block 11: Example 3.2b (the last mixture on a chain of L links, limiting class)
+    L =  10: largest ratio to L/(n+1) is 1.319 at n = 98; 0.4 sqrt(L) = 1.26
+    L =  40: largest ratio to L/(n+1) is 2.550 at n = 1599; 0.4 sqrt(L) = 2.53
+    L = 160: largest ratio to L/(n+1) is 5.059 at n = 25598; 0.4 sqrt(L) = 5.06
+

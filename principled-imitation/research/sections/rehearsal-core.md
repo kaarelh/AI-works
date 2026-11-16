@@ -2,7 +2,7 @@
 
 **The human.** X and Y are countable sets of input and answer strings. A *sampler* S gives every input x a probability distribution S(·|x) on Y. Assumption **A1**: the human is a sampler P, and a question x put to the human is answered by a draw from P(·|x), whatever was realised before. If every P(·|x) is a point mass, the human is *deterministic* and f denotes the function.
 
-**The class.** H is a countable set of *hypotheses* ν with weights w(ν) > 0 of total at most 1. (A hypothesis may be a program that sometimes gives no answer; that counts as one more answer.) Assumption **A2**: P is in H. We write K := log₂(1/w(P)); in Sections 3.1 to 3.4 only the human's answers to inputs that the scaffold can produce count towards it (`proofs/rehearsal-core.md`, Remark 4.4). After data D the posterior weight of ν is proportional to w(ν) times the probability that ν gives to the recorded answers, and the *mixture* M_D(y|x) := Σ_ν (posterior weight of ν)·ν(y|x) answers every question with a hypothesis drawn afresh from the posterior. For the class of all programs it is Solomonoff's predictor for question–answer pairs (2008, equation (10)).
+**The class.** H is a countable set of *hypotheses* ν with weights w(ν) > 0 of total at most 1. (A hypothesis may be a program that sometimes gives no answer; that counts as one more answer.) Assumption **A2**: P is in H. We write K := log₂(1/w(P)); in the upper bounds of Sections 3.1 to 3.4, w(P) may be replaced by the total weight of the hypotheses that agree with the human on every input the scaffold can produce (`proofs/rehearsal-core.md`, Remark 4.4(d)). After data D the posterior weight of ν is proportional to w(ν) times the probability that ν gives to the recorded answers, and the *mixture* M_D(y|x) := Σ_ν (posterior weight of ν)·ν(y|x) answers every question with a hypothesis drawn afresh from the posterior. For the class of all programs it is Solomonoff's predictor for question–answer pairs (2008, equation (10)).
 
 **The scaffold.** A *scaffold* Π draws a top-level input z from a law D₀ and random bits ρ, then computes each question x_j from z, ρ and the answers so far, or stops, after at most L questions (the *horizon*). One execution is a *run*; its questions are its *calls*. An *answerer* A gives the law A_j(·|h_j) of the j-th answer given the history h_j = (z, ρ, y₁, …, y_{j−1}); a sampler looks at x_j only. Q_A is the law of the run answered by A, and Q_P, the *human system*, is what is to be imitated.
 
@@ -36,7 +36,7 @@ Throughout, A1 to A3 hold and the deployment is closed. Numbers refer to `proofs
 
 ### 3.1 Each call
 
-**Theorem R1 (proved here; for a finite class and a deterministic human it is in Li and Zhang 2025).** Write KL_t(x) for KL(P(·|x) ‖ M^(t)(·|x)) in nats. Then
+**Theorem R1 (proved here; for a finite class with equal weights and a deterministic human, the bound on unfaithful calls is the estimation step of Li and Zhang 2025, Theorem 3).** Write KL_t(x) for KL(P(·|x) ‖ M^(t)(·|x)) in nats. Then
 
   Σ_{t=1}^{n} E[ Σ_{calls x of the run of round t} KL_t(x) ] ≤ L·K ln 2.
 
@@ -46,7 +46,7 @@ So the run of M^(T) has E[Σ_{calls x} KL(P(·|x) ‖ M^(T)(·|x))] ≤ L·K ln 
 
 The inequality is the standard regret bound for Bayes mixtures (Hutter 2003, Theorem 1; Solomonoff 2008 for question–answer pairs; Paper 1 of this repository, Proposition 5.7(b), for questions chosen from earlier pairs).
 
-*What it does not say.* It averages over runs: an input reached with probability below about L·K ln 2/n may be answered in any way (Theorem N1). It is empty for n below L·K ln 2, and K for a person under a generic prior is of the order of 10⁹ bits (Section 9): at one hour per answer, L = 10 and 0.1 unfaithful calls per run cost 350 years already for K = 10⁴. And a fixed number of questions buys a constant rate of unfaithful calls, not a bounded number.
+*What it does not say.* It averages over runs: an input reached with probability below about L·K ln 2/n may be answered in any way (Theorem N1). It is empty for n below L·K ln 2, and K for a person under a generic prior is of the order of 10⁹ bits (Section 9): at one hour per answer and 2000 working hours a year, L = 10 and 0.1 unfaithful calls per run cost 350 years already for K = 10⁴. And a fixed number of questions buys a constant rate of unfaithful calls, not a bounded number.
 
 * *Equality* is attained for the divergence and approached for the unfaithful calls (Theorem 5.1(d)).
 * *The round.* T is drawn afresh for every run. One T kept for good exceeds the bound by the factor 1/δ with probability at most δ, and for δ ≤ 0.63 a factor 0.45/δ is needed (Proposition 5.2).
@@ -78,17 +78,17 @@ Fix a set G of good runs. The human system *tolerates k faults with failure δ* 
 
 *What it does not say.* Nothing, unless the human system itself tolerates faults. And the rule must see the human's answer: a system can survive 399 blindly replaced answers with failure 0.0007 and fail with probability 1 under an imitator for which δ + β/(k + 1) is 0.021 (Example 8.5(d)).
 
-In the recoverable form (standard: Ross, Gordon and Bagnell 2011, Theorem 2.2), one replaced answer followed by the human raises the expected cost by at most μ, and the run of A then costs, in expectation, at most μ·β(A) more than the human system's (Theorem 8.6).
+In the recoverable form (standard: Ross, Gordon and Bagnell 2011, Theorem 2.2), one replaced answer followed by the human costs, in expectation and from every history, at most μ more than any answer the human might have given there; the run of A then costs, in expectation, at most μ·β(A) more than the human system's (Theorem 8.6).
 
-For a human who is not deterministic, E[β(M^(T))] ≤ L·√(K ln 2/(2n)) (Proposition 9.1), so the failure probability is at most δ + √(K ln 2/(2n))/θ. The rate is right: every protocol has at least 0.088·L·√(K/n) unfaithful calls in expectation for some member of a class of K bits (Theorem 9.2), and in an example failure γ ≤ ½ needs K·(1 − 2γ)²/(32θ²) questions (Proposition 9.3). The order is K/θ², against K/θ for a deterministic human.
+For a human who is not deterministic, E[β(M^(T))] ≤ L·√(K ln 2/(2n)) (Proposition 9.1), so the failure probability is at most δ + √(K ln 2/(2n))/θ. The rate is right: for every n ≥ K/2 there are a scaffold and a class of 2^K members with equal weights for which every protocol that asks at most n questions in expectation leaves, for some member, at least 0.088·L·√(K/n) unfaithful calls in expectation (Theorem 9.2), and in an example failure γ ≤ ½ needs K·(1 − 2γ)²/(32θ²) questions (Proposition 9.3). The order is K/θ², against K/θ for a deterministic human.
 
-**Proposition R3a (bounded damage; proved here).** Let every run have exactly L calls, and let Φ be a real function of the history. Suppose that from every history, also those reached only after replaced answers, an answer of the human raises Φ by at least a > 0 in expectation and changes it by at most 1, and no answer lowers Φ by more than D. Call a run good if Φ rises by at least (1 − σ)·a·L. Then the human system tolerates k faults with failure δ whenever
+**Proposition R3a (bounded damage; proved here).** Let every run have exactly L calls, and let Φ be a real function of the history. Suppose that from every history, also those reached only after replaced answers, an answer of the human raises Φ by at least a > 0 in expectation and changes it by at most 1, and no answer lowers Φ by more than D. Fix ζ ∈ (0, 1] and call a run good if Φ rises by at least (1 − ζ)·a·L. Then the human system tolerates k faults with failure δ whenever
 
-  k·(1 + D) + √(2L·ln(1/δ)) ≤ σ·a·L,
+  k·(1 + D) + √(2L·ln(1/δ)) ≤ ζ·a·L,
 
-and, for a deterministic human, with failure 0 whenever k·(1 + D) ≤ σ·a·L.
+and, for a deterministic human, with failure 0 whenever k·(1 + D) ≤ ζ·a·L.
 
-Each replacement costs at most 1 + D, and the Azuma–Hoeffding inequality controls the steps that the human's answers would have caused (Proposition 12.2, where a and σ are μ and η). So K ln 2·(1 + D)/(σ·a·δ′) questions give an excess failure δ′ for a deterministic human, whatever L. Without "exactly L calls" the statement is false: if a wrong answer can stop the run, one fault spoils it.
+Each replacement costs at most 1 + D, and the Azuma–Hoeffding inequality controls the steps that the human's answers would have caused (Proposition 12.2, where a and ζ are μ and η). So K ln 2·(1 + D)/(ζ·a·δ′) questions give an excess failure δ′ for a deterministic human, whatever L. Without "exactly L calls" the statement is false: if a wrong answer can stop the run, one fault spoils it.
 
 ### 3.5 The certificate
 

@@ -1,0 +1,65 @@
+== 1. 'Compute': a posterior draw by rejection ==
+  complete code ['0', '10', '110', '111']: Pr[a trial keeps its program] = xi(D) = 4901/400000 = 0.012252
+    law of the kept program = posterior (exact, as fractions): 0: 576/4901, 10: 3125/4901, 110: 1200/4901, 111: 0
+    mean number of trials = 1/xi(D) = 81.616 <= 2^K/P(D) = 333.333: True
+  incomplete code ['0', '10', '110'] (W = 7/8): a trial never ends with probability 1 - W = 1/8;
+    the draw returns with probability xi/(xi + 1 - W) = 0.089270 < 1; given that it returns, the law is the posterior: 0: 576/4901, 10: 3125/4901, 110: 1200/4901
+    mean number of trials started = 1/(xi + 1 - W) = 7.286 <= 1/xi = 81.616
+  Protocol R, n = 2: E ln(1/P(D_n)) = 1.0613 (summed entropy of the recorded answers: 1.0613) <= E ln(1/xi(D_n)) = 1.4848 <= E ln(1/P(D_n)) + K ln 2 = 3.1407: True
+  Protocol R, n = 4: E ln(1/P(D_n)) = 2.1231 (summed entropy of the recorded answers: 2.1231) <= E ln(1/xi(D_n)) = 2.8245 <= E ln(1/P(D_n)) + K ln 2 = 4.2025: True
+  Protocol R, n = 6: E ln(1/P(D_n)) = 3.1850 (summed entropy of the recorded answers: 3.1850) <= E ln(1/xi(D_n)) = 4.1193 <= E ln(1/P(D_n)) + K ln 2 = 5.2645: True
+  Protocol R, n = 8: E ln(1/P(D_n)) = 4.2470 (summed entropy of the recorded answers: 4.2470) <= E ln(1/xi(D_n)) = 5.3755 <= E ln(1/P(D_n)) + K ln 2 = 6.3264: True
+    so the logarithm of the number of trials grows in proportion to the number of recorded answers of a human who varies;
+    for a deterministic human P(D) = 1 and the number of trials is at most 2^K whatever n.
+
+== 2. Finding N4: the budget of Section 3.1 ==
+  L = 10, 0.1 unfaithful calls per run, K = 1e+02: n = L K ln 2/0.1 = 6931 answers; at one hour each: 3.466 years of 2000 working hours, 0.7907 calendar years (8766 hours)
+  L = 10, 0.1 unfaithful calls per run, K = 1e+04: n = L K ln 2/0.1 = 6.931e+05 answers; at one hour each: 346.6 years of 2000 working hours, 79.07 calendar years (8766 hours)
+  L = 10, 0.1 unfaithful calls per run, K = 1e+09: n = L K ln 2/0.1 = 6.931e+10 answers; at one hour each: 3.466e+07 years of 2000 working hours, 7.907e+06 calendar years (8766 hours)
+
+== 3. Finding N5: Theorem 9.2 ==
+  theta = sqrt(K/(32 n)) <= 1/4 exactly when n >= K/2; L theta/2 = L sqrt(K/n)/(8 sqrt 2), 1/(8 sqrt 2) = 0.08839 > 0.088
+  kl(Bern(1/2 + theta) || Bern(1/2 - theta)) <= 16 theta^2 for theta <= 1/4: largest ratio on a grid = 0.5493 (<= 1)
+  the class P_sigma(1|i) = 1/2 + sigma_i theta depends on n through theta: the statement is 'for every K, L and n >= K/2
+  there is a class of 2^K members with equal weights such that every protocol with at most n questions in expectation ...'
+
+== 4. Finding N7: the recoverable form (Theorem 8.6) ==
+  (i) one call, human u/d with probability 1/2, cost 0 after u, 1 after d or b; imitator d/b with probability 1/2:
+      E_Q_P[c] = 1/2, E_Q_C[c] = 1, beta(C) = 1/2;
+      mu read against the human's average = 1/2: E_Q_P[c] + mu beta = 3/4 < E_Q_C[c] = 1: the bound FAILS;
+      mu of condition (8.1), against each answer the human might give = 1: E_Q_P[c] + mu beta = 1 >= 1: holds.
+  (ii) two calls, f = 0, cost 1 exactly if both answers are 1; imitator answers 1 with probability 1/10 at each call:
+      E_Q_f[c] = 0, E_Q_C[c] = 1/100, beta(C) = 1/5;
+      (8.1) only at histories of the human system: mu = 0, bound 0 < 1/100: FAILS;
+      (8.1) at every history: mu = 1, bound 1/5 >= 1/100: holds.
+
+== 5. Coverage and the last mixture (the clause after Proposition 5.6) ==
+  idealised chain, L = 10: max over n of Pr[Bin(n, 1/L) = L - 1]/(L/(n + 1)) = 1.319 at n = 98 (n/L^2 = 0.98);  sqrt(L/(2 pi)) = 1.262
+  idealised chain, L = 40: max over n of Pr[Bin(n, 1/L) = L - 1]/(L/(n + 1)) = 2.550 at n = 1599 (n/L^2 = 1.00);  sqrt(L/(2 pi)) = 2.523
+  idealised chain, L = 160: max over n of Pr[Bin(n, 1/L) = L - 1]/(L/(n + 1)) = 5.059 at n = 25598 (n/L^2 = 1.00);  sqrt(L/(2 pi)) = 5.046
+  exact Protocol R, L = 6, eps = 0.001: max over n <= 150 of Pr[last mixture enters Q unasked]/(L/(n + 1)) = 1.052 at n = 34 (idealised chain: 1.055);  random round: sum over t <= 150 of the same probability = 6.0000 <= L = 6
+  exact Protocol R, L = 10, eps = 0.1: max over n <= 400 of Pr[last mixture enters Q unasked]/(L/(n + 1)) = 0.909 at n = 72 (idealised chain: 1.319);  random round: sum over t <= 400 of the same probability = 10.0000 <= L = 10
+  exact Protocol R, L = 10, eps = 0.001: max over n <= 400 of Pr[last mixture enters Q unasked]/(L/(n + 1)) = 1.311 at n = 98 (idealised chain: 1.319);  random round: sum over t <= 400 of the same probability = 10.0000 <= L = 10
+  exact Protocol R, L = 12, eps = 0.001: max over n <= 500 of Pr[last mixture enters Q unasked]/(L/(n + 1)) = 1.422 at n = 142 (idealised chain: 1.433);  random round: sum over t <= 500 of the same probability = 12.0000 <= L = 12
+
+== 6. Remark 4.4(d) for Proposition 6.1(a): the human is not in the class ==
+  n = 1: E beta(M^(n+1)) = 0.713939 <= L (ln(W/w([f])) + 1)/n = 8.314001: True
+  n = 2: E beta(M^(n+1)) = 0.584027 <= L (ln(W/w([f])) + 1)/n = 4.157000: True
+  n = 3: E beta(M^(n+1)) = 0.501748 <= L (ln(W/w([f])) + 1)/n = 2.771334: True
+  n = 4: E beta(M^(n+1)) = 0.434688 <= L (ln(W/w([f])) + 1)/n = 2.078500: True
+  n = 5: E beta(M^(n+1)) = 0.371337 <= L (ln(W/w([f])) + 1)/n = 1.662800: True
+  n = 6: E beta(M^(n+1)) = 0.309454 <= L (ln(W/w([f])) + 1)/n = 1.385667: True
+  n = 7: E beta(M^(n+1)) = 0.250575 <= L (ln(W/w([f])) + 1)/n = 1.187714: True
+  n = 8: E beta(M^(n+1)) = 0.197166 <= L (ln(W/w([f])) + 1)/n = 1.039250: True
+  largest ratio = 0.2233 (<= 1); here w([f]) = 1/25, W = 47/50, and f itself has no weight.
+
+== 7. Numbers that the second check compared with saved outputs or checked by hand ==
+  Proposition 6.4: (1 + ln(L c))/c < 1 exactly for c > 4.890 when L = 10 (ln L + 3 = 5.30)
+  Proposition 6.4: (1 + ln(L c))/c < 1 exactly for c > 7.638 when L = 100 (ln L + 3 = 7.61)
+  Proposition 6.4: (1 + ln(L c))/c < 1 exactly for c > 10.233 when L = 1000 (ln L + 3 = 9.91)
+  Example 8.5(d), second count: the condition allows k <= 60857.3; the kernel with beta = 0.9 k = 54771.3 has eps = 0.0456,
+    expected loss (1 + D) beta = 2.191e+05 against the allowed 2e+05; the sum of the human's steps has standard deviation 1386,
+    so the expected loss exceeds the allowed loss by 13.8 such standard deviations; delta + beta/(k + 1) = 0.901
+  Proposition 9.4: 4 e^2/gamma' < 1/(2 gamma'^2) exactly for gamma' < 1/(8 e^2) = 0.01692
+  Corollary 13.2: ln(1/0.05)/0.1 = 29.96; m = ln(1/0.05)/(0.1 * 0.1) = 299.6 rounds
+  Theorem 13.1(a2) at rho_hat = ln(1/delta)/m: 1 + sqrt 2 + 2 = 4.414
