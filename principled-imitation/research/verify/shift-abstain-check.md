@@ -1,0 +1,30 @@
+# Referee report on `research/prove-c/shift-abstain.md` (key: shift-abstain)
+
+Role: referee, line by line. File checked: `research/prove-c/shift-abstain.md` (917 lines; below "the file"). No earlier report with this role existed (only the adversary's partial report `research/verify/shift-abstain-attack.md`, whose four findings I re-derived independently and comment on below where they bear on a verdict). Scripts of this check: `research/verify/code/shift-abstain_check_*.py` (see the last section). Status: written in pieces; COMPLETE when the line "END OF REPORT" appears.
+
+Conventions as in the file: log = log₂, ln natural; K = log(1/w(P)); W = Σ w ≤ 1; L horizon; n rounds; Sil, Abs, Qu silent errors, abstentions, questions.
+
+## 1. Entries, one per statement
+
+### Section 1 (tools)
+
+**Lemma 1.1 (regret on asked inputs). CORRECT.** Checked each step. (2): (ln u)⁺ ≤ u/e gives E[Z_t⁻ | 𝓖_t] ≤ Σ m(y)/e ≤ 1/e, so the conditional expectation is defined; the integrability argument a_t Z_t ≤ c + Σ_{s<t}(a_s Z_s)⁻ is right. (3): ln BC ≥ −½ KL by Jensen, H² ≤ −ln(1 − H²), Pinsker on Y_⊥; the semimeasure mass on ⊥ is handled because P(⊥) = 0. (4): telescoping is pathwise for a function. Edge cases: semimeasures (missing mass on ⊥) are covered; a_t ≡ 0 gives the empty sum.
+
+**Lemma 1.2 (asked call is a uniform call of the driver's run). CORRECT.** J_t independent of the run; the aborting call is a call of the run and is counted in d_t, consistently with the convention that the aborted call can be asked.
+
+**Corollary 1.3 (R1 for any driver). CORRECT.** For a function TV(f, M)(x) = e(x) on Y_⊥, and e ≤ KL. Constants: E β(M^(T)) ≤ L·K ln 2/n (function) and ≤ L·√(K ln 2/(2n)) (general), via ∫TV dd_t ≤ √(L ∫TV² dd_t) and Cauchy–Schwarz over t. Recomputed.
+
+**Lemma 1.4 (coupling to the first unfaithful call). CORRECT.** (1): Pr[σ = j | agreement before j, call j exists] = TV(P, C)(x_j), summed over the common calls j ≤ min(σ, len); an abstention of C at call j is a disagreement (P(⊥) = 0), so it is covered. (2): after σ each run has at most L − σ ≤ L − 1 calls and g ∈ [0, 1], so the difference of the two sums is at most (L − 1)·1{σ < ∞}. (3) follows. The inequality in (2) is between two deterministic measures and holds for every g: X → [0, 1], which is what Theorem 5.6 later uses.
+
+### Section 2 (shift)
+
+**Proposition 2.1 (S1 for the top-level law). CORRECT, with one MINOR point.** (a), (b) immediate. (c1)–(c3): conditioning on the rehearsal makes the deployed kernel fixed, Φ_C ≥ 0, apply (a) and Corollary 1.3; the TV step uses that the two run laws on Π′ share the z-marginal D₀′, so TV(Q′_C, Q′_P) = Σ_z D₀′(z) TV(Q_C(·|z), Q_P(·|z)) ≤ B·TV(Q_C, Q_P), then HR Theorem 3.1 (2√(L K ln 2/n)); constant 2B√(L K ln 2/n) recomputed. (d): the lower bound N·(L/(4δ) − 3L/2) is LB Theorem 4.3 with Corollary 2.2(2), which needs δ ≤ 1/6 (stated). (e) correct. MINOR: "the expected number of unfaithful calls" in (c2), (c3) is not defined in Section 1.4 (only the first unfaithful call is); it should be defined as β(C) = E_{Q_C} Σ_j TV(P, C)(x_j), i.e. the expected number of calls at which the maximal coupling of Lemma 1.4, continued call by call along the run of C, separates. With that definition (c3) is right.
+
+**Example 2.2 (candidate's S1 with visit measures fails). CORRECT (the refutation stands).** Recomputed by hand and by script (`shift-abstain_check_s1.py`, exact formulas and a Monte Carlo of Protocol R): while g is alive the refutation probability per round is κ = (1 + ω(L − 1))/L; β(M) = (1 − ω)(1 + ω(L − 1)); β^f(M) = (1 − ω)L; E β(M^(T)) = (1 − ω)L(1 − (1 − κ)^n)/n ≤ L·K ln 2/n because 1 − ω ≤ ln(1/ω); d̄(a) = (L − 1)(1/n)Σ_t(1 − π_t(1 − ω)) ≥ (L − 1)(1 − L/n) because Σ_t π_t ≤ 1/κ ≤ L. Ratio L/(1 + ω(L − 1)) → L/2 at ω = 1/L. The quoted values 0.4975 against 0.0463 (L = 100) and 0.4997 against 0.00691 (L = 1000) are reproduced (see Section 3 of this report). The candidate's S1, read literally (deployment visit measure ≤ B times the average rehearsal visit measure implies the per-call bound with factor B), is false by the factor of order L/ln L.
+
+**Proposition 2.3 (S1′ with visit measures, factor (2L − 1)B). CORRECT.** The chain ∫g dd_{C_t} ≤ ∫g dd_P + (L − 1)β(C_t) ≤ β(C_u) + (L − 1)β(C_u) + (L − 1)β(C_t) uses Lemma 1.4(2) twice and ∫TV(P, C_u) dd_{C_u} = β(C_u). Averaging over u = T and over t gives (2L − 1)·B·E β(M^(T)). The variant with the expected d̄ (independent copy) is right. The lower bound "at least L/(1 + ω(L − 1))" holds in the limit n → ∞ where B → 1.
+
+**Proposition 2.4 (S3). CORRECT, with one MINOR omission.** (a), (b) immediate. (c): checked against LB Lemma 1.10 and Corollary 2.2(1). The adaptation is valid: the protocol's own draws of tasks are part of its seed r, the deployed task is a fresh z ~ D₀(·|Γ) independent of r, and the only place where n enters Lemma 1.10 is Σ_c π_c ≤ E[number of questions in the patches], which is at most β·n because only rounds with z ∈ Γ can produce questions in [N₀] (one question per round). Then Corollary 2.2(1) with βn in the place of n gives βn ≥ L/(4δ) − L. The hypotheses δ ≤ 1/4 and L/(2δ) integer are stated. (d): MINOR — LB Theorem 4.3 is proved through LB Corollary 2.2(2) and needs δ ≤ 1/6; add "for δ ≤ 1/6" to (d) (it is stated in Proposition 2.1(d) but not here). Also (d) holds for the specific class of LB Theorem 4.3 (point indicators on [N] × [N₀]), so "for some class" is right as written. The reading "costs exactly 1/β" is justified: upper L·K ln 2/(βn), lower (L/(4δ) − L)/β, the same power of β.
+
+**Theorem 2.5 (three kinds of shift). CORRECT.** (i) is Lemma 1.2 with φ = 1_{X₁} at round T plus its last sentence. (ii), (iii) are citations, checked against LB Theorem 1.6(4), Proposition 1.8(1), Theorem 4.1, Corollary 4.2, Theorem 4.3, Proposition 4.4(a): the statements are reproduced correctly (Theorem 4.3 needs δ ≤ 1/6, see above; Theorem 4.1 is for one call and functions, as the text implies). The caveat paragraph after the proof is accurate and should stay.
+
