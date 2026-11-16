@@ -4,7 +4,7 @@
 
 **The class.** H is a countable set of *hypotheses* ν with weights w(ν) > 0 of total at most 1. (A hypothesis may be a program that sometimes gives no answer; that counts as one more answer.) Assumption **A2**: P is in H. We write K := log₂(1/w(P)); in Sections 3.1 to 3.4 only the human's answers to inputs that the scaffold can produce count towards it (`proofs/rehearsal-core.md`, Remark 4.4). After data D the posterior weight of ν is proportional to w(ν) times the probability that ν gives to the recorded answers, and the *mixture* M_D(y|x) := Σ_ν (posterior weight of ν)·ν(y|x) answers every question with a hypothesis drawn afresh from the posterior. For the class of all programs it is Solomonoff's predictor for question–answer pairs (2008, equation (10)).
 
-**The scaffold.** A *scaffold* Π draws a top-level input z from a law D₀ and random bits ρ, then computes each question x_j from z, ρ and the answers so far, or stops, after at most L questions (L is the *horizon*). One execution is a *run*; its questions are its *calls*. An *answerer* A gives the law A_j(·|h_j) of the j-th answer given the history h_j = (z, ρ, y₁, …, y_{j−1}); a sampler looks at x_j only. Q_A is the law of the run answered by A, and Q_P, the *human system*, is what is to be imitated.
+**The scaffold.** A *scaffold* Π draws a top-level input z from a law D₀ and random bits ρ, then computes each question x_j from z, ρ and the answers so far, or stops, after at most L questions (the *horizon*). One execution is a *run*; its questions are its *calls*. An *answerer* A gives the law A_j(·|h_j) of the j-th answer given the history h_j = (z, ρ, y₁, …, y_{j−1}); a sampler looks at x_j only. Q_A is the law of the run answered by A, and Q_P, the *human system*, is what is to be imitated.
 
 **Unfaithful calls.** Couple a run of an imitator A with the human: at each call, A's answer y_j and a *shadow* answer y′_j from P(·|x_j) are drawn jointly so that they differ with the least possible probability, TV(A_j(·|h_j), P(·|x_j)), and the run continues with y_j. The call is *unfaithful* if y_j ≠ y′_j; β(A) is the expected number of unfaithful calls of a run. The run of A is thus a run of the human system in which a rule that sees the human's answer has replaced the answers at the unfaithful calls (`proofs/rehearsal-core.md`, Lemma 3.2 and Proposition 3.4). For a deterministic human a call is unfaithful exactly if y_j ≠ f(x_j), and a run without such calls is the human system's run on the same z and ρ.
 
@@ -28,11 +28,11 @@
 
 The human answers at most n + m single calls, taken from the imitator's own runs at every depth of a decomposition, and never carries out a run.
 
-None of this is new. Training a learner without regret on the inputs that its own behaviour produces is the reduction of Ross, Gordon and Bagnell (2011, Theorem 4.1), who also deploy one uniformly chosen iterate for a whole episode and return the best iterate on validation. With logarithmic loss, a finite class and a deterministic expert, the protocol is "Stagger" of Li and Zhang (2025). The note adds a prior on a countable class (bounds in K), a human who is not deterministic, and the uses and limits below.
+None of this is new. Training a learner without regret on the inputs that its own behaviour produces is the reduction of Ross, Gordon and Bagnell (2011, Theorem 4.1); their algorithm returns the best iterate on validation, and they note that the guarantee also holds for one uniformly chosen iterate run for a whole episode. With logarithmic loss, a finite class and a deterministic expert, the protocol is "Stagger" of Li and Zhang (2025). The note adds a prior on a countable class (bounds in K), a human who is not deterministic, and the uses and limits below.
 
 ## 3. What rehearsal guarantees
 
-Throughout, A1 to A3 hold and the deployment is closed. Numbered references are to `proofs/rehearsal-core.md`.
+Throughout, A1 to A3 hold and the deployment is closed. Numbers refer to `proofs/rehearsal-core.md`.
 
 ### 3.1 Each call
 
@@ -51,12 +51,12 @@ The inequality is the standard regret bound for Bayes mixtures (Hutter 2003, The
 * *Equality* is attained for the divergence and approached for the unfaithful calls (Theorem 5.1(d)).
 * *The round.* T is drawn afresh for every run. One T kept for good exceeds the bound by the factor 1/δ with probability at most δ, and for δ ≤ 0.63 a factor 0.45/δ is needed (Proposition 5.2).
 * *The last round* cannot replace M^(T) in general: in an example the mixture after all n answers has a summed divergence of at least (L − 1)/8 times L·K ln 2/n (Proposition 6.2). It can for a deterministic human on a scaffold whose questions do not depend on the answers, with at most L·(K ln 2 + 1)/n unfaithful calls in expectation (Proposition 6.1).
-* *A new round at every call* is a different imitator and is not covered: in an example, "the ladder", its run is unfaithful about L/4 times as often, and it is never more than L times (Proposition 5.5).
+* *A new round at every call* is a different imitator and is not covered: for a deterministic human its run is unfaithful at most L times as often, and about L/4 times as often in an example, "the ladder" (Proposition 5.5).
 * *More questions per run* do not improve the bound (Proposition 5.3).
 
 ### 3.2 Whole runs
 
-**Theorem R2 for a deterministic human (proved here).** The run of M^(T) is the human system's run on the same z and ρ with probability at least 1 − L·K ln 2/n (Theorem 7.1). Theorem N2 gives a class and a scaffold for which every protocol needs of the order of L/δ questions for failure δ.
+**Theorem R2 for a deterministic human (proved here).** The run of M^(T) is the human system's run on the same z and ρ with probability at least 1 − L·K ln 2/n (Theorem 7.1).
 
 [PLACEHOLDER: the subsection "whole runs" for a human who is not deterministic, supplied by part `hellinger-runs`.]
 
@@ -102,7 +102,7 @@ Each replacement costs at most 1 + D, and the Azuma–Hoeffding inequality contr
 
 *Proof.* Theorem 13.1. For (a): the two recorded answers are independent with laws a and p, and differ with probability 1 − Σ_y a(y)p(y), which lies between TV(a, p) and TV(a, p) + 1 − Σ_y p(y)². For (b): Hoeffding's inequality and a union bound. ∎
 
-*What it does not say.* The certificate of (a) is valid for every human, but it is issued with probability at most exp(−m·s/2): only if the human is nearly deterministic on the inputs visited. The exact imitator of a human who varies fails it. For such a human, without A2, single answers cannot certify that a randomised imitator has few unfaithful calls (Proposition 13.4); what can be certified is (b) and, with questions put twice, a squared distance of answer laws (Pr7, Section 8). A test costs Λ(B), whatever its complexity; this is the point of outcome indistinguishability and multicalibration (Dwork et al. 2021; Hébert-Johnson et al. 2018). Each further attempt at validation adds δ.
+*What it does not say.* The certificate of (a) is valid for every human, but it is issued with probability at most exp(−m·s/2): only if the human is nearly deterministic on the inputs visited. The exact imitator of a human who varies fails it. For such a human, without A2, one answer per input cannot certify that a randomised imitator has few unfaithful calls (Proposition 13.4); what can be certified is (b) and, with questions put twice, a squared distance of answer laws (Pr7, Section 8). A test costs Λ(B), whatever its complexity; this is the point of outcome indistinguishability and multicalibration (Dwork et al. 2021; Hébert-Johnson et al. 2018). Each further attempt at validation adds δ.
 
 For a deterministic human in the class, validation of M^(T) records no disagreement with probability at least 1 − m·K ln 2/n (Corollary 13.2). The certificate does not contain K: 300 rounds certify an excess failure 0.1 under θ = 0.1 at δ = 0.05. It certifies an imitator; it does not produce one.
 
