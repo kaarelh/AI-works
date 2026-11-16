@@ -2,7 +2,7 @@
 
 Role: adversary. Status: complete.
 
-The file under attack is `research/prove-c/property-online.md` (Sections 0 to 10; "the file"). The earlier stub of this report (1.7 KB, written by an interrupted verifier) was a list of intentions; per the instructions it was overwritten. Two scripts that interrupted verifier left in `research/verify/code/` (`property-online_attack_finite.py` with its output, and `property-online_attack_game.py`, whose output is empty) were inspected. I re-ran parts (B) and (C) of the first (part (A) had complete saved output, which I checked against the script); I did not re-run the second (an exhaustive search with up to 1.5 million states per instance) and replaced it by my own smaller exhaustive search, `property-online_attack_core.py`.
+The file under attack is `research/prove-c/property-online.md` (Sections 0 to 10; "the file"). The earlier stub of this report (1.7 KB, written by an interrupted verifier) was a list of intentions; per the instructions it was overwritten. Two scripts that interrupted verifier left in `verification/code/` (`property-online_attack_finite.py` with its output, and `property-online_attack_game.py`, whose output is empty) were inspected. I re-ran parts (B) and (C) of the first (part (A) had complete saved output, which I checked against the script); I did not re-run the second (an exhaustive search with up to 1.5 million states per instance) and replaced it by my own smaller exhaustive search, `property-online_attack_core.py`.
 
 ## Hand check of the proofs (this session)
 

@@ -4,7 +4,7 @@ Referee report on `research/prove-c/one-mind.md` (449 lines, Sections 0 to 9), t
 
 *This file was written in pieces by two successive referees with the same role (the first was cut off after Section C). The second referee spot-checked Sections A to C (the R4 symmetry steps, the constants of Proposition 2.5, Example 3.1, Proposition 4.3(a)) and kept them unchanged, and wrote Sections D to H and the list of corrections. Status: complete.*
 
-My scripts are in `research/verify/code/` (names starting with `one-mind_check_`), each with its output next to it (`.out`). Section H quotes them.
+My scripts are in `verification/code/` (names starting with `one-mind_check_`), each with its output next to it (`.out`). Section H quotes them.
 
 ## A. Sections 0 to 2 (conventions, setting, R4)
 
@@ -183,7 +183,7 @@ The table and the four conclusions are a summary; I check each cell against what
 
 **Section 9 (literature). CORRECT.** No result from the literature is used. The elementary inequalities are stated correctly (Bonferroni: 1 − (1 − x)^m ≥ mx − C(m, 2)x² for x ∈ [0, 1]). The three pointers (Strens, ICML 2000; Osband, Russo and Van Roy, NeurIPS 2013; Ross, Gordon and Bagnell, AISTATS 2011) are correctly cited as far as I know them from memory; I did not open them either, and no statement of theirs is used.
 
-## H. Numerical checks (all in `research/verify/code/`, each with its `.out`; all assertions pass)
+## H. Numerical checks (all in `verification/code/`, each with its `.out`; all assertions pass)
 
 * **H.1 `one-mind_check_exact.py`.** (1) Lemma 1.4 by enumeration of 422151 runs in 4000 random instances (stochastic hypotheses, semimeasures, variable length, 793 top-level inputs with no call): no violation. (2) The per-round inequality of Theorem 2.1: min of E[m|z] − (1/L)Σ_j Pr[σ ≥ j]p_j = −3·10⁻¹⁶, largest ratio (ψ_L(u)/L)/E[m|z] = 1.0000. (3) 300 random classes, infinite rehearsal as an absorbing Markov chain: largest ratios to the bounds 0.84 (posterior draw, mixture) and 1.0000 (first consistent, Proposition 5.1). (4) Example 5.2, exact totals. (5) The identities of Steps 2 and 3 of Theorem 5.5 on 877 version spaces. (6) Theorem 5.5 by exact path enumeration on seven classes. (7) Theorem 5.5(a) and Corollary 5.6 on a nearly tight instance (failure 0.048 for δ = 0.1). (8) The same inequalities for the posterior-draw driver (evidence for the open item 5 of Section 8.1).
 * **H.2 `one-mind_check_series.py`.** S(L, K) of Proposition 2.5 on a grid of 2025 pairs: between the lower bound (min ratio 1.00001) and the upper bound (max ratio 0.9934); the chain recomputed level by level; Remark 2.6 (mixture total Σ_k u_k, e.g. 66.29 against 110.22 for L = K = 10); simulation with N_z = 10⁶.

@@ -1,4 +1,4 @@
-"""Independent checks for the referee report research/verify/property-online-check.md.
+"""Independent checks for the referee report verification/property-online-check.md.
 
 Part 1: Proposition 8.1(a) by brute force over all memorisers (a second instance).
 Part 2: lower-bound columns of Section 9.5 (Proposition 3.6(a)).

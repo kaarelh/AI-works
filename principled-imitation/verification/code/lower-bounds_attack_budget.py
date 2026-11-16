@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Numbers for the budget test and for the 'failure budget' form of the
 conclusion (Theorem 7.1 of research/prove/lower-bounds.md), as quoted in
-research/verify/lower-bounds-attack.md.
+verification/lower-bounds-attack.md.
 
 Part A.  The bounds of the file for a few (L, delta, K): necessary and
   sufficient numbers of questions, and the expected number F* = delta * r* of

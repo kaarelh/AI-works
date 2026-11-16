@@ -1,6 +1,6 @@
 # Adversarial report on `research/prove-b/hellinger-runs.md` (key: hellinger-runs)
 
-Role: adversary. Target: the proof file `research/prove-b/hellinger-runs.md` (579 lines; labels L4, R2, A, B) and its scripts. The target file was not changed. This report was written after, and independently of, the line-by-line check `research/verify/hellinger-runs-check.md`; where the two overlap this is said.
+Role: adversary. Target: the proof file `research/prove-b/hellinger-runs.md` (579 lines; labels L4, R2, A, B) and its scripts. The target file was not changed. This report was written after, and independently of, the line-by-line check `verification/hellinger-runs-check.md`; where the two overlap this is said.
 
 **Status of this file: complete.** It was written by an adversary whose run was cut off before it removed the status line. The resumed run (16 November 2026) found every section present, including the verdict list. It spot-checked the file as follows. (i) It rederived by hand the proof of Lemma X (finding M1): both cases of the one-step inequality for U(x) = (γ/2)((m − x)₊)²; the identities U(x) − (1 − (1+η)x²) = (1 − (1+η)x)²/η for m = 1 and U(x) − (1 − x²) = (1 − mx)²/(m² − 1) for m > 1; and the optimisation giving v = σ + √(σ² + 2σ). (ii) It rederived the step of M2(c) that bounds Σ ρ ln(ρ/u) by −ln u_max when ρ ∝ u^λ and λ ≥ 1. (iii) It checked that the saved outputs `hellinger-runs_attack_events.out`, `_l4.out` and `_recorded.out` contain the numbers quoted in Sections 3 and 5. All three checks passed, and nothing was changed except this line.
 
@@ -22,7 +22,7 @@ Notation is that of the target file: H² = 1 − Σ√(pq); for laws P, Q of a s
 
 ## 2. What was done
 
-**Scripts of this report** (all in `research/verify/code/`; each was run without arguments and its complete output is saved next to it as `.out`; they need numpy, scipy and mpmath and write no file). Every quantity is an exact finite sum, evaluated in floating point: run laws by enumeration of all runs, expectations over the training data by a recursion over all data sets.
+**Scripts of this report** (all in `verification/code/`; each was run without arguments and its complete output is saved next to it as `.out`; they need numpy, scipy and mpmath and write no file). Every quantity is an exact finite sum, evaluated in floating point: run laws by enumeration of all runs, expectations over the training data by a recursion over all data sets.
 
 | script | what it attacks |
 |---|---|

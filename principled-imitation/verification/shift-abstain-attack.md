@@ -4,7 +4,7 @@ Role: adversary. File under attack: `research/prove-c/shift-abstain.md` (917 lin
 
 Status: COMPLETE. Findings: no FATAL, 2 MAJOR, 9 MINOR, 5 WORDING.
 
-Conventions as in the file: log = log₂, ln natural; K = log(1/w(f)) or log(1/w(P)); L horizon; n rounds; Sil, Abs, Qu = silent errors, abstentions, questions. Scripts: `research/verify/code/shift-abstain_attack_*.py` with outputs `.out`.
+Conventions as in the file: log = log₂, ln natural; K = log(1/w(f)) or log(1/w(P)); L horizon; n rounds; Sil, Abs, Qu = silent errors, abstentions, questions. Scripts: `verification/code/shift-abstain_attack_*.py` with outputs `.out`.
 
 Read for this report: the whole file; `research/outline.md` (addendum 3, labels); `research/candidate-theory.md` S1–S3, Ab1–Ab3, N3, N4; `research/understand/notes.md` Sections 3E, 5, 6.2; `research/understand/ask-for-help.md` Sections 2.1, 3.1–3.5.
 

@@ -190,7 +190,7 @@ The numbered statements of the note are correct once two hypotheses are written 
 
 ## L. Numerical checks made for this report
 
-Scripts and their saved outputs are in `research/verify/code/`, names `rehearsal-core_check_*.py` and `.out`. All are exact computations (enumeration, forward recursions, binomial laws); where instances are random they are drawn with a fixed seed and then evaluated exactly. None uses the prover's code.
+Scripts and their saved outputs are in `verification/code/`, names `rehearsal-core_check_*.py` and `.out`. All are exact computations (enumeration, forward recursions, binomial laws); where instances are random they are drawn with a fixed seed and then evaluated exactly. None uses the prover's code.
 
 | script | what it checks | result |
 |---|---|---|

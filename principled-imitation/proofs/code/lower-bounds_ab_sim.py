@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Referee's independent check of Theorem 3.3 (Protocol AB) of
 research/prove/lower-bounds.md, and of two additions made in the report
-research/verify/lower-bounds-check.md.
+verification/lower-bounds-check.md.
 
 The prover simulated Protocol AB only on the block class, with a shortcut
 (a question whose answer is known is not asked) and a non-adaptive scaffold.

@@ -1,6 +1,6 @@
 # Adversary's report on `research/prove/lower-bounds.md` (part `lower-bounds`: N1 to N5, S2)
 
-Role: adversary. The task was to break the part: counterexamples by exact computation, hidden assumptions, prose that claims more than the theorems, the citations, the researcher's seven tests, and what is not new. The file under attack is `research/prove/lower-bounds.md` (559 lines; below "the file"); Section 4 of `note.md` (the lead's N1 and N2) is compared with it. A second report on the same file exists (`research/verify/lower-bounds-check.md`, a line-by-line check; below "the check report"). I read it after forming my own view of each proof. Where I repeat one of its findings I say so, and I do not redo what it settles.
+Role: adversary. The task was to break the part: counterexamples by exact computation, hidden assumptions, prose that claims more than the theorems, the citations, the researcher's seven tests, and what is not new. The file under attack is `research/prove/lower-bounds.md` (559 lines; below "the file"); Section 4 of `note.md` (the lead's N1 and N2) is compared with it. A second report on the same file exists (`verification/lower-bounds-check.md`, a line-by-line check; below "the check report"). I read it after forming my own view of each proof. Where I repeat one of its findings I say so, and I do not redo what it settles.
 
 Conventions as in the file: log is log₂, ln the natural logarithm; n is the (expected) number of questions put to the human; L is the horizon; δ or ε is the allowed failure probability; K = log(1/w(f)); a "function" is a deterministic sampler; a run is *faithful* if it equals the run of the human system on the same top-level input and randomness.
 
@@ -292,7 +292,7 @@ Missing from that section: the sources of the core of N2 (Dasgupta; Hanneke and 
 
 ## 7. Computations
 
-All scripts are in `research/verify/code/`, with their outputs in the files `*.out` next to them (Python 3; rational arithmetic in the first three and in the first five rows of the fourth; the dynamic programme of part D of the fifth is exact as a recursion and is evaluated in floating point). Each stops at the first violated inequality and ends with "all checks passed". The prover's two scripts (`research/prove/code/lower-bounds_lp.py`, 25 s, and `lower-bounds_sim.py`, 3 s) were rerun and reproduce the output quoted in Section 8 of the file.
+All scripts are in `verification/code/`, with their outputs in the files `*.out` next to them (Python 3; rational arithmetic in the first three and in the first five rows of the fourth; the dynamic programme of part D of the fifth is exact as a recursion and is evaluated in floating point). Each stops at the first violated inequality and ends with "all checks passed". The prover's two scripts (`research/prove/code/lower-bounds_lp.py`, 25 s, and `lower-bounds_sim.py`, 3 s) were rerun and reproduce the output quoted in Section 8 of the file.
 
 | script | what it attacks | result |
 |---|---|---|

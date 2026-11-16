@@ -20,6 +20,6 @@ The questions are ordered by how much an answer would change the conclusions of 
 
 9. **The reference machine.** Whether the mixture keeps a simple property at a fresh input, at a price in the property's complexity, is false on some universal machines (Pr2(c)) and open for any fixed one that would be called natural. No definition of natural is known that makes the question precise.
 
-10. **Episodes.** When the unit put to the human is an episode with memory inside it, R1 and V1 hold with episodes for calls (E1). For nested episodes and a human who varies the whole-run bound carries an extra factor, the largest number of episodes open at once; whether it is needed is open.
+10. **Episodes.** When the unit put to the human is an episode with memory inside it, R1 and V1 hold with episodes for calls (E1). For nested episodes and a human who varies the whole-run bound carries an extra factor, the smaller of four times the largest number of calls in one episode and half the number of episodes of a run; whether it is needed is open.
 
 11. **Constants.** The best constant in Lemma L4(a) lies between 2.9639 and 2.9642. The constants of the lower bounds for a human who varies (N6) are about 10⁴ away from the upper bounds.

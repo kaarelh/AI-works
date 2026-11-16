@@ -1,6 +1,6 @@
 # Referee report on `research/prove-c/shift-abstain.md` (key: shift-abstain)
 
-Role: referee, line by line. File checked: `research/prove-c/shift-abstain.md` (917 lines; below "the file"). No earlier report with this role existed (only the adversary's partial report `research/verify/shift-abstain-attack.md`, whose four findings I re-derived independently and comment on below where they bear on a verdict). Scripts of this check: `research/verify/code/shift-abstain_check_*.py` (see the last section). Status: written in pieces; COMPLETE when the line "END OF REPORT" appears.
+Role: referee, line by line. File checked: `research/prove-c/shift-abstain.md` (917 lines; below "the file"). No earlier report with this role existed (only the adversary's partial report `verification/shift-abstain-attack.md`, whose four findings I re-derived independently and comment on below where they bear on a verdict). Scripts of this check: `verification/code/shift-abstain_check_*.py` (see the last section). Status: written in pieces; COMPLETE when the line "END OF REPORT" appears.
 
 Conventions as in the file: log = log₂, ln natural; K = log(1/w(P)); W = Σ w ≤ 1; L horizon; n rounds; Sil, Abs, Qu silent errors, abstentions, questions.
 
@@ -123,9 +123,9 @@ Conventions as in the file: log = log₂, ln natural; K = log(1/w(P)); W = Σ w 
 
 ## 3. Scripts of this check
 
-* `research/verify/code/shift-abstain_check_s1.py` (output `.out`): Example 2.2, exact formulas and a Monte Carlo of Protocol R (L = 20, ω = 0.05, n = 200, 20000 repetitions): simulated (E β, E∫e dd_f) = (0.0949, 0.9730) against exact (0.0950, 0.9744); exact values for the two quoted cases: 0.4975 vs claimed bound 0.04628, and 0.4997 vs 0.00691.
-* `research/verify/code/shift-abstain_check_thr.py` (output `.out`): exact minimum of Σ_s Sil(s) over deterministic learners for thresholds, 2 ≤ N ≤ 40, Q ≤ 7: 0 violations of Theorem 3.3(a), of the 3N/16 form, or of the optimality claim (c); N = 240: 0.25, 0.3319, 0.4406 for Q = 0, 1, 11.
-* Earlier files in `research/verify/code/` named `shift-abstain_check_sec*.py`, `shift-abstain_engine.py` and `shift-abstain_attack_shift.py` were written by an earlier, interrupted run (no report accompanied the `check_sec*` scripts); I did not rely on them.
+* `verification/code/shift-abstain_check_s1.py` (output `.out`): Example 2.2, exact formulas and a Monte Carlo of Protocol R (L = 20, ω = 0.05, n = 200, 20000 repetitions): simulated (E β, E∫e dd_f) = (0.0949, 0.9730) against exact (0.0950, 0.9744); exact values for the two quoted cases: 0.4975 vs claimed bound 0.04628, and 0.4997 vs 0.00691.
+* `verification/code/shift-abstain_check_thr.py` (output `.out`): exact minimum of Σ_s Sil(s) over deterministic learners for thresholds, 2 ≤ N ≤ 40, Q ≤ 7: 0 violations of Theorem 3.3(a), of the 3N/16 form, or of the optimality claim (c); N = 240: 0.25, 0.3319, 0.4406 for Q = 0, 1, 11.
+* Earlier files in `verification/code/` named `shift-abstain_check_sec*.py`, `shift-abstain_engine.py` and `shift-abstain_attack_shift.py` were written by an earlier, interrupted run (no report accompanied the `check_sec*` scripts); I did not rely on them.
 
 Re-run of the prover's scripts: `shift-abstain_s1.py`, `_ab1.py`, `_ab2.py`, `_open.py` all reproduce their saved outputs byte for byte.
 

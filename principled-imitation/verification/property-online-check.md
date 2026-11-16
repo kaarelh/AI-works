@@ -4,7 +4,7 @@ Referee report on `research/prove-c/property-online.md` (Sections 0 to 10) and, 
 
 *Status: complete.*
 
-**Note on the scripts.** An earlier verifier with this role was cut off before writing more than a stub of this report, but left five scripts with saved outputs in `research/verify/code/` (`property-online_check_potentials.py`, `_check_game.py`, `_check_ex23.py`, `_check_rehearsal.py`, `_check_tilt.py`, each with its `.out`). I read each script's relevant part before relying on it, and re-ran the ones named below. Where I cite one of these outputs I say which part of it supports which step. Scripts written in this session are named `property-online_check2_*.py`.
+**Note on the scripts.** An earlier verifier with this role was cut off before writing more than a stub of this report, but left five scripts with saved outputs in `verification/code/` (`property-online_check_potentials.py`, `_check_game.py`, `_check_ex23.py`, `_check_rehearsal.py`, `_check_tilt.py`, each with its `.out`). I read each script's relevant part before relying on it, and re-ran the ones named below. Where I cite one of these outputs I say which part of it supports which step. Scripts written in this session are named `property-online_check2_*.py`.
 
 ---
 
@@ -152,7 +152,7 @@ The paragraph after the proof says "given the rehearsal the rate is 1/√n for t
 
 Read on arXiv abstract pages in this session (bibliographic data only, not the theorems): Gupta, Jung, Noarov, Pai, Roth, "Online Multivalid Learning: Means, Moments, and Prediction Intervals", arXiv:2101.01739 (5 Jan 2021; related DOI LIPIcs ITCS 2022): title, authors and venue as cited. Lee, Noarov, Pai, Roth, "Online Minimax Multiobjective Optimization: Multicalibeating and Other Applications", arXiv:2108.03837: title and authors as cited; the abstract does not state the 4C√(T ln d) bound, so the file's quotation of Theorem 2.1 is NOT CHECKED by me. Farina and Perdomo, "Defensive Generation", arXiv:2602.21390 (24 Feb 2026): exists, authors and date as cited; the abstract claims online outcome-indistinguishable generation with error rate T^(−1/2), consistent with the file's description; Definition 1 and Theorem 1 NOT CHECKED. The theorem statements the prover marks "read" (Perchet 2013; Abernethy–Bartlett–Hazan; Chernov–Vovk; Luo–Schapire; Koolen–van Erven; Vovk–Takemura–Shafer; Vovk 2007; Bárány 2024; Bansal et al.) are NOT CHECKED by me. Nothing in the proofs depends on them (Section 5's own opening sentence; I confirm that every proof in Sections 1–4 and 6–8 is self-contained, except Hoeffding's lemma, Pinsker's inequality, Ville's inequality and the Bayes-mixture regret bound, which are standard).
 
-Independent script of this session: `research/verify/code/property-online_check2_misc.py` (output `.out`): Proposition 8.1(a) by exact brute force on three further instances (zero error); the lower-bound column of Section 9.5; Remark 6.4(5); the ratio in Example 2.3; Example 2.3 with the greatest minimiser (books never move).
+Independent script of this session: `verification/code/property-online_check2_misc.py` (output `.out`): Proposition 8.1(a) by exact brute force on three further instances (zero error); the lower-bound column of Section 9.5; Remark 6.4(5); the ratio in Example 2.3; Example 2.3 with the greatest minimiser (books never move).
 
 ---
 

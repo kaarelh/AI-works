@@ -1,6 +1,6 @@
 # Adversary's report on `research/prove-c/property-batch.md` (part `property-batch`: Pr1 to Pr4, the mixture and a simple property, the certificate)
 
-Role: adversary. The task was to break the part: counterexamples by exact computation, hidden assumptions, prose that claims more than the theorems, the citations, the researcher's seven tests, and what is not new. The file under attack is `research/prove-c/property-batch.md` as it stood on 15 November, 22:49 UTC (788 lines; below "the file"). Sections 8.1, 8.2 and 8.5 of `note.md` are compared with it. A second report on the same file exists (`research/verify/property-batch-check.md`, a line-by-line check; below "the check report"). I formed my view of each statement and ran my scripts before I read it in full; where I repeat one of its findings I say so and do not redo what it settles.
+Role: adversary. The task was to break the part: counterexamples by exact computation, hidden assumptions, prose that claims more than the theorems, the citations, the researcher's seven tests, and what is not new. The file under attack is `research/prove-c/property-batch.md` as it stood on 15 November, 22:49 UTC (788 lines; below "the file"). Sections 8.1, 8.2 and 8.5 of `note.md` are compared with it. A second report on the same file exists (`verification/property-batch-check.md`, a line-by-line check; below "the check report"). I formed my view of each statement and ran my scripts before I read it in full; where I repeat one of its findings I say so and do not redo what it settles.
 
 Conventions as in the file: N is the number of recorded runs of the human system; n a number of question–answer pairs; m a number of validation questions; K = log₂(1/w(human)); K(R) the price in bits of a test; ln is the natural logarithm; a *test* is an event of runs or a set of pairs with a weight π fixed in advance. "Exact" means: computed by enumeration of the whole sample space, in rational arithmetic where the script says so.
 
@@ -242,7 +242,7 @@ So for N small against √u a rule that returns "any member of 𝓜_N" may retur
 
 ## 6. Scripts
 
-All in `research/verify/code/`, pure Python 3, each run as `python3 NAME.py > NAME.out`; the outputs are saved next to the scripts. Nothing of the prover's or the check report's code is used. The prover's five scripts were also run again; their outputs are identical to the saved ones.
+All in `verification/code/`, pure Python 3, each run as `python3 NAME.py > NAME.out`; the outputs are saved next to the scripts. Nothing of the prover's or the check report's code is used. The prover's five scripts were also run again; their outputs are identical to the saved ones.
 
 | script | what it attacks | result |
 |---|---|---|

@@ -1,0 +1,101 @@
+== block 1: the certificate (Proposition 2.5) and a human who is not deterministic
+  human: answers f(x) with probability 1 - e, one other answer with probability e;
+  exact imitator A = P: mismatch rate rho' = 2e(1-e); Pr[no mismatch in m rounds] = (1-rho')^m
+  m = ceil(ln 20/(theta delta)) = 300 for theta = delta = 0.1, confidence 95%
+    e = 0.0   : rho' = 0.000000;  Pr[certificate is issued] = 1
+    e = 0.001 : rho' = 0.001998;  Pr[certificate is issued] = 0.5488
+    e = 0.01  : rho' = 0.019800;  Pr[certificate is issued] = 0.00248
+    e = 0.1   : rho' = 0.180000;  Pr[certificate is issued] = 1.394e-26
+  m = 29958 for theta = delta = 0.01:
+    probability that two answers agree = 0.999: Pr[issued] = 9.614e-14
+    probability that two answers agree = 0.99: Pr[issued] = 1.734e-131
+  check of rho' >= s/2 with s = 1 - sum_y P(y)^2 (used for 'issued with probability <= exp(-m s/2)'):
+    100000 random pairs: min of (mismatch - s/2), (mismatch - TV), (TV + s - mismatch) = 1.332e-15
+== block 2: Theorem 3.2(a) holds for each fixed Q, not for all Q at once
+  X = [N], L = 1, input uniform; event: the input of round T was never asked before
+    N =    50, n =  10: probability 0.9146;  L/n = 0.1000
+    N =   200, n =  20: probability 0.9539;  L/n = 0.0500
+    N =  1000, n =  50: probability 0.9759;  L/n = 0.0200
+== block 3: Example 3.3a, rehearsal inputs from a generator with a seed of k = 3 bits
+  X = {0..63}; L = 1; human f = 0 (weight 1/2); for each of 8 seeds sigma the function
+  g_sigma = 0 on A_sigma, 1 elsewhere (weight 1/16); A_sigma = {x : parity(x & mask_sigma) = 0},
+  eight distinct nonzero masks, so |A_sigma| = 32 and |A_sigma & A_s| = 16 for sigma != s.
+    n =    10: Pr[deployed answer of M^(T) is wrong] = 0.10050 with the generator;  0.06106 with fresh inputs;  R1 bound K ln 2/n = 0.06931
+    n =   100: Pr[deployed answer of M^(T) is wrong] = 0.06006 with the generator;  0.00611 with fresh inputs;  R1 bound K ln 2/n = 0.00693
+    n =  1000: Pr[deployed answer of M^(T) is wrong] = 0.05601 with the generator;  0.00061 with fresh inputs;  R1 bound K ln 2/n = 0.00069
+  floor with the generator: (1/2)/(2^k + 1) = 0.05556  (g_s is never refuted)
+== block 4: Proposition 6.4 (additive work) and the cost of the uniformly random round
+  class: all 2^K functions [K] -> {0,1}; L calls at uniform inputs; good = at most m wrong answers
+  lower bound for every protocol: n >= K (1 - 2m/L - 2 delta)
+     K    L    m  delta | lower | distinct | R, T uniform | R, T in 2nd half | R, last | R3 bound
+     20   20    2  0.10 |    12 |       18 |          286 |               67 |      46 |      924
+    200  100   10  0.10 |   120 |      172 |         3136 |              606 |     395 |    12603
+    200  100   10  0.01 |   156 |      181 |        31356 |              790 |     482 |   126027
+    400 1000  100  0.05 |   280 |      332 |        12850 |             1244 |     726 |    54903
+  with 50 answers, theta = m/L = 0.1 and delta = 0.1 the bound allows at most K = 83.3 bits
+== block 5: the table of the data against the human (Remark 3.2a)
+  X = [N], one call per run; human f = 0 with weight 2^-K; for every set A the member
+  '0 on A, 1 elsewhere' with weight c (2N)^-|A|, c = (1 - 2^-K)/(1 + 1/(2N))^N;
+  after s distinct questions: Pr[the mixture answers 1 at an input not yet asked]
+    N = 1024, K = 100, b = log2(2N) = 11 bits, K/b = 9.1:  s = 0: 0.9995;  s = 8: 0.9993;  s = 9: 0.6654;  s = 11: 0.0000
+    N = 1024, K = 1000, b = log2(2N) = 11 bits, K/b = 90.9:  s = 0: 0.9995;  s = 81: 0.9995;  s = 90: 0.9985;  s = 101: 0.0000
+    N = 1048576, K = 1000, b = log2(2N) = 21 bits, K/b = 47.6:  s = 0: 1.0000;  s = 42: 1.0000;  s = 47: 0.9999;  s = 53: 0.0000
+  check report, test 3: log2 C(2^20, 1000) = 11469.9; Pr[1000 uniform inputs are distinct] = 0.621
+== block 6: the budget (Section 6.2)
+  a calendar year has 8765.82 hours (the figure of the researcher's notes); a working year is taken as 2000 hours
+    K =     3e+01: K ln 2/(theta delta) =  2.079e+03 answers at theta = delta = 0.1; at one hour each:  2.372e-01 calendar years of unbroken work =  1.040e+00 working years
+    K =     1e+03: K ln 2/(theta delta) =  6.931e+04 answers at theta = delta = 0.1; at one hour each:  7.907e+00 calendar years of unbroken work =  3.466e+01 working years
+    K =     1e+06: K ln 2/(theta delta) =  6.931e+07 answers at theta = delta = 0.1; at one hour each:  7.907e+03 calendar years of unbroken work =  3.466e+04 working years
+    K =     1e+09: K ln 2/(theta delta) =  6.931e+10 answers at theta = delta = 0.1; at one hour each:  7.907e+06 calendar years of unbroken work =  3.466e+07 working years
+    certificate, 300 answers at one hour each: 12.5 days of unbroken work = 37.5 working days of 8 hours
+    one career of 10^5 working hours, one hour per answer: n = 1e+05: K <= 1443 bits at theta = delta = 0.1; K <= 3.607e+04 bits at theta = delta = 0.5
+    one career of 50 years, one year per answer: n = 5e+01: K <= 0.7213 bits at theta = delta = 0.1; K <= 18.03 bits at theta = delta = 0.5
+    10^4 people for one year, one year per answer: n = 1e+04: K <= 144.3 bits at theta = delta = 0.1; K <= 3607 bits at theta = delta = 0.5
+    10^6 people for one working year, one hour per answer: n = 2e+09: K <= 2.885e+07 bits at theta = delta = 0.1; K <= 7.213e+08 bits at theta = delta = 0.5
+  Theorem 6.1(3), B = 5, delta = 0.05: N = 50; n >= 6.25 m_b = 1.107399 K
+    n = 50: K <= 45.2 bits (in whole blocks: m_b <= 8, K <= 45.2)
+    n = 10000: K <= 9030.2 bits (in whole blocks: m_b <= 1600, K <= 9030.2)
+    m_b = 10, B = 5, m = 0, delta = 0.05: L = 5, K = 56.44, lower bound 62.5, R3 bound 3912, ratio 62.6;  16 ln2 log2(B/(2 delta))/(1-10 delta) = 125.2
+    m_b = 10, B = 5, m = 50, delta = 0.05: L = 505, K = 56.44, lower bound 62.5, R3 bound 7747, ratio 124.0;  16 ln2 log2(B/(2 delta))/(1-10 delta) = 125.2
+    m_b = 1000, B = 50, m = 5, delta = 0.01: L = 550, K = 11287.71, lower bound 5.625e+05, R3 bound 7.172e+07, ratio 127.5;  16 ln2 log2(B/(2 delta))/(1-10 delta) = 139.1
+  Proposition 6.3, twenty sequential batches, theta = delta = 0.1: K <= 0.289 bits
+== block 7: Examples 3.5, 7.6 and 2.3
+  Example 3.5 with the special guard: weights 1/2 (human), 0.49/(theta(theta+1)) (date guards), 0.01 (guard at theta0)
+    n =     1: special guard alone 0.0132;  all live guards, least over d >= theta0 > n: 0.1214
+    n =    10: special guard alone 0.0180;  all live guards, least over d >= theta0 > n: 0.0247
+    n =   100: special guard alone 0.0194;  all live guards, least over d >= theta0 > n: 0.0195
+    n = 10000: special guard alone 0.0196;  all live guards, least over d >= theta0 > n: 0.0196
+    least value of the second column over n = 1..200000: 0.01952
+  Example 3.5 without the special guard (weights 1/2 and (1/2)/(theta(theta+1))):
+    n = 100, d = 101: 9.612e-05
+    n = 100, d = 201: 4.902e-03
+    n = 100, d = 1000000000: 9.804e-03
+    per-call mixture, q = 0.0098, L = 10: Pr[at least one unfaithful call] = 0.094; Pr[all] = 8.2e-21
+  Example 7.6, N = 100: mixture over {0, 1, all needles} with weights 1/4, 1/4, 1/(2N) each; human = needle at x0
+    before any question: Pr[wrong at x0] = 0.7450; after one question elsewhere: 0.9933 (> 1 - 2/N = 0.98)
+    human f = 0, after one question: a run fails with probability 0.00664 (2/(3N) = 0.00667)
+  Example 2.3 with w(nu1) = 2^-K1: Pr[nu1 is refuted] = 1 - prod_k 2/(2 + omega_k)
+    K1 =  1: 0.443519   (lower bound 1 - (4/5)^K1 = 0.2000)
+    K1 =  2: 0.655579   (lower bound 1 - (4/5)^K1 = 0.3600)
+    K1 =  5: 0.903743   (lower bound 1 - (4/5)^K1 = 0.6723)
+    K1 = 10: 0.987421   (lower bound 1 - (4/5)^K1 = 0.8926)
+    K1 = 20: 0.999782   (lower bound 1 - (4/5)^K1 = 0.9885)
+== block 8: Example 3.2b, the last mixture on a chain of L links
+  each round learns the next link with probability 1/L; after L-1 links every run reaches x_L,
+  which is asked with probability 1/L per round.  Pr[run of M^(n+1) meets x_L and no question
+  lay in {x_L}] = Pr[Bin(n, 1/L) = L-1]; ratio to L/(n+1), maximised over n:
+    L =   10: largest ratio 1.32 at n = 98 (L^2 = 100);  0.4 sqrt(L) = 1.26
+    L =   40: largest ratio 2.55 at n = 1599 (L^2 = 1600);  0.4 sqrt(L) = 2.53
+    L =  160: largest ratio 5.06 at n = 25598 (L^2 = 25600);  0.4 sqrt(L) = 5.06
+  for the round T: sum over t of Pr[L-1 links learned and x_L not asked before round t] = L exactly (a geometric wait)
+== block 9: Proposition 1.9a (cut and paste; sqrt(H^2) is subadditive over episodes)
+  300 random scaffolds with 2 or 3 interleaved episodes and 3 to 5 calls, random samplers C, P:
+    largest |H^2(Q_S, Q_T) - H^2(Q_S&T, Q_S|T)| over all pairs of sets = 1.11e-16
+    largest sqrt(H^2(Q_C, Q_P)) - sum_i sqrt(H^2(Q_C, Q_C[i<-P])) = 0.000e+00 (must be <= 0 up to rounding;
+      it is 0 when only one episode ever speaks); largest ratio of the two sides = 1.000000 (must be <= 1)
+    largest H^2(Q_C, Q_P)/sum_i KL_i: 0.3692 with two episodes (bound 1), 0.3621 with three (bound 3/2)
+== block 10: break-even for one run (objection O22), theta = delta = 0.1, certificate 300 answers
+    K =     3e+01: rehearsal with R3 and the certificate costs 2.38e+03 answers; the human system costs L
+    K =     1e+03: rehearsal with R3 and the certificate costs 6.96e+04 answers; the human system costs L
+    K =     1e+06: rehearsal with R3 and the certificate costs 6.93e+07 answers; the human system costs L
+    K =     1e+09: rehearsal with R3 and the certificate costs 6.93e+10 answers; the human system costs L

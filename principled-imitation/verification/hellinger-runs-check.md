@@ -8,7 +8,7 @@ Checked file: `research/prove-b/hellinger-runs.md` (579 lines; labels L4, R2, A,
 
 **Method.** Every proof was recomputed by hand, line by line. Every identity that the file calls "a direct computation" was checked symbolically. Every inequality with a potential was checked numerically on the extreme points of its constraint set. Every numerical claim was recomputed with an independent script. The four papers of Section 2.1 were downloaded from arxiv.org/e-print during this session (15 November 2026) and read in their TeX sources.
 
-**Scripts of this report** (in `research/verify/code/`, outputs saved next to them as `.out`):
+**Scripts of this report** (in `verification/code/`, outputs saved next to them as `.out`):
 
 | script | content | needs |
 |---|---|---|

@@ -6,7 +6,7 @@ Part `lower-bounds`: what no protocol can do (note Section 4 and the lower bound
 
 **Checked.** Every numbered statement of `research/prove/lower-bounds.md` (559 lines) with its proof; its summary table; its Sections 8 to 11. Section 4 of `note.md` (the lead's Theorems N1 and N2). The statements N1, N2, N3, N5, S2 and the "sharper form" of R3 in `research/candidate-theory.md`, about which the file makes claims.
 
-**How.** Each proof was read line by line and each constant recomputed by hand. Three scripts were then written and run (Section 5 below; `research/verify/code/lower-bounds_*.py`, outputs `*.out`): they evaluate every chain of simplifications in its exact form on grids, compute exact minimax values in the range the corollaries talk about (the prover's enumeration stops at N₀ = 5), and simulate Protocol AB literally on classes and scaffolds other than the prover's. The prover's two scripts were rerun; they reproduce the output quoted in the file (32 s and 3 s, numpy 2.5.3, scipy 1.18.1).
+**How.** Each proof was read line by line and each constant recomputed by hand. Three scripts were then written and run (Section 5 below; `verification/code/lower-bounds_*.py`, outputs `*.out`): they evaluate every chain of simplifications in its exact form on grids, compute exact minimax values in the range the corollaries talk about (the prover's enumeration stops at N₀ = 5), and simulate Protocol AB literally on classes and scaffolds other than the prover's. The prover's two scripts were rerun; they reproduce the output quoted in the file (32 s and 3 s, numpy 2.5.3, scipy 1.18.1).
 
 **Result.** Every result of the file holds in the form in which it is used, and all its constants are confirmed. What has to be corrected:
 
@@ -257,7 +257,7 @@ So for the block class the least number of questions is m·L/(8δ) up to a facto
 
 ## 5. Numerical checks
 
-All scripts are in `research/verify/code/`; each stops at the first failed assertion and ends with "all checks passed". Outputs are in the files `*.out` next to them. Python 3 with numpy 2.5.3 and scipy 1.18.1.
+All scripts are in `verification/code/`; each stops at the first failed assertion and ends with "all checks passed". Outputs are in the files `*.out` next to them. Python 3 with numpy 2.5.3 and scipy 1.18.1.
 
 ### 5.1 `lower-bounds_needle_exact.py` (2 s)
 

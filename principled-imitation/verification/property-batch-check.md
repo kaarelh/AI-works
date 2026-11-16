@@ -10,7 +10,7 @@ Verdicts: **CORRECT**; **MINOR** (correct after a small fix, which is given); **
 
 ## I. What was done, and the result in brief
 
-**Done.** Every numbered statement was read line by line and every constant was recomputed by hand. The five scripts of the prover were run again; each reproduces its saved output exactly (compared with `diff`). The three scripts of the earlier worker in `research/prove-b/code/` also run without error and agree. Five new scripts were written from the definitions, without use of the prover's code (`research/verify/code/property-batch_check_*.py`, outputs next to them). They use exact rational arithmetic and full enumeration wherever the sample space is small, so that failure probabilities are exact numbers and not frequencies. Three sources were consulted in this session for the literature of Section 3.6: two were read in the PDF, one was seen through a summary of its page (Part VII).
+**Done.** Every numbered statement was read line by line and every constant was recomputed by hand. The five scripts of the prover were run again; each reproduces its saved output exactly (compared with `diff`). The three scripts of the earlier worker in `research/prove-b/code/` also run without error and agree. Five new scripts were written from the definitions, without use of the prover's code (`verification/code/property-batch_check_*.py`, outputs next to them). They use exact rational arithmetic and full enumeration wherever the sample space is small, so that failure probabilities are exact numbers and not frequencies. Three sources were consulted in this session for the literature of Section 3.6: two were read in the PDF, one was seen through a summary of its page (Part VII).
 
 **Result.**
 
@@ -131,7 +131,7 @@ Checked by enumeration for u = 8 and c ∈ {10, 15, 20} with random semimeasures
 
 ### Section 5 (the two prices)
 
-**Table 5.1. CORRECT.** Theorem A is quoted correctly (E TV ≤ √(K ln 2/(2N)); `research/verify/hellinger-runs-check.md` has it as CORRECT). "Says nothing when N ≤ K ln 2/2" and "K(R) ln 2 + ln(2/δ) ≥ N/2" were recomputed. The lower bound for the first price is Theorems 6.1 and 6.3 of `research/prove/lower-bounds.md`; the check of that file has 6.1 as correct and the two consequences of 6.3 as correct. For the second price see the entry on Remark 2.7(4).
+**Table 5.1. CORRECT.** Theorem A is quoted correctly (E TV ≤ √(K ln 2/(2N)); `verification/hellinger-runs-check.md` has it as CORRECT). "Says nothing when N ≤ K ln 2/2" and "K(R) ln 2 + ln(2/δ) ≥ N/2" were recomputed. The lower bound for the first price is Theorems 6.1 and 6.3 of `research/prove/lower-bounds.md`; the check of that file has 6.1 as correct and the two consequences of 6.3 as correct. For the second price see the entry on Remark 2.7(4).
 
 **Proposition 5.2. CORRECT.** (a) Hoeffding with summands in [0, μ(x)]: 2exp(−2t²/coll(μ)) = π(R)η for the stated t. (b) is exact. Enumeration of all functions F (u ∈ {7, 10, 12}, uniform and non-uniform μ, the coin and other samplers, 1 or 12 weighted tests): E_F Q_F(R) = Q_{P₀}(R) exactly, and the probability that some test deviates by more than its bound is at most 0.24·η. Consequence: √(ln(2/(πδ))/(2u)) = √(N/u)·tol_N(R), and (δ/2)e^(2N)/2^(3N) < 2^(−N/10) because e²/8 = 0.9236 < 2^(−1/10) = 0.9330. The file is careful here: it says that the coin meets the guarantee |Q′(R) − Q(R)| ≤ 2·tol_N(R), not that the coin lies in 𝓜_N; the latter holds with tolerance (1 + √(N/u))·tol_N.
 
@@ -237,7 +237,7 @@ Pr4 of `candidate-theory.md` ends: "One learner, no prior belief needed, both re
 
 Prover's scripts (run again; outputs identical to the saved ones): `property-batch_pr3.py`, `_pr4.py`, `_pr2.py`, `_prices.py`, `_cert.py` in `research/prove-c/code/`.
 
-Referee's scripts, in `research/verify/code/`, each with its output `*.out` (run as `python3 NAME.py > NAME.out`; block 12 of `sec3` uses numpy, everything else is pure Python; the longest takes 40 seconds):
+Referee's scripts, in `verification/code/`, each with its output `*.out` (run as `python3 NAME.py > NAME.out`; block 12 of `sec3` uses numpy, everything else is pure Python; the longest takes 40 seconds):
 
 | script | what it checks | result |
 |---|---|---|
@@ -263,7 +263,7 @@ Two of the referee's own blocks are weak and are named as such: block 6 of `sec3
 ## VIII. What was not checked
 
 * Theorem R1 of `note.md`, on which Proposition 4.9 rests, belongs to the part rehearsal-core. Only the step that is used was checked here, numerically.
-* Theorems 6.1 and 6.3 of `research/prove/lower-bounds.md` (the lower bound for the first price) were not read; the verdicts of `research/verify/lower-bounds-check.md` were taken over.
+* Theorems 6.1 and 6.3 of `research/prove/lower-bounds.md` (the lower bound for the first price) were not read; the verdicts of `verification/lower-bounds-check.md` were taken over.
 * The standard facts of Remark 4.4 about a prefix-free universal language (composition at a constant cost, lower semicomputability of ν^R) were not proved.
 * The statement that the joint form of the draft's Pr3 holds for π(R)δ ≤ 0.32 is numerical, on a grid.
 * The digests in `research/understand/` that the file cites (Trevisan, Tulsiani and Vadhan; Lemma I1a; Proposition I5) were looked up for consistency only.
