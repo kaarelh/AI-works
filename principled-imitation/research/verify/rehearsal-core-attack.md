@@ -1,6 +1,6 @@
 # Adversary's report on `research/prove-c/rehearsal-core.md` (part `rehearsal-core`: L1 to L3, R1, R2 for a deterministic human, R3, R3a, V1) and on Sections 1 to 3 of `note.md`
 
-Role: adversary. **Status of this file: IN PROGRESS** (Sections 0 and 1 are entered; Sections 2 to 7 follow; this line is removed when the verdict list at the end is final).
+Role: adversary. Status: complete. Sections 0 and 1 were written by an earlier adversary who was cut off. In the resumed run (16 Nov) I spot-checked them: I re-derived the inequalities behind m1, m4, X1 and X3 and re-read the script outputs, and I found nothing to withdraw. I then wrote Sections 2 to 7, re-opened the two main sources (Li and Zhang; Ross, Gordon and Bagnell), and ran the follow-up script `rehearsal-core_attack_online_l3.py`, which the earlier adversary had left unrun.
 
 The file under attack is `research/prove-c/rehearsal-core.md` as it stood on 15 Nov, 23:07 UTC (871 lines, Sections 0 to 17; below "the file"). Sections 1 to 3 of `note.md` (the lead's draft; below "the note") are compared with it. The file was not changed. A second report on the same file exists (`research/verify/rehearsal-core-check.md`, a line-by-line check; below "the check report"). I read it after I had run my own attacks and formed my own view of each proof. Where one of my findings is also in the check report I say so; where I rely on a finding of the check report that I had missed, I say that too. Scripts of this report: `research/verify/code/rehearsal-core_attack_*.py`, each with its output saved next to it as `.out` (Section 6).
 
@@ -133,3 +133,105 @@ Items marked (P) are already in Section 15 of the file; I list them so that the 
 * w8. Note, Section 3.1, citation of the regret bound: Proposition 5.7(b) of Paper 1 is the per-query mixture; Theorem 5.3 is the one-tape version (outline, Addendum 2, item 2; I checked this against `research/understand/repo.md`, items A6 and A7, not against the paper).
 * w9. Note, Section 1: "the set of all samplers computable by a program". Membership in that set is not decidable, and the posterior needs the probabilities ν(y|x); with unlimited but ordinary computation the protocol can be run for a class with a time bound (the note says so in the next sentence) or with semimeasures in the limit (the file's Definition 1.1). One sentence should say which.
 * w10. File, summary table: say in the caption that NEW means "not in the candidate theory or the note", and mark the rows that are published (M3(c)).
+
+## 2. Additions for the editor (propositions X1 to X7)
+
+These results are mine. They are proved here and have not been refereed. Notation is that of the file. A run of an answerer A has calls j = 1, …, len ≤ L, with histories h_j and inputs x_j. When A is not a kernel, A(·|h_j) is the law of A's answer at call j given the history. β(A) := E Σ_{j≤len} TV(A(·|h_j), P(·|x_j)) is the expected number of unfaithful calls under the coupling of Lemma L2. H1 is assumed throughout.
+
+**X1 (the zero-disagreement certificate holds for every human).** Let A be frozen and run validation as in Definition 13.0. Let ρ_dis be the probability that a round records a disagreement, and let s_P := (1/L)·E Σ_{j≤len} (1 − Σ_y P(y|x_j)²), the expectation being over a run of A. Then β(A)/L ≤ ρ_dis ≤ β(A)/L + s_P. Hence the rule "if no disagreement is recorded in m rounds, certify β(A) ≤ L·ln(1/δ)/m" issues a false certificate with probability less than δ, whatever the human is.
+*Proof.* At a call with answer law a := A(·|h_j) and human law p := P(·|x_j), the two recorded answers are independent given h_j, so they differ with probability 1 − Σ_y a(y)p(y). Since a(y)p(y) ≤ min(a(y), p(y)), this is at least 1 − Σ_y min(a, p) = TV(a, p). Also Σ_y p² − Σ_y a·p = Σ_y p·(p − a) ≤ Σ_{p>a} (p − a) = TV(a, p), which gives the upper bound. The audited index J is uniform on {1, …, L} and independent of the run, and a round with J > len records nothing, so ρ_dis = (1/L)·E Σ_{j≤len} (1 − Σ_y a_j p_j). The rounds are independent (Theorem 13.1(o)), so (1 − ρ_dis)^m ≤ e^(−m·β/L), which is below δ when β > L·ln(1/δ)/m. ∎ Checked on 3 000 random instances (`rehearsal-core_attack_v1.out`, part A).
+
+**X2 (lower bounds for certifying a randomised imitator with a randomised human).** (B1) Let the input of a validation run be uniform on N values, with L = 1. Human P₀ answers each input with a fair coin. Human P_g answers g(x), where g is a uniformly random function from the inputs to {0, 1}. Let A be the fair coin. Then β(A) = 0 against P₀ and β(A) = ½ against every P_g. The law of everything that m single questions reveal differs between P₀ and the average over g by at most m(m − 1)/(2N) in total variation. (B2) Let P₀ be uniform on a set Y with M elements, and let P_S answer at every input x uniformly on a half S_x of Y, the halves drawn uniformly and independently over x. A protocol puts m questions, adaptively, with repetitions allowed. The total variation between the two laws of what it sees, the second averaged over S, is at most m(m − 1)/(2M). The imitator "uniform on Y" has β = 0 against P₀ and β = E[len]/2 against every P_S. Consequence: a certificate "β(A) < E[len]/2" that is false with probability at most δ for every human is issued for a perfect A with probability at most δ + m(m − 1)/(2M).
+*Proof.* (B1) If the m drawn inputs are distinct, both laws give independent fair bits, so they agree on that event. The probability that two inputs coincide is at most m(m − 1)/(2N). (B2) This is a hybrid argument over the m questions. Suppose c distinct answers have been seen at the current input. Under P₀ the next answer repeats one of them with probability c/M and is otherwise uniform on the unseen values. Under the averaged P_S it repeats one of them with probability c/(M/2) and is otherwise uniform on the unseen values, by symmetry of the posterior on S_x. So the total variation of one step is c/M. Summing the expected step distances under P₀, with c at most the number of earlier questions, gives at most Σ_{i<m} i/M = m(m − 1)/(2M). A procedure that issues the certificate with probability c₀ against P₀ issues it with probability at least c₀ − m(m − 1)/(2M) against some P_S, and there the certificate is false. ∎ The exact values are in part B of the same script output; for example, for N = 10⁹ and m = 1000 the total variation is 2.5·10⁻⁴.
+
+**X3 (a certificate by repeated questions; answer set of size s; no assumption A2).** In round i of validation, put the audited input x_i to the human r times and let p̂_i be the empirical distribution of the r answers. Let a_i := A(·|h_{i,J_i}). This law can be computed from A's code with the compute the note allows, or estimated by rerunning A at the recorded history. Let D_i := TV(a_i, p̂_i), with D_i := 0 if J_i > len. Then, with probability at least 1 − δ,
+ β(A)/L ≤ (1/m)·Σ_i D_i + ½·√((s − 1)/r) + √(ln(1/δ)/(2m)).
+*Proof.* By the triangle inequality TV(a, p) ≤ TV(a, p̂) + TV(p̂, p). Moreover E TV(p̂, p) = ½·Σ_y E|p̂(y) − p(y)| ≤ ½·Σ_y √(p(y)(1 − p(y))/r) ≤ ½·√((s − 1)/r), by Cauchy–Schwarz. So E D_i ≥ β/L − ½·√((s − 1)/r). The D_i are independent and lie in [0, 1], so Hoeffding's inequality gives the remaining term. ∎ The simulation (part C) found 0 violations in 4 000 trials for each of six settings. This uses A1 at its least credible point: a person who is asked the same question r times remembers it.
+
+**X4 (low stakes for a human who is not deterministic, with 1/n in place of 1/√n).** Let A be a kernel (for example M^(T) for a fixed T). Let N be the number of unfaithful calls of its run under the coupling, let k ≥ 1 be an integer, and let Λ(A) := E Σ_j KL(P(·|x_j) ‖ A(·|x_j)). Then
+ Pr[N ≥ k] ≤ 2e²·L·Λ(A)/k² + 2^(−k).
+For M^(T), with T uniform, E Λ ≤ L·K ln 2/n by R1. So with k = θL,
+ Pr[N ≥ θL] ≤ 2e²·K ln 2/(θ²n) + 2^(−θL),
+and R3 gives failure at most δ(k − 1 faults) + 2e²·K ln 2/(θ²n) + 2^(−θL).
+*Proof.* Let t_j := TV at call j and S := Σ_j t_j. Under the coupling, the indicator of an unfaithful call j has conditional probability t_j given the past. Hence exp(λN − (e^λ − 1)S) is a supermartingale, and Pr[N ≥ k, S ≤ a] ≤ exp(−λk + (e^λ − 1)a). With λ := ln(k/a) this is at most (ea/k)^k, which equals 2^(−k) for a := k/(2e). By Cauchy–Schwarz and Pinsker's inequality, S² ≤ L·Σ_j t_j² ≤ (L/2)·Σ_j KL_j. Markov's inequality applied to S² gives Pr[S > a] ≤ L·Λ/(2a²) = 2e²·L·Λ/k². ∎ The script (`rehearsal-core_attack_lowstakes.out`) checks this on the family of Proposition 9.3: the exact tail and X4 both fall like 1/n.
+
+**X5 (audits that are not uniform).** Replace the uniform index J by an audit rule. At call j, given h_j, the call is audited with probability π_j(h_j), with Σ_j π_j ≤ 1 on every run, and at most one call per run is audited. Then the proof of L3 gives Σ_t E Σ_j π_j·KL_j(M^(t)) ≤ ln(W/w(P)) for any human, and the same with the error indicator e_j for a function. Take π_j := c_j(h_j)/C, where c_j ≥ 0 is the criticality of a call and C bounds Σ_j c_j on every run. The criticality-weighted divergence of a uniformly chosen round is then at most C·ln(W/w(P))/n: the horizon L is replaced by the total criticality C. *Proof.* The audited pair is an adaptively chosen question. Its expected Bayes regret given the run is Σ_j π_j·KL_j, and L3 sums the regrets over rounds. ∎ Checked on 600 random instances (`rehearsal-core_attack_weighted.out`).
+
+**X6 (questions times unfaithful calls).** Let the human be deterministic, and let R runs, S := R·L calls in all, be deployed, each run with its own uniformly drawn round. Then n·E[total number of unfaithful calls] ≤ S·K ln 2. The online form (each call put to the human with probability q) has about q·S questions and, by Theorem 10.1, an expected number of errors at most K ln 2/q; the product is again S·K ln 2. *Proof.* Apply R1 (5.2(a)) R times; for the online form, Theorem 10.1 with the error bounded by the divergence for a function. ∎ So a bounded number of questions buys a constant rate of unfaithful calls, not a bounded number of them.
+
+**X7 (which K).** Let X_Π be the set of inputs that the scaffold can produce under any answers. Let [P]_Π := {ν ∈ H : ν(·|x) = P(·|x) for all x ∈ X_Π} and w([P]_Π) := Σ_{ν∈[P]_Π} w(ν). In L3, R1 to R3 and V1, ln(W/w(P)) may be replaced by ln(W/w([P]_Π)). *Proof.* Every question of the protocol lies in X_Π. On such questions the members of [P]_Π give the same likelihoods, so the Bayes mixture is unchanged if they are merged into one hypothesis with weight w([P]_Π). Apply L3 to the merged class. ∎ For a universal prior, −log₂ w([P]_Π) is, up to a constant, the length of the shortest program that agrees with the human on X_Π. This is a real reduction when X_Π is small, and none when the scaffold can pose arbitrary questions.
+
+## 3. The researcher's seven tests (research/understand/notes.md, Section 5)
+
+1. **Guard.** Rehearsal passes the guard test, and this is its main merit. The divergence is measured at the inputs of the imitator's own runs, including the inputs that decomposition creates, so a property that no training input has does not escape the bound: R1 bounds the probability of an unfaithful run on exactly those inputs. Two caveats apply. (i) The guarantee holds for a run drawn from the deployment law with a uniformly drawn round. For a fixed round drawn once, the factor 1/δ of Proposition 5.2(c), (d) is needed. (ii) The guard is passed only on average over runs. An input that the deployed runs reach with probability below L·K ln 2/n can be answered arbitrarily (Theorem N1 of the note says that this is unavoidable). The note says (ii) only in Section 4; Section 3 should point to it.
+2. **Machine.** Changing the reference machine changes K by a constant c and the number of questions by L·c·ln 2/γ (M2(b)). The bounds are machine-independent only up to that term. When K is small enough for R1 to be affordable, the term is not negligible.
+3. **Referent.** A hypothesis that models the human together with the way the questions are posed is the same hypothesis on X_Π (X7). Rehearsal compares predictions only at questions that the protocol itself poses, so a hypothesis that models how the data set was made cannot do better there than the human's own law. This test does not catch the part. It does catch A1: the human is assumed to answer rehearsal questions, which come from imitator runs that may look strange, exactly as P would. That is assumed, not proved (m8(iv)).
+4. **Copy.** For a deterministic human the theorems certify identity of runs (R2), which is a copy statement. For a human who is not deterministic, R1 bounds the divergence, so a predictor of the human that is sharper than the human (the sampler with coins filled in) is penalised in KL. But V1(b) cannot tell the sampler from many non-copies (Theorem 13.1(c), X2). This test catches the note's paragraph after V1 (M1).
+5. **Budget.** This test catches R1 and R3 for any person-sized K (M2(a): 350 human-years for K = 10⁴ bits at one hour per answer), and it catches "the human need not stay in the loop for ever" (M2(c), X6). Only V1 passes. The note does not say so; style rule 4 of the outline requires it.
+6. **Rock.** The protocol never abstains, so the rock test is not triggered. Validation can reject; the note does not say what happens after a rejection (m3).
+7. **Horizon.** R3 and R3a are the part's answer: under low stakes the price does not grow with L. R3a holds only for scaffolds with exactly L calls (m1), and its hypotheses must hold at states that only corrupted runs reach, which a person working in a tree of calls does not obviously satisfy. R1 itself grows linearly in L.
+
+## 4. What is not new
+
+* Protocol R in the form "roll out the current mixture, audit one uniformly chosen call per run, update by log loss with exponential weights, deploy a uniformly chosen iterate for a whole episode", and its bound for a deterministic realisable expert: Y. Li and C. Zhang, "Interactive and Hybrid Imitation Learning: Provably Beating Behavior Cloning", NeurIPS 2025, arXiv:2412.07057 (v3, 13 Jan 2026), Algorithm 1 (Stagger) and Theorem 3. Read in the source in this session (Section 5). Their footnote 3 adds that "a one-sample-per-iteration version of AggreVaTe" was analysed earlier in A. Agarwal, N. Jiang, S. M. Kakade and W. Sun, *Reinforcement Learning: Theory and Algorithms* (lecture notes, 2019), Section 15.5. I did not open that text.
+* Deploying one uniformly chosen iterate for a whole episode, and the three phases ending in "Return best π̂_i on validation": S. Ross, G. J. Gordon and J. A. Bagnell, AISTATS 2011, footnote 3 and Algorithm 3.1. The recoverable form of low stakes (Theorem 8.6) is their Theorem 2.2. Read in the source in this session.
+* The high-probability form 4.3(b): D. J. Foster, S. M. Kakade, J. Qian and A. Rakhlin, arXiv:2112.13487, Lemma A.14. The earlier adversary reports reading it; the file quotes it from a digest. I did not re-open it.
+* L1 (chain rule), L2 (maximal coupling), and the Bayes-mixture regret bound behind L3 are standard (Cover and Thomas, Theorem 2.5.3; Solomonoff 1978). The file says so.
+* V1(a) is the "rule of three" for a Bernoulli rate. V1(b1) is Hoeffding's inequality with a weighted union bound. V1(b3) uses Scheffé sets in the manner of Yatracos's minimum-distance estimate. Lemma 12.1 is the Azuma–Hoeffding inequality. All of these are quoted from memory.
+* Theorem 9.2 and Proposition 9.3 use the Le Cam and Assouad method. X2 is a birthday-type bound of the kind behind uniformity-testing lower bounds (L. Paninski, IEEE Trans. Inf. Theory 54:4750–4755, 2008; quoted from memory).
+* Theorem 10.1 (online form) is the label-efficient setting of Cesa-Bianchi, Lugosi and Stoltz (2005), as the file says; I did not open it.
+* What appears to be this project's own: tolerance of faults with the three classes of replacement rules (8.3 to 8.5); R3a with explicit hypotheses (12.2, 12.3); the last-round examples and bounds (6.1 to 6.4); the ladder (5.5); the comparison of online and frozen rehearsal (10.3); Corollary 13.2; and X1 to X7 above.
+
+## 5. Citations checked
+
+| cited work | what it is cited for | checked | result |
+|---|---|---|---|
+| Li and Zhang, NeurIPS 2025, arXiv:2412.07057 | Stagger = Protocol R; Theorem 3 | Opened this session (PDF of v3, text extracted) | Correct. Theorem 3 reads: "with probability at least 1 − δ, J(π^E) − J(π̂) ≤ µH·(log(B) + 2 log(1/δ))/N_int", for µ-recoverable (M, π^E), deterministic realisability, and the exponential weight algorithm. Output is "a uniform first-step mixture of the historical policies … sample one π^n uniformly at random and execute it for the episode". The file (Section 17) describes it correctly, though it says it did not read the paper. The note does not cite it at all (M3). |
+| Ross, Gordon and Bagnell, AISTATS 2011, arXiv:1011.0686 | reduction; Theorem 2.2 | Opened this session | Correct. Theorem 2.2 is as quoted in the file. Footnote 3: "the same guarantee holds for the policy which uniformly randomly picks one policy in the sequence π̂_{1:N} and executes that policy for T steps". Algorithm 3.1 ends "Return best π̂_i on validation". |
+| Foster, Kakade, Qian and Rakhlin, arXiv:2112.13487, Lemma A.14 | 4.3(b) | Not re-opened; the earlier adversary reports reading it | Self-contained proof in the file; the attribution is not load-bearing. |
+| Paper 1 of the repository, Theorem 5.3 and Proposition 5.7 | the regret bound (note, Section 3.1) | Against `research/understand/repo.md` only | Proposition 5.7(b) is the per-query mixture, Theorem 5.3 the one-tape version (w8). |
+| Hoeffding 1963, Theorem 2; Azuma 1967; Pinsker (Tsybakov 2009, Lemma 2.5); Cover and Thomas, Theorem 2.5.3; Blumer et al. 1987 | standard tools | Not opened (memory) | Standard statements, used correctly; each proof is self-contained in the file except for Pinsker's inequality. |
+| Cesa-Bianchi, Lugosi and Stoltz 2005 | nearest setting to 10.1 | Not opened | Attribution as a neighbour only. |
+
+## 6. Scripts
+
+All are in `research/verify/code/`, each with a `.out` beside it: `rehearsal-core_attack_r1.py` (Protocol R enumerated exactly; R1, 5.1, 5.2, 9.1), `_r3.py` (R3 against the worst replacement rule; the blind-rule example m4; the early-stopping counterexample to the note's R3a, m1), `_v1.py` (X1, X2, X3, part D for m3), `_lastround.py` and `_lastgeneral.py` (6.1 to 6.4), `_ladder.py` (5.5), `_online.py` and `_online_l3.py` (10.1 to 10.3), `_lowstakes.py` (X4 against 9.1(b)), `_weighted.py` (X5), `_budget.py` (M2 table).
+
+New output in this run: `_online_l3.out`. For L = 3, q = 1/3 and 4 runs, a second search found a loss factor of 1.4139. That exceeds the value 1.4101 of the file's example at 4 runs. The first search had found 1.4416, above the example's limit 1.4211. Both are far below the proved bound (1 − 1/L)^−(L−1) = 2.25. So the example of Proposition 10.3 is not extremal for L = 3, and the proposition, an upper bound plus an example, stands. The best instance found uses a sub-probability hypothesis (a semimeasure), which the file's setting allows.
+
+## 7. Verdicts
+
+| statement | verdict | note |
+|---|---|---|
+| L1 (2.1) | HOLDS | Standard; proof followed. |
+| L2 (3.1, 3.2, 3.4) | HOLDS | The note's "is a run of the human system" must read "coincides with the coupled run" (w2). |
+| L3 (4.1, 4.2) | HOLDS | Proof followed; X7 sharpens K. |
+| 4.3 high-probability forms | HOLDS | Published (Foster et al. Lemma A.14), not new. |
+| R1 (5.1) | HOLDS | Exact search: ratio 1.000000 at the stated equality cases. Published for the uniform prior (Li–Zhang). Empty for person-sized K (M2). |
+| 5.2 deployment of M^(T) | HOLDS WITH CHANGE | Correct. (d) holds for δ ≤ 0.63 with a scaffold depending on n, δ. The note must say one round per run or for good (w7). |
+| 5.3 several calls per run | HOLDS | |
+| 5.5 a fresh round per call; ladder | HOLDS WITH CHANGE | "L times larger" is an upper bound; observed factors 1.02–1.79 (L ≤ 4) and growing with L. |
+| 6.1 last round, inputs independent of answers | HOLDS | Search ratio ≤ 0.41. |
+| 6.2, 6.3 last-round examples | HOLDS | Recomputed at the edges of the ranges. |
+| 6.4 last round, any scaffold | HOLDS WITH CHANGE | Has content only for n ≳ 2L²K ln 2·(ln L + 3) (m9(ii)). |
+| R2 for a function (7.1) | HOLDS | |
+| R3 (8.3, 8.4) | HOLDS WITH CHANGE | Worst-case check 3·10⁻¹⁶. The tolerance must be against rules that see the human's answer (m4, with example). Price bound by Markov; X4 gives 1/n for any human. |
+| 8.5 examples | HOLDS | |
+| 8.6 recoverable form | HOLDS | Ross et al. Theorem 2.2; not new. |
+| 9.1 any sampler | HOLDS | 1/γ′² is an artefact of Markov (m7, X4). |
+| 9.2 lower bound | HOLDS | Assouad; not checked line by line beyond the constant's order. |
+| 9.3 low stakes, stochastic human | HOLDS WITH CHANGE | (ii) needs γ ≤ ½. |
+| 10.1 online form | HOLDS | Ratio 1.000000. |
+| 10.2 | HOLDS | |
+| 10.3 freezing after online rehearsal | HOLDS | The example is not extremal for L = 3 (1.4416 found); the bound is not reached. |
+| R3a in note.md | BROKEN | Fails for scaffolds that can stop early (m1): 308 admitted faults, one replacement is fatal. Repair: every run has exactly L calls. |
+| R3a as Proposition 12.2 of the file | HOLDS | Constant 2 is correct. The file's claim that the note's version is correct is wrong. |
+| 12.3 remarks | HOLDS | |
+| V1(a) in note.md (deterministic human) | HOLDS WITH CHANGE | Valid for every human (X1). "Confidence 1 − δ" must read "a false certificate is issued with probability < δ" (m3). |
+| V1(b) in note.md, with the remark on tests | HOLDS WITH CHANGE | Correct; price is ln(1/π(B)), not complexity. The tolerance can be halved, since a_A is computable (m6). The paragraph that follows on the stochastic human is wrong (M1). |
+| 13.1(b3) | HOLDS | |
+| 13.1(c) | BROKEN (first sentence); second sentence HOLDS | The disagreement rate bounds β from below for every human (X1). The example has a deterministic human, so it is no lower bound for randomised humans; X2 supplies one. |
+| 13.2 corollary | HOLDS WITH CHANGE | Last clause false as stated (m3). |
+| Note, Section 2 and 3.1, novelty sentences | BROKEN (as attribution) | The protocol is Stagger, and "bound spent where it matters" is Ross et al. 2011 (M3). |
+| Note, "the human need not stay for ever" | HOLDS WITH CHANGE | Only per run; questions × unfaithful calls ≤ S·K ln 2 (X6). |
+| X1 to X7 (additions) | NOT VERIFIED | Mine; proved here and tested numerically, not independently checked. |

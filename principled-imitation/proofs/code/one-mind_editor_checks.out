@@ -1,0 +1,50 @@
+E1  Example 3.1(c): the per-call mixture at a never-asked input, for all data lists (inputs may repeat)
+    eps = 1/10: 259 data lists of length <= 3 (180 with a repeated input); M(1|z) = P(1|z) at every never-asked z in all of them
+    eps = 1/4: 259 data lists of length <= 3 (180 with a repeated input); M(1|z) = P(1|z) at every never-asked z in all of them
+    eps = 1/2: 259 data lists of length <= 3 (180 with a repeated input); M(1|z) = P(1|z) at every never-asked z in all of them
+E2  Proposition 3.5 (four calls: z, (z,y1,2), (z,y1,3), (z,y1,y2,y3,4))
+    R = 2: |F_z| = 256; single answers have the human's law except BAD at (z,r,b,b'), b != b'; no member's own run reaches such an input; TV(Q_M, Q_P) = w(F)/2 and KL(Q_P||Q_M) = (1/2) ln(1/w(P)) at a fresh z
+    R = 3: |F_z| = 6144; single answers have the human's law except BAD at (z,r,b,b'), b != b'; no member's own run reaches such an input; TV(Q_M, Q_P) = w(F)/2 and KL(Q_P||Q_M) = (1/2) ln(1/w(P)) at a fresh z
+    simulation at fresh top-level inputs, R = 2, 20000 rehearsals per cell: number of rounds until F is refuted
+       K   driver            mean rounds   expected     mean sum_t TV(Q_M^(t), Q_P)   expected (1-2^-K)/2 * rounds
+       1   posterior draw         15.99       16.0                   4.00                       4.00
+       1   mixture                 7.99        8.0                   2.00                       2.00
+       3   posterior draw         64.05       64.0                  28.02                      28.00
+       3   mixture                 7.97        8.0                   3.49                       3.50
+       5   posterior draw        256.87      256.0                 124.42                     124.00
+       5   mixture                 7.91        8.0                   3.83                       3.88
+E3  Example 3.6 (codebook class): human = fair coin, P has weight 2^-K, 2^m random functions, m = n + K - 2
+       K    n    m   trials   freq[MAP is a function]   1-(1-2^-n)^(2^m)   1-exp(-2^(K-2))   freq[2-MAP is a function]
+       3    6    7     3000             0.8580                 0.8668            0.8647               0.0000
+       4    6    8     3000             0.9860                 0.9823            0.9817               0.0000
+       4   10   12     3000             0.9770                 0.9817            0.9817               0.0000
+       5    8   11     3000             0.9997                 0.9997            0.9997               0.0000
+       6    8   12     3000             1.0000                 1.0000            1.0000               0.0000
+    TV(run of a function, run of the human system) at a fresh input = 7/8
+E4  Proposition 4.6 (class A', traps of weight proportional to 1 + iota, human g_0 of weight proportional to 1)
+       n    N    L   Pr[heaviest consistent member has >= L/4 ones]   (9/32) L/n   mixture: bound (L/n)^c/c!
+      16   32    8                          0.19928                0.14062            1.250e-01
+      50  100   12                          0.09562                0.06750            2.304e-03
+     200  400   40                          0.07466                0.05625            2.822e-14
+     200  400  200                          0.31475                0.28125            3.288e-65
+    simulation n = 30, N = 60, L = 12, 20000 rehearsals: heaviest consistent member has >= L/4 ones with frequency 0.1598 (exact 0.1547, bound (9/32)L/n = 0.1125); per-call mixture 0.00230 (bound (L/n)^c/c! = 0.01067)
+E5  Theorem 3.8 (weights squared, stochastic human)
+    (i) 2000 random (instance, mixture) pairs, exact run laws; largest ratios (all must be <= 1):
+        per-call triangle 0.9999;  H2(Q_nu,Q_M)/(4 E_M sum H2(nu,M)) = 0.3324;  H2(Q_P,Q_M)/(4 kappa) = 0.3054;  run-law triangle 0.9995;  H2(Q_nu,Q_P)/(16 L h + 24 kappa) = 0.1050
+    (ii) exact expectations over all data sequences (mixture-driven rehearsal, L = 2):
+         inst   n   paths    max_nu E[N_n(nu)]   E[N'_n]   Pr[sum kappa_t >= L(K ln2/2 + ln(1/d))]   E[Pi_2(A)]   Pr[some nu in A beats P]   delta
+            0   4  279841         1.000000     0.983158                     0.0000                     0.00000            0.00000           0.50
+            1   4 1048576         0.999838     0.997038                     0.0000                     0.01700            0.02295           0.50
+            2   4   65536         1.000000     0.999994                     0.0000                     0.00000            0.00000           0.25
+            3   4  531441         0.998934     0.998768                     0.0000                     0.00000            0.00000           0.25
+    (iii) Monte Carlo of the mixture-driven rehearsal; A = {nu : sum_t h_t(nu) >= K ln2 + ln(1/delta)};
+          B = bound (c) = L (28 K ln2 + 40 ln(1/d))/n
+          L   K(bits)     n  delta  trials   E[Pi_2(A)]   freq[2-MAP in A]   freq[sum kappa >= its bound]   B        E[Pi_2(H2 >= B)]   freq[H2(2-MAP) >= B]   mean H2: Pi_2 draw, 2-MAP, Pi_1 draw, 1-MAP
+           1     3.25    300  0.25     60     0.00000           0.000                  0.017           0.3954      0.00000              0.000          0.000317, 0.000240, 0.000421, 0.000240
+           2     3.26    800  0.25     50     0.00000           0.000                  0.000           0.2968      0.00000              0.000          0.000003, 0.000000, 0.000037, 0.000000
+           3     3.22   1500  0.25     40     0.00000           0.000                  0.000           0.2357      0.00000              0.000          0.000022, 0.000008, 0.000101, 0.000054
+           3     2.94    400  0.50     60     0.00011           0.000                  0.017           0.6354      0.00000              0.000          0.000426, 0.000094, 0.001131, 0.000377
+    (iv) a two-member class, exact (binomial sums), at the first n with sum_t h_t(nu) >= a:
+         96 cases: largest E[Pi_2(A)]/delta = 0.1463 at (p, q, wP, delta, n) = (0.3, 0.31, 0.1, 0.5, 50800); largest Pr[nu beats P]/delta = 0.1333  (both must be <= 1)
+         with the threshold a/2 in place of a the largest ratio would be 9.56 (so the threshold of (a) cannot be halved)
+all assertions passed

@@ -1,0 +1,52 @@
+(A) Example 3.1, exact (N_z = 3; all 8 functions; all data lists with distinct inputs of length <= 2)
+   eps = 1/10: 31 data lists; posterior of P = 1/2 in all; at every fresh z: TV(one draw per run, Q_P) = 27/200 = (3/2)eps(1-eps), TV(per-call mixture, Q_P) = 0, majority-0 probabilities as stated
+   eps = 1/4: 31 data lists; posterior of P = 1/2 in all; at every fresh z: TV(one draw per run, Q_P) = 9/32 = (3/2)eps(1-eps), TV(per-call mixture, Q_P) = 0, majority-0 probabilities as stated
+   eps = 1/2: 31 data lists; posterior of P = 1/2 in all; at every fresh z: TV(one draw per run, Q_P) = 3/8 = (3/2)eps(1-eps), TV(per-call mixture, Q_P) = 0, majority-0 probabilities as stated
+   the same input asked twice, answers (0, 1): posterior of P = 1
+   the same input asked twice, answers (1, 1): posterior of P = 9/19
+   the same input asked twice, answers (0, 0): posterior of P = 1/11
+   consequence (simulation of the rehearsal; posterior and TV computed exactly from the per-input record):
+      eps     n    eta      N_z    mean of sum_t TV(Qbar_t, Q_P)   (1-2eta) n (3/2)eps(1-eps)   mean of sum_t TV(Q_M, Q_P)   eta
+      0.50    40   0.10    16000              14.8492                      12.0000                  0.01649        0.100
+      0.10    60   0.05    72000               8.1003                       7.2900                  0.00441        0.050
+      0.25   100   0.20    50000              27.9214                      16.8750                  0.03099        0.200
+(B) Proposition 3.2, exact
+   R = 2: |F_z| = 16; (a) single answers: likelihood ratio 1; (b),(c) factors 1 / 2 / 0 as stated; (d) TV(uniform member, Q_P) = 1/2, per-call mixture exact, TV(Qbar, Q_P) = w(F)/2
+   R = 3: |F_z| = 96; (a) single answers: likelihood ratio 1; (b),(c) factors 1 / 2 / 0 as stated; (d) TV(uniform member, Q_P) = 1/2, per-call mixture exact, TV(Qbar, Q_P) = w(F)/2
+   N_z = 2, R = 2: 256 members; posterior odds of F against P equal the closed form in 200/200 random data sets
+   N_z = 2, R = 3: 9216 members; posterior odds of F against P equal the closed form in 200/200 random data sets
+   R = 1000, n = 100: Pr[no round has r' = r_d and b != b'] = 0.95122 >= 1 - n/(2R) = 0.95000
+   R = 50, n = 20: Pr[no round has r' = r_d and b != b'] = 0.81791 >= 1 - n/(2R) = 0.80000
+   R = 2, n = 5: Pr[no round has r' = r_d and b != b'] = 0.23730 >= 1 - n/(2R) = -0.25000
+(C) four-call variant (referee): x_1 = z, x_2 = (z,y_1,2), x_3 = (z,y_1,3), x_4 = (z,y_1,y_2,y_3,4); L = 4
+   R = 2: |F_z| = 256. Bayes factor of F against P for the one question of a round at a fresh z:
+      driver in F: 1 for every call and every answer of the human;
+      driver P: 1, except at call 4 after y_2 != y_3 (probability 1/2 * 1/4 = 1/8 of the P-driven rounds), where it is 0.
+   posterior mass of F = 1/2: TV(Q_M, Q_P) at a fresh z = 1/4 = w(F)/2;  TV(Qbar, Q_P) = 1/4;  KL(Q_P || Q_M) = (1/2) ln(1/w(P)) = 0.3466
+   posterior mass of F = 1023/1024: TV(Q_M, Q_P) at a fresh z = 1023/2048 = w(F)/2;  TV(Qbar, Q_P) = 1023/2048;  KL(Q_P || Q_M) = (1/2) ln(1/w(P)) = 3.4657
+   consequence at fresh top-level inputs, prior w(P) = 2^-K, uniform prior on F of total mass 1 - 2^-K:
+      K   driver            Pr[F refuted per round]   E[# rounds with F alive]   E[sum_t TV(Q_M^(t), Q_P)]   sum_t E[w_t(P) KL(Q_P||Q_M^(t))]   L K ln2
+      1   posterior draw           6.250e-02                   16.0                      4.0                       2.7726           2.7726
+      1   mixture                  1.250e-01                    8.0                      2.0                       1.3863           2.7726
+      5   posterior draw           3.906e-03                  256.0                    124.0                      13.8629          13.8629
+      5   mixture                  1.250e-01                    8.0                      3.9                       0.4332          13.8629
+     10   posterior draw           1.221e-04                 8192.0                   4092.0                      27.7259          27.7259
+     10   mixture                  1.250e-01                    8.0                      4.0                       0.0271          27.7259
+     20   posterior draw           1.192e-07              8388608.0                4194300.0                      55.4518          55.4518
+     20   mixture                  1.250e-01                    8.0                      4.0                       0.0001          55.4518
+   K = 10, n = 8192 rounds, posterior-draw driver: E[sum_t TV(Q_M^(t), Q_P)] = 2587; the bound of Theorem R2 for the mixture driver, n * 2 sqrt(L K ln2 / n) = 953
+(D) squared weights (referee's proposition)
+   Example 3.1 with weights w^2: (posterior mass of F)/(posterior mass of P) = prod_i P(y_i|z_i) * (eps^2+(1-eps)^2)^(#fresh inputs), exactly;
+      for eps = 1/2 and N_z = 1600 (the class built for n = 40 rounds) this is 2^-1600; at weights w it is 1.
+   Proposition 3.2 with weights w^2, N_z = 2, R = 2: the odds of F against P are at most (odds at weights w)/|F| = (odds at weights w)/256
+   Proposition 3.2 with weights w^2, N_z = 2, R = 3: the odds of F against P are at most (odds at weights w)/|F| = (odds at weights w)/9216
+   Protocol R on random classes (40 samplers: the human, fill-ins, patched and tilted humans, random samplers):
+      L   K(bits)     n  delta  trials   E[Pi_2(sum_t h_t >= a)]  (<= delta)   freq[2-MAP in that set]   bound (b)   E[Pi_2(H^2(Q_nu,Q_P) >= bound)]  (<= 2 delta)   E[Pi_1(same set)]   mean H^2 of a Pi_2 draw   of a Pi_1 draw
+      1     2.58    400  0.25     60            0.00000                          0.000               0.6365                0.00000                          0.00000             0.000123         0.000229
+      2     2.58   1500  0.25     40            0.00000                          0.000               0.6452                0.00000                          0.00000             0.000051         0.000138
+      3     2.58   3000  0.25     30            0.00000                          0.000               0.7135                0.00000                          0.00000             0.000004         0.000030
+   exact expectation of N_n(nu) = prod_t sqrt(nu(y_t|x_t)/P(y_t|x_t)) exp(h_t(nu)) over all data sequences (L = 2, n = 4):
+      instance 0: 65536 data sequences; E[N_4(nu)] for nu != P between 0.94231 and 1.00000 (<= 1); for P it is 1.000000
+      instance 1: 38416 data sequences; E[N_4(nu)] for nu != P between 0.71137 and 1.00000 (<= 1); for P it is 1.000000
+      instance 2: 65536 data sequences; E[N_4(nu)] for nu != P between 0.46652 and 1.00000 (<= 1); for P it is 1.000000
+all assertions passed
