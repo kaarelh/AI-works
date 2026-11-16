@@ -195,3 +195,33 @@ for N in (50, 500, 5000):
         s += tv(H[est_penalised(H, w, empirical(Q, N), N, 0.0)], Q)
     orac = min(3*tv(H[i], Q) + sqrt(2*log(1/w[i])/N) for i in range(J))
     print(f"    N={N:5d}: E TV = {s/T:.4f}; best TV in class = {min(tv(h, Q) for h in H):.4f}; bound = {orac + sqrt(2*pi/N):.4f}")
+
+# ---------------------------------------------------------------- (9) exact failure probability, three hypotheses on three points
+# The estimator depends on the data through the vector of counts, so the failure probability of Theorem 3.6 is a multinomial sum.
+def exact_fail3(H, ww, Q, N, delta_):
+    k = log(2/delta_)
+    bound = min(3*tv(h, Q) + 2*r_tol(wi, N, k) for h, wi in zip(H, ww))
+    bad = [tv(h, Q) > bound + 1e-12 for h in H]
+    if not any(bad): return 0.0
+    pr = 0.0
+    for a in range(N+1):
+        for b in range(N+1-a):
+            c = N - a - b
+            emp = [a/N, b/N, c/N]
+            if bad[est_penalised(H, ww, emp, N, k)]:
+                pr += math.factorial(N)/(math.factorial(a)*math.factorial(b)*math.factorial(c)) * Q[0]**a * Q[1]**b * Q[2]**c
+    return pr
+random.seed(21)
+lat = [(i/6, j/6, (6-i-j)/6) for i in range(7) for j in range(7-i)]
+worst = 0.0; arg = None; cnt = 0; nontrivial = 0
+for N in (6, 12, 24, 48):
+    for delta_ in (0.5, 0.2, 0.05):
+        for ww in ((1/3, 1/3, 1/3), (0.7, 0.2, 0.1), (0.1, 0.2, 0.7), (0.5, 0.25, 0.01)):
+            for _ in range(150):
+                H = [list(random.choice(lat)) for _ in range(3)]
+                if H[0] == H[1] or H[1] == H[2] or H[0] == H[2]: continue
+                Q = list(random.choice(lat)) if random.random() < 0.5 else list(random.choice(H))
+                f = exact_fail3(H, list(ww), Q, N, delta_); cnt += 1; nontrivial += (f > 0)
+                if f/delta_ > worst: worst, arg = f/delta_, (N, delta_, ww, H, Q)
+print(f"(9) Theorem 3.6, exact multinomial computation for three hypotheses on three points ({cnt} cases, {nontrivial} with positive failure probability):")
+print(f"    max Pr[TV(est,Q) > min_i(3 TV_i + 2 r_N(i))] / delta = {worst:.4f} (must be <= 1)")

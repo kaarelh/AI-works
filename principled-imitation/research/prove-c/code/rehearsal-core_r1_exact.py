@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exact check of Theorem R1 (and of the remarks on several questions per run)
+"""Exact check of Theorem 5.1 (R1) and of Proposition 5.3 (several questions per run)
 on tiny instances, by enumeration of all data histories of Protocol R.
 
 Scaffold (L = 2, variable length): z uniform on {0,1}; call 1 at x = z;
@@ -115,9 +115,10 @@ if __name__ == "__main__":
         a1, _, _ = protocol([f, g], [wf, 1 - wf], f, 3, ask_all=False)
         aL, _, _ = protocol([f, g], [wf, 1 - wf], f, 3, ask_all=True)
         lam1 = Lam(mixture([wf, 1 - wf], [1, 1], [f, g])[0], f)
-        ET = 2 - (1 - wf) / 2     # expected run length under the prior mixture (STOP after z=1, y_1=0)
-        print(f"w(f)={wf}: Lambda(M^(1)) = {lam1:.4f} = E[T] ln(1/w(f)) = {ET * math.log(1 / wf):.4f};"
-              f" sum over 3 rounds, one question per run: {a1:.4f}; all calls asked: {aL:.4f}; ln(1/w(f)) = {math.log(1 / wf):.4f}")
+        ET = 2 - (1 - wf) / 2     # expected number of calls under the prior mixture (STOP after z=1, y_1=0)
+        print(f"w(f)={wf}: Lambda(M^(1)) = {lam1:.4f} = E[len] ln(1/w(f)) = {ET * math.log(1 / wf):.4f};"
+              f" sum_t E Lambda over 3 rounds, one question per run: {a1:.4f}; all calls asked: {aL:.4f};"
+              f" ln(1/w(f)) = {math.log(1 / wf):.4f}; L ln(1/w(f)) = {L * math.log(1 / wf):.4f}")
     print("== Section 12 of the candidate theory: the counterexample ==")
     for eps in (0.1, 0.01, 0.001):
         joint = math.log(1 / eps)                 # KL(delta_b x Bern(1/2) || R)

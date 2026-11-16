@@ -9,13 +9,15 @@ Each part prints a block that is quoted in Section 9 of that file.
   part 3  Theorem 3.2(a): probability that the run of a uniformly random round meets a set Q
           that no earlier question met, against L/n (exact, worst case over visit rates)
   part 4  Examples 3.4 and 3.5: a real task of rehearsal probability p; a time stamp (exact)
-  part 5  Theorem 7.3: one posterior draw per run over a delta-separated class, against the
+  part 5  Theorem 7.4: one posterior draw per run over a delta-separated class, against the
           bound 2^K (1 - delta/(2L))^n, and the same protocol over a class with patches
   part 6  Theorem 1.7: rehearsal with whole episodes (two messages per episode), sum over the
           rounds of the expected number of unfaithful episodes, against L_e K ln 2
   part 7  Corollary 1.12: a human who drifts; distance of the deployed mixture to the human of
           the first round, as a function of the length of rehearsal
   part 8  Theorem 6.1 and Section 6: numbers of questions (lower bounds, upper bounds, budgets)
+  part 9  Proposition 2.5 and Remark 2.6: mismatch probability against total variation; the
+          identity for the squared L2 distance
 
 Usage: python3 assumptions_checks.py [seed]
 """
@@ -101,6 +103,14 @@ def part2():
     for n in (10, 100, 1000):
         print(f"    n = {n:4d}: seeded {rows[n][2] / n:.5f}   fresh {rows[n][3] / n:.5f}"
               f"   R1 bound {L * LN2 / n:.5f}")
+    # Proposition 6.3: fresh coins, batches of b rounds; sum over batches of E[unfaithful calls]
+    for b in (1, 5, 20):
+        tot = 0.0
+        for s in range(1, 200 // b + 1):
+            pf = binom_pmf(S, float(L) ** (-(b * (s - 1))))
+            tot += (L - 1) * sum(pf[i] * i / (S + i) for i in range(S + 1))
+        print(f"  batches of {b:2d} rounds, fresh J: sum over {200 // b:3d} batches of E[unfaithful calls]"
+              f" = {tot:.4f}  (bound L K ln2 = {L * LN2:.4f})")
     # simulation of the seeded protocol as a check of the formula at t = 4
     rng = np.random.default_rng(SEED + 1)
     trials, t = 100000, 4
@@ -146,7 +156,7 @@ def part4():
 
 # ---------------------------------------------------------------------------------------------
 def part5():
-    print("== part 5: Theorem 7.3 (delta-separated class, one posterior draw per run, last posterior)")
+    print("== part 5: Theorem 7.4 (delta-separated class, one posterior draw per run, last posterior)")
     rng = np.random.default_rng(SEED + 2)
     N, L, n_code = 16, 3, 15
     # f = 0 on [N]; code: n_code random functions, each differing from f on exactly N/2 inputs
@@ -204,11 +214,10 @@ def part5():
     t2 = np.vstack([f[None, :], code, patches])
     w2 = np.concatenate([np.full(n_code + 1, w_f / 2), np.full(N, 0.5 / N)])
     m2 = simulate(t2, w2, n_rounds, trials)
-    print("    n   separated class   bound 2^K(1-delta/(2L))^n   class with patches   (1/n scale: 1/n)")
+    print("    n   separated class   bound 2^K(1-delta/(2L))^n   class with patches")
     for n in (0, 5, 10, 20, 40, 60):
         bound = min(1.0, 2 ** K * (1 - delta / (2 * L)) ** n)
-        print(f"  {n:3d}   {m1[n]:.5f}           {bound:.5f}                     {m2[n]:.5f}"
-              f"              {'' if n == 0 else f'{1.0 / n:.5f}'}")
+        print(f"  {n:3d}   {m1[n]:.5f}           {bound:.5f}                     {m2[n]:.5f}")
     print(f"  ({trials} trials; mean posterior mass off f after n rounds)")
 
 
@@ -319,6 +328,17 @@ def part8():
         up = L * K * LN2 / ((m + 1) * delta)
         print(f"  {m_b:7d} {B:4d} {m:7d} {delta:5.2f} {L:10.3g} {K:10.4g} {low:12.4g} {scan:10.4g}"
               f" {up:10.4g} {up / low:8.1f}")
+    print("  the family 'scan c of the m_b blocks' (m_b = 1000, B = 5, delta = 0.05, N = 50):")
+    print("    c/m_b   expected questions n   failure (1-c/m_b) p   lower bound p(1-2B/N-2n/(m_b N))")
+    m_b, B, delta = 1000, 5, 0.05
+    N = int(round(B / (2 * delta)))
+    p = 1 - (1 - 1 / N) ** B
+    for frac in (0.0, 0.25, 0.5, 0.75, 1.0):
+        c = int(frac * m_b)
+        n = c * (N - 1) * (N + 2) / (2 * N)
+        fail = (1 - c / m_b) * p
+        low = p * (1 - 2 * B / N - 2 * n / (m_b * N))
+        print(f"    {frac:4.2f}    {n:12.1f}           {fail:.5f}               {low:.5f}")
     print("  questions needed by the bounds (theta = fraction of faults tolerated, delta = failure):")
     print("    K bits   theta  delta   det. low stakes   stoch. low stakes   critical, L = 1e3   certificate")
     for K in (30.0, 1e3, 1e6, 1e9):
@@ -344,6 +364,25 @@ def part8():
                   f" K <= {n * theta * delta / LN2:10.4g}")
 
 
+def part9():
+    print("== part 9: Proposition 2.5 and Remark 2.6 (mismatch rates) on random pairs of distributions")
+    rng = np.random.default_rng(SEED + 5)
+    worst_gap = 1.0
+    worst_id = 0.0
+    for _ in range(100000):
+        s = rng.integers(2, 8)
+        a = rng.dirichlet(np.full(s, rng.choice([0.2, 1.0, 5.0])))
+        p = rng.dirichlet(np.full(s, rng.choice([0.2, 1.0, 5.0])))
+        rho_ap = 1 - float(a @ p)
+        tv = 0.5 * float(np.abs(a - p).sum())
+        worst_gap = min(worst_gap, rho_ap - tv)
+        l2 = float(((a - p) ** 2).sum())
+        ident = 2 * rho_ap - (1 - float(a @ a)) - (1 - float(p @ p))
+        worst_id = max(worst_id, abs(l2 - ident))
+    print(f"  100000 random pairs (A, P) on 2 to 7 answers: min of (mismatch probability - TV) = {worst_gap:.3e}")
+    print(f"  max |sum (A-P)^2 - (2 rho_AP - rho_AA - rho_PP)| = {worst_id:.3e}")
+
+
 if __name__ == "__main__":
     print(f"seed {SEED}")
     part1()
@@ -354,3 +393,4 @@ if __name__ == "__main__":
     part6()
     part7()
     part8()
+    part9()

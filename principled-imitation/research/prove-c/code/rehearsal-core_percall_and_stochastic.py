@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
 """Two numerical checks for rehearsal-core.md.
 
-(1) Proposition 5.4 (the 'ladder'): re-drawing the round at every CALL (the averaged
+(1) Proposition 5.5 (the 'ladder'): re-drawing the round at every CALL (the averaged
     kernel Mbar) is not covered by Theorem R1/R2; re-drawing it per RUN is.
-(2) Proposition 9.2: the rate sqrt(K/n) per call for a stochastic human
-    (two-point Bernoulli class), against the upper bound from R1 + Pinsker.
+    Monte Carlo over the rehearsal (fixed seed); given the rehearsal the two
+    probabilities are computed exactly.
+(2) Theorem 9.2 with K = 1, L = 1: the rate sqrt(K/n) per call for a stochastic human
+    (two-point Bernoulli class), against the upper bound from R1 + Pinsker (Proposition 9.1).
 """
 import math, random
 
 def ladder(Lc, p, n, trials, rng):
     """Inputs x_1..x_L on the path of f = 0; prior: values independent, 0 with prob p.
-    A wrong answer sends the rest of the run to a junk input on which all agree."""
+    A wrong answer ends the run (STOP); in the file a junk input on which all agree
+    would do the same."""
     s_run = s_call = 0.0
     for _ in range(trials):
         learned = [False] * Lc
@@ -61,8 +64,8 @@ if __name__ == "__main__":
         r, c = ladder(Lc, p, n, 300, rng)
         bound = Lc * Lc * math.log(1 / p) / n
         lower = (1 - p) ** 2 * (Lc ** 3 / (2 * n) - Lc ** 6 / n ** 2)
-        print(f"L={Lc} n={n}: Pr[unfaithful run], t* per run: {r:.5f} <= L K ln2/n = {bound:.5f}; "
-              f"Mbar per call: {c:.5f} (proved >= {lower:.5f}); ratio Mbar/bound = {c / bound:.2f}")
+        print(f"L={Lc} n={n}: Pr[unfaithful run], one round per run: {r:.5f} <= L K ln2/n = {bound:.5f}; "
+              f"averaged kernel Mbar (a round per call): {c:.5f} (proved >= {lower:.5f}); ratio Mbar/bound = {c / bound:.2f}")
     print("== (2) stochastic human, two-point class, K = 1 bit ==")
     for n in (8, 32, 128, 512, 2048):
         eps, last, ces = two_point(n)

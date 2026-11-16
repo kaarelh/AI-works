@@ -1,0 +1,46 @@
+Part A: questions (deterministic human, no fault tolerance)
+   'needle' : necessary for the needle class, L/(4 delta) - L                (Corollary 2.2(1))
+   'block'  : necessary for the block class, (1-10 delta) K L/(8 delta log2(L/(2 delta)))   (Theorem 3.1)
+   'AB'     : sufficient, 1 + 2.7 K L/(delta log2(L/delta))                    (Theorem 3.3)
+   'R'      : sufficient, L K ln2/delta                                         (R1 / Lemma 5.1')
+   F*       : delta * (questions)/L = expected unfaithful runs allowed by the guarantee at break-even
+
+        L    delta          K |     needle        block           AB            R | F*(needle)  F*(block)     F*(AB)      F*(R)
+     1000   0.0100       15.6 |    2.4e+04     1.13e+04     2.54e+05     1.08e+06 |      0.24      0.113       2.54       10.8
+     1000   0.0100      1e+03 |    2.4e+04     7.21e+05     1.63e+07     6.93e+07 |      0.24       7.21        163        693
+     1000   0.0100      1e+06 |    2.4e+04     7.21e+08     1.63e+10     6.93e+10 |      0.24   7.21e+03   1.63e+05   6.93e+05
+     1000   0.0100      1e+09 |    2.4e+04     7.21e+11     1.63e+13     6.93e+13 |      0.24   7.21e+06   1.63e+08   6.93e+08
+  1000000   0.0010       28.9 |   2.49e+08     1.24e+08     2.61e+09        2e+10 |     0.249      0.124       2.61         20
+  1000000   0.0010      1e+09 |   2.49e+08     4.28e+15     9.03e+16     6.93e+17 |     0.249   4.28e+06   9.03e+07   6.93e+08
+   (rows with K = 15.6 or 28.9 are the needle class itself, K = log2(L/(2 delta) + 1))
+
+Part B: needle class with N0 = rL/(2F) cells, r runs of the OR scaffold with L calls;
+   protocol of Proposition 2.3 with n = N0/2 questions: expected failed runs among r, and amplification rL/n
+     r    L      F     N0      n   exact E[failed runs] (worst member)   rL/n    4F/(1-4F/r) (upper limit for every protocol)
+      1   10   1/20    100     50   0.0478 (budget F = 1/20)                    0.200   0.250
+     10   10    1/2    100     50   0.4781 (budget F = 1/2)                    2.000   2.500
+    100   10      5    100     50   4.7809 (budget F = 5)                   20.000   25.000
+   1000   10     50    100     50   47.8090 (budget F = 50)                  200.000   250.000
+   1000   10    1/4  20000  10000   0.2499 (budget F = 1/4)                    1.000   1.001
+   (the protocol stays inside the budget F and its amplification is 4F, just below the limit)
+
+Part C: Bayes failure with no questions, needle class with N0 = L/(2 delta), prior weight eta on the needles together
+        L   delta    eta     Bayes failure eta*p    delta
+      100  0.0100   0.50    0.00990                0.01000
+      100  0.0100   0.10    0.00198                0.01000
+      100  0.0100   0.01    0.00020                0.01000
+     1000  0.0010   0.10    0.00020                0.00100
+   (eta < 1/2 already gives Bayes failure below delta without a question; the uniform prior has eta = N0/(N0+1))
+
+Part D: Protocol R on the block class, exact (deployed mixture of a uniformly chosen round)
+     m     N    L    delta     least n with failure <= delta    n/(mN)    Thm 3.1 lower bound    2.7 K L/(delta log2(L/delta))
+     8    64    2   0.01562         1836                        3.59           108.0                 2370.8
+    16   128    4   0.01562         7480                        3.65           432.0                 9677.8
+    32   512    8   0.00781        62298                        3.80          3776.0                79627.2
+     4   256    8   0.01562         3777                        3.69           216.0                 4916.2
+   (the estimate of the report is n = 3.9 m N; the check report's simulation gave 3.4 to 3.8 m N)
+all checks passed
+
+real	0m7.664s
+user	0m7.597s
+sys	0m0.016s

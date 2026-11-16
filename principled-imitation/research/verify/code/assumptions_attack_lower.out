@@ -1,0 +1,96 @@
+seed 20261118
+== A: Theorem 6.1 against the exact frontier of one block
+  plan k: ask k cells in turn, stop when the needle is found; expected questions
+  n_k = k - k(k-1)/(2N); if not found, the deployed system sees z and answers by the Bayes
+  rule: average failure F_k = (1/N) E_z[min(D, N-k-D)], D = number of distinct cells of the
+  run outside the asked ones.  Bound of Theorem 6.1(2) with m_b = 1: p (1 - 2B/N - 2 n_k/N).
+  N = 2..40, B = 1..6, all k: smallest (F_k - bound) = 0.00125 at (N, B, k) = (40, 1, 0) (F = 0.02500, bound = 0.02375)
+  item (3), N = B/(2 delta): least expected questions per block of the frontier (lower convex
+  envelope of the plans) for average failure <= delta, against (1 - 10 delta) B/(8 delta):
+    B =  5, delta = 0.05: N =   50; best plan mixture     12.22; lower bound      6.25; ratio 1.96
+    B = 10, delta = 0.05: N =  100; best plan mixture     24.09; lower bound     12.50; ratio 1.93
+    B =  4, delta = 0.02: N =  100; best plan mixture     24.86; lower bound     20.00; ratio 1.24
+    B = 20, delta = 0.01: N = 1000; best plan mixture    247.86; lower bound    225.00; ratio 1.10
+== B: additive work: all 2^K functions on K inputs, L uniform calls, good = at most m wrong
+  lower bound for every protocol: failure <= delta for all members forces
+  n >= K (1 - 2 (m/L) - 2 delta)   [each call at an unasked input is wrong w.p. >= 1/2 on average
+  over the class, so E[wrong calls] >= L (K - n)/(2K); and E[wrong calls] <= m + delta L]
+     K    L    m  delta | lower bound | best protocol | Protocol R, M^(T) | T in 2nd half | Protocol R, last | R3 bound
+    20   20    2   0.10 |        12.0 |            18 |               286 |          68 |               46 |      924
+    50   50    5   0.10 |        30.0 |            44 |               767 |         158 |              107 |     2888
+    50  200   20   0.10 |        30.0 |            43 |               799 |         154 |              100 |     3301
+   200  100   10   0.10 |       120.0 |           172 |              3136 |         606 |              395 |    12603
+   200  100   10   0.01 |       156.0 |           181 |             31356 |         790 |              482 |   126027
+   400 1000  100   0.05 |       280.0 |           332 |             12850 |        1244 |              726 |    54903
+  (Protocol R asks one uniformly chosen call per run, which here is a uniform input; 'last' deploys
+   the mixture after all n answers (nothing is proved for it in assumptions.md; the file
+   research/prove-c/rehearsal-core.md announces a bound for scaffolds of this kind); 'T in 2nd half'
+   deploys the mixture of a round drawn uniformly from the second half of the rounds, for which
+   the proof of R1 gives the bound 2 L K ln 2/n.)
+== C: Theorem 7.4(a): one-round inequality on every surviving set, and the n-round bound, exact
+  Proposition 7.5(b), 12 random instances, all subsets: smallest (expected fraction of the weight
+  removed - eps_dag/(2L)) = 0.02778
+  12 random instances (6 inputs, 7 functions, runs of different lengths in half of them):
+  smallest (expected removed weight - delta R/(2L)) over all subsets = 0.00000;
+  smallest (bound - exact posterior weight off [f]) for n = 1..12 = 0.51294
+== D: pseudo-random rehearsal runs with a k-bit seed, L = 1, fresh deployment
+  X = [64], human f = 0; class: f (weight 1/2) and, for each of 8 seeds, the function that is
+  0 on the outputs of the generator with that seed and 1 elsewhere (weight 2^-(k+1) each);
+  rehearsal input of round t: the t-th output of the generator with the true seed (uniform on
+  its set); deployed input: uniform on X, fresh.  A3(i) is void (L = 1); (ii)-(iv) hold.
+    n =   10: Pr[deployed answer of M^(T) is wrong] >= 0.04972 with the generator;  = 0.06100 with fresh inputs;  R1 bound K ln 2/n = 0.06931
+    n =  100: Pr[deployed answer of M^(T) is wrong] >= 0.05497 with the generator;  = 0.00611 with fresh inputs;  R1 bound K ln 2/n = 0.00693
+    n = 1000: Pr[deployed answer of M^(T) is wrong] >= 0.05550 with the generator;  = 0.00061 with fresh inputs;  R1 bound K ln 2/n = 0.00069
+  floor for every n: (1/2)/(2^k + 1) = 0.05556
+== E: Example 3.5
+  weights as written: 1/2 (human) + 1/2 (date guards) + 0.01 (special guard) = 1.01
+    n =   100: with guard weights 0.49/(theta(theta+1)): 0.0194; with 0.5/(theta(theta+1)), total 1.01: 0.0194
+    n = 10000: with guard weights 0.49/(theta(theta+1)): 0.0196; with 0.5/(theta(theta+1)), total 1.01: 0.0196
+== F: the budget
+  (1) the certificate when the human is not deterministic.  Certificate (a) of Proposition 2.5
+  needs no mismatch in m = ln(1/dc)/(theta delta) rounds; the exact imitator of a human whose
+  answers agree with their own repetition with probability c per call passes with probability c^m:
+    theta = delta = 0.1: m =    300; self-agreement c = 1.0: Pr[pass] = 1.000e+00
+    theta = delta = 0.1: m =    300; self-agreement c = 0.999: Pr[pass] = 7.407e-01
+    theta = delta = 0.1: m =    300; self-agreement c = 0.99: Pr[pass] = 4.904e-02
+    theta = delta = 0.1: m =    300; self-agreement c = 0.9: Pr[pass] = 1.874e-14
+    theta = delta = 0.01: m =  29958; self-agreement c = 1.0: Pr[pass] = 1.000e+00
+    theta = delta = 0.01: m =  29958; self-agreement c = 0.999: Pr[pass] = 9.614e-14
+    theta = delta = 0.01: m =  29958; self-agreement c = 0.99: Pr[pass] = 1.734e-131
+    theta = delta = 0.01: m =  29958; self-agreement c = 0.9: Pr[pass] = 0.000e+00
+  what remains for such a human is V1(b): frequencies of tests fixed in advance, to accuracy eps
+  with m = 2 ln(2/(pi dc))/eps^2 answers (pi = weight of the test, dc = 0.05):
+    eps =  0.10, pi = 1.0e+00: m =          738
+    eps =  0.10, pi = 9.5e-07: m =         3510
+    eps =  0.03, pi = 1.0e+00: m =         8198
+    eps =  0.03, pi = 9.5e-07: m =        39004
+    eps =  0.01, pi = 1.0e+00: m =        73778
+    eps =  0.01, pi = 9.5e-07: m =       351036
+  (2) break-even: one run of L calls costs the human system L answers; rehearsal with R3 costs
+  K ln 2/(theta delta) answers plus the certificate; rehearsal is cheaper for one run only if
+  L exceeds:
+    K =    3e+01, theta = delta = 0.1: L > 2.38e+03
+    K =    3e+01, theta = delta = 0.5: L > 95.2
+    K =    1e+03, theta = delta = 0.1: L > 6.96e+04
+    K =    1e+03, theta = delta = 0.5: L > 2.78e+03
+    K =    1e+06, theta = delta = 0.1: L > 6.93e+07
+    K =    1e+06, theta = delta = 0.5: L > 2.77e+06
+    K =    1e+09, theta = delta = 0.1: L > 6.93e+10
+    K =    1e+09, theta = delta = 0.5: L > 2.77e+09
+  (3) units: the file converts answers to 'human-years' at 8765.82 hours per year (all hours
+  of the calendar); at 2000 working hours per year the same numbers are 4.38 times larger:
+    n =      300 one-hour answers:    0.03422 calendar years =       0.15 working years
+    n =  6.9e+04 one-hour answers:      7.871 calendar years =       34.5 working years
+    n =  6.9e+07 one-hour answers:       7871 calendar years =   3.45e+04 working years
+  (4) sequential rounds (Proposition 6.3): with b answers per batch and S batches the bound of R3
+  is K ln 2/(theta S).  Twenty batches, theta = delta = 0.1: K <= 0.289 bits, as the file says.
+== G: the table of the data against the human (the referent test where R1 is empty)
+  X = [N], one call per run at a uniform input, human f = 0 with weight 2^-K; for every set A
+  of inputs the member 'answer 0 on A, 1 elsewhere' (the table of a data set with questions A)
+  with weight proportional to (2N)^-|A|: b = log2(2N) bits per recorded question.  After s
+  distinct questions, probability that the mixture answers 1 at an input not yet asked:
+    N = 1024, K = 100 bits, b = 11 bits, K/b = 9.1:  s = 0: 0.9995;  s = 4: 0.9995;  s = 8: 0.9993;  s = 9: 0.6654;  s = 11: 0.0000;  s = 14: 0.0000
+    N = 1024, K = 1000 bits, b = 11 bits, K/b = 90.9:  s = 0: 0.9995;  s = 45: 0.9995;  s = 81: 0.9995;  s = 90: 0.9985;  s = 101: 0.0000;  s = 137: 0.0000
+    N = 1048576, K = 1000 bits, b = 21 bits, K/b = 47.6:  s = 0: 1.0000;  s = 23: 1.0000;  s = 42: 1.0000;  s = 47: 0.9999;  s = 53: 0.0000;  s = 72: 0.0000
+  the bound of R1 for the same n, K ln 2/n, is below 1 only for n > K ln 2: the tables lose to
+  the human only after about K/b questions, and before that the mixture is the table's.

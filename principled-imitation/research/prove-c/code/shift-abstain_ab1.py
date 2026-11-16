@@ -115,7 +115,9 @@ def example_42(K, eta):
 def audits_sim(K, eta, q, reps, seed=0):
     """All 2^K functions on K inputs, uniform prior, f = 0.  Input a_i is shown until it has
     been asked.  Rule: with probability q ask; otherwise answer the label of posterior mass
-    >= 1-eta if there is one (ties to label 1), else abstain; abstentions are asked."""
+    >= 1-eta if there is one (ties to label 1), else abstain; abstentions are asked.
+    eta = 0.5 is the limiting case of Definition 4.0: at the posterior (1/2, 1/2) the rule
+    then answers 1, which is wrong, and the bound of Proposition 4.3(b) is attained."""
     rng = random.Random(seed)
     silent = 0
     for _ in range(reps):

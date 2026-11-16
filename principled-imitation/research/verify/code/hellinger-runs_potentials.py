@@ -245,6 +245,42 @@ def part_n4():
           f" {best_ratio:.6f} at (Lam, r1, r2) = ({arg_ratio[0]:.4f}, {arg_ratio[1]:.4f}, {arg_ratio[2]:.6f});  c* = {C:.6f}")
 
 
+def part_n4b():
+    """Continuous search (Nelder-Mead from random starts) for a violation of the one-step
+    inequalities, over two-point laws with second moment 1 and over point masses."""
+    from scipy.optimize import minimize
+    rng = np.random.default_rng(5)
+    Usimple = lambda x: 0.5 * np.maximum(2.0 - x, 0.0) ** 2
+
+    def gap(par, Ufun, c):
+        Lam = math.exp(min(max(par[0], -20.0), 20.0))
+        r1 = 1 / (1 + math.exp(-min(max(par[1], -25.0), 25.0)))      # in (0, 1)
+        r2 = 1 + math.exp(min(max(par[2], -25.0), 12.0))             # > 1
+        pi = (r2 * r2 - 1) / (r2 * r2 - r1 * r1)
+        vals = Ufun(np.array([Lam * r1, Lam * r2, Lam]))
+        return float(pi * vals[0] + (1 - pi) * vals[1] - vals[2] - c * (1 - pi * r1 - (1 - pi) * r2))
+
+    def gap_pm(par, Ufun, c):
+        Lam = math.exp(min(max(par[0], -20.0), 20.0))
+        r = 1 / (1 + math.exp(-min(max(par[1], -25.0), 25.0)))
+        vals = Ufun(np.array([Lam * r, Lam]))
+        return float(vals[0] - vals[1] - c * (1 - r))
+
+    out = []
+    for name, Ufun, c in (("U of Lemma 2.2, constant 4", Usimple, 4.0), ("U* of Theorem 2.7, constant c*", U_np, C)):
+        best = -np.inf
+        for _ in range(250):
+            x0 = np.array([rng.uniform(-3, 4), rng.uniform(-6, 6), rng.uniform(-12, 5)])
+            res = minimize(lambda z: -gap(z, Ufun, c), x0, method="Nelder-Mead", options={"xatol": 1e-10, "fatol": 1e-15, "maxiter": 4000})
+            best = max(best, -res.fun)
+            res = minimize(lambda z: -gap_pm(z, Ufun, c), x0[:2], method="Nelder-Mead", options={"xatol": 1e-10, "fatol": 1e-15, "maxiter": 2000})
+            best = max(best, -res.fun)
+        out.append((name, best))
+    print("(N4b) continuous search for a violation of the one-step inequalities (500 Nelder-Mead runs each):")
+    for name, best in out:
+        print(f"     {name}: largest value of E U(Lam r) - U(Lam) - c (1 - E r) found = {best:.3e} (must be <= 0 up to rounding)")
+
+
 # ------------------------------------------------------------------ (N5)
 def part_n5():
     print("(N5) Step 0 (iv), (v); continuity of V; end points")
@@ -445,6 +481,7 @@ if __name__ == "__main__":
     part_n2()
     part_n3()
     part_n4()
+    part_n4b()
     part_n5()
     part_n7()
     part_n8()

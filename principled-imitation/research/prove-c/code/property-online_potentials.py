@@ -10,12 +10,14 @@ S = g_1 + ... + g_{t-1}, the number v of non-zero increments, and (for E1) the t
 The script evaluates the gap  RHS - LHS  of (*) on grids and reports its minimum, which must be
 >= 0 (up to rounding), and for the exact identities its maximum absolute value, which must be 0.
 
-  E1  u = cosh(eta S_t) / cosh(eta)^t                      (the lead's rule; g in [-1, 1])
-  E2  u = cosh(eta S_t) exp(-v_t eta^2 / 2)                (g in [-1, 1], v counts g != 0)
-  E3  u = cosh(eta S_t) / cosh(eta)^{v_t}                  (g in {-1, 0, 1}; identity)
-  E4  u = 2^{v_t - 1} 1[|S_t| = v_t] (1 if v_t = 0)        (g in {-1, 0, 1}; identity)
-  E6  u = G_{v_t}(S_t), G_v(s) = (v+1)^{-1/2} exp(s^2 / (2 (v+1)))   (g in [-1, 1])
-  E7  u = (prod(1 + eta g_s) + prod(1 - eta g_s)) / 2      (g in [-1, 1]; identity)
+The labels E1..E7 are those of this script; the items of Lemma 1.4 are given in brackets.
+
+  E1  [1.4(a)]  u = cosh(eta S_t) / cosh(eta)^t                 (the lead's rule; g in [-1, 1])
+  E2  [1.4(b)]  u = cosh(eta S_t) exp(-v_t eta^2 / 2)           (g in [-1, 1], v counts g != 0)
+  E3  [1.4(b), second form]  u = cosh(eta S_t) / cosh(eta)^{v_t}   (g in {-1, 0, 1}; identity)
+  E4  [1.4(d)]  u = 2^{v_t - 1} 1[|S_t| = v_t] (1 if v_t = 0)   (g in {-1, 0, 1}; identity)
+  E6  [1.4(c)]  u = G_{v_t}(S_t), G_v(s) = (v+1)^{-1/2} exp(s^2 / (2 (v+1)))   (g in [-1, 1])
+  E7  [1.4(e)]  u = (prod(1 + eta g_s) + prod(1 - eta g_s)) / 2  (g in [-1, 1]; identity)
 
 It also checks, by numerical integration, the representation
     G_v(s) = int exp(eta s - v eta^2 / 2) N(0, 1)(d eta),

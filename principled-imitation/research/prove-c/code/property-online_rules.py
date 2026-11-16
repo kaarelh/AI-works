@@ -7,7 +7,7 @@ S_n(B) = sum of g_t(B), V_n(B) = number of rounds with g_t(B) != 0.
 Rules (each answers x with a y that minimises sum_B pi(B) * slope_B * 1[(x, y) in B]; ties go to
 the least y):
   lead   slope = sinh(eta S)                                   (Theorem Pr5 of the note)
-  vclock slope = cosh(eta)^(-V) sinh(eta S)                    (the same with the clock V)
+  vclock slope = cosh(eta)^(-V) sinh(eta S)                    (Remark 2.2(3): the same with the clock V)
   N      slope = (G_{V+1}(S+1) - G_{V+1}(S-1)) / 2,  G_v(s) = (v+1)^(-1/2) exp(s^2 / (2(v+1)))
   NH     slope = half the slope of N plus half the slope of the halving potential
   grid   slope = sum_i rho_i exp(-(V+1) eta_i^2 / 2) sinh(eta_i) sinh(eta_i S),
@@ -111,7 +111,7 @@ if __name__ == "__main__":
     n = 4000
     print(f"n = {n} rounds; entries: the largest (left side)/(bound) over all rounds and tests (must be <= 1),")
     print("then max_B |S_n(B)| / sqrt(n)\n")
-    header = f"{'family':<34}{'human':<12}" + "".join(f"{r:>16}" for r in ("lead", "vclock", "N", "NH", "grid"))
+    header = f"{'family':<36}{'human':<12}" + "".join(f"{r:>16}" for r in ("lead", "vclock", "N", "NH", "grid"))
     print(header)
     for (K, nx, ny, kind) in ((30, 12, 4, "uniform"), (200, 40, 6, "uniform"), (40, 12, 4, "geometric")):
         tests, PI = family(rng, K, nx, ny, kind)
@@ -126,7 +126,7 @@ if __name__ == "__main__":
             "avoiding": lambda t, x, a: int(rng.choice(ny, p=Pav[x])),
         }
         for hname, h in humans.items():
-            row = f"{f'{K} tests ({kind}), |X|={nx}, |Y|={ny}':<34}{hname:<12}"
+            row = f"{f'{K} tests ({kind}), |X|={nx}, |Y|={ny}':<36}{hname:<12}"
             for rule in ("lead", "vclock", "N", "NH", "grid"):
                 worst, S, V = play(rule, tests, PI, n, h, rng, eta=1 / math.sqrt(n))
                 row += f"{worst:8.3f}{np.max(np.abs(S)) / math.sqrt(n):8.3f}"

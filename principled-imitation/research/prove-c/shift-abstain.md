@@ -6,7 +6,45 @@ Part `shift-abstain` of the third proving round for `research/candidate-theory.m
 
 ### 0.1 Table of statements
 
-SUMMARY-TABLE-PLACEHOLDER
+| no. | statement | in the candidate theory | proposed label | tag |
+|---|---|---|---|---|
+| Lemma 1.1 | Regret of the Bayes mixture on any adaptively chosen asked inputs: Σ E[a_t·KL] ≤ K ln 2; Hellinger and squared-TV forms; for a function Π(1 − e_t) ≥ w(f) on every path | L3 | (tool) | PROVED (standard) |
+| Lemma 1.2, Corollary 1.3 | In rehearsal driven by any answer rule the asked call is a uniformly chosen call of the driver's run; R1 for any driver | R1 | (tool) | PROVED |
+| Lemma 1.4 | Coupling of a kernel's run with the human system up to the first unfaithful call: separation probability p ≤ β; visit measures differ by at most (L − 1)p; errors along the human's run are at most L times the errors along the own run | L2 | (tool) | PROVED |
+| Proposition 2.1 | S1 for a change of the law of the top-level input: factor B; a truncated form for unbounded ratios; the factor is necessary | S1 | S1 | PROVED (S1 MODIFIED: stated for the top-level law) |
+| Example 2.2 | S1 as the candidate states it, with the average rehearsal visit measure, fails by the factor L/(2 ln L) | S1 | — | REFUTED as stated |
+| Proposition 2.3 | With visit measures the factor is (2L − 1)·B, and at least L/2 is needed | S1 | S1′ | NEW |
+| Proposition 2.4 | S3: a task property of rehearsal probability β costs exactly 1/β for a rehearsal on D₀ and N for N unknown properties; a known property costs nothing | S3 | S3 | PROVED (meaning made exact) |
+| Theorem 2.5 | The three kinds of shift: self-produced (factor 1), to a described law (density ratio; 2^k for all laws of k bits), anything else (no guarantee) | task item 1 | S4 | PROVED (collects R1, S1, S2, N3, N1) |
+| Theorem 3.1 | Each step put to the human with probability q for ever: E Σ KL ≤ K ln 2/q over all steps; silent errors ≤ (1 − q)K ln 2/q for a function | Observation A | S5 | PROVED |
+| Example 3.2 | Both bounds are attained: equality in the limit for the divergence, factor 2 ln 2 for silent errors | — | — | PROVED |
+| Theorem 3.3, Lemma 3.4 | Thresholds, answers only on questions: E[Sil + Abs]·(Q + 1) ≥ 3N/16 for at most Q ≤ N/2 − 1 questions; E[Sil + Abs]·(E[Qu] + 1) ≥ N/15 for E[Qu] ≤ N/4 − 1; optimal up to the factor 2 | digest, Section 3.4 | N6 | PROVED (constant improved from 1/32; parts (b), (c) NEW) |
+| Corollary 3.5 | The factor K in "silent errors × questions ≤ h·K ln 2" cannot be removed: product of threshold classes | — | N6 | NEW |
+| Corollary 3.6 | With finitely many questions on arbitrary inputs, silent mistakes plus abstentions grow linearly | Section 0, item 4 | N6 | PROVED |
+| Theorem 4.1 | Ab1: on any asked sequence, (wrong rounds)·log(1/η) + (abstention rounds)·log(1/(1 − η)) ≤ K; never wrong if η < w(f) | Ab1 | Ab1 | PROVED |
+| Example 4.2 | Each of the two counts is attained | Ab1 | — | PROVED |
+| Proposition 4.3 | With answers seen only on questions: the abstention count bounds the questions; silent errors are unbounded if η ≥ w(f); with audits at rate q, E[Sil] ≤ ((1 − q)/q)·K/log(1/η) | Ab1 | Ab1 | PROVED; part (b) NEW |
+| Theorem 4.4 | Ab1 under rehearsal driven by the threshold rule: per run E[wrong answers] ≤ L·K/(n·log(1/η)), Pr[abort] ≤ L·K ln 2/(n·η) | Ab1 | Ab1 | PROVED |
+| Theorem 4.5 | Closed system, needle class: silent failure σ with abort probability a needs n ≥ (1 − a)²·L/(4σ) − L | — | N7 | NEW |
+| Proposition 4.6 | Thresholds with every answer shown: at most k wrong answers forces (k + 1)·N^(1/(k+1))/e − k − 1 abstentions; exact value C(m + 1, ≤ k + 1) − 1 | "in line with N4" | N8 | PROVED (exact form due to Zhang and Chaudhuri 2016) |
+| Proposition 4.7 | A stochastic human with a mode: both counts hold in expectation, with kl-divergences in the denominators | Ab1, stochastic version | Ab1 | NEW |
+| Proposition 4.8 | No rule has both counts for all members of a class of samplers | Ab1, stochastic version | N9 | NEW |
+| Theorem 5.1 | Ab2, dominance: the minimum rule over a set containing the human is the human system with a visible abort; TV equals the abort probability; bounds on the abstention probability | Ab2 | Ab2 | PROVED |
+| Proposition 5.2 | Three plausible sets (absolute, cumulative, ratio), their sizes, Ville's bound α/w(P), no loss for functions, the prior-averaged version | Ab2 | Ab2 | PROVED |
+| Theorem 5.3 | Coverage in the class of all programs: the rule abstains wherever sep(x; A) ≤ log(1/α) − c and, for functions, only where sep(x; A) ≤ K + K_D + log(1/α) + c; the threshold rule abstains wherever sep(x; A) < log(1/η) − c | Ab2 | Ab2 | PROVED (inner region: candidate's claim with the constant made explicit, MODIFIED; outer region NEW) |
+| Proposition 5.4 | The minimum rule abstains exactly where every rule that is sound for its plausible set must | — | — | PROVED |
+| Corollary 5.5 | What a moderate α gives under the assumption "within log(1/α) bits of the best explanation": exact dominance, a list of refused inputs, answers beyond a radius; the assumption cannot be checked | Ab2 | Ab2 | PROVED |
+| Theorem 5.6 | Abort probability of the frozen rule on the rehearsed closed system, for functions and for samplers | — | Ab4 | NEW |
+| Example 5.7 | The ratio set is a rock on the needle class until n is near 2^K; with weights 2^(−length) fill-ins of the coins make the rule useless at K = 1 | — | — | PROVED |
+| Section 5.5 | Cohen, Hutter and Nanda (2022): their five theorems, and what in Ab2 is theirs | task item 4 | — | literature, read in the source |
+| Proposition 6.1 | Ab3: at most 2^s − 1 questions; never wrong if s > 2K + c₂; comparison with enumeration | Ab3 | Ab3 | PROVED |
+| Proposition 6.2 | Ab3 when nobody answers: refuses {sep(x; A) < s} for ever; with a sound s this is every input simpler than 2K; share of refused calls on a rehearsed system | Ab3 | Ab3 | PROVED; item 3 NEW |
+| Proposition 7.1, Corollary 7.2 | N4: never silently wrong forces asking or abstaining wherever two members differ; 2^d on the point functions | N4 | N4 | PROVED |
+| Theorem 7.3 | The trade-off between silent errors, abstentions and questions, with upper and lower bounds | task item 6 | Ab5 | PROVED (collects the above) |
+| Definition 7.4, Proposition 7.5 | Rocks and whitelists: a rule that is sound for a slack of a bits refuses all a-simple novelty; which rule is which | task item 6 | Ab6 | PROVED |
+| Section 9 | Open questions | — | — | OPEN |
+
+**In brief.** (1) S1 holds with the density ratio B when the law of the top-level input changes, and is false by a factor of order L when stated with visit measures; the true factor there is between L/2 and 2L − 1. S3 is correct once "costs 1/β" is read as the price of a property that was not singled out in advance. The shift that a decomposition produces by itself costs nothing under rehearsal; a shift to a described law costs the density ratio; any other shift has no guarantee. (2) Asking each call with probability q for ever bounds the total divergence by K ln 2/q on any inputs, with equality in the limit; the asking cannot stop: for N thresholds, (silent mistakes plus abstentions) × (questions + 1) is at least 3N/16, and in the upper bound h·K ln 2 for this product the factor K is necessary up to a logarithm. (3) Ab1 is correct. Its two counts are attained, the exponential rate between them is necessary (thresholds), and under rehearsal they become per-run bounds; in a closed system abstention saves at most the factor (1 − a)² in questions. For a stochastic human the counts survive only if the human has a mode, and no rule has both for all samplers. (4) Ab2 is correct: the minimum rule is the human system with a visible abort. In the class of all programs it abstains wherever a test of log(1/α) − c bits separates the input from the asked ones, and for functions nowhere beyond K + K_D + log(1/α) + c bits. With α small enough for Ville's inequality it refuses every input simpler than the human; with a moderate α it is a whitelist whose soundness is an assumption that the data cannot confirm. On the rehearsed closed system its abort probability is bounded at a price polynomial in 1/α, provided the weights are summable in square root. The rule, the cumulative top set and the Ville step are those of Cohen, Hutter and Nanda; the frozen use, the exact dominance of runs, the coverage theorem and the closed-system bound are not in their paper. (5) Ab3 is correct with the constant of the difference test; frozen, with the sound parameter, it refuses every input simpler than twice the human. (6) The trade-off is Theorem 7.3; Proposition 7.5 says which rules are rocks (all of them, when their parameter makes soundness a theorem) and which are whitelists (the same rules with a moderate parameter, sound by assumption).
 
 ### 0.2 Conventions
 
@@ -45,7 +83,7 @@ Since P ∈ H, M_D(y|x) ≥ w_D(P)·P(y|x).
 
 **Scaffolds and runs.** A scaffold Π of horizon L ≥ 1 consists of a countable set Z with a law D₀ (top-level inputs), a probability space (R, λ) (the scaffold's own randomness ρ), and measurable maps next_j : Z × R × Y^{j−1} → X ∪ {STOP} for j = 1, …, L; next_{L+1} := STOP. An *answerer* G gives, for each call j, a law G_j(· | z, ρ, y_1, …, y_{j−1}) on Y_⊥. A kernel C on Y_⊥ is the answerer that looks only at the input of the call. A *run* with answerer G is produced as follows: draw z ~ D₀ and ρ ~ λ; for j = 1, 2, …, compute x_j := next_j(z, ρ, y_1, …, y_{j−1}); if x_j = STOP the run ends; otherwise draw y_j from G_j; **if y_j = ⊥ the run ends** (it is *aborted* at call j). The run is τ = (z, ρ, y_1, …, y_{len(τ)}), where len(τ) ≤ L is the number of calls made, an aborting call included; x_1, …, x_{len(τ)} are its inputs. A run that is not aborted is *complete*. Q_G is the law of the run, and Q_P the *human system*; all runs of the human system are complete. The *visit measure* of G is d_G(B) := E_{Q_G} #{j ≤ len(τ) : x_j ∈ B} for B ⊆ X; its total mass is at most L. (In `research/prove/rehearsal-core.md` the scaffold continues after an answer ⊥. Here ⊥ ends the run, because for an abstaining rule this is the behaviour wanted. For the statements about the mixture that are used below the two conventions give the same proofs.)
 
-**Separation.** For x ∈ X and A ⊆ X, sep(x; A) is the least complexity K(Q) of a decidable set Q ⊆ X with x ∈ Q and Q ∩ A = ∅ (∞ if there is none, in particular if x ∈ A). The complexity K(Q) is the length of a shortest program, for a fixed universal prefix machine, that decides Q. The statements that involve sep are made for classes with the two properties (P1), (P2) of Section 5.3, which hold in the class of all programs.
+**Separation.** For x ∈ X and A ⊆ X, sep(x; A) is the least complexity K(Q) of a decidable set Q ⊆ X with x ∈ Q and Q ∩ A = ∅ (∞ if there is none, in particular if x ∈ A). The complexity K(Q) is the length of a shortest program, for a fixed universal prefix machine, that decides Q. The statements that involve sep are made for classes with the properties (P1) to (P3) of Section 5.3, which hold in the class of all programs.
 
 ### 1.2 The regret bound on asked inputs
 
@@ -60,7 +98,7 @@ Since P ∈ H, M_D(y|x) ≥ w_D(P)·P(y|x).
 
 *Proof.* (1) Pr[a_t = 1 and P(y_t|x_t) = 0 | 𝓖_t] = 0, so almost surely every recorded answer has positive probability under P, and then ξ(D) ≥ w(P)·P(D) > 0 for all data lists that arise. By definition M^(t)(y_t|x_t) = ξ(D_{<t} + (x_t, y_t))/ξ(D_{<t}) on {a_t = 1}, so the product of these numbers over the asked rounds t ≤ n telescopes to ξ(D_{≤n})/W, and the product of the numbers P(y_t|x_t) is P(D_{≤n}). The inequality is ξ ≥ w(P)·P.
 
-(2) M^(t)(y|x) ≥ w_{D_{<t}}(P)·P(y|x) gives the bound on κ_t. Write Z_t := ln(P(y_t|x_t)/M^(t)(y_t|x_t)) on {a_t = 1}. Given 𝓖_t and a_t = 1, y_t has law p := P(·|x_t), and m := M^(t)(·|x_t) restricted to Y is a sub-probability; since (ln u)⁺ ≤ u/e for u > 0, E[Z_t⁻ | 𝓖_t] = Σ_y p(y)(ln(m(y)/p(y)))⁺ ≤ Σ_y m(y)/e ≤ 1/e. So E[Z_t | 𝓖_t] is well defined and equals κ_t. Put S_n := Σ_{t≤n} a_t Z_t and c := ln(W/w(P)). By (1), a_t Z_t = S_t − S_{t−1} ≤ c + Σ_{s<t} (a_s Z_s)⁻, and the right side is integrable; so every a_t Z_t is integrable, and E[S_n] = Σ_{t≤n} E[a_t κ_t] because a_t is 𝓖_t-measurable. E[S_n] ≤ c by (1). The terms are nonnegative; let n → ∞.
+(2) M^(t)(y|x) ≥ w_{D_{<t}}(P)·P(y|x) gives the bound on κ_t. Write Z_t := ln(P(y_t|x_t)/M^(t)(y_t|x_t)) on {a_t = 1}. Given 𝓖_t and a_t = 1, y_t has law p := P(·|x_t), and m := M^(t)(·|x_t) restricted to Y is a sub-probability; since (ln u)⁺ ≤ u/e for u > 0, E[Z_t⁻ | 𝓖_t] = Σ_y p(y)(ln(m(y)/p(y)))⁺ ≤ Σ_y m(y)/e ≤ 1/e. So E[Z_t | 𝓖_t] is well defined and equals κ_t. Put Reg_n := Σ_{t≤n} a_t Z_t and c := ln(W/w(P)). By (1), a_t Z_t = Reg_t − Reg_{t−1} ≤ c + Σ_{s<t} (a_s Z_s)⁻, and the right side is integrable; so every a_t Z_t is integrable, and E[Reg_n] = Σ_{t≤n} E[a_t κ_t] because a_t is 𝓖_t-measurable. E[Reg_n] ≤ c by (1). The terms are nonnegative; let n → ∞.
 
 (3) For a probability vector p on Y and a sub-probability m on Y, Jensen's inequality gives ln Σ_y p(y)√(m(y)/p(y)) ≥ ½ Σ_y p(y) ln(m(y)/p(y)), that is, −ln(1 − H²) ≤ ½·KL; and H² ≤ −ln(1 − H²). The second bound is Pinsker's inequality TV ≤ √(KL/2) for the two laws on Y_⊥. Now use (2).
 
@@ -70,7 +108,7 @@ Since P ∈ H, M_D(y|x) ≥ w_D(P)·P(y|x).
 
 ### 1.3 Rehearsal with any driver
 
-**Protocol R[𝔯] (rehearsal driven by an answer rule 𝔯).** For t = 1, …, n: (1) freeze the kernel C^(t) := 𝔯_{D_{<t}}; (2) run Π with C^(t) answering every call; the run has ℓ_t calls with inputs x_{t,1}, …, x_{t,ℓ_t}, and if C^(t) abstains at a call the run ends there; (3) draw J_t uniformly from {1, …, L}, independently of everything so far; if J_t ≤ ℓ_t, put x_t := x_{t,J_t} to the human, receive y_t ~ P(·|x_t) and append the pair to the data (a_t = 1); otherwise a_t = 0. The call at which a run was aborted can be asked like any other. *Deployment:* draw T uniformly from {1, …, n}, independently, and run Π with C^(T). 𝓕_{t−1} is the σ-algebra of everything realised in rounds 1, …, t − 1; d_t := d_{C^(t)} is the visit measure of the kernel of round t (a function of D_{<t}). Protocol R of the candidate theory is R[mixture].
+**Protocol R[𝔯] (rehearsal driven by an answer rule 𝔯).** For t = 1, …, n: (1) freeze the kernel C^(t) := 𝔯_{D_{<t}}; (2) run Π with C^(t) answering every call; the run has ℓ_t calls with inputs x_{t,1}, …, x_{t,ℓ_t}, and if C^(t) abstains at a call the run ends there; (3) draw J_t uniformly from {1, …, L}, independently of everything so far; if J_t ≤ ℓ_t, put x_t := x_{t,J_t} to the human, receive y_t ~ P(·|x_t) and append the pair to the data (a_t = 1); otherwise a_t = 0. The call at which a run was aborted can be asked like any other. *Deployment:* draw T uniformly from {1, …, n}, independently, and run Π with C^(T). 𝓕_{t−1} is the σ-algebra of everything realised in rounds 1, …, t − 1; d_t := d_{C^(t)} is the visit measure of the kernel of round t (a function of D_{<t}). Protocol R of the candidate theory is R[mixture]. Here n is the number of rounds; at most n questions are put to the human, and exactly n if every run makes L calls. Where the text says "n questions" for a rehearsal, it means n rounds.
 
 **Lemma 1.2 (the asked call is a uniformly chosen call of the driver's run). PROVED.** For every measurable φ ≥ 0 defined on (data lists) × X,
 
@@ -181,13 +219,13 @@ So S1 holds with the factor B when the shift is a change of the law of the top-l
 
 **Theorem 2.5 (three kinds of shift). PROVED (a statement that collects R1, S1, S2, N3 and N1).** Let Protocol R be run on a scaffold Π with top-level law D₀ and n questions, and let M^(T) be deployed.
 
-(i) *The shift produced by the system itself costs nothing.* For every B ⊆ X, the probability that the question of round T is asked and lies in B equals 1/L times the expected number of calls of the deployed run on Π that lie in B. In other words, a uniformly chosen call of the deployed run and the question put to the human in a uniformly chosen round have the same distribution, whatever the scaffold does with the answers (decomposition, recursion, calls whose inputs are written by earlier calls). Consequently the bounds of Theorem R1 hold for the deployed run with no factor for shift, and for every property Q of inputs the expected number of unfaithful calls with input in Q is at most L·K ln 2/n for a function.
+(i) *The shift produced by the system itself costs nothing.* For every set X₁ ⊆ X, the probability that the question of round T is asked and lies in X₁ equals 1/L times the expected number of calls of the deployed run on Π that lie in X₁. In other words, a uniformly chosen call of the deployed run and the question put to the human in a uniformly chosen round have the same distribution, whatever the scaffold does with the answers (decomposition, recursion, calls whose inputs are written by earlier calls). Consequently the bounds of Theorem R1 hold for the deployed run with no factor for shift, and for every property Q of inputs the expected number of unfaithful calls with input in Q is at most L·K ln 2/n for a function.
 
 (ii) *A shift to a described law costs the density ratio, and no less.* If the deployment draws its top-level input from D₀′ ≤ B·D₀, every bound holds with the factor B (Proposition 2.1). If the rehearsal draws z from a mixture Σ_i π_i D_i, each D_i has B ≤ 1/π_i (LB Proposition 4.4(a)); for N laws with disjoint supports the factor N is necessary for every protocol (LB Theorem 4.3). For 2^k laws of description length at most k + 2 log k + c this is the price 2^k of "all simple shifts" (LB Corollary 4.2), and with advantage η over a coin the exact number of questions is 2η·2^k (LB Theorem 4.1).
 
 (iii) *Any other shift has no guarantee.* Let x be an input, let A be a set that contains all questions of the protocol with probability 1 and not x, and let the class contain, with P, a hypothesis P′ that equals P on A. Then for every protocol whose questions lie in A and every deployed system, the laws R, R′ of the answer at x under P and P′ satisfy TV(R, P(·|x)) + TV(R′, P′(·|x)) ≥ TV(P(·|x), P′(·|x)) (LB Theorem 1.6(4)); for functions with f′(x) ≠ f(x) the answer at x is wrong or withheld with probability at least 1/2 for one of the two. In the class of all programs such an f′ exists with K(f′) ≤ K(f) + sep(x; A) + c (LB Proposition 1.8). In terms of laws: for a deployment law D₀′ that is not dominated by D₀, Proposition 2.1(b) covers the part where D₀′ ≤ B·D₀ at the price B and leaves the rest, D₀′{D₀′ > B·D₀}, without a guarantee.
 
-*Proof.* (i) Lemma 1.2 with φ := 1_B, for the round T, together with its last sentence; the bounds are Corollary 1.3. (ii) and (iii) are the cited statements. ∎
+*Proof.* (i) Lemma 1.2 with φ the indicator of X₁, for the round T, together with its last sentence; the bounds are Corollary 1.3. (ii) and (iii) are the cited statements. ∎
 
 *What the theorem does not say.* (i) is a statement about expected numbers of calls. It does not say that a particular call of a kind that occurs with frequency below 1/n per call is answered faithfully: such kinds are not sampled, and what the imitator does there is fixed by the prior, as in (iii).
 
@@ -227,13 +265,13 @@ Can the asking stop? The following class has N members of log N bits each and sh
 
 (b) with Q̄ := E[Qu]: E[Sil + Abs] ≥ N/(9(Q̄ + 1)) − √((Q̄ + 1)/(8N)); in particular E[Sil + Abs]·(Q̄ + 1) ≥ N/15 whenever Q̄ + 1 ≤ N/4;
 
-(c) if Q + 1 divides N, the learner that asks at the Q positions that are multiples of N/(Q + 1), predicts 1 until an answer 0 has been seen and 0 afterwards, has Qu ≤ Q and E[Sil] = (N/(Q + 1) − 1)/2 < N/(2(Q + 1)). So (a) is optimal up to the factor 2.
+(c) if Q + 1 divides N, the learner that asks at the Q positions that are multiples of N/(Q + 1), predicts 1 until an answer 0 has been seen and 0 afterwards, has Qu ≤ Q and E[Sil] = (N/(Q + 1) − 1)/2 < N/(2(Q + 1)). So (a) is optimal up to a factor that tends to 2 as (Q + 1)/N tends to 0.
 
 Since the left sides are averages over s, some member s has at least as many expected silent mistakes and abstentions.
 
-**Lemma 3.4.** Let b_1, …, b_u > 0 with Σ_j b_j = N. Then (Σ_j b_j²)·(Σ_j j·b_j) ≥ (4/9)·N³.
+**Lemma 3.4. PROVED.** Let b_1, …, b_u > 0 with Σ_j b_j = N. Then (Σ_j b_j²)·(Σ_j j·b_j) ≥ (4/9)·N³.
 
-*Proof.* Put A := Σ_j b_j² and S := Σ_j j b_j, and let J > 0 be real. Then J·N − S = Σ_j (J − j) b_j ≤ Σ_{1≤j<J} (J − j) b_j ≤ √A·√(Σ_{1≤j<J} (J − j)²) by the Cauchy–Schwarz inequality, and Σ_{1≤j<J} (J − j)² ≤ ∫_0^J v² dv = J³/3, because (J − j)² ≤ ∫_{J−j}^{J−j+1} v² dv and these intervals are disjoint subsets of [0, J]. Take J := 3S/N; then J·N − S = 2S > 0 and A ≥ 3·(2S)²/J³ = (4/9)·N³/S. ∎
+*Proof.* Put Ψ := Σ_j b_j² and Ξ := Σ_j j b_j, and let J > 0 be real. Then J·N − Ξ = Σ_j (J − j) b_j ≤ Σ_{1≤j<J} (J − j) b_j ≤ √Ψ·√(Σ_{1≤j<J} (J − j)²) by the Cauchy–Schwarz inequality, and Σ_{1≤j<J} (J − j)² ≤ ∫_0^J v² dv = J³/3, because (J − j)² ≤ ∫_{J−j}^{J−j+1} v² dv and these intervals are disjoint subsets of [0, J]. Take J := 3Ξ/N; then J·N − Ξ = 2Ξ > 0 and Ψ ≥ 3·(2Ξ)²/J³ = (4/9)·N³/Ξ. ∎
 
 *Proof of Theorem 3.3.* *Step 0: reductions.* Replace every abstention by the prediction 1. This gives a learner without abstentions, with the same questions and with Sil′ ≤ Sil + Abs on every run. So it suffices to bound E[Sil] for learners that never abstain. A randomised learner is a deterministic one for each value of its seed; we fix the seed and treat a deterministic learner, and average at the end.
 
@@ -241,15 +279,15 @@ Since the left sides are averages over s, some member s has at least as many exp
 
 *Step 2: mistakes.* Fix j and write the b_j − 1 positions strictly between q_{j−1} and q_j as x = q_{j−1} + r, r = 1, …, b_j − 1, and the members of the block as s = q_{j−1} + i, i = 0, …, b_j − 1. The label of x under h_s is 1[r ≤ i]. If p(x) = 1 the prediction at x is wrong for the r members with i < r; if p(x) = 0 it is wrong for the b_j − r members with i ≥ r. Hence the number of mistakes at these positions, summed over the members of 𝔅_j, is at least Σ_{r=1}^{b_j − 1} min(r, b_j − r) = ⌊b_j²/4⌋ ≥ (b_j² − 1)/4. Summing over the blocks,
 
-  Σ_{s=0}^{N−1} Sil(s) ≥ (A − (m + 1))/4,  A := Σ_{j=1}^{m+1} b_j².  (3.1)
+  Σ_{s=0}^{N−1} Sil(s) ≥ (Ψ − (m + 1))/4,  Ψ := Σ_{j=1}^{m+1} b_j².  (3.1)
 
 *Step 3: questions.* By Step 1, Qu(s) ≥ min(j, m) for s ∈ 𝔅_j, so Qu(s) + 1 ≥ j and
 
-  Σ_{s=0}^{N−1} (Qu(s) + 1) ≥ S := Σ_{j=1}^{m+1} j·b_j ≥ (m + 1)(m + 2)/2.  (3.2)
+  Σ_{s=0}^{N−1} (Qu(s) + 1) ≥ Ξ := Σ_{j=1}^{m+1} j·b_j ≥ (m + 1)(m + 2)/2.  (3.2)
 
-*Step 4: proof of (a).* The member s = N − 1 lies in the last block, so m ≤ Qu(N − 1) ≤ Q. By the Cauchy–Schwarz inequality A ≥ N²/(m + 1), and v ↦ N²/v − v is decreasing; so (3.1) gives Σ_s Sil(s) ≥ (N²/(Q + 1) − (Q + 1))/4 for every seed. Divide by N and average over the seed. If Q + 1 ≤ N/2 then (Q + 1)/N ≤ N/(4(Q + 1)).
+*Step 4: proof of (a).* The member s = N − 1 lies in the last block, so m ≤ Qu(N − 1) ≤ Q. By the Cauchy–Schwarz inequality Ψ ≥ N²/(m + 1), and v ↦ N²/v − v is decreasing; so (3.1) gives Σ_s Sil(s) ≥ (N²/(Q + 1) − (Q + 1))/4 for every seed. Divide by N and average over the seed. If Q + 1 ≤ N/2 then (Q + 1)/N ≤ N/(4(Q + 1)).
 
-*Step 5: proof of (b).* Index the quantities of Steps 1 to 3 by the seed r. By Lemma 3.4, A_r·S_r ≥ (4/9)N³ for every r, so by the Cauchy–Schwarz inequality E_r[A_r]·E_r[S_r] ≥ (E_r √(A_r S_r))² ≥ (4/9)N³. By (3.2), E_r[S_r] ≤ N·(Q̄ + 1) and m_r + 1 ≤ √(2S_r), so E_r[m_r + 1] ≤ √(2N(Q̄ + 1)) by Jensen's inequality. With (3.1): N·E[Sil] ≥ ( (4/9)·N²/(Q̄ + 1) − √(2N(Q̄ + 1)) )/4, which is the first claim. If Q̄ + 1 ≤ N/4, then (Q̄ + 1)·√((Q̄ + 1)/(8N)) ≤ (N/4)^(3/2)/√(8N) = N/(8√8), and N/9 − N/(8√8) > N/15.
+*Step 5: proof of (b).* Index the quantities of Steps 1 to 3 by the seed r. By Lemma 3.4, Ψ_r·Ξ_r ≥ (4/9)N³ for every r, so by the Cauchy–Schwarz inequality E_r[Ψ_r]·E_r[Ξ_r] ≥ (E_r √(Ψ_r Ξ_r))² ≥ (4/9)N³. By (3.2), E_r[Ξ_r] ≤ N·(Q̄ + 1) and m_r + 1 ≤ √(2Ξ_r), so E_r[m_r + 1] ≤ √(2N(Q̄ + 1)) by Jensen's inequality. With (3.1): N·E[Sil] ≥ ( (4/9)·N²/(Q̄ + 1) − √(2N(Q̄ + 1)) )/4, which is the first claim. If Q̄ + 1 ≤ N/4, then (Q̄ + 1)·√((Q̄ + 1)/(8N)) ≤ (N/4)^(3/2)/√(8N) = N/(8√8), and N/9 − N/(8√8) > N/15.
 
 *Step 6: proof of (c).* Put b := N/(Q + 1). For s = q_{j−1} + i in block j, the learner predicts 1 at the b − 1 − i positions of the block's gap that lie above s, where the label is 0, and makes no other mistake: below s the label is 1, and after the answer 0 at q_j it predicts 0, which is right. (In the last block there is no question at the end, and the count is the same.) The average of b − 1 − i over i = 0, …, b − 1 is (b − 1)/2. ∎
 
@@ -268,3 +306,612 @@ So in Theorem 3.1(d) the factor K cannot be removed: the product of silent error
 *Proof.* Theorem 3.3(a) with N = h + 1. ∎
 
 *Relation to the literature.* The product form "mistakes × queries ≳ horizon" for thresholds is derived in `understand/ask-for-help.md`, Section 3.4, whose argument is Steps 1, 2 and 4 above with the constant 1/32. That digest reports the same product law, in a model in which every label is shown and abstentions on injected inputs are free, from J. Yu and M. Blanchard, "Distribution-Free Sequential Prediction with Abstentions", arXiv:2602.17918: E[MisErr] ≥ T^α/32 or E[AbsErr] ≥ T^(1−α)/2 for a class of VC dimension 1. I did not open that paper in this session; it is quoted from the digest and is not used in any proof here.
+
+## 4. Ab1: the threshold rule
+
+In Sections 4.1 to 4.5 the human is a function f ∈ H.
+
+**Definition 4.0 (threshold rule).** Let η ∈ (0, 1/2). After data D, the rule Thr_η(D) answers at input x the element y ∈ Y with M_D(y|x) ≥ 1 − η if there is one (it is unique because 1 − η > 1/2), and abstains otherwise. For a sequence of inputs, a round is a *wrong round* if Thr_η of the current data answers something other than f(x_t) at x_t, and an *abstention round* if it abstains at x_t.
+
+### 4.1 Both counts on any sequence of asked inputs
+
+**Theorem 4.1 (Ab1, counts). PROVED.** In Setting 1.0 with a function f as the human, let Wr_n and Ab_n be the numbers of asked rounds t ≤ n that are wrong rounds and abstention rounds for Thr_η(D_{<t}). On every path and for every n,
+
+  Wr_n·log(1/η) + Ab_n·log(1/(1 − η)) ≤ log(W/w(f)) ≤ K.
+
+Hence Wr_n ≤ K/log(1/η) and Ab_n ≤ K/log(1/(1 − η)) ≤ K ln 2/η. If η < w(f)/W there is no wrong round at all, asked or not: after every data list that can arise, Thr_η answers f(x) or abstains at every x.
+
+*Proof.* By Lemma 1.1(4), Π_{t≤n, a_t=1} M^(t)(f(x_t)|x_t) ≥ w(f)/W. At a wrong round some y ≠ f(x_t) has M^(t)(y|x_t) ≥ 1 − η, so M^(t)(f(x_t)|x_t) ≤ η. At an abstention round M^(t)(f(x_t)|x_t) < 1 − η. All other factors are at most 1. Take logarithms. For the last claim: M_D(f(x)|x) ≥ w_D(f) = w(f)/ξ(D) ≥ w(f)/W > η, so no y ≠ f(x) has M_D(y|x) ≥ 1 − η. ∎
+
+The counts are over asked rounds. A round at which the rule answers correctly costs nothing, and there is no bound on the number of such rounds. With j := log(1/η): at most K/j wrong rounds against at most about K ln 2·2^j abstention rounds. The last sentence of the theorem is item X2 of `understand/repo.md`.
+
+**Example 4.2 (each count is attained). PROVED.** Let K > 0 and η ∈ (0, 1/2).
+
+(a) Let k := ⌊K/log(1/η)⌋ ≥ 1, X := {x_1, …, x_k}, f ≡ 0, g_i := 1[· = x_i], W := 2^(−K)·η^(−k) ≤ 1, w(g_i) := (1 − η)·η^(i−1)·W and w(f) := η^k·W = 2^(−K). The weights sum to W. On the sequence x_1, …, x_k, before round i the consistent hypotheses are f, g_i, …, g_k with total weight η^(i−1)·W, so g_i has posterior weight exactly 1 − η and the rule answers 1 = g_i(x_i) ≠ f(x_i). All k rounds are wrong rounds.
+
+(b) Let η′ ∈ (η, 1/2), k′ := ⌊K/log(1/(1 − η′))⌋, W := 2^(−K)·(1 − η′)^(−k′) ≤ 1, w(g_i) := η′·(1 − η′)^(i−1)·W for i ≤ k′ and w(f) := (1 − η′)^(k′)·W = 2^(−K). Before round i the consistent hypotheses have total weight (1 − η′)^(i−1)·W and g_i has posterior weight η′; so M(1|x_i) = η′ < 1 − η and M(0|x_i) = 1 − η′ < 1 − η: the rule abstains in all k′ rounds, and k′ is K/log(1/(1 − η)) up to rounding as η′ decreases to η.
+
+### 4.2 What the counts mean when an answer is seen only on a question
+
+**Proposition 4.3 (feedback on request). PROVED; NEW in part (b).** Let inputs arrive in any way (Setting 3.0 without the mixture's answers), and let the human be a function f.
+
+(a) *Only abstentions are put to the human.* Let Thr_η of the current data answer every input, and let exactly the abstentions be asked. Then on every path at most K/log(1/(1 − η)) questions are asked. If η < w(f)/W no answer is ever wrong. If η ≥ w(f) this fails in general: for H = {f, g} with f ≡ 0, g ≡ 1 on an infinite X and w(g) = 1 − w(f) ≥ 1 − η, the rule answers 1 at every input, is wrong at every step, and never asks.
+
+(b) *Audits.* Let a coin c_t with Pr[c_t = 1 | 𝓖_t] = q be flipped at each step after x_t is fixed. If c_t = 1 the human is asked. If c_t = 0, Thr_η of the current data is applied; in *variant A* its abstentions are also put to the human, in *variant B* they are not. Over the whole unbounded interaction:
+
+  in both variants  E[Sil] ≤ ((1 − q)/q)·K/log(1/η);
+  in variant A, Abs ≤ K/log(1/(1 − η)) on every path, and the expected number of questions among the first h steps is at most q·h + K/log(1/(1 − η));
+  in variant B, E[Abs] ≤ K/(q·log(1/(1 − η))), and the number of questions among the first h steps has mean q·h.
+
+*Proof.* (a) The asked rounds are the abstention rounds; Theorem 4.1. The example is immediate. (b) Let ω_t and α_t be the indicators that Thr_η(D_{<t}) is wrong, respectively abstains, at x_t; they are 𝓖_t-measurable. In variant A the asked steps are those with c_t = 1 or α_t = 1, and Theorem 4.1 gives, on every path, log(1/η)·Σ_t c_t ω_t + log(1/(1 − η))·Σ_t α_t ≤ K. In variant B the asked steps are those with c_t = 1, and log(1/η)·Σ_t c_t ω_t + log(1/(1 − η))·Σ_t c_t α_t ≤ K. In both, Sil = Σ_t (1 − c_t) ω_t has mean (1 − q)·E Σ_t ω_t = ((1 − q)/q)·E Σ_t c_t ω_t, because E[c_t ω_t] = q·E[ω_t]. The same identity for α_t gives the bound on E[Abs] in variant B. ∎
+
+*Tightness of the bound on E[Sil].* Take the class of Example 4.2(a) and show x_i at every step until it has been asked. At an unasked step with input x_i the rule answers wrongly. The number of unasked steps at x_i has mean (1 − q)/q, so E[Sil] = ⌊K/log(1/η)⌋·(1 − q)/q.
+
+*Reading.* With answers seen only on questions, a silent error teaches nothing. So the first count of Theorem 4.1 limits silent errors only through questions that the rule did not choose (audits), or when η is below the weight of the human, where there are none. The second count limits the questions that the rule itself asks.
+
+### 4.3 The rehearsal version: per-run bounds
+
+**Theorem 4.4 (Ab1 under rehearsal driven by the threshold rule). PROVED.** Run Protocol R[Thr_η] (Section 1.3): in round t the frozen rule Thr_η(D_{<t}) answers the calls, the run halts at the first abstention, and one uniformly chosen call slot is put to the human. Let Wr_t be the number of calls of the run of round t that are answered wrongly, and let Halt_t be the event that this run is aborted. Then
+
+  Σ_{t=1}^{n} ( log(1/η)·E[Wr_t] + log(1/(1 − η))·Pr[Halt_t] ) ≤ L·log(W/w(f)) ≤ L·K.
+
+For the deployed rule Thr_η(D_{<T}), T uniform on {1, …, n}:
+
+1. the expected number of wrong answers in the deployed run is at most L·K/(n·log(1/η));
+2. the deployed run is aborted with probability at most L·K/(n·log(1/(1 − η))) ≤ L·K ln 2/(n·η);
+3. with probability at least 1 − L·K/(n·log(1/η)) the deployed run contains no wrong answer, and then it is the run of the human system on the same (z, ρ) if it is complete, and an initial part of that run followed by the abort otherwise;
+4. log(1/η)·Pr[the deployed run contains a wrong answer] + log(1/(1 − η))·Pr[it is aborted] ≤ L·K/n.
+
+*Proof.* The questions of the protocol form a sequence as in Setting 1.0, so Theorem 4.1 holds on every path for the asked rounds. Apply Lemma 1.2 with φ_W(D, x) := 1[Thr_η(D) answers at x something other than f(x)] and φ_A(D, x) := 1[Thr_η(D) abstains at x]: the asked round t is a wrong round with probability E[Wr_t]/L and an abstention round with probability Pr[Halt_t]/L, because a run has at most one abstaining call, its last. Take expectations in Theorem 4.1 and sum. For the deployed rule use the last sentence of Lemma 1.2 and average over T. (3) is Markov's inequality for the number of wrong answers; a run in which every answer given equals f's has the inputs of f's run. (4) uses Pr[Wr ≥ 1] ≤ E[Wr]. ∎
+
+*Comparison with the mixture.* With the same n, the run of M^(T) is unfaithful with probability at most L·K ln 2/n (Theorem R1), and the run of the threshold rule has a wrong answer with probability at most L·K ln 2/(n·ln(1/η)) and is aborted with probability at most L·K ln 2/(n·η). So the bound on silent failures is smaller by the factor ln(1/η), and a visible failure is added whose bound is larger by the factor 1/η. To keep the visible failures at a level δ, n = L·K ln 2/(η·δ) questions suffice: a bound on silent failures that is smaller by the factor j = ln(1/η) is bought with e^j times as many questions.
+
+*One rule for good.* The bounds are for the rule of a uniformly chosen round, drawn afresh. If one rule Thr_η(D_{<T}) is drawn once and kept for all later runs, apply Markov's inequality to the random variable log(1/η)·E[Wr | D_{<T}] + log(1/(1 − η))·Pr[abort | D_{<T}], whose mean is at most L·K/n: with probability at least 1 − δ′ over the rehearsal and over T, each later run has at most L·K/(δ′·n·log(1/η)) wrong answers in expectation and is aborted with probability at most L·K/(δ′·n·log(1/(1 − η))). Nothing is claimed for the rule of the last round: the bounds are sums over the rounds, and the per-round quantities need not decrease.
+
+*The rule must drive the rehearsal.* If the mixture drives the rehearsal and Thr_η is only deployed, the calls of the deployed run are not distributed as the asked calls, and only Proposition 2.3 applies, with the factor 2L − 1.
+
+### 4.4 In a closed system abstention saves at most the factor (1 − a)²
+
+**Theorem 4.5 (N2 with abstention). NEW.** Take the needle class 𝒩(N₀) = {f₀ ≡ 0} ∪ {f_c := 1[· = c] : c ∈ [N₀]} and the OR scaffold of LB Definition 2.0: z = (z_1, …, z_L) independent and uniform on [N₀], the calls are z_1, …, z_L, the outcome is the largest answer. Let a protocol put n questions in expectation to the human when the human is f₀, and let it deploy any system with outcomes in {0, 1, ⊥} (LB Definitions 1.1 and 1.3). For a member f let σ(f) be the probability that the outcome is neither ⊥ nor the outcome of the human system (*silent failure*), and let a := Pr_{f₀}[outcome ⊥]. Then, with p := 1 − (1 − 1/N₀)^L,
+
+  max_f σ(f) ≥ ( (N₀ − n)·p − L·a )/(N₀ + L).
+
+Consequently, if σ(f) ≤ σ for all members and a ≤ a* < 1, and N₀ := (1 − a*)·L/(2σ) is an integer, then
+
+  n ≥ (1 − a*)²·L/(4σ) − L.
+
+*Proof.* Fix the protocol's seed r. Let S(r) be the set of cells asked when all answers are 0, and g₀ the outcome deployed after that all-zero transcript (a function of r, z and fresh randomness). If c ∉ S(r), the transcript under f_c is the all-zero transcript (LB Lemma 1.5), so the outcome under f_c is g₀. Let U := #{c ∈ [N₀] ∖ S(r) : c ∈ {z_1, …, z_L}} ≤ L. Under f_c with c ∉ S(r) and c among the calls, the human system's outcome is 1, so g₀ = 0 is a silent failure. Hence
+
+  Σ_c σ(f_c) ≥ E[U·1{g₀ = 0}] ≥ E[U] − L·Pr[g₀ ≠ 0] = E[U] − L·(a + σ(f₀)),
+
+and E[U] = Σ_c Pr[c ∉ S(r)]·p ≥ (N₀ − n)·p because r and z are independent and E|S(r)| ≤ n. So N₀·max_c σ(f_c) + L·σ(f₀) ≥ (N₀ − n)p − L·a, which gives the first claim. For the second put ρ₀ := L/N₀ = 2σ/(1 − a*); then p ≥ ρ₀(1 − ρ₀/2) and the first claim gives n/N₀ ≥ 1 − (σ(1 + ρ₀)/ρ₀ + a*)/(1 − ρ₀/2) = ((1 − a*)/2 − ρ₀/2 − σ)/(1 − ρ₀/2). If the numerator is negative the claim is trivial; otherwise n ≥ N₀·((1 − a*)/2 − σ/(1 − a*) − σ) = (1 − a*)²L/(4σ) − L/2 − (1 − a*)L/2 ≥ (1 − a*)²L/(4σ) − L. ∎
+
+For a* = 0 this is LB Corollary 2.2(1). *Reading.* In the closed system, for a class closed under one-cell exceptions, a rule that abstains with probability a still needs (1 − a)²·L/(4σ) − L questions to keep silent failures below σ. Failing obviously does not buy a cheaper guarantee against failing silently; it only converts failures. Theorem 4.4 is consistent with this: its gain is the factor ln(1/η), paid for by aborts. The linear programme of Section 8 gives the exact optimum for small N₀ and L; it is at least the bound in all 27 cases computed.
+
+### 4.5 The exponential rate between wrong answers and abstentions is necessary
+
+**Proposition 4.6 (thresholds, every answer shown). PROVED; the exact characterisation is a theorem of Zhang and Chaudhuri (2016), see Section 11.** Let the class be the N thresholds of Theorem 3.3, and let every input be asked, so that the rule sees f(x_t) after each round. Put F(k, m) := C(m + 1, ≤ k + 1) − 1. If a deterministic rule makes at most k wrong answers and at most m wrong answers and abstentions together, on every sequence of inputs and for every member, then N ≤ F(k, m). Consequently, if N ≥ 2^(k+1), a rule with at most k wrong answers has, for some member and some sequence, at least
+
+  (k + 1)·N^(1/(k+1))/e − k − 1
+
+abstention rounds.
+
+*Proof.* We show by induction on m: if n thresholds s_1 < … < s_n are consistent with the answers shown so far and n > F(k, m), where k ≥ −1 and m ≥ 0, then an adversary can continue the sequence, with answers consistent with one of them, so that the rule makes more than k wrong answers or more than m wrong answers and abstentions in the continuation. For k = −1 this is trivial (F(−1, m) = 0). Let k ≥ 0. *Case m = 0:* F(k, 0) = 1 and n ≥ 2. Show the input x := s_2; its answer is 0 under s_1 and 1 under s_2. If the rule abstains, or answers b and the adversary reveals 1 − b, the round is a wrong or abstained round. *Case m ≥ 1:* by Pascal's rule F(k, m) = F(k, m − 1) + F(k − 1, m − 1) + 1. Put n₂ := F(k − 1, m − 1) + 1 and n₁ := n − n₂ ≥ F(k, m − 1) + 1, and show x := s_{n₂+1}; its answer is 0 under the n₂ lowest thresholds and 1 under the n₁ others. If the rule abstains, reveal 1: n₁ > F(k, m − 1) thresholds remain and the rule may use m − 1 further such rounds. If it answers 0, reveal 1: a wrong answer, n₁ > F(k, m − 1) ≥ F(k − 1, m − 1) remain, and the budgets are k − 1 and m − 1. If it answers 1, reveal 0: a wrong answer, n₂ > F(k − 1, m − 1) remain, budgets k − 1 and m − 1. In each case the induction hypothesis applies. This proves N ≤ F(k, m). For the consequence: if m ≤ k then F(k, m) = 2^(m+1) − 1 < 2^(k+1) ≤ N, so m ≥ k + 1, and then N < C(m + 1, ≤ k + 1) ≤ (e(m + 1)/(k + 1))^(k+1), so m + 1 > (k + 1)N^(1/(k+1))/e; the number of abstentions on a worst sequence is at least m − k. ∎
+
+The game value was computed exactly for k ≤ 3, m ≤ 7 (Section 8): the largest N that a rule can handle is F(k, m) in every case, so the proposition is tight. With uniform weights K = log N, and Theorem 4.1 with η slightly below N^(−1/(k+1)) gives fewer than k + 1 wrong rounds, hence at most k, and at most about ln N·N^(1/(k+1)) abstention rounds. So for thresholds the threshold rule is optimal up to the factor e·ln N/(k + 1), and no rule trades wrong answers for abstentions at a better than exponential rate in K/(k + 1).
+
+### 4.6 A stochastic human
+
+For a stochastic human the threshold rule can only answer where the human has a preferred answer. Call f a *mode* of P with noise ε₀ if P(f(x)|x) ≥ 1 − ε₀ for all x. For a, b ∈ (0, 1) put kl(a ‖ b) := a ln(a/b) + (1 − a) ln((1 − a)/(1 − b)), and 𝔥(ε) := −ε ln ε − (1 − ε) ln(1 − ε) ≤ ln 2.
+
+**Proposition 4.7 (a human with a mode). NEW.** Let P ∈ H have a mode f with noise ε₀ < η < 1/2. In Setting 1.0 call an asked round *wrong* if Thr_η(D_{<t}) answers something other than f(x_t). Then
+
+  E[number of wrong asked rounds] ≤ K ln 2/kl(1 − ε₀ ‖ η) ≤ K ln 2/((1 − ε₀)·ln(1/η) − 𝔥(ε₀)),
+  E[number of asked abstention rounds] ≤ K ln 2/kl(ε₀ ‖ η) ≤ 2η·K ln 2/(η − ε₀)²,
+
+the second forms being valid when their denominators are positive; for ε₀ ≤ η/2 the last bound is at most 8·K ln 2/η. Under Protocol R[Thr_η] the deployed run contains at most L·K ln 2/(n·kl(1 − ε₀ ‖ η)) answers different from the mode in expectation, and is aborted with probability at most L·K ln 2/(n·kl(ε₀ ‖ η)).
+
+*Proof.* Let p := P(·|x_t) and m := M^(t)(·|x_t), and y* := f(x_t). Merging all answers other than y* does not increase the divergence, so κ_t ≥ kl(p(y*) ‖ m(y*)). The function kl(a ‖ b) is nondecreasing in a for a ≥ b and nonincreasing in b for b ≤ a; it is nonincreasing in a for a ≤ b and nondecreasing in b for b ≥ a. At a wrong round m(y*) ≤ η < 1 − ε₀ ≤ p(y*), so κ_t ≥ kl(1 − ε₀ ‖ η). At an abstention round m(y*) < 1 − η < 1 − ε₀ ≤ p(y*), so κ_t ≥ kl(1 − ε₀ ‖ 1 − η) = kl(ε₀ ‖ η). Lemma 1.1(2) gives Σ_t E[a_t κ_t] ≤ K ln 2, which yields the two bounds. For the explicit forms: kl(1 − ε₀ ‖ η) = (1 − ε₀) ln(1/η) − 𝔥(ε₀) + ε₀ ln(1/(1 − η)); and for 0 ≤ a ≤ b < 1, kl(a ‖ b) = ∫_a^b (v − a)/(v(1 − v)) dv ≥ (b − a)²/(2b). The statement on rehearsal follows with Lemma 1.2 as in Theorem 4.4. ∎
+
+*What it does not say.* A deployed run without abort and without an answer off the mode is the run of the function f. A human who leaves the mode with probability ε₀ at every call produces that run with probability (1 − ε₀)^L only. So for a noisy human the threshold rule imitates the mode, not the distribution: the total variation distance between its run law and the human system is then at least 1 − (1 − ε₀)^L − Pr[abort or answer off the mode], however many questions are asked. If the human has no mode with noise below η, the rule abstains at every input at which the mixture has converged to the human.
+
+**Proposition 4.8 (the two counts cannot both hold for all samplers). NEW.** Let N ≥ 1, Y = {0, 1}, and x_1, …, x_N distinct inputs. Let H_N consist of the sampler P₀ that answers every input with a fair coin, with weight 1/2, and of the 2^N functions g_b, b ∈ {0, 1}^N, with g_b(x_i) = b_i, each of weight 2^(−N−1). So log(1/w(P₀)) = 1 and log(1/w(g_b)) = N + 1. Let any answer rule be used on the inputs x_1, …, x_N in this order, each of them asked, so that the rule knows all earlier answers; let r_t(·) be its law on Y_⊥ at round t. For a function g_b let Sil(g_b) be the expected number of rounds at which the rule's answer is in Y and differs from b_t, and let Abs(P₀) be the expected number of abstentions when the human is P₀. Then
+
+  Abs(P₀) = N − 2·2^(−N)·Σ_b Sil(g_b) ≥ N − 2·max_b Sil(g_b).
+
+In particular, if Sil(g_b) ≤ (N + 1)/j for all b (as the first count of Theorem 4.1 gives for the threshold rule with j = log(1/η); its proof applies to a function as the human in any class), then Abs(P₀) ≥ N − 2(N + 1)/j, which for j ≥ 4 is at least (N − 1)/2 although the human P₀ costs one bit.
+
+*Proof.* When the human is g_b the earlier answers are b_1, …, b_{t−1}, and when the human is P₀ they are uniformly distributed; the rule's law at round t is the same function r_t(· ; y_1, …, y_{t−1}) of the earlier answers in both cases. So 2^(−N) Σ_b Sil(g_b) = Σ_t E_b[r_t(1 − b_t ; b_{<t})] = Σ_t E_b[(r_t(0 ; b_{<t}) + r_t(1 ; b_{<t}))/2] = ½·Σ_t E_b[1 − r_t(⊥ ; b_{<t})] = ½(N − Abs(P₀)), where b is uniform and the second step uses that b_t is independent of b_{<t}. ∎
+
+*Reading.* At every new input a stochastic human is consistent with deterministic hypotheses that have not been refuted and that predict the data as well as the human does. A rule that is cautious towards them must abstain; a rule that answers is silently wrong against them. So the pair of counts of Theorem 4.1 has no analogue that holds for every member of a class of samplers with a bound in K and η alone. Proposition 4.7 (a mode) and Section 5 (dominance, with a price in 1/w) are the two things that remain.
+
+## 5. Ab2: the minimum over a plausible set
+
+From here on the human may be stochastic again.
+
+**Definition 5.0 (minimum rule).** For a nonempty set 𝒞 ⊆ H put S_𝒞(y|x) := inf_{ν∈𝒞} ν(y|x) for y ∈ Y and θ_𝒞(x) := 1 − Σ_{y∈Y} S_𝒞(y|x) ∈ [0, 1]. Min_𝒞 is the kernel on Y_⊥ that answers y with probability S_𝒞(y|x) and abstains with probability θ_𝒞(x). A run with Min_𝒞 halts at the first abstention. A *plausible-set rule* assigns to every data list D a set 𝒞(D) ⊆ H; the answer rule is D ↦ Min_{𝒞(D)}, with the convention that it abstains everywhere if 𝒞(D) is empty.
+
+### 5.1 Dominance
+
+**Theorem 5.1 (dominance). PROVED (Ab2, first part; items 2 to 4 are claims 2 to 4 of `understand/ask-for-help.md`, Section 3.2, checked).** Let 𝒞 ⊆ H with P ∈ 𝒞, and let Π be any scaffold.
+
+1. S_𝒞(y|x) ≤ P(y|x) for all x and y.
+2. There is a joint construction of a run τ̂ of Min_𝒞 and a run τ^P of the human system such that either τ̂ = τ^P, or τ̂ is aborted at some call j ≤ len(τ^P) and its first j − 1 answers are those of τ^P. In words: the imitator is the human system with a visible abort.
+3. For every measurable set B of complete runs, Pr[τ̂ ∈ B] ≤ Q_P(B). If all aborted runs are merged into one point, the total variation distance between the law of τ̂ and Q_P equals Pr[τ̂ is aborted].
+4. Pr[τ̂ is aborted] = 1 − E_{Q_P} Π_{j≤len(τ)} ( S_𝒞(y_j|x_j)/P(y_j|x_j) ) ≤ E_{Q_P} Σ_{j≤len(τ)} θ_𝒞(x_j) = ∫ θ_𝒞 dd_P.
+5. For every x: sup_{ν∈𝒞} TV(ν, P)(x) ≤ θ_𝒞(x) ≤ Σ_{ν∈𝒞} TV(ν, P)(x), with TV between the laws on Y_⊥. The right inequality also holds when P ∉ 𝒞.
+
+*Proof.* (1) P is one of the hypotheses over which the infimum is taken. (2) Draw τ^P ~ Q_P and independent uniform numbers V_1, V_2, … on [0, 1]. Let τ̂ have the same (z, ρ); at call j, as long as τ̂ has not been aborted, its history equals that of τ^P, its input is x_j, and we let it answer y_j (the answer of τ^P) if V_j ≤ S_𝒞(y_j|x_j)/P(y_j|x_j), and abort otherwise. Given the past, τ̂ answers y with probability P(y|x_j)·S_𝒞(y|x_j)/P(y|x_j) = S_𝒞(y|x_j) (both sides are 0 if P(y|x_j) = 0, by (1)) and aborts with the remaining probability θ_𝒞(x_j). So τ̂ is a run of Min_𝒞. (3) By (2), {τ̂ ∈ B} ⊆ {τ^P ∈ B}. Let μ̂ be the law of τ̂ with the aborted runs merged into a point ⊥. Then μ̂ ≤ Q_P on the complete runs and Q_P(⊥) = 0 ≤ μ̂(⊥), so the total variation distance is Q_P(complete) − μ̂(complete) = μ̂(⊥). (4) In the construction, given τ^P, the run τ̂ is not aborted with probability Π_j S_𝒞(y_j|x_j)/P(y_j|x_j). For numbers u_j ∈ [0, 1], 1 − Π_j u_j ≤ Σ_j (1 − u_j), and E[1 − S_𝒞(y_j|x_j)/P(y_j|x_j) | history before call j] = Σ_y (P(y|x_j) − S_𝒞(y|x_j)) = θ_𝒞(x_j). (5) θ_𝒞(x) = Σ_y (P(y|x) − inf_ν ν(y|x)) = Σ_y sup_ν (P(y|x) − ν(y|x))⁺ when P ∈ 𝒞, and in general θ_𝒞(x) ≤ 1 − Σ_y min(P(y|x), inf_ν ν(y|x)) = Σ_y sup_ν (P(y|x) − ν(y|x))⁺. For every ν, Σ_{y∈Y} (P(y|x) − ν(y|x))⁺ = TV(P, ν)(x), because P gives ⊥ no mass. A sum of suprema is at least the supremum of the sums and at most the sum over ν of the sums. ∎
+
+*Remarks.* (i) Nothing is assumed about the deployment: the scaffold in the theorem need not be the one used to gather the data, and its top-level inputs may come from anywhere. This is the exact sense in which the rule "only fails obviously". (ii) By (2), conditionally on not aborting, the run is not distributed as the human system in general: the abort may depend on the answers. What holds is the inequality for every event in (3). (iii) S_𝒞 ≤ ν for every ν ∈ 𝒞, so the theorem holds with every member of 𝒞 in the place of the human: the rule is sound for whichever member of 𝒞 the human is. (iv) The same proof works for a set of history-dependent answerers that contains the human answerer; this is the setting of Cohen, Hutter and Nanda (Section 5.5).
+
+### 5.2 Three plausible sets, and Ville's inequality
+
+For data D with ξ(D) > 0 order the hypotheses by decreasing posterior weight, ν_1, ν_2, …, ties broken by a fixed rule. For α ∈ (0, 1]:
+
+* 𝒞^abs_α(D) := {ν : w_D(ν) ≥ α} (hypotheses of posterior weight at least α);
+* 𝒞^cum_α(D) := {ν_i : w_D(ν_i) ≥ α·Σ_{i′≤i} w_D(ν_{i′})} (the top set of Cohen, Hutter and Nanda);
+* 𝒞^rat_α(D) := {ν : w_D(ν) ≥ α·w_max(D)} (posterior weight at least α times the largest; the set of the candidate's Ab2).
+
+**Proposition 5.2 (the plausible sets). PROVED (the Ville step is Theorem 2 of Cohen, Hutter and Nanda).**
+
+(a) 𝒞^abs_α(D) ⊆ 𝒞^cum_α(D) ⊆ 𝒞^rat_α(D). The last two contain ν_1; the first may be empty. |𝒞^abs_α(D)| ≤ 1/α, |𝒞^cum_α(D)| ≤ 1/α and |𝒞^rat_α(D)| ≤ 1/(α·w_max(D)).
+
+(b) In Setting 1.0, Pr[there is n with w_{D_{≤n}}(P) < α] ≤ α·W/w(P) ≤ α/w(P). So with probability at least 1 − α/w(P) the human belongs to all three sets at all times. Conditionally on the data D gathered up to any stopping time, the probability that w(P) falls below α at a later time is at most α/w_D(P).
+
+(c) If the human is a function f, then w_D(f) ≥ w(f)/W for every data list that can arise. So f ∈ 𝒞^abs_α(D) at all times, with probability 1, whenever α ≤ w(f)/W.
+
+(d) *Averaged over the prior.* Let W = 1, let the human be drawn from w, and let the questions depend on the human only through the answers. For β ∈ (0, 1) let 𝒞^mass_β(D) be the shortest initial segment {ν_1, …, ν_i} of posterior mass at least β. Then Pr[P ∈ 𝒞^mass_β(D)] ≥ β at every stopping time, with no condition that relates β to w(P).
+
+*Proof.* (a) If w_D(ν_i) ≥ α then w_D(ν_i) ≥ α·Σ_{i′≤i} w_D(ν_{i′}), because the sum is at most 1; and Σ_{i′≤i} w_D(ν_{i′}) ≥ w_D(ν_1) = w_max(D). ν_1 satisfies both conditions. The posterior weights sum to 1, which gives the first and the third bound on the size. For the second let ν_{i_1}, …, ν_{i_k} be the members of 𝒞^cum_α(D) in order; each has weight at least w_D(ν_{i_k}), so w_D(ν_{i_k}) ≥ α·Σ_{i′≤i_k} w_D(ν_{i′}) ≥ α·k·w_D(ν_{i_k}), hence k ≤ 1/α. (b) Z_n := ξ(D_{≤n})/P(D_{≤n}) is well defined almost surely (Lemma 1.1(1)), Z_0 = W, and it is a nonnegative supermartingale: in an asked round, E[Z_n | 𝓖_n] = Z_{n−1}·Σ_{y : P(y|x_n) > 0} M^(n)(y|x_n) ≤ Z_{n−1}. By Ville's inequality Pr[sup_n Z_n ≥ v] ≤ W/v. Since w_{D_{≤n}}(P) = w(P)/Z_n, the event {w_{D_{≤n}}(P) < α} is {Z_n > w(P)/α}. The conditional statement is the same argument for Z_n/Z at the stopping time. (c) For a function f(D) = 1 and ξ(D) ≤ W. (d) Given D, the human has the posterior distribution, and the set has posterior mass at least β. ∎
+
+*Which set.* The absolute set is small but can be empty, and then the rule abstains everywhere although the mixture may be accurate. The ratio set is never empty but can be large: a class with many equally good explanations puts them all in. The cumulative set is never empty and has at most 1/α members; it is the set of the literature. The conditions for the human to be in the set are, in this order: posterior weight at least α; at least α times the posterior mass of the explanations that are at least as good; at least α times the weight of the best explanation. Only the last is the assumption named in the task ("within log(1/α) bits of the best explanation"), so the coverage theorem below is stated for the ratio set; (a) of that theorem holds for the other two sets with log(1/α) replaced by log(w_max(D)/α).
+
+**Assumption (A_α), for data D:** w_D(P) ≥ α·w_max(D). The number g_P(D) := log(w_max(D)/w_D(P)) ≥ 0 is the *gap* of the human: the number of bits by which the best explanation of the data beats the human. (A_α) says g_P(D) ≤ log(1/α). In a class of functions g_f(D) = K − K_D.
+
+### 5.3 Coverage: where the rule abstains
+
+The statements about separation are made for classes with the following properties.
+
+* **(P1) patches.** There is a constant c₁ such that for every ν ∈ H, every decidable Q ⊆ X and each b ∈ {b₀, b₁}, the hypothesis ν^{Q,b} that answers b on Q and answers as ν outside Q belongs to H, the map ν ↦ ν^{Q,b} is injective, and w(ν^{Q,b}) ≥ w(ν)·2^(−K(Q)−c₁).
+* **(P2) differences.** All members of H are functions, and there is a constant c₂ such that for all g, g′ ∈ H the set {x : g(x) ≠ g′(x)} is decidable with complexity at most log(1/w(g)) + log(1/w(g′)) + c₂.
+* **(P3) points.** K({x}) ≤ K(x) + c₃ for every x, where K(x) is the prefix complexity of the string x.
+
+*The class of all programs.* Let the hypotheses be the programs p of the fixed universal prefix machine that compute a hypothesis ν_p, with w(p) := 2^(−|p|); two programs for the same kernel are two hypotheses, and Σ_p w(p) ≤ 1 by Kraft's inequality. A program for ν^{Q,b} consists of a fixed piece of code, a shortest decider of Q, the bit that names b, and p; this gives (P1). If the class is restricted to programs that compute total functions, a decider of {g ≠ g′} consists of fixed code and the two programs, which gives (P2). (P3) is standard. So K = log(1/w(P)) is the length of the human's program, at best the complexity of the human.
+
+**Theorem 5.3 (coverage of the minimum rule; Ab2, second part). PROVED for the inner region as the candidate states it up to the constant; the outer region is NEW.** Let H satisfy (P1), let D be a data list with ξ(D) > 0 and A := A(D), let α ∈ (0, 1] and 𝒞 := 𝒞^rat_α(D).
+
+(a) *Where it abstains with certainty.* Let ν ∈ H with w_D(ν) ≥ 2^(−g)·w_max(D). At every x with sep(x; A) ≤ log(1/α) − g − c₁ we have θ_𝒞(x) = 1. In particular θ_𝒞(x) = 1 whenever sep(x; A) ≤ log(1/α) − c₁ (take for ν a hypothesis of largest posterior weight), and whenever sep(x; A) ≤ log(1/α) − g_P(D) − c₁ (take ν = P).
+
+(b) *Where it answers.* Let H also satisfy (P2), and let the human be f. If θ_𝒞(x) > 0 then sep(x; A) ≤ K + K_D + log(1/α) + c₂. At every other x all members of 𝒞 answer f(x), and so does the rule. This does not need f ∈ 𝒞.
+
+(c) With (P3): θ_𝒞(x) = 1 at every unasked x with K(x) ≤ log(1/α) − c₁ − c₃.
+
+(d) *The threshold rule.* Under (P1), Thr_η(D) abstains at every x with sep(x; A) < log(1/η) − c₁.
+
+So, for a class of functions with (P1) and (P2),
+
+  {x : sep(x; A) ≤ log(1/α) − c₁} ⊆ {x : the rule abstains} ⊆ {x : sep(x; A) ≤ K + K_D + log(1/α) + c₂}.
+
+*Proof.* (a) Let Q be a decidable set with x ∈ Q, Q ∩ A = ∅ and K(Q) = sep(x; A). No asked input lies in Q, so ν^{Q,b}(D) = ν(D), and w_D(ν^{Q,b}) = w(ν^{Q,b})·ν(D)/ξ(D) ≥ 2^(−K(Q)−c₁)·w_D(ν) ≥ 2^(−K(Q)−c₁−g)·w_max(D) ≥ α·w_max(D) for b = b₀ and b = b₁. Both patched hypotheses are in 𝒞; at x one answers b₀ and the other b₁ with probability 1; hence S_𝒞(y|x) = 0 for every y. (b) For functions, θ_𝒞(x) > 0 means that two members of 𝒞 differ at x, so some g′ ∈ 𝒞 has g′(x) ≠ f(x). Since w_D(g′) > 0, g′ agrees with f on A, and w(g′) ≥ α·2^(−K_D) by the definition of the ratio set. The set {g′ ≠ f} contains x, is disjoint from A, and by (P2) has complexity at most K + K_D + log(1/α) + c₂. (c) For x ∉ A the set {x} separates x from A. (d) By (P1) and injectivity, M_D(b|x) ≥ Σ_ν w_D(ν^{Q,b}) ≥ 2^(−K(Q)−c₁)·Σ_ν w_D(ν) = 2^(−K(Q)−c₁) for b = b₀, b₁; so every y has M_D(y|x) ≤ 1 − 2^(−sep(x;A)−c₁) < 1 − η. ∎
+
+*What it does not say.* Between the two radii the theorem is silent, and this cannot be repaired without fixing the reference machine: in that window the answer of every scheme that takes its bias from the machine can be reversed by a change of machine of sep(x; A) + O(1) bits (`ultranatural/note.md`, Theorem 3, as reported in `understand/repo.md`, item G4; not re-derived here). For samplers there is no outer region at all: a member of 𝒞 that differs slightly from P at every input makes θ_𝒞 positive everywhere, and what limits θ_𝒞 is statistical (Theorem 5.6), not a matter of separation.
+
+**Proposition 5.4 (the minimum rule abstains no more than soundness requires). PROVED (for the version space this is the optimality of the consistent selective strategy; El-Yaniv and Wiener 2010, Theorem 7, as restated in `understand/abstention-shift.md`, not read by me).** Let H be a class of functions and 𝒞 a set of members that are consistent with data D. Call a kernel C on Y_⊥ *sound for 𝒞* if C({g(x), ⊥} | x) = 1 for every g ∈ 𝒞 and every x: whichever member of 𝒞 the human is, C is never silently wrong. Then Min_𝒞 is sound for 𝒞 and abstains exactly on DIS(𝒞) := {x : two members of 𝒞 differ at x}; and every kernel that is sound for 𝒞 abstains with probability 1 on DIS(𝒞).
+
+*Proof.* For functions S_𝒞(y|x) = 1 if all members answer y at x and S_𝒞(·|x) = 0 otherwise. If g(x) ≠ g′(x) for members g, g′ and C is sound, then C gives probability 1 to {g(x), ⊥} and to {g′(x), ⊥}, hence to ⊥. ∎
+
+So the abstention region is not a property of the rule; it is a property of the set of humans for which soundness is demanded. Theorem 5.3 computes that region for the set "within log(1/α) bits of the best explanation".
+
+**Corollary 5.5 (what a moderate α guarantees). PROVED.** Freeze the ratio set at data D and assume (A_α). Then:
+
+1. *Dominance, on any inputs.* For every scaffold and every set B of complete runs, the run of Min_𝒞 lies in B with probability at most Q_P(B); the run is the human system's run or an initial part of it followed by an abort; its total variation distance to the human system is its abort probability.
+2. *A list of what is not answered.* Under (P1) the rule abstains with certainty at every x that a test of complexity at most log(1/α) − c₁ separates from the asked inputs; with (P3), at every unasked x of complexity at most log(1/α) − c₁ − c₃.
+3. *What is answered.* Under (P1), (P2) with a function f as the human: at every x with sep(x; A) > 2K_D + 2 log(1/α) + c₂ the rule answers f(x).
+4. *On the rehearsed closed system* the abort probability is bounded by Theorem 5.6.
+
+*Proof.* (1) is Theorem 5.1 with P ∈ 𝒞. (2) is Theorem 5.3(a), (c). (3) is Theorem 5.3(b) with K ≤ K_D + log(1/α), which is (A_α). ∎
+
+*The assumption cannot be checked from the data.* Let ν₀ agree with P on all asked inputs, differ from P at some other input x, and have w(ν₀) > w(P)/α. Under the human P the assumption (A_α) fails for all data with inputs in A, the set 𝒞 need not contain P, and the rule may answer at x as ν₀ does. The data are the same as they would be under the human ν₀, for whom the rule is right. Ville's inequality (Proposition 5.2(b)) removes the assumption only for α ≤ δ·w(P), where by Theorem 5.3(c) the rule abstains at every unasked input of complexity below K + log(1/δ) − c₁ − c₃.
+
+### 5.4 How often the frozen rule aborts on the rehearsed closed system
+
+**Theorem 5.6 (abort probability after rehearsal). NEW (part (b) extends claim 5 of `understand/ask-for-help.md`, Section 3.2, from independent inputs to rehearsal).** Run Protocol R (driven by the mixture) with n questions, freeze a plausible set 𝒞 ⊆ 𝒞^rat_α(D_{≤n}), and deploy Min_𝒞 on the same scaffold Π. Let η ∈ (0, 1), and let N_𝒞 be a number with |𝒞| ≤ N_𝒞 on every path.
+
+(a) *Functions.* Let the human be a function f, and Γ_f := K ln 2 + ln(1/(α·η)). With probability at least 1 − η over the rehearsal, every g ∈ 𝒞^rat_α(D_{≤n}) satisfies (1/n)·Σ_{t≤n} d_t{x : g(x) ≠ f(x)} < L·Γ_f/n. Consequently
+
+  Pr[the deployed run is aborted] ≤ Pr[f ∉ 𝒞] + η + N_𝒞·L·Γ_f/n + (L − 1)·L·K ln 2/n,
+
+and on {f ∈ 𝒞} the rule is never silently wrong. For 𝒞 = 𝒞^rat_α(D_{≤n}) one can take N_𝒞 = #{g ∈ H : w(g) ≥ α·w(f)} ≤ 2^K/α, and f ∈ 𝒞 if and only if K − K_{D_{≤n}} ≤ log(1/α).
+
+(b) *Samplers.* Assume S_½ := Σ_ν √(w(ν)) < ∞, and put Γ := ln S_½ + ½·ln(1/(α·w(P))) + ln(1/η). With probability at least 1 − η over the rehearsal, every ν ∈ 𝒞^rat_α(D_{≤n}) satisfies (1/n)·Σ_{t≤n} ∫ H²(ν, P) dd_t < L·Γ/n. Consequently
+
+  Pr[the deployed run is aborted] ≤ Pr[P ∉ 𝒞] + η + N_𝒞·L·√(2Γ/n) + (L − 1)·L·√(K ln 2/(2n)).
+
+For 𝒞 = 𝒞^cum_α(D_{≤n}) one can take N_𝒞 = 1/α, and Pr[P ∉ 𝒞] ≤ α/w(P).
+
+(c) The hypothesis S_½ < ∞ in (b) cannot be dropped, and N_𝒞 in (a) can be as large as 2^K: Example 5.7.
+
+*Proof.* (b) For a hypothesis ν put ψ_t(ν) := √(ν(y_t|x_t)/P(y_t|x_t)) if a_t = 1 and ψ_t(ν) := 1 otherwise. Then E[ψ_t(ν) | 𝓖_t] = 1 − a_t·H²(ν, P)(x_t), and by Lemma 1.2, E[ψ_t(ν) | 𝓕_{t−1}] = 1 − h_t(ν) with h_t(ν) := (1/L) ∫ H²(ν, P) dd_t ∈ [0, 1]. So Λ_n(ν) := Π_{t≤n} ψ_t(ν)/(1 − h_t(ν)) (with a factor read as 0 when h_t(ν) = 1, in which case ψ_t(ν) = 0 almost surely) is a nonnegative supermartingale with Λ_0(ν) = 1, and by Markov's inequality Pr[Λ_n(ν) ≥ S_½/(η·√w(ν))] ≤ η·√w(ν)/S_½. The sum of these probabilities over ν is η. Outside the union of these events, every ν satisfies √(ν(D_{≤n})/P(D_{≤n})) = Π_t ψ_t(ν) < exp(−Σ_t h_t(ν))·S_½/(η·√w(ν)). If ν ∈ 𝒞^rat_α(D_{≤n}), then w(ν)·ν(D_{≤n}) ≥ α·w(P)·P(D_{≤n}), because w_max ≥ w_{D_{≤n}}(P); so √(ν(D_{≤n})/P(D_{≤n})) ≥ √(α·w(P)/w(ν)). The two inequalities give exp(Σ_t h_t(ν)) < S_½/(η·√(α·w(P))), that is, Σ_t h_t(ν) < Γ. This is the first claim.
+
+For the second, work on the event that P ∈ 𝒞 and that the first claim holds. By Theorem 5.1(4) the abort probability given the rehearsal is at most ∫ θ_𝒞 dd_P. For each round t, Lemma 1.4(2) with g := θ_𝒞 gives ∫ θ_𝒞 dd_P ≤ ∫ θ_𝒞 dd_t + (L − 1)·p_t, where p_t ≤ β(M^(t)) is the probability that the coupled runs of M^(t) and of P separate (the inequality of the lemma holds for every function with values in [0, 1], hence also for one that depends on the later data). Average over t. By Theorem 5.1(5) and TV ≤ √(2H²), θ_𝒞 ≤ Σ_{ν∈𝒞} √(2H²(ν, P)); by the Cauchy–Schwarz inequality and d_t(X) ≤ L, ∫ √(2H²(ν, P)) dd_t ≤ √(2L·∫ H²(ν, P) dd_t); and by Jensen's inequality (1/n) Σ_t √(2L ∫ H²(ν, P) dd_t) ≤ √(2L·(1/n) Σ_t ∫ H²(ν, P) dd_t) < L·√(2Γ/n). So the abort probability given the rehearsal is at most N_𝒞·L·√(2Γ/n) + (L − 1)·(1/n) Σ_t β(M^(t)), and the expectation of the last average is at most L·√(K ln 2/(2n)) by Corollary 1.3. The bounds on N_𝒞 and on Pr[P ∉ 𝒞] are Proposition 5.2(a), (b).
+
+(a) is the same argument with indicators. For g ∈ H let h_t(g) := (1/L)·d_t{g ≠ f}, the conditional probability that the question of round t refutes g. Λ_n(g) := Π_{t≤n} 1[g is not refuted in round t]/(1 − h_t(g)) is a nonnegative supermartingale started at 1; with the thresholds W/(η·w(g)) and a union bound, with probability at least 1 − η every g that is consistent with D_{≤n} has Σ_t h_t(g) ≤ Σ_t −ln(1 − h_t(g)) < ln(W/(η·w(g))). A member g of the ratio set has w(g) ≥ α·2^(−K_D) ≥ α·w(f), so Σ_t h_t(g) < Γ_f. For the abort probability: θ_𝒞 is the indicator of DIS(𝒞) ⊆ ∪_{g∈𝒞} {g ≠ f}, so ∫ θ_𝒞 dd_t ≤ Σ_{g∈𝒞} d_t{g ≠ f}; the rest is as in (b), with E β(M^(t)) summing to at most L·K ln 2 (Corollary 1.3). The members of the ratio set have weight at least α·w(f), which bounds their number by W/(α·w(f)). ∎
+
+*Reading.* For samplers the abort probability on the closed system is of order (L/α)·√((K + ln S_½ + ln(1/α))/n) + L²·√(K/n). With the choice α = δ·w(P) that Ville's inequality allows, it is small only for n of order 4^K·L²·K/δ². This is empty for a person. With a moderate α and the assumption (A_α) in the cumulative form, n of order L²·(K + ln S_½)/α² suffices.
+
+**Example 5.7 (the two hypotheses of Theorem 5.6 that cost the most). PROVED.**
+
+(a) *Many equally good explanations: the ratio set is a rock on the closed system until almost every input has been asked.* Take the needle class 𝒩(N₀) with equal weights and the OR scaffold (Theorem 4.5), and let the human be f₀. All members have the same weight, so for every α ≤ 1 the ratio set is the set of all members consistent with the data: after questions at a set S of cells it is {f₀} ∪ {f_c : c ∉ S}, and Min aborts as soon as the run meets a cell outside S. With at most n questions the abort probability is at least 1 − (n/N₀)^L. By contrast Thr_η with η > 1/(N₀ + 1 − n) answers 0 at every cell and never aborts; it is silently wrong with probability at most L/N₀ per run when the human is a needle.
+
+(b) *Fill-ins of the human's coins: the term ln S_½ is needed.* Let d ≥ 1 and c₀ ∈ {1, …, d − 1}, X := {0, 1}^d, Y := {0, 1}. The human P₀ answers every input with a fair coin and has weight 1/2. The other hypotheses are the 2^d linear functions x ↦ ⟨s, x⟩ mod 2, s ∈ {0, 1}^d, each of weight 2^(−d−1). So K = 1. The scaffold makes one call at a uniformly random input. Run any protocol that asks n := d − c₀ uniformly random inputs. With probability at least 1 − 2^(−c₀) these are linearly independent; then exactly 2^(c₀) linear functions are consistent with the data, whatever the answers, and each has posterior weight 2^(−c₀) times that of P₀, which is the largest. So for α ≤ 2^(−c₀) they all belong to 𝒞^rat_α. At an input outside the span of the asked ones, half of them answer 0 and half answer 1, so S_𝒞 = 0 there; at an input in the span they agree and S_𝒞 gives the coin's probability 1/2 to their answer. Hence the frozen rule aborts with probability at least 1/2 at every input, and with probability 1 at a random input except with probability 2^(−c₀). So for every n there is a class with K = 1, with the human as the best explanation of every data set, in which the frozen ratio rule with α = 2^(−c₀) is useless after n questions. Here ln S_½ ≥ (d − 1)·ln 2/2, so Γ/n > 0.34 and the bound of Theorem 5.6(b) is void, as it must be.
+
+In (b) the fill-ins are the hypotheses "the human with the coins filled in" of `research/prove-b/hellinger-runs.md`, Example 5.4. Weights with Σ_ν √w(ν) < ∞ exclude them; for programs of a prefix machine, w(p) = 2^(−λ|p|) with λ ≥ 2 has Σ_p √w(p) ≤ 1 by Kraft's inequality (the weights of the candidate's Theorem B).
+
+### 5.5 Comparison with Cohen, Hutter and Nanda
+
+*Source.* M. K. Cohen, M. Hutter and N. Nanda, "Fully General Online Imitation Learning", Journal of Machine Learning Research 23(334):1–30, 2022; arXiv:2102.08686. I read the definitions and Theorems 1 to 5 in the TeX source of arXiv version 2 in this session; the statements below are transcribed from it, in their notation.
+
+*Their setting.* Time steps t = 0, 1, 2, …; a finite action set 𝒜; observations; h_{<t} is the history of triples (q, a, o), where q ∈ {0, 1} records whether the demonstrator chose the action. The environment μ is an arbitrary history-dependent kernel and never resets. The demonstrator's policy π^d may depend on the whole history. Π is a countable class of policies with prior weights w summing to 1, and π^d ∈ Π (realisability). The posterior w(π | h_{<t}) is updated on the actions chosen by the demonstrator only. With π_1, π_2, … in decreasing order of posterior weight, the top set is Π^α_{h<t} := {π_n : w(π_n | h_{<t}) ≥ α·Σ_{m≤n} w(π_m | h_{<t})}. The imitator takes action a itself with probability min_{π′ ∈ Π^α} π′(a | h_{<t}); with the remaining probability θ_q(h_{<t}) := 1 − Σ_a min_{π′} π′(a | h_{<t}) it *queries*: the demonstrator chooses the action. P^i is the law of the interaction with the imitator, P^d the law when the demonstrator chooses every action, and E the event that π^d ∈ Π^α_{h<t} for all t. "Fair" means that neither μ nor π^d depends on the query record.
+
+*Their theorems.* With s_α := |𝒜|·α^(−3)·(24·w(π^d)^(−1) + 12):
+
+1. (Limited Querying) E_{P^i}[Σ_{t=0}^∞ θ_q(h_{<t})³] ≤ s_α.
+2. (Top Models Contain Truth) P^i(E) ≥ 1 − α·w(π^d)^(−1).
+3. (Predictive Convergence) For α < w(π^d): E_{P^i}[Σ_t (Σ_a |π^i_α(0, a | h_{<t}) − π^d(1, a | h_{<t})|)³ | E] ≤ s_α/(1 − α·w(π^d)^(−1)).
+4. (KL Bound) For fair μ, π^d and α < w(π^d), with both laws restricted to the first t actions and observations: KL_t(P^i(· | E) ‖ P^d(· | E)) ≤ s_α^(1/3)·t^(2/3)/(1 − α/w(π^d))² − log(1 − α/w(π^d)).
+5. (Preserving Unlikeliness) For fixed t, an event B on the first t actions and observations and D := B ∩ E, for fair μ and π^d: P^i(D) ≤ t²·s_α/( log(t²·s_α/(27·P^d(B))) − 3·log log(1 + t^(2/3)·s_α^(1/3)/(3·P^d(B)^(1/3))) )³.
+
+Their proof of 4 and 5 rests on what they call the crux: if π^d ∈ Π^α then π^i_α(0, a | h) ≤ π^d(a | h), and with the queried part π^i_α(a | h) ≤ (1 + θ_q(h))·π^d(a | h). The authors state that with α below w(π^d) the bounds are "effectively quartic in w(π^d)^(−1)", that "the training never ends", and that setting α requires an estimate of w(π^d).
+
+*What in Ab2 is theirs.* (i) The object: the minimum, over a set of models of large posterior weight, of the probability of each answer, with the leftover probability not used for answering. (They credit the idea of a minimum over top models to the pessimistic agent of Cohen and Hutter 2020.) (ii) The top set 𝒞^cum; the candidate's ratio set is a superset of it. (iii) The domination at one step when the truth is in the set (Theorem 5.1(1)). (iv) The Ville step (Proposition 5.2(b)) is their Theorem 2, with the same proof.
+
+*What is not in their paper.* (i) The use after a finite phase: the posterior is frozen and the leftover probability is an abort, not a query. (ii) The exact domination of whole runs, Theorem 5.1(2)–(4). Their Theorem 5 is weaker by necessity: a queried step lets the demonstrator act, and the imitator's law then exceeds the demonstrator's by the factor 1 + θ_q at each step; with an abort in the place of the query no such factor arises, and the bound has the factor 1 and no dependence on t. This observation is in `understand/ask-for-help.md`, Section 3.2. (iii) Where the frozen rule abstains (Theorem 5.3) and how often it aborts on a rehearsed system (Theorem 5.6). (iv) That for a deterministic human no probability is lost in the Ville step (Proposition 5.2(c)).
+
+*What is in their paper and not here.* A bound on the querying when the human stays available: Theorem 1 above, for stochastic history-dependent demonstrators in environments without resets. For that online regime we have nothing better; Theorem 3.1 bounds divergences, not the leftover probability of a minimum rule, and Proposition 4.3 is for functions. Their setting also covers a demonstrator with memory, which assumption A1 excludes.
+
+*The comparison in one sentence.* Their imitator and the minimum rule of Ab2 are the same kernel; they keep the human for ever and prove that questions become rare at a price of order w^(−4); here the human leaves after n questions, dominance becomes exact, and the price moves into the abort probability, which is controlled only on the rehearsed closed system and at a price polynomial in 1/α.
+
+## 6. Ab3: the novelty rule
+
+In this section H is a class of functions with property (P2), for example the programs that compute total functions, and the human is a function f ∈ H.
+
+**Definition 6.0 (novelty rule; Observation B of `understand/notes.md`).** Let s ≥ 1. The rule Nov_s keeps the data D with asked set A = A(D). At an input x: if sep(x; A) < s, it *asks* the human and appends the answer to the data (ask variant), or it *abstains* (abstain variant); otherwise it answers g_D(x), where g_D is a member of H of largest weight among those consistent with D, ties broken by a fixed rule (the simplest consistent hypothesis).
+
+**Proposition 6.1 (Ab3: both claims, and the constant). PROVED.**
+
+1. *Count.* In the ask variant, on every sequence of inputs, of any length and chosen in any way, the number of questions is at most the number of decidable sets of complexity below s, which is at most 2^s − 1. This needs no assumption on the human.
+2. *Soundness.* If an answer given without asking at x is wrong, then s ≤ sep(x; A) ≤ K + K_D + c₂ ≤ 2K + c₂. Hence if s > 2K + c₂, every answer given without asking equals f(x). The constant c₂ is that of (P2): the cost of forming a decider of {g ≠ g′} from programs for g and g′.
+3. *Comparison with enumeration.* Let k ≥ K. The rule that keeps V := {g ∈ H : w(g) ≥ 2^(−k), g consistent with the data}, asks at x if two members of V differ at x and answers their common value otherwise, is never wrong and asks at most 2^k − 1 questions on every sequence. Whenever it asks at x, sep(x; A) ≤ 2k + c₂. So after the same data the novelty rule with s = 2k + c₂ + 1 asks wherever enumeration asks, and its count is 2^(2k+c₂+1) against 2^k.
+
+*Proof.* (1) At each question choose a decidable Q with K(Q) < s, x ∈ Q and Q ∩ A = ∅ for the set A before the question. After the question x ∈ A, so Q meets A from then on and is not chosen at any later question. The chosen sets are therefore distinct, and fewer than 2^s programs have length below s. (2) Let the rule answer g_D(x) ≠ f(x). Both g_D and f are consistent with D, so they agree on A; the set {g_D ≠ f} is decidable, contains x and is disjoint from A, and by (P2) its complexity is at most K + log(1/w(g_D)) + c₂ = K + K_D + c₂. Since f is consistent, K_D ≤ K. And the rule answered, so sep(x; A) ≥ s. (3) f ∈ V always, at most 2^k hypotheses have weight at least 2^(−k), and each question refutes at least one member of V other than f. If g, g′ ∈ V differ at x, then {g ≠ g′} separates x from A and has complexity at most 2k + c₂. ∎
+
+*On the constant 2.* The factor 2 comes from (P2): the only test that the proof has for a wrong answer is the set where the rule's hypothesis and the human differ, and describing it takes both programs. I do not know whether 2K can be lowered for this rule (Section 9). A variant that measures novelty relative to its own current hypothesis, asking if and only if some Q with x ∈ Q, Q ∩ A = ∅ has complexity below s *given a program for g_D*, is never wrong once s > K + c for a suitable constant c, because {g_D ≠ f} has complexity at most K + c given a program for g_D. But its tests change whenever g_D changes, which can happen 2^K times, so the bound on its number of questions that the argument of (1) gives is 2^(2K+c+1), no better than before.
+
+**Proposition 6.2 (when nobody answers the abstentions). PROVED; item 3 is NEW.** Let the abstain variant be frozen at data D with A = A(D).
+
+1. It abstains exactly on {x : sep(x; A) < s}, for ever. With (P3) this set contains every unasked x with K(x) < s − c₃. In particular, for an s that Proposition 6.1(2) certifies as sound (s > 2K + c₂), the frozen rule answers no unasked input of complexity below 2K + c₂ − c₃: it refuses every new input that is simpler than twice the human.
+2. For any s, the frozen rule is wrong exactly at the inputs x with sep(x; A) ≥ s and g_D(x) ≠ f(x), and all of these have sep(x; A) ≤ K + K_D + c₂. So with a moderate s it is sound if and only if the simplest hypothesis consistent with the data agrees with the human outside the abstention region. That is an assumption, and its failure is silent.
+3. *How much it refuses on a rehearsed system.* Let the data come from Protocol R[𝔯] with any driver and n rounds, and let η ∈ (0, 1). With probability at least 1 − η,
+
+  (1/n)·Σ_{t≤n} d_t{x : sep(x; A(D_{≤n})) < s} ≤ 2^s·L·(s ln 2 + ln(1/η))/n:
+
+the expected number of calls of a rehearsal run that fall in the frozen abstention region, averaged over the rounds, is at most this.
+
+*Proof.* (1) and (2) are the definition and Proposition 6.1(2); for x ∉ A the set {x} separates x from A. (3) For a decidable Q put h_t(Q) := d_t(Q)/L, the conditional probability that the question of round t lies in Q (Lemma 1.2). Π_{t≤n} 1[the question of round t is not in Q]/(1 − h_t(Q)) is a nonnegative supermartingale started at 1. By Markov's inequality with the threshold 2^s/η and a union bound over the fewer than 2^s sets of complexity below s: with probability at least 1 − η, every such Q that is disjoint from A(D_{≤n}) has Σ_t h_t(Q) ≤ Σ_t −ln(1 − h_t(Q)) < s ln 2 + ln(1/η). The abstention region is the union of these sets, so its d_t-measure is at most the sum of theirs. ∎
+
+*Reading.* The novelty rule is the plainest whitelist: it refuses the inputs that a test of fewer than s bits separates from what has been asked, and nothing else. With the human answering, it pays once for each kind of novelty, at most 2^s times. Without the human it refuses every such input for ever. If s is large enough for soundness to be proved (2K + c₂), that is every input one could write down. If s is moderate, the rule refuses a fraction of order 2^s·s/n of the calls of the rehearsed system, and its soundness is the assumption in (2). The quantity sep is not computable; a version with time-bounded tests is computable, and (1) and (3) hold for it with the same proofs, with the set of tests replaced by the time-bounded ones. I did not work out what replaces (2).
+
+## 7. N4, the trade-off as one statement, and which rules are rocks
+
+### 7.1 N4: never silently wrong
+
+**Proposition 7.1 (never silently wrong forces asking or abstaining wherever two members differ). PROVED.** Consider a learner with questions on request (Section 3.2), possibly randomised, and a set H₀ of functions. Suppose that for every member of H₀ as the human and every way in which the inputs are chosen, with probability 1 every prediction is right. Let f, f′ ∈ H₀. Then, when the human is f, with probability 1 the learner asks or abstains at every step t such that f′(x_t) ≠ f(x_t) and f′ agrees with f at all inputs asked before step t.
+
+*Proof.* Run the interaction with f and the interaction with f′ with the same seed and the same rule for choosing the inputs. By induction over the steps the two interactions coincide (inputs, actions, answers) as long as no question has been asked at an input where f and f′ differ. So on the event E that step t is as described, the learner's action at step t is the same in both. If it were a prediction y on a part of E of positive probability, then y ≠ f(x_t) or y ≠ f′(x_t), and one of the two humans would receive a wrong prediction with positive probability. ∎
+
+**Corollary 7.2 (N4; point functions). PROVED (the candidate's N4; `understand/repo.md`, items C3(2) and X2; Observation C of `understand/notes.md`).** Let X = {0, 1}^d, f₀ ≡ 0 and f_a := 1[· = a].
+
+1. If H₀ ⊇ {f₀} ∪ {f_a : a ∈ X}, then under f₀ the learner asks or abstains at every step whose input has not been asked before. On a sequence of u distinct inputs, Qu + Abs ≥ u; a learner that asks nothing abstains at every input; a learner that never abstains asks 2^d questions on the sequence of all inputs.
+2. If H₀ = {f_a : a ∈ X} and the 2^d inputs are shown once each with a last, then under f_a the learner asks or abstains at each of the first 2^d − 1 steps.
+3. In the class of all programs each f_a has a program of length at most d + 2 log d + c. So a learner that is never silently wrong for all functions with programs of length at most k asks or abstains at least 2^(k − 2 log k − c′) times on some sequence, under the zero function; enumeration (Proposition 6.1(3)) does it with at most 2^k − 1 questions.
+
+*Proof.* (1) Proposition 7.1 with f = f₀ and f′ = f_{x_t}: all earlier answers were 0, and f_{x_t} vanishes at the earlier asked inputs because x_t is not among them. (2) Proposition 7.1 with f = f_a and f′ = f_{x_t} for t ≤ 2^d − 1: the two differ at x_t and at a, and neither x_t nor a has been asked before step t. (3) A program for f_a contains a self-delimiting code of a. ∎
+
+LB Corollary 1.7 is the same fact for a protocol that has stopped asking: a deployed system that is never silently wrong for f and for all its one-point patches abstains with probability 1 at every unasked input.
+
+### 7.2 The trade-off
+
+**Theorem 7.3 (silent errors against abstentions against questions). PROVED (it collects Theorems 3.1, 3.3, 4.1, 4.4, 4.5, Propositions 4.3, 4.6 and Corollaries 3.5, 7.2).** Let the human be a function f ∈ H and K = log(1/w(f)).
+
+**(U) What can be had.**
+
+* (U1) *Inputs from outside.* For every q ∈ (0, 1] and η ∈ (0, 1/2), the threshold rule with audits (Proposition 4.3(b), variant A) has, on every input sequence and over the whole unbounded interaction,
+
+  E[Sil] ≤ ((1 − q)/q)·K/log(1/η),  Abs ≤ K/log(1/(1 − η)),  E[Qu among the first h steps] ≤ q·h + K/log(1/(1 − η)).
+
+ Its corners: q = 1 (the human answers everything; no error, h questions); no abstention, where the mixture's own draws give E[Sil] ≤ (1 − q)·K ln 2/q with q·h questions (Theorem 3.1); q → 0 with η < w(f) (no silent error and at most K/log(1/(1 − η)) ≤ K ln 2/η questions, all of them abstentions; with η just below 2^(−K) this is about K ln 2·2^K).
+* (U2) *A closed system.* After n questions of rehearsal driven by Thr_η, a run has a wrong answer with probability at most L·K/(n·log(1/η)) and is aborted with probability at most L·K ln 2/(n·η) (Theorem 4.4); without abstention the run of the mixture is unfaithful with probability at most L·K ln 2/n. No further question is needed, for any number of later runs.
+
+**(L) What cannot be had.**
+
+* (L1) *No silent error at all.* For the point functions with the zero function, Qu + Abs is at least the number of distinct inputs, for a class of complexity d + 2 log d + c: of the order of 2^K (Corollary 7.2).
+* (L2) *At most k silent errors, every answer shown.* For N = 2^K thresholds with K ≥ k + 1 and every deterministic rule, some sequence forces (k + 1)·2^(K/(k+1))/e − k − 1 abstentions (Proposition 4.6); the threshold rule needs at most about K ln 2·2^(K/(k+1)).
+* (L3) *Answers seen only on questions.* For N thresholds on N − 1 inputs, E[Sil + Abs]·(E[Qu] + 1) ≥ N/15 when E[Qu] + 1 ≤ N/4 (Theorem 3.3), and with the factor K/log for a product of such classes (Corollary 3.5). So if the number of questions stays bounded while inputs keep arriving, silent errors plus abstentions grow linearly with the number of inputs.
+* (L4) *A closed system.* For the needle class, silent failure probability σ with abort probability a needs n ≥ (1 − a)²·L/(4σ) − L questions (Theorem 4.5).
+
+*In words.* On inputs from outside, the three quantities cannot all be bounded: with a bounded number of questions and a bounded number of silent errors, the rule abstains on a fixed fraction of a worst-case sequence, and with no silent error at all it abstains or asks at every new input. Each halving of the allowed number of silent errors squares the number of abstentions, roughly (L2). In a closed system all three are small per run after about L·K/δ questions, abstention included or not; there abstention changes the kind of failure and saves at most the factor (1 − a)² in questions.
+
+### 7.3 Rocks and whitelists
+
+The researcher rejects rules that abstain on everything new and accepts whitelists (`understand/notes.md`, items F20, F21 and Section 6.1). The following definition makes the two words exact for a rule frozen at data D with asked set A.
+
+**Definition 7.4.** Let Ab₁(D) be the set of inputs at which the frozen rule abstains with probability 1, and Ab₊(D) the set at which it abstains with positive probability. The rule is
+
+* a *rock* at D if Ab₁(D) ⊇ X ∖ A: it answers no unasked input;
+* a *rock below complexity r* at D if Ab₁(D) ⊇ {x ∉ A : K(x) ≤ r};
+* a *whitelist of width s* at D if Ab₊(D) ⊆ {x : sep(x; A) ≤ s}: it answers every input that no test of complexity at most s separates from the asked inputs.
+
+Call the rule *sound for a set 𝒮 of functions at D* if, for every member of 𝒮 that is consistent with D as the human, it is never silently wrong at any input (Proposition 5.4).
+
+**Proposition 7.5 (which rule is which). PROVED.** Let H be a class of functions with (P1), (P2), (P3), for example the programs that compute total functions, and let D be data produced by the human f, with A = A(D).
+
+0. *Soundness for a slack forces a rock radius.* Every rule that is sound at D for all members of weight at least 2^(−a)·2^(−K_D) (the hypotheses within a bits of the best explanation of D) abstains with probability 1 at every x with sep(x; A) ≤ a − c₁; in particular it is a rock below complexity a − c₁ − c₃ at D. The human is among these members if and only if a ≥ K − K_D.
+1. *No budget.* A rule that is sound for all members of H is a rock at every D.
+2. *Enumeration with budget k* (the minimum rule over the consistent members of weight at least 2^(−k)): sound if K ≤ k; it abstains wherever sep(x; A) ≤ k − K_D − c₁, so it is a rock below complexity k − K_D − c₁ − c₃; a whitelist of width 2k + c₂.
+3. *Threshold rule Thr_η:* sound at D if w_D(f) > η, which holds for all data if η < 2^(−K); a rock below complexity log(1/η) − c₁ − c₃ − 1. No whitelist width is proved for it.
+4. *Minimum rule over the ratio set 𝒞^rat_α(D):* sound if (A_α) holds, which is the case for all data if α ≤ 2^(−K); a rock below complexity log(1/α) − c₁ − c₃; a whitelist of width K + K_D + log(1/α) + c₂.
+5. *Novelty rule Nov_s:* sound if s > 2K + c₂; a rock below complexity s − c₃ − 1; a whitelist of width s − 1; it abstains exactly on {sep(x; A) < s}.
+6. *The mixture* never abstains; at every x with sep(x; A) < ∞ its draw is wrong with probability at least 2^(−sep(x;A)−c₁).
+
+*Proof.* (0) Let g be a consistent member of largest weight 2^(−K_D), let sep(x; A) ≤ a − c₁, and let Q be a decidable set of complexity sep(x; A) that contains x and no asked input. By (P1) the patches g^{Q,b₀} and g^{Q,b₁} are consistent with D and have weight at least 2^(−K_D−K(Q)−c₁) ≥ 2^(−a)·2^(−K_D). They differ at x, so by Proposition 5.4 the rule abstains at x with probability 1. By (P3), sep(x; A) ≤ K(x) + c₃ for an unasked x. The human has weight 2^(−K) = 2^(−(K−K_D))·2^(−K_D). (1) Apply (0) with every a. (2) Soundness is Proposition 6.1(3). The members of weight at least 2^(−k) are those within a = k − K_D bits of the best explanation; (0) gives the rock radius. If two of them differ at x, the set where they differ separates x from A and has complexity at most 2k + c₂ by (P2). (3) If the rule answers y ≠ f(x) then M_D(f(x)|x) ≤ η, so w_D(f) ≤ η; and w_D(f) ≥ w(f)/W ≥ 2^(−K). The rock radius is Theorem 5.3(d) with (P3); the −1 turns the strict inequality into a non-strict one. (4) (A_α) says f ∈ 𝒞, and then the rule is sound by Theorem 5.1(1); w_D(f) ≥ 2^(−K) ≥ α ≥ α·w_max(D) if α ≤ 2^(−K). The radii are Theorem 5.3(a), (b), (c). (5) Propositions 6.1 and 6.2. (6) By (P1), as in the proof of Theorem 5.3(d), M_D(b|x) ≥ 2^(−sep(x;A)−c₁) for b = b₀ and for b = b₁, and at least one of the two differs from f(x). ∎
+
+*Remark on items 3 to 5.* The conditions in these items are sufficient. If they fail, the rule may still be right at every input by coincidence, but nothing in the data guarantees it (the remark after Corollary 5.5).
+
+**The classification.**
+
+| rule (frozen at D) | parameter | refuses with certainty at least | refuses at most | sound for the human when |
+|---|---|---|---|---|
+| never silently wrong for all computable functions | none | every unasked input | — | always |
+| enumeration | budget k | sep(x; A) ≤ k − K_D − c | sep(x; A) ≤ 2k + c | K ≤ k |
+| threshold rule Thr_η | η = 2^(−a) | sep(x; A) < a − c | not known | posterior weight of the human above η |
+| minimum over the ratio set | α = 2^(−a) | sep(x; A) ≤ a − c | sep(x; A) ≤ K + K_D + a + c | the human is within a bits of the best explanation |
+| novelty rule Nov_s | s = a | sep(x; A) < a | sep(x; A) < a | a > 2K + c, or the simplest consistent hypothesis is right off the refused region |
+| mixture | none | nothing | nothing | never guaranteed off the asked inputs |
+
+**Which are rocks.** In rows two to five the rule refuses, with certainty, all inputs that a test of about a bits separates from the asked inputs, where a is its *slack*: the number of bits by which a hypothesis may be worse than the best explanation and still be taken seriously (k − K_D for enumeration). By item 0 this is forced: no rule that is sound for that set of hypotheses refuses less. Soundness for the human needs a slack of at least the human's gap K − K_D, and a slack that is safe without knowing the gap must be at least K, the whole complexity of the human: η ≤ 2^(−K), α ≤ δ·2^(−K), k ≥ K with K_D possibly small, s > 2K. With such a slack the frozen rule refuses every unasked input of complexity below about K. If, as one expects, K for a person exceeds the complexity of every input that will ever be written down, these are rocks in the researcher's sense: the first row always, and rows two to five whenever their parameter is chosen so that soundness is a theorem. They stop being rocks only if the human answers the abstentions, and then the number of answers is bounded by 2^k for enumeration, by K ln 2·2^K for the threshold rule and by 2^(2K+c) for the novelty rule (Proposition 6.1, Theorem 4.1), which for a person is no bound.
+
+**Which are whitelists.** With a moderate slack a, the novelty rule refuses exactly the a-simple novelty, the minimum rule refuses it and nothing beyond a larger radius, and the threshold rule refuses at least it. On the rehearsed closed system they refuse a small part of the calls: at most about 2^a·a·L/n of them for the novelty rule (Proposition 6.2(3)), an abort probability of at most L·K ln 2·2^a/n for the threshold rule (Theorem 4.4). These are the whitelists the researcher accepts. Their soundness is then not a theorem but the assumption in the last column, and when the assumption fails the failure is silent. The task-decomposition worry is visible in the table: if the calls that a decomposition produces share a property of fewer than a bits that no asked input has, every row above the last refuses all of them, and the last row answers each of them wrongly with probability at least 2^(−a−c).
+
+## 8. Numerical checks
+
+All scripts are in `research/prove-c/code/`; each was run and its output saved next to it (`.out`). They use exact enumeration or linear programming where the text says "exact", and simulation with a fixed seed otherwise.
+
+**8.1 `shift-abstain_s1.py` (Example 2.2, Lemma 1.4, Proposition 2.3).** Columns: beta_own = E β(M^(T)); R1 bound = L·K ln 2/n; beta_hum = E ∫ e_{M^(T)} dd_f; B; S1 claim = B·L·K ln 2/n; the ratio beta_hum/claim; and the bound of Proposition 2.3.
+
+```
+Example 2.2: exact values (candidate S1 claims beta_hum <= B*L*K*ln2/n)
+    L    omega       n      K   beta_own   R1 bound   beta_hum       B   S1 claim  hum/claim  (2L-1)B*own
+   10  0.10000    1000   3.32  9.000e-03  2.303e-02  4.737e-02  1.0048  2.314e-02       2.05    1.718e-01
+  100  0.01000   10000   6.64  9.900e-03  4.605e-02  4.975e-01  1.0050  4.628e-02      10.75    1.980e+00
+  100  0.50000   10000   1.00  5.000e-03  6.931e-03  9.901e-03  1.0001  6.932e-03       1.43    9.951e-01
+ 1000  0.00100 1000000   9.97  9.990e-04  6.908e-03  4.997e-01  1.0005  6.911e-03      72.31    1.998e+00
+ 1000  0.03125 1000000   5.00  9.688e-04  3.466e-03  3.007e-02  1.0000  3.466e-03       8.68    1.937e+00
+   30  0.03333    3000   4.91  9.667e-03  3.401e-02  1.475e-01  1.0049  3.418e-02       4.31    5.732e-01
+
+Monte Carlo check of the exact formulas (L=10, omega=0.1, n=200, 400000 repetitions)
+  beta_own exact 0.04500  simulated 0.04529
+  beta_hum exact 0.23684  simulated 0.23836
+
+ratio beta_hum/beta_own = L/(1+omega*(L-1)); with omega = 1/L it is L/(2-1/L):
+  L=   10: ratio     5.26;  K*ln2 = ln L = 2.30
+  L=  100: ratio    50.25;  K*ln2 = ln L = 4.61
+  L= 1000: ratio   500.25;  K*ln2 = ln L = 6.91
+
+Lemma 1.4 and Proposition 2.3 on 20000 random adaptive scaffolds (L = 3), largest value of
+  int TV(P,C_u) d d_(C_t) - [L beta(C_u) + (L-1) beta(C_t)] : -3.547e-01  (<= 0)
+  max(beta^P(C) - L p, p - beta(C))                       : 4.163e-17  (<= 0)
+  beta(C) - L p                                            : -6.343e-02  (<= 0)
+```
+
+The candidate's S1 is violated in every row (column hum/claim above 1), by a factor 72 in the fourth. The value 4.163e-17 is rounding error of an equality case.
+
+**8.2 `shift-abstain_open.py` (Section 3 and Proposition 4.6).**
+
+```
+(A) online form: E sum_t KL over all steps, against K ln2 / q   (K = 3 bits)
+   q=0.5   simulated   4.159 +- 0.027 (s.e.)   bound   4.159
+   q=0.2   simulated  10.457 +- 0.070 (s.e.)   bound  10.397
+   q=0.05  simulated  41.553 +- 0.283 (s.e.)   bound  41.589
+    (the input rule shows the most informative input, so the bound is nearly attained)
+    Example 3.2: silent mistakes, simulated against K(1-q)/(2q) and the bound (1-q)K ln2/q
+   K=8 q=0.25  simulated   12.023   exact   12.000   bound   16.636
+   K=8 q=0.05  simulated   75.907   exact   76.000   bound  105.358
+
+(B) thresholds, labels only on questions: N * E[silent mistakes], exact minimum
+    brute = all deterministic learners;  blocks = reduction to block sizes;
+    bound = (N^2/(Q+1) - (Q+1))/4
+     N   Q   brute  blocks    bound  N*M*(Q+1)/N^2
+     6   0       9       9     8.75          0.250
+     6   1       5       5     4.00          0.278
+     6   2       3       3     2.25          0.250
+     6   3       2       2     1.25          0.222
+     6   4       1       1     0.55          0.139
+     9   0      20      20    20.00          0.247
+     9   1      12      12     9.62          0.296
+     9   2       8       8     6.00          0.296
+     9   3       5       5     4.06          0.247
+     9   4       4       4     2.80          0.247
+     9   5       3       3     1.88          0.222
+    12   0      36      36    35.75          0.250
+    12   1      22      22    17.50          0.306
+    12   2      15      15    11.25          0.312
+    12   3      11      11     8.00          0.306
+    12   4       8       8     5.95          0.278
+    12   5       6       6     4.50          0.250
+    16   0      64      64    63.75          0.250
+    16   1      40      40    31.50          0.312
+    16   2      28      28    20.58          0.328
+    16   3      21      21    15.00          0.328
+    16   4      16      16    11.55          0.312
+    16   5      13      13     9.17          0.305
+    larger N through the block reduction: E[M]*(Q+1)/N
+   N=  60  Q=0: 0.250  Q=1: 0.328  Q=2: 0.362  Q=5: 0.393  Q=11: 0.380  Q=29: 0.250
+   N= 240  Q=0: 0.250  Q=1: 0.332  Q=2: 0.372  Q=5: 0.420  Q=11: 0.441  Q=29: 0.427
+    (the lower bound of Theorem 3.3(a) gives at least 1/4 - ((Q+1)/N)^2/4)
+
+    expected questions: hull of deterministic learners, against
+    g(Qbar) = N/(9(Qbar+1)) - sqrt((Qbar+1)/(8N))  and  E[M](Qbar+1) >= N/15 for Qbar+1 <= N/4
+   N= 12: 11 hull points; min(E[M] - g) = 0.098; min E[M](Qbar+1)/N over Qbar+1 <= N/4: 0.250  (bound 1/15 = 0.067)
+   N= 24: 19 hull points; min(E[M] - g) = 0.067; min E[M](Qbar+1)/N over Qbar+1 <= N/4: 0.187  (bound 1/15 = 0.067)
+   N= 48: 25 hull points; min(E[M] - g) = 0.048; min E[M](Qbar+1)/N over Qbar+1 <= N/4: 0.135  (bound 1/15 = 0.067)
+    lemma A*S >= (4/9)N^3: smallest ratio A*S/N^3 over 20000 random compositions 0.5175; for b_j = J-j, J=400: 0.4461; 4/9 = 0.4444
+
+(C) thresholds, every label shown, at most k wrong answers and m wrong-or-abstained rounds:
+    largest number of thresholds that can be handled (exact game value) and C(m+1,<=k+1)-1
+   k=0: m=0..7: 1 2 3 4 5 6 7 8
+   k=1: m=0..7: 1 3 6 10 15 21 28 36
+   k=2: m=0..7: 1 3 7 14 25 41 63 92
+   k=3: m=0..7: 1 3 7 15 30 56 98 >=140
+    (equal to the formula in every case below the cap)
+```
+
+Notes. In (A) the class has 8 samplers with uniform weights (K = 3 bits), and the sums are over 300/q steps, 20000 repetitions; the simulated value for q = 0.2 is above the bound by less than one standard error. In (B) "brute" is a dynamic programme over the information states (position, consistent range, questions left) of all deterministic learners; it agrees with the reduction to block sizes in every case, which checks Steps 1 and 2 of the proof of Theorem 3.3 and shows that the exact optimum is the minimum over block sizes of Σ_j Σ_{r<b_j} min(r, b_j − r + R_j), R_j the number of members beyond block j. The expected-question check uses, for 60 values of a price per question, the deterministic learner that minimises mistakes plus price times questions; since the bound of Theorem 3.3(b) is convex in Q̄ it suffices to check it at these points. In (C) the table is F(k, m) of Proposition 4.6 exactly.
+
+**8.3 `shift-abstain_ab1.py` (Section 4).**
+
+```
+(1) Theorem 4.1: 71358 (class, human, order) cases checked; largest used/budget = 0.9926 (never above 1)
+
+(2) Example 4.2: counts attained
+   K=20 eta=0.25: wrong rounds 10 (bound 10.00);  abstentions 48 (bound 48.19; class with log2(1/w(f)) = 19.92)
+   K=20 eta=0.1: wrong rounds 6 (bound 6.02);  abstentions 131 (bound 131.58; class with log2(1/w(f)) = 19.91)
+   K=40 eta=0.01: wrong rounds 6 (bound 6.02);  abstentions 2758 (bound 2758.70; class with log2(1/w(f)) = 39.99)
+
+(3) threshold rule with audits (Proposition 4.3(b)): silent errors, K = 8
+   eta=0.5 q=0.25: simulated   24.036   bound (1-q)K/(q log2(1/eta)) =   24.000
+   eta=0.5 q=0.05: simulated  152.468   bound (1-q)K/(q log2(1/eta)) =  152.000
+   eta=0.3 q=0.25: simulated    0.000   bound (1-q)K/(q log2(1/eta)) =   13.817
+
+(4) Theorem 4.4: rehearsal driven by the threshold rule (exact enumeration)
+   class 0, eta=0.1: sum_t [log2(1/eta) E W_t + log2(1/(1-eta)) P(abort_t)] = 0.4998 <= L*K = 5.6135;  E W_t = [0.0, 0.0, 0.0, 0.0], P(abort_t) = [1.0, 0.889, 0.761, 0.638]
+   class 0, eta=0.3: sum_t [log2(1/eta) E W_t + log2(1/(1-eta)) P(abort_t)] = 1.1204 <= L*K = 5.6135;  E W_t = [0.0, 0.0, 0.0, 0.0], P(abort_t) = [0.667, 0.593, 0.502, 0.416]
+   class 1, eta=0.1: sum_t [log2(1/eta) E W_t + log2(1/(1-eta)) P(abort_t)] = 0.3776 <= L*K = 1.2085;  E W_t = [0.0, 0.0, 0.0, 0.0], P(abort_t) = [1.0, 0.667, 0.469, 0.348]
+   class 1, eta=0.3: sum_t [log2(1/eta) E W_t + log2(1/(1-eta)) P(abort_t)] = 0.0000 <= L*K = 1.2085;  E W_t = [0.0, 0.0, 0.0, 0.0], P(abort_t) = [0.0, 0.0, 0.0, 0.0]
+   class 2, eta=0.1: sum_t [log2(1/eta) E W_t + log2(1/(1-eta)) P(abort_t)] = 0.4937 <= L*K = 8.1184;  E W_t = [0.0, 0.0, 0.0, 0.0], P(abort_t) = [1.0, 0.889, 0.749, 0.61]
+   class 2, eta=0.3: sum_t [log2(1/eta) E W_t + log2(1/(1-eta)) P(abort_t)] = 3.4174 <= L*K = 8.1184;  E W_t = [0.667, 0.444, 0.296, 0.198], P(abort_t) = [0.333, 0.333, 0.3, 0.257]
+   class 3, eta=0.1: sum_t [log2(1/eta) E W_t + log2(1/(1-eta)) P(abort_t)] = 0.5517 <= L*K = 5.5450;  E W_t = [0.0, 0.0, 0.0, 0.0], P(abort_t) = [1.0, 1.0, 0.889, 0.741]
+   class 3, eta=0.3: sum_t [log2(1/eta) E W_t + log2(1/(1-eta)) P(abort_t)] = 1.8677 <= L*K = 5.5450;  E W_t = [0.0, 0.0, 0.0, 0.0], P(abort_t) = [1.0, 1.0, 0.889, 0.741]
+
+(5) Theorem 4.5: smallest silent-failure level (LP) against ((N0-n)p - L a)/(N0+L)
+    N0  L    n     a       LP    bound
+     4  2    0   0.0   0.4375   0.2917
+     4  2    0   0.2   0.3375   0.2250
+     4  2    0   0.5   0.1875   0.1250
+     4  2    1   0.0   0.2578   0.2188
+     4  2    1   0.2   0.1745   0.1521
+     4  2    1   0.5   0.0596   0.0521
+     4  2  2.5   0.0   0.1131   0.1094
+     4  2  2.5   0.2   0.0465   0.0427
+     4  2  2.5   0.5   0.0000   0.0000
+     5  2    0   0.0   0.3600   0.2571
+     5  2    0   0.2   0.2800   0.2000
+     5  2    0   0.5   0.1600   0.1143
+     5  2    1   0.0   0.2640   0.2057
+     5  2    1   0.2   0.1840   0.1486
+     5  2    1   0.5   0.0713   0.0629
+     5  2  2.5   0.0   0.1425   0.1286
+     5  2  2.5   0.2   0.0755   0.0714
+     5  2  2.5   0.5   0.0000   0.0000
+     4  3    0   0.0   0.3906   0.3304
+     4  3    0   0.2   0.3075   0.2446
+     4  3    0   0.5   0.1875   0.1161
+     4  3    1   0.0   0.2863   0.2478
+     4  3    1   0.2   0.2013   0.1621
+     4  3    1   0.5   0.0850   0.0335
+     4  3  2.5   0.0   0.1412   0.1239
+     4  3  2.5   0.2   0.0612   0.0382
+     4  3  2.5   0.5   0.0000   0.0000
+
+(6) Proposition 4.7 (human with modal answer 1-eps0; K = 5 bits), expected counts on 400 asked rounds
+   eps0=0.02 eta=0.2: non-modal answers  0.104 (bound  2.343);  abstentions   5.202 (bound  42.787)
+   eps0=0.05 eta=0.2: non-modal answers  0.295 (bound  2.605);  abstentions   5.549 (bound  61.613)
+   eps0=0.05 eta=0.1: non-modal answers  0.295 (bound  1.743);  abstentions   5.549 (bound 277.259)
+    Proposition 4.8, identity A = N - 2 E_b S_b for a random rule, N = 6: 1.935090 = 1.935090
+```
+
+Notes. (1) is exhaustive over all orders of the inputs for 300 random classes (3 to 5 inputs, 2 to 8 functions, 2 or 3 answers, random weights of total 0.3 to 1) with every member as the human. (3) uses the class of Example 3.2(ii) and the limiting value η = 1/2 with ties answered 1, for which the bound of Proposition 4.3(b) is attained; for η = 0.3 the rule abstains at the posterior (1/2, 1/2) and makes no silent error. (4) enumerates all values of the top-level input and of the asked call slot over n = 4 rounds for a scaffold with three calls whose second input depends on the first answer; "class 2, eta = 0.3" is a case with wrong answers. (5) is a linear programme over all randomised protocols and deployed systems for the needle class (the protocol is described by the law of the set of cells it asks while all answers are 0, and by the law of the outcome in {0, 1, ⊥} given that set and the run). (6) is a simulation with 4000 repetitions; the bounds of Proposition 4.7 are far from tight in this example.
+
+**8.4 `shift-abstain_ab2.py` (Section 5).**
+
+```
+(1) Theorem 5.1, 20000 random instances (5 inputs, adaptive scaffold of 2 calls, 2 to 5 samplers):
+    max of [law of a completed run under the rule - under the human]: 0.00e+00 (<= 0)
+    max |TV - P(abort)|: 2.22e-16;  max [P(abort) - int theta d d_P]: 0.00e+00 (<= 0)
+    max violation of  max_nu TV <= theta <= sum_nu TV: 0.00e+00 (<= 0)
+
+(2) plausible sets: absolute <= cumulative <= ratio and |cumulative| <= 1/alpha in 20000 random posteriors
+    frequency with which the human leaves the set at some time (w(P) = 0.05):
+    alpha=0.005: absolute 0.0819, cumulative 0.0819, ratio 0.0652;  bound alpha/w(P) = 0.100
+    alpha=0.02: absolute 0.3453, cumulative 0.3427, ratio 0.2422;  bound alpha/w(P) = 0.400
+
+(3) Theorem 5.6(b), first claim: frequency of {some member nu of the ratio set has sum_t h_t(nu) >= Gamma}
+    n=40 alpha=0.3 eta=0.5: frequency 0.0065 (bound 0.5); Gamma = 3.316; largest observed sum/Gamma = 2.006
+    n=40 alpha=0.05 eta=0.25: frequency 0.0005 (bound 0.25); Gamma = 4.905; largest observed sum/Gamma = 1.356
+    n=150 alpha=0.3 eta=0.25: frequency 0.0000 (bound 0.25); Gamma = 4.010; largest observed sum/Gamma = 0.000
+
+(4) Example 5.7(b), linear fill-ins of a fair coin (K = 1 bit):
+    d=8 c0=2 n=6: asked inputs independent in 0.765 of 6000 runs (exact probability 0.773, lower bound 1 - 2^-c0 = 0.750);
+        given independence: exactly 2^c0 consistent linear functions in 1.000 of the runs; mean abstention probability at a random input 0.868 (exact value 1 - 2^-c0/2 = 0.875), smallest 0.5
+    d=10 c0=3 n=7: asked inputs independent in 0.878 of 6000 runs (exact probability 0.881, lower bound 1 - 2^-c0 = 0.875);
+        given independence: exactly 2^c0 consistent linear functions in 1.000 of the runs; mean abstention probability at a random input 0.939 (exact value 1 - 2^-c0/2 = 0.938), smallest 0.5
+```
+
+Notes. (1) is exact (all runs enumerated). In (2) the class has five coins and the human has weight 0.05; the observed frequencies are within a factor 1.6 of Ville's bound. In (3) the visit measures of the rehearsal mixtures are computed exactly and the rehearsal is simulated 4000 times with a class of 10 samplers; the event has much smaller frequency than the bound η allows. (4) checks Example 5.7(b) by listing all 2^d linear functions: when the asked inputs are linearly independent there are exactly 2^(c₀) consistent ones, and the rule abstains with probability 1 at an input outside their span and 1/2 inside it.
+
+**Not checked numerically:** Theorem 5.3 and Section 6 (separation complexity is not computable; their proofs are a few lines each), Theorem 5.6 beyond its first claim, Corollary 3.5 (it follows from Theorem 3.3(b) by convexity).
+
+## 9. What remains open in this part
+
+1. **A whitelist width for the threshold rule.** Theorem 5.3(d) gives the region where Thr_η must abstain. I have no outer region: no proof that Thr_η answers at every x with sep(x; A) above some bound in K, K_D and log(1/η). The obstacle is that the posterior mass of the hypotheses that are wrong at x is a sum over many hypotheses, and no single one of them need be simple (the class of function semimeasures has no coding theorem; `understand/repo.md`, Section 1, reports that the sum and the largest term are not within a constant).
+2. **The constant 2 in Ab3.** Whether the novelty rule with the simplest consistent hypothesis can be wrong at an input x with sep(x; A) close to 2K, in the class of all programs. Proposition 6.1(2) gives sep(x; A) ≤ K + K_D + c₂ and I have no example above K + O(log K).
+3. **Constants in Section 3.** The exact minimum in Theorem 3.3(a) is computed in Section 8 and lies between N/(4(Q + 1)) and N/(2(Q + 1)); a closed form is missing. For expected questions the continuous optimum of Lemma 3.4 suggests N/9 in place of N/15. In Corollary 3.5 the upper and lower bounds differ by the factor 15·ln 2·log(h/u + 1).
+4. **The factor between L/2 and 2L − 1 in Proposition 2.3**, and whether the square-root rate for a stochastic human can be kept with a factor of order L only.
+5. **A second count for samplers.** Proposition 4.8 excludes a bound on abstentions in K and η alone. What replaces it? The literature has bounds that are linear in the number of hypotheses (the k-meteorologists bound) or in Ent(w)/w(P) (Lattimore, Hutter and Sunehag 2013, as reported in `understand/abstention-shift.md`); a bound in terms of the number of answers that the class can "fill in" would fit Example 5.7(b).
+6. **Rehearsal driven by the minimum rule.** Theorem 5.6 freezes the set after a rehearsal driven by the mixture and pays L(L − 1)·√(K ln 2/(2n)) for the difference between the visit measures. If the minimum rule itself drives the rehearsal, its runs are initial parts of human runs and this term should disappear; but the argument of Theorem 4.4 does not apply, because an asked abstention need not move the posterior by a fixed amount when the human is stochastic. The bound of Cohen, Hutter and Nanda on Σ θ_q³ is the only tool I know.
+7. **Theorem 4.5 with complexity.** The bound (1 − a)²·L/(4σ) is for the needle class; a version for the block class of LB Theorem 3.1, with the factor K/log(L/σ), is not written out.
+8. **Computable versions.** sep, the plausible sets and the novelty rule are not computable. For time-bounded tests Propositions 6.1(1) and 6.2(1), (3) hold with the same proofs; the soundness statements were not redone.
+9. **A batch guarantee for samplers under arbitrary shift** (errors on the answered part of a given batch of unlabelled deployment inputs, rejection on the training law), sketched in `understand/abstention-shift.md`, Section 8.7, is not treated here.
+
+## 10. Remarks on other files
+
+Found while working on this part. I did not check the other parts systematically.
+
+1. **`candidate-theory.md`, S1** is false as stated (with the average rehearsal visit measure d̄) by a factor of order L/ln L (Example 2.2). It is true with the factor B for a change of the top-level law (Proposition 2.1), which is how LB Proposition 4.4 already reads it, and with the factor (2L − 1)·B for visit measures (Proposition 2.3). The same caution applies wherever the per-call bound of R1 is transferred to "the distribution of calls of the human system": the errors of M^(T) along the human system's runs are bounded by L·E β(M^(T)), not by E β(M^(T)) (Lemma 1.4(3)).
+2. **`candidate-theory.md`, S3:** "a property of tasks with rehearsal probability β costs 1/β" is exact for a protocol that rehearses on D₀ and for a guarantee on N unknown properties at once; a single property known in advance costs nothing (Proposition 2.4(d)).
+3. **`candidate-theory.md`, Ab1:** correct, including the per-run statement, provided the threshold rule drives the rehearsal. The sentence "reducing silent errors by a factor j costs a factor about 2^j in questions, in line with N4" should be read with j = log(1/η): K/j wrong rounds against K ln 2·2^j abstention rounds. Three things should be added. The first count is a count over asked rounds; with answers seen only on questions it limits nothing unless η < w(f) or there are audits (Proposition 4.3). In a closed system abstention saves at most the factor (1 − a)² in questions (Theorem 4.5). And the candidate's Section 11 lists "stochastic versions of … Ab1" as open: Propositions 4.7 and 4.8 answer this (a version exists for a human with a mode, and none exists for all samplers).
+4. **`candidate-theory.md`, Ab2:** the dominance statement and the Ville step are correct. "Every patch of the leading hypotheses of complexity up to K + log(1/δ) is in C" needs the constant: patches by tests of complexity up to K + log(1/δ) − c₁. Two things are missing there. The ratio set {posterior weight ≥ α·max} can have 1/(α·w_max) members; for a class with many equally good explanations it is the whole version space (Example 5.7(a)), and the cumulative set of Cohen, Hutter and Nanda avoids this. And for samplers with weights 2^(−length) the set contains fill-ins of the human's coins, so that the frozen rule can be useless on the closed system even when K = 1 (Example 5.7(b)); a summability condition on the weights is needed (Theorem 5.6(b)).
+5. **`candidate-theory.md`, Ab3 and N4:** correct; the constant in Ab3 is the constant c₂ of (P2), and N4 should say "ask or abstain".
+6. **`candidate-theory.md`, Section 10, item 6 (the rock test):** "no abstention is needed inside the closed system" is right, and Theorem 4.5 adds that abstention would not make the closed system cheaper either.
+7. **`understand/ask-for-help.md`, Section 3.2:** the set {ν : w_D(ν) ≥ α} can be empty, and the minimum over it is then undefined; the claims there are for the event that it contains P. Claims 1 to 4 are correct (Theorem 5.1, Proposition 5.2). Claim 5 is correct; Theorem 5.6(b) is its form for rehearsal. **Section 3.4:** the derivation is correct; the constant 1/32 can be replaced by 3/16, the optimum is within a factor 2 of this, and the bound extends to expected numbers of questions (Theorem 3.3). **Section 2.1:** the statements of the five theorems of Cohen, Hutter and Nanda agree with the source.
+8. **`understand/notes.md`, Observation B:** both claims are correct. Its last paragraph ("without answers it abstains on every input of every new kind for ever") is Proposition 6.2(1); with the sound choice of s this is every input of complexity below 2K.
+9. **`research/prove/lower-bounds.md`, Lemma 1.10:** in the proof, Σ_i π_i is bounded by the expected number of questions; it is in fact bounded by the expected number of questions that lie in the patches. This sharper form is what Proposition 2.4(c) uses. No error.
+10. **`note.md`, Section 4.1:** the sentence "the mixture gives a wrong answer at x probability at least 2^(−sep(x;A)−c)" is Proposition 7.5(6) and holds for the human itself (not only for one of two candidates), in a class with (P1) and two fixed answers.
+
+## 11. Literature used, and how
+
+No result from the literature is used as a black box in a proof, except Ville's inequality, Pinsker's inequality, the inequality TV ≤ √(2H²), Kraft's inequality and the bound C(t, ≤ j) ≤ (et/j)^j. "[source]" means that I read the statement in the source in this session; "[memory]" that I quote it from memory; "[digest]" that I take it from one of the digests in `research/understand/` without opening the work.
+
+* **M. K. Cohen, M. Hutter and N. Nanda,** "Fully General Online Imitation Learning", *Journal of Machine Learning Research* 23(334):1–30, 2022; arXiv:2102.08686. [source: TeX source of arXiv version 2: the definitions of Sections 3 and 4, Theorems 1 to 5 with their statements as in Section 5.5, the definition of fairness, the proof of Theorem 5, and the first lines of the proof of Theorem 2. Bibliographic data confirmed by a web search.] Used for Section 5.5 and for the attribution of the cumulative top set, of the one-step domination and of the Ville step.
+* **C. Zhang and K. Chaudhuri,** "The Extended Littlestone's Dimension for Learning with Mistakes and Abstentions", *Proceedings of the 29th Conference on Learning Theory (COLT 2016)*, PMLR 49:1584–1616; arXiv:1604.06162. [source: TeX source of the arXiv version: the setting ("the adversary then reveals an outcome"), the definition of a (k, m)-SZB bound, and the theorem "for a set of n threshold classifiers, ELdim(H, k) = max{t : C(t, ≤ k + 1) ≤ n}". Volume and pages from the digest.] Their theorem is the exact form of Proposition 4.6: a (k, m) bound exists if and only if m ≥ ELdim(H, k), which is N ≤ C(m + 1, ≤ k + 1) − 1. The proof of the lower bound given here is mine and self-contained; the upper bound (tightness) is theirs and is confirmed by the computation of Section 8.
+* **A. Sayedi, M. Zadimoghaddam and A. Blum,** "Trading off Mistakes and Don't-Know Predictions", *Advances in Neural Information Processing Systems 23*, 2010. [digest] The model of Proposition 4.6 and the bound (k + 1)·|H|^(1/(k+1)).
+* **L. Li, M. L. Littman and T. J. Walsh,** "Knows What It Knows: A Framework for Self-Aware Learning", *ICML 2008*, pp. 568–575. [digest] The enumeration rule of Proposition 6.1(3) with |H| − 1 abstentions.
+* **R. El-Yaniv and Y. Wiener,** "On the Foundations of Noise-free Selective Classification", *Journal of Machine Learning Research* 11:1605–1641, 2010. [digest] Optimality of the rule that abstains on the disagreement region (Proposition 5.4 is the same observation for a plausible set).
+* **N. Cesa-Bianchi, G. Lugosi and G. Stoltz,** "Minimizing Regret with Label Efficient Prediction", *IEEE Transactions on Information Theory* 51(6):2152–2162, 2005. [digest] Asking at random; Theorem 3.1 is of this type and is proved here from the regret bound.
+* **J. Yu and M. Blanchard,** "Distribution-Free Sequential Prediction with Abstentions", arXiv:2602.17918. [digest] Quoted after Corollary 3.6 for comparison only.
+* **T. Lattimore, M. Hutter and P. Sunehag,** "Concentration and Confidence for Discrete Bayesian Sequence Predictors", arXiv:1307.0127 (*ALT 2013* according to the digest, which marks the venue as from memory). [digest] Mentioned in Section 9, item 5, only. The k-meteorologists bound mentioned there is from C. Diuk, L. Li and B. R. Leffler, *ICML 2009*, pp. 249–256 [digest].
+* **Ville's inequality:** for a nonnegative supermartingale (Z_n) with Z_0 = c and v > 0, Pr[sup_n Z_n ≥ v] ≤ c/v. [memory; J. Ville, *Étude critique de la notion de collectif*, 1939; for example R. Durrett, *Probability: Theory and Examples*, the maximal inequality for nonnegative supermartingales.] Used in Proposition 5.2(b).
+* **Pinsker's inequality** TV ≤ √(KL/2), and **TV ≤ √(H²(2 − H²)) ≤ √(2H²)** for H² = 1 − Σ√(pq). [memory; for example A. B. Tsybakov, *Introduction to Nonparametric Estimation*, Springer 2009, Section 2.4; both are also Lemma 1.1 of `research/prove-b/hellinger-runs.md`.]
+* **Kraft's inequality** for prefix-free sets of programs, the bound K(x) ≤ |x| + 2 log|x| + c, and **C(t, ≤ j) ≤ (et/j)^j** for t ≥ j ≥ 1. [memory; standard; M. Li and P. Vitányi, *An Introduction to Kolmogorov Complexity and Its Applications*; for the binomial bound any text on VC theory.]
+* **The regret bound for Bayes mixtures** (R. J. Solomonoff, "Complexity-based induction systems: comparisons and convergence theorems", *IEEE Transactions on Information Theory* 24:422–432, 1978, for sequences). [memory] Re-proved for adaptively chosen questions as Lemma 1.1.
+* **From the repository's digests** [digest]: `understand/repo.md`, items C3(2), X2, X3, X4 (N4, the never-wrong threshold rule, audits), D1 and D4 (the floor 2^(−sep−c)), G4 (the grue theorem); `understand/notes.md`, Observations A to D; `understand/ask-for-help.md`, Sections 2.1, 2.5, 3.1 to 3.5; `understand/abstention-shift.md`, Sections 3, 7.2, 7.5 and 9.7. The statements taken from them are re-proved here, except the grue theorem (cited in the remark after Theorem 5.3) and the reports on the literature.

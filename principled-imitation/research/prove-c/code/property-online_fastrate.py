@@ -1,4 +1,4 @@
-"""One-sided rates: tests that the human never satisfies (property-online.md, Sections 2.3 and 3).
+"""One-sided rates: tests that the human never satisfies (property-online.md, Example 2.3 and Section 3).
 
 (1) Example 2.3. Questions 2, 3, 4, ... (x_t = t + 1); answers {0, 1, 2}; the human answers 0
     to odd questions and 2 to even ones, so never 1. Two tests:
@@ -9,8 +9,8 @@
         N* = least integer N >= 0 with  beta sinh(eta N) >= delta sinh(eta).
     The script simulates the rule and compares the count with this formula, and with the bound
     of Theorem Pr5, ln(2/beta)/eta + n eta/2. It also runs the rules N and NH of Section 3,
-    whose bounds for the count are  2L + ln(2L + 4) + 2  with L = ln(1/beta)  (rule N)  and
-    2 + log2(1/beta)  (rule NH).
+    whose bounds for the count are  2L + ln(2L + 4) + 2  with L = ln(1/beta)  (rule N,
+    Corollary 3.2(b))  and  2 + log2(1/beta)  (rule NH, Theorem 3.3(ii)).
 
 (2) Proposition 3.5 (lower bound). Questions 1..m, answers {0, 1}, the 2^m tests
     B_c = {(x, y): y != c(x)} with weight 2^-m each. Against the human who answers 1 - a_t(x_t),

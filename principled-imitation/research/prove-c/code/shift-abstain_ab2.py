@@ -8,9 +8,10 @@
 (2) Proposition 5.2: the three plausible sets (absolute, cumulative, ratio) are nested,
     the cumulative one has at most 1/alpha members, and the human leaves each of them at
     some time with probability at most alpha/w(P) (simulation).
-(3) Theorem 5.6, step (ii): after rehearsal, every member nu of the ratio set has
+(3) Theorem 5.6(b), first claim: after rehearsal, every member nu of the ratio set has
     sum_t h_t(nu) < Gamma with probability >= 1 - eta, where h_t(nu) is the expected squared
     Hellinger distance to the human at the asked call of round t (exact visit measures).
+(4) Example 5.7(b): linear fill-ins of a fair coin make the frozen ratio rule abstain.
 """
 import itertools
 import math
@@ -203,6 +204,47 @@ def check_hellinger_step(reps, n, alpha, eta, seed=3):
     return viol / reps, Gamma, maxratio
 
 
+def check_fillins(d, c0, reps, seed=4):
+    """Example 5.7(b): the human is a fair coin at every input of {0,1}^d (weight 1/2); the
+    other hypotheses are the 2^d linear functions over GF(2) (weight 2^-(d+1) each).
+    After n = d - c0 questions at uniformly random inputs: number of consistent linear
+    functions, their posterior weight relative to the coin, and the abstention probability
+    theta of the minimum rule over the ratio set with alpha = 2^-c0 at a fresh random input."""
+    rng = random.Random(seed)
+    n = d - c0
+    indep = 0
+    count_ok = 0
+    theta_sum = 0.0
+    theta_min = 1.0
+    for _ in range(reps):
+        xs = [rng.getrandbits(d) for _ in range(n)]
+        ys = [rng.getrandbits(1) for _ in range(n)]
+        cons = [s for s in range(2 ** d)
+                if all((bin(s & x).count("1") & 1) == y for x, y in zip(xs, ys))]
+        # rank of xs over GF(2)
+        basis = []
+        for x in xs:
+            for b in basis:
+                x = min(x, x ^ b)
+            if x:
+                basis.append(x)
+        if len(basis) == n:
+            indep += 1
+            if len(cons) == 2 ** c0:
+                count_ok += 1
+            # ratio set with alpha = 2^-c0 : the coin and all consistent linear functions
+            # (relative posterior weight 2^(n-d) = 2^-c0 each)
+            x = rng.getrandbits(d)
+            vals = {bin(s & x).count("1") & 1 for s in cons}
+            if len(vals) == 2:
+                theta = 1.0                      # S = 0 for both answers
+            else:
+                theta = 0.5                      # S gives 1/2 to the common answer
+            theta_sum += theta
+            theta_min = min(theta_min, theta)
+    return indep / reps, count_ok / max(indep, 1), theta_sum / max(indep, 1), theta_min
+
+
 def main():
     wd, wt, wa, wth = check_dominance(trials=20000, seed=5)
     print("(1) Theorem 5.1, 20000 random instances (5 inputs, adaptive scaffold of 2 calls, 2 to 5 samplers):")
@@ -218,12 +260,24 @@ def main():
         print(f"    alpha={alpha}: absolute {fr[0]:.4f}, cumulative {fr[1]:.4f}, ratio {fr[2]:.4f};"
               f"  bound alpha/w(P) = {alpha / 0.05:.3f}")
     print()
-    print("(3) Theorem 5.6(ii): frequency of {some member nu of the ratio set has sum_t h_t(nu) >= Gamma}")
+    print("(3) Theorem 5.6(b), first claim: frequency of {some member nu of the ratio set has sum_t h_t(nu) >= Gamma}")
     for n, alpha, eta in ((40, 0.3, 0.5), (40, 0.05, 0.25), (150, 0.3, 0.25)):
         fr, Gam, mr = check_hellinger_step(reps=4000, n=n, alpha=alpha, eta=eta)
         print(f"    n={n} alpha={alpha} eta={eta}: frequency {fr:.4f} (bound {eta}); Gamma = {Gam:.3f}; "
               f"largest observed sum/Gamma = {mr:.3f}")
 
+    print()
+    print("(4) Example 5.7(b), linear fill-ins of a fair coin (K = 1 bit):")
+    for d, c0 in ((8, 2), (10, 3)):
+        fi, ok, th, thmin = check_fillins(d, c0, reps=6000)
+        exact = 1.0
+        for i in range(d - c0):
+            exact *= 1 - 2.0 ** (i - d)
+        print(f"    d={d} c0={c0} n={d - c0}: asked inputs independent in {fi:.3f} of 6000 runs "
+              f"(exact probability {exact:.3f}, lower bound 1 - 2^-c0 = {1 - 2.0 ** (-c0):.3f});")
+        print(f"        given independence: exactly 2^c0 consistent linear functions in {ok:.3f} of the runs; "
+              f"mean abstention probability at a random input {th:.3f} (exact value 1 - 2^-c0/2 = "
+              f"{1 - 2.0 ** (-c0) / 2:.3f}), smallest {thmin}")
 
 if __name__ == "__main__":
     main()

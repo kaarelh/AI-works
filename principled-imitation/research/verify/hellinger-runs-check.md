@@ -1,6 +1,6 @@
 # Referee report, line by line: `research/prove-b/hellinger-runs.md` (key: hellinger-runs)
 
-Checked file: `research/prove-b/hellinger-runs.md` (579 lines; labels L4, R2, A, B), with its scripts `research/prove-b/code/hellinger-runs_*`. The file was not changed. This report has three parts: (I) what was done and the result in brief; (II) one entry per statement; (III) the corrections that must be made, ordered by importance, followed by improvements that the check produced.
+Checked file: `research/prove-b/hellinger-runs.md` (579 lines; labels L4, R2, A, B), with its scripts `research/prove-b/code/hellinger-runs_*`. The file was not changed. This report has six parts: (I) what was done and the result in brief; (II) one entry per statement; (III) the corrections that must be made, ordered by importance; (IV) improvements that the check produced; (V) what was not checked; (VI) notes for the editor of the two section blocks.
 
 **Verdict words.** CORRECT: the statement and its proof stand as written. MINOR: correct after the small fix given. GAP: a step is missing; it is named and filled here. WRONG: the statement fails. No statement of the file received the verdict WRONG.
 
@@ -16,7 +16,9 @@ Checked file: `research/prove-b/hellinger-runs.md` (579 lines; labels L4, R2, A,
 | `hellinger-runs_potentials.py` | q₀ and c* to 30 digits and by interval arithmetic; both one-step inequalities on the extreme laws; Step 2 on a grid; Example 2.8(ii) in 30-digit arithmetic, computed in two ways | numpy, scipy, mpmath |
 | `hellinger-runs_sec3.py` | Lemma 1.1; Lemma 3.4a; the constants of Propositions 3.4, 3.5; Protocol R with exact expectations (R1 and Theorem 3.1(a) to (e)) | numpy, scipy |
 | `hellinger-runs_sec45.py` | Examples 4.4, 4.6, 4.8, 5.4; Propositions 4.7, 5.6; Theorems 4.2, 5.1, 5.5; Lemma 5.0; all with exact expectations | numpy |
-| `hellinger-runs_ex48many.py` | the second half of Example 4.8, summed over every t | numpy |
+| `hellinger-runs_ex48many.py` | the second half of Example 4.8, summed over every t, by two methods | numpy, scipy |
+
+How the outputs were made: each script was run without arguments, except `hellinger-runs_potentials.py fine` (the argument adds β = 1.0001 in 30-digit arithmetic and two finer values of β in double precision; about three minutes). sympy is not installed in this environment; for the symbolic script it was installed outside the project (version 1.14.0). No script writes a file.
 
 The prover's scripts `hellinger-runs_l4_check.py`, `_r2_coins.py`, `_thmA.py`, `_thmB.py` were run again: their outputs are identical, byte for byte, to the saved `.out` files. `hellinger-runs_l4_lp.py` was run again in its default mode: identical output up to the grid ratio u = 1.035; the two finest rows of the linear programme (u = 1.025 and 1.018, 1.1 and 2.7 million constraints) were not run again.
 
@@ -24,8 +26,35 @@ The prover's scripts `hellinger-runs_l4_check.py`, `_r2_coins.py`, `_thmA.py`, `
 
 1. **The mathematics is correct.** Both potential arguments for L4 hold (constants 4 and c*). R2 in general, the lower bounds, Theorem A, the counterexample for the per-call mixture, Theorem B, its failure at λ = 1 and the substitute B′ are all correct, with the constants stated. Every constant was recomputed; the recomputed values are in the entries.
 2. **The attribution is correct.** The constant 7 is in Foster, Han, Qian and Rakhlin (arXiv:2404.10122), not in Foster, Kakade, Qian and Rakhlin (arXiv:2112.13487), which has 10²·log n. Both checked in source.
-3. **The corrections are small.** The most important ones: an upper bound rounded in the wrong direction ("c₀* ≤ 2.9641", where c* = 2.964147); one sentence of Example 4.6 that argues for each round t separately where Theorem A is about the average over t (one line closes it); one claim of Section 3.3 that the file itself marks "not written out" (filled here); one wrong sentence after Example 4.8 ("the same to first order": the two total variations differ by the factor 2 − ω_t); and four numbers of Example 4.8 called exact that are approximations to within 2 per cent.
+3. **The corrections are small.** The most important ones: an upper bound rounded in the wrong direction ("c₀* ≤ 2.9641", where c* = 2.964147); one sentence of Example 4.6 that argues for each round t separately where Theorem A is about the average over t (one line closes it); one claim of Section 3.3 that the file itself marks "not written out" (filled here); one wrong sentence after Example 4.8 ("the same to first order": the two total variations differ by the factor 2 − ω_t); and four numbers of Example 4.8 called exact that are quadrature values (off by up to 2 per cent; two of the four change at the quoted precision).
 4. **Two things the check adds.** (a) The root q₀ is unique, and c* is enclosed rigorously: 2.96414712 < c* < 2.96414723. (b) Theorem 3.1(d) can be sharpened: when the inputs do not depend on the answers, E KL(Q_P ‖ Q_{M^(T)}) ≤ LK ln2/n and E TV ≤ √(LK ln2/(2n)), which is exactly the bound of Theorem A for the same number of answers.
+
+**Verdicts at a glance.**
+
+| statement | verdict |
+|---|---|
+| Section 0, setting | CORRECT |
+| Lemma 1.1 | MINOR (data processing is proved for countable sets only; one sentence) |
+| Section 2.1, literature and attribution of 7 and of 10²·log n | CORRECT (read in source) |
+| Lemma 2.2, Theorem 2.1 | CORRECT |
+| Corollary 2.3 (**L4**, constant 4) | CORRECT |
+| Propositions 2.4, 2.5; Example 2.6 | CORRECT |
+| Theorem 2.7 (constant c*) | MINOR (proof correct; add uniqueness of the root; c* < 2.9642) |
+| Example 2.8 | MINOR (values confirmed; "c₀* ≤ 2.9641" must read 2.9642) |
+| Remark 2.9 | CORRECT for the inequality; the figure 12.6 has no proof |
+| Protocol R, Theorem R1, Lemma A.1 | CORRECT |
+| Theorem 3.1 (**R2**), Remarks 3.2, 3.3 | CORRECT |
+| Lemma 3.4a, Propositions 3.4, 3.5 | CORRECT |
+| Section 3.3 | GAP, filled (qualification 3, "not written out") |
+| Lemma 4.1, Theorem 4.2 (**A**), Remark 4.3, Example 4.4, Lemma 4.5 | CORRECT |
+| Example 4.6 (per-call mixture) | GAP, filled (the bounds are shown for each t, not for the average over t) |
+| Proposition 4.7 | CORRECT |
+| Example 4.8 | MINOR (four numbers are quadrature values, two change; one wrong sentence after the example) |
+| Remark 4.9, Lemma 5.0 | CORRECT |
+| Theorem 5.1 (**B**), Corollary 5.2, Remark 5.3 | CORRECT |
+| Example 5.4 (λ = 1), Theorem 5.5 (**B′**), Proposition 5.6 | CORRECT |
+| Section 6 | CORRECT |
+| Sections 7 and 8 | MINOR (wording carried over from the items above) |
 
 ## II. Entries, statement by statement
 
@@ -54,12 +83,12 @@ All six items were recomputed and hold; random test on 100000 pairs, script `sec
 
 I read the four TeX sources in this session. Every statement of Section 2.1 about them is accurate.
 
-1. **Foster, Kakade, Qian, Rakhlin, arXiv:2112.13487** (archive dated 12 July 2023, file `paper-stripped.tex`). Lemma "Subadditivity for squared Hellinger distance", label `lem:hellinger_chain_rule`: D²_H(P,Q) ≤ 10²·log(n)·E_P[Σ_i D²_H(P^(i)(·|X_1:i−1), Q^(i)(·|X_1:i−1))], and with 3·log(V) when sup_A P^(i)(A|x)/Q^(i)(A|x) ≤ V for a constant V ≥ e. The convention is D²_H = ∫(√dP − √dQ)² (line 2148 of the source). Lemma `lem:mp_min` is as quoted, with the constants 3 and 4R. The digit 7 occurs in this paper only in an unrelated lower-bound proof ("≤ 7δ"). Lemma `lem:hellinger_pair` is E_{X∼P_X}[D²_H(P_{Y|X}, Q_{Y|X})] ≤ 4·D²_H(P_{X,Y}, Q_{X,Y}), as the parenthesis in the proof of Proposition 2.5 says.
-2. **Foster, Han, Qian, Rakhlin, "Online Estimation via Offline Estimation: An Information-Theoretic Framework", arXiv:2404.10122** (archive dated 17 April 2024, file `appendix_technical.tex`). The lemma "Subadditivity for squared Hellinger distance" has the same hypotheses and the constant 7. The text before it says that it is "an improvement to Lemma A.13 of" the paper of item 1 "that removes a logarithmic factor". The proof uses the cut-and-paste property and "Theorem 7 of" Jayram (2009), and ends with "∏_{i=1}^n (1 − 1/2^i) > 2/7". The file's figure 2/∏_{i≥1}(1 − 2^(−i)) = 6.93 is right (6.9255). One addition: this paper defines D²_H = ½∫(√dP − √dQ)² (`section_examples.tex`, line 72), which is exactly the H² of the outline, so its 7 is the constant in our convention without any conversion.
-3. **Chen, Foster, Han, Qian, Rakhlin, Xu, arXiv:2410.05117** (file `tools.tex`): the lemma with the constant 7, attributed to Jayram (2009) with "see also" Lemma 11.5.3 of Duchi's notes and Lemma D.2 of the paper of item 2; squared Hellinger distance is the f-divergence with f(x) = ½(√x − 1)² (`prelim.tex`). Its Lemma `lemma:Hellinger-cond` is E_{X∼P_X}[D_H²(P_{Y|X}, Q_{Y|X})] ≤ 2·D_H²(P_{X,Y}, Q_{X,Y}), as the proof of Proposition 2.5 says.
-4. **Foster, Block, Misra, arXiv:2407.15007** (archive dated 3 December 2024): no subadditivity lemma of its own; "Lemma D.2 of Foster et al. (2024)" with the constant 7 is used four times (`appendix_main.tex`, `section_additional_lower.tex`). Convention D²_H = ∫(√dP − √dQ)². The change-of-measure lemma (`lem:hellinger_com`) and the proposition D²_H(P^π̂, P^π*) ≤ 2·log(|Π|δ⁻¹)/n (`prop:mle_finite`) are as quoted.
+1. **Dylan J. Foster, Sham M. Kakade, Jian Qian, Alexander Rakhlin, "The Statistical Complexity of Interactive Decision Making", arXiv:2112.13487** (archive dated 12 July 2023, file `paper-stripped.tex`). Lemma "Subadditivity for squared Hellinger distance", label `lem:hellinger_chain_rule`: D²_H(P,Q) ≤ 10²·log(n)·E_P[Σ_i D²_H(P^(i)(·|X_1:i−1), Q^(i)(·|X_1:i−1))], and with 3·log(V) when sup_A P^(i)(A|x)/Q^(i)(A|x) ≤ V for a constant V ≥ e. The convention is D²_H = ∫(√dP − √dQ)² (line 2148 of the source). Lemma `lem:mp_min` is as quoted, with the constants 3 and 4R. The digit 7 occurs in this paper only in an unrelated lower-bound proof ("≤ 7δ"). Lemma `lem:hellinger_pair` is E_{X∼P_X}[D²_H(P_{Y|X}, Q_{Y|X})] ≤ 4·D²_H(P_{X,Y}, Q_{X,Y}), as the parenthesis in the proof of Proposition 2.5 says.
+2. **Dylan J. Foster, Yanjun Han, Jian Qian, Alexander Rakhlin, "Online Estimation via Offline Estimation: An Information-Theoretic Framework", arXiv:2404.10122** (archive dated 17 April 2024, file `appendix_technical.tex`). The lemma "Subadditivity for squared Hellinger distance" has the same hypotheses and the constant 7. The text before it says that it is "an improvement to Lemma A.13 of" the paper of item 1 "that removes a logarithmic factor". The proof uses the cut-and-paste property and "Theorem 7 of" Jayram (2009), and ends with "∏_{i=1}^n (1 − 1/2^i) > 2/7". The file's figure 2/∏_{i≥1}(1 − 2^(−i)) = 6.93 is right (6.9255). One addition: this paper defines D²_H = ½∫(√dP − √dQ)² (`section_examples.tex`, line 72), which is exactly the H² of the outline, so its 7 is the constant in our convention without any conversion.
+3. **Fan Chen, Dylan J. Foster, Yanjun Han, Jian Qian, Alexander Rakhlin, Yunbei Xu, "Assouad, Fano, and Le Cam with Interaction: A Unifying Lower Bound Framework and Characterization for Bandit Learnability", arXiv:2410.05117** (archive dated 10 December 2024, file `tools.tex`): the lemma with the constant 7, attributed to Jayram (2009) with "see also" Lemma 11.5.3 of Duchi's notes and Lemma D.2 of the paper of item 2; squared Hellinger distance is the f-divergence with f(x) = ½(√x − 1)² (`prelim.tex`). Its Lemma `lemma:Hellinger-cond` is E_{X∼P_X}[D_H²(P_{Y|X}, Q_{Y|X})] ≤ 2·D_H²(P_{X,Y}, Q_{X,Y}), as the proof of Proposition 2.5 says.
+4. **Dylan J. Foster, Adam Block, Dipendra Misra, "Is Behavior Cloning All You Need? Understanding Horizon in Imitation Learning", arXiv:2407.15007** (archive dated 3 December 2024): no subadditivity lemma of its own; "Lemma D.2 of Foster et al. (2024)" with the constant 7 is used four times (`appendix_main.tex`, `section_additional_lower.tex`). Convention D²_H = ∫(√dP − √dQ)². The change-of-measure lemma (`lem:hellinger_com`) and the proposition D²_H(P^π̂, P^π*) ≤ 2·log(|Π|δ⁻¹)/n (`prop:mle_finite`) are as quoted.
 
-My own web search (two queries, not exhaustive) found no statement of the lemma with a constant below 7 and no statement of the best constant. One later paper (arXiv:2508.02637) is reported by the search engine to restate the lemma with "an absolute constant c ≤ 7"; I did not open it. Jayram's paper and Duchi's notes were not read by me either.
+My own web search (three queries, not exhaustive) found no statement of the lemma with a constant below 7 and no statement of the best constant. Later papers that the search engine reports as restating the lemma (arXiv:2508.02637 with "an absolute constant c ≤ 7", arXiv:2501.14928, arXiv:2406.01378) were not opened by me. Jayram's paper and Duchi's notes were not read by me either.
 
 So the candidate theory's sentence "7 in the convention of Foster, Kakade, Qian and Rakhlin" is wrong in the way the file says: wrong paper. The inequality is homogeneous of degree one, so the constant is the same in both conventions; this remark of the file is correct.
 
@@ -105,7 +134,7 @@ Recomputed: H² = ½(1+s²)ε + O(ε²), E_{Q_S} Σ h = ½(s² − 2s + 3)ε + O
 * (iv): ∂φ/∂s′ = s(p(s)/s − p(s′)/s′), φ(s,s) = 0, and p/s decreases in s. (v): ∂ψ/∂s′ = p(s) − s/√(s′ − ½) ≥ p(s) − √2·s ≥ 0. Correct. On a grid of 3001 × 3001 and 3001 × 4001 points the minima are −2.2·10⁻¹⁶ (script `potentials`, part (N5)).
 * Step 1: V is continuous at 1 and at c (r(s₀) = 0, c·r(1)² = c/2). Correct.
 * Step 2: the three closed forms of the parabola, ((c−Λ)/(2Λ²))(a−Λ)², (c/(4s²))(p·a/c − s·q)² and a(1 − c/Λ) + c·a²/(2Λ²), follow from the definition with the stated multipliers μ = (c−Λ)/2, c·p²/4, c/2 (symbolic check), they agree at Λ = 1 and Λ = c (symbolic check), and μ ≥ 0 in all three ranges. The nine cases (three ranges of Λ, three ranges of a) were each recomputed; the two monotonicity arguments in Λ (for Λ ≤ 1 and for Λ ≥ c) are correct. On a grid of 2299 values of Λ and 7801 values of a, with the parabola computed from its definition, min(parabola − V) = −1.1·10⁻¹⁶ (part (N3)).
-* Step 3: E U(Λr̃) ≤ U(Λ) + c(1 − E r̃) + μ(E r̃² − 1), and U(x) ≥ U(1) + 1 − x because V ≥ 0 = V(1). Correct. On the extreme laws (300 values of Λ, with about 32000 two-point laws and 1001 point masses for each) the largest value of E U(Λr̃) − U(Λ) − c*(1 − E r̃) is 0.0, and the largest ratio found is 2.964146 against c* = 2.964147 (part (N4)): the one-step inequality is tight.
+* Step 3: E U(Λr̃) ≤ U(Λ) + c(1 − E r̃) + μ(E r̃² − 1), and U(x) ≥ U(1) + 1 − x because V ≥ 0 = V(1). Correct. On the extreme laws (300 values of Λ, with about 32000 two-point laws and 1001 point masses for each) the largest value of E U(Λr̃) − U(Λ) − c*(1 − E r̃) is 0.0, and the largest ratio found is 2.964146 against c* = 2.964147 (part (N4)): the one-step inequality is tight. A continuous search for a violation (500 Nelder–Mead runs from random starts for each of the two potentials, part (N4b)) found none: the largest values are 1.1·10⁻¹⁵ for Lemma 2.2 and 2.6·10⁻¹⁵ for Theorem 2.7, which is rounding.
 
 **Addition 1 (uniqueness of the root; one line).** The theorem defines q₀ as the smallest positive root, and the proof uses only that. But the numerical value q₀ = 1.151204 rests on the claim that there is no smaller root; the file supports it by a grid ("a single sign change", Section 7.2). It follows from (iii): dr/dq = −(1−s)(q² + 2(1−s))/(2q²) < 0 for all q > 0, so r is strictly decreasing on (0, ∞); r(0+) = 1/√2 > 0 and r(q) < 1/q − q/2 ≤ 0 for q ≥ √2. So r has exactly one zero, and on (0, √2) the zeros of r are the roots of g = k. Hence g = k has exactly one root in (0, √2). Add this line after (ii).
 
@@ -154,7 +183,7 @@ One point for the statement in the note. In Protocol R the number n counts round
 * (a) H²(Q_{M^(t)}, Q_P) ≤ 4·E_{Q_{M^(t)}} Σ_j H²(M^(t), P)(x_j) ≤ 2·E_{Q_{M^(t)}} Σ_j KL(P‖M^(t))(x_j); average over t and R1: 2LK ln2/n. Correct.
 * (b) Lemma 1.1(6) with b = min(1, 2LK ln2/n); √(b(2−b)) ≤ √(2b) ≤ 2·√(LK ln2/n). Correct.
 * (c) (1+η)·Q_P(G) + (1+1/η)·2·E H²; η = 1 gives 2Q_P(G) + 8LK ln2/n; Q_P(G) = 0 gives 4LK ln2/n. Correct. The event G must be fixed before the data are seen; the statement says "for every event G of runs", which is this.
-* (d) The factor 4 becomes 1 by Proposition 2.4; E H² ≤ ½·LK ln2/n and E TV ≤ √(LK ln2/n). Correct, and it can be sharpened (Part III, improvement A).
+* (d) The factor 4 becomes 1 by Proposition 2.4; E H² ≤ ½·LK ln2/n and E TV ≤ √(LK ln2/n). Correct, and it can be sharpened (Part IV, improvement A).
 * (e) −ln M(f(x)|x) ≥ 1 − M(f(x)|x) and the union bound over the calls of the run of M^(t). Correct.
 
 Hypotheses: A1 and A3 enter through R1; A2 gives K; all are used. Exact check: the 30 rows of part (B15) satisfy (a), (b), (c) for the event "runs of Q_P-probability zero", (d) on the scaffold with fixed inputs, and (e) for classes of functions; the chain H² ≤ 4·E Σ h holds for every reachable data set.
@@ -179,7 +208,7 @@ Recomputed constants:
 
 * κ = 2δ·ln((1+2δ)/(1−2δ)) ≤ 8δ²/(1−4δ²), by ln((1+x)/(1−x)) ≤ 2x/(1−x²) (the difference has the series −(4/3)x³ − (8/5)x⁵ − …). On a grid of (0, ½) the largest value of κ − 8δ²/(1−4δ²) is 5·10⁻²³.
 * Step 2: under n ≤ K(1−4δ²)/(16δ²), κn/(2K) ≤ ¼, so the average of E_θ[d] is at least (K/2)(1 − ½) = K/4.
-* Step 3: (¼ − ⅛)/(1 − ⅛) = 1/7. With r₀ = ⌈K/8⌉ and N = r₀m: L/8 ≤ N ≤ L/4 needs K ≥ 7, N ≥ 4 needs m ≥ 4. G(dm, δ) ≥ δ·√((N−1)/2) ≥ δ·√(3N/8) ≥ δ·√(3L/64). Then (1/7)·½·√(3/64) = 0.015465 = 1/64.66 ≥ 1/65.
+* Step 3: (¼ − ⅛)/(1 − ⅛) = 1/7. With r₀ = ⌈K/8⌉ and N = r₀m: L/8 ≤ N ≤ L/4 holds because ⌈K/8⌉ ≤ (K+7)/8 ≤ K/4 for K ≥ 7, and N ≥ 4 because m ≥ 4. G(dm, δ) ≥ δ·√((N−1)/2) ≥ δ·√(3N/8) ≥ δ·√(3L/64). Then (1/7)·½·√(3/64) = 0.015465 = 1/64.66 ≥ 1/65.
 * The consequence: with δ = 65ε/√L, Lδ² = 4225ε² ≤ 1 and δ² ≤ 1/32, so K(1−4δ²)/(16δ²) ≥ (7/8)·KL/(16·4225·ε²) = KL/(77257·ε²) ≥ KL/(8·10⁴·ε²).
 
 The definition of "protocol" covers Protocol R (its questions are functions of earlier answers and of independent randomness, and M^(T) is an answerer chosen from the data and independent randomness) and the recording of whole runs. The averaging over θ, the two-point bound and the chain rule for adaptively chosen questions are used correctly.
@@ -204,7 +233,7 @@ The main text and the table are correct: 8·10⁴·ln2 = 55452 ("about 5·10⁴"
 
 The upper bound of the candidate's R3 is L·√(K ln2/(2n)) = 0.589·L·√(K/n); the lower bound is 0.054·L·√(K/n). They differ by a factor of at most 10.9 (9.42 for n much larger than K; part (B17)). The statement holds for a deployed sampler, that is, for an imitator that answers each call from the input alone.
 
-**Two notes for the editor.** (1) The first row of the table quotes N2 in the candidate's form "L/(2ε)" and says "not checked here"; the note must take the checked form of N2 from the lower-bounds part (the outline's addendum quotes n ≥ L/(4δ) − L). (2) If improvement A of Part III is adopted, "LK ln2/ε² questions of Protocol R suffice" becomes LK ln2/(2ε²) for scaffolds whose inputs do not depend on the answers, and the ratio between the upper and the lower bound becomes 2.8·10⁴ (2.8·10³ with the constant of the other file).
+**Two notes for the editor.** (1) The first row of the table quotes N2 in the candidate's form "L/(2ε)" and says "not checked here"; the note must take the checked form of N2 from the lower-bounds part (the outline's addendum quotes n ≥ L/(4δ) − L). (2) If improvement A of Part IV is adopted, "LK ln2/ε² questions of Protocol R suffice" becomes LK ln2/(2ε²) for scaffolds whose inputs do not depend on the answers, and the ratio between the upper and the lower bound becomes 2.8·10⁴ (2.8·10³ with the constant of the other file).
 
 Qualification (4) is correct: for one run of the scaffold of Proposition 3.4, asking the L calls of one run and replaying the answers gives a run whose law, averaged over the training randomness, is exactly Q_P. The reference to `understand/imitation-theory.md`, §5.8, exists and says what is quoted.
 
@@ -234,11 +263,11 @@ Recomputed exactly: 0.00321, 0.01058, 0.02451, 0.03794, 0.04298, 0.03988 for t =
 
 (i) is the chain rule for KL with the padding of 0.3; (ii) is the hybrid argument, in which consecutive hybrids differ in one kernel and share the law of the past under Q_A.
 
-### Example 4.6 (Theorem A fails for the per-call mixture): MINOR (the counterexample is right; one line is missing)
+### Example 4.6 (Theorem A fails for the per-call mixture): GAP, filled (the counterexample is right; one step is missing)
 
 **Check.** Posterior: w(f) = B/(2B−v) and ω = 1/(2B−v) for each surviving g_b (verified by brute force). One draw per run: TV = (B−v)ω/B ≤ 1/(2B), KL = ((B−v)/B)·ln(1/(1−ω)). Per-call mixture: TV = ((B−v)/B)(1 − (1−ω)^L), KL = L·((B−v)/B)·ln(1/(1−ω)). The four formulas agree with a brute-force computation of the run laws to 2·10⁻¹⁶ (part (B5); B ≤ 6, L ≤ 4). With B = 2N: KL ≥ L/(8N) and TV ≥ ½(1 − e^(−L/(4N))). Thresholds recomputed: L/(8N) > ln2/N if and only if L > 5.545, so L ≥ 6; L/(16N) > √(ln2/(2N)) if and only if L > 9.42·√N, so 9.5 suffices; ½(1 − e⁻¹) = 0.316 > 0.589/√N if and only if N > 3.47, so N ≥ 4. The numerical example (0.087, 0.0019, 0.059) is reproduced.
 
-**The missing line.** The file bounds KL(Q_f‖Q_{M_t}) and TV(Q_{M_t}, Q_f) from below for every single t ≤ N. That refutes the per-call analogue of Theorem 4.2(b) in its form "t drawn once and uniformly, expectation over t as well". Theorem A itself is about the law of an imitation run given the data, which is the average (1/N)·Σ_t Q_{M_t}; a lower bound on each KL(Q_f‖Q_{M_t}) does not by itself bound the divergence from the average, because KL(Q_f‖·) is convex, not concave. Add: "Given z, Q_f is the point mass on the run 'all zeros'. So TV(Q, Q_f) = E_z[1 − Q(zeros | z)] is linear in Q, and the lower bound on the total variation passes to the average. And KL(Q_f‖Q) = E_z[ln(1/Q(zeros | z))]; for each of the at least B − N + 1 > B/2 values of z that are unvisited in all rounds t ≤ N, every Q_{M_t}(zeros | z) = (1−ω_t)^L ≤ (1 − 1/(2B))^L, hence the same holds for their average, and KL(Q_f‖(1/N)·Σ_t Q_{M_t}) ≥ ½·L·ln(1/(1 − 1/(2B))) ≥ L/(4B) = L/(8N)." The same two lines cover the variant in which every call draws its own t.
+**The missing line.** The file bounds KL(Q_f‖Q_{M_t}) and TV(Q_{M_t}, Q_f) from below for every single t ≤ N. That refutes the per-call analogue of Theorem 4.2(b) in its form "t drawn once and uniformly, expectation over t as well". Theorem A itself is about the law of an imitation run given the data, which is the average (1/N)·Σ_t Q_{M_t}; a lower bound on each KL(Q_f‖Q_{M_t}) does not by itself bound the divergence from the average, because KL(Q_f‖·) is convex, not concave. Add: "Given z, Q_f is the point mass on the run 'all zeros'. So TV(Q, Q_f) = E_z[1 − Q(zeros | z)] is linear in Q, and the lower bound on the total variation passes to the average. And KL(Q_f‖Q) = E_z[ln(1/Q(zeros | z))]; for each of the at least B − N + 1 > B/2 values of z that are unvisited in all rounds t ≤ N, every Q_{M_t}(zeros | z) = (1−ω_t)^L ≤ (1 − 1/(2B))^L, hence the same holds for their average, and KL(Q_f‖(1/N)·Σ_t Q_{M_t}) ≥ ½·L·ln(1/(1 − 1/(2B))) ≥ L/(4B) = L/(8N)." The same computation covers the variant in which every call draws its own t: that imitator answers 1 at every input (z, j) with probability (1/N)·Σ_t ω_t ≥ 1/(2B) when z is unvisited in all rounds.
 
 Exact check of the averaged law (part (B5), expectation over the recorded runs): N = 2, L = 6: E KL = 0.7265 against ln2/N = 0.3466; N = 5, L = 30: E KL = 1.2934 against 0.1386 and E TV = 0.6662 against √(ln2/(2N)) = 0.2633; in all nine cases tried E KL ≥ L/(8N).
 
@@ -254,7 +283,7 @@ Exact check of the averaged law (part (B5), expectation over the recorded runs):
 
 **First half (two hypotheses): correct.** ω_t = o/(o + u_t); the first call contributes exactly KL(Q_P‖Q̂_t) = KL(Bern(p)‖Bern(p(1−ω_t))); the second contributes p·ln(1 + o/u_t); p·u_t = (1−p)(u_(t−1) − u_t); ∫₀¹ ln(1 + o/u) du = (1+o)·ln(1+o) + o·ln(1/o) (symbolic check). Exact sums (part (B8)): for p = 0.01 and η = 10⁻¹, 10⁻², 10⁻⁴, 10⁻⁸ the ratio of the summed divergences to L·K ln2 is 2.208, 3.303, 5.582, 10.164, as the file says, and in each case the excess over the draw per run is at least (1−p) times the integral.
 
-**Fix 1 (second half).** The numbers 1.82, 2.50, 3.21, 3.92 "for B = 4, 16, 64, 256" are called "exact expectations". They are not exact: the prover's script integrates over t by the trapezoid rule on a logarithmic grid. Summed over every t (script `ex48many`), the excess is 1.787, 2.494 and 3.210 for B = 4, 16, 64 (B = 256 was not recomputed). The growth by about ½·ln 4 = 0.69 for each factor 4 in B is confirmed (0.707 and 0.716). Also, the construction of this second example is given only in the script (`hellinger-runs_thmA.py`, function `example_48_many`), not in the text. State the construction in the text and replace the numbers and the word "exact", or drop the sentence; the file already says "not proved".
+**Fix 1 (second half).** The numbers 1.82, 2.50, 3.21, 3.92 "for B = 4, 16, 64, 256" are called "exact expectations". They are not exact: the prover's script integrates over t by the trapezoid rule on a logarithmic grid. Summed over every t up to the prover's cut-off (script `ex48many`; two independent methods agree to four decimals for B ≤ 64, and for B = 256 a separate run of the first method, not saved, gave the same value as the second), the excess is 1.786, 2.494, 3.210 and 3.916 for B = 4, 16, 64, 256; the terms after the cut-off add 0.001 for B = 4 and nothing visible for the others. At the precision quoted in the file, 1.82 should read 1.79 and 2.50 should read 2.49; 3.21 and 3.92 stand. The growth by about ½·ln 4 = 0.69 for each factor 4 in B is confirmed (0.708, 0.716, 0.706). Also, the construction of this second example is given only in the script (`hellinger-runs_thmA.py`, function `example_48_many`), not in the text. State the construction in the text and replace the numbers and the word "exact", or drop the sentence; the file already says "not proved".
 
 **Fix 2 (the sentence after the example).** "In this example the total variation of the two imitators is the same to first order" is not right. While ν is alive, TV(Q̂_t, Q_P) = p·ω_t and TV(Q_{M_t}, Q_P) = p·ω_t·(2 − ω_t) (part (B8c)). The per-call mixture is worse by the factor 2 − ω_t, which is close to 2 when ω_t is small. Write "of the same order (they differ by the factor 2 − ω_t)".
 
@@ -302,6 +331,94 @@ Each row of the table agrees with the theorem it summarises.
 
 All quoted lines are in the saved outputs, and the saved outputs are reproduced (Part I). Fix: in 7.4 and in the output of the script the many-alternatives sums are labelled "exact expectation"; they are trapezoid sums (entry on Example 4.8).
 
-### Section 8 (open questions and remarks): CORRECT, with the wording fixes above
+### Section 8 (open questions and remarks): MINOR (the wording fixes above)
 
 8.1 item 1 and 8.2 item 1: the bounds must read 2.9639 ≤ c₀* ≤ 2.9642, and the caveat about double precision can be replaced by the enclosure of c*. 8.2 item 3: n ≥ K ln2/(2θ²δ²) recomputed. 8.2 item 7: KL(P₁⊗P₂‖R) = ln(1/ε) and the sum of the marginal divergences is larger; correct. 8.2 item 9: the factor 2√2 is right for the bounds as stated; with improvement A the two bounds coincide on scaffolds whose inputs do not depend on the answers.
+
+### Edge cases, collected
+
+| case | where it matters | finding |
+|---|---|---|
+| Horizon 1 | Corollary 2.3, Theorem 3.1 | Corollary 2.3 holds with the constant 1 (H² = E h₁ exactly). Theorem 3.1(d) applies, and with improvement A of Part IV the bounds are E KL ≤ K ln2/n and E TV ≤ √(K ln2/(2n)), the same as Theorem 4.2(c) with N = n. |
+| One round, or one recorded run | Theorems 3.1, 4.2, 5.1 | The deployed object is the normalised prior mixture (T = 1, or t = 1). The bounds read 2LK ln2, K ln2 and β with N = 1; they are valid and mostly empty. Nothing is undefined. |
+| Runs with no calls | 0.3, Protocol R, Lemma 4.1 | Such a run has likelihood 1 under every hypothesis and contributes 0 to every sum; in Protocol R such a round asks nothing. |
+| Events of probability zero | Theorem 2.1, Lemma 1.1(5), Theorem 3.1(c), Corollary 5.2 | Theorem 2.1 assumes no absolute continuity: the proof uses E r² ≤ 1, not E r² = 1, and r_i is needed only where p_i > 0. All numerical tests include kernels with singular parts. |
+| Infinite divergences | Lemma 1.1(2), Theorem 4.2, Remark 3.3(ii), Theorem 5.5, Proposition 5.6 | H² ≤ ½·KL holds with KL = ∞. Under A2 every divergence in Theorem 3.1 is finite. Outside the class the statements either assume KL(Q*‖Q_ν*) < ∞ or are empty, and the proofs say so. Section 6, point 2, says "after such an answer the posterior is not defined"; exactly, it is undefined once the data have refuted every member, which one such answer need not do. |
+| Semimeasures | 0.1 | A hypothesis completed by ⊥ is a sampler and so is the mixture; if the human never answers ⊥ no likelihood changes; the scaffold must say what it does with ⊥ (said in 0.1). Weights with Σ w < 1 enter only through ξ(∅) ≤ 1 and W ≤ 1, in the right direction. |
+| Ties | Theorem 5.1(b), Proposition 5.6, Proposition 3.4 | The statements are about every ν with π_λ(ν)·L_ν ≥ π_λ(P)·L_P (or ≥ π_λ(ν*)·L_ν*), so every maximiser is covered, and a maximiser exists. In Proposition 3.4 any measurable choice of the minimiser θ̂ works. |
+
+### Hypotheses, collected
+
+| statement | hypotheses | finding |
+|---|---|---|
+| Theorem 2.1, Corollary 2.3 | sequential kernels; the same law of X₀ (of ω₀) and the same stopping rule under both laws | all used; none missing |
+| Theorem 3.1 | A1, A2, the first half of A3; J_t uniform on {1, …, L}; T uniform and independent | all used. Not used: computability, prefix codes, the second clause of A3. The top-level input and the scaffold's randomness of the deployed run have the same law μ₀ as in rehearsal; this is part of the definition of Q_{M^(T)} and should be said in words in the note ("closed system"). |
+| Proposition 3.4 | K ≥ 8, m ≥ 4, Lδ² ≤ 1, δ ≤ ¼ | K ≥ 8 and m ≥ 4 are used in Step 3; δ ≤ ¼ is redundant |
+| Proposition 3.5 | L odd, L ≥ 3, ε ≤ 1/12 | all used |
+| Theorem 4.2 | independent runs with a common law | (a), (b) need nothing else; A1 enters (c) and (d), A2 enters (c) |
+| Proposition 4.7 | (a) a function; (b) inputs that do not depend on the answers | both needed; (b) fails on an adaptive scaffold (entry above) |
+| Theorem 5.1 | A1, A2, λ > 1, s ∈ [1/λ, 1) | all used; the statement fails at λ = 1 (Example 5.4) |
+| Theorem 5.5, Proposition 5.6 | KL(Q*‖Q_ν*) < ∞; S < ∞ | all used |
+
+## III. Corrections that must be made, in order of importance
+
+None of them changes a theorem. Numbers 1 to 5 change sentences that a reader of the note would take as claims.
+
+1. **An upper bound is rounded down.** "2.9639 ≤ c₀* ≤ 2.9641" and "c₀* ≤ c* = 2.9641" occur in the summary table (row of Example 2.8), in "In brief" (1), at the start and the end of Section 2.4, in 8.1 item 1 and in 8.2 item 1. Since c* = 2.964147…, the proved statement is **2.9639 ≤ c₀* ≤ 2.9642**. Where c* is used as a bound write "c* < 2.9642"; where its value is given write "c* = 2.964147…". Replace "the best constant up to the fourth digit" by "the best constant lies between 2.9639 and 2.9642". The note must state the constant of L4 in this form.
+2. **Example 4.6 must argue about the object of Theorem A.** Add the two lines given in the entry: the lower bounds L/(8N) and ½(1 − e^(−L/(4N))) hold for the average law (1/N)·Σ_t Q_{M_t} (the total variation is linear in it because Q_f is a point mass given z; the divergence because every Q_{M_t} gives the run "all zeros" probability at most (1 − 1/(2B))^L on more than half of the values of z).
+3. **Section 3.3, qualification (3):** the assertion that the order L·√(K/n) of the expected number of unfaithful calls is attained is marked "not written out". Insert the claim and the proof given in the entry (lower bound (√3/32)·L·√(K/n) for n ≥ 3K/4, for a deployed sampler), or delete the assertion. The same sentence is repeated in 8.2 item 3.
+4. **The sentence after Example 4.8** ("the total variation of the two imitators is the same to first order") is wrong by a factor of up to 2: TV(Q_{M_t}, Q_P) = (2 − ω_t)·TV(Q̂_t, Q_P). Write "of the same order".
+5. **Example 4.8, second half** ("B alternatives of weight 1/(2B)"): the four numbers are not exact (quadrature in t). Exact sums: 1.786, 2.494, 3.210, 3.916 for B = 4, 16, 64, 256, so 1.82 and 2.50 should read 1.79 and 2.49. State the construction in the text, correct the numbers and the word "exact" (also in Section 7.4 and in the output line of the script), or drop the sentence.
+6. **Theorem 2.7:** add the line that the root is unique (r is strictly decreasing by (iii), r(0+) > 0 and r < 0 from √2 on), and quote the enclosure 2.96414712 < c* < 2.96414723 in place of the sentence in 8.1 item 1 that the value rests on double precision.
+7. **Lemma 1.1, item 4:** the proof of data processing covers countable sets; add the sentence for laws on a general space (it is used for laws of runs with a general Ω₀).
+8. **Protocol R and Theorems R1 and 3.1:** say that n is the number of rounds and that the human answers at most n questions. The outline's "n: number of questions" is then an upper bound.
+9. **Notation in the published proofs.** The file reuses letters that the outline fixes: L_ν (likelihood) against L (horizon); Π_λ and Π^(α) (posteriors) against Π (scaffold); ρ_N against ρ (the scaffold's randomness); m (repetitions of an input in Proposition 3.4, number of runs in Remark 3.2 and Corollary 5.2, m_t in Proposition 4.7) against m (validation questions); τ_Λ against τ (a run); β (base in Example 2.8, bound in Theorem 5.1) against β of R3; G (event of runs, the function G(N, δ), an event in the proof of Proposition 5.6); δ (bias, and confidence level). Inside Theorem 2.7: r, s, p, q, k, μ. Rename in `proofs/hellinger-runs.md`.
+10. **Section 3.3, table, first row:** take N2 in its checked form from the lower-bounds part, not "L/(2ε)" from the candidate theory.
+11. **Remark 2.9:** the constant 12.6 has no written proof; do not carry it into the note.
+12. **After Corollary 5.2:** "the same up to a factor 2" compares a bound in probability with a bound in expectation; say so.
+13. **Small.** Proposition 3.4: the hypothesis δ ≤ ¼ is implied by the others and can go. Lemma 3.4a defines G(N, δ) inside a sentence about odd N, and Proposition 3.4 uses it for every N; define it for all N ≥ 1. Section 0.3: say that a_j is the point mass at ∅ also on sequences that the scaffold cannot produce. Section 6, point 2: the posterior is undefined once the data have refuted every member, not after one excluded answer.
+
+## IV. Improvements that the check produced (not corrections)
+
+**A. Theorem 3.1(d) can be sharpened.** Suppose next_j is a function of ω₀ only (including the decision to stop). Then for every sampler M, KL(Q_P ‖ Q_M) = E_{Q_M}[Σ_j KL(P‖M)(x_j)]. Proof: by the chain rule (Lemma 4.5(i)), KL(Q_P‖Q_M) = E_{Q_P}[Σ_j KL(P‖M)(x_j)]; the inputs and the length of the run are functions of ω₀, whose law is μ₀ under every answerer; so the expectation under Q_P equals the expectation under Q_M. With R1, under A1, A2, A3 and Protocol R:
+
+ E[KL(Q_P ‖ Q_{M^(T)})] ≤ LK ln2/n, E[TV(Q_{M^(T)}, Q_P)] ≤ √(LK ln2/(2n)), E[H²] ≤ LK ln2/(2n).
+
+The bound on the total variation improves (d) by the factor √2; the bound on H² is that of (d); the bound on the divergence is new. For n = N·L answers this is exactly the guarantee of Theorem 4.2(c) for N recorded runs (K ln2/N and √(K ln2/(2N))). So on scaffolds whose inputs do not depend on the answers, rehearsal with single questions and recorded runs of the human system have the same guarantee per answer. The factor 2√2 of 8.2 item 9 is then the ratio of the two bounds on adaptive scaffolds only; on the scaffold of Proposition 3.4, to which that item refers, the two bounds coincide. Exact check: on the scaffold with fixed inputs, Σ_t E KL(Q_P‖Q_{M^(t)}) equals Σ_t E[E_{Q_{M^(t)}} Σ_j KL] to six digits in all ten rows, and E TV ≤ √(LK ln2/(2n)) (script `sec3`, last table of part (B15)).
+
+**B. The constant c* is now enclosed rigorously** (entry on Theorem 2.7): 2.96414712 < c* < 2.96414723, and the root is unique.
+
+**C. A finer lower bound for the best constant.** Example 2.8(ii) with β = 1.00001 (1381558 levels) has the ratio 2.964127 in double precision, and with β = 1.000001 the ratio 2.964141. The value 2.96399 at β = 1.0001 is confirmed in 30-digit arithmetic and by direct evaluation of the two run laws.
+
+**D. The constant 4 is the best one for the potential of Lemma 2.2.** The one-step ratio [E U(Λr) − U(Λ)]/(1 − E r) equals 2Λ when Λ ≤ 2, Λr ≤ 2 almost surely and E r² = 1, and so comes arbitrarily close to 4. For the potential of Theorem 2.7 the one-step ratio comes arbitrarily close to c* (it is 2.964146 at Λ = c*, r ∈ {0, 1.000001}).
+
+**E. A variant of Protocol R.** Drawing J_t uniformly from the calls that the run of round t made (when it made any) gives the same bounds with the same proof, and no round is wasted on a short run.
+
+**F. Lemma 1.1(5) for P(A) = 0:** the same computation gives Q(A) ≤ H²(2 − H²), slightly better than 2H².
+
+## V. What was not checked
+
+* T. S. Jayram's paper (APPROX-RANDOM 2009), J. C. Duchi's lecture notes, Tsybakov's book, and the three papers on tempered posteriors were not opened; the file itself marks them as not read or quoted from memory, and no proof depends on them.
+* The two finest rows of the prover's linear programme (2.890 and 2.906) were not recomputed.
+* Whether c₀* = c* exactly, whether a last-round bound holds in Theorems 3.1 and 4.2, and whether the frozen per-call mixture satisfies E TV ≤ C·√(LK/N) after recorded runs on an adaptive scaffold are open in the file and remain open.
+
+## VI. Notes for the editor of the two section blocks
+
+**Status of the statements** (the outline asks for "proved here", "standard, with source" or "open").
+
+| statement | status that the check supports |
+|---|---|
+| L4 with the constant 7 | standard: Foster, Han, Qian and Rakhlin, arXiv:2404.10122, lemma "Subadditivity for squared Hellinger distance" in the appendix "Technical Tools" (cited by later papers as Lemma D.2); read in source |
+| L4 with the constants 4 and c* < 2.9642 | proved here (Theorem 2.1(c), ten lines; Theorem 2.7). No source with a constant below 7 was found. The lower bound 2.9639 for the best constant is a computed example, confirmed in 30-digit arithmetic |
+| R2 (Theorem 3.1) | proved here, from R1 and L4 |
+| the lower bounds (Propositions 3.4, 3.5) | proved here |
+| Theorem A (Theorem 4.2) | the regret bound for Bayes mixtures, which the outline lists as standard, applied to whole runs and averaged over t; the file's proof is complete and covers a human outside the class |
+| the per-call mixture (Examples 4.6, 4.8; Proposition 4.7) | proved here, after correction 2 of Part III |
+| Theorem B (Theorem 5.1) | proved here; for a finite class with uniform weights it is the proposition of Foster, Block and Misra (arXiv:2407.15007, read in source) |
+| λ = 1 (Example 5.4) and Theorem B′ (Theorem 5.5) | proved here; the literature on tempered posteriors is quoted by the prover from memory and was not opened |
+| c₀* = c*; a last-round bound; the per-call mixture after recorded runs on an adaptive scaffold; ln(1/δ₁) in Proposition 5.6 | open |
+
+**Final constants for the blocks.**
+
+* Block "whole runs" (Section 3). A function: the deployed run differs from the human system's run on the same ω₀ with probability at most LK ln2/n. In general: E H² ≤ 2LK ln2/n, E TV ≤ 2·√(LK ln2/n), and E Q_{M^(T)}(G) ≤ 4LK ln2/n for an event with Q_P(G) = 0; with Theorem 2.7 the three constants are c*/2 < 1.49, √c* < 1.73 and c* < 2.97. If improvement A is adopted, add for inputs that do not depend on the answers: E KL(Q_P‖Q_{M^(T)}) ≤ LK ln2/n and E TV ≤ √(LK ln2/(2n)). Lower bounds: n > LK/(8·10⁴·ε²) for the K coins (ε ≤ 1/65), n > L/(740·ε²) for two samplers (ε ≤ 1/12). Here n is the number of rounds, and the human answers at most n questions.
+* Block 5.2 (recorded runs). Theorem A: E KL(Q_P‖Q̂) ≤ K ln2/N and E TV ≤ √(K ln2/(2N)); outside the class the right side is ln(1/w(ν*))/N + KL(Q*‖Q_ν*). The per-call mixture: KL(Q_f‖·) ≥ L/(8N) in Example 4.6 (for every t and for the average law), against ln2/N. Theorem B: mass at most 2^(λsℓ(P))·(1−ε²)^(2·min(s,1−s)·N), with s = ½ for λ ≥ 2. At λ = 1: mass at least ¼ for N ≤ 2^(d/2) in Example 5.4; the substitute B′ gives E H² ≤ K ln2/N for the likelihood to the power ½. For the remark that this route needs runs of the human system: by improvement A, on a scaffold whose inputs do not depend on the answers, N recorded runs and n = N·L single questions of Protocol R have the same bound, so recorded runs buy nothing there; on adaptive scaffolds the stated bounds differ by the factor 2√2 (8.2 item 9), and by Proposition 3.4 no protocol saves more than a constant factor in the worst case.
