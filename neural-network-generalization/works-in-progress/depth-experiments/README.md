@@ -31,8 +31,8 @@ global stability, a finite-data certificate, and a learning guarantee.
 The full original replay archive contains **21 ordinary ZIP volumes totaling
 911.99 MiB**, covering all 70 model checkpoints, original compressed datasets,
 per-example outputs, every saved attack, and large exact factor certificates.
-Those ZIPs are **not included in this repository and have not been assigned
-public download URLs in this publication preparation**. The same applies to
+Those ZIPs are **not included in this repository and have no public download
+URLs recorded in the asset index**. The same applies to
 the separately prepared compact archive and older-round archives listed in
 the [asset index](reproducibility/archive-index.json), unless an entry explicitly
 records an available URL.
@@ -46,7 +46,9 @@ regenerated or supplied from the complete archive.
 
 ## Representative results and their scope
 
-The primary score is `clip(z, -0.5, 0.5)`, with allowed change `1/16` under every
+Write `z` for the scalar network output, `H` for the number of hidden layers,
+`N` for their width, and `v` for the readout vector. The primary score is
+`clip(z, -0.5, 0.5)`, with allowed change `1/16` under every
 simultaneous hidden-postactivation/output disturbance of normalized radius
 `c/sqrt(1 + H * Ev)`, where `Ev = N * ||v||²`. The primary constant is `.001`;
 the fixed diagnostic grid also contains `.003`, `.01`, `.03`, and `.0625`.

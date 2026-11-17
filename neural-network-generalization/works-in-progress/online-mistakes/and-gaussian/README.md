@@ -2,7 +2,7 @@
 
 [Paper (PDF)](paper.pdf) · [LaTeX source](source/paper.tex) · [verification](verification/README.md)
 
-Does the exponential online-mistake example for deterministic circuit Occam learning also work for NNBayes? The answer depends on the prior, depth, and prediction rule. This note proves the following distinctions.
+Does the exponential online-mistake example for deterministic circuit Occam learning also work for NNBayes? The answer depends on the prior, depth, and prediction rule. This note proves the following distinctions. Here `d` is the number of Boolean inputs, `L` is network depth, `N` is learner width, and `gamma` is the Gaussian width-scaling exponent. The teacher complexity `C` bounds both hidden width and individual weight magnitude.
 
 | Model | Result for arbitrary input orders |
 |---|---|
@@ -18,7 +18,7 @@ The growing-depth weak-prior example uses the unchanged Gaussian prior. Its kern
 
 For the perturbed strong-prior construction, the initial lowest-energy functions are majority thresholds on selected supports. Tiny unequal variances split their exact ties without allowing any higher-energy function below them. Each queried counterexample eliminates only a small fraction of these supports; covering all of them takes exponentially many mistakes. The same one-neuron class has polynomial iid sample complexity under every prior on its functions, so this is an iid-versus-online separation. The AND version by itself does not meet the separate bounded-weight width convention at width one; the majority version does.
 
-The original paper has conventional proofs and independent AI-agent reviews. The added majority note has been checked in this pass. These results are **not Lean formalized**. Run `bash build.sh` to rebuild the PDF. Generated `build/` files are not published.
+The original paper has conventional proofs and independent AI-agent reviews. The accompanying majority note has also been checked. These results are **not Lean formalized**. Run `bash build.sh` to rebuild the PDF. Generated `build/` files are not published.
 
 The [31 October research continuation](verification/isotropic-ood-continuation.txt) records the remaining superpolynomial question and an exact fractional-energy certificate. This certificate rules out an integer-energy shortcut; it is not a mistake lower bound. Run `python3 verification/check_fractional_energy.py` to check it using only rational arithmetic.
 

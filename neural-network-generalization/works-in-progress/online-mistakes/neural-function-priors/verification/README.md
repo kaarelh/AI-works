@@ -1,10 +1,12 @@
 # Review and publication record
 
-**Author-order revision, 6 November 2026.** The author declarations, alphabetical-order footnotes, and PDF author metadata were updated without changing the document bodies. [Current hashes and clean rebuild checks](../../../../verification/author-order-2026-11-06.md) supersede the earlier manuscript hashes below; the dated mathematical reviews remain records of their original snapshots.
+The reviewed results give polynomial online guarantees at fixed depth for the original Gaussian learner under structured shifts, and for a changed rank-preserving prior under arbitrary input orders. A separate energy-budget learner also has a polynomial mistake bound. The reviews distinguish those learners and check the transfers from existing neural estimates.
 
 30 October 2026. [Paper](../paper.pdf) · [source](../source/paper.tex)
 
 These are conventional proofs with independent AI-agent reviews, not Lean formalizations or human peer review. Earlier Lean coverage of the imported neural results does not automatically certify the new online transfers.
+
+In the review summary, `d` is input dimension, `beta` bounds exceptional posterior mass per new input, and `gamma` is the prior exponent. For rank reweighting, `r` is rank among distinct functions, a tie group occupies ranks `a+1` through `b`, and `M` is the total number of functions.
 
 The mathematical reviews checked:
 
@@ -19,3 +21,7 @@ The mathematical reviews checked:
 - **Scope:** global-margin conditioning is required by the imported neural bounds. No uniform exponent as `gamma` tends to one, unrestricted polynomial depth bound, efficient rank computation, or arbitrary-order theorem for the unchanged Gaussian learner is asserted. The abstract distinct-energy failure example is not relabeled as a neural counterexample.
 
 The [machine-readable record](record.json) contains source/PDF hashes, an isolated rebuild comparison, final LaTeX diagnostics, link checks, and confirmation that earlier Lean files and other manuscript mathematics were unchanged. The PDF was also inspected visually. The collection navigation and FAQ distinguish the unchanged-prior result from the prior modification.
+
+## Snapshot provenance
+
+**Author-order revision, 6 November 2026.** The author declarations, alphabetical-order footnotes, and PDF author metadata were updated without changing the document bodies. [Current hashes and clean rebuild checks](../../../../verification/author-order-2026-11-06.md) supersede the earlier manuscript hashes in the review records; the dated mathematical reviews remain records of their original snapshots.

@@ -1,7 +1,5 @@
 # Verification record
 
-**Author-order revision, 6 November 2026.** The author declarations, alphabetical-order footnotes, and PDF author metadata were updated without changing the document bodies. [Current hashes and clean rebuild checks](../../../verification/author-order-2026-11-06.md) supersede the earlier manuscript hashes below; the dated mathematical reviews remain records of their original snapshots.
-
 This package is conventionally checked mathematics, not a Lean formalization.
 
 - [Assembled mean-shift theorem audit](finite-width-boolean-mean-shift-assembled-audit.md): fresh independent check of the final new Section 3 and its scope.
@@ -11,8 +9,16 @@ This package is conventionally checked mathematics, not a Lean formalization.
 - [Projective symmetry audit](projective-symmetry-root-audit.md): checks the exact conditioned-law invariance and the central-binomial lower bound, including the majority-tie caveat.
 - [Monotonicity parameter check](finite-width-monotonicity-parameter-check.json): records a numerical sanity check of the explicit example. The manuscript proves its signs and margins with elementary inequalities; the numerical values are not a proof premise or an interval certificate.
 
+## Source and build records
+
 The original three results retain their earlier audited proofs. The 26 October update adds the self-contained Gaussian mean-shift theorem for layered Boolean-circuit targets and updates the abstract and scope. The new theorem has its own audit; previous source hashes identify the earlier manuscript versions.
 
 The [build manifest](build-manifest.json) records the compiled source, PDF, selected derivations and audit snapshots. The package [hash manifest](SHA256SUMS.json) covers package files except itself and generated build auxiliaries. Neither file is a formal proof certificate.
 
+## Scope of the results
+
 The general upper bound depends quadratically on learner width; the new digital-circuit bound is linear at the critical scale above its explicit width threshold and retains a t^-2 factor; the lower is logarithmic in input dimension; the monotonicity example makes no `2/3`-threshold-crossing claim. No exponential-depth lower bound or width-independent teacher-polynomial sample upper is asserted.
+
+## Attribution and source provenance
+
+**Author-order revision, 6 November 2026.** The author declarations, alphabetical-order footnotes, and PDF author metadata were updated without changing the document bodies. [Current hashes and clean rebuild checks](../../../verification/author-order-2026-11-06.md) supersede the earlier manuscript hashes listed here; the dated mathematical reviews remain records of their original snapshots.

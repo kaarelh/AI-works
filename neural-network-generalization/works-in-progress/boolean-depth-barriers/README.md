@@ -4,6 +4,8 @@
 
 **The unrestricted Boolean-depth learning question remains open.** This paper gives structural theorems and conditional complexity barriers for the original Gaussian tanh posterior. It does not establish either a general polynomial-depth sample bound or an unconditional exponential-depth sample lower bound.
 
+Here `d` is the Boolean input dimension, `L` the learner depth, `N` its hidden width, and `n` the sample-size bound. The scale is `t`, and `β` is the permitted posterior mass outside the circuit class. A network's Frobenius product `P` is the product of its layer-matrix Frobenius norms.
+
 The main conclusions are:
 
 - A globally unit-margin Boolean network with Frobenius product $P$ has a threshold circuit of size polynomial in $d+P$ and logarithmic depth. The neural network may have arbitrary finite depth and width, and arbitrary neuronwise zero-preserving 1-Lipschitz activations.
@@ -12,13 +14,13 @@ The main conclusions are:
 - Even a fixed stretched-exponential sample lower bound in depth, with input dimension, teacher width, and the logarithm of the coefficient bound polynomial in depth, would separate **P/poly from nonuniform NC**. Exponentially large teacher coefficients are allowed when their logarithms are polynomial in depth. More quantitatively, a lower bound `exp(c L^alpha)`, for `0<alpha<=1`, would require threshold depth at least `Omega(L^alpha/log L)` at every fixed polynomial width. These are conditional consequences of such a sample lower bound, not proofs that it exists.
 - A self-contained appendix implements every small Boolean circuit using width 24, coefficients bounded by one, and polynomial tanh depth. Thus the necessary collapse already follows for fixed-width teachers, while the learning guarantee must still cover arbitrarily large learner widths. The implementation uses delicate analog memory and has no polynomial-product or robustness guarantee.
 
-A [supporting note](proof-notes/padded-resource-depth-barriers.md) extends the conditional barrier beyond polynomial resources. Put `R=d+C+L+log(2+B)+4`. An exponential-in-depth sample lower bound with `R=exp(o(L))` would separate P/poly from nonuniform TC⁰; if `log R=L^{o(1)}`, it would separate P/poly from nonuniform NC. This pads only the family used in the complexity argument, leaving the original learner and prior unchanged.
+A [supporting note](proof-notes/padded-resource-depth-barriers.md) extends the conditional barrier beyond polynomial resources. For teacher width `C` and coefficient bound `B`, put `R=d+C+L+log(2+B)+4`. An exponential-in-depth sample lower bound with `R=exp(o(L))` would separate P/poly from nonuniform TC⁰; if `log R=L^{o(1)}`, it would separate P/poly from nonuniform NC. This pads only the family used in the complexity argument, leaving the original learner and prior unchanged.
 
 The hypotheses matter. The input distribution is arbitrary but common to training and testing; the network is conditioned to have absolute output margin greater than $1/2$ at every Boolean input; training labels are noiseless and fit exactly. The converse treats posterior mixtures. The all-width guarantee means a guarantee at each admissible width, not an unstated simultaneous event over infinitely many widths.
 
 ## Reading and proof dependencies
 
-Start with the paper's introduction and Appendix B. Its new geometric, canonical-feature, finite-event, circuit-reduction, and constant-width-compiler proofs are included. The statistical applications additionally use the following explicit inputs.
+Start with the paper's introduction and Appendix B. It includes the geometric, canonical-feature, finite-event, circuit-reduction, and constant-width-compiler proofs. The statistical applications additionally use the following explicit inputs.
 
 | Input | Source |
 |---|---|
@@ -40,7 +42,7 @@ The six supporting proof notes supply the additional scale-uniform arguments. Th
 
 The paper has undergone independent mathematical audits, including a fresh audit of the actual-posterior quantifiers and the nearcritical block-cover argument. See the [verification record](verification/README.md). These audits are not formal verification.
 
-The [Lean package](lean/README.md) checks the finite-dimensional Frobenius cover, finite-sample concentration and Maurey compression, an actual polynomial-size analytic prefix and prototype decoder, and the relevant-coordinate reduction. It uses no `sorry` or custom axioms. **It does not formalize the finite-bit TC¹ circuit compiler, the posterior results, the target-mass inputs, the constant-width compiler, or the circuit-class implications.** This paper therefore remains a work in progress rather than a fully formalized main result. The separate [conditional impossibility package](../conditional-nonpolynomial-learning/lean/) now proves the actual posterior ceiling at the fixed probability level needed for its central theorem, including the finite-bit circuit compiler, target-mass construction and circuit-class implication. That proof does not certify every stronger statement in this broader paper.
+The [Lean package](lean/README.md) checks the finite-dimensional Frobenius cover, finite-sample concentration and Maurey compression, an actual polynomial-size analytic prefix and prototype decoder, and the relevant-coordinate reduction. It uses no `sorry` or custom axioms. **It does not formalize the finite-bit TC¹ circuit compiler, the posterior results, the target-mass inputs, the constant-width compiler, or the circuit-class implications.** This paper therefore remains a work in progress rather than a fully formalized main result. The separate [conditional impossibility package](../conditional-nonpolynomial-learning/lean/) proves the actual posterior ceiling, including arbitrary confidence levels, together with the finite-bit circuit compiler, target-mass construction and circuit-class implication; see the [current coverage record](../../lean/review/coverage-completion-2026-11-15.txt). That proof does not certify every stronger statement in this broader paper.
 
 ## Reproduction
 

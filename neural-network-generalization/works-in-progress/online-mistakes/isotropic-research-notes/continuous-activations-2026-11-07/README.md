@@ -1,5 +1,7 @@
 # Continuous-activation research record, 7 November 2026
 
+Two method-specific obstructions prevent a direct transfer of an exact atomic-norm construction to smooth periodic activations and tanh.
+
 The [triangle-wave paper](../../isotropic-triangle-allwidth/paper.pdf) and [monotone-activation paper](../../isotropic-monotone-allwidth/paper.pdf) give actual-posterior counterexamples at every sufficiently large width. These two notes explain why their exact atomic argument does not immediately extend to ordinary smooth activations.
 
 - [Smooth periodic activations](SMOOTH-PERIODIC-OBSTRUCTION.md): integer-lattice parity atoms are not norm-optimal after differentiable smoothing. For sine, the note determines the one-parity variation cost and disproves the proposed diagonal weighted Fourier norm even after projection onto a two-character code.

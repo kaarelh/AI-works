@@ -1,7 +1,5 @@
 # Verification record
 
-**Author-order revision, 6 November 2026.** The author declarations, alphabetical-order footnotes, and PDF author metadata were updated without changing the document bodies. [Current hashes and clean rebuild checks](../../../verification/author-order-2026-11-06.md) supersede the earlier manuscript hashes below; the dated mathematical reviews remain records of their original snapshots.
-
 The manuscript and supporting analytic notes received conventional mathematical reviews. They are not a Lean verification of the full statistical results.
 
 - [Resource-padding audit](padded-resource-depth-barriers-independent-audit.md): extends the conditional separation to subexponential teacher resources without padding the Bayesian learner.
@@ -19,3 +17,5 @@ The [Lean directory](../lean/README.md) contains ten checked analytic modules an
 [Publication checks](publication-check.json) record the clean PDF builds, a fresh check of all ten Lean sources using the portable script, source-hash equality, and relative-link/dependency checks. [SHA256SUMS.json](SHA256SUMS.json) identifies the curated files.
 
 The [26 October release check](polynomial-bit-release-check.json) records the sharpened source/PDF hashes, unchanged Lean files, clean build, and isolated rebuild with identical extracted text and rendered pages.
+
+**Author-order revision, 6 November 2026.** The author declarations, alphabetical-order footnotes, and PDF author metadata were updated without changing the document bodies. [Current hashes and clean rebuild checks](../../../verification/author-order-2026-11-06.md) supersede the earlier manuscript hashes in the linked records; the dated mathematical reviews remain records of their original snapshots.

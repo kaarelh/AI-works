@@ -2,13 +2,17 @@
 
 **Status:** Earlier complete side result; extended by structured-parity-repair-certificates
 
-Exact rational certification for a cubic family on 27 bits, with one arbitrary coordinate and 26 symmetric coordinates, and parity-block lifts. The later structured paper expands the class and adds quartic results. Includes a reproduction archive.
+This paper gives exact rational margin-repair certificates for a cubic family on 27 bits: one arbitrary coordinate and 26 symmetric coordinates. It also treats parity-block lifts.
+
+The later structured paper expands the class and adds quartic results. The reproduction archive below contains the scripts and data for this earlier result.
 
 [Paper (PDF)](paper.pdf) · [LaTeX source](source/cubic-parity-repair-certificate.tex) · [Collection index](../../README.md)
 
 ## Build
 
 Run `bash build.sh` in this directory with a standard TeX Live installation. The script runs two LaTeX passes, stores temporary output in `build/`, and refreshes `paper.pdf`. No network access is required.
+
+## Review record
 
 The PDF was reviewed and rebuilt from the included source on 29 October 2026. The [review record](../../verification/remaining-papers-2026-10-29.md) describes exposition changes, mathematical corrections, and the limits of the checks. Existing formalization claims retain their stated scope.
 

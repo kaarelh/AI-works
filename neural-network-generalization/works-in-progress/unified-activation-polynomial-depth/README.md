@@ -13,7 +13,9 @@ The network must admit a partition of each hidden layer into `q` **balanced** po
 - `q≤1+N‖v‖²`, where `v` is its readout;
 - averaging the weights within these populations changes its clipped predictions by at most `1/16`, at every Boolean input.
 
-The clipping level is `±1/2`. The population count is calibrated by absolute readout energy, so this restriction is not invariant under readout rescaling. It is the balanced-population condition previously used for tanh, without the optional extra internal-noise condition. It is a **different prior restriction** from the ReLU/GELU paper's arbitrary-size populations and output-normalized count budget. Neither is established as typical of gradient-trained networks.
+The clipping level is `±1/2`. The population count is calibrated by absolute readout energy, so this restriction is not invariant under readout rescaling. Neither this condition nor the ReLU/GELU paper's restriction is established as typical of gradient-trained networks.
+
+For comparison with the related papers, this is the balanced-population condition used for tanh, without the optional extra internal-noise condition. It is a **different prior restriction** from the ReLU/GELU paper's arbitrary-size populations and output-normalized count budget.
 
 ## Guarantee
 

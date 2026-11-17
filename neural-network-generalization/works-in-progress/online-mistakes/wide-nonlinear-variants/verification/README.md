@@ -1,5 +1,7 @@
 # Verification and exact scope
 
+Two nonlinear variants give exponential online mistakes: a near-identity activation family at every fixed learner width `N≥1`, and networks with exactly one nonlinear hidden layer at every fixed `N≥2`. The reviews here check their full posterior conclusions and the separate tanh energy comparisons, which do not determine wider-posterior predictions.
+
 [Paper](../paper.pdf) · [Source](../source/paper.tex)
 
 These are conventional mathematical proofs, not Lean formalizations. A [full standalone-manuscript review](full-paper-review.md) checked all seven source files, including the larger-perturbation corollary, its IID extension, and both tanh appendices, and found no mathematical correction necessary. It records the exact reviewed source hashes. Earlier independent reviews of the two main arguments are also retained:
@@ -7,7 +9,7 @@ These are conventional mathematical proofs, not Lean formalizations. A [full sta
 - [Near-identity review](near-identity-review.md): uniformity in learner width, activation perturbation constants, the energy gap for all correct-at-next-query parameters, the general activation extension, and the exact teacher complexity.
 - [One-nonlinear-layer review](odd-projection-review.md): the exact odd projection, equality cases and all minimizers, the softplus/ReLU monotonicity argument, antipodal input order, and teacher width/depth/weight bounds.
 
-These review notes were written against the research proofs before integration into the standalone manuscript. The integrating agent rederived the core inequalities while writing the manuscript; the contributing agents checked their integrated sections afterward. The full-manuscript review then checked the integrated proofs and the added IID corollary, including its uniformity over all target-consistent histories. An additional review checked the improved perturbation allowance, which uses the exact affine energy increase to retain exactly `2^(k−1)` forced rounds, and verified that the same IID guarantee applies. The manuscript includes the complete comparator/calibration proof, so its main results do not require a previous paper.
+These review notes were written against the research proofs before integration into the standalone manuscript. The integrating agent rederived the core inequalities while writing the manuscript; the contributing agents checked their integrated sections afterward. The full-manuscript review then checked the integrated proofs and the added IID corollary, including its uniformity over all target-consistent histories. Writing `k` for the selector–comparator construction index, an additional review checked the improved perturbation allowance, which uses the exact affine energy increase to retain exactly `2^(k−1)` forced rounds, and verified that the same IID guarantee applies. The manuscript includes the complete comparator/calibration proof, so its main results do not require a previous paper.
 
 The tanh appendix's construction, constants, layer counts, margins, and limitation to scalar implementations were checked against its research proof. The finite certificate is reproduced by:
 

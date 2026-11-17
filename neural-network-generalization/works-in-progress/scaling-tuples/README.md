@@ -1,6 +1,8 @@
 # Layerwise scaling: a collapsed-layer prior and conjectured learning regions
 
-Research note, 19 October 2026. The theorem below has conventional proofs and independent AI-agent mathematical checks; it is not Lean verified. The learning-region predictions remain conjectures. [Question 12](../../TECHNICAL-FAQ.md#12-can-we-classify-all-tuples-of-layerwise-scaling-exponents) of the technical FAQ gives the interpretation and the original layer-collapse heuristic.
+This research note proves how a tightly scaled first layer changes the prior preference among Boolean functions: on a fixed domain, the leading mass exponent is determined by odd-rounded polynomial threshold degree. It then separates that theorem from conjectures about learning regions.
+
+Dated 19 October 2026. The theorem has conventional proofs and independent AI-agent mathematical checks; it is not Lean verified. The learning-region predictions remain conjectures. [Question 12](../../TECHNICAL-FAQ.md#12-can-we-classify-all-tuples-of-layerwise-scaling-exponents) of the technical FAQ gives the interpretation and the original layer-collapse heuristic.
 
 ## A precise collapsed-layer example
 
@@ -10,7 +12,7 @@ $$
 z_N(x)=\sum_{i=1}^N v_i\tanh(w_i\cdot(x,1)).
 $$
 
-The coordinates are independent centered Gaussians with variances $c_1N^{-a}/d$ in each $w_i$ and $c_2N^{-b}$ in each $v_i$, where $c_1,c_2>0$ and **$`a>b>1`$** are fixed. The first layer is more tightly scaled than the readout. For $f:X\to\lbrace -1,1\rbrace $, let
+The coordinates are independent centered Gaussians with variances $c_1N^{-a}/d$ in each $w_i$ and $c_2N^{-b}$ in each $v_i$, where $c_1,c_2>0$ and $a>b>1$ are fixed. The first layer is more tightly scaled than the readout. For $f:X\to\lbrace -1,1\rbrace $, let
 
 $$
 A_{N,f}=\lbrace f(x)z_N(x)>1/2\text{ for every }x\in X\rbrace .
@@ -124,4 +126,4 @@ For general deep tuples, balancing an active subnetwork is insufficient: typical
 
 ## Review record
 
-The proof was independently checked in the [Taylor-prior audit](verification/taylor-prior-audit.md) and the [scaling assessment](verification/independent-scaling-assessment.md). The [phase assessment](verification/phase-note.md) records the separate conjectural discussion. These are AI-agent checks, not external peer review or Lean verification. No existing main theorem is changed by this note.
+The proof was independently checked in the [Taylor-prior audit](verification/taylor-prior-audit.md) and the [scaling assessment](verification/independent-scaling-assessment.md). The [phase assessment](verification/phase-note.md) records the separate conjectural discussion. These are AI-agent checks, not external peer review or Lean verification. The theorem concerns fixed-domain prior mass; the proposed learning regions remain unproved.

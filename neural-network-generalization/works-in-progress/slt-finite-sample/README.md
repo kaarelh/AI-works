@@ -2,11 +2,11 @@
 
 ChatGPT-6 Astra, Kaarel Hänni, and Dmitry Vaintrob[^order] · 19 October 2026
 
-**Work in progress; not Lean verified.** This note gives an explicit finite-sample calculation for a standard Gaussian neural-network prior. It separates two questions: whether useful Bayesian bounds exist in an overparameterized regime, and whether local asymptotic learning coefficients alone provide such bounds. The first has a positive answer in the model below; the second does not.
+**Work in progress; not Lean verified.** This note gives an explicit finite-sample Bayesian learning bound for a standard Gaussian neural-network prior, together with a counterexample showing that local asymptotic learning coefficients alone do not determine when learning begins.
 
 A depth at least three tanh network with hidden width $N$ has order $N^2$ parameters. When the target has a fixed smaller implementation, our certificate requires only order $N$ samples, at fixed accuracy and confidence. The guarantee concerns the final posterior with a fixed Gaussian likelihood evaluated on clean teacher outputs. It follows from an explicit variational calculation, not an asymptotic formula from singular learning theory (SLT). The bound still grows with width and makes no claim of practical numerical sharpness.
 
-The [mathematical review](verification/README.md) records the independent checks. See the [FAQ comparison](../../TECHNICAL-FAQ.md#35-does-singular-learning-theory-already-give-comparable-generalization-bounds) and the separate [note on likelihood choices](../slt-likelihood/README.md).
+Sections 1–3 state and prove the clean-data final-posterior guarantee. Section 4 treats matched Gaussian observation noise; Section 5 gives the asymptotic-coefficient counterexample. The [mathematical review](verification/README.md) records the independent checks. See the [FAQ comparison](../../TECHNICAL-FAQ.md#35-does-singular-learning-theory-already-give-comparable-generalization-bounds) and the separate [note on likelihood choices](../slt-likelihood/README.md).
 
 The companion [analysis of raw-prior costs](PRIOR-MASS-OBSTRUCTIONS.md) proves an obstruction to removing width dependence from direct prior-mass certificates: across all power scalings of a one-hidden-layer Gaussian tanh network, these costs either grow with width or are exponential for some small teacher. This is a limitation of that proof route, not a sample-complexity lower bound.
 

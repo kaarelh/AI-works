@@ -10,7 +10,7 @@ $$
 K_N=\frac dN\sum_j(b_j^2+\lVert w_j\rVert_2^2)+N\sum_jv_j^2.
 $$
 
-Under the global margin requirement `χ(x)z(x) ≥ 1/2`, its exact minimum over all widths is
+Here `b_j` and `w_j` are hidden-neuron biases and incoming weights, `v_j` are readout weights, `z(x)` is the network output, and `χ(x)` is the degree-`r` parity target. Under the global margin requirement `χ(x)z(x) ≥ 1/2`, its exact minimum over all widths is
 
 $$
 E_* = \frac{\sqrt d}{\rho_r},\qquad

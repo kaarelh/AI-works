@@ -6,7 +6,7 @@
 
 The main result concerns learning a teacher's **real-valued output** on a compact continuous domain, including the entire unit sphere or ball. The input distribution can be arbitrary. There is no global output-margin condition on the prior, and the teacher can cross zero.
 
-Suppose a tanh teacher has depth $L$, width $C$, and weights bounded in absolute value by $B$. For **every learner width $`N\ge C`$**, the sample bound is polynomial in dimension, teacher resources, and accuracy parameters at each fixed depth, independently of $N$. Width and weight magnitude are counted separately; the result does not give a width-only bound for arbitrarily large teacher weights.
+Suppose a tanh teacher has depth $L$, width $C$, and weights bounded in absolute value by $B$. For **every learner width $N\ge C$**, the sample bound is polynomial in dimension, teacher resources, and accuracy parameters at each fixed depth, independently of $N$. Width and weight magnitude are counted separately; the result does not give a width-only bound for arbitrarily large teacher weights.
 
 ## Regression theorem
 
@@ -45,10 +45,12 @@ The results allow large dependence on depth, including rapidly growing polynomia
 
 The upper bounds do not establish computationally efficient inference, learning from noisy real-valued observations, or a finite-scale zero-tolerance regression theorem.
 
+## Lean verification
+
+The main regression statements and the important extensions identified in the audit have Lean proofs: exact interpolants and their mixtures, iterated Gaussian limits in the stated order, measurable success events, binary-margin classification, and spherical score-to-sign learning consequences. The [15 November completion record](../../lean/review/coverage-completion-2026-11-15.txt) and [current coverage inventory](../../lean/review/coverage-extension-2026-10-30.txt) describe the scope and exact hypotheses.
+
+[Second-batch baseline coverage](../../lean/review/BatchTwo-coverage.md) · [Lean entry point](../../lean/NeuralGeneralization/BatchTwoMain.lean). Earlier exclusions in the baseline and original mathematical reviews describe their source snapshots. The current coverage does not claim a separate formal proof of every informal calculation.
+
 ## Build
 
 Run `bash build.sh` in this directory with a standard TeX Live installation. The script runs two LaTeX passes, writes temporary files to `build/`, and refreshes `paper.pdf`. No network access is needed.
-
-## Lean verification
-
-The main statements are included in the second formalization batch. [Exact coverage and exclusions](../../lean/review/BatchTwo-coverage.md) · [Lean entry point](../../lean/NeuralGeneralization/BatchTwoMain.lean). This label does not extend automatically to every appendix, remark or numerical allocation. The original mathematical review records describe their earlier source snapshots.

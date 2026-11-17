@@ -4,7 +4,7 @@
 
 A shallow Bayesian tanh network has a polynomial **total online mistake bound** when training imposes positive output margins but the initial prior has **no global output-margin restriction**. The result allows arbitrary input orders, including adaptive choices.
 
-The independent Gaussian prior has first-layer variance `τ²/d` and physical readout variance `τ²/N²`, at fixed positive `τ`. This is the canonical mean-field scaling (`γ = 1`), equivalently `σ_N = τ/√N` in the common strong-prior normalization. Training conditions on the correct signed output being greater than `1/2` at every observed input.
+For input dimension `d` and learner width `N`, the independent Gaussian prior has first-layer variance `τ²/d` and physical readout variance `τ²/N²`, at fixed positive `τ`. This is the canonical mean-field scaling (`γ = 1`), equivalently `σ_N = τ/√N` in the common strong-prior normalization. Training conditions on the correct signed output being greater than `1/2` at every observed input.
 
 For a shallow width-`C` tanh teacher with all weights bounded by `B` and signed margin greater than `1/2`, at **every sufficiently large learner width**:
 

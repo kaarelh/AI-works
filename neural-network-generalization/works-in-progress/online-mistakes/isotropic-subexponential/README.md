@@ -4,6 +4,8 @@
 
 These results rule out `exp(Ω(d))` mistakes in specified narrow architectures under the unchanged isotropic Gaussian strong prior. They retain the all-input absolute margin and exact label conditioning, and apply to every input order, including adaptive orders chosen before the current private prediction.
 
+Here `d` is the number of Boolean input bits. For a target `f`, the affine unit-margin cost `Q(f)` is the minimum of `‖a‖₂²` subject to `f(x) a·(1,x) ≥ 1` on the full cube; `K` is an upper bound on that cost. The complexity `C₂` bounds both hidden width and individual weight magnitude of a depth-two teacher.
+
 | Learner and target | Cumulative posterior error bound |
 |---|---|
 | One neuron at every hidden layer, any fixed depth; target affine unit-margin cost `Q(f)≤K` | `exp(O(K^(1/3) log(K+1))) [1+K log(d+2)]` |

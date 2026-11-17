@@ -2,7 +2,7 @@
 
 19 October 2026. This records conventional mathematical checks of the [supporting note](../README.md). It is not Lean verification and does not extend the five main results.
 
-One Codex agent developed the Gaussian comparison distribution. The parent independently checked its variance choices, exact relative-entropy cost, layerwise mean-squared approximation bound, and final-posterior argument. A second agent independently checked both the matched-noise predictive guarantee and the clean-data final-posterior extension. A third agent reviewed the completed note and FAQ, including the polynomial depth dependence. A separate source review checked the associated SLT comparison.
+A Codex agent developed the Gaussian comparison distribution. The coordinating reviewer independently checked its variance choices, exact relative-entropy cost, layerwise mean-squared approximation estimate, and final-posterior argument. A second agent independently checked the matched-noise predictive guarantee and clean-data final-posterior extension; a third reviewed the completed note and FAQ, including polynomial depth dependence. The associated SLT comparison received a separate source review.
 
 ## Checks performed
 
@@ -19,13 +19,13 @@ One Codex agent developed the Gaussian comparison distribution. The parent indep
 
 The result uses bounded tanh hidden activations, a bounded-weight teacher at the learner depth, the stated independent Gaussian prior, and a fixed Gaussian likelihood. It does not assert exact interpolation or condition on a global margin. The clean-data theorem concerns posterior latent-output accuracy; the noisy variant concerns predictive densities. The O(N) sample cost is eventually smaller than the quadratic parameter count at fixed depth at least three, but is not uniform in arbitrarily large N. This does not establish practical numerical sharpness, superiority to all classical complexity bounds, or the behavior of typical SGD-trained networks.
 
-The main manuscripts, PDFs, and Lean sources are unchanged. The collection checker, local links, and file checksums are checked separately for publication.
+Publication checks of the collection, local links, and file checksums are separate from these mathematical reviews.
 
 ## Raw-prior-mass obstructions
 
 The [companion note](../PRIOR-MASS-OBSTRUCTIONS.md) adds conventional proofs concerning the cost of direct raw-prior and variational certificates. It does not assert new sample-complexity lower bounds and is not Lean verified.
 
-One agent independently derived the vanishing-scale, growing-scale, and binary-event entropy bounds. The coordinating reviewer derived the Gaussian Fourier variance-budget argument and the constant-target moment-generating-function bound; a second agent independently checked the Fourier argument and developed the complete one-hidden-layer power-scaling classification. The final proofs and FAQ scope were checked across these reviews.
+One agent independently derived the vanishing-scale, growing-scale, and binary-event entropy bounds. The coordinating reviewer derived the Gaussian Fourier variance-budget argument and the constant-target moment-generating-function bound. A second agent independently checked the Fourier argument and developed the complete one-hidden-layer power-scaling classification. The final proofs and FAQ scope were checked across these reviews.
 
 The checks cover:
 

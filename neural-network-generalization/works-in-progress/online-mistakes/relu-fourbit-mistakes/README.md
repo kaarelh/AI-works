@@ -4,7 +4,7 @@
 
 A one-hidden-layer ReLU network with the canonical isotropic Gaussian prior can be wrong at every query after the first on a fixed order of the sixteen Boolean inputs. The prior includes the global absolute output margin greater than one half and exact training labels. At every fixed width `N≥16`, the expected number of posterior-sampling mistakes tends to **15.5** as the common prior scale tends to zero. Posterior majority is wrong on the last fifteen queries as well.
 
-The target is `x₁x₂ ANDsign(x₃,x₄)`. It has a sixteen-neuron teacher with canonical parameters bounded by one and margin `21/40`. Its exact ReLU variation norm is `(5√30+4√2)/6`; all sixteen one-label corruptions are cheaper. The sequential theorem additionally checks every competing Boolean function, so it does not select an unfavorable predictor from a tie.
+The target is `x₁x₂ ANDsign(x₃,x₄)`, where each `xᵢ` lies in `{-1,1}` and `ANDsign` is `+1` only when both its inputs are `+1`. It has a sixteen-neuron teacher with canonical parameters bounded by one and margin `21/40`. Its exact ReLU variation norm is `(5√30+4√2)/6`; all sixteen one-label corruptions are cheaper. The sequential theorem additionally checks every competing Boolean function, so it does not select an unfavorable predictor from a tie.
 
 This is a **finite four-input result**. It does not prove an exponential lower bound as dimension or teacher complexity grows, and the sufficiently small prior scale may depend on the learner width.
 

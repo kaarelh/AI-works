@@ -1,7 +1,5 @@
 # Depth and learning bounds for critical Bayesian neural networks
 
-**Status:** Non-main research draft / work in progress
-
 [Paper (PDF)](paper.pdf) · [LaTeX source](source/critical-paper.tex) · [Technical FAQ, Question 21](../../TECHNICAL-FAQ.md#21-without-a-robustness-restriction-what-depth-dependence-does-the-critical-gamma1-prior-have) · [Collection index](../../README.md)
 
 For the original critical Gaussian prior (gamma = 1), this paper proves polynomial learner-depth bounds for several target classes **at every width capable of implementing the target at the specified depth**. The learner retains the all-input output-margin condition and exact noiseless training fit. No internal robustness restriction is imposed.
@@ -23,10 +21,10 @@ The paper also proves universal rate flattening, sharp excess-rate estimates, an
 
 Complete statements and proofs are included in the PDF. Independent AI-agent mathematical reviews are retained under `verification/`; they are **not Lean verification**. The [finite-width revision record](../../verification/critical-finite-width-2026-10-19.json) records source hashes, audit scope, and an isolated rebuild comparison. Earlier records preserve their historical claims and open statuses.
 
-The five promoted main results and their Lean files are unchanged. This paper remains a research draft outside that list.
+This paper remains a research draft outside the formalized main results.
+
+The PDF was reviewed and rebuilt from the included source on 29 October 2026. The [review record](../../verification/remaining-papers-2026-10-29.md) describes exposition changes, mathematical corrections, and the limits of the checks. Existing formalization claims retain their stated scope.
 
 ## Build
 
 Run `bash build.sh` in this directory with a standard TeX Live installation. It performs three LaTeX passes in `build/` and refreshes `paper.pdf`. All LaTeX inputs and figures are included under `source/`; no network access is needed.
-
-The PDF was reviewed and rebuilt from the included source on 29 October 2026. The [review record](../../verification/remaining-papers-2026-10-29.md) describes exposition changes, mathematical corrections, and the limits of the checks. Existing formalization claims retain their stated scope.

@@ -8,6 +8,8 @@ These are representation results, **not sample-complexity lower bounds** for an 
 
 ## Results
 
+Here `d` is input dimension, `r` bounds first-layer rank or width as specified, and `P` is the product of the layer-matrix Frobenius norms. A global unit margin means that the signed network output is at least one at every Boolean input.
+
 - **Low first-layer rank gives a constant-depth circuit.** A globally unit-margin network with first-layer rank `r` and layer Frobenius product `P` has a threshold circuit of constant depth and size `(d + max(1,P) + r + 2)^{O(r+1)}`. Fixed rank and polynomial product therefore imply nonuniform TC⁰, independently of later widths and neural depth.
 - **Inner-product parity forces an expensive narrow bottleneck.** For two `n`-bit input blocks, every globally unit-margin representation with first hidden width at most `r` has `P ≥ (2^{(n−1)/r}−1)/√2`. The activations may be any 1-Lipschitz functions, and subsequent depth and widths are unrestricted.
 - **A polynomial common coefficient grid cannot replace fine input resolution.** If the first layer has width `r`, coefficients bounded by `B`, and all coefficients lie on the grid `1/Q`, exact inner-product parity requires `Q ≥ (2^{n/r}−1)/(2Bn)`. No continuity assumption on the remaining computation is needed.
@@ -34,6 +36,4 @@ Neither statement proves an intrinsic circuit lower bound or a Bayesian sample l
 
 Run `./build.sh` with TeX Live and `latexmk`. It rebuilds `paper.pdf` and keeps temporary files in the ignored `.build/` directory. The source is self-contained; the constant-width representation consequence cites the companion paper, while the four main theorems are proved within this paper.
 
-Authors: ChatGPT-6 Astra, Kaarel Hänni, and Dmitry Vaintrob.
-
-The PDF was reviewed and rebuilt from the included source on 29 October 2026. The [review record](../../verification/remaining-papers-2026-10-29.md) describes exposition changes, mathematical corrections, and the limits of the checks. Existing formalization claims retain their stated scope.
+Authors: ChatGPT-6 Astra, Kaarel Hänni, and Dmitry Vaintrob. The [29 October review and rebuild record](../../verification/remaining-papers-2026-10-29.md) documents the checked source snapshot, corrections, and limits of the review.

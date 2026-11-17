@@ -9,12 +9,12 @@ The target has a Boolean circuit of size `Θ(k)` and a same-depth teacher of wid
 
 The learner initially conditions on absolute output margin greater than `1/2` at every input, then fits every revealed label exactly. The conclusion concerns the actual posterior, including all nonlinear competitors. It applies to posterior sampling, majority prediction, and the convention requiring correct-label probability greater than `2/3`.
 
-The Gaussian variances are `Nσ²/d` on every first-layer coordinate, including the appended constant, and `σ²/N` on the readout. The paper proves:
+At learner width `N` and common prior scale `σ`, the Gaussian variances are `Nσ²/d` on every first-layer coordinate, including the appended constant, and `σ²/N` on the readout. For the width-dependent scaling below, `τ` is a positive prefactor and `γ` is the width-scaling exponent. The paper proves:
 
 - For every fixed `N ≥ 1`, each designated wrong-label probability tends to one as `σ → 0`.
 - With `σ_N² = τ² N^(−γ)`, every fixed `γ > 1` and `τ > 0` gives the same conclusion at all sufficiently large widths.
 - A sufficiently small fixed `τ` gives any desired joint mistake probability uniformly over **every** `N ≥ 1` and `γ ≥ 1`.
-- The same learner has polynomial IID sample complexity, `O_ε((d³ + log(1/β))/η)`, for posterior confidence greater than `2/3` outside input mass `η`.
+- The same learner has polynomial IID sample complexity, `O_ε((d³ + log(1/β))/η)`, for posterior confidence greater than `2/3` outside input mass `η`, with sample failure probability `β`.
 
 The proof combines an exact energy inequality under an explicit affine covariance certificate, a compact relaxation giving a gap uniform in width, and a short calibration built from pairwise-independent bit assignments. The IID proof also establishes a general lemma: every low-energy full-margin shallow network with a bounded monotone activation has the same Boolean sign as a polynomial-size majority of affine thresholds.
 

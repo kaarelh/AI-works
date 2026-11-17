@@ -2,7 +2,7 @@
 
 **Status:** Main result
 
-At mean-field Gaussian scaling (gamma = 1), a Bayesian tanh network can learn a small target with a sample bound independent of its own potentially much larger width. The bound holds at every width N >= C_L(f), for the exact globally margin-conditioned posterior. Success requires correct-label probability strictly above 2/3; training and test inputs may follow any common distribution. Depth is fixed: the polynomial degree and constants may depend on it.
+At mean-field Gaussian scaling (gamma = 1), a Bayesian tanh network can learn a small target with a sample bound independent of its own potentially much larger width. For the exact globally margin-conditioned posterior, the bound holds at every learner width N >= C_L(f). Here C_L(f) is the target's bounded-weight implementation complexity at depth L. Success requires correct-label probability strictly above 2/3; training and test inputs may follow any common distribution. Depth is fixed: the polynomial degree and constants may depend on it.
 
 [Paper (PDF)](paper.pdf) · [LaTeX source](source/meanfield-all-width.tex) · [Collection index](../../README.md)
 

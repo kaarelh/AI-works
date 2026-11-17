@@ -1,12 +1,14 @@
 # Verification and exact scope
 
-**Author-order revision, 6 November 2026.** The author declarations, alphabetical-order footnotes, and PDF author metadata were updated without changing the document bodies. [Current hashes and clean rebuild checks](../../../../verification/author-order-2026-11-06.md) supersede the earlier manuscript hashes below; the dated mathematical reviews remain records of their original snapshots.
+The conclusions are subexponential bounds on expected sampled mistakes, majority mistakes, and confidence failures, with high-probability sampled-error consequences. They do not rule out an exceptionally unlikely sampled path with more mistakes. Constants for the wider theorem depend on its fixed width, and that theorem has one hidden layer. Neither a uniform growing-width theorem nor a polynomial mistake bound is claimed.
 
 5 November 2026. [Paper](../paper.pdf) · [Source](../source/paper.tex)
 
-Conventional proofs with independent AI-agent mathematical checks. **Not Lean formalized or human peer reviewed.**
+These are conventional proofs with independent AI-agent mathematical checks. **Not Lean formalized or human peer reviewed.**
 
 The scalar argument was independently checked for unique affine-margin minimizers, separation of distinct coefficient magnitudes, packing of canonical representatives, exact augmented-coordinate Gaussian symmetries, and the pathwise shrinking-block error bound. The strong-prior tail estimate is uniform over histories; repeated inputs contribute no tail error. Sampling, majority, and confidence criteria are kept distinct.
+
+For the shallow-network formulas, `d` is input dimension, `n` is learner width, `A` is the incoming-weight matrix, and `b` is the readout vector. The teacher parameter `C₂` bounds both width and individual weight magnitude.
 
 The wider, shallow-network argument received separate checks of:
 
@@ -21,6 +23,8 @@ The wider, shallow-network argument received separate checks of:
 
 The [scalar and integrated review](orbit-review.txt) and [higher-moment audit](upper-final-audit.txt) record these checks. The integrating agent separately reviewed the complete final argument. The publication [record](record.json) identifies the final source hashes, superseding intermediate hashes in the review notes.
 
-The conclusions are subexponential bounds on expected sampled mistakes, majority mistakes, and confidence failures, with high-probability sampled-error consequences. They do not rule out an exceptionally unlikely sampled path with more mistakes. Constants for the wider theorem depend on its fixed width, and that theorem has one hidden layer. Neither a uniform growing-width theorem nor a polynomial mistake bound is claimed.
-
 Isolated rebuilds produced matching PDF text, with no unresolved references or LaTeX warnings. Title/abstract and theorem pages were visually checked.
+
+## Snapshot provenance
+
+**Author-order revision, 6 November 2026.** The author declarations, alphabetical-order footnotes, and PDF author metadata were updated without changing the document bodies. [Current hashes and clean rebuild checks](../../../../verification/author-order-2026-11-06.md) supersede the earlier manuscript hashes in the review records; the dated mathematical reviews remain records of their original snapshots.

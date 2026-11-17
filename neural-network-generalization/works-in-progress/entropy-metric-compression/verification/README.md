@@ -2,13 +2,19 @@
 
 The revised [paper](../paper.pdf) proves `Õ(C⁴L⁹)` at every positive mean-field-or-stronger scale and `Õ(C⁴L⁸)` for `γ≥7/4`. The stronger-scale minimum `Õ(min{C⁴L⁷,C⁹ᐟ²L⁶})` also holds at every width under an explicit width-independent positive-scale threshold. The original Gaussian tanh learner and calibrated internal-noise support are unchanged. These are conventional proofs; **none of these improvements is Lean formalized**.
 
+## Arguments reviewed
+
 The [weighted-entropy appendix](../source/weighted-entropy.tex) prices the uniformly sampled row records by a fixed quantized-Gaussian reference law. The [dyadic-scale appendix](../source/weighted-code.tex) combines a finite family of those reference laws with the ordinary cold code and the direct small-width posterior argument. The [spectral appendix](../source/spectral-code.tex) bounds residual energy after removing a bounded-operator part, and the [interpolation appendix](../source/spectral-interpolation.tex) obtains the intermediate exponent range. The earlier entropy-metric, variance-repair and multilevel arguments remain in the manuscript with their stated dependencies.
 
 Independent AI-agent checks covered uniform-subset relative entropy, fixed Gaussian padding at the actual rank, quantization independent of metadata, canonical prefix enrichment, joint entropy across row records, and charging the remaining finite code once. The uniform variance batch is sampled only after its layer has been constructed. Abort records and approximation failures are handled without conditioning on success. Dyadic coverage, Gaussian scale-grid endpoints, all-width thresholds, the single statistical event, and the explicit width/depth/logarithmic accounting were checked separately.
 
 The spectral argument was checked through the Gaussian operator-norm tail, distance-to-convex-set concentration, posterior energy tail, and the comparison of both networks at the same bounded virtual states. No robustness assumption is placed on the residual network or on a decoded comparison function. The positive cold threshold is common to all learner widths and preserves the original support restriction.
 
+## Source records
+
 The current [mathematical review](../../../verification/weighted-depth-2026-10-29.md) and [build/hash record](../../../verification/weighted-depth-2026-10-29.json) identify the checked revision. The [earlier review](../../../verification/entropy-metric-depth-2026-10-29.md) remains a historical record of the preceding bounds. These checks are not human peer review. Existing Lean sources and certified theorem statements are unchanged.
+
+## Statistical scope
 
 With probability at least `1−δ` over the iid training sample, the theorem bounds posterior-average test-margin failure. The pointwise confidence implication is `D{x: Q(f(x)z_w(x)>1/4)≤2/3}≤3R(Q)`. Using risk tolerance `ε/3` and the same `δ` gives correct-margin posterior probability strictly greater than `2/3` outside test mass `ε`. This is distinct from a statement about posterior mass on predictors whose individual test error is small.
 

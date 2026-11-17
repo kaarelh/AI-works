@@ -4,7 +4,7 @@
 
 **Status:** Proved side result with independent AI-agent mathematical reviews. Main learning statements Lean verified; not externally peer reviewed.
 
-The three positive learning results extend to independent non-Gaussian weights from a common family. Let the standardized coordinate law be even, have variance one, and have density
+At fixed depth, a Bayesian neural network can learn a small bounded-weight target with a sample bound independent of learner width for a family of independent non-Gaussian weights. The family is defined by an even, variance-one standardized coordinate law with density
 
 $$
 q(u)=Z^{-1}e^{-V(u)},\qquad V\in C^2,\qquad
@@ -19,7 +19,7 @@ At each fixed depth, the paper proves a sample bound polynomial in input dimensi
 2. Finite scale with any fixed $\gamma>1$.
 3. Mean-field scaling, $\gamma=1$.
 
-Each theorem covers **every width $`N\ge C_L(f)`$**, where $C_L(f)$ counts both width and weight magnitude at the specified depth. The original layer scalings are retained. The networks have tanh hidden layers, a linear readout, and the original global margin restriction on all Boolean inputs. Training conditions on exact agreement with noiseless labels. For any common training/test distribution, correct-label posterior probability exceeds $2/3$ on all but an arbitrarily small fraction of test inputs, with high probability over training samples. The result controls posterior mixtures.
+Each theorem covers **every width $N\ge C_L(f)$**, where $C_L(f)$ counts both width and weight magnitude at the specified depth. The original layer scalings are retained. The networks have tanh hidden layers, a linear readout, and the original global margin restriction on all Boolean inputs. Training conditions on exact agreement with noiseless labels. For any common training/test distribution, correct-label posterior probability exceeds $2/3$ on all but an arbitrarily small fraction of test inputs, with high probability over training samples. The result controls posterior mixtures.
 
 The paper also proves polynomial comparison between bounded-weight circuit complexity and normalized negative log function prior mass. For the strong-prior result alone, two-sided quadratic density envelopes suffice without symmetry or log-concavity; asymptotically quadratic log densities give the original weighted-energy prior ordering at exponential-rate level.
 
@@ -35,10 +35,12 @@ The manuscript includes the statistical argument, deterministic compression, ent
 
 The sample polynomials may depend on depth, exponent, and coordinate law. The paper does not claim polynomial depth dependence, computationally efficient inference, noisy-label learning, or a subcritical non-Gaussian lower bound. Laplace, uniform, Student, and pure quartic-exponential coordinates at the original layer scales are outside the proved family.
 
+## Lean verification
+
+All three main learning regimes have Lean proofs, together with the audited strong-prior extensions to actual independent two-sided-envelope laws and quadratic log-tail limits and rates. The [15 November completion record](../../lean/review/coverage-completion-2026-11-15.txt) and [current coverage inventory](../../lean/review/coverage-extension-2026-10-30.txt) describe the scope and exact hypotheses.
+
+[Second-batch baseline coverage](../../lean/review/BatchTwo-coverage.md) · [Lean entry point](../../lean/NeuralGeneralization/BatchTwoMain.lean). Earlier exclusions in the baseline and original mathematical reviews describe their source snapshots. The current coverage does not claim a separate formal proof of every informal calculation.
+
 ## Build
 
 Run `bash build.sh` in this directory with a standard TeX Live installation. The script runs two LaTeX passes, writes temporary files to `build/`, and refreshes `paper.pdf`. No network access is needed.
-
-## Lean verification
-
-The main statements are included in the second formalization batch. [Exact coverage and exclusions](../../lean/review/BatchTwo-coverage.md) · [Lean entry point](../../lean/NeuralGeneralization/BatchTwoMain.lean). This label does not extend automatically to every appendix, remark or numerical allocation. The original mathematical review records describe their earlier source snapshots.

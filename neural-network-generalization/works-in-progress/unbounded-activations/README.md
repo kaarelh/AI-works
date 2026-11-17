@@ -4,7 +4,7 @@
 
 For any fixed globally Lipschitz activation vanishing at zero, a teacher of width `C`, with weights bounded by `C` and signed output margin strictly greater than `1/2` at every Boolean input, has a fixed-depth polynomial sample bound at every learner width `N≥C`. **One polynomial works simultaneously for all Gaussian scales at least as strong as mean field**, including every exponent `γ≥1`. Its degree does not deteriorate as `γ` approaches `1`. ReLU, exact GELU, SiLU, tanh, and centered softplus are included.
 
-The raw Gaussian coordinate variances are
+Here `d` is input dimension, `L` network depth, `N` learner width, and `λ≥1` an upper bound on the activation's Lipschitz constant. Write `ε` for the test-error tolerance and `δ` for the training-sample failure probability. The raw Gaussian coordinate variances are
 
 ```text
 first layer:     t²/d
@@ -42,4 +42,4 @@ The [publication record](verification/publication-build.json) records isolated r
 
 ## Lean verification
 
-The main statements are included in the second formalization batch. [Exact coverage and exclusions](../../lean/review/BatchTwo-coverage.md) · [Lean entry point](../../lean/NeuralGeneralization/BatchTwoMain.lean). This label does not extend automatically to every appendix, remark or numerical allocation. The original mathematical review records describe their earlier source snapshots.
+The strong-prior and uniform-scale learning statements, the GELU consequence, the scale reparametrization, and the confidence conversion have Lean proofs. The [current coverage record](../../lean/review/coverage-completion-2026-11-15.txt) supersedes the corresponding exclusions in the [earlier endpoint map](../../lean/review/BatchTwo-coverage.md). The [Lean entry point](../../lean/NeuralGeneralization/BatchTwoMain.lean) identifies the original main statements. These results retain their existential polynomial budgets and fixed-depth scope; dated mathematical reviews describe their own source snapshots.

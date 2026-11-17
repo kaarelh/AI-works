@@ -23,9 +23,10 @@ Training uses ordinary parameter gradients of MSE/2 plus ordinary
 `1e-6 * sum(weights^2)/2` regularization. There is no layerwise gradient
 rescaling or prior-weighted penalty. Adam uses learning rate .003 and SGD .05;
 both run 4000 steps, with the rate multiplied by .3 for the final 20%.
-All outcomes and original weights are retained, without output rescaling or
-selection based on accuracy. This protocol was declared after inspection of
-the older cohorts and should be described as an exploratory follow-up, not
+All outcomes and final weights are included, without output rescaling or
+selection based on accuracy. Initial checkpoints are omitted from this public
+package; the recorded seeds and training code permit regeneration. This protocol
+was declared after inspection of the older cohorts and should be described as an exploratory follow-up, not
 an independently preregistered test of the entire research hypothesis.
 
 ## Results before testing compression
@@ -35,7 +36,8 @@ margin above .95, and classify all 256 cube inputs correctly. Twelve have
 signed margin above .5 on the entire cube; four parity models have some
 held-out margins below .5. These margin evaluations use float64 arithmetic.
 
-The population energy is `Ev=N*||v||^2`. The exact largest permitted population
+For hidden width `N` and readout vector `v`, the population energy is
+`Ev=N*||v||^2`. The exact largest permitted population
 count is `min(N,floor(1+Ev))`, evaluated with rational arithmetic on the stored
 binary floats. Twelve models require real compression; four allow the
 identity choice `q=N`.
@@ -62,21 +64,23 @@ identity choice `q=N`.
 Thus the mean-field initialization removes the vacuity concern for these
 eight Adam runs and four majority SGD runs. It does not by itself establish
 population-averaging stability. That requires a separate search for balanced
-partitions and evaluation of the compressed network. Differences between
+partitions and evaluation of the compressed network, reported in the
+[combined experiment](../README.md). Differences between
 Adam and SGD in this small fixed grid should not be extrapolated into a
 general optimizer claim.
 
 ## Replay and files
 
 `train.py` is standalone NumPy code. `protocol.json` records versions, seeds,
-initialization, optimization, and every configuration. `initial-models/` and
-`models/` contain every initial and final weight array; `records/` contains
+initialization, optimization, and every configuration. `models/` contains all
+16 final weight arrays; `records/` contains
 per-model training histories, final metrics, exact energy fractions, and
 checkpoint hashes. `summary.json` collects the final metrics. No model is
 discarded. The source refuses to overwrite an existing declaration or result
-cohort; replay in a clean copy of this directory with output files removed.
+cohort. To regenerate both initial and final arrays, copy `train.py` into a
+new empty directory and run:
 
-```
+```sh
 python train.py --declare
 python train.py --run
 ```

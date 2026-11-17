@@ -10,7 +10,7 @@ For a layered bounded-fan-in Boolean circuit of width `C` and `L−1` gate stage
 n = O((C^2 [2+d+L+log(4/epsilon)]^9 + log(1/delta))/epsilon).
 ```
 
-The paper gives substantially more informative explicit budgets. The fixed-other-parameters width dependence is `O(C^2 log^3(2+C))`. The result is uniform over learner width and scale. Training conditions on `f(X_i) z(X_i) > 1/2`; test failure means `f(X) z(X) <= 1/4`. The theorem bounds the posterior average of this failure probability. Conditioning the prior on the original global absolute output margin is optional: both prior conventions are covered. Posterior-confidence criteria follow by Markov's inequality.
+Here `d` is input dimension, `epsilon` the test-error tolerance, and `delta` the training-sample failure probability; `gamma=1` denotes mean-field scaling and larger `gamma` a more concentrated Gaussian prior. The paper gives substantially more informative explicit budgets. The fixed-other-parameters width dependence is `O(C^2 log^3(2+C))`. The result is uniform over learner width and scale. Training conditions on `f(X_i) z(X_i) > 1/2`; test failure means `f(X) z(X) <= 1/4`. The theorem bounds the posterior average of this failure probability. Conditioning the prior on the original global absolute output margin is optional: both prior conventions are covered. Posterior-confidence criteria follow by Markov's inequality.
 
 The main ingredients are:
 
@@ -25,10 +25,10 @@ The source and PDF have undergone independent AI-agent mathematical review. Thei
 
 To rebuild, run `./build.sh` from this directory.
 
-The [publication record](verification/publication-build.json) records an isolated rebuild and exact source/PDF hashes for the 22 October snapshot. That snapshot predates the corrected manuscript, and the record's "no Lean verification" scope line predates the formalization. For the current files, use the collection's `SHA256SUMS`; for Lean status, see the section below.
+The [publication record](verification/publication-build.json) records an isolated rebuild and exact source/PDF hashes for the 22 October snapshot. That snapshot predates the corrected manuscript, and the record's "no Lean verification" scope line predates the formalization. For the current files, use the collection's `SHA256SUMS`; the formal scope is stated below.
 
 ## Lean verification
 
-The main statements are included in the second formalization batch. [Exact coverage and exclusions](../../lean/review/BatchTwo-coverage.md) · [Lean entry point](../../lean/NeuralGeneralization/BatchTwoMain.lean). This label does not extend automatically to every appendix, remark or numerical allocation. The original mathematical review records describe their earlier source snapshots.
+The exact numerical budgets, sharp scale bounds, and polynomial width-growth conclusions for the actual merging-support prior have Lean proofs. See the [current coverage record](../../lean/review/coverage-completion-2026-11-15.txt), [detailed endpoint map](../../lean/review/BatchTwo-coverage.md), and [Lean entry point](../../lean/NeuralGeneralization/BatchTwoMain.lean). Dated mathematical reviews describe their original source snapshots; the formal statements use the counted constant-wire model above.
 
 The [statement audit of 23 October](../../lean/review/statement-audit-2026-10-23/activations.md) identified an ambiguity in the manuscript's earlier phrase “constant wires count.” The paper now explicitly adopts the formal reserved-wire convention above. Without that convention, the claimed ReLU guarantee would include an impossible nonconstant width-one case. The Lean theorem already used the correct convention.

@@ -1,10 +1,10 @@
 # Exact noisy interpolation in the strong-prior limit
 
-*Research note, 18 October 2026. This is a new paper proof, not a Lean-verified result. It belongs with the works in progress rather than the verified main results.*
+*Research note, 18 October 2026. Conventional mathematical proof with a separate review record; not Lean verified.*
 
 [FAQ discussion](../../TECHNICAL-FAQ.md#33-do-the-good-generalization-results-survive-a-small-amount-of-label-noise) · [Proof review record](REVIEW.md) · [Collection index](../../README.md)
 
-Exact fitting of noisy labels does not prevent a useful generalization theorem for the strong-prior NNBayes learner. At every fixed depth, we obtain a clean-error bound of the form
+Exact fitting of noisy labels does not prevent a useful generalization theorem for the strong-prior NNBayes learner. For distinct inputs sampled uniformly without replacement, the uniform whole-cube clean error at every fixed depth has a bound of the form
 
 $$
 \frac{B_L(d,C,U)}{n}+A(d,L,U)\frac{s}{n}
@@ -17,7 +17,7 @@ $$
 A(d,L,U)=O\!\left(U^2d(d+1)(d^2+L^2)\right).
 $$
 
-The parameter $U$ bounds the clean teacher's real output. One may always take $U=C^2$, since a width-$`C`$ implementation with weights bounded by $C$ has $|z_f|\leq C^2$. Standard saturated implementations of Boolean circuits have $U=1$, so their corruption coefficient is independent of circuit width.
+The parameter $U$ bounds the clean teacher's real output. One may always take $U=C^2$, since a width-$C$ implementation with weights bounded by $C$ has $|z_f|\leq C^2$. Standard saturated implementations of Boolean circuits have $U=1$, so their corruption coefficient is independent of circuit width.
 
 For independent label flips of probability $\eta$, the bound becomes a resource-dependent multiple of $\eta$, plus a term decreasing with sample size. **This does not yet give a noise floor depending only on $\eta$, uniformly over input dimension.** It does establish tolerance of a positive fraction of corruptions that is sufficiently small relative to the displayed resource polynomial. The clean sample overhead can still have bad depth dependence.
 
@@ -551,7 +551,7 @@ independently of circuit width. The sample overhead and adequate learner width s
 
 ## 8. What this resolves, and what remains open
 
-For distinct uniformly sampled inputs and error under the uniform distribution, the unchanged strong-prior tanh learner now has a paper proof of tolerance to a sufficiently small positive corruption fraction for arbitrary bounded-weight targets at every fixed depth, at every learner width $N\geq W_s$. The proof uses exact interpolation and the original global margin conditioning. It applies to adversarial corruption locations as well as independent flips.
+For distinct uniformly sampled inputs and error under the uniform distribution, this note proves that the unchanged strong-prior tanh learner tolerates a sufficiently small positive corruption fraction for arbitrary bounded-weight targets at every fixed depth, at every learner width $N\geq W_s$. The proof uses exact interpolation and the original global margin conditioning. It applies to adversarial corruption locations as well as independent flips.
 
 The stronger circuit-style target remains open: a clean-risk envelope tending to zero with $\eta$ alone, uniformly over input dimension after paying a target-dependent sample overhead. The present coefficient of $\eta$ grows polynomially in dimension and depth; for a general analog teacher it also depends on its output bound. A fixed numerical noise rate can therefore make this upper bound vacuous as dimension grows. No claim of perfect clean recovery at fixed positive noise is made.
 

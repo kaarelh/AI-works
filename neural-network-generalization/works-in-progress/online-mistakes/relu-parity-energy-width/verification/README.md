@@ -1,5 +1,7 @@
 # Verification record
 
+For even parity degree `r ≥ 4`, minimum Gaussian energy requires shallow-ReLU width at least `2^(r−1)`, although a bounded-weight teacher needs only `O(r²)` width. Degree two has the separate attainment threshold of four neurons.
+
 The manuscript contains conventional mathematical proofs. It is **not Lean formalized**.
 
 The independent reviews check the sharp monotone-function Fourier bound, its conversion to the exact ReLU–parity correlation constant, all equality conditions, the Gaussian energy bound, the Fourier support argument, the matching construction at every sufficiently large width, the degree-two exception, and the bounded-weight teacher at the same depth.

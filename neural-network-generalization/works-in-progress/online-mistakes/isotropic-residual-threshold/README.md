@@ -4,14 +4,14 @@
 
 A fixed **threshold activation with a residual** gives exponentially many online mistakes at every hidden width in the usual strong-prior limit, under the unchanged Gaussian prior. The paper covers both `sign(t) + t` and the bounded activation `sign(t) + tanh(t)`. The bounded result also holds for `sign(t) + c tanh(t)` with any fixed `0 < c ≤ 1`, however small.
 
-For each k ≥ 3, the target on d = 2k + 1 Boolean inputs has a Boolean circuit of size Θ(k) and a **width-one teacher with every weight bounded by one**. A fixed input permutation contains at most 4k + 3 calibration examples followed by 2^k − k − 1 designated errors. Every competing network at every width is included in the proof.
+For each `k ≥ 3`, the target on `d = 2k + 1` Boolean inputs has a Boolean circuit of size `Θ(k)` and a **width-one teacher with every weight bounded by one**. A fixed input permutation contains at most `4k + 3` calibration examples followed by `2^k − k − 1` designated errors. Every competing network at every width is included in the proof.
 
-The learner retains the full Boolean cube, one constant input coordinate, global output margin greater than 1/2, exact labels, and the Gaussian variances
+The learner retains the full Boolean cube, one constant input coordinate, global output margin greater than 1/2, exact labels, and the following Gaussian variances, where `N` is hidden width and `σ` is the common prior scale:
 
 - First layer: `N σ²/d`, equally for every coordinate, including the bias.
 - Readout: `σ²/N`.
 
-There is no coordinate anisotropy or extra readout penalty. The posterior wrong-label probability at every designated round tends to one as σ tends to zero at **each fixed width N ≥ 1**. The paper also proves direct width-dependent statements for `σ² = τ² N^(−γ)`:
+There is no coordinate anisotropy or extra readout penalty. The posterior wrong-label probability at every designated round tends to one as σ tends to zero at **each fixed width N ≥ 1**. The paper also proves direct width-dependent statements for `σ² = τ² N^(−γ)`, where `τ` is the fixed prefactor and `γ` is the width-scaling exponent:
 
 - For every fixed γ > 1 and τ > 0, the errors occur at all sufficiently large widths.
 - For any desired confidence, one sufficiently small fixed τ gives all designated errors uniformly at every N ≥ 1 and every γ ≥ 1.

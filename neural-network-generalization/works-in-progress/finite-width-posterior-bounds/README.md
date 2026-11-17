@@ -2,7 +2,7 @@
 
 **[Read the paper](paper.pdf)** · [LaTeX source](source/paper.tex) · [Verification record](verification/README.md)
 
-Research proof draft, updated 26 October 2026. These results concern the actual Gaussian posterior conditioned on absolute output margin greater than `1/2` on the entire Boolean cube and then on exact training labels. They are not limiting-width or selected-minimum statements.
+These results concern the actual Gaussian posterior conditioned on absolute output margin greater than `1/2` on the entire Boolean cube and then on exact training labels. They are not limiting-width or selected-minimum statements.
 
 The paper proves four finite-width facts for tanh hidden layers with augmented input, no internal biases, and a linear readout:
 
@@ -20,10 +20,10 @@ When `d`, `C`, and `B` are polynomial in depth, the upper bound forces any `exp(
 - [Projective symmetry lower](research-notes/finite-width-projective-symmetry-lower.md): exact posterior symmetry, multiple constant columns, iid consequence, and the limitation of a single symmetry orbit.
 - [Width-monotonicity obstruction](research-notes/finite-width-posterior-monotonicity-obstruction.md): explicit strict-margin networks and the distinction between raw-prior averaging and margin-conditioned sign laws.
 
-The [independent mean-shift audit](verification/finite-width-boolean-circuit-mean-shift-learning-audit.md) covers the new circuit result. The assembled paper includes the proofs and does not require the notes as prerequisites. The [independent full-manuscript audit](verification/finite-width-posterior-assembly-independent-audit.md) and [upper-bound audit](verification/canonical-finite-width-posterior-cover-independent-audit.md) are conventional mathematical checks. **These results are not Lean verified.**
+The [independent mean-shift audit](verification/finite-width-boolean-circuit-mean-shift-learning-audit.md) covers the circuit result added in the 26 October 2026 research-draft revision. The assembled paper includes the proofs and does not require the notes as prerequisites. The [independent full-manuscript audit](verification/finite-width-posterior-assembly-independent-audit.md) and [upper-bound audit](verification/canonical-finite-width-posterior-cover-independent-audit.md) are conventional mathematical checks. **These results are not Lean verified.**
+
+The PDF was reviewed and rebuilt from the included source on 29 October 2026. The [review record](../../verification/remaining-papers-2026-10-29.md) describes exposition changes, mathematical corrections, and the limits of the checks. Existing formalization claims retain their stated scope.
 
 ## Build
 
 Run `./build.sh` from this directory. It requires `pdflatex` and the standard packages listed in the source. Auxiliary files go in `.build/`; the final document is copied to `paper.pdf`. The [build manifest](verification/build-manifest.json) records exact source and PDF hashes.
-
-The PDF was reviewed and rebuilt from the included source on 29 October 2026. The [review record](../../verification/remaining-papers-2026-10-29.md) describes exposition changes, mathematical corrections, and the limits of the checks. Existing formalization claims retain their stated scope.

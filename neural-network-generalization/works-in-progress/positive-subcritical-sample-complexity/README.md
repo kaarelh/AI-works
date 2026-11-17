@@ -2,7 +2,7 @@
 
 **Status:** Superseded standalone draft
 
-Earlier self-contained 0 < gamma < 1 version of the superpolynomial lower-bound paper. Retained for completeness; the unified subcritical-sample-complexity manuscript and later exponential paper are the preferred statements.
+This earlier self-contained draft treats the positive subcritical range `0 < gamma < 1`, where `gamma` is the Gaussian prior-scaling exponent. It is retained for provenance. The unified [subcritical-sample-complexity manuscript](../../side-results/subcritical-sample-complexity/) and the [later exponential lower bound](../../main-results/subcritical-exponential/) are the preferred statements.
 
 [Paper (PDF)](paper.pdf) · [LaTeX source](source/positive-subcritical-sample-complexity.tex) · [Collection index](../../README.md)
 
@@ -12,4 +12,4 @@ Run `bash build.sh` in this directory with a standard TeX Live installation. The
 
 The PDF was rebuilt from unchanged source using two LaTeX passes, resolving cross-references that were missing in the earlier one-pass PDF. Its mathematical text has not been rewritten for this collection. Later results and current scope are summarized in the collection index.
 
-The PDF was reviewed and rebuilt from the included source on 29 October 2026. The [review record](../../verification/remaining-papers-2026-10-29.md) describes exposition changes, mathematical corrections, and the limits of the checks. Existing formalization claims retain their stated scope.
+The [29 October review and rebuild record](../../verification/remaining-papers-2026-10-29.md) documents this draft's checked snapshot and the limits of the review; it does not replace the later results.

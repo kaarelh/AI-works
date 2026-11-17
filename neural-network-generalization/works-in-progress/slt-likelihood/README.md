@@ -2,9 +2,13 @@
 
 ChatGPT-6 Astra, Kaarel Hänni, and Dmitry Vaintrob[^order] · 19 October 2026
 
+A Gaussian likelihood gives polynomial sample bounds for learning clean tanh-network outputs when its observation variance shrinks together with the Gaussian prior scale. The guarantee holds in the strong-prior limit and at every finite-scale exponent $\gamma\ge1$, at every learner width above the teacher width.
+
+A fixed smooth likelihood can instead become powerless when the prior concentrates first, so replacing hard consistency does **not** automatically preserve the sample bounds. This is a distinction between Bayesian learners; it does not concern the sharpness of singular learning theory's generalization formulas.
+
 **Work in progress.** This note gives conventional proofs of several likelihood-sensitive results. It has received independent AI-agent mathematical review ([strong-prior positive results](verification/positive-review.md), [finite-scale extension](verification/finite-scale-review.md), [obstructions](verification/obstructions-review.md)); it is not Lean verified.
 
-Replacing hard consistency by an ordinary smooth likelihood does **not** automatically preserve our sample bounds. A fixed likelihood can become powerless when the prior concentrates first. Nevertheless, a genuine Gaussian likelihood recovers polynomial learning bounds in the strong-prior limit and at every finite-scale exponent $\gamma\ge1$, at every learner width above the teacher width, if its observation variance shrinks together with the prior scale. The distinction concerns the learner itself, not the sharpness of singular learning theory's generalization formulas.
+The [positive theorem](#2-a-positive-theorem-with-an-ordinary-gaussian-likelihood) gives the model, quantifiers, and proofs. The [fixed-likelihood counterexamples](#3-why-a-fixed-smooth-likelihood-can-fail) separate raw and globally margin-conditioned priors; §4 gives the remaining width-dependent guarantee.
 
 ## 1. Which Bayesian setup?
 
@@ -16,7 +20,7 @@ $$
 
 Ordinary Bayes has $\beta=1$; other inverse temperatures give power posteriors. See equations (1)–(2) of [Watanabe (2010)](https://jmlr.org/papers/volume11/watanabe10a/watanabe10a.pdf) for the general setup. Gaussian regression and Bernoulli classification are standard examples. SLT does not specify a unique neural architecture, weight scaling, likelihood, or prediction loss.
 
-Our main classification theorems instead use exact sign consistency, often after restricting the prior to have absolute output margin greater than $1/2$ at every input. The continuous-domain theorem uses an indicator of fitting each observation within a prescribed tolerance. Those likelihoods can assign zero probability to a wrong hypothesis; a Gaussian or logistic likelihood is everywhere positive.
+For comparison, the collection's main classification theorems use exact sign consistency, often after restricting the prior to have absolute output margin greater than $1/2$ at every input. The continuous-domain theorem uses an indicator of fitting each observation within a prescribed tolerance. Those likelihoods can assign zero probability to a wrong hypothesis; a Gaussian or logistic likelihood is everywhere positive.
 
 The proofs below are our own arguments. They are not consequences asserted by the cited SLT paper. Throughout, networks have tanh hidden activations, a linear readout, a constant input coordinate, and no separate internal biases.
 
@@ -175,7 +179,9 @@ The growing-width parameter-volume effects are accounted for by the quantitative
 
 ### Boolean labels and tempered logistic classification
 
-Both Gaussian theorems have a Boolean variant with one additional learner layer. Given a teacher with $f(x)z_T(x)\ge1/2$ for Boolean $f$, append a tanh neuron computing $\tanh(Az_T)$ and a unit readout. With $A=\log(4\sqrt n)$ its uniform error against $f$ is at most $1/(2\sqrt n)$, so its total squared training residual is at most $1/4$. Its bounded-weight complexity, and hence clone energy, grow only polynomially in $1+\log n$. For the finite-scale argument, center a tube of radius $1/(2\sqrt n)$ at this approximating teacher, so total squared residual throughout the tube is at most one. The same proofs give sample conditions polynomial in the teacher parameters, accuracy parameters, and $\log n$; these have polynomial sufficient solutions. Taking $\tau<1$ gives correct-sign confidence. This variant still co-scales the Gaussian observation variance and prior, and uses depth $L+1$.
+Both Gaussian theorems have a Boolean variant with one additional learner layer. Given a teacher with $f(x)z_T(x)\ge1/2$ for Boolean $f$, append a tanh neuron computing $\tanh(Az_T)$ and a unit readout. With $A=\log(4\sqrt n)$ its uniform error against $f$ is at most $1/(2\sqrt n)$, so its total squared training residual is at most $1/4$. Its bounded-weight complexity, and hence clone energy, grow only polynomially in $1+\log n$.
+
+For the finite-scale argument, center a tube of radius $1/(2\sqrt n)$ at this approximating teacher, so total squared residual throughout the tube is at most one. The same proofs give sample conditions polynomial in the teacher parameters, accuracy parameters, and $\log n$; these have polynomial sufficient solutions. Taking $\tau<1$ gives correct-sign confidence. This variant still co-scales the Gaussian observation variance and prior, and uses depth $L+1$.
 
 A related result holds for the explicitly co-tempered logistic posterior
 

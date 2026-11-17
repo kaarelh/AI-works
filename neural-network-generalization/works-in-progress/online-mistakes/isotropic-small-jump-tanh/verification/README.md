@@ -1,6 +1,10 @@
 # Verification record
 
+Adding any fixed positive jump `ε sign(t)` to tanh gives exponential online mistakes at every fixed hidden width in the strong-prior limit. The reviews here check the actual Gaussian posterior, including all nonlinear competitors, and the related width-limit and IID guarantees.
+
 This paper is not Lean verified. Its mathematical statements and proofs were checked by independent AI agents, with particular attention to the relationship between the energy optimization and the actual posterior.
+
+Here `ε` is the jump amplitude, and `γ` is the exponent in the width-dependent variance scale `σ_N² = τ² N^(−γ)`, with learner width `N` and prior prefactor `τ`.
 
 The review covers:
 

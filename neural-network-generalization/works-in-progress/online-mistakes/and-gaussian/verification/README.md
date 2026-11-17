@@ -1,10 +1,12 @@
 # Verification and scope
 
-**Author-order revision, 6 November 2026.** The author declarations, alphabetical-order footnotes, and PDF author metadata were updated without changing the document bodies. [Current hashes and clean rebuild checks](../../../../verification/author-order-2026-11-06.md) supersede the earlier manuscript hashes below; the dated mathematical reviews remain records of their original snapshots.
+The reviewed results distinguish polynomial fixed-depth AND bounds, growing-depth Gaussian lower bounds, and a width-one lower bound that requires anisotropic coordinate variances.
 
 30 October 2026. [Paper](../paper.pdf) · [source](../source/paper.tex)
 
 These are conventional proofs with independent AI-agent mathematical reviews, **not Lean formalizations or human peer review**. The earlier formalized Gaussian width limits do not automatically certify the new consequences.
+
+Here `d` is the input dimension, `N` is learner width, and `C_2` is the target’s shallow bounded-width-and-weight teacher complexity. The prior exponent is `gamma`.
 
 The reviews checked:
 
@@ -17,3 +19,7 @@ The reviews checked:
 - **Remaining gap:** no exponential counterexample is claimed for the original equal-coordinate-variance strong prior or `gamma>=1`. No finite-width threshold is quantified for the Gaussian-process results; no variance threshold is quantified for the perturbed strong-prior result. The orders of these parameter choices are explicit.
 
 The [machine-readable record](record.json) records source hashes, an isolated PDF rebuild, LaTeX diagnostics, collection-link checks, and preservation of earlier manuscript mathematics and Lean files. The PDF was also checked visually.
+
+## Snapshot provenance
+
+**Author-order revision, 6 November 2026.** The author declarations, alphabetical-order footnotes, and PDF author metadata were updated without changing the document bodies. [Current hashes and clean rebuild checks](../../../../verification/author-order-2026-11-06.md) supersede the earlier manuscript hashes in the review records; the dated mathematical reviews remain records of their original snapshots.

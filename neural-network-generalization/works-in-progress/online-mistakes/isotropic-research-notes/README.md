@@ -1,6 +1,6 @@
 # Research records for the unchanged-prior continuous-activation question
 
-These notes record proved obstructions to particular approaches to an exponential online-mistake example for wide neural networks. **They are not online-mistake upper bounds for unrestricted NNbayes, and they do not settle the ordinary-tanh, ReLU, or hardtanh question.**
+These notes prove obstructions to several proposed routes to exponential online-mistake lower bounds for wide neural networks. Their conclusions concern the specified proof methods, not online-mistake upper bounds for unrestricted NNBayes. Separate papers establish lower bounds for [ordinary tanh](../isotropic-tanh-allwidth/README.md), [ReLU](../isotropic-relu-allwidth/README.md), and [hardtanh](../isotropic-hardtanh-allwidth/README.md).
 
 The common attempted reduction is to identify the network's prediction with the sign of the convex minimum-norm affine separator of the observed data, and to represent the energy minimum by a network whose first-layer rows are all proportional to that separator. The notes show why this route cannot produce the desired exponential lower bound when a bounded, small teacher gives a cheap competing implementation.
 
@@ -12,7 +12,6 @@ Three further notes test other possible shortcuts:
 
 - [Potential and convex-relaxation obstructions](POTENTIAL-OBSTRUCTIONS.md). The globally conditioned tanh posterior can make a near-certain mistake without increasing its minimum energy. Removing the global-margin condition also changes the energy optimum, even on a two-example history. Neither observation settles the total-mistake question.
 - [The scalar AND implementation is not optimal](AND-SCALAR-OBSTRUCTION.md). For all sufficiently large input dimensions and then all sufficiently large widths, an explicit two-feature tanh construction has lower canonical Gaussian energy than the best scalar implementation of AND. This rules out a specific energy-optimality claim, not an online-learning theorem.
-
 - [A nonintegral minimum affine margin norm](FRACTIONAL-AFFINE-NORM.md). A nine-variable Boolean threshold function has exact minimum squared affine norm `2405/2`. A rational dual certificate and a standard-library Python verifier establish the value. Thus a proposed argument based on integer-valued affine energy levels would be invalid; this does not show that exponentially many levels exist or can be visited.
 
 A “ridge” has an exact meaning here: if `a` is the minimum affine unit-margin coefficient vector, each first-layer row is `r_j a`, with arbitrary scalars `r_j`. The energy bound permits arbitrary later layers. The online consequence additionally assumes that predictions follow the affine sign; that conclusion is not automatic for arbitrary ridge networks.
@@ -23,4 +22,4 @@ These are research records, not a separate paper or a new main result. They have
 
 The [verification record](VERIFICATION.md) identifies the reviewed files and the exact-arithmetic check.
 
-The [7 November continuous-activation record](continuous-activations-2026-11-07/) gives two precise obstructions to transferring the successful triangle-based construction directly to sine and tanh. It links the positive all-large-width triangle and monotone-activation papers. These method-specific obstructions do not settle the ordinary-activation online question.
+The [7 November continuous-activation record](continuous-activations-2026-11-07/) gives two precise obstructions to transferring the successful triangle-based construction directly to sine and tanh. It links the positive all-large-width triangle and monotone-activation papers. These obstructions explain the limits of those direct transfers; they do not rule out the different constructions in the ordinary-activation papers linked above.

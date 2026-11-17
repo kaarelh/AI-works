@@ -4,7 +4,13 @@
 
 For a teacher with one tanh hidden layer, the sample bound is affine in its weighted squared norm, with an additional dimension cost, independently of the learner's width. It holds simultaneously for every `N >= C` and every mean-field-or-stronger scale.
 
-Writing the teacher energy as `kappa_C`, the dimension-sharpened summary is `soft-O((d(kappa_C+d)+log(1/delta))/epsilon)`. The additive `d²` term comes from the target-neighborhood estimate and cannot simply be absorbed into the teacher norm.
+Here `C` is teacher width, `N` learner width, and `d` input dimension. For hidden matrix `W` and readout vector `a`, the teacher energy is
+
+$$
+\kappa_C=\frac dC\lVert W\rVert_F^2+C\lVert a\rVert_2^2.
+$$
+
+With test-error tolerance `epsilon` and sample failure probability `delta`, the dimension-sharpened summary is `soft-O((d(kappa_C+d)+log(1/delta))/epsilon)`, where `soft-O` suppresses logarithmic factors. The additive `d²` term comes from the target-neighborhood estimate and cannot simply be absorbed into the teacher norm.
 
 The theorem allows the **raw Gaussian prior**, the globally margin-conditioned prior, and the specified shallow robust prior. All versions condition on strict signed training outputs above `1/2` and control posterior average test-margin failure at `1/4`. The raw-prior result is not a claim about Gaussian regression, logistic likelihoods, or conditioning only on training signs.
 
@@ -16,4 +22,4 @@ Run `./build.sh` to rebuild `paper.pdf` with `pdflatex`. Pandoc is not needed. S
 
 ## Lean verification
 
-The main statements are included in the second formalization batch. [Exact coverage and exclusions](../../../lean/review/BatchTwo-coverage.md) · [Lean entry point](../../../lean/NeuralGeneralization/BatchTwoMain.lean). This label does not extend automatically to every appendix, remark or numerical allocation. The original mathematical review records describe their earlier source snapshots.
+The three numerical sample budgets and their readout-norm, weighted-energy, and quadratic resource consequences have Lean proofs. The [current coverage record](../../../lean/review/coverage-completion-2026-11-15.txt) supersedes the corresponding exclusions in the [earlier endpoint map](../../../lean/review/BatchTwo-coverage.md); the [Lean entry point](../../../lean/NeuralGeneralization/BatchTwoMain.lean) identifies the original main statements. Dated mathematical reviews describe their own source snapshots. This coverage concerns the stated results, not every informal calculation in the manuscript.

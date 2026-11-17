@@ -1,8 +1,8 @@
 # Verification record
 
-**Author-order revision, 6 November 2026.** The author declarations, alphabetical-order footnotes, and PDF author metadata were updated without changing the document bodies. [Current hashes and clean rebuild checks](../../../verification/author-order-2026-11-06.md) supersede the earlier manuscript hashes below; the dated mathematical reviews remain records of their original snapshots.
+The nearcritical-window paper has conventional independent mathematical audits and reproducible PDF builds. Its learning theorem retains the stated critical and finite-width inputs; no result in this package is Lean verified.
 
-The [six-page source](../source/nearcritical-positive-window.tex) is byte-identical to the final audited scratch manuscript, SHA256 `3983ca89775173e5abb80ce0c94876495ac3317188e1118c929bdc8bdb5d8ca1`.
+At the original publication snapshot, the [six-page source](../source/nearcritical-positive-window.tex) was byte-identical to the final audited scratch manuscript, SHA256 `3983ca89775173e5abb80ce0c94876495ac3317188e1118c929bdc8bdb5d8ca1`.
 
 - [Scalar baseline comparison audit](supercritical-scalar-baseline-logarithmic-gap-canonical-audit.md): existence of the supercritical boundary value and the rigorous logarithmic deficit; no posterior consequence.
 - [Intrinsic theorem audit](nearcritical-supercritical-positive-gain-finite-n-audit.md): scalar reference identity, bootstrap, and compact-prefactor extension of the imported finite-width machinery.
@@ -14,3 +14,7 @@ The [six-page source](../source/nearcritical-positive-window.tex) is byte-identi
 [Build manifest](build-manifest.json) records the packaged source/PDF hashes and imported-source snapshots. [Package hashes](SHA256SUMS.json) cover every distributable file except that hash list itself. Generated LaTeX logs are ignored in `.build/`.
 
 These are conventional independent mathematical audits, not a formal proof verification. They explicitly retain the imported critical and finite-width inputs. The all-target canonical tanh depth question remains open.
+
+## Attribution and source provenance
+
+**Author-order revision, 6 November 2026.** The author declarations, alphabetical-order footnotes, and PDF author metadata were updated without changing the document bodies. [Current hashes and clean rebuild checks](../../../verification/author-order-2026-11-06.md) supersede the earlier manuscript hashes listed here; the dated mathematical reviews remain records of their original snapshots.

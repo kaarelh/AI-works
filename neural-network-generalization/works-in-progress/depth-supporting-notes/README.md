@@ -1,6 +1,8 @@
 # Earlier depth investigations
 
-**Status: supporting research drafts / work in progress.** These documents are preserved for provenance and useful auxiliary arguments. The current robustness paper is the promoted main result; the unrestricted and critical papers remain non-main.
+These reports develop auxiliary arguments for depth-dependent Bayesian neural-network learning: robust compression, numerical stability, structured targets, and critical Gaussian prior rates. They also preserve the provenance of the standalone depth papers.
+
+**Status: supporting research drafts / work in progress.** The current robustness paper is the promoted main result; the unrestricted and critical papers remain non-main. Use the [collection index](../../README.md) to locate the current papers and their conventions.
 
 - [Depth dependence, internal robustness, and Bayesian neural-network learning](round1-depth-report/README.md): First depth investigation: robust compression, calibrated internal margins, input-Lipschitz counterexamples, simple Gaussian targets, and early experiments. Later standalone papers refine its conventions and results; this historical report is not an additional main result.
 - [Polynomial depth in Bayesian neural-network learning: unrestricted Gaussian priors, trained networks, and numerical stability](round2-depth-report/README.md): Second investigation, including numerical-output stability, localized/trusted-region variants, diagonal-metric exploration, unrestricted structured-target results, critical-rate constructions, and earlier empirical findings. Preserved as a supporting report, with the newer standalone papers preferred for current statements.

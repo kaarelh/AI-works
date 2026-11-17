@@ -1,10 +1,12 @@
 # Mathematical review and publication checks
 
-**Author-order revision, 6 November 2026.** The author declarations, alphabetical-order footnotes, and PDF author metadata were updated without changing the document bodies. [Current hashes and clean rebuild checks](../../../../verification/author-order-2026-11-06.md) supersede the earlier manuscript hashes below; the dated mathematical reviews remain records of their original snapshots.
+Minimum-circuit online learning can have exponential mistakes under deterministic history-based selection and polynomial guarantees under fresh random selection or specified input conditions. The mathematical reviews and exact finite checks below cover both the lower bounds and the positive guarantees.
 
 Research draft, 30 October 2026. [Paper](../paper.pdf) · [source](../source/paper.tex)
 
 The proofs are conventional mathematical proofs, **not Lean formalizations or human peer review**. Several independent AI-agent reviews checked the arguments below; a final review also checked the integrated manuscript for a reader unfamiliar with the repository.
+
+Below, `d` is input dimension, `s` is circuit gate count, and `k` is the subset size in the near-uniform counterexample. Counts used inside the NAND proof are defined in its review item.
 
 ## Main checks
 
@@ -29,3 +31,7 @@ Run `python verification/audit_checks.py` from the paper directory. [Recorded ou
 These finite checks support the review but do not prove the general theorems. The script uses seed `301026`; it needs only Python's standard library.
 
 The [publication record](record.json) records source and PDF hashes, the isolated rebuild, LaTeX diagnostics, collection links, and preservation of existing Lean sources. The final PDF's title/abstract and theorem pages were also visually inspected. No earlier manuscript's mathematical source or PDF was changed.
+
+## Snapshot provenance
+
+**Author-order revision, 6 November 2026.** The author declarations, alphabetical-order footnotes, and PDF author metadata were updated without changing the document bodies. [Current hashes and clean rebuild checks](../../../../verification/author-order-2026-11-06.md) supersede the earlier manuscript hashes in the review records; the dated mathematical reviews remain records of their original snapshots.

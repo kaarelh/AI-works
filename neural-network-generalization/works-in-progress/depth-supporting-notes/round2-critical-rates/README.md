@@ -1,14 +1,14 @@
 # Bounded critical Gaussian cost for every Boolean function at quadratic depth
 
-**Status:** Earlier standalone supporting draft
-
-Earlier standalone critical-rate constructions and variational background, superseded and extended by the current critical-depth draft. Absolute prior cost is not itself a sample-complexity lower bound.
+This draft develops critical-rate constructions and their variational background for Gaussian Bayesian networks. Absolute prior cost is not itself a sample-complexity lower bound.
 
 [Paper (PDF)](paper.pdf) · [LaTeX source](source/critical-rate-paper.tex) · [Collection index](../../../README.md)
 
 ## Relationship to the current papers
 
-This earlier document is preserved for provenance and useful supporting arguments. Its historical status language and empirical qualifications describe that research round. Consult the collection index and current paper READMEs for the present classification and conventions.
+**Status:** Earlier standalone supporting draft, superseded and extended by the current critical-depth draft. It is preserved for provenance and useful supporting arguments.
+
+Its historical status language and empirical qualifications describe that research round. Consult the collection index and current paper READMEs for the present classification and conventions.
 
 ## Build
 

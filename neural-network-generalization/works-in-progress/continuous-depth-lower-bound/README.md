@@ -2,11 +2,11 @@
 
 [Paper (PDF)](paper.pdf) · [LaTeX source](source/paper.tex) · [Review and build records](verification/README.md) · [Collection index](../../README.md)
 
-**Status:** Supporting research result, separate from the main papers. Conventional proof with independent AI-agent mathematical reviews; main learning statements Lean verified; not externally peer reviewed.
-
 Exponential dependence on depth is necessary for a distribution-free, learner-width-independent regression guarantee under the unrestricted Gaussian prior. A tanh teacher of constant width and bounded weights can require exponentially many examples, even in input dimension two. The theorem concerns the actual Bayesian posterior, including mixtures of equally preferred fits.
 
 ## Result and conventions
+
+Here `L` is network depth, `N` is learner width, and `γ` specifies the Gaussian scale `σ²=N^(-γ)`. The constant `c>0` in the sample ceiling below is independent of depth.
 
 There is a fixed, nonatomic distribution on the unit circle and a sequence of teachers with depth $L$, width three, and weights bounded by 30. The teachers have bounded real outputs on the data support. Training observes their exact real-valued outputs and conditions the original Gaussian parameter prior on fitting each observation within $1/8$. Test success requires posterior probability strictly above $2/3$ of output error at most $1/4$. There is no robustness restriction or global output-margin conditioning.
 
@@ -15,7 +15,7 @@ For every sufficiently large depth and every specified sample size up to $\exp(c
 - **Strong-prior limit:** at every fixed learner width above an explicit polynomial in sample size, as the prior variance tends to zero. The sample-probability statement uses a lower limit in the variance.
 - **Every fixed exponent above one:** at the actual scale $\sigma^2=N^{-\gamma}$, at every width above a polynomial in sample size and depth, whose degree can depend on $\gamma-1$.
 - **Mean-field scaling:** at $\gamma=1$, the lower limit of the confidence-failure fraction is at least one half as width tends to infinity, on a sample event of probability at least $49/50$. This uses the same fixed nonatomic distribution. It does not give a quantitative width threshold.
-- **Exact interpolation (not formalized in Lean):** the same obstruction holds for every minimum-energy exact interpolant and every mixture of them. It also holds for posterior limits obtained by taking the strong-prior limit before sending the training tolerance to zero.
+- **Exact interpolation:** the same obstruction holds for every minimum-energy exact interpolant and every mixture of them. It also holds for posterior limits obtained by taking the strong-prior limit before sending the training tolerance to zero.
 
 These are lower bounds at sufficiently large widths. They disprove a polynomial-depth guarantee claimed uniformly over all learner widths above teacher complexity; they do not say that every width is hard.
 
@@ -37,4 +37,6 @@ Run `bash build.sh` in this directory with a standard TeX Live installation. The
 
 ## Lean verification
 
-The main statements are included in the second formalization batch. [Exact coverage and exclusions](../../lean/review/BatchTwo-coverage.md) · [Lean entry point](../../lean/NeuralGeneralization/BatchTwoMain.lean). This label does not extend automatically to every appendix, remark or numerical allocation. The original mathematical review records describe their earlier source snapshots.
+The main lower bounds, exact minimizers and their mixtures, actual iterated posterior limits, and the varying smooth-density construction have Lean proofs. The [current coverage record](../../lean/review/coverage-completion-2026-11-15.txt) and [detailed inventory](../../lean/review/coverage-extension-2026-10-30.txt) supersede the exclusions in the [earlier endpoint map](../../lean/review/BatchTwo-coverage.md). The [Lean entry point](../../lean/NeuralGeneralization/BatchTwoMain.lean) identifies the original main endpoints.
+
+This is a supporting research result with independent AI-agent mathematical reviews, not external peer review. The [review and build records](verification/README.md) describe their dated source snapshots; formal coverage does not imply that every informal calculation has a separately named theorem.

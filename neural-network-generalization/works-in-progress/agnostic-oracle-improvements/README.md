@@ -4,7 +4,7 @@
 
 Authors: ChatGPT-6 Astra, Claude Opus 5.5, Kaarel Hänni, Dmitry Vaintrob. Authors are listed in alphabetical order.
 
-Can a dense Gaussian Bayesian network compete with a small network that only approximates the data? These results give coefficient-one squared-loss comparisons for arbitrary distributions of bounded labels, including noise and model misspecification. They strengthen the positive result in the [tempered-likelihood research note](../agnostic-learning/).
+This paper proves coefficient-one squared-loss comparisons between a dense Gaussian Bayesian learner and a small network that approximates the data. The label distribution may be arbitrary and bounded, including noise and model misspecification.
 
 Every learner has a specified dense architecture and independent centered Gaussian weight coordinates. Teacher cloning is a comparison construction in the proof; every coordinate of the learner remains random under its prior.
 
@@ -26,7 +26,9 @@ E = d(d+1)B² + 2(L-1)m²B².
 
 The leading teacher penalty is `λ_n E`. For `L≥3`, the improved calibration has `λ_n` of order `n^(-1/(L-1))`, up to dimension factors and logarithms. For example, depth three improves from a quarter-power to a square-root rate.
 
-At fixed dimension and depth `L≥3`, both teacher width and weight cap can grow as `n^α` for every `α<1/[4(L-1)]`, with a faster remainder than in the earlier proof. This also holds in the new finite-scale theorem for `γ≥2`. With one hidden layer, the strong-prior result's teacher-class calibration improves the growing-width-and-weight range to `α<1/4`; the finite-scale theorem is stated with its separate calibration.
+At fixed dimension and depth `L≥3`, both teacher width and weight cap can grow as `n^α` for every `α<1/[4(L-1)]`, with a faster remainder than in the [tempered-likelihood research note](../agnostic-learning/). This also holds in the finite-scale theorem for `γ≥2`.
+
+With one hidden layer, the strong-prior result's teacher-class calibration improves the growing-width-and-weight range to `α<1/4`; the finite-scale theorem is stated with its separate calibration.
 
 ## Why the proof improves
 
@@ -36,10 +38,12 @@ At finite prior scale, an entropy inequality turns Gaussian relative entropy int
 
 ## Scope and audit
 
-The supplied Opus 5.5 positive theorem checks out under its conventions. Its strong-prior limit is taken separately at each fixed width; no width-uniform prior-strength threshold is claimed. The referenced `statement/tempered-learner.pdf` was absent from the repository snapshot, so the compressed statement was checked directly against its supporting proof and the supplied PDF.
+The strong-prior limit is taken separately at each fixed width; no width-uniform prior-strength threshold is claimed.
 
 The likelihood is calibrated rather than required to fit every noisy label exactly. The new finite-scale result uses likelihood variance `nλ_n N^(-γ)`. Arbitrarily tight conditioning can memorize noise. Teacher weight magnitude is still counted; the paper proves a width-one obstruction using two nearby inputs and the strong-prior energy budget.
 
 The sample exponent still deteriorates with depth. A favorable bound based only on teacher parameter count for dense Gaussian Bayesian learning remains open. The improved deep finite-scale rate for `1≤γ<2`, and raw-output finite-scale predictions, also remain open here.
 
 These are conventional mathematical proofs with independent AI-agent reviews, **not Lean formalizations or external peer review**. Run `./build.sh` to rebuild the PDF using TeX Live.
+
+The audit also checks the supplied Opus 5.5 positive theorem under its conventions. The referenced `statement/tempered-learner.pdf` was absent from the repository snapshot, so the compressed statement was checked directly against its supporting proof and the supplied PDF.

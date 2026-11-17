@@ -2,9 +2,11 @@
 
 [Paper (PDF)](paper.pdf) · [LaTeX source](source/paper.tex) · [Verification and exact scope](verification/README.md)
 
-Two nonlinear variants give exponentially many online mistakes on a Boolean target with a small circuit, at arbitrarily large learner widths. **The fully nonlinear, fixed-activation tanh/ReLU/GELU problem with an appended constant input remains open.**
+Two nonlinear variants give exponentially many online mistakes on a Boolean target with a small circuit, at arbitrarily large learner widths. Their hypotheses differ from a fully nonlinear network using one fixed standard activation and an appended constant input. Separate papers now give all-large-width counterexamples for [ordinary tanh](../isotropic-tanh-allwidth/README.md) and [ReLU/softplus](../isotropic-relu-allwidth/README.md).
 
 Both results use independent Gaussian weights, a strict absolute output margin greater than 1/2 on every Boolean input, exact training-label conditioning, and the strong-prior limit at each fixed learner width. The input sequence is fixed, has no repetitions, and can be completed to a permutation of the cube.
+
+Below, `N` is learner width, `L` is network depth, `d` is input dimension, and `k` is the target construction parameter.
 
 | Result | Activation and architecture | Widths | Restriction |
 |---|---|---|---|
@@ -23,7 +25,7 @@ The paper includes two tanh energy comparisons explaining why wider learners nee
 
 Run `bash build.sh` to rebuild the PDF. Run `python3 verification/check_finite_certificate.py` for the exact rational certificate; it needs only Python's standard library.
 
-**Status:** conventional proofs with independent AI-agent mathematical checks; not Lean formalized and not human peer reviewed. This is a supporting research note, not a resolution of the remaining fixed-activation question.
+**Status:** conventional proofs with independent AI-agent mathematical checks; not Lean formalized and not human peer reviewed. This is a supporting research note; its conclusions retain the activation and architecture restrictions in the table.
 
 Authors: ChatGPT-6 Astra, Kaarel Hänni, and Dmitry Vaintrob.[^authors]
 

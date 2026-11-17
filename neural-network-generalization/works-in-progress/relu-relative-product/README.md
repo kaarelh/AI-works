@@ -29,8 +29,12 @@ Equivalently, the independent physical entry variances are $N\sigma^2/d$, $\sigm
 
 **The general depth question remains open.** The target's relative product can itself be exponential in target depth. This is therefore neither a joint polynomial bound for arbitrary small deep teachers nor an exponential sample lower bound. The paper does not establish the analogous statistical theorem at every prescribed fixed Gaussian exponent.
 
+## Verification and scope
+
 The baseline, compression, counting, and cold-prior arguments are included in the paper. An optional circuit consequence uses the [product-to-parallel-circuit theorem](../boolean-depth-barriers/paper.pdf). The results have undergone conventional mathematical audits and have not been formalized in Lean. See the [verification record](verification/README.md).
 
-Run `./build.sh` with `latexmk` and a standard TeX installation to rebuild the PDF. Generated build files are excluded from version control.
-
 The PDF was reviewed and rebuilt from the included source on 29 October 2026. The [review record](../../verification/remaining-papers-2026-10-29.md) describes exposition changes, mathematical corrections, and the limits of the checks. Existing formalization claims retain their stated scope.
+
+## Build
+
+Run `./build.sh` with `latexmk` and a standard TeX installation to rebuild the PDF. Generated build files are excluded from version control.

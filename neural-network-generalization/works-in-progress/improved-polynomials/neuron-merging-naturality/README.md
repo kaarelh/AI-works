@@ -4,7 +4,7 @@
 
 **Every eligible layered Boolean circuit has an implementation satisfying the restriction.** More natural versions of the restriction also retain the quadratic learning bound: neurons may merge after aligning their signs, groups may have unequal sizes, and the group-count budget can be normalized by output scale. The empirical evidence supports some ordinarily trained networks, including a rigorously certified reduction from width 32 to one signed population per layer; it does not establish that these conditions generally hold after gradient training.
 
-This is a supporting research paper with independent AI-agent mathematical review, not Lean verification. It leaves the five main results unchanged. Authors: ChatGPT-6 Astra, Claude Fable 5 and Opus 5, Kaarel Hänni, and Dmitry Vaintrob, listed alphabetically.
+This is a supporting research paper with independent AI-agent mathematical review, not Lean verification. Authors: ChatGPT-6 Astra, Claude Fable 5 and Opus 5, Kaarel Hänni, and Dmitry Vaintrob, listed alphabetically.
 
 ## Boolean circuits pass, with positive prior mass
 
@@ -28,14 +28,14 @@ $$
 
 This **count budget** is invariant under readout rescaling. The accompanying requirement that merging change clipped outputs by at most `1/16` still uses fixed output margins. The Boolean construction satisfies the new budget too. Both the old and new budgets give quadratic bounds for signed, unequal populations, with or without additionally imposing the original internal-noise restriction. Neither budget is completely representation invariant: unequal replication of individual neurons can change its value.
 
-For the output-normalized version, one sufficient bound is
+Let `d` be input dimension, `ε` the test-error tolerance, `δ` the sample failure probability, and `c` the internal-noise calibration. The exponent `γ=1` denotes mean-field scaling; larger `γ` gives a more concentrated Gaussian prior. For the output-normalized version, one sufficient bound is
 
 $$
 n=\widetilde O\!\left(\frac{LdQ+L^2Q^2+\log(1/\delta)}{\varepsilon}\right),\qquad
 Q=\widetilde O\!\left(d+LC+c^2C+\log(1/\varepsilon)\right).
 $$
 
-The paper specifies all hidden logarithms and also gives a literal quadratic-width polynomial envelope. Training requires signed output above `1/2`; the conclusion bounds posterior-average test-margin failure at `1/4`. A strict `2/3` confidence guarantee follows by adjusting the error tolerance.
+Here `Õ` suppresses logarithmic factors. The paper specifies all hidden logarithms and also gives a literal quadratic-width polynomial envelope. Training requires signed output above `1/2`; the conclusion bounds posterior-average test-margin failure at `1/4`. A strict `2/3` confidence guarantee follows by adjusting the error tolerance.
 
 ## A more local candidate condition
 
@@ -65,6 +65,4 @@ The package also includes a larger historical checkpoint inventory, the alternat
 
 The signed and unequal-group extension resolves specific artificial features of the original restriction. It remains a substantive structural assumption. A quadratic bound under **only** the original internal-noise restriction is still open, as is a general explanation of when ordinary training produces these population structures.
 
-Run `./build.sh` to rebuild the paper. To replay the published trained-network witnesses and all three interval certificates, install NumPy, SciPy, and mpmath, then run `python replay.py --interval` from `experiments/`. The [publication record](verification/publication-build.json) records hashes, isolated source rebuilding, and empirical replay. No new Lean claim is made.
-
-The PDF was reviewed and rebuilt from the included source on 29 October 2026. The [review record](../../../verification/remaining-papers-2026-10-29.md) describes exposition changes, mathematical corrections, and the limits of the checks. Existing formalization claims retain their stated scope.
+Run `./build.sh` to rebuild the paper. To replay the published trained-network witnesses and all three interval certificates, install NumPy, SciPy, and mpmath, then run `python replay.py --interval` from `experiments/`. The [publication record](verification/publication-build.json) records hashes, isolated source rebuilding, and empirical replay. The [29 October review and rebuild record](../../../verification/remaining-papers-2026-10-29.md) documents the later source snapshot, corrections, and limits of the checks.

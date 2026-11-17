@@ -2,9 +2,9 @@
 
 [Paper (PDF)](paper.pdf) · [LaTeX source](source/paper.tex) · [Independent mathematical review](verification/mathematical-review.md)
 
-The [unified activation paper](../unbounded-activations/) extends the learning guarantee to every `gamma >= 1`, including multiple hidden layers, for ReLU, GELU, and all fixed globally Lipschitz activations vanishing at zero. This earlier paper remains useful for its simpler argument and sharper explicit ReLU strong-prior bounds; its discussion of the remaining deep-scaling gap describes its original scope.
-
 This note proves a learning guarantee for ReLU networks on the Boolean cube under the original strong-prior convention: condition the parameter prior on an absolute output margin greater than 1/2 at every input, then condition on exact training labels. For every learner width at least the teacher width, a sufficiently small prior variance gives a sample bound independent of learner width. No internal-stability restriction is imposed.
+
+## Strong-prior bound
 
 Let the teacher have depth `L`, hidden width `C`, and product of layer Frobenius norms `P`. Writing `H=L−1`, define
 
@@ -23,7 +23,15 @@ Two concrete consequences are:
 
 The proof combines exact positive-homogeneous energy balancing, a width-independent product-norm Rademacher bound, VC/Sauer counting of globally separated functions, and finite-dimensional Gaussian small-variance asymptotics. It supplies the needed arguments, including the order of quantifiers.
 
-A separate theorem gives a finite-variance guarantee for every exponent `γ≥2`, at the prescribed variance `σ²=N^(−γ)`, simultaneously for all learner widths `N≥C`. Its explicit bound uses a target-ball probability lower bound and a Gaussian energy tail; it remains polynomial in bounded-weight teacher width and input dimension at fixed depth. For a single hidden layer (`L=2`), exactly the same finite-variance proof and constants cover every `γ≥1`, including mean-field scaling. With more hidden layers, this note leaves `1≤γ<2` open. Both results have poor depth dependence. It does not prove an inverse equivalence between minimum circuit width and the function-prior rate. The theorem is information-theoretic and provides no efficient posterior sampler.
+## Finite variance and scope
+
+A separate theorem gives a finite-variance guarantee for every exponent `γ≥2`, at the prescribed variance `σ²=N^(−γ)`, simultaneously for all learner widths `N≥C`. Its explicit bound uses a target-ball probability lower bound and a Gaussian energy tail; it remains polynomial in bounded-weight teacher width and input dimension at fixed depth.
+
+For a single hidden layer (`L=2`), exactly the same finite-variance proof and constants cover every `γ≥1`, including mean-field scaling. With more hidden layers, this note leaves `1≤γ<2` open. Both results have poor depth dependence. It does not prove an inverse equivalence between minimum circuit width and the function-prior rate. The theorem is information-theoretic and provides no efficient posterior sampler.
+
+The [unified activation paper](../unbounded-activations/) extends the learning guarantee to every `gamma >= 1`, including multiple hidden layers, for ReLU, GELU, and all fixed globally Lipschitz activations vanishing at zero. This paper provides a simpler argument and sharper explicit ReLU strong-prior bounds; its discussion of the remaining deep-scaling gap describes its original scope.
+
+## Authors, verification, and build
 
 Authors: ChatGPT-6 Astra; Claude Fable 5 and Opus 5; Kaarel Hänni; Dmitry Vaintrob. Dated October 21, 2026. Claude is credited for contributions to the inherited strong-prior setup and slides. This note has independent AI-agent mathematical review, but no Lean formalization.
 

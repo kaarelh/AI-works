@@ -1,6 +1,6 @@
 # Better polynomial bounds for NNBayes
 
-Five research papers with independent AI-agent mathematical review. Each paper lists its authors alphabetically, using ChatGPT-6 Astra for the OpenAI model credit. Papers using the inherited robust construction also credit Claude. The original-support/all-scales and shallow main results are Lean verified in the [second formalization batch](../../lean/review/BatchTwo-coverage.md). The other papers retain their conventional-proof status. None has received a full human mathematical review.
+These five papers improve the polynomial sample bounds for NNBayes by sharpening the original robust-prior argument, adding neuron-population assumptions, or specializing to one hidden layer. The table distinguishes these settings: their rates apply to different teacher classes, support restrictions, and prior scales.
 
 The earlier [robust-prior paper](../../main-results/robust-polynomial-depth/) gives a polynomial-depth theorem at every mean-field-or-stronger scale. Its conservative manuscript budget has degree 510 in the sum of the parameters; the more conservative [formal construction](../../lean/VERIFICATION.md#generalization-under-a-robustness-restriction-scope-and-correspondence) has a checked degree-10974 budget. The papers here obtain much smaller powers, including under the original restriction throughout the entire `gamma >= 1` regime.
 
@@ -12,11 +12,13 @@ The earlier [robust-prior paper](../../main-results/robust-polynomial-depth/) gi
 | [Low-degree all-width learning bounds for shallow Bayesian neural networks](shallow/paper.pdf) · [source and build](shallow/) | A sample bound affine in the teacher's weighted squared norm, with a dimension overhead, at every eligible learner width and every `gamma >= 1`. | Covers the raw Gaussian prior as well as the globally margin-conditioned and shallow robust priors. Training still requires a positive output margin. Quadratic teacher-width dependence needs bounded readout coefficients; the original larger coefficient class gives a quartic sufficient bound. |
 | [A quartic-width learning bound for Bayesian networks stable under internal noise](original-support/paper.pdf) · [source and build](original-support/) | `O(C^4 log^9(2+C))` samples with other parameters fixed; polynomial depth dependence and a `1/epsilon` statistical factor. | Retains the **original support condition**, in the strong-prior regime and at finite scales with `gamma >= 2`. This argument does not supply that rate at `1 <= gamma < 2`. |
 
+Throughout, `C` is teacher width, `N` learner width, `L` depth, and `d` input dimension; `ε` is the test-error tolerance, `δ` the training-sample failure probability, and `c` the robustness calibration. The exponent `γ` describes the Gaussian scale, with `γ=1` at mean field and larger `γ` giving stronger concentration. The notation `Õ` suppresses logarithmic factors.
+
 ## The original restriction across all scales
 
 The [all-scales paper](original-support-all-scales/) keeps the original prior support unchanged and sharpens its entropy compressor. Its complete bound is independent of learner width and polynomial jointly in all the parameters. At fixed remaining parameters it is `O(C^6 log^13(2+C))`; this does not mean that its accuracy dependence is merely `1/epsilon`. The exact formulas and the conservative joint degree-46 estimate are in the paper.
 
-The new rate covers the mean-field endpoint and all stronger priors. Quadratic dependence under this same restriction remains open.
+This rate covers the mean-field endpoint and all stronger priors. Quadratic dependence under this same restriction remains open.
 
 ## What the quadratic result assumes
 
@@ -65,6 +67,10 @@ If hidden coefficients are at most `C` and readout coefficients are bounded inde
 
 ## Verification, provenance, and open questions
 
+All five papers have independent AI-agent mathematical reviews; none has received a full human mathematical review. The original-support/all-scales and shallow learning bounds have Lean proofs, including the all-scales paper's literal numerical budget and the shallow norm consequences. See the [current coverage record](../../lean/review/coverage-completion-2026-11-15.txt) and the [earlier endpoint map](../../lean/review/BatchTwo-coverage.md). The other three papers retain conventional-proof status.
+
+Each paper lists its authors alphabetically, using ChatGPT-6 Astra for the OpenAI model credit. Papers using the inherited robust construction also credit Claude.
+
 - [Independent mathematical review of shallow and original-support proofs](verification/independent-review.md).
 - [Independent mathematical review of neuron averaging and its extensions](verification/neuron-averaging-review.md).
 - [Independent review of the complete all-scales theorem and final sources](verification/all-scales-review.md).
@@ -72,7 +78,7 @@ If hidden coefficients are at most `C` and readout coefficients are bounded inde
 - [Initial build and publication record](verification/publication-build.json) and [attribution correction with current builds](verification/attribution-correction-2026-10-22.json).
 - [All-layer-margin audit](supporting-notes/all-layer-margin-audit.md): why a standard matrix-cover argument does not yet prove the desired quadratic rate.
 
-The quartic original-support paper adapts the compressor from the [earlier depth report](../depth-supporting-notes/round1-depth-report/); the new paper states its adaptation and the finite-scale consequence explicitly. The old Markov-compression prototype is not published here as another new result.
+The quartic original-support paper adapts the compressor from the [earlier depth report](../depth-supporting-notes/round1-depth-report/); the quartic paper states its adaptation and the finite-scale consequence explicitly. The old Markov-compression prototype is not published here as another new result.
 
 A quadratic-width bound under the original internal-noise restriction alone remains open. So does a quadratic bound for the full original shallow complexity convention, including readout coefficients as large as the width. The [naturality study](neuron-merging-naturality/) proves weaker, symmetry-respecting neuron-merging conditions and certifies some ordinarily trained examples; their prevalence and usefulness for broader trained-network classes remain unresolved.
 

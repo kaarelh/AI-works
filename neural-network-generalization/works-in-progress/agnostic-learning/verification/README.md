@@ -1,20 +1,30 @@
 # Verification record
 
-*Part of the [agnostic-learning note](../README.md). The proofs are on paper, with numerical sanity checks; nothing here is Lean verified.*
+This index records the independent AI-agent reviews, revisions, and consistency checks for the [agnostic-learning note](../README.md). The proofs are conventional mathematical arguments with numerical sanity checks; nothing here is Lean verified.
+
+Use the [proof-note table](#proof-notes) for the main reports, [red-team table](#red-team-propositions) for separately reviewed propositions, and [revision checks](#revision-checks) for the resolution history. The [limits of this record](#limits-of-this-record) distinguish these reviews from human refereeing and formal verification.
 
 ## How the results were checked
 
-Each proof note in [`../research-notes/`](../research-notes/) (A, B, C, E, small-learner-width.md and depth-two.md) was written by an AI agent, from the [problem brief](../research-notes/problem-brief.md) or as a repair of a red-team result. The brief and the literature survey were not refereed, and the red-team note only in the parts listed below. Independent AI agents then refereed each proof note, each agent through one lens (in the last two rounds on depth-two.md, one agent covered both logic and computation):
+Each proof note in [`../research-notes/`](../research-notes/) (A, B, C, E, small-learner-width.md and depth-two.md) was written by an AI agent, from the [problem brief](../research-notes/problem-brief.md) or as a repair of a red-team result.
+
+The brief and the literature survey were not refereed, and the red-team note only in the parts listed below. Independent AI agents then refereed each proof note, each agent through one lens (in the last two rounds on depth-two.md, one agent covered both logic and computation):
 
 - **logic**: quantifiers, the order of limits ($\sigma\to0$ after the sample and the learner width are fixed), case splits, definitions against the brief and the cited repository sources, misapplied lemmas, missing hypotheses;
 - **computation**: every constant, exponent, energy bound, probability estimate and concentration inequality, recomputed, with Python checks on small instances;
 - **scope**: whether the results establish or refute the intended version of the conjecture, and whether its proposer could object that they concern a different learner, law, loss or order of limits.
 
-Each referee worked in a separate context and was told to look for errors. Some referees also read earlier reports on the same note, as their reports say. A note with a blocking issue went back to its author for repair and was refereed again through every lens. Notes with only minor issues were then revised by an author agent, who answered every issue in a referee record at the end of the note, and an independent agent checked each revision. Up to three revise-and-check rounds were run, and one more for C and E after their scope reports; the lead editor resolved the points left by the last check.
+Each referee worked in a separate context and was told to look for errors. Some referees also read earlier reports on the same note, as their reports say.
+
+A note with a blocking issue went back to its author for repair and was refereed again through every lens. Notes with only minor issues were then revised by an author agent, who answered every issue in a referee record at the end of the note, and an independent agent checked each revision. Up to three revise-and-check rounds were run, and one more for C and E after their scope reports; the lead editor resolved the points left by the last check.
 
 The red-team note contains propositions that the main README cites. Those propositions were refereed separately; the two that needed repair were refereed again as small-learner-width.md and depth-two.md, and the other two were restated in their referees' corrected form and checked in the finalization checks.
 
-Line numbers in a report refer to the version it reviewed. The versions read by the referees are published here and named in the tables below, except the texts read by the scope reports on C and E and by the last two referee rounds of the depth-two note. Those texts, and the texts read by the checks of a revision, are intermediate and not published; their reports also locate each point by section and result number. Section and result numbers are stable across revisions, and revisions only added items, except that A's revision 1 moved its §5.2 (Discussion) to §5.3. The scripts that referees and checkers wrote are in [`../checks/`](../checks/), in folders named after the report (for example [`../checks/verify-B-scope/`](../checks/verify-B-scope/)); the script of the first red-team finalization check is not published.
+Line numbers in a report refer to the version it reviewed. The versions read by the referees are published here and named in the tables below, except the texts read by the scope reports on C and E and by the last two referee rounds of the depth-two note. Those texts, and the texts read by the checks of a revision, are intermediate and not published; their reports also locate each point by section and result number.
+
+Section and result numbers are stable across revisions, and revisions only added items, except that A's revision 1 moved its §5.2 (Discussion) to §5.3.
+
+The scripts that referees and checkers wrote are in [`../checks/`](../checks/), in folders named after the report (for example [`../checks/verify-B-scope/`](../checks/verify-B-scope/)); the script of the first red-team finalization check is not published.
 
 ## Proof notes
 

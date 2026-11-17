@@ -13,7 +13,7 @@ training labels. For any common training/test distribution, the bounds
 control test mass where posterior correct-label probability is at most
 `2/3`, at **every actual realizable width**.
 
-For the following resource exponent `E`, sufficient samples are
+Here `d` is input dimension, `N` learner width, `L` learner depth, `s` circuit or formula size, and `C` a universal constant. For the following resource exponent `E`, sufficient samples are
 `exp(O(E))`, apart from the stated error/confidence factors, provided
 the learner depth satisfies **`L≥C E`**.
 
@@ -75,7 +75,7 @@ The combinatorial constructions and the extension of the Gaussian
 prefix construction to heterogeneous layer widths and row norms are
 proved in the paper. The statistical transfer explicitly imports:
 
-- [Uniform intrinsic learning, scalar continuation, and short-padding/Fourier target bounds](../boolean-depth-barriers/uniform-target-classes.pdf), Proposition2.1, Proposition3.3, and Theorems1.1–1.2; [source](../boolean-depth-barriers/source/uniform-target-classes.tex).
+- [Uniform intrinsic learning, scalar continuation, and short-padding/Fourier target bounds](../boolean-depth-barriers/uniform-target-classes.pdf), Proposition 2.1, Proposition 3.3, and Theorems 1.1–1.2; [source](../boolean-depth-barriers/source/uniform-target-classes.tex).
 - [Baseline-subtracted intrinsic proof](../boolean-depth-barriers/proof-notes/uniform-sharp-intrinsic.md) and [scale-reuse proof](../boolean-depth-barriers/proof-notes/nearcritical-target-reuse.md).
 - [Finite-width circuit prefix](../critical-depth/source/critical-finite-width-circuit-prefix.tex) and the scalar/finite-channel inputs in the [critical-depth paper](../critical-depth/paper.pdf).
 - The cited balanced tree-decomposition and weighted planar/excluded-minor separator theorems.
@@ -87,10 +87,10 @@ compiled target circuit fits inside every learner width.
 ## Reproduction and status
 
 Run `./build.sh` with `latexmk` and a standard TeX installation to rebuild
-the PDF. The manuscript and the new separator construction passed
+the PDF. The manuscript and the separator construction passed
 independent mathematical review. This package is not Lean verified;
 the imported analytic theorems retain the verification status recorded
 in their own packages. No unconditional exponential sample lower bound
 or generic subexponential compiler is claimed.
 
-The PDF was reviewed and rebuilt from the included source on 29 October 2026. The [review record](../../verification/remaining-papers-2026-10-29.md) describes exposition changes, mathematical corrections, and the limits of the checks. Existing formalization claims retain their stated scope.
+The [29 October review and rebuild record](../../verification/remaining-papers-2026-10-29.md) documents the checked source snapshot, corrections, and limits of the review.

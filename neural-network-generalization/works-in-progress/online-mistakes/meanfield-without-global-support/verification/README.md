@@ -1,6 +1,10 @@
 # Verification record
 
+A shallow mean-field Bayesian tanh learner has polynomial total online mistake bounds when training enforces positive margins but the initial prior has no global output-margin restriction. The bounds cover arbitrary input orders, including adaptive orders, at all sufficiently large widths.
+
 The theorem and proof received independent mathematical reviews from three other AI agents. This is **not Lean verification**. The proof invokes the standard finite-dimensional Cramér large-deviation theorem; the remaining model-specific steps are proved in the paper.
+
+Here `d` is input dimension, `N` is learner width, `C` is teacher width, `B` bounds teacher weights, and `τ` is the fixed positive Gaussian prefactor. The canonical scale is `σ_N = τ/√N`.
 
 The reviews checked:
 

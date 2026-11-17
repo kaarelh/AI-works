@@ -1,14 +1,14 @@
 # Depth-uniform Gaussian Bayesian learning of shallow Boolean targets
 
-**Status:** Earlier standalone supporting draft
-
-Earlier standalone presentation of product-norm and Gaussian-distance upper bounds for bounded-weight shallow targets and fixed intrinsic target depth. The newer unrestricted-depth paper incorporates stronger representation and learner-depth results; neither is a promoted main result.
+This draft gives product-norm and Gaussian-distance upper bounds for bounded-weight shallow targets and fixed intrinsic target depth.
 
 [Paper (PDF)](paper.pdf) · [LaTeX source](source/shallow-target-paper.tex) · [Collection index](../../../README.md)
 
 ## Relationship to the current papers
 
-This earlier document is preserved for provenance and useful supporting arguments. Its historical status language and empirical qualifications describe that research round. Consult the collection index and current paper READMEs for the present classification and conventions.
+**Status:** Earlier standalone supporting draft. The newer unrestricted-depth paper incorporates stronger representation and learner-depth results; neither is a promoted main result. This document is preserved for provenance and useful supporting arguments.
+
+Its historical status language and empirical qualifications describe that research round. Consult the collection index and current paper READMEs for the present classification and conventions.
 
 ## Build
 

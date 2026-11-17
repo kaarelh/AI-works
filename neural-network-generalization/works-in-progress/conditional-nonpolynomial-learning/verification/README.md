@@ -1,7 +1,5 @@
 # Verification record
 
-The [standalone writing revision of 29 October](../../../verification/standalone-writing-2026-10-29.md) gives the current paper source and PDF hashes. It clarifies the abstract, local model definitions, and formalization scope without changing the theorem or any Lean source. The full Lean build record below identifies the earlier manuscript snapshot and the unchanged checked proof.
-
 **The main conditional NNbayes theorem is proved in Lean for the concrete Gaussian model.** The only conjectural premise is nonuniform `PPoly ≠ TC1`, as stated in the paper. The analytic posterior ceiling is a proved dependency, not an additional assumption of the final theorem.
 
 The entry points in [ClosedConditionalImpossibility.lean](../lean/ClosedConditionalImpossibility.lean) are:
@@ -30,6 +28,8 @@ The final theorem's circuit classes are concrete finite NAND and threshold circu
 The 30–31 October extensions are checked separately from the historical 585-module publication record below; see [the current coverage record](../../../lean/review/coverage-extension-2026-10-30.txt).
 
 ## Source and build checks
+
+The [standalone writing revision of 29 October](../../../verification/standalone-writing-2026-10-29.md) gives the paper source and PDF hashes for that revision. It clarifies the abstract, local model definitions, and formalization scope without changing the theorem or any Lean source. The full Lean build record below identifies the earlier manuscript snapshot and the unchanged checked proof.
 
 The final theorem axiom reports contain only `propext`, `Classical.choice`, and `Quot.sound`. They contain no analytic-capacity axiom or `sorryAx`.
 

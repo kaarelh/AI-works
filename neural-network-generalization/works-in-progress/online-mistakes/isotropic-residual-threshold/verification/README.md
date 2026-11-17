@@ -1,5 +1,7 @@
 # Verification record
 
+The manuscript proves exponential online mistakes at every fixed hidden width for the discontinuous activations `sign(t)+t` and `sign(t)+tanh(t)` under the unchanged isotropic Gaussian prior in the strong-prior limit. It also gives direct width-limit results and a polynomial IID confidence bound.
+
 The manuscript has been checked by independent AI research agents. It has **not** been formalized in Lean.
 
 - [Independent mathematical review](independent-review.md): exact linear and bounded residual profiles, all-width competitor bounds, selector geometry, product-box posterior estimate, theorem quantifiers, teacher complexity, and IID confidence guarantee.
@@ -7,4 +9,4 @@ The manuscript has been checked by independent AI research agents. It has **not*
 
 The reviews identify the exact source hashes examined. The paper uses two source files, [paper.tex](../source/paper.tex) and [selector.tex](../source/selector.tex), and builds with [build.sh](../build.sh). The final source compiles to ten pages with no undefined references or layout warnings.
 
-The review scope includes the activation's discontinuity and the distinction between every fixed width in the cold limit, direct γ > 1 limits, and sufficiently small mean-field prefactors. No result for ordinary tanh, ReLU, hardtanh, or the unit-prefactor mean-field boundary is asserted.
+The review scope includes the activation's discontinuity and the distinction between every fixed width in the cold limit, direct `γ > 1` limits, and sufficiently small mean-field prefactors. Here `γ` is the prior exponent in `σ² = τ² N^(−γ)`, with learner width `N`, canonical Gaussian scale `σ`, and prefactor `τ`. No result for ordinary tanh, ReLU, hardtanh, or the unit-prefactor mean-field boundary is asserted.

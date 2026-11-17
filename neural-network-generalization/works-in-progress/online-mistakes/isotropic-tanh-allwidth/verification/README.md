@@ -11,7 +11,7 @@
 
 ## Statement and coverage
 
-The exact construction has `m=6k+6`, `d=Θ(k log² k)`, a same-depth teacher of width `C=O(k² log² k)`, and exactly `2^(k−1)` designated rounds. The teacher has margin at least one and all coefficients bounded by `C`; the target also has a NAND circuit with at most `17d+5` gates. The resulting mistake count is `exp(Ω(√C/log(C+2)))`. Here `C` is the width of the displayed teacher, not an asserted minimum width.
+Writing `k` for the construction index and `d` for input dimension, the exact construction has `m=6k+6`, `d=Θ(k log² k)`, a same-depth teacher of width `C=O(k² log² k)`, and exactly `2^(k−1)` designated rounds. The teacher has margin at least one and all coefficients bounded by `C`; the target also has a NAND circuit with at most `17d+5` gates. The resulting mistake count is `exp(Ω(√C/log(C+2)))`. Here `C` is the width of the displayed teacher, not an asserted minimum width.
 
 One fixed full-cube input permutation works for every sufficiently large fixed finite learner width. The Gaussian scale then tends to zero at that fixed width. The correct-label posterior probability tends to zero at every designated round. At sufficiently small positive scale, every designated majority prediction is wrong, correct-label confidence is below `1/3`, and fresh independent posterior sampling gives all designated errors simultaneously with probability arbitrarily close to one. Posterior normalizers are proved positive for every positive scale and every round.
 

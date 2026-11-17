@@ -1,5 +1,7 @@
 # Verification and exact scope
 
+An arbitrarily small positive anisotropy in the Gaussian input-coordinate variances yields exponential online mistakes for majority at every finite learner width in the strong-prior limit. The reviews cover both calibration constructions, their common mean-field scale, and the polynomial IID comparison.
+
 [Paper](../paper.pdf) · [Source](../source/paper.tex)
 
 These are conventional mathematical proofs with independent AI-agent mathematical reviews; they are not Lean formalized.
@@ -9,10 +11,12 @@ These are conventional mathematical proofs with independent AI-agent mathematica
 
 Both reviews identify the exact final source hash. The source incorporates the earlier width-one anisotropic construction through a citation to the [AND manuscript](../../and-gaussian/paper.pdf), while supplying all proofs needed for the new results.
 
+In the statements below, `d` is input dimension, `N` is learner width, `δ` is the covariance perturbation amplitude, and `q` indexes the second construction. The quantities `λ_i` are coordinate precision factors. The canonical prior scale is `σ`, the mean-field scale is `t`, and `γ` is the prior exponent. In the IID bound, `β` is the sample failure probability and `ρ` is the allowed input mass of confidence failures; `C_2` bounds shallow teacher width and weight magnitude.
+
 The scope qualifications are part of the theorems:
 
 - The activation is fixed standard tanh, with one hidden layer, a constant input coordinate, the full Boolean cube, absolute output margin greater than `1/2` everywhere, and exact label updates.
-- The first-layer covariance is genuinely anisotropic: `λ_0 = 1` and `λ_i = 1 + δ 2^(-i)`. The perturbation may be arbitrarily small but is positive. The exactly isotropic question remains open.
+- The first-layer covariance is genuinely anisotropic: `λ_0 = 1` and `λ_i = 1 + δ 2^(-i)`. The perturbation may be arbitrarily small but is positive. The exactly isotropic case is outside this anisotropic theorem.
 - For every odd `d >= 17`, the first construction permits every fixed `δ` in `(0,1)` and forces at least `2^floor(d/8)` mistakes after a large calibration prefix.
 - For odd `q >= 3` and `d = 9q`, the second construction uses exactly `2q` distinct calibration examples and forces exactly `9^((q+1)/2)` designated mistakes. It permits every `0 < δ <= 1/(80000 q³)`.
 - The target is full majority, with Boolean circuit size `Θ(d)` and bounded-weight teacher complexity `C_2 = 1`. Every finite width `N >= 1` is covered, including all nonlinear competitors.

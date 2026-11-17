@@ -23,11 +23,11 @@ gives a ratio at most $1+e^{-cD}$ between any two raw full-cube truth-table prob
 - [Separate free-prefix audit](nearcritical-bures-free-prefix-independent-audit.md): the improvement to width exponential in D. **Pass.**
 - [Occupation and deterministic transport](nearcritical-smooth-occupation-audit.md), with the [full independent derivation](../research-notes/nearcritical-occupation-transport-independent-audit.md): spectral Lyapunov drift and high-variance cooling. **Pass.**
 
-The [standalone manuscript audit](nearcritical-manuscript-independent-audit.md) checked all source sections and appendices against the reviewed proofs and **passed**. Its source SHA-256 matches the packaged source. The independent component reviews above are also complete.
+The [standalone manuscript audit](nearcritical-manuscript-independent-audit.md) checked all source sections and appendices against the component proofs and **passed**. It records the source hashes it reviewed. The [29 October collection review](../../../verification/remaining-papers-2026-10-29.md) covers the subsequent explanatory revision; the [catalog](../../../catalog.json) records the current PDF checksum.
 
 ## Clean build
 
-The 18-page PDF was built in a new temporary directory containing only the source and build script. The final log has no LaTeX warnings, unresolved references, or overfull/underfull boxes. The title/abstract and main-result pages were visually inspected. See the [hash and build manifest](build-manifest.json), [compiler log](clean-build.log), and [local-link check](local-link-check.json). The packaged PDF is the isolated build output.
+The [hash and build manifest](build-manifest.json) records the initial isolated build of the 18-page PDF, using only the source and build script. Its [compiler log](clean-build.log) has no LaTeX warnings, unresolved references, or overfull/underfull boxes; the title, abstract, and main-result pages were visually inspected. The [local-link check](local-link-check.json) records that publication snapshot. The 29 October review linked above documents the later revision and rebuild.
 
 ## External mathematical inputs
 

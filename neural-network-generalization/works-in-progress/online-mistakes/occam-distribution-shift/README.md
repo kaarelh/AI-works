@@ -2,7 +2,9 @@
 
 [Paper (PDF)](paper.pdf) · [LaTeX source](source/paper.tex) · [review and checks](verification/README.md)
 
-An online learner predicts a Boolean label and then receives the correct label. The target is fixed, but the input distribution or input order may change. The learner always uses a circuit of minimum gate count consistent with every previous label. Which minimum circuit it selects matters.
+A minimum-consistent-circuit learner can make exponentially many mistakes with a deterministic history-based selection rule, yet has polynomial mistake bounds with fresh uniform minimum-circuit sampling or specified distribution coverage. The distinction is which minimum circuit is selected and how the inputs arrive.
+
+The target is fixed. On each round the learner predicts a Boolean label and then receives the correct label; every selected circuit has minimum gate count among those consistent with all previous labels. Below, `d` is the number of Boolean inputs, `s` is target gate count, and `K` is the number of fixed input environments.
 
 | Rule or input condition | Total-mistake result |
 |---|---|

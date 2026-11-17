@@ -2,9 +2,13 @@
 
 **[Read the paper](paper.pdf)** · [LaTeX source](source/paper.tex) · [Verification record](verification/README.md)
 
-Research proof draft, 25 October 2026. This paper proves an **architecture lower bound** for neural networks computing a Boolean predicate of a finite-group word. It is neither a lower bound on a function's minimum product norm over unrestricted networks nor a Bayesian sample lower bound.
+This paper proves an **architecture lower bound** for neural networks computing a Boolean predicate of a finite-group word. It is neither a lower bound on a function's minimum product norm over unrestricted networks nor a Bayesian sample lower bound.
 
-The network's physical layers must merge contiguous subwords through successive local modules. Different modules have disjoint data-dependent channels until their prescribed merge. Each band contains at least one actual matrix layer, and the bands partition all pre-readout layers. Boundary states may retain the entire subword, have arbitrary dimension and precision, and contain arbitrary fixed-seed estimator features. No internal margin, state decoder, or product-only encoding is assumed.
+Research proof draft, 25 October 2026.
+
+The network's physical layers must merge contiguous subwords through successive local modules. Different modules have disjoint data-dependent channels until their prescribed merge. Each band contains at least one actual matrix layer, and the bands partition all pre-readout layers.
+
+Boundary states may retain the entire subword, have arbitrary dimension and precision, and contain arbitrary fixed-seed estimator features. No internal margin, state decoder, or product-only encoding is assumed.
 
 For successive partitions with normalized block sizes `mu`, the theorem bounds the product of all physical Frobenius norms by
 

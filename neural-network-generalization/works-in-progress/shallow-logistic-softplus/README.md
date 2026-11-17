@@ -21,8 +21,8 @@ Parity has polynomial-size shallow teachers for both activations, so it cannot p
 
 The mathematical checks are conventional independent audits. **These results are not Lean verified.** The [build manifest](verification/build-manifest.json) records source provenance and exact packaged hashes.
 
+The PDFs were reviewed and rebuilt from the included source on 29 October 2026. The [review record](../../verification/remaining-papers-2026-10-29.md) describes exposition changes, mathematical corrections, and the limits of the checks. Existing formalization claims retain their stated scope.
+
 ## Build
 
 Run `./build.sh` in this directory. It uses two `pdflatex` passes per manuscript, stores auxiliary files in `.build/`, and writes `logistic.pdf` and `softplus.pdf`.
-
-The PDF was reviewed and rebuilt from the included source on 29 October 2026. The [review record](../../verification/remaining-papers-2026-10-29.md) describes exposition changes, mathematical corrections, and the limits of the checks. Existing formalization claims retain their stated scope.

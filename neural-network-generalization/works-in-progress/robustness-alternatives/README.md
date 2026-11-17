@@ -8,11 +8,15 @@ Research notes, 22 October 2026. These notes examine prior restrictions motivate
 | [Absolute path-norm cap](path-norm.md) | ReLU; quadratic in the declared norm budget and polynomial depth, at all eligible widths and every positive Gaussian scale | A Boolean **formula** gives a budget linear in formula size. A comparable guarantee for every small circuit with reused intermediate values is not established. The budget is fixed before seeing labels. |
 | [Severe neuron-dropout stability](dropout.md) | Tanh; quadratic Boolean teacher width up to logarithms and polynomial depth; all `N≥C`; strong prior and every `γ≥2` | Retaining only a bounded number of neurons is much stronger than ordinary fixed-fraction dropout. The mean-field extension is open. |
 
+## What the restrictions require
+
 The internal-noise condition is the strongest candidate here for a requirement one might study independently of a compression proof. It asks that clipped predictions survive simultaneous internal disturbances, and that hidden-state RMS magnitudes remain bounded on the same disturbance neighborhood. Neither clause mentions a smaller network. [Restoring Boolean gates](robust-witnesses.md) show that ReLU and GELU can satisfy both conditions at the original circuit depth, with a factor-two width overhead and energy linear in circuit width and depth. The new proof derives a small representation from these properties.
 
 A path-norm cap is familiar and invariant under positive ReLU neuron rescaling. Its learning proof is particularly simple because the entire restricted function class has low capacity. This changes the question: the norm budget is a declared prior parameter, and the theorem does not automatically adapt to an unknown smaller circuit under one unrestricted Gaussian prior.
 
 Dropout uses a familiar operation, but the required degree of redundancy remains strong. For the Boolean teacher witnesses, `O(C log(LC))` retained neurons suffice, even when learner width is arbitrarily larger. The support condition sets the retention budget from each network's own readout-energy/output-amplitude ratio; it does not use the unknown teacher width. Calling it dropout does not establish that ordinary dropout training produces the required property.
+
+## Evidence from trained networks
 
 The [dropout diagnostic](dropout.md#a-small-diagnostic-on-already-trained-networks) illustrates the distinction. Four ordinarily trained majority models had perfect full-cube predictions and clean margins above `1/2`, but only 6–21 of 100 masks preserved the whole clipped function at 75% retention. Mean sign disagreement was only 0.2–1.3%. This is a small float64 Monte Carlo study, not an exact failure certificate or a representative population study. The theorem's conservative retention calibration selects the identity mask on these small models, so these observations do not refute literal support membership.
 

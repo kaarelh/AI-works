@@ -1,10 +1,12 @@
 # Verification and exact scope
 
-**Author-order revision, 6 November 2026.** The author declarations, alphabetical-order footnotes, and PDF author metadata were updated without changing the document bodies. [Current hashes and clean rebuild checks](../../../../verification/author-order-2026-11-06.md) supersede the earlier manuscript hashes below; the dated mathematical reviews remain records of their original snapshots.
+A scalar tanh learner under the unchanged isotropic strong prior can make exponentially many mistakes on a fixed selector–comparator input order. The separate linear-activation appendix extends the construction to every fixed width. The reviews here keep those two conclusions and their teacher-width qualifications distinct.
 
 5 November 2026. [Paper](../paper.pdf) · [Source](../source/paper.tex)
 
-Conventional mathematical proofs, independently checked by collaborating AI agents and the integrating agent. **Not Lean formalized or human peer reviewed.**
+These are conventional mathematical proofs, independently checked by collaborating AI agents and the integrating agent. **Not Lean formalized or human peer reviewed.**
+
+The construction compares two `k`-bit integers and has input dimension `d=2k+1`; `t` denotes the current integer threshold. Learner width is `N`, depth is `L`, `C_L` bounds same-depth teacher width and individual weight magnitude, and `Q` is the minimum affine unit-margin squared norm.
 
 The reviews checked the following claims against the manuscript:
 
@@ -27,3 +29,7 @@ The [full-source tanh audit](lower-selector-final-audit.md) and [linear-appendix
 `python3 check_affine.py` requires NumPy, SciPy, and SymPy. For 20 selected instances at `k=3,…,7`, an LP locates a candidate dual support; **all accepted certificates are then checked exactly over the rationals**, including nonnegative multipliers and their exact conic combination. The resulting [certificates](affine-certificates.json) establish those instances' norm optimality and uniqueness independently of the floating-point solver. These checks support the general proof; they do not replace it.
 
 The PDF was rebuilt in isolation with matching extracted text and no unresolved references or LaTeX warnings. Its title/abstract and theorem pages were inspected for rendering problems. See [record.json](record.json) for hashes and build checks.
+
+## Snapshot provenance
+
+**Author-order revision, 6 November 2026.** The author declarations, alphabetical-order footnotes, and PDF author metadata were updated without changing the document bodies. [Current hashes and clean rebuild checks](../../../../verification/author-order-2026-11-06.md) supersede the earlier manuscript hashes in the review records; the dated mathematical reviews remain records of their original snapshots.

@@ -1,10 +1,10 @@
 # Verification record
 
+The main theorem gives superpolynomial online mistakes for the fixed strictly increasing 1-Lipschitz activation `ψ(t)=(2t+φ(t))/3`, where `φ` is the period-four triangle wave. All proofs used in the theorem, including the underlying triangle atomic norm, appear in the source. The external NeurIPS reference supplies only precedent for the triangle component as an activation; no result about its prior or learning behavior is imported.
+
+For construction index `m`, the scope is `2^(m-4)` designated mistakes, dimension and Boolean-circuit size `Θ(m^6)`, teacher width `8m-4`, calibration on `15/16` of the full cube, and every sufficiently large fixed learner width followed by the strong-prior limit. No polynomial sufficient-width bound, width-uniform variance threshold, or result for ordinary tanh, ReLU, GELU, or hardtanh is asserted.
+
 This is a standalone conventional mathematical proof. It is not Lean formalized. The checks below were performed by separate AI agents during the research session, not by external peer reviewers.
-
-The main theorem uses the fixed strictly increasing 1-Lipschitz activation `ψ(t)=(2t+φ(t))/3`, where `φ` is the period-four triangle wave. All proofs used in the theorem, including the underlying triangle atomic norm, appear in the source. The external NeurIPS reference supplies only precedent for the triangle component as an activation; no result about its prior or learning behavior is imported.
-
-The scope is `2^(m-4)` designated mistakes, dimension and Boolean-circuit size `Θ(m^6)`, teacher width `8m-4`, calibration on `15/16` of the full cube, and every sufficiently large fixed learner width followed by the strong-prior limit. No polynomial sufficient-width bound, width-uniform variance threshold, or result for ordinary tanh, ReLU, GELU, or hardtanh is asserted.
 
 Complete manuscript reviews:
 

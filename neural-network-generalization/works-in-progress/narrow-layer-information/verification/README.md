@@ -1,7 +1,5 @@
 # Verification record
 
-**Author-order revision, 6 November 2026.** The author declarations, alphabetical-order footnotes, and PDF author metadata were updated without changing the document bodies. [Current hashes and clean rebuild checks](../../../verification/author-order-2026-11-06.md) supersede the earlier manuscript hashes below; the dated mathematical reviews remain records of their original snapshots.
-
 The paper and supporting note have conventional mathematical proofs and independent AI-agent checks. **They have not been formalized in Lean.** The checks below are not an unrestricted-posterior learning lower bound.
 
 The [independent cross-audit](independent-cross-audit.md) checks the paper's four principal statements against their proofs:
@@ -16,3 +14,5 @@ The width-24 bounded-coefficient representation consequence imports the compiler
 The same cross-audit separately checks the [supporting note](../research-notes/precision-and-oscillation.md): its sharper analog rounding estimate and its fixed-width tanh construction with exponentially many Boolean-grid sign changes. The publication explicitly incorporates the audit's clarification that the inverse image of the reference interval consists of exactly two branches. The oscillation result concerns an implementation, and is not an intrinsic Boolean circuit or learning lower bound.
 
 [Publication checks](publication-check.json) record the isolated source rebuild, five-page PDF, absence of final LaTeX warnings, and relative-link check. [SHA256SUMS.json](SHA256SUMS.json) identifies the curated source, PDF, build script, research note, and audit record. A successful TeX build verifies document construction, not mathematical validity.
+
+**Author-order revision, 6 November 2026.** The author declarations, alphabetical-order footnotes, and PDF author metadata were updated without changing the document bodies. [Current hashes and clean rebuild checks](../../../verification/author-order-2026-11-06.md) supersede the earlier manuscript hashes in the linked records; the dated mathematical reviews remain records of their original snapshots.
